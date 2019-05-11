@@ -1,0 +1,7 @@
+# Don't validate noop renderer bundle.
+# Unlike others, it currently uses ES6 syntax (generators).
+# We also don't use or publish it.
+**/react-noop-renderer/**
+JestReact-prod.js
+JestReact-dev.js
+**/jest-react/**

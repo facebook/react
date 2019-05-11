@@ -43,9 +43,7 @@ class InputTestCase extends React.Component {
           <fieldset>
             <legend>Controlled {type}</legend>
             <input type={type} value={value} onChange={this.onChange} />
-            <p className="hint">
-              Value: {JSON.stringify(this.state.value)}
-            </p>
+            <p className="hint">Value: {JSON.stringify(this.state.value)}</p>
           </fieldset>
 
           <fieldset>

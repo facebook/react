@@ -1,6 +1,5 @@
-import React from 'react';
-
 import Fixture from '../../Fixture';
+const React = window.React;
 
 class InputPlaceholderFixture extends React.Component {
   constructor(props, context) {
@@ -41,14 +40,14 @@ class InputPlaceholderFixture extends React.Component {
           type="text"
           placeholder={placeholder}
           onChange={this.handleChange}
-        />
-        {' '}
+        />{' '}
         <button onClick={this.handleGeneratePlaceholder}>
           Change placeholder
         </button>
-
         <p style={{color}}>
-          <code>onChange</code>{' calls: '}<strong>{changeCount}</strong>
+          <code>onChange</code>
+          {' calls: '}
+          <strong>{changeCount}</strong>
         </p>
         <button onClick={this.handleReset}>Reset count</button>
       </Fixture>

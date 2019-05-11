@@ -1,0 +1,33 @@
+{
+  "name": "jest-react",
+  "version": "0.6.6",
+  "description": "Jest matchers and utilities for testing React components.",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/react.git",
+    "directory": "packages/jest-react"
+  },
+  "keywords": [
+    "react",
+    "jest",
+    "react-testing"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/facebook/react/issues"
+  },
+  "homepage": "https://reactjs.org/",
+  "peerDependencies": {
+    "jest": "^23.0.1",
+    "react": "^16.0.0",
+    "react-test-renderer": "^16.0.0"
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "build-info.json",
+    "index.js",
+    "cjs/"
+  ]
+}

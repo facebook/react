@@ -93,12 +93,6 @@ const attributes = [
     read: getSVGAttribute('allowReorder'),
   },
   {
-    name: 'allowTransparency',
-    containerTagName: 'svg',
-    tagName: 'path',
-    read: getSVGAttribute('allowtransparency'),
-  },
-  {
     name: 'alphabetic',
     containerTagName: 'svg',
     tagName: 'font-face',
@@ -454,6 +448,11 @@ const attributes = [
     read: getSVGAttribute('direction'),
   },
   {name: 'disabled', tagName: 'input'},
+  {
+    name: 'disablePictureInPicture',
+    tagName: 'video',
+    read: getProperty('disablepictureinpicture'),
+  },
   {
     name: 'display',
     tagName: 'svg',
@@ -849,7 +848,8 @@ const attributes = [
     name: 'gradientTransform',
     read: getSVGProperty('gradientTransform'),
     containerTagName: 'svg',
-    overrideStringValue: 'translate(-10,-20) scale(2) rotate(45) translate(5,10)',
+    overrideStringValue:
+      'translate(-10,-20) scale(2) rotate(45) translate(5,10)',
     tagName: 'linearGradient',
   },
   {
@@ -1227,6 +1227,7 @@ const attributes = [
     tagName: 'color-profile',
     read: getSVGAttribute('color-profile'),
   },
+  {name: 'noModule', tagName: 'script'},
   {name: 'nonce', read: getAttribute('nonce')},
   {name: 'noValidate', tagName: 'form'},
   {
@@ -1359,7 +1360,8 @@ const attributes = [
     read: getSVGProperty('patternTransform'),
     containerTagName: 'svg',
     tagName: 'pattern',
-    overrideStringValue: 'translate(-10,-20) scale(2) rotate(45) translate(5,10)',
+    overrideStringValue:
+      'translate(-10,-20) scale(2) rotate(45) translate(5,10)',
   },
   {
     name: 'patternUnits',
@@ -1865,6 +1867,11 @@ const attributes = [
   },
   {name: 'tabIndex'},
   {
+    name: 'tabIndex',
+    read: getSVGProperty('tabIndex'),
+    tagName: 'svg',
+  },
+  {
     name: 'tableValues',
     read: getSVGProperty('tableValues'),
     containerTagName: 'svg',
@@ -1941,7 +1948,8 @@ const attributes = [
     read: getSVGProperty('transform'),
     containerTagName: 'svg',
     tagName: 'a',
-    overrideStringValue: 'translate(-10,-20) scale(2) rotate(45) translate(5,10)',
+    overrideStringValue:
+      'translate(-10,-20) scale(2) rotate(45) translate(5,10)',
   },
   {name: 'type', tagName: 'button', overrideStringValue: 'reset'},
   {

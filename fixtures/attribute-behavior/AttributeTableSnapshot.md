@@ -1,4 +1,4 @@
-## `about` (on `<div>`)
+﻿## `about` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `about=(string)`| (changed)| `"a string"` |
@@ -23,7 +23,7 @@
 | `about=(null)`| (initial)| `<null>` |
 | `about=(undefined)`| (initial)| `<null>` |
 
-## `aBoUt` (on `<div>`)
+## `aBoUt` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `aBoUt=(string)`| (changed, warning)| `"a string"` |
@@ -48,7 +48,7 @@
 | `aBoUt=(null)`| (initial, warning)| `<null>` |
 | `aBoUt=(undefined)`| (initial, warning)| `<null>` |
 
-## `accent-Height` (on `<svg>`)
+## `accent-Height` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `accent-Height=(string)`| (initial, warning, ssr mismatch)| `<null>` |
@@ -73,7 +73,7 @@
 | `accent-Height=(null)`| (initial, warning)| `<null>` |
 | `accent-Height=(undefined)`| (initial, warning)| `<null>` |
 
-## `accent-height` (on `<svg>`)
+## `accent-height` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `accent-height=(string)`| (changed, warning)| `"a string"` |
@@ -98,7 +98,7 @@
 | `accent-height=(null)`| (initial, warning)| `<null>` |
 | `accent-height=(undefined)`| (initial, warning)| `<null>` |
 
-## `accentHeight` (on `<svg>`)
+## `accentHeight` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `accentHeight=(string)`| (changed)| `"a string"` |
@@ -118,12 +118,12 @@
 | `accentHeight=(string 'false')`| (changed)| `"false"` |
 | `accentHeight=(string 'on')`| (changed)| `"on"` |
 | `accentHeight=(string 'off')`| (changed)| `"off"` |
-| `accentHeight=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `accentHeight=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `accentHeight=(symbol)`| (initial, warning)| `<null>` |
+| `accentHeight=(function)`| (initial, warning)| `<null>` |
 | `accentHeight=(null)`| (initial)| `<null>` |
 | `accentHeight=(undefined)`| (initial)| `<null>` |
 
-## `accept` (on `<div>`)
+## `accept` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `accept=(string)`| (changed)| `"a string"` |
@@ -148,7 +148,7 @@
 | `accept=(null)`| (initial)| `<empty string>` |
 | `accept=(undefined)`| (initial)| `<empty string>` |
 
-## `accept-charset` (on `<div>`)
+## `accept-charset` (on `<form>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `accept-charset=(string)`| (changed, warning)| `"a string"` |
@@ -173,7 +173,7 @@
 | `accept-charset=(null)`| (initial, warning)| `<empty string>` |
 | `accept-charset=(undefined)`| (initial, warning)| `<empty string>` |
 
-## `accept-Charset` (on `<div>`)
+## `accept-Charset` (on `<form>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `accept-Charset=(string)`| (changed, warning)| `"a string"` |
@@ -198,7 +198,7 @@
 | `accept-Charset=(null)`| (initial, warning)| `<empty string>` |
 | `accept-Charset=(undefined)`| (initial, warning)| `<empty string>` |
 
-## `acceptCharset` (on `<div>`)
+## `acceptCharset` (on `<form>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `acceptCharset=(string)`| (changed)| `"a string"` |
@@ -218,12 +218,12 @@
 | `acceptCharset=(string 'false')`| (changed)| `"false"` |
 | `acceptCharset=(string 'on')`| (changed)| `"on"` |
 | `acceptCharset=(string 'off')`| (changed)| `"off"` |
-| `acceptCharset=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<empty string>` |
-| `acceptCharset=(function)`| (initial, warning, ssr mismatch)| `<empty string>` |
+| `acceptCharset=(symbol)`| (initial, warning)| `<empty string>` |
+| `acceptCharset=(function)`| (initial, warning)| `<empty string>` |
 | `acceptCharset=(null)`| (initial)| `<empty string>` |
 | `acceptCharset=(undefined)`| (initial)| `<empty string>` |
 
-## `accessKey` (on `<div>`)
+## `accessKey` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `accessKey=(string)`| (changed)| `"a string"` |
@@ -248,7 +248,7 @@
 | `accessKey=(null)`| (initial)| `<empty string>` |
 | `accessKey=(undefined)`| (initial)| `<empty string>` |
 
-## `accumulate` (on `<svg>`)
+## `accumulate` (on `<animate>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `accumulate=(string)`| (changed)| `"a string"` |
@@ -273,13 +273,13 @@
 | `accumulate=(null)`| (initial)| `<null>` |
 | `accumulate=(undefined)`| (initial)| `<null>` |
 
-## `action` (on `<div>`)
+## `action` (on `<form>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `action=(string)`| (changed)| `"https://reactjs.com/"` |
-| `action=(empty string)`| (changed)| `"http://localhost:3000/"` |
+| `action=(empty string)`| (initial)| `"http://localhost:3000/"` |
 | `action=(array with string)`| (changed)| `"https://reactjs.com/"` |
-| `action=(empty array)`| (changed)| `"http://localhost:3000/"` |
+| `action=(empty array)`| (initial)| `"http://localhost:3000/"` |
 | `action=(object)`| (changed)| `"http://localhost:3000/result%20of%20toString()"` |
 | `action=(numeric string)`| (changed)| `"http://localhost:3000/42"` |
 | `action=(-1)`| (changed)| `"http://localhost:3000/-1"` |
@@ -287,18 +287,18 @@
 | `action=(integer)`| (changed)| `"http://localhost:3000/1"` |
 | `action=(NaN)`| (changed, warning)| `"http://localhost:3000/NaN"` |
 | `action=(float)`| (changed)| `"http://localhost:3000/99.99"` |
-| `action=(true)`| (initial, warning)| `<empty string>` |
-| `action=(false)`| (initial, warning)| `<empty string>` |
+| `action=(true)`| (initial, warning)| `"http://localhost:3000/"` |
+| `action=(false)`| (initial, warning)| `"http://localhost:3000/"` |
 | `action=(string 'true')`| (changed)| `"http://localhost:3000/true"` |
 | `action=(string 'false')`| (changed)| `"http://localhost:3000/false"` |
 | `action=(string 'on')`| (changed)| `"http://localhost:3000/on"` |
 | `action=(string 'off')`| (changed)| `"http://localhost:3000/off"` |
-| `action=(symbol)`| (initial, warning)| `<empty string>` |
-| `action=(function)`| (initial, warning)| `<empty string>` |
-| `action=(null)`| (initial)| `<empty string>` |
-| `action=(undefined)`| (initial)| `<empty string>` |
+| `action=(symbol)`| (initial, warning)| `"http://localhost:3000/"` |
+| `action=(function)`| (initial, warning)| `"http://localhost:3000/"` |
+| `action=(null)`| (initial)| `"http://localhost:3000/"` |
+| `action=(undefined)`| (initial)| `"http://localhost:3000/"` |
 
-## `additive` (on `<svg>`)
+## `additive` (on `<animate>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `additive=(string)`| (changed)| `"a string"` |
@@ -323,7 +323,7 @@
 | `additive=(null)`| (initial)| `<null>` |
 | `additive=(undefined)`| (initial)| `<null>` |
 
-## `alignment-baseline` (on `<svg>`)
+## `alignment-baseline` (on `<textPath>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `alignment-baseline=(string)`| (changed, warning)| `"a string"` |
@@ -348,7 +348,7 @@
 | `alignment-baseline=(null)`| (initial, warning)| `<null>` |
 | `alignment-baseline=(undefined)`| (initial, warning)| `<null>` |
 
-## `alignmentBaseline` (on `<svg>`)
+## `alignmentBaseline` (on `<textPath>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `alignmentBaseline=(string)`| (changed)| `"a string"` |
@@ -368,12 +368,12 @@
 | `alignmentBaseline=(string 'false')`| (changed)| `"false"` |
 | `alignmentBaseline=(string 'on')`| (changed)| `"on"` |
 | `alignmentBaseline=(string 'off')`| (changed)| `"off"` |
-| `alignmentBaseline=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `alignmentBaseline=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `alignmentBaseline=(symbol)`| (initial, warning)| `<null>` |
+| `alignmentBaseline=(function)`| (initial, warning)| `<null>` |
 | `alignmentBaseline=(null)`| (initial)| `<null>` |
 | `alignmentBaseline=(undefined)`| (initial)| `<null>` |
 
-## `allowFullScreen` (on `<div>`)
+## `allowFullScreen` (on `<iframe>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `allowFullScreen=(string)`| (changed)| `<boolean: true>` |
@@ -389,16 +389,16 @@
 | `allowFullScreen=(float)`| (changed)| `<boolean: true>` |
 | `allowFullScreen=(true)`| (changed)| `<boolean: true>` |
 | `allowFullScreen=(false)`| (initial)| `<boolean: false>` |
-| `allowFullScreen=(string 'true')`| (changed)| `<boolean: true>` |
-| `allowFullScreen=(string 'false')`| (changed)| `<boolean: true>` |
+| `allowFullScreen=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `allowFullScreen=(string 'false')`| (changed, warning)| `<boolean: true>` |
 | `allowFullScreen=(string 'on')`| (changed)| `<boolean: true>` |
 | `allowFullScreen=(string 'off')`| (changed)| `<boolean: true>` |
-| `allowFullScreen=(symbol)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
-| `allowFullScreen=(function)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
+| `allowFullScreen=(symbol)`| (initial, warning)| `<boolean: false>` |
+| `allowFullScreen=(function)`| (initial, warning)| `<boolean: false>` |
 | `allowFullScreen=(null)`| (initial)| `<boolean: false>` |
 | `allowFullScreen=(undefined)`| (initial)| `<boolean: false>` |
 
-## `allowfullscreen` (on `<div>`)
+## `allowfullscreen` (on `<iframe>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `allowfullscreen=(string)`| (changed, warning)| `<boolean: true>` |
@@ -423,7 +423,7 @@
 | `allowfullscreen=(null)`| (initial, warning)| `<boolean: false>` |
 | `allowfullscreen=(undefined)`| (initial, warning)| `<boolean: false>` |
 
-## `allowFullscreen` (on `<div>`)
+## `allowFullscreen` (on `<iframe>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `allowFullscreen=(string)`| (changed, warning)| `<boolean: true>` |
@@ -448,7 +448,7 @@
 | `allowFullscreen=(null)`| (initial, warning)| `<boolean: false>` |
 | `allowFullscreen=(undefined)`| (initial, warning)| `<boolean: false>` |
 
-## `allowReorder` (on `<svg>`)
+## `allowReorder` (on `<switch>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `allowReorder=(string)`| (changed, ssr mismatch)| `"a string"` |
@@ -473,32 +473,7 @@
 | `allowReorder=(null)`| (initial)| `<null>` |
 | `allowReorder=(undefined)`| (initial)| `<null>` |
 
-## `allowTransparency` (on `<svg>`)
-| Test Case | Flags | Result |
-| --- | --- | --- |
-| `allowTransparency=(string)`| (changed)| `"a string"` |
-| `allowTransparency=(empty string)`| (changed)| `<empty string>` |
-| `allowTransparency=(array with string)`| (changed)| `"string"` |
-| `allowTransparency=(empty array)`| (changed)| `<empty string>` |
-| `allowTransparency=(object)`| (changed)| `"result of toString()"` |
-| `allowTransparency=(numeric string)`| (changed)| `"42"` |
-| `allowTransparency=(-1)`| (changed)| `"-1"` |
-| `allowTransparency=(0)`| (changed)| `"0"` |
-| `allowTransparency=(integer)`| (changed)| `"1"` |
-| `allowTransparency=(NaN)`| (changed, warning)| `"NaN"` |
-| `allowTransparency=(float)`| (changed)| `"99.99"` |
-| `allowTransparency=(true)`| (changed)| `"true"` |
-| `allowTransparency=(false)`| (changed)| `"false"` |
-| `allowTransparency=(string 'true')`| (changed)| `"true"` |
-| `allowTransparency=(string 'false')`| (changed)| `"false"` |
-| `allowTransparency=(string 'on')`| (changed)| `"on"` |
-| `allowTransparency=(string 'off')`| (changed)| `"off"` |
-| `allowTransparency=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `allowTransparency=(function)`| (initial, warning, ssr mismatch)| `<null>` |
-| `allowTransparency=(null)`| (initial)| `<null>` |
-| `allowTransparency=(undefined)`| (initial)| `<null>` |
-
-## `alphabetic` (on `<svg>`)
+## `alphabetic` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `alphabetic=(string)`| (changed)| `"a string"` |
@@ -523,7 +498,7 @@
 | `alphabetic=(null)`| (initial)| `<null>` |
 | `alphabetic=(undefined)`| (initial)| `<null>` |
 
-## `alt` (on `<div>`)
+## `alt` (on `<img>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `alt=(string)`| (changed)| `"a string"` |
@@ -548,7 +523,7 @@
 | `alt=(null)`| (initial)| `<empty string>` |
 | `alt=(undefined)`| (initial)| `<empty string>` |
 
-## `amplitude` (on `<svg>`)
+## `amplitude` (on `<feFuncA>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `amplitude=(string)`| (changed)| `<number: 0>` |
@@ -573,7 +548,7 @@
 | `amplitude=(null)`| (initial)| `<number: 1>` |
 | `amplitude=(undefined)`| (initial)| `<number: 1>` |
 
-## `arabic-form` (on `<svg>`)
+## `arabic-form` (on `<glyph>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `arabic-form=(string)`| (changed, warning)| `"a string"` |
@@ -598,7 +573,7 @@
 | `arabic-form=(null)`| (initial, warning)| `<null>` |
 | `arabic-form=(undefined)`| (initial, warning)| `<null>` |
 
-## `arabicForm` (on `<svg>`)
+## `arabicForm` (on `<glyph>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `arabicForm=(string)`| (changed)| `"a string"` |
@@ -618,12 +593,12 @@
 | `arabicForm=(string 'false')`| (changed)| `"false"` |
 | `arabicForm=(string 'on')`| (changed)| `"on"` |
 | `arabicForm=(string 'off')`| (changed)| `"off"` |
-| `arabicForm=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `arabicForm=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `arabicForm=(symbol)`| (initial, warning)| `<null>` |
+| `arabicForm=(function)`| (initial, warning)| `<null>` |
 | `arabicForm=(null)`| (initial)| `<null>` |
 | `arabicForm=(undefined)`| (initial)| `<null>` |
 
-## `aria` (on `<div>`)
+## `aria` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `aria=(string)`| (changed, warning)| `"a string"` |
@@ -648,7 +623,7 @@
 | `aria=(null)`| (initial, warning)| `<null>` |
 | `aria=(undefined)`| (initial, warning)| `<null>` |
 
-## `aria-` (on `<div>`)
+## `aria-` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `aria-=(string)`| (changed, warning)| `"a string"` |
@@ -673,7 +648,7 @@
 | `aria-=(null)`| (initial, warning)| `<null>` |
 | `aria-=(undefined)`| (initial, warning)| `<null>` |
 
-## `aria-invalidattribute` (on `<div>`)
+## `aria-invalidattribute` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `aria-invalidattribute=(string)`| (changed, warning)| `"a string"` |
@@ -698,7 +673,7 @@
 | `aria-invalidattribute=(null)`| (initial, warning)| `<null>` |
 | `aria-invalidattribute=(undefined)`| (initial, warning)| `<null>` |
 
-## `as` (on `<div>`)
+## `as` (on `<link>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `as=(string)`| (initial)| `<empty string>` |
@@ -723,7 +698,7 @@
 | `as=(null)`| (initial)| `<empty string>` |
 | `as=(undefined)`| (initial)| `<empty string>` |
 
-## `ascent` (on `<svg>`)
+## `ascent` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `ascent=(string)`| (changed)| `"a string"` |
@@ -748,7 +723,7 @@
 | `ascent=(null)`| (initial)| `<null>` |
 | `ascent=(undefined)`| (initial)| `<null>` |
 
-## `async` (on `<div>`)
+## `async` (on `<script>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `async=(string)`| (changed)| `<boolean: true>` |
@@ -764,16 +739,16 @@
 | `async=(float)`| (changed)| `<boolean: true>` |
 | `async=(true)`| (changed)| `<boolean: true>` |
 | `async=(false)`| (initial)| `<boolean: false>` |
-| `async=(string 'true')`| (changed)| `<boolean: true>` |
-| `async=(string 'false')`| (changed)| `<boolean: true>` |
+| `async=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `async=(string 'false')`| (changed, warning)| `<boolean: true>` |
 | `async=(string 'on')`| (changed)| `<boolean: true>` |
 | `async=(string 'off')`| (changed)| `<boolean: true>` |
-| `async=(symbol)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
-| `async=(function)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
+| `async=(symbol)`| (initial, warning)| `<boolean: false>` |
+| `async=(function)`| (initial, warning)| `<boolean: false>` |
 | `async=(null)`| (initial)| `<boolean: false>` |
 | `async=(undefined)`| (initial)| `<boolean: false>` |
 
-## `attributeName` (on `<svg>`)
+## `attributeName` (on `<animate>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `attributeName=(string)`| (changed)| `"a string"` |
@@ -798,7 +773,7 @@
 | `attributeName=(null)`| (initial)| `<null>` |
 | `attributeName=(undefined)`| (initial)| `<null>` |
 
-## `attributeType` (on `<svg>`)
+## `attributeType` (on `<animate>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `attributeType=(string)`| (changed)| `"a string"` |
@@ -823,32 +798,32 @@
 | `attributeType=(null)`| (initial)| `<null>` |
 | `attributeType=(undefined)`| (initial)| `<null>` |
 
-## `autoCapitalize` (on `<div>`)
+## `autoCapitalize` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `autoCapitalize=(string)`| (changed)| `"words"` |
-| `autoCapitalize=(empty string)`| (initial)| `"sentences"` |
+| `autoCapitalize=(empty string)`| (initial)| `<empty string>` |
 | `autoCapitalize=(array with string)`| (changed)| `"words"` |
-| `autoCapitalize=(empty array)`| (initial)| `"sentences"` |
-| `autoCapitalize=(object)`| (initial)| `"sentences"` |
-| `autoCapitalize=(numeric string)`| (initial)| `"sentences"` |
-| `autoCapitalize=(-1)`| (initial)| `"sentences"` |
-| `autoCapitalize=(0)`| (initial)| `"sentences"` |
-| `autoCapitalize=(integer)`| (initial)| `"sentences"` |
-| `autoCapitalize=(NaN)`| (initial, warning)| `"sentences"` |
-| `autoCapitalize=(float)`| (initial)| `"sentences"` |
-| `autoCapitalize=(true)`| (initial, warning)| `"sentences"` |
-| `autoCapitalize=(false)`| (initial, warning)| `"sentences"` |
-| `autoCapitalize=(string 'true')`| (initial)| `"sentences"` |
-| `autoCapitalize=(string 'false')`| (initial)| `"sentences"` |
-| `autoCapitalize=(string 'on')`| (initial)| `"sentences"` |
+| `autoCapitalize=(empty array)`| (initial)| `<empty string>` |
+| `autoCapitalize=(object)`| (changed)| `"sentences"` |
+| `autoCapitalize=(numeric string)`| (changed)| `"sentences"` |
+| `autoCapitalize=(-1)`| (changed)| `"sentences"` |
+| `autoCapitalize=(0)`| (changed)| `"sentences"` |
+| `autoCapitalize=(integer)`| (changed)| `"sentences"` |
+| `autoCapitalize=(NaN)`| (changed, warning)| `"sentences"` |
+| `autoCapitalize=(float)`| (changed)| `"sentences"` |
+| `autoCapitalize=(true)`| (initial, warning)| `<empty string>` |
+| `autoCapitalize=(false)`| (initial, warning)| `<empty string>` |
+| `autoCapitalize=(string 'true')`| (changed)| `"sentences"` |
+| `autoCapitalize=(string 'false')`| (changed)| `"sentences"` |
+| `autoCapitalize=(string 'on')`| (changed)| `"sentences"` |
 | `autoCapitalize=(string 'off')`| (changed)| `"none"` |
-| `autoCapitalize=(symbol)`| (initial, warning)| `"sentences"` |
-| `autoCapitalize=(function)`| (initial, warning)| `"sentences"` |
-| `autoCapitalize=(null)`| (initial)| `"sentences"` |
-| `autoCapitalize=(undefined)`| (initial)| `"sentences"` |
+| `autoCapitalize=(symbol)`| (initial, warning)| `<empty string>` |
+| `autoCapitalize=(function)`| (initial, warning)| `<empty string>` |
+| `autoCapitalize=(null)`| (initial)| `<empty string>` |
+| `autoCapitalize=(undefined)`| (initial)| `<empty string>` |
 
-## `autoComplete` (on `<div>`)
+## `autoComplete` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `autoComplete=(string)`| (changed)| `"email"` |
@@ -873,7 +848,7 @@
 | `autoComplete=(null)`| (initial)| `<empty string>` |
 | `autoComplete=(undefined)`| (initial)| `<empty string>` |
 
-## `autoCorrect` (on `<div>`)
+## `autoCorrect` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `autoCorrect=(string)`| (changed)| `"off"` |
@@ -898,7 +873,7 @@
 | `autoCorrect=(null)`| (initial)| `<null>` |
 | `autoCorrect=(undefined)`| (initial)| `<null>` |
 
-## `autoPlay` (on `<div>`)
+## `autoPlay` (on `<video>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `autoPlay=(string)`| (changed)| `<boolean: true>` |
@@ -914,16 +889,16 @@
 | `autoPlay=(float)`| (changed)| `<boolean: true>` |
 | `autoPlay=(true)`| (changed)| `<boolean: true>` |
 | `autoPlay=(false)`| (initial)| `<boolean: false>` |
-| `autoPlay=(string 'true')`| (changed)| `<boolean: true>` |
-| `autoPlay=(string 'false')`| (changed)| `<boolean: true>` |
+| `autoPlay=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `autoPlay=(string 'false')`| (changed, warning)| `<boolean: true>` |
 | `autoPlay=(string 'on')`| (changed)| `<boolean: true>` |
 | `autoPlay=(string 'off')`| (changed)| `<boolean: true>` |
-| `autoPlay=(symbol)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
-| `autoPlay=(function)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
+| `autoPlay=(symbol)`| (initial, warning)| `<boolean: false>` |
+| `autoPlay=(function)`| (initial, warning)| `<boolean: false>` |
 | `autoPlay=(null)`| (initial)| `<boolean: false>` |
 | `autoPlay=(undefined)`| (initial)| `<boolean: false>` |
 
-## `autoReverse` (on `<svg>`)
+## `autoReverse` (on `<animate>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `autoReverse=(string)`| (initial, ssr mismatch)| `<null>` |
@@ -943,12 +918,12 @@
 | `autoReverse=(string 'false')`| (initial, ssr mismatch)| `<null>` |
 | `autoReverse=(string 'on')`| (initial, ssr mismatch)| `<null>` |
 | `autoReverse=(string 'off')`| (initial, ssr mismatch)| `<null>` |
-| `autoReverse=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `autoReverse=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `autoReverse=(symbol)`| (initial, warning)| `<null>` |
+| `autoReverse=(function)`| (initial, warning)| `<null>` |
 | `autoReverse=(null)`| (initial)| `<null>` |
 | `autoReverse=(undefined)`| (initial)| `<null>` |
 
-## `autoSave` (on `<div>`)
+## `autoSave` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `autoSave=(string)`| (changed)| `"a string"` |
@@ -973,7 +948,7 @@
 | `autoSave=(null)`| (initial)| `<null>` |
 | `autoSave=(undefined)`| (initial)| `<null>` |
 
-## `azimuth` (on `<svg>`)
+## `azimuth` (on `<feDistantLight>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `azimuth=(string)`| (initial)| `<number: 0>` |
@@ -998,7 +973,7 @@
 | `azimuth=(null)`| (initial)| `<number: 0>` |
 | `azimuth=(undefined)`| (initial)| `<number: 0>` |
 
-## `baseFrequency` (on `<svg>`)
+## `baseFrequency` (on `<feTurbulence>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `baseFrequency=(string)`| (changed)| `"a string"` |
@@ -1023,7 +998,7 @@
 | `baseFrequency=(null)`| (initial)| `<null>` |
 | `baseFrequency=(undefined)`| (initial)| `<null>` |
 
-## `baseline-shift` (on `<svg>`)
+## `baseline-shift` (on `<textPath>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `baseline-shift=(string)`| (changed, warning)| `"a string"` |
@@ -1048,7 +1023,7 @@
 | `baseline-shift=(null)`| (initial, warning)| `<null>` |
 | `baseline-shift=(undefined)`| (initial, warning)| `<null>` |
 
-## `baselineShift` (on `<svg>`)
+## `baselineShift` (on `<textPath>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `baselineShift=(string)`| (changed)| `"a string"` |
@@ -1068,12 +1043,12 @@
 | `baselineShift=(string 'false')`| (changed)| `"false"` |
 | `baselineShift=(string 'on')`| (changed)| `"on"` |
 | `baselineShift=(string 'off')`| (changed)| `"off"` |
-| `baselineShift=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `baselineShift=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `baselineShift=(symbol)`| (initial, warning)| `<null>` |
+| `baselineShift=(function)`| (initial, warning)| `<null>` |
 | `baselineShift=(null)`| (initial)| `<null>` |
 | `baselineShift=(undefined)`| (initial)| `<null>` |
 
-## `baseProfile` (on `<div>`)
+## `baseProfile` (on `<svg>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `baseProfile=(string)`| (changed)| `"a string"` |
@@ -1098,7 +1073,7 @@
 | `baseProfile=(null)`| (initial)| `<null>` |
 | `baseProfile=(undefined)`| (initial)| `<null>` |
 
-## `bbox` (on `<svg>`)
+## `bbox` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `bbox=(string)`| (changed)| `"a string"` |
@@ -1123,7 +1098,7 @@
 | `bbox=(null)`| (initial)| `<null>` |
 | `bbox=(undefined)`| (initial)| `<null>` |
 
-## `begin` (on `<svg>`)
+## `begin` (on `<animate>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `begin=(string)`| (changed)| `"a string"` |
@@ -1148,7 +1123,7 @@
 | `begin=(null)`| (initial)| `<null>` |
 | `begin=(undefined)`| (initial)| `<null>` |
 
-## `bias` (on `<svg>`)
+## `bias` (on `<feConvolveMatrix>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `bias=(string)`| (initial)| `<number: 0>` |
@@ -1173,7 +1148,7 @@
 | `bias=(null)`| (initial)| `<number: 0>` |
 | `bias=(undefined)`| (initial)| `<number: 0>` |
 
-## `by` (on `<svg>`)
+## `by` (on `<animate>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `by=(string)`| (changed)| `"a string"` |
@@ -1198,7 +1173,7 @@
 | `by=(null)`| (initial)| `<null>` |
 | `by=(undefined)`| (initial)| `<null>` |
 
-## `calcMode` (on `<svg>`)
+## `calcMode` (on `<animate>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `calcMode=(string)`| (changed)| `"discrete"` |
@@ -1223,7 +1198,7 @@
 | `calcMode=(null)`| (initial)| `<null>` |
 | `calcMode=(undefined)`| (initial)| `<null>` |
 
-## `cap-height` (on `<svg>`)
+## `cap-height` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `cap-height=(string)`| (changed, warning)| `"a string"` |
@@ -1248,7 +1223,7 @@
 | `cap-height=(null)`| (initial, warning)| `<null>` |
 | `cap-height=(undefined)`| (initial, warning)| `<null>` |
 
-## `capHeight` (on `<svg>`)
+## `capHeight` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `capHeight=(string)`| (changed)| `"a string"` |
@@ -1268,37 +1243,37 @@
 | `capHeight=(string 'false')`| (changed)| `"false"` |
 | `capHeight=(string 'on')`| (changed)| `"on"` |
 | `capHeight=(string 'off')`| (changed)| `"off"` |
-| `capHeight=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `capHeight=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `capHeight=(symbol)`| (initial, warning)| `<null>` |
+| `capHeight=(function)`| (initial, warning)| `<null>` |
 | `capHeight=(null)`| (initial)| `<null>` |
 | `capHeight=(undefined)`| (initial)| `<null>` |
 
-## `capture` (on `<div>`)
+## `capture` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `capture=(string)`| (changed)| `<empty string>` |
-| `capture=(empty string)`| (initial)| `<null>` |
-| `capture=(array with string)`| (changed)| `<empty string>` |
+| `capture=(string)`| (changed)| `"environment"` |
+| `capture=(empty string)`| (changed)| `<empty string>` |
+| `capture=(array with string)`| (changed)| `"environment"` |
 | `capture=(empty array)`| (changed)| `<empty string>` |
-| `capture=(object)`| (changed)| `<empty string>` |
-| `capture=(numeric string)`| (changed)| `<empty string>` |
-| `capture=(-1)`| (changed)| `<empty string>` |
-| `capture=(0)`| (initial)| `<null>` |
-| `capture=(integer)`| (changed)| `<empty string>` |
-| `capture=(NaN)`| (initial, warning)| `<null>` |
-| `capture=(float)`| (changed)| `<empty string>` |
+| `capture=(object)`| (changed)| `"result of toString()"` |
+| `capture=(numeric string)`| (changed)| `"42"` |
+| `capture=(-1)`| (changed)| `"-1"` |
+| `capture=(0)`| (changed)| `"0"` |
+| `capture=(integer)`| (changed)| `"1"` |
+| `capture=(NaN)`| (changed, warning)| `"NaN"` |
+| `capture=(float)`| (changed)| `"99.99"` |
 | `capture=(true)`| (changed)| `<empty string>` |
 | `capture=(false)`| (initial)| `<null>` |
-| `capture=(string 'true')`| (changed)| `<empty string>` |
-| `capture=(string 'false')`| (changed)| `<empty string>` |
-| `capture=(string 'on')`| (changed)| `<empty string>` |
-| `capture=(string 'off')`| (changed)| `<empty string>` |
-| `capture=(symbol)`| (initial, warning, ssr mismatch)| `<null>` |
-| `capture=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `capture=(string 'true')`| (changed)| `"true"` |
+| `capture=(string 'false')`| (changed)| `"false"` |
+| `capture=(string 'on')`| (changed)| `"on"` |
+| `capture=(string 'off')`| (changed)| `"off"` |
+| `capture=(symbol)`| (initial, warning)| `<null>` |
+| `capture=(function)`| (initial, warning)| `<null>` |
 | `capture=(null)`| (initial)| `<null>` |
 | `capture=(undefined)`| (initial)| `<null>` |
 
-## `cellPadding` (on `<div>`)
+## `cellPadding` (on `<table>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `cellPadding=(string)`| (changed)| `"a string"` |
@@ -1323,7 +1298,7 @@
 | `cellPadding=(null)`| (initial)| `<empty string>` |
 | `cellPadding=(undefined)`| (initial)| `<empty string>` |
 
-## `cellSpacing` (on `<div>`)
+## `cellSpacing` (on `<table>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `cellSpacing=(string)`| (changed)| `"a string"` |
@@ -1348,7 +1323,7 @@
 | `cellSpacing=(null)`| (initial)| `<empty string>` |
 | `cellSpacing=(undefined)`| (initial)| `<empty string>` |
 
-## `challenge` (on `<div>`)
+## `challenge` (on `<keygen>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `challenge=(string)`| (changed, warning, ssr warning)| `"a string"` |
@@ -1373,7 +1348,7 @@
 | `challenge=(null)`| (initial, warning, ssr warning)| `<null>` |
 | `challenge=(undefined)`| (initial, warning, ssr warning)| `<null>` |
 
-## `charSet` (on `<div>`)
+## `charSet` (on `<script>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `charSet=(string)`| (changed)| `"a string"` |
@@ -1398,7 +1373,7 @@
 | `charSet=(null)`| (initial)| `<empty string>` |
 | `charSet=(undefined)`| (initial)| `<empty string>` |
 
-## `checked` (on `<div>`)
+## `checked` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `checked=(string)`| (changed)| `<boolean: true>` |
@@ -1414,41 +1389,41 @@
 | `checked=(float)`| (changed)| `<boolean: true>` |
 | `checked=(true)`| (changed)| `<boolean: true>` |
 | `checked=(false)`| (initial)| `<boolean: false>` |
-| `checked=(string 'true')`| (changed)| `<boolean: true>` |
-| `checked=(string 'false')`| (changed)| `<boolean: true>` |
+| `checked=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `checked=(string 'false')`| (changed, warning)| `<boolean: true>` |
 | `checked=(string 'on')`| (changed)| `<boolean: true>` |
 | `checked=(string 'off')`| (changed)| `<boolean: true>` |
-| `checked=(symbol)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
-| `checked=(function)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
+| `checked=(symbol)`| (initial, warning)| `<boolean: false>` |
+| `checked=(function)`| (initial, warning)| `<boolean: false>` |
 | `checked=(null)`| (initial)| `<boolean: false>` |
 | `checked=(undefined)`| (initial)| `<boolean: false>` |
 
-## `Checked` (on `<div>`)
+## `Checked` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `Checked=(string)`| (changed, warning, ssr mismatch)| `<empty string>` |
-| `Checked=(empty string)`| (changed, warning)| `<empty string>` |
-| `Checked=(array with string)`| (changed, warning, ssr mismatch)| `<empty string>` |
-| `Checked=(empty array)`| (changed, warning)| `<empty string>` |
-| `Checked=(object)`| (changed, warning, ssr mismatch)| `<empty string>` |
-| `Checked=(numeric string)`| (changed, warning, ssr mismatch)| `<empty string>` |
-| `Checked=(-1)`| (changed, warning, ssr mismatch)| `<empty string>` |
-| `Checked=(0)`| (changed, warning, ssr mismatch)| `<empty string>` |
-| `Checked=(integer)`| (changed, warning, ssr mismatch)| `<empty string>` |
-| `Checked=(NaN)`| (changed, warning, ssr mismatch)| `<empty string>` |
-| `Checked=(float)`| (changed, warning, ssr mismatch)| `<empty string>` |
+| `Checked=(string)`| (initial, warning, ssr mismatch)| `<null>` |
+| `Checked=(empty string)`| (initial, warning, ssr mismatch)| `<null>` |
+| `Checked=(array with string)`| (initial, warning, ssr mismatch)| `<null>` |
+| `Checked=(empty array)`| (initial, warning, ssr mismatch)| `<null>` |
+| `Checked=(object)`| (initial, warning, ssr mismatch)| `<null>` |
+| `Checked=(numeric string)`| (initial, warning, ssr mismatch)| `<null>` |
+| `Checked=(-1)`| (initial, warning, ssr mismatch)| `<null>` |
+| `Checked=(0)`| (initial, warning, ssr mismatch)| `<null>` |
+| `Checked=(integer)`| (initial, warning, ssr mismatch)| `<null>` |
+| `Checked=(NaN)`| (initial, warning, ssr mismatch)| `<null>` |
+| `Checked=(float)`| (initial, warning, ssr mismatch)| `<null>` |
 | `Checked=(true)`| (initial, warning)| `<null>` |
 | `Checked=(false)`| (initial, warning)| `<null>` |
-| `Checked=(string 'true')`| (changed, warning, ssr mismatch)| `<empty string>` |
-| `Checked=(string 'false')`| (changed, warning, ssr mismatch)| `<empty string>` |
-| `Checked=(string 'on')`| (changed, warning, ssr mismatch)| `<empty string>` |
-| `Checked=(string 'off')`| (changed, warning, ssr mismatch)| `<empty string>` |
+| `Checked=(string 'true')`| (initial, warning, ssr mismatch)| `<null>` |
+| `Checked=(string 'false')`| (initial, warning, ssr mismatch)| `<null>` |
+| `Checked=(string 'on')`| (initial, warning, ssr mismatch)| `<null>` |
+| `Checked=(string 'off')`| (initial, warning, ssr mismatch)| `<null>` |
 | `Checked=(symbol)`| (initial, warning)| `<null>` |
 | `Checked=(function)`| (initial, warning)| `<null>` |
 | `Checked=(null)`| (initial, warning)| `<null>` |
 | `Checked=(undefined)`| (initial, warning)| `<null>` |
 
-## `Children` (on `<div>`)
+## `Children` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `Children=(string)`| (changed, warning)| `"a string"` |
@@ -1473,7 +1448,7 @@
 | `Children=(null)`| (initial, warning)| `<null>` |
 | `Children=(undefined)`| (initial, warning)| `<null>` |
 
-## `children` (on `<div>`)
+## `children` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `children=(string)`| (initial)| `[]` |
@@ -1498,7 +1473,7 @@
 | `children=(null)`| (initial)| `[]` |
 | `children=(undefined)`| (initial)| `[]` |
 
-## `cite` (on `<div>`)
+## `cite` (on `<blockquote>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `cite=(string)`| (changed)| `"http://reactjs.com/"` |
@@ -1523,7 +1498,7 @@
 | `cite=(null)`| (initial)| `<empty string>` |
 | `cite=(undefined)`| (initial)| `<empty string>` |
 
-## `class` (on `<div>`)
+## `class` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `class=(string)`| (changed, warning)| `"a string"` |
@@ -1548,7 +1523,7 @@
 | `class=(null)`| (initial, warning)| `<null>` |
 | `class=(undefined)`| (initial, warning)| `<null>` |
 
-## `classID` (on `<div>`)
+## `classID` (on `<object>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `classID=(string)`| (changed)| `"a string"` |
@@ -1573,7 +1548,7 @@
 | `classID=(null)`| (initial)| `<null>` |
 | `classID=(undefined)`| (initial)| `<null>` |
 
-## `className` (on `<div>`)
+## `className` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `className=(string)`| (changed)| `"a string"` |
@@ -1593,12 +1568,12 @@
 | `className=(string 'false')`| (changed)| `"false"` |
 | `className=(string 'on')`| (changed)| `"on"` |
 | `className=(string 'off')`| (changed)| `"off"` |
-| `className=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<empty string>` |
-| `className=(function)`| (initial, warning, ssr mismatch)| `<empty string>` |
+| `className=(symbol)`| (initial, warning)| `<empty string>` |
+| `className=(function)`| (initial, warning)| `<empty string>` |
 | `className=(null)`| (initial)| `<empty string>` |
 | `className=(undefined)`| (initial)| `<empty string>` |
 
-## `clip` (on `<div>`)
+## `clip` (on `<svg>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `clip=(string)`| (changed)| `"a string"` |
@@ -1623,7 +1598,7 @@
 | `clip=(null)`| (initial)| `<null>` |
 | `clip=(undefined)`| (initial)| `<null>` |
 
-## `clip-path` (on `<svg>`)
+## `clip-path` (on `<path>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `clip-path=(string)`| (changed, warning)| `"a string"` |
@@ -1648,7 +1623,7 @@
 | `clip-path=(null)`| (initial, warning)| `<null>` |
 | `clip-path=(undefined)`| (initial, warning)| `<null>` |
 
-## `clipPath` (on `<svg>`)
+## `clipPath` (on `<path>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `clipPath=(string)`| (changed)| `"a string"` |
@@ -1668,12 +1643,12 @@
 | `clipPath=(string 'false')`| (changed)| `"false"` |
 | `clipPath=(string 'on')`| (changed)| `"on"` |
 | `clipPath=(string 'off')`| (changed)| `"off"` |
-| `clipPath=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `clipPath=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `clipPath=(symbol)`| (initial, warning)| `<null>` |
+| `clipPath=(function)`| (initial, warning)| `<null>` |
 | `clipPath=(null)`| (initial)| `<null>` |
 | `clipPath=(undefined)`| (initial)| `<null>` |
 
-## `clipPathUnits` (on `<svg>`)
+## `clipPathUnits` (on `<clipPath>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `clipPathUnits=(string)`| (changed)| `<number: 2>` |
@@ -1698,7 +1673,7 @@
 | `clipPathUnits=(null)`| (initial)| `<number: 1>` |
 | `clipPathUnits=(undefined)`| (initial)| `<number: 1>` |
 
-## `clip-rule` (on `<svg>`)
+## `clip-rule` (on `<path>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `clip-rule=(string)`| (changed, warning)| `"a string"` |
@@ -1723,7 +1698,7 @@
 | `clip-rule=(null)`| (initial, warning)| `<null>` |
 | `clip-rule=(undefined)`| (initial, warning)| `<null>` |
 
-## `clipRule` (on `<svg>`)
+## `clipRule` (on `<path>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `clipRule=(string)`| (changed)| `"a string"` |
@@ -1743,12 +1718,12 @@
 | `clipRule=(string 'false')`| (changed)| `"false"` |
 | `clipRule=(string 'on')`| (changed)| `"on"` |
 | `clipRule=(string 'off')`| (changed)| `"off"` |
-| `clipRule=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `clipRule=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `clipRule=(symbol)`| (initial, warning)| `<null>` |
+| `clipRule=(function)`| (initial, warning)| `<null>` |
 | `clipRule=(null)`| (initial)| `<null>` |
 | `clipRule=(undefined)`| (initial)| `<null>` |
 
-## `color` (on `<svg>`)
+## `color` (on `<text>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `color=(string)`| (changed)| `"a string"` |
@@ -1773,7 +1748,7 @@
 | `color=(null)`| (initial)| `<null>` |
 | `color=(undefined)`| (initial)| `<null>` |
 
-## `color-interpolation` (on `<svg>`)
+## `color-interpolation` (on `<animate>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `color-interpolation=(string)`| (changed, warning)| `"sRGB"` |
@@ -1798,7 +1773,7 @@
 | `color-interpolation=(null)`| (initial, warning)| `<null>` |
 | `color-interpolation=(undefined)`| (initial, warning)| `<null>` |
 
-## `colorInterpolation` (on `<svg>`)
+## `colorInterpolation` (on `<animate>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `colorInterpolation=(string)`| (changed)| `"sRGB"` |
@@ -1818,12 +1793,12 @@
 | `colorInterpolation=(string 'false')`| (changed)| `"false"` |
 | `colorInterpolation=(string 'on')`| (changed)| `"on"` |
 | `colorInterpolation=(string 'off')`| (changed)| `"off"` |
-| `colorInterpolation=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `colorInterpolation=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `colorInterpolation=(symbol)`| (initial, warning)| `<null>` |
+| `colorInterpolation=(function)`| (initial, warning)| `<null>` |
 | `colorInterpolation=(null)`| (initial)| `<null>` |
 | `colorInterpolation=(undefined)`| (initial)| `<null>` |
 
-## `color-interpolation-filters` (on `<svg>`)
+## `color-interpolation-filters` (on `<feComposite>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `color-interpolation-filters=(string)`| (changed, warning)| `"sRGB"` |
@@ -1848,7 +1823,7 @@
 | `color-interpolation-filters=(null)`| (initial, warning)| `<null>` |
 | `color-interpolation-filters=(undefined)`| (initial, warning)| `<null>` |
 
-## `colorInterpolationFilters` (on `<svg>`)
+## `colorInterpolationFilters` (on `<feComposite>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `colorInterpolationFilters=(string)`| (changed)| `"sRGB"` |
@@ -1868,12 +1843,12 @@
 | `colorInterpolationFilters=(string 'false')`| (changed)| `"false"` |
 | `colorInterpolationFilters=(string 'on')`| (changed)| `"on"` |
 | `colorInterpolationFilters=(string 'off')`| (changed)| `"off"` |
-| `colorInterpolationFilters=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `colorInterpolationFilters=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `colorInterpolationFilters=(symbol)`| (initial, warning)| `<null>` |
+| `colorInterpolationFilters=(function)`| (initial, warning)| `<null>` |
 | `colorInterpolationFilters=(null)`| (initial)| `<null>` |
 | `colorInterpolationFilters=(undefined)`| (initial)| `<null>` |
 
-## `color-profile` (on `<svg>`)
+## `color-profile` (on `<image>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `color-profile=(string)`| (changed, warning)| `"sRGB"` |
@@ -1898,7 +1873,7 @@
 | `color-profile=(null)`| (initial, warning)| `<null>` |
 | `color-profile=(undefined)`| (initial, warning)| `<null>` |
 
-## `colorProfile` (on `<svg>`)
+## `colorProfile` (on `<image>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `colorProfile=(string)`| (changed)| `"sRGB"` |
@@ -1918,12 +1893,12 @@
 | `colorProfile=(string 'false')`| (changed)| `"false"` |
 | `colorProfile=(string 'on')`| (changed)| `"on"` |
 | `colorProfile=(string 'off')`| (changed)| `"off"` |
-| `colorProfile=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `colorProfile=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `colorProfile=(symbol)`| (initial, warning)| `<null>` |
+| `colorProfile=(function)`| (initial, warning)| `<null>` |
 | `colorProfile=(null)`| (initial)| `<null>` |
 | `colorProfile=(undefined)`| (initial)| `<null>` |
 
-## `color-rendering` (on `<svg>`)
+## `color-rendering` (on `<animate>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `color-rendering=(string)`| (changed, warning)| `"optimizeSpeed"` |
@@ -1948,7 +1923,7 @@
 | `color-rendering=(null)`| (initial, warning)| `<null>` |
 | `color-rendering=(undefined)`| (initial, warning)| `<null>` |
 
-## `colorRendering` (on `<svg>`)
+## `colorRendering` (on `<animate>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `colorRendering=(string)`| (changed)| `"optimizeSpeed"` |
@@ -1968,12 +1943,12 @@
 | `colorRendering=(string 'false')`| (changed)| `"false"` |
 | `colorRendering=(string 'on')`| (changed)| `"on"` |
 | `colorRendering=(string 'off')`| (changed)| `"off"` |
-| `colorRendering=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `colorRendering=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `colorRendering=(symbol)`| (initial, warning)| `<null>` |
+| `colorRendering=(function)`| (initial, warning)| `<null>` |
 | `colorRendering=(null)`| (initial)| `<null>` |
 | `colorRendering=(undefined)`| (initial)| `<null>` |
 
-## `cols` (on `<div>`)
+## `cols` (on `<textarea>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `cols=(string)`| (initial)| `<number: 20>` |
@@ -1993,12 +1968,12 @@
 | `cols=(string 'false')`| (initial)| `<number: 20>` |
 | `cols=(string 'on')`| (initial)| `<number: 20>` |
 | `cols=(string 'off')`| (initial)| `<number: 20>` |
-| `cols=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<number: 20>` |
+| `cols=(symbol)`| (initial, warning)| `<number: 20>` |
 | `cols=(function)`| (initial, warning)| `<number: 20>` |
 | `cols=(null)`| (initial)| `<number: 20>` |
 | `cols=(undefined)`| (initial)| `<number: 20>` |
 
-## `colSpan` (on `<tr>`)
+## `colSpan` (on `<td>` inside `<tr>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `colSpan=(string)`| (initial, ssr error, ssr mismatch)| `<number: 1>` |
@@ -2023,7 +1998,7 @@
 | `colSpan=(null)`| (initial, ssr error, ssr mismatch)| `<number: 1>` |
 | `colSpan=(undefined)`| (initial, ssr error, ssr mismatch)| `<number: 1>` |
 
-## `content` (on `<div>`)
+## `content` (on `<meta>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `content=(string)`| (changed)| `"a string"` |
@@ -2048,7 +2023,7 @@
 | `content=(null)`| (initial)| `<empty string>` |
 | `content=(undefined)`| (initial)| `<empty string>` |
 
-## `contentEditable` (on `<div>`)
+## `contentEditable` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `contentEditable=(string)`| (initial)| `"inherit"` |
@@ -2068,12 +2043,12 @@
 | `contentEditable=(string 'false')`| (changed)| `"false"` |
 | `contentEditable=(string 'on')`| (initial)| `"inherit"` |
 | `contentEditable=(string 'off')`| (initial)| `"inherit"` |
-| `contentEditable=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `"inherit"` |
+| `contentEditable=(symbol)`| (initial, warning)| `"inherit"` |
 | `contentEditable=(function)`| (initial, warning)| `"inherit"` |
 | `contentEditable=(null)`| (initial)| `"inherit"` |
 | `contentEditable=(undefined)`| (initial)| `"inherit"` |
 
-## `contentScriptType` (on `<div>`)
+## `contentScriptType` (on `<svg>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `contentScriptType=(string)`| (changed, ssr mismatch)| `"a string"` |
@@ -2098,7 +2073,7 @@
 | `contentScriptType=(null)`| (initial)| `<null>` |
 | `contentScriptType=(undefined)`| (initial)| `<null>` |
 
-## `contentStyleType` (on `<div>`)
+## `contentStyleType` (on `<svg>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `contentStyleType=(string)`| (changed, ssr mismatch)| `"a string"` |
@@ -2123,7 +2098,7 @@
 | `contentStyleType=(null)`| (initial)| `<null>` |
 | `contentStyleType=(undefined)`| (initial)| `<null>` |
 
-## `contextMenu` (on `<div>`)
+## `contextMenu` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `contextMenu=(string)`| (changed)| `"a string"` |
@@ -2148,7 +2123,7 @@
 | `contextMenu=(null)`| (initial)| `<null>` |
 | `contextMenu=(undefined)`| (initial)| `<null>` |
 
-## `controls` (on `<div>`)
+## `controls` (on `<video>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `controls=(string)`| (changed)| `<boolean: true>` |
@@ -2164,16 +2139,16 @@
 | `controls=(float)`| (changed)| `<boolean: true>` |
 | `controls=(true)`| (changed)| `<boolean: true>` |
 | `controls=(false)`| (initial)| `<boolean: false>` |
-| `controls=(string 'true')`| (changed)| `<boolean: true>` |
-| `controls=(string 'false')`| (changed)| `<boolean: true>` |
+| `controls=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `controls=(string 'false')`| (changed, warning)| `<boolean: true>` |
 | `controls=(string 'on')`| (changed)| `<boolean: true>` |
 | `controls=(string 'off')`| (changed)| `<boolean: true>` |
-| `controls=(symbol)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
-| `controls=(function)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
+| `controls=(symbol)`| (initial, warning)| `<boolean: false>` |
+| `controls=(function)`| (initial, warning)| `<boolean: false>` |
 | `controls=(null)`| (initial)| `<boolean: false>` |
 | `controls=(undefined)`| (initial)| `<boolean: false>` |
 
-## `coords` (on `<div>`)
+## `coords` (on `<a>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `coords=(string)`| (changed)| `"a string"` |
@@ -2198,7 +2173,7 @@
 | `coords=(null)`| (initial)| `<empty string>` |
 | `coords=(undefined)`| (initial)| `<empty string>` |
 
-## `crossOrigin` (on `<div>`)
+## `crossOrigin` (on `<script>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `crossOrigin=(string)`| (changed)| `"anonymous"` |
@@ -2223,7 +2198,7 @@
 | `crossOrigin=(null)`| (initial)| `<null>` |
 | `crossOrigin=(undefined)`| (initial)| `<null>` |
 
-## `cursor` (on `<div>`)
+## `cursor` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `cursor=(string)`| (changed)| `"a string"` |
@@ -2248,7 +2223,7 @@
 | `cursor=(null)`| (initial)| `<null>` |
 | `cursor=(undefined)`| (initial)| `<null>` |
 
-## `cx` (on `<svg>`)
+## `cx` (on `<circle>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `cx=(string)`| (changed)| `<SVGLength: 10px>` |
@@ -2273,7 +2248,7 @@
 | `cx=(null)`| (initial)| `<SVGLength: 0>` |
 | `cx=(undefined)`| (initial)| `<SVGLength: 0>` |
 
-## `cy` (on `<svg>`)
+## `cy` (on `<circle>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `cy=(string)`| (changed)| `<SVGLength: 10%>` |
@@ -2298,7 +2273,7 @@
 | `cy=(null)`| (initial)| `<SVGLength: 0>` |
 | `cy=(undefined)`| (initial)| `<SVGLength: 0>` |
 
-## `d` (on `<svg>`)
+## `d` (on `<path>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `d=(string)`| (changed)| `"a string"` |
@@ -2323,7 +2298,7 @@
 | `d=(null)`| (initial)| `<null>` |
 | `d=(undefined)`| (initial)| `<null>` |
 
-## `dangerouslySetInnerHTML` (on `<div>`)
+## `dangerouslySetInnerHTML` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `dangerouslySetInnerHTML=(string)`| (changed, error, warning, ssr error)| `` |
@@ -2348,7 +2323,7 @@
 | `dangerouslySetInnerHTML=(null)`| (initial)| `<null>` |
 | `dangerouslySetInnerHTML=(undefined)`| (initial)| `<null>` |
 
-## `DangerouslySetInnerHTML` (on `<div>`)
+## `DangerouslySetInnerHTML` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `DangerouslySetInnerHTML=(string)`| (changed, warning)| `"a string"` |
@@ -2373,7 +2348,7 @@
 | `DangerouslySetInnerHTML=(null)`| (initial, warning)| `<null>` |
 | `DangerouslySetInnerHTML=(undefined)`| (initial, warning)| `<null>` |
 
-## `data` (on `<div>`)
+## `data` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `data=(string)`| (changed)| `"a string"` |
@@ -2398,7 +2373,7 @@
 | `data=(null)`| (initial)| `<null>` |
 | `data=(undefined)`| (initial)| `<null>` |
 
-## `data-` (on `<div>`)
+## `data-` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `data-=(string)`| (changed)| `"a string"` |
@@ -2423,7 +2398,7 @@
 | `data-=(null)`| (initial)| `<null>` |
 | `data-=(undefined)`| (initial)| `<null>` |
 
-## `data-unknownattribute` (on `<div>`)
+## `data-unknownattribute` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `data-unknownattribute=(string)`| (changed)| `"a string"` |
@@ -2448,7 +2423,7 @@
 | `data-unknownattribute=(null)`| (initial)| `<null>` |
 | `data-unknownattribute=(undefined)`| (initial)| `<null>` |
 
-## `datatype` (on `<div>`)
+## `datatype` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `datatype=(string)`| (changed)| `"a string"` |
@@ -2473,7 +2448,7 @@
 | `datatype=(null)`| (initial)| `<null>` |
 | `datatype=(undefined)`| (initial)| `<null>` |
 
-## `dateTime` (on `<div>`)
+## `dateTime` (on `<time>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `dateTime=(string)`| (changed)| `"2001-05-15T19:00"` |
@@ -2498,7 +2473,7 @@
 | `dateTime=(null)`| (initial)| `<null>` |
 | `dateTime=(undefined)`| (initial)| `<null>` |
 
-## `decelerate` (on `<svg>`)
+## `decelerate` (on `<animate>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `decelerate=(string)`| (changed)| `"a string"` |
@@ -2523,7 +2498,7 @@
 | `decelerate=(null)`| (initial)| `<null>` |
 | `decelerate=(undefined)`| (initial)| `<null>` |
 
-## `default` (on `<div>`)
+## `default` (on `<track>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `default=(string)`| (changed)| `<boolean: true>` |
@@ -2539,16 +2514,16 @@
 | `default=(float)`| (changed)| `<boolean: true>` |
 | `default=(true)`| (changed)| `<boolean: true>` |
 | `default=(false)`| (initial)| `<boolean: false>` |
-| `default=(string 'true')`| (changed)| `<boolean: true>` |
-| `default=(string 'false')`| (changed)| `<boolean: true>` |
+| `default=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `default=(string 'false')`| (changed, warning)| `<boolean: true>` |
 | `default=(string 'on')`| (changed)| `<boolean: true>` |
 | `default=(string 'off')`| (changed)| `<boolean: true>` |
-| `default=(symbol)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
-| `default=(function)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
+| `default=(symbol)`| (initial, warning)| `<boolean: false>` |
+| `default=(function)`| (initial, warning)| `<boolean: false>` |
 | `default=(null)`| (initial)| `<boolean: false>` |
 | `default=(undefined)`| (initial)| `<boolean: false>` |
 
-## `defaultchecked` (on `<div>`)
+## `defaultchecked` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `defaultchecked=(string)`| (changed, warning)| `"a string"` |
@@ -2573,32 +2548,32 @@
 | `defaultchecked=(null)`| (initial, warning)| `<null>` |
 | `defaultchecked=(undefined)`| (initial, warning)| `<null>` |
 
-## `defaultChecked` (on `<div>`)
+## `defaultChecked` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `defaultChecked=(string)`| (initial, ssr mismatch)| `<boolean: false>` |
+| `defaultChecked=(string)`| (changed)| `<boolean: true>` |
 | `defaultChecked=(empty string)`| (initial)| `<boolean: false>` |
-| `defaultChecked=(array with string)`| (initial, ssr mismatch)| `<boolean: false>` |
-| `defaultChecked=(empty array)`| (initial, ssr mismatch)| `<boolean: false>` |
-| `defaultChecked=(object)`| (initial, ssr mismatch)| `<boolean: false>` |
-| `defaultChecked=(numeric string)`| (initial, ssr mismatch)| `<boolean: false>` |
-| `defaultChecked=(-1)`| (initial, ssr mismatch)| `<boolean: false>` |
+| `defaultChecked=(array with string)`| (changed)| `<boolean: true>` |
+| `defaultChecked=(empty array)`| (changed)| `<boolean: true>` |
+| `defaultChecked=(object)`| (changed)| `<boolean: true>` |
+| `defaultChecked=(numeric string)`| (changed)| `<boolean: true>` |
+| `defaultChecked=(-1)`| (changed)| `<boolean: true>` |
 | `defaultChecked=(0)`| (initial)| `<boolean: false>` |
-| `defaultChecked=(integer)`| (initial, ssr mismatch)| `<boolean: false>` |
+| `defaultChecked=(integer)`| (changed)| `<boolean: true>` |
 | `defaultChecked=(NaN)`| (initial, warning, ssr warning)| `<boolean: false>` |
-| `defaultChecked=(float)`| (initial, ssr mismatch)| `<boolean: false>` |
-| `defaultChecked=(true)`| (initial, ssr mismatch)| `<boolean: false>` |
+| `defaultChecked=(float)`| (changed)| `<boolean: true>` |
+| `defaultChecked=(true)`| (changed)| `<boolean: true>` |
 | `defaultChecked=(false)`| (initial)| `<boolean: false>` |
-| `defaultChecked=(string 'true')`| (initial, ssr mismatch)| `<boolean: false>` |
-| `defaultChecked=(string 'false')`| (initial, ssr mismatch)| `<boolean: false>` |
-| `defaultChecked=(string 'on')`| (initial, ssr mismatch)| `<boolean: false>` |
-| `defaultChecked=(string 'off')`| (initial, ssr mismatch)| `<boolean: false>` |
-| `defaultChecked=(symbol)`| (initial, ssr mismatch)| `<boolean: false>` |
-| `defaultChecked=(function)`| (initial, ssr mismatch)| `<boolean: false>` |
+| `defaultChecked=(string 'true')`| (changed)| `<boolean: true>` |
+| `defaultChecked=(string 'false')`| (changed)| `<boolean: true>` |
+| `defaultChecked=(string 'on')`| (changed)| `<boolean: true>` |
+| `defaultChecked=(string 'off')`| (changed)| `<boolean: true>` |
+| `defaultChecked=(symbol)`| (changed, ssr mismatch)| `<boolean: true>` |
+| `defaultChecked=(function)`| (changed, ssr mismatch)| `<boolean: true>` |
 | `defaultChecked=(null)`| (initial)| `<boolean: false>` |
 | `defaultChecked=(undefined)`| (initial)| `<boolean: false>` |
 
-## `defaultValue` (on `<div>`)
+## `defaultValue` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `defaultValue=(string)`| (changed)| `"a string"` |
@@ -2618,12 +2593,12 @@
 | `defaultValue=(string 'false')`| (changed)| `"false"` |
 | `defaultValue=(string 'on')`| (changed)| `"on"` |
 | `defaultValue=(string 'off')`| (changed)| `"off"` |
-| `defaultValue=(symbol)`| (initial, ssr error, ssr mismatch)| `<empty string>` |
-| `defaultValue=(function)`| (initial, ssr mismatch)| `<empty string>` |
+| `defaultValue=(symbol)`| (initial, ssr warning)| `<empty string>` |
+| `defaultValue=(function)`| (initial, ssr warning)| `<empty string>` |
 | `defaultValue=(null)`| (initial, ssr warning)| `<empty string>` |
 | `defaultValue=(undefined)`| (initial)| `<empty string>` |
 
-## `defaultValuE` (on `<div>`)
+## `defaultValuE` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `defaultValuE=(string)`| (changed, warning)| `"a string"` |
@@ -2648,7 +2623,7 @@
 | `defaultValuE=(null)`| (initial, warning)| `<null>` |
 | `defaultValuE=(undefined)`| (initial, warning)| `<null>` |
 
-## `defer` (on `<div>`)
+## `defer` (on `<script>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `defer=(string)`| (changed)| `<boolean: true>` |
@@ -2664,16 +2639,16 @@
 | `defer=(float)`| (changed)| `<boolean: true>` |
 | `defer=(true)`| (changed)| `<boolean: true>` |
 | `defer=(false)`| (initial)| `<boolean: false>` |
-| `defer=(string 'true')`| (changed)| `<boolean: true>` |
-| `defer=(string 'false')`| (changed)| `<boolean: true>` |
+| `defer=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `defer=(string 'false')`| (changed, warning)| `<boolean: true>` |
 | `defer=(string 'on')`| (changed)| `<boolean: true>` |
 | `defer=(string 'off')`| (changed)| `<boolean: true>` |
-| `defer=(symbol)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
-| `defer=(function)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
+| `defer=(symbol)`| (initial, warning)| `<boolean: false>` |
+| `defer=(function)`| (initial, warning)| `<boolean: false>` |
 | `defer=(null)`| (initial)| `<boolean: false>` |
 | `defer=(undefined)`| (initial)| `<boolean: false>` |
 
-## `descent` (on `<svg>`)
+## `descent` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `descent=(string)`| (changed)| `"a string"` |
@@ -2698,7 +2673,7 @@
 | `descent=(null)`| (initial)| `<null>` |
 | `descent=(undefined)`| (initial)| `<null>` |
 
-## `diffuseConstant` (on `<svg>`)
+## `diffuseConstant` (on `<feDiffuseLighting>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `diffuseConstant=(string)`| (changed)| `<number: 0>` |
@@ -2723,7 +2698,7 @@
 | `diffuseConstant=(null)`| (initial)| `<number: 1>` |
 | `diffuseConstant=(undefined)`| (initial)| `<number: 1>` |
 
-## `dir` (on `<div>`)
+## `dir` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `dir=(string)`| (changed)| `"rtl"` |
@@ -2748,7 +2723,7 @@
 | `dir=(null)`| (initial)| `<empty string>` |
 | `dir=(undefined)`| (initial)| `<empty string>` |
 
-## `direction` (on `<svg>`)
+## `direction` (on `<text>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `direction=(string)`| (changed)| `"rtl"` |
@@ -2773,7 +2748,7 @@
 | `direction=(null)`| (initial)| `<null>` |
 | `direction=(undefined)`| (initial)| `<null>` |
 
-## `disabled` (on `<div>`)
+## `disabled` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `disabled=(string)`| (changed)| `<boolean: true>` |
@@ -2789,16 +2764,16 @@
 | `disabled=(float)`| (changed)| `<boolean: true>` |
 | `disabled=(true)`| (changed)| `<boolean: true>` |
 | `disabled=(false)`| (initial)| `<boolean: false>` |
-| `disabled=(string 'true')`| (changed)| `<boolean: true>` |
-| `disabled=(string 'false')`| (changed)| `<boolean: true>` |
+| `disabled=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `disabled=(string 'false')`| (changed, warning)| `<boolean: true>` |
 | `disabled=(string 'on')`| (changed)| `<boolean: true>` |
 | `disabled=(string 'off')`| (changed)| `<boolean: true>` |
-| `disabled=(symbol)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
-| `disabled=(function)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
+| `disabled=(symbol)`| (initial, warning)| `<boolean: false>` |
+| `disabled=(function)`| (initial, warning)| `<boolean: false>` |
 | `disabled=(null)`| (initial)| `<boolean: false>` |
 | `disabled=(undefined)`| (initial)| `<boolean: false>` |
 
-## `display` (on `<div>`)
+## `display` (on `<svg>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `display=(string)`| (changed)| `"list-item"` |
@@ -2823,7 +2798,7 @@
 | `display=(null)`| (initial)| `<null>` |
 | `display=(undefined)`| (initial)| `<null>` |
 
-## `divisor` (on `<svg>`)
+## `divisor` (on `<feConvolveMatrix>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `divisor=(string)`| (initial)| `<number: 0>` |
@@ -2848,7 +2823,7 @@
 | `divisor=(null)`| (initial)| `<number: 0>` |
 | `divisor=(undefined)`| (initial)| `<number: 0>` |
 
-## `dominant-baseline` (on `<svg>`)
+## `dominant-baseline` (on `<text>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `dominant-baseline=(string)`| (changed, warning)| `"a string"` |
@@ -2873,7 +2848,7 @@
 | `dominant-baseline=(null)`| (initial, warning)| `<null>` |
 | `dominant-baseline=(undefined)`| (initial, warning)| `<null>` |
 
-## `dominantBaseline` (on `<svg>`)
+## `dominantBaseline` (on `<text>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `dominantBaseline=(string)`| (changed)| `"a string"` |
@@ -2893,12 +2868,12 @@
 | `dominantBaseline=(string 'false')`| (changed)| `"false"` |
 | `dominantBaseline=(string 'on')`| (changed)| `"on"` |
 | `dominantBaseline=(string 'off')`| (changed)| `"off"` |
-| `dominantBaseline=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `dominantBaseline=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `dominantBaseline=(symbol)`| (initial, warning)| `<null>` |
+| `dominantBaseline=(function)`| (initial, warning)| `<null>` |
 | `dominantBaseline=(null)`| (initial)| `<null>` |
 | `dominantBaseline=(undefined)`| (initial)| `<null>` |
 
-## `download` (on `<div>`)
+## `download` (on `<a>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `download=(string)`| (changed)| `"a string"` |
@@ -2918,12 +2893,12 @@
 | `download=(string 'false')`| (changed)| `"false"` |
 | `download=(string 'on')`| (changed)| `"on"` |
 | `download=(string 'off')`| (changed)| `"off"` |
-| `download=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<empty string>` |
-| `download=(function)`| (initial, warning, ssr mismatch)| `<empty string>` |
+| `download=(symbol)`| (initial, warning)| `<empty string>` |
+| `download=(function)`| (initial, warning)| `<empty string>` |
 | `download=(null)`| (initial)| `<empty string>` |
 | `download=(undefined)`| (initial)| `<empty string>` |
 
-## `dOwNlOaD` (on `<div>`)
+## `dOwNlOaD` (on `<a>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `dOwNlOaD=(string)`| (changed, warning)| `"a string"` |
@@ -2948,7 +2923,7 @@
 | `dOwNlOaD=(null)`| (initial, warning)| `<null>` |
 | `dOwNlOaD=(undefined)`| (initial, warning)| `<null>` |
 
-## `draggable` (on `<div>`)
+## `draggable` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `draggable=(string)`| (initial)| `<boolean: false>` |
@@ -2968,12 +2943,12 @@
 | `draggable=(string 'false')`| (initial)| `<boolean: false>` |
 | `draggable=(string 'on')`| (initial)| `<boolean: false>` |
 | `draggable=(string 'off')`| (initial)| `<boolean: false>` |
-| `draggable=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<boolean: false>` |
+| `draggable=(symbol)`| (initial, warning)| `<boolean: false>` |
 | `draggable=(function)`| (initial, warning)| `<boolean: false>` |
 | `draggable=(null)`| (initial)| `<boolean: false>` |
 | `draggable=(undefined)`| (initial)| `<boolean: false>` |
 
-## `dur` (on `<svg>`)
+## `dur` (on `<animate>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `dur=(string)`| (changed)| `"a string"` |
@@ -2998,7 +2973,7 @@
 | `dur=(null)`| (initial)| `<null>` |
 | `dur=(undefined)`| (initial)| `<null>` |
 
-## `dx` (on `<svg>`)
+## `dx` (on `<text>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `dx=(string)`| (changed)| `[<SVGLength: 1pt>, <SVGLength: 2px>, <SVGLength: 3em>]` |
@@ -3023,7 +2998,7 @@
 | `dx=(null)`| (initial)| `[]` |
 | `dx=(undefined)`| (initial)| `[]` |
 
-## `dX` (on `<svg>`)
+## `dX` (on `<text>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `dX=(string)`| (initial, warning, ssr mismatch)| `[]` |
@@ -3048,7 +3023,7 @@
 | `dX=(null)`| (initial, warning)| `[]` |
 | `dX=(undefined)`| (initial, warning)| `[]` |
 
-## `dy` (on `<svg>`)
+## `dy` (on `<text>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `dy=(string)`| (changed)| `[<SVGLength: 1>, <SVGLength: 2>, <SVGLength: 3>]` |
@@ -3073,7 +3048,7 @@
 | `dy=(null)`| (initial)| `[]` |
 | `dy=(undefined)`| (initial)| `[]` |
 
-## `dY` (on `<svg>`)
+## `dY` (on `<text>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `dY=(string)`| (initial, warning, ssr mismatch)| `[]` |
@@ -3098,7 +3073,7 @@
 | `dY=(null)`| (initial, warning)| `[]` |
 | `dY=(undefined)`| (initial, warning)| `[]` |
 
-## `edgeMode` (on `<svg>`)
+## `edgeMode` (on `<feConvolveMatrix>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `edgeMode=(string)`| (changed)| `<number: 2>` |
@@ -3123,7 +3098,7 @@
 | `edgeMode=(null)`| (initial)| `<number: 1>` |
 | `edgeMode=(undefined)`| (initial)| `<number: 1>` |
 
-## `elevation` (on `<svg>`)
+## `elevation` (on `<feDistantLight>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `elevation=(string)`| (initial)| `<number: 0>` |
@@ -3148,7 +3123,7 @@
 | `elevation=(null)`| (initial)| `<number: 0>` |
 | `elevation=(undefined)`| (initial)| `<number: 0>` |
 
-## `enable-background` (on `<svg>`)
+## `enable-background` (on `<path>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `enable-background=(string)`| (changed, warning)| `"a string"` |
@@ -3173,7 +3148,7 @@
 | `enable-background=(null)`| (initial, warning)| `<null>` |
 | `enable-background=(undefined)`| (initial, warning)| `<null>` |
 
-## `enableBackground` (on `<svg>`)
+## `enableBackground` (on `<path>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `enableBackground=(string)`| (changed)| `"a string"` |
@@ -3193,12 +3168,12 @@
 | `enableBackground=(string 'false')`| (changed)| `"false"` |
 | `enableBackground=(string 'on')`| (changed)| `"on"` |
 | `enableBackground=(string 'off')`| (changed)| `"off"` |
-| `enableBackground=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `enableBackground=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `enableBackground=(symbol)`| (initial, warning)| `<null>` |
+| `enableBackground=(function)`| (initial, warning)| `<null>` |
 | `enableBackground=(null)`| (initial)| `<null>` |
 | `enableBackground=(undefined)`| (initial)| `<null>` |
 
-## `encType` (on `<div>`)
+## `encType` (on `<form>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `encType=(string)`| (changed)| `"text/plain"` |
@@ -3223,7 +3198,7 @@
 | `encType=(null)`| (initial)| `"application/x-www-form-urlencoded"` |
 | `encType=(undefined)`| (initial)| `"application/x-www-form-urlencoded"` |
 
-## `end` (on `<svg>`)
+## `end` (on `<animate>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `end=(string)`| (changed)| `"a string"` |
@@ -3248,7 +3223,7 @@
 | `end=(null)`| (initial)| `<null>` |
 | `end=(undefined)`| (initial)| `<null>` |
 
-## `exponent` (on `<svg>`)
+## `exponent` (on `<feFuncA>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `exponent=(string)`| (changed)| `<number: 0>` |
@@ -3273,7 +3248,7 @@
 | `exponent=(null)`| (initial)| `<number: 1>` |
 | `exponent=(undefined)`| (initial)| `<number: 1>` |
 
-## `externalResourcesRequired` (on `<svg>`)
+## `externalResourcesRequired` (on `<path>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `externalResourcesRequired=(string)`| (changed, ssr mismatch)| `"a string"` |
@@ -3293,12 +3268,12 @@
 | `externalResourcesRequired=(string 'false')`| (changed, ssr mismatch)| `"false"` |
 | `externalResourcesRequired=(string 'on')`| (changed, ssr mismatch)| `"on"` |
 | `externalResourcesRequired=(string 'off')`| (changed, ssr mismatch)| `"off"` |
-| `externalResourcesRequired=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
+| `externalResourcesRequired=(symbol)`| (initial, warning)| `<null>` |
 | `externalResourcesRequired=(function)`| (initial, warning)| `<null>` |
 | `externalResourcesRequired=(null)`| (initial)| `<null>` |
 | `externalResourcesRequired=(undefined)`| (initial)| `<null>` |
 
-## `fill` (on `<svg>`)
+## `fill` (on `<path>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `fill=(string)`| (changed)| `"a string"` |
@@ -3323,7 +3298,7 @@
 | `fill=(null)`| (initial)| `<null>` |
 | `fill=(undefined)`| (initial)| `<null>` |
 
-## `fillOpacity` (on `<svg>`)
+## `fillOpacity` (on `<circle>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `fillOpacity=(string)`| (changed)| `"a string"` |
@@ -3343,12 +3318,12 @@
 | `fillOpacity=(string 'false')`| (changed)| `"false"` |
 | `fillOpacity=(string 'on')`| (changed)| `"on"` |
 | `fillOpacity=(string 'off')`| (changed)| `"off"` |
-| `fillOpacity=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `fillOpacity=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `fillOpacity=(symbol)`| (initial, warning)| `<null>` |
+| `fillOpacity=(function)`| (initial, warning)| `<null>` |
 | `fillOpacity=(null)`| (initial)| `<null>` |
 | `fillOpacity=(undefined)`| (initial)| `<null>` |
 
-## `fill-opacity` (on `<svg>`)
+## `fill-opacity` (on `<circle>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `fill-opacity=(string)`| (changed, warning)| `"a string"` |
@@ -3373,7 +3348,7 @@
 | `fill-opacity=(null)`| (initial, warning)| `<null>` |
 | `fill-opacity=(undefined)`| (initial, warning)| `<null>` |
 
-## `fillRule` (on `<svg>`)
+## `fillRule` (on `<circle>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `fillRule=(string)`| (changed)| `"a string"` |
@@ -3393,12 +3368,12 @@
 | `fillRule=(string 'false')`| (changed)| `"false"` |
 | `fillRule=(string 'on')`| (changed)| `"on"` |
 | `fillRule=(string 'off')`| (changed)| `"off"` |
-| `fillRule=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `fillRule=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `fillRule=(symbol)`| (initial, warning)| `<null>` |
+| `fillRule=(function)`| (initial, warning)| `<null>` |
 | `fillRule=(null)`| (initial)| `<null>` |
 | `fillRule=(undefined)`| (initial)| `<null>` |
 
-## `fill-rule` (on `<svg>`)
+## `fill-rule` (on `<circle>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `fill-rule=(string)`| (changed, warning)| `"a string"` |
@@ -3423,7 +3398,7 @@
 | `fill-rule=(null)`| (initial, warning)| `<null>` |
 | `fill-rule=(undefined)`| (initial, warning)| `<null>` |
 
-## `filter` (on `<svg>`)
+## `filter` (on `<g>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `filter=(string)`| (changed)| `"a string"` |
@@ -3448,7 +3423,7 @@
 | `filter=(null)`| (initial)| `<null>` |
 | `filter=(undefined)`| (initial)| `<null>` |
 
-## `filterRes` (on `<svg>`)
+## `filterRes` (on `<filter>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `filterRes=(string)`| (changed, ssr mismatch)| `"a string"` |
@@ -3473,7 +3448,7 @@
 | `filterRes=(null)`| (initial)| `<null>` |
 | `filterRes=(undefined)`| (initial)| `<null>` |
 
-## `filterUnits` (on `<svg>`)
+## `filterUnits` (on `<filter>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `filterUnits=(string)`| (changed)| `<number: 1>` |
@@ -3498,7 +3473,7 @@
 | `filterUnits=(null)`| (initial)| `<number: 2>` |
 | `filterUnits=(undefined)`| (initial)| `<number: 2>` |
 
-## `flood-color` (on `<svg>`)
+## `flood-color` (on `<feflood>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `flood-color=(string)`| (changed, warning)| `"currentColor"` |
@@ -3523,7 +3498,7 @@
 | `flood-color=(null)`| (initial, warning)| `<null>` |
 | `flood-color=(undefined)`| (initial, warning)| `<null>` |
 
-## `floodColor` (on `<svg>`)
+## `floodColor` (on `<feflood>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `floodColor=(string)`| (changed)| `"currentColor"` |
@@ -3543,12 +3518,12 @@
 | `floodColor=(string 'false')`| (changed)| `"false"` |
 | `floodColor=(string 'on')`| (changed)| `"on"` |
 | `floodColor=(string 'off')`| (changed)| `"off"` |
-| `floodColor=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `floodColor=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `floodColor=(symbol)`| (initial, warning)| `<null>` |
+| `floodColor=(function)`| (initial, warning)| `<null>` |
 | `floodColor=(null)`| (initial)| `<null>` |
 | `floodColor=(undefined)`| (initial)| `<null>` |
 
-## `flood-opacity` (on `<svg>`)
+## `flood-opacity` (on `<feflood>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `flood-opacity=(string)`| (changed, warning)| `"inherit"` |
@@ -3573,7 +3548,7 @@
 | `flood-opacity=(null)`| (initial, warning)| `<null>` |
 | `flood-opacity=(undefined)`| (initial, warning)| `<null>` |
 
-## `floodOpacity` (on `<svg>`)
+## `floodOpacity` (on `<feflood>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `floodOpacity=(string)`| (changed)| `"inherit"` |
@@ -3593,12 +3568,12 @@
 | `floodOpacity=(string 'false')`| (changed)| `"false"` |
 | `floodOpacity=(string 'on')`| (changed)| `"on"` |
 | `floodOpacity=(string 'off')`| (changed)| `"off"` |
-| `floodOpacity=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `floodOpacity=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `floodOpacity=(symbol)`| (initial, warning)| `<null>` |
+| `floodOpacity=(function)`| (initial, warning)| `<null>` |
 | `floodOpacity=(null)`| (initial)| `<null>` |
 | `floodOpacity=(undefined)`| (initial)| `<null>` |
 
-## `focusable` (on `<div>`)
+## `focusable` (on `<p>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `focusable=(string)`| (changed)| `"a string"` |
@@ -3612,8 +3587,8 @@
 | `focusable=(integer)`| (changed)| `"1"` |
 | `focusable=(NaN)`| (changed, warning)| `"NaN"` |
 | `focusable=(float)`| (changed)| `"99.99"` |
-| `focusable=(true)`| (initial, warning)| `<null>` |
-| `focusable=(false)`| (initial, warning)| `<null>` |
+| `focusable=(true)`| (changed)| `"true"` |
+| `focusable=(false)`| (changed)| `"false"` |
 | `focusable=(string 'true')`| (changed)| `"true"` |
 | `focusable=(string 'false')`| (changed)| `"false"` |
 | `focusable=(string 'on')`| (changed)| `"on"` |
@@ -3623,7 +3598,7 @@
 | `focusable=(null)`| (initial)| `<null>` |
 | `focusable=(undefined)`| (initial)| `<null>` |
 
-## `font-family` (on `<svg>`)
+## `font-family` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `font-family=(string)`| (changed, warning)| `"a string"` |
@@ -3648,7 +3623,7 @@
 | `font-family=(null)`| (initial, warning)| `<null>` |
 | `font-family=(undefined)`| (initial, warning)| `<null>` |
 
-## `font-size` (on `<svg>`)
+## `font-size` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `font-size=(string)`| (changed, warning)| `"a string"` |
@@ -3673,7 +3648,7 @@
 | `font-size=(null)`| (initial, warning)| `<null>` |
 | `font-size=(undefined)`| (initial, warning)| `<null>` |
 
-## `font-size-adjust` (on `<svg>`)
+## `font-size-adjust` (on `<text>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `font-size-adjust=(string)`| (changed, warning)| `"a string"` |
@@ -3698,7 +3673,7 @@
 | `font-size-adjust=(null)`| (initial, warning)| `<null>` |
 | `font-size-adjust=(undefined)`| (initial, warning)| `<null>` |
 
-## `font-stretch` (on `<svg>`)
+## `font-stretch` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `font-stretch=(string)`| (changed, warning)| `"a string"` |
@@ -3723,7 +3698,7 @@
 | `font-stretch=(null)`| (initial, warning)| `<null>` |
 | `font-stretch=(undefined)`| (initial, warning)| `<null>` |
 
-## `font-style` (on `<svg>`)
+## `font-style` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `font-style=(string)`| (changed, warning)| `"a string"` |
@@ -3748,7 +3723,7 @@
 | `font-style=(null)`| (initial, warning)| `<null>` |
 | `font-style=(undefined)`| (initial, warning)| `<null>` |
 
-## `font-variant` (on `<svg>`)
+## `font-variant` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `font-variant=(string)`| (changed, warning)| `"a string"` |
@@ -3773,7 +3748,7 @@
 | `font-variant=(null)`| (initial, warning)| `<null>` |
 | `font-variant=(undefined)`| (initial, warning)| `<null>` |
 
-## `font-weight` (on `<svg>`)
+## `font-weight` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `font-weight=(string)`| (changed, warning)| `"a string"` |
@@ -3798,7 +3773,7 @@
 | `font-weight=(null)`| (initial, warning)| `<null>` |
 | `font-weight=(undefined)`| (initial, warning)| `<null>` |
 
-## `fontFamily` (on `<svg>`)
+## `fontFamily` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `fontFamily=(string)`| (changed)| `"a string"` |
@@ -3818,12 +3793,12 @@
 | `fontFamily=(string 'false')`| (changed)| `"false"` |
 | `fontFamily=(string 'on')`| (changed)| `"on"` |
 | `fontFamily=(string 'off')`| (changed)| `"off"` |
-| `fontFamily=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `fontFamily=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `fontFamily=(symbol)`| (initial, warning)| `<null>` |
+| `fontFamily=(function)`| (initial, warning)| `<null>` |
 | `fontFamily=(null)`| (initial)| `<null>` |
 | `fontFamily=(undefined)`| (initial)| `<null>` |
 
-## `fontSize` (on `<svg>`)
+## `fontSize` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `fontSize=(string)`| (changed)| `"a string"` |
@@ -3843,12 +3818,12 @@
 | `fontSize=(string 'false')`| (changed)| `"false"` |
 | `fontSize=(string 'on')`| (changed)| `"on"` |
 | `fontSize=(string 'off')`| (changed)| `"off"` |
-| `fontSize=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `fontSize=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `fontSize=(symbol)`| (initial, warning)| `<null>` |
+| `fontSize=(function)`| (initial, warning)| `<null>` |
 | `fontSize=(null)`| (initial)| `<null>` |
 | `fontSize=(undefined)`| (initial)| `<null>` |
 
-## `fontSizeAdjust` (on `<svg>`)
+## `fontSizeAdjust` (on `<text>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `fontSizeAdjust=(string)`| (changed)| `"a string"` |
@@ -3868,12 +3843,12 @@
 | `fontSizeAdjust=(string 'false')`| (changed)| `"false"` |
 | `fontSizeAdjust=(string 'on')`| (changed)| `"on"` |
 | `fontSizeAdjust=(string 'off')`| (changed)| `"off"` |
-| `fontSizeAdjust=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `fontSizeAdjust=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `fontSizeAdjust=(symbol)`| (initial, warning)| `<null>` |
+| `fontSizeAdjust=(function)`| (initial, warning)| `<null>` |
 | `fontSizeAdjust=(null)`| (initial)| `<null>` |
 | `fontSizeAdjust=(undefined)`| (initial)| `<null>` |
 
-## `fontStretch` (on `<svg>`)
+## `fontStretch` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `fontStretch=(string)`| (changed)| `"a string"` |
@@ -3893,12 +3868,12 @@
 | `fontStretch=(string 'false')`| (changed)| `"false"` |
 | `fontStretch=(string 'on')`| (changed)| `"on"` |
 | `fontStretch=(string 'off')`| (changed)| `"off"` |
-| `fontStretch=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `fontStretch=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `fontStretch=(symbol)`| (initial, warning)| `<null>` |
+| `fontStretch=(function)`| (initial, warning)| `<null>` |
 | `fontStretch=(null)`| (initial)| `<null>` |
 | `fontStretch=(undefined)`| (initial)| `<null>` |
 
-## `fontStyle` (on `<svg>`)
+## `fontStyle` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `fontStyle=(string)`| (changed)| `"a string"` |
@@ -3918,12 +3893,12 @@
 | `fontStyle=(string 'false')`| (changed)| `"false"` |
 | `fontStyle=(string 'on')`| (changed)| `"on"` |
 | `fontStyle=(string 'off')`| (changed)| `"off"` |
-| `fontStyle=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `fontStyle=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `fontStyle=(symbol)`| (initial, warning)| `<null>` |
+| `fontStyle=(function)`| (initial, warning)| `<null>` |
 | `fontStyle=(null)`| (initial)| `<null>` |
 | `fontStyle=(undefined)`| (initial)| `<null>` |
 
-## `fontVariant` (on `<svg>`)
+## `fontVariant` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `fontVariant=(string)`| (changed)| `"a string"` |
@@ -3943,12 +3918,12 @@
 | `fontVariant=(string 'false')`| (changed)| `"false"` |
 | `fontVariant=(string 'on')`| (changed)| `"on"` |
 | `fontVariant=(string 'off')`| (changed)| `"off"` |
-| `fontVariant=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `fontVariant=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `fontVariant=(symbol)`| (initial, warning)| `<null>` |
+| `fontVariant=(function)`| (initial, warning)| `<null>` |
 | `fontVariant=(null)`| (initial)| `<null>` |
 | `fontVariant=(undefined)`| (initial)| `<null>` |
 
-## `fontWeight` (on `<svg>`)
+## `fontWeight` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `fontWeight=(string)`| (changed)| `"a string"` |
@@ -3968,12 +3943,12 @@
 | `fontWeight=(string 'false')`| (changed)| `"false"` |
 | `fontWeight=(string 'on')`| (changed)| `"on"` |
 | `fontWeight=(string 'off')`| (changed)| `"off"` |
-| `fontWeight=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `fontWeight=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `fontWeight=(symbol)`| (initial, warning)| `<null>` |
+| `fontWeight=(function)`| (initial, warning)| `<null>` |
 | `fontWeight=(null)`| (initial)| `<null>` |
 | `fontWeight=(undefined)`| (initial)| `<null>` |
 
-## `for` (on `<div>`)
+## `for` (on `<label>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `for=(string)`| (changed, warning)| `"a string"` |
@@ -3998,7 +3973,7 @@
 | `for=(null)`| (initial, warning)| `<empty string>` |
 | `for=(undefined)`| (initial, warning)| `<empty string>` |
 
-## `fOr` (on `<div>`)
+## `fOr` (on `<label>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `fOr=(string)`| (changed, warning)| `"a string"` |
@@ -4023,7 +3998,7 @@
 | `fOr=(null)`| (initial, warning)| `<empty string>` |
 | `fOr=(undefined)`| (initial, warning)| `<empty string>` |
 
-## `form` (on `<div>`)
+## `form` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `form=(string)`| (changed)| `"a string"` |
@@ -4048,7 +4023,7 @@
 | `form=(null)`| (initial)| `<null>` |
 | `form=(undefined)`| (initial)| `<null>` |
 
-## `formAction` (on `<div>`)
+## `formAction` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `formAction=(string)`| (changed)| `"https://reactjs.com/"` |
@@ -4073,7 +4048,7 @@
 | `formAction=(null)`| (initial)| `"http://localhost:3000/"` |
 | `formAction=(undefined)`| (initial)| `"http://localhost:3000/"` |
 
-## `format` (on `<svg>`)
+## `format` (on `<altGlyph>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `format=(string)`| (changed)| `"a string"` |
@@ -4098,7 +4073,7 @@
 | `format=(null)`| (initial)| `<null>` |
 | `format=(undefined)`| (initial)| `<null>` |
 
-## `formEncType` (on `<div>`)
+## `formEncType` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `formEncType=(string)`| (changed)| `"application/x-www-form-urlencoded"` |
@@ -4123,7 +4098,7 @@
 | `formEncType=(null)`| (initial)| `<empty string>` |
 | `formEncType=(undefined)`| (initial)| `<empty string>` |
 
-## `formMethod` (on `<div>`)
+## `formMethod` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `formMethod=(string)`| (changed)| `"post"` |
@@ -4148,7 +4123,7 @@
 | `formMethod=(null)`| (initial)| `<empty string>` |
 | `formMethod=(undefined)`| (initial)| `<empty string>` |
 
-## `formNoValidate` (on `<div>`)
+## `formNoValidate` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `formNoValidate=(string)`| (changed)| `<boolean: true>` |
@@ -4164,16 +4139,16 @@
 | `formNoValidate=(float)`| (changed)| `<boolean: true>` |
 | `formNoValidate=(true)`| (changed)| `<boolean: true>` |
 | `formNoValidate=(false)`| (initial)| `<boolean: false>` |
-| `formNoValidate=(string 'true')`| (changed)| `<boolean: true>` |
-| `formNoValidate=(string 'false')`| (changed)| `<boolean: true>` |
+| `formNoValidate=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `formNoValidate=(string 'false')`| (changed, warning)| `<boolean: true>` |
 | `formNoValidate=(string 'on')`| (changed)| `<boolean: true>` |
 | `formNoValidate=(string 'off')`| (changed)| `<boolean: true>` |
-| `formNoValidate=(symbol)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
-| `formNoValidate=(function)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
+| `formNoValidate=(symbol)`| (initial, warning)| `<boolean: false>` |
+| `formNoValidate=(function)`| (initial, warning)| `<boolean: false>` |
 | `formNoValidate=(null)`| (initial)| `<boolean: false>` |
 | `formNoValidate=(undefined)`| (initial)| `<boolean: false>` |
 
-## `formTarget` (on `<div>`)
+## `formTarget` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `formTarget=(string)`| (changed)| `"a string"` |
@@ -4198,7 +4173,7 @@
 | `formTarget=(null)`| (initial)| `<empty string>` |
 | `formTarget=(undefined)`| (initial)| `<empty string>` |
 
-## `frameBorder` (on `<div>`)
+## `frameBorder` (on `<iframe>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `frameBorder=(string)`| (changed)| `"a string"` |
@@ -4223,7 +4198,7 @@
 | `frameBorder=(null)`| (initial)| `<empty string>` |
 | `frameBorder=(undefined)`| (initial)| `<empty string>` |
 
-## `from` (on `<svg>`)
+## `from` (on `<animate>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `from=(string)`| (changed)| `"a string"` |
@@ -4248,7 +4223,7 @@
 | `from=(null)`| (initial)| `<null>` |
 | `from=(undefined)`| (initial)| `<null>` |
 
-## `fx` (on `<svg>`)
+## `fx` (on `<radialGradient>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `fx=(string)`| (changed)| `<SVGLength: 10px>` |
@@ -4273,7 +4248,7 @@
 | `fx=(null)`| (initial)| `<SVGLength: 0>` |
 | `fx=(undefined)`| (initial)| `<SVGLength: 0>` |
 
-## `fX` (on `<svg>`)
+## `fX` (on `<radialGradient>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `fX=(string)`| (initial, warning, ssr mismatch)| `<SVGLength: 0>` |
@@ -4298,7 +4273,7 @@
 | `fX=(null)`| (initial, warning)| `<SVGLength: 0>` |
 | `fX=(undefined)`| (initial, warning)| `<SVGLength: 0>` |
 
-## `fY` (on `<svg>`)
+## `fY` (on `<radialGradient>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `fY=(string)`| (initial, warning, ssr mismatch)| `<SVGLength: 0>` |
@@ -4323,7 +4298,7 @@
 | `fY=(null)`| (initial, warning)| `<SVGLength: 0>` |
 | `fY=(undefined)`| (initial, warning)| `<SVGLength: 0>` |
 
-## `fy` (on `<svg>`)
+## `fy` (on `<radialGradient>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `fy=(string)`| (changed)| `<SVGLength: 20em>` |
@@ -4348,7 +4323,7 @@
 | `fy=(null)`| (initial)| `<SVGLength: 0>` |
 | `fy=(undefined)`| (initial)| `<SVGLength: 0>` |
 
-## `G1` (on `<svg>`)
+## `G1` (on `<hkern>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `G1=(string)`| (initial, warning, ssr mismatch)| `<null>` |
@@ -4373,7 +4348,7 @@
 | `G1=(null)`| (initial, warning)| `<null>` |
 | `G1=(undefined)`| (initial, warning)| `<null>` |
 
-## `g1` (on `<svg>`)
+## `g1` (on `<hkern>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `g1=(string)`| (changed)| `"a string"` |
@@ -4398,7 +4373,7 @@
 | `g1=(null)`| (initial)| `<null>` |
 | `g1=(undefined)`| (initial)| `<null>` |
 
-## `G2` (on `<svg>`)
+## `G2` (on `<hkern>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `G2=(string)`| (initial, warning, ssr mismatch)| `<null>` |
@@ -4423,7 +4398,7 @@
 | `G2=(null)`| (initial, warning)| `<null>` |
 | `G2=(undefined)`| (initial, warning)| `<null>` |
 
-## `g2` (on `<svg>`)
+## `g2` (on `<hkern>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `g2=(string)`| (changed)| `"a string"` |
@@ -4448,7 +4423,7 @@
 | `g2=(null)`| (initial)| `<null>` |
 | `g2=(undefined)`| (initial)| `<null>` |
 
-## `glyph-name` (on `<svg>`)
+## `glyph-name` (on `<glyph>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `glyph-name=(string)`| (changed, warning)| `"a string"` |
@@ -4473,7 +4448,7 @@
 | `glyph-name=(null)`| (initial, warning)| `<null>` |
 | `glyph-name=(undefined)`| (initial, warning)| `<null>` |
 
-## `glyph-orientation-horizontal` (on `<svg>`)
+## `glyph-orientation-horizontal` (on `<text>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `glyph-orientation-horizontal=(string)`| (changed, warning)| `"a string"` |
@@ -4498,7 +4473,7 @@
 | `glyph-orientation-horizontal=(null)`| (initial, warning)| `<null>` |
 | `glyph-orientation-horizontal=(undefined)`| (initial, warning)| `<null>` |
 
-## `glyph-orientation-vertical` (on `<svg>`)
+## `glyph-orientation-vertical` (on `<text>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `glyph-orientation-vertical=(string)`| (changed, warning)| `"a string"` |
@@ -4523,7 +4498,7 @@
 | `glyph-orientation-vertical=(null)`| (initial, warning)| `<null>` |
 | `glyph-orientation-vertical=(undefined)`| (initial, warning)| `<null>` |
 
-## `glyphName` (on `<svg>`)
+## `glyphName` (on `<glyph>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `glyphName=(string)`| (changed)| `"a string"` |
@@ -4543,12 +4518,12 @@
 | `glyphName=(string 'false')`| (changed)| `"false"` |
 | `glyphName=(string 'on')`| (changed)| `"on"` |
 | `glyphName=(string 'off')`| (changed)| `"off"` |
-| `glyphName=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `glyphName=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `glyphName=(symbol)`| (initial, warning)| `<null>` |
+| `glyphName=(function)`| (initial, warning)| `<null>` |
 | `glyphName=(null)`| (initial)| `<null>` |
 | `glyphName=(undefined)`| (initial)| `<null>` |
 
-## `glyphOrientationHorizontal` (on `<svg>`)
+## `glyphOrientationHorizontal` (on `<text>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `glyphOrientationHorizontal=(string)`| (changed)| `"a string"` |
@@ -4568,12 +4543,12 @@
 | `glyphOrientationHorizontal=(string 'false')`| (changed)| `"false"` |
 | `glyphOrientationHorizontal=(string 'on')`| (changed)| `"on"` |
 | `glyphOrientationHorizontal=(string 'off')`| (changed)| `"off"` |
-| `glyphOrientationHorizontal=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `glyphOrientationHorizontal=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `glyphOrientationHorizontal=(symbol)`| (initial, warning)| `<null>` |
+| `glyphOrientationHorizontal=(function)`| (initial, warning)| `<null>` |
 | `glyphOrientationHorizontal=(null)`| (initial)| `<null>` |
 | `glyphOrientationHorizontal=(undefined)`| (initial)| `<null>` |
 
-## `glyphOrientationVertical` (on `<svg>`)
+## `glyphOrientationVertical` (on `<text>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `glyphOrientationVertical=(string)`| (changed)| `"a string"` |
@@ -4593,12 +4568,12 @@
 | `glyphOrientationVertical=(string 'false')`| (changed)| `"false"` |
 | `glyphOrientationVertical=(string 'on')`| (changed)| `"on"` |
 | `glyphOrientationVertical=(string 'off')`| (changed)| `"off"` |
-| `glyphOrientationVertical=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `glyphOrientationVertical=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `glyphOrientationVertical=(symbol)`| (initial, warning)| `<null>` |
+| `glyphOrientationVertical=(function)`| (initial, warning)| `<null>` |
 | `glyphOrientationVertical=(null)`| (initial)| `<null>` |
 | `glyphOrientationVertical=(undefined)`| (initial)| `<null>` |
 
-## `glyphRef` (on `<svg>`)
+## `glyphRef` (on `<altGlyph>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `glyphRef=(string)`| (initial)| `<null>` |
@@ -4623,7 +4598,7 @@
 | `glyphRef=(null)`| (initial)| `<null>` |
 | `glyphRef=(undefined)`| (initial)| `<null>` |
 
-## `gradientTransform` (on `<svg>`)
+## `gradientTransform` (on `<linearGradient>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `gradientTransform=(string)`| (changed)| `[<SVGMatrix 1 0 0 1 -10 -20>/2/0, <SVGMatrix 2 0 0 2 0 0>/3/0, <SVGMatrix 0.7071067811865476 0.7071067811865475 -0.7071067811865475 0.7071067811865476 0 0>/4/45, <SVGMatrix 1 0 0 1 5 10>/2/0]` |
@@ -4648,7 +4623,7 @@
 | `gradientTransform=(null)`| (initial)| `[]` |
 | `gradientTransform=(undefined)`| (initial)| `[]` |
 
-## `gradientUnits` (on `<svg>`)
+## `gradientUnits` (on `<linearGradient>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `gradientUnits=(string)`| (changed)| `<number: 1>` |
@@ -4673,7 +4648,7 @@
 | `gradientUnits=(null)`| (initial)| `<number: 2>` |
 | `gradientUnits=(undefined)`| (initial)| `<number: 2>` |
 
-## `hanging` (on `<svg>`)
+## `hanging` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `hanging=(string)`| (changed)| `"a string"` |
@@ -4698,7 +4673,7 @@
 | `hanging=(null)`| (initial)| `<null>` |
 | `hanging=(undefined)`| (initial)| `<null>` |
 
-## `headers` (on `<tr>`)
+## `headers` (on `<td>` inside `<tr>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `headers=(string)`| (changed, ssr error, ssr mismatch)| `"a string"` |
@@ -4723,7 +4698,7 @@
 | `headers=(null)`| (initial, ssr error, ssr mismatch)| `<empty string>` |
 | `headers=(undefined)`| (initial, ssr error, ssr mismatch)| `<empty string>` |
 
-## `height` (on `<div>`)
+## `height` (on `<img>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `height=(string)`| (initial)| `<number: 0>` |
@@ -4748,7 +4723,7 @@
 | `height=(null)`| (initial)| `<number: 0>` |
 | `height=(undefined)`| (initial)| `<number: 0>` |
 
-## `height` (on `<svg>`)
+## `height` (on `<rect>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `height=(string)`| (changed)| `<SVGLength: 100%>` |
@@ -4773,7 +4748,7 @@
 | `height=(null)`| (initial)| `<SVGLength: 0>` |
 | `height=(undefined)`| (initial)| `<SVGLength: 0>` |
 
-## `hidden` (on `<div>`)
+## `hidden` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `hidden=(string)`| (changed)| `<boolean: true>` |
@@ -4789,16 +4764,16 @@
 | `hidden=(float)`| (changed)| `<boolean: true>` |
 | `hidden=(true)`| (changed)| `<boolean: true>` |
 | `hidden=(false)`| (initial)| `<boolean: false>` |
-| `hidden=(string 'true')`| (changed)| `<boolean: true>` |
-| `hidden=(string 'false')`| (changed)| `<boolean: true>` |
+| `hidden=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `hidden=(string 'false')`| (changed, warning)| `<boolean: true>` |
 | `hidden=(string 'on')`| (changed)| `<boolean: true>` |
 | `hidden=(string 'off')`| (changed)| `<boolean: true>` |
-| `hidden=(symbol)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
-| `hidden=(function)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
+| `hidden=(symbol)`| (initial, warning)| `<boolean: false>` |
+| `hidden=(function)`| (initial, warning)| `<boolean: false>` |
 | `hidden=(null)`| (initial)| `<boolean: false>` |
 | `hidden=(undefined)`| (initial)| `<boolean: false>` |
 
-## `high` (on `<div>`)
+## `high` (on `<meter>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `high=(string)`| (initial)| `<number: 1>` |
@@ -4823,7 +4798,7 @@
 | `high=(null)`| (initial)| `<number: 1>` |
 | `high=(undefined)`| (initial)| `<number: 1>` |
 
-## `horiz-adv-x` (on `<svg>`)
+## `horiz-adv-x` (on `<font>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `horiz-adv-x=(string)`| (changed, warning)| `"a string"` |
@@ -4848,7 +4823,7 @@
 | `horiz-adv-x=(null)`| (initial, warning)| `<null>` |
 | `horiz-adv-x=(undefined)`| (initial, warning)| `<null>` |
 
-## `horiz-origin-x` (on `<svg>`)
+## `horiz-origin-x` (on `<font>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `horiz-origin-x=(string)`| (changed, warning)| `"a string"` |
@@ -4873,7 +4848,7 @@
 | `horiz-origin-x=(null)`| (initial, warning)| `<null>` |
 | `horiz-origin-x=(undefined)`| (initial, warning)| `<null>` |
 
-## `horizAdvX` (on `<svg>`)
+## `horizAdvX` (on `<font>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `horizAdvX=(string)`| (changed)| `"a string"` |
@@ -4893,12 +4868,12 @@
 | `horizAdvX=(string 'false')`| (changed)| `"false"` |
 | `horizAdvX=(string 'on')`| (changed)| `"on"` |
 | `horizAdvX=(string 'off')`| (changed)| `"off"` |
-| `horizAdvX=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `horizAdvX=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `horizAdvX=(symbol)`| (initial, warning)| `<null>` |
+| `horizAdvX=(function)`| (initial, warning)| `<null>` |
 | `horizAdvX=(null)`| (initial)| `<null>` |
 | `horizAdvX=(undefined)`| (initial)| `<null>` |
 
-## `horizOriginX` (on `<svg>`)
+## `horizOriginX` (on `<font>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `horizOriginX=(string)`| (changed)| `"a string"` |
@@ -4918,12 +4893,12 @@
 | `horizOriginX=(string 'false')`| (changed)| `"false"` |
 | `horizOriginX=(string 'on')`| (changed)| `"on"` |
 | `horizOriginX=(string 'off')`| (changed)| `"off"` |
-| `horizOriginX=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `horizOriginX=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `horizOriginX=(symbol)`| (initial, warning)| `<null>` |
+| `horizOriginX=(function)`| (initial, warning)| `<null>` |
 | `horizOriginX=(null)`| (initial)| `<null>` |
 | `horizOriginX=(undefined)`| (initial)| `<null>` |
 
-## `href` (on `<div>`)
+## `href` (on `<a>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `href=(string)`| (changed)| `"https://reactjs.com/"` |
@@ -4948,7 +4923,7 @@
 | `href=(null)`| (initial)| `<empty string>` |
 | `href=(undefined)`| (initial)| `<empty string>` |
 
-## `hrefLang` (on `<div>`)
+## `hrefLang` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `hrefLang=(string)`| (changed)| `"a string"` |
@@ -4973,7 +4948,7 @@
 | `hrefLang=(null)`| (initial)| `<null>` |
 | `hrefLang=(undefined)`| (initial)| `<null>` |
 
-## `htmlFor` (on `<div>`)
+## `htmlFor` (on `<label>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `htmlFor=(string)`| (changed)| `"a string"` |
@@ -4993,12 +4968,12 @@
 | `htmlFor=(string 'false')`| (changed)| `"false"` |
 | `htmlFor=(string 'on')`| (changed)| `"on"` |
 | `htmlFor=(string 'off')`| (changed)| `"off"` |
-| `htmlFor=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<empty string>` |
-| `htmlFor=(function)`| (initial, warning, ssr mismatch)| `<empty string>` |
+| `htmlFor=(symbol)`| (initial, warning)| `<empty string>` |
+| `htmlFor=(function)`| (initial, warning)| `<empty string>` |
 | `htmlFor=(null)`| (initial)| `<empty string>` |
 | `htmlFor=(undefined)`| (initial)| `<empty string>` |
 
-## `http-equiv` (on `<div>`)
+## `http-equiv` (on `<meta>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `http-equiv=(string)`| (changed, warning)| `"a string"` |
@@ -5023,7 +4998,7 @@
 | `http-equiv=(null)`| (initial, warning)| `<empty string>` |
 | `http-equiv=(undefined)`| (initial, warning)| `<empty string>` |
 
-## `httpEquiv` (on `<div>`)
+## `httpEquiv` (on `<meta>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `httpEquiv=(string)`| (changed)| `"a string"` |
@@ -5043,12 +5018,12 @@
 | `httpEquiv=(string 'false')`| (changed)| `"false"` |
 | `httpEquiv=(string 'on')`| (changed)| `"on"` |
 | `httpEquiv=(string 'off')`| (changed)| `"off"` |
-| `httpEquiv=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<empty string>` |
-| `httpEquiv=(function)`| (initial, warning, ssr mismatch)| `<empty string>` |
+| `httpEquiv=(symbol)`| (initial, warning)| `<empty string>` |
+| `httpEquiv=(function)`| (initial, warning)| `<empty string>` |
 | `httpEquiv=(null)`| (initial)| `<empty string>` |
 | `httpEquiv=(undefined)`| (initial)| `<empty string>` |
 
-## `icon` (on `<div>`)
+## `icon` (on `<command>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `icon=(string)`| (changed, warning, ssr warning)| `"a string"` |
@@ -5073,7 +5048,7 @@
 | `icon=(null)`| (initial, warning, ssr warning)| `<null>` |
 | `icon=(undefined)`| (initial, warning, ssr warning)| `<null>` |
 
-## `id` (on `<div>`)
+## `id` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `id=(string)`| (changed)| `"a string"` |
@@ -5098,7 +5073,7 @@
 | `id=(null)`| (initial)| `<empty string>` |
 | `id=(undefined)`| (initial)| `<empty string>` |
 
-## `ID` (on `<div>`)
+## `ID` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `ID=(string)`| (changed, warning)| `"a string"` |
@@ -5123,7 +5098,7 @@
 | `ID=(null)`| (initial, warning)| `<empty string>` |
 | `ID=(undefined)`| (initial, warning)| `<empty string>` |
 
-## `ideographic` (on `<svg>`)
+## `ideographic` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `ideographic=(string)`| (changed)| `"a string"` |
@@ -5148,7 +5123,7 @@
 | `ideographic=(null)`| (initial)| `<null>` |
 | `ideographic=(undefined)`| (initial)| `<null>` |
 
-## `image-rendering` (on `<div>`)
+## `image-rendering` (on `<svg>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `image-rendering=(string)`| (changed, warning)| `"a string"` |
@@ -5173,7 +5148,7 @@
 | `image-rendering=(null)`| (initial, warning)| `<null>` |
 | `image-rendering=(undefined)`| (initial, warning)| `<null>` |
 
-## `imageRendering` (on `<div>`)
+## `imageRendering` (on `<svg>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `imageRendering=(string)`| (changed)| `"a string"` |
@@ -5193,12 +5168,12 @@
 | `imageRendering=(string 'false')`| (changed)| `"false"` |
 | `imageRendering=(string 'on')`| (changed)| `"on"` |
 | `imageRendering=(string 'off')`| (changed)| `"off"` |
-| `imageRendering=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `imageRendering=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `imageRendering=(symbol)`| (initial, warning)| `<null>` |
+| `imageRendering=(function)`| (initial, warning)| `<null>` |
 | `imageRendering=(null)`| (initial)| `<null>` |
 | `imageRendering=(undefined)`| (initial)| `<null>` |
 
-## `in` (on `<svg>`)
+## `in` (on `<feBlend>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `in=(string)`| (changed)| `"a string"` |
@@ -5223,7 +5198,7 @@
 | `in=(null)`| (initial)| `<null>` |
 | `in=(undefined)`| (initial)| `<null>` |
 
-## `in2` (on `<svg>`)
+## `in2` (on `<feBlend>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `in2=(string)`| (changed)| `"a string"` |
@@ -5248,7 +5223,7 @@
 | `in2=(null)`| (initial)| `<empty string>` |
 | `in2=(undefined)`| (initial)| `<empty string>` |
 
-## `initialChecked` (on `<div>`)
+## `initialChecked` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `initialChecked=(string)`| (changed, warning)| `"a string"` |
@@ -5273,7 +5248,7 @@
 | `initialChecked=(null)`| (initial, warning)| `<null>` |
 | `initialChecked=(undefined)`| (initial, warning)| `<null>` |
 
-## `initialValue` (on `<div>`)
+## `initialValue` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `initialValue=(string)`| (changed, warning)| `"a string"` |
@@ -5298,7 +5273,7 @@
 | `initialValue=(null)`| (initial, warning)| `<null>` |
 | `initialValue=(undefined)`| (initial, warning)| `<null>` |
 
-## `inlist` (on `<div>`)
+## `inlist` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `inlist=(string)`| (changed)| `"a string"` |
@@ -5323,7 +5298,7 @@
 | `inlist=(null)`| (initial)| `<null>` |
 | `inlist=(undefined)`| (initial)| `<null>` |
 
-## `inputMode` (on `<div>`)
+## `inputMode` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `inputMode=(string)`| (changed)| `"a string"` |
@@ -5348,7 +5323,7 @@
 | `inputMode=(null)`| (initial)| `<null>` |
 | `inputMode=(undefined)`| (initial)| `<null>` |
 
-## `integrity` (on `<div>`)
+## `integrity` (on `<script>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `integrity=(string)`| (changed)| `"a string"` |
@@ -5373,7 +5348,7 @@
 | `integrity=(null)`| (initial)| `<empty string>` |
 | `integrity=(undefined)`| (initial)| `<empty string>` |
 
-## `intercept` (on `<svg>`)
+## `intercept` (on `<feFuncA>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `intercept=(string)`| (initial)| `<number: 0>` |
@@ -5398,7 +5373,7 @@
 | `intercept=(null)`| (initial)| `<number: 0>` |
 | `intercept=(undefined)`| (initial)| `<number: 0>` |
 
-## `is` (on `<div>`)
+## `is` (on `<button>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `is=(string)`| (changed)| `"x-test-element"` |
@@ -5423,7 +5398,7 @@
 | `is=(null)`| (initial)| `<null>` |
 | `is=(undefined)`| (initial)| `<null>` |
 
-## `itemID` (on `<div>`)
+## `itemID` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `itemID=(string)`| (changed)| `"a string"` |
@@ -5448,7 +5423,7 @@
 | `itemID=(null)`| (initial)| `<null>` |
 | `itemID=(undefined)`| (initial)| `<null>` |
 
-## `itemProp` (on `<div>`)
+## `itemProp` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `itemProp=(string)`| (changed)| `"a string"` |
@@ -5473,7 +5448,7 @@
 | `itemProp=(null)`| (initial)| `<null>` |
 | `itemProp=(undefined)`| (initial)| `<null>` |
 
-## `itemRef` (on `<div>`)
+## `itemRef` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `itemRef=(string)`| (changed)| `"a string"` |
@@ -5498,7 +5473,7 @@
 | `itemRef=(null)`| (initial)| `<null>` |
 | `itemRef=(undefined)`| (initial)| `<null>` |
 
-## `itemScope` (on `<div>`)
+## `itemScope` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `itemScope=(string)`| (changed)| `<empty string>` |
@@ -5514,16 +5489,16 @@
 | `itemScope=(float)`| (changed)| `<empty string>` |
 | `itemScope=(true)`| (changed)| `<empty string>` |
 | `itemScope=(false)`| (initial)| `<null>` |
-| `itemScope=(string 'true')`| (changed)| `<empty string>` |
-| `itemScope=(string 'false')`| (changed)| `<empty string>` |
+| `itemScope=(string 'true')`| (changed, warning)| `<empty string>` |
+| `itemScope=(string 'false')`| (changed, warning)| `<empty string>` |
 | `itemScope=(string 'on')`| (changed)| `<empty string>` |
 | `itemScope=(string 'off')`| (changed)| `<empty string>` |
-| `itemScope=(symbol)`| (initial, warning, ssr mismatch)| `<null>` |
-| `itemScope=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `itemScope=(symbol)`| (initial, warning)| `<null>` |
+| `itemScope=(function)`| (initial, warning)| `<null>` |
 | `itemScope=(null)`| (initial)| `<null>` |
 | `itemScope=(undefined)`| (initial)| `<null>` |
 
-## `itemType` (on `<div>`)
+## `itemType` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `itemType=(string)`| (changed)| `"a string"` |
@@ -5548,7 +5523,7 @@
 | `itemType=(null)`| (initial)| `<null>` |
 | `itemType=(undefined)`| (initial)| `<null>` |
 
-## `k` (on `<svg>`)
+## `k` (on `<hkern>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `k=(string)`| (changed)| `"a string"` |
@@ -5573,7 +5548,7 @@
 | `k=(null)`| (initial)| `<null>` |
 | `k=(undefined)`| (initial)| `<null>` |
 
-## `K` (on `<svg>`)
+## `K` (on `<hkern>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `K=(string)`| (initial, warning, ssr mismatch)| `<null>` |
@@ -5598,7 +5573,7 @@
 | `K=(null)`| (initial, warning)| `<null>` |
 | `K=(undefined)`| (initial, warning)| `<null>` |
 
-## `K1` (on `<svg>`)
+## `K1` (on `<feComposite>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `K1=(string)`| (initial, warning)| `<number: 0>` |
@@ -5623,7 +5598,7 @@
 | `K1=(null)`| (initial, warning)| `<number: 0>` |
 | `K1=(undefined)`| (initial, warning)| `<number: 0>` |
 
-## `k1` (on `<svg>`)
+## `k1` (on `<feComposite>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `k1=(string)`| (initial)| `<number: 0>` |
@@ -5648,7 +5623,7 @@
 | `k1=(null)`| (initial)| `<number: 0>` |
 | `k1=(undefined)`| (initial)| `<number: 0>` |
 
-## `k2` (on `<svg>`)
+## `k2` (on `<feComposite>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `k2=(string)`| (initial)| `<number: 0>` |
@@ -5673,7 +5648,7 @@
 | `k2=(null)`| (initial)| `<number: 0>` |
 | `k2=(undefined)`| (initial)| `<number: 0>` |
 
-## `k3` (on `<svg>`)
+## `k3` (on `<feComposite>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `k3=(string)`| (initial)| `<number: 0>` |
@@ -5698,7 +5673,7 @@
 | `k3=(null)`| (initial)| `<number: 0>` |
 | `k3=(undefined)`| (initial)| `<number: 0>` |
 
-## `k4` (on `<svg>`)
+## `k4` (on `<feComposite>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `k4=(string)`| (initial)| `<number: 0>` |
@@ -5723,7 +5698,7 @@
 | `k4=(null)`| (initial)| `<number: 0>` |
 | `k4=(undefined)`| (initial)| `<number: 0>` |
 
-## `kernelMatrix` (on `<svg>`)
+## `kernelMatrix` (on `<feConvolveMatrix>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `kernelMatrix=(string)`| (changed)| `[1, 2, 3, 4]` |
@@ -5748,7 +5723,7 @@
 | `kernelMatrix=(null)`| (initial)| `[]` |
 | `kernelMatrix=(undefined)`| (initial)| `[]` |
 
-## `kernelUnitLength` (on `<svg>`)
+## `kernelUnitLength` (on `<feConvolveMatrix>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `kernelUnitLength=(string)`| (changed)| `"a string"` |
@@ -5773,7 +5748,7 @@
 | `kernelUnitLength=(null)`| (initial)| `<null>` |
 | `kernelUnitLength=(undefined)`| (initial)| `<null>` |
 
-## `kerning` (on `<svg>`)
+## `kerning` (on `<text>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `kerning=(string)`| (changed)| `"a string"` |
@@ -5798,7 +5773,7 @@
 | `kerning=(null)`| (initial)| `<null>` |
 | `kerning=(undefined)`| (initial)| `<null>` |
 
-## `keyParams` (on `<div>`)
+## `keyParams` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `keyParams=(string)`| (changed)| `"a string"` |
@@ -5823,7 +5798,7 @@
 | `keyParams=(null)`| (initial)| `<null>` |
 | `keyParams=(undefined)`| (initial)| `<null>` |
 
-## `keyPoints` (on `<svg>`)
+## `keyPoints` (on `<animateMotion>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `keyPoints=(string)`| (changed)| `"a string"` |
@@ -5848,7 +5823,7 @@
 | `keyPoints=(null)`| (initial)| `<null>` |
 | `keyPoints=(undefined)`| (initial)| `<null>` |
 
-## `keySplines` (on `<svg>`)
+## `keySplines` (on `<animate>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `keySplines=(string)`| (changed)| `"a string"` |
@@ -5873,7 +5848,7 @@
 | `keySplines=(null)`| (initial)| `<null>` |
 | `keySplines=(undefined)`| (initial)| `<null>` |
 
-## `keyTimes` (on `<svg>`)
+## `keyTimes` (on `<animate>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `keyTimes=(string)`| (changed)| `"a string"` |
@@ -5898,7 +5873,7 @@
 | `keyTimes=(null)`| (initial)| `<null>` |
 | `keyTimes=(undefined)`| (initial)| `<null>` |
 
-## `keyType` (on `<div>`)
+## `keyType` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `keyType=(string)`| (changed)| `"a string"` |
@@ -5923,7 +5898,7 @@
 | `keyType=(null)`| (initial)| `<null>` |
 | `keyType=(undefined)`| (initial)| `<null>` |
 
-## `kind` (on `<div>`)
+## `kind` (on `<track>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `kind=(string)`| (changed)| `"captions"` |
@@ -5948,7 +5923,7 @@
 | `kind=(null)`| (initial)| `"subtitles"` |
 | `kind=(undefined)`| (initial)| `"subtitles"` |
 
-## `label` (on `<div>`)
+## `label` (on `<track>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `label=(string)`| (changed)| `"a string"` |
@@ -5973,7 +5948,7 @@
 | `label=(null)`| (initial)| `<empty string>` |
 | `label=(undefined)`| (initial)| `<empty string>` |
 
-## `LANG` (on `<div>`)
+## `LANG` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `LANG=(string)`| (changed, warning)| `"a string"` |
@@ -5998,7 +5973,7 @@
 | `LANG=(null)`| (initial, warning)| `<empty string>` |
 | `LANG=(undefined)`| (initial, warning)| `<empty string>` |
 
-## `lang` (on `<div>`)
+## `lang` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `lang=(string)`| (changed)| `"a string"` |
@@ -6023,7 +5998,7 @@
 | `lang=(null)`| (initial)| `<empty string>` |
 | `lang=(undefined)`| (initial)| `<empty string>` |
 
-## `length` (on `<div>`)
+## `length` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `length=(string)`| (changed)| `"a string"` |
@@ -6048,7 +6023,7 @@
 | `length=(null)`| (initial)| `<null>` |
 | `length=(undefined)`| (initial)| `<null>` |
 
-## `lengthAdjust` (on `<svg>`)
+## `lengthAdjust` (on `<text>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `lengthAdjust=(string)`| (changed)| `<number: 2>` |
@@ -6073,7 +6048,7 @@
 | `lengthAdjust=(null)`| (initial)| `<number: 1>` |
 | `lengthAdjust=(undefined)`| (initial)| `<number: 1>` |
 
-## `letter-spacing` (on `<svg>`)
+## `letter-spacing` (on `<text>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `letter-spacing=(string)`| (changed, warning)| `"a string"` |
@@ -6098,7 +6073,7 @@
 | `letter-spacing=(null)`| (initial, warning)| `<null>` |
 | `letter-spacing=(undefined)`| (initial, warning)| `<null>` |
 
-## `letterSpacing` (on `<svg>`)
+## `letterSpacing` (on `<text>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `letterSpacing=(string)`| (changed)| `"a string"` |
@@ -6118,12 +6093,12 @@
 | `letterSpacing=(string 'false')`| (changed)| `"false"` |
 | `letterSpacing=(string 'on')`| (changed)| `"on"` |
 | `letterSpacing=(string 'off')`| (changed)| `"off"` |
-| `letterSpacing=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `letterSpacing=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `letterSpacing=(symbol)`| (initial, warning)| `<null>` |
+| `letterSpacing=(function)`| (initial, warning)| `<null>` |
 | `letterSpacing=(null)`| (initial)| `<null>` |
 | `letterSpacing=(undefined)`| (initial)| `<null>` |
 
-## `lighting-color` (on `<svg>`)
+## `lighting-color` (on `<feDiffuseLighting>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `lighting-color=(string)`| (changed, warning)| `"a string"` |
@@ -6148,7 +6123,7 @@
 | `lighting-color=(null)`| (initial, warning)| `<null>` |
 | `lighting-color=(undefined)`| (initial, warning)| `<null>` |
 
-## `lightingColor` (on `<svg>`)
+## `lightingColor` (on `<feDiffuseLighting>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `lightingColor=(string)`| (changed)| `"a string"` |
@@ -6168,12 +6143,12 @@
 | `lightingColor=(string 'false')`| (changed)| `"false"` |
 | `lightingColor=(string 'on')`| (changed)| `"on"` |
 | `lightingColor=(string 'off')`| (changed)| `"off"` |
-| `lightingColor=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `lightingColor=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `lightingColor=(symbol)`| (initial, warning)| `<null>` |
+| `lightingColor=(function)`| (initial, warning)| `<null>` |
 | `lightingColor=(null)`| (initial)| `<null>` |
 | `lightingColor=(undefined)`| (initial)| `<null>` |
 
-## `limitingConeAngle` (on `<svg>`)
+## `limitingConeAngle` (on `<feSpotLight>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `limitingConeAngle=(string)`| (initial)| `<number: 0>` |
@@ -6198,7 +6173,7 @@
 | `limitingConeAngle=(null)`| (initial)| `<number: 0>` |
 | `limitingConeAngle=(undefined)`| (initial)| `<number: 0>` |
 
-## `list` (on `<div>`)
+## `list` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `list=(string)`| (changed)| `"a string"` |
@@ -6223,7 +6198,7 @@
 | `list=(null)`| (initial)| `<null>` |
 | `list=(undefined)`| (initial)| `<null>` |
 
-## `local` (on `<svg>`)
+## `local` (on `<color-profile>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `local=(string)`| (changed)| `"a string"` |
@@ -6248,7 +6223,7 @@
 | `local=(null)`| (initial)| `<null>` |
 | `local=(undefined)`| (initial)| `<null>` |
 
-## `loop` (on `<div>`)
+## `loop` (on `<audio>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `loop=(string)`| (changed)| `<boolean: true>` |
@@ -6264,16 +6239,16 @@
 | `loop=(float)`| (changed)| `<boolean: true>` |
 | `loop=(true)`| (changed)| `<boolean: true>` |
 | `loop=(false)`| (initial)| `<boolean: false>` |
-| `loop=(string 'true')`| (changed)| `<boolean: true>` |
-| `loop=(string 'false')`| (changed)| `<boolean: true>` |
+| `loop=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `loop=(string 'false')`| (changed, warning)| `<boolean: true>` |
 | `loop=(string 'on')`| (changed)| `<boolean: true>` |
 | `loop=(string 'off')`| (changed)| `<boolean: true>` |
-| `loop=(symbol)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
-| `loop=(function)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
+| `loop=(symbol)`| (initial, warning)| `<boolean: false>` |
+| `loop=(function)`| (initial, warning)| `<boolean: false>` |
 | `loop=(null)`| (initial)| `<boolean: false>` |
 | `loop=(undefined)`| (initial)| `<boolean: false>` |
 
-## `low` (on `<div>`)
+## `low` (on `<meter>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `low=(string)`| (initial)| `<number: 0>` |
@@ -6298,7 +6273,7 @@
 | `low=(null)`| (initial)| `<number: 0>` |
 | `low=(undefined)`| (initial)| `<number: 0>` |
 
-## `manifest` (on `<div>`)
+## `manifest` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `manifest=(string)`| (changed)| `"a string"` |
@@ -6323,7 +6298,7 @@
 | `manifest=(null)`| (initial)| `<null>` |
 | `manifest=(undefined)`| (initial)| `<null>` |
 
-## `marginHeight` (on `<frameset>`)
+## `marginHeight` (on `<frame>` inside `<frameset>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `marginHeight=(string)`| (changed, warning, ssr error, ssr mismatch)| `"a string"` |
@@ -6348,7 +6323,7 @@
 | `marginHeight=(null)`| (initial, warning, ssr error, ssr mismatch)| `<empty string>` |
 | `marginHeight=(undefined)`| (initial, warning, ssr error, ssr mismatch)| `<empty string>` |
 
-## `marginWidth` (on `<frameset>`)
+## `marginWidth` (on `<frame>` inside `<frameset>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `marginWidth=(string)`| (changed, ssr error, ssr mismatch)| `"a string"` |
@@ -6373,7 +6348,7 @@
 | `marginWidth=(null)`| (initial, ssr error, ssr mismatch)| `<empty string>` |
 | `marginWidth=(undefined)`| (initial, ssr error, ssr mismatch)| `<empty string>` |
 
-## `marker-end` (on `<svg>`)
+## `marker-end` (on `<line>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `marker-end=(string)`| (changed, warning)| `"a string"` |
@@ -6398,7 +6373,7 @@
 | `marker-end=(null)`| (initial, warning)| `<null>` |
 | `marker-end=(undefined)`| (initial, warning)| `<null>` |
 
-## `marker-mid` (on `<svg>`)
+## `marker-mid` (on `<line>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `marker-mid=(string)`| (changed, warning)| `"a string"` |
@@ -6423,7 +6398,7 @@
 | `marker-mid=(null)`| (initial, warning)| `<null>` |
 | `marker-mid=(undefined)`| (initial, warning)| `<null>` |
 
-## `marker-start` (on `<svg>`)
+## `marker-start` (on `<line>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `marker-start=(string)`| (changed, warning)| `"a string"` |
@@ -6448,7 +6423,7 @@
 | `marker-start=(null)`| (initial, warning)| `<null>` |
 | `marker-start=(undefined)`| (initial, warning)| `<null>` |
 
-## `markerEnd` (on `<svg>`)
+## `markerEnd` (on `<line>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `markerEnd=(string)`| (changed)| `"a string"` |
@@ -6468,12 +6443,12 @@
 | `markerEnd=(string 'false')`| (changed)| `"false"` |
 | `markerEnd=(string 'on')`| (changed)| `"on"` |
 | `markerEnd=(string 'off')`| (changed)| `"off"` |
-| `markerEnd=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `markerEnd=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `markerEnd=(symbol)`| (initial, warning)| `<null>` |
+| `markerEnd=(function)`| (initial, warning)| `<null>` |
 | `markerEnd=(null)`| (initial)| `<null>` |
 | `markerEnd=(undefined)`| (initial)| `<null>` |
 
-## `markerHeight` (on `<svg>`)
+## `markerHeight` (on `<marker>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `markerHeight=(string)`| (changed)| `<SVGLength: 0>` |
@@ -6498,7 +6473,7 @@
 | `markerHeight=(null)`| (initial)| `<SVGLength: 3>` |
 | `markerHeight=(undefined)`| (initial)| `<SVGLength: 3>` |
 
-## `markerMid` (on `<svg>`)
+## `markerMid` (on `<line>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `markerMid=(string)`| (changed)| `"a string"` |
@@ -6518,12 +6493,12 @@
 | `markerMid=(string 'false')`| (changed)| `"false"` |
 | `markerMid=(string 'on')`| (changed)| `"on"` |
 | `markerMid=(string 'off')`| (changed)| `"off"` |
-| `markerMid=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `markerMid=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `markerMid=(symbol)`| (initial, warning)| `<null>` |
+| `markerMid=(function)`| (initial, warning)| `<null>` |
 | `markerMid=(null)`| (initial)| `<null>` |
 | `markerMid=(undefined)`| (initial)| `<null>` |
 
-## `markerStart` (on `<svg>`)
+## `markerStart` (on `<line>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `markerStart=(string)`| (changed)| `"a string"` |
@@ -6543,12 +6518,12 @@
 | `markerStart=(string 'false')`| (changed)| `"false"` |
 | `markerStart=(string 'on')`| (changed)| `"on"` |
 | `markerStart=(string 'off')`| (changed)| `"off"` |
-| `markerStart=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `markerStart=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `markerStart=(symbol)`| (initial, warning)| `<null>` |
+| `markerStart=(function)`| (initial, warning)| `<null>` |
 | `markerStart=(null)`| (initial)| `<null>` |
 | `markerStart=(undefined)`| (initial)| `<null>` |
 
-## `markerUnits` (on `<svg>`)
+## `markerUnits` (on `<marker>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `markerUnits=(string)`| (initial)| `<number: 2>` |
@@ -6573,7 +6548,7 @@
 | `markerUnits=(null)`| (initial)| `<number: 2>` |
 | `markerUnits=(undefined)`| (initial)| `<number: 2>` |
 
-## `markerWidth` (on `<svg>`)
+## `markerWidth` (on `<marker>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `markerWidth=(string)`| (changed)| `<SVGLength: 0>` |
@@ -6598,7 +6573,7 @@
 | `markerWidth=(null)`| (initial)| `<SVGLength: 3>` |
 | `markerWidth=(undefined)`| (initial)| `<SVGLength: 3>` |
 
-## `mask` (on `<svg>`)
+## `mask` (on `<path>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `mask=(string)`| (changed)| `"a string"` |
@@ -6623,7 +6598,7 @@
 | `mask=(null)`| (initial)| `<null>` |
 | `mask=(undefined)`| (initial)| `<null>` |
 
-## `maskContentUnits` (on `<svg>`)
+## `maskContentUnits` (on `<mask>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `maskContentUnits=(string)`| (changed)| `<number: 2>` |
@@ -6648,7 +6623,7 @@
 | `maskContentUnits=(null)`| (initial)| `<number: 1>` |
 | `maskContentUnits=(undefined)`| (initial)| `<number: 1>` |
 
-## `maskUnits` (on `<svg>`)
+## `maskUnits` (on `<mask>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `maskUnits=(string)`| (changed)| `<number: 1>` |
@@ -6673,7 +6648,7 @@
 | `maskUnits=(null)`| (initial)| `<number: 2>` |
 | `maskUnits=(undefined)`| (initial)| `<number: 2>` |
 
-## `mathematical` (on `<svg>`)
+## `mathematical` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `mathematical=(string)`| (changed)| `"a string"` |
@@ -6698,7 +6673,7 @@
 | `mathematical=(null)`| (initial)| `<null>` |
 | `mathematical=(undefined)`| (initial)| `<null>` |
 
-## `max` (on `<div>`)
+## `max` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `max=(string)`| (changed)| `"a string"` |
@@ -6723,7 +6698,7 @@
 | `max=(null)`| (initial)| `<empty string>` |
 | `max=(undefined)`| (initial)| `<empty string>` |
 
-## `max` (on `<div>`)
+## `max` (on `<meter>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `max=(string)`| (initial)| `<number: 1>` |
@@ -6748,7 +6723,7 @@
 | `max=(null)`| (initial)| `<number: 1>` |
 | `max=(undefined)`| (initial)| `<number: 1>` |
 
-## `max` (on `<div>`)
+## `max` (on `<progress>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `max=(string)`| (initial)| `<number: 1>` |
@@ -6773,7 +6748,7 @@
 | `max=(null)`| (initial)| `<number: 1>` |
 | `max=(undefined)`| (initial)| `<number: 1>` |
 
-## `max` (on `<svg>`)
+## `max` (on `<animate>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `max=(string)`| (changed)| `"a string"` |
@@ -6798,7 +6773,7 @@
 | `max=(null)`| (initial)| `<null>` |
 | `max=(undefined)`| (initial)| `<null>` |
 
-## `maxLength` (on `<div>`)
+## `maxLength` (on `<textarea>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `maxLength=(string)`| (initial)| `<number: -1>` |
@@ -6823,7 +6798,7 @@
 | `maxLength=(null)`| (initial)| `<number: -1>` |
 | `maxLength=(undefined)`| (initial)| `<number: -1>` |
 
-## `media` (on `<div>`)
+## `media` (on `<link>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `media=(string)`| (changed)| `"a string"` |
@@ -6848,7 +6823,7 @@
 | `media=(null)`| (initial)| `<empty string>` |
 | `media=(undefined)`| (initial)| `<empty string>` |
 
-## `media` (on `<svg>`)
+## `media` (on `<style>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `media=(string)`| (changed)| `"a string"` |
@@ -6873,7 +6848,7 @@
 | `media=(null)`| (initial)| `"all"` |
 | `media=(undefined)`| (initial)| `"all"` |
 
-## `mediaGroup` (on `<div>`)
+## `mediaGroup` (on `<video>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `mediaGroup=(string)`| (changed)| `"a string"` |
@@ -6898,7 +6873,7 @@
 | `mediaGroup=(null)`| (initial)| `<null>` |
 | `mediaGroup=(undefined)`| (initial)| `<null>` |
 
-## `method` (on `<div>`)
+## `method` (on `<form>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `method=(string)`| (changed)| `"post"` |
@@ -6923,7 +6898,7 @@
 | `method=(null)`| (initial)| `"get"` |
 | `method=(undefined)`| (initial)| `"get"` |
 
-## `method` (on `<svg>`)
+## `method` (on `<textPath>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `method=(string)`| (changed)| `<number: 2>` |
@@ -6948,7 +6923,7 @@
 | `method=(null)`| (initial)| `<number: 1>` |
 | `method=(undefined)`| (initial)| `<number: 1>` |
 
-## `min` (on `<div>`)
+## `min` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `min=(string)`| (changed)| `"a string"` |
@@ -6973,7 +6948,7 @@
 | `min=(null)`| (initial)| `<empty string>` |
 | `min=(undefined)`| (initial)| `<empty string>` |
 
-## `min` (on `<div>`)
+## `min` (on `<meter>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `min=(string)`| (initial)| `<number: 0>` |
@@ -6998,7 +6973,7 @@
 | `min=(null)`| (initial)| `<number: 0>` |
 | `min=(undefined)`| (initial)| `<number: 0>` |
 
-## `min` (on `<svg>`)
+## `min` (on `<animate>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `min=(string)`| (changed)| `"a string"` |
@@ -7023,7 +6998,7 @@
 | `min=(null)`| (initial)| `<null>` |
 | `min=(undefined)`| (initial)| `<null>` |
 
-## `minLength` (on `<div>`)
+## `minLength` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `minLength=(string)`| (initial)| `<number: -1>` |
@@ -7048,7 +7023,7 @@
 | `minLength=(null)`| (initial)| `<number: -1>` |
 | `minLength=(undefined)`| (initial)| `<number: -1>` |
 
-## `mode` (on `<svg>`)
+## `mode` (on `<feBlend>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `mode=(string)`| (changed)| `<number: 2>` |
@@ -7073,7 +7048,7 @@
 | `mode=(null)`| (initial)| `<number: 1>` |
 | `mode=(undefined)`| (initial)| `<number: 1>` |
 
-## `multiple` (on `<div>`)
+## `multiple` (on `<select>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `multiple=(string)`| (changed)| `<boolean: true>` |
@@ -7089,41 +7064,41 @@
 | `multiple=(float)`| (changed)| `<boolean: true>` |
 | `multiple=(true)`| (changed)| `<boolean: true>` |
 | `multiple=(false)`| (initial)| `<boolean: false>` |
-| `multiple=(string 'true')`| (changed)| `<boolean: true>` |
-| `multiple=(string 'false')`| (changed)| `<boolean: true>` |
+| `multiple=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `multiple=(string 'false')`| (changed, warning)| `<boolean: true>` |
 | `multiple=(string 'on')`| (changed)| `<boolean: true>` |
 | `multiple=(string 'off')`| (changed)| `<boolean: true>` |
-| `multiple=(symbol)`| (changed, warning)| `<boolean: true>` |
-| `multiple=(function)`| (changed, warning)| `<boolean: true>` |
+| `multiple=(symbol)`| (changed, warning, ssr mismatch)| `<boolean: true>` |
+| `multiple=(function)`| (changed, warning, ssr mismatch)| `<boolean: true>` |
 | `multiple=(null)`| (initial)| `<boolean: false>` |
 | `multiple=(undefined)`| (initial)| `<boolean: false>` |
 
-## `muted` (on `<div>`)
+## `muted` (on `<video>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `muted=(string)`| (changed, ssr mismatch)| `<boolean: true>` |
+| `muted=(string)`| (changed)| `<boolean: true>` |
 | `muted=(empty string)`| (initial)| `<boolean: false>` |
-| `muted=(array with string)`| (changed, ssr mismatch)| `<boolean: true>` |
-| `muted=(empty array)`| (changed, ssr mismatch)| `<boolean: true>` |
-| `muted=(object)`| (changed, ssr mismatch)| `<boolean: true>` |
-| `muted=(numeric string)`| (changed, ssr mismatch)| `<boolean: true>` |
-| `muted=(-1)`| (changed, ssr mismatch)| `<boolean: true>` |
+| `muted=(array with string)`| (changed)| `<boolean: true>` |
+| `muted=(empty array)`| (changed)| `<boolean: true>` |
+| `muted=(object)`| (changed)| `<boolean: true>` |
+| `muted=(numeric string)`| (changed)| `<boolean: true>` |
+| `muted=(-1)`| (changed)| `<boolean: true>` |
 | `muted=(0)`| (initial)| `<boolean: false>` |
-| `muted=(integer)`| (changed, ssr mismatch)| `<boolean: true>` |
+| `muted=(integer)`| (changed)| `<boolean: true>` |
 | `muted=(NaN)`| (initial, warning)| `<boolean: false>` |
-| `muted=(float)`| (changed, ssr mismatch)| `<boolean: true>` |
-| `muted=(true)`| (changed, ssr mismatch)| `<boolean: true>` |
+| `muted=(float)`| (changed)| `<boolean: true>` |
+| `muted=(true)`| (changed)| `<boolean: true>` |
 | `muted=(false)`| (initial)| `<boolean: false>` |
-| `muted=(string 'true')`| (changed, ssr mismatch)| `<boolean: true>` |
-| `muted=(string 'false')`| (changed, ssr mismatch)| `<boolean: true>` |
-| `muted=(string 'on')`| (changed, ssr mismatch)| `<boolean: true>` |
-| `muted=(string 'off')`| (changed, ssr mismatch)| `<boolean: true>` |
+| `muted=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `muted=(string 'false')`| (changed, warning)| `<boolean: true>` |
+| `muted=(string 'on')`| (changed)| `<boolean: true>` |
+| `muted=(string 'off')`| (changed)| `<boolean: true>` |
 | `muted=(symbol)`| (initial, warning)| `<boolean: false>` |
 | `muted=(function)`| (initial, warning)| `<boolean: false>` |
 | `muted=(null)`| (initial)| `<boolean: false>` |
 | `muted=(undefined)`| (initial)| `<boolean: false>` |
 
-## `name` (on `<div>`)
+## `name` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `name=(string)`| (changed)| `"a string"` |
@@ -7148,7 +7123,7 @@
 | `name=(null)`| (initial)| `<empty string>` |
 | `name=(undefined)`| (initial)| `<empty string>` |
 
-## `name` (on `<svg>`)
+## `name` (on `<color-profile>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `name=(string)`| (initial)| `<null>` |
@@ -7173,7 +7148,32 @@
 | `name=(null)`| (initial)| `<null>` |
 | `name=(undefined)`| (initial)| `<null>` |
 
-## `nonce` (on `<div>`)
+## `noModule` (on `<script>` inside `<div>`)
+| Test Case | Flags | Result |
+| --- | --- | --- |
+| `noModule=(string)`| (changed)| `<boolean: true>` |
+| `noModule=(empty string)`| (initial)| `<boolean: false>` |
+| `noModule=(array with string)`| (changed)| `<boolean: true>` |
+| `noModule=(empty array)`| (changed)| `<boolean: true>` |
+| `noModule=(object)`| (changed)| `<boolean: true>` |
+| `noModule=(numeric string)`| (changed)| `<boolean: true>` |
+| `noModule=(-1)`| (changed)| `<boolean: true>` |
+| `noModule=(0)`| (initial)| `<boolean: false>` |
+| `noModule=(integer)`| (changed)| `<boolean: true>` |
+| `noModule=(NaN)`| (initial, warning)| `<boolean: false>` |
+| `noModule=(float)`| (changed)| `<boolean: true>` |
+| `noModule=(true)`| (changed)| `<boolean: true>` |
+| `noModule=(false)`| (initial)| `<boolean: false>` |
+| `noModule=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `noModule=(string 'false')`| (changed, warning)| `<boolean: true>` |
+| `noModule=(string 'on')`| (changed)| `<boolean: true>` |
+| `noModule=(string 'off')`| (changed)| `<boolean: true>` |
+| `noModule=(symbol)`| (initial, warning)| `<boolean: false>` |
+| `noModule=(function)`| (initial, warning)| `<boolean: false>` |
+| `noModule=(null)`| (initial)| `<boolean: false>` |
+| `noModule=(undefined)`| (initial)| `<boolean: false>` |
+
+## `nonce` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `nonce=(string)`| (changed)| `"a string"` |
@@ -7198,7 +7198,7 @@
 | `nonce=(null)`| (initial)| `<null>` |
 | `nonce=(undefined)`| (initial)| `<null>` |
 
-## `noValidate` (on `<div>`)
+## `noValidate` (on `<form>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `noValidate=(string)`| (changed)| `<boolean: true>` |
@@ -7214,16 +7214,16 @@
 | `noValidate=(float)`| (changed)| `<boolean: true>` |
 | `noValidate=(true)`| (changed)| `<boolean: true>` |
 | `noValidate=(false)`| (initial)| `<boolean: false>` |
-| `noValidate=(string 'true')`| (changed)| `<boolean: true>` |
-| `noValidate=(string 'false')`| (changed)| `<boolean: true>` |
+| `noValidate=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `noValidate=(string 'false')`| (changed, warning)| `<boolean: true>` |
 | `noValidate=(string 'on')`| (changed)| `<boolean: true>` |
 | `noValidate=(string 'off')`| (changed)| `<boolean: true>` |
-| `noValidate=(symbol)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
-| `noValidate=(function)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
+| `noValidate=(symbol)`| (initial, warning)| `<boolean: false>` |
+| `noValidate=(function)`| (initial, warning)| `<boolean: false>` |
 | `noValidate=(null)`| (initial)| `<boolean: false>` |
 | `noValidate=(undefined)`| (initial)| `<boolean: false>` |
 
-## `numOctaves` (on `<svg>`)
+## `numOctaves` (on `<feTurbulence>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `numOctaves=(string)`| (changed)| `<number: 0>` |
@@ -7248,7 +7248,7 @@
 | `numOctaves=(null)`| (initial)| `<number: 1>` |
 | `numOctaves=(undefined)`| (initial)| `<number: 1>` |
 
-## `offset` (on `<svg>`)
+## `offset` (on `<stop>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `offset=(string)`| (initial)| `<number: 0>` |
@@ -7273,7 +7273,7 @@
 | `offset=(null)`| (initial)| `<number: 0>` |
 | `offset=(undefined)`| (initial)| `<number: 0>` |
 
-## `on-click` (on `<div>`)
+## `on-click` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `on-click=(string)`| (initial, warning)| `<undefined>` |
@@ -7298,7 +7298,7 @@
 | `on-click=(null)`| (initial, warning)| `<undefined>` |
 | `on-click=(undefined)`| (initial, warning)| `<undefined>` |
 
-## `on-unknownevent` (on `<div>`)
+## `on-unknownevent` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `on-unknownevent=(string)`| (initial, warning)| `<undefined>` |
@@ -7323,7 +7323,7 @@
 | `on-unknownevent=(null)`| (initial, warning)| `<undefined>` |
 | `on-unknownevent=(undefined)`| (initial, warning)| `<undefined>` |
 
-## `onclick` (on `<div>`)
+## `onclick` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `onclick=(string)`| (initial, warning)| `<null>` |
@@ -7348,7 +7348,7 @@
 | `onclick=(null)`| (initial, warning)| `<null>` |
 | `onclick=(undefined)`| (initial, warning)| `<null>` |
 
-## `onClick` (on `<div>`)
+## `onClick` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `onClick=(string)`| (initial, warning, ssr warning)| `<undefined>` |
@@ -7373,7 +7373,7 @@
 | `onClick=(null)`| (initial)| `<undefined>` |
 | `onClick=(undefined)`| (initial)| `<undefined>` |
 
-## `onunknownevent` (on `<div>`)
+## `onunknownevent` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `onunknownevent=(string)`| (initial, warning)| `<undefined>` |
@@ -7398,7 +7398,7 @@
 | `onunknownevent=(null)`| (initial, warning)| `<undefined>` |
 | `onunknownevent=(undefined)`| (initial, warning)| `<undefined>` |
 
-## `onUnknownEvent` (on `<div>`)
+## `onUnknownEvent` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `onUnknownEvent=(string)`| (initial, warning, ssr warning)| `<undefined>` |
@@ -7423,7 +7423,7 @@
 | `onUnknownEvent=(null)`| (initial, warning, ssr warning)| `<undefined>` |
 | `onUnknownEvent=(undefined)`| (initial, warning, ssr warning)| `<undefined>` |
 
-## `opacity` (on `<svg>`)
+## `opacity` (on `<path>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `opacity=(string)`| (changed)| `"a string"` |
@@ -7448,7 +7448,7 @@
 | `opacity=(null)`| (initial)| `<null>` |
 | `opacity=(undefined)`| (initial)| `<null>` |
 
-## `open` (on `<div>`)
+## `open` (on `<details>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `open=(string)`| (changed)| `<boolean: true>` |
@@ -7464,16 +7464,16 @@
 | `open=(float)`| (changed)| `<boolean: true>` |
 | `open=(true)`| (changed)| `<boolean: true>` |
 | `open=(false)`| (initial)| `<boolean: false>` |
-| `open=(string 'true')`| (changed)| `<boolean: true>` |
-| `open=(string 'false')`| (changed)| `<boolean: true>` |
+| `open=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `open=(string 'false')`| (changed, warning)| `<boolean: true>` |
 | `open=(string 'on')`| (changed)| `<boolean: true>` |
 | `open=(string 'off')`| (changed)| `<boolean: true>` |
-| `open=(symbol)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
-| `open=(function)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
+| `open=(symbol)`| (initial, warning)| `<boolean: false>` |
+| `open=(function)`| (initial, warning)| `<boolean: false>` |
 | `open=(null)`| (initial)| `<boolean: false>` |
 | `open=(undefined)`| (initial)| `<boolean: false>` |
 
-## `operator` (on `<svg>`)
+## `operator` (on `<feComposite>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `operator=(string)`| (changed)| `<number: 5>` |
@@ -7498,7 +7498,7 @@
 | `operator=(null)`| (initial)| `<number: 1>` |
 | `operator=(undefined)`| (initial)| `<number: 1>` |
 
-## `optimum` (on `<div>`)
+## `optimum` (on `<meter>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `optimum=(string)`| (initial)| `<number: 0.5>` |
@@ -7523,7 +7523,7 @@
 | `optimum=(null)`| (initial)| `<number: 0.5>` |
 | `optimum=(undefined)`| (initial)| `<number: 0.5>` |
 
-## `order` (on `<svg>`)
+## `order` (on `<feConvolveMatrix>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `order=(string)`| (changed)| `"a string"` |
@@ -7548,7 +7548,7 @@
 | `order=(null)`| (initial)| `<null>` |
 | `order=(undefined)`| (initial)| `<null>` |
 
-## `orient` (on `<svg>`)
+## `orient` (on `<marker>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `orient=(string)`| (changed)| `"a string"` |
@@ -7573,7 +7573,7 @@
 | `orient=(null)`| (initial)| `<null>` |
 | `orient=(undefined)`| (initial)| `<null>` |
 
-## `orientation` (on `<svg>`)
+## `orientation` (on `<glyph>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `orientation=(string)`| (changed)| `"a string"` |
@@ -7598,7 +7598,7 @@
 | `orientation=(null)`| (initial)| `<null>` |
 | `orientation=(undefined)`| (initial)| `<null>` |
 
-## `origin` (on `<svg>`)
+## `origin` (on `<animateMotion>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `origin=(string)`| (changed)| `"a string"` |
@@ -7623,7 +7623,7 @@
 | `origin=(null)`| (initial)| `<null>` |
 | `origin=(undefined)`| (initial)| `<null>` |
 
-## `overflow` (on `<svg>`)
+## `overflow` (on `<path>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `overflow=(string)`| (changed)| `"a string"` |
@@ -7648,7 +7648,7 @@
 | `overflow=(null)`| (initial)| `<null>` |
 | `overflow=(undefined)`| (initial)| `<null>` |
 
-## `overline-position` (on `<svg>`)
+## `overline-position` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `overline-position=(string)`| (changed, warning)| `"a string"` |
@@ -7673,7 +7673,7 @@
 | `overline-position=(null)`| (initial, warning)| `<null>` |
 | `overline-position=(undefined)`| (initial, warning)| `<null>` |
 
-## `overline-thickness` (on `<svg>`)
+## `overline-thickness` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `overline-thickness=(string)`| (changed, warning)| `"a string"` |
@@ -7698,7 +7698,7 @@
 | `overline-thickness=(null)`| (initial, warning)| `<null>` |
 | `overline-thickness=(undefined)`| (initial, warning)| `<null>` |
 
-## `overlinePosition` (on `<svg>`)
+## `overlinePosition` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `overlinePosition=(string)`| (changed)| `"a string"` |
@@ -7718,12 +7718,12 @@
 | `overlinePosition=(string 'false')`| (changed)| `"false"` |
 | `overlinePosition=(string 'on')`| (changed)| `"on"` |
 | `overlinePosition=(string 'off')`| (changed)| `"off"` |
-| `overlinePosition=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `overlinePosition=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `overlinePosition=(symbol)`| (initial, warning)| `<null>` |
+| `overlinePosition=(function)`| (initial, warning)| `<null>` |
 | `overlinePosition=(null)`| (initial)| `<null>` |
 | `overlinePosition=(undefined)`| (initial)| `<null>` |
 
-## `overlineThickness` (on `<svg>`)
+## `overlineThickness` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `overlineThickness=(string)`| (changed)| `"a string"` |
@@ -7743,12 +7743,12 @@
 | `overlineThickness=(string 'false')`| (changed)| `"false"` |
 | `overlineThickness=(string 'on')`| (changed)| `"on"` |
 | `overlineThickness=(string 'off')`| (changed)| `"off"` |
-| `overlineThickness=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `overlineThickness=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `overlineThickness=(symbol)`| (initial, warning)| `<null>` |
+| `overlineThickness=(function)`| (initial, warning)| `<null>` |
 | `overlineThickness=(null)`| (initial)| `<null>` |
 | `overlineThickness=(undefined)`| (initial)| `<null>` |
 
-## `paint-order` (on `<svg>`)
+## `paint-order` (on `<path>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `paint-order=(string)`| (changed, warning)| `"a string"` |
@@ -7773,7 +7773,7 @@
 | `paint-order=(null)`| (initial, warning)| `<null>` |
 | `paint-order=(undefined)`| (initial, warning)| `<null>` |
 
-## `paintOrder` (on `<svg>`)
+## `paintOrder` (on `<path>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `paintOrder=(string)`| (changed)| `"a string"` |
@@ -7793,12 +7793,12 @@
 | `paintOrder=(string 'false')`| (changed)| `"false"` |
 | `paintOrder=(string 'on')`| (changed)| `"on"` |
 | `paintOrder=(string 'off')`| (changed)| `"off"` |
-| `paintOrder=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `paintOrder=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `paintOrder=(symbol)`| (initial, warning)| `<null>` |
+| `paintOrder=(function)`| (initial, warning)| `<null>` |
 | `paintOrder=(null)`| (initial)| `<null>` |
 | `paintOrder=(undefined)`| (initial)| `<null>` |
 
-## `panose-1` (on `<svg>`)
+## `panose-1` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `panose-1=(string)`| (changed, warning)| `"a string"` |
@@ -7818,12 +7818,12 @@
 | `panose-1=(string 'false')`| (changed, warning)| `"false"` |
 | `panose-1=(string 'on')`| (changed, warning)| `"on"` |
 | `panose-1=(string 'off')`| (changed, warning)| `"off"` |
-| `panose-1=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `panose-1=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `panose-1=(symbol)`| (initial, warning)| `<null>` |
+| `panose-1=(function)`| (initial, warning)| `<null>` |
 | `panose-1=(null)`| (initial, warning)| `<null>` |
 | `panose-1=(undefined)`| (initial, warning)| `<null>` |
 
-## `panose1` (on `<svg>`)
+## `panose1` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `panose1=(string)`| (initial)| `<null>` |
@@ -7848,7 +7848,7 @@
 | `panose1=(null)`| (initial)| `<null>` |
 | `panose1=(undefined)`| (initial)| `<null>` |
 
-## `pathLength` (on `<svg>`)
+## `pathLength` (on `<path>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `pathLength=(string)`| (initial)| `<number: 0>` |
@@ -7873,7 +7873,7 @@
 | `pathLength=(null)`| (initial)| `<number: 0>` |
 | `pathLength=(undefined)`| (initial)| `<number: 0>` |
 
-## `pattern` (on `<div>`)
+## `pattern` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `pattern=(string)`| (changed)| `"a string"` |
@@ -7898,7 +7898,7 @@
 | `pattern=(null)`| (initial)| `<empty string>` |
 | `pattern=(undefined)`| (initial)| `<empty string>` |
 
-## `patternContentUnits` (on `<svg>`)
+## `patternContentUnits` (on `<pattern>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `patternContentUnits=(string)`| (changed)| `<number: 2>` |
@@ -7923,7 +7923,7 @@
 | `patternContentUnits=(null)`| (initial)| `<number: 1>` |
 | `patternContentUnits=(undefined)`| (initial)| `<number: 1>` |
 
-## `patternTransform` (on `<svg>`)
+## `patternTransform` (on `<pattern>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `patternTransform=(string)`| (changed)| `[<SVGMatrix 1 0 0 1 -10 -20>/2/0, <SVGMatrix 2 0 0 2 0 0>/3/0, <SVGMatrix 0.7071067811865476 0.7071067811865475 -0.7071067811865475 0.7071067811865476 0 0>/4/45, <SVGMatrix 1 0 0 1 5 10>/2/0]` |
@@ -7948,7 +7948,7 @@
 | `patternTransform=(null)`| (initial)| `[]` |
 | `patternTransform=(undefined)`| (initial)| `[]` |
 
-## `patternUnits` (on `<svg>`)
+## `patternUnits` (on `<pattern>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `patternUnits=(string)`| (changed)| `<number: 1>` |
@@ -7973,7 +7973,7 @@
 | `patternUnits=(null)`| (initial)| `<number: 2>` |
 | `patternUnits=(undefined)`| (initial)| `<number: 2>` |
 
-## `placeholder` (on `<div>`)
+## `placeholder` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `placeholder=(string)`| (changed)| `"a string"` |
@@ -7998,7 +7998,7 @@
 | `placeholder=(null)`| (initial)| `<empty string>` |
 | `placeholder=(undefined)`| (initial)| `<empty string>` |
 
-## `playsInline` (on `<div>`)
+## `playsInline` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `playsInline=(string)`| (changed)| `<empty string>` |
@@ -8014,16 +8014,16 @@
 | `playsInline=(float)`| (changed)| `<empty string>` |
 | `playsInline=(true)`| (changed)| `<empty string>` |
 | `playsInline=(false)`| (initial)| `<null>` |
-| `playsInline=(string 'true')`| (changed)| `<empty string>` |
-| `playsInline=(string 'false')`| (changed)| `<empty string>` |
+| `playsInline=(string 'true')`| (changed, warning)| `<empty string>` |
+| `playsInline=(string 'false')`| (changed, warning)| `<empty string>` |
 | `playsInline=(string 'on')`| (changed)| `<empty string>` |
 | `playsInline=(string 'off')`| (changed)| `<empty string>` |
-| `playsInline=(symbol)`| (initial, warning, ssr mismatch)| `<null>` |
-| `playsInline=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `playsInline=(symbol)`| (initial, warning)| `<null>` |
+| `playsInline=(function)`| (initial, warning)| `<null>` |
 | `playsInline=(null)`| (initial)| `<null>` |
 | `playsInline=(undefined)`| (initial)| `<null>` |
 
-## `pointer-events` (on `<svg>`)
+## `pointer-events` (on `<path>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `pointer-events=(string)`| (changed, warning)| `"a string"` |
@@ -8048,7 +8048,7 @@
 | `pointer-events=(null)`| (initial, warning)| `<null>` |
 | `pointer-events=(undefined)`| (initial, warning)| `<null>` |
 
-## `pointerEvents` (on `<svg>`)
+## `pointerEvents` (on `<path>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `pointerEvents=(string)`| (changed)| `"a string"` |
@@ -8068,12 +8068,12 @@
 | `pointerEvents=(string 'false')`| (changed)| `"false"` |
 | `pointerEvents=(string 'on')`| (changed)| `"on"` |
 | `pointerEvents=(string 'off')`| (changed)| `"off"` |
-| `pointerEvents=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `pointerEvents=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `pointerEvents=(symbol)`| (initial, warning)| `<null>` |
+| `pointerEvents=(function)`| (initial, warning)| `<null>` |
 | `pointerEvents=(null)`| (initial)| `<null>` |
 | `pointerEvents=(undefined)`| (initial)| `<null>` |
 
-## `points` (on `<svg>`)
+## `points` (on `<polygon>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `points=(string)`| (changed)| `[<SVGPoint>, <SVGPoint>, <SVGPoint>]` |
@@ -8098,7 +8098,7 @@
 | `points=(null)`| (initial)| `[]` |
 | `points=(undefined)`| (initial)| `[]` |
 
-## `pointsAtX` (on `<svg>`)
+## `pointsAtX` (on `<feSpotLight>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `pointsAtX=(string)`| (initial)| `<number: 0>` |
@@ -8123,7 +8123,7 @@
 | `pointsAtX=(null)`| (initial)| `<number: 0>` |
 | `pointsAtX=(undefined)`| (initial)| `<number: 0>` |
 
-## `pointsAtY` (on `<svg>`)
+## `pointsAtY` (on `<feSpotLight>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `pointsAtY=(string)`| (initial)| `<number: 0>` |
@@ -8148,7 +8148,7 @@
 | `pointsAtY=(null)`| (initial)| `<number: 0>` |
 | `pointsAtY=(undefined)`| (initial)| `<number: 0>` |
 
-## `pointsAtZ` (on `<svg>`)
+## `pointsAtZ` (on `<feSpotLight>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `pointsAtZ=(string)`| (initial)| `<number: 0>` |
@@ -8173,7 +8173,7 @@
 | `pointsAtZ=(null)`| (initial)| `<number: 0>` |
 | `pointsAtZ=(undefined)`| (initial)| `<number: 0>` |
 
-## `poster` (on `<div>`)
+## `poster` (on `<video>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `poster=(string)`| (changed)| `"https://reactjs.com/"` |
@@ -8198,7 +8198,7 @@
 | `poster=(null)`| (initial)| `<empty string>` |
 | `poster=(undefined)`| (initial)| `<empty string>` |
 
-## `prefix` (on `<div>`)
+## `prefix` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `prefix=(string)`| (changed)| `"a string"` |
@@ -8223,32 +8223,32 @@
 | `prefix=(null)`| (initial)| `<null>` |
 | `prefix=(undefined)`| (initial)| `<null>` |
 
-## `preload` (on `<div>`)
+## `preload` (on `<video>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `preload=(string)`| (changed)| `"none"` |
-| `preload=(empty string)`| (initial)| `"auto"` |
+| `preload=(empty string)`| (changed)| `"auto"` |
 | `preload=(array with string)`| (changed)| `"none"` |
-| `preload=(empty array)`| (initial)| `"auto"` |
-| `preload=(object)`| (initial)| `"auto"` |
-| `preload=(numeric string)`| (initial)| `"auto"` |
-| `preload=(-1)`| (initial)| `"auto"` |
-| `preload=(0)`| (initial)| `"auto"` |
-| `preload=(integer)`| (initial)| `"auto"` |
-| `preload=(NaN)`| (initial, warning)| `"auto"` |
-| `preload=(float)`| (initial)| `"auto"` |
-| `preload=(true)`| (initial, warning)| `"auto"` |
-| `preload=(false)`| (initial, warning)| `"auto"` |
-| `preload=(string 'true')`| (initial)| `"auto"` |
-| `preload=(string 'false')`| (initial)| `"auto"` |
-| `preload=(string 'on')`| (initial)| `"auto"` |
-| `preload=(string 'off')`| (initial)| `"auto"` |
-| `preload=(symbol)`| (initial, warning)| `"auto"` |
-| `preload=(function)`| (initial, warning)| `"auto"` |
-| `preload=(null)`| (initial)| `"auto"` |
-| `preload=(undefined)`| (initial)| `"auto"` |
+| `preload=(empty array)`| (changed)| `"auto"` |
+| `preload=(object)`| (initial)| `"metadata"` |
+| `preload=(numeric string)`| (initial)| `"metadata"` |
+| `preload=(-1)`| (initial)| `"metadata"` |
+| `preload=(0)`| (initial)| `"metadata"` |
+| `preload=(integer)`| (initial)| `"metadata"` |
+| `preload=(NaN)`| (initial, warning)| `"metadata"` |
+| `preload=(float)`| (initial)| `"metadata"` |
+| `preload=(true)`| (initial, warning)| `"metadata"` |
+| `preload=(false)`| (initial, warning)| `"metadata"` |
+| `preload=(string 'true')`| (initial)| `"metadata"` |
+| `preload=(string 'false')`| (initial)| `"metadata"` |
+| `preload=(string 'on')`| (initial)| `"metadata"` |
+| `preload=(string 'off')`| (initial)| `"metadata"` |
+| `preload=(symbol)`| (initial, warning)| `"metadata"` |
+| `preload=(function)`| (initial, warning)| `"metadata"` |
+| `preload=(null)`| (initial)| `"metadata"` |
+| `preload=(undefined)`| (initial)| `"metadata"` |
 
-## `preserveAlpha` (on `<svg>`)
+## `preserveAlpha` (on `<feConvolveMatrix>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `preserveAlpha=(string)`| (initial)| `<boolean: false>` |
@@ -8268,12 +8268,12 @@
 | `preserveAlpha=(string 'false')`| (initial)| `<boolean: false>` |
 | `preserveAlpha=(string 'on')`| (initial)| `<boolean: false>` |
 | `preserveAlpha=(string 'off')`| (initial)| `<boolean: false>` |
-| `preserveAlpha=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<boolean: false>` |
+| `preserveAlpha=(symbol)`| (initial, warning)| `<boolean: false>` |
 | `preserveAlpha=(function)`| (initial, warning)| `<boolean: false>` |
 | `preserveAlpha=(null)`| (initial)| `<boolean: false>` |
 | `preserveAlpha=(undefined)`| (initial)| `<boolean: false>` |
 
-## `preserveAspectRatio` (on `<svg>`)
+## `preserveAspectRatio` (on `<feImage>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `preserveAspectRatio=(string)`| (changed)| `<SVGPreserveAspectRatio: 2/2>` |
@@ -8298,7 +8298,7 @@
 | `preserveAspectRatio=(null)`| (initial)| `<SVGPreserveAspectRatio: 6/1>` |
 | `preserveAspectRatio=(undefined)`| (initial)| `<SVGPreserveAspectRatio: 6/1>` |
 
-## `primitiveUnits` (on `<svg>`)
+## `primitiveUnits` (on `<filter>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `primitiveUnits=(string)`| (changed)| `<number: 2>` |
@@ -8323,7 +8323,7 @@
 | `primitiveUnits=(null)`| (initial)| `<number: 1>` |
 | `primitiveUnits=(undefined)`| (initial)| `<number: 1>` |
 
-## `profile` (on `<div>`)
+## `profile` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `profile=(string)`| (changed)| `"a string"` |
@@ -8348,7 +8348,7 @@
 | `profile=(null)`| (initial)| `<null>` |
 | `profile=(undefined)`| (initial)| `<null>` |
 
-## `property` (on `<div>`)
+## `property` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `property=(string)`| (changed)| `"a string"` |
@@ -8373,7 +8373,7 @@
 | `property=(null)`| (initial)| `<null>` |
 | `property=(undefined)`| (initial)| `<null>` |
 
-## `props` (on `<div>`)
+## `props` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `props=(string)`| (changed)| `"a string"` |
@@ -8398,7 +8398,7 @@
 | `props=(null)`| (initial)| `<null>` |
 | `props=(undefined)`| (initial)| `<null>` |
 
-## `r` (on `<svg>`)
+## `r` (on `<circle>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `r=(string)`| (changed)| `<SVGLength: 10pt>` |
@@ -8423,7 +8423,7 @@
 | `r=(null)`| (initial)| `<SVGLength: 0>` |
 | `r=(undefined)`| (initial)| `<SVGLength: 0>` |
 
-## `radioGroup` (on `<div>`)
+## `radioGroup` (on `<command>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `radioGroup=(string)`| (changed)| `"a string"` |
@@ -8448,7 +8448,7 @@
 | `radioGroup=(null)`| (initial)| `<null>` |
 | `radioGroup=(undefined)`| (initial)| `<null>` |
 
-## `radius` (on `<svg>`)
+## `radius` (on `<feMorphology>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `radius=(string)`| (changed)| `"a string"` |
@@ -8473,7 +8473,7 @@
 | `radius=(null)`| (initial)| `<null>` |
 | `radius=(undefined)`| (initial)| `<null>` |
 
-## `readOnly` (on `<div>`)
+## `readOnly` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `readOnly=(string)`| (changed)| `<boolean: true>` |
@@ -8489,16 +8489,16 @@
 | `readOnly=(float)`| (changed)| `<boolean: true>` |
 | `readOnly=(true)`| (changed)| `<boolean: true>` |
 | `readOnly=(false)`| (initial)| `<boolean: false>` |
-| `readOnly=(string 'true')`| (changed)| `<boolean: true>` |
-| `readOnly=(string 'false')`| (changed)| `<boolean: true>` |
+| `readOnly=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `readOnly=(string 'false')`| (changed, warning)| `<boolean: true>` |
 | `readOnly=(string 'on')`| (changed)| `<boolean: true>` |
 | `readOnly=(string 'off')`| (changed)| `<boolean: true>` |
-| `readOnly=(symbol)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
-| `readOnly=(function)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
+| `readOnly=(symbol)`| (initial, warning)| `<boolean: false>` |
+| `readOnly=(function)`| (initial, warning)| `<boolean: false>` |
 | `readOnly=(null)`| (initial)| `<boolean: false>` |
 | `readOnly=(undefined)`| (initial)| `<boolean: false>` |
 
-## `referrerPolicy` (on `<div>`)
+## `referrerPolicy` (on `<iframe>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `referrerPolicy=(string)`| (initial)| `<empty string>` |
@@ -8523,7 +8523,7 @@
 | `referrerPolicy=(null)`| (initial)| `<empty string>` |
 | `referrerPolicy=(undefined)`| (initial)| `<empty string>` |
 
-## `refX` (on `<svg>`)
+## `refX` (on `<marker>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `refX=(string)`| (changed)| `<SVGLength: 5em>` |
@@ -8548,7 +8548,7 @@
 | `refX=(null)`| (initial)| `<SVGLength: 0>` |
 | `refX=(undefined)`| (initial)| `<SVGLength: 0>` |
 
-## `refY` (on `<svg>`)
+## `refY` (on `<marker>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `refY=(string)`| (changed)| `<SVGLength: 6em>` |
@@ -8573,7 +8573,7 @@
 | `refY=(null)`| (initial)| `<SVGLength: 0>` |
 | `refY=(undefined)`| (initial)| `<SVGLength: 0>` |
 
-## `rel` (on `<div>`)
+## `rel` (on `<a>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `rel=(string)`| (changed)| `"a string"` |
@@ -8598,7 +8598,7 @@
 | `rel=(null)`| (initial)| `<empty string>` |
 | `rel=(undefined)`| (initial)| `<empty string>` |
 
-## `rendering-intent` (on `<svg>`)
+## `rendering-intent` (on `<color-profile>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `rendering-intent=(string)`| (changed, warning)| `"a string"` |
@@ -8623,7 +8623,7 @@
 | `rendering-intent=(null)`| (initial, warning)| `<null>` |
 | `rendering-intent=(undefined)`| (initial, warning)| `<null>` |
 
-## `renderingIntent` (on `<svg>`)
+## `renderingIntent` (on `<color-profile>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `renderingIntent=(string)`| (changed)| `"a string"` |
@@ -8643,12 +8643,12 @@
 | `renderingIntent=(string 'false')`| (changed)| `"false"` |
 | `renderingIntent=(string 'on')`| (changed)| `"on"` |
 | `renderingIntent=(string 'off')`| (changed)| `"off"` |
-| `renderingIntent=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `renderingIntent=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `renderingIntent=(symbol)`| (initial, warning)| `<null>` |
+| `renderingIntent=(function)`| (initial, warning)| `<null>` |
 | `renderingIntent=(null)`| (initial)| `<null>` |
 | `renderingIntent=(undefined)`| (initial)| `<null>` |
 
-## `repeatCount` (on `<svg>`)
+## `repeatCount` (on `<animate>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `repeatCount=(string)`| (initial)| `<null>` |
@@ -8673,7 +8673,7 @@
 | `repeatCount=(null)`| (initial)| `<null>` |
 | `repeatCount=(undefined)`| (initial)| `<null>` |
 
-## `repeatDur` (on `<svg>`)
+## `repeatDur` (on `<animate>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `repeatDur=(string)`| (initial)| `<null>` |
@@ -8698,7 +8698,7 @@
 | `repeatDur=(null)`| (initial)| `<null>` |
 | `repeatDur=(undefined)`| (initial)| `<null>` |
 
-## `required` (on `<div>`)
+## `required` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `required=(string)`| (changed)| `<boolean: true>` |
@@ -8714,16 +8714,16 @@
 | `required=(float)`| (changed)| `<boolean: true>` |
 | `required=(true)`| (changed)| `<boolean: true>` |
 | `required=(false)`| (initial)| `<boolean: false>` |
-| `required=(string 'true')`| (changed)| `<boolean: true>` |
-| `required=(string 'false')`| (changed)| `<boolean: true>` |
+| `required=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `required=(string 'false')`| (changed, warning)| `<boolean: true>` |
 | `required=(string 'on')`| (changed)| `<boolean: true>` |
 | `required=(string 'off')`| (changed)| `<boolean: true>` |
-| `required=(symbol)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
-| `required=(function)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
+| `required=(symbol)`| (initial, warning)| `<boolean: false>` |
+| `required=(function)`| (initial, warning)| `<boolean: false>` |
 | `required=(null)`| (initial)| `<boolean: false>` |
 | `required=(undefined)`| (initial)| `<boolean: false>` |
 
-## `requiredExtensions` (on `<svg>`)
+## `requiredExtensions` (on `<a>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `requiredExtensions=(string)`| (changed)| `["a", "string"]` |
@@ -8748,7 +8748,7 @@
 | `requiredExtensions=(null)`| (initial)| `[]` |
 | `requiredExtensions=(undefined)`| (initial)| `[]` |
 
-## `requiredFeatures` (on `<svg>`)
+## `requiredFeatures` (on `<a>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `requiredFeatures=(string)`| (changed)| `"a string"` |
@@ -8773,7 +8773,7 @@
 | `requiredFeatures=(null)`| (initial)| `<null>` |
 | `requiredFeatures=(undefined)`| (initial)| `<null>` |
 
-## `resource` (on `<div>`)
+## `resource` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `resource=(string)`| (changed)| `"a string"` |
@@ -8798,7 +8798,7 @@
 | `resource=(null)`| (initial)| `<null>` |
 | `resource=(undefined)`| (initial)| `<null>` |
 
-## `restart` (on `<svg>`)
+## `restart` (on `<animate>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `restart=(string)`| (initial)| `<null>` |
@@ -8823,7 +8823,7 @@
 | `restart=(null)`| (initial)| `<null>` |
 | `restart=(undefined)`| (initial)| `<null>` |
 
-## `result` (on `<svg>`)
+## `result` (on `<feBlend>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `result=(string)`| (changed)| `"a string"` |
@@ -8848,7 +8848,7 @@
 | `result=(null)`| (initial)| `<empty string>` |
 | `result=(undefined)`| (initial)| `<empty string>` |
 
-## `results` (on `<div>`)
+## `results` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `results=(string)`| (changed)| `"a string"` |
@@ -8873,7 +8873,7 @@
 | `results=(null)`| (initial)| `<null>` |
 | `results=(undefined)`| (initial)| `<null>` |
 
-## `reversed` (on `<div>`)
+## `reversed` (on `<ol>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `reversed=(string)`| (changed)| `<boolean: true>` |
@@ -8889,16 +8889,16 @@
 | `reversed=(float)`| (changed)| `<boolean: true>` |
 | `reversed=(true)`| (changed)| `<boolean: true>` |
 | `reversed=(false)`| (initial)| `<boolean: false>` |
-| `reversed=(string 'true')`| (changed)| `<boolean: true>` |
-| `reversed=(string 'false')`| (changed)| `<boolean: true>` |
+| `reversed=(string 'true')`| (changed, warning)| `<boolean: true>` |
+| `reversed=(string 'false')`| (changed, warning)| `<boolean: true>` |
 | `reversed=(string 'on')`| (changed)| `<boolean: true>` |
 | `reversed=(string 'off')`| (changed)| `<boolean: true>` |
-| `reversed=(symbol)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
-| `reversed=(function)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
+| `reversed=(symbol)`| (initial, warning)| `<boolean: false>` |
+| `reversed=(function)`| (initial, warning)| `<boolean: false>` |
 | `reversed=(null)`| (initial)| `<boolean: false>` |
 | `reversed=(undefined)`| (initial)| `<boolean: false>` |
 
-## `role` (on `<div>`)
+## `role` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `role=(string)`| (changed)| `"a string"` |
@@ -8923,7 +8923,7 @@
 | `role=(null)`| (initial)| `<null>` |
 | `role=(undefined)`| (initial)| `<null>` |
 
-## `rotate` (on `<svg>`)
+## `rotate` (on `<altGlyph>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `rotate=(string)`| (initial)| `<null>` |
@@ -8948,7 +8948,7 @@
 | `rotate=(null)`| (initial)| `<null>` |
 | `rotate=(undefined)`| (initial)| `<null>` |
 
-## `rows` (on `<div>`)
+## `rows` (on `<textarea>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `rows=(string)`| (initial)| `<number: 2>` |
@@ -8968,12 +8968,12 @@
 | `rows=(string 'false')`| (initial)| `<number: 2>` |
 | `rows=(string 'on')`| (initial)| `<number: 2>` |
 | `rows=(string 'off')`| (initial)| `<number: 2>` |
-| `rows=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<number: 2>` |
+| `rows=(symbol)`| (initial, warning)| `<number: 2>` |
 | `rows=(function)`| (initial, warning)| `<number: 2>` |
 | `rows=(null)`| (initial)| `<number: 2>` |
 | `rows=(undefined)`| (initial)| `<number: 2>` |
 
-## `rowSpan` (on `<tr>`)
+## `rowSpan` (on `<td>` inside `<tr>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `rowSpan=(string)`| (initial, ssr error, ssr mismatch)| `<number: 1>` |
@@ -8983,7 +8983,7 @@
 | `rowSpan=(object)`| (initial, ssr error, ssr mismatch)| `<number: 1>` |
 | `rowSpan=(numeric string)`| (changed, ssr error, ssr mismatch)| `<number: 42>` |
 | `rowSpan=(-1)`| (initial, ssr error, ssr mismatch)| `<number: 1>` |
-| `rowSpan=(0)`| (initial, ssr error, ssr mismatch)| `<number: 1>` |
+| `rowSpan=(0)`| (changed, ssr error, ssr mismatch)| `<number: 0>` |
 | `rowSpan=(integer)`| (initial, ssr error, ssr mismatch)| `<number: 1>` |
 | `rowSpan=(NaN)`| (initial, warning, ssr error, ssr mismatch)| `<number: 1>` |
 | `rowSpan=(float)`| (changed, ssr error, ssr mismatch)| `<number: 99>` |
@@ -8998,7 +8998,7 @@
 | `rowSpan=(null)`| (initial, ssr error, ssr mismatch)| `<number: 1>` |
 | `rowSpan=(undefined)`| (initial, ssr error, ssr mismatch)| `<number: 1>` |
 
-## `rx` (on `<svg>`)
+## `rx` (on `<ellipse>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `rx=(string)`| (changed)| `<SVGLength: 1px>` |
@@ -9023,7 +9023,7 @@
 | `rx=(null)`| (initial)| `<SVGLength: 0>` |
 | `rx=(undefined)`| (initial)| `<SVGLength: 0>` |
 
-## `ry` (on `<svg>`)
+## `ry` (on `<ellipse>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `ry=(string)`| (changed)| `<SVGLength: 2px>` |
@@ -9048,7 +9048,7 @@
 | `ry=(null)`| (initial)| `<SVGLength: 0>` |
 | `ry=(undefined)`| (initial)| `<SVGLength: 0>` |
 
-## `sandbox` (on `<div>`)
+## `sandbox` (on `<iframe>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `sandbox=(string)`| (changed)| `["allow-forms", "allow-scripts"]` |
@@ -9073,7 +9073,7 @@
 | `sandbox=(null)`| (initial)| `[]` |
 | `sandbox=(undefined)`| (initial)| `[]` |
 
-## `scale` (on `<svg>`)
+## `scale` (on `<feDisplacementMap>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `scale=(string)`| (initial)| `<number: 0>` |
@@ -9098,7 +9098,7 @@
 | `scale=(null)`| (initial)| `<number: 0>` |
 | `scale=(undefined)`| (initial)| `<number: 0>` |
 
-## `scope` (on `<tr>`)
+## `scope` (on `<th>` inside `<tr>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `scope=(string)`| (changed, ssr error, ssr mismatch)| `"row"` |
@@ -9123,7 +9123,7 @@
 | `scope=(null)`| (initial, ssr error, ssr mismatch)| `<empty string>` |
 | `scope=(undefined)`| (initial, ssr error, ssr mismatch)| `<empty string>` |
 
-## `scoped` (on `<div>`)
+## `scoped` (on `<style>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `scoped=(string)`| (changed)| `<empty string>` |
@@ -9139,16 +9139,16 @@
 | `scoped=(float)`| (changed)| `<empty string>` |
 | `scoped=(true)`| (changed)| `<empty string>` |
 | `scoped=(false)`| (initial)| `<null>` |
-| `scoped=(string 'true')`| (changed)| `<empty string>` |
-| `scoped=(string 'false')`| (changed)| `<empty string>` |
+| `scoped=(string 'true')`| (changed, warning)| `<empty string>` |
+| `scoped=(string 'false')`| (changed, warning)| `<empty string>` |
 | `scoped=(string 'on')`| (changed)| `<empty string>` |
 | `scoped=(string 'off')`| (changed)| `<empty string>` |
-| `scoped=(symbol)`| (initial, warning, ssr mismatch)| `<null>` |
-| `scoped=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `scoped=(symbol)`| (initial, warning)| `<null>` |
+| `scoped=(function)`| (initial, warning)| `<null>` |
 | `scoped=(null)`| (initial)| `<null>` |
 | `scoped=(undefined)`| (initial)| `<null>` |
 
-## `scrolling` (on `<div>`)
+## `scrolling` (on `<iframe>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `scrolling=(string)`| (changed)| `"no"` |
@@ -9173,7 +9173,7 @@
 | `scrolling=(null)`| (initial)| `<empty string>` |
 | `scrolling=(undefined)`| (initial)| `<empty string>` |
 
-## `seamless` (on `<div>`)
+## `seamless` (on `<iframe>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `seamless=(string)`| (changed)| `<empty string>` |
@@ -9189,16 +9189,16 @@
 | `seamless=(float)`| (changed)| `<empty string>` |
 | `seamless=(true)`| (changed)| `<empty string>` |
 | `seamless=(false)`| (initial)| `<null>` |
-| `seamless=(string 'true')`| (changed)| `<empty string>` |
-| `seamless=(string 'false')`| (changed)| `<empty string>` |
+| `seamless=(string 'true')`| (changed, warning)| `<empty string>` |
+| `seamless=(string 'false')`| (changed, warning)| `<empty string>` |
 | `seamless=(string 'on')`| (changed)| `<empty string>` |
 | `seamless=(string 'off')`| (changed)| `<empty string>` |
-| `seamless=(symbol)`| (initial, warning, ssr mismatch)| `<null>` |
-| `seamless=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `seamless=(symbol)`| (initial, warning)| `<null>` |
+| `seamless=(function)`| (initial, warning)| `<null>` |
 | `seamless=(null)`| (initial)| `<null>` |
 | `seamless=(undefined)`| (initial)| `<null>` |
 
-## `security` (on `<div>`)
+## `security` (on `<iframe>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `security=(string)`| (changed)| `"a string"` |
@@ -9223,7 +9223,7 @@
 | `security=(null)`| (initial)| `<null>` |
 | `security=(undefined)`| (initial)| `<null>` |
 
-## `seed` (on `<svg>`)
+## `seed` (on `<feTurbulence>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `seed=(string)`| (initial)| `<number: 0>` |
@@ -9248,7 +9248,7 @@
 | `seed=(null)`| (initial)| `<number: 0>` |
 | `seed=(undefined)`| (initial)| `<number: 0>` |
 
-## `selected` (on `<select>`)
+## `selected` (on `<option>` inside `<select>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `selected=(string)`| (initial, warning, ssr warning)| `<boolean: true>` |
@@ -9264,8 +9264,8 @@
 | `selected=(float)`| (initial, warning, ssr warning)| `<boolean: true>` |
 | `selected=(true)`| (initial, warning, ssr warning)| `<boolean: true>` |
 | `selected=(false)`| (initial, warning, ssr warning)| `<boolean: true>` |
-| `selected=(string 'true')`| (initial, warning, ssr warning)| `<boolean: true>` |
-| `selected=(string 'false')`| (initial, warning, ssr warning)| `<boolean: true>` |
+| `selected=(string 'true')`| (initial, warning)| `<boolean: true>` |
+| `selected=(string 'false')`| (initial, warning)| `<boolean: true>` |
 | `selected=(string 'on')`| (initial, warning, ssr warning)| `<boolean: true>` |
 | `selected=(string 'off')`| (initial, warning, ssr warning)| `<boolean: true>` |
 | `selected=(symbol)`| (initial, warning)| `<boolean: true>` |
@@ -9273,7 +9273,7 @@
 | `selected=(null)`| (initial)| `<boolean: true>` |
 | `selected=(undefined)`| (initial)| `<boolean: true>` |
 
-## `selectedIndex` (on `<div>`)
+## `selectedIndex` (on `<select>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `selectedIndex=(string)`| (initial, warning)| `<number: -1>` |
@@ -9298,7 +9298,7 @@
 | `selectedIndex=(null)`| (initial, warning)| `<number: -1>` |
 | `selectedIndex=(undefined)`| (initial, warning)| `<number: -1>` |
 
-## `shape` (on `<div>`)
+## `shape` (on `<a>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `shape=(string)`| (changed)| `"a string"` |
@@ -9323,7 +9323,7 @@
 | `shape=(null)`| (initial)| `<empty string>` |
 | `shape=(undefined)`| (initial)| `<empty string>` |
 
-## `shape-rendering` (on `<div>`)
+## `shape-rendering` (on `<svg>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `shape-rendering=(string)`| (changed, warning)| `"a string"` |
@@ -9348,7 +9348,7 @@
 | `shape-rendering=(null)`| (initial, warning)| `<null>` |
 | `shape-rendering=(undefined)`| (initial, warning)| `<null>` |
 
-## `shapeRendering` (on `<div>`)
+## `shapeRendering` (on `<svg>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `shapeRendering=(string)`| (changed)| `"a string"` |
@@ -9368,12 +9368,12 @@
 | `shapeRendering=(string 'false')`| (changed)| `"false"` |
 | `shapeRendering=(string 'on')`| (changed)| `"on"` |
 | `shapeRendering=(string 'off')`| (changed)| `"off"` |
-| `shapeRendering=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `shapeRendering=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `shapeRendering=(symbol)`| (initial, warning)| `<null>` |
+| `shapeRendering=(function)`| (initial, warning)| `<null>` |
 | `shapeRendering=(null)`| (initial)| `<null>` |
 | `shapeRendering=(undefined)`| (initial)| `<null>` |
 
-## `size` (on `<div>`)
+## `size` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `size=(string)`| (initial)| `<number: 20>` |
@@ -9393,12 +9393,12 @@
 | `size=(string 'false')`| (initial)| `<number: 20>` |
 | `size=(string 'on')`| (initial)| `<number: 20>` |
 | `size=(string 'off')`| (initial)| `<number: 20>` |
-| `size=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<number: 20>` |
+| `size=(symbol)`| (initial, warning)| `<number: 20>` |
 | `size=(function)`| (initial, warning)| `<number: 20>` |
 | `size=(null)`| (initial)| `<number: 20>` |
 | `size=(undefined)`| (initial)| `<number: 20>` |
 
-## `sizes` (on `<div>`)
+## `sizes` (on `<link>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `sizes=(string)`| (changed)| `["a", "string"]` |
@@ -9423,7 +9423,7 @@
 | `sizes=(null)`| (initial)| `[]` |
 | `sizes=(undefined)`| (initial)| `[]` |
 
-## `slope` (on `<svg>`)
+## `slope` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `slope=(string)`| (changed)| `"a string"` |
@@ -9448,7 +9448,7 @@
 | `slope=(null)`| (initial)| `<null>` |
 | `slope=(undefined)`| (initial)| `<null>` |
 
-## `spacing` (on `<svg>`)
+## `spacing` (on `<textPath>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `spacing=(string)`| (changed)| `<number: 1>` |
@@ -9473,7 +9473,7 @@
 | `spacing=(null)`| (initial)| `<number: 2>` |
 | `spacing=(undefined)`| (initial)| `<number: 2>` |
 
-## `span` (on `<colgroup>`)
+## `span` (on `<col>` inside `<colgroup>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `span=(string)`| (initial, ssr error, ssr mismatch)| `<number: 1>` |
@@ -9498,7 +9498,7 @@
 | `span=(null)`| (initial, ssr error, ssr mismatch)| `<number: 1>` |
 | `span=(undefined)`| (initial, ssr error, ssr mismatch)| `<number: 1>` |
 
-## `specularConstant` (on `<svg>`)
+## `specularConstant` (on `<feSpecularLighting>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `specularConstant=(string)`| (changed)| `<number: 0>` |
@@ -9523,7 +9523,7 @@
 | `specularConstant=(null)`| (initial)| `<number: 1>` |
 | `specularConstant=(undefined)`| (initial)| `<number: 1>` |
 
-## `specularExponent` (on `<svg>`)
+## `specularExponent` (on `<feSpecularLighting>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `specularExponent=(string)`| (initial)| `<number: 1>` |
@@ -9548,7 +9548,7 @@
 | `specularExponent=(null)`| (initial)| `<number: 1>` |
 | `specularExponent=(undefined)`| (initial)| `<number: 1>` |
 
-## `speed` (on `<div>`)
+## `speed` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `speed=(string)`| (changed)| `"a string"` |
@@ -9573,7 +9573,7 @@
 | `speed=(null)`| (initial)| `<null>` |
 | `speed=(undefined)`| (initial)| `<null>` |
 
-## `spellCheck` (on `<div>`)
+## `spellCheck` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `spellCheck=(string)`| (changed)| `<boolean: false>` |
@@ -9593,12 +9593,12 @@
 | `spellCheck=(string 'false')`| (changed)| `<boolean: false>` |
 | `spellCheck=(string 'on')`| (initial)| `<boolean: true>` |
 | `spellCheck=(string 'off')`| (initial)| `<boolean: true>` |
-| `spellCheck=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<boolean: true>` |
+| `spellCheck=(symbol)`| (initial, warning)| `<boolean: true>` |
 | `spellCheck=(function)`| (initial, warning)| `<boolean: true>` |
 | `spellCheck=(null)`| (initial)| `<boolean: true>` |
 | `spellCheck=(undefined)`| (initial)| `<boolean: true>` |
 
-## `spellcheck` (on `<div>`)
+## `spellcheck` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `spellcheck=(string)`| (changed, warning)| `<boolean: false>` |
@@ -9623,7 +9623,7 @@
 | `spellcheck=(null)`| (initial, warning)| `<boolean: true>` |
 | `spellcheck=(undefined)`| (initial, warning)| `<boolean: true>` |
 
-## `spreadMethod` (on `<svg>`)
+## `spreadMethod` (on `<linearGradient>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `spreadMethod=(string)`| (changed)| `<number: 2>` |
@@ -9648,7 +9648,7 @@
 | `spreadMethod=(null)`| (initial)| `<number: 1>` |
 | `spreadMethod=(undefined)`| (initial)| `<number: 1>` |
 
-## `src` (on `<div>`)
+## `src` (on `<img>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `src=(string)`| (changed)| `"https://reactjs.com/"` |
@@ -9673,7 +9673,7 @@
 | `src=(null)`| (initial)| `<empty string>` |
 | `src=(undefined)`| (initial)| `<empty string>` |
 
-## `srcDoc` (on `<div>`)
+## `srcDoc` (on `<iframe>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `srcDoc=(string)`| (changed)| `"<p>Hi</p>"` |
@@ -9698,7 +9698,7 @@
 | `srcDoc=(null)`| (initial)| `<empty string>` |
 | `srcDoc=(undefined)`| (initial)| `<empty string>` |
 
-## `srcdoc` (on `<div>`)
+## `srcdoc` (on `<iframe>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `srcdoc=(string)`| (changed, warning)| `"<p>Hi</p>"` |
@@ -9723,7 +9723,7 @@
 | `srcdoc=(null)`| (initial, warning)| `<empty string>` |
 | `srcdoc=(undefined)`| (initial, warning)| `<empty string>` |
 
-## `srcLang` (on `<audio>`)
+## `srcLang` (on `<track>` inside `<audio>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `srcLang=(string)`| (changed)| `"en"` |
@@ -9748,7 +9748,7 @@
 | `srcLang=(null)`| (initial)| `<empty string>` |
 | `srcLang=(undefined)`| (initial)| `<empty string>` |
 
-## `srclang` (on `<audio>`)
+## `srclang` (on `<track>` inside `<audio>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `srclang=(string)`| (changed, warning)| `"en"` |
@@ -9773,7 +9773,7 @@
 | `srclang=(null)`| (initial, warning)| `<empty string>` |
 | `srclang=(undefined)`| (initial, warning)| `<empty string>` |
 
-## `srcSet` (on `<div>`)
+## `srcSet` (on `<img>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `srcSet=(string)`| (initial)| `<undefined>` |
@@ -9798,7 +9798,7 @@
 | `srcSet=(null)`| (initial)| `<undefined>` |
 | `srcSet=(undefined)`| (initial)| `<undefined>` |
 
-## `srcset` (on `<div>`)
+## `srcset` (on `<img>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `srcset=(string)`| (changed, warning)| `"a string"` |
@@ -9823,7 +9823,7 @@
 | `srcset=(null)`| (initial, warning)| `<empty string>` |
 | `srcset=(undefined)`| (initial, warning)| `<empty string>` |
 
-## `start` (on `<div>`)
+## `start` (on `<ol>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `start=(string)`| (initial)| `<number: 1>` |
@@ -9843,12 +9843,12 @@
 | `start=(string 'false')`| (initial)| `<number: 1>` |
 | `start=(string 'on')`| (initial)| `<number: 1>` |
 | `start=(string 'off')`| (initial)| `<number: 1>` |
-| `start=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<number: 1>` |
+| `start=(symbol)`| (initial, warning)| `<number: 1>` |
 | `start=(function)`| (initial, warning)| `<number: 1>` |
 | `start=(null)`| (initial)| `<number: 1>` |
 | `start=(undefined)`| (initial)| `<number: 1>` |
 
-## `startOffset` (on `<svg>`)
+## `startOffset` (on `<textPath>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `startOffset=(string)`| (initial)| `<SVGLength: 0>` |
@@ -9873,7 +9873,7 @@
 | `startOffset=(null)`| (initial)| `<SVGLength: 0>` |
 | `startOffset=(undefined)`| (initial)| `<SVGLength: 0>` |
 
-## `state` (on `<div>`)
+## `state` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `state=(string)`| (changed)| `"a string"` |
@@ -9898,7 +9898,7 @@
 | `state=(null)`| (initial)| `<null>` |
 | `state=(undefined)`| (initial)| `<null>` |
 
-## `stdDeviation` (on `<svg>`)
+## `stdDeviation` (on `<feGaussianBlur>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `stdDeviation=(string)`| (changed)| `"a string"` |
@@ -9923,7 +9923,7 @@
 | `stdDeviation=(null)`| (initial)| `<null>` |
 | `stdDeviation=(undefined)`| (initial)| `<null>` |
 
-## `stemh` (on `<svg>`)
+## `stemh` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `stemh=(string)`| (changed)| `"a string"` |
@@ -9948,7 +9948,7 @@
 | `stemh=(null)`| (initial)| `<null>` |
 | `stemh=(undefined)`| (initial)| `<null>` |
 
-## `stemv` (on `<svg>`)
+## `stemv` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `stemv=(string)`| (changed)| `"a string"` |
@@ -9973,7 +9973,7 @@
 | `stemv=(null)`| (initial)| `<null>` |
 | `stemv=(undefined)`| (initial)| `<null>` |
 
-## `step` (on `<div>`)
+## `step` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `step=(string)`| (changed)| `"a string"` |
@@ -9998,7 +9998,7 @@
 | `step=(null)`| (initial)| `<null>` |
 | `step=(undefined)`| (initial)| `<null>` |
 
-## `stitchTiles` (on `<svg>`)
+## `stitchTiles` (on `<feTurbulence>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `stitchTiles=(string)`| (changed)| `<number: 1>` |
@@ -10023,7 +10023,7 @@
 | `stitchTiles=(null)`| (initial)| `<number: 2>` |
 | `stitchTiles=(undefined)`| (initial)| `<number: 2>` |
 
-## `stop-color` (on `<svg>`)
+## `stop-color` (on `<stop>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `stop-color=(string)`| (changed, warning)| `"a string"` |
@@ -10048,7 +10048,7 @@
 | `stop-color=(null)`| (initial, warning)| `<null>` |
 | `stop-color=(undefined)`| (initial, warning)| `<null>` |
 
-## `stop-opacity` (on `<svg>`)
+## `stop-opacity` (on `<stop>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `stop-opacity=(string)`| (changed, warning)| `"a string"` |
@@ -10073,7 +10073,7 @@
 | `stop-opacity=(null)`| (initial, warning)| `<null>` |
 | `stop-opacity=(undefined)`| (initial, warning)| `<null>` |
 
-## `stopColor` (on `<svg>`)
+## `stopColor` (on `<stop>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `stopColor=(string)`| (changed)| `"a string"` |
@@ -10093,12 +10093,12 @@
 | `stopColor=(string 'false')`| (changed)| `"false"` |
 | `stopColor=(string 'on')`| (changed)| `"on"` |
 | `stopColor=(string 'off')`| (changed)| `"off"` |
-| `stopColor=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `stopColor=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `stopColor=(symbol)`| (initial, warning)| `<null>` |
+| `stopColor=(function)`| (initial, warning)| `<null>` |
 | `stopColor=(null)`| (initial)| `<null>` |
 | `stopColor=(undefined)`| (initial)| `<null>` |
 
-## `stopOpacity` (on `<svg>`)
+## `stopOpacity` (on `<stop>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `stopOpacity=(string)`| (changed)| `"a string"` |
@@ -10118,12 +10118,12 @@
 | `stopOpacity=(string 'false')`| (changed)| `"false"` |
 | `stopOpacity=(string 'on')`| (changed)| `"on"` |
 | `stopOpacity=(string 'off')`| (changed)| `"off"` |
-| `stopOpacity=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `stopOpacity=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `stopOpacity=(symbol)`| (initial, warning)| `<null>` |
+| `stopOpacity=(function)`| (initial, warning)| `<null>` |
 | `stopOpacity=(null)`| (initial)| `<null>` |
 | `stopOpacity=(undefined)`| (initial)| `<null>` |
 
-## `strikethrough-position` (on `<svg>`)
+## `strikethrough-position` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `strikethrough-position=(string)`| (changed, warning)| `"a string"` |
@@ -10148,7 +10148,7 @@
 | `strikethrough-position=(null)`| (initial, warning)| `<null>` |
 | `strikethrough-position=(undefined)`| (initial, warning)| `<null>` |
 
-## `strikethrough-thickness` (on `<svg>`)
+## `strikethrough-thickness` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `strikethrough-thickness=(string)`| (changed, warning)| `"a string"` |
@@ -10173,7 +10173,7 @@
 | `strikethrough-thickness=(null)`| (initial, warning)| `<null>` |
 | `strikethrough-thickness=(undefined)`| (initial, warning)| `<null>` |
 
-## `strikethroughPosition` (on `<svg>`)
+## `strikethroughPosition` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `strikethroughPosition=(string)`| (changed)| `"a string"` |
@@ -10193,12 +10193,12 @@
 | `strikethroughPosition=(string 'false')`| (changed)| `"false"` |
 | `strikethroughPosition=(string 'on')`| (changed)| `"on"` |
 | `strikethroughPosition=(string 'off')`| (changed)| `"off"` |
-| `strikethroughPosition=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `strikethroughPosition=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `strikethroughPosition=(symbol)`| (initial, warning)| `<null>` |
+| `strikethroughPosition=(function)`| (initial, warning)| `<null>` |
 | `strikethroughPosition=(null)`| (initial)| `<null>` |
 | `strikethroughPosition=(undefined)`| (initial)| `<null>` |
 
-## `strikethroughThickness` (on `<svg>`)
+## `strikethroughThickness` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `strikethroughThickness=(string)`| (changed)| `"a string"` |
@@ -10218,12 +10218,12 @@
 | `strikethroughThickness=(string 'false')`| (changed)| `"false"` |
 | `strikethroughThickness=(string 'on')`| (changed)| `"on"` |
 | `strikethroughThickness=(string 'off')`| (changed)| `"off"` |
-| `strikethroughThickness=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `strikethroughThickness=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `strikethroughThickness=(symbol)`| (initial, warning)| `<null>` |
+| `strikethroughThickness=(function)`| (initial, warning)| `<null>` |
 | `strikethroughThickness=(null)`| (initial)| `<null>` |
 | `strikethroughThickness=(undefined)`| (initial)| `<null>` |
 
-## `string` (on `<svg>`)
+## `string` (on `<font-face-format>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `string=(string)`| (changed)| `"a string"` |
@@ -10248,7 +10248,7 @@
 | `string=(null)`| (initial)| `<null>` |
 | `string=(undefined)`| (initial)| `<null>` |
 
-## `stroke` (on `<svg>`)
+## `stroke` (on `<path>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `stroke=(string)`| (changed)| `"a string"` |
@@ -10273,7 +10273,7 @@
 | `stroke=(null)`| (initial)| `<null>` |
 | `stroke=(undefined)`| (initial)| `<null>` |
 
-## `stroke-dasharray` (on `<svg>`)
+## `stroke-dasharray` (on `<path>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `stroke-dasharray=(string)`| (changed, warning)| `"a string"` |
@@ -10298,7 +10298,7 @@
 | `stroke-dasharray=(null)`| (initial, warning)| `<null>` |
 | `stroke-dasharray=(undefined)`| (initial, warning)| `<null>` |
 
-## `stroke-Dasharray` (on `<svg>`)
+## `stroke-Dasharray` (on `<path>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `stroke-Dasharray=(string)`| (initial, warning, ssr mismatch)| `<null>` |
@@ -10323,7 +10323,7 @@
 | `stroke-Dasharray=(null)`| (initial, warning)| `<null>` |
 | `stroke-Dasharray=(undefined)`| (initial, warning)| `<null>` |
 
-## `stroke-dashoffset` (on `<svg>`)
+## `stroke-dashoffset` (on `<path>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `stroke-dashoffset=(string)`| (changed, warning)| `"a string"` |
@@ -10348,7 +10348,7 @@
 | `stroke-dashoffset=(null)`| (initial, warning)| `<null>` |
 | `stroke-dashoffset=(undefined)`| (initial, warning)| `<null>` |
 
-## `stroke-linecap` (on `<svg>`)
+## `stroke-linecap` (on `<path>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `stroke-linecap=(string)`| (changed, warning)| `"a string"` |
@@ -10373,7 +10373,7 @@
 | `stroke-linecap=(null)`| (initial, warning)| `<null>` |
 | `stroke-linecap=(undefined)`| (initial, warning)| `<null>` |
 
-## `stroke-linejoin` (on `<svg>`)
+## `stroke-linejoin` (on `<path>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `stroke-linejoin=(string)`| (changed, warning)| `"a string"` |
@@ -10398,7 +10398,7 @@
 | `stroke-linejoin=(null)`| (initial, warning)| `<null>` |
 | `stroke-linejoin=(undefined)`| (initial, warning)| `<null>` |
 
-## `stroke-miterlimit` (on `<svg>`)
+## `stroke-miterlimit` (on `<path>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `stroke-miterlimit=(string)`| (changed, warning)| `"a string"` |
@@ -10423,7 +10423,7 @@
 | `stroke-miterlimit=(null)`| (initial, warning)| `<null>` |
 | `stroke-miterlimit=(undefined)`| (initial, warning)| `<null>` |
 
-## `stroke-opacity` (on `<svg>`)
+## `stroke-opacity` (on `<path>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `stroke-opacity=(string)`| (changed, warning)| `"a string"` |
@@ -10448,7 +10448,7 @@
 | `stroke-opacity=(null)`| (initial, warning)| `<null>` |
 | `stroke-opacity=(undefined)`| (initial, warning)| `<null>` |
 
-## `stroke-width` (on `<svg>`)
+## `stroke-width` (on `<path>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `stroke-width=(string)`| (changed, warning)| `"a string"` |
@@ -10473,7 +10473,7 @@
 | `stroke-width=(null)`| (initial, warning)| `<null>` |
 | `stroke-width=(undefined)`| (initial, warning)| `<null>` |
 
-## `strokeDasharray` (on `<svg>`)
+## `strokeDasharray` (on `<path>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `strokeDasharray=(string)`| (changed)| `"a string"` |
@@ -10493,12 +10493,12 @@
 | `strokeDasharray=(string 'false')`| (changed)| `"false"` |
 | `strokeDasharray=(string 'on')`| (changed)| `"on"` |
 | `strokeDasharray=(string 'off')`| (changed)| `"off"` |
-| `strokeDasharray=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `strokeDasharray=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `strokeDasharray=(symbol)`| (initial, warning)| `<null>` |
+| `strokeDasharray=(function)`| (initial, warning)| `<null>` |
 | `strokeDasharray=(null)`| (initial)| `<null>` |
 | `strokeDasharray=(undefined)`| (initial)| `<null>` |
 
-## `strokeDashoffset` (on `<svg>`)
+## `strokeDashoffset` (on `<path>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `strokeDashoffset=(string)`| (changed)| `"a string"` |
@@ -10518,12 +10518,12 @@
 | `strokeDashoffset=(string 'false')`| (changed)| `"false"` |
 | `strokeDashoffset=(string 'on')`| (changed)| `"on"` |
 | `strokeDashoffset=(string 'off')`| (changed)| `"off"` |
-| `strokeDashoffset=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `strokeDashoffset=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `strokeDashoffset=(symbol)`| (initial, warning)| `<null>` |
+| `strokeDashoffset=(function)`| (initial, warning)| `<null>` |
 | `strokeDashoffset=(null)`| (initial)| `<null>` |
 | `strokeDashoffset=(undefined)`| (initial)| `<null>` |
 
-## `strokeLinecap` (on `<svg>`)
+## `strokeLinecap` (on `<path>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `strokeLinecap=(string)`| (changed)| `"a string"` |
@@ -10543,12 +10543,12 @@
 | `strokeLinecap=(string 'false')`| (changed)| `"false"` |
 | `strokeLinecap=(string 'on')`| (changed)| `"on"` |
 | `strokeLinecap=(string 'off')`| (changed)| `"off"` |
-| `strokeLinecap=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `strokeLinecap=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `strokeLinecap=(symbol)`| (initial, warning)| `<null>` |
+| `strokeLinecap=(function)`| (initial, warning)| `<null>` |
 | `strokeLinecap=(null)`| (initial)| `<null>` |
 | `strokeLinecap=(undefined)`| (initial)| `<null>` |
 
-## `strokeLinejoin` (on `<svg>`)
+## `strokeLinejoin` (on `<path>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `strokeLinejoin=(string)`| (changed)| `"a string"` |
@@ -10568,12 +10568,12 @@
 | `strokeLinejoin=(string 'false')`| (changed)| `"false"` |
 | `strokeLinejoin=(string 'on')`| (changed)| `"on"` |
 | `strokeLinejoin=(string 'off')`| (changed)| `"off"` |
-| `strokeLinejoin=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `strokeLinejoin=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `strokeLinejoin=(symbol)`| (initial, warning)| `<null>` |
+| `strokeLinejoin=(function)`| (initial, warning)| `<null>` |
 | `strokeLinejoin=(null)`| (initial)| `<null>` |
 | `strokeLinejoin=(undefined)`| (initial)| `<null>` |
 
-## `strokeMiterlimit` (on `<svg>`)
+## `strokeMiterlimit` (on `<path>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `strokeMiterlimit=(string)`| (changed)| `"a string"` |
@@ -10593,12 +10593,12 @@
 | `strokeMiterlimit=(string 'false')`| (changed)| `"false"` |
 | `strokeMiterlimit=(string 'on')`| (changed)| `"on"` |
 | `strokeMiterlimit=(string 'off')`| (changed)| `"off"` |
-| `strokeMiterlimit=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `strokeMiterlimit=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `strokeMiterlimit=(symbol)`| (initial, warning)| `<null>` |
+| `strokeMiterlimit=(function)`| (initial, warning)| `<null>` |
 | `strokeMiterlimit=(null)`| (initial)| `<null>` |
 | `strokeMiterlimit=(undefined)`| (initial)| `<null>` |
 
-## `strokeOpacity` (on `<svg>`)
+## `strokeOpacity` (on `<path>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `strokeOpacity=(string)`| (changed)| `"a string"` |
@@ -10618,12 +10618,12 @@
 | `strokeOpacity=(string 'false')`| (changed)| `"false"` |
 | `strokeOpacity=(string 'on')`| (changed)| `"on"` |
 | `strokeOpacity=(string 'off')`| (changed)| `"off"` |
-| `strokeOpacity=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `strokeOpacity=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `strokeOpacity=(symbol)`| (initial, warning)| `<null>` |
+| `strokeOpacity=(function)`| (initial, warning)| `<null>` |
 | `strokeOpacity=(null)`| (initial)| `<null>` |
 | `strokeOpacity=(undefined)`| (initial)| `<null>` |
 
-## `strokeWidth` (on `<svg>`)
+## `strokeWidth` (on `<path>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `strokeWidth=(string)`| (changed)| `"a string"` |
@@ -10643,12 +10643,12 @@
 | `strokeWidth=(string 'false')`| (changed)| `"false"` |
 | `strokeWidth=(string 'on')`| (changed)| `"on"` |
 | `strokeWidth=(string 'off')`| (changed)| `"off"` |
-| `strokeWidth=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `strokeWidth=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `strokeWidth=(symbol)`| (initial, warning)| `<null>` |
+| `strokeWidth=(function)`| (initial, warning)| `<null>` |
 | `strokeWidth=(null)`| (initial)| `<null>` |
 | `strokeWidth=(undefined)`| (initial)| `<null>` |
 
-## `style` (on `<div>`)
+## `style` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `style=(string)`| (changed, error, warning, ssr error)| `` |
@@ -10673,7 +10673,7 @@
 | `style=(null)`| (initial)| `[]` |
 | `style=(undefined)`| (initial)| `[]` |
 
-## `summary` (on `<div>`)
+## `summary` (on `<table>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `summary=(string)`| (changed)| `"a string"` |
@@ -10698,7 +10698,7 @@
 | `summary=(null)`| (initial)| `<empty string>` |
 | `summary=(undefined)`| (initial)| `<empty string>` |
 
-## `suppressContentEditableWarning` (on `<div>`)
+## `suppressContentEditableWarning` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `suppressContentEditableWarning=(string)`| (initial)| `<null>` |
@@ -10723,7 +10723,7 @@
 | `suppressContentEditableWarning=(null)`| (initial)| `<null>` |
 | `suppressContentEditableWarning=(undefined)`| (initial)| `<null>` |
 
-## `surfaceScale` (on `<svg>`)
+## `surfaceScale` (on `<feDiffuseLighting>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `surfaceScale=(string)`| (changed)| `<number: 0>` |
@@ -10748,7 +10748,7 @@
 | `surfaceScale=(null)`| (initial)| `<number: 1>` |
 | `surfaceScale=(undefined)`| (initial)| `<number: 1>` |
 
-## `systemLanguage` (on `<svg>`)
+## `systemLanguage` (on `<a>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `systemLanguage=(string)`| (changed)| `["en"]` |
@@ -10773,7 +10773,7 @@
 | `systemLanguage=(null)`| (initial)| `[]` |
 | `systemLanguage=(undefined)`| (initial)| `[]` |
 
-## `tabIndex` (on `<div>`)
+## `tabIndex` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `tabIndex=(string)`| (initial)| `<number: -1>` |
@@ -10798,7 +10798,32 @@
 | `tabIndex=(null)`| (initial)| `<number: -1>` |
 | `tabIndex=(undefined)`| (initial)| `<number: -1>` |
 
-## `tableValues` (on `<svg>`)
+## `tabIndex` (on `<svg>` inside `<div>`)
+| Test Case | Flags | Result |
+| --- | --- | --- |
+| `tabIndex=(string)`| (initial)| `<number: -1>` |
+| `tabIndex=(empty string)`| (initial)| `<number: -1>` |
+| `tabIndex=(array with string)`| (initial)| `<number: -1>` |
+| `tabIndex=(empty array)`| (initial)| `<number: -1>` |
+| `tabIndex=(object)`| (initial)| `<number: -1>` |
+| `tabIndex=(numeric string)`| (changed)| `<number: 42>` |
+| `tabIndex=(-1)`| (initial)| `<number: -1>` |
+| `tabIndex=(0)`| (changed)| `<number: 0>` |
+| `tabIndex=(integer)`| (changed)| `<number: 1>` |
+| `tabIndex=(NaN)`| (initial, warning)| `<number: -1>` |
+| `tabIndex=(float)`| (changed)| `<number: 99>` |
+| `tabIndex=(true)`| (initial, warning)| `<number: -1>` |
+| `tabIndex=(false)`| (initial, warning)| `<number: -1>` |
+| `tabIndex=(string 'true')`| (initial)| `<number: -1>` |
+| `tabIndex=(string 'false')`| (initial)| `<number: -1>` |
+| `tabIndex=(string 'on')`| (initial)| `<number: -1>` |
+| `tabIndex=(string 'off')`| (initial)| `<number: -1>` |
+| `tabIndex=(symbol)`| (initial, warning)| `<number: -1>` |
+| `tabIndex=(function)`| (initial, warning)| `<number: -1>` |
+| `tabIndex=(null)`| (initial)| `<number: -1>` |
+| `tabIndex=(undefined)`| (initial)| `<number: -1>` |
+
+## `tableValues` (on `<feFuncA>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `tableValues=(string)`| (changed)| `[0, 1, 2, 3]` |
@@ -10823,7 +10848,7 @@
 | `tableValues=(null)`| (initial)| `[]` |
 | `tableValues=(undefined)`| (initial)| `[]` |
 
-## `target` (on `<svg>`)
+## `target` (on `<a>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `target=(string)`| (changed)| `"a string"` |
@@ -10848,7 +10873,7 @@
 | `target=(null)`| (initial)| `<empty string>` |
 | `target=(undefined)`| (initial)| `<empty string>` |
 
-## `targetX` (on `<svg>`)
+## `targetX` (on `<feConvolveMatrix>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `targetX=(string)`| (initial)| `<number: 0>` |
@@ -10873,7 +10898,7 @@
 | `targetX=(null)`| (initial)| `<number: 0>` |
 | `targetX=(undefined)`| (initial)| `<number: 0>` |
 
-## `targetY` (on `<svg>`)
+## `targetY` (on `<feConvolveMatrix>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `targetY=(string)`| (initial)| `<number: 0>` |
@@ -10898,7 +10923,7 @@
 | `targetY=(null)`| (initial)| `<number: 0>` |
 | `targetY=(undefined)`| (initial)| `<number: 0>` |
 
-## `text-anchor` (on `<svg>`)
+## `text-anchor` (on `<text>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `text-anchor=(string)`| (changed, warning)| `"a string"` |
@@ -10923,7 +10948,7 @@
 | `text-anchor=(null)`| (initial, warning)| `<null>` |
 | `text-anchor=(undefined)`| (initial, warning)| `<null>` |
 
-## `text-decoration` (on `<svg>`)
+## `text-decoration` (on `<text>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `text-decoration=(string)`| (changed, warning)| `"a string"` |
@@ -10948,7 +10973,7 @@
 | `text-decoration=(null)`| (initial, warning)| `<null>` |
 | `text-decoration=(undefined)`| (initial, warning)| `<null>` |
 
-## `text-rendering` (on `<div>`)
+## `text-rendering` (on `<svg>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `text-rendering=(string)`| (changed, warning)| `"a string"` |
@@ -10973,7 +10998,7 @@
 | `text-rendering=(null)`| (initial, warning)| `<null>` |
 | `text-rendering=(undefined)`| (initial, warning)| `<null>` |
 
-## `textAnchor` (on `<svg>`)
+## `textAnchor` (on `<text>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `textAnchor=(string)`| (changed)| `"a string"` |
@@ -10993,12 +11018,12 @@
 | `textAnchor=(string 'false')`| (changed)| `"false"` |
 | `textAnchor=(string 'on')`| (changed)| `"on"` |
 | `textAnchor=(string 'off')`| (changed)| `"off"` |
-| `textAnchor=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `textAnchor=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `textAnchor=(symbol)`| (initial, warning)| `<null>` |
+| `textAnchor=(function)`| (initial, warning)| `<null>` |
 | `textAnchor=(null)`| (initial)| `<null>` |
 | `textAnchor=(undefined)`| (initial)| `<null>` |
 
-## `textDecoration` (on `<svg>`)
+## `textDecoration` (on `<text>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `textDecoration=(string)`| (changed)| `"a string"` |
@@ -11018,12 +11043,12 @@
 | `textDecoration=(string 'false')`| (changed)| `"false"` |
 | `textDecoration=(string 'on')`| (changed)| `"on"` |
 | `textDecoration=(string 'off')`| (changed)| `"off"` |
-| `textDecoration=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `textDecoration=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `textDecoration=(symbol)`| (initial, warning)| `<null>` |
+| `textDecoration=(function)`| (initial, warning)| `<null>` |
 | `textDecoration=(null)`| (initial)| `<null>` |
 | `textDecoration=(undefined)`| (initial)| `<null>` |
 
-## `textLength` (on `<svg>`)
+## `textLength` (on `<text>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `textLength=(string)`| (initial)| `<SVGLength: 0>` |
@@ -11048,7 +11073,7 @@
 | `textLength=(null)`| (initial)| `<SVGLength: 0>` |
 | `textLength=(undefined)`| (initial)| `<SVGLength: 0>` |
 
-## `textRendering` (on `<div>`)
+## `textRendering` (on `<svg>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `textRendering=(string)`| (changed)| `"a string"` |
@@ -11068,12 +11093,12 @@
 | `textRendering=(string 'false')`| (changed)| `"false"` |
 | `textRendering=(string 'on')`| (changed)| `"on"` |
 | `textRendering=(string 'off')`| (changed)| `"off"` |
-| `textRendering=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `textRendering=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `textRendering=(symbol)`| (initial, warning)| `<null>` |
+| `textRendering=(function)`| (initial, warning)| `<null>` |
 | `textRendering=(null)`| (initial)| `<null>` |
 | `textRendering=(undefined)`| (initial)| `<null>` |
 
-## `title` (on `<div>`)
+## `title` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `title=(string)`| (changed)| `"a string"` |
@@ -11098,7 +11123,7 @@
 | `title=(null)`| (initial)| `<empty string>` |
 | `title=(undefined)`| (initial)| `<empty string>` |
 
-## `to` (on `<svg>`)
+## `to` (on `<set>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `to=(string)`| (changed)| `"a string"` |
@@ -11123,7 +11148,7 @@
 | `to=(null)`| (initial)| `<null>` |
 | `to=(undefined)`| (initial)| `<null>` |
 
-## `transform` (on `<svg>`)
+## `transform` (on `<a>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `transform=(string)`| (changed)| `[<SVGMatrix 1 0 0 1 -10 -20>/2/0, <SVGMatrix 2 0 0 2 0 0>/3/0, <SVGMatrix 0.7071067811865476 0.7071067811865475 -0.7071067811865475 0.7071067811865476 0 0>/4/45, <SVGMatrix 1 0 0 1 5 10>/2/0]` |
@@ -11148,7 +11173,7 @@
 | `transform=(null)`| (initial)| `[]` |
 | `transform=(undefined)`| (initial)| `[]` |
 
-## `type` (on `<div>`)
+## `type` (on `<button>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `type=(string)`| (changed)| `"reset"` |
@@ -11173,7 +11198,7 @@
 | `type=(null)`| (initial)| `"submit"` |
 | `type=(undefined)`| (initial)| `"submit"` |
 
-## `type` (on `<svg>`)
+## `type` (on `<feFuncA>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `type=(string)`| (changed)| `<number: 3>` |
@@ -11198,7 +11223,7 @@
 | `type=(null)`| (initial)| `<number: 1>` |
 | `type=(undefined)`| (initial)| `<number: 1>` |
 
-## `typeof` (on `<div>`)
+## `typeof` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `typeof=(string)`| (changed)| `"a string"` |
@@ -11223,7 +11248,7 @@
 | `typeof=(null)`| (initial)| `<null>` |
 | `typeof=(undefined)`| (initial)| `<null>` |
 
-## `u1` (on `<svg>`)
+## `u1` (on `<hkern>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `u1=(string)`| (changed)| `"a string"` |
@@ -11248,7 +11273,7 @@
 | `u1=(null)`| (initial)| `<null>` |
 | `u1=(undefined)`| (initial)| `<null>` |
 
-## `u2` (on `<svg>`)
+## `u2` (on `<hkern>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `u2=(string)`| (changed)| `"a string"` |
@@ -11273,7 +11298,7 @@
 | `u2=(null)`| (initial)| `<null>` |
 | `u2=(undefined)`| (initial)| `<null>` |
 
-## `underline-position` (on `<svg>`)
+## `underline-position` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `underline-position=(string)`| (changed, warning)| `"a string"` |
@@ -11298,7 +11323,7 @@
 | `underline-position=(null)`| (initial, warning)| `<null>` |
 | `underline-position=(undefined)`| (initial, warning)| `<null>` |
 
-## `underline-thickness` (on `<svg>`)
+## `underline-thickness` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `underline-thickness=(string)`| (changed, warning)| `"a string"` |
@@ -11323,7 +11348,7 @@
 | `underline-thickness=(null)`| (initial, warning)| `<null>` |
 | `underline-thickness=(undefined)`| (initial, warning)| `<null>` |
 
-## `underlinePosition` (on `<svg>`)
+## `underlinePosition` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `underlinePosition=(string)`| (changed)| `"a string"` |
@@ -11343,12 +11368,12 @@
 | `underlinePosition=(string 'false')`| (changed)| `"false"` |
 | `underlinePosition=(string 'on')`| (changed)| `"on"` |
 | `underlinePosition=(string 'off')`| (changed)| `"off"` |
-| `underlinePosition=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `underlinePosition=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `underlinePosition=(symbol)`| (initial, warning)| `<null>` |
+| `underlinePosition=(function)`| (initial, warning)| `<null>` |
 | `underlinePosition=(null)`| (initial)| `<null>` |
 | `underlinePosition=(undefined)`| (initial)| `<null>` |
 
-## `underlineThickness` (on `<svg>`)
+## `underlineThickness` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `underlineThickness=(string)`| (changed)| `"a string"` |
@@ -11368,12 +11393,12 @@
 | `underlineThickness=(string 'false')`| (changed)| `"false"` |
 | `underlineThickness=(string 'on')`| (changed)| `"on"` |
 | `underlineThickness=(string 'off')`| (changed)| `"off"` |
-| `underlineThickness=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `underlineThickness=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `underlineThickness=(symbol)`| (initial, warning)| `<null>` |
+| `underlineThickness=(function)`| (initial, warning)| `<null>` |
 | `underlineThickness=(null)`| (initial)| `<null>` |
 | `underlineThickness=(undefined)`| (initial)| `<null>` |
 
-## `unicode` (on `<svg>`)
+## `unicode` (on `<glyph>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `unicode=(string)`| (changed)| `"a string"` |
@@ -11398,7 +11423,7 @@
 | `unicode=(null)`| (initial)| `<null>` |
 | `unicode=(undefined)`| (initial)| `<null>` |
 
-## `unicode-bidi` (on `<svg>`)
+## `unicode-bidi` (on `<text>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `unicode-bidi=(string)`| (changed, warning)| `"a string"` |
@@ -11423,7 +11448,7 @@
 | `unicode-bidi=(null)`| (initial, warning)| `<null>` |
 | `unicode-bidi=(undefined)`| (initial, warning)| `<null>` |
 
-## `unicode-range` (on `<svg>`)
+## `unicode-range` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `unicode-range=(string)`| (changed, warning)| `"a string"` |
@@ -11448,7 +11473,7 @@
 | `unicode-range=(null)`| (initial, warning)| `<null>` |
 | `unicode-range=(undefined)`| (initial, warning)| `<null>` |
 
-## `unicodeBidi` (on `<svg>`)
+## `unicodeBidi` (on `<text>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `unicodeBidi=(string)`| (changed)| `"a string"` |
@@ -11468,12 +11493,12 @@
 | `unicodeBidi=(string 'false')`| (changed)| `"false"` |
 | `unicodeBidi=(string 'on')`| (changed)| `"on"` |
 | `unicodeBidi=(string 'off')`| (changed)| `"off"` |
-| `unicodeBidi=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `unicodeBidi=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `unicodeBidi=(symbol)`| (initial, warning)| `<null>` |
+| `unicodeBidi=(function)`| (initial, warning)| `<null>` |
 | `unicodeBidi=(null)`| (initial)| `<null>` |
 | `unicodeBidi=(undefined)`| (initial)| `<null>` |
 
-## `unicodeRange` (on `<svg>`)
+## `unicodeRange` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `unicodeRange=(string)`| (changed)| `"a string"` |
@@ -11493,12 +11518,12 @@
 | `unicodeRange=(string 'false')`| (changed)| `"false"` |
 | `unicodeRange=(string 'on')`| (changed)| `"on"` |
 | `unicodeRange=(string 'off')`| (changed)| `"off"` |
-| `unicodeRange=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `unicodeRange=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `unicodeRange=(symbol)`| (initial, warning)| `<null>` |
+| `unicodeRange=(function)`| (initial, warning)| `<null>` |
 | `unicodeRange=(null)`| (initial)| `<null>` |
 | `unicodeRange=(undefined)`| (initial)| `<null>` |
 
-## `units-per-em` (on `<svg>`)
+## `units-per-em` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `units-per-em=(string)`| (changed, warning)| `"a string"` |
@@ -11523,7 +11548,7 @@
 | `units-per-em=(null)`| (initial, warning)| `<null>` |
 | `units-per-em=(undefined)`| (initial, warning)| `<null>` |
 
-## `unitsPerEm` (on `<svg>`)
+## `unitsPerEm` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `unitsPerEm=(string)`| (initial)| `<null>` |
@@ -11543,12 +11568,12 @@
 | `unitsPerEm=(string 'false')`| (initial)| `<null>` |
 | `unitsPerEm=(string 'on')`| (initial)| `<null>` |
 | `unitsPerEm=(string 'off')`| (initial)| `<null>` |
-| `unitsPerEm=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
+| `unitsPerEm=(symbol)`| (initial, warning)| `<null>` |
 | `unitsPerEm=(function)`| (initial, warning)| `<null>` |
 | `unitsPerEm=(null)`| (initial)| `<null>` |
 | `unitsPerEm=(undefined)`| (initial)| `<null>` |
 
-## `unknown` (on `<div>`)
+## `unknown` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `unknown=(string)`| (changed)| `"a string"` |
@@ -11573,7 +11598,7 @@
 | `unknown=(null)`| (initial)| `<null>` |
 | `unknown=(undefined)`| (initial)| `<null>` |
 
-## `unselectable` (on `<div>`)
+## `unselectable` (on `<span>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `unselectable=(string)`| (changed)| `"on"` |
@@ -11598,7 +11623,7 @@
 | `unselectable=(null)`| (initial)| `<null>` |
 | `unselectable=(undefined)`| (initial)| `<null>` |
 
-## `useMap` (on `<div>`)
+## `useMap` (on `<img>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `useMap=(string)`| (changed)| `"a string"` |
@@ -11623,7 +11648,7 @@
 | `useMap=(null)`| (initial)| `<empty string>` |
 | `useMap=(undefined)`| (initial)| `<empty string>` |
 
-## `v-alphabetic` (on `<svg>`)
+## `v-alphabetic` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `v-alphabetic=(string)`| (changed, warning)| `"a string"` |
@@ -11648,7 +11673,7 @@
 | `v-alphabetic=(null)`| (initial, warning)| `<null>` |
 | `v-alphabetic=(undefined)`| (initial, warning)| `<null>` |
 
-## `v-hanging` (on `<svg>`)
+## `v-hanging` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `v-hanging=(string)`| (changed, warning)| `"a string"` |
@@ -11673,7 +11698,7 @@
 | `v-hanging=(null)`| (initial, warning)| `<null>` |
 | `v-hanging=(undefined)`| (initial, warning)| `<null>` |
 
-## `v-ideographic` (on `<svg>`)
+## `v-ideographic` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `v-ideographic=(string)`| (changed, warning)| `"a string"` |
@@ -11698,7 +11723,7 @@
 | `v-ideographic=(null)`| (initial, warning)| `<null>` |
 | `v-ideographic=(undefined)`| (initial, warning)| `<null>` |
 
-## `v-mathematical` (on `<svg>`)
+## `v-mathematical` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `v-mathematical=(string)`| (changed, warning)| `"a string"` |
@@ -11723,7 +11748,7 @@
 | `v-mathematical=(null)`| (initial, warning)| `<null>` |
 | `v-mathematical=(undefined)`| (initial, warning)| `<null>` |
 
-## `vAlphabetic` (on `<svg>`)
+## `vAlphabetic` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `vAlphabetic=(string)`| (changed)| `"a string"` |
@@ -11743,12 +11768,12 @@
 | `vAlphabetic=(string 'false')`| (changed)| `"false"` |
 | `vAlphabetic=(string 'on')`| (changed)| `"on"` |
 | `vAlphabetic=(string 'off')`| (changed)| `"off"` |
-| `vAlphabetic=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `vAlphabetic=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `vAlphabetic=(symbol)`| (initial, warning)| `<null>` |
+| `vAlphabetic=(function)`| (initial, warning)| `<null>` |
 | `vAlphabetic=(null)`| (initial)| `<null>` |
 | `vAlphabetic=(undefined)`| (initial)| `<null>` |
 
-## `value` (on `<div>`)
+## `value` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `value=(string)`| (changed)| `"a string"` |
@@ -11768,12 +11793,12 @@
 | `value=(string 'false')`| (changed)| `"false"` |
 | `value=(string 'on')`| (changed)| `"on"` |
 | `value=(string 'off')`| (changed)| `"off"` |
-| `value=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<empty string>` |
-| `value=(function)`| (initial, warning, ssr mismatch)| `<empty string>` |
+| `value=(symbol)`| (initial, warning, ssr warning)| `<empty string>` |
+| `value=(function)`| (initial, warning, ssr warning)| `<empty string>` |
 | `value=(null)`| (initial, warning, ssr warning)| `<empty string>` |
 | `value=(undefined)`| (initial)| `<empty string>` |
 
-## `value` (on `<div>`)
+## `value` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `value=(string)`| (changed)| `"a string"` |
@@ -11793,12 +11818,12 @@
 | `value=(string 'false')`| (changed)| `"false"` |
 | `value=(string 'on')`| (changed)| `"on"` |
 | `value=(string 'off')`| (changed)| `"off"` |
-| `value=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<empty string>` |
-| `value=(function)`| (initial, warning, ssr mismatch)| `<empty string>` |
+| `value=(symbol)`| (initial, warning)| `<empty string>` |
+| `value=(function)`| (initial, warning)| `<empty string>` |
 | `value=(null)`| (initial, warning, ssr warning)| `<empty string>` |
 | `value=(undefined)`| (initial)| `<empty string>` |
 
-## `value` (on `<div>`)
+## `value` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `value=(string)`| (initial)| `<empty string>` |
@@ -11818,12 +11843,12 @@
 | `value=(string 'false')`| (initial)| `<empty string>` |
 | `value=(string 'on')`| (initial)| `<empty string>` |
 | `value=(string 'off')`| (initial)| `<empty string>` |
-| `value=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<empty string>` |
+| `value=(symbol)`| (initial, warning)| `<empty string>` |
 | `value=(function)`| (initial, warning)| `<empty string>` |
 | `value=(null)`| (initial, warning, ssr warning)| `<empty string>` |
 | `value=(undefined)`| (initial)| `<empty string>` |
 
-## `value` (on `<div>`)
+## `value` (on `<textarea>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `value=(string)`| (changed)| `"a string"` |
@@ -11843,12 +11868,12 @@
 | `value=(string 'false')`| (changed)| `"false"` |
 | `value=(string 'on')`| (changed)| `"on"` |
 | `value=(string 'off')`| (changed)| `"off"` |
-| `value=(symbol)`| (changed, error, warning, ssr error)| `` |
-| `value=(function)`| (changed, warning, ssr warning)| `"function f() {}"` |
+| `value=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<empty string>` |
+| `value=(function)`| (initial, warning, ssr mismatch)| `<empty string>` |
 | `value=(null)`| (initial, warning, ssr warning)| `<empty string>` |
 | `value=(undefined)`| (initial)| `<empty string>` |
 
-## `value` (on `<select>`)
+## `value` (on `<option>` inside `<select>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `value=(string)`| (changed)| `"a string"` |
@@ -11868,12 +11893,12 @@
 | `value=(string 'false')`| (changed)| `"false"` |
 | `value=(string 'on')`| (changed)| `"on"` |
 | `value=(string 'off')`| (changed)| `"off"` |
-| `value=(symbol)`| (changed, error, warning, ssr error)| `` |
-| `value=(function)`| (changed, warning)| `"function f() {}"` |
+| `value=(symbol)`| (initial, warning)| `<empty string>` |
+| `value=(function)`| (initial, warning)| `<empty string>` |
 | `value=(null)`| (initial)| `<empty string>` |
 | `value=(undefined)`| (initial)| `<empty string>` |
 
-## `Value` (on `<select>`)
+## `Value` (on `<option>` inside `<select>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `Value=(string)`| (changed, warning)| `"a string"` |
@@ -11898,7 +11923,7 @@
 | `Value=(null)`| (initial, warning)| `<empty string>` |
 | `Value=(undefined)`| (initial, warning)| `<empty string>` |
 
-## `values` (on `<svg>`)
+## `values` (on `<feColorMatrix>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `values=(string)`| (changed)| `[1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0]` |
@@ -11923,7 +11948,7 @@
 | `values=(null)`| (initial)| `[]` |
 | `values=(undefined)`| (initial)| `[]` |
 
-## `vector-effect` (on `<svg>`)
+## `vector-effect` (on `<line>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `vector-effect=(string)`| (changed, warning)| `"a string"` |
@@ -11948,7 +11973,7 @@
 | `vector-effect=(null)`| (initial, warning)| `<null>` |
 | `vector-effect=(undefined)`| (initial, warning)| `<null>` |
 
-## `vectorEffect` (on `<svg>`)
+## `vectorEffect` (on `<line>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `vectorEffect=(string)`| (changed)| `"a string"` |
@@ -11968,12 +11993,12 @@
 | `vectorEffect=(string 'false')`| (changed)| `"false"` |
 | `vectorEffect=(string 'on')`| (changed)| `"on"` |
 | `vectorEffect=(string 'off')`| (changed)| `"off"` |
-| `vectorEffect=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `vectorEffect=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `vectorEffect=(symbol)`| (initial, warning)| `<null>` |
+| `vectorEffect=(function)`| (initial, warning)| `<null>` |
 | `vectorEffect=(null)`| (initial)| `<null>` |
 | `vectorEffect=(undefined)`| (initial)| `<null>` |
 
-## `version` (on `<document>`)
+## `version` (on `<html>` inside `<document>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `version=(string)`| (changed, ssr mismatch)| `"a string"` |
@@ -11998,7 +12023,7 @@
 | `version=(null)`| (initial)| `<empty string>` |
 | `version=(undefined)`| (initial)| `<empty string>` |
 
-## `version` (on `<div>`)
+## `version` (on `<svg>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `version=(string)`| (changed)| `"a string"` |
@@ -12023,7 +12048,7 @@
 | `version=(null)`| (initial)| `<null>` |
 | `version=(undefined)`| (initial)| `<null>` |
 
-## `vert-adv-y` (on `<svg>`)
+## `vert-adv-y` (on `<font>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `vert-adv-y=(string)`| (initial, warning)| `<null>` |
@@ -12048,7 +12073,7 @@
 | `vert-adv-y=(null)`| (initial, warning)| `<null>` |
 | `vert-adv-y=(undefined)`| (initial, warning)| `<null>` |
 
-## `vert-origin-x` (on `<svg>`)
+## `vert-origin-x` (on `<font>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `vert-origin-x=(string)`| (initial, warning)| `<null>` |
@@ -12073,7 +12098,7 @@
 | `vert-origin-x=(null)`| (initial, warning)| `<null>` |
 | `vert-origin-x=(undefined)`| (initial, warning)| `<null>` |
 
-## `vert-origin-y` (on `<svg>`)
+## `vert-origin-y` (on `<font>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `vert-origin-y=(string)`| (changed, warning)| `"a string"` |
@@ -12098,7 +12123,7 @@
 | `vert-origin-y=(null)`| (initial, warning)| `<null>` |
 | `vert-origin-y=(undefined)`| (initial, warning)| `<null>` |
 
-## `vertAdvY` (on `<svg>`)
+## `vertAdvY` (on `<font>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `vertAdvY=(string)`| (changed)| `"a string"` |
@@ -12118,12 +12143,12 @@
 | `vertAdvY=(string 'false')`| (changed)| `"false"` |
 | `vertAdvY=(string 'on')`| (changed)| `"on"` |
 | `vertAdvY=(string 'off')`| (changed)| `"off"` |
-| `vertAdvY=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `vertAdvY=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `vertAdvY=(symbol)`| (initial, warning)| `<null>` |
+| `vertAdvY=(function)`| (initial, warning)| `<null>` |
 | `vertAdvY=(null)`| (initial)| `<null>` |
 | `vertAdvY=(undefined)`| (initial)| `<null>` |
 
-## `vertOriginX` (on `<svg>`)
+## `vertOriginX` (on `<font>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `vertOriginX=(string)`| (changed)| `"a string"` |
@@ -12143,12 +12168,12 @@
 | `vertOriginX=(string 'false')`| (changed)| `"false"` |
 | `vertOriginX=(string 'on')`| (changed)| `"on"` |
 | `vertOriginX=(string 'off')`| (changed)| `"off"` |
-| `vertOriginX=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `vertOriginX=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `vertOriginX=(symbol)`| (initial, warning)| `<null>` |
+| `vertOriginX=(function)`| (initial, warning)| `<null>` |
 | `vertOriginX=(null)`| (initial)| `<null>` |
 | `vertOriginX=(undefined)`| (initial)| `<null>` |
 
-## `vertOriginY` (on `<svg>`)
+## `vertOriginY` (on `<font>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `vertOriginY=(string)`| (changed)| `"a string"` |
@@ -12168,12 +12193,12 @@
 | `vertOriginY=(string 'false')`| (changed)| `"false"` |
 | `vertOriginY=(string 'on')`| (changed)| `"on"` |
 | `vertOriginY=(string 'off')`| (changed)| `"off"` |
-| `vertOriginY=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `vertOriginY=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `vertOriginY=(symbol)`| (initial, warning)| `<null>` |
+| `vertOriginY=(function)`| (initial, warning)| `<null>` |
 | `vertOriginY=(null)`| (initial)| `<null>` |
 | `vertOriginY=(undefined)`| (initial)| `<null>` |
 
-## `vHanging` (on `<svg>`)
+## `vHanging` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `vHanging=(string)`| (changed)| `"a string"` |
@@ -12193,12 +12218,12 @@
 | `vHanging=(string 'false')`| (changed)| `"false"` |
 | `vHanging=(string 'on')`| (changed)| `"on"` |
 | `vHanging=(string 'off')`| (changed)| `"off"` |
-| `vHanging=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `vHanging=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `vHanging=(symbol)`| (initial, warning)| `<null>` |
+| `vHanging=(function)`| (initial, warning)| `<null>` |
 | `vHanging=(null)`| (initial)| `<null>` |
 | `vHanging=(undefined)`| (initial)| `<null>` |
 
-## `vIdeographic` (on `<svg>`)
+## `vIdeographic` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `vIdeographic=(string)`| (changed)| `"a string"` |
@@ -12218,12 +12243,12 @@
 | `vIdeographic=(string 'false')`| (changed)| `"false"` |
 | `vIdeographic=(string 'on')`| (changed)| `"on"` |
 | `vIdeographic=(string 'off')`| (changed)| `"off"` |
-| `vIdeographic=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `vIdeographic=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `vIdeographic=(symbol)`| (initial, warning)| `<null>` |
+| `vIdeographic=(function)`| (initial, warning)| `<null>` |
 | `vIdeographic=(null)`| (initial)| `<null>` |
 | `vIdeographic=(undefined)`| (initial)| `<null>` |
 
-## `viewBox` (on `<svg>`)
+## `viewBox` (on `<marker>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `viewBox=(string)`| (changed)| `<SVGRect: 0,0,1500,1000>` |
@@ -12248,7 +12273,7 @@
 | `viewBox=(null)`| (initial)| `<SVGRect: 0,0,0,0>` |
 | `viewBox=(undefined)`| (initial)| `<SVGRect: 0,0,0,0>` |
 
-## `viewTarget` (on `<svg>`)
+## `viewTarget` (on `<view>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `viewTarget=(string)`| (changed, ssr mismatch)| `"a string"` |
@@ -12273,7 +12298,7 @@
 | `viewTarget=(null)`| (initial)| `<null>` |
 | `viewTarget=(undefined)`| (initial)| `<null>` |
 
-## `visibility` (on `<div>`)
+## `visibility` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `visibility=(string)`| (changed)| `"a string"` |
@@ -12298,7 +12323,7 @@
 | `visibility=(null)`| (initial)| `<null>` |
 | `visibility=(undefined)`| (initial)| `<null>` |
 
-## `visibility` (on `<svg>`)
+## `visibility` (on `<path>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `visibility=(string)`| (changed)| `"a string"` |
@@ -12323,7 +12348,7 @@
 | `visibility=(null)`| (initial)| `<null>` |
 | `visibility=(undefined)`| (initial)| `<null>` |
 
-## `vMathematical` (on `<svg>`)
+## `vMathematical` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `vMathematical=(string)`| (changed)| `"a string"` |
@@ -12343,12 +12368,12 @@
 | `vMathematical=(string 'false')`| (changed)| `"false"` |
 | `vMathematical=(string 'on')`| (changed)| `"on"` |
 | `vMathematical=(string 'off')`| (changed)| `"off"` |
-| `vMathematical=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `vMathematical=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `vMathematical=(symbol)`| (initial, warning)| `<null>` |
+| `vMathematical=(function)`| (initial, warning)| `<null>` |
 | `vMathematical=(null)`| (initial)| `<null>` |
 | `vMathematical=(undefined)`| (initial)| `<null>` |
 
-## `vocab` (on `<div>`)
+## `vocab` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `vocab=(string)`| (changed)| `"a string"` |
@@ -12373,7 +12398,7 @@
 | `vocab=(null)`| (initial)| `<null>` |
 | `vocab=(undefined)`| (initial)| `<null>` |
 
-## `width` (on `<div>`)
+## `width` (on `<img>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `width=(string)`| (initial)| `<number: 0>` |
@@ -12398,7 +12423,7 @@
 | `width=(null)`| (initial)| `<number: 0>` |
 | `width=(undefined)`| (initial)| `<number: 0>` |
 
-## `width` (on `<svg>`)
+## `width` (on `<rect>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `width=(string)`| (initial)| `<SVGLength: 0>` |
@@ -12423,7 +12448,7 @@
 | `width=(null)`| (initial)| `<SVGLength: 0>` |
 | `width=(undefined)`| (initial)| `<SVGLength: 0>` |
 
-## `widths` (on `<svg>`)
+## `widths` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `widths=(string)`| (changed)| `"a string"` |
@@ -12448,7 +12473,7 @@
 | `widths=(null)`| (initial)| `<null>` |
 | `widths=(undefined)`| (initial)| `<null>` |
 
-## `wmode` (on `<div>`)
+## `wmode` (on `<embed>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `wmode=(string)`| (changed)| `"a string"` |
@@ -12473,7 +12498,7 @@
 | `wmode=(null)`| (initial)| `<null>` |
 | `wmode=(undefined)`| (initial)| `<null>` |
 
-## `word-spacing` (on `<svg>`)
+## `word-spacing` (on `<text>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `word-spacing=(string)`| (changed, warning)| `"a string"` |
@@ -12498,7 +12523,7 @@
 | `word-spacing=(null)`| (initial, warning)| `<null>` |
 | `word-spacing=(undefined)`| (initial, warning)| `<null>` |
 
-## `wordSpacing` (on `<svg>`)
+## `wordSpacing` (on `<text>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `wordSpacing=(string)`| (changed)| `"a string"` |
@@ -12518,12 +12543,12 @@
 | `wordSpacing=(string 'false')`| (changed)| `"false"` |
 | `wordSpacing=(string 'on')`| (changed)| `"on"` |
 | `wordSpacing=(string 'off')`| (changed)| `"off"` |
-| `wordSpacing=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `wordSpacing=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `wordSpacing=(symbol)`| (initial, warning)| `<null>` |
+| `wordSpacing=(function)`| (initial, warning)| `<null>` |
 | `wordSpacing=(null)`| (initial)| `<null>` |
 | `wordSpacing=(undefined)`| (initial)| `<null>` |
 
-## `wrap` (on `<div>`)
+## `wrap` (on `<textarea>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `wrap=(string)`| (changed)| `"a string"` |
@@ -12548,7 +12573,7 @@
 | `wrap=(null)`| (initial)| `<empty string>` |
 | `wrap=(undefined)`| (initial)| `<empty string>` |
 
-## `writing-mode` (on `<svg>`)
+## `writing-mode` (on `<text>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `writing-mode=(string)`| (changed, warning)| `"a string"` |
@@ -12573,7 +12598,7 @@
 | `writing-mode=(null)`| (initial, warning)| `<null>` |
 | `writing-mode=(undefined)`| (initial, warning)| `<null>` |
 
-## `writingMode` (on `<svg>`)
+## `writingMode` (on `<text>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `writingMode=(string)`| (changed)| `"a string"` |
@@ -12593,12 +12618,12 @@
 | `writingMode=(string 'false')`| (changed)| `"false"` |
 | `writingMode=(string 'on')`| (changed)| `"on"` |
 | `writingMode=(string 'off')`| (changed)| `"off"` |
-| `writingMode=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `writingMode=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `writingMode=(symbol)`| (initial, warning)| `<null>` |
+| `writingMode=(function)`| (initial, warning)| `<null>` |
 | `writingMode=(null)`| (initial)| `<null>` |
 | `writingMode=(undefined)`| (initial)| `<null>` |
 
-## `x` (on `<svg>`)
+## `x` (on `<altGlyph>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `x=(string)`| (changed)| `"a string"` |
@@ -12623,7 +12648,7 @@
 | `x=(null)`| (initial)| `<null>` |
 | `x=(undefined)`| (initial)| `<null>` |
 
-## `x-height` (on `<svg>`)
+## `x-height` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `x-height=(string)`| (changed, warning)| `"a string"` |
@@ -12648,7 +12673,7 @@
 | `x-height=(null)`| (initial, warning)| `<null>` |
 | `x-height=(undefined)`| (initial, warning)| `<null>` |
 
-## `x1` (on `<svg>`)
+## `x1` (on `<line>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `x1=(string)`| (initial)| `<SVGLength: 0>` |
@@ -12673,7 +12698,7 @@
 | `x1=(null)`| (initial)| `<SVGLength: 0>` |
 | `x1=(undefined)`| (initial)| `<SVGLength: 0>` |
 
-## `x2` (on `<svg>`)
+## `x2` (on `<line>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `x2=(string)`| (initial)| `<SVGLength: 0>` |
@@ -12698,7 +12723,7 @@
 | `x2=(null)`| (initial)| `<SVGLength: 0>` |
 | `x2=(undefined)`| (initial)| `<SVGLength: 0>` |
 
-## `xChannelSelector` (on `<svg>`)
+## `xChannelSelector` (on `<feDisplacementMap>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xChannelSelector=(string)`| (changed)| `<number: 1>` |
@@ -12723,7 +12748,7 @@
 | `xChannelSelector=(null)`| (initial)| `<number: 4>` |
 | `xChannelSelector=(undefined)`| (initial)| `<number: 4>` |
 
-## `xHeight` (on `<svg>`)
+## `xHeight` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xHeight=(string)`| (changed)| `"a string"` |
@@ -12743,12 +12768,12 @@
 | `xHeight=(string 'false')`| (changed)| `"false"` |
 | `xHeight=(string 'on')`| (changed)| `"on"` |
 | `xHeight=(string 'off')`| (changed)| `"off"` |
-| `xHeight=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `xHeight=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `xHeight=(symbol)`| (initial, warning)| `<null>` |
+| `xHeight=(function)`| (initial, warning)| `<null>` |
 | `xHeight=(null)`| (initial)| `<null>` |
 | `xHeight=(undefined)`| (initial)| `<null>` |
 
-## `XLink:Actuate` (on `<div>`)
+## `XLink:Actuate` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `XLink:Actuate=(string)`| (changed, warning)| `"a string"` |
@@ -12773,7 +12798,7 @@
 | `XLink:Actuate=(null)`| (initial, warning)| `<null>` |
 | `XLink:Actuate=(undefined)`| (initial, warning)| `<null>` |
 
-## `xlink:actuate` (on `<div>`)
+## `xlink:actuate` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xlink:actuate=(string)`| (changed, warning)| `"a string"` |
@@ -12798,7 +12823,7 @@
 | `xlink:actuate=(null)`| (initial, warning)| `<null>` |
 | `xlink:actuate=(undefined)`| (initial, warning)| `<null>` |
 
-## `xlink:arcrole` (on `<div>`)
+## `xlink:arcrole` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xlink:arcrole=(string)`| (changed, warning)| `"a string"` |
@@ -12823,7 +12848,7 @@
 | `xlink:arcrole=(null)`| (initial, warning)| `<null>` |
 | `xlink:arcrole=(undefined)`| (initial, warning)| `<null>` |
 
-## `xlink:href` (on `<div>`)
+## `xlink:href` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xlink:href=(string)`| (changed, warning)| `"a string"` |
@@ -12848,7 +12873,7 @@
 | `xlink:href=(null)`| (initial, warning)| `<null>` |
 | `xlink:href=(undefined)`| (initial, warning)| `<null>` |
 
-## `xlink:role` (on `<div>`)
+## `xlink:role` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xlink:role=(string)`| (changed, warning)| `"a string"` |
@@ -12873,7 +12898,7 @@
 | `xlink:role=(null)`| (initial, warning)| `<null>` |
 | `xlink:role=(undefined)`| (initial, warning)| `<null>` |
 
-## `xlink:show` (on `<div>`)
+## `xlink:show` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xlink:show=(string)`| (changed, warning)| `"a string"` |
@@ -12898,7 +12923,7 @@
 | `xlink:show=(null)`| (initial, warning)| `<null>` |
 | `xlink:show=(undefined)`| (initial, warning)| `<null>` |
 
-## `xlink:title` (on `<div>`)
+## `xlink:title` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xlink:title=(string)`| (changed, warning)| `"a string"` |
@@ -12923,7 +12948,7 @@
 | `xlink:title=(null)`| (initial, warning)| `<null>` |
 | `xlink:title=(undefined)`| (initial, warning)| `<null>` |
 
-## `xlink:type` (on `<div>`)
+## `xlink:type` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xlink:type=(string)`| (changed, warning)| `"a string"` |
@@ -12948,7 +12973,7 @@
 | `xlink:type=(null)`| (initial, warning)| `<null>` |
 | `xlink:type=(undefined)`| (initial, warning)| `<null>` |
 
-## `xlinkActuate` (on `<div>`)
+## `xlinkActuate` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xlinkActuate=(string)`| (changed)| `"a string"` |
@@ -12968,12 +12993,12 @@
 | `xlinkActuate=(string 'false')`| (changed)| `"false"` |
 | `xlinkActuate=(string 'on')`| (changed)| `"on"` |
 | `xlinkActuate=(string 'off')`| (changed)| `"off"` |
-| `xlinkActuate=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `xlinkActuate=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `xlinkActuate=(symbol)`| (initial, warning)| `<null>` |
+| `xlinkActuate=(function)`| (initial, warning)| `<null>` |
 | `xlinkActuate=(null)`| (initial)| `<null>` |
 | `xlinkActuate=(undefined)`| (initial)| `<null>` |
 
-## `XlinkActuate` (on `<div>`)
+## `XlinkActuate` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `XlinkActuate=(string)`| (initial, warning)| `<null>` |
@@ -12998,7 +13023,7 @@
 | `XlinkActuate=(null)`| (initial, warning)| `<null>` |
 | `XlinkActuate=(undefined)`| (initial, warning)| `<null>` |
 
-## `xlinkArcrole` (on `<div>`)
+## `xlinkArcrole` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xlinkArcrole=(string)`| (changed)| `"a string"` |
@@ -13018,12 +13043,12 @@
 | `xlinkArcrole=(string 'false')`| (changed)| `"false"` |
 | `xlinkArcrole=(string 'on')`| (changed)| `"on"` |
 | `xlinkArcrole=(string 'off')`| (changed)| `"off"` |
-| `xlinkArcrole=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `xlinkArcrole=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `xlinkArcrole=(symbol)`| (initial, warning)| `<null>` |
+| `xlinkArcrole=(function)`| (initial, warning)| `<null>` |
 | `xlinkArcrole=(null)`| (initial)| `<null>` |
 | `xlinkArcrole=(undefined)`| (initial)| `<null>` |
 
-## `xlinkHref` (on `<div>`)
+## `xlinkHref` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xlinkHref=(string)`| (changed)| `"a string"` |
@@ -13043,12 +13068,12 @@
 | `xlinkHref=(string 'false')`| (changed)| `"false"` |
 | `xlinkHref=(string 'on')`| (changed)| `"on"` |
 | `xlinkHref=(string 'off')`| (changed)| `"off"` |
-| `xlinkHref=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `xlinkHref=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `xlinkHref=(symbol)`| (initial, warning)| `<null>` |
+| `xlinkHref=(function)`| (initial, warning)| `<null>` |
 | `xlinkHref=(null)`| (initial)| `<null>` |
 | `xlinkHref=(undefined)`| (initial)| `<null>` |
 
-## `xlinkRole` (on `<div>`)
+## `xlinkRole` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xlinkRole=(string)`| (changed)| `"a string"` |
@@ -13068,12 +13093,12 @@
 | `xlinkRole=(string 'false')`| (changed)| `"false"` |
 | `xlinkRole=(string 'on')`| (changed)| `"on"` |
 | `xlinkRole=(string 'off')`| (changed)| `"off"` |
-| `xlinkRole=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `xlinkRole=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `xlinkRole=(symbol)`| (initial, warning)| `<null>` |
+| `xlinkRole=(function)`| (initial, warning)| `<null>` |
 | `xlinkRole=(null)`| (initial)| `<null>` |
 | `xlinkRole=(undefined)`| (initial)| `<null>` |
 
-## `xlinkShow` (on `<div>`)
+## `xlinkShow` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xlinkShow=(string)`| (changed)| `"a string"` |
@@ -13093,12 +13118,12 @@
 | `xlinkShow=(string 'false')`| (changed)| `"false"` |
 | `xlinkShow=(string 'on')`| (changed)| `"on"` |
 | `xlinkShow=(string 'off')`| (changed)| `"off"` |
-| `xlinkShow=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `xlinkShow=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `xlinkShow=(symbol)`| (initial, warning)| `<null>` |
+| `xlinkShow=(function)`| (initial, warning)| `<null>` |
 | `xlinkShow=(null)`| (initial)| `<null>` |
 | `xlinkShow=(undefined)`| (initial)| `<null>` |
 
-## `xlinkTitle` (on `<div>`)
+## `xlinkTitle` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xlinkTitle=(string)`| (changed)| `"a string"` |
@@ -13118,12 +13143,12 @@
 | `xlinkTitle=(string 'false')`| (changed)| `"false"` |
 | `xlinkTitle=(string 'on')`| (changed)| `"on"` |
 | `xlinkTitle=(string 'off')`| (changed)| `"off"` |
-| `xlinkTitle=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `xlinkTitle=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `xlinkTitle=(symbol)`| (initial, warning)| `<null>` |
+| `xlinkTitle=(function)`| (initial, warning)| `<null>` |
 | `xlinkTitle=(null)`| (initial)| `<null>` |
 | `xlinkTitle=(undefined)`| (initial)| `<null>` |
 
-## `xlinkType` (on `<div>`)
+## `xlinkType` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xlinkType=(string)`| (changed)| `"a string"` |
@@ -13143,12 +13168,12 @@
 | `xlinkType=(string 'false')`| (changed)| `"false"` |
 | `xlinkType=(string 'on')`| (changed)| `"on"` |
 | `xlinkType=(string 'off')`| (changed)| `"off"` |
-| `xlinkType=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `xlinkType=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `xlinkType=(symbol)`| (initial, warning)| `<null>` |
+| `xlinkType=(function)`| (initial, warning)| `<null>` |
 | `xlinkType=(null)`| (initial)| `<null>` |
 | `xlinkType=(undefined)`| (initial)| `<null>` |
 
-## `xml:base` (on `<div>`)
+## `xml:base` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xml:base=(string)`| (changed, warning)| `"a string"` |
@@ -13173,7 +13198,7 @@
 | `xml:base=(null)`| (initial, warning)| `<null>` |
 | `xml:base=(undefined)`| (initial, warning)| `<null>` |
 
-## `xml:lang` (on `<div>`)
+## `xml:lang` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xml:lang=(string)`| (changed, warning)| `"a string"` |
@@ -13198,7 +13223,7 @@
 | `xml:lang=(null)`| (initial, warning)| `<null>` |
 | `xml:lang=(undefined)`| (initial, warning)| `<null>` |
 
-## `xml:space` (on `<div>`)
+## `xml:space` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xml:space=(string)`| (changed, warning)| `"a string"` |
@@ -13223,7 +13248,7 @@
 | `xml:space=(null)`| (initial, warning)| `<null>` |
 | `xml:space=(undefined)`| (initial, warning)| `<null>` |
 
-## `xmlBase` (on `<div>`)
+## `xmlBase` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xmlBase=(string)`| (changed)| `"a string"` |
@@ -13243,12 +13268,12 @@
 | `xmlBase=(string 'false')`| (changed)| `"false"` |
 | `xmlBase=(string 'on')`| (changed)| `"on"` |
 | `xmlBase=(string 'off')`| (changed)| `"off"` |
-| `xmlBase=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `xmlBase=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `xmlBase=(symbol)`| (initial, warning)| `<null>` |
+| `xmlBase=(function)`| (initial, warning)| `<null>` |
 | `xmlBase=(null)`| (initial)| `<null>` |
 | `xmlBase=(undefined)`| (initial)| `<null>` |
 
-## `xmlLang` (on `<div>`)
+## `xmlLang` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xmlLang=(string)`| (changed)| `"a string"` |
@@ -13268,12 +13293,12 @@
 | `xmlLang=(string 'false')`| (changed)| `"false"` |
 | `xmlLang=(string 'on')`| (changed)| `"on"` |
 | `xmlLang=(string 'off')`| (changed)| `"off"` |
-| `xmlLang=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `xmlLang=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `xmlLang=(symbol)`| (initial, warning)| `<null>` |
+| `xmlLang=(function)`| (initial, warning)| `<null>` |
 | `xmlLang=(null)`| (initial)| `<null>` |
 | `xmlLang=(undefined)`| (initial)| `<null>` |
 
-## `xmlns` (on `<div>`)
+## `xmlns` (on `<svg>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xmlns=(string)`| (initial)| `"http://www.w3.org/2000/svg"` |
@@ -13298,7 +13323,7 @@
 | `xmlns=(null)`| (initial)| `"http://www.w3.org/2000/svg"` |
 | `xmlns=(undefined)`| (initial)| `"http://www.w3.org/2000/svg"` |
 
-## `xmlns:xlink` (on `<div>`)
+## `xmlns:xlink` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xmlns:xlink=(string)`| (changed, warning)| `"a string"` |
@@ -13323,7 +13348,7 @@
 | `xmlns:xlink=(null)`| (initial, warning)| `<null>` |
 | `xmlns:xlink=(undefined)`| (initial, warning)| `<null>` |
 
-## `xmlnsXlink` (on `<div>`)
+## `xmlnsXlink` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xmlnsXlink=(string)`| (changed)| `"a string"` |
@@ -13343,12 +13368,12 @@
 | `xmlnsXlink=(string 'false')`| (changed)| `"false"` |
 | `xmlnsXlink=(string 'on')`| (changed)| `"on"` |
 | `xmlnsXlink=(string 'off')`| (changed)| `"off"` |
-| `xmlnsXlink=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `xmlnsXlink=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `xmlnsXlink=(symbol)`| (initial, warning)| `<null>` |
+| `xmlnsXlink=(function)`| (initial, warning)| `<null>` |
 | `xmlnsXlink=(null)`| (initial)| `<null>` |
 | `xmlnsXlink=(undefined)`| (initial)| `<null>` |
 
-## `xmlSpace` (on `<div>`)
+## `xmlSpace` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `xmlSpace=(string)`| (changed)| `"a string"` |
@@ -13368,12 +13393,12 @@
 | `xmlSpace=(string 'false')`| (changed)| `"false"` |
 | `xmlSpace=(string 'on')`| (changed)| `"on"` |
 | `xmlSpace=(string 'off')`| (changed)| `"off"` |
-| `xmlSpace=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `xmlSpace=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `xmlSpace=(symbol)`| (initial, warning)| `<null>` |
+| `xmlSpace=(function)`| (initial, warning)| `<null>` |
 | `xmlSpace=(null)`| (initial)| `<null>` |
 | `xmlSpace=(undefined)`| (initial)| `<null>` |
 
-## `y` (on `<svg>`)
+## `y` (on `<altGlyph>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `y=(string)`| (changed)| `"a string"` |
@@ -13398,7 +13423,7 @@
 | `y=(null)`| (initial)| `<null>` |
 | `y=(undefined)`| (initial)| `<null>` |
 
-## `y1` (on `<svg>`)
+## `y1` (on `<line>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `y1=(string)`| (initial)| `<SVGLength: 0>` |
@@ -13423,7 +13448,7 @@
 | `y1=(null)`| (initial)| `<SVGLength: 0>` |
 | `y1=(undefined)`| (initial)| `<SVGLength: 0>` |
 
-## `y2` (on `<svg>`)
+## `y2` (on `<line>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `y2=(string)`| (initial)| `<SVGLength: 0>` |
@@ -13448,7 +13473,7 @@
 | `y2=(null)`| (initial)| `<SVGLength: 0>` |
 | `y2=(undefined)`| (initial)| `<SVGLength: 0>` |
 
-## `yChannelSelector` (on `<svg>`)
+## `yChannelSelector` (on `<feDisplacementMap>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `yChannelSelector=(string)`| (changed)| `<number: 3>` |
@@ -13473,7 +13498,7 @@
 | `yChannelSelector=(null)`| (initial)| `<number: 4>` |
 | `yChannelSelector=(undefined)`| (initial)| `<number: 4>` |
 
-## `z` (on `<svg>`)
+## `z` (on `<fePointLight>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `z=(string)`| (initial)| `<number: 0>` |
@@ -13498,7 +13523,7 @@
 | `z=(null)`| (initial)| `<number: 0>` |
 | `z=(undefined)`| (initial)| `<number: 0>` |
 
-## `zoomAndPan` (on `<div>`)
+## `zoomAndPan` (on `<svg>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `zoomAndPan=(string)`| (changed)| `<number: 0>` |

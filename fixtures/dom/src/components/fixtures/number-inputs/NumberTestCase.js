@@ -24,7 +24,8 @@ class NumberTestCase extends React.Component {
               onChange={this.onChange}
             />
             <span className="hint">
-              {' '}Value: {JSON.stringify(this.state.value)}
+              {' '}
+              Value: {JSON.stringify(this.state.value)}
             </span>
           </fieldset>
 

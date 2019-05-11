@@ -1,4 +1,4 @@
-const PropTypes = window.PropTypes;
+import PropTypes from 'prop-types';
 const React = window.React;
 
 const propTypes = {
@@ -9,11 +9,7 @@ class Fixture extends React.Component {
   render() {
     const {children} = this.props;
 
-    return (
-      <div className="test-fixture">
-        {children}
-      </div>
-    );
+    return <div className="test-fixture">{children}</div>;
   }
 }
 

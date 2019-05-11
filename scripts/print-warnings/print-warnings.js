@@ -1,10 +1,8 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  */
 'use strict';
 
@@ -13,8 +11,6 @@ const fs = require('fs');
 const through = require('through2');
 const traverse = require('babel-traverse').default;
 const gs = require('glob-stream');
-const Bundles = require('../rollup/bundles');
-const Modules = require('../rollup/modules');
 
 const evalToString = require('../shared/evalToString');
 
@@ -23,7 +19,7 @@ const babylonOptions = {
   // As a parser, babylon has its own options and we can't directly
   // import/require a babel preset. It should be kept **the same** as
   // the `babel-plugin-syntax-*` ones specified in
-  // https://github.com/facebook/fbjs/blob/master/babel-preset/configure.js
+  // https://github.com/facebook/fbjs/blob/master/packages/babel-preset-fbjs/configure.js
   plugins: [
     'classProperties',
     'flow',
@@ -49,6 +45,7 @@ function transform(file, enc, cb) {
           const callee = astPath.get('callee');
           if (
             callee.isIdentifier({name: 'warning'}) ||
+            callee.isIdentifier({name: 'warningWithoutStack'}) ||
             callee.isIdentifier({name: 'lowPriorityWarning'})
           ) {
             const node = astPath.node;
@@ -66,18 +63,18 @@ function transform(file, enc, cb) {
   });
 }
 
-const sourcePaths = Bundles.bundles
-  .filter(
-    bundle =>
-      bundle.bundleTypes.indexOf(Bundles.bundleTypes.FB_DEV) !== -1 ||
-      bundle.bundleTypes.indexOf(Bundles.bundleTypes.FB_PROD) !== -1
-  )
-  .reduce((allPaths, bundle) => allPaths.concat(bundle.paths), [])
-  .concat(Modules.getExcludedHasteGlobs().map(glob => `!${glob}`));
-
-gs(sourcePaths).pipe(
+gs([
+  'packages/**/*.js',
+  '!packages/shared/warning.js',
+  '!**/__tests__/**/*.js',
+  '!**/__mocks__/**/*.js',
+]).pipe(
   through.obj(transform, cb => {
-    process.stdout.write(Array.from(warnings).sort().join('\n') + '\n');
+    process.stdout.write(
+      Array.from(warnings)
+        .sort()
+        .join('\n') + '\n'
+    );
     cb();
   })
 );

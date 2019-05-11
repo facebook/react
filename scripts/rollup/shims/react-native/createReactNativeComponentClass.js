@@ -1,20 +1,32 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
- * @providesModule createReactNativeComponentClass
- * @flow
+ * @format
+ * @flow strict-local
  */
 
 'use strict';
 
-const {
-  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
-} = require('ReactNative');
+import type {ViewConfigGetter} from './ReactNativeTypes';
 
-module.exports =
-  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.createReactNativeComponentClass;
+const {register} = require('ReactNativeViewConfigRegistry');
+
+/**
+ * Creates a renderable ReactNative host component.
+ * Use this method for view configs that are loaded from UIManager.
+ * Use createReactNativeComponentClass() for view configs defined within JavaScript.
+ *
+ * @param {string} config iOS View configuration.
+ * @private
+ */
+const createReactNativeComponentClass = function(
+  name: string,
+  callback: ViewConfigGetter,
+): string {
+  return register(name, callback);
+};
+
+module.exports = createReactNativeComponentClass;

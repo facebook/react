@@ -1,14 +1,12 @@
 /**
- * Copyright 2013 Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  */
 'use strict';
 
-var Circle = require('react-art/lib/Circle.art');
+var Circle = require('react-art/Circle');
 var React = require('react');
 var ReactART = require('react-art');
 var Group = ReactART.Group;
@@ -34,7 +32,7 @@ class VectorWidget extends React.Component {
   /**
    * When the component is mounted into the document - this is similar to a
    * constructor, but invoked when the instance is actually mounted into the
-   * document. Here's, we'll just set up an animation loop that invokes our
+   * document. Here, we'll just set up an animation loop that invokes our
    * method. Binding of `this.onTick` is not needed because all React methods
    * are automatically bound before being mounted.
    */
@@ -139,12 +137,12 @@ var RING_TWO_PATH =
 var RING_THREE_PATH =
   'M84,121 C130.391921,121 168,106.673113 168,89 C168,71.3268871 130.391921,57 84,57 C37.6080787,57 0,71.3268871 0,89 C0,106.673113 37.6080787,121 84,121 Z M84,121';
 var RING_TWO_ROTATE = new Transform()
-  .translate(84.000000, 89.000000)
-  .rotate(-240.000000)
-  .translate(-84.000000, -89.000000);
+  .translate(84.0, 89.0)
+  .rotate(-240.0)
+  .translate(-84.0, -89.0);
 var RING_THREE_ROTATE = new Transform()
-  .translate(84.000000, 89.000000)
-  .rotate(-300.000000)
-  .translate(-84.000000, -89.000000);
+  .translate(84.0, 89.0)
+  .rotate(-300.0)
+  .translate(-84.0, -89.0);
 
 module.exports = VectorWidget;

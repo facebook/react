@@ -1,3 +1,16 @@
-.bold {
+.link {
   font-weight: bold;
+  cursor: pointer;
+}
+.light-box {
+  margin: 10px 0;
+  padding: 10px;
+  background-color: #CCCCCC;
+  color: #333333;
+}
+.dark-box {
+  margin: 10px 0;
+  padding: 10px;
+  background-color: #333333;
+  color: #CCCCCC;
 }

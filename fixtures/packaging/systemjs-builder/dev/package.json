@@ -1,6 +1,6 @@
 {
-  "name": "systemjs-builder-test",
   "private": true,
+  "name": "systemjs-dev-fixture",
   "dependencies": {
     "systemjs-builder": "^0.15.34"
   },

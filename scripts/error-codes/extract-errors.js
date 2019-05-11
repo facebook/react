@@ -1,10 +1,8 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  */
 'use strict';
 
@@ -20,7 +18,7 @@ const babylonOptions = {
   // As a parser, babylon has its own options and we can't directly
   // import/require a babel preset. It should be kept **the same** as
   // the `babel-plugin-syntax-*` ones specified in
-  // https://github.com/facebook/fbjs/blob/master/babel-preset/configure.js
+  // https://github.com/facebook/fbjs/blob/master/packages/babel-preset-fbjs/configure.js
   plugins: [
     'classProperties',
     'flow',
@@ -37,8 +35,8 @@ module.exports = function(opts) {
     );
   }
 
-  var errorMapFilePath = opts.errorMapFilePath;
-  var existingErrorMap;
+  const errorMapFilePath = opts.errorMapFilePath;
+  let existingErrorMap;
   try {
     // Using `fs.readFileSync` instead of `require` here, because `require()`
     // calls are cached, and the cache map is not properly invalidated after
@@ -53,8 +51,8 @@ module.exports = function(opts) {
     existingErrorMap = {};
   }
 
-  var allErrorIDs = Object.keys(existingErrorMap);
-  var currentID;
+  const allErrorIDs = Object.keys(existingErrorMap);
+  let currentID;
 
   if (allErrorIDs.length === 0) {
     // Map is empty
@@ -67,26 +65,29 @@ module.exports = function(opts) {
   existingErrorMap = invertObject(existingErrorMap);
 
   function transform(source) {
-    var ast = babylon.parse(source, babylonOptions);
+    const ast = babylon.parse(source, babylonOptions);
 
     traverse(ast, {
       CallExpression: {
-        exit: function(astPath) {
+        exit(astPath) {
           if (astPath.get('callee').isIdentifier({name: 'invariant'})) {
-            var node = astPath.node;
+            const node = astPath.node;
 
             // error messages can be concatenated (`+`) at runtime, so here's a
             // trivial partial evaluator that interprets the literal value
-            var errorMsgLiteral = evalToString(node.arguments[1]);
-            if (existingErrorMap.hasOwnProperty(errorMsgLiteral)) {
-              return;
-            }
-
-            existingErrorMap[errorMsgLiteral] = '' + currentID++;
+            const errorMsgLiteral = evalToString(node.arguments[1]);
+            addToErrorMap(errorMsgLiteral);
           }
         },
       },
     });
+  }
+
+  function addToErrorMap(errorMsgLiteral) {
+    if (existingErrorMap.hasOwnProperty(errorMsgLiteral)) {
+      return;
+    }
+    existingErrorMap[errorMsgLiteral] = '' + currentID++;
   }
 
   function flush(cb) {
@@ -97,9 +98,7 @@ module.exports = function(opts) {
     );
   }
 
-  return function extractErrors(filepath) {
-    const source = fs.readFileSync(filepath, 'utf-8');
-
+  return function extractErrors(source) {
     transform(source);
     flush();
   };

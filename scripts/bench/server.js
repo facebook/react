@@ -70,7 +70,7 @@ if (require.main === module) {
   if (benchmarkInput) {
     serveBenchmark(benchmarkInput);
   } else {
-    console.error('Please specifiy a benchmark directory to serve!');
+    console.error('Please specify a benchmark directory to serve!');
     process.exit(1);
   }
 }

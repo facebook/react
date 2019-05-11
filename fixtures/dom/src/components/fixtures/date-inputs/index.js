@@ -8,7 +8,7 @@ const React = window.React;
 class DateInputFixtures extends React.Component {
   render() {
     return (
-      <FixtureSet title="Dates" description="">
+      <FixtureSet title="Dates">
         <TestCase title="Switching between date and datetime-local">
           <TestCase.Steps>
             <li>Type a date into the date picker</li>
@@ -16,9 +16,8 @@ class DateInputFixtures extends React.Component {
           </TestCase.Steps>
 
           <TestCase.ExpectedResult>
-            The month, day, and year values should correctly
-            transfer. The hours/minutes/seconds should not be
-            discarded.
+            The month, day, and year values should correctly transfer. The
+            hours/minutes/seconds should not be discarded.
           </TestCase.ExpectedResult>
 
           <Fixture>

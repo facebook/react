@@ -1,6 +1,6 @@
 # Attribute Behavior Fixture
 
-**WIP:** This is a MVP, still needs polish.
+**WIP:** This is an MVP, still needs polish.
 
 ### Known Issues
 - There are currently two errors thrown when the page loads;
@@ -8,7 +8,7 @@
 
 ## Instructions
 
-`cd scripts/attribute-behavior && yarn install && yarn start`
+`cd fixtures/attribute-behavior && yarn install && yarn start`
 
 ## Interpretation
 
@@ -20,7 +20,7 @@ The left box shows the property (or attribute) assigned by React 15.\*, and the
 right box shows the property (or attribute) assigned by the latest version of
 React 16.
 
-Right now we use a purple outline to call out cases where the assigned property
+Right now, we use a purple outline to call out cases where the assigned property
 (or attribute) has changed between React 15 and 16.
 
 ---

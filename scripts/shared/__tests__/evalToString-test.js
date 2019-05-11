@@ -1,19 +1,18 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  */
 'use strict';
 
-var evalToString = require('../evalToString');
-var babylon = require('babylon');
+const evalToString = require('../evalToString');
+const babylon = require('babylon');
 
-var parse = source => babylon.parse(`(${source});`).program.body[0].expression; // quick way to get an exp node
+const parse = source =>
+  babylon.parse(`(${source});`).program.body[0].expression; // quick way to get an exp node
 
-var parseAndEval = source => evalToString(parse(source));
+const parseAndEval = source => evalToString(parse(source));
 
 describe('evalToString', () => {
   it('should support StringLiteral', () => {

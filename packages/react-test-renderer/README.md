@@ -4,6 +4,10 @@ This package provides an experimental React renderer that can be used to render 
 
 Essentially, this package makes it easy to grab a snapshot of the "DOM tree" rendered by a React DOM or React Native component without using a browser or jsdom.
 
+Documentation:
+
+[https://reactjs.org/docs/test-renderer.html](https://reactjs.org/docs/test-renderer.html)
+
 Usage:
 
 ```jsx
@@ -19,4 +23,4 @@ console.log(renderer.toJSON());
 //   children: [ 'Facebook' ] }
 ```
 
-You can also use Jest's snapshot testing feature to automatically save a copy of the JSON tree to a file and check in your tests that it hasn't changed: http://facebook.github.io/jest/blog/2016/07/27/jest-14.html.
+You can also use Jest's snapshot testing feature to automatically save a copy of the JSON tree to a file and check in your tests that it hasn't changed: https://facebook.github.io/jest/blog/2016/07/27/jest-14.html.
