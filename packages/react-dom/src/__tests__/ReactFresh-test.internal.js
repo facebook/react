@@ -16,9 +16,24 @@ let act;
 describe('ReactFresh', () => {
   let container;
   let familiesByID;
-  let familiesByFn;
+  let familiesByType;
+  let updatedFamilies;
+  let performHotReload;
 
   beforeEach(() => {
+    let enableHotReloading;
+    let lastRoot;
+    global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
+      supportsFiber: true,
+      inject: injected => {
+        enableHotReloading = injected.enableHotReloading;
+      },
+      onCommitFiberRoot: (id, root) => {
+        lastRoot = root;
+      },
+      onCommitFiberUnmount: () => {},
+    };
+
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
@@ -26,28 +41,34 @@ describe('ReactFresh', () => {
     container = document.createElement('div');
     document.body.appendChild(container);
     familiesByID = new Map();
-    familiesByFn = new WeakMap();
+    familiesByType = new WeakMap();
+
+    if (__DEV__) {
+      const {scheduleHotUpdate} = enableHotReloading(familiesByType);
+      performHotReload = function(families) {
+        scheduleHotUpdate(lastRoot, families);
+      };
+    }
   });
 
   afterEach(() => {
     document.body.removeChild(container);
-    container = null;
-    familiesByFn = null;
   });
 
   function render(version) {
+    updatedFamilies = new Set();
     const Component = version();
+    updatedFamilies = null;
     act(() => {
       ReactDOM.render(<Component />, container);
     });
   }
 
   function patch(version) {
-    const Component = version();
-    // TODO: use a DevTools Hook to force update instead.
-    act(() => {
-      ReactDOM.render(<Component />, container);
-    });
+    updatedFamilies = new Set();
+    version();
+    performHotReload(updatedFamilies);
+    updatedFamilies = null;
   }
 
   function __register__(fn, id) {
@@ -57,8 +78,8 @@ describe('ReactFresh', () => {
       familiesByID.set(id, family);
     }
     family.current = fn;
-    familiesByFn.set(fn, family);
-    // TODO: record which families were updated.
+    familiesByType.set(fn, family);
+    updatedFamilies.add(family);
     // TODO: invalidation based on signatures.
   }
 
@@ -112,6 +133,8 @@ describe('ReactFresh', () => {
       expect(container.firstChild).toBe(el);
       expect(el.textContent).toBe('2');
       expect(el.style.color).toBe('red');
+
+      // TODO: test reconciliation with old type.
     }
   });
 });
