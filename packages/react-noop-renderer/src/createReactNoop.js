@@ -31,7 +31,10 @@ import warning from 'shared/warning';
 import enqueueTask from 'shared/enqueueTask';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import {enableEventAPI} from 'shared/ReactFeatureFlags';
+import {
+  warnAboutMissingMockScheduler,
+  enableEventAPI,
+} from 'shared/ReactFeatureFlags';
 
 type EventTargetChildElement = {
   type: string,
@@ -654,19 +657,20 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   const flushWork =
     Scheduler.unstable_flushWithoutYielding ||
     function() {
-      if (hasWarnedAboutMissingMockScheduler === false) {
-        warningWithoutStack(
-          null,
-          'Starting from React v17, the "scheduler" module will need to be mocked ' +
-            'to guarantee consistent behaviour across tests and browsers. To fix this, add the following ' +
-            "to the top of your tests, or in your framework's global config file -\n\n" +
-            'As an example, for jest - \n' +
-            "jest.mock('scheduler', () => require.requireActual('scheduler/unstable_mock'));\n\n" +
-            'For more info, visit https://fb.me/react-mock-scheduler',
-        );
-        hasWarnedAboutMissingMockScheduler = true;
+      if (warnAboutMissingMockScheduler === true) {
+        if (hasWarnedAboutMissingMockScheduler === false) {
+          warningWithoutStack(
+            null,
+            'Starting from React v17, the "scheduler" module will need to be mocked ' +
+              'to guarantee consistent behaviour across tests and browsers. To fix this, add the following ' +
+              "to the top of your tests, or in your framework's global config file -\n\n" +
+              'As an example, for jest - \n' +
+              "jest.mock('scheduler', () => require.requireActual('scheduler/unstable_mock'));\n\n" +
+              'For more info, visit https://fb.me/react-mock-scheduler',
+          );
+          hasWarnedAboutMissingMockScheduler = true;
+        }
       }
-
       while (flushPassiveEffects()) {}
     };
 

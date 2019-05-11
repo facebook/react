@@ -15,6 +15,7 @@ let act;
 let container;
 let isConcurrentMode;
 let concurrentRoot = null;
+let ReactFeatureFlags;
 
 function render(el, dom) {
   if (isConcurrentMode) {
@@ -54,6 +55,7 @@ describe('ReactTestUtils.act()', () => {
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
     SchedulerTracing = require('scheduler/tracing');
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
     act = ReactTestUtils.act;
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -61,6 +63,27 @@ describe('ReactTestUtils.act()', () => {
   afterEach(() => {
     unmount(container);
     document.body.removeChild(container);
+  });
+
+  describe('mocked scheduler', () => {
+    beforeEach(() => {
+      ReactFeatureFlags.warnAboutMissingMockScheduler = true;
+      // todo - this doesn't actually work
+      // jest.unmock('scheduler');
+      // jest.unmock('scheduler/src/SchedulerHostConfig');
+      // neither does this. am investigating.
+      // jest.mock('scheduler', () => {
+      //   return require.requireActual('scheduler');
+      // });
+      // jest.mock('scheduler/src/SchedulerHostConfig', () => {
+      //   return require.requireActual('scheduler/src/forks/SchedulerHostConfig.default');
+      // });
+    });
+    it("should warn when the scheduler isn't mocked", () => {
+      expect(() => act(() => {})).toWarnDev([
+        'Starting from React v17, the "scheduler" module will need to be mocked',
+      ]);
+    });
   });
 
   [false, true].forEach(concurrent => {
