@@ -140,6 +140,7 @@
     "react-virtualized-auto-sizer": "^1.0.2",
     "react-window": "^1.8.0",
     "request-promise": "^4.2.4",
+    "rimraf": "^2.6.3",
     "scheduler": "^0.0.0-6da04b5d8",
     "semver": "^5.5.1",
     "style-loader": "^0.23.1",
