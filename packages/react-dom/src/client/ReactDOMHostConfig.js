@@ -258,7 +258,9 @@ export function getPublicInstance(instance: Instance): * {
 export function prepareForCommit(containerInfo: Container): void {
   eventsEnabled = ReactBrowserEventEmitterIsEnabled();
   selectionInformation = getSelectionInformation();
-  ReactBrowserEventEmitterSetEnabled(false);
+  const isBrowserChrome =
+    !!window.chrome && (!!window.chrome.webstore || !!window.chrome.runtime);
+  if (!isBrowserChrome) ReactBrowserEventEmitterSetEnabled(false);
 }
 
 export function resetAfterCommit(containerInfo: Container): void {
