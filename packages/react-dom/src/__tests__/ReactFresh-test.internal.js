@@ -83,8 +83,9 @@ describe('ReactFresh', () => {
     // TODO: invalidation based on signatures.
   }
 
-  it('can preserve state', () => {
+  it('can preserve state for compatible types', () => {
     if (__DEV__) {
+      let HelloV1;
       render(() => {
         function Hello() {
           const [val, setVal] = React.useState(0);
@@ -94,6 +95,7 @@ describe('ReactFresh', () => {
             </p>
           );
         }
+        HelloV1 = Hello;
         __register__(Hello, 'Hello');
         return Hello;
       });
@@ -108,6 +110,7 @@ describe('ReactFresh', () => {
       expect(el.textContent).toBe('1');
 
       // Perform a hot update.
+      let HelloV2;
       patch(() => {
         function Hello() {
           const [val, setVal] = React.useState(0);
@@ -117,6 +120,7 @@ describe('ReactFresh', () => {
             </p>
           );
         }
+        HelloV2 = Hello;
         __register__(Hello, 'Hello');
         return Hello;
       });
@@ -134,7 +138,48 @@ describe('ReactFresh', () => {
       expect(el.textContent).toBe('2');
       expect(el.style.color).toBe('red');
 
-      // TODO: test reconciliation with old type.
+      // Perform top-down renders with both fresh and stale types.
+      // Neither should change the state or color.
+      // They should always resolve to the latest version.
+      render(() => {
+        return HelloV1;
+      });
+      render(() => {
+        return HelloV2;
+      });
+      render(() => {
+        return HelloV1;
+      });
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('2');
+      expect(el.style.color).toBe('red');
+
+      // Bump the state again.
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('3');
+      expect(el.style.color).toBe('red');
+
+      // Finally, a render with incompatible type should reset it.
+      render(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        // No register call.
+        // This is considered a new type.
+        return Hello;
+      });
+      expect(container.firstChild).not.toBe(el);
+      const newEl = container.firstChild;
+      expect(newEl.textContent).toBe('0');
+      expect(newEl.style.color).toBe('blue');
     }
   });
 });

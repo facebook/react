@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {ReactElement} from 'shared/ReactElementType';
 import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
 
@@ -16,6 +17,7 @@ import {
   flushPassiveEffects,
 } from './ReactFiberScheduler';
 import {Sync} from './ReactFiberExpirationTime';
+import {FunctionComponent} from 'shared/ReactWorkTags';
 
 type Family = {|
   current: any,
@@ -25,9 +27,12 @@ type HotReloadingInterface = {|
   scheduleHotUpdate: (root: FiberRoot, families: Set<Family>) => void,
 |};
 
-// By default, it is an identity. We override it on injection.
-// TODO: this needs to be used by reconciliation too.
+// Avoid any overhead even in DEV when hot reloading is off:
 export let resolveTypeForHotReloading = (type: any): any => type;
+export let isCompatibleFamilyForHotReloading = (
+  fiber: Fiber,
+  element: ReactElement,
+) => false;
 
 export function enableHotReloading(
   familiesByType: WeakMap<any, Family>,
@@ -40,6 +45,33 @@ export function enableHotReloading(
       }
       // Use the latest known implementation.
       return family.current;
+    };
+
+    isCompatibleFamilyForHotReloading = (
+      fiber: Fiber,
+      element: ReactElement,
+    ): boolean => {
+      // If we got here, we know types aren't === equal.
+      switch (fiber.tag) {
+        case FunctionComponent: {
+          const prevType = fiber.elementType;
+          const nextType = element.type;
+          if (typeof nextType !== 'function') {
+            return false;
+          }
+          const prevFamily = familiesByType.get(prevType);
+          if (
+            prevFamily !== undefined &&
+            prevFamily === familiesByType.get(nextType)
+          ) {
+            return true;
+          }
+          return false;
+        }
+        // TODO: support memo, forwardRef, and maybe lazy.
+        default:
+          return false;
+      }
     };
 
     let scheduleHotUpdate = (root: FiberRoot, families: Set<Family>): void => {

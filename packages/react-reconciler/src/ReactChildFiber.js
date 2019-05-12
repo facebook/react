@@ -43,6 +43,7 @@ import {
   getCurrentFiberStackInDev,
   getStackByFiberInDevAndProd,
 } from './ReactCurrentFiber';
+import {isCompatibleFamilyForHotReloading} from './ReactFiberHotReloading';
 import {StrictMode} from './ReactTypeOfMode';
 
 let didWarnAboutMaps;
@@ -233,6 +234,21 @@ function warnOnFunctionType() {
   );
 }
 
+function isCompatibleType(fiber: Fiber, element: ReactElement): boolean {
+  if (__DEV__) {
+    // Keep the first check inline as it's overwhelmingly true in practice.
+    // The false case is the slower path where we might check a map.
+    return (
+      fiber.elementType === element.type ||
+      isCompatibleFamilyForHotReloading(fiber, element)
+    );
+  } else {
+    // Don't add anything else to prod code path.
+    // This must be easy for GCC to inline.
+    return fiber.elementType === element.type;
+  }
+}
+
 // This wrapper function exists because I expect to clone the code in each path
 // to be able to optimize each path individually by branching early. This needs
 // a compiler or we can do it manually. Helpers that don't need this branching
@@ -378,7 +394,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     element: ReactElement,
     expirationTime: ExpirationTime,
   ): Fiber {
-    if (current !== null && current.elementType === element.type) {
+    if (current !== null && isCompatibleType(current, element)) {
       // Move based on index
       const existing = useFiber(current, element.props, expirationTime);
       existing.ref = coerceRef(returnFiber, current, element);
@@ -1121,7 +1137,7 @@ function ChildReconciler(shouldTrackSideEffects) {
         if (
           child.tag === Fragment
             ? element.type === REACT_FRAGMENT_TYPE
-            : child.elementType === element.type
+            : isCompatibleType(child, element)
         ) {
           deleteRemainingChildren(returnFiber, child.sibling);
           const existing = useFiber(
