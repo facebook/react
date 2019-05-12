@@ -11,6 +11,7 @@
 
 let React;
 let ReactDOM;
+let ReactFeatureFlags;
 let Scheduler;
 
 describe('ReactDOMHooks', () => {
@@ -22,6 +23,8 @@ describe('ReactDOMHooks', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     Scheduler = require('scheduler');
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    ReactFeatureFlags.warnAboutUnactedEffectsinDEV = false;
 
     container = document.createElement('div');
     document.body.appendChild(container);

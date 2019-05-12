@@ -28,6 +28,7 @@ export const disableYielding = false;
 export const enableEventAPI = true;
 export const enableJSXTransformAPI = true;
 export const warnAboutMissingMockScheduler = true;
+export const warnAboutUnactedEffectsinDEV = true;
 
 // Only used in www builds.
 export function addUserTimingListener() {

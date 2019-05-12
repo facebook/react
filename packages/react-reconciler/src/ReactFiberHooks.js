@@ -33,7 +33,8 @@ import {
   computeExpirationForFiber,
   flushPassiveEffects,
   requestCurrentTime,
-  warnIfNotCurrentlyActingUpdatesInDev,
+  warnIfNotCurrentlyActingEffectsInDEV,
+  warnIfNotCurrentlyActingUpdatesInDEV,
   markRenderEventTime,
 } from './ReactFiberScheduler';
 
@@ -869,6 +870,16 @@ function mountEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
+  if (__DEV__) {
+    // jest isn't a 'global', it's just exposed to tests via a wrapped function
+    // further, this isn't a test file, so flow doesn't recognize the symbol. So...
+    // $FlowExpectedError - because requirements don't give a damn about your type sigs.
+    if ('undefined' !== typeof jest) {
+      warnIfNotCurrentlyActingEffectsInDEV(
+        ((currentlyRenderingFiber: any): Fiber),
+      );
+    }
+  }
   return mountEffectImpl(
     UpdateEffect | PassiveEffect,
     UnmountPassive | MountPassive,
@@ -881,6 +892,16 @@ function updateEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
+  if (__DEV__) {
+    // jest isn't a 'global', it's just exposed to tests via a wrapped function
+    // further, this isn't a test file, so flow doesn't recognize the symbol. So...
+    // $FlowExpectedError - because requirements don't give a damn about your type sigs.
+    if ('undefined' !== typeof jest) {
+      warnIfNotCurrentlyActingEffectsInDEV(
+        ((currentlyRenderingFiber: any): Fiber),
+      );
+    }
+  }
   return updateEffectImpl(
     UpdateEffect | PassiveEffect,
     UnmountPassive | MountPassive,
@@ -1180,7 +1201,7 @@ function dispatchAction<S, A>(
       // further, this isn't a test file, so flow doesn't recognize the symbol. So...
       // $FlowExpectedError - because requirements don't give a damn about your type sigs.
       if ('undefined' !== typeof jest) {
-        warnIfNotCurrentlyActingUpdatesInDev(fiber);
+        warnIfNotCurrentlyActingUpdatesInDEV(fiber);
       }
     }
     scheduleWork(fiber, expirationTime);

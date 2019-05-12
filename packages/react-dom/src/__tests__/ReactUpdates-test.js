@@ -12,6 +12,7 @@
 let React;
 let ReactDOM;
 let ReactTestUtils;
+let ReactFeatureFlags;
 let Scheduler;
 
 describe('ReactUpdates', () => {
@@ -20,6 +21,8 @@ describe('ReactUpdates', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    ReactFeatureFlags.warnAboutUnactedEffectsinDEV = false;
     Scheduler = require('scheduler');
   });
 

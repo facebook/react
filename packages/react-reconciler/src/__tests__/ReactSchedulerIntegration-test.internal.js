@@ -26,6 +26,7 @@ describe('ReactSchedulerIntegration', () => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+    ReactFeatureFlags.warnAboutUnactedEffectsinDEV = false;
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');

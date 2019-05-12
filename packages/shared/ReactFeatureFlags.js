@@ -71,3 +71,8 @@ export const enableJSXTransformAPI = false;
 // We will enforce mocking scheduler with scheduler/unstable_mock at some point. (v17?)
 // Till then, we warn about the missing mock, but still fallback to a sync mode compatible version
 export const warnAboutMissingMockScheduler = false;
+
+// We warn if effects are queued in tests without a surround act()
+// However, this interferes withour internal tests that test the actual
+// sequencing work. So we use a feature flag to disable the warning *only* for ourselves
+export const warnAboutUnactedEffectsinDEV = true;

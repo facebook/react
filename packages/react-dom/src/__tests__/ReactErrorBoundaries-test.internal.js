@@ -43,6 +43,7 @@ describe('ReactErrorBoundaries', () => {
     PropTypes = require('prop-types');
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
+    ReactFeatureFlags.warnAboutUnactedEffectsinDEV = false;
     ReactDOM = require('react-dom');
     React = require('react');
     Scheduler = require('scheduler');

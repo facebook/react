@@ -44,7 +44,6 @@ describe('withComponentStack', () => {
   let React = null;
   let ReactTestRenderer = null;
   let error = null;
-  let scheduler = null;
   let warn = null;
 
   beforeEach(() => {
@@ -53,7 +52,6 @@ describe('withComponentStack', () => {
 
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
-    scheduler = require('scheduler');
 
     error = React.error;
     warn = React.warn;
@@ -179,9 +177,9 @@ describe('withComponentStack', () => {
         return null;
       }
 
-      ReactTestRenderer.create(<Parent />);
-
-      scheduler.flushAll(); // Flush passive effects
+      ReactTestRenderer.act(() => {
+        ReactTestRenderer.create(<Parent />);
+      });
 
       expectMessageAndStack(
         'logged in child render method',

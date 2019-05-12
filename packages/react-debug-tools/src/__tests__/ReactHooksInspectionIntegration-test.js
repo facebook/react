@@ -14,11 +14,14 @@ let React;
 let ReactTestRenderer;
 let Scheduler;
 let ReactDebugTools;
+let ReactFeatureFlags;
 let act;
 
 describe('ReactHooksInspectionIntegration', () => {
   beforeEach(() => {
     jest.resetModules();
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    ReactFeatureFlags.warnAboutUnactedEffectsinDEV = false;
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
     Scheduler = require('scheduler');

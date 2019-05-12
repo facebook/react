@@ -24,6 +24,7 @@ import {
   enableProfilerTimer,
   disableYielding,
   enableSchedulerTracing,
+  warnAboutUnactedEffectsinDEV,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
@@ -2088,7 +2089,32 @@ function warnAboutInvalidUpdatesOnClassComponentsInDEV(fiber) {
   }
 }
 
-function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
+export function warnIfNotCurrentlyActingEffectsInDEV(fiber: Fiber): void {
+  if (__DEV__) {
+    if (warnAboutUnactedEffectsinDEV) {
+      if (ReactShouldWarnActingUpdates.current === false) {
+        warningWithoutStack(
+          false,
+          'An effect from %s inside a test was not wrapped in act(...).\n\n' +
+            'When testing, code that causes React state updates should be ' +
+            'wrapped into act(...):\n\n' +
+            'act(() => {\n' +
+            '  /* fire events that update state */\n' +
+            '});\n' +
+            '/* assert on the output */\n\n' +
+            "This ensures that you're testing the behavior the user would see " +
+            'in the browser.' +
+            ' Learn more at https://fb.me/react-wrap-tests-with-act' +
+            '%s',
+          getComponentName(fiber.type),
+          getStackByFiberInDevAndProd(fiber),
+        );
+      }
+    }
+  }
+}
+
+export function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
   if (__DEV__) {
     if (
       workPhase === NotWorking &&
@@ -2113,8 +2139,6 @@ function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
     }
   }
 }
-
-export const warnIfNotCurrentlyActingUpdatesInDev = warnIfNotCurrentlyActingUpdatesInDEV;
 
 let componentsWithSuspendedDiscreteUpdates = null;
 export function checkForWrongSuspensePriorityInDEV(sourceFiber: Fiber) {

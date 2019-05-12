@@ -27,6 +27,7 @@ describe('ReactHooks', () => {
 
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+    ReactFeatureFlags.warnAboutUnactedEffectsinDEV = false;
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
     Scheduler = require('scheduler');
