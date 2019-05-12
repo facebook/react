@@ -416,7 +416,7 @@ export function setDefaultValue(
     type === 'email' && node.hasAttribute('multiple');
   if (
     // Focused number inputs synchronize on blur. See ChangeEventPlugin.js
-    (type !== 'number' && isInputWithMultipleEmails) ||
+    (type !== 'number' && !isInputWithMultipleEmails) ||
     node.ownerDocument.activeElement !== node
   ) {
     if (value == null) {
