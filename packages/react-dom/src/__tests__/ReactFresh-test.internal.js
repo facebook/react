@@ -695,7 +695,7 @@ describe('ReactFresh', () => {
 
   it('can update simple memo function in isolation', () => {
     if (__DEV__) {
-      const OuterV1 = render(() => {
+      render(() => {
         function Hello() {
           const [val, setVal] = React.useState(0);
           return (
