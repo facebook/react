@@ -7,6 +7,8 @@
  * @emails react-core
  */
 
+/* eslint-disable no-for-of-loops/no-for-of-loops */
+
 'use strict';
 
 let React;
@@ -17,8 +19,10 @@ describe('ReactFresh', () => {
   let container;
   let familiesByID;
   let familiesByType;
+  let newFamilies;
   let updatedFamilies;
   let performHotReload;
+  let signaturesByType;
 
   beforeEach(() => {
     let enableHotReloading;
@@ -46,10 +50,11 @@ describe('ReactFresh', () => {
 
     if (__DEV__) {
       const {scheduleHotUpdate} = enableHotReloading(familiesByType);
-      performHotReload = function() {
+      performHotReload = function(staleFamilies) {
         scheduleHotUpdate({
           root: lastRoot,
           updatedFamilies,
+          staleFamilies,
         });
       };
     }
@@ -60,9 +65,20 @@ describe('ReactFresh', () => {
   });
 
   function render(version, props) {
+    newFamilies = new Set();
     updatedFamilies = new Set();
+    signaturesByType = new Map();
     const Component = version();
+
+    // Fill in the signatures.
+    for (let family of newFamilies) {
+      const latestSignature = signaturesByType.get(family.currentType) || null;
+      family.currentSignature = latestSignature;
+    }
+
+    newFamilies = null;
     updatedFamilies = null;
+    signaturesByType = null;
     act(() => {
       ReactDOM.render(<Component {...props} />, container);
     });
@@ -70,10 +86,32 @@ describe('ReactFresh', () => {
   }
 
   function patch(version) {
+    // Will be filled in by __register__ calls in user code.
+    newFamilies = new Set();
     updatedFamilies = new Set();
+    signaturesByType = new Map();
     const Component = version();
-    performHotReload();
+
+    // Fill in the signatures.
+    for (let family of newFamilies) {
+      const latestSignature = signaturesByType.get(family.currentType) || null;
+      family.currentSignature = latestSignature;
+    }
+    // Now that all registration and signatures are collected,
+    // find which registrations changed their signatures since last time.
+    const staleFamilies = new Set();
+    for (let family of updatedFamilies) {
+      const latestSignature = signaturesByType.get(family.currentType) || null;
+      if (family.currentSignature !== latestSignature) {
+        family.currentSignature = latestSignature;
+        staleFamilies.add(family);
+      }
+    }
+
+    performHotReload(staleFamilies);
+    newFamilies = null;
     updatedFamilies = null;
+    signaturesByType = null;
     return Component;
   }
 
@@ -85,16 +123,17 @@ describe('ReactFresh', () => {
     let isNew = false;
     if (family === undefined) {
       isNew = true;
-      family = {current: null};
+      family = {currentType: type, currentSignature: null};
       familiesByID.set(id, family);
     }
-    const prevType = family.current;
-    family.current = type;
+    const prevType = family.currentType;
     if (isNew) {
       // The first time a type is registered, we don't need
       // any special reconciliation logic. So we won't add it to the map.
       // Instead, this will happen the firt time it is edited.
+      newFamilies.add(family);
     } else {
+      family.currentType = type;
       // Point both previous and next types to this family.
       familiesByType.set(prevType, family);
       familiesByType.set(type, family);
@@ -112,6 +151,10 @@ describe('ReactFresh', () => {
           break;
       }
     }
+  }
+
+  function __signature__(type, signature) {
+    signaturesByType.set(type, signature);
   }
 
   it('can preserve state for compatible types', () => {
@@ -910,6 +953,137 @@ describe('ReactFresh', () => {
 
       // Still no re-renders from the top.
       expect(appRenders).toBe(1);
+    }
+  });
+
+  it('can force remount by changing signature', () => {
+    if (__DEV__) {
+      let HelloV1 = render(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+        // When this changes, we'll expect a remount:
+        __signature__(Hello, '1');
+        return Hello;
+      });
+
+      // Bump the state before patching.
+      const el = container.firstChild;
+      expect(el.textContent).toBe('0');
+      expect(el.style.color).toBe('blue');
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(el.textContent).toBe('1');
+
+      // Perform a hot update.
+      let HelloV2 = patch(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'red'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+        // The signature hasn't changed since the last time:
+        __signature__(Hello, '1');
+        return Hello;
+      });
+
+      // Assert the state was preserved but color changed.
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('1');
+      expect(el.style.color).toBe('red');
+
+      // Perform a hot update.
+      let HelloV3 = patch(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'yellow'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        // We're changing the signature now so it will remount:
+        __register__(Hello, 'Hello');
+        __signature__(Hello, '2');
+        return Hello;
+      });
+
+      // Expect a remount.
+      expect(container.firstChild).not.toBe(el);
+      const newEl = container.firstChild;
+      expect(newEl.textContent).toBe('0');
+      expect(newEl.style.color).toBe('yellow');
+
+      // Bump state again.
+      act(() => {
+        newEl.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(newEl.textContent).toBe('1');
+      expect(newEl.style.color).toBe('yellow');
+
+      // Perform top-down renders with both fresh and stale types.
+      // Neither should change the state or color.
+      // They should always resolve to the latest version.
+      render(() => HelloV1);
+      render(() => HelloV2);
+      render(() => HelloV3);
+      render(() => HelloV2);
+      render(() => HelloV1);
+      expect(container.firstChild).toBe(newEl);
+      expect(newEl.textContent).toBe('1');
+      expect(newEl.style.color).toBe('yellow');
+
+      // Verify we can patch again while preserving the signature.
+      patch(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'purple'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        // Same signature as last time.
+        __register__(Hello, 'Hello');
+        __signature__(Hello, '2');
+        return Hello;
+      });
+
+      expect(container.firstChild).toBe(newEl);
+      expect(newEl.textContent).toBe('1');
+      expect(newEl.style.color).toBe('purple');
+
+      // Check removing the signature also causes a remount.
+      patch(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'orange'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        // No signature this time.
+        __register__(Hello, 'Hello');
+        return Hello;
+      });
+
+      // Expect a remount.
+      expect(container.firstChild).not.toBe(newEl);
+      const finalEl = container.firstChild;
+      expect(finalEl.textContent).toBe('0');
+      expect(finalEl.style.color).toBe('orange');
     }
   });
 });

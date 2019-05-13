@@ -895,7 +895,10 @@ function updateHostRoot(current, workInProgress, renderExpirationTime) {
   // Caution: React DevTools currently depends on this property
   // being called "element".
   const nextChildren = nextState.element;
-  if (nextChildren === prevChildren) {
+  if (
+    nextChildren === prevChildren &&
+    !shouldSkipBailoutsForHotReloading(current)
+  ) {
     // If the state is the same as before, that's a bailout because we had
     // no work that expires at this time.
     resetHydrationState();

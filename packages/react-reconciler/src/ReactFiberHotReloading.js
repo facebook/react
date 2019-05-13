@@ -26,12 +26,14 @@ import {
 import {REACT_FORWARD_REF_TYPE, REACT_MEMO_TYPE} from 'shared/ReactSymbols';
 
 type Family = {|
-  current: any,
+  currentType: any,
+  currentSignature: null | string,
 |};
 
 type HotUpdate = {|
   root: FiberRoot,
   updatedFamilies: Set<Family>,
+  staleFamilies: Set<Family>,
 |};
 
 type HotReloadingInterface = {|
@@ -44,7 +46,8 @@ export let isCompatibleFamilyForHotReloading = (
   fiber: Fiber,
   element: ReactElement,
 ) => false;
-export let shouldSkipBailoutsForHotReloading = (fiber: Fiber): boolean => false;
+export let shouldSkipBailoutsForHotReloading = (fiber: Fiber | null): boolean =>
+  false;
 
 export function enableHotReloading(
   familiesByType: WeakMap<any, Family>,
@@ -56,7 +59,7 @@ export function enableHotReloading(
         return type;
       }
       // Use the latest known implementation.
-      return family.current;
+      return family.currentType;
     };
 
     isCompatibleFamilyForHotReloading = (
@@ -123,19 +126,30 @@ export function enableHotReloading(
     };
 
     let invalidatedFibers = null;
-    let scheduleHotUpdate = ({root, updatedFamilies}: HotUpdate): void => {
+    let scheduleHotUpdate = ({
+      root,
+      updatedFamilies,
+      staleFamilies,
+    }: HotUpdate): void => {
       flushPassiveEffects();
       invalidatedFibers = new Set();
       try {
         batchedUpdates(() => {
-          scheduleFibersWithFamiliesRecursively(root.current, updatedFamilies);
+          scheduleFibersWithFamiliesRecursively(
+            root.current,
+            updatedFamilies,
+            staleFamilies,
+          );
         });
       } finally {
         invalidatedFibers = null;
       }
     };
 
-    shouldSkipBailoutsForHotReloading = (fiber: Fiber): boolean => {
+    shouldSkipBailoutsForHotReloading = (fiber: Fiber | null): boolean => {
+      if (fiber === null) {
+        return false;
+      }
       if (invalidatedFibers === null) {
         // Not hot reloading now.
         return false;
@@ -146,6 +160,7 @@ export function enableHotReloading(
     let scheduleFibersWithFamiliesRecursively = (
       fiber: Fiber,
       updatedFamilies: Set<Family>,
+      staleFamilies: Set<Family>,
     ) => {
       const {child, sibling, tag, type} = fiber;
       const candidateTypes = [];
@@ -170,29 +185,59 @@ export function enableHotReloading(
         default:
         // TODO: handle other types.
       }
-      // TODO: remount the whole component if necessary.
 
       if (invalidatedFibers === null) {
         throw new Error(
           'Expected invalidatedFibers to be set during hot reload.',
         );
       }
+
       for (let i = 0; i < candidateTypes.length; i++) {
         const candidateType = candidateTypes[i];
         const family = familiesByType.get(candidateType);
-        if (family !== undefined && updatedFamilies.has(family)) {
-          invalidatedFibers.add(fiber);
-          scheduleWork(fiber, Sync);
-          // TODO: remount Hooks like useEffect.
+        if (family !== undefined) {
+          if (staleFamilies.has(family)) {
+            // Force a remount by changing the element type.
+            fiber.elementType = 'DELETED';
+            if (fiber.alternate !== null) {
+              fiber.alternate.elementType = 'DELETED';
+            }
+            // Schedule the parent.
+            const parent = fiber.return;
+            if (parent !== null) {
+              invalidatedFibers.add(parent);
+              if (parent.alternate !== null) {
+                invalidatedFibers.add(parent.alternate);
+              }
+              scheduleWork(parent, Sync);
+            }
+          } else if (updatedFamilies.has(family)) {
+            // Force a re-render.
+            invalidatedFibers.add(fiber);
+            if (fiber.alternate !== null) {
+              invalidatedFibers.add(fiber.alternate);
+            }
+            // Schedule itself.
+            scheduleWork(fiber, Sync);
+            // TODO: remount Hooks like useEffect.
+          }
           break;
         }
       }
 
       if (child !== null) {
-        scheduleFibersWithFamiliesRecursively(child, updatedFamilies);
+        scheduleFibersWithFamiliesRecursively(
+          child,
+          updatedFamilies,
+          staleFamilies,
+        );
       }
       if (sibling !== null) {
-        scheduleFibersWithFamiliesRecursively(sibling, updatedFamilies);
+        scheduleFibersWithFamiliesRecursively(
+          sibling,
+          updatedFamilies,
+          staleFamilies,
+        );
       }
     };
 
