@@ -661,6 +661,37 @@ describe('ReactDOMFiberAsync', () => {
     });
   });
 
+  describe('createSyncRoot', () => {
+    it('updates flush without yielding in the next event', () => {
+      const root = ReactDOM.unstable_createSyncRoot(container);
+
+      function Text(props) {
+        Scheduler.yieldValue(props.text);
+        return props.text;
+      }
+
+      root.render(
+        <React.Fragment>
+          <Text text="A" />
+          <Text text="B" />
+          <Text text="C" />
+        </React.Fragment>,
+      );
+
+      // Nothing should have rendered yet
+      expect(container.textContent).toEqual('');
+
+      // Everything should render immediately in the next event
+      expect(Scheduler).toFlushExpired(['A', 'B', 'C']);
+      expect(container.textContent).toEqual('ABC');
+    });
+
+    it('does not support createBatch', () => {
+      const root = ReactDOM.unstable_createSyncRoot(container);
+      expect(root.createBatch).toBe(undefined);
+    });
+  });
+
   describe('Disable yielding', () => {
     beforeEach(() => {
       jest.resetModules();
