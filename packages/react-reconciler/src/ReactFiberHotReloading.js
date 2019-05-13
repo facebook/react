@@ -17,8 +17,13 @@ import {
   flushPassiveEffects,
 } from './ReactFiberScheduler';
 import {Sync} from './ReactFiberExpirationTime';
-import {FunctionComponent, ForwardRef} from 'shared/ReactWorkTags';
-import {REACT_FORWARD_REF_TYPE} from 'shared/ReactSymbols';
+import {
+  FunctionComponent,
+  ForwardRef,
+  MemoComponent,
+  SimpleMemoComponent,
+} from 'shared/ReactWorkTags';
+import {REACT_FORWARD_REF_TYPE, REACT_MEMO_TYPE} from 'shared/ReactSymbols';
 
 type Family = {|
   current: any,
@@ -93,7 +98,47 @@ export function enableHotReloading(
           }
           return false;
         }
-        // TODO: support memo, memo+forwardRef, and maybe lazy.
+        case MemoComponent: {
+          const prevType = fiber.elementType;
+          const nextType = element.type;
+          if (
+            typeof nextType !== 'object' ||
+            nextType === null ||
+            nextType.$$typeof !== REACT_MEMO_TYPE
+          ) {
+            return false;
+          }
+          const prevFamily = familiesByType.get(prevType);
+          if (
+            prevFamily !== undefined &&
+            prevFamily === familiesByType.get(nextType)
+          ) {
+            return true;
+          }
+          return false;
+        }
+        case SimpleMemoComponent: {
+          const prevType = fiber.elementType;
+          const nextType = element.type;
+          if (
+            typeof nextType !== 'object' ||
+            nextType === null ||
+            nextType.$$typeof !== REACT_MEMO_TYPE
+          ) {
+            return false;
+          }
+          // TODO: if it can no longer be simple,
+          // we'd also need to return false here.
+          const prevFamily = familiesByType.get(prevType);
+          if (
+            prevFamily !== undefined &&
+            prevFamily === familiesByType.get(nextType)
+          ) {
+            return true;
+          }
+          return false;
+        }
+        // TODO: maybe support lazy?
         default:
           return false;
       }
@@ -113,11 +158,13 @@ export function enableHotReloading(
       const {child, sibling, tag, type} = fiber;
 
       switch (tag) {
-        case FunctionComponent: {
+        case FunctionComponent:
+        case SimpleMemoComponent: {
           if (familiesByType.has(type)) {
             fiber.memoizedProps = {...fiber.memoizedProps};
             scheduleWork(fiber, Sync);
             // TODO: remount Hooks like useEffect.
+            // TODO: skip shallow or custom memo bailout.
           }
           break;
         }
@@ -128,9 +175,15 @@ export function enableHotReloading(
             // TODO: remount Hooks like useEffect.
           }
           break;
+        case MemoComponent:
+          if (familiesByType.has(type) || familiesByType.has(type.type)) {
+            fiber.memoizedProps = {...fiber.memoizedProps};
+            scheduleWork(fiber, Sync);
+            // TODO: skip shallow or custom memo bailout.
+          }
+          break;
         default:
         // TODO: handle other types.
-        // TODO: skip shallow or custom memo bailouts too.
       }
       // TODO: remount the whole component if necessary.
 
