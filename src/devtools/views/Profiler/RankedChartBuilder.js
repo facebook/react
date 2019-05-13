@@ -1,6 +1,6 @@
 // @flow
 
-import { calculateSelfDuration, formatDuration } from './utils';
+import { formatDuration } from './utils';
 
 import type { CommitDetailsFrontend, CommitTreeFrontend } from './types';
 
@@ -27,7 +27,7 @@ export function getChartData({
   commitIndex: number,
   commitTree: CommitTreeFrontend,
 |}): ChartData {
-  const { actualDurations, rootID } = commitDetails;
+  const { actualDurations, rootID, selfDurations } = commitDetails;
   const { nodes } = commitTree;
 
   const key = `${rootID}-${commitIndex}`;
@@ -49,7 +49,7 @@ export function getChartData({
     if (node.parentID === 0) {
       return;
     }
-    const selfDuration = calculateSelfDuration(id, commitTree, commitDetails);
+    const selfDuration = selfDurations.get(id) || 0;
     maxSelfDuration = Math.max(maxSelfDuration, selfDuration);
 
     const name = node.displayName || 'Unknown';

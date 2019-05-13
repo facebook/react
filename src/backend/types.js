@@ -122,8 +122,9 @@ export type InteractionBackend = {|
 |};
 
 export type CommitDetailsBackend = {|
-  actualDurations: Array<number>,
   commitIndex: number,
+  // Tuple of id, actual duration, and (computed) self duration
+  durations: Array<number>,
   interactions: Array<InteractionBackend>,
   rootID: number,
 |};

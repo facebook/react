@@ -31,6 +31,7 @@ export type CommitDetailsFrontend = {|
   rootID: number,
   commitIndex: number,
   actualDurations: Map<number, number>,
+  selfDurations: Map<number, number>,
   interactions: Array<InteractionFrontend>,
 |};
 

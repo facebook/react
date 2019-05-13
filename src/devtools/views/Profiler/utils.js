@@ -2,11 +2,7 @@
 
 import { PROFILER_EXPORT_VERSION } from 'src/constants';
 
-import type {
-  CommitDetailsFrontend,
-  CommitTreeFrontend,
-  ProfilingSnapshotNode,
-} from './types';
+import type { ProfilingSnapshotNode } from './types';
 
 const commitGradient = [
   'var(--color-commit-gradient-0)',
@@ -20,34 +16,6 @@ const commitGradient = [
   'var(--color-commit-gradient-8)',
   'var(--color-commit-gradient-9)',
 ];
-
-export const calculateSelfDuration = (
-  id: number,
-  commitTree: CommitTreeFrontend,
-  commitDetails: CommitDetailsFrontend
-): number => {
-  const { actualDurations } = commitDetails;
-  const { nodes } = commitTree;
-
-  if (!actualDurations.has(id)) {
-    return 0;
-  }
-
-  const node = nodes.get(id);
-  if (node == null) {
-    throw Error(`Could not find node with id "${id}" in commit tree`);
-  }
-
-  let selfDuration = actualDurations.get(id) || 0;
-
-  node.children.forEach(childID => {
-    if (actualDurations.has(childID)) {
-      selfDuration -= actualDurations.get(childID) || 0;
-    }
-  });
-
-  return selfDuration;
-};
 
 export const prepareProfilingExport = (
   profilingOperations: Map<number, Array<Uint32Array>>,

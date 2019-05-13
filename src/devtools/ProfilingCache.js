@@ -127,6 +127,7 @@ export default class ProfilingCache {
           rootID,
           commitIndex,
           actualDurations: new Map(),
+          selfDurations: new Map(),
           interactions: [],
         });
       });
@@ -147,10 +148,10 @@ export default class ProfilingCache {
           const { commitDetails } = (importedProfilingData: any);
           if (commitDetails != null) {
             const commitDurations = [];
-            commitDetails.forEach(({ actualDurations }, commitIndex) => {
-              for (let i = 0; i < actualDurations.length; i += 2) {
-                if (actualDurations[i] === fiberID) {
-                  commitDurations.push(commitIndex, actualDurations[i + 1]);
+            commitDetails.forEach(({ durations }, commitIndex) => {
+              for (let i = 0; i < durations.length; i += 3) {
+                if (durations[i] === fiberID) {
+                  commitDurations.push(commitIndex, durations[i + 2]);
                   break;
                 }
               }
@@ -332,7 +333,7 @@ export default class ProfilingCache {
 
   onCommitDetails = ({
     commitIndex,
-    actualDurations,
+    durations,
     interactions,
     rootID,
   }: CommitDetailsBackend) => {
@@ -342,14 +343,18 @@ export default class ProfilingCache {
       this._pendingCommitDetailsMap.delete(key);
 
       const actualDurationsMap = new Map();
-      for (let i = 0; i < actualDurations.length; i += 2) {
-        actualDurationsMap.set(actualDurations[i], actualDurations[i + 1]);
+      const selfDurationsMap = new Map();
+      for (let i = 0; i < durations.length; i += 3) {
+        const id = durations[i];
+        actualDurationsMap.set(id, durations[i + 1]);
+        selfDurationsMap.set(id, durations[i + 2]);
       }
 
       resolve({
         rootID,
         commitIndex,
         actualDurations: actualDurationsMap,
+        selfDurations: selfDurationsMap,
         interactions,
       });
     }

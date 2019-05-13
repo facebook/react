@@ -12,6 +12,13 @@ Object {
   "commitIndex": 0,
   "interactions": Array [],
   "rootID": 1,
+  "selfDurations": Map {
+    1 => 0,
+    2 => 10,
+    3 => 0,
+    4 => 1,
+    5 => 1,
+  },
 }
 `;
 
@@ -27,6 +34,13 @@ Object {
   "commitIndex": 1,
   "interactions": Array [],
   "rootID": 1,
+  "selfDurations": Map {
+    3 => 0,
+    4 => 1,
+    6 => 2,
+    2 => 10,
+    1 => 0,
+  },
 }
 `;
 
@@ -40,6 +54,11 @@ Object {
   "commitIndex": 2,
   "interactions": Array [],
   "rootID": 1,
+  "selfDurations": Map {
+    3 => 0,
+    2 => 10,
+    1 => 0,
+  },
 }
 `;
 
@@ -52,6 +71,10 @@ Object {
   "commitIndex": 3,
   "interactions": Array [],
   "rootID": 1,
+  "selfDurations": Map {
+    2 => 10,
+    1 => 0,
+  },
 }
 `;
 
@@ -59,60 +82,75 @@ exports[`profiling CommitDetails should be collected for each commit: exported d
 Object {
   "commitDetails": Array [
     Object {
-      "actualDurations": Array [
+      "commitIndex": 0,
+      "durations": Array [
         1,
         12,
+        0,
         2,
         12,
+        10,
         3,
+        0,
         0,
         4,
         1,
+        1,
         5,
         1,
+        1,
       ],
-      "commitIndex": 0,
       "interactions": Array [],
       "rootID": 1,
     },
     Object {
-      "actualDurations": Array [
+      "commitIndex": 1,
+      "durations": Array [
         3,
         0,
+        0,
         4,
+        1,
         1,
         6,
         2,
         2,
+        2,
         13,
+        10,
         1,
         13,
+        0,
       ],
-      "commitIndex": 1,
       "interactions": Array [],
       "rootID": 1,
     },
     Object {
-      "actualDurations": Array [
+      "commitIndex": 2,
+      "durations": Array [
         3,
+        0,
         0,
         2,
         10,
+        10,
         1,
         10,
+        0,
       ],
-      "commitIndex": 2,
       "interactions": Array [],
       "rootID": 1,
     },
     Object {
-      "actualDurations": Array [
+      "commitIndex": 3,
+      "durations": Array [
         2,
+        10,
         10,
         1,
         10,
+        0,
       ],
-      "commitIndex": 3,
       "interactions": Array [],
       "rootID": 1,
     },
@@ -295,15 +333,71 @@ Object {
 }
 `;
 
+exports[`profiling CommitDetails should calculate a self duration based on actual children (not filtered children): CommitDetails with filtered self durations 1`] = `
+Object {
+  "actualDurations": Map {
+    1 => 16,
+    2 => 16,
+    3 => 1,
+    5 => 1,
+  },
+  "commitIndex": 0,
+  "interactions": Array [],
+  "rootID": 1,
+  "selfDurations": Map {
+    1 => 0,
+    2 => 10,
+    3 => 1,
+    5 => 1,
+  },
+}
+`;
+
+exports[`profiling CommitDetails should calculate self duration correctly for suspended views: CommitDetails with filtered self durations 1`] = `
+Object {
+  "actualDurations": Map {
+    1 => 15,
+    2 => 15,
+    3 => 5,
+    4 => 2,
+  },
+  "commitIndex": 0,
+  "interactions": Array [],
+  "rootID": 1,
+  "selfDurations": Map {
+    1 => 0,
+    2 => 10,
+    3 => 3,
+    4 => 2,
+  },
+}
+`;
+
+exports[`profiling CommitDetails should calculate self duration correctly for suspended views: CommitDetails with filtered self durations 2`] = `
+Object {
+  "actualDurations": Map {
+    5 => 3,
+    3 => 3,
+  },
+  "commitIndex": 1,
+  "interactions": Array [],
+  "rootID": 1,
+  "selfDurations": Map {
+    5 => 3,
+    3 => 0,
+  },
+}
+`;
+
 exports[`profiling FiberCommits should be collected for each rendered fiber: FiberCommits: element 2 1`] = `
 Object {
   "commitDurations": Array [
     0,
-    11,
+    10,
     1,
-    11,
+    10,
     2,
-    13,
+    10,
   ],
   "fiberID": 2,
   "rootID": 1,
@@ -364,49 +458,62 @@ exports[`profiling FiberCommits should be collected for each rendered fiber: exp
 Object {
   "commitDetails": Array [
     Object {
-      "actualDurations": Array [
+      "commitIndex": 0,
+      "durations": Array [
         1,
         11,
+        0,
         2,
         11,
+        10,
         3,
+        0,
         0,
         4,
         1,
+        1,
       ],
-      "commitIndex": 0,
       "interactions": Array [],
       "rootID": 1,
     },
     Object {
-      "actualDurations": Array [
+      "commitIndex": 1,
+      "durations": Array [
         3,
         0,
+        0,
         5,
+        1,
         1,
         2,
         11,
+        10,
         1,
         11,
+        0,
       ],
-      "commitIndex": 1,
       "interactions": Array [],
       "rootID": 1,
     },
     Object {
-      "actualDurations": Array [
+      "commitIndex": 2,
+      "durations": Array [
         3,
         0,
+        0,
         5,
+        1,
         1,
         6,
         2,
         2,
+        2,
         13,
+        10,
         1,
         13,
+        0,
       ],
-      "commitIndex": 2,
       "interactions": Array [],
       "rootID": 1,
     },
@@ -609,17 +716,21 @@ exports[`profiling Interactions should be collected for every traced interaction
 Object {
   "commitDetails": Array [
     Object {
-      "actualDurations": Array [
+      "commitIndex": 0,
+      "durations": Array [
         1,
         11,
+        0,
         2,
         11,
+        10,
         3,
+        0,
         0,
         4,
         1,
+        1,
       ],
-      "commitIndex": 0,
       "interactions": Array [
         Object {
           "__count": 1,
@@ -631,17 +742,21 @@ Object {
       "rootID": 1,
     },
     Object {
-      "actualDurations": Array [
+      "commitIndex": 1,
+      "durations": Array [
         3,
+        0,
         0,
         5,
         1,
+        1,
         2,
         11,
+        10,
         1,
         11,
+        0,
       ],
-      "commitIndex": 1,
       "interactions": Array [
         Object {
           "__count": 0,
@@ -833,43 +948,53 @@ exports[`profiling ProfilingSummary should be collected for each commit: exporte
 Object {
   "commitDetails": Array [
     Object {
-      "actualDurations": Array [
+      "commitIndex": 0,
+      "durations": Array [
         3,
         0,
+        0,
         4,
+        1,
         1,
         6,
         2,
         2,
+        2,
         13,
+        10,
         1,
         13,
+        0,
       ],
-      "commitIndex": 0,
       "interactions": Array [],
       "rootID": 1,
     },
     Object {
-      "actualDurations": Array [
+      "commitIndex": 1,
+      "durations": Array [
         3,
+        0,
         0,
         2,
         10,
+        10,
         1,
         10,
+        0,
       ],
-      "commitIndex": 1,
       "interactions": Array [],
       "rootID": 1,
     },
     Object {
-      "actualDurations": Array [
+      "commitIndex": 2,
+      "durations": Array [
         2,
+        10,
         10,
         1,
         10,
+        0,
       ],
-      "commitIndex": 2,
       "interactions": Array [],
       "rootID": 1,
     },

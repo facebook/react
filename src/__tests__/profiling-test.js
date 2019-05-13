@@ -253,6 +253,141 @@ describe('profiling', () => {
 
       done();
     });
+
+    it('should calculate a self duration based on actual children (not filtered children)', async done => {
+      store.componentFilters = [utils.createDisplayNameFilter('^Parent$')];
+
+      const Grandparent = () => {
+        Scheduler.advanceTime(10);
+        return (
+          <React.Fragment>
+            <Parent key="one" />
+            <Parent key="two" />
+          </React.Fragment>
+        );
+      };
+      const Parent = () => {
+        Scheduler.advanceTime(2);
+        return <Child />;
+      };
+      const Child = () => {
+        Scheduler.advanceTime(1);
+        return null;
+      };
+
+      utils.act(() => store.startProfiling());
+      utils.act(() =>
+        ReactDOM.render(<Grandparent />, document.createElement('div'))
+      );
+      utils.act(() => store.stopProfiling());
+
+      let commitDetails = null;
+
+      function Suspender({ commitIndex, rendererID, rootID }) {
+        commitDetails = store.profilingCache.CommitDetails.read({
+          commitIndex,
+          rendererID,
+          rootID,
+        });
+        expect(commitDetails).toMatchSnapshot(
+          `CommitDetails with filtered self durations`
+        );
+        return null;
+      }
+
+      const rendererID = utils.getRendererID();
+      const rootID = store.roots[0];
+
+      await utils.actAsync(() => {
+        TestRenderer.create(
+          <React.Suspense fallback={null}>
+            <Suspender
+              commitIndex={0}
+              rendererID={rendererID}
+              rootID={rootID}
+            />
+          </React.Suspense>
+        );
+      });
+
+      expect(commitDetails).not.toBeNull();
+
+      done();
+    });
+
+    it('should calculate self duration correctly for suspended views', async done => {
+      let data;
+      const getData = () => {
+        if (data) {
+          return data;
+        } else {
+          throw new Promise(resolve => {
+            data = 'abc';
+            resolve(data);
+          });
+        }
+      };
+
+      const Parent = () => {
+        Scheduler.advanceTime(10);
+        return (
+          <React.Suspense fallback={<Fallback />}>
+            <Async />
+          </React.Suspense>
+        );
+      };
+      const Fallback = () => {
+        Scheduler.advanceTime(2);
+        return 'Fallback...';
+      };
+      const Async = () => {
+        Scheduler.advanceTime(3);
+        const data = getData();
+        return data;
+      };
+
+      utils.act(() => store.startProfiling());
+      await utils.actAsync(() =>
+        ReactDOM.render(<Parent />, document.createElement('div'))
+      );
+      utils.act(() => store.stopProfiling());
+
+      const allCommitDetails = [];
+
+      function Suspender({ commitIndex, rendererID, rootID }) {
+        const commitDetails = store.profilingCache.CommitDetails.read({
+          commitIndex,
+          rendererID,
+          rootID,
+        });
+        allCommitDetails.push(commitDetails);
+        expect(commitDetails).toMatchSnapshot(
+          `CommitDetails with filtered self durations`
+        );
+        return null;
+      }
+
+      const rendererID = utils.getRendererID();
+      const rootID = store.roots[0];
+
+      for (let commitIndex = 0; commitIndex < 2; commitIndex++) {
+        await utils.actAsync(() => {
+          TestRenderer.create(
+            <React.Suspense fallback={null}>
+              <Suspender
+                commitIndex={commitIndex}
+                rendererID={rendererID}
+                rootID={rootID}
+              />
+            </React.Suspense>
+          );
+        });
+      }
+
+      expect(allCommitDetails).toHaveLength(2);
+
+      done();
+    });
   });
 
   describe('FiberCommits', () => {
