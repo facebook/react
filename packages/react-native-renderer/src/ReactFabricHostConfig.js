@@ -26,7 +26,6 @@ import {dispatchEvent} from './ReactFabricEventEmitter';
 
 // Modules provided by RN:
 import {
-  FabricUIManager,
   ReactNativeViewConfigRegistry,
   TextInputState,
   deepFreezeAndThrowOnMutationInDev,
@@ -46,7 +45,7 @@ const {
   measure: fabricMeasure,
   measureInWindow: fabricMeasureInWindow,
   measureLayout: fabricMeasureLayout,
-} = FabricUIManager;
+} = nativeFabricUIManager;
 
 const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 

@@ -172,4 +172,4 @@ const RCTFabricUIManager = {
   }),
 };
 
-module.exports = RCTFabricUIManager;
+global.nativeFabricUIManager = RCTFabricUIManager;

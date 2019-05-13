@@ -19,6 +19,7 @@ let createReactNativeComponentClass;
 describe('ReactFabric', () => {
   beforeEach(() => {
     jest.resetModules();
+    require('react-native/Libraries/ReactPrivate/InitializeNativeFabricUIManager');
     ReactNative = require('react-native-renderer');
     jest.resetModules();
     UIManager = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')

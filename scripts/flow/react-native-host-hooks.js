@@ -77,46 +77,6 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
     setJSResponder: (reactTag: number, blockNativeResponder: boolean) => void,
     clearJSResponder: () => void,
   };
-  declare export var FabricUIManager: {
-    createNode: (
-      reactTag: number,
-      viewName: string,
-      rootTag: number,
-      props: ?Object,
-      eventTarget: Object,
-    ) => Object,
-    cloneNode: (node: Object) => Object,
-    cloneNodeWithNewChildren: (node: Object) => Object,
-    cloneNodeWithNewProps: (node: Object, newProps: ?Object) => Object,
-    cloneNodeWithNewChildrenAndProps: (
-      node: Object,
-      newProps: ?Object,
-    ) => Object,
-    appendChild: (node: Object, childNode: Object) => void,
-
-    createChildSet: (rootTag: number) => Object,
-    appendChildToSet: (childSet: Object, childNode: Object) => void,
-    completeRoot: (rootTag: number, childSet: Object) => void,
-    registerEventHandler: (
-      callback: (
-        eventTarget: null | Object,
-        type: RNTopLevelEventType,
-        payload: Object,
-      ) => void,
-    ) => void,
-
-    measure: (node: Node, callback: MeasureOnSuccessCallback) => void,
-    measureInWindow: (
-      node: Node,
-      callback: MeasureInWindowOnSuccessCallback,
-    ) => void,
-    measureLayout: (
-      node: Node,
-      relativeNode: Node,
-      onFail: () => void,
-      onSuccess: MeasureLayoutOnSuccessCallback,
-    ) => void,
-  };
   declare export var BatchedBridge: {
     registerCallableModule: (name: string, module: Object) => void,
   };
@@ -136,8 +96,41 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInitialize
 // This is needed for a short term solution.
 // See https://github.com/facebook/react/pull/15490 for more info
 declare var nativeFabricUIManager: {
-  measure(node: Node, callback: MeasureOnSuccessCallback): void,
-  measureInWindow(node: Node, callback: MeasureInWindowOnSuccessCallback): void,
+  createNode: (
+    reactTag: number,
+    viewName: string,
+    rootTag: number,
+    props: ?Object,
+    eventTarget: Object,
+  ) => Object,
+  cloneNode: (node: Object) => Object,
+  cloneNodeWithNewChildren: (node: Object) => Object,
+  cloneNodeWithNewProps: (node: Object, newProps: ?Object) => Object,
+  cloneNodeWithNewChildrenAndProps: (node: Object, newProps: ?Object) => Object,
+  appendChild: (node: Object, childNode: Object) => void,
+
+  createChildSet: (rootTag: number) => Object,
+  appendChildToSet: (childSet: Object, childNode: Object) => void,
+  completeRoot: (rootTag: number, childSet: Object) => void,
+  registerEventHandler: (
+    callback: (
+      eventTarget: null | Object,
+      type: RNTopLevelEventType,
+      payload: Object,
+    ) => void,
+  ) => void,
+
+  measure: (node: Node, callback: MeasureOnSuccessCallback) => void,
+  measureInWindow: (
+    node: Node,
+    callback: MeasureInWindowOnSuccessCallback,
+  ) => void,
+  measureLayout: (
+    node: Node,
+    relativeNode: Node,
+    onFail: () => void,
+    onSuccess: MeasureLayoutOnSuccessCallback,
+  ) => void,
 };
 
 declare module 'View' {

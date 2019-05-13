@@ -17,9 +17,6 @@ module.exports = {
   get Platform() {
     return require('./Platform');
   },
-  get FabricUIManager() {
-    return require('./FabricUIManager');
-  },
   get RCTEventEmitter() {
     return require('./RCTEventEmitter');
   },
