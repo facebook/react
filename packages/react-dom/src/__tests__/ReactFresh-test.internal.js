@@ -87,12 +87,15 @@ describe('ReactFresh', () => {
     updatedFamilies.add(family);
     // TODO: invalidation based on signatures.
 
-    if (
-      typeof type === 'object' &&
-      type !== null &&
-      type.$$typeof === Symbol.for('react.forward_ref')
-    ) {
-      __register__(type.render, id + '$render');
+    if (typeof type === 'object' && type !== null) {
+      switch (type.$$typeof) {
+        case Symbol.for('react.forward_ref'):
+          __register__(type.render, id + '$render');
+          break;
+        case Symbol.for('react.memo'):
+          __register__(type.type, id + '$type');
+          break;
+      }
     }
   }
 
@@ -558,6 +561,94 @@ describe('ReactFresh', () => {
 
       // TODO: remove this when we fix bailouts:
       render(() => OuterV2, {cacheBreaker: 'foo'});
+
+      // Assert the state was preserved but color changed.
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('1');
+      expect(el.style.color).toBe('red');
+
+      // Bump the state again.
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('2');
+      expect(el.style.color).toBe('red');
+
+      // Perform top-down renders with both fresh and stale types.
+      // Neither should change the state or color.
+      // They should always resolve to the latest version.
+      render(() => OuterV1);
+      render(() => OuterV2);
+      render(() => OuterV1);
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('2');
+      expect(el.style.color).toBe('red');
+
+      // Finally, a render with incompatible type should reset it.
+      render(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+
+        // Note: no wrapper this time.
+        return Hello;
+      });
+
+      expect(container.firstChild).not.toBe(el);
+      const newEl = container.firstChild;
+      expect(newEl.textContent).toBe('0');
+      expect(newEl.style.color).toBe('blue');
+    }
+  });
+
+  it('can preserve state for memo with custom comparison', () => {
+    if (__DEV__) {
+      let OuterV1 = render(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+
+        const Outer = React.memo(Hello, () => true);
+        __register__(Outer, 'Outer');
+        return Outer;
+      });
+
+      // Bump the state before patching.
+      const el = container.firstChild;
+      expect(el.textContent).toBe('0');
+      expect(el.style.color).toBe('blue');
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(el.textContent).toBe('1');
+
+      // Perform a hot update.
+      let OuterV2 = patch(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'red'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+
+        const Outer = React.memo(Hello, () => true);
+        __register__(Outer, 'Outer');
+        return Outer;
+      });
 
       // Assert the state was preserved but color changed.
       expect(container.firstChild).toBe(el);
