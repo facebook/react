@@ -418,10 +418,6 @@ function dispatchCancel(
   }
 }
 
-function isAnchorTagElement(eventTarget: EventTarget): boolean {
-  return (eventTarget: any).nodeName === 'A';
-}
-
 function isValidKeyPress(key: string): boolean {
   // Accessibility for keyboards. Space and Enter only.
   return key === ' ' || key === 'Enter';
@@ -673,7 +669,7 @@ const PressResponder = {
       }
 
       case 'click': {
-        if (isAnchorTagElement(target)) {
+        if (context.isTargetWithinHostComponent(target, 'a')) {
           const {
             altKey,
             ctrlKey,
