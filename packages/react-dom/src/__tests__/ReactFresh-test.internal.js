@@ -40,6 +40,7 @@ describe('ReactFresh', () => {
     act = require('react-dom/test-utils').act;
     container = document.createElement('div');
     document.body.appendChild(container);
+
     familiesByID = new Map();
     familiesByType = new WeakMap();
 
@@ -81,13 +82,24 @@ describe('ReactFresh', () => {
       return;
     }
     let family = familiesByID.get(id);
+    let isNew = false;
     if (family === undefined) {
+      isNew = true;
       family = {current: null};
       familiesByID.set(id, family);
     }
+    const prevType = family.current;
     family.current = type;
-    familiesByType.set(type, family);
-    updatedFamilies.add(family);
+    if (isNew) {
+      // The first time a type is registered, we don't need
+      // any special reconciliation logic. So we won't add it to the map.
+      // Instead, this will happen the firt time it is edited.
+    } else {
+      // Point both previous and next types to this family.
+      familiesByType.set(prevType, family);
+      familiesByType.set(type, family);
+      updatedFamilies.add(family);
+    }
     // TODO: invalidation based on signatures.
 
     if (typeof type === 'object' && type !== null) {
