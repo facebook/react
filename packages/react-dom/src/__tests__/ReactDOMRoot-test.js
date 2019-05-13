@@ -13,7 +13,6 @@ let React = require('react');
 let ReactDOM = require('react-dom');
 let ReactDOMServer = require('react-dom/server');
 let Scheduler = require('scheduler');
-let ConcurrentMode = React.unstable_ConcurrentMode;
 
 describe('ReactDOMRoot', () => {
   let container;
@@ -25,7 +24,6 @@ describe('ReactDOMRoot', () => {
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
     Scheduler = require('scheduler');
-    ConcurrentMode = React.unstable_ConcurrentMode;
   });
 
   it('renders children', () => {
@@ -47,7 +45,7 @@ describe('ReactDOMRoot', () => {
 
   it('`root.render` returns a thenable work object', () => {
     const root = ReactDOM.unstable_createRoot(container);
-    const work = root.render(<ConcurrentMode>Hi</ConcurrentMode>);
+    const work = root.render('Hi');
     let ops = [];
     work.then(() => {
       ops.push('inside callback: ' + container.textContent);
@@ -65,7 +63,7 @@ describe('ReactDOMRoot', () => {
 
   it('resolves `work.then` callback synchronously if the work already committed', () => {
     const root = ReactDOM.unstable_createRoot(container);
-    const work = root.render(<ConcurrentMode>Hi</ConcurrentMode>);
+    const work = root.render('Hi');
     Scheduler.flushAll();
     let ops = [];
     work.then(() => {
@@ -157,11 +155,7 @@ describe('ReactDOMRoot', () => {
 
     const root = ReactDOM.unstable_createRoot(container);
     const batch = root.createBatch();
-    batch.render(
-      <ConcurrentMode>
-        <App />
-      </ConcurrentMode>,
-    );
+    batch.render(<App />);
 
     Scheduler.flushAll();
 
@@ -208,7 +202,7 @@ describe('ReactDOMRoot', () => {
   it('can wait for a batch to finish', () => {
     const root = ReactDOM.unstable_createRoot(container);
     const batch = root.createBatch();
-    batch.render(<ConcurrentMode>Foo</ConcurrentMode>);
+    batch.render('Foo');
 
     Scheduler.flushAll();
 
@@ -248,7 +242,7 @@ describe('ReactDOMRoot', () => {
 
   it('can commit an empty batch', () => {
     const root = ReactDOM.unstable_createRoot(container);
-    root.render(<ConcurrentMode>1</ConcurrentMode>);
+    root.render(1);
 
     Scheduler.advanceTime(2000);
     // This batch has a later expiration time than the earlier update.

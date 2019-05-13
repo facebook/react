@@ -141,7 +141,7 @@ describe('ReactDOMHooks', () => {
     expect(labelRef.current.innerHTML).toBe('abc');
   });
 
-  it('should not bail out when an update is scheduled from within an event handler in ConcurrentMode', () => {
+  it('should not bail out when an update is scheduled from within an event handler in Concurrent Mode', () => {
     const {createRef, useCallback, useState} = React;
 
     const Example = ({inputRef, labelRef}) => {
@@ -162,11 +162,7 @@ describe('ReactDOMHooks', () => {
     const labelRef = createRef();
 
     const root = ReactDOM.unstable_createRoot(container);
-    root.render(
-      <React.unstable_ConcurrentMode>
-        <Example inputRef={inputRef} labelRef={labelRef} />
-      </React.unstable_ConcurrentMode>,
-    );
+    root.render(<Example inputRef={inputRef} labelRef={labelRef} />);
 
     Scheduler.flushAll();
 

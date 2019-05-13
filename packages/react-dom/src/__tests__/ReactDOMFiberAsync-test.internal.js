@@ -16,8 +16,6 @@ let ReactFeatureFlags = require('shared/ReactFeatureFlags');
 let ReactDOM;
 let Scheduler;
 
-const ConcurrentMode = React.unstable_ConcurrentMode;
-
 const setUntrackedInputValue = Object.getOwnPropertyDescriptor(
   HTMLInputElement.prototype,
   'value',
@@ -86,12 +84,9 @@ describe('ReactDOMFiberAsync', () => {
         );
       }
     }
-    ReactDOM.render(
-      <ConcurrentMode>
-        <Counter />
-      </ConcurrentMode>,
-      container,
-    );
+    const root = ReactDOM.unstable_createRoot(container);
+    root.render(<Counter />);
+    Scheduler.flushAll();
     expect(asyncValueRef.current.textContent).toBe('');
     expect(syncValueRef.current.textContent).toBe('');
 
@@ -108,34 +103,7 @@ describe('ReactDOMFiberAsync', () => {
     expect(syncValueRef.current.textContent).toBe('hello');
   });
 
-  describe('with feature flag disabled', () => {
-    beforeEach(() => {
-      jest.resetModules();
-      ReactFeatureFlags = require('shared/ReactFeatureFlags');
-      ReactDOM = require('react-dom');
-      Scheduler = require('scheduler');
-    });
-
-    it('renders synchronously', () => {
-      ReactDOM.render(
-        <ConcurrentMode>
-          <div>Hi</div>
-        </ConcurrentMode>,
-        container,
-      );
-      expect(container.textContent).toEqual('Hi');
-
-      ReactDOM.render(
-        <ConcurrentMode>
-          <div>Bye</div>
-        </ConcurrentMode>,
-        container,
-      );
-      expect(container.textContent).toEqual('Bye');
-    });
-  });
-
-  describe('with feature flag enabled', () => {
+  describe('concurrent mode', () => {
     beforeEach(() => {
       jest.resetModules();
       ReactFeatureFlags = require('shared/ReactFeatureFlags');
@@ -144,7 +112,7 @@ describe('ReactDOMFiberAsync', () => {
       Scheduler = require('scheduler');
     });
 
-    it('createRoot makes the entire tree async', () => {
+    it('top-level updates are concurrent', () => {
       const root = ReactDOM.unstable_createRoot(container);
       root.render(<div>Hi</div>);
       expect(container.textContent).toEqual('');
@@ -157,7 +125,7 @@ describe('ReactDOMFiberAsync', () => {
       expect(container.textContent).toEqual('Bye');
     });
 
-    it('updates inside an async tree are async by default', () => {
+    it('deep updates (setState) are oncurrent', () => {
       let instance;
       class Component extends React.Component {
         state = {step: 0};
@@ -172,56 +140,6 @@ describe('ReactDOMFiberAsync', () => {
       expect(container.textContent).toEqual('');
       Scheduler.flushAll();
       expect(container.textContent).toEqual('0');
-
-      instance.setState({step: 1});
-      expect(container.textContent).toEqual('0');
-      Scheduler.flushAll();
-      expect(container.textContent).toEqual('1');
-    });
-
-    it('ConcurrentMode creates an async subtree', () => {
-      let instance;
-      class Component extends React.Component {
-        state = {step: 0};
-        render() {
-          instance = this;
-          return <div>{this.state.step}</div>;
-        }
-      }
-
-      ReactDOM.render(
-        <ConcurrentMode>
-          <Component />
-        </ConcurrentMode>,
-        container,
-      );
-      Scheduler.flushAll();
-
-      instance.setState({step: 1});
-      expect(container.textContent).toEqual('0');
-      Scheduler.flushAll();
-      expect(container.textContent).toEqual('1');
-    });
-
-    it('updates inside an async subtree are async by default', () => {
-      let instance;
-      class Child extends React.Component {
-        state = {step: 0};
-        render() {
-          instance = this;
-          return <div>{this.state.step}</div>;
-        }
-      }
-
-      ReactDOM.render(
-        <div>
-          <ConcurrentMode>
-            <Child />
-          </ConcurrentMode>
-        </div>,
-        container,
-      );
-      Scheduler.flushAll();
 
       instance.setState({step: 1});
       expect(container.textContent).toEqual('0');
@@ -345,12 +263,8 @@ describe('ReactDOMFiberAsync', () => {
         }
       }
 
-      ReactDOM.render(
-        <ConcurrentMode>
-          <Component />
-        </ConcurrentMode>,
-        container,
-      );
+      const root = ReactDOM.unstable_createRoot(container);
+      root.render(<Component />);
       Scheduler.flushAll();
 
       // Updates are async by default
@@ -390,12 +304,9 @@ describe('ReactDOMFiberAsync', () => {
           return this.state.counter;
         }
       }
-      ReactDOM.render(
-        <ConcurrentMode>
-          <Counter />
-        </ConcurrentMode>,
-        container,
-      );
+      const root = ReactDOM.unstable_createRoot(container);
+      root.render(<Counter />);
+      Scheduler.flushAll();
       expect(container.textContent).toEqual('0');
 
       // Test that a normal update is async
