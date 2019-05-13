@@ -25,12 +25,12 @@ describe('ReactFresh', () => {
   let signaturesByType;
 
   beforeEach(() => {
-    let enableHotReloading;
+    let scheduleHotUpdate;
     let lastRoot;
     global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
       supportsFiber: true,
       inject: injected => {
-        enableHotReloading = injected.enableHotReloading;
+        scheduleHotUpdate = injected.scheduleHotUpdate;
       },
       onCommitFiberRoot: (id, root) => {
         lastRoot = root;
@@ -49,10 +49,10 @@ describe('ReactFresh', () => {
     familiesByType = new WeakMap();
 
     if (__DEV__) {
-      const {scheduleHotUpdate} = enableHotReloading(familiesByType);
       performHotReload = function(staleFamilies) {
         scheduleHotUpdate({
           root: lastRoot,
+          familiesByType,
           updatedFamilies,
           staleFamilies,
         });

@@ -31,228 +31,234 @@ type Family = {|
 |};
 
 type HotUpdate = {|
+  familiesByType: WeakMap<any, Family>,
   root: FiberRoot,
-  updatedFamilies: Set<Family>,
   staleFamilies: Set<Family>,
+  updatedFamilies: Set<Family>,
 |};
 
-type HotReloadingInterface = {|
-  scheduleHotUpdate: HotUpdate => void,
-|};
+let familiesByType: WeakMap<any, Family> | null = null;
+let invalidatedFibers: Set<Fiber> | null = null;
 
-// Avoid any overhead even in DEV when hot reloading is off:
-export let resolveTypeForHotReloading = (type: any): any => type;
-export let isCompatibleFamilyForHotReloading = (
+export function resolveTypeForHotReloading(type: any): any {
+  if (__DEV__) {
+    if (familiesByType === null) {
+      // Hot reloading is disabled.
+      return type;
+    }
+    let family = familiesByType.get(type);
+    if (family === undefined) {
+      return type;
+    }
+    // Use the latest known implementation.
+    return family.currentType;
+  } else {
+    return type;
+  }
+}
+
+export function isCompatibleFamilyForHotReloading(
   fiber: Fiber,
   element: ReactElement,
-) => false;
-export let isInvalidatedForHotReloading = (fiber: Fiber | null): boolean =>
-  false;
-
-export function enableHotReloading(
-  familiesByType: WeakMap<any, Family>,
-): ?HotReloadingInterface {
+): boolean {
   if (__DEV__) {
-    resolveTypeForHotReloading = type => {
-      let family = familiesByType.get(type);
-      if (family === undefined) {
-        return type;
-      }
-      // Use the latest known implementation.
-      return family.currentType;
-    };
-
-    isCompatibleFamilyForHotReloading = (
-      fiber: Fiber,
-      element: ReactElement,
-    ): boolean => {
-      const prevType = fiber.elementType;
-      const nextType = element.type;
-
-      // If we got here, we know types aren't === equal.
-      let needsCompareFamilies = false;
-      switch (fiber.tag) {
-        case FunctionComponent: {
-          if (typeof nextType === 'function') {
-            needsCompareFamilies = true;
-          }
-          break;
-        }
-        case ForwardRef: {
-          if (
-            typeof nextType === 'object' &&
-            nextType !== null &&
-            nextType.$$typeof === REACT_FORWARD_REF_TYPE
-          ) {
-            needsCompareFamilies = true;
-          }
-          break;
-        }
-        case MemoComponent:
-        case SimpleMemoComponent: {
-          if (
-            typeof nextType === 'object' &&
-            nextType !== null &&
-            nextType.$$typeof === REACT_MEMO_TYPE
-          ) {
-            // TODO: if it was but can no longer be simple,
-            // we shouldn't set this.
-            needsCompareFamilies = true;
-          }
-          break;
-        }
-        // TODO: maybe support lazy?
-        default:
-          return false;
-      }
-
-      // Check if both types have a family and it's the same one.
-      if (needsCompareFamilies) {
-        // Note: memo() and forwardRef() we'll compare outer rather than inner type.
-        // This means both of them need to be registered to preserve state.
-        // If we unwrapped and compared the inner types for wrappers instead,
-        // then we would risk falsely saying two separate memo(Foo)
-        // calls are equivalent because they wrap the same Foo function.
-        const prevFamily = familiesByType.get(prevType);
-        if (
-          prevFamily !== undefined &&
-          prevFamily === familiesByType.get(nextType)
-        ) {
-          return true;
-        }
-      }
-
+    if (familiesByType === null) {
+      // Hot reloading is disabled.
       return false;
-    };
+    }
 
-    let invalidatedFibers = null;
-    let scheduleHotUpdate = ({
-      root,
-      updatedFamilies,
-      staleFamilies,
-    }: HotUpdate): void => {
-      flushPassiveEffects();
-      invalidatedFibers = new Set();
-      try {
-        flushSync(() => {
-          scheduleFibersWithFamiliesRecursively(
-            root.current,
-            updatedFamilies,
-            staleFamilies,
-          );
-        });
-      } finally {
-        invalidatedFibers = null;
+    const prevType = fiber.elementType;
+    const nextType = element.type;
+    // If we got here, we know types aren't === equal.
+    let needsCompareFamilies = false;
+    switch (fiber.tag) {
+      case FunctionComponent: {
+        if (typeof nextType === 'function') {
+          needsCompareFamilies = true;
+        }
+        break;
       }
-      flushPassiveEffects();
-    };
-
-    isInvalidatedForHotReloading = (fiber: Fiber | null): boolean => {
-      if (fiber === null) {
+      case ForwardRef: {
+        if (
+          typeof nextType === 'object' &&
+          nextType !== null &&
+          nextType.$$typeof === REACT_FORWARD_REF_TYPE
+        ) {
+          needsCompareFamilies = true;
+        }
+        break;
+      }
+      case MemoComponent:
+      case SimpleMemoComponent: {
+        if (
+          typeof nextType === 'object' &&
+          nextType !== null &&
+          nextType.$$typeof === REACT_MEMO_TYPE
+        ) {
+          // TODO: if it was but can no longer be simple,
+          // we shouldn't set this.
+          needsCompareFamilies = true;
+        }
+        break;
+      }
+      // TODO: maybe support lazy?
+      default:
         return false;
-      }
-      if (invalidatedFibers === null) {
-        // Not hot reloading now.
-        return false;
-      }
-      return invalidatedFibers.has(fiber);
-    };
+    }
 
-    let scheduleFibersWithFamiliesRecursively = (
-      fiber: Fiber,
-      updatedFamilies: Set<Family>,
-      staleFamilies: Set<Family>,
-    ) => {
-      const {child, sibling, tag, type} = fiber;
-      const candidateTypes = [];
-      switch (tag) {
-        case FunctionComponent:
-        case SimpleMemoComponent: {
-          candidateTypes.push(type);
-          break;
-        }
-        case ForwardRef: {
-          candidateTypes.push(type);
-          candidateTypes.push(type.render);
-          break;
-        }
-        case MemoComponent: {
-          candidateTypes.push(type);
-          candidateTypes.push(type.type);
-          break;
-        }
-        default:
-        // TODO: handle other types.
+    // Check if both types have a family and it's the same one.
+    if (needsCompareFamilies) {
+      // Note: memo() and forwardRef() we'll compare outer rather than inner type.
+      // This means both of them need to be registered to preserve state.
+      // If we unwrapped and compared the inner types for wrappers instead,
+      // then we would risk falsely saying two separate memo(Foo)
+      // calls are equivalent because they wrap the same Foo function.
+      const prevFamily = familiesByType.get(prevType);
+      if (
+        prevFamily !== undefined &&
+        prevFamily === familiesByType.get(nextType)
+      ) {
+        return true;
       }
+    }
+    return false;
+  } else {
+    return false;
+  }
+}
 
-      if (invalidatedFibers === null) {
-        throw new Error(
-          'Expected invalidatedFibers to be set during hot reload.',
+export function isInvalidatedForHotReloading(fiber: Fiber | null): boolean {
+  if (__DEV__) {
+    if (fiber === null) {
+      return false;
+    }
+    if (invalidatedFibers === null) {
+      // Not hot reloading now.
+      return false;
+    }
+    return invalidatedFibers.has(fiber);
+  } else {
+    return false;
+  }
+}
+
+export function scheduleHotUpdate(hotUpdate: HotUpdate): void {
+  if (__DEV__) {
+    // TODO: warn if its identity changes over time?
+    familiesByType = hotUpdate.familiesByType;
+
+    const {root, staleFamilies, updatedFamilies} = hotUpdate;
+    flushPassiveEffects();
+    invalidatedFibers = new Set();
+    try {
+      flushSync(() => {
+        scheduleFibersWithFamiliesRecursively(
+          root.current,
+          updatedFamilies,
+          staleFamilies,
         );
-      }
+      });
+    } finally {
+      invalidatedFibers = null;
+    }
+    flushPassiveEffects();
+  }
+}
 
-      for (let i = 0; i < candidateTypes.length; i++) {
-        const candidateType = candidateTypes[i];
-        const family = familiesByType.get(candidateType);
-        if (family !== undefined) {
-          if (staleFamilies.has(family)) {
-            let fiberToRemount = fiber;
-            // Force a remount by changing the element type.
-            // If necessary, do this for more than a single fiber on parent path.
-            while (true) {
-              fiberToRemount.elementType = 'DELETED';
-              if (fiberToRemount.alternate !== null) {
-                fiberToRemount.alternate.elementType = 'DELETED';
-              }
-              const parent = fiberToRemount.return;
-              if (parent !== null && parent.tag === MemoComponent) {
-                // Memo components can't reconcile themelves so
-                // delete them too until we find a non-memo parent.
-                fiberToRemount = parent;
-              } else {
-                break;
-              }
+function scheduleFibersWithFamiliesRecursively(
+  fiber: Fiber,
+  updatedFamilies: Set<Family>,
+  staleFamilies: Set<Family>,
+) {
+  if (__DEV__) {
+    const {child, sibling, tag, type} = fiber;
+    const candidateTypes = [];
+    switch (tag) {
+      case FunctionComponent:
+      case SimpleMemoComponent: {
+        candidateTypes.push(type);
+        break;
+      }
+      case ForwardRef: {
+        candidateTypes.push(type);
+        candidateTypes.push(type.render);
+        break;
+      }
+      case MemoComponent: {
+        candidateTypes.push(type);
+        candidateTypes.push(type.type);
+        break;
+      }
+      default:
+      // TODO: handle other types.
+    }
+
+    if (invalidatedFibers === null) {
+      throw new Error(
+        'Expected invalidatedFibers to be set during hot reload.',
+      );
+    }
+    if (familiesByType === null) {
+      throw new Error('Expected familiesByType to be set during hot reload.');
+    }
+
+    for (let i = 0; i < candidateTypes.length; i++) {
+      const candidateType = candidateTypes[i];
+      const family = familiesByType.get(candidateType);
+      if (family !== undefined) {
+        if (staleFamilies.has(family)) {
+          let fiberToRemount = fiber;
+          // Force a remount by changing the element type.
+          // If necessary, do this for more than a single fiber on parent path.
+          while (true) {
+            fiberToRemount.elementType = 'DELETED';
+            if (fiberToRemount.alternate !== null) {
+              fiberToRemount.alternate.elementType = 'DELETED';
             }
-            // Schedule the parent.
             const parent = fiberToRemount.return;
-            if (parent !== null) {
-              invalidatedFibers.add(parent);
-              if (parent.alternate !== null) {
-                invalidatedFibers.add(parent.alternate);
-              }
-              scheduleWork(parent, Sync);
+            if (parent !== null && parent.tag === MemoComponent) {
+              // Memo components can't reconcile themelves so
+              // delete them too until we find a non-memo parent.
+              fiberToRemount = parent;
+            } else {
+              break;
             }
-          } else if (updatedFamilies.has(family)) {
-            // Force a re-render.
-            invalidatedFibers.add(fiber);
-            if (fiber.alternate !== null) {
-              invalidatedFibers.add(fiber.alternate);
-            }
-            // Schedule itself.
-            scheduleWork(fiber, Sync);
           }
-          break;
+          // Schedule the parent.
+          const parent = fiberToRemount.return;
+          if (parent !== null) {
+            invalidatedFibers.add(parent);
+            if (parent.alternate !== null) {
+              invalidatedFibers.add(parent.alternate);
+            }
+            scheduleWork(parent, Sync);
+          }
+        } else if (updatedFamilies.has(family)) {
+          // Force a re-render.
+          invalidatedFibers.add(fiber);
+          if (fiber.alternate !== null) {
+            invalidatedFibers.add(fiber.alternate);
+          }
+          // Schedule itself.
+          scheduleWork(fiber, Sync);
         }
+        break;
       }
+    }
 
-      if (child !== null) {
-        scheduleFibersWithFamiliesRecursively(
-          child,
-          updatedFamilies,
-          staleFamilies,
-        );
-      }
-      if (sibling !== null) {
-        scheduleFibersWithFamiliesRecursively(
-          sibling,
-          updatedFamilies,
-          staleFamilies,
-        );
-      }
-    };
-
-    return {
-      scheduleHotUpdate,
-    };
+    if (child !== null) {
+      scheduleFibersWithFamiliesRecursively(
+        child,
+        updatedFamilies,
+        staleFamilies,
+      );
+    }
+    if (sibling !== null) {
+      scheduleFibersWithFamiliesRecursively(
+        sibling,
+        updatedFamilies,
+        staleFamilies,
+      );
+    }
   }
 }

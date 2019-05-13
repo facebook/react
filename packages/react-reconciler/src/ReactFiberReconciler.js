@@ -67,7 +67,7 @@ import {StrictMode} from './ReactTypeOfMode';
 import {Sync} from './ReactFiberExpirationTime';
 import {revertPassiveEffectsChange} from 'shared/ReactFeatureFlags';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
-import {enableHotReloading} from './ReactFiberHotReloading';
+import {scheduleHotUpdate} from './ReactFiberHotReloading';
 
 type OpaqueRoot = FiberRoot;
 
@@ -461,7 +461,7 @@ export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
 
   return injectInternals({
     ...devToolsConfig,
-    enableHotReloading: __DEV__ ? enableHotReloading : null,
+    scheduleHotUpdate: __DEV__ ? scheduleHotUpdate : null,
     overrideHookState,
     overrideProps,
     setSuspenseHandler,
