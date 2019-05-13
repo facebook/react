@@ -1320,4 +1320,76 @@ describe('ReactFresh', () => {
     expect(finalEl.textContent).toBe('0');
     expect(finalEl.style.color).toBe('orange');
   }
+
+  it('resets hooks with dependencies on hot reload', () => {
+    if (__DEV__) {
+      let useEffectWithEmptyArrayCalls = 0;
+
+      let HelloV1 = render(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          const tranformed = React.useMemo(() => val * 2, [val]);
+          const handleClick = React.useCallback(() => setVal(v => v + 1), []);
+
+          React.useEffect(() => {
+            useEffectWithEmptyArrayCalls++;
+          }, []);
+
+          return (
+            <p style={{color: 'blue'}} onClick={handleClick}>
+              {tranformed}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+        return Hello;
+      });
+
+      // Bump the state before patching.
+      const el = container.firstChild;
+      expect(el.textContent).toBe('0');
+      expect(el.style.color).toBe('blue');
+      expect(useEffectWithEmptyArrayCalls).toBe(1); // useEffect ran
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(el.textContent).toBe('2'); // val * 2
+      expect(useEffectWithEmptyArrayCalls).toBe(1); // useEffect didn't re-run
+
+      // Perform a hot update.
+      let HelloV2 = patch(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          const tranformed = React.useMemo(() => val * 10, [val]);
+          const handleClick = React.useCallback(() => setVal(v => v - 1), []);
+
+          React.useEffect(() => {
+            useEffectWithEmptyArrayCalls++;
+          }, []);
+
+          return (
+            <p style={{color: 'red'}} onClick={handleClick}>
+              {tranformed}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+        return Hello;
+      });
+
+      // Assert the state was preserved but memo was evicted.
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('10'); // val * 10
+      expect(el.style.color).toBe('red');
+      expect(useEffectWithEmptyArrayCalls).toBe(2); // useEffect re-ran
+
+      // This should fire the new callback which decreases the counter.
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(el.textContent).toBe('0');
+      expect(el.style.color).toBe('red');
+      expect(useEffectWithEmptyArrayCalls).toBe(2); // useEffect didn't re-run
+    }
+  });
 });

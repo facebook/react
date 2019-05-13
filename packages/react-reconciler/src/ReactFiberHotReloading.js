@@ -12,7 +12,7 @@ import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
 
 import {
-  batchedUpdates,
+  flushSync,
   scheduleWork,
   flushPassiveEffects,
 } from './ReactFiberScheduler';
@@ -46,7 +46,7 @@ export let isCompatibleFamilyForHotReloading = (
   fiber: Fiber,
   element: ReactElement,
 ) => false;
-export let shouldSkipBailoutsForHotReloading = (fiber: Fiber | null): boolean =>
+export let isInvalidatedForHotReloading = (fiber: Fiber | null): boolean =>
   false;
 
 export function enableHotReloading(
@@ -134,7 +134,7 @@ export function enableHotReloading(
       flushPassiveEffects();
       invalidatedFibers = new Set();
       try {
-        batchedUpdates(() => {
+        flushSync(() => {
           scheduleFibersWithFamiliesRecursively(
             root.current,
             updatedFamilies,
@@ -144,9 +144,10 @@ export function enableHotReloading(
       } finally {
         invalidatedFibers = null;
       }
+      flushPassiveEffects();
     };
 
-    shouldSkipBailoutsForHotReloading = (fiber: Fiber | null): boolean => {
+    isInvalidatedForHotReloading = (fiber: Fiber | null): boolean => {
       if (fiber === null) {
         return false;
       }

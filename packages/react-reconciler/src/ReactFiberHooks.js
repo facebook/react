@@ -37,6 +37,7 @@ import {
   warnIfNotCurrentlyActingUpdatesInDev,
   markRenderEventTimeAndConfig,
 } from './ReactFiberScheduler';
+import {isInvalidatedForHotReloading} from './ReactFiberHotReloading';
 
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
@@ -297,6 +298,13 @@ function areHookInputsEqual(
   nextDeps: Array<mixed>,
   prevDeps: Array<mixed> | null,
 ) {
+  if (__DEV__) {
+    // Force to remount effects, callbacks, and memo for hot reloaded components.
+    if (isInvalidatedForHotReloading(currentlyRenderingFiber)) {
+      return false;
+    }
+  }
+
   if (prevDeps === null) {
     if (__DEV__) {
       warning(
