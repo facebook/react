@@ -73,3 +73,13 @@
   height: 1rem;
   color: var(--color-expand-collapse-toggle);
 }
+
+.Badge{
+  background: var(--color-component-name);
+  color: #000;
+  line-height: calc(var(--line-height-data) - 0.25rem);
+  padding: 0 0.55rem;
+  border-radius: 5px;
+  margin-left: 0.5rem;
+  font-size: calc(var(--font-size-monospace-normal) - 2px);
+}

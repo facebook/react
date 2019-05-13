@@ -9,7 +9,12 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { ElementTypeClass, ElementTypeFunction } from 'src/types';
+import {
+  ElementTypeClass,
+  ElementTypeFunction,
+  ElementTypeMemo,
+  ElementTypeForwardRef,
+} from 'src/types';
 import Store from 'src/devtools/store';
 import ButtonIcon from '../ButtonIcon';
 import { createRegExp } from '../utils';
@@ -134,6 +139,7 @@ export default function ElementView({ data, index, style }: Props) {
 
   const showDollarR =
     isSelected && (type === ElementTypeClass || type === ElementTypeFunction);
+  const showBadge = type === ElementTypeMemo || type === ElementTypeForwardRef;
 
   let className = styles.Element;
   if (isSelected) {
@@ -182,6 +188,11 @@ export default function ElementView({ data, index, style }: Props) {
       </span>
       {showDollarR && <span className={styles.DollarR}>&nbsp;== $r</span>}
       <span className={styles.ScrollAnchor} ref={scrollAnchorEndRef} />
+      {showBadge && (
+        <span className={styles.Badge}>
+          {type === ElementTypeMemo ? 'Memo' : 'ForwardRef'}
+        </span>
+      )}
     </div>
   );
 }

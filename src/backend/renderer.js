@@ -462,7 +462,7 @@ export function attach(
         const functionName = getDisplayName(resolvedType.render, '');
         return (
           resolvedType.displayName ||
-          (functionName !== '' ? `ForwardRef(${functionName})` : 'ForwardRef')
+          (functionName !== '' ? functionName : 'ForwardRef')
         );
       case HostRoot:
         return null;
@@ -478,7 +478,7 @@ export function attach(
           return elementType.displayName;
         } else {
           const displayName = type.displayName || type.name;
-          return displayName ? `Memo(${displayName})` : 'Memo';
+          return displayName ? displayName : 'Memo';
         }
       default:
         const typeSymbol = getTypeSymbol(type);
