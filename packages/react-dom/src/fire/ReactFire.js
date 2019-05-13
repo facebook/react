@@ -165,11 +165,11 @@ setRestoreImplementation(restoreControlledState);
 
 export type DOMContainer =
   | (Element & {
-      _reactRootContainer: ?Root,
+      _reactRootContainer: ?(_ReactRoot | _ReactSyncRoot),
       _reactHasBeenPassedToCreateRootDEV: ?boolean,
     })
   | (Document & {
-      _reactRootContainer: ?Root,
+      _reactRootContainer: ?(_ReactRoot | _ReactSyncRoot),
       _reactHasBeenPassedToCreateRootDEV: ?boolean,
     });
 
@@ -181,7 +181,7 @@ type Batch = FiberRootBatch & {
   // The ReactRoot constructor is hoisted but the prototype methods are not. If
   // we move ReactRoot to be above ReactBatch, the inverse error occurs.
   // $FlowFixMe Hoisting issue.
-  _root: Root,
+  _root: _ReactRoot | _ReactSyncRoot,
   _hasChildren: boolean,
   _children: ReactNodeList,
 
@@ -189,18 +189,18 @@ type Batch = FiberRootBatch & {
   _didComplete: boolean,
 };
 
-type Root = {
+type _ReactSyncRoot = {
   render(children: ReactNodeList, callback: ?() => mixed): Work,
   unmount(callback: ?() => mixed): Work,
 
   _internalRoot: FiberRoot,
 };
 
-type RootWithBatchingAPI = Root & {
+type _ReactRoot = _ReactSyncRoot & {
   createBatch(): Batch,
 };
 
-function ReactBatch(root: Root) {
+function ReactBatch(root: _ReactRoot | _ReactSyncRoot) {
   const expirationTime = computeUniqueAsyncExpiration();
   this._expirationTime = expirationTime;
   this._root = root;
@@ -495,7 +495,7 @@ let warnedAboutHydrateAPI = false;
 function legacyCreateRootFromDOMContainer(
   container: DOMContainer,
   forceHydrate: boolean,
-): Root {
+): _ReactSyncRoot {
   const shouldHydrate =
     forceHydrate || shouldHydrateDueToLegacyHeuristic(container);
   // First clear any existing content.
@@ -551,7 +551,7 @@ function legacyRenderSubtreeIntoContainer(
 
   // TODO: Without `any` type, Flow says "Property cannot be accessed on any
   // member of intersection type." Whyyyyyy.
-  let root: Root = (container._reactRootContainer: any);
+  let root: _ReactSyncRoot = (container._reactRootContainer: any);
   let fiberRoot;
   if (!root) {
     // Initial mount
@@ -823,7 +823,7 @@ type RootOptions = {
 function createRoot(
   container: DOMContainer,
   options?: RootOptions,
-): RootWithBatchingAPI {
+): _ReactRoot {
   const functionName = enableStableConcurrentModeAPIs
     ? 'createRoot'
     : 'unstable_createRoot';
@@ -837,7 +837,10 @@ function createRoot(
   return new ReactRoot(container, hydrate);
 }
 
-function createSyncRoot(container: DOMContainer, options?: RootOptions): Root {
+function createSyncRoot(
+  container: DOMContainer,
+  options?: RootOptions,
+): _ReactSyncRoot {
   const functionName = enableStableConcurrentModeAPIs
     ? 'createRoot'
     : 'unstable_createRoot';
