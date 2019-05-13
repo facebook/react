@@ -208,6 +208,7 @@ const eventResponderContext: ReactResponderContext = {
     childTarget: Element | Document,
     parentTarget: Element | Document,
   ): boolean {
+    validateResponderContext();
     const childFiber = getClosestInstanceFromNode(childTarget);
     const parentFiber = getClosestInstanceFromNode(parentTarget);
 
@@ -345,6 +346,7 @@ const eventResponderContext: ReactResponderContext = {
     }
   },
   getFocusableElementsInScope(): Array<HTMLElement> {
+    validateResponderContext();
     const focusableElements = [];
     const eventComponentInstance = ((currentInstance: any): ReactEventComponentInstance);
     let node = ((eventComponentInstance.currentFiber: any): Fiber).child;
@@ -383,6 +385,7 @@ const eventResponderContext: ReactResponderContext = {
   getEventPointerType(
     event: ReactResponderEvent,
   ): '' | 'mouse' | 'keyboard' | 'pen' | 'touch' {
+    validateResponderContext();
     const nativeEvent: any = event.nativeEvent;
     const {type, pointerType} = nativeEvent;
     if (pointerType != null) {
@@ -400,6 +403,7 @@ const eventResponderContext: ReactResponderContext = {
     return '';
   },
   getEventCurrentTarget(event: ReactResponderEvent): Element {
+    validateResponderContext();
     const target: any = event.target;
     let currentTarget = target;
     while (
@@ -412,7 +416,25 @@ const eventResponderContext: ReactResponderContext = {
     return currentTarget;
   },
   getTimeStamp(): number {
+    validateResponderContext();
     return currentTimeStamp;
+  },
+  isTargetWithinHostComponent(
+    target: Element | Document,
+    elementType: string,
+  ): boolean {
+    validateResponderContext();
+    let fiber = getClosestInstanceFromNode(target);
+    while (fiber !== null) {
+      if (fiber.stateNode === currentInstance) {
+        return false;
+      }
+      if (fiber.tag === HostComponent && fiber.type === elementType) {
+        return true;
+      }
+      fiber = fiber.return;
+    }
+    return false;
   },
 };
 
