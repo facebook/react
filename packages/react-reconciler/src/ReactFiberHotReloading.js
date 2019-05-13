@@ -57,91 +57,63 @@ export function enableHotReloading(
       fiber: Fiber,
       element: ReactElement,
     ): boolean => {
+      const prevType = fiber.elementType;
+      const nextType = element.type;
+
       // If we got here, we know types aren't === equal.
+      let needsCompareFamilies = false;
       switch (fiber.tag) {
         case FunctionComponent: {
-          const prevType = fiber.elementType;
-          const nextType = element.type;
-          if (typeof nextType !== 'function') {
-            return false;
+          if (typeof nextType === 'function') {
+            needsCompareFamilies = true;
           }
-          const prevFamily = familiesByType.get(prevType);
-          if (
-            prevFamily !== undefined &&
-            prevFamily === familiesByType.get(nextType)
-          ) {
-            return true;
-          }
-          return false;
+          break;
         }
         case ForwardRef: {
-          const prevType = fiber.elementType;
-          const nextType = element.type;
           if (
-            typeof nextType !== 'object' ||
-            nextType === null ||
-            nextType.$$typeof !== REACT_FORWARD_REF_TYPE
+            typeof nextType === 'object' &&
+            nextType !== null &&
+            nextType.$$typeof === REACT_FORWARD_REF_TYPE
           ) {
-            return false;
+            needsCompareFamilies = true;
           }
-          // We compare the outer type rather than the inner type,
-          // which means both of them need to be registered to preserve state.
-          // Registering inner type alone wouldn't be sufficient because
-          // then we would risk falsely saying two different forwardRef(X)
-          // calls are equivalent when they wrap the same render function.
-          const prevFamily = familiesByType.get(prevType);
-          if (
-            prevFamily !== undefined &&
-            prevFamily === familiesByType.get(nextType)
-          ) {
-            return true;
-          }
-          return false;
+          break;
         }
-        case MemoComponent: {
-          const prevType = fiber.elementType;
-          const nextType = element.type;
-          if (
-            typeof nextType !== 'object' ||
-            nextType === null ||
-            nextType.$$typeof !== REACT_MEMO_TYPE
-          ) {
-            return false;
-          }
-          const prevFamily = familiesByType.get(prevType);
-          if (
-            prevFamily !== undefined &&
-            prevFamily === familiesByType.get(nextType)
-          ) {
-            return true;
-          }
-          return false;
-        }
+        case MemoComponent:
         case SimpleMemoComponent: {
-          const prevType = fiber.elementType;
-          const nextType = element.type;
           if (
-            typeof nextType !== 'object' ||
-            nextType === null ||
-            nextType.$$typeof !== REACT_MEMO_TYPE
+            typeof nextType === 'object' &&
+            nextType !== null &&
+            nextType.$$typeof === REACT_MEMO_TYPE
           ) {
-            return false;
+            // TODO: if it was but can no longer be simple,
+            // we shouldn't set this.
+            needsCompareFamilies = true;
           }
-          // TODO: if it can no longer be simple,
-          // we'd also need to return false here.
-          const prevFamily = familiesByType.get(prevType);
-          if (
-            prevFamily !== undefined &&
-            prevFamily === familiesByType.get(nextType)
-          ) {
-            return true;
-          }
-          return false;
+          break;
         }
         // TODO: maybe support lazy?
         default:
           return false;
       }
+
+      // Check if both types have a family and it's the same one.
+      if (needsCompareFamilies) {
+        // Note: memo() and forwardRef() we'll compare outer rather than inner type.
+        // This means both of them need to be registered to preserve state.
+        // If we unwrapped and compared the inner types for wrappers instead,
+        // then we would risk falsely saying two separate memo(Foo)
+        // calls are equivalent because they wrap the same Foo function.
+        const prevFamily = familiesByType.get(prevType);
+        if (
+          prevFamily !== undefined &&
+          prevFamily === familiesByType.get(nextType)
+        ) {
+          return true;
+        }
+      }
+
+      return false;
     };
 
     let scheduleHotUpdate = (root: FiberRoot, families: Set<Family>): void => {
