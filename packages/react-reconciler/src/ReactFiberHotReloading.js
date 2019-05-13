@@ -110,20 +110,30 @@ export function enableHotReloading(
       fiber: Fiber,
       families: Set<Family>,
     ) => {
-      const {child, sibling, type} = fiber;
-      // TODO: handle other types.
-      if (typeof type === 'function') {
-        const family = familiesByType.get(type);
-        if (family !== undefined) {
-          if (families.has(family)) {
-            // TODO: skip shallow or custom memo bailouts too.
+      const {child, sibling, tag, type} = fiber;
+
+      switch (tag) {
+        case FunctionComponent: {
+          if (familiesByType.has(type)) {
             fiber.memoizedProps = {...fiber.memoizedProps};
             scheduleWork(fiber, Sync);
             // TODO: remount Hooks like useEffect.
           }
-          // TODO: remount the whole component if necessary.
+          break;
         }
+        case ForwardRef:
+          if (familiesByType.has(type) || familiesByType.has(type.render)) {
+            fiber.memoizedProps = {...fiber.memoizedProps};
+            scheduleWork(fiber, Sync);
+            // TODO: remount Hooks like useEffect.
+          }
+          break;
+        default:
+        // TODO: handle other types.
+        // TODO: skip shallow or custom memo bailouts too.
       }
+      // TODO: remount the whole component if necessary.
+
       if (child !== null) {
         scheduleFibersWithFamiliesRecursively(child, families);
       }

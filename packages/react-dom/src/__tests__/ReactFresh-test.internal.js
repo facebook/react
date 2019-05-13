@@ -73,16 +73,27 @@ describe('ReactFresh', () => {
     return Component;
   }
 
-  function __register__(fn, id) {
+  function __register__(type, id) {
+    if (familiesByType.has(type)) {
+      return;
+    }
     let family = familiesByID.get(id);
     if (family === undefined) {
       family = {current: null};
       familiesByID.set(id, family);
     }
-    family.current = fn;
-    familiesByType.set(fn, family);
+    family.current = type;
+    familiesByType.set(type, family);
     updatedFamilies.add(family);
     // TODO: invalidation based on signatures.
+
+    if (
+      typeof type === 'object' &&
+      type !== null &&
+      type.$$typeof === Symbol.for('react.forward_ref')
+    ) {
+      __register__(type.render, id + '$render');
+    }
   }
 
   it('can preserve state for compatible types', () => {
@@ -175,7 +186,7 @@ describe('ReactFresh', () => {
     }
   });
 
-  it('can preserve state for forwardRef if both inner and outer types are registered', () => {
+  it('can preserve state for forwardRef', () => {
     let OuterV1 = render(() => {
       function Hello() {
         const [val, setVal] = React.useState(0);
@@ -187,12 +198,7 @@ describe('ReactFresh', () => {
       }
       __register__(Hello, 'Hello');
 
-      function renderInner() {
-        return <Hello />;
-      }
-      __register__(renderInner, 'renderInner');
-
-      const Outer = React.forwardRef(renderInner);
+      const Outer = React.forwardRef(() => <Hello />);
       __register__(Outer, 'Outer');
       return Outer;
     });
@@ -218,12 +224,7 @@ describe('ReactFresh', () => {
       }
       __register__(Hello, 'Hello');
 
-      function renderInner() {
-        return <Hello />;
-      }
-      __register__(renderInner, 'renderInner');
-
-      const Outer = React.forwardRef(renderInner);
+      const Outer = React.forwardRef(() => <Hello />);
       __register__(Outer, 'Outer');
       return Outer;
     });
@@ -289,8 +290,6 @@ describe('ReactFresh', () => {
         function renderInner() {
           return <Hello />;
         }
-        __register__(renderInner, 'renderInner');
-
         // Both of these are wrappers around the same inner function.
         // They should be treated as distinct types across reloads.
         let ForwardRefA = React.forwardRef(renderInner);
@@ -357,8 +356,6 @@ describe('ReactFresh', () => {
       function renderInner() {
         return <Hello />;
       }
-      __register__(renderInner, 'renderInner');
-
       // Both of these are wrappers around the same inner function.
       // They should be treated as distinct types across reloads.
       let ForwardRefA = React.forwardRef(renderInner);
@@ -398,6 +395,110 @@ describe('ReactFresh', () => {
     render(() => ParentV1);
     render(() => ParentV2);
     render(() => ParentV1);
+    expect(container.firstChild).toBe(el);
+    expect(el.textContent).toBe('1');
+    expect(el.style.color).toBe('red');
+  });
+
+  it('can update forwardRef render function with its wrapper', () => {
+    render(() => {
+      function Hello({color}) {
+        const [val, setVal] = React.useState(0);
+        return (
+          <p style={{color}} onClick={() => setVal(val + 1)}>
+            {val}
+          </p>
+        );
+      }
+      __register__(Hello, 'Hello');
+
+      const Outer = React.forwardRef(() => <Hello color="blue" />);
+      __register__(Outer, 'Outer');
+      return Outer;
+    });
+
+    // Bump the state before patching.
+    const el = container.firstChild;
+    expect(el.textContent).toBe('0');
+    expect(el.style.color).toBe('blue');
+    act(() => {
+      el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+    });
+    expect(el.textContent).toBe('1');
+
+    // Perform a hot update.
+    patch(() => {
+      function Hello({color}) {
+        const [val, setVal] = React.useState(0);
+        return (
+          <p style={{color}} onClick={() => setVal(val + 1)}>
+            {val}
+          </p>
+        );
+      }
+      __register__(Hello, 'Hello');
+
+      const Outer = React.forwardRef(() => <Hello color="red" />);
+      __register__(Outer, 'Outer');
+      return Outer;
+    });
+
+    // Assert the state was preserved but color changed.
+    expect(container.firstChild).toBe(el);
+    expect(el.textContent).toBe('1');
+    expect(el.style.color).toBe('red');
+  });
+
+  it('can update forwardRef render function in isolation', () => {
+    render(() => {
+      function Hello({color}) {
+        const [val, setVal] = React.useState(0);
+        return (
+          <p style={{color}} onClick={() => setVal(val + 1)}>
+            {val}
+          </p>
+        );
+      }
+      __register__(Hello, 'Hello');
+
+      function renderHello() {
+        return <Hello color="blue" />;
+      }
+      __register__(renderHello, 'renderHello');
+
+      return React.forwardRef(renderHello);
+    });
+
+    // Bump the state before patching.
+    const el = container.firstChild;
+    expect(el.textContent).toBe('0');
+    expect(el.style.color).toBe('blue');
+    act(() => {
+      el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+    });
+    expect(el.textContent).toBe('1');
+
+    // Perform a hot update of just the rendering function.
+    patch(() => {
+      function Hello({color}) {
+        const [val, setVal] = React.useState(0);
+        return (
+          <p style={{color}} onClick={() => setVal(val + 1)}>
+            {val}
+          </p>
+        );
+      }
+      __register__(Hello, 'Hello');
+
+      function renderHello() {
+        return <Hello color="red" />;
+      }
+      __register__(renderHello, 'renderHello');
+
+      // Not updating the wrapper.
+    });
+
+    // Assert the state was preserved but color changed.
     expect(container.firstChild).toBe(el);
     expect(el.textContent).toBe('1');
     expect(el.style.color).toBe('red');
