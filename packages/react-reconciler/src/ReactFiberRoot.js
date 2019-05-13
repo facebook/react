@@ -46,7 +46,7 @@ type BaseFiberRootProperties = {|
     | Map<Thenable, Set<ExpirationTime>>
     | null,
 
-  pendingCommitExpirationTime: ExpirationTime,
+  finishedExpirationTime: ExpirationTime,
   // A finished work-in-progress HostRoot that's ready to be committed.
   finishedWork: Fiber | null,
   // Timeout handle returned by setTimeout. Used to cancel a pending timeout, if
@@ -99,7 +99,7 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   this.containerInfo = containerInfo;
   this.pendingChildren = null;
   this.pingCache = null;
-  this.pendingCommitExpirationTime = NoWork;
+  this.finishedExpirationTime = NoWork;
   this.finishedWork = null;
   this.timeoutHandle = noTimeout;
   this.context = null;
