@@ -17,7 +17,8 @@ import {
   flushPassiveEffects,
 } from './ReactFiberScheduler';
 import {Sync} from './ReactFiberExpirationTime';
-import {FunctionComponent} from 'shared/ReactWorkTags';
+import {FunctionComponent, ForwardRef} from 'shared/ReactWorkTags';
+import {REACT_FORWARD_REF_TYPE} from 'shared/ReactSymbols';
 
 type Family = {|
   current: any,
@@ -68,7 +69,31 @@ export function enableHotReloading(
           }
           return false;
         }
-        // TODO: support memo, forwardRef, and maybe lazy.
+        case ForwardRef: {
+          const prevType = fiber.elementType;
+          const nextType = element.type;
+          if (
+            typeof nextType !== 'object' ||
+            nextType === null ||
+            nextType.$$typeof !== REACT_FORWARD_REF_TYPE
+          ) {
+            return false;
+          }
+          // We compare the outer type rather than the inner type,
+          // which means both of them need to be registered to preserve state.
+          // Registering inner type alone wouldn't be sufficient because
+          // then we would risk falsely saying two different forwardRef(X)
+          // calls are equivalent when they wrap the same render function.
+          const prevFamily = familiesByType.get(prevType);
+          if (
+            prevFamily !== undefined &&
+            prevFamily === familiesByType.get(nextType)
+          ) {
+            return true;
+          }
+          return false;
+        }
+        // TODO: support memo, memo+forwardRef, and maybe lazy.
         default:
           return false;
       }
