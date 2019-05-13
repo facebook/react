@@ -1474,7 +1474,7 @@ addons-linter@1.6.1:
   optionalDependencies:
     fsevents "2.0.1"
 
-adm-zip@^0.4.7, adm-zip@~0.4.x:
+adm-zip@~0.4.x:
   version "0.4.13"
   resolved "https://registry.yarnpkg.com/adm-zip/-/adm-zip-0.4.13.tgz#597e2f8cc3672151e1307d3e95cddbc75672314a"
   integrity sha512-fERNJX8sOXfel6qCBCMPvZLzENBEhZTzKqg6vrOW5pvoEaQuJhRU4ndTAh6lHOxn1I6jnz2NHra56ZODM751uw==
