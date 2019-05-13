@@ -117,17 +117,24 @@ export function enableHotReloading(
       return false;
     };
 
-    let invalidatedFibers = new Set();
+    let invalidatedFibers = null;
     let scheduleHotUpdate = (root: FiberRoot, families: Set<Family>): void => {
       flushPassiveEffects();
-      invalidatedFibers.clear();
-      batchedUpdates(() => {
-        scheduleFibersWithFamiliesRecursively(root.current, families);
-      });
-      invalidatedFibers.clear();
+      invalidatedFibers = new Set();
+      try {
+        batchedUpdates(() => {
+          scheduleFibersWithFamiliesRecursively(root.current, families);
+        });
+      } finally {
+        invalidatedFibers = null;
+      }
     };
 
     shouldSkipBailoutsForHotReloading = (fiber: Fiber): boolean => {
+      if (invalidatedFibers === null) {
+        // Not hot reloading now.
+        return false;
+      }
       return invalidatedFibers.has(fiber);
     };
 
@@ -160,6 +167,11 @@ export function enableHotReloading(
       }
       // TODO: remount the whole component if necessary.
 
+      if (invalidatedFibers === null) {
+        throw new Error(
+          'Expected invalidatedFibers to be set during hot reload.',
+        );
+      }
       for (let i = 0; i < candidateTypes.length; i++) {
         const candidateType = candidateTypes[i];
         const family = familiesByType.get(candidateType);
