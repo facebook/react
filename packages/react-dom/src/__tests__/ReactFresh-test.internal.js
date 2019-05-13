@@ -1088,117 +1088,143 @@ describe('ReactFresh', () => {
   });
 
   it('can remount on signature change within a <root> wrapper', () => {
-    testRemountingWithWrapper(Hello => Hello);
+    if (__DEV__) {
+      testRemountingWithWrapper(Hello => Hello);
+    }
   });
 
   it('can remount on signature change within a simple memo wrapper', () => {
-    testRemountingWithWrapper(Hello => React.memo(Hello));
+    if (__DEV__) {
+      testRemountingWithWrapper(Hello => React.memo(Hello));
+    }
   });
 
   it('can remount on signature change within forwardRef', () => {
-    testRemountingWithWrapper(Hello => React.forwardRef(Hello));
+    if (__DEV__) {
+      testRemountingWithWrapper(Hello => React.forwardRef(Hello));
+    }
   });
 
   it('can remount on signature change within forwardRef render function', () => {
-    testRemountingWithWrapper(Hello => React.forwardRef(() => <Hello />));
+    if (__DEV__) {
+      testRemountingWithWrapper(Hello => React.forwardRef(() => <Hello />));
+    }
   });
 
   it('can remount on signature change within nested memo', () => {
-    testRemountingWithWrapper(Hello =>
-      React.memo(React.memo(React.memo(Hello))),
-    );
+    if (__DEV__) {
+      testRemountingWithWrapper(Hello =>
+        React.memo(React.memo(React.memo(Hello))),
+      );
+    }
   });
 
   it('can remount on signature change within a memo wrapper and custom comparison', () => {
-    testRemountingWithWrapper(Hello => React.memo(Hello, () => true));
+    if (__DEV__) {
+      testRemountingWithWrapper(Hello => React.memo(Hello, () => true));
+    }
   });
 
   it('can remount on signature change within a class', () => {
-    testRemountingWithWrapper(Hello => {
-      const child = <Hello />;
-      return class Wrapper extends React.PureComponent {
-        render() {
-          return child;
-        }
-      };
-    });
+    if (__DEV__) {
+      testRemountingWithWrapper(Hello => {
+        const child = <Hello />;
+        return class Wrapper extends React.PureComponent {
+          render() {
+            return child;
+          }
+        };
+      });
+    }
   });
 
   it('can remount on signature change within a context provider', () => {
-    testRemountingWithWrapper(Hello => {
-      const Context = React.createContext();
-      const child = (
-        <Context.Provider value="constant">
-          <Hello />
-        </Context.Provider>
-      );
-      return function Wrapper() {
-        return child;
-      };
-    });
+    if (__DEV__) {
+      testRemountingWithWrapper(Hello => {
+        const Context = React.createContext();
+        const child = (
+          <Context.Provider value="constant">
+            <Hello />
+          </Context.Provider>
+        );
+        return function Wrapper() {
+          return child;
+        };
+      });
+    }
   });
 
   it('can remount on signature change within a context consumer', () => {
-    testRemountingWithWrapper(Hello => {
-      const Context = React.createContext();
-      const child = <Context.Consumer>{() => <Hello />}</Context.Consumer>;
-      return function Wrapper() {
-        return child;
-      };
-    });
+    if (__DEV__) {
+      testRemountingWithWrapper(Hello => {
+        const Context = React.createContext();
+        const child = <Context.Consumer>{() => <Hello />}</Context.Consumer>;
+        return function Wrapper() {
+          return child;
+        };
+      });
+    }
   });
 
   it('can remount on signature change within a suspense node', () => {
-    testRemountingWithWrapper(Hello => {
-      // TODO: we'll probably want to test fallback trees too.
-      const child = (
-        <React.Suspense>
-          <Hello />
-        </React.Suspense>
-      );
-      return function Wrapper() {
-        return child;
-      };
-    });
+    if (__DEV__) {
+      testRemountingWithWrapper(Hello => {
+        // TODO: we'll probably want to test fallback trees too.
+        const child = (
+          <React.Suspense>
+            <Hello />
+          </React.Suspense>
+        );
+        return function Wrapper() {
+          return child;
+        };
+      });
+    }
   });
 
   it('can remount on signature change within a mode node', () => {
-    testRemountingWithWrapper(Hello => {
-      const child = (
-        <React.StrictMode>
-          <Hello />
-        </React.StrictMode>
-      );
-      return function Wrapper() {
-        return child;
-      };
-    });
+    if (__DEV__) {
+      testRemountingWithWrapper(Hello => {
+        const child = (
+          <React.StrictMode>
+            <Hello />
+          </React.StrictMode>
+        );
+        return function Wrapper() {
+          return child;
+        };
+      });
+    }
   });
 
   it('can remount on signature change within a fragment node', () => {
-    testRemountingWithWrapper(Hello => {
-      const child = (
-        <React.Fragment>
-          <Hello />
-        </React.Fragment>
-      );
-      return function Wrapper() {
-        return child;
-      };
-    });
+    if (__DEV__) {
+      testRemountingWithWrapper(Hello => {
+        const child = (
+          <React.Fragment>
+            <Hello />
+          </React.Fragment>
+        );
+        return function Wrapper() {
+          return child;
+        };
+      });
+    }
   });
 
   it('can remount on signature change within a profiler node', () => {
-    testRemountingWithWrapper(Hello => {
-      const child = <Hello />;
-      return function Wrapper() {
-        return (
-          <React.Profiler onRender={() => {}} id="foo">
-            {child}
-          </React.Profiler>
-        );
-      };
-    });
+    if (__DEV__) {
+      testRemountingWithWrapper(Hello => {
+        const child = <Hello />;
+        return function Wrapper() {
+          return (
+            <React.Profiler onRender={() => {}} id="foo">
+              {child}
+            </React.Profiler>
+          );
+        };
+      });
+    }
   });
 
   function testRemountingWithWrapper(wrap) {
