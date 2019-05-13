@@ -125,14 +125,15 @@ export function enableHotReloading(
 
     let scheduleFibersWithFamiliesRecursively = (
       fiber: Fiber,
-      families: Set<Family>,
+      familiesToUpdate: Set<Family>,
     ) => {
       const {child, sibling, tag, type} = fiber;
 
       switch (tag) {
         case FunctionComponent:
         case SimpleMemoComponent: {
-          if (familiesByType.has(type)) {
+          const family = familiesByType.get(type);
+          if (family !== undefined && familiesToUpdate.has(family)) {
             fiber.memoizedProps = {...fiber.memoizedProps};
             scheduleWork(fiber, Sync);
             // TODO: remount Hooks like useEffect.
@@ -140,30 +141,42 @@ export function enableHotReloading(
           }
           break;
         }
-        case ForwardRef:
-          if (familiesByType.has(type) || familiesByType.has(type.render)) {
+        case ForwardRef: {
+          const outerFamily = familiesByType.get(type);
+          const innerFamily = familiesByType.get(type.render);
+          if (
+            (outerFamily !== undefined && familiesToUpdate.has(outerFamily)) ||
+            (innerFamily !== undefined && familiesToUpdate.has(innerFamily))
+          ) {
             fiber.memoizedProps = {...fiber.memoizedProps};
             scheduleWork(fiber, Sync);
             // TODO: remount Hooks like useEffect.
           }
           break;
-        case MemoComponent:
-          if (familiesByType.has(type) || familiesByType.has(type.type)) {
+        }
+        case MemoComponent: {
+          const outerFamily = familiesByType.get(type);
+          const innerFamily = familiesByType.get(type.type);
+          if (
+            (outerFamily !== undefined && familiesToUpdate.has(outerFamily)) ||
+            (innerFamily !== undefined && familiesToUpdate.has(innerFamily))
+          ) {
             fiber.memoizedProps = {...fiber.memoizedProps};
             scheduleWork(fiber, Sync);
             // TODO: skip shallow or custom memo bailout.
           }
           break;
+        }
         default:
         // TODO: handle other types.
       }
       // TODO: remount the whole component if necessary.
 
       if (child !== null) {
-        scheduleFibersWithFamiliesRecursively(child, families);
+        scheduleFibersWithFamiliesRecursively(child, familiesToUpdate);
       }
       if (sibling !== null) {
-        scheduleFibersWithFamiliesRecursively(sibling, families);
+        scheduleFibersWithFamiliesRecursively(sibling, familiesToUpdate);
       }
     };
 

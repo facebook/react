@@ -744,4 +744,63 @@ describe('ReactFresh', () => {
       expect(newEl.style.color).toBe('blue');
     }
   });
+
+  it('does not re-render ancestor components unnecessarily during a hot update', () => {
+    if (__DEV__) {
+      let appRenders = 0;
+
+      render(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+        function App() {
+          appRenders++;
+          return <Hello />;
+        }
+        __register__(App, 'App');
+        return App;
+      });
+
+      expect(appRenders).toBe(1);
+
+      // Bump the state before patching.
+      const el = container.firstChild;
+      expect(el.textContent).toBe('0');
+      expect(el.style.color).toBe('blue');
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(el.textContent).toBe('1');
+
+      // No re-renders from the top.
+      expect(appRenders).toBe(1);
+
+      // Perform a hot update for Hello only.
+      patch(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'red'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+      });
+
+      // Assert the state was preserved but color changed.
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('1');
+      expect(el.style.color).toBe('red');
+
+      // Still no re-renders from the top.
+      expect(appRenders).toBe(1);
+    }
+  });
 });
