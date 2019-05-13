@@ -71,6 +71,7 @@ import {
   getCurrentFiberStackInDev,
 } from './ReactCurrentFiber';
 import {startWorkTimer, cancelWorkTimer} from './ReactDebugFiberPerf';
+import {shouldSkipBailoutsForHotReloading} from './ReactFiberHotReloading';
 
 import {
   mountChildFibers,
@@ -486,7 +487,8 @@ function updateSimpleMemoComponent(
     const prevProps = current.memoizedProps;
     if (
       shallowEqual(prevProps, nextProps) &&
-      current.ref === workInProgress.ref
+      current.ref === workInProgress.ref &&
+      !shouldSkipBailoutsForHotReloading(current)
     ) {
       didReceiveUpdate = false;
       if (updateExpirationTime < renderExpirationTime) {
@@ -2117,7 +2119,11 @@ function beginWork(
     const oldProps = current.memoizedProps;
     const newProps = workInProgress.pendingProps;
 
-    if (oldProps !== newProps || hasLegacyContextChanged()) {
+    if (
+      oldProps !== newProps ||
+      hasLegacyContextChanged() ||
+      shouldSkipBailoutsForHotReloading(current)
+    ) {
       // If props or context changed, mark the fiber as having performed work.
       // This may be unset if the props are determined to be equal later (memo).
       didReceiveUpdate = true;

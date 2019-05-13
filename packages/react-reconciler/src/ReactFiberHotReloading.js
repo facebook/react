@@ -39,6 +39,7 @@ export let isCompatibleFamilyForHotReloading = (
   fiber: Fiber,
   element: ReactElement,
 ) => false;
+export let shouldSkipBailoutsForHotReloading = (fiber: Fiber): boolean => false;
 
 export function enableHotReloading(
   familiesByType: WeakMap<any, Family>,
@@ -116,11 +117,18 @@ export function enableHotReloading(
       return false;
     };
 
+    let invalidatedFibers = new Set();
     let scheduleHotUpdate = (root: FiberRoot, families: Set<Family>): void => {
       flushPassiveEffects();
+      invalidatedFibers.clear();
       batchedUpdates(() => {
         scheduleFibersWithFamiliesRecursively(root.current, families);
       });
+      invalidatedFibers.clear();
+    };
+
+    shouldSkipBailoutsForHotReloading = (fiber: Fiber): boolean => {
+      return invalidatedFibers.has(fiber);
     };
 
     let scheduleFibersWithFamiliesRecursively = (
@@ -134,10 +142,9 @@ export function enableHotReloading(
         case SimpleMemoComponent: {
           const family = familiesByType.get(type);
           if (family !== undefined && familiesToUpdate.has(family)) {
-            fiber.memoizedProps = {...fiber.memoizedProps};
+            invalidatedFibers.add(fiber);
             scheduleWork(fiber, Sync);
             // TODO: remount Hooks like useEffect.
-            // TODO: skip shallow or custom memo bailout.
           }
           break;
         }
@@ -148,7 +155,7 @@ export function enableHotReloading(
             (outerFamily !== undefined && familiesToUpdate.has(outerFamily)) ||
             (innerFamily !== undefined && familiesToUpdate.has(innerFamily))
           ) {
-            fiber.memoizedProps = {...fiber.memoizedProps};
+            invalidatedFibers.add(fiber);
             scheduleWork(fiber, Sync);
             // TODO: remount Hooks like useEffect.
           }
@@ -161,9 +168,8 @@ export function enableHotReloading(
             (outerFamily !== undefined && familiesToUpdate.has(outerFamily)) ||
             (innerFamily !== undefined && familiesToUpdate.has(innerFamily))
           ) {
-            fiber.memoizedProps = {...fiber.memoizedProps};
+            invalidatedFibers.add(fiber);
             scheduleWork(fiber, Sync);
-            // TODO: skip shallow or custom memo bailout.
           }
           break;
         }

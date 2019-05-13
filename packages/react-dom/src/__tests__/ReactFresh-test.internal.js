@@ -559,9 +559,6 @@ describe('ReactFresh', () => {
         return Outer;
       });
 
-      // TODO: remove this when we fix bailouts:
-      render(() => OuterV2, {cacheBreaker: 'foo'});
-
       // Assert the state was preserved but color changed.
       expect(container.firstChild).toBe(el);
       expect(el.textContent).toBe('1');
@@ -736,9 +733,6 @@ describe('ReactFresh', () => {
         // Not updating the wrapper.
       });
 
-      // TODO: remove this when we fix bailouts:
-      render(() => OuterV1, {cacheBreaker: 'foo'});
-
       // Assert the state was preserved but color changed.
       expect(container.firstChild).toBe(el);
       expect(el.textContent).toBe('1');
@@ -889,6 +883,15 @@ describe('ReactFresh', () => {
       expect(container.firstChild).toBe(el);
       expect(el.textContent).toBe('1');
       expect(el.style.color).toBe('red');
+
+      // Still no re-renders from the top.
+      expect(appRenders).toBe(1);
+
+      // Bump the state.
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(el.textContent).toBe('2');
 
       // Still no re-renders from the top.
       expect(appRenders).toBe(1);
