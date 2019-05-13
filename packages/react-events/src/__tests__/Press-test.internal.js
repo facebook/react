@@ -1965,7 +1965,7 @@ describe('Event responder: Press', () => {
       expect(preventDefault).toBeCalled();
     });
 
-    it.only('prevents native behaviour by default #2', () => {
+    it('prevents native behaviour by default with nested elements', () => {
       const onPress = jest.fn();
       const preventDefault = jest.fn();
       const ref = React.createRef();
