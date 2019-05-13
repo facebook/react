@@ -136,47 +136,40 @@ export function enableHotReloading(
       familiesToUpdate: Set<Family>,
     ) => {
       const {child, sibling, tag, type} = fiber;
-
+      const candidateTypes = [];
       switch (tag) {
         case FunctionComponent:
         case SimpleMemoComponent: {
-          const family = familiesByType.get(type);
-          if (family !== undefined && familiesToUpdate.has(family)) {
-            invalidatedFibers.add(fiber);
-            scheduleWork(fiber, Sync);
-            // TODO: remount Hooks like useEffect.
-          }
+          candidateTypes.push(type);
+          // TODO: remount Hooks like useEffect.
           break;
         }
         case ForwardRef: {
-          const outerFamily = familiesByType.get(type);
-          const innerFamily = familiesByType.get(type.render);
-          if (
-            (outerFamily !== undefined && familiesToUpdate.has(outerFamily)) ||
-            (innerFamily !== undefined && familiesToUpdate.has(innerFamily))
-          ) {
-            invalidatedFibers.add(fiber);
-            scheduleWork(fiber, Sync);
-            // TODO: remount Hooks like useEffect.
-          }
+          candidateTypes.push(type);
+          candidateTypes.push(type.render);
+          // TODO: remount Hooks like useEffect.
           break;
         }
         case MemoComponent: {
-          const outerFamily = familiesByType.get(type);
-          const innerFamily = familiesByType.get(type.type);
-          if (
-            (outerFamily !== undefined && familiesToUpdate.has(outerFamily)) ||
-            (innerFamily !== undefined && familiesToUpdate.has(innerFamily))
-          ) {
-            invalidatedFibers.add(fiber);
-            scheduleWork(fiber, Sync);
-          }
+          candidateTypes.push(type);
+          candidateTypes.push(type.type);
           break;
         }
         default:
         // TODO: handle other types.
       }
       // TODO: remount the whole component if necessary.
+
+      for (let i = 0; i < candidateTypes.length; i++) {
+        const candidateType = candidateTypes[i];
+        const family = familiesByType.get(candidateType);
+        if (family !== undefined && familiesToUpdate.has(family)) {
+          invalidatedFibers.add(fiber);
+          scheduleWork(fiber, Sync);
+          // TODO: remount Hooks like useEffect.
+          break;
+        }
+      }
 
       if (child !== null) {
         scheduleFibersWithFamiliesRecursively(child, familiesToUpdate);
