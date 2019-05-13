@@ -1351,7 +1351,7 @@ describe('ReactFresh', () => {
     if (__DEV__) {
       let useEffectWithEmptyArrayCalls = 0;
 
-      let HelloV1 = render(() => {
+      render(() => {
         function Hello() {
           const [val, setVal] = React.useState(0);
           const tranformed = React.useMemo(() => val * 2, [val]);
@@ -1383,7 +1383,7 @@ describe('ReactFresh', () => {
       expect(useEffectWithEmptyArrayCalls).toBe(1); // useEffect didn't re-run
 
       // Perform a hot update.
-      let HelloV2 = patch(() => {
+      patch(() => {
         function Hello() {
           const [val, setVal] = React.useState(0);
           const tranformed = React.useMemo(() => val * 10, [val]);
