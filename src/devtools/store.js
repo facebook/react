@@ -720,6 +720,7 @@ export default class Store extends EventEmitter {
         children: element.children.slice(0),
         displayName: element.displayName,
         key: element.key,
+        type: element.type,
       });
 
       element.children.forEach(childID =>

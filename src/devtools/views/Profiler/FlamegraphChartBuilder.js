@@ -1,5 +1,6 @@
 // @flow
 
+import { ElementTypeForwardRef, ElementTypeMemo } from 'src/types';
 import { formatDuration } from './utils';
 
 import type { CommitDetailsFrontend, CommitTreeFrontend } from './types';
@@ -57,16 +58,23 @@ export function getChartData({
       throw Error(`Could not find node with id "${id}" in commit tree`);
     }
 
-    const { children, displayName, key, treeBaseDuration } = node;
+    const { children, displayName, key, treeBaseDuration, type } = node;
 
     const actualDuration = actualDurations.get(id) || 0;
     const selfDuration = selfDurations.get(id) || 0;
     const didRender = actualDurations.has(id);
 
-    const name = displayName || 'Unknown';
+    const name = displayName || 'Anonymous';
     const maybeKey = key !== null ? ` key="${key}"` : '';
 
-    let label = `${name}${maybeKey}`;
+    let maybeBadge = '';
+    if (type === ElementTypeForwardRef) {
+      maybeBadge = ' (ForwardRef)';
+    } else if (type === ElementTypeMemo) {
+      maybeBadge = ' (Memo)';
+    }
+
+    let label = `${name}${maybeBadge}${maybeKey}`;
     if (didRender) {
       label += ` (${formatDuration(selfDuration)}ms of ${formatDuration(
         actualDuration

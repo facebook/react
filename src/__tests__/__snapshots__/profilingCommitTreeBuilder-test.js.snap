@@ -12,6 +12,7 @@ Object {
       "key": null,
       "parentID": 0,
       "treeBaseDuration": 12,
+      "type": 11,
     },
     2 => Object {
       "children": Array [
@@ -22,6 +23,7 @@ Object {
       "key": null,
       "parentID": 1,
       "treeBaseDuration": 12,
+      "type": 5,
     },
     3 => Object {
       "children": Array [],
@@ -30,6 +32,7 @@ Object {
       "key": "0",
       "parentID": 2,
       "treeBaseDuration": 2,
+      "type": 8,
     },
   },
   "rootID": 1,
@@ -48,6 +51,7 @@ Object {
       "key": null,
       "parentID": 0,
       "treeBaseDuration": 16,
+      "type": 11,
     },
     2 => Object {
       "children": Array [
@@ -60,6 +64,7 @@ Object {
       "key": null,
       "parentID": 1,
       "treeBaseDuration": 16,
+      "type": 5,
     },
     3 => Object {
       "children": Array [],
@@ -68,6 +73,7 @@ Object {
       "key": "0",
       "parentID": 2,
       "treeBaseDuration": 2,
+      "type": 8,
     },
     4 => Object {
       "children": Array [],
@@ -76,6 +82,7 @@ Object {
       "key": "1",
       "parentID": 2,
       "treeBaseDuration": 2,
+      "type": 8,
     },
     5 => Object {
       "children": Array [],
@@ -84,6 +91,7 @@ Object {
       "key": "2",
       "parentID": 2,
       "treeBaseDuration": 2,
+      "type": 8,
     },
   },
   "rootID": 1,
@@ -102,6 +110,7 @@ Object {
       "key": null,
       "parentID": 0,
       "treeBaseDuration": 14,
+      "type": 11,
     },
     2 => Object {
       "children": Array [
@@ -113,6 +122,7 @@ Object {
       "key": null,
       "parentID": 1,
       "treeBaseDuration": 14,
+      "type": 5,
     },
     3 => Object {
       "children": Array [],
@@ -121,6 +131,7 @@ Object {
       "key": "0",
       "parentID": 2,
       "treeBaseDuration": 2,
+      "type": 8,
     },
     4 => Object {
       "children": Array [],
@@ -129,6 +140,7 @@ Object {
       "key": "1",
       "parentID": 2,
       "treeBaseDuration": 2,
+      "type": 8,
     },
   },
   "rootID": 1,
@@ -147,6 +159,7 @@ Object {
       "key": null,
       "parentID": 0,
       "treeBaseDuration": 10,
+      "type": 11,
     },
     2 => Object {
       "children": Array [],
@@ -155,6 +168,7 @@ Object {
       "key": null,
       "parentID": 1,
       "treeBaseDuration": 10,
+      "type": 5,
     },
   },
   "rootID": 1,

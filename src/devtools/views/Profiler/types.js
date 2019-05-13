@@ -1,5 +1,7 @@
 // @flow
 
+import type { ElementType } from 'src/types';
+
 export type CommitTreeNodeFrontend = {|
   id: number,
   children: Array<number>,
@@ -7,6 +9,7 @@ export type CommitTreeNodeFrontend = {|
   key: number | string | null,
   parentID: number,
   treeBaseDuration: number,
+  type: ElementType,
 |};
 
 export type CommitTreeFrontend = {|
@@ -61,6 +64,7 @@ export type ProfilingSnapshotNode = {|
   children: Array<number>,
   displayName: string | null,
   key: number | string | null,
+  type: ElementType,
 |};
 
 export type ImportedProfilingData = {|

@@ -1044,6 +1044,7 @@ Object {
         "displayName": null,
         "id": 1,
         "key": null,
+        "type": 11,
       },
       2 => Object {
         "children": Array [
@@ -1054,24 +1055,28 @@ Object {
         "displayName": "Parent",
         "id": 2,
         "key": null,
+        "type": 5,
       },
       3 => Object {
         "children": Array [],
         "displayName": "Child",
         "id": 3,
         "key": "0",
+        "type": 5,
       },
       4 => Object {
         "children": Array [],
         "displayName": "Child",
         "id": 4,
         "key": "1",
+        "type": 5,
       },
       5 => Object {
         "children": Array [],
         "displayName": "Child",
         "id": 5,
         "key": null,
+        "type": 8,
       },
     },
   },

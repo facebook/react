@@ -1,5 +1,6 @@
 // @flow
 
+import { ElementTypeForwardRef, ElementTypeMemo } from 'src/types';
 import { formatDuration } from './utils';
 
 import type { CommitDetailsFrontend, CommitTreeFrontend } from './types';
@@ -45,16 +46,28 @@ export function getChartData({
       throw Error(`Could not find node with id "${id}" in commit tree`);
     }
 
+    const { displayName, key, parentID, type } = node;
+
     // Don't show the root node in this chart.
-    if (node.parentID === 0) {
+    if (parentID === 0) {
       return;
     }
     const selfDuration = selfDurations.get(id) || 0;
     maxSelfDuration = Math.max(maxSelfDuration, selfDuration);
 
-    const name = node.displayName || 'Unknown';
-    const maybeKey = node.key !== null ? ` key="${node.key}"` : '';
-    const label = `${name}${maybeKey} (${formatDuration(selfDuration)}ms)`;
+    const name = displayName || 'Anonymous';
+    const maybeKey = key !== null ? ` key="${key}"` : '';
+
+    let maybeBadge = '';
+    if (type === ElementTypeForwardRef) {
+      maybeBadge = ' (ForwardRef)';
+    } else if (type === ElementTypeMemo) {
+      maybeBadge = ' (Memo)';
+    }
+
+    const label = `${name}${maybeBadge}${maybeKey} (${formatDuration(
+      selfDuration
+    )}ms)`;
     chartNodes.push({
       id,
       label,

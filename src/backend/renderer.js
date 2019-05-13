@@ -459,10 +459,9 @@ export function attach(
             return 'EventTarget';
         }
       case ForwardRef:
-        const functionName = getDisplayName(resolvedType.render, '');
         return (
           resolvedType.displayName ||
-          (functionName !== '' ? functionName : 'ForwardRef')
+          getDisplayName(resolvedType.render, 'Anonymous')
         );
       case HostRoot:
         return null;
@@ -477,8 +476,7 @@ export function attach(
         if (elementType.displayName) {
           return elementType.displayName;
         } else {
-          const displayName = type.displayName || type.name;
-          return displayName ? displayName : 'Memo';
+          return getDisplayName(type, 'Anonymous');
         }
       default:
         const typeSymbol = getTypeSymbol(type);
@@ -1690,7 +1688,7 @@ export function attach(
 
     const owners = [
       {
-        displayName: getDisplayNameForFiber(fiber) || 'Unknown',
+        displayName: getDisplayNameForFiber(fiber) || 'Anonymous',
         id,
       },
     ];
@@ -1699,7 +1697,7 @@ export function attach(
       let owner = _debugOwner;
       while (owner !== null) {
         owners.unshift({
-          displayName: getDisplayNameForFiber(owner) || 'Unknown',
+          displayName: getDisplayNameForFiber(owner) || 'Anonymous',
           id: getFiberID(getPrimaryFiber(owner)),
         });
         owner = owner._debugOwner || null;
@@ -1794,7 +1792,7 @@ export function attach(
       let owner = _debugOwner;
       while (owner !== null) {
         owners.push({
-          displayName: getDisplayNameForFiber(owner) || 'Unknown',
+          displayName: getDisplayNameForFiber(owner) || 'Anonymous',
           id: getFiberID(getPrimaryFiber(owner)),
         });
         owner = owner._debugOwner || null;
@@ -2306,7 +2304,7 @@ export function attach(
       }
       child = child.child;
     }
-    const name = preferredDisplayName || fallbackDisplayName || 'Unknown';
+    const name = preferredDisplayName || fallbackDisplayName || 'Anonymous';
     const counter = rootDisplayNameCounter.get(name) || 0;
     rootDisplayNameCounter.set(name, counter + 1);
     const pseudoKey = `${name}:${counter}`;

@@ -15,7 +15,7 @@ let encodedStringCache = new LRU({ max: 1000 });
 
 export function getDisplayName(
   type: Function,
-  fallbackName: string = 'Unknown'
+  fallbackName: string = 'Anonymous'
 ): string {
   const nameFromCache = cachedDisplayNames.get(type);
   if (nameFromCache != null) {

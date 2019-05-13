@@ -304,7 +304,7 @@ function InspectedElementView({
           {owners.map(owner => (
             <OwnerView
               key={owner.id}
-              displayName={owner.displayName || 'Unknown'}
+              displayName={owner.displayName || 'Anonymous'}
               id={owner.id}
               isInStore={store.containsElement(owner.id)}
             />

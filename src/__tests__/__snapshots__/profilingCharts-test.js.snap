@@ -12,6 +12,7 @@ Object {
       "key": null,
       "parentID": 0,
       "treeBaseDuration": 15,
+      "type": 11,
     },
     2 => Object {
       "children": Array [
@@ -24,6 +25,7 @@ Object {
       "key": null,
       "parentID": 1,
       "treeBaseDuration": 15,
+      "type": 5,
     },
     3 => Object {
       "children": Array [],
@@ -32,6 +34,7 @@ Object {
       "key": "first",
       "parentID": 2,
       "treeBaseDuration": 3,
+      "type": 8,
     },
     4 => Object {
       "children": Array [],
@@ -40,6 +43,7 @@ Object {
       "key": "second",
       "parentID": 2,
       "treeBaseDuration": 2,
+      "type": 8,
     },
     5 => Object {
       "children": Array [],
@@ -48,6 +52,7 @@ Object {
       "key": "third",
       "parentID": 2,
       "treeBaseDuration": 0,
+      "type": 8,
     },
   },
   "rootID": 1,
@@ -83,7 +88,7 @@ Object {
         "actualDuration": 0,
         "didRender": true,
         "id": 5,
-        "label": "Child key=\\"third\\" (<0.1ms of <0.1ms)",
+        "label": "Child (Memo) key=\\"third\\" (<0.1ms of <0.1ms)",
         "name": "Child",
         "offset": 15,
         "selfDuration": 0,
@@ -93,7 +98,7 @@ Object {
         "actualDuration": 2,
         "didRender": true,
         "id": 4,
-        "label": "Child key=\\"second\\" (2ms of 2ms)",
+        "label": "Child (Memo) key=\\"second\\" (2ms of 2ms)",
         "name": "Child",
         "offset": 13,
         "selfDuration": 2,
@@ -103,7 +108,7 @@ Object {
         "actualDuration": 3,
         "didRender": true,
         "id": 3,
-        "label": "Child key=\\"first\\" (3ms of 3ms)",
+        "label": "Child (Memo) key=\\"first\\" (3ms of 3ms)",
         "name": "Child",
         "offset": 10,
         "selfDuration": 3,
@@ -126,6 +131,7 @@ Object {
       "key": null,
       "parentID": 0,
       "treeBaseDuration": 15,
+      "type": 11,
     },
     2 => Object {
       "children": Array [
@@ -138,6 +144,7 @@ Object {
       "key": null,
       "parentID": 1,
       "treeBaseDuration": 15,
+      "type": 5,
     },
     3 => Object {
       "children": Array [],
@@ -146,6 +153,7 @@ Object {
       "key": "first",
       "parentID": 2,
       "treeBaseDuration": 3,
+      "type": 8,
     },
     4 => Object {
       "children": Array [],
@@ -154,6 +162,7 @@ Object {
       "key": "second",
       "parentID": 2,
       "treeBaseDuration": 2,
+      "type": 8,
     },
     5 => Object {
       "children": Array [],
@@ -162,6 +171,7 @@ Object {
       "key": "third",
       "parentID": 2,
       "treeBaseDuration": 0,
+      "type": 8,
     },
   },
   "rootID": 1,
@@ -197,7 +207,7 @@ Object {
         "actualDuration": 0,
         "didRender": false,
         "id": 5,
-        "label": "Child key=\\"third\\"",
+        "label": "Child (Memo) key=\\"third\\"",
         "name": "Child",
         "offset": 15,
         "selfDuration": 0,
@@ -207,7 +217,7 @@ Object {
         "actualDuration": 0,
         "didRender": false,
         "id": 4,
-        "label": "Child key=\\"second\\"",
+        "label": "Child (Memo) key=\\"second\\"",
         "name": "Child",
         "offset": 13,
         "selfDuration": 0,
@@ -217,7 +227,7 @@ Object {
         "actualDuration": 0,
         "didRender": false,
         "id": 3,
-        "label": "Child key=\\"first\\"",
+        "label": "Child (Memo) key=\\"first\\"",
         "name": "Child",
         "offset": 10,
         "selfDuration": 0,
@@ -254,6 +264,7 @@ Object {
       "key": null,
       "parentID": 0,
       "treeBaseDuration": 15,
+      "type": 11,
     },
     2 => Object {
       "children": Array [
@@ -266,6 +277,7 @@ Object {
       "key": null,
       "parentID": 1,
       "treeBaseDuration": 15,
+      "type": 5,
     },
     3 => Object {
       "children": Array [],
@@ -274,6 +286,7 @@ Object {
       "key": "first",
       "parentID": 2,
       "treeBaseDuration": 3,
+      "type": 8,
     },
     4 => Object {
       "children": Array [],
@@ -282,6 +295,7 @@ Object {
       "key": "second",
       "parentID": 2,
       "treeBaseDuration": 2,
+      "type": 8,
     },
     5 => Object {
       "children": Array [],
@@ -290,6 +304,7 @@ Object {
       "key": "third",
       "parentID": 2,
       "treeBaseDuration": 0,
+      "type": 8,
     },
   },
   "rootID": 1,
@@ -308,19 +323,19 @@ Object {
     },
     Object {
       "id": 3,
-      "label": "Child key=\\"first\\" (3ms)",
+      "label": "Child (Memo) key=\\"first\\" (3ms)",
       "name": "Child",
       "value": 3,
     },
     Object {
       "id": 4,
-      "label": "Child key=\\"second\\" (2ms)",
+      "label": "Child (Memo) key=\\"second\\" (2ms)",
       "name": "Child",
       "value": 2,
     },
     Object {
       "id": 5,
-      "label": "Child key=\\"third\\" (<0.1ms)",
+      "label": "Child (Memo) key=\\"third\\" (<0.1ms)",
       "name": "Child",
       "value": 0,
     },
@@ -340,6 +355,7 @@ Object {
       "key": null,
       "parentID": 0,
       "treeBaseDuration": 15,
+      "type": 11,
     },
     2 => Object {
       "children": Array [
@@ -352,6 +368,7 @@ Object {
       "key": null,
       "parentID": 1,
       "treeBaseDuration": 15,
+      "type": 5,
     },
     3 => Object {
       "children": Array [],
@@ -360,6 +377,7 @@ Object {
       "key": "first",
       "parentID": 2,
       "treeBaseDuration": 3,
+      "type": 8,
     },
     4 => Object {
       "children": Array [],
@@ -368,6 +386,7 @@ Object {
       "key": "second",
       "parentID": 2,
       "treeBaseDuration": 2,
+      "type": 8,
     },
     5 => Object {
       "children": Array [],
@@ -376,6 +395,7 @@ Object {
       "key": "third",
       "parentID": 2,
       "treeBaseDuration": 0,
+      "type": 8,
     },
   },
   "rootID": 1,

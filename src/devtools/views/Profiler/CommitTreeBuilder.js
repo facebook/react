@@ -144,6 +144,7 @@ function recursivelyInitializeTree(
       key: node.key,
       parentID,
       treeBaseDuration: ((initialTreeBaseDurations.get(id): any): number),
+      type: node.type,
     });
 
     node.children.forEach(childID =>
@@ -225,6 +226,7 @@ function updateTree(
             key: null,
             parentID: 0,
             treeBaseDuration: 0, // This will be updated by a subsequent operation
+            type,
           };
 
           nodes.set(id, node);
@@ -259,6 +261,7 @@ function updateTree(
             key,
             parentID,
             treeBaseDuration: 0, // This will be updated by a subsequent operation
+            type,
           };
 
           nodes.set(id, node);
