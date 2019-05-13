@@ -206,6 +206,59 @@ describe('Focus event responder', () => {
     });
   });
 
+  describe('onFocusVisible', () => {
+    let onFocusVisible, ref;
+
+    beforeEach(() => {
+      onFocusVisible = jest.fn();
+      ref = React.createRef();
+      const element = (
+        <Focus onFocusVisible={onFocusVisible}>
+          <div ref={ref} />
+        </Focus>
+      );
+      ReactDOM.render(element, container);
+    });
+
+    it('is called after "focus" and "blur" if keyboard navigation is active', () => {
+      // use keyboard first
+      container.dispatchEvent(createKeyboardEvent('keydown', {key: 'Tab'}));
+      ref.current.dispatchEvent(createFocusEvent('focus'));
+      expect(onFocusVisible).toHaveBeenCalledTimes(1);
+      expect(onFocusVisible).toHaveBeenCalledWith(
+        expect.objectContaining({target: ref.current, type: 'focusvisible'}),
+      );
+      ref.current.dispatchEvent(createFocusEvent('blur'));
+      // onFocusVisible should not be called again
+      expect(onFocusVisible).toHaveBeenCalledTimes(1);
+    });
+
+    it('is called if non-keyboard event is dispatched on target previously focused with keyboard', () => {
+      // use keyboard first
+      container.dispatchEvent(createKeyboardEvent('keydown', {key: 'Tab'}));
+      ref.current.dispatchEvent(createFocusEvent('focus'));
+      expect(onFocusVisible).toHaveBeenCalledTimes(1);
+      expect(onFocusVisible).toHaveBeenCalledWith(
+        expect.objectContaining({target: ref.current, type: 'focusvisible'}),
+      );
+      // then use pointer on the target, focus should no longer be visible
+      // onFocusVisible should not be called again
+      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+      expect(onFocusVisible).toHaveBeenCalledTimes(1);
+      // onFocusVisible should not be called again
+      ref.current.dispatchEvent(createFocusEvent('blur'));
+      expect(onFocusVisible).toHaveBeenCalledTimes(1);
+    });
+
+    it('is not called after "focus" and "blur" events without keyboard', () => {
+      ref.current.dispatchEvent(createPointerEvent('pointerdown'));
+      ref.current.dispatchEvent(createFocusEvent('focus'));
+      container.dispatchEvent(createPointerEvent('pointerdown'));
+      ref.current.dispatchEvent(createFocusEvent('blur'));
+      expect(onFocusVisible).toHaveBeenCalledTimes(0);
+    });
+  });
+
   describe('nested Focus components', () => {
     it('do not propagate events by default', () => {
       const events = [];
