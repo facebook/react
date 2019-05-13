@@ -1086,4 +1086,238 @@ describe('ReactFresh', () => {
       expect(finalEl.style.color).toBe('orange');
     }
   });
+
+  it('can remount on signature change within a <root> wrapper', () => {
+    testRemountingWithWrapper(Hello => Hello);
+  });
+
+  it('can remount on signature change within a simple memo wrapper', () => {
+    testRemountingWithWrapper(Hello => React.memo(Hello));
+  });
+
+  it('can remount on signature change within forwardRef', () => {
+    testRemountingWithWrapper(Hello => React.forwardRef(Hello));
+  });
+
+  it('can remount on signature change within forwardRef render function', () => {
+    testRemountingWithWrapper(Hello => React.forwardRef(() => <Hello />));
+  });
+
+  it('can remount on signature change within nested memo', () => {
+    testRemountingWithWrapper(Hello =>
+      React.memo(React.memo(React.memo(Hello))),
+    );
+  });
+
+  it('can remount on signature change within a memo wrapper and custom comparison', () => {
+    testRemountingWithWrapper(Hello => React.memo(Hello, () => true));
+  });
+
+  it('can remount on signature change within a class', () => {
+    testRemountingWithWrapper(Hello => {
+      const child = <Hello />;
+      return class Wrapper extends React.PureComponent {
+        render() {
+          return child;
+        }
+      };
+    });
+  });
+
+  it('can remount on signature change within a context provider', () => {
+    testRemountingWithWrapper(Hello => {
+      const Context = React.createContext();
+      const child = (
+        <Context.Provider value="constant">
+          <Hello />
+        </Context.Provider>
+      );
+      return function Wrapper() {
+        return child;
+      };
+    });
+  });
+
+  it('can remount on signature change within a context consumer', () => {
+    testRemountingWithWrapper(Hello => {
+      const Context = React.createContext();
+      const child = <Context.Consumer>{() => <Hello />}</Context.Consumer>;
+      return function Wrapper() {
+        return child;
+      };
+    });
+  });
+
+  it('can remount on signature change within a suspense node', () => {
+    testRemountingWithWrapper(Hello => {
+      // TODO: we'll probably want to test fallback trees too.
+      const child = (
+        <React.Suspense>
+          <Hello />
+        </React.Suspense>
+      );
+      return function Wrapper() {
+        return child;
+      };
+    });
+  });
+
+  it('can remount on signature change within a mode node', () => {
+    testRemountingWithWrapper(Hello => {
+      const child = (
+        <React.StrictMode>
+          <Hello />
+        </React.StrictMode>
+      );
+      return function Wrapper() {
+        return child;
+      };
+    });
+  });
+
+  it('can remount on signature change within a fragment node', () => {
+    testRemountingWithWrapper(Hello => {
+      const child = (
+        <React.Fragment>
+          <Hello />
+        </React.Fragment>
+      );
+      return function Wrapper() {
+        return child;
+      };
+    });
+  });
+
+  it('can remount on signature change within a profiler node', () => {
+    testRemountingWithWrapper(Hello => {
+      const child = <Hello />;
+      return function Wrapper() {
+        return (
+          <React.Profiler onRender={() => {}} id="foo">
+            {child}
+          </React.Profiler>
+        );
+      };
+    });
+  });
+
+  function testRemountingWithWrapper(wrap) {
+    render(() => {
+      function Hello() {
+        const [val, setVal] = React.useState(0);
+        return (
+          <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
+            {val}
+          </p>
+        );
+      }
+      __register__(Hello, 'Hello');
+      // When this changes, we'll expect a remount:
+      __signature__(Hello, '1');
+
+      // Use the passed wrapper.
+      // This will be different in every test.
+      return wrap(Hello);
+    });
+
+    // Bump the state before patching.
+    const el = container.firstChild;
+    expect(el.textContent).toBe('0');
+    expect(el.style.color).toBe('blue');
+    act(() => {
+      el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+    });
+    expect(el.textContent).toBe('1');
+
+    // Perform a hot update that doesn't remount.
+    patch(() => {
+      function Hello() {
+        const [val, setVal] = React.useState(0);
+        return (
+          <p style={{color: 'red'}} onClick={() => setVal(val + 1)}>
+            {val}
+          </p>
+        );
+      }
+      __register__(Hello, 'Hello');
+      // The signature hasn't changed since the last time:
+      __signature__(Hello, '1');
+      return Hello;
+    });
+
+    // Assert the state was preserved but color changed.
+    expect(container.firstChild).toBe(el);
+    expect(el.textContent).toBe('1');
+    expect(el.style.color).toBe('red');
+
+    // Perform a hot update that remounts.
+    patch(() => {
+      function Hello() {
+        const [val, setVal] = React.useState(0);
+        return (
+          <p style={{color: 'yellow'}} onClick={() => setVal(val + 1)}>
+            {val}
+          </p>
+        );
+      }
+      // We're changing the signature now so it will remount:
+      __register__(Hello, 'Hello');
+      __signature__(Hello, '2');
+      return Hello;
+    });
+
+    // Expect a remount.
+    expect(container.firstChild).not.toBe(el);
+    const newEl = container.firstChild;
+    expect(newEl.textContent).toBe('0');
+    expect(newEl.style.color).toBe('yellow');
+
+    // Bump state again.
+    act(() => {
+      newEl.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+    });
+    expect(newEl.textContent).toBe('1');
+    expect(newEl.style.color).toBe('yellow');
+
+    // Verify we can patch again while preserving the signature.
+    patch(() => {
+      function Hello() {
+        const [val, setVal] = React.useState(0);
+        return (
+          <p style={{color: 'purple'}} onClick={() => setVal(val + 1)}>
+            {val}
+          </p>
+        );
+      }
+      // Same signature as last time.
+      __register__(Hello, 'Hello');
+      __signature__(Hello, '2');
+      return Hello;
+    });
+
+    expect(container.firstChild).toBe(newEl);
+    expect(newEl.textContent).toBe('1');
+    expect(newEl.style.color).toBe('purple');
+
+    // Check removing the signature also causes a remount.
+    patch(() => {
+      function Hello() {
+        const [val, setVal] = React.useState(0);
+        return (
+          <p style={{color: 'orange'}} onClick={() => setVal(val + 1)}>
+            {val}
+          </p>
+        );
+      }
+      // No signature this time.
+      __register__(Hello, 'Hello');
+      return Hello;
+    });
+
+    // Expect a remount.
+    expect(container.firstChild).not.toBe(newEl);
+    const finalEl = container.firstChild;
+    expect(finalEl.textContent).toBe('0');
+    expect(finalEl.style.color).toBe('orange');
+  }
 });

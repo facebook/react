@@ -774,7 +774,11 @@ function finishClassComponent(
 
   const didCaptureError = (workInProgress.effectTag & DidCapture) !== NoEffect;
 
-  if (!shouldUpdate && !didCaptureError) {
+  if (
+    !shouldUpdate &&
+    !didCaptureError &&
+    !shouldSkipBailoutsForHotReloading(current)
+  ) {
     // Context providers should defer to sCU for rendering
     if (hasContext) {
       invalidateContextProvider(workInProgress, Component, false);
@@ -1939,7 +1943,8 @@ function updateContextProvider(
       // No change. Bailout early if children are the same.
       if (
         oldProps.children === newProps.children &&
-        !hasLegacyContextChanged()
+        !hasLegacyContextChanged() &&
+        !shouldSkipBailoutsForHotReloading(current)
       ) {
         return bailoutOnAlreadyFinishedWork(
           current,

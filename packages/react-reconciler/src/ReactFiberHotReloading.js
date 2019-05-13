@@ -197,13 +197,25 @@ export function enableHotReloading(
         const family = familiesByType.get(candidateType);
         if (family !== undefined) {
           if (staleFamilies.has(family)) {
+            let fiberToRemount = fiber;
             // Force a remount by changing the element type.
-            fiber.elementType = 'DELETED';
-            if (fiber.alternate !== null) {
-              fiber.alternate.elementType = 'DELETED';
+            // If necessary, do this for more than a single fiber on parent path.
+            while (true) {
+              fiberToRemount.elementType = 'DELETED';
+              if (fiberToRemount.alternate !== null) {
+                fiberToRemount.alternate.elementType = 'DELETED';
+              }
+              const parent = fiberToRemount.return;
+              if (parent !== null && parent.tag === MemoComponent) {
+                // Memo components can't reconcile themelves so
+                // delete them too until we find a non-memo parent.
+                fiberToRemount = parent;
+              } else {
+                break;
+              }
             }
             // Schedule the parent.
-            const parent = fiber.return;
+            const parent = fiberToRemount.return;
             if (parent !== null) {
               invalidatedFibers.add(parent);
               if (parent.alternate !== null) {
