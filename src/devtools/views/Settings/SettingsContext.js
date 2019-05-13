@@ -228,6 +228,16 @@ function updateThemeVariables(
   updateStyleHelper(theme, 'color-commit-gradient-text', documentElements);
   updateStyleHelper(theme, 'color-component-name', documentElements);
   updateStyleHelper(theme, 'color-component-name-inverted', documentElements);
+  updateStyleHelper(
+    theme,
+    'color-component-badge-background',
+    documentElements
+  );
+  updateStyleHelper(
+    theme,
+    'color-component-badge-background-inverted',
+    documentElements
+  );
   updateStyleHelper(theme, 'color-dim', documentElements);
   updateStyleHelper(theme, 'color-dimmer', documentElements);
   updateStyleHelper(theme, 'color-dimmest', documentElements);

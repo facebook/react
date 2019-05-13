@@ -28,6 +28,9 @@
 
   /* Invert colors */
   --color-component-name: var(--color-component-name-inverted);
+  --color-component-badge-background: var(
+    --color-component-badge-background-inverted
+  );
   --color-jsx-arrow-brackets: var(--color-jsx-arrow-brackets-inverted);
   --color-attribute-name: var(--color-background-hover);
   --color-attribute-value: var(--color-component-name-inverted);
@@ -74,12 +77,12 @@
   color: var(--color-expand-collapse-toggle);
 }
 
-.Badge{
-  background: var(--color-component-name);
-  color: #000;
-  line-height: calc(var(--line-height-data) - 0.25rem);
-  padding: 0 0.55rem;
-  border-radius: 5px;
-  margin-left: 0.5rem;
-  font-size: calc(var(--font-size-monospace-normal) - 2px);
+.Badge {
+  background-color: var(--color-component-badge-background);
+  padding: 0.125rem 0.25rem;
+  line-height: normal;
+  border-radius: 0.125rem;
+  margin-left: 0.25rem;
+  font-family: var(--font-family-monospace);
+  font-size: var(--font-size-monospace-small);
 }
