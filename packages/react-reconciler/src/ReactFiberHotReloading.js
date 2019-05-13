@@ -169,13 +169,11 @@ export function enableHotReloading(
         case FunctionComponent:
         case SimpleMemoComponent: {
           candidateTypes.push(type);
-          // TODO: remount Hooks like useEffect.
           break;
         }
         case ForwardRef: {
           candidateTypes.push(type);
           candidateTypes.push(type.render);
-          // TODO: remount Hooks like useEffect.
           break;
         }
         case MemoComponent: {
@@ -232,7 +230,6 @@ export function enableHotReloading(
             }
             // Schedule itself.
             scheduleWork(fiber, Sync);
-            // TODO: remount Hooks like useEffect.
           }
           break;
         }
