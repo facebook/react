@@ -329,7 +329,7 @@ Object {
     "interactionCount": 0,
     "rootID": 1,
   },
-  "version": 2,
+  "version": 3,
 }
 `;
 
@@ -685,7 +685,7 @@ Object {
     "interactionCount": 0,
     "rootID": 1,
   },
-  "version": 2,
+  "version": 3,
 }
 `;
 
@@ -916,7 +916,7 @@ Object {
     "interactionCount": 2,
     "rootID": 1,
   },
-  "version": 2,
+  "version": 3,
 }
 `;
 
@@ -1137,6 +1137,6 @@ Object {
     "interactionCount": 0,
     "rootID": 1,
   },
-  "version": 2,
+  "version": 3,
 }
 `;
