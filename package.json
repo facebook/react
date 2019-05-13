@@ -79,7 +79,7 @@
     "@babel/preset-react": "^7.0.0",
     "@reach/menu-button": "^0.1.17",
     "@reach/tooltip": "^0.2.0",
-    "adm-zip": "^0.4.7",
+    "archiver": "^3.0.0",
     "babel-core": "^7.0.0-bridge",
     "babel-eslint": "^9.0.0",
     "babel-jest": "^24.7.1",
