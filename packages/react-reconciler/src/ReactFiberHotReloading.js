@@ -29,8 +29,13 @@ type Family = {|
   current: any,
 |};
 
+type HotUpdate = {|
+  root: FiberRoot,
+  updatedFamilies: Set<Family>,
+|};
+
 type HotReloadingInterface = {|
-  scheduleHotUpdate: (root: FiberRoot, families: Set<Family>) => void,
+  scheduleHotUpdate: HotUpdate => void,
 |};
 
 // Avoid any overhead even in DEV when hot reloading is off:
@@ -118,12 +123,12 @@ export function enableHotReloading(
     };
 
     let invalidatedFibers = null;
-    let scheduleHotUpdate = (root: FiberRoot, families: Set<Family>): void => {
+    let scheduleHotUpdate = ({root, updatedFamilies}: HotUpdate): void => {
       flushPassiveEffects();
       invalidatedFibers = new Set();
       try {
         batchedUpdates(() => {
-          scheduleFibersWithFamiliesRecursively(root.current, families);
+          scheduleFibersWithFamiliesRecursively(root.current, updatedFamilies);
         });
       } finally {
         invalidatedFibers = null;
@@ -140,7 +145,7 @@ export function enableHotReloading(
 
     let scheduleFibersWithFamiliesRecursively = (
       fiber: Fiber,
-      familiesToUpdate: Set<Family>,
+      updatedFamilies: Set<Family>,
     ) => {
       const {child, sibling, tag, type} = fiber;
       const candidateTypes = [];
@@ -175,7 +180,7 @@ export function enableHotReloading(
       for (let i = 0; i < candidateTypes.length; i++) {
         const candidateType = candidateTypes[i];
         const family = familiesByType.get(candidateType);
-        if (family !== undefined && familiesToUpdate.has(family)) {
+        if (family !== undefined && updatedFamilies.has(family)) {
           invalidatedFibers.add(fiber);
           scheduleWork(fiber, Sync);
           // TODO: remount Hooks like useEffect.
@@ -184,10 +189,10 @@ export function enableHotReloading(
       }
 
       if (child !== null) {
-        scheduleFibersWithFamiliesRecursively(child, familiesToUpdate);
+        scheduleFibersWithFamiliesRecursively(child, updatedFamilies);
       }
       if (sibling !== null) {
-        scheduleFibersWithFamiliesRecursively(sibling, familiesToUpdate);
+        scheduleFibersWithFamiliesRecursively(sibling, updatedFamilies);
       }
     };
 

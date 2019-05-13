@@ -45,8 +45,11 @@ describe('ReactFresh', () => {
 
     if (__DEV__) {
       const {scheduleHotUpdate} = enableHotReloading(familiesByType);
-      performHotReload = function(families) {
-        scheduleHotUpdate(lastRoot, families);
+      performHotReload = function() {
+        scheduleHotUpdate({
+          root: lastRoot,
+          updatedFamilies,
+        });
       };
     }
   });
@@ -68,7 +71,7 @@ describe('ReactFresh', () => {
   function patch(version) {
     updatedFamilies = new Set();
     const Component = version();
-    performHotReload(updatedFamilies);
+    performHotReload();
     updatedFamilies = null;
     return Component;
   }
