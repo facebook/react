@@ -29,7 +29,12 @@ type FocusState = {
   isLocalFocusVisible: boolean,
 };
 
-type FocusEventType = 'focus' | 'blur' | 'focuschange' | 'focusvisiblechange';
+type FocusEventType =
+  | 'focus'
+  | 'blur'
+  | 'focuschange'
+  | 'focusvisiblechange'
+  | 'focusvisible';
 
 type FocusEvent = {|
   target: Element | Document,
