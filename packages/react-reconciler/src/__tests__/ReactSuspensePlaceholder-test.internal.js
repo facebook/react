@@ -303,7 +303,7 @@ describe('ReactSuspensePlaceholder', () => {
     });
 
     describe('when suspending during mount', () => {
-      it('properly accounts for base durations when a suspended times out in a sync tree', () => {
+      it('properly accounts for base durations when a suspended times out in a legacy tree', () => {
         ReactNoop.renderLegacySyncRoot(<App shouldSuspend={true} />);
         expect(Scheduler).toHaveYielded([
           'App',
@@ -373,7 +373,7 @@ describe('ReactSuspensePlaceholder', () => {
     });
 
     describe('when suspending during update', () => {
-      it('properly accounts for base durations when a suspended times out in a sync tree', () => {
+      it('properly accounts for base durations when a suspended times out in a legacy tree', () => {
         ReactNoop.renderLegacySyncRoot(
           <App shouldSuspend={false} textRenderDuration={5} />,
         );

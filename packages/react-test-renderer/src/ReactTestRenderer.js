@@ -43,6 +43,7 @@ import ReactVersion from 'shared/ReactVersion';
 import act from './ReactTestRendererAct';
 
 import {getPublicInstance} from './ReactTestHostConfig';
+import {ConcurrentRoot, LegacyRoot} from 'shared/ReactRootTags';
 
 type TestRendererOptions = {
   createNodeMock: (element: React$Element<any>) => any,
@@ -439,7 +440,7 @@ const ReactTestRendererFiber = {
     };
     let root: FiberRoot | null = createContainer(
       container,
-      isConcurrent,
+      isConcurrent ? ConcurrentRoot : LegacyRoot,
       false,
     );
     invariant(root != null, 'something went wrong');

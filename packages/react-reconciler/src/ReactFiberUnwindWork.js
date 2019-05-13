@@ -42,7 +42,7 @@ import {
   enableSuspenseServerRenderer,
   enableEventAPI,
 } from 'shared/ReactFeatureFlags';
-import {ConcurrentMode, NoContext} from './ReactTypeOfMode';
+import {NoMode, BatchedMode} from './ReactTypeOfMode';
 import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent';
 
 import {createCapturedValue} from './ReactCapturedValue';
@@ -238,15 +238,15 @@ function throwException(
           thenables.add(thenable);
         }
 
-        // If the boundary is outside of concurrent mode, we should *not*
+        // If the boundary is outside of batched mode, we should *not*
         // suspend the commit. Pretend as if the suspended component rendered
         // null and keep rendering. In the commit phase, we'll schedule a
         // subsequent synchronous update to re-render the Suspense.
         //
         // Note: It doesn't matter whether the component that suspended was
-        // inside a concurrent mode tree. If the Suspense is outside of it, we
+        // inside a batched mode tree. If the Suspense is outside of it, we
         // should *not* suspend the commit.
-        if ((workInProgress.mode & ConcurrentMode) === NoContext) {
+        if ((workInProgress.mode & BatchedMode) === NoMode) {
           workInProgress.effectTag |= DidCapture;
 
           // We're going to commit this fiber even though it didn't complete.

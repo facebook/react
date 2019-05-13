@@ -8,6 +8,7 @@
  */
 
 import type {ReactNodeList} from 'shared/ReactTypes';
+import type {RootTag} from 'shared/ReactRootTags';
 // TODO: This type is shared between the reconciler and ReactDOM, but will
 // eventually be lifted out to the renderer.
 import type {
@@ -52,6 +53,7 @@ import {
   accumulateTwoPhaseDispatches,
   accumulateDirectDispatches,
 } from 'events/EventPropagators';
+import {LegacyRoot, ConcurrentRoot} from 'shared/ReactRootTags';
 import {has as hasInstance} from 'shared/ReactInstanceMap';
 import ReactVersion from 'shared/ReactVersion';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -361,12 +363,8 @@ ReactWork.prototype._onCommit = function(): void {
   }
 };
 
-function ReactRoot(
-  container: DOMContainer,
-  isConcurrent: boolean,
-  hydrate: boolean,
-) {
-  const root = createContainer(container, isConcurrent, hydrate);
+function ReactRoot(container: DOMContainer, tag: RootTag, hydrate: boolean) {
+  const root = createContainer(container, tag, hydrate);
   this._internalRoot = root;
 }
 ReactRoot.prototype.render = function(
@@ -531,9 +529,7 @@ function legacyCreateRootFromDOMContainer(
       );
     }
   }
-  // Legacy roots are not async by default.
-  const isConcurrent = false;
-  return new ReactRoot(container, isConcurrent, shouldHydrate);
+  return new ReactRoot(container, LegacyRoot, shouldHydrate);
 }
 
 function legacyRenderSubtreeIntoContainer(
@@ -849,7 +845,7 @@ function createRoot(container: DOMContainer, options?: RootOptions): ReactRoot {
     container._reactHasBeenPassedToCreateRootDEV = true;
   }
   const hydrate = options != null && options.hydrate === true;
-  return new ReactRoot(container, true, hydrate);
+  return new ReactRoot(container, ConcurrentRoot, hydrate);
 }
 
 if (enableStableConcurrentModeAPIs) {

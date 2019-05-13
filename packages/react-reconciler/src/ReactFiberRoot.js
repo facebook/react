@@ -9,6 +9,7 @@
 
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {RootTag} from 'shared/ReactRootTags';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
 import type {Thenable} from './ReactFiberScheduler';
 import type {Interaction} from 'scheduler/src/Tracing';
@@ -30,6 +31,9 @@ export type Batch = {
 export type PendingInteractionMap = Map<ExpirationTime, Set<Interaction>>;
 
 type BaseFiberRootProperties = {|
+  // The type of root (legacy, batched, concurrent, etc.)
+  tag: RootTag,
+
   // Any additional information from the host associated with this root.
   containerInfo: any,
   // Used only by persistent updates.
@@ -89,7 +93,8 @@ export type FiberRoot = {
   ...ProfilingOnlyFiberRootProperties,
 };
 
-function FiberRootNode(containerInfo, hydrate) {
+function FiberRootNode(containerInfo, tag, hydrate) {
+  this.tag = tag;
   this.current = null;
   this.containerInfo = containerInfo;
   this.pendingChildren = null;
@@ -116,14 +121,14 @@ function FiberRootNode(containerInfo, hydrate) {
 
 export function createFiberRoot(
   containerInfo: any,
-  isConcurrent: boolean,
+  tag: RootTag,
   hydrate: boolean,
 ): FiberRoot {
-  const root: FiberRoot = (new FiberRootNode(containerInfo, hydrate): any);
+  const root: FiberRoot = (new FiberRootNode(containerInfo, tag, hydrate): any);
 
   // Cyclic construction. This cheats the type system right now because
   // stateNode is any.
-  const uninitializedFiber = createHostRootFiber(isConcurrent);
+  const uninitializedFiber = createHostRootFiber(tag);
   root.current = uninitializedFiber;
   uninitializedFiber.stateNode = root;
 

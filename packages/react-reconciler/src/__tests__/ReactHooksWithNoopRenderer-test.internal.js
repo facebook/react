@@ -941,7 +941,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     });
 
     it(
-      'in sync mode, useEffect is deferred and updates finish synchronously ' +
+      'in legacy mode, useEffect is deferred and updates finish synchronously ' +
         '(in a single batch)',
       () => {
         function Counter(props) {

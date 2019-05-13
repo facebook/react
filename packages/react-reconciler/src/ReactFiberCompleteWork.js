@@ -43,7 +43,7 @@ import {
   EventComponent,
   EventTarget,
 } from 'shared/ReactWorkTags';
-import {ConcurrentMode, NoContext} from './ReactTypeOfMode';
+import {NoMode, BatchedMode} from './ReactTypeOfMode';
 import {
   Placement,
   Ref,
@@ -718,12 +718,12 @@ function completeWork(
       }
 
       if (nextDidTimeout && !prevDidTimeout) {
-        // If this subtreee is running in concurrent mode we can suspend,
+        // If this subtreee is running in batched mode we can suspend,
         // otherwise we won't suspend.
         // TODO: This will still suspend a synchronous tree if anything
         // in the concurrent tree already suspended during this render.
         // This is a known bug.
-        if ((workInProgress.mode & ConcurrentMode) !== NoContext) {
+        if ((workInProgress.mode & BatchedMode) !== NoMode) {
           renderDidSuspend();
         }
       }
