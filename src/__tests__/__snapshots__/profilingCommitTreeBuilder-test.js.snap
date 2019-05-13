@@ -25,7 +25,7 @@ Object {
     },
     3 => Object {
       "children": Array [],
-      "displayName": "Memo(Child)",
+      "displayName": "Child",
       "id": 3,
       "key": "0",
       "parentID": 2,
@@ -63,7 +63,7 @@ Object {
     },
     3 => Object {
       "children": Array [],
-      "displayName": "Memo(Child)",
+      "displayName": "Child",
       "id": 3,
       "key": "0",
       "parentID": 2,
@@ -71,7 +71,7 @@ Object {
     },
     4 => Object {
       "children": Array [],
-      "displayName": "Memo(Child)",
+      "displayName": "Child",
       "id": 4,
       "key": "1",
       "parentID": 2,
@@ -79,7 +79,7 @@ Object {
     },
     5 => Object {
       "children": Array [],
-      "displayName": "Memo(Child)",
+      "displayName": "Child",
       "id": 5,
       "key": "2",
       "parentID": 2,
@@ -116,7 +116,7 @@ Object {
     },
     3 => Object {
       "children": Array [],
-      "displayName": "Memo(Child)",
+      "displayName": "Child",
       "id": 3,
       "key": "0",
       "parentID": 2,
@@ -124,7 +124,7 @@ Object {
     },
     4 => Object {
       "children": Array [],
-      "displayName": "Memo(Child)",
+      "displayName": "Child",
       "id": 4,
       "key": "1",
       "parentID": 2,
