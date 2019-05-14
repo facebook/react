@@ -38,7 +38,8 @@ type HotUpdate = {|
 |};
 
 let familiesByType: WeakMap<any, Family> | null = null;
-let invalidatedFibers: Set<Fiber> | null = null;
+let fibersWithForcedRender: Set<Fiber> | null = null;
+let fibersWithIgnoredDependencies: Set<Fiber> | null = null;
 
 export function resolveTypeForHotReloading(type: any): any {
   if (__DEV__) {
@@ -127,16 +128,28 @@ export function isCompatibleFamilyForHotReloading(
   }
 }
 
-export function isInvalidatedForHotReloading(fiber: Fiber | null): boolean {
+export function shouldForceRenderForHotReloading(fiber: Fiber | null): boolean {
   if (__DEV__) {
     if (fiber === null) {
       return false;
     }
-    if (invalidatedFibers === null) {
+    if (fibersWithForcedRender === null) {
       // Not hot reloading now.
       return false;
     }
-    return invalidatedFibers.has(fiber);
+    return fibersWithForcedRender.has(fiber);
+  } else {
+    return false;
+  }
+}
+
+export function shouldIgnoreDependenciesForHotReloading(fiber: Fiber): boolean {
+  if (__DEV__) {
+    if (fibersWithIgnoredDependencies === null) {
+      // Not hot reloading now.
+      return false;
+    }
+    return fibersWithIgnoredDependencies.has(fiber);
   } else {
     return false;
   }
@@ -149,7 +162,8 @@ export function scheduleHotUpdate(hotUpdate: HotUpdate): void {
 
     const {root, staleFamilies, updatedFamilies} = hotUpdate;
     flushPassiveEffects();
-    invalidatedFibers = new Set();
+    fibersWithForcedRender = new Set();
+    fibersWithIgnoredDependencies = new Set();
     try {
       flushSync(() => {
         scheduleFibersWithFamiliesRecursively(
@@ -159,7 +173,8 @@ export function scheduleHotUpdate(hotUpdate: HotUpdate): void {
         );
       });
     } finally {
-      invalidatedFibers = null;
+      fibersWithForcedRender = null;
+      fibersWithIgnoredDependencies = null;
     }
     flushPassiveEffects();
   }
@@ -193,9 +208,14 @@ function scheduleFibersWithFamiliesRecursively(
       // TODO: handle other types.
     }
 
-    if (invalidatedFibers === null) {
+    if (fibersWithForcedRender === null) {
       throw new Error(
-        'Expected invalidatedFibers to be set during hot reload.',
+        'Expected fibersWithForcedRender to be set during hot reload.',
+      );
+    }
+    if (fibersWithIgnoredDependencies === null) {
+      throw new Error(
+        'Expected fibersWithIgnoredDependencies to be set during hot reload.',
       );
     }
     if (familiesByType === null) {
@@ -227,17 +247,21 @@ function scheduleFibersWithFamiliesRecursively(
           // Schedule the parent.
           const parent = fiberToRemount.return;
           if (parent !== null) {
-            invalidatedFibers.add(parent);
-            if (parent.alternate !== null) {
-              invalidatedFibers.add(parent.alternate);
+            fibersWithForcedRender.add(parent);
+            const alternate = parent.alternate;
+            if (alternate !== null) {
+              fibersWithForcedRender.add(alternate);
             }
             scheduleWork(parent, Sync);
           }
         } else if (updatedFamilies.has(family)) {
-          // Force a re-render.
-          invalidatedFibers.add(fiber);
-          if (fiber.alternate !== null) {
-            invalidatedFibers.add(fiber.alternate);
+          // Force a re-render and remount Hooks with dependencies.
+          fibersWithForcedRender.add(fiber);
+          fibersWithIgnoredDependencies.add(fiber);
+          const alternate = fiber.alternate;
+          if (alternate !== null) {
+            fibersWithForcedRender.add(alternate);
+            fibersWithIgnoredDependencies.add(alternate);
           }
           // Schedule itself.
           scheduleWork(fiber, Sync);

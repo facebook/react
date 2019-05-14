@@ -71,7 +71,7 @@ import {
   getCurrentFiberStackInDev,
 } from './ReactCurrentFiber';
 import {startWorkTimer, cancelWorkTimer} from './ReactDebugFiberPerf';
-import {isInvalidatedForHotReloading} from './ReactFiberHotReloading';
+import {shouldForceRenderForHotReloading} from './ReactFiberHotReloading';
 
 import {
   mountChildFibers,
@@ -488,7 +488,7 @@ function updateSimpleMemoComponent(
     if (
       shallowEqual(prevProps, nextProps) &&
       current.ref === workInProgress.ref &&
-      !isInvalidatedForHotReloading(current)
+      !shouldForceRenderForHotReloading(current)
     ) {
       didReceiveUpdate = false;
       if (updateExpirationTime < renderExpirationTime) {
@@ -777,7 +777,7 @@ function finishClassComponent(
   if (
     !shouldUpdate &&
     !didCaptureError &&
-    !isInvalidatedForHotReloading(current)
+    !shouldForceRenderForHotReloading(current)
   ) {
     // Context providers should defer to sCU for rendering
     if (hasContext) {
@@ -899,7 +899,10 @@ function updateHostRoot(current, workInProgress, renderExpirationTime) {
   // Caution: React DevTools currently depends on this property
   // being called "element".
   const nextChildren = nextState.element;
-  if (nextChildren === prevChildren && !isInvalidatedForHotReloading(current)) {
+  if (
+    nextChildren === prevChildren &&
+    !shouldForceRenderForHotReloading(current)
+  ) {
     // If the state is the same as before, that's a bailout because we had
     // no work that expires at this time.
     resetHydrationState();
@@ -1941,7 +1944,7 @@ function updateContextProvider(
       if (
         oldProps.children === newProps.children &&
         !hasLegacyContextChanged() &&
-        !isInvalidatedForHotReloading(current)
+        !shouldForceRenderForHotReloading(current)
       ) {
         return bailoutOnAlreadyFinishedWork(
           current,
@@ -2127,7 +2130,7 @@ function beginWork(
     if (
       oldProps !== newProps ||
       hasLegacyContextChanged() ||
-      isInvalidatedForHotReloading(current)
+      shouldForceRenderForHotReloading(current)
     ) {
       // If props or context changed, mark the fiber as having performed work.
       // This may be unset if the props are determined to be equal later (memo).
