@@ -90,7 +90,7 @@ import {
 import {
   NoWork,
   Sync,
-  Never,
+  Idle,
   msToExpirationTime,
   expirationTimeToMs,
   computeInteractiveExpiration,
@@ -98,6 +98,7 @@ import {
   inferPriorityFromExpirationTime,
   LOW_PRIORITY_EXPIRATION,
   Batched,
+  Offscreen,
 } from './ReactFiberExpirationTime';
 import {beginWork as originalBeginWork} from './ReactFiberBeginWork';
 import {completeWork} from './ReactFiberCompleteWork';
@@ -293,7 +294,7 @@ export function computeExpirationForFiber(
       expirationTime = computeAsyncExpiration(currentTime);
       break;
     case IdlePriority:
-      expirationTime = Never;
+      expirationTime = Idle;
       break;
     default:
       invariant(false, 'Expected a valid priority level');
@@ -479,7 +480,11 @@ function scheduleCallbackForRoot(
       );
     } else {
       let options = null;
-      if (expirationTime !== Sync && expirationTime !== Never) {
+      if (
+        expirationTime !== Sync &&
+        expirationTime !== Offscreen &&
+        expirationTime !== Idle
+      ) {
         let timeout = expirationTimeToMs(expirationTime) - now();
         if (timeout > 5000) {
           // Sanity check. Should never take longer than 5 seconds.
@@ -909,7 +914,7 @@ function renderRoot(
       return commitRoot.bind(null, root);
     }
     case RootSuspended: {
-      if (!isSync) {
+      if (!isSync && expirationTime !== Offscreen) {
         const lastPendingTime = root.lastPendingTime;
         if (root.lastPendingTime < expirationTime) {
           // There's lower priority work. It might be unsuspended. Try rendering
@@ -953,7 +958,7 @@ function renderRoot(
 export function markRenderEventTime(expirationTime: ExpirationTime): void {
   if (
     expirationTime < workInProgressRootMostRecentEventTime &&
-    expirationTime > Never
+    expirationTime > Idle
   ) {
     workInProgressRootMostRecentEventTime = expirationTime;
   }
@@ -1160,8 +1165,8 @@ function completeUnitOfWork(unitOfWork: Fiber): Fiber | null {
 
 function resetChildExpirationTime(completedWork: Fiber) {
   if (
-    renderExpirationTime !== Never &&
-    completedWork.childExpirationTime === Never
+    renderExpirationTime !== Offscreen &&
+    completedWork.childExpirationTime === Offscreen
   ) {
     // The children of this component are hidden. Don't bubble their
     // expiration times.
@@ -1792,6 +1797,14 @@ export function pingSuspendedRoot(
   const lastPendingTime = root.lastPendingTime;
   if (lastPendingTime < suspendedTime) {
     // The root is no longer suspended at this time.
+    return;
+  }
+
+  if (suspendedTime === Offscreen) {
+    // Don't bother pinging an offscreen tree. These trees are never suspended
+    // and always commit the fallback immediately.
+    // TODO: A better approach might be to avoid attaching a listener in the
+    // first place. We could also do this for Batched priority.
     return;
   }
 

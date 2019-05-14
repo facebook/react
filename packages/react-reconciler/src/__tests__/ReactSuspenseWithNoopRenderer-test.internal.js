@@ -1616,4 +1616,66 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     expect(ReactNoop.getChildren()).toEqual([span('Loading A...')]);
   });
+
+  it('hidden fallbacks should display immediately without suspending', async () => {
+    function App({show}) {
+      return (
+        <Suspense fallback={<Text text="Loading... [outer]" />}>
+          {show ? <AsyncText ms={1} text="A" /> : null}
+          <div hidden={true}>
+            <Suspense fallback={<Text text="Loading... [inner]" />}>
+              <AsyncText ms={1} text="A" />
+              <AsyncText ms={2} text="B" />
+            </Suspense>
+          </div>
+        </Suspense>
+      );
+    }
+
+    ReactNoop.render(<App show={false} />);
+    expect(Scheduler).toFlushAndYield([
+      'Suspend! [A]',
+      'Suspend! [B]',
+      'Loading... [inner]',
+    ]);
+
+    // The inner fallback should immediately commit. There's no point suspending
+    // because its inside a hidden tree.
+    expect(ReactNoop).toMatchRenderedOutput(
+      <div hidden={true}>
+        <span prop="Loading... [inner]" />
+      </div>,
+    );
+
+    // Update the props at normal pri. This will suspend the outer boundary.
+    ReactNoop.render(<App show={true} />);
+    expect(Scheduler).toFlushAndYield(['Suspend! [A]', 'Loading... [outer]']);
+
+    // Resolve data sufficient to unblock the outer boundary (A), but not the
+    // inner boundary (A and B)
+    Scheduler.advanceTime(1);
+    await advanceTimers(1);
+    expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
+
+    // The outer boundary should commit without suspending, even though the
+    // inner boundary still needs data, because the inner boundary is inside a
+    // hidden tree.
+    expect(Scheduler).toFlushAndYield([
+      'A',
+      // After committing the outer boundary, we happen to retry the hidden
+      // boundary, too. This isn't inherent, just a consequence of an
+      // implementation heuristic.
+      'A',
+      'Suspend! [B]',
+      'Loading... [inner]',
+    ]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <React.Fragment>
+        <span prop="A" />
+        <div hidden={true}>
+          <span prop="Loading... [inner]" />
+        </div>
+      </React.Fragment>,
+    );
+  });
 });

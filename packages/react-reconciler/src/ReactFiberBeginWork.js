@@ -80,7 +80,8 @@ import {
 import {processUpdateQueue} from './ReactUpdateQueue';
 import {
   NoWork,
-  Never,
+  Offscreen,
+  Idle,
   computeAsyncExpiration,
 } from './ReactFiberExpirationTime';
 import {
@@ -973,12 +974,12 @@ function updateHostComponent(current, workInProgress, renderExpirationTime) {
 
   // Check the host config to see if the children are offscreen/hidden.
   if (
-    renderExpirationTime !== Never &&
+    renderExpirationTime !== Offscreen &&
     workInProgress.mode & ConcurrentMode &&
     shouldDeprioritizeSubtree(type, nextProps)
   ) {
     // Schedule this fiber to re-render at offscreen priority. Then bailout.
-    workInProgress.expirationTime = workInProgress.childExpirationTime = Never;
+    workInProgress.expirationTime = workInProgress.childExpirationTime = Offscreen;
     return null;
   }
 
@@ -1797,9 +1798,9 @@ function updateDehydratedSuspenseComponent(
       // Schedule a normal pri update to render this content.
       workInProgress.expirationTime = computeAsyncExpiration(serverDisplayTime);
     } else {
-      // We'll continue hydrating the rest at offscreen priority since we'll already
+      // We'll continue hydrating the rest at idle priority since we'll already
       // be showing the right content coming from the server, it is no rush.
-      workInProgress.expirationTime = Never;
+      workInProgress.expirationTime = Idle;
     }
     return null;
   }

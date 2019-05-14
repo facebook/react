@@ -239,8 +239,9 @@ function throwException(
         }
 
         // If the boundary is outside of batched mode, we should *not*
-        // suspend the commit. Pretend as if the suspended component rendered
-        // null and keep rendering. In the commit phase, we'll schedule a
+        // suspend the commit. Pretend as if the suspended component bailed out
+        // and keep rendering. We'll reuse the current children, even though
+        // they are inconsistent. In the commit phase, we'll schedule a
         // subsequent synchronous update to re-render the Suspense.
         //
         // Note: It doesn't matter whether the component that suspended was

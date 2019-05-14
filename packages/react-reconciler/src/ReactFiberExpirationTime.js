@@ -21,7 +21,8 @@ import {
 export type ExpirationTime = number;
 
 export const NoWork = 0;
-export const Never = 1;
+export const Idle = 1;
+export const Offscreen = 2;
 export const Sync = MAX_SIGNED_31_BIT_INT;
 export const Batched = Sync - 1;
 
@@ -108,7 +109,7 @@ export function inferPriorityFromExpirationTime(
   if (expirationTime === Sync) {
     return ImmediatePriority;
   }
-  if (expirationTime === Never) {
+  if (expirationTime === Idle) {
     return IdlePriority;
   }
   const msUntil =
