@@ -354,14 +354,10 @@ const eventResponderContext: ReactResponderContext = {
     let node = ((eventComponentInstance.currentFiber: any): Fiber).child;
 
     while (node !== null) {
-      if (isFiberSuspenseAndTimedOut(node)) {
-        const suspendedChild = getSuspenseFallbackChild(node);
-        if (suspendedChild !== null) {
-          node = suspendedChild;
-          continue;
-        }
-      } else if (node.tag === SuspenseComponent) {
-        const suspendedChild = getSuspenseChild(node);
+      if (node.tag === SuspenseComponent) {
+        const suspendedChild = isFiberSuspenseAndTimedOut(node)
+          ? getSuspenseFallbackChild(node)
+          : getSuspenseChild(node);
         if (suspendedChild !== null) {
           node = suspendedChild;
           continue;
