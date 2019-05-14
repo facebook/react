@@ -6,6 +6,7 @@ import { BridgeContext, StoreContext } from '../context';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import HooksTree from './HooksTree';
+import EventsTree from './EventsTree';
 import { ModalDialogContext } from '../ModalDialog';
 import InspectedElementTree from './InspectedElementTree';
 import { InspectedElementContext } from './InspectedElementContext';
@@ -221,6 +222,7 @@ function InspectedElementView({
     canEditHooks,
     canToggleSuspense,
     context,
+    events,
     hooks,
     owners,
     props,
@@ -297,6 +299,7 @@ function InspectedElementView({
         data={context}
         overrideValueFn={overrideContextFn}
       />
+      {events !== null && events.length > 0 && <EventsTree events={events} />}
 
       {ownerID === null && owners !== null && owners.length > 0 && (
         <div className={styles.Owners}>

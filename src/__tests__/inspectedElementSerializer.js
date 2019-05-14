@@ -17,6 +17,7 @@ export function print(inspectedElement, serialize, indent) {
       id: inspectedElement.id,
       owners: inspectedElement.owners,
       context: inspectedElement.context,
+      events: inspectedElement.events,
       hooks: inspectedElement.hooks,
       props: inspectedElement.props,
       state: inspectedElement.state,

@@ -1,0 +1,27 @@
+.EventsTree {
+  padding: 0.25rem;
+  border-top: 1px solid var(--color-border);
+}
+.EventsTree:first-of-type {
+  border-top: none;
+}
+
+.HeaderRow {
+  display: flex;
+  align-items: center;
+}
+
+.Header {
+  flex: 1 1;
+  font-family: var(--font-family-sans);
+}
+
+.NameValueRow {
+  display: flex;
+}
+
+.Empty {
+  color: var(--color-dimmer);
+  font-style: italic;
+  padding-left: 0.75rem;
+}

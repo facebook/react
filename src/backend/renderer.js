@@ -478,6 +478,10 @@ export function attach(
           case EVENT_TARGET_TOUCH_HIT_STRING:
             return 'TouchHitTarget';
           default:
+            const displayName = elementType.displayName;
+            if (displayName !== undefined) {
+              return displayName;
+            }
             return 'EventTarget';
         }
       case ForwardRef:
@@ -1833,6 +1837,23 @@ export function attach(
     const isTimedOutSuspense =
       tag === SuspenseComponent && memoizedState !== null;
 
+    let events = null;
+    let node = fiber;
+    while (node !== null) {
+      if (node.tag === EventComponent) {
+        if (events === null) {
+          events = [];
+        }
+        const eventComponentInstance = node.stateNode;
+        const currentFiber = eventComponentInstance.currentFiber;
+        events.push({
+          props: eventComponentInstance.props,
+          displayName: currentFiber.type.displayName,
+        });
+      }
+      node = node.return;
+    }
+
     return {
       id,
 
@@ -1858,6 +1879,7 @@ export function attach(
       // Inspectable properties.
       // TODO Review sanitization approach for the below inspectable values.
       context,
+      events,
       hooks: usesHooks
         ? inspectHooksOfFiber(fiber, (renderer.currentDispatcherRef: any))
         : null,
@@ -1879,6 +1901,7 @@ export function attach(
     }
     // TODO Review sanitization approach for the below inspectable values.
     result.context = cleanForBridge(result.context);
+    result.events = cleanForBridge(result.events);
     result.hooks = cleanForBridge(result.hooks);
     result.props = cleanForBridge(result.props);
     result.state = cleanForBridge(result.state);

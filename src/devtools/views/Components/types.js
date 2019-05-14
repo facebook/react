@@ -59,6 +59,7 @@ export type InspectedElement = {|
 
   // Inspectable properties.
   context: Object | null,
+  events: Object | null,
   hooks: Object | null,
   props: Object | null,
   state: Object | null,

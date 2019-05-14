@@ -90,6 +90,7 @@ function InspectedElementContextController({ children }: Props) {
         inspectedElement = (({
           ...inspectedElement,
           context: hydrateHelper(inspectedElement.context),
+          events: hydrateHelper(inspectedElement.events),
           hooks: hydrateHelper(inspectedElement.hooks),
           props: hydrateHelper(inspectedElement.props),
           state: hydrateHelper(inspectedElement.state),
