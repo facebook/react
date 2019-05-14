@@ -924,7 +924,7 @@ describe('DOMEventResponderSystem', () => {
     expect(container.innerHTML).toBe('<button>Click me!</button>');
   });
 
-  it('should warn if multiple host components are detected and allowMultipleHostChildren is false', () => {
+  it('should warn if multiple host components are detected without allowMultipleHostChildren', () => {
     const EventComponent = createReactEventComponent({
       targetEventTypes: [],
       onEvent: () => {},
@@ -962,7 +962,66 @@ describe('DOMEventResponderSystem', () => {
     );
   });
 
-  it('should not warn if multiple host components are detected and allowMultipleHostChildren is true', () => {
+  it('should handle suspended nodes correctly when detecting host components without allowMultipleHostChildren', () => {
+    const EventComponent = createReactEventComponent({
+      targetEventTypes: [],
+      onEvent: () => {},
+      allowMultipleHostChildren: false,
+    });
+
+    function SuspendedComponent() {
+      throw Promise.resolve();
+    }
+
+    function Component() {
+      return (
+        <React.Fragment>
+          <div />
+          <SuspendedComponent />
+        </React.Fragment>
+      );
+    }
+
+    const Test = () => (
+      <EventComponent>
+        <React.Suspense fallback={<div>Loading...</div>}>
+          <Component />
+        </React.Suspense>
+      </EventComponent>
+    );
+
+    ReactDOM.render(<Test />, container);
+
+    function Component2() {
+      return (
+        <React.Fragment>
+          <SuspendedComponent />
+        </React.Fragment>
+      );
+    }
+
+    const Test2 = () => (
+      <EventComponent>
+        <React.Suspense
+          fallback={
+            <React.Fragment>
+              <div />
+              <div />
+            </React.Fragment>
+          }>
+          <Component2 />
+        </React.Suspense>
+      </EventComponent>
+    );
+
+    expect(() => {
+      ReactDOM.render(<Test2 />, container);
+    }).toWarnDev(
+      'Warning: An event component "TestEventComponent" was found to have multiple host children.',
+    );
+  });
+
+  it('should not warn if multiple host components are detected with allowMultipleHostChildren', () => {
     const EventComponent = createReactEventComponent({
       targetEventTypes: [],
       onEvent: () => {},

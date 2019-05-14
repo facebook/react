@@ -108,6 +108,10 @@ function markRef(workInProgress: Fiber) {
   workInProgress.effectTag |= Ref;
 }
 
+function isFiberSuspenseAndTimedOut(fiber: Fiber): boolean {
+  return fiber.tag === SuspenseComponent && fiber.memoizedState !== null;
+}
+
 let appendAllChildren;
 let updateHostContainer;
 let updateHostComponent;
@@ -816,6 +820,14 @@ function completeWork(
           if (__DEV__ && !responder.allowMultipleHostChildren) {
             let hostChildrenCount = 0;
             const findAllHostChildren = node => {
+              if (isFiberSuspenseAndTimedOut(node)) {
+                const fallbackNode = ((((node.child: any): Fiber)
+                  .sibling: any): Fiber).child;
+                if (fallbackNode === null) {
+                  return;
+                }
+                node = fallbackNode;
+              }
               if (
                 node.tag === HostComponent ||
                 node.tag === HostText ||
