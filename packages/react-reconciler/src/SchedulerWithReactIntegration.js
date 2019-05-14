@@ -11,10 +11,7 @@
 // CommonJS interop named imports.
 import * as Scheduler from 'scheduler';
 import {__interactionsRef} from 'scheduler/tracing';
-import {
-  disableYielding,
-  enableSchedulerTracing,
-} from 'shared/ReactFeatureFlags';
+import {enableSchedulerTracing} from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 
 const {
@@ -65,9 +62,7 @@ export const IdlePriority: ReactPriorityLevel = 95;
 // NoPriority is the absence of priority. Also React-only.
 export const NoPriority: ReactPriorityLevel = 90;
 
-export const shouldYield = disableYielding
-  ? () => false // Never yield when `disableYielding` is on
-  : Scheduler_shouldYield;
+export const shouldYield = Scheduler_shouldYield;
 
 let syncQueue: Array<SchedulerCallback> | null = null;
 let immediateQueueCallbackNode: mixed | null = null;

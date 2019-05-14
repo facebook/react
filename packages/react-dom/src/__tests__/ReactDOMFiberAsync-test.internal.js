@@ -10,7 +10,6 @@
 'use strict';
 
 const React = require('react');
-const Fragment = React.Fragment;
 let ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 let ReactDOM;
@@ -600,86 +599,6 @@ describe('ReactDOMFiberAsync', () => {
     it('does not support createBatch', () => {
       const root = ReactDOM.unstable_createSyncRoot(container);
       expect(root.createBatch).toBe(undefined);
-    });
-  });
-
-  describe('Disable yielding', () => {
-    beforeEach(() => {
-      jest.resetModules();
-      ReactFeatureFlags = require('shared/ReactFeatureFlags');
-      ReactFeatureFlags.disableYielding = true;
-      ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
-      ReactDOM = require('react-dom');
-      Scheduler = require('scheduler');
-    });
-
-    it('wont yield during a render if yielding is disabled', () => {
-      class A extends React.Component {
-        render() {
-          Scheduler.yieldValue('A');
-          return <div>{this.props.children}</div>;
-        }
-      }
-
-      class B extends React.Component {
-        render() {
-          Scheduler.yieldValue('B');
-          return <div>{this.props.children}</div>;
-        }
-      }
-
-      class C extends React.Component {
-        render() {
-          Scheduler.yieldValue('C');
-          return <div>{this.props.children}</div>;
-        }
-      }
-
-      let root = ReactDOM.unstable_createRoot(container);
-
-      root.render(
-        <Fragment>
-          <A />
-          <B />
-          <C />
-        </Fragment>,
-      );
-
-      expect(Scheduler).toHaveYielded([]);
-
-      Scheduler.unstable_flushNumberOfYields(2);
-      // Even though we just flushed two yields, we should have rendered
-      // everything without yielding when the flag is on.
-      expect(Scheduler).toHaveYielded(['A', 'B', 'C']);
-    });
-
-    it('wont suspend during a render if yielding is disabled', () => {
-      let p = new Promise(resolve => {});
-
-      function Suspend() {
-        throw p;
-      }
-
-      let root = ReactDOM.unstable_createRoot(container);
-      root.render(
-        <React.Suspense fallback={'Loading'}>Initial</React.Suspense>,
-      );
-
-      Scheduler.flushAll();
-      expect(container.textContent).toBe('Initial');
-
-      root.render(
-        <React.Suspense fallback={'Loading'}>
-          <Suspend />
-        </React.Suspense>,
-      );
-
-      expect(Scheduler).toHaveYielded([]);
-
-      Scheduler.flushAll();
-
-      // This should have flushed to the DOM even though we haven't ran the timers.
-      expect(container.textContent).toBe('Loading');
     });
   });
 });
