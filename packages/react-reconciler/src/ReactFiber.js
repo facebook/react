@@ -45,6 +45,7 @@ import {
   SuspenseComponent,
   FunctionComponent,
   MemoComponent,
+  SimpleMemoComponent,
   LazyComponent,
   EventComponent,
   EventTarget,
@@ -52,6 +53,10 @@ import {
 import getComponentName from 'shared/getComponentName';
 
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
+import {
+  resolveFunctionForHotReloading,
+  resolveForwardRefForHotReloading,
+} from './ReactFiberHotReloading';
 import {NoWork} from './ReactFiberExpirationTime';
 import {
   NoMode,
@@ -434,6 +439,25 @@ export function createWorkInProgress(
     workInProgress.treeBaseDuration = current.treeBaseDuration;
   }
 
+  if (__DEV__) {
+    switch (workInProgress.tag) {
+      case IndeterminateComponent:
+      case FunctionComponent:
+      case SimpleMemoComponent:
+        workInProgress.type = resolveFunctionForHotReloading(
+          workInProgress.type,
+        );
+        break;
+      case ForwardRef:
+        workInProgress.type = resolveForwardRefForHotReloading(
+          workInProgress.type,
+        );
+        break;
+      default:
+        break;
+    }
+  }
+
   return workInProgress;
 }
 
@@ -473,6 +497,10 @@ export function createFiberFromTypeAndProps(
   if (typeof type === 'function') {
     if (shouldConstruct(type)) {
       fiberTag = ClassComponent;
+    } else {
+      if (__DEV__) {
+        resolvedType = resolveFunctionForHotReloading(resolvedType);
+      }
     }
   } else if (typeof type === 'string') {
     fiberTag = HostComponent;
@@ -509,6 +537,9 @@ export function createFiberFromTypeAndProps(
               break getTag;
             case REACT_FORWARD_REF_TYPE:
               fiberTag = ForwardRef;
+              if (__DEV__) {
+                resolvedType = resolveForwardRefForHotReloading(resolvedType);
+              }
               break getTag;
             case REACT_MEMO_TYPE:
               fiberTag = MemoComponent;

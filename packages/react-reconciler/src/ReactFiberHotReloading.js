@@ -41,7 +41,7 @@ let familiesByType: WeakMap<any, Family> | null = null;
 let fibersWithForcedRender: Set<Fiber> | null = null;
 let fibersWithIgnoredDependencies: Set<Fiber> | null = null;
 
-export function resolveTypeForHotReloading(type: any): any {
+export function resolveFunctionForHotReloading(type: any): any {
   if (__DEV__) {
     if (familiesByType === null) {
       // Hot reloading is disabled.
@@ -49,6 +49,37 @@ export function resolveTypeForHotReloading(type: any): any {
     }
     let family = familiesByType.get(type);
     if (family === undefined) {
+      return type;
+    }
+    // Use the latest known implementation.
+    return family.currentType;
+  } else {
+    return type;
+  }
+}
+
+export function resolveForwardRefForHotReloading(type: any): any {
+  if (__DEV__) {
+    if (familiesByType === null) {
+      // Hot reloading is disabled.
+      return type;
+    }
+    let family = familiesByType.get(type);
+    if (family === undefined) {
+      // Check if we're dealing with a real forwardRef. Don't want to crash early.
+      if (
+        type !== null &&
+        type !== undefined &&
+        typeof type.render === 'function'
+      ) {
+        // ForwardRef is special because its resolved .type is an object,
+        // but it's possible that we only have its inner render function in the map.
+        // If that inner render function is different, we'll build a new forwardRef type.
+        const currentRender = resolveFunctionForHotReloading(type.render);
+        if (type.render !== currentRender) {
+          return {...type, render: currentRender};
+        }
+      }
       return type;
     }
     // Use the latest known implementation.
@@ -187,25 +218,18 @@ function scheduleFibersWithFamiliesRecursively(
 ) {
   if (__DEV__) {
     const {child, sibling, tag, type} = fiber;
-    const candidateTypes = [];
+
+    let candidateType = null;
     switch (tag) {
       case FunctionComponent:
-      case SimpleMemoComponent: {
-        candidateTypes.push(type);
+      case SimpleMemoComponent:
+        candidateType = type;
         break;
-      }
-      case ForwardRef: {
-        candidateTypes.push(type);
-        candidateTypes.push(type.render);
+      case ForwardRef:
+        candidateType = type.render;
         break;
-      }
-      case MemoComponent: {
-        candidateTypes.push(type);
-        candidateTypes.push(type.type);
-        break;
-      }
       default:
-      // TODO: handle other types.
+        break;
     }
 
     if (fibersWithForcedRender === null) {
@@ -222,8 +246,7 @@ function scheduleFibersWithFamiliesRecursively(
       throw new Error('Expected familiesByType to be set during hot reload.');
     }
 
-    for (let i = 0; i < candidateTypes.length; i++) {
-      const candidateType = candidateTypes[i];
+    if (candidateType !== null) {
       const family = familiesByType.get(candidateType);
       if (family !== undefined) {
         if (staleFamilies.has(family)) {
@@ -266,7 +289,6 @@ function scheduleFibersWithFamiliesRecursively(
           // Schedule itself.
           scheduleWork(fiber, Sync);
         }
-        break;
       }
     }
 

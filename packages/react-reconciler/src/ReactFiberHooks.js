@@ -46,7 +46,6 @@ import is from 'shared/objectIs';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork';
 import {revertPassiveEffectsChange} from 'shared/ReactFeatureFlags';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
-import {resolveTypeForHotReloading} from './ReactFiberHotReloading';
 
 const {ReactCurrentDispatcher} = ReactSharedInternals;
 
@@ -356,10 +355,6 @@ export function renderWithHooks(
   refOrContext: any,
   nextRenderExpirationTime: ExpirationTime,
 ): any {
-  if (__DEV__) {
-    Component = resolveTypeForHotReloading(Component);
-  }
-
   renderExpirationTime = nextRenderExpirationTime;
   currentlyRenderingFiber = workInProgress;
   nextCurrentHook = current !== null ? current.memoizedState : null;

@@ -139,7 +139,6 @@ describe('ReactFresh', () => {
       familiesByType.set(type, family);
       updatedFamilies.add(family);
     }
-    // TODO: invalidation based on signatures.
 
     if (typeof type === 'object' && type !== null) {
       switch (type.$$typeof) {

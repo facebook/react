@@ -71,7 +71,10 @@ import {
   getCurrentFiberStackInDev,
 } from './ReactCurrentFiber';
 import {startWorkTimer, cancelWorkTimer} from './ReactDebugFiberPerf';
-import {shouldForceRenderForHotReloading} from './ReactFiberHotReloading';
+import {
+  resolveFunctionForHotReloading,
+  shouldForceRenderForHotReloading,
+} from './ReactFiberHotReloading';
 
 import {
   mountChildFibers,
@@ -359,18 +362,22 @@ function updateMemoComponent(
       // SimpleMemoComponent codepath doesn't resolve outer props either.
       Component.defaultProps === undefined
     ) {
+      let resolvedType = type;
+      if (__DEV__) {
+        resolvedType = resolveFunctionForHotReloading(type);
+      }
       // If this is a plain function component without default props,
       // and with only the default shallow comparison, we upgrade it
       // to a SimpleMemoComponent to allow fast path updates.
       workInProgress.tag = SimpleMemoComponent;
-      workInProgress.type = type;
+      workInProgress.type = resolvedType;
       if (__DEV__) {
         validateFunctionComponentInDev(workInProgress, type);
       }
       return updateSimpleMemoComponent(
         current,
         workInProgress,
-        type,
+        resolvedType,
         nextProps,
         updateExpirationTime,
         renderExpirationTime,
@@ -1032,6 +1039,9 @@ function mountLazyComponent(
   // Cancel and resume right after we know the tag.
   cancelWorkTimer(workInProgress);
   let Component = readLazyComponentType(elementType);
+  if (__DEV__) {
+    // TODO: resolve type for hot reloading.
+  }
   // Store the unwrapped component in the type.
   workInProgress.type = Component;
   const resolvedTag = (workInProgress.tag = resolveLazyComponentTag(Component));
@@ -2270,11 +2280,10 @@ function beginWork(
 
   switch (workInProgress.tag) {
     case IndeterminateComponent: {
-      const elementType = workInProgress.elementType;
       return mountIndeterminateComponent(
         current,
         workInProgress,
-        elementType,
+        workInProgress.type,
         renderExpirationTime,
       );
     }
