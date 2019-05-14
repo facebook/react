@@ -820,15 +820,10 @@ function completeWork(
           if (__DEV__ && !responder.allowMultipleHostChildren) {
             let hostChildrenCount = 0;
             const findAllHostChildren = node => {
-              if (isFiberSuspenseAndTimedOut(node)) {
-                const fallbackNode = ((((node.child: any): Fiber)
-                  .sibling: any): Fiber).child;
-                if (fallbackNode === null) {
-                  return;
-                }
-                node = fallbackNode;
-              } else if (node.tag === SuspenseComponent) {
-                const fallbackNode = ((node.child: any): Fiber).child;
+              if (node.tag === SuspenseComponent) {
+                const fallbackNode = isFiberSuspenseAndTimedOut(node)
+                  ? ((((node.child: any): Fiber).sibling: any): Fiber).child
+                  : ((node.child: any): Fiber).child;
                 if (fallbackNode === null) {
                   return;
                 }
