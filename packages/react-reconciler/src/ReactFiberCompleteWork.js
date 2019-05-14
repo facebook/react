@@ -827,6 +827,12 @@ function completeWork(
                   return;
                 }
                 node = fallbackNode;
+              } else if (node.tag === SuspenseComponent) {
+                const fallbackNode = ((node.child: any): Fiber).child;
+                if (fallbackNode === null) {
+                  return;
+                }
+                node = fallbackNode;
               }
               if (
                 node.tag === HostComponent ||
