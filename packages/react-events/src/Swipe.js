@@ -99,6 +99,7 @@ const SwipeResponder = {
       y: 0,
     };
   },
+  allowMultipleHostChildren: false,
   stopLocalPropagation: true,
   onEvent(
     event: ReactResponderEvent,

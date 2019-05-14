@@ -160,6 +160,7 @@ const FocusResponder = {
       isLocalFocusVisible: false,
     };
   },
+  allowMultipleHostChildren: false,
   stopLocalPropagation: true,
   onEvent(
     event: ReactResponderEvent,

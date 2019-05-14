@@ -247,6 +247,7 @@ const HoverResponder = {
       ignoreEmulatedMouseEvents: false,
     };
   },
+  allowMultipleHostChildren: false,
   stopLocalPropagation: true,
   onEvent(
     event: ReactResponderEvent,

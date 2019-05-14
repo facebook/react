@@ -586,6 +586,7 @@ const PressResponder = {
       allowPressReentry: false,
     };
   },
+  allowMultipleHostChildren: false,
   stopLocalPropagation: true,
   onEvent(
     event: ReactResponderEvent,

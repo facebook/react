@@ -95,6 +95,8 @@ import {
   enableEventAPI,
 } from 'shared/ReactFeatureFlags';
 import {markRenderEventTime, renderDidSuspend} from './ReactFiberScheduler';
+import warning from 'shared/warning';
+import getComponentName from 'shared/getComponentName';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -811,6 +813,46 @@ function completeWork(
 
         if (eventComponentInstance === null) {
           let responderState = null;
+          if (__DEV__ && !responder.allowMultipleHostChildren) {
+            let hostChildrenCount = 0;
+            let node = workInProgress.child;
+
+            mainLoop: while (node !== null) {
+              if (
+                node.tag === HostComponent ||
+                node.tag === HostText ||
+                node.tag === HostPortal
+              ) {
+                hostChildrenCount++;
+              } else {
+                const child = node.child;
+                if (child !== null) {
+                  node = child;
+                  continue;
+                }
+              }
+              const sibling = node.sibling;
+              if (sibling !== null) {
+                node = sibling;
+                continue;
+              }
+              while (node !== null) {
+                node = node.return;
+                if ((node = workInProgress)) {
+                  break mainLoop;
+                }
+                if (node.sibling) {
+                  node = node.sibling;
+                  break;
+                }
+              }
+            }
+            warning(
+              hostChildrenCount < 2,
+              'An event component "%s" was found to have multiple host children.',
+              getComponentName(workInProgress.type),
+            );
+          }
           if (responder.createInitialState !== undefined) {
             responderState = responder.createInitialState(newProps);
           }
