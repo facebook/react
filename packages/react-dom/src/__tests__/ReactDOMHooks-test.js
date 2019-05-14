@@ -11,7 +11,6 @@
 
 let React;
 let ReactDOM;
-let act;
 let Scheduler;
 
 describe('ReactDOMHooks', () => {
@@ -23,7 +22,6 @@ describe('ReactDOMHooks', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     Scheduler = require('scheduler');
-    act = require('react-dom/test-utils').act;
 
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -187,8 +185,8 @@ describe('ReactDOMHooks', () => {
     // (the effect would flush on start and the clicks would never set state)
     // but it does model setting state in an effect clean up that removes a previous handler
 
-    // users should probably wrap their code with unstable_interactiveUpdates? or 
-    // use emitEffect? 
+    // users should probably wrap their code with unstable_interactiveUpdates? or
+    // use emitEffect?
     const {useState, useEffect} = React;
 
     function Foo() {
