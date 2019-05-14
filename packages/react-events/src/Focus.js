@@ -185,13 +185,12 @@ function unmountResponder(
 }
 
 function handleRootPointerEvent(
-  type: string,
-  target: Element | Document,
   event: ReactResponderEvent,
   context: ReactResponderContext,
   props: FocusProps,
   state: FocusState,
 ): void {
+  const {type, target} = event;
   // Ignore a Safari quirks where 'mousemove' is dispatched on the 'html'
   // element when the window blurs.
   if (type === 'mousemove' && target.nodeName === 'HTML') {
@@ -271,14 +270,14 @@ const FocusResponder = {
     props: FocusProps,
     state: FocusState,
   ): void {
-    const {type, target} = event;
+    const {type} = event;
 
     switch (type) {
       case 'mousemove':
       case 'mousedown':
       case 'mouseup': {
         state.pointerType = 'mouse';
-        handleRootPointerEvent(type, target, event, context, props, state);
+        handleRootPointerEvent(event, context, props, state);
         break;
       }
       case 'pointermove':
@@ -287,14 +286,14 @@ const FocusResponder = {
         // $FlowFixMe: Flow doesn't know about PointerEvents
         const nativeEvent = ((event.nativeEvent: any): PointerEvent);
         state.pointerType = nativeEvent.pointerType;
-        handleRootPointerEvent(type, target, event, context, props, state);
+        handleRootPointerEvent(event, context, props, state);
         break;
       }
       case 'touchmove':
       case 'touchstart':
       case 'touchend': {
         state.pointerType = 'touch';
-        handleRootPointerEvent(type, target, event, context, props, state);
+        handleRootPointerEvent(event, context, props, state);
         break;
       }
 
