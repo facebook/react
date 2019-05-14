@@ -123,8 +123,9 @@ export default class ProfilingCache {
           return;
         }
 
-        // If no profiling data was recorded for this root, skip the round trip.
         this._pendingCommitDetailsMap.delete(pendingKey);
+
+        // If no profiling data was recorded for this root, skip the round trip.
         resolve({
           rootID,
           commitIndex,
@@ -156,13 +157,12 @@ export default class ProfilingCache {
               commitDurations.push(commitIndex, selfDuration);
             }
           });
-          const fiberCommitsFrontend: FiberCommitsFrontend = {
+          this._pendingFiberCommitsMap.delete(pendingKey);
+          resolve({
             commitDurations,
             fiberID,
             rootID,
-          };
-          this._pendingFiberCommitsMap.delete(pendingKey);
-          resolve(fiberCommitsFrontend);
+          });
           return;
         } else if (this._store.profilingOperations.has(rootID)) {
           this._pendingFiberCommitsMap.set(pendingKey, resolve);
@@ -174,14 +174,14 @@ export default class ProfilingCache {
           return;
         }
 
-        // If no profiling data was recorded for this root, skip the round trip.
         this._pendingFiberCommitsMap.delete(pendingKey);
-        const fiberCommitsFrontend: FiberCommitsFrontend = {
+
+        // If no profiling data was recorded for this root, skip the round trip.
+        resolve({
           commitDurations: [],
           fiberID,
           rootID,
-        };
-        resolve(fiberCommitsFrontend);
+        });
       });
     },
     ({ fiberID, rendererID, rootID }: FiberCommitsParams) =>
@@ -214,13 +214,13 @@ export default class ProfilingCache {
           return;
         }
 
-        // If no profiling data was recorded for this root, skip the round trip.
         this._pendingInteractionsMap.delete(pendingKey);
-        const interactionsFrontend: InteractionsFrontend = {
+
+        // If no profiling data was recorded for this root, skip the round trip.
+        resolve({
           interactions: [],
           rootID,
-        };
-        resolve(interactionsFrontend);
+        });
       });
     },
     ({ rendererID, rootID }: ProfilingSummaryParams) => rootID
@@ -249,16 +249,16 @@ export default class ProfilingCache {
           return;
         }
 
-        // If no profiling data was recorded for this root, skip the round trip.
         this._pendingProfileSummaryMap.delete(pendingKey);
-        const profilingSummaryFrontend: ProfilingSummaryFrontend = {
+
+        // If no profiling data was recorded for this root, skip the round trip.
+        resolve({
           rootID,
           commitDurations: [],
           commitTimes: [],
           initialTreeBaseDurations: new Map(),
           interactionCount: 0,
-        };
-        resolve(profilingSummaryFrontend);
+        });
       });
     },
     ({ rendererID, rootID }: ProfilingSummaryParams) => rootID
@@ -361,15 +361,13 @@ export default class ProfilingCache {
         selfDurationsMap.set(fiberID, durations[i + 2]);
       }
 
-      resolve(
-        ({
-          actualDurations: actualDurationsMap,
-          commitIndex,
-          interactions,
-          rootID,
-          selfDurations: selfDurationsMap,
-        }: CommitDetailsFrontend)
-      );
+      resolve({
+        actualDurations: actualDurationsMap,
+        commitIndex,
+        interactions,
+        rootID,
+        selfDurations: selfDurationsMap,
+      });
     }
   };
 
@@ -383,13 +381,11 @@ export default class ProfilingCache {
     if (resolve != null) {
       this._pendingFiberCommitsMap.delete(key);
 
-      resolve(
-        ({
-          commitDurations,
-          fiberID,
-          rootID,
-        }: FiberCommitsFrontend)
-      );
+      resolve({
+        commitDurations,
+        fiberID,
+        rootID,
+      });
     }
   };
 
@@ -398,12 +394,10 @@ export default class ProfilingCache {
     if (resolve != null) {
       this._pendingInteractionsMap.delete(rootID);
 
-      resolve(
-        ({
-          interactions,
-          rootID,
-        }: InteractionsFrontend)
-      );
+      resolve({
+        interactions,
+        rootID,
+      });
     }
   };
 
@@ -425,15 +419,13 @@ export default class ProfilingCache {
         initialTreeBaseDurationsMap.set(fiberID, initialTreeBaseDuration);
       }
 
-      resolve(
-        ({
-          commitDurations,
-          commitTimes,
-          initialTreeBaseDurations: initialTreeBaseDurationsMap,
-          interactionCount,
-          rootID,
-        }: ProfilingSummaryFrontend)
-      );
+      resolve({
+        commitDurations,
+        commitTimes,
+        initialTreeBaseDurations: initialTreeBaseDurationsMap,
+        interactionCount,
+        rootID,
+      });
     }
   };
 }

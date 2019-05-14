@@ -175,8 +175,8 @@ export default class Agent extends EventEmitter {
         contents: JSON.stringify(exportedProfilingData, null, 2),
         filename: 'profile-data.json',
       });
-    } catch (ex) {
-      console.warn(`Unable to export file: ${ex.stack}`);
+    } catch (error) {
+      console.warn(`Unable to export file: ${error.stack}`);
     }
   };
 

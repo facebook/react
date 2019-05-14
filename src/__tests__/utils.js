@@ -139,7 +139,7 @@ export function exportImportHelper(
   rendererID: number,
   rootID: number
 ): void {
-  const utils = require('./utils');
+  const { act } = require('./utils');
   const {
     prepareExportedProfilingSummary,
     prepareImportedProfilingData,
@@ -153,7 +153,7 @@ export function exportImportHelper(
   };
   bridge.addListener('exportFile', onExportFile);
 
-  utils.act(() => {
+  act(() => {
     const exportProfilingSummary = prepareExportedProfilingSummary(
       store.profilingOperations,
       store.profilingSnapshots,
@@ -183,7 +183,7 @@ export function exportImportHelper(
   // Snapshot the JSON-parsed object, rather than the raw string, because Jest formats the diff nicer.
   expect(importedProfilingData).toMatchSnapshot('imported data');
 
-  utils.act(() => {
+  act(() => {
     store.importedProfilingData = importedProfilingData;
   });
 }
