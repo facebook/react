@@ -360,6 +360,12 @@ const eventResponderContext: ReactResponderContext = {
           node = suspendedChild;
           continue;
         }
+      } else if (node.tag === SuspenseComponent) {
+        const suspendedChild = getSuspenseChild(node);
+        if (suspendedChild !== null) {
+          node = suspendedChild;
+          continue;
+        }
       } else {
         if (isFiberHostComponentFocusable(node)) {
           focusableElements.push(node.stateNode);
@@ -379,8 +385,8 @@ const eventResponderContext: ReactResponderContext = {
         continue;
       }
       let parent;
-      if (isFiberSuspenseFallbackChild(node)) {
-        parent = getTimedOutSuspenseFiberFromChild(node);
+      if (isFiberSuspenseChild(node)) {
+        parent = getSuspenseFiberFromChild(node);
       } else {
         parent = node.return;
         if (parent === null) {
@@ -607,7 +613,7 @@ function isFiberSuspenseAndTimedOut(fiber: Fiber): boolean {
   return fiber.tag === SuspenseComponent && fiber.memoizedState !== null;
 }
 
-function isFiberSuspenseFallbackChild(fiber: Fiber | null): boolean {
+function isFiberSuspenseChild(fiber: Fiber | null): boolean {
   if (fiber === null) {
     return false;
   }
@@ -626,12 +632,16 @@ function isFiberSuspenseFallbackChild(fiber: Fiber | null): boolean {
   return false;
 }
 
-function getTimedOutSuspenseFiberFromChild(fiber: Fiber): Fiber {
+function getSuspenseFiberFromChild(fiber: Fiber): Fiber {
   return ((((fiber.return: any): Fiber).return: any): Fiber);
 }
 
 function getSuspenseFallbackChild(fiber: Fiber): Fiber | null {
   return ((((fiber.child: any): Fiber).sibling: any): Fiber).child;
+}
+
+function getSuspenseChild(fiber: Fiber): Fiber | null {
+  return (((fiber.child: any): Fiber): Fiber).child;
 }
 
 function getTargetEventTypesSet(
