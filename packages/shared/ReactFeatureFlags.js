@@ -63,7 +63,7 @@ export const warnAboutShorthandPropertyCollision = false;
 export const warnAboutDeprecatedSetNativeProps = false;
 
 // Experimental React Events support. Only used in www builds for now.
-export const enableEventAPI = true;
+export const enableEventAPI = false;
 
 // New API for JSX transforms to target - https://github.com/reactjs/rfcs/pull/107
 export const enableJSXTransformAPI = false;
