@@ -192,7 +192,7 @@ describe('FocusScope event responder', () => {
     expect(document.activeElement).toBe(button2Ref.current);
   });
 
-  it.only('should work as expected with suspense fallbacks', () => {
+  it('should work as expected with suspense fallbacks', () => {
     const buttonRef = React.createRef();
     const button2Ref = React.createRef();
     const button3Ref = React.createRef();
