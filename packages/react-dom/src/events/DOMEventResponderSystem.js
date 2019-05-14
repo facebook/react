@@ -17,6 +17,7 @@ import {
   EventTarget as EventTargetWorkTag,
   HostComponent,
   SuspenseComponent,
+  Fragment,
 } from 'shared/ReactWorkTags';
 import type {
   ReactEventResponder,
@@ -377,9 +378,14 @@ const eventResponderContext: ReactResponderContext = {
         node = sibling;
         continue;
       }
-      const parent = node.return;
-      if (parent === null) {
-        break;
+      let parent;
+      if (isFiberSuspenseFallbackChild(node)) {
+        parent = getTimedOutSuspenseFiberFromChild(node);
+      } else {
+        parent = node.return;
+        if (parent === null) {
+          break;
+        }
       }
       if (parent.stateNode === currentInstance) {
         break;
@@ -599,6 +605,29 @@ export function processEventQueue(): void {
 
 function isFiberSuspenseAndTimedOut(fiber: Fiber): boolean {
   return fiber.tag === SuspenseComponent && fiber.memoizedState !== null;
+}
+
+function isFiberSuspenseFallbackChild(fiber: Fiber | null): boolean {
+  if (fiber === null) {
+    return false;
+  }
+  const parent = fiber.return;
+  if (parent !== null && parent.tag === Fragment) {
+    const grandParent = parent.return;
+
+    if (
+      grandParent !== null &&
+      grandParent.tag === SuspenseComponent &&
+      grandParent.stateNode !== null
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function getTimedOutSuspenseFiberFromChild(fiber: Fiber): Fiber {
+  return ((((fiber.return: any): Fiber).return: any): Fiber);
 }
 
 function getSuspenseFallbackChild(fiber: Fiber): Fiber | null {
