@@ -815,9 +815,7 @@ function completeWork(
           let responderState = null;
           if (__DEV__ && !responder.allowMultipleHostChildren) {
             let hostChildrenCount = 0;
-            let node = workInProgress.child;
-
-            mainLoop: while (node !== null) {
+            const findAllHostChildren = node => {
               if (
                 node.tag === HostComponent ||
                 node.tag === HostText ||
@@ -827,25 +825,16 @@ function completeWork(
               } else {
                 const child = node.child;
                 if (child !== null) {
-                  node = child;
-                  continue;
+                  findAllHostChildren(child);
                 }
               }
               const sibling = node.sibling;
               if (sibling !== null) {
-                node = sibling;
-                continue;
+                findAllHostChildren(sibling);
               }
-              while (node !== null) {
-                node = node.return;
-                if ((node = workInProgress)) {
-                  break mainLoop;
-                }
-                if (node.sibling) {
-                  node = node.sibling;
-                  break;
-                }
-              }
+            };
+            if (workInProgress.child !== null) {
+              findAllHostChildren(workInProgress.child);
             }
             warning(
               hostChildrenCount < 2,
