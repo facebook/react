@@ -539,6 +539,7 @@ export function flushInteractiveUpdates() {
     // an input event inside an effect, like with `element.click()`.
     return;
   }
+  flushPassiveEffects();
   flushPendingDiscreteUpdates();
 }
 
@@ -575,7 +576,7 @@ export function interactiveUpdates<A, B, C, R>(
   if (workPhase === NotWorking) {
     // TODO: Remove this call. Instead of doing this automatically, the caller
     // should explicitly call flushInteractiveUpdates.
-    flushPendingDiscreteUpdates();
+    flushInteractiveUpdates();
   }
   return runWithPriority(UserBlockingPriority, fn.bind(null, a, b, c));
 }

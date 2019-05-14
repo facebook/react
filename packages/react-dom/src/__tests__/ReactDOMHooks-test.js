@@ -11,6 +11,7 @@
 
 let React;
 let ReactDOM;
+let act;
 let Scheduler;
 
 describe('ReactDOMHooks', () => {
@@ -22,6 +23,7 @@ describe('ReactDOMHooks', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     Scheduler = require('scheduler');
+    act = require('react-dom/test-utils').act;
 
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -178,5 +180,45 @@ describe('ReactDOMHooks', () => {
     Scheduler.flushAll();
 
     expect(labelRef.current.innerHTML).toBe('abc');
+  });
+  it('should flush passive effects before interactive events', () => {
+    // related to #15057
+    // the test is a bit contrived since it'll never happen in a 'real' test/browser
+    // (the effect would flush on start and the clicks would never set state)
+    // but it does model setting state in an effect clean up that removes a previous handler
+
+    // users should probably wrap their code with unstable_interactiveUpdates? or 
+    // use emitEffect? 
+    const {useState, useEffect} = React;
+
+    function Foo() {
+      const [count, setCount] = useState(0);
+      const [enabled, setEnabled] = useState(true);
+      useEffect(() => {
+        return () => {
+          setEnabled(false);
+        };
+      });
+      function handleClick() {
+        setCount(x => x + 1);
+      }
+      return <button onClick={enabled ? handleClick : null}>{count}</button>;
+    }
+
+    ReactDOM.render(<Foo />, container);
+
+    container.firstChild.dispatchEvent(
+      new Event('click', {bubbles: true, cancelable: true}),
+    );
+    // Cleanup from first passive effect should remove the handler.
+    container.firstChild.dispatchEvent(
+      new Event('click', {bubbles: true, cancelable: true}),
+    );
+    container.firstChild.dispatchEvent(
+      new Event('click', {bubbles: true, cancelable: true}),
+    );
+
+    jest.runAllTimers();
+    expect(container.textContent).toBe('1');
   });
 });
