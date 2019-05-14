@@ -16,6 +16,7 @@ import {
   EventComponent,
   EventTarget as EventTargetWorkTag,
   HostComponent,
+  SuspenseComponent,
 } from 'shared/ReactWorkTags';
 import type {
   ReactEventResponder,
@@ -352,14 +353,22 @@ const eventResponderContext: ReactResponderContext = {
     let node = ((eventComponentInstance.currentFiber: any): Fiber).child;
 
     while (node !== null) {
-      if (isFiberHostComponentFocusable(node)) {
-        focusableElements.push(node.stateNode);
-      } else {
-        const child = node.child;
-
-        if (child !== null) {
-          node = child;
+      if (isFiberSuspenseAndTimedOut(node)) {
+        const suspendedChild = getSuspenseFallbackChild(node);
+        if (suspendedChild !== null) {
+          node = suspendedChild;
           continue;
+        }
+      } else {
+        if (isFiberHostComponentFocusable(node)) {
+          focusableElements.push(node.stateNode);
+        } else {
+          const child = node.child;
+
+          if (child !== null) {
+            node = child;
+            continue;
+          }
         }
       }
       const sibling = node.sibling;
@@ -586,6 +595,14 @@ export function processEventQueue(): void {
   } else {
     batchedUpdates(processEvents, events);
   }
+}
+
+function isFiberSuspenseAndTimedOut(fiber: Fiber): boolean {
+  return fiber.tag === SuspenseComponent && fiber.memoizedState !== null;
+}
+
+function getSuspenseFallbackChild(fiber: Fiber): Fiber | null {
+  return ((((fiber.child: any): Fiber).sibling: any): Fiber).child;
 }
 
 function getTargetEventTypesSet(
