@@ -262,6 +262,8 @@ function scheduleFibersWithFamiliesRecursively(
             if (parent !== null && parent.tag === MemoComponent) {
               // Memo components can't reconcile themelves so
               // delete them too until we find a non-memo parent.
+              // TODO: we might need something similar for Suspense
+              // or its special "fake fragment" node.
               fiberToRemount = parent;
             } else {
               break;
