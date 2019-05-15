@@ -25,11 +25,7 @@ export function getSuspenseFallbackChild(fiber: Fiber): Fiber | null {
   return ((((fiber.child: any): Fiber).sibling: any): Fiber).child;
 }
 
-export function getSuspenseChild(fiber: Fiber): Fiber | null {
-  return (((fiber.child: any): Fiber): Fiber).child;
-}
-
-export function isFiberSuspenseChild(fiber: Fiber | null): boolean {
+export function isFiberSuspenseTimedOutChild(fiber: Fiber | null): boolean {
   if (fiber === null) {
     return false;
   }
@@ -48,23 +44,24 @@ export function isFiberSuspenseChild(fiber: Fiber | null): boolean {
   return false;
 }
 
-export function getSuspenseFiberFromChild(fiber: Fiber): Fiber {
+export function getSuspenseFiberFromTimedOutChild(fiber: Fiber): Fiber {
   return ((((fiber.return: any): Fiber).return: any): Fiber);
 }
 
+// TODO: should this be under a DEV onlyflag in the future?
 export function getEventComponentHostChildrenCount(
   eventComponentFiber: Fiber,
 ): number {
   const eventComponentInstance = eventComponentFiber.stateNode;
   let hostChildrenCount = 0;
   let node = eventComponentFiber.child;
+  let parent = eventComponentFiber;
+
   while (node !== null) {
-    if (node.tag === SuspenseComponent) {
-      const suspendedChild = isFiberSuspenseAndTimedOut(node)
-        ? getSuspenseFallbackChild(node)
-        : getSuspenseChild(node);
-      if (suspendedChild !== null) {
-        node = suspendedChild;
+    if (isFiberSuspenseAndTimedOut(node)) {
+      const fallbackChild = getSuspenseFallbackChild(node);
+      if (fallbackChild !== null) {
+        node = fallbackChild;
         continue;
       }
     } else if (
@@ -76,28 +73,32 @@ export function getEventComponentHostChildrenCount(
     } else {
       const child = node.child;
       if (child !== null) {
+        child.return = parent;
+        parent = node;
         node = child;
         continue;
       }
     }
     const sibling = node.sibling;
     if (sibling !== null) {
+      sibling.return = parent;
       node = sibling;
       continue;
     }
-    let parent;
-    if (isFiberSuspenseChild(node)) {
-      parent = getSuspenseFiberFromChild(node);
+    let nextParent;
+    if (isFiberSuspenseTimedOutChild(node)) {
+      nextParent = getSuspenseFiberFromTimedOutChild(node);
     } else {
-      parent = node.return;
-      if (parent === null) {
+      nextParent = node.return;
+      if (nextParent === null) {
         break;
       }
     }
-    if (parent.stateNode === eventComponentInstance) {
+    if (nextParent.stateNode === eventComponentInstance) {
       break;
     }
-    node = parent.sibling;
+    parent = nextParent.return;
+    node = nextParent.sibling;
   }
   return hostChildrenCount;
 }

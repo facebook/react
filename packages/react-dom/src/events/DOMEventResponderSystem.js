@@ -16,7 +16,6 @@ import {
   EventComponent,
   EventTarget as EventTargetWorkTag,
   HostComponent,
-  SuspenseComponent,
 } from 'shared/ReactWorkTags';
 import type {
   ReactEventResponder,
@@ -36,9 +35,8 @@ import invariant from 'shared/invariant';
 import {
   isFiberSuspenseAndTimedOut,
   getSuspenseFallbackChild,
-  getSuspenseChild,
-  isFiberSuspenseChild,
-  getSuspenseFiberFromChild,
+  isFiberSuspenseTimedOutChild,
+  getSuspenseFiberFromTimedOutChild,
 } from 'react-reconciler/src/ReactFiberEvents';
 
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
@@ -360,12 +358,10 @@ const eventResponderContext: ReactResponderContext = {
     let node = ((eventComponentInstance.currentFiber: any): Fiber).child;
 
     while (node !== null) {
-      if (node.tag === SuspenseComponent) {
-        const suspendedChild = isFiberSuspenseAndTimedOut(node)
-          ? getSuspenseFallbackChild(node)
-          : getSuspenseChild(node);
-        if (suspendedChild !== null) {
-          node = suspendedChild;
+      if (isFiberSuspenseAndTimedOut(node)) {
+        const fallbackChild = getSuspenseFallbackChild(node);
+        if (fallbackChild !== null) {
+          node = fallbackChild;
           continue;
         }
       } else {
@@ -387,8 +383,8 @@ const eventResponderContext: ReactResponderContext = {
         continue;
       }
       let parent;
-      if (isFiberSuspenseChild(node)) {
-        parent = getSuspenseFiberFromChild(node);
+      if (isFiberSuspenseTimedOutChild(node)) {
+        parent = getSuspenseFiberFromTimedOutChild(node);
       } else {
         parent = node.return;
         if (parent === null) {
