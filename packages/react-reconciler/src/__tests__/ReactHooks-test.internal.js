@@ -1719,6 +1719,58 @@ describe('ReactHooks', () => {
     ).toThrow('Hello');
   });
 
+  // Regression test for https://github.com/facebook/react/issues/15057
+  it('does not fire a false positive warning when previous effect unmounts the component', () => {
+    let {useState, useEffect} = React;
+    let globalListener;
+
+    function A() {
+      const [show, setShow] = useState(true);
+      function hideMe() {
+        setShow(false);
+      }
+      return show ? <B hideMe={hideMe} /> : null;
+    }
+
+    function B(props) {
+      return <C {...props} />;
+    }
+
+    function C({hideMe}) {
+      const [, setState] = useState();
+
+      useEffect(() => {
+        let isStale = false;
+
+        globalListener = () => {
+          if (!isStale) {
+            setState('hello');
+          }
+        };
+
+        return () => {
+          isStale = true;
+          hideMe();
+        };
+      });
+      return null;
+    }
+
+    ReactTestRenderer.act(() => {
+      ReactTestRenderer.create(<A />);
+    });
+
+    expect(() => {
+      globalListener();
+      globalListener();
+    }).toWarnDev([
+      'An update to C inside a test was not wrapped in act',
+      'An update to C inside a test was not wrapped in act',
+      // Note: should *not* warn about updates on unmounted component.
+      // Because there's no way for component to know it got unmounted.
+    ]);
+  });
+
   // Regression test for https://github.com/facebook/react/issues/14790
   it('does not fire a false positive warning when suspending memo', async () => {
     const {Suspense, useState} = React;

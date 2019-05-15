@@ -191,4 +191,54 @@ describe('FocusScope event responder', () => {
     document.activeElement.dispatchEvent(createTabBackward());
     expect(document.activeElement).toBe(button2Ref.current);
   });
+
+  it('should work as expected with suspense fallbacks', () => {
+    const buttonRef = React.createRef();
+    const button2Ref = React.createRef();
+    const button3Ref = React.createRef();
+    const button4Ref = React.createRef();
+    const button5Ref = React.createRef();
+
+    function SuspendedComponent() {
+      throw new Promise(() => {
+        // Never resolve
+      });
+    }
+
+    function Component() {
+      return (
+        <React.Fragment>
+          <button ref={button5Ref} id={5} />
+          <SuspendedComponent />
+        </React.Fragment>
+      );
+    }
+
+    const SimpleFocusScope = () => (
+      <div>
+        <FocusScope>
+          <button ref={buttonRef} id={1} />
+          <button ref={button2Ref} id={2} />
+          <React.Suspense fallback={<button ref={button3Ref} id={3} />}>
+            <Component />
+          </React.Suspense>
+          <button ref={button4Ref} id={4} />
+        </FocusScope>
+      </div>
+    );
+
+    ReactDOM.render(<SimpleFocusScope />, container);
+    buttonRef.current.focus();
+    expect(document.activeElement).toBe(buttonRef.current);
+    document.activeElement.dispatchEvent(createTabForward());
+    expect(document.activeElement).toBe(button2Ref.current);
+    document.activeElement.dispatchEvent(createTabForward());
+    expect(document.activeElement).toBe(button3Ref.current);
+    document.activeElement.dispatchEvent(createTabForward());
+    expect(document.activeElement).toBe(button4Ref.current);
+    document.activeElement.dispatchEvent(createTabBackward());
+    expect(document.activeElement).toBe(button3Ref.current);
+    document.activeElement.dispatchEvent(createTabBackward());
+    expect(document.activeElement).toBe(button2Ref.current);
+  });
 });

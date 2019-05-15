@@ -31,6 +31,7 @@ function assertValidProps(tag: string, props: ?Object) {
     invariant(
       (props.children == null ||
         (enableEventAPI &&
+          props.children.type &&
           props.children.type.$$typeof === REACT_EVENT_TARGET_TYPE)) &&
         props.dangerouslySetInnerHTML == null,
       '%s is a void element tag and must neither have `children` nor ' +

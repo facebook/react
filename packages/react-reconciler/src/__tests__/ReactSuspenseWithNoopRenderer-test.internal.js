@@ -1507,7 +1507,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     );
   });
 
-  it('shows the parent boundary if the inner boundary should be avoided', async () => {
+  it('shows the parent fallback if the inner fallback should be avoided', async () => {
     function Foo({showC}) {
       Scheduler.yieldValue('Foo');
       return (
@@ -1570,6 +1570,80 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(Scheduler).toHaveYielded(['Promise resolved [C]']);
     expect(Scheduler).toFlushAndYield(['A', 'C']);
     expect(ReactNoop.getChildren()).toEqual([span('A'), span('C'), span('B')]);
+  });
+
+  it('favors showing the inner fallback for nested top level avoided fallback', async () => {
+    function Foo({showB}) {
+      Scheduler.yieldValue('Foo');
+      return (
+        <Suspense
+          unstable_avoidThisFallback={true}
+          fallback={<Text text="Loading A..." />}>
+          <Text text="A" />
+          <Suspense
+            unstable_avoidThisFallback={true}
+            fallback={<Text text="Loading B..." />}>
+            <AsyncText text="B" ms={5000} />
+          </Suspense>
+        </Suspense>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+    expect(Scheduler).toFlushAndYield([
+      'Foo',
+      'A',
+      'Suspend! [B]',
+      'Loading B...',
+    ]);
+    // Flush to skip suspended time.
+    Scheduler.advanceTime(600);
+    await advanceTimers(600);
+
+    expect(ReactNoop.getChildren()).toEqual([span('A'), span('Loading B...')]);
+  });
+
+  it('keeps showing an avoided parent fallback if it is already showing', async () => {
+    function Foo({showB}) {
+      Scheduler.yieldValue('Foo');
+      return (
+        <Suspense fallback={<Text text="Initial load..." />}>
+          <Suspense
+            unstable_avoidThisFallback={true}
+            fallback={<Text text="Loading A..." />}>
+            <Text text="A" />
+            {showB ? (
+              <Suspense
+                unstable_avoidThisFallback={true}
+                fallback={<Text text="Loading B..." />}>
+                <AsyncText text="B" ms={5000} />
+              </Suspense>
+            ) : null}
+          </Suspense>
+        </Suspense>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+    expect(Scheduler).toFlushAndYield(['Foo', 'A']);
+    expect(ReactNoop.getChildren()).toEqual([span('A')]);
+
+    ReactNoop.render(<Foo showB={true} />);
+
+    expect(Scheduler).toFlushAndYield([
+      'Foo',
+      'A',
+      'Suspend! [B]',
+      'Loading B...',
+    ]);
+    // Still suspended.
+    expect(ReactNoop.getChildren()).toEqual([span('A')]);
+
+    // Flush to skip suspended time.
+    Scheduler.advanceTime(600);
+    await advanceTimers(600);
+
+    expect(ReactNoop.getChildren()).toEqual([span('A'), span('Loading B...')]);
   });
 
   it('commits a suspended idle pri render within a reasonable time', async () => {
