@@ -38,7 +38,6 @@ type HotUpdate = {|
 |};
 
 let familiesByType: WeakMap<any, Family> | null = null;
-let fibersWithForcedRender: Set<Fiber> | null = null;
 
 export function resolveFunctionForHotReloading(type: any): any {
   if (__DEV__) {
@@ -158,27 +157,6 @@ export function isCompatibleFamilyForHotReloading(
   }
 }
 
-export function shouldForceRenderForHotReloading(
-  current: Fiber | null,
-  workInProgress: Fiber,
-): boolean {
-  if (__DEV__) {
-    if (current === null) {
-      return false;
-    }
-    if (current.type !== workInProgress.type) {
-      return true;
-    }
-    if (fibersWithForcedRender === null) {
-      // Not hot reloading now.
-      return false;
-    }
-    return fibersWithForcedRender.has(current);
-  } else {
-    return false;
-  }
-}
-
 export function scheduleHotUpdate(hotUpdate: HotUpdate): void {
   if (__DEV__) {
     // TODO: warn if its identity changes over time?
@@ -186,18 +164,13 @@ export function scheduleHotUpdate(hotUpdate: HotUpdate): void {
 
     const {root, staleFamilies, updatedFamilies} = hotUpdate;
     flushPassiveEffects();
-    fibersWithForcedRender = new Set();
-    try {
-      flushSync(() => {
-        scheduleFibersWithFamiliesRecursively(
-          root.current,
-          updatedFamilies,
-          staleFamilies,
-        );
-      });
-    } finally {
-      fibersWithForcedRender = null;
-    }
+    flushSync(() => {
+      scheduleFibersWithFamiliesRecursively(
+        root.current,
+        updatedFamilies,
+        staleFamilies,
+      );
+    });
     flushPassiveEffects();
   }
 }
@@ -223,11 +196,6 @@ function scheduleFibersWithFamiliesRecursively(
         break;
     }
 
-    if (fibersWithForcedRender === null) {
-      throw new Error(
-        'Expected fibersWithForcedRender to be set during hot reload.',
-      );
-    }
     if (familiesByType === null) {
       throw new Error('Expected familiesByType to be set during hot reload.');
     }
@@ -236,37 +204,9 @@ function scheduleFibersWithFamiliesRecursively(
       const family = familiesByType.get(candidateType);
       if (family !== undefined) {
         if (staleFamilies.has(family)) {
-          let fiberToRemount = fiber;
-          // Force a remount by changing the element type.
-          // If necessary, do this for more than a single fiber on parent path.
-          while (true) {
-            fiberToRemount.elementType = 'DELETED';
-            if (fiberToRemount.alternate !== null) {
-              fiberToRemount.alternate.elementType = 'DELETED';
-            }
-            const parent = fiberToRemount.return;
-            if (parent !== null && parent.tag === MemoComponent) {
-              // Memo components can't reconcile themelves so
-              // delete them too until we find a non-memo parent.
-              // TODO: we might need something similar for Suspense
-              // or its special "fake fragment" node.
-              fiberToRemount = parent;
-            } else {
-              break;
-            }
-          }
-          // Schedule the parent.
-          const parent = fiberToRemount.return;
-          if (parent !== null) {
-            fibersWithForcedRender.add(parent);
-            const alternate = parent.alternate;
-            if (alternate !== null) {
-              fibersWithForcedRender.add(alternate);
-            }
-            scheduleWork(parent, Sync);
-          }
+          fiber._debugNeedsRemount = true;
+          scheduleWork(fiber, Sync);
         } else if (updatedFamilies.has(family)) {
-          // Schedule itself.
           scheduleWork(fiber, Sync);
         }
       }

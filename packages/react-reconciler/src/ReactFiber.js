@@ -223,6 +223,7 @@ export type Fiber = {|
   _debugSource?: Source | null,
   _debugOwner?: Fiber | null,
   _debugIsCurrentlyTiming?: boolean,
+  _debugNeedsRemount?: boolean,
 
   // Used to verify that the order of hooks does not change between renders.
   _debugHookTypes?: Array<HookType> | null,
@@ -307,6 +308,7 @@ function FiberNode(
     this._debugSource = null;
     this._debugOwner = null;
     this._debugIsCurrentlyTiming = false;
+    this._debugNeedsRemount = false;
     this._debugHookTypes = null;
     if (!hasBadMapPolyfill && typeof Object.preventExtensions === 'function') {
       Object.preventExtensions(this);
@@ -440,6 +442,7 @@ export function createWorkInProgress(
   }
 
   if (__DEV__) {
+    workInProgress._debugNeedsRemount = current._debugNeedsRemount;
     switch (workInProgress.tag) {
       case IndeterminateComponent:
       case FunctionComponent:
@@ -804,6 +807,7 @@ export function assignFiberPropertiesInDEV(
   target._debugSource = source._debugSource;
   target._debugOwner = source._debugOwner;
   target._debugIsCurrentlyTiming = source._debugIsCurrentlyTiming;
+  target._debugNeedsRemount = source._debugNeedsRemount;
   target._debugHookTypes = source._debugHookTypes;
   return target;
 }

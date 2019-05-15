@@ -955,7 +955,7 @@ describe('ReactFresh', () => {
     }
   });
 
-  xit('can force remount by changing signature', () => {
+  it('can force remount by changing signature', () => {
     if (__DEV__) {
       let HelloV1 = render(() => {
         function Hello() {
@@ -1086,31 +1086,31 @@ describe('ReactFresh', () => {
     }
   });
 
-  xit('can remount on signature change within a <root> wrapper', () => {
+  it('can remount on signature change within a <root> wrapper', () => {
     if (__DEV__) {
       testRemountingWithWrapper(Hello => Hello);
     }
   });
 
-  xit('can remount on signature change within a simple memo wrapper', () => {
+  it('can remount on signature change within a simple memo wrapper', () => {
     if (__DEV__) {
       testRemountingWithWrapper(Hello => React.memo(Hello));
     }
   });
 
-  xit('can remount on signature change within forwardRef', () => {
+  it('can remount on signature change within forwardRef', () => {
     if (__DEV__) {
       testRemountingWithWrapper(Hello => React.forwardRef(Hello));
     }
   });
 
-  xit('can remount on signature change within forwardRef render function', () => {
+  it('can remount on signature change within forwardRef render function', () => {
     if (__DEV__) {
       testRemountingWithWrapper(Hello => React.forwardRef(() => <Hello />));
     }
   });
 
-  xit('can remount on signature change within nested memo', () => {
+  it('can remount on signature change within nested memo', () => {
     if (__DEV__) {
       testRemountingWithWrapper(Hello =>
         React.memo(React.memo(React.memo(Hello))),
@@ -1118,13 +1118,13 @@ describe('ReactFresh', () => {
     }
   });
 
-  xit('can remount on signature change within a memo wrapper and custom comparison', () => {
+  it('can remount on signature change within a memo wrapper and custom comparison', () => {
     if (__DEV__) {
       testRemountingWithWrapper(Hello => React.memo(Hello, () => true));
     }
   });
 
-  xit('can remount on signature change within a class', () => {
+  it('can remount on signature change within a class', () => {
     if (__DEV__) {
       testRemountingWithWrapper(Hello => {
         const child = <Hello />;
@@ -1137,7 +1137,7 @@ describe('ReactFresh', () => {
     }
   });
 
-  xit('can remount on signature change within a context provider', () => {
+  it('can remount on signature change within a context provider', () => {
     if (__DEV__) {
       testRemountingWithWrapper(Hello => {
         const Context = React.createContext();
@@ -1153,7 +1153,7 @@ describe('ReactFresh', () => {
     }
   });
 
-  xit('can remount on signature change within a context consumer', () => {
+  it('can remount on signature change within a context consumer', () => {
     if (__DEV__) {
       testRemountingWithWrapper(Hello => {
         const Context = React.createContext();
@@ -1165,7 +1165,7 @@ describe('ReactFresh', () => {
     }
   });
 
-  xit('can remount on signature change within a suspense node', () => {
+  it('can remount on signature change within a suspense node', () => {
     if (__DEV__) {
       testRemountingWithWrapper(Hello => {
         // TODO: we'll probably want to test fallback trees too.
@@ -1181,7 +1181,7 @@ describe('ReactFresh', () => {
     }
   });
 
-  xit('can remount on signature change within a mode node', () => {
+  it('can remount on signature change within a mode node', () => {
     if (__DEV__) {
       testRemountingWithWrapper(Hello => {
         const child = (
@@ -1196,7 +1196,7 @@ describe('ReactFresh', () => {
     }
   });
 
-  xit('can remount on signature change within a fragment node', () => {
+  it('can remount on signature change within a fragment node', () => {
     if (__DEV__) {
       testRemountingWithWrapper(Hello => {
         const child = (
@@ -1211,7 +1211,26 @@ describe('ReactFresh', () => {
     }
   });
 
-  xit('can remount on signature change within a profiler node', () => {
+  it('can remount on signature change within multiple siblings', () => {
+    if (__DEV__) {
+      testRemountingWithWrapper(Hello => {
+        const child = (
+          <React.Fragment>
+            <React.Fragment>
+              <React.Fragment />
+            </React.Fragment>
+            <Hello />
+            <React.Fragment />
+          </React.Fragment>
+        );
+        return function Wrapper() {
+          return child;
+        };
+      });
+    }
+  });
+
+  it('can remount on signature change within a profiler node', () => {
     if (__DEV__) {
       testRemountingWithWrapper(Hello => {
         const child = <Hello />;

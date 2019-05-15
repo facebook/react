@@ -2115,12 +2115,80 @@ function bailoutOnAlreadyFinishedWork(
   }
 }
 
+function remountFiber(
+  current: Fiber | null,
+  oldWorkInProgress: Fiber,
+  newWorkInProgress: Fiber,
+): Fiber | null {
+  if (__DEV__) {
+    const returnFiber = oldWorkInProgress.return;
+    if (returnFiber === null) {
+      throw new Error('Cannot swap the root fiber.');
+    }
+
+    // Connect the new fiber to the tree.
+    newWorkInProgress.sibling = oldWorkInProgress.sibling;
+    newWorkInProgress.return = oldWorkInProgress.return;
+
+    // Replace the child/sibling pointers above it.
+    if (oldWorkInProgress === returnFiber.child) {
+      returnFiber.child = newWorkInProgress;
+    } else {
+      let prevSibling = returnFiber.child;
+      if (prevSibling === null) {
+        throw new Error('Expected parent to have a child.');
+      }
+      while (prevSibling.sibling !== oldWorkInProgress) {
+        prevSibling = prevSibling.sibling;
+        if (prevSibling === null) {
+          throw new Error('Expected to find the previous sibling.');
+        }
+      }
+      prevSibling.sibling = newWorkInProgress;
+    }
+
+    // Delete the old one and place the new one.
+    // Since the old one is disconnected, we have to schedule it manually.
+    newWorkInProgress.effectTag = Placement;
+    oldWorkInProgress.effectTag = Deletion;
+    if (returnFiber.lastEffect !== null) {
+      returnFiber.lastEffect.nextEffect = oldWorkInProgress;
+      returnFiber.lastEffect = oldWorkInProgress;
+    } else {
+      returnFiber.firstEffect = returnFiber.lastEffect = oldWorkInProgress;
+    }
+
+    // Restart work from the new fiber.
+    return newWorkInProgress;
+  } else {
+    return null;
+  }
+}
+
 function beginWork(
   current: Fiber | null,
   workInProgress: Fiber,
   renderExpirationTime: ExpirationTime,
 ): Fiber | null {
   const updateExpirationTime = workInProgress.expirationTime;
+
+  if (__DEV__) {
+    if (workInProgress._debugNeedsRemount) {
+      // This will restart the begin phase with a new fiber.
+      return remountFiber(
+        current,
+        workInProgress,
+        createFiberFromTypeAndProps(
+          workInProgress.type,
+          workInProgress.key,
+          workInProgress.pendingProps,
+          workInProgress._debugOwner || null,
+          workInProgress.mode,
+          workInProgress.expirationTime,
+        ),
+      );
+    }
+  }
 
   if (current !== null) {
     const oldProps = current.memoizedProps;
