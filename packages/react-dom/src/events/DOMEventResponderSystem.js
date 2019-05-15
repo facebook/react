@@ -35,8 +35,6 @@ import invariant from 'shared/invariant';
 import {
   isFiberSuspenseAndTimedOut,
   getSuspenseFallbackChild,
-  isFiberSuspenseTimedOutChild,
-  getSuspenseFiberFromTimedOutChild,
 } from 'react-reconciler/src/ReactFiberEvents';
 
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
