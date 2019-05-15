@@ -158,16 +158,22 @@ export function isCompatibleFamilyForHotReloading(
   }
 }
 
-export function shouldForceRenderForHotReloading(fiber: Fiber | null): boolean {
+export function shouldForceRenderForHotReloading(
+  current: Fiber | null,
+  workInProgress: Fiber,
+): boolean {
   if (__DEV__) {
-    if (fiber === null) {
+    if (current === null) {
       return false;
+    }
+    if (current.type !== workInProgress.type) {
+      return true;
     }
     if (fibersWithForcedRender === null) {
       // Not hot reloading now.
       return false;
     }
-    return fibersWithForcedRender.has(fiber);
+    return fibersWithForcedRender.has(current);
   } else {
     return false;
   }
@@ -260,12 +266,6 @@ function scheduleFibersWithFamiliesRecursively(
             scheduleWork(parent, Sync);
           }
         } else if (updatedFamilies.has(family)) {
-          // Force a re-render and remount Hooks with dependencies.
-          fibersWithForcedRender.add(fiber);
-          const alternate = fiber.alternate;
-          if (alternate !== null) {
-            fibersWithForcedRender.add(alternate);
-          }
           // Schedule itself.
           scheduleWork(fiber, Sync);
         }

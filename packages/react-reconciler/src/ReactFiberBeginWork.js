@@ -495,7 +495,7 @@ function updateSimpleMemoComponent(
     if (
       shallowEqual(prevProps, nextProps) &&
       current.ref === workInProgress.ref &&
-      !shouldForceRenderForHotReloading(current)
+      !shouldForceRenderForHotReloading(current, workInProgress)
     ) {
       didReceiveUpdate = false;
       if (updateExpirationTime < renderExpirationTime) {
@@ -784,7 +784,7 @@ function finishClassComponent(
   if (
     !shouldUpdate &&
     !didCaptureError &&
-    !shouldForceRenderForHotReloading(current)
+    !shouldForceRenderForHotReloading(current, workInProgress)
   ) {
     // Context providers should defer to sCU for rendering
     if (hasContext) {
@@ -908,7 +908,7 @@ function updateHostRoot(current, workInProgress, renderExpirationTime) {
   const nextChildren = nextState.element;
   if (
     nextChildren === prevChildren &&
-    !shouldForceRenderForHotReloading(current)
+    !shouldForceRenderForHotReloading(current, workInProgress)
   ) {
     // If the state is the same as before, that's a bailout because we had
     // no work that expires at this time.
@@ -1954,7 +1954,7 @@ function updateContextProvider(
       if (
         oldProps.children === newProps.children &&
         !hasLegacyContextChanged() &&
-        !shouldForceRenderForHotReloading(current)
+        !shouldForceRenderForHotReloading(current, workInProgress)
       ) {
         return bailoutOnAlreadyFinishedWork(
           current,
@@ -2140,7 +2140,7 @@ function beginWork(
     if (
       oldProps !== newProps ||
       hasLegacyContextChanged() ||
-      shouldForceRenderForHotReloading(current)
+      shouldForceRenderForHotReloading(current, workInProgress)
     ) {
       // If props or context changed, mark the fiber as having performed work.
       // This may be unset if the props are determined to be equal later (memo).
