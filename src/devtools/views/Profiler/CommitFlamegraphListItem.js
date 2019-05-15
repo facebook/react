@@ -23,7 +23,7 @@ function CommitFlamegraphListItem({ data, index, style }: Props) {
     selectFiber,
     width,
   } = data;
-  const { maxSelfDuration, rows } = chartData;
+  const { renderPathNodes, maxSelfDuration, rows } = chartData;
 
   const handleClick = useCallback(
     (event: SyntheticMouseEvent<*>, id: number, name: string) => {
@@ -76,9 +76,14 @@ function CommitFlamegraphListItem({ data, index, style }: Props) {
           return null;
         }
 
-        let color = 'var(--color-commit-did-not-render)';
+        let color = 'url(#didNotRenderPattern)';
+        let textColor = 'var(--color-commit-did-not-render-pattern-text)';
         if (didRender) {
           color = getGradientColor(selfDuration / maxSelfDuration);
+          textColor = 'var(--color-commit-gradient-text)';
+        } else if (renderPathNodes.has(id)) {
+          color = 'var(--color-commit-did-not-render-fill)';
+          textColor = 'var(--color-commit-did-not-render-fill-text)';
         }
 
         return (
@@ -89,6 +94,7 @@ function CommitFlamegraphListItem({ data, index, style }: Props) {
             key={id}
             label={label}
             onClick={event => handleClick(event, id, name)}
+            textStyle={{ color: textColor }}
             width={nodeWidth}
             x={nodeOffset - selectedNodeOffset}
             y={top}

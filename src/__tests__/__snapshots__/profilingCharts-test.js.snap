@@ -70,6 +70,10 @@ Object {
     3 => 2,
   },
   "maxSelfDuration": 10,
+  "renderPathNodes": Set {
+    1,
+    3,
+  },
   "rows": Array [
     Array [
       Object {
@@ -189,6 +193,9 @@ Object {
     3 => 2,
   },
   "maxSelfDuration": 10,
+  "renderPathNodes": Set {
+    1,
+  },
   "rows": Array [
     Array [
       Object {

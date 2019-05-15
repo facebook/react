@@ -19,7 +19,10 @@
   --light-color-button-focus: #23272f;
   --light-color-button-hover: #23272f;
   --light-color-border: #eeeeee;
-  --light-color-commit-did-not-render: #cfd1d5;
+  --light-color-commit-did-not-render-fill: #cfd1d5;
+  --light-color-commit-did-not-render-fill-text: #000000;
+  --light-color-commit-did-not-render-pattern: #cfd1d5;
+  --light-color-commit-did-not-render-pattern-text: #000000;
   --light-color-commit-gradient-0: #37afa9;
   --light-color-commit-gradient-1: #63b19e;
   --light-color-commit-gradient-2: #80b393;
@@ -73,7 +76,10 @@
   --dark-color-button-focus: #a2e9fc;
   --dark-color-button-hover: #ededed;
   --dark-color-border: #3d424a;
-  --dark-color-commit-did-not-render: #777d88;
+  --dark-color-commit-did-not-render-fill: #777d88;
+  --dark-color-commit-did-not-render-fill-text: #000000;
+  --dark-color-commit-did-not-render-pattern: #666c77;
+  --dark-color-commit-did-not-render-pattern-text: #ffffff;
   --dark-color-commit-gradient-0: #37afa9;
   --dark-color-commit-gradient-1: #63b19e;
   --dark-color-commit-gradient-2: #80b393;

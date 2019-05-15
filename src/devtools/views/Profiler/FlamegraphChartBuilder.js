@@ -21,6 +21,7 @@ export type ChartData = {|
   depth: number,
   idToDepthMap: Map<number, number>,
   maxSelfDuration: number,
+  renderPathNodes: Set<number>,
   rows: Array<Array<ChartNode>>,
 |};
 
@@ -44,6 +45,7 @@ export function getChartData({
   }
 
   const idToDepthMap: Map<number, number> = new Map();
+  const renderPathNodes: Set<number> = new Set();
   const rows: Array<Array<ChartNode>> = [];
 
   let maxDepth = 0;
@@ -129,11 +131,30 @@ export function getChartData({
     walkTree(id, baseDuration, 1);
   }
 
+  actualDurations.forEach((duration, id) => {
+    const node = nodes.get(id);
+    if (node != null) {
+      let currentID = node.parentID;
+      while (currentID !== 0) {
+        if (renderPathNodes.has(currentID)) {
+          // We've already walked this path; we can skip it.
+          break;
+        } else {
+          renderPathNodes.add(currentID);
+        }
+
+        const node = nodes.get(currentID);
+        currentID = node != null ? node.parentID : 0;
+      }
+    }
+  });
+
   const chartData = {
     baseDuration,
     depth: maxDepth,
     idToDepthMap,
     maxSelfDuration,
+    renderPathNodes,
     rows,
   };
 

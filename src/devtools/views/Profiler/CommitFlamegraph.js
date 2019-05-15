@@ -1,6 +1,6 @@
 // @flow
 
-import React, { useCallback, useContext, useMemo } from 'react';
+import React, { forwardRef, useCallback, useContext, useMemo } from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { FixedSizeList } from 'react-window';
 import { ProfilerContext } from './ProfilerContext';
@@ -152,7 +152,7 @@ function CommitFlamegraph({
   return (
     <FixedSizeList
       height={height}
-      innerElementType="svg"
+      innerElementType={InnerElementType}
       itemCount={chartData.depth}
       itemData={itemData}
       itemSize={barHeight}
@@ -162,3 +162,22 @@ function CommitFlamegraph({
     </FixedSizeList>
   );
 }
+
+const InnerElementType = forwardRef(({ children, ...rest }, ref) => (
+  <svg ref={ref} {...rest}>
+    <defs>
+      <pattern
+        id="didNotRenderPattern"
+        patternUnits="userSpaceOnUse"
+        width="4"
+        height="4"
+      >
+        <path
+          d="M-1,1 l2,-2 M0,4 l4,-4 M3,5 l2,-2"
+          className={styles.PatternPath}
+        />
+      </pattern>
+    </defs>
+    {children}
+  </svg>
+));
