@@ -16,6 +16,8 @@ import {
   EventComponent,
   EventTarget as EventTargetWorkTag,
   HostComponent,
+  SuspenseComponent,
+  Fragment,
 } from 'shared/ReactWorkTags';
 import type {
   ReactEventResponder,
@@ -352,14 +354,24 @@ const eventResponderContext: ReactResponderContext = {
     let node = ((eventComponentInstance.currentFiber: any): Fiber).child;
 
     while (node !== null) {
-      if (isFiberHostComponentFocusable(node)) {
-        focusableElements.push(node.stateNode);
-      } else {
-        const child = node.child;
-
-        if (child !== null) {
-          node = child;
+      if (node.tag === SuspenseComponent) {
+        const suspendedChild = isFiberSuspenseAndTimedOut(node)
+          ? getSuspenseFallbackChild(node)
+          : getSuspenseChild(node);
+        if (suspendedChild !== null) {
+          node = suspendedChild;
           continue;
+        }
+      } else {
+        if (isFiberHostComponentFocusable(node)) {
+          focusableElements.push(node.stateNode);
+        } else {
+          const child = node.child;
+
+          if (child !== null) {
+            node = child;
+            continue;
+          }
         }
       }
       const sibling = node.sibling;
@@ -368,9 +380,14 @@ const eventResponderContext: ReactResponderContext = {
         node = sibling;
         continue;
       }
-      const parent = node.return;
-      if (parent === null) {
-        break;
+      let parent;
+      if (isFiberSuspenseChild(node)) {
+        parent = getSuspenseFiberFromChild(node);
+      } else {
+        parent = node.return;
+        if (parent === null) {
+          break;
+        }
       }
       if (parent.stateNode === currentInstance) {
         break;
@@ -586,6 +603,41 @@ export function processEventQueue(): void {
   } else {
     batchedUpdates(processEvents, events);
   }
+}
+
+function isFiberSuspenseAndTimedOut(fiber: Fiber): boolean {
+  return fiber.tag === SuspenseComponent && fiber.memoizedState !== null;
+}
+
+function isFiberSuspenseChild(fiber: Fiber | null): boolean {
+  if (fiber === null) {
+    return false;
+  }
+  const parent = fiber.return;
+  if (parent !== null && parent.tag === Fragment) {
+    const grandParent = parent.return;
+
+    if (
+      grandParent !== null &&
+      grandParent.tag === SuspenseComponent &&
+      grandParent.stateNode !== null
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function getSuspenseFiberFromChild(fiber: Fiber): Fiber {
+  return ((((fiber.return: any): Fiber).return: any): Fiber);
+}
+
+function getSuspenseFallbackChild(fiber: Fiber): Fiber | null {
+  return ((((fiber.child: any): Fiber).sibling: any): Fiber).child;
+}
+
+function getSuspenseChild(fiber: Fiber): Fiber | null {
+  return (((fiber.child: any): Fiber): Fiber).child;
 }
 
 function getTargetEventTypesSet(
