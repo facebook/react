@@ -37,7 +37,6 @@ import {
   warnIfNotCurrentlyActingUpdatesInDev,
   markRenderEventTimeAndConfig,
 } from './ReactFiberScheduler';
-import {shouldIgnoreDependenciesForHotReloading} from './ReactFiberHotReloading';
 
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
@@ -365,9 +364,9 @@ export function renderWithHooks(
         ? ((current._debugHookTypes: any): Array<HookType>)
         : null;
     hookTypesUpdateIndexDev = -1;
-    ignorePreviousDependencies = shouldIgnoreDependenciesForHotReloading(
-      workInProgress,
-    );
+    // Used for hot reloading:
+    ignorePreviousDependencies =
+      current !== null && current.type !== workInProgress.type;
   }
 
   // The following should have already been reset

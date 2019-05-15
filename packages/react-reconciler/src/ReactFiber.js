@@ -444,14 +444,10 @@ export function createWorkInProgress(
       case IndeterminateComponent:
       case FunctionComponent:
       case SimpleMemoComponent:
-        workInProgress.type = resolveFunctionForHotReloading(
-          workInProgress.type,
-        );
+        workInProgress.type = resolveFunctionForHotReloading(current.type);
         break;
       case ForwardRef:
-        workInProgress.type = resolveForwardRefForHotReloading(
-          workInProgress.type,
-        );
+        workInProgress.type = resolveForwardRefForHotReloading(current.type);
         break;
       default:
         break;
