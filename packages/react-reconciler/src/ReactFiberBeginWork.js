@@ -71,10 +71,7 @@ import {
   getCurrentFiberStackInDev,
 } from './ReactCurrentFiber';
 import {startWorkTimer, cancelWorkTimer} from './ReactDebugFiberPerf';
-import {
-  resolveFunctionForHotReloading,
-  shouldForceRenderForHotReloading,
-} from './ReactFiberHotReloading';
+import {resolveFunctionForHotReloading} from './ReactFiberHotReloading';
 
 import {
   mountChildFibers,
@@ -495,7 +492,7 @@ function updateSimpleMemoComponent(
     if (
       shallowEqual(prevProps, nextProps) &&
       current.ref === workInProgress.ref &&
-      !shouldForceRenderForHotReloading(current, workInProgress)
+      (__DEV__ ? workInProgress.type === current.type : true)
     ) {
       didReceiveUpdate = false;
       if (updateExpirationTime < renderExpirationTime) {
@@ -781,11 +778,7 @@ function finishClassComponent(
 
   const didCaptureError = (workInProgress.effectTag & DidCapture) !== NoEffect;
 
-  if (
-    !shouldUpdate &&
-    !didCaptureError &&
-    !shouldForceRenderForHotReloading(current, workInProgress)
-  ) {
+  if (!shouldUpdate && !didCaptureError) {
     // Context providers should defer to sCU for rendering
     if (hasContext) {
       invalidateContextProvider(workInProgress, Component, false);
@@ -906,10 +899,7 @@ function updateHostRoot(current, workInProgress, renderExpirationTime) {
   // Caution: React DevTools currently depends on this property
   // being called "element".
   const nextChildren = nextState.element;
-  if (
-    nextChildren === prevChildren &&
-    !shouldForceRenderForHotReloading(current, workInProgress)
-  ) {
+  if (nextChildren === prevChildren) {
     // If the state is the same as before, that's a bailout because we had
     // no work that expires at this time.
     resetHydrationState();
@@ -1953,8 +1943,7 @@ function updateContextProvider(
       // No change. Bailout early if children are the same.
       if (
         oldProps.children === newProps.children &&
-        !hasLegacyContextChanged() &&
-        !shouldForceRenderForHotReloading(current, workInProgress)
+        !hasLegacyContextChanged()
       ) {
         return bailoutOnAlreadyFinishedWork(
           current,
@@ -2140,7 +2129,7 @@ function beginWork(
     if (
       oldProps !== newProps ||
       hasLegacyContextChanged() ||
-      shouldForceRenderForHotReloading(current, workInProgress)
+      (__DEV__ ? workInProgress.type !== current.type : false)
     ) {
       // If props or context changed, mark the fiber as having performed work.
       // This may be unset if the props are determined to be equal later (memo).
