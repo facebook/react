@@ -31,7 +31,6 @@ import {
 import {
   scheduleWork,
   computeExpirationForFiber,
-  flushPassiveEffects,
   requestCurrentTime,
   warnIfNotCurrentlyActingUpdatesInDev,
   markRenderEventTime,
@@ -1108,8 +1107,6 @@ function dispatchAction<S, A>(
       lastRenderPhaseUpdate.next = update;
     }
   } else {
-    flushPassiveEffects();
-
     const currentTime = requestCurrentTime();
     const expirationTime = computeExpirationForFiber(currentTime, fiber);
 

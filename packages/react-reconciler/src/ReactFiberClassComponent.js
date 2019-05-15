@@ -52,7 +52,6 @@ import {
   requestCurrentTime,
   computeExpirationForFiber,
   scheduleWork,
-  flushPassiveEffects,
 } from './ReactFiberScheduler';
 
 const fakeInternalInstance = {};
@@ -194,7 +193,6 @@ const classComponentUpdater = {
       update.callback = callback;
     }
 
-    flushPassiveEffects();
     enqueueUpdate(fiber, update);
     scheduleWork(fiber, expirationTime);
   },
@@ -214,7 +212,6 @@ const classComponentUpdater = {
       update.callback = callback;
     }
 
-    flushPassiveEffects();
     enqueueUpdate(fiber, update);
     scheduleWork(fiber, expirationTime);
   },
@@ -233,7 +230,6 @@ const classComponentUpdater = {
       update.callback = callback;
     }
 
-    flushPassiveEffects();
     enqueueUpdate(fiber, update);
     scheduleWork(fiber, expirationTime);
   },
