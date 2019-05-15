@@ -851,7 +851,7 @@ function completeWork(
             }
             warning(
               hostChildrenCount < 2,
-              'An event component "%s" was found to have multiple host children.',
+              'A "<%s>" event component cannot contain multiple host children.',
               getComponentName(workInProgress.type),
             );
           }
