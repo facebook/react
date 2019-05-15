@@ -67,3 +67,6 @@ export const enableEventAPI = false;
 
 // New API for JSX transforms to target - https://github.com/reactjs/rfcs/pull/107
 export const enableJSXTransformAPI = false;
+
+// Temporary flag to revert the fix in #15650
+export const revertPassiveEffectsChange = false;

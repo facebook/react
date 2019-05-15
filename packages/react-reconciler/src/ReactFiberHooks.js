@@ -31,6 +31,7 @@ import {
 import {
   scheduleWork,
   computeExpirationForFiber,
+  flushPassiveEffects,
   requestCurrentTime,
   warnIfNotCurrentlyActingUpdatesInDev,
   markRenderEventTime,
@@ -41,6 +42,7 @@ import warning from 'shared/warning';
 import getComponentName from 'shared/getComponentName';
 import is from 'shared/objectIs';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork';
+import {revertPassiveEffectsChange} from 'shared/ReactFeatureFlags';
 
 const {ReactCurrentDispatcher} = ReactSharedInternals;
 
@@ -1107,6 +1109,10 @@ function dispatchAction<S, A>(
       lastRenderPhaseUpdate.next = update;
     }
   } else {
+    if (revertPassiveEffectsChange) {
+      flushPassiveEffects();
+    }
+
     const currentTime = requestCurrentTime();
     const expirationTime = computeExpirationForFiber(currentTime, fiber);
 

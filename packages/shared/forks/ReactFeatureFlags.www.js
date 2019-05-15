@@ -20,6 +20,7 @@ export const {
   disableInputAttributeSyncing,
   warnAboutShorthandPropertyCollision,
   warnAboutDeprecatedSetNativeProps,
+  revertPassiveEffectsChange,
 } = require('ReactFeatureFlags');
 
 // In www, we have experimental support for gathering data

@@ -52,7 +52,9 @@ import {
   requestCurrentTime,
   computeExpirationForFiber,
   scheduleWork,
+  flushPassiveEffects,
 } from './ReactFiberScheduler';
+import {revertPassiveEffectsChange} from 'shared/ReactFeatureFlags';
 
 const fakeInternalInstance = {};
 const isArray = Array.isArray;
@@ -193,6 +195,9 @@ const classComponentUpdater = {
       update.callback = callback;
     }
 
+    if (revertPassiveEffectsChange) {
+      flushPassiveEffects();
+    }
     enqueueUpdate(fiber, update);
     scheduleWork(fiber, expirationTime);
   },
@@ -212,6 +217,9 @@ const classComponentUpdater = {
       update.callback = callback;
     }
 
+    if (revertPassiveEffectsChange) {
+      flushPassiveEffects();
+    }
     enqueueUpdate(fiber, update);
     scheduleWork(fiber, expirationTime);
   },
@@ -230,6 +238,9 @@ const classComponentUpdater = {
       update.callback = callback;
     }
 
+    if (revertPassiveEffectsChange) {
+      flushPassiveEffects();
+    }
     enqueueUpdate(fiber, update);
     scheduleWork(fiber, expirationTime);
   },
