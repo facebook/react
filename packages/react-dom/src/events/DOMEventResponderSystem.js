@@ -16,6 +16,8 @@ import {
   EventComponent,
   EventTarget as EventTargetWorkTag,
   HostComponent,
+  SuspenseComponent,
+  Fragment,
 } from 'shared/ReactWorkTags';
 import type {
   ReactEventResponder,
@@ -64,6 +66,7 @@ type ResponderTimer = {|
   instance: ReactEventComponentInstance,
   func: () => void,
   id: Symbol,
+  timeStamp: number,
 |};
 
 const activeTimeouts: Map<Symbol, ResponderTimeout> = new Map();
@@ -90,6 +93,7 @@ const responderOwners: Map<
 > = new Map();
 let globalOwner = null;
 
+let currentTimeStamp = 0;
 let currentTimers = new Map();
 let currentInstance: null | ReactEventComponentInstance = null;
 let currentEventQueue: null | EventQueue = null;
@@ -101,28 +105,45 @@ const eventResponderContext: ReactResponderContext = {
     {discrete}: ReactResponderDispatchEventOptions,
   ): void {
     validateResponderContext();
-    const {target, type} = possibleEventObject;
+    const {target, type, timeStamp} = possibleEventObject;
 
-    if (target == null || type == null) {
+    if (target == null || type == null || timeStamp == null) {
       throw new Error(
-        'context.dispatchEvent: "target" and "type" fields on event object are required.',
+        'context.dispatchEvent: "target", "timeStamp", and "type" fields on event object are required.',
       );
     }
     if (__DEV__) {
-      possibleEventObject.preventDefault = () => {
-        // Update this warning when we have a story around dealing with preventDefault
+      const showWarning = name => {
         warning(
           false,
-          'preventDefault() is no longer available on event objects created from event responder modules.',
+          '%s is not available on event objects created from event responder modules (React Flare).',
+          name,
         );
+      };
+      possibleEventObject.preventDefault = () => {
+        showWarning('preventDefault()');
       };
       possibleEventObject.stopPropagation = () => {
-        // Update this warning when we have a story around dealing with stopPropgation
-        warning(
-          false,
-          'stopPropagation() is no longer available on event objects created from event responder modules.',
-        );
+        showWarning('stopPropagation()');
       };
+      possibleEventObject.isDefaultPrevented = () => {
+        showWarning('isDefaultPrevented()');
+      };
+      possibleEventObject.isPropagationStopped = () => {
+        showWarning('isPropagationStopped()');
+      };
+      // $FlowFixMe: we don't need value, Flow thinks we do
+      Object.defineProperty(possibleEventObject, 'nativeEvent', {
+        get() {
+          showWarning('nativeEvent');
+        },
+      });
+      // $FlowFixMe: we don't need value, Flow thinks we do
+      Object.defineProperty(possibleEventObject, 'defaultPrevented', {
+        get() {
+          showWarning('defaultPrevented');
+        },
+      });
     }
     const eventObject = ((possibleEventObject: any): $Shape<
       PartialEventObject,
@@ -163,19 +184,7 @@ const eventResponderContext: ReactResponderContext = {
     }
     return false;
   },
-  isTargetWithinEventComponent(target: Element | Document): boolean {
-    validateResponderContext();
-    if (target != null) {
-      let fiber = getClosestInstanceFromNode(target);
-      while (fiber !== null) {
-        if (fiber.stateNode === currentInstance) {
-          return true;
-        }
-        fiber = fiber.return;
-      }
-    }
-    return false;
-  },
+  isTargetWithinEventComponent,
   isTargetWithinEventResponderScope(target: Element | Document): boolean {
     validateResponderContext();
     const responder = ((currentInstance: any): ReactEventComponentInstance)
@@ -201,6 +210,7 @@ const eventResponderContext: ReactResponderContext = {
     childTarget: Element | Document,
     parentTarget: Element | Document,
   ): boolean {
+    validateResponderContext();
     const childFiber = getClosestInstanceFromNode(childTarget);
     const parentFiber = getClosestInstanceFromNode(parentTarget);
 
@@ -308,7 +318,7 @@ const eventResponderContext: ReactResponderContext = {
     if (timeout === undefined) {
       const timers = new Map();
       const id = setTimeout(() => {
-        processTimers(timers);
+        processTimers(timers, delay);
       }, delay);
       timeout = {
         id,
@@ -320,6 +330,7 @@ const eventResponderContext: ReactResponderContext = {
       instance: ((currentInstance: any): ReactEventComponentInstance),
       func,
       id: timerId,
+      timeStamp: currentTimeStamp,
     });
     activeTimeouts.set(timerId, timeout);
     return timerId;
@@ -337,19 +348,30 @@ const eventResponderContext: ReactResponderContext = {
     }
   },
   getFocusableElementsInScope(): Array<HTMLElement> {
+    validateResponderContext();
     const focusableElements = [];
     const eventComponentInstance = ((currentInstance: any): ReactEventComponentInstance);
     let node = ((eventComponentInstance.currentFiber: any): Fiber).child;
 
     while (node !== null) {
-      if (isFiberHostComponentFocusable(node)) {
-        focusableElements.push(node.stateNode);
-      } else {
-        const child = node.child;
-
-        if (child !== null) {
-          node = child;
+      if (node.tag === SuspenseComponent) {
+        const suspendedChild = isFiberSuspenseAndTimedOut(node)
+          ? getSuspenseFallbackChild(node)
+          : getSuspenseChild(node);
+        if (suspendedChild !== null) {
+          node = suspendedChild;
           continue;
+        }
+      } else {
+        if (isFiberHostComponentFocusable(node)) {
+          focusableElements.push(node.stateNode);
+        } else {
+          const child = node.child;
+
+          if (child !== null) {
+            node = child;
+            continue;
+          }
         }
       }
       const sibling = node.sibling;
@@ -358,9 +380,14 @@ const eventResponderContext: ReactResponderContext = {
         node = sibling;
         continue;
       }
-      const parent = node.return;
-      if (parent === null) {
-        break;
+      let parent;
+      if (isFiberSuspenseChild(node)) {
+        parent = getSuspenseFiberFromChild(node);
+      } else {
+        parent = node.return;
+        if (parent === null) {
+          break;
+        }
       }
       if (parent.stateNode === currentInstance) {
         break;
@@ -371,7 +398,76 @@ const eventResponderContext: ReactResponderContext = {
     return focusableElements;
   },
   getActiveDocument,
+  objectAssign: Object.assign,
+  getEventPointerType(
+    event: ReactResponderEvent,
+  ): '' | 'mouse' | 'keyboard' | 'pen' | 'touch' {
+    validateResponderContext();
+    const nativeEvent: any = event.nativeEvent;
+    const {type, pointerType} = nativeEvent;
+    if (pointerType != null) {
+      return pointerType;
+    }
+    if (type.indexOf('mouse') === 0) {
+      return 'mouse';
+    }
+    if (type.indexOf('touch') === 0) {
+      return 'touch';
+    }
+    if (type.indexOf('key') === 0) {
+      return 'keyboard';
+    }
+    return '';
+  },
+  getEventCurrentTarget(event: ReactResponderEvent): Element {
+    validateResponderContext();
+    const target: any = event.target;
+    let currentTarget = target;
+    while (
+      currentTarget.parentNode &&
+      currentTarget.parentNode.nodeType === Node.ELEMENT_NODE &&
+      isTargetWithinEventComponent(currentTarget.parentNode)
+    ) {
+      currentTarget = currentTarget.parentNode;
+    }
+    return currentTarget;
+  },
+  getTimeStamp(): number {
+    validateResponderContext();
+    return currentTimeStamp;
+  },
+  isTargetWithinHostComponent(
+    target: Element | Document,
+    elementType: string,
+  ): boolean {
+    validateResponderContext();
+    let fiber = getClosestInstanceFromNode(target);
+    while (fiber !== null) {
+      if (fiber.stateNode === currentInstance) {
+        return false;
+      }
+      if (fiber.tag === HostComponent && fiber.type === elementType) {
+        return true;
+      }
+      fiber = fiber.return;
+    }
+    return false;
+  },
 };
+
+function isTargetWithinEventComponent(target: Element | Document): boolean {
+  validateResponderContext();
+  if (target != null) {
+    let fiber = getClosestInstanceFromNode(target);
+    while (fiber !== null) {
+      if (fiber.stateNode === currentInstance) {
+        return true;
+      }
+      fiber = fiber.return;
+    }
+  }
+  return false;
+}
 
 function getActiveDocument(): Document {
   const eventComponentInstance = ((currentInstance: any): ReactEventComponentInstance);
@@ -427,13 +523,17 @@ function isFiberHostComponentFocusable(fiber: Fiber): boolean {
   );
 }
 
-function processTimers(timers: Map<Symbol, ResponderTimer>): void {
+function processTimers(
+  timers: Map<Symbol, ResponderTimer>,
+  delay: number,
+): void {
   const timersArr = Array.from(timers.values());
   currentEventQueue = createEventQueue();
   try {
     for (let i = 0; i < timersArr.length; i++) {
-      const {instance, func, id} = timersArr[i];
+      const {instance, func, id, timeStamp} = timersArr[i];
       currentInstance = instance;
+      currentTimeStamp = timeStamp + delay;
       try {
         func();
       } finally {
@@ -445,6 +545,7 @@ function processTimers(timers: Map<Symbol, ResponderTimer>): void {
     currentTimers = null;
     currentInstance = null;
     currentEventQueue = null;
+    currentTimeStamp = 0;
   }
 }
 
@@ -502,6 +603,41 @@ export function processEventQueue(): void {
   } else {
     batchedUpdates(processEvents, events);
   }
+}
+
+function isFiberSuspenseAndTimedOut(fiber: Fiber): boolean {
+  return fiber.tag === SuspenseComponent && fiber.memoizedState !== null;
+}
+
+function isFiberSuspenseChild(fiber: Fiber | null): boolean {
+  if (fiber === null) {
+    return false;
+  }
+  const parent = fiber.return;
+  if (parent !== null && parent.tag === Fragment) {
+    const grandParent = parent.return;
+
+    if (
+      grandParent !== null &&
+      grandParent.tag === SuspenseComponent &&
+      grandParent.stateNode !== null
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function getSuspenseFiberFromChild(fiber: Fiber): Fiber {
+  return ((((fiber.return: any): Fiber).return: any): Fiber);
+}
+
+function getSuspenseFallbackChild(fiber: Fiber): Fiber | null {
+  return ((((fiber.child: any): Fiber).sibling: any): Fiber).child;
+}
+
+function getSuspenseChild(fiber: Fiber): Fiber | null {
+  return (((fiber.child: any): Fiber): Fiber).child;
 }
 
 function getTargetEventTypesSet(
@@ -810,8 +946,11 @@ export function dispatchEventForResponderEventSystem(
     const previousEventQueue = currentEventQueue;
     const previousInstance = currentInstance;
     const previousTimers = currentTimers;
+    const previousTimeStamp = currentTimeStamp;
     currentTimers = null;
     currentEventQueue = createEventQueue();
+    // We might want to control timeStamp another way here
+    currentTimeStamp = (nativeEvent: any).timeStamp;
     try {
       traverseAndHandleEventResponderInstances(
         topLevelType,
@@ -825,6 +964,7 @@ export function dispatchEventForResponderEventSystem(
       currentTimers = previousTimers;
       currentInstance = previousInstance;
       currentEventQueue = previousEventQueue;
+      currentTimeStamp = previousTimeStamp;
     }
   }
 }

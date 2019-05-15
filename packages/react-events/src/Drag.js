@@ -50,11 +50,13 @@ type DragEventType = 'dragstart' | 'dragend' | 'dragchange' | 'dragmove';
 type DragEvent = {|
   target: Element | Document,
   type: DragEventType,
+  timeStamp: number,
   diffX?: number,
   diffY?: number,
 |};
 
 function createDragEvent(
+  context: ReactResponderContext,
   type: DragEventType,
   target: Element | Document,
   eventData?: EventData,
@@ -62,6 +64,7 @@ function createDragEvent(
   return {
     target,
     type,
+    timeStamp: context.getTimeStamp(),
     ...eventData,
   };
 }
@@ -75,7 +78,7 @@ function dispatchDragEvent(
   eventData?: EventData,
 ): void {
   const target = ((state.dragTarget: any): Element | Document);
-  const syntheticEvent = createDragEvent(name, target, eventData);
+  const syntheticEvent = createDragEvent(context, name, target, eventData);
   context.dispatchEvent(syntheticEvent, listener, {discrete});
 }
 

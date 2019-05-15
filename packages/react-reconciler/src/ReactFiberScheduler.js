@@ -24,6 +24,7 @@ import {
   enableProfilerTimer,
   disableYielding,
   enableSchedulerTracing,
+  revertPassiveEffectsChange,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
@@ -41,7 +42,8 @@ import {
   NormalPriority,
   LowPriority,
   IdlePriority,
-  flushImmediateQueue,
+  flushSyncCallbackQueue,
+  scheduleSyncCallback,
 } from './SchedulerWithReactIntegration';
 
 import {__interactionsRef, __subscriberRef} from 'scheduler/tracing';
@@ -55,7 +57,12 @@ import {
 } from './ReactFiberHostConfig';
 
 import {createWorkInProgress, assignFiberPropertiesInDEV} from './ReactFiber';
-import {NoContext, ConcurrentMode, ProfileMode} from './ReactTypeOfMode';
+import {
+  NoMode,
+  ProfileMode,
+  BatchedMode,
+  ConcurrentMode,
+} from './ReactTypeOfMode';
 import {
   HostRoot,
   ClassComponent,
@@ -91,6 +98,7 @@ import {
   computeAsyncExpiration,
   inferPriorityFromExpirationTime,
   LOW_PRIORITY_EXPIRATION,
+  Batched,
 } from './ReactFiberExpirationTime';
 import {beginWork as originalBeginWork} from './ReactFiberBeginWork';
 import {completeWork} from './ReactFiberCompleteWork';
@@ -255,8 +263,14 @@ export function computeExpirationForFiber(
   currentTime: ExpirationTime,
   fiber: Fiber,
 ): ExpirationTime {
-  if ((fiber.mode & ConcurrentMode) === NoContext) {
+  const mode = fiber.mode;
+  if ((mode & BatchedMode) === NoMode) {
     return Sync;
+  }
+
+  const priorityLevel = getCurrentPriorityLevel();
+  if ((mode & ConcurrentMode) === NoMode) {
+    return priorityLevel === ImmediatePriority ? Sync : Batched;
   }
 
   if (workPhase === RenderPhase) {
@@ -266,7 +280,6 @@ export function computeExpirationForFiber(
 
   // Compute an expiration time based on the Scheduler priority.
   let expirationTime;
-  const priorityLevel = getCurrentPriorityLevel();
   switch (priorityLevel) {
     case ImmediatePriority:
       expirationTime = Sync;
@@ -349,7 +362,7 @@ export function scheduleUpdateOnFiber(
         // scheduleCallbackForFiber to preserve the ability to schedule a callback
         // without immediately flushing it. We only do this for user-initated
         // updates, to preserve historical behavior of sync mode.
-        flushImmediateQueue();
+        flushSyncCallbackQueue();
       }
     }
   } else {
@@ -456,36 +469,47 @@ function scheduleCallbackForRoot(
     }
     root.callbackExpirationTime = expirationTime;
 
-    let options = null;
-    if (expirationTime !== Sync && expirationTime !== Never) {
-      let timeout = expirationTimeToMs(expirationTime) - now();
-      if (timeout > 5000) {
-        // Sanity check. Should never take longer than 5 seconds.
-        // TODO: Add internal warning?
-        timeout = 5000;
+    if (expirationTime === Sync) {
+      // Sync React callbacks are scheduled on a special internal queue
+      root.callbackNode = scheduleSyncCallback(
+        runRootCallback.bind(
+          null,
+          root,
+          renderRoot.bind(null, root, expirationTime),
+        ),
+      );
+    } else {
+      let options = null;
+      if (expirationTime !== Sync && expirationTime !== Never) {
+        let timeout = expirationTimeToMs(expirationTime) - now();
+        if (timeout > 5000) {
+          // Sanity check. Should never take longer than 5 seconds.
+          // TODO: Add internal warning?
+          timeout = 5000;
+        }
+        options = {timeout};
       }
-      options = {timeout};
-    }
 
-    root.callbackNode = scheduleCallback(
-      priorityLevel,
-      runRootCallback.bind(
-        null,
-        root,
-        renderRoot.bind(null, root, expirationTime),
-      ),
-      options,
-    );
-    if (
-      enableUserTimingAPI &&
-      expirationTime !== Sync &&
-      workPhase !== RenderPhase &&
-      workPhase !== CommitPhase
-    ) {
-      // Scheduled an async callback, and we're not already working. Add an
-      // entry to the flamegraph that shows we're waiting for a callback
-      // to fire.
-      startRequestCallbackTimer();
+      root.callbackNode = scheduleCallback(
+        priorityLevel,
+        runRootCallback.bind(
+          null,
+          root,
+          renderRoot.bind(null, root, expirationTime),
+        ),
+        options,
+      );
+      if (
+        enableUserTimingAPI &&
+        expirationTime !== Sync &&
+        workPhase !== RenderPhase &&
+        workPhase !== CommitPhase
+      ) {
+        // Scheduled an async callback, and we're not already working. Add an
+        // entry to the flamegraph that shows we're waiting for a callback
+        // to fire.
+        startRequestCallbackTimer();
+      }
     }
   }
 
@@ -524,11 +548,8 @@ export function flushRoot(root: FiberRoot, expirationTime: ExpirationTime) {
         'means you attempted to commit from inside a lifecycle method.',
     );
   }
-  scheduleCallback(
-    ImmediatePriority,
-    renderRoot.bind(null, root, expirationTime),
-  );
-  flushImmediateQueue();
+  scheduleSyncCallback(renderRoot.bind(null, root, expirationTime));
+  flushSyncCallbackQueue();
 }
 
 export function flushInteractiveUpdates() {
@@ -540,6 +561,11 @@ export function flushInteractiveUpdates() {
     return;
   }
   flushPendingDiscreteUpdates();
+  if (!revertPassiveEffectsChange) {
+    // If the discrete updates scheduled passive effects, flush them now so that
+    // they fire before the next serial event.
+    flushPassiveEffects();
+  }
 }
 
 function resolveLocksOnRoot(root: FiberRoot, expirationTime: ExpirationTime) {
@@ -549,8 +575,6 @@ function resolveLocksOnRoot(root: FiberRoot, expirationTime: ExpirationTime) {
     firstBatch._defer &&
     firstBatch._expirationTime >= expirationTime
   ) {
-    root.finishedWork = root.current.alternate;
-    root.pendingCommitExpirationTime = expirationTime;
     scheduleCallback(NormalPriority, () => {
       firstBatch._onComplete();
       return null;
@@ -577,6 +601,10 @@ export function interactiveUpdates<A, B, C, R>(
     // should explicitly call flushInteractiveUpdates.
     flushPendingDiscreteUpdates();
   }
+  if (!revertPassiveEffectsChange) {
+    // TODO: Remove this call for the same reason as above.
+    flushPassiveEffects();
+  }
   return runWithPriority(UserBlockingPriority, fn.bind(null, a, b, c));
 }
 
@@ -596,13 +624,10 @@ function flushPendingDiscreteUpdates() {
     const roots = rootsWithPendingDiscreteUpdates;
     rootsWithPendingDiscreteUpdates = null;
     roots.forEach((expirationTime, root) => {
-      scheduleCallback(
-        ImmediatePriority,
-        renderRoot.bind(null, root, expirationTime),
-      );
+      scheduleSyncCallback(renderRoot.bind(null, root, expirationTime));
     });
     // Now flush the immediate queue.
-    flushImmediateQueue();
+    flushSyncCallbackQueue();
   }
 }
 
@@ -617,7 +642,7 @@ export function batchedUpdates<A, R>(fn: A => R, a: A): R {
   } finally {
     workPhase = NotWorking;
     // Flush the immediate callbacks that were scheduled during this batch
-    flushImmediateQueue();
+    flushSyncCallbackQueue();
   }
 }
 
@@ -653,7 +678,7 @@ export function flushSync<A, R>(fn: A => R, a: A): R {
     // Flush the immediate callbacks that were scheduled during this batch.
     // Note that this will happen even if batchedUpdates is higher up
     // the stack.
-    flushImmediateQueue();
+    flushSyncCallbackQueue();
   }
 }
 
@@ -666,13 +691,14 @@ export function flushControlled(fn: () => mixed): void {
     workPhase = prevWorkPhase;
     if (workPhase === NotWorking) {
       // Flush the immediate callbacks that were scheduled during this batch
-      flushImmediateQueue();
+      flushSyncCallbackQueue();
     }
   }
 }
 
 function prepareFreshStack(root, expirationTime) {
-  root.pendingCommitExpirationTime = NoWork;
+  root.finishedWork = null;
+  root.finishedExpirationTime = NoWork;
 
   const timeoutHandle = root.timeoutHandle;
   if (timeoutHandle !== noTimeout) {
@@ -724,13 +750,14 @@ function renderRoot(
     return null;
   }
 
-  if (root.pendingCommitExpirationTime === expirationTime) {
+  if (root.finishedExpirationTime === expirationTime) {
     // There's already a pending commit at this expiration time.
-    root.pendingCommitExpirationTime = NoWork;
-    return commitRoot.bind(null, root, expirationTime);
+    return commitRoot.bind(null, root);
   }
 
-  flushPassiveEffects();
+  if (!revertPassiveEffectsChange) {
+    flushPassiveEffects();
+  }
 
   // If the root or expiration time have changed, throw out the existing stack
   // and prepare a fresh one. Otherwise we'll continue where we left off.
@@ -850,6 +877,9 @@ function renderRoot(
   // something suspended, wait to commit it after a timeout.
   stopFinishedWorkLoopTimer();
 
+  root.finishedWork = root.current.alternate;
+  root.finishedExpirationTime = expirationTime;
+
   const isLocked = resolveLocksOnRoot(root, expirationTime);
   if (isLocked) {
     // This root has a lock that prevents it from committing. Exit. If we begin
@@ -883,15 +913,12 @@ function renderRoot(
         // caused by tearing due to a mutation during an event. Try rendering
         // one more time without yiedling to events.
         prepareFreshStack(root, expirationTime);
-        scheduleCallback(
-          ImmediatePriority,
-          renderRoot.bind(null, root, expirationTime),
-        );
+        scheduleSyncCallback(renderRoot.bind(null, root, expirationTime));
         return null;
       }
       // If we're already rendering synchronously, commit the root in its
       // errored state.
-      return commitRoot.bind(null, root, expirationTime);
+      return commitRoot.bind(null, root);
     }
     case RootSuspended: {
       if (!isSync) {
@@ -915,7 +942,7 @@ function renderRoot(
             // priority work to do. Instead of committing the fallback
             // immediately, wait for more data to arrive.
             root.timeoutHandle = scheduleTimeout(
-              commitRoot.bind(null, root, expirationTime),
+              commitRoot.bind(null, root),
               msUntilTimeout,
             );
             return null;
@@ -923,11 +950,11 @@ function renderRoot(
         }
       }
       // The work expired. Commit immediately.
-      return commitRoot.bind(null, root, expirationTime);
+      return commitRoot.bind(null, root);
     }
     case RootCompleted: {
       // The work completed. Ready to commit.
-      return commitRoot.bind(null, root, expirationTime);
+      return commitRoot.bind(null, root);
     }
     default: {
       invariant(false, 'Unknown root exit status.');
@@ -936,7 +963,10 @@ function renderRoot(
 }
 
 export function markRenderEventTime(expirationTime: ExpirationTime): void {
-  if (expirationTime < workInProgressRootMostRecentEventTime) {
+  if (
+    expirationTime < workInProgressRootMostRecentEventTime &&
+    expirationTime > Never
+  ) {
     workInProgressRootMostRecentEventTime = expirationTime;
   }
 }
@@ -987,7 +1017,7 @@ function performUnitOfWork(unitOfWork: Fiber): Fiber | null {
   setCurrentDebugFiberInDEV(unitOfWork);
 
   let next;
-  if (enableProfilerTimer && (unitOfWork.mode & ProfileMode) !== NoContext) {
+  if (enableProfilerTimer && (unitOfWork.mode & ProfileMode) !== NoMode) {
     startProfilerTimer(unitOfWork);
     next = beginWork(current, unitOfWork, renderExpirationTime);
     stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, true);
@@ -1023,7 +1053,7 @@ function completeUnitOfWork(unitOfWork: Fiber): Fiber | null {
       let next;
       if (
         !enableProfilerTimer ||
-        (workInProgress.mode & ProfileMode) === NoContext
+        (workInProgress.mode & ProfileMode) === NoMode
       ) {
         next = completeWork(current, workInProgress, renderExpirationTime);
       } else {
@@ -1089,7 +1119,7 @@ function completeUnitOfWork(unitOfWork: Fiber): Fiber | null {
 
       if (
         enableProfilerTimer &&
-        (workInProgress.mode & ProfileMode) !== NoContext
+        (workInProgress.mode & ProfileMode) !== NoMode
       ) {
         // Record the render duration for the fiber that errored.
         stopProfilerTimerIfRunningAndRecordDelta(workInProgress, false);
@@ -1153,7 +1183,7 @@ function resetChildExpirationTime(completedWork: Fiber) {
   let newChildExpirationTime = NoWork;
 
   // Bubble up the earliest expiration time.
-  if (enableProfilerTimer && (completedWork.mode & ProfileMode) !== NoContext) {
+  if (enableProfilerTimer && (completedWork.mode & ProfileMode) !== NoMode) {
     // In profiling mode, resetChildExpirationTime is also used to reset
     // profiler durations.
     let actualDuration = completedWork.actualDuration;
@@ -1206,11 +1236,8 @@ function resetChildExpirationTime(completedWork: Fiber) {
   completedWork.childExpirationTime = newChildExpirationTime;
 }
 
-function commitRoot(root, expirationTime) {
-  runWithPriority(
-    ImmediatePriority,
-    commitRootImpl.bind(null, root, expirationTime),
-  );
+function commitRoot(root) {
+  runWithPriority(ImmediatePriority, commitRootImpl.bind(null, root));
   // If there are passive effects, schedule a callback to flush them. This goes
   // outside commitRootImpl so that it inherits the priority of the render.
   if (rootWithPendingPassiveEffects !== null) {
@@ -1223,7 +1250,7 @@ function commitRoot(root, expirationTime) {
   return null;
 }
 
-function commitRootImpl(root, expirationTime) {
+function commitRootImpl(root) {
   flushPassiveEffects();
   flushRenderPhaseStrictModeWarningsInDEV();
   flushSuspensePriorityWarningInDEV();
@@ -1232,8 +1259,20 @@ function commitRootImpl(root, expirationTime) {
     workPhase !== RenderPhase && workPhase !== CommitPhase,
     'Should not already be working.',
   );
-  const finishedWork = root.current.alternate;
-  invariant(finishedWork !== null, 'Should have a work-in-progress root.');
+
+  const finishedWork = root.finishedWork;
+  const expirationTime = root.finishedExpirationTime;
+  if (finishedWork === null) {
+    return null;
+  }
+  root.finishedWork = null;
+  root.finishedExpirationTime = NoWork;
+
+  invariant(
+    finishedWork !== root.current,
+    'Cannot commit the same tree as before. This error is likely caused by ' +
+      'a bug in React. Please file an issue.',
+  );
 
   // commitRoot never returns a continuation; it always finishes synchronously.
   // So we can clear these now to allow a new callback to be scheduled.
@@ -1484,7 +1523,7 @@ function commitRootImpl(root, expirationTime) {
   }
 
   // If layout work was scheduled, flush it now.
-  flushImmediateQueue();
+  flushSyncCallbackQueue();
   return null;
 }
 
@@ -1655,7 +1694,7 @@ export function flushPassiveEffects() {
   }
 
   workPhase = prevWorkPhase;
-  flushImmediateQueue();
+  flushSyncCallbackQueue();
 
   // If additional passive effects were scheduled, increment a counter. If this
   // exceeds the limit, we'll fire a warning.
@@ -1777,6 +1816,12 @@ export function pingSuspendedRoot(
   // Mark the time at which this ping was scheduled.
   root.pingTime = suspendedTime;
 
+  if (root.finishedExpirationTime === suspendedTime) {
+    // If there's a pending fallback waiting to commit, throw it away.
+    root.finishedExpirationTime = NoWork;
+    root.finishedWork = null;
+  }
+
   const currentTime = requestCurrentTime();
   const priorityLevel = inferPriorityFromExpirationTime(
     currentTime,
@@ -1866,7 +1911,11 @@ function computeMsUntilTimeout(
 
   const eventTimeMs: number = inferTimeFromExpirationTime(mostRecentEventTime);
   const currentTimeMs: number = now();
-  const timeElapsed = currentTimeMs - eventTimeMs;
+  let timeElapsed = currentTimeMs - eventTimeMs;
+  if (timeElapsed < 0) {
+    // We get this wrong some time since we estimate the time.
+    timeElapsed = 0;
+  }
 
   let msUntilTimeout = jnd(timeElapsed) - timeElapsed;
 

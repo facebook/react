@@ -670,8 +670,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       // Destroying the first child shouldn't prevent the passive effect from
       // being executed
       ReactNoop.render([passive]);
-      expect(Scheduler).toHaveYielded(['Passive effect']);
-      expect(Scheduler).toFlushAndYield([]);
+      expect(Scheduler).toFlushAndYield(['Passive effect']);
       expect(ReactNoop.getChildren()).toEqual([span('Passive')]);
 
       // (No effects are left to flush.)
@@ -776,11 +775,12 @@ describe('ReactHooksWithNoopRenderer', () => {
         ReactNoop.render(<Counter count={1} />, () =>
           Scheduler.yieldValue('Sync effect'),
         );
-        expect(Scheduler).toHaveYielded([
+        expect(Scheduler).toFlushAndYieldThrough([
           // The previous effect flushes before the reconciliation
           'Committed state when effect was fired: 0',
+          1,
+          'Sync effect',
         ]);
-        expect(Scheduler).toFlushAndYieldThrough([1, 'Sync effect']);
         expect(ReactNoop.getChildren()).toEqual([span(1)]);
 
         ReactNoop.flushPassiveEffects();
@@ -849,8 +849,10 @@ describe('ReactHooksWithNoopRenderer', () => {
       ReactNoop.render(<Counter count={1} />, () =>
         Scheduler.yieldValue('Sync effect'),
       );
-      expect(Scheduler).toHaveYielded(['Schedule update [0]']);
-      expect(Scheduler).toFlushAndYieldThrough(['Count: 0']);
+      expect(Scheduler).toFlushAndYieldThrough([
+        'Schedule update [0]',
+        'Count: 0',
+      ]);
       expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
 
       expect(Scheduler).toFlushAndYieldThrough(['Sync effect']);
@@ -862,7 +864,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
     });
 
-    it('flushes serial effects before enqueueing work', () => {
+    it('flushes passive effects when flushing discrete updates', () => {
       let _updateCount;
       function Counter(props) {
         const [count, updateCount] = useState(0);
@@ -880,15 +882,21 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
 
-      // Enqueuing this update forces the passive effect to be flushed --
+      // A discrete event forces the passive effect to be flushed --
       // updateCount(1) happens first, so 2 wins.
-      ReactNoop.batchedUpdates(() => _updateCount(2));
+
+      ReactNoop.interactiveUpdates(() => {
+        // (use batchedUpdates to silence the act() warning)
+        ReactNoop.batchedUpdates(() => {
+          _updateCount(2)  
+        })        
+      });
       expect(Scheduler).toHaveYielded(['Will set count to 1']);
       expect(Scheduler).toFlushAndYield(['Count: 2']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 2')]);
     });
 
-    it('flushes serial effects before enqueueing work (with tracing)', () => {
+    it('flushes passive effects when flushing discrete updates (with tracing)', () => {
       const onInteractionScheduledWorkCompleted = jest.fn();
       const onWorkCanceled = jest.fn();
       SchedulerTracing.unstable_subscribe({
@@ -929,9 +937,12 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(0);
 
-      // Enqueuing this update forces the passive effect to be flushed --
+      // A discrete event forces the passive effect to be flushed --
       // updateCount(1) happens first, so 2 wins.
-      ReactNoop.batchedUpdates(() => _updateCount(2));
+      ReactNoop.interactiveUpdates(() => {
+        // use batchedUpdates to silence the act warning 
+        ReactNoop.batchedUpdates(() => _updateCount(2));
+      });
       expect(Scheduler).toHaveYielded(['Will set count to 1']);
       expect(Scheduler).toFlushAndYield(['Count: 2']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 2')]);
@@ -941,7 +952,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     });
 
     it(
-      'in sync mode, useEffect is deferred and updates finish synchronously ' +
+      'in legacy mode, useEffect is deferred and updates finish synchronously ' +
         '(in a single batch)',
       () => {
         function Counter(props) {
@@ -1472,8 +1483,8 @@ describe('ReactHooksWithNoopRenderer', () => {
       ReactNoop.render(<Counter count={1} />, () =>
         Scheduler.yieldValue('Sync effect'),
       );
-      expect(Scheduler).toHaveYielded(['Mount normal [current: 0]']);
       expect(Scheduler).toFlushAndYieldThrough([
+        'Mount normal [current: 0]',
         'Unmount layout [current: 0]',
         'Mount layout [current: 1]',
         'Sync effect',
@@ -2070,5 +2081,48 @@ describe('ReactHooksWithNoopRenderer', () => {
     act(() => dispatch());
     expect(Scheduler).toHaveYielded(['Step: 5, Shadow: 5']);
     expect(ReactNoop).toMatchRenderedOutput('5');
+  });
+
+  describe('revertPassiveEffectsChange', () => {
+    it('flushes serial effects before enqueueing work', () => {
+      jest.resetModules();
+
+      ReactFeatureFlags = require('shared/ReactFeatureFlags');
+      ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+      ReactFeatureFlags.enableSchedulerTracing = true;
+      ReactFeatureFlags.revertPassiveEffectsChange = true;
+      React = require('react');
+      ReactNoop = require('react-noop-renderer');
+      Scheduler = require('scheduler');
+      SchedulerTracing = require('scheduler/tracing');
+      useState = React.useState;
+      useEffect = React.useEffect;
+      act = ReactNoop.act;
+
+      let _updateCount;
+      function Counter(props) {
+        const [count, updateCount] = useState(0);
+        _updateCount = updateCount;
+        useEffect(() => {
+          Scheduler.yieldValue(`Will set count to 1`);
+          updateCount(1);
+        }, []);
+        return <Text text={'Count: ' + count} />;
+      }
+
+      ReactNoop.render(<Counter count={0} />, () =>
+        Scheduler.yieldValue('Sync effect'),
+      );
+      expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+
+      // Enqueuing this update forces the passive effect to be flushed --
+      // updateCount(1) happens first, so 2 wins.
+      // (use batchedUpdates to silence the act() warning)
+      ReactNoop.batchedUpdates(() => _updateCount(2));
+      expect(Scheduler).toHaveYielded(['Will set count to 1']);
+      expect(Scheduler).toFlushAndYield(['Count: 2']);
+      expect(ReactNoop.getChildren()).toEqual([span('Count: 2')]);
+    });
   });
 });

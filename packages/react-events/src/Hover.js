@@ -13,11 +13,7 @@ import type {
 } from 'shared/ReactTypes';
 
 import React from 'react';
-import {
-  getEventPointerType,
-  getEventCurrentTarget,
-  isEventPositionWithinTouchHitTarget,
-} from './utils';
+import {isEventPositionWithinTouchHitTarget} from './utils';
 
 type HoverProps = {
   disabled: boolean,
@@ -46,6 +42,7 @@ type HoverEventType = 'hoverstart' | 'hoverend' | 'hoverchange' | 'hovermove';
 type HoverEvent = {|
   target: Element | Document,
   type: HoverEventType,
+  timeStamp: number,
 |};
 
 const DEFAULT_HOVER_END_DELAY_MS = 0;
@@ -64,12 +61,14 @@ if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
 }
 
 function createHoverEvent(
+  context: ReactResponderContext,
   type: HoverEventType,
   target: Element | Document,
 ): HoverEvent {
   return {
     target,
     type,
+    timeStamp: context.getTimeStamp(),
   };
 }
 
@@ -83,6 +82,7 @@ function dispatchHoverChangeEvent(
     props.onHoverChange(bool);
   };
   const syntheticEvent = createHoverEvent(
+    context,
     'hoverchange',
     ((state.hoverTarget: any): Element | Document),
   );
@@ -119,6 +119,7 @@ function dispatchHoverStartEvents(
 
     if (props.onHoverStart) {
       const syntheticEvent = createHoverEvent(
+        context,
         'hoverstart',
         ((target: any): Element | Document),
       );
@@ -178,6 +179,7 @@ function dispatchHoverEndEvents(
 
     if (props.onHoverEnd) {
       const syntheticEvent = createHoverEvent(
+        context,
         'hoverend',
         ((target: any): Element | Document),
       );
@@ -264,7 +266,7 @@ const HoverResponder = {
       }
       return;
     }
-    const pointerType = getEventPointerType(event);
+    const pointerType = context.getEventPointerType(event);
 
     switch (type) {
       // START
@@ -287,7 +289,7 @@ const HoverResponder = {
             state.isOverTouchHitTarget = true;
             return;
           }
-          state.hoverTarget = getEventCurrentTarget(event, context);
+          state.hoverTarget = context.getEventCurrentTarget(event);
           state.ignoreEmulatedMouseEvents = true;
           dispatchHoverStartEvents(event, context, props, state);
         }
@@ -315,6 +317,7 @@ const HoverResponder = {
               } else {
                 if (props.onHoverMove && state.hoverTarget !== null) {
                   const syntheticEvent = createHoverEvent(
+                    context,
                     'hovermove',
                     state.hoverTarget,
                   );
