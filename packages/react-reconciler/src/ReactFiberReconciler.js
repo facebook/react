@@ -64,6 +64,7 @@ import {
 } from './ReactCurrentFiber';
 import {StrictMode} from './ReactTypeOfMode';
 import {Sync} from './ReactFiberExpirationTime';
+import {revertPassiveEffectsChange} from 'shared/ReactFeatureFlags';
 
 type OpaqueRoot = FiberRoot;
 
@@ -152,6 +153,9 @@ function scheduleRootUpdate(
     update.callback = callback;
   }
 
+  if (revertPassiveEffectsChange) {
+    flushPassiveEffects();
+  }
   enqueueUpdate(current, update);
   scheduleWork(current, expirationTime);
 
@@ -391,6 +395,10 @@ if (__DEV__) {
       id--;
     }
     if (currentHook !== null) {
+      if (revertPassiveEffectsChange) {
+        flushPassiveEffects();
+      }
+
       const newState = copyWithSet(currentHook.memoizedState, path, value);
       currentHook.memoizedState = newState;
       currentHook.baseState = newState;
@@ -408,6 +416,9 @@ if (__DEV__) {
 
   // Support DevTools props for function components, forwardRef, memo, host components, etc.
   overrideProps = (fiber: Fiber, path: Array<string | number>, value: any) => {
+    if (revertPassiveEffectsChange) {
+      flushPassiveEffects();
+    }
     fiber.pendingProps = copyWithSet(fiber.memoizedProps, path, value);
     if (fiber.alternate) {
       fiber.alternate.pendingProps = fiber.pendingProps;
@@ -416,6 +427,9 @@ if (__DEV__) {
   };
 
   scheduleUpdate = (fiber: Fiber) => {
+    if (revertPassiveEffectsChange) {
+      flushPassiveEffects();
+    }
     scheduleWork(fiber, Sync);
   };
 

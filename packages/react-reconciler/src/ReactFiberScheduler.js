@@ -24,6 +24,7 @@ import {
   enableProfilerTimer,
   disableYielding,
   enableSchedulerTracing,
+  revertPassiveEffectsChange,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
@@ -560,9 +561,11 @@ export function flushInteractiveUpdates() {
     return;
   }
   flushPendingDiscreteUpdates();
-  // If the discrete updates scheduled passive effects, flush them now so that
-  // they fire before the next serial event.
-  flushPassiveEffects();
+  if (!revertPassiveEffectsChange) {
+    // If the discrete updates scheduled passive effects, flush them now so that
+    // they fire before the next serial event.
+    flushPassiveEffects();
+  }
 }
 
 function resolveLocksOnRoot(root: FiberRoot, expirationTime: ExpirationTime) {
@@ -598,8 +601,10 @@ export function interactiveUpdates<A, B, C, R>(
     // should explicitly call flushInteractiveUpdates.
     flushPendingDiscreteUpdates();
   }
-  // TODO: Remove this call for the same reason as above.
-  flushPassiveEffects();
+  if (!revertPassiveEffectsChange) {
+    // TODO: Remove this call for the same reason as above.
+    flushPassiveEffects();
+  }
   return runWithPriority(UserBlockingPriority, fn.bind(null, a, b, c));
 }
 
@@ -750,7 +755,9 @@ function renderRoot(
     return commitRoot.bind(null, root);
   }
 
-  flushPassiveEffects();
+  if (!revertPassiveEffectsChange) {
+    flushPassiveEffects();
+  }
 
   // If the root or expiration time have changed, throw out the existing stack
   // and prepare a fresh one. Otherwise we'll continue where we left off.
