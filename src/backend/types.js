@@ -32,6 +32,16 @@ export type HookType =
   | 'useImperativeHandle'
   | 'useDebugValue';
 
+// Priority level is copied from React and should be kept in sync:
+// https://github.com/facebook/react/blob/master/packages/react-reconciler/src/SchedulerWithReactIntegration.js
+export opaque type ReactPriorityLevel = 99 | 98 | 97 | 96 | 95 | 90;
+export const ImmediatePriority: ReactPriorityLevel = 99;
+export const UserBlockingPriority: ReactPriorityLevel = 98;
+export const NormalPriority: ReactPriorityLevel = 97;
+export const LowPriority: ReactPriorityLevel = 96;
+export const IdlePriority: ReactPriorityLevel = 95;
+export const NoPriority: ReactPriorityLevel = 90;
+
 // The Fiber type is copied from React and should be kept in sync:
 // https://github.com/facebook/react/blob/master/packages/react-reconciler/src/ReactFiber.js
 // The properties we don't use in DevTools are omitted.
@@ -126,6 +136,7 @@ export type CommitDetailsBackend = {|
   // An interleaved array: fiberID at [i], actualDuration at [i + 1], computed selfDuration at [i + 2].
   durations: Array<number>,
   interactions: Array<InteractionBackend>,
+  priorityLevel: ReactPriorityLevel | null,
   rootID: number,
 |};
 
@@ -193,7 +204,10 @@ export type RendererInterface = {
   ) => ExportedProfilingDataFromRenderer,
   getProfilingSummary: (rootID: number) => ProfilingSummaryBackend,
   getPathForElement: (id: number) => Array<PathFrame> | null,
-  handleCommitFiberRoot: (fiber: Object) => void,
+  handleCommitFiberRoot: (
+    fiber: Object,
+    commitPriority?: ReactPriorityLevel
+  ) => void,
   handleCommitFiberUnmount: (fiber: Object) => void,
   inspectElement: (id: number) => InspectedElement | null,
   logElementToConsole: (id: number) => void,
@@ -234,7 +248,11 @@ export type DevToolsHook = {
   // React uses these methods.
   checkDCE: (fn: Function) => void,
   onCommitFiberUnmount: (rendererID: RendererID, fiber: Object) => void,
-  onCommitFiberRoot: (rendererID: RendererID, fiber: Object) => void,
+  onCommitFiberRoot: (
+    rendererID: RendererID,
+    fiber: Object,
+    commitPriority?: ReactPriorityLevel
+  ) => void,
 };
 
 export type HooksNode = {

@@ -2,7 +2,7 @@
 
 import React, { Fragment, useCallback, useContext, useState } from 'react';
 import { ProfilerContext } from './ProfilerContext';
-import { formatDuration, formatTime } from './utils';
+import { formatDuration, formatPriorityLevel, formatTime } from './utils';
 import { StoreContext } from '../context';
 
 import styles from './SidebarCommitInfo.css';
@@ -56,7 +56,7 @@ export default function SidebarCommitInfo(_: Props) {
     }
   );
 
-  const { interactions } = profilingCache.CommitDetails.read({
+  const { interactions, priorityLevel } = profilingCache.CommitDetails.read({
     commitIndex: selectedCommitIndex,
     rendererID: ((rendererID: any): number),
     rootID: ((rootID: any): number),
@@ -72,6 +72,14 @@ export default function SidebarCommitInfo(_: Props) {
       <div className={styles.Toolbar}>Commit information</div>
       <div className={styles.Content}>
         <ul className={styles.List}>
+          {priorityLevel !== null && (
+            <li className={styles.ListItem}>
+              <label className={styles.Label}>Priority</label>:{' '}
+              <span className={styles.Value}>
+                {formatPriorityLevel(priorityLevel)}
+              </span>
+            </li>
+          )}
           <li className={styles.ListItem}>
             <label className={styles.Label}>Committed at</label>:{' '}
             <span className={styles.Value}>

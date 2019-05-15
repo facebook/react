@@ -48,6 +48,7 @@ import type {
   PathFrame,
   PathMatch,
   ProfilingSummaryBackend,
+  ReactPriorityLevel,
   ReactRenderer,
   RendererInterface,
 } from './types';
@@ -1267,6 +1268,7 @@ export function attach(
               })
             ),
             maxActualDuration: 0,
+            priorityLevel: null,
           };
         }
 
@@ -1284,7 +1286,7 @@ export function attach(
     recordUnmount(fiber, false);
   }
 
-  function handleCommitFiberRoot(root) {
+  function handleCommitFiberRoot(root, priorityLevel) {
     const current = root.current;
     const alternate = current.alternate;
 
@@ -1309,6 +1311,7 @@ export function attach(
           })
         ),
         maxActualDuration: 0,
+        priorityLevel: priorityLevel || null,
       };
     }
 
@@ -1955,6 +1958,7 @@ export function attach(
     durations: Array<number>,
     interactions: Array<InteractionBackend>,
     maxActualDuration: number,
+    priorityLevel: ReactPriorityLevel | null,
   |};
 
   type CommitProfilingMetadataMap = Map<number, Array<CommitProfilingData>>;
@@ -1980,6 +1984,7 @@ export function attach(
           commitIndex,
           durations: commitProfilingData.durations,
           interactions: commitProfilingData.interactions,
+          priorityLevel: commitProfilingData.priorityLevel,
           rootID,
         };
       }
@@ -1993,6 +1998,7 @@ export function attach(
       commitIndex,
       durations: [],
       interactions: [],
+      priorityLevel: null,
       rootID,
     };
   }

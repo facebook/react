@@ -5,6 +5,7 @@ import type {
   CommitDetailsBackend,
   InteractionsBackend,
   ProfilingSummaryBackend,
+  ReactPriorityLevel,
 } from 'src/backend/types';
 
 export type CommitTreeNodeFrontend = {|
@@ -42,6 +43,7 @@ export type CommitDetailsFrontend = {|
   actualDurations: Map<number, number>,
   commitIndex: number,
   interactions: Array<InteractionFrontend>,
+  priorityLevel: ReactPriorityLevel | null,
   rootID: number,
   selfDurations: Map<number, number>,
 |};
