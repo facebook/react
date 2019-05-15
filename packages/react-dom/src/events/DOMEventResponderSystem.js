@@ -17,7 +17,6 @@ import {
   EventTarget as EventTargetWorkTag,
   HostComponent,
   SuspenseComponent,
-  Fragment,
 } from 'shared/ReactWorkTags';
 import type {
   ReactEventResponder,
@@ -34,6 +33,13 @@ import warning from 'shared/warning';
 import {enableEventAPI} from 'shared/ReactFeatureFlags';
 import {invokeGuardedCallbackAndCatchFirstError} from 'shared/ReactErrorUtils';
 import invariant from 'shared/invariant';
+import {
+  isFiberSuspenseAndTimedOut,
+  getSuspenseFallbackChild,
+  getSuspenseChild,
+  isFiberSuspenseChild,
+  getSuspenseFiberFromChild,
+} from 'react-reconciler/src/ReactFiberEvents';
 
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 
@@ -603,41 +609,6 @@ export function processEventQueue(): void {
   } else {
     batchedUpdates(processEvents, events);
   }
-}
-
-function isFiberSuspenseAndTimedOut(fiber: Fiber): boolean {
-  return fiber.tag === SuspenseComponent && fiber.memoizedState !== null;
-}
-
-function isFiberSuspenseChild(fiber: Fiber | null): boolean {
-  if (fiber === null) {
-    return false;
-  }
-  const parent = fiber.return;
-  if (parent !== null && parent.tag === Fragment) {
-    const grandParent = parent.return;
-
-    if (
-      grandParent !== null &&
-      grandParent.tag === SuspenseComponent &&
-      grandParent.stateNode !== null
-    ) {
-      return true;
-    }
-  }
-  return false;
-}
-
-function getSuspenseFiberFromChild(fiber: Fiber): Fiber {
-  return ((((fiber.return: any): Fiber).return: any): Fiber);
-}
-
-function getSuspenseFallbackChild(fiber: Fiber): Fiber | null {
-  return ((((fiber.child: any): Fiber).sibling: any): Fiber).child;
-}
-
-function getSuspenseChild(fiber: Fiber): Fiber | null {
-  return (((fiber.child: any): Fiber): Fiber).child;
 }
 
 function getTargetEventTypesSet(

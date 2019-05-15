@@ -95,7 +95,7 @@ import {
   enableEventAPI,
 } from 'shared/ReactFeatureFlags';
 import {markRenderEventTime, renderDidSuspend} from './ReactFiberScheduler';
-import warning from 'shared/warning';
+import {getEventComponentHostChildrenCount} from './ReactFiberEvents';
 import getComponentName from 'shared/getComponentName';
 
 function markUpdate(workInProgress: Fiber) {
@@ -106,10 +106,6 @@ function markUpdate(workInProgress: Fiber) {
 
 function markRef(workInProgress: Fiber) {
   workInProgress.effectTag |= Ref;
-}
-
-function isFiberSuspenseAndTimedOut(fiber: Fiber): boolean {
-  return fiber.tag === SuspenseComponent && fiber.memoizedState !== null;
 }
 
 let appendAllChildren;
@@ -817,39 +813,11 @@ function completeWork(
 
         if (eventComponentInstance === null) {
           let responderState = null;
-          if (__DEV__ && !responder.allowMultipleHostChildren) {
-            let hostChildrenCount = 0;
-            const findAllHostChildren = node => {
-              if (node.tag === SuspenseComponent) {
-                const fallbackNode = isFiberSuspenseAndTimedOut(node)
-                  ? ((((node.child: any): Fiber).sibling: any): Fiber).child
-                  : ((node.child: any): Fiber).child;
-                if (fallbackNode === null) {
-                  return;
-                }
-                node = fallbackNode;
-              }
-              if (
-                node.tag === HostComponent ||
-                node.tag === HostText ||
-                node.tag === HostPortal
-              ) {
-                hostChildrenCount++;
-              } else {
-                const child = node.child;
-                if (child !== null) {
-                  findAllHostChildren(child);
-                }
-              }
-              const sibling = node.sibling;
-              if (sibling !== null) {
-                findAllHostChildren(sibling);
-              }
-            };
-            if (workInProgress.child !== null) {
-              findAllHostChildren(workInProgress.child);
-            }
-            warning(
+          if (!responder.allowMultipleHostChildren) {
+            const hostChildrenCount = getEventComponentHostChildrenCount(
+              workInProgress,
+            );
+            invariant(
               hostChildrenCount < 2,
               'A "<%s>" event component cannot contain multiple host children.',
               getComponentName(workInProgress.type),
