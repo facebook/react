@@ -97,6 +97,7 @@ import {
 import {markRenderEventTime, renderDidSuspend} from './ReactFiberScheduler';
 import {getEventComponentHostChildrenCount} from './ReactFiberEvents';
 import getComponentName from 'shared/getComponentName';
+import warning from 'shared/warning';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -813,11 +814,11 @@ function completeWork(
 
         if (eventComponentInstance === null) {
           let responderState = null;
-          if (!responder.allowMultipleHostChildren) {
+          if (__DEV__ && !responder.allowMultipleHostChildren) {
             const hostChildrenCount = getEventComponentHostChildrenCount(
               workInProgress,
             );
-            invariant(
+            warning(
               hostChildrenCount < 2,
               'A "<%s>" event component cannot contain multiple host children.',
               getComponentName(workInProgress.type),

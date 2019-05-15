@@ -940,8 +940,8 @@ describe('DOMEventResponderSystem', () => {
 
     expect(() => {
       ReactDOM.render(<Test />, container);
-    }).toThrowError(
-      'A "<TestEventComponent>" event component cannot contain multiple host children.',
+    }).toWarnDev(
+      'Warning: A "<TestEventComponent>" event component cannot contain multiple host children.',
     );
 
     function Component() {
@@ -957,8 +957,8 @@ describe('DOMEventResponderSystem', () => {
 
     expect(() => {
       ReactDOM.render(<Test2 />, container);
-    }).toThrowError(
-      'A "<TestEventComponent>" event component cannot contain multiple host children.',
+    }).toWarnDev(
+      'Warning: A "<TestEventComponent>" event component cannot contain multiple host children.',
     );
   });
 
@@ -1016,8 +1016,8 @@ describe('DOMEventResponderSystem', () => {
 
     expect(() => {
       ReactDOM.render(<Test2 />, container);
-    }).toThrowError(
-      'A "<TestEventComponent>" event component cannot contain multiple host children.',
+    }).toWarnDev(
+      'Warning: A "<TestEventComponent>" event component cannot contain multiple host children.',
     );
   });
 

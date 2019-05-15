@@ -52,17 +52,13 @@ export function getSuspenseFiberFromTimedOutChild(fiber: Fiber): Fiber {
 export function getEventComponentHostChildrenCount(
   eventComponentFiber: Fiber,
 ): number {
-  const eventComponentInstance = eventComponentFiber.stateNode;
   let hostChildrenCount = 0;
-  let node = eventComponentFiber.child;
-  let parent = eventComponentFiber;
 
-  while (node !== null) {
+  const getHostChildrenCount = node => {
     if (isFiberSuspenseAndTimedOut(node)) {
       const fallbackChild = getSuspenseFallbackChild(node);
       if (fallbackChild !== null) {
-        node = fallbackChild;
-        continue;
+        getHostChildrenCount(fallbackChild);
       }
     } else if (
       node.tag === HostComponent ||
@@ -73,32 +69,17 @@ export function getEventComponentHostChildrenCount(
     } else {
       const child = node.child;
       if (child !== null) {
-        child.return = parent;
-        parent = node;
-        node = child;
-        continue;
+        getHostChildrenCount(child);
       }
     }
     const sibling = node.sibling;
     if (sibling !== null) {
-      sibling.return = parent;
-      node = sibling;
-      continue;
+      getHostChildrenCount(sibling);
     }
-    let nextParent;
-    if (isFiberSuspenseTimedOutChild(node)) {
-      nextParent = getSuspenseFiberFromTimedOutChild(node);
-    } else {
-      nextParent = node.return;
-      if (nextParent === null) {
-        break;
-      }
-    }
-    if (nextParent.stateNode === eventComponentInstance) {
-      break;
-    }
-    parent = nextParent.return;
-    node = nextParent.sibling;
+  };
+
+  if (eventComponentFiber.child !== null) {
+    getHostChildrenCount(eventComponentFiber.child);
   }
   return hostChildrenCount;
 }

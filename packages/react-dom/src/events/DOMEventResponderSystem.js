@@ -355,48 +355,11 @@ const eventResponderContext: ReactResponderContext = {
     validateResponderContext();
     const focusableElements = [];
     const eventComponentInstance = ((currentInstance: any): ReactEventComponentInstance);
-    let node = ((eventComponentInstance.currentFiber: any): Fiber).child;
+    const child = ((eventComponentInstance.currentFiber: any): Fiber).child;
 
-    while (node !== null) {
-      if (isFiberSuspenseAndTimedOut(node)) {
-        const fallbackChild = getSuspenseFallbackChild(node);
-        if (fallbackChild !== null) {
-          node = fallbackChild;
-          continue;
-        }
-      } else {
-        if (isFiberHostComponentFocusable(node)) {
-          focusableElements.push(node.stateNode);
-        } else {
-          const child = node.child;
-
-          if (child !== null) {
-            node = child;
-            continue;
-          }
-        }
-      }
-      const sibling = node.sibling;
-
-      if (sibling !== null) {
-        node = sibling;
-        continue;
-      }
-      let parent;
-      if (isFiberSuspenseTimedOutChild(node)) {
-        parent = getSuspenseFiberFromTimedOutChild(node);
-      } else {
-        parent = node.return;
-        if (parent === null) {
-          break;
-        }
-      }
-      if (parent.stateNode === currentInstance) {
-        break;
-      }
-      node = parent.sibling;
+    if (child !== null) {
+      collectFocusableElements(child, focusableElements);
     }
-
     return focusableElements;
   },
   getActiveDocument,
@@ -456,6 +419,33 @@ const eventResponderContext: ReactResponderContext = {
     return false;
   },
 };
+
+function collectFocusableElements(
+  node: Fiber,
+  focusableElements: Array<HTMLElement>,
+): void {
+  if (isFiberSuspenseAndTimedOut(node)) {
+    const fallbackChild = getSuspenseFallbackChild(node);
+    if (fallbackChild !== null) {
+      collectFocusableElements(fallbackChild, focusableElements);
+    }
+  } else {
+    if (isFiberHostComponentFocusable(node)) {
+      focusableElements.push(node.stateNode);
+    } else {
+      const child = node.child;
+
+      if (child !== null) {
+        collectFocusableElements(child, focusableElements);
+      }
+    }
+  }
+  const sibling = node.sibling;
+
+  if (sibling !== null) {
+    collectFocusableElements(sibling, focusableElements);
+  }
+}
 
 function isTargetWithinEventComponent(target: Element | Document): boolean {
   validateResponderContext();
