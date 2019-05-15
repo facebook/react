@@ -146,10 +146,10 @@ describe('ReactBatchedMode', () => {
     expect(root).toMatchRenderedOutput('A0B0');
 
     // Schedule a batched update to the first sibling
-    act(() => foo1.current.setStep(1));
+    ReactNoop.batchedUpdates(() => foo1.current.setStep(1));
 
     // Before it flushes, update the second sibling inside flushSync
-    act(() =>
+    ReactNoop.batchedUpdates(() =>
       ReactNoop.flushSync(() => {
         foo2.current.setStep(1);
       }),
