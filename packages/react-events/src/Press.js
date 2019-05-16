@@ -428,6 +428,29 @@ function calculateDelayMS(delay: ?number, min = 0, fallback = 0) {
   return Math.max(min, maybeNumber != null ? maybeNumber : fallback);
 }
 
+function getAbsoluteBoundingClientRect(
+  target: Element,
+): {left: number, right: number, bottom: number, top: number} {
+  const clientRect = target.getBoundingClientRect();
+  let {left, right, bottom, top} = clientRect;
+  let node = target.parentNode;
+  let offsetX = 0;
+  let offsetY = 0;
+
+  // Traverse through all offset nodes
+  while (node != null && node.nodeType !== Node.DOCUMENT_NODE) {
+    offsetX += (node: any).scrollLeft;
+    offsetY += (node: any).scrollTop;
+    node = node.parentNode;
+  }
+  return {
+    left: left + offsetX,
+    right: right + offsetX,
+    bottom: bottom + offsetY,
+    top: top + offsetY,
+  };
+}
+
 // TODO: account for touch hit slop
 function calculateResponderRegion(
   context: ReactResponderContext,
@@ -440,12 +463,8 @@ function calculateResponderRegion(
     props.pressRetentionOffset,
   );
 
-  const clientRect = target.getBoundingClientRect();
-
-  let bottom = clientRect.bottom;
-  let left = clientRect.left;
-  let right = clientRect.right;
-  let top = clientRect.top;
+  const clientRect = getAbsoluteBoundingClientRect(target);
+  let {left, right, bottom, top} = clientRect;
 
   if (pressRetentionOffset) {
     if (pressRetentionOffset.bottom != null) {

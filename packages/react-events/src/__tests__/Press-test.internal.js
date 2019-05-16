@@ -1085,6 +1085,57 @@ describe('Event responder: Press', () => {
       });
     });
 
+    describe('the page offset changes', () => {
+      it('"onPress" is called on release', () => {
+        let events = [];
+        const ref = React.createRef();
+        const createEventHandler = msg => () => {
+          events.push(msg);
+        };
+
+        const element = (
+          <Press
+            onPress={createEventHandler('onPress')}
+            onPressChange={createEventHandler('onPressChange')}
+            onPressMove={createEventHandler('onPressMove')}
+            onPressStart={createEventHandler('onPressStart')}
+            onPressEnd={createEventHandler('onPressEnd')}>
+            <div ref={ref} />
+          </Press>
+        );
+
+        ReactDOM.render(element, container);
+
+        ref.current.getBoundingClientRect = getBoundingClientRectMock;
+        // Emulate the element being offset
+        document.body.scrollTop = 1000;
+        const updatedCoordinatesInside = {
+          pageX: coordinatesInside.pageX,
+          pageY: coordinatesInside.pageY + 1000,
+        };
+        ref.current.dispatchEvent(
+          createEvent('pointerdown', updatedCoordinatesInside),
+        );
+        container.dispatchEvent(
+          createEvent('pointermove', updatedCoordinatesInside),
+        );
+        container.dispatchEvent(
+          createEvent('pointerup', updatedCoordinatesInside),
+        );
+        jest.runAllTimers();
+        document.body.scrollTop = 0;
+
+        expect(events).toEqual([
+          'onPressStart',
+          'onPressChange',
+          'onPressMove',
+          'onPressEnd',
+          'onPressChange',
+          'onPress',
+        ]);
+      });
+    });
+
     describe('beyond bounds of hit rect', () => {
       /** ┌──────────────────┐
        *  │  ┌────────────┐  │
