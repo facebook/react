@@ -755,9 +755,7 @@ function renderRoot(
     return commitRoot.bind(null, root);
   }
 
-  if (!revertPassiveEffectsChange) {
-    flushPassiveEffects();
-  }
+  flushPassiveEffects();
 
   // If the root or expiration time have changed, throw out the existing stack
   // and prepare a fresh one. Otherwise we'll continue where we left off.

@@ -966,7 +966,7 @@ describe('ReactIncrementalSideEffects', () => {
 
     // However, once we render fully, we will have enough time to finish it all
     // at once.
-    expect(Scheduler).toFlushAndYield(['Bar', 'Bar', 'Bar']);
+    expect(Scheduler).toFlushAndYield(['Bar', 'Bar']);
     expect(ReactNoop.getChildrenAsJSX()).toEqual(
       <div>
         <span prop={1} />
