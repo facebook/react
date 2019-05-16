@@ -197,7 +197,7 @@ const eventResponderContext: ReactResponderContext = {
         }
         if (
           fiber.tag === EventComponent &&
-          fiber.stateNode.responder === responder
+          (fiber.stateNode === null || fiber.stateNode.responder === responder)
         ) {
           return false;
         }
