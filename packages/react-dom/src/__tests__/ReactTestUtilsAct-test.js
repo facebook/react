@@ -10,7 +10,6 @@
 let React;
 let ReactDOM;
 let ReactTestUtils;
-let ReactFeatureFlags;
 let SchedulerTracing;
 let Scheduler;
 let act;
@@ -60,7 +59,6 @@ function runActTests(label, render, unmount) {
       ReactTestUtils = require('react-dom/test-utils');
       SchedulerTracing = require('scheduler/tracing');
       Scheduler = require('scheduler');
-      ReactFeatureFlags = require('shared/ReactFeatureFlags');
       act = ReactTestUtils.act;
       container = document.createElement('div');
       document.body.appendChild(container);
@@ -86,7 +84,7 @@ function runActTests(label, render, unmount) {
       });
 
       it('flushes effects on every call', () => {
-        function App(props) {
+        function App() {
           let [ctr, setCtr] = React.useState(0);
           React.useEffect(() => {
             Scheduler.yieldValue(ctr);
@@ -515,22 +513,3 @@ function runActTests(label, render, unmount) {
     });
   });
 }
-
-describe('mocked scheduler', () => {
-  beforeEach(() => {
-    jest.resetModules();
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.warnAboutMissingMockScheduler = true;
-    jest.unmock('scheduler');
-    ReactTestUtils = require('react-dom/test-utils');
-    act = ReactTestUtils.act;
-  });
-  it("should warn when the scheduler isn't mocked", () => {
-    expect(() => act(() => {})).toWarnDev(
-      [
-        'Starting from React v17, the "scheduler" module will need to be mocked',
-      ],
-      {withoutStack: true},
-    );
-  });
-});
