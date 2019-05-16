@@ -90,7 +90,7 @@ function createRootErrorUpdate(
   errorInfo: CapturedValue<mixed>,
   expirationTime: ExpirationTime,
 ): Update<mixed> {
-  const update = createUpdate(expirationTime);
+  const update = createUpdate(expirationTime, null);
   // Unmount the root by rendering null.
   update.tag = CaptureUpdate;
   // Caution: React DevTools currently depends on this property
@@ -109,7 +109,7 @@ function createClassErrorUpdate(
   errorInfo: CapturedValue<mixed>,
   expirationTime: ExpirationTime,
 ): Update<mixed> {
-  const update = createUpdate(expirationTime);
+  const update = createUpdate(expirationTime, null);
   update.tag = CaptureUpdate;
   const getDerivedStateFromError = fiber.type.getDerivedStateFromError;
   if (typeof getDerivedStateFromError === 'function') {
@@ -265,7 +265,7 @@ function throwException(
               // When we try rendering again, we should not reuse the current fiber,
               // since it's known to be in an inconsistent state. Use a force updte to
               // prevent a bail out.
-              const update = createUpdate(Sync);
+              const update = createUpdate(Sync, null);
               update.tag = ForceUpdate;
               enqueueUpdate(sourceFiber, update);
             }
@@ -286,12 +286,6 @@ function throwException(
 
         workInProgress.effectTag |= ShouldCapture;
         workInProgress.expirationTime = renderExpirationTime;
-
-        if (!hasInvisibleParentBoundary) {
-          // TODO: If we're not in an invisible subtree, then we need to mark this render
-          // pass as needing to suspend for longer to avoid showing this fallback state.
-          // We could do it here or when we render the fallback.
-        }
 
         return;
       } else if (

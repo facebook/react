@@ -40,6 +40,7 @@ import {
   useRef,
   useState,
 } from './ReactHooks';
+import {withSuspenseConfig} from './ReactBatchConfig';
 import {
   createElementWithValidation,
   createFactoryWithValidation,
@@ -94,6 +95,8 @@ const React = {
   isValidElement: isValidElement,
 
   version: ReactVersion,
+
+  unstable_withSuspenseConfig: withSuspenseConfig,
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: ReactSharedInternals,
 };

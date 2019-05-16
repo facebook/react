@@ -226,6 +226,7 @@ ReactBatch.prototype.render = function(children: ReactNodeList) {
     internalRoot,
     null,
     expirationTime,
+    null,
     work._onCommit,
   );
   return work;

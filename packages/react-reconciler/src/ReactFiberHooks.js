@@ -12,6 +12,7 @@ import type {SideEffectTag} from 'shared/ReactSideEffectTags';
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {HookEffectTag} from './ReactHookEffectTags';
+import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
@@ -34,7 +35,7 @@ import {
   flushPassiveEffects,
   requestCurrentTime,
   warnIfNotCurrentlyActingUpdatesInDev,
-  markRenderEventTime,
+  markRenderEventTimeAndConfig,
 } from './ReactFiberScheduler';
 
 import invariant from 'shared/invariant';
@@ -43,6 +44,7 @@ import getComponentName from 'shared/getComponentName';
 import is from 'shared/objectIs';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork';
 import {revertPassiveEffectsChange} from 'shared/ReactFeatureFlags';
+import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 
 const {ReactCurrentDispatcher} = ReactSharedInternals;
 
@@ -82,6 +84,7 @@ export type Dispatcher = {
 
 type Update<S, A> = {
   expirationTime: ExpirationTime,
+  suspenseConfig: null | SuspenseConfig,
   action: A,
   eagerReducer: ((S, A) => S) | null,
   eagerState: S | null,
@@ -728,7 +731,10 @@ function updateReducer<S, I, A>(
         // TODO: We should skip this update if it was already committed but currently
         // we have no way of detecting the difference between a committed and suspended
         // update here.
-        markRenderEventTime(updateExpirationTime);
+        markRenderEventTimeAndConfig(
+          updateExpirationTime,
+          update.suspenseConfig,
+        );
 
         // Process this update.
         if (update.eagerReducer === reducer) {
@@ -1089,6 +1095,7 @@ function dispatchAction<S, A>(
     didScheduleRenderPhaseUpdate = true;
     const update: Update<S, A> = {
       expirationTime: renderExpirationTime,
+      suspenseConfig: null,
       action,
       eagerReducer: null,
       eagerState: null,
@@ -1114,10 +1121,16 @@ function dispatchAction<S, A>(
     }
 
     const currentTime = requestCurrentTime();
-    const expirationTime = computeExpirationForFiber(currentTime, fiber);
+    const suspenseConfig = requestCurrentSuspenseConfig();
+    const expirationTime = computeExpirationForFiber(
+      currentTime,
+      fiber,
+      suspenseConfig,
+    );
 
     const update: Update<S, A> = {
       expirationTime,
+      suspenseConfig,
       action,
       eagerReducer: null,
       eagerState: null,
