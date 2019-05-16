@@ -38,6 +38,8 @@ type HotUpdate = {|
 |};
 
 let familiesByType: WeakMap<any, Family> | null = null;
+// $FlowFixMe Flow gets confused by a WeakSet feature check below.
+let failedBoundaries: WeakSet<Fiber> | null = null;
 
 export function resolveFunctionForHotReloading(type: any): any {
   if (__DEV__) {
@@ -157,6 +159,22 @@ export function isCompatibleFamilyForHotReloading(
   }
 }
 
+export function markFailedErrorBoundaryForHotReloading(fiber: Fiber) {
+  if (__DEV__) {
+    if (familiesByType === null) {
+      // Not hot reloading.
+      return;
+    }
+    if (typeof WeakSet !== 'function') {
+      return;
+    }
+    if (failedBoundaries === null) {
+      failedBoundaries = new WeakSet();
+    }
+    failedBoundaries.add(fiber);
+  }
+}
+
 export function scheduleHotUpdate(hotUpdate: HotUpdate): void {
   if (__DEV__) {
     // TODO: warn if its identity changes over time?
@@ -181,7 +199,7 @@ function scheduleFibersWithFamiliesRecursively(
   staleFamilies: Set<Family>,
 ) {
   if (__DEV__) {
-    const {child, sibling, tag, type} = fiber;
+    const {alternate, child, sibling, tag, type} = fiber;
 
     let candidateType = null;
     switch (tag) {
@@ -209,6 +227,16 @@ function scheduleFibersWithFamiliesRecursively(
         } else if (updatedFamilies.has(family)) {
           scheduleWork(fiber, Sync);
         }
+      }
+    }
+
+    if (failedBoundaries !== null) {
+      if (
+        failedBoundaries.has(fiber) ||
+        (alternate !== null && failedBoundaries.has(alternate))
+      ) {
+        fiber._debugNeedsRemount = true;
+        scheduleWork(fiber, Sync);
       }
     }
 

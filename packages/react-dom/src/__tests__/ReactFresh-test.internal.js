@@ -1774,4 +1774,260 @@ describe('ReactFresh', () => {
       expect(el.firstChild.style.color).toBe('orange');
     }
   });
+
+  it('remounts failed error boundaries (componentDidCatch)', () => {
+    if (__DEV__) {
+      render(() => {
+        function Hello() {
+          return <h1>Hi</h1>;
+        }
+        __register__(Hello, 'Hello');
+
+        class Boundary extends React.Component {
+          state = {error: null};
+          componentDidCatch(error) {
+            this.setState({error});
+          }
+          render() {
+            if (this.state.error) {
+              return <h1>Oops: {this.state.error.message}</h1>;
+            }
+            return this.props.children;
+          }
+        }
+
+        function App() {
+          return (
+            <React.Fragment>
+              <p>A</p>
+              <Boundary>
+                <Hello />
+              </Boundary>
+              <p>B</p>
+            </React.Fragment>
+          );
+        }
+
+        return App;
+      });
+
+      expect(container.innerHTML).toBe('<p>A</p><h1>Hi</h1><p>B</p>');
+      const firstP = container.firstChild;
+      const secondP = firstP.nextSibling.nextSibling;
+
+      // Perform a hot update that fails.
+      patch(() => {
+        function Hello() {
+          throw new Error('No');
+        }
+        __register__(Hello, 'Hello');
+      });
+
+      expect(container.innerHTML).toBe('<p>A</p><h1>Oops: No</h1><p>B</p>');
+      expect(container.firstChild).toBe(firstP);
+      expect(container.firstChild.nextSibling.nextSibling).toBe(secondP);
+
+      // Perform a hot update that fixes the error.
+      patch(() => {
+        function Hello() {
+          return <h1>Fixed!</h1>;
+        }
+        __register__(Hello, 'Hello');
+      });
+
+      // This should remount the error boundary (but not anything above it).
+      expect(container.innerHTML).toBe('<p>A</p><h1>Fixed!</h1><p>B</p>');
+      expect(container.firstChild).toBe(firstP);
+      expect(container.firstChild.nextSibling.nextSibling).toBe(secondP);
+
+      // Verify next hot reload doesn't remount anything.
+      const helloNode = container.firstChild.nextSibling;
+      patch(() => {
+        function Hello() {
+          return <h1>Nice.</h1>;
+        }
+        __register__(Hello, 'Hello');
+      });
+      expect(container.firstChild.nextSibling).toBe(helloNode);
+      expect(helloNode.textContent).toBe('Nice.');
+    }
+  });
+
+  it('remounts failed error boundaries (getDerivedStateFromError)', () => {
+    if (__DEV__) {
+      render(() => {
+        function Hello() {
+          return <h1>Hi</h1>;
+        }
+        __register__(Hello, 'Hello');
+
+        class Boundary extends React.Component {
+          state = {error: null};
+          static getDerivedStateFromError(error) {
+            return {error};
+          }
+          render() {
+            if (this.state.error) {
+              return <h1>Oops: {this.state.error.message}</h1>;
+            }
+            return this.props.children;
+          }
+        }
+
+        function App() {
+          return (
+            <React.Fragment>
+              <p>A</p>
+              <Boundary>
+                <Hello />
+              </Boundary>
+              <p>B</p>
+            </React.Fragment>
+          );
+        }
+
+        return App;
+      });
+
+      expect(container.innerHTML).toBe('<p>A</p><h1>Hi</h1><p>B</p>');
+      const firstP = container.firstChild;
+      const secondP = firstP.nextSibling.nextSibling;
+
+      // Perform a hot update that fails.
+      patch(() => {
+        function Hello() {
+          throw new Error('No');
+        }
+        __register__(Hello, 'Hello');
+      });
+
+      expect(container.innerHTML).toBe('<p>A</p><h1>Oops: No</h1><p>B</p>');
+      expect(container.firstChild).toBe(firstP);
+      expect(container.firstChild.nextSibling.nextSibling).toBe(secondP);
+
+      // Perform a hot update that fixes the error.
+      patch(() => {
+        function Hello() {
+          return <h1>Fixed!</h1>;
+        }
+        __register__(Hello, 'Hello');
+      });
+
+      // This should remount the error boundary (but not anything above it).
+      expect(container.innerHTML).toBe('<p>A</p><h1>Fixed!</h1><p>B</p>');
+      expect(container.firstChild).toBe(firstP);
+      expect(container.firstChild.nextSibling.nextSibling).toBe(secondP);
+
+      // Verify next hot reload doesn't remount anything.
+      const helloNode = container.firstChild.nextSibling;
+      patch(() => {
+        function Hello() {
+          return <h1>Nice.</h1>;
+        }
+        __register__(Hello, 'Hello');
+      });
+      expect(container.firstChild.nextSibling).toBe(helloNode);
+      expect(helloNode.textContent).toBe('Nice.');
+    }
+  });
+
+  it('remounts error boundaries that failed asynchronously after hot update', () => {
+    if (__DEV__) {
+      render(() => {
+        function Hello() {
+          const [x] = React.useState('');
+          React.useEffect(() => {}, []);
+          x.slice(); // Doesn't throw initially.
+          return <h1>Hi</h1>;
+        }
+        __register__(Hello, 'Hello');
+
+        class Boundary extends React.Component {
+          state = {error: null};
+          static getDerivedStateFromError(error) {
+            return {error};
+          }
+          render() {
+            if (this.state.error) {
+              return <h1>Oops: {this.state.error.message}</h1>;
+            }
+            return this.props.children;
+          }
+        }
+
+        function App() {
+          return (
+            <React.Fragment>
+              <p>A</p>
+              <Boundary>
+                <Hello />
+              </Boundary>
+              <p>B</p>
+            </React.Fragment>
+          );
+        }
+
+        return App;
+      });
+
+      expect(container.innerHTML).toBe('<p>A</p><h1>Hi</h1><p>B</p>');
+      const firstP = container.firstChild;
+      const secondP = firstP.nextSibling.nextSibling;
+
+      // Perform a hot update that fails.
+      patch(() => {
+        function Hello() {
+          const [x, setX] = React.useState('');
+          React.useEffect(() => {
+            setTimeout(() => {
+              setX(42); // This will crash next render.
+            }, 1);
+          }, []);
+          x.slice();
+          return <h1>Hi</h1>;
+        }
+        __register__(Hello, 'Hello');
+      });
+
+      expect(container.innerHTML).toBe('<p>A</p><h1>Hi</h1><p>B</p>');
+      act(() => {
+        jest.runAllTimers();
+      });
+      expect(container.innerHTML).toBe(
+        '<p>A</p><h1>Oops: x.slice is not a function</h1><p>B</p>',
+      );
+      expect(container.firstChild).toBe(firstP);
+      expect(container.firstChild.nextSibling.nextSibling).toBe(secondP);
+
+      // Perform a hot update that fixes the error.
+      patch(() => {
+        function Hello() {
+          const [x] = React.useState('');
+          React.useEffect(() => {}, []); // Removes the bad effect code.
+          x.slice(); // Doesn't throw initially.
+          return <h1>Fixed!</h1>;
+        }
+        __register__(Hello, 'Hello');
+      });
+
+      // This should remount the error boundary (but not anything above it).
+      expect(container.innerHTML).toBe('<p>A</p><h1>Fixed!</h1><p>B</p>');
+      expect(container.firstChild).toBe(firstP);
+      expect(container.firstChild.nextSibling.nextSibling).toBe(secondP);
+
+      // Verify next hot reload doesn't remount anything.
+      const helloNode = container.firstChild.nextSibling;
+      patch(() => {
+        function Hello() {
+          const [x] = React.useState('');
+          React.useEffect(() => {}, []);
+          x.slice();
+          return <h1>Nice.</h1>;
+        }
+        __register__(Hello, 'Hello');
+      });
+      expect(container.firstChild.nextSibling).toBe(helloNode);
+      expect(helloNode.textContent).toBe('Nice.');
+    }
+  });
 });
