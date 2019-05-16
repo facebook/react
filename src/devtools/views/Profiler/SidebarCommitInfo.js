@@ -2,7 +2,7 @@
 
 import React, { Fragment, useCallback, useContext, useState } from 'react';
 import { ProfilerContext } from './ProfilerContext';
-import { formatDuration, formatPriorityLevel, formatTime } from './utils';
+import { formatDuration, formatTime } from './utils';
 import { StoreContext } from '../context';
 
 import styles from './SidebarCommitInfo.css';
@@ -75,9 +75,7 @@ export default function SidebarCommitInfo(_: Props) {
           {priorityLevel !== null && (
             <li className={styles.ListItem}>
               <label className={styles.Label}>Priority</label>:{' '}
-              <span className={styles.Value}>
-                {formatPriorityLevel(priorityLevel)}
-              </span>
+              <span className={styles.Value}>{priorityLevel}</span>
             </li>
           )}
           <li className={styles.ListItem}>

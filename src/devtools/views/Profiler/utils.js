@@ -1,14 +1,6 @@
 // @flow
 
 import { PROFILER_EXPORT_VERSION } from 'src/constants';
-import {
-  ImmediatePriority,
-  UserBlockingPriority,
-  NormalPriority,
-  LowPriority,
-  IdlePriority,
-  NoPriority,
-} from 'src/backend/types';
 
 import type {
   ExportedProfilingSummaryFromFrontend,
@@ -17,10 +9,7 @@ import type {
   ProfilingSnapshotNode,
 } from './types';
 
-import type {
-  ExportedProfilingDataFromRenderer,
-  ReactPriorityLevel,
-} from 'src/backend/types';
+import type { ExportedProfilingDataFromRenderer } from 'src/backend/types';
 
 const commitGradient = [
   'var(--color-commit-gradient-0)',
@@ -194,24 +183,6 @@ export const getGradientColor = (value: number) => {
     index = Math.max(0, Math.min(maxIndex, value)) * maxIndex;
   }
   return commitGradient[Math.round(index)];
-};
-
-export const formatPriorityLevel = (priorityLevel: ReactPriorityLevel) => {
-  switch (priorityLevel) {
-    case ImmediatePriority:
-      return 'Immediate';
-    case UserBlockingPriority:
-      return 'User-Blocking';
-    case NormalPriority:
-      return 'Normal';
-    case LowPriority:
-      return 'Low';
-    case IdlePriority:
-      return 'Idle';
-    case NoPriority:
-    default:
-      return 'Unknown';
-  }
 };
 
 export const formatDuration = (duration: number) =>

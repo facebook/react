@@ -48,7 +48,6 @@ import type {
   PathFrame,
   PathMatch,
   ProfilingSummaryBackend,
-  ReactPriorityLevel,
   ReactRenderer,
   RendererInterface,
 } from './types';
@@ -92,12 +91,27 @@ function getInternalReactConstants(version) {
     Placement: 0b10,
   };
 
+  // **********************************************************
+  // The section below is copied from files in React repo.
+  // Keep it in sync, and add version guards if it changes.
+  //
+  // Technically these priority levels are invalid for versions before 16.9,
+  // but 16.9 is the first version to report priority level to DevTools,
+  // so we can avoid checking for earlier versions and support pre-16.9 canary releases in the process.
+  const ReactPriorityLevels = {
+    ImmediatePriority: 99,
+    UserBlockingPriority: 98,
+    NormalPriority: 97,
+    LowPriority: 96,
+    IdlePriority: 95,
+    NoPriority: 90,
+  };
+
   let ReactTypeOfWork;
 
   // **********************************************************
   // The section below is copied from files in React repo.
   // Keep it in sync, and add version guards if it changes.
-  // **********************************************************
   if (gte(version, '16.6.0-beta.0')) {
     ReactTypeOfWork = {
       ClassComponent: 1,
@@ -185,6 +199,7 @@ function getInternalReactConstants(version) {
   // **********************************************************
 
   return {
+    ReactPriorityLevels,
     ReactTypeOfWork,
     ReactSymbols,
     ReactTypeOfSideEffect,
@@ -198,6 +213,7 @@ export function attach(
   global: Object
 ): RendererInterface {
   const {
+    ReactPriorityLevels,
     ReactTypeOfWork,
     ReactSymbols,
     ReactTypeOfSideEffect,
@@ -222,6 +238,14 @@ export function attach(
     SimpleMemoComponent,
     SuspenseComponent,
   } = ReactTypeOfWork;
+  const {
+    ImmediatePriority,
+    UserBlockingPriority,
+    NormalPriority,
+    LowPriority,
+    IdlePriority,
+    NoPriority,
+  } = ReactPriorityLevels;
   const {
     CONCURRENT_MODE_NUMBER,
     CONCURRENT_MODE_SYMBOL_STRING,
@@ -1311,7 +1335,8 @@ export function attach(
           })
         ),
         maxActualDuration: 0,
-        priorityLevel: priorityLevel || null,
+        priorityLevel:
+          priorityLevel == null ? null : formatPriorityLevel(priorityLevel),
       };
     }
 
@@ -1958,7 +1983,7 @@ export function attach(
     durations: Array<number>,
     interactions: Array<InteractionBackend>,
     maxActualDuration: number,
-    priorityLevel: ReactPriorityLevel | null,
+    priorityLevel: string | null,
   |};
 
   type CommitProfilingMetadataMap = Map<number, Array<CommitProfilingData>>;
@@ -2407,6 +2432,28 @@ export function attach(
       isFullMatch: trackedPathMatchDepth === trackedPath.length - 1,
     };
   }
+
+  const formatPriorityLevel = (priorityLevel: ?number) => {
+    if (priorityLevel == null) {
+      return 'Unknown';
+    }
+
+    switch (priorityLevel) {
+      case ImmediatePriority:
+        return 'Immediate';
+      case UserBlockingPriority:
+        return 'User-Blocking';
+      case NormalPriority:
+        return 'Normal';
+      case LowPriority:
+        return 'Low';
+      case IdlePriority:
+        return 'Idle';
+      case NoPriority:
+      default:
+        return 'Unknown';
+    }
+  };
 
   return {
     cleanup,

@@ -11,7 +11,7 @@ Object {
   },
   "commitIndex": 0,
   "interactions": Array [],
-  "priorityLevel": 99,
+  "priorityLevel": "Immediate",
   "rootID": 1,
   "selfDurations": Map {
     1 => 0,
@@ -34,7 +34,7 @@ Object {
   },
   "commitIndex": 1,
   "interactions": Array [],
-  "priorityLevel": 99,
+  "priorityLevel": "Immediate",
   "rootID": 1,
   "selfDurations": Map {
     3 => 0,
@@ -55,7 +55,7 @@ Object {
   },
   "commitIndex": 2,
   "interactions": Array [],
-  "priorityLevel": 99,
+  "priorityLevel": "Immediate",
   "rootID": 1,
   "selfDurations": Map {
     3 => 0,
@@ -73,7 +73,7 @@ Object {
   },
   "commitIndex": 3,
   "interactions": Array [],
-  "priorityLevel": 99,
+  "priorityLevel": "Immediate",
   "rootID": 1,
   "selfDurations": Map {
     2 => 10,
@@ -95,7 +95,7 @@ Object {
       },
       "commitIndex": 0,
       "interactions": Array [],
-      "priorityLevel": 99,
+      "priorityLevel": "Immediate",
       "rootID": 1,
       "selfDurations": Map {
         1 => 0,
@@ -115,7 +115,7 @@ Object {
       },
       "commitIndex": 1,
       "interactions": Array [],
-      "priorityLevel": 99,
+      "priorityLevel": "Immediate",
       "rootID": 1,
       "selfDurations": Map {
         3 => 0,
@@ -133,7 +133,7 @@ Object {
       },
       "commitIndex": 2,
       "interactions": Array [],
-      "priorityLevel": 99,
+      "priorityLevel": "Immediate",
       "rootID": 1,
       "selfDurations": Map {
         3 => 0,
@@ -148,7 +148,7 @@ Object {
       },
       "commitIndex": 3,
       "interactions": Array [],
-      "priorityLevel": 99,
+      "priorityLevel": "Immediate",
       "rootID": 1,
       "selfDurations": Map {
         2 => 10,
@@ -332,7 +332,7 @@ Object {
   },
   "commitIndex": 0,
   "interactions": Array [],
-  "priorityLevel": 99,
+  "priorityLevel": "Immediate",
   "rootID": 1,
   "selfDurations": Map {
     1 => 0,
@@ -353,7 +353,7 @@ Object {
   },
   "commitIndex": 0,
   "interactions": Array [],
-  "priorityLevel": 99,
+  "priorityLevel": "Immediate",
   "rootID": 1,
   "selfDurations": Map {
     1 => 0,
@@ -372,7 +372,7 @@ Object {
   },
   "commitIndex": 1,
   "interactions": Array [],
-  "priorityLevel": 99,
+  "priorityLevel": "Immediate",
   "rootID": 1,
   "selfDurations": Map {
     5 => 3,
@@ -458,7 +458,7 @@ Object {
       },
       "commitIndex": 0,
       "interactions": Array [],
-      "priorityLevel": 99,
+      "priorityLevel": "Immediate",
       "rootID": 1,
       "selfDurations": Map {
         1 => 0,
@@ -476,7 +476,7 @@ Object {
       },
       "commitIndex": 1,
       "interactions": Array [],
-      "priorityLevel": 99,
+      "priorityLevel": "Immediate",
       "rootID": 1,
       "selfDurations": Map {
         3 => 0,
@@ -495,7 +495,7 @@ Object {
       },
       "commitIndex": 2,
       "interactions": Array [],
-      "priorityLevel": 99,
+      "priorityLevel": "Immediate",
       "rootID": 1,
       "selfDurations": Map {
         3 => 0,
@@ -710,7 +710,7 @@ Object {
           "timestamp": 0,
         },
       ],
-      "priorityLevel": 99,
+      "priorityLevel": "Immediate",
       "rootID": 1,
       "selfDurations": Map {
         1 => 0,
@@ -735,7 +735,7 @@ Object {
           "timestamp": 11,
         },
       ],
-      "priorityLevel": 99,
+      "priorityLevel": "Immediate",
       "rootID": 1,
       "selfDurations": Map {
         3 => 0,
@@ -922,7 +922,7 @@ Object {
       },
       "commitIndex": 0,
       "interactions": Array [],
-      "priorityLevel": 99,
+      "priorityLevel": "Immediate",
       "rootID": 1,
       "selfDurations": Map {
         3 => 0,
@@ -940,7 +940,7 @@ Object {
       },
       "commitIndex": 1,
       "interactions": Array [],
-      "priorityLevel": 99,
+      "priorityLevel": "Immediate",
       "rootID": 1,
       "selfDurations": Map {
         3 => 0,
@@ -955,7 +955,7 @@ Object {
       },
       "commitIndex": 2,
       "interactions": Array [],
-      "priorityLevel": 99,
+      "priorityLevel": "Immediate",
       "rootID": 1,
       "selfDurations": Map {
         2 => 10,
