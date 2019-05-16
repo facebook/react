@@ -418,7 +418,14 @@ const bundles = [
 
   /******* React Scheduler Mock (experimental) *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
+    bundleTypes: [
+      UMD_DEV,
+      UMD_PROD,
+      NODE_DEV,
+      NODE_PROD,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+    ],
     moduleType: ISOMORPHIC,
     entry: 'scheduler/unstable_mock',
     global: 'SchedulerMock',

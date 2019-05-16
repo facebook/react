@@ -7,7 +7,11 @@
   this page tests whether act runs properly in a browser.
   <br/>
   your console should say "5"
+  <script src='scheduler-unstable_mock.development.js'></script>
   <script src='react.development.js'></script>
+  <script type="text/javascript">    
+    window.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Scheduler = window.SchedulerMock
+  </script>
   <script src='react-dom.development.js'></script>
   <script src='react-dom-test-utils.development.js'></script>
   <script>

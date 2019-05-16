@@ -104,14 +104,14 @@ describe('ReactIncrementalScheduling', () => {
       ReactNoop.renderToRootWithID(<Text text="b:1" />, 'b');
       ReactNoop.renderToRootWithID(<Text text="c:1" />, 'c');
     });
-    expect(Scheduler).toFlushAndYield(['a:1', 'b:1', 'c:1']);
+    expect(Scheduler).toHaveYielded(['a:1', 'b:1', 'c:1']);
 
     expect(ReactNoop.getChildrenAsJSX('a')).toEqual('a:1');
     expect(ReactNoop.getChildrenAsJSX('b')).toEqual('b:1');
     expect(ReactNoop.getChildrenAsJSX('c')).toEqual('c:1');
 
     // Schedule deferred work in the reverse order
-    ReactNoop.act(() => {
+    ReactNoop.batchedUpdates(() => {
       ReactNoop.renderToRootWithID(<Text text="c:2" />, 'c');
       ReactNoop.renderToRootWithID(<Text text="b:2" />, 'b');
     });
@@ -122,7 +122,7 @@ describe('ReactIncrementalScheduling', () => {
     expect(ReactNoop.getChildrenAsJSX('b')).toEqual('b:1');
     expect(ReactNoop.getChildrenAsJSX('c')).toEqual('c:2');
     // Schedule last bit of work, it will get processed the last
-    ReactNoop.act(() => {
+    ReactNoop.batchedUpdates(() => {
       ReactNoop.renderToRootWithID(<Text text="a:2" />, 'a');
     });
     // Keep performing work in the order it was scheduled

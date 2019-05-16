@@ -1,7 +1,6 @@
 let React;
 let ReactFeatureFlags;
 let ReactNoop;
-let act;
 let Scheduler;
 let ReactCache;
 let Suspense;
@@ -15,7 +14,6 @@ describe('ReactBatchedMode', () => {
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     React = require('react');
     ReactNoop = require('react-noop-renderer');
-    act = ReactNoop.act;
     Scheduler = require('scheduler');
     ReactCache = require('react-cache');
     Suspense = React.Suspense;
@@ -146,10 +144,10 @@ describe('ReactBatchedMode', () => {
     expect(root).toMatchRenderedOutput('A0B0');
 
     // Schedule a batched update to the first sibling
-    act(() => foo1.current.setStep(1));
+    ReactNoop.batchedUpdates(() => foo1.current.setStep(1));
 
     // Before it flushes, update the second sibling inside flushSync
-    act(() =>
+    ReactNoop.batchedUpdates(() =>
       ReactNoop.flushSync(() => {
         foo2.current.setStep(1);
       }),
