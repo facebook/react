@@ -50,35 +50,37 @@ export function getSuspenseFiberFromTimedOutChild(fiber: Fiber): Fiber {
 
 export function getEventComponentHostChildrenCount(
   eventComponentFiber: Fiber,
-): number {
-  let hostChildrenCount = 0;
-
-  const getHostChildrenCount = node => {
-    if (isFiberSuspenseAndTimedOut(node)) {
-      const fallbackChild = getSuspenseFallbackChild(node);
-      if (fallbackChild !== null) {
-        getHostChildrenCount(fallbackChild);
+): ?number {
+  if (__DEV__) {
+    let hostChildrenCount = 0;
+    const getHostChildrenCount = node => {
+      if (isFiberSuspenseAndTimedOut(node)) {
+        const fallbackChild = getSuspenseFallbackChild(node);
+        if (fallbackChild !== null) {
+          getHostChildrenCount(fallbackChild);
+        }
+      } else if (
+        node.tag === HostComponent ||
+        node.tag === HostText ||
+        node.tag === HostPortal
+      ) {
+        hostChildrenCount++;
+      } else {
+        const child = node.child;
+        if (child !== null) {
+          getHostChildrenCount(child);
+        }
       }
-    } else if (
-      node.tag === HostComponent ||
-      node.tag === HostText ||
-      node.tag === HostPortal
-    ) {
-      hostChildrenCount++;
-    } else {
-      const child = node.child;
-      if (child !== null) {
-        getHostChildrenCount(child);
+      const sibling = node.sibling;
+      if (sibling !== null) {
+        getHostChildrenCount(sibling);
       }
-    }
-    const sibling = node.sibling;
-    if (sibling !== null) {
-      getHostChildrenCount(sibling);
-    }
-  };
+    };
 
-  if (eventComponentFiber.child !== null) {
-    getHostChildrenCount(eventComponentFiber.child);
+    if (eventComponentFiber.child !== null) {
+      getHostChildrenCount(eventComponentFiber.child);
+    }
+
+    return hostChildrenCount;
   }
-  return hostChildrenCount;
 }

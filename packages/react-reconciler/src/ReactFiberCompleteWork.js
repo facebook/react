@@ -819,7 +819,7 @@ function completeWork(
               workInProgress,
             );
             warning(
-              hostChildrenCount < 2,
+              (hostChildrenCount || 0) < 2,
               'A "<%s>" event component cannot contain multiple host children.',
               getComponentName(workInProgress.type),
             );
