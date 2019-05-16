@@ -48,7 +48,6 @@ export function getSuspenseFiberFromTimedOutChild(fiber: Fiber): Fiber {
   return ((((fiber.return: any): Fiber).return: any): Fiber);
 }
 
-// TODO: should this be under a DEV onlyflag in the future?
 export function getEventComponentHostChildrenCount(
   eventComponentFiber: Fiber,
 ): number {
