@@ -348,9 +348,8 @@ describe('ReactHooks', () => {
       });
       return <Child text={text} />;
     }
-    let root;
+    const root = ReactTestRenderer.create(null, {unstable_isConcurrent: true});
     act(() => {
-      root = ReactTestRenderer.create(null, {unstable_isConcurrent: true});
       root.update(
         <ThemeProvider>
           <Parent />
