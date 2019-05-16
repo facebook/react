@@ -888,8 +888,8 @@ describe('ReactHooksWithNoopRenderer', () => {
       ReactNoop.interactiveUpdates(() => {
         // (use batchedUpdates to silence the act() warning)
         ReactNoop.batchedUpdates(() => {
-          _updateCount(2)  
-        })        
+          _updateCount(2);
+        });
       });
       expect(Scheduler).toHaveYielded(['Will set count to 1']);
       expect(Scheduler).toFlushAndYield(['Count: 2']);
@@ -940,7 +940,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       // A discrete event forces the passive effect to be flushed --
       // updateCount(1) happens first, so 2 wins.
       ReactNoop.interactiveUpdates(() => {
-        // use batchedUpdates to silence the act warning 
+        // use batchedUpdates to silence the act warning
         ReactNoop.batchedUpdates(() => _updateCount(2));
       });
       expect(Scheduler).toHaveYielded(['Will set count to 1']);

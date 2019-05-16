@@ -1,7 +1,6 @@
 let React;
 let ReactFeatureFlags;
 let ReactNoop;
-let act;
 let Scheduler;
 let ReactCache;
 let Suspense;
@@ -15,7 +14,6 @@ describe('ReactBatchedMode', () => {
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     React = require('react');
     ReactNoop = require('react-noop-renderer');
-    act = ReactNoop.act;
     Scheduler = require('scheduler');
     ReactCache = require('react-cache');
     Suspense = React.Suspense;

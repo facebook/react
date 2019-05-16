@@ -59,7 +59,7 @@ function runActTests(label, render, unmount) {
       ReactDOM = require('react-dom');
       ReactTestUtils = require('react-dom/test-utils');
       SchedulerTracing = require('scheduler/tracing');
-      Scheduler = require('Scheduler');
+      Scheduler = require('scheduler');
       ReactFeatureFlags = require('shared/ReactFeatureFlags');
       act = ReactTestUtils.act;
       container = document.createElement('div');
