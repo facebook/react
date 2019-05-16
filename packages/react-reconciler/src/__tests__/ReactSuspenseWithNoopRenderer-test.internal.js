@@ -1977,4 +1977,99 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       span('Loading...'),
     ]);
   });
+
+  it('withSuspenseConfig timeout applies when we use an updated avoided boundary', async () => {
+    function App({page}) {
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <Text text="Hi!" />
+          <Suspense
+            fallback={<Text text={'Loading ' + page + '...'} />}
+            unstable_avoidThisFallback={true}>
+            <AsyncText text={page} ms={3000} />
+          </Suspense>
+        </Suspense>
+      );
+    }
+
+    // Initial render.
+    ReactNoop.render(<App page="A" />);
+    expect(Scheduler).toFlushAndYield(['Hi!', 'Suspend! [A]', 'Loading...']);
+    Scheduler.advanceTime(3000);
+    await advanceTimers(3000);
+    expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
+    expect(Scheduler).toFlushAndYield(['Hi!', 'A']);
+    expect(ReactNoop.getChildren()).toEqual([span('Hi!'), span('A')]);
+
+    // Start transition.
+    React.unstable_withSuspenseConfig(
+      () => ReactNoop.render(<App page="B" />),
+      {timeoutMs: 2000},
+    );
+
+    expect(Scheduler).toFlushAndYield(['Hi!', 'Suspend! [B]', 'Loading B...']);
+
+    // Suspended
+    expect(ReactNoop.getChildren()).toEqual([span('Hi!'), span('A')]);
+    Scheduler.advanceTime(1800);
+    await advanceTimers(1800);
+    expect(Scheduler).toFlushAndYield([]);
+    // We should still be suspended here because this loading state should be avoided.
+    expect(ReactNoop.getChildren()).toEqual([span('Hi!'), span('A')]);
+    Scheduler.advanceTime(1500);
+    await advanceTimers(1500);
+    expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
+    expect(ReactNoop.getChildren()).toEqual([
+      span('Hi!'),
+      hiddenSpan('A'),
+      span('Loading B...'),
+    ]);
+  });
+
+  it('withSuspenseConfig timeout applies when we use a newly created avoided boundary', async () => {
+    function App({page}) {
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <Text text="Hi!" />
+          {page === 'A' ? (
+            <Text text="A" />
+          ) : (
+            <Suspense
+              fallback={<Text text={'Loading ' + page + '...'} />}
+              unstable_avoidThisFallback={true}>
+              <AsyncText text={page} ms={3000} />
+            </Suspense>
+          )}
+        </Suspense>
+      );
+    }
+
+    // Initial render.
+    ReactNoop.render(<App page="A" />);
+    expect(Scheduler).toFlushAndYield(['Hi!', 'A']);
+    expect(ReactNoop.getChildren()).toEqual([span('Hi!'), span('A')]);
+
+    // Start transition.
+    React.unstable_withSuspenseConfig(
+      () => ReactNoop.render(<App page="B" />),
+      {timeoutMs: 2000},
+    );
+
+    expect(Scheduler).toFlushAndYield(['Hi!', 'Suspend! [B]', 'Loading B...']);
+
+    // Suspended
+    expect(ReactNoop.getChildren()).toEqual([span('Hi!'), span('A')]);
+    Scheduler.advanceTime(1800);
+    await advanceTimers(1800);
+    expect(Scheduler).toFlushAndYield([]);
+    // We should still be suspended here because this loading state should be avoided.
+    expect(ReactNoop.getChildren()).toEqual([span('Hi!'), span('A')]);
+    Scheduler.advanceTime(1500);
+    await advanceTimers(1500);
+    expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
+    expect(ReactNoop.getChildren()).toEqual([
+      span('Hi!'),
+      span('Loading B...'),
+    ]);
+  });
 });

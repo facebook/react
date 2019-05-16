@@ -737,8 +737,11 @@ function completeWork(
         // in the concurrent tree already suspended during this render.
         // This is a known bug.
         if ((workInProgress.mode & BatchedMode) !== NoMode) {
+          const hasInvisibleChildContext =
+            current === null &&
+            workInProgress.memoizedProps.unstable_avoidThisFallback !== true;
           if (
-            current === null ||
+            hasInvisibleChildContext ||
             hasSuspenseContext(
               suspenseStackCursor.current,
               (InvisibleParentSuspenseContext: SuspenseContext),
