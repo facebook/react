@@ -14,6 +14,10 @@ describe('ReactIncrementalErrorReplay-test', () => {
   const ReactTestRenderer = require('react-test-renderer');
 
   it('copies all keys when stashing potentially failing work', () => {
+    // Include a renderer to ensure host config files are properly shimmed.
+    // Otherwise transient imports may cause an invariant.
+    require('react-dom');
+
     // Note: this test is fragile and relies on internals.
     // We almost always try to avoid such tests, but here the cost of
     // the list getting out of sync (and causing subtle bugs in rare cases)
