@@ -745,9 +745,12 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(Scheduler).toFlushAndYield(['S']);
 
     // Schedule an update, and suspend for up to 5 seconds.
-    React.unstable_suspendIfNeeded(() => ReactNoop.render(<App text="A" />), {
-      timeoutMs: 5000,
-    });
+    React.unstable_withSuspenseConfig(
+      () => ReactNoop.render(<App text="A" />),
+      {
+        timeoutMs: 5000,
+      },
+    );
     // The update should suspend.
     expect(Scheduler).toFlushAndYield(['Suspend! [A]', 'Loading...']);
     expect(ReactNoop.getChildren()).toEqual([span('S')]);
@@ -759,9 +762,12 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('S')]);
 
     // Schedule another low priority update.
-    React.unstable_suspendIfNeeded(() => ReactNoop.render(<App text="B" />), {
-      timeoutMs: 10000,
-    });
+    React.unstable_withSuspenseConfig(
+      () => ReactNoop.render(<App text="B" />),
+      {
+        timeoutMs: 10000,
+      },
+    );
     // This update should also suspend.
     expect(Scheduler).toFlushAndYield(['Suspend! [B]', 'Loading...']);
     expect(ReactNoop.getChildren()).toEqual([span('S')]);
@@ -1665,7 +1671,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     ReactNoop.render(<Foo />);
 
     // Took a long time to render. This is to ensure we get a long suspense time.
-    // Could also use something like suspendIfNeeded to simulate this.
+    // Could also use something like withSuspenseConfig to simulate this.
     Scheduler.advanceTime(1500);
     await advanceTimers(1500);
 
