@@ -1108,9 +1108,7 @@ describe('Event responder: Press', () => {
 
         ref.current.getBoundingClientRect = getBoundingClientRectMock;
         // Emulate the element being offset
-        Object.defineProperty(ref.current, 'offsetTop', {
-          value: 1000,
-        });
+        document.body.scrollTop = 1000;
         const updatedCoordinatesInside = {
           pageX: coordinatesInside.pageX,
           pageY: coordinatesInside.pageY + 1000,
@@ -1125,6 +1123,7 @@ describe('Event responder: Press', () => {
           createEvent('pointerup', updatedCoordinatesInside),
         );
         jest.runAllTimers();
+        document.body.scrollTop = 0;
 
         expect(events).toEqual([
           'onPressStart',

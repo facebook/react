@@ -433,18 +433,22 @@ function getAbsoluteBoundingClientRect(
 ): {left: number, right: number, bottom: number, top: number} {
   const clientRect = target.getBoundingClientRect();
   let {left, right, bottom, top} = clientRect;
-  let node = target;
+  let node = target.parentNode;
+  let offsetX = 0;
+  let offsetY = 0;
+
   // Traverse through all offset nodes
-  while (node != null) {
-    const offsetX = (node: any).offsetLeft || 0;
-    const offsetY = (node: any).offsetTop || 0;
-    left += offsetX;
-    right += offsetX;
-    top += offsetY;
-    bottom += offsetY;
-    node = (node: any).offsetParent;
+  while (node != null && node.nodeType !== Node.DOCUMENT_NODE) {
+    offsetX += (node: any).scrollLeft;
+    offsetY += (node: any).scrollTop;
+    node = node.parentNode;
   }
-  return {left, right, bottom, top};
+  return {
+    left: left + offsetX,
+    right: right + offsetX,
+    bottom: bottom + offsetY,
+    top: top + offsetY,
+  };
 }
 
 // TODO: account for touch hit slop
