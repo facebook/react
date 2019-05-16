@@ -441,11 +441,13 @@ function calculateResponderRegion(
   );
 
   const clientRect = target.getBoundingClientRect();
+  const viewportOffsetX = window.pageXOffset;
+  const viewportOffsetY = window.pageYOffset;
 
-  let bottom = clientRect.bottom;
-  let left = clientRect.left;
-  let right = clientRect.right;
-  let top = clientRect.top;
+  let bottom = clientRect.bottom + viewportOffsetY;
+  let top = clientRect.top + viewportOffsetY;
+  let left = clientRect.left + viewportOffsetX;
+  let right = clientRect.right + viewportOffsetX;
 
   if (pressRetentionOffset) {
     if (pressRetentionOffset.bottom != null) {
