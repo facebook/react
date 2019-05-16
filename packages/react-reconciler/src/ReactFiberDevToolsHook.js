@@ -7,8 +7,12 @@
  * @flow
  */
 
+import {requestCurrentTime} from './ReactFiberScheduler';
+import {inferPriorityFromExpirationTime} from './ReactFiberExpirationTime';
+
 import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
+import type {ExpirationTime} from './ReactFiberExpirationTime';
 
 import warningWithoutStack from 'shared/warningWithoutStack';
 
@@ -17,23 +21,6 @@ declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: Object | void;
 let onCommitFiberRoot = null;
 let onCommitFiberUnmount = null;
 let hasLoggedError = false;
-
-function catchErrors(fn) {
-  return function(arg) {
-    try {
-      return fn(arg);
-    } catch (err) {
-      if (__DEV__ && !hasLoggedError) {
-        hasLoggedError = true;
-        warningWithoutStack(
-          false,
-          'React DevTools encountered an error: %s',
-          err,
-        );
-      }
-    }
-  };
-}
 
 export const isDevToolsPresent =
   typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined';
@@ -65,12 +52,39 @@ export function injectInternals(internals: Object): boolean {
   try {
     const rendererID = hook.inject(internals);
     // We have successfully injected, so now it is safe to set up hooks.
-    onCommitFiberRoot = catchErrors(root =>
-      hook.onCommitFiberRoot(rendererID, root),
-    );
-    onCommitFiberUnmount = catchErrors(fiber =>
-      hook.onCommitFiberUnmount(rendererID, fiber),
-    );
+    onCommitFiberRoot = (root, expirationTime) => {
+      const currentTime = requestCurrentTime();
+      const priorityLevel = inferPriorityFromExpirationTime(
+        currentTime,
+        expirationTime,
+      );
+      try {
+        hook.onCommitFiberRoot(rendererID, root, priorityLevel);
+      } catch (err) {
+        if (__DEV__ && !hasLoggedError) {
+          hasLoggedError = true;
+          warningWithoutStack(
+            false,
+            'React DevTools encountered an error: %s',
+            err,
+          );
+        }
+      }
+    };
+    onCommitFiberUnmount = fiber => {
+      try {
+        hook.onCommitFiberUnmount(rendererID, fiber);
+      } catch (err) {
+        if (__DEV__ && !hasLoggedError) {
+          hasLoggedError = true;
+          warningWithoutStack(
+            false,
+            'React DevTools encountered an error: %s',
+            err,
+          );
+        }
+      }
+    };
   } catch (err) {
     // Catch all errors because it is unsafe to throw during initialization.
     if (__DEV__) {
@@ -85,9 +99,9 @@ export function injectInternals(internals: Object): boolean {
   return true;
 }
 
-export function onCommitRoot(root: FiberRoot) {
+export function onCommitRoot(root: FiberRoot, expirationTime: ExpirationTime) {
   if (typeof onCommitFiberRoot === 'function') {
-    onCommitFiberRoot(root);
+    onCommitFiberRoot(root, expirationTime);
   }
 }
 
