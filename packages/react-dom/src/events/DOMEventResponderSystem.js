@@ -16,8 +16,6 @@ import {
   EventComponent,
   EventTarget as EventTargetWorkTag,
   HostComponent,
-  SuspenseComponent,
-  Fragment,
 } from 'shared/ReactWorkTags';
 import type {
   ReactEventResponder,
@@ -34,6 +32,10 @@ import warning from 'shared/warning';
 import {enableEventAPI} from 'shared/ReactFeatureFlags';
 import {invokeGuardedCallbackAndCatchFirstError} from 'shared/ReactErrorUtils';
 import invariant from 'shared/invariant';
+import {
+  isFiberSuspenseAndTimedOut,
+  getSuspenseFallbackChild,
+} from 'react-reconciler/src/ReactFiberEvents';
 
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 
@@ -351,50 +353,11 @@ const eventResponderContext: ReactResponderContext = {
     validateResponderContext();
     const focusableElements = [];
     const eventComponentInstance = ((currentInstance: any): ReactEventComponentInstance);
-    let node = ((eventComponentInstance.currentFiber: any): Fiber).child;
+    const child = ((eventComponentInstance.currentFiber: any): Fiber).child;
 
-    while (node !== null) {
-      if (node.tag === SuspenseComponent) {
-        const suspendedChild = isFiberSuspenseAndTimedOut(node)
-          ? getSuspenseFallbackChild(node)
-          : getSuspenseChild(node);
-        if (suspendedChild !== null) {
-          node = suspendedChild;
-          continue;
-        }
-      } else {
-        if (isFiberHostComponentFocusable(node)) {
-          focusableElements.push(node.stateNode);
-        } else {
-          const child = node.child;
-
-          if (child !== null) {
-            node = child;
-            continue;
-          }
-        }
-      }
-      const sibling = node.sibling;
-
-      if (sibling !== null) {
-        node = sibling;
-        continue;
-      }
-      let parent;
-      if (isFiberSuspenseChild(node)) {
-        parent = getSuspenseFiberFromChild(node);
-      } else {
-        parent = node.return;
-        if (parent === null) {
-          break;
-        }
-      }
-      if (parent.stateNode === currentInstance) {
-        break;
-      }
-      node = parent.sibling;
+    if (child !== null) {
+      collectFocusableElements(child, focusableElements);
     }
-
     return focusableElements;
   },
   getActiveDocument,
@@ -454,6 +417,33 @@ const eventResponderContext: ReactResponderContext = {
     return false;
   },
 };
+
+function collectFocusableElements(
+  node: Fiber,
+  focusableElements: Array<HTMLElement>,
+): void {
+  if (isFiberSuspenseAndTimedOut(node)) {
+    const fallbackChild = getSuspenseFallbackChild(node);
+    if (fallbackChild !== null) {
+      collectFocusableElements(fallbackChild, focusableElements);
+    }
+  } else {
+    if (isFiberHostComponentFocusable(node)) {
+      focusableElements.push(node.stateNode);
+    } else {
+      const child = node.child;
+
+      if (child !== null) {
+        collectFocusableElements(child, focusableElements);
+      }
+    }
+  }
+  const sibling = node.sibling;
+
+  if (sibling !== null) {
+    collectFocusableElements(sibling, focusableElements);
+  }
+}
 
 function isTargetWithinEventComponent(target: Element | Document): boolean {
   validateResponderContext();
@@ -603,41 +593,6 @@ export function processEventQueue(): void {
   } else {
     batchedUpdates(processEvents, events);
   }
-}
-
-function isFiberSuspenseAndTimedOut(fiber: Fiber): boolean {
-  return fiber.tag === SuspenseComponent && fiber.memoizedState !== null;
-}
-
-function isFiberSuspenseChild(fiber: Fiber | null): boolean {
-  if (fiber === null) {
-    return false;
-  }
-  const parent = fiber.return;
-  if (parent !== null && parent.tag === Fragment) {
-    const grandParent = parent.return;
-
-    if (
-      grandParent !== null &&
-      grandParent.tag === SuspenseComponent &&
-      grandParent.stateNode !== null
-    ) {
-      return true;
-    }
-  }
-  return false;
-}
-
-function getSuspenseFiberFromChild(fiber: Fiber): Fiber {
-  return ((((fiber.return: any): Fiber).return: any): Fiber);
-}
-
-function getSuspenseFallbackChild(fiber: Fiber): Fiber | null {
-  return ((((fiber.child: any): Fiber).sibling: any): Fiber).child;
-}
-
-function getSuspenseChild(fiber: Fiber): Fiber | null {
-  return (((fiber.child: any): Fiber): Fiber).child;
 }
 
 function getTargetEventTypesSet(

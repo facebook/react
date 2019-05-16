@@ -89,6 +89,7 @@ export type ReactEventResponder = {
   targetEventTypes?: Array<ReactEventResponderEventType>,
   rootEventTypes?: Array<ReactEventResponderEventType>,
   createInitialState?: (props: null | Object) => Object,
+  allowMultipleHostChildren: boolean,
   stopLocalPropagation: boolean,
   onEvent?: (
     event: ReactResponderEvent,

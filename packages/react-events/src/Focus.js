@@ -222,6 +222,7 @@ const FocusResponder = {
       pointerType: '',
     };
   },
+  allowMultipleHostChildren: false,
   stopLocalPropagation: true,
   onEvent(
     event: ReactResponderEvent,

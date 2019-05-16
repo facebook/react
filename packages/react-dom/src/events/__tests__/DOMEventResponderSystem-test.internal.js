@@ -13,7 +13,7 @@ let React;
 let ReactFeatureFlags;
 let ReactDOM;
 
-function createReactEventComponent(
+function createReactEventComponent({
   targetEventTypes,
   rootEventTypes,
   createInitialState,
@@ -24,7 +24,8 @@ function createReactEventComponent(
   onUnmount,
   onOwnershipChange,
   stopLocalPropagation,
-) {
+  allowMultipleHostChildren,
+}) {
   const testEventResponder = {
     targetEventTypes,
     rootEventTypes,
@@ -36,6 +37,7 @@ function createReactEventComponent(
     onUnmount,
     onOwnershipChange,
     stopLocalPropagation: stopLocalPropagation || false,
+    allowMultipleHostChildren: allowMultipleHostChildren || false,
   };
 
   return {
@@ -81,11 +83,9 @@ describe('DOMEventResponderSystem', () => {
     let eventLog = [];
     const buttonRef = React.createRef();
 
-    const ClickEventComponent = createReactEventComponent(
-      ['click'],
-      undefined,
-      undefined,
-      (event, context, props) => {
+    const ClickEventComponent = createReactEventComponent({
+      targetEventTypes: ['click'],
+      onEvent: (event, context, props) => {
         eventResponderFiredCount++;
         eventLog.push({
           name: event.type,
@@ -94,7 +94,7 @@ describe('DOMEventResponderSystem', () => {
           phase: 'bubble',
         });
       },
-      (event, context, props) => {
+      onEventCapture: (event, context, props) => {
         eventResponderFiredCount++;
         eventLog.push({
           name: event.type,
@@ -103,7 +103,7 @@ describe('DOMEventResponderSystem', () => {
           phase: 'capture',
         });
       },
-    );
+    });
 
     const Test = () => (
       <ClickEventComponent>
@@ -155,11 +155,9 @@ describe('DOMEventResponderSystem', () => {
     let eventLog = [];
     const buttonRef = React.createRef();
 
-    const ClickEventComponent = createReactEventComponent(
-      ['click'],
-      undefined,
-      undefined,
-      (event, context, props) => {
+    const ClickEventComponent = createReactEventComponent({
+      targetEventTypes: ['click'],
+      onEvent: (event, context, props) => {
         eventLog.push({
           name: event.type,
           passive: event.passive,
@@ -167,7 +165,7 @@ describe('DOMEventResponderSystem', () => {
           phase: 'bubble',
         });
       },
-      (event, context, props) => {
+      onEventCapture: (event, context, props) => {
         eventLog.push({
           name: event.type,
           passive: event.passive,
@@ -175,7 +173,7 @@ describe('DOMEventResponderSystem', () => {
           phase: 'capture',
         });
       },
-    );
+    });
 
     const Test = () => (
       <ClickEventComponent>
@@ -210,11 +208,9 @@ describe('DOMEventResponderSystem', () => {
     let eventLog = [];
     const buttonRef = React.createRef();
 
-    const ClickEventComponent = createReactEventComponent(
-      ['click'],
-      undefined,
-      undefined,
-      (event, context, props) => {
+    const ClickEventComponent = createReactEventComponent({
+      targetEventTypes: ['click'],
+      onEvent: (event, context, props) => {
         eventResponderFiredCount++;
         eventLog.push({
           name: event.type,
@@ -223,7 +219,7 @@ describe('DOMEventResponderSystem', () => {
           phase: 'bubble',
         });
       },
-      (event, context, props) => {
+      onEventCapture: (event, context, props) => {
         eventResponderFiredCount++;
         eventLog.push({
           name: event.type,
@@ -232,7 +228,7 @@ describe('DOMEventResponderSystem', () => {
           phase: 'capture',
         });
       },
-    );
+    });
 
     const Test = () => (
       <ClickEventComponent>
@@ -282,29 +278,25 @@ describe('DOMEventResponderSystem', () => {
     let eventLog = [];
     const buttonRef = React.createRef();
 
-    const ClickEventComponentA = createReactEventComponent(
-      ['click'],
-      undefined,
-      undefined,
-      (event, context, props) => {
+    const ClickEventComponentA = createReactEventComponent({
+      targetEventTypes: ['click'],
+      onEvent: (event, context, props) => {
         eventLog.push(`A [bubble]`);
       },
-      (event, context, props) => {
+      onEventCapture: (event, context, props) => {
         eventLog.push(`A [capture]`);
       },
-    );
+    });
 
-    const ClickEventComponentB = createReactEventComponent(
-      ['click'],
-      undefined,
-      undefined,
-      (event, context, props) => {
+    const ClickEventComponentB = createReactEventComponent({
+      targetEventTypes: ['click'],
+      onEvent: (event, context, props) => {
         eventLog.push(`B [bubble]`);
       },
-      (event, context, props) => {
+      onEventCapture: (event, context, props) => {
         eventLog.push(`B [capture]`);
       },
-    );
+    });
 
     const Test = () => (
       <ClickEventComponentA>
@@ -332,21 +324,16 @@ describe('DOMEventResponderSystem', () => {
     let eventLog = [];
     const buttonRef = React.createRef();
 
-    const ClickEventComponent = createReactEventComponent(
-      ['click'],
-      undefined,
-      undefined,
-      (event, context, props) => {
+    const ClickEventComponent = createReactEventComponent({
+      targetEventTypes: ['click'],
+      onEvent: (event, context, props) => {
         eventLog.push(`${props.name} [bubble]`);
       },
-      (event, context, props) => {
+      onEventCapture: (event, context, props) => {
         eventLog.push(`${props.name} [capture]`);
       },
-      undefined,
-      undefined,
-      undefined,
-      false,
-    );
+      stopLocalPropagation: false,
+    });
 
     const Test = () => (
       <ClickEventComponent name="A">
@@ -374,22 +361,16 @@ describe('DOMEventResponderSystem', () => {
     let eventLog = [];
     const buttonRef = React.createRef();
 
-    const ClickEventComponent = createReactEventComponent(
-      ['click'],
-      undefined,
-      undefined,
-      (event, context, props) => {
+    const ClickEventComponent = createReactEventComponent({
+      targetEventTypes: ['click'],
+      onEvent: (event, context, props) => {
         eventLog.push(`${props.name} [bubble]`);
       },
-      (event, context, props) => {
+      onEventCapture: (event, context, props) => {
         eventLog.push(`${props.name} [capture]`);
       },
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      true,
-    );
+      stopLocalPropagation: true,
+    });
 
     const Test = () => (
       <ClickEventComponent name="A">
@@ -412,11 +393,9 @@ describe('DOMEventResponderSystem', () => {
     let eventLog = [];
     const buttonRef = React.createRef();
 
-    const ClickEventComponent = createReactEventComponent(
-      ['click'],
-      undefined,
-      undefined,
-      (event, context, props) => {
+    const ClickEventComponent = createReactEventComponent({
+      targetEventTypes: ['click'],
+      onEvent: (event, context, props) => {
         if (props.onMagicClick) {
           const syntheticEvent = {
             target: event.target,
@@ -429,7 +408,7 @@ describe('DOMEventResponderSystem', () => {
           });
         }
       },
-      (event, context, props) => {
+      onEventCapture: (event, context, props) => {
         if (props.onMagicClick) {
           const syntheticEvent = {
             target: event.target,
@@ -442,7 +421,7 @@ describe('DOMEventResponderSystem', () => {
           });
         }
       },
-    );
+    });
 
     function handleMagicEvent(e) {
       eventLog.push('magic event fired', e.type, e.phase);
@@ -510,17 +489,15 @@ describe('DOMEventResponderSystem', () => {
       }, 500);
     }
 
-    const LongPressEventComponent = createReactEventComponent(
-      ['click'],
-      undefined,
-      undefined,
-      (event, context, props) => {
+    const LongPressEventComponent = createReactEventComponent({
+      targetEventTypes: ['click'],
+      onEvent: (event, context, props) => {
         handleEvent(event, context, props, 'bubble');
       },
-      (event, context, props) => {
+      onEventCapture: (event, context, props) => {
         handleEvent(event, context, props, 'capture');
       },
-    );
+    });
 
     function log(msg) {
       eventLog.push(msg);
@@ -555,17 +532,12 @@ describe('DOMEventResponderSystem', () => {
   it('the event responder onMount() function should fire', () => {
     let onMountFired = 0;
 
-    const EventComponent = createReactEventComponent(
-      [],
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      () => {
+    const EventComponent = createReactEventComponent({
+      targetEventTypes: [],
+      onMount: () => {
         onMountFired++;
       },
-    );
+    });
 
     const Test = () => (
       <EventComponent>
@@ -580,18 +552,12 @@ describe('DOMEventResponderSystem', () => {
   it('the event responder onUnmount() function should fire', () => {
     let onUnmountFired = 0;
 
-    const EventComponent = createReactEventComponent(
-      [],
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      () => {
+    const EventComponent = createReactEventComponent({
+      targetEventTypes: [],
+      onUnmount: () => {
         onUnmountFired++;
       },
-    );
+    });
 
     const Test = () => (
       <EventComponent>
@@ -607,20 +573,15 @@ describe('DOMEventResponderSystem', () => {
   it('the event responder onUnmount() function should fire with state', () => {
     let counter = 0;
 
-    const EventComponent = createReactEventComponent(
-      [],
-      undefined,
-      () => ({
+    const EventComponent = createReactEventComponent({
+      targetEventTypes: [],
+      createInitialState: () => ({
         incrementAmount: 5,
       }),
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      (context, props, state) => {
+      onUnmount: (context, props, state) => {
         counter += state.incrementAmount;
       },
-    );
+    });
 
     const Test = () => (
       <EventComponent>
@@ -638,21 +599,15 @@ describe('DOMEventResponderSystem', () => {
     let ownershipGained = false;
     const buttonRef = React.createRef();
 
-    const EventComponent = createReactEventComponent(
-      ['click'],
-      undefined,
-      undefined,
-      (event, context, props, state) => {
+    const EventComponent = createReactEventComponent({
+      targetEventTypes: ['click'],
+      onEvent: (event, context, props, state) => {
         ownershipGained = context.requestGlobalOwnership();
       },
-      undefined,
-      undefined,
-      undefined,
-      undefined,
-      () => {
+      onOwnershipChange: () => {
         onOwnershipChangeFired++;
       },
-    );
+    });
 
     const Test = () => (
       <EventComponent>
@@ -675,13 +630,9 @@ describe('DOMEventResponderSystem', () => {
     let eventResponderFiredCount = 0;
     let eventLog = [];
 
-    const ClickEventComponent = createReactEventComponent(
-      undefined,
-      ['click'],
-      undefined,
-      undefined,
-      undefined,
-      event => {
+    const ClickEventComponent = createReactEventComponent({
+      rootEventTypes: ['click'],
+      onRootEvent: event => {
         eventResponderFiredCount++;
         eventLog.push({
           name: event.type,
@@ -690,7 +641,7 @@ describe('DOMEventResponderSystem', () => {
           phase: 'root',
         });
       },
-    );
+    });
 
     const Test = () => (
       <ClickEventComponent>
@@ -720,17 +671,16 @@ describe('DOMEventResponderSystem', () => {
     const divRef = React.createRef();
     const log = [];
 
-    const EventComponent = createReactEventComponent(
-      ['pointerout'],
-      undefined,
-      undefined,
-      (event, context) => {
+    const EventComponent = createReactEventComponent({
+      targetEventTypes: ['pointerout'],
+      onEvent: (event, context) => {
         const isWithin = context.isTargetWithinEventResponderScope(
           event.nativeEvent.relatedTarget,
         );
         log.push(isWithin);
       },
-    );
+      allowMultipleHostChildren: true,
+    });
 
     const Test = () => (
       <EventComponent>
@@ -769,11 +719,9 @@ describe('DOMEventResponderSystem', () => {
     let eventLog = [];
     const buttonRef = React.createRef();
 
-    const ClickEventComponent1 = createReactEventComponent(
-      [{name: 'click', passive: false, capture: false}],
-      undefined,
-      undefined,
-      event => {
+    const ClickEventComponent1 = createReactEventComponent({
+      targetEventTypes: [{name: 'click', passive: false, capture: false}],
+      onEvent: event => {
         clickEventComponent1Fired++;
         eventLog.push({
           name: event.type,
@@ -781,13 +729,11 @@ describe('DOMEventResponderSystem', () => {
           passiveSupported: event.passiveSupported,
         });
       },
-    );
+    });
 
-    const ClickEventComponent2 = createReactEventComponent(
-      [{name: 'click', passive: true, capture: false}],
-      undefined,
-      undefined,
-      event => {
+    const ClickEventComponent2 = createReactEventComponent({
+      targetEventTypes: [{name: 'click', passive: true, capture: false}],
+      onEvent: event => {
         clickEventComponent2Fired++;
         eventLog.push({
           name: event.type,
@@ -795,7 +741,7 @@ describe('DOMEventResponderSystem', () => {
           passiveSupported: event.passiveSupported,
         });
       },
-    );
+    });
 
     const Test = () => (
       <ClickEventComponent1>
@@ -832,13 +778,9 @@ describe('DOMEventResponderSystem', () => {
     let clickEventComponent2Fired = 0;
     let eventLog = [];
 
-    const ClickEventComponent1 = createReactEventComponent(
-      undefined,
-      [{name: 'click', passive: false, capture: false}],
-      undefined,
-      undefined,
-      undefined,
-      event => {
+    const ClickEventComponent1 = createReactEventComponent({
+      rootEventTypes: [{name: 'click', passive: false, capture: false}],
+      onRootEvent: event => {
         clickEventComponent1Fired++;
         eventLog.push({
           name: event.type,
@@ -846,15 +788,11 @@ describe('DOMEventResponderSystem', () => {
           passiveSupported: event.passiveSupported,
         });
       },
-    );
+    });
 
-    const ClickEventComponent2 = createReactEventComponent(
-      undefined,
-      [{name: 'click', passive: true, capture: false}],
-      undefined,
-      undefined,
-      undefined,
-      event => {
+    const ClickEventComponent2 = createReactEventComponent({
+      rootEventTypes: [{name: 'click', passive: true, capture: false}],
+      onRootEvent: event => {
         clickEventComponent2Fired++;
         eventLog.push({
           name: event.type,
@@ -862,7 +800,7 @@ describe('DOMEventResponderSystem', () => {
           passiveSupported: event.passiveSupported,
         });
       },
-    );
+    });
 
     const Test = () => (
       <ClickEventComponent1>
@@ -896,13 +834,9 @@ describe('DOMEventResponderSystem', () => {
   });
 
   it('the event responder system should warn on accessing invalid properties', () => {
-    const ClickEventComponent = createReactEventComponent(
-      undefined,
-      ['click'],
-      undefined,
-      undefined,
-      undefined,
-      (event, context, props) => {
+    const ClickEventComponent = createReactEventComponent({
+      rootEventTypes: ['click'],
+      onRootEvent: (event, context, props) => {
         const syntheticEvent = {
           target: event.target,
           type: 'click',
@@ -912,7 +846,7 @@ describe('DOMEventResponderSystem', () => {
           discrete: true,
         });
       },
-    );
+    });
 
     let handler;
     const Test = () => (
@@ -988,5 +922,132 @@ describe('DOMEventResponderSystem', () => {
     );
 
     expect(container.innerHTML).toBe('<button>Click me!</button>');
+  });
+
+  it('should warn if multiple host components are detected without allowMultipleHostChildren', () => {
+    const EventComponent = createReactEventComponent({
+      targetEventTypes: [],
+      onEvent: () => {},
+      allowMultipleHostChildren: false,
+    });
+
+    const Test = () => (
+      <EventComponent>
+        <div />
+        <div />
+      </EventComponent>
+    );
+
+    expect(() => {
+      ReactDOM.render(<Test />, container);
+    }).toWarnDev(
+      'Warning: A "<TestEventComponent>" event component cannot contain multiple host children.',
+    );
+
+    function Component() {
+      return <div />;
+    }
+
+    const Test2 = () => (
+      <EventComponent>
+        <div />
+        <Component />
+      </EventComponent>
+    );
+
+    expect(() => {
+      ReactDOM.render(<Test2 />, container);
+    }).toWarnDev(
+      'Warning: A "<TestEventComponent>" event component cannot contain multiple host children.',
+    );
+  });
+
+  it('should handle suspended nodes correctly when detecting host components without allowMultipleHostChildren', () => {
+    const EventComponent = createReactEventComponent({
+      targetEventTypes: [],
+      onEvent: () => {},
+      allowMultipleHostChildren: false,
+    });
+
+    function SuspendedComponent() {
+      throw Promise.resolve();
+    }
+
+    function Component() {
+      return (
+        <React.Fragment>
+          <div />
+          <SuspendedComponent />
+        </React.Fragment>
+      );
+    }
+
+    const Test = () => (
+      <EventComponent>
+        <React.Suspense fallback={<div>Loading...</div>}>
+          <Component />
+        </React.Suspense>
+      </EventComponent>
+    );
+
+    ReactDOM.render(<Test />, container);
+
+    function Component2() {
+      return (
+        <React.Fragment>
+          <SuspendedComponent />
+        </React.Fragment>
+      );
+    }
+
+    const Test2 = () => (
+      <EventComponent>
+        <React.Suspense
+          fallback={
+            <React.Fragment>
+              <div />
+              <div />
+            </React.Fragment>
+          }>
+          <Component2 />
+        </React.Suspense>
+      </EventComponent>
+    );
+
+    expect(() => {
+      ReactDOM.render(<Test2 />, container);
+    }).toWarnDev(
+      'Warning: A "<TestEventComponent>" event component cannot contain multiple host children.',
+    );
+  });
+
+  it('should not warn if multiple host components are detected with allowMultipleHostChildren', () => {
+    const EventComponent = createReactEventComponent({
+      targetEventTypes: [],
+      onEvent: () => {},
+      allowMultipleHostChildren: true,
+    });
+
+    const Test = () => (
+      <EventComponent>
+        <div />
+        <div />
+      </EventComponent>
+    );
+
+    ReactDOM.render(<Test />, container);
+
+    function Component() {
+      return <div />;
+    }
+
+    const Test2 = () => (
+      <EventComponent>
+        <div />
+        <Component />
+      </EventComponent>
+    );
+
+    ReactDOM.render(<Test2 />, container);
   });
 });

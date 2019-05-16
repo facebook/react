@@ -55,6 +55,8 @@ const FocusScopeResponder = {
       currentFocusedNode: null,
     };
   },
+  allowMultipleHostChildren: true,
+  stopLocalPropagation: false,
   onEvent(
     event: ReactResponderEvent,
     context: ReactResponderContext,
