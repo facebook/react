@@ -1532,18 +1532,13 @@ describe('ReactFresh', () => {
         __register__(Hello, 'Hello');
       });
 
-      // TODO: this part of the test doesn't work
-      // because Sync updates in Offscreen trees
-      // aren't actually delayed now. But they should be.
-      // This needs to be fixed in React itself.
-
       // It's still offscreen so we don't see the updates.
-      // expect(container.firstChild).toBe(el);
-      // expect(el.firstChild.textContent).toBe('1');
-      // expect(el.firstChild.style.color).toBe('red');
-      // Process the offscreen updates.
-      // expect(Scheduler).toFlushAndYieldThrough(['Hello#layout']);
+      expect(container.firstChild).toBe(el);
+      expect(el.firstChild.textContent).toBe('1');
+      expect(el.firstChild.style.color).toBe('red');
 
+      // Process the offscreen updates.
+      expect(Scheduler).toFlushAndYieldThrough(['Hello#layout']);
       expect(container.firstChild).toBe(el);
       expect(el.firstChild.textContent).toBe('1');
       expect(el.firstChild.style.color).toBe('orange');
