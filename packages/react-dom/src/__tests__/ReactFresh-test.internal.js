@@ -1094,6 +1094,236 @@ describe('ReactFresh', () => {
     }
   });
 
+  it('keeps a valid tree when forcing remount', () => {
+    if (__DEV__) {
+      let HelloV1 = prepare(() => {
+        function Hello() {
+          return null;
+        }
+        __register__(Hello, 'Hello');
+        __signature__(Hello, '1');
+        return Hello;
+      });
+
+      const Bailout = React.memo(({children}) => {
+        return children;
+      });
+
+      // Each of those renders three instances of HelloV1,
+      // but in different ways.
+      let trees = [
+        <div>
+          <HelloV1 />
+          <div>
+            <HelloV1 />
+            <Bailout>
+              <HelloV1 />
+            </Bailout>
+          </div>
+        </div>,
+        <div>
+          <div>
+            <HelloV1>
+              <HelloV1 />
+            </HelloV1>
+            <HelloV1 />
+          </div>
+        </div>,
+        <div>
+          <span />
+          <HelloV1 />
+          <HelloV1 />
+          <HelloV1 />
+        </div>,
+        <div>
+          <HelloV1 />
+          <span />
+          <HelloV1 />
+          <HelloV1 />
+        </div>,
+        <div>
+          <div>foo</div>
+          <HelloV1 />
+          <div>
+            <HelloV1 />
+          </div>
+          <HelloV1 />
+          <span />
+        </div>,
+        <div>
+          <HelloV1>
+            <span />
+            Hello
+            <span />
+          </HelloV1>,
+          <HelloV1>
+            <React.Fragment>
+              <HelloV1 />
+            </React.Fragment>
+          </HelloV1>,
+        </div>,
+        <HelloV1>
+          <HelloV1>
+            <Bailout>
+              <span />
+              <HelloV1>
+                <span />
+              </HelloV1>
+              <span />
+            </Bailout>
+          </HelloV1>
+        </HelloV1>,
+        <div>
+          <span />
+          <HelloV1 key="0" />
+          <HelloV1 key="1" />
+          <HelloV1 key="2" />
+          <span />
+        </div>,
+        <div>
+          <span />
+          {null}
+          <HelloV1 key="1" />
+          {null}
+          <HelloV1 />
+          <HelloV1 />
+          <span />
+        </div>,
+        <div>
+          <HelloV1 key="2" />
+          <span />
+          <HelloV1 key="0" />
+          <span />
+          <HelloV1 key="1" />
+        </div>,
+        <div>
+          {[[<HelloV1 key="2" />]]}
+          <span>
+            <HelloV1 key="0" />
+            {[null]}
+            <HelloV1 key="1" />
+          </span>
+        </div>,
+        <div>
+          {['foo', <HelloV1 key="hi" />, null, <HelloV1 key="2" />]}
+          <span>
+            {[null]}
+            <HelloV1 key="x" />
+          </span>
+        </div>,
+        <HelloV1>
+          <HelloV1>
+            <span />
+            <Bailout>
+              <HelloV1>hi</HelloV1>
+              <span />
+            </Bailout>
+          </HelloV1>
+        </HelloV1>,
+      ];
+
+      // First, check that each tree handles remounts in isolation.
+      ReactDOM.render(null, container);
+      for (let i = 0; i < trees.length; i++) {
+        runRemountingStressTest(trees[i]);
+      }
+
+      // Then check that each tree is resilient to updates from another tree.
+      for (let i = 0; i < trees.length; i++) {
+        for (let j = 0; j < trees.length; j++) {
+          ReactDOM.render(null, container);
+          // Intentionally don't clean up between the tests:
+          runRemountingStressTest(trees[i]);
+          runRemountingStressTest(trees[j]);
+          runRemountingStressTest(trees[i]);
+        }
+      }
+    }
+  });
+
+  function runRemountingStressTest(tree) {
+    patch(() => {
+      function Hello({children}) {
+        return <section data-color="blue">{children}</section>;
+      }
+      __register__(Hello, 'Hello');
+      __signature__(Hello, '1');
+      return Hello;
+    });
+
+    ReactDOM.render(tree, container);
+    const elements = container.querySelectorAll('section');
+    // Each tree above products exactly three <section> elements:
+    expect(elements.length).toBe(3);
+    elements.forEach(el => {
+      expect(el.dataset.color).toBe('blue');
+    });
+
+    // Patch color without changing the signature.
+    patch(() => {
+      function Hello({children}) {
+        return <section data-color="red">{children}</section>;
+      }
+      __register__(Hello, 'Hello');
+      __signature__(Hello, '1');
+      return Hello;
+    });
+
+    const elementsAfterPatch = container.querySelectorAll('section');
+    expect(elementsAfterPatch.length).toBe(3);
+    elementsAfterPatch.forEach((el, index) => {
+      // The signature hasn't changed so we expect DOM nodes to stay the same.
+      expect(el).toBe(elements[index]);
+      // However, the color should have changed:
+      expect(el.dataset.color).toBe('red');
+    });
+
+    // Patch color *and* change the signature.
+    patch(() => {
+      function Hello({children}) {
+        return <section data-color="orange">{children}</section>;
+      }
+      __register__(Hello, 'Hello');
+      __signature__(Hello, '2'); // Remount
+      return Hello;
+    });
+
+    const elementsAfterRemount = container.querySelectorAll('section');
+    expect(elementsAfterRemount.length).toBe(3);
+    elementsAfterRemount.forEach((el, index) => {
+      // The signature changed so we expect DOM nodes to be different.
+      expect(el).not.toBe(elements[index]);
+      // They should all be using the new color:
+      expect(el.dataset.color).toBe('orange');
+    });
+
+    // Now patch color but *don't* change the signature.
+    patch(() => {
+      function Hello({children}) {
+        return <section data-color="black">{children}</section>;
+      }
+      __register__(Hello, 'Hello');
+      __signature__(Hello, '2'); // Same signature as before
+      return Hello;
+    });
+
+    expect(container.querySelectorAll('section').length).toBe(3);
+    container.querySelectorAll('section').forEach((el, index) => {
+      // The signature didn't change so DOM nodes should stay the same.
+      expect(el).toBe(elementsAfterRemount[index]);
+      // They should all be using the new color:
+      expect(el.dataset.color).toBe('black');
+    });
+
+    // Do another render just in case.
+    ReactDOM.render(tree, container);
+    expect(container.querySelectorAll('section').length).toBe(3);
+    container.querySelectorAll('section').forEach((el, index) => {
+      expect(el).toBe(elementsAfterRemount[index]);
+      expect(el.dataset.color).toBe('black');
+    });
+  }
+
   it('can remount on signature change within a <root> wrapper', () => {
     if (__DEV__) {
       testRemountingWithWrapper(Hello => Hello);

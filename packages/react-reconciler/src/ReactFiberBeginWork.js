@@ -2116,7 +2116,7 @@ function bailoutOnAlreadyFinishedWork(
 }
 
 function remountFiber(
-  current: Fiber | null,
+  current: Fiber,
   oldWorkInProgress: Fiber,
   newWorkInProgress: Fiber,
 ): Fiber | null {
@@ -2126,7 +2126,13 @@ function remountFiber(
       throw new Error('Cannot swap the root fiber.');
     }
 
-    // Connect the new fiber to the tree.
+    // Disconnect from the old current.
+    // It will get deleted.
+    current.alternate = null;
+    oldWorkInProgress.alternate = null;
+
+    // Connect to the new tree.
+    newWorkInProgress.index = oldWorkInProgress.index;
     newWorkInProgress.sibling = oldWorkInProgress.sibling;
     newWorkInProgress.return = oldWorkInProgress.return;
 
@@ -2147,16 +2153,19 @@ function remountFiber(
       prevSibling.sibling = newWorkInProgress;
     }
 
-    // Delete the old one and place the new one.
-    // Since the old one is disconnected, we have to schedule it manually.
-    newWorkInProgress.effectTag = Placement;
-    oldWorkInProgress.effectTag = Deletion;
-    if (returnFiber.lastEffect !== null) {
-      returnFiber.lastEffect.nextEffect = oldWorkInProgress;
-      returnFiber.lastEffect = oldWorkInProgress;
+    // Delete the old fiber and place the new one.
+    // Since the old fiber is disconnected, we have to schedule it manually.
+    const last = returnFiber.lastEffect;
+    if (last !== null) {
+      last.nextEffect = current;
+      returnFiber.lastEffect = current;
     } else {
-      returnFiber.firstEffect = returnFiber.lastEffect = oldWorkInProgress;
+      returnFiber.firstEffect = returnFiber.lastEffect = current;
     }
+    current.nextEffect = null;
+    current.effectTag = Deletion;
+
+    newWorkInProgress.effectTag |= Placement;
 
     // Restart work from the new fiber.
     return newWorkInProgress;
@@ -2173,7 +2182,7 @@ function beginWork(
   const updateExpirationTime = workInProgress.expirationTime;
 
   if (__DEV__) {
-    if (workInProgress._debugNeedsRemount) {
+    if (workInProgress._debugNeedsRemount && current !== null) {
       // This will restart the begin phase with a new fiber.
       return remountFiber(
         current,
