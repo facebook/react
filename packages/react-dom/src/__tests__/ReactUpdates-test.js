@@ -1323,18 +1323,27 @@ describe('ReactUpdates', () => {
 
     const root = ReactDOM.unstable_createRoot(container);
     root.render(<Foo />);
-    expect(Scheduler).toFlushAndYieldThrough(
-      ['Foo', __DEV__ && 'Foo', 'Baz', 'Foo#effect'].filter(Boolean),
-    );
+    if (__DEV__) {
+      expect(Scheduler).toFlushAndYieldThrough([
+        'Foo',
+        'Foo',
+        'Baz',
+        'Foo#effect',
+      ]);
+    } else {
+      expect(Scheduler).toFlushAndYieldThrough(['Foo', 'Baz', 'Foo#effect']);
+    }
 
     const hiddenDiv = container.firstChild.firstChild;
     expect(hiddenDiv.hidden).toBe(true);
     expect(hiddenDiv.innerHTML).toBe('');
 
     // Run offscreen update
-    expect(Scheduler).toFlushAndYield(
-      ['Bar', __DEV__ && 'Bar'].filter(Boolean),
-    );
+    if (__DEV__) {
+      expect(Scheduler).toFlushAndYield(['Bar', 'Bar']);
+    } else {
+      expect(Scheduler).toFlushAndYield(['Bar']);
+    }
     expect(hiddenDiv.hidden).toBe(true);
     expect(hiddenDiv.innerHTML).toBe('<p>bar 0</p>');
 
@@ -1345,9 +1354,11 @@ describe('ReactUpdates', () => {
     expect(hiddenDiv.innerHTML).toBe('<p>bar 0</p>');
 
     // Run offscreen update
-    expect(Scheduler).toFlushAndYield(
-      ['Bar', __DEV__ && 'Bar'].filter(Boolean),
-    );
+    if (__DEV__) {
+      expect(Scheduler).toFlushAndYield(['Bar', 'Bar']);
+    } else {
+      expect(Scheduler).toFlushAndYield(['Bar']);
+    }
     expect(hiddenDiv.innerHTML).toBe('<p>bar 1</p>');
   });
 

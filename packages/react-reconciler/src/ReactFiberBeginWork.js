@@ -2132,6 +2132,7 @@ function beginWork(
           resetHydrationState();
           break;
         case HostComponent:
+          pushHostContext(workInProgress);
           if (
             workInProgress.mode & ConcurrentMode &&
             renderExpirationTime !== Never &&
@@ -2141,7 +2142,6 @@ function beginWork(
             workInProgress.expirationTime = workInProgress.childExpirationTime = Never;
             return null;
           }
-          pushHostContext(workInProgress);
           break;
         case ClassComponent: {
           const Component = workInProgress.type;
