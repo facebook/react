@@ -2072,4 +2072,86 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       span('Loading B...'),
     ]);
   });
+
+  it('supports delaying a busy spinner from disappearing', async () => {
+    function useLoadingIndicator(config) {
+      let [isLoading, setLoading] = React.useState(false);
+      let start = React.useCallback(
+        cb => {
+          setLoading(true);
+          Scheduler.unstable_next(() =>
+            React.unstable_withSuspenseConfig(() => {
+              setLoading(false);
+              cb();
+            }, config),
+          );
+        },
+        [setLoading, config],
+      );
+      return [isLoading, start];
+    }
+
+    const SUSPENSE_CONFIG = {
+      timeoutMs: 10000,
+      loadingDelayMs: 500,
+      minLoadingDurationMs: 400,
+    };
+
+    let transitionToPage;
+
+    function App() {
+      let [page, setPage] = React.useState('A');
+      let [isLoading, startLoading] = useLoadingIndicator(SUSPENSE_CONFIG);
+      transitionToPage = nextPage => startLoading(() => setPage(nextPage));
+      return (
+        <Fragment>
+          <Text text={page} />
+          {isLoading ? <Text text="L" /> : null}
+        </Fragment>
+      );
+    }
+
+    // Initial render.
+    ReactNoop.render(<App />);
+    expect(Scheduler).toFlushAndYield(['A']);
+    expect(ReactNoop.getChildren()).toEqual([span('A')]);
+
+    await ReactNoop.act(async () => {
+      transitionToPage('B');
+      // Rendering B is quick and we didn't have enough
+      // time to show the loading indicator.
+      Scheduler.advanceTime(200);
+      await advanceTimers(200);
+      expect(Scheduler).toFlushAndYield(['A', 'L', 'B']);
+      expect(ReactNoop.getChildren()).toEqual([span('B')]);
+    });
+
+    await ReactNoop.act(async () => {
+      transitionToPage('C');
+      // Rendering C is a bit slower so we've already showed
+      // the loading indicator.
+      Scheduler.advanceTime(600);
+      await advanceTimers(600);
+      expect(Scheduler).toFlushAndYield(['B', 'L', 'C']);
+      // We're technically done now but we haven't shown the
+      // loading indicator for long enough yet so we'll suspend
+      // while we keep it on the screen a bit longer.
+      expect(ReactNoop.getChildren()).toEqual([span('B'), span('L')]);
+      Scheduler.advanceTime(400);
+      await advanceTimers(400);
+      expect(ReactNoop.getChildren()).toEqual([span('C')]);
+    });
+
+    await ReactNoop.act(async () => {
+      transitionToPage('D');
+      // Rendering D is very slow so we've already showed
+      // the loading indicator.
+      Scheduler.advanceTime(1000);
+      await advanceTimers(1000);
+      expect(Scheduler).toFlushAndYield(['C', 'L', 'D']);
+      // However, since we exceeded the minimum time to show
+      // the loading indicator, we commit immediately.
+      expect(ReactNoop.getChildren()).toEqual([span('D')]);
+    });
+  });
 });
