@@ -212,6 +212,7 @@ let workInProgressRootExitStatus: RootExitStatus = RootIncomplete;
 // because we deal mostly with expiration times in the hot path, so this avoids
 // the conversion happening in the hot path.
 let workInProgressRootLatestProcessedExpirationTime: ExpirationTime = Sync;
+let workInProgressRootLatestSuspenseTimeout: ExpirationTime = Sync;
 let workInProgressRootCanSuspendUsingConfig: null | SuspenseConfig = null;
 
 let nextEffect: Fiber | null = null;
@@ -734,6 +735,7 @@ function prepareFreshStack(root, expirationTime) {
   renderExpirationTime = expirationTime;
   workInProgressRootExitStatus = RootIncomplete;
   workInProgressRootLatestProcessedExpirationTime = Sync;
+  workInProgressRootLatestSuspenseTimeout = Sync;
   workInProgressRootCanSuspendUsingConfig = null;
 
   if (__DEV__) {
@@ -949,6 +951,7 @@ function renderRoot(
             workInProgressRootExitStatus === RootSuspendedWithDelay;
           let msUntilTimeout = computeMsUntilTimeout(
             workInProgressRootLatestProcessedExpirationTime,
+            workInProgressRootLatestSuspenseTimeout,
             expirationTime,
             workInProgressRootCanSuspendUsingConfig,
             shouldDelay,
@@ -1011,15 +1014,12 @@ export function markRenderEventTimeAndConfig(
     workInProgressRootLatestProcessedExpirationTime = expirationTime;
   }
   if (suspenseConfig !== null) {
-    // Most of the time we only have one config and getting wrong is not bad.
-    // We pick the config with the lowest timeout because we'll use it to
-    // reverse engineer the event time if we end up using JND and we want to
-    // error on the side of suspending less time.
     if (
-      workInProgressRootCanSuspendUsingConfig === null ||
-      workInProgressRootCanSuspendUsingConfig.timeoutMs <
-        suspenseConfig.timeoutMs
+      expirationTime < workInProgressRootLatestSuspenseTimeout &&
+      expirationTime > Never
     ) {
+      workInProgressRootLatestSuspenseTimeout = expirationTime;
+      // Most of the time we only have one config and getting wrong is not bad.
       workInProgressRootCanSuspendUsingConfig = suspenseConfig;
     }
   }
@@ -2001,13 +2001,14 @@ function computeMsUntilSuspenseLoadingDelay(
     // have to wait any additional time.
     return 0;
   }
-  const msUntilTimeout = timeElapsed - loadingDelayMs - minLoadingDurationMs;
+  const msUntilTimeout = loadingDelayMs + minLoadingDurationMs - timeElapsed;
   // This is the value that is passed to `setTimeout`.
   return msUntilTimeout;
 }
 
 function computeMsUntilTimeout(
   mostRecentEventTime: ExpirationTime,
+  suspenseTimeout: ExpirationTime,
   committedExpirationTime: ExpirationTime,
   suspenseConfig: null | SuspenseConfig,
   shouldDelay: boolean,
@@ -2019,17 +2020,19 @@ function computeMsUntilTimeout(
 
   // Compute the time until this render pass would expire.
   const currentTimeMs: number = now();
-  const timeUntilExpirationMs =
-    expirationTimeToMs(committedExpirationTime) - currentTimeMs;
 
-  if (suspenseConfig !== null && shouldDelay) {
-    return timeUntilExpirationMs;
+  if (suspenseTimeout !== Sync && shouldDelay) {
+    const timeUntilTimeoutMs =
+      expirationTimeToMs(suspenseTimeout) - currentTimeMs;
+    return timeUntilTimeoutMs;
   }
 
   const eventTimeMs: number = inferTimeFromExpirationTime(
     mostRecentEventTime,
     suspenseConfig,
   );
+  const timeUntilExpirationMs =
+    expirationTimeToMs(committedExpirationTime) - currentTimeMs;
   let timeElapsed = currentTimeMs - eventTimeMs;
   if (timeElapsed < 0) {
     // We get this wrong some time since we estimate the time.
