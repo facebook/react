@@ -77,7 +77,14 @@ export function resolveForwardRefForHotReloading(type: any): any {
         // If that inner render function is different, we'll build a new forwardRef type.
         const currentRender = resolveFunctionForHotReloading(type.render);
         if (type.render !== currentRender) {
-          return {...type, render: currentRender};
+          const syntheticType = {
+            $$typeof: REACT_FORWARD_REF_TYPE,
+            render: currentRender,
+          };
+          if (type.displayName !== undefined) {
+            (syntheticType: any).displayName = type.displayName;
+          }
+          return syntheticType;
         }
       }
       return type;
@@ -189,7 +196,6 @@ export function scheduleHotUpdate(hotUpdate: HotUpdate): void {
         staleFamilies,
       );
     });
-    flushPassiveEffects();
   }
 }
 

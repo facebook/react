@@ -2170,7 +2170,10 @@ function remountFiber(
     // Restart work from the new fiber.
     return newWorkInProgress;
   } else {
-    return null;
+    throw new Error(
+      'Did not expect this call in production. ' +
+        'This is a bug in React. Please file an issue.',
+    );
   }
 }
 

@@ -1639,24 +1639,26 @@ describe('ReactFresh', () => {
       expect(useEffectWithEmptyArrayCalls).toBe(1); // useEffect didn't re-run
 
       // Perform a hot update.
-      patch(() => {
-        function Hello() {
-          const [val, setVal] = React.useState(0);
-          const tranformed = React.useMemo(() => val * 10, [val]);
-          const handleClick = React.useCallback(() => setVal(v => v - 1), []);
+      act(() => {
+        patch(() => {
+          function Hello() {
+            const [val, setVal] = React.useState(0);
+            const tranformed = React.useMemo(() => val * 10, [val]);
+            const handleClick = React.useCallback(() => setVal(v => v - 1), []);
 
-          React.useEffect(() => {
-            useEffectWithEmptyArrayCalls++;
-          }, []);
+            React.useEffect(() => {
+              useEffectWithEmptyArrayCalls++;
+            }, []);
 
-          return (
-            <p style={{color: 'red'}} onClick={handleClick}>
-              {tranformed}
-            </p>
-          );
-        }
-        __register__(Hello, 'Hello');
-        return Hello;
+            return (
+              <p style={{color: 'red'}} onClick={handleClick}>
+                {tranformed}
+              </p>
+            );
+          }
+          __register__(Hello, 'Hello');
+          return Hello;
+        });
       });
 
       // Assert the state was preserved but memo was evicted.
@@ -1973,21 +1975,24 @@ describe('ReactFresh', () => {
       const secondP = firstP.nextSibling.nextSibling;
 
       // Perform a hot update that fails.
-      patch(() => {
-        function Hello() {
-          const [x, setX] = React.useState('');
-          React.useEffect(() => {
-            setTimeout(() => {
-              setX(42); // This will crash next render.
-            }, 1);
-          }, []);
-          x.slice();
-          return <h1>Hi</h1>;
-        }
-        __register__(Hello, 'Hello');
+      act(() => {
+        patch(() => {
+          function Hello() {
+            const [x, setX] = React.useState('');
+            React.useEffect(() => {
+              setTimeout(() => {
+                setX(42); // This will crash next render.
+              }, 1);
+            }, []);
+            x.slice();
+            return <h1>Hi</h1>;
+          }
+          __register__(Hello, 'Hello');
+        });
       });
 
       expect(container.innerHTML).toBe('<p>A</p><h1>Hi</h1><p>B</p>');
+      // Run timeout inside effect:
       act(() => {
         jest.runAllTimers();
       });
