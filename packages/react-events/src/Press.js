@@ -649,6 +649,11 @@ const PressResponder = {
 
           // Ignore emulated mouse events
           if (type === 'mousedown' && state.ignoreEmulatedMouseEvents) {
+            // In order to ensure that other event systems (including React's heritage event system).
+            // We need to be able to block these events from reaching them, otherwise, they
+            // might conflict with Flare and cause unwanted side-effects. So we use the
+            // stopImmediatePropagation to do this via the DOM event API. At some point,
+            // we may want to move this into the Flare event system, rather than have it in this module.
             nativeEvent.stopImmediatePropagation();
             return;
           }
@@ -803,6 +808,11 @@ const PressResponder = {
       case 'mouseup':
       case 'touchend': {
         if (type === 'mouseup' && state.ignoreEmulatedMouseEvents) {
+          // In order to ensure that other event systems (including React's heritage event system).
+            // We need to be able to block these events from reaching them, otherwise, they
+            // might conflict with Flare and cause unwanted side-effects. So we use the
+            // stopImmediatePropagation to do this via the DOM event API. At some point,
+            // we may want to move this into the Flare event system, rather than have it in this module.
           nativeEvent.stopImmediatePropagation();
           state.ignoreEmulatedMouseEvents = false;
           return;
