@@ -123,9 +123,13 @@ function CommitFlamegraph({
   const selectedChartNode = useMemo(() => {
     let chartNode = null;
     if (selectedFiberID !== null) {
-      chartNode = ((chartData.rows[selectedChartNodeIndex].find(
+      const foundChartNode = chartData.rows[selectedChartNodeIndex].find(
         chartNode => chartNode.id === selectedFiberID
-      ): any): ChartNode);
+      );
+
+      if (foundChartNode !== undefined) {
+        chartNode = foundChartNode;
+      }
     }
     return chartNode;
   }, [chartData, selectedFiberID, selectedChartNodeIndex]);
