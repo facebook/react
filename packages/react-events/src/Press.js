@@ -713,10 +713,6 @@ const PressResponder = {
             nativeEvent.preventDefault();
           }
         }
-        if (state.ignoreEmulatedMouseEvents) {
-          state.ignoreEmulatedMouseEvents = false;
-          nativeEvent.stopImmediatePropagation();
-        }
         break;
       }
     }
@@ -808,6 +804,7 @@ const PressResponder = {
       case 'touchend': {
         if (type === 'mouseup' && state.ignoreEmulatedMouseEvents) {
           nativeEvent.stopImmediatePropagation();
+          state.ignoreEmulatedMouseEvents = false;
           return;
         }
         if (state.isPressed) {
