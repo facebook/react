@@ -39,5 +39,11 @@ declare module 'EventListener' {
       options?: {passive: boolean},
     ) => mixed,
     capture: (target: Element, type: string, callback: Function) => mixed,
+    captureWithPassiveFlag: (
+      target: Element,
+      type: string,
+      callback: Function,
+      passive: boolean,
+    ) => mixed,
   };
 }

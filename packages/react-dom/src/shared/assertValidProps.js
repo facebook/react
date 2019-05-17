@@ -12,6 +12,8 @@ import warning from 'shared/warning';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 import voidElementTags from './voidElementTags';
+import {enableEventAPI} from 'shared/ReactFeatureFlags';
+import {REACT_EVENT_TARGET_TYPE} from 'shared/ReactSymbols';
 
 const HTML = '__html';
 
@@ -27,7 +29,11 @@ function assertValidProps(tag: string, props: ?Object) {
   // Note the use of `==` which checks for null or undefined.
   if (voidElementTags[tag]) {
     invariant(
-      props.children == null && props.dangerouslySetInnerHTML == null,
+      (props.children == null ||
+        (enableEventAPI &&
+          props.children.type &&
+          props.children.type.$$typeof === REACT_EVENT_TARGET_TYPE)) &&
+        props.dangerouslySetInnerHTML == null,
       '%s is a void element tag and must neither have `children` nor ' +
         'use `dangerouslySetInnerHTML`.%s',
       tag,

@@ -486,7 +486,7 @@ describe('ReactNative', () => {
     expect(mockArgs.length).toEqual(0);
   });
 
-  it('should throw when <View> is used inside of a <Text> ancestor', () => {
+  it('should not throw when <View> is used inside of a <Text> ancestor', () => {
     const Image = createReactNativeComponentClass('RCTImage', () => ({
       validAttributes: {},
       uiViewClassName: 'RCTImage',
@@ -500,14 +500,12 @@ describe('ReactNative', () => {
       uiViewClassName: 'RCTView',
     }));
 
-    expect(() =>
-      ReactNative.render(
-        <Text>
-          <View />
-        </Text>,
-        11,
-      ),
-    ).toThrow('Nesting of <View> within <Text> is not currently supported.');
+    ReactNative.render(
+      <Text>
+        <View />
+      </Text>,
+      11,
+    );
 
     // Non-View things (e.g. Image) are fine
     ReactNative.render(

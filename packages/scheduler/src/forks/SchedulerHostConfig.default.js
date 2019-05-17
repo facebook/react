@@ -17,6 +17,7 @@ export let requestHostCallback;
 export let cancelHostCallback;
 export let shouldYieldToHost;
 export let getCurrentTime;
+export let forceFrameRate;
 
 const hasNativePerformanceNow =
   typeof performance === 'object' && typeof performance.now === 'function';
@@ -111,6 +112,7 @@ if (
   shouldYieldToHost = function() {
     return false;
   };
+  forceFrameRate = function() {};
 } else {
   if (typeof console !== 'undefined') {
     // TODO: Remove fb.me link
@@ -144,9 +146,28 @@ if (
   // frames.
   let previousFrameTime = 33;
   let activeFrameTime = 33;
+  let fpsLocked = false;
 
   shouldYieldToHost = function() {
     return frameDeadline <= getCurrentTime();
+  };
+
+  forceFrameRate = function(fps) {
+    if (fps < 0 || fps > 125) {
+      console.error(
+        'forceFrameRate takes a positive int between 0 and 125, ' +
+          'forcing framerates higher than 125 fps is not unsupported',
+      );
+      return;
+    }
+    if (fps > 0) {
+      activeFrameTime = Math.floor(1000 / fps);
+      fpsLocked = true;
+    } else {
+      // reset the framerate
+      activeFrameTime = 33;
+      fpsLocked = false;
+    }
   };
 
   // We use the postMessage trick to defer idle work until after the repaint.
@@ -214,7 +235,8 @@ if (
     let nextFrameTime = rafTime - frameDeadline + activeFrameTime;
     if (
       nextFrameTime < activeFrameTime &&
-      previousFrameTime < activeFrameTime
+      previousFrameTime < activeFrameTime &&
+      !fpsLocked
     ) {
       if (nextFrameTime < 8) {
         // Defensive coding. We don't support higher frame rates than 120hz.

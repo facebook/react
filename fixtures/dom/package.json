@@ -18,7 +18,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "prestart": "cp ../../build/node_modules/react/umd/react.development.js ../../build/node_modules/react-dom/umd/react-dom.development.js ../../build/node_modules/react/umd/react.production.min.js ../../build/node_modules/react-dom/umd/react-dom.production.min.js ../../build/node_modules/react-dom/umd/react-dom-server.browser.development.js ../../build/node_modules/react-dom/umd/react-dom-server.browser.production.min.js ../../build/node_modules/react-dom/umd/react-dom-test-utils.development.js ../../build/node_modules/react-dom/umd/react-dom-test-utils.production.min.js public/ && cp -a ../../build/node_modules/. node_modules",
+    "prestart": "cp ../../build/node_modules/scheduler/umd/scheduler-unstable_mock.development.js ../../build/node_modules/scheduler/umd/scheduler-unstable_mock.production.min.js ../../build/node_modules/react/umd/react.development.js ../../build/node_modules/react-dom/umd/react-dom.development.js ../../build/node_modules/react/umd/react.production.min.js ../../build/node_modules/react-dom/umd/react-dom.production.min.js ../../build/node_modules/react-dom/umd/react-dom-server.browser.development.js ../../build/node_modules/react-dom/umd/react-dom-server.browser.production.min.js ../../build/node_modules/react-dom/umd/react-dom-test-utils.development.js ../../build/node_modules/react-dom/umd/react-dom-test-utils.production.min.js public/ && cp -a ../../build/node_modules/. node_modules",
     "build": "react-scripts build && cp build/index.html build/200.html",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"

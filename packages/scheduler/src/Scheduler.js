@@ -14,6 +14,7 @@ import {
   cancelHostCallback,
   shouldYieldToHost,
   getCurrentTime,
+  forceFrameRate,
 } from './SchedulerHostConfig';
 
 // TODO: Use symbols?
@@ -343,8 +344,8 @@ function unstable_scheduleCallback(
   };
 
   // Insert the new callback into the list, ordered first by expiration, then
-  // by insertion. So the new callback is inserted any other callback with
-  // equal expiration.
+  // by insertion. So the new callback is inserted after any other callback
+  // with equal expiration.
   if (firstCallbackNode === null) {
     // This is the first callback in the list.
     firstCallbackNode = newNode.next = newNode.previous = newNode;
@@ -448,4 +449,5 @@ export {
   unstable_pauseExecution,
   unstable_getFirstCallbackNode,
   getCurrentTime as unstable_now,
+  forceFrameRate as unstable_forceFrameRate,
 };

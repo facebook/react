@@ -15,6 +15,7 @@ import type {
   ReactEventComponent,
   ReactEventTarget,
 } from 'shared/ReactTypes';
+import type {RootTag} from 'shared/ReactRootTags';
 import type {WorkTag} from 'shared/ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {SideEffectTag} from 'shared/ReactSideEffectTags';
@@ -27,6 +28,7 @@ import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {enableProfilerTimer, enableEventAPI} from 'shared/ReactFeatureFlags';
 import {NoEffect} from 'shared/ReactSideEffectTags';
+import {ConcurrentRoot, BatchedRoot} from 'shared/ReactRootTags';
 import {
   IndeterminateComponent,
   ClassComponent,
@@ -52,10 +54,11 @@ import getComponentName from 'shared/getComponentName';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {NoWork} from './ReactFiberExpirationTime';
 import {
-  NoContext,
+  NoMode,
   ConcurrentMode,
   ProfileMode,
   StrictMode,
+  BatchedMode,
 } from './ReactTypeOfMode';
 import {
   REACT_FORWARD_REF_TYPE,
@@ -434,8 +437,15 @@ export function createWorkInProgress(
   return workInProgress;
 }
 
-export function createHostRootFiber(isConcurrent: boolean): Fiber {
-  let mode = isConcurrent ? ConcurrentMode | StrictMode : NoContext;
+export function createHostRootFiber(tag: RootTag): Fiber {
+  let mode;
+  if (tag === ConcurrentRoot) {
+    mode = ConcurrentMode | BatchedMode | StrictMode;
+  } else if (tag === BatchedRoot) {
+    mode = BatchedMode | StrictMode;
+  } else {
+    mode = NoMode;
+  }
 
   if (enableProfilerTimer && isDevToolsPresent) {
     // Always collect profile timings when DevTools are present.
@@ -476,19 +486,13 @@ export function createFiberFromTypeAndProps(
           key,
         );
       case REACT_CONCURRENT_MODE_TYPE:
-        return createFiberFromMode(
-          pendingProps,
-          mode | ConcurrentMode | StrictMode,
-          expirationTime,
-          key,
-        );
+        fiberTag = Mode;
+        mode |= ConcurrentMode | BatchedMode | StrictMode;
+        break;
       case REACT_STRICT_MODE_TYPE:
-        return createFiberFromMode(
-          pendingProps,
-          mode | StrictMode,
-          expirationTime,
-          key,
-        );
+        fiberTag = Mode;
+        mode |= StrictMode;
+        break;
       case REACT_PROFILER_TYPE:
         return createFiberFromProfiler(pendingProps, mode, expirationTime, key);
       case REACT_SUSPENSE_TYPE:
@@ -672,26 +676,6 @@ function createFiberFromProfiler(
   return fiber;
 }
 
-function createFiberFromMode(
-  pendingProps: any,
-  mode: TypeOfMode,
-  expirationTime: ExpirationTime,
-  key: null | string,
-): Fiber {
-  const fiber = createFiber(Mode, pendingProps, key, mode);
-
-  // TODO: The Mode fiber shouldn't have a type. It has a tag.
-  const type =
-    (mode & ConcurrentMode) === NoContext
-      ? REACT_STRICT_MODE_TYPE
-      : REACT_CONCURRENT_MODE_TYPE;
-  fiber.elementType = type;
-  fiber.type = type;
-
-  fiber.expirationTime = expirationTime;
-  return fiber;
-}
-
 export function createFiberFromSuspense(
   pendingProps: any,
   mode: TypeOfMode,
@@ -720,7 +704,7 @@ export function createFiberFromText(
 }
 
 export function createFiberFromHostInstanceForDeletion(): Fiber {
-  const fiber = createFiber(HostComponent, null, null, NoContext);
+  const fiber = createFiber(HostComponent, null, null, NoMode);
   // TODO: These should not need a type.
   fiber.elementType = 'DELETED';
   fiber.type = 'DELETED';
@@ -751,7 +735,7 @@ export function assignFiberPropertiesInDEV(
   if (target === null) {
     // This Fiber's initial properties will always be overwritten.
     // We only use a Fiber to ensure the same hidden class so DEV isn't slow.
-    target = createFiber(IndeterminateComponent, null, null, NoContext);
+    target = createFiber(IndeterminateComponent, null, null, NoMode);
   }
 
   // This is intentionally written as a list of all properties.

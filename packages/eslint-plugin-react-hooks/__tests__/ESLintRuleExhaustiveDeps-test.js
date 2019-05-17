@@ -270,6 +270,16 @@ const tests = {
       options: [{additionalHooks: 'useCustomEffect'}],
     },
     {
+      code: `
+        function MyComponent(props) {
+          useCustomEffect(() => {
+            console.log(props.foo);
+          }, []);
+        }
+      `,
+      options: [{additionalHooks: 'useAnotherEffect'}],
+    },
+    {
       // Valid because we don't care about hooks outside of components.
       code: `
         const local = {};

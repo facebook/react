@@ -33,6 +33,7 @@ import ReactNativeComponent from './ReactNativeComponent';
 import {getClosestInstanceFromNode} from './ReactFabricComponentTree';
 import {getInspectorDataForViewTag} from './ReactNativeFiberInspector';
 
+import {LegacyRoot} from 'shared/ReactRootTags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentName from 'shared/getComponentName';
 import warningWithoutStack from 'shared/warningWithoutStack';
@@ -119,7 +120,7 @@ const ReactFabric: ReactFabricType = {
     if (!root) {
       // TODO (bvaughn): If we decide to keep the wrapper component,
       // We could create a wrapper for containerTag as well to reduce special casing.
-      root = createContainer(containerTag, false, false);
+      root = createContainer(containerTag, LegacyRoot, false);
       roots.set(containerTag, root);
     }
     updateContainer(element, root, null, callback);

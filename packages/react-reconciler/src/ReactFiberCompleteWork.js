@@ -43,7 +43,7 @@ import {
   EventComponent,
   EventTarget,
 } from 'shared/ReactWorkTags';
-import {ConcurrentMode, NoContext} from './ReactTypeOfMode';
+import {NoMode, BatchedMode} from './ReactTypeOfMode';
 import {
   Placement,
   Ref,
@@ -68,7 +68,6 @@ import {
   createContainerChildSet,
   appendChildToContainerChildSet,
   finalizeContainerChildren,
-  mountEventComponent,
   updateEventComponent,
   handleEventTarget,
 } from './ReactFiberHostConfig';
@@ -78,6 +77,7 @@ import {
   getHostContext,
   popHostContainer,
 } from './ReactFiberHostContext';
+import {popSuspenseContext} from './ReactFiberSuspenseContext';
 import {
   isContextProvider as isLegacyContextProvider,
   popContext as popLegacyContext,
@@ -95,6 +95,9 @@ import {
   enableEventAPI,
 } from 'shared/ReactFeatureFlags';
 import {markRenderEventTime, renderDidSuspend} from './ReactFiberScheduler';
+import {getEventComponentHostChildrenCount} from './ReactFiberEvents';
+import getComponentName from 'shared/getComponentName';
+import warning from 'shared/warning';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -668,6 +671,7 @@ function completeWork(
     case ForwardRef:
       break;
     case SuspenseComponent: {
+      popSuspenseContext(workInProgress);
       const nextState: null | SuspenseState = workInProgress.memoizedState;
       if ((workInProgress.effectTag & DidCapture) !== NoEffect) {
         // Something suspended. Re-render with the fallback children.
@@ -717,12 +721,12 @@ function completeWork(
       }
 
       if (nextDidTimeout && !prevDidTimeout) {
-        // If this subtreee is running in concurrent mode we can suspend,
+        // If this subtreee is running in batched mode we can suspend,
         // otherwise we won't suspend.
         // TODO: This will still suspend a synchronous tree if anything
         // in the concurrent tree already suspended during this render.
         // This is a known bug.
-        if ((workInProgress.mode & ConcurrentMode) !== NoContext) {
+        if ((workInProgress.mode & BatchedMode) !== NoMode) {
           renderDidSuspend();
         }
       }
@@ -778,6 +782,7 @@ function completeWork(
     }
     case DehydratedSuspenseComponent: {
       if (enableSuspenseServerRenderer) {
+        popSuspenseContext(workInProgress);
         if (current === null) {
           let wasHydrated = popHydrationState(workInProgress);
           invariant(
@@ -809,22 +814,35 @@ function completeWork(
 
         if (eventComponentInstance === null) {
           let responderState = null;
+          if (__DEV__ && !responder.allowMultipleHostChildren) {
+            const hostChildrenCount = getEventComponentHostChildrenCount(
+              workInProgress,
+            );
+            warning(
+              (hostChildrenCount || 0) < 2,
+              'A "<%s>" event component cannot contain multiple host children.',
+              getComponentName(workInProgress.type),
+            );
+          }
           if (responder.createInitialState !== undefined) {
             responderState = responder.createInitialState(newProps);
           }
           eventComponentInstance = workInProgress.stateNode = {
-            context: null,
+            currentFiber: workInProgress,
             props: newProps,
             responder,
+            rootEventTypes: null,
             rootInstance: rootContainerInstance,
             state: responderState,
           };
-          mountEventComponent(eventComponentInstance);
+          markUpdate(workInProgress);
         } else {
           // Update the props on the event component state node
           eventComponentInstance.props = newProps;
           // Update the root container, so we can properly unmount events at some point
           eventComponentInstance.rootInstance = rootContainerInstance;
+          // Update the current fiber
+          eventComponentInstance.currentFiber = workInProgress;
           updateEventComponent(eventComponentInstance);
         }
       }

@@ -12,21 +12,32 @@
 let React;
 let ReactFeatureFlags;
 let ReactDOM;
-let ReactSymbols;
 
-function createReactEventComponent(
+function createReactEventComponent({
   targetEventTypes,
+  rootEventTypes,
   createInitialState,
   onEvent,
+  onEventCapture,
+  onRootEvent,
+  onMount,
   onUnmount,
   onOwnershipChange,
-) {
+  stopLocalPropagation,
+  allowMultipleHostChildren,
+}) {
   const testEventResponder = {
     targetEventTypes,
+    rootEventTypes,
     createInitialState,
     onEvent,
+    onEventCapture,
+    onRootEvent,
+    onMount,
     onUnmount,
     onOwnershipChange,
+    stopLocalPropagation: stopLocalPropagation || false,
+    allowMultipleHostChildren: allowMultipleHostChildren || false,
   };
 
   return {
@@ -37,30 +48,14 @@ function createReactEventComponent(
   };
 }
 
-const ROOT_PHASE = 0;
-const BUBBLE_PHASE = 1;
-const CAPTURE_PHASE = 2;
-
-function phaseToString(phase) {
-  return phase === ROOT_PHASE
-    ? 'root'
-    : phase === BUBBLE_PHASE
-      ? 'bubble'
-      : 'capture';
+function dispatchEvent(element, type) {
+  const event = document.createEvent('Event');
+  event.initEvent(type, true, true);
+  element.dispatchEvent(event);
 }
 
 function dispatchClickEvent(element) {
-  const clickEvent = document.createEvent('Event');
-  clickEvent.initEvent('click', true, true);
-  element.dispatchEvent(clickEvent);
-}
-
-function createReactEventTarget(type) {
-  return {
-    $$typeof: ReactSymbols.REACT_EVENT_TARGET_TYPE,
-    displayName: 'TestEventTarget',
-    type,
-  };
+  dispatchEvent(element, 'click');
 }
 
 // This is a new feature in Fiber so I put it in its own test file. It could
@@ -76,7 +71,6 @@ describe('DOMEventResponderSystem', () => {
     ReactDOM = require('react-dom');
     container = document.createElement('div');
     document.body.appendChild(container);
-    ReactSymbols = require('shared/ReactSymbols');
   });
 
   afterEach(() => {
@@ -84,24 +78,32 @@ describe('DOMEventResponderSystem', () => {
     container = null;
   });
 
-  it('the event responder onEvent() function should fire on click event', () => {
+  it('the event responder event listeners should fire on click event', () => {
     let eventResponderFiredCount = 0;
     let eventLog = [];
     const buttonRef = React.createRef();
 
-    const ClickEventComponent = createReactEventComponent(
-      ['click'],
-      undefined,
-      (event, context, props) => {
+    const ClickEventComponent = createReactEventComponent({
+      targetEventTypes: ['click'],
+      onEvent: (event, context, props) => {
         eventResponderFiredCount++;
         eventLog.push({
           name: event.type,
           passive: event.passive,
           passiveSupported: event.passiveSupported,
-          phase: event.phase,
+          phase: 'bubble',
         });
       },
-    );
+      onEventCapture: (event, context, props) => {
+        eventResponderFiredCount++;
+        eventLog.push({
+          name: event.type,
+          passive: event.passive,
+          passiveSupported: event.passiveSupported,
+          phase: 'capture',
+        });
+      },
+    });
 
     const Test = () => (
       <ClickEventComponent>
@@ -123,13 +125,13 @@ describe('DOMEventResponderSystem', () => {
         name: 'click',
         passive: false,
         passiveSupported: false,
-        phase: CAPTURE_PHASE,
+        phase: 'capture',
       },
       {
         name: 'click',
         passive: false,
         passiveSupported: false,
-        phase: BUBBLE_PHASE,
+        phase: 'bubble',
       },
     ]);
 
@@ -145,7 +147,7 @@ describe('DOMEventResponderSystem', () => {
     expect(eventResponderFiredCount).toBe(4);
   });
 
-  it('the event responder onEvent() function should fire on click event (passive events forced)', () => {
+  it('the event responder event listeners should fire on click event (passive events forced)', () => {
     // JSDOM does not support passive events, so this manually overrides the value to be true
     const checkPassiveEvents = require('react-dom/src/events/checkPassiveEvents');
     checkPassiveEvents.passiveBrowserEventsSupported = true;
@@ -153,18 +155,25 @@ describe('DOMEventResponderSystem', () => {
     let eventLog = [];
     const buttonRef = React.createRef();
 
-    const ClickEventComponent = createReactEventComponent(
-      ['click'],
-      undefined,
-      (event, context, props) => {
+    const ClickEventComponent = createReactEventComponent({
+      targetEventTypes: ['click'],
+      onEvent: (event, context, props) => {
         eventLog.push({
           name: event.type,
           passive: event.passive,
           passiveSupported: event.passiveSupported,
-          phase: event.phase,
+          phase: 'bubble',
         });
       },
-    );
+      onEventCapture: (event, context, props) => {
+        eventLog.push({
+          name: event.type,
+          passive: event.passive,
+          passiveSupported: event.passiveSupported,
+          phase: 'capture',
+        });
+      },
+    });
 
     const Test = () => (
       <ClickEventComponent>
@@ -183,35 +192,43 @@ describe('DOMEventResponderSystem', () => {
         name: 'click',
         passive: true,
         passiveSupported: true,
-        phase: CAPTURE_PHASE,
+        phase: 'capture',
       },
       {
         name: 'click',
         passive: true,
         passiveSupported: true,
-        phase: BUBBLE_PHASE,
+        phase: 'bubble',
       },
     ]);
   });
 
-  it('nested event responders and their onEvent() function should fire multiple times', () => {
+  it('nested event responders and their event listeners should fire multiple times', () => {
     let eventResponderFiredCount = 0;
     let eventLog = [];
     const buttonRef = React.createRef();
 
-    const ClickEventComponent = createReactEventComponent(
-      ['click'],
-      undefined,
-      (event, context, props) => {
+    const ClickEventComponent = createReactEventComponent({
+      targetEventTypes: ['click'],
+      onEvent: (event, context, props) => {
         eventResponderFiredCount++;
         eventLog.push({
           name: event.type,
           passive: event.passive,
           passiveSupported: event.passiveSupported,
-          phase: event.phase,
+          phase: 'bubble',
         });
       },
-    );
+      onEventCapture: (event, context, props) => {
+        eventResponderFiredCount++;
+        eventLog.push({
+          name: event.type,
+          passive: event.passive,
+          passiveSupported: event.passiveSupported,
+          phase: 'capture',
+        });
+      },
+    });
 
     const Test = () => (
       <ClickEventComponent>
@@ -234,48 +251,52 @@ describe('DOMEventResponderSystem', () => {
         name: 'click',
         passive: false,
         passiveSupported: false,
-        phase: CAPTURE_PHASE,
+        phase: 'capture',
       },
       {
         name: 'click',
         passive: false,
         passiveSupported: false,
-        phase: CAPTURE_PHASE,
+        phase: 'capture',
       },
       {
         name: 'click',
         passive: false,
         passiveSupported: false,
-        phase: BUBBLE_PHASE,
+        phase: 'bubble',
       },
       {
         name: 'click',
         passive: false,
         passiveSupported: false,
-        phase: BUBBLE_PHASE,
+        phase: 'bubble',
       },
     ]);
   });
 
-  it('nested event responders and their onEvent() should fire in the correct order', () => {
+  it('nested event responders and their event listeners should fire in the correct order', () => {
     let eventLog = [];
     const buttonRef = React.createRef();
 
-    const ClickEventComponentA = createReactEventComponent(
-      ['click'],
-      undefined,
-      (event, context, props) => {
-        eventLog.push(`A [${phaseToString(event.phase)}]`);
+    const ClickEventComponentA = createReactEventComponent({
+      targetEventTypes: ['click'],
+      onEvent: (event, context, props) => {
+        eventLog.push(`A [bubble]`);
       },
-    );
+      onEventCapture: (event, context, props) => {
+        eventLog.push(`A [capture]`);
+      },
+    });
 
-    const ClickEventComponentB = createReactEventComponent(
-      ['click'],
-      undefined,
-      (event, context, props) => {
-        eventLog.push(`B [${phaseToString(event.phase)}]`);
+    const ClickEventComponentB = createReactEventComponent({
+      targetEventTypes: ['click'],
+      onEvent: (event, context, props) => {
+        eventLog.push(`B [bubble]`);
       },
-    );
+      onEventCapture: (event, context, props) => {
+        eventLog.push(`B [capture]`);
+      },
+    });
 
     const Test = () => (
       <ClickEventComponentA>
@@ -299,123 +320,108 @@ describe('DOMEventResponderSystem', () => {
     ]);
   });
 
-  it('nested event responders and their onEvent() should fire in the correct order with stopPropagation', () => {
-    let eventLog;
-    let stopPropagationOnPhase;
+  it('nested event responders should fire in the correct order without stopLocalPropagation', () => {
+    let eventLog = [];
     const buttonRef = React.createRef();
 
-    const ClickEventComponentA = createReactEventComponent(
-      ['click'],
-      undefined,
-      (event, context, props) => {
-        eventLog.push(`A [${phaseToString(event.phase)}]`);
+    const ClickEventComponent = createReactEventComponent({
+      targetEventTypes: ['click'],
+      onEvent: (event, context, props) => {
+        eventLog.push(`${props.name} [bubble]`);
       },
-    );
-
-    const ClickEventComponentB = createReactEventComponent(
-      ['click'],
-      undefined,
-      (event, context, props) => {
-        eventLog.push(`B [${phaseToString(event.phase)}]`);
-        if (event.phase === stopPropagationOnPhase) {
-          return true;
-        }
+      onEventCapture: (event, context, props) => {
+        eventLog.push(`${props.name} [capture]`);
       },
-    );
+      stopLocalPropagation: false,
+    });
 
     const Test = () => (
-      <ClickEventComponentA>
-        <ClickEventComponentB>
+      <ClickEventComponent name="A">
+        <ClickEventComponent name="B">
           <button ref={buttonRef}>Click me!</button>
-        </ClickEventComponentB>
-      </ClickEventComponentA>
+        </ClickEventComponent>
+      </ClickEventComponent>
     );
 
-    function runTestWithPhase(phase) {
-      eventLog = [];
-      stopPropagationOnPhase = phase;
-      ReactDOM.render(<Test />, container);
-      let buttonElement = buttonRef.current;
-      dispatchClickEvent(buttonElement);
-    }
+    ReactDOM.render(<Test />, container);
 
-    runTestWithPhase(BUBBLE_PHASE);
-    expect(eventLog).toEqual(['A [capture]', 'B [capture]', 'B [bubble]']);
-    runTestWithPhase(CAPTURE_PHASE);
-    expect(eventLog).toEqual(['A [capture]', 'B [capture]']);
-  });
+    // Clicking the button should trigger the event responder onEvent()
+    let buttonElement = buttonRef.current;
+    dispatchClickEvent(buttonElement);
 
-  it('nested event responders and their onEvent() should fire in the correct order with stopPropagation #2', () => {
-    let eventLog;
-    let stopPropagationOnPhase;
-    const buttonRef = React.createRef();
-
-    const ClickEventComponentA = createReactEventComponent(
-      ['click'],
-      undefined,
-      (event, context, props) => {
-        eventLog.push(`A [${phaseToString(event.phase)}]`);
-        if (event.phase === stopPropagationOnPhase) {
-          return true;
-        }
-      },
-    );
-
-    const ClickEventComponentB = createReactEventComponent(
-      ['click'],
-      undefined,
-      (event, context, props) => {
-        eventLog.push(`B [${phaseToString(event.phase)}]`);
-      },
-    );
-
-    const Test = () => (
-      <ClickEventComponentA>
-        <ClickEventComponentB>
-          <button ref={buttonRef}>Click me!</button>
-        </ClickEventComponentB>
-      </ClickEventComponentA>
-    );
-
-    function runTestWithPhase(phase) {
-      eventLog = [];
-      stopPropagationOnPhase = phase;
-      ReactDOM.render(<Test />, container);
-      let buttonElement = buttonRef.current;
-      dispatchClickEvent(buttonElement);
-    }
-
-    runTestWithPhase(BUBBLE_PHASE);
     expect(eventLog).toEqual([
       'A [capture]',
       'B [capture]',
       'B [bubble]',
       'A [bubble]',
     ]);
-    runTestWithPhase(CAPTURE_PHASE);
-    expect(eventLog).toEqual(['A [capture]']);
+  });
+
+  it('nested event responders should fire in the correct order with stopLocalPropagation', () => {
+    let eventLog = [];
+    const buttonRef = React.createRef();
+
+    const ClickEventComponent = createReactEventComponent({
+      targetEventTypes: ['click'],
+      onEvent: (event, context, props) => {
+        eventLog.push(`${props.name} [bubble]`);
+      },
+      onEventCapture: (event, context, props) => {
+        eventLog.push(`${props.name} [capture]`);
+      },
+      stopLocalPropagation: true,
+    });
+
+    const Test = () => (
+      <ClickEventComponent name="A">
+        <ClickEventComponent name="B">
+          <button ref={buttonRef}>Click me!</button>
+        </ClickEventComponent>
+      </ClickEventComponent>
+    );
+
+    ReactDOM.render(<Test />, container);
+
+    // Clicking the button should trigger the event responder onEvent()
+    let buttonElement = buttonRef.current;
+    dispatchClickEvent(buttonElement);
+
+    expect(eventLog).toEqual(['A [capture]', 'B [bubble]']);
   });
 
   it('custom event dispatching for click -> magicClick works', () => {
     let eventLog = [];
     const buttonRef = React.createRef();
 
-    const ClickEventComponent = createReactEventComponent(
-      ['click'],
-      undefined,
-      (event, context, props) => {
+    const ClickEventComponent = createReactEventComponent({
+      targetEventTypes: ['click'],
+      onEvent: (event, context, props) => {
         if (props.onMagicClick) {
           const syntheticEvent = {
             target: event.target,
             type: 'magicclick',
-            phase: phaseToString(event.phase),
+            phase: 'bubble',
+            timeStamp: context.getTimeStamp(),
           };
           context.dispatchEvent(syntheticEvent, props.onMagicClick, {
             discrete: true,
           });
         }
       },
-    );
+      onEventCapture: (event, context, props) => {
+        if (props.onMagicClick) {
+          const syntheticEvent = {
+            target: event.target,
+            type: 'magicclick',
+            phase: 'capture',
+            timeStamp: context.getTimeStamp(),
+          };
+          context.dispatchEvent(syntheticEvent, props.onMagicClick, {
+            discrete: true,
+          });
+        }
+      },
+    });
 
     function handleMagicEvent(e) {
       eventLog.push('magic event fired', e.type, e.phase);
@@ -447,44 +453,51 @@ describe('DOMEventResponderSystem', () => {
     let eventLog = [];
     const buttonRef = React.createRef();
 
-    const LongPressEventComponent = createReactEventComponent(
-      ['click'],
-      undefined,
-      (event, context, props) => {
-        const pressEvent = {
-          target: event.target,
-          type: 'press',
-          phase: phaseToString(event.phase),
-        };
-        context.dispatchEvent(pressEvent, props.onPress, {discrete: true});
+    function handleEvent(event, context, props, phase) {
+      const pressEvent = {
+        target: event.target,
+        type: 'press',
+        phase,
+        timeStamp: context.getTimeStamp(),
+      };
+      context.dispatchEvent(pressEvent, props.onPress, {discrete: true});
 
-        context.setTimeout(() => {
-          if (props.onLongPress) {
-            const longPressEvent = {
-              target: event.target,
-              type: 'longpress',
-              phase: phaseToString(event.phase),
-            };
-            context.dispatchEvent(longPressEvent, props.onLongPress, {
-              discrete: true,
-            });
-          }
+      context.setTimeout(() => {
+        if (props.onLongPress) {
+          const longPressEvent = {
+            target: event.target,
+            type: 'longpress',
+            phase,
+            timeStamp: context.getTimeStamp(),
+          };
+          context.dispatchEvent(longPressEvent, props.onLongPress, {
+            discrete: true,
+          });
+        }
 
-          if (props.onLongPressChange) {
-            const longPressChangeEvent = {
-              target: event.target,
-              type: 'longpresschange',
-              phase: phaseToString(event.phase),
-            };
-            context.dispatchEvent(
-              longPressChangeEvent,
-              props.onLongPressChange,
-              {discrete: true},
-            );
-          }
-        }, 500);
+        if (props.onLongPressChange) {
+          const longPressChangeEvent = {
+            target: event.target,
+            type: 'longpresschange',
+            phase,
+            timeStamp: context.getTimeStamp(),
+          };
+          context.dispatchEvent(longPressChangeEvent, props.onLongPressChange, {
+            discrete: true,
+          });
+        }
+      }, 500);
+    }
+
+    const LongPressEventComponent = createReactEventComponent({
+      targetEventTypes: ['click'],
+      onEvent: (event, context, props) => {
+        handleEvent(event, context, props, 'bubble');
       },
-    );
+      onEventCapture: (event, context, props) => {
+        handleEvent(event, context, props, 'capture');
+      },
+    });
 
     function log(msg) {
       eventLog.push(msg);
@@ -516,17 +529,35 @@ describe('DOMEventResponderSystem', () => {
     ]);
   });
 
+  it('the event responder onMount() function should fire', () => {
+    let onMountFired = 0;
+
+    const EventComponent = createReactEventComponent({
+      targetEventTypes: [],
+      onMount: () => {
+        onMountFired++;
+      },
+    });
+
+    const Test = () => (
+      <EventComponent>
+        <button />
+      </EventComponent>
+    );
+
+    ReactDOM.render(<Test />, container);
+    expect(onMountFired).toEqual(1);
+  });
+
   it('the event responder onUnmount() function should fire', () => {
     let onUnmountFired = 0;
 
-    const EventComponent = createReactEventComponent(
-      [],
-      undefined,
-      (event, context, props, state) => {},
-      () => {
+    const EventComponent = createReactEventComponent({
+      targetEventTypes: [],
+      onUnmount: () => {
         onUnmountFired++;
       },
-    );
+    });
 
     const Test = () => (
       <EventComponent>
@@ -542,16 +573,15 @@ describe('DOMEventResponderSystem', () => {
   it('the event responder onUnmount() function should fire with state', () => {
     let counter = 0;
 
-    const EventComponent = createReactEventComponent(
-      [],
-      () => ({
+    const EventComponent = createReactEventComponent({
+      targetEventTypes: [],
+      createInitialState: () => ({
         incrementAmount: 5,
       }),
-      (event, context, props, state) => {},
-      (context, props, state) => {
+      onUnmount: (context, props, state) => {
         counter += state.incrementAmount;
       },
-    );
+    });
 
     const Test = () => (
       <EventComponent>
@@ -569,19 +599,15 @@ describe('DOMEventResponderSystem', () => {
     let ownershipGained = false;
     const buttonRef = React.createRef();
 
-    const EventComponent = createReactEventComponent(
-      ['click'],
-      undefined,
-      (event, context, props, state) => {
-        if (event.phase === BUBBLE_PHASE) {
-          ownershipGained = context.requestOwnership();
-        }
+    const EventComponent = createReactEventComponent({
+      targetEventTypes: ['click'],
+      onEvent: (event, context, props, state) => {
+        ownershipGained = context.requestGlobalOwnership();
       },
-      undefined,
-      () => {
+      onOwnershipChange: () => {
         onOwnershipChangeFired++;
       },
-    );
+    });
 
     const Test = () => (
       <EventComponent>
@@ -600,228 +626,428 @@ describe('DOMEventResponderSystem', () => {
     expect(onOwnershipChangeFired).toEqual(1);
   });
 
-  it('should be possible to get event targets', () => {
-    let queryResult = null;
-    const buttonRef = React.createRef();
-    const divRef = React.createRef();
-    const eventTargetType = Symbol.for('react.event_target.test');
-    const EventTarget = createReactEventTarget(eventTargetType);
+  it('the event responder root listeners should fire on a root click event', () => {
+    let eventResponderFiredCount = 0;
+    let eventLog = [];
 
-    const EventComponent = createReactEventComponent(
-      ['click'],
-      undefined,
-      (event, context, props, state) => {
-        queryResult = Array.from(
-          context.getEventTargetsFromTarget(event.target),
-        );
+    const ClickEventComponent = createReactEventComponent({
+      rootEventTypes: ['click'],
+      onRootEvent: event => {
+        eventResponderFiredCount++;
+        eventLog.push({
+          name: event.type,
+          passive: event.passive,
+          passiveSupported: event.passiveSupported,
+          phase: 'root',
+        });
       },
-    );
+    });
 
     const Test = () => (
-      <EventComponent>
-        <div ref={divRef}>
-          <EventTarget foo={1} />
-          <button ref={buttonRef}>
-            <EventTarget foo={2} />
-            Press me!
-          </button>
-        </div>
-      </EventComponent>
+      <ClickEventComponent>
+        <button>Click me!</button>
+      </ClickEventComponent>
     );
 
     ReactDOM.render(<Test />, container);
+    expect(container.innerHTML).toBe('<button>Click me!</button>');
 
-    let buttonElement = buttonRef.current;
-    let divElement = divRef.current;
-    dispatchClickEvent(buttonElement);
-    jest.runAllTimers();
-
-    expect(queryResult).toEqual([
+    // Clicking the button should trigger the event responder onEvent() twice
+    dispatchClickEvent(document.body);
+    expect(eventResponderFiredCount).toBe(1);
+    expect(eventLog.length).toBe(1);
+    expect(eventLog).toEqual([
       {
-        node: buttonElement,
-        props: {
-          foo: 2,
-        },
-      },
-      {
-        node: divElement,
-        props: {
-          foo: 1,
-        },
+        name: 'click',
+        passive: false,
+        passiveSupported: false,
+        phase: 'root',
       },
     ]);
   });
 
-  it('should be possible to query event targets by type', () => {
-    let queryResult = null;
+  it('isTargetWithinEventResponderScope works', () => {
     const buttonRef = React.createRef();
     const divRef = React.createRef();
-    const eventTargetType = Symbol.for('react.event_target.test');
-    const EventTarget = createReactEventTarget(eventTargetType);
+    const log = [];
 
-    const eventTargetType2 = Symbol.for('react.event_target.test2');
-    const EventTarget2 = createReactEventTarget(eventTargetType2);
-
-    const EventComponent = createReactEventComponent(
-      ['click'],
-      undefined,
-      (event, context, props, state) => {
-        queryResult = context.getEventTargetsFromTarget(
-          event.target,
-          eventTargetType2,
+    const EventComponent = createReactEventComponent({
+      targetEventTypes: ['pointerout'],
+      onEvent: (event, context) => {
+        const isWithin = context.isTargetWithinEventResponderScope(
+          event.nativeEvent.relatedTarget,
         );
+        log.push(isWithin);
       },
-    );
+      allowMultipleHostChildren: true,
+    });
 
     const Test = () => (
       <EventComponent>
-        <div ref={divRef}>
-          <EventTarget2 foo={1} />
-          <button ref={buttonRef}>
-            <EventTarget foo={2} />
-            Press me!
-          </button>
-        </div>
+        <div ref={divRef} />
+        <EventComponent>
+          <button ref={buttonRef}>Click me!</button>
+        </EventComponent>
       </EventComponent>
+    );
+    ReactDOM.render(<Test />, container);
+
+    const createEvent = (type, data) => {
+      const event = document.createEvent('CustomEvent');
+      event.initCustomEvent(type, true, true);
+      if (data != null) {
+        Object.entries(data).forEach(([key, value]) => {
+          event[key] = value;
+        });
+      }
+      return event;
+    };
+
+    buttonRef.current.dispatchEvent(
+      createEvent('pointerout', {relatedTarget: divRef.current}),
+    );
+    divRef.current.dispatchEvent(
+      createEvent('pointerout', {relatedTarget: buttonRef.current}),
+    );
+
+    expect(log).toEqual([false, true, false]);
+  });
+
+  it('the event responder target listeners should correctly fire for only their events', () => {
+    let clickEventComponent1Fired = 0;
+    let clickEventComponent2Fired = 0;
+    let eventLog = [];
+    const buttonRef = React.createRef();
+
+    const ClickEventComponent1 = createReactEventComponent({
+      targetEventTypes: [{name: 'click', passive: false, capture: false}],
+      onEvent: event => {
+        clickEventComponent1Fired++;
+        eventLog.push({
+          name: event.type,
+          passive: event.passive,
+          passiveSupported: event.passiveSupported,
+        });
+      },
+    });
+
+    const ClickEventComponent2 = createReactEventComponent({
+      targetEventTypes: [{name: 'click', passive: true, capture: false}],
+      onEvent: event => {
+        clickEventComponent2Fired++;
+        eventLog.push({
+          name: event.type,
+          passive: event.passive,
+          passiveSupported: event.passiveSupported,
+        });
+      },
+    });
+
+    const Test = () => (
+      <ClickEventComponent1>
+        <ClickEventComponent2>
+          <button ref={buttonRef}>Click me!</button>
+        </ClickEventComponent2>
+      </ClickEventComponent1>
     );
 
     ReactDOM.render(<Test />, container);
 
     let buttonElement = buttonRef.current;
-    let divElement = divRef.current;
     dispatchClickEvent(buttonElement);
-    jest.runAllTimers();
 
-    expect(queryResult).toEqual([
+    expect(clickEventComponent1Fired).toBe(1);
+    expect(clickEventComponent2Fired).toBe(1);
+    expect(eventLog.length).toBe(2);
+    expect(eventLog).toEqual([
       {
-        node: divElement,
-        props: {
-          foo: 1,
-        },
+        name: 'click',
+        passive: false,
+        passiveSupported: false,
+      },
+      {
+        name: 'click',
+        passive: false,
+        passiveSupported: true,
       },
     ]);
   });
 
-  it('should be possible to query event targets by key', () => {
-    let queryResult = null;
-    const buttonRef = React.createRef();
-    const divRef = React.createRef();
-    const eventTargetType = Symbol.for('react.event_target.test');
-    const EventTarget = createReactEventTarget(eventTargetType);
+  it('the event responder root listeners should correctly fire for only their events', () => {
+    let clickEventComponent1Fired = 0;
+    let clickEventComponent2Fired = 0;
+    let eventLog = [];
 
-    const EventComponent = createReactEventComponent(
-      ['click'],
-      undefined,
-      (event, context, props, state) => {
-        queryResult = context.getEventTargetsFromTarget(
-          event.target,
-          undefined,
-          'a',
-        );
+    const ClickEventComponent1 = createReactEventComponent({
+      rootEventTypes: [{name: 'click', passive: false, capture: false}],
+      onRootEvent: event => {
+        clickEventComponent1Fired++;
+        eventLog.push({
+          name: event.type,
+          passive: event.passive,
+          passiveSupported: event.passiveSupported,
+        });
       },
-    );
+    });
+
+    const ClickEventComponent2 = createReactEventComponent({
+      rootEventTypes: [{name: 'click', passive: true, capture: false}],
+      onRootEvent: event => {
+        clickEventComponent2Fired++;
+        eventLog.push({
+          name: event.type,
+          passive: event.passive,
+          passiveSupported: event.passiveSupported,
+        });
+      },
+    });
 
     const Test = () => (
-      <EventComponent>
-        <div ref={divRef}>
-          <EventTarget foo={1} />
-          <button ref={buttonRef}>
-            <EventTarget key="a" foo={2} />
-            Press me!
-          </button>
-        </div>
-      </EventComponent>
+      <ClickEventComponent1>
+        <ClickEventComponent2>
+          <button>Click me!</button>
+        </ClickEventComponent2>
+      </ClickEventComponent1>
     );
 
     ReactDOM.render(<Test />, container);
 
-    let buttonElement = buttonRef.current;
-    dispatchClickEvent(buttonElement);
-    jest.runAllTimers();
+    dispatchClickEvent(document.body);
 
-    expect(queryResult).toEqual([
+    expect(clickEventComponent1Fired).toBe(1);
+    expect(clickEventComponent2Fired).toBe(1);
+    expect(eventLog.length).toBe(2);
+    expect(eventLog).toEqual([
       {
-        node: buttonElement,
-        props: {
-          foo: 2,
-        },
+        name: 'click',
+        passive: false,
+        passiveSupported: false,
+      },
+      {
+        name: 'click',
+        passive: false,
+        passiveSupported: true,
       },
     ]);
+
+    ReactDOM.render(<Test />, container);
   });
 
-  it('should be possible to query event targets by type and key', () => {
-    let queryResult = null;
-    let queryResult2 = null;
-    let queryResult3 = null;
-    const buttonRef = React.createRef();
-    const divRef = React.createRef();
-    const eventTargetType = Symbol.for('react.event_target.test');
-    const EventTarget = createReactEventTarget(eventTargetType);
-
-    const eventTargetType2 = Symbol.for('react.event_target.test2');
-    const EventTarget2 = createReactEventTarget(eventTargetType2);
-
-    const EventComponent = createReactEventComponent(
-      ['click'],
-      undefined,
-      (event, context, props, state) => {
-        queryResult = context.getEventTargetsFromTarget(
-          event.target,
-          eventTargetType2,
-          'a',
-        );
-
-        queryResult2 = context.getEventTargetsFromTarget(
-          event.target,
-          eventTargetType,
-          'c',
-        );
-
-        // Should return an empty array as this doesn't exist
-        queryResult3 = context.getEventTargetsFromTarget(
-          event.target,
-          eventTargetType,
-          'd',
-        );
+  it('the event responder system should warn on accessing invalid properties', () => {
+    const ClickEventComponent = createReactEventComponent({
+      rootEventTypes: ['click'],
+      onRootEvent: (event, context, props) => {
+        const syntheticEvent = {
+          target: event.target,
+          type: 'click',
+          timeStamp: context.getTimeStamp(),
+        };
+        context.dispatchEvent(syntheticEvent, props.onClick, {
+          discrete: true,
+        });
       },
+    });
+
+    let handler;
+    const Test = () => (
+      <ClickEventComponent onClick={handler}>
+        <button>Click me!</button>
+      </ClickEventComponent>
     );
+    expect(() => {
+      handler = event => {
+        event.preventDefault();
+      };
+      ReactDOM.render(<Test />, container);
+      dispatchClickEvent(document.body);
+    }).toWarnDev(
+      'Warning: preventDefault() is not available on event objects created ' +
+        'from event responder modules (React Flare).',
+      {withoutStack: true},
+    );
+    expect(() => {
+      handler = event => {
+        event.stopPropagation();
+      };
+      ReactDOM.render(<Test />, container);
+      dispatchClickEvent(document.body);
+    }).toWarnDev(
+      'Warning: stopPropagation() is not available on event objects created ' +
+        'from event responder modules (React Flare).',
+      {withoutStack: true},
+    );
+    expect(() => {
+      handler = event => {
+        event.isDefaultPrevented();
+      };
+      ReactDOM.render(<Test />, container);
+      dispatchClickEvent(document.body);
+    }).toWarnDev(
+      'Warning: isDefaultPrevented() is not available on event objects created ' +
+        'from event responder modules (React Flare).',
+      {withoutStack: true},
+    );
+    expect(() => {
+      handler = event => {
+        event.isPropagationStopped();
+      };
+      ReactDOM.render(<Test />, container);
+      dispatchClickEvent(document.body);
+    }).toWarnDev(
+      'Warning: isPropagationStopped() is not available on event objects created ' +
+        'from event responder modules (React Flare).',
+      {withoutStack: true},
+    );
+    expect(() => {
+      handler = event => {
+        return event.nativeEvent;
+      };
+      ReactDOM.render(<Test />, container);
+      dispatchClickEvent(document.body);
+    }).toWarnDev(
+      'Warning: nativeEvent is not available on event objects created ' +
+        'from event responder modules (React Flare).',
+      {withoutStack: true},
+    );
+    expect(() => {
+      handler = event => {
+        return event.defaultPrevented;
+      };
+      ReactDOM.render(<Test />, container);
+      dispatchClickEvent(document.body);
+    }).toWarnDev(
+      'Warning: defaultPrevented is not available on event objects created ' +
+        'from event responder modules (React Flare).',
+      {withoutStack: true},
+    );
+
+    expect(container.innerHTML).toBe('<button>Click me!</button>');
+  });
+
+  it('should warn if multiple host components are detected without allowMultipleHostChildren', () => {
+    const EventComponent = createReactEventComponent({
+      targetEventTypes: [],
+      onEvent: () => {},
+      allowMultipleHostChildren: false,
+    });
 
     const Test = () => (
       <EventComponent>
-        <div ref={divRef}>
-          <EventTarget2 key="a" foo={1} />
-          <EventTarget2 key="b" foo={2} />
-          <button ref={buttonRef}>
-            <EventTarget key="c" foo={3} />
-            Press me!
-          </button>
-        </div>
+        <div />
+        <div />
+      </EventComponent>
+    );
+
+    expect(() => {
+      ReactDOM.render(<Test />, container);
+    }).toWarnDev(
+      'Warning: A "<TestEventComponent>" event component cannot contain multiple host children.',
+    );
+
+    function Component() {
+      return <div />;
+    }
+
+    const Test2 = () => (
+      <EventComponent>
+        <div />
+        <Component />
+      </EventComponent>
+    );
+
+    expect(() => {
+      ReactDOM.render(<Test2 />, container);
+    }).toWarnDev(
+      'Warning: A "<TestEventComponent>" event component cannot contain multiple host children.',
+    );
+  });
+
+  it('should handle suspended nodes correctly when detecting host components without allowMultipleHostChildren', () => {
+    const EventComponent = createReactEventComponent({
+      targetEventTypes: [],
+      onEvent: () => {},
+      allowMultipleHostChildren: false,
+    });
+
+    function SuspendedComponent() {
+      throw Promise.resolve();
+    }
+
+    function Component() {
+      return (
+        <React.Fragment>
+          <div />
+          <SuspendedComponent />
+        </React.Fragment>
+      );
+    }
+
+    const Test = () => (
+      <EventComponent>
+        <React.Suspense fallback={<div>Loading...</div>}>
+          <Component />
+        </React.Suspense>
       </EventComponent>
     );
 
     ReactDOM.render(<Test />, container);
 
-    let buttonElement = buttonRef.current;
-    let divElement = divRef.current;
-    dispatchClickEvent(buttonElement);
-    jest.runAllTimers();
+    function Component2() {
+      return (
+        <React.Fragment>
+          <SuspendedComponent />
+        </React.Fragment>
+      );
+    }
 
-    expect(queryResult).toEqual([
-      {
-        node: divElement,
-        props: {
-          foo: 1,
-        },
-      },
-    ]);
-    expect(queryResult2).toEqual([
-      {
-        node: buttonElement,
-        props: {
-          foo: 3,
-        },
-      },
-    ]);
-    expect(queryResult3).toEqual([]);
+    const Test2 = () => (
+      <EventComponent>
+        <React.Suspense
+          fallback={
+            <React.Fragment>
+              <div />
+              <div />
+            </React.Fragment>
+          }>
+          <Component2 />
+        </React.Suspense>
+      </EventComponent>
+    );
+
+    expect(() => {
+      ReactDOM.render(<Test2 />, container);
+    }).toWarnDev(
+      'Warning: A "<TestEventComponent>" event component cannot contain multiple host children.',
+    );
+  });
+
+  it('should not warn if multiple host components are detected with allowMultipleHostChildren', () => {
+    const EventComponent = createReactEventComponent({
+      targetEventTypes: [],
+      onEvent: () => {},
+      allowMultipleHostChildren: true,
+    });
+
+    const Test = () => (
+      <EventComponent>
+        <div />
+        <div />
+      </EventComponent>
+    );
+
+    ReactDOM.render(<Test />, container);
+
+    function Component() {
+      return <div />;
+    }
+
+    const Test2 = () => (
+      <EventComponent>
+        <div />
+        <Component />
+      </EventComponent>
+    );
+
+    ReactDOM.render(<Test2 />, container);
   });
 });

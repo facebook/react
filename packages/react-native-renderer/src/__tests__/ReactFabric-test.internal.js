@@ -48,6 +48,11 @@ describe('ReactFabric', () => {
     NativeMethodsMixin =
       ReactFabric.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
         .NativeMethodsMixin;
+
+    global.nativeFabricUIManager = {
+      measure: FabricUIManager.measure,
+      measureInWindow: FabricUIManager.measureInWindow,
+    };
   });
 
   it('should be able to create and render a native component', () => {
@@ -610,7 +615,7 @@ describe('ReactFabric', () => {
     expect(snapshots).toMatchSnapshot();
   });
 
-  it('should throw when <View> is used inside of a <Text> ancestor', () => {
+  it('should not throw when <View> is used inside of a <Text> ancestor', () => {
     const Image = createReactNativeComponentClass('RCTImage', () => ({
       validAttributes: {},
       uiViewClassName: 'RCTImage',
@@ -624,16 +629,13 @@ describe('ReactFabric', () => {
       uiViewClassName: 'RCTView',
     }));
 
-    expect(() =>
-      ReactFabric.render(
-        <Text>
-          <View />
-        </Text>,
-        11,
-      ),
-    ).toThrow('Nesting of <View> within <Text> is not currently supported.');
+    ReactFabric.render(
+      <Text>
+        <View />
+      </Text>,
+      11,
+    );
 
-    // Non-View things (e.g. Image) are fine
     ReactFabric.render(
       <Text>
         <Image />

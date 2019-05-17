@@ -23,9 +23,10 @@ export type ExpirationTime = number;
 export const NoWork = 0;
 export const Never = 1;
 export const Sync = MAX_SIGNED_31_BIT_INT;
+export const Batched = Sync - 1;
 
 const UNIT_SIZE = 10;
-const MAGIC_NUMBER_OFFSET = MAX_SIGNED_31_BIT_INT - 1;
+const MAGIC_NUMBER_OFFSET = Batched - 1;
 
 // 1 unit of expiration time represents 10ms.
 export function msToExpirationTime(ms: number): ExpirationTime {
@@ -111,14 +112,14 @@ export function inferPriorityFromExpirationTime(
     return IdlePriority;
   }
   const msUntil =
-    msToExpirationTime(expirationTime) - msToExpirationTime(currentTime);
+    expirationTimeToMs(expirationTime) - expirationTimeToMs(currentTime);
   if (msUntil <= 0) {
     return ImmediatePriority;
   }
-  if (msUntil <= HIGH_PRIORITY_EXPIRATION) {
+  if (msUntil <= HIGH_PRIORITY_EXPIRATION + HIGH_PRIORITY_BATCH_SIZE) {
     return UserBlockingPriority;
   }
-  if (msUntil <= LOW_PRIORITY_EXPIRATION) {
+  if (msUntil <= LOW_PRIORITY_EXPIRATION + LOW_PRIORITY_BATCH_SIZE) {
     return NormalPriority;
   }
 

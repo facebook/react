@@ -11,17 +11,21 @@ import type {
   ReactResponderEvent,
   ReactResponderContext,
 } from 'shared/ReactTypes';
-import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
 
-const CAPTURE_PHASE = 2;
-const targetEventTypes = ['pointerdown', 'pointercancel'];
-const rootEventTypes = ['pointerup', {name: 'pointermove', passive: false}];
+import React from 'react';
+
+const targetEventTypes = ['pointerdown'];
+const rootEventTypes = [
+  'pointerup',
+  'pointercancel',
+  {name: 'pointermove', passive: false},
+];
 
 // In the case we don't have PointerEvents (Safari), we listen to touch events
 // too
 if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
-  targetEventTypes.push('touchstart', 'touchend', 'mousedown', 'touchcancel');
-  rootEventTypes.push('mouseup', 'mousemove', {
+  targetEventTypes.push('touchstart', 'mousedown');
+  rootEventTypes.push('mouseup', 'mousemove', 'touchend', 'touchcancel', {
     name: 'touchmove',
     passive: false,
   });
@@ -36,11 +40,13 @@ type SwipeEventType = 'swipeleft' | 'swiperight' | 'swipeend' | 'swipemove';
 type SwipeEvent = {|
   target: Element | Document,
   type: SwipeEventType,
+  timeStamp: number,
   diffX?: number,
   diffY?: number,
 |};
 
 function createSwipeEvent(
+  context: ReactResponderContext,
   type: SwipeEventType,
   target: Element | Document,
   eventData?: EventData,
@@ -48,6 +54,7 @@ function createSwipeEvent(
   return {
     target,
     type,
+    timeStamp: context.getTimeStamp(),
     ...eventData,
   };
 }
@@ -61,7 +68,7 @@ function dispatchSwipeEvent(
   eventData?: EventData,
 ) {
   const target = ((state.swipeTarget: any): Element | Document);
-  const syntheticEvent = createSwipeEvent(name, target, eventData);
+  const syntheticEvent = createSwipeEvent(context, name, target, eventData);
   context.dispatchEvent(syntheticEvent, listener, {discrete});
 }
 
@@ -92,18 +99,16 @@ const SwipeResponder = {
       y: 0,
     };
   },
+  allowMultipleHostChildren: false,
+  stopLocalPropagation: true,
   onEvent(
     event: ReactResponderEvent,
     context: ReactResponderContext,
     props: Object,
     state: SwipeState,
-  ): boolean {
-    const {target, phase, type, nativeEvent} = event;
+  ): void {
+    const {target, type, nativeEvent} = event;
 
-    // Swipe doesn't handle capture target events at this point
-    if (phase === CAPTURE_PHASE) {
-      return false;
-    }
     switch (type) {
       case 'touchstart':
       case 'mousedown':
@@ -120,7 +125,7 @@ const SwipeResponder = {
           let shouldEnableSwiping = true;
 
           if (props.onShouldClaimOwnership && props.onShouldClaimOwnership()) {
-            shouldEnableSwiping = context.requestOwnership();
+            shouldEnableSwiping = context.requestGlobalOwnership();
           }
           if (shouldEnableSwiping) {
             state.isSwiping = true;
@@ -129,18 +134,29 @@ const SwipeResponder = {
             state.x = x;
             state.y = y;
             state.swipeTarget = target;
-            context.addRootEventTypes(target.ownerDocument, rootEventTypes);
+            context.addRootEventTypes(rootEventTypes);
           } else {
             state.touchId = null;
           }
         }
         break;
       }
+    }
+  },
+  onRootEvent(
+    event: ReactResponderEvent,
+    context: ReactResponderContext,
+    props: Object,
+    state: SwipeState,
+  ): void {
+    const {type, nativeEvent} = event;
+
+    switch (type) {
       case 'touchmove':
       case 'mousemove':
       case 'pointermove': {
         if (event.passive) {
-          return false;
+          return;
         }
         if (state.isSwiping) {
           let obj = null;
@@ -160,7 +176,7 @@ const SwipeResponder = {
             state.swipeTarget = null;
             state.touchId = null;
             context.removeRootEventTypes(rootEventTypes);
-            return false;
+            return;
           }
           const x = (obj: any).screenX;
           const y = (obj: any).screenY;
@@ -196,7 +212,7 @@ const SwipeResponder = {
       case 'pointerup': {
         if (state.isSwiping) {
           if (state.x === state.startX && state.y === state.startY) {
-            return false;
+            return;
           }
           if (props.onShouldClaimOwnership) {
             context.releaseOwnership();
@@ -240,13 +256,7 @@ const SwipeResponder = {
         break;
       }
     }
-    return false;
   },
 };
 
-export default {
-  $$typeof: REACT_EVENT_COMPONENT_TYPE,
-  displayName: 'Swipe',
-  props: null,
-  responder: SwipeResponder,
-};
+export default React.unstable_createEventComponent(SwipeResponder, 'Swipe');

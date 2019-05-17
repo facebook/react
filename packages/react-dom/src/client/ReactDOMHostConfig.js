@@ -34,6 +34,7 @@ import {
   setEnabled as ReactBrowserEventEmitterSetEnabled,
 } from '../events/ReactBrowserEventEmitter';
 import {Namespaces, getChildNamespace} from '../shared/DOMNamespaces';
+import {addRootEventTypesForComponentInstance} from '../events/DOMEventResponderSystem';
 import {
   ELEMENT_NODE,
   TEXT_NODE,
@@ -895,22 +896,28 @@ export function mountEventComponent(
   eventComponentInstance: ReactEventComponentInstance,
 ): void {
   if (enableEventAPI) {
+    const rootContainerInstance = ((eventComponentInstance.rootInstance: any): Container);
+    const rootElement = rootContainerInstance.ownerDocument;
+    const responder = eventComponentInstance.responder;
+    const {rootEventTypes, targetEventTypes} = responder;
+    if (targetEventTypes !== undefined) {
+      listenToEventResponderEventTypes(targetEventTypes, rootElement);
+    }
+    if (rootEventTypes !== undefined) {
+      addRootEventTypesForComponentInstance(
+        eventComponentInstance,
+        rootEventTypes,
+      );
+      listenToEventResponderEventTypes(rootEventTypes, rootElement);
+    }
     mountEventResponder(eventComponentInstance);
-    updateEventComponent(eventComponentInstance);
   }
 }
 
 export function updateEventComponent(
   eventComponentInstance: ReactEventComponentInstance,
 ): void {
-  if (enableEventAPI) {
-    const rootContainerInstance = ((eventComponentInstance.rootInstance: any): Container);
-    const rootElement = rootContainerInstance.ownerDocument;
-    listenToEventResponderEventTypes(
-      eventComponentInstance.responder.targetEventTypes,
-      rootElement,
-    );
-  }
+  // NO-OP, why might use this in the future
 }
 
 export function unmountEventComponent(
@@ -939,11 +946,14 @@ export function getEventTargetChildElement(
           style: {
             position: 'absolute',
             zIndex: -1,
+            pointerEvents: null,
             bottom: bottom ? `-${bottom}px` : '0px',
             left: left ? `-${left}px` : '0px',
             right: right ? `-${right}px` : '0px',
             top: top ? `-${top}px` : '0px',
           },
+          hydrateTouchHitTarget: true,
+          suppressHydrationWarning: true,
         },
       };
     }
@@ -957,6 +967,13 @@ export function handleEventTarget(
   rootContainerInstance: Container,
   internalInstanceHandle: Object,
 ): boolean {
+  if (
+    __DEV__ &&
+    type === REACT_EVENT_TARGET_TOUCH_HIT &&
+    (props.left || props.right || props.top || props.bottom)
+  ) {
+    return true;
+  }
   return false;
 }
 
@@ -983,9 +1000,9 @@ export function commitEventTarget(
             'value of "relative".',
         );
         warning(
-          computedStyles.getPropertyValue('zIndex') !== '',
+          computedStyles.getPropertyValue('z-index') !== '',
           '<TouchHitTarget> inserts an empty <div> with "z-index" of "-1". ' +
-            'This requires its parent DOM node to have a "z-index" great than "-1",' +
+            'This requires its parent DOM node to have a "z-index" greater than "-1",' +
             'but the parent DOM node was found to no "z-index" value set.' +
             ' Try using a "z-index" value of "0" or greater.',
         );

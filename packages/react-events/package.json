@@ -17,6 +17,7 @@
     "focus.js",
     "swipe.js",
     "drag.js",
+    "focus-scope.js",
     "index.js",
     "build-info.json",
     "cjs/",
@@ -33,6 +34,9 @@
   },
   "dependencies": {
     "loose-envify": "^1.1.0"
+  },
+  "peerDependencies": {
+    "react": "^16.0.0"
   },
   "browserify": {
     "transform": [

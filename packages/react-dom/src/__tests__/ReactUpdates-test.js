@@ -1290,6 +1290,78 @@ describe('ReactUpdates', () => {
     expect(ops).toEqual(['Foo', 'Bar', 'Baz']);
   });
 
+  it('delays sync updates inside hidden subtrees in Concurrent Mode', () => {
+    const container = document.createElement('div');
+
+    function Baz() {
+      Scheduler.yieldValue('Baz');
+      return <p>baz</p>;
+    }
+
+    let setCounter;
+    function Bar() {
+      const [counter, _setCounter] = React.useState(0);
+      setCounter = _setCounter;
+      Scheduler.yieldValue('Bar');
+      return <p>bar {counter}</p>;
+    }
+
+    function Foo() {
+      Scheduler.yieldValue('Foo');
+      React.useEffect(() => {
+        Scheduler.yieldValue('Foo#effect');
+      });
+      return (
+        <div>
+          <div hidden={true}>
+            <Bar />
+          </div>
+          <Baz />
+        </div>
+      );
+    }
+
+    const root = ReactDOM.unstable_createRoot(container);
+    root.render(<Foo />);
+    if (__DEV__) {
+      expect(Scheduler).toFlushAndYieldThrough([
+        'Foo',
+        'Foo',
+        'Baz',
+        'Foo#effect',
+      ]);
+    } else {
+      expect(Scheduler).toFlushAndYieldThrough(['Foo', 'Baz', 'Foo#effect']);
+    }
+
+    const hiddenDiv = container.firstChild.firstChild;
+    expect(hiddenDiv.hidden).toBe(true);
+    expect(hiddenDiv.innerHTML).toBe('');
+
+    // Run offscreen update
+    if (__DEV__) {
+      expect(Scheduler).toFlushAndYield(['Bar', 'Bar']);
+    } else {
+      expect(Scheduler).toFlushAndYield(['Bar']);
+    }
+    expect(hiddenDiv.hidden).toBe(true);
+    expect(hiddenDiv.innerHTML).toBe('<p>bar 0</p>');
+
+    ReactDOM.flushSync(() => {
+      setCounter(1);
+    });
+    // Should not flush yet
+    expect(hiddenDiv.innerHTML).toBe('<p>bar 0</p>');
+
+    // Run offscreen update
+    if (__DEV__) {
+      expect(Scheduler).toFlushAndYield(['Bar', 'Bar']);
+    } else {
+      expect(Scheduler).toFlushAndYield(['Bar']);
+    }
+    expect(hiddenDiv.innerHTML).toBe('<p>bar 1</p>');
+  });
+
   it('can render ridiculously large number of roots without triggering infinite update loop error', () => {
     class Foo extends React.Component {
       componentDidMount() {
@@ -1616,6 +1688,86 @@ describe('ReactUpdates', () => {
       ReactDOM.render(<Terminating />, container);
       expect(Scheduler).toFlushAndYield(['Done']);
       expect(container.textContent).toBe('1000');
+    });
+  }
+
+  if (__DEV__) {
+    it('should properly trace interactions within batched udpates', () => {
+      const SchedulerTracing = require('scheduler/tracing');
+
+      let expectedInteraction;
+
+      const container = document.createElement('div');
+
+      const Component = jest.fn(() => {
+        expect(expectedInteraction).toBeDefined();
+
+        const interactions = SchedulerTracing.unstable_getCurrent();
+        expect(interactions.size).toBe(1);
+        expect(interactions).toContain(expectedInteraction);
+
+        return null;
+      });
+
+      ReactDOM.unstable_batchedUpdates(() => {
+        SchedulerTracing.unstable_trace(
+          'mount traced inside a batched update',
+          1,
+          () => {
+            const interactions = SchedulerTracing.unstable_getCurrent();
+            expect(interactions.size).toBe(1);
+            expectedInteraction = Array.from(interactions)[0];
+
+            ReactDOM.render(<Component />, container);
+          },
+        );
+      });
+
+      ReactDOM.unstable_batchedUpdates(() => {
+        SchedulerTracing.unstable_trace(
+          'update traced inside a batched update',
+          2,
+          () => {
+            const interactions = SchedulerTracing.unstable_getCurrent();
+            expect(interactions.size).toBe(1);
+            expectedInteraction = Array.from(interactions)[0];
+
+            ReactDOM.render(<Component />, container);
+          },
+        );
+      });
+
+      const secondContainer = document.createElement('div');
+
+      SchedulerTracing.unstable_trace(
+        'mount traced outside a batched update',
+        3,
+        () => {
+          ReactDOM.unstable_batchedUpdates(() => {
+            const interactions = SchedulerTracing.unstable_getCurrent();
+            expect(interactions.size).toBe(1);
+            expectedInteraction = Array.from(interactions)[0];
+
+            ReactDOM.render(<Component />, secondContainer);
+          });
+        },
+      );
+
+      SchedulerTracing.unstable_trace(
+        'update traced outside a batched update',
+        4,
+        () => {
+          ReactDOM.unstable_batchedUpdates(() => {
+            const interactions = SchedulerTracing.unstable_getCurrent();
+            expect(interactions.size).toBe(1);
+            expectedInteraction = Array.from(interactions)[0];
+
+            ReactDOM.render(<Component />, container);
+          });
+        },
+      );
+
+      expect(Component).toHaveBeenCalledTimes(4);
     });
   }
 });

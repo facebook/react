@@ -9,6 +9,7 @@
 
 import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
+import type {RootTag} from 'shared/ReactRootTags';
 import type {
   Instance,
   TextInstance,
@@ -64,6 +65,7 @@ import {
 } from './ReactCurrentFiber';
 import {StrictMode} from './ReactTypeOfMode';
 import {Sync} from './ReactFiberExpirationTime';
+import {revertPassiveEffectsChange} from 'shared/ReactFeatureFlags';
 
 type OpaqueRoot = FiberRoot;
 
@@ -152,7 +154,9 @@ function scheduleRootUpdate(
     update.callback = callback;
   }
 
-  flushPassiveEffects();
+  if (revertPassiveEffectsChange) {
+    flushPassiveEffects();
+  }
   enqueueUpdate(current, update);
   scheduleWork(current, expirationTime);
 
@@ -274,10 +278,10 @@ function findHostInstanceWithWarning(
 
 export function createContainer(
   containerInfo: Container,
-  isConcurrent: boolean,
+  tag: RootTag,
   hydrate: boolean,
 ): OpaqueRoot {
-  return createFiberRoot(containerInfo, isConcurrent, hydrate);
+  return createFiberRoot(containerInfo, tag, hydrate);
 }
 
 export function updateContainer(
@@ -400,7 +404,9 @@ if (__DEV__) {
       id--;
     }
     if (currentHook !== null) {
-      flushPassiveEffects();
+      if (revertPassiveEffectsChange) {
+        flushPassiveEffects();
+      }
 
       const newState = copyWithSet(currentHook.memoizedState, path, value);
       currentHook.memoizedState = newState;
@@ -419,7 +425,9 @@ if (__DEV__) {
 
   // Support DevTools props for function components, forwardRef, memo, host components, etc.
   overrideProps = (fiber: Fiber, path: Array<string | number>, value: any) => {
-    flushPassiveEffects();
+    if (revertPassiveEffectsChange) {
+      flushPassiveEffects();
+    }
     fiber.pendingProps = copyWithSet(fiber.memoizedProps, path, value);
     if (fiber.alternate) {
       fiber.alternate.pendingProps = fiber.pendingProps;
@@ -428,7 +436,9 @@ if (__DEV__) {
   };
 
   scheduleUpdate = (fiber: Fiber) => {
-    flushPassiveEffects();
+    if (revertPassiveEffectsChange) {
+      flushPassiveEffects();
+    }
     scheduleWork(fiber, Sync);
   };
 

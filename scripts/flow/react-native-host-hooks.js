@@ -144,6 +144,13 @@ declare module 'FabricUIManager' {
   ): void;
 }
 
+// This is needed for a short term solution.
+// See https://github.com/facebook/react/pull/15490 for more info
+declare var nativeFabricUIManager: {
+  measure(node: Node, callback: MeasureOnSuccessCallback): void,
+  measureInWindow(node: Node, callback: MeasureInWindowOnSuccessCallback): void,
+};
+
 declare module 'View' {
   declare module.exports: typeof React$Component;
 }

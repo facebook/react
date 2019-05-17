@@ -219,6 +219,7 @@ const properties = {};
   'suppressContentEditableWarning',
   'suppressHydrationWarning',
   'style',
+  'hydrateTouchHitTarget',
 ].forEach(name => {
   properties[name] = new PropertyInfoRecord(
     name,
@@ -294,6 +295,7 @@ const properties = {};
   'default',
   'defer',
   'disabled',
+  'disablePictureInPicture',
   'formNoValidate',
   'hidden',
   'loop',

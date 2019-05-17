@@ -47,6 +47,10 @@ export function getCurrentTime(): number {
   return currentTime;
 }
 
+export function forceFrameRate() {
+  // No-op
+}
+
 export function reset() {
   if (isFlushing) {
     throw new Error('Cannot reset while already flushing work.');
@@ -99,12 +103,15 @@ export function unstable_flushExpired() {
   }
 }
 
-export function unstable_flushWithoutYielding(): void {
+export function unstable_flushWithoutYielding(): boolean {
   if (isFlushing) {
     throw new Error('Already flushing work.');
   }
   isFlushing = true;
   try {
+    if (scheduledCallback === null) {
+      return false;
+    }
     while (scheduledCallback !== null) {
       const cb = scheduledCallback;
       scheduledCallback = null;
@@ -113,6 +120,7 @@ export function unstable_flushWithoutYielding(): void {
         scheduledCallbackExpiration <= currentTime;
       cb(didTimeout);
     }
+    return true;
   } finally {
     expectedNumberOfYields = -1;
     didStop = false;
