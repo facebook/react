@@ -7,6 +7,7 @@
  * @flow
  */
 
+import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 import {requestCurrentTime} from './ReactFiberScheduler';
 import {inferPriorityFromExpirationTime} from './ReactFiberExpirationTime';
 
@@ -53,13 +54,17 @@ export function injectInternals(internals: Object): boolean {
     const rendererID = hook.inject(internals);
     // We have successfully injected, so now it is safe to set up hooks.
     onCommitFiberRoot = (root, expirationTime) => {
-      const currentTime = requestCurrentTime();
-      const priorityLevel = inferPriorityFromExpirationTime(
-        currentTime,
-        expirationTime,
-      );
       try {
-        hook.onCommitFiberRoot(rendererID, root, priorityLevel);
+        if (enableProfilerTimer) {
+          const currentTime = requestCurrentTime();
+          const priorityLevel = inferPriorityFromExpirationTime(
+            currentTime,
+            expirationTime,
+          );
+          hook.onCommitFiberRoot(rendererID, root, priorityLevel);
+        } else {
+          hook.onCommitFiberRoot(rendererID, root);
+        }
       } catch (err) {
         if (__DEV__ && !hasLoggedError) {
           hasLoggedError = true;
