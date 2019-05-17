@@ -18,6 +18,7 @@ import type {
 } from './ReactFiberHostConfig';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
 
 import {
   findCurrentHostFiber,
@@ -66,6 +67,7 @@ import {
 import {StrictMode} from './ReactTypeOfMode';
 import {Sync} from './ReactFiberExpirationTime';
 import {revertPassiveEffectsChange} from 'shared/ReactFeatureFlags';
+import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 
 type OpaqueRoot = FiberRoot;
 
@@ -118,6 +120,7 @@ function scheduleRootUpdate(
   current: Fiber,
   element: ReactNodeList,
   expirationTime: ExpirationTime,
+  suspenseConfig: null | SuspenseConfig,
   callback: ?Function,
 ) {
   if (__DEV__) {
@@ -138,7 +141,7 @@ function scheduleRootUpdate(
     }
   }
 
-  const update = createUpdate(expirationTime);
+  const update = createUpdate(expirationTime, suspenseConfig);
   // Caution: React DevTools currently depends on this property
   // being called "element".
   update.payload = {element};
@@ -168,6 +171,7 @@ export function updateContainerAtExpirationTime(
   container: OpaqueRoot,
   parentComponent: ?React$Component<any, any>,
   expirationTime: ExpirationTime,
+  suspenseConfig: null | SuspenseConfig,
   callback: ?Function,
 ) {
   // TODO: If this is a nested container, this won't be the root.
@@ -192,7 +196,13 @@ export function updateContainerAtExpirationTime(
     container.pendingContext = context;
   }
 
-  return scheduleRootUpdate(current, element, expirationTime, callback);
+  return scheduleRootUpdate(
+    current,
+    element,
+    expirationTime,
+    suspenseConfig,
+    callback,
+  );
 }
 
 function findHostInstance(component: Object): PublicInstance | null {
@@ -292,7 +302,6 @@ export function updateContainer(
 ): ExpirationTime {
   const current = container.current;
   const currentTime = requestCurrentTime();
-  const expirationTime = computeExpirationForFiber(currentTime, current);
   if (__DEV__) {
     // jest isn't a 'global', it's just exposed to tests via a wrapped function
     // further, this isn't a test file, so flow doesn't recognize the symbol. So...
@@ -301,11 +310,18 @@ export function updateContainer(
       warnIfNotScopedWithMatchingAct(current);
     }
   }
+  const suspenseConfig = requestCurrentSuspenseConfig();
+  const expirationTime = computeExpirationForFiber(
+    currentTime,
+    current,
+    suspenseConfig,
+  );
   return updateContainerAtExpirationTime(
     element,
     container,
     parentComponent,
     expirationTime,
+    suspenseConfig,
     callback,
   );
 }

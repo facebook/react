@@ -19,6 +19,7 @@ import type {
 } from './ReactFiberHostConfig';
 import type {ReactEventComponentInstance} from 'shared/ReactTypes';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
+import type {SuspenseContext} from './ReactFiberSuspenseContext';
 
 import {
   IndeterminateComponent,
@@ -77,7 +78,12 @@ import {
   getHostContext,
   popHostContainer,
 } from './ReactFiberHostContext';
-import {popSuspenseContext} from './ReactFiberSuspenseContext';
+import {
+  suspenseStackCursor,
+  InvisibleParentSuspenseContext,
+  hasSuspenseContext,
+  popSuspenseContext,
+} from './ReactFiberSuspenseContext';
 import {
   isContextProvider as isLegacyContextProvider,
   popContext as popLegacyContext,
@@ -94,7 +100,11 @@ import {
   enableSuspenseServerRenderer,
   enableEventAPI,
 } from 'shared/ReactFeatureFlags';
-import {markRenderEventTime, renderDidSuspend} from './ReactFiberScheduler';
+import {
+  markRenderEventTimeAndConfig,
+  renderDidSuspend,
+  renderDidSuspendDelayIfPossible,
+} from './ReactFiberScheduler';
 import {getEventComponentHostChildrenCount} from './ReactFiberEvents';
 import getComponentName from 'shared/getComponentName';
 import warning from 'shared/warning';
@@ -698,7 +708,7 @@ function completeWork(
           // was given a normal pri expiration time at the time it was shown.
           const fallbackExpirationTime: ExpirationTime =
             prevState.fallbackExpirationTime;
-          markRenderEventTime(fallbackExpirationTime);
+          markRenderEventTimeAndConfig(fallbackExpirationTime, null);
 
           // Delete the fallback.
           // TODO: Would it be better to store the fallback fragment on
@@ -727,7 +737,24 @@ function completeWork(
         // in the concurrent tree already suspended during this render.
         // This is a known bug.
         if ((workInProgress.mode & BatchedMode) !== NoMode) {
-          renderDidSuspend();
+          const hasInvisibleChildContext =
+            current === null &&
+            workInProgress.memoizedProps.unstable_avoidThisFallback !== true;
+          if (
+            hasInvisibleChildContext ||
+            hasSuspenseContext(
+              suspenseStackCursor.current,
+              (InvisibleParentSuspenseContext: SuspenseContext),
+            )
+          ) {
+            // If this was in an invisible tree or a new render, then showing
+            // this boundary is ok.
+            renderDidSuspend();
+          } else {
+            // Otherwise, we're going to have to hide content so we should
+            // suspend for longer if possible.
+            renderDidSuspendDelayIfPossible();
+          }
         }
       }
 

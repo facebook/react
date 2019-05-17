@@ -55,6 +55,7 @@ import {
   flushPassiveEffects,
 } from './ReactFiberScheduler';
 import {revertPassiveEffectsChange} from 'shared/ReactFeatureFlags';
+import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 
 const fakeInternalInstance = {};
 const isArray = Array.isArray;
@@ -184,9 +185,14 @@ const classComponentUpdater = {
   enqueueSetState(inst, payload, callback) {
     const fiber = getInstance(inst);
     const currentTime = requestCurrentTime();
-    const expirationTime = computeExpirationForFiber(currentTime, fiber);
+    const suspenseConfig = requestCurrentSuspenseConfig();
+    const expirationTime = computeExpirationForFiber(
+      currentTime,
+      fiber,
+      suspenseConfig,
+    );
 
-    const update = createUpdate(expirationTime);
+    const update = createUpdate(expirationTime, suspenseConfig);
     update.payload = payload;
     if (callback !== undefined && callback !== null) {
       if (__DEV__) {
@@ -204,9 +210,14 @@ const classComponentUpdater = {
   enqueueReplaceState(inst, payload, callback) {
     const fiber = getInstance(inst);
     const currentTime = requestCurrentTime();
-    const expirationTime = computeExpirationForFiber(currentTime, fiber);
+    const suspenseConfig = requestCurrentSuspenseConfig();
+    const expirationTime = computeExpirationForFiber(
+      currentTime,
+      fiber,
+      suspenseConfig,
+    );
 
-    const update = createUpdate(expirationTime);
+    const update = createUpdate(expirationTime, suspenseConfig);
     update.tag = ReplaceState;
     update.payload = payload;
 
@@ -226,9 +237,14 @@ const classComponentUpdater = {
   enqueueForceUpdate(inst, callback) {
     const fiber = getInstance(inst);
     const currentTime = requestCurrentTime();
-    const expirationTime = computeExpirationForFiber(currentTime, fiber);
+    const suspenseConfig = requestCurrentSuspenseConfig();
+    const expirationTime = computeExpirationForFiber(
+      currentTime,
+      fiber,
+      suspenseConfig,
+    );
 
-    const update = createUpdate(expirationTime);
+    const update = createUpdate(expirationTime, suspenseConfig);
     update.tag = ForceUpdate;
 
     if (callback !== undefined && callback !== null) {

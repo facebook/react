@@ -7,12 +7,14 @@
 
 import assign from 'object-assign';
 import ReactCurrentDispatcher from './ReactCurrentDispatcher';
+import ReactCurrentBatchConfig from './ReactCurrentBatchConfig';
 import ReactCurrentOwner from './ReactCurrentOwner';
 import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
 import ReactActingRendererSigil from './ReactActingRendererSigil';
 
 const ReactSharedInternals = {
   ReactCurrentDispatcher,
+  ReactCurrentBatchConfig,
   ReactCurrentOwner,
   ReactActingRendererSigil,
   // Used by renderers to avoid bundling object-assign twice in UMD bundles:
