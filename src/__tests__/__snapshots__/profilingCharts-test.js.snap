@@ -72,7 +72,7 @@ Object {
   "maxSelfDuration": 10,
   "renderPathNodes": Set {
     1,
-    3,
+    2,
   },
   "rows": Array [
     Array [
