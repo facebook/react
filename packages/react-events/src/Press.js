@@ -117,6 +117,7 @@ const targetEventTypes = [
   // We need to preventDefault on pointerdown for mouse/pen events
   // that are in hit target area but not the element area.
   {name: 'pointerdown', passive: false},
+  'mousedown',
 ];
 const rootEventTypes = [
   'keyup',
@@ -125,17 +126,19 @@ const rootEventTypes = [
   'scroll',
   'pointercancel',
 ];
+const baseRootEventTypes = [
+  // Used as a 'cancel' signal for mouse interactions
+  {name: 'mouseup', passive: false},
+];
 
 // If PointerEvents is not supported (e.g., Safari), also listen to touch and mouse events.
 if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
-  targetEventTypes.push('touchstart', 'mousedown');
+  targetEventTypes.push('touchstart');
   rootEventTypes.push(
-    {name: 'mouseup', passive: false},
     'mousemove',
     'touchmove',
     'touchend',
     'touchcancel',
-    // Used as a 'cancel' signal for mouse interactions
     'dragstart',
   );
 }
@@ -584,6 +587,7 @@ function removeRootEventTypes(
 
 const PressResponder = {
   targetEventTypes,
+  rootEventTypes: baseRootEventTypes,
   createInitialState(): PressState {
     return {
       activationPosition: null,
@@ -645,6 +649,7 @@ const PressResponder = {
 
           // Ignore emulated mouse events
           if (type === 'mousedown' && state.ignoreEmulatedMouseEvents) {
+            nativeEvent.stopImmediatePropagation();
             return;
           }
           // Ignore mouse/pen pressing on touch hit target area
@@ -707,6 +712,10 @@ const PressResponder = {
           ) {
             nativeEvent.preventDefault();
           }
+        }
+        if (state.ignoreEmulatedMouseEvents) {
+          state.ignoreEmulatedMouseEvents = false;
+          nativeEvent.stopImmediatePropagation();
         }
         break;
       }
@@ -797,6 +806,10 @@ const PressResponder = {
       case 'keyup':
       case 'mouseup':
       case 'touchend': {
+        if (type === 'mouseup' && state.ignoreEmulatedMouseEvents) {
+          nativeEvent.stopImmediatePropagation();
+          return;
+        }
         if (state.isPressed) {
           // Ignore unrelated keyboard events and verify press is within
           // responder region for non-keyboard events.
@@ -850,8 +863,6 @@ const PressResponder = {
               }
             }
           }
-        } else if (type === 'mouseup' && state.ignoreEmulatedMouseEvents) {
-          state.ignoreEmulatedMouseEvents = false;
         } else if (state.allowPressReentry) {
           removeRootEventTypes(context, state);
         }
