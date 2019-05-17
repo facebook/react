@@ -1737,9 +1737,7 @@ describe('ReactFresh', () => {
       expect(el.firstChild.textContent).toBe('0');
       expect(el.firstChild.style.color).toBe('red');
 
-      act(() => {
-        el.firstChild.dispatchEvent(new MouseEvent('click', {bubbles: true}));
-      });
+      el.firstChild.dispatchEvent(new MouseEvent('click', {bubbles: true}));
       expect(el.firstChild.textContent).toBe('0');
       expect(el.firstChild.style.color).toBe('red');
       expect(Scheduler).toFlushAndYieldThrough(['Hello#layout']);
