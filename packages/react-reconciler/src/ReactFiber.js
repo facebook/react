@@ -45,6 +45,7 @@ import {
   SuspenseComponent,
   FunctionComponent,
   MemoComponent,
+  SimpleMemoComponent,
   LazyComponent,
   EventComponent,
   EventTarget,
@@ -52,6 +53,10 @@ import {
 import getComponentName from 'shared/getComponentName';
 
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
+import {
+  resolveFunctionForHotReloading,
+  resolveForwardRefForHotReloading,
+} from './ReactFiberHotReloading';
 import {NoWork} from './ReactFiberExpirationTime';
 import {
   NoMode,
@@ -218,6 +223,7 @@ export type Fiber = {|
   _debugSource?: Source | null,
   _debugOwner?: Fiber | null,
   _debugIsCurrentlyTiming?: boolean,
+  _debugNeedsRemount?: boolean,
 
   // Used to verify that the order of hooks does not change between renders.
   _debugHookTypes?: Array<HookType> | null,
@@ -302,6 +308,7 @@ function FiberNode(
     this._debugSource = null;
     this._debugOwner = null;
     this._debugIsCurrentlyTiming = false;
+    this._debugNeedsRemount = false;
     this._debugHookTypes = null;
     if (!hasBadMapPolyfill && typeof Object.preventExtensions === 'function') {
       Object.preventExtensions(this);
@@ -434,6 +441,22 @@ export function createWorkInProgress(
     workInProgress.treeBaseDuration = current.treeBaseDuration;
   }
 
+  if (__DEV__) {
+    workInProgress._debugNeedsRemount = current._debugNeedsRemount;
+    switch (workInProgress.tag) {
+      case IndeterminateComponent:
+      case FunctionComponent:
+      case SimpleMemoComponent:
+        workInProgress.type = resolveFunctionForHotReloading(current.type);
+        break;
+      case ForwardRef:
+        workInProgress.type = resolveForwardRefForHotReloading(current.type);
+        break;
+      default:
+        break;
+    }
+  }
+
   return workInProgress;
 }
 
@@ -473,6 +496,10 @@ export function createFiberFromTypeAndProps(
   if (typeof type === 'function') {
     if (shouldConstruct(type)) {
       fiberTag = ClassComponent;
+    } else {
+      if (__DEV__) {
+        resolvedType = resolveFunctionForHotReloading(resolvedType);
+      }
     }
   } else if (typeof type === 'string') {
     fiberTag = HostComponent;
@@ -509,6 +536,9 @@ export function createFiberFromTypeAndProps(
               break getTag;
             case REACT_FORWARD_REF_TYPE:
               fiberTag = ForwardRef;
+              if (__DEV__) {
+                resolvedType = resolveForwardRefForHotReloading(resolvedType);
+              }
               break getTag;
             case REACT_MEMO_TYPE:
               fiberTag = MemoComponent;
@@ -777,6 +807,7 @@ export function assignFiberPropertiesInDEV(
   target._debugSource = source._debugSource;
   target._debugOwner = source._debugOwner;
   target._debugIsCurrentlyTiming = source._debugIsCurrentlyTiming;
+  target._debugNeedsRemount = source._debugNeedsRemount;
   target._debugHookTypes = source._debugHookTypes;
   return target;
 }

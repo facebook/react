@@ -1,0 +1,2036 @@
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @emails react-core
+ */
+
+/* eslint-disable no-for-of-loops/no-for-of-loops */
+
+'use strict';
+
+let React;
+let ReactDOM;
+let Scheduler;
+let act;
+
+describe('ReactFresh', () => {
+  let container;
+  let familiesByID;
+  let familiesByType;
+  let newFamilies;
+  let updatedFamilies;
+  let performHotReload;
+  let signaturesByType;
+
+  beforeEach(() => {
+    let scheduleHotUpdate;
+    let lastRoot;
+    global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
+      supportsFiber: true,
+      inject: injected => {
+        scheduleHotUpdate = injected.scheduleHotUpdate;
+      },
+      onCommitFiberRoot: (id, root) => {
+        lastRoot = root;
+      },
+      onCommitFiberUnmount: () => {},
+    };
+
+    jest.resetModules();
+    React = require('react');
+    ReactDOM = require('react-dom');
+    Scheduler = require('scheduler');
+    act = require('react-dom/test-utils').act;
+    container = document.createElement('div');
+    document.body.appendChild(container);
+
+    familiesByID = new Map();
+    familiesByType = new WeakMap();
+
+    if (__DEV__) {
+      performHotReload = function(staleFamilies) {
+        scheduleHotUpdate({
+          root: lastRoot,
+          familiesByType,
+          updatedFamilies,
+          staleFamilies,
+        });
+      };
+    }
+  });
+
+  afterEach(() => {
+    document.body.removeChild(container);
+  });
+
+  function prepare(version) {
+    newFamilies = new Set();
+    updatedFamilies = new Set();
+    signaturesByType = new Map();
+    const Component = version();
+
+    // Fill in the signatures.
+    for (let family of newFamilies) {
+      const latestSignature = signaturesByType.get(family.currentType) || null;
+      family.currentSignature = latestSignature;
+    }
+
+    newFamilies = null;
+    updatedFamilies = null;
+    signaturesByType = null;
+
+    return Component;
+  }
+
+  function render(version, props) {
+    const Component = prepare(version);
+    act(() => {
+      ReactDOM.render(<Component {...props} />, container);
+    });
+    return Component;
+  }
+
+  function patch(version) {
+    // Will be filled in by __register__ calls in user code.
+    newFamilies = new Set();
+    updatedFamilies = new Set();
+    signaturesByType = new Map();
+    const Component = version();
+
+    // Fill in the signatures.
+    for (let family of newFamilies) {
+      const latestSignature = signaturesByType.get(family.currentType) || null;
+      family.currentSignature = latestSignature;
+    }
+    // Now that all registration and signatures are collected,
+    // find which registrations changed their signatures since last time.
+    const staleFamilies = new Set();
+    for (let family of updatedFamilies) {
+      const latestSignature = signaturesByType.get(family.currentType) || null;
+      if (family.currentSignature !== latestSignature) {
+        family.currentSignature = latestSignature;
+        staleFamilies.add(family);
+      }
+    }
+
+    performHotReload(staleFamilies);
+    newFamilies = null;
+    updatedFamilies = null;
+    signaturesByType = null;
+    return Component;
+  }
+
+  function __register__(type, id) {
+    if (familiesByType.has(type)) {
+      return;
+    }
+    let family = familiesByID.get(id);
+    let isNew = false;
+    if (family === undefined) {
+      isNew = true;
+      family = {currentType: type, currentSignature: null};
+      familiesByID.set(id, family);
+    }
+    const prevType = family.currentType;
+    if (isNew) {
+      // The first time a type is registered, we don't need
+      // any special reconciliation logic. So we won't add it to the map.
+      // Instead, this will happen the firt time it is edited.
+      newFamilies.add(family);
+    } else {
+      family.currentType = type;
+      // Point both previous and next types to this family.
+      familiesByType.set(prevType, family);
+      familiesByType.set(type, family);
+      updatedFamilies.add(family);
+    }
+
+    if (typeof type === 'object' && type !== null) {
+      switch (type.$$typeof) {
+        case Symbol.for('react.forward_ref'):
+          __register__(type.render, id + '$render');
+          break;
+        case Symbol.for('react.memo'):
+          __register__(type.type, id + '$type');
+          break;
+      }
+    }
+  }
+
+  function __signature__(type, signature) {
+    signaturesByType.set(type, signature);
+  }
+
+  it('can preserve state for compatible types', () => {
+    if (__DEV__) {
+      let HelloV1 = render(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+        return Hello;
+      });
+
+      // Bump the state before patching.
+      const el = container.firstChild;
+      expect(el.textContent).toBe('0');
+      expect(el.style.color).toBe('blue');
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(el.textContent).toBe('1');
+
+      // Perform a hot update.
+      let HelloV2 = patch(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'red'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+        return Hello;
+      });
+
+      // Assert the state was preserved but color changed.
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('1');
+      expect(el.style.color).toBe('red');
+
+      // Bump the state again.
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('2');
+      expect(el.style.color).toBe('red');
+
+      // Perform top-down renders with both fresh and stale types.
+      // Neither should change the state or color.
+      // They should always resolve to the latest version.
+      render(() => HelloV1);
+      render(() => HelloV2);
+      render(() => HelloV1);
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('2');
+      expect(el.style.color).toBe('red');
+
+      // Bump the state again.
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('3');
+      expect(el.style.color).toBe('red');
+
+      // Finally, a render with incompatible type should reset it.
+      render(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        // No register call.
+        // This is considered a new type.
+        return Hello;
+      });
+      expect(container.firstChild).not.toBe(el);
+      const newEl = container.firstChild;
+      expect(newEl.textContent).toBe('0');
+      expect(newEl.style.color).toBe('blue');
+    }
+  });
+
+  it('can preserve state for forwardRef', () => {
+    if (__DEV__) {
+      let OuterV1 = render(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+
+        const Outer = React.forwardRef(() => <Hello />);
+        __register__(Outer, 'Outer');
+        return Outer;
+      });
+
+      // Bump the state before patching.
+      const el = container.firstChild;
+      expect(el.textContent).toBe('0');
+      expect(el.style.color).toBe('blue');
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(el.textContent).toBe('1');
+
+      // Perform a hot update.
+      let OuterV2 = patch(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'red'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+
+        const Outer = React.forwardRef(() => <Hello />);
+        __register__(Outer, 'Outer');
+        return Outer;
+      });
+
+      // Assert the state was preserved but color changed.
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('1');
+      expect(el.style.color).toBe('red');
+
+      // Bump the state again.
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('2');
+      expect(el.style.color).toBe('red');
+
+      // Perform top-down renders with both fresh and stale types.
+      // Neither should change the state or color.
+      // They should always resolve to the latest version.
+      render(() => OuterV1);
+      render(() => OuterV2);
+      render(() => OuterV1);
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('2');
+      expect(el.style.color).toBe('red');
+
+      // Finally, a render with incompatible type should reset it.
+      render(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+
+        // Note: no forwardRef wrapper this time.
+        return Hello;
+      });
+
+      expect(container.firstChild).not.toBe(el);
+      const newEl = container.firstChild;
+      expect(newEl.textContent).toBe('0');
+      expect(newEl.style.color).toBe('blue');
+    }
+  });
+
+  it('should not consider two forwardRefs around the same type to be equivalent', () => {
+    if (__DEV__) {
+      let ParentV1 = render(
+        () => {
+          function Hello() {
+            const [val, setVal] = React.useState(0);
+            return (
+              <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
+                {val}
+              </p>
+            );
+          }
+          __register__(Hello, 'Hello');
+
+          function renderInner() {
+            return <Hello />;
+          }
+          // Both of these are wrappers around the same inner function.
+          // They should be treated as distinct types across reloads.
+          let ForwardRefA = React.forwardRef(renderInner);
+          __register__(ForwardRefA, 'ForwardRefA');
+          let ForwardRefB = React.forwardRef(renderInner);
+          __register__(ForwardRefB, 'ForwardRefB');
+
+          function Parent({cond}) {
+            return cond ? <ForwardRefA /> : <ForwardRefB />;
+          }
+          __register__(Parent, 'Parent');
+
+          return Parent;
+        },
+        {cond: true},
+      );
+
+      // Bump the state before switching up types.
+      let el = container.firstChild;
+      expect(el.textContent).toBe('0');
+      expect(el.style.color).toBe('blue');
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(el.textContent).toBe('1');
+
+      // Switching up the inner types should reset the state.
+      render(() => ParentV1, {cond: false});
+      expect(el).not.toBe(container.firstChild);
+      el = container.firstChild;
+      expect(el.textContent).toBe('0');
+      expect(el.style.color).toBe('blue');
+
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(el.textContent).toBe('1');
+
+      // Switch them up back again.
+      render(() => ParentV1, {cond: true});
+      expect(el).not.toBe(container.firstChild);
+      el = container.firstChild;
+      expect(el.textContent).toBe('0');
+      expect(el.style.color).toBe('blue');
+
+      // Now bump up the state to prepare for patching.
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(el.textContent).toBe('1');
+
+      // Patch to change the color.
+      let ParentV2 = patch(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'red'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+
+        function renderInner() {
+          return <Hello />;
+        }
+        // Both of these are wrappers around the same inner function.
+        // They should be treated as distinct types across reloads.
+        let ForwardRefA = React.forwardRef(renderInner);
+        __register__(ForwardRefA, 'ForwardRefA');
+        let ForwardRefB = React.forwardRef(renderInner);
+        __register__(ForwardRefB, 'ForwardRefB');
+
+        function Parent({cond}) {
+          return cond ? <ForwardRefA /> : <ForwardRefB />;
+        }
+        __register__(Parent, 'Parent');
+
+        return Parent;
+      });
+
+      // The state should be intact; the color should change.
+      expect(el).toBe(container.firstChild);
+      expect(el.textContent).toBe('1');
+      expect(el.style.color).toBe('red');
+
+      // Switching up the condition should still reset the state.
+      render(() => ParentV2, {cond: false});
+      expect(el).not.toBe(container.firstChild);
+      el = container.firstChild;
+      expect(el.textContent).toBe('0');
+      expect(el.style.color).toBe('red');
+
+      // Now bump up the state to prepare for top-level renders.
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(el).toBe(container.firstChild);
+      expect(el.textContent).toBe('1');
+      expect(el.style.color).toBe('red');
+
+      // Finally, verify using top-level render with stale type keeps state.
+      render(() => ParentV1);
+      render(() => ParentV2);
+      render(() => ParentV1);
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('1');
+      expect(el.style.color).toBe('red');
+    }
+  });
+
+  it('can update forwardRef render function with its wrapper', () => {
+    if (__DEV__) {
+      render(() => {
+        function Hello({color}) {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+
+        const Outer = React.forwardRef(() => <Hello color="blue" />);
+        __register__(Outer, 'Outer');
+        return Outer;
+      });
+
+      // Bump the state before patching.
+      const el = container.firstChild;
+      expect(el.textContent).toBe('0');
+      expect(el.style.color).toBe('blue');
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(el.textContent).toBe('1');
+
+      // Perform a hot update.
+      patch(() => {
+        function Hello({color}) {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+
+        const Outer = React.forwardRef(() => <Hello color="red" />);
+        __register__(Outer, 'Outer');
+        return Outer;
+      });
+
+      // Assert the state was preserved but color changed.
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('1');
+      expect(el.style.color).toBe('red');
+    }
+  });
+
+  it('can update forwardRef render function in isolation', () => {
+    if (__DEV__) {
+      render(() => {
+        function Hello({color}) {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+
+        function renderHello() {
+          return <Hello color="blue" />;
+        }
+        __register__(renderHello, 'renderHello');
+
+        return React.forwardRef(renderHello);
+      });
+
+      // Bump the state before patching.
+      const el = container.firstChild;
+      expect(el.textContent).toBe('0');
+      expect(el.style.color).toBe('blue');
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(el.textContent).toBe('1');
+
+      // Perform a hot update of just the rendering function.
+      patch(() => {
+        function Hello({color}) {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+
+        function renderHello() {
+          return <Hello color="red" />;
+        }
+        __register__(renderHello, 'renderHello');
+
+        // Not updating the wrapper.
+      });
+
+      // Assert the state was preserved but color changed.
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('1');
+      expect(el.style.color).toBe('red');
+    }
+  });
+
+  it('can preserve state for simple memo', () => {
+    if (__DEV__) {
+      let OuterV1 = render(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+
+        const Outer = React.memo(Hello);
+        __register__(Outer, 'Outer');
+        return Outer;
+      });
+
+      // Bump the state before patching.
+      const el = container.firstChild;
+      expect(el.textContent).toBe('0');
+      expect(el.style.color).toBe('blue');
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(el.textContent).toBe('1');
+
+      // Perform a hot update.
+      let OuterV2 = patch(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'red'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+
+        const Outer = React.memo(Hello);
+        __register__(Outer, 'Outer');
+        return Outer;
+      });
+
+      // Assert the state was preserved but color changed.
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('1');
+      expect(el.style.color).toBe('red');
+
+      // Bump the state again.
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('2');
+      expect(el.style.color).toBe('red');
+
+      // Perform top-down renders with both fresh and stale types.
+      // Neither should change the state or color.
+      // They should always resolve to the latest version.
+      render(() => OuterV1);
+      render(() => OuterV2);
+      render(() => OuterV1);
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('2');
+      expect(el.style.color).toBe('red');
+
+      // Finally, a render with incompatible type should reset it.
+      render(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+
+        // Note: no wrapper this time.
+        return Hello;
+      });
+
+      expect(container.firstChild).not.toBe(el);
+      const newEl = container.firstChild;
+      expect(newEl.textContent).toBe('0');
+      expect(newEl.style.color).toBe('blue');
+    }
+  });
+
+  it('can preserve state for memo with custom comparison', () => {
+    if (__DEV__) {
+      let OuterV1 = render(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+
+        const Outer = React.memo(Hello, () => true);
+        __register__(Outer, 'Outer');
+        return Outer;
+      });
+
+      // Bump the state before patching.
+      const el = container.firstChild;
+      expect(el.textContent).toBe('0');
+      expect(el.style.color).toBe('blue');
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(el.textContent).toBe('1');
+
+      // Perform a hot update.
+      let OuterV2 = patch(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'red'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+
+        const Outer = React.memo(Hello, () => true);
+        __register__(Outer, 'Outer');
+        return Outer;
+      });
+
+      // Assert the state was preserved but color changed.
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('1');
+      expect(el.style.color).toBe('red');
+
+      // Bump the state again.
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('2');
+      expect(el.style.color).toBe('red');
+
+      // Perform top-down renders with both fresh and stale types.
+      // Neither should change the state or color.
+      // They should always resolve to the latest version.
+      render(() => OuterV1);
+      render(() => OuterV2);
+      render(() => OuterV1);
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('2');
+      expect(el.style.color).toBe('red');
+
+      // Finally, a render with incompatible type should reset it.
+      render(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+
+        // Note: no wrapper this time.
+        return Hello;
+      });
+
+      expect(container.firstChild).not.toBe(el);
+      const newEl = container.firstChild;
+      expect(newEl.textContent).toBe('0');
+      expect(newEl.style.color).toBe('blue');
+    }
+  });
+
+  it('can update simple memo function in isolation', () => {
+    if (__DEV__) {
+      render(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+
+        return React.memo(Hello);
+      });
+
+      // Bump the state before patching.
+      const el = container.firstChild;
+      expect(el.textContent).toBe('0');
+      expect(el.style.color).toBe('blue');
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(el.textContent).toBe('1');
+
+      // Perform a hot update of just the rendering function.
+      patch(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'red'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+
+        // Not updating the wrapper.
+      });
+
+      // Assert the state was preserved but color changed.
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('1');
+      expect(el.style.color).toBe('red');
+    }
+  });
+
+  it('can preserve state for memo(forwardRef)', () => {
+    if (__DEV__) {
+      let OuterV1 = render(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+
+        const Outer = React.memo(React.forwardRef(() => <Hello />));
+        __register__(Outer, 'Outer');
+        return Outer;
+      });
+
+      // Bump the state before patching.
+      const el = container.firstChild;
+      expect(el.textContent).toBe('0');
+      expect(el.style.color).toBe('blue');
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(el.textContent).toBe('1');
+
+      // Perform a hot update.
+      let OuterV2 = patch(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'red'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+
+        const Outer = React.memo(React.forwardRef(() => <Hello />));
+        __register__(Outer, 'Outer');
+        return Outer;
+      });
+
+      // Assert the state was preserved but color changed.
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('1');
+      expect(el.style.color).toBe('red');
+
+      // Bump the state again.
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('2');
+      expect(el.style.color).toBe('red');
+
+      // Perform top-down renders with both fresh and stale types.
+      // Neither should change the state or color.
+      // They should always resolve to the latest version.
+      render(() => OuterV1);
+      render(() => OuterV2);
+      render(() => OuterV1);
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('2');
+      expect(el.style.color).toBe('red');
+
+      // Finally, a render with incompatible type should reset it.
+      render(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+
+        // Note: no wrapper this time.
+        return Hello;
+      });
+
+      expect(container.firstChild).not.toBe(el);
+      const newEl = container.firstChild;
+      expect(newEl.textContent).toBe('0');
+      expect(newEl.style.color).toBe('blue');
+    }
+  });
+
+  it('does not re-render ancestor components unnecessarily during a hot update', () => {
+    if (__DEV__) {
+      let appRenders = 0;
+
+      render(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+        function App() {
+          appRenders++;
+          return <Hello />;
+        }
+        __register__(App, 'App');
+        return App;
+      });
+
+      expect(appRenders).toBe(1);
+
+      // Bump the state before patching.
+      const el = container.firstChild;
+      expect(el.textContent).toBe('0');
+      expect(el.style.color).toBe('blue');
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(el.textContent).toBe('1');
+
+      // No re-renders from the top.
+      expect(appRenders).toBe(1);
+
+      // Perform a hot update for Hello only.
+      patch(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'red'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+      });
+
+      // Assert the state was preserved but color changed.
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('1');
+      expect(el.style.color).toBe('red');
+
+      // Still no re-renders from the top.
+      expect(appRenders).toBe(1);
+
+      // Bump the state.
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(el.textContent).toBe('2');
+
+      // Still no re-renders from the top.
+      expect(appRenders).toBe(1);
+    }
+  });
+
+  it('can force remount by changing signature', () => {
+    if (__DEV__) {
+      let HelloV1 = render(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+        // When this changes, we'll expect a remount:
+        __signature__(Hello, '1');
+        return Hello;
+      });
+
+      // Bump the state before patching.
+      const el = container.firstChild;
+      expect(el.textContent).toBe('0');
+      expect(el.style.color).toBe('blue');
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(el.textContent).toBe('1');
+
+      // Perform a hot update.
+      let HelloV2 = patch(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'red'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+        // The signature hasn't changed since the last time:
+        __signature__(Hello, '1');
+        return Hello;
+      });
+
+      // Assert the state was preserved but color changed.
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('1');
+      expect(el.style.color).toBe('red');
+
+      // Perform a hot update.
+      let HelloV3 = patch(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'yellow'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        // We're changing the signature now so it will remount:
+        __register__(Hello, 'Hello');
+        __signature__(Hello, '2');
+        return Hello;
+      });
+
+      // Expect a remount.
+      expect(container.firstChild).not.toBe(el);
+      const newEl = container.firstChild;
+      expect(newEl.textContent).toBe('0');
+      expect(newEl.style.color).toBe('yellow');
+
+      // Bump state again.
+      act(() => {
+        newEl.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(newEl.textContent).toBe('1');
+      expect(newEl.style.color).toBe('yellow');
+
+      // Perform top-down renders with both fresh and stale types.
+      // Neither should change the state or color.
+      // They should always resolve to the latest version.
+      render(() => HelloV1);
+      render(() => HelloV2);
+      render(() => HelloV3);
+      render(() => HelloV2);
+      render(() => HelloV1);
+      expect(container.firstChild).toBe(newEl);
+      expect(newEl.textContent).toBe('1');
+      expect(newEl.style.color).toBe('yellow');
+
+      // Verify we can patch again while preserving the signature.
+      patch(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'purple'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        // Same signature as last time.
+        __register__(Hello, 'Hello');
+        __signature__(Hello, '2');
+        return Hello;
+      });
+
+      expect(container.firstChild).toBe(newEl);
+      expect(newEl.textContent).toBe('1');
+      expect(newEl.style.color).toBe('purple');
+
+      // Check removing the signature also causes a remount.
+      patch(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'orange'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        // No signature this time.
+        __register__(Hello, 'Hello');
+        return Hello;
+      });
+
+      // Expect a remount.
+      expect(container.firstChild).not.toBe(newEl);
+      const finalEl = container.firstChild;
+      expect(finalEl.textContent).toBe('0');
+      expect(finalEl.style.color).toBe('orange');
+    }
+  });
+
+  it('keeps a valid tree when forcing remount', () => {
+    if (__DEV__) {
+      let HelloV1 = prepare(() => {
+        function Hello() {
+          return null;
+        }
+        __register__(Hello, 'Hello');
+        __signature__(Hello, '1');
+        return Hello;
+      });
+
+      const Bailout = React.memo(({children}) => {
+        return children;
+      });
+
+      // Each of those renders three instances of HelloV1,
+      // but in different ways.
+      let trees = [
+        <div>
+          <HelloV1 />
+          <div>
+            <HelloV1 />
+            <Bailout>
+              <HelloV1 />
+            </Bailout>
+          </div>
+        </div>,
+        <div>
+          <div>
+            <HelloV1>
+              <HelloV1 />
+            </HelloV1>
+            <HelloV1 />
+          </div>
+        </div>,
+        <div>
+          <span />
+          <HelloV1 />
+          <HelloV1 />
+          <HelloV1 />
+        </div>,
+        <div>
+          <HelloV1 />
+          <span />
+          <HelloV1 />
+          <HelloV1 />
+        </div>,
+        <div>
+          <div>foo</div>
+          <HelloV1 />
+          <div>
+            <HelloV1 />
+          </div>
+          <HelloV1 />
+          <span />
+        </div>,
+        <div>
+          <HelloV1>
+            <span />
+            Hello
+            <span />
+          </HelloV1>,
+          <HelloV1>
+            <React.Fragment>
+              <HelloV1 />
+            </React.Fragment>
+          </HelloV1>,
+        </div>,
+        <HelloV1>
+          <HelloV1>
+            <Bailout>
+              <span />
+              <HelloV1>
+                <span />
+              </HelloV1>
+              <span />
+            </Bailout>
+          </HelloV1>
+        </HelloV1>,
+        <div>
+          <span />
+          <HelloV1 key="0" />
+          <HelloV1 key="1" />
+          <HelloV1 key="2" />
+          <span />
+        </div>,
+        <div>
+          <span />
+          {null}
+          <HelloV1 key="1" />
+          {null}
+          <HelloV1 />
+          <HelloV1 />
+          <span />
+        </div>,
+        <div>
+          <HelloV1 key="2" />
+          <span />
+          <HelloV1 key="0" />
+          <span />
+          <HelloV1 key="1" />
+        </div>,
+        <div>
+          {[[<HelloV1 key="2" />]]}
+          <span>
+            <HelloV1 key="0" />
+            {[null]}
+            <HelloV1 key="1" />
+          </span>
+        </div>,
+        <div>
+          {['foo', <HelloV1 key="hi" />, null, <HelloV1 key="2" />]}
+          <span>
+            {[null]}
+            <HelloV1 key="x" />
+          </span>
+        </div>,
+        <HelloV1>
+          <HelloV1>
+            <span />
+            <Bailout>
+              <HelloV1>hi</HelloV1>
+              <span />
+            </Bailout>
+          </HelloV1>
+        </HelloV1>,
+      ];
+
+      // First, check that each tree handles remounts in isolation.
+      ReactDOM.render(null, container);
+      for (let i = 0; i < trees.length; i++) {
+        runRemountingStressTest(trees[i]);
+      }
+
+      // Then check that each tree is resilient to updates from another tree.
+      for (let i = 0; i < trees.length; i++) {
+        for (let j = 0; j < trees.length; j++) {
+          ReactDOM.render(null, container);
+          // Intentionally don't clean up between the tests:
+          runRemountingStressTest(trees[i]);
+          runRemountingStressTest(trees[j]);
+          runRemountingStressTest(trees[i]);
+        }
+      }
+    }
+  });
+
+  function runRemountingStressTest(tree) {
+    patch(() => {
+      function Hello({children}) {
+        return <section data-color="blue">{children}</section>;
+      }
+      __register__(Hello, 'Hello');
+      __signature__(Hello, '1');
+      return Hello;
+    });
+
+    ReactDOM.render(tree, container);
+    const elements = container.querySelectorAll('section');
+    // Each tree above products exactly three <section> elements:
+    expect(elements.length).toBe(3);
+    elements.forEach(el => {
+      expect(el.dataset.color).toBe('blue');
+    });
+
+    // Patch color without changing the signature.
+    patch(() => {
+      function Hello({children}) {
+        return <section data-color="red">{children}</section>;
+      }
+      __register__(Hello, 'Hello');
+      __signature__(Hello, '1');
+      return Hello;
+    });
+
+    const elementsAfterPatch = container.querySelectorAll('section');
+    expect(elementsAfterPatch.length).toBe(3);
+    elementsAfterPatch.forEach((el, index) => {
+      // The signature hasn't changed so we expect DOM nodes to stay the same.
+      expect(el).toBe(elements[index]);
+      // However, the color should have changed:
+      expect(el.dataset.color).toBe('red');
+    });
+
+    // Patch color *and* change the signature.
+    patch(() => {
+      function Hello({children}) {
+        return <section data-color="orange">{children}</section>;
+      }
+      __register__(Hello, 'Hello');
+      __signature__(Hello, '2'); // Remount
+      return Hello;
+    });
+
+    const elementsAfterRemount = container.querySelectorAll('section');
+    expect(elementsAfterRemount.length).toBe(3);
+    elementsAfterRemount.forEach((el, index) => {
+      // The signature changed so we expect DOM nodes to be different.
+      expect(el).not.toBe(elements[index]);
+      // They should all be using the new color:
+      expect(el.dataset.color).toBe('orange');
+    });
+
+    // Now patch color but *don't* change the signature.
+    patch(() => {
+      function Hello({children}) {
+        return <section data-color="black">{children}</section>;
+      }
+      __register__(Hello, 'Hello');
+      __signature__(Hello, '2'); // Same signature as before
+      return Hello;
+    });
+
+    expect(container.querySelectorAll('section').length).toBe(3);
+    container.querySelectorAll('section').forEach((el, index) => {
+      // The signature didn't change so DOM nodes should stay the same.
+      expect(el).toBe(elementsAfterRemount[index]);
+      // They should all be using the new color:
+      expect(el.dataset.color).toBe('black');
+    });
+
+    // Do another render just in case.
+    ReactDOM.render(tree, container);
+    expect(container.querySelectorAll('section').length).toBe(3);
+    container.querySelectorAll('section').forEach((el, index) => {
+      expect(el).toBe(elementsAfterRemount[index]);
+      expect(el.dataset.color).toBe('black');
+    });
+  }
+
+  it('can remount on signature change within a <root> wrapper', () => {
+    if (__DEV__) {
+      testRemountingWithWrapper(Hello => Hello);
+    }
+  });
+
+  it('can remount on signature change within a simple memo wrapper', () => {
+    if (__DEV__) {
+      testRemountingWithWrapper(Hello => React.memo(Hello));
+    }
+  });
+
+  it('can remount on signature change within forwardRef', () => {
+    if (__DEV__) {
+      testRemountingWithWrapper(Hello => React.forwardRef(Hello));
+    }
+  });
+
+  it('can remount on signature change within forwardRef render function', () => {
+    if (__DEV__) {
+      testRemountingWithWrapper(Hello => React.forwardRef(() => <Hello />));
+    }
+  });
+
+  it('can remount on signature change within nested memo', () => {
+    if (__DEV__) {
+      testRemountingWithWrapper(Hello =>
+        React.memo(React.memo(React.memo(Hello))),
+      );
+    }
+  });
+
+  it('can remount on signature change within a memo wrapper and custom comparison', () => {
+    if (__DEV__) {
+      testRemountingWithWrapper(Hello => React.memo(Hello, () => true));
+    }
+  });
+
+  it('can remount on signature change within a class', () => {
+    if (__DEV__) {
+      testRemountingWithWrapper(Hello => {
+        const child = <Hello />;
+        return class Wrapper extends React.PureComponent {
+          render() {
+            return child;
+          }
+        };
+      });
+    }
+  });
+
+  it('can remount on signature change within a context provider', () => {
+    if (__DEV__) {
+      testRemountingWithWrapper(Hello => {
+        const Context = React.createContext();
+        const child = (
+          <Context.Provider value="constant">
+            <Hello />
+          </Context.Provider>
+        );
+        return function Wrapper() {
+          return child;
+        };
+      });
+    }
+  });
+
+  it('can remount on signature change within a context consumer', () => {
+    if (__DEV__) {
+      testRemountingWithWrapper(Hello => {
+        const Context = React.createContext();
+        const child = <Context.Consumer>{() => <Hello />}</Context.Consumer>;
+        return function Wrapper() {
+          return child;
+        };
+      });
+    }
+  });
+
+  it('can remount on signature change within a suspense node', () => {
+    if (__DEV__) {
+      testRemountingWithWrapper(Hello => {
+        // TODO: we'll probably want to test fallback trees too.
+        const child = (
+          <React.Suspense>
+            <Hello />
+          </React.Suspense>
+        );
+        return function Wrapper() {
+          return child;
+        };
+      });
+    }
+  });
+
+  it('can remount on signature change within a mode node', () => {
+    if (__DEV__) {
+      testRemountingWithWrapper(Hello => {
+        const child = (
+          <React.StrictMode>
+            <Hello />
+          </React.StrictMode>
+        );
+        return function Wrapper() {
+          return child;
+        };
+      });
+    }
+  });
+
+  it('can remount on signature change within a fragment node', () => {
+    if (__DEV__) {
+      testRemountingWithWrapper(Hello => {
+        const child = (
+          <React.Fragment>
+            <Hello />
+          </React.Fragment>
+        );
+        return function Wrapper() {
+          return child;
+        };
+      });
+    }
+  });
+
+  it('can remount on signature change within multiple siblings', () => {
+    if (__DEV__) {
+      testRemountingWithWrapper(Hello => {
+        const child = (
+          <React.Fragment>
+            <React.Fragment>
+              <React.Fragment />
+            </React.Fragment>
+            <Hello />
+            <React.Fragment />
+          </React.Fragment>
+        );
+        return function Wrapper() {
+          return child;
+        };
+      });
+    }
+  });
+
+  it('can remount on signature change within a profiler node', () => {
+    if (__DEV__) {
+      testRemountingWithWrapper(Hello => {
+        const child = <Hello />;
+        return function Wrapper() {
+          return (
+            <React.Profiler onRender={() => {}} id="foo">
+              {child}
+            </React.Profiler>
+          );
+        };
+      });
+    }
+  });
+
+  function testRemountingWithWrapper(wrap) {
+    render(() => {
+      function Hello() {
+        const [val, setVal] = React.useState(0);
+        return (
+          <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
+            {val}
+          </p>
+        );
+      }
+      __register__(Hello, 'Hello');
+      // When this changes, we'll expect a remount:
+      __signature__(Hello, '1');
+
+      // Use the passed wrapper.
+      // This will be different in every test.
+      return wrap(Hello);
+    });
+
+    // Bump the state before patching.
+    const el = container.firstChild;
+    expect(el.textContent).toBe('0');
+    expect(el.style.color).toBe('blue');
+    act(() => {
+      el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+    });
+    expect(el.textContent).toBe('1');
+
+    // Perform a hot update that doesn't remount.
+    patch(() => {
+      function Hello() {
+        const [val, setVal] = React.useState(0);
+        return (
+          <p style={{color: 'red'}} onClick={() => setVal(val + 1)}>
+            {val}
+          </p>
+        );
+      }
+      __register__(Hello, 'Hello');
+      // The signature hasn't changed since the last time:
+      __signature__(Hello, '1');
+      return Hello;
+    });
+
+    // Assert the state was preserved but color changed.
+    expect(container.firstChild).toBe(el);
+    expect(el.textContent).toBe('1');
+    expect(el.style.color).toBe('red');
+
+    // Perform a hot update that remounts.
+    patch(() => {
+      function Hello() {
+        const [val, setVal] = React.useState(0);
+        return (
+          <p style={{color: 'yellow'}} onClick={() => setVal(val + 1)}>
+            {val}
+          </p>
+        );
+      }
+      // We're changing the signature now so it will remount:
+      __register__(Hello, 'Hello');
+      __signature__(Hello, '2');
+      return Hello;
+    });
+
+    // Expect a remount.
+    expect(container.firstChild).not.toBe(el);
+    const newEl = container.firstChild;
+    expect(newEl.textContent).toBe('0');
+    expect(newEl.style.color).toBe('yellow');
+
+    // Bump state again.
+    act(() => {
+      newEl.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+    });
+    expect(newEl.textContent).toBe('1');
+    expect(newEl.style.color).toBe('yellow');
+
+    // Verify we can patch again while preserving the signature.
+    patch(() => {
+      function Hello() {
+        const [val, setVal] = React.useState(0);
+        return (
+          <p style={{color: 'purple'}} onClick={() => setVal(val + 1)}>
+            {val}
+          </p>
+        );
+      }
+      // Same signature as last time.
+      __register__(Hello, 'Hello');
+      __signature__(Hello, '2');
+      return Hello;
+    });
+
+    expect(container.firstChild).toBe(newEl);
+    expect(newEl.textContent).toBe('1');
+    expect(newEl.style.color).toBe('purple');
+
+    // Check removing the signature also causes a remount.
+    patch(() => {
+      function Hello() {
+        const [val, setVal] = React.useState(0);
+        return (
+          <p style={{color: 'orange'}} onClick={() => setVal(val + 1)}>
+            {val}
+          </p>
+        );
+      }
+      // No signature this time.
+      __register__(Hello, 'Hello');
+      return Hello;
+    });
+
+    // Expect a remount.
+    expect(container.firstChild).not.toBe(newEl);
+    const finalEl = container.firstChild;
+    expect(finalEl.textContent).toBe('0');
+    expect(finalEl.style.color).toBe('orange');
+  }
+
+  it('resets hooks with dependencies on hot reload', () => {
+    if (__DEV__) {
+      let useEffectWithEmptyArrayCalls = 0;
+
+      render(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          const tranformed = React.useMemo(() => val * 2, [val]);
+          const handleClick = React.useCallback(() => setVal(v => v + 1), []);
+
+          React.useEffect(() => {
+            useEffectWithEmptyArrayCalls++;
+          }, []);
+
+          return (
+            <p style={{color: 'blue'}} onClick={handleClick}>
+              {tranformed}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+        return Hello;
+      });
+
+      // Bump the state before patching.
+      const el = container.firstChild;
+      expect(el.textContent).toBe('0');
+      expect(el.style.color).toBe('blue');
+      expect(useEffectWithEmptyArrayCalls).toBe(1); // useEffect ran
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(el.textContent).toBe('2'); // val * 2
+      expect(useEffectWithEmptyArrayCalls).toBe(1); // useEffect didn't re-run
+
+      // Perform a hot update.
+      act(() => {
+        patch(() => {
+          function Hello() {
+            const [val, setVal] = React.useState(0);
+            const tranformed = React.useMemo(() => val * 10, [val]);
+            const handleClick = React.useCallback(() => setVal(v => v - 1), []);
+
+            React.useEffect(() => {
+              useEffectWithEmptyArrayCalls++;
+            }, []);
+
+            return (
+              <p style={{color: 'red'}} onClick={handleClick}>
+                {tranformed}
+              </p>
+            );
+          }
+          __register__(Hello, 'Hello');
+          return Hello;
+        });
+      });
+
+      // Assert the state was preserved but memo was evicted.
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('10'); // val * 10
+      expect(el.style.color).toBe('red');
+      expect(useEffectWithEmptyArrayCalls).toBe(2); // useEffect re-ran
+
+      // This should fire the new callback which decreases the counter.
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(el.textContent).toBe('0');
+      expect(el.style.color).toBe('red');
+      expect(useEffectWithEmptyArrayCalls).toBe(2); // useEffect didn't re-run
+    }
+  });
+
+  it('can hot reload offscreen components', () => {
+    if (__DEV__) {
+      const AppV1 = prepare(() => {
+        function Hello() {
+          React.useLayoutEffect(() => {
+            Scheduler.yieldValue('Hello#layout');
+          });
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+
+        return function App({offscreen}) {
+          React.useLayoutEffect(() => {
+            Scheduler.yieldValue('App#layout');
+          });
+          return (
+            <div hidden={offscreen}>
+              <Hello />
+            </div>
+          );
+        };
+      });
+
+      const root = ReactDOM.unstable_createRoot(container);
+      root.render(<AppV1 offscreen={true} />);
+      expect(Scheduler).toFlushAndYieldThrough(['App#layout']);
+      const el = container.firstChild;
+      expect(el.hidden).toBe(true);
+      expect(el.firstChild).toBe(null); // Offscreen content not flushed yet.
+
+      // Perform a hot update.
+      patch(() => {
+        function Hello() {
+          React.useLayoutEffect(() => {
+            Scheduler.yieldValue('Hello#layout');
+          });
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'red'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+      });
+
+      // It's still offscreen so we don't see anything.
+      expect(container.firstChild).toBe(el);
+      expect(el.hidden).toBe(true);
+      expect(el.firstChild).toBe(null);
+
+      // Process the offscreen updates.
+      expect(Scheduler).toFlushAndYieldThrough(['Hello#layout']);
+      expect(container.firstChild).toBe(el);
+      expect(el.firstChild.textContent).toBe('0');
+      expect(el.firstChild.style.color).toBe('red');
+
+      el.firstChild.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      expect(el.firstChild.textContent).toBe('0');
+      expect(el.firstChild.style.color).toBe('red');
+      expect(Scheduler).toFlushAndYieldThrough(['Hello#layout']);
+      expect(el.firstChild.textContent).toBe('1');
+      expect(el.firstChild.style.color).toBe('red');
+
+      // Hot reload while we're offscreen.
+      patch(() => {
+        function Hello() {
+          React.useLayoutEffect(() => {
+            Scheduler.yieldValue('Hello#layout');
+          });
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'orange'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+      });
+
+      // It's still offscreen so we don't see the updates.
+      expect(container.firstChild).toBe(el);
+      expect(el.firstChild.textContent).toBe('1');
+      expect(el.firstChild.style.color).toBe('red');
+
+      // Process the offscreen updates.
+      expect(Scheduler).toFlushAndYieldThrough(['Hello#layout']);
+      expect(container.firstChild).toBe(el);
+      expect(el.firstChild.textContent).toBe('1');
+      expect(el.firstChild.style.color).toBe('orange');
+    }
+  });
+
+  it('remounts failed error boundaries (componentDidCatch)', () => {
+    if (__DEV__) {
+      render(() => {
+        function Hello() {
+          return <h1>Hi</h1>;
+        }
+        __register__(Hello, 'Hello');
+
+        class Boundary extends React.Component {
+          state = {error: null};
+          componentDidCatch(error) {
+            this.setState({error});
+          }
+          render() {
+            if (this.state.error) {
+              return <h1>Oops: {this.state.error.message}</h1>;
+            }
+            return this.props.children;
+          }
+        }
+
+        function App() {
+          return (
+            <React.Fragment>
+              <p>A</p>
+              <Boundary>
+                <Hello />
+              </Boundary>
+              <p>B</p>
+            </React.Fragment>
+          );
+        }
+
+        return App;
+      });
+
+      expect(container.innerHTML).toBe('<p>A</p><h1>Hi</h1><p>B</p>');
+      const firstP = container.firstChild;
+      const secondP = firstP.nextSibling.nextSibling;
+
+      // Perform a hot update that fails.
+      patch(() => {
+        function Hello() {
+          throw new Error('No');
+        }
+        __register__(Hello, 'Hello');
+      });
+
+      expect(container.innerHTML).toBe('<p>A</p><h1>Oops: No</h1><p>B</p>');
+      expect(container.firstChild).toBe(firstP);
+      expect(container.firstChild.nextSibling.nextSibling).toBe(secondP);
+
+      // Perform a hot update that fixes the error.
+      patch(() => {
+        function Hello() {
+          return <h1>Fixed!</h1>;
+        }
+        __register__(Hello, 'Hello');
+      });
+
+      // This should remount the error boundary (but not anything above it).
+      expect(container.innerHTML).toBe('<p>A</p><h1>Fixed!</h1><p>B</p>');
+      expect(container.firstChild).toBe(firstP);
+      expect(container.firstChild.nextSibling.nextSibling).toBe(secondP);
+
+      // Verify next hot reload doesn't remount anything.
+      const helloNode = container.firstChild.nextSibling;
+      patch(() => {
+        function Hello() {
+          return <h1>Nice.</h1>;
+        }
+        __register__(Hello, 'Hello');
+      });
+      expect(container.firstChild.nextSibling).toBe(helloNode);
+      expect(helloNode.textContent).toBe('Nice.');
+    }
+  });
+
+  it('remounts failed error boundaries (getDerivedStateFromError)', () => {
+    if (__DEV__) {
+      render(() => {
+        function Hello() {
+          return <h1>Hi</h1>;
+        }
+        __register__(Hello, 'Hello');
+
+        class Boundary extends React.Component {
+          state = {error: null};
+          static getDerivedStateFromError(error) {
+            return {error};
+          }
+          render() {
+            if (this.state.error) {
+              return <h1>Oops: {this.state.error.message}</h1>;
+            }
+            return this.props.children;
+          }
+        }
+
+        function App() {
+          return (
+            <React.Fragment>
+              <p>A</p>
+              <Boundary>
+                <Hello />
+              </Boundary>
+              <p>B</p>
+            </React.Fragment>
+          );
+        }
+
+        return App;
+      });
+
+      expect(container.innerHTML).toBe('<p>A</p><h1>Hi</h1><p>B</p>');
+      const firstP = container.firstChild;
+      const secondP = firstP.nextSibling.nextSibling;
+
+      // Perform a hot update that fails.
+      patch(() => {
+        function Hello() {
+          throw new Error('No');
+        }
+        __register__(Hello, 'Hello');
+      });
+
+      expect(container.innerHTML).toBe('<p>A</p><h1>Oops: No</h1><p>B</p>');
+      expect(container.firstChild).toBe(firstP);
+      expect(container.firstChild.nextSibling.nextSibling).toBe(secondP);
+
+      // Perform a hot update that fixes the error.
+      patch(() => {
+        function Hello() {
+          return <h1>Fixed!</h1>;
+        }
+        __register__(Hello, 'Hello');
+      });
+
+      // This should remount the error boundary (but not anything above it).
+      expect(container.innerHTML).toBe('<p>A</p><h1>Fixed!</h1><p>B</p>');
+      expect(container.firstChild).toBe(firstP);
+      expect(container.firstChild.nextSibling.nextSibling).toBe(secondP);
+
+      // Verify next hot reload doesn't remount anything.
+      const helloNode = container.firstChild.nextSibling;
+      patch(() => {
+        function Hello() {
+          return <h1>Nice.</h1>;
+        }
+        __register__(Hello, 'Hello');
+      });
+      expect(container.firstChild.nextSibling).toBe(helloNode);
+      expect(helloNode.textContent).toBe('Nice.');
+    }
+  });
+
+  it('remounts error boundaries that failed asynchronously after hot update', () => {
+    if (__DEV__) {
+      render(() => {
+        function Hello() {
+          const [x] = React.useState('');
+          React.useEffect(() => {}, []);
+          x.slice(); // Doesn't throw initially.
+          return <h1>Hi</h1>;
+        }
+        __register__(Hello, 'Hello');
+
+        class Boundary extends React.Component {
+          state = {error: null};
+          static getDerivedStateFromError(error) {
+            return {error};
+          }
+          render() {
+            if (this.state.error) {
+              return <h1>Oops: {this.state.error.message}</h1>;
+            }
+            return this.props.children;
+          }
+        }
+
+        function App() {
+          return (
+            <React.Fragment>
+              <p>A</p>
+              <Boundary>
+                <Hello />
+              </Boundary>
+              <p>B</p>
+            </React.Fragment>
+          );
+        }
+
+        return App;
+      });
+
+      expect(container.innerHTML).toBe('<p>A</p><h1>Hi</h1><p>B</p>');
+      const firstP = container.firstChild;
+      const secondP = firstP.nextSibling.nextSibling;
+
+      // Perform a hot update that fails.
+      act(() => {
+        patch(() => {
+          function Hello() {
+            const [x, setX] = React.useState('');
+            React.useEffect(() => {
+              setTimeout(() => {
+                setX(42); // This will crash next render.
+              }, 1);
+            }, []);
+            x.slice();
+            return <h1>Hi</h1>;
+          }
+          __register__(Hello, 'Hello');
+        });
+      });
+
+      expect(container.innerHTML).toBe('<p>A</p><h1>Hi</h1><p>B</p>');
+      // Run timeout inside effect:
+      act(() => {
+        jest.runAllTimers();
+      });
+      expect(container.innerHTML).toBe(
+        '<p>A</p><h1>Oops: x.slice is not a function</h1><p>B</p>',
+      );
+      expect(container.firstChild).toBe(firstP);
+      expect(container.firstChild.nextSibling.nextSibling).toBe(secondP);
+
+      // Perform a hot update that fixes the error.
+      patch(() => {
+        function Hello() {
+          const [x] = React.useState('');
+          React.useEffect(() => {}, []); // Removes the bad effect code.
+          x.slice(); // Doesn't throw initially.
+          return <h1>Fixed!</h1>;
+        }
+        __register__(Hello, 'Hello');
+      });
+
+      // This should remount the error boundary (but not anything above it).
+      expect(container.innerHTML).toBe('<p>A</p><h1>Fixed!</h1><p>B</p>');
+      expect(container.firstChild).toBe(firstP);
+      expect(container.firstChild.nextSibling.nextSibling).toBe(secondP);
+
+      // Verify next hot reload doesn't remount anything.
+      const helloNode = container.firstChild.nextSibling;
+      patch(() => {
+        function Hello() {
+          const [x] = React.useState('');
+          React.useEffect(() => {}, []);
+          x.slice();
+          return <h1>Nice.</h1>;
+        }
+        __register__(Hello, 'Hello');
+      });
+      expect(container.firstChild.nextSibling).toBe(helloNode);
+      expect(helloNode.textContent).toBe('Nice.');
+    }
+  });
+});
