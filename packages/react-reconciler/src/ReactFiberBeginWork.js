@@ -492,6 +492,7 @@ function updateSimpleMemoComponent(
     if (
       shallowEqual(prevProps, nextProps) &&
       current.ref === workInProgress.ref &&
+      // Prevent bailout if the implementation changed due to hot reload:
       (__DEV__ ? workInProgress.type === current.type : true)
     ) {
       didReceiveUpdate = false;
@@ -2209,6 +2210,7 @@ function beginWork(
     if (
       oldProps !== newProps ||
       hasLegacyContextChanged() ||
+      // Force a re-render if the implementation changed due to hot reload:
       (__DEV__ ? workInProgress.type !== current.type : false)
     ) {
       // If props or context changed, mark the fiber as having performed work.
