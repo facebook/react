@@ -39,6 +39,8 @@ type FocusEvent = {|
   timeStamp: number,
 |};
 
+const isMac = /^Mac/.test(navigator.platform);
+
 const targetEventTypes = [
   {name: 'focus', passive: true},
   {name: 'blur', passive: true},
@@ -304,7 +306,11 @@ const FocusResponder = {
         const nativeEvent = event.nativeEvent;
         if (
           nativeEvent.key === 'Tab' &&
-          !(nativeEvent.metaKey || nativeEvent.altKey || nativeEvent.ctrlKey)
+          !(
+            nativeEvent.metaKey ||
+            (!isMac && nativeEvent.altKey) ||
+            nativeEvent.ctrlKey
+          )
         ) {
           state.pointerType = 'keyboard';
           isGlobalFocusVisible = true;
