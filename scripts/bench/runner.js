@@ -20,11 +20,14 @@ const {wait, cleanDir, asyncCopyTo} = require('./utils');
 const runRemote = !!argv.remote || !argv.local;
 const runLocal = !!argv.local || !argv.remote;
 const benchmarkFilter = argv.benchmark;
-const remoteCommitId = argv.remote && typeof argv.remote === 'string' ? argv.remote : null;
+const remoteCommitId =
+  argv.remote && typeof argv.remote === 'string' ? argv.remote : null;
 const skipBuild = argv['skip-build'];
 const headless = argv.headless;
 const runOrder = argv['run-order'] === 'random' ? 'random' : 'interleaved';
-const timesToRun = argv['times-to-run'] ? parseInt(argv['times-to-run'], 10) : 10;
+const timesToRun = argv['times-to-run']
+  ? parseInt(argv['times-to-run'], 10)
+  : 10;
 
 // Setup used paths
 const localReactPath = join(__dirname, '..', '..');
@@ -34,6 +37,9 @@ const localBenchmarksPath = join(
   'bench',
   'benchmarks'
 );
+// the remote-repo directory is added to the ignore list in
+// scripts\prettier\index.js to avoid unnecessary processing of the remote
+// branch source
 const remoteReactPath = join(__dirname, 'remote-repo');
 const remoteBenchmarksPath = join(
   remoteReactPath,
