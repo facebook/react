@@ -53,6 +53,7 @@ type HotUpdateResult = {|
 let familiesByType: WeakMap<any, Family> | null = null;
 // $FlowFixMe Flow gets confused by a WeakSet feature check below.
 let failedBoundaries: WeakSet<Fiber> | null = null;
+let fibersDeletedDuringHotReload: Map<Fiber, Fiber | null> | null = null;
 
 export function resolveFunctionForHotReloading(type: any): any {
   if (__DEV__) {
@@ -203,6 +204,20 @@ export function markFailedErrorBoundaryForHotReloading(fiber: Fiber) {
   }
 }
 
+export function markDeletedFiberForHotReloading(fiber: Fiber) {
+  if (__DEV__) {
+    if (fibersDeletedDuringHotReload === null) {
+      return;
+    }
+    // Record the parent path so we can find closest still mounted
+    // fiber when deciding which host nodes should get visual feedback.
+    fibersDeletedDuringHotReload.set(fiber, fiber.return);
+    if (fiber.alternate !== null) {
+      fibersDeletedDuringHotReload.set(fiber.alternate, fiber.return);
+    }
+  }
+}
+
 export function scheduleHotUpdate(hotUpdate: HotUpdate): HotUpdateResult {
   if (__DEV__) {
     // TODO: warn if its identity changes over time?
@@ -211,17 +226,24 @@ export function scheduleHotUpdate(hotUpdate: HotUpdate): HotUpdateResult {
     const affectedSubtrees = new Set();
     const {root, staleFamilies, updatedFamilies} = hotUpdate;
     flushPassiveEffects();
-    flushSync(() => {
-      scheduleFibersWithFamiliesRecursively(
-        root.current,
-        updatedFamilies,
-        staleFamilies,
-        affectedSubtrees,
-      );
-    });
+
+    let deletedFiberParents = (fibersDeletedDuringHotReload = new Map());
+    try {
+      flushSync(() => {
+        scheduleFibersWithFamiliesRecursively(
+          root.current,
+          updatedFamilies,
+          staleFamilies,
+          affectedSubtrees,
+        );
+      });
+    } finally {
+      fibersDeletedDuringHotReload = null;
+    }
 
     const hostNodesForVisualFeedback = findHostNodesForVisualFeedback(
       affectedSubtrees,
+      deletedFiberParents,
     );
     return {hostNodesForVisualFeedback};
   } else {
@@ -295,9 +317,7 @@ function scheduleFibersWithFamiliesRecursively(
         updatedFamilies,
         staleFamilies,
         // We don't track affected Fibers deeper than
-        // the outermost component that was affected.
-        // So if we re-render this Fiber, there's no need
-        // to pass the affected subtree Set to its children.
+        // the outermost component that was edited.
         needsRender ? null : affectedSubtrees,
       );
     }
@@ -313,11 +333,27 @@ function scheduleFibersWithFamiliesRecursively(
   }
 }
 
-function findHostNodesForVisualFeedback(fibers: Set<Fiber>): Array<Instance> {
+function findHostNodesForVisualFeedback(
+  fibers: Set<Fiber>,
+  deletedFiberParents: Map<Fiber, Fiber | null>,
+): Array<Instance> {
   if (__DEV__) {
-    // TODO: deal with unmounted Fibers.
     const hostNodeSet = new Set();
     fibers.forEach(fiber => {
+      // Find closest non-deleted Fiber from here.
+      while (deletedFiberParents.has(fiber)) {
+        const parent = deletedFiberParents.get(fiber);
+        if (parent === undefined) {
+          throw new Error('Expected to find closest non-deleted fiber.');
+        } else if (parent === null) {
+          return;
+        }
+        fiber = parent;
+      }
+      if (fiber === null) {
+        return;
+      }
+      // From here on we assume `fiber` is still connected to the tree.
       let hostFibers = findAllCurrentHostFibers(fiber);
       if (hostFibers.length === 0) {
         // Search for closest host fiber above.

@@ -2985,4 +2985,58 @@ describe('ReactFresh', () => {
       ]);
     }
   });
+
+  it('reports visual feedback for parents of deleted nodes', () => {
+    if (__DEV__) {
+      render(() => {
+        function Child({children}) {
+          return <div className="Child">{children}</div>;
+        }
+        __register__(Child, 'Child');
+        __signature__(Child, '1');
+
+        function Parent({children}) {
+          return (
+            <div className="Parent">
+              <div className="Parent-childWrapper">
+                <Child />
+              </div>
+              <div className="Parent-childWrapper">
+                <Child />
+              </div>
+            </div>
+          );
+        }
+        __register__(Parent, 'Parent');
+
+        function App() {
+          return (
+            <div className="App">
+              <Parent />
+              <Parent />
+            </div>
+          );
+        }
+        __register__(App, 'App');
+
+        return App;
+      });
+
+      // This edit will remount the Child component.
+      // As a result, we should highlight the wrappers instead.
+      patch(() => {
+        function Child({children}) {
+          return <div className="Child">{children}</div>;
+        }
+        __register__(Child, 'Child');
+        __signature__(Child, '2'); // This will force a remount.
+      });
+      expect(hostNodesForVisualFeedback.map(node => node.className)).toEqual([
+        'Parent-childWrapper',
+        'Parent-childWrapper',
+        'Parent-childWrapper',
+        'Parent-childWrapper',
+      ]);
+    }
+  });
 });

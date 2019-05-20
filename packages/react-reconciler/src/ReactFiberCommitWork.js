@@ -71,6 +71,7 @@ import {onCommitUnmount} from './ReactFiberDevToolsHook';
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 import {getStackByFiberInDevAndProd} from './ReactCurrentFiber';
 import {logCapturedError} from './ReactFiberErrorLogger';
+import {markDeletedFiberForHotReloading} from './ReactFiberHotReloading';
 import {resolveDefaultProps} from './ReactFiberLazyComponent';
 import {getCommitTime} from './ReactProfilerTimer';
 import {commitUpdateQueue} from './ReactUpdateQueue';
@@ -738,6 +739,9 @@ function commitDetachRef(current: Fiber) {
 // interrupt deletion, so it's okay
 function commitUnmount(current: Fiber): void {
   onCommitUnmount(current);
+  if (__DEV__) {
+    markDeletedFiberForHotReloading(current);
+  }
 
   switch (current.tag) {
     case FunctionComponent:
