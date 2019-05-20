@@ -224,29 +224,34 @@ function scheduleFibersWithFamiliesRecursively(
       throw new Error('Expected familiesByType to be set during hot reload.');
     }
 
+    let needsRender = false;
+    let needsRemount = false;
     if (candidateType !== null) {
       const family = familiesByType.get(candidateType);
       if (family !== undefined) {
         if (staleFamilies.has(family)) {
-          fiber._debugNeedsRemount = true;
-          scheduleWork(fiber, Sync);
+          needsRemount = true;
         } else if (updatedFamilies.has(family)) {
-          scheduleWork(fiber, Sync);
+          needsRender = true;
         }
       }
     }
-
     if (failedBoundaries !== null) {
       if (
         failedBoundaries.has(fiber) ||
         (alternate !== null && failedBoundaries.has(alternate))
       ) {
-        fiber._debugNeedsRemount = true;
-        scheduleWork(fiber, Sync);
+        needsRemount = true;
       }
     }
 
-    if (child !== null) {
+    if (needsRemount) {
+      fiber._debugNeedsRemount = true;
+    }
+    if (needsRemount || needsRender) {
+      scheduleWork(fiber, Sync);
+    }
+    if (child !== null && !needsRemount) {
       scheduleFibersWithFamiliesRecursively(
         child,
         updatedFamilies,
