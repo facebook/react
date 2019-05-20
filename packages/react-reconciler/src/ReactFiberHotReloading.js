@@ -116,7 +116,7 @@ export function isCompatibleFamilyForHotReloading(
     // If we got here, we know types aren't === equal.
     let needsCompareFamilies = false;
 
-    const nextTypeOf =
+    const $$typeofNextType =
       typeof nextType === 'object' && nextType !== null
         ? nextType.$$typeof
         : null;
@@ -125,7 +125,7 @@ export function isCompatibleFamilyForHotReloading(
       case FunctionComponent: {
         if (typeof nextType === 'function') {
           needsCompareFamilies = true;
-        } else if (nextTypeOf === REACT_LAZY_TYPE) {
+        } else if ($$typeofNextType === REACT_LAZY_TYPE) {
           // We don't know the inner type yet.
           // We're going to assume that the lazy inner type is stable,
           // and so it is sufficient to avoid reconciling it away.
@@ -135,20 +135,20 @@ export function isCompatibleFamilyForHotReloading(
         break;
       }
       case ForwardRef: {
-        if (nextTypeOf === REACT_FORWARD_REF_TYPE) {
+        if ($$typeofNextType === REACT_FORWARD_REF_TYPE) {
           needsCompareFamilies = true;
-        } else if (nextTypeOf === REACT_LAZY_TYPE) {
+        } else if ($$typeofNextType === REACT_LAZY_TYPE) {
           needsCompareFamilies = true;
         }
         break;
       }
       case MemoComponent:
       case SimpleMemoComponent: {
-        if (nextTypeOf === REACT_MEMO_TYPE) {
+        if ($$typeofNextType === REACT_MEMO_TYPE) {
           // TODO: if it was but can no longer be simple,
           // we shouldn't set this.
           needsCompareFamilies = true;
-        } else if (nextTypeOf === REACT_LAZY_TYPE) {
+        } else if ($$typeofNextType === REACT_LAZY_TYPE) {
           needsCompareFamilies = true;
         }
         break;
