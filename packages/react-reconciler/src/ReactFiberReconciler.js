@@ -52,8 +52,8 @@ import {
   flushControlled,
   deferredUpdates,
   syncUpdates,
-  interactiveUpdates,
-  flushInteractiveUpdates,
+  discreteUpdates,
+  flushDiscreteUpdates,
   flushPassiveEffects,
 } from './ReactFiberScheduler';
 import {createUpdate, enqueueUpdate} from './ReactUpdateQueue';
@@ -325,8 +325,8 @@ export {
   unbatchedUpdates,
   deferredUpdates,
   syncUpdates,
-  interactiveUpdates,
-  flushInteractiveUpdates,
+  discreteUpdates,
+  flushDiscreteUpdates,
   flushControlled,
   flushSync,
   flushPassiveEffects,

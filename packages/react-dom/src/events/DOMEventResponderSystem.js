@@ -26,7 +26,11 @@ import type {
   ReactResponderDispatchEventOptions,
 } from 'shared/ReactTypes';
 import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
-import {batchedUpdates, interactiveUpdates} from 'events/ReactGenericBatching';
+import {
+  batchedUpdates,
+  discreteUpdates,
+  flushDiscreteUpdates,
+} from 'events/ReactGenericBatching';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import warning from 'shared/warning';
 import {enableEventAPI} from 'shared/ReactFeatureFlags';
@@ -587,7 +591,8 @@ export function processEventQueue(): void {
     return;
   }
   if (discrete) {
-    interactiveUpdates(() => {
+    flushDiscreteUpdates(currentTimeStamp);
+    discreteUpdates(() => {
       batchedUpdates(processEvents, events);
     });
   } else {

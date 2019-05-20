@@ -9,6 +9,7 @@ import {
   needsStateRestore,
   restoreStateIfNeeded,
 } from './ReactControlledComponent';
+import {enableEventAPI} from 'shared/ReactFeatureFlags';
 
 // Used as a way to call batchedUpdates when we don't have a reference to
 // the renderer. Such as when we're dispatching events or if third party
@@ -17,13 +18,13 @@ import {
 // scheduled work and instead do synchronous work.
 
 // Defaults
-let _batchedUpdatesImpl = function(fn, bookkeeping) {
+let batchedUpdatesImpl = function(fn, bookkeeping) {
   return fn(bookkeeping);
 };
-let _interactiveUpdatesImpl = function(fn, a, b, c) {
+let discreteUpdatesImpl = function(fn, a, b, c) {
   return fn(a, b, c);
 };
-let _flushInteractiveUpdatesImpl = function() {};
+let flushDiscreteUpdatesImpl = function() {};
 
 let isBatching = false;
 export function batchedUpdates(fn, bookkeeping) {
@@ -34,7 +35,7 @@ export function batchedUpdates(fn, bookkeeping) {
   }
   isBatching = true;
   try {
-    return _batchedUpdatesImpl(fn, bookkeeping);
+    return batchedUpdatesImpl(fn, bookkeeping);
   } finally {
     // Here we wait until all updates have propagated, which is important
     // when using controlled components within layers:
@@ -46,26 +47,31 @@ export function batchedUpdates(fn, bookkeeping) {
       // If a controlled event was fired, we may need to restore the state of
       // the DOM node back to the controlled value. This is necessary when React
       // bails out of the update without touching the DOM.
-      _flushInteractiveUpdatesImpl();
+      flushDiscreteUpdatesImpl();
       restoreStateIfNeeded();
     }
   }
 }
 
-export function interactiveUpdates(fn, a, b, c) {
-  return _interactiveUpdatesImpl(fn, a, b, c);
+export function discreteUpdates(fn, a, b, c) {
+  return discreteUpdatesImpl(fn, a, b, c);
 }
 
-export function flushInteractiveUpdates() {
-  return _flushInteractiveUpdatesImpl();
+let lastInteractiveTimeStamp = 0;
+
+export function flushDiscreteUpdates(timeStamp?: number) {
+  if (!enableEventAPI || !timeStamp || lastInteractiveTimeStamp !== timeStamp) {
+    lastInteractiveTimeStamp = timeStamp;
+    return flushDiscreteUpdatesImpl();
+  }
 }
 
 export function setBatchingImplementation(
-  batchedUpdatesImpl,
-  interactiveUpdatesImpl,
-  flushInteractiveUpdatesImpl,
+  _batchedUpdatesImpl,
+  _discreteUpdatesImpl,
+  _flushDiscreteUpdatesImpl,
 ) {
-  _batchedUpdatesImpl = batchedUpdatesImpl;
-  _interactiveUpdatesImpl = interactiveUpdatesImpl;
-  _flushInteractiveUpdatesImpl = flushInteractiveUpdatesImpl;
+  batchedUpdatesImpl = _batchedUpdatesImpl;
+  discreteUpdatesImpl = _discreteUpdatesImpl;
+  flushDiscreteUpdatesImpl = _flushDiscreteUpdatesImpl;
 }

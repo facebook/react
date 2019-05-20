@@ -33,8 +33,8 @@ import {
   updateContainer,
   batchedUpdates,
   unbatchedUpdates,
-  interactiveUpdates,
-  flushInteractiveUpdates,
+  discreteUpdates,
+  flushDiscreteUpdates,
   flushSync,
   flushControlled,
   injectIntoDevTools,
@@ -487,8 +487,8 @@ function shouldHydrateDueToLegacyHeuristic(container) {
 
 setBatchingImplementation(
   batchedUpdates,
-  interactiveUpdates,
-  flushInteractiveUpdates,
+  discreteUpdates,
+  flushDiscreteUpdates,
 );
 
 let warnedAboutHydrateAPI = false;
@@ -789,7 +789,10 @@ const ReactDOM: Object = {
 
   unstable_batchedUpdates: batchedUpdates,
 
-  unstable_interactiveUpdates: interactiveUpdates,
+  unstable_interactiveUpdates: (fn, a, b, c) => {
+    flushDiscreteUpdates();
+    return discreteUpdates(fn, a, b, c);
+  },
 
   flushSync: flushSync,
 

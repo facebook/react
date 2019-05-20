@@ -26,7 +26,6 @@ import {
   disableYielding,
   enableSchedulerTracing,
   revertPassiveEffectsChange,
-  enableEventAPI,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
@@ -567,8 +566,8 @@ export function flushRoot(root: FiberRoot, expirationTime: ExpirationTime) {
   flushSyncCallbackQueue();
 }
 
-export function flushInteractiveUpdates() {
-  if (workPhase === RenderPhase || workPhase === CommitPhase) {
+export function flushDiscreteUpdates() {
+  if (workPhase !== NotWorking) {
     // Can't synchronously flush interactive updates if React is already
     // working. This is currently a no-op.
     // TODO: Should we fire a warning? This happens if you synchronously invoke
@@ -605,33 +604,15 @@ export function deferredUpdates<A>(fn: () => A): A {
   return runWithPriority(NormalPriority, fn);
 }
 
-let interactiveEventTimeStamp = 0;
-
-export function interactiveUpdates<A, B, C, R>(
+export function discreteUpdates<A, B, C, R>(
   fn: (A, B, C) => R,
   a: A,
   b: B,
   c: C,
 ): R {
-  const currentEvent = typeof window !== 'undefined' && window.event;
-  let skipFlushing = false;
-
-  if (enableEventAPI && currentEvent) {
-    if (currentEvent.timeStamp === interactiveEventTimeStamp) {
-      skipFlushing = true;
-    }
-    interactiveEventTimeStamp = currentEvent.timeStamp;
-  }
-  if (!skipFlushing) {
-    if (workPhase === NotWorking) {
-      // TODO: Remove this call. Instead of doing this automatically, the caller
-      // should explicitly call flushInteractiveUpdates.
-      flushPendingDiscreteUpdates();
-    }
-    if (!revertPassiveEffectsChange) {
-      // TODO: Remove this call for the same reason as above.
-      flushPassiveEffects();
-    }
+  if (!revertPassiveEffectsChange) {
+    // TODO: Remove this call for the same reason as above.
+    flushPassiveEffects();
   }
   return runWithPriority(UserBlockingPriority, fn.bind(null, a, b, c));
 }

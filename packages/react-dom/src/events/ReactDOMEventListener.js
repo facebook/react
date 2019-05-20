@@ -11,7 +11,11 @@ import type {AnyNativeEvent} from 'events/PluginModuleType';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
 
-import {batchedUpdates, interactiveUpdates} from 'events/ReactGenericBatching';
+import {
+  batchedUpdates,
+  discreteUpdates,
+  flushDiscreteUpdates,
+} from 'events/ReactGenericBatching';
 import {runExtractedPluginEventsInBatch} from 'events/EventPluginHub';
 import {dispatchEventForResponderEventSystem} from '../events/DOMEventResponderSystem';
 import {isFiberMounted} from 'react-reconciler/reflection';
@@ -188,7 +192,7 @@ export function trapEventForResponderEventSystem(
     } else {
       eventFlags |= IS_ACTIVE;
     }
-    // Check if interactive and wrap in interactiveUpdates
+    // Check if interactive and wrap in discreteUpdates
     const listener = dispatchEvent.bind(null, topLevelType, eventFlags);
     if (passiveBrowserEventsSupported) {
       addEventCaptureListenerWithPassiveFlag(
@@ -212,7 +216,7 @@ function trapEventForPluginEventSystem(
     ? dispatchInteractiveEvent
     : dispatchEvent;
   const rawEventName = getRawEventName(topLevelType);
-  // Check if interactive and wrap in interactiveUpdates
+  // Check if interactive and wrap in discreteUpdates
   const listener = dispatch.bind(null, topLevelType, PLUGIN_EVENT_SYSTEM);
   if (capture) {
     addEventCaptureListener(element, rawEventName, listener);
@@ -222,12 +226,8 @@ function trapEventForPluginEventSystem(
 }
 
 function dispatchInteractiveEvent(topLevelType, eventSystemFlags, nativeEvent) {
-  interactiveUpdates(
-    dispatchEvent,
-    topLevelType,
-    eventSystemFlags,
-    nativeEvent,
-  );
+  flushDiscreteUpdates(nativeEvent.timeStamp);
+  discreteUpdates(dispatchEvent, topLevelType, eventSystemFlags, nativeEvent);
 }
 
 function dispatchEventForPluginEventSystem(

@@ -2308,14 +2308,12 @@ describe('Event responder: Press', () => {
     const ref = React.createRef();
     let renderCounts = 0;
 
-    function dispatchEvent(name) {
+    function dispatchEvent(name, timeStamp) {
       const event = createEvent(name);
       Object.defineProperty(event, 'timeStamp', {
-        value: 100,
+        value: timeStamp,
       });
-      window.event = event;
       ref.current.dispatchEvent(event);
-      window.event = null;
     }
 
     function MyComponent() {
@@ -2347,13 +2345,32 @@ describe('Event responder: Press', () => {
     root.render(<MyComponent />);
     Scheduler.flushAll();
 
-    dispatchEvent('pointerdown');
-    dispatchEvent('pointerup');
-    dispatchEvent('click');
+    dispatchEvent('pointerdown', 100);
+    dispatchEvent('pointerup', 100);
+    dispatchEvent('click', 100);
 
-    expect(renderCounts).toBe(2);
+    if (__DEV__) {
+      expect(renderCounts).toBe(2);
+    } else {
+      expect(renderCounts).toBe(1);
+    }
     Scheduler.flushAll();
-    expect(renderCounts).toBe(4);
+    if (__DEV__) {
+      expect(renderCounts).toBe(4);
+    } else {
+      expect(renderCounts).toBe(2);
+    }
+
+    dispatchEvent('pointerdown', 100);
+    dispatchEvent('pointerup', 100);
+    // Ensure the timeStamp logic works
+    dispatchEvent('click', 101);
+
+    if (__DEV__) {
+      expect(renderCounts).toBe(6);
+    } else {
+      expect(renderCounts).toBe(3);
+    }
 
     document.body.removeChild(newContainer);
   });
