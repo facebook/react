@@ -13,6 +13,7 @@ let React;
 let ReactFeatureFlags;
 let ReactDOM;
 let Press;
+let Scheduler;
 
 const DEFAULT_LONG_PRESS_DELAY = 500;
 
@@ -45,6 +46,7 @@ describe('Event responder: Press', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     Press = require('react-events/press');
+    Scheduler = require('scheduler');
 
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -2300,5 +2302,59 @@ describe('Event responder: Press', () => {
         type: 'pressstart',
       },
     ]);
+  });
+
+  it('should properly only flush sync once when the event systems are mixed', () => {
+    const ref = React.createRef();
+    let renderCounts = 0;
+
+    function dispatchEvent(name) {
+      const event = createEvent(name);
+      Object.defineProperty(event, 'timeStamp', {
+        value: 100,
+      });
+      window.event = event;
+      ref.current.dispatchEvent(event);
+      window.event = null;
+    }
+
+    function MyComponent() {
+      const [, updateCounter] = React.useState(0);
+      renderCounts++;
+
+      function handlePress() {
+        updateCounter(count => count + 1);
+      }
+
+      return (
+        <div>
+          <Press onPress={handlePress}>
+            <button
+              ref={ref}
+              onClick={() => {
+                updateCounter(count => count + 1);
+              }}>
+              Press me
+            </button>
+          </Press>
+        </div>
+      );
+    }
+
+    const newContainer = document.createElement('div');
+    const root = ReactDOM.unstable_createRoot(newContainer);
+    document.body.appendChild(newContainer);
+    root.render(<MyComponent />);
+    Scheduler.flushAll();
+
+    dispatchEvent('pointerdown');
+    dispatchEvent('pointerup');
+    dispatchEvent('click');
+
+    expect(renderCounts).toBe(2);
+    Scheduler.flushAll();
+    expect(renderCounts).toBe(4);
+
+    document.body.removeChild(newContainer);
   });
 });

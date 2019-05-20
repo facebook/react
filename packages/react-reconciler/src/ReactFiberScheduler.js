@@ -605,7 +605,6 @@ export function deferredUpdates<A>(fn: () => A): A {
   return runWithPriority(NormalPriority, fn);
 }
 
-let interactiveUpdatesDepth = 0;
 let interactiveEventTimeStamp = 0;
 
 export function interactiveUpdates<A, B, C, R>(
@@ -615,9 +614,9 @@ export function interactiveUpdates<A, B, C, R>(
   c: C,
 ): R {
   const currentEvent = typeof window !== 'undefined' && window.event;
-  let skipFlushing = enableEventAPI && interactiveUpdatesDepth !== 0;
+  let skipFlushing = false;
 
-  if (!skipFlushing && currentEvent) {
+  if (enableEventAPI && currentEvent) {
     if (currentEvent.timeStamp === interactiveEventTimeStamp) {
       skipFlushing = true;
     }
@@ -634,12 +633,7 @@ export function interactiveUpdates<A, B, C, R>(
       flushPassiveEffects();
     }
   }
-  interactiveUpdatesDepth++;
-  try {
-    return runWithPriority(UserBlockingPriority, fn.bind(null, a, b, c));
-  } finally {
-    interactiveUpdatesDepth--;
-  }
+  return runWithPriority(UserBlockingPriority, fn.bind(null, a, b, c));
 }
 
 export function syncUpdates<A, B, C, R>(
