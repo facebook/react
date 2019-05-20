@@ -84,16 +84,15 @@ function flushWorkAndMicroTasks(onDone: (err: ?Error) => void) {
 let actingUpdatesScopeDepth = 0;
 
 function act(callback: () => Thenable) {
-  let previousActingUpdatesScopeDepth;
+  let previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
+  actingUpdatesScopeDepth++;
   if (__DEV__) {
-    previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
-    actingUpdatesScopeDepth++;
     ReactShouldWarnActingUpdates.current = true;
   }
 
   function onDone() {
+    actingUpdatesScopeDepth--;
     if (__DEV__) {
-      actingUpdatesScopeDepth--;
       if (actingUpdatesScopeDepth === 0) {
         ReactShouldWarnActingUpdates.current = false;
       }
@@ -143,6 +142,13 @@ function act(callback: () => Thenable) {
         called = true;
         result.then(
           () => {
+            if (actingUpdatesScopeDepth > 1) {
+              onDone();
+              resolve();
+              return;
+            }
+            // we're about to exit the act() scope,
+            // now's the time to flush tasks/effects
             flushWorkAndMicroTasks((err: ?Error) => {
               onDone();
               if (err) {
@@ -171,7 +177,11 @@ function act(callback: () => Thenable) {
 
     // flush effects until none remain, and cleanup
     try {
-      flushWork();
+      if (actingUpdatesScopeDepth === 1) {
+        // we're about to exit the act() scope,
+        // now's the time to flush effects
+        flushWork();
+      }
       onDone();
     } catch (err) {
       onDone();
