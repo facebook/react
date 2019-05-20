@@ -895,6 +895,597 @@ describe('ReactFresh', () => {
     }
   });
 
+  it('can preserve state for lazy after resolution', async () => {
+    if (__DEV__) {
+      let promise;
+      let OuterV1 = render(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+
+        const Outer = React.lazy(() => {
+          promise = new Promise(resolve => {
+            setTimeout(() => resolve({default: Hello}), 100);
+          });
+          return promise;
+        });
+        __register__(Outer, 'Outer');
+
+        function App() {
+          return (
+            <React.Suspense fallback={<p>Loading</p>}>
+              <Outer />
+            </React.Suspense>
+          );
+        }
+
+        return App;
+      });
+
+      expect(container.textContent).toBe('Loading');
+      jest.runAllTimers();
+      await promise;
+      Scheduler.flushAll();
+      expect(container.textContent).toBe('0');
+
+      // Bump the state before patching.
+      const el = container.firstChild;
+      expect(el.textContent).toBe('0');
+      expect(el.style.color).toBe('blue');
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(el.textContent).toBe('1');
+
+      // Perform a hot update.
+      patch(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'red'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+      });
+
+      // Assert the state was preserved but color changed.
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('1');
+      expect(el.style.color).toBe('red');
+
+      // Bump the state again.
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('2');
+      expect(el.style.color).toBe('red');
+
+      // Perform top-down renders with a stale type.
+      render(() => OuterV1);
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('2');
+      expect(el.style.color).toBe('red');
+
+      // Finally, a render with incompatible type should reset it.
+      render(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+
+        // Note: no lazy wrapper this time.
+        return Hello;
+      });
+
+      expect(container.firstChild).not.toBe(el);
+      const newEl = container.firstChild;
+      expect(newEl.textContent).toBe('0');
+      expect(newEl.style.color).toBe('blue');
+    }
+  });
+
+  it('can patch lazy before resolution', async () => {
+    if (__DEV__) {
+      let promise;
+      render(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+
+        const Outer = React.lazy(() => {
+          promise = new Promise(resolve => {
+            setTimeout(() => resolve({default: Hello}), 100);
+          });
+          return promise;
+        });
+        __register__(Outer, 'Outer');
+
+        function App() {
+          return (
+            <React.Suspense fallback={<p>Loading</p>}>
+              <Outer />
+            </React.Suspense>
+          );
+        }
+
+        return App;
+      });
+
+      expect(container.textContent).toBe('Loading');
+
+      // Perform a hot update.
+      patch(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'red'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+      });
+
+      jest.runAllTimers();
+      await promise;
+      Scheduler.flushAll();
+
+      // Expect different color on initial mount.
+      const el = container.firstChild;
+      expect(el.textContent).toBe('0');
+      expect(el.style.color).toBe('red');
+
+      // Bump state.
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('1');
+      expect(el.style.color).toBe('red');
+
+      // Test another reload.
+      patch(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'orange'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+      });
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('1');
+      expect(el.style.color).toBe('orange');
+    }
+  });
+
+  it('can patch lazy(forwardRef) before resolution', async () => {
+    if (__DEV__) {
+      let promise;
+      render(() => {
+        function renderHello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        const Hello = React.forwardRef(renderHello);
+        __register__(Hello, 'Hello');
+
+        const Outer = React.lazy(() => {
+          promise = new Promise(resolve => {
+            setTimeout(() => resolve({default: Hello}), 100);
+          });
+          return promise;
+        });
+        __register__(Outer, 'Outer');
+
+        function App() {
+          return (
+            <React.Suspense fallback={<p>Loading</p>}>
+              <Outer />
+            </React.Suspense>
+          );
+        }
+
+        return App;
+      });
+
+      expect(container.textContent).toBe('Loading');
+
+      // Perform a hot update.
+      patch(() => {
+        function renderHello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'red'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        const Hello = React.forwardRef(renderHello);
+        __register__(Hello, 'Hello');
+      });
+
+      jest.runAllTimers();
+      await promise;
+      Scheduler.flushAll();
+
+      // Expect different color on initial mount.
+      const el = container.firstChild;
+      expect(el.textContent).toBe('0');
+      expect(el.style.color).toBe('red');
+
+      // Bump state.
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('1');
+      expect(el.style.color).toBe('red');
+
+      // Test another reload.
+      patch(() => {
+        function renderHello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'orange'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        const Hello = React.forwardRef(renderHello);
+        __register__(Hello, 'Hello');
+      });
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('1');
+      expect(el.style.color).toBe('orange');
+    }
+  });
+
+  it('can patch lazy(memo) before resolution', async () => {
+    if (__DEV__) {
+      let promise;
+      render(() => {
+        function renderHello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        const Hello = React.memo(renderHello);
+        __register__(Hello, 'Hello');
+
+        const Outer = React.lazy(() => {
+          promise = new Promise(resolve => {
+            setTimeout(() => resolve({default: Hello}), 100);
+          });
+          return promise;
+        });
+        __register__(Outer, 'Outer');
+
+        function App() {
+          return (
+            <React.Suspense fallback={<p>Loading</p>}>
+              <Outer />
+            </React.Suspense>
+          );
+        }
+
+        return App;
+      });
+
+      expect(container.textContent).toBe('Loading');
+
+      // Perform a hot update.
+      patch(() => {
+        function renderHello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'red'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        const Hello = React.memo(renderHello);
+        __register__(Hello, 'Hello');
+      });
+
+      jest.runAllTimers();
+      await promise;
+      Scheduler.flushAll();
+
+      // Expect different color on initial mount.
+      const el = container.firstChild;
+      expect(el.textContent).toBe('0');
+      expect(el.style.color).toBe('red');
+
+      // Bump state.
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('1');
+      expect(el.style.color).toBe('red');
+
+      // Test another reload.
+      patch(() => {
+        function renderHello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'orange'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        const Hello = React.memo(renderHello);
+        __register__(Hello, 'Hello');
+      });
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('1');
+      expect(el.style.color).toBe('orange');
+    }
+  });
+
+  it('can patch lazy(memo(forwardRef)) before resolution', async () => {
+    if (__DEV__) {
+      let promise;
+      render(() => {
+        function renderHello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        const Hello = React.memo(React.forwardRef(renderHello));
+        __register__(Hello, 'Hello');
+
+        const Outer = React.lazy(() => {
+          promise = new Promise(resolve => {
+            setTimeout(() => resolve({default: Hello}), 100);
+          });
+          return promise;
+        });
+        __register__(Outer, 'Outer');
+
+        function App() {
+          return (
+            <React.Suspense fallback={<p>Loading</p>}>
+              <Outer />
+            </React.Suspense>
+          );
+        }
+
+        return App;
+      });
+
+      expect(container.textContent).toBe('Loading');
+
+      // Perform a hot update.
+      patch(() => {
+        function renderHello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'red'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        const Hello = React.memo(React.forwardRef(renderHello));
+        __register__(Hello, 'Hello');
+      });
+
+      jest.runAllTimers();
+      await promise;
+      Scheduler.flushAll();
+
+      // Expect different color on initial mount.
+      const el = container.firstChild;
+      expect(el.textContent).toBe('0');
+      expect(el.style.color).toBe('red');
+
+      // Bump state.
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('1');
+      expect(el.style.color).toBe('red');
+
+      // Test another reload.
+      patch(() => {
+        function renderHello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'orange'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        const Hello = React.memo(React.forwardRef(renderHello));
+        __register__(Hello, 'Hello');
+      });
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('1');
+      expect(el.style.color).toBe('orange');
+    }
+  });
+
+  it('can patch both trees while suspense is displaying the fallback', async () => {
+    if (__DEV__) {
+      const AppV1 = render(
+        () => {
+          function Hello({children}) {
+            const [val, setVal] = React.useState(0);
+            return (
+              <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
+                {children} {val}
+              </p>
+            );
+          }
+          __register__(Hello, 'Hello');
+
+          function Never() {
+            throw new Promise(resolve => {});
+          }
+
+          function App({shouldSuspend}) {
+            return (
+              <React.Suspense fallback={<Hello>Fallback</Hello>}>
+                <Hello>Content</Hello>
+                {shouldSuspend && <Never />}
+              </React.Suspense>
+            );
+          }
+
+          return App;
+        },
+        {shouldSuspend: false},
+      );
+
+      // We start with just the primary tree.
+      expect(container.childNodes.length).toBe(1);
+      const primaryChild = container.firstChild;
+      expect(primaryChild.textContent).toBe('Content 0');
+      expect(primaryChild.style.color).toBe('blue');
+      expect(primaryChild.style.display).toBe('');
+
+      // Bump primary content state.
+      act(() => {
+        primaryChild.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(container.childNodes.length).toBe(1);
+      expect(container.childNodes[0]).toBe(primaryChild);
+      expect(primaryChild.textContent).toBe('Content 1');
+      expect(primaryChild.style.color).toBe('blue');
+      expect(primaryChild.style.display).toBe('');
+
+      // Perform a hot update.
+      patch(() => {
+        function Hello({children}) {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'green'}} onClick={() => setVal(val + 1)}>
+              {children} {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+      });
+      expect(container.childNodes.length).toBe(1);
+      expect(container.childNodes[0]).toBe(primaryChild);
+      expect(primaryChild.textContent).toBe('Content 1');
+      expect(primaryChild.style.color).toBe('green');
+      expect(primaryChild.style.display).toBe('');
+
+      // Now force the tree to suspend.
+      render(() => AppV1, {shouldSuspend: true});
+
+      // Expect to see two trees, one of them is hidden.
+      expect(container.childNodes.length).toBe(2);
+      expect(container.childNodes[0]).toBe(primaryChild);
+      const fallbackChild = container.childNodes[1];
+      expect(primaryChild.textContent).toBe('Content 1');
+      expect(primaryChild.style.color).toBe('green');
+      expect(primaryChild.style.display).toBe('none');
+      expect(fallbackChild.textContent).toBe('Fallback 0');
+      expect(fallbackChild.style.color).toBe('green');
+      expect(fallbackChild.style.display).toBe('');
+
+      // Bump fallback state.
+      act(() => {
+        fallbackChild.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(container.childNodes.length).toBe(2);
+      expect(container.childNodes[0]).toBe(primaryChild);
+      expect(container.childNodes[1]).toBe(fallbackChild);
+      expect(primaryChild.textContent).toBe('Content 1');
+      expect(primaryChild.style.color).toBe('green');
+      expect(primaryChild.style.display).toBe('none');
+      expect(fallbackChild.textContent).toBe('Fallback 1');
+      expect(fallbackChild.style.color).toBe('green');
+      expect(fallbackChild.style.display).toBe('');
+
+      // Perform a hot update.
+      patch(() => {
+        function Hello({children}) {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'red'}} onClick={() => setVal(val + 1)}>
+              {children} {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+      });
+
+      // Colors inside both trees should change:
+      expect(container.childNodes.length).toBe(2);
+      expect(container.childNodes[0]).toBe(primaryChild);
+      expect(container.childNodes[1]).toBe(fallbackChild);
+      expect(primaryChild.textContent).toBe('Content 1');
+      expect(primaryChild.style.color).toBe('red');
+      expect(primaryChild.style.display).toBe('none');
+      expect(fallbackChild.textContent).toBe('Fallback 1');
+      expect(fallbackChild.style.color).toBe('red');
+      expect(fallbackChild.style.display).toBe('');
+
+      // Only primary tree should exist now:
+      render(() => AppV1, {shouldSuspend: false});
+      expect(container.childNodes.length).toBe(1);
+      expect(container.childNodes[0]).toBe(primaryChild);
+      expect(primaryChild.textContent).toBe('Content 1');
+      expect(primaryChild.style.color).toBe('red');
+      expect(primaryChild.style.display).toBe('');
+
+      // Perform a hot update.
+      patch(() => {
+        function Hello({children}) {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'orange'}} onClick={() => setVal(val + 1)}>
+              {children} {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+      });
+      expect(container.childNodes.length).toBe(1);
+      expect(container.childNodes[0]).toBe(primaryChild);
+      expect(primaryChild.textContent).toBe('Content 1');
+      expect(primaryChild.style.color).toBe('orange');
+      expect(primaryChild.style.display).toBe('');
+    }
+  });
+
   it('does not re-render ancestor components unnecessarily during a hot update', () => {
     if (__DEV__) {
       let appRenders = 0;
