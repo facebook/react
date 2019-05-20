@@ -98,10 +98,9 @@ export default class ProfilingCache {
     ({ commitIndex, rendererID, rootID }: CommitDetailsParams) => {
       return new Promise(resolve => {
         const pendingKey = `${rootID}-${commitIndex}`;
-        const importedProfilingData = this._store.importedProfilingData;
-        if (importedProfilingData !== null) {
-          const commitDetailsByCommitIndex =
-            importedProfilingData.commitDetails;
+        const profilingData = this._store.profilingData;
+        if (profilingData !== null) {
+          const commitDetailsByCommitIndex = profilingData.commitDetails;
           if (
             commitDetailsByCommitIndex != null &&
             commitIndex < commitDetailsByCommitIndex.length
@@ -148,9 +147,9 @@ export default class ProfilingCache {
     ({ fiberID, rendererID, rootID }: FiberCommitsParams) => {
       return new Promise(resolve => {
         const pendingKey = `${rootID}-${fiberID}`;
-        const importedProfilingData = this._store.importedProfilingData;
-        if (importedProfilingData !== null) {
-          const { commitDetails } = importedProfilingData;
+        const profilingData = this._store.profilingData;
+        if (profilingData !== null) {
+          const { commitDetails } = profilingData;
           const commitDurations = [];
           commitDetails.forEach(({ selfDurations }, commitIndex) => {
             const selfDuration = selfDurations.get(fiberID);
@@ -197,10 +196,10 @@ export default class ProfilingCache {
     ({ rendererID, rootID }: InteractionsParams) => {
       return new Promise(resolve => {
         const pendingKey = rootID;
-        const importedProfilingData = this._store.importedProfilingData;
-        if (importedProfilingData !== null) {
+        const profilingData = this._store.profilingData;
+        if (profilingData !== null) {
           const interactionsFrontend: InteractionsFrontend =
-            importedProfilingData.interactions;
+            profilingData.interactions;
           if (interactionsFrontend != null) {
             this._pendingInteractionsMap.delete(pendingKey);
             resolve(interactionsFrontend);
@@ -235,10 +234,10 @@ export default class ProfilingCache {
     ({ rendererID, rootID }: ProfilingSummaryParams) => {
       return new Promise(resolve => {
         const pendingKey = rootID;
-        const importedProfilingData = this._store.importedProfilingData;
-        if (importedProfilingData !== null) {
+        const profilingData = this._store.profilingData;
+        if (profilingData !== null) {
           const profilingSummaryFrontend: ProfilingSummaryFrontend =
-            importedProfilingData.profilingSummary;
+            profilingData.profilingSummary;
           if (profilingSummaryFrontend != null) {
             this._pendingProfileSummaryMap.delete(pendingKey);
             resolve(profilingSummaryFrontend);

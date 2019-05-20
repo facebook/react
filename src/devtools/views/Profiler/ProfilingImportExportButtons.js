@@ -57,7 +57,7 @@ export default function ProfilingImportExportButtons() {
       fileReader.addEventListener('load', () => {
         try {
           const raw = ((fileReader.result: any): string);
-          store.importedProfilingData = prepareImportedProfilingData(raw);
+          store.profilingData = prepareImportedProfilingData(raw);
         } catch (error) {
           modalDialogDispatch({
             type: 'SHOW',

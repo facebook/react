@@ -72,7 +72,7 @@ ProfilerContext.displayName = 'ProfilerContext';
 
 type StoreProfilingState = {|
   hasProfilingData: boolean,
-  importedProfilingData: ImportedProfilingData | null,
+  profilingData: ImportedProfilingData | null,
   isProfiling: boolean,
 |};
 
@@ -89,30 +89,29 @@ function ProfilerContextController({ children }: Props) {
     () => ({
       getCurrentValue: () => ({
         hasProfilingData: store.hasProfilingData,
-        importedProfilingData: store.importedProfilingData,
+        profilingData: store.profilingData,
         isProfiling: store.isProfiling,
       }),
       subscribe: (callback: Function) => {
-        store.addListener('importedProfilingData', callback);
+        store.addListener('profilingData', callback);
         store.addListener('isProfiling', callback);
         return () => {
-          store.removeListener('importedProfilingData', callback);
+          store.removeListener('profilingData', callback);
           store.removeListener('isProfiling', callback);
         };
       },
     }),
     [store]
   );
-  const {
-    isProfiling,
-    hasProfilingData,
-    importedProfilingData,
-  } = useSubscription<StoreProfilingState, Store>(subscription);
+  const { isProfiling, hasProfilingData, profilingData } = useSubscription<
+    StoreProfilingState,
+    Store
+  >(subscription);
 
   let rendererID = null;
   let rootID = null;
   let rootHasProfilingData = false;
-  if (importedProfilingData !== null) {
+  if (profilingData !== null) {
     rootHasProfilingData = true;
   } else if (selectedElementID !== null) {
     rendererID = store.getRendererIDForElement(selectedElementID);

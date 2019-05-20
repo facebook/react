@@ -80,9 +80,6 @@ export default class Store extends EventEmitter {
   // The InspectedElementContext also relies on this mutability for its WeakMap usage.
   _idToElement: Map<number, Element> = new Map();
 
-  // The user has imported a previously exported profiling session.
-  _importedProfilingData: ImportedProfilingData | null = null;
-
   // The backend is currently profiling.
   // When profiling is in progress, operations are stored so that we can later reconstruct past commit trees.
   _isProfiling: boolean = false;
@@ -93,6 +90,9 @@ export default class Store extends EventEmitter {
 
   // Suspense cache for reading profiling data.
   _profilingCache: ProfilingCache;
+
+  // The user has imported a previously exported profiling session.
+  _profilingData: ImportedProfilingData | null = null;
 
   // Map of root (id) to a list of tree mutation that occur during profiling.
   // Once profiling is finished, these mutations can be used, along with the initial tree snapshots,
@@ -298,22 +298,8 @@ export default class Store extends EventEmitter {
   // Profiling data has been recorded for at least one root.
   get hasProfilingData(): boolean {
     return (
-      this._importedProfilingData !== null ||
-      this._profilingOperationsByRootID.size > 0
+      this._profilingData !== null || this._profilingOperationsByRootID.size > 0
     );
-  }
-
-  get importedProfilingData(): ImportedProfilingData | null {
-    return this._importedProfilingData;
-  }
-  set importedProfilingData(value: ImportedProfilingData | null): void {
-    this._importedProfilingData = value;
-    this._profilingOperationsByRootID = new Map();
-    this._profilingScreenshotsByRootID = new Map();
-    this._profilingSnapshotsByRootID = new Map();
-    this._profilingCache.invalidate();
-
-    this.emit('importedProfilingData');
   }
 
   get isProfiling(): boolean {
@@ -326,6 +312,19 @@ export default class Store extends EventEmitter {
 
   get profilingCache(): ProfilingCache {
     return this._profilingCache;
+  }
+
+  get profilingData(): ImportedProfilingData | null {
+    return this._profilingData;
+  }
+  set profilingData(value: ImportedProfilingData | null): void {
+    this._profilingData = value;
+    this._profilingOperationsByRootID = new Map();
+    this._profilingScreenshotsByRootID = new Map();
+    this._profilingSnapshotsByRootID = new Map();
+    this._profilingCache.invalidate();
+
+    this.emit('profilingData');
   }
 
   get profilingOperations(): Map<number, Array<Uint32Array>> {
@@ -365,7 +364,7 @@ export default class Store extends EventEmitter {
   }
 
   clearProfilingData(): void {
-    this._importedProfilingData = null;
+    this._profilingData = null;
     this._profilingOperationsByRootID = new Map();
     this._profilingScreenshotsByRootID = new Map();
     this._profilingSnapshotsByRootID = new Map();
@@ -1068,7 +1067,7 @@ export default class Store extends EventEmitter {
 
   onProfilingStatus = (isProfiling: boolean) => {
     if (isProfiling) {
-      this._importedProfilingData = null;
+      this._profilingData = null;
       this._profilingOperationsByRootID = new Map();
       this._profilingScreenshotsByRootID = new Map();
       this._profilingSnapshotsByRootID = new Map();

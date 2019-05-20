@@ -169,21 +169,21 @@ export function exportImportHelper(
   expect(typeof exportedProfilingDataJsonString).toBe('string');
   expect(exportedProfilingDataJsonString).not.toBe('');
 
-  const importedProfilingData = prepareImportedProfilingData(
+  const profilingData = prepareImportedProfilingData(
     exportedProfilingDataJsonString
   );
   // Sanity check that profiling snapshots are serialized correctly.
   expect(store.profilingSnapshots.get(rootID)).toEqual(
-    importedProfilingData.profilingSnapshots.get(rootID)
+    profilingData.profilingSnapshots.get(rootID)
   );
   expect(store.profilingOperations.get(rootID)).toEqual(
-    importedProfilingData.profilingOperations.get(rootID)
+    profilingData.profilingOperations.get(rootID)
   );
 
   // Snapshot the JSON-parsed object, rather than the raw string, because Jest formats the diff nicer.
-  expect(importedProfilingData).toMatchSnapshot('imported data');
+  expect(profilingData).toMatchSnapshot('imported data');
 
   act(() => {
-    store.importedProfilingData = importedProfilingData;
+    store.profilingData = profilingData;
   });
 }

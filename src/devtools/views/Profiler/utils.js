@@ -120,7 +120,7 @@ export const prepareImportedProfilingData = (
     initialTreeBaseDurationsMap.set(fiberID, initialTreeBaseDuration);
   }
 
-  const importedProfilingData: ImportedProfilingData = {
+  const profilingData: ImportedProfilingData = {
     version: parsed.version,
     profilingOperations: new Map(
       exportedProfilingData.profilingOperationsByRootID.map(
@@ -169,7 +169,7 @@ export const prepareImportedProfilingData = (
       interactionCount: profilingSummaryExported.interactionCount,
     },
   };
-  return importedProfilingData;
+  return profilingData;
 };
 
 export const getGradientColor = (value: number) => {

@@ -55,10 +55,10 @@ export function getCommitTree({
     return commitTrees[commitIndex];
   }
 
-  const { importedProfilingData } = store;
+  const { profilingData } = store;
   const profilingOperations =
-    importedProfilingData != null
-      ? importedProfilingData.profilingOperations
+    profilingData != null
+      ? profilingData.profilingOperations
       : store.profilingOperations;
 
   // Commits are generated sequentially and cached.
@@ -67,10 +67,10 @@ export function getCommitTree({
   if (commitIndex === 0) {
     const nodes = new Map();
 
-    const { importedProfilingData } = store;
+    const { profilingData } = store;
     const profilingSnapshots =
-      importedProfilingData != null
-        ? importedProfilingData.profilingSnapshots.get(rootID)
+      profilingData != null
+        ? profilingData.profilingSnapshots.get(rootID)
         : store.profilingSnapshots.get(rootID);
 
     if (profilingSnapshots == null) {
