@@ -897,7 +897,6 @@ describe('ReactFresh', () => {
 
   it('can preserve state for lazy after resolution', async () => {
     if (__DEV__) {
-      let promise;
       let OuterV1 = render(() => {
         function Hello() {
           const [val, setVal] = React.useState(0);
@@ -909,12 +908,12 @@ describe('ReactFresh', () => {
         }
         __register__(Hello, 'Hello');
 
-        const Outer = React.lazy(() => {
-          promise = new Promise(resolve => {
-            setTimeout(() => resolve({default: Hello}), 100);
-          });
-          return promise;
-        });
+        const Outer = React.lazy(
+          () =>
+            new Promise(resolve => {
+              setTimeout(() => resolve({default: Hello}), 100);
+            }),
+        );
         __register__(Outer, 'Outer');
 
         function App() {
@@ -929,9 +928,9 @@ describe('ReactFresh', () => {
       });
 
       expect(container.textContent).toBe('Loading');
-      jest.runAllTimers();
-      await promise;
-      Scheduler.flushAll();
+      await act(async () => {
+        jest.runAllTimers();
+      });
       expect(container.textContent).toBe('0');
 
       // Bump the state before patching.
@@ -969,7 +968,7 @@ describe('ReactFresh', () => {
       expect(el.textContent).toBe('2');
       expect(el.style.color).toBe('red');
 
-      // Perform top-down renders with a stale type.
+      // Perform a top-down render with a stale type.
       render(() => OuterV1);
       expect(container.firstChild).toBe(el);
       expect(el.textContent).toBe('2');
@@ -1000,7 +999,6 @@ describe('ReactFresh', () => {
 
   it('can patch lazy before resolution', async () => {
     if (__DEV__) {
-      let promise;
       render(() => {
         function Hello() {
           const [val, setVal] = React.useState(0);
@@ -1012,12 +1010,12 @@ describe('ReactFresh', () => {
         }
         __register__(Hello, 'Hello');
 
-        const Outer = React.lazy(() => {
-          promise = new Promise(resolve => {
-            setTimeout(() => resolve({default: Hello}), 100);
-          });
-          return promise;
-        });
+        const Outer = React.lazy(
+          () =>
+            new Promise(resolve => {
+              setTimeout(() => resolve({default: Hello}), 100);
+            }),
+        );
         __register__(Outer, 'Outer');
 
         function App() {
@@ -1046,9 +1044,9 @@ describe('ReactFresh', () => {
         __register__(Hello, 'Hello');
       });
 
-      jest.runAllTimers();
-      await promise;
-      Scheduler.flushAll();
+      await act(async () => {
+        jest.runAllTimers();
+      });
 
       // Expect different color on initial mount.
       const el = container.firstChild;
@@ -1083,7 +1081,6 @@ describe('ReactFresh', () => {
 
   it('can patch lazy(forwardRef) before resolution', async () => {
     if (__DEV__) {
-      let promise;
       render(() => {
         function renderHello() {
           const [val, setVal] = React.useState(0);
@@ -1096,12 +1093,12 @@ describe('ReactFresh', () => {
         const Hello = React.forwardRef(renderHello);
         __register__(Hello, 'Hello');
 
-        const Outer = React.lazy(() => {
-          promise = new Promise(resolve => {
-            setTimeout(() => resolve({default: Hello}), 100);
-          });
-          return promise;
-        });
+        const Outer = React.lazy(
+          () =>
+            new Promise(resolve => {
+              setTimeout(() => resolve({default: Hello}), 100);
+            }),
+        );
         __register__(Outer, 'Outer');
 
         function App() {
@@ -1131,9 +1128,9 @@ describe('ReactFresh', () => {
         __register__(Hello, 'Hello');
       });
 
-      jest.runAllTimers();
-      await promise;
-      Scheduler.flushAll();
+      await act(async () => {
+        jest.runAllTimers();
+      });
 
       // Expect different color on initial mount.
       const el = container.firstChild;
@@ -1169,7 +1166,6 @@ describe('ReactFresh', () => {
 
   it('can patch lazy(memo) before resolution', async () => {
     if (__DEV__) {
-      let promise;
       render(() => {
         function renderHello() {
           const [val, setVal] = React.useState(0);
@@ -1182,12 +1178,12 @@ describe('ReactFresh', () => {
         const Hello = React.memo(renderHello);
         __register__(Hello, 'Hello');
 
-        const Outer = React.lazy(() => {
-          promise = new Promise(resolve => {
-            setTimeout(() => resolve({default: Hello}), 100);
-          });
-          return promise;
-        });
+        const Outer = React.lazy(
+          () =>
+            new Promise(resolve => {
+              setTimeout(() => resolve({default: Hello}), 100);
+            }),
+        );
         __register__(Outer, 'Outer');
 
         function App() {
@@ -1217,9 +1213,9 @@ describe('ReactFresh', () => {
         __register__(Hello, 'Hello');
       });
 
-      jest.runAllTimers();
-      await promise;
-      Scheduler.flushAll();
+      await act(async () => {
+        jest.runAllTimers();
+      });
 
       // Expect different color on initial mount.
       const el = container.firstChild;
@@ -1255,7 +1251,6 @@ describe('ReactFresh', () => {
 
   it('can patch lazy(memo(forwardRef)) before resolution', async () => {
     if (__DEV__) {
-      let promise;
       render(() => {
         function renderHello() {
           const [val, setVal] = React.useState(0);
@@ -1268,12 +1263,12 @@ describe('ReactFresh', () => {
         const Hello = React.memo(React.forwardRef(renderHello));
         __register__(Hello, 'Hello');
 
-        const Outer = React.lazy(() => {
-          promise = new Promise(resolve => {
-            setTimeout(() => resolve({default: Hello}), 100);
-          });
-          return promise;
-        });
+        const Outer = React.lazy(
+          () =>
+            new Promise(resolve => {
+              setTimeout(() => resolve({default: Hello}), 100);
+            }),
+        );
         __register__(Outer, 'Outer');
 
         function App() {
@@ -1303,9 +1298,9 @@ describe('ReactFresh', () => {
         __register__(Hello, 'Hello');
       });
 
-      jest.runAllTimers();
-      await promise;
-      Scheduler.flushAll();
+      await act(async () => {
+        jest.runAllTimers();
+      });
 
       // Expect different color on initial mount.
       const el = container.firstChild;
@@ -1608,7 +1603,7 @@ describe('ReactFresh', () => {
       });
       expect(el2.textContent).toBe('1');
 
-      // Perform a hot update for Hello only.
+      // Perform a hot update for both inner components.
       patch(() => {
         function Hello1() {
           const [val, setVal] = React.useState(0);
