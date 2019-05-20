@@ -24,6 +24,7 @@ describe('ReactFresh', () => {
   let updatedFamilies;
   let performHotReload;
   let signaturesByType;
+  let hostNodesForVisualFeedback;
 
   beforeEach(() => {
     let scheduleHotUpdate;
@@ -52,12 +53,12 @@ describe('ReactFresh', () => {
 
     if (__DEV__) {
       performHotReload = function(staleFamilies) {
-        scheduleHotUpdate({
+        hostNodesForVisualFeedback = scheduleHotUpdate({
           root: lastRoot,
           familiesByType,
           updatedFamilies,
           staleFamilies,
-        });
+        }).hostNodesForVisualFeedback;
       };
     }
   });
@@ -98,6 +99,7 @@ describe('ReactFresh', () => {
     newFamilies = new Set();
     updatedFamilies = new Set();
     signaturesByType = new Map();
+    hostNodesForVisualFeedback = null;
     const Component = version();
 
     // Fill in the signatures.
@@ -2794,6 +2796,105 @@ describe('ReactFresh', () => {
       });
       expect(container.firstChild.nextSibling).toBe(helloNode);
       expect(helloNode.textContent).toBe('Nice.');
+    }
+  });
+
+  it('provides visual feedback by returning related host nodes', () => {
+    if (__DEV__) {
+      let ParentV1;
+      render(() => {
+        function Child({children}) {
+          return <div className="Child">{children}</div>;
+        }
+        __register__(Child, 'Child');
+
+        function Parent({children}) {
+          return (
+            <div className="Parent">
+              <div>
+                <Child />
+              </div>
+              <div>
+                <Child />
+              </div>
+            </div>
+          );
+        }
+        __register__(Parent, 'Parent');
+        ParentV1 = Parent;
+
+        function App() {
+          return (
+            <div className="App">
+              <Parent />
+              <Parent />
+            </div>
+          );
+        }
+        __register__(App, 'App');
+
+        return App;
+      });
+
+      // First, edit Child alone.
+      // This should flash only the four Child nodes.
+      patch(() => {
+        function Child({children}) {
+          return <div className="Child">{children}</div>;
+        }
+        __register__(Child, 'Child');
+      });
+      expect(hostNodesForVisualFeedback.map(node => node.className)).toEqual([
+        'Child',
+        'Child',
+        'Child',
+        'Child',
+      ]);
+
+      // Edit the App alone.
+      // This should flash just its root node.
+      patch(() => {
+        function App() {
+          return (
+            <div className="App">
+              <ParentV1 />
+              <ParentV1 />
+            </div>
+          );
+        }
+        __register__(App, 'App');
+      });
+      expect(hostNodesForVisualFeedback.map(node => node.className)).toEqual([
+        'App',
+      ]);
+
+      // Edit *both* Parent and Child.
+      // Parent contains Child, but we only want to flash Parent nodes.
+      // Visual feedback includes only the outermost edited components.
+      patch(() => {
+        function Child({children}) {
+          return <div className="Child">{children}</div>;
+        }
+        __register__(Child, 'Child');
+
+        function Parent({children}) {
+          return (
+            <div className="Parent">
+              <div>
+                <Child />
+              </div>
+              <div>
+                <Child />
+              </div>
+            </div>
+          );
+        }
+        __register__(Parent, 'Parent');
+      });
+      expect(hostNodesForVisualFeedback.map(node => node.className)).toEqual([
+        'Parent',
+        'Parent',
+      ]);
     }
   });
 });

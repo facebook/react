@@ -10,6 +10,7 @@
 import type {ReactElement} from 'shared/ReactElementType';
 import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
+import type {Instance} from './ReactFiberHostConfig';
 
 import {
   flushSync,
@@ -17,11 +18,13 @@ import {
   flushPassiveEffects,
 } from './ReactFiberScheduler';
 import {Sync} from './ReactFiberExpirationTime';
+import {findCurrentFiberUsingSlowPath} from './ReactFiberTreeReflection';
 import {
   FunctionComponent,
   ForwardRef,
   MemoComponent,
   SimpleMemoComponent,
+  HostComponent,
 } from 'shared/ReactWorkTags';
 import {
   REACT_FORWARD_REF_TYPE,
@@ -39,6 +42,10 @@ type HotUpdate = {|
   root: FiberRoot,
   staleFamilies: Set<Family>,
   updatedFamilies: Set<Family>,
+|};
+
+type HotUpdateResult = {|
+  hostNodesForVisualFeedback: Array<Instance>,
 |};
 
 let familiesByType: WeakMap<any, Family> | null = null;
@@ -194,11 +201,12 @@ export function markFailedErrorBoundaryForHotReloading(fiber: Fiber) {
   }
 }
 
-export function scheduleHotUpdate(hotUpdate: HotUpdate): void {
+export function scheduleHotUpdate(hotUpdate: HotUpdate): HotUpdateResult {
   if (__DEV__) {
     // TODO: warn if its identity changes over time?
     familiesByType = hotUpdate.familiesByType;
 
+    const affectedSubtrees = new Set();
     const {root, staleFamilies, updatedFamilies} = hotUpdate;
     flushPassiveEffects();
     flushSync(() => {
@@ -206,8 +214,19 @@ export function scheduleHotUpdate(hotUpdate: HotUpdate): void {
         root.current,
         updatedFamilies,
         staleFamilies,
+        affectedSubtrees,
       );
     });
+
+    const hostNodesForVisualFeedback = findHostNodesForVisualFeedback(
+      affectedSubtrees,
+    );
+    return {hostNodesForVisualFeedback};
+  } else {
+    throw new Error(
+      'Did not expect this call in production. ' +
+        'This is a bug in React. Please file an issue.',
+    );
   }
 }
 
@@ -215,6 +234,7 @@ function scheduleFibersWithFamiliesRecursively(
   fiber: Fiber,
   updatedFamilies: Set<Family>,
   staleFamilies: Set<Family>,
+  affectedSubtrees: Set<Fiber> | null,
 ) {
   if (__DEV__) {
     const {alternate, child, sibling, tag, type} = fiber;
@@ -262,20 +282,89 @@ function scheduleFibersWithFamiliesRecursively(
     }
     if (needsRemount || needsRender) {
       scheduleWork(fiber, Sync);
+      if (affectedSubtrees !== null) {
+        affectedSubtrees.add(fiber);
+      }
     }
+
     if (child !== null && !needsRemount) {
       scheduleFibersWithFamiliesRecursively(
         child,
         updatedFamilies,
         staleFamilies,
+        // We don't track affected Fibers deeper than
+        // the outermost component that was affected.
+        // So if we re-render this Fiber, there's no need
+        // to pass the affected subtree Set to its children.
+        needsRender ? null : affectedSubtrees,
       );
     }
+
     if (sibling !== null) {
       scheduleFibersWithFamiliesRecursively(
         sibling,
         updatedFamilies,
         staleFamilies,
+        affectedSubtrees,
       );
     }
+  }
+}
+
+function findHostNodesForVisualFeedback(fibers: Set<Fiber>): Array<Instance> {
+  if (__DEV__) {
+    // TODO: deal with unmounted Fibers.
+    const hostNodeSet = new Set();
+    fibers.forEach(fiber => {
+      const hostFibers = findAllCurrentHostFibers(fiber);
+      hostFibers.forEach(hostFiber => {
+        hostNodeSet.add(hostFiber.stateNode);
+      });
+    });
+    return Array.from(hostNodeSet);
+  } else {
+    throw new Error(
+      'Did not expect this call in production. ' +
+        'This is a bug in React. Please file an issue.',
+    );
+  }
+}
+
+function findAllCurrentHostFibers(parent: Fiber): Array<Fiber> {
+  if (__DEV__) {
+    const fibers = [];
+    const currentParent = findCurrentFiberUsingSlowPath(parent);
+    if (!currentParent) {
+      return fibers;
+    }
+
+    let node: Fiber = currentParent;
+    while (true) {
+      if (node.tag === HostComponent) {
+        fibers.push(node);
+      } else if (node.child) {
+        node.child.return = node;
+        node = node.child;
+        continue;
+      }
+      if (node === currentParent) {
+        return fibers;
+      }
+      while (!node.sibling) {
+        if (!node.return || node.return === currentParent) {
+          return fibers;
+        }
+        node = node.return;
+      }
+      node.sibling.return = node.return;
+      node = node.sibling;
+    }
+    // eslint-disable-next-line no-unreachable
+    return fibers;
+  } else {
+    throw new Error(
+      'Did not expect this call in production. ' +
+        'This is a bug in React. Please file an issue.',
+    );
   }
 }
