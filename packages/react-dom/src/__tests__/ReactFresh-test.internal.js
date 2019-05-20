@@ -897,7 +897,7 @@ describe('ReactFresh', () => {
 
   it('can preserve state for lazy after resolution', async () => {
     if (__DEV__) {
-      let OuterV1 = render(() => {
+      let AppV1 = render(() => {
         function Hello() {
           const [val, setVal] = React.useState(0);
           return (
@@ -923,6 +923,7 @@ describe('ReactFresh', () => {
             </React.Suspense>
           );
         }
+        __register__(App, 'App');
 
         return App;
       });
@@ -943,7 +944,7 @@ describe('ReactFresh', () => {
       expect(el.textContent).toBe('1');
 
       // Perform a hot update.
-      patch(() => {
+      let AppV2 = patch(() => {
         function Hello() {
           const [val, setVal] = React.useState(0);
           return (
@@ -953,6 +954,25 @@ describe('ReactFresh', () => {
           );
         }
         __register__(Hello, 'Hello');
+
+        const Outer = React.lazy(
+          () =>
+            new Promise(resolve => {
+              setTimeout(() => resolve({default: Hello}), 100);
+            }),
+        );
+        __register__(Outer, 'Outer');
+
+        function App() {
+          return (
+            <React.Suspense fallback={<p>Loading</p>}>
+              <Outer />
+            </React.Suspense>
+          );
+        }
+        __register__(App, 'App');
+
+        return App;
       });
 
       // Assert the state was preserved but color changed.
@@ -968,8 +988,12 @@ describe('ReactFresh', () => {
       expect(el.textContent).toBe('2');
       expect(el.style.color).toBe('red');
 
-      // Perform a top-down render with a stale type.
-      render(() => OuterV1);
+      // Perform top-down renders with both fresh and stale types.
+      // Neither should change the state or color.
+      // They should always resolve to the latest version.
+      render(() => AppV1);
+      render(() => AppV2);
+      render(() => AppV1);
       expect(container.firstChild).toBe(el);
       expect(el.textContent).toBe('2');
       expect(el.style.color).toBe('red');
@@ -987,7 +1011,17 @@ describe('ReactFresh', () => {
         __register__(Hello, 'Hello');
 
         // Note: no lazy wrapper this time.
-        return Hello;
+
+        function App() {
+          return (
+            <React.Suspense fallback={<p>Loading</p>}>
+              <Hello />
+            </React.Suspense>
+          );
+        }
+        __register__(App, 'App');
+
+        return App;
       });
 
       expect(container.firstChild).not.toBe(el);
@@ -2050,6 +2084,18 @@ describe('ReactFresh', () => {
   it('can remount on signature change within a simple memo wrapper', () => {
     if (__DEV__) {
       testRemountingWithWrapper(Hello => React.memo(Hello));
+    }
+  });
+
+  it('can remount on signature change within a lazy simple memo wrapper', () => {
+    if (__DEV__) {
+      testRemountingWithWrapper(Hello =>
+        React.lazy(() => ({
+          then(cb) {
+            cb({default: React.memo(Hello)});
+          },
+        })),
+      );
     }
   });
 
