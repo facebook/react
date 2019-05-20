@@ -3,12 +3,17 @@
 // This test harness mounts each test app as a separate root to test multi-root applications.
 
 import { createElement } from 'react';
-import { render, unmountComponentAtNode } from 'react-dom';
+import {
+  unmountComponentAtNode,
+  // $FlowFixMe Flow does not yet know about createRoot()
+  unstable_createRoot as createRoot,
+} from 'react-dom';
 import DeeplyNestedComponents from './DeeplyNestedComponents';
 import EditableProps from './EditableProps';
 import ElementTypes from './ElementTypes';
 import InspectableElements from './InspectableElements';
 import InteractionTracing from './InteractionTracing';
+import PriorityLevels from './PriorityLevels';
 import ToDoList from './ToDoList';
 import Toggle from './Toggle';
 import SuspenseTree from './SuspenseTree';
@@ -24,7 +29,8 @@ function mountHelper(App) {
 
   containers.push(container);
 
-  render(createElement(App), container);
+  const root = createRoot(container);
+  root.render(createElement(App));
 }
 
 function mountTestApp() {
@@ -33,6 +39,7 @@ function mountTestApp() {
   mountHelper(InspectableElements);
   mountHelper(ElementTypes);
   mountHelper(EditableProps);
+  mountHelper(PriorityLevels);
   mountHelper(Toggle);
   mountHelper(SuspenseTree);
   mountHelper(DeeplyNestedComponents);

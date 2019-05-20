@@ -27,6 +27,28 @@ exports[`InspectedElementContext should inspect the currently selected element: 
 }
 `;
 
+exports[`InspectedElementContext should inspect the currently selected element: 2: Inspected element 2 2`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "hooks": [
+    {
+      "id": 0,
+      "isStateEditable": true,
+      "name": "State",
+      "value": 1,
+      "subHooks": []
+    }
+  ],
+  "props": {
+    "foo": 1,
+    "bar": "abc"
+  },
+  "state": null
+}
+`;
+
 exports[`InspectedElementContext should poll for updates for the currently selected element: 1: mount 1`] = `
 [root]
     <Example>

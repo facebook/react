@@ -152,10 +152,11 @@ export const prepareImportedProfilingData = (
         }
         return {
           actualDurations: actualDurationsMap,
-          selfDurations: selfDurationsMap,
           commitIndex: commitDetailsBackendItem.commitIndex,
           interactions: commitDetailsBackendItem.interactions,
+          priorityLevel: commitDetailsBackendItem.priorityLevel,
           rootID: commitDetailsBackendItem.rootID,
+          selfDurations: selfDurationsMap,
         };
       }
     ),

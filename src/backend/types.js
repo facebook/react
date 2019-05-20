@@ -126,6 +126,7 @@ export type CommitDetailsBackend = {|
   // An interleaved array: fiberID at [i], actualDuration at [i + 1], computed selfDuration at [i + 2].
   durations: Array<number>,
   interactions: Array<InteractionBackend>,
+  priorityLevel: string | null,
   rootID: number,
 |};
 
@@ -193,7 +194,7 @@ export type RendererInterface = {
   ) => ExportedProfilingDataFromRenderer,
   getProfilingSummary: (rootID: number) => ProfilingSummaryBackend,
   getPathForElement: (id: number) => Array<PathFrame> | null,
-  handleCommitFiberRoot: (fiber: Object) => void,
+  handleCommitFiberRoot: (fiber: Object, commitPriority?: number) => void,
   handleCommitFiberUnmount: (fiber: Object) => void,
   inspectElement: (id: number) => InspectedElement | null,
   logElementToConsole: (id: number) => void,
@@ -234,7 +235,11 @@ export type DevToolsHook = {
   // React uses these methods.
   checkDCE: (fn: Function) => void,
   onCommitFiberUnmount: (rendererID: RendererID, fiber: Object) => void,
-  onCommitFiberRoot: (rendererID: RendererID, fiber: Object) => void,
+  onCommitFiberRoot: (
+    rendererID: RendererID,
+    fiber: Object,
+    commitPriority?: number
+  ) => void,
 };
 
 export type HooksNode = {
