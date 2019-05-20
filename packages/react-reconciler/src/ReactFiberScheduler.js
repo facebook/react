@@ -567,7 +567,11 @@ export function flushRoot(root: FiberRoot, expirationTime: ExpirationTime) {
 }
 
 export function flushDiscreteUpdates() {
-  if (workPhase !== NotWorking) {
+  if (
+    workPhase === RenderPhase ||
+    workPhase === CommitPhase ||
+    workPhase === BatchedPhase
+  ) {
     // Can't synchronously flush interactive updates if React is already
     // working. This is currently a no-op.
     // TODO: Should we fire a warning? This happens if you synchronously invoke
@@ -610,10 +614,6 @@ export function discreteUpdates<A, B, C, R>(
   b: B,
   c: C,
 ): R {
-  if (!revertPassiveEffectsChange) {
-    // TODO: Remove this call for the same reason as above.
-    flushPassiveEffects();
-  }
   return runWithPriority(UserBlockingPriority, fn.bind(null, a, b, c));
 }
 
