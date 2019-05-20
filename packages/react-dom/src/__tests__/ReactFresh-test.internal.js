@@ -1549,6 +1549,47 @@ describe('ReactFresh', () => {
     }
   });
 
+  it('batches re-renders during a hot update', () => {
+    if (__DEV__) {
+      let helloRenders = 0;
+
+      render(() => {
+        function Hello({children}) {
+          helloRenders++;
+          return <div>X{children}X</div>;
+        }
+        __register__(Hello, 'Hello');
+
+        function App() {
+          return (
+            <Hello>
+              <Hello>
+                <Hello />
+              </Hello>
+              <Hello>
+                <Hello />
+              </Hello>
+            </Hello>
+          );
+        }
+        return App;
+      });
+      expect(helloRenders).toBe(5);
+      expect(container.textContent).toBe('XXXXXXXXXX');
+      helloRenders = 0;
+
+      patch(() => {
+        function Hello({children}) {
+          helloRenders++;
+          return <div>O{children}O</div>;
+        }
+        __register__(Hello, 'Hello');
+      });
+      expect(helloRenders).toBe(5);
+      expect(container.textContent).toBe('OOOOOOOOOO');
+    }
+  });
+
   it('does not leak state between components', () => {
     if (__DEV__) {
       const AppV1 = render(
