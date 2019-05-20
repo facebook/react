@@ -1560,7 +1560,7 @@ function commitRootImpl(root) {
     legacyErrorBoundariesThatAlreadyFailed = null;
   }
 
-  onCommitRoot(finishedWork.stateNode);
+  onCommitRoot(finishedWork.stateNode, expirationTime);
 
   if (remainingExpirationTime === Sync) {
     // Count the number of times the root synchronously re-renders without
