@@ -1,29 +1,46 @@
 // @flow
 
 import React, { Fragment, useCallback, useState } from 'react';
-import { unstable_next as next } from 'scheduler';
+import {
+  unstable_IdlePriority as IdlePriority,
+  unstable_LowPriority as LowPriority,
+  unstable_runWithPriority as runWithPriority,
+} from 'scheduler';
 
 export default function PriorityLevels() {
-  const [count, setCount] = useState(0);
+  const [defaultPriority, setDefaultPriority] = useState<boolean>(false);
+  const [idlePriority, setIdlePriority] = useState<boolean>(false);
+  const [normalPriority, setLowPriority] = useState<boolean>(false);
+
+  const resetSequence = useCallback(() => {
+    setDefaultPriority(false);
+    setLowPriority(false);
+    setIdlePriority(false);
+  }, []);
 
   const startSequence = useCallback(() => {
-    setCount(1);
-    next(() => setCount(2));
+    setDefaultPriority(true);
+    runWithPriority(LowPriority, () => setLowPriority(true));
+    runWithPriority(IdlePriority, () => setIdlePriority(true));
   }, []);
+
+  const labels = [];
+  if (defaultPriority) {
+    labels.push('(default priority)');
+  }
+  if (normalPriority) {
+    labels.push('Low Priority');
+  }
+  if (idlePriority) {
+    labels.push('Idle Priority');
+  }
 
   return (
     <Fragment>
       <h1>Priority Levels</h1>
-      <button onClick={startSequence}>start sequence</button>
-      {count >= 1 && <Text>One</Text>}
-      {count >= 2 && <Text>Two</Text>}
-      {count >= 2 && (
-        <div hidden>
-          <Text>Three</Text>
-        </div>
-      )}
+      <button onClick={resetSequence}>Reset</button>
+      <button onClick={startSequence}>Start sequence</button>
+      <span>{labels.join(', ')}</span>
     </Fragment>
   );
 }
-
-const Text = ({ children }) => children;
