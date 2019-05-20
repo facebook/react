@@ -83,7 +83,7 @@ function runActTests(label, render, unmount) {
         expect(Scheduler).toHaveYielded([100]);
       });
 
-      it.only('flushes effects on every call', () => {
+      it('flushes effects on every call', () => {
         function App() {
           let [ctr, setCtr] = React.useState(0);
           React.useEffect(() => {
