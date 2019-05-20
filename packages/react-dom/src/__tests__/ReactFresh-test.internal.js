@@ -963,6 +963,96 @@ describe('ReactFresh', () => {
     }
   });
 
+  it('does not leak state between components', () => {
+    if (__DEV__) {
+      const AppV1 = render(
+        () => {
+          function Hello1() {
+            const [val, setVal] = React.useState(0);
+            return (
+              <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
+                {val}
+              </p>
+            );
+          }
+          __register__(Hello1, 'Hello1');
+          function Hello2() {
+            const [val, setVal] = React.useState(0);
+            return (
+              <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
+                {val}
+              </p>
+            );
+          }
+          __register__(Hello2, 'Hello2');
+          function App({cond}) {
+            return cond ? <Hello1 /> : <Hello2 />;
+          }
+          __register__(App, 'App');
+          return App;
+        },
+        {cond: false},
+      );
+
+      // Bump the state before patching.
+      const el = container.firstChild;
+      expect(el.textContent).toBe('0');
+      expect(el.style.color).toBe('blue');
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(el.textContent).toBe('1');
+
+      // Switch the condition, flipping inner content.
+      // This should reset the state.
+      render(() => AppV1, {cond: true});
+      const el2 = container.firstChild;
+      expect(el2).not.toBe(el);
+      expect(el2.textContent).toBe('0');
+      expect(el2.style.color).toBe('blue');
+
+      // Bump it again.
+      act(() => {
+        el2.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(el2.textContent).toBe('1');
+
+      // Perform a hot update for Hello only.
+      patch(() => {
+        function Hello1() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'red'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello1, 'Hello1');
+        function Hello2() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'red'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello2, 'Hello2');
+      });
+
+      // Assert the state was preserved but color changed.
+      expect(container.firstChild).toBe(el2);
+      expect(el2.textContent).toBe('1');
+      expect(el2.style.color).toBe('red');
+
+      // Flip the condition again.
+      render(() => AppV1, {cond: false});
+      const el3 = container.firstChild;
+      expect(el3).not.toBe(el2);
+      expect(el3.textContent).toBe('0');
+      expect(el3.style.color).toBe('red');
+    }
+  });
+
   it('can force remount by changing signature', () => {
     if (__DEV__) {
       let HelloV1 = render(() => {
