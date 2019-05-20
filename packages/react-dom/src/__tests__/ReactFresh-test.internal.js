@@ -46,6 +46,7 @@ describe('ReactFresh', () => {
     Scheduler = require('scheduler');
     act = require('react-dom/test-utils').act;
     container = document.createElement('div');
+    container.className = 'container';
     document.body.appendChild(container);
 
     familiesByID = new Map();
@@ -2894,6 +2895,93 @@ describe('ReactFresh', () => {
       expect(hostNodesForVisualFeedback.map(node => node.className)).toEqual([
         'Parent',
         'Parent',
+      ]);
+    }
+  });
+
+  it('uses closest parent nodes for visual feedback when there is no children', () => {
+    if (__DEV__) {
+      render(() => {
+        function Child({children}) {
+          return <div className="Child">{children}</div>;
+        }
+        __register__(Child, 'Child');
+
+        function Parent({children}) {
+          return (
+            <div className="Parent">
+              <div className="Parent-childWrapper">
+                <Child />
+              </div>
+              <div className="Parent-childWrapper">
+                <Child />
+              </div>
+            </div>
+          );
+        }
+        __register__(Parent, 'Parent');
+
+        function App() {
+          return (
+            <div className="App">
+              <Parent />
+              <Parent />
+            </div>
+          );
+        }
+        __register__(App, 'App');
+
+        return App;
+      });
+
+      // Child doesn't have its own host node anymore,
+      // so we expect to find closest parent host node instead.
+      patch(() => {
+        function Child({children}) {
+          return null;
+        }
+        __register__(Child, 'Child');
+      });
+      expect(hostNodesForVisualFeedback.map(node => node.className)).toEqual([
+        'Parent-childWrapper',
+        'Parent-childWrapper',
+        'Parent-childWrapper',
+        'Parent-childWrapper',
+      ]);
+
+      // Now Child will have more than one child node.
+      // Expect to find them all.
+      patch(() => {
+        function Child({children}) {
+          return (
+            <React.Fragment>
+              <p className="Child-p1" />
+              <p className="Child-p2" />
+            </React.Fragment>
+          );
+        }
+        __register__(Child, 'Child');
+      });
+      expect(hostNodesForVisualFeedback.map(node => node.className)).toEqual([
+        'Child-p1',
+        'Child-p2',
+        'Child-p1',
+        'Child-p2',
+        'Child-p1',
+        'Child-p2',
+        'Child-p1',
+        'Child-p2',
+      ]);
+
+      // We should find the root host node if there's nothing else above.
+      patch(() => {
+        function App() {
+          return null;
+        }
+        __register__(App, 'App');
+      });
+      expect(hostNodesForVisualFeedback.map(node => node.className)).toEqual([
+        'container',
       ]);
     }
   });

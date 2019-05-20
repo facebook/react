@@ -25,6 +25,8 @@ import {
   MemoComponent,
   SimpleMemoComponent,
   HostComponent,
+  HostPortal,
+  HostRoot,
 } from 'shared/ReactWorkTags';
 import {
   REACT_FORWARD_REF_TYPE,
@@ -316,12 +318,45 @@ function findHostNodesForVisualFeedback(fibers: Set<Fiber>): Array<Instance> {
     // TODO: deal with unmounted Fibers.
     const hostNodeSet = new Set();
     fibers.forEach(fiber => {
-      const hostFibers = findAllCurrentHostFibers(fiber);
-      hostFibers.forEach(hostFiber => {
-        hostNodeSet.add(hostFiber.stateNode);
-      });
+      let hostFibers = findAllCurrentHostFibers(fiber);
+      if (hostFibers.length === 0) {
+        // Search for closest host fiber above.
+        hostNodeSet.add(getHostParentInstance(fiber));
+      } else {
+        // All of these are HostComponent.
+        hostFibers.forEach(hostFiber => {
+          hostNodeSet.add(hostFiber.stateNode);
+        });
+      }
     });
     return Array.from(hostNodeSet);
+  } else {
+    throw new Error(
+      'Did not expect this call in production. ' +
+        'This is a bug in React. Please file an issue.',
+    );
+  }
+}
+
+function getHostParentInstance(fiber: Fiber): Instance {
+  if (__DEV__) {
+    let parent = fiber.return;
+    while (parent !== null) {
+      switch (parent.tag) {
+        case HostComponent:
+          return parent.stateNode;
+        case HostPortal:
+          return parent.stateNode.containerInfo;
+        case HostRoot:
+          return parent.stateNode.containerInfo;
+        default:
+          parent = parent.return;
+      }
+    }
+    throw new Error(
+      'Expected to find a host parent. This error is likely caused by a bug ' +
+        'in React. Please file an issue.',
+    );
   } else {
     throw new Error(
       'Did not expect this call in production. ' +
