@@ -1009,8 +1009,10 @@ export function shouldflushDiscreteUpdates(timeStamp: number): boolean {
   // negative time stamps or time stamps that are 0 (iOS9) in some cases.
   // Given we are only comparing two time stamps with equality (!==),
   // we are safe from the resolution differences. If the time stamp is 0
-  // we bail-out of preventing the flush, which shouldn't have any
-  // effect on the desired output, other than we over-flush.
+  // we bail-out of preventing the flush, which can affect semantics,
+  // such as if an earlier flush removes or adds event listeners that
+  // are fired in the subsequent flush. However, this is the same
+  // behaviour as we had before this change, so the risks are low.
   if (timeStamp === 0 || lastDiscreteEventTimeStamp !== timeStamp) {
     lastDiscreteEventTimeStamp = timeStamp;
     return true;
