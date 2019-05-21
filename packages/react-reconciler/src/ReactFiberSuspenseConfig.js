@@ -13,8 +13,8 @@ const {ReactCurrentBatchConfig} = ReactSharedInternals;
 
 export type SuspenseConfig = {|
   timeoutMs: number,
-  loadingDelayMs?: number,
-  minLoadingDurationMs?: number,
+  busyDelayMs?: number,
+  busyMinDurationMs?: number,
 |};
 
 export function requestCurrentSuspenseConfig(): null | SuspenseConfig {

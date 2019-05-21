@@ -2093,8 +2093,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     const SUSPENSE_CONFIG = {
       timeoutMs: 10000,
-      loadingDelayMs: 500,
-      minLoadingDurationMs: 400,
+      busyDelayMs: 500,
+      busyMinDurationMs: 400,
     };
 
     let transitionToPage;
