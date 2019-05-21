@@ -36,6 +36,7 @@ import warning from 'shared/warning';
 import {enableEventAPI} from 'shared/ReactFeatureFlags';
 import {invokeGuardedCallbackAndCatchFirstError} from 'shared/ReactErrorUtils';
 import invariant from 'shared/invariant';
+import {canUseDOM} from 'shared/ExecutionEnvironment';
 import {
   isFiberSuspenseAndTimedOut,
   getSuspenseFallbackChild,
@@ -999,9 +1000,27 @@ export function generateListeningKey(
 }
 
 let lastDiscreteEventTimeStamp = 0;
+let useTimeStampHeuristic = true;
+
+if (canUseDOM) {
+  const firefoxUA = navigator.userAgent.match(/Firefox\/(.*)$/);
+
+  if (firefoxUA && firefoxUA.length === 2) {
+    const firefoxVersion = firefoxUA[1].split('.');
+    if (parseInt(firefoxVersion[0], 10) < 53) {
+      useTimeStampHeuristic = false;
+    } else {
+      console.log(firefoxVersion[0]);
+    }
+  }
+}
 
 export function shouldflushDiscreteUpdates(timeStamp: number): boolean {
-  if (lastDiscreteEventTimeStamp !== timeStamp) {
+  if (
+    !useTimeStampHeuristic ||
+    timeStamp === 0 ||
+    lastDiscreteEventTimeStamp !== timeStamp
+  ) {
     lastDiscreteEventTimeStamp = timeStamp;
     return true;
   }
