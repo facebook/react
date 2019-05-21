@@ -5,7 +5,7 @@ let Scheduler;
 let ReactFeatureFlags;
 let Random;
 
-const SEED = process.env.TEST_SEED || 'default';
+const SEED = 0;
 
 const prettyFormatPkg = require('pretty-format');
 
@@ -382,6 +382,40 @@ ${prettyFormat(randomTestCase)}
               <Text initialDelay={9000} text="D" />
             </Container>
           </Suspense>
+        </React.Fragment>,
+      );
+    });
+
+    it('3', () => {
+      const {Text, Container, testResolvedOutput} = createFuzzer();
+      testResolvedOutput(
+        <React.Fragment>
+          <Suspense fallback="Loading...">
+            <Text
+              initialDelay={3183}
+              text="A"
+              updates={[
+                {
+                  beginAfter: 2256,
+                  suspendFor: 6696,
+                },
+              ]}
+            />
+            <Text initialDelay={3251} text="B" />
+          </Suspense>
+          <Container>
+            <Text
+              initialDelay={2700}
+              text="C"
+              updates={[
+                {
+                  beginAfter: 3266,
+                  suspendFor: 9139,
+                },
+              ]}
+            />
+            <Text initialDelay={6732} text="D" />
+          </Container>
         </React.Fragment>,
       );
     });

@@ -1561,8 +1561,10 @@ function updateSuspenseComponent(
             ? (workInProgress.child: any).child
             : (workInProgress.child: any);
         primaryChildFragment.child = progressedPrimaryChild;
-        if (progressedPrimaryChild !== null) {
-          progressedPrimaryChild.return = primaryChildFragment;
+        let progressedChild = progressedPrimaryChild;
+        while (progressedChild !== null) {
+          progressedChild.return = primaryChildFragment;
+          progressedChild = progressedChild.sibling;
         }
       }
 
@@ -1619,9 +1621,11 @@ function updateSuspenseComponent(
               : (workInProgress.child: any);
           if (progressedPrimaryChild !== currentPrimaryChildFragment.child) {
             primaryChildFragment.child = progressedPrimaryChild;
-          }
-          if (progressedPrimaryChild !== null) {
-            progressedPrimaryChild.return = primaryChildFragment;
+            let progressedChild = progressedPrimaryChild;
+            while (progressedChild !== null) {
+              progressedChild.return = primaryChildFragment;
+              progressedChild = progressedChild.sibling;
+            }
           }
         }
 
@@ -1709,8 +1713,10 @@ function updateSuspenseComponent(
               ? (workInProgress.child: any).child
               : (workInProgress.child: any);
           primaryChildFragment.child = progressedPrimaryChild;
-          if (progressedPrimaryChild !== null) {
-            progressedPrimaryChild.return = primaryChildFragment;
+          let progressedChild = progressedPrimaryChild;
+          while (progressedChild !== null) {
+            progressedChild.return = primaryChildFragment;
+            progressedChild = progressedChild.sibling;
           }
         }
 
