@@ -568,6 +568,8 @@ export function flushRoot(root: FiberRoot, expirationTime: ExpirationTime) {
 }
 
 export function flushDiscreteUpdates() {
+  // TODO: we ideally do not want to early reurn for BatchedPhase here either.
+  // Removing this causes act() tests to fail, so we should follow up.
   if (workPhase === CommitPhase || workPhase === BatchedPhase) {
     // We're inside the commit phase or batched phase, so we can't
     // synchronously flush pending work. This is probably a nested event
