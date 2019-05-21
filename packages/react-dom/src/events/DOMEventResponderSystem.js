@@ -114,9 +114,8 @@ const eventResponderContext: ReactResponderContext = {
         'context.dispatchEvent: "target", "timeStamp", and "type" fields on event object are required.',
       );
     }
-    let showWarning;
-    if (__DEV__) {
-      showWarning = name => {
+    const showWarning = name => {
+      if (__DEV__) {
         warning(
           false,
           '%s is not available on event objects created from event responder modules (React Flare). ' +
@@ -124,8 +123,8 @@ const eventResponderContext: ReactResponderContext = {
           name,
           name,
         );
-      };
-    }
+      }
+    };
     possibleEventObject.preventDefault = () => {
       if (__DEV__) {
         showWarning('preventDefault()');
