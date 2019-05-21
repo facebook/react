@@ -474,7 +474,7 @@ describe('ReactDOMEventListener', () => {
     }
   });
 
-  it.only('should not warn when setting media attributes that trigger discrete events', () => {
+  it('should not warn when setting media attributes that trigger discrete events', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
 
