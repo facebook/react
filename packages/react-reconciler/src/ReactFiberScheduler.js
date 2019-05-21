@@ -178,13 +178,14 @@ const {
   ReactShouldWarnActingUpdates,
 } = ReactSharedInternals;
 
-type WorkPhase = 0 | 1 | 2 | 3 | 4 | 5;
+type WorkPhase = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 const NotWorking = 0;
 const BatchedPhase = 1;
 const LegacyUnbatchedPhase = 2;
 const FlushSyncPhase = 3;
 const RenderPhase = 4;
 const CommitPhase = 5;
+const BatchedEventPhase = 6;
 
 type RootExitStatus = 0 | 1 | 2 | 3 | 4;
 const RootIncomplete = 0;
@@ -566,13 +567,21 @@ export function flushRoot(root: FiberRoot, expirationTime: ExpirationTime) {
   flushSyncCallbackQueue();
 }
 
-export function flushInteractiveUpdates() {
-  if (workPhase === RenderPhase || workPhase === CommitPhase) {
-    // Can't synchronously flush interactive updates if React is already
-    // working. This is currently a no-op.
-    // TODO: Should we fire a warning? This happens if you synchronously invoke
-    // an input event inside an effect, like with `element.click()`.
+export function flushDiscreteUpdates() {
+  // TODO: we ideally do not want to early reurn for BatchedPhase here either.
+  // Removing this causes act() tests to fail, so we should follow up.
+  if (workPhase === CommitPhase || workPhase === BatchedPhase) {
+    // We're inside the commit phase or batched phase, so we can't
+    // synchronously flush pending work. This is probably a nested event
+    // dispatch triggered by a lifecycle/effect, like `el.focus()`. Exit.
     return;
+  }
+  if (workPhase === RenderPhase) {
+    invariant(
+      false,
+      'unstable_flushDiscreteUpdates: Cannot flush updates when React is ' +
+        'already rendering.',
+    );
   }
   flushPendingDiscreteUpdates();
   if (!revertPassiveEffectsChange) {
@@ -604,21 +613,12 @@ export function deferredUpdates<A>(fn: () => A): A {
   return runWithPriority(NormalPriority, fn);
 }
 
-export function interactiveUpdates<A, B, C, R>(
+export function discreteUpdates<A, B, C, R>(
   fn: (A, B, C) => R,
   a: A,
   b: B,
   c: C,
 ): R {
-  if (workPhase === NotWorking) {
-    // TODO: Remove this call. Instead of doing this automatically, the caller
-    // should explicitly call flushInteractiveUpdates.
-    flushPendingDiscreteUpdates();
-  }
-  if (!revertPassiveEffectsChange) {
-    // TODO: Remove this call for the same reason as above.
-    flushPassiveEffects();
-  }
   return runWithPriority(UserBlockingPriority, fn.bind(null, a, b, c));
 }
 
@@ -660,8 +660,28 @@ export function batchedUpdates<A, R>(fn: A => R, a: A): R {
   }
 }
 
+export function batchedEventUpdates<A, R>(fn: A => R, a: A): R {
+  if (workPhase !== NotWorking) {
+    // We're already working, or inside a batch, so batchedUpdates is a no-op.
+    return fn(a);
+  }
+  const prevWorkPhase = workPhase;
+  workPhase = BatchedEventPhase;
+  try {
+    return fn(a);
+  } finally {
+    workPhase = prevWorkPhase;
+    // Flush the immediate callbacks that were scheduled during this batch
+    flushSyncCallbackQueue();
+  }
+}
+
 export function unbatchedUpdates<A, R>(fn: (a: A) => R, a: A): R {
-  if (workPhase !== BatchedPhase && workPhase !== FlushSyncPhase) {
+  if (
+    workPhase !== BatchedPhase &&
+    workPhase !== FlushSyncPhase &&
+    workPhase !== BatchedEventPhase
+  ) {
     // We're not inside batchedUpdates or flushSync, so unbatchedUpdates is
     // a no-op.
     return fn(a);

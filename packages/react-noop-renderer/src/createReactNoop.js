@@ -1124,7 +1124,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     unbatchedUpdates: NoopRenderer.unbatchedUpdates,
 
-    interactiveUpdates: NoopRenderer.interactiveUpdates,
+    discreteUpdates: NoopRenderer.discreteUpdates,
+
+    flushDiscreteUpdates: NoopRenderer.flushDiscreteUpdates,
 
     flushSync(fn: () => mixed) {
       NoopRenderer.flushSync(fn);

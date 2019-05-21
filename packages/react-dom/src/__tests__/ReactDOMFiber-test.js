@@ -1026,8 +1026,14 @@ describe('ReactDOMFiber', () => {
 
   it('should not update event handlers until commit', () => {
     let ops = [];
+    let eventErrors = [];
     const handlerA = () => ops.push('A');
     const handlerB = () => ops.push('B');
+
+    spyOnProd(console, 'error');
+    window.addEventListener('error', e => {
+      eventErrors.push(e.message);
+    });
 
     class Example extends React.Component {
       state = {flip: false, count: 0};
@@ -1090,12 +1096,16 @@ describe('ReactDOMFiber', () => {
 
     // Because the new click handler has not yet committed, we should still
     // invoke B.
-    expect(ops).toEqual(['B']);
+    expect(ops).toEqual([]);
     ops = [];
 
     // Any click that happens after commit, should invoke A.
     node.click();
     expect(ops).toEqual(['A']);
+    expect(eventErrors[0]).toEqual(
+      'unstable_flushDiscreteUpdates: Cannot flush ' +
+        'updates when React is already rendering.',
+    );
   });
 
   it('should not crash encountering low-priority tree', () => {

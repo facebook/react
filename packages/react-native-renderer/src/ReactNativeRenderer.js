@@ -16,8 +16,9 @@ import {
   findHostInstance,
   findHostInstanceWithWarning,
   batchedUpdates as batchedUpdatesImpl,
-  interactiveUpdates,
-  flushInteractiveUpdates,
+  batchedEventUpdates,
+  discreteUpdates,
+  flushDiscreteUpdates,
   createContainer,
   updateContainer,
   injectIntoDevTools,
@@ -99,8 +100,9 @@ function findNodeHandle(componentOrHandle: any): ?number {
 
 setBatchingImplementation(
   batchedUpdatesImpl,
-  interactiveUpdates,
-  flushInteractiveUpdates,
+  discreteUpdates,
+  flushDiscreteUpdates,
+  batchedEventUpdates,
 );
 
 function computeComponentStackForErrorReporting(reactTag: number): string {
