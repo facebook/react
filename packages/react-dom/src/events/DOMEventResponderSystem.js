@@ -118,7 +118,9 @@ const eventResponderContext: ReactResponderContext = {
       const showWarning = name => {
         warning(
           false,
-          '%s is not available on event objects created from event responder modules (React Flare).',
+          '%s is not available on event objects created from event responder modules (React Flare). ' +
+            'Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.%s }`',
+          name,
           name,
         );
       };
@@ -145,6 +147,21 @@ const eventResponderContext: ReactResponderContext = {
         get() {
           showWarning('defaultPrevented');
         },
+      });
+    } else {
+      // For prod, these are all no-ops
+      const noOp = () => {};
+      possibleEventObject.preventDefault = noOp;
+      possibleEventObject.stopPropagation = noOp;
+      possibleEventObject.isDefaultPrevented = noOp;
+      possibleEventObject.isPropagationStopped = noOp;
+      // $FlowFixMe: we don't need value, Flow thinks we do
+      Object.defineProperty(possibleEventObject, 'nativeEvent', {
+        get() {},
+      });
+      // $FlowFixMe: we don't need value, Flow thinks we do
+      Object.defineProperty(possibleEventObject, 'defaultPrevented', {
+        get() {},
       });
     }
     const eventObject = ((possibleEventObject: any): $Shape<
