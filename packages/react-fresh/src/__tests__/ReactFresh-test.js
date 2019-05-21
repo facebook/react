@@ -13,21 +13,16 @@
 
 let React;
 let ReactDOM;
+let ReactFreshRuntime;
 let Scheduler;
 let act;
+let lastRoot;
 
 describe('ReactFresh', () => {
   let container;
-  let familiesByID;
-  let familiesByType;
-  let newFamilies;
-  let updatedFamilies;
-  let performHotReload;
-  let signaturesByType;
+  let scheduleHotUpdate;
 
   beforeEach(() => {
-    let scheduleHotUpdate;
-    let lastRoot;
     global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
       supportsFiber: true,
       inject: injected => {
@@ -42,24 +37,11 @@ describe('ReactFresh', () => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactFreshRuntime = require('react-fresh/runtime');
     Scheduler = require('scheduler');
     act = require('react-dom/test-utils').act;
     container = document.createElement('div');
     document.body.appendChild(container);
-
-    familiesByID = new Map();
-    familiesByType = new WeakMap();
-
-    if (__DEV__) {
-      performHotReload = function(staleFamilies) {
-        scheduleHotUpdate({
-          root: lastRoot,
-          familiesByType,
-          updatedFamilies,
-          staleFamilies,
-        });
-      };
-    }
   });
 
   afterEach(() => {
@@ -67,26 +49,12 @@ describe('ReactFresh', () => {
   });
 
   function prepare(version) {
-    newFamilies = new Set();
-    updatedFamilies = new Set();
-    signaturesByType = new Map();
     const Component = version();
-
-    // Fill in the signatures.
-    for (let family of newFamilies) {
-      const latestSignature = signaturesByType.get(family.currentType) || null;
-      family.currentSignature = latestSignature;
-    }
-
-    newFamilies = null;
-    updatedFamilies = null;
-    signaturesByType = null;
-
     return Component;
   }
 
   function render(version, props) {
-    const Component = prepare(version);
+    const Component = version();
     act(() => {
       ReactDOM.render(<Component {...props} />, container);
     });
@@ -94,74 +62,18 @@ describe('ReactFresh', () => {
   }
 
   function patch(version) {
-    // Will be filled in by __register__ calls in user code.
-    newFamilies = new Set();
-    updatedFamilies = new Set();
-    signaturesByType = new Map();
     const Component = version();
-
-    // Fill in the signatures.
-    for (let family of newFamilies) {
-      const latestSignature = signaturesByType.get(family.currentType) || null;
-      family.currentSignature = latestSignature;
-    }
-    // Now that all registration and signatures are collected,
-    // find which registrations changed their signatures since last time.
-    const staleFamilies = new Set();
-    for (let family of updatedFamilies) {
-      const latestSignature = signaturesByType.get(family.currentType) || null;
-      if (family.currentSignature !== latestSignature) {
-        family.currentSignature = latestSignature;
-        staleFamilies.add(family);
-      }
-    }
-
-    performHotReload(staleFamilies);
-    newFamilies = null;
-    updatedFamilies = null;
-    signaturesByType = null;
+    const hotUpdate = ReactFreshRuntime.prepareUpdate();
+    scheduleHotUpdate(lastRoot, hotUpdate);
     return Component;
   }
 
   function __register__(type, id) {
-    if (familiesByType.has(type)) {
-      return;
-    }
-    let family = familiesByID.get(id);
-    let isNew = false;
-    if (family === undefined) {
-      isNew = true;
-      family = {currentType: type, currentSignature: null};
-      familiesByID.set(id, family);
-    }
-    const prevType = family.currentType;
-    if (isNew) {
-      // The first time a type is registered, we don't need
-      // any special reconciliation logic. So we won't add it to the map.
-      // Instead, this will happen the firt time it is edited.
-      newFamilies.add(family);
-    } else {
-      family.currentType = type;
-      // Point both previous and next types to this family.
-      familiesByType.set(prevType, family);
-      familiesByType.set(type, family);
-      updatedFamilies.add(family);
-    }
-
-    if (typeof type === 'object' && type !== null) {
-      switch (type.$$typeof) {
-        case Symbol.for('react.forward_ref'):
-          __register__(type.render, id + '$render');
-          break;
-        case Symbol.for('react.memo'):
-          __register__(type.type, id + '$type');
-          break;
-      }
-    }
+    ReactFreshRuntime.register(type, id);
   }
 
-  function __signature__(type, signature) {
-    signaturesByType.set(type, signature);
+  function __signature__(type, id) {
+    ReactFreshRuntime.setSignature(type, id);
   }
 
   it('can preserve state for compatible types', () => {
