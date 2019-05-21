@@ -137,6 +137,26 @@ function runActTests(label, render, unmount) {
         expect(container.innerHTML).toBe('5');
       });
 
+      it('should flush effects only on exiting the outermost act', () => {
+        function App() {
+          React.useEffect(() => {
+            Scheduler.yieldValue(0);
+          });
+          return null;
+        }
+        // let's nest a couple of act() calls
+        act(() => {
+          act(() => {
+            render(<App />, container);
+          });
+          // the effect wouldn't have yielded yet because
+          // we're still inside an act() scope
+          expect(Scheduler).toHaveYielded([]);
+        });
+        // but after exiting the last one, effects get flushed
+        expect(Scheduler).toHaveYielded([0]);
+      });
+
       it('warns if a setState is called outside of act(...)', () => {
         let setValue = null;
         function App() {
@@ -281,7 +301,7 @@ function runActTests(label, render, unmount) {
       });
     });
     describe('asynchronous tests', () => {
-      it('can handle timers', async () => {
+      it('works with timeouts', async () => {
         function App() {
           let [ctr, setCtr] = React.useState(0);
           function doSomething() {
@@ -295,16 +315,17 @@ function runActTests(label, render, unmount) {
           }, []);
           return ctr;
         }
-        act(() => {
-          render(<App />, container);
-        });
+
         await act(async () => {
+          render(<App />, container);
+          // flush a little to start the timer
+          expect(Scheduler).toFlushAndYield([]);
           await sleep(100);
         });
         expect(container.innerHTML).toBe('1');
       });
 
-      it('can handle async/await', async () => {
+      it('flushes microtasks before exiting', async () => {
         function App() {
           let [ctr, setCtr] = React.useState(0);
           async function someAsyncFunction() {
@@ -321,10 +342,7 @@ function runActTests(label, render, unmount) {
         }
 
         await act(async () => {
-          act(() => {
-            render(<App />, container);
-          });
-          // pending promises will close before this ends
+          render(<App />, container);
         });
         expect(container.innerHTML).toEqual('1');
       });
@@ -361,7 +379,7 @@ function runActTests(label, render, unmount) {
         }
       });
 
-      it('commits and effects are guaranteed to be flushed', async () => {
+      it('async commits and effects are guaranteed to be flushed', async () => {
         function App() {
           let [state, setState] = React.useState(0);
           async function something() {
@@ -378,17 +396,12 @@ function runActTests(label, render, unmount) {
         }
 
         await act(async () => {
-          act(() => {
-            render(<App />, container);
-          });
-          expect(container.innerHTML).toBe('0');
-          expect(Scheduler).toHaveYielded([0]);
+          render(<App />, container);
         });
-        // this may seem odd, but it matches user behaviour -
-        // a flash of "0" followed by "1"
+        // exiting act() drains effects and microtasks
 
+        expect(Scheduler).toHaveYielded([0, 1]);
         expect(container.innerHTML).toBe('1');
-        expect(Scheduler).toHaveYielded([1]);
       });
 
       it('propagates errors', async () => {
