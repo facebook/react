@@ -43,6 +43,7 @@ import {
   getCurrentFiberStackInDev,
   getStackByFiberInDevAndProd,
 } from './ReactCurrentFiber';
+import {isCompatibleFamilyForHotReloading} from './ReactFiberHotReloading';
 import {StrictMode} from './ReactTypeOfMode';
 
 let didWarnAboutMaps;
@@ -378,7 +379,12 @@ function ChildReconciler(shouldTrackSideEffects) {
     element: ReactElement,
     expirationTime: ExpirationTime,
   ): Fiber {
-    if (current !== null && current.elementType === element.type) {
+    if (
+      current !== null &&
+      (current.elementType === element.type ||
+        // Keep this check inline so it only runs on the false path:
+        (__DEV__ ? isCompatibleFamilyForHotReloading(current, element) : false))
+    ) {
       // Move based on index
       const existing = useFiber(current, element.props, expirationTime);
       existing.ref = coerceRef(returnFiber, current, element);
@@ -1121,7 +1127,11 @@ function ChildReconciler(shouldTrackSideEffects) {
         if (
           child.tag === Fragment
             ? element.type === REACT_FRAGMENT_TYPE
-            : child.elementType === element.type
+            : child.elementType === element.type ||
+              // Keep this check inline so it only runs on the false path:
+              (__DEV__
+                ? isCompatibleFamilyForHotReloading(child, element)
+                : false)
         ) {
           deleteRemainingChildren(returnFiber, child.sibling);
           const existing = useFiber(
