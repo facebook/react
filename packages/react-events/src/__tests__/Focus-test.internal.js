@@ -39,16 +39,20 @@ const createPointerEvent = (type, data) => {
   return event;
 };
 
+const modulesInit = () => {
+  ReactFeatureFlags = require('shared/ReactFeatureFlags');
+  ReactFeatureFlags.enableEventAPI = true;
+  React = require('react');
+  ReactDOM = require('react-dom');
+  Focus = require('react-events/focus');
+};
+
 describe('Focus event responder', () => {
   let container;
 
   beforeEach(() => {
     jest.resetModules();
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableEventAPI = true;
-    React = require('react');
-    ReactDOM = require('react-dom');
-    Focus = require('react-events/focus');
+    modulesInit();
 
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -107,7 +111,7 @@ describe('Focus event responder', () => {
   describe('onFocus', () => {
     let onFocus, ref, innerRef;
 
-    beforeEach(() => {
+    const componentInit = () => {
       onFocus = jest.fn();
       ref = React.createRef();
       innerRef = React.createRef();
@@ -119,7 +123,9 @@ describe('Focus event responder', () => {
         </Focus>
       );
       ReactDOM.render(element, container);
-    });
+    };
+
+    beforeEach(componentInit);
 
     it('is called after "focus" event', () => {
       ref.current.dispatchEvent(createFocusEvent('focus'));
@@ -203,6 +209,30 @@ describe('Focus event responder', () => {
       expect(onFocus).toHaveBeenCalledWith(
         expect.objectContaining({pointerType: 'keyboard'}),
       );
+    });
+
+    it('is called with the correct pointerType using Tab+altKey on Mac', () => {
+      jest.resetModules();
+      const platformGetter = jest.spyOn(global.navigator, 'platform', 'get');
+      platformGetter.mockReturnValue('MacIntel');
+      modulesInit();
+      componentInit();
+
+      ref.current.dispatchEvent(
+        createPointerEvent('keypress', {
+          key: 'Tab',
+          altKey: true,
+        }),
+      );
+      ref.current.dispatchEvent(createFocusEvent('focus'));
+      expect(onFocus).toHaveBeenCalledTimes(1);
+      expect(onFocus).toHaveBeenCalledWith(
+        expect.objectContaining({
+          pointerType: 'keyboard',
+        }),
+      );
+
+      platformGetter.mockClear();
     });
   });
 
