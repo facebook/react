@@ -51,7 +51,9 @@ export function setListenToResponderEventTypes(
   listenToResponderEventTypesImpl = _listenToResponderEventTypesImpl;
 }
 
-export function setSkipDiscreteUpdateFlushing(_skipDiscreteUpdateFlushing: boolean): void {
+export function setSkipDiscreteUpdateFlushing(
+  _skipDiscreteUpdateFlushing: boolean,
+): void {
   skipDiscreteUpdateFlushing = _skipDiscreteUpdateFlushing;
 }
 
