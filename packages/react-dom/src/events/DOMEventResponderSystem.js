@@ -1001,6 +1001,16 @@ export function generateListeningKey(
 let lastDiscreteEventTimeStamp = 0;
 
 export function shouldflushDiscreteUpdates(timeStamp: number): boolean {
+  // event.timeStamp isn't overly reliable due to inconsistencies in
+  // how different browsers have historically provided the time stamp.
+  // Some browsers provide high-resolution time stamps for all events,
+  // some provide low-resoltion time stamps for all events. FF < 52
+  // even mixes both time stamps together. Some browsers even report
+  // negative time stamps or time stamps that are 0 (iOS9) in some cases.
+  // Given we are only comparing two time stamps with equality (!==),
+  // we are safe from the resolution differences. If the time stamp is 0
+  // we bail-out of preventing the flush, which shouldn't have any
+  // effect on the desired output, other than we over-flush.
   if (timeStamp === 0 || lastDiscreteEventTimeStamp !== timeStamp) {
     lastDiscreteEventTimeStamp = timeStamp;
     return true;
