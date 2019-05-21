@@ -158,15 +158,11 @@ export type ReactResponderEvent = {
   passiveSupported: boolean,
 };
 
-export type ReactResponderDispatchEventOptions = {
-  discrete?: boolean,
-};
-
 export type ReactResponderContext = {
   dispatchEvent: (
     eventObject: Object,
     listener: (Object) => void,
-    options: ReactResponderDispatchEventOptions,
+    discrete: boolean,
   ) => void,
   isTargetWithinElement: (
     childTarget: Element | Document,
