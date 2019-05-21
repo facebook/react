@@ -322,28 +322,6 @@ describe('ReactSuspenseFuzz', () => {
     );
   });
 
-  it('hard-coded cases', () => {
-    const {Text, testResolvedOutput} = createFuzzer();
-
-    testResolvedOutput(
-      <React.Fragment>
-        <Text
-          initialDelay={20}
-          text="A"
-          updates={[{beginAfter: 10, suspendFor: 20}]}
-        />
-        <Suspense fallback="Loading... (B)">
-          <Text
-            initialDelay={10}
-            text="B"
-            updates={[{beginAfter: 30, suspendFor: 50}]}
-          />
-          <Text text="C" />
-        </Suspense>
-      </React.Fragment>,
-    );
-  });
-
   it('generative tests', () => {
     const {generateTestCase, testResolvedOutput} = createFuzzer();
 
@@ -366,5 +344,80 @@ ${prettyFormat(randomTestCase)}
         throw e;
       }
     }
+  });
+
+  describe('hard-coded cases', () => {
+    it('1', () => {
+      const {Text, testResolvedOutput} = createFuzzer();
+      testResolvedOutput(
+        <React.Fragment>
+          <Text
+            initialDelay={20}
+            text="A"
+            updates={[{beginAfter: 10, suspendFor: 20}]}
+          />
+          <Suspense fallback="Loading... (B)">
+            <Text
+              initialDelay={10}
+              text="B"
+              updates={[{beginAfter: 30, suspendFor: 50}]}
+            />
+            <Text text="C" />
+          </Suspense>
+        </React.Fragment>,
+      );
+    });
+
+    it('2', () => {
+      const {Text, Container, testResolvedOutput} = createFuzzer();
+      testResolvedOutput(
+        <React.Fragment>
+          <Suspense fallback="Loading...">
+            <Text initialDelay={7200} text="A" />
+          </Suspense>
+          <Suspense fallback="Loading...">
+            <Container>
+              <Text initialDelay={1000} text="B" />
+              <Text initialDelay={7200} text="C" />
+              <Text initialDelay={9000} text="D" />
+            </Container>
+          </Suspense>
+        </React.Fragment>,
+      );
+    });
+
+    it('3', () => {
+      const {Text, Container, testResolvedOutput} = createFuzzer();
+      testResolvedOutput(
+        <React.Fragment>
+          <Suspense fallback="Loading...">
+            <Text
+              initialDelay={3183}
+              text="A"
+              updates={[
+                {
+                  beginAfter: 2256,
+                  suspendFor: 6696,
+                },
+              ]}
+            />
+            <Text initialDelay={3251} text="B" />
+          </Suspense>
+          <Container>
+            <Text
+              initialDelay={2700}
+              text="C"
+              updates={[
+                {
+                  beginAfter: 3266,
+                  suspendFor: 9139,
+                },
+              ]}
+            />
+            <Text initialDelay={6732} text="D" />
+          </Container>
+        </React.Fragment>,
+      );
+    });
   });
 });
