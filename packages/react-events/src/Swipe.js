@@ -11,7 +11,8 @@ import type {
   ReactResponderEvent,
   ReactResponderContext,
 } from 'shared/ReactTypes';
-import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
+
+import React from 'react';
 
 const targetEventTypes = ['pointerdown'];
 const rootEventTypes = [
@@ -39,11 +40,13 @@ type SwipeEventType = 'swipeleft' | 'swiperight' | 'swipeend' | 'swipemove';
 type SwipeEvent = {|
   target: Element | Document,
   type: SwipeEventType,
+  timeStamp: number,
   diffX?: number,
   diffY?: number,
 |};
 
 function createSwipeEvent(
+  context: ReactResponderContext,
   type: SwipeEventType,
   target: Element | Document,
   eventData?: EventData,
@@ -51,6 +54,7 @@ function createSwipeEvent(
   return {
     target,
     type,
+    timeStamp: context.getTimeStamp(),
     ...eventData,
   };
 }
@@ -64,8 +68,8 @@ function dispatchSwipeEvent(
   eventData?: EventData,
 ) {
   const target = ((state.swipeTarget: any): Element | Document);
-  const syntheticEvent = createSwipeEvent(name, target, eventData);
-  context.dispatchEvent(syntheticEvent, listener, {discrete});
+  const syntheticEvent = createSwipeEvent(context, name, target, eventData);
+  context.dispatchEvent(syntheticEvent, listener, discrete);
 }
 
 type SwipeState = {
@@ -95,6 +99,7 @@ const SwipeResponder = {
       y: 0,
     };
   },
+  allowMultipleHostChildren: false,
   stopLocalPropagation: true,
   onEvent(
     event: ReactResponderEvent,
@@ -254,9 +259,4 @@ const SwipeResponder = {
   },
 };
 
-export default {
-  $$typeof: REACT_EVENT_COMPONENT_TYPE,
-  displayName: 'Swipe',
-  props: null,
-  responder: SwipeResponder,
-};
+export default React.unstable_createEventComponent(SwipeResponder, 'Swipe');

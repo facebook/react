@@ -303,7 +303,7 @@ describe('ReactSuspensePlaceholder', () => {
     });
 
     describe('when suspending during mount', () => {
-      it('properly accounts for base durations when a suspended times out in a sync tree', () => {
+      it('properly accounts for base durations when a suspended times out in a legacy tree', () => {
         ReactNoop.renderLegacySyncRoot(<App shouldSuspend={true} />);
         expect(Scheduler).toHaveYielded([
           'App',
@@ -373,7 +373,7 @@ describe('ReactSuspensePlaceholder', () => {
     });
 
     describe('when suspending during update', () => {
-      it('properly accounts for base durations when a suspended times out in a sync tree', () => {
+      it('properly accounts for base durations when a suspended times out in a legacy tree', () => {
         ReactNoop.renderLegacySyncRoot(
           <App shouldSuspend={false} textRenderDuration={5} />,
         );
@@ -459,7 +459,7 @@ describe('ReactSuspensePlaceholder', () => {
         expect(ReactNoop).toMatchRenderedOutput('Text');
 
         // Show the fallback UI.
-        jest.advanceTimersByTime(750);
+        jest.advanceTimersByTime(900);
         expect(ReactNoop).toMatchRenderedOutput('Loading...');
         expect(onRender).toHaveBeenCalledTimes(2);
 
@@ -479,7 +479,7 @@ describe('ReactSuspensePlaceholder', () => {
           <React.Fragment>
             <App shouldSuspend={true} text="New" textRenderDuration={6} />
             <Suspense fallback={null}>
-              <AsyncText ms={250} text="Sibling" fakeRenderDuration={1} />
+              <AsyncText ms={100} text="Sibling" fakeRenderDuration={1} />
             </Suspense>
           </React.Fragment>,
         );
@@ -495,7 +495,7 @@ describe('ReactSuspensePlaceholder', () => {
         expect(onRender).toHaveBeenCalledTimes(2);
 
         // Resolve the pending promise.
-        jest.advanceTimersByTime(250);
+        jest.advanceTimersByTime(100);
         expect(Scheduler).toHaveYielded([
           'Promise resolved [Loaded]',
           'Promise resolved [Sibling]',

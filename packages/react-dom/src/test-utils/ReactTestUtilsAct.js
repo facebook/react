@@ -12,7 +12,9 @@ import type {Thenable} from 'react-reconciler/src/ReactFiberScheduler';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import ReactDOM from 'react-dom';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
+import {warnAboutMissingMockScheduler} from 'shared/ReactFeatureFlags';
 import enqueueTask from 'shared/enqueueTask';
+import * as Scheduler from 'scheduler';
 
 // Keep in sync with ReactDOMUnstableNativeDependencies.js
 // ReactDOM.js, and ReactTestUtils.js:
@@ -40,16 +42,33 @@ const {ReactShouldWarnActingUpdates} = ReactSharedInternals;
 // this implementation should be exactly the same in
 // ReactTestUtilsAct.js, ReactTestRendererAct.js, createReactNoop.js
 
-// we track the 'depth' of the act() calls with this counter,
-// so we can tell if any async act() calls try to run in parallel.
-let actingUpdatesScopeDepth = 0;
+let hasWarnedAboutMissingMockScheduler = false;
+const flushWork =
+  Scheduler.unstable_flushWithoutYielding ||
+  function() {
+    if (warnAboutMissingMockScheduler === true) {
+      if (hasWarnedAboutMissingMockScheduler === false) {
+        warningWithoutStack(
+          null,
+          'Starting from React v17, the "scheduler" module will need to be mocked ' +
+            'to guarantee consistent behaviour across tests and browsers. To fix this, add the following ' +
+            "to the top of your tests, or in your framework's global config file -\n\n" +
+            'As an example, for jest - \n' +
+            "jest.mock('scheduler', () => require.requireActual('scheduler/unstable_mock'));\n\n" +
+            'For more info, visit https://fb.me/react-mock-scheduler',
+        );
+        hasWarnedAboutMissingMockScheduler = true;
+      }
+    }
+    while (flushPassiveEffects()) {}
+  };
 
-function flushEffectsAndMicroTasks(onDone: (err: ?Error) => void) {
+function flushWorkAndMicroTasks(onDone: (err: ?Error) => void) {
   try {
-    flushPassiveEffects();
+    flushWork();
     enqueueTask(() => {
-      if (flushPassiveEffects()) {
-        flushEffectsAndMicroTasks(onDone);
+      if (flushWork()) {
+        flushWorkAndMicroTasks(onDone);
       } else {
         onDone();
       }
@@ -59,17 +78,21 @@ function flushEffectsAndMicroTasks(onDone: (err: ?Error) => void) {
   }
 }
 
+// we track the 'depth' of the act() calls with this counter,
+// so we can tell if any async act() calls try to run in parallel.
+
+let actingUpdatesScopeDepth = 0;
+
 function act(callback: () => Thenable) {
-  let previousActingUpdatesScopeDepth;
+  let previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
+  actingUpdatesScopeDepth++;
   if (__DEV__) {
-    previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
-    actingUpdatesScopeDepth++;
     ReactShouldWarnActingUpdates.current = true;
   }
 
   function onDone() {
+    actingUpdatesScopeDepth--;
     if (__DEV__) {
-      actingUpdatesScopeDepth--;
       if (actingUpdatesScopeDepth === 0) {
         ReactShouldWarnActingUpdates.current = false;
       }
@@ -119,7 +142,14 @@ function act(callback: () => Thenable) {
         called = true;
         result.then(
           () => {
-            flushEffectsAndMicroTasks((err: ?Error) => {
+            if (actingUpdatesScopeDepth > 1) {
+              onDone();
+              resolve();
+              return;
+            }
+            // we're about to exit the act() scope,
+            // now's the time to flush tasks/effects
+            flushWorkAndMicroTasks((err: ?Error) => {
               onDone();
               if (err) {
                 reject(err);
@@ -147,7 +177,11 @@ function act(callback: () => Thenable) {
 
     // flush effects until none remain, and cleanup
     try {
-      while (flushPassiveEffects()) {}
+      if (actingUpdatesScopeDepth === 1) {
+        // we're about to exit the act() scope,
+        // now's the time to flush effects
+        flushWork();
+      }
       onDone();
     } catch (err) {
       onDone();

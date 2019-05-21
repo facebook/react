@@ -13,6 +13,7 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {CapturedValue} from './ReactCapturedValue';
 import type {Update} from './ReactUpdateQueue';
 import type {Thenable} from './ReactFiberScheduler';
+import type {SuspenseContext} from './ReactFiberSuspenseContext';
 
 import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
 import getComponentName from 'shared/getComponentName';
@@ -41,7 +42,7 @@ import {
   enableSuspenseServerRenderer,
   enableEventAPI,
 } from 'shared/ReactFeatureFlags';
-import {ConcurrentMode, NoContext} from './ReactTypeOfMode';
+import {NoMode, BatchedMode} from './ReactTypeOfMode';
 import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent';
 
 import {createCapturedValue} from './ReactCapturedValue';
@@ -55,6 +56,13 @@ import {
 import {logError} from './ReactFiberCommitWork';
 import {getStackByFiberInDevAndProd} from './ReactCurrentFiber';
 import {popHostContainer, popHostContext} from './ReactFiberHostContext';
+import {markFailedErrorBoundaryForHotReloading} from './ReactFiberHotReloading';
+import {
+  suspenseStackCursor,
+  InvisibleParentSuspenseContext,
+  hasSuspenseContext,
+  popSuspenseContext,
+} from './ReactFiberSuspenseContext';
 import {
   isContextProvider as isLegacyContextProvider,
   popContext as popLegacyContext,
@@ -68,6 +76,7 @@ import {
   isAlreadyFailedLegacyErrorBoundary,
   pingSuspendedRoot,
   resolveRetryThenable,
+  checkForWrongSuspensePriorityInDEV,
 } from './ReactFiberScheduler';
 
 import invariant from 'shared/invariant';
@@ -82,7 +91,7 @@ function createRootErrorUpdate(
   errorInfo: CapturedValue<mixed>,
   expirationTime: ExpirationTime,
 ): Update<mixed> {
-  const update = createUpdate(expirationTime);
+  const update = createUpdate(expirationTime, null);
   // Unmount the root by rendering null.
   update.tag = CaptureUpdate;
   // Caution: React DevTools currently depends on this property
@@ -101,7 +110,7 @@ function createClassErrorUpdate(
   errorInfo: CapturedValue<mixed>,
   expirationTime: ExpirationTime,
 ): Update<mixed> {
-  const update = createUpdate(expirationTime);
+  const update = createUpdate(expirationTime, null);
   update.tag = CaptureUpdate;
   const getDerivedStateFromError = fiber.type.getDerivedStateFromError;
   if (typeof getDerivedStateFromError === 'function') {
@@ -114,6 +123,9 @@ function createClassErrorUpdate(
   const inst = fiber.stateNode;
   if (inst !== null && typeof inst.componentDidCatch === 'function') {
     update.callback = function callback() {
+      if (__DEV__) {
+        markFailedErrorBoundaryForHotReloading(fiber);
+      }
       if (typeof getDerivedStateFromError !== 'function') {
         // To preserve the preexisting retry behavior of error boundaries,
         // we keep track of which ones already failed during this batch.
@@ -141,6 +153,10 @@ function createClassErrorUpdate(
           );
         }
       }
+    };
+  } else if (__DEV__) {
+    update.callback = () => {
+      markFailedErrorBoundaryForHotReloading(fiber);
     };
   }
   return update;
@@ -203,12 +219,19 @@ function throwException(
     // This is a thenable.
     const thenable: Thenable = (value: any);
 
+    checkForWrongSuspensePriorityInDEV(sourceFiber);
+
+    let hasInvisibleParentBoundary = hasSuspenseContext(
+      suspenseStackCursor.current,
+      (InvisibleParentSuspenseContext: SuspenseContext),
+    );
+
     // Schedule the nearest Suspense to re-render the timed out view.
     let workInProgress = returnFiber;
     do {
       if (
         workInProgress.tag === SuspenseComponent &&
-        shouldCaptureSuspense(workInProgress)
+        shouldCaptureSuspense(workInProgress, hasInvisibleParentBoundary)
       ) {
         // Found the nearest boundary.
 
@@ -223,15 +246,15 @@ function throwException(
           thenables.add(thenable);
         }
 
-        // If the boundary is outside of concurrent mode, we should *not*
+        // If the boundary is outside of batched mode, we should *not*
         // suspend the commit. Pretend as if the suspended component rendered
         // null and keep rendering. In the commit phase, we'll schedule a
         // subsequent synchronous update to re-render the Suspense.
         //
         // Note: It doesn't matter whether the component that suspended was
-        // inside a concurrent mode tree. If the Suspense is outside of it, we
+        // inside a batched mode tree. If the Suspense is outside of it, we
         // should *not* suspend the commit.
-        if ((workInProgress.mode & ConcurrentMode) === NoContext) {
+        if ((workInProgress.mode & BatchedMode) === NoMode) {
           workInProgress.effectTag |= DidCapture;
 
           // We're going to commit this fiber even though it didn't complete.
@@ -250,7 +273,7 @@ function throwException(
               // When we try rendering again, we should not reuse the current fiber,
               // since it's known to be in an inconsistent state. Use a force updte to
               // prevent a bail out.
-              const update = createUpdate(Sync);
+              const update = createUpdate(Sync, null);
               update.tag = ForceUpdate;
               enqueueUpdate(sourceFiber, update);
             }
@@ -271,6 +294,7 @@ function throwException(
 
         workInProgress.effectTag |= ShouldCapture;
         workInProgress.expirationTime = renderExpirationTime;
+
         return;
       } else if (
         enableSuspenseServerRenderer &&
@@ -405,6 +429,7 @@ function unwindWork(
       return null;
     }
     case SuspenseComponent: {
+      popSuspenseContext(workInProgress);
       const effectTag = workInProgress.effectTag;
       if (effectTag & ShouldCapture) {
         workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture;
@@ -416,6 +441,7 @@ function unwindWork(
     case DehydratedSuspenseComponent: {
       if (enableSuspenseServerRenderer) {
         // TODO: popHydrationState
+        popSuspenseContext(workInProgress);
         const effectTag = workInProgress.effectTag;
         if (effectTag & ShouldCapture) {
           workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture;
@@ -463,8 +489,23 @@ function unwindInterruptedWork(interruptedWork: Fiber) {
     case HostPortal:
       popHostContainer(interruptedWork);
       break;
+    case SuspenseComponent:
+      popSuspenseContext(interruptedWork);
+      break;
+    case DehydratedSuspenseComponent:
+      if (enableSuspenseServerRenderer) {
+        // TODO: popHydrationState
+        popSuspenseContext(interruptedWork);
+      }
+      break;
     case ContextProvider:
       popProvider(interruptedWork);
+      break;
+    case EventComponent:
+    case EventTarget:
+      if (enableEventAPI) {
+        popHostContext(interruptedWork);
+      }
       break;
     default:
       break;

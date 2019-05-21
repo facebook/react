@@ -12,6 +12,7 @@ import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
+import type {SuspenseContext} from './ReactFiberSuspenseContext';
 
 import checkPropTypes from 'prop-types/checkPropTypes';
 
@@ -70,6 +71,7 @@ import {
   getCurrentFiberStackInDev,
 } from './ReactCurrentFiber';
 import {startWorkTimer, cancelWorkTimer} from './ReactDebugFiberPerf';
+import {resolveFunctionForHotReloading} from './ReactFiberHotReloading';
 
 import {
   mountChildFibers,
@@ -84,9 +86,10 @@ import {
 } from './ReactFiberExpirationTime';
 import {
   ConcurrentMode,
-  NoContext,
+  NoMode,
   ProfileMode,
   StrictMode,
+  BatchedMode,
 } from './ReactTypeOfMode';
 import {
   shouldSetTextContent,
@@ -104,6 +107,16 @@ import {
   pushHostContextForEventComponent,
   pushHostContextForEventTarget,
 } from './ReactFiberHostContext';
+import {
+  suspenseStackCursor,
+  pushSuspenseContext,
+  popSuspenseContext,
+  InvisibleParentSuspenseContext,
+  ForceSuspenseFallback,
+  hasSuspenseContext,
+  setDefaultShallowSuspenseContext,
+  addSubtreeSuspenseContext,
+} from './ReactFiberSuspenseContext';
 import {
   pushProvider,
   propagateContextChange,
@@ -346,18 +359,22 @@ function updateMemoComponent(
       // SimpleMemoComponent codepath doesn't resolve outer props either.
       Component.defaultProps === undefined
     ) {
+      let resolvedType = type;
+      if (__DEV__) {
+        resolvedType = resolveFunctionForHotReloading(type);
+      }
       // If this is a plain function component without default props,
       // and with only the default shallow comparison, we upgrade it
       // to a SimpleMemoComponent to allow fast path updates.
       workInProgress.tag = SimpleMemoComponent;
-      workInProgress.type = type;
+      workInProgress.type = resolvedType;
       if (__DEV__) {
         validateFunctionComponentInDev(workInProgress, type);
       }
       return updateSimpleMemoComponent(
         current,
         workInProgress,
-        type,
+        resolvedType,
         nextProps,
         updateExpirationTime,
         renderExpirationTime,
@@ -474,7 +491,9 @@ function updateSimpleMemoComponent(
     const prevProps = current.memoizedProps;
     if (
       shallowEqual(prevProps, nextProps) &&
-      current.ref === workInProgress.ref
+      current.ref === workInProgress.ref &&
+      // Prevent bailout if the implementation changed due to hot reload:
+      (__DEV__ ? workInProgress.type === current.type : true)
     ) {
       didReceiveUpdate = false;
       if (updateExpirationTime < renderExpirationTime) {
@@ -961,8 +980,8 @@ function updateHostComponent(current, workInProgress, renderExpirationTime) {
 
   // Check the host config to see if the children are offscreen/hidden.
   if (
-    renderExpirationTime !== Never &&
     workInProgress.mode & ConcurrentMode &&
+    renderExpirationTime !== Never &&
     shouldDeprioritizeSubtree(type, nextProps)
   ) {
     // Schedule this fiber to re-render at offscreen priority. Then bailout.
@@ -1021,6 +1040,9 @@ function mountLazyComponent(
     case FunctionComponent: {
       if (__DEV__) {
         validateFunctionComponentInDev(workInProgress, Component);
+        workInProgress.type = Component = resolveFunctionForHotReloading(
+          Component,
+        );
       }
       child = updateFunctionComponent(
         null,
@@ -1042,6 +1064,11 @@ function mountLazyComponent(
       break;
     }
     case ForwardRef: {
+      if (__DEV__) {
+        workInProgress.type = Component = resolveFunctionForHotReloading(
+          Component,
+        );
+      }
       child = updateForwardRef(
         null,
         workInProgress,
@@ -1394,31 +1421,61 @@ function updateSuspenseComponent(
   const mode = workInProgress.mode;
   const nextProps = workInProgress.pendingProps;
 
+  // This is used by DevTools to force a boundary to suspend.
   if (__DEV__) {
     if (shouldSuspend(workInProgress)) {
       workInProgress.effectTag |= DidCapture;
     }
   }
 
-  // We should attempt to render the primary children unless this boundary
-  // already suspended during this render (`alreadyCaptured` is true).
-  let nextState: SuspenseState | null = workInProgress.memoizedState;
+  let suspenseContext: SuspenseContext = suspenseStackCursor.current;
 
-  let nextDidTimeout;
-  if ((workInProgress.effectTag & DidCapture) === NoEffect) {
-    // This is the first attempt.
-    nextState = null;
-    nextDidTimeout = false;
-  } else {
+  let nextState = null;
+  let nextDidTimeout = false;
+
+  if (
+    (workInProgress.effectTag & DidCapture) !== NoEffect ||
+    hasSuspenseContext(
+      suspenseContext,
+      (ForceSuspenseFallback: SuspenseContext),
+    )
+  ) {
+    // This either already captured or is a new mount that was forced into its fallback
+    // state by a parent.
+    const attemptedState: SuspenseState | null = workInProgress.memoizedState;
     // Something in this boundary's subtree already suspended. Switch to
     // rendering the fallback children.
     nextState = {
       fallbackExpirationTime:
-        nextState !== null ? nextState.fallbackExpirationTime : NoWork,
+        attemptedState !== null
+          ? attemptedState.fallbackExpirationTime
+          : NoWork,
     };
     nextDidTimeout = true;
     workInProgress.effectTag &= ~DidCapture;
+  } else {
+    // Attempting the main content
+    if (current === null || current.memoizedState !== null) {
+      // This is a new mount or this boundary is already showing a fallback state.
+      // Mark this subtree context as having at least one invisible parent that could
+      // handle the fallback state.
+      // Boundaries without fallbacks or should be avoided are not considered since
+      // they cannot handle preferred fallback states.
+      if (
+        nextProps.fallback !== undefined &&
+        nextProps.unstable_avoidThisFallback !== true
+      ) {
+        suspenseContext = addSubtreeSuspenseContext(
+          suspenseContext,
+          InvisibleParentSuspenseContext,
+        );
+      }
+    }
   }
+
+  suspenseContext = setDefaultShallowSuspenseContext(suspenseContext);
+
+  pushSuspenseContext(workInProgress, suspenseContext);
 
   if (__DEV__) {
     if ('maxDuration' in nextProps) {
@@ -1472,6 +1529,7 @@ function updateSuspenseComponent(
         tryToClaimNextHydratableInstance(workInProgress);
         // This could've changed the tag if this was a dehydrated suspense component.
         if (workInProgress.tag === DehydratedSuspenseComponent) {
+          popSuspenseContext(workInProgress);
           return updateDehydratedSuspenseComponent(
             null,
             workInProgress,
@@ -1493,8 +1551,8 @@ function updateSuspenseComponent(
         null,
       );
 
-      if ((workInProgress.mode & ConcurrentMode) === NoContext) {
-        // Outside of concurrent mode, we commit the effects from the
+      if ((workInProgress.mode & BatchedMode) === NoMode) {
+        // Outside of batched mode, we commit the effects from the
         // partially completed, timed-out tree, too.
         const progressedState: SuspenseState = workInProgress.memoizedState;
         const progressedPrimaryChild: Fiber | null =
@@ -1546,8 +1604,8 @@ function updateSuspenseComponent(
           NoWork,
         );
 
-        if ((workInProgress.mode & ConcurrentMode) === NoContext) {
-          // Outside of concurrent mode, we commit the effects from the
+        if ((workInProgress.mode & BatchedMode) === NoMode) {
+          // Outside of batched mode, we commit the effects from the
           // partially completed, timed-out tree, too.
           const progressedState: SuspenseState = workInProgress.memoizedState;
           const progressedPrimaryChild: Fiber | null =
@@ -1629,8 +1687,8 @@ function updateSuspenseComponent(
         // schedule a placement.
         // primaryChildFragment.effectTag |= Placement;
 
-        if ((workInProgress.mode & ConcurrentMode) === NoContext) {
-          // Outside of concurrent mode, we commit the effects from the
+        if ((workInProgress.mode & BatchedMode) === NoMode) {
+          // Outside of batched mode, we commit the effects from the
           // partially completed, timed-out tree, too.
           const progressedState: SuspenseState = workInProgress.memoizedState;
           const progressedPrimaryChild: Fiber | null =
@@ -1713,6 +1771,8 @@ function retrySuspenseComponentWithoutHydrating(
   current.nextEffect = null;
   current.effectTag = Deletion;
 
+  popSuspenseContext(workInProgress);
+
   // Upgrade this work in progress to a real Suspense component.
   workInProgress.tag = SuspenseComponent;
   workInProgress.stateNode = null;
@@ -1728,6 +1788,10 @@ function updateDehydratedSuspenseComponent(
   workInProgress: Fiber,
   renderExpirationTime: ExpirationTime,
 ) {
+  pushSuspenseContext(
+    workInProgress,
+    setDefaultShallowSuspenseContext(suspenseStackCursor.current),
+  );
   const suspenseInstance = (workInProgress.stateNode: SuspenseInstance);
   if (current === null) {
     // During the first pass, we'll bail out and not drill into the children.
@@ -2057,6 +2121,68 @@ function bailoutOnAlreadyFinishedWork(
   }
 }
 
+function remountFiber(
+  current: Fiber,
+  oldWorkInProgress: Fiber,
+  newWorkInProgress: Fiber,
+): Fiber | null {
+  if (__DEV__) {
+    const returnFiber = oldWorkInProgress.return;
+    if (returnFiber === null) {
+      throw new Error('Cannot swap the root fiber.');
+    }
+
+    // Disconnect from the old current.
+    // It will get deleted.
+    current.alternate = null;
+    oldWorkInProgress.alternate = null;
+
+    // Connect to the new tree.
+    newWorkInProgress.index = oldWorkInProgress.index;
+    newWorkInProgress.sibling = oldWorkInProgress.sibling;
+    newWorkInProgress.return = oldWorkInProgress.return;
+
+    // Replace the child/sibling pointers above it.
+    if (oldWorkInProgress === returnFiber.child) {
+      returnFiber.child = newWorkInProgress;
+    } else {
+      let prevSibling = returnFiber.child;
+      if (prevSibling === null) {
+        throw new Error('Expected parent to have a child.');
+      }
+      while (prevSibling.sibling !== oldWorkInProgress) {
+        prevSibling = prevSibling.sibling;
+        if (prevSibling === null) {
+          throw new Error('Expected to find the previous sibling.');
+        }
+      }
+      prevSibling.sibling = newWorkInProgress;
+    }
+
+    // Delete the old fiber and place the new one.
+    // Since the old fiber is disconnected, we have to schedule it manually.
+    const last = returnFiber.lastEffect;
+    if (last !== null) {
+      last.nextEffect = current;
+      returnFiber.lastEffect = current;
+    } else {
+      returnFiber.firstEffect = returnFiber.lastEffect = current;
+    }
+    current.nextEffect = null;
+    current.effectTag = Deletion;
+
+    newWorkInProgress.effectTag |= Placement;
+
+    // Restart work from the new fiber.
+    return newWorkInProgress;
+  } else {
+    throw new Error(
+      'Did not expect this call in production. ' +
+        'This is a bug in React. Please file an issue.',
+    );
+  }
+}
+
 function beginWork(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -2064,11 +2190,34 @@ function beginWork(
 ): Fiber | null {
   const updateExpirationTime = workInProgress.expirationTime;
 
+  if (__DEV__) {
+    if (workInProgress._debugNeedsRemount && current !== null) {
+      // This will restart the begin phase with a new fiber.
+      return remountFiber(
+        current,
+        workInProgress,
+        createFiberFromTypeAndProps(
+          workInProgress.type,
+          workInProgress.key,
+          workInProgress.pendingProps,
+          workInProgress._debugOwner || null,
+          workInProgress.mode,
+          workInProgress.expirationTime,
+        ),
+      );
+    }
+  }
+
   if (current !== null) {
     const oldProps = current.memoizedProps;
     const newProps = workInProgress.pendingProps;
 
-    if (oldProps !== newProps || hasLegacyContextChanged()) {
+    if (
+      oldProps !== newProps ||
+      hasLegacyContextChanged() ||
+      // Force a re-render if the implementation changed due to hot reload:
+      (__DEV__ ? workInProgress.type !== current.type : false)
+    ) {
       // If props or context changed, mark the fiber as having performed work.
       // This may be unset if the props are determined to be equal later (memo).
       didReceiveUpdate = true;
@@ -2084,6 +2233,15 @@ function beginWork(
           break;
         case HostComponent:
           pushHostContext(workInProgress);
+          if (
+            workInProgress.mode & ConcurrentMode &&
+            renderExpirationTime !== Never &&
+            shouldDeprioritizeSubtree(workInProgress.type, newProps)
+          ) {
+            // Schedule this fiber to re-render at offscreen priority. Then bailout.
+            workInProgress.expirationTime = workInProgress.childExpirationTime = Never;
+            return null;
+          }
           break;
         case ClassComponent: {
           const Component = workInProgress.type;
@@ -2131,6 +2289,10 @@ function beginWork(
                 renderExpirationTime,
               );
             } else {
+              pushSuspenseContext(
+                workInProgress,
+                setDefaultShallowSuspenseContext(suspenseStackCursor.current),
+              );
               // The primary children do not have pending work with sufficient
               // priority. Bailout.
               const child = bailoutOnAlreadyFinishedWork(
@@ -2146,11 +2308,20 @@ function beginWork(
                 return null;
               }
             }
+          } else {
+            pushSuspenseContext(
+              workInProgress,
+              setDefaultShallowSuspenseContext(suspenseStackCursor.current),
+            );
           }
           break;
         }
         case DehydratedSuspenseComponent: {
           if (enableSuspenseServerRenderer) {
+            pushSuspenseContext(
+              workInProgress,
+              setDefaultShallowSuspenseContext(suspenseStackCursor.current),
+            );
             // We know that this component will suspend again because if it has
             // been unsuspended it has committed as a regular Suspense component.
             // If it needs to be retried, it should have work scheduled on it.
@@ -2185,11 +2356,10 @@ function beginWork(
 
   switch (workInProgress.tag) {
     case IndeterminateComponent: {
-      const elementType = workInProgress.elementType;
       return mountIndeterminateComponent(
         current,
         workInProgress,
-        elementType,
+        workInProgress.type,
         renderExpirationTime,
       );
     }

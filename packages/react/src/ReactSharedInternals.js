@@ -6,32 +6,20 @@
  */
 
 import assign from 'object-assign';
-import * as Scheduler from 'scheduler';
-import * as SchedulerTracing from 'scheduler/tracing';
 import ReactCurrentDispatcher from './ReactCurrentDispatcher';
+import ReactCurrentBatchConfig from './ReactCurrentBatchConfig';
 import ReactCurrentOwner from './ReactCurrentOwner';
 import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
 
 const ReactSharedInternals = {
   ReactCurrentDispatcher,
+  ReactCurrentBatchConfig,
   ReactCurrentOwner,
   // used by act()
   ReactShouldWarnActingUpdates: {current: false},
   // Used by renderers to avoid bundling object-assign twice in UMD bundles:
   assign,
 };
-
-if (__UMD__) {
-  // Re-export the schedule API(s) for UMD bundles.
-  // This avoids introducing a dependency on a new UMD global in a minor update,
-  // Since that would be a breaking change (e.g. for all existing CodeSandboxes).
-  // This re-export is only required for UMD bundles;
-  // CJS bundles use the shared NPM package.
-  Object.assign(ReactSharedInternals, {
-    Scheduler,
-    SchedulerTracing,
-  });
-}
 
 if (__DEV__) {
   Object.assign(ReactSharedInternals, {

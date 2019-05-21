@@ -176,7 +176,7 @@
   "174": "Expected host context to exist. This error is likely caused by a bug in React. Please file an issue.",
   "175": "Expected prepareToHydrateHostInstance() to never be called. This error is likely caused by a bug in React. Please file an issue.",
   "176": "Expected prepareToHydrateHostTextInstance() to never be called. This error is likely caused by a bug in React. Please file an issue.",
-  "177": "Cannot commit the same tree as before. This is probably a bug related to the return field. This error is likely caused by a bug in React. Please file an issue.",
+  "177": "Cannot commit the same tree as before. This error is likely caused by a bug in React. Please file an issue.",
   "178": "Should have next effect. This error is likely caused by a bug in React. Please file an issue.",
   "179": "Should have a pending commit. This error is likely caused by a bug in React. Please file an issue.",
   "180": "Commit phase errors should be scheduled to recover with task priority. This error is likely caused by a bug in React. Please file an issue.",

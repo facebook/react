@@ -131,6 +131,79 @@ describe('Focus event responder', () => {
       target.dispatchEvent(createFocusEvent('focus'));
       expect(onFocus).not.toBeCalled();
     });
+
+    it('is called with the correct pointerType using pointer events', () => {
+      // Pointer mouse
+      ref.current.dispatchEvent(
+        createPointerEvent('pointerdown', {
+          pointerType: 'mouse',
+        }),
+      );
+      ref.current.dispatchEvent(createFocusEvent('focus'));
+      expect(onFocus).toHaveBeenCalledTimes(1);
+      expect(onFocus).toHaveBeenCalledWith(
+        expect.objectContaining({pointerType: 'mouse'}),
+      );
+      ref.current.dispatchEvent(createFocusEvent('blur'));
+
+      // Pointer touch
+      ref.current.dispatchEvent(
+        createPointerEvent('pointerdown', {
+          pointerType: 'touch',
+        }),
+      );
+      ref.current.dispatchEvent(createFocusEvent('focus'));
+      expect(onFocus).toHaveBeenCalledTimes(2);
+      expect(onFocus).toHaveBeenCalledWith(
+        expect.objectContaining({pointerType: 'touch'}),
+      );
+      ref.current.dispatchEvent(createFocusEvent('blur'));
+
+      // Pointer pen
+      ref.current.dispatchEvent(
+        createPointerEvent('pointerdown', {
+          pointerType: 'pen',
+        }),
+      );
+      ref.current.dispatchEvent(createFocusEvent('focus'));
+      expect(onFocus).toHaveBeenCalledTimes(3);
+      expect(onFocus).toHaveBeenCalledWith(
+        expect.objectContaining({pointerType: 'pen'}),
+      );
+    });
+
+    it('is called with the correct pointerType without pointer events', () => {
+      // Mouse
+      ref.current.dispatchEvent(createPointerEvent('mousedown'));
+      ref.current.dispatchEvent(createFocusEvent('focus'));
+      expect(onFocus).toHaveBeenCalledTimes(1);
+      expect(onFocus).toHaveBeenCalledWith(
+        expect.objectContaining({pointerType: 'mouse'}),
+      );
+      ref.current.dispatchEvent(createFocusEvent('blur'));
+
+      // Touch
+      ref.current.dispatchEvent(createPointerEvent('touchstart'));
+      ref.current.dispatchEvent(createFocusEvent('focus'));
+      expect(onFocus).toHaveBeenCalledTimes(2);
+      expect(onFocus).toHaveBeenCalledWith(
+        expect.objectContaining({pointerType: 'touch'}),
+      );
+    });
+
+    it('is called with the correct pointerType using a keyboard', () => {
+      // Keyboard tab
+      ref.current.dispatchEvent(
+        createPointerEvent('keypress', {
+          key: 'Tab',
+        }),
+      );
+      ref.current.dispatchEvent(createFocusEvent('focus'));
+      expect(onFocus).toHaveBeenCalledTimes(1);
+      expect(onFocus).toHaveBeenCalledWith(
+        expect.objectContaining({pointerType: 'keyboard'}),
+      );
+    });
   });
 
   describe('onFocusChange', () => {

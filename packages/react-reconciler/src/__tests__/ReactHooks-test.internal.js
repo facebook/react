@@ -95,7 +95,7 @@ describe('ReactHooks', () => {
       setCounter2(1);
     });
 
-    expect(Scheduler).toFlushAndYield([
+    expect(Scheduler).toHaveYielded([
       'Parent: 1, 1',
       'Child: 1, 1',
       'Effect: 1, 1',
@@ -103,7 +103,7 @@ describe('ReactHooks', () => {
 
     // Update that bails out.
     act(() => setCounter1(1));
-    expect(Scheduler).toFlushAndYield(['Parent: 1, 1']);
+    expect(Scheduler).toHaveYielded(['Parent: 1, 1']);
 
     // This time, one of the state updates but the other one doesn't. So we
     // can't bail out.
@@ -112,7 +112,7 @@ describe('ReactHooks', () => {
       setCounter2(2);
     });
 
-    expect(Scheduler).toFlushAndYield([
+    expect(Scheduler).toHaveYielded([
       'Parent: 1, 2',
       'Child: 1, 2',
       'Effect: 1, 2',
@@ -130,14 +130,15 @@ describe('ReactHooks', () => {
 
     // Because the final values are the same as the current values, the
     // component bails out.
-    expect(Scheduler).toFlushAndYield(['Parent: 1, 2']);
+    expect(Scheduler).toHaveYielded(['Parent: 1, 2']);
 
     // prepare to check SameValue
     act(() => {
       setCounter1(0 / -1);
       setCounter2(NaN);
     });
-    expect(Scheduler).toFlushAndYield([
+
+    expect(Scheduler).toHaveYielded([
       'Parent: 0, NaN',
       'Child: 0, NaN',
       'Effect: 0, NaN',
@@ -151,13 +152,13 @@ describe('ReactHooks', () => {
       setCounter2(NaN);
     });
 
-    expect(Scheduler).toFlushAndYield(['Parent: 0, NaN']);
+    expect(Scheduler).toHaveYielded(['Parent: 0, NaN']);
 
     // check if changing negative 0 to positive 0 does not bail out
     act(() => {
       setCounter1(0);
     });
-    expect(Scheduler).toFlushAndYield([
+    expect(Scheduler).toHaveYielded([
       'Parent: 0, NaN',
       'Child: 0, NaN',
       'Effect: 0, NaN',
@@ -201,14 +202,14 @@ describe('ReactHooks', () => {
       setCounter2(1);
     });
 
-    expect(Scheduler).toFlushAndYield([
+    expect(Scheduler).toHaveYielded([
       'Parent: 1, 1 (light)',
       'Child: 1, 1 (light)',
     ]);
 
     // Update that bails out.
     act(() => setCounter1(1));
-    expect(Scheduler).toFlushAndYield(['Parent: 1, 1 (light)']);
+    expect(Scheduler).toHaveYielded(['Parent: 1, 1 (light)']);
 
     // This time, one of the state updates but the other one doesn't. So we
     // can't bail out.
@@ -217,7 +218,7 @@ describe('ReactHooks', () => {
       setCounter2(2);
     });
 
-    expect(Scheduler).toFlushAndYield([
+    expect(Scheduler).toHaveYielded([
       'Parent: 1, 2 (light)',
       'Child: 1, 2 (light)',
     ]);
@@ -227,10 +228,10 @@ describe('ReactHooks', () => {
     act(() => {
       setCounter1(1);
       setCounter2(2);
+      root.update(<Parent theme="dark" />);
     });
 
-    root.update(<Parent theme="dark" />);
-    expect(Scheduler).toFlushAndYield([
+    expect(Scheduler).toHaveYielded([
       'Parent: 1, 2 (dark)',
       'Child: 1, 2 (dark)',
     ]);
@@ -239,10 +240,10 @@ describe('ReactHooks', () => {
     act(() => {
       setCounter1(1);
       setCounter2(2);
+      root.update(<Parent theme="dark" />);
     });
 
-    root.update(<Parent theme="dark" />);
-    expect(Scheduler).toFlushAndYield(['Parent: 1, 2 (dark)']);
+    expect(Scheduler).toHaveYielded(['Parent: 1, 2 (dark)']);
   });
 
   it('warns about setState second argument', () => {
@@ -275,7 +276,7 @@ describe('ReactHooks', () => {
         'declare it in the component body with useEffect().',
       {withoutStack: true},
     );
-    expect(Scheduler).toFlushAndYield(['Count: 1']);
+    expect(Scheduler).toHaveYielded(['Count: 1']);
     expect(root).toMatchRenderedOutput('1');
   });
 
@@ -309,7 +310,7 @@ describe('ReactHooks', () => {
         'declare it in the component body with useEffect().',
       {withoutStack: true},
     );
-    expect(Scheduler).toFlushAndYield(['Count: 1']);
+    expect(Scheduler).toHaveYielded(['Count: 1']);
     expect(root).toMatchRenderedOutput('1');
   });
 
@@ -347,14 +348,16 @@ describe('ReactHooks', () => {
       });
       return <Child text={text} />;
     }
-
     const root = ReactTestRenderer.create(null, {unstable_isConcurrent: true});
-    root.update(
-      <ThemeProvider>
-        <Parent />
-      </ThemeProvider>,
-    );
-    expect(Scheduler).toFlushAndYield([
+    act(() => {
+      root.update(
+        <ThemeProvider>
+          <Parent />
+        </ThemeProvider>,
+      );
+    });
+
+    expect(Scheduler).toHaveYielded([
       'Theme: light',
       'Parent: 0 (light)',
       'Child: 0 (light)',
@@ -370,7 +373,7 @@ describe('ReactHooks', () => {
 
     // Normal update
     act(() => setCounter(1));
-    expect(Scheduler).toFlushAndYield([
+    expect(Scheduler).toHaveYielded([
       'Parent: 1 (light)',
       'Child: 1 (light)',
       'Effect: 1 (light)',
@@ -379,7 +382,7 @@ describe('ReactHooks', () => {
 
     // Update that doesn't change state, so it bails out
     act(() => setCounter(1));
-    expect(Scheduler).toFlushAndYield(['Parent: 1 (light)']);
+    expect(Scheduler).toHaveYielded(['Parent: 1 (light)']);
     expect(root).toMatchRenderedOutput('1 (light)');
 
     // Update that doesn't change state, but the context changes, too, so it
@@ -389,7 +392,7 @@ describe('ReactHooks', () => {
       setTheme('dark');
     });
 
-    expect(Scheduler).toFlushAndYield([
+    expect(Scheduler).toHaveYielded([
       'Theme: dark',
       'Parent: 1 (dark)',
       'Child: 1 (dark)',
@@ -424,7 +427,7 @@ describe('ReactHooks', () => {
 
     // Normal update
     act(() => setCounter(1));
-    expect(Scheduler).toFlushAndYield(['Parent: 1', 'Child: 1', 'Effect: 1']);
+    expect(Scheduler).toHaveYielded(['Parent: 1', 'Child: 1', 'Effect: 1']);
     expect(root).toMatchRenderedOutput('1');
 
     // Update to the same state. React doesn't know if the queue is empty
@@ -432,7 +435,7 @@ describe('ReactHooks', () => {
     // enter the render phase before we can bail out. But we bail out before
     // rendering the child, and we don't fire any effects.
     act(() => setCounter(1));
-    expect(Scheduler).toFlushAndYield(['Parent: 1']);
+    expect(Scheduler).toHaveYielded(['Parent: 1']);
     expect(root).toMatchRenderedOutput('1');
 
     // Update to the same state again. This times, neither fiber has pending
@@ -443,14 +446,14 @@ describe('ReactHooks', () => {
 
     // This changes the state to something different so it renders normally.
     act(() => setCounter(2));
-    expect(Scheduler).toFlushAndYield(['Parent: 2', 'Child: 2', 'Effect: 2']);
+    expect(Scheduler).toHaveYielded(['Parent: 2', 'Child: 2', 'Effect: 2']);
     expect(root).toMatchRenderedOutput('2');
 
     // prepare to check SameValue
     act(() => {
       setCounter(0);
     });
-    expect(Scheduler).toFlushAndYield(['Parent: 0', 'Child: 0', 'Effect: 0']);
+    expect(Scheduler).toHaveYielded(['Parent: 0', 'Child: 0', 'Effect: 0']);
     expect(root).toMatchRenderedOutput('0');
 
     // Update to the same state for the first time to flush the queue
@@ -458,7 +461,7 @@ describe('ReactHooks', () => {
       setCounter(0);
     });
 
-    expect(Scheduler).toFlushAndYield(['Parent: 0']);
+    expect(Scheduler).toHaveYielded(['Parent: 0']);
     expect(root).toMatchRenderedOutput('0');
 
     // Update again to the same state. Should bail out.
@@ -472,7 +475,7 @@ describe('ReactHooks', () => {
     act(() => {
       setCounter(0 / -1);
     });
-    expect(Scheduler).toFlushAndYield(['Parent: 0', 'Child: 0', 'Effect: 0']);
+    expect(Scheduler).toHaveYielded(['Parent: 0', 'Child: 0', 'Effect: 0']);
     expect(root).toMatchRenderedOutput('0');
   });
 
@@ -503,7 +506,7 @@ describe('ReactHooks', () => {
         return value;
       });
     };
-    act(() => {
+    ReactTestRenderer.unstable_batchedUpdates(() => {
       update(0);
       update(0);
       update(0);
@@ -564,7 +567,7 @@ describe('ReactHooks', () => {
     };
 
     // Update at normal priority
-    act(() => update(n => n * 100));
+    ReactTestRenderer.unstable_batchedUpdates(() => update(n => n * 100));
 
     // The new state is eagerly computed.
     expect(Scheduler).toHaveYielded(['Compute state (1 -> 100)']);
@@ -1717,6 +1720,58 @@ describe('ReactHooks', () => {
         </React.Fragment>,
       ),
     ).toThrow('Hello');
+  });
+
+  // Regression test for https://github.com/facebook/react/issues/15057
+  it('does not fire a false positive warning when previous effect unmounts the component', () => {
+    let {useState, useEffect} = React;
+    let globalListener;
+
+    function A() {
+      const [show, setShow] = useState(true);
+      function hideMe() {
+        setShow(false);
+      }
+      return show ? <B hideMe={hideMe} /> : null;
+    }
+
+    function B(props) {
+      return <C {...props} />;
+    }
+
+    function C({hideMe}) {
+      const [, setState] = useState();
+
+      useEffect(() => {
+        let isStale = false;
+
+        globalListener = () => {
+          if (!isStale) {
+            setState('hello');
+          }
+        };
+
+        return () => {
+          isStale = true;
+          hideMe();
+        };
+      });
+      return null;
+    }
+
+    ReactTestRenderer.act(() => {
+      ReactTestRenderer.create(<A />);
+    });
+
+    expect(() => {
+      globalListener();
+      globalListener();
+    }).toWarnDev([
+      'An update to C inside a test was not wrapped in act',
+      'An update to C inside a test was not wrapped in act',
+      // Note: should *not* warn about updates on unmounted component.
+      // Because there's no way for component to know it got unmounted.
+    ]);
   });
 
   // Regression test for https://github.com/facebook/react/issues/14790

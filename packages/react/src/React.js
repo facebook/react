@@ -7,7 +7,6 @@
 
 import ReactVersion from 'shared/ReactVersion';
 import {
-  REACT_CONCURRENT_MODE_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_PROFILER_TYPE,
   REACT_STRICT_MODE_TYPE,
@@ -15,6 +14,7 @@ import {
 } from 'shared/ReactSymbols';
 
 import {Component, PureComponent} from './ReactBaseClasses';
+import {createEventComponent} from './ReactCreateEventComponent';
 import {createRef} from './ReactCreateRef';
 import {forEach, map, count, toArray, only} from './ReactChildren';
 import {
@@ -40,6 +40,7 @@ import {
   useRef,
   useState,
 } from './ReactHooks';
+import {withSuspenseConfig} from './ReactBatchConfig';
 import {
   createElementWithValidation,
   createFactoryWithValidation,
@@ -50,11 +51,7 @@ import {
 } from './ReactElementValidator';
 import ReactSharedInternals from './ReactSharedInternals';
 import {error, warn} from './withComponentStack';
-import {
-  enableStableConcurrentModeAPIs,
-  enableJSXTransformAPI,
-} from 'shared/ReactFeatureFlags';
-
+import {enableEventAPI, enableJSXTransformAPI} from 'shared/ReactFeatureFlags';
 const React = {
   Children: {
     map,
@@ -99,7 +96,7 @@ const React = {
 
   version: ReactVersion,
 
-  unstable_ConcurrentMode: REACT_CONCURRENT_MODE_TYPE,
+  unstable_withSuspenseConfig: withSuspenseConfig,
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: ReactSharedInternals,
 };
@@ -109,9 +106,8 @@ const React = {
 // don't modify the React object to avoid deopts.
 // Also let's not expose their names in stable builds.
 
-if (enableStableConcurrentModeAPIs) {
-  React.ConcurrentMode = REACT_CONCURRENT_MODE_TYPE;
-  React.unstable_ConcurrentMode = undefined;
+if (enableEventAPI) {
+  React.unstable_createEventComponent = createEventComponent;
 }
 
 if (enableJSXTransformAPI) {

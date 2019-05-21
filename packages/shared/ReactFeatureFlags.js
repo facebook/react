@@ -67,3 +67,9 @@ export const enableEventAPI = false;
 
 // New API for JSX transforms to target - https://github.com/reactjs/rfcs/pull/107
 export const enableJSXTransformAPI = false;
+
+// We will enforce mocking scheduler with scheduler/unstable_mock at some point. (v17?)
+// Till then, we warn about the missing mock, but still fallback to a sync mode compatible version
+export const warnAboutMissingMockScheduler = false;
+// Temporary flag to revert the fix in #15650
+export const revertPassiveEffectsChange = false;

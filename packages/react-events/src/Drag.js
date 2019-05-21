@@ -11,7 +11,8 @@ import type {
   ReactResponderEvent,
   ReactResponderContext,
 } from 'shared/ReactTypes';
-import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
+
+import React from 'react';
 
 const targetEventTypes = ['pointerdown'];
 const rootEventTypes = [
@@ -49,11 +50,13 @@ type DragEventType = 'dragstart' | 'dragend' | 'dragchange' | 'dragmove';
 type DragEvent = {|
   target: Element | Document,
   type: DragEventType,
+  timeStamp: number,
   diffX?: number,
   diffY?: number,
 |};
 
 function createDragEvent(
+  context: ReactResponderContext,
   type: DragEventType,
   target: Element | Document,
   eventData?: EventData,
@@ -61,6 +64,7 @@ function createDragEvent(
   return {
     target,
     type,
+    timeStamp: context.getTimeStamp(),
     ...eventData,
   };
 }
@@ -74,8 +78,8 @@ function dispatchDragEvent(
   eventData?: EventData,
 ): void {
   const target = ((state.dragTarget: any): Element | Document);
-  const syntheticEvent = createDragEvent(name, target, eventData);
-  context.dispatchEvent(syntheticEvent, listener, {discrete});
+  const syntheticEvent = createDragEvent(context, name, target, eventData);
+  context.dispatchEvent(syntheticEvent, listener, discrete);
 }
 
 const DragResponder = {
@@ -91,6 +95,7 @@ const DragResponder = {
       y: 0,
     };
   },
+  allowMultipleHostChildren: false,
   stopLocalPropagation: true,
   onEvent(
     event: ReactResponderEvent,
@@ -244,9 +249,4 @@ const DragResponder = {
   },
 };
 
-export default {
-  $$typeof: REACT_EVENT_COMPONENT_TYPE,
-  displayName: 'Drag',
-  props: null,
-  responder: DragResponder,
-};
+export default React.unstable_createEventComponent(DragResponder, 'Drag');

@@ -788,6 +788,43 @@ describe('ReactFiberEvents', () => {
       expect(componentStackMessage.includes('Test')).toBe(true);
       expect(componentStackMessage.includes('Wrapper')).toBe(true);
     });
+
+    it('should handle unwinding event component fibers in concurrent mode', () => {
+      let resolveThenable;
+
+      const thenable = {
+        then(resolve) {
+          resolveThenable = resolve;
+        },
+      };
+
+      function Async() {
+        Scheduler.yieldValue('Suspend!');
+        throw thenable;
+      }
+
+      function Text(props) {
+        Scheduler.yieldValue(props.text);
+        return props.text;
+      }
+
+      ReactTestRenderer.create(
+        <React.Suspense fallback={<Text text="Loading..." />}>
+          <EventComponent>
+            <div>
+              <Async />
+              <Text text="Sibling" />
+            </div>
+          </EventComponent>
+        </React.Suspense>,
+        {
+          unstable_isConcurrent: true,
+        },
+      );
+
+      expect(Scheduler).toFlushAndYieldThrough(['Suspend!']);
+      resolveThenable();
+    });
   });
 
   describe('ReactDOM', () => {
