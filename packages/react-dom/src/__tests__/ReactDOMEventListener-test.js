@@ -473,4 +473,15 @@ describe('ReactDOMEventListener', () => {
       document.body.removeChild(container);
     }
   });
+
+  it.only('should not warn when setting media attributes that trigger discrete events', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+
+    try {
+      ReactDOM.render(<audio muted={true} />, container);
+    } finally {
+      document.body.removeChild(container);
+    }
+  });
 });
