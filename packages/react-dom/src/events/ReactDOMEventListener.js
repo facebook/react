@@ -20,6 +20,7 @@ import {runExtractedPluginEventsInBatch} from 'events/EventPluginHub';
 import {
   dispatchEventForResponderEventSystem,
   shouldflushDiscreteUpdates,
+  shouldSkipDiscreteUpdateFlushing,
 } from '../events/DOMEventResponderSystem';
 import {isFiberMounted} from 'react-reconciler/reflection';
 import {HostRoot} from 'shared/ReactWorkTags';
@@ -38,10 +39,11 @@ import {
   addEventCaptureListenerWithPassiveFlag,
 } from './EventListener';
 import getEventTarget from './getEventTarget';
-import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 import SimpleEventPlugin from './SimpleEventPlugin';
 import {getRawEventName} from './DOMTopLevelEventTypes';
 import {passiveBrowserEventsSupported} from './checkPassiveEvents';
+
+import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 
 import {enableEventAPI} from 'shared/ReactFeatureFlags';
 
@@ -229,7 +231,10 @@ function trapEventForPluginEventSystem(
 }
 
 function dispatchInteractiveEvent(topLevelType, eventSystemFlags, nativeEvent) {
-  if (!enableEventAPI || shouldflushDiscreteUpdates(nativeEvent.timeStamp)) {
+  if (
+    !shouldSkipDiscreteUpdateFlushing() &&
+    (!enableEventAPI || shouldflushDiscreteUpdates(nativeEvent.timeStamp))
+  ) {
     flushDiscreteUpdates();
   }
   discreteUpdates(dispatchEvent, topLevelType, eventSystemFlags, nativeEvent);

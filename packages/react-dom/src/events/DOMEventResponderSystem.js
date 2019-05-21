@@ -42,12 +42,21 @@ import {
 
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 
-export let listenToResponderEventTypesImpl;
+let listenToResponderEventTypesImpl;
+let skipDiscreteUpdateFlushing = false;
 
 export function setListenToResponderEventTypes(
   _listenToResponderEventTypesImpl: Function,
 ) {
   listenToResponderEventTypesImpl = _listenToResponderEventTypesImpl;
+}
+
+export function setSkipDiscreteUpdateFlushing(_skipDiscreteUpdateFlushing: boolean): void {
+  skipDiscreteUpdateFlushing = _skipDiscreteUpdateFlushing;
+}
+
+export function shouldSkipDiscreteUpdateFlushing(): boolean {
+  return skipDiscreteUpdateFlushing;
 }
 
 type EventObjectType = $Shape<PartialEventObject>;
@@ -605,7 +614,10 @@ export function processEventQueue(): void {
     return;
   }
   if (discrete) {
-    if (shouldflushDiscreteUpdates(currentTimeStamp)) {
+    if (
+      !shouldSkipDiscreteUpdateFlushing() &&
+      shouldflushDiscreteUpdates(currentTimeStamp)
+    ) {
       flushDiscreteUpdates();
     }
     discreteUpdates(() => {

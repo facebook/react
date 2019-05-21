@@ -34,7 +34,10 @@ import {
   setEnabled as ReactBrowserEventEmitterSetEnabled,
 } from '../events/ReactBrowserEventEmitter';
 import {Namespaces, getChildNamespace} from '../shared/DOMNamespaces';
-import {addRootEventTypesForComponentInstance} from '../events/DOMEventResponderSystem';
+import {
+  addRootEventTypesForComponentInstance,
+  setSkipDiscreteUpdateFlushing,
+} from '../events/DOMEventResponderSystem';
 import {
   ELEMENT_NODE,
   TEXT_NODE,
@@ -320,7 +323,9 @@ export function finalizeInitialChildren(
   rootContainerInstance: Container,
   hostContext: HostContext,
 ): boolean {
+  setSkipDiscreteUpdateFlushing(true);
   setInitialProperties(domElement, type, props, rootContainerInstance);
+  setSkipDiscreteUpdateFlushing(false);
   return shouldAutoFocusHostComponent(type, props);
 }
 
