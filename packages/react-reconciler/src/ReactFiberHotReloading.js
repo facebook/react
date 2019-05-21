@@ -29,14 +29,12 @@ import {
   REACT_LAZY_TYPE,
 } from 'shared/ReactSymbols';
 
-type Family = {|
-  currentType: any,
-  currentSignature: null | string,
+export type Family = {|
+  current: any,
 |};
 
-type HotUpdate = {|
+export type HotUpdate = {|
   familiesByType: WeakMap<any, Family>,
-  root: FiberRoot,
   staleFamilies: Set<Family>,
   updatedFamilies: Set<Family>,
 |};
@@ -56,7 +54,7 @@ export function resolveFunctionForHotReloading(type: any): any {
       return type;
     }
     // Use the latest known implementation.
-    return family.currentType;
+    return family.current;
   } else {
     return type;
   }
@@ -94,7 +92,7 @@ export function resolveForwardRefForHotReloading(type: any): any {
       return type;
     }
     // Use the latest known implementation.
-    return family.currentType;
+    return family.current;
   } else {
     return type;
   }
@@ -194,12 +192,12 @@ export function markFailedErrorBoundaryForHotReloading(fiber: Fiber) {
   }
 }
 
-export function scheduleHotUpdate(hotUpdate: HotUpdate): void {
+export function scheduleHotUpdate(root: FiberRoot, hotUpdate: HotUpdate): void {
   if (__DEV__) {
     // TODO: warn if its identity changes over time?
     familiesByType = hotUpdate.familiesByType;
 
-    const {root, staleFamilies, updatedFamilies} = hotUpdate;
+    const {staleFamilies, updatedFamilies} = hotUpdate;
     flushPassiveEffects();
     flushSync(() => {
       scheduleFibersWithFamiliesRecursively(

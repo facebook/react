@@ -453,6 +453,23 @@ const bundles = [
     global: 'ESLintPluginReactHooks',
     externals: [],
   },
+
+  /******* React Fresh *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'react-fresh/babel',
+    global: 'ReactFreshBabelPlugin',
+    externals: [],
+  },
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'react-fresh/runtime',
+    global: 'ReactFreshRuntime',
+    externals: [],
+  },
+
   {
     bundleTypes: [
       FB_WWW_DEV,
