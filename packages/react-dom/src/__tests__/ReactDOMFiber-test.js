@@ -1030,6 +1030,7 @@ describe('ReactDOMFiber', () => {
     const handlerA = () => ops.push('A');
     const handlerB = () => ops.push('B');
 
+    spyOnProd(console, 'error');
     window.addEventListener('error', e => {
       eventErrors.push(e.message);
     });
