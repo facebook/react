@@ -617,7 +617,7 @@ export function processEventQueue(): void {
   }
   if (discrete) {
     if (
-      !shouldSkipDiscreteUpdateFlushing() &&
+      !skipDiscreteUpdateFlushing &&
       shouldflushDiscreteUpdates(currentTimeStamp)
     ) {
       flushDiscreteUpdates();
