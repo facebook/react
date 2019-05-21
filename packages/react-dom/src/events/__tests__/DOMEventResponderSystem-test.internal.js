@@ -861,8 +861,9 @@ describe('DOMEventResponderSystem', () => {
       ReactDOM.render(<Test />, container);
       dispatchClickEvent(document.body);
     }).toWarnDev(
-      'Warning: preventDefault() is not available on event objects created ' +
-        'from event responder modules (React Flare).',
+      'Warning: preventDefault() is not available on event objects created from event responder modules ' +
+        '(React Flare).' +
+        ' Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.preventDefault() }`',
       {withoutStack: true},
     );
     expect(() => {
@@ -872,8 +873,9 @@ describe('DOMEventResponderSystem', () => {
       ReactDOM.render(<Test />, container);
       dispatchClickEvent(document.body);
     }).toWarnDev(
-      'Warning: stopPropagation() is not available on event objects created ' +
-        'from event responder modules (React Flare).',
+      'Warning: stopPropagation() is not available on event objects created from event responder modules ' +
+        '(React Flare).' +
+        ' Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.stopPropagation() }`',
       {withoutStack: true},
     );
     expect(() => {
@@ -883,8 +885,9 @@ describe('DOMEventResponderSystem', () => {
       ReactDOM.render(<Test />, container);
       dispatchClickEvent(document.body);
     }).toWarnDev(
-      'Warning: isDefaultPrevented() is not available on event objects created ' +
-        'from event responder modules (React Flare).',
+      'Warning: isDefaultPrevented() is not available on event objects created from event responder modules ' +
+        '(React Flare).' +
+        ' Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.isDefaultPrevented() }`',
       {withoutStack: true},
     );
     expect(() => {
@@ -894,8 +897,9 @@ describe('DOMEventResponderSystem', () => {
       ReactDOM.render(<Test />, container);
       dispatchClickEvent(document.body);
     }).toWarnDev(
-      'Warning: isPropagationStopped() is not available on event objects created ' +
-        'from event responder modules (React Flare).',
+      'Warning: isPropagationStopped() is not available on event objects created from event responder modules ' +
+        '(React Flare).' +
+        ' Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.isPropagationStopped() }`',
       {withoutStack: true},
     );
     expect(() => {
@@ -905,8 +909,9 @@ describe('DOMEventResponderSystem', () => {
       ReactDOM.render(<Test />, container);
       dispatchClickEvent(document.body);
     }).toWarnDev(
-      'Warning: nativeEvent is not available on event objects created ' +
-        'from event responder modules (React Flare).',
+      'Warning: nativeEvent is not available on event objects created from event responder modules ' +
+        '(React Flare).' +
+        ' Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.nativeEvent }`',
       {withoutStack: true},
     );
     expect(() => {
@@ -916,8 +921,9 @@ describe('DOMEventResponderSystem', () => {
       ReactDOM.render(<Test />, container);
       dispatchClickEvent(document.body);
     }).toWarnDev(
-      'Warning: defaultPrevented is not available on event objects created ' +
-        'from event responder modules (React Flare).',
+      'Warning: defaultPrevented is not available on event objects created from event responder modules ' +
+        '(React Flare).' +
+        ' Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.defaultPrevented }`',
       {withoutStack: true},
     );
 

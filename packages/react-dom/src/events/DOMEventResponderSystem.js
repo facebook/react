@@ -114,39 +114,54 @@ const eventResponderContext: ReactResponderContext = {
         'context.dispatchEvent: "target", "timeStamp", and "type" fields on event object are required.',
       );
     }
-    if (__DEV__) {
-      const showWarning = name => {
+    const showWarning = name => {
+      if (__DEV__) {
         warning(
           false,
-          '%s is not available on event objects created from event responder modules (React Flare).',
+          '%s is not available on event objects created from event responder modules (React Flare). ' +
+            'Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.%s }`',
+          name,
           name,
         );
-      };
-      possibleEventObject.preventDefault = () => {
+      }
+    };
+    possibleEventObject.preventDefault = () => {
+      if (__DEV__) {
         showWarning('preventDefault()');
-      };
-      possibleEventObject.stopPropagation = () => {
+      }
+    };
+    possibleEventObject.stopPropagation = () => {
+      if (__DEV__) {
         showWarning('stopPropagation()');
-      };
-      possibleEventObject.isDefaultPrevented = () => {
+      }
+    };
+    possibleEventObject.isDefaultPrevented = () => {
+      if (__DEV__) {
         showWarning('isDefaultPrevented()');
-      };
-      possibleEventObject.isPropagationStopped = () => {
+      }
+    };
+    possibleEventObject.isPropagationStopped = () => {
+      if (__DEV__) {
         showWarning('isPropagationStopped()');
-      };
-      // $FlowFixMe: we don't need value, Flow thinks we do
-      Object.defineProperty(possibleEventObject, 'nativeEvent', {
-        get() {
+      }
+    };
+    // $FlowFixMe: we don't need value, Flow thinks we do
+    Object.defineProperty(possibleEventObject, 'nativeEvent', {
+      get() {
+        if (__DEV__) {
           showWarning('nativeEvent');
-        },
-      });
-      // $FlowFixMe: we don't need value, Flow thinks we do
-      Object.defineProperty(possibleEventObject, 'defaultPrevented', {
-        get() {
+        }
+      },
+    });
+    // $FlowFixMe: we don't need value, Flow thinks we do
+    Object.defineProperty(possibleEventObject, 'defaultPrevented', {
+      get() {
+        if (__DEV__) {
           showWarning('defaultPrevented');
-        },
-      });
-    }
+        }
+      },
+    });
+
     const eventObject = ((possibleEventObject: any): $Shape<
       PartialEventObject,
     >);
