@@ -1009,8 +1009,6 @@ if (canUseDOM) {
     const firefoxVersion = firefoxUA[1].split('.');
     if (parseInt(firefoxVersion[0], 10) < 53) {
       useTimeStampHeuristic = false;
-    } else {
-      console.log(firefoxVersion[0]);
     }
   }
 }
