@@ -13,6 +13,7 @@
     "LICENSE",
     "README.md",
     "babel.js",
+    "runtime.js",
     "build-info.json",
     "cjs/",
     "umd/"

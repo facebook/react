@@ -462,6 +462,13 @@ const bundles = [
     global: 'ReactFreshBabelPlugin',
     externals: [],
   },
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'react-fresh/runtime',
+    global: 'ReactFreshRuntime',
+    externals: [],
+  },
 
   {
     bundleTypes: [
