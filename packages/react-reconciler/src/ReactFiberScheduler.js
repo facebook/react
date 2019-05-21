@@ -2003,11 +2003,11 @@ function computeMsUntilSuspenseLoadingDelay(
     return 0;
   }
 
-  const minLoadingDurationMs = (suspenseConfig.minLoadingDurationMs: any) | 0;
-  if (minLoadingDurationMs <= 0) {
+  const busyMinDurationMs = (suspenseConfig.busyMinDurationMs: any) | 0;
+  if (busyMinDurationMs <= 0) {
     return 0;
   }
-  const loadingDelayMs = (suspenseConfig.loadingDelayMs: any) | 0;
+  const busyDelayMs = (suspenseConfig.busyDelayMs: any) | 0;
 
   // Compute the time until this render pass would expire.
   const currentTimeMs: number = now();
@@ -2016,12 +2016,12 @@ function computeMsUntilSuspenseLoadingDelay(
     suspenseConfig,
   );
   const timeElapsed = currentTimeMs - eventTimeMs;
-  if (timeElapsed <= loadingDelayMs) {
+  if (timeElapsed <= busyDelayMs) {
     // If we haven't yet waited longer than the initial delay, we don't
     // have to wait any additional time.
     return 0;
   }
-  const msUntilTimeout = loadingDelayMs + minLoadingDurationMs - timeElapsed;
+  const msUntilTimeout = busyDelayMs + busyMinDurationMs - timeElapsed;
   // This is the value that is passed to `setTimeout`.
   return msUntilTimeout;
 }
