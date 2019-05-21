@@ -23,7 +23,6 @@ import type {
   ReactEventComponentInstance,
   ReactResponderContext,
   ReactResponderEvent,
-  ReactResponderDispatchEventOptions,
 } from 'shared/ReactTypes';
 import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
 import {batchedUpdates, interactiveUpdates} from 'events/ReactGenericBatching';
@@ -104,7 +103,7 @@ const eventResponderContext: ReactResponderContext = {
   dispatchEvent(
     possibleEventObject: Object,
     listener: ($Shape<PartialEventObject>) => void,
-    {discrete}: ReactResponderDispatchEventOptions,
+    discrete: boolean,
   ): void {
     validateResponderContext();
     const {target, type, timeStamp} = possibleEventObject;

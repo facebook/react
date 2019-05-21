@@ -403,9 +403,7 @@ describe('DOMEventResponderSystem', () => {
             phase: 'bubble',
             timeStamp: context.getTimeStamp(),
           };
-          context.dispatchEvent(syntheticEvent, props.onMagicClick, {
-            discrete: true,
-          });
+          context.dispatchEvent(syntheticEvent, props.onMagicClick, true);
         }
       },
       onEventCapture: (event, context, props) => {
@@ -416,9 +414,7 @@ describe('DOMEventResponderSystem', () => {
             phase: 'capture',
             timeStamp: context.getTimeStamp(),
           };
-          context.dispatchEvent(syntheticEvent, props.onMagicClick, {
-            discrete: true,
-          });
+          context.dispatchEvent(syntheticEvent, props.onMagicClick, true);
         }
       },
     });
@@ -460,7 +456,7 @@ describe('DOMEventResponderSystem', () => {
         phase,
         timeStamp: context.getTimeStamp(),
       };
-      context.dispatchEvent(pressEvent, props.onPress, {discrete: true});
+      context.dispatchEvent(pressEvent, props.onPress, true);
 
       context.setTimeout(() => {
         if (props.onLongPress) {
@@ -470,9 +466,7 @@ describe('DOMEventResponderSystem', () => {
             phase,
             timeStamp: context.getTimeStamp(),
           };
-          context.dispatchEvent(longPressEvent, props.onLongPress, {
-            discrete: true,
-          });
+          context.dispatchEvent(longPressEvent, props.onLongPress, true);
         }
 
         if (props.onLongPressChange) {
@@ -482,9 +476,11 @@ describe('DOMEventResponderSystem', () => {
             phase,
             timeStamp: context.getTimeStamp(),
           };
-          context.dispatchEvent(longPressChangeEvent, props.onLongPressChange, {
-            discrete: true,
-          });
+          context.dispatchEvent(
+            longPressChangeEvent,
+            props.onLongPressChange,
+            true,
+          );
         }
       }, 500);
     }
@@ -842,9 +838,7 @@ describe('DOMEventResponderSystem', () => {
           type: 'click',
           timeStamp: context.getTimeStamp(),
         };
-        context.dispatchEvent(syntheticEvent, props.onClick, {
-          discrete: true,
-        });
+        context.dispatchEvent(syntheticEvent, props.onClick, true);
       },
     });
 

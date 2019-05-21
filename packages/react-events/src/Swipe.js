@@ -69,7 +69,7 @@ function dispatchSwipeEvent(
 ) {
   const target = ((state.swipeTarget: any): Element | Document);
   const syntheticEvent = createSwipeEvent(context, name, target, eventData);
-  context.dispatchEvent(syntheticEvent, listener, {discrete});
+  context.dispatchEvent(syntheticEvent, listener, discrete);
 }
 
 type SwipeState = {

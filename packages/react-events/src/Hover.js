@@ -86,7 +86,7 @@ function dispatchHoverChangeEvent(
     'hoverchange',
     ((state.hoverTarget: any): Element | Document),
   );
-  context.dispatchEvent(syntheticEvent, listener, {discrete: true});
+  context.dispatchEvent(syntheticEvent, listener, true);
 }
 
 function dispatchHoverStartEvents(
@@ -123,9 +123,7 @@ function dispatchHoverStartEvents(
         'hoverstart',
         ((target: any): Element | Document),
       );
-      context.dispatchEvent(syntheticEvent, props.onHoverStart, {
-        discrete: true,
-      });
+      context.dispatchEvent(syntheticEvent, props.onHoverStart, true);
     }
     if (props.onHoverChange) {
       dispatchHoverChangeEvent(context, props, state);
@@ -183,7 +181,7 @@ function dispatchHoverEndEvents(
         'hoverend',
         ((target: any): Element | Document),
       );
-      context.dispatchEvent(syntheticEvent, props.onHoverEnd, {discrete: true});
+      context.dispatchEvent(syntheticEvent, props.onHoverEnd, true);
     }
     if (props.onHoverChange) {
       dispatchHoverChangeEvent(context, props, state);
@@ -322,9 +320,11 @@ const HoverResponder = {
                     'hovermove',
                     state.hoverTarget,
                   );
-                  context.dispatchEvent(syntheticEvent, props.onHoverMove, {
-                    discrete: false,
-                  });
+                  context.dispatchEvent(
+                    syntheticEvent,
+                    props.onHoverMove,
+                    true,
+                  );
                 }
               }
             }

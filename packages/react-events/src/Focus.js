@@ -93,7 +93,7 @@ function dispatchFocusInEvents(
       target,
       pointerType,
     );
-    context.dispatchEvent(syntheticEvent, props.onFocus, {discrete: true});
+    context.dispatchEvent(syntheticEvent, props.onFocus, true);
   }
   if (props.onFocusChange) {
     const listener = () => {
@@ -105,7 +105,7 @@ function dispatchFocusInEvents(
       target,
       pointerType,
     );
-    context.dispatchEvent(syntheticEvent, listener, {discrete: true});
+    context.dispatchEvent(syntheticEvent, listener, true);
   }
   if (props.onFocusVisibleChange && state.isLocalFocusVisible) {
     const listener = () => {
@@ -117,7 +117,7 @@ function dispatchFocusInEvents(
       target,
       pointerType,
     );
-    context.dispatchEvent(syntheticEvent, listener, {discrete: true});
+    context.dispatchEvent(syntheticEvent, listener, true);
   }
 }
 
@@ -135,7 +135,7 @@ function dispatchFocusOutEvents(
       target,
       pointerType,
     );
-    context.dispatchEvent(syntheticEvent, props.onBlur, {discrete: true});
+    context.dispatchEvent(syntheticEvent, props.onBlur, true);
   }
   if (props.onFocusChange) {
     const listener = () => {
@@ -147,7 +147,7 @@ function dispatchFocusOutEvents(
       target,
       pointerType,
     );
-    context.dispatchEvent(syntheticEvent, listener, {discrete: true});
+    context.dispatchEvent(syntheticEvent, listener, true);
   }
   dispatchFocusVisibleOutEvent(context, props, state);
 }
@@ -169,7 +169,7 @@ function dispatchFocusVisibleOutEvent(
       target,
       pointerType,
     );
-    context.dispatchEvent(syntheticEvent, listener, {discrete: true});
+    context.dispatchEvent(syntheticEvent, listener, true);
     state.isLocalFocusVisible = false;
   }
 }

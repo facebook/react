@@ -211,9 +211,7 @@ function dispatchEvent(
     pointerType,
     event,
   );
-  context.dispatchEvent(syntheticEvent, listener, {
-    discrete,
-  });
+  context.dispatchEvent(syntheticEvent, listener, discrete);
 }
 
 function dispatchPressChangeEvent(

@@ -79,7 +79,7 @@ function dispatchDragEvent(
 ): void {
   const target = ((state.dragTarget: any): Element | Document);
   const syntheticEvent = createDragEvent(context, name, target, eventData);
-  context.dispatchEvent(syntheticEvent, listener, {discrete});
+  context.dispatchEvent(syntheticEvent, listener, discrete);
 }
 
 const DragResponder = {
