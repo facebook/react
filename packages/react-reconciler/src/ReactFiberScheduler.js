@@ -577,11 +577,14 @@ export function flushDiscreteUpdates() {
     return;
   }
   if (workPhase === RenderPhase) {
-    invariant(
-      false,
-      'unstable_flushDiscreteUpdates: Cannot flush updates when React is ' +
-        'already rendering.',
-    );
+    if (__DEV__) {
+      warning(
+        false,
+        'unstable_flushDiscreteUpdates: Cannot flush updates when React is ' +
+          'already rendering.',
+      );
+    }
+    return;
   }
   flushPendingDiscreteUpdates();
   if (!revertPassiveEffectsChange) {
