@@ -431,7 +431,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     // Schedule a high pri update and a low pri update, without rendering in
     // between.
-    ReactNoop.interactiveUpdates(() => {
+    ReactNoop.discreteUpdates(() => {
       // High pri
       ReactNoop.render(<App />);
     });
@@ -1443,7 +1443,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       );
     }
 
-    ReactNoop.interactiveUpdates(() => ReactNoop.render(<Foo />));
+    ReactNoop.discreteUpdates(() => ReactNoop.render(<Foo />));
     expect(Scheduler).toFlushAndYieldThrough(['Foo']);
 
     // Advance some time.
@@ -1504,7 +1504,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       );
     }
 
-    ReactNoop.interactiveUpdates(() => ReactNoop.render(<App />));
+    ReactNoop.discreteUpdates(() => ReactNoop.render(<App />));
     Scheduler.flushAll();
 
     // Warning is not flushed until the commit phase

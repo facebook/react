@@ -178,13 +178,14 @@ const {
   ReactShouldWarnActingUpdates,
 } = ReactSharedInternals;
 
-type WorkPhase = 0 | 1 | 2 | 3 | 4 | 5;
+type WorkPhase = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 const NotWorking = 0;
 const BatchedPhase = 1;
 const LegacyUnbatchedPhase = 2;
 const FlushSyncPhase = 3;
 const RenderPhase = 4;
 const CommitPhase = 5;
+const BatchedEventPhase = 6;
 
 type RootExitStatus = 0 | 1 | 2 | 3 | 4;
 const RootIncomplete = 0;
@@ -567,16 +568,18 @@ export function flushRoot(root: FiberRoot, expirationTime: ExpirationTime) {
 }
 
 export function flushDiscreteUpdates() {
-  if (
-    workPhase === RenderPhase ||
-    workPhase === CommitPhase ||
-    workPhase === BatchedPhase
-  ) {
-    // Can't synchronously flush interactive updates if React is already
-    // working. This is currently a no-op.
-    // TODO: Should we fire a warning? This happens if you synchronously invoke
-    // an input event inside an effect, like with `element.click()`.
+  if (workPhase === CommitPhase || workPhase === BatchedPhase) {
+    // We're inside the commit phase or batched phase, so we can't
+    // synchronously flush pending work. This is probably a nested event
+    // dispatch triggered by a lifecycle/effect, like `el.focus()`. Exit.
     return;
+  }
+  if (workPhase === RenderPhase) {
+    invariant(
+      false,
+      'unstable_flushDiscreteUpdates: Cannot flush updates when React is ' +
+        'already rendering.',
+    );
   }
   flushPendingDiscreteUpdates();
   if (!revertPassiveEffectsChange) {
@@ -655,8 +658,28 @@ export function batchedUpdates<A, R>(fn: A => R, a: A): R {
   }
 }
 
+export function batchedEventUpdates<A, R>(fn: A => R, a: A): R {
+  if (workPhase !== NotWorking) {
+    // We're already working, or inside a batch, so batchedUpdates is a no-op.
+    return fn(a);
+  }
+  const prevWorkPhase = workPhase;
+  workPhase = BatchedEventPhase;
+  try {
+    return fn(a);
+  } finally {
+    workPhase = prevWorkPhase;
+    // Flush the immediate callbacks that were scheduled during this batch
+    flushSyncCallbackQueue();
+  }
+}
+
 export function unbatchedUpdates<A, R>(fn: (a: A) => R, a: A): R {
-  if (workPhase !== BatchedPhase && workPhase !== FlushSyncPhase) {
+  if (
+    workPhase !== BatchedPhase &&
+    workPhase !== FlushSyncPhase &&
+    workPhase !== BatchedEventPhase
+  ) {
     // We're not inside batchedUpdates or flushSync, so unbatchedUpdates is
     // a no-op.
     return fn(a);

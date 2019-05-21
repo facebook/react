@@ -12,12 +12,15 @@ import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
 
 import {
-  batchedUpdates,
+  batchedEventUpdates,
   discreteUpdates,
   flushDiscreteUpdates,
 } from 'events/ReactGenericBatching';
 import {runExtractedPluginEventsInBatch} from 'events/EventPluginHub';
-import {dispatchEventForResponderEventSystem} from '../events/DOMEventResponderSystem';
+import {
+  dispatchEventForResponderEventSystem,
+  shouldflushDiscreteUpdates,
+} from '../events/DOMEventResponderSystem';
 import {isFiberMounted} from 'react-reconciler/reflection';
 import {HostRoot} from 'shared/ReactWorkTags';
 import {
@@ -226,7 +229,9 @@ function trapEventForPluginEventSystem(
 }
 
 function dispatchInteractiveEvent(topLevelType, eventSystemFlags, nativeEvent) {
-  flushDiscreteUpdates(nativeEvent.timeStamp);
+  if (!enableEventAPI || shouldflushDiscreteUpdates(nativeEvent.timeStamp)) {
+    flushDiscreteUpdates();
+  }
   discreteUpdates(dispatchEvent, topLevelType, eventSystemFlags, nativeEvent);
 }
 
@@ -245,7 +250,7 @@ function dispatchEventForPluginEventSystem(
   try {
     // Event queue being processed in the same cycle allows
     // `preventDefault`.
-    batchedUpdates(handleTopLevel, bookKeeping);
+    batchedEventUpdates(handleTopLevel, bookKeeping);
   } finally {
     releaseTopLevelCallbackBookKeeping(bookKeeping);
   }

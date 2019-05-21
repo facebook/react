@@ -26,6 +26,7 @@ import {
   flushRoot,
   createContainer,
   updateContainer,
+  batchedEventUpdates,
   batchedUpdates,
   unbatchedUpdates,
   discreteUpdates,
@@ -483,6 +484,7 @@ setBatchingImplementation(
   batchedUpdates,
   discreteUpdates,
   flushDiscreteUpdates,
+  batchedEventUpdates,
 );
 
 let warnedAboutHydrateAPI = false;
@@ -783,10 +785,14 @@ const ReactDOM: Object = {
 
   unstable_batchedUpdates: batchedUpdates,
 
+  // TODO remove this legacy method, unstable_discreteUpdates replaces it
   unstable_interactiveUpdates: (fn, a, b, c) => {
     flushDiscreteUpdates();
     return discreteUpdates(fn, a, b, c);
   },
+
+  unstable_discreteUpdates: discreteUpdates,
+  unstable_flushDiscreteUpdates: flushDiscreteUpdates,
 
   flushSync: flushSync,
 

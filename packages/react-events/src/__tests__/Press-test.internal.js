@@ -2304,17 +2304,17 @@ describe('Event responder: Press', () => {
     ]);
   });
 
+  function dispatchEventWithTimeStamp(elem, name, timeStamp) {
+    const event = createEvent(name);
+    Object.defineProperty(event, 'timeStamp', {
+      value: timeStamp,
+    });
+    elem.dispatchEvent(event);
+  }
+
   it('should properly only flush sync once when the event systems are mixed', () => {
     const ref = React.createRef();
     let renderCounts = 0;
-
-    function dispatchEvent(name, timeStamp) {
-      const event = createEvent(name);
-      Object.defineProperty(event, 'timeStamp', {
-        value: timeStamp,
-      });
-      ref.current.dispatchEvent(event);
-    }
 
     function MyComponent() {
       const [, updateCounter] = React.useState(0);
@@ -2345,9 +2345,9 @@ describe('Event responder: Press', () => {
     root.render(<MyComponent />);
     Scheduler.flushAll();
 
-    dispatchEvent('pointerdown', 100);
-    dispatchEvent('pointerup', 100);
-    dispatchEvent('click', 100);
+    dispatchEventWithTimeStamp(ref.current, 'pointerdown', 100);
+    dispatchEventWithTimeStamp(ref.current, 'pointerup', 100);
+    dispatchEventWithTimeStamp(ref.current, 'click', 100);
 
     if (__DEV__) {
       expect(renderCounts).toBe(2);
@@ -2361,10 +2361,10 @@ describe('Event responder: Press', () => {
       expect(renderCounts).toBe(2);
     }
 
-    dispatchEvent('pointerdown', 100);
-    dispatchEvent('pointerup', 100);
+    dispatchEventWithTimeStamp(ref.current, 'pointerdown', 100);
+    dispatchEventWithTimeStamp(ref.current, 'pointerup', 100);
     // Ensure the timeStamp logic works
-    dispatchEvent('click', 101);
+    dispatchEventWithTimeStamp(ref.current, 'click', 101);
 
     if (__DEV__) {
       expect(renderCounts).toBe(6);
@@ -2372,6 +2372,73 @@ describe('Event responder: Press', () => {
       expect(renderCounts).toBe(3);
     }
 
+    Scheduler.flushAll();
+    document.body.removeChild(newContainer);
+  });
+
+  it('should properly flush sync when the event systems are mixed with unstable_flushDiscreteUpdates', () => {
+    const ref = React.createRef();
+    let renderCounts = 0;
+
+    function MyComponent() {
+      const [, updateCounter] = React.useState(0);
+      renderCounts++;
+
+      function handlePress() {
+        updateCounter(count => count + 1);
+      }
+
+      return (
+        <div>
+          <Press onPress={handlePress}>
+            <button
+              ref={ref}
+              onClick={() => {
+                // This should flush synchronously
+                ReactDOM.unstable_flushDiscreteUpdates();
+                updateCounter(count => count + 1);
+              }}>
+              Press me
+            </button>
+          </Press>
+        </div>
+      );
+    }
+
+    const newContainer = document.createElement('div');
+    const root = ReactDOM.unstable_createRoot(newContainer);
+    document.body.appendChild(newContainer);
+    root.render(<MyComponent />);
+    Scheduler.flushAll();
+
+    dispatchEventWithTimeStamp(ref.current, 'pointerdown', 100);
+    dispatchEventWithTimeStamp(ref.current, 'pointerup', 100);
+    dispatchEventWithTimeStamp(ref.current, 'click', 100);
+
+    if (__DEV__) {
+      expect(renderCounts).toBe(4);
+    } else {
+      expect(renderCounts).toBe(2);
+    }
+    Scheduler.flushAll();
+    if (__DEV__) {
+      expect(renderCounts).toBe(6);
+    } else {
+      expect(renderCounts).toBe(3);
+    }
+
+    dispatchEventWithTimeStamp(ref.current, 'pointerdown', 100);
+    dispatchEventWithTimeStamp(ref.current, 'pointerup', 100);
+    // Ensure the timeStamp logic works
+    dispatchEventWithTimeStamp(ref.current, 'click', 101);
+
+    if (__DEV__) {
+      expect(renderCounts).toBe(8);
+    } else {
+      expect(renderCounts).toBe(4);
+    }
+
+    Scheduler.flushAll();
     document.body.removeChild(newContainer);
   });
 });

@@ -27,7 +27,7 @@ import type {
 } from 'shared/ReactTypes';
 import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
 import {
-  batchedUpdates,
+  batchedEventUpdates,
   discreteUpdates,
   flushDiscreteUpdates,
 } from 'events/ReactGenericBatching';
@@ -591,12 +591,14 @@ export function processEventQueue(): void {
     return;
   }
   if (discrete) {
-    flushDiscreteUpdates(currentTimeStamp);
+    if (shouldflushDiscreteUpdates(currentTimeStamp)) {
+      flushDiscreteUpdates();
+    }
     discreteUpdates(() => {
-      batchedUpdates(processEvents, events);
+      batchedEventUpdates(processEvents, events);
     });
   } else {
-    batchedUpdates(processEvents, events);
+    batchedEventUpdates(processEvents, events);
   }
 }
 
@@ -994,4 +996,14 @@ export function generateListeningKey(
   // properties again.
   const passiveKey = passive ? '_passive' : '_active';
   return `${topLevelType}${passiveKey}`;
+}
+
+let lastDiscreteEventTimeStamp = 0;
+
+export function shouldflushDiscreteUpdates(timeStamp: number): boolean {
+  if (lastDiscreteEventTimeStamp !== timeStamp) {
+    lastDiscreteEventTimeStamp = timeStamp;
+    return true;
+  }
+  return false;
 }

@@ -46,6 +46,7 @@ import {
   computeExpirationForFiber,
   scheduleWork,
   flushRoot,
+  batchedEventUpdates,
   batchedUpdates,
   unbatchedUpdates,
   flushSync,
@@ -321,6 +322,7 @@ export function updateContainer(
 export {
   flushRoot,
   computeUniqueAsyncExpiration,
+  batchedEventUpdates,
   batchedUpdates,
   unbatchedUpdates,
   deferredUpdates,

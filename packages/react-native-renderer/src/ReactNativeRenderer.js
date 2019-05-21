@@ -16,6 +16,7 @@ import {
   findHostInstance,
   findHostInstanceWithWarning,
   batchedUpdates as batchedUpdatesImpl,
+  batchedEventUpdates,
   discreteUpdates,
   flushDiscreteUpdates,
   createContainer,
@@ -101,6 +102,7 @@ setBatchingImplementation(
   batchedUpdatesImpl,
   discreteUpdates,
   flushDiscreteUpdates,
+  batchedEventUpdates,
 );
 
 function computeComponentStackForErrorReporting(reactTag: number): string {

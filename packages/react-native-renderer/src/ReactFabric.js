@@ -15,6 +15,7 @@ import './ReactFabricInjection';
 import {
   findHostInstance,
   findHostInstanceWithWarning,
+  batchedEventUpdates,
   batchedUpdates as batchedUpdatesImpl,
   discreteUpdates,
   flushDiscreteUpdates,
@@ -96,6 +97,7 @@ setBatchingImplementation(
   batchedUpdatesImpl,
   discreteUpdates,
   flushDiscreteUpdates,
+  batchedEventUpdates,
 );
 
 const roots = new Map();
