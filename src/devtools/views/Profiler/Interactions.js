@@ -45,10 +45,11 @@ function Interactions({ height, width }: {| height: number, width: number |}) {
     selectTab,
   } = useContext(ProfilerContext);
   const { profilerStore } = useContext(StoreContext);
+  const { profilingCache } = profilerStore;
 
   const dataForRoot = profilerStore.getDataForRoot(((rootID: any): number));
 
-  const chartData = profilerStore.cache.getInteractionsChartData({
+  const chartData = profilingCache.getInteractionsChartData({
     rootID: ((rootID: any): number),
   });
 

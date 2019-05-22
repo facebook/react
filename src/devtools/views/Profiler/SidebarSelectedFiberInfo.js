@@ -12,7 +12,7 @@ import styles from './SidebarSelectedFiberInfo.css';
 export type Props = {||};
 
 export default function SidebarSelectedFiberInfo(_: Props) {
-  const { profilingCache, profilerStore } = useContext(StoreContext);
+  const { profilerStore } = useContext(StoreContext);
   const {
     rootID,
     selectCommitIndex,
@@ -21,6 +21,7 @@ export default function SidebarSelectedFiberInfo(_: Props) {
     selectedFiberName,
     selectFiber,
   } = useContext(ProfilerContext);
+  const { profilingCache } = profilerStore;
 
   const commitIndices = profilingCache.getFiberCommits({
     fiberID: ((selectedFiberID: any): number),

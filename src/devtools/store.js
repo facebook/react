@@ -15,15 +15,10 @@ import {
   utfDecodeString,
 } from '../utils';
 import { __DEBUG__ } from '../constants';
-import ProfilingCache from './ProfilingCache';
 import { printStore } from 'src/__tests__/storeSerializer';
 import ProfilerStore from './ProfilerStore';
 
 import type { Element } from './views/Components/types';
-import type {
-  ProfilingDataFrontend,
-  SnapshotNode,
-} from './views/Profiler/types';
 import type { Bridge, ComponentFilter, ElementType } from '../types';
 
 const debug = (methodName, ...args) => {
@@ -236,51 +231,8 @@ export default class Store extends EventEmitter {
     return this._hasOwnerMetadata;
   }
 
-  // TODO (profarc) Update views to use ProfilerStore directly to access this value.
-  get hasProfilingData(): boolean {
-    return this._profilerStore.hasProfilingData;
-  }
-
-  // TODO (profarc) Update views to use ProfilerStore directly to access this value.
-  get isProcessingProfilingData(): boolean {
-    return this._profilerStore.isProcessingData;
-  }
-
-  // TODO (profarc) Update views to use ProfilerStore directly to access this value.
-  get isProfiling(): boolean {
-    return this._profilerStore.isProfiling;
-  }
-
   get numElements(): number {
     return this._weightAcrossRoots;
-  }
-
-  // TODO (profarc) Update views to use ProfilerStore directly to access this value.
-  get profilingCache(): ProfilingCache {
-    return this._profilerStore.cache;
-  }
-
-  // TODO (profarc) Update views to use ProfilerStore directly to access this value.
-  get profilingData(): ProfilingDataFrontend | null {
-    return this._profilerStore.profilingData;
-  }
-  set profilingData(value: ProfilingDataFrontend | null): void {
-    this._profilerStore.profilingData = value;
-  }
-
-  // TODO (profarc) Update views to use ProfilerStore directly to access this value.
-  get profilingOperationsByRootID(): Map<number, Array<Uint32Array>> {
-    return this._profilerStore.inProgressOperationsByRootID;
-  }
-
-  // TODO (profarc) Update views to use ProfilerStore directly to access this value.
-  get profilingScreenshotsByRootID(): Map<number, Map<number, string>> {
-    return this._profilerStore.inProgressScreenshotsByRootID;
-  }
-
-  // TODO (profarc) Update views to use ProfilerStore directly to access this value.
-  get profilingSnapshotsByRootID(): Map<number, Map<number, SnapshotNode>> {
-    return this._profilerStore.initialSnapshotsByRootID;
   }
 
   get profilerStore(): ProfilerStore {
@@ -309,11 +261,6 @@ export default class Store extends EventEmitter {
 
   get supportsReloadAndProfile(): boolean {
     return this._supportsReloadAndProfile;
-  }
-
-  // TODO (profarc) Update views to use ProfilerStore directly to access this method.
-  clearProfilingData(): void {
-    this._profilerStore.clear();
   }
 
   containsElement(id: number): boolean {
@@ -539,16 +486,6 @@ export default class Store extends EventEmitter {
       }
     }
     return false;
-  }
-
-  // TODO (profarc) Update views to use ProfilerStore directly to access this method.
-  startProfiling(): void {
-    this._profilerStore.startProfiling();
-  }
-
-  // TODO (profarc) Update views to use ProfilerStore directly to access this method.
-  stopProfiling(): void {
-    this._profilerStore.stopProfiling();
   }
 
   // TODO Maybe split this into two methods: expand() and collapse()

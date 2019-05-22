@@ -114,30 +114,11 @@ export default class ProfilerStore extends EventEmitter {
     throw Error(`Could not find commit data for root "${rootID}"`);
   }
 
-  get cache(): ProfilingCache {
-    return this._cache;
-  }
-
   // Profiling data has been recorded for at least one root.
   get hasProfilingData(): boolean {
     return (
       this._dataFrontend !== null && this._dataFrontend.dataForRoots.size > 0
     );
-  }
-
-  // TODO (profarc) Remove this getter
-  get initialSnapshotsByRootID(): Map<number, Map<number, SnapshotNode>> {
-    return this._initialSnapshotsByRootID;
-  }
-
-  // TODO (profarc) Remove this getter
-  get inProgressOperationsByRootID(): Map<number, Array<Uint32Array>> {
-    return this._inProgressOperationsByRootID;
-  }
-
-  // TODO (profarc) Remove this getter
-  get inProgressScreenshotsByRootID(): Map<number, Map<number, string>> {
-    return this._inProgressScreenshotsByRootID;
   }
 
   get isProcessingData(): boolean {
@@ -146,6 +127,10 @@ export default class ProfilerStore extends EventEmitter {
 
   get isProfiling(): boolean {
     return this._isProfiling;
+  }
+
+  get profilingCache(): ProfilingCache {
+    return this._cache;
   }
 
   get profilingData(): ProfilingDataFrontend | null {
@@ -159,8 +144,6 @@ export default class ProfilerStore extends EventEmitter {
     this._inProgressScreenshotsByRootID.clear();
     this._cache.invalidate();
 
-    // TODO (profarc) Remove subscriptions to Store for this
-    this._store.emit('profilingData');
     this.emit('profilingData');
   }
 
@@ -175,8 +158,6 @@ export default class ProfilerStore extends EventEmitter {
     // Note that we clear now because any existing data is "stale".
     this._cache.invalidate();
 
-    // TODO (profarc) Remove subscriptions to Store for this
-    this._store.emit('isProfiling');
     this.emit('isProfiling');
   }
 
@@ -282,8 +263,6 @@ export default class ProfilerStore extends EventEmitter {
 
       this._dataBackends.splice(0);
 
-      // TODO (profarc) Remove subscriptions to Store for this
-      this._store.emit('isProcessingData');
       this.emit('isProcessingData');
     }
   };
@@ -320,8 +299,6 @@ export default class ProfilerStore extends EventEmitter {
       // (That would have resolved a now-stale value without any profiling data.)
       this._cache.invalidate();
 
-      // TODO (profarc) Remove subscriptions to Store for this
-      this._store.emit('isProfiling');
       this.emit('isProfiling');
 
       // If we've just finished a profiling session, we need to fetch data stored in each renderer interface
@@ -339,8 +316,6 @@ export default class ProfilerStore extends EventEmitter {
           }
         }
 
-        // TODO (profarc) Remove subscriptions to Store for this
-        this._store.emit('isProcessingData');
         this.emit('isProcessingData');
       }
     }

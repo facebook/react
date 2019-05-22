@@ -34,14 +34,14 @@ describe('ProfilerStore', () => {
       ReactDOM.render(<Parent key="B" count={2} />, containerB);
     });
 
-    utils.act(() => store.startProfiling());
+    utils.act(() => store.profilerStore.startProfiling());
 
     utils.act(() => {
       ReactDOM.render(<Parent key="A" count={4} />, containerA);
       ReactDOM.render(<Parent key="B" count={1} />, containerB);
     });
 
-    utils.act(() => store.stopProfiling());
+    utils.act(() => store.profilerStore.stopProfiling());
 
     const rootA = store.roots[0];
     const rootB = store.roots[1];

@@ -18,7 +18,8 @@ export default function SidebarInteractions(_: Props) {
     selectTab,
   } = useContext(ProfilerContext);
 
-  const { profilingCache, profilerStore } = useContext(StoreContext);
+  const { profilerStore } = useContext(StoreContext);
+  const { profilingCache } = profilerStore;
 
   if (selectedInteractionID === null) {
     return <div className={styles.NothingSelected}>Nothing selected</div>;

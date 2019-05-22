@@ -25,10 +25,11 @@ export type ItemData = {|
 |};
 
 export default function CommitRankedAutoSizer(_: {||}) {
-  const { profilingCache } = useContext(StoreContext);
+  const { profilerStore } = useContext(StoreContext);
   const { rootID, selectedCommitIndex, selectFiber } = useContext(
     ProfilerContext
   );
+  const { profilingCache } = profilerStore;
 
   const deselectCurrentFiber = useCallback(
     event => {

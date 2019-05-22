@@ -47,7 +47,7 @@ describe('profiling charts', () => {
 
       const container = document.createElement('div');
 
-      utils.act(() => store.startProfiling());
+      utils.act(() => store.profilerStore.startProfiling());
       utils.act(() =>
         SchedulerTracing.unstable_trace('mount', Scheduler.unstable_now(), () =>
           ReactDOM.render(<Parent />, container)
@@ -60,20 +60,22 @@ describe('profiling charts', () => {
           () => ReactDOM.render(<Parent />, container)
         )
       );
-      utils.act(() => store.stopProfiling());
+      utils.act(() => store.profilerStore.stopProfiling());
 
       let renderFinished = false;
 
       function Suspender({ commitIndex, rootID }) {
-        const commitTree = store.profilingCache.getCommitTree({
+        const commitTree = store.profilerStore.profilingCache.getCommitTree({
           commitIndex,
           rootID,
         });
-        const chartData = store.profilingCache.getFlamegraphChartData({
-          commitIndex,
-          commitTree,
-          rootID,
-        });
+        const chartData = store.profilerStore.profilingCache.getFlamegraphChartData(
+          {
+            commitIndex,
+            commitTree,
+            rootID,
+          }
+        );
         expect(commitTree).toMatchSnapshot(`${commitIndex}: CommitTree`);
         expect(chartData).toMatchSnapshot(
           `${commitIndex}: FlamegraphChartData`
@@ -127,7 +129,7 @@ describe('profiling charts', () => {
 
       const container = document.createElement('div');
 
-      utils.act(() => store.startProfiling());
+      utils.act(() => store.profilerStore.startProfiling());
       utils.act(() =>
         SchedulerTracing.unstable_trace('mount', Scheduler.unstable_now(), () =>
           ReactDOM.render(<Parent />, container)
@@ -140,20 +142,22 @@ describe('profiling charts', () => {
           () => ReactDOM.render(<Parent />, container)
         )
       );
-      utils.act(() => store.stopProfiling());
+      utils.act(() => store.profilerStore.stopProfiling());
 
       let renderFinished = false;
 
       function Suspender({ commitIndex, rootID }) {
-        const commitTree = store.profilingCache.getCommitTree({
+        const commitTree = store.profilerStore.profilingCache.getCommitTree({
           commitIndex,
           rootID,
         });
-        const chartData = store.profilingCache.getRankedChartData({
-          commitIndex,
-          commitTree,
-          rootID,
-        });
+        const chartData = store.profilerStore.profilingCache.getRankedChartData(
+          {
+            commitIndex,
+            commitTree,
+            rootID,
+          }
+        );
         expect(commitTree).toMatchSnapshot(`${commitIndex}: CommitTree`);
         expect(chartData).toMatchSnapshot(`${commitIndex}: RankedChartData`);
         renderFinished = true;
@@ -203,7 +207,7 @@ describe('profiling charts', () => {
 
       const container = document.createElement('div');
 
-      utils.act(() => store.startProfiling());
+      utils.act(() => store.profilerStore.startProfiling());
       utils.act(() =>
         SchedulerTracing.unstable_trace('mount', Scheduler.unstable_now(), () =>
           ReactDOM.render(<Parent />, container)
@@ -216,14 +220,16 @@ describe('profiling charts', () => {
           () => ReactDOM.render(<Parent />, container)
         )
       );
-      utils.act(() => store.stopProfiling());
+      utils.act(() => store.profilerStore.stopProfiling());
 
       let renderFinished = false;
 
       function Suspender({ commitIndex, rootID }) {
-        const chartData = store.profilingCache.getInteractionsChartData({
-          rootID,
-        });
+        const chartData = store.profilerStore.profilingCache.getInteractionsChartData(
+          {
+            rootID,
+          }
+        );
         expect(chartData).toMatchSnapshot('Interactions');
         renderFinished = true;
         return null;

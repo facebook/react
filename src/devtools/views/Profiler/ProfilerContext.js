@@ -141,8 +141,13 @@ function ProfilerContextController({ children }: Props) {
     }
   }
 
-  const startProfiling = useCallback(() => store.startProfiling(), [store]);
-  const stopProfiling = useCallback(() => store.stopProfiling(), [store]);
+  const startProfiling = useCallback(
+    () => store.profilerStore.startProfiling(),
+    [store]
+  );
+  const stopProfiling = useCallback(() => store.profilerStore.stopProfiling(), [
+    store,
+  ]);
 
   const [
     isCommitFilterEnabled,

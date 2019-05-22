@@ -38,17 +38,17 @@ describe('commit tree', () => {
 
     const container = document.createElement('div');
 
-    utils.act(() => store.startProfiling());
+    utils.act(() => store.profilerStore.startProfiling());
     utils.act(() => ReactDOM.render(<Parent count={1} />, container));
     utils.act(() => ReactDOM.render(<Parent count={3} />, container));
     utils.act(() => ReactDOM.render(<Parent count={2} />, container));
     utils.act(() => ReactDOM.render(<Parent count={0} />, container));
-    utils.act(() => store.stopProfiling());
+    utils.act(() => store.profilerStore.stopProfiling());
 
     let renderFinished = false;
 
     function Suspender({ commitIndex, rootID }) {
-      const commitTree = store.profilingCache.getCommitTree({
+      const commitTree = store.profilerStore.profilingCache.getCommitTree({
         commitIndex,
         rootID,
       });

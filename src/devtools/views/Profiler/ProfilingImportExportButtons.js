@@ -55,7 +55,7 @@ export default function ProfilingImportExportButtons() {
           const profilingDataExport = ((JSON.parse(
             raw
           ): any): ProfilingDataExport);
-          store.profilingData = prepareProfilingDataFrontendFromExport(
+          profilerStore.profilingData = prepareProfilingDataFrontendFromExport(
             profilingDataExport
           );
         } catch (error) {
@@ -76,7 +76,7 @@ export default function ProfilingImportExportButtons() {
       // TODO (profiling) Handle fileReader errors.
       fileReader.readAsText(input.files[0]);
     }
-  }, [modalDialogDispatch, store]);
+  }, [modalDialogDispatch, profilerStore]);
 
   return (
     <Fragment>

@@ -51,11 +51,11 @@ describe('ProfilingCache', () => {
     const container = document.createElement('div');
 
     utils.act(() => ReactDOM.render(<Parent count={2} />, container));
-    utils.act(() => store.startProfiling());
+    utils.act(() => store.profilerStore.startProfiling());
     utils.act(() => ReactDOM.render(<Parent count={3} />, container));
     utils.act(() => ReactDOM.render(<Parent count={1} />, container));
     utils.act(() => ReactDOM.render(<Parent count={0} />, container));
-    utils.act(() => store.stopProfiling());
+    utils.act(() => store.profilerStore.stopProfiling());
 
     let profilingDataForRoot = null;
 
@@ -120,12 +120,12 @@ describe('ProfilingCache', () => {
 
     const container = document.createElement('div');
 
-    utils.act(() => store.startProfiling());
+    utils.act(() => store.profilerStore.startProfiling());
     utils.act(() => ReactDOM.render(<Parent count={2} />, container));
     utils.act(() => ReactDOM.render(<Parent count={3} />, container));
     utils.act(() => ReactDOM.render(<Parent count={1} />, container));
     utils.act(() => ReactDOM.render(<Parent count={0} />, container));
-    utils.act(() => store.stopProfiling());
+    utils.act(() => store.profilerStore.stopProfiling());
 
     const allCommitData = [];
 
@@ -200,11 +200,11 @@ describe('ProfilingCache', () => {
       return null;
     };
 
-    utils.act(() => store.startProfiling());
+    utils.act(() => store.profilerStore.startProfiling());
     utils.act(() =>
       ReactDOM.render(<Grandparent />, document.createElement('div'))
     );
-    utils.act(() => store.stopProfiling());
+    utils.act(() => store.profilerStore.stopProfiling());
 
     let commitData = null;
 
@@ -262,11 +262,11 @@ describe('ProfilingCache', () => {
       return data;
     };
 
-    utils.act(() => store.startProfiling());
+    utils.act(() => store.profilerStore.startProfiling());
     await utils.actAsync(() =>
       ReactDOM.render(<Parent />, document.createElement('div'))
     );
-    utils.act(() => store.stopProfiling());
+    utils.act(() => store.profilerStore.stopProfiling());
 
     const allCommitData = [];
 
@@ -317,16 +317,16 @@ describe('ProfilingCache', () => {
 
     const container = document.createElement('div');
 
-    utils.act(() => store.startProfiling());
+    utils.act(() => store.profilerStore.startProfiling());
     utils.act(() => ReactDOM.render(<Parent count={1} />, container));
     utils.act(() => ReactDOM.render(<Parent count={2} />, container));
     utils.act(() => ReactDOM.render(<Parent count={3} />, container));
-    utils.act(() => store.stopProfiling());
+    utils.act(() => store.profilerStore.stopProfiling());
 
     const allFiberCommits = [];
 
     function Suspender({ fiberID, previousFiberCommits, rootID }) {
-      const fiberCommits = store.profilingCache.getFiberCommits({
+      const fiberCommits = store.profilerStore.profilingCache.getFiberCommits({
         fiberID,
         rootID,
       });
@@ -407,7 +407,7 @@ describe('ProfilingCache', () => {
 
     const container = document.createElement('div');
 
-    utils.act(() => store.startProfiling());
+    utils.act(() => store.profilerStore.startProfiling());
     utils.act(() =>
       SchedulerTracing.unstable_trace(
         'mount: one child',
@@ -422,14 +422,16 @@ describe('ProfilingCache', () => {
         () => ReactDOM.render(<Parent count={2} />, container)
       )
     );
-    utils.act(() => store.stopProfiling());
+    utils.act(() => store.profilerStore.stopProfiling());
 
     let interactions = null;
 
     function Suspender({ previousInteractions, rootID }) {
-      interactions = store.profilingCache.getInteractionsChartData({
-        rootID,
-      }).interactions;
+      interactions = store.profilerStore.profilingCache.getInteractionsChartData(
+        {
+          rootID,
+        }
+      ).interactions;
       if (previousInteractions != null) {
         expect(interactions).toEqual(previousInteractions);
       } else {
