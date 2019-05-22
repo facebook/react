@@ -402,16 +402,20 @@ const eventResponderContext: ReactResponderContext = {
   },
   getEventCurrentTarget(event: ReactResponderEvent): Element {
     validateResponderContext();
-    const target: any = event.target;
-    let currentTarget = target;
-    while (
-      currentTarget.parentNode &&
-      currentTarget.parentNode.nodeType === Node.ELEMENT_NODE &&
-      isTargetWithinEventComponent(currentTarget.parentNode)
-    ) {
-      currentTarget = currentTarget.parentNode;
+    const target = event.target;
+    let fiber = getClosestInstanceFromNode(target);
+    let hostComponent = target;
+
+    while (fiber !== null) {
+      if (fiber.stateNode === currentInstance) {
+        break;
+      }
+      if (fiber.tag === HostComponent) {
+        hostComponent = fiber.stateNode;
+      }
+      fiber = fiber.return;
     }
-    return currentTarget;
+    return ((hostComponent: any): Element);
   },
   getTimeStamp(): number {
     validateResponderContext();
