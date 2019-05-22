@@ -2,8 +2,9 @@
 
 import { ElementTypeForwardRef, ElementTypeMemo } from 'src/types';
 import { formatDuration } from './utils';
+import ProfilerStore from 'src/devtools/ProfilerStore';
 
-import type { CommitDetailsFrontend, CommitTreeFrontend } from './types';
+import type { CommitTree } from './types';
 
 export type ChartNode = {|
   actualDuration: number,
@@ -28,15 +29,19 @@ export type ChartData = {|
 const cachedChartData: Map<string, ChartData> = new Map();
 
 export function getChartData({
-  commitDetails,
   commitIndex,
   commitTree,
+  profilerStore,
+  rootID,
 }: {|
-  commitDetails: CommitDetailsFrontend,
   commitIndex: number,
-  commitTree: CommitTreeFrontend,
+  commitTree: CommitTree,
+  profilerStore: ProfilerStore,
+  rootID: number,
 |}): ChartData {
-  const { actualDurations, rootID, selfDurations } = commitDetails;
+  const commitDatum = profilerStore.getCommitData(rootID, commitIndex);
+
+  const { fiberActualDurations, fiberSelfDurations } = commitDatum;
   const { nodes } = commitTree;
 
   const key = `${rootID}-${commitIndex}`;
@@ -62,9 +67,9 @@ export function getChartData({
 
     const { children, displayName, key, treeBaseDuration, type } = node;
 
-    const actualDuration = actualDurations.get(id) || 0;
-    const selfDuration = selfDurations.get(id) || 0;
-    const didRender = actualDurations.has(id);
+    const actualDuration = fiberActualDurations.get(id) || 0;
+    const selfDuration = fiberSelfDurations.get(id) || 0;
+    const didRender = fiberActualDurations.has(id);
 
     const name = displayName || 'Anonymous';
     const maybeKey = key !== null ? ` key="${key}"` : '';
@@ -131,7 +136,7 @@ export function getChartData({
     walkTree(id, baseDuration, 1);
   }
 
-  actualDurations.forEach((duration, id) => {
+  fiberActualDurations.forEach((duration, id) => {
     const node = nodes.get(id);
     if (node != null) {
       let currentID = node.parentID;

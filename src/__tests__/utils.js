@@ -2,10 +2,10 @@
 
 import typeof ReactTestRenderer from 'react-test-renderer';
 
-import type { ElementType } from 'src/types';
-
 import type Bridge from 'src/bridge';
 import type Store from 'src/devtools/store';
+import type { ProfilingDataFrontend } from 'src/devtools/views/Profiler/types';
+import type { ElementType } from 'src/types';
 
 export function act(callback: Function): void {
   const TestUtils = require('react-dom/test-utils');
@@ -136,54 +136,44 @@ export function requireTestRenderer(): ReactTestRenderer {
 export function exportImportHelper(
   bridge: Bridge,
   store: Store,
-  rendererID: number,
   rootID: number
 ): void {
   const { act } = require('./utils');
   const {
-    prepareExportedProfilingSummary,
-    prepareImportedProfilingData,
+    prepareProfilingDataExport,
+    prepareProfilingDataFrontendFromExport,
   } = require('src/devtools/views/Profiler/utils');
 
-  let exportedProfilingDataJsonString = '';
-  const onExportFile = ({ contents }) => {
-    if (typeof contents === 'string') {
-      exportedProfilingDataJsonString = (contents: string);
-    }
-  };
-  bridge.addListener('exportFile', onExportFile);
+  const { profilerStore } = store;
 
-  act(() => {
-    const exportProfilingSummary = prepareExportedProfilingSummary(
-      store.profilingOperations,
-      store.profilingSnapshots,
-      rendererID,
-      rootID
-    );
-    bridge.send('exportProfilingSummary', exportProfilingSummary);
-  });
+  expect(profilerStore.profilingData).not.toBeNull();
 
-  // Cleanup to be able to call this again on the same bridge without memory leaks.
-  bridge.removeListener('exportFile', onExportFile);
+  const profilingDataFrontendInitial = ((profilerStore.profilingData: any): ProfilingDataFrontend);
 
-  expect(typeof exportedProfilingDataJsonString).toBe('string');
-  expect(exportedProfilingDataJsonString).not.toBe('');
-
-  const profilingData = prepareImportedProfilingData(
-    exportedProfilingDataJsonString
+  const profilingDataExport = prepareProfilingDataExport(
+    profilingDataFrontendInitial
   );
+
+  // Simulate writing/reading to disk.
+  const serializedProfilingDataExport = JSON.stringify(
+    profilingDataExport,
+    null,
+    2
+  );
+  const parsedProfilingDataExport = JSON.parse(serializedProfilingDataExport);
+
+  const profilingDataFrontend = prepareProfilingDataFrontendFromExport(
+    (parsedProfilingDataExport: any)
+  );
+
   // Sanity check that profiling snapshots are serialized correctly.
-  expect(store.profilingSnapshots.get(rootID)).toEqual(
-    profilingData.profilingSnapshots.get(rootID)
-  );
-  expect(store.profilingOperations.get(rootID)).toEqual(
-    profilingData.profilingOperations.get(rootID)
-  );
+  expect(profilingDataFrontendInitial).toEqual(profilingDataFrontend);
 
   // Snapshot the JSON-parsed object, rather than the raw string, because Jest formats the diff nicer.
-  expect(profilingData).toMatchSnapshot('imported data');
+  expect(serializedProfilingDataExport).toMatchSnapshot('imported data');
 
   act(() => {
-    store.profilingData = profilingData;
+    // Apply the new exported-then-reimported data so tests can re-run assertions.
+    profilerStore.profilingData = profilingDataFrontend;
   });
 }

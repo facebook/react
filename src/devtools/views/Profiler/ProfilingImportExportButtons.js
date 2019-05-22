@@ -5,20 +5,20 @@ import { ProfilerContext } from './ProfilerContext';
 import { ModalDialogContext } from '../ModalDialog';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
-import { BridgeContext, StoreContext } from '../context';
+import { StoreContext } from '../context';
 import {
-  prepareExportedProfilingSummary,
-  prepareImportedProfilingData,
+  prepareProfilingDataExport,
+  prepareProfilingDataFrontendFromExport,
 } from './utils';
 
 import styles from './ProfilingImportExportButtons.css';
 
+import type { ProfilingDataExport } from './types';
+
 export default function ProfilingImportExportButtons() {
-  const bridge = useContext(BridgeContext);
-  const { isProfiling, rendererID, rootHasProfilingData, rootID } = useContext(
-    ProfilerContext
-  );
+  const { isProfiling, rendererID, rootID } = useContext(ProfilerContext);
   const store = useContext(StoreContext);
+  const { profilerStore } = store;
 
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -29,20 +29,15 @@ export default function ProfilingImportExportButtons() {
       return;
     }
 
-    const exportedProfilingSummary = prepareExportedProfilingSummary(
-      store.profilingOperations,
-      store.profilingSnapshots,
-      rootID,
-      rendererID
-    );
-    bridge.send('exportProfilingSummary', exportedProfilingSummary);
-  }, [
-    bridge,
-    rendererID,
-    rootID,
-    store.profilingOperations,
-    store.profilingSnapshots,
-  ]);
+    if (profilerStore.profilingData !== null) {
+      const profilingDataExport = prepareProfilingDataExport(
+        profilerStore.profilingData
+      );
+
+      // TODO (profarc) Generate anchor "download" tag and click it
+      console.log('profilingDataExport:', profilingDataExport);
+    }
+  }, [rendererID, rootID, profilerStore.profilingData]);
 
   const uploadData = useCallback(() => {
     if (inputRef.current !== null) {
@@ -57,7 +52,12 @@ export default function ProfilingImportExportButtons() {
       fileReader.addEventListener('load', () => {
         try {
           const raw = ((fileReader.result: any): string);
-          store.profilingData = prepareImportedProfilingData(raw);
+          const profilingDataExport = ((JSON.parse(
+            raw
+          ): any): ProfilingDataExport);
+          store.profilingData = prepareProfilingDataFrontendFromExport(
+            profilingDataExport
+          );
         } catch (error) {
           modalDialogDispatch({
             type: 'SHOW',
@@ -97,7 +97,7 @@ export default function ProfilingImportExportButtons() {
       </Button>
       {store.supportsFileDownloads && (
         <Button
-          disabled={isProfiling || !rootHasProfilingData}
+          disabled={isProfiling || !profilerStore.hasProfilingData}
           onClick={downloadData}
           title="Save profile..."
         >

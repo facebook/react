@@ -62,59 +62,45 @@ describe('profiling charts', () => {
       );
       utils.act(() => store.stopProfiling());
 
-      let suspenseResolved = false;
+      let renderFinished = false;
 
-      function Suspender({ commitIndex, rendererID, rootID }) {
-        const profilingSummary = store.profilingCache.ProfilingSummary.read({
-          rendererID,
-          rootID,
-        });
-        const commitDetails = store.profilingCache.CommitDetails.read({
-          commitIndex,
-          rendererID,
-          rootID,
-        });
-        suspenseResolved = true;
+      function Suspender({ commitIndex, rootID }) {
         const commitTree = store.profilingCache.getCommitTree({
           commitIndex,
-          profilingSummary,
+          rootID,
         });
         const chartData = store.profilingCache.getFlamegraphChartData({
-          commitDetails,
           commitIndex,
           commitTree,
+          rootID,
         });
         expect(commitTree).toMatchSnapshot(`${commitIndex}: CommitTree`);
         expect(chartData).toMatchSnapshot(
           `${commitIndex}: FlamegraphChartData`
         );
+        renderFinished = true;
         return null;
       }
 
-      const rendererID = utils.getRendererID();
       const rootID = store.roots[0];
 
       for (let commitIndex = 0; commitIndex < 2; commitIndex++) {
-        suspenseResolved = false;
+        renderFinished = false;
 
         await utils.actAsync(
           () =>
             TestRenderer.create(
               <React.Suspense fallback={null}>
-                <Suspender
-                  commitIndex={commitIndex}
-                  rendererID={rendererID}
-                  rootID={rootID}
-                />
+                <Suspender commitIndex={commitIndex} rootID={rootID} />
               </React.Suspense>
             ),
           3
         );
 
-        expect(suspenseResolved).toBe(true);
+        expect(renderFinished).toBe(true);
       }
 
-      expect(suspenseResolved).toBe(true);
+      expect(renderFinished).toBe(true);
 
       done();
     });
@@ -156,54 +142,40 @@ describe('profiling charts', () => {
       );
       utils.act(() => store.stopProfiling());
 
-      let suspenseResolved = false;
+      let renderFinished = false;
 
-      function Suspender({ commitIndex, rendererID, rootID }) {
-        const profilingSummary = store.profilingCache.ProfilingSummary.read({
-          rendererID,
-          rootID,
-        });
-        const commitDetails = store.profilingCache.CommitDetails.read({
-          commitIndex,
-          rendererID,
-          rootID,
-        });
-        suspenseResolved = true;
+      function Suspender({ commitIndex, rootID }) {
         const commitTree = store.profilingCache.getCommitTree({
           commitIndex,
-          profilingSummary,
+          rootID,
         });
         const chartData = store.profilingCache.getRankedChartData({
-          commitDetails,
           commitIndex,
           commitTree,
+          rootID,
         });
         expect(commitTree).toMatchSnapshot(`${commitIndex}: CommitTree`);
         expect(chartData).toMatchSnapshot(`${commitIndex}: RankedChartData`);
+        renderFinished = true;
         return null;
       }
 
-      const rendererID = utils.getRendererID();
       const rootID = store.roots[0];
 
       for (let commitIndex = 0; commitIndex < 2; commitIndex++) {
-        suspenseResolved = false;
+        renderFinished = false;
 
         await utils.actAsync(
           () =>
             TestRenderer.create(
               <React.Suspense fallback={null}>
-                <Suspender
-                  commitIndex={commitIndex}
-                  rendererID={rendererID}
-                  rootID={rootID}
-                />
+                <Suspender commitIndex={commitIndex} rootID={rootID} />
               </React.Suspense>
             ),
           3
         );
 
-        expect(suspenseResolved).toBe(true);
+        expect(renderFinished).toBe(true);
       }
 
       done();
@@ -246,47 +218,33 @@ describe('profiling charts', () => {
       );
       utils.act(() => store.stopProfiling());
 
-      let suspenseResolved = false;
+      let renderFinished = false;
 
-      function Suspender({ commitIndex, rendererID, rootID }) {
-        const profilingSummary = store.profilingCache.ProfilingSummary.read({
-          rendererID,
-          rootID,
-        });
-        const { interactions } = store.profilingCache.Interactions.read({
-          rendererID,
-          rootID,
-        });
-        suspenseResolved = true;
+      function Suspender({ commitIndex, rootID }) {
         const chartData = store.profilingCache.getInteractionsChartData({
-          interactions,
-          profilingSummary,
+          rootID,
         });
         expect(chartData).toMatchSnapshot('Interactions');
+        renderFinished = true;
         return null;
       }
 
-      const rendererID = utils.getRendererID();
       const rootID = store.roots[0];
 
       for (let commitIndex = 0; commitIndex < 2; commitIndex++) {
-        suspenseResolved = false;
+        renderFinished = false;
 
         await utils.actAsync(
           () =>
             TestRenderer.create(
               <React.Suspense fallback={null}>
-                <Suspender
-                  commitIndex={commitIndex}
-                  rendererID={rendererID}
-                  rootID={rootID}
-                />
+                <Suspender commitIndex={commitIndex} rootID={rootID} />
               </React.Suspense>
             ),
           3
         );
 
-        expect(suspenseResolved).toBe(true);
+        expect(renderFinished).toBe(true);
       }
 
       done();

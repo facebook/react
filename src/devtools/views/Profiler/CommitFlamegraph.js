@@ -13,7 +13,7 @@ import { StoreContext } from '../context';
 import styles from './CommitFlamegraph.css';
 
 import type { ChartData, ChartNode } from './FlamegraphChartBuilder';
-import type { CommitDetailsFrontend, CommitTreeFrontend } from './types';
+import type { CommitTree } from './types';
 
 export type ItemData = {|
   chartData: ChartData,
@@ -26,7 +26,7 @@ export type ItemData = {|
 
 export default function CommitFlamegraphAutoSizer(_: {||}) {
   const { profilingCache } = useContext(StoreContext);
-  const { rendererID, rootID, selectedCommitIndex, selectFiber } = useContext(
+  const { rootID, selectedCommitIndex, selectFiber } = useContext(
     ProfilerContext
   );
 
@@ -38,39 +38,22 @@ export default function CommitFlamegraphAutoSizer(_: {||}) {
     [selectFiber]
   );
 
-  const profilingSummary = profilingCache.ProfilingSummary.read({
-    rendererID: ((rendererID: any): number),
-    rootID: ((rootID: any): number),
-  });
-
-  let commitDetails: CommitDetailsFrontend | null = null;
-  let commitTree: CommitTreeFrontend | null = null;
+  let commitTree: CommitTree | null = null;
   let chartData: ChartData | null = null;
   if (selectedCommitIndex !== null) {
-    commitDetails = profilingCache.CommitDetails.read({
+    commitTree = profilingCache.getCommitTree({
       commitIndex: selectedCommitIndex,
-      rendererID: ((rendererID: any): number),
       rootID: ((rootID: any): number),
     });
 
-    commitTree = profilingCache.getCommitTree({
-      commitIndex: selectedCommitIndex,
-      profilingSummary,
-    });
-
     chartData = profilingCache.getFlamegraphChartData({
-      commitDetails,
       commitIndex: selectedCommitIndex,
       commitTree,
+      rootID: ((rootID: any): number),
     });
   }
 
-  if (
-    commitDetails != null &&
-    commitTree != null &&
-    chartData != null &&
-    chartData.depth > 0
-  ) {
+  if (commitTree != null && chartData != null && chartData.depth > 0) {
     return (
       <div className={styles.Container} onClick={deselectCurrentFiber}>
         <AutoSizer>
@@ -79,8 +62,7 @@ export default function CommitFlamegraphAutoSizer(_: {||}) {
             // by the time this render prop function is called, the values of the `let` variables have not changed.
             <CommitFlamegraph
               chartData={((chartData: any): ChartData)}
-              commitDetails={((commitDetails: any): CommitDetailsFrontend)}
-              commitTree={((commitTree: any): CommitTreeFrontend)}
+              commitTree={((commitTree: any): CommitTree)}
               height={height}
               width={width}
             />
@@ -95,19 +77,12 @@ export default function CommitFlamegraphAutoSizer(_: {||}) {
 
 type Props = {|
   chartData: ChartData,
-  commitDetails: CommitDetailsFrontend,
-  commitTree: CommitTreeFrontend,
+  commitTree: CommitTree,
   height: number,
   width: number,
 |};
 
-function CommitFlamegraph({
-  chartData,
-  commitDetails,
-  commitTree,
-  height,
-  width,
-}: Props) {
+function CommitFlamegraph({ chartData, commitTree, height, width }: Props) {
   const { selectFiber, selectedFiberID } = useContext(ProfilerContext);
 
   const selectedChartNodeIndex = useMemo<number>(() => {

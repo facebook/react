@@ -16,7 +16,7 @@ import {
 import { StoreContext } from '../context';
 import Store from '../../store';
 
-import type { ImportedProfilingData } from './types';
+import type { ProfilingDataFrontend } from './types';
 
 export type TabID = 'flame-chart' | 'ranked-chart' | 'interactions';
 
@@ -72,7 +72,7 @@ ProfilerContext.displayName = 'ProfilerContext';
 
 type StoreProfilingState = {|
   hasProfilingData: boolean,
-  profilingData: ImportedProfilingData | null,
+  profilingData: ProfilingDataFrontend | null,
   isProfiling: boolean,
 |};
 
@@ -117,11 +117,11 @@ function ProfilerContextController({ children }: Props) {
     rendererID = store.getRendererIDForElement(selectedElementID);
     rootID = store.getRootIDForElement(selectedElementID);
     rootHasProfilingData =
-      rootID === null ? false : store.profilingOperations.has(rootID);
+      rootID === null ? false : store.profilingOperationsByRootID.has(rootID);
   } else if (store.roots.length > 0) {
     // If no root is selected, assume the first root; many React apps are single root anyway.
     rootID = store.roots[0];
-    rootHasProfilingData = store.profilingOperations.has(rootID);
+    rootHasProfilingData = store.profilingOperationsByRootID.has(rootID);
     rendererID = store.getRendererIDForElement(rootID);
   }
 

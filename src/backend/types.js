@@ -5,6 +5,7 @@ import type {
   InspectedElement,
   Owner,
 } from 'src/devtools/views/Components/types';
+import type { Interaction } from 'src/devtools/views/Profiler/types';
 
 type BundleType =
   | 0 // PROD
@@ -115,51 +116,33 @@ export type ReactRenderer = {
   currentDispatcherRef?: {| current: null | Dispatcher |},
 };
 
-export type InteractionBackend = {|
-  id: number,
-  name: string,
+export type CommitDataBackend = {|
+  duration: number,
+  // Tuple of fiber ID and actual duration
+  fiberActualDurations: Array<[number, number]>,
+  // Tuple of fiber ID and computed "self" duration
+  fiberSelfDurations: Array<[number, number]>,
+  interactionIDs: Array<number>,
+  priorityLevel: string | null,
   timestamp: number,
 |};
 
-export type CommitDetailsBackend = {|
-  commitIndex: number,
-  // An interleaved array: fiberID at [i], actualDuration at [i + 1], computed selfDuration at [i + 2].
-  durations: Array<number>,
-  interactions: Array<InteractionBackend>,
-  priorityLevel: string | null,
+export type ProfilingDataForRootBackend = {|
+  commitData: Array<CommitDataBackend>,
+  displayName: string,
+  // Tuple of Fiber ID and base duration
+  initialTreeBaseDurations: Array<[number, number]>,
+  // Tuple of Interaction ID and commit indices
+  interactionCommits: Array<[number, Array<number>]>,
+  interactions: Array<[number, Interaction]>,
   rootID: number,
 |};
 
-export type FiberCommitsBackend = {|
-  commitDurations: Array<number>,
-  fiberID: number,
-  rootID: number,
-|};
-
-export type InteractionWithCommitsBackend = {|
-  ...InteractionBackend,
-  commits: Array<number>,
-|};
-
-export type InteractionsBackend = {|
-  interactions: Array<InteractionWithCommitsBackend>,
-  rootID: number,
-|};
-
-export type ProfilingSummaryBackend = {|
-  commitDurations: Array<number>,
-  commitTimes: Array<number>,
-  // An interleaved array: fiberID at [i], initialTreeBaseDuration at [i + 1].
-  initialTreeBaseDurations: Array<number>,
-  interactionCount: number,
-  rootID: number,
-|};
-
-export type ExportedProfilingDataFromRenderer = {|
-  version: 3,
-  profilingSummary: ProfilingSummaryBackend,
-  commitDetails: Array<CommitDetailsBackend>,
-  interactions: InteractionsBackend,
+// Profiling data collected by the renderer interface.
+// This information will be passed to the frontend and combined with info it collects.
+export type ProfilingDataBackend = {|
+  dataForRoots: Array<ProfilingDataForRootBackend>,
+  rendererID: number,
 |};
 
 export type PathFrame = {|
@@ -178,21 +161,12 @@ export type RendererInterface = {
   findNativeByFiberID: (id: number) => ?Array<NativeType>,
   flushInitialOperations: () => void,
   getBestMatchForTrackedPath: () => PathMatch | null,
-  getCommitDetails: (
-    rootID: number,
-    commitIndex: number
-  ) => CommitDetailsBackend,
   getFiberIDFromNative: (
     component: NativeType,
     findNearestUnfilteredAncestor?: boolean
   ) => number | null,
-  getFiberCommits: (rootID: number, fiberID: number) => FiberCommitsBackend,
-  getInteractions: (rootID: number) => InteractionsBackend,
+  getProfilingData(): ProfilingDataBackend,
   getOwnersList: (id: number) => Array<Owner> | null,
-  getExportedProfilingData: (
-    rootID: number
-  ) => ExportedProfilingDataFromRenderer,
-  getProfilingSummary: (rootID: number) => ProfilingSummaryBackend,
   getPathForElement: (id: number) => Array<PathFrame> | null,
   handleCommitFiberRoot: (fiber: Object, commitPriority?: number) => void,
   handleCommitFiberUnmount: (fiber: Object) => void,

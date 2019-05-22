@@ -9,14 +9,13 @@ import {
 } from 'src/constants';
 import { utfDecodeString } from 'src/utils';
 import { ElementTypeRoot } from 'src/types';
-import Store from 'src/devtools/store';
+import ProfilerStore from 'src/devtools/ProfilerStore';
 
 import type { ElementType } from 'src/types';
 import type {
-  CommitTreeFrontend,
-  CommitTreeNodeFrontend,
-  ProfilingSnapshotNode,
-  ProfilingSummaryFrontend,
+  CommitTree,
+  CommitTreeNode,
+  ProfilingDataForRootFrontend,
 } from 'src/devtools/views/Profiler/types';
 
 const debug = (methodName, ...args) => {
@@ -30,36 +29,40 @@ const debug = (methodName, ...args) => {
   }
 };
 
-const rootToCommitTreeMap: Map<number, Array<CommitTreeFrontend>> = new Map();
+const rootToCommitTreeMap: Map<number, Array<CommitTree>> = new Map();
 
 export function getCommitTree({
   commitIndex,
-  profilingSummary,
-  store,
+  profilerStore,
+  rootID,
 }: {|
   commitIndex: number,
-  profilingSummary: ProfilingSummaryFrontend,
-  store: Store,
-|}): CommitTreeFrontend {
-  const { rootID } = profilingSummary;
-
+  profilerStore: ProfilerStore,
+  rootID: number,
+|}): CommitTree {
   if (!rootToCommitTreeMap.has(rootID)) {
     rootToCommitTreeMap.set(rootID, []);
   }
 
   const commitTrees = ((rootToCommitTreeMap.get(
     rootID
-  ): any): Array<CommitTreeFrontend>);
+  ): any): Array<CommitTree>);
 
   if (commitIndex < commitTrees.length) {
     return commitTrees[commitIndex];
   }
 
-  const { profilingData } = store;
-  const profilingOperations =
-    profilingData != null
-      ? profilingData.profilingOperations
-      : store.profilingOperations;
+  const { profilingData } = profilerStore;
+  if (profilingData === null) {
+    throw Error(`No profiling data available`);
+  }
+
+  const dataForRoot = profilingData.dataForRoots.get(rootID);
+  if (dataForRoot == null) {
+    throw Error(`Could not find profiling data for root "${rootID}"`);
+  }
+
+  const { operations } = dataForRoot;
 
   // Commits are generated sequentially and cached.
   // If this is the very first commit, start with the cached snapshot and apply the first mutation.
@@ -67,32 +70,12 @@ export function getCommitTree({
   if (commitIndex === 0) {
     const nodes = new Map();
 
-    const { profilingData } = store;
-    const profilingSnapshots =
-      profilingData != null
-        ? profilingData.profilingSnapshots.get(rootID)
-        : store.profilingSnapshots.get(rootID);
-
-    if (profilingSnapshots == null) {
-      throw Error(`Could not find profiling snapshot for root "${rootID}"`);
-    }
-
     // Construct the initial tree.
-    recursivelyInitializeTree(
-      rootID,
-      0,
-      nodes,
-      profilingSummary.initialTreeBaseDurations,
-      profilingSnapshots
-    );
+    recursivelyInitializeTree(rootID, 0, nodes, dataForRoot);
 
     // Mutate the tree
-    const commitOperations = profilingOperations.get(rootID);
-    if (commitOperations != null && commitIndex < commitOperations.length) {
-      const commitTree = updateTree(
-        { nodes, rootID },
-        commitOperations[commitIndex]
-      );
+    if (operations != null && commitIndex < operations.length) {
+      const commitTree = updateTree({ nodes, rootID }, operations[commitIndex]);
 
       if (__DEBUG__) {
         __printTree(commitTree);
@@ -104,14 +87,14 @@ export function getCommitTree({
   } else {
     const previousCommitTree = getCommitTree({
       commitIndex: commitIndex - 1,
-      profilingSummary,
-      store,
+      profilerStore,
+      rootID,
     });
-    const commitOperations = profilingOperations.get(rootID);
-    if (commitOperations != null && commitIndex < commitOperations.length) {
+
+    if (operations != null && commitIndex < operations.length) {
       const commitTree = updateTree(
         previousCommitTree,
-        commitOperations[commitIndex]
+        operations[commitIndex]
       );
 
       if (__DEBUG__) {
@@ -131,11 +114,10 @@ export function getCommitTree({
 function recursivelyInitializeTree(
   id: number,
   parentID: number,
-  nodes: Map<number, CommitTreeNodeFrontend>,
-  initialTreeBaseDurations: Map<number, number>,
-  profilingSnapshots: Map<number, ProfilingSnapshotNode>
+  nodes: Map<number, CommitTreeNode>,
+  dataForRoot: ProfilingDataForRootFrontend
 ): void {
-  const node = profilingSnapshots.get(id);
+  const node = dataForRoot.snapshots.get(id);
   if (node != null) {
     nodes.set(id, {
       id,
@@ -143,35 +125,31 @@ function recursivelyInitializeTree(
       displayName: node.displayName,
       key: node.key,
       parentID,
-      treeBaseDuration: ((initialTreeBaseDurations.get(id): any): number),
+      treeBaseDuration: ((dataForRoot.initialTreeBaseDurations.get(
+        id
+      ): any): number),
       type: node.type,
     });
 
     node.children.forEach(childID =>
-      recursivelyInitializeTree(
-        childID,
-        id,
-        nodes,
-        initialTreeBaseDurations,
-        profilingSnapshots
-      )
+      recursivelyInitializeTree(childID, id, nodes, dataForRoot)
     );
   }
 }
 
 function updateTree(
-  commitTree: CommitTreeFrontend,
+  commitTree: CommitTree,
   operations: Uint32Array
-): CommitTreeFrontend {
+): CommitTree {
   // Clone the original tree so edits don't affect it.
   const nodes = new Map(commitTree.nodes);
 
   // Clone nodes before mutating them so edits don't affect them.
-  const getClonedNode = (id: number): CommitTreeNodeFrontend => {
+  const getClonedNode = (id: number): CommitTreeNode => {
     const clonedNode = ((Object.assign(
       {},
       nodes.get(id)
-    ): any): CommitTreeNodeFrontend);
+    ): any): CommitTreeNode);
     nodes.set(id, clonedNode);
     return clonedNode;
   };
@@ -219,7 +197,7 @@ function updateTree(
             debug('Add', `new root fiber ${id}`);
           }
 
-          const node: CommitTreeNodeFrontend = {
+          const node: CommitTreeNode = {
             children: [],
             displayName: null,
             id,
@@ -254,7 +232,7 @@ function updateTree(
           const parentNode = getClonedNode(parentID);
           parentNode.children = parentNode.children.concat(id);
 
-          const node: CommitTreeNodeFrontend = {
+          const node: CommitTreeNode = {
             children: [],
             displayName,
             id,
@@ -355,7 +333,7 @@ export function invalidateCommitTrees(): void {
 }
 
 // DEBUG
-const __printTree = (commitTree: CommitTreeFrontend) => {
+const __printTree = (commitTree: CommitTree) => {
   if (__DEBUG__) {
     const { nodes, rootID } = commitTree;
     console.group('__printTree()');

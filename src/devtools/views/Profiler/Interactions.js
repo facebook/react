@@ -11,18 +11,14 @@ import { scale } from './utils';
 
 import styles from './Interactions.css';
 
+import type { ProfilingDataForRootFrontend } from './types';
 import type { ChartData } from './InteractionsChartBuilder';
 import type { TabID } from './ProfilerContext';
-import type {
-  InteractionWithCommitsFrontend,
-  ProfilingSummaryFrontend,
-} from './types';
 
 export type ItemData = {|
   chartData: ChartData,
-  interactions: Array<InteractionWithCommitsFrontend>,
+  dataForRoot: ProfilingDataForRootFrontend,
   labelWidth: number,
-  profilingSummary: ProfilingSummaryFrontend,
   scaleX: (value: number, fallbackValue: number) => number,
   selectedInteractionID: number | null,
   selectCommitIndex: (id: number | null) => void,
@@ -42,29 +38,21 @@ export default function InteractionsAutoSizer(_: {||}) {
 
 function Interactions({ height, width }: {| height: number, width: number |}) {
   const {
-    rendererID,
     rootID,
     selectedInteractionID,
     selectInteraction,
     selectCommitIndex,
     selectTab,
   } = useContext(ProfilerContext);
-  const { profilingCache } = useContext(StoreContext);
+  const { profilerStore } = useContext(StoreContext);
 
-  const { interactions } = profilingCache.Interactions.read({
-    rendererID: ((rendererID: any): number),
+  const dataForRoot = profilerStore.getDataForRoot(((rootID: any): number));
+
+  const chartData = profilerStore.cache.getInteractionsChartData({
     rootID: ((rootID: any): number),
   });
 
-  const profilingSummary = profilingCache.ProfilingSummary.read({
-    rendererID: ((rendererID: any): number),
-    rootID: ((rootID: any): number),
-  });
-
-  const chartData = profilingCache.getInteractionsChartData({
-    interactions,
-    profilingSummary,
-  });
+  const { interactions } = chartData;
 
   const handleKeyDown = useCallback(
     event => {
@@ -110,9 +98,8 @@ function Interactions({ height, width }: {| height: number, width: number |}) {
 
     return {
       chartData,
-      interactions,
+      dataForRoot,
       labelWidth,
-      profilingSummary,
       scaleX: scale(0, chartData.lastInteractionTime, 0, timelineWidth),
       selectedInteractionID,
       selectCommitIndex,
@@ -121,8 +108,7 @@ function Interactions({ height, width }: {| height: number, width: number |}) {
     };
   }, [
     chartData,
-    interactions,
-    profilingSummary,
+    dataForRoot,
     selectedInteractionID,
     selectCommitIndex,
     selectInteraction,

@@ -45,43 +45,34 @@ describe('commit tree', () => {
     utils.act(() => ReactDOM.render(<Parent count={0} />, container));
     utils.act(() => store.stopProfiling());
 
-    let suspenseResolved = false;
+    let renderFinished = false;
 
-    function Suspender({ commitIndex, rendererID, rootID }) {
-      const profilingSummary = store.profilingCache.ProfilingSummary.read({
-        rendererID,
-        rootID,
-      });
-      suspenseResolved = true;
+    function Suspender({ commitIndex, rootID }) {
       const commitTree = store.profilingCache.getCommitTree({
         commitIndex,
-        profilingSummary,
+        rootID,
       });
       expect(commitTree).toMatchSnapshot(`${commitIndex}: CommitTree`);
+      renderFinished = true;
       return null;
     }
 
-    const rendererID = utils.getRendererID();
     const rootID = store.roots[0];
 
     for (let commitIndex = 0; commitIndex < 4; commitIndex++) {
-      suspenseResolved = false;
+      renderFinished = false;
 
       await utils.actAsync(
         () =>
           TestRenderer.create(
             <React.Suspense fallback={null}>
-              <Suspender
-                commitIndex={commitIndex}
-                rendererID={rendererID}
-                rootID={rootID}
-              />
+              <Suspender commitIndex={commitIndex} rootID={rootID} />
             </React.Suspense>
           ),
         3
       );
 
-      expect(suspenseResolved).toBe(true);
+      expect(renderFinished).toBe(true);
     }
 
     done();

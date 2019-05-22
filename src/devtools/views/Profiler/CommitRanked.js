@@ -13,7 +13,7 @@ import { StoreContext } from '../context';
 import styles from './CommitRanked.css';
 
 import type { ChartData } from './RankedChartBuilder';
-import type { CommitDetailsFrontend, CommitTreeFrontend } from './types';
+import type { CommitTree } from './types';
 
 export type ItemData = {|
   chartData: ChartData,
@@ -26,7 +26,7 @@ export type ItemData = {|
 
 export default function CommitRankedAutoSizer(_: {||}) {
   const { profilingCache } = useContext(StoreContext);
-  const { rendererID, rootID, selectedCommitIndex, selectFiber } = useContext(
+  const { rootID, selectedCommitIndex, selectFiber } = useContext(
     ProfilerContext
   );
 
@@ -38,47 +38,29 @@ export default function CommitRankedAutoSizer(_: {||}) {
     [selectFiber]
   );
 
-  const profilingSummary = profilingCache.ProfilingSummary.read({
-    rendererID: ((rendererID: any): number),
-    rootID: ((rootID: any): number),
-  });
-
-  let commitDetails: CommitDetailsFrontend | null = null;
-  let commitTree: CommitTreeFrontend | null = null;
+  let commitTree: CommitTree | null = null;
   let chartData: ChartData | null = null;
   if (selectedCommitIndex !== null) {
-    commitDetails = profilingCache.CommitDetails.read({
+    commitTree = profilingCache.getCommitTree({
       commitIndex: selectedCommitIndex,
-      rendererID: ((rendererID: any): number),
       rootID: ((rootID: any): number),
     });
 
-    commitTree = profilingCache.getCommitTree({
-      commitIndex: selectedCommitIndex,
-      profilingSummary,
-    });
-
     chartData = profilingCache.getRankedChartData({
-      commitDetails,
       commitIndex: selectedCommitIndex,
       commitTree,
+      rootID: ((rootID: any): number),
     });
   }
 
-  if (
-    commitDetails != null &&
-    commitTree != null &&
-    chartData != null &&
-    chartData.nodes.length > 0
-  ) {
+  if (commitTree != null && chartData != null && chartData.nodes.length > 0) {
     return (
       <div className={styles.Container} onClick={deselectCurrentFiber}>
         <AutoSizer>
           {({ height, width }) => (
             <CommitRanked
               chartData={((chartData: any): ChartData)}
-              commitDetails={((commitDetails: any): CommitDetailsFrontend)}
-              commitTree={((commitTree: any): CommitTreeFrontend)}
+              commitTree={((commitTree: any): CommitTree)}
               height={height}
               width={width}
             />
@@ -93,19 +75,12 @@ export default function CommitRankedAutoSizer(_: {||}) {
 
 type Props = {|
   chartData: ChartData,
-  commitDetails: CommitDetailsFrontend,
-  commitTree: CommitTreeFrontend,
+  commitTree: CommitTree,
   height: number,
   width: number,
 |};
 
-function CommitRanked({
-  chartData,
-  commitDetails,
-  commitTree,
-  height,
-  width,
-}: Props) {
+function CommitRanked({ chartData, commitTree, height, width }: Props) {
   const { selectedFiberID, selectFiber } = useContext(ProfilerContext);
 
   const selectedFiberIndex = useMemo(

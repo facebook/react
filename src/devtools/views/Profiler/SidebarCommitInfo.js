@@ -12,24 +12,12 @@ export type Props = {||};
 export default function SidebarCommitInfo(_: Props) {
   const {
     selectedCommitIndex,
-    rendererID,
     rootID,
     selectInteraction,
     selectTab,
   } = useContext(ProfilerContext);
 
-  const {
-    captureScreenshots,
-    profilingCache,
-    profilingScreenshots,
-  } = useContext(StoreContext);
-
-  const screenshotsByCommitIndex =
-    rootID !== null ? profilingScreenshots.get(rootID) : null;
-  const screenshot =
-    screenshotsByCommitIndex != null && selectedCommitIndex !== null
-      ? screenshotsByCommitIndex.get(selectedCommitIndex)
-      : null;
+  const { captureScreenshots, profilerStore } = useContext(StoreContext);
 
   const [
     isScreenshotModalVisible,
@@ -45,26 +33,22 @@ export default function SidebarCommitInfo(_: Props) {
     []
   );
 
-  if (selectedCommitIndex === null) {
+  if (rootID === null || selectedCommitIndex === null) {
     return <div className={styles.NothingSelected}>Nothing selected</div>;
   }
 
-  const { commitDurations, commitTimes } = profilingCache.ProfilingSummary.read(
-    {
-      rendererID: ((rendererID: any): number),
-      rootID: ((rootID: any): number),
-    }
-  );
+  const { interactions } = profilerStore.getDataForRoot(rootID);
+  const {
+    duration,
+    interactionIDs,
+    priorityLevel,
+    screenshot,
+    timestamp,
+  } = profilerStore.getCommitData(rootID, selectedCommitIndex);
 
-  const { interactions, priorityLevel } = profilingCache.CommitDetails.read({
-    commitIndex: selectedCommitIndex,
-    rendererID: ((rendererID: any): number),
-    rootID: ((rootID: any): number),
-  });
-
-  const viewInteraction = interaction => {
+  const viewInteraction = interactionID => {
     selectTab('interactions');
-    selectInteraction(interaction.id);
+    selectInteraction(interactionID);
   };
 
   return (
@@ -80,34 +64,33 @@ export default function SidebarCommitInfo(_: Props) {
           )}
           <li className={styles.ListItem}>
             <label className={styles.Label}>Committed at</label>:{' '}
-            <span className={styles.Value}>
-              {formatTime(commitTimes[((selectedCommitIndex: any): number)])}s
-            </span>
+            <span className={styles.Value}>{formatTime(timestamp)}s</span>
           </li>
           <li className={styles.ListItem}>
             <label className={styles.Label}>Render duration</label>:{' '}
-            <span className={styles.Value}>
-              {formatDuration(
-                commitDurations[((selectedCommitIndex: any): number)]
-              )}
-              ms
-            </span>
+            <span className={styles.Value}>{formatDuration(duration)}ms</span>
           </li>
           <li className={styles.Interactions}>
             <label className={styles.Label}>Interactions</label>:
             <div className={styles.InteractionList}>
-              {interactions.length === 0 ? (
+              {interactionIDs.length === 0 ? (
                 <div className={styles.NoInteractions}>None</div>
               ) : null}
-              {interactions.map((interaction, index) => (
-                <button
-                  key={index}
-                  className={styles.Interaction}
-                  onClick={() => viewInteraction(interaction)}
-                >
-                  {interaction.name}
-                </button>
-              ))}
+              {interactionIDs.map(interactionID => {
+                const interaction = interactions.get(interactionID);
+                if (interaction == null) {
+                  throw Error(`Invalid interaction "${interactionID}"`);
+                }
+                return (
+                  <button
+                    key={interactionID}
+                    className={styles.Interaction}
+                    onClick={() => viewInteraction(interactionID)}
+                  >
+                    {interaction.name}
+                  </button>
+                );
+              })}
             </div>
           </li>
           {captureScreenshots && (

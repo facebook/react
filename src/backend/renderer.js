@@ -18,7 +18,6 @@ import {
   ElementTypeRoot,
   ElementTypeSuspense,
 } from 'src/types';
-import { PROFILER_EXPORT_VERSION } from 'src/constants';
 import {
   getDisplayName,
   getDefaultComponentFilters,
@@ -37,17 +36,13 @@ import {
 import { inspectHooksOfFiber } from './ReactDebugHooks';
 
 import type {
-  CommitDetailsBackend,
+  CommitDataBackend,
   DevToolsHook,
-  ExportedProfilingDataFromRenderer,
   Fiber,
-  FiberCommitsBackend,
-  InteractionBackend,
-  InteractionsBackend,
-  InteractionWithCommitsBackend,
   PathFrame,
   PathMatch,
-  ProfilingSummaryBackend,
+  ProfilingDataBackend,
+  ProfilingDataForRootBackend,
   ReactRenderer,
   RendererInterface,
 } from './types';
@@ -55,6 +50,7 @@ import type {
   InspectedElement,
   Owner,
 } from 'src/devtools/views/Components/types';
+import type { Interaction } from 'src/devtools/views/Profiler/types';
 import type { ComponentFilter, ElementType } from 'src/types';
 
 function getInternalReactConstants(version) {
@@ -820,6 +816,12 @@ export function attach(
       pushOperation(ElementTypeRoot);
       pushOperation(isProfilingSupported ? 1 : 0);
       pushOperation(hasOwnerMetadata ? 1 : 0);
+
+      if (isProfiling) {
+        if (displayNamesByRootID !== null) {
+          displayNamesByRootID.set(id, getDisplayNameForRoot(fiber));
+        }
+      }
     } else {
       const { key } = fiber;
       const displayName = getDisplayNameForFiber(fiber);
@@ -1286,7 +1288,7 @@ export function attach(
             durations: [],
             commitTime: performance.now() - profilingStartTime,
             interactions: Array.from(root.memoizedInteractions).map(
-              (interaction: InteractionBackend) => ({
+              (interaction: Interaction) => ({
                 ...interaction,
                 timestamp: interaction.timestamp - profilingStartTime,
               })
@@ -1329,7 +1331,7 @@ export function attach(
         durations: [],
         commitTime: performance.now() - profilingStartTime,
         interactions: Array.from(root.memoizedInteractions).map(
-          (interaction: InteractionBackend) => ({
+          (interaction: Interaction) => ({
             ...interaction,
             timestamp: interaction.timestamp - profilingStartTime,
           })
@@ -1981,188 +1983,113 @@ export function attach(
   type CommitProfilingData = {|
     commitTime: number,
     durations: Array<number>,
-    interactions: Array<InteractionBackend>,
+    interactions: Array<Interaction>,
     maxActualDuration: number,
     priorityLevel: string | null,
   |};
 
   type CommitProfilingMetadataMap = Map<number, Array<CommitProfilingData>>;
+  type DisplayNamesByRootID = Map<number, string>;
 
   let currentCommitProfilingMetadata: CommitProfilingData | null = null;
+  let displayNamesByRootID: DisplayNamesByRootID | null = null;
   let initialTreeBaseDurationsMap: Map<number, number> | null = null;
   let initialIDToRootMap: Map<number, number> | null = null;
   let isProfiling: boolean = false;
   let profilingStartTime: number = 0;
   let rootToCommitProfilingMetadataMap: CommitProfilingMetadataMap | null = null;
 
-  function getCommitDetails(
-    rootID: number,
-    commitIndex: number
-  ): CommitDetailsBackend {
-    const commitProfilingMetadata = ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).get(
-      rootID
-    );
-    if (commitProfilingMetadata != null) {
-      const commitProfilingData = commitProfilingMetadata[commitIndex];
-      if (commitProfilingData != null) {
-        return {
-          commitIndex,
-          durations: commitProfilingData.durations,
-          interactions: commitProfilingData.interactions,
-          priorityLevel: commitProfilingData.priorityLevel,
+  function getProfilingData(): ProfilingDataBackend {
+    const dataForRoots: Array<ProfilingDataForRootBackend> = [];
+
+    if (rootToCommitProfilingMetadataMap === null) {
+      throw Error(
+        'getProfilingData() called before any profiling data was recorded'
+      );
+    }
+
+    rootToCommitProfilingMetadataMap.forEach(
+      (commitProfilingMetadata, rootID) => {
+        const commitData: Array<CommitDataBackend> = [];
+        const initialTreeBaseDurations: Array<[number, number]> = [];
+        const allInteractions: Map<number, Interaction> = new Map();
+        const interactionCommits: Map<number, Array<number>> = new Map();
+
+        const displayName =
+          (displayNamesByRootID !== null && displayNamesByRootID.get(rootID)) ||
+          'Unknown';
+
+        if (initialTreeBaseDurationsMap != null) {
+          initialTreeBaseDurationsMap.forEach((treeBaseDuration, id) => {
+            if (
+              initialIDToRootMap != null &&
+              initialIDToRootMap.get(id) === rootID
+            ) {
+              // We don't need to convert milliseconds to microseconds in this case,
+              // because the profiling summary is JSON serialized.
+              initialTreeBaseDurations.push([id, treeBaseDuration]);
+            }
+          });
+        }
+
+        commitProfilingMetadata.forEach((commitProfilingData, commitIndex) => {
+          const {
+            durations,
+            interactions,
+            maxActualDuration,
+            priorityLevel,
+            commitTime,
+          } = commitProfilingData;
+
+          const interactionIDs: Array<number> = [];
+
+          interactions.forEach(interaction => {
+            if (!allInteractions.has(interaction.id)) {
+              allInteractions.set(interaction.id, interaction);
+            }
+
+            interactionIDs.push(interaction.id);
+
+            const commitIndices = interactionCommits.get(interaction.id);
+            if (commitIndices != null) {
+              commitIndices.push(commitIndex);
+            } else {
+              interactionCommits.set(interaction.id, [commitIndex]);
+            }
+          });
+
+          const fiberActualDurations: Array<[number, number]> = [];
+          const fiberSelfDurations: Array<[number, number]> = [];
+          for (let i = 0; i < durations.length; i += 3) {
+            const fiberID = durations[i];
+            fiberActualDurations.push([fiberID, durations[i + 1]]);
+            fiberSelfDurations.push([fiberID, durations[i + 2]]);
+          }
+
+          commitData.push({
+            duration: maxActualDuration,
+            fiberActualDurations,
+            fiberSelfDurations,
+            interactionIDs,
+            priorityLevel,
+            timestamp: commitTime,
+          });
+        });
+
+        dataForRoots.push({
+          commitData,
+          displayName,
+          initialTreeBaseDurations,
+          interactionCommits: Array.from(interactionCommits.entries()),
+          interactions: Array.from(allInteractions.entries()),
           rootID,
-        };
-      }
-    }
-
-    console.warn(
-      `getCommitDetails(): No profiling info recorded for root "${rootID}" and commit ${commitIndex}`
-    );
-
-    return {
-      commitIndex,
-      durations: [],
-      interactions: [],
-      priorityLevel: null,
-      rootID,
-    };
-  }
-
-  function getFiberCommits(
-    rootID: number,
-    fiberID: number
-  ): FiberCommitsBackend {
-    const commitProfilingMetadata = ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).get(
-      rootID
-    );
-    if (commitProfilingMetadata != null) {
-      const commitDurations = [];
-      commitProfilingMetadata.forEach(({ durations }, commitIndex) => {
-        for (let i = 0; i < durations.length; i += 3) {
-          if (durations[i] === fiberID) {
-            commitDurations.push(commitIndex, durations[i + 2]);
-            break;
-          }
-        }
-      });
-
-      return {
-        commitDurations,
-        fiberID,
-        rootID,
-      };
-    }
-
-    console.warn(
-      `getFiberCommits(): No profiling info recorded for root "${rootID}"`
-    );
-
-    return {
-      commitDurations: [],
-      fiberID,
-      rootID,
-    };
-  }
-
-  function getInteractions(rootID: number): InteractionsBackend {
-    const commitProfilingMetadata = ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).get(
-      rootID
-    );
-    if (commitProfilingMetadata != null) {
-      const interactionsMap: Map<
-        number,
-        InteractionWithCommitsBackend
-      > = new Map();
-
-      commitProfilingMetadata.forEach((commitProfilingData, commitIndex) => {
-        commitProfilingData.interactions.forEach(interaction => {
-          const interactionWithCommits = interactionsMap.get(interaction.id);
-          if (interactionWithCommits != null) {
-            interactionWithCommits.commits.push(commitIndex);
-          } else {
-            interactionsMap.set(interaction.id, {
-              ...interaction,
-              commits: [commitIndex],
-            });
-          }
         });
-      });
-
-      return {
-        interactions: Array.from(interactionsMap.values()),
-        rootID,
-      };
-    }
-
-    console.warn(
-      `getInteractions(): No interactions recorded for root "${rootID}"`
-    );
-
-    return {
-      interactions: [],
-      rootID,
-    };
-  }
-
-  function getExportedProfilingData(
-    rootID: number
-  ): ExportedProfilingDataFromRenderer {
-    const commitDetailsForEachCommit = [];
-    const commitProfilingMetadata = ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).get(
-      rootID
-    );
-    if (commitProfilingMetadata != null) {
-      for (let index = 0; index < commitProfilingMetadata.length; index++) {
-        commitDetailsForEachCommit.push(getCommitDetails(rootID, index));
       }
-    }
-
-    return {
-      version: PROFILER_EXPORT_VERSION,
-      profilingSummary: getProfilingSummary(rootID),
-      commitDetails: commitDetailsForEachCommit,
-      interactions: getInteractions(rootID),
-    };
-  }
-
-  function getProfilingSummary(rootID: number): ProfilingSummaryBackend {
-    const interactions = new Set();
-    const commitDurations = [];
-    const commitTimes = [];
-
-    const commitProfilingMetadata = ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).get(
-      rootID
     );
-    if (commitProfilingMetadata != null) {
-      commitProfilingMetadata.forEach(metadata => {
-        commitDurations.push(metadata.maxActualDuration);
-        commitTimes.push(metadata.commitTime);
-        metadata.interactions.forEach(({ name, timestamp }) => {
-          interactions.add(`${timestamp}:${name}`);
-        });
-      });
-    }
-
-    const initialTreeBaseDurations = [];
-    if (initialTreeBaseDurationsMap != null) {
-      initialTreeBaseDurationsMap.forEach((treeBaseDuration, id) => {
-        if (
-          initialIDToRootMap != null &&
-          initialIDToRootMap.get(id) === rootID
-        ) {
-          // We don't need to convert milliseconds to microseconds in this case,
-          // because the profiling summary is JSON serialized.
-          initialTreeBaseDurations.push(id, treeBaseDuration);
-        }
-      });
-    }
 
     return {
-      commitDurations,
-      commitTimes,
-      initialTreeBaseDurations,
-      interactionCount: interactions.size,
-      rootID,
+      dataForRoots,
+      rendererID,
     };
   }
 
@@ -2175,8 +2102,17 @@ export function attach(
     // It's important we snapshot both the durations and the id-to-root map,
     // since either of these may change during the profiling session
     // (e.g. when a fiber is re-rendered or when a fiber gets removed).
+    displayNamesByRootID = new Map();
     initialTreeBaseDurationsMap = new Map(idToTreeBaseDurationMap);
     initialIDToRootMap = new Map(idToRootMap);
+
+    hook.getFiberRoots(rendererID).forEach(root => {
+      const rootID = getFiberID(getPrimaryFiber(root.current));
+      ((displayNamesByRootID: any): DisplayNamesByRootID).set(
+        rootID,
+        getDisplayNameForRoot(root.current)
+      );
+    });
 
     isProfiling = true;
     profilingStartTime = performance.now();
@@ -2313,6 +2249,32 @@ export function attach(
   const rootDisplayNameCounter: Map<string, number> = new Map();
 
   function setRootPseudoKey(id: number, fiber: Fiber) {
+    const name = getDisplayNameForRoot(fiber);
+    const counter = rootDisplayNameCounter.get(name) || 0;
+    rootDisplayNameCounter.set(name, counter + 1);
+    const pseudoKey = `${name}:${counter}`;
+    rootPseudoKeys.set(id, pseudoKey);
+  }
+
+  function removeRootPseudoKey(id: number) {
+    const pseudoKey = rootPseudoKeys.get(id);
+    if (pseudoKey === undefined) {
+      throw new Error('Expected root pseudo key to be known.');
+    }
+    const name = pseudoKey.substring(0, pseudoKey.lastIndexOf(':'));
+    const counter = rootDisplayNameCounter.get(name);
+    if (counter === undefined) {
+      throw new Error('Expected counter to be known.');
+    }
+    if (counter > 1) {
+      rootDisplayNameCounter.set(name, counter - 1);
+    } else {
+      rootDisplayNameCounter.delete(name);
+    }
+    rootPseudoKeys.delete(id);
+  }
+
+  function getDisplayNameForRoot(fiber: Fiber): string {
     let preferredDisplayName = null;
     let fallbackDisplayName = null;
     let child = fiber.child;
@@ -2339,29 +2301,7 @@ export function attach(
       }
       child = child.child;
     }
-    const name = preferredDisplayName || fallbackDisplayName || 'Anonymous';
-    const counter = rootDisplayNameCounter.get(name) || 0;
-    rootDisplayNameCounter.set(name, counter + 1);
-    const pseudoKey = `${name}:${counter}`;
-    rootPseudoKeys.set(id, pseudoKey);
-  }
-
-  function removeRootPseudoKey(id: number) {
-    const pseudoKey = rootPseudoKeys.get(id);
-    if (pseudoKey === undefined) {
-      throw new Error('Expected root pseudo key to be known.');
-    }
-    const name = pseudoKey.substring(0, pseudoKey.lastIndexOf(':'));
-    const counter = rootDisplayNameCounter.get(name);
-    if (counter === undefined) {
-      throw new Error('Expected counter to be known.');
-    }
-    if (counter > 1) {
-      rootDisplayNameCounter.set(name, counter - 1);
-    } else {
-      rootDisplayNameCounter.delete(name);
-    }
-    rootPseudoKeys.delete(id);
+    return preferredDisplayName || fallbackDisplayName || 'Anonymous';
   }
 
   function getPathFrame(fiber: Fiber): PathFrame {
@@ -2459,15 +2399,11 @@ export function attach(
     cleanup,
     flushInitialOperations,
     getBestMatchForTrackedPath,
-    getCommitDetails,
     getFiberIDFromNative,
-    getFiberCommits,
-    getInteractions,
     findNativeByFiberID,
     getOwnersList,
     getPathForElement,
-    getExportedProfilingData,
-    getProfilingSummary,
+    getProfilingData,
     handleCommitFiberRoot,
     handleCommitFiberUnmount,
     inspectElement,
