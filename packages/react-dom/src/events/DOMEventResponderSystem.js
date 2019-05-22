@@ -400,8 +400,9 @@ const eventResponderContext: ReactResponderContext = {
     }
     return '';
   },
-  getEventCurrentTarget(target: Element | Document): Element {
+  getEventCurrentTarget(event: ReactResponderEvent): Element {
     validateResponderContext();
+    const target = event.target;
     let fiber = getClosestInstanceFromNode(target);
     let hostComponent = target;
 

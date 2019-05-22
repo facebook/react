@@ -288,7 +288,7 @@ const HoverResponder = {
             state.isOverTouchHitTarget = true;
             return;
           }
-          state.hoverTarget = context.getEventCurrentTarget(event.target);
+          state.hoverTarget = context.getEventCurrentTarget(event);
           state.ignoreEmulatedMouseEvents = true;
           dispatchHoverStartEvents(event, context, props, state);
         }
