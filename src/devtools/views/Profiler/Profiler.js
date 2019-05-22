@@ -63,20 +63,22 @@ function Profiler({ supportsProfiling }: Props) {
   }
 
   let sidebar = null;
-  switch (selectedTabID) {
-    case 'interactions':
-      sidebar = <SidebarInteractions />;
-      break;
-    case 'flame-chart':
-    case 'ranked-chart':
-      if (selectedFiberID !== null) {
-        sidebar = <SidebarSelectedFiberInfo />;
-      } else {
-        sidebar = <SidebarCommitInfo />;
-      }
-      break;
-    default:
-      break;
+  if (!isProfiling && !isProcessingData && hasProfilingData) {
+    switch (selectedTabID) {
+      case 'interactions':
+        sidebar = <SidebarInteractions />;
+        break;
+      case 'flame-chart':
+      case 'ranked-chart':
+        if (selectedFiberID !== null) {
+          sidebar = <SidebarSelectedFiberInfo />;
+        } else {
+          sidebar = <SidebarCommitInfo />;
+        }
+        break;
+      default:
+        break;
+    }
   }
 
   return (

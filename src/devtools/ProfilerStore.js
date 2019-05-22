@@ -153,12 +153,13 @@ export default class ProfilerStore extends EventEmitter {
     this._initialSnapshotsByRootID.clear();
     this._inProgressOperationsByRootID.clear();
     this._inProgressScreenshotsByRootID.clear();
+    this._rendererQueue.clear();
 
     // Invalidate suspense cache if profiling data is being (re-)recorded.
     // Note that we clear now because any existing data is "stale".
     this._cache.invalidate();
 
-    this.emit('isProfiling');
+    this.emit('profilingData');
   }
 
   startProfiling(): void {
