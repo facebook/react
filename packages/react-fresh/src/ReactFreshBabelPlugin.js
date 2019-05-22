@@ -94,10 +94,6 @@ export default function(babel) {
           default:
             return;
         }
-        const declarations = path.node.declarations;
-        if (declarations.length !== 1) {
-          return;
-        }
         const declPath = path.get('declarations');
         if (declPath.length !== 1) {
           return;
