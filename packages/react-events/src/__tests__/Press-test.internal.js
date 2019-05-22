@@ -1109,8 +1109,8 @@ describe('Event responder: Press', () => {
         ReactDOM.render(element, container);
 
         ref.current.getBoundingClientRect = getBoundingClientRectMock;
-        // Emulate the element being offset
-        document.body.scrollTop = 1000;
+        // Emulate the <html> element being offset with scroll
+        document.firstElementChild.scrollTop = 1000;
         const updatedCoordinatesInside = {
           pageX: coordinatesInside.pageX,
           pageY: coordinatesInside.pageY + 1000,
@@ -1125,7 +1125,125 @@ describe('Event responder: Press', () => {
           createEvent('pointerup', updatedCoordinatesInside),
         );
         jest.runAllTimers();
-        document.body.scrollTop = 0;
+        document.firstElementChild.scrollTop = 0;
+
+        expect(events).toEqual([
+          'onPressStart',
+          'onPressChange',
+          'onPressMove',
+          'onPressEnd',
+          'onPressChange',
+          'onPress',
+        ]);
+      });
+
+      it('"onPress" is called on release inside a fixed container', () => {
+        let events = [];
+        const ref = React.createRef();
+        const fixedContainerRef = React.createRef();
+        const createEventHandler = msg => () => {
+          events.push(msg);
+        };
+
+        const element = (
+          <div ref={fixedContainerRef}>
+            <Press
+              onPress={createEventHandler('onPress')}
+              onPressChange={createEventHandler('onPressChange')}
+              onPressMove={createEventHandler('onPressMove')}
+              onPressStart={createEventHandler('onPressStart')}
+              onPressEnd={createEventHandler('onPressEnd')}>
+              <div ref={ref} />
+            </Press>
+          </div>
+        );
+
+        ReactDOM.render(element, container);
+
+        const fixedDiv = fixedContainerRef.current;
+        Object.defineProperty(fixedDiv, 'offsetParent', {
+          value: null,
+        });
+
+        // The fixed container is not scrolled
+        fixedDiv.scrollTop = 0;
+        ref.current.getBoundingClientRect = getBoundingClientRectMock;
+        // Emulate the <html> element being offset with scroll
+        document.firstElementChild.scrollTop = 1000;
+        const updatedCoordinatesInside = {
+          pageX: coordinatesInside.pageX,
+          pageY: coordinatesInside.pageY + 1000,
+        };
+        ref.current.dispatchEvent(
+          createEvent('pointerdown', updatedCoordinatesInside),
+        );
+        container.dispatchEvent(
+          createEvent('pointermove', updatedCoordinatesInside),
+        );
+        container.dispatchEvent(
+          createEvent('pointerup', updatedCoordinatesInside),
+        );
+        jest.runAllTimers();
+        document.firstElementChild.scrollTop = 0;
+
+        expect(events).toEqual([
+          'onPressStart',
+          'onPressChange',
+          'onPressMove',
+          'onPressEnd',
+          'onPressChange',
+          'onPress',
+        ]);
+      });
+
+      it('"onPress" is called on release inside a fixed scrolled container', () => {
+        let events = [];
+        const ref = React.createRef();
+        const fixedContainerRef = React.createRef();
+        const createEventHandler = msg => () => {
+          events.push(msg);
+        };
+
+        const element = (
+          <div ref={fixedContainerRef}>
+            <Press
+              onPress={createEventHandler('onPress')}
+              onPressChange={createEventHandler('onPressChange')}
+              onPressMove={createEventHandler('onPressMove')}
+              onPressStart={createEventHandler('onPressStart')}
+              onPressEnd={createEventHandler('onPressEnd')}>
+              <div ref={ref} />
+            </Press>
+          </div>
+        );
+
+        ReactDOM.render(element, container);
+
+        const fixedDiv = fixedContainerRef.current;
+        Object.defineProperty(fixedDiv, 'offsetParent', {
+          value: null,
+        });
+
+        // The fixed container is scrolled
+        fixedDiv.scrollTop = 100;
+        ref.current.getBoundingClientRect = getBoundingClientRectMock;
+        // Emulate the <html> element being offset with scroll
+        document.firstElementChild.scrollTop = 1000;
+        const updatedCoordinatesInside = {
+          pageX: coordinatesInside.pageX,
+          pageY: coordinatesInside.pageY + 100,
+        };
+        ref.current.dispatchEvent(
+          createEvent('pointerdown', updatedCoordinatesInside),
+        );
+        container.dispatchEvent(
+          createEvent('pointermove', updatedCoordinatesInside),
+        );
+        container.dispatchEvent(
+          createEvent('pointerup', updatedCoordinatesInside),
+        );
+        jest.runAllTimers();
+        document.firstElementChild.scrollTop = 0;
 
         expect(events).toEqual([
           'onPressStart',
