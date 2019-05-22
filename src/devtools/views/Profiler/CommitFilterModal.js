@@ -8,6 +8,16 @@ import { useModalDismissSignal } from '../hooks';
 import styles from './CommitFilterModal.css';
 
 export default function FilterModal(_: {||}) {
+  const { isModalShowing } = useContext(CommitFilterModalContext);
+
+  if (!isModalShowing) {
+    return null;
+  }
+
+  return <FilterModalImpl />;
+}
+
+function FilterModalImpl(_: {||}) {
   const {
     isCommitFilterEnabled,
     minCommitDuration,

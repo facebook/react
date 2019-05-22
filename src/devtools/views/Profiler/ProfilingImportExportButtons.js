@@ -16,7 +16,7 @@ import styles from './ProfilingImportExportButtons.css';
 import type { ProfilingDataExport } from './types';
 
 export default function ProfilingImportExportButtons() {
-  const { isProfiling, rendererID, rootID } = useContext(ProfilerContext);
+  const { isProfiling, rootID } = useContext(ProfilerContext);
   const store = useContext(StoreContext);
   const { profilerStore } = store;
 
@@ -25,7 +25,7 @@ export default function ProfilingImportExportButtons() {
   const { dispatch: modalDialogDispatch } = useContext(ModalDialogContext);
 
   const downloadData = useCallback(() => {
-    if (rendererID === null || rootID === null) {
+    if (rootID === null) {
       return;
     }
 
@@ -37,7 +37,7 @@ export default function ProfilingImportExportButtons() {
       // TODO (profarc) Generate anchor "download" tag and click it
       console.log('profilingDataExport:', profilingDataExport);
     }
-  }, [rendererID, rootID, profilerStore.profilingData]);
+  }, [rootID, profilerStore.profilingData]);
 
   const uploadData = useCallback(() => {
     if (inputRef.current !== null) {
