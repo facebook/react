@@ -1,53 +1,189 @@
 version: 2
+
+aliases:
+  - &docker
+    - image: circleci/openjdk:8-jdk-node-browsers
+
+  - &environment
+    TZ: /usr/share/zoneinfo/America/Los_Angeles
+
+  - &restore_node_modules
+    name: Restore node_modules cache
+    keys:
+      - v1-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}
+      - v1-node-{{ arch }}-{{ .Branch }}-
+      - v1-node-{{ arch }}-
+  - &attach_workspace
+    at: build
+
 jobs:
-  build:
-
-    docker:
-      - image: circleci/openjdk:8-jdk-node-browsers
-
-    environment:
-      TZ: /usr/share/zoneinfo/America/Los_Angeles
-
-    parallelism: 4
+  setup:
+    docker: *docker
+    environment: *environment
 
     steps:
       - checkout
-
-      - run: echo $CIRCLE_COMPARE_URL | cut -d/ -f7
-
-      - restore_cache:
-          name: Restore node_modules cache
-          keys:
-            - v1-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}
-            - v1-node-{{ arch }}-{{ .Branch }}-
-            - v1-node-{{ arch }}-
-
+      - restore_cache: *restore_node_modules
       - run:
           name: Nodejs Version
           command: node --version
-
       - run:
           name: Install Packages
           command: yarn install --frozen-lockfile
-
-      - run:
-          name: Test Packages
-          command: ./scripts/circleci/test_entry_point.sh
-
       - save_cache:
           name: Save node_modules cache
           key: v1-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}
           paths:
             - node_modules
 
+  lint:
+    docker: *docker
+    environment: *environment
+
+    steps:
+      - checkout
+      - restore_cache: *restore_node_modules
+      - run: node ./scripts/prettier/index
+      - run: node ./scripts/tasks/eslint
+      - run: ./scripts/circleci/check_license.sh
+      - run: ./scripts/circleci/check_modules.sh
+      - run: ./scripts/circleci/test_print_warnings.sh
+
+  flow:
+    docker: *docker
+    environment: *environment
+
+    steps:
+      - checkout
+      - restore_cache: *restore_node_modules
+      - run: node ./scripts/tasks/flow-ci
+
+  test-source:
+    docker: *docker
+    environment: *environment
+
+    steps:
+      - checkout
+      - restore_cache: *restore_node_modules
+      - run: yarn test --maxWorkers=2
+
+  test-source-persistent:
+    docker: *docker
+    environment: *environment
+
+    steps:
+      - checkout
+      - restore_cache: *restore_node_modules
+      - run: yarn test-persistent --maxWorkers=2
+
+  test-source-prod:
+    docker: *docker
+    environment: *environment
+
+    steps:
+      - checkout
+      - restore_cache: *restore_node_modules
+      - run: yarn test-prod --maxWorkers=2
+
+  test-source-fire:
+    docker: *docker
+    environment: *environment
+
+    steps:
+      - checkout
+      - restore_cache: *restore_node_modules
+      - run: yarn test-fire --maxWorkers=2
+      - run: yarn test-fire-prod --maxWorkers=2
+
+  test-coverage:
+    docker: *docker
+    environment: *environment
+
+    steps:
+      - checkout
+      - restore_cache: *restore_node_modules
+      - run: ./scripts/circleci/test_coverage.sh
+
+  build:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - restore_cache: *restore_node_modules
+      - run: ./scripts/circleci/add_build_info_json.sh
+      - run: ./scripts/circleci/update_package_versions.sh
+      - run: ./scripts/circleci/build.sh
+      - run: yarn test-build --maxWorkers=2
+      - run: yarn test-build-prod --maxWorkers=2
+      - run: cp ./scripts/rollup/results.json ./build/bundle-sizes.json
+      - run: node ./scripts/tasks/danger
+      - run: ./scripts/circleci/upload_build.sh
+      - run: ./scripts/circleci/pack_and_store_artifact.sh
       - store_artifacts:
           path: ./node_modules.tgz
-
       - store_artifacts:
           path: ./build.tgz
-
       - store_artifacts:
           path: ./build/bundle-sizes.json
-
       - store_artifacts:
           path: ./scripts/error-codes/codes.json
+      - persist_to_workspace:
+          root: build
+          paths:
+            - facebook-www
+            - node_modules
+            - react-native
+
+  test-build:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - attach_workspace: *attach_workspace
+      - restore_cache: *restore_node_modules
+      - run: yarn test-build --maxWorkers=2
+
+  test-build-prod:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - attach_workspace: *attach_workspace
+      - restore_cache: *restore_node_modules
+      - run: yarn test-build-prod --maxWorkers=2
+
+workflows:
+  version: 2
+  build-and-test:
+    jobs:
+      - setup
+      - lint:
+          requires:
+            - setup
+      - flow:
+          requires:
+            - setup
+      - test-source:
+          requires:
+            - setup
+      - test-source-prod:
+          requires:
+            - setup
+      - test-source-persistent:
+          requires:
+            - setup
+      - test-source-fire:
+          requires:
+            - setup
+      - test-coverage:
+          requires:
+            - setup
+      - build:
+          requires:
+            - setup
+      - test-build:
+          requires:
+            - build
+      - test-build-prod:
+          requires:
+            - build
