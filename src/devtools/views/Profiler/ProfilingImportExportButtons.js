@@ -32,8 +32,21 @@ export default function ProfilingImportExportButtons() {
 
     if (profilingData !== null) {
       const profilingDataExport = prepareProfilingDataExport(profilingData);
+      const date = new Date();
+      const dateString = date
+        .toLocaleDateString(undefined, {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+        })
+        .replace(/\//g, '-');
+      const timeString = date
+        .toLocaleTimeString(undefined, {
+          hour12: false,
+        })
+        .replace(/:/g, '-');
       downloadFile(
-        'profile-data.json',
+        `profiling-data.${dateString}.${timeString}.json`,
         JSON.stringify(profilingDataExport, null, 2)
       );
     }
