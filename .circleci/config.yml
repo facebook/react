@@ -7,12 +7,18 @@ aliases:
   - &environment
     TZ: /usr/share/zoneinfo/America/Los_Angeles
 
-  - &restore_node_modules
-    name: Restore node_modules cache
-    keys:
-      - v1-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}
-      - v1-node-{{ arch }}-{{ .Branch }}-
-      - v1-node-{{ arch }}-
+  - &restore_yarn_cache
+    restore_cache:
+      name: Restore node_modules cache
+      keys:
+        - v1-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}
+        - v1-node-{{ arch }}-{{ .Branch }}-
+        - v1-node-{{ arch }}-
+  - &run_yarn
+    run:
+      name: Install Packages
+      command: yarn --frozen-lockfile
+
   - &attach_workspace
     at: build
 
@@ -23,18 +29,16 @@ jobs:
 
     steps:
       - checkout
-      - restore_cache: *restore_node_modules
       - run:
           name: Nodejs Version
           command: node --version
-      - run:
-          name: Install Packages
-          command: yarn install --frozen-lockfile
+      - *restore_yarn_cache
+      - *run_yarn
       - save_cache:
           name: Save node_modules cache
           key: v1-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}
           paths:
-            - node_modules
+            - ~/.cache/yarn
 
   lint:
     docker: *docker
@@ -42,7 +46,8 @@ jobs:
 
     steps:
       - checkout
-      - restore_cache: *restore_node_modules
+      - *restore_yarn_cache
+      - *run_yarn
       - run: node ./scripts/prettier/index
       - run: node ./scripts/tasks/eslint
       - run: ./scripts/circleci/check_license.sh
@@ -55,53 +60,59 @@ jobs:
 
     steps:
       - checkout
-      - restore_cache: *restore_node_modules
+      - *restore_yarn_cache
+      - *run_yarn
       - run: node ./scripts/tasks/flow-ci
 
-  test-source:
+  test_source:
     docker: *docker
     environment: *environment
 
     steps:
       - checkout
-      - restore_cache: *restore_node_modules
+      - *restore_yarn_cache
+      - *run_yarn
       - run: yarn test --maxWorkers=2
 
-  test-source-persistent:
+  test_source_persistent:
     docker: *docker
     environment: *environment
 
     steps:
       - checkout
-      - restore_cache: *restore_node_modules
+      - *restore_yarn_cache
+      - *run_yarn
       - run: yarn test-persistent --maxWorkers=2
 
-  test-source-prod:
+  test_source_prod:
     docker: *docker
     environment: *environment
 
     steps:
       - checkout
-      - restore_cache: *restore_node_modules
+      - *restore_yarn_cache
+      - *run_yarn
       - run: yarn test-prod --maxWorkers=2
 
-  test-source-fire:
+  test_source_fire:
     docker: *docker
     environment: *environment
 
     steps:
       - checkout
-      - restore_cache: *restore_node_modules
+      - *restore_yarn_cache
+      - *run_yarn
       - run: yarn test-fire --maxWorkers=2
       - run: yarn test-fire-prod --maxWorkers=2
 
-  test-coverage:
+  test_coverage:
     docker: *docker
     environment: *environment
 
     steps:
       - checkout
-      - restore_cache: *restore_node_modules
+      - *restore_yarn_cache
+      - *run_yarn
       - run: ./scripts/circleci/test_coverage.sh
 
   build:
@@ -109,7 +120,8 @@ jobs:
     environment: *environment
     steps:
       - checkout
-      - restore_cache: *restore_node_modules
+      - *restore_yarn_cache
+      - *run_yarn
       - run: ./scripts/circleci/add_build_info_json.sh
       - run: ./scripts/circleci/update_package_versions.sh
       - run: ./scripts/circleci/build.sh
@@ -134,22 +146,24 @@ jobs:
             - node_modules
             - react-native
 
-  test-build:
+  test_build:
     docker: *docker
     environment: *environment
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - restore_cache: *restore_node_modules
+      - *restore_yarn_cache
+      - *run_yarn
       - run: yarn test-build --maxWorkers=2
 
-  test-build-prod:
+  test_build_prod:
     docker: *docker
     environment: *environment
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - restore_cache: *restore_node_modules
+      - *restore_yarn_cache
+      - *run_yarn
       - run: yarn test-build-prod --maxWorkers=2
 
 workflows:
@@ -163,27 +177,27 @@ workflows:
       - flow:
           requires:
             - setup
-      - test-source:
+      - test_source:
           requires:
             - setup
-      - test-source-prod:
+      - test_source_prod:
           requires:
             - setup
-      - test-source-persistent:
+      - test_source_persistent:
           requires:
             - setup
-      - test-source-fire:
+      - test_source_fire:
           requires:
             - setup
-      - test-coverage:
+      - test_coverage:
           requires:
             - setup
       - build:
           requires:
             - setup
-      - test-build:
+      - test_build:
           requires:
             - build
-      - test-build-prod:
+      - test_build_prod:
           requires:
             - build
