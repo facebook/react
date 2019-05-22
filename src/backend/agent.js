@@ -373,10 +373,11 @@ export default class Agent extends EventEmitter {
 
   startInspectingDOM = () => {
     window.addEventListener('click', this._onClick, true);
-    window.addEventListener('mousedown', this._onMouseDown, true);
-    window.addEventListener('mouseup', this._onMouseUp, true);
-    window.addEventListener('pointerover', this._onPointerOver, true);
+    window.addEventListener('mousedown', this._onMouseEvent, true);
+    window.addEventListener('mouseover', this._onMouseEvent, true);
+    window.addEventListener('mouseup', this._onMouseEvent, true);
     window.addEventListener('pointerdown', this._onPointerDown, true);
+    window.addEventListener('pointerover', this._onPointerOver, true);
     window.addEventListener('pointerup', this._onPointerUp, true);
   };
 
@@ -395,10 +396,11 @@ export default class Agent extends EventEmitter {
     hideOverlay();
 
     window.removeEventListener('click', this._onClick, true);
-    window.removeEventListener('mousedown', this._onMouseDown, true);
-    window.removeEventListener('mouseup', this._onMouseUp, true);
-    window.removeEventListener('pointerover', this._onPointerOver, true);
+    window.removeEventListener('mousedown', this._onMouseEvent, true);
+    window.removeEventListener('mouseover', this._onMouseEvent, true);
+    window.removeEventListener('mouseup', this._onMouseEvent, true);
     window.removeEventListener('pointerdown', this._onPointerDown, true);
+    window.removeEventListener('pointerover', this._onPointerOver, true);
     window.removeEventListener('pointerup', this._onPointerUp, true);
   };
 
@@ -490,10 +492,11 @@ export default class Agent extends EventEmitter {
     event.stopPropagation();
 
     this.stopInspectingDOM();
+
     this._bridge.send('stopInspectingDOM', true);
   };
 
-  _onMouseDown = (event: MouseEvent) => {
+  _onMouseEvent = (event: MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
   };
@@ -503,19 +506,6 @@ export default class Agent extends EventEmitter {
     event.stopPropagation();
 
     this._selectFiberForNode(((event.target: any): HTMLElement));
-  };
-
-  // While we don't do anything here, this makes choosing
-  // the inspected element less invasive and less likely
-  // to dismiss e.g. a context menu.
-  _onMouseUp = (event: MouseEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-  };
-
-  _onPointerUp = (event: MouseEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
   };
 
   _onPointerOver = (event: MouseEvent) => {
@@ -529,6 +519,11 @@ export default class Agent extends EventEmitter {
     showOverlay([target], null, false);
 
     this._selectFiberForNode(target);
+  };
+
+  _onPointerUp = (event: MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
   };
 
   _selectFiberForNode = throttle(
