@@ -284,6 +284,7 @@ export default class ProfilerStore extends EventEmitter {
 
   onBridgeShutdown = () => {
     this._bridge.removeListener('operations', this.onBridgeOperations);
+    this._bridge.removeListener('profilingData', this.onBridgeProfilingData);
     this._bridge.removeListener('profilingStatus', this.onProfilingStatus);
     this._bridge.removeListener('shutdown', this.onBridgeShutdown);
   };
