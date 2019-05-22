@@ -33,6 +33,11 @@ let D = bar && (() => {
 });"
 `;
 
+exports[`ReactFreshBabelPlugin ignores unnamed function declarations 1`] = `
+"
+export default function () {}"
+`;
+
 exports[`ReactFreshBabelPlugin only registers pascal case functions 1`] = `
 "
 function hello() {
@@ -47,17 +52,17 @@ export function Hello() {
   return <h1 onClick={handleClick}>Hi</h1>;
 }
 
-_c = Hello
+_c = Hello;
 export default function Bar() {
   return <Hello />;
 }
 
-_c2 = Bar
+_c2 = Bar;
 function Baz() {
   return <h1>OK</h1>;
 }
 
-_c3 = Baz
+_c3 = Baz;
 const NotAComp = 'hi';
 export { Baz, NotAComp };
 
@@ -108,11 +113,11 @@ function Hello() {
   return <h1 onClick={handleClick}>Hi</h1>;
 }
 
-_c = Hello
+_c = Hello;
 function Bar() {
   return <Hello />;
 }
-_c2 = Bar
+_c2 = Bar;
 
 var _c;
 
@@ -175,7 +180,7 @@ exports[`ReactFreshBabelPlugin uses original function declaration if it get reas
 function Hello() {
   return <h1>Hi</h1>;
 }
-_c = Hello
+_c = Hello;
 Hello = connect(Hello);
 
 var _c;

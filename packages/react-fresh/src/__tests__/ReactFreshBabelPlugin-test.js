@@ -163,18 +163,26 @@ describe('ReactFreshBabelPlugin', () => {
   it('ignores complex definitions', () => {
     expect(
       transform(`
-      let A = foo ? () => {
-        return <h1>Hi</h1>;
-      } : null
-      const B = (function Foo() {
-        return <h1>Hi</h1>;
-      })();
-      let C = () => () => {
-        return <h1>Hi</h1>;
-      };
-      let D = bar && (() => {
-        return <h1>Hi</h1>;
-      });
+        let A = foo ? () => {
+          return <h1>Hi</h1>;
+        } : null
+        const B = (function Foo() {
+          return <h1>Hi</h1>;
+        })();
+        let C = () => () => {
+          return <h1>Hi</h1>;
+        };
+        let D = bar && (() => {
+          return <h1>Hi</h1>;
+        });
+    `),
+    ).toMatchSnapshot();
+  });
+
+  it('ignores unnamed function declarations', () => {
+    expect(
+      transform(`
+        export default function() {}
     `),
     ).toMatchSnapshot();
   });

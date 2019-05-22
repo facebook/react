@@ -29,7 +29,7 @@ export default function(babel) {
   }
 
   const buildRegistrationCall = template(`
-    __register__(HANDLE, PERSISTENT_ID)
+    __register__(HANDLE, PERSISTENT_ID);
   `);
 
   function isComponentishName(name) {
@@ -39,7 +39,7 @@ export default function(babel) {
   function isComponentish(node) {
     switch (node.type) {
       case 'FunctionDeclaration':
-        return isComponentishName(node.id.name);
+        return node.id !== null && isComponentishName(node.id.name);
       case 'VariableDeclarator':
         return (
           isComponentishName(node.id.name) &&
@@ -78,7 +78,9 @@ export default function(babel) {
         const functionName = path.node.id.name;
         const handle = createRegistration(programPath, functionName);
         insertAfterPath.insertAfter(
-          t.assignmentExpression('=', handle, path.node.id),
+          t.expressionStatement(
+            t.assignmentExpression('=', handle, path.node.id),
+          ),
         );
       },
       VariableDeclaration(path) {
