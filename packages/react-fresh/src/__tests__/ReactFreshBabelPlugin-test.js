@@ -14,7 +14,6 @@ function transform(input, options = {}) {
   return babel.transform(input, {
     babelrc: false,
     plugins: ['syntax-jsx', freshPlugin],
-    filename: 'MyFile.js',
   }).code;
 }
 
