@@ -5,13 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-/**
- * Copyright (c) Facebook, Inc. and its affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
 'use strict';
 
 export default function(babel) {
@@ -23,6 +16,10 @@ export default function(babel) {
     if (!registrationsByProgramPath.has(programPath)) {
       registrationsByProgramPath.set(programPath, []);
     }
+    programPath.pushContainer(
+      'body',
+      t.variableDeclaration('var', [t.variableDeclarator(handle)]),
+    );
     const registrations = registrationsByProgramPath.get(programPath);
     registrations.push({
       handle,
@@ -31,12 +28,6 @@ export default function(babel) {
     return handle;
   }
 
-  const buildRegistrationAssignment = template(`
-    var HANDLE = COMPONENT;
-  `);
-  const buildInlineRegistrationAssignment = template(`
-    HANDLE = COMPONENT;
-  `);
   const buildRegistrationCall = template(`
     __register__(HANDLE, PERSISTENT_ID)
   `);
@@ -87,10 +78,7 @@ export default function(babel) {
         const functionName = path.node.id.name;
         const handle = createRegistration(programPath, functionName);
         insertAfterPath.insertAfter(
-          buildRegistrationAssignment({
-            HANDLE: handle,
-            COMPONENT: path.node.id,
-          }),
+          t.assignmentExpression('=', handle, path.node.id),
         );
       },
       VariableDeclaration(path) {
@@ -123,10 +111,7 @@ export default function(babel) {
         const initPath = firstDeclPath.get('init');
         const handle = createRegistration(programPath, functionName);
         initPath.replaceWith(
-          buildInlineRegistrationAssignment({
-            HANDLE: handle,
-            COMPONENT: initPath.node,
-          }),
+          t.assignmentExpression('=', handle, initPath.node),
         );
       },
       Program: {

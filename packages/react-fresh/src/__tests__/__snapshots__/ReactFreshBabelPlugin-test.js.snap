@@ -47,22 +47,28 @@ export function Hello() {
   return <h1 onClick={handleClick}>Hi</h1>;
 }
 
-var _c = Hello;
+_c = Hello
 export default function Bar() {
   return <Hello />;
 }
 
-var _c2 = Bar;
+_c2 = Bar
 function Baz() {
   return <h1>OK</h1>;
 }
 
-var _c3 = Baz;
+_c3 = Baz
 const NotAComp = 'hi';
 export { Baz, NotAComp };
 
 export function sum() {}
 export const Bad = 42;
+
+var _c;
+
+var _c2;
+
+var _c3;
 
 __register__(_c, 'Hello');
 
@@ -86,6 +92,10 @@ export default (() => {
   return <Hello />;
 });
 
+var _c;
+
+var _c2;
+
 __register__(_c, \\"Hello\\");
 
 __register__(_c2, \\"Bar\\");"
@@ -98,11 +108,15 @@ function Hello() {
   return <h1 onClick={handleClick}>Hi</h1>;
 }
 
-var _c = Hello;
+_c = Hello
 function Bar() {
   return <Hello />;
 }
-var _c2 = Bar;
+_c2 = Bar
+
+var _c;
+
+var _c2;
 
 __register__(_c, \\"Hello\\");
 
@@ -120,6 +134,12 @@ const Bar = _c2 = () => {
 };
 var Baz = _c3 = () => <div />;
 var sum = () => {};
+
+var _c;
+
+var _c2;
+
+var _c3;
 
 __register__(_c, \\"Hello\\");
 
@@ -141,6 +161,10 @@ function sum() {}
 let Baz = 10;
 var Qux;
 
+var _c;
+
+var _c2;
+
 __register__(_c, \\"Hello\\");
 
 __register__(_c2, \\"Bar\\");"
@@ -151,8 +175,10 @@ exports[`ReactFreshBabelPlugin uses original function declaration if it get reas
 function Hello() {
   return <h1>Hi</h1>;
 }
-var _c = Hello;
+_c = Hello
 Hello = connect(Hello);
+
+var _c;
 
 __register__(_c, \\"Hello\\");"
 `;
