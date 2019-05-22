@@ -41,6 +41,7 @@ import type {
 
 export default function ComponentFiltersModalWrapper(_: {||}) {
   const store = useContext(StoreContext);
+  const { profilerStore } = store;
 
   const { isModalShowing, setIsModalShowing } = useContext(
     ComponentFiltersModalContext
@@ -50,13 +51,13 @@ export default function ComponentFiltersModalWrapper(_: {||}) {
   // If necessary, we could support this- but it doesn't seem like a necessary use case.
   const isProfilingSubscription = useMemo(
     () => ({
-      getCurrentValue: () => store.isProfiling,
+      getCurrentValue: () => profilerStore.isProfiling,
       subscribe: (callback: Function) => {
-        store.addListener('isProfiling', callback);
-        return () => store.removeListener('isProfiling', callback);
+        profilerStore.addListener('isProfiling', callback);
+        return () => profilerStore.removeListener('isProfiling', callback);
       },
     }),
-    [store]
+    [profilerStore]
   );
   const isProfiling = useSubscription<boolean, Store>(isProfilingSubscription);
   if (isProfiling && isModalShowing) {

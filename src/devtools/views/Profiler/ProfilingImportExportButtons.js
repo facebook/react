@@ -5,44 +5,52 @@ import { ProfilerContext } from './ProfilerContext';
 import { ModalDialogContext } from '../ModalDialog';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
-import { BridgeContext, StoreContext } from '../context';
+import { StoreContext } from '../context';
 import {
-  prepareExportedProfilingSummary,
-  prepareImportedProfilingData,
+  prepareProfilingDataExport,
+  prepareProfilingDataFrontendFromExport,
 } from './utils';
+import { downloadFile } from '../utils';
 
 import styles from './ProfilingImportExportButtons.css';
 
+import type { ProfilingDataExport } from './types';
+
 export default function ProfilingImportExportButtons() {
-  const bridge = useContext(BridgeContext);
-  const { isProfiling, rendererID, rootHasProfilingData, rootID } = useContext(
-    ProfilerContext
-  );
+  const { isProfiling, profilingData, rootID } = useContext(ProfilerContext);
   const store = useContext(StoreContext);
+  const { profilerStore } = store;
 
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const { dispatch: modalDialogDispatch } = useContext(ModalDialogContext);
 
   const downloadData = useCallback(() => {
-    if (rendererID === null || rootID === null) {
+    if (rootID === null) {
       return;
     }
 
-    const exportedProfilingSummary = prepareExportedProfilingSummary(
-      store.profilingOperations,
-      store.profilingSnapshots,
-      rootID,
-      rendererID
-    );
-    bridge.send('exportProfilingSummary', exportedProfilingSummary);
-  }, [
-    bridge,
-    rendererID,
-    rootID,
-    store.profilingOperations,
-    store.profilingSnapshots,
-  ]);
+    if (profilingData !== null) {
+      const profilingDataExport = prepareProfilingDataExport(profilingData);
+      const date = new Date();
+      const dateString = date
+        .toLocaleDateString(undefined, {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+        })
+        .replace(/\//g, '-');
+      const timeString = date
+        .toLocaleTimeString(undefined, {
+          hour12: false,
+        })
+        .replace(/:/g, '-');
+      downloadFile(
+        `profiling-data.${dateString}.${timeString}.json`,
+        JSON.stringify(profilingDataExport, null, 2)
+      );
+    }
+  }, [rootID, profilingData]);
 
   const uploadData = useCallback(() => {
     if (inputRef.current !== null) {
@@ -57,7 +65,12 @@ export default function ProfilingImportExportButtons() {
       fileReader.addEventListener('load', () => {
         try {
           const raw = ((fileReader.result: any): string);
-          store.importedProfilingData = prepareImportedProfilingData(raw);
+          const profilingDataExport = ((JSON.parse(
+            raw
+          ): any): ProfilingDataExport);
+          profilerStore.profilingData = prepareProfilingDataFrontendFromExport(
+            profilingDataExport
+          );
         } catch (error) {
           modalDialogDispatch({
             type: 'SHOW',
@@ -76,7 +89,7 @@ export default function ProfilingImportExportButtons() {
       // TODO (profiling) Handle fileReader errors.
       fileReader.readAsText(input.files[0]);
     }
-  }, [modalDialogDispatch, store]);
+  }, [modalDialogDispatch, profilerStore]);
 
   return (
     <Fragment>
@@ -95,15 +108,13 @@ export default function ProfilingImportExportButtons() {
       >
         <ButtonIcon type="import" />
       </Button>
-      {store.supportsFileDownloads && (
-        <Button
-          disabled={isProfiling || !rootHasProfilingData}
-          onClick={downloadData}
-          title="Save profile..."
-        >
-          <ButtonIcon type="export" />
-        </Button>
-      )}
+      <Button
+        disabled={isProfiling || !profilerStore.hasProfilingData}
+        onClick={downloadData}
+        title="Save profile..."
+      >
+        <ButtonIcon type="export" />
+      </Button>
     </Fragment>
   );
 }

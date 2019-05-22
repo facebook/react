@@ -24,7 +24,7 @@ describe('commit tree', () => {
     TestRenderer = utils.requireTestRenderer();
   });
 
-  it('should be able to rebuild the store tree for each commit', async done => {
+  it('should be able to rebuild the store tree for each commit', () => {
     const Parent = ({ count }) => {
       Scheduler.advanceTime(10);
       return new Array(count)
@@ -38,52 +38,37 @@ describe('commit tree', () => {
 
     const container = document.createElement('div');
 
-    utils.act(() => store.startProfiling());
+    utils.act(() => store.profilerStore.startProfiling());
     utils.act(() => ReactDOM.render(<Parent count={1} />, container));
     utils.act(() => ReactDOM.render(<Parent count={3} />, container));
     utils.act(() => ReactDOM.render(<Parent count={2} />, container));
     utils.act(() => ReactDOM.render(<Parent count={0} />, container));
-    utils.act(() => store.stopProfiling());
+    utils.act(() => store.profilerStore.stopProfiling());
 
-    let suspenseResolved = false;
+    let renderFinished = false;
 
-    function Suspender({ commitIndex, rendererID, rootID }) {
-      const profilingSummary = store.profilingCache.ProfilingSummary.read({
-        rendererID,
+    function Validator({ commitIndex, rootID }) {
+      const commitTree = store.profilerStore.profilingCache.getCommitTree({
+        commitIndex,
         rootID,
       });
-      suspenseResolved = true;
-      const commitTree = store.profilingCache.getCommitTree({
-        commitIndex,
-        profilingSummary,
-      });
       expect(commitTree).toMatchSnapshot(`${commitIndex}: CommitTree`);
+      renderFinished = true;
       return null;
     }
 
-    const rendererID = utils.getRendererID();
     const rootID = store.roots[0];
 
     for (let commitIndex = 0; commitIndex < 4; commitIndex++) {
-      suspenseResolved = false;
+      renderFinished = false;
 
-      await utils.actAsync(
-        () =>
-          TestRenderer.create(
-            <React.Suspense fallback={null}>
-              <Suspender
-                commitIndex={commitIndex}
-                rendererID={rendererID}
-                rootID={rootID}
-              />
-            </React.Suspense>
-          ),
-        3
-      );
+      utils.act(() => {
+        TestRenderer.create(
+          <Validator commitIndex={commitIndex} rootID={rootID} />
+        );
+      });
 
-      expect(suspenseResolved).toBe(true);
+      expect(renderFinished).toBe(true);
     }
-
-    done();
   });
 });

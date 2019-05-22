@@ -1,11 +1,13 @@
 // @flow
 
+import type Store from 'src/devtools/store';
+
 describe('Store component filters', () => {
   let React;
   let ReactDOM;
   let TestUtils;
   let Types;
-  let store;
+  let store: Store;
   let utils;
 
   const act = (callback: Function) => {
@@ -28,7 +30,7 @@ describe('Store component filters', () => {
   });
 
   it('should throw if filters are updated while profiling', () => {
-    act(() => store.startProfiling());
+    act(() => store.profilerStore.startProfiling());
     expect(() => (store.componentFilters = [])).toThrow(
       'Cannot modify filter preferences while profiling'
     );

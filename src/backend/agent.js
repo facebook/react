@@ -10,7 +10,6 @@ import {
 } from '../constants';
 import { hideOverlay, showOverlay } from './views/Highlighter';
 
-import type { ExportedProfilingSummaryFromFrontend } from 'src/devtools/views/Profiler/types';
 import type {
   PathFrame,
   PathMatch,
@@ -19,8 +18,6 @@ import type {
 } from './types';
 import type { OwnersList } from 'src/devtools/views/Components/types';
 import type { Bridge, ComponentFilter } from '../types';
-
-import { prepareExportedProfilingData } from 'src/devtools/views/Profiler/utils';
 
 const debug = (methodName, ...args) => {
   if (__DEBUG__) {
@@ -96,12 +93,8 @@ export default class Agent extends EventEmitter {
       'clearHighlightedElementInDOM',
       this.clearHighlightedElementInDOM
     );
-    bridge.addListener('exportProfilingSummary', this.exportProfilingSummary);
-    bridge.addListener('getCommitDetails', this.getCommitDetails);
-    bridge.addListener('getFiberCommits', this.getFiberCommits);
-    bridge.addListener('getInteractions', this.getInteractions);
+    bridge.addListener('getProfilingData', this.getProfilingData);
     bridge.addListener('getProfilingStatus', this.getProfilingStatus);
-    bridge.addListener('getProfilingSummary', this.getProfilingSummary);
     bridge.addListener('highlightElementInDOM', this.highlightElementInDOM);
     bridge.addListener('getOwnersList', this.getOwnersList);
     bridge.addListener('inspectElement', this.inspectElement);
@@ -154,107 +147,17 @@ export default class Agent extends EventEmitter {
     return null;
   }
 
-  exportProfilingSummary = (
-    exportedProfilingSummary: ExportedProfilingSummaryFromFrontend
-  ): void => {
-    const { rendererID, rootID } = exportedProfilingSummary;
+  getProfilingData = ({ rendererID }: {| rendererID: RendererID |}) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}"`);
-      return;
     }
-    try {
-      const exportedProfilingDataFromRenderer = renderer.getExportedProfilingData(
-        rootID
-      );
-      const exportedProfilingData = prepareExportedProfilingData(
-        exportedProfilingDataFromRenderer,
-        exportedProfilingSummary
-      );
-      this._bridge.send('exportFile', {
-        contents: JSON.stringify(exportedProfilingData, null, 2),
-        filename: 'profile-data.json',
-      });
-    } catch (error) {
-      console.warn(`Unable to export file: ${error.stack}`);
-    }
-  };
 
-  getCommitDetails = ({
-    commitIndex,
-    rendererID,
-    rootID,
-  }: {
-    commitIndex: number,
-    rendererID: number,
-    rootID: number,
-  }) => {
-    const renderer = this._rendererInterfaces[rendererID];
-    if (renderer == null) {
-      console.warn(`Invalid renderer id "${rendererID}"`);
-    } else {
-      this._bridge.send(
-        'commitDetails',
-        renderer.getCommitDetails(rootID, commitIndex)
-      );
-    }
-  };
-
-  getFiberCommits = ({
-    fiberID,
-    rendererID,
-    rootID,
-  }: {
-    fiberID: number,
-    rendererID: number,
-    rootID: number,
-  }) => {
-    const renderer = this._rendererInterfaces[rendererID];
-    if (renderer == null) {
-      console.warn(`Invalid renderer id "${rendererID}"`);
-    } else {
-      this._bridge.send(
-        'fiberCommits',
-        renderer.getFiberCommits(rootID, fiberID)
-      );
-    }
-  };
-
-  getInteractions = ({
-    rendererID,
-    rootID,
-  }: {
-    rendererID: number,
-    rootID: number,
-  }) => {
-    const renderer = this._rendererInterfaces[rendererID];
-    if (renderer == null) {
-      console.warn(`Invalid renderer id "${rendererID}"`);
-    } else {
-      this._bridge.send('interactions', renderer.getInteractions(rootID));
-    }
+    this._bridge.send('profilingData', renderer.getProfilingData());
   };
 
   getProfilingStatus = () => {
     this._bridge.send('profilingStatus', this._isProfiling);
-  };
-
-  getProfilingSummary = ({
-    rendererID,
-    rootID,
-  }: {
-    rendererID: number,
-    rootID: number,
-  }) => {
-    const renderer = this._rendererInterfaces[rendererID];
-    if (renderer == null) {
-      console.warn(`Invalid renderer id "${rendererID}"`);
-    } else {
-      this._bridge.send(
-        'profilingSummary',
-        renderer.getProfilingSummary(rootID)
-      );
-    }
   };
 
   clearHighlightedElementInDOM = () => {

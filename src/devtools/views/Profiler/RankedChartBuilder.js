@@ -2,8 +2,9 @@
 
 import { ElementTypeForwardRef, ElementTypeMemo } from 'src/types';
 import { formatDuration } from './utils';
+import ProfilerStore from 'src/devtools/ProfilerStore';
 
-import type { CommitDetailsFrontend, CommitTreeFrontend } from './types';
+import type { CommitTree } from './types';
 
 export type ChartNode = {|
   id: number,
@@ -20,15 +21,19 @@ export type ChartData = {|
 const cachedChartData: Map<string, ChartData> = new Map();
 
 export function getChartData({
-  commitDetails,
   commitIndex,
   commitTree,
+  profilerStore,
+  rootID,
 }: {|
-  commitDetails: CommitDetailsFrontend,
   commitIndex: number,
-  commitTree: CommitTreeFrontend,
+  commitTree: CommitTree,
+  profilerStore: ProfilerStore,
+  rootID: number,
 |}): ChartData {
-  const { actualDurations, rootID, selfDurations } = commitDetails;
+  const commitDatum = profilerStore.getCommitData(rootID, commitIndex);
+
+  const { fiberActualDurations, fiberSelfDurations } = commitDatum;
   const { nodes } = commitTree;
 
   const key = `${rootID}-${commitIndex}`;
@@ -39,7 +44,7 @@ export function getChartData({
   let maxSelfDuration = 0;
 
   const chartNodes: Array<ChartNode> = [];
-  actualDurations.forEach((actualDuration, id) => {
+  fiberActualDurations.forEach((actualDuration, id) => {
     const node = nodes.get(id);
 
     if (node == null) {
@@ -52,7 +57,7 @@ export function getChartData({
     if (parentID === 0) {
       return;
     }
-    const selfDuration = selfDurations.get(id) || 0;
+    const selfDuration = fiberSelfDurations.get(id) || 0;
     maxSelfDuration = Math.max(maxSelfDuration, selfDuration);
 
     const name = displayName || 'Anonymous';

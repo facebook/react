@@ -27,7 +27,7 @@ describe('profiling charts', () => {
   });
 
   describe('flamegraph chart', () => {
-    it('should contain valid data', async done => {
+    it('should contain valid data', () => {
       const Parent = ({ count }) => {
         Scheduler.advanceTime(10);
         return (
@@ -47,7 +47,7 @@ describe('profiling charts', () => {
 
       const container = document.createElement('div');
 
-      utils.act(() => store.startProfiling());
+      utils.act(() => store.profilerStore.startProfiling());
       utils.act(() =>
         SchedulerTracing.unstable_trace('mount', Scheduler.unstable_now(), () =>
           ReactDOM.render(<Parent />, container)
@@ -60,68 +60,50 @@ describe('profiling charts', () => {
           () => ReactDOM.render(<Parent />, container)
         )
       );
-      utils.act(() => store.stopProfiling());
+      utils.act(() => store.profilerStore.stopProfiling());
 
-      let suspenseResolved = false;
+      let renderFinished = false;
 
-      function Suspender({ commitIndex, rendererID, rootID }) {
-        const profilingSummary = store.profilingCache.ProfilingSummary.read({
-          rendererID,
+      function Validator({ commitIndex, rootID }) {
+        const commitTree = store.profilerStore.profilingCache.getCommitTree({
+          commitIndex,
           rootID,
         });
-        const commitDetails = store.profilingCache.CommitDetails.read({
-          commitIndex,
-          rendererID,
-          rootID,
-        });
-        suspenseResolved = true;
-        const commitTree = store.profilingCache.getCommitTree({
-          commitIndex,
-          profilingSummary,
-        });
-        const chartData = store.profilingCache.getFlamegraphChartData({
-          commitDetails,
-          commitIndex,
-          commitTree,
-        });
+        const chartData = store.profilerStore.profilingCache.getFlamegraphChartData(
+          {
+            commitIndex,
+            commitTree,
+            rootID,
+          }
+        );
         expect(commitTree).toMatchSnapshot(`${commitIndex}: CommitTree`);
         expect(chartData).toMatchSnapshot(
           `${commitIndex}: FlamegraphChartData`
         );
+        renderFinished = true;
         return null;
       }
 
-      const rendererID = utils.getRendererID();
       const rootID = store.roots[0];
 
       for (let commitIndex = 0; commitIndex < 2; commitIndex++) {
-        suspenseResolved = false;
+        renderFinished = false;
 
-        await utils.actAsync(
-          () =>
-            TestRenderer.create(
-              <React.Suspense fallback={null}>
-                <Suspender
-                  commitIndex={commitIndex}
-                  rendererID={rendererID}
-                  rootID={rootID}
-                />
-              </React.Suspense>
-            ),
-          3
-        );
+        utils.act(() => {
+          TestRenderer.create(
+            <Validator commitIndex={commitIndex} rootID={rootID} />
+          );
+        });
 
-        expect(suspenseResolved).toBe(true);
+        expect(renderFinished).toBe(true);
       }
 
-      expect(suspenseResolved).toBe(true);
-
-      done();
+      expect(renderFinished).toBe(true);
     });
   });
 
   describe('ranked chart', () => {
-    it('should contain valid data', async done => {
+    it('should contain valid data', () => {
       const Parent = ({ count }) => {
         Scheduler.advanceTime(10);
         return (
@@ -141,7 +123,7 @@ describe('profiling charts', () => {
 
       const container = document.createElement('div');
 
-      utils.act(() => store.startProfiling());
+      utils.act(() => store.profilerStore.startProfiling());
       utils.act(() =>
         SchedulerTracing.unstable_trace('mount', Scheduler.unstable_now(), () =>
           ReactDOM.render(<Parent />, container)
@@ -154,64 +136,46 @@ describe('profiling charts', () => {
           () => ReactDOM.render(<Parent />, container)
         )
       );
-      utils.act(() => store.stopProfiling());
+      utils.act(() => store.profilerStore.stopProfiling());
 
-      let suspenseResolved = false;
+      let renderFinished = false;
 
-      function Suspender({ commitIndex, rendererID, rootID }) {
-        const profilingSummary = store.profilingCache.ProfilingSummary.read({
-          rendererID,
+      function Validator({ commitIndex, rootID }) {
+        const commitTree = store.profilerStore.profilingCache.getCommitTree({
+          commitIndex,
           rootID,
         });
-        const commitDetails = store.profilingCache.CommitDetails.read({
-          commitIndex,
-          rendererID,
-          rootID,
-        });
-        suspenseResolved = true;
-        const commitTree = store.profilingCache.getCommitTree({
-          commitIndex,
-          profilingSummary,
-        });
-        const chartData = store.profilingCache.getRankedChartData({
-          commitDetails,
-          commitIndex,
-          commitTree,
-        });
+        const chartData = store.profilerStore.profilingCache.getRankedChartData(
+          {
+            commitIndex,
+            commitTree,
+            rootID,
+          }
+        );
         expect(commitTree).toMatchSnapshot(`${commitIndex}: CommitTree`);
         expect(chartData).toMatchSnapshot(`${commitIndex}: RankedChartData`);
+        renderFinished = true;
         return null;
       }
 
-      const rendererID = utils.getRendererID();
       const rootID = store.roots[0];
 
       for (let commitIndex = 0; commitIndex < 2; commitIndex++) {
-        suspenseResolved = false;
+        renderFinished = false;
 
-        await utils.actAsync(
-          () =>
-            TestRenderer.create(
-              <React.Suspense fallback={null}>
-                <Suspender
-                  commitIndex={commitIndex}
-                  rendererID={rendererID}
-                  rootID={rootID}
-                />
-              </React.Suspense>
-            ),
-          3
-        );
+        utils.act(() => {
+          TestRenderer.create(
+            <Validator commitIndex={commitIndex} rootID={rootID} />
+          );
+        });
 
-        expect(suspenseResolved).toBe(true);
+        expect(renderFinished).toBe(true);
       }
-
-      done();
     });
   });
 
   describe('interactions', () => {
-    it('should contain valid data', async done => {
+    it('should contain valid data', () => {
       const Parent = ({ count }) => {
         Scheduler.advanceTime(10);
         return (
@@ -231,7 +195,7 @@ describe('profiling charts', () => {
 
       const container = document.createElement('div');
 
-      utils.act(() => store.startProfiling());
+      utils.act(() => store.profilerStore.startProfiling());
       utils.act(() =>
         SchedulerTracing.unstable_trace('mount', Scheduler.unstable_now(), () =>
           ReactDOM.render(<Parent />, container)
@@ -244,52 +208,34 @@ describe('profiling charts', () => {
           () => ReactDOM.render(<Parent />, container)
         )
       );
-      utils.act(() => store.stopProfiling());
+      utils.act(() => store.profilerStore.stopProfiling());
 
-      let suspenseResolved = false;
+      let renderFinished = false;
 
-      function Suspender({ commitIndex, rendererID, rootID }) {
-        const profilingSummary = store.profilingCache.ProfilingSummary.read({
-          rendererID,
-          rootID,
-        });
-        const { interactions } = store.profilingCache.Interactions.read({
-          rendererID,
-          rootID,
-        });
-        suspenseResolved = true;
-        const chartData = store.profilingCache.getInteractionsChartData({
-          interactions,
-          profilingSummary,
-        });
+      function Validator({ commitIndex, rootID }) {
+        const chartData = store.profilerStore.profilingCache.getInteractionsChartData(
+          {
+            rootID,
+          }
+        );
         expect(chartData).toMatchSnapshot('Interactions');
+        renderFinished = true;
         return null;
       }
 
-      const rendererID = utils.getRendererID();
       const rootID = store.roots[0];
 
       for (let commitIndex = 0; commitIndex < 2; commitIndex++) {
-        suspenseResolved = false;
+        renderFinished = false;
 
-        await utils.actAsync(
-          () =>
-            TestRenderer.create(
-              <React.Suspense fallback={null}>
-                <Suspender
-                  commitIndex={commitIndex}
-                  rendererID={rendererID}
-                  rootID={rootID}
-                />
-              </React.Suspense>
-            ),
-          3
-        );
+        utils.act(() => {
+          TestRenderer.create(
+            <Validator commitIndex={commitIndex} rootID={rootID} />
+          );
+        });
 
-        expect(suspenseResolved).toBe(true);
+        expect(renderFinished).toBe(true);
       }
-
-      done();
     });
   });
 });

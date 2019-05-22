@@ -44,7 +44,6 @@
   "permissions": [
     "<all_urls>",
     "background",
-    "downloads",
     "tabs",
     "file:///*",
     "http://*/*",

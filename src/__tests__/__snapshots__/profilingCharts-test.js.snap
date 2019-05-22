@@ -247,6 +247,20 @@ Object {
 
 exports[`profiling charts interactions should contain valid data: Interactions 1`] = `
 Object {
+  "interactions": Array [
+    Object {
+      "__count": 1,
+      "id": 0,
+      "name": "mount",
+      "timestamp": 0,
+    },
+    Object {
+      "__count": 0,
+      "id": 1,
+      "name": "update",
+      "timestamp": 15,
+    },
+  ],
   "lastInteractionTime": 25,
   "maxCommitDuration": 15,
 }
@@ -254,6 +268,20 @@ Object {
 
 exports[`profiling charts interactions should contain valid data: Interactions 2`] = `
 Object {
+  "interactions": Array [
+    Object {
+      "__count": 1,
+      "id": 0,
+      "name": "mount",
+      "timestamp": 0,
+    },
+    Object {
+      "__count": 0,
+      "id": 1,
+      "name": "update",
+      "timestamp": 15,
+    },
+  ],
   "lastInteractionTime": 25,
   "maxCommitDuration": 15,
 }

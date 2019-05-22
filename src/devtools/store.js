@@ -1,8 +1,6 @@
 // @flow
 
 import EventEmitter from 'events';
-import memoize from 'memoize-one';
-import throttle from 'lodash.throttle';
 import { inspect } from 'util';
 import {
   TREE_OPERATION_ADD,
@@ -17,14 +15,10 @@ import {
   utfDecodeString,
 } from '../utils';
 import { __DEBUG__ } from '../constants';
-import ProfilingCache from './ProfilingCache';
 import { printStore } from 'src/__tests__/storeSerializer';
+import ProfilerStore from './ProfilerStore';
 
 import type { Element } from './views/Components/types';
-import type {
-  ImportedProfilingData,
-  ProfilingSnapshotNode,
-} from './views/Profiler/types';
 import type { Bridge, ComponentFilter, ElementType } from '../types';
 
 const debug = (methodName, ...args) => {
@@ -43,12 +37,9 @@ const LOCAL_STORAGE_CAPTURE_SCREENSHOTS_KEY =
 const LOCAL_STORAGE_COLLAPSE_ROOTS_BY_DEFAULT_KEY =
   'React::DevTools::collapseNodesByDefault';
 
-const THROTTLE_CAPTURE_SCREENSHOT_DURATION = 500;
-
 type Config = {|
   isProfiling?: boolean,
   supportsCaptureScreenshots?: boolean,
-  supportsFileDownloads?: boolean,
   supportsReloadAndProfile?: boolean,
   supportsProfiling?: boolean,
 |};
@@ -80,37 +71,11 @@ export default class Store extends EventEmitter {
   // The InspectedElementContext also relies on this mutability for its WeakMap usage.
   _idToElement: Map<number, Element> = new Map();
 
-  // The user has imported a previously exported profiling session.
-  _importedProfilingData: ImportedProfilingData | null = null;
-
-  // The backend is currently profiling.
-  // When profiling is in progress, operations are stored so that we can later reconstruct past commit trees.
-  _isProfiling: boolean = false;
-
   // Map of element (id) to the set of elements (ids) it owns.
   // This map enables getOwnersListForElement() to avoid traversing the entire tree.
   _ownersMap: Map<number, Set<number>> = new Map();
 
-  // Suspense cache for reading profiling data.
-  _profilingCache: ProfilingCache;
-
-  // Map of root (id) to a list of tree mutation that occur during profiling.
-  // Once profiling is finished, these mutations can be used, along with the initial tree snapshots,
-  // to reconstruct the state of each root for each commit.
-  _profilingOperationsByRootID: Map<number, Array<Uint32Array>> = new Map();
-
-  // Map of root (id) to a Map of screenshots by commit ID.
-  // Stores screenshots for each commit (when profiling).
-  _profilingScreenshotsByRootID: Map<number, Map<number, string>> = new Map();
-
-  // Snapshot of the state of the main Store (including all roots) when profiling started.
-  // Once profiling is finished, this snapshot can be used along with "operations" messages emitted during profiling,
-  // to reconstruct the state of each root for each commit.
-  // It's okay to use a single root to store this information because node IDs are unique across all roots.
-  _profilingSnapshotsByRootID: Map<
-    number,
-    Map<number, ProfilingSnapshotNode>
-  > = new Map();
+  _profilerStore: ProfilerStore;
 
   // Incremented each time the store is mutated.
   // This enables a passive effect to detect a mutation between render and commit phase.
@@ -128,7 +93,6 @@ export default class Store extends EventEmitter {
   // These options may be initially set by a confiugraiton option when constructing the Store.
   // In the case of "supportsProfiling", the option may be updated based on the injected renderers.
   _supportsCaptureScreenshots: boolean = false;
-  _supportsFileDownloads: boolean = false;
   _supportsProfiling: boolean = false;
   _supportsReloadAndProfile: boolean = false;
 
@@ -150,25 +114,20 @@ export default class Store extends EventEmitter {
 
     this._componentFilters = getSavedComponentFilters();
 
+    let isProfiling = false;
     if (config != null) {
+      isProfiling = config.isProfiling === true;
+
       const {
-        isProfiling,
         supportsCaptureScreenshots,
-        supportsFileDownloads,
         supportsProfiling,
         supportsReloadAndProfile,
       } = config;
-      if (isProfiling) {
-        this._isProfiling = true;
-      }
       if (supportsCaptureScreenshots) {
         this._supportsCaptureScreenshots = true;
         this._captureScreenshots =
           localStorage.getItem(LOCAL_STORAGE_CAPTURE_SCREENSHOTS_KEY) ===
           'true';
-      }
-      if (supportsFileDownloads) {
-        this._supportsFileDownloads = true;
       }
       if (supportsProfiling) {
         this._supportsProfiling = true;
@@ -180,15 +139,9 @@ export default class Store extends EventEmitter {
 
     this._bridge = bridge;
     bridge.addListener('operations', this.onBridgeOperations);
-    bridge.addListener('profilingStatus', this.onProfilingStatus);
-    bridge.addListener('screenshotCaptured', this.onScreenshotCaptured);
     bridge.addListener('shutdown', this.onBridgeShutdown);
 
-    // It's possible that profiling has already started (e.g. "reload and start profiling")
-    // so the frontend needs to ask the backend for its status after mounting.
-    bridge.send('getProfilingStatus');
-
-    this._profilingCache = new ProfilingCache(bridge, this);
+    this._profilerStore = new ProfilerStore(bridge, this, isProfiling);
   }
 
   // This is only used in tests to avoid memory leaks.
@@ -197,23 +150,6 @@ export default class Store extends EventEmitter {
       // The only safe time to assert these maps are empty is when the store is empty.
       this.assertMapSizeMatchesRootCount(this._idToElement, '_idToElement');
       this.assertMapSizeMatchesRootCount(this._ownersMap, '_ownersMap');
-
-      // These maps will be empty unless profiling mode has been started.
-      // After this, their size should always match the number of roots,
-      // but unless we want to track additional metadata about profiling history,
-      // the only safe time to assert this is when the store is empty.
-      this.assertMapSizeMatchesRootCount(
-        this._profilingOperationsByRootID,
-        '_profilingOperationsByRootID'
-      );
-      this.assertMapSizeMatchesRootCount(
-        this._profilingScreenshotsByRootID,
-        '_profilingScreenshotsByRootID'
-      );
-      this.assertMapSizeMatchesRootCount(
-        this._profilingSnapshotsByRootID,
-        '_profilingSnapshotsByRootID'
-      );
     }
 
     // These maps should always be the same size as the number of roots
@@ -273,7 +209,7 @@ export default class Store extends EventEmitter {
     return this._componentFilters;
   }
   set componentFilters(value: Array<ComponentFilter>): void {
-    if (this._isProfiling) {
+    if (this._profilerStore.isProfiling) {
       // Re-mounting a tree while profiling is in progress might break a lot of assumptions.
       // If necessary, we could support this- but it doesn't seem like a necessary use case.
       throw Error('Cannot modify filter preferences while profiling');
@@ -295,53 +231,20 @@ export default class Store extends EventEmitter {
     return this._hasOwnerMetadata;
   }
 
-  // Profiling data has been recorded for at least one root.
-  get hasProfilingData(): boolean {
-    return (
-      this._importedProfilingData !== null ||
-      this._profilingOperationsByRootID.size > 0
-    );
-  }
-
-  get importedProfilingData(): ImportedProfilingData | null {
-    return this._importedProfilingData;
-  }
-  set importedProfilingData(value: ImportedProfilingData | null): void {
-    this._importedProfilingData = value;
-    this._profilingOperationsByRootID = new Map();
-    this._profilingScreenshotsByRootID = new Map();
-    this._profilingSnapshotsByRootID = new Map();
-    this._profilingCache.invalidate();
-
-    this.emit('importedProfilingData');
-  }
-
-  get isProfiling(): boolean {
-    return this._isProfiling;
-  }
-
   get numElements(): number {
     return this._weightAcrossRoots;
   }
 
-  get profilingCache(): ProfilingCache {
-    return this._profilingCache;
-  }
-
-  get profilingOperations(): Map<number, Array<Uint32Array>> {
-    return this._profilingOperationsByRootID;
-  }
-
-  get profilingScreenshots(): Map<number, Map<number, string>> {
-    return this._profilingScreenshotsByRootID;
-  }
-
-  get profilingSnapshots(): Map<number, Map<number, ProfilingSnapshotNode>> {
-    return this._profilingSnapshotsByRootID;
+  get profilerStore(): ProfilerStore {
+    return this._profilerStore;
   }
 
   get revision(): number {
     return this._revision;
+  }
+
+  get rootIDToRendererID(): Map<number, number> {
+    return this._rootIDToRendererID;
   }
 
   get roots(): $ReadOnlyArray<number> {
@@ -352,29 +255,12 @@ export default class Store extends EventEmitter {
     return this._supportsCaptureScreenshots;
   }
 
-  get supportsFileDownloads(): boolean {
-    return this._supportsFileDownloads;
-  }
-
   get supportsProfiling(): boolean {
     return this._supportsProfiling;
   }
 
   get supportsReloadAndProfile(): boolean {
     return this._supportsReloadAndProfile;
-  }
-
-  clearProfilingData(): void {
-    this._importedProfilingData = null;
-    this._profilingOperationsByRootID = new Map();
-    this._profilingScreenshotsByRootID = new Map();
-    this._profilingSnapshotsByRootID = new Map();
-
-    // Invalidate suspense cache if profiling data is being (re-)recorded.
-    // Note that we clear now because any existing data is "stale".
-    this._profilingCache.invalidate();
-
-    this.emit('isProfiling');
   }
 
   containsElement(id: number): boolean {
@@ -602,24 +488,6 @@ export default class Store extends EventEmitter {
     return false;
   }
 
-  startProfiling(): void {
-    this._bridge.send('startProfiling');
-
-    // Don't actually update the local profiling boolean yet!
-    // Wait for onProfilingStatus() to confirm the status has changed.
-    // This ensures the frontend and backend are in sync wrt which commits were profiled.
-    // We do this to avoid mismatches on e.g. CommitTreeBuilder that would cause errors.
-  }
-
-  stopProfiling(): void {
-    this._bridge.send('stopProfiling');
-
-    // Don't actually update the local profiling boolean yet!
-    // Wait for onProfilingStatus() to confirm the status has changed.
-    // This ensures the frontend and backend are in sync wrt which commits were profiled.
-    // We do this to avoid mismatches on e.g. CommitTreeBuilder that would cause errors.
-  }
-
   // TODO Maybe split this into two methods: expand() and collapse()
   toggleIsCollapsed(id: number, isCollapsed: boolean): void {
     let didMutate = false;
@@ -702,34 +570,6 @@ export default class Store extends EventEmitter {
     }
   }
 
-  _captureScreenshot = throttle(
-    memoize((rootID: number, commitIndex: number) => {
-      this._bridge.send('captureScreenshot', { commitIndex, rootID });
-    }),
-    THROTTLE_CAPTURE_SCREENSHOT_DURATION
-  );
-
-  _takeProfilingSnapshotRecursive = (
-    elementID: number,
-    profilingSnapshots: Map<number, ProfilingSnapshotNode>
-  ) => {
-    const element = this.getElementByID(elementID);
-    if (element !== null) {
-      const snapshotNode: ProfilingSnapshotNode = {
-        id: elementID,
-        children: element.children.slice(0),
-        displayName: element.displayName,
-        key: element.key,
-        type: element.type,
-      };
-      profilingSnapshots.set(elementID, snapshotNode);
-
-      element.children.forEach(childID =>
-        this._takeProfilingSnapshotRecursive(childID, profilingSnapshots)
-      );
-    }
-  };
-
   _adjustParentTreeWeight = (
     parentElement: Element | null,
     weightDelta: number
@@ -770,23 +610,8 @@ export default class Store extends EventEmitter {
 
     let haveRootsChanged = false;
 
+    // The first two values are always rendererID and rootID
     const rendererID = operations[0];
-    const rootID = operations[1];
-
-    if (this._isProfiling) {
-      let profilingOperations = this._profilingOperationsByRootID.get(rootID);
-      if (profilingOperations == null) {
-        profilingOperations = [operations];
-        this._profilingOperationsByRootID.set(rootID, profilingOperations);
-      } else {
-        profilingOperations.push(operations);
-      }
-
-      if (this._captureScreenshots) {
-        const commitIndex = profilingOperations.length - 1;
-        this._captureScreenshot(rootID, commitIndex);
-      }
-    }
 
     const addedElementIDs: Array<number> = [];
     // This is a mapping of removed ID -> parent ID:
@@ -857,10 +682,6 @@ export default class Store extends EventEmitter {
               type,
               weight: 0,
             });
-
-            if (this._isProfiling) {
-              this._profilingSnapshotsByRootID.set(id, new Map());
-            }
 
             haveRootsChanged = true;
           } else {
@@ -956,10 +777,6 @@ export default class Store extends EventEmitter {
               this._roots = this._roots.filter(rootID => rootID !== id);
               this._rootIDToRendererID.delete(id);
               this._rootIDToCapabilities.delete(id);
-
-              this._profilingOperationsByRootID.delete(id);
-              this._profilingScreenshotsByRootID.delete(id);
-              this._profilingSnapshotsByRootID.delete(id);
 
               haveRootsChanged = true;
             } else {
@@ -1066,60 +883,12 @@ export default class Store extends EventEmitter {
     this.emit('mutated', [addedElementIDs, removedElementIDs]);
   };
 
-  onProfilingStatus = (isProfiling: boolean) => {
-    if (isProfiling) {
-      this._importedProfilingData = null;
-      this._profilingOperationsByRootID = new Map();
-      this._profilingScreenshotsByRootID = new Map();
-      this._profilingSnapshotsByRootID = new Map();
-      this.roots.forEach(rootID => {
-        const profilingSnapshots = new Map();
-        this._profilingSnapshotsByRootID.set(rootID, profilingSnapshots);
-        this._takeProfilingSnapshotRecursive(rootID, profilingSnapshots);
-      });
-    }
-
-    if (this._isProfiling !== isProfiling) {
-      this._isProfiling = isProfiling;
-
-      // Invalidate suspense cache if profiling data is being (re-)recorded.
-      // Note that we clear again, in case any views read from the cache while profiling.
-      // (That would have resolved a now-stale value without any profiling data.)
-      this._profilingCache.invalidate();
-
-      this.emit('isProfiling');
-    }
-  };
-
-  onScreenshotCaptured = ({
-    commitIndex,
-    dataURL,
-    rootID,
-  }: {|
-    commitIndex: number,
-    dataURL: string,
-    rootID: number,
-  |}) => {
-    let profilingScreenshotsForRootByCommitIndex = this._profilingScreenshotsByRootID.get(
-      rootID
-    );
-    if (!profilingScreenshotsForRootByCommitIndex) {
-      profilingScreenshotsForRootByCommitIndex = new Map();
-      this._profilingScreenshotsByRootID.set(
-        rootID,
-        profilingScreenshotsForRootByCommitIndex
-      );
-    }
-    profilingScreenshotsForRootByCommitIndex.set(commitIndex, dataURL);
-  };
-
   onBridgeShutdown = () => {
     if (__DEBUG__) {
       debug('onBridgeShutdown', 'unsubscribing from Bridge');
     }
 
     this._bridge.removeListener('operations', this.onBridgeOperations);
-    this._bridge.removeListener('profilingStatus', this.onProfilingStatus);
     this._bridge.removeListener('shutdown', this.onBridgeShutdown);
   };
 }

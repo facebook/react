@@ -2,14 +2,14 @@
 
 import { PROFILER_EXPORT_VERSION } from 'src/constants';
 
+import type { ProfilingDataBackend } from 'src/backend/types';
 import type {
-  ExportedProfilingSummaryFromFrontend,
-  ExportedProfilingData,
-  ImportedProfilingData,
-  ProfilingSnapshotNode,
+  ProfilingDataExport,
+  ProfilingDataForRootExport,
+  ProfilingDataForRootFrontend,
+  ProfilingDataFrontend,
+  SnapshotNode,
 } from './types';
-
-import type { ExportedProfilingDataFromRenderer } from 'src/backend/types';
 
 const commitGradient = [
   'var(--color-commit-gradient-0)',
@@ -24,153 +24,176 @@ const commitGradient = [
   'var(--color-commit-gradient-9)',
 ];
 
-export const prepareExportedProfilingSummary = (
-  profilingOperations: Map<number, Array<Uint32Array>>,
-  profilingSnapshots: Map<number, Map<number, ProfilingSnapshotNode>>,
-  rendererID: number,
-  rootID: number
-) => {
-  const profilingOperationsForRoot = [];
-  const operations = profilingOperations.get(rootID);
-  if (operations != null) {
-    operations.forEach(operationsTypedArray => {
-      // Convert typed array to plain array before JSON serialization, or it will be converted to an Object.
-      const operationsPlainArray = Array.from(operationsTypedArray);
-      profilingOperationsForRoot.push(operationsPlainArray);
-    });
-  }
+// Combines info from the Store (frontend) and renderer interfaces (backend) into the format required by the Profiler UI.
+// This format can then be quickly exported (and re-imported).
+export function prepareProfilingDataFrontendFromBackendAndStore(
+  dataBackends: Array<ProfilingDataBackend>,
+  operationsByRootID: Map<number, Array<Uint32Array>>,
+  screenshotsByRootID: Map<number, Map<number, string>>,
+  snapshotsByRootID: Map<number, Map<number, SnapshotNode>>
+): ProfilingDataFrontend {
+  const dataForRoots: Map<number, ProfilingDataForRootFrontend> = new Map();
 
-  // Convert Map to Array of key-value pairs or JSON.stringify will clobber the contents.
-  const profilingSnapshotsForRoot = [];
-  const profilingSnapshotsMap = profilingSnapshots.get(rootID);
-  if (profilingSnapshotsMap != null) {
-    for (const [elementID, snapshotNode] of profilingSnapshotsMap.entries()) {
-      profilingSnapshotsForRoot.push([elementID, snapshotNode]);
-    }
-  }
+  dataBackends.forEach(dataBackend => {
+    dataBackend.dataForRoots.forEach(
+      ({
+        commitData,
+        displayName,
+        initialTreeBaseDurations,
+        interactionCommits,
+        interactions,
+        rootID,
+      }) => {
+        const screenshots = screenshotsByRootID.get(rootID) || null;
 
-  const exportedProfilingSummary: ExportedProfilingSummaryFromFrontend = {
-    version: PROFILER_EXPORT_VERSION,
-    profilingOperationsByRootID: [[rootID, profilingOperationsForRoot]],
-    profilingSnapshotsByRootID: [[rootID, profilingSnapshotsForRoot]],
-    rendererID,
-    rootID,
-  };
-  return exportedProfilingSummary;
-};
-
-export const prepareExportedProfilingData = (
-  exportedProfilingDataFromRenderer: ExportedProfilingDataFromRenderer,
-  exportedProfilingSummary: ExportedProfilingSummaryFromFrontend
-): ExportedProfilingData => {
-  if (exportedProfilingDataFromRenderer.version !== PROFILER_EXPORT_VERSION) {
-    throw new Error(
-      `Unsupported profiling data version ${
-        exportedProfilingDataFromRenderer.version
-      } from renderer with id "${exportedProfilingSummary.rendererID}"`
-    );
-  }
-  if (exportedProfilingSummary.version !== PROFILER_EXPORT_VERSION) {
-    throw new Error(
-      `Unsupported profiling summary version ${
-        exportedProfilingSummary.version
-      } from renderer with id "${exportedProfilingSummary.rendererID}"`
-    );
-  }
-  const exportedProfilingData: ExportedProfilingData = {
-    version: PROFILER_EXPORT_VERSION,
-    profilingSummary: exportedProfilingDataFromRenderer.profilingSummary,
-    commitDetails: exportedProfilingDataFromRenderer.commitDetails,
-    interactions: exportedProfilingDataFromRenderer.interactions,
-    profilingOperationsByRootID:
-      exportedProfilingSummary.profilingOperationsByRootID,
-    profilingSnapshotsByRootID:
-      exportedProfilingSummary.profilingSnapshotsByRootID,
-  };
-  return exportedProfilingData;
-};
-
-/**
- * This function should mirror `prepareExportedProfilingData` and `prepareExportedProfilingSummary`.
- */
-export const prepareImportedProfilingData = (
-  exportedProfilingDataJsonString: string
-) => {
-  const parsed = JSON.parse(exportedProfilingDataJsonString);
-
-  if (parsed.version !== PROFILER_EXPORT_VERSION) {
-    throw Error(`Unsupported profiler export version "${parsed.version}".`);
-  }
-
-  // Some "exported" types in `parsed` are `...Backend`, see `prepareExportedProfilingData`,
-  // they come to `ExportedProfilingData` from `ExportedProfilingDataFromRenderer`.
-  // But the "imported" types in `ImportedProfilingData` are `...Frontend`,
-  // and some of them aren't exactly the same as `...Backend` (i.e. an interleaved array versus a map).
-  // The type annotations here help us to spot the incompatibilities and properly convert.
-
-  const exportedProfilingData: ExportedProfilingData = parsed;
-
-  const profilingSummaryExported = exportedProfilingData.profilingSummary;
-  const initialTreeBaseDurations =
-    profilingSummaryExported.initialTreeBaseDurations;
-  const initialTreeBaseDurationsMap = new Map();
-  for (let i = 0; i < initialTreeBaseDurations.length; i += 2) {
-    const fiberID = initialTreeBaseDurations[i];
-    const initialTreeBaseDuration = initialTreeBaseDurations[i + 1];
-    initialTreeBaseDurationsMap.set(fiberID, initialTreeBaseDuration);
-  }
-
-  const importedProfilingData: ImportedProfilingData = {
-    version: parsed.version,
-    profilingOperations: new Map(
-      exportedProfilingData.profilingOperationsByRootID.map(
-        ([rootID, profilingOperationsForRoot]) => [
-          rootID,
-          profilingOperationsForRoot.map(operations =>
-            Uint32Array.from(operations)
-          ),
-        ]
-      )
-    ),
-    profilingSnapshots: new Map(
-      exportedProfilingData.profilingSnapshotsByRootID.map(
-        ([rootID, profilingSnapshotsForRoot]) => [
-          rootID,
-          new Map(profilingSnapshotsForRoot),
-        ]
-      )
-    ),
-    commitDetails: exportedProfilingData.commitDetails.map(
-      commitDetailsBackendItem => {
-        const durations = commitDetailsBackendItem.durations;
-        const actualDurationsMap = new Map<number, number>();
-        const selfDurationsMap = new Map<number, number>();
-        for (let i = 0; i < durations.length; i += 3) {
-          const fiberID = durations[i];
-          actualDurationsMap.set(fiberID, durations[i + 1]);
-          selfDurationsMap.set(fiberID, durations[i + 2]);
+        const operations = operationsByRootID.get(rootID);
+        if (operations == null) {
+          throw Error(`Could not find profiling operations for root ${rootID}`);
         }
-        return {
-          actualDurations: actualDurationsMap,
-          commitIndex: commitDetailsBackendItem.commitIndex,
-          interactions: commitDetailsBackendItem.interactions,
-          priorityLevel: commitDetailsBackendItem.priorityLevel,
-          rootID: commitDetailsBackendItem.rootID,
-          selfDurations: selfDurationsMap,
-        };
+
+        const snapshots = snapshotsByRootID.get(rootID);
+        if (snapshots == null) {
+          throw Error(`Could not find profiling snapshots for root ${rootID}`);
+        }
+
+        dataForRoots.set(rootID, {
+          commitData: commitData.map((commitDataBackend, commitIndex) => ({
+            duration: commitDataBackend.duration,
+            fiberActualDurations: new Map(
+              commitDataBackend.fiberActualDurations
+            ),
+            fiberSelfDurations: new Map(commitDataBackend.fiberSelfDurations),
+            interactionIDs: commitDataBackend.interactionIDs,
+            priorityLevel: commitDataBackend.priorityLevel,
+            screenshot:
+              (screenshots !== null && screenshots.get(commitIndex)) || null,
+            timestamp: commitDataBackend.timestamp,
+          })),
+          displayName,
+          initialTreeBaseDurations: new Map(initialTreeBaseDurations),
+          interactionCommits: new Map(interactionCommits),
+          interactions: new Map(interactions),
+          operations,
+          rootID,
+          snapshots,
+        });
       }
-    ),
-    interactions: exportedProfilingData.interactions,
-    profilingSummary: {
-      rootID: profilingSummaryExported.rootID,
-      commitDurations: profilingSummaryExported.commitDurations,
-      commitTimes: profilingSummaryExported.commitTimes,
-      initialTreeBaseDurations: initialTreeBaseDurationsMap,
-      interactionCount: profilingSummaryExported.interactionCount,
-    },
+    );
+  });
+
+  return { dataForRoots };
+}
+
+// Converts a Profiling data export into the format required by the Store.
+export function prepareProfilingDataFrontendFromExport(
+  profilingDataExport: ProfilingDataExport
+): ProfilingDataFrontend {
+  const { version } = profilingDataExport;
+
+  if (version !== PROFILER_EXPORT_VERSION) {
+    throw Error(`Unsupported profiler export version "${version}"`);
+  }
+
+  const dataForRoots: Map<number, ProfilingDataForRootFrontend> = new Map();
+  profilingDataExport.dataForRoots.forEach(
+    ({
+      commitData,
+      displayName,
+      initialTreeBaseDurations,
+      interactionCommits,
+      interactions,
+      operations,
+      rootID,
+      snapshots,
+    }) => {
+      dataForRoots.set(rootID, {
+        commitData: commitData.map(
+          ({
+            duration,
+            fiberActualDurations,
+            fiberSelfDurations,
+            interactionIDs,
+            priorityLevel,
+            screenshot,
+            timestamp,
+          }) => ({
+            duration,
+            fiberActualDurations: new Map(fiberActualDurations),
+            fiberSelfDurations: new Map(fiberSelfDurations),
+            interactionIDs,
+            priorityLevel,
+            screenshot,
+            timestamp,
+          })
+        ),
+        displayName,
+        initialTreeBaseDurations: new Map(initialTreeBaseDurations),
+        interactionCommits: new Map(interactionCommits),
+        interactions: new Map(interactions),
+        operations: operations.map(array => Uint32Array.from(array)), // Convert Array back to Uint32Array
+        rootID,
+        snapshots: new Map(snapshots),
+      });
+    }
+  );
+
+  return { dataForRoots };
+}
+
+// Converts a Store Profiling data into a format that can be safely (JSON) serialized for export.
+export function prepareProfilingDataExport(
+  profilingDataFrontend: ProfilingDataFrontend
+): ProfilingDataExport {
+  const dataForRoots: Array<ProfilingDataForRootExport> = [];
+  profilingDataFrontend.dataForRoots.forEach(
+    ({
+      commitData,
+      displayName,
+      initialTreeBaseDurations,
+      interactionCommits,
+      interactions,
+      operations,
+      rootID,
+      snapshots,
+    }) => {
+      dataForRoots.push({
+        commitData: commitData.map(
+          ({
+            duration,
+            fiberActualDurations,
+            fiberSelfDurations,
+            interactionIDs,
+            priorityLevel,
+            screenshot,
+            timestamp,
+          }) => ({
+            duration,
+            fiberActualDurations: Array.from(fiberActualDurations.entries()),
+            fiberSelfDurations: Array.from(fiberSelfDurations.entries()),
+            interactionIDs,
+            priorityLevel,
+            screenshot,
+            timestamp,
+          })
+        ),
+        displayName,
+        initialTreeBaseDurations: Array.from(
+          initialTreeBaseDurations.entries()
+        ),
+        interactionCommits: Array.from(interactionCommits.entries()),
+        interactions: Array.from(interactions.entries()),
+        operations: operations.map(array => Array.from(array)), // Convert Uint32Array to Array for serialization
+        rootID,
+        snapshots: Array.from(snapshots.entries()),
+      });
+    }
+  );
+
+  return {
+    version: PROFILER_EXPORT_VERSION,
+    dataForRoots,
   };
-  return importedProfilingData;
-};
+}
 
 export const getGradientColor = (value: number) => {
   const maxIndex = commitGradient.length - 1;

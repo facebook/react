@@ -1,10 +1,7 @@
 // @flow
 
-import React, { Suspense, useContext } from 'react';
-import {
-  CommitFilterModalContext,
-  CommitFilterModalContextController,
-} from './CommitFilterModalContext';
+import React, { useContext } from 'react';
+import { CommitFilterModalContextController } from './CommitFilterModalContext';
 import { ModalDialog } from '../ModalDialog';
 import { ProfilerContext } from './ProfilerContext';
 import TabBar from '../TabBar';
@@ -13,6 +10,7 @@ import CommitFlamegraph from './CommitFlamegraph';
 import CommitRanked from './CommitRanked';
 import CommitFilterModal from './CommitFilterModal';
 import Interactions from './Interactions';
+import RootSelector from './RootSelector';
 import RecordToggle from './RecordToggle';
 import ReloadAndProfileButton from './ReloadAndProfileButton';
 import ProfilingImportExportButtons from './ProfilingImportExportButtons';
@@ -30,163 +28,91 @@ export type Props = {|
 |};
 
 function Profiler({ supportsProfiling }: Props) {
-  const { hasProfilingData, isProfiling, rootHasProfilingData } = useContext(
-    ProfilerContext
-  );
+  const {
+    hasProfilingData,
+    isProcessingData,
+    isProfiling,
+    selectedFiberID,
+    selectedTabID,
+    selectTab,
+  } = useContext(ProfilerContext);
 
-  if (isProfiling || !rootHasProfilingData) {
-    return (
-      <NonSuspendingProfiler
-        hasProfilingData={hasProfilingData}
-        isProfiling={isProfiling}
-        supportsProfiling={supportsProfiling}
-      />
-    );
-  } else {
-    return (
-      <CommitFilterModalContextController>
-        <SuspendingProfiler />
-      </CommitFilterModalContextController>
-    );
-  }
-}
-
-// This view is rendered when there is no profiler data (either we haven't profiled yet or we're currently profiling).
-// Nothing in this view's subtree suspends.
-// By not suspending while profiling is in progress, we avoid potential cache invalidation trickiness.
-// NOTE that the structure of this UI should mirror SuspendingProfiler.
-function NonSuspendingProfiler({
-  hasProfilingData,
-  isProfiling,
-  supportsProfiling,
-}: {|
-  hasProfilingData: boolean,
-  isProfiling: boolean,
-  supportsProfiling: boolean,
-|}) {
   let view = null;
   if (!supportsProfiling) {
     view = <ProfilingNotSupported />;
   } else if (isProfiling) {
-    view = <RecortdingInProgress />;
+    view = <RecordingInProgress />;
+  } else if (isProcessingData) {
+    view = <ProcessingData />;
   } else if (!hasProfilingData) {
     view = <NoProfilingData />;
   } else {
-    view = <NoProfilingDataForRoot />;
-  }
-
-  return (
-    <div className={styles.Profiler}>
-      <div className={styles.LeftColumn}>
-        <div className={styles.Toolbar}>
-          <RecordToggle disabled={!supportsProfiling} />
-          <ReloadAndProfileButton />
-          <ClearProfilingDataButton />
-          <ProfilingImportExportButtons />
-          <div className={styles.VRule} />
-          <TabBar
-            currentTab={null}
-            disabled
-            id="Profiler"
-            selectTab={() => {}}
-            size="small"
-            tabs={tabs}
-          />
-        </div>
-        <div className={styles.Content}>
-          {view}
-          <ModalDialog />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ContentFallback() {
-  return <div className={styles.ContentFallback}>Loading...</div>;
-}
-
-function SnapshotSelectorFallback() {
-  return <div className={styles.SnapshotSelectorFallback}>Loading...</div>;
-}
-
-// This view is rendered when there is profiler data (even though there may not be any for the currently selected root).
-// This view's subtree uses suspense to request profiler data from the backend.
-// NOTE that the structure of this UI should mirror NonSuspendingProfiler.
-function SuspendingProfiler() {
-  const { selectedFiberID, selectedTabID, selectTab } = useContext(
-    ProfilerContext
-  );
-
-  const { isModalShowing: isFilterModalShowing } = useContext(
-    CommitFilterModalContext
-  );
-
-  let view = null;
-  switch (selectedTabID) {
-    case 'flame-chart':
-      view = <CommitFlamegraph />;
-      break;
-    case 'ranked-chart':
-      view = <CommitRanked />;
-      break;
-    case 'interactions':
-      view = <Interactions />;
-      break;
-    default:
-      break;
+    switch (selectedTabID) {
+      case 'flame-chart':
+        view = <CommitFlamegraph />;
+        break;
+      case 'ranked-chart':
+        view = <CommitRanked />;
+        break;
+      case 'interactions':
+        view = <Interactions />;
+        break;
+      default:
+        break;
+    }
   }
 
   let sidebar = null;
-  switch (selectedTabID) {
-    case 'interactions':
-      sidebar = <SidebarInteractions />;
-      break;
-    case 'flame-chart':
-    case 'ranked-chart':
-      if (selectedFiberID !== null) {
-        sidebar = <SidebarSelectedFiberInfo />;
-      } else {
-        sidebar = <SidebarCommitInfo />;
-      }
-      break;
-    default:
-      break;
+  if (!isProfiling && !isProcessingData && hasProfilingData) {
+    switch (selectedTabID) {
+      case 'interactions':
+        sidebar = <SidebarInteractions />;
+        break;
+      case 'flame-chart':
+      case 'ranked-chart':
+        if (selectedFiberID !== null) {
+          sidebar = <SidebarSelectedFiberInfo />;
+        } else {
+          sidebar = <SidebarCommitInfo />;
+        }
+        break;
+      default:
+        break;
+    }
   }
 
   return (
-    <div className={styles.Profiler}>
-      <div className={styles.LeftColumn}>
-        <div className={styles.Toolbar}>
-          <RecordToggle />
-          <ReloadAndProfileButton />
-          <ClearProfilingDataButton />
-          <ProfilingImportExportButtons />
-          <div className={styles.VRule} />
-          <TabBar
-            currentTab={selectedTabID}
-            id="Profiler"
-            selectTab={selectTab}
-            size="small"
-            tabs={tabs}
-          />
-          <div className={styles.Spacer} />
-          <ToggleCommitFilterModalButton />
-          <div className={styles.VRule} />
-          <Suspense fallback={<SnapshotSelectorFallback />}>
-            <SnapshotSelector />
-          </Suspense>
+    <CommitFilterModalContextController>
+      <div className={styles.Profiler}>
+        <div className={styles.LeftColumn}>
+          <div className={styles.Toolbar}>
+            <RecordToggle />
+            <ReloadAndProfileButton />
+            <ClearProfilingDataButton />
+            <ProfilingImportExportButtons />
+            <div className={styles.VRule} />
+            <TabBar
+              currentTab={selectedTabID}
+              id="Profiler"
+              selectTab={selectTab}
+              size="small"
+              tabs={tabs}
+            />
+            <RootSelector />
+            <div className={styles.Spacer} />
+            <ToggleCommitFilterModalButton />
+            <div className={styles.VRule} />
+            {hasProfilingData && <SnapshotSelector />}
+          </div>
+          <div className={styles.Content}>
+            {view}
+            <CommitFilterModal />
+            <ModalDialog />
+          </div>
         </div>
-        <div className={styles.Content}>
-          <Suspense fallback={<ContentFallback />}>{view}</Suspense>
-          {isFilterModalShowing && <CommitFilterModal />}
-          <ModalDialog />
-        </div>
+        <div className={styles.RightColumn}>{sidebar}</div>
       </div>
-      <div className={styles.RightColumn}>
-        <Suspense fallback={<ContentFallback />}>{sidebar}</Suspense>
-      </div>
-    </div>
+    </CommitFilterModalContextController>
   );
 }
 
@@ -220,18 +146,6 @@ const NoProfilingData = () => (
   </div>
 );
 
-const NoProfilingDataForRoot = () => (
-  <div className={styles.Column}>
-    <div className={styles.Header}>
-      No profiling data has been recorded for the selected root.
-    </div>
-    <div className={styles.Row}>
-      Select a different root in the elements panel, or click the record button{' '}
-      <RecordToggle /> to start recording.
-    </div>
-  </div>
-);
-
 const ProfilingNotSupported = () => (
   <div className={styles.Column}>
     <div className={styles.Header}>Profiling not supported.</div>
@@ -256,7 +170,14 @@ const ProfilingNotSupported = () => (
   </div>
 );
 
-const RecortdingInProgress = () => (
+const ProcessingData = () => (
+  <div className={styles.Column}>
+    <div className={styles.Header}>Processing data...</div>
+    <div className={styles.Row}>This should only take a minute.</div>
+  </div>
+);
+
+const RecordingInProgress = () => (
   <div className={styles.Column}>
     <div className={styles.Header}>Profiling is in progress...</div>
     <div className={styles.Row}>

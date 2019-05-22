@@ -17,9 +17,8 @@ type Props = {
 function InteractionListItem({ data: itemData, index, style }: Props) {
   const {
     chartData,
-    interactions,
+    dataForRoot,
     labelWidth,
-    profilingSummary,
     scaleX,
     selectedInteractionID,
     selectCommitIndex,
@@ -27,20 +26,22 @@ function InteractionListItem({ data: itemData, index, style }: Props) {
     selectTab,
   } = itemData;
 
-  const { maxCommitDuration } = chartData;
-  const { commitDurations, commitTimes } = profilingSummary;
+  const { commitData, interactionCommits } = dataForRoot;
+  const { interactions, lastInteractionTime, maxCommitDuration } = chartData;
 
   const interaction = interactions[index];
+  if (interaction == null) {
+    throw Error(`Could not find interaction #${index}`);
+  }
 
   const handleClick = useCallback(() => {
     selectInteraction(interaction.id);
   }, [interaction, selectInteraction]);
 
+  const commits = interactionCommits.get(interaction.id) || [];
+
   const startTime = interaction.timestamp;
-  const stopTime =
-    interaction.commits.length > 0
-      ? commitTimes[interaction.commits[interaction.commits.length - 1]]
-      : interaction.timestamp;
+  const stopTime = lastInteractionTime;
 
   const viewCommit = (commitIndex: number) => {
     selectTab('flame-chart');
@@ -71,7 +72,7 @@ function InteractionListItem({ data: itemData, index, style }: Props) {
           width: scaleX(stopTime - startTime, 0),
         }}
       />
-      {interaction.commits.map(commitIndex => (
+      {commits.map(commitIndex => (
         <div
           className={styles.CommitBox}
           key={commitIndex}
@@ -80,10 +81,13 @@ function InteractionListItem({ data: itemData, index, style }: Props) {
             backgroundColor: getGradientColor(
               Math.min(
                 1,
-                Math.max(0, commitDurations[commitIndex] / maxCommitDuration)
+                Math.max(
+                  0,
+                  commitData[commitIndex].duration / maxCommitDuration
+                )
               ) || 0
             ),
-            left: labelWidth + scaleX(commitTimes[commitIndex], 0),
+            left: labelWidth + scaleX(commitData[commitIndex].timestamp, 0),
           }}
         />
       ))}
