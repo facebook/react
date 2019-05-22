@@ -267,10 +267,11 @@ function updateTree(
 
           nodes.delete(id);
 
-          const parentNode = getClonedNode(parentID);
-          if (parentNode == null) {
+          if (!nodes.has(parentID)) {
             // No-op
           } else {
+            const parentNode = getClonedNode(parentID);
+
             if (__DEBUG__) {
               debug('Remove', `fiber ${id} from parent ${parentID}`);
             }

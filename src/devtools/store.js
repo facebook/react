@@ -860,7 +860,6 @@ export default class Store extends EventEmitter {
 
     if (haveRootsChanged) {
       this._hasOwnerMetadata = false;
-      this._supportsProfiling = false;
       this._rootIDToCapabilities.forEach(
         ({ hasOwnerMetadata, supportsProfiling }) => {
           if (hasOwnerMetadata) {

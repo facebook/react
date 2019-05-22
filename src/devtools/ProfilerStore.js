@@ -34,12 +34,19 @@ export default class ProfilerStore extends EventEmitter {
   // even though some of it is lazily parsed/derived via the ProfilingCache.
   _dataFrontend: ProfilingDataFrontend | null = null;
 
+  // Snapshot of all attached renderer IDs.
+  // Once profiling is finished, this snapshot will be used to query renderers for profiling data.
+  //
+  // This map is initialized when profiling starts and updated when a new root is added while profiling;
+  // Upon completion, it is converted into the exportable ProfilingDataFrontend format.
+  _initialRendererIDs: Set<number> = new Set();
+
   // Snapshot of the state of the main Store (including all roots) when profiling started.
   // Once profiling is finished, this snapshot can be used along with "operations" messages emitted during profiling,
   // to reconstruct the state of each root for each commit.
   // It's okay to use a single root to store this information because node IDs are unique across all roots.
   //
-  // This map is only updated while profiling is in progress;
+  // This map is initialized when profiling starts and updated when a new root is added while profiling;
   // Upon completion, it is converted into the exportable ProfilingDataFrontend format.
   _initialSnapshotsByRootID: Map<number, Map<number, SnapshotNode>> = new Map();
 
@@ -139,6 +146,7 @@ export default class ProfilerStore extends EventEmitter {
   set profilingData(value: ProfilingDataFrontend | null): void {
     this._dataBackends.splice(0);
     this._dataFrontend = value;
+    this._initialRendererIDs.clear();
     this._initialSnapshotsByRootID.clear();
     this._inProgressOperationsByRootID.clear();
     this._inProgressScreenshotsByRootID.clear();
@@ -150,6 +158,7 @@ export default class ProfilerStore extends EventEmitter {
   clear(): void {
     this._dataBackends.splice(0);
     this._dataFrontend = null;
+    this._initialRendererIDs.clear();
     this._initialSnapshotsByRootID.clear();
     this._inProgressOperationsByRootID.clear();
     this._inProgressScreenshotsByRootID.clear();
@@ -215,6 +224,7 @@ export default class ProfilerStore extends EventEmitter {
     }
 
     // The first two values are always rendererID and rootID
+    const rendererID = operations[0];
     const rootID = operations[1];
 
     if (this._isProfiling) {
@@ -224,6 +234,10 @@ export default class ProfilerStore extends EventEmitter {
         this._inProgressOperationsByRootID.set(rootID, profilingOperations);
       } else {
         profilingOperations.push(operations);
+      }
+
+      if (!this._initialRendererIDs.has(rendererID)) {
+        this._initialRendererIDs.add(rendererID);
       }
 
       if (!this._initialSnapshotsByRootID.has(rootID)) {
@@ -278,10 +292,18 @@ export default class ProfilerStore extends EventEmitter {
     if (isProfiling) {
       this._dataBackends.splice(0);
       this._dataFrontend = null;
+      this._initialRendererIDs.clear();
       this._initialSnapshotsByRootID.clear();
       this._inProgressOperationsByRootID.clear();
       this._inProgressScreenshotsByRootID.clear();
       this._rendererQueue.clear();
+
+      // Record all renderer IDs initially too (in case of unmount)
+      for (let rendererID of this._store.rootIDToRendererID.values()) {
+        if (!this._initialRendererIDs.has(rendererID)) {
+          this._initialRendererIDs.add(rendererID);
+        }
+      }
 
       // Record snapshot of tree at the time profiling is started.
       // This info is required to handle cases of e.g. nodes being removed during profiling.
@@ -309,13 +331,13 @@ export default class ProfilerStore extends EventEmitter {
         this._dataBackends.splice(0);
         this._rendererQueue.clear();
 
-        for (let rendererID of this._store.rootIDToRendererID.values()) {
+        this._initialRendererIDs.forEach(rendererID => {
           if (!this._rendererQueue.has(rendererID)) {
             this._rendererQueue.add(rendererID);
 
             this._bridge.send('getProfilingData', { rendererID });
           }
-        }
+        });
 
         this.emit('isProcessingData');
       }

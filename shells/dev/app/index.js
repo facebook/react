@@ -4,7 +4,6 @@
 
 import { createElement } from 'react';
 import {
-  unmountComponentAtNode,
   // $FlowFixMe Flow does not yet know about createRoot()
   unstable_createRoot as createRoot,
 } from 'react-dom';
@@ -20,17 +19,17 @@ import SuspenseTree from './SuspenseTree';
 
 import './styles.css';
 
-const containers = [];
+const roots = [];
 
 function mountHelper(App) {
   const container = document.createElement('div');
 
   ((document.body: any): HTMLBodyElement).appendChild(container);
 
-  containers.push(container);
-
   const root = createRoot(container);
   root.render(createElement(App));
+
+  roots.push(root);
 }
 
 function mountTestApp() {
@@ -46,7 +45,7 @@ function mountTestApp() {
 }
 
 function unmountTestApp() {
-  containers.forEach(container => unmountComponentAtNode(container));
+  roots.forEach(root => root.unmount());
 }
 
 mountTestApp();
