@@ -36,6 +36,10 @@ if (!existsSync('./build/bundle-sizes.json')) {
   // This indicates the build failed previously.
   // In that case, there's nothing for the Dangerfile to do.
   // Exit early to avoid leaving a redundant (and potentially confusing) PR comment.
+  warn(
+    'No bundle size information found. This indicates the build ' +
+      'job failed.'
+  );
   process.exit(0);
 }
 
@@ -127,7 +131,8 @@ function git(args) {
     const statuses = await statusesResponse.json();
     for (let i = 0; i < statuses.length; i++) {
       const status = statuses[i];
-      if (status.context === 'ci/circleci') {
+      // This must match the name of the CI job that creates the build artifacts
+      if (status.context === 'ci/circleci: build') {
         if (status.state === 'success') {
           baseCIBuildId = /\/facebook\/react\/([0-9]+)/.exec(
             status.target_url
@@ -271,5 +276,7 @@ function git(args) {
   </details>
   `;
     markdown(summary);
+  } else {
+    markdown('No significant bundle size changes to report.');
   }
 })();
