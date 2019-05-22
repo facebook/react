@@ -1,3 +1,175 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ReactFreshBabelPlugin hello world 1`] = `"hello();"`;
+exports[`ReactFreshBabelPlugin ignores HOC definitions 1`] = `
+"
+let connect = () => {
+  function Comp() {
+    const handleClick = () => {};
+    return <h1 onClick={handleClick}>Hi</h1>;
+  }
+  return Comp;
+};
+function withRouter() {
+  return function Child() {
+    const handleClick = () => {};
+    return <h1 onClick={handleClick}>Hi</h1>;
+  };
+};"
+`;
+
+exports[`ReactFreshBabelPlugin ignores complex definitions 1`] = `
+"
+let A = foo ? () => {
+  return <h1>Hi</h1>;
+} : null;
+const B = function Foo() {
+  return <h1>Hi</h1>;
+}();
+let C = () => () => {
+  return <h1>Hi</h1>;
+};
+let D = bar && (() => {
+  return <h1>Hi</h1>;
+});"
+`;
+
+exports[`ReactFreshBabelPlugin ignores unnamed function declarations 1`] = `
+"
+export default function () {}"
+`;
+
+exports[`ReactFreshBabelPlugin only registers pascal case functions 1`] = `
+"
+function hello() {
+  return 2 * 2;
+}"
+`;
+
+exports[`ReactFreshBabelPlugin registers top-level exported function declarations 1`] = `
+"
+export function Hello() {
+  function handleClick() {}
+  return <h1 onClick={handleClick}>Hi</h1>;
+}
+
+_c = Hello;
+export default function Bar() {
+  return <Hello />;
+}
+
+_c2 = Bar;
+function Baz() {
+  return <h1>OK</h1>;
+}
+
+_c3 = Baz;
+const NotAComp = 'hi';
+export { Baz, NotAComp };
+
+export function sum() {}
+export const Bad = 42;
+
+var _c, _c2, _c3;
+
+__register__(_c, 'Hello');
+
+__register__(_c2, 'Bar');
+
+__register__(_c3, 'Baz');"
+`;
+
+exports[`ReactFreshBabelPlugin registers top-level exported named arrow functions 1`] = `
+"
+export const Hello = _c = () => {
+  function handleClick() {}
+  return <h1 onClick={handleClick}>Hi</h1>;
+};
+
+export let Bar = _c2 = props => <Hello />;
+
+export default (() => {
+  // This one should be ignored.
+  // You should name your components.
+  return <Hello />;
+});
+
+var _c, _c2;
+
+__register__(_c, \\"Hello\\");
+
+__register__(_c2, \\"Bar\\");"
+`;
+
+exports[`ReactFreshBabelPlugin registers top-level function declarations 1`] = `
+"
+function Hello() {
+  function handleClick() {}
+  return <h1 onClick={handleClick}>Hi</h1>;
+}
+
+_c = Hello;
+function Bar() {
+  return <Hello />;
+}
+_c2 = Bar;
+
+var _c, _c2;
+
+__register__(_c, \\"Hello\\");
+
+__register__(_c2, \\"Bar\\");"
+`;
+
+exports[`ReactFreshBabelPlugin registers top-level variable declarations with arrow functions 1`] = `
+"
+let Hello = _c = () => {
+  const handleClick = () => {};
+  return <h1 onClick={handleClick}>Hi</h1>;
+};
+const Bar = _c2 = () => {
+  return <Hello />;
+};
+var Baz = _c3 = () => <div />;
+var sum = () => {};
+
+var _c, _c2, _c3;
+
+__register__(_c, \\"Hello\\");
+
+__register__(_c2, \\"Bar\\");
+
+__register__(_c3, \\"Baz\\");"
+`;
+
+exports[`ReactFreshBabelPlugin registers top-level variable declarations with function expressions 1`] = `
+"
+let Hello = _c = function () {
+  function handleClick() {}
+  return <h1 onClick={handleClick}>Hi</h1>;
+};
+const Bar = _c2 = function Baz() {
+  return <Hello />;
+};
+function sum() {}
+let Baz = 10;
+var Qux;
+
+var _c, _c2;
+
+__register__(_c, \\"Hello\\");
+
+__register__(_c2, \\"Bar\\");"
+`;
+
+exports[`ReactFreshBabelPlugin uses original function declaration if it get reassigned 1`] = `
+"
+function Hello() {
+  return <h1>Hi</h1>;
+}
+_c = Hello;
+Hello = connect(Hello);
+
+var _c;
+
+__register__(_c, \\"Hello\\");"
+`;
