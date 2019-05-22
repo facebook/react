@@ -40,6 +40,57 @@ function hello() {
 }"
 `;
 
+exports[`ReactFreshBabelPlugin registers top-level exported function declarations 1`] = `
+"
+export function Hello() {
+  function handleClick() {}
+  return <h1 onClick={handleClick}>Hi</h1>;
+}
+
+var _c = Hello;
+export default function Bar() {
+  return <Hello />;
+}
+
+var _c2 = Bar;
+function Baz() {
+  return <h1>OK</h1>;
+}
+
+var _c3 = Baz;
+const NotAComp = 'hi';
+export { Baz, NotAComp };
+
+export function sum() {}
+export const Bad = 42;
+
+__register__(_c, 'Hello');
+
+__register__(_c2, 'Bar');
+
+__register__(_c3, 'Baz');"
+`;
+
+exports[`ReactFreshBabelPlugin registers top-level exported named arrow functions 1`] = `
+"
+export const Hello = _c = () => {
+  function handleClick() {}
+  return <h1 onClick={handleClick}>Hi</h1>;
+};
+
+export let Bar = _c2 = props => <Hello />;
+
+export default (() => {
+  // This one should be ignored.
+  // You should name your components.
+  return <Hello />;
+});
+
+__register__(_c, \\"Hello\\");
+
+__register__(_c2, \\"Bar\\");"
+`;
+
 exports[`ReactFreshBabelPlugin registers top-level function declarations 1`] = `
 "
 function Hello() {

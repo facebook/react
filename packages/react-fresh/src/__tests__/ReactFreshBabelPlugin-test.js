@@ -35,6 +35,50 @@ describe('ReactFreshBabelPlugin', () => {
     ).toMatchSnapshot();
   });
 
+  it('registers top-level exported function declarations', () => {
+    expect(
+      transform(`
+        export function Hello() {
+          function handleClick() {}
+          return <h1 onClick={handleClick}>Hi</h1>;
+        }
+
+        export default function Bar() {
+          return <Hello />;
+        }
+
+        function Baz() {
+          return <h1>OK</h1>;
+        }
+
+        const NotAComp = 'hi';
+        export { Baz, NotAComp };
+
+        export function sum() {}
+        export const Bad = 42;
+    `),
+    ).toMatchSnapshot();
+  });
+
+  it('registers top-level exported named arrow functions', () => {
+    expect(
+      transform(`
+        export const Hello = () => {
+          function handleClick() {}
+          return <h1 onClick={handleClick}>Hi</h1>;
+        };
+
+        export let Bar = (props) => <Hello />;
+
+        export default () => {
+          // This one should be ignored.
+          // You should name your components.
+          return <Hello />;
+        };
+    `),
+    ).toMatchSnapshot();
+  });
+
   it('uses original function declaration if it get reassigned', () => {
     // This should register the original version.
     // TODO: in the future, we may *also* register the wrapped one.

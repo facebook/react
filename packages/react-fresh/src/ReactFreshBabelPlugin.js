@@ -65,17 +65,28 @@ export default function(babel) {
   return {
     visitor: {
       FunctionDeclaration(path) {
-        if (path.parent.type !== 'Program') {
-          return;
+        let programPath;
+        let insertAfterPath;
+        switch (path.parent.type) {
+          case 'Program':
+            insertAfterPath = path;
+            programPath = path.parentPath;
+            break;
+          case 'ExportNamedDeclaration':
+          case 'ExportDefaultDeclaration':
+            insertAfterPath = path.parentPath;
+            programPath = insertAfterPath.parentPath;
+            break;
+          default:
+            return;
         }
-        const programPath = path.parentPath;
         const maybeComponent = path.node;
         if (!isComponentish(maybeComponent)) {
           return;
         }
         const functionName = path.node.id.name;
         const handle = createRegistration(programPath, functionName);
-        path.insertAfter(
+        insertAfterPath.insertAfter(
           buildRegistrationAssignment({
             HANDLE: handle,
             COMPONENT: path.node.id,
@@ -83,14 +94,22 @@ export default function(babel) {
         );
       },
       VariableDeclaration(path) {
-        if (path.parent.type !== 'Program') {
-          return;
+        let programPath;
+        switch (path.parent.type) {
+          case 'Program':
+            programPath = path.parentPath;
+            break;
+          case 'ExportNamedDeclaration':
+          case 'ExportDefaultDeclaration':
+            programPath = path.parentPath.parentPath;
+            break;
+          default:
+            return;
         }
         const declarations = path.node.declarations;
         if (declarations.length !== 1) {
           return;
         }
-        const programPath = path.parentPath;
         const declPath = path.get('declarations');
         if (declPath.length !== 1) {
           return;
