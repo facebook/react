@@ -29,7 +29,7 @@ describe('ProfilingCache', () => {
     TestRenderer = utils.requireTestRenderer();
   });
 
-  it('should collect data for each root', async done => {
+  it('should collect data for each root (including ones added or mounted after profiling started)', () => {
     const Parent = ({ count }) => {
       Scheduler.advanceTime(10);
       const children = new Array(count)
@@ -48,58 +48,72 @@ describe('ProfilingCache', () => {
     };
     const MemoizedChild = React.memo(Child);
 
-    const container = document.createElement('div');
+    const containerA = document.createElement('div');
+    const containerB = document.createElement('div');
+    const containerC = document.createElement('div');
 
-    utils.act(() => ReactDOM.render(<Parent count={2} />, container));
+    utils.act(() => ReactDOM.render(<Parent count={2} />, containerA));
+    utils.act(() => ReactDOM.render(<Parent count={1} />, containerB));
     utils.act(() => store.profilerStore.startProfiling());
-    utils.act(() => ReactDOM.render(<Parent count={3} />, container));
-    utils.act(() => ReactDOM.render(<Parent count={1} />, container));
-    utils.act(() => ReactDOM.render(<Parent count={0} />, container));
+    utils.act(() => ReactDOM.render(<Parent count={3} />, containerA));
+    utils.act(() => ReactDOM.render(<Parent count={1} />, containerC));
+    utils.act(() => ReactDOM.render(<Parent count={1} />, containerA));
+    utils.act(() => ReactDOM.unmountComponentAtNode(containerB));
+    utils.act(() => ReactDOM.render(<Parent count={0} />, containerA));
     utils.act(() => store.profilerStore.stopProfiling());
 
-    let profilingDataForRoot = null;
+    let allProfilingDataForRoots = [];
 
-    // TODO (profarc) Add multi roots
-
-    function Suspender({ previousProfilingDataForRoot, rootID }) {
-      profilingDataForRoot = store.profilerStore.getDataForRoot(rootID);
+    function Validator({ previousProfilingDataForRoot, rootID }) {
+      const profilingDataForRoot = store.profilerStore.getDataForRoot(rootID);
       if (previousProfilingDataForRoot != null) {
         expect(profilingDataForRoot).toEqual(previousProfilingDataForRoot);
       } else {
-        expect(profilingDataForRoot).toMatchSnapshot('ProfilingSummary');
+        expect(profilingDataForRoot).toMatchSnapshot(
+          `Data for root ${profilingDataForRoot.displayName}`
+        );
       }
+      allProfilingDataForRoots.push(profilingDataForRoot);
       return null;
     }
 
-    const rootID = store.roots[0];
+    const dataForRoots =
+      store.profilerStore.profilingData !== null
+        ? store.profilerStore.profilingData.dataForRoots
+        : null;
 
-    await utils.actAsync(() =>
-      TestRenderer.create(
-        <React.Suspense fallback={null}>
-          <Suspender previousProfilingDataForRoot={null} rootID={rootID} />
-        </React.Suspense>
-      )
-    );
+    expect(dataForRoots).not.toBeNull();
 
-    expect(profilingDataForRoot).not.toBeNull();
+    if (dataForRoots !== null) {
+      dataForRoots.forEach(dataForRoot => {
+        utils.act(() =>
+          TestRenderer.create(
+            <Validator
+              previousProfilingDataForRoot={null}
+              rootID={dataForRoot.rootID}
+            />
+          )
+        );
+      });
+    }
 
-    utils.exportImportHelper(bridge, store, rootID);
+    expect(allProfilingDataForRoots).toHaveLength(3);
 
-    await utils.actAsync(() =>
-      TestRenderer.create(
-        <React.Suspense fallback={null}>
-          <Suspender
+    utils.exportImportHelper(bridge, store);
+
+    allProfilingDataForRoots.forEach(profilingDataForRoot => {
+      utils.act(() =>
+        TestRenderer.create(
+          <Validator
             previousProfilingDataForRoot={profilingDataForRoot}
-            rootID={rootID}
+            rootID={profilingDataForRoot.rootID}
           />
-        </React.Suspense>
-      )
-    );
-
-    done();
+        )
+      );
+    });
   });
 
-  it('should collect data for each commit', async done => {
+  it('should collect data for each commit', () => {
     const Parent = ({ count }) => {
       Scheduler.advanceTime(10);
       const children = new Array(count)
@@ -129,7 +143,7 @@ describe('ProfilingCache', () => {
 
     const allCommitData = [];
 
-    function Suspender({ commitIndex, previousCommitDetails, rootID }) {
+    function Validator({ commitIndex, previousCommitDetails, rootID }) {
       const commitData = store.profilerStore.getCommitData(rootID, commitIndex);
       if (previousCommitDetails != null) {
         expect(commitData).toEqual(previousCommitDetails);
@@ -145,41 +159,35 @@ describe('ProfilingCache', () => {
     const rootID = store.roots[0];
 
     for (let commitIndex = 0; commitIndex < 4; commitIndex++) {
-      await utils.actAsync(() => {
+      utils.act(() => {
         TestRenderer.create(
-          <React.Suspense fallback={null}>
-            <Suspender
-              commitIndex={commitIndex}
-              previousCommitDetails={null}
-              rootID={rootID}
-            />
-          </React.Suspense>
+          <Validator
+            commitIndex={commitIndex}
+            previousCommitDetails={null}
+            rootID={rootID}
+          />
         );
       });
     }
 
     expect(allCommitData).toHaveLength(4);
 
-    utils.exportImportHelper(bridge, store, rootID);
+    utils.exportImportHelper(bridge, store);
 
     for (let commitIndex = 0; commitIndex < 4; commitIndex++) {
-      await utils.actAsync(() => {
+      utils.act(() => {
         TestRenderer.create(
-          <React.Suspense fallback={null}>
-            <Suspender
-              commitIndex={commitIndex}
-              previousCommitDetails={allCommitData[commitIndex]}
-              rootID={rootID}
-            />
-          </React.Suspense>
+          <Validator
+            commitIndex={commitIndex}
+            previousCommitDetails={allCommitData[commitIndex]}
+            rootID={rootID}
+          />
         );
       });
     }
-
-    done();
   });
 
-  it('should calculate a self duration based on actual children (not filtered children)', async done => {
+  it('should calculate a self duration based on actual children (not filtered children)', () => {
     store.componentFilters = [utils.createDisplayNameFilter('^Parent$')];
 
     const Grandparent = () => {
@@ -208,7 +216,7 @@ describe('ProfilingCache', () => {
 
     let commitData = null;
 
-    function Suspender({ commitIndex, rootID }) {
+    function Validator({ commitIndex, rootID }) {
       commitData = store.profilerStore.getCommitData(rootID, commitIndex);
       expect(commitData).toMatchSnapshot(
         `CommitDetails with filtered self durations`
@@ -218,17 +226,11 @@ describe('ProfilingCache', () => {
 
     const rootID = store.roots[0];
 
-    await utils.actAsync(() => {
-      TestRenderer.create(
-        <React.Suspense fallback={null}>
-          <Suspender commitIndex={0} rootID={rootID} />
-        </React.Suspense>
-      );
+    utils.act(() => {
+      TestRenderer.create(<Validator commitIndex={0} rootID={rootID} />);
     });
 
     expect(commitData).not.toBeNull();
-
-    done();
   });
 
   it('should calculate self duration correctly for suspended views', async done => {
@@ -270,7 +272,7 @@ describe('ProfilingCache', () => {
 
     const allCommitData = [];
 
-    function Suspender({ commitIndex, rootID }) {
+    function Validator({ commitIndex, rootID }) {
       const commitData = store.profilerStore.getCommitData(rootID, commitIndex);
       allCommitData.push(commitData);
       expect(commitData).toMatchSnapshot(
@@ -282,11 +284,9 @@ describe('ProfilingCache', () => {
     const rootID = store.roots[0];
 
     for (let commitIndex = 0; commitIndex < 2; commitIndex++) {
-      await utils.actAsync(() => {
+      utils.act(() => {
         TestRenderer.create(
-          <React.Suspense fallback={null}>
-            <Suspender commitIndex={commitIndex} rootID={rootID} />
-          </React.Suspense>
+          <Validator commitIndex={commitIndex} rootID={rootID} />
         );
       });
     }
@@ -296,7 +296,7 @@ describe('ProfilingCache', () => {
     done();
   });
 
-  it('should collect data for each rendered fiber', async done => {
+  it('should collect data for each rendered fiber', () => {
     const Parent = ({ count }) => {
       Scheduler.advanceTime(10);
       const children = new Array(count)
@@ -325,7 +325,7 @@ describe('ProfilingCache', () => {
 
     const allFiberCommits = [];
 
-    function Suspender({ fiberID, previousFiberCommits, rootID }) {
+    function Validator({ fiberID, previousFiberCommits, rootID }) {
       const fiberCommits = store.profilerStore.profilingCache.getFiberCommits({
         fiberID,
         rootID,
@@ -344,49 +344,43 @@ describe('ProfilingCache', () => {
     const rootID = store.roots[0];
 
     for (let index = 0; index < store.numElements; index++) {
-      await utils.actAsync(() => {
+      utils.act(() => {
         const fiberID = store.getElementIDAtIndex(index);
         if (fiberID == null) {
           throw Error(`Unexpected null ID for element at index ${index}`);
         }
         TestRenderer.create(
-          <React.Suspense fallback={null}>
-            <Suspender
-              fiberID={fiberID}
-              previousFiberCommits={null}
-              rootID={rootID}
-            />
-          </React.Suspense>
+          <Validator
+            fiberID={fiberID}
+            previousFiberCommits={null}
+            rootID={rootID}
+          />
         );
       });
     }
 
     expect(allFiberCommits).toHaveLength(store.numElements);
 
-    utils.exportImportHelper(bridge, store, rootID);
+    utils.exportImportHelper(bridge, store);
 
     for (let index = 0; index < store.numElements; index++) {
-      await utils.actAsync(() => {
+      utils.act(() => {
         const fiberID = store.getElementIDAtIndex(index);
         if (fiberID == null) {
           throw Error(`Unexpected null ID for element at index ${index}`);
         }
         TestRenderer.create(
-          <React.Suspense fallback={null}>
-            <Suspender
-              fiberID={fiberID}
-              previousFiberCommits={allFiberCommits[index]}
-              rootID={rootID}
-            />
-          </React.Suspense>
+          <Validator
+            fiberID={fiberID}
+            previousFiberCommits={allFiberCommits[index]}
+            rootID={rootID}
+          />
         );
       });
     }
-
-    done();
   });
 
-  it('should report every traced interaction', async done => {
+  it('should report every traced interaction', () => {
     const Parent = ({ count }) => {
       Scheduler.advanceTime(10);
       const children = new Array(count)
@@ -426,7 +420,7 @@ describe('ProfilingCache', () => {
 
     let interactions = null;
 
-    function Suspender({ previousInteractions, rootID }) {
+    function Validator({ previousInteractions, rootID }) {
       interactions = store.profilerStore.profilingCache.getInteractionsChartData(
         {
           rootID,
@@ -442,26 +436,20 @@ describe('ProfilingCache', () => {
 
     const rootID = store.roots[0];
 
-    await utils.actAsync(() =>
+    utils.act(() =>
       TestRenderer.create(
-        <React.Suspense fallback={null}>
-          <Suspender previousInteractions={null} rootID={rootID} />
-        </React.Suspense>
+        <Validator previousInteractions={null} rootID={rootID} />
       )
     );
 
     expect(interactions).not.toBeNull();
 
-    utils.exportImportHelper(bridge, store, rootID);
+    utils.exportImportHelper(bridge, store);
 
-    await utils.actAsync(() =>
+    utils.act(() =>
       TestRenderer.create(
-        <React.Suspense fallback={null}>
-          <Suspender previousInteractions={interactions} rootID={rootID} />
-        </React.Suspense>
+        <Validator previousInteractions={interactions} rootID={rootID} />
       )
     );
-
-    done();
   });
 });

@@ -27,7 +27,7 @@ describe('profiling charts', () => {
   });
 
   describe('flamegraph chart', () => {
-    it('should contain valid data', async done => {
+    it('should contain valid data', () => {
       const Parent = ({ count }) => {
         Scheduler.advanceTime(10);
         return (
@@ -64,7 +64,7 @@ describe('profiling charts', () => {
 
       let renderFinished = false;
 
-      function Suspender({ commitIndex, rootID }) {
+      function Validator({ commitIndex, rootID }) {
         const commitTree = store.profilerStore.profilingCache.getCommitTree({
           commitIndex,
           rootID,
@@ -89,27 +89,21 @@ describe('profiling charts', () => {
       for (let commitIndex = 0; commitIndex < 2; commitIndex++) {
         renderFinished = false;
 
-        await utils.actAsync(
-          () =>
-            TestRenderer.create(
-              <React.Suspense fallback={null}>
-                <Suspender commitIndex={commitIndex} rootID={rootID} />
-              </React.Suspense>
-            ),
-          3
-        );
+        utils.act(() => {
+          TestRenderer.create(
+            <Validator commitIndex={commitIndex} rootID={rootID} />
+          );
+        });
 
         expect(renderFinished).toBe(true);
       }
 
       expect(renderFinished).toBe(true);
-
-      done();
     });
   });
 
   describe('ranked chart', () => {
-    it('should contain valid data', async done => {
+    it('should contain valid data', () => {
       const Parent = ({ count }) => {
         Scheduler.advanceTime(10);
         return (
@@ -146,7 +140,7 @@ describe('profiling charts', () => {
 
       let renderFinished = false;
 
-      function Suspender({ commitIndex, rootID }) {
+      function Validator({ commitIndex, rootID }) {
         const commitTree = store.profilerStore.profilingCache.getCommitTree({
           commitIndex,
           rootID,
@@ -169,25 +163,19 @@ describe('profiling charts', () => {
       for (let commitIndex = 0; commitIndex < 2; commitIndex++) {
         renderFinished = false;
 
-        await utils.actAsync(
-          () =>
-            TestRenderer.create(
-              <React.Suspense fallback={null}>
-                <Suspender commitIndex={commitIndex} rootID={rootID} />
-              </React.Suspense>
-            ),
-          3
-        );
+        utils.act(() => {
+          TestRenderer.create(
+            <Validator commitIndex={commitIndex} rootID={rootID} />
+          );
+        });
 
         expect(renderFinished).toBe(true);
       }
-
-      done();
     });
   });
 
   describe('interactions', () => {
-    it('should contain valid data', async done => {
+    it('should contain valid data', () => {
       const Parent = ({ count }) => {
         Scheduler.advanceTime(10);
         return (
@@ -224,7 +212,7 @@ describe('profiling charts', () => {
 
       let renderFinished = false;
 
-      function Suspender({ commitIndex, rootID }) {
+      function Validator({ commitIndex, rootID }) {
         const chartData = store.profilerStore.profilingCache.getInteractionsChartData(
           {
             rootID,
@@ -240,20 +228,14 @@ describe('profiling charts', () => {
       for (let commitIndex = 0; commitIndex < 2; commitIndex++) {
         renderFinished = false;
 
-        await utils.actAsync(
-          () =>
-            TestRenderer.create(
-              <React.Suspense fallback={null}>
-                <Suspender commitIndex={commitIndex} rootID={rootID} />
-              </React.Suspense>
-            ),
-          3
-        );
+        utils.act(() => {
+          TestRenderer.create(
+            <Validator commitIndex={commitIndex} rootID={rootID} />
+          );
+        });
 
         expect(renderFinished).toBe(true);
       }
-
-      done();
     });
   });
 });

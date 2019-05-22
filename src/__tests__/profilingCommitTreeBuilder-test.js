@@ -24,7 +24,7 @@ describe('commit tree', () => {
     TestRenderer = utils.requireTestRenderer();
   });
 
-  it('should be able to rebuild the store tree for each commit', async done => {
+  it('should be able to rebuild the store tree for each commit', () => {
     const Parent = ({ count }) => {
       Scheduler.advanceTime(10);
       return new Array(count)
@@ -47,7 +47,7 @@ describe('commit tree', () => {
 
     let renderFinished = false;
 
-    function Suspender({ commitIndex, rootID }) {
+    function Validator({ commitIndex, rootID }) {
       const commitTree = store.profilerStore.profilingCache.getCommitTree({
         commitIndex,
         rootID,
@@ -62,19 +62,13 @@ describe('commit tree', () => {
     for (let commitIndex = 0; commitIndex < 4; commitIndex++) {
       renderFinished = false;
 
-      await utils.actAsync(
-        () =>
-          TestRenderer.create(
-            <React.Suspense fallback={null}>
-              <Suspender commitIndex={commitIndex} rootID={rootID} />
-            </React.Suspense>
-          ),
-        3
-      );
+      utils.act(() => {
+        TestRenderer.create(
+          <Validator commitIndex={commitIndex} rootID={rootID} />
+        );
+      });
 
       expect(renderFinished).toBe(true);
     }
-
-    done();
   });
 });
