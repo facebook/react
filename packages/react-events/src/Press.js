@@ -456,8 +456,8 @@ function getAbsoluteBoundingClientRect(
     ) {
       break;
     }
-    offsetX += node.scrollLeft;
-    offsetY += node.scrollTop;
+    offsetX += scrollLeft;
+    offsetY += scrollTop;
     if (isParentDocumentNode) {
       break;
     }
