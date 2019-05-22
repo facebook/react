@@ -119,6 +119,6 @@ export type ProfilingDataForRootExport = {|
 
 // Serializable vefrsion of ProfilingDataFrontend data.
 export type ProfilingDataExport = {|
-  version: 5,
+  version: 4,
   dataForRoots: Array<ProfilingDataForRootExport>,
 |};

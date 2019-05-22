@@ -462,7 +462,7 @@ Object {
       "snapshots": Array [],
     },
   ],
-  "version": 5,
+  "version": 4,
 }
 `;
 
@@ -783,7 +783,7 @@ Object {
       "snapshots": Array [],
     },
   ],
-  "version": 5,
+  "version": 4,
 }
 `;
 
@@ -1612,7 +1612,7 @@ Object {
       ],
     },
   ],
-  "version": 5,
+  "version": 4,
 }
 `;
 
@@ -1864,6 +1864,6 @@ Object {
       "snapshots": Array [],
     },
   ],
-  "version": 5,
+  "version": 4,
 }
 `;
