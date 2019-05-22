@@ -436,10 +436,32 @@ function getAbsoluteBoundingClientRect(
   let offsetY = 0;
 
   // Traverse through all offset nodes
-  while (node != null && node.nodeType !== Node.DOCUMENT_NODE) {
-    offsetX += (node: any).scrollLeft;
-    offsetY += (node: any).scrollTop;
-    node = node.parentNode;
+  while (node != null) {
+    const parent = node.parentNode;
+    const scrollTop = node.scrollTop;
+    const scrollLeft = node.scrollLeft;
+    const isParentDocumentNode =
+      parent !== null && parent.nodeType === Node.DOCUMENT_NODE;
+
+    // Check if the current node is fixed position, by using
+    // offsetParent node for a fast-path. Then we need to
+    // check if it's a scrollable container by checking if
+    // either scrollLeft or scrollTop are not 0. If it is
+    // a scrollable container and the parent node is not
+    // the document, then we can stop traversing the tree.
+    if (
+      !isParentDocumentNode &&
+      node.offsetParent === null &&
+      (scrollLeft !== 0 || scrollTop !== 0)
+    ) {
+      break;
+    }
+    offsetX += scrollLeft;
+    offsetY += scrollTop;
+    if (isParentDocumentNode) {
+      break;
+    }
+    node = parent;
   }
   return {
     left: left + offsetX,
