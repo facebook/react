@@ -662,7 +662,7 @@ const PressResponder = {
 
           state.allowPressReentry = true;
           state.pointerType = pointerType;
-          state.pressTarget = context.getEventCurrentTarget(event);
+          state.pressTarget = context.getEventCurrentTarget(target);
           state.responderRegionOnActivation = calculateResponderRegion(
             context,
             state.pressTarget,
