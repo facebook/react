@@ -69,11 +69,7 @@ export { Baz, NotAComp };
 export function sum() {}
 export const Bad = 42;
 
-var _c;
-
-var _c2;
-
-var _c3;
+var _c, _c2, _c3;
 
 __register__(_c, 'Hello');
 
@@ -97,9 +93,7 @@ export default (() => {
   return <Hello />;
 });
 
-var _c;
-
-var _c2;
+var _c, _c2;
 
 __register__(_c, \\"Hello\\");
 
@@ -119,9 +113,7 @@ function Bar() {
 }
 _c2 = Bar;
 
-var _c;
-
-var _c2;
+var _c, _c2;
 
 __register__(_c, \\"Hello\\");
 
@@ -140,11 +132,7 @@ const Bar = _c2 = () => {
 var Baz = _c3 = () => <div />;
 var sum = () => {};
 
-var _c;
-
-var _c2;
-
-var _c3;
+var _c, _c2, _c3;
 
 __register__(_c, \\"Hello\\");
 
@@ -166,9 +154,7 @@ function sum() {}
 let Baz = 10;
 var Qux;
 
-var _c;
-
-var _c2;
+var _c, _c2;
 
 __register__(_c, \\"Hello\\");
 

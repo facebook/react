@@ -16,10 +16,6 @@ export default function(babel) {
     if (!registrationsByProgramPath.has(programPath)) {
       registrationsByProgramPath.set(programPath, []);
     }
-    programPath.pushContainer(
-      'body',
-      t.variableDeclaration('var', [t.variableDeclarator(handle)]),
-    );
     const registrations = registrationsByProgramPath.get(programPath);
     registrations.push({
       handle,
@@ -119,6 +115,8 @@ export default function(babel) {
             return;
           }
           registrationsByProgramPath.delete(path);
+          const declarators = [];
+          path.pushContainer('body', t.variableDeclaration('var', declarators));
           registrations.forEach(({handle, persistentID}) => {
             path.pushContainer(
               'body',
@@ -127,6 +125,7 @@ export default function(babel) {
                 PERSISTENT_ID: t.stringLiteral(persistentID),
               }),
             );
+            declarators.push(t.variableDeclarator(handle));
           });
         },
       },
