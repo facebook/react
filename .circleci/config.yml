@@ -125,8 +125,6 @@ jobs:
       - run: ./scripts/circleci/add_build_info_json.sh
       - run: ./scripts/circleci/update_package_versions.sh
       - run: ./scripts/circleci/build.sh
-      - run: yarn test-build --maxWorkers=2
-      - run: yarn test-build-prod --maxWorkers=2
       - run: cp ./scripts/rollup/results.json ./build/bundle-sizes.json
       - run: node ./scripts/tasks/danger
       - run: ./scripts/circleci/upload_build.sh
