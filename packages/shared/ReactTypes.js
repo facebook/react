@@ -189,7 +189,7 @@ export type ReactResponderContext = {
   getEventPointerType(
     event: ReactResponderEvent,
   ): '' | 'mouse' | 'keyboard' | 'pen' | 'touch',
-  getEventCurrentTarget(event: ReactResponderEvent): Element,
+  getEventCurrentTarget(target: Element | Document): Element,
   getTimeStamp: () => number,
   isTargetWithinHostComponent: (
     target: Element | Document,
