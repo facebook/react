@@ -33,6 +33,7 @@ type Context = {|
   hasProfilingData: boolean,
   isProcessingData: boolean,
   isProfiling: boolean,
+  profilingData: ProfilingDataFrontend | null,
   startProfiling(value: boolean): void,
   stopProfiling(value: boolean): void,
 
@@ -203,6 +204,7 @@ function ProfilerContextController({ children }: Props) {
       hasProfilingData,
       isProcessingData,
       isProfiling,
+      profilingData,
       startProfiling,
       stopProfiling,
 
@@ -231,6 +233,7 @@ function ProfilerContextController({ children }: Props) {
       hasProfilingData,
       isProcessingData,
       isProfiling,
+      profilingData,
       startProfiling,
       stopProfiling,
 

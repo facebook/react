@@ -2,15 +2,11 @@
 
 import React, { Fragment, useCallback, useContext } from 'react';
 import { ProfilerContext } from './ProfilerContext';
-import { StoreContext } from '../context';
 
 import styles from './RootSelector.css';
 
 export default function RootSelector(_: {||}) {
-  const store = useContext(StoreContext);
-  const { rootID, setRootID } = useContext(ProfilerContext);
-
-  const { profilingData } = store.profilerStore;
+  const { profilingData, rootID, setRootID } = useContext(ProfilerContext);
 
   const options = [];
   if (profilingData !== null) {

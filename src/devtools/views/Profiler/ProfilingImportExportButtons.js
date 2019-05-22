@@ -17,7 +17,7 @@ import styles from './ProfilingImportExportButtons.css';
 import type { ProfilingDataExport } from './types';
 
 export default function ProfilingImportExportButtons() {
-  const { isProfiling, rootID } = useContext(ProfilerContext);
+  const { isProfiling, profilingData, rootID } = useContext(ProfilerContext);
   const store = useContext(StoreContext);
   const { profilerStore } = store;
 
@@ -30,17 +30,14 @@ export default function ProfilingImportExportButtons() {
       return;
     }
 
-    if (profilerStore.profilingData !== null) {
-      const profilingDataExport = prepareProfilingDataExport(
-        profilerStore.profilingData
-      );
-
+    if (profilingData !== null) {
+      const profilingDataExport = prepareProfilingDataExport(profilingData);
       downloadFile(
         'profile-data.json',
         JSON.stringify(profilingDataExport, null, 2)
       );
     }
-  }, [rootID, profilerStore.profilingData]);
+  }, [rootID, profilingData]);
 
   const uploadData = useCallback(() => {
     if (inputRef.current !== null) {
