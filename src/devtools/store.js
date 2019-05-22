@@ -45,7 +45,6 @@ const LOCAL_STORAGE_COLLAPSE_ROOTS_BY_DEFAULT_KEY =
 type Config = {|
   isProfiling?: boolean,
   supportsCaptureScreenshots?: boolean,
-  supportsFileDownloads?: boolean,
   supportsReloadAndProfile?: boolean,
   supportsProfiling?: boolean,
 |};
@@ -99,7 +98,6 @@ export default class Store extends EventEmitter {
   // These options may be initially set by a confiugraiton option when constructing the Store.
   // In the case of "supportsProfiling", the option may be updated based on the injected renderers.
   _supportsCaptureScreenshots: boolean = false;
-  _supportsFileDownloads: boolean = false;
   _supportsProfiling: boolean = false;
   _supportsReloadAndProfile: boolean = false;
 
@@ -127,7 +125,6 @@ export default class Store extends EventEmitter {
 
       const {
         supportsCaptureScreenshots,
-        supportsFileDownloads,
         supportsProfiling,
         supportsReloadAndProfile,
       } = config;
@@ -136,9 +133,6 @@ export default class Store extends EventEmitter {
         this._captureScreenshots =
           localStorage.getItem(LOCAL_STORAGE_CAPTURE_SCREENSHOTS_KEY) ===
           'true';
-      }
-      if (supportsFileDownloads) {
-        this._supportsFileDownloads = true;
       }
       if (supportsProfiling) {
         this._supportsProfiling = true;
@@ -307,10 +301,6 @@ export default class Store extends EventEmitter {
 
   get supportsCaptureScreenshots(): boolean {
     return this._supportsCaptureScreenshots;
-  }
-
-  get supportsFileDownloads(): boolean {
-    return this._supportsFileDownloads;
   }
 
   get supportsProfiling(): boolean {

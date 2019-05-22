@@ -10,6 +10,7 @@ import {
   prepareProfilingDataExport,
   prepareProfilingDataFrontendFromExport,
 } from './utils';
+import { downloadFile } from '../utils';
 
 import styles from './ProfilingImportExportButtons.css';
 
@@ -34,8 +35,10 @@ export default function ProfilingImportExportButtons() {
         profilerStore.profilingData
       );
 
-      // TODO (profarc) Generate anchor "download" tag and click it
-      console.log('profilingDataExport:', profilingDataExport);
+      downloadFile(
+        'profile-data.json',
+        JSON.stringify(profilingDataExport, null, 2)
+      );
     }
   }, [rootID, profilerStore.profilingData]);
 
@@ -95,15 +98,13 @@ export default function ProfilingImportExportButtons() {
       >
         <ButtonIcon type="import" />
       </Button>
-      {store.supportsFileDownloads && (
-        <Button
-          disabled={isProfiling || !profilerStore.hasProfilingData}
-          onClick={downloadData}
-          title="Save profile..."
-        >
-          <ButtonIcon type="export" />
-        </Button>
-      )}
+      <Button
+        disabled={isProfiling || !profilerStore.hasProfilingData}
+        onClick={downloadData}
+        title="Save profile..."
+      >
+        <ButtonIcon type="export" />
+      </Button>
     </Fragment>
   );
 }
