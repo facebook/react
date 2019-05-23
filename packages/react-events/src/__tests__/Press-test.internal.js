@@ -1167,6 +1167,7 @@ describe('Event responder: Press', () => {
 
         // The fixed container is not scrolled
         fixedDiv.scrollTop = 0;
+        fixedDiv.scrollLeft = 0;
         ref.current.getBoundingClientRect = getBoundingClientRectMock;
         // Emulate the <html> element being offset with scroll
         document.firstElementChild.scrollTop = 1000;

@@ -426,6 +426,18 @@ function calculateDelayMS(delay: ?number, min = 0, fallback = 0) {
   return Math.max(min, maybeNumber != null ? maybeNumber : fallback);
 }
 
+function isNodeFixedPositioned(node: Node | null | void): boolean {
+  return (
+    node != null &&
+    (node: any).offsetParent === null &&
+    !isNodeDocumentNode(node.parentNode)
+  );
+}
+
+function isNodeDocumentNode(node: Node | null | void): boolean {
+  return node != null && node.nodeType === Node.DOCUMENT_NODE;
+}
+
 function getAbsoluteBoundingClientRect(
   target: Element,
 ): {left: number, right: number, bottom: number, top: number} {
@@ -440,25 +452,23 @@ function getAbsoluteBoundingClientRect(
     const parent = node.parentNode;
     const scrollTop = (node: any).scrollTop;
     const scrollLeft = (node: any).scrollLeft;
-    const isParentDocumentNode =
-      parent != null && parent.nodeType === Node.DOCUMENT_NODE;
 
-    // Check if the current node is fixed position, by using
-    // offsetParent node for a fast-path. Then we need to
-    // check if it's a scrollable container by checking if
-    // either scrollLeft or scrollTop are not 0. If it is
-    // a scrollable container and the parent node is not
-    // the document, then we can stop traversing the tree.
+    // We first need to check if it's a scrollable container by
+    // checking if either scrollLeft or scrollTop are not 0.
+    // Then we check if either the current node or its parent
+    // are fixed position, using offsetParent node for a fast-path.
+    // We need to check both as offsetParent accounts for both
+    // itself and the parent; so we need to align with that API.
+    // If these all pass, we can stop traversing the tree.
     if (
-      !isParentDocumentNode &&
-      (node: any).offsetParent === null &&
-      (scrollLeft !== 0 || scrollTop !== 0)
+      (scrollLeft !== 0 || scrollTop !== 0) &&
+      (isNodeFixedPositioned(parent) || isNodeFixedPositioned(node))
     ) {
       break;
     }
     offsetX += scrollLeft;
     offsetY += scrollTop;
-    if (isParentDocumentNode) {
+    if (isNodeDocumentNode(parent)) {
       break;
     }
     node = parent;
