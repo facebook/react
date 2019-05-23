@@ -58,6 +58,37 @@ function hello() {
 }"
 `;
 
+exports[`ReactFreshBabelPlugin registers identifiers used in JSX at definition site 1`] = `
+"
+import A from './A';
+import Store from './Store';
+
+Store.subscribe();
+
+const Header = _c = styled.div\`color: red\`;
+const Factory = funny.factory\`\`;
+
+let Alias1 = A;
+let Alias2 = A.Foo;
+const Dict = {};
+
+function Foo() {
+  return <div><A /><B /><Alias1 /><Alias2 /><Header /><Dict.X /></div>;
+}
+
+_c2 = Foo;
+const B = _c3 = hoc(A);
+const NotAComponent = wow(A);
+
+var _c, _c2, _c3;
+
+__register__(_c, 'Header');
+
+__register__(_c2, 'Foo');
+
+__register__(_c3, 'B');"
+`;
+
 exports[`ReactFreshBabelPlugin registers likely HOCs with inline functions 1`] = `
 "
 const A = _c2 = forwardRef(_c = function () {

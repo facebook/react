@@ -105,8 +105,35 @@ export default function(babel) {
         if (!isComponentishName(name)) {
           return false;
         }
+        if (init.type === 'Identifier' || init.type === 'MemberExpression') {
+          return false;
+        }
         const initPath = path.get('init');
-        return findInnerComponents(inferredName, initPath, callback);
+        const foundInside = findInnerComponents(
+          inferredName,
+          initPath,
+          callback,
+        );
+        if (foundInside) {
+          return true;
+        }
+        // See if this identifier is used in JSX. Then it's a component.
+        const binding = path.scope.getBinding(name);
+        if (binding === undefined) {
+          return;
+        }
+        const referencePaths = binding.referencePaths;
+        for (let i = 0; i < referencePaths.length; i++) {
+          const ref = referencePaths[i];
+          if (
+            ref.node.type === 'JSXIdentifier' &&
+            ref.parent.type === 'JSXOpeningElement'
+          ) {
+            // const X = ... + later <X />
+            callback(inferredName, init, initPath);
+            return true;
+          }
+        }
       }
     }
     return false;
