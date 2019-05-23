@@ -21,6 +21,9 @@ import type { ProfilingDataFrontend } from './types';
 export type TabID = 'flame-chart' | 'ranked-chart' | 'interactions';
 
 export type Context = {|
+  // Does the Store support profiling?
+  supportsProfiling: boolean,
+
   // Which tab is selexted in the Profiler UI?
   selectedTabID: TabID,
   selectTab(id: TabID): void,
@@ -77,6 +80,7 @@ type StoreProfilingState = {|
   isProcessingData: boolean,
   isProfiling: boolean,
   profilingData: ProfilingDataFrontend | null,
+  supportsProfiling: boolean,
 |};
 
 type Props = {|
@@ -97,25 +101,29 @@ function ProfilerContextController({ children }: Props) {
         isProcessingData: profilerStore.isProcessingData,
         isProfiling: profilerStore.isProfiling,
         profilingData: profilerStore.profilingData,
+        supportsProfiling: store.supportsProfiling,
       }),
       subscribe: (callback: Function) => {
         profilerStore.addListener('profilingData', callback);
         profilerStore.addListener('isProcessingData', callback);
         profilerStore.addListener('isProfiling', callback);
+        store.addListener('supportsProfiling', callback);
         return () => {
           profilerStore.removeListener('profilingData', callback);
           profilerStore.removeListener('isProcessingData', callback);
           profilerStore.removeListener('isProfiling', callback);
+          store.removeListener('supportsProfiling', callback);
         };
       },
     }),
-    [profilerStore]
+    [profilerStore, store]
   );
   const {
     didRecordCommits,
     isProcessingData,
     isProfiling,
     profilingData,
+    supportsProfiling,
   } = useSubscription<StoreProfilingState, Store>(subscription);
 
   const [prevProfilingData, setPrevProfilingData] = useState();
@@ -221,6 +229,7 @@ function ProfilerContextController({ children }: Props) {
       profilingData,
       startProfiling,
       stopProfiling,
+      supportsProfiling,
 
       rootID,
       setRootID,
@@ -250,6 +259,7 @@ function ProfilerContextController({ children }: Props) {
       profilingData,
       startProfiling,
       stopProfiling,
+      supportsProfiling,
 
       rootID,
       setRootID,

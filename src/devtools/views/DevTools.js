@@ -5,7 +5,7 @@
 import '@reach/menu-button/styles.css';
 import '@reach/tooltip/styles.css';
 
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import Store from '../store';
 import { BridgeContext, StoreContext } from './context';
 import Components from './Components/Components';
@@ -18,7 +18,6 @@ import ViewElementSourceContext from './Components/ViewElementSourceContext';
 import { ProfilerContextController } from './Profiler/ProfilerContext';
 import { ModalDialogContextController } from './ModalDialog';
 import ReactLogo from './ReactLogo';
-import { useSubscription } from './hooks';
 
 import styles from './DevTools.css';
 
@@ -92,20 +91,6 @@ export default function DevTools({
     setTab(overrideTab);
   }
 
-  const supportsProfilingSubscription = useMemo(
-    () => ({
-      getCurrentValue: () => store.supportsProfiling,
-      subscribe: (callback: Function) => {
-        store.addListener('supportsProfiling', callback);
-        return () => store.removeListener('supportsProfiling', callback);
-      },
-    }),
-    [store]
-  );
-  const supportsProfiling = useSubscription<boolean, Store>(
-    supportsProfilingSubscription
-  );
-
   return (
     <BridgeContext.Provider value={bridge}>
       <StoreContext.Provider value={store}>
@@ -146,10 +131,7 @@ export default function DevTools({
                       className={styles.TabContent}
                       hidden={tab !== 'profiler'}
                     >
-                      <Profiler
-                        portalContainer={profilerPortalContainer}
-                        supportsProfiling={supportsProfiling}
-                      />
+                      <Profiler portalContainer={profilerPortalContainer} />
                     </div>
                     <div
                       className={styles.TabContent}

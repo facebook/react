@@ -23,11 +23,7 @@ import portaledContent from '../portaledContent';
 
 import styles from './Profiler.css';
 
-export type Props = {|
-  supportsProfiling: boolean,
-|};
-
-function Profiler({ supportsProfiling }: Props) {
+function Profiler(_: {||}) {
   const {
     didRecordCommits,
     isProcessingData,
@@ -35,6 +31,7 @@ function Profiler({ supportsProfiling }: Props) {
     selectedFiberID,
     selectedTabID,
     selectTab,
+    supportsProfiling,
   } = useContext(ProfilerContext);
 
   let view = null;
@@ -86,7 +83,7 @@ function Profiler({ supportsProfiling }: Props) {
       <div className={styles.Profiler}>
         <div className={styles.LeftColumn}>
           <div className={styles.Toolbar}>
-            <RecordToggle />
+            <RecordToggle disabled={!supportsProfiling} />
             <ReloadAndProfileButton />
             <ClearProfilingDataButton />
             <ProfilingImportExportButtons />
