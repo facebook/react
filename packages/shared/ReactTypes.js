@@ -137,7 +137,7 @@ export type ReactEventComponentInstance = {|
 
 export type ReactEventComponent = {|
   $$typeof: Symbol | number,
-  displayName?: string,
+  displayName: string,
   props: null | Object,
   responder: ReactEventResponder,
 |};
