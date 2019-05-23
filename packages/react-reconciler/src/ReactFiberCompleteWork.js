@@ -104,7 +104,7 @@ import {
   markRenderEventTimeAndConfig,
   renderDidSuspend,
   renderDidSuspendDelayIfPossible,
-} from './ReactFiberScheduler';
+} from './ReactFiberWorkLoop';
 import {getEventComponentHostChildrenCount} from './ReactFiberEvents';
 import getComponentName from 'shared/getComponentName';
 import warning from 'shared/warning';

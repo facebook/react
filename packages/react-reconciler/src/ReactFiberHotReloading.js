@@ -15,7 +15,7 @@ import {
   flushSync,
   scheduleWork,
   flushPassiveEffects,
-} from './ReactFiberScheduler';
+} from './ReactFiberWorkLoop';
 import {Sync} from './ReactFiberExpirationTime';
 import {
   FunctionComponent,

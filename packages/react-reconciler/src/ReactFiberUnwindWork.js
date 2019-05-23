@@ -12,7 +12,7 @@ import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {CapturedValue} from './ReactCapturedValue';
 import type {Update} from './ReactUpdateQueue';
-import type {Thenable} from './ReactFiberScheduler';
+import type {Thenable} from './ReactFiberWorkLoop';
 import type {SuspenseContext} from './ReactFiberSuspenseContext';
 
 import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
@@ -77,7 +77,7 @@ import {
   pingSuspendedRoot,
   resolveRetryThenable,
   checkForWrongSuspensePriorityInDEV,
-} from './ReactFiberScheduler';
+} from './ReactFiberWorkLoop';
 
 import invariant from 'shared/invariant';
 

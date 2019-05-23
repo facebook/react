@@ -8,7 +8,7 @@
  */
 
 import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
-import {requestCurrentTime} from './ReactFiberScheduler';
+import {requestCurrentTime} from './ReactFiberWorkLoop';
 import {inferPriorityFromExpirationTime} from './ReactFiberExpirationTime';
 
 import type {Fiber} from './ReactFiber';
