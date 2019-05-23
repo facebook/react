@@ -238,6 +238,6 @@ workflows:
                 - master
     jobs:
       - setup
-      - fuzz_tests:
+      - test_fuzz:
           requires:
             - setup
