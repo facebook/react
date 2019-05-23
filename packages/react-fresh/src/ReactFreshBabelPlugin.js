@@ -191,8 +191,6 @@ export default function(babel) {
           default:
             return;
         }
-        // While we reuse this function, in this case it won't
-        // go more than one level deep because we're at the leaf.
         findInnerComponents(inferredName, path, (persistentID, targetExpr) => {
           const handle = createRegistration(programPath, persistentID);
           insertAfterPath.insertAfter(
