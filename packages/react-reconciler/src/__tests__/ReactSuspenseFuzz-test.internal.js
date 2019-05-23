@@ -5,8 +5,7 @@ let Scheduler;
 let ReactFeatureFlags;
 let Random;
 
-const SEED = 0;
-
+const SEED = process.env.FUZZ_TEST_SEED || 'default';
 const prettyFormatPkg = require('pretty-format');
 
 function prettyFormat(thing) {
@@ -339,6 +338,8 @@ describe('ReactSuspenseFuzz', () => {
 Failed fuzzy test case:
 
 ${prettyFormat(randomTestCase)}
+
+Random seed is ${SEED}
 `);
 
         throw e;

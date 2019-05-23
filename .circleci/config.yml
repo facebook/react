@@ -165,6 +165,21 @@ jobs:
       - *run_yarn
       - run: yarn test-build --maxWorkers=2
 
+  test_fuzz:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - *restore_yarn_cache
+      - *run_yarn
+      - run:
+          name: Run fuzz tests
+          command: |
+            FUZZ_TEST_SEED=$RANDOM
+            echo $FUZZ_TEST_SEED
+            yarn test fuzz --maxWorkers=2
+            yarn test-prod fuzz --maxWorkers=2
+
   test_build_prod:
     docker: *docker
     environment: *environment
@@ -177,7 +192,7 @@ jobs:
 
 workflows:
   version: 2
-  build-and-test:
+  commit:
     jobs:
       - setup
       - lint:
@@ -213,3 +228,16 @@ workflows:
       - test_build_prod:
           requires:
             - build
+  hourly:
+    triggers:
+      - schedule:
+          cron: "0 * * * *"
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - setup
+      - fuzz_tests:
+          requires:
+            - setup
