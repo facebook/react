@@ -29,7 +29,7 @@ export type Props = {|
 
 function Profiler({ supportsProfiling }: Props) {
   const {
-    hasProfilingData,
+    didRecordCommits,
     isProcessingData,
     isProfiling,
     selectedFiberID,
@@ -38,15 +38,7 @@ function Profiler({ supportsProfiling }: Props) {
   } = useContext(ProfilerContext);
 
   let view = null;
-  if (!supportsProfiling) {
-    view = <ProfilingNotSupported />;
-  } else if (isProfiling) {
-    view = <RecordingInProgress />;
-  } else if (isProcessingData) {
-    view = <ProcessingData />;
-  } else if (!hasProfilingData) {
-    view = <NoProfilingData />;
-  } else {
+  if (didRecordCommits) {
     switch (selectedTabID) {
       case 'flame-chart':
         view = <CommitFlamegraph />;
@@ -60,10 +52,18 @@ function Profiler({ supportsProfiling }: Props) {
       default:
         break;
     }
+  } else if (isProfiling) {
+    view = <RecordingInProgress />;
+  } else if (isProcessingData) {
+    view = <ProcessingData />;
+  } else if (supportsProfiling) {
+    view = <NoProfilingData />;
+  } else {
+    view = <ProfilingNotSupported />;
   }
 
   let sidebar = null;
-  if (!isProfiling && !isProcessingData && hasProfilingData) {
+  if (!isProfiling && !isProcessingData && didRecordCommits) {
     switch (selectedTabID) {
       case 'interactions':
         sidebar = <SidebarInteractions />;
@@ -102,7 +102,7 @@ function Profiler({ supportsProfiling }: Props) {
             <div className={styles.Spacer} />
             <ToggleCommitFilterModalButton />
             <div className={styles.VRule} />
-            {hasProfilingData && <SnapshotSelector />}
+            {didRecordCommits && <SnapshotSelector />}
           </div>
           <div className={styles.Content}>
             {view}

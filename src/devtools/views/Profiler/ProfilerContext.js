@@ -20,7 +20,7 @@ import type { ProfilingDataFrontend } from './types';
 
 export type TabID = 'flame-chart' | 'ranked-chart' | 'interactions';
 
-type Context = {|
+export type Context = {|
   // Which tab is selexted in the Profiler UI?
   selectedTabID: TabID,
   selectTab(id: TabID): void,
@@ -30,7 +30,7 @@ type Context = {|
   // This value may be modified by the record button in the Profiler toolbar,
   // or from the backend itself (after a reload-and-profile action).
   // It is synced between the backend and frontend via a Store subscription.
-  hasProfilingData: boolean,
+  didRecordCommits: boolean,
   isProcessingData: boolean,
   isProfiling: boolean,
   profilingData: ProfilingDataFrontend | null,
@@ -73,7 +73,7 @@ const ProfilerContext = createContext<Context>(((null: any): Context));
 ProfilerContext.displayName = 'ProfilerContext';
 
 type StoreProfilingState = {|
-  hasProfilingData: boolean,
+  didRecordCommits: boolean,
   isProcessingData: boolean,
   isProfiling: boolean,
   profilingData: ProfilingDataFrontend | null,
@@ -93,7 +93,7 @@ function ProfilerContextController({ children }: Props) {
   const subscription = useMemo(
     () => ({
       getCurrentValue: () => ({
-        hasProfilingData: profilerStore.hasProfilingData,
+        didRecordCommits: profilerStore.didRecordCommits,
         isProcessingData: profilerStore.isProcessingData,
         isProfiling: profilerStore.isProfiling,
         profilingData: profilerStore.profilingData,
@@ -112,31 +112,36 @@ function ProfilerContextController({ children }: Props) {
     [profilerStore]
   );
   const {
-    hasProfilingData,
+    didRecordCommits,
     isProcessingData,
     isProfiling,
     profilingData,
   } = useSubscription<StoreProfilingState, Store>(subscription);
 
+  const [prevProfilingData, setPrevProfilingData] = useState();
   const [rootID, setRootID] = useState<number | null>(null);
 
-  const dataForRoots =
-    profilingData !== null ? profilingData.dataForRoots : null;
-  if (dataForRoots != null) {
-    const firstRootID = dataForRoots.keys().next().value || null;
+  if (prevProfilingData !== profilingData) {
+    setPrevProfilingData(profilingData);
 
-    if (rootID === null || !dataForRoots.has(rootID)) {
-      let selectedElementRootID = null;
-      if (selectedElementID !== null) {
-        selectedElementRootID = store.getRootIDForElement(selectedElementID);
-      }
-      if (
-        selectedElementRootID !== null &&
-        dataForRoots.has(selectedElementRootID)
-      ) {
-        setRootID(selectedElementRootID);
-      } else {
-        setRootID(firstRootID);
+    const dataForRoots =
+      profilingData !== null ? profilingData.dataForRoots : null;
+    if (dataForRoots != null) {
+      const firstRootID = dataForRoots.keys().next().value || null;
+
+      if (rootID === null || !dataForRoots.has(rootID)) {
+        let selectedElementRootID = null;
+        if (selectedElementID !== null) {
+          selectedElementRootID = store.getRootIDForElement(selectedElementID);
+        }
+        if (
+          selectedElementRootID !== null &&
+          dataForRoots.has(selectedElementRootID)
+        ) {
+          setRootID(selectedElementRootID);
+        } else {
+          setRootID(firstRootID);
+        }
       }
     }
   }
@@ -172,10 +177,14 @@ function ProfilerContextController({ children }: Props) {
     (id: number | null, name: string | null) => {
       selectFiberID(id);
       selectFiberName(name);
+
+      // Sync selection to the Components tab for convenience.
       if (id !== null) {
-        // If this element is still in the store, then select it in the Components tab as well.
         const element = store.getElementByID(id);
-        if (element !== null) {
+
+        // Keep in mind that profiling data may be from a previous session.
+        // In that case, IDs may match up arbitrarily; to be safe, compare both ID and display name.
+        if (element !== null && element.displayName === name) {
           dispatch({
             type: 'SELECT_ELEMENT_BY_ID',
             payload: id,
@@ -206,7 +215,7 @@ function ProfilerContextController({ children }: Props) {
       selectedTabID,
       selectTab,
 
-      hasProfilingData,
+      didRecordCommits,
       isProcessingData,
       isProfiling,
       profilingData,
@@ -235,7 +244,7 @@ function ProfilerContextController({ children }: Props) {
       selectedTabID,
       selectTab,
 
-      hasProfilingData,
+      didRecordCommits,
       isProcessingData,
       isProfiling,
       profilingData,

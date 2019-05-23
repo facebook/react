@@ -122,7 +122,7 @@ export default class ProfilerStore extends EventEmitter {
   }
 
   // Profiling data has been recorded for at least one root.
-  get hasProfilingData(): boolean {
+  get didRecordCommits(): boolean {
     return (
       this._dataFrontend !== null && this._dataFrontend.dataForRoots.size > 0
     );

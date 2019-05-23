@@ -12,6 +12,7 @@
   },
   "globals": {
     "__DEV__": "readonly",
-    "jasmine": "readonly"
+    "jasmine": "readonly",
+    "spyOn": "readonly"
   }
 }

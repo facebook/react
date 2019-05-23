@@ -100,7 +100,7 @@ export default function TabBar({
 
         if (title) {
           button = (
-            <Tooltip className={tooltipStyles.Tooltip} label={title}>
+            <Tooltip key={id} className={tooltipStyles.Tooltip} label={title}>
               {button}
             </Tooltip>
           );

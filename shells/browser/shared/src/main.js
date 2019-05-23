@@ -51,6 +51,8 @@ function createPanelIfReactLoaded() {
       let bridge = null;
       let store = null;
 
+      let profilingData = null;
+
       let componentsPortalContainer = null;
       let profilerPortalContainer = null;
       let settingsPortalContainer = null;
@@ -120,6 +122,7 @@ function createPanelIfReactLoaded() {
           supportsReloadAndProfile: true,
           supportsProfiling,
         });
+        store.profilerStore.profilingData = profilingData;
 
         // Initialize the backend only once the Store has been initialized.
         // Otherwise the Store may miss important initial tree op codes.
@@ -278,18 +281,29 @@ function createPanelIfReactLoaded() {
 
       chrome.devtools.network.onNavigated.removeListener(checkPageForReact);
 
-      // Shutdown bridge and re-initialize DevTools panel when a new page is loaded.
+      // Shutdown bridge before a new page is loaded.
+      chrome.webNavigation.onBeforeNavigate.addListener(
+        function onBeforeNavigate(details) {
+          // `bridge.shutdown()` will remove all listeners we added, so we don't have to.
+          bridge.shutdown();
+
+          profilingData = store.profilerStore.profilingData;
+        }
+      );
+
+      // Re-initialize DevTools panel when a new page is loaded.
       chrome.devtools.network.onNavigated.addListener(function onNavigated() {
         // Re-initialize saved filters on navigation,
         // since global values stored on window get reset in this case.
         initializeSavedComponentFilters();
 
-        // `bridge.shutdown()` will remove all listeners we added, so we don't have to.
-        bridge.shutdown();
-
         // It's easiest to recreate the DevTools panel (to clean up potential stale state).
         // We can revisit this in the future as a small optimization.
-        flushSync(() => root.unmount(initBridgeAndStore));
+        flushSync(() => {
+          root.unmount(() => {
+            initBridgeAndStore();
+          });
+        });
       });
     }
   );
