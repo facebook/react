@@ -122,14 +122,40 @@ export default function(babel) {
         if (binding === undefined) {
           return;
         }
+        let isLikelyUsedAsType = false;
         const referencePaths = binding.referencePaths;
         for (let i = 0; i < referencePaths.length; i++) {
           const ref = referencePaths[i];
           if (
-            (ref.node.type === 'JSXIdentifier' ||
-              ref.node.type === 'Identifier') &&
-            ref.parent.type === 'JSXOpeningElement'
+            ref.node.type !== 'JSXIdentifier' &&
+            ref.node.type !== 'Identifier'
           ) {
+            continue;
+          }
+          const refParent = ref.parent;
+          if (refParent.type === 'JSXOpeningElement') {
+            isLikelyUsedAsType = true;
+          } else if (refParent.type === 'CallExpression') {
+            const callee = refParent.callee;
+            let fnName;
+            switch (callee.type) {
+              case 'Identifier':
+                fnName = callee.name;
+                break;
+              case 'MemberExpression':
+                fnName = callee.property.name;
+                break;
+            }
+            switch (fnName) {
+              case 'createElement':
+              case 'jsx':
+              case 'jsxDEV':
+              case 'jsxs':
+                isLikelyUsedAsType = true;
+                break;
+            }
+          }
+          if (isLikelyUsedAsType) {
             // const X = ... + later <X />
             callback(inferredName, init, initPath);
             return true;

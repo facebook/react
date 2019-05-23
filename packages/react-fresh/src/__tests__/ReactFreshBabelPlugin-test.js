@@ -247,4 +247,42 @@ describe('ReactFreshBabelPlugin', () => {
     `),
     ).toMatchSnapshot();
   });
+
+  it('registers identifiers used in React.createElement at definition site', () => {
+    // When in doubt, register variables that were used in JSX.
+    // Foo, Header, and B get registered.
+    // A doesn't get registered because it's not declared locally.
+    // Alias doesn't get registered because its definition is just an identifier.
+    expect(
+      transform(`
+        import A from './A';
+        import Store from './Store';
+
+        Store.subscribe();
+
+        const Header = styled.div\`color: red\`
+        const Factory = funny.factory\`\`;
+
+        let Alias1 = A;
+        let Alias2 = A.Foo;
+        const Dict = {};
+
+        function Foo() {
+          return [
+            React.createElement(A),
+            React.createElement(B),
+            React.createElement(Alias1),
+            React.createElement(Alias2),
+            jsx(Header),
+            React.createElement(Dict.X),
+          ];
+        }
+
+        React.createContext(Store);
+
+        const B = hoc(A);
+        const NotAComponent = wow(A);
+    `),
+    ).toMatchSnapshot();
+  });
 });

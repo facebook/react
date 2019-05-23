@@ -89,6 +89,39 @@ __register__(_c2, 'Foo');
 __register__(_c3, 'B');"
 `;
 
+exports[`ReactFreshBabelPlugin registers identifiers used in React.createElement at definition site 1`] = `
+"
+import A from './A';
+import Store from './Store';
+
+Store.subscribe();
+
+const Header = _c = styled.div\`color: red\`;
+const Factory = funny.factory\`\`;
+
+let Alias1 = A;
+let Alias2 = A.Foo;
+const Dict = {};
+
+function Foo() {
+  return [React.createElement(A), React.createElement(B), React.createElement(Alias1), React.createElement(Alias2), jsx(Header), React.createElement(Dict.X)];
+}
+
+_c2 = Foo;
+React.createContext(Store);
+
+const B = _c3 = hoc(A);
+const NotAComponent = wow(A);
+
+var _c, _c2, _c3;
+
+__register__(_c, 'Header');
+
+__register__(_c2, 'Foo');
+
+__register__(_c3, 'B');"
+`;
+
 exports[`ReactFreshBabelPlugin registers likely HOCs with inline functions 1`] = `
 "
 const A = _c2 = forwardRef(_c = function () {

@@ -197,7 +197,7 @@ describe('ReactFreshIntegration', () => {
       }
 
       export default function Parent() {
-        return <Child />;
+        return React.createElement(Child);
       }
 
       const Child = hoc('B');
