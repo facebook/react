@@ -60,11 +60,7 @@ const bundles = [
   },
   {
     format: 'rn',
-    filePatterns: [
-      `./build/react-native/oss/*.js`,
-      `./build/react-native/fb/ReactFabric-*.js`,
-      `./build/react-native/fb/ReactNativeRenderer-*.js`,
-    ],
+    filePatterns: [`./build/react-native/implementations/*.js`],
   },
   {
     format: 'umd',
