@@ -32,20 +32,48 @@ export default function(babel) {
     return typeof name === 'string' && name[0] >= 'A' && name[0] <= 'Z';
   }
 
-  function isComponentish(node) {
+  function findLikelyComponents(path, callback) {
+    const node = path.node;
     switch (node.type) {
-      case 'FunctionDeclaration':
-        return node.id !== null && isComponentishName(node.id.name);
-      case 'VariableDeclarator':
-        return (
-          isComponentishName(node.id.name) &&
-          node.init !== null &&
-          (node.init.type === 'FunctionExpression' ||
-            (node.init.type === 'ArrowFunctionExpression' &&
-              node.init.body.type !== 'ArrowFunctionExpression'))
-        );
-      default:
-        return false;
+      case 'FunctionDeclaration': {
+        const id = node.id;
+        if (id === null) {
+          return;
+        }
+        const name = id.name;
+        if (!isComponentishName(name)) {
+          return;
+        }
+        // function Foo() {}
+        callback(name, id);
+        break;
+      }
+      case 'VariableDeclarator': {
+        const name = node.id.name;
+        if (!isComponentishName(name)) {
+          return;
+        }
+        const init = node.init;
+        if (init === null) {
+          return;
+        }
+        const initPath = path.get('init');
+        const initNode = initPath.node;
+        switch (initNode.type) {
+          case 'FunctionExpression': {
+            // let Foo = function() {}
+            callback(name, initNode, initPath);
+            break;
+          }
+          case 'ArrowFunctionExpression': {
+            if (initNode.body.type !== 'ArrowFunctionExpression') {
+              // let Foo = () => {}
+              callback(name, initNode, initPath);
+              break;
+            }
+          }
+        }
+      }
     }
   }
 
@@ -67,17 +95,16 @@ export default function(babel) {
           default:
             return;
         }
-        const maybeComponent = path.node;
-        if (!isComponentish(maybeComponent)) {
-          return;
-        }
-        const functionName = path.node.id.name;
-        const handle = createRegistration(programPath, functionName);
-        insertAfterPath.insertAfter(
-          t.expressionStatement(
-            t.assignmentExpression('=', handle, path.node.id),
-          ),
-        );
+        // While we reuse this function, in this case it won't
+        // go more than one level deep because we're at the leaf.
+        findLikelyComponents(path, (persistentID, targetExpr) => {
+          const handle = createRegistration(programPath, persistentID);
+          insertAfterPath.insertAfter(
+            t.expressionStatement(
+              t.assignmentExpression('=', handle, targetExpr),
+            ),
+          );
+        });
       },
       VariableDeclaration(path) {
         let programPath;
@@ -92,20 +119,19 @@ export default function(babel) {
           default:
             return;
         }
-        const declPath = path.get('declarations');
-        if (declPath.length !== 1) {
+        const declPaths = path.get('declarations');
+        if (declPaths.length !== 1) {
           return;
         }
-        const firstDeclPath = declPath[0];
-        const maybeComponent = firstDeclPath.node;
-        if (!isComponentish(maybeComponent)) {
-          return;
-        }
-        const functionName = maybeComponent.id.name;
-        const initPath = firstDeclPath.get('init');
-        const handle = createRegistration(programPath, functionName);
-        initPath.replaceWith(
-          t.assignmentExpression('=', handle, initPath.node),
+        const declPath = declPaths[0];
+        findLikelyComponents(
+          declPath,
+          (persistentID, targetExpr, targetPath) => {
+            const handle = createRegistration(programPath, persistentID);
+            targetPath.replaceWith(
+              t.assignmentExpression('=', handle, targetExpr),
+            );
+          },
         );
       },
       Program: {
