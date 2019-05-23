@@ -109,7 +109,7 @@ export default function ProfilingImportExportButtons() {
         <ButtonIcon type="import" />
       </Button>
       <Button
-        disabled={isProfiling || !profilerStore.hasProfilingData}
+        disabled={isProfiling || !profilerStore.didRecordCommits}
         onClick={downloadData}
         title="Save profile..."
       >

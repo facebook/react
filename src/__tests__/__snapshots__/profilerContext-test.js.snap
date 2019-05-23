@@ -1,6 +1,41 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ProfilerContext should gracefully handle an empty profiling session: 1: mount 1`] = `
+exports[`ProfilerContext should auto-select the root ID matching the Components tab selection if it has profiling data: mounted 1`] = `
 [root]
-    <Example>
+  ▾ <Parent>
+      <Child>
+[root]
+  ▾ <Parent>
+      <Child>
+`;
+
+exports[`ProfilerContext should maintain root selection between profiling sessions so long as there is data for that root: mounted 1`] = `
+[root]
+  ▾ <Parent>
+      <Child>
+[root]
+  ▾ <Parent>
+      <Child>
+`;
+
+exports[`ProfilerContext should not select the root ID matching the Components tab selection if it has no profiling data: mounted 1`] = `
+[root]
+  ▾ <Parent>
+      <Child>
+[root]
+  ▾ <Parent>
+      <Child>
+`;
+
+exports[`ProfilerContext should sync selected element in the Components tab too, provided the element is a match: mounted 1`] = `
+[root]
+  ▾ <GrandParent>
+    ▾ <Parent>
+        <Child>
+`;
+
+exports[`ProfilerContext should sync selected element in the Components tab too, provided the element is a match: updated 1`] = `
+[root]
+  ▾ <GrandParent>
+      <Parent>
 `;
