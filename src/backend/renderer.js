@@ -471,18 +471,14 @@ export function attach(
       case IndeterminateComponent:
         return getDisplayName(resolvedType);
       case EventComponent:
-        return null;
+        return type.displayName || 'EventComponent';
       case EventTarget:
         switch (getTypeSymbol(elementType.type)) {
           case EVENT_TARGET_TOUCH_HIT_NUMBER:
           case EVENT_TARGET_TOUCH_HIT_STRING:
             return 'TouchHitTarget';
           default:
-            const displayName = elementType.displayName;
-            if (displayName !== undefined) {
-              return displayName;
-            }
-            return 'EventTarget';
+            return elementType.displayName || 'EventTarget';
         }
       case ForwardRef:
         return (
@@ -1848,7 +1844,7 @@ export function attach(
         const currentFiber = eventComponentInstance.currentFiber;
         events.push({
           props: eventComponentInstance.props,
-          displayName: currentFiber.type.displayName,
+          displayName: getDisplayNameForFiber(currentFiber),
         });
       }
       node = node.return;
