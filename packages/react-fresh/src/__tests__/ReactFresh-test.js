@@ -16,10 +16,10 @@ let ReactDOM;
 let ReactFreshRuntime;
 let Scheduler;
 let act;
-let lastRoot;
 
 describe('ReactFresh', () => {
   let container;
+  let lastRoot;
   let scheduleHotUpdate;
 
   beforeEach(() => {
