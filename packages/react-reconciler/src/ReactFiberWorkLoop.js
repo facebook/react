@@ -104,13 +104,12 @@ import {
 } from './ReactFiberExpirationTime';
 import {beginWork as originalBeginWork} from './ReactFiberBeginWork';
 import {completeWork} from './ReactFiberCompleteWork';
+import {unwindWork, unwindInterruptedWork} from './ReactFiberUnwindWork';
 import {
   throwException,
-  unwindWork,
-  unwindInterruptedWork,
   createRootErrorUpdate,
   createClassErrorUpdate,
-} from './ReactFiberUnwindWork';
+} from './ReactFiberThrow';
 import {
   commitBeforeMutationLifeCycles as commitBeforeMutationEffectOnFiber,
   commitLifeCycles as commitLayoutEffectOnFiber,

@@ -102,7 +102,7 @@ import {
 } from 'shared/ReactFeatureFlags';
 
 import {StrictMode} from './ReactTypeOfMode';
-import {markRenderEventTimeAndConfig} from './ReactFiberScheduler';
+import {markRenderEventTimeAndConfig} from './ReactFiberWorkLoop';
 
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';

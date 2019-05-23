@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Thenable} from 'react-reconciler/src/ReactFiberScheduler';
+import type {Thenable} from 'react-reconciler/src/ReactFiberWorkLoop';
 
 import warningWithoutStack from 'shared/warningWithoutStack';
 import ReactDOM from 'react-dom';

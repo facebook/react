@@ -36,7 +36,7 @@ import {
   requestCurrentTime,
   warnIfNotCurrentlyActingUpdatesInDev,
   markRenderEventTimeAndConfig,
-} from './ReactFiberScheduler';
+} from './ReactFiberWorkLoop';
 
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';

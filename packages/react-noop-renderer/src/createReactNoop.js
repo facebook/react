@@ -14,7 +14,7 @@
  * environment.
  */
 
-import type {Thenable} from 'react-reconciler/src/ReactFiberScheduler';
+import type {Thenable} from 'react-reconciler/src/ReactFiberWorkLoop';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {UpdateQueue} from 'react-reconciler/src/ReactUpdateQueue';
 import type {ReactNodeList} from 'shared/ReactTypes';
