@@ -5,7 +5,7 @@
 import '@reach/menu-button/styles.css';
 import '@reach/tooltip/styles.css';
 
-import React, { useEffect, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import Store from '../store';
 import { BridgeContext, StoreContext } from './context';
 import Components from './Components/Components';
@@ -18,6 +18,7 @@ import ViewElementSourceContext from './Components/ViewElementSourceContext';
 import { ProfilerContextController } from './Profiler/ProfilerContext';
 import { ModalDialogContextController } from './ModalDialog';
 import ReactLogo from './ReactLogo';
+import { useSubscription } from './hooks';
 
 import styles from './DevTools.css';
 
@@ -71,8 +72,7 @@ const settingsTab = {
   title: 'React Settings',
 };
 
-const tabsWithProfiler = [componentsTab, profilerTab, settingsTab];
-const tabsWithoutProfiler = [componentsTab, settingsTab];
+const tabs = [componentsTab, profilerTab, settingsTab];
 
 export default function DevTools({
   bridge,
@@ -92,27 +92,19 @@ export default function DevTools({
     setTab(overrideTab);
   }
 
-  const [supportsProfiling, setSupportsProfiling] = useState(
-    store.supportsProfiling
+  const supportsProfilingSubscription = useMemo(
+    () => ({
+      getCurrentValue: () => store.supportsProfiling,
+      subscribe: (callback: Function) => {
+        store.addListener('supportsProfiling', callback);
+        return () => store.removeListener('supportsProfiling', callback);
+      },
+    }),
+    [store]
   );
-
-  // Show/hide the "Profiler" button depending on if profiling is supported.
-  useEffect(() => {
-    if (supportsProfiling !== store.supportsProfiling) {
-      setSupportsProfiling(store.supportsProfiling);
-    }
-
-    const handleRoots = () => {
-      if (supportsProfiling !== store.supportsProfiling) {
-        setSupportsProfiling(store.supportsProfiling);
-      }
-    };
-
-    store.addListener('roots', handleRoots);
-    return () => {
-      store.removeListener('roots', handleRoots);
-    };
-  }, [store, supportsProfiling]);
+  const supportsProfiling = useSubscription<boolean, Store>(
+    supportsProfilingSubscription
+  );
 
   return (
     <BridgeContext.Provider value={bridge}>
@@ -140,11 +132,7 @@ export default function DevTools({
                           id="DevTools"
                           selectTab={setTab}
                           size="large"
-                          tabs={
-                            supportsProfiling
-                              ? tabsWithProfiler
-                              : tabsWithoutProfiler
-                          }
+                          tabs={tabs}
                         />
                       </div>
                     )}

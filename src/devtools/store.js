@@ -865,8 +865,9 @@ export default class Store extends EventEmitter {
           if (hasOwnerMetadata) {
             this._hasOwnerMetadata = true;
           }
-          if (supportsProfiling) {
+          if (!this._supportsProfiling && supportsProfiling) {
             this._supportsProfiling = true;
+            this.emit('supportsProfiling');
           }
         }
       );

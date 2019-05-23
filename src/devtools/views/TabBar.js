@@ -2,9 +2,11 @@
 
 import classNames from 'classnames';
 import React, { Fragment, useCallback } from 'react';
+import Tooltip from '@reach/tooltip';
 import Icon from './Icon';
 
 import styles from './TabBar.css';
+import tooltipStyles from './Tooltip.css';
 
 import type { IconType } from './Icon';
 
@@ -59,42 +61,53 @@ export default function TabBar({
 
   return (
     <Fragment>
-      {tabs.map(({ icon, id, label, title }) => (
-        <label
-          className={classNames(
-            tabClassName,
-            disabled ? styles.TabDisabled : styles.Tab,
-            !disabled && currentTab === id ? styles.TabCurrent : null
-          )}
-          key={id}
-          onKeyDown={handleKeyDown}
-          onMouseDown={() => selectTab(id)}
-          title={title || label}
-        >
-          <input
-            type="radio"
-            className={styles.Input}
-            checked={currentTab === id}
-            disabled={disabled}
-            name={groupName}
-            value={id}
-            onChange={onChange}
-          />
-          <Icon
-            className={`${disabled ? styles.IconDisabled : ''} ${
-              size === 'large' ? styles.IconSizeLarge : styles.IconSizeSmall
-            }`}
-            type={icon}
-          />
-          <span
-            className={
-              size === 'large' ? styles.TabLabelLarge : styles.TabLabelSmall
-            }
+      {tabs.map(({ icon, id, label, title }) => {
+        let button = (
+          <label
+            className={classNames(
+              tabClassName,
+              disabled ? styles.TabDisabled : styles.Tab,
+              !disabled && currentTab === id ? styles.TabCurrent : null
+            )}
+            key={id}
+            onKeyDown={handleKeyDown}
+            onMouseDown={() => selectTab(id)}
           >
-            {label}
-          </span>
-        </label>
-      ))}
+            <input
+              type="radio"
+              className={styles.Input}
+              checked={currentTab === id}
+              disabled={disabled}
+              name={groupName}
+              value={id}
+              onChange={onChange}
+            />
+            <Icon
+              className={`${disabled ? styles.IconDisabled : ''} ${
+                size === 'large' ? styles.IconSizeLarge : styles.IconSizeSmall
+              }`}
+              type={icon}
+            />
+            <span
+              className={
+                size === 'large' ? styles.TabLabelLarge : styles.TabLabelSmall
+              }
+            >
+              {label}
+            </span>
+          </label>
+        );
+
+        if (title) {
+          button = (
+            <Tooltip className={tooltipStyles.Tooltip} label={title}>
+              {button}
+            </Tooltip>
+          );
+        }
+
+        return button;
+      })}
     </Fragment>
   );
 }
