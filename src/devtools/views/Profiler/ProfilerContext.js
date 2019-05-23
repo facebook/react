@@ -118,25 +118,30 @@ function ProfilerContextController({ children }: Props) {
     profilingData,
   } = useSubscription<StoreProfilingState, Store>(subscription);
 
+  const [prevProfilingData, setPrevProfilingData] = useState();
   const [rootID, setRootID] = useState<number | null>(null);
 
-  const dataForRoots =
-    profilingData !== null ? profilingData.dataForRoots : null;
-  if (dataForRoots != null) {
-    const firstRootID = dataForRoots.keys().next().value || null;
+  if (prevProfilingData !== profilingData) {
+    setPrevProfilingData(profilingData);
 
-    if (rootID === null || !dataForRoots.has(rootID)) {
-      let selectedElementRootID = null;
-      if (selectedElementID !== null) {
-        selectedElementRootID = store.getRootIDForElement(selectedElementID);
-      }
-      if (
-        selectedElementRootID !== null &&
-        dataForRoots.has(selectedElementRootID)
-      ) {
-        setRootID(selectedElementRootID);
-      } else {
-        setRootID(firstRootID);
+    const dataForRoots =
+      profilingData !== null ? profilingData.dataForRoots : null;
+    if (dataForRoots != null) {
+      const firstRootID = dataForRoots.keys().next().value || null;
+
+      if (rootID === null || !dataForRoots.has(rootID)) {
+        let selectedElementRootID = null;
+        if (selectedElementID !== null) {
+          selectedElementRootID = store.getRootIDForElement(selectedElementID);
+        }
+        if (
+          selectedElementRootID !== null &&
+          dataForRoots.has(selectedElementRootID)
+        ) {
+          setRootID(selectedElementRootID);
+        } else {
+          setRootID(firstRootID);
+        }
       }
     }
   }

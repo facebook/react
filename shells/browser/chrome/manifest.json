@@ -45,6 +45,7 @@
     "<all_urls>",
     "background",
     "tabs",
+    "webNavigation",
     "file:///*",
     "http://*/*",
     "https://*/*"

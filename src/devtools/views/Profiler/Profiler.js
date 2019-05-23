@@ -38,15 +38,7 @@ function Profiler({ supportsProfiling }: Props) {
   } = useContext(ProfilerContext);
 
   let view = null;
-  if (!supportsProfiling) {
-    view = <ProfilingNotSupported />;
-  } else if (isProfiling) {
-    view = <RecordingInProgress />;
-  } else if (isProcessingData) {
-    view = <ProcessingData />;
-  } else if (!hasProfilingData) {
-    view = <NoProfilingData />;
-  } else {
+  if (hasProfilingData) {
     switch (selectedTabID) {
       case 'flame-chart':
         view = <CommitFlamegraph />;
@@ -60,6 +52,14 @@ function Profiler({ supportsProfiling }: Props) {
       default:
         break;
     }
+  } else if (isProfiling) {
+    view = <RecordingInProgress />;
+  } else if (isProcessingData) {
+    view = <ProcessingData />;
+  } else if (supportsProfiling) {
+    view = <NoProfilingData />;
+  } else {
+    view = <ProfilingNotSupported />;
   }
 
   let sidebar = null;

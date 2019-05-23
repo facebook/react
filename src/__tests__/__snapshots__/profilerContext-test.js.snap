@@ -1,0 +1,6 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ProfilerContext should gracefully handle an empty profiling session: 1: mount 1`] = `
+[root]
+    <Example>
+`;

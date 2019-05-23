@@ -57,9 +57,6 @@ export default class Bridge extends EventEmitter {
       return;
     }
 
-    // Mark this bridge as destroyed, i.e. disable its public API.
-    this._isShutdown = true;
-
     // Disable the API inherited from EventEmitter that can add more listeners and send more messages.
     this.addListener = function() {};
     this.emit = function() {};
@@ -86,9 +83,17 @@ export default class Bridge extends EventEmitter {
     // Make sure once again that there is no dangling timer.
     clearTimeout(this._timeoutID);
     this._timeoutID = null;
+
+    // Mark this bridge as destroyed, i.e. disable its public API.
+    this._isShutdown = true;
   }
 
   _flush = () => {
+    if (this._isShutdown) {
+      console.warn(`Cannot flush a Bridge that has been shutdown.`);
+      return;
+    }
+
     // This method is used after the bridge is marked as destroyed in shutdown sequence,
     // so we do not bail out if the bridge marked as destroyed.
     // It is a private method that the bridge ensures is only called at the right times.
