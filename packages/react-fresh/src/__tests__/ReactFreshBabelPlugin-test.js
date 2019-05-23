@@ -186,4 +186,34 @@ describe('ReactFreshBabelPlugin', () => {
     `),
     ).toMatchSnapshot();
   });
+
+  it('registers likely HOCs with inline functions', () => {
+    expect(
+      transform(`
+        const A = forwardRef(function() {
+          return <h1>Foo</h1>;
+        });
+        const B = memo(React.forwardRef(() => {
+          return <h1>Foo</h1>;
+        }));
+        export default React.memo(forwardRef((props, ref) => {
+          return <h1>Foo</h1>;
+        }))
+    `),
+    ).toMatchSnapshot();
+  });
+
+  it('ignores higher-order functions that are not HOCs', () => {
+    expect(
+      transform(`
+        const throttledAlert = throttle(function() {
+          alert('Hi');
+        });
+        const TooComplex = (function() { return hello })(() => {});
+        if (cond) {
+          const Foo = thing(() => {});
+        }
+    `),
+    ).toMatchSnapshot();
+  });
 });

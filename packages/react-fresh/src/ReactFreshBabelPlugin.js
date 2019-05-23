@@ -32,49 +32,84 @@ export default function(babel) {
     return typeof name === 'string' && name[0] >= 'A' && name[0] <= 'Z';
   }
 
-  function findLikelyComponents(path, callback) {
+  function findInnerComponents(inferredName, path, callback) {
     const node = path.node;
     switch (node.type) {
       case 'FunctionDeclaration': {
         const id = node.id;
         if (id === null) {
-          return;
+          return false;
         }
         const name = id.name;
         if (!isComponentishName(name)) {
-          return;
+          return false;
         }
         // function Foo() {}
-        callback(name, id);
-        break;
+        // export function Foo() {}
+        // export default function Foo() {}
+        callback(name, id, null);
+        return true;
+      }
+      case 'ArrowFunctionExpression': {
+        if (node.body.type === 'ArrowFunctionExpression') {
+          return false;
+        }
+        // let Foo = () => {}
+        // export default hoc1(hoc2(() => {}))
+        callback(inferredName, node, path);
+        return true;
+      }
+      case 'FunctionExpression': {
+        // let Foo = function() {}
+        // const Foo = hoc1(forwardRef(function renderFoo() {}))
+        // export default memo(function() {})
+        callback(inferredName, node, path);
+        return true;
+      }
+      case 'CallExpression': {
+        const argsPath = path.get('arguments');
+        if (argsPath === undefined || argsPath.length === 0) {
+          return false;
+        }
+        const calleePath = path.get('callee');
+        switch (calleePath.node.type) {
+          case 'MemberExpression':
+          case 'Identifier': {
+            const calleeSource = calleePath.getSource();
+            const firstArgPath = argsPath[0];
+            const innerName = inferredName + '$' + calleeSource;
+            const foundInside = findInnerComponents(
+              innerName,
+              firstArgPath,
+              callback,
+            );
+            if (!foundInside) {
+              return false;
+            }
+            // const Foo = hoc1(hoc2(() => {}))
+            // export default memo(React.forwardRef(function() {}))
+            callback(inferredName, node, path);
+            return true;
+          }
+          default: {
+            return false;
+          }
+        }
       }
       case 'VariableDeclarator': {
-        const name = node.id.name;
-        if (!isComponentishName(name)) {
-          return;
-        }
         const init = node.init;
         if (init === null) {
-          return;
+          return false;
+        }
+        const name = node.id.name;
+        if (!isComponentishName(name)) {
+          return false;
         }
         const initPath = path.get('init');
-        const initNode = initPath.node;
-        switch (initNode.type) {
-          case 'FunctionExpression': {
-            // let Foo = function() {}
-            callback(name, initNode, initPath);
-            break;
-          }
-          case 'ArrowFunctionExpression': {
-            if (initNode.body.type !== 'ArrowFunctionExpression') {
-              // let Foo = () => {}
-              callback(name, initNode, initPath);
-              break;
-            }
-          }
-        }
+        return findInnerComponents(inferredName, initPath, callback);
       }
     }
+    return false;
   }
 
   return {
@@ -82,22 +117,29 @@ export default function(babel) {
       FunctionDeclaration(path) {
         let programPath;
         let insertAfterPath;
+        let inferredName;
         switch (path.parent.type) {
           case 'Program':
             insertAfterPath = path;
             programPath = path.parentPath;
+            inferredName = path.node.id.name;
             break;
           case 'ExportNamedDeclaration':
+            insertAfterPath = path.parentPath;
+            programPath = insertAfterPath.parentPath;
+            inferredName = path.node.id.name;
+            break;
           case 'ExportDefaultDeclaration':
             insertAfterPath = path.parentPath;
             programPath = insertAfterPath.parentPath;
+            inferredName = '%default%';
             break;
           default:
             return;
         }
         // While we reuse this function, in this case it won't
         // go more than one level deep because we're at the leaf.
-        findLikelyComponents(path, (persistentID, targetExpr) => {
+        findInnerComponents(inferredName, path, (persistentID, targetExpr) => {
           const handle = createRegistration(programPath, persistentID);
           insertAfterPath.insertAfter(
             t.expressionStatement(
@@ -124,7 +166,9 @@ export default function(babel) {
           return;
         }
         const declPath = declPaths[0];
-        findLikelyComponents(
+        const inferredName = declPath.node.id.name;
+        findInnerComponents(
+          inferredName,
           declPath,
           (persistentID, targetExpr, targetPath) => {
             const handle = createRegistration(programPath, persistentID);
