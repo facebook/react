@@ -64,6 +64,7 @@ import {
   BatchedMode,
   ConcurrentMode,
 } from './ReactTypeOfMode';
+import {ConcurrentRoot} from 'shared/ReactRootTags';
 import {
   HostRoot,
   ClassComponent,
@@ -775,6 +776,10 @@ function renderRoot(
     workPhase !== RenderPhase && workPhase !== CommitPhase,
     'Should not already be working.',
   );
+
+  if (root.tag !== ConcurrentRoot) {
+    isSync = true;
+  }
 
   if (enableUserTimingAPI && expirationTime !== Sync) {
     const didExpire = isSync;

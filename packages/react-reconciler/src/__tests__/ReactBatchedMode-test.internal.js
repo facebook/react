@@ -161,4 +161,46 @@ describe('ReactBatchedMode', () => {
     expect(Scheduler).toFlushExpired(['A1']);
     expect(root).toMatchRenderedOutput('A1B1');
   });
+
+  it('hidden subtrees are deprioritized but not yieldy', () => {
+    const {useEffect} = React;
+
+    const root = ReactNoop.createSyncRoot();
+    function App() {
+      useEffect(() => Scheduler.yieldValue('Commit'));
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <div hidden={true}>
+            <Text text="A" />
+            <Text text="B" />
+            <Text text="C" />
+          </div>
+          <div>
+            <Text text="D" />
+            <Text text="E" />
+            <Text text="F" />
+          </div>
+        </Suspense>
+      );
+    }
+
+    root.render(<App />);
+    expect(Scheduler).toFlushAndYieldThrough(['D', 'E', 'F', 'Commit']);
+    expect(root).toMatchRenderedOutput(
+      <React.Fragment>
+        <div hidden={true} />
+        <div>DEF</div>
+      </React.Fragment>,
+    );
+
+    Scheduler.unstable_flushNumberOfYields(1);
+    expect(Scheduler).toHaveYielded(['A', 'B', 'C']);
+    Scheduler.flushAll();
+    expect(root).toMatchRenderedOutput(
+      <React.Fragment>
+        <div hidden={true}>ABC</div>
+        <div>DEF</div>
+      </React.Fragment>,
+    );
+  });
 });

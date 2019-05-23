@@ -84,13 +84,7 @@ import {
   Never,
   computeAsyncExpiration,
 } from './ReactFiberExpirationTime';
-import {
-  ConcurrentMode,
-  NoMode,
-  ProfileMode,
-  StrictMode,
-  BatchedMode,
-} from './ReactTypeOfMode';
+import {NoMode, ProfileMode, StrictMode, BatchedMode} from './ReactTypeOfMode';
 import {
   shouldSetTextContent,
   shouldDeprioritizeSubtree,
@@ -980,7 +974,7 @@ function updateHostComponent(current, workInProgress, renderExpirationTime) {
 
   // Check the host config to see if the children are offscreen/hidden.
   if (
-    workInProgress.mode & ConcurrentMode &&
+    workInProgress.mode & BatchedMode &&
     renderExpirationTime !== Never &&
     shouldDeprioritizeSubtree(type, nextProps)
   ) {
@@ -2257,7 +2251,7 @@ function beginWork(
         case HostComponent:
           pushHostContext(workInProgress);
           if (
-            workInProgress.mode & ConcurrentMode &&
+            workInProgress.mode & BatchedMode &&
             renderExpirationTime !== Never &&
             shouldDeprioritizeSubtree(workInProgress.type, newProps)
           ) {
