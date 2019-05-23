@@ -21,16 +21,12 @@ import type { ProfilingDataFrontend } from './types';
 export type TabID = 'flame-chart' | 'ranked-chart' | 'interactions';
 
 export type Context = {|
-  // Does the Store support profiling?
-  supportsProfiling: boolean,
-
   // Which tab is selexted in the Profiler UI?
   selectedTabID: TabID,
   selectTab(id: TabID): void,
 
-  // Have we recorded any profiling data?
-  // Are we currently profiling?
-  // This value may be modified by the record button in the Profiler toolbar,
+  // Store subscription based values.
+  // The isProfiling value may be modified by the record button in the Profiler toolbar,
   // or from the backend itself (after a reload-and-profile action).
   // It is synced between the backend and frontend via a Store subscription.
   didRecordCommits: boolean,
@@ -39,6 +35,7 @@ export type Context = {|
   profilingData: ProfilingDataFrontend | null,
   startProfiling(value: boolean): void,
   stopProfiling(value: boolean): void,
+  supportsProfiling: boolean,
 
   // Which root should profiling data be shown for?
   // This value should be initialized to either:

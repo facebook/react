@@ -859,20 +859,26 @@ export default class Store extends EventEmitter {
     this._revision++;
 
     if (haveRootsChanged) {
+      const prevSupportsProfiling = this._supportsProfiling;
+
       this._hasOwnerMetadata = false;
+      this._supportsProfiling = false;
       this._rootIDToCapabilities.forEach(
         ({ hasOwnerMetadata, supportsProfiling }) => {
           if (hasOwnerMetadata) {
             this._hasOwnerMetadata = true;
           }
-          if (!this._supportsProfiling && supportsProfiling) {
+          if (supportsProfiling) {
             this._supportsProfiling = true;
-            this.emit('supportsProfiling');
           }
         }
       );
 
       this.emit('roots');
+
+      if (this._supportsProfiling !== prevSupportsProfiling) {
+        this.emit('supportsProfiling');
+      }
     }
 
     if (__DEBUG__) {

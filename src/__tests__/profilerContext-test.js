@@ -65,6 +65,41 @@ describe('ProfilerContext', () => {
     </BridgeContext.Provider>
   );
 
+  it('updates updates profiling support based on the attached roots', async done => {
+    const Component = () => null;
+
+    let context: Context = ((null: any): Context);
+
+    function ContextReader() {
+      context = React.useContext(ProfilerContext);
+      return null;
+    }
+    await utils.actAsync(() => {
+      TestRenderer.create(
+        <Contexts>
+          <ContextReader />
+        </Contexts>
+      );
+    });
+
+    expect(context.supportsProfiling).toBe(false);
+
+    const containerA = document.createElement('div');
+    const containerB = document.createElement('div');
+
+    await utils.actAsync(() => ReactDOM.render(<Component />, containerA));
+    expect(context.supportsProfiling).toBe(true);
+
+    await utils.actAsync(() => ReactDOM.render(<Component />, containerB));
+    await utils.actAsync(() => ReactDOM.unmountComponentAtNode(containerA));
+    expect(context.supportsProfiling).toBe(true);
+
+    await utils.actAsync(() => ReactDOM.unmountComponentAtNode(containerB));
+    expect(context.supportsProfiling).toBe(false);
+
+    done();
+  });
+
   it('should gracefully handle an empty profiling session (with no recorded commits)', async done => {
     const Example = () => null;
 

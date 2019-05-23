@@ -778,4 +778,23 @@ describe('Store', () => {
       }
     });
   });
+
+  it('detects and updates profiling support based on the attached roots', () => {
+    const Component = () => null;
+
+    const containerA = document.createElement('div');
+    const containerB = document.createElement('div');
+
+    expect(store.supportsProfiling).toBe(false);
+
+    act(() => ReactDOM.render(<Component />, containerA));
+    expect(store.supportsProfiling).toBe(true);
+
+    act(() => ReactDOM.render(<Component />, containerB));
+    act(() => ReactDOM.unmountComponentAtNode(containerA));
+    expect(store.supportsProfiling).toBe(true);
+
+    act(() => ReactDOM.unmountComponentAtNode(containerB));
+    expect(store.supportsProfiling).toBe(false);
+  });
 });
