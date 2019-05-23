@@ -144,6 +144,13 @@ export default class ProfilerStore extends EventEmitter {
     return this._dataFrontend;
   }
   set profilingData(value: ProfilingDataFrontend | null): void {
+    if (this._isProfiling) {
+      console.warn(
+        'Profiling data cannot be updated while profiling is in progress.'
+      );
+      return;
+    }
+
     this._dataBackends.splice(0);
     this._dataFrontend = value;
     this._initialRendererIDs.clear();

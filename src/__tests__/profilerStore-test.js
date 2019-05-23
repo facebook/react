@@ -54,4 +54,21 @@ describe('ProfilerStore', () => {
 
     expect(store.profilerStore.getDataForRoot(rootB)).not.toBeNull();
   });
+
+  it('should not allow new/saved profiling data to be set while profiling is in progress', () => {
+    utils.act(() => store.profilerStore.startProfiling());
+    const fauxProfilingData = {
+      dataForRoots: new Map(),
+    };
+    spyOn(console, 'warn');
+    store.profilerStore.profilingData = fauxProfilingData;
+    expect(store.profilerStore.profilingData).not.toBe(fauxProfilingData);
+    expect(console.warn).toHaveBeenCalledTimes(1);
+    expect(console.warn).toHaveBeenCalledWith(
+      'Profiling data cannot be updated while profiling is in progress.'
+    );
+    utils.act(() => store.profilerStore.stopProfiling());
+    store.profilerStore.profilingData = fauxProfilingData;
+    expect(store.profilerStore.profilingData).toBe(fauxProfilingData);
+  });
 });
