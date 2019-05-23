@@ -172,4 +172,37 @@ describe('ReactFreshIntegration', () => {
     expect(container.firstChild).toBe(el);
     expect(el.textContent).toBe('B2');
   });
+
+  it('reloads HOCs if they return functions', () => {
+    render(`
+      function hoc(letter) {
+        return function() {
+          return <h1>{letter}1</h1>;
+        }
+      }
+
+      export default function Parent() {
+        return <Child />;
+      }
+
+      const Child = hoc('A');
+    `);
+    const el = container.firstChild;
+    expect(el.textContent).toBe('A1');
+    patch(`
+      function hoc(letter) {
+        return function() {
+          return <h1>{letter}2</h1>;
+        }
+      }
+
+      export default function Parent() {
+        return <Child />;
+      }
+
+      const Child = hoc('B');
+    `);
+    expect(container.firstChild).toBe(el);
+    expect(el.textContent).toBe('B2');
+  });
 });
