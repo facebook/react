@@ -18,31 +18,36 @@ import type {ReactEventComponentInstance} from 'shared/ReactTypes';
 
 import {mountSafeCallback_NOT_REALLY_SAFE} from './NativeMethodsMixinUtils';
 import {create, diff} from './ReactNativeAttributePayload';
-import {get as getViewConfigForType} from 'ReactNativeViewConfigRegistry';
 
-import deepFreezeAndThrowOnMutationInDev from 'deepFreezeAndThrowOnMutationInDev';
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
 
 import {dispatchEvent} from './ReactFabricEventEmitter';
 
 // Modules provided by RN:
-import TextInputState from 'TextInputState';
 import {
+  ReactNativeViewConfigRegistry,
+  TextInputState,
+  deepFreezeAndThrowOnMutationInDev,
+} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
+
+const {
   createNode,
   cloneNode,
   cloneNodeWithNewChildren,
   cloneNodeWithNewChildrenAndProps,
   cloneNodeWithNewProps,
-  createChildSet as createChildNodeSet,
-  appendChild as appendChildNode,
-  appendChildToSet as appendChildNodeToSet,
+  createChildSet: createChildNodeSet,
+  appendChild: appendChildNode,
+  appendChildToSet: appendChildNodeToSet,
   completeRoot,
   registerEventHandler,
-  measure as fabricMeasure,
-  measureInWindow as fabricMeasureInWindow,
-  measureLayout as fabricMeasureLayout,
-} from 'FabricUIManager';
+  measure: fabricMeasure,
+  measureInWindow: fabricMeasureInWindow,
+  measureLayout: fabricMeasureLayout,
+} = nativeFabricUIManager;
+
+const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 
 // Counter for uniquely identifying views.
 // % 10 === 1 means it is a rootTag.
