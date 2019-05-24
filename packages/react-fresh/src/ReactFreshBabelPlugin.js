@@ -155,7 +155,6 @@ export default function(babel) {
   }
 
   let hookCalls = new WeakMap();
-  let signedExpressions = new WeakSet();
 
   function recordHookCall(functionNode, hookCallPath) {
     if (!hookCalls.has(functionNode)) {
@@ -181,6 +180,11 @@ export default function(babel) {
     return fnHookCalls.map(call => call.name + '{' + call.key + '}').join('\n');
   }
 
+  let seenForRegistration = new WeakSet();
+  let seenForSignature = new WeakSet();
+  let seenForHookCalls = new WeakSet();
+  let seenForOutro = new WeakSet();
+
   return {
     visitor: {
       ExportDefaultDeclaration(path) {
@@ -194,6 +198,15 @@ export default function(babel) {
           // are currently ignored.
           return;
         }
+
+        // Make sure we're not mutating the same tree twice.
+        // This can happen if another Babel plugin replaces parents.
+        if (seenForRegistration.has(node)) {
+          return;
+        }
+        seenForRegistration.add(node);
+        // Don't mutate the tree above this point.
+
         // This code path handles nested cases like:
         // export default memo(() => {})
         // In those cases it is more plausible people will omit names
@@ -215,6 +228,7 @@ export default function(babel) {
       },
       FunctionDeclaration: {
         enter(path) {
+          const node = path.node;
           let programPath;
           let insertAfterPath;
           switch (path.parent.type) {
@@ -233,7 +247,7 @@ export default function(babel) {
             default:
               return;
           }
-          const id = path.node.id;
+          const id = node.id;
           if (id === null) {
             // We don't currently handle anonymous default exports.
             return;
@@ -242,6 +256,15 @@ export default function(babel) {
           if (!isComponentishName(inferredName)) {
             return;
           }
+
+          // Make sure we're not mutating the same tree twice.
+          // This can happen if another Babel plugin replaces parents.
+          if (seenForRegistration.has(node)) {
+            return;
+          }
+          seenForRegistration.add(node);
+          // Don't mutate the tree above this point.
+
           // export function Named() {}
           // function Named() {}
           findInnerComponents(
@@ -267,6 +290,15 @@ export default function(babel) {
           if (signature === null) {
             return;
           }
+
+          // Make sure we're not mutating the same tree twice.
+          // This can happen if another Babel plugin replaces parents.
+          if (seenForSignature.has(node)) {
+            return;
+          }
+          seenForSignature.add(node);
+          // Don't muatte the tree above this point.
+
           // Unlike with __register__, this needs to work for nested
           // declarations too. So we need to search for a path where
           // we can insert a statement rather than hardcoding it.
@@ -297,10 +329,15 @@ export default function(babel) {
           if (signature === null) {
             return;
           }
-          if (signedExpressions.has(node)) {
+
+          // Make sure we're not mutating the same tree twice.
+          // This can happen if another Babel plugin replaces parents.
+          if (seenForSignature.has(node)) {
             return;
           }
-          signedExpressions.add(node);
+          seenForSignature.add(node);
+          // Don't mutate the tree above this point.
+
           path.replaceWith(
             t.callExpression(t.identifier('__signature__'), [
               node,
@@ -310,6 +347,7 @@ export default function(babel) {
         },
       },
       VariableDeclaration(path) {
+        const node = path.node;
         let programPath;
         switch (path.parent.type) {
           case 'Program':
@@ -322,6 +360,15 @@ export default function(babel) {
           default:
             return;
         }
+
+        // Make sure we're not mutating the same tree twice.
+        // This can happen if another Babel plugin replaces parents.
+        if (seenForRegistration.has(node)) {
+          return;
+        }
+        seenForRegistration.add(node);
+        // Don't mutate the tree above this point.
+
         const declPaths = path.get('declarations');
         if (declPaths.length !== 1) {
           return;
@@ -340,10 +387,20 @@ export default function(babel) {
         );
       },
       CallExpression(path) {
+        const node = path.node;
         const name = path.node.callee.name;
         if (!/^use[A-Z]/.test(name)) {
           return;
         }
+
+        // Make sure we're not recording the same calls twice.
+        // This can happen if another Babel plugin replaces parents.
+        if (seenForHookCalls.has(node)) {
+          return;
+        }
+        seenForHookCalls.add(node);
+        // Don't mutate the tree above this point.
+
         const fn = path.scope.getFunctionParent();
         if (fn === null) {
           return;
@@ -356,6 +413,16 @@ export default function(babel) {
           if (registrations === undefined) {
             return;
           }
+
+          // Make sure we're not mutating the same tree twice.
+          // This can happen if another Babel plugin replaces parents.
+          const node = path.node;
+          if (seenForOutro.has(node)) {
+            return;
+          }
+          seenForOutro.add(node);
+          // Don't mutate the tree above this point.
+
           registrationsByProgramPath.delete(path);
           const declarators = [];
           path.pushContainer('body', t.variableDeclaration('var', declarators));
