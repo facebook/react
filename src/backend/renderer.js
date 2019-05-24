@@ -1104,15 +1104,14 @@ export function attach(
     }
 
     if (
-      mostRecentlyInspectedElement !== null &&
+      mostRecentlyInspectedElementID !== null &&
       mostRecentlyInspectedElementID ===
         getFiberID(getPrimaryFiber(nextFiber)) &&
       hasDataChanged(prevFiber, nextFiber)
     ) {
       // If this Fiber has updated, clear cached inspected data.
       // If it is inspected again, it may need to be re-run to obtain updated hooks values.
-      mostRecentlyInspectedElement = null;
-      mostRecentlyInspectedElementID = null;
+      hasElementUpdatedSinceLastInspected = true;
     }
 
     const shouldIncludeInTree = !shouldFilterFiber(nextFiber);
@@ -1904,36 +1903,32 @@ export function attach(
   }
 
   let mostRecentlyInspectedElementID: number | null = null;
-  let mostRecentlyInspectedElement: InspectedElement | null = null;
+  let hasElementUpdatedSinceLastInspected: boolean = false;
 
   function inspectElement(id: number): InspectedElement | number | null {
     // If this element has not been updated since it was last inspected, we don't need to re-run it.
     // Instead we can just return the ID to indicate that it has not changed.
-    if (mostRecentlyInspectedElementID === id) {
+    if (
+      mostRecentlyInspectedElementID === id &&
+      !hasElementUpdatedSinceLastInspected
+    ) {
       return id;
     }
 
     mostRecentlyInspectedElementID = id;
-    mostRecentlyInspectedElement = inspectElementRaw(id);
-    if (mostRecentlyInspectedElement === null) {
+    hasElementUpdatedSinceLastInspected = false;
+
+    const inspectedElement = inspectElementRaw(id);
+    if (inspectedElement === null) {
       return null;
     }
-    mostRecentlyInspectedElement.context = cleanForBridge(
-      mostRecentlyInspectedElement.context
-    );
-    mostRecentlyInspectedElement.events = cleanForBridge(
-      mostRecentlyInspectedElement.events
-    );
-    mostRecentlyInspectedElement.hooks = cleanForBridge(
-      mostRecentlyInspectedElement.hooks
-    );
-    mostRecentlyInspectedElement.props = cleanForBridge(
-      mostRecentlyInspectedElement.props
-    );
-    mostRecentlyInspectedElement.state = cleanForBridge(
-      mostRecentlyInspectedElement.state
-    );
-    return mostRecentlyInspectedElement;
+    inspectedElement.context = cleanForBridge(inspectedElement.context);
+    inspectedElement.events = cleanForBridge(inspectedElement.events);
+    inspectedElement.hooks = cleanForBridge(inspectedElement.hooks);
+    inspectedElement.props = cleanForBridge(inspectedElement.props);
+    inspectedElement.state = cleanForBridge(inspectedElement.state);
+
+    return inspectedElement;
   }
 
   function logElementToConsole(id) {
