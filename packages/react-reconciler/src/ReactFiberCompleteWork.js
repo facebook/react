@@ -101,7 +101,6 @@ import {
   enableEventAPI,
 } from 'shared/ReactFeatureFlags';
 import {
-  markRenderEventTimeAndConfig,
   renderDidSuspend,
   renderDidSuspendDelayIfPossible,
 } from './ReactFiberWorkLoop';
@@ -702,14 +701,6 @@ function completeWork(
         prevDidTimeout = prevState !== null;
         if (!nextDidTimeout && prevState !== null) {
           // We just switched from the fallback to the normal children.
-
-          // Mark the event time of the switching from fallback to normal children,
-          // based on the start of when we first showed the fallback. This time
-          // was given a normal pri expiration time at the time it was shown.
-          const fallbackExpirationTime: ExpirationTime =
-            prevState.fallbackExpirationTime;
-          markRenderEventTimeAndConfig(fallbackExpirationTime, null);
-
           // Delete the fallback.
           // TODO: Would it be better to store the fallback fragment on
           // the stateNode during the begin phase?

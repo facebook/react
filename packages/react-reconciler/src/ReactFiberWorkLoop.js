@@ -213,6 +213,9 @@ let workInProgressRootExitStatus: RootExitStatus = RootIncomplete;
 let workInProgressRootLatestProcessedExpirationTime: ExpirationTime = Sync;
 let workInProgressRootLatestSuspenseTimeout: ExpirationTime = Sync;
 let workInProgressRootCanSuspendUsingConfig: null | SuspenseConfig = null;
+// The most recent time we committed a fallback. This lets us ensure a train
+// model where we don't commit new loading states in too quick succession.
+let globalMostRecentFallbackTime: number = 0;
 
 let nextEffect: Fiber | null = null;
 let hasUncaughtError = false;
@@ -1017,6 +1020,10 @@ function renderRoot(
       invariant(false, 'Unknown root exit status.');
     }
   }
+}
+
+export function markCommitTimeOfFallback() {
+  globalMostRecentFallbackTime = now();
 }
 
 export function markRenderEventTimeAndConfig(

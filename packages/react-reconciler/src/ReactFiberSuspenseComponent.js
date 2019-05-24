@@ -8,11 +8,9 @@
  */
 
 import type {Fiber} from './ReactFiber';
-import type {ExpirationTime} from './ReactFiberExpirationTime';
 
-export type SuspenseState = {|
-  fallbackExpirationTime: ExpirationTime,
-|};
+// TODO: This is now an empty object. Should we switch this to a boolean?
+export type SuspenseState = {||};
 
 export function shouldCaptureSuspense(
   workInProgress: Fiber,
