@@ -179,6 +179,37 @@ describe('ReactFreshIntegration', () => {
     }
   });
 
+  it('reloads anonymous memo default export', () => {
+    if (__DEV__) {
+      render(`
+      const {memo} = React;
+
+      export default memo(React.forwardRef(function (props, ref) {
+        return <Child prop="A" ref={ref} />;
+      }));
+
+      const Child = React.memo(({prop}) => {
+        return <h1>{prop}1</h1>;
+      });
+    `);
+      const el = container.firstChild;
+      expect(el.textContent).toBe('A1');
+      patch(`
+      const {memo} = React;
+
+      export default memo(React.forwardRef(function (props, ref) {
+        return <Child prop="B" ref={ref} />;
+      }));
+
+      const Child = React.memo(({prop}) => {
+        return <h1>{prop}2</h1>;
+      });
+    `);
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('B2');
+    }
+  });
+
   it('reloads HOCs if they return functions', () => {
     if (__DEV__) {
       render(`

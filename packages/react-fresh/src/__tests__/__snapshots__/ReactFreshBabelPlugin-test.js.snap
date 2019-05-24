@@ -130,11 +130,11 @@ const A = _c2 = forwardRef(_c = function () {
 const B = _c5 = memo(_c4 = React.forwardRef(_c3 = () => {
   return <h1>Foo</h1>;
 }));
-export default React.memo(forwardRef((props, ref) => {
+export default _c8 = React.memo(_c7 = forwardRef(_c6 = (props, ref) => {
   return <h1>Foo</h1>;
 }));
 
-var _c, _c2, _c3, _c4, _c5;
+var _c, _c2, _c3, _c4, _c5, _c6, _c7, _c8;
 
 __register__(_c, \\"A$forwardRef\\");
 
@@ -144,7 +144,43 @@ __register__(_c3, \\"B$memo$React.forwardRef\\");
 
 __register__(_c4, \\"B$memo\\");
 
-__register__(_c5, \\"B\\");"
+__register__(_c5, \\"B\\");
+
+__register__(_c6, \\"%default%$React.memo$forwardRef\\");
+
+__register__(_c7, \\"%default%$React.memo\\");
+
+__register__(_c8, \\"%default%\\");"
+`;
+
+exports[`ReactFreshBabelPlugin registers likely HOCs with inline functions 2`] = `
+"
+export default _c3 = React.memo(_c2 = forwardRef(_c = function (props, ref) {
+  return <h1>Foo</h1>;
+}));
+
+var _c, _c2, _c3;
+
+__register__(_c, \\"%default%$React.memo$forwardRef\\");
+
+__register__(_c2, \\"%default%$React.memo\\");
+
+__register__(_c3, \\"%default%\\");"
+`;
+
+exports[`ReactFreshBabelPlugin registers likely HOCs with inline functions 3`] = `
+"
+export default _c3 = React.memo(_c2 = forwardRef(_c = function Named(props, ref) {
+  return <h1>Foo</h1>;
+}));
+
+var _c, _c2, _c3;
+
+__register__(_c, \\"%default%$React.memo$forwardRef\\");
+
+__register__(_c2, \\"%default%$React.memo\\");
+
+__register__(_c3, \\"%default%\\");"
 `;
 
 exports[`ReactFreshBabelPlugin registers top-level exported function declarations 1`] = `

@@ -198,7 +198,21 @@ describe('ReactFreshBabelPlugin', () => {
         }));
         export default React.memo(forwardRef((props, ref) => {
           return <h1>Foo</h1>;
-        }))
+        }));
+    `),
+    ).toMatchSnapshot();
+    expect(
+      transform(`
+        export default React.memo(forwardRef(function (props, ref) {
+          return <h1>Foo</h1>;
+        }));
+    `),
+    ).toMatchSnapshot();
+    expect(
+      transform(`
+        export default React.memo(forwardRef(function Named(props, ref) {
+          return <h1>Foo</h1>;
+        }));
     `),
     ).toMatchSnapshot();
   });

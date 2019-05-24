@@ -36,18 +36,10 @@ export default function(babel) {
     const node = path.node;
     switch (node.type) {
       case 'FunctionDeclaration': {
-        const id = node.id;
-        if (id === null) {
-          return false;
-        }
-        const name = id.name;
-        if (!isComponentishName(name)) {
-          return false;
-        }
         // function Foo() {}
         // export function Foo() {}
         // export default function Foo() {}
-        callback(name, id, null);
+        callback(inferredName, node.id, null);
         return true;
       }
       case 'ArrowFunctionExpression': {
@@ -168,29 +160,64 @@ export default function(babel) {
 
   return {
     visitor: {
+      ExportDefaultDeclaration(path) {
+        const node = path.node;
+        const decl = node.declaration;
+        const declPath = path.get('declaration');
+        if (decl.type !== 'CallExpression') {
+          // For now, we only support process possible HOC calls here.
+          // Named function declarations are handled in FunctionDeclaration.
+          // Anonymous direct exports like export default function() {}
+          // are currently ignored.
+          return;
+        }
+        // This code path handles nested cases like:
+        // export default memo(() => {})
+        // In those cases it is more plausible people will omit names
+        // so they're worth handling despite possible false positives.
+        const inferredName = '%default%';
+        const programPath = path.parentPath;
+        findInnerComponents(
+          inferredName,
+          declPath,
+          (persistentID, targetExpr, targetPath) => {
+            const handle = createRegistration(programPath, persistentID);
+            targetPath.replaceWith(
+              t.assignmentExpression('=', handle, targetExpr),
+            );
+          },
+        );
+      },
       FunctionDeclaration(path) {
         let programPath;
         let insertAfterPath;
-        let inferredName;
         switch (path.parent.type) {
           case 'Program':
             insertAfterPath = path;
             programPath = path.parentPath;
-            inferredName = path.node.id.name;
             break;
           case 'ExportNamedDeclaration':
             insertAfterPath = path.parentPath;
             programPath = insertAfterPath.parentPath;
-            inferredName = path.node.id.name;
             break;
           case 'ExportDefaultDeclaration':
             insertAfterPath = path.parentPath;
             programPath = insertAfterPath.parentPath;
-            inferredName = '%default%';
             break;
           default:
             return;
         }
+        const id = path.node.id;
+        if (id === null) {
+          // We don't currently handle anonymous default exports.
+          return;
+        }
+        const inferredName = id.name;
+        if (!isComponentishName(inferredName)) {
+          return;
+        }
+        // export function Named() {}
+        // function Named() {}
         findInnerComponents(inferredName, path, (persistentID, targetExpr) => {
           const handle = createRegistration(programPath, persistentID);
           insertAfterPath.insertAfter(
