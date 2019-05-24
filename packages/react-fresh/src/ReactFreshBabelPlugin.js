@@ -8,7 +8,7 @@
 'use strict';
 
 export default function(babel) {
-  const {types: t, template} = babel;
+  const {types: t} = babel;
 
   const registrationsByProgramPath = new Map();
   function createRegistration(programPath, persistentID) {
@@ -23,10 +23,6 @@ export default function(babel) {
     });
     return handle;
   }
-
-  const buildRegistrationCall = template(`
-    __register__(HANDLE, PERSISTENT_ID);
-  `);
 
   function isComponentishName(name) {
     return typeof name === 'string' && name[0] >= 'A' && name[0] <= 'Z';
@@ -158,6 +154,33 @@ export default function(babel) {
     return false;
   }
 
+  let hookCalls = new WeakMap();
+  let signedExpressions = new WeakSet();
+
+  function recordHookCall(functionNode, hookCallPath) {
+    if (!hookCalls.has(functionNode)) {
+      hookCalls.set(functionNode, []);
+    }
+    let hookCallsForFn = hookCalls.get(functionNode);
+    let key = '';
+    if (hookCallPath.parent.type === 'VariableDeclarator') {
+      // TODO: if there is no LHS, consider some other heuristic.
+      key = hookCallPath.parentPath.get('id').getSource();
+    }
+    hookCallsForFn.push({
+      name: hookCallPath.node.callee.name,
+      key,
+    });
+  }
+
+  function getHookCallsSignature(functionNode) {
+    const fnHookCalls = hookCalls.get(functionNode);
+    if (fnHookCalls === undefined) {
+      return null;
+    }
+    return fnHookCalls.map(call => call.name + '{' + call.key + '}').join('\n');
+  }
+
   return {
     visitor: {
       ExportDefaultDeclaration(path) {
@@ -190,44 +213,101 @@ export default function(babel) {
           },
         );
       },
-      FunctionDeclaration(path) {
-        let programPath;
-        let insertAfterPath;
-        switch (path.parent.type) {
-          case 'Program':
-            insertAfterPath = path;
-            programPath = path.parentPath;
-            break;
-          case 'ExportNamedDeclaration':
-            insertAfterPath = path.parentPath;
-            programPath = insertAfterPath.parentPath;
-            break;
-          case 'ExportDefaultDeclaration':
-            insertAfterPath = path.parentPath;
-            programPath = insertAfterPath.parentPath;
-            break;
-          default:
+      FunctionDeclaration: {
+        enter(path) {
+          let programPath;
+          let insertAfterPath;
+          switch (path.parent.type) {
+            case 'Program':
+              insertAfterPath = path;
+              programPath = path.parentPath;
+              break;
+            case 'ExportNamedDeclaration':
+              insertAfterPath = path.parentPath;
+              programPath = insertAfterPath.parentPath;
+              break;
+            case 'ExportDefaultDeclaration':
+              insertAfterPath = path.parentPath;
+              programPath = insertAfterPath.parentPath;
+              break;
+            default:
+              return;
+          }
+          const id = path.node.id;
+          if (id === null) {
+            // We don't currently handle anonymous default exports.
             return;
-        }
-        const id = path.node.id;
-        if (id === null) {
-          // We don't currently handle anonymous default exports.
-          return;
-        }
-        const inferredName = id.name;
-        if (!isComponentishName(inferredName)) {
-          return;
-        }
-        // export function Named() {}
-        // function Named() {}
-        findInnerComponents(inferredName, path, (persistentID, targetExpr) => {
-          const handle = createRegistration(programPath, persistentID);
+          }
+          const inferredName = id.name;
+          if (!isComponentishName(inferredName)) {
+            return;
+          }
+          // export function Named() {}
+          // function Named() {}
+          findInnerComponents(
+            inferredName,
+            path,
+            (persistentID, targetExpr) => {
+              const handle = createRegistration(programPath, persistentID);
+              insertAfterPath.insertAfter(
+                t.expressionStatement(
+                  t.assignmentExpression('=', handle, targetExpr),
+                ),
+              );
+            },
+          );
+        },
+        exit(path) {
+          const node = path.node;
+          const id = node.id;
+          if (id === null) {
+            return;
+          }
+          const signature = getHookCallsSignature(node);
+          if (signature === null) {
+            return;
+          }
+          // Unlike with __register__, this needs to work for nested
+          // declarations too. So we need to search for a path where
+          // we can insert a statement rather than hardcoding it.
+          let insertAfterPath = null;
+          path.find(p => {
+            if (p.parentPath.isBlock()) {
+              insertAfterPath = p;
+              return true;
+            }
+          });
+          if (insertAfterPath === null) {
+            return;
+          }
           insertAfterPath.insertAfter(
             t.expressionStatement(
-              t.assignmentExpression('=', handle, targetExpr),
+              t.callExpression(t.identifier('__signature__'), [
+                id,
+                t.stringLiteral(signature),
+              ]),
             ),
           );
-        });
+        },
+      },
+      'ArrowFunctionExpression|FunctionExpression': {
+        exit(path) {
+          const node = path.node;
+          const signature = getHookCallsSignature(node);
+          if (signature === null) {
+            return;
+          }
+          if (signedExpressions.has(node)) {
+            return;
+          }
+          signedExpressions.add(node);
+          path.replaceWith(
+            t.callExpression(t.identifier('__signature__'), [
+              node,
+              t.stringLiteral(signature),
+            ]),
+          );
+        },
       },
       VariableDeclaration(path) {
         let programPath;
@@ -259,6 +339,17 @@ export default function(babel) {
           },
         );
       },
+      CallExpression(path) {
+        const name = path.node.callee.name;
+        if (!/^use[A-Z]/.test(name)) {
+          return;
+        }
+        const fn = path.scope.getFunctionParent();
+        if (fn === null) {
+          return;
+        }
+        recordHookCall(fn.block, path);
+      },
       Program: {
         exit(path) {
           const registrations = registrationsByProgramPath.get(path);
@@ -271,10 +362,12 @@ export default function(babel) {
           registrations.forEach(({handle, persistentID}) => {
             path.pushContainer(
               'body',
-              buildRegistrationCall({
-                HANDLE: handle,
-                PERSISTENT_ID: t.stringLiteral(persistentID),
-              }),
+              t.expressionStatement(
+                t.callExpression(t.identifier('__register__'), [
+                  handle,
+                  t.stringLiteral(persistentID),
+                ]),
+              ),
             );
             declarators.push(t.variableDeclarator(handle));
           });

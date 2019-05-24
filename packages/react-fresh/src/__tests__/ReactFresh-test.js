@@ -74,6 +74,7 @@ describe('ReactFresh', () => {
 
   function __signature__(type, id) {
     ReactFreshRuntime.setSignature(type, id);
+    return type;
   }
 
   it('can preserve state for compatible types', () => {

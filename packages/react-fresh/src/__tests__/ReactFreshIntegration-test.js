@@ -57,10 +57,11 @@ describe('ReactFreshIntegration', () => {
     }).code;
     const exportsObj = {};
     // eslint-disable-next-line no-new-func
-    new Function('React', 'exports', '__register__', compiled)(
+    new Function('React', 'exports', '__register__', '__signature__', compiled)(
       React,
       exportsObj,
       __register__,
+      __signature__,
     );
     return exportsObj.default;
   }
@@ -80,6 +81,11 @@ describe('ReactFreshIntegration', () => {
 
   function __register__(type, id) {
     ReactFreshRuntime.register(type, id);
+  }
+
+  function __signature__(type, id) {
+    ReactFreshRuntime.setSignature(type, id);
+    return type;
   }
 
   it('reloads function declarations', () => {
@@ -242,6 +248,104 @@ describe('ReactFreshIntegration', () => {
       `);
       expect(container.firstChild).toBe(el);
       expect(el.textContent).toBe('B2');
+    }
+  });
+
+  it('resets state when renaming a state variable', () => {
+    if (__DEV__) {
+      render(`
+        const {useState} = React;
+
+        export default function App() {
+          const [foo, setFoo] = useState(1);
+          return <h1>A{foo}</h1>;
+        }
+      `);
+      const el = container.firstChild;
+      expect(el.textContent).toBe('A1');
+
+      patch(`
+        const {useState} = React;
+
+        export default function App() {
+          const [foo, setFoo] = useState('ignored');
+          return <h1>B{foo}</h1>;
+        }
+      `);
+      // Same state variable name, so state is preserved.
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('B1');
+
+      patch(`
+        const {useState} = React;
+
+        export default function App() {
+          const [bar, setBar] = useState(2);
+          return <h1>C{bar}</h1>;
+        }
+      `);
+      // Different state variable name, so state is reset.
+      expect(container.firstChild).not.toBe(el);
+      const newEl = container.firstChild;
+      expect(newEl.textContent).toBe('C2');
+    }
+  });
+
+  it('resets state when renaming a state variable in a HOC', () => {
+    if (__DEV__) {
+      render(`
+        const {useState} = React;
+
+        function hoc(Wrapped) {
+          return function GeneratedV1() {
+            const [foo, setFoo] = useState(1);
+            return <Wrapped value={foo} />;
+          };
+        }
+
+        export default hoc(({ value }) => {
+          return <h1>A{value}</h1>;
+        });
+      `);
+      const el = container.firstChild;
+      expect(el.textContent).toBe('A1');
+
+      patch(`
+        const {useState} = React;
+
+        function hoc(Wrapped) {
+          return function GeneratedV2() {
+            const [foo, setFoo] = useState('ignored');
+            return <Wrapped value={foo} />;
+          };
+        }
+
+        export default hoc(({ value }) => {
+          return <h1>B{value}</h1>;
+        });
+      `);
+      // Same state variable name, so state is preserved.
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('B1');
+
+      patch(`
+        const {useState} = React;
+
+        function hoc(Wrapped) {
+          return function GeneratedV3() {
+            const [bar, setBar] = useState(2);
+            return <Wrapped value={bar} />;
+          };
+        }
+
+        export default hoc(({ value }) => {
+          return <h1>C{value}</h1>;
+        });
+      `);
+      // Different state variable name, so state is reset.
+      expect(container.firstChild).not.toBe(el);
+      const newEl = container.firstChild;
+      expect(newEl.textContent).toBe('C2');
     }
   });
 });
