@@ -159,4 +159,94 @@ describe('InspectedElementContext', () => {
 
     done();
   });
+
+  it('should not re-render a function with hooks if it did not update since it was last inspected', async done => {
+    let targetRenderCount = 0;
+
+    const Wrapper = ({ children }) => children;
+    const Target = React.memo(props => {
+      targetRenderCount++;
+      React.useState(0);
+      return null;
+    });
+
+    const container = document.createElement('div');
+    utils.act(() =>
+      ReactDOM.render(
+        <Wrapper>
+          <Target foo={1} bar="abc" />
+        </Wrapper>,
+        container
+      )
+    );
+    expect(store).toMatchSnapshot('1: mount');
+
+    const id = ((store.getElementIDAtIndex(1): any): number);
+
+    let inspectedElement = null;
+
+    function Suspender({ target }) {
+      const { read } = React.useContext(InspectedElementContext);
+      inspectedElement = read(target);
+      return null;
+    }
+
+    targetRenderCount = 0;
+
+    let renderer;
+    await utils.actAsync(
+      () =>
+        (renderer = TestRenderer.create(
+          <Contexts
+            defaultSelectedElementID={id}
+            defaultSelectedElementIndex={1}
+          >
+            <React.Suspense fallback={null}>
+              <Suspender target={id} />
+            </React.Suspense>
+          </Contexts>
+        )),
+      3
+    );
+    expect(targetRenderCount).toBe(1);
+    expect(inspectedElement).toMatchSnapshot('2: initial render');
+
+    const initialInspectedElement = inspectedElement;
+
+    targetRenderCount = 0;
+    inspectedElement = null;
+    await utils.actAsync(
+      () =>
+        renderer.update(
+          <Contexts
+            defaultSelectedElementID={id}
+            defaultSelectedElementIndex={1}
+          >
+            <React.Suspense fallback={null}>
+              <Suspender target={id} />
+            </React.Suspense>
+          </Contexts>
+        ),
+      1
+    );
+    expect(targetRenderCount).toBe(0);
+    expect(inspectedElement).toEqual(initialInspectedElement);
+
+    targetRenderCount = 0;
+
+    await utils.actAsync(() =>
+      ReactDOM.render(
+        <Wrapper>
+          <Target foo={2} bar="def" />
+        </Wrapper>,
+        container
+      )
+    );
+
+    // Target should have been rendered once (by ReactDOM) and once by DevTools for inspection.
+    expect(targetRenderCount).toBe(2);
+    expect(inspectedElement).toMatchSnapshot('3: updated state');
+
+    done();
+  });
 });

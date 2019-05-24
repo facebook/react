@@ -1102,6 +1102,19 @@ export function attach(
     if (__DEBUG__) {
       debug('updateFiberRecursively()', nextFiber, parentFiber);
     }
+
+    if (
+      mostRecentlyInspectedElement !== null &&
+      mostRecentlyInspectedElementID ===
+        getFiberID(getPrimaryFiber(nextFiber)) &&
+      hasDataChanged(prevFiber, nextFiber)
+    ) {
+      // If this Fiber has updated, clear cached inspected data.
+      // If it is inspected again, it may need to be re-run to obtain updated hooks values.
+      mostRecentlyInspectedElement = null;
+      mostRecentlyInspectedElementID = null;
+    }
+
     const shouldIncludeInTree = !shouldFilterFiber(nextFiber);
     const isSuspense = nextFiber.tag === SuspenseComponent;
     let shouldResetChildren = false;
@@ -1890,18 +1903,41 @@ export function attach(
     };
   }
 
+  let mostRecentlyInspectedElementID: number | null = null;
+  let mostRecentlyInspectedElement: InspectedElement | null = null;
+
   function inspectElement(id: number): InspectedElement | null {
-    let result = inspectElementRaw(id);
-    if (result === null) {
+    // If this element has not been updated since it was last inspected, reuse the last value.
+    // This avoids re-invoking a function component with hooks.
+    // TODO We could send a special signal (e.g. true) to avoid serialization too.
+    if (
+      mostRecentlyInspectedElement !== null &&
+      mostRecentlyInspectedElementID === id
+    ) {
+      return mostRecentlyInspectedElement;
+    }
+
+    mostRecentlyInspectedElementID = id;
+    mostRecentlyInspectedElement = inspectElementRaw(id);
+    if (mostRecentlyInspectedElement === null) {
       return null;
     }
-    // TODO Review sanitization approach for the below inspectable values.
-    result.context = cleanForBridge(result.context);
-    result.events = cleanForBridge(result.events);
-    result.hooks = cleanForBridge(result.hooks);
-    result.props = cleanForBridge(result.props);
-    result.state = cleanForBridge(result.state);
-    return result;
+    mostRecentlyInspectedElement.context = cleanForBridge(
+      mostRecentlyInspectedElement.context
+    );
+    mostRecentlyInspectedElement.events = cleanForBridge(
+      mostRecentlyInspectedElement.events
+    );
+    mostRecentlyInspectedElement.hooks = cleanForBridge(
+      mostRecentlyInspectedElement.hooks
+    );
+    mostRecentlyInspectedElement.props = cleanForBridge(
+      mostRecentlyInspectedElement.props
+    );
+    mostRecentlyInspectedElement.state = cleanForBridge(
+      mostRecentlyInspectedElement.state
+    );
+    return mostRecentlyInspectedElement;
   }
 
   function logElementToConsole(id) {
