@@ -165,7 +165,7 @@ export default function(babel) {
         const decl = node.declaration;
         const declPath = path.get('declaration');
         if (decl.type !== 'CallExpression') {
-          // For now, we only support process possible HOC calls here.
+          // For now, we only support possible HOC calls here.
           // Named function declarations are handled in FunctionDeclaration.
           // Anonymous direct exports like export default function() {}
           // are currently ignored.
@@ -175,6 +175,8 @@ export default function(babel) {
         // export default memo(() => {})
         // In those cases it is more plausible people will omit names
         // so they're worth handling despite possible false positives.
+        // More importantly, it handles the named case:
+        // export default memo(function Named() {})
         const inferredName = '%default%';
         const programPath = path.parentPath;
         findInnerComponents(
