@@ -297,7 +297,7 @@ describe('ReactFreshIntegration', () => {
         const {useState} = React;
 
         function hoc(Wrapped) {
-          return function GeneratedV1() {
+          return function Generated() {
             const [foo, setFoo] = useState(1);
             return <Wrapped value={foo} />;
           };
@@ -314,7 +314,7 @@ describe('ReactFreshIntegration', () => {
         const {useState} = React;
 
         function hoc(Wrapped) {
-          return function GeneratedV2() {
+          return function Generated() {
             const [foo, setFoo] = useState('ignored');
             return <Wrapped value={foo} />;
           };
@@ -332,7 +332,7 @@ describe('ReactFreshIntegration', () => {
         const {useState} = React;
 
         function hoc(Wrapped) {
-          return function GeneratedV3() {
+          return function Generated() {
             const [bar, setBar] = useState(2);
             return <Wrapped value={bar} />;
           };
