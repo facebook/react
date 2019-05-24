@@ -32,25 +32,164 @@ export default function(babel) {
     return typeof name === 'string' && name[0] >= 'A' && name[0] <= 'Z';
   }
 
-  function isComponentish(node) {
+  function findInnerComponents(inferredName, path, callback) {
+    const node = path.node;
     switch (node.type) {
-      case 'FunctionDeclaration':
-        return node.id !== null && isComponentishName(node.id.name);
-      case 'VariableDeclarator':
-        return (
-          isComponentishName(node.id.name) &&
-          node.init !== null &&
-          (node.init.type === 'FunctionExpression' ||
-            (node.init.type === 'ArrowFunctionExpression' &&
-              node.init.body.type !== 'ArrowFunctionExpression'))
+      case 'FunctionDeclaration': {
+        // function Foo() {}
+        // export function Foo() {}
+        // export default function Foo() {}
+        callback(inferredName, node.id, null);
+        return true;
+      }
+      case 'ArrowFunctionExpression': {
+        if (node.body.type === 'ArrowFunctionExpression') {
+          return false;
+        }
+        // let Foo = () => {}
+        // export default hoc1(hoc2(() => {}))
+        callback(inferredName, node, path);
+        return true;
+      }
+      case 'FunctionExpression': {
+        // let Foo = function() {}
+        // const Foo = hoc1(forwardRef(function renderFoo() {}))
+        // export default memo(function() {})
+        callback(inferredName, node, path);
+        return true;
+      }
+      case 'CallExpression': {
+        const argsPath = path.get('arguments');
+        if (argsPath === undefined || argsPath.length === 0) {
+          return false;
+        }
+        const calleePath = path.get('callee');
+        switch (calleePath.node.type) {
+          case 'MemberExpression':
+          case 'Identifier': {
+            const calleeSource = calleePath.getSource();
+            const firstArgPath = argsPath[0];
+            const innerName = inferredName + '$' + calleeSource;
+            const foundInside = findInnerComponents(
+              innerName,
+              firstArgPath,
+              callback,
+            );
+            if (!foundInside) {
+              return false;
+            }
+            // const Foo = hoc1(hoc2(() => {}))
+            // export default memo(React.forwardRef(function() {}))
+            callback(inferredName, node, path);
+            return true;
+          }
+          default: {
+            return false;
+          }
+        }
+      }
+      case 'VariableDeclarator': {
+        const init = node.init;
+        if (init === null) {
+          return false;
+        }
+        const name = node.id.name;
+        if (!isComponentishName(name)) {
+          return false;
+        }
+        if (init.type === 'Identifier' || init.type === 'MemberExpression') {
+          return false;
+        }
+        const initPath = path.get('init');
+        const foundInside = findInnerComponents(
+          inferredName,
+          initPath,
+          callback,
         );
-      default:
-        return false;
+        if (foundInside) {
+          return true;
+        }
+        // See if this identifier is used in JSX. Then it's a component.
+        const binding = path.scope.getBinding(name);
+        if (binding === undefined) {
+          return;
+        }
+        let isLikelyUsedAsType = false;
+        const referencePaths = binding.referencePaths;
+        for (let i = 0; i < referencePaths.length; i++) {
+          const ref = referencePaths[i];
+          if (
+            ref.node.type !== 'JSXIdentifier' &&
+            ref.node.type !== 'Identifier'
+          ) {
+            continue;
+          }
+          const refParent = ref.parent;
+          if (refParent.type === 'JSXOpeningElement') {
+            isLikelyUsedAsType = true;
+          } else if (refParent.type === 'CallExpression') {
+            const callee = refParent.callee;
+            let fnName;
+            switch (callee.type) {
+              case 'Identifier':
+                fnName = callee.name;
+                break;
+              case 'MemberExpression':
+                fnName = callee.property.name;
+                break;
+            }
+            switch (fnName) {
+              case 'createElement':
+              case 'jsx':
+              case 'jsxDEV':
+              case 'jsxs':
+                isLikelyUsedAsType = true;
+                break;
+            }
+          }
+          if (isLikelyUsedAsType) {
+            // const X = ... + later <X />
+            callback(inferredName, init, initPath);
+            return true;
+          }
+        }
+      }
     }
+    return false;
   }
 
   return {
     visitor: {
+      ExportDefaultDeclaration(path) {
+        const node = path.node;
+        const decl = node.declaration;
+        const declPath = path.get('declaration');
+        if (decl.type !== 'CallExpression') {
+          // For now, we only support possible HOC calls here.
+          // Named function declarations are handled in FunctionDeclaration.
+          // Anonymous direct exports like export default function() {}
+          // are currently ignored.
+          return;
+        }
+        // This code path handles nested cases like:
+        // export default memo(() => {})
+        // In those cases it is more plausible people will omit names
+        // so they're worth handling despite possible false positives.
+        // More importantly, it handles the named case:
+        // export default memo(function Named() {})
+        const inferredName = '%default%';
+        const programPath = path.parentPath;
+        findInnerComponents(
+          inferredName,
+          declPath,
+          (persistentID, targetExpr, targetPath) => {
+            const handle = createRegistration(programPath, persistentID);
+            targetPath.replaceWith(
+              t.assignmentExpression('=', handle, targetExpr),
+            );
+          },
+        );
+      },
       FunctionDeclaration(path) {
         let programPath;
         let insertAfterPath;
@@ -60,6 +199,9 @@ export default function(babel) {
             programPath = path.parentPath;
             break;
           case 'ExportNamedDeclaration':
+            insertAfterPath = path.parentPath;
+            programPath = insertAfterPath.parentPath;
+            break;
           case 'ExportDefaultDeclaration':
             insertAfterPath = path.parentPath;
             programPath = insertAfterPath.parentPath;
@@ -67,17 +209,25 @@ export default function(babel) {
           default:
             return;
         }
-        const maybeComponent = path.node;
-        if (!isComponentish(maybeComponent)) {
+        const id = path.node.id;
+        if (id === null) {
+          // We don't currently handle anonymous default exports.
           return;
         }
-        const functionName = path.node.id.name;
-        const handle = createRegistration(programPath, functionName);
-        insertAfterPath.insertAfter(
-          t.expressionStatement(
-            t.assignmentExpression('=', handle, path.node.id),
-          ),
-        );
+        const inferredName = id.name;
+        if (!isComponentishName(inferredName)) {
+          return;
+        }
+        // export function Named() {}
+        // function Named() {}
+        findInnerComponents(inferredName, path, (persistentID, targetExpr) => {
+          const handle = createRegistration(programPath, persistentID);
+          insertAfterPath.insertAfter(
+            t.expressionStatement(
+              t.assignmentExpression('=', handle, targetExpr),
+            ),
+          );
+        });
       },
       VariableDeclaration(path) {
         let programPath;
@@ -92,20 +242,21 @@ export default function(babel) {
           default:
             return;
         }
-        const declPath = path.get('declarations');
-        if (declPath.length !== 1) {
+        const declPaths = path.get('declarations');
+        if (declPaths.length !== 1) {
           return;
         }
-        const firstDeclPath = declPath[0];
-        const maybeComponent = firstDeclPath.node;
-        if (!isComponentish(maybeComponent)) {
-          return;
-        }
-        const functionName = maybeComponent.id.name;
-        const initPath = firstDeclPath.get('init');
-        const handle = createRegistration(programPath, functionName);
-        initPath.replaceWith(
-          t.assignmentExpression('=', handle, initPath.node),
+        const declPath = declPaths[0];
+        const inferredName = declPath.node.id.name;
+        findInnerComponents(
+          inferredName,
+          declPath,
+          (persistentID, targetExpr, targetPath) => {
+            const handle = createRegistration(programPath, persistentID);
+            targetPath.replaceWith(
+              t.assignmentExpression('=', handle, targetExpr),
+            );
+          },
         );
       },
       Program: {

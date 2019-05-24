@@ -33,6 +33,19 @@ let D = bar && (() => {
 });"
 `;
 
+exports[`ReactFreshBabelPlugin ignores higher-order functions that are not HOCs 1`] = `
+"
+const throttledAlert = throttle(function () {
+  alert('Hi');
+});
+const TooComplex = function () {
+  return hello;
+}(() => {});
+if (cond) {
+  const Foo = thing(() => {});
+}"
+`;
+
 exports[`ReactFreshBabelPlugin ignores unnamed function declarations 1`] = `
 "
 export default function () {}"
@@ -43,6 +56,131 @@ exports[`ReactFreshBabelPlugin only registers pascal case functions 1`] = `
 function hello() {
   return 2 * 2;
 }"
+`;
+
+exports[`ReactFreshBabelPlugin registers identifiers used in JSX at definition site 1`] = `
+"
+import A from './A';
+import Store from './Store';
+
+Store.subscribe();
+
+const Header = _c = styled.div\`color: red\`;
+const Factory = funny.factory\`\`;
+
+let Alias1 = A;
+let Alias2 = A.Foo;
+const Dict = {};
+
+function Foo() {
+  return <div><A /><B /><Alias1 /><Alias2 /><Header /><Dict.X /></div>;
+}
+
+_c2 = Foo;
+const B = _c3 = hoc(A);
+const NotAComponent = wow(A);
+
+var _c, _c2, _c3;
+
+__register__(_c, 'Header');
+
+__register__(_c2, 'Foo');
+
+__register__(_c3, 'B');"
+`;
+
+exports[`ReactFreshBabelPlugin registers identifiers used in React.createElement at definition site 1`] = `
+"
+import A from './A';
+import Store from './Store';
+
+Store.subscribe();
+
+const Header = _c = styled.div\`color: red\`;
+const Factory = funny.factory\`\`;
+
+let Alias1 = A;
+let Alias2 = A.Foo;
+const Dict = {};
+
+function Foo() {
+  return [React.createElement(A), React.createElement(B), React.createElement(Alias1), React.createElement(Alias2), jsx(Header), React.createElement(Dict.X)];
+}
+
+_c2 = Foo;
+React.createContext(Store);
+
+const B = _c3 = hoc(A);
+const NotAComponent = wow(A);
+
+var _c, _c2, _c3;
+
+__register__(_c, 'Header');
+
+__register__(_c2, 'Foo');
+
+__register__(_c3, 'B');"
+`;
+
+exports[`ReactFreshBabelPlugin registers likely HOCs with inline functions 1`] = `
+"
+const A = _c2 = forwardRef(_c = function () {
+  return <h1>Foo</h1>;
+});
+const B = _c5 = memo(_c4 = React.forwardRef(_c3 = () => {
+  return <h1>Foo</h1>;
+}));
+export default _c8 = React.memo(_c7 = forwardRef(_c6 = (props, ref) => {
+  return <h1>Foo</h1>;
+}));
+
+var _c, _c2, _c3, _c4, _c5, _c6, _c7, _c8;
+
+__register__(_c, \\"A$forwardRef\\");
+
+__register__(_c2, \\"A\\");
+
+__register__(_c3, \\"B$memo$React.forwardRef\\");
+
+__register__(_c4, \\"B$memo\\");
+
+__register__(_c5, \\"B\\");
+
+__register__(_c6, \\"%default%$React.memo$forwardRef\\");
+
+__register__(_c7, \\"%default%$React.memo\\");
+
+__register__(_c8, \\"%default%\\");"
+`;
+
+exports[`ReactFreshBabelPlugin registers likely HOCs with inline functions 2`] = `
+"
+export default _c3 = React.memo(_c2 = forwardRef(_c = function (props, ref) {
+  return <h1>Foo</h1>;
+}));
+
+var _c, _c2, _c3;
+
+__register__(_c, \\"%default%$React.memo$forwardRef\\");
+
+__register__(_c2, \\"%default%$React.memo\\");
+
+__register__(_c3, \\"%default%\\");"
+`;
+
+exports[`ReactFreshBabelPlugin registers likely HOCs with inline functions 3`] = `
+"
+export default _c3 = React.memo(_c2 = forwardRef(_c = function Named(props, ref) {
+  return <h1>Foo</h1>;
+}));
+
+var _c, _c2, _c3;
+
+__register__(_c, \\"%default%$React.memo$forwardRef\\");
+
+__register__(_c2, \\"%default%$React.memo\\");
+
+__register__(_c3, \\"%default%\\");"
 `;
 
 exports[`ReactFreshBabelPlugin registers top-level exported function declarations 1`] = `

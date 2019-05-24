@@ -186,4 +186,117 @@ describe('ReactFreshBabelPlugin', () => {
     `),
     ).toMatchSnapshot();
   });
+
+  it('registers likely HOCs with inline functions', () => {
+    expect(
+      transform(`
+        const A = forwardRef(function() {
+          return <h1>Foo</h1>;
+        });
+        const B = memo(React.forwardRef(() => {
+          return <h1>Foo</h1>;
+        }));
+        export default React.memo(forwardRef((props, ref) => {
+          return <h1>Foo</h1>;
+        }));
+    `),
+    ).toMatchSnapshot();
+    expect(
+      transform(`
+        export default React.memo(forwardRef(function (props, ref) {
+          return <h1>Foo</h1>;
+        }));
+    `),
+    ).toMatchSnapshot();
+    expect(
+      transform(`
+        export default React.memo(forwardRef(function Named(props, ref) {
+          return <h1>Foo</h1>;
+        }));
+    `),
+    ).toMatchSnapshot();
+  });
+
+  it('ignores higher-order functions that are not HOCs', () => {
+    expect(
+      transform(`
+        const throttledAlert = throttle(function() {
+          alert('Hi');
+        });
+        const TooComplex = (function() { return hello })(() => {});
+        if (cond) {
+          const Foo = thing(() => {});
+        }
+    `),
+    ).toMatchSnapshot();
+  });
+
+  it('registers identifiers used in JSX at definition site', () => {
+    // When in doubt, register variables that were used in JSX.
+    // Foo, Header, and B get registered.
+    // A doesn't get registered because it's not declared locally.
+    // Alias doesn't get registered because its definition is just an identifier.
+    expect(
+      transform(`
+        import A from './A';
+        import Store from './Store';
+
+        Store.subscribe();
+
+        const Header = styled.div\`color: red\`
+        const Factory = funny.factory\`\`;
+
+        let Alias1 = A;
+        let Alias2 = A.Foo;
+        const Dict = {};
+
+        function Foo() {
+          return (
+            <div><A /><B /><Alias1 /><Alias2 /><Header /><Dict.X /></div>
+          );
+        }
+
+        const B = hoc(A);
+        const NotAComponent = wow(A);
+    `),
+    ).toMatchSnapshot();
+  });
+
+  it('registers identifiers used in React.createElement at definition site', () => {
+    // When in doubt, register variables that were used in JSX.
+    // Foo, Header, and B get registered.
+    // A doesn't get registered because it's not declared locally.
+    // Alias doesn't get registered because its definition is just an identifier.
+    expect(
+      transform(`
+        import A from './A';
+        import Store from './Store';
+
+        Store.subscribe();
+
+        const Header = styled.div\`color: red\`
+        const Factory = funny.factory\`\`;
+
+        let Alias1 = A;
+        let Alias2 = A.Foo;
+        const Dict = {};
+
+        function Foo() {
+          return [
+            React.createElement(A),
+            React.createElement(B),
+            React.createElement(Alias1),
+            React.createElement(Alias2),
+            jsx(Header),
+            React.createElement(Dict.X),
+          ];
+        }
+
+        React.createContext(Store);
+
+        const B = hoc(A);
+        const NotAComponent = wow(A);
+    `),
+    ).toMatchSnapshot();
+  });
 });
