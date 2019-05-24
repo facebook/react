@@ -1906,15 +1906,11 @@ export function attach(
   let mostRecentlyInspectedElementID: number | null = null;
   let mostRecentlyInspectedElement: InspectedElement | null = null;
 
-  function inspectElement(id: number): InspectedElement | null {
-    // If this element has not been updated since it was last inspected, reuse the last value.
-    // This avoids re-invoking a function component with hooks.
-    // TODO We could send a special signal (e.g. true) to avoid serialization too.
-    if (
-      mostRecentlyInspectedElement !== null &&
-      mostRecentlyInspectedElementID === id
-    ) {
-      return mostRecentlyInspectedElement;
+  function inspectElement(id: number): InspectedElement | number | null {
+    // If this element has not been updated since it was last inspected, we don't need to re-run it.
+    // Instead we can just return the ID to indicate that it has not changed.
+    if (mostRecentlyInspectedElementID === id) {
+      return id;
     }
 
     mostRecentlyInspectedElementID = id;
