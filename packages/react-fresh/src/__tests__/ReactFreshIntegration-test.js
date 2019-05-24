@@ -116,29 +116,29 @@ describe('ReactFreshIntegration', () => {
   it('reloads arrow functions', () => {
     if (__DEV__) {
       render(`
-      const Parent = () => {
-        return <Child prop="A" />;
-      };
+        const Parent = () => {
+          return <Child prop="A" />;
+        };
 
-      const Child = ({prop}) => {
-        return <h1>{prop}1</h1>;
-      };
+        const Child = ({prop}) => {
+          return <h1>{prop}1</h1>;
+        };
 
-      export default Parent;
-    `);
+        export default Parent;
+      `);
       const el = container.firstChild;
       expect(el.textContent).toBe('A1');
       patch(`
-      const Parent = () => {
-        return <Child prop="B" />;
-      };
+        const Parent = () => {
+          return <Child prop="B" />;
+        };
 
-      const Child = ({prop}) => {
-        return <h1>{prop}2</h1>;
-      };
+        const Child = ({prop}) => {
+          return <h1>{prop}2</h1>;
+        };
 
-      export default Parent;
-    `);
+        export default Parent;
+      `);
       expect(container.firstChild).toBe(el);
       expect(el.textContent).toBe('B2');
     }
@@ -147,33 +147,33 @@ describe('ReactFreshIntegration', () => {
   it('reloads a combination of memo and forwardRef', () => {
     if (__DEV__) {
       render(`
-      const {memo} = React;
+        const {memo} = React;
 
-      const Parent = memo(React.forwardRef(function (props, ref) {
-        return <Child prop="A" ref={ref} />;
-      }));
+        const Parent = memo(React.forwardRef(function (props, ref) {
+          return <Child prop="A" ref={ref} />;
+        }));
 
-      const Child = React.memo(({prop}) => {
-        return <h1>{prop}1</h1>;
-      });
+        const Child = React.memo(({prop}) => {
+          return <h1>{prop}1</h1>;
+        });
 
-      export default React.memo(Parent);
-    `);
+        export default React.memo(Parent);
+      `);
       const el = container.firstChild;
       expect(el.textContent).toBe('A1');
       patch(`
-      const {memo} = React;
+        const {memo} = React;
 
-      const Parent = memo(React.forwardRef(function (props, ref) {
-        return <Child prop="B" ref={ref} />;
-      }));
+        const Parent = memo(React.forwardRef(function (props, ref) {
+          return <Child prop="B" ref={ref} />;
+        }));
 
-      const Child = React.memo(({prop}) => {
-        return <h1>{prop}2</h1>;
-      });
+        const Child = React.memo(({prop}) => {
+          return <h1>{prop}2</h1>;
+        });
 
-      export default React.memo(Parent);
-    `);
+        export default React.memo(Parent);
+      `);
       expect(container.firstChild).toBe(el);
       expect(el.textContent).toBe('B2');
     }
@@ -182,29 +182,29 @@ describe('ReactFreshIntegration', () => {
   it('reloads anonymous memo default export', () => {
     if (__DEV__) {
       render(`
-      const {memo} = React;
+        const {memo} = React;
 
-      export default memo(React.forwardRef(function (props, ref) {
-        return <Child prop="A" ref={ref} />;
-      }));
+        export default memo(React.forwardRef(function (props, ref) {
+          return <Child prop="A" ref={ref} />;
+        }));
 
-      const Child = React.memo(({prop}) => {
-        return <h1>{prop}1</h1>;
-      });
-    `);
+        const Child = React.memo(({prop}) => {
+          return <h1>{prop}1</h1>;
+        });
+      `);
       const el = container.firstChild;
       expect(el.textContent).toBe('A1');
       patch(`
-      const {memo} = React;
+        const {memo} = React;
 
-      export default memo(React.forwardRef(function (props, ref) {
-        return <Child prop="B" ref={ref} />;
-      }));
+        export default memo(React.forwardRef(function (props, ref) {
+          return <Child prop="B" ref={ref} />;
+        }));
 
-      const Child = React.memo(({prop}) => {
-        return <h1>{prop}2</h1>;
-      });
-    `);
+        const Child = React.memo(({prop}) => {
+          return <h1>{prop}2</h1>;
+        });
+      `);
       expect(container.firstChild).toBe(el);
       expect(el.textContent).toBe('B2');
     }
@@ -213,33 +213,33 @@ describe('ReactFreshIntegration', () => {
   it('reloads HOCs if they return functions', () => {
     if (__DEV__) {
       render(`
-      function hoc(letter) {
-        return function() {
-          return <h1>{letter}1</h1>;
+        function hoc(letter) {
+          return function() {
+            return <h1>{letter}1</h1>;
+          }
         }
-      }
 
-      export default function Parent() {
-        return <Child />;
-      }
+        export default function Parent() {
+          return <Child />;
+        }
 
-      const Child = hoc('A');
-    `);
+        const Child = hoc('A');
+      `);
       const el = container.firstChild;
       expect(el.textContent).toBe('A1');
       patch(`
-      function hoc(letter) {
-        return function() {
-          return <h1>{letter}2</h1>;
+        function hoc(letter) {
+          return function() {
+            return <h1>{letter}2</h1>;
+          }
         }
-      }
 
-      export default function Parent() {
-        return React.createElement(Child);
-      }
+        export default function Parent() {
+          return React.createElement(Child);
+        }
 
-      const Child = hoc('B');
-    `);
+        const Child = hoc('B');
+      `);
       expect(container.firstChild).toBe(el);
       expect(el.textContent).toBe('B2');
     }
