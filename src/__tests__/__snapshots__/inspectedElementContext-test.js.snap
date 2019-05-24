@@ -28,9 +28,15 @@ exports[`InspectedElementContext should inspect the currently selected element: 
 }
 `;
 
-exports[`InspectedElementContext should inspect the currently selected element: 2: Inspected element 2 2`] = `
+exports[`InspectedElementContext should not re-render a function with hooks if it did not update since it was last inspected: 1: mount 1`] = `
+[root]
+  ▾ <Wrapper>
+      <Anonymous>
+`;
+
+exports[`InspectedElementContext should not re-render a function with hooks if it did not update since it was last inspected: 2: initial render 1`] = `
 {
-  "id": 2,
+  "id": 3,
   "owners": null,
   "context": null,
   "events": null,
@@ -39,13 +45,36 @@ exports[`InspectedElementContext should inspect the currently selected element: 
       "id": 0,
       "isStateEditable": true,
       "name": "State",
-      "value": 1,
+      "value": 0,
       "subHooks": []
     }
   ],
   "props": {
     "foo": 1,
     "bar": "abc"
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should not re-render a function with hooks if it did not update since it was last inspected: 3: updated state 1`] = `
+{
+  "id": 3,
+  "owners": null,
+  "context": null,
+  "events": null,
+  "hooks": [
+    {
+      "id": 0,
+      "isStateEditable": true,
+      "name": "State",
+      "value": 0,
+      "subHooks": []
+    }
+  ],
+  "props": {
+    "foo": 2,
+    "bar": "def"
   },
   "state": null
 }
