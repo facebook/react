@@ -14,9 +14,9 @@ The old DevTools also rendered the entire application tree in the form of a larg
 
 Every React commit that changes the tree in a way DevTools cares about results in an "_operations_" message being sent across the bridge. These messages are lightweight patches that describe the changes that were made. (We don't resend the full tree structure like in legacy DevTools.)
 
-The payload for each message is a typed array. The first two entries are numbers that identify which renderer and root the update belongs to (for multi-root support). Then the strings are encoded in a string table. The rest of the array depends on the operations being made to the tree.
+The payload for each message is a typed array. The first two entries are numbers that identify which renderer and root the update belongs to (for multi-root support). Then the strings are encoded in a [string table](#string-table). The rest of the array depends on the operations being made to the tree.
 
-No updates are required for many commits because we only send the following bits of information: element type, id, parent id, owner id, name, and key. Additional information (e.g. props, state) requires a separate "_inspectElement_" message.
+No updates are required for most commits because we only send the following bits of information: element type, id, parent id, owner id, name, and key. Additional information (e.g. props, state) requires a separate ["_inspectElement_" message](#inspecting-an-element).
 
 #### String table
 
@@ -210,6 +210,32 @@ while (index !== currentWeight) {
   }
 }
 ```
+
+## Inspecting an element
+
+When an element is mounted in the tree, DevTools sends a minimal amount of information about it across the bridge. This information includes its display name, type, and key- but does _not_ include things like props or state. (These values are often expensive to serialize and change frequently, which would add a significant amount of load to the bridge.)
+
+Instead DevTools lazily requests additional information about an element only when it is selected in the "Components" tab. At that point, the frontend requests this information by sending a special "_inspectElement_" message containing the id of the element being inspected. The backend then responds with an "_inspectedElement_" message containing the additional details.
+
+### Polling strategy
+
+Elements can update frequently, especially in response to things like scrolling events. Since props and state can be large, we avoid sending this information across the bridge every time the selected element is updated. Instead, the frontend polls the backend for updates about once a second. The backend tracks when the element was last "inspected" and sends a special no-op response if it has not re-rendered since then.
+
+### Inspecting hooks
+
+Hooks present a unique challenge for the DevTools because of the concept of _custom_ hooks. (A custom hook is essentially any function that calls at least one of the built-in hooks. By convention custom hooks also have names that begin with "use".)
+
+So how does DevTools identify custom functions called from within third party components? It does this by temporarily overriding React's built-in hooks and shallow rendering the component in question. Whenever one of the (overridden) built-in hooks are called, it parses the call stack to spot potential custom hooks (functions between the component itself and the built-in hook). This approach enables it to build a tree structure describing all of the calls to both the built-in _and_ custom hooks, along with the values passed to those hooks. (If you're interested in learning more about this, [here is the source code](https://github.com/bvaughn/react-devtools-experimental/blob/master/src/backend/ReactDebugHooks.js).)
+
+> **Note**: DevTools obtains hooks info by re-rendering a component. Breakpoints and console logs will be invoked during this additional (shallow) render.
+
+### Performance implications
+
+To mitigate the performance impact of re-rendering a component, DevTools does the following:
+* Only function components that use _at least one hook_ are rendered. (Props and state can be analyzed without rendering.)
+* Rendering is always shallow.
+* Rendering is throttled to occur, at most, once per second.
+* Rendering is skipped if the component has not updated since the last time its properties were inspected.
 
 ## Profiler
 
