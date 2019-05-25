@@ -76,7 +76,9 @@ describe('ReactFreshIntegration', () => {
   function patch(source) {
     execute(source);
     const hotUpdate = ReactFreshRuntime.prepareUpdate();
-    scheduleHotUpdate(lastRoot, hotUpdate);
+    act(() => {
+      scheduleHotUpdate(lastRoot, hotUpdate);
+    });
   }
 
   function __register__(type, id) {
@@ -346,6 +348,86 @@ describe('ReactFreshIntegration', () => {
       expect(container.firstChild).not.toBe(el);
       const newEl = container.firstChild;
       expect(newEl.textContent).toBe('C2');
+    }
+  });
+
+  it('resets effects while preserving state', () => {
+    if (__DEV__) {
+      render(`
+        const {useState} = React;
+
+        export default function App() {
+          const [value, setValue] = useState(0);
+          return <h1>A{value}</h1>;
+        }
+      `);
+      let el = container.firstChild;
+      expect(el.textContent).toBe('A0');
+
+      // Add an effect.
+      patch(`
+        const {useState} = React;
+
+        export default function App() {
+          const [value, setValue] = useState(0);
+          React.useEffect(() => {
+            const id = setInterval(() => {
+              setValue(v => v + 1);
+            }, 1000);
+            return () => clearInterval(id);
+          }, []);
+          return <h1>B{value}</h1>;
+        }
+      `);
+      // We added an effect, thereby changing Hook order.
+      // This causes a remount.
+      expect(container.firstChild).not.toBe(el);
+      el = container.firstChild;
+      expect(el.textContent).toBe('B0');
+
+      act(() => {
+        jest.advanceTimersByTime(1000);
+      });
+      expect(el.textContent).toBe('B1');
+
+      patch(`
+        const {useState} = React;
+
+        export default function App() {
+          const [value, setValue] = useState(0);
+          React.useEffect(() => {
+            const id = setInterval(() => {
+              setValue(v => v + 10);
+            }, 1000);
+            return () => clearInterval(id);
+          }, []);
+          return <h1>C{value}</h1>;
+        }
+      `);
+      // Same Hooks are called, so state is preserved.
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('C1');
+
+      // Effects are always reset, so timer was reinstalled.
+      // The new version increments by 10 rather than 1.
+      act(() => {
+        jest.advanceTimersByTime(1000);
+      });
+      expect(el.textContent).toBe('C11');
+
+      patch(`
+        const {useState} = React;
+
+        export default function App() {
+          const [value, setValue] = useState(0);
+          return <h1>D{value}</h1>;
+        }
+      `);
+      // Removing the effect changes the signature
+      // and causes the component to remount.
+      expect(container.firstChild).not.toBe(el);
+      el = container.firstChild;
+      expect(el.textContent).toBe('D0');
     }
   });
 });
