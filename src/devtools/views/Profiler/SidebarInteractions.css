@@ -10,6 +10,7 @@
   padding: 0.5rem;
   user-select: none;
   border-top: 1px solid var(--color-border);
+  overflow: auto;
 }
 
 .Name {
@@ -44,7 +45,7 @@
   padding: 0.25rem 0.5rem;
 }
 .ListItem:hover {
-  background-color: var(--color-hover-background);
+  background-color: var(--color-background-hover);
 }
 
 .CommitBox {

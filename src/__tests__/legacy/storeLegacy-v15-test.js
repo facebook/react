@@ -16,8 +16,10 @@ describe('Store (legacy)', () => {
 
     // Redirect all React/ReactDOM requires to the v15 UMD.
     // We use the UMD because Jest doesn't enable us to mock deep imports (e.g. "react/lib/Something").
-    jest.mock('react', () => require.requireActual('react-15/dist/react.js'));
-    jest.mock('react-dom', () => require.requireActual('react-dom-15/dist/react-dom.js'));
+    jest.mock('react', () => jest.requireActual('react-15/dist/react.js'));
+    jest.mock('react-dom', () =>
+      jest.requireActual('react-dom-15/dist/react-dom.js')
+    );
 
     React = require('react');
     ReactDOM = require('react-dom');
@@ -52,8 +54,13 @@ describe('Store (legacy)', () => {
           <Parent count={count} />
         </div>
       );
-      const Parent = ({ count }) =>
-        <div>{new Array(count).fill(true).map((_, index) => <Child key={index} />)}</div>;
+      const Parent = ({ count }) => (
+        <div>
+          {new Array(count).fill(true).map((_, index) => (
+            <Child key={index} />
+          ))}
+        </div>
+      );
       const Child = () => <div>Hi!</div>;
 
       const container = document.createElement('div');
@@ -69,8 +76,13 @@ describe('Store (legacy)', () => {
     });
 
     it('should support mount and update operations for multiple roots', () => {
-      const Parent = ({ count }) =>
-        <div>{new Array(count).fill(true).map((_, index) => <Child key={index} />)}</div>;
+      const Parent = ({ count }) => (
+        <div>
+          {new Array(count).fill(true).map((_, index) => (
+            <Child key={index} />
+          ))}
+        </div>
+      );
       const Child = () => <div>Hi!</div>;
 
       const containerA = document.createElement('div');
@@ -127,8 +139,13 @@ describe('Store (legacy)', () => {
           <Parent count={count} />
         </div>
       );
-      const Parent = ({ count }) =>
-        <div>{new Array(count).fill(true).map((_, index) => <Child key={index} />)}</div>;
+      const Parent = ({ count }) => (
+        <div>
+          {new Array(count).fill(true).map((_, index) => (
+            <Child key={index} />
+          ))}
+        </div>
+      );
       const Child = () => <div>Hi!</div>;
 
       act(() =>
@@ -165,7 +182,9 @@ describe('Store (legacy)', () => {
       const Component = () => null;
 
       const Foo = () => <div>{[<Component key="0" />]}</div>;
-      const Bar = () => <div>{[<Component key="0" />, <Component key="1" />]}</div>;
+      const Bar = () => (
+        <div>{[<Component key="0" />, <Component key="1" />]}</div>
+      );
       const foo = <Foo key="foo" />;
       const bar = <Bar key="bar" />;
 
@@ -191,8 +210,13 @@ describe('Store (legacy)', () => {
     });
 
     it('should support mount and update operations', () => {
-      const Parent = ({ count }) =>
-        <div>{new Array(count).fill(true).map((_, index) => <Child key={index} />)}</div>;
+      const Parent = ({ count }) => (
+        <div>
+          {new Array(count).fill(true).map((_, index) => (
+            <Child key={index} />
+          ))}
+        </div>
+      );
       const Child = () => <div>Hi!</div>;
 
       const container = document.createElement('div');
@@ -224,8 +248,13 @@ describe('Store (legacy)', () => {
     });
 
     it('should support mount and update operations for multiple roots', () => {
-      const Parent = ({ count }) =>
-        <div>{new Array(count).fill(true).map((_, index) => <Child key={index} />)}</div>;
+      const Parent = ({ count }) => (
+        <div>
+          {new Array(count).fill(true).map((_, index) => (
+            <Child key={index} />
+          ))}
+        </div>
+      );
       const Child = () => <div>Hi!</div>;
 
       const containerA = document.createElement('div');
@@ -288,8 +317,13 @@ describe('Store (legacy)', () => {
           <Parent count={count} />
         </div>
       );
-      const Parent = ({ count }) =>
-        <div>{new Array(count).fill(true).map((_, index) => <Child key={index} />)}</div>;
+      const Parent = ({ count }) => (
+        <div>
+          {new Array(count).fill(true).map((_, index) => (
+            <Child key={index} />
+          ))}
+        </div>
+      );
       const Child = () => <div>Hi!</div>;
 
       act(() =>
@@ -376,7 +410,9 @@ describe('Store (legacy)', () => {
       const Component = () => null;
 
       const Foo = () => <div>{[<Component key="0" />]}</div>;
-      const Bar = () => <div>{[<Component key="0" />, <Component key="1" />]}</div>;
+      const Bar = () => (
+        <div>{[<Component key="0" />, <Component key="1" />]}</div>
+      );
       const foo = <Foo key="foo" />;
       const bar = <Bar key="bar" />;
 

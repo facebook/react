@@ -1,24 +1,31 @@
-const { readFileSync } = require('fs');
 const { resolve } = require('path');
 const { DefinePlugin } = require('webpack');
 const { getGitHubURL, getVersionString } = require('../utils');
 
-const __DEV__ = process.env.NODE_ENV !== 'production';
+const NODE_ENV = process.env.NODE_ENV;
+if (!NODE_ENV) {
+  console.error('NODE_ENV not set');
+  process.exit(1);
+}
+
+const TARGET = process.env.TARGET;
+if (!TARGET) {
+  console.error('TARGET not set');
+  process.exit(1);
+}
+
+const __DEV__ = NODE_ENV === 'development';
 
 const GITHUB_URL = getGitHubURL();
 const DEVTOOLS_VERSION = getVersionString();
 
-module.exports = {
+const config = {
   mode: __DEV__ ? 'development' : 'production',
   devtool: false,
   entry: {
     app: './app/index.js',
     backend: './src/backend.js',
     devtools: './src/devtools.js',
-  },
-  output: {
-    path: __dirname + '/build',
-    filename: '[name].js',
   },
   resolve: {
     alias: {
@@ -37,7 +44,9 @@ module.exports = {
       {
         test: /\.js$/,
         loader: 'babel-loader',
-        options: JSON.parse(readFileSync(resolve(__dirname, '../../.babelrc'))),
+        options: {
+          configFile: require.resolve('../../babel.config.js'),
+        },
       },
       {
         test: /\.css$/,
@@ -58,3 +67,20 @@ module.exports = {
     ],
   },
 };
+
+if (TARGET === 'local') {
+  config.devServer = {
+    hot: true,
+    port: 8080,
+    clientLogLevel: 'warning',
+    publicPath: '/dist/',
+    stats: 'errors-only',
+  };
+} else {
+  config.output = {
+    path: resolve(__dirname, 'dist'),
+    filename: '[name].js',
+  };
+}
+
+module.exports = config;

@@ -6,8 +6,6 @@ import React, {
   lazy,
   memo,
   Component,
-  // $FlowFixMe Flow thinks ConcurrentMode is stable
-  unstable_ConcurrentMode as ConcurrentMode,
   Fragment,
   // $FlowFixMe Flow doesn't know about the Profiler import yet
   Profiler,
@@ -48,15 +46,13 @@ export default function ElementTypes() {
           <Context.Consumer>{value => null}</Context.Consumer>
         </Context.Provider>
         <StrictMode>
-          <ConcurrentMode>
-            <Suspense fallback={<div>Loading...</div>}>
-              <ClassComponent />
-              <FunctionComponent />
-              <MemoFunctionComponent />
-              <ForwardRefComponent />
-              <LazyComponent />
-            </Suspense>
-          </ConcurrentMode>
+          <Suspense fallback={<div>Loading...</div>}>
+            <ClassComponent />
+            <FunctionComponent />
+            <MemoFunctionComponent />
+            <ForwardRefComponent />
+            <LazyComponent />
+          </Suspense>
         </StrictMode>
       </Fragment>
     </Profiler>

@@ -16,29 +16,33 @@ export default function SnapshotSelector(_: Props) {
   const {
     isCommitFilterEnabled,
     minCommitDuration,
-    rendererID,
     rootID,
     selectedCommitIndex,
     selectCommitIndex,
   } = useContext(ProfilerContext);
 
-  const { profilingCache } = useContext(StoreContext);
-  const { commitDurations, commitTimes } = profilingCache.ProfilingSummary.read(
-    {
-      rendererID: ((rendererID: any): number),
-      rootID: ((rootID: any): number),
-    }
-  );
+  const { profilerStore } = useContext(StoreContext);
+  const { commitData } = profilerStore.getDataForRoot(((rootID: any): number));
+
+  const commitDurations: Array<number> = [];
+  const commitTimes: Array<number> = [];
+  commitData.forEach(commitDatum => {
+    commitDurations.push(commitDatum.duration);
+    commitTimes.push(commitDatum.timestamp);
+  });
 
   const filteredCommitIndices = useMemo(
     () =>
-      commitDurations.reduce((reduced, commitDuration, index) => {
-        if (!isCommitFilterEnabled || commitDuration >= minCommitDuration) {
+      commitData.reduce((reduced, commitDatum, index) => {
+        if (
+          !isCommitFilterEnabled ||
+          commitDatum.duration >= minCommitDuration
+        ) {
           reduced.push(index);
         }
         return reduced;
       }, []),
-    [commitDurations, isCommitFilterEnabled, minCommitDuration]
+    [commitData, isCommitFilterEnabled, minCommitDuration]
   );
 
   const numFilteredCommits = filteredCommitIndices.length;
@@ -112,7 +116,7 @@ export default function SnapshotSelector(_: Props) {
     [viewNextCommit, viewPrevCommit]
   );
 
-  if (commitDurations.length === 0) {
+  if (commitData.length === 0) {
     return null;
   }
 

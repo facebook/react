@@ -9,19 +9,19 @@
   border-bottom: 3px solid transparent;
   cursor: pointer;
   user-select: none;
-  color: var(--color-text-color);
+  color: var(--color-text);
 }
 .Tab:hover,
 .TabCurrent:hover {
-  background-color: var(--color-hover-background);
+  background-color: var(--color-background-hover);
 }
 .Tab:focus-within,
 .TabCurrent:focus-within {
-  background-color: var(--color-hover-background);
+  background-color: var(--color-background-hover);
 }
 
 .TabCurrent {
-  border-bottom: 3px solid var(--color-selected-border);
+  border-bottom: 3px solid var(--color-tab-selected-border);
 }
 
 .TabDisabled {
@@ -45,7 +45,7 @@
 .IconSizeLarge,
 .IconSizeSmall {
   margin-right: 0.5rem;
-  color: var(--color-button);
+  color: var(--color-button-active);
 }
 
 .IconDisabled {

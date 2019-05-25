@@ -203,15 +203,37 @@ function updateThemeVariables(
   updateStyleHelper(theme, 'color-attribute-value', documentElements);
   updateStyleHelper(theme, 'color-attribute-editable-value', documentElements);
   updateStyleHelper(theme, 'color-background', documentElements);
+  updateStyleHelper(theme, 'color-background-hover', documentElements);
+  updateStyleHelper(theme, 'color-background-inactive', documentElements);
+  updateStyleHelper(theme, 'color-background-selected', documentElements);
   updateStyleHelper(theme, 'color-border', documentElements);
   updateStyleHelper(theme, 'color-button-background', documentElements);
   updateStyleHelper(theme, 'color-button-background-focus', documentElements);
-  updateStyleHelper(theme, 'color-button-background-hover', documentElements);
   updateStyleHelper(theme, 'color-button', documentElements);
+  updateStyleHelper(theme, 'color-button-active', documentElements);
   updateStyleHelper(theme, 'color-button-disabled', documentElements);
   updateStyleHelper(theme, 'color-button-focus', documentElements);
   updateStyleHelper(theme, 'color-button-hover', documentElements);
-  updateStyleHelper(theme, 'color-commit-did-not-render', documentElements);
+  updateStyleHelper(
+    theme,
+    'color-commit-did-not-render-fill',
+    documentElements
+  );
+  updateStyleHelper(
+    theme,
+    'color-commit-did-not-render-fill-text',
+    documentElements
+  );
+  updateStyleHelper(
+    theme,
+    'color-commit-did-not-render-pattern',
+    documentElements
+  );
+  updateStyleHelper(
+    theme,
+    'color-commit-did-not-render-pattern-text',
+    documentElements
+  );
   updateStyleHelper(theme, 'color-commit-gradient-0', documentElements);
   updateStyleHelper(theme, 'color-commit-gradient-1', documentElements);
   updateStyleHelper(theme, 'color-commit-gradient-2', documentElements);
@@ -225,12 +247,20 @@ function updateThemeVariables(
   updateStyleHelper(theme, 'color-commit-gradient-text', documentElements);
   updateStyleHelper(theme, 'color-component-name', documentElements);
   updateStyleHelper(theme, 'color-component-name-inverted', documentElements);
+  updateStyleHelper(
+    theme,
+    'color-component-badge-background',
+    documentElements
+  );
+  updateStyleHelper(
+    theme,
+    'color-component-badge-background-inverted',
+    documentElements
+  );
   updateStyleHelper(theme, 'color-dim', documentElements);
   updateStyleHelper(theme, 'color-dimmer', documentElements);
   updateStyleHelper(theme, 'color-dimmest', documentElements);
   updateStyleHelper(theme, 'color-expand-collapse-toggle', documentElements);
-  updateStyleHelper(theme, 'color-hover-background', documentElements);
-  updateStyleHelper(theme, 'color-inactive-background', documentElements);
   updateStyleHelper(theme, 'color-jsx-arrow-brackets', documentElements);
   updateStyleHelper(
     theme,
@@ -241,12 +271,17 @@ function updateThemeVariables(
   updateStyleHelper(theme, 'color-record-active', documentElements);
   updateStyleHelper(theme, 'color-record-hover', documentElements);
   updateStyleHelper(theme, 'color-record-inactive', documentElements);
-  updateStyleHelper(theme, 'color-selected-background', documentElements);
-  updateStyleHelper(theme, 'color-selected-border', documentElements);
-  updateStyleHelper(theme, 'color-selected-foreground', documentElements);
   updateStyleHelper(theme, 'color-search-match', documentElements);
   updateStyleHelper(theme, 'color-search-match-current', documentElements);
-  updateStyleHelper(theme, 'color-text-color', documentElements);
+  updateStyleHelper(theme, 'color-tab-selected-border', documentElements);
+  updateStyleHelper(theme, 'color-text', documentElements);
+  updateStyleHelper(theme, 'color-text-selected', documentElements);
+  updateStyleHelper(theme, 'color-toggle-background-invalid', documentElements);
+  updateStyleHelper(theme, 'color-toggle-background-on', documentElements);
+  updateStyleHelper(theme, 'color-toggle-background-off', documentElements);
+  updateStyleHelper(theme, 'color-toggle-text', documentElements);
+  updateStyleHelper(theme, 'color-tooltip-background', documentElements);
+  updateStyleHelper(theme, 'color-tooltip-text', documentElements);
 
   // Font smoothing varies based on the theme.
   updateStyleHelper(theme, 'font-smoothing', documentElements);

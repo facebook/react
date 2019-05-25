@@ -1,10 +1,11 @@
 .Components {
+  position: relative;
   width: 100%;
   height: 100%;
   display: flex;
   flex-direction: row;
   background-color: var(--color-background);
-  color: var(--color-text-color);
+  color: var(--color-text);
   font-family: var(--font-family-sans);
 }
 
@@ -23,4 +24,14 @@
   .Components {
     flex-direction: column;
   }
+}
+
+.Loading {
+  height: 100%;
+  padding-left: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-sans-large);
+  color: var(--color-dim);
 }

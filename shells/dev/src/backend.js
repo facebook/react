@@ -7,25 +7,29 @@ import { initBackend } from 'src/backend';
 
 const bridge = new Bridge({
   listen(fn) {
-    window.addEventListener('message', event => {
+    const listener = event => {
       fn(event.data);
-    });
+    };
+    window.addEventListener('message', listener);
+    return () => {
+      window.removeEventListener('message', listener);
+    };
   },
   send(event: string, payload: any, transferable?: Array<any>) {
     window.parent.postMessage({ event, payload }, '*', transferable);
   },
 });
 
-bridge.addListener('captureScreenshot', ({ commitIndex }) => {
+bridge.addListener('captureScreenshot', ({ commitIndex, rootID }) => {
   html2canvas(document.body, { logging: false }).then(canvas => {
     bridge.send('screenshotCaptured', {
       commitIndex,
       dataURL: canvas.toDataURL(),
+      rootID,
     });
   });
 });
 
-const agent = new Agent();
-agent.addBridge(bridge);
+const agent = new Agent(bridge);
 
 initBackend(window.__REACT_DEVTOOLS_GLOBAL_HOOK__, agent, window.parent);

@@ -1,9 +1,6 @@
 // @flow
 
-import {
-  ElementTypeClass,
-  ElementTypeOtherOrUnknown,
-} from 'src/devtools/types';
+import { ElementTypeClass, ElementTypeOtherOrUnknown } from 'src/types';
 import { getDisplayName } from 'src/utils';
 
 import type { InternalInstance } from './renderer';

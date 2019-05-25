@@ -1,0 +1,1869 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ProfilingCache should calculate a self duration based on actual children (not filtered children): CommitDetails with filtered self durations 1`] = `
+Object {
+  "duration": 16,
+  "fiberActualDurations": Map {
+    1 => 16,
+    2 => 16,
+    3 => 1,
+    5 => 1,
+  },
+  "fiberSelfDurations": Map {
+    1 => 0,
+    2 => 10,
+    3 => 1,
+    5 => 1,
+  },
+  "interactionIDs": Array [],
+  "priorityLevel": "Immediate",
+  "screenshot": null,
+  "timestamp": 16,
+}
+`;
+
+exports[`ProfilingCache should calculate self duration correctly for suspended views: CommitDetails with filtered self durations 1`] = `
+Object {
+  "duration": 15,
+  "fiberActualDurations": Map {
+    1 => 15,
+    2 => 15,
+    3 => 5,
+    4 => 2,
+  },
+  "fiberSelfDurations": Map {
+    1 => 0,
+    2 => 10,
+    3 => 3,
+    4 => 2,
+  },
+  "interactionIDs": Array [],
+  "priorityLevel": "Immediate",
+  "screenshot": null,
+  "timestamp": 15,
+}
+`;
+
+exports[`ProfilingCache should calculate self duration correctly for suspended views: CommitDetails with filtered self durations 2`] = `
+Object {
+  "duration": 3,
+  "fiberActualDurations": Map {
+    5 => 3,
+    3 => 3,
+  },
+  "fiberSelfDurations": Map {
+    5 => 3,
+    3 => 0,
+  },
+  "interactionIDs": Array [],
+  "priorityLevel": "Immediate",
+  "screenshot": null,
+  "timestamp": 18,
+}
+`;
+
+exports[`ProfilingCache should collect data for each commit: CommitDetails commitIndex: 0 1`] = `
+Object {
+  "duration": 12,
+  "fiberActualDurations": Map {
+    1 => 12,
+    2 => 12,
+    3 => 0,
+    4 => 1,
+    5 => 1,
+  },
+  "fiberSelfDurations": Map {
+    1 => 0,
+    2 => 10,
+    3 => 0,
+    4 => 1,
+    5 => 1,
+  },
+  "interactionIDs": Array [],
+  "priorityLevel": "Immediate",
+  "screenshot": null,
+  "timestamp": 12,
+}
+`;
+
+exports[`ProfilingCache should collect data for each commit: CommitDetails commitIndex: 1 1`] = `
+Object {
+  "duration": 13,
+  "fiberActualDurations": Map {
+    3 => 0,
+    4 => 1,
+    6 => 2,
+    2 => 13,
+    1 => 13,
+  },
+  "fiberSelfDurations": Map {
+    3 => 0,
+    4 => 1,
+    6 => 2,
+    2 => 10,
+    1 => 0,
+  },
+  "interactionIDs": Array [],
+  "priorityLevel": "Immediate",
+  "screenshot": null,
+  "timestamp": 25,
+}
+`;
+
+exports[`ProfilingCache should collect data for each commit: CommitDetails commitIndex: 2 1`] = `
+Object {
+  "duration": 10,
+  "fiberActualDurations": Map {
+    3 => 0,
+    2 => 10,
+    1 => 10,
+  },
+  "fiberSelfDurations": Map {
+    3 => 0,
+    2 => 10,
+    1 => 0,
+  },
+  "interactionIDs": Array [],
+  "priorityLevel": "Immediate",
+  "screenshot": null,
+  "timestamp": 35,
+}
+`;
+
+exports[`ProfilingCache should collect data for each commit: CommitDetails commitIndex: 3 1`] = `
+Object {
+  "duration": 10,
+  "fiberActualDurations": Map {
+    2 => 10,
+    1 => 10,
+  },
+  "fiberSelfDurations": Map {
+    2 => 10,
+    1 => 0,
+  },
+  "interactionIDs": Array [],
+  "priorityLevel": "Immediate",
+  "screenshot": null,
+  "timestamp": 45,
+}
+`;
+
+exports[`ProfilingCache should collect data for each commit: imported data 1`] = `
+Object {
+  "dataForRoots": Array [
+    Object {
+      "commitData": Array [
+        Object {
+          "duration": 12,
+          "fiberActualDurations": Array [
+            Array [
+              1,
+              12,
+            ],
+            Array [
+              2,
+              12,
+            ],
+            Array [
+              3,
+              0,
+            ],
+            Array [
+              4,
+              1,
+            ],
+            Array [
+              5,
+              1,
+            ],
+          ],
+          "fiberSelfDurations": Array [
+            Array [
+              1,
+              0,
+            ],
+            Array [
+              2,
+              10,
+            ],
+            Array [
+              3,
+              0,
+            ],
+            Array [
+              4,
+              1,
+            ],
+            Array [
+              5,
+              1,
+            ],
+          ],
+          "interactionIDs": Array [],
+          "priorityLevel": "Immediate",
+          "screenshot": null,
+          "timestamp": 12,
+        },
+        Object {
+          "duration": 13,
+          "fiberActualDurations": Array [
+            Array [
+              3,
+              0,
+            ],
+            Array [
+              4,
+              1,
+            ],
+            Array [
+              6,
+              2,
+            ],
+            Array [
+              2,
+              13,
+            ],
+            Array [
+              1,
+              13,
+            ],
+          ],
+          "fiberSelfDurations": Array [
+            Array [
+              3,
+              0,
+            ],
+            Array [
+              4,
+              1,
+            ],
+            Array [
+              6,
+              2,
+            ],
+            Array [
+              2,
+              10,
+            ],
+            Array [
+              1,
+              0,
+            ],
+          ],
+          "interactionIDs": Array [],
+          "priorityLevel": "Immediate",
+          "screenshot": null,
+          "timestamp": 25,
+        },
+        Object {
+          "duration": 10,
+          "fiberActualDurations": Array [
+            Array [
+              3,
+              0,
+            ],
+            Array [
+              2,
+              10,
+            ],
+            Array [
+              1,
+              10,
+            ],
+          ],
+          "fiberSelfDurations": Array [
+            Array [
+              3,
+              0,
+            ],
+            Array [
+              2,
+              10,
+            ],
+            Array [
+              1,
+              0,
+            ],
+          ],
+          "interactionIDs": Array [],
+          "priorityLevel": "Immediate",
+          "screenshot": null,
+          "timestamp": 35,
+        },
+        Object {
+          "duration": 10,
+          "fiberActualDurations": Array [
+            Array [
+              2,
+              10,
+            ],
+            Array [
+              1,
+              10,
+            ],
+          ],
+          "fiberSelfDurations": Array [
+            Array [
+              2,
+              10,
+            ],
+            Array [
+              1,
+              0,
+            ],
+          ],
+          "interactionIDs": Array [],
+          "priorityLevel": "Immediate",
+          "screenshot": null,
+          "timestamp": 45,
+        },
+      ],
+      "displayName": "Parent",
+      "initialTreeBaseDurations": Array [],
+      "interactionCommits": Array [],
+      "interactions": Array [],
+      "operations": Array [
+        Array [
+          1,
+          1,
+          17,
+          6,
+          80,
+          97,
+          114,
+          101,
+          110,
+          116,
+          5,
+          67,
+          104,
+          105,
+          108,
+          100,
+          1,
+          48,
+          1,
+          49,
+          1,
+          1,
+          11,
+          1,
+          1,
+          4,
+          1,
+          12000,
+          1,
+          2,
+          5,
+          1,
+          0,
+          1,
+          0,
+          4,
+          2,
+          12000,
+          1,
+          3,
+          5,
+          2,
+          2,
+          2,
+          3,
+          4,
+          3,
+          0,
+          1,
+          4,
+          5,
+          2,
+          2,
+          2,
+          4,
+          4,
+          4,
+          1000,
+          1,
+          5,
+          8,
+          2,
+          2,
+          2,
+          0,
+          4,
+          5,
+          1000,
+        ],
+        Array [
+          1,
+          1,
+          8,
+          5,
+          67,
+          104,
+          105,
+          108,
+          100,
+          1,
+          50,
+          1,
+          6,
+          5,
+          2,
+          2,
+          1,
+          2,
+          4,
+          6,
+          2000,
+          4,
+          2,
+          14000,
+          3,
+          2,
+          4,
+          3,
+          4,
+          6,
+          5,
+          4,
+          1,
+          14000,
+        ],
+        Array [
+          1,
+          1,
+          0,
+          2,
+          2,
+          6,
+          4,
+          4,
+          2,
+          11000,
+          3,
+          2,
+          2,
+          3,
+          5,
+          4,
+          1,
+          11000,
+        ],
+        Array [
+          1,
+          1,
+          0,
+          2,
+          1,
+          3,
+        ],
+      ],
+      "rootID": 1,
+      "snapshots": Array [],
+    },
+  ],
+  "version": 4,
+}
+`;
+
+exports[`ProfilingCache should collect data for each rendered fiber: FiberCommits: element 2 1`] = `
+Array [
+  0,
+  1,
+  2,
+]
+`;
+
+exports[`ProfilingCache should collect data for each rendered fiber: FiberCommits: element 3 1`] = `
+Array [
+  0,
+  1,
+  2,
+]
+`;
+
+exports[`ProfilingCache should collect data for each rendered fiber: FiberCommits: element 4 1`] = `
+Array [
+  0,
+]
+`;
+
+exports[`ProfilingCache should collect data for each rendered fiber: FiberCommits: element 5 1`] = `
+Array [
+  1,
+  2,
+]
+`;
+
+exports[`ProfilingCache should collect data for each rendered fiber: FiberCommits: element 6 1`] = `
+Array [
+  2,
+]
+`;
+
+exports[`ProfilingCache should collect data for each rendered fiber: imported data 1`] = `
+Object {
+  "dataForRoots": Array [
+    Object {
+      "commitData": Array [
+        Object {
+          "duration": 11,
+          "fiberActualDurations": Array [
+            Array [
+              1,
+              11,
+            ],
+            Array [
+              2,
+              11,
+            ],
+            Array [
+              3,
+              0,
+            ],
+            Array [
+              4,
+              1,
+            ],
+          ],
+          "fiberSelfDurations": Array [
+            Array [
+              1,
+              0,
+            ],
+            Array [
+              2,
+              10,
+            ],
+            Array [
+              3,
+              0,
+            ],
+            Array [
+              4,
+              1,
+            ],
+          ],
+          "interactionIDs": Array [],
+          "priorityLevel": "Immediate",
+          "screenshot": null,
+          "timestamp": 11,
+        },
+        Object {
+          "duration": 11,
+          "fiberActualDurations": Array [
+            Array [
+              3,
+              0,
+            ],
+            Array [
+              5,
+              1,
+            ],
+            Array [
+              2,
+              11,
+            ],
+            Array [
+              1,
+              11,
+            ],
+          ],
+          "fiberSelfDurations": Array [
+            Array [
+              3,
+              0,
+            ],
+            Array [
+              5,
+              1,
+            ],
+            Array [
+              2,
+              10,
+            ],
+            Array [
+              1,
+              0,
+            ],
+          ],
+          "interactionIDs": Array [],
+          "priorityLevel": "Immediate",
+          "screenshot": null,
+          "timestamp": 22,
+        },
+        Object {
+          "duration": 13,
+          "fiberActualDurations": Array [
+            Array [
+              3,
+              0,
+            ],
+            Array [
+              5,
+              1,
+            ],
+            Array [
+              6,
+              2,
+            ],
+            Array [
+              2,
+              13,
+            ],
+            Array [
+              1,
+              13,
+            ],
+          ],
+          "fiberSelfDurations": Array [
+            Array [
+              3,
+              0,
+            ],
+            Array [
+              5,
+              1,
+            ],
+            Array [
+              6,
+              2,
+            ],
+            Array [
+              2,
+              10,
+            ],
+            Array [
+              1,
+              0,
+            ],
+          ],
+          "interactionIDs": Array [],
+          "priorityLevel": "Immediate",
+          "screenshot": null,
+          "timestamp": 35,
+        },
+      ],
+      "displayName": "Parent",
+      "initialTreeBaseDurations": Array [],
+      "interactionCommits": Array [],
+      "interactions": Array [],
+      "operations": Array [
+        Array [
+          1,
+          1,
+          15,
+          6,
+          80,
+          97,
+          114,
+          101,
+          110,
+          116,
+          5,
+          67,
+          104,
+          105,
+          108,
+          100,
+          1,
+          48,
+          1,
+          1,
+          11,
+          1,
+          1,
+          4,
+          1,
+          11000,
+          1,
+          2,
+          5,
+          1,
+          0,
+          1,
+          0,
+          4,
+          2,
+          11000,
+          1,
+          3,
+          5,
+          2,
+          2,
+          2,
+          3,
+          4,
+          3,
+          0,
+          1,
+          4,
+          8,
+          2,
+          2,
+          2,
+          0,
+          4,
+          4,
+          1000,
+        ],
+        Array [
+          1,
+          1,
+          8,
+          5,
+          67,
+          104,
+          105,
+          108,
+          100,
+          1,
+          49,
+          1,
+          5,
+          5,
+          2,
+          2,
+          1,
+          2,
+          4,
+          5,
+          1000,
+          4,
+          2,
+          12000,
+          3,
+          2,
+          3,
+          3,
+          5,
+          4,
+          4,
+          1,
+          12000,
+        ],
+        Array [
+          1,
+          1,
+          8,
+          5,
+          67,
+          104,
+          105,
+          108,
+          100,
+          1,
+          50,
+          1,
+          6,
+          5,
+          2,
+          2,
+          1,
+          2,
+          4,
+          6,
+          2000,
+          4,
+          2,
+          14000,
+          3,
+          2,
+          4,
+          3,
+          5,
+          6,
+          4,
+          4,
+          1,
+          14000,
+        ],
+      ],
+      "rootID": 1,
+      "snapshots": Array [],
+    },
+  ],
+  "version": 4,
+}
+`;
+
+exports[`ProfilingCache should collect data for each root (including ones added or mounted after profiling started): Data for root Parent 1`] = `
+Object {
+  "commitData": Array [
+    Object {
+      "duration": 13,
+      "fiberActualDurations": Map {
+        3 => 0,
+        4 => 1,
+        10 => 2,
+        2 => 13,
+        1 => 13,
+      },
+      "fiberSelfDurations": Map {
+        3 => 0,
+        4 => 1,
+        10 => 2,
+        2 => 10,
+        1 => 0,
+      },
+      "interactionIDs": Array [],
+      "priorityLevel": "Immediate",
+      "screenshot": null,
+      "timestamp": 13,
+    },
+    Object {
+      "duration": 10,
+      "fiberActualDurations": Map {
+        3 => 0,
+        2 => 10,
+        1 => 10,
+      },
+      "fiberSelfDurations": Map {
+        3 => 0,
+        2 => 10,
+        1 => 0,
+      },
+      "interactionIDs": Array [],
+      "priorityLevel": "Immediate",
+      "screenshot": null,
+      "timestamp": 34,
+    },
+    Object {
+      "duration": 10,
+      "fiberActualDurations": Map {
+        2 => 10,
+        1 => 10,
+      },
+      "fiberSelfDurations": Map {
+        2 => 10,
+        1 => 0,
+      },
+      "interactionIDs": Array [],
+      "priorityLevel": "Immediate",
+      "screenshot": null,
+      "timestamp": 44,
+    },
+  ],
+  "displayName": "Parent",
+  "initialTreeBaseDurations": Map {
+    1 => 12,
+    2 => 12,
+    3 => 0,
+    4 => 1,
+    5 => 1,
+  },
+  "interactionCommits": Map {},
+  "interactions": Map {},
+  "operations": Array [
+    Uint32Array [
+      1,
+      1,
+      8,
+      5,
+      67,
+      104,
+      105,
+      108,
+      100,
+      1,
+      50,
+      1,
+      10,
+      5,
+      2,
+      2,
+      1,
+      2,
+      4,
+      10,
+      2000,
+      4,
+      2,
+      14000,
+      3,
+      2,
+      4,
+      3,
+      4,
+      10,
+      5,
+      4,
+      1,
+      14000,
+    ],
+    Uint32Array [
+      1,
+      1,
+      0,
+      2,
+      2,
+      10,
+      4,
+      4,
+      2,
+      11000,
+      3,
+      2,
+      2,
+      3,
+      5,
+      4,
+      1,
+      11000,
+    ],
+    Uint32Array [
+      1,
+      1,
+      0,
+      2,
+      1,
+      3,
+    ],
+  ],
+  "rootID": 1,
+  "snapshots": Map {
+    1 => Object {
+      "children": Array [
+        2,
+      ],
+      "displayName": null,
+      "id": 1,
+      "key": null,
+      "type": 11,
+    },
+    2 => Object {
+      "children": Array [
+        3,
+        4,
+        5,
+      ],
+      "displayName": "Parent",
+      "id": 2,
+      "key": null,
+      "type": 5,
+    },
+    3 => Object {
+      "children": Array [],
+      "displayName": "Child",
+      "id": 3,
+      "key": "0",
+      "type": 5,
+    },
+    4 => Object {
+      "children": Array [],
+      "displayName": "Child",
+      "id": 4,
+      "key": "1",
+      "type": 5,
+    },
+    5 => Object {
+      "children": Array [],
+      "displayName": "Child",
+      "id": 5,
+      "key": null,
+      "type": 8,
+    },
+  },
+}
+`;
+
+exports[`ProfilingCache should collect data for each root (including ones added or mounted after profiling started): Data for root Parent 2`] = `
+Object {
+  "commitData": Array [
+    Object {
+      "duration": 11,
+      "fiberActualDurations": Map {
+        11 => 11,
+        12 => 11,
+        13 => 0,
+        14 => 1,
+      },
+      "fiberSelfDurations": Map {
+        11 => 0,
+        12 => 10,
+        13 => 0,
+        14 => 1,
+      },
+      "interactionIDs": Array [],
+      "priorityLevel": "Immediate",
+      "screenshot": null,
+      "timestamp": 24,
+    },
+  ],
+  "displayName": "Parent",
+  "initialTreeBaseDurations": Map {},
+  "interactionCommits": Map {},
+  "interactions": Map {},
+  "operations": Array [
+    Uint32Array [
+      1,
+      11,
+      15,
+      6,
+      80,
+      97,
+      114,
+      101,
+      110,
+      116,
+      5,
+      67,
+      104,
+      105,
+      108,
+      100,
+      1,
+      48,
+      1,
+      11,
+      11,
+      1,
+      1,
+      4,
+      11,
+      11000,
+      1,
+      12,
+      5,
+      11,
+      0,
+      1,
+      0,
+      4,
+      12,
+      11000,
+      1,
+      13,
+      5,
+      12,
+      12,
+      2,
+      3,
+      4,
+      13,
+      0,
+      1,
+      14,
+      8,
+      12,
+      12,
+      2,
+      0,
+      4,
+      14,
+      1000,
+    ],
+  ],
+  "rootID": 11,
+  "snapshots": Map {},
+}
+`;
+
+exports[`ProfilingCache should collect data for each root (including ones added or mounted after profiling started): Data for root Parent 3`] = `
+Object {
+  "commitData": Array [
+    Object {
+      "duration": 0,
+      "fiberActualDurations": Map {},
+      "fiberSelfDurations": Map {},
+      "interactionIDs": Array [],
+      "priorityLevel": "Immediate",
+      "screenshot": null,
+      "timestamp": 34,
+    },
+  ],
+  "displayName": "Parent",
+  "initialTreeBaseDurations": Map {
+    6 => 11,
+    7 => 11,
+    8 => 0,
+    9 => 1,
+  },
+  "interactionCommits": Map {},
+  "interactions": Map {},
+  "operations": Array [
+    Uint32Array [
+      1,
+      6,
+      0,
+      2,
+      4,
+      9,
+      8,
+      7,
+      6,
+    ],
+  ],
+  "rootID": 6,
+  "snapshots": Map {
+    6 => Object {
+      "children": Array [
+        7,
+      ],
+      "displayName": null,
+      "id": 6,
+      "key": null,
+      "type": 11,
+    },
+    7 => Object {
+      "children": Array [
+        8,
+        9,
+      ],
+      "displayName": "Parent",
+      "id": 7,
+      "key": null,
+      "type": 5,
+    },
+    8 => Object {
+      "children": Array [],
+      "displayName": "Child",
+      "id": 8,
+      "key": "0",
+      "type": 5,
+    },
+    9 => Object {
+      "children": Array [],
+      "displayName": "Child",
+      "id": 9,
+      "key": null,
+      "type": 8,
+    },
+  },
+}
+`;
+
+exports[`ProfilingCache should collect data for each root (including ones added or mounted after profiling started): imported data 1`] = `
+Object {
+  "dataForRoots": Array [
+    Object {
+      "commitData": Array [
+        Object {
+          "duration": 13,
+          "fiberActualDurations": Array [
+            Array [
+              3,
+              0,
+            ],
+            Array [
+              4,
+              1,
+            ],
+            Array [
+              10,
+              2,
+            ],
+            Array [
+              2,
+              13,
+            ],
+            Array [
+              1,
+              13,
+            ],
+          ],
+          "fiberSelfDurations": Array [
+            Array [
+              3,
+              0,
+            ],
+            Array [
+              4,
+              1,
+            ],
+            Array [
+              10,
+              2,
+            ],
+            Array [
+              2,
+              10,
+            ],
+            Array [
+              1,
+              0,
+            ],
+          ],
+          "interactionIDs": Array [],
+          "priorityLevel": "Immediate",
+          "screenshot": null,
+          "timestamp": 13,
+        },
+        Object {
+          "duration": 10,
+          "fiberActualDurations": Array [
+            Array [
+              3,
+              0,
+            ],
+            Array [
+              2,
+              10,
+            ],
+            Array [
+              1,
+              10,
+            ],
+          ],
+          "fiberSelfDurations": Array [
+            Array [
+              3,
+              0,
+            ],
+            Array [
+              2,
+              10,
+            ],
+            Array [
+              1,
+              0,
+            ],
+          ],
+          "interactionIDs": Array [],
+          "priorityLevel": "Immediate",
+          "screenshot": null,
+          "timestamp": 34,
+        },
+        Object {
+          "duration": 10,
+          "fiberActualDurations": Array [
+            Array [
+              2,
+              10,
+            ],
+            Array [
+              1,
+              10,
+            ],
+          ],
+          "fiberSelfDurations": Array [
+            Array [
+              2,
+              10,
+            ],
+            Array [
+              1,
+              0,
+            ],
+          ],
+          "interactionIDs": Array [],
+          "priorityLevel": "Immediate",
+          "screenshot": null,
+          "timestamp": 44,
+        },
+      ],
+      "displayName": "Parent",
+      "initialTreeBaseDurations": Array [
+        Array [
+          1,
+          12,
+        ],
+        Array [
+          2,
+          12,
+        ],
+        Array [
+          3,
+          0,
+        ],
+        Array [
+          4,
+          1,
+        ],
+        Array [
+          5,
+          1,
+        ],
+      ],
+      "interactionCommits": Array [],
+      "interactions": Array [],
+      "operations": Array [
+        Array [
+          1,
+          1,
+          8,
+          5,
+          67,
+          104,
+          105,
+          108,
+          100,
+          1,
+          50,
+          1,
+          10,
+          5,
+          2,
+          2,
+          1,
+          2,
+          4,
+          10,
+          2000,
+          4,
+          2,
+          14000,
+          3,
+          2,
+          4,
+          3,
+          4,
+          10,
+          5,
+          4,
+          1,
+          14000,
+        ],
+        Array [
+          1,
+          1,
+          0,
+          2,
+          2,
+          10,
+          4,
+          4,
+          2,
+          11000,
+          3,
+          2,
+          2,
+          3,
+          5,
+          4,
+          1,
+          11000,
+        ],
+        Array [
+          1,
+          1,
+          0,
+          2,
+          1,
+          3,
+        ],
+      ],
+      "rootID": 1,
+      "snapshots": Array [
+        Array [
+          1,
+          Object {
+            "children": Array [
+              2,
+            ],
+            "displayName": null,
+            "id": 1,
+            "key": null,
+            "type": 11,
+          },
+        ],
+        Array [
+          2,
+          Object {
+            "children": Array [
+              3,
+              4,
+              5,
+            ],
+            "displayName": "Parent",
+            "id": 2,
+            "key": null,
+            "type": 5,
+          },
+        ],
+        Array [
+          3,
+          Object {
+            "children": Array [],
+            "displayName": "Child",
+            "id": 3,
+            "key": "0",
+            "type": 5,
+          },
+        ],
+        Array [
+          4,
+          Object {
+            "children": Array [],
+            "displayName": "Child",
+            "id": 4,
+            "key": "1",
+            "type": 5,
+          },
+        ],
+        Array [
+          5,
+          Object {
+            "children": Array [],
+            "displayName": "Child",
+            "id": 5,
+            "key": null,
+            "type": 8,
+          },
+        ],
+      ],
+    },
+    Object {
+      "commitData": Array [
+        Object {
+          "duration": 11,
+          "fiberActualDurations": Array [
+            Array [
+              11,
+              11,
+            ],
+            Array [
+              12,
+              11,
+            ],
+            Array [
+              13,
+              0,
+            ],
+            Array [
+              14,
+              1,
+            ],
+          ],
+          "fiberSelfDurations": Array [
+            Array [
+              11,
+              0,
+            ],
+            Array [
+              12,
+              10,
+            ],
+            Array [
+              13,
+              0,
+            ],
+            Array [
+              14,
+              1,
+            ],
+          ],
+          "interactionIDs": Array [],
+          "priorityLevel": "Immediate",
+          "screenshot": null,
+          "timestamp": 24,
+        },
+      ],
+      "displayName": "Parent",
+      "initialTreeBaseDurations": Array [],
+      "interactionCommits": Array [],
+      "interactions": Array [],
+      "operations": Array [
+        Array [
+          1,
+          11,
+          15,
+          6,
+          80,
+          97,
+          114,
+          101,
+          110,
+          116,
+          5,
+          67,
+          104,
+          105,
+          108,
+          100,
+          1,
+          48,
+          1,
+          11,
+          11,
+          1,
+          1,
+          4,
+          11,
+          11000,
+          1,
+          12,
+          5,
+          11,
+          0,
+          1,
+          0,
+          4,
+          12,
+          11000,
+          1,
+          13,
+          5,
+          12,
+          12,
+          2,
+          3,
+          4,
+          13,
+          0,
+          1,
+          14,
+          8,
+          12,
+          12,
+          2,
+          0,
+          4,
+          14,
+          1000,
+        ],
+      ],
+      "rootID": 11,
+      "snapshots": Array [],
+    },
+    Object {
+      "commitData": Array [
+        Object {
+          "duration": 0,
+          "fiberActualDurations": Array [],
+          "fiberSelfDurations": Array [],
+          "interactionIDs": Array [],
+          "priorityLevel": "Immediate",
+          "screenshot": null,
+          "timestamp": 34,
+        },
+      ],
+      "displayName": "Parent",
+      "initialTreeBaseDurations": Array [
+        Array [
+          6,
+          11,
+        ],
+        Array [
+          7,
+          11,
+        ],
+        Array [
+          8,
+          0,
+        ],
+        Array [
+          9,
+          1,
+        ],
+      ],
+      "interactionCommits": Array [],
+      "interactions": Array [],
+      "operations": Array [
+        Array [
+          1,
+          6,
+          0,
+          2,
+          4,
+          9,
+          8,
+          7,
+          6,
+        ],
+      ],
+      "rootID": 6,
+      "snapshots": Array [
+        Array [
+          6,
+          Object {
+            "children": Array [
+              7,
+            ],
+            "displayName": null,
+            "id": 6,
+            "key": null,
+            "type": 11,
+          },
+        ],
+        Array [
+          7,
+          Object {
+            "children": Array [
+              8,
+              9,
+            ],
+            "displayName": "Parent",
+            "id": 7,
+            "key": null,
+            "type": 5,
+          },
+        ],
+        Array [
+          8,
+          Object {
+            "children": Array [],
+            "displayName": "Child",
+            "id": 8,
+            "key": "0",
+            "type": 5,
+          },
+        ],
+        Array [
+          9,
+          Object {
+            "children": Array [],
+            "displayName": "Child",
+            "id": 9,
+            "key": null,
+            "type": 8,
+          },
+        ],
+      ],
+    },
+  ],
+  "version": 4,
+}
+`;
+
+exports[`ProfilingCache should report every traced interaction: Interactions 1`] = `
+Array [
+  Object {
+    "__count": 1,
+    "id": 0,
+    "name": "mount: one child",
+    "timestamp": 0,
+  },
+  Object {
+    "__count": 0,
+    "id": 1,
+    "name": "update: two children",
+    "timestamp": 11,
+  },
+]
+`;
+
+exports[`ProfilingCache should report every traced interaction: imported data 1`] = `
+Object {
+  "dataForRoots": Array [
+    Object {
+      "commitData": Array [
+        Object {
+          "duration": 11,
+          "fiberActualDurations": Array [
+            Array [
+              1,
+              11,
+            ],
+            Array [
+              2,
+              11,
+            ],
+            Array [
+              3,
+              0,
+            ],
+            Array [
+              4,
+              1,
+            ],
+          ],
+          "fiberSelfDurations": Array [
+            Array [
+              1,
+              0,
+            ],
+            Array [
+              2,
+              10,
+            ],
+            Array [
+              3,
+              0,
+            ],
+            Array [
+              4,
+              1,
+            ],
+          ],
+          "interactionIDs": Array [
+            0,
+          ],
+          "priorityLevel": "Immediate",
+          "screenshot": null,
+          "timestamp": 11,
+        },
+        Object {
+          "duration": 11,
+          "fiberActualDurations": Array [
+            Array [
+              3,
+              0,
+            ],
+            Array [
+              5,
+              1,
+            ],
+            Array [
+              2,
+              11,
+            ],
+            Array [
+              1,
+              11,
+            ],
+          ],
+          "fiberSelfDurations": Array [
+            Array [
+              3,
+              0,
+            ],
+            Array [
+              5,
+              1,
+            ],
+            Array [
+              2,
+              10,
+            ],
+            Array [
+              1,
+              0,
+            ],
+          ],
+          "interactionIDs": Array [
+            1,
+          ],
+          "priorityLevel": "Immediate",
+          "screenshot": null,
+          "timestamp": 22,
+        },
+      ],
+      "displayName": "Parent",
+      "initialTreeBaseDurations": Array [],
+      "interactionCommits": Array [
+        Array [
+          0,
+          Array [
+            0,
+          ],
+        ],
+        Array [
+          1,
+          Array [
+            1,
+          ],
+        ],
+      ],
+      "interactions": Array [
+        Array [
+          0,
+          Object {
+            "__count": 1,
+            "id": 0,
+            "name": "mount: one child",
+            "timestamp": 0,
+          },
+        ],
+        Array [
+          1,
+          Object {
+            "__count": 0,
+            "id": 1,
+            "name": "update: two children",
+            "timestamp": 11,
+          },
+        ],
+      ],
+      "operations": Array [
+        Array [
+          1,
+          1,
+          15,
+          6,
+          80,
+          97,
+          114,
+          101,
+          110,
+          116,
+          5,
+          67,
+          104,
+          105,
+          108,
+          100,
+          1,
+          48,
+          1,
+          1,
+          11,
+          1,
+          1,
+          4,
+          1,
+          11000,
+          1,
+          2,
+          5,
+          1,
+          0,
+          1,
+          0,
+          4,
+          2,
+          11000,
+          1,
+          3,
+          5,
+          2,
+          2,
+          2,
+          3,
+          4,
+          3,
+          0,
+          1,
+          4,
+          8,
+          2,
+          2,
+          2,
+          0,
+          4,
+          4,
+          1000,
+        ],
+        Array [
+          1,
+          1,
+          8,
+          5,
+          67,
+          104,
+          105,
+          108,
+          100,
+          1,
+          49,
+          1,
+          5,
+          5,
+          2,
+          2,
+          1,
+          2,
+          4,
+          5,
+          1000,
+          4,
+          2,
+          12000,
+          3,
+          2,
+          3,
+          3,
+          5,
+          4,
+          4,
+          1,
+          12000,
+        ],
+      ],
+      "rootID": 1,
+      "snapshots": Array [],
+    },
+  ],
+  "version": 4,
+}
+`;

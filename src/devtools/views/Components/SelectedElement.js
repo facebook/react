@@ -1,76 +1,140 @@
 // @flow
 
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
-import { TreeContext } from './TreeContext';
+import React, { useCallback, useContext } from 'react';
+import { TreeDispatcherContext, TreeStateContext } from './TreeContext';
 import { BridgeContext, StoreContext } from '../context';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import HooksTree from './HooksTree';
+import EventsTree from './EventsTree';
+import { ModalDialogContext } from '../ModalDialog';
 import InspectedElementTree from './InspectedElementTree';
-import { hydrate } from 'src/hydration';
-import styles from './SelectedElement.css';
+import { InspectedElementContext } from './InspectedElementContext';
+import ViewElementSourceContext from './ViewElementSourceContext';
+import Toggle from '../Toggle';
 import {
+  ComponentFilterElementType,
   ElementTypeClass,
   ElementTypeForwardRef,
   ElementTypeFunction,
   ElementTypeMemo,
   ElementTypeSuspense,
-} from '../../types';
+} from 'src/types';
 
-import type { InspectedElement } from './types';
-import type { DehydratedData, Element } from './types';
+import styles from './SelectedElement.css';
+
+import type { Element, InspectedElement } from './types';
 
 export type Props = {||};
 
 export default function SelectedElement(_: Props) {
-  const { selectedElementID, viewElementSource } = useContext(TreeContext);
+  const { inspectedElementID } = useContext(TreeStateContext);
+  const dispatch = useContext(TreeDispatcherContext);
+  const viewElementSource = useContext(ViewElementSourceContext);
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
+  const { dispatch: modalDialogDispatch } = useContext(ModalDialogContext);
+
+  const { read } = useContext(InspectedElementContext);
 
   const element =
-    selectedElementID !== null ? store.getElementByID(selectedElementID) : null;
+    inspectedElementID !== null
+      ? store.getElementByID(inspectedElementID)
+      : null;
 
-  const inspectedElement = useInspectedElement(selectedElementID);
+  const inspectedElement =
+    inspectedElementID != null ? read(inspectedElementID) : null;
 
   const highlightElement = useCallback(() => {
-    if (element !== null && selectedElementID !== null) {
-      const rendererID = store.getRendererIDForElement(selectedElementID);
+    if (element !== null && inspectedElementID !== null) {
+      const rendererID = store.getRendererIDForElement(inspectedElementID);
       if (rendererID !== null) {
         bridge.send('highlightElementInDOM', {
           displayName: element.displayName,
           hideAfterTimeout: true,
-          id: selectedElementID,
+          id: inspectedElementID,
           openNativeElementsPanel: true,
           rendererID,
           scrollIntoView: true,
         });
       }
     }
-  }, [bridge, element, selectedElementID, store]);
+  }, [bridge, element, inspectedElementID, store]);
 
   const logElement = useCallback(() => {
-    if (selectedElementID !== null) {
-      const rendererID = store.getRendererIDForElement(selectedElementID);
+    if (inspectedElementID !== null) {
+      const rendererID = store.getRendererIDForElement(inspectedElementID);
       if (rendererID !== null) {
         bridge.send('logElementToConsole', {
-          id: selectedElementID,
+          id: inspectedElementID,
           rendererID,
         });
       }
     }
-  }, [bridge, selectedElementID, store]);
+  }, [bridge, inspectedElementID, store]);
 
   const viewSource = useCallback(() => {
-    if (viewElementSource != null && selectedElementID !== null) {
-      viewElementSource(selectedElementID);
+    if (viewElementSource != null && inspectedElementID !== null) {
+      viewElementSource(inspectedElementID);
     }
-  }, [selectedElementID, viewElementSource]);
+  }, [inspectedElementID, viewElementSource]);
+
+  const canViewSource =
+    inspectedElement &&
+    inspectedElement.canViewSource &&
+    viewElementSource !== null;
+
+  const isSuspended =
+    element !== null &&
+    element.type === ElementTypeSuspense &&
+    inspectedElement != null &&
+    inspectedElement.state != null;
+
+  const canToggleSuspense =
+    inspectedElement != null && inspectedElement.canToggleSuspense;
+
+  // TODO (suspense toggle) Would be nice to eventually use a two setState pattern here as well.
+  const toggleSuspended = useCallback(() => {
+    let nearestSuspenseElement = null;
+    let currentElement = element;
+    while (currentElement !== null) {
+      if (currentElement.type === ElementTypeSuspense) {
+        nearestSuspenseElement = currentElement;
+        break;
+      } else if (currentElement.parentID > 0) {
+        currentElement = store.getElementByID(currentElement.parentID);
+      } else {
+        currentElement = null;
+      }
+    }
+
+    // If we didn't find a Suspense ancestor, we can't suspend.
+    // Instead we can show a warning to the user.
+    if (nearestSuspenseElement === null) {
+      modalDialogDispatch({
+        type: 'SHOW',
+        content: <CannotSuspendWarningMessage />,
+      });
+    } else {
+      const nearestSuspenseElementID = nearestSuspenseElement.id;
+
+      // If we're suspending from an arbitary (non-Suspense) component, select the nearest Suspense element in the Tree.
+      // This way when the fallback UI is shown and the current element is hidden, something meaningful is selected.
+      if (nearestSuspenseElement !== element) {
+        dispatch({
+          type: 'SELECT_ELEMENT_BY_ID',
+          payload: nearestSuspenseElementID,
+        });
+      }
+
+      // Toggle suspended
+      bridge.send('overrideSuspense', {
+        id: nearestSuspenseElementID,
+        rendererID: store.getRendererIDForElement(nearestSuspenseElementID),
+        forceFallback: !isSuspended,
+      });
+    }
+  }, [bridge, dispatch, element, isSuspended, modalDialogDispatch, store]);
 
   if (element === null) {
     return (
@@ -79,11 +143,6 @@ export default function SelectedElement(_: Props) {
       </div>
     );
   }
-
-  const canViewSource =
-    inspectedElement &&
-    inspectedElement.canViewSource &&
-    viewElementSource !== null;
 
   return (
     <div className={styles.SelectedElement}>
@@ -94,6 +153,20 @@ export default function SelectedElement(_: Props) {
           </div>
         </div>
 
+        {canToggleSuspense && (
+          <Toggle
+            className={styles.IconButton}
+            isChecked={isSuspended}
+            onChange={toggleSuspended}
+            title={
+              isSuspended
+                ? 'Unsuspend the selected component'
+                : 'Suspend the selected component'
+            }
+          >
+            <ButtonIcon type="suspend" />
+          </Toggle>
+        )}
         <Button
           className={styles.IconButton}
           onClick={highlightElement}
@@ -149,13 +222,14 @@ function InspectedElementView({
     canEditHooks,
     canToggleSuspense,
     context,
+    events,
     hooks,
     owners,
     props,
     state,
   } = inspectedElement;
 
-  const { ownerStack } = useContext(TreeContext);
+  const { ownerID } = useContext(TreeStateContext);
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 
@@ -225,15 +299,17 @@ function InspectedElementView({
         data={context}
         overrideValueFn={overrideContextFn}
       />
+      {events !== null && events.length > 0 && <EventsTree events={events} />}
 
-      {ownerStack.length === 0 && owners !== null && owners.length > 0 && (
+      {ownerID === null && owners !== null && owners.length > 0 && (
         <div className={styles.Owners}>
           <div className={styles.OwnersHeader}>rendered by</div>
           {owners.map(owner => (
             <OwnerView
               key={owner.id}
-              displayName={owner.displayName}
+              displayName={owner.displayName || 'Anonymous'}
               id={owner.id}
+              isInStore={store.containsElement(owner.id)}
             />
           ))}
         </div>
@@ -242,18 +318,25 @@ function InspectedElementView({
   );
 }
 
-function OwnerView({ displayName, id }: { displayName: string, id: number }) {
-  const { selectElementByID } = useContext(TreeContext);
+type OwnerViewProps = {| displayName: string, id: number, isInStore: boolean |};
 
-  const handleClick = useCallback(() => selectElementByID(id), [
-    id,
-    selectElementByID,
-  ]);
+function OwnerView({ displayName, id, isInStore }: OwnerViewProps) {
+  const dispatch = useContext(TreeDispatcherContext);
+
+  const handleClick = useCallback(
+    () =>
+      dispatch({
+        type: 'SELECT_ELEMENT_BY_ID',
+        payload: id,
+      }),
+    [dispatch, id]
+  );
 
   return (
     <button
       key={id}
-      className={styles.Owner}
+      className={`${styles.Owner} ${isInStore ? '' : styles.NotInStore}`}
+      disabled={!isInStore}
       onClick={handleClick}
       title={displayName}
     >
@@ -262,79 +345,30 @@ function OwnerView({ displayName, id }: { displayName: string, id: number }) {
   );
 }
 
-function hydrateHelper(dehydratedData: DehydratedData | null): Object | null {
-  if (dehydratedData !== null) {
-    return hydrate(dehydratedData.data, dehydratedData.cleaned);
-  } else {
-    return null;
-  }
-}
-
-function useInspectedElement(id: number | null): InspectedElement | null {
-  const idRef = useRef(id);
-  const bridge = useContext(BridgeContext);
+function CannotSuspendWarningMessage() {
   const store = useContext(StoreContext);
+  const areSuspenseElementsHidden = !!store.componentFilters.find(
+    filter =>
+      filter.type === ComponentFilterElementType &&
+      filter.value === ElementTypeSuspense &&
+      filter.isEnabled
+  );
 
-  const [inspectedElement, setInspectedElement] = useState(null);
-
-  useEffect(() => {
-    // Track the current selected element ID.
-    // We ignore any backend updates about previously selected elements.
-    idRef.current = id;
-
-    // Hide previous/stale insepected element to avoid temporarily showing the wrong values.
-    setInspectedElement(null);
-
-    // A null id indicates that there's nothing currently selected in the tree.
-    if (id === null) {
-      return () => {};
-    }
-
-    const rendererID = store.getRendererIDForElement(id);
-
-    // Update the $r variable.
-    bridge.send('selectElement', { id, rendererID });
-
-    // Update props, state, and context in the side panel.
-    const sendBridgeRequest = () => {
-      bridge.send('inspectElement', { id, rendererID });
-    };
-
-    let timeoutID = null;
-
-    const onInspectedElement = (inspectedElement: InspectedElement) => {
-      if (!inspectedElement || inspectedElement.id !== idRef.current) {
-        // Ignore bridge updates about previously selected elements.
-        return;
-      }
-
-      if (inspectedElement !== null) {
-        inspectedElement.context = hydrateHelper(inspectedElement.context);
-        inspectedElement.hooks = hydrateHelper(inspectedElement.hooks);
-        inspectedElement.props = hydrateHelper(inspectedElement.props);
-        inspectedElement.state = hydrateHelper(inspectedElement.state);
-      }
-
-      setInspectedElement(inspectedElement);
-
-      // Ask for an update in a second.
-      // Make sure we only ask once though.
-      clearTimeout(((timeoutID: any): TimeoutID));
-      setTimeout(sendBridgeRequest, 1000);
-    };
-
-    bridge.addListener('inspectedElement', onInspectedElement);
-
-    sendBridgeRequest();
-
-    return () => {
-      bridge.removeListener('inspectedElement', onInspectedElement);
-
-      if (timeoutID !== null) {
-        clearTimeout(timeoutID);
-      }
-    };
-  }, [bridge, id, idRef, store]);
-
-  return inspectedElement;
+  // Has the user filted out Suspense nodes from the tree?
+  // If so, the selected element might actually be in a Suspense tree after all.
+  if (areSuspenseElementsHidden) {
+    return (
+      <div className={styles.CannotSuspendWarningMessage}>
+        Suspended state cannot be toggled while Suspense components are hidden.
+        Disable the filter and try agan.
+      </div>
+    );
+  } else {
+    return (
+      <div className={styles.CannotSuspendWarningMessage}>
+        The selected element is not within a Suspense container. Suspending it
+        would cause an error.
+      </div>
+    );
+  }
 }

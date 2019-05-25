@@ -61,6 +61,8 @@
     <div id="devtools"></div>
 
     <!-- This script installs the hook, injects the backend, and renders the DevTools UI -->
-    <script src="build/devtools.js"></script>
+    <!-- In DEV mode, this file is served by the Webpack dev server -->
+    <!-- For production builds, it's built by Webpack and uploaded from the local file system -->
+    <script src="dist/devtools.js"></script>
   </body>
 </html>

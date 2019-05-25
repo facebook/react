@@ -1,4 +1,5 @@
 .Tree {
+  position: relative;
   height: 100%;
   width: 100%;
   display: flex;
@@ -28,4 +29,22 @@
   font-family: var(--font-family-monospace);
   font-size: var(--font-size-monospace-normal);
   line-height: var(--line-height-data);
+}
+
+.VRule {
+  height: 20px;
+  width: 1px;
+  margin: 0 0.5rem;
+  background-color: var(--color-border);
+}
+
+.Loading {
+  height: 100%;
+  padding-left: 0.5rem;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  justify-content: flex-start;
+  font-size: var(--font-size-sans-large);
+  color: var(--color-dim);
 }

@@ -1,8 +1,11 @@
 // @flow
 
-import type { InteractionWithCommits, ProfilingSummary } from './types';
+import ProfilerStore from 'src/devtools/ProfilerStore';
+
+import type { Interaction } from './types';
 
 export type ChartData = {|
+  interactions: Array<Interaction>,
   lastInteractionTime: number,
   maxCommitDuration: number,
 |};
@@ -10,30 +13,37 @@ export type ChartData = {|
 const cachedChartData: Map<number, ChartData> = new Map();
 
 export function getChartData({
-  interactions,
-  profilingSummary,
+  profilerStore,
+  rootID,
 }: {|
-  interactions: Array<InteractionWithCommits>,
-  profilingSummary: ProfilingSummary,
+  profilerStore: ProfilerStore,
+  rootID: number,
 |}): ChartData {
-  const { rootID } = profilingSummary;
-
   if (cachedChartData.has(rootID)) {
     return ((cachedChartData.get(rootID): any): ChartData);
   }
 
-  const { commitDurations, commitTimes } = profilingSummary;
+  const dataForRoot = profilerStore.getDataForRoot(rootID);
+  if (dataForRoot == null) {
+    throw Error(`Could not find profiling data for root "${rootID}"`);
+  }
+
+  const { commitData, interactions } = dataForRoot;
 
   const lastInteractionTime =
-    commitTimes.length > 0 ? commitTimes[commitTimes.length - 1] : 0;
+    commitData.length > 0 ? commitData[commitData.length - 1].timestamp : 0;
 
   let maxCommitDuration = 0;
 
-  commitDurations.forEach(commitDuration => {
-    maxCommitDuration = Math.max(maxCommitDuration, commitDuration);
+  commitData.forEach(commitDatum => {
+    maxCommitDuration = Math.max(maxCommitDuration, commitDatum.duration);
   });
 
-  const chartData = { lastInteractionTime, maxCommitDuration };
+  const chartData = {
+    interactions: Array.from(interactions.values()),
+    lastInteractionTime,
+    maxCommitDuration,
+  };
 
   cachedChartData.set(rootID, chartData);
 

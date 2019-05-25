@@ -12,9 +12,8 @@ import styles from './SidebarSelectedFiberInfo.css';
 export type Props = {||};
 
 export default function SidebarSelectedFiberInfo(_: Props) {
-  const { profilingCache } = useContext(StoreContext);
+  const { profilerStore } = useContext(StoreContext);
   const {
-    rendererID,
     rootID,
     selectCommitIndex,
     selectedCommitIndex,
@@ -22,23 +21,21 @@ export default function SidebarSelectedFiberInfo(_: Props) {
     selectedFiberName,
     selectFiber,
   } = useContext(ProfilerContext);
+  const { profilingCache } = profilerStore;
 
-  const { commitTimes } = profilingCache.ProfilingSummary.read({
-    rendererID: ((rendererID: any): number),
-    rootID: ((rootID: any): number),
-  });
-
-  const { commitDurations } = profilingCache.FiberCommits.read({
+  const commitIndices = profilingCache.getFiberCommits({
     fiberID: ((selectedFiberID: any): number),
-    rendererID: ((rendererID: any): number),
     rootID: ((rootID: any): number),
   });
 
   const listItems = [];
-  for (let i = 0; i < commitDurations.length; i += 2) {
-    const commitIndex = commitDurations[i];
-    const duration = commitDurations[i + 1];
-    const time = commitTimes[commitIndex];
+  for (let i = 0; i < commitIndices.length; i += 2) {
+    const commitIndex = commitIndices[i];
+
+    const { duration, timestamp } = profilerStore.getCommitData(
+      ((rootID: any): number),
+      commitIndex
+    );
 
     listItems.push(
       <button
@@ -50,7 +47,7 @@ export default function SidebarSelectedFiberInfo(_: Props) {
         }
         onClick={() => selectCommitIndex(commitIndex)}
       >
-        {formatTime(time)}s for {formatDuration(duration)}ms
+        {formatTime(timestamp)}s for {formatDuration(duration)}ms
       </button>
     );
   }

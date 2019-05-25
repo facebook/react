@@ -163,7 +163,7 @@ function List({
     >
       <FixedSizeList
         className={styles.List}
-        direction="horizontal"
+        layout="horizontal"
         height={height}
         itemCount={filteredCommitIndices.length}
         itemData={itemData}

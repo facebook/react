@@ -1,19 +1,12 @@
 // @flow
 
-describe('StoreStress', () => {
+describe('StoreStress (Sync Mode)', () => {
   let React;
   let ReactDOM;
-  let TestUtils;
+  let act;
   let bridge;
   let store;
   let print;
-
-  const act = (callback: Function) => {
-    TestUtils.act(() => {
-      callback();
-    });
-    jest.runAllTimers(); // Flush Bridge operations
-  };
 
   beforeEach(() => {
     bridge = global.bridge;
@@ -22,14 +15,14 @@ describe('StoreStress', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
-    TestUtils = require('react-dom/test-utils');
+    act = require('./utils').act;
 
     print = require('./storeSerializer').print;
   });
 
   // This is a stress test for the tree mount/update/unmount traversal.
   // It renders different trees that should produce the same output.
-  it('should handle a stress test with different tree operations', () => {
+  it('should handle a stress test with different tree operations (Sync Mode)', () => {
     let setShowX;
     const A = () => 'a';
     const B = () => 'b';
@@ -168,37 +161,9 @@ describe('StoreStress', () => {
     }
     act(() => ReactDOM.unmountComponentAtNode(container));
     expect(print(store)).toBe('');
-
-    // 7. Same as the previous step, but for Concurrent Mode.
-    container = document.createElement('div');
-    // $FlowFixMe
-    let root = ReactDOM.unstable_createRoot(container);
-    for (let i = 0; i < cases.length; i++) {
-      // Verify mounting 'abcde'.
-      act(() => root.render(<Parent>{cases[i]}</Parent>));
-      expect(container.textContent).toMatch('abcde');
-      expect(print(store)).toEqual(snapshotForABCDE);
-
-      // Verify switching to 'abxde'.
-      act(() => {
-        setShowX(true);
-      });
-      expect(container.textContent).toMatch('abxde');
-      expect(print(store)).toBe(snapshotForABXDE);
-
-      // Verify switching back to 'abcde'.
-      act(() => {
-        setShowX(false);
-      });
-      expect(container.textContent).toMatch('abcde');
-      expect(print(store)).toBe(snapshotForABCDE);
-      // Don't unmount. Reuse the container between iterations.
-    }
-    act(() => root.unmount());
-    expect(print(store)).toBe('');
   });
 
-  it('should handle stress test with reordering', () => {
+  it('should handle stress test with reordering (Sync Mode)', () => {
     const A = () => 'a';
     const B = () => 'b';
     const C = () => 'c';
@@ -298,7 +263,7 @@ describe('StoreStress', () => {
     }
   });
 
-  it('should handle a stress test for Suspense', async () => {
+  it('should handle a stress test for Suspense (Sync Mode)', async () => {
     const A = () => 'a';
     const B = () => 'b';
     const C = () => 'c';
@@ -690,6 +655,441 @@ describe('StoreStress', () => {
         expect(print(store)).toBe('');
       }
     }
-    // TODO: Test Concurrent Mode
+  });
+
+  it('should handle a stress test for Suspense without type change (Sync Mode)', () => {
+    const A = () => 'a';
+    const B = () => 'b';
+    const C = () => 'c';
+    const X = () => 'x';
+    const Y = () => 'y';
+    const Z = () => 'z';
+    const a = <A key="a" />;
+    const b = <B key="b" />;
+    const c = <C key="c" />;
+    const z = <Z key="z" />;
+
+    // prettier-ignore
+    const steps = [
+      a,
+      [a],
+      [a, b, c],
+      [c, b, a],
+      [c, null, a],
+      <React.Fragment>{c}{a}</React.Fragment>,
+      <div>{c}{a}</div>,
+      <div><span>{a}</span>{b}</div>,
+      [[a]],
+      null,
+      b,
+      a
+    ];
+
+    const Never = () => {
+      throw new Promise(() => {});
+    };
+
+    const MaybeSuspend = ({ children, suspend }) => {
+      if (suspend) {
+        return (
+          <div>
+            {children}
+            <Never />
+            <X />
+          </div>
+        );
+      }
+      return (
+        <div>
+          {children}
+          <Z />
+        </div>
+      );
+    };
+
+    const Root = ({ children }) => {
+      return children;
+    };
+
+    // 1. For each step, check Suspense can render them as initial primary content.
+    // This is the only step where we use Jest snapshots.
+    let snapshots = [];
+    let container = document.createElement('div');
+    for (let i = 0; i < steps.length; i++) {
+      act(() =>
+        ReactDOM.render(
+          <Root>
+            <X />
+            <React.Suspense fallback={z}>
+              <MaybeSuspend suspend={false}>{steps[i]}</MaybeSuspend>
+            </React.Suspense>
+            <Y />
+          </Root>,
+          container
+        )
+      );
+      // We snapshot each step once so it doesn't regress.
+      expect(store).toMatchSnapshot();
+      snapshots.push(print(store));
+      act(() => ReactDOM.unmountComponentAtNode(container));
+      expect(print(store)).toBe('');
+    }
+
+    // 2. Verify check Suspense can render same steps as initial fallback content.
+    // We don't actually assert here because the tree includes <MaybeSuspend>
+    // which is different from the snapshots above. So we take more snapshots.
+    let fallbackSnapshots = [];
+    for (let i = 0; i < steps.length; i++) {
+      act(() =>
+        ReactDOM.render(
+          <Root>
+            <X />
+            <React.Suspense fallback={steps[i]}>
+              <Z />
+              <MaybeSuspend suspend={true}>{steps[i]}</MaybeSuspend>
+              <Z />
+            </React.Suspense>
+            <Y />
+          </Root>,
+          container
+        )
+      );
+      // We snapshot each step once so it doesn't regress.
+      expect(store).toMatchSnapshot();
+      fallbackSnapshots.push(print(store));
+      act(() => ReactDOM.unmountComponentAtNode(container));
+      expect(print(store)).toBe('');
+    }
+
+    // 3. Verify we can update from each step to each step in primary mode.
+    for (let i = 0; i < steps.length; i++) {
+      for (let j = 0; j < steps.length; j++) {
+        // Always start with a fresh container and steps[i].
+        container = document.createElement('div');
+        act(() =>
+          ReactDOM.render(
+            <Root>
+              <X />
+              <React.Suspense fallback={z}>
+                <MaybeSuspend suspend={false}>{steps[i]}</MaybeSuspend>
+              </React.Suspense>
+              <Y />
+            </Root>,
+            container
+          )
+        );
+        expect(print(store)).toEqual(snapshots[i]);
+        // Re-render with steps[j].
+        act(() =>
+          ReactDOM.render(
+            <Root>
+              <X />
+              <React.Suspense fallback={z}>
+                <MaybeSuspend suspend={false}>{steps[j]}</MaybeSuspend>
+              </React.Suspense>
+              <Y />
+            </Root>,
+            container
+          )
+        );
+        // Verify the successful transition to steps[j].
+        expect(print(store)).toEqual(snapshots[j]);
+        // Check that we can transition back again.
+        act(() =>
+          ReactDOM.render(
+            <Root>
+              <X />
+              <React.Suspense fallback={z}>
+                <MaybeSuspend suspend={false}>{steps[i]}</MaybeSuspend>
+              </React.Suspense>
+              <Y />
+            </Root>,
+            container
+          )
+        );
+        expect(print(store)).toEqual(snapshots[i]);
+        // Clean up after every iteration.
+        act(() => ReactDOM.unmountComponentAtNode(container));
+        expect(print(store)).toBe('');
+      }
+    }
+
+    // 4. Verify we can update from each step to each step in fallback mode.
+    for (let i = 0; i < steps.length; i++) {
+      for (let j = 0; j < steps.length; j++) {
+        // Always start with a fresh container and steps[i].
+        container = document.createElement('div');
+        act(() =>
+          ReactDOM.render(
+            <Root>
+              <X />
+              <React.Suspense fallback={steps[i]}>
+                <Z />
+                <MaybeSuspend suspend={true}>
+                  <X />
+                  <Y />
+                </MaybeSuspend>
+                <Z />
+              </React.Suspense>
+              <Y />
+            </Root>,
+            container
+          )
+        );
+        expect(print(store)).toEqual(fallbackSnapshots[i]);
+        // Re-render with steps[j].
+        act(() =>
+          ReactDOM.render(
+            <Root>
+              <X />
+              <React.Suspense fallback={steps[j]}>
+                <Z />
+                <MaybeSuspend suspend={true}>
+                  <Y />
+                  <X />
+                </MaybeSuspend>
+                <Z />
+              </React.Suspense>
+              <Y />
+            </Root>,
+            container
+          )
+        );
+        // Verify the successful transition to steps[j].
+        expect(print(store)).toEqual(fallbackSnapshots[j]);
+        // Check that we can transition back again.
+        act(() =>
+          ReactDOM.render(
+            <Root>
+              <X />
+              <React.Suspense fallback={steps[i]}>
+                <Z />
+                <MaybeSuspend suspend={true}>
+                  <X />
+                  <Y />
+                </MaybeSuspend>
+                <Z />
+              </React.Suspense>
+              <Y />
+            </Root>,
+            container
+          )
+        );
+        expect(print(store)).toEqual(fallbackSnapshots[i]);
+        // Clean up after every iteration.
+        act(() => ReactDOM.unmountComponentAtNode(container));
+        expect(print(store)).toBe('');
+      }
+    }
+
+    // 5. Verify we can update from each step to each step when moving primary -> fallback.
+    for (let i = 0; i < steps.length; i++) {
+      for (let j = 0; j < steps.length; j++) {
+        // Always start with a fresh container and steps[i].
+        container = document.createElement('div');
+        act(() =>
+          ReactDOM.render(
+            <Root>
+              <X />
+              <React.Suspense fallback={z}>
+                <MaybeSuspend suspend={false}>{steps[i]}</MaybeSuspend>
+              </React.Suspense>
+              <Y />
+            </Root>,
+            container
+          )
+        );
+        expect(print(store)).toEqual(snapshots[i]);
+        // Re-render with steps[j].
+        act(() =>
+          ReactDOM.render(
+            <Root>
+              <X />
+              <React.Suspense fallback={steps[j]}>
+                <MaybeSuspend suspend={true}>{steps[i]}</MaybeSuspend>
+              </React.Suspense>
+              <Y />
+            </Root>,
+            container
+          )
+        );
+        // Verify the successful transition to steps[j].
+        expect(print(store)).toEqual(fallbackSnapshots[j]);
+        // Check that we can transition back again.
+        act(() =>
+          ReactDOM.render(
+            <Root>
+              <X />
+              <React.Suspense fallback={z}>
+                <MaybeSuspend suspend={false}>{steps[i]}</MaybeSuspend>
+              </React.Suspense>
+              <Y />
+            </Root>,
+            container
+          )
+        );
+        expect(print(store)).toEqual(snapshots[i]);
+        // Clean up after every iteration.
+        act(() => ReactDOM.unmountComponentAtNode(container));
+        expect(print(store)).toBe('');
+      }
+    }
+
+    // 6. Verify we can update from each step to each step when moving fallback -> primary.
+    for (let i = 0; i < steps.length; i++) {
+      for (let j = 0; j < steps.length; j++) {
+        // Always start with a fresh container and steps[i].
+        container = document.createElement('div');
+        act(() =>
+          ReactDOM.render(
+            <Root>
+              <X />
+              <React.Suspense fallback={steps[i]}>
+                <MaybeSuspend suspend={true}>{steps[j]}</MaybeSuspend>
+              </React.Suspense>
+              <Y />
+            </Root>,
+            container
+          )
+        );
+        expect(print(store)).toEqual(fallbackSnapshots[i]);
+        // Re-render with steps[j].
+        act(() =>
+          ReactDOM.render(
+            <Root>
+              <X />
+              <React.Suspense fallback={steps[i]}>
+                <MaybeSuspend suspend={false}>{steps[j]}</MaybeSuspend>
+              </React.Suspense>
+              <Y />
+            </Root>,
+            container
+          )
+        );
+        // Verify the successful transition to steps[j].
+        expect(print(store)).toEqual(snapshots[j]);
+        // Check that we can transition back again.
+        act(() =>
+          ReactDOM.render(
+            <Root>
+              <X />
+              <React.Suspense fallback={steps[i]}>
+                <MaybeSuspend suspend={true}>{steps[j]}</MaybeSuspend>
+              </React.Suspense>
+              <Y />
+            </Root>,
+            container
+          )
+        );
+        expect(print(store)).toEqual(fallbackSnapshots[i]);
+        // Clean up after every iteration.
+        act(() => ReactDOM.unmountComponentAtNode(container));
+        expect(print(store)).toBe('');
+      }
+    }
+
+    // 7. Verify we can update from each step to each step when toggling Suspense.
+    for (let i = 0; i < steps.length; i++) {
+      for (let j = 0; j < steps.length; j++) {
+        // Always start with a fresh container and steps[i].
+        container = document.createElement('div');
+        act(() =>
+          ReactDOM.render(
+            <Root>
+              <X />
+              <React.Suspense fallback={steps[j]}>
+                <MaybeSuspend suspend={false}>{steps[i]}</MaybeSuspend>
+              </React.Suspense>
+              <Y />
+            </Root>,
+            container
+          )
+        );
+
+        // We get ID from the index in the tree above:
+        // Root, X, Suspense, ...
+        //          ^ (index is 2)
+        const suspenseID = store.getElementIDAtIndex(2);
+
+        // Force fallback.
+        expect(print(store)).toEqual(snapshots[i]);
+        act(() => {
+          const suspenseID = store.getElementIDAtIndex(2);
+          bridge.send('overrideSuspense', {
+            id: suspenseID,
+            rendererID: store.getRendererIDForElement(suspenseID),
+            forceFallback: true,
+          });
+        });
+        expect(print(store)).toEqual(fallbackSnapshots[j]);
+
+        // Stop forcing fallback.
+        act(() => {
+          bridge.send('overrideSuspense', {
+            id: suspenseID,
+            rendererID: store.getRendererIDForElement(suspenseID),
+            forceFallback: false,
+          });
+        });
+        expect(print(store)).toEqual(snapshots[i]);
+
+        // Trigger actual fallback.
+        act(() =>
+          ReactDOM.render(
+            <Root>
+              <X />
+              <React.Suspense fallback={steps[j]}>
+                <MaybeSuspend suspend={true}>{steps[i]}</MaybeSuspend>
+              </React.Suspense>
+              <Y />
+            </Root>,
+            container
+          )
+        );
+        expect(print(store)).toEqual(fallbackSnapshots[j]);
+
+        // Force fallback while we're in fallback mode.
+        act(() => {
+          bridge.send('overrideSuspense', {
+            id: suspenseID,
+            rendererID: store.getRendererIDForElement(suspenseID),
+            forceFallback: true,
+          });
+        });
+        // Keep seeing fallback content.
+        expect(print(store)).toEqual(fallbackSnapshots[j]);
+
+        // Switch to primary mode.
+        act(() =>
+          ReactDOM.render(
+            <Root>
+              <X />
+              <React.Suspense fallback={steps[j]}>
+                <MaybeSuspend suspend={false}>{steps[i]}</MaybeSuspend>
+              </React.Suspense>
+              <Y />
+            </Root>,
+            container
+          )
+        );
+        // Fallback is still forced though.
+        expect(print(store)).toEqual(fallbackSnapshots[j]);
+
+        // Stop forcing fallback. This reverts to primary content.
+        act(() => {
+          bridge.send('overrideSuspense', {
+            id: suspenseID,
+            rendererID: store.getRendererIDForElement(suspenseID),
+            forceFallback: false,
+          });
+        });
+        // Now we see primary content.
+        expect(print(store)).toEqual(snapshots[i]);
+
+        // Clean up after every iteration.
+        act(() => ReactDOM.unmountComponentAtNode(container));
+        expect(print(store)).toBe('');
+      }
+    }
   });
 });

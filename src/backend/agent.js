@@ -3,11 +3,21 @@
 import EventEmitter from 'events';
 import memoize from 'memoize-one';
 import throttle from 'lodash.throttle';
-import { LOCAL_STORAGE_RELOAD_AND_PROFILE_KEY, __DEBUG__ } from '../constants';
+import {
+  LOCAL_STORAGE_RELOAD_AND_PROFILE_KEY,
+  SESSION_STORAGE_LAST_SELECTION_KEY,
+  __DEBUG__,
+} from '../constants';
 import { hideOverlay, showOverlay } from './views/Highlighter';
 
-import type { RendererID, RendererInterface } from './types';
-import type { Bridge } from '../types';
+import type {
+  PathFrame,
+  PathMatch,
+  RendererID,
+  RendererInterface,
+} from './types';
+import type { OwnersList } from 'src/devtools/views/Components/types';
+import type { Bridge, ComponentFilter } from '../types';
 
 const debug = (methodName, ...args) => {
   if (__DEBUG__) {
@@ -20,7 +30,7 @@ const debug = (methodName, ...args) => {
   }
 };
 
-type InspectSelectParams = {|
+type ElementAndRendererID = {|
   id: number,
   rendererID: number,
 |};
@@ -46,12 +56,19 @@ type OverrideSuspenseParams = {|
   forceFallback: boolean,
 |};
 
+type PersistedSelection = {|
+  rendererID: number,
+  path: Array<PathFrame>,
+|};
+
 export default class Agent extends EventEmitter {
-  _bridge: Bridge = ((null: any): Bridge);
+  _bridge: Bridge;
   _isProfiling: boolean = false;
   _rendererInterfaces: { [key: RendererID]: RendererInterface } = {};
+  _persistedSelection: PersistedSelection | null = null;
+  _persistedSelectionMatch: PathMatch | null = null;
 
-  constructor() {
+  constructor(bridge: Bridge) {
     super();
 
     if (localStorage.getItem(LOCAL_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true') {
@@ -59,9 +76,16 @@ export default class Agent extends EventEmitter {
 
       localStorage.removeItem(LOCAL_STORAGE_RELOAD_AND_PROFILE_KEY);
     }
-  }
 
-  addBridge(bridge: Bridge) {
+    if (typeof sessionStorage !== 'undefined') {
+      const persistedSelectionString = sessionStorage.getItem(
+        SESSION_STORAGE_LAST_SELECTION_KEY
+      );
+      if (persistedSelectionString != null) {
+        this._persistedSelection = JSON.parse(persistedSelectionString);
+      }
+    }
+
     this._bridge = bridge;
 
     bridge.addListener('captureScreenshot', this.captureScreenshot);
@@ -69,13 +93,10 @@ export default class Agent extends EventEmitter {
       'clearHighlightedElementInDOM',
       this.clearHighlightedElementInDOM
     );
-    bridge.addListener('exportProfilingSummary', this.exportProfilingSummary);
-    bridge.addListener('getCommitDetails', this.getCommitDetails);
-    bridge.addListener('getFiberCommits', this.getFiberCommits);
-    bridge.addListener('getInteractions', this.getInteractions);
+    bridge.addListener('getProfilingData', this.getProfilingData);
     bridge.addListener('getProfilingStatus', this.getProfilingStatus);
-    bridge.addListener('getProfilingSummary', this.getProfilingSummary);
     bridge.addListener('highlightElementInDOM', this.highlightElementInDOM);
+    bridge.addListener('getOwnersList', this.getOwnersList);
     bridge.addListener('inspectElement', this.inspectElement);
     bridge.addListener('logElementToConsole', this.logElementToConsole);
     bridge.addListener('overrideContext', this.overrideContext);
@@ -95,15 +116,22 @@ export default class Agent extends EventEmitter {
       this.syncSelectionFromNativeElementsPanel
     );
     bridge.addListener('shutdown', this.shutdown);
+    bridge.addListener('updateComponentFilters', this.updateComponentFilters);
     bridge.addListener('viewElementSource', this.viewElementSource);
 
     if (this._isProfiling) {
-      this._bridge.send('profilingStatus', true);
+      bridge.send('profilingStatus', true);
     }
   }
 
-  captureScreenshot = ({ commitIndex }: { commitIndex: number }) => {
-    this._bridge.send('captureScreenshot', { commitIndex });
+  captureScreenshot = ({
+    commitIndex,
+    rootID,
+  }: {
+    commitIndex: number,
+    rootID: number,
+  }) => {
+    this._bridge.send('captureScreenshot', { commitIndex, rootID });
   };
 
   getIDForNode(node: Object): number | null {
@@ -119,112 +147,17 @@ export default class Agent extends EventEmitter {
     return null;
   }
 
-  exportProfilingSummary = ({
-    profilingOperations,
-    profilingSnapshot,
-    rendererID,
-    rootID,
-  }: {
-    profilingOperations: Array<any>,
-    profilingSnapshot: Array<any>,
-    rendererID: number,
-    rootID: number,
-  }) => {
+  getProfilingData = ({ rendererID }: {| rendererID: RendererID |}) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}"`);
-    } else {
-      const rendererData = renderer.getProfilingDataForDownload(rootID);
-      this._bridge.send('exportFile', {
-        contents: JSON.stringify(
-          {
-            ...rendererData,
-            profilingOperations,
-            profilingSnapshot,
-          },
-          null,
-          2
-        ),
-        filename: 'profile-data.json',
-      });
     }
-  };
 
-  getCommitDetails = ({
-    commitIndex,
-    rendererID,
-    rootID,
-  }: {
-    commitIndex: number,
-    rendererID: number,
-    rootID: number,
-  }) => {
-    const renderer = this._rendererInterfaces[rendererID];
-    if (renderer == null) {
-      console.warn(`Invalid renderer id "${rendererID}"`);
-    } else {
-      this._bridge.send(
-        'commitDetails',
-        renderer.getCommitDetails(rootID, commitIndex)
-      );
-    }
-  };
-
-  getFiberCommits = ({
-    fiberID,
-    rendererID,
-    rootID,
-  }: {
-    fiberID: number,
-    rendererID: number,
-    rootID: number,
-  }) => {
-    const renderer = this._rendererInterfaces[rendererID];
-    if (renderer == null) {
-      console.warn(`Invalid renderer id "${rendererID}"`);
-    } else {
-      this._bridge.send(
-        'fiberCommits',
-        renderer.getFiberCommits(rootID, fiberID)
-      );
-    }
-  };
-
-  getInteractions = ({
-    rendererID,
-    rootID,
-  }: {
-    rendererID: number,
-    rootID: number,
-  }) => {
-    const renderer = this._rendererInterfaces[rendererID];
-    if (renderer == null) {
-      console.warn(`Invalid renderer id "${rendererID}"`);
-    } else {
-      this._bridge.send('interactions', renderer.getInteractions(rootID));
-    }
+    this._bridge.send('profilingData', renderer.getProfilingData());
   };
 
   getProfilingStatus = () => {
     this._bridge.send('profilingStatus', this._isProfiling);
-  };
-
-  getProfilingSummary = ({
-    rendererID,
-    rootID,
-  }: {
-    rendererID: number,
-    rootID: number,
-  }) => {
-    const renderer = this._rendererInterfaces[rendererID];
-    if (renderer == null) {
-      console.warn(`Invalid renderer id "${rendererID}"`);
-    } else {
-      this._bridge.send(
-        'profilingSummary',
-        renderer.getProfilingSummary(rootID)
-      );
-    }
   };
 
   clearHighlightedElementInDOM = () => {
@@ -251,18 +184,19 @@ export default class Agent extends EventEmitter {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
     }
 
-    let node: HTMLElement | null = null;
+    let nodes: ?Array<HTMLElement> = null;
     if (renderer !== null) {
-      node = ((renderer.getNativeFromInternal(id): any): HTMLElement);
+      nodes = ((renderer.getNativeFromInternal(id): any): ?Array<HTMLElement>);
     }
 
-    if (node != null) {
+    if (nodes != null && nodes[0] != null) {
+      const node = nodes[0];
       if (scrollIntoView && typeof node.scrollIntoView === 'function') {
         // If the node isn't visible show it before highlighting it.
         // We may want to reconsider this; it might be a little disruptive.
         node.scrollIntoView({ block: 'nearest', inline: 'nearest' });
       }
-      showOverlay(((node: any): HTMLElement), displayName, hideAfterTimeout);
+      showOverlay(nodes, displayName, hideAfterTimeout);
       if (openNativeElementsPanel) {
         window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 = node;
         this._bridge.send('syncSelectionToNativeElementsPanel');
@@ -272,7 +206,17 @@ export default class Agent extends EventEmitter {
     }
   };
 
-  inspectElement = ({ id, rendererID }: InspectSelectParams) => {
+  getOwnersList = ({ id, rendererID }: ElementAndRendererID) => {
+    const renderer = this._rendererInterfaces[rendererID];
+    if (renderer == null) {
+      console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
+    } else {
+      const owners = renderer.getOwnersList(id);
+      this._bridge.send('ownersList', ({ id, owners }: OwnersList));
+    }
+  };
+
+  inspectElement = ({ id, rendererID }: ElementAndRendererID) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
@@ -281,7 +225,7 @@ export default class Agent extends EventEmitter {
     }
   };
 
-  logElementToConsole = ({ id, rendererID }: InspectSelectParams) => {
+  logElementToConsole = ({ id, rendererID }: ElementAndRendererID) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
@@ -309,13 +253,25 @@ export default class Agent extends EventEmitter {
     this._bridge.send('screenshotCaptured', { commitIndex, dataURL });
   };
 
-  selectElement = ({ id, rendererID }: InspectSelectParams) => {
+  selectElement = ({ id, rendererID }: ElementAndRendererID) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
     } else {
       renderer.selectElement(id);
-      this._bridge.send('selectElement');
+
+      // When user selects an element, stop trying to restore the selection,
+      // and instead remember the current selection for the next reload.
+      if (
+        this._persistedSelectionMatch === null ||
+        this._persistedSelectionMatch.id !== id
+      ) {
+        this._persistedSelection = null;
+        this._persistedSelectionMatch = null;
+        renderer.setTrackedPath(null);
+        this._throttledPersistSelection(rendererID, id);
+      }
+
       // TODO: If there was a way to change the selected DOM element
       // in native Elements tab without forcing a switch to it, we'd do it here.
       // For now, it doesn't seem like there is a way to do that:
@@ -388,6 +344,14 @@ export default class Agent extends EventEmitter {
     if (this._isProfiling) {
       rendererInterface.startProfiling();
     }
+
+    // When the renderer is attached, we need to tell it whether
+    // we remember the previous selection that we'd like to restore.
+    // It'll start tracking mounts for matches to the last selection path.
+    const selection = this._persistedSelection;
+    if (selection !== null && selection.rendererID === rendererID) {
+      rendererInterface.setTrackedPath(selection.path);
+    }
   }
 
   syncSelectionFromNativeElementsPanel = () => {
@@ -402,14 +366,19 @@ export default class Agent extends EventEmitter {
   };
 
   shutdown = () => {
+    // Clean up the overlay if visible, and associated events.
+    this.stopInspectingDOM();
     this.emit('shutdown');
   };
 
   startInspectingDOM = () => {
     window.addEventListener('click', this._onClick, true);
-    window.addEventListener('mousedown', this._onMouseDown, true);
-    window.addEventListener('mouseup', this._onMouseUp, true);
-    window.addEventListener('mouseover', this._onMouseOver, true);
+    window.addEventListener('mousedown', this._onMouseEvent, true);
+    window.addEventListener('mouseover', this._onMouseEvent, true);
+    window.addEventListener('mouseup', this._onMouseEvent, true);
+    window.addEventListener('pointerdown', this._onPointerDown, true);
+    window.addEventListener('pointerover', this._onPointerOver, true);
+    window.addEventListener('pointerup', this._onPointerUp, true);
   };
 
   startProfiling = () => {
@@ -427,9 +396,12 @@ export default class Agent extends EventEmitter {
     hideOverlay();
 
     window.removeEventListener('click', this._onClick, true);
-    window.removeEventListener('mousedown', this._onMouseDown, true);
-    window.removeEventListener('mouseup', this._onMouseUp, true);
-    window.removeEventListener('mouseover', this._onMouseOver, true);
+    window.removeEventListener('mousedown', this._onMouseEvent, true);
+    window.removeEventListener('mouseover', this._onMouseEvent, true);
+    window.removeEventListener('mouseup', this._onMouseEvent, true);
+    window.removeEventListener('pointerdown', this._onPointerDown, true);
+    window.removeEventListener('pointerover', this._onPointerOver, true);
+    window.removeEventListener('pointerup', this._onPointerUp, true);
   };
 
   stopProfiling = () => {
@@ -443,7 +415,16 @@ export default class Agent extends EventEmitter {
     this._bridge.send('profilingStatus', this._isProfiling);
   };
 
-  viewElementSource = ({ id, rendererID }: InspectSelectParams) => {
+  updateComponentFilters = (componentFilters: Array<ComponentFilter>) => {
+    for (let rendererID in this._rendererInterfaces) {
+      const renderer = ((this._rendererInterfaces[
+        (rendererID: any)
+      ]: any): RendererInterface);
+      renderer.updateComponentFilters(componentFilters);
+    }
+  };
+
+  viewElementSource = ({ id, rendererID }: ElementAndRendererID) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
@@ -478,6 +459,32 @@ export default class Agent extends EventEmitter {
     //
     // this._bridge.send('operations', operations, [operations.buffer]);
     this._bridge.send('operations', operations);
+
+    if (this._persistedSelection !== null) {
+      const rendererID = operations[0];
+      if (this._persistedSelection.rendererID === rendererID) {
+        // Check if we can select a deeper match for the persisted selection.
+        const renderer = this._rendererInterfaces[rendererID];
+        const prevMatch = this._persistedSelectionMatch;
+        const nextMatch = renderer.getBestMatchForTrackedPath();
+        this._persistedSelectionMatch = nextMatch;
+        const prevMatchID = prevMatch !== null ? prevMatch.id : null;
+        const nextMatchID = nextMatch !== null ? nextMatch.id : null;
+        if (prevMatchID !== nextMatchID) {
+          if (nextMatchID !== null) {
+            // We moved forward, unlocking a deeper node.
+            this._bridge.send('selectFiber', nextMatchID);
+          }
+        }
+        if (nextMatch !== null && nextMatch.isFullMatch) {
+          // We've just unlocked the innermost selected node.
+          // There's no point tracking it further.
+          this._persistedSelection = null;
+          this._persistedSelectionMatch = null;
+          renderer.setTrackedPath(null);
+        }
+      }
+    }
   };
 
   _onClick = (event: MouseEvent) => {
@@ -485,25 +492,23 @@ export default class Agent extends EventEmitter {
     event.stopPropagation();
 
     this.stopInspectingDOM();
+
     this._bridge.send('stopInspectingDOM', true);
   };
 
-  _onMouseDown = (event: MouseEvent) => {
+  _onMouseEvent = (event: MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+  };
+
+  _onPointerDown = (event: MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
 
     this._selectFiberForNode(((event.target: any): HTMLElement));
   };
 
-  // While we don't do anything here, this makes choosing
-  // the inspected element less invasive and less likely
-  // to dismiss e.g. a context menu.
-  _onMouseUp = (event: MouseEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-  };
-
-  _onMouseOver = (event: MouseEvent) => {
+  _onPointerOver = (event: MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
 
@@ -511,9 +516,14 @@ export default class Agent extends EventEmitter {
 
     // Don't pass the name explicitly.
     // It will be inferred from DOM tag and Fiber owner.
-    showOverlay(target, null, false);
+    showOverlay([target], null, false);
 
     this._selectFiberForNode(target);
+  };
+
+  _onPointerUp = (event: MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
   };
 
   _selectFiberForNode = throttle(
@@ -523,6 +533,27 @@ export default class Agent extends EventEmitter {
         this._bridge.send('selectFiber', id);
       }
     }),
-    200
+    200,
+    // Don't change the selection in the very first 200ms
+    // because those are usually unintentional as you lift the cursor.
+    { leading: false }
   );
+
+  _throttledPersistSelection = throttle((rendererID: number, id: number) => {
+    // This is throttled, so both renderer and selected ID
+    // might not be available by the time we read them.
+    // This is why we need the defensive checks here.
+    const renderer = this._rendererInterfaces[rendererID];
+    const path = renderer != null ? renderer.getPathForElement(id) : null;
+    if (typeof sessionStorage !== 'undefined') {
+      if (path !== null) {
+        sessionStorage.setItem(
+          SESSION_STORAGE_LAST_SELECTION_KEY,
+          JSON.stringify(({ rendererID, path }: PersistedSelection))
+        );
+      } else {
+        sessionStorage.removeItem(SESSION_STORAGE_LAST_SELECTION_KEY);
+      }
+    }
+  }, 1000);
 }

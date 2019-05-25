@@ -3,6 +3,7 @@
 /shells/browser/firefox/*.xpi
 /shells/browser/firefox/*.pem
 /shells/browser/shared/build
+/shells/dev/dist
 build
 node_modules
 npm-debug.log

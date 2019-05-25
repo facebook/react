@@ -1,9 +1,14 @@
-const { readFileSync } = require('fs');
 const { resolve } = require('path');
 const { DefinePlugin } = require('webpack');
 const { getGitHubURL, getVersionString } = require('../../utils');
 
-const __DEV__ = process.env.NODE_ENV !== 'production';
+const NODE_ENV = process.env.NODE_ENV;
+if (!NODE_ENV) {
+  console.error('NODE_ENV not set');
+  process.exit(1);
+}
+
+const __DEV__ = NODE_ENV === 'development';
 
 const GITHUB_URL = getGitHubURL();
 const DEVTOOLS_VERSION = getVersionString();
@@ -35,9 +40,9 @@ module.exports = {
       {
         test: /\.js$/,
         loader: 'babel-loader',
-        options: JSON.parse(
-          readFileSync(resolve(__dirname, '../../../.babelrc'))
-        ),
+        options: {
+          configFile: resolve(__dirname, '../../../babel.config.js'),
+        },
       },
     ],
   },

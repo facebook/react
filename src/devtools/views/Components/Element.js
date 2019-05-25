@@ -9,11 +9,16 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { ElementTypeClass, ElementTypeFunction } from 'src/devtools/types';
+import {
+  ElementTypeClass,
+  ElementTypeFunction,
+  ElementTypeMemo,
+  ElementTypeForwardRef,
+} from 'src/types';
 import Store from 'src/devtools/store';
 import ButtonIcon from '../ButtonIcon';
 import { createRegExp } from '../utils';
-import { TreeContext } from './TreeContext';
+import { TreeDispatcherContext, TreeStateContext } from './TreeContext';
 import { StoreContext } from '../context';
 
 import type { ItemData } from './Tree';
@@ -28,18 +33,18 @@ type Props = {
 };
 
 export default function ElementView({ data, index, style }: Props) {
-  const [isHovered, setIsHovered] = useState(false);
-  const {
-    baseDepth,
-    getElementAtIndex,
-    ownerStack,
-    selectOwner,
-    selectedElementID,
-    selectElementByID,
-  } = useContext(TreeContext);
   const store = useContext(StoreContext);
+  const { ownerFlatTree, ownerID, selectedElementID } = useContext(
+    TreeStateContext
+  );
+  const dispatch = useContext(TreeDispatcherContext);
 
-  const element = getElementAtIndex(index);
+  const element =
+    ownerFlatTree !== null
+      ? ownerFlatTree[index]
+      : store.getElementAtIndex(index);
+
+  const [isHovered, setIsHovered] = useState(false);
 
   const {
     lastScrolledIDRef,
@@ -52,9 +57,9 @@ export default function ElementView({ data, index, style }: Props) {
 
   const handleDoubleClick = useCallback(() => {
     if (id !== null) {
-      selectOwner(id);
+      dispatch({ type: 'SELECT_OWNER', payload: id });
     }
-  }, [id, selectOwner]);
+  }, [dispatch, id]);
 
   const scrollAnchorStartRef = useRef<HTMLSpanElement | null>(null);
   const scrollAnchorEndRef = useRef<HTMLSpanElement | null>(null);
@@ -102,10 +107,13 @@ export default function ElementView({ data, index, style }: Props) {
   const handleMouseDown = useCallback(
     ({ metaKey }) => {
       if (id !== null) {
-        selectElementByID(metaKey ? null : id);
+        dispatch({
+          type: 'SELECT_ELEMENT_BY_ID',
+          payload: metaKey ? null : id,
+        });
       }
     },
-    [id, selectElementByID]
+    [dispatch, id]
   );
 
   const handleMouseEnter = useCallback(() => {
@@ -131,6 +139,7 @@ export default function ElementView({ data, index, style }: Props) {
 
   const showDollarR =
     isSelected && (type === ElementTypeClass || type === ElementTypeFunction);
+  const showBadge = type === ElementTypeMemo || type === ElementTypeForwardRef;
 
   let className = styles.Element;
   if (isSelected) {
@@ -152,7 +161,7 @@ export default function ElementView({ data, index, style }: Props) {
         ...style, // "style" comes from react-window
 
         // Left padding presents the appearance of a nested tree structure.
-        paddingLeft: `${(depth - baseDepth) * 0.75 + 0.25}rem`,
+        paddingLeft: `${depth * 0.75 + 0.25}rem`,
 
         // These style overrides enable the background color to fill the full visible width,
         // when combined with the CSS tweaks in Tree.
@@ -165,7 +174,7 @@ export default function ElementView({ data, index, style }: Props) {
       }}
     >
       <span className={styles.ScrollAnchor} ref={scrollAnchorStartRef} />
-      {ownerStack.length === 0 ? (
+      {ownerID === null ? (
         <ExpandCollapseToggle element={element} store={store} />
       ) : null}
       <span className={styles.Component}>
@@ -179,6 +188,11 @@ export default function ElementView({ data, index, style }: Props) {
       </span>
       {showDollarR && <span className={styles.DollarR}>&nbsp;== $r</span>}
       <span className={styles.ScrollAnchor} ref={scrollAnchorEndRef} />
+      {showBadge && (
+        <span className={styles.Badge}>
+          {type === ElementTypeMemo ? 'Memo' : 'ForwardRef'}
+        </span>
+      )}
     </div>
   );
 }
@@ -234,7 +248,9 @@ type DisplayNameProps = {|
 |};
 
 function DisplayName({ displayName, id }: DisplayNameProps) {
-  const { searchIndex, searchResults, searchText } = useContext(TreeContext);
+  const { searchIndex, searchResults, searchText } = useContext(
+    TreeStateContext
+  );
   const isSearchResult = useMemo(() => {
     return searchResults.includes(id);
   }, [id, searchResults]);

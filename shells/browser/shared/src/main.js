@@ -10,12 +10,27 @@ import {
   getBrowserName,
   getBrowserTheme,
 } from './utils';
+import { getSavedComponentFilters } from 'src/utils';
 import DevTools from 'src/devtools/views/DevTools';
 
 const LOCAL_STORAGE_SUPPORTS_PROFILING_KEY =
   'React::DevTools::supportsProfiling';
 
 let panelCreated = false;
+
+// The renderer interface can't read saved component filters directly,
+// because they are stored in localStorage within the context of the extension.
+// Instead it relies on the extension to pass filters through.
+function initializeSavedComponentFilters() {
+  const componentFilters = getSavedComponentFilters();
+  chrome.devtools.inspectedWindow.eval(
+    `window.__REACT_DEVTOOLS_COMPONENT_FILTERS__ = ${JSON.stringify(
+      componentFilters
+    )};`
+  );
+}
+
+initializeSavedComponentFilters();
 
 function createPanelIfReactLoaded() {
   if (panelCreated) {
@@ -36,6 +51,8 @@ function createPanelIfReactLoaded() {
       let bridge = null;
       let store = null;
 
+      let profilingData = null;
+
       let componentsPortalContainer = null;
       let profilerPortalContainer = null;
       let settingsPortalContainer = null;
@@ -46,40 +63,36 @@ function createPanelIfReactLoaded() {
       let root = null;
 
       function initBridgeAndStore() {
-        let hasPortBeenDisconnected = false;
         const port = chrome.runtime.connect({
           name: '' + chrome.devtools.inspectedWindow.tabId,
         });
-        port.onDisconnect.addListener(() => {
-          hasPortBeenDisconnected = true;
-        });
+        // Looks like `port.onDisconnect` does not trigger on in-tab navigation like new URL or back/forward navigation,
+        // so it makes no sense to handle it here.
 
         bridge = new Bridge({
           listen(fn) {
-            port.onMessage.addListener(message => fn(message));
+            const listener = message => fn(message);
+            // Store the reference so that we unsubscribe from the same object.
+            const portOnMessage = port.onMessage;
+            portOnMessage.addListener(listener);
+            return () => {
+              portOnMessage.removeListener(listener);
+            };
           },
           send(event: string, payload: any, transferable?: Array<any>) {
-            if (!hasPortBeenDisconnected) {
-              port.postMessage({ event, payload }, transferable);
-            }
+            port.postMessage({ event, payload }, transferable);
           },
         });
         bridge.addListener('reloadAppForProfiling', () => {
           localStorage.setItem(LOCAL_STORAGE_SUPPORTS_PROFILING_KEY, 'true');
           chrome.devtools.inspectedWindow.eval('window.location.reload();');
         });
-        bridge.addListener('exportFile', ({ contents, filename }) => {
-          chrome.runtime.sendMessage({
-            exportFile: true,
-            contents,
-            filename,
-          });
-        });
-        bridge.addListener('captureScreenshot', ({ commitIndex }) => {
+        bridge.addListener('captureScreenshot', ({ commitIndex, rootID }) => {
           chrome.runtime.sendMessage(
             {
               captureScreenshot: true,
               commitIndex,
+              rootID,
             },
             response => bridge.send('screenshotCaptured', response)
           );
@@ -106,10 +119,10 @@ function createPanelIfReactLoaded() {
         store = new Store(bridge, {
           isProfiling,
           supportsCaptureScreenshots: true,
-          supportsFileDownloads: browserName === 'Chrome',
           supportsReloadAndProfile: true,
           supportsProfiling,
         });
+        store.profilerStore.profilingData = profilingData;
 
         // Initialize the backend only once the Store has been initialized.
         // Otherwise the Store may miss important initial tree op codes.
@@ -268,13 +281,29 @@ function createPanelIfReactLoaded() {
 
       chrome.devtools.network.onNavigated.removeListener(checkPageForReact);
 
-      // Shutdown bridge and re-initialize DevTools panel when a new page is loaded.
+      // Shutdown bridge before a new page is loaded.
+      chrome.webNavigation.onBeforeNavigate.addListener(
+        function onBeforeNavigate(details) {
+          // `bridge.shutdown()` will remove all listeners we added, so we don't have to.
+          bridge.shutdown();
+
+          profilingData = store.profilerStore.profilingData;
+        }
+      );
+
+      // Re-initialize DevTools panel when a new page is loaded.
       chrome.devtools.network.onNavigated.addListener(function onNavigated() {
-        bridge.send('shutdown');
+        // Re-initialize saved filters on navigation,
+        // since global values stored on window get reset in this case.
+        initializeSavedComponentFilters();
 
         // It's easiest to recreate the DevTools panel (to clean up potential stale state).
         // We can revisit this in the future as a small optimization.
-        flushSync(() => root.unmount(initBridgeAndStore));
+        flushSync(() => {
+          root.unmount(() => {
+            initBridgeAndStore();
+          });
+        });
       });
     }
   );
@@ -282,6 +311,7 @@ function createPanelIfReactLoaded() {
 
 // Load (or reload) the DevTools extension when the user navigates to a new page.
 function checkPageForReact() {
+  initializeSavedComponentFilters();
   createPanelIfReactLoaded();
 }
 

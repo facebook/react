@@ -1,11 +1,8 @@
 // @flow
-import {
-  ElementTypeClass,
-  ElementTypeOtherOrUnknown,
-} from 'src/devtools/types';
+import { ElementTypeClass, ElementTypeOtherOrUnknown } from 'src/types';
 
 import type { InternalInstance } from './renderer';
-import type { ElementType } from 'src/devtools/types';
+import type { ElementType } from 'src/types';
 
 export default function getElementType(
   internalInstance: InternalInstance

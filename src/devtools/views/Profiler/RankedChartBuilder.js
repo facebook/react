@@ -1,8 +1,10 @@
 // @flow
 
-import { calculateSelfDuration } from './utils';
+import { ElementTypeForwardRef, ElementTypeMemo } from 'src/types';
+import { formatDuration } from './utils';
+import ProfilerStore from 'src/devtools/ProfilerStore';
 
-import type { CommitDetails, CommitTree, Node } from './types';
+import type { CommitTree } from './types';
 
 export type ChartNode = {|
   id: number,
@@ -19,15 +21,19 @@ export type ChartData = {|
 const cachedChartData: Map<string, ChartData> = new Map();
 
 export function getChartData({
-  commitDetails,
   commitIndex,
   commitTree,
+  profilerStore,
+  rootID,
 }: {|
-  commitDetails: CommitDetails,
   commitIndex: number,
   commitTree: CommitTree,
+  profilerStore: ProfilerStore,
+  rootID: number,
 |}): ChartData {
-  const { actualDurations, rootID } = commitDetails;
+  const commitDatum = profilerStore.getCommitData(rootID, commitIndex);
+
+  const { fiberActualDurations, fiberSelfDurations } = commitDatum;
   const { nodes } = commitTree;
 
   const key = `${rootID}-${commitIndex}`;
@@ -38,24 +44,35 @@ export function getChartData({
   let maxSelfDuration = 0;
 
   const chartNodes: Array<ChartNode> = [];
-  actualDurations.forEach((actualDuration, id) => {
-    const node = ((nodes.get(id): any): Node);
+  fiberActualDurations.forEach((actualDuration, id) => {
+    const node = nodes.get(id);
 
     if (node == null) {
       throw Error(`Could not find node with id "${id}" in commit tree`);
     }
 
+    const { displayName, key, parentID, type } = node;
+
     // Don't show the root node in this chart.
-    if (node.parentID === 0) {
+    if (parentID === 0) {
       return;
     }
-
-    const selfDuration = calculateSelfDuration(id, commitTree, commitDetails);
+    const selfDuration = fiberSelfDurations.get(id) || 0;
     maxSelfDuration = Math.max(maxSelfDuration, selfDuration);
 
-    const name = node.displayName || 'Unknown';
-    const maybeKey = node.key !== null ? ` key="${node.key}"` : '';
-    const label = `${name}${maybeKey} (${selfDuration.toFixed(1)}ms)`;
+    const name = displayName || 'Anonymous';
+    const maybeKey = key !== null ? ` key="${key}"` : '';
+
+    let maybeBadge = '';
+    if (type === ElementTypeForwardRef) {
+      maybeBadge = ' (ForwardRef)';
+    } else if (type === ElementTypeMemo) {
+      maybeBadge = ' (Memo)';
+    }
+
+    const label = `${name}${maybeBadge}${maybeKey} (${formatDuration(
+      selfDuration
+    )}ms)`;
     chartNodes.push({
       id,
       label,

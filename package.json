@@ -14,7 +14,8 @@
       "<rootDir>"
     ],
     "moduleNameMapper": {
-      "^src/(.*)$": "<rootDir>/src/$1"
+      "^src/(.*)$": "<rootDir>/src/$1",
+      "\\.css$": "<rootDir>/src/__tests__/__mocks__/cssMock.js"
     },
     "setupFiles": [
       "<rootDir>/src/__tests__/setupEnv"
@@ -23,6 +24,7 @@
       "<rootDir>/src/__tests__/setupTests"
     ],
     "snapshotSerializers": [
+      "<rootDir>/src/__tests__/inspectedElementSerializer",
       "<rootDir>/src/__tests__/storeSerializer"
     ],
     "testMatch": [
@@ -30,6 +32,7 @@
     ]
   },
   "scripts": {
+    "build:demo": "cd ./shells/dev && cross-env NODE_ENV=development cross-env TARGET=remote webpack --config webpack.config.js",
     "build:extension": "cross-env NODE_ENV=production yarn run build:extension:chrome && yarn run build:extension:firefox",
     "build:extension:dev": "cross-env NODE_ENV=development yarn run build:extension:chrome && yarn run build:extension:firefox",
     "build:extension:chrome": "cross-env NODE_ENV=production node ./shells/browser/chrome/build",
@@ -38,7 +41,7 @@
     "build:extension:firefox:dev": "cross-env NODE_ENV=development node ./shells/browser/firefox/build",
     "build:standalone": "cd packages/react-devtools-core && yarn run build",
     "deploy": "yarn run deploy:demo && yarn run deploy:chrome && yarn run deploy:firefox",
-    "deploy:demo": "cd shells/dev/ && now deploy && now alias react-devtools-experimental",
+    "deploy:demo": "yarn run build:demo && cd shells/dev/ && now deploy && now alias react-devtools-experimental",
     "deploy:chrome": "node ./shells/browser/chrome/deploy",
     "deploy:firefox": "node ./shells/browser/firefox/deploy",
     "linc": "lint-staged",
@@ -47,8 +50,8 @@
     "precommit": "lint-staged",
     "prettier": "prettier --write '**/*.{js,json,css}'",
     "prettier:ci": "prettier --check '**/*.{js,json,css}'",
-    "start": "cd ./shells/dev && opener ./index.html && webpack --config webpack.config.js --watch",
-    "start:prod": "cross-env NODE_ENV=production npm start",
+    "start": "cd ./shells/dev && cross-env NODE_ENV=development cross-env TARGET=local webpack-dev-server --open",
+    "start:prod": "cd ./shells/dev && cross-env NODE_ENV=production cross-env TARGET=local webpack-dev-server --open",
     "test": "jest",
     "test-debug": "node --inspect-brk node_modules/.bin/jest --runInBand",
     "test:chrome": "node ./shells/browser/chrome/test",
@@ -66,18 +69,17 @@
     ],
     "**/*.js": "eslint --max-warnings 0"
   },
-  "resolutions": {
-    "@reach/portal": "file:./vendor/@reach/portal"
-  },
   "dependencies": {
     "@babel/core": "^7.1.6",
     "@babel/plugin-proposal-class-properties": "^7.1.0",
     "@babel/plugin-transform-flow-strip-types": "^7.1.6",
+    "@babel/plugin-transform-react-jsx-source": "^7.2.0",
     "@babel/preset-env": "^7.1.6",
     "@babel/preset-flow": "^7.0.0",
     "@babel/preset-react": "^7.0.0",
-    "@reach/menu-button": "^0.1.9",
-    "adm-zip": "^0.4.7",
+    "@reach/menu-button": "^0.1.17",
+    "@reach/tooltip": "^0.2.0",
+    "archiver": "^3.0.0",
     "babel-core": "^7.0.0-bridge",
     "babel-eslint": "^9.0.0",
     "babel-jest": "^24.7.1",
@@ -111,7 +113,7 @@
     "fbjs": "0.5.1",
     "fbjs-scripts": "0.7.0",
     "firefox-profile": "^1.0.2",
-    "flow-bin": "^0.96.0",
+    "flow-bin": "^0.97.0",
     "fs-extra": "^3.0.1",
     "gh-pages": "^1.0.0",
     "html2canvas": "^1.0.0-alpha.12",
@@ -130,21 +132,24 @@
     "opener": "^1.5.1",
     "prettier": "^1.16.4",
     "prop-types": "^15.6.2",
-    "react": "0.0.0-4221565e1",
+    "react": "^0.0.0-50b50c26f",
     "react-15": "npm:react@^15",
     "react-color": "^2.11.7",
-    "react-dom": "0.0.0-4221565e1",
+    "react-dom": "^0.0.0-50b50c26f",
     "react-dom-15": "npm:react-dom@^15",
-    "react-is": "0.0.0-4221565e1",
+    "react-is": "^0.0.0-50b50c26f",
+    "react-test-renderer": "^0.0.0-50b50c26f",
     "react-virtualized-auto-sizer": "^1.0.2",
     "react-window": "^1.8.0",
     "request-promise": "^4.2.4",
-    "scheduler": "^0.14.0-alpha.0",
+    "rimraf": "^2.6.3",
+    "scheduler": "^0.0.0-50b50c26f",
     "semver": "^5.5.1",
     "style-loader": "^0.23.1",
     "web-ext": "^3.0.0",
     "webpack": "^4.26.0",
     "webpack-cli": "^3.1.2",
+    "webpack-dev-server": "^3.3.1",
     "xml-js": "^1.6.11"
   }
 }

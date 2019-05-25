@@ -17,7 +17,7 @@ export function hideOverlay() {
 }
 
 export function showOverlay(
-  element: HTMLElement | null,
+  elements: Array<HTMLElement> | null,
   componentName: string | null,
   hideAfterTimeout: boolean
 ) {
@@ -25,7 +25,7 @@ export function showOverlay(
     clearTimeout(timeoutID);
   }
 
-  if (element == null) {
+  if (elements == null) {
     return;
   }
 
@@ -33,7 +33,7 @@ export function showOverlay(
     overlay = new Overlay();
   }
 
-  overlay.inspect(element, componentName);
+  overlay.inspect(elements, componentName);
 
   if (hideAfterTimeout) {
     timeoutID = setTimeout(hideOverlay, SHOW_DURATION);

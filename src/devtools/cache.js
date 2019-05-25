@@ -12,7 +12,7 @@ import React, { createContext } from 'react';
 //    The size of this cache is bounded by how many renders were profiled,
 //    and it will be fully reset between profiling sessions.
 
-type Thenable<T> = {
+export type Thenable<T> = {
   then(resolve: (T) => mixed, reject: (mixed) => mixed): mixed,
 };
 
@@ -25,9 +25,9 @@ type PendingResult = {|
   value: Suspender,
 |};
 
-type ResolvedResult<V> = {|
+type ResolvedResult<Value> = {|
   status: 1,
-  value: V,
+  value: Value,
 |};
 
 type RejectedResult = {|
@@ -35,11 +35,14 @@ type RejectedResult = {|
   value: mixed,
 |};
 
-type Result<V> = PendingResult | ResolvedResult<V> | RejectedResult;
+type Result<Value> = PendingResult | ResolvedResult<Value> | RejectedResult;
 
-export type Resource<I, V> = {
-  read(I): V,
-  preload(I): void,
+export type Resource<Input, Key, Value> = {
+  clear(): void,
+  invalidate(Key): void,
+  read(Input): Value,
+  preload(Input): void,
+  write(Key, Value): void,
 };
 
 const Pending = 0;
@@ -61,32 +64,45 @@ function readContext(Context, observedBits) {
   return dispatcher.readContext(Context, observedBits);
 }
 
-function identityHashFn(input) {
-  return input;
-}
-
 const CacheContext = createContext(null);
 
-const entries: Map<Resource<any, any>, Map<any, any>> = new Map();
+type Config = {
+  useWeakMap?: boolean,
+};
 
-function accessResult<I, K, V>(
-  resource: any,
-  fetch: I => Thenable<V>,
-  input: I,
-  key: K
-): Result<V> {
-  let entriesForResource = entries.get(resource);
+const entries: Map<
+  Resource<any, any, any>,
+  Map<any, any> | WeakMap<any, any>
+> = new Map();
+const resourceConfigs: Map<Resource<any, any, any>, Config> = new Map();
+
+function getEntriesForResource(
+  resource: any
+): Map<any, any> | WeakMap<any, any> {
+  let entriesForResource = ((entries.get(resource): any): Map<any, any>);
   if (entriesForResource === undefined) {
-    entriesForResource = new Map();
+    const config = resourceConfigs.get(resource);
+    entriesForResource =
+      config !== undefined && config.useWeakMap ? new WeakMap() : new Map();
     entries.set(resource, entriesForResource);
   }
-  let entry = entriesForResource.get(key);
+  return entriesForResource;
+}
+
+function accessResult<Input, Key, Value>(
+  resource: any,
+  fetch: Input => Thenable<Value>,
+  input: Input,
+  key: Key
+): Result<Value> {
+  const entriesForResource = getEntriesForResource(resource);
+  const entry = entriesForResource.get(key);
   if (entry === undefined) {
     const thenable = fetch(input);
     thenable.then(
       value => {
         if (newResult.status === Pending) {
-          const resolvedResult: ResolvedResult<V> = (newResult: any);
+          const resolvedResult: ResolvedResult<Value> = (newResult: any);
           resolvedResult.status = Resolved;
           resolvedResult.value = value;
         }
@@ -110,21 +126,28 @@ function accessResult<I, K, V>(
   }
 }
 
-export function createResource<I, K: string | number, V>(
-  fetch: I => Thenable<V>,
-  maybeHashInput?: I => K
-): Resource<I, V> {
-  const hashInput: I => K =
-    maybeHashInput !== undefined ? maybeHashInput : (identityHashFn: any);
-
+export function createResource<Input, Key, Value>(
+  fetch: Input => Thenable<Value>,
+  hashInput: Input => Key,
+  config?: Config = {}
+): Resource<Input, Key, Value> {
   const resource = {
-    read(input: I): V {
+    clear(): void {
+      entries.delete(resource);
+    },
+
+    invalidate(key: Key): void {
+      const entriesForResource = getEntriesForResource(resource);
+      entriesForResource.delete(key);
+    },
+
+    read(input: Input): Value {
       // Prevent access outside of render.
       // eslint-disable-next-line react-hooks/rules-of-hooks
       readContext(CacheContext);
 
       const key = hashInput(input);
-      const result: Result<V> = accessResult(resource, fetch, input, key);
+      const result: Result<Value> = accessResult(resource, fetch, input, key);
       switch (result.status) {
         case Pending: {
           const suspender = result.value;
@@ -144,7 +167,7 @@ export function createResource<I, K: string | number, V>(
       }
     },
 
-    preload(input: I): void {
+    preload(input: Input): void {
       // Prevent access outside of render.
       // eslint-disable-next-line react-hooks/rules-of-hooks
       readContext(CacheContext);
@@ -152,7 +175,21 @@ export function createResource<I, K: string | number, V>(
       const key = hashInput(input);
       accessResult(resource, fetch, input, key);
     },
+
+    write(key: Key, value: Value): void {
+      const entriesForResource = getEntriesForResource(resource);
+
+      const resolvedResult: ResolvedResult<Value> = {
+        status: Resolved,
+        value,
+      };
+
+      entriesForResource.set(key, resolvedResult);
+    },
   };
+
+  resourceConfigs.set(resource, config);
+
   return resource;
 }
 

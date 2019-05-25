@@ -1,6 +1,6 @@
 // @flow
 
-import type { ElementType } from '../../types';
+import type { ElementType } from 'src/types';
 
 // Each element on the frontend corresponds to a Fiber on the backend.
 // Some of its information (e.g. id, type, displayName) come from the backend.
@@ -31,8 +31,13 @@ export type Element = {|
 |};
 
 export type Owner = {|
-  displayName: string,
+  displayName: string | null,
   id: number,
+|};
+
+export type OwnersList = {|
+  id: number,
+  owners: Array<Owner> | null,
 |};
 
 export type InspectedElement = {|
@@ -54,6 +59,7 @@ export type InspectedElement = {|
 
   // Inspectable properties.
   context: Object | null,
+  events: Object | null,
   hooks: Object | null,
   props: Object | null,
   state: Object | null,

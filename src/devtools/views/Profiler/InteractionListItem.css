@@ -7,11 +7,11 @@
 }
 
 .Interaction:hover {
-  background-color: var(--color-hover-background);
+  background-color: var(--color-background-hover);
 }
 
 .SelectedInteraction {
-  background-color: var(--color-hover-background);
+  background-color: var(--color-background-hover);
 }
 
 .Name {
@@ -28,7 +28,8 @@
 .InteractionLine {
   position: absolute;
   height: 3px;
-  background-color: var(--color-commit-did-not-render);
+  background-color: var(--color-commit-did-not-render-fill);
+  color: var(--color-commit-did-not-render-fill-text);
   border-radius: 0.125rem;
 }
 
@@ -36,6 +37,7 @@
   position: absolute;
   width: var(--interaction-commit-size);
   height: var(--interaction-commit-size);
-  background-color: var(--color-commit-did-not-render);
+  background-color: var(--color-commit-did-not-render-fill);
+  color: var(--color-commit-did-not-render-fill-text);
   cursor: pointer;
 }

@@ -38,14 +38,20 @@ export function useIsOverflowing(
 // Forked from https://usehooks.com/useLocalStorage/
 export function useLocalStorage<T>(
   key: string,
-  initialValue: T
+  initialValue: T | (() => T)
 ): [T, (value: T | (() => T)) => void] {
   const getValueFromLocalStorage = useCallback(() => {
     try {
       const item = window.localStorage.getItem(key);
-      return item ? JSON.parse(item) : initialValue;
+      if (item != null) {
+        return JSON.parse(item);
+      }
     } catch (error) {
       console.log(error);
+    }
+    if (typeof initialValue === 'function') {
+      return ((initialValue: any): () => T)();
+    } else {
       return initialValue;
     }
   }, [initialValue, key]);
@@ -56,7 +62,7 @@ export function useLocalStorage<T>(
     value => {
       try {
         const valueToStore =
-          value instanceof Function ? value(storedValue) : value;
+          value instanceof Function ? (value: any)(storedValue) : value;
         setStoredValue(valueToStore);
         window.localStorage.setItem(key, JSON.stringify(valueToStore));
       } catch (error) {
@@ -88,7 +94,7 @@ export function useLocalStorage<T>(
 
 export function useModalDismissSignal(
   modalRef: { current: HTMLDivElement | null },
-  dismissCallback: Function
+  dismissCallback: () => void
 ): void {
   useEffect(() => {
     if (modalRef.current === null) {

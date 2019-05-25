@@ -5,8 +5,8 @@ import {
   ElementTypeFunction,
   ElementTypeRoot,
   ElementTypeOtherOrUnknown,
-} from 'src/devtools/types';
-import { getUID, utfEncodeString, operationsArrayToString } from '../../utils';
+} from 'src/types';
+import { getUID, utfEncodeString, printOperationsArray } from '../../utils';
 import { cleanForBridge, copyWithSet } from '../utils';
 import {
   __DEBUG__,
@@ -28,9 +28,15 @@ import type {
   GetInternalIDFromNative,
   GetNativeFromInternal,
   NativeType,
+  PathFrame,
+  PathMatch,
   RendererInterface,
 } from '../types';
-import type { InspectedElement } from 'src/devtools/views/Components/types';
+import type { ComponentFilter } from 'src/types';
+import type {
+  InspectedElement,
+  Owner,
+} from 'src/devtools/views/Components/types';
 
 export type InternalInstance = Object;
 type LegacyRenderer = Object;
@@ -44,9 +50,6 @@ export function attach(
   const idToInternalInstanceMap: Map<number, InternalInstance> = new Map();
   const idToParentIDMap: Map<number, number> = new Map();
   const internalInstanceToIDMap: Map<InternalInstance, number> = new Map();
-  const mountedIDs: Set<number> = new Set();
-  const pendingMountIDs: Set<number> = new Set();
-  const pendingUnmountIDs: Set<number> = new Set();
   const rootIDs: Set<number> = new Set();
 
   function getID(internalInstance: InternalInstance): number {
@@ -230,21 +233,24 @@ export function attach(
     oldRenderComponent = null;
   }
 
-  let pendingOperations: Uint32Array = new Uint32Array(0);
+  const mountedIDs: Set<number> = new Set();
+  const pendingMountIDs: Set<number> = new Set();
+  const pendingUnmountIDs: Set<number> = new Set();
+  const pendingOperations: Array<number> = [];
+  const pendingStringTable: Map<string, number> = new Map();
+  let pendingStringTableLength: number = 0;
+  let pendingUnmountedRootID: number | null = null;
 
-  function addOperation(
-    newAction: Uint32Array,
-    addToStartOfQueue: boolean = false
-  ): void {
-    const oldActions = pendingOperations;
-    pendingOperations = new Uint32Array(oldActions.length + newAction.length);
-    if (addToStartOfQueue) {
-      pendingOperations.set(newAction);
-      pendingOperations.set(oldActions, newAction.length);
-    } else {
-      pendingOperations.set(oldActions);
-      pendingOperations.set(newAction, oldActions.length);
+  function pushOperation(op: number): void {
+    if (__DEV__) {
+      if (!Number.isInteger(op)) {
+        console.error(
+          'pushOperation() was called but the value is not an integer.',
+          op
+        );
+      }
     }
+    pendingOperations.push(op);
   }
 
   // TODO Rethink the below queueing mechanism.
@@ -306,6 +312,8 @@ export function attach(
     isInitialMount: boolean
   ) {
     const internalInstance = idToInternalInstanceMap.get(id);
+
+    // TODO (legacy) Support component filtering
     const shouldIncludeInTree =
       parentID === 0 ||
       getElementType(internalInstance) !== ElementTypeOtherOrUnknown;
@@ -351,34 +359,122 @@ export function attach(
   }
 
   function flushPendingEvents(rootID: number): void {
-    // Crawl tree and queue mounts/updates.
+    // Crawl tree and record mounts/updates.
     crawlAndRecordMounts(rootID, 0, false);
 
-    // Send pending deletions.
+    // Record pending deletions.
+    const unmountIDs = [];
     pendingUnmountIDs.forEach(id => {
       if (mountedIDs.has(id)) {
-        recordUnmount(id);
+        const internalInstance = idToInternalInstanceMap.get(id);
+        const isRoot = rootIDs.has(id);
+
+        if (__DEBUG__) {
+          console.log(
+            '%crecordUnmount()',
+            'color: red; font-weight: bold;',
+            id,
+            getData(internalInstance).displayName
+          );
+        }
+
+        if (isRoot) {
+          pendingUnmountedRootID = id;
+
+          rootIDs.delete(id);
+        } else {
+          unmountIDs.push(id);
+        }
+
+        idToInternalInstanceMap.delete(id);
+        internalInstanceToIDMap.delete(internalInstance);
+
+        mountedIDs.delete(id);
       }
     });
 
+    const numUnmountIDs =
+      unmountIDs.length + (pendingUnmountedRootID === null ? 0 : 1);
+
+    const operations = new Uint32Array(
+      // Identify which renderer this update is coming from.
+      2 + // [rendererID, rootFiberID]
+      // How big is the string table?
+      1 + // [stringTableLength]
+        // Then goes the actual string table.
+        pendingStringTableLength +
+        // All unmounts are batched in a single message.
+        // [TREE_OPERATION_REMOVE, removedIDLength, ...ids]
+        (numUnmountIDs > 0 ? 2 + numUnmountIDs : 0) +
+        // Mount/update/reorder operations
+        pendingOperations.length
+    );
+
     // Identify which renderer this update is coming from.
     // This enables roots to be mapped to renderers,
-    // Which in turn enables fiber props, states, and hooks to be inspected.
-    const idArray = new Uint32Array(2);
-    idArray[0] = rendererID;
-    idArray[1] = rootID;
-    addOperation(idArray, true);
+    // Which in turn enables fiber properations, states, and hooks to be inspected.
+    let i = 0;
+    operations[i++] = rendererID;
+    operations[i++] = rootID;
+
+    // Now fill in the string table.
+    // [stringTableLength, str1Length, ...str1, str2Length, ...str2, ...]
+    operations[i++] = pendingStringTableLength;
+    pendingStringTable.forEach((value, key) => {
+      operations[i++] = key.length;
+      operations.set(utfEncodeString(key), i);
+      i += key.length;
+    });
+
+    if (numUnmountIDs > 0) {
+      // All unmounts except roots are batched in a single message.
+      operations[i++] = TREE_OPERATION_REMOVE;
+      // The first number is how many unmounted IDs we're gonna send.
+      operations[i++] = numUnmountIDs;
+      // Fill in the unmounts
+      for (let j = 0; j < unmountIDs.length; j++) {
+        operations[i++] = unmountIDs[j];
+      }
+      // The root ID should always be unmounted last.
+      if (pendingUnmountedRootID !== null) {
+        operations[i] = pendingUnmountedRootID;
+        i++;
+      }
+    }
+
+    // Fill in the rest of the operations.
+    operations.set(pendingOperations, i);
 
     if (__DEBUG__) {
-      operationsArrayToString(pendingOperations);
+      printOperationsArray(operations);
     }
 
     // If we've already connected to the frontend, just pass the operations through.
-    hook.emit('operations', pendingOperations);
+    hook.emit('operations', operations);
 
+    pendingOperations.length = 0;
     pendingMountIDs.clear();
     pendingUnmountIDs.clear();
-    pendingOperations = new Uint32Array(0);
+    pendingUnmountedRootID = null;
+    pendingStringTable.clear();
+    pendingStringTableLength = 0;
+  }
+
+  function getStringID(str: string | null): number {
+    if (str === null) {
+      return 0;
+    }
+    const existingID = pendingStringTable.get(str);
+    if (existingID !== undefined) {
+      return existingID;
+    }
+    const stringID = pendingStringTable.size + 1;
+    pendingStringTable.set(str, stringID);
+    // The string table total length needs to account
+    // both for the string length, and for the array item
+    // that contains the length itself. Hence + 1.
+    pendingStringTableLength += str.length + 1;
+    return stringID;
   }
 
   function inspectElement(id: number): InspectedElement | null {
@@ -442,6 +538,9 @@ export function attach(
         data.type === ElementTypeClass || data.type === ElementTypeFunction,
 
       displayName: data.displayName,
+
+      // New events system did not exist in legacy versions
+      events: null,
 
       // Inspectable properties.
       context,
@@ -594,13 +693,11 @@ export function attach(
         internalInstance._currentElement != null &&
         internalInstance._currentElement._owner != null;
 
-      const operation = new Uint32Array(5);
-      operation[0] = TREE_OPERATION_ADD;
-      operation[1] = id;
-      operation[2] = ElementTypeRoot;
-      operation[3] = 0; // isProfilingSupported?
-      operation[4] = hasOwnerMetadata ? 1 : 0;
-      addOperation(operation);
+      pushOperation(TREE_OPERATION_ADD);
+      pushOperation(id);
+      pushOperation(ElementTypeRoot);
+      pushOperation(0); // isProfilingSupported?
+      pushOperation(hasOwnerMetadata ? 1 : 0);
     } else {
       const { displayName, key, type } = getData(internalInstance);
 
@@ -610,75 +707,16 @@ export function attach(
           ? getID(internalInstance._currentElement._owner)
           : 0;
 
-      let encodedDisplayName = ((null: any): Uint8Array);
-      let encodedKey = ((null: any): Uint8Array);
-
-      if (displayName !== null) {
-        encodedDisplayName = utfEncodeString(displayName);
-      }
-
-      if (key !== null) {
-        // React$Key supports string and number types as inputs,
-        // But React converts numeric keys to strings, so we only have to handle that type here.
-        // https://github.com/facebook/react/blob/0e67969cb1ad8c27a72294662e68fa5d7c2c9783/packages/react/src/ReactElement.js#L187
-        encodedKey = utfEncodeString(((key: any): string));
-      }
-
-      const encodedDisplayNameSize =
-        displayName === null ? 0 : encodedDisplayName.length;
-      const encodedKeySize = key === null ? 0 : encodedKey.length;
-
-      const operation = new Uint32Array(
-        7 + encodedDisplayNameSize + encodedKeySize
-      );
-      operation[0] = TREE_OPERATION_ADD;
-      operation[1] = id;
-      operation[2] = type;
-      operation[3] = parentID;
-      operation[4] = ownerID;
-      operation[5] = encodedDisplayNameSize;
-      if (displayName !== null) {
-        operation.set(encodedDisplayName, 6);
-      }
-      operation[6 + encodedDisplayNameSize] = encodedKeySize;
-      if (key !== null) {
-        operation.set(encodedKey, 6 + encodedDisplayNameSize + 1);
-      }
-      addOperation(operation);
+      let displayNameStringID = getStringID(displayName);
+      let keyStringID = getStringID(key);
+      pushOperation(TREE_OPERATION_ADD);
+      pushOperation(id);
+      pushOperation(type);
+      pushOperation(parentID);
+      pushOperation(ownerID);
+      pushOperation(displayNameStringID);
+      pushOperation(keyStringID);
     }
-  }
-
-  function recordUnmount(id: number) {
-    const internalInstance = idToInternalInstanceMap.get(id);
-    const isRoot = rootIDs.has(id);
-
-    if (__DEBUG__) {
-      console.log(
-        '%crecordUnmount()',
-        'color: red; font-weight: bold;',
-        id,
-        getData(internalInstance).displayName
-      );
-    }
-
-    if (isRoot) {
-      const operation = new Uint32Array(2);
-      operation[0] = TREE_OPERATION_REMOVE;
-      operation[1] = id;
-      addOperation(operation);
-
-      rootIDs.delete(id);
-    } else {
-      const operation = new Uint32Array(2);
-      operation[0] = TREE_OPERATION_REMOVE;
-      operation[1] = id;
-      addOperation(operation);
-    }
-
-    idToInternalInstanceMap.delete(id);
-    internalInstanceToIDMap.delete(internalInstance);
-
-    mountedIDs.delete(id);
   }
 
   function setInProps(id: number, path: Array<string | number>, value: any) {
@@ -723,22 +761,8 @@ export function attach(
   }
 
   // v16+ only features
-  const getCommitDetails = () => {
-    throw new Error('getCommitDetails not supported by this renderer');
-  };
-  const getFiberCommits = () => {
-    throw new Error('getFiberCommits not supported by this renderer');
-  };
-  const getInteractions = () => {
-    throw new Error('getInteractions not supported by this renderer');
-  };
-  const getProfilingDataForDownload = () => {
-    throw new Error(
-      'getProfilingDataForDownload not supported by this renderer'
-    );
-  };
-  const getProfilingSummary = () => {
-    throw new Error('getProfilingSummary not supported by this renderer');
+  const getProfilingData = () => {
+    throw new Error('getProfilingData not supported by this renderer');
   };
   const handleCommitFiberRoot = () => {
     throw new Error('handleCommitFiberRoot not supported by this renderer');
@@ -759,16 +783,35 @@ export function attach(
     throw new Error('stopProfiling not supported by this renderer');
   };
 
+  function getBestMatchForTrackedPath(): PathMatch | null {
+    return null; // TODO (legacy)
+  }
+
+  function getPathForElement(id: number): Array<PathFrame> | null {
+    return null; // TODO (legacy)
+  }
+
+  function updateComponentFilters(componentFilters: Array<ComponentFilter>) {
+    // TODO (legacy)
+  }
+
+  function setTrackedPath(path: Array<PathFrame> | null) {
+    // TODO (legacy)
+  }
+
+  function getOwnersList(id: number): Array<Owner> | null {
+    return null; // TODO (legacy)
+  }
+
   return {
     cleanup,
     flushInitialOperations,
-    getCommitDetails,
-    getFiberCommits,
-    getInteractions,
+    getBestMatchForTrackedPath,
     getInternalIDFromNative,
     getNativeFromInternal,
-    getProfilingDataForDownload,
-    getProfilingSummary,
+    getOwnersList,
+    getPathForElement,
+    getProfilingData,
     handleCommitFiberRoot,
     handleCommitFiberUnmount,
     inspectElement,
@@ -781,7 +824,9 @@ export function attach(
     setInHook,
     setInProps,
     setInState,
+    setTrackedPath,
     startProfiling,
     stopProfiling,
+    updateComponentFilters,
   };
 }

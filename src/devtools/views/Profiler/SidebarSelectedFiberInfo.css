@@ -46,12 +46,12 @@
 .Commit:focus,
 .Commit:hover {
   outline: none;
-  background-color: var(--color-hover-background);
+  background-color: var(--color-background-hover);
 }
 
 .CurrentCommit {
-  background-color: var(--color-selected-background);
-  color: var(--color-selected-foreground);
+  background-color: var(--color-background-selected);
+  color: var(--color-text-selected);
 }
 .CurrentCommit:focus {
   outline: none;

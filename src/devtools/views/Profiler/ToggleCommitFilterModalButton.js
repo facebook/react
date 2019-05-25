@@ -6,10 +6,10 @@ import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 
 export default function ToggleCommitFilterModalButton() {
-  const { setIsFilterModalShowing } = useContext(CommitFilterModalContext);
+  const { setIsModalShowing } = useContext(CommitFilterModalContext);
 
-  const showFilterModal = useCallback(() => setIsFilterModalShowing(true), [
-    setIsFilterModalShowing,
+  const showFilterModal = useCallback(() => setIsModalShowing(true), [
+    setIsModalShowing,
   ]);
 
   return (

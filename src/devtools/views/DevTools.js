@@ -1,6 +1,11 @@
 // @flow
 
-import React, { useEffect, useState } from 'react';
+// Reach styles need to come before any component styles.
+// This makes overridding the styles simpler.
+import '@reach/menu-button/styles.css';
+import '@reach/tooltip/styles.css';
+
+import React, { useState } from 'react';
 import Store from '../store';
 import { BridgeContext, StoreContext } from './context';
 import Components from './Components/Components';
@@ -9,12 +14,13 @@ import Settings from './Settings/Settings';
 import TabBar from './TabBar';
 import { SettingsContextController } from './Settings/SettingsContext';
 import { TreeContextController } from './Components/TreeContext';
+import ViewElementSourceContext from './Components/ViewElementSourceContext';
 import { ProfilerContextController } from './Profiler/ProfilerContext';
+import { ModalDialogContextController } from './ModalDialog';
 import ReactLogo from './ReactLogo';
 
 import styles from './DevTools.css';
 
-import '@reach/menu-button/styles.css';
 import './root.css';
 
 import type { Bridge } from '../../types';
@@ -65,8 +71,7 @@ const settingsTab = {
   title: 'React Settings',
 };
 
-const tabsWithProfiler = [componentsTab, profilerTab, settingsTab];
-const tabsWithoutProfiler = [componentsTab, settingsTab];
+const tabs = [componentsTab, profilerTab, settingsTab];
 
 export default function DevTools({
   bridge,
@@ -86,79 +91,60 @@ export default function DevTools({
     setTab(overrideTab);
   }
 
-  const [supportsProfiling, setSupportsProfiling] = useState(
-    store.supportsProfiling
-  );
-
-  // Show/hide the "Profiler" button depending on if profiling is supported.
-  useEffect(() => {
-    if (supportsProfiling !== store.supportsProfiling) {
-      setSupportsProfiling(store.supportsProfiling);
-    }
-
-    const handleRoots = () => {
-      if (supportsProfiling !== store.supportsProfiling) {
-        setSupportsProfiling(store.supportsProfiling);
-      }
-    };
-
-    store.addListener('roots', handleRoots);
-    return () => {
-      store.removeListener('roots', handleRoots);
-    };
-  }, [store, supportsProfiling]);
-
   return (
     <BridgeContext.Provider value={bridge}>
       <StoreContext.Provider value={store}>
-        <SettingsContextController
-          browserTheme={browserTheme}
-          componentsPortalContainer={componentsPortalContainer}
-          profilerPortalContainer={profilerPortalContainer}
-          settingsPortalContainer={settingsPortalContainer}
-        >
-          <TreeContextController viewElementSource={viewElementSource}>
-            <ProfilerContextController>
-              <div className={styles.DevTools}>
-                {showTabBar && (
-                  <div className={styles.TabBar}>
-                    <ReactLogo />
-                    <span className={styles.DevToolsVersion}>
-                      {process.env.DEVTOOLS_VERSION}
-                    </span>
-                    <div className={styles.Spacer} />
-                    <TabBar
-                      currentTab={tab}
-                      id="DevTools"
-                      selectTab={setTab}
-                      size="large"
-                      tabs={
-                        supportsProfiling
-                          ? tabsWithProfiler
-                          : tabsWithoutProfiler
-                      }
-                    />
+        <ModalDialogContextController>
+          <SettingsContextController
+            browserTheme={browserTheme}
+            componentsPortalContainer={componentsPortalContainer}
+            profilerPortalContainer={profilerPortalContainer}
+            settingsPortalContainer={settingsPortalContainer}
+          >
+            <ViewElementSourceContext.Provider value={viewElementSource}>
+              <TreeContextController>
+                <ProfilerContextController>
+                  <div className={styles.DevTools}>
+                    {showTabBar && (
+                      <div className={styles.TabBar}>
+                        <ReactLogo />
+                        <span className={styles.DevToolsVersion}>
+                          {process.env.DEVTOOLS_VERSION}
+                        </span>
+                        <div className={styles.Spacer} />
+                        <TabBar
+                          currentTab={tab}
+                          id="DevTools"
+                          selectTab={setTab}
+                          size="large"
+                          tabs={tabs}
+                        />
+                      </div>
+                    )}
+                    <div
+                      className={styles.TabContent}
+                      hidden={tab !== 'components'}
+                    >
+                      <Components portalContainer={componentsPortalContainer} />
+                    </div>
+                    <div
+                      className={styles.TabContent}
+                      hidden={tab !== 'profiler'}
+                    >
+                      <Profiler portalContainer={profilerPortalContainer} />
+                    </div>
+                    <div
+                      className={styles.TabContent}
+                      hidden={tab !== 'settings'}
+                    >
+                      <Settings portalContainer={settingsPortalContainer} />
+                    </div>
                   </div>
-                )}
-                <div
-                  className={styles.TabContent}
-                  hidden={tab !== 'components'}
-                >
-                  <Components portalContainer={componentsPortalContainer} />
-                </div>
-                <div className={styles.TabContent} hidden={tab !== 'profiler'}>
-                  <Profiler
-                    portalContainer={profilerPortalContainer}
-                    supportsProfiling={supportsProfiling}
-                  />
-                </div>
-                <div className={styles.TabContent} hidden={tab !== 'settings'}>
-                  <Settings portalContainer={settingsPortalContainer} />
-                </div>
-              </div>
-            </ProfilerContextController>
-          </TreeContextController>
-        </SettingsContextController>
+                </ProfilerContextController>
+              </TreeContextController>
+            </ViewElementSourceContext.Provider>
+          </SettingsContextController>
+        </ModalDialogContextController>
       </StoreContext.Provider>
     </BridgeContext.Provider>
   );

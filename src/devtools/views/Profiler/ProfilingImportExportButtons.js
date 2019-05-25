@@ -2,57 +2,55 @@
 
 import React, { Fragment, useContext, useCallback, useRef } from 'react';
 import { ProfilerContext } from './ProfilerContext';
+import { ModalDialogContext } from '../ModalDialog';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
-import { BridgeContext, StoreContext } from '../context';
+import { StoreContext } from '../context';
+import {
+  prepareProfilingDataExport,
+  prepareProfilingDataFrontendFromExport,
+} from './utils';
+import { downloadFile } from '../utils';
 
 import styles from './ProfilingImportExportButtons.css';
 
-import type { ImportedProfilingData } from './types';
+import type { ProfilingDataExport } from './types';
 
 export default function ProfilingImportExportButtons() {
-  const bridge = useContext(BridgeContext);
-  const { isProfiling, rendererID, rootHasProfilingData, rootID } = useContext(
-    ProfilerContext
-  );
+  const { isProfiling, profilingData, rootID } = useContext(ProfilerContext);
   const store = useContext(StoreContext);
+  const { profilerStore } = store;
 
   const inputRef = useRef<HTMLInputElement | null>(null);
+
+  const { dispatch: modalDialogDispatch } = useContext(ModalDialogContext);
 
   const downloadData = useCallback(() => {
     if (rootID === null) {
       return;
     }
 
-    const profilingOperationsForRoot = [];
-    const operations = store.profilingOperations.get(rootID);
-    if (operations != null) {
-      operations.forEach(operations => {
-        // Convert typed Array before JSON serialization, or it will be converted to an Object.
-        profilingOperationsForRoot.push(Array.from(operations));
-      });
+    if (profilingData !== null) {
+      const profilingDataExport = prepareProfilingDataExport(profilingData);
+      const date = new Date();
+      const dateString = date
+        .toLocaleDateString(undefined, {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+        })
+        .replace(/\//g, '-');
+      const timeString = date
+        .toLocaleTimeString(undefined, {
+          hour12: false,
+        })
+        .replace(/:/g, '-');
+      downloadFile(
+        `profiling-data.${dateString}.${timeString}.json`,
+        JSON.stringify(profilingDataExport, null, 2)
+      );
     }
-
-    const profilingSnapshotForRoot = [];
-    const queue = [rootID];
-    while (queue.length) {
-      const id = queue.pop();
-      profilingSnapshotForRoot.push([id, store.profilingSnapshot.get(id)]);
-    }
-
-    bridge.send('exportProfilingSummary', {
-      profilingOperations: [[rootID, profilingOperationsForRoot]],
-      profilingSnapshot: profilingSnapshotForRoot,
-      rendererID,
-      rootID,
-    });
-  }, [
-    bridge,
-    rendererID,
-    rootID,
-    store.profilingOperations,
-    store.profilingSnapshot,
-  ]);
+  }, [rootID, profilingData]);
 
   const uploadData = useCallback(() => {
     if (inputRef.current !== null) {
@@ -65,17 +63,33 @@ export default function ProfilingImportExportButtons() {
     if (input !== null && input.files.length > 0) {
       const fileReader = new FileReader();
       fileReader.addEventListener('load', () => {
-        const data = JSON.parse((fileReader.result: any));
-        data.profilingOperations = new Map(data.profilingOperations);
-        data.profilingSnapshot = new Map(data.profilingSnapshot);
-
-        // TODO (profiling) Version check; warn if older version.
-
-        store.importedProfilingData = ((data: any): ImportedProfilingData);
+        try {
+          const raw = ((fileReader.result: any): string);
+          const profilingDataExport = ((JSON.parse(
+            raw
+          ): any): ProfilingDataExport);
+          profilerStore.profilingData = prepareProfilingDataFrontendFromExport(
+            profilingDataExport
+          );
+        } catch (error) {
+          modalDialogDispatch({
+            type: 'SHOW',
+            title: 'Import failed',
+            content: (
+              <Fragment>
+                <div>The profiling data you selected cannot be imported.</div>
+                {error !== null && (
+                  <div className={styles.ErrorMessage}>{error.message}</div>
+                )}
+              </Fragment>
+            ),
+          });
+        }
       });
+      // TODO (profiling) Handle fileReader errors.
       fileReader.readAsText(input.files[0]);
     }
-  }, [store]);
+  }, [modalDialogDispatch, profilerStore]);
 
   return (
     <Fragment>
@@ -94,15 +108,13 @@ export default function ProfilingImportExportButtons() {
       >
         <ButtonIcon type="import" />
       </Button>
-      {store.supportsFileDownloads && (
-        <Button
-          disabled={isProfiling || !rootHasProfilingData}
-          onClick={downloadData}
-          title="Save profile..."
-        >
-          <ButtonIcon type="export" />
-        </Button>
-      )}
+      <Button
+        disabled={isProfiling || !profilerStore.didRecordCommits}
+        onClick={downloadData}
+        title="Save profile..."
+      >
+        <ButtonIcon type="export" />
+      </Button>
     </Fragment>
   );
 }

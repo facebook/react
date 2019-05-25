@@ -110,19 +110,8 @@ chrome.runtime.onMessage.addListener((request, sender) => {
       setIconAndPopup(reactBuildType, sender.tab.id);
     }
 
-    if (request.exportFile) {
-      let { contents, filename } = request;
-      if (!Array.isArray(contents)) {
-        contents = [contents];
-      }
-
-      const blob = new Blob(contents, { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      chrome.downloads.download({ filename, saveAs: true, url });
-    }
-
     if (request.captureScreenshot) {
-      const { commitIndex } = request;
+      const { commitIndex, rootID } = request;
       try {
         chrome.tabs.captureVisibleTab(undefined, undefined, dataURL => {
           // TODO For some reason, sending a response using the third param (sendResponse) doesn't work,
@@ -134,6 +123,7 @@ chrome.runtime.onMessage.addListener((request, sender) => {
                 payload: {
                   commitIndex,
                   dataURL,
+                  rootID,
                 },
               });
             }

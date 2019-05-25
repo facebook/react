@@ -9,52 +9,78 @@
   font-family: var(--font-family-sans);
   font-size: var(--font-size-sans-normal);
   background-color: var(--color-background);
-  color: var(--color-text-color);
+  color: var(--color-text);
 }
 
 .Section {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  margin-right: 0.5rem;
-  margin-bottom: 0.5rem;
+  width: 100%;
+  padding: 0.5rem 0;
+  border-top: 1px solid var(--color-border);
+}
+.Section:first-of-type {
+  padding-top: 0;
+  border-top: none;
 }
 
 .Header {
-  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
   font-size: var(--font-size-sans-large);
 }
 
 .OptionGroup {
-  display: flex;
+  display: inline-flex;
   flex-direction: row;
+  align-items: center;
   user-select: none;
+  margin: 0 1rem 0.5rem 0;
+}
+.OptionGroup:last-of-type {
+  margin-right: 0;
 }
 
-.Option {
+.OptionLabel {
+  margin-right: 0.5rem;
+  font-size: var(--font-size-sans-normal);
+}
+
+.RadioOption {
   cursor: pointer;
   padding: 0.5rem;
   border: 1px solid var(--color-border);
   border-right: none;
 }
 
-.Option:hover {
-  background-color: var(--color-hover-background);
+.RadioOption:hover {
+  background-color: var(--color-background-hover);
 }
 
-.Option:first-of-type {
+.RadioOption:first-of-type {
   border-top-left-radius: 0.25rem;
   border-bottom-left-radius: 0.25rem;
 }
 
-.Option:last-of-type {
+.RadioOption:last-of-type {
   border-top-right-radius: 0.25rem;
   border-bottom-right-radius: 0.25rem;
   border-right: 1px solid var(--color-border);
 }
 
+.CheckboxOption {
+  display: block;
+  padding: 0 0 0.5rem;
+}
+
 .ScreenshotThrottling {
-  background-color: var(--color-hover-background);
+  display: inline-block;
+  background-color: var(--color-background-hover);
   padding: 0.25rem 0.5rem;
   border-radius: 0.25rem;
+}
+
+.HRule {
+  height: 1px;
+  background-color: var(--color-border);
+  width: 100%;
+  border: none;
+  margin: 0.5rem 0;
 }

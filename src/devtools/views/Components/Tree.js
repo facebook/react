@@ -1,6 +1,7 @@
 // @flow
 
 import React, {
+  Suspense,
   useState,
   useCallback,
   useContext,
@@ -11,22 +12,21 @@ import React, {
 } from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { FixedSizeList } from 'react-window';
-import { TreeContext } from './TreeContext';
+import { TreeDispatcherContext, TreeStateContext } from './TreeContext';
 import { SettingsContext } from '../Settings/SettingsContext';
 import { BridgeContext, StoreContext } from '../context';
 import ElementView from './Element';
 import InspectHostNodesToggle from './InspectHostNodesToggle';
 import OwnersStack from './OwnersStack';
 import SearchInput from './SearchInput';
+import { ComponentFiltersModalContextController } from './ComponentFiltersModalContext';
+import ToggleComponentFiltersModalButton from './ToggleComponentFiltersModalButton';
+import ComponentFiltersModal from './ComponentFiltersModal';
 
 import styles from './Tree.css';
 
-import type { Element } from './types';
-
 export type ItemData = {|
-  baseDepth: number,
   numElements: number,
-  getElementAtIndex: (index: number) => Element | null,
   isNavigatingWithKeyboard: boolean,
   lastScrolledIDRef: { current: number | null },
   onElementMouseEnter: (id: number) => void,
@@ -36,22 +36,15 @@ export type ItemData = {|
 type Props = {||};
 
 export default function Tree(props: Props) {
+  const dispatch = useContext(TreeDispatcherContext);
   const {
-    baseDepth,
-    getElementAtIndex,
     numElements,
-    ownerStack,
+    ownerID,
     searchIndex,
     searchResults,
     selectedElementID,
     selectedElementIndex,
-    selectChildElementInTree,
-    selectElementAtIndex,
-    selectNextElementInTree,
-    selectOwner,
-    selectParentElementInTree,
-    selectPreviousElementInTree,
-  } = useContext(TreeContext);
+  } = useContext(TreeStateContext);
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
   const [isNavigatingWithKeyboard, setIsNavigatingWithKeyboard] = useState(
@@ -111,7 +104,7 @@ export default function Tree(props: Props) {
       switch (event.key) {
         case 'ArrowDown':
           event.preventDefault();
-          selectNextElementInTree();
+          dispatch({ type: 'SELECT_NEXT_ELEMENT_IN_TREE' });
           break;
         case 'ArrowLeft':
           event.preventDefault();
@@ -123,7 +116,7 @@ export default function Tree(props: Props) {
             if (element.children.length > 0 && !element.isCollapsed) {
               store.toggleIsCollapsed(element.id, true);
             } else {
-              selectParentElementInTree();
+              dispatch({ type: 'SELECT_PARENT_ELEMENT_IN_TREE' });
             }
           }
           break;
@@ -137,13 +130,13 @@ export default function Tree(props: Props) {
             if (element.children.length > 0 && element.isCollapsed) {
               store.toggleIsCollapsed(element.id, false);
             } else {
-              selectChildElementInTree();
+              dispatch({ type: 'SELECT_CHILD_ELEMENT_IN_TREE' });
             }
           }
           break;
         case 'ArrowUp':
           event.preventDefault();
-          selectPreviousElementInTree();
+          dispatch({ type: 'SELECT_PREVIOUS_ELEMENT_IN_TREE' });
           break;
         default:
           return;
@@ -160,14 +153,7 @@ export default function Tree(props: Props) {
     return () => {
       ownerDocument.removeEventListener('keydown', handleKeyDown);
     };
-  }, [
-    selectedElementID,
-    selectChildElementInTree,
-    selectNextElementInTree,
-    selectParentElementInTree,
-    selectPreviousElementInTree,
-    store,
-  ]);
+  }, [dispatch, selectedElementID, store]);
 
   // Focus management.
   const handleBlur = useCallback(() => setTreeFocused(false), []);
@@ -175,9 +161,12 @@ export default function Tree(props: Props) {
     setTreeFocused(true);
 
     if (selectedElementIndex === null && numElements > 0) {
-      selectElementAtIndex(0);
+      dispatch({
+        type: 'SELECT_ELEMENT_AT_INDEX',
+        payload: 0,
+      });
     }
-  }, [numElements, selectedElementIndex, selectElementAtIndex]);
+  }, [dispatch, numElements, selectedElementIndex]);
 
   const handleKeyPress = useCallback(
     event => {
@@ -185,14 +174,14 @@ export default function Tree(props: Props) {
         case 'Enter':
         case ' ':
           if (selectedElementID !== null) {
-            selectOwner(selectedElementID);
+            dispatch({ type: 'SELECT_OWNER', payload: selectedElementID });
           }
           break;
         default:
           break;
       }
     },
-    [selectedElementID, selectOwner]
+    [dispatch, selectedElementID]
   );
 
   const highlightElementInDOM = useCallback(
@@ -268,18 +257,14 @@ export default function Tree(props: Props) {
   // This includes the owner context, since it controls a filtered view of the tree.
   const itemData = useMemo<ItemData>(
     () => ({
-      baseDepth,
       numElements,
-      getElementAtIndex,
       isNavigatingWithKeyboard,
       onElementMouseEnter: handleElementMouseEnter,
       lastScrolledIDRef,
       treeFocused,
     }),
     [
-      baseDepth,
       numElements,
-      getElementAtIndex,
       isNavigatingWithKeyboard,
       handleElementMouseEnter,
       lastScrolledIDRef,
@@ -288,46 +273,54 @@ export default function Tree(props: Props) {
   );
 
   return (
-    <div className={styles.Tree} ref={treeRef}>
-      <div className={styles.SearchInput}>
-        {ownerStack.length > 0 ? <OwnersStack /> : <SearchInput />}
-        <InspectHostNodesToggle />
+    <ComponentFiltersModalContextController>
+      <div className={styles.Tree} ref={treeRef}>
+        <div className={styles.SearchInput}>
+          <InspectHostNodesToggle />
+          <div className={styles.VRule} />
+          <Suspense fallback={<Loading />}>
+            {ownerID !== null ? <OwnersStack /> : <SearchInput />}
+          </Suspense>
+          <div className={styles.VRule} />
+          <ToggleComponentFiltersModalButton />
+        </div>
+        <div
+          className={styles.AutoSizerWrapper}
+          onBlur={handleBlur}
+          onFocus={handleFocus}
+          onKeyPress={handleKeyPress}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+          ref={focusTargetRef}
+          tabIndex={0}
+        >
+          <AutoSizer>
+            {({ height, width }) => (
+              // $FlowFixMe https://github.com/facebook/flow/issues/7341
+              <FixedSizeList
+                className={styles.List}
+                height={height}
+                innerElementType={InnerElementType}
+                itemCount={numElements}
+                itemData={itemData}
+                itemSize={lineHeight}
+                overscanCount={3}
+                ref={listRef}
+                width={width}
+              >
+                {ElementView}
+              </FixedSizeList>
+            )}
+          </AutoSizer>
+        </div>
+        <ComponentFiltersModal />
       </div>
-      <div
-        className={styles.AutoSizerWrapper}
-        onBlur={handleBlur}
-        onFocus={handleFocus}
-        onKeyPress={handleKeyPress}
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-        ref={focusTargetRef}
-        tabIndex={0}
-      >
-        <AutoSizer>
-          {({ height, width }) => (
-            // $FlowFixMe https://github.com/facebook/flow/issues/7341
-            <FixedSizeList
-              className={styles.List}
-              height={height}
-              innerElementType={InnerElementType}
-              itemCount={numElements}
-              itemData={itemData}
-              itemSize={lineHeight}
-              overscanCount={3}
-              ref={listRef}
-              width={width}
-            >
-              {ElementView}
-            </FixedSizeList>
-          )}
-        </AutoSizer>
-      </div>
-    </div>
+    </ComponentFiltersModalContextController>
   );
 }
 
 function InnerElementType({ style, ...rest }) {
-  const { ownerStack } = useContext(TreeContext);
+  const { ownerID } = useContext(TreeStateContext);
 
   // The list may need to scroll horizontally due to deeply nested elements.
   // We don't know the maximum scroll width up front, because we're windowing.
@@ -356,10 +349,9 @@ function InnerElementType({ style, ...rest }) {
 
   // We shouldn't retain this width across different conceptual trees though,
   // so when the user opens the "owners tree" view, we should discard the previous width.
-  const hasOwnerStack = ownerStack.length > 0;
-  const [prevHasOwnerStack, setPrevHasOwnerStack] = useState(hasOwnerStack);
-  if (hasOwnerStack !== prevHasOwnerStack) {
-    setPrevHasOwnerStack(hasOwnerStack);
+  const [prevOwnerID, setPrevOwnerID] = useState(ownerID);
+  if (ownerID !== prevOwnerID) {
+    setPrevOwnerID(ownerID);
     setMinWidth(null);
   }
 
@@ -380,4 +372,8 @@ function InnerElementType({ style, ...rest }) {
       {...rest}
     />
   );
+}
+
+function Loading() {
+  return <div className={styles.Loading}>Loading...</div>;
 }

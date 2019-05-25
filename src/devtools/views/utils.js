@@ -146,3 +146,27 @@ export function serializeHooksForCopy(hooks: HooksTree | null): string {
     return '';
   }
 }
+
+// Keeping this in memory seems to be enough to enable the browser to download larger profiles.
+// Without this, we would see a "Download failed: network error" failure.
+let downloadUrl = null;
+
+export function downloadFile(filename: string, text: string): void {
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+
+  if (downloadUrl !== null) {
+    URL.revokeObjectURL(downloadUrl);
+  }
+
+  downloadUrl = URL.createObjectURL(blob);
+
+  const element = document.createElement('a');
+  element.setAttribute('href', downloadUrl);
+  element.setAttribute('download', filename);
+  element.style.display = 'none';
+  ((document.body: any): HTMLBodyElement).appendChild(element);
+
+  element.click();
+
+  ((document.body: any): HTMLBodyElement).removeChild(element);
+}

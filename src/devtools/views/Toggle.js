@@ -1,8 +1,10 @@
 // @flow
 
 import React, { useCallback } from 'react';
+import Tooltip from '@reach/tooltip';
 
 import styles from './Toggle.css';
+import tooltipStyles from './Tooltip.css';
 
 type Props = {
   children: React$Node,
@@ -30,23 +32,30 @@ export default function Toggle({
     defaultClassName = styles.ToggleOff;
   }
 
-  const handleChange = useCallback(
-    ({ target }) => {
-      onChange(target.checked);
-    },
-    [onChange]
+  const handleClick = useCallback(() => onChange(!isChecked), [
+    isChecked,
+    onChange,
+  ]);
+
+  let toggle = (
+    <button
+      className={`${defaultClassName} ${className}`}
+      disabled={isDisabled}
+      onClick={handleClick}
+    >
+      <span className={styles.ToggleContent} tabIndex={-1}>
+        {children}
+      </span>
+    </button>
   );
 
-  return (
-    <label className={`${defaultClassName} ${className}`} title={title}>
-      <input
-        type="checkbox"
-        className={styles.Input}
-        checked={isChecked}
-        disabled={isDisabled}
-        onChange={handleChange}
-      />
-      {children}
-    </label>
-  );
+  if (title) {
+    toggle = (
+      <Tooltip className={tooltipStyles.Tooltip} label={title}>
+        {toggle}
+      </Tooltip>
+    );
+  }
+
+  return toggle;
 }

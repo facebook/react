@@ -1,8 +1,10 @@
 // @flow
 
-import { calculateSelfDuration } from './utils';
+import { ElementTypeForwardRef, ElementTypeMemo } from 'src/types';
+import { formatDuration } from './utils';
+import ProfilerStore from 'src/devtools/ProfilerStore';
 
-import type { CommitDetails, CommitTree, Node } from './types';
+import type { CommitTree } from './types';
 
 export type ChartNode = {|
   actualDuration: number,
@@ -16,24 +18,30 @@ export type ChartNode = {|
 |};
 
 export type ChartData = {|
+  baseDuration: number,
   depth: number,
   idToDepthMap: Map<number, number>,
   maxSelfDuration: number,
+  renderPathNodes: Set<number>,
   rows: Array<Array<ChartNode>>,
 |};
 
 const cachedChartData: Map<string, ChartData> = new Map();
 
 export function getChartData({
-  commitDetails,
   commitIndex,
   commitTree,
+  profilerStore,
+  rootID,
 }: {|
-  commitDetails: CommitDetails,
   commitIndex: number,
   commitTree: CommitTree,
+  profilerStore: ProfilerStore,
+  rootID: number,
 |}): ChartData {
-  const { actualDurations, rootID } = commitDetails;
+  const commitDatum = profilerStore.getCommitData(rootID, commitIndex);
+
+  const { fiberActualDurations, fiberSelfDurations } = commitDatum;
   const { nodes } = commitTree;
 
   const key = `${rootID}-${commitIndex}`;
@@ -42,36 +50,41 @@ export function getChartData({
   }
 
   const idToDepthMap: Map<number, number> = new Map();
+  const renderPathNodes: Set<number> = new Set();
   const rows: Array<Array<ChartNode>> = [];
 
   let maxDepth = 0;
   let maxSelfDuration = 0;
 
   // Generate flame graph structure using tree base durations.
-  const walkTree = (
-    id: number,
-    parentOffset: number = 0,
-    currentDepth: number = 1
-  ) => {
+  const walkTree = (id: number, rightOffset: number, currentDepth: number) => {
     idToDepthMap.set(id, currentDepth);
 
-    const node = ((nodes.get(id): any): Node);
-
+    const node = nodes.get(id);
     if (node == null) {
       throw Error(`Could not find node with id "${id}" in commit tree`);
     }
 
-    const actualDuration = actualDurations.get(id) || 0;
-    const selfDuration = calculateSelfDuration(id, commitTree, commitDetails);
-    const didRender = actualDurations.has(id);
+    const { children, displayName, key, treeBaseDuration, type } = node;
 
-    const name = node.displayName || 'Unknown';
-    const maybeKey = node.key !== null ? ` key="${node.key}"` : '';
+    const actualDuration = fiberActualDurations.get(id) || 0;
+    const selfDuration = fiberSelfDurations.get(id) || 0;
+    const didRender = fiberActualDurations.has(id);
 
-    let label = `${name}${maybeKey}`;
+    const name = displayName || 'Anonymous';
+    const maybeKey = key !== null ? ` key="${key}"` : '';
+
+    let maybeBadge = '';
+    if (type === ElementTypeForwardRef) {
+      maybeBadge = ' (ForwardRef)';
+    } else if (type === ElementTypeMemo) {
+      maybeBadge = ' (Memo)';
+    }
+
+    let label = `${name}${maybeBadge}${maybeKey}`;
     if (didRender) {
-      label += ` (${selfDuration.toFixed(1)}ms of ${actualDuration.toFixed(
-        1
+      label += ` (${formatDuration(selfDuration)}ms of ${formatDuration(
+        actualDuration
       )}ms)`;
     }
 
@@ -84,9 +97,9 @@ export function getChartData({
       id,
       label,
       name,
-      offset: parentOffset,
+      offset: rightOffset - treeBaseDuration,
       selfDuration,
-      treeBaseDuration: node.treeBaseDuration,
+      treeBaseDuration,
     };
 
     if (currentDepth > rows.length) {
@@ -95,22 +108,64 @@ export function getChartData({
       rows[currentDepth - 1].push(chartNode);
     }
 
-    node.children.forEach(childID => {
-      const childChartNode = walkTree(childID, parentOffset, currentDepth + 1);
-      parentOffset += childChartNode.treeBaseDuration;
-    });
+    for (let i = children.length - 1; i >= 0; i--) {
+      const childID = children[i];
+      const childChartNode = walkTree(childID, rightOffset, currentDepth + 1);
+      rightOffset -= childChartNode.treeBaseDuration;
+    }
 
     return chartNode;
   };
 
-  // Skip over the root; we don't want to show it in the flamegraph.
-  const root = ((nodes.get(rootID): any): Node);
-  walkTree(root.children[0]);
+  let baseDuration = 0;
+
+  // Special case to handle unmounted roots.
+  if (nodes.size > 0) {
+    // Skip over the root; we don't want to show it in the flamegraph.
+    const root = nodes.get(rootID);
+    if (root == null) {
+      throw Error(
+        `Could not find root node with id "${rootID}" in commit tree`
+      );
+    }
+
+    // Don't assume a single root.
+    // Component filters or Fragments might lead to multiple "roots" in a flame graph.
+    for (let i = root.children.length - 1; i >= 0; i--) {
+      const id = root.children[i];
+      const node = nodes.get(id);
+      if (node == null) {
+        throw Error(`Could not find node with id "${id}" in commit tree`);
+      }
+      baseDuration += node.treeBaseDuration;
+      walkTree(id, baseDuration, 1);
+    }
+
+    fiberActualDurations.forEach((duration, id) => {
+      const node = nodes.get(id);
+      if (node != null) {
+        let currentID = node.parentID;
+        while (currentID !== 0) {
+          if (renderPathNodes.has(currentID)) {
+            // We've already walked this path; we can skip it.
+            break;
+          } else {
+            renderPathNodes.add(currentID);
+          }
+
+          const node = nodes.get(currentID);
+          currentID = node != null ? node.parentID : 0;
+        }
+      }
+    });
+  }
 
   const chartData = {
+    baseDuration,
     depth: maxDepth,
     idToDepthMap,
     maxSelfDuration,
+    renderPathNodes,
     rows,
   };
 

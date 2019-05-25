@@ -8,10 +8,16 @@ import { installHook } from 'src/hook';
 import { initDevTools } from 'src/devtools';
 import Store from 'src/devtools/store';
 import DevTools from 'src/devtools/views/DevTools';
+import { getSavedComponentFilters } from 'src/utils';
 
 const iframe = ((document.getElementById('target'): any): HTMLIFrameElement);
 
 const { contentDocument, contentWindow } = iframe;
+
+// The renderer interface can't read saved component filters directly,
+// because they are stored in localStorage within the context of the extension.
+// Instead it relies on the extension to pass filters through.
+contentWindow.__REACT_DEVTOOLS_COMPONENT_FILTERS__ = getSavedComponentFilters();
 
 installHook(contentWindow);
 
@@ -38,14 +44,20 @@ mountButton.addEventListener('click', function() {
   }
 });
 
-inject('./build/app.js', () => {
+inject('dist/app.js', () => {
   initDevTools({
     connect(cb) {
       const bridge = new Bridge({
         listen(fn) {
-          contentWindow.parent.addEventListener('message', ({ data }) => {
+          const listener = ({ data }) => {
             fn(data);
-          });
+          };
+          // Preserve the reference to the window we subscribe to, so we can unsubscribe from it when required.
+          const contentWindowParent = contentWindow.parent;
+          contentWindowParent.addEventListener('message', listener);
+          return () => {
+            contentWindowParent.removeEventListener('message', listener);
+          };
         },
         send(event: string, payload: any, transferable?: Array<any>) {
           contentWindow.postMessage({ event, payload }, '*', transferable);
@@ -72,7 +84,7 @@ inject('./build/app.js', () => {
 
         // Initialize the backend only once the DevTools frontend Store has been initialized.
         // Otherwise the Store may miss important initial tree op codes.
-        inject('./build/backend.js');
+        inject('dist/backend.js');
       });
     },
 

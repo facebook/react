@@ -10,7 +10,7 @@ export function initBackend(
   hook: DevToolsHook,
   agent: Agent,
   global: Object
-): void {
+): () => void {
   const subs = [
     hook.sub(
       'renderer-attached',
@@ -65,20 +65,30 @@ export function initBackend(
   });
 
   // Connect any new renderers that injected themselves.
-  hook.on(
-    'renderer',
-    ({ id, renderer }: { id: number, renderer: ReactRenderer }) => {
-      attachRenderer(id, renderer);
-    }
+  subs.push(
+    hook.sub(
+      'renderer',
+      ({ id, renderer }: { id: number, renderer: ReactRenderer }) => {
+        attachRenderer(id, renderer);
+      }
+    )
   );
 
   hook.emit('react-devtools', agent);
   hook.reactDevtoolsAgent = agent;
-  agent.addListener('shutdown', () => {
+  const onAgentShutdown = () => {
     subs.forEach(fn => fn());
     hook.rendererInterfaces.forEach(rendererInterface => {
       rendererInterface.cleanup();
     });
     hook.reactDevtoolsAgent = null;
+  };
+  agent.addListener('shutdown', onAgentShutdown);
+  subs.push(() => {
+    agent.removeListener('shutdown', onAgentShutdown);
   });
+
+  return () => {
+    subs.forEach(fn => fn());
+  };
 }

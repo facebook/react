@@ -4,13 +4,15 @@ import LRU from 'lru-cache';
 import {
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
-  TREE_OPERATION_RESET_CHILDREN,
-  TREE_OPERATION_RECURSIVE_REMOVE_CHILDREN,
+  TREE_OPERATION_REORDER_CHILDREN,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
 } from './constants';
-import { ElementTypeRoot } from 'src/devtools/types';
+import { ElementTypeRoot } from 'src/types';
+import { LOCAL_STORAGE_FILTER_PREFERENCES_KEY } from './constants';
+import { ComponentFilterElementType, ElementTypeHostComponent } from './types';
 
-import type { ElementType } from 'src/devtools/types';
+import type { ElementType } from 'src/types';
+import type { ComponentFilter } from './types';
 
 const FB_MODULE_RE = /^(.*) \[from (.*)\]$/;
 const cachedDisplayNames: WeakMap<Function, string> = new WeakMap();
@@ -21,7 +23,7 @@ let encodedStringCache = new LRU({ max: 1000 });
 
 export function getDisplayName(
   type: Function,
-  fallbackName: string = 'Unknown'
+  fallbackName: string = 'Anonymous'
 ): string {
   const nameFromCache = cachedDisplayNames.get(type);
   if (nameFromCache != null) {
@@ -87,95 +89,124 @@ function toCodePoint(string: string) {
   return string.codePointAt(0);
 }
 
-export function operationsArrayToString(operations: Uint32Array) {
+export function printOperationsArray(operations: Uint32Array) {
+  // The first two values are always rendererID and rootID
   const rendererID = operations[0];
   const rootID = operations[1];
 
-  console.group('rendererID:', rendererID, 'rootID:', rootID);
+  const logs = [`opertions for renderer:${rendererID} and root:${rootID}`];
 
   let i = 2;
-  while (i < operations.length) {
-    let id: number = ((null: any): number);
-    let parentID: number = ((null: any): number);
-    let type: ElementType = ((null: any): ElementType);
 
+  // Reassemble the string table.
+  const stringTable = [
+    null, // ID = 0 corresponds to the null string.
+  ];
+  const stringTableSize = operations[i++];
+  const stringTableEnd = i + stringTableSize;
+  while (i < stringTableEnd) {
+    const nextLength = operations[i++];
+    const nextString = utfDecodeString(
+      (operations.slice(i, i + nextLength): any)
+    );
+    stringTable.push(nextString);
+    i += nextLength;
+  }
+
+  while (i < operations.length) {
     const operation = operations[i];
 
     switch (operation) {
-      case TREE_OPERATION_ADD:
-        id = ((operations[i + 1]: any): number);
-        type = ((operations[i + 2]: any): ElementType);
+      case TREE_OPERATION_ADD: {
+        const id = ((operations[i + 1]: any): number);
+        const type = ((operations[i + 2]: any): ElementType);
 
-        i = i + 3;
+        i += 3;
 
         if (type === ElementTypeRoot) {
-          console.log(`Add root fiber ${id}`);
+          logs.push(`Add new root node ${id}`);
 
           i++; // supportsProfiling
           i++; // hasOwnerMetadata
         } else {
-          parentID = ((operations[i]: any): number);
+          const parentID = ((operations[i]: any): number);
           i++;
 
           i++; // ownerID
 
-          const displayNameLength = operations[i];
+          const displayNameStringID = operations[i];
+          const displayName = stringTable[displayNameStringID];
           i++;
-          const displayName =
-            displayNameLength === 0
-              ? null
-              : utfDecodeString(
-                  (operations.slice(i, i + displayNameLength): any)
-                );
-          i += displayNameLength;
 
-          const keyLength = operations[i];
-          i++;
-          i += +keyLength;
+          i++; // key
 
-          console.log(
-            `Add fiber ${id} (${displayName || 'null'}) as child of ${parentID}`
+          logs.push(
+            `Add node ${id} (${displayName || 'null'}) as child of ${parentID}`
           );
         }
         break;
-      case TREE_OPERATION_RECURSIVE_REMOVE_CHILDREN: {
-        id = ((operations[i + 1]: any): number);
-
-        i = i + 2;
-
-        console.log(`Recursively remove children from fiber ${id}`);
-        break;
       }
       case TREE_OPERATION_REMOVE: {
-        id = ((operations[i + 1]: any): number);
+        const removeLength = ((operations[i + 1]: any): number);
+        i += 2;
 
-        i = i + 2;
+        for (let removeIndex = 0; removeIndex < removeLength; removeIndex++) {
+          const id = ((operations[i]: any): number);
+          i += 1;
 
-        console.log(`Remove fiber ${id}`);
+          logs.push(`Remove node ${id}`);
+        }
         break;
       }
-      case TREE_OPERATION_RESET_CHILDREN:
-        id = ((operations[i + 1]: any): number);
+      case TREE_OPERATION_REORDER_CHILDREN: {
+        const id = ((operations[i + 1]: any): number);
         const numChildren = ((operations[i + 2]: any): number);
-        const children = ((operations.slice(
-          i + 3,
-          i + 3 + numChildren
-        ): any): Array<number>);
+        i += 3;
+        const children = operations.slice(i, i + numChildren);
+        i += numChildren;
 
-        i = i + 3 + numChildren;
-
-        console.log(`Re-order fiber ${id} children ${children.join(',')}`);
+        logs.push(`Re-order node ${id} children ${children.join(',')}`);
         break;
+      }
       case TREE_OPERATION_UPDATE_TREE_BASE_DURATION:
         // Base duration updates are only sent while profiling is in progress.
         // We can ignore them at this point.
         // The profiler UI uses them lazily in order to generate the tree.
-        i = i + 3;
+        i += 3;
         break;
       default:
         throw Error(`Unsupported Bridge operation ${operation}`);
     }
   }
 
-  console.groupEnd();
+  console.log(logs.join('\n  '));
+}
+
+export function getDefaultComponentFilters(): Array<ComponentFilter> {
+  return [
+    {
+      type: ComponentFilterElementType,
+      value: ElementTypeHostComponent,
+      isEnabled: true,
+    },
+  ];
+}
+
+export function getSavedComponentFilters(): Array<ComponentFilter> {
+  try {
+    const raw = localStorage.getItem(LOCAL_STORAGE_FILTER_PREFERENCES_KEY);
+    if (raw != null) {
+      return JSON.parse(raw);
+    }
+  } catch (error) {}
+  return getDefaultComponentFilters();
+}
+
+export function saveComponentFilters(
+  componentFilters: Array<ComponentFilter>
+): void {
+  localStorage.setItem(
+    LOCAL_STORAGE_FILTER_PREFERENCES_KEY,
+    JSON.stringify(componentFilters)
+  );
 }

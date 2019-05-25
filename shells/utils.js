@@ -9,13 +9,19 @@ function getGitCommit() {
 }
 
 function getGitHubURL() {
-  // TODO potentially replac this with an fb.me URL (if it can forward the query params)
-  return execSync('git remote get-url origin')
+  // TODO potentially replace this with an fb.me URL (assuming it can forward the query params)
+  const url = execSync('git remote get-url origin')
     .toString()
-    .trim()
-    .replace(':', '/')
-    .replace('git@', 'https://')
-    .replace('.git', '');
+    .trim();
+
+  if (url.startsWith('https://')) {
+    return url.replace('.git', '');
+  } else {
+    return url
+      .replace(':', '/')
+      .replace('git@', 'https://')
+      .replace('.git', '');
+  }
 }
 
 function getVersionString() {

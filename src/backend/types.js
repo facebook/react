@@ -1,20 +1,84 @@
 // @flow
 
-import type { ElementType } from 'src/devtools/types';
-import type { InspectedElement } from 'src/devtools/views/Components/types';
+import type { ComponentFilter, ElementType } from 'src/types';
+import type {
+  InspectedElement,
+  Owner,
+} from 'src/devtools/views/Components/types';
+import type { Interaction } from 'src/devtools/views/Profiler/types';
 
 type BundleType =
   | 0 // PROD
   | 1; // DEV
 
-// TODO: Better type for Fiber
-export type Fiber = Object;
+export type WorkTag = number;
+export type SideEffectTag = number;
+export type ExpirationTime = number;
+export type RefObject = {|
+  current: any,
+|};
+export type Source = {
+  fileName: string,
+  lineNumber: number,
+};
+export type HookType =
+  | 'useState'
+  | 'useReducer'
+  | 'useContext'
+  | 'useRef'
+  | 'useEffect'
+  | 'useLayoutEffect'
+  | 'useCallback'
+  | 'useMemo'
+  | 'useImperativeHandle'
+  | 'useDebugValue';
+
+// The Fiber type is copied from React and should be kept in sync:
+// https://github.com/facebook/react/blob/master/packages/react-reconciler/src/ReactFiber.js
+// The properties we don't use in DevTools are omitted.
+export type Fiber = {|
+  tag: WorkTag,
+
+  key: null | string,
+
+  elementType: any,
+
+  type: any,
+
+  stateNode: any,
+
+  return: Fiber | null,
+
+  child: Fiber | null,
+  sibling: Fiber | null,
+  index: number,
+
+  ref: null | (((handle: mixed) => void) & { _stringRef: ?string }) | RefObject,
+
+  pendingProps: any, // This type will be more specific once we overload the tag.
+  memoizedProps: any, // The props used to create the output.
+
+  memoizedState: any,
+
+  effectTag: SideEffectTag,
+
+  alternate: Fiber | null,
+
+  actualDuration?: number,
+
+  actualStartTime?: number,
+
+  treeBaseDuration?: number,
+
+  _debugSource?: Source | null,
+  _debugOwner?: Fiber | null,
+|};
 
 // TODO: If it's useful for the frontend to know which types of data an Element has
 // (e.g. props, state, context, hooks) then we could add a bitmask field for this
 // to keep the number of attributes small.
 export type FiberData = {|
-  key: React$Key | null,
+  key: string | null,
   displayName: string | null,
   type: ElementType,
 |};
@@ -24,8 +88,13 @@ export type RendererID = number;
 
 type Dispatcher = any;
 
+export type GetInternalIDFromNative = (
+  component: NativeType,
+  findNearestUnfilteredAncestor?: boolean
+) => number | null;
+export type GetNativeFromInternal = (id: number) => ?NativeType;
+
 export type ReactRenderer = {
-  findHostInstanceByFiber: (fiber: Object) => ?NativeType,
   findFiberByHostInstance: (hostInstance: NativeType) => ?Fiber,
   version: string,
   bundleType: BundleType,
@@ -53,78 +122,76 @@ export type ReactRenderer = {
   currentDispatcherRef?: {| current: null | Dispatcher |},
 };
 
-export type Interaction = {|
-  id: number,
-  name: string,
+export type CommitDataBackend = {|
+  duration: number,
+  // Tuple of fiber ID and actual duration
+  fiberActualDurations: Array<[number, number]>,
+  // Tuple of fiber ID and computed "self" duration
+  fiberSelfDurations: Array<[number, number]>,
+  interactionIDs: Array<number>,
+  priorityLevel: string | null,
   timestamp: number,
 |};
 
-export type CommitDetails = {|
-  actualDurations: Array<number>,
-  commitIndex: number,
-  interactions: Array<Interaction>,
+export type ProfilingDataForRootBackend = {|
+  commitData: Array<CommitDataBackend>,
+  displayName: string,
+  // Tuple of Fiber ID and base duration
+  initialTreeBaseDurations: Array<[number, number]>,
+  // Tuple of Interaction ID and commit indices
+  interactionCommits: Array<[number, Array<number>]>,
+  interactions: Array<[number, Interaction]>,
   rootID: number,
 |};
 
-export type FiberCommits = {|
-  commitDurations: Array<number>,
-  fiberID: number,
-  rootID: number,
+// Profiling data collected by the renderer interface.
+// This information will be passed to the frontend and combined with info it collects.
+export type ProfilingDataBackend = {|
+  dataForRoots: Array<ProfilingDataForRootBackend>,
+  rendererID: number,
 |};
 
-export type InteractionWithCommits = {|
-  ...Interaction,
-  commits: Array<number>,
+export type PathFrame = {|
+  key: string | null,
+  index: number,
+  displayName: string | null,
 |};
 
-export type Interactions = {|
-  interactions: Array<InteractionWithCommits>,
-  rootID: number,
+export type PathMatch = {|
+  id: number,
+  isFullMatch: boolean,
 |};
-
-export type ProfilingSummary = {|
-  commitDurations: Array<number>,
-  commitTimes: Array<number>,
-  initialTreeBaseDurations: Array<number>,
-  interactionCount: number,
-  rootID: number,
-|};
-
-export type GetInternalIDFromNative = (
-  component: NativeType,
-  findNearestUnfilteredAncestor?: boolean
-) => number | null;
-export type GetNativeFromInternal = (id: number) => ?NativeType;
 
 export type RendererInterface = {
   cleanup: () => void,
   flushInitialOperations: () => void,
-  getCommitDetails: (rootID: number, commitIndex: number) => CommitDetails,
-  getFiberCommits: (rootID: number, fiberID: number) => FiberCommits,
-  getInteractions: (rootID: number) => Interactions,
+  getBestMatchForTrackedPath: () => PathMatch | null,
   getInternalIDFromNative: GetInternalIDFromNative,
   getNativeFromInternal: GetNativeFromInternal,
-  getProfilingDataForDownload: (rootID: number) => Object,
-  getProfilingSummary: (rootID: number) => ProfilingSummary,
-  handleCommitFiberRoot: (fiber: Object) => void,
+  getProfilingData(): ProfilingDataBackend,
+  getOwnersList: (id: number) => Array<Owner> | null,
+  getPathForElement: (id: number) => Array<PathFrame> | null,
+  handleCommitFiberRoot: (fiber: Object, commitPriority?: number) => void,
   handleCommitFiberUnmount: (fiber: Object) => void,
-  inspectElement: (id: number) => InspectedElement | null,
+  inspectElement: (id: number) => InspectedElement | number | null,
   logElementToConsole: (id: number) => void,
   overrideSuspense: (id: number, forceFallback: boolean) => void,
   prepareViewElementSource: (id: number) => void,
   renderer: ReactRenderer | null,
   selectElement: (id: number) => void,
   setInContext: (id: number, path: Array<string | number>, value: any) => void,
-  setInProps: (id: number, path: Array<string | number>, value: any) => void,
-  setInState: (id: number, path: Array<string | number>, value: any) => void,
   setInHook: (
     id: number,
     index: number,
     path: Array<string | number>,
     value: any
   ) => void,
+  setInProps: (id: number, path: Array<string | number>, value: any) => void,
+  setInState: (id: number, path: Array<string | number>, value: any) => void,
+  setTrackedPath: (path: Array<PathFrame> | null) => void,
   startProfiling: () => void,
   stopProfiling: () => void,
+  updateComponentFilters: (somponentFilters: Array<ComponentFilter>) => void,
 };
 
 export type Handler = (data: any) => void;
@@ -145,7 +212,11 @@ export type DevToolsHook = {
   // React uses these methods.
   checkDCE: (fn: Function) => void,
   onCommitFiberUnmount: (rendererID: RendererID, fiber: Object) => void,
-  onCommitFiberRoot: (rendererID: RendererID, fiber: Object) => void,
+  onCommitFiberRoot: (
+    rendererID: RendererID,
+    fiber: Object,
+    commitPriority?: number
+  ) => void,
 };
 
 export type HooksNode = {

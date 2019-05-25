@@ -1,6 +1,6 @@
 // @flow
 
-import React, { useCallback, useContext, useMemo } from 'react';
+import React, { forwardRef, useCallback, useContext, useMemo } from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { FixedSizeList } from 'react-window';
 import { ProfilerContext } from './ProfilerContext';
@@ -13,22 +13,23 @@ import { StoreContext } from '../context';
 import styles from './CommitFlamegraph.css';
 
 import type { ChartData, ChartNode } from './FlamegraphChartBuilder';
-import type { CommitDetails, CommitTree } from './types';
+import type { CommitTree } from './types';
 
 export type ItemData = {|
   chartData: ChartData,
   scaleX: (value: number, fallbackValue: number) => number,
-  selectedChartNode: ChartNode,
+  selectedChartNode: ChartNode | null,
   selectedChartNodeIndex: number,
   selectFiber: (id: number | null, name: string | null) => void,
   width: number,
 |};
 
 export default function CommitFlamegraphAutoSizer(_: {||}) {
-  const { profilingCache } = useContext(StoreContext);
-  const { rendererID, rootID, selectedCommitIndex, selectFiber } = useContext(
+  const { profilerStore } = useContext(StoreContext);
+  const { rootID, selectedCommitIndex, selectFiber } = useContext(
     ProfilerContext
   );
+  const { profilingCache } = profilerStore;
 
   const deselectCurrentFiber = useCallback(
     event => {
@@ -38,46 +39,30 @@ export default function CommitFlamegraphAutoSizer(_: {||}) {
     [selectFiber]
   );
 
-  const profilingSummary = profilingCache.ProfilingSummary.read({
-    rendererID: ((rendererID: any): number),
-    rootID: ((rootID: any): number),
-  });
-
-  let commitDetails: CommitDetails | null = null;
   let commitTree: CommitTree | null = null;
   let chartData: ChartData | null = null;
   if (selectedCommitIndex !== null) {
-    commitDetails = profilingCache.CommitDetails.read({
+    commitTree = profilingCache.getCommitTree({
       commitIndex: selectedCommitIndex,
-      rendererID: ((rendererID: any): number),
       rootID: ((rootID: any): number),
     });
 
-    commitTree = profilingCache.getCommitTree({
-      commitIndex: selectedCommitIndex,
-      profilingSummary,
-    });
-
     chartData = profilingCache.getFlamegraphChartData({
-      commitDetails,
       commitIndex: selectedCommitIndex,
       commitTree,
+      rootID: ((rootID: any): number),
     });
   }
 
-  if (
-    commitDetails != null &&
-    commitTree != null &&
-    chartData != null &&
-    chartData.depth > 0
-  ) {
+  if (commitTree != null && chartData != null && chartData.depth > 0) {
     return (
       <div className={styles.Container} onClick={deselectCurrentFiber}>
         <AutoSizer>
           {({ height, width }) => (
+            // Force Flow types to avoid checking for `null` here because there's no static proof that
+            // by the time this render prop function is called, the values of the `let` variables have not changed.
             <CommitFlamegraph
               chartData={((chartData: any): ChartData)}
-              commitDetails={((commitDetails: any): CommitDetails)}
               commitTree={((commitTree: any): CommitTree)}
               height={height}
               width={width}
@@ -93,19 +78,12 @@ export default function CommitFlamegraphAutoSizer(_: {||}) {
 
 type Props = {|
   chartData: ChartData,
-  commitDetails: CommitDetails,
   commitTree: CommitTree,
   height: number,
   width: number,
 |};
 
-function CommitFlamegraph({
-  chartData,
-  commitDetails,
-  commitTree,
-  height,
-  width,
-}: Props) {
+function CommitFlamegraph({ chartData, commitTree, height, width }: Props) {
   const { selectFiber, selectedFiberID } = useContext(ProfilerContext);
 
   const selectedChartNodeIndex = useMemo<number>(() => {
@@ -121,14 +99,13 @@ function CommitFlamegraph({
   const selectedChartNode = useMemo(() => {
     let chartNode = null;
     if (selectedFiberID !== null) {
-      chartNode = ((chartData.rows[selectedChartNodeIndex].find(
+      const foundChartNode = chartData.rows[selectedChartNodeIndex].find(
         chartNode => chartNode.id === selectedFiberID
-      ): any): ChartNode);
-    }
-    // The selected node might not be in the tree for this commit,
-    // so it's important that we have a fallback plan.
-    if (chartNode == null) {
-      return chartData.rows[0][0];
+      );
+
+      if (foundChartNode !== undefined) {
+        chartNode = foundChartNode;
+      }
     }
     return chartNode;
   }, [chartData, selectedFiberID, selectedChartNodeIndex]);
@@ -136,7 +113,14 @@ function CommitFlamegraph({
   const itemData = useMemo<ItemData>(
     () => ({
       chartData,
-      scaleX: scale(0, selectedChartNode.treeBaseDuration, 0, width),
+      scaleX: scale(
+        0,
+        selectedChartNode !== null
+          ? selectedChartNode.treeBaseDuration
+          : chartData.baseDuration,
+        0,
+        width
+      ),
       selectedChartNode,
       selectedChartNodeIndex,
       selectFiber,
@@ -148,7 +132,7 @@ function CommitFlamegraph({
   return (
     <FixedSizeList
       height={height}
-      innerElementType="svg"
+      innerElementType={InnerElementType}
       itemCount={chartData.depth}
       itemData={itemData}
       itemSize={barHeight}
@@ -158,3 +142,22 @@ function CommitFlamegraph({
     </FixedSizeList>
   );
 }
+
+const InnerElementType = forwardRef(({ children, ...rest }, ref) => (
+  <svg ref={ref} {...rest}>
+    <defs>
+      <pattern
+        id="didNotRenderPattern"
+        patternUnits="userSpaceOnUse"
+        width="4"
+        height="4"
+      >
+        <path
+          d="M-1,1 l2,-2 M0,4 l4,-4 M3,5 l2,-2"
+          className={styles.PatternPath}
+        />
+      </pattern>
+    </defs>
+    {children}
+  </svg>
+));

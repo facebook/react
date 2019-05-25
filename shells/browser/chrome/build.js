@@ -6,6 +6,7 @@ const { join } = require('path');
 const rp = require('request-promise');
 const convert = require('xml-js');
 const build = require('../shared/build');
+const rimraf = require('rimraf');
 
 const main = async () => {
   const manifestVersion = await rp(
@@ -29,7 +30,7 @@ const main = async () => {
   execSync('crx pack ./unpacked -o ReactDevTools.crx -p ../../../../key.pem', {
     cwd,
   });
-  execSync('rm packed.zip', { cwd });
+  rimraf.sync(join(cwd, 'packed.zip'));
 
   console.log(chalk.green('\nThe Chrome extension has been built!'));
   console.log(chalk.green('You can test this build by running:'));

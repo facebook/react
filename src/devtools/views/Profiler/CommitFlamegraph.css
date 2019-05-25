@@ -3,3 +3,8 @@
   height: 100%;
   padding: 0.5rem;
 }
+
+.PatternPath {
+  stroke: var(--color-commit-did-not-render-pattern);
+  stroke-width: 1;
+}

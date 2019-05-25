@@ -9,6 +9,7 @@
 
 .Header {
   font-size: var(--font-size-sans-large);
+  margin-bottom: 0.5rem;
 }
 
 .FilterMessage {

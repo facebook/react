@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-const AdmZip = require('adm-zip');
+const archiver = require('archiver');
 const { execSync } = require('child_process');
-const { readFileSync, writeFileSync } = require('fs');
+const { readFileSync, writeFileSync, createWriteStream } = require('fs');
 const { copy, ensureDir, move, remove } = require('fs-extra');
 const { join } = require('path');
 const { getGitCommit } = require('../../utils');
@@ -70,9 +70,16 @@ const build = async (tempPath, manifestPath, manifestVersion) => {
   writeFileSync(copiedManifestPath, JSON.stringify(manifest, null, 2));
 
   // Pack the extension
-  const zip = new AdmZip();
-  zip.addLocalFolder(zipPath);
-  zip.writeZip(join(tempPath, 'packed.zip'));
+  const archive = archiver('zip', { zlib: { level: 9 } });
+  const zipStream = createWriteStream(join(tempPath, 'packed.zip'));
+  await new Promise((resolve, reject) => {
+    archive
+      .directory(zipPath, false)
+      .on('error', err => reject(err))
+      .pipe(zipStream);
+    archive.finalize();
+    zipStream.on('close', () => resolve());
+  });
 };
 
 const postProcess = async (tempPath, destinationPath) => {
