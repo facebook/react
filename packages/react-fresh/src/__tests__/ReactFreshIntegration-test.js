@@ -430,4 +430,60 @@ describe('ReactFreshIntegration', () => {
       expect(el.textContent).toBe('D0');
     }
   });
+
+  it('does not get confused when custom hooks are reordered', () => {
+    if (__DEV__) {
+      render(`
+        function useFancyState(initialState) {
+          return React.useState(initialState);
+        }
+
+        const App = () => {
+          const [x, setX] = useFancyState('X');
+          const [y, setY] = useFancyState('Y');
+          return <h1>A{x}{y}</h1>;
+        };
+
+        export default App;
+      `);
+      let el = container.firstChild;
+      expect(el.textContent).toBe('AXY');
+
+      patch(`
+        function useFancyState(initialState) {
+          return React.useState(initialState);
+        }
+
+        const App = () => {
+          const [x, setX] = useFancyState('X');
+          const [y, setY] = useFancyState('Y');
+          return <h1>B{x}{y}</h1>;
+        };
+
+        export default App;
+      `);
+      // Same state variables, so no remount.
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('BXY');
+
+      patch(`
+        function useFancyState(initialState) {
+          return React.useState(initialState);
+        }
+
+        const App = () => {
+          const [y, setY] = useFancyState('Y');
+          const [x, setX] = useFancyState('X');
+          return <h1>B{x}{y}</h1>;
+        };
+
+        export default App;
+      `);
+      // Hooks were re-ordered. This causes a remount.
+      // Therefore, Hook calls don't accidentally share state.
+      expect(container.firstChild).not.toBe(el);
+      el = container.firstChild;
+      expect(el.textContent).toBe('BXY');
+    }
+  });
 });
