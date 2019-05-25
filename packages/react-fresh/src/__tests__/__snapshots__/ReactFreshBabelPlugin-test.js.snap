@@ -4,7 +4,7 @@ exports[`ReactFreshBabelPlugin generates signatures for function declarations ca
 "
 export default function App() {
   const [foo, setFoo] = useState(0);
-  useEffect(() => {});
+  React.useEffect(() => {});
   return <h1>{foo}</h1>;
 }
 
@@ -21,20 +21,20 @@ exports[`ReactFreshBabelPlugin generates signatures for function expressions cal
 "
 export const A = _c3 = React.memo(_c2 = React.forwardRef(_c = __signature__((props, ref) => {
   const [foo, setFoo] = useState(0);
-  useEffect(() => {});
+  React.useEffect(() => {});
   return <h1 ref={ref}>{foo}</h1>;
 }, \\"useState{[foo, setFoo]}\\\\nuseEffect{}\\")));
 
 export const B = _c6 = React.memo(_c5 = React.forwardRef(_c4 = __signature__(function (props, ref) {
   const [foo, setFoo] = useState(0);
-  useEffect(() => {});
+  React.useEffect(() => {});
   return <h1 ref={ref}>{foo}</h1>;
 }, \\"useState{[foo, setFoo]}\\\\nuseEffect{}\\")));
 
 function hoc() {
   return __signature__(function Inner() {
     const [foo, setFoo] = useState(0);
-    useEffect(() => {});
+    React.useEffect(() => {});
     return <h1 ref={ref}>{foo}</h1>;
   }, \\"useState{[foo, setFoo]}\\\\nuseEffect{}\\");
 }

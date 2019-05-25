@@ -305,7 +305,7 @@ describe('ReactFreshBabelPlugin', () => {
       transform(`
         export default function App() {
           const [foo, setFoo] = useState(0);
-          useEffect(() => {});
+          React.useEffect(() => {});
           return <h1>{foo}</h1>;
         }
     `),
@@ -322,20 +322,20 @@ describe('ReactFreshBabelPlugin', () => {
       transform(`
         export const A = React.memo(React.forwardRef((props, ref) => {
           const [foo, setFoo] = useState(0);
-          useEffect(() => {});
+          React.useEffect(() => {});
           return <h1 ref={ref}>{foo}</h1>;
         }));
 
         export const B = React.memo(React.forwardRef(function(props, ref) {
           const [foo, setFoo] = useState(0);
-          useEffect(() => {});
+          React.useEffect(() => {});
           return <h1 ref={ref}>{foo}</h1>;
         }));
 
         function hoc() {
           return function Inner() {
             const [foo, setFoo] = useState(0);
-            useEffect(() => {});
+            React.useEffect(() => {});
             return <h1 ref={ref}>{foo}</h1>;
           };
         }

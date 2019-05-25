@@ -156,7 +156,7 @@ export default function(babel) {
 
   let hookCalls = new WeakMap();
 
-  function recordHookCall(functionNode, hookCallPath) {
+  function recordHookCall(functionNode, hookCallPath, hookName) {
     if (!hookCalls.has(functionNode)) {
       hookCalls.set(functionNode, []);
     }
@@ -167,7 +167,7 @@ export default function(babel) {
       key = hookCallPath.parentPath.get('id').getSource();
     }
     hookCallsForFn.push({
-      name: hookCallPath.node.callee.name,
+      name: hookName,
       key,
     });
   }
@@ -388,8 +388,18 @@ export default function(babel) {
       },
       CallExpression(path) {
         const node = path.node;
-        const name = path.node.callee.name;
-        if (!/^use[A-Z]/.test(name)) {
+        const callee = node.callee;
+
+        let name = null;
+        switch (callee.type) {
+          case 'Identifier':
+            name = callee.name;
+            break;
+          case 'MemberExpression':
+            name = callee.property.name;
+            break;
+        }
+        if (name === null || !/^use[A-Z]/.test(name)) {
           return;
         }
 
@@ -405,7 +415,7 @@ export default function(babel) {
         if (fn === null) {
           return;
         }
-        recordHookCall(fn.block, path);
+        recordHookCall(fn.block, path, name);
       },
       Program: {
         exit(path) {
