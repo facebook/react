@@ -160,16 +160,14 @@ describe('ReactSuspenseFuzz', () => {
       );
 
       resetCache();
-      ReactNoop.renderToRootWithID(
+      const expectedRoot = ReactNoop.createRoot();
+      expectedRoot.render(
         <ShouldSuspendContext.Provider value={false}>
           {children}
         </ShouldSuspendContext.Provider>,
-        'expected',
       );
       resolveAllTasks();
-      const expectedOutput = ReactNoop.getChildrenAsJSX('expected');
-      ReactNoop.renderToRootWithID(null, 'expected');
-      Scheduler.unstable_flushWithoutYielding();
+      const expectedOutput = expectedRoot.getChildrenAsJSX();
 
       resetCache();
       ReactNoop.renderLegacySyncRoot(children);
@@ -179,13 +177,18 @@ describe('ReactSuspenseFuzz', () => {
       ReactNoop.renderLegacySyncRoot(null);
 
       resetCache();
-      ReactNoop.renderToRootWithID(children, 'concurrent');
-      Scheduler.unstable_flushWithoutYielding();
+      const batchedSyncRoot = ReactNoop.createSyncRoot();
+      batchedSyncRoot.render(children);
       resolveAllTasks();
-      const concurrentOutput = ReactNoop.getChildrenAsJSX('concurrent');
+      const batchedSyncOutput = batchedSyncRoot.getChildrenAsJSX();
+      expect(batchedSyncOutput).toEqual(expectedOutput);
+
+      resetCache();
+      const concurrentRoot = ReactNoop.createRoot();
+      concurrentRoot.render(children);
+      resolveAllTasks();
+      const concurrentOutput = concurrentRoot.getChildrenAsJSX();
       expect(concurrentOutput).toEqual(expectedOutput);
-      ReactNoop.renderToRootWithID(null, 'concurrent');
-      Scheduler.unstable_flushWithoutYielding();
     }
 
     function pickRandomWeighted(rand, options) {
@@ -321,7 +324,7 @@ describe('ReactSuspenseFuzz', () => {
     );
   });
 
-  it('generative tests', () => {
+  it(`generative tests (random seed: ${SEED})`, () => {
     const {generateTestCase, testResolvedOutput} = createFuzzer();
 
     const rand = Random.create(SEED);

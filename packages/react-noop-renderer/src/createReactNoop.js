@@ -969,10 +969,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           NoopRenderer.updateContainer(children, fiberRoot, null, null);
         },
         getChildren() {
-          return getChildren(fiberRoot);
+          return getChildren(container);
         },
         getChildrenAsJSX() {
-          return getChildrenAsJSX(fiberRoot);
+          return getChildrenAsJSX(container);
         },
       };
     },
