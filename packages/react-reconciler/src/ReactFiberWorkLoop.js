@@ -216,6 +216,7 @@ let workInProgressRootCanSuspendUsingConfig: null | SuspenseConfig = null;
 // The most recent time we committed a fallback. This lets us ensure a train
 // model where we don't commit new loading states in too quick succession.
 let globalMostRecentFallbackTime: number = 0;
+const FALLBACK_THROTTLE_MS: number = 500;
 
 let nextEffect: Fiber | null = null;
 let hasUncaughtError = false;
@@ -953,39 +954,106 @@ function renderRoot(
       // errored state.
       return commitRoot.bind(null, root);
     }
-    case RootSuspended:
+    case RootSuspended: {
+      // We have an acceptable loading state. We need to figure out if we should
+      // immediately commit it or wait a bit.
+
+      // If we have processed new updates during this render, we may now have a
+      // new loading state ready. We want to ensure that we commit that as soon as
+      // possible.
+      const hasNotProcessedNewUpdates =
+        workInProgressRootLatestProcessedExpirationTime === Sync;
+      if (hasNotProcessedNewUpdates && !disableYielding && !isSync) {
+        // If we have not processed any new updates during this pass, then this is
+        // either a retry of an existing fallback state or a hidden tree.
+        // Hidden trees shouldn't be batched with other work and after that's
+        // fixed it can only be a retry.
+        // We're going to throttle committing retries so that we don't show too
+        // many loading states too quickly.
+        let msUntilTimeout =
+          globalMostRecentFallbackTime + FALLBACK_THROTTLE_MS - now();
+        // Don't bother with a very short suspense time.
+        if (msUntilTimeout > 10) {
+          const lastPendingTime = root.lastPendingTime;
+          if (root.lastPendingTime < expirationTime) {
+            // There's lower priority work. It might be unsuspended. Try rendering
+            // at that level.
+            return renderRoot.bind(null, root, lastPendingTime);
+          }
+          // The render is suspended, it hasn't timed out, and there's no lower
+          // priority work to do. Instead of committing the fallback
+          // immediately, wait for more data to arrive.
+          root.timeoutHandle = scheduleTimeout(
+            commitRoot.bind(null, root),
+            msUntilTimeout,
+          );
+          return null;
+        }
+      }
+      // The work expired. Commit immediately.
+      return commitRoot.bind(null, root);
+    }
     case RootSuspendedWithDelay: {
-      if (!isSync) {
+      if (!disableYielding && !isSync) {
+        // We're suspended in a state that should be avoided. We'll try to avoid committing
+        // it for as long as the timeouts let us.
         const lastPendingTime = root.lastPendingTime;
         if (root.lastPendingTime < expirationTime) {
+          // TODO: We should check this when we schedule work or when we first
+          // marked this render as "delayed" so that we can restart earlier.
+          // We should never have gotten this far without restarting.
+
           // There's lower priority work. It might be unsuspended. Try rendering
-          // at that level.
+          // at that level immediately.
           return renderRoot.bind(null, root, lastPendingTime);
         }
-        // If workInProgressRootLatestProcessedExpirationTime is Sync, that means we didn't
-        // track any event times. That can happen if we retried but nothing switched
-        // from fallback to content. There's no reason to delay doing no work.
-        if (workInProgressRootLatestProcessedExpirationTime !== Sync) {
-          let shouldDelay =
-            workInProgressRootExitStatus === RootSuspendedWithDelay;
-          let msUntilTimeout = computeMsUntilTimeout(
+
+        let msUntilTimeout;
+        if (workInProgressRootLatestSuspenseTimeout !== Sync) {
+          // We have processed a suspense config whose expiration time we can use as
+          // the timeout.
+          msUntilTimeout =
+            expirationTimeToMs(workInProgressRootLatestSuspenseTimeout) - now();
+        } else if (workInProgressRootLatestProcessedExpirationTime === Sync) {
+          // This should never normally happen because only new updates cause
+          // delayed states, so we should have processed something. However,
+          // this could also happen in an offscreen tree.
+          msUntilTimeout = 0;
+        } else {
+          // If we don't have a suspense config, we're going to use a heuristic to
+          // determine how long we can suspend.
+          const eventTimeMs: number = inferTimeFromExpirationTime(
             workInProgressRootLatestProcessedExpirationTime,
-            workInProgressRootLatestSuspenseTimeout,
-            expirationTime,
-            workInProgressRootCanSuspendUsingConfig,
-            shouldDelay,
           );
-          // Don't bother with a very short suspense time.
-          if (msUntilTimeout > 10) {
-            // The render is suspended, it hasn't timed out, and there's no lower
-            // priority work to do. Instead of committing the fallback
-            // immediately, wait for more data to arrive.
-            root.timeoutHandle = scheduleTimeout(
-              commitRoot.bind(null, root),
-              msUntilTimeout,
-            );
-            return null;
+          const currentTimeMs = now();
+          const timeUntilExpirationMs =
+            expirationTimeToMs(expirationTime) - currentTimeMs;
+          let timeElapsed = currentTimeMs - eventTimeMs;
+          if (timeElapsed < 0) {
+            // We get this wrong some time since we estimate the time.
+            timeElapsed = 0;
           }
+
+          msUntilTimeout = jnd(timeElapsed) - timeElapsed;
+
+          // Clamp the timeout to the expiration time.
+          // TODO: Once the event time is exact instead of inferred from expiration time
+          // we don't need this.
+          if (timeUntilExpirationMs < msUntilTimeout) {
+            msUntilTimeout = timeUntilExpirationMs;
+          }
+        }
+
+        // Don't bother with a very short suspense time.
+        if (msUntilTimeout > 10) {
+          // The render is suspended, it hasn't timed out, and there's no lower
+          // priority work to do. Instead of committing the fallback
+          // immediately, wait for more data to arrive.
+          root.timeoutHandle = scheduleTimeout(
+            commitRoot.bind(null, root),
+            msUntilTimeout,
+          );
+          return null;
         }
       }
       // The work expired. Commit immediately.
@@ -1069,18 +1137,24 @@ export function renderDidError() {
   }
 }
 
-function inferTimeFromExpirationTime(
-  expirationTime: ExpirationTime,
-  suspenseConfig: null | SuspenseConfig,
-): number {
+function inferTimeFromExpirationTime(expirationTime: ExpirationTime): number {
   // We don't know exactly when the update was scheduled, but we can infer an
   // approximate start time from the expiration time.
   const earliestExpirationTimeMs = expirationTimeToMs(expirationTime);
+  return earliestExpirationTimeMs - LOW_PRIORITY_EXPIRATION;
+}
+
+function inferTimeFromExpirationTimeWithSuspenseConfig(
+  expirationTime: ExpirationTime,
+  suspenseConfig: SuspenseConfig,
+): number {
+  // We don't know exactly when the update was scheduled, but we can infer an
+  // approximate start time from the expiration time by subtracting the timeout
+  // that was added to the event time.
+  const earliestExpirationTimeMs = expirationTimeToMs(expirationTime);
   return (
     earliestExpirationTimeMs -
-    (suspenseConfig !== null
-      ? suspenseConfig.timeoutMs | 0 || LOW_PRIORITY_EXPIRATION
-      : LOW_PRIORITY_EXPIRATION)
+    (suspenseConfig.timeoutMs | 0 || LOW_PRIORITY_EXPIRATION)
   );
 }
 
@@ -2014,7 +2088,7 @@ function computeMsUntilSuspenseLoadingDelay(
 
   // Compute the time until this render pass would expire.
   const currentTimeMs: number = now();
-  const eventTimeMs: number = inferTimeFromExpirationTime(
+  const eventTimeMs: number = inferTimeFromExpirationTimeWithSuspenseConfig(
     mostRecentEventTime,
     suspenseConfig,
   );
@@ -2025,52 +2099,6 @@ function computeMsUntilSuspenseLoadingDelay(
     return 0;
   }
   const msUntilTimeout = busyDelayMs + busyMinDurationMs - timeElapsed;
-  // This is the value that is passed to `setTimeout`.
-  return msUntilTimeout;
-}
-
-function computeMsUntilTimeout(
-  mostRecentEventTime: ExpirationTime,
-  suspenseTimeout: ExpirationTime,
-  committedExpirationTime: ExpirationTime,
-  suspenseConfig: null | SuspenseConfig,
-  shouldDelay: boolean,
-) {
-  if (disableYielding) {
-    // Timeout immediately when yielding is disabled.
-    return 0;
-  }
-
-  // Compute the time until this render pass would expire.
-  const currentTimeMs: number = now();
-
-  if (suspenseTimeout !== Sync && shouldDelay) {
-    const timeUntilTimeoutMs =
-      expirationTimeToMs(suspenseTimeout) - currentTimeMs;
-    return timeUntilTimeoutMs;
-  }
-
-  const eventTimeMs: number = inferTimeFromExpirationTime(
-    mostRecentEventTime,
-    suspenseConfig,
-  );
-  const timeUntilExpirationMs =
-    expirationTimeToMs(committedExpirationTime) - currentTimeMs;
-  let timeElapsed = currentTimeMs - eventTimeMs;
-  if (timeElapsed < 0) {
-    // We get this wrong some time since we estimate the time.
-    timeElapsed = 0;
-  }
-
-  let msUntilTimeout = jnd(timeElapsed) - timeElapsed;
-
-  // Clamp the timeout to the expiration time.
-  // TODO: Once the event time is exact instead of inferred from expiration time
-  // we don't need this.
-  if (timeUntilExpirationMs < msUntilTimeout) {
-    msUntilTimeout = timeUntilExpirationMs;
-  }
-
   // This is the value that is passed to `setTimeout`.
   return msUntilTimeout;
 }
