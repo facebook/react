@@ -126,9 +126,13 @@ function git(args) {
   try {
     let baseCIBuildId = null;
     const statusesResponse = await fetch(
-      `https://api.github.com/repos/facebook/react/commits/${baseCommit}/statuses`
+      `https://api.github.com/repos/facebook/react/commits/${baseCommit}/status`
     );
-    const statuses = await statusesResponse.json();
+    const {statuses, state} = await statusesResponse.json();
+    if (state === 'failure') {
+      warn(`Base commit is broken: ${baseCommit}`);
+      return;
+    }
     for (let i = 0; i < statuses.length; i++) {
       const status = statuses[i];
       // This must match the name of the CI job that creates the build artifacts
@@ -139,8 +143,8 @@ function git(args) {
           )[1];
           break;
         }
-        if (status.state === 'failure') {
-          warn(`Base commit is broken: ${baseCommit}`);
+        if (status.state === 'pending') {
+          warn(`Build job for base commit is still pending: ${baseCommit}`);
           return;
         }
       }
