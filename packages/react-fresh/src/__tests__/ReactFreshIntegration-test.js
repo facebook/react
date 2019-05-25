@@ -85,8 +85,8 @@ describe('ReactFreshIntegration', () => {
     ReactFreshRuntime.register(type, id);
   }
 
-  function __signature__(type, id) {
-    ReactFreshRuntime.setSignature(type, id);
+  function __signature__(type, key, getCustomHooks) {
+    ReactFreshRuntime.setSignature(type, key, getCustomHooks);
     return type;
   }
 
@@ -484,6 +484,103 @@ describe('ReactFreshIntegration', () => {
       expect(container.firstChild).not.toBe(el);
       el = container.firstChild;
       expect(el.textContent).toBe('BXY');
+    }
+  });
+
+  it('remounts component if custom hook it uses changes order', () => {
+    if (__DEV__) {
+      render(`
+        const App = () => {
+          const [x, setX] = useFancyState('X');
+          const [y, setY] = useFancyState('Y');
+          return <h1>A{x}{y}</h1>;
+        };
+
+        const useFancyState = (initialState) => {
+          const result = useIndirection(initialState);
+          return result;
+        };
+
+        function useIndirection(initialState) {
+          return React.useState(initialState);
+        }
+
+        export default App;
+      `);
+      let el = container.firstChild;
+      expect(el.textContent).toBe('AXY');
+
+      patch(`
+        const App = () => {
+          const [x, setX] = useFancyState('X');
+          const [y, setY] = useFancyState('Y');
+          return <h1>B{x}{y}</h1>;
+        };
+
+        const useFancyState = (initialState) => {
+          const result = useIndirection();
+          return result;
+        };
+
+        function useIndirection(initialState) {
+          return React.useState(initialState);
+        }
+
+        export default App;
+      `);
+      // We didn't change anything except the header text.
+      // So we don't expect a remount.
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('BXY');
+
+      patch(`
+        const App = () => {
+          const [x, setX] = useFancyState('X');
+          const [y, setY] = useFancyState('Y');
+          return <h1>C{x}{y}</h1>;
+        };
+
+        const useFancyState = (initialState) => {
+          const result = useIndirection(initialState);
+          return result;
+        };
+
+        function useIndirection(initialState) {
+          React.useEffect(() => {});
+          return React.useState(initialState);
+        }
+
+        export default App;
+      `);
+      // The useIndirection Hook added an affect,
+      // so we had to remount the component.
+      expect(container.firstChild).not.toBe(el);
+      el = container.firstChild;
+      expect(el.textContent).toBe('CXY');
+
+      patch(`
+        const App = () => {
+          const [x, setX] = useFancyState('X');
+          const [y, setY] = useFancyState('Y');
+          return <h1>D{x}{y}</h1>;
+        };
+
+        const useFancyState = (initialState) => {
+          const result = useIndirection();
+          return result;
+        };
+
+        function useIndirection(initialState) {
+          React.useEffect(() => {});
+          return React.useState(initialState);
+        }
+
+        export default App;
+      `);
+      // We didn't change anything except the header text.
+      // So we don't expect a remount.
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('DXY');
     }
   });
 });

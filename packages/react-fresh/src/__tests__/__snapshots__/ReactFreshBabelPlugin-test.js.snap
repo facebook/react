@@ -107,6 +107,34 @@ exports[`ReactFreshBabelPlugin ignores unnamed function declarations 1`] = `
 export default function () {}"
 `;
 
+exports[`ReactFreshBabelPlugin includes custom hooks into the signatures 1`] = `
+"
+function useFancyState() {
+  const [foo, setFoo] = React.useState(0);
+  useFancyEffect();
+  return foo;
+}
+
+__signature__(useFancyState, \\"useState{[foo, setFoo]}\\\\nuseFancyEffect{}\\", () => [useFancyEffect]);
+
+const useFancyEffect = __signature__(() => {
+  React.useEffect(() => {});
+}, \\"useEffect{}\\");
+
+export default function App() {
+  const bar = useFancyState();
+  return <h1>{bar}</h1>;
+}
+
+__signature__(App, \\"useFancyState{bar}\\", () => [useFancyState]);
+
+_c = App;
+
+var _c;
+
+__register__(_c, \\"App\\");"
+`;
+
 exports[`ReactFreshBabelPlugin only registers pascal case functions 1`] = `
 "
 function hello() {

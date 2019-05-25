@@ -168,8 +168,31 @@ export default function(babel) {
     }
     hookCallsForFn.push({
       name: hookName,
+      callee: hookCallPath.node.callee,
       key,
     });
+  }
+
+  function isBuiltinHook(hookName) {
+    switch (hookName) {
+      case 'useState':
+      case 'React.useState':
+      case 'useReducer':
+      case 'React.useReducer':
+      case 'useEffect':
+      case 'React.useEffect':
+      case 'useLayoutEffect':
+      case 'React.useLayoutEffect':
+      case 'useMemo':
+      case 'React.useMemo':
+      case 'useCallback':
+      case 'React.useCallback':
+      case 'useImperativeMethods':
+      case 'React.useImperativeMethods':
+        return true;
+      default:
+        return false;
+    }
   }
 
   function getHookCallsSignature(functionNode) {
@@ -177,7 +200,21 @@ export default function(babel) {
     if (fnHookCalls === undefined) {
       return null;
     }
-    return fnHookCalls.map(call => call.name + '{' + call.key + '}').join('\n');
+    return {
+      key: fnHookCalls.map(call => call.name + '{' + call.key + '}').join('\n'),
+      customHooks: fnHookCalls
+        .filter(call => !isBuiltinHook(call.name))
+        .map(call => call.callee),
+    };
+  }
+
+  function createArgumentsForSignature(node, signature) {
+    const {key, customHooks} = signature;
+    const args = [node, t.stringLiteral(key)];
+    if (customHooks.length > 0) {
+      args.push(t.arrowFunctionExpression([], t.arrayExpression(customHooks)));
+    }
+    return args;
   }
 
   let seenForRegistration = new WeakSet();
@@ -312,12 +349,13 @@ export default function(babel) {
           if (insertAfterPath === null) {
             return;
           }
+
           insertAfterPath.insertAfter(
             t.expressionStatement(
-              t.callExpression(t.identifier('__signature__'), [
-                id,
-                t.stringLiteral(signature),
-              ]),
+              t.callExpression(
+                t.identifier('__signature__'),
+                createArgumentsForSignature(id, signature),
+              ),
             ),
           );
         },
@@ -339,10 +377,10 @@ export default function(babel) {
           // Don't mutate the tree above this point.
 
           path.replaceWith(
-            t.callExpression(t.identifier('__signature__'), [
-              node,
-              t.stringLiteral(signature),
-            ]),
+            t.callExpression(
+              t.identifier('__signature__'),
+              createArgumentsForSignature(node, signature),
+            ),
           );
         },
       },

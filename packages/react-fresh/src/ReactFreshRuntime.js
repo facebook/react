@@ -14,11 +14,16 @@ import type {
 
 import {REACT_MEMO_TYPE, REACT_FORWARD_REF_TYPE} from 'shared/ReactSymbols';
 
+type Signature = {|
+  key: string,
+  getCustomHooks: () => Array<Function>,
+|};
+
 // We never remove these associations.
 // It's OK to reference families, but use WeakMap/Set for types.
 const allFamiliesByID: Map<string, Family> = new Map();
 const allTypes: WeakSet<any> = new WeakSet();
-const allSignaturesByType: WeakMap<any, string> = new WeakMap();
+const allSignaturesByType: WeakMap<any, Signature> = new WeakMap();
 // This WeakMap is read by React, so we only put families
 // that have actually been edited here. This keeps checks fast.
 const familiesByType: WeakMap<any, Family> = new WeakMap();
@@ -26,6 +31,37 @@ const familiesByType: WeakMap<any, Family> = new WeakMap();
 // This is cleared on every prepareUpdate() call.
 // It is an array of [Family, NextType] tuples.
 let pendingUpdates: Array<[Family, any]> = [];
+
+function haveEqualSignatures(prevType, nextType) {
+  const prevSignature = allSignaturesByType.get(prevType);
+  const nextSignature = allSignaturesByType.get(nextType);
+
+  if (prevSignature === undefined && nextSignature === undefined) {
+    return true;
+  }
+  if (prevSignature === undefined || nextSignature === undefined) {
+    return false;
+  }
+  if (prevSignature.key !== nextSignature.key) {
+    return false;
+  }
+
+  // TODO: we might need to calculate previous signature earlier in practice,
+  // such as during the first time a component is resolved. We'll revisit this.
+  const prevCustomHooks = prevSignature.getCustomHooks();
+  const nextCustomHooks = nextSignature.getCustomHooks();
+  if (prevCustomHooks.length !== nextCustomHooks.length) {
+    return false;
+  }
+
+  for (let i = 0; i < nextCustomHooks.length; i++) {
+    if (!haveEqualSignatures(prevCustomHooks[i], nextCustomHooks[i])) {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 export function prepareUpdate(): HotUpdate {
   const staleFamilies = new Set();
@@ -42,12 +78,10 @@ export function prepareUpdate(): HotUpdate {
     family.current = nextType;
 
     // Determine whether this should be a re-render or a re-mount.
-    const prevSignature = allSignaturesByType.get(prevType);
-    const nextSignature = allSignaturesByType.get(nextType);
-    if (prevSignature !== nextSignature) {
-      staleFamilies.add(family);
-    } else {
+    if (haveEqualSignatures(prevType, nextType)) {
       updatedFamilies.add(family);
+    } else {
+      staleFamilies.add(family);
     }
   });
 
@@ -98,6 +132,13 @@ export function register(type: any, id: string): void {
   }
 }
 
-export function setSignature(type: any, signature: string): void {
-  allSignaturesByType.set(type, signature);
+export function setSignature(
+  type: any,
+  key: string,
+  getCustomHooks?: () => Array<Function>,
+): void {
+  allSignaturesByType.set(type, {
+    key,
+    getCustomHooks: getCustomHooks || (() => []),
+  });
 }
