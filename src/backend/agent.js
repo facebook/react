@@ -141,7 +141,7 @@ export default class Agent extends EventEmitter {
         const renderer = ((this._rendererInterfaces[
           (rendererID: any)
         ]: any): RendererInterface);
-        return renderer.getFiberIDFromNative(node, true);
+        return renderer.getFiberIDForNative(node, true);
       } catch (e) {}
     }
     return null;
@@ -186,7 +186,9 @@ export default class Agent extends EventEmitter {
 
     let nodes: ?Array<HTMLElement> = null;
     if (renderer !== null) {
-      nodes = ((renderer.findNativeByFiberID(id): any): ?Array<HTMLElement>);
+      nodes = ((renderer.findNativeNodesForFiberID(
+        id
+      ): any): ?Array<HTMLElement>);
     }
 
     if (nodes != null && nodes[0] != null) {

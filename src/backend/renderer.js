@@ -708,7 +708,7 @@ export function attach(
       pendingSimulatedUnmountedIDs.length +
       (pendingUnmountedRootID === null ? 0 : 1);
 
-    const ops = new Uint32Array(
+    const operations = new Uint32Array(
       // Identify which renderer this update is coming from.
       2 + // [rendererID, rootFiberID]
       // How big is the string table?
@@ -726,44 +726,44 @@ export function attach(
     // This enables roots to be mapped to renderers,
     // Which in turn enables fiber props, states, and hooks to be inspected.
     let i = 0;
-    ops[i++] = rendererID;
-    ops[i++] = currentRootID; // Use this ID in case the root was unmounted!
+    operations[i++] = rendererID;
+    operations[i++] = currentRootID; // Use this ID in case the root was unmounted!
 
     // Now fill in the string table.
     // [stringTableLength, str1Length, ...str1, str2Length, ...str2, ...]
-    ops[i++] = pendingStringTableLength;
+    operations[i++] = pendingStringTableLength;
     pendingStringTable.forEach((value, key) => {
-      ops[i++] = key.length;
-      ops.set(utfEncodeString(key), i);
+      operations[i++] = key.length;
+      operations.set(utfEncodeString(key), i);
       i += key.length;
     });
 
     if (numUnmountIDs > 0) {
       // All unmounts except roots are batched in a single message.
-      ops[i++] = TREE_OPERATION_REMOVE;
+      operations[i++] = TREE_OPERATION_REMOVE;
       // The first number is how many unmounted IDs we're gonna send.
-      ops[i++] = numUnmountIDs;
+      operations[i++] = numUnmountIDs;
       // Fill in the real unmounts in the reverse order.
       // They were inserted parents-first by React, but we want children-first.
       // So we traverse our array backwards.
       for (let j = pendingRealUnmountedIDs.length - 1; j >= 0; j--) {
-        ops[i++] = pendingRealUnmountedIDs[j];
+        operations[i++] = pendingRealUnmountedIDs[j];
       }
       // Fill in the simulated unmounts (hidden Suspense subtrees) in their order.
       // (We want children to go before parents.)
       // They go *after* the real unmounts because we know for sure they won't be
       // children of already pushed "real" IDs. If they were, we wouldn't be able
       // to discover them during the traversal, as they would have been deleted.
-      ops.set(pendingSimulatedUnmountedIDs, i);
+      operations.set(pendingSimulatedUnmountedIDs, i);
       i += pendingSimulatedUnmountedIDs.length;
       // The root ID should always be unmounted last.
       if (pendingUnmountedRootID !== null) {
-        ops[i] = pendingUnmountedRootID;
+        operations[i] = pendingUnmountedRootID;
         i++;
       }
     }
     // Fill in the rest of the operations.
-    ops.set(pendingOperations, i);
+    operations.set(pendingOperations, i);
 
     // Let the frontend know about tree operations.
     // The first value in this array will identify which root it corresponds to,
@@ -772,10 +772,10 @@ export function attach(
       // Until the frontend has been connected, store the tree operations.
       // This will let us avoid walking the tree later when the frontend connects,
       // and it enables the Profiler's reload-and-profile functionality to work as well.
-      pendingOperationsQueue.push(ops);
+      pendingOperationsQueue.push(operations);
     } else {
       // If we've already connected to the frontend, just pass the operations through.
-      hook.emit('operations', ops);
+      hook.emit('operations', operations);
     }
 
     pendingOperations.length = 0;
@@ -1279,8 +1279,8 @@ export function attach(
     ) {
       // We may have already queued up some operations before the frontend connected
       // If so, let the frontend know about them.
-      localPendingOperationsQueue.forEach(ops => {
-        hook.emit('operations', ops);
+      localPendingOperationsQueue.forEach(operations => {
+        hook.emit('operations', operations);
       });
     } else {
       // Before the traversals, remember to start tracking
@@ -1435,7 +1435,7 @@ export function attach(
     return fibers;
   }
 
-  function findNativeByFiberID(id: number) {
+  function findNativeNodesForFiberID(id: number) {
     try {
       let fiber = findCurrentFiberUsingSlowPathById(id);
       if (fiber === null) {
@@ -1460,7 +1460,7 @@ export function attach(
     }
   }
 
-  function getFiberIDFromNative(
+  function getFiberIDForNative(
     hostInstance,
     findNearestUnfilteredAncestor = false
   ) {
@@ -1672,7 +1672,7 @@ export function attach(
       return;
     }
 
-    const { memoizedProps, stateNode, tag, type } = fiber;
+    const { elementType, memoizedProps, stateNode, tag, type } = fiber;
 
     switch (tag) {
       case ClassComponent:
@@ -1692,6 +1692,16 @@ export function attach(
           type: type.render,
         };
         break;
+      case MemoComponent:
+      case SimpleMemoComponent:
+        global.$r = {
+          props: memoizedProps,
+          type:
+            elementType != null && elementType.type != null
+              ? elementType.type
+              : type,
+        };
+        break;
       default:
         global.$r = null;
         break;
@@ -1705,15 +1715,24 @@ export function attach(
       return;
     }
 
-    switch (fiber.tag) {
+    const { elementType, tag, type } = fiber;
+
+    switch (tag) {
       case ClassComponent:
       case IncompleteClassComponent:
       case IndeterminateComponent:
       case FunctionComponent:
-        global.$type = fiber.type;
+        global.$type = type;
         break;
       case ForwardRef:
-        global.$type = fiber.type.render;
+        global.$type = type.render;
+        break;
+      case MemoComponent:
+      case SimpleMemoComponent:
+        global.$type =
+          elementType != null && elementType.type != null
+            ? elementType.type
+            : type;
         break;
       default:
         global.$type = null;
@@ -1781,7 +1800,9 @@ export function attach(
       tag === FunctionComponent ||
       tag === IncompleteClassComponent ||
       tag === IndeterminateComponent ||
-      tag === ForwardRef
+      tag === MemoComponent ||
+      tag === ForwardRef ||
+      tag === SimpleMemoComponent
     ) {
       canViewSource = true;
       if (stateNode && stateNode.context != null) {
@@ -1955,7 +1976,7 @@ export function attach(
     if (result.hooks !== null) {
       console.log('Hooks:', result.hooks);
     }
-    const nativeNodes = findNativeByFiberID(id);
+    const nativeNodes = findNativeNodesForFiberID(id);
     if (nativeNodes !== null) {
       console.log('Nodes:', nativeNodes);
     }
@@ -2445,8 +2466,8 @@ export function attach(
     cleanup,
     flushInitialOperations,
     getBestMatchForTrackedPath,
-    getFiberIDFromNative,
-    findNativeByFiberID,
+    getFiberIDForNative,
+    findNativeNodesForFiberID,
     getOwnersList,
     getPathForElement,
     getProfilingData,

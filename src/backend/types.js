@@ -158,10 +158,10 @@ export type PathMatch = {|
 
 export type RendererInterface = {
   cleanup: () => void,
-  findNativeByFiberID: (id: number) => ?Array<NativeType>,
+  findNativeNodesForFiberID: (id: number) => ?Array<NativeType>,
   flushInitialOperations: () => void,
   getBestMatchForTrackedPath: () => PathMatch | null,
-  getFiberIDFromNative: (
+  getFiberIDForNative: (
     component: NativeType,
     findNearestUnfilteredAncestor?: boolean
   ) => number | null,
