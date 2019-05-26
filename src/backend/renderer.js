@@ -724,7 +724,7 @@ export function attach(
 
     // Identify which renderer this update is coming from.
     // This enables roots to be mapped to renderers,
-    // Which in turn enables fiber properations, states, and hooks to be inspected.
+    // Which in turn enables fiber props, states, and hooks to be inspected.
     let i = 0;
     operations[i++] = rendererID;
     operations[i++] = currentRootID; // Use this ID in case the root was unmounted!
@@ -1435,7 +1435,7 @@ export function attach(
     return fibers;
   }
 
-  function getNativeFromInternal(id: number) {
+  function findNativeNodesForFiberID(id: number) {
     try {
       let fiber = findCurrentFiberUsingSlowPathById(id);
       if (fiber === null) {
@@ -1460,7 +1460,7 @@ export function attach(
     }
   }
 
-  function getInternalIDFromNative(
+  function getFiberIDForNative(
     hostInstance,
     findNearestUnfilteredAncestor = false
   ) {
@@ -1672,7 +1672,7 @@ export function attach(
       return;
     }
 
-    const { memoizedProps, stateNode, tag, type } = fiber;
+    const { elementType, memoizedProps, stateNode, tag, type } = fiber;
 
     switch (tag) {
       case ClassComponent:
@@ -1692,6 +1692,16 @@ export function attach(
           type: type.render,
         };
         break;
+      case MemoComponent:
+      case SimpleMemoComponent:
+        global.$r = {
+          props: memoizedProps,
+          type:
+            elementType != null && elementType.type != null
+              ? elementType.type
+              : type,
+        };
+        break;
       default:
         global.$r = null;
         break;
@@ -1705,19 +1715,20 @@ export function attach(
       return;
     }
 
-    switch (fiber.tag) {
+    const { elementType, tag, type } = fiber;
+
+    switch (tag) {
       case ClassComponent:
       case IncompleteClassComponent:
       case IndeterminateComponent:
       case FunctionComponent:
-        global.$type = fiber.type;
+        global.$type = type;
         break;
       case ForwardRef:
-        global.$type = fiber.type.render;
+        global.$type = type.render;
         break;
       case MemoComponent:
       case SimpleMemoComponent:
-        const { elementType, type } = fiber;
         global.$type =
           elementType != null && elementType.type != null
             ? elementType.type
@@ -1965,7 +1976,7 @@ export function attach(
     if (result.hooks !== null) {
       console.log('Hooks:', result.hooks);
     }
-    const nativeNodes = getNativeFromInternal(id);
+    const nativeNodes = findNativeNodesForFiberID(id);
     if (nativeNodes !== null) {
       console.log('Nodes:', nativeNodes);
     }
@@ -2455,8 +2466,8 @@ export function attach(
     cleanup,
     flushInitialOperations,
     getBestMatchForTrackedPath,
-    getInternalIDFromNative,
-    getNativeFromInternal,
+    getFiberIDForNative,
+    findNativeNodesForFiberID,
     getOwnersList,
     getPathForElement,
     getProfilingData,

@@ -25,8 +25,7 @@ import {
 
 import type {
   DevToolsHook,
-  GetInternalIDFromNative,
-  GetNativeFromInternal,
+  GetFiberIDForNative,
   NativeType,
   PathFrame,
   PathMatch,
@@ -87,38 +86,36 @@ export function attach(
     return null;
   }
 
-  let getInternalIDFromNative: GetInternalIDFromNative = ((null: any): GetInternalIDFromNative);
-  let getNativeFromInternal: (
-    id: number
-  ) => ?NativeType = ((null: any): GetNativeFromInternal);
+  let getInternalIDForNative: GetFiberIDForNative = ((null: any): GetFiberIDForNative);
+  let findNativeNodeForInternalID: (id: number) => ?NativeType;
 
   // React Native
   if (renderer.Mount.findNodeHandle && renderer.Mount.nativeTagToRootNodeID) {
-    getInternalIDFromNative = (nativeTag, findNearestUnfilteredAncestor) => {
+    getInternalIDForNative = (nativeTag, findNearestUnfilteredAncestor) => {
       const internalInstance = renderer.Mount.nativeTagToRootNodeID(nativeTag);
       return findNearestAncestorInTree(internalInstance);
     };
-    getNativeFromInternal = (id: number) => {
+    findNativeNodeForInternalID = (id: number) => {
       const internalInstance = idToInternalInstanceMap.get(id);
       return renderer.Mount.findNodeHandle(internalInstance);
     };
 
     // React DOM 15+
   } else if (renderer.ComponentTree) {
-    getInternalIDFromNative = (node, findNearestUnfilteredAncestor) => {
+    getInternalIDForNative = (node, findNearestUnfilteredAncestor) => {
       const internalInstance = renderer.ComponentTree.getClosestInstanceFromNode(
         node
       );
       return findNearestAncestorInTree(internalInstance);
     };
-    getNativeFromInternal = (id: number) => {
+    findNativeNodeForInternalID = (id: number) => {
       const internalInstance = idToInternalInstanceMap.get(id);
       return renderer.ComponentTree.getNodeFromInstance(internalInstance);
     };
 
     // React DOM
   } else if (renderer.Mount.getID && renderer.Mount.getNode) {
-    getInternalIDFromNative = (node, findNearestUnfilteredAncestor) => {
+    getInternalIDForNative = (node, findNearestUnfilteredAncestor) => {
       let id = renderer.Mount.getID(node);
       while (node && node.parentNode && !id) {
         node = node.parentNode;
@@ -127,7 +124,7 @@ export function attach(
       return id;
     };
 
-    getNativeFromInternal = (id: number) => {
+    findNativeNodeForInternalID = (id: number) => {
       try {
         const internalInstance = idToInternalInstanceMap.get(id);
         if (internalInstance != null) {
@@ -580,7 +577,7 @@ export function attach(
     if (result.context !== null) {
       console.log('State:', result.context);
     }
-    const nativeNode = getNativeFromInternal(id);
+    const nativeNode = findNativeNodeForInternalID(id);
     if (nativeNode !== null) {
       console.log('Node:', nativeNode);
     }
@@ -807,8 +804,11 @@ export function attach(
     cleanup,
     flushInitialOperations,
     getBestMatchForTrackedPath,
-    getInternalIDFromNative,
-    getNativeFromInternal,
+    getFiberIDForNative: getInternalIDForNative,
+    findNativeNodesForFiberID: (id: number) => {
+      const nativeNode = findNativeNodeForInternalID(id);
+      return nativeNode == null ? null : [nativeNode];
+    },
     getOwnersList,
     getPathForElement,
     getProfilingData,
