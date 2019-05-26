@@ -257,7 +257,9 @@ describe('ReactFreshBabelPlugin', () => {
         }
 
         const B = hoc(A);
+        // This is currently registered as a false positive:
         const NotAComponent = wow(A);
+        // We could avoid it but it also doesn't hurt.
     `),
     ).toMatchSnapshot();
   });
@@ -295,7 +297,23 @@ describe('ReactFreshBabelPlugin', () => {
         React.createContext(Store);
 
         const B = hoc(A);
+        // This is currently registered as a false positive:
         const NotAComponent = wow(A);
+        // We could avoid it but it also doesn't hurt.
+    `),
+    ).toMatchSnapshot();
+  });
+
+  it('registers capitalized identifiers in HOC calls', () => {
+    expect(
+      transform(`
+        function Foo() {
+          return <h1>Hi</h1>;
+        }
+
+        export default hoc(Foo);
+        export const A = hoc(Foo);
+        const B = hoc(Foo);
     `),
     ).toMatchSnapshot();
   });

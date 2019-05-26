@@ -31,6 +31,15 @@ export default function(babel) {
   function findInnerComponents(inferredName, path, callback) {
     const node = path.node;
     switch (node.type) {
+      case 'Identifier': {
+        if (!isComponentishName(node.name)) {
+          return false;
+        }
+        // export default hoc(Foo)
+        // const X = hoc(Foo)
+        callback(inferredName, node, null);
+        return true;
+      }
       case 'FunctionDeclaration': {
         // function Foo() {}
         // export function Foo() {}
@@ -256,6 +265,13 @@ export default function(babel) {
           inferredName,
           declPath,
           (persistentID, targetExpr, targetPath) => {
+            if (targetPath === null) {
+              // For case like:
+              // export default hoc(Foo)
+              // we don't want to wrap Foo inside the call.
+              // Instead we assume it's registered at definition.
+              return;
+            }
             const handle = createRegistration(programPath, persistentID);
             targetPath.replaceWith(
               t.assignmentExpression('=', handle, targetExpr),
@@ -452,6 +468,13 @@ export default function(babel) {
           inferredName,
           declPath,
           (persistentID, targetExpr, targetPath) => {
+            if (targetPath === null) {
+              // For case like:
+              // export const Something = hoc(Foo)
+              // we don't want to wrap Foo inside the call.
+              // Instead we assume it's registered at definition.
+              return;
+            }
             const handle = createRegistration(programPath, persistentID);
             if (
               (targetExpr.type === 'ArrowFunctionExpression' ||

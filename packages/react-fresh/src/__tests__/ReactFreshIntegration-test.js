@@ -351,6 +351,70 @@ describe('ReactFreshIntegration', () => {
     }
   });
 
+  it('resets state when renaming a state variable in a HOC with indirection', () => {
+    if (__DEV__) {
+      render(`
+        const {useState} = React;
+
+        function hoc(Wrapped) {
+          return function Generated() {
+            const [foo, setFoo] = useState(1);
+            return <Wrapped value={foo} />;
+          };
+        }
+
+        function Indirection({ value }) {
+          return <h1>A{value}</h1>;
+        }
+
+        export default hoc(Indirection);
+      `);
+      const el = container.firstChild;
+      expect(el.textContent).toBe('A1');
+
+      patch(`
+        const {useState} = React;
+
+        function hoc(Wrapped) {
+          return function Generated() {
+            const [foo, setFoo] = useState('ignored');
+            return <Wrapped value={foo} />;
+          };
+        }
+
+        function Indirection({ value }) {
+          return <h1>B{value}</h1>;
+        }
+
+        export default hoc(Indirection);
+      `);
+      // Same state variable name, so state is preserved.
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('B1');
+
+      patch(`
+        const {useState} = React;
+
+        function hoc(Wrapped) {
+          return function Generated() {
+            const [bar, setBar] = useState(2);
+            return <Wrapped value={bar} />;
+          };
+        }
+
+        function Indirection({ value }) {
+          return <h1>C{value}</h1>;
+        }
+
+        export default hoc(Indirection);
+      `);
+      // Different state variable name, so state is reset.
+      expect(container.firstChild).not.toBe(el);
+      const newEl = container.firstChild;
+      expect(newEl.textContent).toBe('C2');
+    }
+  });
+
   it('resets effects while preserving state', () => {
     if (__DEV__) {
       render(`

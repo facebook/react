@@ -144,6 +144,28 @@ function hello() {
 }"
 `;
 
+exports[`ReactFreshBabelPlugin registers capitalized identifiers in HOC calls 1`] = `
+"
+function Foo() {
+  return <h1>Hi</h1>;
+}
+
+_c = Foo;
+export default _c2 = hoc(Foo);
+export const A = _c3 = hoc(Foo);
+const B = _c4 = hoc(Foo);
+
+var _c, _c2, _c3, _c4;
+
+__register__(_c, \\"Foo\\");
+
+__register__(_c2, \\"%default%\\");
+
+__register__(_c3, \\"A\\");
+
+__register__(_c4, \\"B\\");"
+`;
+
 exports[`ReactFreshBabelPlugin registers identifiers used in JSX at definition site 1`] = `
 "
 import A from './A';
@@ -164,15 +186,19 @@ function Foo() {
 
 _c2 = Foo;
 const B = _c3 = hoc(A);
-const NotAComponent = wow(A);
+// This is currently registered as a false positive:
+const NotAComponent = _c4 = wow(A);
+// We could avoid it but it also doesn't hurt.
 
-var _c, _c2, _c3;
+var _c, _c2, _c3, _c4;
 
 __register__(_c, 'Header');
 
 __register__(_c2, 'Foo');
 
-__register__(_c3, 'B');"
+__register__(_c3, 'B');
+
+__register__(_c4, 'NotAComponent');"
 `;
 
 exports[`ReactFreshBabelPlugin registers identifiers used in React.createElement at definition site 1`] = `
@@ -197,15 +223,19 @@ _c2 = Foo;
 React.createContext(Store);
 
 const B = _c3 = hoc(A);
-const NotAComponent = wow(A);
+// This is currently registered as a false positive:
+const NotAComponent = _c4 = wow(A);
+// We could avoid it but it also doesn't hurt.
 
-var _c, _c2, _c3;
+var _c, _c2, _c3, _c4;
 
 __register__(_c, 'Header');
 
 __register__(_c2, 'Foo');
 
-__register__(_c3, 'B');"
+__register__(_c3, 'B');
+
+__register__(_c4, 'NotAComponent');"
 `;
 
 exports[`ReactFreshBabelPlugin registers likely HOCs with inline functions 1`] = `
@@ -372,13 +402,15 @@ __register__(_c3, \\"Baz\\");"
 
 exports[`ReactFreshBabelPlugin registers top-level variable declarations with function expressions 1`] = `
 "
-let Hello = _c = function () {
+let Hello = function () {
   function handleClick() {}
   return <h1 onClick={handleClick}>Hi</h1>;
 };
-const Bar = _c2 = function Baz() {
+_c = Hello;
+const Bar = function Baz() {
   return <Hello />;
 };
+_c2 = Bar;
 function sum() {}
 let Baz = 10;
 var Qux;
