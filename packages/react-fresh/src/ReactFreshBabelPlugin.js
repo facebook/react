@@ -376,24 +376,59 @@ export default function(babel) {
           seenForSignature.add(node);
           // Don't mutate the tree above this point.
 
-          path.replaceWith(
-            t.callExpression(
-              t.identifier('__signature__'),
-              createArgumentsForSignature(node, signature),
-            ),
-          );
+          if (path.parent.type === 'VariableDeclarator') {
+            let insertAfterPath = null;
+            path.find(p => {
+              if (p.parentPath.isBlock()) {
+                insertAfterPath = p;
+                return true;
+              }
+            });
+            if (insertAfterPath === null) {
+              return;
+            }
+            // Special case when a function would get an inferred name:
+            // let Foo = () => {}
+            // let Foo = function() {}
+            // We'll add signature it on next line so that
+            // we don't mess up the inferred 'Foo' function name.
+            insertAfterPath.insertAfter(
+              t.expressionStatement(
+                t.callExpression(
+                  t.identifier('__signature__'),
+                  createArgumentsForSignature(path.parent.id, signature),
+                ),
+              ),
+            );
+            // Result: let Foo = () => {}; __signature(Foo, ...);
+          } else {
+            // let Foo = hoc(() => {})
+            path.replaceWith(
+              t.callExpression(
+                t.identifier('__signature__'),
+                createArgumentsForSignature(node, signature),
+              ),
+            );
+            // Result: let Foo = hoc(__signature(() => {}, ...))
+          }
         },
       },
       VariableDeclaration(path) {
         const node = path.node;
         let programPath;
+        let insertAfterPath;
         switch (path.parent.type) {
           case 'Program':
+            insertAfterPath = path;
             programPath = path.parentPath;
             break;
           case 'ExportNamedDeclaration':
+            insertAfterPath = path.parentPath;
+            programPath = insertAfterPath.parentPath;
+            break;
           case 'ExportDefaultDeclaration':
-            programPath = path.parentPath.parentPath;
+            insertAfterPath = path.parentPath;
+            programPath = insertAfterPath.parentPath;
             break;
           default:
             return;
@@ -418,9 +453,29 @@ export default function(babel) {
           declPath,
           (persistentID, targetExpr, targetPath) => {
             const handle = createRegistration(programPath, persistentID);
-            targetPath.replaceWith(
-              t.assignmentExpression('=', handle, targetExpr),
-            );
+            if (
+              (targetExpr.type === 'ArrowFunctionExpression' ||
+                targetExpr.type === 'FunctionExpression') &&
+              targetPath.parent.type === 'VariableDeclarator'
+            ) {
+              // Special case when a function would get an inferred name:
+              // let Foo = () => {}
+              // let Foo = function() {}
+              // We'll register it on next line so that
+              // we don't mess up the inferred 'Foo' function name.
+              insertAfterPath.insertAfter(
+                t.expressionStatement(
+                  t.assignmentExpression('=', handle, declPath.node.id),
+                ),
+              );
+              // Result: let Foo = () => {}; _c1 = Foo;
+            } else {
+              // let Foo = hoc(() => {})
+              targetPath.replaceWith(
+                t.assignmentExpression('=', handle, targetExpr),
+              );
+              // Result: let Foo = _c1 = hoc(() => {})
+            }
           },
         );
       },

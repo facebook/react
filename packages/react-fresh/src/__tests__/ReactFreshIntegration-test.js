@@ -583,4 +583,48 @@ describe('ReactFreshIntegration', () => {
       expect(el.textContent).toBe('DXY');
     }
   });
+
+  it('does not lose the inferred arrow names', () => {
+    if (__DEV__) {
+      render(`
+        const Parent = () => {
+          return <Child/>;
+        };
+
+        const Child = () => {
+          useMyThing();
+          return <h1>{Parent.name} {Child.name} {useMyThing.name}</h1>;
+        };
+
+        const useMyThing = () => {
+          React.useState();
+        };
+
+        export default Parent;
+      `);
+      expect(container.textContent).toBe('Parent Child useMyThing');
+    }
+  });
+
+  it('does not lose the inferred function names', () => {
+    if (__DEV__) {
+      render(`
+        var Parent = function() {
+          return <Child/>;
+        };
+
+        var Child = function() {
+          useMyThing();
+          return <h1>{Parent.name} {Child.name} {useMyThing.name}</h1>;
+        };
+
+        var useMyThing = function() {
+          React.useState();
+        };
+
+        export default Parent;
+      `);
+      expect(container.textContent).toBe('Parent Child useMyThing');
+    }
+  });
 });

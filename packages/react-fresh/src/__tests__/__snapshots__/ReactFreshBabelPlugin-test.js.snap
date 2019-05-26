@@ -117,9 +117,11 @@ function useFancyState() {
 
 __signature__(useFancyState, \\"useState{[foo, setFoo]}\\\\nuseFancyEffect{}\\", () => [useFancyEffect]);
 
-const useFancyEffect = __signature__(() => {
+const useFancyEffect = () => {
   React.useEffect(() => {});
-}, \\"useEffect{}\\");
+};
+
+__signature__(useFancyEffect, \\"useEffect{}\\");
 
 export default function App() {
   const bar = useFancyState();
@@ -302,13 +304,15 @@ __register__(_c3, 'Baz');"
 
 exports[`ReactFreshBabelPlugin registers top-level exported named arrow functions 1`] = `
 "
-export const Hello = _c = () => {
+export const Hello = () => {
   function handleClick() {}
   return <h1 onClick={handleClick}>Hi</h1>;
 };
 
-export let Bar = _c2 = props => <Hello />;
+_c = Hello;
+export let Bar = props => <Hello />;
 
+_c2 = Bar;
 export default (() => {
   // This one should be ignored.
   // You should name your components.
@@ -344,14 +348,17 @@ __register__(_c2, \\"Bar\\");"
 
 exports[`ReactFreshBabelPlugin registers top-level variable declarations with arrow functions 1`] = `
 "
-let Hello = _c = () => {
+let Hello = () => {
   const handleClick = () => {};
   return <h1 onClick={handleClick}>Hi</h1>;
 };
-const Bar = _c2 = () => {
+_c = Hello;
+const Bar = () => {
   return <Hello />;
 };
-var Baz = _c3 = () => <div />;
+_c2 = Bar;
+var Baz = () => <div />;
+_c3 = Baz;
 var sum = () => {};
 
 var _c, _c2, _c3;
