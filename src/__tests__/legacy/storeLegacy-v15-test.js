@@ -177,6 +177,45 @@ describe('Store (legacy)', () => {
     });
 
     // TODO Re-enable this test once the renderer supports it.
+    xit('should support adding and removing children', () => {
+      const Root = ({ children }) => <div>{children}</div>;
+      const Component = () => null;
+
+      const container = document.createElement('div');
+
+      act(() =>
+        ReactDOM.render(
+          <Root>
+            <Component key="a" />
+          </Root>,
+          container
+        )
+      );
+      expect(store).toMatchSnapshot('1: mount');
+
+      act(() =>
+        ReactDOM.render(
+          <Root>
+            <Component key="a" />
+            <Component key="b" />
+          </Root>,
+          container
+        )
+      );
+      expect(store).toMatchSnapshot('2: add child');
+
+      act(() =>
+        ReactDOM.render(
+          <Root>
+            <Component key="b" />
+          </Root>,
+          container
+        )
+      );
+      expect(store).toMatchSnapshot('3: remove child');
+    });
+
+    // TODO Re-enable this test once the renderer supports it.
     xit('should support reordering of children', () => {
       const Root = ({ children }) => <div>{children}</div>;
       const Component = () => null;
@@ -194,13 +233,13 @@ describe('Store (legacy)', () => {
       expect(store).toMatchSnapshot('1: mount');
 
       act(() => ReactDOM.render(<Root>{[bar, foo]}</Root>, container));
-      expect(store).toMatchSnapshot('3: reorder children');
+      expect(store).toMatchSnapshot('2: reorder children');
 
       act(() => store.toggleIsCollapsed(store.getElementIDAtIndex(0), true));
-      expect(store).toMatchSnapshot('4: collapse root');
+      expect(store).toMatchSnapshot('3: collapse root');
 
       act(() => store.toggleIsCollapsed(store.getElementIDAtIndex(0), false));
-      expect(store).toMatchSnapshot('5: expand root');
+      expect(store).toMatchSnapshot('4: expand root');
     });
   });
 
@@ -422,19 +461,19 @@ describe('Store (legacy)', () => {
       expect(store).toMatchSnapshot('1: mount');
 
       act(() => ReactDOM.render(<Root>{[bar, foo]}</Root>, container));
-      expect(store).toMatchSnapshot('3: reorder children');
+      expect(store).toMatchSnapshot('2: reorder children');
 
       act(() => store.toggleIsCollapsed(store.getElementIDAtIndex(0), false));
-      expect(store).toMatchSnapshot('4: expand root');
+      expect(store).toMatchSnapshot('3: expand root');
 
       act(() => {
         store.toggleIsCollapsed(store.getElementIDAtIndex(2), false);
         store.toggleIsCollapsed(store.getElementIDAtIndex(1), false);
       });
-      expect(store).toMatchSnapshot('5: expand leaves');
+      expect(store).toMatchSnapshot('4: expand leaves');
 
       act(() => store.toggleIsCollapsed(store.getElementIDAtIndex(0), true));
-      expect(store).toMatchSnapshot('6: collapse root');
+      expect(store).toMatchSnapshot('5: collapse root');
     });
   });
 });

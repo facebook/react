@@ -1,22 +1,30 @@
 // @flow
 
+import traverseAllChildrenImpl from './traverseAllChildrenImpl';
+
+// TODO (legacy) Respect component filters
+
 export default function getChildren(internalInstance: Object): Array<any> {
+  let children = [];
+
   // If the parent is a native node without rendered children, but with
   // multiple string children, then the `element` that gets passed in here is
   // a plain value -- a string or number.
-  if (internalInstance._renderedComponent) {
-    return [internalInstance._renderedComponent];
+  if (typeof internalInstance !== 'object') {
+    // No children
+  } else if (
+    internalInstance._currentElement === null ||
+    internalInstance._currentElement === false
+  ) {
+    // No children
+  } else if (internalInstance._renderedComponent) {
+    children = [internalInstance._renderedComponent];
   } else if (internalInstance._renderedChildren) {
-    return childrenToArray(internalInstance._renderedChildren);
+    children = renderedChildrenToArray(internalInstance._renderedChildren);
   } else if (
     internalInstance._currentElement &&
     internalInstance._currentElement.props
   ) {
-    // DevTools doesn't need to display primative child types,
-    // So we can filter them out early.
-    /*
-    const children = [];
-
     // This is a native node without rendered children -- meaning the children
     // prop is the unfiltered list of children.
     // This may include 'null' or even other invalid values, so we need to
@@ -34,30 +42,26 @@ export default function getChildren(internalInstance: Object): Array<any> {
           children.push(child);
         }
       }
-      // traverseContext
     );
-
-    return children;
-    */
   }
 
-  if (internalInstance._instance) {
-    var inst = internalInstance._instance;
+  const instance = internalInstance._instance;
+  if (instance) {
     // TODO: React ART currently falls in this bucket, but this doesn't
     // actually make sense and we should clean this up after stabilizing our
     // API for backends
-    if (inst._renderedChildren) {
-      return childrenToArray(inst._renderedChildren);
+    if (instance._renderedChildren) {
+      children = renderedChildrenToArray(instance._renderedChildren);
     }
   }
 
-  return [];
+  return children;
 }
 
-function childrenToArray(children) {
-  const array = [];
-  for (var name in children) {
-    array.push(children[name]);
+function renderedChildrenToArray(renderedChildren): Array<any> {
+  const childrenArray = [];
+  for (let name in renderedChildren) {
+    childrenArray.push(renderedChildren[name]);
   }
-  return array;
+  return childrenArray;
 }
