@@ -14,10 +14,8 @@ const fs = require('fs');
 const mkdirp = require('mkdirp');
 const inlinedHostConfigs = require('../shared/inlinedHostConfigs');
 
-const configTemplate = fs
-  .readFileSync(__dirname + '/config/flowconfig')
-  .toString();
-
+const configTemplate = fs.readFileSync(__dirname + '/config/flowconfig').toString();
+const config = fs.readFileSync(__dirnagit)
 function writeConfig(renderer, isFizzSupported) {
   const folder = __dirname + '/' + renderer;
   mkdirp.sync(folder);
