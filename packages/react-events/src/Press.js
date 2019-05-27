@@ -459,12 +459,17 @@ function getAbsoluteBoundingClientRect(
     // are fixed position, using offsetParent node for a fast-path.
     // We need to check both as offsetParent accounts for both
     // itself and the parent; so we need to align with that API.
-    // If these all pass, we can stop traversing the tree.
-    if (
-      (scrollLeft !== 0 || scrollTop !== 0) &&
-      (isNodeFixedPositioned(parent) || isNodeFixedPositioned(node))
-    ) {
-      break;
+    // If these all pass, we can skip traversing the relevant
+    // node and go directly to its parent.
+    if (scrollLeft !== 0 || scrollTop !== 0) {
+      if (isNodeFixedPositioned(parent)) {
+        node = ((parent: any): Node).parentNode;
+        continue;
+      }
+      if (isNodeFixedPositioned(node)) {
+        node = parent;
+        continue;
+      }
     }
     offsetX += scrollLeft;
     offsetY += scrollTop;

@@ -1232,7 +1232,7 @@ describe('Event responder: Press', () => {
         document.firstElementChild.scrollTop = 1000;
         const updatedCoordinatesInside = {
           pageX: coordinatesInside.pageX,
-          pageY: coordinatesInside.pageY + 100,
+          pageY: coordinatesInside.pageY + 1100,
         };
         ref.current.dispatchEvent(
           createEvent('pointerdown', updatedCoordinatesInside),
