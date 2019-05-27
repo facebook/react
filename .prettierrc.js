@@ -1,3 +1,5 @@
+'use strict';
+
 const {esNextPaths} = require('./scripts/shared/pathsByLanguageVersion');
 
 module.exports = {
@@ -6,6 +8,7 @@ module.exports = {
   jsxBracketSameLine: true,
   trailingComma: 'es5',
   printWidth: 80,
+  parser: 'babylon',
 
   overrides: [
     {

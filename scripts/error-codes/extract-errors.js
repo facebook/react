@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -18,7 +18,7 @@ const babylonOptions = {
   // As a parser, babylon has its own options and we can't directly
   // import/require a babel preset. It should be kept **the same** as
   // the `babel-plugin-syntax-*` ones specified in
-  // https://github.com/facebook/fbjs/blob/master/babel-preset/configure.js
+  // https://github.com/facebook/fbjs/blob/master/packages/babel-preset-fbjs/configure.js
   plugins: [
     'classProperties',
     'flow',
@@ -76,15 +76,18 @@ module.exports = function(opts) {
             // error messages can be concatenated (`+`) at runtime, so here's a
             // trivial partial evaluator that interprets the literal value
             const errorMsgLiteral = evalToString(node.arguments[1]);
-            if (existingErrorMap.hasOwnProperty(errorMsgLiteral)) {
-              return;
-            }
-
-            existingErrorMap[errorMsgLiteral] = '' + currentID++;
+            addToErrorMap(errorMsgLiteral);
           }
         },
       },
     });
+  }
+
+  function addToErrorMap(errorMsgLiteral) {
+    if (existingErrorMap.hasOwnProperty(errorMsgLiteral)) {
+      return;
+    }
+    existingErrorMap[errorMsgLiteral] = '' + currentID++;
   }
 
   function flush(cb) {

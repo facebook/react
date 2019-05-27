@@ -1,5 +1,5 @@
 ###
-Copyright (c) 2015-present, Facebook, Inc.
+Copyright (c) Facebook, Inc. and its affiliates.
 
 This source code is licensed under the MIT license found in the
 LICENSE file in the root directory of this source tree.
@@ -55,7 +55,7 @@ describe 'ReactCoffeeScriptClass', ->
       # A failed component renders twice in DEV
       'No `render` method found on the returned component instance',
       'No `render` method found on the returned component instance',
-    ])
+    ], {withoutStack: true})
     undefined
 
   it 'renders a simple stateless component with prop', ->
@@ -126,18 +126,18 @@ describe 'ReactCoffeeScriptClass', ->
         {}
     expect(->
       ReactDOM.render(React.createElement(Foo, foo: 'foo'), container)
-    ).toWarnDev 'Foo: getDerivedStateFromProps() is defined as an instance method and will be ignored. Instead, declare it as a static method.',
+    ).toWarnDev 'Foo: getDerivedStateFromProps() is defined as an instance method and will be ignored. Instead, declare it as a static method.', {withoutStack: true}
     undefined
 
-  it 'warns if getDerivedStateFromCatch is not static', ->
+  it 'warns if getDerivedStateFromError is not static', ->
     class Foo extends React.Component
       render: ->
         div()
-      getDerivedStateFromCatch: ->
+      getDerivedStateFromError: ->
         {}
     expect(->
       ReactDOM.render(React.createElement(Foo, foo: 'foo'), container)
-    ).toWarnDev 'Foo: getDerivedStateFromCatch() is defined as an instance method and will be ignored. Instead, declare it as a static method.',
+    ).toWarnDev 'Foo: getDerivedStateFromError() is defined as an instance method and will be ignored. Instead, declare it as a static method.', {withoutStack: true}
     undefined
 
   it 'warns if getSnapshotBeforeUpdate is static', ->
@@ -148,7 +148,7 @@ describe 'ReactCoffeeScriptClass', ->
       {}
     expect(->
       ReactDOM.render(React.createElement(Foo, foo: 'foo'), container)
-    ).toWarnDev 'Foo: getSnapshotBeforeUpdate() is defined as a static method and will be ignored. Instead, declare it as an instance method.',
+    ).toWarnDev 'Foo: getSnapshotBeforeUpdate() is defined as a static method and will be ignored. Instead, declare it as an instance method.', {withoutStack: true}
     undefined
 
   it 'warns if state not initialized before static getDerivedStateFromProps', ->
@@ -163,7 +163,12 @@ describe 'ReactCoffeeScriptClass', ->
       }
     expect(->
       ReactDOM.render(React.createElement(Foo, foo: 'foo'), container)
-    ).toWarnDev 'Foo: Did not properly initialize state during construction. Expected state to be an object, but it was undefined.'
+    ).toWarnDev (
+      '`Foo` uses `getDerivedStateFromProps` but its initial state is ' +
+      'undefined. This is not recommended. Instead, define the initial state by ' +
+      'assigning an object to `this.state` in the constructor of `Foo`. ' +
+      'This ensures that `getDerivedStateFromProps` arguments have a consistent shape.'
+    ), {withoutStack: true}
     undefined
 
   it 'updates initial state with values returned by static getDerivedStateFromProps', ->
@@ -262,7 +267,7 @@ describe 'ReactCoffeeScriptClass', ->
 
       expect(->
         test React.createElement(Foo), 'SPAN', ''
-      ).toWarnDev('Foo.state: must be set to an object or null')
+      ).toWarnDev('Foo.state: must be set to an object or null', {withoutStack: true})
     undefined
 
   it 'should render with null in the initial state property', ->
@@ -387,6 +392,7 @@ describe 'ReactCoffeeScriptClass', ->
     class Foo extends React.Component
       constructor: ->
         @contextTypes = {}
+        @contextType = {}
         @propTypes = {}
 
       getInitialState: ->
@@ -408,7 +414,8 @@ describe 'ReactCoffeeScriptClass', ->
       'getDefaultProps was defined on Foo, a plain JavaScript class.',
       'propTypes was defined as an instance property on Foo.',
       'contextTypes was defined as an instance property on Foo.',
-    ])
+      'contextType was defined as an instance property on Foo.',
+    ], {withoutStack: true})
     expect(getInitialStateWasCalled).toBe false
     expect(getDefaultPropsWasCalled).toBe false
     undefined
@@ -444,7 +451,8 @@ describe 'ReactCoffeeScriptClass', ->
     ).toWarnDev(
       'Warning: NamedComponent has a method called componentShouldUpdate().
        Did you mean shouldComponentUpdate()? The name is phrased as a
-       question because the function is expected to return a value.'
+       question because the function is expected to return a value.',
+       {withoutStack: true}
     )
     undefined
 
@@ -461,7 +469,8 @@ describe 'ReactCoffeeScriptClass', ->
       test React.createElement(NamedComponent), 'SPAN', 'foo'
     ).toWarnDev(
       'Warning: NamedComponent has a method called componentWillRecieveProps().
-       Did you mean componentWillReceiveProps()?'
+       Did you mean componentWillReceiveProps()?',
+       {withoutStack: true}
     )
     undefined
 
@@ -478,7 +487,8 @@ describe 'ReactCoffeeScriptClass', ->
       test React.createElement(NamedComponent), 'SPAN', 'foo'
     ).toWarnDev(
       'Warning: NamedComponent has a method called UNSAFE_componentWillRecieveProps().
-       Did you mean UNSAFE_componentWillReceiveProps()?'
+       Did you mean UNSAFE_componentWillReceiveProps()?',
+       {withoutStack: true}
     )
     undefined
 
@@ -488,12 +498,14 @@ describe 'ReactCoffeeScriptClass', ->
     expect(->
       expect(-> instance.replaceState {}).toThrow()
     ).toLowPriorityWarnDev(
-      'replaceState(...) is deprecated in plain JavaScript React classes'
+      'replaceState(...) is deprecated in plain JavaScript React classes',
+      {withoutStack: true}
     )
     expect(->
       expect(-> instance.isMounted()).toThrow()
     ).toLowPriorityWarnDev(
-      'isMounted(...) is deprecated in plain JavaScript React classes'
+      'isMounted(...) is deprecated in plain JavaScript React classes',
+      {withoutStack: true}
     )
     undefined
 

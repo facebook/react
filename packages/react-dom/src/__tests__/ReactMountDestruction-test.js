@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -55,6 +55,7 @@ describe('ReactMount', () => {
         'unmount was rendered by React and is not a top-level container. You ' +
         'may have accidentally passed in a React root node instead of its ' +
         'container.',
+      {withoutStack: true},
     );
   });
 
@@ -77,6 +78,7 @@ describe('ReactMount', () => {
         'unmount was rendered by React and is not a top-level container. ' +
         'Instead, have the parent component update its state and rerender in ' +
         'order to remove this component.',
+      {withoutStack: true},
     );
   });
 });

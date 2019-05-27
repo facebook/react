@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,7 +7,7 @@
  * @flow
  */
 
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 
 /**
  * Accumulates items that must not be null or undefined.
@@ -22,7 +22,7 @@ function accumulate<T>(
 ): T | Array<T> {
   invariant(
     next != null,
-    'accumulate(...): Accumulated items must be not be null or undefined.',
+    'accumulate(...): Accumulated items must not be null or undefined.',
   );
 
   if (current == null) {

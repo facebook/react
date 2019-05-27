@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -16,7 +16,9 @@ const SyntheticWheelEvent = SyntheticMouseEvent.extend({
     return 'deltaX' in event
       ? event.deltaX
       : // Fallback to `wheelDeltaX` for Webkit and normalize (right is positive).
-        'wheelDeltaX' in event ? -event.wheelDeltaX : 0;
+        'wheelDeltaX' in event
+        ? -event.wheelDeltaX
+        : 0;
   },
   deltaY(event) {
     return 'deltaY' in event
@@ -25,7 +27,9 @@ const SyntheticWheelEvent = SyntheticMouseEvent.extend({
         'wheelDeltaY' in event
         ? -event.wheelDeltaY
         : // Fallback to `wheelDelta` for IE<9 and normalize (down is positive).
-          'wheelDelta' in event ? -event.wheelDelta : 0;
+          'wheelDelta' in event
+          ? -event.wheelDelta
+          : 0;
   },
   deltaZ: null,
 

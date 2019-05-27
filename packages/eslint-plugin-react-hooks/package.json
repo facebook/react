@@ -1,0 +1,34 @@
+{
+  "name": "eslint-plugin-react-hooks",
+  "description": "ESLint rules for React Hooks",
+  "version": "1.6.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/react.git",
+    "directory": "packages/eslint-plugin-react-hooks"
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "build-info.json",
+    "index.js",
+    "cjs"
+  ],
+  "keywords": [
+    "eslint",
+    "eslint-plugin",
+    "eslintplugin",
+    "react"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/facebook/react/issues"
+  },
+  "engines": {
+    "node": ">=7"
+  },
+  "homepage": "https://reactjs.org/",
+  "peerDependencies": {
+    "eslint": "^3.0.0 || ^4.0.0 || ^5.0.0"
+  }
+}

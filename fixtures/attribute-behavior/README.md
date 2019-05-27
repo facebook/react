@@ -20,7 +20,7 @@ The left box shows the property (or attribute) assigned by React 15.\*, and the
 right box shows the property (or attribute) assigned by the latest version of
 React 16.
 
-Right now we use a purple outline to call out cases where the assigned property
+Right now, we use a purple outline to call out cases where the assigned property
 (or attribute) has changed between React 15 and 16.
 
 ---

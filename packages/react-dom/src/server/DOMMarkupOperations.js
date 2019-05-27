@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -17,6 +17,7 @@ import {
   shouldIgnoreAttribute,
   shouldRemoveAttribute,
 } from '../shared/DOMProperty';
+import sanitizeURL from '../shared/sanitizeURL';
 import quoteAttributeValueForBrowser from './quoteAttributeValueForBrowser';
 
 /**
@@ -58,11 +59,16 @@ export function createMarkupForProperty(name: string, value: mixed): string {
     if (type === BOOLEAN || (type === OVERLOADED_BOOLEAN && value === true)) {
       return attributeName + '=""';
     } else {
+      if (propertyInfo.sanitizeURL) {
+        value = '' + (value: any);
+        sanitizeURL(value);
+      }
       return attributeName + '=' + quoteAttributeValueForBrowser(value);
     }
-  } else {
+  } else if (isAttributeNameSafe(name)) {
     return name + '=' + quoteAttributeValueForBrowser(value);
   }
+  return '';
 }
 
 /**

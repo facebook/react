@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -79,6 +79,7 @@ describe('ReactPureComponent', () => {
         'Component has a method called shouldComponentUpdate(). ' +
         'shouldComponentUpdate should not be used when extending React.PureComponent. ' +
         'Please extend React.Component if shouldComponentUpdate is used.',
+      {withoutStack: true},
     );
     ReactDOM.render(<Component />, container);
     expect(renders).toBe(2);
@@ -113,6 +114,7 @@ describe('ReactPureComponent', () => {
         'PureComponent has a method called shouldComponentUpdate(). ' +
         'shouldComponentUpdate should not be used when extending React.PureComponent. ' +
         'Please extend React.Component if shouldComponentUpdate is used.',
+      {withoutStack: true},
     );
   });
 });

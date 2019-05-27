@@ -2,41 +2,35 @@
 
 'use strict';
 
-const chalk = require('chalk');
-const logUpdate = require('log-update');
-const {getPublicPackages} = require('./utils');
+const {join} = require('path');
+const {getPublicPackages, handleError} = require('./utils');
 
-const checkBuildStatus = require('./publish-commands/check-build-status');
-const commitChangelog = require('./publish-commands/commit-changelog');
-const parsePublishParams = require('./publish-commands/parse-publish-params');
-const printPostPublishSummary = require('./publish-commands/print-post-publish-summary');
-const pushGitRemote = require('./publish-commands/push-git-remote');
-const publishToNpm = require('./publish-commands/publish-to-npm');
+const checkNPMPermissions = require('./publish-commands/check-npm-permissions');
+const confirmVersionAndTags = require('./publish-commands/confirm-version-and-tags');
+const downloadErrorCodesFromCI = require('./publish-commands/download-error-codes-from-ci');
+const parseParams = require('./publish-commands/parse-params');
+const printFollowUpInstructions = require('./publish-commands/print-follow-up-instructions');
+const promptForOTP = require('./publish-commands/prompt-for-otp');
+const publishToNPM = require('./publish-commands/publish-to-npm');
+const updateStableVersionNumbers = require('./publish-commands/update-stable-version-numbers');
+const validateTags = require('./publish-commands/validate-tags');
 
-// Follows the steps outlined in github.com/facebook/react/issues/10620
 const run = async () => {
-  const params = parsePublishParams();
-  params.packages = getPublicPackages();
-
   try {
-    await checkBuildStatus(params);
-    await commitChangelog(params);
-    await pushGitRemote(params);
-    await publishToNpm(params);
-    await printPostPublishSummary(params);
+    const params = parseParams();
+    params.cwd = join(__dirname, '..', '..');
+    params.packages = await getPublicPackages();
+
+    await validateTags(params);
+    await confirmVersionAndTags(params);
+    await checkNPMPermissions(params);
+    const otp = await promptForOTP(params);
+    await publishToNPM(params, otp);
+    await downloadErrorCodesFromCI(params);
+    await updateStableVersionNumbers(params);
+    await printFollowUpInstructions(params);
   } catch (error) {
-    logUpdate.clear();
-
-    const message = error.message.trim().replace(/\n +/g, '\n');
-    const stack = error.stack.replace(error.message, '');
-
-    console.log(
-      `${chalk.bgRed.white(' ERROR ')} ${chalk.red(message)}\n\n${chalk.gray(
-        stack
-      )}`
-    );
-
-    process.exit(1);
+    handleError(error);
   }
 };
 

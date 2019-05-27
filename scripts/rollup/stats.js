@@ -5,7 +5,9 @@ const filesize = require('filesize');
 const chalk = require('chalk');
 const join = require('path').join;
 const fs = require('fs');
-const prevBuildResults = require('./results.json');
+const prevBuildResults = fs.existsSync(__dirname + '/results.json')
+  ? require('./results.json')
+  : {bundleSizes: []};
 
 const currentBuildResults = {
   // Mutated inside build.js during a build run.
@@ -72,9 +74,11 @@ function generateResultsArray(current, prevResults) {
         prevSize: filesize(prevSize),
         prevFileSize: filesize(size),
         prevFileSizeChange: fractionalChange(prevSize, size),
+        prevFileSizeAbsoluteChange: size - prevSize,
         prevGzip: filesize(prevGzip),
         prevGzipSize: filesize(gzip),
         prevGzipSizeChange: fractionalChange(prevGzip, gzip),
+        prevGzipSizeAbsoluteChange: gzip - prevGzip,
       };
       // Strip any nulls
     })

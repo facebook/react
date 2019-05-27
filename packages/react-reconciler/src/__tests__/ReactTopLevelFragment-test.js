@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -12,6 +12,7 @@
 
 let React;
 let ReactNoop;
+let Scheduler;
 
 // This is a new feature in Fiber so I put it in its own test file. It could
 // probably move to one of the other test files once it is official.
@@ -20,6 +21,7 @@ describe('ReactTopLevelFragment', function() {
     jest.resetModules();
     React = require('react');
     ReactNoop = require('react-noop-renderer');
+    Scheduler = require('scheduler');
   });
 
   it('should render a simple fragment at the top of a component', function() {
@@ -27,7 +29,7 @@ describe('ReactTopLevelFragment', function() {
       return [<div key="a">Hello</div>, <div key="b">World</div>];
     }
     ReactNoop.render(<Fragment />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
   });
 
   it('should preserve state when switching from a single child', function() {
@@ -48,14 +50,14 @@ describe('ReactTopLevelFragment', function() {
       );
     }
     ReactNoop.render(<Fragment />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     const instanceA = instance;
 
     expect(instanceA).not.toBe(null);
 
     ReactNoop.render(<Fragment condition={true} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     const instanceB = instance;
 
@@ -80,14 +82,14 @@ describe('ReactTopLevelFragment', function() {
       );
     }
     ReactNoop.render(<Fragment />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     const instanceA = instance;
 
     expect(instanceA).not.toBe(null);
 
     ReactNoop.render(<Fragment condition={true} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     const instanceB = instance;
 
@@ -110,21 +112,21 @@ describe('ReactTopLevelFragment', function() {
         : [<div key="b">Hello</div>, <Stateful key="a" />];
     }
     ReactNoop.render(<Fragment />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     const instanceA = instance;
 
     expect(instanceA).not.toBe(null);
 
     ReactNoop.render(<Fragment condition={true} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     const instanceB = instance;
 
     expect(instanceB).toBe(instanceA);
 
     ReactNoop.render(<Fragment condition={false} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     const instanceC = instance;
 
@@ -147,14 +149,14 @@ describe('ReactTopLevelFragment', function() {
         : [[<Stateful key="a" />, <div key="b">World</div>], <div key="c" />];
     }
     ReactNoop.render(<Fragment />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     const instanceA = instance;
 
     expect(instanceA).not.toBe(null);
 
     ReactNoop.render(<Fragment condition={true} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     const instanceB = instance;
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -32,7 +32,7 @@ class VectorWidget extends React.Component {
   /**
    * When the component is mounted into the document - this is similar to a
    * constructor, but invoked when the instance is actually mounted into the
-   * document. Here's, we'll just set up an animation loop that invokes our
+   * document. Here, we'll just set up an animation loop that invokes our
    * method. Binding of `this.onTick` is not needed because all React methods
    * are automatically bound before being mounted.
    */

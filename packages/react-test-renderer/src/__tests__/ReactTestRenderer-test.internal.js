@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -15,6 +15,11 @@ ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 const React = require('react');
 const ReactTestRenderer = require('react-test-renderer');
 const prettyFormat = require('pretty-format');
+
+// Isolate noop renderer
+jest.resetModules();
+const ReactNoop = require('react-noop-renderer');
+const Scheduler = require('scheduler');
 
 // Kind of hacky, but we nullify all the instances to test the tree structure
 // with jasmine's deep equality function, and test the instances separate. We
@@ -277,8 +282,10 @@ describe('ReactTestRenderer', () => {
     }
     ReactTestRenderer.create(<Baz />);
     expect(() => ReactTestRenderer.create(<Foo />)).toWarnDev(
-      'Warning: Stateless function components cannot be given refs. Attempts ' +
-        'to access this ref will fail.\n\nCheck the render method of `Foo`.\n' +
+      'Warning: Function components cannot be given refs. Attempts ' +
+        'to access this ref will fail. ' +
+        'Did you mean to use React.forwardRef()?\n\n' +
+        'Check the render method of `Foo`.\n' +
         '    in Bar (at **)\n' +
         '    in Foo (at **)',
     );
@@ -998,6 +1005,37 @@ describe('ReactTestRenderer', () => {
         },
         type: App,
       }),
+    );
+  });
+
+  it('can concurrently render context with a "primary" renderer', () => {
+    const Context = React.createContext(null);
+    const Indirection = React.Fragment;
+    const App = () => (
+      <Context.Provider>
+        <Indirection>
+          <Context.Consumer>{() => null}</Context.Consumer>
+        </Indirection>
+      </Context.Provider>
+    );
+    ReactNoop.render(<App />);
+    expect(Scheduler).toFlushWithoutYielding();
+    ReactTestRenderer.create(<App />);
+  });
+
+  // we run this test here because we need a dom-less scope
+  it('warns and throws if you use TestUtils.act instead of TestRenderer.act in node', () => {
+    // we warn when you try to load 2 renderers in the same 'scope'
+    // so as suggested, we call resetModules() to carry on with the test
+    jest.resetModules();
+    const {act} = require('react-dom/test-utils');
+    expect(() => {
+      expect(() => act(() => {})).toThrow('document is not defined');
+    }).toWarnDev(
+      [
+        'It looks like you called ReactTestUtils.act(...) in a non-browser environment',
+      ],
+      {withoutStack: 1},
     );
   });
 });

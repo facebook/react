@@ -1,62 +1,27 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  * @flow
  */
 
-import ReactErrorUtils from 'shared/ReactErrorUtils';
-import invariant from 'fbjs/lib/invariant';
+import invariant from 'shared/invariant';
 
 import {
   injectEventPluginOrder,
   injectEventPluginsByName,
   plugins,
 } from './EventPluginRegistry';
-import {
-  executeDispatchesInOrder,
-  getFiberCurrentPropsFromNode,
-} from './EventPluginUtils';
+import {getFiberCurrentPropsFromNode} from './EventPluginUtils';
 import accumulateInto from './accumulateInto';
-import forEachAccumulated from './forEachAccumulated';
+import {runEventsInBatch} from './EventBatching';
 
 import type {PluginModule} from './PluginModuleType';
 import type {ReactSyntheticEvent} from './ReactSyntheticEventType';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {AnyNativeEvent} from './PluginModuleType';
-
-/**
- * Internal queue of events that have accumulated their dispatches and are
- * waiting to have their dispatches executed.
- */
-let eventQueue: ?(Array<ReactSyntheticEvent> | ReactSyntheticEvent) = null;
-
-/**
- * Dispatches an event and releases it back into the pool, unless persistent.
- *
- * @param {?object} event Synthetic event to be dispatched.
- * @param {boolean} simulated If the event is simulated (changes exn behavior)
- * @private
- */
-const executeDispatchesAndRelease = function(
-  event: ReactSyntheticEvent,
-  simulated: boolean,
-) {
-  if (event) {
-    executeDispatchesInOrder(event, simulated);
-
-    if (!event.isPersistent()) {
-      event.constructor.release(event);
-    }
-  }
-};
-const executeDispatchesAndReleaseSimulated = function(e) {
-  return executeDispatchesAndRelease(e, true);
-};
-const executeDispatchesAndReleaseTopLevel = function(e) {
-  return executeDispatchesAndRelease(e, false);
-};
+import type {TopLevelType} from './TopLevelEventTypes';
 
 function isInteractive(tag) {
   return (
@@ -164,9 +129,9 @@ export function getListener(inst: Fiber, registrationName: string) {
  * @return {*} An accumulation of synthetic events.
  * @internal
  */
-function extractEvents(
-  topLevelType: string,
-  targetInst: Fiber,
+function extractPluginEvents(
+  topLevelType: TopLevelType,
+  targetInst: null | Fiber,
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: EventTarget,
 ): Array<ReactSyntheticEvent> | ReactSyntheticEvent | null {
@@ -189,54 +154,17 @@ function extractEvents(
   return events;
 }
 
-export function runEventsInBatch(
-  events: Array<ReactSyntheticEvent> | ReactSyntheticEvent | null,
-  simulated: boolean,
-) {
-  if (events !== null) {
-    eventQueue = accumulateInto(eventQueue, events);
-  }
-
-  // Set `eventQueue` to null before processing it so that we can tell if more
-  // events get enqueued while processing.
-  const processingEventQueue = eventQueue;
-  eventQueue = null;
-
-  if (!processingEventQueue) {
-    return;
-  }
-
-  if (simulated) {
-    forEachAccumulated(
-      processingEventQueue,
-      executeDispatchesAndReleaseSimulated,
-    );
-  } else {
-    forEachAccumulated(
-      processingEventQueue,
-      executeDispatchesAndReleaseTopLevel,
-    );
-  }
-  invariant(
-    !eventQueue,
-    'processEventQueue(): Additional events were enqueued while processing ' +
-      'an event queue. Support for this has not yet been implemented.',
-  );
-  // This would be a good time to rethrow if any of the event handlers threw.
-  ReactErrorUtils.rethrowCaughtError();
-}
-
-export function runExtractedEventsInBatch(
-  topLevelType: string,
-  targetInst: Fiber,
+export function runExtractedPluginEventsInBatch(
+  topLevelType: TopLevelType,
+  targetInst: null | Fiber,
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: EventTarget,
 ) {
-  const events = extractEvents(
+  const events = extractPluginEvents(
     topLevelType,
     targetInst,
     nativeEvent,
     nativeEventTarget,
   );
-  runEventsInBatch(events, false);
+  runEventsInBatch(events);
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -72,7 +72,7 @@ describe('SelectEventPlugin', () => {
     // Verify that it doesn't get "stuck" waiting for
     // a `mouseup` event that it has "missed" because
     // a top-level listener didn't exist yet.
-    expect(select.mock.calls.length).toBe(1);
+    expect(select).toHaveBeenCalledTimes(1);
   });
 
   it('should fire `onSelect` when a listener is present', () => {
@@ -95,17 +95,52 @@ describe('SelectEventPlugin', () => {
       cancelable: true,
     });
     node.dispatchEvent(nativeEvent);
-    expect(select.mock.calls.length).toBe(0);
+    expect(select).toHaveBeenCalledTimes(0);
 
     nativeEvent = new MouseEvent('mousedown', {
       bubbles: true,
       cancelable: true,
     });
     node.dispatchEvent(nativeEvent);
-    expect(select.mock.calls.length).toBe(0);
+    expect(select).toHaveBeenCalledTimes(0);
 
     nativeEvent = new MouseEvent('mouseup', {bubbles: true, cancelable: true});
     node.dispatchEvent(nativeEvent);
-    expect(select.mock.calls.length).toBe(1);
+    expect(select).toHaveBeenCalledTimes(1);
+  });
+
+  // Regression test for https://github.com/facebook/react/issues/11379
+  it('should not wait for `mouseup` after receiving `dragend`', () => {
+    const select = jest.fn();
+    const onSelect = event => {
+      expect(typeof event).toBe('object');
+      expect(event.type).toBe('select');
+      expect(event.target).toBe(node);
+      select(event.currentTarget);
+    };
+
+    const node = ReactDOM.render(
+      <input type="text" onSelect={onSelect} />,
+      container,
+    );
+    node.focus();
+
+    let nativeEvent = new MouseEvent('focus', {
+      bubbles: true,
+      cancelable: true,
+    });
+    node.dispatchEvent(nativeEvent);
+    expect(select).toHaveBeenCalledTimes(0);
+
+    nativeEvent = new MouseEvent('mousedown', {
+      bubbles: true,
+      cancelable: true,
+    });
+    node.dispatchEvent(nativeEvent);
+    expect(select).toHaveBeenCalledTimes(0);
+
+    nativeEvent = new MouseEvent('dragend', {bubbles: true, cancelable: true});
+    node.dispatchEvent(nativeEvent);
+    expect(select).toHaveBeenCalledTimes(1);
   });
 });

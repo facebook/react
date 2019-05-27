@@ -5,8 +5,9 @@ init:
   - git config --global core.autocrlf input
 
 environment:
+  JAVA_HOME: C:\Program Files\Java\jdk1.8.0
   matrix:
-    - nodejs_version: 8
+    - nodejs_version: 10
 
 # Finish on first failed build
 matrix:
@@ -25,12 +26,12 @@ deploy: off
 
 install:
   - ps: Install-Product node $env:nodejs_version $env:platform
-  - yarn install
+  - yarn install --frozen-lockfile
 
 test_script:
   - node --version
   - yarn lint
-  - yarn flow
+#  - yarn flow-ci
   - yarn build
   - yarn test
   - yarn prettier

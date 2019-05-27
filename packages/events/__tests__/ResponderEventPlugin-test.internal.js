@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -9,14 +9,23 @@
 
 'use strict';
 
-const {HostComponent} = require('shared/ReactTypeOfWork');
+const {HostComponent} = require('shared/ReactWorkTags');
 
-let EventPluginHub;
+let EventBatching;
+let EventPluginUtils;
 let ResponderEventPlugin;
 
 const touch = function(nodeHandle, i) {
   return {target: nodeHandle, identifier: i};
 };
+
+function injectComponentTree(ComponentTree) {
+  EventPluginUtils.setComponentTree(
+    ComponentTree.getFiberCurrentPropsFromNode,
+    ComponentTree.getInstanceFromNode,
+    ComponentTree.getNodeFromInstance,
+  );
+}
 
 /**
  * @param {NodeHandle} nodeHandle @see NodeHandle. Handle of target.
@@ -312,7 +321,7 @@ const run = function(config, hierarchyConfig, nativeEventConfig) {
   // At this point the negotiation events have been dispatched as part of the
   // extraction process, but not the side effectful events. Below, we dispatch
   // side effectful events.
-  EventPluginHub.runEventsInBatch(extractedEvents, true);
+  EventBatching.runEventsInBatch(extractedEvents);
 
   // Ensure that every event that declared an `order`, was actually dispatched.
   expect('number of events dispatched:' + runData.dispatchCount).toBe(
@@ -393,13 +402,9 @@ describe('ResponderEventPlugin', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    const ReactDOM = require('react-dom');
     const ReactDOMUnstableNativeDependencies = require('react-dom/unstable-native-dependencies');
-    EventPluginHub =
-      ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-        .EventPluginHub;
-    const injectComponentTree =
-      ReactDOMUnstableNativeDependencies.injectComponentTree;
+    EventBatching = require('events/EventBatching');
+    EventPluginUtils = require('events/EventPluginUtils');
     ResponderEventPlugin =
       ReactDOMUnstableNativeDependencies.ResponderEventPlugin;
 

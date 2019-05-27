@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -183,6 +183,7 @@ describe('ReactDOMServerLifecycles', () => {
     expect(() => ReactDOMServer.renderToString(<Component />)).toWarnDev(
       'Component.getDerivedStateFromProps(): A valid state object (or null) must ' +
         'be returned. You have returned undefined.',
+      {withoutStack: true},
     );
 
     // De-duped
@@ -200,8 +201,11 @@ describe('ReactDOMServerLifecycles', () => {
     }
 
     expect(() => ReactDOMServer.renderToString(<Component />)).toWarnDev(
-      'Component: Did not properly initialize state during construction. ' +
-        'Expected state to be an object, but it was undefined.',
+      '`Component` uses `getDerivedStateFromProps` but its initial state is ' +
+        'undefined. This is not recommended. Instead, define the initial state by ' +
+        'assigning an object to `this.state` in the constructor of `Component`. ' +
+        'This ensures that `getDerivedStateFromProps` arguments have a consistent shape.',
+      {withoutStack: true},
     );
 
     // De-duped
@@ -223,7 +227,11 @@ describe('ReactDOMServerLifecycles', () => {
       }
     }
 
-    ReactDOMServer.renderToString(<Component />);
+    expect(() =>
+      ReactDOMServer.renderToString(<Component />),
+    ).toLowPriorityWarnDev('componentWillMount() is deprecated', {
+      withoutStack: true,
+    });
     expect(log).toEqual(['componentWillMount', 'UNSAFE_componentWillMount']);
   });
 
@@ -258,6 +266,97 @@ describe('ReactDOMServerLifecycles', () => {
         'usually means you called setState() outside componentWillMount() on ' +
         'the server. This is a no-op.\n\n' +
         'Please check the code for the Outer component.',
+      {withoutStack: true},
     );
+  });
+
+  it('should not invoke cWM if static gDSFP is present', () => {
+    class Component extends React.Component {
+      state = {};
+      static getDerivedStateFromProps() {
+        return null;
+      }
+      componentWillMount() {
+        throw Error('unexpected');
+      }
+      render() {
+        return null;
+      }
+    }
+
+    expect(() =>
+      ReactDOMServer.renderToString(<Component />),
+    ).toLowPriorityWarnDev(
+      'Component: componentWillMount() is deprecated and will be removed in the next major version.',
+      {withoutStack: true},
+    );
+  });
+
+  it('should warn about deprecated lifecycle hooks', () => {
+    class Component extends React.Component {
+      componentWillMount() {}
+      render() {
+        return null;
+      }
+    }
+
+    expect(() =>
+      ReactDOMServer.renderToString(<Component />),
+    ).toLowPriorityWarnDev(
+      'Warning: Component: componentWillMount() is deprecated and will be removed ' +
+        'in the next major version.',
+      {withoutStack: true},
+    );
+
+    // De-duped
+    ReactDOMServer.renderToString(<Component />);
+  });
+
+  describe('react-lifecycles-compat', () => {
+    const {polyfill} = require('react-lifecycles-compat');
+
+    it('should not warn for components with polyfilled getDerivedStateFromProps', () => {
+      class PolyfilledComponent extends React.Component {
+        state = {};
+        static getDerivedStateFromProps() {
+          return null;
+        }
+        render() {
+          return null;
+        }
+      }
+
+      polyfill(PolyfilledComponent);
+
+      const container = document.createElement('div');
+      ReactDOMServer.renderToString(
+        <React.StrictMode>
+          <PolyfilledComponent />
+        </React.StrictMode>,
+        container,
+      );
+    });
+
+    it('should not warn for components with polyfilled getSnapshotBeforeUpdate', () => {
+      class PolyfilledComponent extends React.Component {
+        getSnapshotBeforeUpdate() {
+          return null;
+        }
+        componentDidUpdate() {}
+        render() {
+          return null;
+        }
+      }
+
+      polyfill(PolyfilledComponent);
+
+      const container = document.createElement('div');
+      ReactDOMServer.renderToString(
+        <React.StrictMode>
+          <PolyfilledComponent />
+        </React.StrictMode>,
+        container,
+      );
+    });
   });
 });

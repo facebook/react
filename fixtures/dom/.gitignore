@@ -8,8 +8,16 @@ coverage
 
 # production
 build
+public/scheduler-unstable_mock.development.js
+public/scheduler-unstable_mock.production.min.js
 public/react.development.js
+public/react.production.min.js
 public/react-dom.development.js
+public/react-dom.production.min.js
+public/react-dom-server.browser.development.js
+public/react-dom-server.browser.production.min.js
+public/react-dom-test-utils.development.js
+public/react-dom-test-utils.production.min.js
 
 # misc
 .DS_Store

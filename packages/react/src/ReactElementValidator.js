@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2014-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -13,65 +13,39 @@
  */
 
 import lowPriorityWarning from 'shared/lowPriorityWarning';
-import describeComponentFrame from 'shared/describeComponentFrame';
 import isValidElementType from 'shared/isValidElementType';
 import getComponentName from 'shared/getComponentName';
-import {getIteratorFn, REACT_FRAGMENT_TYPE} from 'shared/ReactSymbols';
+import {
+  getIteratorFn,
+  REACT_FORWARD_REF_TYPE,
+  REACT_MEMO_TYPE,
+  REACT_FRAGMENT_TYPE,
+  REACT_ELEMENT_TYPE,
+} from 'shared/ReactSymbols';
 import checkPropTypes from 'prop-types/checkPropTypes';
-import warning from 'fbjs/lib/warning';
+import warning from 'shared/warning';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
 import ReactCurrentOwner from './ReactCurrentOwner';
-import {isValidElement, createElement, cloneElement} from './ReactElement';
-import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
+import {
+  isValidElement,
+  createElement,
+  cloneElement,
+  jsxDEV,
+} from './ReactElement';
+import ReactDebugCurrentFrame, {
+  setCurrentlyValidatingElement,
+} from './ReactDebugCurrentFrame';
 
-let currentlyValidatingElement;
 let propTypesMisspellWarningShown;
 
-let getDisplayName = () => {};
-let getStackAddendum = () => {};
-
-let VALID_FRAGMENT_PROPS;
-
 if (__DEV__) {
-  currentlyValidatingElement = null;
-
   propTypesMisspellWarningShown = false;
-
-  getDisplayName = function(element): string {
-    if (element == null) {
-      return '#empty';
-    } else if (typeof element === 'string' || typeof element === 'number') {
-      return '#text';
-    } else if (typeof element.type === 'string') {
-      return element.type;
-    } else if (element.type === REACT_FRAGMENT_TYPE) {
-      return 'React.Fragment';
-    } else {
-      return element.type.displayName || element.type.name || 'Unknown';
-    }
-  };
-
-  getStackAddendum = function(): string {
-    let stack = '';
-    if (currentlyValidatingElement) {
-      const name = getDisplayName(currentlyValidatingElement);
-      const owner = currentlyValidatingElement._owner;
-      stack += describeComponentFrame(
-        name,
-        currentlyValidatingElement._source,
-        owner && getComponentName(owner),
-      );
-    }
-    stack += ReactDebugCurrentFrame.getStackAddendum() || '';
-    return stack;
-  };
-
-  VALID_FRAGMENT_PROPS = new Map([['children', true], ['key', true]]);
 }
 
 function getDeclarationErrorAddendum() {
   if (ReactCurrentOwner.current) {
-    const name = getComponentName(ReactCurrentOwner.current);
+    const name = getComponentName(ReactCurrentOwner.current.type);
     if (name) {
       return '\n\nCheck the render method of `' + name + '`.';
     }
@@ -79,16 +53,18 @@ function getDeclarationErrorAddendum() {
   return '';
 }
 
-function getSourceInfoErrorAddendum(elementProps) {
-  if (
-    elementProps !== null &&
-    elementProps !== undefined &&
-    elementProps.__source !== undefined
-  ) {
-    const source = elementProps.__source;
+function getSourceInfoErrorAddendum(source) {
+  if (source !== undefined) {
     const fileName = source.fileName.replace(/^.*[\\\/]/, '');
     const lineNumber = source.lineNumber;
     return '\n\nCheck your code at ' + fileName + ':' + lineNumber + '.';
+  }
+  return '';
+}
+
+function getSourceInfoErrorAddendumForProps(elementProps) {
+  if (elementProps !== null && elementProps !== undefined) {
+    return getSourceInfoErrorAddendum(elementProps.__source);
   }
   return '';
 }
@@ -149,22 +125,21 @@ function validateExplicitKey(element, parentType) {
   ) {
     // Give the component that originally created this child.
     childOwner = ` It was passed a child from ${getComponentName(
-      element._owner,
+      element._owner.type,
     )}.`;
   }
 
-  currentlyValidatingElement = element;
+  setCurrentlyValidatingElement(element);
   if (__DEV__) {
     warning(
       false,
-      'Each child in an array or iterator should have a unique "key" prop.' +
-        '%s%s See https://fb.me/react-warning-keys for more information.%s',
+      'Each child in a list should have a unique "key" prop.' +
+        '%s%s See https://fb.me/react-warning-keys for more information.',
       currentComponentErrorInfo,
       childOwner,
-      getStackAddendum(),
     );
   }
-  currentlyValidatingElement = null;
+  setCurrentlyValidatingElement(null);
 }
 
 /**
@@ -217,30 +192,46 @@ function validateChildKeys(node, parentType) {
  * @param {ReactElement} element
  */
 function validatePropTypes(element) {
-  const componentClass = element.type;
-  if (typeof componentClass !== 'function') {
+  const type = element.type;
+  if (type === null || type === undefined || typeof type === 'string') {
     return;
   }
-  const name = componentClass.displayName || componentClass.name;
-  const propTypes = componentClass.propTypes;
-  if (propTypes) {
-    currentlyValidatingElement = element;
-    checkPropTypes(propTypes, element.props, 'prop', name, getStackAddendum);
-    currentlyValidatingElement = null;
+  const name = getComponentName(type);
+  let propTypes;
+  if (typeof type === 'function') {
+    propTypes = type.propTypes;
   } else if (
-    componentClass.PropTypes !== undefined &&
-    !propTypesMisspellWarningShown
+    typeof type === 'object' &&
+    (type.$$typeof === REACT_FORWARD_REF_TYPE ||
+      // Note: Memo only checks outer props here.
+      // Inner props are checked in the reconciler.
+      type.$$typeof === REACT_MEMO_TYPE)
   ) {
+    propTypes = type.propTypes;
+  } else {
+    return;
+  }
+  if (propTypes) {
+    setCurrentlyValidatingElement(element);
+    checkPropTypes(
+      propTypes,
+      element.props,
+      'prop',
+      name,
+      ReactDebugCurrentFrame.getStackAddendum,
+    );
+    setCurrentlyValidatingElement(null);
+  } else if (type.PropTypes !== undefined && !propTypesMisspellWarningShown) {
     propTypesMisspellWarningShown = true;
-    warning(
+    warningWithoutStack(
       false,
       'Component %s declared `PropTypes` instead of `propTypes`. Did you misspell the property assignment?',
       name || 'Unknown',
     );
   }
-  if (typeof componentClass.getDefaultProps === 'function') {
-    warning(
-      componentClass.getDefaultProps.isReactClassApproved,
+  if (typeof type.getDefaultProps === 'function') {
+    warningWithoutStack(
+      type.getDefaultProps.isReactClassApproved,
       'getDefaultProps is only used on classic React.createClass ' +
         'definitions. Use a static property named `defaultProps` instead.',
     );
@@ -252,32 +243,138 @@ function validatePropTypes(element) {
  * @param {ReactElement} fragment
  */
 function validateFragmentProps(fragment) {
-  currentlyValidatingElement = fragment;
+  setCurrentlyValidatingElement(fragment);
 
   const keys = Object.keys(fragment.props);
   for (let i = 0; i < keys.length; i++) {
     const key = keys[i];
-    if (!VALID_FRAGMENT_PROPS.has(key)) {
+    if (key !== 'children' && key !== 'key') {
       warning(
         false,
         'Invalid prop `%s` supplied to `React.Fragment`. ' +
-          'React.Fragment can only have `key` and `children` props.%s',
+          'React.Fragment can only have `key` and `children` props.',
         key,
-        getStackAddendum(),
       );
       break;
     }
   }
 
   if (fragment.ref !== null) {
+    warning(false, 'Invalid attribute `ref` supplied to `React.Fragment`.');
+  }
+
+  setCurrentlyValidatingElement(null);
+}
+
+export function jsxWithValidation(
+  type,
+  props,
+  key,
+  isStaticChildren,
+  source,
+  self,
+) {
+  const validType = isValidElementType(type);
+
+  // We warn in this case but don't throw. We expect the element creation to
+  // succeed and there will likely be errors in render.
+  if (!validType) {
+    let info = '';
+    if (
+      type === undefined ||
+      (typeof type === 'object' &&
+        type !== null &&
+        Object.keys(type).length === 0)
+    ) {
+      info +=
+        ' You likely forgot to export your component from the file ' +
+        "it's defined in, or you might have mixed up default and named imports.";
+    }
+
+    const sourceInfo = getSourceInfoErrorAddendum(source);
+    if (sourceInfo) {
+      info += sourceInfo;
+    } else {
+      info += getDeclarationErrorAddendum();
+    }
+
+    let typeString;
+    if (type === null) {
+      typeString = 'null';
+    } else if (Array.isArray(type)) {
+      typeString = 'array';
+    } else if (type !== undefined && type.$$typeof === REACT_ELEMENT_TYPE) {
+      typeString = `<${getComponentName(type.type) || 'Unknown'} />`;
+      info =
+        ' Did you accidentally export a JSX literal instead of a component?';
+    } else {
+      typeString = typeof type;
+    }
+
     warning(
       false,
-      'Invalid attribute `ref` supplied to `React.Fragment`.%s',
-      getStackAddendum(),
+      'React.jsx: type is invalid -- expected a string (for ' +
+        'built-in components) or a class/function (for composite ' +
+        'components) but got: %s.%s',
+      typeString,
+      info,
     );
   }
 
-  currentlyValidatingElement = null;
+  const element = jsxDEV(type, props, key, source, self);
+
+  // The result can be nullish if a mock or a custom function is used.
+  // TODO: Drop this when these are no longer allowed as the type argument.
+  if (element == null) {
+    return element;
+  }
+
+  // Skip key warning if the type isn't valid since our key validation logic
+  // doesn't expect a non-string/function type and can throw confusing errors.
+  // We don't want exception behavior to differ between dev and prod.
+  // (Rendering will throw with a helpful message and as soon as the type is
+  // fixed, the key warnings will appear.)
+  if (validType) {
+    const children = props.children;
+    if (children !== undefined) {
+      if (isStaticChildren) {
+        for (let i = 0; i < children.length; i++) {
+          validateChildKeys(children[i], type);
+        }
+      } else {
+        validateChildKeys(children, type);
+      }
+    }
+  }
+
+  if (props.key !== undefined) {
+    warning(
+      false,
+      'React.jsx: Spreading a key to JSX is a deprecated pattern. ' +
+        'Explicitly pass a key after spreading props in your JSX call. ' +
+        'E.g. <ComponentName {...props} key={key} />',
+    );
+  }
+
+  if (type === REACT_FRAGMENT_TYPE) {
+    validateFragmentProps(element);
+  } else {
+    validatePropTypes(element);
+  }
+
+  return element;
+}
+
+// These two functions exist to still get child warnings in dev
+// even with the prod transform. This means that jsxDEV is purely
+// opt-in behavior for better messages but that we won't stop
+// giving you warnings if you use production apis.
+export function jsxWithValidationStatic(type, props, key) {
+  return jsxWithValidation(type, props, key, true);
+}
+
+export function jsxWithValidationDynamic(type, props, key) {
+  return jsxWithValidation(type, props, key, false);
 }
 
 export function createElementWithValidation(type, props, children) {
@@ -298,20 +395,22 @@ export function createElementWithValidation(type, props, children) {
         "it's defined in, or you might have mixed up default and named imports.";
     }
 
-    const sourceInfo = getSourceInfoErrorAddendum(props);
+    const sourceInfo = getSourceInfoErrorAddendumForProps(props);
     if (sourceInfo) {
       info += sourceInfo;
     } else {
       info += getDeclarationErrorAddendum();
     }
 
-    info += getStackAddendum() || '';
-
     let typeString;
     if (type === null) {
       typeString = 'null';
     } else if (Array.isArray(type)) {
       typeString = 'array';
+    } else if (type !== undefined && type.$$typeof === REACT_ELEMENT_TYPE) {
+      typeString = `<${getComponentName(type.type) || 'Unknown'} />`;
+      info =
+        ' Did you accidentally export a JSX literal instead of a component?';
     } else {
       typeString = typeof type;
     }

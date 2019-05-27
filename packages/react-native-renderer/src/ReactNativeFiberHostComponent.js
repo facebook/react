@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -14,14 +14,22 @@ import type {
   NativeMethodsMixinType,
   ReactNativeBaseComponentViewConfig,
 } from './ReactNativeTypes';
-import type {Instance} from './ReactNativeFiberRenderer';
+import type {Instance} from './ReactNativeHostConfig';
 
 // Modules provided by RN:
-import TextInputState from 'TextInputState';
-import UIManager from 'UIManager';
+import {
+  TextInputState,
+  UIManager,
+} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
-import * as ReactNativeAttributePayload from './ReactNativeAttributePayload';
-import {mountSafeCallback, warnForStyleProps} from './NativeMethodsMixinUtils';
+import {create} from './ReactNativeAttributePayload';
+import {
+  mountSafeCallback_NOT_REALLY_SAFE,
+  warnForStyleProps,
+} from './NativeMethodsMixinUtils';
+
+import warningWithoutStack from 'shared/warningWithoutStack';
+import {warnAboutDeprecatedSetNativeProps} from 'shared/ReactFeatureFlags';
 
 /**
  * This component defines the same methods as NativeMethodsMixin but without the
@@ -33,9 +41,9 @@ import {mountSafeCallback, warnForStyleProps} from './NativeMethodsMixinUtils';
 class ReactNativeFiberHostComponent {
   _children: Array<Instance | number>;
   _nativeTag: number;
-  viewConfig: ReactNativeBaseComponentViewConfig;
+  viewConfig: ReactNativeBaseComponentViewConfig<>;
 
-  constructor(tag: number, viewConfig: ReactNativeBaseComponentViewConfig) {
+  constructor(tag: number, viewConfig: ReactNativeBaseComponentViewConfig<>) {
     this._nativeTag = tag;
     this._children = [];
     this.viewConfig = viewConfig;
@@ -50,38 +58,70 @@ class ReactNativeFiberHostComponent {
   }
 
   measure(callback: MeasureOnSuccessCallback) {
-    UIManager.measure(this._nativeTag, mountSafeCallback(this, callback));
+    UIManager.measure(
+      this._nativeTag,
+      mountSafeCallback_NOT_REALLY_SAFE(this, callback),
+    );
   }
 
   measureInWindow(callback: MeasureInWindowOnSuccessCallback) {
     UIManager.measureInWindow(
       this._nativeTag,
-      mountSafeCallback(this, callback),
+      mountSafeCallback_NOT_REALLY_SAFE(this, callback),
     );
   }
 
   measureLayout(
-    relativeToNativeNode: number,
+    relativeToNativeNode: number | Object,
     onSuccess: MeasureLayoutOnSuccessCallback,
     onFail: () => void /* currently unused */,
   ) {
+    let relativeNode;
+
+    if (typeof relativeToNativeNode === 'number') {
+      // Already a node handle
+      relativeNode = relativeToNativeNode;
+    } else if (relativeToNativeNode._nativeTag) {
+      relativeNode = relativeToNativeNode._nativeTag;
+    } else if (
+      relativeToNativeNode.canonical &&
+      relativeToNativeNode.canonical._nativeTag
+    ) {
+      relativeNode = relativeToNativeNode.canonical._nativeTag;
+    }
+
+    if (relativeNode == null) {
+      warningWithoutStack(
+        false,
+        'Warning: ref.measureLayout must be called with a node handle or a ref to a native component.',
+      );
+
+      return;
+    }
+
     UIManager.measureLayout(
       this._nativeTag,
-      relativeToNativeNode,
-      mountSafeCallback(this, onFail),
-      mountSafeCallback(this, onSuccess),
+      relativeNode,
+      mountSafeCallback_NOT_REALLY_SAFE(this, onFail),
+      mountSafeCallback_NOT_REALLY_SAFE(this, onSuccess),
     );
   }
 
   setNativeProps(nativeProps: Object) {
     if (__DEV__) {
+      if (warnAboutDeprecatedSetNativeProps) {
+        warningWithoutStack(
+          false,
+          'Warning: Calling ref.setNativeProps(nativeProps) ' +
+            'is deprecated and will be removed in a future release. ' +
+            'Use the setNativeProps export from the react-native package instead.' +
+            "\n\timport {setNativeProps} from 'react-native';\n\tsetNativeProps(ref, nativeProps);\n",
+        );
+      }
       warnForStyleProps(nativeProps, this.viewConfig.validAttributes);
     }
 
-    const updatePayload = ReactNativeAttributePayload.create(
-      nativeProps,
-      this.viewConfig.validAttributes,
-    );
+    const updatePayload = create(nativeProps, this.viewConfig.validAttributes);
 
     // Avoid the overhead of bridge calls if there's no update.
     // This is an expensive no-op for Android, and causes an unnecessary

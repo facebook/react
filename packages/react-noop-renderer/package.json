@@ -4,14 +4,18 @@
   "private": true,
   "description": "React package for testing the Fiber reconciler.",
   "main": "index.js",
-  "repository": "facebook/react",
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/facebook/react.git",
+    "directory": "packages/react-noop-renderer"
+  },
   "license": "MIT",
   "dependencies": {
-    "fbjs": "^0.8.16",
     "object-assign": "^4.1.1",
-    "prop-types": "^15.6.0",
+    "prop-types": "^15.6.2",
     "regenerator-runtime": "^0.11.0",
-    "react-reconciler": "*"
+    "react-reconciler": "*",
+    "react-stream": "*"
   },
   "peerDependencies": {
     "react": "^16.0.0"
@@ -19,7 +23,10 @@
   "files": [
     "LICENSE",
     "README.md",
+    "build-info.json",
     "index.js",
+    "persistent.js",
+    "server.js",
     "cjs/"
   ]
 }

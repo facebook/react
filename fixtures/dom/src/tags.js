@@ -52,7 +52,9 @@ export default function getVersionTags() {
       cachedTags = JSON.parse(cachedTags);
       resolve(cachedTags);
     } else {
-      fetch('https://api.github.com/repos/facebook/react/tags', {mode: 'cors'})
+      fetch('https://api.github.com/repos/facebook/react/tags?per_page=1000', {
+        mode: 'cors',
+      })
         .then(res => res.json())
         .then(tags => {
           // A message property indicates an error was sent from the API

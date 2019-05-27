@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2015-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -9,12 +9,33 @@
 
 import './ReactNativeInjectionShared';
 
-import * as ReactNativeEventEmitter from './ReactNativeEventEmitter';
+import {
+  getFiberCurrentPropsFromNode,
+  getInstanceFromNode,
+  getNodeFromInstance,
+} from './ReactNativeComponentTree';
+import {setComponentTree} from 'events/EventPluginUtils';
+import {receiveEvent, receiveTouches} from './ReactNativeEventEmitter';
+import ReactNativeGlobalResponderHandler from './ReactNativeGlobalResponderHandler';
+import ResponderEventPlugin from 'events/ResponderEventPlugin';
 
 // Module provided by RN:
-import RCTEventEmitter from 'RCTEventEmitter';
+import {RCTEventEmitter} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
 /**
  * Register the event emitter with the native bridge
  */
-RCTEventEmitter.register(ReactNativeEventEmitter);
+RCTEventEmitter.register({
+  receiveEvent,
+  receiveTouches,
+});
+
+setComponentTree(
+  getFiberCurrentPropsFromNode,
+  getInstanceFromNode,
+  getNodeFromInstance,
+);
+
+ResponderEventPlugin.injection.injectGlobalResponderHandler(
+  ReactNativeGlobalResponderHandler,
+);

@@ -1,12 +1,14 @@
 /**
- * Copyright (c) 2015-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
+ * @format
  * @flow
- * @providesModule ReactNativeTypes
  */
+
+import React from 'react';
 
 export type MeasureOnSuccessCallback = (
   x: number,
@@ -31,26 +33,68 @@ export type MeasureLayoutOnSuccessCallback = (
   height: number,
 ) => void;
 
-type BubblingEventType = {
-  phasedRegistrationNames: {
-    captured: string,
-    bubbled: string,
-  },
-};
+type AttributeType =
+  | true
+  | $ReadOnly<{|
+      diff?: <T>(arg1: T, arg2: T) => boolean,
+      process?: (arg1: any) => any,
+    |}>;
 
-type DirectEventType = {
-  registrationName: string,
-};
+export type AttributeConfiguration<
+  TProps = string,
+  TStyleProps = string,
+> = $ReadOnly<{
+  [propName: TProps]: AttributeType,
+  style: $ReadOnly<{
+    [propName: TStyleProps]: AttributeType,
+  }>,
+}>;
 
-export type ReactNativeBaseComponentViewConfig = {
-  validAttributes: Object,
+export type ReactNativeBaseComponentViewConfig<
+  TProps = string,
+  TStyleProps = string,
+> = $ReadOnly<{|
+  baseModuleName?: string,
+  bubblingEventTypes?: $ReadOnly<{
+    [eventName: string]: $ReadOnly<{|
+      phasedRegistrationNames: $ReadOnly<{|
+        captured: string,
+        bubbled: string,
+      |}>,
+    |}>,
+  }>,
+  Commands?: $ReadOnly<{
+    [commandName: string]: number,
+  }>,
+  directEventTypes?: $ReadOnly<{
+    [eventName: string]: $ReadOnly<{|
+      registrationName: string,
+    |}>,
+  }>,
+  NativeProps?: $ReadOnly<{
+    [propName: string]: string,
+  }>,
   uiViewClassName: string,
-  bubblingEventTypes?: {[topLevelType: string]: BubblingEventType},
-  directEventTypes?: {[topLevelType: string]: DirectEventType},
-  propTypes?: Object,
-};
+  validAttributes: AttributeConfiguration<TProps, TStyleProps>,
+|}>;
 
-export type ViewConfigGetter = () => ReactNativeBaseComponentViewConfig;
+export type ViewConfigGetter = () => ReactNativeBaseComponentViewConfig<>;
+
+/**
+ * Class only exists for its Flow type.
+ */
+class ReactNativeComponent<Props> extends React.Component<Props> {
+  blur(): void {}
+  focus(): void {}
+  measure(callback: MeasureOnSuccessCallback): void {}
+  measureInWindow(callback: MeasureInWindowOnSuccessCallback): void {}
+  measureLayout(
+    relativeToNativeNode: number | Object,
+    onSuccess: MeasureLayoutOnSuccessCallback,
+    onFail?: () => void,
+  ): void {}
+  setNativeProps(nativeProps: Object): void {}
+}
 
 /**
  * This type keeps ReactNativeFiberHostComponent and NativeMethodsMixin in sync.
@@ -62,28 +106,22 @@ export type NativeMethodsMixinType = {
   measure(callback: MeasureOnSuccessCallback): void,
   measureInWindow(callback: MeasureInWindowOnSuccessCallback): void,
   measureLayout(
-    relativeToNativeNode: number,
+    relativeToNativeNode: number | Object,
     onSuccess: MeasureLayoutOnSuccessCallback,
     onFail: () => void,
   ): void,
   setNativeProps(nativeProps: Object): void,
 };
 
-type ReactNativeBridgeEventPlugin = {
-  processEventTypes(viewConfig: ReactNativeBaseComponentViewConfig): void,
-};
-
 type SecretInternalsType = {
   NativeMethodsMixin: NativeMethodsMixinType,
-  createReactNativeComponentClass(
-    name: string,
-    callback: ViewConfigGetter,
-  ): any,
-  ReactNativeBridgeEventPlugin: ReactNativeBridgeEventPlugin,
-  ReactNativeComponentTree: any,
-  ReactNativePropRegistry: any,
+  computeComponentStackForErrorReporting(tag: number): string,
   // TODO (bvaughn) Decide which additional types to expose here?
   // And how much information to fill in for the above types.
+};
+
+type SecretInternalsFabricType = {
+  NativeMethodsMixin: NativeMethodsMixinType,
 };
 
 /**
@@ -91,8 +129,9 @@ type SecretInternalsType = {
  * Provide minimal Flow typing for the high-level RN API and call it a day.
  */
 export type ReactNativeType = {
-  NativeComponent: any,
+  NativeComponent: typeof ReactNativeComponent,
   findNodeHandle(componentOrHandle: any): ?number,
+  setNativeProps(handle: any, nativeProps: Object): void,
   render(
     element: React$Element<any>,
     containerTag: any,
@@ -103,4 +142,18 @@ export type ReactNativeType = {
   unstable_batchedUpdates: any, // TODO (bvaughn) Add types
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: SecretInternalsType,
+};
+
+export type ReactFabricType = {
+  NativeComponent: typeof ReactNativeComponent,
+  findNodeHandle(componentOrHandle: any): ?number,
+  setNativeProps(handle: any, nativeProps: Object): void,
+  render(
+    element: React$Element<any>,
+    containerTag: any,
+    callback: ?Function,
+  ): any,
+  unmountComponentAtNode(containerTag: number): any,
+
+  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: SecretInternalsFabricType,
 };

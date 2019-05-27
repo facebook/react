@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,165 +7,131 @@
  * @flow
  */
 
-import type {HostConfig} from 'react-reconciler';
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
-import type {HostContext} from './ReactFiberHostContext';
-import type {LegacyContext} from './ReactFiberContext';
-import type {NewContext} from './ReactFiberNewContext';
-import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {FiberRoot} from './ReactFiberRoot';
+import type {
+  Instance,
+  Type,
+  Props,
+  Container,
+  ChildSet,
+} from './ReactFiberHostConfig';
+import type {ReactEventComponentInstance} from 'shared/ReactTypes';
+import type {SuspenseState} from './ReactFiberSuspenseComponent';
+import type {SuspenseContext} from './ReactFiberSuspenseContext';
 
 import {
-  enableMutatingReconciler,
-  enablePersistentReconciler,
-  enableNoopReconciler,
-} from 'shared/ReactFeatureFlags';
-import {
   IndeterminateComponent,
-  FunctionalComponent,
+  FunctionComponent,
   ClassComponent,
   HostRoot,
   HostComponent,
   HostText,
   HostPortal,
-  CallComponent,
-  CallHandlerPhase,
-  ReturnComponent,
   ContextProvider,
   ContextConsumer,
   ForwardRef,
   Fragment,
   Mode,
-} from 'shared/ReactTypeOfWork';
+  Profiler,
+  SuspenseComponent,
+  DehydratedSuspenseComponent,
+  MemoComponent,
+  SimpleMemoComponent,
+  LazyComponent,
+  IncompleteClassComponent,
+  EventComponent,
+  EventTarget,
+} from 'shared/ReactWorkTags';
+import {NoMode, BatchedMode} from './ReactTypeOfMode';
 import {
   Placement,
   Ref,
   Update,
-  ErrLog,
+  NoEffect,
   DidCapture,
-} from 'shared/ReactTypeOfSideEffect';
-import invariant from 'fbjs/lib/invariant';
+  Deletion,
+} from 'shared/ReactSideEffectTags';
+import invariant from 'shared/invariant';
 
-import {reconcileChildFibers} from './ReactChildFiber';
+import {
+  createInstance,
+  createTextInstance,
+  appendInitialChild,
+  finalizeInitialChildren,
+  prepareUpdate,
+  supportsMutation,
+  supportsPersistence,
+  cloneInstance,
+  cloneHiddenInstance,
+  cloneHiddenTextInstance,
+  createContainerChildSet,
+  appendChildToContainerChildSet,
+  finalizeContainerChildren,
+  updateEventComponent,
+  handleEventTarget,
+} from './ReactFiberHostConfig';
+import {
+  getRootHostContainer,
+  popHostContext,
+  getHostContext,
+  popHostContainer,
+} from './ReactFiberHostContext';
+import {
+  suspenseStackCursor,
+  InvisibleParentSuspenseContext,
+  hasSuspenseContext,
+  popSuspenseContext,
+} from './ReactFiberSuspenseContext';
+import {
+  isContextProvider as isLegacyContextProvider,
+  popContext as popLegacyContext,
+  popTopLevelContextObject as popTopLevelLegacyContextObject,
+} from './ReactFiberContext';
+import {popProvider} from './ReactFiberNewContext';
+import {
+  prepareToHydrateHostInstance,
+  prepareToHydrateHostTextInstance,
+  skipPastDehydratedSuspenseInstance,
+  popHydrationState,
+} from './ReactFiberHydrationContext';
+import {
+  enableSuspenseServerRenderer,
+  enableEventAPI,
+} from 'shared/ReactFeatureFlags';
+import {
+  markRenderEventTimeAndConfig,
+  renderDidSuspend,
+  renderDidSuspendDelayIfPossible,
+} from './ReactFiberWorkLoop';
+import {getEventComponentHostChildrenCount} from './ReactFiberEvents';
+import getComponentName from 'shared/getComponentName';
+import warning from 'shared/warning';
 
-export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
-  config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
-  hostContext: HostContext<C, CX>,
-  legacyContext: LegacyContext,
-  newContext: NewContext,
-  hydrationContext: HydrationContext<C, CX>,
-) {
-  const {
-    createInstance,
-    createTextInstance,
-    appendInitialChild,
-    finalizeInitialChildren,
-    prepareUpdate,
-    mutation,
-    persistence,
-  } = config;
+function markUpdate(workInProgress: Fiber) {
+  // Tag the fiber with an update effect. This turns a Placement into
+  // a PlacementAndUpdate.
+  workInProgress.effectTag |= Update;
+}
 
-  const {
-    getRootHostContainer,
-    popHostContext,
-    getHostContext,
-    popHostContainer,
-  } = hostContext;
+function markRef(workInProgress: Fiber) {
+  workInProgress.effectTag |= Ref;
+}
 
-  const {
-    popContextProvider: popLegacyContextProvider,
-    popTopLevelContextObject: popTopLevelLegacyContextObject,
-  } = legacyContext;
+let appendAllChildren;
+let updateHostContainer;
+let updateHostComponent;
+let updateHostText;
+if (supportsMutation) {
+  // Mutation mode
 
-  const {popProvider} = newContext;
-
-  const {
-    prepareToHydrateHostInstance,
-    prepareToHydrateHostTextInstance,
-    popHydrationState,
-  } = hydrationContext;
-
-  function markUpdate(workInProgress: Fiber) {
-    // Tag the fiber with an update effect. This turns a Placement into
-    // an UpdateAndPlacement.
-    workInProgress.effectTag |= Update;
-  }
-
-  function markRef(workInProgress: Fiber) {
-    workInProgress.effectTag |= Ref;
-  }
-
-  function appendAllReturns(returns: Array<mixed>, workInProgress: Fiber) {
-    let node = workInProgress.stateNode;
-    if (node) {
-      node.return = workInProgress;
-    }
-    while (node !== null) {
-      if (
-        node.tag === HostComponent ||
-        node.tag === HostText ||
-        node.tag === HostPortal
-      ) {
-        invariant(false, 'A call cannot have host component children.');
-      } else if (node.tag === ReturnComponent) {
-        returns.push(node.pendingProps.value);
-      } else if (node.child !== null) {
-        node.child.return = node;
-        node = node.child;
-        continue;
-      }
-      while (node.sibling === null) {
-        if (node.return === null || node.return === workInProgress) {
-          return;
-        }
-        node = node.return;
-      }
-      node.sibling.return = node.return;
-      node = node.sibling;
-    }
-  }
-
-  function moveCallToHandlerPhase(
-    current: Fiber | null,
+  appendAllChildren = function(
+    parent: Instance,
     workInProgress: Fiber,
-    renderExpirationTime: ExpirationTime,
+    needsVisibilityToggle: boolean,
+    isHidden: boolean,
   ) {
-    const props = workInProgress.memoizedProps;
-    invariant(
-      props,
-      'Should be resolved by now. This error is likely caused by a bug in ' +
-        'React. Please file an issue.',
-    );
-
-    // First step of the call has completed. Now we need to do the second.
-    // TODO: It would be nice to have a multi stage call represented by a
-    // single component, or at least tail call optimize nested ones. Currently
-    // that requires additional fields that we don't want to add to the fiber.
-    // So this requires nested handlers.
-    // Note: This doesn't mutate the alternate node. I don't think it needs to
-    // since this stage is reset for every pass.
-    workInProgress.tag = CallHandlerPhase;
-
-    // Build up the returns.
-    // TODO: Compare this to a generator or opaque helpers like Children.
-    const returns: Array<mixed> = [];
-    appendAllReturns(returns, workInProgress);
-    const fn = props.handler;
-    const childProps = props.props;
-    const nextChildren = fn(childProps, returns);
-
-    const currentFirstChild = current !== null ? current.child : null;
-    workInProgress.child = reconcileChildFibers(
-      workInProgress,
-      currentFirstChild,
-      nextChildren,
-      renderExpirationTime,
-    );
-    return workInProgress.child;
-  }
-
-  function appendAllChildren(parent: I, workInProgress: Fiber) {
     // We only have the top Fiber that was created but we need recurse down its
     // children to find all the terminal nodes.
     let node = workInProgress.child;
@@ -193,142 +159,473 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       node.sibling.return = node.return;
       node = node.sibling;
     }
-  }
+  };
 
-  let updateHostContainer;
-  let updateHostComponent;
-  let updateHostText;
-  if (mutation) {
-    if (enableMutatingReconciler) {
-      // Mutation mode
-      updateHostContainer = function(workInProgress: Fiber) {
-        // Noop
-      };
-      updateHostComponent = function(
-        current: Fiber,
-        workInProgress: Fiber,
-        updatePayload: null | PL,
-        type: T,
-        oldProps: P,
-        newProps: P,
-        rootContainerInstance: C,
-        currentHostContext: CX,
-      ) {
-        // TODO: Type this specific to this type of component.
-        workInProgress.updateQueue = (updatePayload: any);
-        // If the update payload indicates that there is a change or if there
-        // is a new ref we mark this as an update. All the work is done in commitWork.
-        if (updatePayload) {
-          markUpdate(workInProgress);
-        }
-      };
-      updateHostText = function(
-        current: Fiber,
-        workInProgress: Fiber,
-        oldText: string,
-        newText: string,
-      ) {
-        // If the text differs, mark it as an update. All the work in done in commitWork.
-        if (oldText !== newText) {
-          markUpdate(workInProgress);
-        }
-      };
-    } else {
-      invariant(false, 'Mutating reconciler is disabled.');
+  updateHostContainer = function(workInProgress: Fiber) {
+    // Noop
+  };
+  updateHostComponent = function(
+    current: Fiber,
+    workInProgress: Fiber,
+    type: Type,
+    newProps: Props,
+    rootContainerInstance: Container,
+  ) {
+    // If we have an alternate, that means this is an update and we need to
+    // schedule a side-effect to do the updates.
+    const oldProps = current.memoizedProps;
+    if (oldProps === newProps) {
+      // In mutation mode, this is sufficient for a bailout because
+      // we won't touch this node even if children changed.
+      return;
     }
-  } else if (persistence) {
-    if (enablePersistentReconciler) {
-      // Persistent host tree mode
-      const {
-        cloneInstance,
-        createContainerChildSet,
-        appendChildToContainerChildSet,
-        finalizeContainerChildren,
-      } = persistence;
 
-      // An unfortunate fork of appendAllChildren because we have two different parent types.
-      const appendAllChildrenToContainer = function(
-        containerChildSet: CC,
-        workInProgress: Fiber,
-      ) {
-        // We only have the top Fiber that was created but we need recurse down its
-        // children to find all the terminal nodes.
-        let node = workInProgress.child;
-        while (node !== null) {
-          if (node.tag === HostComponent || node.tag === HostText) {
-            appendChildToContainerChildSet(containerChildSet, node.stateNode);
-          } else if (node.tag === HostPortal) {
-            // If we have a portal child, then we don't want to traverse
-            // down its children. Instead, we'll get insertions from each child in
-            // the portal directly.
-          } else if (node.child !== null) {
-            node.child.return = node;
-            node = node.child;
-            continue;
-          }
-          if (node === workInProgress) {
-            return;
-          }
-          while (node.sibling === null) {
-            if (node.return === null || node.return === workInProgress) {
-              return;
+    // If we get updated because one of our children updated, we don't
+    // have newProps so we'll have to reuse them.
+    // TODO: Split the update API as separate for the props vs. children.
+    // Even better would be if children weren't special cased at all tho.
+    const instance: Instance = workInProgress.stateNode;
+    const currentHostContext = getHostContext();
+    // TODO: Experiencing an error where oldProps is null. Suggests a host
+    // component is hitting the resume path. Figure out why. Possibly
+    // related to `hidden`.
+    const updatePayload = prepareUpdate(
+      instance,
+      type,
+      oldProps,
+      newProps,
+      rootContainerInstance,
+      currentHostContext,
+    );
+    // TODO: Type this specific to this type of component.
+    workInProgress.updateQueue = (updatePayload: any);
+    // If the update payload indicates that there is a change or if there
+    // is a new ref we mark this as an update. All the work is done in commitWork.
+    if (updatePayload) {
+      markUpdate(workInProgress);
+    }
+  };
+  updateHostText = function(
+    current: Fiber,
+    workInProgress: Fiber,
+    oldText: string,
+    newText: string,
+  ) {
+    // If the text differs, mark it as an update. All the work in done in commitWork.
+    if (oldText !== newText) {
+      markUpdate(workInProgress);
+    }
+  };
+} else if (supportsPersistence) {
+  // Persistent host tree mode
+
+  appendAllChildren = function(
+    parent: Instance,
+    workInProgress: Fiber,
+    needsVisibilityToggle: boolean,
+    isHidden: boolean,
+  ) {
+    // We only have the top Fiber that was created but we need recurse down its
+    // children to find all the terminal nodes.
+    let node = workInProgress.child;
+    while (node !== null) {
+      // eslint-disable-next-line no-labels
+      branches: if (node.tag === HostComponent) {
+        let instance = node.stateNode;
+        if (needsVisibilityToggle && isHidden) {
+          // This child is inside a timed out tree. Hide it.
+          const props = node.memoizedProps;
+          const type = node.type;
+          instance = cloneHiddenInstance(instance, type, props, node);
+        }
+        appendInitialChild(parent, instance);
+      } else if (node.tag === HostText) {
+        let instance = node.stateNode;
+        if (needsVisibilityToggle && isHidden) {
+          // This child is inside a timed out tree. Hide it.
+          const text = node.memoizedProps;
+          instance = cloneHiddenTextInstance(instance, text, node);
+        }
+        appendInitialChild(parent, instance);
+      } else if (node.tag === HostPortal) {
+        // If we have a portal child, then we don't want to traverse
+        // down its children. Instead, we'll get insertions from each child in
+        // the portal directly.
+      } else if (node.tag === SuspenseComponent) {
+        if ((node.effectTag & Update) !== NoEffect) {
+          // Need to toggle the visibility of the primary children.
+          const newIsHidden = node.memoizedState !== null;
+          if (newIsHidden) {
+            const primaryChildParent = node.child;
+            if (primaryChildParent !== null) {
+              if (primaryChildParent.child !== null) {
+                primaryChildParent.child.return = primaryChildParent;
+                appendAllChildren(
+                  parent,
+                  primaryChildParent,
+                  true,
+                  newIsHidden,
+                );
+              }
+              const fallbackChildParent = primaryChildParent.sibling;
+              if (fallbackChildParent !== null) {
+                fallbackChildParent.return = node;
+                node = fallbackChildParent;
+                continue;
+              }
             }
-            node = node.return;
           }
-          node.sibling.return = node.return;
-          node = node.sibling;
         }
-      };
-      updateHostContainer = function(workInProgress: Fiber) {
-        const portalOrRoot: {containerInfo: C, pendingChildren: CC} =
-          workInProgress.stateNode;
-        const childrenUnchanged = workInProgress.firstEffect === null;
-        if (childrenUnchanged) {
-          // No changes, just reuse the existing instance.
-        } else {
-          const container = portalOrRoot.containerInfo;
-          let newChildSet = createContainerChildSet(container);
-          // If children might have changed, we have to add them all to the set.
-          appendAllChildrenToContainer(newChildSet, workInProgress);
-          portalOrRoot.pendingChildren = newChildSet;
-          // Schedule an update on the container to swap out the container.
-          markUpdate(workInProgress);
-          finalizeContainerChildren(container, newChildSet);
+        if (node.child !== null) {
+          // Continue traversing like normal
+          node.child.return = node;
+          node = node.child;
+          continue;
         }
-      };
-      updateHostComponent = function(
-        current: Fiber,
-        workInProgress: Fiber,
-        updatePayload: null | PL,
-        type: T,
-        oldProps: P,
-        newProps: P,
-        rootContainerInstance: C,
-        currentHostContext: CX,
-      ) {
-        // If there are no effects associated with this node, then none of our children had any updates.
-        // This guarantees that we can reuse all of them.
-        const childrenUnchanged = workInProgress.firstEffect === null;
-        const currentInstance = current.stateNode;
-        if (childrenUnchanged && updatePayload === null) {
-          // No changes, just reuse the existing instance.
-          // Note that this might release a previous clone.
-          workInProgress.stateNode = currentInstance;
-        } else {
-          let recyclableInstance = workInProgress.stateNode;
-          let newInstance = cloneInstance(
-            currentInstance,
-            updatePayload,
-            type,
-            oldProps,
-            newProps,
-            workInProgress,
-            childrenUnchanged,
-            recyclableInstance,
+      } else if (node.child !== null) {
+        node.child.return = node;
+        node = node.child;
+        continue;
+      }
+      // $FlowFixMe This is correct but Flow is confused by the labeled break.
+      node = (node: Fiber);
+      if (node === workInProgress) {
+        return;
+      }
+      while (node.sibling === null) {
+        if (node.return === null || node.return === workInProgress) {
+          return;
+        }
+        node = node.return;
+      }
+      node.sibling.return = node.return;
+      node = node.sibling;
+    }
+  };
+
+  // An unfortunate fork of appendAllChildren because we have two different parent types.
+  const appendAllChildrenToContainer = function(
+    containerChildSet: ChildSet,
+    workInProgress: Fiber,
+    needsVisibilityToggle: boolean,
+    isHidden: boolean,
+  ) {
+    // We only have the top Fiber that was created but we need recurse down its
+    // children to find all the terminal nodes.
+    let node = workInProgress.child;
+    while (node !== null) {
+      // eslint-disable-next-line no-labels
+      branches: if (node.tag === HostComponent) {
+        let instance = node.stateNode;
+        if (needsVisibilityToggle && isHidden) {
+          // This child is inside a timed out tree. Hide it.
+          const props = node.memoizedProps;
+          const type = node.type;
+          instance = cloneHiddenInstance(instance, type, props, node);
+        }
+        appendChildToContainerChildSet(containerChildSet, instance);
+      } else if (node.tag === HostText) {
+        let instance = node.stateNode;
+        if (needsVisibilityToggle && isHidden) {
+          // This child is inside a timed out tree. Hide it.
+          const text = node.memoizedProps;
+          instance = cloneHiddenTextInstance(instance, text, node);
+        }
+        appendChildToContainerChildSet(containerChildSet, instance);
+      } else if (node.tag === HostPortal) {
+        // If we have a portal child, then we don't want to traverse
+        // down its children. Instead, we'll get insertions from each child in
+        // the portal directly.
+      } else if (node.tag === SuspenseComponent) {
+        if ((node.effectTag & Update) !== NoEffect) {
+          // Need to toggle the visibility of the primary children.
+          const newIsHidden = node.memoizedState !== null;
+          if (newIsHidden) {
+            const primaryChildParent = node.child;
+            if (primaryChildParent !== null) {
+              if (primaryChildParent.child !== null) {
+                primaryChildParent.child.return = primaryChildParent;
+                appendAllChildrenToContainer(
+                  containerChildSet,
+                  primaryChildParent,
+                  true,
+                  newIsHidden,
+                );
+              }
+              const fallbackChildParent = primaryChildParent.sibling;
+              if (fallbackChildParent !== null) {
+                fallbackChildParent.return = node;
+                node = fallbackChildParent;
+                continue;
+              }
+            }
+          }
+        }
+        if (node.child !== null) {
+          // Continue traversing like normal
+          node.child.return = node;
+          node = node.child;
+          continue;
+        }
+      } else if (node.child !== null) {
+        node.child.return = node;
+        node = node.child;
+        continue;
+      }
+      // $FlowFixMe This is correct but Flow is confused by the labeled break.
+      node = (node: Fiber);
+      if (node === workInProgress) {
+        return;
+      }
+      while (node.sibling === null) {
+        if (node.return === null || node.return === workInProgress) {
+          return;
+        }
+        node = node.return;
+      }
+      node.sibling.return = node.return;
+      node = node.sibling;
+    }
+  };
+  updateHostContainer = function(workInProgress: Fiber) {
+    const portalOrRoot: {
+      containerInfo: Container,
+      pendingChildren: ChildSet,
+    } =
+      workInProgress.stateNode;
+    const childrenUnchanged = workInProgress.firstEffect === null;
+    if (childrenUnchanged) {
+      // No changes, just reuse the existing instance.
+    } else {
+      const container = portalOrRoot.containerInfo;
+      let newChildSet = createContainerChildSet(container);
+      // If children might have changed, we have to add them all to the set.
+      appendAllChildrenToContainer(newChildSet, workInProgress, false, false);
+      portalOrRoot.pendingChildren = newChildSet;
+      // Schedule an update on the container to swap out the container.
+      markUpdate(workInProgress);
+      finalizeContainerChildren(container, newChildSet);
+    }
+  };
+  updateHostComponent = function(
+    current: Fiber,
+    workInProgress: Fiber,
+    type: Type,
+    newProps: Props,
+    rootContainerInstance: Container,
+  ) {
+    const currentInstance = current.stateNode;
+    const oldProps = current.memoizedProps;
+    // If there are no effects associated with this node, then none of our children had any updates.
+    // This guarantees that we can reuse all of them.
+    const childrenUnchanged = workInProgress.firstEffect === null;
+    if (childrenUnchanged && oldProps === newProps) {
+      // No changes, just reuse the existing instance.
+      // Note that this might release a previous clone.
+      workInProgress.stateNode = currentInstance;
+      return;
+    }
+    const recyclableInstance: Instance = workInProgress.stateNode;
+    const currentHostContext = getHostContext();
+    let updatePayload = null;
+    if (oldProps !== newProps) {
+      updatePayload = prepareUpdate(
+        recyclableInstance,
+        type,
+        oldProps,
+        newProps,
+        rootContainerInstance,
+        currentHostContext,
+      );
+    }
+    if (childrenUnchanged && updatePayload === null) {
+      // No changes, just reuse the existing instance.
+      // Note that this might release a previous clone.
+      workInProgress.stateNode = currentInstance;
+      return;
+    }
+    let newInstance = cloneInstance(
+      currentInstance,
+      updatePayload,
+      type,
+      oldProps,
+      newProps,
+      workInProgress,
+      childrenUnchanged,
+      recyclableInstance,
+    );
+    if (
+      finalizeInitialChildren(
+        newInstance,
+        type,
+        newProps,
+        rootContainerInstance,
+        currentHostContext,
+      )
+    ) {
+      markUpdate(workInProgress);
+    }
+    workInProgress.stateNode = newInstance;
+    if (childrenUnchanged) {
+      // If there are no other effects in this tree, we need to flag this node as having one.
+      // Even though we're not going to use it for anything.
+      // Otherwise parents won't know that there are new children to propagate upwards.
+      markUpdate(workInProgress);
+    } else {
+      // If children might have changed, we have to add them all to the set.
+      appendAllChildren(newInstance, workInProgress, false, false);
+    }
+  };
+  updateHostText = function(
+    current: Fiber,
+    workInProgress: Fiber,
+    oldText: string,
+    newText: string,
+  ) {
+    if (oldText !== newText) {
+      // If the text content differs, we'll create a new text instance for it.
+      const rootContainerInstance = getRootHostContainer();
+      const currentHostContext = getHostContext();
+      workInProgress.stateNode = createTextInstance(
+        newText,
+        rootContainerInstance,
+        currentHostContext,
+        workInProgress,
+      );
+      // We'll have to mark it as having an effect, even though we won't use the effect for anything.
+      // This lets the parents know that at least one of their children has changed.
+      markUpdate(workInProgress);
+    }
+  };
+} else {
+  // No host operations
+  updateHostContainer = function(workInProgress: Fiber) {
+    // Noop
+  };
+  updateHostComponent = function(
+    current: Fiber,
+    workInProgress: Fiber,
+    type: Type,
+    newProps: Props,
+    rootContainerInstance: Container,
+  ) {
+    // Noop
+  };
+  updateHostText = function(
+    current: Fiber,
+    workInProgress: Fiber,
+    oldText: string,
+    newText: string,
+  ) {
+    // Noop
+  };
+}
+
+function completeWork(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  renderExpirationTime: ExpirationTime,
+): Fiber | null {
+  const newProps = workInProgress.pendingProps;
+
+  switch (workInProgress.tag) {
+    case IndeterminateComponent:
+      break;
+    case LazyComponent:
+      break;
+    case SimpleMemoComponent:
+    case FunctionComponent:
+      break;
+    case ClassComponent: {
+      const Component = workInProgress.type;
+      if (isLegacyContextProvider(Component)) {
+        popLegacyContext(workInProgress);
+      }
+      break;
+    }
+    case HostRoot: {
+      popHostContainer(workInProgress);
+      popTopLevelLegacyContextObject(workInProgress);
+      const fiberRoot = (workInProgress.stateNode: FiberRoot);
+      if (fiberRoot.pendingContext) {
+        fiberRoot.context = fiberRoot.pendingContext;
+        fiberRoot.pendingContext = null;
+      }
+      if (current === null || current.child === null) {
+        // If we hydrated, pop so that we can delete any remaining children
+        // that weren't hydrated.
+        popHydrationState(workInProgress);
+        // This resets the hacky state to fix isMounted before committing.
+        // TODO: Delete this when we delete isMounted and findDOMNode.
+        workInProgress.effectTag &= ~Placement;
+      }
+      updateHostContainer(workInProgress);
+      break;
+    }
+    case HostComponent: {
+      popHostContext(workInProgress);
+      const rootContainerInstance = getRootHostContainer();
+      const type = workInProgress.type;
+      if (current !== null && workInProgress.stateNode != null) {
+        updateHostComponent(
+          current,
+          workInProgress,
+          type,
+          newProps,
+          rootContainerInstance,
+        );
+
+        if (current.ref !== workInProgress.ref) {
+          markRef(workInProgress);
+        }
+      } else {
+        if (!newProps) {
+          invariant(
+            workInProgress.stateNode !== null,
+            'We must have new props for new mounts. This error is likely ' +
+              'caused by a bug in React. Please file an issue.',
           );
+          // This can happen when we abort work.
+          break;
+        }
+
+        const currentHostContext = getHostContext();
+        // TODO: Move createInstance to beginWork and keep it on a context
+        // "stack" as the parent. Then append children as we go in beginWork
+        // or completeWork depending on we want to add then top->down or
+        // bottom->up. Top->down is faster in IE11.
+        let wasHydrated = popHydrationState(workInProgress);
+        if (wasHydrated) {
+          // TODO: Move this and createInstance step into the beginPhase
+          // to consolidate.
+          if (
+            prepareToHydrateHostInstance(
+              workInProgress,
+              rootContainerInstance,
+              currentHostContext,
+            )
+          ) {
+            // If changes to the hydrated node needs to be applied at the
+            // commit-phase we mark this as such.
+            markUpdate(workInProgress);
+          }
+        } else {
+          let instance = createInstance(
+            type,
+            newProps,
+            rootContainerInstance,
+            currentHostContext,
+            workInProgress,
+          );
+
+          appendAllChildren(instance, workInProgress, false, false);
+
+          // Certain renderers require commit-time effects for initial mount.
+          // (eg DOM renderer supports auto-focus for certain elements).
+          // Make sure such renderers get scheduled for later work.
           if (
             finalizeInitialChildren(
-              newInstance,
+              instance,
               type,
               newProps,
               rootContainerInstance,
@@ -337,314 +634,276 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           ) {
             markUpdate(workInProgress);
           }
-          workInProgress.stateNode = newInstance;
-          if (childrenUnchanged) {
-            // If there are no other effects in this tree, we need to flag this node as having one.
-            // Even though we're not going to use it for anything.
-            // Otherwise parents won't know that there are new children to propagate upwards.
-            markUpdate(workInProgress);
-          } else {
-            // If children might have changed, we have to add them all to the set.
-            appendAllChildren(newInstance, workInProgress);
-          }
+          workInProgress.stateNode = instance;
         }
-      };
-      updateHostText = function(
-        current: Fiber,
-        workInProgress: Fiber,
-        oldText: string,
-        newText: string,
-      ) {
-        if (oldText !== newText) {
-          // If the text content differs, we'll create a new text instance for it.
-          const rootContainerInstance = getRootHostContainer();
-          const currentHostContext = getHostContext();
+
+        if (workInProgress.ref !== null) {
+          // If there is a ref on a host node we need to schedule a callback
+          markRef(workInProgress);
+        }
+      }
+      break;
+    }
+    case HostText: {
+      let newText = newProps;
+      if (current && workInProgress.stateNode != null) {
+        const oldText = current.memoizedProps;
+        // If we have an alternate, that means this is an update and we need
+        // to schedule a side-effect to do the updates.
+        updateHostText(current, workInProgress, oldText, newText);
+      } else {
+        if (typeof newText !== 'string') {
+          invariant(
+            workInProgress.stateNode !== null,
+            'We must have new props for new mounts. This error is likely ' +
+              'caused by a bug in React. Please file an issue.',
+          );
+          // This can happen when we abort work.
+        }
+        const rootContainerInstance = getRootHostContainer();
+        const currentHostContext = getHostContext();
+        let wasHydrated = popHydrationState(workInProgress);
+        if (wasHydrated) {
+          if (prepareToHydrateHostTextInstance(workInProgress)) {
+            markUpdate(workInProgress);
+          }
+        } else {
           workInProgress.stateNode = createTextInstance(
             newText,
             rootContainerInstance,
             currentHostContext,
             workInProgress,
           );
-          // We'll have to mark it as having an effect, even though we won't use the effect for anything.
-          // This lets the parents know that at least one of their children has changed.
-          markUpdate(workInProgress);
         }
-      };
-    } else {
-      invariant(false, 'Persistent reconciler is disabled.');
+      }
+      break;
     }
-  } else {
-    if (enableNoopReconciler) {
-      // No host operations
-      updateHostContainer = function(workInProgress: Fiber) {
-        // Noop
-      };
-      updateHostComponent = function(
-        current: Fiber,
-        workInProgress: Fiber,
-        updatePayload: null | PL,
-        type: T,
-        oldProps: P,
-        newProps: P,
-        rootContainerInstance: C,
-        currentHostContext: CX,
-      ) {
-        // Noop
-      };
-      updateHostText = function(
-        current: Fiber,
-        workInProgress: Fiber,
-        oldText: string,
-        newText: string,
-      ) {
-        // Noop
-      };
-    } else {
-      invariant(false, 'Noop reconciler is disabled.');
-    }
-  }
+    case ForwardRef:
+      break;
+    case SuspenseComponent: {
+      popSuspenseContext(workInProgress);
+      const nextState: null | SuspenseState = workInProgress.memoizedState;
+      if ((workInProgress.effectTag & DidCapture) !== NoEffect) {
+        // Something suspended. Re-render with the fallback children.
+        workInProgress.expirationTime = renderExpirationTime;
+        // Do not reset the effect list.
+        return workInProgress;
+      }
 
-  function completeWork(
-    current: Fiber | null,
-    workInProgress: Fiber,
-    renderExpirationTime: ExpirationTime,
-  ): Fiber | null {
-    const newProps = workInProgress.pendingProps;
-    switch (workInProgress.tag) {
-      case FunctionalComponent:
-        return null;
-      case ClassComponent: {
-        // We are leaving this subtree, so pop context if any.
-        popLegacyContextProvider(workInProgress);
+      const nextDidTimeout = nextState !== null;
+      let prevDidTimeout = false;
+      if (current === null) {
+        // In cases where we didn't find a suitable hydration boundary we never
+        // downgraded this to a DehydratedSuspenseComponent, but we still need to
+        // pop the hydration state since we might be inside the insertion tree.
+        popHydrationState(workInProgress);
+      } else {
+        const prevState: null | SuspenseState = current.memoizedState;
+        prevDidTimeout = prevState !== null;
+        if (!nextDidTimeout && prevState !== null) {
+          // We just switched from the fallback to the normal children.
 
-        // If this component caught an error, schedule an error log effect.
-        const instance = workInProgress.stateNode;
-        const updateQueue = workInProgress.updateQueue;
-        if (updateQueue !== null && updateQueue.capturedValues !== null) {
-          workInProgress.effectTag &= ~DidCapture;
-          if (typeof instance.componentDidCatch === 'function') {
-            workInProgress.effectTag |= ErrLog;
-          } else {
-            // Normally we clear this in the commit phase, but since we did not
-            // schedule an effect, we need to reset it here.
-            updateQueue.capturedValues = null;
+          // Mark the event time of the switching from fallback to normal children,
+          // based on the start of when we first showed the fallback. This time
+          // was given a normal pri expiration time at the time it was shown.
+          const fallbackExpirationTime: ExpirationTime =
+            prevState.fallbackExpirationTime;
+          markRenderEventTimeAndConfig(fallbackExpirationTime, null);
+
+          // Delete the fallback.
+          // TODO: Would it be better to store the fallback fragment on
+          // the stateNode during the begin phase?
+          const currentFallbackChild: Fiber | null = (current.child: any)
+            .sibling;
+          if (currentFallbackChild !== null) {
+            // Deletions go at the beginning of the return fiber's effect list
+            const first = workInProgress.firstEffect;
+            if (first !== null) {
+              workInProgress.firstEffect = currentFallbackChild;
+              currentFallbackChild.nextEffect = first;
+            } else {
+              workInProgress.firstEffect = workInProgress.lastEffect = currentFallbackChild;
+              currentFallbackChild.nextEffect = null;
+            }
+            currentFallbackChild.effectTag = Deletion;
           }
         }
-        return null;
       }
-      case HostRoot: {
-        popHostContainer(workInProgress);
-        popTopLevelLegacyContextObject(workInProgress);
-        const fiberRoot = (workInProgress.stateNode: FiberRoot);
-        if (fiberRoot.pendingContext) {
-          fiberRoot.context = fiberRoot.pendingContext;
-          fiberRoot.pendingContext = null;
-        }
-        if (current === null || current.child === null) {
-          // If we hydrated, pop so that we can delete any remaining children
-          // that weren't hydrated.
-          popHydrationState(workInProgress);
-          // This resets the hacky state to fix isMounted before committing.
-          // TODO: Delete this when we delete isMounted and findDOMNode.
-          workInProgress.effectTag &= ~Placement;
-        }
-        updateHostContainer(workInProgress);
 
-        const updateQueue = workInProgress.updateQueue;
-        if (updateQueue !== null && updateQueue.capturedValues !== null) {
-          workInProgress.effectTag |= ErrLog;
+      if (nextDidTimeout && !prevDidTimeout) {
+        // If this subtreee is running in batched mode we can suspend,
+        // otherwise we won't suspend.
+        // TODO: This will still suspend a synchronous tree if anything
+        // in the concurrent tree already suspended during this render.
+        // This is a known bug.
+        if ((workInProgress.mode & BatchedMode) !== NoMode) {
+          const hasInvisibleChildContext =
+            current === null &&
+            workInProgress.memoizedProps.unstable_avoidThisFallback !== true;
+          if (
+            hasInvisibleChildContext ||
+            hasSuspenseContext(
+              suspenseStackCursor.current,
+              (InvisibleParentSuspenseContext: SuspenseContext),
+            )
+          ) {
+            // If this was in an invisible tree or a new render, then showing
+            // this boundary is ok.
+            renderDidSuspend();
+          } else {
+            // Otherwise, we're going to have to hide content so we should
+            // suspend for longer if possible.
+            renderDidSuspendDelayIfPossible();
+          }
         }
-        return null;
       }
-      case HostComponent: {
+
+      if (supportsPersistence) {
+        // TODO: Only schedule updates if not prevDidTimeout.
+        if (nextDidTimeout) {
+          // If this boundary just timed out, schedule an effect to attach a
+          // retry listener to the proimse. This flag is also used to hide the
+          // primary children.
+          workInProgress.effectTag |= Update;
+        }
+      }
+      if (supportsMutation) {
+        // TODO: Only schedule updates if these values are non equal, i.e. it changed.
+        if (nextDidTimeout || prevDidTimeout) {
+          // If this boundary just timed out, schedule an effect to attach a
+          // retry listener to the proimse. This flag is also used to hide the
+          // primary children. In mutation mode, we also need the flag to
+          // *unhide* children that were previously hidden, so check if the
+          // is currently timed out, too.
+          workInProgress.effectTag |= Update;
+        }
+      }
+      break;
+    }
+    case Fragment:
+      break;
+    case Mode:
+      break;
+    case Profiler:
+      break;
+    case HostPortal:
+      popHostContainer(workInProgress);
+      updateHostContainer(workInProgress);
+      break;
+    case ContextProvider:
+      // Pop provider fiber
+      popProvider(workInProgress);
+      break;
+    case ContextConsumer:
+      break;
+    case MemoComponent:
+      break;
+    case IncompleteClassComponent: {
+      // Same as class component case. I put it down here so that the tags are
+      // sequential to ensure this switch is compiled to a jump table.
+      const Component = workInProgress.type;
+      if (isLegacyContextProvider(Component)) {
+        popLegacyContext(workInProgress);
+      }
+      break;
+    }
+    case DehydratedSuspenseComponent: {
+      if (enableSuspenseServerRenderer) {
+        popSuspenseContext(workInProgress);
+        if (current === null) {
+          let wasHydrated = popHydrationState(workInProgress);
+          invariant(
+            wasHydrated,
+            'A dehydrated suspense component was completed without a hydrated node. ' +
+              'This is probably a bug in React.',
+          );
+          skipPastDehydratedSuspenseInstance(workInProgress);
+        } else if ((workInProgress.effectTag & DidCapture) === NoEffect) {
+          // This boundary did not suspend so it's now hydrated.
+          // To handle any future suspense cases, we're going to now upgrade it
+          // to a Suspense component. We detach it from the existing current fiber.
+          current.alternate = null;
+          workInProgress.alternate = null;
+          workInProgress.tag = SuspenseComponent;
+          workInProgress.memoizedState = null;
+          workInProgress.stateNode = null;
+        }
+      }
+      break;
+    }
+    case EventComponent: {
+      if (enableEventAPI) {
         popHostContext(workInProgress);
         const rootContainerInstance = getRootHostContainer();
-        const type = workInProgress.type;
-        if (current !== null && workInProgress.stateNode != null) {
-          // If we have an alternate, that means this is an update and we need to
-          // schedule a side-effect to do the updates.
-          const oldProps = current.memoizedProps;
-          // If we get updated because one of our children updated, we don't
-          // have newProps so we'll have to reuse them.
-          // TODO: Split the update API as separate for the props vs. children.
-          // Even better would be if children weren't special cased at all tho.
-          const instance: I = workInProgress.stateNode;
-          const currentHostContext = getHostContext();
-          // TODO: Experiencing an error where oldProps is null. Suggests a host
-          // component is hitting the resume path. Figure out why. Possibly
-          // related to `hidden`.
-          const updatePayload = prepareUpdate(
-            instance,
-            type,
-            oldProps,
-            newProps,
-            rootContainerInstance,
-            currentHostContext,
-          );
+        const responder = workInProgress.type.responder;
+        let eventComponentInstance: ReactEventComponentInstance | null =
+          workInProgress.stateNode;
 
-          updateHostComponent(
-            current,
-            workInProgress,
-            updatePayload,
-            type,
-            oldProps,
-            newProps,
-            rootContainerInstance,
-            currentHostContext,
-          );
-
-          if (current.ref !== workInProgress.ref) {
-            markRef(workInProgress);
-          }
-        } else {
-          if (!newProps) {
-            invariant(
-              workInProgress.stateNode !== null,
-              'We must have new props for new mounts. This error is likely ' +
-                'caused by a bug in React. Please file an issue.',
-            );
-            // This can happen when we abort work.
-            return null;
-          }
-
-          const currentHostContext = getHostContext();
-          // TODO: Move createInstance to beginWork and keep it on a context
-          // "stack" as the parent. Then append children as we go in beginWork
-          // or completeWork depending on we want to add then top->down or
-          // bottom->up. Top->down is faster in IE11.
-          let wasHydrated = popHydrationState(workInProgress);
-          if (wasHydrated) {
-            // TODO: Move this and createInstance step into the beginPhase
-            // to consolidate.
-            if (
-              prepareToHydrateHostInstance(
-                workInProgress,
-                rootContainerInstance,
-                currentHostContext,
-              )
-            ) {
-              // If changes to the hydrated node needs to be applied at the
-              // commit-phase we mark this as such.
-              markUpdate(workInProgress);
-            }
-          } else {
-            let instance = createInstance(
-              type,
-              newProps,
-              rootContainerInstance,
-              currentHostContext,
+        if (eventComponentInstance === null) {
+          let responderState = null;
+          if (__DEV__ && !responder.allowMultipleHostChildren) {
+            const hostChildrenCount = getEventComponentHostChildrenCount(
               workInProgress,
             );
-
-            appendAllChildren(instance, workInProgress);
-
-            // Certain renderers require commit-time effects for initial mount.
-            // (eg DOM renderer supports auto-focus for certain elements).
-            // Make sure such renderers get scheduled for later work.
-            if (
-              finalizeInitialChildren(
-                instance,
-                type,
-                newProps,
-                rootContainerInstance,
-                currentHostContext,
-              )
-            ) {
-              markUpdate(workInProgress);
-            }
-            workInProgress.stateNode = instance;
+            warning(
+              (hostChildrenCount || 0) < 2,
+              'A "<%s>" event component cannot contain multiple host children.',
+              getComponentName(workInProgress.type),
+            );
           }
-
-          if (workInProgress.ref !== null) {
-            // If there is a ref on a host node we need to schedule a callback
-            markRef(workInProgress);
+          if (responder.createInitialState !== undefined) {
+            responderState = responder.createInitialState(newProps);
           }
-        }
-        return null;
-      }
-      case HostText: {
-        let newText = newProps;
-        if (current && workInProgress.stateNode != null) {
-          const oldText = current.memoizedProps;
-          // If we have an alternate, that means this is an update and we need
-          // to schedule a side-effect to do the updates.
-          updateHostText(current, workInProgress, oldText, newText);
+          eventComponentInstance = workInProgress.stateNode = {
+            currentFiber: workInProgress,
+            props: newProps,
+            responder,
+            rootEventTypes: null,
+            rootInstance: rootContainerInstance,
+            state: responderState,
+          };
+          markUpdate(workInProgress);
         } else {
-          if (typeof newText !== 'string') {
-            invariant(
-              workInProgress.stateNode !== null,
-              'We must have new props for new mounts. This error is likely ' +
-                'caused by a bug in React. Please file an issue.',
-            );
-            // This can happen when we abort work.
-            return null;
-          }
-          const rootContainerInstance = getRootHostContainer();
-          const currentHostContext = getHostContext();
-          let wasHydrated = popHydrationState(workInProgress);
-          if (wasHydrated) {
-            if (prepareToHydrateHostTextInstance(workInProgress)) {
-              markUpdate(workInProgress);
-            }
-          } else {
-            workInProgress.stateNode = createTextInstance(
-              newText,
-              rootContainerInstance,
-              currentHostContext,
-              workInProgress,
-            );
-          }
+          // Update the props on the event component state node
+          eventComponentInstance.props = newProps;
+          // Update the root container, so we can properly unmount events at some point
+          eventComponentInstance.rootInstance = rootContainerInstance;
+          // Update the current fiber
+          eventComponentInstance.currentFiber = workInProgress;
+          updateEventComponent(eventComponentInstance);
         }
-        return null;
       }
-      case CallComponent:
-        return moveCallToHandlerPhase(
-          current,
-          workInProgress,
-          renderExpirationTime,
-        );
-      case CallHandlerPhase:
-        // Reset the tag to now be a first phase call.
-        workInProgress.tag = CallComponent;
-        return null;
-      case ReturnComponent:
-        // Does nothing.
-        return null;
-      case ForwardRef:
-        return null;
-      case Fragment:
-        return null;
-      case Mode:
-        return null;
-      case HostPortal:
-        popHostContainer(workInProgress);
-        updateHostContainer(workInProgress);
-        return null;
-      case ContextProvider:
-        // Pop provider fiber
-        popProvider(workInProgress);
-        return null;
-      case ContextConsumer:
-        return null;
-      // Error cases
-      case IndeterminateComponent:
-        invariant(
-          false,
-          'An indeterminate component should have become determinate before ' +
-            'completing. This error is likely caused by a bug in React. Please ' +
-            'file an issue.',
-        );
-      // eslint-disable-next-line no-fallthrough
-      default:
-        invariant(
-          false,
-          'Unknown unit of work tag. This error is likely caused by a bug in ' +
-            'React. Please file an issue.',
-        );
+      break;
     }
+    case EventTarget: {
+      if (enableEventAPI) {
+        popHostContext(workInProgress);
+        const type = workInProgress.type.type;
+        const rootContainerInstance = getRootHostContainer();
+        const shouldUpdate = handleEventTarget(
+          type,
+          newProps,
+          rootContainerInstance,
+          workInProgress,
+        );
+        // Update the latest props on the stateNode. This is used
+        // during the event phase to find the most current props.
+        workInProgress.stateNode.props = newProps;
+        if (shouldUpdate) {
+          markUpdate(workInProgress);
+        }
+      }
+      break;
+    }
+    default:
+      invariant(
+        false,
+        'Unknown unit of work tag. This error is likely caused by a bug in ' +
+          'React. Please file an issue.',
+      );
   }
 
-  return {
-    completeWork,
-  };
+  return null;
 }
+
+export {completeWork};

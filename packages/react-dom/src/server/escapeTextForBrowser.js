@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -56,7 +56,7 @@ function escapeHtml(string) {
 
   let escape;
   let html = '';
-  let index = 0;
+  let index;
   let lastIndex = 0;
 
   for (index = match.index; index < str.length; index++) {

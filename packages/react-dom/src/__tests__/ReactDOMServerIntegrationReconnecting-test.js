@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -410,6 +410,40 @@ describe('ReactDOMServerIntegration', () => {
       expectMarkupMismatch(
         <div dangerouslySetInnerHTML={{__html: "<span id='child1'/>"}} />,
         <div dangerouslySetInnerHTML={{__html: "<span id='child2'/>"}} />,
+      ));
+
+    it('should error reconnecting a div with different text dangerouslySetInnerHTML', () =>
+      expectMarkupMismatch(
+        <div dangerouslySetInnerHTML={{__html: 'foo'}} />,
+        <div dangerouslySetInnerHTML={{__html: 'bar'}} />,
+      ));
+
+    it('should error reconnecting a div with different number dangerouslySetInnerHTML', () =>
+      expectMarkupMismatch(
+        <div dangerouslySetInnerHTML={{__html: 10}} />,
+        <div dangerouslySetInnerHTML={{__html: 20}} />,
+      ));
+
+    it('should error reconnecting a div with different object dangerouslySetInnerHTML', () =>
+      expectMarkupMismatch(
+        <div
+          dangerouslySetInnerHTML={{
+            __html: {
+              toString() {
+                return 'hi';
+              },
+            },
+          }}
+        />,
+        <div
+          dangerouslySetInnerHTML={{
+            __html: {
+              toString() {
+                return 'bye';
+              },
+            },
+          }}
+        />,
       ));
 
     it('can explicitly ignore reconnecting a div with different dangerouslySetInnerHTML', () =>

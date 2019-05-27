@@ -9,7 +9,7 @@
   },
   "scripts": {
     "prestart":
-      "cp ../../build/dist/react.development.js public/ && cp ../../build/dist/react-dom.development.js public/",
+      "cp ../../build/node_modules/react/umd/react.development.js public/ && cp ../../build/node_modules/react-dom/umd/react-dom.development.js public/",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",

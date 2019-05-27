@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -12,7 +12,9 @@
 let ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 let React = require('react');
+let useContext;
 let ReactNoop;
+let Scheduler;
 let gen;
 
 describe('ReactNewContext', () => {
@@ -21,852 +23,1600 @@ describe('ReactNewContext', () => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     React = require('react');
+    useContext = React.useContext;
     ReactNoop = require('react-noop-renderer');
+    Scheduler = require('scheduler');
     gen = require('random-seed');
   });
 
-  // function div(...children) {
-  //   children = children.map(c => (typeof c === 'string' ? {text: c} : c));
-  //   return {type: 'div', children, prop: undefined};
-  // }
-
-  function span(prop) {
-    return {type: 'span', children: [], prop};
+  function Text(props) {
+    Scheduler.yieldValue(props.text);
+    return <span prop={props.text} />;
   }
 
-  it('simple mount and update', () => {
-    const Context = React.createContext(1);
+  function span(prop) {
+    return {type: 'span', children: [], prop, hidden: false};
+  }
 
-    function Consumer(props) {
-      return (
-        <Context.Consumer>
-          {value => <span prop={'Result: ' + value} />}
-        </Context.Consumer>
+  function readContext(Context, observedBits) {
+    const dispatcher =
+      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+        .ReactCurrentDispatcher.current;
+    return dispatcher.readContext(Context, observedBits);
+  }
+
+  // We have several ways of reading from context. sharedContextTests runs
+  // a suite of tests for a given context consumer implementation.
+  sharedContextTests('Context.Consumer', Context => Context.Consumer);
+  sharedContextTests(
+    'useContext inside function component',
+    Context =>
+      function Consumer(props) {
+        const observedBits = props.unstable_observedBits;
+        let contextValue;
+        expect(() => {
+          contextValue = useContext(Context, observedBits);
+        }).toWarnDev(
+          observedBits !== undefined
+            ? 'useContext() second argument is reserved for future use in React. ' +
+              `Passing it is not supported. You passed: ${observedBits}.`
+            : [],
+        );
+        const render = props.children;
+        return render(contextValue);
+      },
+  );
+  sharedContextTests('useContext inside forwardRef component', Context =>
+    React.forwardRef(function Consumer(props, ref) {
+      const observedBits = props.unstable_observedBits;
+      let contextValue;
+      expect(() => {
+        contextValue = useContext(Context, observedBits);
+      }).toWarnDev(
+        observedBits !== undefined
+          ? 'useContext() second argument is reserved for future use in React. ' +
+            `Passing it is not supported. You passed: ${observedBits}.`
+          : [],
       );
-    }
-
-    const Indirection = React.Fragment;
-
-    function App(props) {
-      return (
-        <Context.Provider value={props.value}>
-          <Indirection>
-            <Indirection>
-              <Consumer />
-            </Indirection>
-          </Indirection>
-        </Context.Provider>
+      const render = props.children;
+      return render(contextValue);
+    }),
+  );
+  sharedContextTests('useContext inside memoized function component', Context =>
+    React.memo(function Consumer(props) {
+      const observedBits = props.unstable_observedBits;
+      let contextValue;
+      expect(() => {
+        contextValue = useContext(Context, observedBits);
+      }).toWarnDev(
+        observedBits !== undefined
+          ? 'useContext() second argument is reserved for future use in React. ' +
+            `Passing it is not supported. You passed: ${observedBits}.`
+          : [],
       );
-    }
+      const render = props.children;
+      return render(contextValue);
+    }),
+  );
+  sharedContextTests(
+    'readContext(Context) inside class component',
+    Context =>
+      class Consumer extends React.Component {
+        render() {
+          const observedBits = this.props.unstable_observedBits;
+          const contextValue = readContext(Context, observedBits);
+          const render = this.props.children;
+          return render(contextValue);
+        }
+      },
+  );
+  sharedContextTests(
+    'readContext(Context) inside pure class component',
+    Context =>
+      class Consumer extends React.PureComponent {
+        render() {
+          const observedBits = this.props.unstable_observedBits;
+          const contextValue = readContext(Context, observedBits);
+          const render = this.props.children;
+          return render(contextValue);
+        }
+      },
+  );
 
-    ReactNoop.render(<App value={2} />);
-    ReactNoop.flush();
-    expect(ReactNoop.getChildren()).toEqual([span('Result: 2')]);
+  function sharedContextTests(label, getConsumer) {
+    describe(`reading context with ${label}`, () => {
+      it('simple mount and update', () => {
+        const Context = React.createContext(1);
+        const Consumer = getConsumer(Context);
 
-    // Update
-    ReactNoop.render(<App value={3} />);
-    ReactNoop.flush();
-    expect(ReactNoop.getChildren()).toEqual([span('Result: 3')]);
-  });
+        const Indirection = React.Fragment;
 
-  it('propagates through shouldComponentUpdate false', () => {
-    const Context = React.createContext(1);
+        function App(props) {
+          return (
+            <Context.Provider value={props.value}>
+              <Indirection>
+                <Indirection>
+                  <Consumer>
+                    {value => <span prop={'Result: ' + value} />}
+                  </Consumer>
+                </Indirection>
+              </Indirection>
+            </Context.Provider>
+          );
+        }
 
-    function Provider(props) {
-      ReactNoop.yield('Provider');
-      return (
-        <Context.Provider value={props.value}>
-          {props.children}
-        </Context.Provider>
-      );
-    }
+        ReactNoop.render(<App value={2} />);
+        expect(Scheduler).toFlushWithoutYielding();
+        expect(ReactNoop.getChildren()).toEqual([span('Result: 2')]);
 
-    function Consumer(props) {
-      ReactNoop.yield('Consumer');
-      return (
-        <Context.Consumer>
-          {value => {
-            ReactNoop.yield('Consumer render prop');
-            return <span prop={'Result: ' + value} />;
-          }}
-        </Context.Consumer>
-      );
-    }
+        // Update
+        ReactNoop.render(<App value={3} />);
+        expect(Scheduler).toFlushWithoutYielding();
+        expect(ReactNoop.getChildren()).toEqual([span('Result: 3')]);
+      });
 
-    class Indirection extends React.Component {
-      shouldComponentUpdate() {
-        return false;
-      }
-      render() {
-        ReactNoop.yield('Indirection');
-        return this.props.children;
-      }
-    }
+      it('propagates through shouldComponentUpdate false', () => {
+        const Context = React.createContext(1);
+        const ContextConsumer = getConsumer(Context);
 
-    function App(props) {
-      ReactNoop.yield('App');
-      return (
-        <Provider value={props.value}>
-          <Indirection>
-            <Indirection>
-              <Consumer />
-            </Indirection>
-          </Indirection>
-        </Provider>
-      );
-    }
-
-    ReactNoop.render(<App value={2} />);
-    expect(ReactNoop.flush()).toEqual([
-      'App',
-      'Provider',
-      'Indirection',
-      'Indirection',
-      'Consumer',
-      'Consumer render prop',
-    ]);
-    expect(ReactNoop.getChildren()).toEqual([span('Result: 2')]);
-
-    // Update
-    ReactNoop.render(<App value={3} />);
-    expect(ReactNoop.flush()).toEqual([
-      'App',
-      'Provider',
-      'Consumer render prop',
-    ]);
-    expect(ReactNoop.getChildren()).toEqual([span('Result: 3')]);
-  });
-
-  it('consumers bail out if context value is the same', () => {
-    const Context = React.createContext(1);
-
-    function Provider(props) {
-      ReactNoop.yield('Provider');
-      return (
-        <Context.Provider value={props.value}>
-          {props.children}
-        </Context.Provider>
-      );
-    }
-
-    function Consumer(props) {
-      ReactNoop.yield('Consumer');
-      return (
-        <Context.Consumer>
-          {value => {
-            ReactNoop.yield('Consumer render prop');
-            return <span prop={'Result: ' + value} />;
-          }}
-        </Context.Consumer>
-      );
-    }
-
-    class Indirection extends React.Component {
-      shouldComponentUpdate() {
-        return false;
-      }
-      render() {
-        ReactNoop.yield('Indirection');
-        return this.props.children;
-      }
-    }
-
-    function App(props) {
-      ReactNoop.yield('App');
-      return (
-        <Provider value={props.value}>
-          <Indirection>
-            <Indirection>
-              <Consumer />
-            </Indirection>
-          </Indirection>
-        </Provider>
-      );
-    }
-
-    ReactNoop.render(<App value={2} />);
-    expect(ReactNoop.flush()).toEqual([
-      'App',
-      'Provider',
-      'Indirection',
-      'Indirection',
-      'Consumer',
-      'Consumer render prop',
-    ]);
-    expect(ReactNoop.getChildren()).toEqual([span('Result: 2')]);
-
-    // Update with the same context value
-    ReactNoop.render(<App value={2} />);
-    expect(ReactNoop.flush()).toEqual([
-      'App',
-      'Provider',
-      // Don't call render prop again
-    ]);
-    expect(ReactNoop.getChildren()).toEqual([span('Result: 2')]);
-  });
-
-  it('nested providers', () => {
-    const Context = React.createContext(1);
-
-    function Provider(props) {
-      return (
-        <Context.Consumer>
-          {contextValue => (
-            // Multiply previous context value by 2, unless prop overrides
-            <Context.Provider value={props.value || contextValue * 2}>
+        function Provider(props) {
+          Scheduler.yieldValue('Provider');
+          return (
+            <Context.Provider value={props.value}>
               {props.children}
             </Context.Provider>
-          )}
-        </Context.Consumer>
-      );
-    }
+          );
+        }
 
-    function Consumer(props) {
-      return (
-        <Context.Consumer>
-          {value => <span prop={'Result: ' + value} />}
-        </Context.Consumer>
-      );
-    }
+        function Consumer(props) {
+          Scheduler.yieldValue('Consumer');
+          return (
+            <ContextConsumer>
+              {value => {
+                Scheduler.yieldValue('Consumer render prop');
+                return <span prop={'Result: ' + value} />;
+              }}
+            </ContextConsumer>
+          );
+        }
 
-    class Indirection extends React.Component {
-      shouldComponentUpdate() {
-        return false;
-      }
-      render() {
-        return this.props.children;
-      }
-    }
+        class Indirection extends React.Component {
+          shouldComponentUpdate() {
+            return false;
+          }
+          render() {
+            Scheduler.yieldValue('Indirection');
+            return this.props.children;
+          }
+        }
 
-    function App(props) {
-      return (
-        <Provider value={props.value}>
-          <Indirection>
-            <Provider>
+        function App(props) {
+          Scheduler.yieldValue('App');
+          return (
+            <Provider value={props.value}>
+              <Indirection>
+                <Indirection>
+                  <Consumer />
+                </Indirection>
+              </Indirection>
+            </Provider>
+          );
+        }
+
+        ReactNoop.render(<App value={2} />);
+        expect(Scheduler).toFlushAndYield([
+          'App',
+          'Provider',
+          'Indirection',
+          'Indirection',
+          'Consumer',
+          'Consumer render prop',
+        ]);
+        expect(ReactNoop.getChildren()).toEqual([span('Result: 2')]);
+
+        // Update
+        ReactNoop.render(<App value={3} />);
+        expect(Scheduler).toFlushAndYield([
+          'App',
+          'Provider',
+          'Consumer render prop',
+        ]);
+        expect(ReactNoop.getChildren()).toEqual([span('Result: 3')]);
+      });
+
+      it('consumers bail out if context value is the same', () => {
+        const Context = React.createContext(1);
+        const ContextConsumer = getConsumer(Context);
+
+        function Provider(props) {
+          Scheduler.yieldValue('Provider');
+          return (
+            <Context.Provider value={props.value}>
+              {props.children}
+            </Context.Provider>
+          );
+        }
+
+        function Consumer(props) {
+          Scheduler.yieldValue('Consumer');
+          return (
+            <ContextConsumer>
+              {value => {
+                Scheduler.yieldValue('Consumer render prop');
+                return <span prop={'Result: ' + value} />;
+              }}
+            </ContextConsumer>
+          );
+        }
+
+        class Indirection extends React.Component {
+          shouldComponentUpdate() {
+            return false;
+          }
+          render() {
+            Scheduler.yieldValue('Indirection');
+            return this.props.children;
+          }
+        }
+
+        function App(props) {
+          Scheduler.yieldValue('App');
+          return (
+            <Provider value={props.value}>
+              <Indirection>
+                <Indirection>
+                  <Consumer />
+                </Indirection>
+              </Indirection>
+            </Provider>
+          );
+        }
+
+        ReactNoop.render(<App value={2} />);
+        expect(Scheduler).toFlushAndYield([
+          'App',
+          'Provider',
+          'Indirection',
+          'Indirection',
+          'Consumer',
+          'Consumer render prop',
+        ]);
+        expect(ReactNoop.getChildren()).toEqual([span('Result: 2')]);
+
+        // Update with the same context value
+        ReactNoop.render(<App value={2} />);
+        expect(Scheduler).toFlushAndYield([
+          'App',
+          'Provider',
+          // Don't call render prop again
+        ]);
+        expect(ReactNoop.getChildren()).toEqual([span('Result: 2')]);
+      });
+
+      it('nested providers', () => {
+        const Context = React.createContext(1);
+        const Consumer = getConsumer(Context);
+
+        function Provider(props) {
+          return (
+            <Consumer>
+              {contextValue => (
+                // Multiply previous context value by 2, unless prop overrides
+                <Context.Provider value={props.value || contextValue * 2}>
+                  {props.children}
+                </Context.Provider>
+              )}
+            </Consumer>
+          );
+        }
+
+        class Indirection extends React.Component {
+          shouldComponentUpdate() {
+            return false;
+          }
+          render() {
+            return this.props.children;
+          }
+        }
+
+        function App(props) {
+          return (
+            <Provider value={props.value}>
               <Indirection>
                 <Provider>
                   <Indirection>
-                    <Consumer />
+                    <Provider>
+                      <Indirection>
+                        <Consumer>
+                          {value => <span prop={'Result: ' + value} />}
+                        </Consumer>
+                      </Indirection>
+                    </Provider>
                   </Indirection>
                 </Provider>
               </Indirection>
             </Provider>
-          </Indirection>
-        </Provider>
-      );
-    }
+          );
+        }
 
-    ReactNoop.render(<App value={2} />);
-    ReactNoop.flush();
-    expect(ReactNoop.getChildren()).toEqual([span('Result: 8')]);
+        ReactNoop.render(<App value={2} />);
+        expect(Scheduler).toFlushWithoutYielding();
+        expect(ReactNoop.getChildren()).toEqual([span('Result: 8')]);
 
-    // Update
-    ReactNoop.render(<App value={3} />);
-    ReactNoop.flush();
-    expect(ReactNoop.getChildren()).toEqual([span('Result: 12')]);
-  });
+        // Update
+        ReactNoop.render(<App value={3} />);
+        expect(Scheduler).toFlushWithoutYielding();
+        expect(ReactNoop.getChildren()).toEqual([span('Result: 12')]);
+      });
 
-  it('should provide the correct (default) values to consumers outside of a provider', () => {
-    const FooContext = React.createContext({value: 'foo-initial'});
-    const BarContext = React.createContext({value: 'bar-initial'});
+      it('should provide the correct (default) values to consumers outside of a provider', () => {
+        const FooContext = React.createContext({value: 'foo-initial'});
+        const BarContext = React.createContext({value: 'bar-initial'});
+        const FooConsumer = getConsumer(FooContext);
+        const BarConsumer = getConsumer(BarContext);
 
-    const Verify = ({actual, expected}) => {
-      expect(expected).toBe(actual);
-      return null;
-    };
+        const Verify = ({actual, expected}) => {
+          expect(expected).toBe(actual);
+          return null;
+        };
 
-    ReactNoop.render(
-      <React.Fragment>
-        <BarContext.Provider value={{value: 'bar-updated'}}>
-          <BarContext.Consumer>
-            {({value}) => <Verify actual={value} expected="bar-updated" />}
-          </BarContext.Consumer>
+        ReactNoop.render(
+          <React.Fragment>
+            <BarContext.Provider value={{value: 'bar-updated'}}>
+              <BarConsumer>
+                {({value}) => <Verify actual={value} expected="bar-updated" />}
+              </BarConsumer>
 
-          <FooContext.Provider value={{value: 'foo-updated'}}>
-            <FooContext.Consumer>
-              {({value}) => <Verify actual={value} expected="foo-updated" />}
-            </FooContext.Consumer>
-          </FooContext.Provider>
-        </BarContext.Provider>
+              <FooContext.Provider value={{value: 'foo-updated'}}>
+                <FooConsumer>
+                  {({value}) => (
+                    <Verify actual={value} expected="foo-updated" />
+                  )}
+                </FooConsumer>
+              </FooContext.Provider>
+            </BarContext.Provider>
 
-        <FooContext.Consumer>
-          {({value}) => <Verify actual={value} expected="foo-initial" />}
-        </FooContext.Consumer>
-        <BarContext.Consumer>
-          {({value}) => <Verify actual={value} expected="bar-initial" />}
-        </BarContext.Consumer>
-      </React.Fragment>,
-    );
-    ReactNoop.flush();
-  });
+            <FooConsumer>
+              {({value}) => <Verify actual={value} expected="foo-initial" />}
+            </FooConsumer>
+            <BarConsumer>
+              {({value}) => <Verify actual={value} expected="bar-initial" />}
+            </BarConsumer>
+          </React.Fragment>,
+        );
+        expect(Scheduler).toFlushWithoutYielding();
+      });
 
-  it('multiple consumers in different branches', () => {
-    const Context = React.createContext(1);
+      it('multiple consumers in different branches', () => {
+        const Context = React.createContext(1);
+        const Consumer = getConsumer(Context);
 
-    function Provider(props) {
-      return (
-        <Context.Consumer>
-          {contextValue => (
-            // Multiply previous context value by 2, unless prop overrides
-            <Context.Provider value={props.value || contextValue * 2}>
+        function Provider(props) {
+          return (
+            <Context.Consumer>
+              {contextValue => (
+                // Multiply previous context value by 2, unless prop overrides
+                <Context.Provider value={props.value || contextValue * 2}>
+                  {props.children}
+                </Context.Provider>
+              )}
+            </Context.Consumer>
+          );
+        }
+
+        class Indirection extends React.Component {
+          shouldComponentUpdate() {
+            return false;
+          }
+          render() {
+            return this.props.children;
+          }
+        }
+
+        function App(props) {
+          return (
+            <Provider value={props.value}>
+              <Indirection>
+                <Indirection>
+                  <Provider>
+                    <Consumer>
+                      {value => <span prop={'Result: ' + value} />}
+                    </Consumer>
+                  </Provider>
+                </Indirection>
+                <Indirection>
+                  <Consumer>
+                    {value => <span prop={'Result: ' + value} />}
+                  </Consumer>
+                </Indirection>
+              </Indirection>
+            </Provider>
+          );
+        }
+
+        ReactNoop.render(<App value={2} />);
+        expect(Scheduler).toFlushWithoutYielding();
+        expect(ReactNoop.getChildren()).toEqual([
+          span('Result: 4'),
+          span('Result: 2'),
+        ]);
+
+        // Update
+        ReactNoop.render(<App value={3} />);
+        expect(Scheduler).toFlushWithoutYielding();
+        expect(ReactNoop.getChildren()).toEqual([
+          span('Result: 6'),
+          span('Result: 3'),
+        ]);
+
+        // Another update
+        ReactNoop.render(<App value={4} />);
+        expect(Scheduler).toFlushWithoutYielding();
+        expect(ReactNoop.getChildren()).toEqual([
+          span('Result: 8'),
+          span('Result: 4'),
+        ]);
+      });
+
+      it('compares context values with Object.is semantics', () => {
+        const Context = React.createContext(1);
+        const ContextConsumer = getConsumer(Context);
+
+        function Provider(props) {
+          Scheduler.yieldValue('Provider');
+          return (
+            <Context.Provider value={props.value}>
               {props.children}
             </Context.Provider>
-          )}
-        </Context.Consumer>
-      );
-    }
-
-    function Consumer(props) {
-      return (
-        <Context.Consumer>
-          {value => <span prop={'Result: ' + value} />}
-        </Context.Consumer>
-      );
-    }
-
-    class Indirection extends React.Component {
-      shouldComponentUpdate() {
-        return false;
-      }
-      render() {
-        return this.props.children;
-      }
-    }
-
-    function App(props) {
-      return (
-        <Provider value={props.value}>
-          <Indirection>
-            <Indirection>
-              <Provider>
-                <Consumer />
-              </Provider>
-            </Indirection>
-            <Indirection>
-              <Consumer />
-            </Indirection>
-          </Indirection>
-        </Provider>
-      );
-    }
-
-    ReactNoop.render(<App value={2} />);
-    ReactNoop.flush();
-    expect(ReactNoop.getChildren()).toEqual([
-      span('Result: 4'),
-      span('Result: 2'),
-    ]);
-
-    // Update
-    ReactNoop.render(<App value={3} />);
-    ReactNoop.flush();
-    expect(ReactNoop.getChildren()).toEqual([
-      span('Result: 6'),
-      span('Result: 3'),
-    ]);
-
-    // Another update
-    ReactNoop.render(<App value={4} />);
-    ReactNoop.flush();
-    expect(ReactNoop.getChildren()).toEqual([
-      span('Result: 8'),
-      span('Result: 4'),
-    ]);
-  });
-
-  it('compares context values with Object.is semantics', () => {
-    const Context = React.createContext(1);
-
-    function Provider(props) {
-      ReactNoop.yield('Provider');
-      return (
-        <Context.Provider value={props.value}>
-          {props.children}
-        </Context.Provider>
-      );
-    }
-
-    function Consumer(props) {
-      ReactNoop.yield('Consumer');
-      return (
-        <Context.Consumer>
-          {value => {
-            ReactNoop.yield('Consumer render prop');
-            return <span prop={'Result: ' + value} />;
-          }}
-        </Context.Consumer>
-      );
-    }
-
-    class Indirection extends React.Component {
-      shouldComponentUpdate() {
-        return false;
-      }
-      render() {
-        ReactNoop.yield('Indirection');
-        return this.props.children;
-      }
-    }
-
-    function App(props) {
-      ReactNoop.yield('App');
-      return (
-        <Provider value={props.value}>
-          <Indirection>
-            <Indirection>
-              <Consumer />
-            </Indirection>
-          </Indirection>
-        </Provider>
-      );
-    }
-
-    ReactNoop.render(<App value={NaN} />);
-    expect(ReactNoop.flush()).toEqual([
-      'App',
-      'Provider',
-      'Indirection',
-      'Indirection',
-      'Consumer',
-      'Consumer render prop',
-    ]);
-    expect(ReactNoop.getChildren()).toEqual([span('Result: NaN')]);
-
-    // Update
-    ReactNoop.render(<App value={NaN} />);
-    expect(ReactNoop.flush()).toEqual([
-      'App',
-      'Provider',
-      // Consumer should not re-render again
-      // 'Consumer render prop',
-    ]);
-    expect(ReactNoop.getChildren()).toEqual([span('Result: NaN')]);
-  });
-
-  it('context unwinds when interrupted', () => {
-    const Context = React.createContext('Default');
-
-    function Consumer(props) {
-      return (
-        <Context.Consumer>
-          {value => <span prop={'Result: ' + value} />}
-        </Context.Consumer>
-      );
-    }
-
-    function BadRender() {
-      throw new Error('Bad render');
-    }
-
-    class ErrorBoundary extends React.Component {
-      state = {error: null};
-      componentDidCatch(error) {
-        this.setState({error});
-      }
-      render() {
-        if (this.state.error) {
-          return null;
+          );
         }
-        return this.props.children;
-      }
-    }
 
-    function App(props) {
-      return (
-        <React.Fragment>
-          <Context.Provider value="Does not unwind">
-            <ErrorBoundary>
-              <Context.Provider value="Unwinds after BadRender throws">
-                <BadRender />
+        function Consumer(props) {
+          Scheduler.yieldValue('Consumer');
+          return (
+            <ContextConsumer>
+              {value => {
+                Scheduler.yieldValue('Consumer render prop');
+                return <span prop={'Result: ' + value} />;
+              }}
+            </ContextConsumer>
+          );
+        }
+
+        class Indirection extends React.Component {
+          shouldComponentUpdate() {
+            return false;
+          }
+          render() {
+            Scheduler.yieldValue('Indirection');
+            return this.props.children;
+          }
+        }
+
+        function App(props) {
+          Scheduler.yieldValue('App');
+          return (
+            <Provider value={props.value}>
+              <Indirection>
+                <Indirection>
+                  <Consumer />
+                </Indirection>
+              </Indirection>
+            </Provider>
+          );
+        }
+
+        ReactNoop.render(<App value={NaN} />);
+        expect(Scheduler).toFlushAndYield([
+          'App',
+          'Provider',
+          'Indirection',
+          'Indirection',
+          'Consumer',
+          'Consumer render prop',
+        ]);
+        expect(ReactNoop.getChildren()).toEqual([span('Result: NaN')]);
+
+        // Update
+        ReactNoop.render(<App value={NaN} />);
+        expect(Scheduler).toFlushAndYield([
+          'App',
+          'Provider',
+          // Consumer should not re-render again
+          // 'Consumer render prop',
+        ]);
+        expect(ReactNoop.getChildren()).toEqual([span('Result: NaN')]);
+      });
+
+      it('context unwinds when interrupted', () => {
+        const Context = React.createContext('Default');
+        const ContextConsumer = getConsumer(Context);
+
+        function Consumer(props) {
+          return (
+            <ContextConsumer>
+              {value => <span prop={'Result: ' + value} />}
+            </ContextConsumer>
+          );
+        }
+
+        function BadRender() {
+          throw new Error('Bad render');
+        }
+
+        class ErrorBoundary extends React.Component {
+          state = {error: null};
+          componentDidCatch(error) {
+            this.setState({error});
+          }
+          render() {
+            if (this.state.error) {
+              return null;
+            }
+            return this.props.children;
+          }
+        }
+
+        function App(props) {
+          return (
+            <React.Fragment>
+              <Context.Provider value="Does not unwind">
+                <ErrorBoundary>
+                  <Context.Provider value="Unwinds after BadRender throws">
+                    <BadRender />
+                  </Context.Provider>
+                </ErrorBoundary>
+                <Consumer />
               </Context.Provider>
-            </ErrorBoundary>
-            <Consumer />
-          </Context.Provider>
-        </React.Fragment>
-      );
-    }
+            </React.Fragment>
+          );
+        }
 
-    ReactNoop.render(<App value="A" />);
-    ReactNoop.flush();
-    expect(ReactNoop.getChildren()).toEqual([
-      // The second provider should use the default value.
-      span('Result: Does not unwind'),
-    ]);
-  });
+        ReactNoop.render(<App value="A" />);
+        expect(Scheduler).toFlushWithoutYielding();
+        expect(ReactNoop.getChildren()).toEqual([
+          // The second provider should use the default value.
+          span('Result: Does not unwind'),
+        ]);
+      });
 
-  it('can skip consumers with bitmask', () => {
-    const Context = React.createContext({foo: 0, bar: 0}, (a, b) => {
-      let result = 0;
-      if (a.foo !== b.foo) {
-        result |= 0b01;
-      }
-      if (a.bar !== b.bar) {
-        result |= 0b10;
-      }
-      return result;
+      it('can skip consumers with bitmask', () => {
+        const Context = React.createContext({foo: 0, bar: 0}, (a, b) => {
+          let result = 0;
+          if (a.foo !== b.foo) {
+            result |= 0b01;
+          }
+          if (a.bar !== b.bar) {
+            result |= 0b10;
+          }
+          return result;
+        });
+        const Consumer = getConsumer(Context);
+
+        function Provider(props) {
+          return (
+            <Context.Provider value={{foo: props.foo, bar: props.bar}}>
+              {props.children}
+            </Context.Provider>
+          );
+        }
+
+        function Foo() {
+          return (
+            <Consumer unstable_observedBits={0b01}>
+              {value => {
+                Scheduler.yieldValue('Foo');
+                return <span prop={'Foo: ' + value.foo} />;
+              }}
+            </Consumer>
+          );
+        }
+
+        function Bar() {
+          return (
+            <Consumer unstable_observedBits={0b10}>
+              {value => {
+                Scheduler.yieldValue('Bar');
+                return <span prop={'Bar: ' + value.bar} />;
+              }}
+            </Consumer>
+          );
+        }
+
+        class Indirection extends React.Component {
+          shouldComponentUpdate() {
+            return false;
+          }
+          render() {
+            return this.props.children;
+          }
+        }
+
+        function App(props) {
+          return (
+            <Provider foo={props.foo} bar={props.bar}>
+              <Indirection>
+                <Indirection>
+                  <Foo />
+                </Indirection>
+                <Indirection>
+                  <Bar />
+                </Indirection>
+              </Indirection>
+            </Provider>
+          );
+        }
+
+        ReactNoop.render(<App foo={1} bar={1} />);
+        expect(Scheduler).toFlushAndYield(['Foo', 'Bar']);
+        expect(ReactNoop.getChildren()).toEqual([
+          span('Foo: 1'),
+          span('Bar: 1'),
+        ]);
+
+        // Update only foo
+        ReactNoop.render(<App foo={2} bar={1} />);
+        expect(Scheduler).toFlushAndYield(['Foo']);
+        expect(ReactNoop.getChildren()).toEqual([
+          span('Foo: 2'),
+          span('Bar: 1'),
+        ]);
+
+        // Update only bar
+        ReactNoop.render(<App foo={2} bar={2} />);
+        expect(Scheduler).toFlushAndYield(['Bar']);
+        expect(ReactNoop.getChildren()).toEqual([
+          span('Foo: 2'),
+          span('Bar: 2'),
+        ]);
+
+        // Update both
+        ReactNoop.render(<App foo={3} bar={3} />);
+        expect(Scheduler).toFlushAndYield(['Foo', 'Bar']);
+        expect(ReactNoop.getChildren()).toEqual([
+          span('Foo: 3'),
+          span('Bar: 3'),
+        ]);
+      });
+
+      it('can skip parents with bitmask bailout while updating their children', () => {
+        const Context = React.createContext({foo: 0, bar: 0}, (a, b) => {
+          let result = 0;
+          if (a.foo !== b.foo) {
+            result |= 0b01;
+          }
+          if (a.bar !== b.bar) {
+            result |= 0b10;
+          }
+          return result;
+        });
+        const Consumer = getConsumer(Context);
+
+        function Provider(props) {
+          return (
+            <Context.Provider value={{foo: props.foo, bar: props.bar}}>
+              {props.children}
+            </Context.Provider>
+          );
+        }
+
+        function Foo(props) {
+          return (
+            <Consumer unstable_observedBits={0b01}>
+              {value => {
+                Scheduler.yieldValue('Foo');
+                return (
+                  <React.Fragment>
+                    <span prop={'Foo: ' + value.foo} />
+                    {props.children && props.children()}
+                  </React.Fragment>
+                );
+              }}
+            </Consumer>
+          );
+        }
+
+        function Bar(props) {
+          return (
+            <Consumer unstable_observedBits={0b10}>
+              {value => {
+                Scheduler.yieldValue('Bar');
+                return (
+                  <React.Fragment>
+                    <span prop={'Bar: ' + value.bar} />
+                    {props.children && props.children()}
+                  </React.Fragment>
+                );
+              }}
+            </Consumer>
+          );
+        }
+
+        class Indirection extends React.Component {
+          shouldComponentUpdate() {
+            return false;
+          }
+          render() {
+            return this.props.children;
+          }
+        }
+
+        function App(props) {
+          return (
+            <Provider foo={props.foo} bar={props.bar}>
+              <Indirection>
+                <Foo>
+                  {/* Use a render prop so we don't test constant elements. */}
+                  {() => (
+                    <Indirection>
+                      <Bar>
+                        {() => (
+                          <Indirection>
+                            <Foo />
+                          </Indirection>
+                        )}
+                      </Bar>
+                    </Indirection>
+                  )}
+                </Foo>
+              </Indirection>
+            </Provider>
+          );
+        }
+
+        ReactNoop.render(<App foo={1} bar={1} />);
+        expect(Scheduler).toFlushAndYield(['Foo', 'Bar', 'Foo']);
+        expect(ReactNoop.getChildren()).toEqual([
+          span('Foo: 1'),
+          span('Bar: 1'),
+          span('Foo: 1'),
+        ]);
+
+        // Update only foo
+        ReactNoop.render(<App foo={2} bar={1} />);
+        expect(Scheduler).toFlushAndYield(['Foo', 'Foo']);
+        expect(ReactNoop.getChildren()).toEqual([
+          span('Foo: 2'),
+          span('Bar: 1'),
+          span('Foo: 2'),
+        ]);
+
+        // Update only bar
+        ReactNoop.render(<App foo={2} bar={2} />);
+        expect(Scheduler).toFlushAndYield(['Bar']);
+        expect(ReactNoop.getChildren()).toEqual([
+          span('Foo: 2'),
+          span('Bar: 2'),
+          span('Foo: 2'),
+        ]);
+
+        // Update both
+        ReactNoop.render(<App foo={3} bar={3} />);
+        expect(Scheduler).toFlushAndYield(['Foo', 'Bar', 'Foo']);
+        expect(ReactNoop.getChildren()).toEqual([
+          span('Foo: 3'),
+          span('Bar: 3'),
+          span('Foo: 3'),
+        ]);
+      });
+
+      it("does not re-render if there's an update in a child", () => {
+        const Context = React.createContext(0);
+        const Consumer = getConsumer(Context);
+
+        let child;
+        class Child extends React.Component {
+          state = {step: 0};
+          render() {
+            Scheduler.yieldValue('Child');
+            return (
+              <span
+                prop={`Context: ${this.props.context}, Step: ${
+                  this.state.step
+                }`}
+              />
+            );
+          }
+        }
+
+        function App(props) {
+          return (
+            <Context.Provider value={props.value}>
+              <Consumer>
+                {value => {
+                  Scheduler.yieldValue('Consumer render prop');
+                  return <Child ref={inst => (child = inst)} context={value} />;
+                }}
+              </Consumer>
+            </Context.Provider>
+          );
+        }
+
+        // Initial mount
+        ReactNoop.render(<App value={1} />);
+        expect(Scheduler).toFlushAndYield(['Consumer render prop', 'Child']);
+        expect(ReactNoop.getChildren()).toEqual([span('Context: 1, Step: 0')]);
+
+        child.setState({step: 1});
+        expect(Scheduler).toFlushAndYield(['Child']);
+        expect(ReactNoop.getChildren()).toEqual([span('Context: 1, Step: 1')]);
+      });
+
+      it('consumer bails out if value is unchanged and something above bailed out', () => {
+        const Context = React.createContext(0);
+        const Consumer = getConsumer(Context);
+
+        function renderChildValue(value) {
+          Scheduler.yieldValue('Consumer');
+          return <span prop={value} />;
+        }
+
+        function ChildWithInlineRenderCallback() {
+          Scheduler.yieldValue('ChildWithInlineRenderCallback');
+          // Note: we are intentionally passing an inline arrow. Don't refactor.
+          return <Consumer>{value => renderChildValue(value)}</Consumer>;
+        }
+
+        function ChildWithCachedRenderCallback() {
+          Scheduler.yieldValue('ChildWithCachedRenderCallback');
+          return <Consumer>{renderChildValue}</Consumer>;
+        }
+
+        class PureIndirection extends React.PureComponent {
+          render() {
+            Scheduler.yieldValue('PureIndirection');
+            return (
+              <React.Fragment>
+                <ChildWithInlineRenderCallback />
+                <ChildWithCachedRenderCallback />
+              </React.Fragment>
+            );
+          }
+        }
+
+        class App extends React.Component {
+          render() {
+            Scheduler.yieldValue('App');
+            return (
+              <Context.Provider value={this.props.value}>
+                <PureIndirection />
+              </Context.Provider>
+            );
+          }
+        }
+
+        // Initial mount
+        ReactNoop.render(<App value={1} />);
+        expect(Scheduler).toFlushAndYield([
+          'App',
+          'PureIndirection',
+          'ChildWithInlineRenderCallback',
+          'Consumer',
+          'ChildWithCachedRenderCallback',
+          'Consumer',
+        ]);
+        expect(ReactNoop.getChildren()).toEqual([span(1), span(1)]);
+
+        // Update (bailout)
+        ReactNoop.render(<App value={1} />);
+        expect(Scheduler).toFlushAndYield(['App']);
+        expect(ReactNoop.getChildren()).toEqual([span(1), span(1)]);
+
+        // Update (no bailout)
+        ReactNoop.render(<App value={2} />);
+        expect(Scheduler).toFlushAndYield(['App', 'Consumer', 'Consumer']);
+        expect(ReactNoop.getChildren()).toEqual([span(2), span(2)]);
+      });
+
+      it("context consumer doesn't bail out inside hidden subtree", () => {
+        const Context = React.createContext('dark');
+        const Consumer = getConsumer(Context);
+
+        function App({theme}) {
+          return (
+            <Context.Provider value={theme}>
+              <div hidden={true}>
+                <Consumer>{value => <Text text={value} />}</Consumer>
+              </div>
+            </Context.Provider>
+          );
+        }
+
+        ReactNoop.render(<App theme="dark" />);
+        expect(Scheduler).toFlushAndYield(['dark']);
+        expect(ReactNoop.getChildrenAsJSX()).toEqual(
+          <div hidden={true}>
+            <span prop="dark" />
+          </div>,
+        );
+
+        ReactNoop.render(<App theme="light" />);
+        expect(Scheduler).toFlushAndYield(['light']);
+        expect(ReactNoop.getChildrenAsJSX()).toEqual(
+          <div hidden={true}>
+            <span prop="light" />
+          </div>,
+        );
+      });
+
+      // This is a regression case for https://github.com/facebook/react/issues/12389.
+      it('does not run into an infinite loop', () => {
+        const Context = React.createContext(null);
+        const Consumer = getConsumer(Context);
+
+        class App extends React.Component {
+          renderItem(id) {
+            return (
+              <span key={id}>
+                <Consumer>{() => <span>inner</span>}</Consumer>
+                <span>outer</span>
+              </span>
+            );
+          }
+          renderList() {
+            const list = [1, 2].map(id => this.renderItem(id));
+            if (this.props.reverse) {
+              list.reverse();
+            }
+            return list;
+          }
+          render() {
+            return (
+              <Context.Provider value={{}}>
+                {this.renderList()}
+              </Context.Provider>
+            );
+          }
+        }
+
+        ReactNoop.render(<App reverse={false} />);
+        expect(Scheduler).toFlushWithoutYielding();
+        ReactNoop.render(<App reverse={true} />);
+        expect(Scheduler).toFlushWithoutYielding();
+        ReactNoop.render(<App reverse={false} />);
+        expect(Scheduler).toFlushWithoutYielding();
+      });
+
+      // This is a regression case for https://github.com/facebook/react/issues/12686
+      it('does not skip some siblings', () => {
+        const Context = React.createContext(0);
+        const ContextConsumer = getConsumer(Context);
+
+        class App extends React.Component {
+          state = {
+            step: 0,
+          };
+
+          render() {
+            Scheduler.yieldValue('App');
+            return (
+              <Context.Provider value={this.state.step}>
+                <StaticContent />
+                {this.state.step > 0 && <Indirection />}
+              </Context.Provider>
+            );
+          }
+        }
+
+        class StaticContent extends React.PureComponent {
+          render() {
+            return (
+              <React.Fragment>
+                <React.Fragment>
+                  <span prop="static 1" />
+                  <span prop="static 2" />
+                </React.Fragment>
+              </React.Fragment>
+            );
+          }
+        }
+
+        class Indirection extends React.PureComponent {
+          render() {
+            return (
+              <ContextConsumer>
+                {value => {
+                  Scheduler.yieldValue('Consumer');
+                  return <span prop={value} />;
+                }}
+              </ContextConsumer>
+            );
+          }
+        }
+
+        // Initial mount
+        let inst;
+        ReactNoop.render(<App ref={ref => (inst = ref)} />);
+        expect(Scheduler).toFlushAndYield(['App']);
+        expect(ReactNoop.getChildren()).toEqual([
+          span('static 1'),
+          span('static 2'),
+        ]);
+        // Update the first time
+        inst.setState({step: 1});
+        expect(Scheduler).toFlushAndYield(['App', 'Consumer']);
+        expect(ReactNoop.getChildren()).toEqual([
+          span('static 1'),
+          span('static 2'),
+          span(1),
+        ]);
+        // Update the second time
+        inst.setState({step: 2});
+        expect(Scheduler).toFlushAndYield(['App', 'Consumer']);
+        expect(ReactNoop.getChildren()).toEqual([
+          span('static 1'),
+          span('static 2'),
+          span(2),
+        ]);
+      });
     });
+  }
 
-    function Provider(props) {
-      return (
-        <Context.Provider value={{foo: props.foo, bar: props.bar}}>
-          {props.children}
-        </Context.Provider>
+  describe('Context.Provider', () => {
+    it('warns if calculateChangedBits returns larger than a 31-bit integer', () => {
+      const Context = React.createContext(
+        0,
+        (a, b) => Math.pow(2, 32) - 1, // Return 32 bit int
       );
-    }
 
-    function Foo() {
-      return (
-        <Context.Consumer unstable_observedBits={0b01}>
-          {value => {
-            ReactNoop.yield('Foo');
-            return <span prop={'Foo: ' + value.foo} />;
-          }}
-        </Context.Consumer>
-      );
-    }
-
-    function Bar() {
-      return (
-        <Context.Consumer unstable_observedBits={0b10}>
-          {value => {
-            ReactNoop.yield('Bar');
-            return <span prop={'Bar: ' + value.bar} />;
-          }}
-        </Context.Consumer>
-      );
-    }
-
-    class Indirection extends React.Component {
-      shouldComponentUpdate() {
-        return false;
+      function App(props) {
+        return <Context.Provider value={props.value} />;
       }
-      render() {
-        return this.props.children;
-      }
-    }
 
-    function App(props) {
-      return (
-        <Provider foo={props.foo} bar={props.bar}>
-          <Indirection>
-            <Indirection>
-              <Foo />
-            </Indirection>
-            <Indirection>
-              <Bar />
-            </Indirection>
-          </Indirection>
-        </Provider>
-      );
-    }
+      ReactNoop.render(<App value={1} />);
+      expect(Scheduler).toFlushWithoutYielding();
 
-    ReactNoop.render(<App foo={1} bar={1} />);
-    expect(ReactNoop.flush()).toEqual(['Foo', 'Bar']);
-    expect(ReactNoop.getChildren()).toEqual([span('Foo: 1'), span('Bar: 1')]);
-
-    // Update only foo
-    ReactNoop.render(<App foo={2} bar={1} />);
-    expect(ReactNoop.flush()).toEqual(['Foo']);
-    expect(ReactNoop.getChildren()).toEqual([span('Foo: 2'), span('Bar: 1')]);
-
-    // Update only bar
-    ReactNoop.render(<App foo={2} bar={2} />);
-    expect(ReactNoop.flush()).toEqual(['Bar']);
-    expect(ReactNoop.getChildren()).toEqual([span('Foo: 2'), span('Bar: 2')]);
-
-    // Update both
-    ReactNoop.render(<App foo={3} bar={3} />);
-    expect(ReactNoop.flush()).toEqual(['Foo', 'Bar']);
-    expect(ReactNoop.getChildren()).toEqual([span('Foo: 3'), span('Bar: 3')]);
-  });
-
-  it('warns if calculateChangedBits returns larger than a 31-bit integer', () => {
-    spyOnDev(console, 'error');
-
-    const Context = React.createContext(
-      0,
-      (a, b) => Math.pow(2, 32) - 1, // Return 32 bit int
-    );
-
-    ReactNoop.render(<Context.Provider value={1} />);
-    ReactNoop.flush();
-
-    // Update
-    ReactNoop.render(<Context.Provider value={2} />);
-    ReactNoop.flush();
-
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
+      // Update
+      ReactNoop.render(<App value={2} />);
+      expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
         'calculateChangedBits: Expected the return value to be a 31-bit ' +
           'integer. Instead received: 4294967295',
       );
-    }
-  });
+    });
 
-  it('warns if multiple renderers concurrently render the same context', () => {
-    spyOnDev(console, 'error');
-    const Context = React.createContext(0);
+    it('warns if multiple renderers concurrently render the same context', () => {
+      spyOnDev(console, 'error');
+      const Context = React.createContext(0);
 
-    function Foo(props) {
-      ReactNoop.yield('Foo');
-      return null;
-    }
-
-    function App(props) {
-      return (
-        <Context.Provider value={props.value}>
-          <Foo />
-          <Foo />
-        </Context.Provider>
-      );
-    }
-
-    ReactNoop.render(<App value={1} />);
-    // Render past the Provider, but don't commit yet
-    ReactNoop.flushThrough(['Foo']);
-
-    // Get a new copy of ReactNoop
-    jest.resetModules();
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    React = require('react');
-    ReactNoop = require('react-noop-renderer');
-
-    // Render the provider again using a different renderer
-    ReactNoop.render(<App value={1} />);
-    ReactNoop.flush();
-
-    if (__DEV__) {
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Detected multiple renderers concurrently rendering the same ' +
-          'context provider. This is currently unsupported',
-      );
-    }
-  });
-
-  it('warns if consumer child is not a function', () => {
-    spyOnDev(console, 'error');
-    const Context = React.createContext(0);
-    ReactNoop.render(<Context.Consumer />);
-    expect(ReactNoop.flush).toThrow('render is not a function');
-    if (__DEV__) {
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'A context consumer was rendered with multiple children, or a child ' +
-          "that isn't a function",
-      );
-    }
-  });
-
-  it("does not re-render if there's an update in a child", () => {
-    const Context = React.createContext(0);
-
-    let child;
-    class Child extends React.Component {
-      state = {step: 0};
-      render() {
-        ReactNoop.yield('Child');
-        return (
-          <span
-            prop={`Context: ${this.props.context}, Step: ${this.state.step}`}
-          />
-        );
+      function Foo(props) {
+        Scheduler.yieldValue('Foo');
+        return null;
       }
-    }
 
-    function App(props) {
-      return (
-        <Context.Provider value={props.value}>
-          <Context.Consumer>
-            {value => {
-              ReactNoop.yield('Consumer render prop');
-              return <Child ref={inst => (child = inst)} context={value} />;
-            }}
-          </Context.Consumer>
-        </Context.Provider>
-      );
-    }
-
-    // Initial mount
-    ReactNoop.render(<App value={1} />);
-    expect(ReactNoop.flush()).toEqual(['Consumer render prop', 'Child']);
-    expect(ReactNoop.getChildren()).toEqual([span('Context: 1, Step: 0')]);
-
-    child.setState({step: 1});
-    expect(ReactNoop.flush()).toEqual(['Child']);
-    expect(ReactNoop.getChildren()).toEqual([span('Context: 1, Step: 1')]);
-  });
-
-  it('provider bails out if children and value are unchanged (like sCU)', () => {
-    const Context = React.createContext(0);
-
-    function Child() {
-      ReactNoop.yield('Child');
-      return <span prop="Child" />;
-    }
-
-    const children = <Child />;
-
-    function App(props) {
-      ReactNoop.yield('App');
-      return (
-        <Context.Provider value={props.value}>{children}</Context.Provider>
-      );
-    }
-
-    // Initial mount
-    ReactNoop.render(<App value={1} />);
-    expect(ReactNoop.flush()).toEqual(['App', 'Child']);
-    expect(ReactNoop.getChildren()).toEqual([span('Child')]);
-
-    // Update
-    ReactNoop.render(<App value={1} />);
-    expect(ReactNoop.flush()).toEqual([
-      'App',
-      // Child does not re-render
-    ]);
-    expect(ReactNoop.getChildren()).toEqual([span('Child')]);
-  });
-
-  it('consumer bails out if value is unchanged and something above bailed out', () => {
-    const Context = React.createContext(0);
-
-    function renderChildValue(value) {
-      ReactNoop.yield('Consumer');
-      return <span prop={value} />;
-    }
-
-    function ChildWithInlineRenderCallback() {
-      ReactNoop.yield('ChildWithInlineRenderCallback');
-      // Note: we are intentionally passing an inline arrow. Don't refactor.
-      return (
-        <Context.Consumer>{value => renderChildValue(value)}</Context.Consumer>
-      );
-    }
-
-    function ChildWithCachedRenderCallback() {
-      ReactNoop.yield('ChildWithCachedRenderCallback');
-      return <Context.Consumer>{renderChildValue}</Context.Consumer>;
-    }
-
-    class PureIndirection extends React.PureComponent {
-      render() {
-        ReactNoop.yield('PureIndirection');
+      function App(props) {
         return (
-          <React.Fragment>
-            <ChildWithInlineRenderCallback />
-            <ChildWithCachedRenderCallback />
-          </React.Fragment>
-        );
-      }
-    }
-
-    class App extends React.Component {
-      render() {
-        ReactNoop.yield('App');
-        return (
-          <Context.Provider value={this.props.value}>
-            <PureIndirection />
+          <Context.Provider value={props.value}>
+            <Foo />
+            <Foo />
           </Context.Provider>
         );
       }
-    }
 
-    // Initial mount
-    ReactNoop.render(<App value={1} />);
-    expect(ReactNoop.flush()).toEqual([
-      'App',
-      'PureIndirection',
-      'ChildWithInlineRenderCallback',
-      'Consumer',
-      'ChildWithCachedRenderCallback',
-      'Consumer',
-    ]);
-    expect(ReactNoop.getChildren()).toEqual([span(1), span(1)]);
+      ReactNoop.render(<App value={1} />);
+      // Render past the Provider, but don't commit yet
+      expect(Scheduler).toFlushAndYieldThrough(['Foo']);
 
-    // Update (bailout)
-    ReactNoop.render(<App value={1} />);
-    expect(ReactNoop.flush()).toEqual(['App']);
-    expect(ReactNoop.getChildren()).toEqual([span(1), span(1)]);
+      // Get a new copy of ReactNoop
+      jest.resetModules();
+      ReactFeatureFlags = require('shared/ReactFeatureFlags');
+      React = require('react');
+      ReactNoop = require('react-noop-renderer');
+      Scheduler = require('scheduler');
 
-    // Update (no bailout)
-    ReactNoop.render(<App value={2} />);
-    expect(ReactNoop.flush()).toEqual(['App', 'Consumer', 'Consumer']);
-    expect(ReactNoop.getChildren()).toEqual([span(2), span(2)]);
-  });
+      // Render the provider again using a different renderer
+      ReactNoop.render(<App value={1} />);
+      expect(Scheduler).toFlushAndYield(['Foo', 'Foo']);
 
-  // Context consumer bails out on propagating "deep" updates when `value` hasn't changed.
-  // However, it doesn't bail out from rendering if the component above it re-rendered anyway.
-  // If we bailed out on referential equality, it would be confusing that you
-  // can call this.setState(), but an autobound render callback "blocked" the update.
-  // https://github.com/facebook/react/pull/12470#issuecomment-376917711
-  it('consumer does not bail out if there were no bailouts above it', () => {
-    const Context = React.createContext(0);
-
-    class App extends React.Component {
-      state = {
-        text: 'hello',
-      };
-
-      renderConsumer = context => {
-        ReactNoop.yield('App#renderConsumer');
-        return <span prop={this.state.text} />;
-      };
-
-      render() {
-        ReactNoop.yield('App');
-        return (
-          <Context.Provider value={this.props.value}>
-            <Context.Consumer>{this.renderConsumer}</Context.Consumer>
-          </Context.Provider>
+      if (__DEV__) {
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          'Detected multiple renderers concurrently rendering the same ' +
+            'context provider. This is currently unsupported',
         );
       }
-    }
+    });
 
-    // Initial mount
-    let inst;
-    ReactNoop.render(<App value={1} ref={ref => (inst = ref)} />);
-    expect(ReactNoop.flush()).toEqual(['App', 'App#renderConsumer']);
-    expect(ReactNoop.getChildren()).toEqual([span('hello')]);
+    it('provider bails out if children and value are unchanged (like sCU)', () => {
+      const Context = React.createContext(0);
 
-    // Update
-    inst.setState({text: 'goodbye'});
-    expect(ReactNoop.flush()).toEqual(['App', 'App#renderConsumer']);
-    expect(ReactNoop.getChildren()).toEqual([span('goodbye')]);
-  });
+      function Child() {
+        Scheduler.yieldValue('Child');
+        return <span prop="Child" />;
+      }
 
-  // This is a regression case for https://github.com/facebook/react/issues/12389.
-  it('does not run into an infinite loop', () => {
-    const Context = React.createContext(null);
+      const children = <Child />;
 
-    class App extends React.Component {
-      renderItem(id) {
+      function App(props) {
+        Scheduler.yieldValue('App');
         return (
-          <span key={id}>
-            <Context.Consumer>{() => <span>inner</span>}</Context.Consumer>
-            <span>outer</span>
-          </span>
+          <Context.Provider value={props.value}>{children}</Context.Provider>
         );
       }
-      renderList() {
-        const list = [1, 2].map(id => this.renderItem(id));
-        if (this.props.reverse) {
-          list.reverse();
+
+      // Initial mount
+      ReactNoop.render(<App value={1} />);
+      expect(Scheduler).toFlushAndYield(['App', 'Child']);
+      expect(ReactNoop.getChildren()).toEqual([span('Child')]);
+
+      // Update
+      ReactNoop.render(<App value={1} />);
+      expect(Scheduler).toFlushAndYield([
+        'App',
+        // Child does not re-render
+      ]);
+      expect(ReactNoop.getChildren()).toEqual([span('Child')]);
+    });
+
+    it('provider does not bail out if legacy context changed above', () => {
+      const Context = React.createContext(0);
+
+      function Child() {
+        Scheduler.yieldValue('Child');
+        return <span prop="Child" />;
+      }
+
+      const children = <Child />;
+
+      class LegacyProvider extends React.Component {
+        static childContextTypes = {
+          legacyValue: () => {},
+        };
+        state = {legacyValue: 1};
+        getChildContext() {
+          return {legacyValue: this.state.legacyValue};
         }
-        return list;
+        render() {
+          Scheduler.yieldValue('LegacyProvider');
+          return this.props.children;
+        }
       }
-      render() {
-        return (
-          <Context.Provider value={{}}>{this.renderList()}</Context.Provider>
+
+      class App extends React.Component {
+        state = {value: 1};
+        render() {
+          Scheduler.yieldValue('App');
+          return (
+            <Context.Provider value={this.state.value}>
+              {this.props.children}
+            </Context.Provider>
+          );
+        }
+      }
+
+      const legacyProviderRef = React.createRef();
+      const appRef = React.createRef();
+
+      // Initial mount
+      ReactNoop.render(
+        <LegacyProvider ref={legacyProviderRef}>
+          <App ref={appRef} value={1}>
+            {children}
+          </App>
+        </LegacyProvider>,
+      );
+      expect(() => {
+        expect(Scheduler).toFlushAndYield(['LegacyProvider', 'App', 'Child']);
+      }).toWarnDev(
+        'Legacy context API has been detected within a strict-mode tree: \n\n' +
+          'Please update the following components: LegacyProvider',
+        {withoutStack: true},
+      );
+      expect(ReactNoop.getChildren()).toEqual([span('Child')]);
+
+      // Update App with same value (should bail out)
+      appRef.current.setState({value: 1});
+      expect(Scheduler).toFlushAndYield(['App']);
+      expect(ReactNoop.getChildren()).toEqual([span('Child')]);
+
+      // Update LegacyProvider (should not bail out)
+      legacyProviderRef.current.setState({value: 1});
+      expect(Scheduler).toFlushAndYield(['LegacyProvider', 'App', 'Child']);
+      expect(ReactNoop.getChildren()).toEqual([span('Child')]);
+
+      // Update App with same value (should bail out)
+      appRef.current.setState({value: 1});
+      expect(Scheduler).toFlushAndYield(['App']);
+      expect(ReactNoop.getChildren()).toEqual([span('Child')]);
+    });
+  });
+
+  describe('Context.Consumer', () => {
+    it('warns if child is not a function', () => {
+      spyOnDev(console, 'error');
+      const Context = React.createContext(0);
+      ReactNoop.render(<Context.Consumer />);
+      expect(Scheduler).toFlushAndThrow('render is not a function');
+      if (__DEV__) {
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          'A context consumer was rendered with multiple children, or a child ' +
+            "that isn't a function",
         );
       }
-    }
+    });
 
-    ReactNoop.render(<App reverse={false} />);
-    ReactNoop.flush();
-    ReactNoop.render(<App reverse={true} />);
-    ReactNoop.flush();
-    ReactNoop.render(<App reverse={false} />);
-    ReactNoop.flush();
+    it('can read other contexts inside consumer render prop', () => {
+      const FooContext = React.createContext(0);
+      const BarContext = React.createContext(0);
+
+      function FooAndBar() {
+        return (
+          <FooContext.Consumer>
+            {foo => {
+              const bar = readContext(BarContext);
+              return <Text text={`Foo: ${foo}, Bar: ${bar}`} />;
+            }}
+          </FooContext.Consumer>
+        );
+      }
+
+      class Indirection extends React.Component {
+        shouldComponentUpdate() {
+          return false;
+        }
+        render() {
+          return this.props.children;
+        }
+      }
+
+      function App(props) {
+        return (
+          <FooContext.Provider value={props.foo}>
+            <BarContext.Provider value={props.bar}>
+              <Indirection>
+                <FooAndBar />
+              </Indirection>
+            </BarContext.Provider>
+          </FooContext.Provider>
+        );
+      }
+
+      ReactNoop.render(<App foo={1} bar={1} />);
+      expect(Scheduler).toFlushAndYield(['Foo: 1, Bar: 1']);
+      expect(ReactNoop.getChildren()).toEqual([span('Foo: 1, Bar: 1')]);
+
+      // Update foo
+      ReactNoop.render(<App foo={2} bar={1} />);
+      expect(Scheduler).toFlushAndYield(['Foo: 2, Bar: 1']);
+      expect(ReactNoop.getChildren()).toEqual([span('Foo: 2, Bar: 1')]);
+
+      // Update bar
+      ReactNoop.render(<App foo={2} bar={2} />);
+      expect(Scheduler).toFlushAndYield(['Foo: 2, Bar: 2']);
+      expect(ReactNoop.getChildren()).toEqual([span('Foo: 2, Bar: 2')]);
+    });
+
+    // Context consumer bails out on propagating "deep" updates when `value` hasn't changed.
+    // However, it doesn't bail out from rendering if the component above it re-rendered anyway.
+    // If we bailed out on referential equality, it would be confusing that you
+    // can call this.setState(), but an autobound render callback "blocked" the update.
+    // https://github.com/facebook/react/pull/12470#issuecomment-376917711
+    it('consumer does not bail out if there were no bailouts above it', () => {
+      const Context = React.createContext(0);
+      const Consumer = Context.Consumer;
+
+      class App extends React.Component {
+        state = {
+          text: 'hello',
+        };
+
+        renderConsumer = context => {
+          Scheduler.yieldValue('App#renderConsumer');
+          return <span prop={this.state.text} />;
+        };
+
+        render() {
+          Scheduler.yieldValue('App');
+          return (
+            <Context.Provider value={this.props.value}>
+              <Consumer>{this.renderConsumer}</Consumer>
+            </Context.Provider>
+          );
+        }
+      }
+
+      // Initial mount
+      let inst;
+      ReactNoop.render(<App value={1} ref={ref => (inst = ref)} />);
+      expect(Scheduler).toFlushAndYield(['App', 'App#renderConsumer']);
+      expect(ReactNoop.getChildren()).toEqual([span('hello')]);
+
+      // Update
+      inst.setState({text: 'goodbye'});
+      expect(Scheduler).toFlushAndYield(['App', 'App#renderConsumer']);
+      expect(ReactNoop.getChildren()).toEqual([span('goodbye')]);
+    });
+  });
+
+  describe('readContext', () => {
+    it('can read the same context multiple times in the same function', () => {
+      const Context = React.createContext({foo: 0, bar: 0, baz: 0}, (a, b) => {
+        let result = 0;
+        if (a.foo !== b.foo) {
+          result |= 0b001;
+        }
+        if (a.bar !== b.bar) {
+          result |= 0b010;
+        }
+        if (a.baz !== b.baz) {
+          result |= 0b100;
+        }
+        return result;
+      });
+
+      function Provider(props) {
+        return (
+          <Context.Provider
+            value={{foo: props.foo, bar: props.bar, baz: props.baz}}>
+            {props.children}
+          </Context.Provider>
+        );
+      }
+
+      function FooAndBar() {
+        const {foo} = readContext(Context, 0b001);
+        const {bar} = readContext(Context, 0b010);
+        return <Text text={`Foo: ${foo}, Bar: ${bar}`} />;
+      }
+
+      function Baz() {
+        const {baz} = readContext(Context, 0b100);
+        return <Text text={'Baz: ' + baz} />;
+      }
+
+      class Indirection extends React.Component {
+        shouldComponentUpdate() {
+          return false;
+        }
+        render() {
+          return this.props.children;
+        }
+      }
+
+      function App(props) {
+        return (
+          <Provider foo={props.foo} bar={props.bar} baz={props.baz}>
+            <Indirection>
+              <Indirection>
+                <FooAndBar />
+              </Indirection>
+              <Indirection>
+                <Baz />
+              </Indirection>
+            </Indirection>
+          </Provider>
+        );
+      }
+
+      ReactNoop.render(<App foo={1} bar={1} baz={1} />);
+      expect(Scheduler).toFlushAndYield(['Foo: 1, Bar: 1', 'Baz: 1']);
+      expect(ReactNoop.getChildren()).toEqual([
+        span('Foo: 1, Bar: 1'),
+        span('Baz: 1'),
+      ]);
+
+      // Update only foo
+      ReactNoop.render(<App foo={2} bar={1} baz={1} />);
+      expect(Scheduler).toFlushAndYield(['Foo: 2, Bar: 1']);
+      expect(ReactNoop.getChildren()).toEqual([
+        span('Foo: 2, Bar: 1'),
+        span('Baz: 1'),
+      ]);
+
+      // Update only bar
+      ReactNoop.render(<App foo={2} bar={2} baz={1} />);
+      expect(Scheduler).toFlushAndYield(['Foo: 2, Bar: 2']);
+      expect(ReactNoop.getChildren()).toEqual([
+        span('Foo: 2, Bar: 2'),
+        span('Baz: 1'),
+      ]);
+
+      // Update only baz
+      ReactNoop.render(<App foo={2} bar={2} baz={2} />);
+      expect(Scheduler).toFlushAndYield(['Baz: 2']);
+      expect(ReactNoop.getChildren()).toEqual([
+        span('Foo: 2, Bar: 2'),
+        span('Baz: 2'),
+      ]);
+    });
+
+    // Context consumer bails out on propagating "deep" updates when `value` hasn't changed.
+    // However, it doesn't bail out from rendering if the component above it re-rendered anyway.
+    // If we bailed out on referential equality, it would be confusing that you
+    // can call this.setState(), but an autobound render callback "blocked" the update.
+    // https://github.com/facebook/react/pull/12470#issuecomment-376917711
+    it('does not bail out if there were no bailouts above it', () => {
+      const Context = React.createContext(0);
+
+      class Consumer extends React.Component {
+        render() {
+          const contextValue = readContext(Context);
+          return this.props.children(contextValue);
+        }
+      }
+
+      class App extends React.Component {
+        state = {
+          text: 'hello',
+        };
+
+        renderConsumer = context => {
+          Scheduler.yieldValue('App#renderConsumer');
+          return <span prop={this.state.text} />;
+        };
+
+        render() {
+          Scheduler.yieldValue('App');
+          return (
+            <Context.Provider value={this.props.value}>
+              <Consumer>{this.renderConsumer}</Consumer>
+            </Context.Provider>
+          );
+        }
+      }
+
+      // Initial mount
+      let inst;
+      ReactNoop.render(<App value={1} ref={ref => (inst = ref)} />);
+      expect(Scheduler).toFlushAndYield(['App', 'App#renderConsumer']);
+      expect(ReactNoop.getChildren()).toEqual([span('hello')]);
+
+      // Update
+      inst.setState({text: 'goodbye'});
+      expect(Scheduler).toFlushAndYield(['App', 'App#renderConsumer']);
+      expect(ReactNoop.getChildren()).toEqual([span('goodbye')]);
+    });
+
+    it('warns when reading context inside render phase class setState updater', () => {
+      const ThemeContext = React.createContext('light');
+
+      class Cls extends React.Component {
+        state = {};
+        render() {
+          this.setState(() => {
+            readContext(ThemeContext);
+          });
+          return null;
+        }
+      }
+
+      ReactNoop.render(<Cls />);
+      expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
+        [
+          'Context can only be read while React is rendering',
+          'Cannot update during an existing state transition',
+        ],
+        {
+          withoutStack: 1,
+        },
+      );
+    });
+  });
+
+  describe('useContext', () => {
+    it('warns on array.map(useContext)', () => {
+      const Context = React.createContext(0);
+      function Foo() {
+        return [Context].map(useContext);
+      }
+      ReactNoop.render(<Foo />);
+      expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
+        'useContext() second argument is reserved for future ' +
+          'use in React. Passing it is not supported. ' +
+          'You passed: 0.\n\n' +
+          'Did you call array.map(useContext)? ' +
+          'Calling Hooks inside a loop is not supported. ' +
+          'Learn more at https://fb.me/rules-of-hooks',
+      );
+    });
+
+    it('throws when used in a class component', () => {
+      const Context = React.createContext(0);
+      class Foo extends React.Component {
+        render() {
+          return useContext(Context);
+        }
+      }
+      ReactNoop.render(<Foo />);
+      expect(Scheduler).toFlushAndThrow(
+        'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen' +
+          ' for one of the following reasons:\n' +
+          '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
+          '2. You might be breaking the Rules of Hooks\n' +
+          '3. You might have more than one copy of React in the same app\n' +
+          'See https://fb.me/react-invalid-hook-call for tips about how to debug and fix this problem.',
+      );
+    });
+
+    it('warns when passed a consumer', () => {
+      const Context = React.createContext(0);
+      function Foo() {
+        return useContext(Context.Consumer);
+      }
+      ReactNoop.render(<Foo />);
+      expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
+        'Calling useContext(Context.Consumer) is not supported, may cause bugs, ' +
+          'and will be removed in a future major release. ' +
+          'Did you mean to call useContext(Context) instead?',
+      );
+    });
+
+    it('warns when passed a provider', () => {
+      const Context = React.createContext(0);
+      function Foo() {
+        useContext(Context.Provider);
+        return null;
+      }
+      ReactNoop.render(<Foo />);
+      expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
+        'Calling useContext(Context.Provider) is not supported. ' +
+          'Did you mean to call useContext(Context) instead?',
+      );
+    });
+
+    // Context consumer bails out on propagating "deep" updates when `value` hasn't changed.
+    // However, it doesn't bail out from rendering if the component above it re-rendered anyway.
+    // If we bailed out on referential equality, it would be confusing that you
+    // can call this.setState(), but an autobound render callback "blocked" the update.
+    // https://github.com/facebook/react/pull/12470#issuecomment-376917711
+    it('does not bail out if there were no bailouts above it', () => {
+      const Context = React.createContext(0);
+
+      function Consumer({children}) {
+        const contextValue = useContext(Context);
+        return children(contextValue);
+      }
+
+      class App extends React.Component {
+        state = {
+          text: 'hello',
+        };
+
+        renderConsumer = context => {
+          Scheduler.yieldValue('App#renderConsumer');
+          return <span prop={this.state.text} />;
+        };
+
+        render() {
+          Scheduler.yieldValue('App');
+          return (
+            <Context.Provider value={this.props.value}>
+              <Consumer>{this.renderConsumer}</Consumer>
+            </Context.Provider>
+          );
+        }
+      }
+
+      // Initial mount
+      let inst;
+      ReactNoop.render(<App value={1} ref={ref => (inst = ref)} />);
+      expect(Scheduler).toFlushAndYield(['App', 'App#renderConsumer']);
+      expect(ReactNoop.getChildren()).toEqual([span('hello')]);
+
+      // Update
+      inst.setState({text: 'goodbye'});
+      expect(Scheduler).toFlushAndYield(['App', 'App#renderConsumer']);
+      expect(ReactNoop.getChildren()).toEqual([span('goodbye')]);
+    });
+  });
+
+  it('unwinds after errors in complete phase', () => {
+    const Context = React.createContext(0);
+
+    // This is a regression test for stack misalignment
+    // caused by unwinding the context from wrong point.
+    ReactNoop.render(
+      <errorInCompletePhase>
+        <Context.Provider />
+      </errorInCompletePhase>,
+    );
+    expect(Scheduler).toFlushAndThrow('Error in host config.');
+
+    ReactNoop.render(
+      <Context.Provider value={10}>
+        <Context.Consumer>{value => <span prop={value} />}</Context.Consumer>
+      </Context.Provider>,
+    );
+    expect(Scheduler).toFlushWithoutYielding();
+    expect(ReactNoop.getChildren()).toEqual([span(10)]);
   });
 
   describe('fuzz test', () => {
@@ -949,6 +1699,7 @@ describe('ReactNewContext', () => {
           return false;
         }
         render() {
+          Scheduler.yieldValue();
           if (this.props.depth >= this.props.maxDepth) {
             return null;
           }
@@ -1003,9 +1754,7 @@ describe('ReactNewContext', () => {
             expectedValues[key] = value;
           } else if (value !== expectedValue) {
             throw new Error(
-              `Inconsistent value! Expected: ${key}:${expectedValue}. Actual: ${
-                text
-              }`,
+              `Inconsistent value! Expected: ${key}:${expectedValue}. Actual: ${text}`,
             );
           }
         });
@@ -1028,10 +1777,10 @@ describe('ReactNewContext', () => {
         actions.forEach(action => {
           switch (action.type) {
             case FLUSH_ALL:
-              ReactNoop.flush();
+              Scheduler.unstable_flushWithoutYielding();
               break;
             case FLUSH:
-              ReactNoop.flushUnitsOfWork(action.unitsOfWork);
+              Scheduler.unstable_flushNumberOfYields(action.unitsOfWork);
               break;
             case UPDATE:
               finalExpectedValues = {
@@ -1046,7 +1795,7 @@ describe('ReactNewContext', () => {
           assertConsistentTree();
         });
 
-        ReactNoop.flush();
+        Scheduler.unstable_flushWithoutYielding();
         assertConsistentTree(finalExpectedValues);
       }
 
@@ -1078,5 +1827,101 @@ Context fuzz tester error! Copy and paste the following line into the test suite
         }
       }
     });
+  });
+
+  it('should warn with an error message when using context as a consumer in DEV', () => {
+    const BarContext = React.createContext({value: 'bar-initial'});
+    const BarConsumer = BarContext;
+
+    function Component() {
+      return (
+        <React.Fragment>
+          <BarContext.Provider value={{value: 'bar-updated'}}>
+            <BarConsumer>
+              {({value}) => <div actual={value} expected="bar-updated" />}
+            </BarConsumer>
+          </BarContext.Provider>
+        </React.Fragment>
+      );
+    }
+
+    expect(() => {
+      ReactNoop.render(<Component />);
+      expect(Scheduler).toFlushWithoutYielding();
+    }).toWarnDev(
+      'Rendering <Context> directly is not supported and will be removed in ' +
+        'a future major release. Did you mean to render <Context.Consumer> instead?',
+    );
+  });
+
+  // False positive regression test.
+  it('should not warn when using Consumer from React < 16.6 with newer renderer', () => {
+    const BarContext = React.createContext({value: 'bar-initial'});
+    // React 16.5 and earlier didn't have a separate object.
+    BarContext.Consumer = BarContext;
+
+    function Component() {
+      return (
+        <React.Fragment>
+          <BarContext.Provider value={{value: 'bar-updated'}}>
+            <BarContext.Consumer>
+              {({value}) => <div actual={value} expected="bar-updated" />}
+            </BarContext.Consumer>
+          </BarContext.Provider>
+        </React.Fragment>
+      );
+    }
+
+    ReactNoop.render(<Component />);
+    expect(Scheduler).toFlushWithoutYielding();
+  });
+
+  it('should warn with an error message when using nested context consumers in DEV', () => {
+    const BarContext = React.createContext({value: 'bar-initial'});
+    const BarConsumer = BarContext;
+
+    function Component() {
+      return (
+        <React.Fragment>
+          <BarContext.Provider value={{value: 'bar-updated'}}>
+            <BarConsumer.Consumer.Consumer>
+              {({value}) => <div actual={value} expected="bar-updated" />}
+            </BarConsumer.Consumer.Consumer>
+          </BarContext.Provider>
+        </React.Fragment>
+      );
+    }
+
+    expect(() => {
+      ReactNoop.render(<Component />);
+      expect(Scheduler).toFlushWithoutYielding();
+    }).toWarnDev(
+      'Rendering <Context.Consumer.Consumer> is not supported and will be removed in ' +
+        'a future major release. Did you mean to render <Context.Consumer> instead?',
+    );
+  });
+
+  it('should warn with an error message when using Context.Consumer.Provider DEV', () => {
+    const BarContext = React.createContext({value: 'bar-initial'});
+
+    function Component() {
+      return (
+        <React.Fragment>
+          <BarContext.Consumer.Provider value={{value: 'bar-updated'}}>
+            <BarContext.Consumer>
+              {({value}) => <div actual={value} expected="bar-updated" />}
+            </BarContext.Consumer>
+          </BarContext.Consumer.Provider>
+        </React.Fragment>
+      );
+    }
+
+    expect(() => {
+      ReactNoop.render(<Component />);
+      expect(Scheduler).toFlushWithoutYielding();
+    }).toWarnDev(
+      'Rendering <Context.Consumer.Provider> is not supported and will be removed in ' +
+        'a future major release. Did you mean to render <Context.Provider> instead?',
+    );
   });
 });

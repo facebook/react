@@ -1,40 +1,85 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
+import type {Thenable} from 'react-reconciler/src/ReactFiberWorkLoop';
 
 import React from 'react';
 import ReactDOM from 'react-dom';
 import {findCurrentFiberUsingSlowPath} from 'react-reconciler/reflection';
-import * as ReactInstanceMap from 'shared/ReactInstanceMap';
+import {get as getInstance} from 'shared/ReactInstanceMap';
 import {
   ClassComponent,
-  FunctionalComponent,
+  FunctionComponent,
   HostComponent,
   HostText,
-} from 'shared/ReactTypeOfWork';
+} from 'shared/ReactWorkTags';
 import SyntheticEvent from 'events/SyntheticEvent';
-import invariant from 'fbjs/lib/invariant';
-
-import {topLevelTypes, mediaEventTypes} from '../events/BrowserEventConstants';
+import invariant from 'shared/invariant';
+import lowPriorityWarning from 'shared/lowPriorityWarning';
+import warningWithoutStack from 'shared/warningWithoutStack';
+import {ELEMENT_NODE} from '../shared/HTMLNodeType';
+import * as DOMTopLevelEventTypes from '../events/DOMTopLevelEventTypes';
+import {PLUGIN_EVENT_SYSTEM} from 'events/EventSystemFlags';
+import act from './ReactTestUtilsAct';
 
 const {findDOMNode} = ReactDOM;
-const {
-  EventPluginHub,
-  EventPluginRegistry,
-  EventPropagators,
-  ReactControlledComponent,
-  ReactDOMComponentTree,
-  ReactDOMEventListener,
-} = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+// Keep in sync with ReactDOMUnstableNativeDependencies.js
+// ReactDOM.js, and ReactTestUtilsAct.js:
+const [
+  getInstanceFromNode,
+  /* eslint-disable no-unused-vars */
+  getNodeFromInstance,
+  getFiberCurrentPropsFromNode,
+  injectEventPluginsByName,
+  /* eslint-enable no-unused-vars */
+  eventNameDispatchConfigs,
+  accumulateTwoPhaseDispatches,
+  accumulateDirectDispatches,
+  enqueueStateRestore,
+  restoreStateIfNeeded,
+  dispatchEvent,
+  runEventsInBatch,
+  // eslint-disable-next-line no-unused-vars
+  flushPassiveEffects,
+] = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
 
 function Event(suffix) {}
+
+let hasWarnedAboutDeprecatedMockComponent = false;
 
 /**
  * @class ReactTestUtils
  */
+
+/**
+ * Simulates a top level event being dispatched from a raw event that occurred
+ * on an `Element` node.
+ * @param {number} topLevelType A number from `TopLevelEventTypes`
+ * @param {!Element} node The dom to simulate an event occurring on.
+ * @param {?Event} fakeNativeEvent Fake native event to use in SyntheticEvent.
+ */
+function simulateNativeEventOnNode(topLevelType, node, fakeNativeEvent) {
+  fakeNativeEvent.target = node;
+  dispatchEvent(topLevelType, PLUGIN_EVENT_SYSTEM, fakeNativeEvent);
+}
+
+/**
+ * Simulates a top level event being dispatched from a raw event that occurred
+ * on the `ReactDOMComponent` `comp`.
+ * @param {Object} topLevelType A type from `BrowserEventConstants.topLevelTypes`.
+ * @param {!ReactDOMComponent} comp
+ * @param {?Event} fakeNativeEvent Fake native event to use in SyntheticEvent.
+ */
+function simulateNativeEventOnDOMComponent(
+  topLevelType,
+  comp,
+  fakeNativeEvent,
+) {
+  simulateNativeEventOnNode(topLevelType, findDOMNode(comp), fakeNativeEvent);
+}
 
 function findAllInRenderedFiberTreeInternal(fiber, test) {
   if (!fiber) {
@@ -51,7 +96,7 @@ function findAllInRenderedFiberTreeInternal(fiber, test) {
       node.tag === HostComponent ||
       node.tag === HostText ||
       node.tag === ClassComponent ||
-      node.tag === FunctionalComponent
+      node.tag === FunctionComponent
     ) {
       const publicInst = node.stateNode;
       if (test(publicInst)) {
@@ -76,6 +121,41 @@ function findAllInRenderedFiberTreeInternal(fiber, test) {
     node = node.sibling;
   }
 }
+
+function validateClassInstance(inst, methodName) {
+  if (!inst) {
+    // This is probably too relaxed but it's existing behavior.
+    return;
+  }
+  if (getInstance(inst)) {
+    // This is a public instance indeed.
+    return;
+  }
+  let received;
+  const stringified = '' + inst;
+  if (Array.isArray(inst)) {
+    received = 'an array';
+  } else if (inst && inst.nodeType === ELEMENT_NODE && inst.tagName) {
+    received = 'a DOM node';
+  } else if (stringified === '[object Object]') {
+    received = 'object with keys {' + Object.keys(inst).join(', ') + '}';
+  } else {
+    received = stringified;
+  }
+  invariant(
+    false,
+    '%s(...): the first argument must be a React class instance. ' +
+      'Instead received: %s.',
+    methodName,
+    received,
+  );
+}
+
+// a plain dom element, lazily initialized, used by act() when flushing effects
+let actContainerElement = null;
+
+// a warning for when you try to use TestUtils.act in a non-browser environment
+let didWarnAboutActInNodejs = false;
 
 /**
  * Utilities for making it easy to test React components.
@@ -106,7 +186,7 @@ const ReactTestUtils = {
   },
 
   isDOMComponent: function(inst) {
-    return !!(inst && inst.nodeType === 1 && inst.tagName);
+    return !!(inst && inst.nodeType === ELEMENT_NODE && inst.tagName);
   },
 
   isDOMComponentElement: function(inst) {
@@ -130,20 +210,17 @@ const ReactTestUtils = {
     if (!ReactTestUtils.isCompositeComponent(inst)) {
       return false;
     }
-    const internalInstance = ReactInstanceMap.get(inst);
+    const internalInstance = getInstance(inst);
     const constructor = internalInstance.type;
     return constructor === type;
   },
 
   findAllInRenderedTree: function(inst, test) {
+    validateClassInstance(inst, 'findAllInRenderedTree');
     if (!inst) {
       return [];
     }
-    invariant(
-      ReactTestUtils.isCompositeComponent(inst),
-      'findAllInRenderedTree(...): instance must be a composite component',
-    );
-    const internalInstance = ReactInstanceMap.get(inst);
+    const internalInstance = getInstance(inst);
     return findAllInRenderedFiberTreeInternal(internalInstance, test);
   },
 
@@ -153,6 +230,7 @@ const ReactTestUtils = {
    * @return {array} an array of all the matches.
    */
   scryRenderedDOMComponentsWithClass: function(root, classNames) {
+    validateClassInstance(root, 'scryRenderedDOMComponentsWithClass');
     return ReactTestUtils.findAllInRenderedTree(root, function(inst) {
       if (ReactTestUtils.isDOMComponent(inst)) {
         let className = inst.className;
@@ -185,6 +263,7 @@ const ReactTestUtils = {
    * @return {!ReactDOMComponent} The one match.
    */
   findRenderedDOMComponentWithClass: function(root, className) {
+    validateClassInstance(root, 'findRenderedDOMComponentWithClass');
     const all = ReactTestUtils.scryRenderedDOMComponentsWithClass(
       root,
       className,
@@ -207,6 +286,7 @@ const ReactTestUtils = {
    * @return {array} an array of all the matches.
    */
   scryRenderedDOMComponentsWithTag: function(root, tagName) {
+    validateClassInstance(root, 'scryRenderedDOMComponentsWithTag');
     return ReactTestUtils.findAllInRenderedTree(root, function(inst) {
       return (
         ReactTestUtils.isDOMComponent(inst) &&
@@ -222,6 +302,7 @@ const ReactTestUtils = {
    * @return {!ReactDOMComponent} The one match.
    */
   findRenderedDOMComponentWithTag: function(root, tagName) {
+    validateClassInstance(root, 'findRenderedDOMComponentWithTag');
     const all = ReactTestUtils.scryRenderedDOMComponentsWithTag(root, tagName);
     if (all.length !== 1) {
       throw new Error(
@@ -240,6 +321,7 @@ const ReactTestUtils = {
    * @return {array} an array of all the matches.
    */
   scryRenderedComponentsWithType: function(root, componentType) {
+    validateClassInstance(root, 'scryRenderedComponentsWithType');
     return ReactTestUtils.findAllInRenderedTree(root, function(inst) {
       return ReactTestUtils.isCompositeComponentWithType(inst, componentType);
     });
@@ -252,6 +334,7 @@ const ReactTestUtils = {
    * @return {!ReactComponent} The one match.
    */
   findRenderedComponentWithType: function(root, componentType) {
+    validateClassInstance(root, 'findRenderedComponentWithType');
     const all = ReactTestUtils.scryRenderedComponentsWithType(
       root,
       componentType,
@@ -282,6 +365,16 @@ const ReactTestUtils = {
    * @return {object} the ReactTestUtils object (for chaining)
    */
   mockComponent: function(module, mockTagName) {
+    if (!hasWarnedAboutDeprecatedMockComponent) {
+      hasWarnedAboutDeprecatedMockComponent = true;
+      lowPriorityWarning(
+        false,
+        'ReactTestUtils.mockComponent() is deprecated. ' +
+          'Use shallow rendering or jest.mock() instead.\n\n' +
+          'See https://fb.me/test-utils-mock-component for more information.',
+      );
+    }
+
     mockTagName = mockTagName || module.mockTagName || 'div';
 
     module.prototype.render.mockImplementation(function() {
@@ -289,37 +382,6 @@ const ReactTestUtils = {
     });
 
     return this;
-  },
-
-  /**
-   * Simulates a top level event being dispatched from a raw event that occurred
-   * on an `Element` node.
-   * @param {Object} topLevelType A type from `BrowserEventConstants.topLevelTypes`
-   * @param {!Element} node The dom to simulate an event occurring on.
-   * @param {?Event} fakeNativeEvent Fake native event to use in SyntheticEvent.
-   */
-  simulateNativeEventOnNode: function(topLevelType, node, fakeNativeEvent) {
-    fakeNativeEvent.target = node;
-    ReactDOMEventListener.dispatchEvent(topLevelType, fakeNativeEvent);
-  },
-
-  /**
-   * Simulates a top level event being dispatched from a raw event that occurred
-   * on the `ReactDOMComponent` `comp`.
-   * @param {Object} topLevelType A type from `BrowserEventConstants.topLevelTypes`.
-   * @param {!ReactDOMComponent} comp
-   * @param {?Event} fakeNativeEvent Fake native event to use in SyntheticEvent.
-   */
-  simulateNativeEventOnDOMComponent: function(
-    topLevelType,
-    comp,
-    fakeNativeEvent,
-  ) {
-    ReactTestUtils.simulateNativeEventOnNode(
-      topLevelType,
-      findDOMNode(comp),
-      fakeNativeEvent,
-    );
   },
 
   nativeTouchData: function(x, y) {
@@ -330,6 +392,26 @@ const ReactTestUtils = {
 
   Simulate: null,
   SimulateNative: {},
+
+  act(callback: () => Thenable) {
+    if (actContainerElement === null) {
+      if (__DEV__) {
+        // warn if we're trying to use this in something like node (without jsdom)
+        if (didWarnAboutActInNodejs === false) {
+          didWarnAboutActInNodejs = true;
+          warningWithoutStack(
+            typeof document !== 'undefined' && document !== null,
+            'It looks like you called ReactTestUtils.act(...) in a non-browser environment. ' +
+              "If you're using TestRenderer for your tests, you should call " +
+              'ReactTestRenderer.act(...) instead of ReactTestUtils.act(...).',
+          );
+        }
+      }
+      // now make the stub element
+      actContainerElement = document.createElement('div');
+    }
+    return act(callback);
+  },
 };
 
 /**
@@ -354,8 +436,7 @@ function makeSimulator(eventType) {
         'a component instance. Pass the DOM node you wish to simulate the event on instead.',
     );
 
-    const dispatchConfig =
-      EventPluginRegistry.eventNameDispatchConfigs[eventType];
+    const dispatchConfig = eventNameDispatchConfigs[eventType];
 
     const fakeNativeEvent = new Event();
     fakeNativeEvent.target = domNode;
@@ -363,7 +444,7 @@ function makeSimulator(eventType) {
 
     // We don't use SyntheticEvent.getPooled in order to not have to worry about
     // properly destroying any properties assigned from `eventData` upon release
-    const targetInst = ReactDOMComponentTree.getInstanceFromNode(domNode);
+    const targetInst = getInstanceFromNode(domNode);
     const event = new SyntheticEvent(
       dispatchConfig,
       targetInst,
@@ -377,18 +458,18 @@ function makeSimulator(eventType) {
     Object.assign(event, eventData);
 
     if (dispatchConfig.phasedRegistrationNames) {
-      EventPropagators.accumulateTwoPhaseDispatches(event);
+      accumulateTwoPhaseDispatches(event);
     } else {
-      EventPropagators.accumulateDirectDispatches(event);
+      accumulateDirectDispatches(event);
     }
 
     ReactDOM.unstable_batchedUpdates(function() {
       // Normally extractEvent enqueues a state restore, but we'll just always
-      // do that since we we're by-passing it here.
-      ReactControlledComponent.enqueueStateRestore(domNode);
-      EventPluginHub.runEventsInBatch(event, true);
+      // do that since we're by-passing it here.
+      enqueueStateRestore(domNode);
+      runEventsInBatch(event);
     });
-    ReactControlledComponent.restoreStateIfNeeded();
+    restoreStateIfNeeded();
   };
 }
 
@@ -396,7 +477,7 @@ function buildSimulators() {
   ReactTestUtils.Simulate = {};
 
   let eventType;
-  for (eventType in EventPluginRegistry.eventNameDispatchConfigs) {
+  for (eventType in eventNameDispatchConfigs) {
     /**
      * @param {!Element|ReactDOMComponent} domComponentOrNode
      * @param {?object} eventData Fake event data to use in SyntheticEvent.
@@ -404,19 +485,6 @@ function buildSimulators() {
     ReactTestUtils.Simulate[eventType] = makeSimulator(eventType);
   }
 }
-
-// Rebuild ReactTestUtils.Simulate whenever event plugins are injected
-const oldInjectEventPluginOrder =
-  EventPluginHub.injection.injectEventPluginOrder;
-EventPluginHub.injection.injectEventPluginOrder = function() {
-  oldInjectEventPluginOrder.apply(this, arguments);
-  buildSimulators();
-};
-const oldInjectEventPlugins = EventPluginHub.injection.injectEventPluginsByName;
-EventPluginHub.injection.injectEventPluginsByName = function() {
-  oldInjectEventPlugins.apply(this, arguments);
-  buildSimulators();
-};
 
 buildSimulators();
 
@@ -436,20 +504,20 @@ buildSimulators();
  * to dispatch synthetic events.
  */
 
-function makeNativeSimulator(eventType) {
+function makeNativeSimulator(eventType, topLevelType) {
   return function(domComponentOrNode, nativeEventData) {
     const fakeNativeEvent = new Event(eventType);
     Object.assign(fakeNativeEvent, nativeEventData);
     if (ReactTestUtils.isDOMComponent(domComponentOrNode)) {
-      ReactTestUtils.simulateNativeEventOnDOMComponent(
-        eventType,
+      simulateNativeEventOnDOMComponent(
+        topLevelType,
         domComponentOrNode,
         fakeNativeEvent,
       );
     } else if (domComponentOrNode.tagName) {
       // Will allow on actual dom nodes.
-      ReactTestUtils.simulateNativeEventOnNode(
-        eventType,
+      simulateNativeEventOnNode(
+        topLevelType,
         domComponentOrNode,
         fakeNativeEvent,
       );
@@ -457,23 +525,84 @@ function makeNativeSimulator(eventType) {
   };
 }
 
-const eventKeys = [].concat(
-  Object.keys(topLevelTypes),
-  Object.keys(mediaEventTypes),
-);
-
-eventKeys.forEach(function(eventType) {
-  // Event type is stored as 'topClick' - we transform that to 'click'
-  const convenienceName =
-    eventType.indexOf('top') === 0
-      ? eventType.charAt(3).toLowerCase() + eventType.substr(4)
-      : eventType;
+[
+  [DOMTopLevelEventTypes.TOP_ABORT, 'abort'],
+  [DOMTopLevelEventTypes.TOP_ANIMATION_END, 'animationEnd'],
+  [DOMTopLevelEventTypes.TOP_ANIMATION_ITERATION, 'animationIteration'],
+  [DOMTopLevelEventTypes.TOP_ANIMATION_START, 'animationStart'],
+  [DOMTopLevelEventTypes.TOP_BLUR, 'blur'],
+  [DOMTopLevelEventTypes.TOP_CAN_PLAY_THROUGH, 'canPlayThrough'],
+  [DOMTopLevelEventTypes.TOP_CAN_PLAY, 'canPlay'],
+  [DOMTopLevelEventTypes.TOP_CANCEL, 'cancel'],
+  [DOMTopLevelEventTypes.TOP_CHANGE, 'change'],
+  [DOMTopLevelEventTypes.TOP_CLICK, 'click'],
+  [DOMTopLevelEventTypes.TOP_CLOSE, 'close'],
+  [DOMTopLevelEventTypes.TOP_COMPOSITION_END, 'compositionEnd'],
+  [DOMTopLevelEventTypes.TOP_COMPOSITION_START, 'compositionStart'],
+  [DOMTopLevelEventTypes.TOP_COMPOSITION_UPDATE, 'compositionUpdate'],
+  [DOMTopLevelEventTypes.TOP_CONTEXT_MENU, 'contextMenu'],
+  [DOMTopLevelEventTypes.TOP_COPY, 'copy'],
+  [DOMTopLevelEventTypes.TOP_CUT, 'cut'],
+  [DOMTopLevelEventTypes.TOP_DOUBLE_CLICK, 'doubleClick'],
+  [DOMTopLevelEventTypes.TOP_DRAG_END, 'dragEnd'],
+  [DOMTopLevelEventTypes.TOP_DRAG_ENTER, 'dragEnter'],
+  [DOMTopLevelEventTypes.TOP_DRAG_EXIT, 'dragExit'],
+  [DOMTopLevelEventTypes.TOP_DRAG_LEAVE, 'dragLeave'],
+  [DOMTopLevelEventTypes.TOP_DRAG_OVER, 'dragOver'],
+  [DOMTopLevelEventTypes.TOP_DRAG_START, 'dragStart'],
+  [DOMTopLevelEventTypes.TOP_DRAG, 'drag'],
+  [DOMTopLevelEventTypes.TOP_DROP, 'drop'],
+  [DOMTopLevelEventTypes.TOP_DURATION_CHANGE, 'durationChange'],
+  [DOMTopLevelEventTypes.TOP_EMPTIED, 'emptied'],
+  [DOMTopLevelEventTypes.TOP_ENCRYPTED, 'encrypted'],
+  [DOMTopLevelEventTypes.TOP_ENDED, 'ended'],
+  [DOMTopLevelEventTypes.TOP_ERROR, 'error'],
+  [DOMTopLevelEventTypes.TOP_FOCUS, 'focus'],
+  [DOMTopLevelEventTypes.TOP_INPUT, 'input'],
+  [DOMTopLevelEventTypes.TOP_KEY_DOWN, 'keyDown'],
+  [DOMTopLevelEventTypes.TOP_KEY_PRESS, 'keyPress'],
+  [DOMTopLevelEventTypes.TOP_KEY_UP, 'keyUp'],
+  [DOMTopLevelEventTypes.TOP_LOAD_START, 'loadStart'],
+  [DOMTopLevelEventTypes.TOP_LOAD_START, 'loadStart'],
+  [DOMTopLevelEventTypes.TOP_LOAD, 'load'],
+  [DOMTopLevelEventTypes.TOP_LOADED_DATA, 'loadedData'],
+  [DOMTopLevelEventTypes.TOP_LOADED_METADATA, 'loadedMetadata'],
+  [DOMTopLevelEventTypes.TOP_MOUSE_DOWN, 'mouseDown'],
+  [DOMTopLevelEventTypes.TOP_MOUSE_MOVE, 'mouseMove'],
+  [DOMTopLevelEventTypes.TOP_MOUSE_OUT, 'mouseOut'],
+  [DOMTopLevelEventTypes.TOP_MOUSE_OVER, 'mouseOver'],
+  [DOMTopLevelEventTypes.TOP_MOUSE_UP, 'mouseUp'],
+  [DOMTopLevelEventTypes.TOP_PASTE, 'paste'],
+  [DOMTopLevelEventTypes.TOP_PAUSE, 'pause'],
+  [DOMTopLevelEventTypes.TOP_PLAY, 'play'],
+  [DOMTopLevelEventTypes.TOP_PLAYING, 'playing'],
+  [DOMTopLevelEventTypes.TOP_PROGRESS, 'progress'],
+  [DOMTopLevelEventTypes.TOP_RATE_CHANGE, 'rateChange'],
+  [DOMTopLevelEventTypes.TOP_SCROLL, 'scroll'],
+  [DOMTopLevelEventTypes.TOP_SEEKED, 'seeked'],
+  [DOMTopLevelEventTypes.TOP_SEEKING, 'seeking'],
+  [DOMTopLevelEventTypes.TOP_SELECTION_CHANGE, 'selectionChange'],
+  [DOMTopLevelEventTypes.TOP_STALLED, 'stalled'],
+  [DOMTopLevelEventTypes.TOP_SUSPEND, 'suspend'],
+  [DOMTopLevelEventTypes.TOP_TEXT_INPUT, 'textInput'],
+  [DOMTopLevelEventTypes.TOP_TIME_UPDATE, 'timeUpdate'],
+  [DOMTopLevelEventTypes.TOP_TOGGLE, 'toggle'],
+  [DOMTopLevelEventTypes.TOP_TOUCH_CANCEL, 'touchCancel'],
+  [DOMTopLevelEventTypes.TOP_TOUCH_END, 'touchEnd'],
+  [DOMTopLevelEventTypes.TOP_TOUCH_MOVE, 'touchMove'],
+  [DOMTopLevelEventTypes.TOP_TOUCH_START, 'touchStart'],
+  [DOMTopLevelEventTypes.TOP_TRANSITION_END, 'transitionEnd'],
+  [DOMTopLevelEventTypes.TOP_VOLUME_CHANGE, 'volumeChange'],
+  [DOMTopLevelEventTypes.TOP_WAITING, 'waiting'],
+  [DOMTopLevelEventTypes.TOP_WHEEL, 'wheel'],
+].forEach(([topLevelType, eventType]) => {
   /**
    * @param {!Element|ReactDOMComponent} domComponentOrNode
    * @param {?Event} nativeEventData Fake native event to use in SyntheticEvent.
    */
-  ReactTestUtils.SimulateNative[convenienceName] = makeNativeSimulator(
+  ReactTestUtils.SimulateNative[eventType] = makeNativeSimulator(
     eventType,
+    topLevelType,
   );
 });
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -10,15 +10,37 @@
 'use strict';
 
 describe('ReactDOMFrameScheduling', () => {
+  beforeEach(() => {
+    jest.resetModules();
+
+    // Un-mock scheduler
+    jest.mock('scheduler', () => require.requireActual('scheduler'));
+    jest.mock('scheduler/src/SchedulerHostConfig', () =>
+      require.requireActual(
+        'scheduler/src/forks/SchedulerHostConfig.default.js',
+      ),
+    );
+  });
+
   it('warns when requestAnimationFrame is not polyfilled in the browser', () => {
     const previousRAF = global.requestAnimationFrame;
+    const previousMessageChannel = global.MessageChannel;
     try {
-      global.requestAnimationFrame = undefined;
-      jest.resetModules();
-      expect(() => require('react-dom')).toWarnDev(
-        'React depends on requestAnimationFrame.',
+      delete global.requestAnimationFrame;
+      global.MessageChannel = function MessageChannel() {
+        return {
+          port1: {},
+          port2: {},
+        };
+      };
+      spyOnDevAndProd(console, 'error');
+      require('react-dom');
+      expect(console.error.calls.count()).toEqual(1);
+      expect(console.error.calls.argsFor(0)[0]).toMatch(
+        "This browser doesn't support requestAnimationFrame.",
       );
     } finally {
+      global.MessageChannel = previousMessageChannel;
       global.requestAnimationFrame = previousRAF;
     }
   });

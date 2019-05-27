@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -11,6 +11,7 @@
 
 let React;
 let ReactNoop;
+let Scheduler;
 
 describe('ReactFragment', () => {
   beforeEach(function() {
@@ -18,19 +19,22 @@ describe('ReactFragment', () => {
 
     React = require('react');
     ReactNoop = require('react-noop-renderer');
+    Scheduler = require('scheduler');
   });
 
-  function span(prop) {
-    return {type: 'span', children: [], prop};
-  }
-
-  function text(val) {
-    return {text: val};
-  }
-
   function div(...children) {
-    children = children.map(c => (typeof c === 'string' ? {text: c} : c));
-    return {type: 'div', children, prop: undefined};
+    children = children.map(
+      c => (typeof c === 'string' ? {text: c, hidden: false} : c),
+    );
+    return {type: 'div', children, prop: undefined, hidden: false};
+  }
+
+  function span(prop) {
+    return {type: 'span', children: [], prop, hidden: false};
+  }
+
+  function text(t) {
+    return {text: t, hidden: false};
   }
 
   it('should render a single child via noop renderer', () => {
@@ -41,7 +45,7 @@ describe('ReactFragment', () => {
     );
 
     ReactNoop.render(element);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(ReactNoop.getChildren()).toEqual([span()]);
   });
@@ -50,7 +54,7 @@ describe('ReactFragment', () => {
     const element = <React.Fragment />;
 
     ReactNoop.render(element);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(ReactNoop.getChildren()).toEqual([]);
   });
@@ -63,7 +67,7 @@ describe('ReactFragment', () => {
     );
 
     ReactNoop.render(element);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(ReactNoop.getChildren()).toEqual([text('hello '), span()]);
   });
@@ -76,7 +80,7 @@ describe('ReactFragment', () => {
     );
 
     ReactNoop.render(element);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(ReactNoop.getChildren()).toEqual([span(), span()]);
   });
@@ -106,16 +110,16 @@ describe('ReactFragment', () => {
     }
 
     ReactNoop.render(<Foo condition={true} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     ReactNoop.render(<Foo condition={false} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(ops).toEqual(['Update Stateful']);
     expect(ReactNoop.getChildren()).toEqual([div(), div()]);
 
     ReactNoop.render(<Foo condition={true} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(ops).toEqual(['Update Stateful', 'Update Stateful']);
     expect(ReactNoop.getChildren()).toEqual([div()]);
@@ -147,16 +151,16 @@ describe('ReactFragment', () => {
     }
 
     ReactNoop.render(<Foo condition={true} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     ReactNoop.render(<Foo condition={false} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(ops).toEqual(['Update Stateful']);
     expect(ReactNoop.getChildren()).toEqual([div()]);
 
     ReactNoop.render(<Foo condition={true} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(ops).toEqual(['Update Stateful', 'Update Stateful']);
     expect(ReactNoop.getChildren()).toEqual([div()]);
@@ -197,16 +201,16 @@ describe('ReactFragment', () => {
     }
 
     ReactNoop.render(<Foo condition={true} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     ReactNoop.render(<Foo condition={false} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(ops).toEqual(['Update Stateful']);
     expect(ReactNoop.getChildren()).toEqual([div(), div()]);
 
     ReactNoop.render(<Foo condition={true} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(ops).toEqual(['Update Stateful', 'Update Stateful']);
     expect(ReactNoop.getChildren()).toEqual([div()]);
@@ -240,16 +244,16 @@ describe('ReactFragment', () => {
     }
 
     ReactNoop.render(<Foo condition={true} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     ReactNoop.render(<Foo condition={false} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(ops).toEqual([]);
     expect(ReactNoop.getChildren()).toEqual([div()]);
 
     ReactNoop.render(<Foo condition={true} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(ops).toEqual([]);
     expect(ReactNoop.getChildren()).toEqual([div()]);
@@ -281,16 +285,16 @@ describe('ReactFragment', () => {
     }
 
     ReactNoop.render(<Foo condition={true} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     ReactNoop.render(<Foo condition={false} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(ops).toEqual([]);
     expect(ReactNoop.getChildren()).toEqual([div()]);
 
     ReactNoop.render(<Foo condition={true} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(ops).toEqual([]);
     expect(ReactNoop.getChildren()).toEqual([div()]);
@@ -323,16 +327,16 @@ describe('ReactFragment', () => {
     }
 
     ReactNoop.render(<Foo condition={true} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     ReactNoop.render(<Foo condition={false} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(ops).toEqual([]);
     expect(ReactNoop.getChildren()).toEqual([div(), div()]);
 
     ReactNoop.render(<Foo condition={true} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(ops).toEqual([]);
     expect(ReactNoop.getChildren()).toEqual([div()]);
@@ -362,16 +366,16 @@ describe('ReactFragment', () => {
     }
 
     ReactNoop.render(<Foo condition={true} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     ReactNoop.render(<Foo condition={false} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(ops).toEqual(['Update Stateful']);
     expect(ReactNoop.getChildren()).toEqual([div()]);
 
     ReactNoop.render(<Foo condition={true} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(ops).toEqual(['Update Stateful', 'Update Stateful']);
     expect(ReactNoop.getChildren()).toEqual([div()]);
@@ -401,16 +405,16 @@ describe('ReactFragment', () => {
     }
 
     ReactNoop.render(<Foo condition={true} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     ReactNoop.render(<Foo condition={false} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(ops).toEqual(['Update Stateful']);
     expect(ReactNoop.getChildren()).toEqual([div()]);
 
     ReactNoop.render(<Foo condition={true} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(ops).toEqual(['Update Stateful', 'Update Stateful']);
     expect(ReactNoop.getChildren()).toEqual([div()]);
@@ -442,16 +446,16 @@ describe('ReactFragment', () => {
     }
 
     ReactNoop.render(<Foo condition={true} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     ReactNoop.render(<Foo condition={false} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(ops).toEqual([]);
     expect(ReactNoop.getChildren()).toEqual([div()]);
 
     ReactNoop.render(<Foo condition={true} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(ops).toEqual([]);
     expect(ReactNoop.getChildren()).toEqual([div()]);
@@ -479,16 +483,16 @@ describe('ReactFragment', () => {
     }
 
     ReactNoop.render(<Foo condition={true} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     ReactNoop.render(<Foo condition={false} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(ops).toEqual([]);
     expect(ReactNoop.getChildren()).toEqual([div()]);
 
     ReactNoop.render(<Foo condition={true} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(ops).toEqual([]);
     expect(ReactNoop.getChildren()).toEqual([div()]);
@@ -520,16 +524,16 @@ describe('ReactFragment', () => {
     }
 
     ReactNoop.render(<Foo condition={true} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     ReactNoop.render(<Foo condition={false} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(ops).toEqual(['Update Stateful']);
     expect(ReactNoop.getChildren()).toEqual([div()]);
 
     ReactNoop.render(<Foo condition={true} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(ops).toEqual(['Update Stateful', 'Update Stateful']);
     expect(ReactNoop.getChildren()).toEqual([div()]);
@@ -562,16 +566,16 @@ describe('ReactFragment', () => {
     }
 
     ReactNoop.render(<Foo condition={true} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     ReactNoop.render(<Foo condition={false} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(ops).toEqual([]);
     expect(ReactNoop.getChildren()).toEqual([div(), span()]);
 
     ReactNoop.render(<Foo condition={true} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(ops).toEqual([]);
     expect(ReactNoop.getChildren()).toEqual([div()]);
@@ -603,16 +607,16 @@ describe('ReactFragment', () => {
     }
 
     ReactNoop.render(<Foo condition={true} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     ReactNoop.render(<Foo condition={false} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(ops).toEqual([]);
     expect(ReactNoop.getChildren()).toEqual([div()]);
 
     ReactNoop.render(<Foo condition={true} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(ops).toEqual([]);
     expect(ReactNoop.getChildren()).toEqual([div()]);
@@ -656,16 +660,16 @@ describe('ReactFragment', () => {
     }
 
     ReactNoop.render(<Foo condition={true} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     ReactNoop.render(<Foo condition={false} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(ops).toEqual(['Update Stateful']);
     expect(ReactNoop.getChildren()).toEqual([div(span(), div(div()), span())]);
 
     ReactNoop.render(<Foo condition={true} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(ops).toEqual(['Update Stateful', 'Update Stateful']);
     expect(ReactNoop.getChildren()).toEqual([div(span(), div(div()), span())]);
@@ -703,18 +707,18 @@ describe('ReactFragment', () => {
     }
 
     ReactNoop.render(<Foo condition={true} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     ReactNoop.render(<Foo condition={false} />);
-    expect(ReactNoop.flush).toWarnDev(
-      'Each child in an array or iterator should have a unique "key" prop.',
+    expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
+      'Each child in a list should have a unique "key" prop.',
     );
 
     expect(ops).toEqual([]);
     expect(ReactNoop.getChildren()).toEqual([div(div(), span())]);
 
     ReactNoop.render(<Foo condition={true} />);
-    ReactNoop.flush();
+    expect(Scheduler).toFlushWithoutYielding();
 
     expect(ops).toEqual([]);
     expect(ReactNoop.getChildren()).toEqual([div(div(), span())]);
@@ -750,21 +754,21 @@ describe('ReactFragment', () => {
     }
 
     ReactNoop.render(<Foo condition={true} />);
-    expect(ReactNoop.flush).toWarnDev(
-      'Each child in an array or iterator should have a unique "key" prop.',
+    expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
+      'Each child in a list should have a unique "key" prop.',
     );
 
     ReactNoop.render(<Foo condition={false} />);
-    expect(ReactNoop.flush).toWarnDev(
-      'Each child in an array or iterator should have a unique "key" prop.',
+    expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
+      'Each child in a list should have a unique "key" prop.',
     );
 
     expect(ops).toEqual(['Update Stateful']);
     expect(ReactNoop.getChildren()).toEqual([span(), div()]);
 
     ReactNoop.render(<Foo condition={true} />);
-    expect(ReactNoop.flush).toWarnDev(
-      'Each child in an array or iterator should have a unique "key" prop.',
+    expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
+      'Each child in a list should have a unique "key" prop.',
     );
 
     expect(ops).toEqual(['Update Stateful', 'Update Stateful']);

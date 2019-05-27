@@ -1,5 +1,7 @@
 .DS_STORE
 node_modules
+scripts/flow/*/.flowconfig
+scripts/rollup/results.json
 *~
 *.pyc
 .grunt
@@ -8,7 +10,6 @@ __benchmarks__
 build/
 remote-repo/
 coverage/
-flow-coverage/
 .module-cache
 fixtures/dom/public/react-dom.js
 fixtures/dom/public/react.js

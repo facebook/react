@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -26,6 +26,20 @@ export function addEventCaptureListener(
   listener: Function,
 ): void {
   EventListenerWWW.capture(element, eventType, listener);
+}
+
+export function addEventCaptureListenerWithPassiveFlag(
+  element: Element,
+  eventType: string,
+  listener: Function,
+  passive: boolean,
+): void {
+  EventListenerWWW.captureWithPassiveFlag(
+    element,
+    eventType,
+    listener,
+    passive,
+  );
 }
 
 // Flow magic to verify the exports of this file match the original version.

@@ -1,12 +1,11 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
 
 import getNodeForCharacterOffset from './getNodeForCharacterOffset';
-import getTextContentAccessor from './getTextContentAccessor';
 import {TEXT_NODE} from '../shared/HTMLNodeType';
 
 /**
@@ -14,7 +13,9 @@ import {TEXT_NODE} from '../shared/HTMLNodeType';
  * @return {?object}
  */
 export function getOffsets(outerNode) {
-  const selection = window.getSelection && window.getSelection();
+  const {ownerDocument} = outerNode;
+  const win = (ownerDocument && ownerDocument.defaultView) || window;
+  const selection = win.getSelection && win.getSelection();
 
   if (!selection || selection.rangeCount === 0) {
     return null;
@@ -150,12 +151,18 @@ export function getModernOffsetsFromPoints(
  * @param {object} offsets
  */
 export function setOffsets(node, offsets) {
-  if (!window.getSelection) {
+  const doc = node.ownerDocument || document;
+  const win = (doc && doc.defaultView) || window;
+
+  // Edge fails with "Object expected" in some scenarios.
+  // (For instance: TinyMCE editor used in a list component that supports pasting to add more,
+  // fails when pasting 100+ items)
+  if (!win.getSelection) {
     return;
   }
 
-  const selection = window.getSelection();
-  const length = node[getTextContentAccessor()].length;
+  const selection = win.getSelection();
+  const length = node.textContent.length;
   let start = Math.min(offsets.start, length);
   let end = offsets.end === undefined ? start : Math.min(offsets.end, length);
 
@@ -180,7 +187,7 @@ export function setOffsets(node, offsets) {
     ) {
       return;
     }
-    const range = document.createRange();
+    const range = doc.createRange();
     range.setStart(startMarker.node, startMarker.offset);
     selection.removeAllRanges();
 

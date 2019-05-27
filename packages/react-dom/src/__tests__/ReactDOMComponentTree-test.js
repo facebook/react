@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2015-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -195,6 +195,7 @@ describe('ReactDOMComponentTree', () => {
         'was rendered by React and is not a top-level container. You may ' +
         'have accidentally passed in a React root node instead of its ' +
         'container.',
+      {withoutStack: true},
     );
   });
 
@@ -211,6 +212,7 @@ describe('ReactDOMComponentTree', () => {
         'component. If you intended to update the children of this node, ' +
         'you should instead have the existing children update their state ' +
         'and render the new components instead of calling ReactDOM.render.',
+      {withoutStack: true},
     );
   });
 });

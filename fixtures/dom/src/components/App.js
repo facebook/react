@@ -4,15 +4,15 @@ import '../style.css';
 
 const React = window.React;
 
-function App() {
-  return (
-    <div>
-      <Header />
-      <div className="container">
+class App extends React.Component {
+  render() {
+    return (
+      <div>
+        <Header />
         <Fixtures />
       </div>
-    </div>
-  );
+    );
+  }
 }
 
 export default App;

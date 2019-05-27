@@ -1,53 +1,29 @@
 /**
- * Copyright (c) 2014-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
  * @flow
- * @providesModule ReactTypes
  */
 
 export type ReactNode =
   | React$Element<any>
-  | ReactCall<any>
-  | ReactReturn<any>
   | ReactPortal
   | ReactText
   | ReactFragment
   | ReactProvider<any>
-  | ReactConsumer<any>;
+  | ReactConsumer<any>
+  | ReactEventComponent
+  | ReactEventTarget;
+
+export type ReactEmpty = null | void | boolean;
 
 export type ReactFragment = ReactEmpty | Iterable<React$Node>;
 
 export type ReactNodeList = ReactEmpty | React$Node;
 
 export type ReactText = string | number;
-
-export type ReactEmpty = null | void | boolean;
-
-export type ReactCall<V> = {
-  $$typeof: Symbol | number,
-  type: Symbol | number,
-  key: null | string,
-  ref: null,
-  props: {
-    props: any,
-    // This should be a more specific CallHandler
-    handler: (props: any, returns: Array<V>) => ReactNodeList,
-    children?: ReactNodeList,
-  },
-};
-
-export type ReactReturn<V> = {
-  $$typeof: Symbol | number,
-  type: Symbol | number,
-  key: null,
-  ref: null,
-  props: {
-    value: V,
-  },
-};
 
 export type ReactProvider<T> = {
   $$typeof: Symbol | number,
@@ -62,7 +38,7 @@ export type ReactProvider<T> = {
 
 export type ReactProviderType<T> = {
   $$typeof: Symbol | number,
-  context: ReactContext<T>,
+  _context: ReactContext<T>,
 };
 
 export type ReactConsumer<T> = {
@@ -82,13 +58,14 @@ export type ReactContext<T> = {
   Provider: ReactProviderType<T>,
 
   _calculateChangedBits: ((a: T, b: T) => number) | null,
-  _defaultValue: T,
 
   _currentValue: T,
-  _changedBits: number,
+  _currentValue2: T,
+  _threadCount: number,
 
   // DEV only
   _currentRenderer?: Object | null,
+  _currentRenderer2?: Object | null,
 };
 
 export type ReactPortal = {
@@ -103,3 +80,119 @@ export type ReactPortal = {
 export type RefObject = {|
   current: any,
 |};
+
+export type ReactEventResponderEventType =
+  | string
+  | {name: string, passive?: boolean};
+
+export type ReactEventResponder = {
+  targetEventTypes?: Array<ReactEventResponderEventType>,
+  rootEventTypes?: Array<ReactEventResponderEventType>,
+  createInitialState?: (props: null | Object) => Object,
+  allowMultipleHostChildren: boolean,
+  stopLocalPropagation: boolean,
+  onEvent?: (
+    event: ReactResponderEvent,
+    context: ReactResponderContext,
+    props: null | Object,
+    state: null | Object,
+  ) => void,
+  onEventCapture?: (
+    event: ReactResponderEvent,
+    context: ReactResponderContext,
+    props: null | Object,
+    state: null | Object,
+  ) => void,
+  onRootEvent?: (
+    event: ReactResponderEvent,
+    context: ReactResponderContext,
+    props: null | Object,
+    state: null | Object,
+  ) => void,
+  onMount?: (
+    context: ReactResponderContext,
+    props: null | Object,
+    state: null | Object,
+  ) => void,
+  onUnmount?: (
+    context: ReactResponderContext,
+    props: null | Object,
+    state: null | Object,
+  ) => void,
+  onOwnershipChange?: (
+    context: ReactResponderContext,
+    props: null | Object,
+    state: null | Object,
+  ) => void,
+};
+
+export type ReactEventComponentInstance = {|
+  currentFiber: mixed,
+  props: null | Object,
+  responder: ReactEventResponder,
+  rootEventTypes: null | Set<string>,
+  rootInstance: mixed,
+  state: null | Object,
+|};
+
+export type ReactEventComponent = {|
+  $$typeof: Symbol | number,
+  displayName: string,
+  props: null | Object,
+  responder: ReactEventResponder,
+|};
+
+export type ReactEventTarget = {|
+  $$typeof: Symbol | number,
+  displayName?: string,
+  type: Symbol | number,
+|};
+
+type AnyNativeEvent = Event | KeyboardEvent | MouseEvent | Touch;
+
+export type ReactResponderEvent = {
+  nativeEvent: AnyNativeEvent,
+  target: Element | Document,
+  type: string,
+  passive: boolean,
+  passiveSupported: boolean,
+};
+
+export type ReactResponderContext = {
+  dispatchEvent: (
+    eventObject: Object,
+    listener: (Object) => void,
+    discrete: boolean,
+  ) => void,
+  isTargetWithinElement: (
+    childTarget: Element | Document,
+    parentTarget: Element | Document,
+  ) => boolean,
+  isTargetWithinEventComponent: (Element | Document) => boolean,
+  isTargetWithinEventResponderScope: (Element | Document) => boolean,
+  isPositionWithinTouchHitTarget: (x: number, y: number) => boolean,
+  addRootEventTypes: (
+    rootEventTypes: Array<ReactEventResponderEventType>,
+  ) => void,
+  removeRootEventTypes: (
+    rootEventTypes: Array<ReactEventResponderEventType>,
+  ) => void,
+  hasOwnership: () => boolean,
+  requestResponderOwnership: () => boolean,
+  requestGlobalOwnership: () => boolean,
+  releaseOwnership: () => boolean,
+  setTimeout: (func: () => void, timeout: number) => Symbol,
+  clearTimeout: (timerId: Symbol) => void,
+  getFocusableElementsInScope(): Array<HTMLElement>,
+  getActiveDocument(): Document,
+  objectAssign: Function,
+  getEventPointerType(
+    event: ReactResponderEvent,
+  ): '' | 'mouse' | 'keyboard' | 'pen' | 'touch',
+  getEventCurrentTarget(event: ReactResponderEvent): Element,
+  getTimeStamp: () => number,
+  isTargetWithinHostComponent: (
+    target: Element | Document,
+    elementType: string,
+  ) => boolean,
+};

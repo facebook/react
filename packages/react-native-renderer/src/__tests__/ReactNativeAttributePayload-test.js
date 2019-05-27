@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -9,7 +9,6 @@
 'use strict';
 
 const ReactNativeAttributePayload = require('../ReactNativeAttributePayload');
-const ReactNativePropRegistry = require('../ReactNativePropRegistry').default;
 
 const diff = ReactNativeAttributePayload.diff;
 
@@ -114,9 +113,9 @@ describe('ReactNativeAttributePayload', () => {
       diff({someStyle: [{foo: 1}, {bar: 2}]}, {}, validStyleAttribute),
     ).toEqual({foo: null, bar: null});
 
-    const barStyle = ReactNativePropRegistry.register({
+    const barStyle = {
       bar: 3,
-    });
+    };
 
     expect(
       diff(

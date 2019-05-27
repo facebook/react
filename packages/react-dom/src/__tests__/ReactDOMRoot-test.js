@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -12,92 +12,46 @@
 let React = require('react');
 let ReactDOM = require('react-dom');
 let ReactDOMServer = require('react-dom/server');
-let AsyncMode = React.unstable_AsyncMode;
+let Scheduler = require('scheduler');
 
 describe('ReactDOMRoot', () => {
   let container;
 
-  let scheduledCallback;
-  let flush;
-  let now;
-  let expire;
-
   beforeEach(() => {
-    container = document.createElement('div');
-
-    // Override requestIdleCallback
-    scheduledCallback = null;
-    flush = function(units = Infinity) {
-      if (scheduledCallback !== null) {
-        let didStop = false;
-        while (scheduledCallback !== null && !didStop) {
-          const cb = scheduledCallback;
-          scheduledCallback = null;
-          cb({
-            timeRemaining() {
-              if (units > 0) {
-                return 999;
-              }
-              didStop = true;
-              return 0;
-            },
-          });
-          units--;
-        }
-      }
-    };
-    global.performance = {
-      now() {
-        return now;
-      },
-    };
-    global.requestIdleCallback = function(cb) {
-      scheduledCallback = cb;
-    };
-
-    now = 0;
-    expire = function(ms) {
-      now += ms;
-    };
-    global.performance = {
-      now() {
-        return now;
-      },
-    };
-
     jest.resetModules();
+    container = document.createElement('div');
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
-    AsyncMode = React.unstable_AsyncMode;
+    Scheduler = require('scheduler');
   });
 
   it('renders children', () => {
     const root = ReactDOM.unstable_createRoot(container);
     root.render(<div>Hi</div>);
-    flush();
+    Scheduler.flushAll();
     expect(container.textContent).toEqual('Hi');
   });
 
   it('unmounts children', () => {
     const root = ReactDOM.unstable_createRoot(container);
     root.render(<div>Hi</div>);
-    flush();
+    Scheduler.flushAll();
     expect(container.textContent).toEqual('Hi');
     root.unmount();
-    flush();
+    Scheduler.flushAll();
     expect(container.textContent).toEqual('');
   });
 
   it('`root.render` returns a thenable work object', () => {
     const root = ReactDOM.unstable_createRoot(container);
-    const work = root.render(<AsyncMode>Hi</AsyncMode>);
+    const work = root.render('Hi');
     let ops = [];
     work.then(() => {
       ops.push('inside callback: ' + container.textContent);
     });
     ops.push('before committing: ' + container.textContent);
-    flush();
+    Scheduler.flushAll();
     ops.push('after committing: ' + container.textContent);
     expect(ops).toEqual([
       'before committing: ',
@@ -109,8 +63,8 @@ describe('ReactDOMRoot', () => {
 
   it('resolves `work.then` callback synchronously if the work already committed', () => {
     const root = ReactDOM.unstable_createRoot(container);
-    const work = root.render(<AsyncMode>Hi</AsyncMode>);
-    flush();
+    const work = root.render('Hi');
+    Scheduler.flushAll();
     let ops = [];
     work.then(() => {
       ops.push('inside callback');
@@ -138,7 +92,7 @@ describe('ReactDOMRoot', () => {
         <span />
       </div>,
     );
-    flush();
+    Scheduler.flushAll();
 
     // Accepts `hydrate` option
     const container2 = document.createElement('div');
@@ -149,7 +103,9 @@ describe('ReactDOMRoot', () => {
         <span />
       </div>,
     );
-    expect(flush).toWarnDev('Extra attributes');
+    expect(() => Scheduler.flushAll()).toWarnDev('Extra attributes', {
+      withoutStack: true,
+    });
   });
 
   it('does not clear existing children', async () => {
@@ -161,7 +117,7 @@ describe('ReactDOMRoot', () => {
         <span>d</span>
       </div>,
     );
-    flush();
+    Scheduler.flushAll();
     expect(container.textContent).toEqual('abcd');
     root.render(
       <div>
@@ -169,7 +125,7 @@ describe('ReactDOMRoot', () => {
         <span>c</span>
       </div>,
     );
-    flush();
+    Scheduler.flushAll();
     expect(container.textContent).toEqual('abdc');
   });
 
@@ -199,13 +155,9 @@ describe('ReactDOMRoot', () => {
 
     const root = ReactDOM.unstable_createRoot(container);
     const batch = root.createBatch();
-    batch.render(
-      <AsyncMode>
-        <App />
-      </AsyncMode>,
-    );
+    batch.render(<App />);
 
-    flush();
+    Scheduler.flushAll();
 
     // Hasn't updated yet
     expect(container.textContent).toEqual('');
@@ -234,7 +186,7 @@ describe('ReactDOMRoot', () => {
     const batch = root.createBatch();
     batch.render(<Foo>Hi</Foo>);
     // Flush all async work.
-    flush();
+    Scheduler.flushAll();
     // Root should complete without committing.
     expect(ops).toEqual(['Foo']);
     expect(container.textContent).toEqual('');
@@ -250,9 +202,9 @@ describe('ReactDOMRoot', () => {
   it('can wait for a batch to finish', () => {
     const root = ReactDOM.unstable_createRoot(container);
     const batch = root.createBatch();
-    batch.render(<AsyncMode>Foo</AsyncMode>);
+    batch.render('Foo');
 
-    flush();
+    Scheduler.flushAll();
 
     // Hasn't updated yet
     expect(container.textContent).toEqual('');
@@ -290,9 +242,9 @@ describe('ReactDOMRoot', () => {
 
   it('can commit an empty batch', () => {
     const root = ReactDOM.unstable_createRoot(container);
-    root.render(<AsyncMode>1</AsyncMode>);
+    root.render(1);
 
-    expire(2000);
+    Scheduler.advanceTime(2000);
     // This batch has a later expiration time than the earlier update.
     const batch = root.createBatch();
 
@@ -300,7 +252,7 @@ describe('ReactDOMRoot', () => {
     batch.commit();
     expect(container.textContent).toEqual('');
 
-    flush();
+    Scheduler.flushAll();
     expect(container.textContent).toEqual('1');
   });
 
@@ -327,7 +279,7 @@ describe('ReactDOMRoot', () => {
     batch1.render(1);
 
     // This batch has a later expiration time
-    expire(2000);
+    Scheduler.advanceTime(2000);
     const batch2 = root.createBatch();
     batch2.render(2);
 
@@ -346,7 +298,7 @@ describe('ReactDOMRoot', () => {
     batch1.render(1);
 
     // This batch has a later expiration time
-    expire(2000);
+    Scheduler.advanceTime(2000);
     const batch2 = root.createBatch();
     batch2.render(2);
 
@@ -356,7 +308,7 @@ describe('ReactDOMRoot', () => {
     expect(container.textContent).toEqual('2');
 
     batch1.commit();
-    flush();
+    Scheduler.flushAll();
     expect(container.textContent).toEqual('1');
   });
 
@@ -364,9 +316,118 @@ describe('ReactDOMRoot', () => {
     const root = ReactDOM.unstable_createRoot(container);
     const batch = root.createBatch();
     const InvalidType = undefined;
-    expect(() => batch.render(<InvalidType />)).toWarnDev([
-      'React.createElement: type is invalid',
-    ]);
+    expect(() => batch.render(<InvalidType />)).toWarnDev(
+      ['React.createElement: type is invalid'],
+      {withoutStack: true},
+    );
     expect(() => batch.commit()).toThrow('Element type is invalid');
+  });
+
+  it('throws a good message on invalid containers', () => {
+    expect(() => {
+      ReactDOM.unstable_createRoot(<div>Hi</div>);
+    }).toThrow(
+      'unstable_createRoot(...): Target container is not a DOM element.',
+    );
+  });
+
+  it('warns when rendering with legacy API into createRoot() container', () => {
+    const root = ReactDOM.unstable_createRoot(container);
+    root.render(<div>Hi</div>);
+    Scheduler.flushAll();
+    expect(container.textContent).toEqual('Hi');
+    expect(() => {
+      ReactDOM.render(<div>Bye</div>, container);
+    }).toWarnDev(
+      [
+        // We care about this warning:
+        'You are calling ReactDOM.render() on a container that was previously ' +
+          'passed to ReactDOM.unstable_createRoot(). This is not supported. ' +
+          'Did you mean to call root.render(element)?',
+        // This is more of a symptom but restructuring the code to avoid it isn't worth it:
+        'Replacing React-rendered children with a new root component.',
+      ],
+      {withoutStack: true},
+    );
+    Scheduler.flushAll();
+    // This works now but we could disallow it:
+    expect(container.textContent).toEqual('Bye');
+  });
+
+  it('warns when hydrating with legacy API into createRoot() container', () => {
+    const root = ReactDOM.unstable_createRoot(container);
+    root.render(<div>Hi</div>);
+    Scheduler.flushAll();
+    expect(container.textContent).toEqual('Hi');
+    expect(() => {
+      ReactDOM.hydrate(<div>Hi</div>, container);
+    }).toWarnDev(
+      [
+        // We care about this warning:
+        'You are calling ReactDOM.hydrate() on a container that was previously ' +
+          'passed to ReactDOM.unstable_createRoot(). This is not supported. ' +
+          'Did you mean to call createRoot(container, {hydrate: true}).render(element)?',
+        // This is more of a symptom but restructuring the code to avoid it isn't worth it:
+        'Replacing React-rendered children with a new root component.',
+      ],
+      {withoutStack: true},
+    );
+  });
+
+  it('warns when unmounting with legacy API (no previous content)', () => {
+    const root = ReactDOM.unstable_createRoot(container);
+    root.render(<div>Hi</div>);
+    Scheduler.flushAll();
+    expect(container.textContent).toEqual('Hi');
+    let unmounted = false;
+    expect(() => {
+      unmounted = ReactDOM.unmountComponentAtNode(container);
+    }).toWarnDev(
+      [
+        // We care about this warning:
+        'You are calling ReactDOM.unmountComponentAtNode() on a container that was previously ' +
+          'passed to ReactDOM.unstable_createRoot(). This is not supported. Did you mean to call root.unmount()?',
+        // This is more of a symptom but restructuring the code to avoid it isn't worth it:
+        "The node you're attempting to unmount was rendered by React and is not a top-level container.",
+      ],
+      {withoutStack: true},
+    );
+    expect(unmounted).toBe(false);
+    Scheduler.flushAll();
+    expect(container.textContent).toEqual('Hi');
+    root.unmount();
+    Scheduler.flushAll();
+    expect(container.textContent).toEqual('');
+  });
+
+  it('warns when unmounting with legacy API (has previous content)', () => {
+    // Currently createRoot().render() doesn't clear this.
+    container.appendChild(document.createElement('div'));
+    // The rest is the same as test above.
+    const root = ReactDOM.unstable_createRoot(container);
+    root.render(<div>Hi</div>);
+    Scheduler.flushAll();
+    expect(container.textContent).toEqual('Hi');
+    let unmounted = false;
+    expect(() => {
+      unmounted = ReactDOM.unmountComponentAtNode(container);
+    }).toWarnDev('Did you mean to call root.unmount()?', {withoutStack: true});
+    expect(unmounted).toBe(false);
+    Scheduler.flushAll();
+    expect(container.textContent).toEqual('Hi');
+    root.unmount();
+    Scheduler.flushAll();
+    expect(container.textContent).toEqual('');
+  });
+
+  it('warns when passing legacy container to createRoot()', () => {
+    ReactDOM.render(<div>Hi</div>, container);
+    expect(() => {
+      ReactDOM.unstable_createRoot(container);
+    }).toWarnDev(
+      'You are calling ReactDOM.unstable_createRoot() on a container that was previously ' +
+        'passed to ReactDOM.render(). This is not supported.',
+      {withoutStack: true},
+    );
   });
 });

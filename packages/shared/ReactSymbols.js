@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -14,10 +14,6 @@ const hasSymbol = typeof Symbol === 'function' && Symbol.for;
 export const REACT_ELEMENT_TYPE = hasSymbol
   ? Symbol.for('react.element')
   : 0xeac7;
-export const REACT_CALL_TYPE = hasSymbol ? Symbol.for('react.call') : 0xeac8;
-export const REACT_RETURN_TYPE = hasSymbol
-  ? Symbol.for('react.return')
-  : 0xeac9;
 export const REACT_PORTAL_TYPE = hasSymbol
   ? Symbol.for('react.portal')
   : 0xeaca;
@@ -27,24 +23,48 @@ export const REACT_FRAGMENT_TYPE = hasSymbol
 export const REACT_STRICT_MODE_TYPE = hasSymbol
   ? Symbol.for('react.strict_mode')
   : 0xeacc;
+export const REACT_PROFILER_TYPE = hasSymbol
+  ? Symbol.for('react.profiler')
+  : 0xead2;
 export const REACT_PROVIDER_TYPE = hasSymbol
   ? Symbol.for('react.provider')
   : 0xeacd;
 export const REACT_CONTEXT_TYPE = hasSymbol
   ? Symbol.for('react.context')
   : 0xeace;
+// TODO: We don't use AsyncMode or ConcurrentMode anymore. They were temporary
+// (unstable) APIs that have been removed. Can we remove the symbols?
 export const REACT_ASYNC_MODE_TYPE = hasSymbol
   ? Symbol.for('react.async_mode')
+  : 0xeacf;
+export const REACT_CONCURRENT_MODE_TYPE = hasSymbol
+  ? Symbol.for('react.concurrent_mode')
   : 0xeacf;
 export const REACT_FORWARD_REF_TYPE = hasSymbol
   ? Symbol.for('react.forward_ref')
   : 0xead0;
+export const REACT_SUSPENSE_TYPE = hasSymbol
+  ? Symbol.for('react.suspense')
+  : 0xead1;
+export const REACT_MEMO_TYPE = hasSymbol ? Symbol.for('react.memo') : 0xead3;
+export const REACT_LAZY_TYPE = hasSymbol ? Symbol.for('react.lazy') : 0xead4;
+export const REACT_EVENT_COMPONENT_TYPE = hasSymbol
+  ? Symbol.for('react.event_component')
+  : 0xead5;
+export const REACT_EVENT_TARGET_TYPE = hasSymbol
+  ? Symbol.for('react.event_target')
+  : 0xead6;
+
+// React event targets
+export const REACT_EVENT_TARGET_TOUCH_HIT = hasSymbol
+  ? Symbol.for('react.event_target.touch_hit')
+  : 0xead7;
 
 const MAYBE_ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
 const FAUX_ITERATOR_SYMBOL = '@@iterator';
 
 export function getIteratorFn(maybeIterable: ?any): ?() => ?Iterator<*> {
-  if (maybeIterable === null || typeof maybeIterable === 'undefined') {
+  if (maybeIterable === null || typeof maybeIterable !== 'object') {
     return null;
   }
   const maybeIterator =

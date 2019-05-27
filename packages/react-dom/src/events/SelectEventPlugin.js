@@ -1,26 +1,35 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
 
 import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
-import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
+import {canUseDOM} from 'shared/ExecutionEnvironment';
 import SyntheticEvent from 'events/SyntheticEvent';
 import isTextInputElement from 'shared/isTextInputElement';
-import getActiveElement from 'fbjs/lib/getActiveElement';
-import shallowEqual from 'fbjs/lib/shallowEqual';
+import shallowEqual from 'shared/shallowEqual';
 
+import {
+  TOP_BLUR,
+  TOP_CONTEXT_MENU,
+  TOP_DRAG_END,
+  TOP_FOCUS,
+  TOP_KEY_DOWN,
+  TOP_KEY_UP,
+  TOP_MOUSE_DOWN,
+  TOP_MOUSE_UP,
+  TOP_SELECTION_CHANGE,
+} from './DOMTopLevelEventTypes';
 import {isListeningToAllDependencies} from './ReactBrowserEventEmitter';
+import getActiveElement from '../client/getActiveElement';
 import {getNodeFromInstance} from '../client/ReactDOMComponentTree';
-import * as ReactInputSelection from '../client/ReactInputSelection';
+import {hasSelectionCapabilities} from '../client/ReactInputSelection';
 import {DOCUMENT_NODE} from '../shared/HTMLNodeType';
 
 const skipSelectionChangeEvent =
-  ExecutionEnvironment.canUseDOM &&
-  'documentMode' in document &&
-  document.documentMode <= 11;
+  canUseDOM && 'documentMode' in document && document.documentMode <= 11;
 
 const eventTypes = {
   select: {
@@ -29,14 +38,15 @@ const eventTypes = {
       captured: 'onSelectCapture',
     },
     dependencies: [
-      'topBlur',
-      'topContextMenu',
-      'topFocus',
-      'topKeyDown',
-      'topKeyUp',
-      'topMouseDown',
-      'topMouseUp',
-      'topSelectionChange',
+      TOP_BLUR,
+      TOP_CONTEXT_MENU,
+      TOP_DRAG_END,
+      TOP_FOCUS,
+      TOP_KEY_DOWN,
+      TOP_KEY_UP,
+      TOP_MOUSE_DOWN,
+      TOP_MOUSE_UP,
+      TOP_SELECTION_CHANGE,
     ],
   },
 };
@@ -56,16 +66,15 @@ let mouseDown = false;
  * @return {object}
  */
 function getSelection(node) {
-  if (
-    'selectionStart' in node &&
-    ReactInputSelection.hasSelectionCapabilities(node)
-  ) {
+  if ('selectionStart' in node && hasSelectionCapabilities(node)) {
     return {
       start: node.selectionStart,
       end: node.selectionEnd,
     };
-  } else if (window.getSelection) {
-    const selection = window.getSelection();
+  } else {
+    const win =
+      (node.ownerDocument && node.ownerDocument.defaultView) || window;
+    const selection = win.getSelection();
     return {
       anchorNode: selection.anchorNode,
       anchorOffset: selection.anchorOffset,
@@ -76,9 +85,24 @@ function getSelection(node) {
 }
 
 /**
+ * Get document associated with the event target.
+ *
+ * @param {object} nativeEventTarget
+ * @return {Document}
+ */
+function getEventTargetDocument(eventTarget) {
+  return eventTarget.window === eventTarget
+    ? eventTarget.document
+    : eventTarget.nodeType === DOCUMENT_NODE
+      ? eventTarget
+      : eventTarget.ownerDocument;
+}
+
+/**
  * Poll selection to see whether it's changed.
  *
  * @param {object} nativeEvent
+ * @param {object} nativeEventTarget
  * @return {?SyntheticEvent}
  */
 function constructSelectEvent(nativeEvent, nativeEventTarget) {
@@ -86,10 +110,12 @@ function constructSelectEvent(nativeEvent, nativeEventTarget) {
   // selection (this matches native `select` event behavior). In HTML5, select
   // fires only on input and textarea thus if there's no focused element we
   // won't dispatch.
+  const doc = getEventTargetDocument(nativeEventTarget);
+
   if (
     mouseDown ||
     activeElement == null ||
-    activeElement !== getActiveElement()
+    activeElement !== getActiveElement(doc)
   ) {
     return null;
   }
@@ -140,12 +166,7 @@ const SelectEventPlugin = {
     nativeEvent,
     nativeEventTarget,
   ) {
-    const doc =
-      nativeEventTarget.window === nativeEventTarget
-        ? nativeEventTarget.document
-        : nativeEventTarget.nodeType === DOCUMENT_NODE
-          ? nativeEventTarget
-          : nativeEventTarget.ownerDocument;
+    const doc = getEventTargetDocument(nativeEventTarget);
     // Track whether all listeners exists for this plugin. If none exist, we do
     // not extract events. See #3639.
     if (!doc || !isListeningToAllDependencies('onSelect', doc)) {
@@ -156,7 +177,7 @@ const SelectEventPlugin = {
 
     switch (topLevelType) {
       // Track the input node that has focus.
-      case 'topFocus':
+      case TOP_FOCUS:
         if (
           isTextInputElement(targetNode) ||
           targetNode.contentEditable === 'true'
@@ -166,18 +187,19 @@ const SelectEventPlugin = {
           lastSelection = null;
         }
         break;
-      case 'topBlur':
+      case TOP_BLUR:
         activeElement = null;
         activeElementInst = null;
         lastSelection = null;
         break;
       // Don't fire the event while the user is dragging. This matches the
       // semantics of the native select event.
-      case 'topMouseDown':
+      case TOP_MOUSE_DOWN:
         mouseDown = true;
         break;
-      case 'topContextMenu':
-      case 'topMouseUp':
+      case TOP_CONTEXT_MENU:
+      case TOP_MOUSE_UP:
+      case TOP_DRAG_END:
         mouseDown = false;
         return constructSelectEvent(nativeEvent, nativeEventTarget);
       // Chrome and IE fire non-standard event when selection is changed (and
@@ -189,13 +211,13 @@ const SelectEventPlugin = {
       // keyup, but we check on keydown as well in the case of holding down a
       // key, when multiple keydown events are fired but only one keyup is.
       // This is also our approach for IE handling, for the reason above.
-      case 'topSelectionChange':
+      case TOP_SELECTION_CHANGE:
         if (skipSelectionChangeEvent) {
           break;
         }
       // falls through
-      case 'topKeyDown':
-      case 'topKeyUp':
+      case TOP_KEY_DOWN:
+      case TOP_KEY_UP:
         return constructSelectEvent(nativeEvent, nativeEventTarget);
     }
 

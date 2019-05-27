@@ -5,6 +5,7 @@ const bundleTypes = require('./bundles').bundleTypes;
 
 const UMD_DEV = bundleTypes.UMD_DEV;
 const UMD_PROD = bundleTypes.UMD_PROD;
+const UMD_PROFILING = bundleTypes.UMD_PROFILING;
 
 // For any external that is used in a DEV-only condition, explicitly
 // specify whether it has side effects during import or not. This lets
@@ -12,27 +13,30 @@ const UMD_PROD = bundleTypes.UMD_PROD;
 const HAS_NO_SIDE_EFFECTS_ON_IMPORT = false;
 // const HAS_SIDE_EFFECTS_ON_IMPORT = true;
 const importSideEffects = Object.freeze({
-  'fbjs/lib/invariant': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
-  'fbjs/lib/warning': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'prop-types/checkPropTypes': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
-  'fbjs/lib/camelizeStyleName': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
-  'fbjs/lib/hyphenateStyleName': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
-  deepFreezeAndThrowOnMutationInDev: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  scheduler: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  'scheduler/tracing': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
 });
 
 // Bundles exporting globals that other modules rely on.
 const knownGlobals = Object.freeze({
   react: 'React',
   'react-dom': 'ReactDOM',
+  scheduler: 'Scheduler',
+  'scheduler/tracing': 'SchedulerTracing',
+  'scheduler/unstable_mock': 'SchedulerMock',
 });
 
 // Given ['react'] in bundle externals, returns { 'react': 'React' }.
-function getPeerGlobals(externals, moduleType) {
+function getPeerGlobals(externals, bundleType) {
   const peerGlobals = {};
   externals.forEach(name => {
     if (
       !knownGlobals[name] &&
-      (moduleType === UMD_DEV || moduleType === UMD_PROD)
+      (bundleType === UMD_DEV ||
+        bundleType === UMD_PROD ||
+        bundleType === UMD_PROFILING)
     ) {
       throw new Error('Cannot build UMD without a global name for: ' + name);
     }
@@ -56,11 +60,16 @@ function getDependencies(bundleType, entry) {
 }
 
 // Hijacks some modules for optimization and integration reasons.
-function getForks(bundleType, entry) {
+function getForks(bundleType, entry, moduleType) {
   const forksForBundle = {};
   Object.keys(forks).forEach(srcModule => {
     const dependencies = getDependencies(bundleType, entry);
-    const targetModule = forks[srcModule](bundleType, entry, dependencies);
+    const targetModule = forks[srcModule](
+      bundleType,
+      entry,
+      dependencies,
+      moduleType
+    );
     if (targetModule === null) {
       return;
     }

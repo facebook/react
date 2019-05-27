@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -9,9 +9,10 @@
  */
 
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
+import type {TopLevelType} from './TopLevelEventTypes';
 
 export type DispatchConfig = {
-  dependencies: Array<string>,
+  dependencies: Array<TopLevelType>,
   phasedRegistrationNames?: {
     bubbled: string,
     captured: string,

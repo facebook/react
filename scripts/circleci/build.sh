@@ -1,11 +1,6 @@
-#!/bin/bash		
-		
-set -e		
+#!/bin/bash
 
-# Update the local size measurements to the master version
-# so that the size diff printed at the end of the build is
-# accurate.
-curl -o scripts/rollup/results.json http://react.zpao.com/builds/master/latest/results.json
+set -e
 
 yarn build --extract-errors
 # Note: since we run the full build including extracting error codes,

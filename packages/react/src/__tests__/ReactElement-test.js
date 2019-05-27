@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -80,6 +80,7 @@ describe('ReactElement', () => {
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
         'prop. (https://fb.me/react-special-props)',
+      {withoutStack: true},
     );
   });
 
@@ -90,6 +91,7 @@ describe('ReactElement', () => {
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
         'prop. (https://fb.me/react-special-props)',
+      {withoutStack: true},
     );
   });
 
@@ -114,6 +116,7 @@ describe('ReactElement', () => {
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
         'prop. (https://fb.me/react-special-props)',
+      {withoutStack: true},
     );
   });
 

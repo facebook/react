@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2015-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -9,15 +9,21 @@
 
 import './ReactNativeInjectionShared';
 
-// TODO: The event emitter registration is interfering with the existing
-// ReactNative renderer. So disable it for Fabric for now.
+import {
+  getFiberCurrentPropsFromNode,
+  getInstanceFromNode,
+  getNodeFromInstance,
+} from './ReactFabricComponentTree';
+import {setComponentTree} from 'events/EventPluginUtils';
+import ReactFabricGlobalResponderHandler from './ReactFabricGlobalResponderHandler';
+import ResponderEventPlugin from 'events/ResponderEventPlugin';
 
-// import * as ReactNativeEventEmitter from './ReactNativeEventEmitter';
+setComponentTree(
+  getFiberCurrentPropsFromNode,
+  getInstanceFromNode,
+  getNodeFromInstance,
+);
 
-// Module provided by RN:
-// import RCTEventEmitter from 'RCTEventEmitter';
-
-/**
- * Register the event emitter with the native bridge
- */
-// RCTEventEmitter.register(ReactNativeEventEmitter);
+ResponderEventPlugin.injection.injectGlobalResponderHandler(
+  ReactFabricGlobalResponderHandler,
+);
