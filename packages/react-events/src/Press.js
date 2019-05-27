@@ -462,7 +462,6 @@ function getAbsoluteBoundingClientRect(
     // If these all pass, we can skip traversing the relevant
     // node and go directly to its parent.
     if (scrollLeft !== 0 || scrollTop !== 0) {
-      debugger;
       if (isNodeFixedPositioned(parent)) {
         node = ((parent: any): Node).parentNode;
         continue;
