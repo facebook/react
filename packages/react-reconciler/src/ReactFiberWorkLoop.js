@@ -2305,13 +2305,6 @@ export function warnIfNotScopedWithMatchingAct(fiber: Fiber): void {
   }
 }
 
-// in a test-like environment, we want to warn if dispatchAction() is
-// called outside of a TestUtils.act(...)/batchedUpdates/render call.
-// so we have a a step counter for when we descend/ascend from
-// act() calls, and test on it for when to warn
-// It's a tuple with a single value. Look into ReactTestUtilsAct as an
-// example of how we change the value
-
 function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
   if (__DEV__) {
     if (
