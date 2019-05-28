@@ -11,5 +11,6 @@
 .Inner {
   width: 100%;
   min-height: 5px;
-  background-color: var(--color-commit-did-not-render);
+  background-color: var(--color-commit-did-not-render-fill);
+  color: var(--color-commit-did-not-render-fill-text);
 }

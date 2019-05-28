@@ -138,7 +138,7 @@ export function installHook(target: any): DevToolsHook | null {
     }
   }
 
-  function onCommitFiberRoot(rendererID, root) {
+  function onCommitFiberRoot(rendererID, root, priorityLevel) {
     const mountedRoots = hook.getFiberRoots(rendererID);
     const current = root.current;
     const isKnownRoot = mountedRoots.has(root);
@@ -153,7 +153,7 @@ export function installHook(target: any): DevToolsHook | null {
     }
     const rendererInterface = rendererInterfaces.get(rendererID);
     if (rendererInterface != null) {
-      rendererInterface.handleCommitFiberRoot(root);
+      rendererInterface.handleCommitFiberRoot(root, priorityLevel);
     }
   }
 

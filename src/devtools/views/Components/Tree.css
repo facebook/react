@@ -37,3 +37,14 @@
   margin: 0 0.5rem;
   background-color: var(--color-border);
 }
+
+.Loading {
+  height: 100%;
+  padding-left: 0.5rem;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  justify-content: flex-start;
+  font-size: var(--font-size-sans-large);
+  color: var(--color-dim);
+}

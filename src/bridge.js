@@ -57,6 +57,9 @@ export default class Bridge extends EventEmitter {
       return;
     }
 
+    // Queue the shutdown outgoing message for subscribers.
+    this.send('shutdown');
+
     // Mark this bridge as destroyed, i.e. disable its public API.
     this._isShutdown = true;
 
@@ -73,9 +76,6 @@ export default class Bridge extends EventEmitter {
     if (wallUnlisten) {
       wallUnlisten();
     }
-
-    // Queue the shutdown outgoing message for subscribers.
-    this.send('shutdown');
 
     // Synchronously flush all queued outgoing messages.
     // At this step the subscribers' code may run in this call stack.

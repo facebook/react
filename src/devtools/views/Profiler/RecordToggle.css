@@ -23,3 +23,16 @@
 .InactiveRecordToggle:active {
   color: var(--color-record-hover);
 }
+
+.DisabledRecordToggle {
+  color: var(--color-button-disabled);
+}
+.DisabledRecordToggle:hover {
+  color: var(--color-button-disabled);
+}
+.DisabledRecordToggle:focus {
+  color: var(--color-button-disabled);
+}
+.DisabledRecordToggle:active {
+  color: var(--color-button-disabled);
+}

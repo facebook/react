@@ -13,6 +13,7 @@ type Props = {|
   onClick: (event: SyntheticMouseEvent<*>) => mixed,
   onDoubleClick?: (event: SyntheticMouseEvent<*>) => mixed,
   placeLabelAboveNode?: boolean,
+  textStyle?: Object,
   width: number,
   x: number,
   y: number,
@@ -27,6 +28,7 @@ export default function ChartNode({
   label,
   onClick,
   onDoubleClick,
+  textStyle,
   width,
   x,
   y,
@@ -57,7 +59,9 @@ export default function ChartNode({
           }}
           y={height < textHeight ? -textHeight : 0}
         >
-          <div className={styles.Div}>{label}</div>
+          <div className={styles.Div} style={textStyle}>
+            {label}
+          </div>
         </foreignObject>
       )}
     </g>

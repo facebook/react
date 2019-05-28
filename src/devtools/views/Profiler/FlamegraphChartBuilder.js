@@ -1,8 +1,10 @@
 // @flow
 
-import { calculateSelfDuration, formatDuration } from './utils';
+import { ElementTypeForwardRef, ElementTypeMemo } from 'src/types';
+import { formatDuration } from './utils';
+import ProfilerStore from 'src/devtools/ProfilerStore';
 
-import type { CommitDetailsFrontend, CommitTreeFrontend } from './types';
+import type { CommitTree } from './types';
 
 export type ChartNode = {|
   actualDuration: number,
@@ -20,21 +22,26 @@ export type ChartData = {|
   depth: number,
   idToDepthMap: Map<number, number>,
   maxSelfDuration: number,
+  renderPathNodes: Set<number>,
   rows: Array<Array<ChartNode>>,
 |};
 
 const cachedChartData: Map<string, ChartData> = new Map();
 
 export function getChartData({
-  commitDetails,
   commitIndex,
   commitTree,
+  profilerStore,
+  rootID,
 }: {|
-  commitDetails: CommitDetailsFrontend,
   commitIndex: number,
-  commitTree: CommitTreeFrontend,
+  commitTree: CommitTree,
+  profilerStore: ProfilerStore,
+  rootID: number,
 |}): ChartData {
-  const { actualDurations, rootID } = commitDetails;
+  const commitDatum = profilerStore.getCommitData(rootID, commitIndex);
+
+  const { fiberActualDurations, fiberSelfDurations } = commitDatum;
   const { nodes } = commitTree;
 
   const key = `${rootID}-${commitIndex}`;
@@ -43,6 +50,7 @@ export function getChartData({
   }
 
   const idToDepthMap: Map<number, number> = new Map();
+  const renderPathNodes: Set<number> = new Set();
   const rows: Array<Array<ChartNode>> = [];
 
   let maxDepth = 0;
@@ -57,16 +65,23 @@ export function getChartData({
       throw Error(`Could not find node with id "${id}" in commit tree`);
     }
 
-    const { children, displayName, key, treeBaseDuration } = node;
+    const { children, displayName, key, treeBaseDuration, type } = node;
 
-    const actualDuration = actualDurations.get(id) || 0;
-    const selfDuration = calculateSelfDuration(id, commitTree, commitDetails);
-    const didRender = actualDurations.has(id);
+    const actualDuration = fiberActualDurations.get(id) || 0;
+    const selfDuration = fiberSelfDurations.get(id) || 0;
+    const didRender = fiberActualDurations.has(id);
 
-    const name = displayName || 'Unknown';
+    const name = displayName || 'Anonymous';
     const maybeKey = key !== null ? ` key="${key}"` : '';
 
-    let label = `${name}${maybeKey}`;
+    let maybeBadge = '';
+    if (type === ElementTypeForwardRef) {
+      maybeBadge = ' (ForwardRef)';
+    } else if (type === ElementTypeMemo) {
+      maybeBadge = ' (Memo)';
+    }
+
+    let label = `${name}${maybeBadge}${maybeKey}`;
     if (didRender) {
       label += ` (${formatDuration(selfDuration)}ms of ${formatDuration(
         actualDuration
@@ -102,23 +117,47 @@ export function getChartData({
     return chartNode;
   };
 
-  // Skip over the root; we don't want to show it in the flamegraph.
-  const root = nodes.get(rootID);
-  if (root == null) {
-    throw Error(`Could not find root node with id "${rootID}" in commit tree`);
-  }
-
-  // Don't assume a single root.
-  // Component filters or Fragments might lead to multiple "roots" in a flame graph.
   let baseDuration = 0;
-  for (let i = root.children.length - 1; i >= 0; i--) {
-    const id = root.children[i];
-    const node = nodes.get(id);
-    if (node == null) {
-      throw Error(`Could not find node with id "${id}" in commit tree`);
+
+  // Special case to handle unmounted roots.
+  if (nodes.size > 0) {
+    // Skip over the root; we don't want to show it in the flamegraph.
+    const root = nodes.get(rootID);
+    if (root == null) {
+      throw Error(
+        `Could not find root node with id "${rootID}" in commit tree`
+      );
     }
-    baseDuration += node.treeBaseDuration;
-    walkTree(id, baseDuration, 1);
+
+    // Don't assume a single root.
+    // Component filters or Fragments might lead to multiple "roots" in a flame graph.
+    for (let i = root.children.length - 1; i >= 0; i--) {
+      const id = root.children[i];
+      const node = nodes.get(id);
+      if (node == null) {
+        throw Error(`Could not find node with id "${id}" in commit tree`);
+      }
+      baseDuration += node.treeBaseDuration;
+      walkTree(id, baseDuration, 1);
+    }
+
+    fiberActualDurations.forEach((duration, id) => {
+      const node = nodes.get(id);
+      if (node != null) {
+        let currentID = node.parentID;
+        while (currentID !== 0) {
+          if (renderPathNodes.has(currentID)) {
+            // We've already walked this path; we can skip it.
+            break;
+          } else {
+            renderPathNodes.add(currentID);
+          }
+
+          const node = nodes.get(currentID);
+          currentID = node != null ? node.parentID : 0;
+        }
+      }
+    });
   }
 
   const chartData = {
@@ -126,6 +165,7 @@ export function getChartData({
     depth: maxDepth,
     idToDepthMap,
     maxSelfDuration,
+    renderPathNodes,
     rows,
   };
 

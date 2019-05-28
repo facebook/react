@@ -5,7 +5,7 @@
 import '@reach/menu-button/styles.css';
 import '@reach/tooltip/styles.css';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import Store from '../store';
 import { BridgeContext, StoreContext } from './context';
 import Components from './Components/Components';
@@ -71,8 +71,7 @@ const settingsTab = {
   title: 'React Settings',
 };
 
-const tabsWithProfiler = [componentsTab, profilerTab, settingsTab];
-const tabsWithoutProfiler = [componentsTab, settingsTab];
+const tabs = [componentsTab, profilerTab, settingsTab];
 
 export default function DevTools({
   bridge,
@@ -91,28 +90,6 @@ export default function DevTools({
   if (overrideTab != null && overrideTab !== tab) {
     setTab(overrideTab);
   }
-
-  const [supportsProfiling, setSupportsProfiling] = useState(
-    store.supportsProfiling
-  );
-
-  // Show/hide the "Profiler" button depending on if profiling is supported.
-  useEffect(() => {
-    if (supportsProfiling !== store.supportsProfiling) {
-      setSupportsProfiling(store.supportsProfiling);
-    }
-
-    const handleRoots = () => {
-      if (supportsProfiling !== store.supportsProfiling) {
-        setSupportsProfiling(store.supportsProfiling);
-      }
-    };
-
-    store.addListener('roots', handleRoots);
-    return () => {
-      store.removeListener('roots', handleRoots);
-    };
-  }, [store, supportsProfiling]);
 
   return (
     <BridgeContext.Provider value={bridge}>
@@ -140,11 +117,7 @@ export default function DevTools({
                           id="DevTools"
                           selectTab={setTab}
                           size="large"
-                          tabs={
-                            supportsProfiling
-                              ? tabsWithProfiler
-                              : tabsWithoutProfiler
-                          }
+                          tabs={tabs}
                         />
                       </div>
                     )}
@@ -158,10 +131,7 @@ export default function DevTools({
                       className={styles.TabContent}
                       hidden={tab !== 'profiler'}
                     >
-                      <Profiler
-                        portalContainer={profilerPortalContainer}
-                        supportsProfiling={supportsProfiling}
-                      />
+                      <Profiler portalContainer={profilerPortalContainer} />
                     </div>
                     <div
                       className={styles.TabContent}

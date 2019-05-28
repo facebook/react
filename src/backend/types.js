@@ -1,7 +1,11 @@
 // @flow
 
 import type { ComponentFilter, ElementType } from 'src/types';
-import type { InspectedElement } from 'src/devtools/views/Components/types';
+import type {
+  InspectedElement,
+  Owner,
+} from 'src/devtools/views/Components/types';
+import type { Interaction } from 'src/devtools/views/Profiler/types';
 
 type BundleType =
   | 0 // PROD
@@ -112,41 +116,33 @@ export type ReactRenderer = {
   currentDispatcherRef?: {| current: null | Dispatcher |},
 };
 
-export type InteractionBackend = {|
-  id: number,
-  name: string,
+export type CommitDataBackend = {|
+  duration: number,
+  // Tuple of fiber ID and actual duration
+  fiberActualDurations: Array<[number, number]>,
+  // Tuple of fiber ID and computed "self" duration
+  fiberSelfDurations: Array<[number, number]>,
+  interactionIDs: Array<number>,
+  priorityLevel: string | null,
   timestamp: number,
 |};
 
-export type CommitDetailsBackend = {|
-  actualDurations: Array<number>,
-  commitIndex: number,
-  interactions: Array<InteractionBackend>,
+export type ProfilingDataForRootBackend = {|
+  commitData: Array<CommitDataBackend>,
+  displayName: string,
+  // Tuple of Fiber ID and base duration
+  initialTreeBaseDurations: Array<[number, number]>,
+  // Tuple of Interaction ID and commit indices
+  interactionCommits: Array<[number, Array<number>]>,
+  interactions: Array<[number, Interaction]>,
   rootID: number,
 |};
 
-export type FiberCommitsBackend = {|
-  commitDurations: Array<number>,
-  fiberID: number,
-  rootID: number,
-|};
-
-export type InteractionWithCommitsBackend = {|
-  ...InteractionBackend,
-  commits: Array<number>,
-|};
-
-export type InteractionsBackend = {|
-  interactions: Array<InteractionWithCommitsBackend>,
-  rootID: number,
-|};
-
-export type ProfilingSummaryBackend = {|
-  commitDurations: Array<number>,
-  commitTimes: Array<number>,
-  initialTreeBaseDurations: Array<number>,
-  interactionCount: number,
-  rootID: number,
+// Profiling data collected by the renderer interface.
+// This information will be passed to the frontend and combined with info it collects.
+export type ProfilingDataBackend = {|
+  dataForRoots: Array<ProfilingDataForRootBackend>,
+  rendererID: number,
 |};
 
 export type PathFrame = {|
@@ -162,25 +158,19 @@ export type PathMatch = {|
 
 export type RendererInterface = {
   cleanup: () => void,
-  findNativeByFiberID: (id: number) => ?Array<NativeType>,
+  findNativeNodesForFiberID: (id: number) => ?Array<NativeType>,
   flushInitialOperations: () => void,
   getBestMatchForTrackedPath: () => PathMatch | null,
-  getCommitDetails: (
-    rootID: number,
-    commitIndex: number
-  ) => CommitDetailsBackend,
-  getFiberIDFromNative: (
+  getFiberIDForNative: (
     component: NativeType,
     findNearestUnfilteredAncestor?: boolean
   ) => number | null,
-  getFiberCommits: (rootID: number, fiberID: number) => FiberCommitsBackend,
-  getInteractions: (rootID: number) => InteractionsBackend,
-  getProfilingDataForDownload: (rootID: number) => Object,
-  getProfilingSummary: (rootID: number) => ProfilingSummaryBackend,
+  getProfilingData(): ProfilingDataBackend,
+  getOwnersList: (id: number) => Array<Owner> | null,
   getPathForElement: (id: number) => Array<PathFrame> | null,
-  handleCommitFiberRoot: (fiber: Object) => void,
+  handleCommitFiberRoot: (fiber: Object, commitPriority?: number) => void,
   handleCommitFiberUnmount: (fiber: Object) => void,
-  inspectElement: (id: number) => InspectedElement | null,
+  inspectElement: (id: number) => InspectedElement | number | null,
   logElementToConsole: (id: number) => void,
   overrideSuspense: (id: number, forceFallback: boolean) => void,
   prepareViewElementSource: (id: number) => void,
@@ -219,7 +209,11 @@ export type DevToolsHook = {
   // React uses these methods.
   checkDCE: (fn: Function) => void,
   onCommitFiberUnmount: (rendererID: RendererID, fiber: Object) => void,
-  onCommitFiberRoot: (rendererID: RendererID, fiber: Object) => void,
+  onCommitFiberRoot: (
+    rendererID: RendererID,
+    fiber: Object,
+    commitPriority?: number
+  ) => void,
 };
 
 export type HooksNode = {

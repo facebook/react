@@ -83,13 +83,22 @@ function InspectedElementContextController({ children }: Props) {
 
   // This effect handler invalidates the suspense cache and schedules rendering updates with React.
   useEffect(() => {
-    const onInspectedElement = (inspectedElement: InspectedElement | null) => {
-      if (inspectedElement !== null) {
+    const onInspectedElement = (
+      inspectedElement: InspectedElement | number | null
+    ) => {
+      // A null value means that the element no longer exists in the backend.
+      // If it's the same element that's currently selected, that selection will be removed once the Store updates.
+      // If it's not- then we can just ignore it anyway.
+      // Either way there is nothing we need to do in this case.
+      // A numeric value indicates that the element hasn't changed since we last requested its data,
+      // in which case we don't need to invalidate the cache and re-render anything in the DevTools.
+      if (inspectedElement !== null && typeof inspectedElement === 'object') {
         const id = inspectedElement.id;
 
         inspectedElement = (({
           ...inspectedElement,
           context: hydrateHelper(inspectedElement.context),
+          events: hydrateHelper(inspectedElement.events),
           hooks: hydrateHelper(inspectedElement.hooks),
           props: hydrateHelper(inspectedElement.props),
           state: hydrateHelper(inspectedElement.state),
@@ -140,13 +149,19 @@ function InspectedElementContextController({ children }: Props) {
     // Update the $r variable.
     bridge.send('selectElement', { id: selectedElementID, rendererID });
 
-    const onInspectedElement = (inspectedElement: InspectedElement | null) => {
-      if (
-        inspectedElement !== null &&
-        inspectedElement.id === selectedElementID
-      ) {
+    const onInspectedElement = (
+      inspectedElement: InspectedElement | number | null
+    ) => {
+      if (inspectedElement !== null) {
         // If this is the element we requested, wait a little bit and then ask for an update.
-        timeoutID = setTimeout(sendRequest, 1000);
+        if (inspectedElement === selectedElementID) {
+          timeoutID = setTimeout(sendRequest, 1000);
+        } else if (
+          typeof inspectedElement === 'object' &&
+          inspectedElement.id === selectedElementID
+        ) {
+          timeoutID = setTimeout(sendRequest, 1000);
+        }
       }
     };
 

@@ -8,13 +8,14 @@ import { StoreContext } from '../context';
 
 export default function ClearProfilingDataButton() {
   const store = useContext(StoreContext);
-  const { isProfiling } = useContext(ProfilerContext);
+  const { didRecordCommits, isProfiling } = useContext(ProfilerContext);
+  const { profilerStore } = store;
 
-  const clear = useCallback(() => store.clearProfilingData(), [store]);
+  const clear = useCallback(() => profilerStore.clear(), [profilerStore]);
 
   return (
     <Button
-      disabled={isProfiling || !store.hasProfilingData}
+      disabled={isProfiling || !didRecordCommits}
       onClick={clear}
       title="Clear profiling data"
     >

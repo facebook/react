@@ -2,6 +2,11 @@
 
 import typeof ReactTestRenderer from 'react-test-renderer';
 
+import type Bridge from 'src/bridge';
+import type Store from 'src/devtools/store';
+import type { ProfilingDataFrontend } from 'src/devtools/views/Profiler/types';
+import type { ElementType } from 'src/types';
+
 export function act(callback: Function): void {
   const TestUtils = require('react-dom/test-utils');
   TestUtils.act(() => {
@@ -11,10 +16,10 @@ export function act(callback: Function): void {
   // Flush Bridge operations
   TestUtils.act(() => {
     jest.runAllTimers();
-  });
+  })
 }
 
-export async function actSuspense(cb: () => *): Promise<void> {
+export async function actAsync(cb: () => *): Promise<void> {
   const TestUtils = require('react-dom/test-utils');
 
   // $FlowFixMe Flow doens't know about "await act()" yet
@@ -44,6 +49,56 @@ export function beforeEachProfiling(): void {
   );
 }
 
+export function createElementTypeFilter(
+  elementType: ElementType,
+  isEnabled: boolean = true
+) {
+  const Types = require('src/types');
+  return {
+    type: Types.ComponentFilterElementType,
+    isEnabled,
+    value: elementType,
+  };
+}
+
+export function createDisplayNameFilter(
+  source: string,
+  isEnabled: boolean = true
+) {
+  const Types = require('src/types');
+  let isValid = true;
+  try {
+    new RegExp(source);
+  } catch (error) {
+    isValid = false;
+  }
+  return {
+    type: Types.ComponentFilterDisplayName,
+    isEnabled,
+    isValid,
+    value: source,
+  };
+}
+
+export function createLocationFilter(
+  source: string,
+  isEnabled: boolean = true
+) {
+  const Types = require('src/types');
+  let isValid = true;
+  try {
+    new RegExp(source);
+  } catch (error) {
+    isValid = false;
+  }
+  return {
+    type: Types.ComponentFilterLocation,
+    isEnabled,
+    isValid,
+    value: source,
+  };
+}
+
 export function getRendererID(): number {
   if (global.agent == null) {
     throw Error('Agent unavailable.');
@@ -66,4 +121,45 @@ export function requireTestRenderer(): ReactTestRenderer {
   } finally {
     global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = hook;
   }
+}
+
+export function exportImportHelper(bridge: Bridge, store: Store): void {
+  const { act } = require('./utils');
+  const {
+    prepareProfilingDataExport,
+    prepareProfilingDataFrontendFromExport,
+  } = require('src/devtools/views/Profiler/utils');
+
+  const { profilerStore } = store;
+
+  expect(profilerStore.profilingData).not.toBeNull();
+
+  const profilingDataFrontendInitial = ((profilerStore.profilingData: any): ProfilingDataFrontend);
+
+  const profilingDataExport = prepareProfilingDataExport(
+    profilingDataFrontendInitial
+  );
+
+  // Simulate writing/reading to disk.
+  const serializedProfilingDataExport = JSON.stringify(
+    profilingDataExport,
+    null,
+    2
+  );
+  const parsedProfilingDataExport = JSON.parse(serializedProfilingDataExport);
+
+  const profilingDataFrontend = prepareProfilingDataFrontendFromExport(
+    (parsedProfilingDataExport: any)
+  );
+
+  // Sanity check that profiling snapshots are serialized correctly.
+  expect(profilingDataFrontendInitial).toEqual(profilingDataFrontend);
+
+  // Snapshot the JSON-parsed object, rather than the raw string, because Jest formats the diff nicer.
+  expect(parsedProfilingDataExport).toMatchSnapshot('imported data');
+
+  act(() => {
+    // Apply the new exported-then-reimported data so tests can re-run assertions.
+    profilerStore.profilingData = profilingDataFrontend;
+  });
 }

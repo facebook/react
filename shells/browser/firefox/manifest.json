@@ -46,9 +46,9 @@
 
   "permissions": [
     "<all_urls>",
-    "downloads",
     "activeTab",
     "tabs",
+    "webNavigation",
     "file:///*",
     "http://*/*",
     "https://*/*"

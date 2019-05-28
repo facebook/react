@@ -214,7 +214,26 @@ function updateThemeVariables(
   updateStyleHelper(theme, 'color-button-disabled', documentElements);
   updateStyleHelper(theme, 'color-button-focus', documentElements);
   updateStyleHelper(theme, 'color-button-hover', documentElements);
-  updateStyleHelper(theme, 'color-commit-did-not-render', documentElements);
+  updateStyleHelper(
+    theme,
+    'color-commit-did-not-render-fill',
+    documentElements
+  );
+  updateStyleHelper(
+    theme,
+    'color-commit-did-not-render-fill-text',
+    documentElements
+  );
+  updateStyleHelper(
+    theme,
+    'color-commit-did-not-render-pattern',
+    documentElements
+  );
+  updateStyleHelper(
+    theme,
+    'color-commit-did-not-render-pattern-text',
+    documentElements
+  );
   updateStyleHelper(theme, 'color-commit-gradient-0', documentElements);
   updateStyleHelper(theme, 'color-commit-gradient-1', documentElements);
   updateStyleHelper(theme, 'color-commit-gradient-2', documentElements);
@@ -228,6 +247,16 @@ function updateThemeVariables(
   updateStyleHelper(theme, 'color-commit-gradient-text', documentElements);
   updateStyleHelper(theme, 'color-component-name', documentElements);
   updateStyleHelper(theme, 'color-component-name-inverted', documentElements);
+  updateStyleHelper(
+    theme,
+    'color-component-badge-background',
+    documentElements
+  );
+  updateStyleHelper(
+    theme,
+    'color-component-badge-background-inverted',
+    documentElements
+  );
   updateStyleHelper(theme, 'color-dim', documentElements);
   updateStyleHelper(theme, 'color-dimmer', documentElements);
   updateStyleHelper(theme, 'color-dimmest', documentElements);

@@ -13,47 +13,69 @@ export type Props = {||};
 export default function SidebarInteractions(_: Props) {
   const {
     selectedInteractionID,
-    rendererID,
     rootID,
     selectCommitIndex,
     selectTab,
   } = useContext(ProfilerContext);
 
-  const { profilingCache } = useContext(StoreContext);
+  const { profilerStore } = useContext(StoreContext);
+  const { profilingCache } = profilerStore;
 
   if (selectedInteractionID === null) {
     return <div className={styles.NothingSelected}>Nothing selected</div>;
   }
 
-  const interactions = profilingCache.Interactions.read({
-    rendererID: ((rendererID: any): number),
-    rootID: ((rootID: any): number),
-  });
-  const interaction = interactions.find(
-    interaction => interaction.id === selectedInteractionID
+  const { interactionCommits, interactions } = profilerStore.getDataForRoot(
+    ((rootID: any): number)
   );
+  const interaction = interactions.get(selectedInteractionID);
   if (interaction == null) {
     throw Error(
       `Could not find interaction by selected interaction id "${selectedInteractionID}"`
     );
   }
 
-  const profilingSummary = profilingCache.ProfilingSummary.read({
-    rendererID: ((rendererID: any): number),
+  const { maxCommitDuration } = profilingCache.getInteractionsChartData({
     rootID: ((rootID: any): number),
   });
-
-  const { maxCommitDuration } = profilingCache.getInteractionsChartData({
-    interactions,
-    profilingSummary,
-  });
-
-  const { commitDurations, commitTimes } = profilingSummary;
 
   const viewCommit = (commitIndex: number) => {
     selectTab('flame-chart');
     selectCommitIndex(commitIndex);
   };
+
+  const listItems: Array<React$Node> = [];
+  const commitIndices = interactionCommits.get(selectedInteractionID);
+  if (commitIndices != null) {
+    commitIndices.forEach(commitIndex => {
+      const { duration, timestamp } = profilerStore.getCommitData(
+        ((rootID: any): number),
+        commitIndex
+      );
+
+      listItems.push(
+        <li
+          key={commitIndex}
+          className={styles.ListItem}
+          onClick={() => viewCommit(commitIndex)}
+        >
+          <div
+            className={styles.CommitBox}
+            style={{
+              backgroundColor: getGradientColor(
+                Math.min(1, Math.max(0, duration / maxCommitDuration)) || 0
+              ),
+            }}
+          />
+          <div>
+            timestamp: {formatTime(timestamp)}s
+            <br />
+            duration: {formatDuration(duration)}ms
+          </div>
+        </li>
+      );
+    });
+  }
 
   return (
     <Fragment>
@@ -62,35 +84,7 @@ export default function SidebarInteractions(_: Props) {
       </div>
       <div className={styles.Content}>
         <div className={styles.Commits}>Commits:</div>
-        <ul className={styles.List}>
-          {interaction.commits.map(commitIndex => (
-            <li
-              key={commitIndex}
-              className={styles.ListItem}
-              onClick={() => viewCommit(commitIndex)}
-            >
-              <div
-                className={styles.CommitBox}
-                style={{
-                  backgroundColor: getGradientColor(
-                    Math.min(
-                      1,
-                      Math.max(
-                        0,
-                        commitDurations[commitIndex] / maxCommitDuration
-                      )
-                    ) || 0
-                  ),
-                }}
-              />
-              <div>
-                timestamp: {formatTime(commitTimes[commitIndex])}s
-                <br />
-                duration: {formatDuration(commitDurations[commitIndex])}ms
-              </div>
-            </li>
-          ))}
-        </ul>
+        <ul className={styles.List}>{listItems}</ul>
       </div>
     </Fragment>
   );

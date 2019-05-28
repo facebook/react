@@ -53,9 +53,11 @@ env.beforeEach(() => {
 
   initBackend(hook, agent, global);
 
+  const store = new Store(bridge);
+
   global.agent = agent;
   global.bridge = bridge;
-  global.store = new Store(bridge);
+  global.store = store;
 });
 env.afterEach(() => {
   delete global.__REACT_DEVTOOLS_GLOBAL_HOOK__;

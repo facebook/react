@@ -16,6 +16,7 @@ import type {
   RendererID,
   RendererInterface,
 } from './types';
+import type { OwnersList } from 'src/devtools/views/Components/types';
 import type { Bridge, ComponentFilter } from '../types';
 
 const debug = (methodName, ...args) => {
@@ -29,7 +30,7 @@ const debug = (methodName, ...args) => {
   }
 };
 
-type InspectSelectParams = {|
+type ElementAndRendererID = {|
   id: number,
   rendererID: number,
 |};
@@ -92,13 +93,10 @@ export default class Agent extends EventEmitter {
       'clearHighlightedElementInDOM',
       this.clearHighlightedElementInDOM
     );
-    bridge.addListener('exportProfilingSummary', this.exportProfilingSummary);
-    bridge.addListener('getCommitDetails', this.getCommitDetails);
-    bridge.addListener('getFiberCommits', this.getFiberCommits);
-    bridge.addListener('getInteractions', this.getInteractions);
+    bridge.addListener('getProfilingData', this.getProfilingData);
     bridge.addListener('getProfilingStatus', this.getProfilingStatus);
-    bridge.addListener('getProfilingSummary', this.getProfilingSummary);
     bridge.addListener('highlightElementInDOM', this.highlightElementInDOM);
+    bridge.addListener('getOwnersList', this.getOwnersList);
     bridge.addListener('inspectElement', this.inspectElement);
     bridge.addListener('logElementToConsole', this.logElementToConsole);
     bridge.addListener('overrideContext', this.overrideContext);
@@ -143,118 +141,23 @@ export default class Agent extends EventEmitter {
         const renderer = ((this._rendererInterfaces[
           (rendererID: any)
         ]: any): RendererInterface);
-        return renderer.getFiberIDFromNative(node, true);
+        return renderer.getFiberIDForNative(node, true);
       } catch (e) {}
     }
     return null;
   }
 
-  exportProfilingSummary = ({
-    profilingOperations,
-    profilingSnapshots,
-    rendererID,
-    rootID,
-  }: {
-    profilingOperations: Array<any>,
-    profilingSnapshots: Array<any>,
-    rendererID: number,
-    rootID: number,
-  }) => {
+  getProfilingData = ({ rendererID }: {| rendererID: RendererID |}) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}"`);
-    } else {
-      const rendererData = renderer.getProfilingDataForDownload(rootID);
-      this._bridge.send('exportFile', {
-        contents: JSON.stringify(
-          {
-            ...rendererData,
-            profilingOperations,
-            profilingSnapshots,
-          },
-          null,
-          2
-        ),
-        filename: 'profile-data.json',
-      });
     }
-  };
 
-  getCommitDetails = ({
-    commitIndex,
-    rendererID,
-    rootID,
-  }: {
-    commitIndex: number,
-    rendererID: number,
-    rootID: number,
-  }) => {
-    const renderer = this._rendererInterfaces[rendererID];
-    if (renderer == null) {
-      console.warn(`Invalid renderer id "${rendererID}"`);
-    } else {
-      this._bridge.send(
-        'commitDetails',
-        renderer.getCommitDetails(rootID, commitIndex)
-      );
-    }
-  };
-
-  getFiberCommits = ({
-    fiberID,
-    rendererID,
-    rootID,
-  }: {
-    fiberID: number,
-    rendererID: number,
-    rootID: number,
-  }) => {
-    const renderer = this._rendererInterfaces[rendererID];
-    if (renderer == null) {
-      console.warn(`Invalid renderer id "${rendererID}"`);
-    } else {
-      this._bridge.send(
-        'fiberCommits',
-        renderer.getFiberCommits(rootID, fiberID)
-      );
-    }
-  };
-
-  getInteractions = ({
-    rendererID,
-    rootID,
-  }: {
-    rendererID: number,
-    rootID: number,
-  }) => {
-    const renderer = this._rendererInterfaces[rendererID];
-    if (renderer == null) {
-      console.warn(`Invalid renderer id "${rendererID}"`);
-    } else {
-      this._bridge.send('interactions', renderer.getInteractions(rootID));
-    }
+    this._bridge.send('profilingData', renderer.getProfilingData());
   };
 
   getProfilingStatus = () => {
     this._bridge.send('profilingStatus', this._isProfiling);
-  };
-
-  getProfilingSummary = ({
-    rendererID,
-    rootID,
-  }: {
-    rendererID: number,
-    rootID: number,
-  }) => {
-    const renderer = this._rendererInterfaces[rendererID];
-    if (renderer == null) {
-      console.warn(`Invalid renderer id "${rendererID}"`);
-    } else {
-      this._bridge.send(
-        'profilingSummary',
-        renderer.getProfilingSummary(rootID)
-      );
-    }
   };
 
   clearHighlightedElementInDOM = () => {
@@ -283,7 +186,9 @@ export default class Agent extends EventEmitter {
 
     let nodes: ?Array<HTMLElement> = null;
     if (renderer !== null) {
-      nodes = ((renderer.findNativeByFiberID(id): any): ?Array<HTMLElement>);
+      nodes = ((renderer.findNativeNodesForFiberID(
+        id
+      ): any): ?Array<HTMLElement>);
     }
 
     if (nodes != null && nodes[0] != null) {
@@ -303,7 +208,17 @@ export default class Agent extends EventEmitter {
     }
   };
 
-  inspectElement = ({ id, rendererID }: InspectSelectParams) => {
+  getOwnersList = ({ id, rendererID }: ElementAndRendererID) => {
+    const renderer = this._rendererInterfaces[rendererID];
+    if (renderer == null) {
+      console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
+    } else {
+      const owners = renderer.getOwnersList(id);
+      this._bridge.send('ownersList', ({ id, owners }: OwnersList));
+    }
+  };
+
+  inspectElement = ({ id, rendererID }: ElementAndRendererID) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
@@ -312,7 +227,7 @@ export default class Agent extends EventEmitter {
     }
   };
 
-  logElementToConsole = ({ id, rendererID }: InspectSelectParams) => {
+  logElementToConsole = ({ id, rendererID }: ElementAndRendererID) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
@@ -340,13 +255,12 @@ export default class Agent extends EventEmitter {
     this._bridge.send('screenshotCaptured', { commitIndex, dataURL });
   };
 
-  selectElement = ({ id, rendererID }: InspectSelectParams) => {
+  selectElement = ({ id, rendererID }: ElementAndRendererID) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
     } else {
       renderer.selectElement(id);
-      this._bridge.send('selectElement');
 
       // When user selects an element, stop trying to restore the selection,
       // and instead remember the current selection for the next reload.
@@ -461,9 +375,12 @@ export default class Agent extends EventEmitter {
 
   startInspectingDOM = () => {
     window.addEventListener('click', this._onClick, true);
-    window.addEventListener('mousedown', this._onMouseDown, true);
-    window.addEventListener('mouseup', this._onMouseUp, true);
-    window.addEventListener('mouseover', this._onMouseOver, true);
+    window.addEventListener('mousedown', this._onMouseEvent, true);
+    window.addEventListener('mouseover', this._onMouseEvent, true);
+    window.addEventListener('mouseup', this._onMouseEvent, true);
+    window.addEventListener('pointerdown', this._onPointerDown, true);
+    window.addEventListener('pointerover', this._onPointerOver, true);
+    window.addEventListener('pointerup', this._onPointerUp, true);
   };
 
   startProfiling = () => {
@@ -481,9 +398,12 @@ export default class Agent extends EventEmitter {
     hideOverlay();
 
     window.removeEventListener('click', this._onClick, true);
-    window.removeEventListener('mousedown', this._onMouseDown, true);
-    window.removeEventListener('mouseup', this._onMouseUp, true);
-    window.removeEventListener('mouseover', this._onMouseOver, true);
+    window.removeEventListener('mousedown', this._onMouseEvent, true);
+    window.removeEventListener('mouseover', this._onMouseEvent, true);
+    window.removeEventListener('mouseup', this._onMouseEvent, true);
+    window.removeEventListener('pointerdown', this._onPointerDown, true);
+    window.removeEventListener('pointerover', this._onPointerOver, true);
+    window.removeEventListener('pointerup', this._onPointerUp, true);
   };
 
   stopProfiling = () => {
@@ -506,7 +426,7 @@ export default class Agent extends EventEmitter {
     }
   };
 
-  viewElementSource = ({ id, rendererID }: InspectSelectParams) => {
+  viewElementSource = ({ id, rendererID }: ElementAndRendererID) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
@@ -574,25 +494,23 @@ export default class Agent extends EventEmitter {
     event.stopPropagation();
 
     this.stopInspectingDOM();
+
     this._bridge.send('stopInspectingDOM', true);
   };
 
-  _onMouseDown = (event: MouseEvent) => {
+  _onMouseEvent = (event: MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+  };
+
+  _onPointerDown = (event: MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
 
     this._selectFiberForNode(((event.target: any): HTMLElement));
   };
 
-  // While we don't do anything here, this makes choosing
-  // the inspected element less invasive and less likely
-  // to dismiss e.g. a context menu.
-  _onMouseUp = (event: MouseEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-  };
-
-  _onMouseOver = (event: MouseEvent) => {
+  _onPointerOver = (event: MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
 
@@ -603,6 +521,11 @@ export default class Agent extends EventEmitter {
     showOverlay([target], null, false);
 
     this._selectFiberForNode(target);
+  };
+
+  _onPointerUp = (event: MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
   };
 
   _selectFiberForNode = throttle(

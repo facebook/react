@@ -24,6 +24,7 @@
       "<rootDir>/src/__tests__/setupTests"
     ],
     "snapshotSerializers": [
+      "<rootDir>/src/__tests__/inspectedElementSerializer",
       "<rootDir>/src/__tests__/storeSerializer"
     ],
     "testMatch": [
@@ -78,7 +79,7 @@
     "@babel/preset-react": "^7.0.0",
     "@reach/menu-button": "^0.1.17",
     "@reach/tooltip": "^0.2.0",
-    "adm-zip": "^0.4.7",
+    "archiver": "^3.0.0",
     "babel-core": "^7.0.0-bridge",
     "babel-eslint": "^9.0.0",
     "babel-jest": "^24.7.1",
@@ -89,7 +90,6 @@
     "cli-spinners": "^1.0.0",
     "clipboard-js": "^0.3.6",
     "cross-env": "^5.2.0",
-    "crx": "git+https://github.com/oncletom/crx#ef150e8",
     "css-loader": "^1.0.1",
     "error-stack-parser": "^2.0.2",
     "es6-symbol": "3.0.2",
@@ -131,21 +131,21 @@
     "opener": "^1.5.1",
     "prettier": "^1.16.4",
     "prop-types": "^15.6.2",
-    "react": "^0.0.0-6da04b5d8",
+    "react": "^0.0.0-50b50c26f",
     "react-color": "^2.11.7",
-    "react-dom": "^0.0.0-6da04b5d8",
-    "react-is": "^0.0.0-6da04b5d8",
-    "react-test-renderer": "^0.0.0-6da04b5d8",
+    "react-dom": "^0.0.0-50b50c26f",
+    "react-is": "^0.0.0-50b50c26f",
+    "react-test-renderer": "^0.0.0-50b50c26f",
     "react-virtualized-auto-sizer": "^1.0.2",
     "react-window": "^1.8.0",
     "request-promise": "^4.2.4",
-    "scheduler": "^0.0.0-6da04b5d8",
+    "rimraf": "^2.6.3",
+    "scheduler": "^0.0.0-50b50c26f",
     "semver": "^5.5.1",
     "style-loader": "^0.23.1",
     "web-ext": "^3.0.0",
     "webpack": "^4.26.0",
     "webpack-cli": "^3.1.2",
-    "webpack-dev-server": "^3.3.1",
-    "xml-js": "^1.6.11"
+    "webpack-dev-server": "^3.3.1"
   }
 }

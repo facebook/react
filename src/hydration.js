@@ -272,7 +272,7 @@ export function getDisplayNameForReactElement(
       if (typeof type === 'string') {
         return type;
       } else if (type != null) {
-        return getDisplayName(type, 'Unknown');
+        return getDisplayName(type, 'Anonymous');
       } else {
         return 'Element';
       }

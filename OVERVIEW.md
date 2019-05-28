@@ -14,9 +14,9 @@ The old DevTools also rendered the entire application tree in the form of a larg
 
 Every React commit that changes the tree in a way DevTools cares about results in an "_operations_" message being sent across the bridge. These messages are lightweight patches that describe the changes that were made. (We don't resend the full tree structure like in legacy DevTools.)
 
-The payload for each message is a typed array. The first two entries are numbers that identify which renderer and root the update belongs to (for multi-root support). Then the strings are encoded in a string table. The rest of the array depends on the operations being made to the tree.
+The payload for each message is a typed array. The first two entries are numbers that identify which renderer and root the update belongs to (for multi-root support). Then the strings are encoded in a [string table](#string-table). The rest of the array depends on the operations being made to the tree.
 
-No updates are required for many commits because we only send the following bits of information: element type, id, parent id, owner id, name, and key. Additional information (e.g. props, state) requires a separate "_inspectElement_" message.
+No updates are required for most commits because we only send the following bits of information: element type, id, parent id, owner id, name, and key. Additional information (e.g. props, state) requires a separate ["_inspectElement_" message](#inspecting-an-element).
 
 #### String table
 
@@ -211,13 +211,39 @@ while (index !== currentWeight) {
 }
 ```
 
+## Inspecting an element
+
+When an element is mounted in the tree, DevTools sends a minimal amount of information about it across the bridge. This information includes its display name, type, and key- but does _not_ include things like props or state. (These values are often expensive to serialize and change frequently, which would add a significant amount of load to the bridge.)
+
+Instead DevTools lazily requests additional information about an element only when it is selected in the "Components" tab. At that point, the frontend requests this information by sending a special "_inspectElement_" message containing the id of the element being inspected. The backend then responds with an "_inspectedElement_" message containing the additional details.
+
+### Polling strategy
+
+Elements can update frequently, especially in response to things like scrolling events. Since props and state can be large, we avoid sending this information across the bridge every time the selected element is updated. Instead, the frontend polls the backend for updates about once a second. The backend tracks when the element was last "inspected" and sends a special no-op response if it has not re-rendered since then.
+
+### Inspecting hooks
+
+Hooks present a unique challenge for the DevTools because of the concept of _custom_ hooks. (A custom hook is essentially any function that calls at least one of the built-in hooks. By convention custom hooks also have names that begin with "use".)
+
+So how does DevTools identify custom functions called from within third party components? It does this by temporarily overriding React's built-in hooks and shallow rendering the component in question. Whenever one of the (overridden) built-in hooks are called, it parses the call stack to spot potential custom hooks (functions between the component itself and the built-in hook). This approach enables it to build a tree structure describing all of the calls to both the built-in _and_ custom hooks, along with the values passed to those hooks. (If you're interested in learning more about this, [here is the source code](https://github.com/bvaughn/react-devtools-experimental/blob/master/src/backend/ReactDebugHooks.js).)
+
+> **Note**: DevTools obtains hooks info by re-rendering a component. Breakpoints and console logs will be invoked during this additional (shallow) render.
+
+### Performance implications
+
+To mitigate the performance impact of re-rendering a component, DevTools does the following:
+* Only function components that use _at least one hook_ are rendered. (Props and state can be analyzed without rendering.)
+* Rendering is always shallow.
+* Rendering is throttled to occur, at most, once per second.
+* Rendering is skipped if the component has not updated since the last time its properties were inspected.
+
 ## Profiler
 
 The Profiler UI is a powerful tool for identifying and fixing performance problems. The primary goal of the new profiler is to minimize its impact (CPU usage) while profiling is active. This can be accomplished by:
 * Minimizing bridge traffic.
 * Making expensive computations lazy.
 
-Profiling information is stored on the backend. The backend push-notifies the frontend of when profiling starts or stops by sending a "_profilingStatus_" message. (The frontend also asks for the current status after mounting by sending a "_getProfilingStatus_" message.)
+The majority of profiling information is stored on the backend. The backend push-notifies the frontend of when profiling starts or stops by sending a "_profilingStatus_" message. (The frontend also asks for the current status after mounting by sending a "_getProfilingStatus_" message.)
 
 When profiling begins, the frontend takes a snapshot/copy of each root. This snapshot includes the id, name, key, and child IDs for each node in the tree. (This information is already present on the frontend, so it does not require any additional bridge traffic.) While profiling is active, each time React commits– the frontend also stores a copy of the "_operations_" message (described above). Once profiling has finished, the frontend can use the original snapshot along with each of the stored "_operations_" messages to reconstruct the tree for each of the profiled commits.
 
@@ -226,161 +252,16 @@ When profiling begins, the backend records the base durations of each fiber curr
 * Which elements were rendered during that commit.
 * Which interactions (if any) were part of the commit.
 
-This information is kept on the backend until requested by the frontend (as described below).
+This information will eventually be required by the frontend in order to render its profiling graphs, but it will not be sent across the bridge until profiling has completed (to minimize the performance impact of profiling).
 
 <sup>1</sup> In the future, the backend may also store additional metadata (e.g. which props/states changed between rendered for a given component).
 
-### Profiling summary
+### Combining profiling data
 
-The profiling tab shows information for the currently-selected React root. When profiling completes (or when a new root is selected) the frontend first checks to see if there is any profiling data for the selected root. (Has it cached any "_operations_"?)
+Once profiling is finished, the frontend requests profiling data from the backend one renderer at a time by sending a "_getProfilingData_" message. The backend responds with a "_profilingData_" message that contains per-root commit timing and duration information. The frontend then combines this information with its own snapshots to form a complete picture of the profiling session. Using this data, charts and graphs are lazily computed (and incrementally cached) on demand, based on which commits and views are selected in the Profiler UI.
 
-If so, then it sends a "_getProfilingSummary_" message with an id that identifies the root. The backend then returns a "_profilingSummary_" message with the following information:
+### Importing/exporting data
 
-* root id (to match request and response)
-* number of interactions that were traced for this root
-* the commits (each consisting of a timestamp and duration) that were profiled for the root
-* tree base durations as of when profiling started
+Because all of the data is merged in the frontend after a profiling session is completed, it can be exported and imported (as JSON), enabling profiling sessions to be shared between users.
 
-This is the minimal information required to render the main ["commit selector"](https://reactjs.org/blog/2018/09/10/introducing-the-react-profiler.html#browsing-commits). 
-
-Here is an example profile summary:
-```js
-{
-  rootID: 1,
-  interactionCount: 2,
-
-  // Commit durations
-  commitDurations: [
-    10,  // first commit took 10ms
-    13,  // second commit took 13ms
-    5,   // third commit took 5ms
-  ]
-
-  // Commit times (relative to when profiling started)
-  commitTimes: [
-    210, // first commit started 210ms after profiling began
-    284, // second commit started 284ms after profiling began
-    303, // third commit started 303ms after profiling began
-  ],
-
-  // Tuples of fiber id and initial tree base duration
-  initialTreeBaseDurations: [
-    1,  // fiber id
-    11, // tree base duration when profiling started
-
-    2,  // fiber id
-    12, // tree base duration when profiling started
-
-    3,  // fiber id
-    8,  // tree base duration when profiling started
-  ]
-]
-```
-
-Additional information (e.g. which components were part of a specific commit, which interactions were logged) are lazily requested by the frontend as a user interacts with the Profiler UI.
-
-### Commit details
-
-When a commit is selected in the profiling view, the frontend needs to reconstruct the tree at that point in time using the snapshot and the "_operations_" it has cached.
-
-In addition to this, it also needs to ask the backend for some additional information needed to display the ["flame chart"](https://reactjs.org/blog/2018/09/10/introducing-the-react-profiler.html#flame-chart) and ["ranked chart"](https://reactjs.org/blog/2018/09/10/introducing-the-react-profiler.html#ranked-chart) views. The frontend sends a "_profileCommitDetails_" message specifying which root and commit (index) it is interested in. The backend sends a response to fill in missing details about the commit:
-
-* root id and commit index (to match request and response)
-* which elements were rendered during the commit <sup>1</sup> and how long did they take
-* which interactions were part of the commit
-
-Here is an example commit in which two elements were rendered and one interaction was traced:
-
-```js
-{
-  rootID: 1,
-  commitIndex: 0,
-  interactions: [
-    {
-      id: 8,
-      timestamp: 4,
-      name: "Foo"
-    },
-    {
-      id: 11,
-      timestamp: 4,
-      name: "Bar"
-    }
-  ],
-  nodes: [
-    {
-      id: 1,
-      baseDuration: 15,
-      actualDuration: 15
-    },
-    {
-      id: 2,
-      baseDuration: 11,
-      actualDuration: 11
-    }
-  }
-}
-```
-
-<sup>1</sup> Elements in the tree that are not explicitly included in the above response were not rendered during the current commit.
-
-### Component commits
-
-When a particular component (fiber) is selected, the frontend polls the backend for the aggregate data required to render the ["component chart"](https://reactjs.org/blog/2018/09/10/introducing-the-react-profiler.html#component-chart) view. The frontend sends a "_profileComponentDetails_" message specifying which root and component (id) it is interested in. The backend sends a response that includes:
-
-* root and component ids (to match request and response)
-* which commits was the component rendered in and how long did each take
-
-Here is an example of a component that committed twice during a profiling session:
-
-```js
-{
-  rootID: 1,
-  id: 2,
-
-  // Tuples of commit index and render duration (ms)
-  commits: [
-    0,  // index of first
-    11  // duration (ms)
-
-    2,  // index of second commit
-    7   // duration (ms)
-  ]
-}
-```
-
-### Interactions
-
-The [Interactions chart](https://reactjs.org/blog/2018/09/10/introducing-the-react-profiler.html#interactions) shows a time series for every interaction that was traced in the recent profiler session. The frontend sends a "_profileInteractions_" message specifying which root it would like interaction data for. The backend sends the following response:
-
-* root id (to match request and response)
-* interaction metadata
-
-Here is an example of a profiling session consisting of two interactions:
-
-```js
-{
-  rootID: 1,
-  interactions: [
-    {
-      id: 8,
-      name: "Foo",
-      timestamp: 4,
-      commits: [
-        0, // index of first commit
-        2  // index of second commit
-      ]
-    },
-    {
-      id: 11,
-      name: "Bar",
-      timestamp: 4,
-      commits: [
-        0  // index of first commit
-      ]
-    }
-  ]
-}
-```
-
-The backend does not need to resend the timestamp for each of the commits because that was already sent as part of the "_profilingSummary_" message.
+At the moment, screenshots are not included in the exported data (to keep the export filesize small) but this could be changed in the future.

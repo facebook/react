@@ -19,7 +19,10 @@
   --light-color-button-focus: #23272f;
   --light-color-button-hover: #23272f;
   --light-color-border: #eeeeee;
-  --light-color-commit-did-not-render: #cfd1d5;
+  --light-color-commit-did-not-render-fill: #cfd1d5;
+  --light-color-commit-did-not-render-fill-text: #000000;
+  --light-color-commit-did-not-render-pattern: #cfd1d5;
+  --light-color-commit-did-not-render-pattern-text: #333333;
   --light-color-commit-gradient-0: #37afa9;
   --light-color-commit-gradient-1: #63b19e;
   --light-color-commit-gradient-2: #80b393;
@@ -33,6 +36,8 @@
   --light-color-commit-gradient-text: #000000;
   --light-color-component-name: #6a51b2;
   --light-color-component-name-inverted: #ffffff;
+  --light-color-component-badge-background: rgba(0, 0, 0, 0.15);
+  --light-color-component-badge-background-inverted: rgba(255, 255, 255, 0.25);
   --light-color-dim: #777d88;
   --light-color-dimmer: #cfd1d5;
   --light-color-dimmest: #eff0f1;
@@ -67,11 +72,14 @@
   --dark-color-button-background-focus: #3d424a;
   --dark-color-button: #afb3b9;
   --dark-color-button-active: #61dafb;
-  --dark-color-button-disabled: #777d88;
+  --dark-color-button-disabled: #4f5766;
   --dark-color-button-focus: #a2e9fc;
   --dark-color-button-hover: #ededed;
   --dark-color-border: #3d424a;
-  --dark-color-commit-did-not-render: #777d88;
+  --dark-color-commit-did-not-render-fill: #777d88;
+  --dark-color-commit-did-not-render-fill-text: #000000;
+  --dark-color-commit-did-not-render-pattern: #666c77;
+  --dark-color-commit-did-not-render-pattern-text: #ffffff;
   --dark-color-commit-gradient-0: #37afa9;
   --dark-color-commit-gradient-1: #63b19e;
   --dark-color-commit-gradient-2: #80b393;
@@ -85,6 +93,8 @@
   --dark-color-commit-gradient-text: #000000;
   --dark-color-component-name: #61dafb;
   --dark-color-component-name-inverted: ##282828;
+  --dark-color-component-badge-background: rgba(255, 255, 255, 0.25);
+  --dark-color-component-badge-background-inverted: rgba(0, 0, 0, 0.25);
   --dark-color-dim: #8f949d;
   --dark-color-dimmer: #777d88;
   --dark-color-dimmest: #4f5766;

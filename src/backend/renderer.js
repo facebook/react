@@ -18,7 +18,6 @@ import {
   ElementTypeRoot,
   ElementTypeSuspense,
 } from 'src/types';
-import { PROFILER_EXPORT_VERSION } from 'src/constants';
 import {
   getDisplayName,
   getDefaultComponentFilters,
@@ -37,20 +36,21 @@ import {
 import { inspectHooksOfFiber } from './ReactDebugHooks';
 
 import type {
-  CommitDetailsBackend,
+  CommitDataBackend,
   DevToolsHook,
   Fiber,
-  FiberCommitsBackend,
-  InteractionBackend,
-  InteractionsBackend,
-  InteractionWithCommitsBackend,
   PathFrame,
   PathMatch,
-  ProfilingSummaryBackend,
+  ProfilingDataBackend,
+  ProfilingDataForRootBackend,
   ReactRenderer,
   RendererInterface,
 } from './types';
-import type { InspectedElement } from 'src/devtools/views/Components/types';
+import type {
+  InspectedElement,
+  Owner,
+} from 'src/devtools/views/Components/types';
+import type { Interaction } from 'src/devtools/views/Profiler/types';
 import type { ComponentFilter, ElementType } from 'src/types';
 
 function getInternalReactConstants(version) {
@@ -87,12 +87,27 @@ function getInternalReactConstants(version) {
     Placement: 0b10,
   };
 
+  // **********************************************************
+  // The section below is copied from files in React repo.
+  // Keep it in sync, and add version guards if it changes.
+  //
+  // Technically these priority levels are invalid for versions before 16.9,
+  // but 16.9 is the first version to report priority level to DevTools,
+  // so we can avoid checking for earlier versions and support pre-16.9 canary releases in the process.
+  const ReactPriorityLevels = {
+    ImmediatePriority: 99,
+    UserBlockingPriority: 98,
+    NormalPriority: 97,
+    LowPriority: 96,
+    IdlePriority: 95,
+    NoPriority: 90,
+  };
+
   let ReactTypeOfWork;
 
   // **********************************************************
   // The section below is copied from files in React repo.
   // Keep it in sync, and add version guards if it changes.
-  // **********************************************************
   if (gte(version, '16.6.0-beta.0')) {
     ReactTypeOfWork = {
       ClassComponent: 1,
@@ -180,6 +195,7 @@ function getInternalReactConstants(version) {
   // **********************************************************
 
   return {
+    ReactPriorityLevels,
     ReactTypeOfWork,
     ReactSymbols,
     ReactTypeOfSideEffect,
@@ -193,6 +209,7 @@ export function attach(
   global: Object
 ): RendererInterface {
   const {
+    ReactPriorityLevels,
     ReactTypeOfWork,
     ReactSymbols,
     ReactTypeOfSideEffect,
@@ -217,6 +234,14 @@ export function attach(
     SimpleMemoComponent,
     SuspenseComponent,
   } = ReactTypeOfWork;
+  const {
+    ImmediatePriority,
+    UserBlockingPriority,
+    NormalPriority,
+    LowPriority,
+    IdlePriority,
+    NoPriority,
+  } = ReactPriorityLevels;
   const {
     CONCURRENT_MODE_NUMBER,
     CONCURRENT_MODE_SYMBOL_STRING,
@@ -446,20 +471,19 @@ export function attach(
       case IndeterminateComponent:
         return getDisplayName(resolvedType);
       case EventComponent:
-        return null;
+        return type.displayName || 'EventComponent';
       case EventTarget:
         switch (getTypeSymbol(elementType.type)) {
           case EVENT_TARGET_TOUCH_HIT_NUMBER:
           case EVENT_TARGET_TOUCH_HIT_STRING:
             return 'TouchHitTarget';
           default:
-            return 'EventTarget';
+            return elementType.displayName || 'EventTarget';
         }
       case ForwardRef:
-        const functionName = getDisplayName(resolvedType.render, '');
         return (
           resolvedType.displayName ||
-          (functionName !== '' ? `ForwardRef(${functionName})` : 'ForwardRef')
+          getDisplayName(resolvedType.render, 'Anonymous')
         );
       case HostRoot:
         return null;
@@ -474,8 +498,7 @@ export function attach(
         if (elementType.displayName) {
           return elementType.displayName;
         } else {
-          const displayName = type.displayName || type.name;
-          return displayName ? `Memo(${displayName})` : 'Memo';
+          return getDisplayName(type, 'Anonymous');
         }
       default:
         const typeSymbol = getTypeSymbol(type);
@@ -685,7 +708,7 @@ export function attach(
       pendingSimulatedUnmountedIDs.length +
       (pendingUnmountedRootID === null ? 0 : 1);
 
-    const ops = new Uint32Array(
+    const operations = new Uint32Array(
       // Identify which renderer this update is coming from.
       2 + // [rendererID, rootFiberID]
       // How big is the string table?
@@ -703,44 +726,44 @@ export function attach(
     // This enables roots to be mapped to renderers,
     // Which in turn enables fiber props, states, and hooks to be inspected.
     let i = 0;
-    ops[i++] = rendererID;
-    ops[i++] = currentRootID; // Use this ID in case the root was unmounted!
+    operations[i++] = rendererID;
+    operations[i++] = currentRootID; // Use this ID in case the root was unmounted!
 
     // Now fill in the string table.
     // [stringTableLength, str1Length, ...str1, str2Length, ...str2, ...]
-    ops[i++] = pendingStringTableLength;
+    operations[i++] = pendingStringTableLength;
     pendingStringTable.forEach((value, key) => {
-      ops[i++] = key.length;
-      ops.set(utfEncodeString(key), i);
+      operations[i++] = key.length;
+      operations.set(utfEncodeString(key), i);
       i += key.length;
     });
 
     if (numUnmountIDs > 0) {
       // All unmounts except roots are batched in a single message.
-      ops[i++] = TREE_OPERATION_REMOVE;
+      operations[i++] = TREE_OPERATION_REMOVE;
       // The first number is how many unmounted IDs we're gonna send.
-      ops[i++] = numUnmountIDs;
+      operations[i++] = numUnmountIDs;
       // Fill in the real unmounts in the reverse order.
       // They were inserted parents-first by React, but we want children-first.
       // So we traverse our array backwards.
       for (let j = pendingRealUnmountedIDs.length - 1; j >= 0; j--) {
-        ops[i++] = pendingRealUnmountedIDs[j];
+        operations[i++] = pendingRealUnmountedIDs[j];
       }
       // Fill in the simulated unmounts (hidden Suspense subtrees) in their order.
       // (We want children to go before parents.)
       // They go *after* the real unmounts because we know for sure they won't be
       // children of already pushed "real" IDs. If they were, we wouldn't be able
       // to discover them during the traversal, as they would have been deleted.
-      ops.set(pendingSimulatedUnmountedIDs, i);
+      operations.set(pendingSimulatedUnmountedIDs, i);
       i += pendingSimulatedUnmountedIDs.length;
       // The root ID should always be unmounted last.
       if (pendingUnmountedRootID !== null) {
-        ops[i] = pendingUnmountedRootID;
+        operations[i] = pendingUnmountedRootID;
         i++;
       }
     }
     // Fill in the rest of the operations.
-    ops.set(pendingOperations, i);
+    operations.set(pendingOperations, i);
 
     // Let the frontend know about tree operations.
     // The first value in this array will identify which root it corresponds to,
@@ -749,10 +772,10 @@ export function attach(
       // Until the frontend has been connected, store the tree operations.
       // This will let us avoid walking the tree later when the frontend connects,
       // and it enables the Profiler's reload-and-profile functionality to work as well.
-      pendingOperationsQueue.push(ops);
+      pendingOperationsQueue.push(operations);
     } else {
       // If we've already connected to the frontend, just pass the operations through.
-      hook.emit('operations', ops);
+      hook.emit('operations', operations);
     }
 
     pendingOperations.length = 0;
@@ -771,26 +794,21 @@ export function attach(
     if (existingID !== undefined) {
       return existingID;
     }
-    const id = pendingStringTable.size + 1;
-    pendingStringTable.set(str, id);
+    const stringID = pendingStringTable.size + 1;
+    pendingStringTable.set(str, stringID);
     // The string table total length needs to account
     // both for the string length, and for the array item
     // that contains the length itself. Hence + 1.
     pendingStringTableLength += str.length + 1;
-    return id;
+    return stringID;
   }
 
   function recordMount(fiber: Fiber, parentFiber: Fiber | null) {
     const isRoot = fiber.tag === HostRoot;
     const id = getFiberID(getPrimaryFiber(fiber));
 
-    const isProfilingSupported = fiber.hasOwnProperty('treeBaseDuration');
-    if (isProfilingSupported) {
-      idToRootMap.set(id, currentRootID);
-      idToTreeBaseDurationMap.set(id, fiber.treeBaseDuration || 0);
-    }
-
     const hasOwnerMetadata = fiber.hasOwnProperty('_debugOwner');
+    const isProfilingSupported = fiber.hasOwnProperty('treeBaseDuration');
 
     if (isRoot) {
       pushOperation(TREE_OPERATION_ADD);
@@ -798,6 +816,12 @@ export function attach(
       pushOperation(ElementTypeRoot);
       pushOperation(isProfilingSupported ? 1 : 0);
       pushOperation(hasOwnerMetadata ? 1 : 0);
+
+      if (isProfiling) {
+        if (displayNamesByRootID !== null) {
+          displayNamesByRootID.set(id, getDisplayNameForRoot(fiber));
+        }
+      }
     } else {
       const { key } = fiber;
       const displayName = getDisplayNameForFiber(fiber);
@@ -821,26 +845,10 @@ export function attach(
       pushOperation(keyStringID);
     }
 
-    if (isProfiling) {
-      // Tree base duration updates are included in the operations typed array.
-      // So we have to convert them from milliseconds to microseconds so we can send them as ints.
-      const treeBaseDuration = Math.floor((fiber.treeBaseDuration || 0) * 1000);
+    if (isProfilingSupported) {
+      idToRootMap.set(id, currentRootID);
 
-      pushOperation(TREE_OPERATION_UPDATE_TREE_BASE_DURATION);
-      pushOperation(id);
-      pushOperation(treeBaseDuration);
-
-      const { actualDuration } = fiber;
-      if (actualDuration != null) {
-        // If profiling is active, store durations for elements that were rendered during the commit.
-        // We should do this for all fibers on mount, regardless of their actual durations.
-        const metadata = ((currentCommitProfilingMetadata: any): CommitProfilingData);
-        metadata.actualDurations.push(id, actualDuration);
-        metadata.maxActualDuration = Math.max(
-          metadata.maxActualDuration,
-          actualDuration
-        );
-      }
+      recordProfilingDurations(fiber);
     }
   }
 
@@ -990,7 +998,7 @@ export function attach(
     }
   }
 
-  function recordTreeDuration(fiber: Fiber) {
+  function recordProfilingDurations(fiber: Fiber) {
     const id = getFiberID(getPrimaryFiber(fiber));
     const { actualDuration, treeBaseDuration } = fiber;
 
@@ -1000,8 +1008,8 @@ export function attach(
       const { alternate } = fiber;
 
       if (
-        treeBaseDuration !==
-        (alternate ? alternate.treeBaseDuration : undefined)
+        alternate == null ||
+        treeBaseDuration !== alternate.treeBaseDuration
       ) {
         // Tree base duration updates are included in the operations typed array.
         // So we have to convert them from milliseconds to microseconds so we can send them as ints.
@@ -1009,18 +1017,31 @@ export function attach(
           (fiber.treeBaseDuration || 0) * 1000
         );
         pushOperation(TREE_OPERATION_UPDATE_TREE_BASE_DURATION);
-        pushOperation(getFiberID(getPrimaryFiber(fiber)));
+        pushOperation(id);
         pushOperation(treeBaseDuration);
       }
 
-      if (alternate ? hasDataChanged(alternate, fiber) : true) {
+      if (alternate == null || hasDataChanged(alternate, fiber)) {
         if (actualDuration != null) {
+          // The actual duration reported by React includes time spent working on children.
+          // This is useful information, but it's also useful to be able to exclude child durations.
+          // The frontend can't compute this, since the immediate children may have been filtered out.
+          // So we need to do this on the backend.
+          // Note that this calculated self duration is not the same thing as the base duration.
+          // The two are calculated differently (tree duration does not accumulate).
+          let selfDuration = actualDuration;
+          let child = fiber.child;
+          while (child !== null) {
+            selfDuration -= child.actualDuration || 0;
+            child = child.sibling;
+          }
+
           // If profiling is active, store durations for elements that were rendered during the commit.
           // Note that we should do this for any fiber we performed work on, regardless of its actualDuration value.
           // In some cases actualDuration might be 0 for fibers we worked on (particularly if we're using Date.now)
           // In other cases (e.g. Memo) actualDuration might be greater than 0 even if we "bailed out".
           const metadata = ((currentCommitProfilingMetadata: any): CommitProfilingData);
-          metadata.actualDurations.push(id, actualDuration);
+          metadata.durations.push(id, actualDuration, selfDuration);
           metadata.maxActualDuration = Math.max(
             metadata.maxActualDuration,
             actualDuration
@@ -1081,6 +1102,18 @@ export function attach(
     if (__DEBUG__) {
       debug('updateFiberRecursively()', nextFiber, parentFiber);
     }
+
+    if (
+      mostRecentlyInspectedElementID !== null &&
+      mostRecentlyInspectedElementID ===
+        getFiberID(getPrimaryFiber(nextFiber)) &&
+      hasDataChanged(prevFiber, nextFiber)
+    ) {
+      // If this Fiber has updated, clear cached inspected data.
+      // If it is inspected again, it may need to be re-run to obtain updated hooks values.
+      hasElementUpdatedSinceLastInspected = true;
+    }
+
     const shouldIncludeInTree = !shouldFilterFiber(nextFiber);
     const isSuspense = nextFiber.tag === SuspenseComponent;
     let shouldResetChildren = false;
@@ -1202,7 +1235,7 @@ export function attach(
     if (shouldIncludeInTree) {
       const isProfilingSupported = nextFiber.hasOwnProperty('treeBaseDuration');
       if (isProfilingSupported) {
-        recordTreeDuration(nextFiber);
+        recordProfilingDurations(nextFiber);
       }
     }
     if (shouldResetChildren) {
@@ -1246,8 +1279,8 @@ export function attach(
     ) {
       // We may have already queued up some operations before the frontend connected
       // If so, let the frontend know about them.
-      localPendingOperationsQueue.forEach(ops => {
-        hook.emit('operations', ops);
+      localPendingOperationsQueue.forEach(operations => {
+        hook.emit('operations', operations);
       });
     } else {
       // Before the traversals, remember to start tracking
@@ -1264,15 +1297,16 @@ export function attach(
           // If profiling is active, store commit time and duration, and the current interactions.
           // The frontend may request this information after profiling has stopped.
           currentCommitProfilingMetadata = {
-            actualDurations: [],
+            durations: [],
             commitTime: performance.now() - profilingStartTime,
             interactions: Array.from(root.memoizedInteractions).map(
-              (interaction: InteractionBackend) => ({
+              (interaction: Interaction) => ({
                 ...interaction,
                 timestamp: interaction.timestamp - profilingStartTime,
               })
             ),
             maxActualDuration: 0,
+            priorityLevel: null,
           };
         }
 
@@ -1290,7 +1324,7 @@ export function attach(
     recordUnmount(fiber, false);
   }
 
-  function handleCommitFiberRoot(root) {
+  function handleCommitFiberRoot(root, priorityLevel) {
     const current = root.current;
     const alternate = current.alternate;
 
@@ -1306,15 +1340,17 @@ export function attach(
       // If profiling is active, store commit time and duration, and the current interactions.
       // The frontend may request this information after profiling has stopped.
       currentCommitProfilingMetadata = {
-        actualDurations: [],
+        durations: [],
         commitTime: performance.now() - profilingStartTime,
         interactions: Array.from(root.memoizedInteractions).map(
-          (interaction: InteractionBackend) => ({
+          (interaction: Interaction) => ({
             ...interaction,
             timestamp: interaction.timestamp - profilingStartTime,
           })
         ),
         maxActualDuration: 0,
+        priorityLevel:
+          priorityLevel == null ? null : formatPriorityLevel(priorityLevel),
       };
     }
 
@@ -1399,7 +1435,7 @@ export function attach(
     return fibers;
   }
 
-  function findNativeByFiberID(id: number) {
+  function findNativeNodesForFiberID(id: number) {
     try {
       let fiber = findCurrentFiberUsingSlowPathById(id);
       if (fiber === null) {
@@ -1424,7 +1460,7 @@ export function attach(
     }
   }
 
-  function getFiberIDFromNative(
+  function getFiberIDForNative(
     hostInstance,
     findNearestUnfilteredAncestor = false
   ) {
@@ -1636,7 +1672,7 @@ export function attach(
       return;
     }
 
-    const { memoizedProps, stateNode, tag, type } = fiber;
+    const { elementType, memoizedProps, stateNode, tag, type } = fiber;
 
     switch (tag) {
       case ClassComponent:
@@ -1656,6 +1692,16 @@ export function attach(
           type: type.render,
         };
         break;
+      case MemoComponent:
+      case SimpleMemoComponent:
+        global.$r = {
+          props: memoizedProps,
+          type:
+            elementType != null && elementType.type != null
+              ? elementType.type
+              : type,
+        };
+        break;
       default:
         global.$r = null;
         break;
@@ -1669,20 +1715,58 @@ export function attach(
       return;
     }
 
-    switch (fiber.tag) {
+    const { elementType, tag, type } = fiber;
+
+    switch (tag) {
       case ClassComponent:
       case IncompleteClassComponent:
       case IndeterminateComponent:
       case FunctionComponent:
-        global.$type = fiber.type;
+        global.$type = type;
         break;
       case ForwardRef:
-        global.$type = fiber.type.render;
+        global.$type = type.render;
+        break;
+      case MemoComponent:
+      case SimpleMemoComponent:
+        global.$type =
+          elementType != null && elementType.type != null
+            ? elementType.type
+            : type;
         break;
       default:
         global.$type = null;
         break;
     }
+  }
+
+  function getOwnersList(id: number): Array<Owner> | null {
+    let fiber = findCurrentFiberUsingSlowPathById(id);
+    if (fiber == null) {
+      return null;
+    }
+
+    const { _debugOwner } = fiber;
+
+    const owners = [
+      {
+        displayName: getDisplayNameForFiber(fiber) || 'Anonymous',
+        id,
+      },
+    ];
+
+    if (_debugOwner) {
+      let owner = _debugOwner;
+      while (owner !== null) {
+        owners.unshift({
+          displayName: getDisplayNameForFiber(owner) || 'Anonymous',
+          id: getFiberID(getPrimaryFiber(owner)),
+        });
+        owner = owner._debugOwner || null;
+      }
+    }
+
+    return owners;
   }
 
   function inspectElementRaw(id: number): InspectedElement | null {
@@ -1716,7 +1800,9 @@ export function attach(
       tag === FunctionComponent ||
       tag === IncompleteClassComponent ||
       tag === IndeterminateComponent ||
-      tag === ForwardRef
+      tag === MemoComponent ||
+      tag === ForwardRef ||
+      tag === SimpleMemoComponent
     ) {
       canViewSource = true;
       if (stateNode && stateNode.context != null) {
@@ -1770,7 +1856,7 @@ export function attach(
       let owner = _debugOwner;
       while (owner !== null) {
         owners.push({
-          displayName: getDisplayNameForFiber(owner) || 'Unknown',
+          displayName: getDisplayNameForFiber(owner) || 'Anonymous',
           id: getFiberID(getPrimaryFiber(owner)),
         });
         owner = owner._debugOwner || null;
@@ -1779,6 +1865,23 @@ export function attach(
 
     const isTimedOutSuspense =
       tag === SuspenseComponent && memoizedState !== null;
+
+    let events = null;
+    let node = fiber;
+    while (node !== null) {
+      if (node.tag === EventComponent) {
+        if (events === null) {
+          events = [];
+        }
+        const eventComponentInstance = node.stateNode;
+        const currentFiber = eventComponentInstance.currentFiber;
+        events.push({
+          props: eventComponentInstance.props,
+          displayName: getDisplayNameForFiber(currentFiber),
+        });
+      }
+      node = node.return;
+    }
 
     return {
       id,
@@ -1805,6 +1908,7 @@ export function attach(
       // Inspectable properties.
       // TODO Review sanitization approach for the below inspectable values.
       context,
+      events,
       hooks: usesHooks
         ? inspectHooksOfFiber(fiber, (renderer.currentDispatcherRef: any))
         : null,
@@ -1819,17 +1923,33 @@ export function attach(
     };
   }
 
-  function inspectElement(id: number): InspectedElement | null {
-    let result = inspectElementRaw(id);
-    if (result === null) {
+  let mostRecentlyInspectedElementID: number | null = null;
+  let hasElementUpdatedSinceLastInspected: boolean = false;
+
+  function inspectElement(id: number): InspectedElement | number | null {
+    // If this element has not been updated since it was last inspected, we don't need to re-run it.
+    // Instead we can just return the ID to indicate that it has not changed.
+    if (
+      mostRecentlyInspectedElementID === id &&
+      !hasElementUpdatedSinceLastInspected
+    ) {
+      return id;
+    }
+
+    mostRecentlyInspectedElementID = id;
+    hasElementUpdatedSinceLastInspected = false;
+
+    const inspectedElement = inspectElementRaw(id);
+    if (inspectedElement === null) {
       return null;
     }
-    // TODO Review sanitization approach for the below inspectable values.
-    result.context = cleanForBridge(result.context);
-    result.hooks = cleanForBridge(result.hooks);
-    result.props = cleanForBridge(result.props);
-    result.state = cleanForBridge(result.state);
-    return result;
+    inspectedElement.context = cleanForBridge(inspectedElement.context);
+    inspectedElement.events = cleanForBridge(inspectedElement.events);
+    inspectedElement.hooks = cleanForBridge(inspectedElement.hooks);
+    inspectedElement.props = cleanForBridge(inspectedElement.props);
+    inspectedElement.state = cleanForBridge(inspectedElement.state);
+
+    return inspectedElement;
   }
 
   function logElementToConsole(id) {
@@ -1856,7 +1976,7 @@ export function attach(
     if (result.hooks !== null) {
       console.log('Hooks:', result.hooks);
     }
-    const nativeNodes = findNativeByFiberID(id);
+    const nativeNodes = findNativeNodesForFiberID(id);
     if (nativeNodes !== null) {
       console.log('Nodes:', nativeNodes);
     }
@@ -1928,184 +2048,115 @@ export function attach(
   }
 
   type CommitProfilingData = {|
-    actualDurations: Array<number>,
     commitTime: number,
-    interactions: Array<InteractionBackend>,
+    durations: Array<number>,
+    interactions: Array<Interaction>,
     maxActualDuration: number,
+    priorityLevel: string | null,
   |};
 
   type CommitProfilingMetadataMap = Map<number, Array<CommitProfilingData>>;
+  type DisplayNamesByRootID = Map<number, string>;
 
   let currentCommitProfilingMetadata: CommitProfilingData | null = null;
+  let displayNamesByRootID: DisplayNamesByRootID | null = null;
   let initialTreeBaseDurationsMap: Map<number, number> | null = null;
   let initialIDToRootMap: Map<number, number> | null = null;
   let isProfiling: boolean = false;
   let profilingStartTime: number = 0;
   let rootToCommitProfilingMetadataMap: CommitProfilingMetadataMap | null = null;
 
-  function getCommitDetails(
-    rootID: number,
-    commitIndex: number
-  ): CommitDetailsBackend {
-    const commitProfilingMetadata = ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).get(
-      rootID
-    );
-    if (commitProfilingMetadata != null) {
-      const commitProfilingData = commitProfilingMetadata[commitIndex];
-      if (commitProfilingData != null) {
-        return {
-          commitIndex,
-          interactions: commitProfilingData.interactions,
-          actualDurations: commitProfilingData.actualDurations,
+  function getProfilingData(): ProfilingDataBackend {
+    const dataForRoots: Array<ProfilingDataForRootBackend> = [];
+
+    if (rootToCommitProfilingMetadataMap === null) {
+      throw Error(
+        'getProfilingData() called before any profiling data was recorded'
+      );
+    }
+
+    rootToCommitProfilingMetadataMap.forEach(
+      (commitProfilingMetadata, rootID) => {
+        const commitData: Array<CommitDataBackend> = [];
+        const initialTreeBaseDurations: Array<[number, number]> = [];
+        const allInteractions: Map<number, Interaction> = new Map();
+        const interactionCommits: Map<number, Array<number>> = new Map();
+
+        const displayName =
+          (displayNamesByRootID !== null && displayNamesByRootID.get(rootID)) ||
+          'Unknown';
+
+        if (initialTreeBaseDurationsMap != null) {
+          initialTreeBaseDurationsMap.forEach((treeBaseDuration, id) => {
+            if (
+              initialIDToRootMap != null &&
+              initialIDToRootMap.get(id) === rootID
+            ) {
+              // We don't need to convert milliseconds to microseconds in this case,
+              // because the profiling summary is JSON serialized.
+              initialTreeBaseDurations.push([id, treeBaseDuration]);
+            }
+          });
+        }
+
+        commitProfilingMetadata.forEach((commitProfilingData, commitIndex) => {
+          const {
+            durations,
+            interactions,
+            maxActualDuration,
+            priorityLevel,
+            commitTime,
+          } = commitProfilingData;
+
+          const interactionIDs: Array<number> = [];
+
+          interactions.forEach(interaction => {
+            if (!allInteractions.has(interaction.id)) {
+              allInteractions.set(interaction.id, interaction);
+            }
+
+            interactionIDs.push(interaction.id);
+
+            const commitIndices = interactionCommits.get(interaction.id);
+            if (commitIndices != null) {
+              commitIndices.push(commitIndex);
+            } else {
+              interactionCommits.set(interaction.id, [commitIndex]);
+            }
+          });
+
+          const fiberActualDurations: Array<[number, number]> = [];
+          const fiberSelfDurations: Array<[number, number]> = [];
+          for (let i = 0; i < durations.length; i += 3) {
+            const fiberID = durations[i];
+            fiberActualDurations.push([fiberID, durations[i + 1]]);
+            fiberSelfDurations.push([fiberID, durations[i + 2]]);
+          }
+
+          commitData.push({
+            duration: maxActualDuration,
+            fiberActualDurations,
+            fiberSelfDurations,
+            interactionIDs,
+            priorityLevel,
+            timestamp: commitTime,
+          });
+        });
+
+        dataForRoots.push({
+          commitData,
+          displayName,
+          initialTreeBaseDurations,
+          interactionCommits: Array.from(interactionCommits.entries()),
+          interactions: Array.from(allInteractions.entries()),
           rootID,
-        };
-      }
-    }
-
-    console.warn(
-      `getCommitDetails(): No profiling info recorded for root "${rootID}" and commit ${commitIndex}`
-    );
-
-    return {
-      commitIndex,
-      interactions: [],
-      actualDurations: [],
-      rootID,
-    };
-  }
-
-  function getFiberCommits(
-    rootID: number,
-    fiberID: number
-  ): FiberCommitsBackend {
-    const commitProfilingMetadata = ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).get(
-      rootID
-    );
-    if (commitProfilingMetadata != null) {
-      const commitDurations = [];
-      commitProfilingMetadata.forEach(({ actualDurations }, commitIndex) => {
-        for (let i = 0; i < actualDurations.length; i += 2) {
-          if (actualDurations[i] === fiberID) {
-            commitDurations.push(commitIndex, actualDurations[i + 1]);
-            break;
-          }
-        }
-      });
-
-      return {
-        commitDurations,
-        fiberID,
-        rootID,
-      };
-    }
-
-    console.warn(
-      `getFiberCommits(): No profiling info recorded for root "${rootID}"`
-    );
-
-    return {
-      commitDurations: [],
-      fiberID,
-      rootID,
-    };
-  }
-
-  function getInteractions(rootID: number): InteractionsBackend {
-    const commitProfilingMetadata = ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).get(
-      rootID
-    );
-    if (commitProfilingMetadata != null) {
-      const interactionsMap: Map<
-        number,
-        InteractionWithCommitsBackend
-      > = new Map();
-
-      commitProfilingMetadata.forEach((commitProfilingData, commitIndex) => {
-        commitProfilingData.interactions.forEach(interaction => {
-          const interactionWithCommits = interactionsMap.get(interaction.id);
-          if (interactionWithCommits != null) {
-            interactionWithCommits.commits.push(commitIndex);
-          } else {
-            interactionsMap.set(interaction.id, {
-              ...interaction,
-              commits: [commitIndex],
-            });
-          }
         });
-      });
-
-      return {
-        interactions: Array.from(interactionsMap.values()),
-        rootID,
-      };
-    }
-
-    console.warn(
-      `getInteractions(): No interactions recorded for root "${rootID}"`
-    );
-
-    return {
-      interactions: [],
-      rootID,
-    };
-  }
-
-  function getProfilingDataForDownload(rootID: number): Object {
-    const commitDetails = [];
-    const commitProfilingMetadata = ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).get(
-      rootID
-    );
-    if (commitProfilingMetadata != null) {
-      for (let index = 0; index < commitProfilingMetadata.length; index++) {
-        commitDetails.push(getCommitDetails(rootID, index));
       }
-    }
-    return {
-      version: PROFILER_EXPORT_VERSION,
-      profilingSummary: getProfilingSummary(rootID),
-      commitDetails,
-      interactions: getInteractions(rootID),
-    };
-  }
-
-  function getProfilingSummary(rootID: number): ProfilingSummaryBackend {
-    const interactions = new Set();
-    const commitDurations = [];
-    const commitTimes = [];
-
-    const commitProfilingMetadata = ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).get(
-      rootID
     );
-    if (commitProfilingMetadata != null) {
-      commitProfilingMetadata.forEach(metadata => {
-        commitDurations.push(metadata.maxActualDuration);
-        commitTimes.push(metadata.commitTime);
-        metadata.interactions.forEach(({ name, timestamp }) => {
-          interactions.add(`${timestamp}:${name}`);
-        });
-      });
-    }
-
-    const initialTreeBaseDurations = [];
-    if (initialTreeBaseDurationsMap != null) {
-      initialTreeBaseDurationsMap.forEach((treeBaseDuration, id) => {
-        if (
-          initialIDToRootMap != null &&
-          initialIDToRootMap.get(id) === rootID
-        ) {
-          // We don't need to convert milliseconds to microseconds in this case,
-          // because the profiling summary is JSON serialized.
-          initialTreeBaseDurations.push(id, treeBaseDuration);
-        }
-      });
-    }
 
     return {
-      commitDurations,
-      commitTimes,
-      initialTreeBaseDurations,
-      interactionCount: interactions.size,
-      rootID,
+      dataForRoots,
+      rendererID,
     };
   }
 
@@ -2118,8 +2169,17 @@ export function attach(
     // It's important we snapshot both the durations and the id-to-root map,
     // since either of these may change during the profiling session
     // (e.g. when a fiber is re-rendered or when a fiber gets removed).
+    displayNamesByRootID = new Map();
     initialTreeBaseDurationsMap = new Map(idToTreeBaseDurationMap);
     initialIDToRootMap = new Map(idToRootMap);
+
+    hook.getFiberRoots(rendererID).forEach(root => {
+      const rootID = getFiberID(getPrimaryFiber(root.current));
+      ((displayNamesByRootID: any): DisplayNamesByRootID).set(
+        rootID,
+        getDisplayNameForRoot(root.current)
+      );
+    });
 
     isProfiling = true;
     profilingStartTime = performance.now();
@@ -2256,6 +2316,32 @@ export function attach(
   const rootDisplayNameCounter: Map<string, number> = new Map();
 
   function setRootPseudoKey(id: number, fiber: Fiber) {
+    const name = getDisplayNameForRoot(fiber);
+    const counter = rootDisplayNameCounter.get(name) || 0;
+    rootDisplayNameCounter.set(name, counter + 1);
+    const pseudoKey = `${name}:${counter}`;
+    rootPseudoKeys.set(id, pseudoKey);
+  }
+
+  function removeRootPseudoKey(id: number) {
+    const pseudoKey = rootPseudoKeys.get(id);
+    if (pseudoKey === undefined) {
+      throw new Error('Expected root pseudo key to be known.');
+    }
+    const name = pseudoKey.substring(0, pseudoKey.lastIndexOf(':'));
+    const counter = rootDisplayNameCounter.get(name);
+    if (counter === undefined) {
+      throw new Error('Expected counter to be known.');
+    }
+    if (counter > 1) {
+      rootDisplayNameCounter.set(name, counter - 1);
+    } else {
+      rootDisplayNameCounter.delete(name);
+    }
+    rootPseudoKeys.delete(id);
+  }
+
+  function getDisplayNameForRoot(fiber: Fiber): string {
     let preferredDisplayName = null;
     let fallbackDisplayName = null;
     let child = fiber.child;
@@ -2282,29 +2368,7 @@ export function attach(
       }
       child = child.child;
     }
-    const name = preferredDisplayName || fallbackDisplayName || 'Unknown';
-    const counter = rootDisplayNameCounter.get(name) || 0;
-    rootDisplayNameCounter.set(name, counter + 1);
-    const pseudoKey = `${name}:${counter}`;
-    rootPseudoKeys.set(id, pseudoKey);
-  }
-
-  function removeRootPseudoKey(id: number) {
-    const pseudoKey = rootPseudoKeys.get(id);
-    if (pseudoKey === undefined) {
-      throw new Error('Expected root pseudo key to be known.');
-    }
-    const name = pseudoKey.substring(0, pseudoKey.lastIndexOf(':'));
-    const counter = rootDisplayNameCounter.get(name);
-    if (counter === undefined) {
-      throw new Error('Expected counter to be known.');
-    }
-    if (counter > 1) {
-      rootDisplayNameCounter.set(name, counter - 1);
-    } else {
-      rootDisplayNameCounter.delete(name);
-    }
-    rootPseudoKeys.delete(id);
+    return preferredDisplayName || fallbackDisplayName || 'Anonymous';
   }
 
   function getPathFrame(fiber: Fiber): PathFrame {
@@ -2376,18 +2440,37 @@ export function attach(
     };
   }
 
+  const formatPriorityLevel = (priorityLevel: ?number) => {
+    if (priorityLevel == null) {
+      return 'Unknown';
+    }
+
+    switch (priorityLevel) {
+      case ImmediatePriority:
+        return 'Immediate';
+      case UserBlockingPriority:
+        return 'User-Blocking';
+      case NormalPriority:
+        return 'Normal';
+      case LowPriority:
+        return 'Low';
+      case IdlePriority:
+        return 'Idle';
+      case NoPriority:
+      default:
+        return 'Unknown';
+    }
+  };
+
   return {
     cleanup,
     flushInitialOperations,
     getBestMatchForTrackedPath,
-    getCommitDetails,
-    getFiberIDFromNative,
-    getFiberCommits,
-    getInteractions,
-    findNativeByFiberID,
+    getFiberIDForNative,
+    findNativeNodesForFiberID,
+    getOwnersList,
     getPathForElement,
-    getProfilingDataForDownload,
-    getProfilingSummary,
+    getProfilingData,
     handleCommitFiberRoot,
     handleCommitFiberUnmount,
     inspectElement,

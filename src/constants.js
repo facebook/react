@@ -16,4 +16,4 @@ export const SESSION_STORAGE_LAST_SELECTION_KEY =
 
 export const __DEBUG__ = false;
 
-export const PROFILER_EXPORT_VERSION = 2;
+export const PROFILER_EXPORT_VERSION = 4;

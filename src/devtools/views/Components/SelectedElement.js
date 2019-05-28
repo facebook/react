@@ -6,6 +6,7 @@ import { BridgeContext, StoreContext } from '../context';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import HooksTree from './HooksTree';
+import EventsTree from './EventsTree';
 import { ModalDialogContext } from '../ModalDialog';
 import InspectedElementTree from './InspectedElementTree';
 import { InspectedElementContext } from './InspectedElementContext';
@@ -221,13 +222,14 @@ function InspectedElementView({
     canEditHooks,
     canToggleSuspense,
     context,
+    events,
     hooks,
     owners,
     props,
     state,
   } = inspectedElement;
 
-  const { ownerStack } = useContext(TreeStateContext);
+  const { ownerID } = useContext(TreeStateContext);
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 
@@ -297,14 +299,15 @@ function InspectedElementView({
         data={context}
         overrideValueFn={overrideContextFn}
       />
+      {events !== null && events.length > 0 && <EventsTree events={events} />}
 
-      {ownerStack.length === 0 && owners !== null && owners.length > 0 && (
+      {ownerID === null && owners !== null && owners.length > 0 && (
         <div className={styles.Owners}>
           <div className={styles.OwnersHeader}>rendered by</div>
           {owners.map(owner => (
             <OwnerView
               key={owner.id}
-              displayName={owner.displayName}
+              displayName={owner.displayName || 'Anonymous'}
               id={owner.id}
               isInStore={store.containsElement(owner.id)}
             />

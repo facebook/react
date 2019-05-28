@@ -16,11 +16,16 @@ export default function RecordToggle({ disabled }: Props) {
     ProfilerContext
   );
 
+  let className = styles.InactiveRecordToggle;
+  if (disabled) {
+    className = styles.DisabledRecordToggle;
+  } else if (isProfiling) {
+    className = styles.ActiveRecordToggle;
+  }
+
   return (
     <Button
-      className={
-        isProfiling ? styles.ActiveRecordToggle : styles.InactiveRecordToggle
-      }
+      className={className}
       disabled={disabled}
       onClick={isProfiling ? stopProfiling : startProfiling}
       title={isProfiling ? 'Stop profiling' : 'Start profiling'}
