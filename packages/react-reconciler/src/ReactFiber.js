@@ -341,7 +341,7 @@ const createFiber = function(
 
 function shouldConstruct(Component: Function) {
   const prototype = Component.prototype;
-  return !!(prototype && prototype.isReactComponent);
+  return Boolean(prototype && prototype.isReactComponent);
 }
 
 export function isSimpleFunctionComponent(type: any) {
