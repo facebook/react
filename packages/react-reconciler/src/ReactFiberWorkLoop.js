@@ -493,13 +493,8 @@ function scheduleCallbackForRoot(
       );
     } else {
       let options = null;
-      if (expirationTime !== Sync && expirationTime !== Never) {
+      if (expirationTime !== Never) {
         let timeout = expirationTimeToMs(expirationTime) - now();
-        if (timeout > 5000) {
-          // Sanity check. Should never take longer than 5 seconds.
-          // TODO: Add internal warning?
-          timeout = 5000;
-        }
         options = {timeout};
       }
 
