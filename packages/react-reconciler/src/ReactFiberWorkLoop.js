@@ -951,7 +951,7 @@ function renderRoot(
       // An error was thrown. First check if there is lower priority work
       // scheduled on this root.
       const lastPendingTime = root.lastPendingTime;
-      if (root.lastPendingTime < expirationTime) {
+      if (lastPendingTime < expirationTime) {
         // There's lower priority work. Before raising the error, try rendering
         // at the lower priority to see if it fixes it. Use a continuation to
         // maintain the existing priority and position in the queue.
@@ -990,7 +990,7 @@ function renderRoot(
         // Don't bother with a very short suspense time.
         if (msUntilTimeout > 10) {
           const lastPendingTime = root.lastPendingTime;
-          if (root.lastPendingTime < expirationTime) {
+          if (lastPendingTime < expirationTime) {
             // There's lower priority work. It might be unsuspended. Try rendering
             // at that level.
             return renderRoot.bind(null, root, lastPendingTime);
@@ -1013,7 +1013,7 @@ function renderRoot(
         // We're suspended in a state that should be avoided. We'll try to avoid committing
         // it for as long as the timeouts let us.
         const lastPendingTime = root.lastPendingTime;
-        if (root.lastPendingTime < expirationTime) {
+        if (lastPendingTime < expirationTime) {
           // There's lower priority work. It might be unsuspended. Try rendering
           // at that level immediately.
           return renderRoot.bind(null, root, lastPendingTime);
