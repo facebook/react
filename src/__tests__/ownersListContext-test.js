@@ -92,8 +92,7 @@ describe('OwnersListContext', () => {
               <Suspender owner={parent} />
             </React.Suspense>
           </Contexts>
-        ),
-      3
+        )
     );
     expect(didFinish).toBe(true);
 
@@ -106,8 +105,7 @@ describe('OwnersListContext', () => {
               <Suspender owner={firstChild} />
             </React.Suspense>
           </Contexts>
-        ),
-      3
+        )
     );
     expect(didFinish).toBe(true);
 
@@ -156,8 +154,7 @@ describe('OwnersListContext', () => {
               <Suspender owner={firstChild} />
             </React.Suspense>
           </Contexts>
-        ),
-      3
+        )
     );
     expect(didFinish).toBe(true);
 
@@ -198,8 +195,7 @@ describe('OwnersListContext', () => {
               <Suspender owner={grandparent} />
             </React.Suspense>
           </Contexts>
-        ),
-      3
+        )
     );
     expect(didFinish).toBe(true);
 

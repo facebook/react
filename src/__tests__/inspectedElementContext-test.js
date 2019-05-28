@@ -8,6 +8,7 @@ import type Store from 'src/devtools/store';
 describe('InspectedElementContext', () => {
   let React;
   let ReactDOM;
+  let act;
   let TestRenderer: ReactTestRenderer;
   let bridge: Bridge;
   let store: Store;
@@ -19,6 +20,20 @@ describe('InspectedElementContext', () => {
   let StoreContext;
   let TreeContextController;
 
+  // a version of actAsync that *doesn't* recursively flush timers 
+  async function actAsync(cb: () => *): Promise<void> {
+
+    // $FlowFixMe Flow doesn't know about "await act()" yet
+    await act(async () => {
+      await cb();
+    });
+    // $FlowFixMe Flow doesn't know about "await act()" yet
+    await act(async () => {
+      jest.runOnlyPendingTimers();
+    });
+  }
+
+
   beforeEach(() => {
     utils = require('./utils');
     utils.beforeEachProfiling();
@@ -29,6 +44,7 @@ describe('InspectedElementContext', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
+    act = require('react-dom/test-utils').act
     TestRenderer = utils.requireTestRenderer();
 
     BridgeContext = require('src/devtools/views/context').BridgeContext;
@@ -84,7 +100,7 @@ describe('InspectedElementContext', () => {
       return null;
     }
 
-    await utils.actAsync(
+    await actAsync(
       () =>
         TestRenderer.create(
           <Contexts
@@ -95,8 +111,7 @@ describe('InspectedElementContext', () => {
               <Suspender target={example} />
             </React.Suspense>
           </Contexts>
-        ),
-      3
+        )
     );
     expect(didFinish).toBe(true);
 
@@ -120,7 +135,7 @@ describe('InspectedElementContext', () => {
       return null;
     }
 
-    await utils.actAsync(
+    await actAsync(
       () =>
         TestRenderer.create(
           <Contexts
@@ -131,17 +146,16 @@ describe('InspectedElementContext', () => {
               <Suspender target={example} />
             </React.Suspense>
           </Contexts>
-        ),
-      3
+        )
     );
     expect(inspectedElement).toMatchSnapshot('2: initial render');
 
-    await utils.actAsync(() =>
+    await actAsync(() =>
       ReactDOM.render(<Example foo={2} bar="def" />, container)
     );
 
     inspectedElement = null;
-    await utils.actAsync(
+    await actAsync(
       () =>
         TestRenderer.create(
           <Contexts
@@ -152,8 +166,7 @@ describe('InspectedElementContext', () => {
               <Suspender target={example} />
             </React.Suspense>
           </Contexts>
-        ),
-      1
+        )
     );
     expect(inspectedElement).toMatchSnapshot('2: updated state');
 
@@ -194,7 +207,7 @@ describe('InspectedElementContext', () => {
     targetRenderCount = 0;
 
     let renderer;
-    await utils.actAsync(
+    await actAsync(
       () =>
         (renderer = TestRenderer.create(
           <Contexts
@@ -205,8 +218,7 @@ describe('InspectedElementContext', () => {
               <Suspender target={id} />
             </React.Suspense>
           </Contexts>
-        )),
-      3
+        ))
     );
     expect(targetRenderCount).toBe(1);
     expect(inspectedElement).toMatchSnapshot('2: initial render');
@@ -215,7 +227,7 @@ describe('InspectedElementContext', () => {
 
     targetRenderCount = 0;
     inspectedElement = null;
-    await utils.actAsync(
+    await actAsync(
       () =>
         renderer.update(
           <Contexts
@@ -226,15 +238,14 @@ describe('InspectedElementContext', () => {
               <Suspender target={id} />
             </React.Suspense>
           </Contexts>
-        ),
-      1
+        )
     );
     expect(targetRenderCount).toBe(0);
     expect(inspectedElement).toEqual(initialInspectedElement);
 
     targetRenderCount = 0;
 
-    await utils.actAsync(() =>
+    await actAsync(() =>
       ReactDOM.render(
         <Wrapper>
           <Target foo={2} bar="def" />
