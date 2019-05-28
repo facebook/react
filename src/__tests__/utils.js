@@ -16,7 +16,7 @@ export function act(callback: Function): void {
   // Flush Bridge operations
   TestUtils.act(() => {
     jest.runAllTimers();
-  })
+  });
 }
 
 export async function actAsync(cb: () => *): Promise<void> {

@@ -20,9 +20,8 @@ describe('InspectedElementContext', () => {
   let StoreContext;
   let TreeContextController;
 
-  // a version of actAsync that *doesn't* recursively flush timers 
+  // a version of actAsync that *doesn't* recursively flush timers
   async function actAsync(cb: () => *): Promise<void> {
-
     // $FlowFixMe Flow doesn't know about "await act()" yet
     await act(async () => {
       await cb();
@@ -32,7 +31,6 @@ describe('InspectedElementContext', () => {
       jest.runOnlyPendingTimers();
     });
   }
-
 
   beforeEach(() => {
     utils = require('./utils');
@@ -44,7 +42,7 @@ describe('InspectedElementContext', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
-    act = require('react-dom/test-utils').act
+    act = require('react-dom/test-utils').act;
     TestRenderer = utils.requireTestRenderer();
 
     BridgeContext = require('src/devtools/views/context').BridgeContext;
@@ -100,18 +98,17 @@ describe('InspectedElementContext', () => {
       return null;
     }
 
-    await actAsync(
-      () =>
-        TestRenderer.create(
-          <Contexts
-            defaultSelectedElementID={example.id}
-            defaultSelectedElementIndex={0}
-          >
-            <React.Suspense fallback={null}>
-              <Suspender target={example} />
-            </React.Suspense>
-          </Contexts>
-        )
+    await actAsync(() =>
+      TestRenderer.create(
+        <Contexts
+          defaultSelectedElementID={example.id}
+          defaultSelectedElementIndex={0}
+        >
+          <React.Suspense fallback={null}>
+            <Suspender target={example} />
+          </React.Suspense>
+        </Contexts>
+      )
     );
     expect(didFinish).toBe(true);
 
@@ -135,18 +132,17 @@ describe('InspectedElementContext', () => {
       return null;
     }
 
-    await actAsync(
-      () =>
-        TestRenderer.create(
-          <Contexts
-            defaultSelectedElementID={example.id}
-            defaultSelectedElementIndex={0}
-          >
-            <React.Suspense fallback={null}>
-              <Suspender target={example} />
-            </React.Suspense>
-          </Contexts>
-        )
+    await actAsync(() =>
+      TestRenderer.create(
+        <Contexts
+          defaultSelectedElementID={example.id}
+          defaultSelectedElementIndex={0}
+        >
+          <React.Suspense fallback={null}>
+            <Suspender target={example} />
+          </React.Suspense>
+        </Contexts>
+      )
     );
     expect(inspectedElement).toMatchSnapshot('2: initial render');
 
@@ -155,18 +151,17 @@ describe('InspectedElementContext', () => {
     );
 
     inspectedElement = null;
-    await actAsync(
-      () =>
-        TestRenderer.create(
-          <Contexts
-            defaultSelectedElementID={example.id}
-            defaultSelectedElementIndex={0}
-          >
-            <React.Suspense fallback={null}>
-              <Suspender target={example} />
-            </React.Suspense>
-          </Contexts>
-        )
+    await actAsync(() =>
+      TestRenderer.create(
+        <Contexts
+          defaultSelectedElementID={example.id}
+          defaultSelectedElementIndex={0}
+        >
+          <React.Suspense fallback={null}>
+            <Suspender target={example} />
+          </React.Suspense>
+        </Contexts>
+      )
     );
     expect(inspectedElement).toMatchSnapshot('2: updated state');
 
@@ -227,18 +222,14 @@ describe('InspectedElementContext', () => {
 
     targetRenderCount = 0;
     inspectedElement = null;
-    await actAsync(
-      () =>
-        renderer.update(
-          <Contexts
-            defaultSelectedElementID={id}
-            defaultSelectedElementIndex={1}
-          >
-            <React.Suspense fallback={null}>
-              <Suspender target={id} />
-            </React.Suspense>
-          </Contexts>
-        )
+    await actAsync(() =>
+      renderer.update(
+        <Contexts defaultSelectedElementID={id} defaultSelectedElementIndex={1}>
+          <React.Suspense fallback={null}>
+            <Suspender target={id} />
+          </React.Suspense>
+        </Contexts>
+      )
     );
     expect(targetRenderCount).toBe(0);
     expect(inspectedElement).toEqual(initialInspectedElement);
