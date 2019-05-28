@@ -88,6 +88,7 @@ describe('profiling charts', () => {
 
       for (let commitIndex = 0; commitIndex < 2; commitIndex++) {
         renderFinished = false;
+
         utils.act(() => {
           TestRenderer.create(
             <Validator commitIndex={commitIndex} rootID={rootID} />
@@ -161,6 +162,7 @@ describe('profiling charts', () => {
 
       for (let commitIndex = 0; commitIndex < 2; commitIndex++) {
         renderFinished = false;
+
         utils.act(() => {
           TestRenderer.create(
             <Validator commitIndex={commitIndex} rootID={rootID} />
@@ -225,6 +227,7 @@ describe('profiling charts', () => {
 
       for (let commitIndex = 0; commitIndex < 2; commitIndex++) {
         renderFinished = false;
+
         utils.act(() => {
           TestRenderer.create(
             <Validator commitIndex={commitIndex} rootID={rootID} />

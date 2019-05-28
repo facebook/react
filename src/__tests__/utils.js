@@ -19,17 +19,28 @@ export function act(callback: Function): void {
   });
 }
 
-export async function actAsync(cb: () => *): Promise<void> {
+export async function actAsync(
+  cb: () => *,
+  recursivelyFlush: boolean = true
+): Promise<void> {
   const TestUtils = require('react-dom/test-utils');
 
   // $FlowFixMe Flow doens't know about "await act()" yet
   await TestUtils.act(async () => {
     await cb();
   });
-  while (jest.getTimerCount() > 0) {
-    // $FlowFixMe Flow doens't know about "await act()" yet
+
+  if (recursivelyFlush) {
+    while (jest.getTimerCount() > 0) {
+      // $FlowFixMe Flow doens't know about "await act()" yet
+      await TestUtils.act(async () => {
+        jest.runAllTimers();
+      });
+    }
+  } else {
+    // $FlowFixMe Flow doesn't know about "await act()" yet
     await TestUtils.act(async () => {
-      jest.runAllTimers();
+      jest.runOnlyPendingTimers();
     });
   }
 }

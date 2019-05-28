@@ -8,7 +8,6 @@ import type Store from 'src/devtools/store';
 describe('InspectedElementContext', () => {
   let React;
   let ReactDOM;
-  let act;
   let TestRenderer: ReactTestRenderer;
   let bridge: Bridge;
   let store: Store;
@@ -20,18 +19,6 @@ describe('InspectedElementContext', () => {
   let StoreContext;
   let TreeContextController;
 
-  // a version of actAsync that *doesn't* recursively flush timers
-  async function actAsync(cb: () => *): Promise<void> {
-    // $FlowFixMe Flow doesn't know about "await act()" yet
-    await act(async () => {
-      await cb();
-    });
-    // $FlowFixMe Flow doesn't know about "await act()" yet
-    await act(async () => {
-      jest.runOnlyPendingTimers();
-    });
-  }
-
   beforeEach(() => {
     utils = require('./utils');
     utils.beforeEachProfiling();
@@ -42,7 +29,6 @@ describe('InspectedElementContext', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
-    act = require('react-dom/test-utils').act;
     TestRenderer = utils.requireTestRenderer();
 
     BridgeContext = require('src/devtools/views/context').BridgeContext;
@@ -81,7 +67,9 @@ describe('InspectedElementContext', () => {
     };
 
     const container = document.createElement('div');
-    utils.act(() => ReactDOM.render(<Example foo={1} bar="abc" />, container));
+    await utils.actAsync(() =>
+      ReactDOM.render(<Example foo={1} bar="abc" />, container)
+    );
     expect(store).toMatchSnapshot('1: mount');
 
     const example = ((store.getElementAtIndex(0): any): Element);
@@ -98,17 +86,19 @@ describe('InspectedElementContext', () => {
       return null;
     }
 
-    await actAsync(() =>
-      TestRenderer.create(
-        <Contexts
-          defaultSelectedElementID={example.id}
-          defaultSelectedElementIndex={0}
-        >
-          <React.Suspense fallback={null}>
-            <Suspender target={example} />
-          </React.Suspense>
-        </Contexts>
-      )
+    await utils.actAsync(
+      () =>
+        TestRenderer.create(
+          <Contexts
+            defaultSelectedElementID={example.id}
+            defaultSelectedElementIndex={0}
+          >
+            <React.Suspense fallback={null}>
+              <Suspender target={example} />
+            </React.Suspense>
+          </Contexts>
+        ),
+      false
     );
     expect(didFinish).toBe(true);
 
@@ -119,7 +109,10 @@ describe('InspectedElementContext', () => {
     const Example = () => null;
 
     const container = document.createElement('div');
-    utils.act(() => ReactDOM.render(<Example foo={1} bar="abc" />, container));
+    await utils.actAsync(
+      () => ReactDOM.render(<Example foo={1} bar="abc" />, container),
+      false
+    );
     expect(store).toMatchSnapshot('1: mount');
 
     const example = ((store.getElementAtIndex(0): any): Element);
@@ -132,8 +125,10 @@ describe('InspectedElementContext', () => {
       return null;
     }
 
-    await actAsync(() =>
-      TestRenderer.create(
+    let renderer;
+
+    await utils.actAsync(() => {
+      renderer = TestRenderer.create(
         <Contexts
           defaultSelectedElementID={example.id}
           defaultSelectedElementIndex={0}
@@ -142,26 +137,29 @@ describe('InspectedElementContext', () => {
             <Suspender target={example} />
           </React.Suspense>
         </Contexts>
-      )
-    );
+      );
+    }, false);
     expect(inspectedElement).toMatchSnapshot('2: initial render');
 
-    await actAsync(() =>
-      ReactDOM.render(<Example foo={2} bar="def" />, container)
+    await utils.actAsync(
+      () => ReactDOM.render(<Example foo={2} bar="def" />, container),
+      false
     );
 
     inspectedElement = null;
-    await actAsync(() =>
-      TestRenderer.create(
-        <Contexts
-          defaultSelectedElementID={example.id}
-          defaultSelectedElementIndex={0}
-        >
-          <React.Suspense fallback={null}>
-            <Suspender target={example} />
-          </React.Suspense>
-        </Contexts>
-      )
+    await utils.actAsync(
+      () =>
+        renderer.update(
+          <Contexts
+            defaultSelectedElementID={example.id}
+            defaultSelectedElementIndex={0}
+          >
+            <React.Suspense fallback={null}>
+              <Suspender target={example} />
+            </React.Suspense>
+          </Contexts>
+        ),
+      false
     );
     expect(inspectedElement).toMatchSnapshot('2: updated state');
 
@@ -179,7 +177,7 @@ describe('InspectedElementContext', () => {
     });
 
     const container = document.createElement('div');
-    utils.act(() =>
+    await utils.actAsync(() =>
       ReactDOM.render(
         <Wrapper>
           <Target foo={1} bar="abc" />
@@ -202,7 +200,7 @@ describe('InspectedElementContext', () => {
     targetRenderCount = 0;
 
     let renderer;
-    await actAsync(
+    await utils.actAsync(
       () =>
         (renderer = TestRenderer.create(
           <Contexts
@@ -213,7 +211,8 @@ describe('InspectedElementContext', () => {
               <Suspender target={id} />
             </React.Suspense>
           </Contexts>
-        ))
+        )),
+      false
     );
     expect(targetRenderCount).toBe(1);
     expect(inspectedElement).toMatchSnapshot('2: initial render');
@@ -222,27 +221,34 @@ describe('InspectedElementContext', () => {
 
     targetRenderCount = 0;
     inspectedElement = null;
-    await actAsync(() =>
-      renderer.update(
-        <Contexts defaultSelectedElementID={id} defaultSelectedElementIndex={1}>
-          <React.Suspense fallback={null}>
-            <Suspender target={id} />
-          </React.Suspense>
-        </Contexts>
-      )
+    await utils.actAsync(
+      () =>
+        renderer.update(
+          <Contexts
+            defaultSelectedElementID={id}
+            defaultSelectedElementIndex={1}
+          >
+            <React.Suspense fallback={null}>
+              <Suspender target={id} />
+            </React.Suspense>
+          </Contexts>
+        ),
+      false
     );
     expect(targetRenderCount).toBe(0);
     expect(inspectedElement).toEqual(initialInspectedElement);
 
     targetRenderCount = 0;
 
-    await actAsync(() =>
-      ReactDOM.render(
-        <Wrapper>
-          <Target foo={2} bar="def" />
-        </Wrapper>,
-        container
-      )
+    await utils.actAsync(
+      () =>
+        ReactDOM.render(
+          <Wrapper>
+            <Target foo={2} bar="def" />
+          </Wrapper>,
+          container
+        ),
+      false
     );
 
     // Target should have been rendered once (by ReactDOM) and once by DevTools for inspection.
