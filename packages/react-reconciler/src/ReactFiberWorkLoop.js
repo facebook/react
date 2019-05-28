@@ -798,6 +798,21 @@ function renderRoot(
   if (root !== workInProgressRoot || expirationTime !== renderExpirationTime) {
     prepareFreshStack(root, expirationTime);
     startWorkOnPendingInteraction(root, expirationTime);
+  } else if (workInProgressRootExitStatus === RootSuspendedWithDelay) {
+    // We could've received an update at a lower priority while we yielded.
+    // We're suspended in a delayed state. Once we complete this render we're
+    // just going to try to recover at the last pending time anyway so we might
+    // as well start doing that eagerly.
+    // Ideally we should be able to do this even for retries but we don't yet
+    // know if we're going to process an update which wants to commit earlier,
+    // and this path happens very early so it would happen too often. Instead,
+    // for that case, we'll wait until we complete.
+    const lastPendingTime = root.lastPendingTime;
+    if (lastPendingTime < expirationTime) {
+      // There's lower priority work. It might be unsuspended. Try rendering
+      // at that level immediately, while preserving the position in the queue.
+      return renderRoot.bind(null, root, lastPendingTime);
+    }
   }
 
   // If we have a work-in-progress fiber, it means there's still work to do
@@ -999,10 +1014,6 @@ function renderRoot(
         // it for as long as the timeouts let us.
         const lastPendingTime = root.lastPendingTime;
         if (root.lastPendingTime < expirationTime) {
-          // TODO: We should check this when we schedule work or when we first
-          // marked this render as "delayed" so that we can restart earlier.
-          // We should never have gotten this far without restarting.
-
           // There's lower priority work. It might be unsuspended. Try rendering
           // at that level immediately.
           return renderRoot.bind(null, root, lastPendingTime);
@@ -1960,10 +1971,29 @@ export function pingSuspendedRoot(
 
   if (workInProgressRoot === root && renderExpirationTime === suspendedTime) {
     // Received a ping at the same priority level at which we're currently
-    // rendering. Restart from the root. Don't need to schedule a ping because
-    // we're already working on this tree.
-    prepareFreshStack(root, renderExpirationTime);
-    return;
+    // rendering. We might want to restart this render. This should mirror
+    // the logic of whether or not a root suspends once it completes.
+
+    // TODO: If we're rendering sync either due to Sync, Batched or expired,
+    // we should probably never restart.
+
+    // If we're suspended with delay, we'll always suspend so we can always
+    // restart. If we're suspended without any updates, it might be a retry.
+    // If it's early in the retry we can restart. We can't know for sure
+    // whether we'll eventually process an update during this render pass,
+    // but it's somewhat unlikely that we get to a ping before that, since
+    // getting to the root most update is usually very fast.
+    if (
+      workInProgressRootExitStatus === RootSuspendedWithDelay ||
+      (workInProgressRootExitStatus === RootSuspended &&
+        workInProgressRootLatestProcessedExpirationTime === Sync &&
+        now() - globalMostRecentFallbackTime < FALLBACK_THROTTLE_MS)
+    ) {
+      // Restart from the root. Don't need to schedule a ping because
+      // we're already working on this tree.
+      prepareFreshStack(root, renderExpirationTime);
+      return;
+    }
   }
 
   const lastPendingTime = root.lastPendingTime;
