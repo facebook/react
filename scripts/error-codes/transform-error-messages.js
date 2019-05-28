@@ -60,17 +60,8 @@ module.exports = function(babel) {
             ])
           );
 
-          // Avoid caching because we write it as we go.
-          const existingErrorMap = JSON.parse(
-            fs.readFileSync(__dirname + '/codes.json', 'utf-8')
-          );
-          const errorMap = invertObject(existingErrorMap);
-
-          let prodErrorId = errorMap[errorMsgLiteral];
-          if (prodErrorId === undefined || noMinify) {
-            // There is no error code for this message. We use a lint rule to
-            // enforce that messages can be minified, so assume this is
-            // intentional and exit gracefully.
+          if (noMinify) {
+            // Error minification is disabled for this build.
             //
             // Outputs:
             //   if (!condition) {
@@ -81,6 +72,37 @@ module.exports = function(babel) {
                 t.unaryExpression('!', condition),
                 t.blockStatement([devThrow])
               )
+            );
+            return;
+          }
+
+          // Avoid caching because we write it as we go.
+          const existingErrorMap = JSON.parse(
+            fs.readFileSync(__dirname + '/codes.json', 'utf-8')
+          );
+          const errorMap = invertObject(existingErrorMap);
+
+          let prodErrorId = errorMap[errorMsgLiteral];
+
+          if (prodErrorId === undefined) {
+            // There is no error code for this message. Add an inline comment
+            // that flags this as an unminified error. This allows the build
+            // to proceed, while also allowing a post-build linter to detect it.
+            //
+            // Outputs:
+            //   /* FIXME (minify-errors-in-prod): Unminified error message in production build! */
+            //   if (!condition) {
+            //     throw ReactError(`A ${adj} message that contains ${noun}`);
+            //   }
+            path.replaceWith(
+              t.ifStatement(
+                t.unaryExpression('!', condition),
+                t.blockStatement([devThrow])
+              )
+            );
+            path.addComment(
+              'leading',
+              'FIXME (minify-errors-in-prod): Unminified error message in production build!'
             );
             return;
           }
