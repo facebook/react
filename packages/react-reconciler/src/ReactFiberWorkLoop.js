@@ -173,7 +173,7 @@ const ceil = Math.ceil;
 const {
   ReactCurrentDispatcher,
   ReactCurrentOwner,
-  ReactShouldWarnActingUpdates,
+  ReactActingRendererSigil,
 } = ReactSharedInternals;
 
 type WorkPhase = 0 | 1 | 2 | 3 | 4 | 5 | 6;
@@ -2276,11 +2276,47 @@ function warnAboutInvalidUpdatesOnClassComponentsInDEV(fiber) {
   }
 }
 
+export function warnIfNotScopedWithMatchingAct(fiber: Fiber): void {
+  if (__DEV__) {
+    if (
+      ReactActingRendererSigil.current !== null &&
+      // use the function flushPassiveEffects directly as the sigil
+      // so this comparison is expected here
+      ReactActingRendererSigil.current !== flushPassiveEffects
+    ) {
+      // it looks like we're using the wrong matching act(), so log a warning
+      warningWithoutStack(
+        false,
+        "It looks like you're using the wrong act() around your test interactions.\n" +
+          'Be sure to use the matching version of act() corresponding to your renderer:\n\n' +
+          '// for react-dom:\n' +
+          "import {act} from 'react-test-utils';\n" +
+          '//...\n' +
+          'act(() => ...);\n\n' +
+          '// for react-test-renderer:\n' +
+          "import TestRenderer from 'react-test-renderer';\n" +
+          'const {act} = TestRenderer;\n' +
+          '//...\n' +
+          'act(() => ...);' +
+          '%s',
+        getStackByFiberInDevAndProd(fiber),
+      );
+    }
+  }
+}
+
+// in a test-like environment, we want to warn if dispatchAction() is
+// called outside of a TestUtils.act(...)/batchedUpdates/render call.
+// so we have a a step counter for when we descend/ascend from
+// act() calls, and test on it for when to warn
+// It's a tuple with a single value. Look into ReactTestUtilsAct as an
+// example of how we change the value
+
 function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
   if (__DEV__) {
     if (
       workPhase === NotWorking &&
-      ReactShouldWarnActingUpdates.current === false
+      ReactActingRendererSigil.current !== flushPassiveEffects
     ) {
       warningWithoutStack(
         false,

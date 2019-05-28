@@ -56,6 +56,7 @@ import {
   discreteUpdates,
   flushDiscreteUpdates,
   flushPassiveEffects,
+  warnIfNotScopedWithMatchingAct,
 } from './ReactFiberWorkLoop';
 import {createUpdate, enqueueUpdate} from './ReactUpdateQueue';
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
@@ -303,6 +304,12 @@ export function updateContainer(
 ): ExpirationTime {
   const current = container.current;
   const currentTime = requestCurrentTime();
+  if (__DEV__) {
+    // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
+    if ('undefined' !== typeof jest) {
+      warnIfNotScopedWithMatchingAct(current);
+    }
+  }
   const suspenseConfig = requestCurrentSuspenseConfig();
   const expirationTime = computeExpirationForFiber(
     currentTime,
