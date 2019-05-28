@@ -116,7 +116,7 @@ export function createContext<T>(
             warning(
               false,
               'Rendering <Context.Consumer.Consumer> is not supported and will be removed in ' +
-                'a future major release. Did you mean to render <Context.Consumer> instead?',
+                'a future major release. You want to use <Context.Consumer> instead.',
             );
           }
           return context.Consumer;
