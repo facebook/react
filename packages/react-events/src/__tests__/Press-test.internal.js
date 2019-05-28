@@ -2137,6 +2137,25 @@ describe('Event responder: Press', () => {
       expect(preventDefault).toBeCalled();
     });
 
+    it('deeply prevents native behaviour by default', () => {
+      const onPress = jest.fn();
+      const preventDefault = jest.fn();
+      const buttonRef = React.createRef();
+      const element = (
+        <a href="#">
+          <Press onPress={onPress}>
+            <button ref={buttonRef} />
+          </Press>
+        </a>
+      );
+      ReactDOM.render(element, container);
+
+      buttonRef.current.dispatchEvent(createEvent('pointerdown'));
+      buttonRef.current.dispatchEvent(createEvent('pointerup'));
+      buttonRef.current.dispatchEvent(createEvent('click', {preventDefault}));
+      expect(preventDefault).toBeCalled();
+    });
+
     it('prevents native behaviour by default with nested elements', () => {
       const onPress = jest.fn();
       const preventDefault = jest.fn();

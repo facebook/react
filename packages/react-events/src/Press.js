@@ -724,7 +724,7 @@ const PressResponder = {
       }
 
       case 'click': {
-        if (context.isTargetWithinHostComponent(target, 'a')) {
+        if (context.isTargetWithinHostComponent(target, 'a', true)) {
           const {
             altKey,
             ctrlKey,

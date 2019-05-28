@@ -194,5 +194,6 @@ export type ReactResponderContext = {
   isTargetWithinHostComponent: (
     target: Element | Document,
     elementType: string,
+    deep: boolean,
   ) => boolean,
 };

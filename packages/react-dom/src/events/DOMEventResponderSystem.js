@@ -424,11 +424,12 @@ const eventResponderContext: ReactResponderContext = {
   isTargetWithinHostComponent(
     target: Element | Document,
     elementType: string,
+    deep: boolean,
   ): boolean {
     validateResponderContext();
     let fiber = getClosestInstanceFromNode(target);
     while (fiber !== null) {
-      if (fiber.stateNode === currentInstance) {
+      if (!deep && fiber.stateNode === currentInstance) {
         return false;
       }
       if (fiber.tag === HostComponent && fiber.type === elementType) {
