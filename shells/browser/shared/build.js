@@ -17,7 +17,7 @@ const preProcess = async (destinationPath, tempPath) => {
   await ensureDir(tempPath); // Create temp dir for this new build
 };
 
-const build = async (tempPath, manifestPath, manifestVersion) => {
+const build = async (tempPath, manifestPath) => {
   const binPath = join(tempPath, 'bin');
   const zipPath = join(tempPath, 'zip');
 
@@ -62,16 +62,13 @@ const build = async (tempPath, manifestPath, manifestVersion) => {
   const commit = getGitCommit();
 
   const manifest = JSON.parse(readFileSync(copiedManifestPath).toString());
-  manifest.description += `\n\nCreated from revision ${commit}`;
-  if (manifestVersion) {
-    manifest.version = manifestVersion;
-    manifest.version_name = `${manifestVersion} ${commit}`;
-  }
+  manifest.description += `\n\nCreated from revision ${commit} (${new Date().toLocaleDateString()})`;
+  manifest.version_name = `${commit} (${new Date().toLocaleDateString()})`;
   writeFileSync(copiedManifestPath, JSON.stringify(manifest, null, 2));
 
   // Pack the extension
   const archive = archiver('zip', { zlib: { level: 9 } });
-  const zipStream = createWriteStream(join(tempPath, 'packed.zip'));
+  const zipStream = createWriteStream(join(tempPath, 'ReactDevTools.zip'));
   await new Promise((resolve, reject) => {
     archive
       .directory(zipPath, false)
@@ -84,8 +81,8 @@ const build = async (tempPath, manifestPath, manifestVersion) => {
 
 const postProcess = async (tempPath, destinationPath) => {
   const unpackedSourcePath = join(tempPath, 'zip');
-  const packedSourcePath = join(tempPath, 'packed.zip');
-  const packedDestPath = join(destinationPath, 'packed.zip');
+  const packedSourcePath = join(tempPath, 'ReactDevTools.zip');
+  const packedDestPath = join(destinationPath, 'ReactDevTools.zip');
   const unpackedDestPath = join(destinationPath, 'unpacked');
 
   await move(unpackedSourcePath, unpackedDestPath); // Copy built files to destination
@@ -93,7 +90,7 @@ const postProcess = async (tempPath, destinationPath) => {
   await remove(tempPath); // Clean up temp directory and files
 };
 
-const main = async (buildId, manifestVersion) => {
+const main = async buildId => {
   const root = join(__dirname, '..', buildId);
   const manifestPath = join(root, 'manifest.json');
   const destinationPath = join(root, 'build');
@@ -101,7 +98,7 @@ const main = async (buildId, manifestVersion) => {
   try {
     const tempPath = join(__dirname, 'build', buildId);
     await preProcess(destinationPath, tempPath);
-    await build(tempPath, manifestPath, manifestVersion);
+    await build(tempPath, manifestPath);
 
     const builtUnpackedPath = join(destinationPath, 'unpacked');
     await postProcess(tempPath, destinationPath);

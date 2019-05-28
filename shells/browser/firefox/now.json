@@ -1,5 +1,5 @@
 {
   "name": "react-devtools-experimental-firefox",
   "alias": ["react-devtools-experimental-firefox"],
-  "files": ["index.html", "packed.zip"]
+  "files": ["index.html", "ReactDevTools.zip"]
 }

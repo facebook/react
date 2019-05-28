@@ -3,7 +3,6 @@
 const { exec, execSync } = require('child_process');
 const { readFileSync, writeFileSync } = require('fs');
 const { join } = require('path');
-const convert = require('xml-js');
 
 const main = async buildId => {
   const root = join(__dirname, '..', buildId);
@@ -21,18 +20,6 @@ const main = async buildId => {
   await exec(`cp ${join(root, 'now.json')} ${join(buildPath, 'now.json')}`, {
     cwd: root,
   });
-
-  if (buildId === 'chrome') {
-    const file = readFileSync(join(buildPath, 'unpacked', 'manifest.json'));
-    const json = JSON.parse(file);
-    const { version } = json;
-
-    const xmlString = readFileSync(join(root, 'updates.xml'), 'utf8');
-    const parsedXML = convert.xml2js(xmlString);
-    parsedXML.elements[0].elements[0].elements[0].attributes.version = version;
-
-    writeFileSync(join(buildPath, 'updates.xml'), convert.js2xml(parsedXML));
-  }
 
   const file = readFileSync(join(root, 'now.json'));
   const json = JSON.parse(file);
