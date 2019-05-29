@@ -132,6 +132,7 @@ jobs:
             - facebook-www
             - node_modules
             - react-native
+            - dist
             - sizes/*.json
 
   process_artifacts:

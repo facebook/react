@@ -136,7 +136,7 @@ function git(args) {
     for (let i = 0; i < statuses.length; i++) {
       const status = statuses[i];
       // This must match the name of the CI job that creates the build artifacts
-      if (status.context === 'ci/circleci: build') {
+      if (status.context === 'ci/circleci: process_artifacts') {
         if (status.state === 'success') {
           baseCIBuildId = /\/facebook\/react\/([0-9]+)/.exec(
             status.target_url
