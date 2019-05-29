@@ -118,6 +118,7 @@ jobs:
   build:
     docker: *docker
     environment: *environment
+    parallelism: 20
     steps:
       - checkout
       - *restore_yarn_cache
@@ -125,7 +126,24 @@ jobs:
       - run: ./scripts/circleci/add_build_info_json.sh
       - run: ./scripts/circleci/update_package_versions.sh
       - run: yarn build
-      - run: cp ./scripts/rollup/results.json ./build/bundle-sizes.json
+      - persist_to_workspace:
+          root: build
+          paths:
+            - facebook-www
+            - node_modules
+            - react-native
+            - sizes/*.json
+
+  process_artifacts:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - attach_workspace: *attach_workspace
+      - *restore_yarn_cache
+      - *run_yarn
+      - run: node ./scripts/rollup/consolidateBundleSizes.js
+      - run: node ./scripts/tasks/danger
       - run: ./scripts/circleci/upload_build.sh
       - run: ./scripts/circleci/pack_and_store_artifact.sh
       - store_artifacts:
@@ -135,24 +153,9 @@ jobs:
       - store_artifacts:
           path: ./build/bundle-sizes.json
       - store_artifacts:
+          # TODO: Update release script to use local file instead of pulling
+          # from artifacts.
           path: ./scripts/error-codes/codes.json
-      - persist_to_workspace:
-          root: build
-          paths:
-            - facebook-www
-            - node_modules
-            - react-native
-            - bundle-sizes.json
-
-  sizebot:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - attach_workspace: *attach_workspace
-      - *restore_yarn_cache
-      - *run_yarn
-      - run: node ./scripts/tasks/danger
 
   lint_build:
     docker: *docker
@@ -223,13 +226,10 @@ workflows:
       - test_source_fire:
           requires:
             - setup
-      - test_coverage:
-          requires:
-            - setup
       - build:
           requires:
             - setup
-      - sizebot:
+      - process_artifacts:
           requires:
             - build
       - lint_build:
@@ -252,5 +252,8 @@ workflows:
     jobs:
       - setup
       - test_fuzz:
+          requires:
+            - setup
+      - test_coverage:
           requires:
             - setup
