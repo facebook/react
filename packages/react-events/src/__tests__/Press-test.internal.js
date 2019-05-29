@@ -36,18 +36,21 @@ const createKeyboardEvent = (type, data) => {
   });
 };
 
+function init() {
+  ReactFeatureFlags = require('shared/ReactFeatureFlags');
+  ReactFeatureFlags.enableEventAPI = true;
+  React = require('react');
+  ReactDOM = require('react-dom');
+  Press = require('react-events/press');
+  Scheduler = require('scheduler');
+}
+
 describe('Event responder: Press', () => {
   let container;
 
   beforeEach(() => {
     jest.resetModules();
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableEventAPI = true;
-    React = require('react');
-    ReactDOM = require('react-dom');
-    Press = require('react-events/press');
-    Scheduler = require('scheduler');
-
+    init();
     container = document.createElement('div');
     document.body.appendChild(container);
   });
@@ -2578,5 +2581,101 @@ describe('Event responder: Press', () => {
 
     Scheduler.flushAll();
     document.body.removeChild(newContainer);
+  });
+
+  describe('onContextMenu', () => {
+    it('is called after a right mouse click', () => {
+      const onContextMenu = jest.fn();
+      const ref = React.createRef();
+      const element = (
+        <Press onContextMenu={onContextMenu}>
+          <div ref={ref} />
+        </Press>
+      );
+      ReactDOM.render(element, container);
+
+      ref.current.dispatchEvent(
+        createEvent('pointerdown', {pointerType: 'mouse', button: 2}),
+      );
+      ref.current.dispatchEvent(createEvent('contextmenu'));
+      expect(onContextMenu).toHaveBeenCalledTimes(1);
+      expect(onContextMenu).toHaveBeenCalledWith(
+        expect.objectContaining({pointerType: 'mouse', type: 'contextmenu'}),
+      );
+    });
+
+    it('is called after a left mouse click + ctrl key on Mac', () => {
+      jest.resetModules();
+      const platformGetter = jest.spyOn(global.navigator, 'platform', 'get');
+      platformGetter.mockReturnValue('MacIntel');
+      init();
+
+      const onContextMenu = jest.fn();
+      const ref = React.createRef();
+      const element = (
+        <Press onContextMenu={onContextMenu}>
+          <div ref={ref} />
+        </Press>
+      );
+      ReactDOM.render(element, container);
+
+      ref.current.dispatchEvent(
+        createEvent('pointerdown', {
+          pointerType: 'mouse',
+          button: 0,
+          ctrlKey: true,
+        }),
+      );
+      ref.current.dispatchEvent(createEvent('contextmenu'));
+      expect(onContextMenu).toHaveBeenCalledTimes(1);
+      expect(onContextMenu).toHaveBeenCalledWith(
+        expect.objectContaining({pointerType: 'mouse', type: 'contextmenu'}),
+      );
+      platformGetter.mockClear();
+    });
+
+    it('is not called after a left mouse click + ctrl key on Windows', () => {
+      jest.resetModules();
+      const platformGetter = jest.spyOn(global.navigator, 'platform', 'get');
+      platformGetter.mockReturnValue('Win32');
+      init();
+
+      const onContextMenu = jest.fn();
+      const ref = React.createRef();
+      const element = (
+        <Press onContextMenu={onContextMenu}>
+          <div ref={ref} />
+        </Press>
+      );
+      ReactDOM.render(element, container);
+
+      ref.current.dispatchEvent(
+        createEvent('pointerdown', {
+          pointerType: 'mouse',
+          button: 0,
+          ctrlKey: true,
+        }),
+      );
+      ref.current.dispatchEvent(createEvent('contextmenu'));
+      expect(onContextMenu).toHaveBeenCalledTimes(0);
+      platformGetter.mockClear();
+    });
+
+    it('is not called after a right mouse click occurs during an active press', () => {
+      const onContextMenu = jest.fn();
+      const ref = React.createRef();
+      const element = (
+        <Press onContextMenu={onContextMenu}>
+          <div ref={ref} />
+        </Press>
+      );
+      ReactDOM.render(element, container);
+
+      ref.current.dispatchEvent(
+        createEvent('pointerdown', {pointerType: 'mouse', button: 0}),
+      );
+      ref.current.dispatchEvent(createEvent('contextmenu'));
+      expect(onContextMenu).toHaveBeenCalledTimes(0);
+    });
   });
 });
