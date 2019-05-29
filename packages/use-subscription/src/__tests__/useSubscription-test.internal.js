@@ -80,9 +80,9 @@ describe('useSubscription', () => {
     // Updates while subscribed should re-render the child component
     expect(Scheduler).toFlushAndYield(['default']);
     act(() => observable.next(123));
-    expect(Scheduler).toFlushAndYield([123]);
+    expect(Scheduler).toHaveYielded([123]);
     act(() => observable.next('abc'));
-    expect(Scheduler).toFlushAndYield(['abc']);
+    expect(Scheduler).toHaveYielded(['abc']);
 
     // Unmounting the subscriber should remove listeners
     renderer.update(<div />);
@@ -127,7 +127,7 @@ describe('useSubscription', () => {
     );
     expect(Scheduler).toFlushAndYield(['initial']);
     act(() => observable.next('updated'));
-    expect(Scheduler).toFlushAndYield(['updated']);
+    expect(Scheduler).toHaveYielded(['updated']);
 
     Scheduler.flushAll();
 
@@ -191,7 +191,7 @@ describe('useSubscription', () => {
 
     // Updates to the bew subscribable should re-render the child component
     act(() => observableB.next('b-1'));
-    expect(Scheduler).toFlushAndYield(['b-1']);
+    expect(Scheduler).toHaveYielded(['b-1']);
 
     expect(subscriptions).toHaveLength(2);
   });
@@ -248,7 +248,7 @@ describe('useSubscription', () => {
 
     // Updates to the bew subscribable should re-render the child component
     act(() => observableB.next('b-1'));
-    expect(Scheduler).toFlushAndYield(['b-1']);
+    expect(Scheduler).toHaveYielded(['b-1']);
 
     expect(subscriptions).toHaveLength(2);
   });
@@ -429,8 +429,12 @@ describe('useSubscription', () => {
     // Flush everything and ensure that the correct subscribable is used
     // We expect the new subscribable to finish rendering,
     // But then the updated values from the old subscribable should be used.
+    expect(Scheduler).toHaveYielded(['Grandchild: b-0',]);
     expect(Scheduler).toFlushAndYield([
-      'Grandchild: b-0',
+      'Child: a-2',
+      'Grandchild: a-2',
+      'Child: a-2',
+      'Grandchild: a-2',
       'Child: a-2',
       'Grandchild: a-2',
     ]);
