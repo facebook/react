@@ -595,6 +595,16 @@ describe('ReactDebugFiberPerf', () => {
         }),
     );
 
+    // Initial render
+    ReactNoop.render(
+      <Parent>
+        <React.Suspense fallback={<Spinner />} />
+      </Parent>,
+    );
+    expect(Scheduler).toFlushWithoutYielding();
+    expect(getFlameChart()).toMatchSnapshot();
+
+    // Update that suspends
     ReactNoop.render(
       <Parent>
         <React.Suspense fallback={<Spinner />}>
