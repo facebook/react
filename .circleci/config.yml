@@ -163,6 +163,8 @@ jobs:
       - *restore_yarn_cache
       - *run_yarn
       - run: yarn lint-build
+      - run: ls
+      - run: ls ./build
       - run: scripts/circleci/check_minified_errors.sh
 
   test_build:
