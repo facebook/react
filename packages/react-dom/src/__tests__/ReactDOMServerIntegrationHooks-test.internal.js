@@ -17,6 +17,7 @@ let React;
 let ReactFeatureFlags;
 let ReactDOM;
 let ReactDOMServer;
+let act;
 let useState;
 let useReducer;
 let useEffect;
@@ -41,6 +42,7 @@ function initModules() {
   React = require('react');
   ReactDOM = require('react-dom');
   ReactDOMServer = require('react-dom/server');
+  act = require('react-dom/test-utils').act;
   useState = React.useState;
   useReducer = React.useReducer;
   useEffect = React.useEffect;
@@ -546,10 +548,12 @@ describe('ReactDOMServerHooks', () => {
         });
         return <Text text={'Count: ' + props.count} />;
       }
-      const domNode = await render(<Counter count={0} />);
-      expect(clearYields()).toEqual(['Count: 0']);
-      expect(domNode.tagName).toEqual('SPAN');
-      expect(domNode.textContent).toEqual('Count: 0');
+      await act(async () => {
+        const domNode = await render(<Counter count={0} />);
+        expect(clearYields()).toEqual(['Count: 0']);
+        expect(domNode.tagName).toEqual('SPAN');
+        expect(domNode.textContent).toEqual('Count: 0');
+      });
     });
   });
 

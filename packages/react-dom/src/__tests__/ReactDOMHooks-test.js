@@ -11,6 +11,7 @@
 
 let React;
 let ReactDOM;
+let act;
 let Scheduler;
 
 describe('ReactDOMHooks', () => {
@@ -21,6 +22,7 @@ describe('ReactDOMHooks', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
+    act = require('react-dom/test-utils').act;
     Scheduler = require('scheduler');
 
     container = document.createElement('div');
@@ -53,23 +55,33 @@ describe('ReactDOMHooks', () => {
       return 3 * n;
     }
 
-    ReactDOM.render(<Example1 n={1} />, container);
-    expect(container.textContent).toBe('1');
-    expect(container2.textContent).toBe('');
-    expect(container3.textContent).toBe('');
-    Scheduler.flushAll();
-    expect(container.textContent).toBe('1');
-    expect(container2.textContent).toBe('2');
-    expect(container3.textContent).toBe('3');
+    // we explicitly catch the missing act() warnings
+    // to simulate this tricky repro
+    // todo - is this ok?
+    expect(() => {
+      ReactDOM.render(<Example1 n={1} />, container);
+      expect(container.textContent).toBe('1');
+      expect(container2.textContent).toBe('');
+      expect(container3.textContent).toBe('');
+      Scheduler.flushAll();
+      expect(container.textContent).toBe('1');
+      expect(container2.textContent).toBe('2');
+      expect(container3.textContent).toBe('3');
 
-    ReactDOM.render(<Example1 n={2} />, container);
-    expect(container.textContent).toBe('2');
-    expect(container2.textContent).toBe('2'); // Not flushed yet
-    expect(container3.textContent).toBe('3'); // Not flushed yet
-    Scheduler.flushAll();
-    expect(container.textContent).toBe('2');
-    expect(container2.textContent).toBe('4');
-    expect(container3.textContent).toBe('6');
+      ReactDOM.render(<Example1 n={2} />, container);
+      expect(container.textContent).toBe('2');
+      expect(container2.textContent).toBe('2'); // Not flushed yet
+      expect(container3.textContent).toBe('3'); // Not flushed yet
+      Scheduler.flushAll();
+      expect(container.textContent).toBe('2');
+      expect(container2.textContent).toBe('4');
+      expect(container3.textContent).toBe('6');
+    }).toWarnDev([
+      'Your test just caused an effect from Example1',
+      'Your test just caused an effect from Example2',
+      'Your test just caused an effect from Example1',
+      'Your test just caused an effect from Example2',
+    ]);
   });
 
   it('should not bail out when an update is scheduled from within an event handler', () => {

@@ -178,10 +178,9 @@ describe('withComponentStack', () => {
         });
         return null;
       }
-
-      ReactTestRenderer.create(<Parent />);
-
-      scheduler.flushAll(); // Flush passive effects
+      ReactTestRenderer.act(() => {
+        ReactTestRenderer.create(<Parent />);
+      });
 
       expectMessageAndStack(
         'logged in child render method',

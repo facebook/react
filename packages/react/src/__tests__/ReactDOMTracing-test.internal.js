@@ -104,34 +104,32 @@ describe('ReactDOMTracing', () => {
         const root = ReactDOM.unstable_createRoot(container);
         SchedulerTracing.unstable_trace('initialization', 0, () => {
           interaction = Array.from(SchedulerTracing.unstable_getCurrent())[0];
+          TestUtils.act(() => {
+            root.render(
+              <React.Profiler id="test" onRender={onRender}>
+                <App />
+              </React.Profiler>,
+            );
+            expect(onInteractionTraced).toHaveBeenCalledTimes(1);
+            expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
+              interaction,
+            );
+            expect(Scheduler).toFlushAndYieldThrough(['App', 'App:mount']);
+            expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+            expect(onRender).toHaveBeenCalledTimes(1);
+            expect(onRender).toHaveLastRenderedWithInteractions(
+              new Set([interaction]),
+            );
+            expect(Scheduler).toFlushAndYieldThrough(['Child', 'Child:mount']);
+            expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+            expect(onRender).toHaveBeenCalledTimes(2);
+            expect(onRender).toHaveLastRenderedWithInteractions(
+              new Set([interaction]),
+            );
 
-          root.render(
-            <React.Profiler id="test" onRender={onRender}>
-              <App />
-            </React.Profiler>,
-          );
+            expect(Scheduler).toFlushAndYield(['Child', 'Child:update']);
+          });
         });
-
-        expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-        expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
-          interaction,
-        );
-
-        expect(Scheduler).toFlushAndYieldThrough(['App', 'App:mount']);
-        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
-        expect(onRender).toHaveBeenCalledTimes(1);
-        expect(onRender).toHaveLastRenderedWithInteractions(
-          new Set([interaction]),
-        );
-
-        expect(Scheduler).toFlushAndYieldThrough(['Child', 'Child:mount']);
-        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
-        expect(onRender).toHaveBeenCalledTimes(2);
-        expect(onRender).toHaveLastRenderedWithInteractions(
-          new Set([interaction]),
-        );
-
-        expect(Scheduler).toFlushAndYield(['Child', 'Child:update']);
         expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
         expect(
           onInteractionScheduledWorkCompleted,
@@ -172,33 +170,34 @@ describe('ReactDOMTracing', () => {
         SchedulerTracing.unstable_trace('initialization', 0, () => {
           interaction = Array.from(SchedulerTracing.unstable_getCurrent())[0];
 
-          root.render(
-            <React.Profiler id="test" onRender={onRender}>
-              <App />
-            </React.Profiler>,
-          );
+          TestUtils.act(() => {
+            root.render(
+              <React.Profiler id="test" onRender={onRender}>
+                <App />
+              </React.Profiler>,
+            );
+            expect(onInteractionTraced).toHaveBeenCalledTimes(1);
+            expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
+              interaction,
+            );
+
+            expect(Scheduler).toFlushAndYieldThrough(['App', 'App:mount']);
+            expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+            expect(onRender).toHaveBeenCalledTimes(1);
+            expect(onRender).toHaveLastRenderedWithInteractions(
+              new Set([interaction]),
+            );
+
+            expect(wrapped).not.toBeNull();
+
+            expect(Scheduler).toFlushAndYield(['Child']);
+            expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+            expect(onRender).toHaveBeenCalledTimes(2);
+            expect(onRender).toHaveLastRenderedWithInteractions(
+              new Set([interaction]),
+            );
+          });
         });
-
-        expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-        expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
-          interaction,
-        );
-
-        expect(Scheduler).toFlushAndYieldThrough(['App', 'App:mount']);
-        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
-        expect(onRender).toHaveBeenCalledTimes(1);
-        expect(onRender).toHaveLastRenderedWithInteractions(
-          new Set([interaction]),
-        );
-
-        expect(wrapped).not.toBeNull();
-
-        expect(Scheduler).toFlushAndYield(['Child']);
-        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
-        expect(onRender).toHaveBeenCalledTimes(2);
-        expect(onRender).toHaveLastRenderedWithInteractions(
-          new Set([interaction]),
-        );
 
         wrapped();
         expect(onInteractionTraced).toHaveBeenCalledTimes(1);
@@ -249,34 +248,35 @@ describe('ReactDOMTracing', () => {
         const root = ReactDOM.unstable_createRoot(container);
         SchedulerTracing.unstable_trace('initialization', 0, () => {
           interaction = Array.from(SchedulerTracing.unstable_getCurrent())[0];
+          TestUtils.act(() => {
+            root.render(
+              <React.Profiler id="test" onRender={onRender}>
+                <App />
+              </React.Profiler>,
+            );
+            expect(onInteractionTraced).toHaveBeenCalledTimes(1);
+            expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
+              interaction,
+            );
 
-          root.render(
-            <React.Profiler id="test" onRender={onRender}>
-              <App />
-            </React.Profiler>,
-          );
+            expect(Scheduler).toFlushAndYieldThrough(['App', 'App:mount']);
+            expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+            expect(onRender).toHaveBeenCalledTimes(1);
+            expect(onRender).toHaveLastRenderedWithInteractions(
+              new Set([interaction]),
+            );
+
+            expect(Scheduler).toFlushAndYieldThrough(['Child', 'Child:mount']);
+            expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+            expect(onRender).toHaveBeenCalledTimes(2);
+            expect(onRender).toHaveLastRenderedWithInteractions(
+              new Set([interaction]),
+            );
+
+            expect(Scheduler).toFlushAndYield(['Child', 'Child:update']);
+          });
         });
 
-        expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-        expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
-          interaction,
-        );
-
-        expect(Scheduler).toFlushAndYieldThrough(['App', 'App:mount']);
-        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
-        expect(onRender).toHaveBeenCalledTimes(1);
-        expect(onRender).toHaveLastRenderedWithInteractions(
-          new Set([interaction]),
-        );
-
-        expect(Scheduler).toFlushAndYieldThrough(['Child', 'Child:mount']);
-        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
-        expect(onRender).toHaveBeenCalledTimes(2);
-        expect(onRender).toHaveLastRenderedWithInteractions(
-          new Set([interaction]),
-        );
-
-        expect(Scheduler).toFlushAndYield(['Child', 'Child:update']);
         expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
         expect(
           onInteractionScheduledWorkCompleted,
