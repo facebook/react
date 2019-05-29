@@ -1208,9 +1208,7 @@ function dispatchAction<S, A>(
       }
     }
     if (__DEV__) {
-      // jest isn't a 'global', it's just exposed to tests via a wrapped function
-      // further, this isn't a test file, so flow doesn't recognize the symbol. So...
-      // $FlowExpectedError - because requirements don't give a damn about your type sigs.
+      // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
       if ('undefined' !== typeof jest) {
         warnIfNotScopedWithMatchingAct(fiber);
         warnIfNotCurrentlyActingUpdatesInDev(fiber);
