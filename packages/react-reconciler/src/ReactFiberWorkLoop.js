@@ -173,7 +173,7 @@ const ceil = Math.ceil;
 const {
   ReactCurrentDispatcher,
   ReactCurrentOwner,
-  ReactActingRendererSigil,
+  ReactCurrentActingRendererSigil,
 } = ReactSharedInternals;
 
 type WorkPhase = 0 | 1 | 2 | 3 | 4 | 5 | 6;
@@ -2276,13 +2276,19 @@ function warnAboutInvalidUpdatesOnClassComponentsInDEV(fiber) {
   }
 }
 
+// We export a simple object here to be used by a renderer/test-utils
+// as the value of ReactCurrentActingRendererSigil.current
+// This identity lets us identify (ha!) when the wrong renderer's act()
+// wraps anothers' updates/effects
+export const ReactActingRendererSigil = {};
+
 export function warnIfNotScopedWithMatchingAct(fiber: Fiber): void {
   if (__DEV__) {
     if (
-      ReactActingRendererSigil.current !== null &&
+      ReactCurrentActingRendererSigil.current !== null &&
       // use the function flushPassiveEffects directly as the sigil
       // so this comparison is expected here
-      ReactActingRendererSigil.current !== flushPassiveEffects
+      ReactCurrentActingRendererSigil.current !== ReactActingRendererSigil
     ) {
       // it looks like we're using the wrong matching act(), so log a warning
       warningWithoutStack(
@@ -2309,7 +2315,7 @@ function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
   if (__DEV__) {
     if (
       workPhase === NotWorking &&
-      ReactActingRendererSigil.current !== flushPassiveEffects
+      ReactCurrentActingRendererSigil.current !== ReactActingRendererSigil
     ) {
       warningWithoutStack(
         false,

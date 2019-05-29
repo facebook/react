@@ -13,7 +13,7 @@
  * so we can track identity of the renderer.
  */
 
-const ReactActingRendererSigil = {
+const ReactCurrentActingRendererSigil = {
   current: (null: null | (() => boolean)),
 };
-export default ReactActingRendererSigil;
+export default ReactCurrentActingRendererSigil;

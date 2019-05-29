@@ -43,6 +43,7 @@ import {
   findHostInstance,
   findHostInstanceWithWarning,
   flushPassiveEffects,
+  ReactActingRendererSigil,
 } from 'react-reconciler/inline.fire';
 import {createPortal as createPortalImpl} from 'shared/ReactPortal';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
@@ -822,6 +823,7 @@ const ReactDOM: Object = {
       dispatchEvent,
       runEventsInBatch,
       flushPassiveEffects,
+      ReactActingRendererSigil,
     ],
   },
 };

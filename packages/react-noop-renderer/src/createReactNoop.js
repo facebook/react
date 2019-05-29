@@ -81,7 +81,7 @@ type TextInstance = {|
 |};
 type HostContext = Object;
 
-const {ReactActingRendererSigil} = ReactSharedInternals;
+const {ReactCurrentActingRendererSigil} = ReactSharedInternals;
 
 const NO_CONTEXT = {};
 const UPPERCASE_CONTEXT = {};
@@ -650,7 +650,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   const roots = new Map();
   const DEFAULT_ROOT_ID = '<default>';
 
-  const {flushPassiveEffects, batchedUpdates} = NoopRenderer;
+  const {
+    flushPassiveEffects,
+    batchedUpdates,
+    ReactActingRendererSigil,
+  } = NoopRenderer;
 
   // this act() implementation should be exactly the same in
   // ReactTestUtilsAct.js, ReactTestRendererAct.js, createReactNoop.js
@@ -700,17 +704,15 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     let previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
     let previousActingUpdatesSigil;
     actingUpdatesScopeDepth++;
-    // we use the function flushPassiveEffects directly as the sigil,
-    // since it's unique to a renderer
     if (__DEV__) {
-      previousActingUpdatesSigil = ReactActingRendererSigil.current;
-      ReactActingRendererSigil.current = flushPassiveEffects;
+      previousActingUpdatesSigil = ReactCurrentActingRendererSigil.current;
+      ReactCurrentActingRendererSigil.current = ReactActingRendererSigil;
     }
 
     function onDone() {
       actingUpdatesScopeDepth--;
       if (__DEV__) {
-        ReactActingRendererSigil.current = previousActingUpdatesSigil;
+        ReactCurrentActingRendererSigil.current = previousActingUpdatesSigil;
         if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
           // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
           warningWithoutStack(

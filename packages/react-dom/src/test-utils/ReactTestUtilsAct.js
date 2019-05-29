@@ -33,11 +33,12 @@ const [
   runEventsInBatch,
   /* eslint-enable no-unused-vars */
   flushPassiveEffects,
+  ReactActingRendererSigil,
 ] = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
 
 const batchedUpdates = ReactDOM.unstable_batchedUpdates;
 
-const {ReactActingRendererSigil} = ReactSharedInternals;
+const {ReactCurrentActingRendererSigil} = ReactSharedInternals;
 
 // this implementation should be exactly the same in
 // ReactTestUtilsAct.js, ReactTestRendererAct.js, createReactNoop.js
@@ -87,17 +88,15 @@ function act(callback: () => Thenable) {
   let previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
   let previousActingUpdatesSigil;
   actingUpdatesScopeDepth++;
-  // we use the function flushPassiveEffects directly as the sigil,
-  // since it's unique to a renderer
   if (__DEV__) {
-    previousActingUpdatesSigil = ReactActingRendererSigil.current;
-    ReactActingRendererSigil.current = flushPassiveEffects;
+    previousActingUpdatesSigil = ReactCurrentActingRendererSigil.current;
+    ReactCurrentActingRendererSigil.current = ReactActingRendererSigil;
   }
 
   function onDone() {
     actingUpdatesScopeDepth--;
     if (__DEV__) {
-      ReactActingRendererSigil.current = previousActingUpdatesSigil;
+      ReactCurrentActingRendererSigil.current = previousActingUpdatesSigil;
       if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
         // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
         warningWithoutStack(
