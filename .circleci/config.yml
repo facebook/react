@@ -178,7 +178,21 @@ jobs:
       - *restore_yarn_cache
       - *run_yarn
       - run: yarn test-build --maxWorkers=2
-      - run: yarn test-dom-fixture
+
+  test_dom_fixtures:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - attach_workspace: *attach_workspace
+      - *restore_yarn_cache
+      - run:
+          name: Run DOM fixture tests
+          command: |
+            cd fixtures/dom
+            yarn --frozen-lockfile
+            yarn prestart
+            yarn test --maxWorkers=2
 
   test_fuzz:
     docker: *docker
@@ -241,6 +255,9 @@ workflows:
           requires:
             - build
       - test_build_prod:
+          requires:
+            - build
+      - test_dom_fixtures:
           requires:
             - build
   hourly:
