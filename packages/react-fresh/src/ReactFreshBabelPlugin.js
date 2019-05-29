@@ -196,8 +196,14 @@ export default function(babel) {
       case 'React.useMemo':
       case 'useCallback':
       case 'React.useCallback':
+      case 'useRef':
+      case 'React.useRef':
+      case 'useContext':
+      case 'React.useContext':
       case 'useImperativeMethods':
       case 'React.useImperativeMethods':
+      case 'useDebugValue':
+      case 'React.useDebugValue':
         return true;
       default:
         return false;
