@@ -118,6 +118,7 @@ jobs:
   build:
     docker: *docker
     environment: *environment
+    parallelism: 20
     steps:
       - checkout
       - *restore_yarn_cache
@@ -125,8 +126,6 @@ jobs:
       - run: ./scripts/circleci/add_build_info_json.sh
       - run: ./scripts/circleci/update_package_versions.sh
       - run: yarn build
-      - store_artifacts:
-          path: ./scripts/error-codes/codes.json
       - persist_to_workspace:
           root: build
           paths:
@@ -153,6 +152,10 @@ jobs:
           path: ./build.tgz
       - store_artifacts:
           path: ./build/bundle-sizes.json
+      - store_artifacts:
+          # TODO: Update release script to use local file instead of pulling
+          # from artifacts.
+          path: ./scripts/error-codes/codes.json
 
   lint_build:
     docker: *docker
@@ -223,9 +226,6 @@ workflows:
       - test_source_fire:
           requires:
             - setup
-      - test_coverage:
-          requires:
-            - setup
       - build:
           requires:
             - setup
@@ -237,10 +237,10 @@ workflows:
             - build
       - test_build:
           requires:
-            - process_artifacts
+            - build
       - test_build_prod:
           requires:
-            - process_artifacts
+            - build
   hourly:
     triggers:
       - schedule:
@@ -252,5 +252,8 @@ workflows:
     jobs:
       - setup
       - test_fuzz:
+          requires:
+            - setup
+      - test_coverage:
           requires:
             - setup

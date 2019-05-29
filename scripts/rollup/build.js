@@ -21,7 +21,7 @@ const useForks = require('./plugins/use-forks-plugin');
 const stripUnusedImports = require('./plugins/strip-unused-imports');
 const extractErrorCodes = require('../error-codes/extract-errors');
 const Packaging = require('./packaging');
-const {asyncCopyTo, asyncRimRaf} = require('./utils');
+const {asyncCopyTo} = require('./utils');
 const codeFrame = require('babel-code-frame');
 const Wrappers = require('./wrappers');
 
@@ -634,27 +634,41 @@ function handleRollupError(error) {
 }
 
 async function buildEverything() {
-  await asyncRimRaf('build');
-
   // Run them serially for better console output
   // and to avoid any potential race conditions.
+
+  let bundles = [];
   // eslint-disable-next-line no-for-of-loops/no-for-of-loops
   for (const bundle of Bundles.bundles) {
-    await createBundle(bundle, UMD_DEV);
-    await createBundle(bundle, UMD_PROD);
-    await createBundle(bundle, UMD_PROFILING);
-    await createBundle(bundle, NODE_DEV);
-    await createBundle(bundle, NODE_PROD);
-    await createBundle(bundle, NODE_PROFILING);
-    await createBundle(bundle, FB_WWW_DEV);
-    await createBundle(bundle, FB_WWW_PROD);
-    await createBundle(bundle, FB_WWW_PROFILING);
-    await createBundle(bundle, RN_OSS_DEV);
-    await createBundle(bundle, RN_OSS_PROD);
-    await createBundle(bundle, RN_OSS_PROFILING);
-    await createBundle(bundle, RN_FB_DEV);
-    await createBundle(bundle, RN_FB_PROD);
-    await createBundle(bundle, RN_FB_PROFILING);
+    bundles.push(
+      [bundle, UMD_DEV],
+      [bundle, UMD_PROD],
+      [bundle, UMD_PROFILING],
+      [bundle, NODE_DEV],
+      [bundle, NODE_PROD],
+      [bundle, NODE_PROFILING],
+      [bundle, FB_WWW_DEV],
+      [bundle, FB_WWW_PROD],
+      [bundle, FB_WWW_PROFILING],
+      [bundle, RN_OSS_DEV],
+      [bundle, RN_OSS_PROD],
+      [bundle, RN_OSS_PROFILING],
+      [bundle, RN_FB_DEV],
+      [bundle, RN_FB_PROD],
+      [bundle, RN_FB_PROFILING]
+    );
+  }
+
+  if (!shouldExtractErrors && process.env.CIRCLE_NODE_TOTAL) {
+    // In CI, parallelize bundles across multiple tasks.
+    const nodeTotal = parseInt(process.env.CIRCLE_NODE_TOTAL, 10);
+    const nodeIndex = parseInt(process.env.CIRCLE_NODE_INDEX, 10);
+    bundles = bundles.filter((_, i) => i % nodeTotal === nodeIndex);
+  }
+
+  // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+  for (const [bundle, bundleType] of bundles) {
+    await createBundle(bundle, bundleType);
   }
 
   await Packaging.copyAllShims();
