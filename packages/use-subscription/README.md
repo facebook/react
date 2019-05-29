@@ -1,3 +1,3 @@
-# react-hooks
+# use-subscription
 
 Placeholder package.
