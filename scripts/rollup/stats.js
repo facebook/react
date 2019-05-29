@@ -5,21 +5,35 @@ const filesize = require('filesize');
 const chalk = require('chalk');
 const join = require('path').join;
 const fs = require('fs');
-const prevBuildResults = fs.existsSync(__dirname + '/results.json')
-  ? require('./results.json')
+const mkdirp = require('mkdirp');
+
+const BUNDLE_SIZES_FILE_NAME = join(__dirname, '../../build/bundle-sizes.json');
+const prevBuildResults = fs.existsSync(BUNDLE_SIZES_FILE_NAME)
+  ? require(BUNDLE_SIZES_FILE_NAME)
   : {bundleSizes: []};
 
 const currentBuildResults = {
   // Mutated inside build.js during a build run.
-  // We make a copy so that partial rebuilds don't erase other stats.
-  bundleSizes: [...prevBuildResults.bundleSizes],
+  bundleSizes: [],
 };
 
 function saveResults() {
+  // Write all the bundle sizes to a single JSON file.
   fs.writeFileSync(
-    join('scripts', 'rollup', 'results.json'),
+    BUNDLE_SIZES_FILE_NAME,
     JSON.stringify(currentBuildResults, null, 2)
   );
+
+  // Also write each bundle size to a separate file. That way multiple build
+  // processes can run in parallel and generate separate size artifacts.
+  // A downstream job can combine them into a single JSON file.
+  mkdirp.sync('build/sizes');
+  currentBuildResults.bundleSizes.forEach(results => {
+    fs.writeFileSync(
+      join('build', 'sizes', `${results.filename}.size.json`),
+      JSON.stringify(results, null, 2)
+    );
+  });
 }
 
 function fractionalChange(prev, current) {
