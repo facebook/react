@@ -30,11 +30,11 @@ export function useSubscription<Value>({
   // When this value changes, we'll schedule an update with React.
   // It's important to also store the hook params so that we can check for staleness.
   // (See the comment in checkForUpdates() below for more info.)
-  const [state, setState] = useState({
+  const [state, setState] = useState(() => ({
     getCurrentValue,
     subscribe,
     value: getCurrentValue(),
-  });
+  }));
 
   let valueToReturn = state.value;
 
