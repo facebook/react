@@ -124,7 +124,7 @@ jobs:
       - *run_yarn
       - run: ./scripts/circleci/add_build_info_json.sh
       - run: ./scripts/circleci/update_package_versions.sh
-      - run: ./scripts/circleci/build.sh
+      - run: yarn build
       - run: cp ./scripts/rollup/results.json ./build/bundle-sizes.json
       - run: ./scripts/circleci/upload_build.sh
       - run: ./scripts/circleci/pack_and_store_artifact.sh
@@ -145,7 +145,6 @@ jobs:
             - bundle-sizes.json
 
   sizebot:
-    build:
     docker: *docker
     environment: *environment
     steps:
@@ -154,6 +153,17 @@ jobs:
       - *restore_yarn_cache
       - *run_yarn
       - run: node ./scripts/tasks/danger
+
+  lint_build:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - attach_workspace: *attach_workspace
+      - *restore_yarn_cache
+      - *run_yarn
+      - run: yarn lint-build
+      - run: scripts/circleci/check_minified_errors.sh
 
   test_build:
     docker: *docker
@@ -220,6 +230,9 @@ workflows:
           requires:
             - setup
       - sizebot:
+          requires:
+            - build
+      - lint_build:
           requires:
             - build
       - test_build:

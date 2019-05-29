@@ -4,7 +4,7 @@ exports[`error transform should correctly transform invariants that are not in t
 "import _ReactError from 'shared/ReactError';
 
 import invariant from 'shared/invariant';
-(function () {
+/*FIXME (minify-errors-in-prod): Unminified error message in production build!*/(function () {
   if (!condition) {
     throw _ReactError(\`This is not a real error message.\`);
   }
@@ -15,7 +15,7 @@ exports[`error transform should handle escaped characters 1`] = `
 "import _ReactError from 'shared/ReactError';
 
 import invariant from 'shared/invariant';
-(function () {
+/*FIXME (minify-errors-in-prod): Unminified error message in production build!*/(function () {
   if (!condition) {
     throw _ReactError(\`What's up?\`);
   }
