@@ -108,6 +108,7 @@
     "test-prod-build": "yarn test-build-prod",
     "test-build": "cross-env NODE_ENV=development jest --config ./scripts/jest/config.build.js",
     "test-build-prod": "cross-env NODE_ENV=production jest --config ./scripts/jest/config.build.js",
+    "test-dom-fixture": "cd fixtures/dom && yarn && yarn prestart && yarn test",
     "flow": "node ./scripts/tasks/flow.js",
     "flow-ci": "node ./scripts/tasks/flow-ci.js",
     "prettier": "node ./scripts/prettier/index.js write-changed",

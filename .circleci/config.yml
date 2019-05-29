@@ -178,6 +178,7 @@ jobs:
       - *restore_yarn_cache
       - *run_yarn
       - run: yarn test-build --maxWorkers=2
+      - run: yarn test-dom-fixture
 
   test_fuzz:
     docker: *docker

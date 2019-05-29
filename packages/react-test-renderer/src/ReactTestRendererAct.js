@@ -11,6 +11,7 @@ import type {Thenable} from 'react-reconciler/src/ReactFiberWorkLoop';
 import {
   batchedUpdates,
   flushPassiveEffects,
+  ReactActingRendererSigil,
 } from 'react-reconciler/inline.test';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import warningWithoutStack from 'shared/warningWithoutStack';
@@ -18,7 +19,7 @@ import {warnAboutMissingMockScheduler} from 'shared/ReactFeatureFlags';
 import enqueueTask from 'shared/enqueueTask';
 import * as Scheduler from 'scheduler';
 
-const {ReactShouldWarnActingUpdates} = ReactSharedInternals;
+const {ReactCurrentActingRendererSigil} = ReactSharedInternals;
 
 // this implementation should be exactly the same in
 // ReactTestUtilsAct.js, ReactTestRendererAct.js, createReactNoop.js
@@ -66,17 +67,17 @@ let actingUpdatesScopeDepth = 0;
 
 function act(callback: () => Thenable) {
   let previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
+  let previousActingUpdatesSigil;
   actingUpdatesScopeDepth++;
   if (__DEV__) {
-    ReactShouldWarnActingUpdates.current = true;
+    previousActingUpdatesSigil = ReactCurrentActingRendererSigil.current;
+    ReactCurrentActingRendererSigil.current = ReactActingRendererSigil;
   }
 
   function onDone() {
     actingUpdatesScopeDepth--;
     if (__DEV__) {
-      if (actingUpdatesScopeDepth === 0) {
-        ReactShouldWarnActingUpdates.current = false;
-      }
+      ReactCurrentActingRendererSigil.current = previousActingUpdatesSigil;
       if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
         // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
         warningWithoutStack(

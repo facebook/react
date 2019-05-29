@@ -81,7 +81,7 @@ type TextInstance = {|
 |};
 type HostContext = Object;
 
-const {ReactShouldWarnActingUpdates} = ReactSharedInternals;
+const {ReactCurrentActingRendererSigil} = ReactSharedInternals;
 
 const NO_CONTEXT = {};
 const UPPERCASE_CONTEXT = {};
@@ -650,7 +650,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   const roots = new Map();
   const DEFAULT_ROOT_ID = '<default>';
 
-  const {flushPassiveEffects, batchedUpdates} = NoopRenderer;
+  const {
+    flushPassiveEffects,
+    batchedUpdates,
+    ReactActingRendererSigil,
+  } = NoopRenderer;
 
   // this act() implementation should be exactly the same in
   // ReactTestUtilsAct.js, ReactTestRendererAct.js, createReactNoop.js
@@ -698,17 +702,17 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
   function act(callback: () => Thenable) {
     let previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
+    let previousActingUpdatesSigil;
     actingUpdatesScopeDepth++;
     if (__DEV__) {
-      ReactShouldWarnActingUpdates.current = true;
+      previousActingUpdatesSigil = ReactCurrentActingRendererSigil.current;
+      ReactCurrentActingRendererSigil.current = ReactActingRendererSigil;
     }
 
     function onDone() {
       actingUpdatesScopeDepth--;
       if (__DEV__) {
-        if (actingUpdatesScopeDepth === 0) {
-          ReactShouldWarnActingUpdates.current = false;
-        }
+        ReactCurrentActingRendererSigil.current = previousActingUpdatesSigil;
         if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
           // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
           warningWithoutStack(

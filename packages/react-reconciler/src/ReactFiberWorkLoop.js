@@ -173,7 +173,7 @@ const ceil = Math.ceil;
 const {
   ReactCurrentDispatcher,
   ReactCurrentOwner,
-  ReactShouldWarnActingUpdates,
+  ReactCurrentActingRendererSigil,
 } = ReactSharedInternals;
 
 type WorkPhase = 0 | 1 | 2 | 3 | 4 | 5 | 6;
@@ -2271,11 +2271,46 @@ function warnAboutInvalidUpdatesOnClassComponentsInDEV(fiber) {
   }
 }
 
+// We export a simple object here to be used by a renderer/test-utils
+// as the value of ReactCurrentActingRendererSigil.current
+// This identity lets us identify (ha!) when the wrong renderer's act()
+// wraps anothers' updates/effects
+export const ReactActingRendererSigil = {};
+
+export function warnIfNotScopedWithMatchingAct(fiber: Fiber): void {
+  if (__DEV__) {
+    if (
+      ReactCurrentActingRendererSigil.current !== null &&
+      // use the function flushPassiveEffects directly as the sigil
+      // so this comparison is expected here
+      ReactCurrentActingRendererSigil.current !== ReactActingRendererSigil
+    ) {
+      // it looks like we're using the wrong matching act(), so log a warning
+      warningWithoutStack(
+        false,
+        "It looks like you're using the wrong act() around your test interactions.\n" +
+          'Be sure to use the matching version of act() corresponding to your renderer:\n\n' +
+          '// for react-dom:\n' +
+          "import {act} from 'react-test-utils';\n" +
+          '//...\n' +
+          'act(() => ...);\n\n' +
+          '// for react-test-renderer:\n' +
+          "import TestRenderer from 'react-test-renderer';\n" +
+          'const {act} = TestRenderer;\n' +
+          '//...\n' +
+          'act(() => ...);' +
+          '%s',
+        getStackByFiberInDevAndProd(fiber),
+      );
+    }
+  }
+}
+
 function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
   if (__DEV__) {
     if (
       workPhase === NotWorking &&
-      ReactShouldWarnActingUpdates.current === false
+      ReactCurrentActingRendererSigil.current !== ReactActingRendererSigil
     ) {
       warningWithoutStack(
         false,
