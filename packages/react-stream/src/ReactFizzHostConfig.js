@@ -7,6 +7,8 @@
  * @flow
  */
 
+/* eslint-disable react-internal/warning-and-invariant-args */
+
 import invariant from 'shared/invariant';
 
 // We expect that our Rollup, Jest, and Flow configurations

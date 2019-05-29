@@ -9,6 +9,16 @@
 
 'use strict';
 
+const fs = require('fs');
+const path = require('path');
+const existingErrorMap = JSON.parse(
+  fs.readFileSync(path.resolve(__dirname, '../error-codes/codes.json'))
+);
+const messages = new Set();
+Object.keys(existingErrorMap).forEach(key =>
+  messages.add(existingErrorMap[key])
+);
+
 /**
  * The warning() and invariant() functions take format strings as their second
  * argument.
@@ -78,6 +88,21 @@ module.exports = function(context) {
             length: node.arguments.length,
           }
         );
+      }
+
+      if (node.callee.name === 'invariant') {
+        if (!messages.has(format)) {
+          context.report(
+            node,
+            'Error message does not have a corresponding production ' +
+              'error code.\n\n' +
+              'Run `yarn extract-errors` to add the message to error code ' +
+              'map, so it can be stripped from the production builds. ' +
+              "Alternatively, if you're updating an existing error " +
+              'message, you can modify ' +
+              '`scripts/error-codes/codes.json` directly.'
+          );
+        }
       }
     },
   };

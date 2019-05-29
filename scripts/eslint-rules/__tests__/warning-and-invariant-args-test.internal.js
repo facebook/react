@@ -17,8 +17,10 @@ ruleTester.run('eslint-rules/warning-and-invariant-args', rule, {
   valid: [
     "warning(true, 'hello, world');",
     "warning(true, 'expected %s, got %s', 42, 24);",
-    "invariant(true, 'hello, world');",
-    "invariant(true, 'expected %s, got %s', 42, 24);",
+    'arbitraryFunction(a, b)',
+    // These messages are in the error code map
+    "invariant(false, 'Do not override existing functions.')",
+    "invariant(false, '%s(...): Target container is not a DOM element.', str)",
   ],
   invalid: [
     {
@@ -93,6 +95,19 @@ ruleTester.run('eslint-rules/warning-and-invariant-args', rule, {
             'The warning format should be able to uniquely identify this ' +
             'warning. Please, use a more descriptive format than: ' +
             '%s %s, %s %s: %s (%s)',
+        },
+      ],
+    },
+    {
+      code: "invariant(false, 'Not in error map')",
+      errors: [
+        {
+          message:
+            'Error message does not have a corresponding production error code.\n\n' +
+            'Run `yarn extract-errors` to add the message to error code map, ' +
+            'so it can be stripped from the production builds. ' +
+            "Alternatively, if you're updating an existing error message, " +
+            'you can modify `scripts/error-codes/codes.json` directly.',
         },
       ],
     },
