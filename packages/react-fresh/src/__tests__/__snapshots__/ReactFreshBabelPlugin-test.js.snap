@@ -1,5 +1,61 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`ReactFreshBabelPlugin generates signatures for function declarations calling hooks 1`] = `
+"
+export default function App() {
+  const [foo, setFoo] = useState(0);
+  React.useEffect(() => {});
+  return <h1>{foo}</h1>;
+}
+
+__signature__(App, \\"useState{[foo, setFoo]}\\\\nuseEffect{}\\");
+
+_c = App;
+
+var _c;
+
+__register__(_c, \\"App\\");"
+`;
+
+exports[`ReactFreshBabelPlugin generates signatures for function expressions calling hooks 1`] = `
+"
+export const A = _c3 = React.memo(_c2 = React.forwardRef(_c = __signature__((props, ref) => {
+  const [foo, setFoo] = useState(0);
+  React.useEffect(() => {});
+  return <h1 ref={ref}>{foo}</h1>;
+}, \\"useState{[foo, setFoo]}\\\\nuseEffect{}\\")));
+
+export const B = _c6 = React.memo(_c5 = React.forwardRef(_c4 = __signature__(function (props, ref) {
+  const [foo, setFoo] = useState(0);
+  React.useEffect(() => {});
+  return <h1 ref={ref}>{foo}</h1>;
+}, \\"useState{[foo, setFoo]}\\\\nuseEffect{}\\")));
+
+function hoc() {
+  return __signature__(function Inner() {
+    const [foo, setFoo] = useState(0);
+    React.useEffect(() => {});
+    return <h1 ref={ref}>{foo}</h1>;
+  }, \\"useState{[foo, setFoo]}\\\\nuseEffect{}\\");
+}
+
+export let C = hoc();
+
+var _c, _c2, _c3, _c4, _c5, _c6;
+
+__register__(_c, \\"A$React.memo$React.forwardRef\\");
+
+__register__(_c2, \\"A$React.memo\\");
+
+__register__(_c3, \\"A\\");
+
+__register__(_c4, \\"B$React.memo$React.forwardRef\\");
+
+__register__(_c5, \\"B$React.memo\\");
+
+__register__(_c6, \\"B\\");"
+`;
+
 exports[`ReactFreshBabelPlugin ignores HOC definitions 1`] = `
 "
 let connect = () => {
@@ -51,11 +107,63 @@ exports[`ReactFreshBabelPlugin ignores unnamed function declarations 1`] = `
 export default function () {}"
 `;
 
+exports[`ReactFreshBabelPlugin includes custom hooks into the signatures 1`] = `
+"
+function useFancyState() {
+  const [foo, setFoo] = React.useState(0);
+  useFancyEffect();
+  return foo;
+}
+
+__signature__(useFancyState, \\"useState{[foo, setFoo]}\\\\nuseFancyEffect{}\\", () => [useFancyEffect]);
+
+const useFancyEffect = () => {
+  React.useEffect(() => {});
+};
+
+__signature__(useFancyEffect, \\"useEffect{}\\");
+
+export default function App() {
+  const bar = useFancyState();
+  return <h1>{bar}</h1>;
+}
+
+__signature__(App, \\"useFancyState{bar}\\", () => [useFancyState]);
+
+_c = App;
+
+var _c;
+
+__register__(_c, \\"App\\");"
+`;
+
 exports[`ReactFreshBabelPlugin only registers pascal case functions 1`] = `
 "
 function hello() {
   return 2 * 2;
 }"
+`;
+
+exports[`ReactFreshBabelPlugin registers capitalized identifiers in HOC calls 1`] = `
+"
+function Foo() {
+  return <h1>Hi</h1>;
+}
+
+_c = Foo;
+export default _c2 = hoc(Foo);
+export const A = _c3 = hoc(Foo);
+const B = _c4 = hoc(Foo);
+
+var _c, _c2, _c3, _c4;
+
+__register__(_c, \\"Foo\\");
+
+__register__(_c2, \\"%default%\\");
+
+__register__(_c3, \\"A\\");
+
+__register__(_c4, \\"B\\");"
 `;
 
 exports[`ReactFreshBabelPlugin registers identifiers used in JSX at definition site 1`] = `
@@ -78,15 +186,19 @@ function Foo() {
 
 _c2 = Foo;
 const B = _c3 = hoc(A);
-const NotAComponent = wow(A);
+// This is currently registered as a false positive:
+const NotAComponent = _c4 = wow(A);
+// We could avoid it but it also doesn't hurt.
 
-var _c, _c2, _c3;
+var _c, _c2, _c3, _c4;
 
 __register__(_c, 'Header');
 
 __register__(_c2, 'Foo');
 
-__register__(_c3, 'B');"
+__register__(_c3, 'B');
+
+__register__(_c4, 'NotAComponent');"
 `;
 
 exports[`ReactFreshBabelPlugin registers identifiers used in React.createElement at definition site 1`] = `
@@ -111,15 +223,19 @@ _c2 = Foo;
 React.createContext(Store);
 
 const B = _c3 = hoc(A);
-const NotAComponent = wow(A);
+// This is currently registered as a false positive:
+const NotAComponent = _c4 = wow(A);
+// We could avoid it but it also doesn't hurt.
 
-var _c, _c2, _c3;
+var _c, _c2, _c3, _c4;
 
 __register__(_c, 'Header');
 
 __register__(_c2, 'Foo');
 
-__register__(_c3, 'B');"
+__register__(_c3, 'B');
+
+__register__(_c4, 'NotAComponent');"
 `;
 
 exports[`ReactFreshBabelPlugin registers likely HOCs with inline functions 1`] = `
@@ -218,13 +334,15 @@ __register__(_c3, 'Baz');"
 
 exports[`ReactFreshBabelPlugin registers top-level exported named arrow functions 1`] = `
 "
-export const Hello = _c = () => {
+export const Hello = () => {
   function handleClick() {}
   return <h1 onClick={handleClick}>Hi</h1>;
 };
 
-export let Bar = _c2 = props => <Hello />;
+_c = Hello;
+export let Bar = props => <Hello />;
 
+_c2 = Bar;
 export default (() => {
   // This one should be ignored.
   // You should name your components.
@@ -260,14 +378,17 @@ __register__(_c2, \\"Bar\\");"
 
 exports[`ReactFreshBabelPlugin registers top-level variable declarations with arrow functions 1`] = `
 "
-let Hello = _c = () => {
+let Hello = () => {
   const handleClick = () => {};
   return <h1 onClick={handleClick}>Hi</h1>;
 };
-const Bar = _c2 = () => {
+_c = Hello;
+const Bar = () => {
   return <Hello />;
 };
-var Baz = _c3 = () => <div />;
+_c2 = Bar;
+var Baz = () => <div />;
+_c3 = Baz;
 var sum = () => {};
 
 var _c, _c2, _c3;
@@ -281,13 +402,15 @@ __register__(_c3, \\"Baz\\");"
 
 exports[`ReactFreshBabelPlugin registers top-level variable declarations with function expressions 1`] = `
 "
-let Hello = _c = function () {
+let Hello = function () {
   function handleClick() {}
   return <h1 onClick={handleClick}>Hi</h1>;
 };
-const Bar = _c2 = function Baz() {
+_c = Hello;
+const Bar = function Baz() {
   return <Hello />;
 };
+_c2 = Bar;
 function sum() {}
 let Baz = 10;
 var Qux;

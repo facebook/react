@@ -257,7 +257,9 @@ describe('ReactFreshBabelPlugin', () => {
         }
 
         const B = hoc(A);
+        // This is currently registered as a false positive:
         const NotAComponent = wow(A);
+        // We could avoid it but it also doesn't hurt.
     `),
     ).toMatchSnapshot();
   });
@@ -295,7 +297,89 @@ describe('ReactFreshBabelPlugin', () => {
         React.createContext(Store);
 
         const B = hoc(A);
+        // This is currently registered as a false positive:
         const NotAComponent = wow(A);
+        // We could avoid it but it also doesn't hurt.
+    `),
+    ).toMatchSnapshot();
+  });
+
+  it('registers capitalized identifiers in HOC calls', () => {
+    expect(
+      transform(`
+        function Foo() {
+          return <h1>Hi</h1>;
+        }
+
+        export default hoc(Foo);
+        export const A = hoc(Foo);
+        const B = hoc(Foo);
+    `),
+    ).toMatchSnapshot();
+  });
+
+  it('generates signatures for function declarations calling hooks', () => {
+    expect(
+      transform(`
+        export default function App() {
+          const [foo, setFoo] = useState(0);
+          React.useEffect(() => {});
+          return <h1>{foo}</h1>;
+        }
+    `),
+    ).toMatchSnapshot();
+  });
+
+  it('generates signatures for function expressions calling hooks', () => {
+    // Unlike __register__, we want to sign all functions -- not just top level.
+    // This lets us support editing HOCs better.
+    // For function declarations, __signature__ is called on next line.
+    // For function expressions, it wraps the expression.
+    // In order for this to work, __signature__ returns its first argument.
+    expect(
+      transform(`
+        export const A = React.memo(React.forwardRef((props, ref) => {
+          const [foo, setFoo] = useState(0);
+          React.useEffect(() => {});
+          return <h1 ref={ref}>{foo}</h1>;
+        }));
+
+        export const B = React.memo(React.forwardRef(function(props, ref) {
+          const [foo, setFoo] = useState(0);
+          React.useEffect(() => {});
+          return <h1 ref={ref}>{foo}</h1>;
+        }));
+
+        function hoc() {
+          return function Inner() {
+            const [foo, setFoo] = useState(0);
+            React.useEffect(() => {});
+            return <h1 ref={ref}>{foo}</h1>;
+          };
+        }
+
+        export let C = hoc();
+    `),
+    ).toMatchSnapshot();
+  });
+
+  it('includes custom hooks into the signatures', () => {
+    expect(
+      transform(`
+        function useFancyState() {
+          const [foo, setFoo] = React.useState(0);
+          useFancyEffect();
+          return foo;
+        }
+
+        const useFancyEffect = () => {
+          React.useEffect(() => {});
+        };
+
+        export default function App() {
+          const bar = useFancyState();
+          return <h1>{bar}</h1>;
+        }
     `),
     ).toMatchSnapshot();
   });
