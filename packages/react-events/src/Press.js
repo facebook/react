@@ -20,6 +20,7 @@ type PressProps = {
   delayLongPress: number,
   delayPressEnd: number,
   delayPressStart: number,
+  onContextMenu: (e: PressEvent) => void,
   onLongPress: (e: PressEvent) => void,
   onLongPressChange: boolean => void,
   onLongPressShouldCancelPress: () => boolean,
@@ -78,7 +79,8 @@ type PressEventType =
   | 'pressend'
   | 'presschange'
   | 'longpress'
-  | 'longpresschange';
+  | 'longpresschange'
+  | 'contextmenu';
 
 type PressEvent = {|
   target: Element | Document,
@@ -99,6 +101,7 @@ type PressEvent = {|
   shiftKey: boolean,
 |};
 
+const isMac = /^Mac/.test(navigator.platform);
 const DEFAULT_PRESS_END_DELAY_MS = 0;
 const DEFAULT_PRESS_START_DELAY_MS = 0;
 const DEFAULT_LONG_PRESS_DELAY_MS = 500;
@@ -400,17 +403,10 @@ function dispatchCancel(
   props: PressProps,
   state: PressState,
 ): void {
-  const nativeEvent: any = event.nativeEvent;
-  const type = event.type;
-
   if (state.isPressed) {
-    if (type === 'contextmenu' && props.preventDefault !== false) {
-      nativeEvent.preventDefault();
-    } else {
-      state.ignoreEmulatedMouseEvents = false;
-      removeRootEventTypes(context, state);
-      dispatchPressEndEvents(event, context, props, state);
-    }
+    state.ignoreEmulatedMouseEvents = false;
+    removeRootEventTypes(context, state);
+    dispatchPressEndEvents(event, context, props, state);
   } else if (state.allowPressReentry) {
     removeRootEventTypes(context, state);
   }
@@ -683,8 +679,9 @@ const PressResponder = {
             return;
           }
           // Ignore mouse/pen pressing on touch hit target area
+          const isMouseType = pointerType === 'mouse';
           if (
-            (pointerType === 'mouse' || pointerType === 'pen') &&
+            (isMouseType || pointerType === 'pen') &&
             isEventPositionWithinTouchHitTarget(event, context)
           ) {
             // We need to prevent the native event to block the focus
@@ -692,14 +689,22 @@ const PressResponder = {
             return;
           }
 
-          // Ignore any device buttons except left-mouse and touch/pen contact
-          if (nativeEvent.button > 0) {
+          // We set these here, before the button check so we have this
+          // data around for handling of the context menu
+          state.pointerType = pointerType;
+          state.pressTarget = context.getEventCurrentTarget(event);
+
+          // Ignore any device buttons except left-mouse and touch/pen contact.
+          // Additionally we ignore left-mouse + ctrl-key with Macs as that
+          // acts like right-click and opens the contextmenu.
+          if (
+            nativeEvent.button > 0 ||
+            (isMac && isMouseType && nativeEvent.ctrlKey)
+          ) {
             return;
           }
 
           state.allowPressReentry = true;
-          state.pointerType = pointerType;
-          state.pressTarget = context.getEventCurrentTarget(event);
           state.responderRegionOnActivation = calculateResponderRegion(
             context,
             state.pressTarget,
@@ -717,9 +722,25 @@ const PressResponder = {
         break;
       }
 
-      // CANCEL
       case 'contextmenu': {
-        dispatchCancel(event, context, props, state);
+        if (state.isPressed) {
+          dispatchCancel(event, context, props, state);
+          if (props.preventDefault !== false) {
+            // Skip dispatching of onContextMenu below
+            nativeEvent.preventDefault();
+            return;
+          }
+        }
+        if (props.onContextMenu) {
+          dispatchEvent(
+            event,
+            context,
+            state,
+            'contextmenu',
+            props.onContextMenu,
+            true,
+          );
+        }
         break;
       }
 
