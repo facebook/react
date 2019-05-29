@@ -36,15 +36,22 @@ export function useSubscription<Value>({
     value: getCurrentValue(),
   });
 
+  let valueToReturn = state.value;
+
   // If parameters have changed since our last render, schedule an update with its current value.
   if (
     state.getCurrentValue !== getCurrentValue ||
     state.subscribe !== subscribe
   ) {
+    // If the subscription has been updated, we'll schedule another update with React.
+    // React will process this update immediately, so the old subscription value won't be committed.
+    // It is still nice to avoid returning a mismatched value though, so let's override the return value.
+    valueToReturn = getCurrentValue();
+
     setState({
       getCurrentValue,
       subscribe,
-      value: getCurrentValue(),
+      value: valueToReturn,
     });
   }
 
@@ -109,5 +116,5 @@ export function useSubscription<Value>({
   );
 
   // Return the current value for our caller to use while rendering.
-  return state.value;
+  return valueToReturn;
 }

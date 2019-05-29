@@ -429,7 +429,7 @@ describe('useSubscription', () => {
     // Flush everything and ensure that the correct subscribable is used
     // We expect the new subscribable to finish rendering,
     // But then the updated values from the old subscribable should be used.
-    expect(Scheduler).toHaveYielded(['Grandchild: b-0',]);
+    expect(Scheduler).toHaveYielded(['Grandchild: b-0']);
     expect(Scheduler).toFlushAndYield([
       'Child: a-2',
       'Grandchild: a-2',
@@ -513,5 +513,36 @@ describe('useSubscription', () => {
 
     // This event should unmount
     eventHandler.change(false);
+  });
+
+  it('does not return a value from the previous subscription if the source is updated', () => {
+    const subscription1 = {
+      getCurrentValue: () => 'one',
+      subscribe: () => () => {},
+    };
+
+    const subscription2 = {
+      getCurrentValue: () => 'two',
+      subscribe: () => () => {},
+    };
+
+    function Subscription({subscription}) {
+      const value = useSubscription(subscription);
+      if (value !== subscription.getCurrentValue()) {
+        throw Error(
+          `expected value "${subscription.getCurrentValue()}" but got value "${value}"`,
+        );
+      }
+      return null;
+    }
+
+    const renderer = ReactTestRenderer.create(
+      <Subscription subscription={subscription1} />,
+      {unstable_isConcurrent: true},
+    );
+
+    Scheduler.flushAll();
+    renderer.update(<Subscription subscription={subscription2} />);
+    Scheduler.flushAll();
   });
 });
