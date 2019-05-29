@@ -126,7 +126,7 @@ describe('ReactSuspensePlaceholder', () => {
     ReactNoop.render(<App middleText="B" />);
 
     expect(Scheduler).toFlushAndYield(['A', 'Suspend! [B]', 'C', 'Loading...']);
-    expect(ReactNoop).toMatchRenderedOutput(null);
+    expect(ReactNoop).toMatchRenderedOutput('Loading...');
 
     jest.advanceTimersByTime(1000);
     expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
@@ -189,7 +189,7 @@ describe('ReactSuspensePlaceholder', () => {
 
     expect(Scheduler).toFlushAndYield(['A', 'Suspend! [B]', 'C', 'Loading...']);
 
-    expect(ReactNoop).toMatchRenderedOutput(null);
+    expect(ReactNoop).not.toMatchRenderedOutput('ABC');
 
     jest.advanceTimersByTime(1000);
     expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
@@ -239,7 +239,7 @@ describe('ReactSuspensePlaceholder', () => {
 
     expect(Scheduler).toFlushAndYield(['a', 'Suspend! [b]', 'c', 'Loading...']);
 
-    expect(ReactNoop).toMatchRenderedOutput(null);
+    expect(ReactNoop).toMatchRenderedOutput(<uppercase>LOADING...</uppercase>);
 
     jest.advanceTimersByTime(1000);
     expect(Scheduler).toHaveYielded(['Promise resolved [b]']);
@@ -345,10 +345,8 @@ describe('ReactSuspensePlaceholder', () => {
           'Text',
           'Fallback',
         ]);
-        expect(ReactNoop).toMatchRenderedOutput(null);
-
-        // Show the fallback UI.
-        jest.advanceTimersByTime(750);
+        // Since this is initial render we immediately commit the fallback. Another test below
+        // deals with the update case where this suspends.
         expect(ReactNoop).toMatchRenderedOutput('Loading...');
         expect(onRender).toHaveBeenCalledTimes(1);
 
@@ -359,7 +357,7 @@ describe('ReactSuspensePlaceholder', () => {
         expect(onRender.mock.calls[0][3]).toBe(10);
 
         // Resolve the pending promise.
-        jest.advanceTimersByTime(250);
+        jest.advanceTimersByTime(1000);
         expect(Scheduler).toHaveYielded(['Promise resolved [Loaded]']);
         expect(Scheduler).toFlushAndYield(['Suspending', 'Loaded', 'Text']);
         expect(ReactNoop).toMatchRenderedOutput('LoadedText');
@@ -437,7 +435,12 @@ describe('ReactSuspensePlaceholder', () => {
       });
 
       it('properly accounts for base durations when a suspended times out in a concurrent tree', () => {
-        ReactNoop.render(<App shouldSuspend={false} textRenderDuration={5} />);
+        ReactNoop.render(
+          <React.Fragment>
+            <App shouldSuspend={false} textRenderDuration={5} />
+            <Suspense fallback={null} />
+          </React.Fragment>,
+        );
 
         expect(Scheduler).toFlushAndYield(['App', 'Text']);
         expect(ReactNoop).toMatchRenderedOutput('Text');
@@ -448,7 +451,12 @@ describe('ReactSuspensePlaceholder', () => {
         expect(onRender.mock.calls[0][2]).toBe(5);
         expect(onRender.mock.calls[0][3]).toBe(5);
 
-        ReactNoop.render(<App shouldSuspend={true} textRenderDuration={5} />);
+        ReactNoop.render(
+          <React.Fragment>
+            <App shouldSuspend={true} textRenderDuration={5} />
+            <Suspense fallback={null} />
+          </React.Fragment>,
+        );
         expect(Scheduler).toFlushAndYield([
           'App',
           'Suspending',
