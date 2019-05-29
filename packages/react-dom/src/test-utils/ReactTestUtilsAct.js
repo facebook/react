@@ -85,16 +85,19 @@ let actingUpdatesScopeDepth = 0;
 
 function act(callback: () => Thenable) {
   let previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
-  let previousActingUpdatesSigil = ReactActingRendererSigil.current;
+  let previousActingUpdatesSigil;
   actingUpdatesScopeDepth++;
   // we use the function flushPassiveEffects directly as the sigil,
   // since it's unique to a renderer
-  ReactActingRendererSigil.current = flushPassiveEffects;
+  if (__DEV__) {
+    previousActingUpdatesSigil = ReactActingRendererSigil.current;
+    ReactActingRendererSigil.current = flushPassiveEffects;
+  }
 
   function onDone() {
     actingUpdatesScopeDepth--;
-    ReactActingRendererSigil.current = previousActingUpdatesSigil;
     if (__DEV__) {
+      ReactActingRendererSigil.current = previousActingUpdatesSigil;
       if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
         // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
         warningWithoutStack(
