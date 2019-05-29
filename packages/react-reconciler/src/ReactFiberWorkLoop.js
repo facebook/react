@@ -213,6 +213,10 @@ let workInProgressRootExitStatus: RootExitStatus = RootIncomplete;
 let workInProgressRootLatestProcessedExpirationTime: ExpirationTime = Sync;
 let workInProgressRootLatestSuspenseTimeout: ExpirationTime = Sync;
 let workInProgressRootCanSuspendUsingConfig: null | SuspenseConfig = null;
+// If we're pinged while rendering we don't always restart immediately.
+// This flag determines if it might be worthwhile to restart if an opportunity
+// happens latere.
+let workInProgressRootHasPendingPing: boolean = false;
 // The most recent time we committed a fallback. This lets us ensure a train
 // model where we don't commit new loading states in too quick succession.
 let globalMostRecentFallbackTime: number = 0;
@@ -757,6 +761,7 @@ function prepareFreshStack(root, expirationTime) {
   workInProgressRootLatestProcessedExpirationTime = Sync;
   workInProgressRootLatestSuspenseTimeout = Sync;
   workInProgressRootCanSuspendUsingConfig = null;
+  workInProgressRootHasPendingPing = false;
 
   if (__DEV__) {
     ReactStrictModeWarnings.discardPendingWarnings();
@@ -807,11 +812,16 @@ function renderRoot(
     // know if we're going to process an update which wants to commit earlier,
     // and this path happens very early so it would happen too often. Instead,
     // for that case, we'll wait until we complete.
-    const lastPendingTime = root.lastPendingTime;
-    if (lastPendingTime < expirationTime) {
-      // There's lower priority work. It might be unsuspended. Try rendering
-      // at that level immediately, while preserving the position in the queue.
-      return renderRoot.bind(null, root, lastPendingTime);
+    if (workInProgressRootHasPendingPing) {
+      // We have a ping at this expiration. Let's restart to see if we get unblocked.
+      prepareFreshStack(root, expirationTime);
+    } else {
+      const lastPendingTime = root.lastPendingTime;
+      if (lastPendingTime < expirationTime) {
+        // There's lower priority work. It might be unsuspended. Try rendering
+        // at that level immediately, while preserving the position in the queue.
+        return renderRoot.bind(null, root, lastPendingTime);
+      }
     }
   }
 
@@ -989,6 +999,12 @@ function renderRoot(
           globalMostRecentFallbackTime + FALLBACK_THROTTLE_MS - now();
         // Don't bother with a very short suspense time.
         if (msUntilTimeout > 10) {
+          if (workInProgressRootHasPendingPing) {
+            // This render was pinged but we didn't get to restart earlier so try
+            // restarting now instead.
+            prepareFreshStack(root, expirationTime);
+            return renderRoot.bind(null, root, expirationTime);
+          }
           const lastPendingTime = root.lastPendingTime;
           if (lastPendingTime < expirationTime) {
             // There's lower priority work. It might be unsuspended. Try rendering
@@ -1012,6 +1028,12 @@ function renderRoot(
       if (!disableYielding && !isSync) {
         // We're suspended in a state that should be avoided. We'll try to avoid committing
         // it for as long as the timeouts let us.
+        if (workInProgressRootHasPendingPing) {
+          // This render was pinged but we didn't get to restart earlier so try
+          // restarting now instead.
+          prepareFreshStack(root, expirationTime);
+          return renderRoot.bind(null, root, expirationTime);
+        }
         const lastPendingTime = root.lastPendingTime;
         if (lastPendingTime < expirationTime) {
           // There's lower priority work. It might be unsuspended. Try rendering
@@ -1992,8 +2014,12 @@ export function pingSuspendedRoot(
       // Restart from the root. Don't need to schedule a ping because
       // we're already working on this tree.
       prepareFreshStack(root, renderExpirationTime);
-      return;
+    } else {
+      // Even though we can't restart right now, we might get an
+      // opportunity later. So we mark this render as having a ping.
+      workInProgressRootHasPendingPing = true;
     }
+    return;
   }
 
   const lastPendingTime = root.lastPendingTime;
