@@ -414,7 +414,8 @@ function dispatchCancel(
 
 function isValidKeyPress(key: string): boolean {
   // Accessibility for keyboards. Space and Enter only.
-  return key === ' ' || key === 'Enter';
+  // "Spacebar" is for IE 11
+  return key === 'Enter' || key === ' ' || key === 'Spacebar';
 }
 
 function calculateDelayMS(delay: ?number, min = 0, fallback = 0) {
