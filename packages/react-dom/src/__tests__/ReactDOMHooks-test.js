@@ -11,7 +11,6 @@
 
 let React;
 let ReactDOM;
-let act;
 let Scheduler;
 
 describe('ReactDOMHooks', () => {
@@ -22,7 +21,6 @@ describe('ReactDOMHooks', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
-    act = require('react-dom/test-utils').act;
     Scheduler = require('scheduler');
 
     container = document.createElement('div');

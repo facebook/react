@@ -14,7 +14,6 @@ let React;
 let ReactDOM;
 let act;
 let ReactFeatureFlags;
-let Scheduler;
 
 describe('ReactErrorBoundaries', () => {
   let log;
@@ -47,7 +46,6 @@ describe('ReactErrorBoundaries', () => {
     ReactDOM = require('react-dom');
     React = require('react');
     act = require('react-dom/test-utils').act;
-    Scheduler = require('scheduler');
 
     log = [];
 

@@ -44,16 +44,13 @@ describe('withComponentStack', () => {
   let React = null;
   let ReactTestRenderer = null;
   let error = null;
-  let scheduler = null;
   let warn = null;
 
   beforeEach(() => {
     jest.resetModules();
-    jest.mock('scheduler', () => require('scheduler/unstable_mock'));
 
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
-    scheduler = require('scheduler');
 
     error = React.error;
     warn = React.warn;
