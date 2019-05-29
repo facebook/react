@@ -96,8 +96,8 @@ module.exports = function(context) {
             node,
             'Error message does not have a corresponding production ' +
               'error code.\n\n' +
-              'Run `yarn build --extract-errors` to add the message to error ' +
-              'code map, so it can be stripped from the production builds. ' +
+              'Run `yarn extract-errors` to add the message to error code ' +
+              'map, so it can be stripped from the production builds. ' +
               "Alternatively, if you're updating an existing error " +
               'message, you can modify ' +
               '`scripts/error-codes/codes.json` directly.'
