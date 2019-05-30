@@ -45,7 +45,7 @@ import {passiveBrowserEventsSupported} from './checkPassiveEvents';
 
 import {enableEventAPI} from 'shared/ReactFeatureFlags';
 
-const {isInteractiveTopLevelEventType} = SimpleEventPlugin;
+const {isDiscreteTopLevelEventType} = SimpleEventPlugin;
 
 const CALLBACK_BOOKKEEPING_POOL_SIZE = 10;
 const callbackBookkeepingPool = [];
@@ -215,11 +215,11 @@ function trapEventForPluginEventSystem(
   topLevelType: DOMTopLevelEventType,
   capture: boolean,
 ): void {
-  const dispatch = isInteractiveTopLevelEventType(topLevelType)
-    ? dispatchInteractiveEvent
+  const dispatch = isDiscreteTopLevelEventType(topLevelType)
+    ? dispatchDiscreteEvent
     : dispatchEvent;
   const rawEventName = getRawEventName(topLevelType);
-  // Check if interactive and wrap in discreteUpdates
+  // Check if discrete and wrap in discreteUpdates
   const listener = dispatch.bind(null, topLevelType, PLUGIN_EVENT_SYSTEM);
   if (capture) {
     addEventCaptureListener(element, rawEventName, listener);
@@ -228,7 +228,7 @@ function trapEventForPluginEventSystem(
   }
 }
 
-function dispatchInteractiveEvent(topLevelType, eventSystemFlags, nativeEvent) {
+function dispatchDiscreteEvent(topLevelType, eventSystemFlags, nativeEvent) {
   if (!enableEventAPI || shouldflushDiscreteUpdates(nativeEvent.timeStamp)) {
     flushDiscreteUpdates();
   }
