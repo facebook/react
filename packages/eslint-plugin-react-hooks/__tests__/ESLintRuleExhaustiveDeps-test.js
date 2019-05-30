@@ -521,7 +521,7 @@ const tests = {
       // Valid because the ref is captured.
       code: `
         function useMyThing(myRef) {
-          const myRef = useRef();
+          myRef = useRef();
           useEffect(() => {
             const handleMove = () => {};
             const node = myRef.current;

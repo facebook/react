@@ -651,7 +651,7 @@ describe('ReactDOMServerIntegration', () => {
       });
     });
 
-    describe('component hierarchies', async function() {
+    describe('component hierarchies', function() {
       itRenders('single child hierarchies of components', async render => {
         const Component = props => <div>{props.children}</div>;
         let e = await render(

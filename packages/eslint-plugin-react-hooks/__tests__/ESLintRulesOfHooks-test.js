@@ -95,7 +95,7 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
       useHook2 = () => { useState(); };
       ({useHook: () => { useState(); }});
       ({useHook() { useState(); }});
-      const {useHook = () => { useState(); }} = {};
+      const {useHook3 = () => { useState(); }} = {};
       ({useHook = () => { useState(); }} = {});
     `,
     `
