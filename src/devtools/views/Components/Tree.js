@@ -22,6 +22,9 @@ import SearchInput from './SearchInput';
 import { ComponentFiltersModalContextController } from './ComponentFiltersModalContext';
 import ToggleComponentFiltersModalButton from './ToggleComponentFiltersModalButton';
 import ComponentFiltersModal from './ComponentFiltersModal';
+import { HoveredElementSetIDContext } from './HoveredElementContext';
+import Guidelines from './Guidelines';
+import TreeFocusedContext from './TreeFocusedContext';
 
 import styles from './Tree.css';
 
@@ -273,54 +276,57 @@ export default function Tree(props: Props) {
   );
 
   return (
-    <ComponentFiltersModalContextController>
-      <div className={styles.Tree} ref={treeRef}>
-        <div className={styles.SearchInput}>
-          <InspectHostNodesToggle />
-          <div className={styles.VRule} />
-          <Suspense fallback={<Loading />}>
-            {ownerID !== null ? <OwnersStack /> : <SearchInput />}
-          </Suspense>
-          <div className={styles.VRule} />
-          <ToggleComponentFiltersModalButton />
+    <TreeFocusedContext.Provider value={treeFocused}>
+      <ComponentFiltersModalContextController>
+        <div className={styles.Tree} ref={treeRef}>
+          <div className={styles.SearchInput}>
+            <InspectHostNodesToggle />
+            <div className={styles.VRule} />
+            <Suspense fallback={<Loading />}>
+              {ownerID !== null ? <OwnersStack /> : <SearchInput />}
+            </Suspense>
+            <div className={styles.VRule} />
+            <ToggleComponentFiltersModalButton />
+          </div>
+          <div
+            className={styles.AutoSizerWrapper}
+            onBlur={handleBlur}
+            onFocus={handleFocus}
+            onKeyPress={handleKeyPress}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            ref={focusTargetRef}
+            tabIndex={0}
+          >
+            <AutoSizer>
+              {({ height, width }) => (
+                // $FlowFixMe https://github.com/facebook/flow/issues/7341
+                <FixedSizeList
+                  className={styles.List}
+                  height={height}
+                  innerElementType={InnerElementType}
+                  itemCount={numElements}
+                  itemData={itemData}
+                  itemSize={lineHeight}
+                  overscanCount={3}
+                  ref={listRef}
+                  width={width}
+                >
+                  {ElementView}
+                </FixedSizeList>
+              )}
+            </AutoSizer>
+          </div>
+          <ComponentFiltersModal />
         </div>
-        <div
-          className={styles.AutoSizerWrapper}
-          onBlur={handleBlur}
-          onFocus={handleFocus}
-          onKeyPress={handleKeyPress}
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
-          ref={focusTargetRef}
-          tabIndex={0}
-        >
-          <AutoSizer>
-            {({ height, width }) => (
-              // $FlowFixMe https://github.com/facebook/flow/issues/7341
-              <FixedSizeList
-                className={styles.List}
-                height={height}
-                innerElementType={InnerElementType}
-                itemCount={numElements}
-                itemData={itemData}
-                itemSize={lineHeight}
-                overscanCount={3}
-                ref={listRef}
-                width={width}
-              >
-                {ElementView}
-              </FixedSizeList>
-            )}
-          </AutoSizer>
-        </div>
-        <ComponentFiltersModal />
-      </div>
-    </ComponentFiltersModalContextController>
+      </ComponentFiltersModalContextController>
+    </TreeFocusedContext.Provider>
   );
 }
 
-function InnerElementType({ style, ...rest }) {
+function InnerElementType({ children, style, ...rest }) {
   const { ownerID } = useContext(TreeStateContext);
+  const setHoveredElementID = useContext(HoveredElementSetIDContext);
 
   // The list may need to scroll horizontally due to deeply nested elements.
   // We don't know the maximum scroll width up front, because we're windowing.
@@ -355,6 +361,10 @@ function InnerElementType({ style, ...rest }) {
     setMinWidth(null);
   }
 
+  const handleMouseLeave = useCallback(() => {
+    setHoveredElementID(null);
+  }, [setHoveredElementID]);
+
   // This style override enables the background color to fill the full visible width,
   // when combined with the CSS tweaks in Element.
   // A lot of options were considered; this seemed the one that requires the least code.
@@ -362,6 +372,7 @@ function InnerElementType({ style, ...rest }) {
   return (
     <div
       className={styles.InnerElementType}
+      onMouseLeave={handleMouseLeave}
       style={{
         ...style,
         display: 'inline-block',
@@ -370,7 +381,10 @@ function InnerElementType({ style, ...rest }) {
       }}
       ref={divRef}
       {...rest}
-    />
+    >
+      <Guidelines />
+      {children}
+    </div>
   );
 }
 

@@ -3,6 +3,7 @@
 import React, { Suspense } from 'react';
 import Tree from './Tree';
 import SelectedElement from './SelectedElement';
+import { HoveredElementContextController } from './HoveredElementContext';
 import { InspectedElementContextController } from './InspectedElementContext';
 import { OwnersListContextController } from './OwnersListContext';
 import portaledContent from '../portaledContent';
@@ -14,19 +15,21 @@ function Components(_: {||}) {
   // TODO Flex wrappers below should be user resizable.
   return (
     <OwnersListContextController>
-      <InspectedElementContextController>
-        <div className={styles.Components}>
-          <div className={styles.TreeWrapper}>
-            <Tree />
+      <HoveredElementContextController>
+        <InspectedElementContextController>
+          <div className={styles.Components}>
+            <div className={styles.TreeWrapper}>
+              <Tree />
+            </div>
+            <div className={styles.SelectedElementWrapper}>
+              <Suspense fallback={<Loading />}>
+                <SelectedElement />
+              </Suspense>
+            </div>
+            <ModalDialog />
           </div>
-          <div className={styles.SelectedElementWrapper}>
-            <Suspense fallback={<Loading />}>
-              <SelectedElement />
-            </Suspense>
-          </div>
-          <ModalDialog />
-        </div>
-      </InspectedElementContextController>
+        </InspectedElementContextController>
+      </HoveredElementContextController>
     </OwnersListContextController>
   );
 }

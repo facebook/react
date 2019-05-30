@@ -19,6 +19,7 @@ import Store from 'src/devtools/store';
 import ButtonIcon from '../ButtonIcon';
 import { createRegExp } from '../utils';
 import { TreeDispatcherContext, TreeStateContext } from './TreeContext';
+import { HoveredElementSetIDContext } from './HoveredElementContext';
 import { StoreContext } from '../context';
 
 import type { ItemData } from './Tree';
@@ -38,6 +39,7 @@ export default function ElementView({ data, index, style }: Props) {
     TreeStateContext
   );
   const dispatch = useContext(TreeDispatcherContext);
+  const setHoveredElementID = useContext(HoveredElementSetIDContext);
 
   const element =
     ownerFlatTree !== null
@@ -119,9 +121,10 @@ export default function ElementView({ data, index, style }: Props) {
   const handleMouseEnter = useCallback(() => {
     setIsHovered(true);
     if (id !== null) {
+      setHoveredElementID(id);
       onElementMouseEnter(id);
     }
-  }, [onElementMouseEnter, id]);
+  }, [id, onElementMouseEnter, setHoveredElementID]);
 
   const handleMouseLeave = useCallback(() => {
     setIsHovered(false);

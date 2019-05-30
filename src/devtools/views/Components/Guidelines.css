@@ -1,0 +1,18 @@
+.GuidelineHovered,
+.GuidelineSelectedActive,
+.GuidelineSelectedInactive {
+  width: 1px;
+  z-index: 2;
+}
+
+.GuidelineHovered {
+  background-color: var(--color-guideline-hovered);
+}
+
+.GuidelineSelectedActive {
+  background-color: var(--color-background-selected);
+}
+
+.GuidelineSelectedInactive {
+  background-color: var(--color-background-inactive);
+}

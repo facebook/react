@@ -261,6 +261,7 @@ function updateThemeVariables(
   updateStyleHelper(theme, 'color-dimmer', documentElements);
   updateStyleHelper(theme, 'color-dimmest', documentElements);
   updateStyleHelper(theme, 'color-expand-collapse-toggle', documentElements);
+  updateStyleHelper(theme, 'color-guideline-hovered', documentElements);
   updateStyleHelper(theme, 'color-jsx-arrow-brackets', documentElements);
   updateStyleHelper(
     theme,
