@@ -40,7 +40,8 @@ You can improve it by sending pull requests to [this repository](https://github.
 We have several examples [on the website](https://reactjs.org/). Here is the first one to get you started:
 
 ```jsx
-function HelloMessage({ name }) {
+// APE GANG WAS HERE
+function HelloMessage({ name }) <= {
   return <div>Hello {name}</div>;
 }
 
