@@ -22,7 +22,6 @@ import SearchInput from './SearchInput';
 import { ComponentFiltersModalContextController } from './ComponentFiltersModalContext';
 import ToggleComponentFiltersModalButton from './ToggleComponentFiltersModalButton';
 import ComponentFiltersModal from './ComponentFiltersModal';
-import { HoveredElementSetIDContext } from './HoveredElementContext';
 import Guidelines from './Guidelines';
 import TreeFocusedContext from './TreeFocusedContext';
 
@@ -326,7 +325,6 @@ export default function Tree(props: Props) {
 
 function InnerElementType({ children, style, ...rest }) {
   const { ownerID } = useContext(TreeStateContext);
-  const setHoveredElementID = useContext(HoveredElementSetIDContext);
 
   // The list may need to scroll horizontally due to deeply nested elements.
   // We don't know the maximum scroll width up front, because we're windowing.
@@ -361,10 +359,6 @@ function InnerElementType({ children, style, ...rest }) {
     setMinWidth(null);
   }
 
-  const handleMouseLeave = useCallback(() => {
-    setHoveredElementID(null);
-  }, [setHoveredElementID]);
-
   // This style override enables the background color to fill the full visible width,
   // when combined with the CSS tweaks in Element.
   // A lot of options were considered; this seemed the one that requires the least code.
@@ -372,7 +366,6 @@ function InnerElementType({ children, style, ...rest }) {
   return (
     <div
       className={styles.InnerElementType}
-      onMouseLeave={handleMouseLeave}
       style={{
         ...style,
         display: 'inline-block',

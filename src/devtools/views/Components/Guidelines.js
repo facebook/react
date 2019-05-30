@@ -1,7 +1,6 @@
 // @flow
 
 import React, { Fragment, useContext, useMemo } from 'react';
-import { HoveredElementIDContext } from './HoveredElementContext';
 import { TreeStateContext } from './TreeContext';
 import TreeFocusedContext from './TreeFocusedContext';
 import { SettingsContext } from '../Settings/SettingsContext';
@@ -12,23 +11,14 @@ import Store from '../../store';
 import styles from './Guidelines.css';
 
 export default function Guidelines(_: {||}) {
-  const hoveredElementID = useContext(HoveredElementIDContext);
   const { selectedElementID } = useContext(TreeStateContext);
   const treeFocused = useContext(TreeFocusedContext);
 
   return (
     <Fragment>
-      {hoveredElementID !== selectedElementID && (
-        <Guideline
-          className={styles.GuidelineHovered}
-          elementID={hoveredElementID}
-        />
-      )}
       <Guideline
         className={
-          treeFocused
-            ? styles.GuidelineSelectedActive
-            : styles.GuidelineSelectedInactive
+          treeFocused ? styles.GuidelineActive : styles.GuidelineInactive
         }
         elementID={selectedElementID}
       />

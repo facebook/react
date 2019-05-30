@@ -19,7 +19,6 @@ import Store from 'src/devtools/store';
 import ButtonIcon from '../ButtonIcon';
 import { createRegExp } from '../utils';
 import { TreeDispatcherContext, TreeStateContext } from './TreeContext';
-import { HoveredElementSetIDContext } from './HoveredElementContext';
 import { StoreContext } from '../context';
 
 import type { ItemData } from './Tree';
@@ -39,7 +38,6 @@ export default function ElementView({ data, index, style }: Props) {
     TreeStateContext
   );
   const dispatch = useContext(TreeDispatcherContext);
-  const setHoveredElementID = useContext(HoveredElementSetIDContext);
 
   const element =
     ownerFlatTree !== null
@@ -121,10 +119,9 @@ export default function ElementView({ data, index, style }: Props) {
   const handleMouseEnter = useCallback(() => {
     setIsHovered(true);
     if (id !== null) {
-      setHoveredElementID(id);
       onElementMouseEnter(id);
     }
-  }, [id, onElementMouseEnter, setHoveredElementID]);
+  }, [id, onElementMouseEnter]);
 
   const handleMouseLeave = useCallback(() => {
     setIsHovered(false);
@@ -164,7 +161,7 @@ export default function ElementView({ data, index, style }: Props) {
         ...style, // "style" comes from react-window
 
         // Left padding presents the appearance of a nested tree structure.
-        paddingLeft: `${depth * 0.75 + 0.25}rem`,
+        paddingLeft: '0.25rem',
 
         // These style overrides enable the background color to fill the full visible width,
         // when combined with the CSS tweaks in Tree.
@@ -176,6 +173,17 @@ export default function ElementView({ data, index, style }: Props) {
         marginBottom: `-${style.height}px`,
       }}
     >
+      <div
+        style={{
+          width: `${depth * 0.75}rem`,
+          height: '100%',
+          backgroundSize: '0.75rem 1rem',
+          backgroundColor: 'transparent',
+          backgroundImage:
+            'linear-gradient(to right, transparent 8px, var(--color-guideline) 8px, transparent 9px)',
+          backgroundRepeat: 'repeat',
+        }}
+      />
       <span className={styles.ScrollAnchor} ref={scrollAnchorStartRef} />
       {ownerID === null ? (
         <ExpandCollapseToggle element={element} store={store} />
