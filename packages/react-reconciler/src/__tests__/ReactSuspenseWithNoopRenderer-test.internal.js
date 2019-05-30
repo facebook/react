@@ -1451,6 +1451,60 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('A'), span('B')]);
   });
 
+  it('does suspend if a fallback has been shown for a short time', async () => {
+    function Foo() {
+      Scheduler.yieldValue('Foo');
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <AsyncText text="A" ms={200} />
+          <Suspense fallback={<Text text="Loading more..." />}>
+            <AsyncText text="B" ms={450} />
+          </Suspense>
+        </Suspense>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+    // Start rendering
+    expect(Scheduler).toFlushAndYield([
+      'Foo',
+      // A suspends
+      'Suspend! [A]',
+      // B suspends
+      'Suspend! [B]',
+      'Loading more...',
+      'Loading...',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
+
+    // Wait a short time.
+    Scheduler.advanceTime(250);
+    await advanceTimers(250);
+    expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
+
+    // Retry with the new content.
+    expect(Scheduler).toFlushAndYield([
+      'A',
+      // B still suspends
+      'Suspend! [B]',
+      'Loading more...',
+    ]);
+    // Because we've already been waiting for so long we can
+    // wait a bit longer. Still nothing...
+    expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
+
+    Scheduler.advanceTime(200);
+    await advanceTimers(200);
+
+    // Before we commit another Promise resolves.
+    expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
+    // We're still showing the first loading state.
+    expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
+    // Restart and render the complete content.
+    expect(Scheduler).toFlushAndYield(['A', 'B']);
+    expect(ReactNoop.getChildren()).toEqual([span('A'), span('B')]);
+  });
+
   it('does not suspend for very long after a higher priority update', async () => {
     function Foo({renderContent}) {
       Scheduler.yieldValue('Foo');
