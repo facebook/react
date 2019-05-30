@@ -290,6 +290,22 @@ describe('ReactShallowRenderer with hooks', () => {
     expect(firstResult).toEqual(secondResult);
   });
 
+  it('should work with useCallback', () => {
+    function SomeComponent() {
+      const noop = React.useCallback(() => {}, []);
+
+      return (
+        <div onClick={noop} />
+      );
+    }
+
+    const shallowRenderer = createRenderer();
+    let firstResult = shallowRenderer.render(<SomeComponent />);
+    let secondResult = shallowRenderer.render(<SomeComponent />);
+
+    expect(firstResult).toEqual(secondResult);
+  });
+
   it('should work with useContext', () => {
     const SomeContext = React.createContext('default');
 
