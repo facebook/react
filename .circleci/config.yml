@@ -118,7 +118,7 @@ jobs:
   build:
     docker: *docker
     environment: *environment
-    parallelism: 20
+    parallelism: 50
     steps:
       - checkout
       - *restore_yarn_cache
