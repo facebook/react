@@ -1413,6 +1413,9 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
   }
 }
 
+// TODO: This is now an empty object. Should we just make it a boolean?
+const SUSPENDED_MARKER: SuspenseState = ({}: any);
+
 function updateSuspenseComponent(
   current,
   workInProgress,
@@ -1440,17 +1443,9 @@ function updateSuspenseComponent(
       (ForceSuspenseFallback: SuspenseContext),
     )
   ) {
-    // This either already captured or is a new mount that was forced into its fallback
-    // state by a parent.
-    const attemptedState: SuspenseState | null = workInProgress.memoizedState;
     // Something in this boundary's subtree already suspended. Switch to
     // rendering the fallback children.
-    nextState = {
-      fallbackExpirationTime:
-        attemptedState !== null
-          ? attemptedState.fallbackExpirationTime
-          : NoWork,
-    };
+    nextState = SUSPENDED_MARKER;
     nextDidTimeout = true;
     workInProgress.effectTag &= ~DidCapture;
   } else {

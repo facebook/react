@@ -2303,17 +2303,6 @@ describe('Profiler', () => {
           'Text [Sync]',
           'Monkey',
         ]);
-        // The update hasn't expired yet, so we commit nothing.
-        expect(ReactNoop.getChildrenAsJSX()).toEqual(null);
-        expect(onRender).not.toHaveBeenCalled();
-
-        // Advance both React's virtual time and Jest's timers by enough to expire
-        // the update, but not by enough to flush the suspending promise.
-        ReactNoop.expire(10000);
-        await awaitableAdvanceTimers(10000);
-        // No additional rendering work is required, since we already prepared
-        // the placeholder.
-        expect(Scheduler).toHaveYielded([]);
         // Should have committed the placeholder.
         expect(ReactNoop.getChildrenAsJSX()).toEqual('Loading...Sync');
         expect(onRender).toHaveBeenCalledTimes(1);
@@ -2333,7 +2322,7 @@ describe('Profiler', () => {
         expect(onRender).toHaveBeenCalledTimes(2);
 
         // Once the promise resolves, we render the suspended view
-        await awaitableAdvanceTimers(10000);
+        await awaitableAdvanceTimers(20000);
         expect(Scheduler).toHaveYielded(['Promise resolved [Async]']);
         expect(Scheduler).toFlushAndYield(['AsyncText [Async]']);
         expect(ReactNoop.getChildrenAsJSX()).toEqual('AsyncSync');
@@ -2633,6 +2622,16 @@ describe('Profiler', () => {
       });
 
       it('handles high-pri renderers between suspended and resolved (async) trees', async () => {
+        // Set up an initial shell. We need to set this up before the test sceanrio
+        // because we want initial render to suspend on navigation to the initial state.
+        let renderer = ReactTestRenderer.create(
+          <React.Profiler id="app" onRender={() => {}}>
+            <React.Suspense fallback={<Text text="loading" />} />
+          </React.Profiler>,
+          {unstable_isConcurrent: true},
+        );
+        expect(Scheduler).toFlushAndYield([]);
+
         const initialRenderInteraction = {
           id: 0,
           name: 'initial render',
@@ -2640,19 +2639,17 @@ describe('Profiler', () => {
         };
 
         const onRender = jest.fn();
-        let renderer;
         SchedulerTracing.unstable_trace(
           initialRenderInteraction.name,
           initialRenderInteraction.timestamp,
           () => {
-            renderer = ReactTestRenderer.create(
+            renderer.update(
               <React.Profiler id="app" onRender={onRender}>
                 <React.Suspense fallback={<Text text="loading" />}>
                   <AsyncText text="loaded" ms={100} />
                 </React.Suspense>
                 <Text text="initial" />
               </React.Profiler>,
-              {unstable_isConcurrent: true},
             );
           },
         );

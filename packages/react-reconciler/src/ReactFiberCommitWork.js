@@ -63,10 +63,6 @@ import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import warning from 'shared/warning';
 
-import {
-  NoWork,
-  computeAsyncExpirationNoBucket,
-} from './ReactFiberExpirationTime';
 import {onCommitUnmount} from './ReactFiberDevToolsHook';
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 import {getStackByFiberInDevAndProd} from './ReactCurrentFiber';
@@ -102,8 +98,8 @@ import {
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
-  requestCurrentTime,
   resolveRetryThenable,
+  markCommitTimeOfFallback,
 } from './ReactFiberWorkLoop';
 import {
   NoEffect as NoHookEffect,
@@ -1288,16 +1284,7 @@ function commitSuspenseComponent(finishedWork: Fiber) {
   } else {
     newDidTimeout = true;
     primaryChildParent = finishedWork.child;
-    if (newState.fallbackExpirationTime === NoWork) {
-      // If the children had not already timed out, record the time.
-      // This is used to compute the elapsed time during subsequent
-      // attempts to render the children.
-      // We model this as a normal pri expiration time since that's
-      // how we infer start time for updates.
-      newState.fallbackExpirationTime = computeAsyncExpirationNoBucket(
-        requestCurrentTime(),
-      );
-    }
+    markCommitTimeOfFallback();
   }
 
   if (supportsMutation && primaryChildParent !== null) {

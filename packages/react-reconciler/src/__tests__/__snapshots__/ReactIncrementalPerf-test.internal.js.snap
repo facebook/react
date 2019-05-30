@@ -363,9 +363,12 @@ exports[`ReactDebugFiberPerf supports Suspense and lazy 1`] = `
 
 ⚛ (React Tree Reconciliation: Completed Root)
   ⚛ Parent [mount]
-    ⛔ Suspense [mount] Warning: Rendering was suspended
     ⚛ Suspense [mount]
-      ⚛ Spinner [mount]
+
+⚛ (Committing Changes)
+  ⚛ (Committing Snapshot Effects: 0 Total)
+  ⚛ (Committing Host Effects: 1 Total)
+  ⚛ (Calling Lifecycle Methods: 0 Total)
 "
 `;
 
@@ -374,21 +377,54 @@ exports[`ReactDebugFiberPerf supports Suspense and lazy 2`] = `
 
 ⚛ (React Tree Reconciliation: Completed Root)
   ⚛ Parent [mount]
-    ⛔ Suspense [mount] Warning: Rendering was suspended
     ⚛ Suspense [mount]
-      ⚛ Spinner [mount]
-
-⚛ (Waiting for async callback...)
-
-⚛ (React Tree Reconciliation: Completed Root)
-  ⚛ Parent [mount]
-    ⚛ Suspense [mount]
-      ⚛ Foo [mount]
 
 ⚛ (Committing Changes)
   ⚛ (Committing Snapshot Effects: 0 Total)
   ⚛ (Committing Host Effects: 1 Total)
   ⚛ (Calling Lifecycle Methods: 0 Total)
+
+⚛ (Waiting for async callback...)
+
+⚛ (React Tree Reconciliation: Completed Root)
+  ⚛ Parent [update]
+    ⛔ Suspense [update] Warning: Rendering was suspended
+    ⚛ Suspense [update]
+      ⚛ Spinner [mount]
+"
+`;
+
+exports[`ReactDebugFiberPerf supports Suspense and lazy 3`] = `
+"⚛ (Waiting for async callback...)
+
+⚛ (React Tree Reconciliation: Completed Root)
+  ⚛ Parent [mount]
+    ⚛ Suspense [mount]
+
+⚛ (Committing Changes)
+  ⚛ (Committing Snapshot Effects: 0 Total)
+  ⚛ (Committing Host Effects: 1 Total)
+  ⚛ (Calling Lifecycle Methods: 0 Total)
+
+⚛ (Waiting for async callback...)
+
+⚛ (React Tree Reconciliation: Completed Root)
+  ⚛ Parent [update]
+    ⛔ Suspense [update] Warning: Rendering was suspended
+    ⚛ Suspense [update]
+      ⚛ Spinner [mount]
+
+⚛ (Waiting for async callback...)
+
+⚛ (React Tree Reconciliation: Completed Root)
+  ⚛ Parent [update]
+    ⚛ Suspense [update]
+      ⚛ Foo [mount]
+
+⚛ (Committing Changes)
+  ⚛ (Committing Snapshot Effects: 0 Total)
+  ⚛ (Committing Host Effects: 2 Total)
+  ⚛ (Calling Lifecycle Methods: 1 Total)
 "
 `;
 

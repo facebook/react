@@ -101,7 +101,6 @@ import {
   enableEventAPI,
 } from 'shared/ReactFeatureFlags';
 import {
-  markRenderEventTimeAndConfig,
   renderDidSuspend,
   renderDidSuspendDelayIfPossible,
 } from './ReactFiberWorkLoop';
@@ -702,14 +701,6 @@ function completeWork(
         prevDidTimeout = prevState !== null;
         if (!nextDidTimeout && prevState !== null) {
           // We just switched from the fallback to the normal children.
-
-          // Mark the event time of the switching from fallback to normal children,
-          // based on the start of when we first showed the fallback. This time
-          // was given a normal pri expiration time at the time it was shown.
-          const fallbackExpirationTime: ExpirationTime =
-            prevState.fallbackExpirationTime;
-          markRenderEventTimeAndConfig(fallbackExpirationTime, null);
-
           // Delete the fallback.
           // TODO: Would it be better to store the fallback fragment on
           // the stateNode during the begin phase?
@@ -737,6 +728,13 @@ function completeWork(
         // in the concurrent tree already suspended during this render.
         // This is a known bug.
         if ((workInProgress.mode & BatchedMode) !== NoMode) {
+          // TODO: Move this back to throwException because this is too late
+          // if this is a large tree which is common for initial loads. We
+          // don't know if we should restart a render or not until we get
+          // this marker, and this is too late.
+          // If this render already had a ping or lower pri updates,
+          // and this is the first time we know we're going to suspend we
+          // should be able to immediately restart from within throwException.
           const hasInvisibleChildContext =
             current === null &&
             workInProgress.memoizedProps.unstable_avoidThisFallback !== true;
