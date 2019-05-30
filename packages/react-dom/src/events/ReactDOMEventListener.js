@@ -19,7 +19,7 @@ import {
 import {runExtractedPluginEventsInBatch} from 'events/EventPluginHub';
 import {
   dispatchEventForResponderEventSystem,
-  shouldflushDiscreteUpdates,
+  shouldFlushDiscreteUpdates,
 } from '../events/DOMEventResponderSystem';
 import {isFiberMounted} from 'react-reconciler/reflection';
 import {HostRoot} from 'shared/ReactWorkTags';
@@ -229,7 +229,7 @@ function trapEventForPluginEventSystem(
 }
 
 function dispatchDiscreteEvent(topLevelType, eventSystemFlags, nativeEvent) {
-  if (!enableEventAPI || shouldflushDiscreteUpdates(nativeEvent.timeStamp)) {
+  if (!enableEventAPI || shouldFlushDiscreteUpdates(nativeEvent.timeStamp)) {
     flushDiscreteUpdates();
   }
   discreteUpdates(dispatchEvent, topLevelType, eventSystemFlags, nativeEvent);

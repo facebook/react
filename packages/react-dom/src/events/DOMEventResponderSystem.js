@@ -610,7 +610,7 @@ export function processEventQueue(): void {
     return;
   }
   if (discrete) {
-    if (shouldflushDiscreteUpdates(currentTimeStamp)) {
+    if (shouldFlushDiscreteUpdates(currentTimeStamp)) {
       flushDiscreteUpdates();
     }
     discreteUpdates(() => {
@@ -1019,7 +1019,7 @@ export function generateListeningKey(
 
 let lastDiscreteEventTimeStamp = 0;
 
-export function shouldflushDiscreteUpdates(timeStamp: number): boolean {
+export function shouldFlushDiscreteUpdates(timeStamp: number): boolean {
   // event.timeStamp isn't overly reliable due to inconsistencies in
   // how different browsers have historically provided the time stamp.
   // Some browsers provide high-resolution time stamps for all events,
