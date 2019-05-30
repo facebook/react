@@ -48,9 +48,10 @@ export default function ElementView({ data, index, style }: Props) {
 
   const {
     lastScrolledIDRef,
-    treeFocused,
     isNavigatingWithKeyboard,
     onElementMouseEnter,
+    showIndentLines,
+    treeFocused,
   } = data;
   const id = element === null ? null : element.id;
   const isSelected = selectedElementID === id;
@@ -179,8 +180,9 @@ export default function ElementView({ data, index, style }: Props) {
           height: '100%',
           backgroundSize: '0.75rem 1rem',
           backgroundColor: 'transparent',
-          backgroundImage:
-            'linear-gradient(to right, transparent 8px, var(--color-guideline) 8px, transparent 9px)',
+          backgroundImage: showIndentLines
+            ? 'linear-gradient(to right, transparent 8px, var(--color-guideline) 8px, transparent 9px)'
+            : '',
           backgroundRepeat: 'repeat',
         }}
       />

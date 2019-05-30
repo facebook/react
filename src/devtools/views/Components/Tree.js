@@ -32,6 +32,7 @@ export type ItemData = {|
   isNavigatingWithKeyboard: boolean,
   lastScrolledIDRef: { current: number | null },
   onElementMouseEnter: (id: number) => void,
+  showIndentLines: boolean,
   treeFocused: boolean,
 |};
 
@@ -59,7 +60,7 @@ export default function Tree(props: Props) {
 
   const [treeFocused, setTreeFocused] = useState<boolean>(false);
 
-  const { lineHeight } = useContext(SettingsContext);
+  const { lineHeight, showIndentLines } = useContext(SettingsContext);
 
   // Make sure a newly selected element is visible in the list.
   // This is helpful for things like the owners list and search.
@@ -263,6 +264,7 @@ export default function Tree(props: Props) {
       isNavigatingWithKeyboard,
       onElementMouseEnter: handleElementMouseEnter,
       lastScrolledIDRef,
+      showIndentLines,
       treeFocused,
     }),
     [
@@ -270,6 +272,7 @@ export default function Tree(props: Props) {
       isNavigatingWithKeyboard,
       handleElementMouseEnter,
       lastScrolledIDRef,
+      showIndentLines,
       treeFocused,
     ]
   );
