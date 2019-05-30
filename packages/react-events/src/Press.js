@@ -101,7 +101,10 @@ type PressEvent = {|
   shiftKey: boolean,
 |};
 
-const isMac = /^Mac/.test(navigator.platform);
+const isMac =
+  typeof window !== 'undefined' && window.navigator != null
+    ? /^Mac/.test(window.navigator.platform)
+    : false;
 const DEFAULT_PRESS_END_DELAY_MS = 0;
 const DEFAULT_PRESS_START_DELAY_MS = 0;
 const DEFAULT_LONG_PRESS_DELAY_MS = 500;
