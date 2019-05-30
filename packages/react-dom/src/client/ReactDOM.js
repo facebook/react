@@ -159,6 +159,8 @@ const ReactDOM: Object = {
       IsThisRendererActing,
     ],
   },
+
+  version: ReactVersion,
 };
 
 if (exposeConcurrentModeAPIs) {
