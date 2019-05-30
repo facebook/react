@@ -108,6 +108,70 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     ]);
   });
 
+  it('does not restart rendering for initial render', async () => {
+    function Bar(props) {
+      Scheduler.yieldValue('Bar');
+      return props.children;
+    }
+
+    function Foo() {
+      Scheduler.yieldValue('Foo');
+      return (
+        <React.Fragment>
+          <Suspense fallback={<Text text="Loading..." />}>
+            <Bar>
+              <AsyncText text="A" ms={100} />
+              <Text text="B" />
+            </Bar>
+          </Suspense>
+          <Text text="C" />
+          <Text text="D" />
+        </React.Fragment>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+    expect(Scheduler).toFlushAndYieldThrough([
+      'Foo',
+      'Bar',
+      // A suspends
+      'Suspend! [A]',
+      // But we keep rendering the siblings
+      'B',
+      'Loading...',
+      'C',
+      // We leave D incomplete.
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([]);
+
+    // Flush the promise completely
+    Scheduler.advanceTime(100);
+    await advanceTimers(100);
+    expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
+
+    // Even though the promise has resolved, we should now flush
+    // and commit the in progress render instead of restarting.
+    expect(Scheduler).toFlushAndYield(['D']);
+    expect(ReactNoop.getChildren()).toEqual([
+      span('Loading...'),
+      span('C'),
+      span('D'),
+    ]);
+
+    // Await one micro task to attach the retry listeners.
+    await null;
+
+    // Next, we'll flush the complete content.
+    expect(Scheduler).toFlushAndYield(['Bar', 'A', 'B']);
+
+    expect(ReactNoop.getChildren()).toEqual([
+      span('A'),
+      span('B'),
+      span('C'),
+      span('D'),
+    ]);
+  });
+
   it('suspends rendering and continues later', async () => {
     function Bar(props) {
       Scheduler.yieldValue('Bar');
