@@ -62,6 +62,9 @@ module.exports = {
     if (filePath.match(/\.ts$/) && !filePath.match(/\.d\.ts$/)) {
       return tsPreprocessor.compile(src, filePath);
     }
+    if (filePath.match(/\.json$/)) {
+      return src;
+    }
     if (!filePath.match(/\/third_party\//)) {
       // for test files, we also apply the async-await transform, but we want to
       // make sure we don't accidentally apply that transform to product code.
