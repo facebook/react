@@ -18,22 +18,23 @@ const currentBuildResults = {
 };
 
 function saveResults() {
-  // Write all the bundle sizes to a single JSON file.
-  fs.writeFileSync(
-    BUNDLE_SIZES_FILE_NAME,
-    JSON.stringify(currentBuildResults, null, 2)
-  );
-
-  // Also write each bundle size to a separate file. That way multiple build
-  // processes can run in parallel and generate separate size artifacts.
-  // A downstream job can combine them into a single JSON file.
-  mkdirp.sync('build/sizes');
-  currentBuildResults.bundleSizes.forEach(results => {
+  if (process.env.CIRCLE_NODE_TOTAL) {
+    // In CI, write the bundle sizes to a subdirectory and append the node index
+    // to the filename. A downstream job will consolidate these into a
+    // single file.
+    const nodeIndex = process.env.CIRCLE_NODE_INDEX;
+    mkdirp.sync('build/sizes');
     fs.writeFileSync(
-      join('build', 'sizes', `${results.filename}.size.json`),
-      JSON.stringify(results, null, 2)
+      join('build', 'sizes', `bundle-sizes-${nodeIndex}.json`),
+      JSON.stringify(currentBuildResults, null, 2)
     );
-  });
+  } else {
+    // Write all the bundle sizes to a single JSON file.
+    fs.writeFileSync(
+      BUNDLE_SIZES_FILE_NAME,
+      JSON.stringify(currentBuildResults, null, 2)
+    );
+  }
 }
 
 function fractionalChange(prev, current) {

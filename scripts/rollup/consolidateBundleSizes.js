@@ -13,9 +13,9 @@ const filenames = fs.readdirSync(path.join(BUILD_DIR, 'sizes'));
 let bundleSizes = [];
 for (let i = 0; i < filenames.length; i++) {
   const filename = filenames[i];
-  if (filename.endsWith('.size.json')) {
+  if (filename.endsWith('.json')) {
     const json = fs.readFileSync(path.join(BUILD_DIR, 'sizes', filename));
-    bundleSizes.push(JSON.parse(json));
+    bundleSizes.push(...JSON.parse(json).bundleSizes);
   }
 }
 

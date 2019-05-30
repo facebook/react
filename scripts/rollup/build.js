@@ -21,7 +21,7 @@ const useForks = require('./plugins/use-forks-plugin');
 const stripUnusedImports = require('./plugins/strip-unused-imports');
 const extractErrorCodes = require('../error-codes/extract-errors');
 const Packaging = require('./packaging');
-const {asyncCopyTo} = require('./utils');
+const {asyncCopyTo, asyncRimRaf} = require('./utils');
 const codeFrame = require('babel-code-frame');
 const Wrappers = require('./wrappers');
 
@@ -634,6 +634,8 @@ function handleRollupError(error) {
 }
 
 async function buildEverything() {
+  await asyncRimRaf('build');
+
   // Run them serially for better console output
   // and to avoid any potential race conditions.
 
