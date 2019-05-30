@@ -62,9 +62,11 @@ function createPanelIfReactLoaded() {
       let render = null;
       let root = null;
 
+      const tabId = chrome.devtools.inspectedWindow.tabId;
+
       function initBridgeAndStore() {
         const port = chrome.runtime.connect({
-          name: '' + chrome.devtools.inspectedWindow.tabId,
+          name: '' + tabId,
         });
         // Looks like `port.onDisconnect` does not trigger on in-tab navigation like new URL or back/forward navigation,
         // so it makes no sense to handle it here.
@@ -284,6 +286,11 @@ function createPanelIfReactLoaded() {
       // Shutdown bridge before a new page is loaded.
       chrome.webNavigation.onBeforeNavigate.addListener(
         function onBeforeNavigate(details) {
+          // Ignore navigation events from other tabs (or from within frames).
+          if (details.tabId !== tabId || details.frameId !== 0) {
+            return;
+          }
+
           // `bridge.shutdown()` will remove all listeners we added, so we don't have to.
           bridge.shutdown();
 
