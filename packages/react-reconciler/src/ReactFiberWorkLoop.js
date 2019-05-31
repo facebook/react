@@ -178,12 +178,13 @@ const {
 
 type ExecutionContext = number;
 
-const NoContext = /*                    */ 0b00000;
-const BatchedContext = /*               */ 0b00001;
-const EventContext = /*                 */ 0b00010;
-const LegacyUnbatchedContext = /*       */ 0b00100;
-const RenderContext = /*                */ 0b01000;
-const CommitContext = /*                */ 0b10000;
+const NoContext = /*                    */ 0b000000;
+const BatchedContext = /*               */ 0b000001;
+const EventContext = /*                 */ 0b000010;
+const DiscreteEventContext = /*         */ 0b000100;
+const LegacyUnbatchedContext = /*       */ 0b001000;
+const RenderContext = /*                */ 0b010000;
+const CommitContext = /*                */ 0b100000;
 
 type RootExitStatus = 0 | 1 | 2 | 3 | 4;
 const RootIncomplete = 0;
@@ -363,6 +364,10 @@ export function scheduleUpdateOnFiber(
   checkForInterruption(fiber, expirationTime);
   recordScheduleUpdate();
 
+  // TODO: computeExpirationForFiber also reads the priority. Pass the
+  // priority as an argument to that function and this one.
+  const priorityLevel = getCurrentPriorityLevel();
+
   if (expirationTime === Sync) {
     if (
       // Check if we're inside unbatchedUpdates
@@ -392,25 +397,26 @@ export function scheduleUpdateOnFiber(
       }
     }
   } else {
-    // TODO: computeExpirationForFiber also reads the priority. Pass the
-    // priority as an argument to that function and this one.
-    const priorityLevel = getCurrentPriorityLevel();
-    if (priorityLevel === UserBlockingPriority) {
-      // This is the result of a discrete event. Track the lowest priority
-      // discrete update per root so we can flush them early, if needed.
-      if (rootsWithPendingDiscreteUpdates === null) {
-        rootsWithPendingDiscreteUpdates = new Map([[root, expirationTime]]);
-      } else {
-        const lastDiscreteTime = rootsWithPendingDiscreteUpdates.get(root);
-        if (
-          lastDiscreteTime === undefined ||
-          lastDiscreteTime > expirationTime
-        ) {
-          rootsWithPendingDiscreteUpdates.set(root, expirationTime);
-        }
+    scheduleCallbackForRoot(root, priorityLevel, expirationTime);
+  }
+
+  if (
+    (executionContext & DiscreteEventContext) !== NoContext &&
+    // Only updates at user-blocking priority or greater are considered
+    // discrete, even inside a discrete event.
+    (priorityLevel === UserBlockingPriority ||
+      priorityLevel === ImmediatePriority)
+  ) {
+    // This is the result of a discrete event. Track the lowest priority
+    // discrete update per root so we can flush them early, if needed.
+    if (rootsWithPendingDiscreteUpdates === null) {
+      rootsWithPendingDiscreteUpdates = new Map([[root, expirationTime]]);
+    } else {
+      const lastDiscreteTime = rootsWithPendingDiscreteUpdates.get(root);
+      if (lastDiscreteTime === undefined || lastDiscreteTime > expirationTime) {
+        rootsWithPendingDiscreteUpdates.set(root, expirationTime);
       }
     }
-    scheduleCallbackForRoot(root, priorityLevel, expirationTime);
   }
 }
 export const scheduleWork = scheduleUpdateOnFiber;
@@ -623,15 +629,6 @@ export function deferredUpdates<A>(fn: () => A): A {
   return runWithPriority(NormalPriority, fn);
 }
 
-export function discreteUpdates<A, B, C, R>(
-  fn: (A, B, C) => R,
-  a: A,
-  b: B,
-  c: C,
-): R {
-  return runWithPriority(UserBlockingPriority, fn.bind(null, a, b, c));
-}
-
 export function syncUpdates<A, B, C, R>(
   fn: (A, B, C) => R,
   a: A,
@@ -674,6 +671,26 @@ export function batchedEventUpdates<A, R>(fn: A => R, a: A): R {
   executionContext |= EventContext;
   try {
     return fn(a);
+  } finally {
+    executionContext = prevExecutionContext;
+    if (executionContext === NoContext) {
+      // Flush the immediate callbacks that were scheduled during this batch
+      flushSyncCallbackQueue();
+    }
+  }
+}
+
+export function discreteUpdates<A, B, C, R>(
+  fn: (A, B, C) => R,
+  a: A,
+  b: B,
+  c: C,
+): R {
+  const prevExecutionContext = executionContext;
+  executionContext |= DiscreteEventContext;
+  try {
+    // Should this
+    return runWithPriority(UserBlockingPriority, fn.bind(null, a, b, c));
   } finally {
     executionContext = prevExecutionContext;
     if (executionContext === NoContext) {

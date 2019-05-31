@@ -9,6 +9,7 @@ import {
   needsStateRestore,
   restoreStateIfNeeded,
 } from './ReactControlledComponent';
+import {enableEventAPI} from 'shared/ReactFeatureFlags';
 
 // Used as a way to call batchedUpdates when we don't have a reference to
 // the renderer. Such as when we're dispatching events or if third party
@@ -26,14 +27,13 @@ let discreteUpdatesImpl = function(fn, a, b, c) {
 let flushDiscreteUpdatesImpl = function() {};
 let batchedEventUpdatesImpl = batchedUpdatesImpl;
 
-let isBatching = false;
+let isInsideEventHandler = false;
 
-function batchedUpdatesFinally() {
+function finishEventHandler() {
   // Here we wait until all updates have propagated, which is important
   // when using controlled components within layers:
   // https://github.com/facebook/react/issues/1698
   // Then we restore state of any controlled component.
-  isBatching = false;
   const controlledComponentsHavePendingUpdates = needsStateRestore();
   if (controlledComponentsHavePendingUpdates) {
     // If a controlled event was fired, we may need to restore the state of
@@ -45,39 +45,70 @@ function batchedUpdatesFinally() {
 }
 
 export function batchedUpdates(fn, bookkeeping) {
-  if (isBatching) {
+  if (isInsideEventHandler) {
     // If we are currently inside another batch, we need to wait until it
     // fully completes before restoring state.
     return fn(bookkeeping);
   }
-  isBatching = true;
+  isInsideEventHandler = true;
   try {
     return batchedUpdatesImpl(fn, bookkeeping);
   } finally {
-    batchedUpdatesFinally();
+    isInsideEventHandler = false;
+    finishEventHandler();
   }
 }
 
 export function batchedEventUpdates(fn, bookkeeping) {
-  if (isBatching) {
+  if (isInsideEventHandler) {
     // If we are currently inside another batch, we need to wait until it
     // fully completes before restoring state.
     return fn(bookkeeping);
   }
-  isBatching = true;
+  isInsideEventHandler = true;
   try {
     return batchedEventUpdatesImpl(fn, bookkeeping);
   } finally {
-    batchedUpdatesFinally();
+    isInsideEventHandler = false;
+    finishEventHandler();
   }
 }
 
 export function discreteUpdates(fn, a, b, c) {
-  return discreteUpdatesImpl(fn, a, b, c);
+  const prevIsInsideEventHandler = isInsideEventHandler;
+  isInsideEventHandler = true;
+  try {
+    return discreteUpdatesImpl(fn, a, b, c);
+  } finally {
+    isInsideEventHandler = prevIsInsideEventHandler;
+    if (!isInsideEventHandler) {
+      finishEventHandler();
+    }
+  }
 }
 
-export function flushDiscreteUpdates() {
-  return flushDiscreteUpdatesImpl();
+let lastFlushedEventTimeStamp = 0;
+export function flushDiscreteUpdatesIfNeeded(timeStamp: number) {
+  // event.timeStamp isn't overly reliable due to inconsistencies in
+  // how different browsers have historically provided the time stamp.
+  // Some browsers provide high-resolution time stamps for all events,
+  // some provide low-resoltion time stamps for all events. FF < 52
+  // even mixes both time stamps together. Some browsers even report
+  // negative time stamps or time stamps that are 0 (iOS9) in some cases.
+  // Given we are only comparing two time stamps with equality (!==),
+  // we are safe from the resolution differences. If the time stamp is 0
+  // we bail-out of preventing the flush, which can affect semantics,
+  // such as if an earlier flush removes or adds event listeners that
+  // are fired in the subsequent flush. However, this is the same
+  // behaviour as we had before this change, so the risks are low.
+  if (
+    !isInsideEventHandler &&
+    (!enableEventAPI ||
+      (timeStamp === 0 || lastFlushedEventTimeStamp !== timeStamp))
+  ) {
+    lastFlushedEventTimeStamp = timeStamp;
+    flushDiscreteUpdatesImpl();
+  }
 }
 
 export function setBatchingImplementation(

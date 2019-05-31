@@ -9,7 +9,7 @@
 
 'use strict';
 
-const React = require('react');
+let React = require('react');
 let ReactDOM = require('react-dom');
 let ReactFeatureFlags;
 let Scheduler;
@@ -479,14 +479,16 @@ describe('ChangeEventPlugin', () => {
     }
   });
 
-  describe('async mode', () => {
+  describe('concurrent mode', () => {
     beforeEach(() => {
       jest.resetModules();
       ReactFeatureFlags = require('shared/ReactFeatureFlags');
       ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+      React = require('react');
       ReactDOM = require('react-dom');
       Scheduler = require('scheduler');
     });
+
     it('text input', () => {
       const root = ReactDOM.unstable_createRoot(container);
       let input;

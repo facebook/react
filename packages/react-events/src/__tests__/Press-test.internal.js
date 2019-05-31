@@ -2583,6 +2583,61 @@ describe('Event responder: Press', () => {
     document.body.removeChild(newContainer);
   });
 
+  it(
+    'should only flush before outermost discrete event handler when mixing ' +
+      'event systems',
+    async () => {
+      const {useState} = React;
+
+      const button = React.createRef();
+
+      const ops = [];
+
+      function MyComponent() {
+        const [pressesCount, updatePressesCount] = useState(0);
+        const [clicksCount, updateClicksCount] = useState(0);
+
+        function handlePress() {
+          // This dispatches a synchronous, discrete event in the legacy event
+          // system. However, because it's nested inside the new event system,
+          // its updates should not flush until the end of the outer handler.
+          button.current.click();
+          // Text context should not have changed
+          ops.push(newContainer.textContent);
+          updatePressesCount(pressesCount + 1);
+        }
+
+        return (
+          <div>
+            <Press onPress={handlePress}>
+              <button
+                ref={button}
+                onClick={() => updateClicksCount(clicksCount + 1)}>
+                Presses: {pressesCount}, Clicks: {clicksCount}
+              </button>
+            </Press>
+          </div>
+        );
+      }
+
+      const newContainer = document.createElement('div');
+      document.body.appendChild(newContainer);
+      const root = ReactDOM.unstable_createRoot(newContainer);
+
+      root.render(<MyComponent />);
+      Scheduler.flushAll();
+      expect(newContainer.textContent).toEqual('Presses: 0, Clicks: 0');
+
+      dispatchEventWithTimeStamp(button.current, 'pointerdown', 100);
+      dispatchEventWithTimeStamp(button.current, 'pointerup', 100);
+      dispatchEventWithTimeStamp(button.current, 'click', 100);
+      Scheduler.flushAll();
+      expect(newContainer.textContent).toEqual('Presses: 1, Clicks: 1');
+
+      expect(ops).toEqual(['Presses: 0, Clicks: 0']);
+    },
+  );
+
   describe('onContextMenu', () => {
     it('is called after a right mouse click', () => {
       const onContextMenu = jest.fn();

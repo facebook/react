@@ -14,13 +14,10 @@ import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
 import {
   batchedEventUpdates,
   discreteUpdates,
-  flushDiscreteUpdates,
+  flushDiscreteUpdatesIfNeeded,
 } from 'events/ReactGenericBatching';
 import {runExtractedPluginEventsInBatch} from 'events/EventPluginHub';
-import {
-  dispatchEventForResponderEventSystem,
-  shouldFlushDiscreteUpdates,
-} from '../events/DOMEventResponderSystem';
+import {dispatchEventForResponderEventSystem} from '../events/DOMEventResponderSystem';
 import {isFiberMounted} from 'react-reconciler/reflection';
 import {HostRoot} from 'shared/ReactWorkTags';
 import {
@@ -229,9 +226,7 @@ function trapEventForPluginEventSystem(
 }
 
 function dispatchDiscreteEvent(topLevelType, eventSystemFlags, nativeEvent) {
-  if (!enableEventAPI || shouldFlushDiscreteUpdates(nativeEvent.timeStamp)) {
-    flushDiscreteUpdates();
-  }
+  flushDiscreteUpdatesIfNeeded(nativeEvent.timeStamp);
   discreteUpdates(dispatchEvent, topLevelType, eventSystemFlags, nativeEvent);
 }
 
