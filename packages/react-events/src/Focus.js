@@ -39,7 +39,10 @@ type FocusEvent = {|
   timeStamp: number,
 |};
 
-const isMac = /^Mac/.test(navigator.platform);
+const isMac =
+  typeof window !== 'undefined' && window.navigator != null
+    ? /^Mac/.test(window.navigator.platform)
+    : false;
 
 const targetEventTypes = [
   {name: 'focus', passive: true},
