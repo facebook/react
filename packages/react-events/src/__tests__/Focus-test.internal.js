@@ -200,7 +200,7 @@ describe('Focus event responder', () => {
     it('is called with the correct pointerType using a keyboard', () => {
       // Keyboard tab
       ref.current.dispatchEvent(
-        createPointerEvent('keypress', {
+        createPointerEvent('keydown', {
           key: 'Tab',
         }),
       );
@@ -219,7 +219,7 @@ describe('Focus event responder', () => {
       componentInit();
 
       ref.current.dispatchEvent(
-        createPointerEvent('keypress', {
+        createPointerEvent('keydown', {
           key: 'Tab',
           altKey: true,
         }),
