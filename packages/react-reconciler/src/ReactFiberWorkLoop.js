@@ -176,14 +176,14 @@ const {
   ReactCurrentActingRendererSigil,
 } = ReactSharedInternals;
 
-type WorkPhase = 0 | 1 | 2 | 3 | 4 | 5 | 6;
-const NotWorking = 0;
-const BatchedPhase = 1;
-const LegacyUnbatchedPhase = 2;
-const FlushSyncPhase = 3;
-const RenderPhase = 4;
-const CommitPhase = 5;
-const BatchedEventPhase = 6;
+type ExecutionContext = number;
+
+const NoContext = /*                    */ 0b00000;
+const BatchedContext = /*               */ 0b00001;
+const EventContext = /*                 */ 0b00010;
+const LegacyUnbatchedContext = /*       */ 0b00100;
+const RenderContext = /*                */ 0b01000;
+const CommitContext = /*                */ 0b10000;
 
 type RootExitStatus = 0 | 1 | 2 | 3 | 4;
 const RootIncomplete = 0;
@@ -196,8 +196,8 @@ export type Thenable = {
   then(resolve: () => mixed, reject?: () => mixed): Thenable | void,
 };
 
-// The phase of work we're currently in
-let workPhase: WorkPhase = NotWorking;
+// Describes where we are in the React execution stack
+let executionContext: ExecutionContext = NoContext;
 // The root we're working on
 let workInProgressRoot: FiberRoot | null = null;
 // The fiber we're working on
@@ -257,7 +257,7 @@ let interruptedBy: Fiber | null = null;
 let currentEventTime: ExpirationTime = NoWork;
 
 export function requestCurrentTime() {
-  if (workPhase === RenderPhase || workPhase === CommitPhase) {
+  if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
     // We're inside React, so it's fine to read the actual time.
     return msToExpirationTime(now());
   }
@@ -286,7 +286,7 @@ export function computeExpirationForFiber(
     return priorityLevel === ImmediatePriority ? Sync : Batched;
   }
 
-  if (workPhase === RenderPhase) {
+  if ((executionContext & RenderContext) !== NoContext) {
     // Use whatever time we're already rendering
     return renderExpirationTime;
   }
@@ -364,7 +364,12 @@ export function scheduleUpdateOnFiber(
   recordScheduleUpdate();
 
   if (expirationTime === Sync) {
-    if (workPhase === LegacyUnbatchedPhase) {
+    if (
+      // Check if we're inside unbatchedUpdates
+      (executionContext & LegacyUnbatchedContext) !== NoContext &&
+      // Check if we're not already rendering
+      (executionContext & (RenderContext | CommitContext)) === NoContext
+    ) {
       // Register pending interactions on the root to avoid losing traced interaction data.
       schedulePendingInteraction(root, expirationTime);
 
@@ -377,7 +382,7 @@ export function scheduleUpdateOnFiber(
       }
     } else {
       scheduleCallbackForRoot(root, ImmediatePriority, Sync);
-      if (workPhase === NotWorking) {
+      if (executionContext === NoContext) {
         // Flush the synchronous work now, wnless we're already working or inside
         // a batch. This is intentionally inside scheduleUpdateOnFiber instead of
         // scheduleCallbackForFiber to preserve the ability to schedule a callback
@@ -518,8 +523,7 @@ function scheduleCallbackForRoot(
       if (
         enableUserTimingAPI &&
         expirationTime !== Sync &&
-        workPhase !== RenderPhase &&
-        workPhase !== CommitPhase
+        (executionContext & (RenderContext | CommitContext)) === NoContext
       ) {
         // Scheduled an async callback, and we're not already working. Add an
         // entry to the flamegraph that shows we're waiting for a callback
@@ -557,7 +561,7 @@ function runRootCallback(root, callback, isSync) {
 }
 
 export function flushRoot(root: FiberRoot, expirationTime: ExpirationTime) {
-  if (workPhase === RenderPhase || workPhase === CommitPhase) {
+  if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
     invariant(
       false,
       'work.commit(): Cannot commit while already rendering. This likely ' +
@@ -569,22 +573,24 @@ export function flushRoot(root: FiberRoot, expirationTime: ExpirationTime) {
 }
 
 export function flushDiscreteUpdates() {
-  // TODO: we ideally do not want to early reurn for BatchedPhase here either.
-  // Removing this causes act() tests to fail, so we should follow up.
-  if (workPhase === CommitPhase || workPhase === BatchedPhase) {
-    // We're inside the commit phase or batched phase, so we can't
-    // synchronously flush pending work. This is probably a nested event
-    // dispatch triggered by a lifecycle/effect, like `el.focus()`. Exit.
-    return;
-  }
-  if (workPhase === RenderPhase) {
-    if (__DEV__) {
+  // TODO: Should be able to flush inside batchedUpdates, but not inside `act`.
+  // However, `act` uses `batchedUpdates`, so there's no way to distinguish
+  // those two cases. Need to fix this before exposing flushDiscreteUpdates
+  // as a public API.
+  if (
+    (executionContext & (BatchedContext | RenderContext | CommitContext)) !==
+    NoContext
+  ) {
+    if (__DEV__ && (executionContext & RenderContext) !== NoContext) {
       warning(
         false,
         'unstable_flushDiscreteUpdates: Cannot flush updates when React is ' +
           'already rendering.',
       );
     }
+    // We're already rendering, so we can't synchronously flush pending work.
+    // This is probably a nested event dispatch triggered by a lifecycle/effect,
+    // like `el.focus()`. Exit.
     return;
   }
   flushPendingDiscreteUpdates();
@@ -650,69 +656,62 @@ function flushPendingDiscreteUpdates() {
 }
 
 export function batchedUpdates<A, R>(fn: A => R, a: A): R {
-  if (workPhase !== NotWorking) {
-    // We're already working, or inside a batch, so batchedUpdates is a no-op.
-    return fn(a);
-  }
-  workPhase = BatchedPhase;
+  const prevExecutionContext = executionContext;
+  executionContext |= BatchedContext;
   try {
     return fn(a);
   } finally {
-    workPhase = NotWorking;
-    // Flush the immediate callbacks that were scheduled during this batch
-    flushSyncCallbackQueue();
+    executionContext = prevExecutionContext;
+    if (executionContext === NoContext) {
+      // Flush the immediate callbacks that were scheduled during this batch
+      flushSyncCallbackQueue();
+    }
   }
 }
 
 export function batchedEventUpdates<A, R>(fn: A => R, a: A): R {
-  if (workPhase !== NotWorking) {
-    // We're already working, or inside a batch, so batchedUpdates is a no-op.
-    return fn(a);
-  }
-  const prevWorkPhase = workPhase;
-  workPhase = BatchedEventPhase;
+  const prevExecutionContext = executionContext;
+  executionContext |= EventContext;
   try {
     return fn(a);
   } finally {
-    workPhase = prevWorkPhase;
-    // Flush the immediate callbacks that were scheduled during this batch
-    flushSyncCallbackQueue();
+    executionContext = prevExecutionContext;
+    if (executionContext === NoContext) {
+      // Flush the immediate callbacks that were scheduled during this batch
+      flushSyncCallbackQueue();
+    }
   }
 }
 
 export function unbatchedUpdates<A, R>(fn: (a: A) => R, a: A): R {
-  if (
-    workPhase !== BatchedPhase &&
-    workPhase !== FlushSyncPhase &&
-    workPhase !== BatchedEventPhase
-  ) {
-    // We're not inside batchedUpdates or flushSync, so unbatchedUpdates is
-    // a no-op.
-    return fn(a);
-  }
-  const prevWorkPhase = workPhase;
-  workPhase = LegacyUnbatchedPhase;
+  const prevExecutionContext = executionContext;
+  executionContext &= ~BatchedContext;
+  executionContext |= LegacyUnbatchedContext;
   try {
     return fn(a);
   } finally {
-    workPhase = prevWorkPhase;
+    executionContext = prevExecutionContext;
+    if (executionContext === NoContext) {
+      // Flush the immediate callbacks that were scheduled during this batch
+      flushSyncCallbackQueue();
+    }
   }
 }
 
 export function flushSync<A, R>(fn: A => R, a: A): R {
-  if (workPhase === RenderPhase || workPhase === CommitPhase) {
+  if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
     invariant(
       false,
       'flushSync was called from inside a lifecycle method. It cannot be ' +
         'called when React is already rendering.',
     );
   }
-  const prevWorkPhase = workPhase;
-  workPhase = FlushSyncPhase;
+  const prevExecutionContext = executionContext;
+  executionContext |= BatchedContext;
   try {
     return runWithPriority(ImmediatePriority, fn.bind(null, a));
   } finally {
-    workPhase = prevWorkPhase;
+    executionContext = prevExecutionContext;
     // Flush the immediate callbacks that were scheduled during this batch.
     // Note that this will happen even if batchedUpdates is higher up
     // the stack.
@@ -721,13 +720,13 @@ export function flushSync<A, R>(fn: A => R, a: A): R {
 }
 
 export function flushControlled(fn: () => mixed): void {
-  const prevWorkPhase = workPhase;
-  workPhase = BatchedPhase;
+  const prevExecutionContext = executionContext;
+  executionContext |= BatchedContext;
   try {
     runWithPriority(ImmediatePriority, fn);
   } finally {
-    workPhase = prevWorkPhase;
-    if (workPhase === NotWorking) {
+    executionContext = prevExecutionContext;
+    if (executionContext === NoContext) {
       // Flush the immediate callbacks that were scheduled during this batch
       flushSyncCallbackQueue();
     }
@@ -775,7 +774,7 @@ function renderRoot(
   isSync: boolean,
 ): SchedulerCallback | null {
   invariant(
-    workPhase !== RenderPhase && workPhase !== CommitPhase,
+    (executionContext & (RenderContext | CommitContext)) === NoContext,
     'Should not already be working.',
   );
 
@@ -828,8 +827,8 @@ function renderRoot(
   // If we have a work-in-progress fiber, it means there's still work to do
   // in this root.
   if (workInProgress !== null) {
-    const prevWorkPhase = workPhase;
-    workPhase = RenderPhase;
+    const prevExecutionContext = executionContext;
+    executionContext |= RenderContext;
     let prevDispatcher = ReactCurrentDispatcher.current;
     if (prevDispatcher === null) {
       // The React isomorphic package does not include a default dispatcher.
@@ -855,7 +854,7 @@ function renderRoot(
         const currentTime = requestCurrentTime();
         if (currentTime < expirationTime) {
           // Restart at the current time.
-          workPhase = prevWorkPhase;
+          executionContext = prevExecutionContext;
           resetContextDependencies();
           ReactCurrentDispatcher.current = prevDispatcher;
           if (enableSchedulerTracing) {
@@ -892,7 +891,7 @@ function renderRoot(
           // supposed to capture all errors that weren't caught by an error
           // boundary.
           prepareFreshStack(root, expirationTime);
-          workPhase = prevWorkPhase;
+          executionContext = prevExecutionContext;
           throw thrownValue;
         }
 
@@ -915,7 +914,7 @@ function renderRoot(
       }
     } while (true);
 
-    workPhase = prevWorkPhase;
+    executionContext = prevExecutionContext;
     resetContextDependencies();
     ReactCurrentDispatcher.current = prevDispatcher;
     if (enableSchedulerTracing) {
@@ -1454,7 +1453,7 @@ function commitRootImpl(root) {
   flushSuspensePriorityWarningInDEV();
 
   invariant(
-    workPhase !== RenderPhase && workPhase !== CommitPhase,
+    (executionContext & (RenderContext | CommitContext)) === NoContext,
     'Should not already be working.',
   );
 
@@ -1524,8 +1523,8 @@ function commitRootImpl(root) {
   }
 
   if (firstEffect !== null) {
-    const prevWorkPhase = workPhase;
-    workPhase = CommitPhase;
+    const prevExecutionContext = executionContext;
+    executionContext |= CommitContext;
     let prevInteractions: Set<Interaction> | null = null;
     if (enableSchedulerTracing) {
       prevInteractions = __interactionsRef.current;
@@ -1640,7 +1639,7 @@ function commitRootImpl(root) {
     if (enableSchedulerTracing) {
       __interactionsRef.current = ((prevInteractions: any): Set<Interaction>);
     }
-    workPhase = prevWorkPhase;
+    executionContext = prevExecutionContext;
   } else {
     // No effects.
     root.current = finishedWork;
@@ -1712,7 +1711,7 @@ function commitRootImpl(root) {
     throw error;
   }
 
-  if (workPhase === LegacyUnbatchedPhase) {
+  if ((executionContext & LegacyUnbatchedContext) !== NoContext) {
     // This is a legacy edge case. We just committed the initial mount of
     // a ReactDOM.render-ed root inside of batchedUpdates. The commit fired
     // synchronously, but layout updates should be deferred until the end
@@ -1855,11 +1854,11 @@ export function flushPassiveEffects() {
   }
 
   invariant(
-    workPhase !== RenderPhase && workPhase !== CommitPhase,
+    (executionContext & (RenderContext | CommitContext)) === NoContext,
     'Cannot flush passive effects while already rendering.',
   );
-  const prevWorkPhase = workPhase;
-  workPhase = CommitPhase;
+  const prevExecutionContext = executionContext;
+  executionContext |= CommitContext;
 
   // Note: This currently assumes there are no passive effects on the root
   // fiber, because the root is not part of its own effect list. This could
@@ -1891,7 +1890,7 @@ export function flushPassiveEffects() {
     finishPendingInteractions(root, expirationTime);
   }
 
-  workPhase = prevWorkPhase;
+  executionContext = prevExecutionContext;
   flushSyncCallbackQueue();
 
   // If additional passive effects were scheduled, increment a counter. If this
@@ -2400,7 +2399,7 @@ export function warnIfNotScopedWithMatchingAct(fiber: Fiber): void {
 function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
   if (__DEV__) {
     if (
-      workPhase === NotWorking &&
+      executionContext === NoContext &&
       ReactCurrentActingRendererSigil.current !== ReactActingRendererSigil
     ) {
       warningWithoutStack(
