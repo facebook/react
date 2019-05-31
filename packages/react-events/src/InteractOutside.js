@@ -70,7 +70,6 @@ const rootEventTypes = [
   'pointerup',
   'pointercancel',
   {name: 'keydown', passive: false},
-  {name: 'keypress', passive: false},
   'keyup',
 ];
 
@@ -299,7 +298,6 @@ const InteractOutsideResponder = {
       // START
       case 'pointerdown':
       case 'keydown':
-      case 'keypress':
       case 'mousedown':
       case 'touchstart': {
         if (state.pressStatus === NOT_PRESSED) {
