@@ -19,9 +19,7 @@ export function decorateResult(
 export function decorate(object: Object, attr: string, fn: Function): Function {
   const old = object[attr];
   object[attr] = function(instance: InternalInstance) {
-    const res = old.apply(this, arguments);
-    fn.apply(this, arguments);
-    return res;
+    return fn.call(this, old, arguments);
   };
   return old;
 }

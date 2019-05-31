@@ -149,15 +149,17 @@ export function attach(
       renderer.Mount,
       '_renderNewRootComponent',
       internalInstance => {
-        const id = getID(internalInstance);
+        // TODO: we might need to reset currentParentID before this runs.
 
+        const id = getID(internalInstance);
         rootIDs.add(id);
 
         if (__DEBUG__) {
           console.log('renderer.Mount._renderNewRootComponent()', id);
         }
 
-        recordPendingMount(internalInstance);
+        // TODO: maybe we need to record this mount.
+        // Needs testing.
 
         // If we're mounting a root, we've just finished a batch of work,
         // so it's safe to synchronously flush.
@@ -171,15 +173,17 @@ export function attach(
       renderer.Mount,
       'renderComponent',
       internalInstance => {
-        const id = getID(internalInstance);
+        // TODO: we might need to reset currentParentID before this runs.
 
+        const id = getID(internalInstance);
         rootIDs.add(id);
 
         if (__DEBUG__) {
           console.log('renderer.Mount.renderComponent()', id);
         }
 
-        recordPendingMount(internalInstance);
+        // TODO: maybe we need to record this mount.
+        // Needs testing.
 
         // If we're mounting a root, we've just finished a batch of work,
         // so it's safe to synchronously flush.
@@ -188,24 +192,50 @@ export function attach(
     );
   }
 
+  // This is shared mutable state that lets us keep track of where we are.
+  let currentParentID = 0;
+
   if (renderer.Reconciler) {
     oldReconcilerMethods = decorateMany(renderer.Reconciler, {
-      mountComponent(internalInstance, rootID, transaction, context) {
+      mountComponent(fn, args) {
+        const [internalInstance] = args;
+
         recordPendingMount(internalInstance);
+
+        let prevParentID = currentParentID;
+        currentParentID = getID(internalInstance);
+        const result = fn.apply(this, args);
+        currentParentID = prevParentID;
+
+        return result;
       },
-      performUpdateIfNecessary(
-        internalInstance,
-        nextChild,
-        transaction,
-        context
-      ) {
-        // TODO Check for change in order of children
+      performUpdateIfNecessary(fn, args) {
+        const [internalInstance] = args;
+
+        let prevParentID = currentParentID;
+        currentParentID = getID(internalInstance);
+        const result = fn.apply(this, args);
+        currentParentID = prevParentID;
+
+        return result;
       },
-      receiveComponent(internalInstance, nextChild, transaction, context) {
-        // TODO Check for change in order of children
+      receiveComponent(fn, args) {
+        const [internalInstance] = args;
+
+        let prevParentID = currentParentID;
+        currentParentID = getID(internalInstance);
+        const result = fn.apply(this, args);
+        currentParentID = prevParentID;
+
+        return result;
       },
-      unmountComponent(internalInstance) {
+      unmountComponent(fn, args) {
+        const [internalInstance] = args;
+
+        const result = fn.apply(this, args);
+
         recordPendingUnmount(internalInstance);
+        return result;
       },
     });
   }
@@ -229,7 +259,6 @@ export function attach(
     oldRenderComponent = null;
   }
 
-  const mountedIDs: Set<number> = new Set();
   const pendingMountIDs: Set<number> = new Set();
   const pendingUnmountIDs: Set<number> = new Set();
   const pendingOperations: Array<number> = [];
@@ -295,57 +324,29 @@ export function attach(
 
       rootIDs.add(id);
 
-      crawlAndRecordMounts(id, 0, true);
+      crawlAndRecordInitialMounts(id, 0);
 
       // It's safe to synchronously flush for the root we just crawled.
       flushPendingEvents(id);
     }
   }
 
-  function crawlAndRecordMounts(
-    id: number,
-    parentID: number,
-    isInitialMount: boolean
-  ) {
+  // TODO: this isn't covered by tests.
+  // Might be broken.
+  function crawlAndRecordInitialMounts(id: number, parentID: number) {
     const internalInstance = idToInternalInstanceMap.get(id);
-
-    const shouldIncludeInTree =
-      parentID === 0 ||
-      getElementType(internalInstance) !== ElementTypeOtherOrUnknown;
 
     // Not all nodes are mounted in the frontend DevTools tree,
     // but it's important to track parent info even for the unmounted ones.
     idToParentIDMap.set(id, parentID);
 
     if (__DEBUG__) {
-      console.group(
-        'crawlAndRecordMounts() id:',
-        id,
-        'shouldIncludeInTree?',
-        shouldIncludeInTree
-      );
+      console.group('crawlAndRecordInitialMounts() id:', id);
     }
 
-    if (shouldIncludeInTree) {
-      const didMount = isInitialMount || pendingMountIDs.has(id);
-      const didUnmount = pendingUnmountIDs.has(id);
-
-      // If this node was both mounted and unmounted in the same batch,
-      // just skip it and don't send any update.
-      if (didMount && didUnmount) {
-        pendingUnmountIDs.delete(id);
-        return;
-      } else if (didMount) {
-        recordMount(id, parentID);
-      }
-    }
-
+    recordMount(id, parentID);
     getChildIDs(internalInstance).forEach(childID =>
-      crawlAndRecordMounts(
-        childID,
-        shouldIncludeInTree ? id : parentID,
-        isInitialMount
-      )
+      crawlAndRecordInitialMounts(childID, id)
     );
 
     if (__DEBUG__) {
@@ -354,38 +355,42 @@ export function attach(
   }
 
   function flushPendingEvents(rootID: number): void {
-    // Crawl tree and record mounts/updates.
-    crawlAndRecordMounts(rootID, 0, false);
-
     // Record pending deletions.
     const unmountIDs = [];
     pendingUnmountIDs.forEach(id => {
-      if (mountedIDs.has(id)) {
-        const internalInstance = idToInternalInstanceMap.get(id);
-        const isRoot = rootIDs.has(id);
+      const internalInstance = idToInternalInstanceMap.get(id);
+      const isRoot = rootIDs.has(id);
 
-        if (__DEBUG__) {
-          console.log(
-            '%crecordUnmount()',
-            'color: red; font-weight: bold;',
-            id,
-            getData(internalInstance).displayName
-          );
-        }
-
-        if (isRoot) {
-          pendingUnmountedRootID = id;
-
-          rootIDs.delete(id);
-        } else {
-          unmountIDs.push(id);
-        }
-
-        idToInternalInstanceMap.delete(id);
-        internalInstanceToIDMap.delete(internalInstance);
-
-        mountedIDs.delete(id);
+      if (__DEBUG__) {
+        console.log(
+          '%crecordUnmount()',
+          'color: red; font-weight: bold;',
+          id,
+          getData(internalInstance).displayName
+        );
       }
+
+      // TODO: handle the case where it was never mounted.
+      if (isRoot) {
+        pendingUnmountedRootID = id;
+        rootIDs.delete(id);
+      } else {
+        unmountIDs.push(id);
+      }
+
+      idToInternalInstanceMap.delete(id);
+      internalInstanceToIDMap.delete(internalInstance);
+    });
+
+    pendingMountIDs.forEach(id => {
+      if (pendingUnmountIDs.has(id)) {
+        return;
+      }
+      const parentID = idToParentIDMap.get(id);
+      if (parentID === undefined) {
+        return;
+      }
+      recordMount(id, parentID);
     });
 
     const numUnmountIDs =
@@ -632,7 +637,9 @@ export function attach(
   }
 
   function recordPendingMount(internalInstance: InternalInstance) {
-    pendingMountIDs.add(getID(internalInstance));
+    const id = getID(internalInstance);
+    pendingMountIDs.add(id);
+    idToParentIDMap.set(id, currentParentID);
 
     if (__DEBUG__) {
       console.log(
@@ -679,8 +686,6 @@ export function attach(
         getData(internalInstance).displayName
       );
     }
-
-    mountedIDs.add(id);
 
     if (isRoot) {
       // TODO Is this right? For all versions?
