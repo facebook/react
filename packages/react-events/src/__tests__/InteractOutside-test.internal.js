@@ -25,14 +25,6 @@ const createEvent = (type, data) => {
   return event;
 };
 
-const createKeyboardEvent = (type, data) => {
-  return new KeyboardEvent(type, {
-    bubbles: true,
-    cancelable: true,
-    ...data,
-  });
-};
-
 function init() {
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
   ReactFeatureFlags.enableEventAPI = true;
