@@ -16,7 +16,6 @@ import React from 'react';
 
 type PressOutsideProps = {
   disabled: boolean,
-  onContextMenu: (e: PressOutsideEvent) => void,
   onPress: (e: PressOutsideEvent) => void,
   onPressChange: boolean => void,
   onPressEnd: (e: PressOutsideEvent) => void,
@@ -393,20 +392,8 @@ const PressOutsideResponder = {
         if (state.pressStatus === PRESSED_OUTSIDE) {
           dispatchCancel(event, context, props, state);
           if (props.preventDefault !== false) {
-            // Skip dispatching of onContextMenu below
             nativeEvent.preventDefault();
-            return;
           }
-        }
-        if (props.onContextMenu) {
-          dispatchEvent(
-            event,
-            context,
-            state,
-            'contextmenu',
-            props.onContextMenu,
-            true,
-          );
         }
         break;
       }
