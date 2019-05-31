@@ -20,13 +20,13 @@ type InteractOutsideProps = {
   onInteractOutside: (e: InteractOutsideEvent) => void,
 };
 
-type PointerType = '' | 'mouse' | 'pen' | 'touch';
+type PointerType = '' | 'keyboard' | 'mouse' | 'pen' | 'touch';
 
 type InteractOutsideState = {
   ignoreEmulatedMouseEvents: boolean,
   pointerType: PointerType,
   pressStatus: 0 | 1 | 2,
-  pressTarget: null | Element,
+  pressTarget: null | Document | Element,
 };
 
 type InteractOutsideEventType = 'interactoutside';
