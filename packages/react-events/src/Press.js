@@ -118,7 +118,6 @@ const DEFAULT_PRESS_RETENTION_OFFSET = {
 const targetEventTypes = [
   {name: 'click', passive: false},
   {name: 'keydown', passive: false},
-  {name: 'keypress', passive: false},
   {name: 'contextmenu', passive: false},
   // We need to preventDefault on pointerdown for mouse/pen events
   // that are in hit target area but not the element area.
@@ -663,7 +662,6 @@ const PressResponder = {
       // START
       case 'pointerdown':
       case 'keydown':
-      case 'keypress':
       case 'mousedown':
       case 'touchstart': {
         if (!state.isPressed) {

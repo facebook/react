@@ -51,7 +51,6 @@ const targetEventTypes = [
 
 const rootEventTypes = [
   'keydown',
-  'keypress',
   'keyup',
   'pointermove',
   'pointerdown',
@@ -304,7 +303,6 @@ const FocusResponder = {
       }
 
       case 'keydown':
-      case 'keypress':
       case 'keyup': {
         const nativeEvent = event.nativeEvent;
         if (
