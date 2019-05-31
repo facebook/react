@@ -83,7 +83,7 @@ describe('Event responder: InteractOutside', () => {
     });
   });
 
-  describe('onInteractOutside', () => {
+  describe('onInteractOutside (interactOnBlur: true)', () => {
     let onInteractOutside, outsideRef, insideRef;
 
     beforeEach(() => {
@@ -93,7 +93,9 @@ describe('Event responder: InteractOutside', () => {
       const element = (
         <div>
           <div ref={outsideRef}>I am outside</div>
-          <InteractOutside onInteractOutside={onInteractOutside}>
+          <InteractOutside
+            onInteractOutside={onInteractOutside}
+            interactOnBlur={true}>
             <div ref={insideRef}>I am inside</div>
           </InteractOutside>
         </div>
@@ -144,29 +146,47 @@ describe('Event responder: InteractOutside', () => {
       expect(onInteractOutside).toHaveBeenCalledTimes(0);
     });
 
-    it('is called after valid "keyup" event (outside)', () => {
-      outsideRef.current.dispatchEvent(
-        createKeyboardEvent('keydown', {key: 'Enter'}),
-      );
-      outsideRef.current.dispatchEvent(
-        createKeyboardEvent('keyup', {key: 'Enter'}),
-      );
+    it('is called after "focus" event (outside)', () => {
+      outsideRef.current.dispatchEvent(createEvent('focus'));
       expect(onInteractOutside).toHaveBeenCalledTimes(1);
       expect(onInteractOutside).toHaveBeenCalledWith(
-        expect.objectContaining({
-          pointerType: 'keyboard',
-          type: 'interactoutside',
-        }),
+        expect.objectContaining({pointerType: '', type: 'interactoutside'}),
       );
     });
 
-    it('is called after valid "keyup" event (inside)', () => {
-      insideRef.current.dispatchEvent(
-        createKeyboardEvent('keydown', {key: 'Enter'}),
+    it('is called after "focus" event (inside)', () => {
+      insideRef.current.dispatchEvent(createEvent('focus'));
+      expect(onInteractOutside).toHaveBeenCalledTimes(0);
+    });
+  });
+
+  describe('onInteractOutside (interactOnBlur: false)', () => {
+    let onInteractOutside, outsideRef, insideRef;
+
+    beforeEach(() => {
+      onInteractOutside = jest.fn();
+      outsideRef = React.createRef();
+      insideRef = React.createRef();
+      const element = (
+        <div>
+          <div ref={outsideRef}>I am outside</div>
+          <InteractOutside
+            onInteractOutside={onInteractOutside}
+            interactOnBlur={false}>
+            <div ref={insideRef}>I am inside</div>
+          </InteractOutside>
+        </div>
       );
-      insideRef.current.dispatchEvent(
-        createKeyboardEvent('keyup', {key: 'Enter'}),
-      );
+      ReactDOM.render(element, container);
+    });
+
+    it('is called after "focus" event (outside)', () => {
+      outsideRef.current.dispatchEvent(createEvent('focus'));
+      expect(onInteractOutside).toHaveBeenCalledTimes(0);
+    });
+
+    it('is called after "focus" event (inside)', () => {
+      insideRef.current.dispatchEvent(createEvent('focus'));
       expect(onInteractOutside).toHaveBeenCalledTimes(0);
     });
   });

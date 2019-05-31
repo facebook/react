@@ -16,10 +16,11 @@ import React from 'react';
 
 type InteractOutsideProps = {
   disabled: boolean,
+  interactOnBlur: boolean,
   onInteractOutside: (e: InteractOutsideEvent) => void,
 };
 
-type PointerType = '' | 'mouse' | 'keyboard' | 'pen' | 'touch';
+type PointerType = '' | 'mouse' | 'pen' | 'touch';
 
 type InteractOutsideState = {
   ignoreEmulatedMouseEvents: boolean,
@@ -58,7 +59,7 @@ const rootEventTypes = [
   'pointerdown',
   'pointerup',
   'pointercancel',
-  {name: 'keydown', passive: false},
+  'focus',
   'keyup',
 ];
 
@@ -78,12 +79,6 @@ if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
 const NOT_PRESSED = 0;
 const PRESSED_INSIDE = 1;
 const PRESSED_OUTSIDE = 2;
-
-function isValidKeyPress(key: string): boolean {
-  // Accessibility for keyboards. Space and Enter only.
-  // "Spacebar" is for IE 11
-  return key === 'Enter' || key === ' ' || key === 'Spacebar';
-}
 
 function isTouchEvent(nativeEvent: Event): boolean {
   return Array.isArray((nativeEvent: any).changedTouches);
@@ -200,9 +195,7 @@ const InteractOutsideResponder = {
     const pointerType = context.getEventPointerType(event);
 
     switch (type) {
-      // START
       case 'pointerdown':
-      case 'keydown':
       case 'mousedown':
       case 'touchstart': {
         if (state.pressStatus === NOT_PRESSED) {
@@ -210,19 +203,6 @@ const InteractOutsideResponder = {
             state.ignoreEmulatedMouseEvents = true;
           }
 
-          // Ignore unrelated key events
-          if (pointerType === 'keyboard') {
-            // We don't process key events on the body
-            if (target.nodeName === 'BODY') {
-              return;
-            }
-            if (!isValidKeyPress(nativeEvent.key)) {
-              return;
-            }
-          }
-
-          // We set these here, before the button check so we have this
-          // data around for handling of the context menu
           state.pointerType = pointerType;
           state.pressTarget = context.getEventCurrentTarget(event);
 
@@ -248,34 +228,24 @@ const InteractOutsideResponder = {
         }
         break;
       }
-      // END
       case 'pointerup':
-      case 'keyup':
       case 'mouseup':
       case 'touchend': {
         if (state.pressStatus !== NOT_PRESSED) {
-          // Ignore unrelated keyboard events and verify press is within
-          // responder region for non-keyboard events.
-          if (pointerType === 'keyboard') {
-            if (!isValidKeyPress(nativeEvent.key)) {
-              return;
-            }
-            // If the event target isn't within the press target, check if we're still
-            // within the responder region. The region may have changed if the
-            // element's layout was modified after activation.
-          }
           if (state.pressStatus === PRESSED_OUTSIDE) {
-            if (state.pressTarget !== null && props.onInteractOutside) {
-              if (!context.isTargetWithinEventComponent(target)) {
-                dispatchEvent(
-                  event,
-                  context,
-                  state,
-                  'interactoutside',
-                  props.onInteractOutside,
-                  true,
-                );
-              }
+            if (
+              state.pressTarget !== null &&
+              props.onInteractOutside &&
+              !context.isTargetWithinEventComponent(target)
+            ) {
+              dispatchEvent(
+                event,
+                context,
+                state,
+                'interactoutside',
+                props.onInteractOutside,
+                true,
+              );
             }
           }
           state.pressStatus = NOT_PRESSED;
@@ -284,8 +254,33 @@ const InteractOutsideResponder = {
         }
         break;
       }
-
-      // CANCEL
+      case 'keyup': {
+        if (state.pressStatus === NOT_PRESSED) {
+          state.pointerType = pointerType;
+        }
+        break;
+      }
+      case 'focus': {
+        if (props.interactOnBlur === false) {
+          return;
+        }
+        if (
+          props.onInteractOutside &&
+          !context.isTargetWithinEventComponent(target)
+        ) {
+          state.pressTarget = target;
+          dispatchEvent(
+            event,
+            context,
+            state,
+            'interactoutside',
+            props.onInteractOutside,
+            true,
+          );
+          state.pressStatus = NOT_PRESSED;
+        }
+        break;
+      }
       case 'pointercancel':
       case 'scroll':
       case 'touchcancel':
