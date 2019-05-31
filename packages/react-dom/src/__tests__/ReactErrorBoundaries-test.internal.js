@@ -37,9 +37,14 @@ describe('ReactErrorBoundaries', () => {
   let RetryErrorBoundary;
   let Normal;
 
+  afterEach(() => {
+    console.error.mockRestore();
+  });
+
   beforeEach(() => {
     jest.useFakeTimers();
     jest.resetModules();
+    jest.spyOn(console, 'error');
     PropTypes = require('prop-types');
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
@@ -653,6 +658,13 @@ describe('ReactErrorBoundaries', () => {
       container,
     );
     expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
+    expect(console.error).toHaveBeenCalledWith(
+      __DEV__
+        ? expect.stringMatching(
+            /^The above error occurred in the <BrokenRender> component/,
+          )
+        : new Error('Hello'),
+    );
     expect(log).toEqual([
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
