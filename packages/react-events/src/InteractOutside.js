@@ -14,18 +14,18 @@ import type {
 
 import React from 'react';
 
-type PressOutsideProps = {
+type InteractOutsideProps = {
   disabled: boolean,
-  onPress: (e: PressOutsideEvent) => void,
-  onPressChange: boolean => void,
-  onPressEnd: (e: PressOutsideEvent) => void,
-  onPressStart: (e: PressOutsideEvent) => void,
+  onInteraction: (e: InteractOutsideEvent) => void,
+  onInteractionChange: boolean => void,
+  onInteractionEnd: (e: InteractOutsideEvent) => void,
+  onInteractionStart: (e: InteractOutsideEvent) => void,
   preventDefault: boolean,
 };
 
 type PointerType = '' | 'mouse' | 'keyboard' | 'pen' | 'touch';
 
-type PressOutsideState = {
+type InteractOutsideState = {
   ignoreEmulatedMouseEvents: boolean,
   isActivePressed: boolean,
   pointerType: PointerType,
@@ -33,16 +33,16 @@ type PressOutsideState = {
   pressTarget: null | Element,
 };
 
-type PressOutsideEventType =
+type InteractOutsideEventType =
   | 'press'
   | 'pressstart'
   | 'pressend'
   | 'presschange'
   | 'contextmenu';
 
-type PressOutsideEvent = {|
+type InteractOutsideEvent = {|
   target: Element | Document,
-  type: PressOutsideEventType,
+  type: InteractOutsideEventType,
   pointerType: PointerType,
   timeStamp: number,
   clientX: null | number,
@@ -110,13 +110,13 @@ function getTouchFromPressEvent(nativeEvent: TouchEvent): Touch {
       : (nativeEvent: any);
 }
 
-function createPressOutsideEvent(
+function createInteractOutsideEvent(
   context: ReactResponderContext,
-  type: PressOutsideEventType,
+  type: InteractOutsideEventType,
   target: Element | Document,
   pointerType: PointerType,
   event: ?ReactResponderEvent,
-): PressOutsideEvent {
+): InteractOutsideEvent {
   const timeStamp = context.getTimeStamp();
   let clientX = null;
   let clientY = null;
@@ -167,14 +167,14 @@ function createPressOutsideEvent(
 function dispatchEvent(
   event: ?ReactResponderEvent,
   context: ReactResponderContext,
-  state: PressOutsideState,
-  name: PressOutsideEventType,
+  state: InteractOutsideState,
+  name: InteractOutsideEventType,
   listener: (e: Object) => void,
   discrete: boolean,
 ): void {
   const target = ((state.pressTarget: any): Element | Document);
   const pointerType = state.pointerType;
-  const syntheticEvent = createPressOutsideEvent(
+  const syntheticEvent = createInteractOutsideEvent(
     context,
     name,
     target,
@@ -187,8 +187,8 @@ function dispatchEvent(
 function dispatchCancel(
   event: ReactResponderEvent,
   context: ReactResponderContext,
-  props: PressOutsideProps,
-  state: PressOutsideState,
+  props: InteractOutsideProps,
+  state: InteractOutsideState,
 ): void {
   state.ignoreEmulatedMouseEvents = false;
   if (state.pressStatus === PRESSED_OUTSIDE) {
@@ -198,8 +198,8 @@ function dispatchCancel(
 
 function unmountResponder(
   context: ReactResponderContext,
-  props: PressOutsideProps,
-  state: PressOutsideState,
+  props: InteractOutsideProps,
+  state: InteractOutsideState,
 ): void {
   if (state.pressStatus === PRESSED_OUTSIDE) {
     dispatchPressEndEvents(null, context, props, state);
@@ -209,12 +209,12 @@ function unmountResponder(
 function dispatchPressChangeEvent(
   event: ?ReactResponderEvent,
   context: ReactResponderContext,
-  props: PressOutsideProps,
-  state: PressOutsideState,
+  props: InteractOutsideProps,
+  state: InteractOutsideState,
 ): void {
   const bool = state.isActivePressed;
   const listener = () => {
-    props.onPressChange(bool);
+    props.onInteractionChange(bool);
   };
   dispatchEvent(event, context, state, 'presschange', listener, true);
 }
@@ -227,17 +227,17 @@ function dispatchPressStartEvents(
 ) {
   const wasActivePressed = state.isActivePressed;
   state.isActivePressed = true;
-  if (props.onPressStart) {
+  if (props.onInteractionStart) {
     dispatchEvent(
       event,
       context,
       state,
       'pressstart',
-      props.onPressStart,
+      props.onInteractionStart,
       true,
     );
   }
-  if (!wasActivePressed && props.onPressChange) {
+  if (!wasActivePressed && props.onInteractionChange) {
     dispatchPressChangeEvent(event, context, props, state);
   }
 }
@@ -250,17 +250,17 @@ function dispatchPressEndEvents(
 ) {
   state.isActivePressed = false;
 
-  if (props.onPressEnd) {
-    dispatchEvent(event, context, state, 'pressend', props.onPressEnd, true);
+  if (props.onInteractionEnd) {
+    dispatchEvent(event, context, state, 'pressend', props.onInteractionEnd, true);
   }
-  if (props.onPressChange) {
+  if (props.onInteractionChange) {
     dispatchPressChangeEvent(event, context, props, state);
   }
 }
 
-const PressOutsideResponder = {
+const InteractOutsideResponder = {
   rootEventTypes,
-  createInitialState(): PressOutsideState {
+  createInitialState(): InteractOutsideState {
     return {
       ignoreEmulatedMouseEvents: false,
       isActivePressed: false,
@@ -273,8 +273,8 @@ const PressOutsideResponder = {
   onRootEvent(
     event: ReactResponderEvent,
     context: ReactResponderContext,
-    props: PressOutsideProps,
-    state: PressOutsideState,
+    props: InteractOutsideProps,
+    state: InteractOutsideState,
   ): void {
     const {target, type} = event;
 
@@ -368,14 +368,14 @@ const PressOutsideResponder = {
           }
           if (state.pressStatus === PRESSED_OUTSIDE) {
             dispatchPressEndEvents(event, context, props, state);
-            if (state.pressTarget !== null && props.onPress) {
+            if (state.pressTarget !== null && props.onInteraction) {
               if (!context.isTargetWithinEventComponent(target)) {
                 dispatchEvent(
                   event,
                   context,
                   state,
                   'press',
-                  props.onPress,
+                  props.onInteraction,
                   true,
                 );
               }
@@ -409,21 +409,21 @@ const PressOutsideResponder = {
   },
   onUnmount(
     context: ReactResponderContext,
-    props: PressOutsideProps,
-    state: PressOutsideState,
+    props: InteractOutsideProps,
+    state: InteractOutsideState,
   ) {
     unmountResponder(context, props, state);
   },
   onOwnershipChange(
     context: ReactResponderContext,
-    props: PressOutsideProps,
-    state: PressOutsideState,
+    props: InteractOutsideProps,
+    state: InteractOutsideState,
   ) {
     unmountResponder(context, props, state);
   },
 };
 
 export default React.unstable_createEventComponent(
-  PressOutsideResponder,
-  'PressOutside',
+  InteractOutsideResponder,
+  'InteractOutside',
 );

@@ -9,6 +9,6 @@
 
 'use strict';
 
-const PressOutside = require('./src/PressOutside');
+const InteractOutside = require('./src/InteractOutside');
 
-module.exports = PressOutside.default || PressOutside;
+module.exports = InteractOutside.default || InteractOutside;

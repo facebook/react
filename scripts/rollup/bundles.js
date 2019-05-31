@@ -478,8 +478,8 @@ const bundles = [
       FB_WWW_PROD,
     ],
     moduleType: NON_FIBER_RENDERER,
-    entry: 'react-events/press-outside',
-    global: 'ReactEventsPressOutside',
+    entry: 'react-events/interact-outside',
+    global: 'ReactEventsInteractOutside',
     externals: ['react'],
   },
 
