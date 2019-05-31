@@ -89,6 +89,23 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     }
   }
 
+  function useLoadingIndicator(config) {
+    let [isLoading, setLoading] = React.useState(false);
+    let start = React.useCallback(
+      cb => {
+        setLoading(true);
+        Scheduler.unstable_next(() =>
+          React.unstable_withSuspenseConfig(() => {
+            setLoading(false);
+            cb();
+          }, config),
+        );
+      },
+      [setLoading, config],
+    );
+    return [isLoading, start];
+  }
+
   it('warns if the deprecated maxDuration option is used', () => {
     function Foo() {
       return (
@@ -2214,23 +2231,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   it('supports delaying a busy spinner from disappearing', async () => {
-    function useLoadingIndicator(config) {
-      let [isLoading, setLoading] = React.useState(false);
-      let start = React.useCallback(
-        cb => {
-          setLoading(true);
-          Scheduler.unstable_next(() =>
-            React.unstable_withSuspenseConfig(() => {
-              setLoading(false);
-              cb();
-            }, config),
-          );
-        },
-        [setLoading, config],
-      );
-      return [isLoading, start];
-    }
-
     const SUSPENSE_CONFIG = {
       timeoutMs: 10000,
       busyDelayMs: 500,
@@ -2292,6 +2292,58 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       // However, since we exceeded the minimum time to show
       // the loading indicator, we commit immediately.
       expect(ReactNoop.getChildren()).toEqual([span('D')]);
+    });
+  });
+
+  it('does not warn for suspends that resolve quickly after a discrete event', async () => {
+    let pressButton;
+
+    function Button({value, onPress}) {
+      const [isLoading, startLoading] = useLoadingIndicator({
+        timeoutMs: 500,
+      });
+      pressButton = React.useCallback(
+        page => {
+          startLoading(() => {
+            onPress(value);
+          });
+        },
+        [onPress],
+      );
+      return <Text text={'Button ' + value + (isLoading ? '...' : '')} />;
+    }
+
+    function App() {
+      const [page, setPage] = React.useState('A');
+      return (
+        <Fragment>
+          <Button value="B" onPress={setPage} />
+          <Suspense fallback="Loading...">
+            <AsyncText text={page} ms={100} />
+          </Suspense>
+        </Fragment>
+      );
+    }
+    // Initial render.
+    ReactNoop.render(<App page="A" />);
+    expect(Scheduler).toFlushAndYield(['Button B', 'Suspend! [A]']);
+    Scheduler.advanceTime(100);
+    await advanceTimers(100);
+    expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
+    expect(Scheduler).toFlushAndYield(['A']);
+    expect(ReactNoop.getChildren()).toEqual([span('Button B'), span('A')]);
+
+    await ReactNoop.act(async () => {
+      // Perform a discrete update that will trigger a loading state and eventually suspend
+      ReactNoop.discreteUpdates(() => {
+        pressButton('B');
+      });
+      expect(Scheduler).toFlushAndYield([
+        'Button B...',
+        'Button B',
+        'Suspend! [B]',
+      ]);
+      Scheduler.flushAll();
     });
   });
 });
