@@ -1,6 +1,6 @@
 // @flow
 
-import React, { Fragment, useContext, useMemo } from 'react';
+import React, { useContext, useMemo } from 'react';
 import { TreeStateContext } from './TreeContext';
 import TreeFocusedContext from './TreeFocusedContext';
 import { SettingsContext } from '../Settings/SettingsContext';
@@ -8,23 +8,7 @@ import { StoreContext } from '../context';
 import { useSubscription } from '../hooks';
 import Store from '../../store';
 
-import styles from './Guidelines.css';
-
-export default function Guidelines(_: {||}) {
-  const { selectedElementID } = useContext(TreeStateContext);
-  const treeFocused = useContext(TreeFocusedContext);
-
-  return (
-    <Fragment>
-      <Guideline
-        className={
-          treeFocused ? styles.GuidelineActive : styles.GuidelineInactive
-        }
-        elementID={selectedElementID}
-      />
-    </Fragment>
-  );
-}
+import styles from './Guideline.css';
 
 type Data = {|
   depth: number,
@@ -32,23 +16,20 @@ type Data = {|
   stopIndex: number,
 |};
 
-type Props = {|
-  className: string,
-  elementID: number | null,
-|};
-
-function Guideline({ className, elementID }: Props) {
-  const store = useContext(StoreContext);
+export default function Guideline(_: {||}) {
   const { lineHeight } = useContext(SettingsContext);
+  const store = useContext(StoreContext);
+  const { selectedElementID } = useContext(TreeStateContext);
+  const treeFocused = useContext(TreeFocusedContext);
 
   const subscription = useMemo(
     () => ({
       getCurrentValue: () => {
-        if (elementID === null) {
+        if (selectedElementID === null) {
           return null;
         }
 
-        const element = store.getElementByID(elementID);
+        const element = store.getElementByID(selectedElementID);
         if (
           element === null ||
           element.isCollapsed ||
@@ -92,7 +73,7 @@ function Guideline({ className, elementID }: Props) {
         };
       },
     }),
-    [elementID, store]
+    [selectedElementID, store]
   );
   const data = useSubscription<Data | null, Store>(subscription);
 
@@ -104,11 +85,13 @@ function Guideline({ className, elementID }: Props) {
 
   return (
     <div
-      className={className}
+      className={
+        treeFocused ? styles.GuidelineActive : styles.GuidelineInactive
+      }
       style={{
         position: 'absolute',
         top: `${startIndex * lineHeight}px`,
-        left: `${depth * 0.75 + 0.75}rem`,
+        left: `calc(${depth} * var(--indentation-size) + 0.5rem)`,
         height: `${(stopIndex + 1 - startIndex) * lineHeight}px`,
       }}
     />

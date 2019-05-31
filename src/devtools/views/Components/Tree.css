@@ -7,6 +7,14 @@
   border-top: 1px solid var(--color-border);
 }
 
+.List {
+  overflow-x: hidden !important;
+}
+
+.InnerElementType {
+  overflow-x: hidden;
+}
+
 .SearchInput {
   flex: 0 0 42px;
   display: flex;

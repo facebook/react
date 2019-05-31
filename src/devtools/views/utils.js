@@ -170,3 +170,16 @@ export function downloadFile(filename: string, text: string): void {
 
   ((document.body: any): HTMLBodyElement).removeChild(element);
 }
+
+export function truncateText(text: string, maxLength: number): string {
+  const { length } = text;
+  if (length > maxLength) {
+    return (
+      text.substr(0, Math.floor(maxLength / 2)) +
+      '…' +
+      text.substr(length - Math.ceil(maxLength / 2) + 1)
+    );
+  } else {
+    return text;
+  }
+}

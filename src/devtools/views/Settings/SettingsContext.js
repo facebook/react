@@ -16,9 +16,6 @@ type Context = {|
   // Specified as a separate prop so it can trigger a re-render of FixedSizeList.
   lineHeight: number,
 
-  showIndentLines: boolean,
-  setShowIndentLines: (value: boolean) => void,
-
   theme: Theme,
   setTheme(value: Theme): void,
 |};
@@ -46,10 +43,6 @@ function SettingsContextController({
   const [displayDensity, setDisplayDensity] = useLocalStorage<DisplayDensity>(
     'React::DevTools::displayDensity',
     'compact'
-  );
-  const [showIndentLines, setShowIndentLines] = useLocalStorage<boolean>(
-    'React::DevTools::showIndentLines',
-    true
   );
   const [theme, setTheme] = useLocalStorage<Theme>(
     'React::DevTools::theme',
@@ -133,8 +126,6 @@ function SettingsContextController({
       setDisplayDensity,
       theme,
       setTheme,
-      showIndentLines,
-      setShowIndentLines,
       lineHeight:
         displayDensity === 'compact'
           ? compactLineHeight
@@ -144,9 +135,7 @@ function SettingsContextController({
       comfortableLineHeight,
       compactLineHeight,
       displayDensity,
-      showIndentLines,
       setDisplayDensity,
-      setShowIndentLines,
       setTheme,
       theme,
     ]

@@ -4,20 +4,13 @@ import React, {
   Fragment,
   useCallback,
   useContext,
-  useLayoutEffect,
   useMemo,
-  useRef,
   useState,
 } from 'react';
-import {
-  ElementTypeClass,
-  ElementTypeFunction,
-  ElementTypeMemo,
-  ElementTypeForwardRef,
-} from 'src/types';
+import { ElementTypeMemo, ElementTypeForwardRef } from 'src/types';
 import Store from 'src/devtools/store';
 import ButtonIcon from '../ButtonIcon';
-import { createRegExp } from '../utils';
+import { createRegExp, truncateText } from '../utils';
 import { TreeDispatcherContext, TreeStateContext } from './TreeContext';
 import { StoreContext } from '../context';
 
@@ -46,13 +39,7 @@ export default function ElementView({ data, index, style }: Props) {
 
   const [isHovered, setIsHovered] = useState(false);
 
-  const {
-    lastScrolledIDRef,
-    isNavigatingWithKeyboard,
-    onElementMouseEnter,
-    showIndentLines,
-    treeFocused,
-  } = data;
+  const { isNavigatingWithKeyboard, onElementMouseEnter, treeFocused } = data;
   const id = element === null ? null : element.id;
   const isSelected = selectedElementID === id;
 
@@ -61,49 +48,6 @@ export default function ElementView({ data, index, style }: Props) {
       dispatch({ type: 'SELECT_OWNER', payload: id });
     }
   }, [dispatch, id]);
-
-  const scrollAnchorStartRef = useRef<HTMLSpanElement | null>(null);
-  const scrollAnchorEndRef = useRef<HTMLSpanElement | null>(null);
-
-  // The tree above has its own autoscrolling, but it only works for rows.
-  // However, even when the row gets into the viewport, the component name
-  // might be too far left or right on the screen. Adjust it in this case.
-  useLayoutEffect(() => {
-    if (isSelected) {
-      // Don't select the same item twice.
-      // A row may appear and disappear just by scrolling:
-      // https://github.com/bvaughn/react-devtools-experimental/issues/67
-      // It doesn't necessarily indicate a user action.
-      // TODO: we might want to revamp the autoscroll logic
-      // to only happen explicitly for user-initiated events.
-      if (lastScrolledIDRef.current === id) {
-        return;
-      }
-      lastScrolledIDRef.current = id;
-
-      // We want to bring the whole <Component> name into view,
-      // including the expansion toggle and the "=== $r" hint.
-      // However, even calling scrollIntoView() on a wrapper parent node (e.g. <span>)
-      // wouldn't guarantee that it will be *fully* brought into view.
-      // As a workaround, we'll have two anchor spans, and scroll each into view.
-      if (scrollAnchorEndRef.current !== null) {
-        scrollAnchorEndRef.current.scrollIntoView({
-          behavior: 'auto',
-          block: 'nearest',
-          inline: 'nearest',
-        });
-      }
-      if (scrollAnchorStartRef.current !== null) {
-        // We scroll the start anchor last because it's
-        // more important for it to be in the view.
-        scrollAnchorStartRef.current.scrollIntoView({
-          behavior: 'auto',
-          block: 'nearest',
-          inline: 'nearest',
-        });
-      }
-    }
-  }, [id, isSelected, lastScrolledIDRef]);
 
   const handleMouseDown = useCallback(
     ({ metaKey }) => {
@@ -138,8 +82,6 @@ export default function ElementView({ data, index, style }: Props) {
 
   const { depth, displayName, key, type } = ((element: any): Element);
 
-  const showDollarR =
-    isSelected && (type === ElementTypeClass || type === ElementTypeFunction);
   const showBadge = type === ElementTypeMemo || type === ElementTypeForwardRef;
 
   let className = styles.Element;
@@ -162,45 +104,26 @@ export default function ElementView({ data, index, style }: Props) {
         ...style, // "style" comes from react-window
 
         // Left padding presents the appearance of a nested tree structure.
-        paddingLeft: '0.25rem',
-
-        // These style overrides enable the background color to fill the full visible width,
-        // when combined with the CSS tweaks in Tree.
-        // A lot of options were considered; this seemed the one that requires the least code.
-        // See https://github.com/bvaughn/react-devtools-experimental/issues/9
-        width: undefined,
-        minWidth: '100%',
-        position: 'relative',
-        marginBottom: `-${style.height}px`,
+        // We must use padding rather than margin/left because of the selected background color.
+        paddingLeft: `calc(${depth} * var(--indentation-size))`,
       }}
     >
-      <div
-        style={{
-          width: `${depth * 0.75}rem`,
-          height: '100%',
-          backgroundSize: '0.75rem 1rem',
-          backgroundColor: 'transparent',
-          backgroundImage: showIndentLines
-            ? 'linear-gradient(to right, transparent 8px, var(--color-guideline) 8px, transparent 9px)'
-            : '',
-          backgroundRepeat: 'repeat',
-        }}
-      />
-      <span className={styles.ScrollAnchor} ref={scrollAnchorStartRef} />
       {ownerID === null ? (
         <ExpandCollapseToggle element={element} store={store} />
       ) : null}
-      <span className={styles.Component}>
-        <DisplayName displayName={displayName} id={((id: any): number)} />
-        {key && (
-          <Fragment>
-            &nbsp;<span className={styles.AttributeName}>key</span>=
-            <span className={styles.AttributeValue}>"{key}"</span>
-          </Fragment>
-        )}
-      </span>
-      {showDollarR && <span className={styles.DollarR}>&nbsp;== $r</span>}
-      <span className={styles.ScrollAnchor} ref={scrollAnchorEndRef} />
+
+      <span className={styles.Bracket}>&lt;</span>
+      <DisplayName displayName={displayName} id={((id: any): number)} />
+      {key && (
+        <Fragment>
+          &nbsp;<span className={styles.AttributeName}>key</span>=
+          <span className={styles.AttributeValue} title={key}>
+            "{truncateText(`${key}`, 10)}"
+          </span>
+        </Fragment>
+      )}
+      <span className={styles.Bracket}>&gt;</span>
+
       {showBadge && (
         <span className={styles.Badge}>
           {type === ElementTypeMemo ? 'Memo' : 'ForwardRef'}

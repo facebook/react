@@ -22,7 +22,7 @@ import SearchInput from './SearchInput';
 import { ComponentFiltersModalContextController } from './ComponentFiltersModalContext';
 import ToggleComponentFiltersModalButton from './ToggleComponentFiltersModalButton';
 import ComponentFiltersModal from './ComponentFiltersModal';
-import Guidelines from './Guidelines';
+import Guideline from './Guideline';
 import TreeFocusedContext from './TreeFocusedContext';
 
 import styles from './Tree.css';
@@ -32,7 +32,6 @@ export type ItemData = {|
   isNavigatingWithKeyboard: boolean,
   lastScrolledIDRef: { current: number | null },
   onElementMouseEnter: (id: number) => void,
-  showIndentLines: boolean,
   treeFocused: boolean,
 |};
 
@@ -60,7 +59,7 @@ export default function Tree(props: Props) {
 
   const [treeFocused, setTreeFocused] = useState<boolean>(false);
 
-  const { lineHeight, showIndentLines } = useContext(SettingsContext);
+  const { lineHeight } = useContext(SettingsContext);
 
   // Make sure a newly selected element is visible in the list.
   // This is helpful for things like the owners list and search.
@@ -264,7 +263,6 @@ export default function Tree(props: Props) {
       isNavigatingWithKeyboard,
       onElementMouseEnter: handleElementMouseEnter,
       lastScrolledIDRef,
-      showIndentLines,
       treeFocused,
     }),
     [
@@ -272,7 +270,6 @@ export default function Tree(props: Props) {
       isNavigatingWithKeyboard,
       handleElementMouseEnter,
       lastScrolledIDRef,
-      showIndentLines,
       treeFocused,
     ]
   );
@@ -310,7 +307,6 @@ export default function Tree(props: Props) {
                   itemCount={numElements}
                   itemData={itemData}
                   itemSize={lineHeight}
-                  overscanCount={3}
                   ref={listRef}
                   width={width}
                 >
@@ -326,6 +322,31 @@ export default function Tree(props: Props) {
   );
 }
 
+function updateIndentationSizeVar(innerDiv: HTMLDivElement): void {
+  const list = ((innerDiv.parentElement: any): HTMLDivElement);
+
+  let indentationSize =
+    parseFloat(getComputedStyle(list).getPropertyValue('--indentation-size')) ||
+    12;
+
+  let maxChildWidth = 0;
+  for (let child of innerDiv.children) {
+    const { lastElementChild } = child;
+    // Skip over e.g. the guideline element
+    if (lastElementChild != null) {
+      const bounds = ((lastElementChild.getBoundingClientRect(): any): DOMRect);
+      maxChildWidth = Math.max(maxChildWidth, bounds.x + bounds.width);
+    }
+  }
+
+  indentationSize = Math.min(
+    12,
+    (list.clientWidth / maxChildWidth) * indentationSize
+  );
+
+  list.style.setProperty('--indentation-size', `${indentationSize}px`);
+}
+
 function InnerElementType({ children, style, ...rest }) {
   const { ownerID } = useContext(TreeStateContext);
 
@@ -335,13 +356,12 @@ function InnerElementType({ children, style, ...rest }) {
   // and ensure that once we've grown to a new max size, we don't shrink below it.
   // This improves the user experience when scrolling between wide and narrow rows.
   const divRef = useRef<HTMLDivElement | null>(null);
-  const [minWidth, setMinWidth] = useState(null);
+
   // TODO This is a valid warning, but we're ignoring it for the time being.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (divRef.current !== null) {
-      const measuredWidth = divRef.current.offsetWidth;
-      setMinWidth(w => Math.max(w || 0, measuredWidth));
+      updateIndentationSizeVar(divRef.current);
     }
   });
 
@@ -349,7 +369,11 @@ function InnerElementType({ children, style, ...rest }) {
   // This will cause a render with 100% min-width, a measurement
   // in an effect, and a second render where we know the width.
   useEffect(() => {
-    const invalidateMinWidth = () => setMinWidth(null);
+    const invalidateMinWidth = () => {
+      if (divRef.current !== null) {
+        updateIndentationSizeVar(divRef.current);
+      }
+    };
     window.addEventListener('resize', invalidateMinWidth);
     return () => window.removeEventListener('resize', invalidateMinWidth);
   }, []);
@@ -359,7 +383,6 @@ function InnerElementType({ children, style, ...rest }) {
   const [prevOwnerID, setPrevOwnerID] = useState(ownerID);
   if (ownerID !== prevOwnerID) {
     setPrevOwnerID(ownerID);
-    setMinWidth(null);
   }
 
   // This style override enables the background color to fill the full visible width,
@@ -369,16 +392,11 @@ function InnerElementType({ children, style, ...rest }) {
   return (
     <div
       className={styles.InnerElementType}
-      style={{
-        ...style,
-        display: 'inline-block',
-        minWidth: minWidth || '100%',
-        width: undefined,
-      }}
+      style={style}
       ref={divRef}
       {...rest}
     >
-      <Guidelines />
+      <Guideline />
       {children}
     </div>
   );

@@ -9,12 +9,17 @@
   align-items: center;
   cursor: default;
   user-select: none;
+  color: var(--color-component-name);
 }
 .HoveredElement {
   background-color: var(--color-background-hover);
 }
 .InactiveSelectedElement {
   background-color: var(--color-background-inactive);
+}
+
+.Bracket {
+  color: var(--color-jsx-arrow-brackets);
 }
 
 .ScrollAnchor {
@@ -37,24 +42,6 @@
   --color-expand-collapse-toggle: var(--color-component-name-inverted);
 }
 
-.DollarR {
-  color: var(--color-jsx-arrow-brackets);
-}
-
-.Component {
-  color: var(--color-component-name);
-}
-.Component:before {
-  white-space: nowrap;
-  content: '<';
-  color: var(--color-jsx-arrow-brackets);
-}
-.Component:after {
-  white-space: nowrap;
-  content: '>';
-  color: var(--color-jsx-arrow-brackets);
-}
-
 .AttributeName {
   color: var(--color-attribute-name);
 }
@@ -74,10 +61,12 @@
   display: inline-flex;
   width: 1rem;
   height: 1rem;
+  flex: 0 0 1rem;
   color: var(--color-expand-collapse-toggle);
 }
 
 .Badge {
+  color: var(--color-text);
   background-color: var(--color-component-badge-background);
   padding: 0.125rem 0.25rem;
   line-height: normal;
