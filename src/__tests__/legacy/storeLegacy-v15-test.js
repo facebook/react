@@ -176,10 +176,9 @@ describe('Store (legacy)', () => {
       expect(store).toMatchSnapshot('6: expand Grandparent');
     });
 
-    // TODO Re-enable this test once the renderer supports it.
-    xit('should support adding and removing children', () => {
+    it('should support adding and removing children', () => {
       const Root = ({ children }) => <div>{children}</div>;
-      const Component = () => null;
+      const Component = () => <div />;
 
       const container = document.createElement('div');
 
@@ -215,10 +214,9 @@ describe('Store (legacy)', () => {
       expect(store).toMatchSnapshot('3: remove child');
     });
 
-    // TODO Re-enable this test once the renderer supports it.
-    xit('should support reordering of children', () => {
+    it('should support reordering of children', () => {
       const Root = ({ children }) => <div>{children}</div>;
-      const Component = () => null;
+      const Component = () => <div />;
 
       const Foo = () => <div>{[<Component key="0" />]}</div>;
       const Bar = () => (
@@ -447,10 +445,9 @@ describe('Store (legacy)', () => {
       expect(store).toMatchSnapshot('6: expand middle node');
     });
 
-    // TODO Re-enable this test once the renderer supports it.
     xit('should support reordering of children', () => {
       const Root = ({ children }) => <div>{children}</div>;
-      const Component = () => null;
+      const Component = () => <div />;
 
       const Foo = () => <div>{[<Component key="0" />]}</div>;
       const Bar = () => (

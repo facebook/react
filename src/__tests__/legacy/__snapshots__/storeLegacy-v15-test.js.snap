@@ -15,6 +15,32 @@ exports[`Store (legacy) collapseNodesByDefault:false should filter DOM nodes fro
               <div>
 `;
 
+exports[`Store (legacy) collapseNodesByDefault:false should support adding and removing children: 1: mount 1`] = `
+[root]
+  ▾ <Root>
+    ▾ <div>
+      ▾ <Component key="a">
+          <div>
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:false should support adding and removing children: 2: add child 1`] = `
+[root]
+  ▾ <Root>
+    ▾ <div>
+      ▾ <Component key="a">
+          <div>
+      ▾ <Component key="b">
+          <div>
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:false should support adding and removing children: 3: remove child 1`] = `
+[root]
+  ▾ <Root>
+    ▾ <div>
+      ▾ <Component key="b">
+          <div>
+`;
+
 exports[`Store (legacy) collapseNodesByDefault:false should support collapsing parts of the tree: 1: mount 1`] = `
 [root]
   ▾ <Grandparent>
@@ -184,6 +210,59 @@ exports[`Store (legacy) collapseNodesByDefault:false should support mount and up
 `;
 
 exports[`Store (legacy) collapseNodesByDefault:false should support mount and update operations: 3: unmount 1`] = ``;
+
+exports[`Store (legacy) collapseNodesByDefault:false should support reordering of children: 1: mount 1`] = `
+[root]
+  ▾ <Root>
+    ▾ <div>
+      ▾ <Foo key="foo">
+        ▾ <div>
+          ▾ <Component key="0">
+              <div>
+      ▾ <Bar key="bar">
+        ▾ <div>
+          ▾ <Component key="0">
+              <div>
+          ▾ <Component key="1">
+              <div>
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:false should support reordering of children: 2: reorder children 1`] = `
+[root]
+  ▾ <Root>
+    ▾ <div>
+      ▾ <Bar key="bar">
+        ▾ <div>
+          ▾ <Component key="0">
+              <div>
+          ▾ <Component key="1">
+              <div>
+      ▾ <Foo key="foo">
+        ▾ <div>
+          ▾ <Component key="0">
+              <div>
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:false should support reordering of children: 3: collapse root 1`] = `
+[root]
+  ▸ <Root>
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:false should support reordering of children: 4: expand root 1`] = `
+[root]
+  ▾ <Root>
+    ▾ <div>
+      ▾ <Bar key="bar">
+        ▾ <div>
+          ▾ <Component key="0">
+              <div>
+          ▾ <Component key="1">
+              <div>
+      ▾ <Foo key="foo">
+        ▾ <div>
+          ▾ <Component key="0">
+              <div>
+`;
 
 exports[`Store (legacy) collapseNodesByDefault:true should not filter DOM nodes from the store tree: 1: mount 1`] = `
 [root]

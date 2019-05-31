@@ -12,6 +12,7 @@ import {
   __DEBUG__,
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
+  TREE_OPERATION_REORDER_CHILDREN,
 } from '../../constants';
 import getChildren from './getChildren';
 import getData from './getData';
@@ -49,6 +50,10 @@ export function attach(
   const idToInternalInstanceMap: Map<number, InternalInstance> = new Map();
   const idToParentIDMap: Map<number, number> = new Map();
   const internalInstanceToIDMap: Map<InternalInstance, number> = new Map();
+  const internalInstanceToLastKnownChildrenMap: WeakMap<
+    InternalInstance,
+    Array<number>
+  > = new WeakMap();
   const rootIDs: Set<number> = new Set();
 
   function getID(internalInstance: InternalInstance): number {
@@ -217,6 +222,7 @@ export function attach(
         const result = fn.apply(this, args);
         currentParentID = prevParentID;
 
+        recordPendingReorder(internalInstance);
         return result;
       },
       receiveComponent(fn, args) {
@@ -227,6 +233,7 @@ export function attach(
         const result = fn.apply(this, args);
         currentParentID = prevParentID;
 
+        recordPendingReorder(internalInstance);
         return result;
       },
       unmountComponent(fn, args) {
@@ -261,6 +268,7 @@ export function attach(
 
   const pendingMountIDs: Set<number> = new Set();
   const pendingUnmountIDs: Set<number> = new Set();
+  const pendingReorderIDs: Set<number> = new Set();
   const pendingOperations: Array<number> = [];
   const pendingStringTable: Map<string, number> = new Map();
   let pendingStringTableLength: number = 0;
@@ -303,7 +311,11 @@ export function attach(
         // It should be possible to improve this though, by maintaining a map of id-to-parent,
         // and crawling upward to the first non-filtered node.
         // TODO Revisit this and think about it more...
-        if (pendingMountIDs.size > 0 || pendingUnmountIDs.size > 0) {
+        if (
+          pendingMountIDs.size > 0 ||
+          pendingUnmountIDs.size > 0 ||
+          pendingReorderIDs.size > 0
+        ) {
           rootIDs.forEach(flushPendingEvents);
         }
       }, 0);
@@ -396,6 +408,7 @@ export function attach(
     const numUnmountIDs =
       unmountIDs.length + (pendingUnmountedRootID === null ? 0 : 1);
 
+    const reorderOperations = computePendingReorderOperations();
     const operations = new Uint32Array(
       // Identify which renderer this update is coming from.
       2 + // [rendererID, rootFiberID]
@@ -406,8 +419,12 @@ export function attach(
         // All unmounts are batched in a single message.
         // [TREE_OPERATION_REMOVE, removedIDLength, ...ids]
         (numUnmountIDs > 0 ? 2 + numUnmountIDs : 0) +
-        // Mount/update/reorder operations
-        pendingOperations.length
+        // Mount operations
+        pendingOperations.length +
+        // Reorder operation come last because
+        // bridge expects them to not change children length.
+        // So both mounts and unmounts need to have happened by now.
+        reorderOperations.length
     );
 
     // Identify which renderer this update is coming from.
@@ -444,6 +461,9 @@ export function attach(
 
     // Fill in the rest of the operations.
     operations.set(pendingOperations, i);
+    i += pendingOperations.length;
+
+    operations.set(reorderOperations, i);
 
     if (__DEBUG__) {
       printOperationsArray(operations);
@@ -454,10 +474,58 @@ export function attach(
 
     pendingOperations.length = 0;
     pendingMountIDs.clear();
+    pendingReorderIDs.clear();
     pendingUnmountIDs.clear();
     pendingUnmountedRootID = null;
     pendingStringTable.clear();
     pendingStringTableLength = 0;
+  }
+
+  function computePendingReorderOperations(): Array<number> {
+    const ops = [];
+    pendingReorderIDs.forEach(id => {
+      const internalInstance = idToInternalInstanceMap.get(id);
+      if (internalInstance === undefined) {
+        return;
+      }
+      const prevChildIDs = internalInstanceToLastKnownChildrenMap.get(
+        internalInstance
+      );
+      const nextChildIDs = getChildIDs(internalInstance);
+      internalInstanceToLastKnownChildrenMap.set(
+        internalInstance,
+        nextChildIDs
+      );
+
+      let shouldResetChildren = false;
+      if (prevChildIDs === undefined) {
+        // We haven't computed children before.
+        // So we'll have to do it now.
+        // Next time they'll be cached for comparison
+        // TODO: this might not make sense. Revisit.
+        shouldResetChildren = true;
+      } else if (nextChildIDs.length > 1) {
+        if (prevChildIDs.length !== nextChildIDs.length) {
+          shouldResetChildren = true;
+        } else {
+          for (let i = 0; i < prevChildIDs.length; i++) {
+            if (prevChildIDs[i] !== nextChildIDs[i]) {
+              shouldResetChildren = true;
+              break;
+            }
+          }
+        }
+      }
+      if (shouldResetChildren) {
+        ops.push(TREE_OPERATION_REORDER_CHILDREN);
+        ops.push(getID(internalInstance));
+        ops.push(nextChildIDs.length);
+        for (let i = 0; i < nextChildIDs.length; i++) {
+          ops.push(nextChildIDs[i]);
+        }
+      }
+    });
+    return ops;
   }
 
   function getStringID(str: string | null): number {
@@ -647,6 +715,17 @@ export function attach(
         'color: green',
         getID(internalInstance)
       );
+    }
+
+    queueFlushPendingEvents();
+  }
+
+  function recordPendingReorder(internalInstance: InternalInstance) {
+    const id = getID(internalInstance);
+    pendingReorderIDs.add(id);
+
+    if (__DEBUG__) {
+      console.log('%crecordPendingReorder()', 'color: green', id);
     }
 
     queueFlushPendingEvents();
