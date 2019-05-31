@@ -13,6 +13,7 @@
     "LICENSE",
     "README.md",
     "press.js",
+    "press-outside.js",
     "hover.js",
     "focus.js",
     "swipe.js",

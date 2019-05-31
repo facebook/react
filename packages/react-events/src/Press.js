@@ -406,8 +406,8 @@ function dispatchCancel(
   props: PressProps,
   state: PressState,
 ): void {
+  state.ignoreEmulatedMouseEvents = false;
   if (state.isPressed) {
-    state.ignoreEmulatedMouseEvents = false;
     removeRootEventTypes(context, state);
     dispatchPressEndEvents(event, context, props, state);
   } else if (state.allowPressReentry) {
@@ -623,7 +623,6 @@ const PressResponder = {
     return {
       activationPosition: null,
       addedRootEvents: false,
-      didDispatchEvent: false,
       isActivePressed: false,
       isActivePressStart: false,
       isLongPressed: false,
@@ -652,7 +651,9 @@ const PressResponder = {
 
     if (props.disabled) {
       removeRootEventTypes(context, state);
-      dispatchPressEndEvents(event, context, props, state);
+      if (state.isPressed) {
+        dispatchPressEndEvents(event, context, props, state);
+      }
       state.ignoreEmulatedMouseEvents = false;
       return;
     }
