@@ -303,6 +303,10 @@ const PressOutsideResponder = {
 
           // Ignore unrelated key events
           if (pointerType === 'keyboard') {
+            // We don't process key events on the body
+            if (target.nodeName === 'BODY') {
+              return;
+            }
             if (!isValidKeyPress(nativeEvent.key)) {
               return;
             }
@@ -333,6 +337,17 @@ const PressOutsideResponder = {
             dispatchPressStartEvents(event, context, props, state);
             state.pressStatus = PRESSED_OUTSIDE;
           }
+        } else {
+          // Prevent spacebar press from scrolling the window if
+          // the target is not the body node
+          if (
+            target.nodeName !== 'BODY' &&
+            isValidKeyPress(nativeEvent.key) &&
+            nativeEvent.key === ' '
+          ) {
+            nativeEvent.preventDefault();
+          }
+          return;
         }
         break;
       }
@@ -368,11 +383,9 @@ const PressOutsideResponder = {
             }
           }
           state.pressStatus = NOT_PRESSED;
+        } else if (type === 'mouseup' && state.ignoreEmulatedMouseEvents) {
+          state.ignoreEmulatedMouseEvents = false;
         }
-        // TODO: in Press we preventDefault on space, but we don't do that here
-        // otherwise we essentially block space scrolling for the entirity of
-        // PressOutside being active in the tree. We should look into this more
-        // at some point.
         break;
       }
 
