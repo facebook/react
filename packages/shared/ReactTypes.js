@@ -8,7 +8,7 @@
  */
 
 export type ReactNode =
-  | React$Element<any>
+  | React$Element<React$ElementType>
   | ReactPortal
   | ReactText
   | ReactFragment

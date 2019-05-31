@@ -37,7 +37,7 @@ const ReactNoopServer = ReactFizzStreamer({
   },
 });
 
-function render(children: React$Element<any>): Destination {
+function render(children: React$Element<React$ElementType>): Destination {
   let destination: Destination = [];
   let request = ReactNoopServer.createRequest(children, destination);
   ReactNoopServer.startWork(request);

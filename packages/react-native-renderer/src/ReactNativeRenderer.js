@@ -122,7 +122,7 @@ const ReactNativeRenderer: ReactNativeType = {
 
   setNativeProps,
 
-  render(element: React$Element<any>, containerTag: any, callback: ?Function) {
+  render(element: React$Element<React$ElementType>, containerTag: any, callback: ?Function) {
     let root = roots.get(containerTag);
 
     if (!root) {

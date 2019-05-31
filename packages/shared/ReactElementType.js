@@ -24,7 +24,7 @@ export type ReactElement = {
   _store: {
     validated: boolean,
   },
-  _self: React$Element<any>,
+  _self: React$Element<React$ElementType>,
   _shadowChildren: any,
   _source: Source,
 };

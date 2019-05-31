@@ -133,7 +133,7 @@ export type ReactNativeType = {
   findNodeHandle(componentOrHandle: any): ?number,
   setNativeProps(handle: any, nativeProps: Object): void,
   render(
-    element: React$Element<any>,
+    element: React$Element<React$ElementType>,
     containerTag: any,
     callback: ?Function,
   ): any,
@@ -149,7 +149,7 @@ export type ReactFabricType = {
   findNodeHandle(componentOrHandle: any): ?number,
   setNativeProps(handle: any, nativeProps: Object): void,
   render(
-    element: React$Element<any>,
+    element: React$Element<React$ElementType>,
     containerTag: any,
     callback: ?Function,
   ): any,

@@ -657,7 +657,7 @@ const ReactDOM: Object = {
   },
 
   render(
-    element: React$Element<any>,
+    element: React$Element<React$ElementType>,
     container: DOMContainer,
     callback: ?Function,
   ) {
@@ -685,7 +685,7 @@ const ReactDOM: Object = {
 
   unstable_renderSubtreeIntoContainer(
     parentComponent: React$Component<any, any>,
-    element: React$Element<any>,
+    element: React$Element<React$ElementType>,
     containerNode: DOMContainer,
     callback: ?Function,
   ) {

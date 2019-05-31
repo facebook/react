@@ -1025,11 +1025,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     },
 
     // Shortcut for testing a single root
-    render(element: React$Element<any>, callback: ?Function) {
+    render(element: React$Element<React$ElementType>, callback: ?Function) {
       ReactNoop.renderToRootWithID(element, DEFAULT_ROOT_ID, callback);
     },
 
-    renderLegacySyncRoot(element: React$Element<any>, callback: ?Function) {
+    renderLegacySyncRoot(element: React$Element<React$ElementType>, callback: ?Function) {
       const rootID = DEFAULT_ROOT_ID;
       const container = ReactNoop.getOrCreateRootContainer(rootID, LegacyRoot);
       const root = roots.get(container.rootID);
@@ -1037,7 +1037,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     },
 
     renderToRootWithID(
-      element: React$Element<any>,
+      element: React$Element<React$ElementType>,
       rootID: string,
       callback: ?Function,
     ) {
