@@ -52,6 +52,9 @@ export function attach(
   const rootIDs: Set<number> = new Set();
 
   function getID(internalInstance: InternalInstance): number {
+    if (typeof internalInstance !== 'object') {
+      throw new Error('Invalid internal instance: ' + internalInstance);
+    }
     if (!internalInstanceToIDMap.has(internalInstance)) {
       const id = getUID();
       internalInstanceToIDMap.set(internalInstance, id);
