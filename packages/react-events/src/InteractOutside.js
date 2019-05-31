@@ -16,29 +16,19 @@ import React from 'react';
 
 type InteractOutsideProps = {
   disabled: boolean,
-  onInteraction: (e: InteractOutsideEvent) => void,
-  onInteractionChange: boolean => void,
-  onInteractionEnd: (e: InteractOutsideEvent) => void,
-  onInteractionStart: (e: InteractOutsideEvent) => void,
-  preventDefault: boolean,
+  onInteractOutside: (e: InteractOutsideEvent) => void,
 };
 
 type PointerType = '' | 'mouse' | 'keyboard' | 'pen' | 'touch';
 
 type InteractOutsideState = {
   ignoreEmulatedMouseEvents: boolean,
-  isActivePressed: boolean,
   pointerType: PointerType,
   pressStatus: 0 | 1 | 2,
   pressTarget: null | Element,
 };
 
-type InteractOutsideEventType =
-  | 'press'
-  | 'pressstart'
-  | 'pressend'
-  | 'presschange'
-  | 'contextmenu';
+type InteractOutsideEventType = 'interactoutside';
 
 type InteractOutsideEvent = {|
   target: Element | Document,
@@ -65,7 +55,6 @@ const isMac =
     : false;
 
 const rootEventTypes = [
-  {name: 'contextmenu', passive: false},
   'pointerdown',
   'pointerup',
   'pointercancel',
@@ -183,93 +172,11 @@ function dispatchEvent(
   context.dispatchEvent(syntheticEvent, listener, discrete);
 }
 
-function dispatchCancel(
-  event: ReactResponderEvent,
-  context: ReactResponderContext,
-  props: InteractOutsideProps,
-  state: InteractOutsideState,
-): void {
-  state.ignoreEmulatedMouseEvents = false;
-  if (state.pressStatus === PRESSED_OUTSIDE) {
-    dispatchPressEndEvents(event, context, props, state);
-  }
-}
-
-function unmountResponder(
-  context: ReactResponderContext,
-  props: InteractOutsideProps,
-  state: InteractOutsideState,
-): void {
-  if (state.pressStatus === PRESSED_OUTSIDE) {
-    dispatchPressEndEvents(null, context, props, state);
-  }
-}
-
-function dispatchPressChangeEvent(
-  event: ?ReactResponderEvent,
-  context: ReactResponderContext,
-  props: InteractOutsideProps,
-  state: InteractOutsideState,
-): void {
-  const bool = state.isActivePressed;
-  const listener = () => {
-    props.onInteractionChange(bool);
-  };
-  dispatchEvent(event, context, state, 'presschange', listener, true);
-}
-
-function dispatchPressStartEvents(
-  event: ReactResponderEvent,
-  context,
-  props,
-  state,
-) {
-  const wasActivePressed = state.isActivePressed;
-  state.isActivePressed = true;
-  if (props.onInteractionStart) {
-    dispatchEvent(
-      event,
-      context,
-      state,
-      'pressstart',
-      props.onInteractionStart,
-      true,
-    );
-  }
-  if (!wasActivePressed && props.onInteractionChange) {
-    dispatchPressChangeEvent(event, context, props, state);
-  }
-}
-
-function dispatchPressEndEvents(
-  event: ?ReactResponderEvent,
-  context,
-  props,
-  state,
-) {
-  state.isActivePressed = false;
-
-  if (props.onInteractionEnd) {
-    dispatchEvent(
-      event,
-      context,
-      state,
-      'pressend',
-      props.onInteractionEnd,
-      true,
-    );
-  }
-  if (props.onInteractionChange) {
-    dispatchPressChangeEvent(event, context, props, state);
-  }
-}
-
 const InteractOutsideResponder = {
   rootEventTypes,
   createInitialState(): InteractOutsideState {
     return {
       ignoreEmulatedMouseEvents: false,
-      isActivePressed: false,
       pointerType: '',
       pressStatus: NOT_PRESSED,
       pressTarget: null,
@@ -285,10 +192,8 @@ const InteractOutsideResponder = {
     const {target, type} = event;
 
     if (props.disabled) {
-      if (state.pressStatus === PRESSED_OUTSIDE) {
-        dispatchPressEndEvents(event, context, props, state);
-      }
       state.ignoreEmulatedMouseEvents = false;
+      state.pressStatus = NOT_PRESSED;
       return;
     }
     const nativeEvent: any = event.nativeEvent;
@@ -338,20 +243,8 @@ const InteractOutsideResponder = {
           if (context.isTargetWithinEventComponent(target)) {
             state.pressStatus = PRESSED_INSIDE;
           } else {
-            dispatchPressStartEvents(event, context, props, state);
             state.pressStatus = PRESSED_OUTSIDE;
           }
-        } else {
-          // Prevent spacebar press from scrolling the window if
-          // the target is not the body node
-          if (
-            target.nodeName !== 'BODY' &&
-            isValidKeyPress(nativeEvent.key) &&
-            nativeEvent.key === ' '
-          ) {
-            nativeEvent.preventDefault();
-          }
-          return;
         }
         break;
       }
@@ -372,15 +265,14 @@ const InteractOutsideResponder = {
             // element's layout was modified after activation.
           }
           if (state.pressStatus === PRESSED_OUTSIDE) {
-            dispatchPressEndEvents(event, context, props, state);
-            if (state.pressTarget !== null && props.onInteraction) {
+            if (state.pressTarget !== null && props.onInteractOutside) {
               if (!context.isTargetWithinEventComponent(target)) {
                 dispatchEvent(
                   event,
                   context,
                   state,
-                  'press',
-                  props.onInteraction,
+                  'interactoutside',
+                  props.onInteractOutside,
                   true,
                 );
               }
@@ -393,38 +285,21 @@ const InteractOutsideResponder = {
         break;
       }
 
-      case 'contextmenu': {
-        if (state.pressStatus === PRESSED_OUTSIDE) {
-          dispatchCancel(event, context, props, state);
-          if (props.preventDefault !== false) {
-            nativeEvent.preventDefault();
-          }
-        }
-        break;
-      }
-
       // CANCEL
       case 'pointercancel':
       case 'scroll':
       case 'touchcancel':
       case 'dragstart': {
-        dispatchCancel(event, context, props, state);
+        state.pressStatus = NOT_PRESSED;
       }
     }
-  },
-  onUnmount(
-    context: ReactResponderContext,
-    props: InteractOutsideProps,
-    state: InteractOutsideState,
-  ) {
-    unmountResponder(context, props, state);
   },
   onOwnershipChange(
     context: ReactResponderContext,
     props: InteractOutsideProps,
     state: InteractOutsideState,
   ) {
-    unmountResponder(context, props, state);
+    state.pressStatus = NOT_PRESSED;
   },
 };
 
