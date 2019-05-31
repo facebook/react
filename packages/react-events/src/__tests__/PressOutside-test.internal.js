@@ -161,6 +161,13 @@ describe('Event responder: PressOutside', () => {
       );
     });
 
+    it('is not called after "keydown" events for Enter on document body', () => {
+      document.body.dispatchEvent(
+        createKeyboardEvent('keydown', {key: 'Enter'}),
+      );
+      expect(onPressStart).toHaveBeenCalledTimes(0);
+    });
+
     it('is called once after "keydown" events for Enter (inside)', () => {
       insideRef.current.dispatchEvent(
         createKeyboardEvent('keydown', {key: 'Enter'}),
