@@ -39,7 +39,12 @@ export default function ElementView({ data, index, style }: Props) {
 
   const [isHovered, setIsHovered] = useState(false);
 
-  const { isNavigatingWithKeyboard, onElementMouseEnter, treeFocused } = data;
+  const {
+    isNavigatingWithKeyboard,
+    onElementMouseEnter,
+    showIndentLines,
+    treeFocused,
+  } = data;
   const id = element === null ? null : element.id;
   const isSelected = selectedElementID === id;
 
@@ -100,14 +105,24 @@ export default function ElementView({ data, index, style }: Props) {
       onMouseLeave={handleMouseLeave}
       onMouseDown={handleMouseDown}
       onDoubleClick={handleDoubleClick}
-      style={{
-        ...style, // "style" comes from react-window
-
-        // Left padding presents the appearance of a nested tree structure.
-        // We must use padding rather than margin/left because of the selected background color.
-        paddingLeft: `calc(${depth} * var(--indentation-size))`,
-      }}
+      style={style}
     >
+      {depth > 0 && (
+        <div
+          style={{
+            flex: `0 0 calc(${depth} * var(--indentation-size) - 0.5rem)`,
+            marginLeft: '0.5rem', // Offset to align with collapse toggle
+            height: '100%',
+            backgroundSize: 'var(--indentation-size) 1rem',
+            backgroundColor: 'transparent',
+            backgroundRepeat: 'repeat',
+            backgroundImage: showIndentLines
+              ? 'linear-gradient(to right, var(--color-guideline) 0, transparent 1px'
+              : '',
+          }}
+        />
+      )}
+
       {ownerID === null ? (
         <ExpandCollapseToggle element={element} store={store} />
       ) : null}

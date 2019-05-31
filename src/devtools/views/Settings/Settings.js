@@ -11,9 +11,14 @@ import styles from './Settings.css';
 
 function Settings(_: {||}) {
   const store = useContext(StoreContext);
-  const { displayDensity, setDisplayDensity, theme, setTheme } = useContext(
-    SettingsContext
-  );
+  const {
+    displayDensity,
+    setDisplayDensity,
+    showIndentLines,
+    setShowIndentLines,
+    theme,
+    setTheme,
+  } = useContext(SettingsContext);
 
   const captureScreenshotsSubscription = useMemo(
     () => ({
@@ -55,6 +60,13 @@ function Settings(_: {||}) {
       setTheme(currentTarget.value);
     },
     [setTheme]
+  );
+
+  const updateShowIndentLines = useCallback(
+    ({ currentTarget }) => {
+      setShowIndentLines(currentTarget.checked);
+    },
+    [setShowIndentLines]
   );
 
   const updateCaptureScreenshotsWhileProfiling = useCallback(
@@ -142,6 +154,14 @@ function Settings(_: {||}) {
             onChange={updateCollapseNodesByDefault}
           />{' '}
           Collapse newly added components by default
+        </label>
+        <label className={styles.CheckboxOption}>
+          <input
+            type="checkbox"
+            checked={showIndentLines}
+            onChange={updateShowIndentLines}
+          />{' '}
+          Show indent lines
         </label>
       </div>
 
