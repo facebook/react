@@ -157,8 +157,8 @@ describe('Store (legacy)', () => {
       expect(store).toMatchSnapshot('1: mount');
 
       const grandparentID = store.getElementIDAtIndex(0);
-      const parentOneID = store.getElementIDAtIndex(1);
-      const parentTwoID = store.getElementIDAtIndex(4);
+      const parentOneID = store.getElementIDAtIndex(2);
+      const parentTwoID = store.getElementIDAtIndex(8);
 
       act(() => store.toggleIsCollapsed(parentOneID, true));
       expect(store).toMatchSnapshot('2: collapse first Parent');
@@ -318,7 +318,7 @@ describe('Store (legacy)', () => {
       expect(store).toMatchSnapshot('4: unmount A');
     });
 
-    it('should filter DOM nodes from the store tree', () => {
+    it('should not filter DOM nodes from the store tree', () => {
       const Grandparent = () => (
         <div>
           <div>
@@ -346,7 +346,7 @@ describe('Store (legacy)', () => {
       expect(store).toMatchSnapshot('2: expand Grandparent');
 
       act(() => store.toggleIsCollapsed(store.getElementIDAtIndex(1), false));
-      expect(store).toMatchSnapshot('3: expand Parent');
+      expect(store).toMatchSnapshot('3: expand div');
     });
 
     it('should support expanding parts of the tree', () => {
@@ -378,23 +378,27 @@ describe('Store (legacy)', () => {
       act(() => store.toggleIsCollapsed(grandparentID, false));
       expect(store).toMatchSnapshot('2: expand Grandparent');
 
-      const parentOneID = store.getElementIDAtIndex(1);
-      const parentTwoID = store.getElementIDAtIndex(2);
+      const parentDivID = store.getElementIDAtIndex(1);
+      act(() => store.toggleIsCollapsed(parentDivID, false));
+      expect(store).toMatchSnapshot('3: expand parent div');
+
+      const parentOneID = store.getElementIDAtIndex(2);
+      const parentTwoID = store.getElementIDAtIndex(3);
 
       act(() => store.toggleIsCollapsed(parentOneID, false));
-      expect(store).toMatchSnapshot('3: expand first Parent');
+      expect(store).toMatchSnapshot('4: expand first Parent');
 
       act(() => store.toggleIsCollapsed(parentTwoID, false));
-      expect(store).toMatchSnapshot('4: expand second Parent');
+      expect(store).toMatchSnapshot('5: expand second Parent');
 
       act(() => store.toggleIsCollapsed(parentOneID, true));
-      expect(store).toMatchSnapshot('5: collapse first Parent');
+      expect(store).toMatchSnapshot('6: collapse first Parent');
 
       act(() => store.toggleIsCollapsed(parentTwoID, true));
-      expect(store).toMatchSnapshot('6: collapse second Parent');
+      expect(store).toMatchSnapshot('7: collapse second Parent');
 
       act(() => store.toggleIsCollapsed(grandparentID, true));
-      expect(store).toMatchSnapshot('7: collapse Grandparent');
+      expect(store).toMatchSnapshot('8: collapse Grandparent');
     });
 
     it('should support expanding deep parts of the tree', () => {

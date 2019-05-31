@@ -1,5 +1,9 @@
 // @flow
-import { ElementTypeClass, ElementTypeOtherOrUnknown } from 'src/types';
+import {
+  ElementTypeClass,
+  ElementTypeHostComponent,
+  ElementTypeOtherOrUnknown,
+} from 'src/types';
 
 import type { InternalInstance } from './renderer';
 import type { ElementType } from 'src/types';
@@ -12,6 +16,8 @@ export default function getElementType(
     const elementType = internalInstance._currentElement.type;
     if (typeof elementType === 'function') {
       return ElementTypeClass;
+    } else if (typeof elementType === 'string') {
+      return ElementTypeHostComponent;
     }
   }
 

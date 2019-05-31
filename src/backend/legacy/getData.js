@@ -1,6 +1,10 @@
 // @flow
 
-import { ElementTypeClass, ElementTypeOtherOrUnknown } from 'src/types';
+import {
+  ElementTypeClass,
+  ElementTypeHostComponent,
+  ElementTypeOtherOrUnknown,
+} from 'src/types';
 import { getDisplayName } from 'src/utils';
 
 import type { InternalInstance } from './renderer';
@@ -19,7 +23,8 @@ export default function getData(internalInstance: InternalInstance): FiberData {
 
     const elementType = internalInstance._currentElement.type;
     if (typeof elementType === 'string') {
-      // ...
+      type = ElementTypeHostComponent;
+      displayName = elementType;
     } else if (typeof elementType === 'function') {
       // TODO Can we differentiate between function and class component types?
       //      Dan said _compositeType tells you PureClass, ImpureClass, StatelessFunctional but it was only added in v14

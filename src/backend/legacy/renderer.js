@@ -67,10 +67,6 @@ export function attach(
     return getChildren(internalInstance).map(getID);
   }
 
-  //function getParentID(internalInstance: InternalInstance): number {
-  //  return getID(internalInstance._hostParent);
-  //}
-
   function findNearestAncestorInTree(
     internalInstance: InternalInstance
   ): number | null {
@@ -313,7 +309,6 @@ export function attach(
   ) {
     const internalInstance = idToInternalInstanceMap.get(id);
 
-    // TODO (legacy) Support component filtering
     const shouldIncludeInTree =
       parentID === 0 ||
       getElementType(internalInstance) !== ElementTypeOtherOrUnknown;
