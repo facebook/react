@@ -251,7 +251,14 @@ function dispatchPressEndEvents(
   state.isActivePressed = false;
 
   if (props.onInteractionEnd) {
-    dispatchEvent(event, context, state, 'pressend', props.onInteractionEnd, true);
+    dispatchEvent(
+      event,
+      context,
+      state,
+      'pressend',
+      props.onInteractionEnd,
+      true,
+    );
   }
   if (props.onInteractionChange) {
     dispatchPressChangeEvent(event, context, props, state);
