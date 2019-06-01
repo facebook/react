@@ -68,6 +68,7 @@
 
 .Padding {
   width: 0.25rem;
+  min-width: 0.25rem; /* Keep padding from shrinking when it's near the right */
 }
 
 .Badge {

@@ -122,8 +122,8 @@ export default function ElementView({ data, index, style }: Props) {
         // We must use padding rather than margin/left because of the selected background color.
         paddingLeft: `calc(${depth} * var(--indentation-size))`,
 
-        // TODO Animate horizontal axis compression so it's smoother.
-        // transition: 'padding-left 250ms',
+        // Animate horizontal axis compression so it's smoother.
+        transition: 'padding-left 150ms',
       }}
       data-depth={depth}
     >

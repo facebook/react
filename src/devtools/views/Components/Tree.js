@@ -322,7 +322,6 @@ export default function Tree(props: Props) {
   );
 }
 
-/* TODO Debounce so newly added rows animate with pre-existing ones
 let debounceTimeoutID: TimeoutID | null = null;
 function debounce(callback: () => void, delay: number) {
   if (debounceTimeoutID !== null) {
@@ -330,7 +329,6 @@ function debounce(callback: () => void, delay: number) {
   }
   debounceTimeoutID = setTimeout(callback, delay);
 }
-*/
 
 function updateIndentationSizeVar(
   innerDiv: HTMLDivElement,
@@ -343,12 +341,11 @@ function updateIndentationSizeVar(
   for (let child of innerDiv.children) {
     const depth = parseInt(child.getAttribute('data-depth'), 10) || 0;
 
+    let childWidth: number = 0;
+
     const cachedChildWidth = cachedChildWidths.get(child);
     if (cachedChildWidth != null) {
-      maxChildWidth = Math.max(
-        maxChildWidth,
-        indentationSizeRef.current * depth + cachedChildWidth
-      );
+      childWidth = cachedChildWidth;
     } else {
       const { firstElementChild, lastElementChild } = child;
 
@@ -356,16 +353,15 @@ function updateIndentationSizeVar(
       if (firstElementChild != null && lastElementChild != null) {
         const firstBounds = ((firstElementChild.getBoundingClientRect(): any): DOMRect);
         const lastBounds = ((lastElementChild.getBoundingClientRect(): any): DOMRect);
-        const childWidth = lastBounds.x + lastBounds.width - firstBounds.x;
 
+        childWidth = lastBounds.x + lastBounds.width - firstBounds.x;
         cachedChildWidths.set(child, childWidth);
-
-        maxChildWidth = Math.max(
-          maxChildWidth,
-          indentationSizeRef.current * depth + childWidth
-        );
       }
     }
+
+    const childWidthIncludingIndentation =
+      indentationSizeRef.current * depth + childWidth;
+    maxChildWidth = Math.max(maxChildWidth, childWidthIncludingIndentation);
   }
 
   const indentationSize = Math.min(
@@ -373,11 +369,12 @@ function updateIndentationSizeVar(
     (list.clientWidth / maxChildWidth) * indentationSizeRef.current
   );
 
-  // TODO Debounce so newly added rows animate with pre-existing ones
-  // debounce(() => {
-  list.style.setProperty('--indentation-size', `${indentationSize}px`);
   indentationSizeRef.current = indentationSize;
-  // }, 50);
+
+  // Debounce so newly added rows animate with pre-existing ones
+  debounce(() => {
+    list.style.setProperty('--indentation-size', `${indentationSize}px`);
+  }, 50);
 }
 
 function InnerElementType({ children, style, ...rest }) {
@@ -407,23 +404,6 @@ function InnerElementType({ children, style, ...rest }) {
       );
     }
   });
-
-  // When the window is resized, forget the specific min width.
-  // This will cause a render with 100% min-width, a measurement
-  // in an effect, and a second render where we know the width.
-  useEffect(() => {
-    const invalidateMinWidth = () => {
-      if (divRef.current !== null) {
-        updateIndentationSizeVar(
-          divRef.current,
-          indentationSizeRef,
-          cachedChildWidths
-        );
-      }
-    };
-    window.addEventListener('resize', invalidateMinWidth);
-    return () => window.removeEventListener('resize', invalidateMinWidth);
-  }, [cachedChildWidths]);
 
   // We shouldn't retain this width across different conceptual trees though,
   // so when the user opens the "owners tree" view, we should discard the previous width.
