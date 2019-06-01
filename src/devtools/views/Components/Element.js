@@ -120,17 +120,17 @@ export default function ElementView({ data, index, style }: Props) {
 
         // Left padding presents the appearance of a nested tree structure.
         // We must use padding rather than margin/left because of the selected background color.
-        paddingLeft: `calc(${depth} * var(--indentation-size) + 0.25rem)`,
+        paddingLeft: `calc(${depth} * var(--indentation-size))`,
 
         // TODO Animate horizontal axis compression so it's smoother.
         // transition: 'padding-left 250ms',
       }}
       data-depth={depth}
     >
+      <span className={styles.Padding} />
       {ownerID === null ? (
         <ExpandCollapseToggle element={element} store={store} />
       ) : null}
-
       <span className={styles.Bracket}>&lt;</span>
       <DisplayName displayName={displayName} id={((id: any): number)} />
       {key && (
@@ -142,7 +142,8 @@ export default function ElementView({ data, index, style }: Props) {
         </Fragment>
       )}
       <span className={styles.Bracket}>&gt;</span>
-      <Badge>{badge}</Badge>
+      <Badge className={styles.Badge}>{badge}</Badge>
+      <span className={styles.Padding} />
     </div>
   );
 }

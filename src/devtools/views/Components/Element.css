@@ -64,3 +64,11 @@
   flex: 0 0 1rem;
   color: var(--color-expand-collapse-toggle);
 }
+
+.Padding {
+  width: 0.25rem;
+}
+
+.Badge {
+  margin-left: 0.25rem;
+}
