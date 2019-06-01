@@ -17,6 +17,7 @@ import React from 'react';
 type InteractOutsideProps = {
   disabled: boolean,
   interactOnBlur: boolean,
+  interactOnScroll: boolean,
   onInteractOutside: (e: InteractOutsideEvent) => void,
 };
 
@@ -61,6 +62,7 @@ const rootEventTypes = [
   'pointercancel',
   'focus',
   'keyup',
+  'scroll',
 ];
 
 // If PointerEvents is not supported (e.g., Safari), also listen to touch and mouse events.
@@ -260,8 +262,12 @@ const InteractOutsideResponder = {
         }
         break;
       }
+      case 'scroll':
       case 'focus': {
-        if (props.interactOnBlur === false) {
+        if (type === 'focus' && props.interactOnBlur === false) {
+          return;
+        }
+        if (type === 'scroll' && !props.interactOnScroll) {
           return;
         }
         if (
@@ -282,7 +288,6 @@ const InteractOutsideResponder = {
         break;
       }
       case 'pointercancel':
-      case 'scroll':
       case 'touchcancel':
       case 'dragstart': {
         state.pressStatus = NOT_PRESSED;

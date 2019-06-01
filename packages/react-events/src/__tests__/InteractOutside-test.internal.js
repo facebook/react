@@ -75,7 +75,7 @@ describe('Event responder: InteractOutside', () => {
     });
   });
 
-  describe('onInteractOutside (interactOnBlur: true)', () => {
+  describe('onInteractOutside', () => {
     let onInteractOutside, outsideRef, insideRef;
 
     beforeEach(() => {
@@ -85,9 +85,7 @@ describe('Event responder: InteractOutside', () => {
       const element = (
         <div>
           <div ref={outsideRef}>I am outside</div>
-          <InteractOutside
-            onInteractOutside={onInteractOutside}
-            interactOnBlur={true}>
+          <InteractOutside onInteractOutside={onInteractOutside}>
             <div ref={insideRef}>I am inside</div>
           </InteractOutside>
         </div>
@@ -150,6 +148,16 @@ describe('Event responder: InteractOutside', () => {
       insideRef.current.dispatchEvent(createEvent('focus'));
       expect(onInteractOutside).toHaveBeenCalledTimes(0);
     });
+
+    it('is called after "scroll" event (outside)', () => {
+      outsideRef.current.dispatchEvent(createEvent('scroll'));
+      expect(onInteractOutside).toHaveBeenCalledTimes(0);
+    });
+
+    it('is called after "focus" event (inside)', () => {
+      insideRef.current.dispatchEvent(createEvent('scroll'));
+      expect(onInteractOutside).toHaveBeenCalledTimes(0);
+    });
   });
 
   describe('onInteractOutside (interactOnBlur: false)', () => {
@@ -179,6 +187,40 @@ describe('Event responder: InteractOutside', () => {
 
     it('is called after "focus" event (inside)', () => {
       insideRef.current.dispatchEvent(createEvent('focus'));
+      expect(onInteractOutside).toHaveBeenCalledTimes(0);
+    });
+  });
+
+  describe('onInteractOutside (interactOnScroll: true)', () => {
+    let onInteractOutside, outsideRef, insideRef;
+
+    beforeEach(() => {
+      onInteractOutside = jest.fn();
+      outsideRef = React.createRef();
+      insideRef = React.createRef();
+      const element = (
+        <div>
+          <div ref={outsideRef}>I am outside</div>
+          <InteractOutside
+            onInteractOutside={onInteractOutside}
+            interactOnScroll={true}>
+            <div ref={insideRef}>I am inside</div>
+          </InteractOutside>
+        </div>
+      );
+      ReactDOM.render(element, container);
+    });
+
+    it('is called after "focus" event (outside)', () => {
+      outsideRef.current.dispatchEvent(createEvent('scroll'));
+      expect(onInteractOutside).toHaveBeenCalledTimes(1);
+      expect(onInteractOutside).toHaveBeenCalledWith(
+        expect.objectContaining({pointerType: '', type: 'interactoutside'}),
+      );
+    });
+
+    it('is called after "focus" event (inside)', () => {
+      insideRef.current.dispatchEvent(createEvent('scroll'));
       expect(onInteractOutside).toHaveBeenCalledTimes(0);
     });
   });
