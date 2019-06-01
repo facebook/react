@@ -1,8 +1,16 @@
-.Guideline {
+.Active,
+.Inactive {
   position: absolute;
   left: 0;
   width: 100%;
   z-index: 0;
   pointer-events: none;
-  background-color: var(--color-guideline);
+}
+
+.Active {
+  background-color: var(--color-guideline-active);
+}
+
+.Inactive {
+  background-color: var(--color-guideline-inactive);
 }

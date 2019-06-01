@@ -3,6 +3,7 @@
 import React, { useContext, useMemo } from 'react';
 import { TreeStateContext } from './TreeContext';
 import { SettingsContext } from '../Settings/SettingsContext';
+import TreeFocusedContext from './TreeFocusedContext';
 import { StoreContext } from '../context';
 import { useSubscription } from '../hooks';
 import Store from '../../store';
@@ -17,6 +18,7 @@ type Data = {|
 export default function Guideline(_: {||}) {
   const { lineHeight } = useContext(SettingsContext);
   const store = useContext(StoreContext);
+  const treeFocused = useContext(TreeFocusedContext);
   const { selectedElementID } = useContext(TreeStateContext);
 
   const subscription = useMemo(
@@ -81,7 +83,7 @@ export default function Guideline(_: {||}) {
 
   return (
     <div
-      className={styles.Guideline}
+      className={treeFocused ? styles.Active : styles.Inactive}
       style={{
         position: 'absolute',
         top: `${startIndex * lineHeight - lineHeight / 2}px`,

@@ -8,7 +8,7 @@
   --light-color-attribute-value: #1a1aa6;
   --light-color-attribute-editable-value: #1a1aa6;
   --light-color-background: #ffffff;
-  --light-color-background-hover: #ebf1fb;
+  --light-color-background-hover: rgba(0, 136, 250, 0.1);
   --light-color-background-inactive: #e5e5e5;
   --light-color-background-selected: #0088fa;
   --light-color-button-background: #ffffff;
@@ -42,7 +42,8 @@
   --light-color-dimmer: #cfd1d5;
   --light-color-dimmest: #eff0f1;
   --light-color-expand-collapse-toggle: #777d88;
-  --light-color-guideline: rgba(0, 0, 0, 0.05);
+  --light-color-guideline-active: rgba(0, 136, 250, 0.1);
+  --light-color-guideline-inactive: rgba(0, 0, 0, 0.05);
   --light-color-jsx-arrow-brackets: #333333;
   --light-color-jsx-arrow-brackets-inverted: rgba(255, 255, 255, 0.7);
   --light-color-modal-background: rgba(255, 255, 255, 0.75);
@@ -66,7 +67,7 @@
   --dark-color-attribute-value: #cedae0;
   --dark-color-attribute-editable-value: yellow;
   --dark-color-background: #282c34;
-  --dark-color-background-hover: #3d424a;
+  --dark-color-background-hover: rgba(255, 255, 255, 0.1);
   --dark-color-background-inactive: #3d424a;
   --dark-color-background-selected: #178fb9;
   --dark-color-button-background: #282c34;
@@ -100,7 +101,8 @@
   --dark-color-dimmer: #777d88;
   --dark-color-dimmest: #4f5766;
   --dark-color-expand-collapse-toggle: #8f949d;
-  --dark-color-guideline: rgba(255, 255, 255, 0.05);
+  --dark-color-guideline-active: rgba(23, 143, 185, 0.1);
+  --dark-color-guideline-inactive: rgba(255, 255, 255, 0.05);
   --dark-color-jsx-arrow-brackets: #777d88;
   --dark-color-jsx-arrow-brackets-inverted: rgba(255, 255, 255, 0.7);
   --dark-color-modal-background: rgba(0, 0, 0, 0.75);

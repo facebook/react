@@ -33,6 +33,7 @@
 
   /* Invert colors */
   --color-component-name: var(--color-component-name-inverted);
+  --color-text: var(--color-text-selected);
   --color-component-badge-background: var(
     --color-component-badge-background-inverted
   );
