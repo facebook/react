@@ -180,6 +180,7 @@ const InteractOutsideResponder = {
     };
   },
   allowMultipleHostChildren: true,
+  stopLocalPropagation: true,
   onRootEvent(
     event: ReactResponderEvent,
     context: ReactResponderContext,
