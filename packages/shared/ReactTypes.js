@@ -137,7 +137,7 @@ export type ReactEventComponentInstance = {|
 
 export type ReactEventComponent = {|
   $$typeof: Symbol | number,
-  displayName?: string,
+  displayName: string,
   props: null | Object,
   responder: ReactEventResponder,
 |};
@@ -194,5 +194,6 @@ export type ReactResponderContext = {
   isTargetWithinHostComponent: (
     target: Element | Document,
     elementType: string,
+    deep: boolean,
   ) => boolean,
 };

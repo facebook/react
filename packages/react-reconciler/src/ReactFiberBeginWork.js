@@ -160,7 +160,7 @@ import {
   createWorkInProgress,
   isSimpleFunctionComponent,
 } from './ReactFiber';
-import {requestCurrentTime, retryTimedOutBoundary} from './ReactFiberScheduler';
+import {requestCurrentTime, retryTimedOutBoundary} from './ReactFiberWorkLoop';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -1413,6 +1413,9 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
   }
 }
 
+// TODO: This is now an empty object. Should we just make it a boolean?
+const SUSPENDED_MARKER: SuspenseState = ({}: any);
+
 function updateSuspenseComponent(
   current,
   workInProgress,
@@ -1440,17 +1443,9 @@ function updateSuspenseComponent(
       (ForceSuspenseFallback: SuspenseContext),
     )
   ) {
-    // This either already captured or is a new mount that was forced into its fallback
-    // state by a parent.
-    const attemptedState: SuspenseState | null = workInProgress.memoizedState;
     // Something in this boundary's subtree already suspended. Switch to
     // rendering the fallback children.
-    nextState = {
-      fallbackExpirationTime:
-        attemptedState !== null
-          ? attemptedState.fallbackExpirationTime
-          : NoWork,
-    };
+    nextState = SUSPENDED_MARKER;
     nextDidTimeout = true;
     workInProgress.effectTag &= ~DidCapture;
   } else {
@@ -1550,6 +1545,7 @@ function updateSuspenseComponent(
         NoWork,
         null,
       );
+      primaryChildFragment.return = workInProgress;
 
       if ((workInProgress.mode & BatchedMode) === NoMode) {
         // Outside of batched mode, we commit the effects from the
@@ -1560,6 +1556,11 @@ function updateSuspenseComponent(
             ? (workInProgress.child: any).child
             : (workInProgress.child: any);
         primaryChildFragment.child = progressedPrimaryChild;
+        let progressedChild = progressedPrimaryChild;
+        while (progressedChild !== null) {
+          progressedChild.return = primaryChildFragment;
+          progressedChild = progressedChild.sibling;
+        }
       }
 
       const fallbackChildFragment = createFiberFromFragment(
@@ -1568,12 +1569,12 @@ function updateSuspenseComponent(
         renderExpirationTime,
         null,
       );
+      fallbackChildFragment.return = workInProgress;
       primaryChildFragment.sibling = fallbackChildFragment;
       child = primaryChildFragment;
       // Skip the primary children, and continue working on the
       // fallback children.
       next = fallbackChildFragment;
-      child.return = next.return = workInProgress;
     } else {
       // Mount the primary children without an intermediate fragment fiber.
       const nextPrimaryChildren = nextProps.children;
@@ -1603,6 +1604,7 @@ function updateSuspenseComponent(
           currentPrimaryChildFragment.pendingProps,
           NoWork,
         );
+        primaryChildFragment.return = workInProgress;
 
         if ((workInProgress.mode & BatchedMode) === NoMode) {
           // Outside of batched mode, we commit the effects from the
@@ -1614,6 +1616,11 @@ function updateSuspenseComponent(
               : (workInProgress.child: any);
           if (progressedPrimaryChild !== currentPrimaryChildFragment.child) {
             primaryChildFragment.child = progressedPrimaryChild;
+            let progressedChild = progressedPrimaryChild;
+            while (progressedChild !== null) {
+              progressedChild.return = primaryChildFragment;
+              progressedChild = progressedChild.sibling;
+            }
           }
         }
 
@@ -1632,17 +1639,18 @@ function updateSuspenseComponent(
 
         // Clone the fallback child fragment, too. These we'll continue
         // working on.
-        const fallbackChildFragment = (primaryChildFragment.sibling = createWorkInProgress(
+        const fallbackChildFragment = createWorkInProgress(
           currentFallbackChildFragment,
           nextFallbackChildren,
           currentFallbackChildFragment.expirationTime,
-        ));
+        );
+        fallbackChildFragment.return = workInProgress;
+        primaryChildFragment.sibling = fallbackChildFragment;
         child = primaryChildFragment;
         primaryChildFragment.childExpirationTime = NoWork;
         // Skip the primary children, and continue working on the
         // fallback children.
         next = fallbackChildFragment;
-        child.return = next.return = workInProgress;
       } else {
         // No longer suspended. Switch back to showing the primary children,
         // and remove the intermediate fragment fiber.
@@ -1680,7 +1688,11 @@ function updateSuspenseComponent(
           NoWork,
           null,
         );
+        primaryChildFragment.return = workInProgress;
         primaryChildFragment.child = currentPrimaryChild;
+        if (currentPrimaryChild !== null) {
+          currentPrimaryChild.return = primaryChildFragment;
+        }
 
         // Even though we're creating a new fiber, there are no new children,
         // because we're reusing an already mounted tree. So we don't need to
@@ -1696,6 +1708,11 @@ function updateSuspenseComponent(
               ? (workInProgress.child: any).child
               : (workInProgress.child: any);
           primaryChildFragment.child = progressedPrimaryChild;
+          let progressedChild = progressedPrimaryChild;
+          while (progressedChild !== null) {
+            progressedChild.return = primaryChildFragment;
+            progressedChild = progressedChild.sibling;
+          }
         }
 
         // Because primaryChildFragment is a new fiber that we're inserting as the
@@ -1712,19 +1729,20 @@ function updateSuspenseComponent(
         }
 
         // Create a fragment from the fallback children, too.
-        const fallbackChildFragment = (primaryChildFragment.sibling = createFiberFromFragment(
+        const fallbackChildFragment = createFiberFromFragment(
           nextFallbackChildren,
           mode,
           renderExpirationTime,
           null,
-        ));
+        );
+        fallbackChildFragment.return = workInProgress;
+        primaryChildFragment.sibling = fallbackChildFragment;
         fallbackChildFragment.effectTag |= Placement;
         child = primaryChildFragment;
         primaryChildFragment.childExpirationTime = NoWork;
         // Skip the primary children, and continue working on the
         // fallback children.
         next = fallbackChildFragment;
-        child.return = next.return = workInProgress;
       } else {
         // Still haven't timed out.  Continue rendering the children, like we
         // normally do.

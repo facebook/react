@@ -53,7 +53,7 @@ import {
   computeExpirationForFiber,
   scheduleWork,
   flushPassiveEffects,
-} from './ReactFiberScheduler';
+} from './ReactFiberWorkLoop';
 import {revertPassiveEffectsChange} from 'shared/ReactFeatureFlags';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 

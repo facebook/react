@@ -46,16 +46,19 @@ import {
   computeExpirationForFiber,
   scheduleWork,
   flushRoot,
+  batchedEventUpdates,
   batchedUpdates,
   unbatchedUpdates,
   flushSync,
   flushControlled,
   deferredUpdates,
   syncUpdates,
-  interactiveUpdates,
-  flushInteractiveUpdates,
+  discreteUpdates,
+  flushDiscreteUpdates,
   flushPassiveEffects,
-} from './ReactFiberScheduler';
+  warnIfNotScopedWithMatchingAct,
+  ReactActingRendererSigil,
+} from './ReactFiberWorkLoop';
 import {createUpdate, enqueueUpdate} from './ReactUpdateQueue';
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
 import {
@@ -302,6 +305,12 @@ export function updateContainer(
 ): ExpirationTime {
   const current = container.current;
   const currentTime = requestCurrentTime();
+  if (__DEV__) {
+    // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
+    if ('undefined' !== typeof jest) {
+      warnIfNotScopedWithMatchingAct(current);
+    }
+  }
   const suspenseConfig = requestCurrentSuspenseConfig();
   const expirationTime = computeExpirationForFiber(
     currentTime,
@@ -321,15 +330,17 @@ export function updateContainer(
 export {
   flushRoot,
   computeUniqueAsyncExpiration,
+  batchedEventUpdates,
   batchedUpdates,
   unbatchedUpdates,
   deferredUpdates,
   syncUpdates,
-  interactiveUpdates,
-  flushInteractiveUpdates,
+  discreteUpdates,
+  flushDiscreteUpdates,
   flushControlled,
   flushSync,
   flushPassiveEffects,
+  ReactActingRendererSigil,
 };
 
 export function getPublicRootInstance(

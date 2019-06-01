@@ -25,7 +25,11 @@ import type {
   ReactResponderEvent,
 } from 'shared/ReactTypes';
 import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
-import {batchedUpdates, interactiveUpdates} from 'events/ReactGenericBatching';
+import {
+  batchedEventUpdates,
+  discreteUpdates,
+  flushDiscreteUpdatesIfNeeded,
+} from 'events/ReactGenericBatching';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import warning from 'shared/warning';
 import {enableEventAPI} from 'shared/ReactFeatureFlags';
@@ -398,16 +402,20 @@ const eventResponderContext: ReactResponderContext = {
   },
   getEventCurrentTarget(event: ReactResponderEvent): Element {
     validateResponderContext();
-    const target: any = event.target;
-    let currentTarget = target;
-    while (
-      currentTarget.parentNode &&
-      currentTarget.parentNode.nodeType === Node.ELEMENT_NODE &&
-      isTargetWithinEventComponent(currentTarget.parentNode)
-    ) {
-      currentTarget = currentTarget.parentNode;
+    const target = event.target;
+    let fiber = getClosestInstanceFromNode(target);
+    let hostComponent = target;
+
+    while (fiber !== null) {
+      if (fiber.stateNode === currentInstance) {
+        break;
+      }
+      if (fiber.tag === HostComponent) {
+        hostComponent = fiber.stateNode;
+      }
+      fiber = fiber.return;
     }
-    return currentTarget;
+    return ((hostComponent: any): Element);
   },
   getTimeStamp(): number {
     validateResponderContext();
@@ -416,11 +424,12 @@ const eventResponderContext: ReactResponderContext = {
   isTargetWithinHostComponent(
     target: Element | Document,
     elementType: string,
+    deep: boolean,
   ): boolean {
     validateResponderContext();
     let fiber = getClosestInstanceFromNode(target);
     while (fiber !== null) {
-      if (fiber.stateNode === currentInstance) {
+      if (!deep && fiber.stateNode === currentInstance) {
         return false;
       }
       if (fiber.tag === HostComponent && fiber.type === elementType) {
@@ -601,11 +610,12 @@ export function processEventQueue(): void {
     return;
   }
   if (discrete) {
-    interactiveUpdates(() => {
-      batchedUpdates(processEvents, events);
+    flushDiscreteUpdatesIfNeeded(currentTimeStamp);
+    discreteUpdates(() => {
+      batchedEventUpdates(processEvents, events);
     });
   } else {
-    batchedUpdates(processEvents, events);
+    batchedEventUpdates(processEvents, events);
   }
 }
 

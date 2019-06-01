@@ -21,7 +21,7 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {CapturedValue, CapturedError} from './ReactCapturedValue';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks';
-import type {Thenable} from './ReactFiberScheduler';
+import type {Thenable} from './ReactFiberWorkLoop';
 
 import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
 import {
@@ -63,10 +63,6 @@ import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import warning from 'shared/warning';
 
-import {
-  NoWork,
-  computeAsyncExpirationNoBucket,
-} from './ReactFiberExpirationTime';
 import {onCommitUnmount} from './ReactFiberDevToolsHook';
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 import {getStackByFiberInDevAndProd} from './ReactCurrentFiber';
@@ -102,9 +98,9 @@ import {
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
-  requestCurrentTime,
   resolveRetryThenable,
-} from './ReactFiberScheduler';
+  markCommitTimeOfFallback,
+} from './ReactFiberWorkLoop';
 import {
   NoEffect as NoHookEffect,
   UnmountSnapshot,
@@ -1288,16 +1284,7 @@ function commitSuspenseComponent(finishedWork: Fiber) {
   } else {
     newDidTimeout = true;
     primaryChildParent = finishedWork.child;
-    if (newState.fallbackExpirationTime === NoWork) {
-      // If the children had not already timed out, record the time.
-      // This is used to compute the elapsed time during subsequent
-      // attempts to render the children.
-      // We model this as a normal pri expiration time since that's
-      // how we infer start time for updates.
-      newState.fallbackExpirationTime = computeAsyncExpirationNoBucket(
-        requestCurrentTime(),
-      );
-    }
+    markCommitTimeOfFallback();
   }
 
   if (supportsMutation && primaryChildParent !== null) {

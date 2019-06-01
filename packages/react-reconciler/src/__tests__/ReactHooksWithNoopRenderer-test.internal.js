@@ -885,7 +885,8 @@ describe('ReactHooksWithNoopRenderer', () => {
       // A discrete event forces the passive effect to be flushed --
       // updateCount(1) happens first, so 2 wins.
 
-      ReactNoop.interactiveUpdates(() => {
+      ReactNoop.flushDiscreteUpdates();
+      ReactNoop.discreteUpdates(() => {
         // (use batchedUpdates to silence the act() warning)
         ReactNoop.batchedUpdates(() => {
           _updateCount(2);
@@ -939,7 +940,8 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       // A discrete event forces the passive effect to be flushed --
       // updateCount(1) happens first, so 2 wins.
-      ReactNoop.interactiveUpdates(() => {
+      ReactNoop.flushDiscreteUpdates();
+      ReactNoop.discreteUpdates(() => {
         // use batchedUpdates to silence the act warning
         ReactNoop.batchedUpdates(() => _updateCount(2));
       });

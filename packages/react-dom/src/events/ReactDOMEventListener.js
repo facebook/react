@@ -11,7 +11,11 @@ import type {AnyNativeEvent} from 'events/PluginModuleType';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
 
-import {batchedUpdates, interactiveUpdates} from 'events/ReactGenericBatching';
+import {
+  batchedEventUpdates,
+  discreteUpdates,
+  flushDiscreteUpdatesIfNeeded,
+} from 'events/ReactGenericBatching';
 import {runExtractedPluginEventsInBatch} from 'events/EventPluginHub';
 import {dispatchEventForResponderEventSystem} from '../events/DOMEventResponderSystem';
 import {isFiberMounted} from 'react-reconciler/reflection';
@@ -38,7 +42,7 @@ import {passiveBrowserEventsSupported} from './checkPassiveEvents';
 
 import {enableEventAPI} from 'shared/ReactFeatureFlags';
 
-const {isInteractiveTopLevelEventType} = SimpleEventPlugin;
+const {isDiscreteTopLevelEventType} = SimpleEventPlugin;
 
 const CALLBACK_BOOKKEEPING_POOL_SIZE = 10;
 const callbackBookkeepingPool = [];
@@ -188,7 +192,7 @@ export function trapEventForResponderEventSystem(
     } else {
       eventFlags |= IS_ACTIVE;
     }
-    // Check if interactive and wrap in interactiveUpdates
+    // Check if interactive and wrap in discreteUpdates
     const listener = dispatchEvent.bind(null, topLevelType, eventFlags);
     if (passiveBrowserEventsSupported) {
       addEventCaptureListenerWithPassiveFlag(
@@ -208,11 +212,11 @@ function trapEventForPluginEventSystem(
   topLevelType: DOMTopLevelEventType,
   capture: boolean,
 ): void {
-  const dispatch = isInteractiveTopLevelEventType(topLevelType)
-    ? dispatchInteractiveEvent
+  const dispatch = isDiscreteTopLevelEventType(topLevelType)
+    ? dispatchDiscreteEvent
     : dispatchEvent;
   const rawEventName = getRawEventName(topLevelType);
-  // Check if interactive and wrap in interactiveUpdates
+  // Check if discrete and wrap in discreteUpdates
   const listener = dispatch.bind(null, topLevelType, PLUGIN_EVENT_SYSTEM);
   if (capture) {
     addEventCaptureListener(element, rawEventName, listener);
@@ -221,13 +225,9 @@ function trapEventForPluginEventSystem(
   }
 }
 
-function dispatchInteractiveEvent(topLevelType, eventSystemFlags, nativeEvent) {
-  interactiveUpdates(
-    dispatchEvent,
-    topLevelType,
-    eventSystemFlags,
-    nativeEvent,
-  );
+function dispatchDiscreteEvent(topLevelType, eventSystemFlags, nativeEvent) {
+  flushDiscreteUpdatesIfNeeded(nativeEvent.timeStamp);
+  discreteUpdates(dispatchEvent, topLevelType, eventSystemFlags, nativeEvent);
 }
 
 function dispatchEventForPluginEventSystem(
@@ -245,7 +245,7 @@ function dispatchEventForPluginEventSystem(
   try {
     // Event queue being processed in the same cycle allows
     // `preventDefault`.
-    batchedUpdates(handleTopLevel, bookKeeping);
+    batchedEventUpdates(handleTopLevel, bookKeeping);
   } finally {
     releaseTopLevelCallbackBookKeeping(bookKeeping);
   }

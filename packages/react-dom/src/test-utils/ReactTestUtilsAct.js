@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Thenable} from 'react-reconciler/src/ReactFiberScheduler';
+import type {Thenable} from 'react-reconciler/src/ReactFiberWorkLoop';
 
 import warningWithoutStack from 'shared/warningWithoutStack';
 import ReactDOM from 'react-dom';
@@ -33,11 +33,12 @@ const [
   runEventsInBatch,
   /* eslint-enable no-unused-vars */
   flushPassiveEffects,
+  ReactActingRendererSigil,
 ] = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
 
 const batchedUpdates = ReactDOM.unstable_batchedUpdates;
 
-const {ReactShouldWarnActingUpdates} = ReactSharedInternals;
+const {ReactCurrentActingRendererSigil} = ReactSharedInternals;
 
 // this implementation should be exactly the same in
 // ReactTestUtilsAct.js, ReactTestRendererAct.js, createReactNoop.js
@@ -85,17 +86,17 @@ let actingUpdatesScopeDepth = 0;
 
 function act(callback: () => Thenable) {
   let previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
+  let previousActingUpdatesSigil;
   actingUpdatesScopeDepth++;
   if (__DEV__) {
-    ReactShouldWarnActingUpdates.current = true;
+    previousActingUpdatesSigil = ReactCurrentActingRendererSigil.current;
+    ReactCurrentActingRendererSigil.current = ReactActingRendererSigil;
   }
 
   function onDone() {
     actingUpdatesScopeDepth--;
     if (__DEV__) {
-      if (actingUpdatesScopeDepth === 0) {
-        ReactShouldWarnActingUpdates.current = false;
-      }
+      ReactCurrentActingRendererSigil.current = previousActingUpdatesSigil;
       if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
         // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
         warningWithoutStack(

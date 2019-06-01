@@ -14,7 +14,7 @@
  * environment.
  */
 
-import type {Thenable} from 'react-reconciler/src/ReactFiberScheduler';
+import type {Thenable} from 'react-reconciler/src/ReactFiberWorkLoop';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {UpdateQueue} from 'react-reconciler/src/ReactUpdateQueue';
 import type {ReactNodeList} from 'shared/ReactTypes';
@@ -81,7 +81,7 @@ type TextInstance = {|
 |};
 type HostContext = Object;
 
-const {ReactShouldWarnActingUpdates} = ReactSharedInternals;
+const {ReactCurrentActingRendererSigil} = ReactSharedInternals;
 
 const NO_CONTEXT = {};
 const UPPERCASE_CONTEXT = {};
@@ -650,7 +650,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   const roots = new Map();
   const DEFAULT_ROOT_ID = '<default>';
 
-  const {flushPassiveEffects, batchedUpdates} = NoopRenderer;
+  const {
+    flushPassiveEffects,
+    batchedUpdates,
+    ReactActingRendererSigil,
+  } = NoopRenderer;
 
   // this act() implementation should be exactly the same in
   // ReactTestUtilsAct.js, ReactTestRendererAct.js, createReactNoop.js
@@ -698,17 +702,17 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
   function act(callback: () => Thenable) {
     let previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
+    let previousActingUpdatesSigil;
     actingUpdatesScopeDepth++;
     if (__DEV__) {
-      ReactShouldWarnActingUpdates.current = true;
+      previousActingUpdatesSigil = ReactCurrentActingRendererSigil.current;
+      ReactCurrentActingRendererSigil.current = ReactActingRendererSigil;
     }
 
     function onDone() {
       actingUpdatesScopeDepth--;
       if (__DEV__) {
-        if (actingUpdatesScopeDepth === 0) {
-          ReactShouldWarnActingUpdates.current = false;
-        }
+        ReactCurrentActingRendererSigil.current = previousActingUpdatesSigil;
         if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
           // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
           warningWithoutStack(
@@ -969,10 +973,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           NoopRenderer.updateContainer(children, fiberRoot, null, null);
         },
         getChildren() {
-          return getChildren(fiberRoot);
+          return getChildren(container);
         },
         getChildrenAsJSX() {
-          return getChildrenAsJSX(fiberRoot);
+          return getChildrenAsJSX(container);
         },
       };
     },
@@ -1124,7 +1128,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     unbatchedUpdates: NoopRenderer.unbatchedUpdates,
 
-    interactiveUpdates: NoopRenderer.interactiveUpdates,
+    discreteUpdates: NoopRenderer.discreteUpdates,
+
+    flushDiscreteUpdates: NoopRenderer.flushDiscreteUpdates,
 
     flushSync(fn: () => mixed) {
       NoopRenderer.flushSync(fn);

@@ -1869,4 +1869,53 @@ describe('ReactHooks', () => {
     Scheduler.flushAll();
     expect(root).toMatchRenderedOutput('hello');
   });
+
+  // Regression test for https://github.com/facebook/react/issues/15732
+  it('resets hooks when an error is thrown in the middle of a list of hooks', async () => {
+    const {useEffect, useState} = React;
+
+    class ErrorBoundary extends React.Component {
+      state = {hasError: false};
+
+      static getDerivedStateFromError() {
+        return {hasError: true};
+      }
+
+      render() {
+        return (
+          <Wrapper>
+            {this.state.hasError ? 'Error!' : this.props.children}
+          </Wrapper>
+        );
+      }
+    }
+
+    function Wrapper({children}) {
+      return children;
+    }
+
+    let setShouldThrow;
+    function Thrower() {
+      const [shouldThrow, _setShouldThrow] = useState(false);
+      setShouldThrow = _setShouldThrow;
+
+      if (shouldThrow) {
+        throw new Error('Throw!');
+      }
+
+      useEffect(() => {}, []);
+
+      return 'Throw!';
+    }
+
+    const root = ReactTestRenderer.create(
+      <ErrorBoundary>
+        <Thrower />
+      </ErrorBoundary>,
+    );
+
+    expect(root).toMatchRenderedOutput('Throw!');
+    act(() => setShouldThrow(true));
+    expect(root).toMatchRenderedOutput('Error!');
+  });
 });

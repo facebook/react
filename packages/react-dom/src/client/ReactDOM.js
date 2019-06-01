@@ -26,10 +26,11 @@ import {
   flushRoot,
   createContainer,
   updateContainer,
+  batchedEventUpdates,
   batchedUpdates,
   unbatchedUpdates,
-  interactiveUpdates,
-  flushInteractiveUpdates,
+  discreteUpdates,
+  flushDiscreteUpdates,
   flushSync,
   flushControlled,
   injectIntoDevTools,
@@ -37,6 +38,7 @@ import {
   findHostInstance,
   findHostInstanceWithWarning,
   flushPassiveEffects,
+  ReactActingRendererSigil,
 } from 'react-reconciler/inline.dom';
 import {createPortal as createPortalImpl} from 'shared/ReactPortal';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
@@ -481,8 +483,9 @@ function shouldHydrateDueToLegacyHeuristic(container) {
 
 setBatchingImplementation(
   batchedUpdates,
-  interactiveUpdates,
-  flushInteractiveUpdates,
+  discreteUpdates,
+  flushDiscreteUpdates,
+  batchedEventUpdates,
 );
 
 let warnedAboutHydrateAPI = false;
@@ -783,7 +786,14 @@ const ReactDOM: Object = {
 
   unstable_batchedUpdates: batchedUpdates,
 
-  unstable_interactiveUpdates: interactiveUpdates,
+  // TODO remove this legacy method, unstable_discreteUpdates replaces it
+  unstable_interactiveUpdates: (fn, a, b, c) => {
+    flushDiscreteUpdates();
+    return discreteUpdates(fn, a, b, c);
+  },
+
+  unstable_discreteUpdates: discreteUpdates,
+  unstable_flushDiscreteUpdates: flushDiscreteUpdates,
 
   flushSync: flushSync,
 
@@ -807,6 +817,7 @@ const ReactDOM: Object = {
       dispatchEvent,
       runEventsInBatch,
       flushPassiveEffects,
+      ReactActingRendererSigil,
     ],
   },
 };

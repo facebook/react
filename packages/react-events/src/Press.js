@@ -20,6 +20,7 @@ type PressProps = {
   delayLongPress: number,
   delayPressEnd: number,
   delayPressStart: number,
+  onContextMenu: (e: PressEvent) => void,
   onLongPress: (e: PressEvent) => void,
   onLongPressChange: boolean => void,
   onLongPressShouldCancelPress: () => boolean,
@@ -78,7 +79,8 @@ type PressEventType =
   | 'pressend'
   | 'presschange'
   | 'longpress'
-  | 'longpresschange';
+  | 'longpresschange'
+  | 'contextmenu';
 
 type PressEvent = {|
   target: Element | Document,
@@ -99,6 +101,10 @@ type PressEvent = {|
   shiftKey: boolean,
 |};
 
+const isMac =
+  typeof window !== 'undefined' && window.navigator != null
+    ? /^Mac/.test(window.navigator.platform)
+    : false;
 const DEFAULT_PRESS_END_DELAY_MS = 0;
 const DEFAULT_PRESS_START_DELAY_MS = 0;
 const DEFAULT_LONG_PRESS_DELAY_MS = 500;
@@ -112,7 +118,6 @@ const DEFAULT_PRESS_RETENTION_OFFSET = {
 const targetEventTypes = [
   {name: 'click', passive: false},
   {name: 'keydown', passive: false},
-  {name: 'keypress', passive: false},
   {name: 'contextmenu', passive: false},
   // We need to preventDefault on pointerdown for mouse/pen events
   // that are in hit target area but not the element area.
@@ -400,17 +405,10 @@ function dispatchCancel(
   props: PressProps,
   state: PressState,
 ): void {
-  const nativeEvent: any = event.nativeEvent;
-  const type = event.type;
-
   if (state.isPressed) {
-    if (type === 'contextmenu' && props.preventDefault !== false) {
-      nativeEvent.preventDefault();
-    } else {
-      state.ignoreEmulatedMouseEvents = false;
-      removeRootEventTypes(context, state);
-      dispatchPressEndEvents(event, context, props, state);
-    }
+    state.ignoreEmulatedMouseEvents = false;
+    removeRootEventTypes(context, state);
+    dispatchPressEndEvents(event, context, props, state);
   } else if (state.allowPressReentry) {
     removeRootEventTypes(context, state);
   }
@@ -418,12 +416,25 @@ function dispatchCancel(
 
 function isValidKeyPress(key: string): boolean {
   // Accessibility for keyboards. Space and Enter only.
-  return key === ' ' || key === 'Enter';
+  // "Spacebar" is for IE 11
+  return key === 'Enter' || key === ' ' || key === 'Spacebar';
 }
 
 function calculateDelayMS(delay: ?number, min = 0, fallback = 0) {
   const maybeNumber = delay == null ? null : delay;
   return Math.max(min, maybeNumber != null ? maybeNumber : fallback);
+}
+
+function isNodeFixedPositioned(node: Node | null | void): boolean {
+  return (
+    node != null &&
+    (node: any).offsetParent === null &&
+    !isNodeDocumentNode(node.parentNode)
+  );
+}
+
+function isNodeDocumentNode(node: Node | null | void): boolean {
+  return node != null && node.nodeType === Node.DOCUMENT_NODE;
 }
 
 function getAbsoluteBoundingClientRect(
@@ -436,10 +447,35 @@ function getAbsoluteBoundingClientRect(
   let offsetY = 0;
 
   // Traverse through all offset nodes
-  while (node != null && node.nodeType !== Node.DOCUMENT_NODE) {
-    offsetX += (node: any).scrollLeft;
-    offsetY += (node: any).scrollTop;
-    node = node.parentNode;
+  while (node != null) {
+    const parent = node.parentNode;
+    const scrollTop = (node: any).scrollTop;
+    const scrollLeft = (node: any).scrollLeft;
+
+    // We first need to check if it's a scrollable container by
+    // checking if either scrollLeft or scrollTop are not 0.
+    // Then we check if either the current node or its parent
+    // are fixed position, using offsetParent node for a fast-path.
+    // We need to check both as offsetParent accounts for both
+    // itself and the parent; so we need to align with that API.
+    // If these all pass, we can skip traversing the relevant
+    // node and go directly to its parent.
+    if (scrollLeft !== 0 || scrollTop !== 0) {
+      if (isNodeFixedPositioned(parent)) {
+        node = ((parent: any): Node).parentNode;
+        continue;
+      }
+      if (isNodeFixedPositioned(node)) {
+        node = parent;
+        continue;
+      }
+    }
+    offsetX += scrollLeft;
+    offsetY += scrollTop;
+    if (isNodeDocumentNode(parent)) {
+      break;
+    }
+    node = parent;
   }
   return {
     left: left + offsetX,
@@ -626,7 +662,6 @@ const PressResponder = {
       // START
       case 'pointerdown':
       case 'keydown':
-      case 'keypress':
       case 'mousedown':
       case 'touchstart': {
         if (!state.isPressed) {
@@ -646,8 +681,9 @@ const PressResponder = {
             return;
           }
           // Ignore mouse/pen pressing on touch hit target area
+          const isMouseType = pointerType === 'mouse';
           if (
-            (pointerType === 'mouse' || pointerType === 'pen') &&
+            (isMouseType || pointerType === 'pen') &&
             isEventPositionWithinTouchHitTarget(event, context)
           ) {
             // We need to prevent the native event to block the focus
@@ -655,14 +691,22 @@ const PressResponder = {
             return;
           }
 
-          // Ignore any device buttons except left-mouse and touch/pen contact
-          if (nativeEvent.button > 0) {
+          // We set these here, before the button check so we have this
+          // data around for handling of the context menu
+          state.pointerType = pointerType;
+          state.pressTarget = context.getEventCurrentTarget(event);
+
+          // Ignore any device buttons except left-mouse and touch/pen contact.
+          // Additionally we ignore left-mouse + ctrl-key with Macs as that
+          // acts like right-click and opens the contextmenu.
+          if (
+            nativeEvent.button > 0 ||
+            (isMac && isMouseType && nativeEvent.ctrlKey)
+          ) {
             return;
           }
 
           state.allowPressReentry = true;
-          state.pointerType = pointerType;
-          state.pressTarget = context.getEventCurrentTarget(event);
           state.responderRegionOnActivation = calculateResponderRegion(
             context,
             state.pressTarget,
@@ -680,14 +724,30 @@ const PressResponder = {
         break;
       }
 
-      // CANCEL
       case 'contextmenu': {
-        dispatchCancel(event, context, props, state);
+        if (state.isPressed) {
+          dispatchCancel(event, context, props, state);
+          if (props.preventDefault !== false) {
+            // Skip dispatching of onContextMenu below
+            nativeEvent.preventDefault();
+            return;
+          }
+        }
+        if (props.onContextMenu) {
+          dispatchEvent(
+            event,
+            context,
+            state,
+            'contextmenu',
+            props.onContextMenu,
+            true,
+          );
+        }
         break;
       }
 
       case 'click': {
-        if (context.isTargetWithinHostComponent(target, 'a')) {
+        if (context.isTargetWithinHostComponent(target, 'a', true)) {
           const {
             altKey,
             ctrlKey,

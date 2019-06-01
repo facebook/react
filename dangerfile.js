@@ -36,6 +36,10 @@ if (!existsSync('./build/bundle-sizes.json')) {
   // This indicates the build failed previously.
   // In that case, there's nothing for the Dangerfile to do.
   // Exit early to avoid leaving a redundant (and potentially confusing) PR comment.
+  warn(
+    'No bundle size information found. This indicates the build ' +
+      'job failed.'
+  );
   process.exit(0);
 }
 
@@ -122,20 +126,25 @@ function git(args) {
   try {
     let baseCIBuildId = null;
     const statusesResponse = await fetch(
-      `https://api.github.com/repos/facebook/react/commits/${baseCommit}/statuses`
+      `https://api.github.com/repos/facebook/react/commits/${baseCommit}/status`
     );
-    const statuses = await statusesResponse.json();
+    const {statuses, state} = await statusesResponse.json();
+    if (state === 'failure') {
+      warn(`Base commit is broken: ${baseCommit}`);
+      return;
+    }
     for (let i = 0; i < statuses.length; i++) {
       const status = statuses[i];
-      if (status.context === 'ci/circleci') {
+      // This must match the name of the CI job that creates the build artifacts
+      if (status.context === 'ci/circleci: process_artifacts') {
         if (status.state === 'success') {
           baseCIBuildId = /\/facebook\/react\/([0-9]+)/.exec(
             status.target_url
           )[1];
           break;
         }
-        if (status.state === 'failure') {
-          warn(`Base commit is broken: ${baseCommit}`);
+        if (status.state === 'pending') {
+          warn(`Build job for base commit is still pending: ${baseCommit}`);
           return;
         }
       }
@@ -271,5 +280,7 @@ function git(args) {
   </details>
   `;
     markdown(summary);
+  } else {
+    markdown('No significant bundle size changes to report.');
   }
 })();

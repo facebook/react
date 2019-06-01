@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-import type {Thenable} from 'react-reconciler/src/ReactFiberScheduler';
+import type {Thenable} from 'react-reconciler/src/ReactFiberWorkLoop';
 
 import React from 'react';
 import ReactDOM from 'react-dom';
@@ -42,8 +42,10 @@ const [
   restoreStateIfNeeded,
   dispatchEvent,
   runEventsInBatch,
-  // eslint-disable-next-line no-unused-vars
+  /* eslint-disable no-unused-vars */
   flushPassiveEffects,
+  ReactActingRendererSigil,
+  /* eslint-enable no-unused-vars */
 ] = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
 
 function Event(suffix) {}
