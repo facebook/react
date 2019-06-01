@@ -64,14 +64,3 @@
   flex: 0 0 1rem;
   color: var(--color-expand-collapse-toggle);
 }
-
-.Badge {
-  color: var(--color-text);
-  background-color: var(--color-component-badge-background);
-  padding: 0.125rem 0.25rem;
-  line-height: normal;
-  border-radius: 0.125rem;
-  margin-left: 0.25rem;
-  font-family: var(--font-family-monospace);
-  font-size: var(--font-size-monospace-small);
-}

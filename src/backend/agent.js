@@ -11,12 +11,12 @@ import {
 import { hideOverlay, showOverlay } from './views/Highlighter';
 
 import type {
+  OwnersList,
   PathFrame,
   PathMatch,
   RendererID,
   RendererInterface,
 } from './types';
-import type { OwnersList } from 'src/devtools/views/Components/types';
 import type { Bridge, ComponentFilter } from '../types';
 
 const debug = (methodName, ...args) => {

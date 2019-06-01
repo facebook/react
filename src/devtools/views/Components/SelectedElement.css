@@ -69,7 +69,6 @@
 .Owner {
   border-radius: 0.25rem;
   padding: 0.125rem 0.25rem;
-  margin-left: 0.5rem;
   cursor: pointer;
   background: none;
   border: none;
@@ -93,4 +92,10 @@
 .NotInStore {
   color: var(--color-dim);
   cursor: default;
+}
+
+.OwnerButton {
+  display: flex;
+  align-items: center;
+  margin-left: 0.5rem;
 }

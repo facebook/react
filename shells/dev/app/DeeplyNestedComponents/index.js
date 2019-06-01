@@ -6,7 +6,8 @@ function wrapWithHoc(Component, index) {
   function HOC() {
     return <Component />;
   }
-  HOC.displayName = `HOC-${index}`;
+  HOC.displayName = `withHoc${index}(${Component.displayName ||
+    Component.name})`;
   return HOC;
 }
 

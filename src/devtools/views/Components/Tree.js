@@ -322,33 +322,72 @@ export default function Tree(props: Props) {
   );
 }
 
-function updateIndentationSizeVar(innerDiv: HTMLDivElement): void {
-  const list = ((innerDiv.parentElement: any): HTMLDivElement);
+/* TODO Debounce so newly added rows animate with pre-existing ones
+let debounceTimeoutID: TimeoutID | null = null;
+function debounce(callback: () => void, delay: number) {
+  if (debounceTimeoutID !== null) {
+    clearTimeout(debounceTimeoutID);
+  }
+  debounceTimeoutID = setTimeout(callback, delay);
+}
+*/
 
-  let indentationSize =
-    parseFloat(getComputedStyle(list).getPropertyValue('--indentation-size')) ||
-    12;
+function updateIndentationSizeVar(
+  innerDiv: HTMLDivElement,
+  indentationSizeRef: {| current: number |},
+  cachedChildWidths: WeakMap<HTMLElement, number>
+): void {
+  const list = ((innerDiv.parentElement: any): HTMLDivElement);
 
   let maxChildWidth = 0;
   for (let child of innerDiv.children) {
-    const { lastElementChild } = child;
-    // Skip over e.g. the guideline element
-    if (lastElementChild != null) {
-      const bounds = ((lastElementChild.getBoundingClientRect(): any): DOMRect);
-      maxChildWidth = Math.max(maxChildWidth, bounds.x + bounds.width);
+    const depth = parseInt(child.getAttribute('data-depth'), 10) || 0;
+
+    const cachedChildWidth = cachedChildWidths.get(child);
+    if (cachedChildWidth != null) {
+      maxChildWidth = Math.max(
+        maxChildWidth,
+        indentationSizeRef.current * depth + cachedChildWidth
+      );
+    } else {
+      const { firstElementChild, lastElementChild } = child;
+
+      // Skip over e.g. the guideline element
+      if (firstElementChild != null && lastElementChild != null) {
+        const firstBounds = ((firstElementChild.getBoundingClientRect(): any): DOMRect);
+        const lastBounds = ((lastElementChild.getBoundingClientRect(): any): DOMRect);
+        const childWidth = lastBounds.x + lastBounds.width - firstBounds.x;
+
+        cachedChildWidths.set(child, childWidth);
+
+        maxChildWidth = Math.max(
+          maxChildWidth,
+          indentationSizeRef.current * depth + childWidth
+        );
+      }
     }
   }
 
-  indentationSize = Math.min(
+  const indentationSize = Math.min(
     12,
-    (list.clientWidth / maxChildWidth) * indentationSize
+    (list.clientWidth / maxChildWidth) * indentationSizeRef.current
   );
 
+  // TODO Debounce so newly added rows animate with pre-existing ones
+  // debounce(() => {
   list.style.setProperty('--indentation-size', `${indentationSize}px`);
+  indentationSizeRef.current = indentationSize;
+  // }, 50);
 }
 
 function InnerElementType({ children, style, ...rest }) {
   const { ownerID } = useContext(TreeStateContext);
+
+  const indentationSizeRef = useRef<number>(12);
+  const cachedChildWidths = useMemo<WeakMap<HTMLElement, number>>(
+    () => new WeakMap(),
+    []
+  );
 
   // The list may need to scroll horizontally due to deeply nested elements.
   // We don't know the maximum scroll width up front, because we're windowing.
@@ -361,7 +400,11 @@ function InnerElementType({ children, style, ...rest }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (divRef.current !== null) {
-      updateIndentationSizeVar(divRef.current);
+      updateIndentationSizeVar(
+        divRef.current,
+        indentationSizeRef,
+        cachedChildWidths
+      );
     }
   });
 
@@ -371,12 +414,16 @@ function InnerElementType({ children, style, ...rest }) {
   useEffect(() => {
     const invalidateMinWidth = () => {
       if (divRef.current !== null) {
-        updateIndentationSizeVar(divRef.current);
+        updateIndentationSizeVar(
+          divRef.current,
+          indentationSizeRef,
+          cachedChildWidths
+        );
       }
     };
     window.addEventListener('resize', invalidateMinWidth);
     return () => window.removeEventListener('resize', invalidateMinWidth);
-  }, []);
+  }, [cachedChildWidths]);
 
   // We shouldn't retain this width across different conceptual trees though,
   // so when the user opens the "owners tree" view, we should discard the previous width.

@@ -1,0 +1,9 @@
+.HocBadges {
+  padding: 0.125rem 0.25rem;
+  background-color: var(--color-background-selected);
+  color: var(--color-text-selected);
+  --color-component-badge-background: var(
+    --color-component-badge-background-inverted
+  );
+  user-select: none;
+}

@@ -2,7 +2,6 @@
 
 import React, { useContext, useMemo } from 'react';
 import { TreeStateContext } from './TreeContext';
-import TreeFocusedContext from './TreeFocusedContext';
 import { SettingsContext } from '../Settings/SettingsContext';
 import { StoreContext } from '../context';
 import { useSubscription } from '../hooks';
@@ -11,7 +10,6 @@ import Store from '../../store';
 import styles from './Guideline.css';
 
 type Data = {|
-  depth: number,
   startIndex: number,
   stopIndex: number,
 |};
@@ -20,7 +18,6 @@ export default function Guideline(_: {||}) {
   const { lineHeight } = useContext(SettingsContext);
   const store = useContext(StoreContext);
   const { selectedElementID } = useContext(TreeStateContext);
-  const treeFocused = useContext(TreeFocusedContext);
 
   const subscription = useMemo(
     () => ({
@@ -61,7 +58,6 @@ export default function Guideline(_: {||}) {
         }
 
         return {
-          depth: element.depth,
           startIndex,
           stopIndex,
         };
@@ -81,18 +77,16 @@ export default function Guideline(_: {||}) {
     return null;
   }
 
-  const { depth, startIndex, stopIndex } = data;
+  const { startIndex, stopIndex } = data;
 
   return (
     <div
-      className={
-        treeFocused ? styles.GuidelineActive : styles.GuidelineInactive
-      }
+      className={styles.Guideline}
       style={{
         position: 'absolute',
-        top: `${startIndex * lineHeight}px`,
-        left: `calc(${depth} * var(--indentation-size) + 0.5rem)`,
-        height: `${(stopIndex + 1 - startIndex) * lineHeight}px`,
+        top: `${startIndex * lineHeight - lineHeight / 2}px`,
+        height: `${(stopIndex + 1 - startIndex) * lineHeight +
+          lineHeight / 2}px`,
       }}
     />
   );

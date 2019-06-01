@@ -9,6 +9,7 @@ import React, {
 import { createResource } from '../../cache';
 import { BridgeContext, StoreContext } from '../context';
 import { TreeStateContext } from './TreeContext';
+import { separateDisplayNameAndHOCs } from 'src/utils';
 
 import type {
   Element,
@@ -79,7 +80,23 @@ function OwnersListContextController({ children }: Props) {
         const request = inProgressRequests.get(element);
         if (request != null) {
           inProgressRequests.delete(element);
-          request.resolveFn(ownersList.owners);
+
+          request.resolveFn(
+            ownersList.owners === null
+              ? null
+              : ownersList.owners.map(owner => {
+                  const [
+                    displayNameWithoutHOCs,
+                    hocDisplayNames,
+                  ] = separateDisplayNameAndHOCs(owner.displayName, owner.type);
+
+                  return {
+                    ...owner,
+                    displayName: displayNameWithoutHOCs,
+                    hocDisplayNames,
+                  };
+                })
+          );
         }
       }
     };

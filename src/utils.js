@@ -3,8 +3,14 @@
 import LRU from 'lru-cache';
 import { LOCAL_STORAGE_FILTER_PREFERENCES_KEY } from './constants';
 import { ComponentFilterElementType, ElementTypeHostComponent } from './types';
+import {
+  ElementTypeClass,
+  ElementTypeForwardRef,
+  ElementTypeFunction,
+  ElementTypeMemo,
+} from 'src/types';
 
-import type { ComponentFilter } from './types';
+import type { ComponentFilter, ElementType } from './types';
 
 const FB_MODULE_RE = /^(.*) \[from (.*)\]$/;
 const cachedDisplayNames: WeakMap<Function, string> = new WeakMap();
@@ -108,4 +114,34 @@ export function saveComponentFilters(
     LOCAL_STORAGE_FILTER_PREFERENCES_KEY,
     JSON.stringify(componentFilters)
   );
+}
+
+export function separateDisplayNameAndHOCs(
+  displayName: string | null,
+  type: ElementType
+): [string | null, Array<string> | null] {
+  if (displayName === null) {
+    return [null, null];
+  }
+
+  let hocDisplayNames = null;
+
+  switch (type) {
+    case ElementTypeClass:
+    case ElementTypeForwardRef:
+    case ElementTypeFunction:
+    case ElementTypeMemo:
+      if (displayName.indexOf('(') >= 0) {
+        const matches = displayName.match(/[^()]+/g);
+        if (matches !== null) {
+          displayName = matches.pop();
+          hocDisplayNames = matches;
+        }
+      }
+      break;
+    default:
+      break;
+  }
+
+  return [displayName, hocDisplayNames];
 }

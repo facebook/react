@@ -14,6 +14,8 @@ export type Element = {|
   displayName: string | null,
   key: number | string | null,
 
+  hocDisplayNames: null | Array<string>,
+
   // Should the elements children be visible in the tree?
   isCollapsed: boolean,
 
@@ -33,6 +35,8 @@ export type Element = {|
 export type Owner = {|
   displayName: string | null,
   id: number,
+  hocDisplayNames: Array<string> | null,
+  type: ElementType,
 |};
 
 export type OwnersList = {|
@@ -69,6 +73,8 @@ export type InspectedElement = {|
 
   // Location of component in source coude.
   source: Object | null,
+
+  type: ElementType,
 |};
 
 // TODO: Add profiling type

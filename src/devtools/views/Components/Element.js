@@ -9,6 +9,7 @@ import React, {
 } from 'react';
 import { ElementTypeMemo, ElementTypeForwardRef } from 'src/types';
 import Store from 'src/devtools/store';
+import Badge from './Badge';
 import ButtonIcon from '../ButtonIcon';
 import { createRegExp, truncateText } from '../utils';
 import { TreeDispatcherContext, TreeStateContext } from './TreeContext';
@@ -80,9 +81,23 @@ export default function ElementView({ data, index, style }: Props) {
     return null;
   }
 
-  const { depth, displayName, key, type } = ((element: any): Element);
+  const {
+    depth,
+    displayName,
+    hocDisplayNames,
+    key,
+    type,
+  } = ((element: any): Element);
 
-  const showBadge = type === ElementTypeMemo || type === ElementTypeForwardRef;
+  // TODO Maybe factor this into a shared util method?
+  let badge = null;
+  if (hocDisplayNames !== null) {
+    badge = hocDisplayNames.length === 1 ? hocDisplayNames[0] : '…';
+  } else if (type === ElementTypeMemo) {
+    badge = 'Memo';
+  } else if (type === ElementTypeForwardRef) {
+    badge = 'ForwardRef';
+  }
 
   let className = styles.Element;
   if (isSelected) {
@@ -105,8 +120,12 @@ export default function ElementView({ data, index, style }: Props) {
 
         // Left padding presents the appearance of a nested tree structure.
         // We must use padding rather than margin/left because of the selected background color.
-        paddingLeft: `calc(${depth} * var(--indentation-size))`,
+        paddingLeft: `calc(${depth} * var(--indentation-size) + 0.25rem)`,
+
+        // TODO Animate horizontal axis compression so it's smoother.
+        // transition: 'padding-left 250ms',
       }}
+      data-depth={depth}
     >
       {ownerID === null ? (
         <ExpandCollapseToggle element={element} store={store} />
@@ -123,12 +142,7 @@ export default function ElementView({ data, index, style }: Props) {
         </Fragment>
       )}
       <span className={styles.Bracket}>&gt;</span>
-
-      {showBadge && (
-        <span className={styles.Badge}>
-          {type === ElementTypeMemo ? 'Memo' : 'ForwardRef'}
-        </span>
-      )}
+      <Badge>{badge}</Badge>
     </div>
   );
 }

@@ -39,6 +39,8 @@ import type {
   CommitDataBackend,
   DevToolsHook,
   Fiber,
+  InspectedElement,
+  Owner,
   PathFrame,
   PathMatch,
   ProfilingDataBackend,
@@ -46,10 +48,6 @@ import type {
   ReactRenderer,
   RendererInterface,
 } from './types';
-import type {
-  InspectedElement,
-  Owner,
-} from 'src/devtools/views/Components/types';
 import type { Interaction } from 'src/devtools/views/Profiler/types';
 import type { ComponentFilter, ElementType } from 'src/types';
 
@@ -1752,6 +1750,7 @@ export function attach(
       {
         displayName: getDisplayNameForFiber(fiber) || 'Anonymous',
         id,
+        type: getElementTypeForFiber(fiber),
       },
     ];
 
@@ -1761,6 +1760,7 @@ export function attach(
         owners.unshift({
           displayName: getDisplayNameForFiber(owner) || 'Anonymous',
           id: getFiberID(getPrimaryFiber(owner)),
+          type: getElementTypeForFiber(owner),
         });
         owner = owner._debugOwner || null;
       }
@@ -1858,6 +1858,7 @@ export function attach(
         owners.push({
           displayName: getDisplayNameForFiber(owner) || 'Anonymous',
           id: getFiberID(getPrimaryFiber(owner)),
+          type: getElementTypeForFiber(owner),
         });
         owner = owner._debugOwner || null;
       }
@@ -1904,6 +1905,7 @@ export function attach(
       canViewSource,
 
       displayName: getDisplayNameForFiber(fiber),
+      type: getElementTypeForFiber(fiber),
 
       // Inspectable properties.
       // TODO Review sanitization approach for the below inspectable values.
