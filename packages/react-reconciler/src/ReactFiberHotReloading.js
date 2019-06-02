@@ -18,6 +18,7 @@ import {
 } from './ReactFiberWorkLoop';
 import {Sync} from './ReactFiberExpirationTime';
 import {
+  ClassComponent,
   FunctionComponent,
   ForwardRef,
   MemoComponent,
@@ -58,6 +59,11 @@ export function resolveFunctionForHotReloading(type: any): any {
   } else {
     return type;
   }
+}
+
+export function resolveClassForHotReloading(type: any): any {
+  // No implementation differences.
+  return resolveFunctionForHotReloading(type);
 }
 
 export function resolveForwardRefForHotReloading(type: any): any {
@@ -120,6 +126,12 @@ export function isCompatibleFamilyForHotReloading(
         : null;
 
     switch (fiber.tag) {
+      case ClassComponent: {
+        if (typeof nextType === 'function') {
+          needsCompareFamilies = true;
+        }
+        break;
+      }
       case FunctionComponent: {
         if (typeof nextType === 'function') {
           needsCompareFamilies = true;
@@ -221,6 +233,7 @@ function scheduleFibersWithFamiliesRecursively(
     switch (tag) {
       case FunctionComponent:
       case SimpleMemoComponent:
+      case ClassComponent:
         candidateType = type;
         break;
       case ForwardRef:

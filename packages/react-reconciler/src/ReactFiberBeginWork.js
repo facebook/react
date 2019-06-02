@@ -71,7 +71,10 @@ import {
   getCurrentFiberStackInDev,
 } from './ReactCurrentFiber';
 import {startWorkTimer, cancelWorkTimer} from './ReactDebugFiberPerf';
-import {resolveFunctionForHotReloading} from './ReactFiberHotReloading';
+import {
+  resolveFunctionForHotReloading,
+  resolveClassForHotReloading,
+} from './ReactFiberHotReloading';
 
 import {
   mountChildFibers,
@@ -1054,6 +1057,11 @@ function mountLazyComponent(
       break;
     }
     case ClassComponent: {
+      if (__DEV__) {
+        workInProgress.type = Component = resolveClassForHotReloading(
+          Component,
+        );
+      }
       child = updateClassComponent(
         null,
         workInProgress,

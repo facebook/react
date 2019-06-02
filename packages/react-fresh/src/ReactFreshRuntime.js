@@ -63,6 +63,20 @@ function haveEqualSignatures(prevType, nextType) {
   return true;
 }
 
+function isReactClass(type) {
+  return type.prototype && type.prototype.isReactComponent;
+}
+
+function areCompatible(prevType, nextType) {
+  if (isReactClass(prevType) || isReactClass(nextType)) {
+    return false;
+  }
+  if (haveEqualSignatures(prevType, nextType)) {
+    return true;
+  }
+  return false;
+}
+
 export function prepareUpdate(): HotUpdate {
   const staleFamilies = new Set();
   const updatedFamilies = new Set();
@@ -78,7 +92,7 @@ export function prepareUpdate(): HotUpdate {
     family.current = nextType;
 
     // Determine whether this should be a re-render or a re-mount.
-    if (haveEqualSignatures(prevType, nextType)) {
+    if (areCompatible(prevType, nextType)) {
       updatedFamilies.add(family);
     } else {
       staleFamilies.add(family);
