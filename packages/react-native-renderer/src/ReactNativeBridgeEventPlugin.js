@@ -22,11 +22,10 @@ import {ReactNativeViewConfigRegistry} from 'react-native/Libraries/ReactPrivate
 const {
   customBubblingEventTypes,
   customDirectEventTypes,
-  eventTypes,
 } = ReactNativeViewConfigRegistry;
 
 const ReactNativeBridgeEventPlugin = {
-  eventTypes: eventTypes,
+  eventTypes: {},
 
   /**
    * @see {EventPluginHub.extractEvents}
