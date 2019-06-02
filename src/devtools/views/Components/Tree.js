@@ -322,14 +322,6 @@ export default function Tree(props: Props) {
   );
 }
 
-let debounceTimeoutID: TimeoutID | null = null;
-function debounce(callback: () => void, delay: number) {
-  if (debounceTimeoutID !== null) {
-    clearTimeout(debounceTimeoutID);
-  }
-  debounceTimeoutID = setTimeout(callback, delay);
-}
-
 function updateIndentationSizeVar(
   innerDiv: HTMLDivElement,
   indentationSizeRef: {| current: number |},
@@ -371,10 +363,7 @@ function updateIndentationSizeVar(
 
   indentationSizeRef.current = indentationSize;
 
-  // Debounce so newly added rows animate with pre-existing ones
-  debounce(() => {
-    list.style.setProperty('--indentation-size', `${indentationSize}px`);
-  }, 50);
+  list.style.setProperty('--indentation-size', `${indentationSize}px`);
 }
 
 function InnerElementType({ children, style, ...rest }) {

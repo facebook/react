@@ -121,9 +121,6 @@ export default function ElementView({ data, index, style }: Props) {
         // Left padding presents the appearance of a nested tree structure.
         // We must use padding rather than margin/left because of the selected background color.
         paddingLeft: `calc(${depth} * var(--indentation-size))`,
-
-        // Animate horizontal axis compression so it's smoother.
-        transition: 'padding-left 150ms',
       }}
       data-depth={depth}
     >
