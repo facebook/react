@@ -350,15 +350,6 @@ function OwnerView({
     [dispatch, id]
   );
 
-  let badge = null;
-  if (hocDisplayNames !== null) {
-    badge = hocDisplayNames.length === 1 ? hocDisplayNames[0] : '…';
-  } else if (type === ElementTypeMemo) {
-    badge = 'Memo';
-  } else if (type === ElementTypeForwardRef) {
-    badge = 'ForwardRef';
-  }
-
   return (
     <Button
       key={id}
@@ -372,7 +363,7 @@ function OwnerView({
       >
         {displayName}
       </span>
-      <Badge>{badge}</Badge>
+      <Badge hocDisplayNames={hocDisplayNames} type={type} />
     </Button>
   );
 }

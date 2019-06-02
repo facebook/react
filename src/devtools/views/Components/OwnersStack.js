@@ -18,7 +18,6 @@ import { OwnersListContext } from './OwnersListContext';
 import { TreeDispatcherContext, TreeStateContext } from './TreeContext';
 import { useIsOverflowing } from '../hooks';
 import { StoreContext } from '../context';
-import { ElementTypeMemo, ElementTypeForwardRef } from 'src/types';
 
 import type { Owner } from './types';
 
@@ -248,16 +247,6 @@ function ElementView({ isSelected, owner, selectOwner }: ElementViewProps) {
     }
   }, [isInStore, selectOwner, owner]);
 
-  // TODO Maybe factor this into a shared util method?
-  let badge = null;
-  if (hocDisplayNames !== null) {
-    badge = hocDisplayNames.length === 1 ? hocDisplayNames[0] : '…';
-  } else if (type === ElementTypeMemo) {
-    badge = 'Memo';
-  } else if (type === ElementTypeForwardRef) {
-    badge = 'ForwardRef';
-  }
-
   return (
     <Toggle
       className={`${styles.Component} ${isInStore ? '' : styles.NotInStore}`}
@@ -266,7 +255,11 @@ function ElementView({ isSelected, owner, selectOwner }: ElementViewProps) {
     >
       {displayName}
 
-      <Badge className={styles.Badge}>{badge}</Badge>
+      <Badge
+        className={styles.Badge}
+        hocDisplayNames={hocDisplayNames}
+        type={type}
+      />
     </Toggle>
   );
 }

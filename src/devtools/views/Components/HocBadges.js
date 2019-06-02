@@ -27,10 +27,12 @@ export default function HocBadges({ element }: Props) {
 
   return (
     <div className={styles.HocBadges}>
-      <Badge>{typeBadge}</Badge>
+      {typeBadge !== null && <div className={styles.Badge}>{typeBadge}</div>}
       {hocDisplayNames !== null &&
         hocDisplayNames.map(hocDisplayName => (
-          <Badge key={hocDisplayName}>{hocDisplayName}</Badge>
+          <div key={hocDisplayName} className={styles.Badge}>
+            {hocDisplayName}
+          </div>
         ))}
     </div>
   );

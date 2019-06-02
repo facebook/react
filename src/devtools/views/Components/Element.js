@@ -7,7 +7,6 @@ import React, {
   useMemo,
   useState,
 } from 'react';
-import { ElementTypeMemo, ElementTypeForwardRef } from 'src/types';
 import Store from 'src/devtools/store';
 import Badge from './Badge';
 import ButtonIcon from '../ButtonIcon';
@@ -89,16 +88,6 @@ export default function ElementView({ data, index, style }: Props) {
     type,
   } = ((element: any): Element);
 
-  // TODO Maybe factor this into a shared util method?
-  let badge = null;
-  if (hocDisplayNames !== null) {
-    badge = hocDisplayNames.length === 1 ? hocDisplayNames[0] : '…';
-  } else if (type === ElementTypeMemo) {
-    badge = 'Memo';
-  } else if (type === ElementTypeForwardRef) {
-    badge = 'ForwardRef';
-  }
-
   let className = styles.Element;
   if (isSelected) {
     className = treeFocused
@@ -139,7 +128,11 @@ export default function ElementView({ data, index, style }: Props) {
         </Fragment>
       )}
       <span className={styles.Bracket}>&gt;</span>
-      <Badge className={styles.Badge}>{badge}</Badge>
+      <Badge
+        className={styles.Badge}
+        hocDisplayNames={hocDisplayNames}
+        type={type}
+      />
       <span className={styles.Padding} />
     </div>
   );

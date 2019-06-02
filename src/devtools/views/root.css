@@ -40,6 +40,8 @@
   --light-color-component-name-inverted: #ffffff;
   --light-color-component-badge-background: rgba(0, 0, 0, 0.15);
   --light-color-component-badge-background-inverted: rgba(255, 255, 255, 0.25);
+  --light-color-component-badge-count: #777d88;
+  --light-color-component-badge-count-inverted: rgba(255, 255, 255, 0.7);
   --light-color-dim: #777d88;
   --light-color-dimmer: #cfd1d5;
   --light-color-dimmest: #eff0f1;
@@ -98,9 +100,11 @@
   --dark-color-commit-gradient-9: #febc38;
   --dark-color-commit-gradient-text: #000000;
   --dark-color-component-name: #61dafb;
-  --dark-color-component-name-inverted: ##282828;
+  --dark-color-component-name-inverted: #282828;
   --dark-color-component-badge-background: rgba(255, 255, 255, 0.25);
   --dark-color-component-badge-background-inverted: rgba(0, 0, 0, 0.25);
+  --dark-color-component-badge-count: #8f949d;
+  --dark-color-component-badge-count-inverted: rgba(255, 255, 255, 0.7);
   --dark-color-dim: #8f949d;
   --dark-color-dimmer: #777d88;
   --dark-color-dimmest: #4f5766;

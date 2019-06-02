@@ -259,6 +259,12 @@ function updateThemeVariables(
     'color-component-badge-background-inverted',
     documentElements
   );
+  updateStyleHelper(theme, 'color-component-badge-count', documentElements);
+  updateStyleHelper(
+    theme,
+    'color-component-badge-count-inverted',
+    documentElements
+  );
   updateStyleHelper(theme, 'color-dim', documentElements);
   updateStyleHelper(theme, 'color-dimmer', documentElements);
   updateStyleHelper(theme, 'color-dimmest', documentElements);
