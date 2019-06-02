@@ -325,39 +325,39 @@ export default function Tree(props: Props) {
 // Indentation size can be adjusted but child width is fixed.
 // We need to adjust indentations so the widest child can fit without overflowing.
 // Sometimes the widest child is also the deepest in the tree:
-//   ┏━━━━━━━━━━━━┓
-//   ┃ <Foo>                ┃
-//   ┃ ••••<Foobar>         ┃
-//   ┃ ••••••••<Baz>        ┃
-//   ┗━━━━━━━━━━━━┛
+//   ┏----------------------┓
+//   ┆ <Foo>                ┆
+//   ┆ ••••<Foobar>         ┆
+//   ┆ ••••••••<Baz>        ┆
+//   ┗----------------------┛
 //
 // But this is not always the case.
 // Even with the above example, a change in indentation may change the overall widest child:
-//   ┏━━━━━━━━━━━━┓
-//   ┃ <Foo>                ┃
-//   ┃ ••<Foobar>           ┃
-//   ┃ ••••<Baz>            ┃
-//   ┗━━━━━━━━━━━━┛
+//   ┏----------------------┓
+//   ┆ <Foo>                ┆
+//   ┆ ••<Foobar>           ┆
+//   ┆ ••••<Baz>            ┆
+//   ┗----------------------┛
 //
 // In extreme cases this difference can be important:
-//   ┏━━━━━━━━━━━━┓
-//   ┃ <ReallyLongName>     ┃
-//   ┃ ••<Foo>              ┃
-//   ┃ ••••<Bar>            ┃
-//   ┃ ••••••<Baz>          ┃
-//   ┃ ••••••••<Qux>        ┃
-//   ┗━━━━━━━━━━━━┛
+//   ┏----------------------┓
+//   ┆ <ReallyLongName>     ┆
+//   ┆ ••<Foo>              ┆
+//   ┆ ••••<Bar>            ┆
+//   ┆ ••••••<Baz>          ┆
+//   ┆ ••••••••<Qux>        ┆
+//   ┗----------------------┛
 //
 // In the above example, the current indentation is fine,
 // but if we naively assumed that the widest element is also the deepest element,
 // we would end up compressing the indentation unnecessarily:
-//   ┏━━━━━━━━━━━━┓
-//   ┃ <ReallyLongName>     ┃
-//   ┃ •<Foo>               ┃
-//   ┃ ••<Bar>              ┃
-//   ┃ •••<Baz>             ┃
-//   ┃ ••••<Qux>            ┃
-//   ┗━━━━━━━━━━━━┛
+//   ┏----------------------┓
+//   ┆ <ReallyLongName>     ┆
+//   ┆ •<Foo>               ┆
+//   ┆ ••<Bar>              ┆
+//   ┆ •••<Baz>             ┆
+//   ┆ ••••<Qux>            ┆
+//   ┗----------------------┛
 //
 // The way we deal with this is to compute the max indentation size that can fit each child,
 // given the child's fixed width and depth within the tree.
