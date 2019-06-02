@@ -19,7 +19,7 @@ export default function Guideline(_: {||}) {
   const { lineHeight } = useContext(SettingsContext);
   const store = useContext(StoreContext);
   const treeFocused = useContext(TreeFocusedContext);
-  const { selectedElementID } = useContext(TreeStateContext);
+  const { ownerID, selectedElementID } = useContext(TreeStateContext);
 
   const subscription = useMemo(
     () => ({
@@ -74,6 +74,10 @@ export default function Guideline(_: {||}) {
     [selectedElementID, store]
   );
   const data = useSubscription<Data | null, Store>(subscription);
+
+  if (ownerID !== null) {
+    return null;
+  }
 
   if (data === null) {
     return null;
