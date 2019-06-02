@@ -322,14 +322,55 @@ export default function Tree(props: Props) {
   );
 }
 
+// Indentation size can be adjusted but child width is fixed.
+// We need to adjust indentations so the widest child can fit without overflowing.
+// Sometimes the widest child is also the deepest in the tree:
+//   ┏━━━━━━━━━━━━┓
+//   ┃ <Foo>                ┃
+//   ┃ ••••<Foobar>         ┃
+//   ┃ ••••••••<Baz>        ┃
+//   ┗━━━━━━━━━━━━┛
+//
+// But this is not always the case.
+// Even with the above example, a change in indentation may change the overall widest child:
+//   ┏━━━━━━━━━━━━┓
+//   ┃ <Foo>                ┃
+//   ┃ ••<Foobar>           ┃
+//   ┃ ••••<Baz>            ┃
+//   ┗━━━━━━━━━━━━┛
+//
+// In extreme cases this difference can be important:
+//   ┏━━━━━━━━━━━━┓
+//   ┃ <ReallyLongName>     ┃
+//   ┃ ••<Foo>              ┃
+//   ┃ ••••<Bar>            ┃
+//   ┃ ••••••<Baz>          ┃
+//   ┃ ••••••••<Qux>        ┃
+//   ┗━━━━━━━━━━━━┛
+//
+// In the above example, the current indentation is fine,
+// but if we naively assumed that the widest element is also the deepest element,
+// we would end up compressing the indentation unnecessarily:
+//   ┏━━━━━━━━━━━━┓
+//   ┃ <ReallyLongName>     ┃
+//   ┃ •<Foo>               ┃
+//   ┃ ••<Bar>              ┃
+//   ┃ •••<Baz>             ┃
+//   ┃ ••••<Qux>            ┃
+//   ┗━━━━━━━━━━━━┛
+//
+// The way we deal with this is to compute the max indentation size that can fit each child,
+// given the child's fixed width and depth within the tree.
+// Then we take the smallest of these indentation sizes...
 function updateIndentationSizeVar(
   innerDiv: HTMLDivElement,
-  indentationSizeRef: {| current: number |},
   cachedChildWidths: WeakMap<HTMLElement, number>
 ): void {
   const list = ((innerDiv.parentElement: any): HTMLDivElement);
+  const listWidth = list.clientWidth;
 
-  let maxChildWidth = 0;
+  let maxIndentationSize: number = 12;
+
   for (let child of innerDiv.children) {
     const depth = parseInt(child.getAttribute('data-depth'), 10) || 0;
 
@@ -339,37 +380,26 @@ function updateIndentationSizeVar(
     if (cachedChildWidth != null) {
       childWidth = cachedChildWidth;
     } else {
-      const { firstElementChild, lastElementChild } = child;
+      const { firstElementChild } = child;
 
       // Skip over e.g. the guideline element
-      if (firstElementChild != null && lastElementChild != null) {
-        const firstBounds = ((firstElementChild.getBoundingClientRect(): any): DOMRect);
-        const lastBounds = ((lastElementChild.getBoundingClientRect(): any): DOMRect);
-
-        childWidth = lastBounds.x + lastBounds.width - firstBounds.x;
+      if (firstElementChild != null) {
+        childWidth = firstElementChild.clientWidth;
         cachedChildWidths.set(child, childWidth);
       }
     }
 
-    const childWidthIncludingIndentation =
-      indentationSizeRef.current * depth + childWidth;
-    maxChildWidth = Math.max(maxChildWidth, childWidthIncludingIndentation);
+    const remainingWidth = Math.max(0, listWidth - childWidth);
+
+    maxIndentationSize = Math.min(maxIndentationSize, remainingWidth / depth);
   }
 
-  const indentationSize = Math.min(
-    12,
-    (list.clientWidth / maxChildWidth) * indentationSizeRef.current
-  );
-
-  indentationSizeRef.current = indentationSize;
-
-  list.style.setProperty('--indentation-size', `${indentationSize}px`);
+  list.style.setProperty('--indentation-size', `${maxIndentationSize}px`);
 }
 
 function InnerElementType({ children, style, ...rest }) {
   const { ownerID } = useContext(TreeStateContext);
 
-  const indentationSizeRef = useRef<number>(12);
   const cachedChildWidths = useMemo<WeakMap<HTMLElement, number>>(
     () => new WeakMap(),
     []
@@ -386,11 +416,7 @@ function InnerElementType({ children, style, ...rest }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (divRef.current !== null) {
-      updateIndentationSizeVar(
-        divRef.current,
-        indentationSizeRef,
-        cachedChildWidths
-      );
+      updateIndentationSizeVar(divRef.current, cachedChildWidths);
     }
   });
 

@@ -3,12 +3,6 @@
 .SelectedElement,
 .HoveredElement {
   border-radius: 0.25em;
-  white-space: nowrap;
-  line-height: var(--line-height-data);
-  display: flex;
-  align-items: center;
-  cursor: default;
-  user-select: none;
   color: var(--color-component-name);
 }
 .HoveredElement {
@@ -16,6 +10,17 @@
 }
 .InactiveSelectedElement {
   background-color: var(--color-background-inactive);
+}
+
+.Wrapper {
+  padding: 0 0.25rem;
+  white-space: nowrap;
+  height: var(--line-height-data);
+  line-height: var(--line-height-data);
+  display: inline-flex;
+  align-items: center;
+  cursor: default;
+  user-select: none;
 }
 
 .Bracket {
@@ -65,11 +70,6 @@
   height: 1rem;
   flex: 0 0 1rem;
   color: var(--color-expand-collapse-toggle);
-}
-
-.Padding {
-  width: 0.25rem;
-  min-width: 0.25rem; /* Keep padding from shrinking when it's near the right */
 }
 
 .Badge {

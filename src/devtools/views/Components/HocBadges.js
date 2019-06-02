@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { ElementTypeForwardRef, ElementTypeMemo } from 'src/types';
-import Badge from './Badge';
 import styles from './HocBadges.css';
 
 import type { Element } from './types';

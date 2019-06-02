@@ -104,36 +104,38 @@ export default function ElementView({ data, index, style }: Props) {
       onMouseLeave={handleMouseLeave}
       onMouseDown={handleMouseDown}
       onDoubleClick={handleDoubleClick}
-      style={{
-        ...style, // "style" comes from react-window
-
-        // Left padding presents the appearance of a nested tree structure.
-        // We must use padding rather than margin/left because of the selected background color.
-        paddingLeft: `calc(${depth} * var(--indentation-size))`,
-      }}
+      style={style}
       data-depth={depth}
     >
-      <span className={styles.Padding} />
-      {ownerID === null ? (
-        <ExpandCollapseToggle element={element} store={store} />
-      ) : null}
-      <span className={styles.Bracket}>&lt;</span>
-      <DisplayName displayName={displayName} id={((id: any): number)} />
-      {key && (
-        <Fragment>
-          &nbsp;<span className={styles.AttributeName}>key</span>=
-          <span className={styles.AttributeValue} title={key}>
-            "{truncateText(`${key}`, 10)}"
-          </span>
-        </Fragment>
-      )}
-      <span className={styles.Bracket}>&gt;</span>
-      <Badge
-        className={styles.Badge}
-        hocDisplayNames={hocDisplayNames}
-        type={type}
-      />
-      <span className={styles.Padding} />
+      {/* This wrapper is used by Tree for measurement purposes. */}
+      <div
+        className={styles.Wrapper}
+        style={{
+          // Left offset presents the appearance of a nested tree structure.
+          // We must use padding rather than margin/left because of the selected background color.
+          transform: `translateX(calc(${depth} * var(--indentation-size)))`,
+        }}
+      >
+        {ownerID === null ? (
+          <ExpandCollapseToggle element={element} store={store} />
+        ) : null}
+        <span className={styles.Bracket}>&lt;</span>
+        <DisplayName displayName={displayName} id={((id: any): number)} />
+        {key && (
+          <Fragment>
+            &nbsp;<span className={styles.AttributeName}>key</span>=
+            <span className={styles.AttributeValue} title={key}>
+              "{truncateText(`${key}`, 10)}"
+            </span>
+          </Fragment>
+        )}
+        <span className={styles.Bracket}>&gt;</span>
+        <Badge
+          className={styles.Badge}
+          hocDisplayNames={hocDisplayNames}
+          type={type}
+        />
+      </div>
     </div>
   );
 }

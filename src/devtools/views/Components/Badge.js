@@ -40,7 +40,7 @@ export default function Badge({ className, hocDisplayNames, type }: Props) {
         {hocDisplayName || typeLabel}
       </div>
       {totalBadgeCount > 1 && (
-        <div className={styles.ExtraLabel}>+{totalBadgeCount}</div>
+        <div className={styles.ExtraLabel}>+{totalBadgeCount - 1}</div>
       )}
     </Fragment>
   );
