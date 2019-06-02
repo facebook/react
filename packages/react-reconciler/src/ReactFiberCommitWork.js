@@ -637,52 +637,47 @@ function commitLifeCycles(
 }
 
 function hideOrUnhideAllChildren(finishedWork, isHidden) {
-  if (supportsMutation) {
-    // We only have the top Fiber that was inserted but we need to recurse down its
-    // children to find all the terminal nodes.
-    let node: Fiber = finishedWork;
-    while (true) {
-      if (node.tag === HostComponent) {
-        const instance = node.stateNode;
-        if (isHidden) {
-          hideInstance(instance);
-        } else {
-          unhideInstance(node.stateNode, node.memoizedProps);
-        }
-      } else if (node.tag === HostText) {
-        const instance = node.stateNode;
-        if (isHidden) {
-          hideTextInstance(instance);
-        } else {
-          unhideTextInstance(instance, node.memoizedProps);
-        }
-      } else if (
-        node.tag === SuspenseComponent &&
-        node.memoizedState !== null
-      ) {
-        // Found a nested Suspense component that timed out. Skip over the
-        // primary child fragment, which should remain hidden.
-        const fallbackChildFragment: Fiber = (node.child: any).sibling;
-        fallbackChildFragment.return = node;
-        node = fallbackChildFragment;
-        continue;
-      } else if (node.child !== null) {
-        node.child.return = node;
-        node = node.child;
-        continue;
+  // We only have the top Fiber that was inserted but we need to recurse down its
+  // children to find all the terminal nodes.
+  let node: Fiber = finishedWork;
+  while (true) {
+    if (node.tag === HostComponent) {
+      const instance = node.stateNode;
+      if (isHidden) {
+        hideInstance(instance);
+      } else {
+        unhideInstance(node.stateNode, node.memoizedProps);
       }
-      if (node === finishedWork) {
+    } else if (node.tag === HostText) {
+      const instance = node.stateNode;
+      if (isHidden) {
+        hideTextInstance(instance);
+      } else {
+        unhideTextInstance(instance, node.memoizedProps);
+      }
+    } else if (node.tag === SuspenseComponent && node.memoizedState !== null) {
+      // Found a nested Suspense component that timed out. Skip over the
+      // primary child fragment, which should remain hidden.
+      const fallbackChildFragment: Fiber = (node.child: any).sibling;
+      fallbackChildFragment.return = node;
+      node = fallbackChildFragment;
+      continue;
+    } else if (node.child !== null) {
+      node.child.return = node;
+      node = node.child;
+      continue;
+    }
+    if (node === finishedWork) {
+      return;
+    }
+    while (node.sibling === null) {
+      if (node.return === null || node.return === finishedWork) {
         return;
       }
-      while (node.sibling === null) {
-        if (node.return === null || node.return === finishedWork) {
-          return;
-        }
-        node = node.return;
-      }
-      node.sibling.return = node.return;
-      node = node.sibling;
+      node = node.return;
     }
+    node.sibling.return = node.return;
+    node = node.sibling;
   }
 }
 
