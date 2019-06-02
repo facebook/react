@@ -212,6 +212,12 @@ function ElementsDropdown({
         onSelect={() => (isInStore ? selectOwner(owner) : null)}
       >
         {owner.displayName}
+
+        <Badge
+          className={styles.Badge}
+          hocDisplayNames={owner.hocDisplayNames}
+          type={owner.type}
+        />
       </MenuItem>
     );
   }
