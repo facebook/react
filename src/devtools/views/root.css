@@ -5,7 +5,9 @@
 
   /* Light theme */
   --light-color-attribute-name: #ef6632;
+  --light-color-attribute-name-inverted: rgba(255, 255, 255, 0.7);
   --light-color-attribute-value: #1a1aa6;
+  --light-color-attribute-value-inverted: #ffffff;
   --light-color-attribute-editable-value: #1a1aa6;
   --light-color-background: #ffffff;
   --light-color-background-hover: rgba(0, 136, 250, 0.1);
@@ -64,7 +66,9 @@
 
   /* Dark theme */
   --dark-color-attribute-name: #9d87d2;
+  --dark-color-attribute-name-inverted: #282828;
   --dark-color-attribute-value: #cedae0;
+  --dark-color-attribute-value-inverted: #ffffff;
   --dark-color-attribute-editable-value: yellow;
   --dark-color-background: #282c34;
   --dark-color-background-hover: rgba(255, 255, 255, 0.1);

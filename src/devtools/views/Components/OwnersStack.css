@@ -13,6 +13,8 @@
   font-size: var(--font-size-monospace-normal);
   user-select: none;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
 }
 
 .Component[data-reach-menu-item][data-selected],
@@ -95,4 +97,8 @@
 .NotInStore,
 .NotInStore:hover {
   color: var(--color-dimmest);
+}
+
+.Badge {
+  margin-left: 0.25rem;
 }

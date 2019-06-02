@@ -200,7 +200,9 @@ function updateThemeVariables(
   documentElements: DocumentElements
 ): void {
   updateStyleHelper(theme, 'color-attribute-name', documentElements);
+  updateStyleHelper(theme, 'color-attribute-name-inverted', documentElements);
   updateStyleHelper(theme, 'color-attribute-value', documentElements);
+  updateStyleHelper(theme, 'color-attribute-value-inverted', documentElements);
   updateStyleHelper(theme, 'color-attribute-editable-value', documentElements);
   updateStyleHelper(theme, 'color-background', documentElements);
   updateStyleHelper(theme, 'color-background-hover', documentElements);
