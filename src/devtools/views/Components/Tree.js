@@ -35,6 +35,13 @@ export type ItemData = {|
   treeFocused: boolean,
 |};
 
+// Never indent more than this number of pixels (even if we have the room).
+const DEFAULT_INDENTATION_SIZE = 12;
+
+// Never increase indentation by more than this number of pixels in a single adjustment.
+// This is to prevent things from "jumping" when a wide item is scrolled out of view.
+const MAX_INDENTATION_SIZE_INCREASE = 0.25;
+
 type Props = {||};
 
 export default function Tree(props: Props) {
@@ -370,12 +377,13 @@ export default function Tree(props: Props) {
 // Then we take the smallest of these indentation sizes...
 function updateIndentationSizeVar(
   innerDiv: HTMLDivElement,
-  cachedChildWidths: WeakMap<HTMLElement, number>
+  cachedChildWidths: WeakMap<HTMLElement, number>,
+  indentationSizeRef: {| current: number |}
 ): void {
   const list = ((innerDiv.parentElement: any): HTMLDivElement);
   const listWidth = list.clientWidth;
 
-  let maxIndentationSize: number = 12;
+  let maxIndentationSize: number = DEFAULT_INDENTATION_SIZE;
 
   for (let child of innerDiv.children) {
     const depth = parseInt(child.getAttribute('data-depth'), 10) || 0;
@@ -400,7 +408,21 @@ function updateIndentationSizeVar(
     maxIndentationSize = Math.min(maxIndentationSize, remainingWidth / depth);
   }
 
-  list.style.setProperty('--indentation-size', `${maxIndentationSize}px`);
+  // It's very important to shrink indentation so that nothing gets clipped.
+  // But it is less important to increase indentation when something wide is scrolled out of view.
+  // In fact, increasing too much leads to visual "jumping" which can be unpleasant.
+  // To avoid this, we only increase by a maximum of some threshold (MAX_INDENTATION_SIZE_INCREASE).
+  const newIndentationSize =
+    indentationSizeRef.current > maxIndentationSize
+      ? maxIndentationSize
+      : Math.min(
+          maxIndentationSize,
+          indentationSizeRef.current + MAX_INDENTATION_SIZE_INCREASE
+        );
+
+  list.style.setProperty('--indentation-size', `${newIndentationSize}px`);
+
+  indentationSizeRef.current = newIndentationSize;
 }
 
 function InnerElementType({ children, style, ...rest }) {
@@ -410,6 +432,7 @@ function InnerElementType({ children, style, ...rest }) {
     () => new WeakMap(),
     []
   );
+  const indentationSizeRef = useRef<number>(DEFAULT_INDENTATION_SIZE);
 
   // The list may need to scroll horizontally due to deeply nested elements.
   // We don't know the maximum scroll width up front, because we're windowing.
@@ -422,7 +445,11 @@ function InnerElementType({ children, style, ...rest }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (divRef.current !== null) {
-      updateIndentationSizeVar(divRef.current, cachedChildWidths);
+      updateIndentationSizeVar(
+        divRef.current,
+        cachedChildWidths,
+        indentationSizeRef
+      );
     }
   });
 
