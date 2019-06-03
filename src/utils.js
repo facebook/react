@@ -12,7 +12,6 @@ import {
 
 import type { ComponentFilter, ElementType } from './types';
 
-const FB_MODULE_RE = /^(.*) \[from (.*)\]$/;
 const cachedDisplayNames: WeakMap<Function, string> = new WeakMap();
 
 // On large trees, encoding takes significant time.
@@ -39,22 +38,6 @@ export function getDisplayName(
 
   if (!displayName) {
     displayName = type.name || fallbackName;
-  }
-
-  // Facebook-specific hack to turn "Image [from Image.react]" into just "Image".
-  // We need displayName with module name for error reports but it clutters the DevTools.
-  const match = displayName.match(FB_MODULE_RE);
-  if (match) {
-    const componentName = match[1];
-    const moduleName = match[2];
-    if (componentName && moduleName) {
-      if (
-        moduleName === componentName ||
-        moduleName.startsWith(componentName + '.')
-      ) {
-        displayName = componentName;
-      }
-    }
   }
 
   cachedDisplayNames.set(type, displayName);

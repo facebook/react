@@ -24,7 +24,10 @@ export default function SelectedTreeHighlight(_: {||}) {
   const subscription = useMemo(
     () => ({
       getCurrentValue: () => {
-        if (selectedElementID === null) {
+        if (
+          selectedElementID === null ||
+          store.isInsideCollapsedSubTree(selectedElementID)
+        ) {
           return null;
         }
 

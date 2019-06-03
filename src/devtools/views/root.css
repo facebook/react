@@ -38,7 +38,7 @@
   --light-color-commit-gradient-text: #000000;
   --light-color-component-name: #6a51b2;
   --light-color-component-name-inverted: #ffffff;
-  --light-color-component-badge-background: rgba(0, 0, 0, 0.15);
+  --light-color-component-badge-background: rgba(0, 0, 0, 0.1);
   --light-color-component-badge-background-inverted: rgba(255, 255, 255, 0.25);
   --light-color-component-badge-count: #777d88;
   --light-color-component-badge-count-inverted: rgba(255, 255, 255, 0.7);

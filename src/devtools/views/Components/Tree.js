@@ -380,6 +380,11 @@ function updateIndentationSizeVar(
   const list = ((innerDiv.parentElement: any): HTMLDivElement);
   const listWidth = list.clientWidth;
 
+  // Skip measurements when the Components panel is hidden.
+  if (listWidth === 0) {
+    return;
+  }
+
   // Reset the max indentation size if the width of the tree has increased.
   if (listWidth > prevListWidthRef.current) {
     indentationSizeRef.current = DEFAULT_INDENTATION_SIZE;
