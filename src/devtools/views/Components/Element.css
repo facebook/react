@@ -2,7 +2,6 @@
 .InactiveSelectedElement,
 .SelectedElement,
 .HoveredElement {
-  border-radius: 0.25em;
   color: var(--color-component-name);
 }
 .HoveredElement {
