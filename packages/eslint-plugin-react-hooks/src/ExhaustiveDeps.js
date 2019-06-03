@@ -407,6 +407,11 @@ export default {
             continue;
           }
 
+          // Ignore Flow type parameters
+          if (def.type === 'TypeParameter') {
+            continue;
+          }
+
           // Add the dependency to a map so we can make sure it is referenced
           // again in our dependencies array. Remember whether it's static.
           if (!dependencies.has(dependency)) {
