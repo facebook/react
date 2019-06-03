@@ -1014,6 +1014,16 @@ const tests = {
         }
       `,
     },
+    // Ignore Generic Type Variables for arrow functions
+    {
+      code: `
+        function Example({ prop }) {
+          const bar = useEffect(<T>(a: T): Hello => {
+            prop();
+          }, [prop]);
+        }
+      `,
+    },
   ],
   invalid: [
     {
