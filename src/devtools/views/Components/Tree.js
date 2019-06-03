@@ -27,6 +27,9 @@ import TreeFocusedContext from './TreeFocusedContext';
 
 import styles from './Tree.css';
 
+// Never indent more than this number of pixels (even if we have the room).
+const DEFAULT_INDENTATION_SIZE = 12;
+
 export type ItemData = {|
   numElements: number,
   isNavigatingWithKeyboard: boolean,
@@ -34,13 +37,6 @@ export type ItemData = {|
   onElementMouseEnter: (id: number) => void,
   treeFocused: boolean,
 |};
-
-// Never indent more than this number of pixels (even if we have the room).
-const DEFAULT_INDENTATION_SIZE = 12;
-
-// Never increase indentation by more than this number of pixels in a single adjustment.
-// This is to prevent things from "jumping" when a wide item is scrolled out of view.
-const MAX_INDENTATION_SIZE_INCREASE = 0.25;
 
 type Props = {||};
 
@@ -378,12 +374,19 @@ export default function Tree(props: Props) {
 function updateIndentationSizeVar(
   innerDiv: HTMLDivElement,
   cachedChildWidths: WeakMap<HTMLElement, number>,
-  indentationSizeRef: {| current: number |}
+  indentationSizeRef: {| current: number |},
+  prevListWidthRef: {| current: number |}
 ): void {
   const list = ((innerDiv.parentElement: any): HTMLDivElement);
   const listWidth = list.clientWidth;
 
-  let maxIndentationSize: number = DEFAULT_INDENTATION_SIZE;
+  // Reset the max indentation size if the width of the tree has increased.
+  if (listWidth > prevListWidthRef.current) {
+    indentationSizeRef.current = DEFAULT_INDENTATION_SIZE;
+  }
+  prevListWidthRef.current = listWidth;
+
+  let maxIndentationSize: number = indentationSizeRef.current;
 
   for (let child of innerDiv.children) {
     const depth = parseInt(child.getAttribute('data-depth'), 10) || 0;
@@ -408,21 +411,9 @@ function updateIndentationSizeVar(
     maxIndentationSize = Math.min(maxIndentationSize, remainingWidth / depth);
   }
 
-  // It's very important to shrink indentation so that nothing gets clipped.
-  // But it is less important to increase indentation when something wide is scrolled out of view.
-  // In fact, increasing too much leads to visual "jumping" which can be unpleasant.
-  // To avoid this, we only increase by a maximum of some threshold (MAX_INDENTATION_SIZE_INCREASE).
-  const newIndentationSize =
-    indentationSizeRef.current > maxIndentationSize
-      ? maxIndentationSize
-      : Math.min(
-          maxIndentationSize,
-          indentationSizeRef.current + MAX_INDENTATION_SIZE_INCREASE
-        );
+  indentationSizeRef.current = maxIndentationSize;
 
-  list.style.setProperty('--indentation-size', `${newIndentationSize}px`);
-
-  indentationSizeRef.current = newIndentationSize;
+  list.style.setProperty('--indentation-size', `${maxIndentationSize}px`);
 }
 
 function InnerElementType({ children, style, ...rest }) {
@@ -432,23 +423,30 @@ function InnerElementType({ children, style, ...rest }) {
     () => new WeakMap(),
     []
   );
-  const indentationSizeRef = useRef<number>(DEFAULT_INDENTATION_SIZE);
 
-  // The list may need to scroll horizontally due to deeply nested elements.
-  // We don't know the maximum scroll width up front, because we're windowing.
-  // What we can do instead, is passively measure the width of the current rows,
-  // and ensure that once we've grown to a new max size, we don't shrink below it.
-  // This improves the user experience when scrolling between wide and narrow rows.
+  // This ref tracks the current indentation size.
+  // We decrease indentation to fit wider/deeper trees.
+  // We indentionally do not increase it again afterward, to avoid the perception of content "jumping"
+  // e.g. clicking to toggle/collapse a row might otherwise jump horizontally beneath your cursor,
+  // e.g. scrolling a wide row off screen could cause narrower rows to jump to the right some.
+  //
+  // The one exception for this is when the width of the tree increases.
+  // The user may have resized the window specifically to make more room for DevTools.
+  // In either case, this should reset our max indentation size logic.
+  const indentationSizeRef = useRef<number>(DEFAULT_INDENTATION_SIZE);
+  const prevListWidthRef = useRef<number>(0);
   const divRef = useRef<HTMLDivElement | null>(null);
 
-  // TODO This is a valid warning, but we're ignoring it for the time being.
+  // When we render new content, measure to see if we need to shrink indentation to fit it.
+  // TODO The lint warning is valid, but we are intentionally ignoring it for now.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (divRef.current !== null) {
       updateIndentationSizeVar(
         divRef.current,
         cachedChildWidths,
-        indentationSizeRef
+        indentationSizeRef,
+        prevListWidthRef
       );
     }
   });
