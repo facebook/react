@@ -414,10 +414,17 @@ function dispatchCancel(
   }
 }
 
-function isValidKeyPress(key: string): boolean {
+function isValidKeyboardEvent(nativeEvent: Object): boolean {
+  const {key, target} = nativeEvent;
+  const {tagName, isContentEditable} = target;
   // Accessibility for keyboards. Space and Enter only.
   // "Spacebar" is for IE 11
-  return key === 'Enter' || key === ' ' || key === 'Spacebar';
+  return (
+    (key === 'Enter' || key === ' ' || key === 'Spacebar') &&
+    (tagName !== 'INPUT' &&
+      tagName !== 'TEXTAREA' &&
+      isContentEditable !== true)
+  );
 }
 
 function calculateDelayMS(delay: ?number, min = 0, fallback = 0) {
@@ -671,7 +678,7 @@ const PressResponder = {
 
           // Ignore unrelated key events
           if (pointerType === 'keyboard') {
-            if (!isValidKeyPress(nativeEvent.key)) {
+            if (!isValidKeyboardEvent(nativeEvent)) {
               return;
             }
           }
@@ -717,7 +724,7 @@ const PressResponder = {
           addRootEventTypes(context, state);
         } else {
           // Prevent spacebar press from scrolling the window
-          if (isValidKeyPress(nativeEvent.key) && nativeEvent.key === ' ') {
+          if (isValidKeyboardEvent(nativeEvent) && nativeEvent.key === ' ') {
             nativeEvent.preventDefault();
           }
         }
@@ -859,7 +866,7 @@ const PressResponder = {
           // Ignore unrelated keyboard events and verify press is within
           // responder region for non-keyboard events.
           if (pointerType === 'keyboard') {
-            if (!isValidKeyPress(nativeEvent.key)) {
+            if (!isValidKeyboardEvent(nativeEvent)) {
               return;
             }
             // If the event target isn't within the press target, check if we're still
