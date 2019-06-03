@@ -274,6 +274,11 @@ export default function Tree(props: Props) {
     ]
   );
 
+  const itemKey = useCallback(
+    (index: number) => store.getElementIDAtIndex(index),
+    [store]
+  );
+
   return (
     <TreeFocusedContext.Provider value={treeFocused}>
       <ComponentFiltersModalContextController>
@@ -306,6 +311,7 @@ export default function Tree(props: Props) {
                   innerElementType={InnerElementType}
                   itemCount={numElements}
                   itemData={itemData}
+                  itemKey={itemKey}
                   itemSize={lineHeight}
                   ref={listRef}
                   width={width}
