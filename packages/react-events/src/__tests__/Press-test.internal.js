@@ -561,6 +561,27 @@ describe('Event responder: Press', () => {
       );
     });
 
+    it('is not called after invalid "keyup" event', () => {
+      const inputRef = React.createRef();
+      const element = (
+        <Press onPress={onPress}>
+          <input ref={inputRef} />
+        </Press>
+      );
+      ReactDOM.render(element, container);
+      inputRef.current.dispatchEvent(
+        createKeyboardEvent('keydown', {key: 'Enter'}),
+      );
+      inputRef.current.dispatchEvent(
+        createKeyboardEvent('keyup', {key: 'Enter'}),
+      );
+      inputRef.current.dispatchEvent(
+        createKeyboardEvent('keydown', {key: ' '}),
+      );
+      inputRef.current.dispatchEvent(createKeyboardEvent('keyup', {key: ' '}));
+      expect(onPress).not.toBeCalled();
+    });
+
     it('is always called immediately after press is released', () => {
       const element = (
         <Press delayPressEnd={500} onPress={onPress}>
