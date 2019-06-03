@@ -448,8 +448,6 @@ function InnerElementType({ children, style, ...rest }) {
   }
 
   // When we render new content, measure to see if we need to shrink indentation to fit it.
-  // TODO The lint warning is valid, but we are intentionally ignoring it for now.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (divRef.current !== null) {
       updateIndentationSizeVar(
