@@ -90,9 +90,8 @@ export default function SelectedTreeHighlight(_: {||}) {
       className={treeFocused ? styles.Active : styles.Inactive}
       style={{
         position: 'absolute',
-        top: `${startIndex * lineHeight - lineHeight / 2}px`,
-        height: `${(stopIndex + 1 - startIndex) * lineHeight +
-          lineHeight / 2}px`,
+        top: `${startIndex * lineHeight}px`,
+        height: `${(stopIndex + 1 - startIndex) * lineHeight}px`,
       }}
     />
   );
