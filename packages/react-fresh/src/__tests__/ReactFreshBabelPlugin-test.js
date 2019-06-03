@@ -8,13 +8,16 @@
 'use strict';
 
 let babel = require('babel-core');
+let {wrap} = require('jest-snapshot-serializer-raw');
 let freshPlugin = require('react-fresh/babel');
 
 function transform(input, options = {}) {
-  return babel.transform(input, {
-    babelrc: false,
-    plugins: ['syntax-jsx', freshPlugin],
-  }).code;
+  return wrap(
+    babel.transform(input, {
+      babelrc: false,
+      plugins: ['syntax-jsx', freshPlugin],
+    }).code,
+  );
 }
 
 describe('ReactFreshBabelPlugin', () => {
