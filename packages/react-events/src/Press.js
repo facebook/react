@@ -42,8 +42,8 @@ type PointerType = '' | 'mouse' | 'keyboard' | 'pen' | 'touch';
 
 type PressState = {
   activationPosition: null | $ReadOnly<{|
-    pageX: number,
-    pageY: number,
+    x: number,
+    y: number,
   |}>,
   addedRootEvents: boolean,
   isActivePressed: boolean,
@@ -247,14 +247,11 @@ function dispatchLongPressChangeEvent(
 
 function activate(event: ReactResponderEvent, context, props, state) {
   const nativeEvent: any = event.nativeEvent;
-  const {x, y} = getEventPageCoords(nativeEvent);
+  const {x, y} = getEventViewportCoords(nativeEvent);
   const wasActivePressed = state.isActivePressed;
   state.isActivePressed = true;
   if (x !== null && y !== null) {
-    state.activationPosition = {
-      pageX: x,
-      pageY: y,
-    };
+    state.activationPosition = {x, y};
   }
 
   if (props.onPressStart) {
@@ -432,66 +429,6 @@ function calculateDelayMS(delay: ?number, min = 0, fallback = 0) {
   return Math.max(min, maybeNumber != null ? maybeNumber : fallback);
 }
 
-function isNodeFixedPositioned(node: Node | null | void): boolean {
-  return (
-    node != null &&
-    (node: any).offsetParent === null &&
-    !isNodeDocumentNode(node.parentNode)
-  );
-}
-
-function isNodeDocumentNode(node: Node | null | void): boolean {
-  return node != null && node.nodeType === Node.DOCUMENT_NODE;
-}
-
-function getAbsoluteBoundingClientRect(
-  target: Element,
-): {left: number, right: number, bottom: number, top: number} {
-  const clientRect = target.getBoundingClientRect();
-  let {left, right, bottom, top} = clientRect;
-  let node = target.parentNode;
-  let offsetX = 0;
-  let offsetY = 0;
-
-  // Traverse through all offset nodes
-  while (node != null) {
-    const parent = node.parentNode;
-    const scrollTop = (node: any).scrollTop;
-    const scrollLeft = (node: any).scrollLeft;
-
-    // We first need to check if it's a scrollable container by
-    // checking if either scrollLeft or scrollTop are not 0.
-    // Then we check if either the current node or its parent
-    // are fixed position, using offsetParent node for a fast-path.
-    // We need to check both as offsetParent accounts for both
-    // itself and the parent; so we need to align with that API.
-    // If these all pass, we can skip traversing the relevant
-    // node and go directly to its parent.
-    if (scrollLeft !== 0 || scrollTop !== 0) {
-      if (isNodeFixedPositioned(parent)) {
-        node = ((parent: any): Node).parentNode;
-        continue;
-      }
-      if (isNodeFixedPositioned(node)) {
-        node = parent;
-        continue;
-      }
-    }
-    offsetX += scrollLeft;
-    offsetY += scrollTop;
-    if (isNodeDocumentNode(parent)) {
-      break;
-    }
-    node = parent;
-  }
-  return {
-    left: left + offsetX,
-    right: right + offsetX,
-    bottom: bottom + offsetY,
-    top: top + offsetY,
-  };
-}
-
 // TODO: account for touch hit slop
 function calculateResponderRegion(
   context: ReactResponderContext,
@@ -504,8 +441,7 @@ function calculateResponderRegion(
     props.pressRetentionOffset,
   );
 
-  const clientRect = getAbsoluteBoundingClientRect(target);
-  let {left, right, bottom, top} = clientRect;
+  let {left, right, bottom, top} = target.getBoundingClientRect();
 
   if (pressRetentionOffset) {
     if (pressRetentionOffset.bottom != null) {
@@ -543,18 +479,18 @@ function getTouchFromPressEvent(nativeEvent: TouchEvent): Touch {
       : (nativeEvent: any);
 }
 
-function getEventPageCoords(
+function getEventViewportCoords(
   nativeEvent: Event,
 ): {x: null | number, y: null | number} {
   let eventObject = (nativeEvent: any);
   if (isTouchEvent(eventObject)) {
     eventObject = getTouchFromPressEvent(eventObject);
   }
-  const pageX = eventObject.pageX;
-  const pageY = eventObject.pageY;
+  const x = eventObject.clientX;
+  const y = eventObject.clientY;
   return {
-    x: pageX != null ? pageX : null,
-    y: pageY != null ? pageY : null,
+    x: x != null ? x : null,
+    y: y != null ? y : null,
   };
 }
 
@@ -578,7 +514,7 @@ function isPressWithinResponderRegion(
       bottom = Math.max(bottom, responderRegionOnDeactivation.bottom);
     }
   }
-  const {x, y} = getEventPageCoords(((nativeEvent: any): Event));
+  const {x, y} = getEventViewportCoords(((nativeEvent: any): Event));
 
   return (
     left != null &&
@@ -833,10 +769,8 @@ const PressResponder = {
                 state.activationPosition != null &&
                 state.longPressTimeout != null
               ) {
-                const deltaX =
-                  state.activationPosition.pageX - nativeEvent.pageX;
-                const deltaY =
-                  state.activationPosition.pageY - nativeEvent.pageY;
+                const deltaX = state.activationPosition.x - nativeEvent.clientX;
+                const deltaY = state.activationPosition.y - nativeEvent.clientY;
                 if (
                   Math.hypot(deltaX, deltaY) > 10 &&
                   state.longPressTimeout != null
