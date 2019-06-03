@@ -15,8 +15,9 @@ import ButtonIcon from '../ButtonIcon';
 import Toggle from '../Toggle';
 import Store from 'src/devtools/store';
 import {
-  ComponentFilterElementType,
   ComponentFilterDisplayName,
+  ComponentFilterElementType,
+  ComponentFilterHOC,
   ComponentFilterLocation,
   ElementTypeClass,
   ElementTypeContext,
@@ -32,6 +33,7 @@ import {
 import styles from './ComponentFiltersModal.css';
 
 import type {
+  BooleanComponentFilter,
   ComponentFilter,
   ComponentFilterType,
   ElementType,
@@ -170,15 +172,18 @@ function ComponentFiltersModal({ store, setIsModalShowing }: Props) {
                     <option value={ComponentFilterLocation}>location</option>
                     <option value={ComponentFilterDisplayName}>name</option>
                     <option value={ComponentFilterElementType}>type</option>
+                    <option value={ComponentFilterHOC}>hoc</option>
                   </select>
                 </td>
                 <td className={styles.TableCell}>
-                  {componentFilter.type === ComponentFilterElementType
-                    ? 'equals'
-                    : 'matches'}
+                  {componentFilter.type === ComponentFilterElementType &&
+                    'equals'}
+                  {(componentFilter.type === ComponentFilterLocation ||
+                    componentFilter.type === ComponentFilterDisplayName) &&
+                    'matches'}
                 </td>
                 <td className={styles.TableCell}>
-                  {componentFilter.type === ComponentFilterElementType ? (
+                  {componentFilter.type === ComponentFilterElementType && (
                     <select
                       className={styles.Select}
                       value={componentFilter.value}
@@ -205,7 +210,9 @@ function ComponentFiltersModal({ store, setIsModalShowing }: Props) {
                       <option value={ElementTypeProfiler}>profiler</option>
                       <option value={ElementTypeSuspense}>suspense</option>
                     </select>
-                  ) : (
+                  )}
+                  {(componentFilter.type === ComponentFilterLocation ||
+                    componentFilter.type === ComponentFilterDisplayName) && (
                     <input
                       className={styles.Input}
                       type="text"
@@ -311,6 +318,12 @@ function useComponentFilters() {
               isValid: true,
               value: '',
             };
+          } else if (type === ComponentFilterHOC) {
+            cloned[index] = {
+              type: ComponentFilterHOC,
+              isEnabled: componentFilter.isEnabled,
+              isValid: true,
+            };
           }
         }
         return cloned;
@@ -404,6 +417,11 @@ function useComponentFilters() {
           ) {
             cloned[index] = {
               ...((cloned[index]: any): RegExpComponentFilter),
+              isEnabled,
+            };
+          } else if (componentFilter.type === ComponentFilterHOC) {
+            cloned[index] = {
+              ...((cloned[index]: any): BooleanComponentFilter),
               isEnabled,
             };
           }

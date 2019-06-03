@@ -4,6 +4,7 @@ import { gte } from 'semver';
 import {
   ComponentFilterDisplayName,
   ComponentFilterElementType,
+  ComponentFilterHOC,
   ComponentFilterLocation,
   ElementTypeClass,
   ElementTypeContext,
@@ -318,6 +319,9 @@ export function attach(
           if (componentFilter.isValid && componentFilter.value !== '') {
             hideElementsWithPaths.add(new RegExp(componentFilter.value, 'i'));
           }
+          break;
+        case ComponentFilterHOC:
+          hideElementsWithDisplayNames.add(new RegExp('\\('));
           break;
         default:
           console.warn(
