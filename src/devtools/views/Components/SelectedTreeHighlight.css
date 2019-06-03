@@ -8,9 +8,9 @@
 }
 
 .Active {
-  background-color: var(--color-guideline-active);
+  background-color: var(--color-selected-tree-highlight-active);
 }
 
 .Inactive {
-  background-color: var(--color-guideline-inactive);
+  background-color: var(--color-selected-tree-highlight-inactive);
 }

@@ -22,7 +22,7 @@ import SearchInput from './SearchInput';
 import { ComponentFiltersModalContextController } from './ComponentFiltersModalContext';
 import ToggleComponentFiltersModalButton from './ToggleComponentFiltersModalButton';
 import ComponentFiltersModal from './ComponentFiltersModal';
-import Guideline from './Guideline';
+import SelectedTreeHighlight from './SelectedTreeHighlight';
 import TreeFocusedContext from './TreeFocusedContext';
 
 import styles from './Tree.css';
@@ -466,11 +466,11 @@ function InnerElementType({ children, style, ...rest }) {
   return (
     <div
       className={styles.InnerElementType}
-      style={style}
       ref={divRef}
+      style={style}
       {...rest}
     >
-      <Guideline />
+      <SelectedTreeHighlight />
       {children}
     </div>
   );

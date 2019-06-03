@@ -269,8 +269,6 @@ function updateThemeVariables(
   updateStyleHelper(theme, 'color-dimmer', documentElements);
   updateStyleHelper(theme, 'color-dimmest', documentElements);
   updateStyleHelper(theme, 'color-expand-collapse-toggle', documentElements);
-  updateStyleHelper(theme, 'color-guideline-active', documentElements);
-  updateStyleHelper(theme, 'color-guideline-inactive', documentElements);
   updateStyleHelper(theme, 'color-jsx-arrow-brackets', documentElements);
   updateStyleHelper(
     theme,
@@ -283,6 +281,16 @@ function updateThemeVariables(
   updateStyleHelper(theme, 'color-record-inactive', documentElements);
   updateStyleHelper(theme, 'color-search-match', documentElements);
   updateStyleHelper(theme, 'color-search-match-current', documentElements);
+  updateStyleHelper(
+    theme,
+    'color-selected-tree-highlight-active',
+    documentElements
+  );
+  updateStyleHelper(
+    theme,
+    'color-selected-tree-highlight-inactive',
+    documentElements
+  );
   updateStyleHelper(theme, 'color-tab-selected-border', documentElements);
   updateStyleHelper(theme, 'color-text', documentElements);
   updateStyleHelper(theme, 'color-text-selected', documentElements);

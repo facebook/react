@@ -46,8 +46,6 @@
   --light-color-dimmer: #cfd1d5;
   --light-color-dimmest: #eff0f1;
   --light-color-expand-collapse-toggle: #777d88;
-  --light-color-guideline-active: rgba(0, 136, 250, 0.1);
-  --light-color-guideline-inactive: rgba(0, 0, 0, 0.05);
   --light-color-jsx-arrow-brackets: #333333;
   --light-color-jsx-arrow-brackets-inverted: rgba(255, 255, 255, 0.7);
   --light-color-modal-background: rgba(255, 255, 255, 0.75);
@@ -56,6 +54,8 @@
   --light-color-record-inactive: #0088fa;
   --light-color-search-match: yellow;
   --light-color-search-match-current: #f7923b;
+  --light-color-selected-tree-highlight-active: rgba(0, 136, 250, 0.15);
+  --light-color-selected-tree-highlight-inactive: rgba(0, 0, 0, 0.05);
   --light-color-tab-selected-border: #0088fa;
   --light-color-text: #000000;
   --light-color-text-selected: #ffffff;
@@ -109,8 +109,6 @@
   --dark-color-dimmer: #777d88;
   --dark-color-dimmest: #4f5766;
   --dark-color-expand-collapse-toggle: #8f949d;
-  --dark-color-guideline-active: rgba(23, 143, 185, 0.1);
-  --dark-color-guideline-inactive: rgba(255, 255, 255, 0.05);
   --dark-color-jsx-arrow-brackets: #777d88;
   --dark-color-jsx-arrow-brackets-inverted: rgba(255, 255, 255, 0.7);
   --dark-color-modal-background: rgba(0, 0, 0, 0.75);
@@ -119,6 +117,8 @@
   --dark-color-record-inactive: #61dafb;
   --dark-color-search-match: yellow;
   --dark-color-search-match-current: #f7923b;
+  --dark-color-selected-tree-highlight-active: rgba(23, 143, 185, 0.15);
+  --dark-color-selected-tree-highlight-inactive: rgba(255, 255, 255, 0.05);
   --dark-color-tab-selected-border: #178fb9;
   --dark-color-text: #ffffff;
   --dark-color-text-selected: #ffffff;

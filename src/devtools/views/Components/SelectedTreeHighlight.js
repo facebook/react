@@ -8,14 +8,14 @@ import { StoreContext } from '../context';
 import { useSubscription } from '../hooks';
 import Store from '../../store';
 
-import styles from './Guideline.css';
+import styles from './SelectedTreeHighlight.css';
 
 type Data = {|
   startIndex: number,
   stopIndex: number,
 |};
 
-export default function Guideline(_: {||}) {
+export default function SelectedTreeHighlight(_: {||}) {
   const { lineHeight } = useContext(SettingsContext);
   const store = useContext(StoreContext);
   const treeFocused = useContext(TreeFocusedContext);
