@@ -430,12 +430,22 @@ function InnerElementType({ children, style, ...rest }) {
   // e.g. clicking to toggle/collapse a row might otherwise jump horizontally beneath your cursor,
   // e.g. scrolling a wide row off screen could cause narrower rows to jump to the right some.
   //
-  // The one exception for this is when the width of the tree increases.
+  // There are two exceptions for this:
+  // 1. The first is when the width of the tree increases.
   // The user may have resized the window specifically to make more room for DevTools.
   // In either case, this should reset our max indentation size logic.
+  // 2. The second is when the user enters or exits an owner tree.
   const indentationSizeRef = useRef<number>(DEFAULT_INDENTATION_SIZE);
   const prevListWidthRef = useRef<number>(0);
+  const prevOwnerIDRef = useRef<number | null>(ownerID);
   const divRef = useRef<HTMLDivElement | null>(null);
+
+  // We shouldn't retain this width across different conceptual trees though,
+  // so when the user opens the "owners tree" view, we should discard the previous width.
+  if (ownerID !== prevOwnerIDRef.current) {
+    prevOwnerIDRef.current = ownerID;
+    indentationSizeRef.current = DEFAULT_INDENTATION_SIZE;
+  }
 
   // When we render new content, measure to see if we need to shrink indentation to fit it.
   // TODO The lint warning is valid, but we are intentionally ignoring it for now.
@@ -450,13 +460,6 @@ function InnerElementType({ children, style, ...rest }) {
       );
     }
   });
-
-  // We shouldn't retain this width across different conceptual trees though,
-  // so when the user opens the "owners tree" view, we should discard the previous width.
-  const [prevOwnerID, setPrevOwnerID] = useState(ownerID);
-  if (ownerID !== prevOwnerID) {
-    setPrevOwnerID(ownerID);
-  }
 
   // This style override enables the background color to fill the full visible width,
   // when combined with the CSS tweaks in Element.
