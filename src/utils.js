@@ -3,10 +3,15 @@
 import LRU from 'lru-cache';
 import { LOCAL_STORAGE_FILTER_PREFERENCES_KEY } from './constants';
 import { ComponentFilterElementType, ElementTypeHostComponent } from './types';
+import {
+  ElementTypeClass,
+  ElementTypeForwardRef,
+  ElementTypeFunction,
+  ElementTypeMemo,
+} from 'src/types';
 
-import type { ComponentFilter } from './types';
+import type { ComponentFilter, ElementType } from './types';
 
-const FB_MODULE_RE = /^(.*) \[from (.*)\]$/;
 const cachedDisplayNames: WeakMap<Function, string> = new WeakMap();
 
 // On large trees, encoding takes significant time.
@@ -33,22 +38,6 @@ export function getDisplayName(
 
   if (!displayName) {
     displayName = type.name || fallbackName;
-  }
-
-  // Facebook-specific hack to turn "Image [from Image.react]" into just "Image".
-  // We need displayName with module name for error reports but it clutters the DevTools.
-  const match = displayName.match(FB_MODULE_RE);
-  if (match) {
-    const componentName = match[1];
-    const moduleName = match[2];
-    if (componentName && moduleName) {
-      if (
-        moduleName === componentName ||
-        moduleName.startsWith(componentName + '.')
-      ) {
-        displayName = componentName;
-      }
-    }
   }
 
   cachedDisplayNames.set(type, displayName);
@@ -108,4 +97,34 @@ export function saveComponentFilters(
     LOCAL_STORAGE_FILTER_PREFERENCES_KEY,
     JSON.stringify(componentFilters)
   );
+}
+
+export function separateDisplayNameAndHOCs(
+  displayName: string | null,
+  type: ElementType
+): [string | null, Array<string> | null] {
+  if (displayName === null) {
+    return [null, null];
+  }
+
+  let hocDisplayNames = null;
+
+  switch (type) {
+    case ElementTypeClass:
+    case ElementTypeForwardRef:
+    case ElementTypeFunction:
+    case ElementTypeMemo:
+      if (displayName.indexOf('(') >= 0) {
+        const matches = displayName.match(/[^()]+/g);
+        if (matches !== null) {
+          displayName = matches.pop();
+          hocDisplayNames = matches;
+        }
+      }
+      break;
+    default:
+      break;
+  }
+
+  return [displayName, hocDisplayNames];
 }

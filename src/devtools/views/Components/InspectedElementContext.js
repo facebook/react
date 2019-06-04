@@ -12,6 +12,7 @@ import { createResource } from '../../cache';
 import { BridgeContext, StoreContext } from '../context';
 import { hydrate } from 'src/hydration';
 import { TreeStateContext } from './TreeContext';
+import { separateDisplayNameAndHOCs } from 'src/utils';
 
 import type {
   DehydratedData,
@@ -95,8 +96,31 @@ function InspectedElementContextController({ children }: Props) {
       if (inspectedElement !== null && typeof inspectedElement === 'object') {
         const id = inspectedElement.id;
 
+        const { displayName, type } = inspectedElement;
+
+        const [
+          displayNameWithoutHOCs,
+          hocDisplayNames,
+        ] = separateDisplayNameAndHOCs(displayName, type);
+
         inspectedElement = (({
           ...inspectedElement,
+          displayName: displayNameWithoutHOCs,
+          owners:
+            inspectedElement.owners === null
+              ? null
+              : inspectedElement.owners.map(owner => {
+                  const [
+                    displayName,
+                    hocDisplayNames,
+                  ] = separateDisplayNameAndHOCs(owner.displayName, owner.type);
+                  return {
+                    ...owner,
+                    displayName,
+                    hocDisplayNames,
+                  };
+                }),
+          hocDisplayNames,
           context: hydrateHelper(inspectedElement.context),
           events: hydrateHelper(inspectedElement.events),
           hooks: hydrateHelper(inspectedElement.hooks),

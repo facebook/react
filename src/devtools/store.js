@@ -12,6 +12,7 @@ import { ElementTypeRoot } from '../types';
 import {
   getSavedComponentFilters,
   saveComponentFilters,
+  separateDisplayNameAndHOCs,
   utfDecodeString,
 } from '../utils';
 import { __DEBUG__ } from '../constants';
@@ -674,6 +675,7 @@ export default class Store extends EventEmitter {
               children: [],
               depth: -1,
               displayName: null,
+              hocDisplayNames: null,
               id,
               isCollapsed: false, // Never collapse roots; it would hide the entire tree.
               key: null,
@@ -717,10 +719,16 @@ export default class Store extends EventEmitter {
             ): any): Element);
             parentElement.children.push(id);
 
+            const [
+              displayNameWithoutHOCs,
+              hocDisplayNames,
+            ] = separateDisplayNameAndHOCs(displayName, type);
+
             const element: Element = {
               children: [],
               depth: parentElement.depth + 1,
-              displayName,
+              displayName: displayNameWithoutHOCs,
+              hocDisplayNames,
               id,
               isCollapsed: this._collapseNodesByDefault,
               key,

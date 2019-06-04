@@ -5,7 +5,7 @@ import { useLocalStorage } from '../hooks';
 
 import type { BrowserTheme } from '../DevTools';
 
-export type DisplayDensity = 'compact' | 'comfortable';
+export type DisplayDensity = 'comfortable' | 'compact';
 export type Theme = 'auto' | 'light' | 'dark';
 
 type Context = {|
@@ -15,9 +15,6 @@ type Context = {|
   // Derived from display density.
   // Specified as a separate prop so it can trigger a re-render of FixedSizeList.
   lineHeight: number,
-
-  showIndentLines: boolean,
-  setShowIndentLines: (value: boolean) => void,
 
   theme: Theme,
   setTheme(value: Theme): void,
@@ -46,10 +43,6 @@ function SettingsContextController({
   const [displayDensity, setDisplayDensity] = useLocalStorage<DisplayDensity>(
     'React::DevTools::displayDensity',
     'compact'
-  );
-  const [showIndentLines, setShowIndentLines] = useLocalStorage<boolean>(
-    'React::DevTools::showIndentLines',
-    true
   );
   const [theme, setTheme] = useLocalStorage<Theme>(
     'React::DevTools::theme',
@@ -85,26 +78,23 @@ function SettingsContextController({
     settingsPortalContainer,
   ]);
 
+  const computedStyle = getComputedStyle((document.body: any));
   const comfortableLineHeight = parseInt(
-    getComputedStyle((document.body: any)).getPropertyValue(
-      '--comfortable-line-height-data'
-    ),
+    computedStyle.getPropertyValue('--comfortable-line-height-data'),
     10
   );
   const compactLineHeight = parseInt(
-    getComputedStyle((document.body: any)).getPropertyValue(
-      '--compact-line-height-data'
-    ),
+    computedStyle.getPropertyValue('--compact-line-height-data'),
     10
   );
 
   useLayoutEffect(() => {
     switch (displayDensity) {
-      case 'compact':
-        updateDisplayDensity('compact', documentElements);
-        break;
       case 'comfortable':
         updateDisplayDensity('comfortable', documentElements);
+        break;
+      case 'compact':
+        updateDisplayDensity('compact', documentElements);
         break;
       default:
         throw Error(`Unsupported displayDensity value "${displayDensity}"`);
@@ -133,8 +123,6 @@ function SettingsContextController({
       setDisplayDensity,
       theme,
       setTheme,
-      showIndentLines,
-      setShowIndentLines,
       lineHeight:
         displayDensity === 'compact'
           ? compactLineHeight
@@ -144,9 +132,7 @@ function SettingsContextController({
       comfortableLineHeight,
       compactLineHeight,
       displayDensity,
-      showIndentLines,
       setDisplayDensity,
-      setShowIndentLines,
       setTheme,
       theme,
     ]
@@ -204,6 +190,15 @@ function updateDisplayDensity(
   updateStyleHelper(displayDensity, 'font-size-sans-large', documentElements);
   updateStyleHelper(displayDensity, 'font-size-sans-small', documentElements);
   updateStyleHelper(displayDensity, 'line-height-data', documentElements);
+
+  // Sizes and paddings/margins are all rem-based,
+  // so update the root font-size as well when the display preference changes.
+  const computedStyle = getComputedStyle((document.body: any));
+  const fontSize = computedStyle.getPropertyValue(
+    `--${displayDensity}-root-font-size`
+  );
+  const root = document.querySelector(':root');
+  ((root: any): HTMLElement).style.fontSize = fontSize;
 }
 
 function updateThemeVariables(
@@ -211,7 +206,9 @@ function updateThemeVariables(
   documentElements: DocumentElements
 ): void {
   updateStyleHelper(theme, 'color-attribute-name', documentElements);
+  updateStyleHelper(theme, 'color-attribute-name-inverted', documentElements);
   updateStyleHelper(theme, 'color-attribute-value', documentElements);
+  updateStyleHelper(theme, 'color-attribute-value-inverted', documentElements);
   updateStyleHelper(theme, 'color-attribute-editable-value', documentElements);
   updateStyleHelper(theme, 'color-background', documentElements);
   updateStyleHelper(theme, 'color-background-hover', documentElements);
@@ -268,11 +265,16 @@ function updateThemeVariables(
     'color-component-badge-background-inverted',
     documentElements
   );
+  updateStyleHelper(theme, 'color-component-badge-count', documentElements);
+  updateStyleHelper(
+    theme,
+    'color-component-badge-count-inverted',
+    documentElements
+  );
   updateStyleHelper(theme, 'color-dim', documentElements);
   updateStyleHelper(theme, 'color-dimmer', documentElements);
   updateStyleHelper(theme, 'color-dimmest', documentElements);
   updateStyleHelper(theme, 'color-expand-collapse-toggle', documentElements);
-  updateStyleHelper(theme, 'color-guideline', documentElements);
   updateStyleHelper(theme, 'color-jsx-arrow-brackets', documentElements);
   updateStyleHelper(
     theme,
@@ -285,6 +287,16 @@ function updateThemeVariables(
   updateStyleHelper(theme, 'color-record-inactive', documentElements);
   updateStyleHelper(theme, 'color-search-match', documentElements);
   updateStyleHelper(theme, 'color-search-match-current', documentElements);
+  updateStyleHelper(
+    theme,
+    'color-selected-tree-highlight-active',
+    documentElements
+  );
+  updateStyleHelper(
+    theme,
+    'color-selected-tree-highlight-inactive',
+    documentElements
+  );
   updateStyleHelper(theme, 'color-tab-selected-border', documentElements);
   updateStyleHelper(theme, 'color-text', documentElements);
   updateStyleHelper(theme, 'color-text-selected', documentElements);

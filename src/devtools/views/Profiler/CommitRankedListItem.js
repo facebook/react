@@ -1,10 +1,11 @@
 // @flow
 
-import React, { memo, useCallback } from 'react';
+import React, { memo, useCallback, useContext } from 'react';
 import { areEqual } from 'react-window';
-import { barHeight, minBarWidth } from './constants';
+import { minBarWidth } from './constants';
 import { getGradientColor } from './utils';
 import ChartNode from './ChartNode';
+import { SettingsContext } from '../Settings/SettingsContext';
 
 import type { ItemData } from './CommitRanked';
 
@@ -18,6 +19,8 @@ function CommitRankedListItem({ data, index, style }: Props) {
   const { chartData, scaleX, selectedFiberIndex, selectFiber, width } = data;
 
   const node = chartData.nodes[index];
+
+  const { lineHeight } = useContext(SettingsContext);
 
   const handleClick = useCallback(
     event => {
@@ -36,7 +39,7 @@ function CommitRankedListItem({ data, index, style }: Props) {
   return (
     <ChartNode
       color={getGradientColor(node.value / chartData.maxValue)}
-      height={barHeight}
+      height={lineHeight}
       isDimmed={index < selectedFiberIndex}
       key={node.id}
       label={node.label}

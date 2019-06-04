@@ -22,17 +22,19 @@ import SearchInput from './SearchInput';
 import { ComponentFiltersModalContextController } from './ComponentFiltersModalContext';
 import ToggleComponentFiltersModalButton from './ToggleComponentFiltersModalButton';
 import ComponentFiltersModal from './ComponentFiltersModal';
-import Guidelines from './Guidelines';
+import SelectedTreeHighlight from './SelectedTreeHighlight';
 import TreeFocusedContext from './TreeFocusedContext';
 
 import styles from './Tree.css';
+
+// Never indent more than this number of pixels (even if we have the room).
+const DEFAULT_INDENTATION_SIZE = 12;
 
 export type ItemData = {|
   numElements: number,
   isNavigatingWithKeyboard: boolean,
   lastScrolledIDRef: { current: number | null },
   onElementMouseEnter: (id: number) => void,
-  showIndentLines: boolean,
   treeFocused: boolean,
 |};
 
@@ -60,7 +62,7 @@ export default function Tree(props: Props) {
 
   const [treeFocused, setTreeFocused] = useState<boolean>(false);
 
-  const { lineHeight, showIndentLines } = useContext(SettingsContext);
+  const { lineHeight } = useContext(SettingsContext);
 
   // Make sure a newly selected element is visible in the list.
   // This is helpful for things like the owners list and search.
@@ -264,7 +266,6 @@ export default function Tree(props: Props) {
       isNavigatingWithKeyboard,
       onElementMouseEnter: handleElementMouseEnter,
       lastScrolledIDRef,
-      showIndentLines,
       treeFocused,
     }),
     [
@@ -272,9 +273,13 @@ export default function Tree(props: Props) {
       isNavigatingWithKeyboard,
       handleElementMouseEnter,
       lastScrolledIDRef,
-      showIndentLines,
       treeFocused,
     ]
+  );
+
+  const itemKey = useCallback(
+    (index: number) => store.getElementIDAtIndex(index),
+    [store]
   );
 
   return (
@@ -309,8 +314,8 @@ export default function Tree(props: Props) {
                   innerElementType={InnerElementType}
                   itemCount={numElements}
                   itemData={itemData}
+                  itemKey={itemKey}
                   itemSize={lineHeight}
-                  overscanCount={3}
                   ref={listRef}
                   width={width}
                 >
@@ -326,41 +331,138 @@ export default function Tree(props: Props) {
   );
 }
 
+// Indentation size can be adjusted but child width is fixed.
+// We need to adjust indentations so the widest child can fit without overflowing.
+// Sometimes the widest child is also the deepest in the tree:
+//   ┏----------------------┓
+//   ┆ <Foo>                ┆
+//   ┆ ••••<Foobar>         ┆
+//   ┆ ••••••••<Baz>        ┆
+//   ┗----------------------┛
+//
+// But this is not always the case.
+// Even with the above example, a change in indentation may change the overall widest child:
+//   ┏----------------------┓
+//   ┆ <Foo>                ┆
+//   ┆ ••<Foobar>           ┆
+//   ┆ ••••<Baz>            ┆
+//   ┗----------------------┛
+//
+// In extreme cases this difference can be important:
+//   ┏----------------------┓
+//   ┆ <ReallyLongName>     ┆
+//   ┆ ••<Foo>              ┆
+//   ┆ ••••<Bar>            ┆
+//   ┆ ••••••<Baz>          ┆
+//   ┆ ••••••••<Qux>        ┆
+//   ┗----------------------┛
+//
+// In the above example, the current indentation is fine,
+// but if we naively assumed that the widest element is also the deepest element,
+// we would end up compressing the indentation unnecessarily:
+//   ┏----------------------┓
+//   ┆ <ReallyLongName>     ┆
+//   ┆ •<Foo>               ┆
+//   ┆ ••<Bar>              ┆
+//   ┆ •••<Baz>             ┆
+//   ┆ ••••<Qux>            ┆
+//   ┗----------------------┛
+//
+// The way we deal with this is to compute the max indentation size that can fit each child,
+// given the child's fixed width and depth within the tree.
+// Then we take the smallest of these indentation sizes...
+function updateIndentationSizeVar(
+  innerDiv: HTMLDivElement,
+  cachedChildWidths: WeakMap<HTMLElement, number>,
+  indentationSizeRef: {| current: number |},
+  prevListWidthRef: {| current: number |}
+): void {
+  const list = ((innerDiv.parentElement: any): HTMLDivElement);
+  const listWidth = list.clientWidth;
+
+  // Skip measurements when the Components panel is hidden.
+  if (listWidth === 0) {
+    return;
+  }
+
+  // Reset the max indentation size if the width of the tree has increased.
+  if (listWidth > prevListWidthRef.current) {
+    indentationSizeRef.current = DEFAULT_INDENTATION_SIZE;
+  }
+  prevListWidthRef.current = listWidth;
+
+  let maxIndentationSize: number = indentationSizeRef.current;
+
+  for (let child of innerDiv.children) {
+    const depth = parseInt(child.getAttribute('data-depth'), 10) || 0;
+
+    let childWidth: number = 0;
+
+    const cachedChildWidth = cachedChildWidths.get(child);
+    if (cachedChildWidth != null) {
+      childWidth = cachedChildWidth;
+    } else {
+      const { firstElementChild } = child;
+
+      // Skip over e.g. the guideline element
+      if (firstElementChild != null) {
+        childWidth = firstElementChild.clientWidth;
+        cachedChildWidths.set(child, childWidth);
+      }
+    }
+
+    const remainingWidth = Math.max(0, listWidth - childWidth);
+
+    maxIndentationSize = Math.min(maxIndentationSize, remainingWidth / depth);
+  }
+
+  indentationSizeRef.current = maxIndentationSize;
+
+  list.style.setProperty('--indentation-size', `${maxIndentationSize}px`);
+}
+
 function InnerElementType({ children, style, ...rest }) {
   const { ownerID } = useContext(TreeStateContext);
 
-  // The list may need to scroll horizontally due to deeply nested elements.
-  // We don't know the maximum scroll width up front, because we're windowing.
-  // What we can do instead, is passively measure the width of the current rows,
-  // and ensure that once we've grown to a new max size, we don't shrink below it.
-  // This improves the user experience when scrolling between wide and narrow rows.
-  const divRef = useRef<HTMLDivElement | null>(null);
-  const [minWidth, setMinWidth] = useState(null);
-  // TODO This is a valid warning, but we're ignoring it for the time being.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    if (divRef.current !== null) {
-      const measuredWidth = divRef.current.offsetWidth;
-      setMinWidth(w => Math.max(w || 0, measuredWidth));
-    }
-  });
+  const cachedChildWidths = useMemo<WeakMap<HTMLElement, number>>(
+    () => new WeakMap(),
+    []
+  );
 
-  // When the window is resized, forget the specific min width.
-  // This will cause a render with 100% min-width, a measurement
-  // in an effect, and a second render where we know the width.
-  useEffect(() => {
-    const invalidateMinWidth = () => setMinWidth(null);
-    window.addEventListener('resize', invalidateMinWidth);
-    return () => window.removeEventListener('resize', invalidateMinWidth);
-  }, []);
+  // This ref tracks the current indentation size.
+  // We decrease indentation to fit wider/deeper trees.
+  // We indentionally do not increase it again afterward, to avoid the perception of content "jumping"
+  // e.g. clicking to toggle/collapse a row might otherwise jump horizontally beneath your cursor,
+  // e.g. scrolling a wide row off screen could cause narrower rows to jump to the right some.
+  //
+  // There are two exceptions for this:
+  // 1. The first is when the width of the tree increases.
+  // The user may have resized the window specifically to make more room for DevTools.
+  // In either case, this should reset our max indentation size logic.
+  // 2. The second is when the user enters or exits an owner tree.
+  const indentationSizeRef = useRef<number>(DEFAULT_INDENTATION_SIZE);
+  const prevListWidthRef = useRef<number>(0);
+  const prevOwnerIDRef = useRef<number | null>(ownerID);
+  const divRef = useRef<HTMLDivElement | null>(null);
 
   // We shouldn't retain this width across different conceptual trees though,
   // so when the user opens the "owners tree" view, we should discard the previous width.
-  const [prevOwnerID, setPrevOwnerID] = useState(ownerID);
-  if (ownerID !== prevOwnerID) {
-    setPrevOwnerID(ownerID);
-    setMinWidth(null);
+  if (ownerID !== prevOwnerIDRef.current) {
+    prevOwnerIDRef.current = ownerID;
+    indentationSizeRef.current = DEFAULT_INDENTATION_SIZE;
   }
+
+  // When we render new content, measure to see if we need to shrink indentation to fit it.
+  useEffect(() => {
+    if (divRef.current !== null) {
+      updateIndentationSizeVar(
+        divRef.current,
+        cachedChildWidths,
+        indentationSizeRef,
+        prevListWidthRef
+      );
+    }
+  });
 
   // This style override enables the background color to fill the full visible width,
   // when combined with the CSS tweaks in Element.
@@ -369,16 +471,11 @@ function InnerElementType({ children, style, ...rest }) {
   return (
     <div
       className={styles.InnerElementType}
-      style={{
-        ...style,
-        display: 'inline-block',
-        minWidth: minWidth || '100%',
-        width: undefined,
-      }}
       ref={divRef}
+      style={style}
       {...rest}
     >
-      <Guidelines />
+      <SelectedTreeHighlight />
       {children}
     </div>
   );

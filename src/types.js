@@ -41,8 +41,9 @@ export type ElementType = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 export const ComponentFilterElementType = 1;
 export const ComponentFilterDisplayName = 2;
 export const ComponentFilterLocation = 3;
+export const ComponentFilterHOC = 4;
 
-export type ComponentFilterType = 1 | 2 | 3;
+export type ComponentFilterType = 1 | 2 | 3 | 4;
 
 // Hide all elements of types in this Set.
 // We hide host components only by default.
@@ -61,6 +62,13 @@ export type RegExpComponentFilter = {|
   value: string,
 |};
 
+export type BooleanComponentFilter = {|
+  isEnabled: boolean,
+  isValid: boolean,
+  type: 4,
+|};
+
 export type ComponentFilter =
+  | BooleanComponentFilter
   | ElementTypeComponentFilter
   | RegExpComponentFilter;

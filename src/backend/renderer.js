@@ -4,6 +4,7 @@ import { gte } from 'semver';
 import {
   ComponentFilterDisplayName,
   ComponentFilterElementType,
+  ComponentFilterHOC,
   ComponentFilterLocation,
   ElementTypeClass,
   ElementTypeContext,
@@ -39,6 +40,8 @@ import type {
   CommitDataBackend,
   DevToolsHook,
   Fiber,
+  InspectedElement,
+  Owner,
   PathFrame,
   PathMatch,
   ProfilingDataBackend,
@@ -46,10 +49,6 @@ import type {
   ReactRenderer,
   RendererInterface,
 } from './types';
-import type {
-  InspectedElement,
-  Owner,
-} from 'src/devtools/views/Components/types';
 import type { Interaction } from 'src/devtools/views/Profiler/types';
 import type { ComponentFilter, ElementType } from 'src/types';
 
@@ -320,6 +319,9 @@ export function attach(
           if (componentFilter.isValid && componentFilter.value !== '') {
             hideElementsWithPaths.add(new RegExp(componentFilter.value, 'i'));
           }
+          break;
+        case ComponentFilterHOC:
+          hideElementsWithDisplayNames.add(new RegExp('\\('));
           break;
         default:
           console.warn(
@@ -1752,6 +1754,7 @@ export function attach(
       {
         displayName: getDisplayNameForFiber(fiber) || 'Anonymous',
         id,
+        type: getElementTypeForFiber(fiber),
       },
     ];
 
@@ -1761,6 +1764,7 @@ export function attach(
         owners.unshift({
           displayName: getDisplayNameForFiber(owner) || 'Anonymous',
           id: getFiberID(getPrimaryFiber(owner)),
+          type: getElementTypeForFiber(owner),
         });
         owner = owner._debugOwner || null;
       }
@@ -1858,6 +1862,7 @@ export function attach(
         owners.push({
           displayName: getDisplayNameForFiber(owner) || 'Anonymous',
           id: getFiberID(getPrimaryFiber(owner)),
+          type: getElementTypeForFiber(owner),
         });
         owner = owner._debugOwner || null;
       }
@@ -1904,6 +1909,7 @@ export function attach(
       canViewSource,
 
       displayName: getDisplayNameForFiber(fiber),
+      type: getElementTypeForFiber(fiber),
 
       // Inspectable properties.
       // TODO Review sanitization approach for the below inspectable values.
@@ -1919,7 +1925,7 @@ export function attach(
       owners,
 
       // Location of component in source coude.
-      source: _debugSource,
+      source: _debugSource || null,
     };
   }
 
@@ -1979,6 +1985,9 @@ export function attach(
     const nativeNodes = findNativeNodesForFiberID(id);
     if (nativeNodes !== null) {
       console.log('Nodes:', nativeNodes);
+    }
+    if (result.source !== null) {
+      console.log('Location:', result.source);
     }
     if (window.chrome || /firefox/i.test(navigator.userAgent)) {
       console.log(

@@ -1,54 +1,37 @@
 // @flow
 
-import React, { Fragment, useContext, useMemo } from 'react';
+import React, { useContext, useMemo } from 'react';
 import { TreeStateContext } from './TreeContext';
-import TreeFocusedContext from './TreeFocusedContext';
 import { SettingsContext } from '../Settings/SettingsContext';
+import TreeFocusedContext from './TreeFocusedContext';
 import { StoreContext } from '../context';
 import { useSubscription } from '../hooks';
 import Store from '../../store';
 
-import styles from './Guidelines.css';
-
-export default function Guidelines(_: {||}) {
-  const { selectedElementID } = useContext(TreeStateContext);
-  const treeFocused = useContext(TreeFocusedContext);
-
-  return (
-    <Fragment>
-      <Guideline
-        className={
-          treeFocused ? styles.GuidelineActive : styles.GuidelineInactive
-        }
-        elementID={selectedElementID}
-      />
-    </Fragment>
-  );
-}
+import styles from './SelectedTreeHighlight.css';
 
 type Data = {|
-  depth: number,
   startIndex: number,
   stopIndex: number,
 |};
 
-type Props = {|
-  className: string,
-  elementID: number | null,
-|};
-
-function Guideline({ className, elementID }: Props) {
-  const store = useContext(StoreContext);
+export default function SelectedTreeHighlight(_: {||}) {
   const { lineHeight } = useContext(SettingsContext);
+  const store = useContext(StoreContext);
+  const treeFocused = useContext(TreeFocusedContext);
+  const { ownerID, selectedElementID } = useContext(TreeStateContext);
 
   const subscription = useMemo(
     () => ({
       getCurrentValue: () => {
-        if (elementID === null) {
+        if (
+          selectedElementID === null ||
+          store.isInsideCollapsedSubTree(selectedElementID)
+        ) {
           return null;
         }
 
-        const element = store.getElementByID(elementID);
+        const element = store.getElementByID(selectedElementID);
         if (
           element === null ||
           element.isCollapsed ||
@@ -80,7 +63,6 @@ function Guideline({ className, elementID }: Props) {
         }
 
         return {
-          depth: element.depth,
           startIndex,
           stopIndex,
         };
@@ -92,23 +74,26 @@ function Guideline({ className, elementID }: Props) {
         };
       },
     }),
-    [elementID, store]
+    [selectedElementID, store]
   );
   const data = useSubscription<Data | null, Store>(subscription);
+
+  if (ownerID !== null) {
+    return null;
+  }
 
   if (data === null) {
     return null;
   }
 
-  const { depth, startIndex, stopIndex } = data;
+  const { startIndex, stopIndex } = data;
 
   return (
     <div
-      className={className}
+      className={treeFocused ? styles.Active : styles.Inactive}
       style={{
         position: 'absolute',
         top: `${startIndex * lineHeight}px`,
-        left: `${depth * 0.75 + 0.75}rem`,
         height: `${(stopIndex + 1 - startIndex) * lineHeight}px`,
       }}
     />

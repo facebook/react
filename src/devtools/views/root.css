@@ -5,10 +5,12 @@
 
   /* Light theme */
   --light-color-attribute-name: #ef6632;
+  --light-color-attribute-name-inverted: rgba(255, 255, 255, 0.7);
   --light-color-attribute-value: #1a1aa6;
+  --light-color-attribute-value-inverted: #ffffff;
   --light-color-attribute-editable-value: #1a1aa6;
   --light-color-background: #ffffff;
-  --light-color-background-hover: #ebf1fb;
+  --light-color-background-hover: rgba(0, 136, 250, 0.1);
   --light-color-background-inactive: #e5e5e5;
   --light-color-background-selected: #0088fa;
   --light-color-button-background: #ffffff;
@@ -36,13 +38,14 @@
   --light-color-commit-gradient-text: #000000;
   --light-color-component-name: #6a51b2;
   --light-color-component-name-inverted: #ffffff;
-  --light-color-component-badge-background: rgba(0, 0, 0, 0.15);
+  --light-color-component-badge-background: rgba(0, 0, 0, 0.1);
   --light-color-component-badge-background-inverted: rgba(255, 255, 255, 0.25);
+  --light-color-component-badge-count: #777d88;
+  --light-color-component-badge-count-inverted: rgba(255, 255, 255, 0.7);
   --light-color-dim: #777d88;
   --light-color-dimmer: #cfd1d5;
   --light-color-dimmest: #eff0f1;
   --light-color-expand-collapse-toggle: #777d88;
-  --light-color-guideline: rgba(0, 0, 0, 0.15);
   --light-color-jsx-arrow-brackets: #333333;
   --light-color-jsx-arrow-brackets-inverted: rgba(255, 255, 255, 0.7);
   --light-color-modal-background: rgba(255, 255, 255, 0.75);
@@ -51,6 +54,8 @@
   --light-color-record-inactive: #0088fa;
   --light-color-search-match: yellow;
   --light-color-search-match-current: #f7923b;
+  --light-color-selected-tree-highlight-active: rgba(0, 136, 250, 0.15);
+  --light-color-selected-tree-highlight-inactive: rgba(0, 0, 0, 0.05);
   --light-color-tab-selected-border: #0088fa;
   --light-color-text: #000000;
   --light-color-text-selected: #ffffff;
@@ -63,10 +68,12 @@
 
   /* Dark theme */
   --dark-color-attribute-name: #9d87d2;
+  --dark-color-attribute-name-inverted: #282828;
   --dark-color-attribute-value: #cedae0;
+  --dark-color-attribute-value-inverted: #ffffff;
   --dark-color-attribute-editable-value: yellow;
   --dark-color-background: #282c34;
-  --dark-color-background-hover: #3d424a;
+  --dark-color-background-hover: rgba(255, 255, 255, 0.1);
   --dark-color-background-inactive: #3d424a;
   --dark-color-background-selected: #178fb9;
   --dark-color-button-background: #282c34;
@@ -93,14 +100,15 @@
   --dark-color-commit-gradient-9: #febc38;
   --dark-color-commit-gradient-text: #000000;
   --dark-color-component-name: #61dafb;
-  --dark-color-component-name-inverted: ##282828;
+  --dark-color-component-name-inverted: #282828;
   --dark-color-component-badge-background: rgba(255, 255, 255, 0.25);
   --dark-color-component-badge-background-inverted: rgba(0, 0, 0, 0.25);
+  --dark-color-component-badge-count: #8f949d;
+  --dark-color-component-badge-count-inverted: rgba(255, 255, 255, 0.7);
   --dark-color-dim: #8f949d;
   --dark-color-dimmer: #777d88;
   --dark-color-dimmest: #4f5766;
   --dark-color-expand-collapse-toggle: #8f949d;
-  --dark-color-guideline: rgba(255, 255, 255, 0.15);
   --dark-color-jsx-arrow-brackets: #777d88;
   --dark-color-jsx-arrow-brackets-inverted: rgba(255, 255, 255, 0.7);
   --dark-color-modal-background: rgba(0, 0, 0, 0.75);
@@ -109,6 +117,8 @@
   --dark-color-record-inactive: #61dafb;
   --dark-color-search-match: yellow;
   --dark-color-search-match-current: #f7923b;
+  --dark-color-selected-tree-highlight-active: rgba(23, 143, 185, 0.15);
+  --dark-color-selected-tree-highlight-inactive: rgba(255, 255, 255, 0.05);
   --dark-color-tab-selected-border: #178fb9;
   --dark-color-text: #ffffff;
   --dark-color-text-selected: #ffffff;
@@ -132,6 +142,7 @@
   --compact-font-size-sans-normal: 12px;
   --compact-font-size-sans-large: 14px;
   --compact-line-height-data: 18px;
+  --compact-root-font-size: 16px;
 
   /* Comfortable density */
   --comfortable-font-size-monospace-small: 10px;
@@ -141,6 +152,7 @@
   --comfortable-font-size-sans-normal: 14px;
   --comfortable-font-size-sans-large: 16px;
   --comfortable-line-height-data: 22px;
+  --comfortable-root-font-size: 20px;
 
   /* GitHub.com system fonts */
   --font-family-monospace: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo,

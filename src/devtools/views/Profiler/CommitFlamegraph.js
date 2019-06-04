@@ -6,9 +6,9 @@ import { FixedSizeList } from 'react-window';
 import { ProfilerContext } from './ProfilerContext';
 import NoCommitData from './NoCommitData';
 import CommitFlamegraphListItem from './CommitFlamegraphListItem';
-import { barHeight } from './constants';
 import { scale } from './utils';
 import { StoreContext } from '../context';
+import { SettingsContext } from '../Settings/SettingsContext';
 
 import styles from './CommitFlamegraph.css';
 
@@ -84,6 +84,7 @@ type Props = {|
 |};
 
 function CommitFlamegraph({ chartData, commitTree, height, width }: Props) {
+  const { lineHeight } = useContext(SettingsContext);
   const { selectFiber, selectedFiberID } = useContext(ProfilerContext);
 
   const selectedChartNodeIndex = useMemo<number>(() => {
@@ -135,7 +136,7 @@ function CommitFlamegraph({ chartData, commitTree, height, width }: Props) {
       innerElementType={InnerElementType}
       itemCount={chartData.depth}
       itemData={itemData}
-      itemSize={barHeight}
+      itemSize={lineHeight}
       width={width}
     >
       {CommitFlamegraphListItem}
