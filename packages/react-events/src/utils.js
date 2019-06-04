@@ -19,7 +19,7 @@ export function isEventPositionWithinTouchHitTarget(
   const nativeEvent: any = event.nativeEvent;
   return context.isPositionWithinTouchHitTarget(
     // x and y can be doubles, so ensure they are integers
-    parseInt(nativeEvent.x, 10),
-    parseInt(nativeEvent.y, 10),
+    parseInt(nativeEvent.clientX, 10),
+    parseInt(nativeEvent.clientY, 10),
   );
 }
