@@ -43,6 +43,14 @@ type HoverEvent = {|
   target: Element | Document,
   type: HoverEventType,
   timeStamp: number,
+  clientX: null | number,
+  clientY: null | number,
+  pageX: null | number,
+  pageY: null | number,
+  screenX: null | number,
+  screenY: null | number,
+  x: null | number,
+  y: null | number,
 |};
 
 const DEFAULT_HOVER_END_DELAY_MS = 0;
@@ -61,18 +69,40 @@ if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
 }
 
 function createHoverEvent(
+  event: ?ReactResponderEvent,
   context: ReactResponderContext,
   type: HoverEventType,
   target: Element | Document,
 ): HoverEvent {
+  let clientX = null;
+  let clientY = null;
+  let pageX = null;
+  let pageY = null;
+  let screenX = null;
+  let screenY = null;
+
+  if (event) {
+    const nativeEvent = (event.nativeEvent: any);
+    ({clientX, clientY, pageX, pageY, screenX, screenY} = nativeEvent);
+  }
+
   return {
     target,
     type,
     timeStamp: context.getTimeStamp(),
+    clientX,
+    clientY,
+    pageX,
+    pageY,
+    screenX,
+    screenY,
+    x: clientX,
+    y: clientY,
   };
 }
 
 function dispatchHoverChangeEvent(
+  event: null | ReactResponderEvent,
   context: ReactResponderContext,
   props: HoverProps,
   state: HoverState,
@@ -82,6 +112,7 @@ function dispatchHoverChangeEvent(
     props.onHoverChange(bool);
   };
   const syntheticEvent = createHoverEvent(
+    event,
     context,
     'hoverchange',
     ((state.hoverTarget: any): Element | Document),
@@ -119,6 +150,7 @@ function dispatchHoverStartEvents(
 
     if (props.onHoverStart) {
       const syntheticEvent = createHoverEvent(
+        event,
         context,
         'hoverstart',
         ((target: any): Element | Document),
@@ -126,7 +158,7 @@ function dispatchHoverStartEvents(
       context.dispatchEvent(syntheticEvent, props.onHoverStart, true);
     }
     if (props.onHoverChange) {
-      dispatchHoverChangeEvent(context, props, state);
+      dispatchHoverChangeEvent(event, context, props, state);
     }
   };
 
@@ -177,6 +209,7 @@ function dispatchHoverEndEvents(
 
     if (props.onHoverEnd) {
       const syntheticEvent = createHoverEvent(
+        event,
         context,
         'hoverend',
         ((target: any): Element | Document),
@@ -184,7 +217,7 @@ function dispatchHoverEndEvents(
       context.dispatchEvent(syntheticEvent, props.onHoverEnd, true);
     }
     if (props.onHoverChange) {
-      dispatchHoverChangeEvent(context, props, state);
+      dispatchHoverChangeEvent(event, context, props, state);
     }
 
     state.isOverTouchHitTarget = false;
@@ -316,6 +349,7 @@ const HoverResponder = {
               } else {
                 if (props.onHoverMove && state.hoverTarget !== null) {
                   const syntheticEvent = createHoverEvent(
+                    event,
                     context,
                     'hovermove',
                     state.hoverTarget,
