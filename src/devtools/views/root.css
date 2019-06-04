@@ -142,6 +142,7 @@
   --compact-font-size-sans-normal: 12px;
   --compact-font-size-sans-large: 14px;
   --compact-line-height-data: 18px;
+  --compact-root-font-size: 16px;
 
   /* Comfortable density */
   --comfortable-font-size-monospace-small: 10px;
@@ -151,6 +152,7 @@
   --comfortable-font-size-sans-normal: 14px;
   --comfortable-font-size-sans-large: 16px;
   --comfortable-line-height-data: 22px;
+  --comfortable-root-font-size: 20px;
 
   /* GitHub.com system fonts */
   --font-family-monospace: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo,

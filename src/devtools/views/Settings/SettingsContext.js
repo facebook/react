@@ -5,7 +5,7 @@ import { useLocalStorage } from '../hooks';
 
 import type { BrowserTheme } from '../DevTools';
 
-export type DisplayDensity = 'compact' | 'comfortable';
+export type DisplayDensity = 'comfortable' | 'compact';
 export type Theme = 'auto' | 'light' | 'dark';
 
 type Context = {|
@@ -78,26 +78,23 @@ function SettingsContextController({
     settingsPortalContainer,
   ]);
 
+  const computedStyle = getComputedStyle((document.body: any));
   const comfortableLineHeight = parseInt(
-    getComputedStyle((document.body: any)).getPropertyValue(
-      '--comfortable-line-height-data'
-    ),
+    computedStyle.getPropertyValue('--comfortable-line-height-data'),
     10
   );
   const compactLineHeight = parseInt(
-    getComputedStyle((document.body: any)).getPropertyValue(
-      '--compact-line-height-data'
-    ),
+    computedStyle.getPropertyValue('--compact-line-height-data'),
     10
   );
 
   useLayoutEffect(() => {
     switch (displayDensity) {
-      case 'compact':
-        updateDisplayDensity('compact', documentElements);
-        break;
       case 'comfortable':
         updateDisplayDensity('comfortable', documentElements);
+        break;
+      case 'compact':
+        updateDisplayDensity('compact', documentElements);
         break;
       default:
         throw Error(`Unsupported displayDensity value "${displayDensity}"`);
@@ -193,6 +190,15 @@ function updateDisplayDensity(
   updateStyleHelper(displayDensity, 'font-size-sans-large', documentElements);
   updateStyleHelper(displayDensity, 'font-size-sans-small', documentElements);
   updateStyleHelper(displayDensity, 'line-height-data', documentElements);
+
+  // Sizes and paddings/margins are all rem-based,
+  // so update the root font-size as well when the display preference changes.
+  const computedStyle = getComputedStyle((document.body: any));
+  const fontSize = computedStyle.getPropertyValue(
+    `--${displayDensity}-root-font-size`
+  );
+  const root = document.querySelector(':root');
+  ((root: any): HTMLElement).style.fontSize = fontSize;
 }
 
 function updateThemeVariables(

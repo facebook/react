@@ -1,10 +1,11 @@
 // @flow
 
-import React, { Fragment, memo, useCallback } from 'react';
+import React, { Fragment, memo, useCallback, useContext } from 'react';
 import { areEqual } from 'react-window';
-import { barHeight, barWidthThreshold } from './constants';
+import { barWidthThreshold } from './constants';
 import { getGradientColor } from './utils';
 import ChartNode from './ChartNode';
+import { SettingsContext } from '../Settings/SettingsContext';
 
 import type { ItemData } from './CommitFlamegraph';
 
@@ -25,6 +26,7 @@ function CommitFlamegraphListItem({ data, index, style }: Props) {
   } = data;
   const { renderPathNodes, maxSelfDuration, rows } = chartData;
 
+  const { lineHeight } = useContext(SettingsContext);
   const handleClick = useCallback(
     (event: SyntheticMouseEvent<*>, id: number, name: string) => {
       event.stopPropagation();
@@ -89,7 +91,7 @@ function CommitFlamegraphListItem({ data, index, style }: Props) {
         return (
           <ChartNode
             color={color}
-            height={barHeight}
+            height={lineHeight}
             isDimmed={index < selectedChartNodeIndex}
             key={id}
             label={label}

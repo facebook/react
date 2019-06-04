@@ -6,9 +6,9 @@ import { FixedSizeList } from 'react-window';
 import { ProfilerContext } from './ProfilerContext';
 import NoCommitData from './NoCommitData';
 import CommitRankedListItem from './CommitRankedListItem';
-import { barHeight } from './constants';
 import { scale } from './utils';
 import { StoreContext } from '../context';
+import { SettingsContext } from '../Settings/SettingsContext';
 
 import styles from './CommitRanked.css';
 
@@ -82,6 +82,7 @@ type Props = {|
 |};
 
 function CommitRanked({ chartData, commitTree, height, width }: Props) {
+  const { lineHeight } = useContext(SettingsContext);
   const { selectedFiberID, selectFiber } = useContext(ProfilerContext);
 
   const selectedFiberIndex = useMemo(
@@ -107,7 +108,7 @@ function CommitRanked({ chartData, commitTree, height, width }: Props) {
       innerElementType="svg"
       itemCount={chartData.nodes.length}
       itemData={itemData}
-      itemSize={barHeight}
+      itemSize={lineHeight}
       width={width}
     >
       {CommitRankedListItem}
