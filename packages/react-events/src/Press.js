@@ -467,7 +467,8 @@ function calculateResponderRegion(
 }
 
 function isTouchEvent(nativeEvent: Event): boolean {
-  return Array.isArray((nativeEvent: any).changedTouches);
+  const changedTouches = ((nativeEvent: any): TouchEvent).changedTouches;
+  return changedTouches && typeof changedTouches.length === 'number';
 }
 
 function getTouchFromPressEvent(nativeEvent: TouchEvent): Touch {
