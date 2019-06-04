@@ -11,6 +11,7 @@
 
 let React = require('react');
 let ReactDOM = require('react-dom');
+let TestUtils = require('react-dom/test-utils');
 let ReactFeatureFlags;
 let Scheduler;
 
@@ -486,6 +487,7 @@ describe('ChangeEventPlugin', () => {
       ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
       React = require('react');
       ReactDOM = require('react-dom');
+      TestUtils = require('react-dom/test-utils');
       Scheduler = require('scheduler');
     });
 

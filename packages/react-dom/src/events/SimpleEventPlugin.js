@@ -14,12 +14,18 @@ import type {
 import type {
   DispatchConfig,
   ReactSyntheticEvent,
+  EventPriority,
 } from 'events/ReactSyntheticEventType';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {EventTypes, PluginModule} from 'events/PluginModuleType';
 
 import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
 import SyntheticEvent from 'events/SyntheticEvent';
+import {
+  DiscreteEvent,
+  UserBlockingEvent,
+  ContinuousEvent,
+} from 'events/ReactSyntheticEventType';
 
 import * as DOMTopLevelEventTypes from './DOMTopLevelEventTypes';
 import warningWithoutStack from 'shared/warningWithoutStack';
@@ -55,84 +61,117 @@ import getEventCharCode from './getEventCharCode';
  *   [TOP_ABORT, { sameConfig }],
  * ]);
  */
-type EventTuple = [DOMTopLevelEventType, string];
-const discreteEventTypeNames: Array<EventTuple> = [
-  [DOMTopLevelEventTypes.TOP_BLUR, 'blur'],
-  [DOMTopLevelEventTypes.TOP_CANCEL, 'cancel'],
-  [DOMTopLevelEventTypes.TOP_CLICK, 'click'],
-  [DOMTopLevelEventTypes.TOP_CLOSE, 'close'],
-  [DOMTopLevelEventTypes.TOP_CONTEXT_MENU, 'contextMenu'],
-  [DOMTopLevelEventTypes.TOP_COPY, 'copy'],
-  [DOMTopLevelEventTypes.TOP_CUT, 'cut'],
-  [DOMTopLevelEventTypes.TOP_AUX_CLICK, 'auxClick'],
-  [DOMTopLevelEventTypes.TOP_DOUBLE_CLICK, 'doubleClick'],
-  [DOMTopLevelEventTypes.TOP_DRAG_END, 'dragEnd'],
-  [DOMTopLevelEventTypes.TOP_DRAG_START, 'dragStart'],
-  [DOMTopLevelEventTypes.TOP_DROP, 'drop'],
-  [DOMTopLevelEventTypes.TOP_FOCUS, 'focus'],
-  [DOMTopLevelEventTypes.TOP_INPUT, 'input'],
-  [DOMTopLevelEventTypes.TOP_INVALID, 'invalid'],
-  [DOMTopLevelEventTypes.TOP_KEY_DOWN, 'keyDown'],
-  [DOMTopLevelEventTypes.TOP_KEY_PRESS, 'keyPress'],
-  [DOMTopLevelEventTypes.TOP_KEY_UP, 'keyUp'],
-  [DOMTopLevelEventTypes.TOP_MOUSE_DOWN, 'mouseDown'],
-  [DOMTopLevelEventTypes.TOP_MOUSE_UP, 'mouseUp'],
-  [DOMTopLevelEventTypes.TOP_PASTE, 'paste'],
-  [DOMTopLevelEventTypes.TOP_PAUSE, 'pause'],
-  [DOMTopLevelEventTypes.TOP_PLAY, 'play'],
-  [DOMTopLevelEventTypes.TOP_POINTER_CANCEL, 'pointerCancel'],
-  [DOMTopLevelEventTypes.TOP_POINTER_DOWN, 'pointerDown'],
-  [DOMTopLevelEventTypes.TOP_POINTER_UP, 'pointerUp'],
-  [DOMTopLevelEventTypes.TOP_RATE_CHANGE, 'rateChange'],
-  [DOMTopLevelEventTypes.TOP_RESET, 'reset'],
-  [DOMTopLevelEventTypes.TOP_SEEKED, 'seeked'],
-  [DOMTopLevelEventTypes.TOP_SUBMIT, 'submit'],
-  [DOMTopLevelEventTypes.TOP_TOUCH_CANCEL, 'touchCancel'],
-  [DOMTopLevelEventTypes.TOP_TOUCH_END, 'touchEnd'],
-  [DOMTopLevelEventTypes.TOP_TOUCH_START, 'touchStart'],
-  [DOMTopLevelEventTypes.TOP_VOLUME_CHANGE, 'volumeChange'],
-];
-const continuousEventTypeNames: Array<EventTuple> = [
-  [DOMTopLevelEventTypes.TOP_ABORT, 'abort'],
-  [DOMTopLevelEventTypes.TOP_ANIMATION_END, 'animationEnd'],
-  [DOMTopLevelEventTypes.TOP_ANIMATION_ITERATION, 'animationIteration'],
-  [DOMTopLevelEventTypes.TOP_ANIMATION_START, 'animationStart'],
-  [DOMTopLevelEventTypes.TOP_CAN_PLAY, 'canPlay'],
-  [DOMTopLevelEventTypes.TOP_CAN_PLAY_THROUGH, 'canPlayThrough'],
-  [DOMTopLevelEventTypes.TOP_DRAG, 'drag'],
-  [DOMTopLevelEventTypes.TOP_DRAG_ENTER, 'dragEnter'],
-  [DOMTopLevelEventTypes.TOP_DRAG_EXIT, 'dragExit'],
-  [DOMTopLevelEventTypes.TOP_DRAG_LEAVE, 'dragLeave'],
-  [DOMTopLevelEventTypes.TOP_DRAG_OVER, 'dragOver'],
-  [DOMTopLevelEventTypes.TOP_DURATION_CHANGE, 'durationChange'],
-  [DOMTopLevelEventTypes.TOP_EMPTIED, 'emptied'],
-  [DOMTopLevelEventTypes.TOP_ENCRYPTED, 'encrypted'],
-  [DOMTopLevelEventTypes.TOP_ENDED, 'ended'],
-  [DOMTopLevelEventTypes.TOP_ERROR, 'error'],
-  [DOMTopLevelEventTypes.TOP_GOT_POINTER_CAPTURE, 'gotPointerCapture'],
-  [DOMTopLevelEventTypes.TOP_LOAD, 'load'],
-  [DOMTopLevelEventTypes.TOP_LOADED_DATA, 'loadedData'],
-  [DOMTopLevelEventTypes.TOP_LOADED_METADATA, 'loadedMetadata'],
-  [DOMTopLevelEventTypes.TOP_LOAD_START, 'loadStart'],
-  [DOMTopLevelEventTypes.TOP_LOST_POINTER_CAPTURE, 'lostPointerCapture'],
-  [DOMTopLevelEventTypes.TOP_MOUSE_MOVE, 'mouseMove'],
-  [DOMTopLevelEventTypes.TOP_MOUSE_OUT, 'mouseOut'],
-  [DOMTopLevelEventTypes.TOP_MOUSE_OVER, 'mouseOver'],
-  [DOMTopLevelEventTypes.TOP_PLAYING, 'playing'],
-  [DOMTopLevelEventTypes.TOP_POINTER_MOVE, 'pointerMove'],
-  [DOMTopLevelEventTypes.TOP_POINTER_OUT, 'pointerOut'],
-  [DOMTopLevelEventTypes.TOP_POINTER_OVER, 'pointerOver'],
-  [DOMTopLevelEventTypes.TOP_PROGRESS, 'progress'],
-  [DOMTopLevelEventTypes.TOP_SCROLL, 'scroll'],
-  [DOMTopLevelEventTypes.TOP_SEEKING, 'seeking'],
-  [DOMTopLevelEventTypes.TOP_STALLED, 'stalled'],
-  [DOMTopLevelEventTypes.TOP_SUSPEND, 'suspend'],
-  [DOMTopLevelEventTypes.TOP_TIME_UPDATE, 'timeUpdate'],
-  [DOMTopLevelEventTypes.TOP_TOGGLE, 'toggle'],
-  [DOMTopLevelEventTypes.TOP_TOUCH_MOVE, 'touchMove'],
-  [DOMTopLevelEventTypes.TOP_TRANSITION_END, 'transitionEnd'],
-  [DOMTopLevelEventTypes.TOP_WAITING, 'waiting'],
-  [DOMTopLevelEventTypes.TOP_WHEEL, 'wheel'],
+
+type EventTuple = [DOMTopLevelEventType, string, EventPriority];
+
+const eventTuples: Array<EventTuple> = [
+  // Discrete events
+  [DOMTopLevelEventTypes.TOP_BLUR, 'blur', DiscreteEvent],
+  [DOMTopLevelEventTypes.TOP_CANCEL, 'cancel', DiscreteEvent],
+  [DOMTopLevelEventTypes.TOP_CLICK, 'click', DiscreteEvent],
+  [DOMTopLevelEventTypes.TOP_CLOSE, 'close', DiscreteEvent],
+  [DOMTopLevelEventTypes.TOP_CONTEXT_MENU, 'contextMenu', DiscreteEvent],
+  [DOMTopLevelEventTypes.TOP_COPY, 'copy', DiscreteEvent],
+  [DOMTopLevelEventTypes.TOP_CUT, 'cut', DiscreteEvent],
+  [DOMTopLevelEventTypes.TOP_AUX_CLICK, 'auxClick', DiscreteEvent],
+  [DOMTopLevelEventTypes.TOP_DOUBLE_CLICK, 'doubleClick', DiscreteEvent],
+  [DOMTopLevelEventTypes.TOP_DRAG_END, 'dragEnd', DiscreteEvent],
+  [DOMTopLevelEventTypes.TOP_DRAG_START, 'dragStart', DiscreteEvent],
+  [DOMTopLevelEventTypes.TOP_DROP, 'drop', DiscreteEvent],
+  [DOMTopLevelEventTypes.TOP_FOCUS, 'focus', DiscreteEvent],
+  [DOMTopLevelEventTypes.TOP_INPUT, 'input', DiscreteEvent],
+  [DOMTopLevelEventTypes.TOP_INVALID, 'invalid', DiscreteEvent],
+  [DOMTopLevelEventTypes.TOP_KEY_DOWN, 'keyDown', DiscreteEvent],
+  [DOMTopLevelEventTypes.TOP_KEY_PRESS, 'keyPress', DiscreteEvent],
+  [DOMTopLevelEventTypes.TOP_KEY_UP, 'keyUp', DiscreteEvent],
+  [DOMTopLevelEventTypes.TOP_MOUSE_DOWN, 'mouseDown', DiscreteEvent],
+  [DOMTopLevelEventTypes.TOP_MOUSE_UP, 'mouseUp', DiscreteEvent],
+  [DOMTopLevelEventTypes.TOP_PASTE, 'paste', DiscreteEvent],
+  [DOMTopLevelEventTypes.TOP_PAUSE, 'pause', DiscreteEvent],
+  [DOMTopLevelEventTypes.TOP_PLAY, 'play', DiscreteEvent],
+  [DOMTopLevelEventTypes.TOP_POINTER_CANCEL, 'pointerCancel', DiscreteEvent],
+  [DOMTopLevelEventTypes.TOP_POINTER_DOWN, 'pointerDown', DiscreteEvent],
+  [DOMTopLevelEventTypes.TOP_POINTER_UP, 'pointerUp', DiscreteEvent],
+  [DOMTopLevelEventTypes.TOP_RATE_CHANGE, 'rateChange', DiscreteEvent],
+  [DOMTopLevelEventTypes.TOP_RESET, 'reset', DiscreteEvent],
+  [DOMTopLevelEventTypes.TOP_SEEKED, 'seeked', DiscreteEvent],
+  [DOMTopLevelEventTypes.TOP_SUBMIT, 'submit', DiscreteEvent],
+  [DOMTopLevelEventTypes.TOP_TOUCH_CANCEL, 'touchCancel', DiscreteEvent],
+  [DOMTopLevelEventTypes.TOP_TOUCH_END, 'touchEnd', DiscreteEvent],
+  [DOMTopLevelEventTypes.TOP_TOUCH_START, 'touchStart', DiscreteEvent],
+  [DOMTopLevelEventTypes.TOP_VOLUME_CHANGE, 'volumeChange', DiscreteEvent],
+
+  // User-blocking events
+  [DOMTopLevelEventTypes.TOP_DRAG, 'drag', UserBlockingEvent],
+  [DOMTopLevelEventTypes.TOP_DRAG_ENTER, 'dragEnter', UserBlockingEvent],
+  [DOMTopLevelEventTypes.TOP_DRAG_EXIT, 'dragExit', UserBlockingEvent],
+  [DOMTopLevelEventTypes.TOP_DRAG_LEAVE, 'dragLeave', UserBlockingEvent],
+  [DOMTopLevelEventTypes.TOP_DRAG_OVER, 'dragOver', UserBlockingEvent],
+  [DOMTopLevelEventTypes.TOP_MOUSE_MOVE, 'mouseMove', UserBlockingEvent],
+  [DOMTopLevelEventTypes.TOP_MOUSE_OUT, 'mouseOut', UserBlockingEvent],
+  [DOMTopLevelEventTypes.TOP_MOUSE_OVER, 'mouseOver', UserBlockingEvent],
+  [DOMTopLevelEventTypes.TOP_POINTER_MOVE, 'pointerMove', UserBlockingEvent],
+  [DOMTopLevelEventTypes.TOP_POINTER_OUT, 'pointerOut', UserBlockingEvent],
+  [DOMTopLevelEventTypes.TOP_POINTER_OVER, 'pointerOver', UserBlockingEvent],
+  [DOMTopLevelEventTypes.TOP_SCROLL, 'scroll', UserBlockingEvent],
+  [DOMTopLevelEventTypes.TOP_TOGGLE, 'toggle', UserBlockingEvent],
+  [DOMTopLevelEventTypes.TOP_TOUCH_MOVE, 'touchMove', UserBlockingEvent],
+  [DOMTopLevelEventTypes.TOP_WHEEL, 'wheel', UserBlockingEvent],
+
+  // Continuous events
+  [DOMTopLevelEventTypes.TOP_ABORT, 'abort', ContinuousEvent],
+  [DOMTopLevelEventTypes.TOP_ANIMATION_END, 'animationEnd', ContinuousEvent],
+  [
+    DOMTopLevelEventTypes.TOP_ANIMATION_ITERATION,
+    'animationIteration',
+    ContinuousEvent,
+  ],
+  [
+    DOMTopLevelEventTypes.TOP_ANIMATION_START,
+    'animationStart',
+    ContinuousEvent,
+  ],
+  [DOMTopLevelEventTypes.TOP_CAN_PLAY, 'canPlay', ContinuousEvent],
+  [
+    DOMTopLevelEventTypes.TOP_CAN_PLAY_THROUGH,
+    'canPlayThrough',
+    ContinuousEvent,
+  ],
+  [
+    DOMTopLevelEventTypes.TOP_DURATION_CHANGE,
+    'durationChange',
+    ContinuousEvent,
+  ],
+  [DOMTopLevelEventTypes.TOP_EMPTIED, 'emptied', ContinuousEvent],
+  [DOMTopLevelEventTypes.TOP_ENCRYPTED, 'encrypted', ContinuousEvent],
+  [DOMTopLevelEventTypes.TOP_ENDED, 'ended', ContinuousEvent],
+  [DOMTopLevelEventTypes.TOP_ERROR, 'error', ContinuousEvent],
+  [
+    DOMTopLevelEventTypes.TOP_GOT_POINTER_CAPTURE,
+    'gotPointerCapture',
+    ContinuousEvent,
+  ],
+  [DOMTopLevelEventTypes.TOP_LOAD, 'load', ContinuousEvent],
+  [DOMTopLevelEventTypes.TOP_LOADED_DATA, 'loadedData', ContinuousEvent],
+  [
+    DOMTopLevelEventTypes.TOP_LOADED_METADATA,
+    'loadedMetadata',
+    ContinuousEvent,
+  ],
+  [DOMTopLevelEventTypes.TOP_LOAD_START, 'loadStart', ContinuousEvent],
+  [
+    DOMTopLevelEventTypes.TOP_LOST_POINTER_CAPTURE,
+    'lostPointerCapture',
+    ContinuousEvent,
+  ],
+  [DOMTopLevelEventTypes.TOP_PLAYING, 'playing', ContinuousEvent],
+  [DOMTopLevelEventTypes.TOP_PROGRESS, 'progress', ContinuousEvent],
+  [DOMTopLevelEventTypes.TOP_SEEKING, 'seeking', ContinuousEvent],
+  [DOMTopLevelEventTypes.TOP_STALLED, 'stalled', ContinuousEvent],
+  [DOMTopLevelEventTypes.TOP_SUSPEND, 'suspend', ContinuousEvent],
+  [DOMTopLevelEventTypes.TOP_TIME_UPDATE, 'timeUpdate', ContinuousEvent],
+  [DOMTopLevelEventTypes.TOP_TRANSITION_END, 'transitionEnd', ContinuousEvent],
+  [DOMTopLevelEventTypes.TOP_WAITING, 'waiting', ContinuousEvent],
 ];
 
 const eventTypes: EventTypes = {};
@@ -140,31 +179,26 @@ const topLevelEventsToDispatchConfig: {
   [key: TopLevelType]: DispatchConfig,
 } = {};
 
-function addEventTypeNameToConfig(
-  [topEvent, event]: EventTuple,
-  isDiscrete: boolean,
-) {
+for (let i = 0; i < eventTuples.length; i++) {
+  const eventTuple = eventTuples[i];
+  const topEvent = eventTuple[0];
+  const event = eventTuple[1];
+  const eventPriority = eventTuple[2];
+
   const capitalizedEvent = event[0].toUpperCase() + event.slice(1);
   const onEvent = 'on' + capitalizedEvent;
 
-  const type = {
+  const config = {
     phasedRegistrationNames: {
       bubbled: onEvent,
       captured: onEvent + 'Capture',
     },
     dependencies: [topEvent],
-    isDiscrete,
+    eventPriority,
   };
-  eventTypes[event] = type;
-  topLevelEventsToDispatchConfig[topEvent] = type;
+  eventTypes[event] = config;
+  topLevelEventsToDispatchConfig[topEvent] = config;
 }
-
-discreteEventTypeNames.forEach(eventTuple => {
-  addEventTypeNameToConfig(eventTuple, true);
-});
-continuousEventTypeNames.forEach(eventTuple => {
-  addEventTypeNameToConfig(eventTuple, false);
-});
 
 // Only used in DEV for exhaustiveness validation.
 const knownHTMLTopLevelTypes: Array<DOMTopLevelEventType> = [
@@ -202,13 +236,13 @@ const knownHTMLTopLevelTypes: Array<DOMTopLevelEventType> = [
 ];
 
 const SimpleEventPlugin: PluginModule<MouseEvent> & {
-  isDiscreteTopLevelEventType: (topLevelType: TopLevelType) => boolean,
+  getEventPriority: (topLevelType: TopLevelType) => EventPriority,
 } = {
   eventTypes: eventTypes,
 
-  isDiscreteTopLevelEventType(topLevelType: TopLevelType): boolean {
+  getEventPriority(topLevelType: TopLevelType): EventPriority {
     const config = topLevelEventsToDispatchConfig[topLevelType];
-    return config !== undefined && config.isDiscrete === true;
+    return config !== undefined ? config.eventPriority : ContinuousEvent;
   },
 
   extractEvents: function(
