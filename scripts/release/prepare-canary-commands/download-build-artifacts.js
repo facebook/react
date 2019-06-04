@@ -16,9 +16,22 @@ const run = async ({build, cwd}) => {
     process.env.CIRCLE_CI_API_TOKEN
   }`;
   const metadata = await http.get(metadataURL, true);
-  const nodeModulesURL = metadata.find(
+  const nodeModulesArtifact = metadata.find(
     entry => entry.path === 'home/circleci/project/node_modules.tgz'
-  ).url;
+  );
+
+  if (!nodeModulesArtifact) {
+    console.log(
+      theme`{error The specified build number does not contain any build artifacts}\n\n` +
+        'To get the correct build number from Circle CI, open the following URL:\n' +
+        theme`{link https://circleci.com/gh/facebook/react/${build}}\n\n` +
+        'Select the "commit" Workflow at the top of the page, then select the "process_artifacts" job.'
+    );
+
+    process.exit(1);
+  }
+
+  const nodeModulesURL = nodeModulesArtifact.url;
 
   if (!existsSync(join(cwd, 'build'))) {
     await exec(`mkdir ./build`, {cwd});
