@@ -1925,7 +1925,7 @@ export function attach(
       owners,
 
       // Location of component in source coude.
-      source: _debugSource,
+      source: _debugSource || null,
     };
   }
 
@@ -1985,6 +1985,9 @@ export function attach(
     const nativeNodes = findNativeNodesForFiberID(id);
     if (nativeNodes !== null) {
       console.log('Nodes:', nativeNodes);
+    }
+    if (result.source !== null) {
+      console.log('Location:', result.source);
     }
     if (window.chrome || /firefox/i.test(navigator.userAgent)) {
       console.log(

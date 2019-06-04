@@ -44,6 +44,11 @@ export type OwnersList = {|
   owners: Array<Owner> | null,
 |};
 
+export type Source = {|
+  fileName: string,
+  lineNumber: number,
+|};
+
 export type InspectedElement = {|
   id: number,
 
@@ -72,7 +77,7 @@ export type InspectedElement = {|
   owners: Array<Owner> | null,
 
   // Location of component in source coude.
-  source: Object | null,
+  source: Source | null,
 
   type: ElementType,
 |};
