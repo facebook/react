@@ -52,7 +52,7 @@ import {
   UserBlockingEvent,
   ContinuousEvent,
   DiscreteEvent,
-} from 'events/ReactSyntheticEventType';
+} from 'shared/ReactTypes';
 
 const {
   unstable_UserBlockingPriority: UserBlockingPriority,

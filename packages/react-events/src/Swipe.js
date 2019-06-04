@@ -11,8 +11,10 @@ import type {
   ReactResponderEvent,
   ReactResponderContext,
 } from 'shared/ReactTypes';
+import type {EventPriority} from 'shared/ReactTypes';
 
 import React from 'react';
+import {UserBlockingEvent, DiscreteEvent} from 'shared/ReactTypes';
 
 const targetEventTypes = ['pointerdown'];
 const rootEventTypes = [
@@ -64,12 +66,12 @@ function dispatchSwipeEvent(
   name: SwipeEventType,
   listener: SwipeEvent => void,
   state: SwipeState,
-  discrete: boolean,
+  eventPriority: EventPriority,
   eventData?: EventData,
 ) {
   const target = ((state.swipeTarget: any): Element | Document);
   const syntheticEvent = createSwipeEvent(context, name, target, eventData);
-  context.dispatchEvent(syntheticEvent, listener, discrete);
+  context.dispatchEvent(syntheticEvent, listener, eventPriority);
 }
 
 type SwipeState = {
@@ -197,7 +199,7 @@ const SwipeResponder = {
               'swipemove',
               props.onSwipeMove,
               state,
-              false,
+              UserBlockingEvent,
               eventData,
             );
             (nativeEvent: any).preventDefault();
@@ -226,7 +228,7 @@ const SwipeResponder = {
                 'swipeleft',
                 props.onSwipeLeft,
                 state,
-                true,
+                DiscreteEvent,
               );
             } else if (props.onSwipeRight && direction === 1) {
               dispatchSwipeEvent(
@@ -234,7 +236,7 @@ const SwipeResponder = {
                 'swiperight',
                 props.onSwipeRight,
                 state,
-                true,
+                DiscreteEvent,
               );
             }
           }
@@ -244,7 +246,7 @@ const SwipeResponder = {
               'swipeend',
               props.onSwipeEnd,
               state,
-              true,
+              DiscreteEvent,
             );
           }
           state.lastDirection = direction;
