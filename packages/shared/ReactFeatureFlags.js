@@ -73,3 +73,8 @@ export const enableJSXTransformAPI = false;
 export const warnAboutMissingMockScheduler = false;
 // Temporary flag to revert the fix in #15650
 export const revertPassiveEffectsChange = false;
+
+// Changes priority of some events like mousemove to user-blocking priority,
+// but without making them discrete. The flag exists in case it causes
+// starvation problems.
+export const enableUserBlockingEvents = false;

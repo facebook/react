@@ -11,6 +11,10 @@ import type {AnyNativeEvent} from 'events/PluginModuleType';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
 
+// Intentionally not named imports because Rollup would use dynamic dispatch for
+// CommonJS interop named imports.
+import * as Scheduler from 'scheduler';
+
 import {
   batchedEventUpdates,
   discreteUpdates,
@@ -40,9 +44,22 @@ import SimpleEventPlugin from './SimpleEventPlugin';
 import {getRawEventName} from './DOMTopLevelEventTypes';
 import {passiveBrowserEventsSupported} from './checkPassiveEvents';
 
-import {enableEventAPI} from 'shared/ReactFeatureFlags';
+import {
+  enableEventAPI,
+  enableUserBlockingEvents,
+} from 'shared/ReactFeatureFlags';
+import {
+  UserBlockingEvent,
+  ContinuousEvent,
+  DiscreteEvent,
+} from 'events/ReactSyntheticEventType';
 
-const {isDiscreteTopLevelEventType} = SimpleEventPlugin;
+const {
+  unstable_UserBlockingPriority: UserBlockingPriority,
+  unstable_runWithPriority: runWithPriority,
+} = Scheduler;
+
+const {getEventPriority} = SimpleEventPlugin;
 
 const CALLBACK_BOOKKEEPING_POOL_SIZE = 10;
 const callbackBookkeepingPool = [];
@@ -212,12 +229,29 @@ function trapEventForPluginEventSystem(
   topLevelType: DOMTopLevelEventType,
   capture: boolean,
 ): void {
-  const dispatch = isDiscreteTopLevelEventType(topLevelType)
-    ? dispatchDiscreteEvent
-    : dispatchEvent;
+  let listener;
+  switch (getEventPriority(topLevelType)) {
+    case DiscreteEvent:
+      listener = dispatchDiscreteEvent.bind(
+        null,
+        topLevelType,
+        PLUGIN_EVENT_SYSTEM,
+      );
+      break;
+    case UserBlockingEvent:
+      listener = dispatchUserBlockingUpdate.bind(
+        null,
+        topLevelType,
+        PLUGIN_EVENT_SYSTEM,
+      );
+      break;
+    case ContinuousEvent:
+    default:
+      listener = dispatchEvent.bind(null, topLevelType, PLUGIN_EVENT_SYSTEM);
+      break;
+  }
+
   const rawEventName = getRawEventName(topLevelType);
-  // Check if discrete and wrap in discreteUpdates
-  const listener = dispatch.bind(null, topLevelType, PLUGIN_EVENT_SYSTEM);
   if (capture) {
     addEventCaptureListener(element, rawEventName, listener);
   } else {
@@ -228,6 +262,21 @@ function trapEventForPluginEventSystem(
 function dispatchDiscreteEvent(topLevelType, eventSystemFlags, nativeEvent) {
   flushDiscreteUpdatesIfNeeded(nativeEvent.timeStamp);
   discreteUpdates(dispatchEvent, topLevelType, eventSystemFlags, nativeEvent);
+}
+
+function dispatchUserBlockingUpdate(
+  topLevelType,
+  eventSystemFlags,
+  nativeEvent,
+) {
+  if (enableUserBlockingEvents) {
+    runWithPriority(
+      UserBlockingPriority,
+      dispatchEvent.bind(null, topLevelType, eventSystemFlags, nativeEvent),
+    );
+  } else {
+    dispatchEvent(topLevelType, eventSystemFlags, nativeEvent);
+  }
 }
 
 function dispatchEventForPluginEventSystem(

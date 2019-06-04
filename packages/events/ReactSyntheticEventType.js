@@ -11,6 +11,12 @@
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {TopLevelType} from './TopLevelEventTypes';
 
+export opaque type EventPriority = 0 | 1 | 2;
+
+export const DiscreteEvent: EventPriority = 0;
+export const UserBlockingEvent: EventPriority = 1;
+export const ContinuousEvent: EventPriority = 2;
+
 export type DispatchConfig = {
   dependencies: Array<TopLevelType>,
   phasedRegistrationNames?: {
@@ -18,7 +24,7 @@ export type DispatchConfig = {
     captured: string,
   },
   registrationName?: string,
-  isDiscrete?: boolean,
+  eventPriority: EventPriority,
 };
 
 export type ReactSyntheticEvent = {

@@ -11,6 +11,7 @@
 
 let React = require('react');
 let ReactDOM = require('react-dom');
+let TestUtils = require('react-dom/test-utils');
 let ReactFeatureFlags;
 let Scheduler;
 
@@ -486,6 +487,7 @@ describe('ChangeEventPlugin', () => {
       ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
       React = require('react');
       ReactDOM = require('react-dom');
+      TestUtils = require('react-dom/test-utils');
       Scheduler = require('scheduler');
     });
 
@@ -749,6 +751,50 @@ describe('ChangeEventPlugin', () => {
       // Now the click update has flushed.
       expect(ops).toEqual(['render: ']);
       expect(input.value).toBe('');
+    });
+
+    it('mouse enter/leave should be user-blocking but not discrete', async () => {
+      // This is currently behind a feature flag
+      jest.resetModules();
+      ReactFeatureFlags = require('shared/ReactFeatureFlags');
+      ReactFeatureFlags.enableUserBlockingEvents = true;
+      React = require('react');
+      ReactDOM = require('react-dom');
+      TestUtils = require('react-dom/test-utils');
+      Scheduler = require('scheduler');
+
+      const {act} = TestUtils;
+      const {useState} = React;
+
+      const root = ReactDOM.unstable_createRoot(container);
+
+      const target = React.createRef(null);
+      function Foo() {
+        const [isHover, setHover] = useState(false);
+        return (
+          <div
+            ref={target}
+            onMouseEnter={() => setHover(true)}
+            onMouseLeave={() => setHover(false)}>
+            {isHover ? 'hovered' : 'not hovered'}
+          </div>
+        );
+      }
+
+      await act(async () => {
+        root.render(<Foo />);
+      });
+      expect(container.textContent).toEqual('not hovered');
+
+      await act(async () => {
+        const mouseOverEvent = document.createEvent('MouseEvents');
+        mouseOverEvent.initEvent('mouseover', true, true);
+        target.current.dispatchEvent(mouseOverEvent);
+
+        // 3s should be enough to expire the updates
+        Scheduler.advanceTime(3000);
+        expect(container.textContent).toEqual('hovered');
+      });
     });
   });
 });
