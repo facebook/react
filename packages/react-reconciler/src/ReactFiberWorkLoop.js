@@ -2388,17 +2388,14 @@ export function warnIfNotScopedWithMatchingAct(fiber: Fiber): void {
   if (__DEV__) {
     if (
       ReactCurrentActingRendererSigil.current !== null &&
-      // use the function flushPassiveEffects directly as the sigil
-      // so this comparison is expected here
       ReactCurrentActingRendererSigil.current !== ReactActingRendererSigil
     ) {
-      // it looks like we're using the wrong matching act(), so log a warning
       warningWithoutStack(
         false,
         "It looks like you're using the wrong act() around your test interactions.\n" +
           'Be sure to use the matching version of act() corresponding to your renderer:\n\n' +
           '// for react-dom:\n' +
-          "import {act} from 'react-test-utils';\n" +
+          "import {act} from 'react-dom/test-utils';\n" +
           '//...\n' +
           'act(() => ...);\n\n' +
           '// for react-test-renderer:\n' +
