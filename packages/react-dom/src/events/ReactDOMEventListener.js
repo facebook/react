@@ -44,7 +44,10 @@ import SimpleEventPlugin from './SimpleEventPlugin';
 import {getRawEventName} from './DOMTopLevelEventTypes';
 import {passiveBrowserEventsSupported} from './checkPassiveEvents';
 
-import {enableEventAPI} from 'shared/ReactFeatureFlags';
+import {
+  enableEventAPI,
+  enableUserBlockingEvents,
+} from 'shared/ReactFeatureFlags';
 import {
   UserBlockingEvent,
   ContinuousEvent,
@@ -266,8 +269,7 @@ function dispatchUserBlockingUpdate(
   eventSystemFlags,
   nativeEvent,
 ) {
-  // TODO: Replace with feature flag
-  if (false) {
+  if (enableUserBlockingEvents) {
     runWithPriority(
       UserBlockingPriority,
       dispatchEvent.bind(null, topLevelType, eventSystemFlags, nativeEvent),
