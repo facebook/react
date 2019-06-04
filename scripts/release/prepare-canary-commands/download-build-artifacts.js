@@ -2,32 +2,23 @@
 
 'use strict';
 
-const http = require('request-promise-json');
 const {exec} = require('child-process-promise');
 const {existsSync, readdirSync} = require('fs');
 const {readJsonSync} = require('fs-extra');
 const {join} = require('path');
-const {logPromise} = require('../utils');
+const {getArtifactsList, logPromise} = require('../utils');
 const theme = require('../theme');
 
 const run = async ({build, cwd}) => {
-  // https://circleci.com/docs/2.0/artifacts/#downloading-all-artifacts-for-a-build-on-circleci
-  const metadataURL = `https://circleci.com/api/v1.1/project/github/facebook/react/${build}/artifacts?circle-token=${
-    process.env.CIRCLE_CI_API_TOKEN
-  }`;
-  const metadata = await http.get(metadataURL, true);
-  const nodeModulesArtifact = metadata.find(
+  const artifacts = await getArtifactsList(build);
+  const nodeModulesArtifact = artifacts.find(
     entry => entry.path === 'home/circleci/project/node_modules.tgz'
   );
 
   if (!nodeModulesArtifact) {
     console.log(
-      theme`{error The specified build number does not contain any build artifacts}\n\n` +
-        'To get the correct build number from Circle CI, open the following URL:\n' +
-        theme`{link https://circleci.com/gh/facebook/react/${build}}\n\n` +
-        'Select the "commit" Workflow at the top of the page, then select the "process_artifacts" job.'
+      theme`{error The specified build (${build}) does not contain any build artifacts.}`
     );
-
     process.exit(1);
   }
 

@@ -5,6 +5,7 @@ const {createPatch} = require('diff');
 const {hashElement} = require('folder-hash');
 const {readdirSync, readFileSync, statSync, writeFileSync} = require('fs');
 const {readJson, writeJson} = require('fs-extra');
+const http = require('request-promise-json');
 const logUpdate = require('log-update');
 const {join} = require('path');
 const createLogger = require('progress-estimator');
@@ -29,6 +30,42 @@ const execRead = async (command, options) => {
   const {stdout} = await exec(command, options);
 
   return stdout.trim();
+};
+
+const getArtifactsList = async buildID => {
+  const buildMetadataURL = `https://circleci.com/api/v1.1/project/github/facebook/react/${buildID}?circle-token=${
+    process.env.CIRCLE_CI_API_TOKEN
+  }`;
+  const buildMetadata = await http.get(buildMetadataURL, true);
+  if (!buildMetadata.workflows || !buildMetadata.workflows.workflow_id) {
+    console.log(
+      theme`{error Could not find workflow info for build ${buildID}.}`
+    );
+    process.exit(1);
+  }
+
+  const workflowID = buildMetadata.workflows.workflow_id;
+  const workflowMetadataURL = `https://circleci.com/api/v2/workflow/${workflowID}/jobs?circle-token=${
+    process.env.CIRCLE_CI_API_TOKEN
+  }`;
+  const workflowMetadata = await http.get(workflowMetadataURL, true);
+
+  const job = workflowMetadata.jobs.find(
+    ({name}) => name === 'process_artifacts'
+  );
+  if (!job || !job.job_number) {
+    console.log(
+      theme`{error Could not find "process_artifacts" job for workflow ${workflowID}.}`
+    );
+    process.exit(1);
+  }
+
+  const jobArtifactsURL = `https://circleci.com/api/v1.1/project/github/facebook/react/${
+    job.job_number
+  }/artifacts?circle-token=${process.env.CIRCLE_CI_API_TOKEN}`;
+  const jobArtifacts = await http.get(jobArtifactsURL, true);
+
+  return jobArtifacts;
 };
 
 const getBuildInfo = async () => {
@@ -87,7 +124,6 @@ const handleError = error => {
   const stack = error.stack.replace(error.message, '');
 
   console.log(theme`{error ${message}}\n\n{path ${stack}}`);
-
   process.exit(1);
 };
 
@@ -185,6 +221,7 @@ const updateVersionsForCanary = async (cwd, reactVersion, version) => {
 module.exports = {
   confirm,
   execRead,
+  getArtifactsList,
   getBuildInfo,
   getChecksumForCurrentRevision,
   getPublicPackages,
