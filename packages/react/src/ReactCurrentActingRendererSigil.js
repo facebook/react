@@ -8,12 +8,12 @@
  */
 
 /**
- * Used by act() to track whether you're outside an act() scope.
- * We use a renderer's flushPassiveEffects as the sigil value
- * so we can track identity of the renderer.
+ * We maintain a 'stack' of renderer specific sigils
+ * corresponding to act() calls, so we can track whenever an update
+ * happens inside/outside of one.
  */
 
 const ReactCurrentActingRendererSigil = {
-  current: (null: null | (() => boolean)),
+  current: ([]: Array<{}>),
 };
 export default ReactCurrentActingRendererSigil;

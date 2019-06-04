@@ -2422,8 +2422,10 @@ export function warnIfNotScopedWithMatchingAct(fiber: Fiber): void {
   if (__DEV__) {
     if (
       shouldWarnUnactedUpdates === true &&
-      ReactCurrentActingRendererSigil.current !== null &&
-      ReactCurrentActingRendererSigil.current !== ReactActingRendererSigil
+      ReactCurrentActingRendererSigil.current.length !== 0 &&
+      ReactCurrentActingRendererSigil.current.indexOf(
+        ReactActingRendererSigil,
+      ) === -1
     ) {
       warningWithoutStack(
         false,
@@ -2449,7 +2451,9 @@ export function warnIfNotCurrentlyActingEffectsInDEV(fiber: Fiber): void {
   if (__DEV__) {
     if (
       shouldWarnUnactedUpdates === true &&
-      ReactCurrentActingRendererSigil.current !== ReactActingRendererSigil
+      ReactCurrentActingRendererSigil.current.indexOf(
+        ReactActingRendererSigil,
+      ) === -1
     ) {
       warningWithoutStack(
         false,
@@ -2476,7 +2480,9 @@ function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
     if (
       shouldWarnUnactedUpdates === true &&
       executionContext === NoContext &&
-      ReactCurrentActingRendererSigil.current !== ReactActingRendererSigil
+      ReactCurrentActingRendererSigil.current.indexOf(
+        ReactActingRendererSigil,
+      ) === -1
     ) {
       warningWithoutStack(
         false,

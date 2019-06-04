@@ -14,7 +14,6 @@ import ARTSVGMode from 'art/modes/svg';
 import ARTCurrentMode from 'art/modes/current';
 import TestUtils from 'react-dom/test-utils';
 import TestRenderer from 'react-test-renderer';
-
 ARTCurrentMode.setCurrent(ARTSVGMode);
 
 global.__DEV__ = process.env.NODE_ENV !== 'production';
@@ -156,5 +155,13 @@ it('does not warn when nesting react-act inside react-dom', () => {
 it('does not warn when nesting react-act inside react-test-renderer', () => {
   TestRenderer.act(() => {
     TestRenderer.create(<ARTTest />);
+  });
+});
+
+it("doesn't warn if you use nested acts from different renderers", () => {
+  TestRenderer.act(() => {
+    TestUtils.act(() => {
+      TestRenderer.create(<App />);
+    });
   });
 });

@@ -31,7 +31,6 @@ describe('ReactNoop.act()', () => {
         />,
       );
     });
-    expect(Scheduler).toFlushWithoutYielding();
     expect(calledLog).toEqual([0]);
   });
 
@@ -54,7 +53,6 @@ describe('ReactNoop.act()', () => {
       ReactNoop.render(<App />);
     });
     expect(Scheduler).toHaveYielded(['stage 1', 'stage 2']);
-    expect(Scheduler).toFlushWithoutYielding();
     expect(ReactNoop.getChildren()).toEqual([{text: '1', hidden: false}]);
   });
 });

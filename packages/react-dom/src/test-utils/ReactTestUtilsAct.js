@@ -86,17 +86,15 @@ let actingUpdatesScopeDepth = 0;
 
 function act(callback: () => Thenable) {
   let previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
-  let previousActingUpdatesSigil;
   actingUpdatesScopeDepth++;
   if (__DEV__) {
-    previousActingUpdatesSigil = ReactCurrentActingRendererSigil.current;
-    ReactCurrentActingRendererSigil.current = ReactActingRendererSigil;
+    ReactCurrentActingRendererSigil.current.push(ReactActingRendererSigil);
   }
 
   function onDone() {
     actingUpdatesScopeDepth--;
     if (__DEV__) {
-      ReactCurrentActingRendererSigil.current = previousActingUpdatesSigil;
+      ReactCurrentActingRendererSigil.current.pop();
       if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
         // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
         warningWithoutStack(
