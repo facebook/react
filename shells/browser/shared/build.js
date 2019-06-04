@@ -63,7 +63,9 @@ const build = async (tempPath, manifestPath) => {
 
   const manifest = JSON.parse(readFileSync(copiedManifestPath).toString());
   manifest.description += `\n\nCreated from revision ${commit} (${new Date().toLocaleDateString()})`;
-  manifest.version_name = `${commit} (${new Date().toLocaleDateString()})`;
+  if (tempPath.includes('chrome')) {
+    manifest.version_name = `${commit} (${new Date().toLocaleDateString()})`;
+  }
   writeFileSync(copiedManifestPath, JSON.stringify(manifest, null, 2));
 
   // Pack the extension
