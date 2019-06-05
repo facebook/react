@@ -73,6 +73,7 @@ import {
 import {startWorkTimer, cancelWorkTimer} from './ReactDebugFiberPerf';
 import {
   resolveFunctionForHotReloading,
+  resolveForwardRefForHotReloading,
   resolveClassForHotReloading,
 } from './ReactFiberHotReloading';
 
@@ -1073,7 +1074,7 @@ function mountLazyComponent(
     }
     case ForwardRef: {
       if (__DEV__) {
-        workInProgress.type = Component = resolveFunctionForHotReloading(
+        workInProgress.type = Component = resolveForwardRefForHotReloading(
           Component,
         );
       }

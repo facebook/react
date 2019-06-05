@@ -73,7 +73,7 @@ function isReactClass(type) {
   return type.prototype && type.prototype.isReactComponent;
 }
 
-function areCompatible(prevType, nextType) {
+function canPreserveStateBetween(prevType, nextType) {
   if (isReactClass(prevType) || isReactClass(nextType)) {
     return false;
   }
@@ -98,7 +98,7 @@ export function prepareUpdate(): HotUpdate {
     family.current = nextType;
 
     // Determine whether this should be a re-render or a re-mount.
-    if (areCompatible(prevType, nextType)) {
+    if (canPreserveStateBetween(prevType, nextType)) {
       updatedFamilies.add(family);
     } else {
       staleFamilies.add(family);
