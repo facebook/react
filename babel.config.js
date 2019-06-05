@@ -29,7 +29,7 @@ module.exports = api => {
     ['@babel/plugin-transform-flow-strip-types'],
     ['@babel/plugin-proposal-class-properties', { loose: false }],
   ];
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV !== 'production') {
     plugins.push(['@babel/plugin-transform-react-jsx-source']);
   }
   return {
