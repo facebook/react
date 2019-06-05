@@ -53,12 +53,14 @@ function createSwipeEvent(
   target: Element | Document,
   eventData?: EventData,
 ): SwipeEvent {
-  return {
-    target,
-    type,
-    timeStamp: context.getTimeStamp(),
-    ...eventData,
-  };
+  return context.objectAssign(
+    {
+      target,
+      type,
+      timeStamp: context.getTimeStamp(),
+    },
+    eventData,
+  );
 }
 
 function dispatchSwipeEvent(
