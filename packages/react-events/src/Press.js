@@ -11,9 +11,11 @@ import type {
   ReactResponderEvent,
   ReactResponderContext,
 } from 'shared/ReactTypes';
+import type {EventPriority} from 'shared/ReactTypes';
 
 import React from 'react';
 import {isEventPositionWithinTouchHitTarget} from './utils';
+import {DiscreteEvent, UserBlockingEvent} from 'shared/ReactTypes';
 
 type PressProps = {
   disabled: boolean,
@@ -205,7 +207,7 @@ function dispatchEvent(
   state: PressState,
   name: PressEventType,
   listener: (e: Object) => void,
-  discrete: boolean,
+  eventPriority: EventPriority,
 ): void {
   const target = ((state.pressTarget: any): Element | Document);
   const pointerType = state.pointerType;
@@ -216,7 +218,7 @@ function dispatchEvent(
     pointerType,
     event,
   );
-  context.dispatchEvent(syntheticEvent, listener, discrete);
+  context.dispatchEvent(syntheticEvent, listener, eventPriority);
 }
 
 function dispatchPressChangeEvent(
@@ -229,7 +231,7 @@ function dispatchPressChangeEvent(
   const listener = () => {
     props.onPressChange(bool);
   };
-  dispatchEvent(event, context, state, 'presschange', listener, true);
+  dispatchEvent(event, context, state, 'presschange', listener, DiscreteEvent);
 }
 
 function dispatchLongPressChangeEvent(
@@ -242,7 +244,14 @@ function dispatchLongPressChangeEvent(
   const listener = () => {
     props.onLongPressChange(bool);
   };
-  dispatchEvent(event, context, state, 'longpresschange', listener, true);
+  dispatchEvent(
+    event,
+    context,
+    state,
+    'longpresschange',
+    listener,
+    DiscreteEvent,
+  );
 }
 
 function activate(event: ReactResponderEvent, context, props, state) {
@@ -261,7 +270,7 @@ function activate(event: ReactResponderEvent, context, props, state) {
       state,
       'pressstart',
       props.onPressStart,
-      true,
+      DiscreteEvent,
     );
   }
   if (!wasActivePressed && props.onPressChange) {
@@ -275,7 +284,14 @@ function deactivate(event: ?ReactResponderEvent, context, props, state) {
   state.isLongPressed = false;
 
   if (props.onPressEnd) {
-    dispatchEvent(event, context, state, 'pressend', props.onPressEnd, true);
+    dispatchEvent(
+      event,
+      context,
+      state,
+      'pressend',
+      props.onPressEnd,
+      DiscreteEvent,
+    );
   }
   if (props.onPressChange) {
     dispatchPressChangeEvent(event, context, props, state);
@@ -321,7 +337,7 @@ function dispatchPressStartEvents(
             state,
             'longpress',
             props.onLongPress,
-            true,
+            DiscreteEvent,
           );
         }
         if (props.onLongPressChange) {
@@ -684,7 +700,7 @@ const PressResponder = {
             state,
             'contextmenu',
             props.onContextMenu,
-            true,
+            DiscreteEvent,
           );
         }
         break;
@@ -763,7 +779,7 @@ const PressResponder = {
                   state,
                   'pressmove',
                   props.onPressMove,
-                  false,
+                  UserBlockingEvent,
                 );
               }
               if (
@@ -845,7 +861,7 @@ const PressResponder = {
                   state,
                   'press',
                   props.onPress,
-                  true,
+                  DiscreteEvent,
                 );
               }
             }

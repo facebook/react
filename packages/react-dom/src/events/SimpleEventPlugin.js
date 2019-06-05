@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {EventPriority} from 'shared/ReactTypes';
 import type {
   TopLevelType,
   DOMTopLevelEventType,
@@ -14,18 +15,17 @@ import type {
 import type {
   DispatchConfig,
   ReactSyntheticEvent,
-  EventPriority,
 } from 'events/ReactSyntheticEventType';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {EventTypes, PluginModule} from 'events/PluginModuleType';
 
-import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
-import SyntheticEvent from 'events/SyntheticEvent';
 import {
   DiscreteEvent,
   UserBlockingEvent,
   ContinuousEvent,
-} from 'events/ReactSyntheticEventType';
+} from 'shared/ReactTypes';
+import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
+import SyntheticEvent from 'events/SyntheticEvent';
 
 import * as DOMTopLevelEventTypes from './DOMTopLevelEventTypes';
 import warningWithoutStack from 'shared/warningWithoutStack';

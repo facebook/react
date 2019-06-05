@@ -23,6 +23,7 @@ import type {
   ReactEventComponentInstance,
   ReactResponderContext,
   ReactResponderEvent,
+  EventPriority,
 } from 'shared/ReactTypes';
 import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
 import {
@@ -41,6 +42,20 @@ import {
 } from 'react-reconciler/src/ReactFiberEvents';
 
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
+import {
+  ContinuousEvent,
+  UserBlockingEvent,
+  DiscreteEvent,
+} from 'shared/ReactTypes';
+import {enableUserBlockingEvents} from 'shared/ReactFeatureFlags';
+
+// Intentionally not named imports because Rollup would use dynamic dispatch for
+// CommonJS interop named imports.
+import * as Scheduler from 'scheduler';
+const {
+  unstable_UserBlockingPriority: UserBlockingPriority,
+  unstable_runWithPriority: runWithPriority,
+} = Scheduler;
 
 export let listenToResponderEventTypesImpl;
 
@@ -54,7 +69,7 @@ type EventObjectType = $Shape<PartialEventObject>;
 
 type EventQueue = {
   events: Array<EventObjectType>,
-  discrete: boolean,
+  eventPriority: EventPriority,
 };
 
 type PartialEventObject = {
@@ -107,7 +122,7 @@ const eventResponderContext: ReactResponderContext = {
   dispatchEvent(
     possibleEventObject: Object,
     listener: ($Shape<PartialEventObject>) => void,
-    discrete: boolean,
+    eventPriority: EventPriority,
   ): void {
     validateResponderContext();
     const {target, type, timeStamp} = possibleEventObject;
@@ -169,9 +184,7 @@ const eventResponderContext: ReactResponderContext = {
       PartialEventObject,
     >);
     const eventQueue = ((currentEventQueue: any): EventQueue);
-    if (discrete) {
-      eventQueue.discrete = true;
-    }
+    eventQueue.eventPriority = eventPriority;
     eventListeners.set(eventObject, listener);
     eventQueue.events.push(eventObject);
   },
@@ -585,7 +598,7 @@ function createResponderEvent(
 function createEventQueue(): EventQueue {
   return {
     events: [],
-    discrete: false,
+    eventPriority: ContinuousEvent,
   };
 }
 
@@ -604,18 +617,35 @@ function processEvents(events: Array<EventObjectType>): void {
 }
 
 export function processEventQueue(): void {
-  const {events, discrete} = ((currentEventQueue: any): EventQueue);
+  const {events, eventPriority} = ((currentEventQueue: any): EventQueue);
 
   if (events.length === 0) {
     return;
   }
-  if (discrete) {
-    flushDiscreteUpdatesIfNeeded(currentTimeStamp);
-    discreteUpdates(() => {
+
+  switch (eventPriority) {
+    case DiscreteEvent: {
+      flushDiscreteUpdatesIfNeeded(currentTimeStamp);
+      discreteUpdates(() => {
+        batchedEventUpdates(processEvents, events);
+      });
+      break;
+    }
+    case UserBlockingEvent: {
+      if (enableUserBlockingEvents) {
+        runWithPriority(
+          UserBlockingPriority,
+          batchedEventUpdates.bind(null, processEvents, events),
+        );
+      } else {
+        batchedEventUpdates(processEvents, events);
+      }
+      break;
+    }
+    case ContinuousEvent: {
       batchedEventUpdates(processEvents, events);
-    });
-  } else {
-    batchedEventUpdates(processEvents, events);
+      break;
+    }
   }
 }
 

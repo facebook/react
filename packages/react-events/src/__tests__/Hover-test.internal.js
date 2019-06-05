@@ -12,6 +12,8 @@
 let React;
 let ReactFeatureFlags;
 let ReactDOM;
+let TestUtils;
+let Scheduler;
 let Hover;
 
 const createPointerEvent = (type, data) => {
@@ -228,6 +230,48 @@ describe('Hover event responder', () => {
       ref.current.dispatchEvent(createPointerEvent('mouseout'));
       expect(onHoverChange).toHaveBeenCalledTimes(2);
       expect(onHoverChange).toHaveBeenCalledWith(false);
+    });
+
+    it('should be user-blocking but not discrete', async () => {
+      // This is currently behind a feature flag
+      jest.resetModules();
+      ReactFeatureFlags = require('shared/ReactFeatureFlags');
+      ReactFeatureFlags.enableEventAPI = true;
+      ReactFeatureFlags.enableUserBlockingEvents = true;
+      React = require('react');
+      ReactDOM = require('react-dom');
+      TestUtils = require('react-dom/test-utils');
+      Scheduler = require('scheduler');
+
+      const {act} = TestUtils;
+      const {useState} = React;
+
+      const newContainer = document.createElement('div');
+      document.body.appendChild(newContainer);
+      const root = ReactDOM.unstable_createRoot(newContainer);
+
+      const target = React.createRef(null);
+      function Foo() {
+        const [isHover, setHover] = useState(false);
+        return (
+          <Hover onHoverChange={setHover}>
+            <div ref={target}>{isHover ? 'hovered' : 'not hovered'}</div>
+          </Hover>
+        );
+      }
+
+      await act(async () => {
+        root.render(<Foo />);
+      });
+      expect(newContainer.textContent).toEqual('not hovered');
+
+      await act(async () => {
+        target.current.dispatchEvent(createPointerEvent('mouseover'));
+
+        // 3s should be enough to expire the updates
+        Scheduler.advanceTime(3000);
+        expect(newContainer.textContent).toEqual('hovered');
+      });
     });
   });
 

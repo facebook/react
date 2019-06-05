@@ -13,6 +13,10 @@ let React;
 let ReactFeatureFlags;
 let ReactDOM;
 
+// FIXME: What should the public API be for setting an event's priority? Right
+// now it's an enum but is that what we want? Hard coding this for now.
+const DiscreteEvent = 0;
+
 function createReactEventComponent({
   targetEventTypes,
   rootEventTypes,
@@ -403,7 +407,11 @@ describe('DOMEventResponderSystem', () => {
             phase: 'bubble',
             timeStamp: context.getTimeStamp(),
           };
-          context.dispatchEvent(syntheticEvent, props.onMagicClick, true);
+          context.dispatchEvent(
+            syntheticEvent,
+            props.onMagicClick,
+            DiscreteEvent,
+          );
         }
       },
       onEventCapture: (event, context, props) => {
@@ -414,7 +422,11 @@ describe('DOMEventResponderSystem', () => {
             phase: 'capture',
             timeStamp: context.getTimeStamp(),
           };
-          context.dispatchEvent(syntheticEvent, props.onMagicClick, true);
+          context.dispatchEvent(
+            syntheticEvent,
+            props.onMagicClick,
+            DiscreteEvent,
+          );
         }
       },
     });
@@ -456,7 +468,7 @@ describe('DOMEventResponderSystem', () => {
         phase,
         timeStamp: context.getTimeStamp(),
       };
-      context.dispatchEvent(pressEvent, props.onPress, true);
+      context.dispatchEvent(pressEvent, props.onPress, DiscreteEvent);
 
       context.setTimeout(() => {
         if (props.onLongPress) {
@@ -466,7 +478,11 @@ describe('DOMEventResponderSystem', () => {
             phase,
             timeStamp: context.getTimeStamp(),
           };
-          context.dispatchEvent(longPressEvent, props.onLongPress, true);
+          context.dispatchEvent(
+            longPressEvent,
+            props.onLongPress,
+            DiscreteEvent,
+          );
         }
 
         if (props.onLongPressChange) {
@@ -479,7 +495,7 @@ describe('DOMEventResponderSystem', () => {
           context.dispatchEvent(
             longPressChangeEvent,
             props.onLongPressChange,
-            true,
+            DiscreteEvent,
           );
         }
       }, 500);
@@ -838,7 +854,7 @@ describe('DOMEventResponderSystem', () => {
           type: 'click',
           timeStamp: context.getTimeStamp(),
         };
-        context.dispatchEvent(syntheticEvent, props.onClick, true);
+        context.dispatchEvent(syntheticEvent, props.onClick, DiscreteEvent);
       },
     });
 

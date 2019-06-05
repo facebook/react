@@ -14,6 +14,7 @@ import type {
 
 import React from 'react';
 import {isEventPositionWithinTouchHitTarget} from './utils';
+import {UserBlockingEvent} from 'shared/ReactTypes';
 
 type HoverProps = {
   disabled: boolean,
@@ -117,7 +118,7 @@ function dispatchHoverChangeEvent(
     'hoverchange',
     ((state.hoverTarget: any): Element | Document),
   );
-  context.dispatchEvent(syntheticEvent, listener, true);
+  context.dispatchEvent(syntheticEvent, listener, UserBlockingEvent);
 }
 
 function dispatchHoverStartEvents(
@@ -155,7 +156,11 @@ function dispatchHoverStartEvents(
         'hoverstart',
         ((target: any): Element | Document),
       );
-      context.dispatchEvent(syntheticEvent, props.onHoverStart, true);
+      context.dispatchEvent(
+        syntheticEvent,
+        props.onHoverStart,
+        UserBlockingEvent,
+      );
     }
     if (props.onHoverChange) {
       dispatchHoverChangeEvent(event, context, props, state);
@@ -214,7 +219,11 @@ function dispatchHoverEndEvents(
         'hoverend',
         ((target: any): Element | Document),
       );
-      context.dispatchEvent(syntheticEvent, props.onHoverEnd, true);
+      context.dispatchEvent(
+        syntheticEvent,
+        props.onHoverEnd,
+        UserBlockingEvent,
+      );
     }
     if (props.onHoverChange) {
       dispatchHoverChangeEvent(event, context, props, state);
@@ -357,7 +366,7 @@ const HoverResponder = {
                   context.dispatchEvent(
                     syntheticEvent,
                     props.onHoverMove,
-                    true,
+                    UserBlockingEvent,
                   );
                 }
               }
