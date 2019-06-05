@@ -250,6 +250,7 @@ export default function(babel) {
   function createArgumentsForSignature(node, signature, scope) {
     const {key, customHooks} = signature;
 
+    let forceReset = hasForceResetComment(scope.path);
     let customHooksInScope = [];
     customHooks.forEach(callee => {
       // Check if a correponding binding exists where we emit the signature.
@@ -268,13 +269,12 @@ export default function(babel) {
         customHooksInScope.push(callee);
       } else {
         // We don't have anything to put in the array because Hook is out of scope.
-        // But we can still mark that it exists. This will cause remount on edits.
-        customHooksInScope.push(null);
+        // Since it could potentially have been edited, remount the component.
+        forceReset = true;
       }
     });
 
     const args = [node, t.stringLiteral(key)];
-    const forceReset = hasForceResetComment(scope.path);
     if (forceReset || customHooksInScope.length > 0) {
       args.push(t.booleanLiteral(forceReset));
     }
