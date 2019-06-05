@@ -3,6 +3,7 @@ import _inheritsLoose from '@babel/runtime/helpers/esm/inheritsLoose';
 import _assertThisInitialized from '@babel/runtime/helpers/esm/assertThisInitialized';
 import memoizeOne from 'memoize-one';
 import { createElement, PureComponent } from 'react';
+import { flushSync } from 'react-dom';
 import _objectWithoutPropertiesLoose from '@babel/runtime/helpers/esm/objectWithoutPropertiesLoose';
 
 // Animation frame based implementation of setTimeout.
@@ -182,37 +183,40 @@ function createGridComponent(_ref2) {
             scrollTop = _event$currentTarget.scrollTop,
             scrollWidth = _event$currentTarget.scrollWidth;
 
-        _this.setState(function (prevState) {
-          if (prevState.scrollLeft === scrollLeft && prevState.scrollTop === scrollTop) {
-            // Scroll position may have been updated by cDM/cDU,
-            // In which case we don't need to trigger another render,
-            // And we don't want to update state.isScrolling.
-            return null;
-          }
-
-          var direction = _this.props.direction; // HACK According to the spec, scrollLeft should be negative for RTL aligned elements.
-          // Chrome does not seem to adhere; its scrollLeft values are positive (measured relative to the left).
-          // See https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollLeft
-
-          var calculatedScrollLeft = scrollLeft;
-
-          if (direction === 'rtl') {
-            if (scrollLeft <= 0) {
-              calculatedScrollLeft = -scrollLeft;
-            } else {
-              calculatedScrollLeft = scrollWidth - clientWidth - scrollLeft;
+        // Force flush sync for scroll updates to reduce visual checkerboarding.
+        flushSync(() => {
+          _this.setState(function (prevState) {
+            if (prevState.scrollLeft === scrollLeft && prevState.scrollTop === scrollTop) {
+              // Scroll position may have been updated by cDM/cDU,
+              // In which case we don't need to trigger another render,
+              // And we don't want to update state.isScrolling.
+              return null;
             }
-          }
 
-          return {
-            isScrolling: true,
-            horizontalScrollDirection: prevState.scrollLeft < scrollLeft ? 'forward' : 'backward',
-            scrollLeft: calculatedScrollLeft,
-            scrollTop: scrollTop,
-            verticalScrollDirection: prevState.scrollTop < scrollTop ? 'forward' : 'backward',
-            scrollUpdateWasRequested: false
-          };
-        }, _this._resetIsScrollingDebounced);
+            var direction = _this.props.direction; // HACK According to the spec, scrollLeft should be negative for RTL aligned elements.
+            // Chrome does not seem to adhere; its scrollLeft values are positive (measured relative to the left).
+            // See https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollLeft
+
+            var calculatedScrollLeft = scrollLeft;
+
+            if (direction === 'rtl') {
+              if (scrollLeft <= 0) {
+                calculatedScrollLeft = -scrollLeft;
+              } else {
+                calculatedScrollLeft = scrollWidth - clientWidth - scrollLeft;
+              }
+            }
+
+            return {
+              isScrolling: true,
+              horizontalScrollDirection: prevState.scrollLeft < scrollLeft ? 'forward' : 'backward',
+              scrollLeft: calculatedScrollLeft,
+              scrollTop: scrollTop,
+              verticalScrollDirection: prevState.scrollTop < scrollTop ? 'forward' : 'backward',
+              scrollUpdateWasRequested: false
+            };
+          }, _this._resetIsScrollingDebounced);
+        });
       };
 
       _this._outerRefSetter = function (ref) {
@@ -1023,55 +1027,61 @@ function createListComponent(_ref) {
             scrollLeft = _event$currentTarget.scrollLeft,
             scrollWidth = _event$currentTarget.scrollWidth;
 
-        _this.setState(function (prevState) {
-          if (prevState.scrollOffset === scrollLeft) {
-            // Scroll position may have been updated by cDM/cDU,
-            // In which case we don't need to trigger another render,
-            // And we don't want to update state.isScrolling.
-            return null;
-          }
-
-          var direction = _this.props.direction; // HACK According to the spec, scrollLeft should be negative for RTL aligned elements.
-          // Chrome does not seem to adhere; its scrolLeft values are positive (measured relative to the left).
-          // See https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollLeft
-
-          var scrollOffset = scrollLeft;
-
-          if (direction === 'rtl') {
-            if (scrollLeft <= 0) {
-              scrollOffset = -scrollOffset;
-            } else {
-              scrollOffset = scrollWidth - clientWidth - scrollLeft;
+        // Force flush sync for scroll updates to reduce visual checkerboarding.
+        flushSync(() => {
+          _this.setState(function (prevState) {
+            if (prevState.scrollOffset === scrollLeft) {
+              // Scroll position may have been updated by cDM/cDU,
+              // In which case we don't need to trigger another render,
+              // And we don't want to update state.isScrolling.
+              return null;
             }
-          }
 
-          return {
-            isScrolling: true,
-            scrollDirection: prevState.scrollOffset < scrollLeft ? 'forward' : 'backward',
-            scrollOffset: scrollOffset,
-            scrollUpdateWasRequested: false
-          };
-        }, _this._resetIsScrollingDebounced);
+            var direction = _this.props.direction; // HACK According to the spec, scrollLeft should be negative for RTL aligned elements.
+            // Chrome does not seem to adhere; its scrolLeft values are positive (measured relative to the left).
+            // See https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollLeft
+
+            var scrollOffset = scrollLeft;
+
+            if (direction === 'rtl') {
+              if (scrollLeft <= 0) {
+                scrollOffset = -scrollOffset;
+              } else {
+                scrollOffset = scrollWidth - clientWidth - scrollLeft;
+              }
+            }
+
+            return {
+              isScrolling: true,
+              scrollDirection: prevState.scrollOffset < scrollLeft ? 'forward' : 'backward',
+              scrollOffset: scrollOffset,
+              scrollUpdateWasRequested: false
+            };
+          }, _this._resetIsScrollingDebounced);
+        });
       };
 
       _this._onScrollVertical = function (event) {
         var scrollTop = event.currentTarget.scrollTop;
 
-        _this.setState(function (prevState) {
-          if (prevState.scrollOffset === scrollTop) {
-            // Scroll position may have been updated by cDM/cDU,
-            // In which case we don't need to trigger another render,
-            // And we don't want to update state.isScrolling.
-            return null;
-          }
+        // Force flush sync for scroll updates to reduce visual checkerboarding.
+        flushSync(() => {
+          _this.setState(function (prevState) {
+            if (prevState.scrollOffset === scrollTop) {
+              // Scroll position may have been updated by cDM/cDU,
+              // In which case we don't need to trigger another render,
+              // And we don't want to update state.isScrolling.
+              return null;
+            }
 
-          return {
-            isScrolling: true,
-            scrollDirection: prevState.scrollOffset < scrollTop ? 'forward' : 'backward',
-            scrollOffset: scrollTop,
-            scrollUpdateWasRequested: false
-          };
-        }, _this._resetIsScrollingDebounced);
+            return {
+              isScrolling: true,
+              scrollDirection: prevState.scrollOffset < scrollTop ? 'forward' : 'backward',
+              scrollOffset: scrollTop,
+              scrollUpdateWasRequested: false
+            };
+          }, _this._resetIsScrollingDebounced);
+        });
       };
 
       _this._outerRefSetter = function (ref) {
