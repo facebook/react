@@ -223,11 +223,37 @@ export default function(babel) {
     };
   }
 
-  function createArgumentsForSignature(node, signature) {
+  function createArgumentsForSignature(node, signature, scope) {
     const {key, customHooks} = signature;
+
+    let customHooksInScope = [];
+    customHooks.forEach(callee => {
+      // Check if a correponding binding exists where we emit the signature.
+      let bindingName;
+      switch (callee.type) {
+        case 'MemberExpression':
+          if (callee.object.type === 'Identifier') {
+            bindingName = callee.object.name;
+          }
+          break;
+        case 'Identifier':
+          bindingName = callee.name;
+          break;
+      }
+      if (scope.hasBinding(bindingName)) {
+        customHooksInScope.push(callee);
+      } else {
+        // We don't have anything to put in the array because Hook is out of scope.
+        // But we can still mark that it exists. This will cause remount on edits.
+        customHooksInScope.push(null);
+      }
+    });
+
     const args = [node, t.stringLiteral(key)];
-    if (customHooks.length > 0) {
-      args.push(t.arrowFunctionExpression([], t.arrayExpression(customHooks)));
+    if (customHooksInScope.length > 0) {
+      args.push(
+        t.arrowFunctionExpression([], t.arrayExpression(customHooksInScope)),
+      );
     }
     return args;
   }
@@ -376,7 +402,11 @@ export default function(babel) {
             t.expressionStatement(
               t.callExpression(
                 t.identifier('__signature__'),
-                createArgumentsForSignature(id, signature),
+                createArgumentsForSignature(
+                  id,
+                  signature,
+                  insertAfterPath.scope,
+                ),
               ),
             ),
           );
@@ -418,7 +448,11 @@ export default function(babel) {
               t.expressionStatement(
                 t.callExpression(
                   t.identifier('__signature__'),
-                  createArgumentsForSignature(path.parent.id, signature),
+                  createArgumentsForSignature(
+                    path.parent.id,
+                    signature,
+                    insertAfterPath.scope,
+                  ),
                 ),
               ),
             );
@@ -428,7 +462,7 @@ export default function(babel) {
             path.replaceWith(
               t.callExpression(
                 t.identifier('__signature__'),
-                createArgumentsForSignature(node, signature),
+                createArgumentsForSignature(node, signature, path.scope),
               ),
             );
             // Result: let Foo = hoc(__signature(() => {}, ...))

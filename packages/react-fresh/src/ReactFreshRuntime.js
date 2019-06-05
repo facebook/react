@@ -55,6 +55,12 @@ function haveEqualSignatures(prevType, nextType) {
   }
 
   for (let i = 0; i < nextCustomHooks.length; i++) {
+    if (prevCustomHooks[i] === undefined || nextCustomHooks[i] === undefined) {
+      // We used a custom Hook, but it isn't in the scope of the signature.
+      // For example this would happen if you define a Hook inline in the component.
+      // This is an edge case, but we'll treat it as always different signature.
+      return false;
+    }
     if (!haveEqualSignatures(prevCustomHooks[i], nextCustomHooks[i])) {
       return false;
     }

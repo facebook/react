@@ -551,6 +551,49 @@ describe('ReactFreshIntegration', () => {
     }
   });
 
+  it('does not get confused by Hooks defined inline', () => {
+    // This is not a recommended pattern but at least it shouldn't break.
+    if (__DEV__) {
+      render(`
+        const App = () => {
+          const useFancyState = (initialState) => {
+            const result = React.useState(initialState);
+            return result;
+          };
+          const [x, setX] = useFancyState('X1');
+          const [y, setY] = useFancyState('Y1');
+          return <h1>A{x}{y}</h1>;
+        };
+
+        export default App;
+      `);
+      let el = container.firstChild;
+      expect(el.textContent).toBe('AX1Y1');
+
+      patch(`
+        const App = () => {
+          const useFancyState = (initialState) => {
+            const result = React.useState(initialState);
+            return result;
+          };
+          const [x, setX] = useFancyState('X2');
+          const [y, setY] = useFancyState('Y2');
+          return <h1>B{x}{y}</h1>;
+        };
+
+        export default App;
+      `);
+      // Remount even though nothing changed because
+      // the custom Hook is inside -- and so we don't
+      // really know whether its signature has changed.
+      // We could potentially make it work, but for now
+      // let's assert we don't crash with confusing errors.
+      expect(container.firstChild).not.toBe(el);
+      el = container.firstChild;
+      expect(el.textContent).toBe('BX2Y2');
+    }
+  });
+
   it('remounts component if custom hook it uses changes order', () => {
     if (__DEV__) {
       render(`
