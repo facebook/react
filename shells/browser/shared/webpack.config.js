@@ -31,6 +31,7 @@ module.exports = {
   resolve: {
     alias: {
       src: resolve(__dirname, '../../../src'),
+      'react-window': resolve(__dirname, '../../../vendor/react-window'),
     },
   },
   plugins: [
