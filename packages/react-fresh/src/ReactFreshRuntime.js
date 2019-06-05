@@ -16,6 +16,7 @@ import {REACT_MEMO_TYPE, REACT_FORWARD_REF_TYPE} from 'shared/ReactSymbols';
 
 type Signature = {|
   key: string,
+  forceReset: boolean,
   getCustomHooks: () => Array<Function>,
 |};
 
@@ -45,6 +46,9 @@ function haveEqualSignatures(prevType, nextType) {
   if (prevSignature.key !== nextSignature.key) {
     return false;
   }
+  if (nextSignature.forceReset) {
+    return false;
+  }
 
   // TODO: we might need to calculate previous signature earlier in practice,
   // such as during the first time a component is resolved. We'll revisit this.
@@ -63,6 +67,24 @@ function haveEqualSignatures(prevType, nextType) {
   return true;
 }
 
+function isReactClass(type) {
+  return type.prototype && type.prototype.isReactComponent;
+}
+
+function canPreserveStateBetween(prevType, nextType) {
+  if (isReactClass(prevType) || isReactClass(nextType)) {
+    return false;
+  }
+  if (haveEqualSignatures(prevType, nextType)) {
+    return true;
+  }
+  return false;
+}
+
+function resolveFamily(type) {
+  return familiesByType.get(type);
+}
+
 export function prepareUpdate(): HotUpdate {
   const staleFamilies = new Set();
   const updatedFamilies = new Set();
@@ -78,7 +100,7 @@ export function prepareUpdate(): HotUpdate {
     family.current = nextType;
 
     // Determine whether this should be a re-render or a re-mount.
-    if (haveEqualSignatures(prevType, nextType)) {
+    if (canPreserveStateBetween(prevType, nextType)) {
       updatedFamilies.add(family);
     } else {
       staleFamilies.add(family);
@@ -86,7 +108,7 @@ export function prepareUpdate(): HotUpdate {
   });
 
   return {
-    familiesByType,
+    resolveFamily,
     updatedFamilies,
     staleFamilies,
   };
@@ -135,10 +157,12 @@ export function register(type: any, id: string): void {
 export function setSignature(
   type: any,
   key: string,
+  forceReset?: boolean = false,
   getCustomHooks?: () => Array<Function>,
 ): void {
   allSignaturesByType.set(type, {
     key,
+    forceReset,
     getCustomHooks: getCustomHooks || (() => []),
   });
 }

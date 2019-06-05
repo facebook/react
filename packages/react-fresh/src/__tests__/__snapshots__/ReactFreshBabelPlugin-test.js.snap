@@ -56,6 +56,35 @@ __register__(_c5, "B$React.memo");
 __register__(_c6, "B");
 `;
 
+exports[`ReactFreshBabelPlugin generates valid signature for exotic ways to call Hooks 1`] = `
+
+import FancyHook from 'fancy';
+
+export default function App() {
+  function useFancyState() {
+    const [foo, setFoo] = React.useState(0);
+    useFancyEffect();
+    return foo;
+  }
+
+  __signature__(useFancyState, 'useState{[foo, setFoo]}\\nuseFancyEffect{}', true);
+
+  const bar = useFancyState();
+  const baz = FancyHook.useThing();
+  React.useState();
+  useThePlatform();
+  return <h1>{bar}{baz}</h1>;
+}
+
+__signature__(App, 'useFancyState{bar}\\nuseThing{baz}\\nuseState{}\\nuseThePlatform{}', true, () => [FancyHook.useThing]);
+
+_c = App;
+
+var _c;
+
+__register__(_c, 'App');
+`;
+
 exports[`ReactFreshBabelPlugin ignores HOC definitions 1`] = `
 
 let connect = () => {
@@ -115,7 +144,7 @@ function useFancyState() {
   return foo;
 }
 
-__signature__(useFancyState, "useState{[foo, setFoo]}\\nuseFancyEffect{}", () => [useFancyEffect]);
+__signature__(useFancyState, "useState{[foo, setFoo]}\\nuseFancyEffect{}", false, () => [useFancyEffect]);
 
 const useFancyEffect = () => {
   React.useEffect(() => {});
@@ -128,7 +157,7 @@ export default function App() {
   return <h1>{bar}</h1>;
 }
 
-__signature__(App, "useFancyState{bar}", () => [useFancyState]);
+__signature__(App, "useFancyState{bar}", false, () => [useFancyState]);
 
 _c = App;
 

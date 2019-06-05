@@ -223,11 +223,65 @@ export default function(babel) {
     };
   }
 
-  function createArgumentsForSignature(node, signature) {
+  let hasForceResetCommentByFile = new WeakMap();
+
+  // We let user do /* @hot reset */ to reset state in the whole file.
+  function hasForceResetComment(path) {
+    const file = path.hub.file;
+    let hasForceReset = hasForceResetCommentByFile.get(file);
+    if (hasForceReset !== undefined) {
+      return hasForceReset;
+    }
+
+    hasForceReset = false;
+    const comments = file.ast.comments;
+    for (let i = 0; i < comments.length; i++) {
+      const cmt = comments[i];
+      if (cmt.value.indexOf('@hot reset') !== -1) {
+        hasForceReset = true;
+        break;
+      }
+    }
+
+    hasForceResetCommentByFile.set(file, hasForceReset);
+    return hasForceReset;
+  }
+
+  function createArgumentsForSignature(node, signature, scope) {
     const {key, customHooks} = signature;
+
+    let forceReset = hasForceResetComment(scope.path);
+    let customHooksInScope = [];
+    customHooks.forEach(callee => {
+      // Check if a correponding binding exists where we emit the signature.
+      let bindingName;
+      switch (callee.type) {
+        case 'MemberExpression':
+          if (callee.object.type === 'Identifier') {
+            bindingName = callee.object.name;
+          }
+          break;
+        case 'Identifier':
+          bindingName = callee.name;
+          break;
+      }
+      if (scope.hasBinding(bindingName)) {
+        customHooksInScope.push(callee);
+      } else {
+        // We don't have anything to put in the array because Hook is out of scope.
+        // Since it could potentially have been edited, remount the component.
+        forceReset = true;
+      }
+    });
+
     const args = [node, t.stringLiteral(key)];
-    if (customHooks.length > 0) {
-      args.push(t.arrowFunctionExpression([], t.arrayExpression(customHooks)));
+    if (forceReset || customHooksInScope.length > 0) {
+      args.push(t.booleanLiteral(forceReset));
+    }
+    if (customHooksInScope.length > 0) {
+      args.push(
+        t.arrowFunctionExpression([], t.arrayExpression(customHooksInScope)),
+      );
     }
     return args;
   }
@@ -376,7 +430,11 @@ export default function(babel) {
             t.expressionStatement(
               t.callExpression(
                 t.identifier('__signature__'),
-                createArgumentsForSignature(id, signature),
+                createArgumentsForSignature(
+                  id,
+                  signature,
+                  insertAfterPath.scope,
+                ),
               ),
             ),
           );
@@ -418,7 +476,11 @@ export default function(babel) {
               t.expressionStatement(
                 t.callExpression(
                   t.identifier('__signature__'),
-                  createArgumentsForSignature(path.parent.id, signature),
+                  createArgumentsForSignature(
+                    path.parent.id,
+                    signature,
+                    insertAfterPath.scope,
+                  ),
                 ),
               ),
             );
@@ -428,7 +490,7 @@ export default function(babel) {
             path.replaceWith(
               t.callExpression(
                 t.identifier('__signature__'),
-                createArgumentsForSignature(node, signature),
+                createArgumentsForSignature(node, signature, path.scope),
               ),
             );
             // Result: let Foo = hoc(__signature(() => {}, ...))

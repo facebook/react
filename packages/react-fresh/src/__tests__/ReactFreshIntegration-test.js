@@ -85,8 +85,8 @@ describe('ReactFreshIntegration', () => {
     ReactFreshRuntime.register(type, id);
   }
 
-  function __signature__(type, key, getCustomHooks) {
-    ReactFreshRuntime.setSignature(type, key, getCustomHooks);
+  function __signature__(type, key, forceReset, getCustomHooks) {
+    ReactFreshRuntime.setSignature(type, key, forceReset, getCustomHooks);
     return type;
   }
 
@@ -551,6 +551,49 @@ describe('ReactFreshIntegration', () => {
     }
   });
 
+  it('does not get confused by Hooks defined inline', () => {
+    // This is not a recommended pattern but at least it shouldn't break.
+    if (__DEV__) {
+      render(`
+        const App = () => {
+          const useFancyState = (initialState) => {
+            const result = React.useState(initialState);
+            return result;
+          };
+          const [x, setX] = useFancyState('X1');
+          const [y, setY] = useFancyState('Y1');
+          return <h1>A{x}{y}</h1>;
+        };
+
+        export default App;
+      `);
+      let el = container.firstChild;
+      expect(el.textContent).toBe('AX1Y1');
+
+      patch(`
+        const App = () => {
+          const useFancyState = (initialState) => {
+            const result = React.useState(initialState);
+            return result;
+          };
+          const [x, setX] = useFancyState('X2');
+          const [y, setY] = useFancyState('Y2');
+          return <h1>B{x}{y}</h1>;
+        };
+
+        export default App;
+      `);
+      // Remount even though nothing changed because
+      // the custom Hook is inside -- and so we don't
+      // really know whether its signature has changed.
+      // We could potentially make it work, but for now
+      // let's assert we don't crash with confusing errors.
+      expect(container.firstChild).not.toBe(el);
+      el = container.firstChild;
+      expect(el.textContent).toBe('BX2Y2');
+    }
+  });
+
   it('remounts component if custom hook it uses changes order', () => {
     if (__DEV__) {
       render(`
@@ -689,6 +732,105 @@ describe('ReactFreshIntegration', () => {
         export default Parent;
       `);
       expect(container.textContent).toBe('Parent Child useMyThing');
+    }
+  });
+
+  it('resets state on every edit with @hot reset annotation', () => {
+    if (__DEV__) {
+      render(`
+        const {useState} = React;
+
+        export default function App() {
+          const [foo, setFoo] = useState(1);
+          return <h1>A{foo}</h1>;
+        }
+      `);
+      let el = container.firstChild;
+      expect(el.textContent).toBe('A1');
+
+      patch(`
+        const {useState} = React;
+
+        export default function App() {
+          const [foo, setFoo] = useState('ignored');
+          return <h1>B{foo}</h1>;
+        }
+      `);
+      // Same state variable name, so state is preserved.
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('B1');
+
+      patch(`
+        const {useState} = React;
+
+        /* @hot reset */
+
+        export default function App() {
+          const [bar, setBar] = useState(2);
+          return <h1>C{bar}</h1>;
+        }
+      `);
+      // Found remount annotation, so state is reset.
+      expect(container.firstChild).not.toBe(el);
+      el = container.firstChild;
+      expect(el.textContent).toBe('C2');
+
+      patch(`
+        const {useState} = React;
+
+        export default function App() {
+
+          // @hot reset
+
+          const [bar, setBar] = useState(3);
+          return <h1>D{bar}</h1>;
+        }
+      `);
+      // Found remount annotation, so state is reset.
+      expect(container.firstChild).not.toBe(el);
+      el = container.firstChild;
+      expect(el.textContent).toBe('D3');
+
+      patch(`
+        const {useState} = React;
+
+        export default function App() {
+          const [bar, setBar] = useState(4);
+          return <h1>E{bar}</h1>;
+        }
+      `);
+      // There is no remount annotation anymore,
+      // so preserve the previous state.
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('E3');
+
+      patch(`
+        const {useState} = React;
+
+        export default function App() {
+          const [bar, setBar] = useState(4);
+          return <h1>F{bar}</h1>;
+        }
+      `);
+      // Continue editing.
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('F3');
+
+      patch(`
+        const {useState} = React;
+
+        export default function App() {
+
+          /* @hot reset */
+
+          const [bar, setBar] = useState(5);
+          return <h1>G{bar}</h1>;
+        }
+      `);
+      // Force remount one last time.
+      expect(container.firstChild).not.toBe(el);
+      el = container.firstChild;
+      expect(el.textContent).toBe('G5');
     }
   });
 });

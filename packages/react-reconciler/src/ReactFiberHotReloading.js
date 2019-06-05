@@ -18,6 +18,7 @@ import {
 } from './ReactFiberWorkLoop';
 import {Sync} from './ReactFiberExpirationTime';
 import {
+  ClassComponent,
   FunctionComponent,
   ForwardRef,
   MemoComponent,
@@ -34,22 +35,22 @@ export type Family = {|
 |};
 
 export type HotUpdate = {|
-  familiesByType: WeakMap<any, Family>,
+  resolveFamily: (any => Family | void) | null,
   staleFamilies: Set<Family>,
   updatedFamilies: Set<Family>,
 |};
 
-let familiesByType: WeakMap<any, Family> | null = null;
+let resolveFamily: (any => Family | void) | null = null;
 // $FlowFixMe Flow gets confused by a WeakSet feature check below.
 let failedBoundaries: WeakSet<Fiber> | null = null;
 
 export function resolveFunctionForHotReloading(type: any): any {
   if (__DEV__) {
-    if (familiesByType === null) {
+    if (resolveFamily === null) {
       // Hot reloading is disabled.
       return type;
     }
-    let family = familiesByType.get(type);
+    let family = resolveFamily(type);
     if (family === undefined) {
       return type;
     }
@@ -60,13 +61,18 @@ export function resolveFunctionForHotReloading(type: any): any {
   }
 }
 
+export function resolveClassForHotReloading(type: any): any {
+  // No implementation differences.
+  return resolveFunctionForHotReloading(type);
+}
+
 export function resolveForwardRefForHotReloading(type: any): any {
   if (__DEV__) {
-    if (familiesByType === null) {
+    if (resolveFamily === null) {
       // Hot reloading is disabled.
       return type;
     }
-    let family = familiesByType.get(type);
+    let family = resolveFamily(type);
     if (family === undefined) {
       // Check if we're dealing with a real forwardRef. Don't want to crash early.
       if (
@@ -103,7 +109,7 @@ export function isCompatibleFamilyForHotReloading(
   element: ReactElement,
 ): boolean {
   if (__DEV__) {
-    if (familiesByType === null) {
+    if (resolveFamily === null) {
       // Hot reloading is disabled.
       return false;
     }
@@ -120,6 +126,12 @@ export function isCompatibleFamilyForHotReloading(
         : null;
 
     switch (fiber.tag) {
+      case ClassComponent: {
+        if (typeof nextType === 'function') {
+          needsCompareFamilies = true;
+        }
+        break;
+      }
       case FunctionComponent: {
         if (typeof nextType === 'function') {
           needsCompareFamilies = true;
@@ -162,11 +174,8 @@ export function isCompatibleFamilyForHotReloading(
       // If we unwrapped and compared the inner types for wrappers instead,
       // then we would risk falsely saying two separate memo(Foo)
       // calls are equivalent because they wrap the same Foo function.
-      const prevFamily = familiesByType.get(prevType);
-      if (
-        prevFamily !== undefined &&
-        prevFamily === familiesByType.get(nextType)
-      ) {
+      const prevFamily = resolveFamily(prevType);
+      if (prevFamily !== undefined && prevFamily === resolveFamily(nextType)) {
         return true;
       }
     }
@@ -178,7 +187,7 @@ export function isCompatibleFamilyForHotReloading(
 
 export function markFailedErrorBoundaryForHotReloading(fiber: Fiber) {
   if (__DEV__) {
-    if (familiesByType === null) {
+    if (resolveFamily === null) {
       // Not hot reloading.
       return;
     }
@@ -195,7 +204,7 @@ export function markFailedErrorBoundaryForHotReloading(fiber: Fiber) {
 export function scheduleHotUpdate(root: FiberRoot, hotUpdate: HotUpdate): void {
   if (__DEV__) {
     // TODO: warn if its identity changes over time?
-    familiesByType = hotUpdate.familiesByType;
+    resolveFamily = hotUpdate.resolveFamily;
 
     const {staleFamilies, updatedFamilies} = hotUpdate;
     flushPassiveEffects();
@@ -221,6 +230,7 @@ function scheduleFibersWithFamiliesRecursively(
     switch (tag) {
       case FunctionComponent:
       case SimpleMemoComponent:
+      case ClassComponent:
         candidateType = type;
         break;
       case ForwardRef:
@@ -230,14 +240,14 @@ function scheduleFibersWithFamiliesRecursively(
         break;
     }
 
-    if (familiesByType === null) {
-      throw new Error('Expected familiesByType to be set during hot reload.');
+    if (resolveFamily === null) {
+      throw new Error('Expected resolveFamily to be set during hot reload.');
     }
 
     let needsRender = false;
     let needsRemount = false;
     if (candidateType !== null) {
-      const family = familiesByType.get(candidateType);
+      const family = resolveFamily(candidateType);
       if (family !== undefined) {
         if (staleFamilies.has(family)) {
           needsRemount = true;
