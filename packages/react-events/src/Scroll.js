@@ -27,7 +27,7 @@ type ScrollProps = {
 
 type ScrollState = {
   pointerType: PointerType,
-  scrollTarget: null | Element,
+  scrollTarget: null | Element | Document,
   isPointerDown: boolean,
 };
 
@@ -135,11 +135,20 @@ const ScrollResponder = {
     state: ScrollState,
   ): void {
     const {target, type} = event;
+
+    if (props.disabled) {
+      if (state.isPointerDown) {
+        state.isPointerDown = false;
+        state.scrollTarget = null;
+        context.addRootEventTypes(rootEventTypes);
+      }
+      return;
+    }
     const pointerType = context.getEventPointerType(event);
 
     switch (type) {
       case 'scroll': {
-        state.scrollTarget = target;
+        state.scrollTarget = ((target: any): Element | Document);
         if (props.onScroll) {
           dispatchEvent(
             event,
