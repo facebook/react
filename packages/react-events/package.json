@@ -17,6 +17,7 @@
     "focus.js",
     "swipe.js",
     "drag.js",
+    "scroll.js",
     "focus-scope.js",
     "index.js",
     "build-info.json",
