@@ -87,6 +87,10 @@ function canPreserveStateBetween(prevType, nextType) {
   return false;
 }
 
+function resolveFamily(type) {
+  return familiesByType.get(type);
+}
+
 export function prepareUpdate(): HotUpdate {
   const staleFamilies = new Set();
   const updatedFamilies = new Set();
@@ -110,7 +114,7 @@ export function prepareUpdate(): HotUpdate {
   });
 
   return {
-    familiesByType,
+    resolveFamily,
     updatedFamilies,
     staleFamilies,
   };
