@@ -137,6 +137,7 @@
     "react-is": "^0.0.0-50b50c26f",
     "react-test-renderer": "^0.0.0-50b50c26f",
     "react-virtualized-auto-sizer": "^1.0.2",
+    "react-window": "./vendor/react-window",
     "request-promise": "^4.2.4",
     "rimraf": "^2.6.3",
     "scheduler": "^0.0.0-50b50c26f",
