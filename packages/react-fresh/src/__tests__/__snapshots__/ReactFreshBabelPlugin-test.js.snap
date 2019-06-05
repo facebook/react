@@ -67,7 +67,7 @@ export default function App() {
     return foo;
   }
 
-  __signature__(useFancyState, 'useState{[foo, setFoo]}\\nuseFancyEffect{}', () => [,]);
+  __signature__(useFancyState, 'useState{[foo, setFoo]}\\nuseFancyEffect{}', false, () => [,]);
 
   const bar = useFancyState();
   const baz = FancyHook.useThing();
@@ -76,7 +76,7 @@ export default function App() {
   return <h1>{bar}{baz}</h1>;
 }
 
-__signature__(App, 'useFancyState{bar}\\nuseThing{baz}\\nuseState{}\\nuseThePlatform{}', () => [, FancyHook.useThing,,]);
+__signature__(App, 'useFancyState{bar}\\nuseThing{baz}\\nuseState{}\\nuseThePlatform{}', false, () => [, FancyHook.useThing,,]);
 
 _c = App;
 
@@ -144,7 +144,7 @@ function useFancyState() {
   return foo;
 }
 
-__signature__(useFancyState, "useState{[foo, setFoo]}\\nuseFancyEffect{}", () => [useFancyEffect]);
+__signature__(useFancyState, "useState{[foo, setFoo]}\\nuseFancyEffect{}", false, () => [useFancyEffect]);
 
 const useFancyEffect = () => {
   React.useEffect(() => {});
@@ -157,7 +157,7 @@ export default function App() {
   return <h1>{bar}</h1>;
 }
 
-__signature__(App, "useFancyState{bar}", () => [useFancyState]);
+__signature__(App, "useFancyState{bar}", false, () => [useFancyState]);
 
 _c = App;
 

@@ -16,6 +16,7 @@ import {REACT_MEMO_TYPE, REACT_FORWARD_REF_TYPE} from 'shared/ReactSymbols';
 
 type Signature = {|
   key: string,
+  forceReset: boolean,
   getCustomHooks: () => Array<Function>,
 |};
 
@@ -43,6 +44,9 @@ function haveEqualSignatures(prevType, nextType) {
     return false;
   }
   if (prevSignature.key !== nextSignature.key) {
+    return false;
+  }
+  if (nextSignature.forceReset) {
     return false;
   }
 
@@ -155,10 +159,12 @@ export function register(type: any, id: string): void {
 export function setSignature(
   type: any,
   key: string,
+  forceReset?: boolean = false,
   getCustomHooks?: () => Array<Function>,
 ): void {
   allSignaturesByType.set(type, {
     key,
+    forceReset,
     getCustomHooks: getCustomHooks || (() => []),
   });
 }

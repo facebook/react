@@ -72,8 +72,8 @@ describe('ReactFresh', () => {
     ReactFreshRuntime.register(type, id);
   }
 
-  function __signature__(type, key, getCustomHooks) {
-    ReactFreshRuntime.setSignature(type, key, getCustomHooks);
+  function __signature__(type, key, forceReset, getCustomHooks) {
+    ReactFreshRuntime.setSignature(type, key, forceReset, getCustomHooks);
     return type;
   }
 

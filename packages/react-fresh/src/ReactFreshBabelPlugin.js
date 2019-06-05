@@ -223,6 +223,30 @@ export default function(babel) {
     };
   }
 
+  let hasForceResetCommentByFile = new WeakMap();
+
+  // We let user do /* @hot reset */ to reset state in the whole file.
+  function hasForceResetComment(path) {
+    const file = path.hub.file;
+    let hasForceReset = hasForceResetCommentByFile.get(file);
+    if (hasForceReset !== undefined) {
+      return hasForceReset;
+    }
+
+    hasForceReset = false;
+    const comments = file.ast.comments;
+    for (let i = 0; i < comments.length; i++) {
+      const cmt = comments[i];
+      if (cmt.value.indexOf('@hot reset') !== -1) {
+        hasForceReset = true;
+        break;
+      }
+    }
+
+    hasForceResetCommentByFile.set(file, hasForceReset);
+    return hasForceReset;
+  }
+
   function createArgumentsForSignature(node, signature, scope) {
     const {key, customHooks} = signature;
 
@@ -250,6 +274,10 @@ export default function(babel) {
     });
 
     const args = [node, t.stringLiteral(key)];
+    const forceReset = hasForceResetComment(scope.path);
+    if (forceReset || customHooksInScope.length > 0) {
+      args.push(t.booleanLiteral(forceReset));
+    }
     if (customHooksInScope.length > 0) {
       args.push(
         t.arrowFunctionExpression([], t.arrayExpression(customHooksInScope)),
