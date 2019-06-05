@@ -166,6 +166,9 @@ const DragResponder = {
           const y = (obj: any).screenY;
           state.x = x;
           state.y = y;
+          if (x === state.startX && y === state.startY) {
+            return;
+          }
           if (!state.isDragging) {
             let shouldEnableDragging = true;
 
