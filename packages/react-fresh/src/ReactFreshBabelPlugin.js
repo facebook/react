@@ -410,7 +410,25 @@ export default function(babel) {
             return;
           }
           seenForSignature.add(node);
-          // Don't muatte the tree above this point.
+          // Don't mutate the tree above this point.
+
+          const sigCallID = path.scope.generateUidIdentifier('_s');
+          path.scope.parent.push({
+            id: sigCallID,
+            init: t.callExpression(t.identifier('__signature__'), []),
+          });
+
+          // The signature call is split in two parts. One part is called inside the function.
+          // This is used to signal when first render happens.
+          path
+            .get('body')
+            .unshiftContainer(
+              'body',
+              t.expressionStatement(t.callExpression(sigCallID, [])),
+            );
+
+          // The second call is around the function itself.
+          // This is used to associate a type with a signature.
 
           // Unlike with __register__, this needs to work for nested
           // declarations too. So we need to search for a path where
@@ -429,7 +447,7 @@ export default function(babel) {
           insertAfterPath.insertAfter(
             t.expressionStatement(
               t.callExpression(
-                t.identifier('__signature__'),
+                sigCallID,
                 createArgumentsForSignature(
                   id,
                   signature,
@@ -456,6 +474,24 @@ export default function(babel) {
           seenForSignature.add(node);
           // Don't mutate the tree above this point.
 
+          const sigCallID = path.scope.generateUidIdentifier('_s');
+          path.scope.parent.push({
+            id: sigCallID,
+            init: t.callExpression(t.identifier('__signature__'), []),
+          });
+
+          // The signature call is split in two parts. One part is called inside the function.
+          // This is used to signal when first render happens.
+          path
+            .get('body')
+            .unshiftContainer(
+              'body',
+              t.expressionStatement(t.callExpression(sigCallID, [])),
+            );
+
+          // The second call is around the function itself.
+          // This is used to associate a type with a signature.
+
           if (path.parent.type === 'VariableDeclarator') {
             let insertAfterPath = null;
             path.find(p => {
@@ -475,7 +511,7 @@ export default function(babel) {
             insertAfterPath.insertAfter(
               t.expressionStatement(
                 t.callExpression(
-                  t.identifier('__signature__'),
+                  sigCallID,
                   createArgumentsForSignature(
                     path.parent.id,
                     signature,
@@ -489,7 +525,7 @@ export default function(babel) {
             // let Foo = hoc(() => {})
             path.replaceWith(
               t.callExpression(
-                t.identifier('__signature__'),
+                sigCallID,
                 createArgumentsForSignature(node, signature, path.scope),
               ),
             );

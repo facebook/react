@@ -85,9 +85,17 @@ describe('ReactFreshIntegration', () => {
     ReactFreshRuntime.register(type, id);
   }
 
-  function __signature__(type, key, forceReset, getCustomHooks) {
-    ReactFreshRuntime.setSignature(type, key, forceReset, getCustomHooks);
-    return type;
+  function __signature__() {
+    let call = 0;
+    return function(type, key, forceReset, getCustomHooks) {
+      call++;
+      if (call === 1) {
+        ReactFreshRuntime.setSignature(type, key, forceReset, getCustomHooks);
+      } else if (call === 2) {
+        // TODO: lazily traverse custom Hooks here for first render.
+      }
+      return type;
+    };
   }
 
   it('reloads function declarations', () => {
