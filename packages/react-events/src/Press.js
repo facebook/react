@@ -38,6 +38,7 @@ type PressProps = {
     left: number,
   },
   preventDefault: boolean,
+  preventNativePropagation: boolean,
 };
 
 type PointerType = '' | 'mouse' | 'keyboard' | 'pen' | 'touch';
@@ -685,6 +686,9 @@ const PressResponder = {
       }
 
       case 'contextmenu': {
+        if (props.preventNativePropagation) {
+          nativeEvent.stopImmediatePropagation();
+        }
         if (state.isPressed) {
           dispatchCancel(event, context, props, state);
           if (props.preventDefault !== false) {
@@ -707,6 +711,9 @@ const PressResponder = {
       }
 
       case 'click': {
+        if (props.preventNativePropagation) {
+          nativeEvent.stopImmediatePropagation();
+        }
         if (context.isTargetWithinHostComponent(target, 'a', true)) {
           const {
             altKey,
@@ -819,6 +826,8 @@ const PressResponder = {
           if (pointerType === 'keyboard') {
             if (!isValidKeyboardEvent(nativeEvent)) {
               return;
+            } else if (props.preventNativePropagation) {
+              nativeEvent.stopImmediatePropagation();
             }
             // If the event target isn't within the press target, check if we're still
             // within the responder region. The region may have changed if the
