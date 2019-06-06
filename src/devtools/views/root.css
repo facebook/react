@@ -52,6 +52,8 @@
   --light-color-record-active: #fc3a4b;
   --light-color-record-hover: #3578e5;
   --light-color-record-inactive: #0088fa;
+  --light-color-scroll-thumb: #c2c2c2;
+  --light-color-scroll-track: #fafafa;
   --light-color-search-match: yellow;
   --light-color-search-match-current: #f7923b;
   --light-color-selected-tree-highlight-active: rgba(0, 136, 250, 0.15);
@@ -115,6 +117,8 @@
   --dark-color-record-active: #fc3a4b;
   --dark-color-record-hover: #a2e9fc;
   --dark-color-record-inactive: #61dafb;
+  --dark-color-scroll-thumb: #afb3b9;
+  --dark-color-scroll-track: #313640;
   --dark-color-search-match: yellow;
   --dark-color-search-match-current: #f7923b;
   --dark-color-selected-tree-highlight-active: rgba(23, 143, 185, 0.15);

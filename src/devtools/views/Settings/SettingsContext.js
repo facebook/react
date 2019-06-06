@@ -197,8 +197,8 @@ function updateDisplayDensity(
   const fontSize = computedStyle.getPropertyValue(
     `--${displayDensity}-root-font-size`
   );
-  const root = document.querySelector(':root');
-  ((root: any): HTMLElement).style.fontSize = fontSize;
+  const root = ((document.querySelector(':root'): any): HTMLElement);
+  root.style.fontSize = fontSize;
 }
 
 function updateThemeVariables(
@@ -285,6 +285,8 @@ function updateThemeVariables(
   updateStyleHelper(theme, 'color-record-active', documentElements);
   updateStyleHelper(theme, 'color-record-hover', documentElements);
   updateStyleHelper(theme, 'color-record-inactive', documentElements);
+  updateStyleHelper(theme, 'color-color-scroll-thumb', documentElements);
+  updateStyleHelper(theme, 'color-color-scroll-track', documentElements);
   updateStyleHelper(theme, 'color-search-match', documentElements);
   updateStyleHelper(theme, 'color-search-match-current', documentElements);
   updateStyleHelper(
@@ -309,6 +311,15 @@ function updateThemeVariables(
 
   // Font smoothing varies based on the theme.
   updateStyleHelper(theme, 'font-smoothing', documentElements);
+
+  // Update scrollbar color to match theme.
+  // this CSS property is currently only supported in Firefox,
+  // but it makes a significant UI improvement in dark mode.
+  // https://developer.mozilla.org/en-US/docs/Web/CSS/scrollbar-color
+  documentElements.forEach(documentElement => {
+    // $FlowFixMe scrollbarColor is missing in CSSStyleDeclaration
+    documentElement.style.scrollbarColor = `var(${`--${theme}-color-scroll-thumb`}) var(${`--${theme}-color-scroll-track`})`;
+  });
 }
 
 export { SettingsContext, SettingsContextController };
