@@ -15,8 +15,9 @@ import type {
 import {REACT_MEMO_TYPE, REACT_FORWARD_REF_TYPE} from 'shared/ReactSymbols';
 
 type Signature = {|
-  key: string,
+  ownKey: string,
   forceReset: boolean,
+  fullKey: string | null, // Contains keys of nested Hooks. Computed lazily.
   getCustomHooks: () => Array<Function>,
 |};
 
@@ -33,6 +34,49 @@ const familiesByType: WeakMap<any, Family> = new WeakMap();
 // It is an array of [Family, NextType] tuples.
 let pendingUpdates: Array<[Family, any]> = [];
 
+function computeFullKey(signature: Signature): string {
+  if (signature.fullKey !== null) {
+    return signature.fullKey;
+  }
+
+  let fullKey: string = signature.ownKey;
+  let hooks;
+  try {
+    hooks = signature.getCustomHooks();
+  } catch (err) {
+    // This can happen in an edge case, e.g. if expression like Foo.useSomething
+    // depends on Foo which is lazily initialized during rendering.
+    // In that case just assume we'll have to remount.
+    signature.forceReset = true;
+    signature.fullKey = fullKey;
+    return fullKey;
+  }
+
+  for (let i = 0; i < hooks.length; i++) {
+    const hook = hooks[i];
+    if (typeof hook !== 'function') {
+      // Something's wrong. Assume we need to remount.
+      signature.forceReset = true;
+      signature.fullKey = fullKey;
+      return fullKey;
+    }
+    const nestedHookSignature = allSignaturesByType.get(hook);
+    if (nestedHookSignature === undefined) {
+      // No signature means Hook wasn't in the source code, e.g. in a library.
+      // We'll skip it because we can assume it won't change during this session.
+      continue;
+    }
+    const nestedHookKey = computeFullKey(nestedHookSignature);
+    if (nestedHookSignature.forceReset) {
+      signature.forceReset = true;
+    }
+    fullKey += '\n---\n' + nestedHookKey;
+  }
+
+  signature.fullKey = fullKey;
+  return fullKey;
+}
+
 function haveEqualSignatures(prevType, nextType) {
   const prevSignature = allSignaturesByType.get(prevType);
   const nextSignature = allSignaturesByType.get(nextType);
@@ -43,33 +87,11 @@ function haveEqualSignatures(prevType, nextType) {
   if (prevSignature === undefined || nextSignature === undefined) {
     return false;
   }
-  if (prevSignature.key !== nextSignature.key) {
+  if (computeFullKey(prevSignature) !== computeFullKey(nextSignature)) {
     return false;
   }
   if (nextSignature.forceReset) {
     return false;
-  }
-
-  let prevCustomHooks;
-  let nextCustomHooks;
-  try {
-    prevCustomHooks = prevSignature.getCustomHooks();
-    nextCustomHooks = nextSignature.getCustomHooks();
-  } catch (err) {
-    // This can happen in an edge case, e.g. if expression like Foo.useSomething
-    // depends on Foo which is lazily initialized during rendering.
-    // In that case just assume we'll have to remount.
-    return false;
-  }
-
-  if (prevCustomHooks.length !== nextCustomHooks.length) {
-    return false;
-  }
-
-  for (let i = 0; i < nextCustomHooks.length; i++) {
-    if (!haveEqualSignatures(prevCustomHooks[i], nextCustomHooks[i])) {
-      return false;
-    }
   }
 
   return true;
@@ -169,8 +191,9 @@ export function setSignature(
   getCustomHooks?: () => Array<Function>,
 ): void {
   allSignaturesByType.set(type, {
-    key,
     forceReset,
+    ownKey: key,
+    fullKey: null,
     getCustomHooks: getCustomHooks || (() => []),
   });
 }
@@ -179,19 +202,7 @@ export function setSignature(
 // It captures Hook list at that time so inline requires don't break comparisons.
 export function collectCustomHooksForSignature(type: any) {
   const signature = allSignaturesByType.get(type);
-  if (signature === undefined) {
-    return;
+  if (signature !== undefined) {
+    computeFullKey(signature);
   }
-  let hooks;
-  try {
-    hooks = signature.getCustomHooks();
-  } catch (err) {
-    // This can happen in an edge case, e.g. if expression like Foo.useSomething
-    // depends on Foo which is lazily initialized during rendering.
-    // In that case just assume we'll have to remount.
-    signature.forceReset = true;
-    return;
-  }
-  // Capture Hooks at this time.
-  signature.getCustomHooks = () => hooks;
 }

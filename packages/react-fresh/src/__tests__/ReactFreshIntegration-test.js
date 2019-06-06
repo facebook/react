@@ -90,14 +90,18 @@ describe('ReactFreshIntegration', () => {
   function __signature__() {
     let call = 0;
     let savedType;
+    let hasCustomHooks;
     return function(type, key, forceReset, getCustomHooks) {
       switch (call++) {
         case 0:
           savedType = type;
+          hasCustomHooks = typeof getCustomHooks === 'function';
           ReactFreshRuntime.setSignature(type, key, forceReset, getCustomHooks);
           break;
         case 1:
-          ReactFreshRuntime.collectCustomHooksForSignature(savedType);
+          if (hasCustomHooks) {
+            ReactFreshRuntime.collectCustomHooksForSignature(savedType);
+          }
           break;
       }
       return type;
