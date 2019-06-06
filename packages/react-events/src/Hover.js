@@ -33,8 +33,8 @@ type HoverState = {
   isHovered: boolean,
   isOverTouchHitTarget: boolean,
   isTouched: boolean,
-  hoverStartTimeout: null | Symbol,
-  hoverEndTimeout: null | Symbol,
+  hoverStartTimeout: null | number,
+  hoverEndTimeout: null | number,
   ignoreEmulatedMouseEvents: boolean,
 };
 
