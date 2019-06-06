@@ -11,12 +11,34 @@ import {enableEventAPI} from 'shared/ReactFeatureFlags';
 
 import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
 
+let hasBadMapPolyfill;
+
+if (__DEV__) {
+  hasBadMapPolyfill = false;
+  try {
+    const frozenObject = Object.freeze({});
+    const testMap = new Map([[frozenObject, null]]);
+    const testSet = new Set([frozenObject]);
+    // This is necessary for Rollup to not consider these unused.
+    // https://github.com/rollup/rollup/issues/1771
+    // TODO: we can remove these if Rollup fixes the bug.
+    testMap.set(0, 0);
+    testSet.add(0);
+  } catch (e) {
+    // TODO: Consider warning about bad polyfills
+    hasBadMapPolyfill = true;
+  }
+}
+
 export function createEventComponent(
   responder: ReactEventResponder,
   displayName: string,
 ): ?ReactEventComponent {
   if (enableEventAPI) {
-    if (__DEV__) {
+    // We use responder as a Map key later on. When we have a bad
+    // polyfill, then we can't use it as a key as the polyfill tries
+    // to add a property to the object.
+    if (__DEV__ && !hasBadMapPolyfill) {
       Object.freeze(responder);
     }
     const eventComponent = {

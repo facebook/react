@@ -79,17 +79,17 @@ type PartialEventObject = {
 
 type ResponderTimeout = {|
   id: TimeoutID,
-  timers: Map<Symbol, ResponderTimer>,
+  timers: Map<number, ResponderTimer>,
 |};
 
 type ResponderTimer = {|
   instance: ReactEventComponentInstance,
   func: () => void,
-  id: Symbol,
+  id: number,
   timeStamp: number,
 |};
 
-const activeTimeouts: Map<Symbol, ResponderTimeout> = new Map();
+const activeTimeouts: Map<number, ResponderTimeout> = new Map();
 const rootEventTypesToEventComponentInstances: Map<
   DOMTopLevelEventType | string,
   Set<ReactEventComponentInstance>,
@@ -117,6 +117,7 @@ let currentTimeStamp = 0;
 let currentTimers = new Map();
 let currentInstance: null | ReactEventComponentInstance = null;
 let currentEventQueue: null | EventQueue = null;
+let currentTimerIDCounter = 0;
 
 const eventResponderContext: ReactResponderContext = {
   dispatchEvent(
@@ -340,14 +341,14 @@ const eventResponderContext: ReactResponderContext = {
       ((currentInstance: any): ReactEventComponentInstance),
     );
   },
-  setTimeout(func: () => void, delay): Symbol {
+  setTimeout(func: () => void, delay): number {
     validateResponderContext();
     if (currentTimers === null) {
       currentTimers = new Map();
     }
     let timeout = currentTimers.get(delay);
 
-    const timerId = Symbol();
+    const timerId = currentTimerIDCounter++;
     if (timeout === undefined) {
       const timers = new Map();
       const id = setTimeout(() => {
@@ -368,7 +369,7 @@ const eventResponderContext: ReactResponderContext = {
     activeTimeouts.set(timerId, timeout);
     return timerId;
   },
-  clearTimeout(timerId: Symbol): void {
+  clearTimeout(timerId: number): void {
     validateResponderContext();
     const timeout = activeTimeouts.get(timerId);
 
@@ -550,7 +551,7 @@ function isFiberHostComponentFocusable(fiber: Fiber): boolean {
 }
 
 function processTimers(
-  timers: Map<Symbol, ResponderTimer>,
+  timers: Map<number, ResponderTimer>,
   delay: number,
 ): void {
   const timersArr = Array.from(timers.values());
