@@ -50,10 +50,18 @@ function haveEqualSignatures(prevType, nextType) {
     return false;
   }
 
-  // TODO: we might need to calculate previous signature earlier in practice,
-  // such as during the first time a component is resolved. We'll revisit this.
-  const prevCustomHooks = prevSignature.getCustomHooks();
-  const nextCustomHooks = nextSignature.getCustomHooks();
+  let prevCustomHooks;
+  let nextCustomHooks;
+  try {
+    prevCustomHooks = prevSignature.getCustomHooks();
+    nextCustomHooks = nextSignature.getCustomHooks();
+  } catch (err) {
+    // This can happen in an edge case, e.g. if expression like Foo.useSomething
+    // depends on Foo which is lazily initialized during rendering.
+    // In that case just assume we'll have to remount.
+    return false;
+  }
+
   if (prevCustomHooks.length !== nextCustomHooks.length) {
     return false;
   }
@@ -165,4 +173,25 @@ export function setSignature(
     forceReset,
     getCustomHooks: getCustomHooks || (() => []),
   });
+}
+
+// This is lazily called during first render for a type.
+// It captures Hook list at that time so inline requires don't break comparisons.
+export function collectCustomHooksForSignature(type: any) {
+  const signature = allSignaturesByType.get(type);
+  if (signature === undefined) {
+    return;
+  }
+  let hooks;
+  try {
+    hooks = signature.getCustomHooks();
+  } catch (err) {
+    // This can happen in an edge case, e.g. if expression like Foo.useSomething
+    // depends on Foo which is lazily initialized during rendering.
+    // In that case just assume we'll have to remount.
+    signature.forceReset = true;
+    return;
+  }
+  // Capture Hooks at this time.
+  signature.getCustomHooks = () => hooks;
 }
