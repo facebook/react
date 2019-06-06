@@ -38,7 +38,7 @@ export function createEventComponent(
     // We use responder as a Map key later on. When we have a bad
     // polyfill, then we can't use it as a key as the polyfill tries
     // to add a property to the object.
-    if (!hasBadMapPolyfill && __DEV__) {
+    if (__DEV__ && !hasBadMapPolyfill) {
       Object.freeze(responder);
     }
     const eventComponent = {
