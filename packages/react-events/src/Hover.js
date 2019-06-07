@@ -13,7 +13,6 @@ import type {
 } from 'shared/ReactTypes';
 
 import React from 'react';
-import {isEventPositionWithinTouchHitTarget} from './utils';
 import {UserBlockingEvent} from 'shared/ReactTypes';
 
 type HoverProps = {
@@ -326,7 +325,7 @@ const HoverResponder = {
             return;
           }
 
-          if (isEventPositionWithinTouchHitTarget(event, context)) {
+          if (context.isEventWithinTouchHitTarget(event)) {
             state.isOverTouchHitTarget = true;
             return;
           }
@@ -345,14 +344,14 @@ const HoverResponder = {
             if (state.isOverTouchHitTarget) {
               // If we were moving over the TouchHitTarget and have now moved
               // over the Responder target
-              if (!isEventPositionWithinTouchHitTarget(event, context)) {
+              if (!context.isEventWithinTouchHitTarget(event)) {
                 dispatchHoverStartEvents(event, context, props, state);
                 state.isOverTouchHitTarget = false;
               }
             } else {
               // If we were moving over the Responder target and have now moved
               // over the TouchHitTarget
-              if (isEventPositionWithinTouchHitTarget(event, context)) {
+              if (context.isEventWithinTouchHitTarget(event)) {
                 dispatchHoverEndEvents(event, context, props, state);
                 state.isOverTouchHitTarget = true;
               } else {

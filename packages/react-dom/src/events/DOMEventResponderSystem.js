@@ -189,15 +189,15 @@ const eventResponderContext: ReactResponderContext = {
     eventListeners.set(eventObject, listener);
     eventQueue.events.push(eventObject);
   },
-  isPositionWithinTouchHitTarget(x: number, y: number): boolean {
+  isEventWithinTouchHitTarget(event: ReactResponderEvent): boolean {
     validateResponderContext();
-    const doc = getActiveDocument();
-    // This isn't available in some environments (JSDOM)
-    if (typeof doc.elementFromPoint !== 'function') {
-      return false;
-    }
-    const target = doc.elementFromPoint(x, y);
-    if (target === null) {
+    const target = event.target;
+    const nativeEvent = event.nativeEvent;
+    // We should always be dealing with a mouse event or touch event here.
+    // If we are not, these won't exist and we can early return.
+    const x = (nativeEvent: any).clientX;
+    const y = (nativeEvent: any).clientY;
+    if (x === undefined || y === undefined) {
       return false;
     }
     const childFiber = getClosestInstanceFromNode(target);
