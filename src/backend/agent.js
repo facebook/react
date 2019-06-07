@@ -127,6 +127,15 @@ export default class Agent extends EventEmitter {
     if (this._isProfiling) {
       bridge.send('profilingStatus', true);
     }
+
+    // Notify the frontend if the backend supports the Storage API (e.g. localStorage).
+    // If not, features like reload-and-profile will not work correctly and must be disabled.
+    let isBackendStorageAPISupported = false;
+    try {
+      localStorage.getItem('test');
+      isBackendStorageAPISupported = true;
+    } catch (error) {}
+    bridge.send('isBackendStorageAPISupported', isBackendStorageAPISupported);
   }
 
   captureScreenshot = ({

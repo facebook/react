@@ -73,6 +73,10 @@ export default class Store extends EventEmitter {
   // The InspectedElementContext also relies on this mutability for its WeakMap usage.
   _idToElement: Map<number, Element> = new Map();
 
+  // Can the backend use the Storage API (e.g. localStorage)?
+  // If not, features like reload-and-profile will not work correctly and must be disabled.
+  _isBackendStorageAPISupported: boolean = false;
+
   // Map of element (id) to the set of elements (ids) it owns.
   // This map enables getOwnersListForElement() to avoid traversing the entire tree.
   _ownersMap: Map<number, Set<number>> = new Map();
@@ -141,6 +145,10 @@ export default class Store extends EventEmitter {
     this._bridge = bridge;
     bridge.addListener('operations', this.onBridgeOperations);
     bridge.addListener('shutdown', this.onBridgeShutdown);
+    bridge.addListener(
+      'isBackendStorageAPISupported',
+      this.onBridgeStorageSupported
+    );
 
     this._profilerStore = new ProfilerStore(bridge, this, isProfiling);
   }
@@ -261,7 +269,10 @@ export default class Store extends EventEmitter {
   }
 
   get supportsReloadAndProfile(): boolean {
-    return this._supportsReloadAndProfile;
+    // Does the DevTools shell support reloading and eagerly injecting the renderer interface?
+    // And if so, can the backend use the localStorage API?
+    // Both of these are required for the reload-and-profile feature to work.
+    return this._supportsReloadAndProfile && this._isBackendStorageAPISupported;
   }
 
   containsElement(id: number): boolean {
@@ -904,5 +915,15 @@ export default class Store extends EventEmitter {
 
     this._bridge.removeListener('operations', this.onBridgeOperations);
     this._bridge.removeListener('shutdown', this.onBridgeShutdown);
+    this._bridge.removeListener(
+      'isBackendStorageAPISupported',
+      this.onBridgeStorageSupported
+    );
+  };
+
+  onBridgeStorageSupported = (isBackendStorageAPISupported: boolean) => {
+    this._isBackendStorageAPISupported = isBackendStorageAPISupported;
+
+    this.emit('supportsReloadAndProfile');
   };
 }
