@@ -7,7 +7,7 @@
  */
 
 import type {ReactEventComponent, ReactEventResponder} from 'shared/ReactTypes';
-import {enableEventAPI} from 'shared/ReactFeatureFlags';
+import {enableResponderEventSystem} from 'shared/ReactFeatureFlags';
 
 import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
 
@@ -34,7 +34,7 @@ export function createEventComponent(
   responder: ReactEventResponder,
   displayName: string,
 ): ?ReactEventComponent {
-  if (enableEventAPI) {
+  if (enableResponderEventSystem) {
     // We use responder as a Map key later on. When we have a bad
     // polyfill, then we can't use it as a key as the polyfill tries
     // to add a property to the object.

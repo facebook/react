@@ -6,13 +6,18 @@
  */
 
 import SyntheticUIEvent from './SyntheticUIEvent';
+import {enablePluginEventSystem} from 'shared/ReactFeatureFlags';
 
-/**
- * @interface FocusEvent
- * @see http://www.w3.org/TR/DOM-Level-3-Events/
- */
-const SyntheticFocusEvent = SyntheticUIEvent.extend({
-  relatedTarget: null,
-});
+let SyntheticFocusEvent;
+
+if (enablePluginEventSystem) {
+  /**
+   * @interface FocusEvent
+   * @see http://www.w3.org/TR/DOM-Level-3-Events/
+   */
+  SyntheticFocusEvent = SyntheticUIEvent.extend({
+    relatedTarget: null,
+  });
+}
 
 export default SyntheticFocusEvent;

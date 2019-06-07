@@ -7,20 +7,25 @@
 
 import SyntheticUIEvent from './SyntheticUIEvent';
 import getEventModifierState from './getEventModifierState';
+import {enablePluginEventSystem} from 'shared/ReactFeatureFlags';
 
-/**
- * @interface TouchEvent
- * @see http://www.w3.org/TR/touch-events/
- */
-const SyntheticTouchEvent = SyntheticUIEvent.extend({
-  touches: null,
-  targetTouches: null,
-  changedTouches: null,
-  altKey: null,
-  metaKey: null,
-  ctrlKey: null,
-  shiftKey: null,
-  getModifierState: getEventModifierState,
-});
+let SyntheticTouchEvent;
+
+if (enablePluginEventSystem) {
+  /**
+   * @interface TouchEvent
+   * @see http://www.w3.org/TR/touch-events/
+   */
+  SyntheticTouchEvent = SyntheticUIEvent.extend({
+    touches: null,
+    targetTouches: null,
+    changedTouches: null,
+    altKey: null,
+    metaKey: null,
+    ctrlKey: null,
+    shiftKey: null,
+    getModifierState: getEventModifierState,
+  });
+}
 
 export default SyntheticTouchEvent;

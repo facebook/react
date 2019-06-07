@@ -34,7 +34,7 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {
   warnAboutMissingMockScheduler,
-  enableEventAPI,
+  enableResponderEventSystem,
 } from 'shared/ReactFeatureFlags';
 import {ConcurrentRoot, BatchedRoot, LegacyRoot} from 'shared/ReactRootTags';
 
@@ -285,7 +285,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     },
 
     getChildHostContextForEventComponent(parentHostContext: HostContext) {
-      if (__DEV__ && enableEventAPI) {
+      if (__DEV__ && enableResponderEventSystem) {
         warning(
           parentHostContext !== EVENT_TARGET_CONTEXT &&
             parentHostContext !== EVENT_TOUCH_HIT_TARGET_CONTEXT,
@@ -300,7 +300,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       parentHostContext: HostContext,
       type: Symbol | number,
     ) {
-      if (__DEV__ && enableEventAPI) {
+      if (__DEV__ && enableResponderEventSystem) {
         if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
           warning(
             parentHostContext !== EVENT_COMPONENT_CONTEXT,
@@ -397,7 +397,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       hostContext: Object,
       internalInstanceHandle: Object,
     ): TextInstance {
-      if (__DEV__ && enableEventAPI) {
+      if (__DEV__ && enableResponderEventSystem) {
         warning(
           hostContext !== EVENT_COMPONENT_CONTEXT,
           'validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
@@ -452,7 +452,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       type: Symbol | number,
       props: Props,
     ): null | EventTargetChildElement {
-      if (enableEventAPI) {
+      if (enableResponderEventSystem) {
         if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
           const {bottom, left, right, top} = props;
 

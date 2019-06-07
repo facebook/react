@@ -12,7 +12,7 @@ import warning from 'shared/warning';
 import type {ReactEventComponentInstance} from 'shared/ReactTypes';
 import {REACT_EVENT_TARGET_TOUCH_HIT} from 'shared/ReactSymbols';
 
-import {enableEventAPI} from 'shared/ReactFeatureFlags';
+import {enableResponderEventSystem} from 'shared/ReactFeatureFlags';
 
 type EventTargetChildElement = {
   type: string,
@@ -138,7 +138,7 @@ export function getChildHostContext(
 export function getChildHostContextForEventComponent(
   parentHostContext: HostContext,
 ): HostContext {
-  if (__DEV__ && enableEventAPI) {
+  if (__DEV__ && enableResponderEventSystem) {
     warning(
       parentHostContext !== EVENT_TARGET_CONTEXT &&
         parentHostContext !== EVENT_TOUCH_HIT_TARGET_CONTEXT,
@@ -153,7 +153,7 @@ export function getChildHostContextForEventTarget(
   parentHostContext: HostContext,
   type: Symbol | number,
 ): HostContext {
-  if (__DEV__ && enableEventAPI) {
+  if (__DEV__ && enableResponderEventSystem) {
     if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
       warning(
         parentHostContext !== EVENT_COMPONENT_CONTEXT,
@@ -238,7 +238,7 @@ export function createTextInstance(
   hostContext: Object,
   internalInstanceHandle: Object,
 ): TextInstance {
-  if (__DEV__ && enableEventAPI) {
+  if (__DEV__ && enableResponderEventSystem) {
     warning(
       hostContext !== EVENT_COMPONENT_CONTEXT,
       'validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
@@ -349,7 +349,7 @@ export function getEventTargetChildElement(
   type: Symbol | number,
   props: Props,
 ): null | EventTargetChildElement {
-  if (enableEventAPI) {
+  if (enableResponderEventSystem) {
     if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
       const {bottom, left, right, top} = props;
 
@@ -380,7 +380,7 @@ export function handleEventTarget(
   rootContainerInstance: Container,
   internalInstanceHandle: Object,
 ): boolean {
-  if (enableEventAPI) {
+  if (enableResponderEventSystem) {
     if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
       // In DEV we do a computed style check on the position to ensure
       // the parent host component is correctly position in the document.

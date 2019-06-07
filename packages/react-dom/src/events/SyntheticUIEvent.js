@@ -6,10 +6,15 @@
  */
 
 import SyntheticEvent from 'events/SyntheticEvent';
+import {enablePluginEventSystem} from 'shared/ReactFeatureFlags';
 
-const SyntheticUIEvent = SyntheticEvent.extend({
-  view: null,
-  detail: null,
-});
+let SyntheticUIEvent;
+
+if (enablePluginEventSystem) {
+  SyntheticUIEvent = SyntheticEvent.extend({
+    view: null,
+    detail: null,
+  });
+}
 
 export default SyntheticUIEvent;

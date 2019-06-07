@@ -33,7 +33,7 @@ describe('Hover event responder', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableEventAPI = true;
+    ReactFeatureFlags.enableResponderEventSystem = true;
     React = require('react');
     ReactDOM = require('react-dom');
     Hover = require('react-events/hover');
@@ -236,7 +236,7 @@ describe('Hover event responder', () => {
       // This is currently behind a feature flag
       jest.resetModules();
       ReactFeatureFlags = require('shared/ReactFeatureFlags');
-      ReactFeatureFlags.enableEventAPI = true;
+      ReactFeatureFlags.enableResponderEventSystem = true;
       ReactFeatureFlags.enableUserBlockingEvents = true;
       React = require('react');
       ReactDOM = require('react-dom');

@@ -12,7 +12,7 @@ import warning from 'shared/warning';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 import voidElementTags from './voidElementTags';
-import {enableEventAPI} from 'shared/ReactFeatureFlags';
+import {enableResponderEventSystem} from 'shared/ReactFeatureFlags';
 import {REACT_EVENT_TARGET_TYPE} from 'shared/ReactSymbols';
 
 const HTML = '__html';
@@ -30,7 +30,7 @@ function assertValidProps(tag: string, props: ?Object) {
   if (voidElementTags[tag]) {
     invariant(
       (props.children == null ||
-        (enableEventAPI &&
+        (enableResponderEventSystem &&
           props.children.type &&
           props.children.type.$$typeof === REACT_EVENT_TARGET_TYPE)) &&
         props.dangerouslySetInnerHTML == null,

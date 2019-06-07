@@ -22,7 +22,7 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   warnAboutDeprecatedLifecycles,
   enableSuspenseServerRenderer,
-  enableEventAPI,
+  enableResponderEventSystem,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -1168,7 +1168,7 @@ class ReactDOMServerRenderer {
           }
           case REACT_EVENT_COMPONENT_TYPE:
           case REACT_EVENT_TARGET_TYPE: {
-            if (enableEventAPI) {
+            if (enableResponderEventSystem) {
               if (
                 elementType.$$typeof === REACT_EVENT_TARGET_TYPE &&
                 elementType.type === REACT_EVENT_TARGET_TOUCH_HIT

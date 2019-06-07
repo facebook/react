@@ -6,13 +6,18 @@
  */
 
 import SyntheticMouseEvent from './SyntheticMouseEvent';
+import {enablePluginEventSystem} from 'shared/ReactFeatureFlags';
 
-/**
- * @interface DragEvent
- * @see http://www.w3.org/TR/DOM-Level-3-Events/
- */
-const SyntheticDragEvent = SyntheticMouseEvent.extend({
-  dataTransfer: null,
-});
+let SyntheticDragEvent;
+
+if (enablePluginEventSystem) {
+  /**
+   * @interface DragEvent
+   * @see http://www.w3.org/TR/DOM-Level-3-Events/
+   */
+  SyntheticDragEvent = SyntheticMouseEvent.extend({
+    dataTransfer: null,
+  });
+}
 
 export default SyntheticDragEvent;

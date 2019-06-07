@@ -28,7 +28,7 @@ import {
   enableSchedulerTracing,
   enableProfilerTimer,
   enableSuspenseServerRenderer,
-  enableEventAPI,
+  enableResponderEventSystem,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -593,7 +593,7 @@ function commitLifeCycles(
     case IncompleteClassComponent:
       return;
     case EventTarget: {
-      if (enableEventAPI) {
+      if (enableResponderEventSystem) {
         const type = finishedWork.type.type;
         const props = finishedWork.memoizedProps;
         const instance = finishedWork.stateNode;
@@ -621,7 +621,7 @@ function commitLifeCycles(
       return;
     }
     case EventComponent: {
-      if (enableEventAPI) {
+      if (enableResponderEventSystem) {
         mountEventComponent(finishedWork.stateNode);
       }
       return;
@@ -781,7 +781,7 @@ function commitUnmount(current: Fiber): void {
       return;
     }
     case EventComponent: {
-      if (enableEventAPI) {
+      if (enableResponderEventSystem) {
         const eventComponentInstance = current.stateNode;
         unmountEventComponent(eventComponentInstance);
         current.stateNode = null;

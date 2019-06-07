@@ -51,7 +51,10 @@ import {
 } from './ReactElementValidator';
 import ReactSharedInternals from './ReactSharedInternals';
 import {error, warn} from './withComponentStack';
-import {enableEventAPI, enableJSXTransformAPI} from 'shared/ReactFeatureFlags';
+import {
+  enableResponderEventSystem,
+  enableJSXTransformAPI,
+} from 'shared/ReactFeatureFlags';
 const React = {
   Children: {
     map,
@@ -106,7 +109,7 @@ const React = {
 // don't modify the React object to avoid deopts.
 // Also let's not expose their names in stable builds.
 
-if (enableEventAPI) {
+if (enableResponderEventSystem) {
   React.unstable_createEventComponent = createEventComponent;
 }
 

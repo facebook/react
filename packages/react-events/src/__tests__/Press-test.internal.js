@@ -38,7 +38,7 @@ const createKeyboardEvent = (type, data) => {
 
 function init() {
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
-  ReactFeatureFlags.enableEventAPI = true;
+  ReactFeatureFlags.enableResponderEventSystem = true;
   React = require('react');
   ReactDOM = require('react-dom');
   Press = require('react-events/press');

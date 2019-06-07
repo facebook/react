@@ -37,7 +37,7 @@ function createReactEventComponent() {
 function init() {
   jest.resetModules();
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
-  ReactFeatureFlags.enableEventAPI = true;
+  ReactFeatureFlags.enableResponderEventSystem = true;
   React = require('react');
   Scheduler = require('scheduler');
   ReactSymbols = require('shared/ReactSymbols');

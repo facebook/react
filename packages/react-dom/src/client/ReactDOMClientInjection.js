@@ -20,24 +20,28 @@ import EnterLeaveEventPlugin from '../events/EnterLeaveEventPlugin';
 import SelectEventPlugin from '../events/SelectEventPlugin';
 import SimpleEventPlugin from '../events/SimpleEventPlugin';
 
-/**
- * Inject modules for resolving DOM hierarchy and plugin ordering.
- */
-EventPluginHubInjection.injectEventPluginOrder(DOMEventPluginOrder);
-setComponentTree(
-  getFiberCurrentPropsFromNode,
-  getInstanceFromNode,
-  getNodeFromInstance,
-);
+import {enablePluginEventSystem} from 'shared/ReactFeatureFlags';
 
-/**
- * Some important event plugins included by default (without having to require
- * them).
- */
-EventPluginHubInjection.injectEventPluginsByName({
-  SimpleEventPlugin: SimpleEventPlugin,
-  EnterLeaveEventPlugin: EnterLeaveEventPlugin,
-  ChangeEventPlugin: ChangeEventPlugin,
-  SelectEventPlugin: SelectEventPlugin,
-  BeforeInputEventPlugin: BeforeInputEventPlugin,
-});
+if (enablePluginEventSystem) {
+  /**
+   * Inject modules for resolving DOM hierarchy and plugin ordering.
+   */
+  EventPluginHubInjection.injectEventPluginOrder(DOMEventPluginOrder);
+  setComponentTree(
+    getFiberCurrentPropsFromNode,
+    getInstanceFromNode,
+    getNodeFromInstance,
+  );
+
+  /**
+   * Some important event plugins included by default (without having to require
+   * them).
+   */
+  EventPluginHubInjection.injectEventPluginsByName({
+    SimpleEventPlugin: SimpleEventPlugin,
+    EnterLeaveEventPlugin: EnterLeaveEventPlugin,
+    ChangeEventPlugin: ChangeEventPlugin,
+    SelectEventPlugin: SelectEventPlugin,
+    BeforeInputEventPlugin: BeforeInputEventPlugin,
+  });
+}

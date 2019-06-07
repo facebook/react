@@ -6,13 +6,17 @@
  */
 
 import SyntheticEvent from 'events/SyntheticEvent';
+import {enablePluginEventSystem} from 'shared/ReactFeatureFlags';
 
-/**
- * @interface Event
- * @see http://www.w3.org/TR/DOM-Level-3-Events/#events-compositionevents
- */
-const SyntheticCompositionEvent = SyntheticEvent.extend({
-  data: null,
-});
+let SyntheticCompositionEvent;
 
+if (enablePluginEventSystem) {
+  /**
+   * @interface Event
+   * @see http://www.w3.org/TR/DOM-Level-3-Events/#events-compositionevents
+   */
+  SyntheticCompositionEvent = SyntheticEvent.extend({
+    data: null,
+  });
+}
 export default SyntheticCompositionEvent;

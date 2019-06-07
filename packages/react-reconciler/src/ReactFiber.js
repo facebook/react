@@ -26,7 +26,10 @@ import type {HookType} from './ReactFiberHooks';
 
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import {enableProfilerTimer, enableEventAPI} from 'shared/ReactFeatureFlags';
+import {
+  enableProfilerTimer,
+  enableResponderEventSystem,
+} from 'shared/ReactFeatureFlags';
 import {NoEffect} from 'shared/ReactSideEffectTags';
 import {ConcurrentRoot, BatchedRoot} from 'shared/ReactRootTags';
 import {
@@ -555,7 +558,7 @@ export function createFiberFromTypeAndProps(
               resolvedType = null;
               break getTag;
             case REACT_EVENT_COMPONENT_TYPE:
-              if (enableEventAPI) {
+              if (enableResponderEventSystem) {
                 return createFiberFromEventComponent(
                   type,
                   pendingProps,
@@ -566,7 +569,7 @@ export function createFiberFromTypeAndProps(
               }
               break;
             case REACT_EVENT_TARGET_TYPE:
-              if (enableEventAPI) {
+              if (enableResponderEventSystem) {
                 return createFiberFromEventTarget(
                   type,
                   pendingProps,

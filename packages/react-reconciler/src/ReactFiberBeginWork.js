@@ -55,7 +55,7 @@ import {
   debugRenderPhaseSideEffectsForStrictMode,
   enableProfilerTimer,
   enableSuspenseServerRenderer,
-  enableEventAPI,
+  enableResponderEventSystem,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import shallowEqual from 'shared/shallowEqual';
@@ -2357,12 +2357,12 @@ function beginWork(
           break;
         }
         case EventComponent:
-          if (enableEventAPI) {
+          if (enableResponderEventSystem) {
             pushHostContextForEventComponent(workInProgress);
           }
           break;
         case EventTarget: {
-          if (enableEventAPI) {
+          if (enableResponderEventSystem) {
             pushHostContextForEventTarget(workInProgress);
           }
           break;
@@ -2546,7 +2546,7 @@ function beginWork(
       break;
     }
     case EventComponent: {
-      if (enableEventAPI) {
+      if (enableResponderEventSystem) {
         return updateEventComponent(
           current,
           workInProgress,
@@ -2556,7 +2556,7 @@ function beginWork(
       break;
     }
     case EventTarget: {
-      if (enableEventAPI) {
+      if (enableResponderEventSystem) {
         return updateEventTarget(current, workInProgress, renderExpirationTime);
       }
       break;

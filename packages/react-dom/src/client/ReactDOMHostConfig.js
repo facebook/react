@@ -104,7 +104,7 @@ export type NoTimeout = -1;
 
 import {
   enableSuspenseServerRenderer,
-  enableEventAPI,
+  enableResponderEventSystem,
 } from 'shared/ReactFeatureFlags';
 import warning from 'shared/warning';
 
@@ -382,7 +382,7 @@ export function createTextInstance(
   if (__DEV__) {
     const hostContextDev = ((hostContext: any): HostContextDev);
     validateDOMNesting(null, text, hostContextDev.ancestorInfo);
-    if (enableEventAPI) {
+    if (enableResponderEventSystem) {
       const eventData = hostContextDev.eventData;
       if (eventData !== null) {
         warning(
@@ -895,7 +895,7 @@ export function didNotFindHydratableSuspenseInstance(
 export function mountEventComponent(
   eventComponentInstance: ReactEventComponentInstance,
 ): void {
-  if (enableEventAPI) {
+  if (enableResponderEventSystem) {
     const rootContainerInstance = ((eventComponentInstance.rootInstance: any): Container);
     const rootElement = rootContainerInstance.ownerDocument;
     const responder = eventComponentInstance.responder;
@@ -923,7 +923,7 @@ export function updateEventComponent(
 export function unmountEventComponent(
   eventComponentInstance: ReactEventComponentInstance,
 ): void {
-  if (enableEventAPI) {
+  if (enableResponderEventSystem) {
     // TODO stop listening to targetEventTypes
     unmountEventResponder(eventComponentInstance);
   }
@@ -933,7 +933,7 @@ export function getEventTargetChildElement(
   type: Symbol | number,
   props: Props,
 ): null | EventTargetChildElement {
-  if (enableEventAPI) {
+  if (enableResponderEventSystem) {
     if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
       const {bottom, left, right, top} = props;
 
@@ -983,7 +983,7 @@ export function commitEventTarget(
   instance: Instance,
   parentInstance: Instance,
 ): void {
-  if (enableEventAPI) {
+  if (enableResponderEventSystem) {
     if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
       if (__DEV__ && canUseDOM) {
         // This is done at DEV time because getComputedStyle will

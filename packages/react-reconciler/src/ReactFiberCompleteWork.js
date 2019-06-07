@@ -98,7 +98,7 @@ import {
 } from './ReactFiberHydrationContext';
 import {
   enableSuspenseServerRenderer,
-  enableEventAPI,
+  enableResponderEventSystem,
 } from 'shared/ReactFeatureFlags';
 import {
   renderDidSuspend,
@@ -830,7 +830,7 @@ function completeWork(
       break;
     }
     case EventComponent: {
-      if (enableEventAPI) {
+      if (enableResponderEventSystem) {
         popHostContext(workInProgress);
         const rootContainerInstance = getRootHostContainer();
         const responder = workInProgress.type.responder;
@@ -874,7 +874,7 @@ function completeWork(
       break;
     }
     case EventTarget: {
-      if (enableEventAPI) {
+      if (enableResponderEventSystem) {
         popHostContext(workInProgress);
         const type = workInProgress.type.type;
         const rootContainerInstance = getRootHostContainer();

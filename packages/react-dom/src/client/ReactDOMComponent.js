@@ -89,7 +89,10 @@ import {validateProperties as validateARIAProperties} from '../shared/ReactDOMIn
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
 
-import {enableEventAPI} from 'shared/ReactFeatureFlags';
+import {
+  enableResponderEventSystem,
+  enablePluginEventSystem,
+} from 'shared/ReactFeatureFlags';
 
 let didWarnInvalidHydration = false;
 let didWarnShadyDOM = false;
@@ -353,7 +356,10 @@ function setInitialDOMProperties(
       // We could have excluded it in the property list instead of
       // adding a special case here, but then it wouldn't be emitted
       // on server rendering (but we *do* want to emit it in SSR).
-    } else if (registrationNameModules.hasOwnProperty(propKey)) {
+    } else if (
+      enablePluginEventSystem &&
+      registrationNameModules.hasOwnProperty(propKey)
+    ) {
       if (nextProp != null) {
         if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
@@ -529,8 +535,10 @@ export function setInitialProperties(
     case 'video':
     case 'audio':
       // Create listener for each media event
-      for (let i = 0; i < mediaEventTypes.length; i++) {
-        trapBubbledEvent(mediaEventTypes[i], domElement);
+      if (enablePluginEventSystem) {
+        for (let i = 0; i < mediaEventTypes.length; i++) {
+          trapBubbledEvent(mediaEventTypes[i], domElement);
+        }
       }
       props = rawProps;
       break;
@@ -706,7 +714,10 @@ export function diffProperties(
       // Noop
     } else if (propKey === AUTOFOCUS) {
       // Noop. It doesn't work on updates anyway.
-    } else if (registrationNameModules.hasOwnProperty(propKey)) {
+    } else if (
+      enablePluginEventSystem &&
+      registrationNameModules.hasOwnProperty(propKey)
+    ) {
       // This is a special case. If any listener updates we need to ensure
       // that the "current" fiber pointer gets updated so we need a commit
       // to update this element.
@@ -795,7 +806,10 @@ export function diffProperties(
       propKey === SUPPRESS_HYDRATION_WARNING
     ) {
       // Noop
-    } else if (registrationNameModules.hasOwnProperty(propKey)) {
+    } else if (
+      enablePluginEventSystem &&
+      registrationNameModules.hasOwnProperty(propKey)
+    ) {
       if (nextProp != null) {
         // We eagerly listen to this even though we haven't committed yet.
         if (__DEV__ && typeof nextProp !== 'function') {
@@ -1027,14 +1041,20 @@ export function diffHydratedProperties(
           updatePayload = [CHILDREN, '' + nextProp];
         }
       }
-    } else if (registrationNameModules.hasOwnProperty(propKey)) {
+    } else if (
+      enablePluginEventSystem &&
+      registrationNameModules.hasOwnProperty(propKey)
+    ) {
       if (nextProp != null) {
         if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
         }
         ensureListeningTo(rootContainerElement, propKey);
       }
-    } else if (enableEventAPI && propKey === HYDRATE_TOUCH_HIT_TARGET) {
+    } else if (
+      enableResponderEventSystem &&
+      propKey === HYDRATE_TOUCH_HIT_TARGET
+    ) {
       updatePayload = [STYLE, rawProps.style];
     } else if (
       __DEV__ &&
@@ -1290,7 +1310,7 @@ export function listenToEventResponderEventTypes(
   eventTypes: Array<ReactEventResponderEventType>,
   element: Element | Document,
 ): void {
-  if (enableEventAPI) {
+  if (enableResponderEventSystem) {
     // Get the listening Set for this element. We use this to track
     // what events we're listening to.
     const listeningSet = getListeningSetForElement(element);
@@ -1337,6 +1357,6 @@ export function listenToEventResponderEventTypes(
 }
 
 // We can remove this once the event API is stable and out of a flag
-if (enableEventAPI) {
+if (enableResponderEventSystem) {
   setListenToResponderEventTypes(listenToEventResponderEventTypes);
 }

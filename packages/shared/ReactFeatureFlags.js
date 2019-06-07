@@ -62,8 +62,10 @@ export const warnAboutShorthandPropertyCollision = false;
 // This is a flag so we can fix warnings in RN core before turning it on
 export const warnAboutDeprecatedSetNativeProps = false;
 
-// Experimental React Events support. Only used in www builds for now.
-export const enableEventAPI = false;
+// Heritage React Events system. Should be on by default and only disabled for testing.
+export const enablePluginEventSystem = true;
+// Experimental event system for the React Flare project. Only used in www builds for now.
+export const enableResponderEventSystem = false;
 
 // New API for JSX transforms to target - https://github.com/reactjs/rfcs/pull/107
 export const enableJSXTransformAPI = false;

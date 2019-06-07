@@ -6,22 +6,27 @@
  */
 
 import SyntheticMouseEvent from './SyntheticMouseEvent';
+import {enablePluginEventSystem} from 'shared/ReactFeatureFlags';
 
-/**
- * @interface PointerEvent
- * @see http://www.w3.org/TR/pointerevents/
- */
-const SyntheticPointerEvent = SyntheticMouseEvent.extend({
-  pointerId: null,
-  width: null,
-  height: null,
-  pressure: null,
-  tangentialPressure: null,
-  tiltX: null,
-  tiltY: null,
-  twist: null,
-  pointerType: null,
-  isPrimary: null,
-});
+let SyntheticPointerEvent;
+
+if (enablePluginEventSystem) {
+  /**
+   * @interface PointerEvent
+   * @see http://www.w3.org/TR/pointerevents/
+   */
+  SyntheticPointerEvent = SyntheticMouseEvent.extend({
+    pointerId: null,
+    width: null,
+    height: null,
+    pressure: null,
+    tangentialPressure: null,
+    tiltX: null,
+    tiltY: null,
+    twist: null,
+    pointerType: null,
+    isPrimary: null,
+  });
+}
 
 export default SyntheticPointerEvent;

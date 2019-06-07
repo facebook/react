@@ -69,7 +69,9 @@ function updateFlagOutsideOfReactCallStack() {
   }
 }
 
-export const enableEventAPI = true;
+export const enablePluginEventSystem = true;
+
+export const enableResponderEventSystem = true;
 
 export const enableJSXTransformAPI = true;
 

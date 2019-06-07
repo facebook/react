@@ -45,8 +45,9 @@ import {getRawEventName} from './DOMTopLevelEventTypes';
 import {passiveBrowserEventsSupported} from './checkPassiveEvents';
 
 import {
-  enableEventAPI,
+  enableResponderEventSystem,
   enableUserBlockingEvents,
+  enablePluginEventSystem,
 } from 'shared/ReactFeatureFlags';
 import {
   UserBlockingEvent,
@@ -175,14 +176,18 @@ export function trapBubbledEvent(
   topLevelType: DOMTopLevelEventType,
   element: Document | Element | Node,
 ): void {
-  trapEventForPluginEventSystem(element, topLevelType, false);
+  if (enablePluginEventSystem) {
+    trapEventForPluginEventSystem(element, topLevelType, false);
+  }
 }
 
 export function trapCapturedEvent(
   topLevelType: DOMTopLevelEventType,
   element: Document | Element | Node,
 ): void {
-  trapEventForPluginEventSystem(element, topLevelType, true);
+  if (enablePluginEventSystem) {
+    trapEventForPluginEventSystem(element, topLevelType, true);
+  }
 }
 
 export function trapEventForResponderEventSystem(
@@ -190,7 +195,7 @@ export function trapEventForResponderEventSystem(
   topLevelType: DOMTopLevelEventType,
   passive: boolean,
 ): void {
-  if (enableEventAPI) {
+  if (enableResponderEventSystem) {
     const rawEventName = getRawEventName(topLevelType);
     let eventFlags = RESPONDER_EVENT_SYSTEM;
 
@@ -229,33 +234,35 @@ function trapEventForPluginEventSystem(
   topLevelType: DOMTopLevelEventType,
   capture: boolean,
 ): void {
-  let listener;
-  switch (getEventPriority(topLevelType)) {
-    case DiscreteEvent:
-      listener = dispatchDiscreteEvent.bind(
-        null,
-        topLevelType,
-        PLUGIN_EVENT_SYSTEM,
-      );
-      break;
-    case UserBlockingEvent:
-      listener = dispatchUserBlockingUpdate.bind(
-        null,
-        topLevelType,
-        PLUGIN_EVENT_SYSTEM,
-      );
-      break;
-    case ContinuousEvent:
-    default:
-      listener = dispatchEvent.bind(null, topLevelType, PLUGIN_EVENT_SYSTEM);
-      break;
-  }
+  if (enablePluginEventSystem) {
+    let listener;
+    switch (getEventPriority(topLevelType)) {
+      case DiscreteEvent:
+        listener = dispatchDiscreteEvent.bind(
+          null,
+          topLevelType,
+          PLUGIN_EVENT_SYSTEM,
+        );
+        break;
+      case UserBlockingEvent:
+        listener = dispatchUserBlockingUpdate.bind(
+          null,
+          topLevelType,
+          PLUGIN_EVENT_SYSTEM,
+        );
+        break;
+      case ContinuousEvent:
+      default:
+        listener = dispatchEvent.bind(null, topLevelType, PLUGIN_EVENT_SYSTEM);
+        break;
+    }
 
-  const rawEventName = getRawEventName(topLevelType);
-  if (capture) {
-    addEventCaptureListener(element, rawEventName, listener);
-  } else {
-    addEventBubbleListener(element, rawEventName, listener);
+    const rawEventName = getRawEventName(topLevelType);
+    if (capture) {
+      addEventCaptureListener(element, rawEventName, listener);
+    } else {
+      addEventBubbleListener(element, rawEventName, listener);
+    }
   }
 }
 
@@ -323,7 +330,7 @@ export function dispatchEvent(
     targetInst = null;
   }
 
-  if (enableEventAPI) {
+  if (enableResponderEventSystem) {
     if (eventSystemFlags === PLUGIN_EVENT_SYSTEM) {
       dispatchEventForPluginEventSystem(
         topLevelType,
@@ -341,7 +348,7 @@ export function dispatchEvent(
         eventSystemFlags,
       );
     }
-  } else {
+  } else if (enablePluginEventSystem) {
     dispatchEventForPluginEventSystem(
       topLevelType,
       eventSystemFlags,

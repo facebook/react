@@ -81,6 +81,8 @@ import {
 } from '../shared/HTMLNodeType';
 import {ROOT_ATTRIBUTE_NAME} from '../shared/DOMProperty';
 
+import {enablePluginEventSystem} from 'shared/ReactFeatureFlags';
+
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
 let topLevelUpdateWarnings;
@@ -808,13 +810,15 @@ const ReactDOM: Object = {
       getInstanceFromNode,
       getNodeFromInstance,
       getFiberCurrentPropsFromNode,
-      EventPluginHubInjection.injectEventPluginsByName,
+      enablePluginEventSystem
+        ? EventPluginHubInjection.injectEventPluginsByName
+        : null,
       eventNameDispatchConfigs,
-      accumulateTwoPhaseDispatches,
-      accumulateDirectDispatches,
+      enablePluginEventSystem ? accumulateTwoPhaseDispatches : null,
+      enablePluginEventSystem ? accumulateDirectDispatches : null,
       enqueueStateRestore,
       restoreStateIfNeeded,
-      dispatchEvent,
+      enablePluginEventSystem ? dispatchEvent : null,
       runEventsInBatch,
       flushPassiveEffects,
       ReactActingRendererSigil,

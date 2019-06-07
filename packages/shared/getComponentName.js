@@ -28,7 +28,7 @@ import {
 import {refineResolvedLazyComponent} from 'shared/ReactLazyComponent';
 import type {ReactEventComponent, ReactEventTarget} from 'shared/ReactTypes';
 
-import {enableEventAPI} from './ReactFeatureFlags';
+import {enableResponderEventSystem} from './ReactFeatureFlags';
 
 function getWrappedName(
   outerType: mixed,
@@ -93,14 +93,14 @@ function getComponentName(type: mixed): string | null {
         break;
       }
       case REACT_EVENT_COMPONENT_TYPE: {
-        if (enableEventAPI) {
+        if (enableResponderEventSystem) {
           const eventComponent = ((type: any): ReactEventComponent);
           return eventComponent.displayName;
         }
         break;
       }
       case REACT_EVENT_TARGET_TYPE: {
-        if (enableEventAPI) {
+        if (enableResponderEventSystem) {
           const eventTarget = ((type: any): ReactEventTarget);
           if (eventTarget.type === REACT_EVENT_TARGET_TOUCH_HIT) {
             return 'TouchHitTarget';

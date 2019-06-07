@@ -6,17 +6,22 @@
  */
 
 import SyntheticEvent from 'events/SyntheticEvent';
+import {enablePluginEventSystem} from 'shared/ReactFeatureFlags';
 
-/**
- * @interface Event
- * @see http://www.w3.org/TR/clipboard-apis/
- */
-const SyntheticClipboardEvent = SyntheticEvent.extend({
-  clipboardData: function(event) {
-    return 'clipboardData' in event
-      ? event.clipboardData
-      : window.clipboardData;
-  },
-});
+let SyntheticClipboardEvent;
+
+if (enablePluginEventSystem) {
+  /**
+   * @interface Event
+   * @see http://www.w3.org/TR/clipboard-apis/
+   */
+  SyntheticClipboardEvent = SyntheticEvent.extend({
+    clipboardData: function(event) {
+      return 'clipboardData' in event
+        ? event.clipboardData
+        : window.clipboardData;
+    },
+  });
+}
 
 export default SyntheticClipboardEvent;
