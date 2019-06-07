@@ -170,12 +170,12 @@ describe('Store component filters', () => {
 
   it('should filter HOCs', () => {
     const Component = () => <div>Hi</div>;
-    const WrappedComponent = () => <Component />;
-    WrappedComponent.displayName = 'withWrapper(Component)';
+    const Foo = () => <Component />;
+    Foo.displayName = 'Foo(Component)';
+    const Bar = () => <Foo />;
+    Bar.displayName = 'Bar(Foo(Component))';
 
-    act(() =>
-      ReactDOM.render(<WrappedComponent />, document.createElement('div'))
-    );
+    act(() => ReactDOM.render(<Bar />, document.createElement('div')));
     expect(store).toMatchSnapshot('1: mount');
 
     act(() => (store.componentFilters = [utils.createHOCFilter(true)]));

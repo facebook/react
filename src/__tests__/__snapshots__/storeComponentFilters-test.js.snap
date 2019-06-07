@@ -2,9 +2,10 @@
 
 exports[`Store component filters should filter HOCs: 1: mount 1`] = `
 [root]
-  ▾ <Component>
-    ▾ <Component>
-        <div>
+  ▾ <Component> [Bar][Foo]
+    ▾ <Component> [Foo]
+      ▾ <Component>
+          <div>
 `;
 
 exports[`Store component filters should filter HOCs: 2: hide all HOCs 1`] = `
@@ -15,9 +16,10 @@ exports[`Store component filters should filter HOCs: 2: hide all HOCs 1`] = `
 
 exports[`Store component filters should filter HOCs: 3: disable HOC filter 1`] = `
 [root]
-  ▾ <Component>
-    ▾ <Component>
-        <div>
+  ▾ <Component> [Bar][Foo]
+    ▾ <Component> [Foo]
+      ▾ <Component>
+          <div>
 `;
 
 exports[`Store component filters should filter by display name: 1: mount 1`] = `
