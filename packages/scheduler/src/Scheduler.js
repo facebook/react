@@ -38,8 +38,8 @@ var LOW_PRIORITY_TIMEOUT = 10000;
 // Never times out
 var IDLE_PRIORITY = maxSigned31BitInt;
 
-// Callbacks are stored as a circular, doubly linked list.
-var firstCallbackNode = null;
+// Tasks are stored as a circular, doubly linked list.
+var firstTask = null;
 
 var currentHostCallbackDidTimeout = false;
 // Pausing the scheduler is useful for debugging.
@@ -59,9 +59,9 @@ function scheduleHostCallbackIfNeeded() {
     // Don't schedule work yet; wait until the next time we yield.
     return;
   }
-  if (firstCallbackNode !== null) {
+  if (firstTask !== null) {
     // Schedule the host callback using the earliest expiration in the list.
-    var expirationTime = firstCallbackNode.expirationTime;
+    var expirationTime = firstTask.expirationTime;
     if (isHostCallbackScheduled) {
       // Cancel the existing host callback.
       cancelHostCallback();
@@ -72,28 +72,28 @@ function scheduleHostCallbackIfNeeded() {
   }
 }
 
-function flushFirstCallback() {
-  const currentlyFlushingCallback = firstCallbackNode;
+function flushFirstTask() {
+  const currentlyFlushingTask = firstTask;
 
-  // Remove the node from the list before calling the callback. That way the
+  // Remove the task from the list before calling the callback. That way the
   // list is in a consistent state even if the callback throws.
-  var next = firstCallbackNode.next;
-  if (firstCallbackNode === next) {
-    // This is the last callback in the list.
-    firstCallbackNode = null;
+  var next = firstTask.next;
+  if (firstTask === next) {
+    // This is the last task in the list.
+    firstTask = null;
     next = null;
   } else {
-    var lastCallbackNode = firstCallbackNode.previous;
-    firstCallbackNode = lastCallbackNode.next = next;
-    next.previous = lastCallbackNode;
+    var lastTask = firstTask.previous;
+    firstTask = lastTask.next = next;
+    next.previous = lastTask;
   }
 
-  currentlyFlushingCallback.next = currentlyFlushingCallback.previous = null;
+  currentlyFlushingTask.next = currentlyFlushingTask.previous = null;
 
-  // Now it's safe to call the callback.
-  var callback = currentlyFlushingCallback.callback;
-  var expirationTime = currentlyFlushingCallback.expirationTime;
-  var priorityLevel = currentlyFlushingCallback.priorityLevel;
+  // Now it's safe to execute the task.
+  var callback = currentlyFlushingTask.callback;
+  var expirationTime = currentlyFlushingTask.expirationTime;
+  var priorityLevel = currentlyFlushingTask.priorityLevel;
   var previousPriorityLevel = currentPriorityLevel;
   var previousExpirationTime = currentExpirationTime;
   currentPriorityLevel = priorityLevel;
@@ -115,7 +115,7 @@ function flushFirstCallback() {
   // A callback may return a continuation. The continuation should be scheduled
   // with the same priority and expiration as the just-finished callback.
   if (typeof continuationCallback === 'function') {
-    var continuationNode: CallbackNode = {
+    var continuationTask = {
       callback: continuationCallback,
       priorityLevel,
       expirationTime,
@@ -127,36 +127,36 @@ function flushFirstCallback() {
     // almost the same as the code in `scheduleCallback`, except the callback
     // is inserted into the list *before* callbacks of equal expiration instead
     // of after.
-    if (firstCallbackNode === null) {
+    if (firstTask === null) {
       // This is the first callback in the list.
-      firstCallbackNode = continuationNode.next = continuationNode.previous = continuationNode;
+      firstTask = continuationTask.next = continuationTask.previous = continuationTask;
     } else {
       var nextAfterContinuation = null;
-      var node = firstCallbackNode;
+      var task = firstTask;
       do {
-        if (node.expirationTime >= expirationTime) {
-          // This callback expires at or after the continuation. We will insert
-          // the continuation *before* this callback.
-          nextAfterContinuation = node;
+        if (task.expirationTime >= expirationTime) {
+          // This task expires at or after the continuation. We will insert the
+          // continuation *before* this task.
+          nextAfterContinuation = task;
           break;
         }
-        node = node.next;
-      } while (node !== firstCallbackNode);
+        task = task.next;
+      } while (task !== firstTask);
 
       if (nextAfterContinuation === null) {
-        // No equal or lower priority callback was found, which means the new
-        // callback is the lowest priority callback in the list.
-        nextAfterContinuation = firstCallbackNode;
-      } else if (nextAfterContinuation === firstCallbackNode) {
-        // The new callback is the highest priority callback in the list.
-        firstCallbackNode = continuationNode;
+        // No equal or lower priority task was found, which means the new task
+        // is the lowest priority task in the list.
+        nextAfterContinuation = firstTask;
+      } else if (nextAfterContinuation === firstTask) {
+        // The new task is the highest priority task in the list.
+        firstTask = continuationTask;
         scheduleHostCallbackIfNeeded();
       }
 
       var previous = nextAfterContinuation.previous;
-      previous.next = nextAfterContinuation.previous = continuationNode;
-      continuationNode.next = nextAfterContinuation;
-      continuationNode.previous = previous;
+      previous.next = nextAfterContinuation.previous = continuationTask;
+      continuationTask.next = nextAfterContinuation;
+      continuationTask.previous = previous;
     }
   }
 }
@@ -177,7 +177,7 @@ function flushWork(didUserCallbackTimeout) {
     if (didUserCallbackTimeout) {
       // Flush all the expired callbacks without yielding.
       while (
-        firstCallbackNode !== null &&
+        firstTask !== null &&
         !(enableSchedulerDebugging && isSchedulerPaused)
       ) {
         // TODO Wrap in feature flag
@@ -185,12 +185,12 @@ function flushWork(didUserCallbackTimeout) {
         // earlier than that time. Then read the current time again and repeat.
         // This optimizes for as few performance.now calls as possible.
         var currentTime = getCurrentTime();
-        if (firstCallbackNode.expirationTime <= currentTime) {
+        if (firstTask.expirationTime <= currentTime) {
           do {
-            flushFirstCallback();
+            flushFirstTask();
           } while (
-            firstCallbackNode !== null &&
-            firstCallbackNode.expirationTime <= currentTime &&
+            firstTask !== null &&
+            firstTask.expirationTime <= currentTime &&
             !(enableSchedulerDebugging && isSchedulerPaused)
           );
           continue;
@@ -199,13 +199,13 @@ function flushWork(didUserCallbackTimeout) {
       }
     } else {
       // Keep flushing callbacks until we run out of time in the frame.
-      if (firstCallbackNode !== null) {
+      if (firstTask !== null) {
         do {
           if (enableSchedulerDebugging && isSchedulerPaused) {
             break;
           }
-          flushFirstCallback();
-        } while (firstCallbackNode !== null && !shouldYieldToHost());
+          flushFirstTask();
+        } while (firstTask !== null && !shouldYieldToHost());
       }
     }
   } finally {
@@ -335,7 +335,7 @@ function unstable_scheduleCallback(
     }
   }
 
-  var newNode = {
+  var newTask = {
     callback,
     priorityLevel: priorityLevel,
     expirationTime,
@@ -343,42 +343,42 @@ function unstable_scheduleCallback(
     previous: null,
   };
 
-  // Insert the new callback into the list, ordered first by expiration, then
-  // by insertion. So the new callback is inserted after any other callback
-  // with equal expiration.
-  if (firstCallbackNode === null) {
-    // This is the first callback in the list.
-    firstCallbackNode = newNode.next = newNode.previous = newNode;
+  // Insert the new task into the list, ordered first by expiration, then by
+  // insertion. So the new task is inserted after any other task with
+  // equal expiration.
+  if (firstTask === null) {
+    // This is the first task in the list.
+    firstTask = newTask.next = newTask.previous = newTask;
     scheduleHostCallbackIfNeeded();
   } else {
     var next = null;
-    var node = firstCallbackNode;
+    var task = firstTask;
     do {
-      if (node.expirationTime > expirationTime) {
-        // The new callback expires before this one.
-        next = node;
+      if (task.expirationTime > expirationTime) {
+        // The new task expires before this one.
+        next = task;
         break;
       }
-      node = node.next;
-    } while (node !== firstCallbackNode);
+      task = task.next;
+    } while (task !== firstTask);
 
     if (next === null) {
-      // No callback with a later expiration was found, which means the new
-      // callback has the latest expiration in the list.
-      next = firstCallbackNode;
-    } else if (next === firstCallbackNode) {
-      // The new callback has the earliest expiration in the entire list.
-      firstCallbackNode = newNode;
+      // No task with a later expiration was found, which means the new task has
+      // the latest expiration in the list.
+      next = firstTask;
+    } else if (next === firstTask) {
+      // The new task has the earliest expiration in the entire list.
+      firstTask = newTask;
       scheduleHostCallbackIfNeeded();
     }
 
     var previous = next.previous;
-    previous.next = next.previous = newNode;
-    newNode.next = next;
-    newNode.previous = previous;
+    previous.next = next.previous = newTask;
+    newTask.next = next;
+    newTask.previous = previous;
   }
 
-  return newNode;
+  return newTask;
 }
 
 function unstable_pauseExecution() {
@@ -387,36 +387,36 @@ function unstable_pauseExecution() {
 
 function unstable_continueExecution() {
   isSchedulerPaused = false;
-  if (firstCallbackNode !== null) {
+  if (firstTask !== null) {
     scheduleHostCallbackIfNeeded();
   }
 }
 
 function unstable_getFirstCallbackNode() {
-  return firstCallbackNode;
+  return firstTask;
 }
 
-function unstable_cancelCallback(callbackNode) {
-  var next = callbackNode.next;
+function unstable_cancelCallback(task) {
+  var next = task.next;
   if (next === null) {
     // Already cancelled.
     return;
   }
 
-  if (next === callbackNode) {
-    // This is the only scheduled callback. Clear the list.
-    firstCallbackNode = null;
+  if (next === task) {
+    // This is the only scheduled task. Clear the list.
+    firstTask = null;
   } else {
-    // Remove the callback from its position in the list.
-    if (callbackNode === firstCallbackNode) {
-      firstCallbackNode = next;
+    // Remove the task from its position in the list.
+    if (task === firstTask) {
+      firstTask = next;
     }
-    var previous = callbackNode.previous;
+    var previous = task.previous;
     previous.next = next;
     next.previous = previous;
   }
 
-  callbackNode.next = callbackNode.previous = null;
+  task.next = task.previous = null;
 }
 
 function unstable_getCurrentPriorityLevel() {
@@ -426,8 +426,7 @@ function unstable_getCurrentPriorityLevel() {
 function unstable_shouldYield() {
   return (
     !currentHostCallbackDidTimeout &&
-    ((firstCallbackNode !== null &&
-      firstCallbackNode.expirationTime < currentExpirationTime) ||
+    ((firstTask !== null && firstTask.expirationTime < currentExpirationTime) ||
       shouldYieldToHost())
   );
 }
