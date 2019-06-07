@@ -11,6 +11,11 @@ import {
   getBrowserTheme,
 } from './utils';
 import { getSavedComponentFilters } from 'src/utils';
+import {
+  localStorageGetItem,
+  localStorageRemoveItem,
+  localStorageSetItem,
+} from 'src/storage';
 import DevTools from 'src/devtools/views/DevTools';
 
 const LOCAL_STORAGE_SUPPORTS_PROFILING_KEY =
@@ -86,7 +91,7 @@ function createPanelIfReactLoaded() {
           },
         });
         bridge.addListener('reloadAppForProfiling', () => {
-          localStorage.setItem(LOCAL_STORAGE_SUPPORTS_PROFILING_KEY, 'true');
+          localStorageSetItem(LOCAL_STORAGE_SUPPORTS_PROFILING_KEY, 'true');
           chrome.devtools.inspectedWindow.eval('window.location.reload();');
         });
         bridge.addListener('captureScreenshot', ({ commitIndex, rootID }) => {
@@ -109,11 +114,11 @@ function createPanelIfReactLoaded() {
         let isProfiling = false;
         let supportsProfiling = false;
         if (
-          localStorage.getItem(LOCAL_STORAGE_SUPPORTS_PROFILING_KEY) === 'true'
+          localStorageGetItem(LOCAL_STORAGE_SUPPORTS_PROFILING_KEY) === 'true'
         ) {
           supportsProfiling = true;
           isProfiling = true;
-          localStorage.removeItem(LOCAL_STORAGE_SUPPORTS_PROFILING_KEY);
+          localStorageRemoveItem(LOCAL_STORAGE_SUPPORTS_PROFILING_KEY);
         }
 
         const browserName = getBrowserName();

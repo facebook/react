@@ -8,6 +8,14 @@ import {
   SESSION_STORAGE_LAST_SELECTION_KEY,
   __DEBUG__,
 } from '../constants';
+import {
+  localStorageGetItem,
+  localStorageRemoveItem,
+  localStorageSetItem,
+  sessionStorageGetItem,
+  sessionStorageRemoveItem,
+  sessionStorageSetItem,
+} from 'src/storage';
 import { hideOverlay, showOverlay } from './views/Highlighter';
 
 import type {
@@ -71,19 +79,17 @@ export default class Agent extends EventEmitter {
   constructor(bridge: Bridge) {
     super();
 
-    if (localStorage.getItem(LOCAL_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true') {
+    if (localStorageGetItem(LOCAL_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true') {
       this._isProfiling = true;
 
-      localStorage.removeItem(LOCAL_STORAGE_RELOAD_AND_PROFILE_KEY);
+      localStorageRemoveItem(LOCAL_STORAGE_RELOAD_AND_PROFILE_KEY);
     }
 
-    if (typeof sessionStorage !== 'undefined') {
-      const persistedSelectionString = sessionStorage.getItem(
-        SESSION_STORAGE_LAST_SELECTION_KEY
-      );
-      if (persistedSelectionString != null) {
-        this._persistedSelection = JSON.parse(persistedSelectionString);
-      }
+    const persistedSelectionString = sessionStorageGetItem(
+      SESSION_STORAGE_LAST_SELECTION_KEY
+    );
+    if (persistedSelectionString != null) {
+      this._persistedSelection = JSON.parse(persistedSelectionString);
     }
 
     this._bridge = bridge;
@@ -237,7 +243,7 @@ export default class Agent extends EventEmitter {
   };
 
   reloadAndProfile = () => {
-    localStorage.setItem(LOCAL_STORAGE_RELOAD_AND_PROFILE_KEY, 'true');
+    localStorageSetItem(LOCAL_STORAGE_RELOAD_AND_PROFILE_KEY, 'true');
 
     // This code path should only be hit if the shell has explicitly told the Store that it supports profiling.
     // In that case, the shell must also listen for this specific message to know when it needs to reload the app.
@@ -547,15 +553,13 @@ export default class Agent extends EventEmitter {
     // This is why we need the defensive checks here.
     const renderer = this._rendererInterfaces[rendererID];
     const path = renderer != null ? renderer.getPathForElement(id) : null;
-    if (typeof sessionStorage !== 'undefined') {
-      if (path !== null) {
-        sessionStorage.setItem(
-          SESSION_STORAGE_LAST_SELECTION_KEY,
-          JSON.stringify(({ rendererID, path }: PersistedSelection))
-        );
-      } else {
-        sessionStorage.removeItem(SESSION_STORAGE_LAST_SELECTION_KEY);
-      }
+    if (path !== null) {
+      sessionStorageSetItem(
+        SESSION_STORAGE_LAST_SELECTION_KEY,
+        JSON.stringify(({ rendererID, path }: PersistedSelection))
+      );
+    } else {
+      sessionStorageRemoveItem(SESSION_STORAGE_LAST_SELECTION_KEY);
     }
   }, 1000);
 }

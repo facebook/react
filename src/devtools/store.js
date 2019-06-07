@@ -15,6 +15,7 @@ import {
   separateDisplayNameAndHOCs,
   utfDecodeString,
 } from '../utils';
+import { localStorageGetItem, localStorageSetItem } from '../storage';
 import { __DEBUG__ } from '../constants';
 import { printStore } from 'src/__tests__/storeSerializer';
 import ProfilerStore from './ProfilerStore';
@@ -110,7 +111,7 @@ export default class Store extends EventEmitter {
 
     // Default this setting to true unless otherwise specified.
     this._collapseNodesByDefault =
-      localStorage.getItem(LOCAL_STORAGE_COLLAPSE_ROOTS_BY_DEFAULT_KEY) !==
+      localStorageGetItem(LOCAL_STORAGE_COLLAPSE_ROOTS_BY_DEFAULT_KEY) !==
       'false';
 
     this._componentFilters = getSavedComponentFilters();
@@ -127,8 +128,7 @@ export default class Store extends EventEmitter {
       if (supportsCaptureScreenshots) {
         this._supportsCaptureScreenshots = true;
         this._captureScreenshots =
-          localStorage.getItem(LOCAL_STORAGE_CAPTURE_SCREENSHOTS_KEY) ===
-          'true';
+          localStorageGetItem(LOCAL_STORAGE_CAPTURE_SCREENSHOTS_KEY) === 'true';
       }
       if (supportsProfiling) {
         this._supportsProfiling = true;
@@ -184,7 +184,7 @@ export default class Store extends EventEmitter {
   set captureScreenshots(value: boolean): void {
     this._captureScreenshots = value;
 
-    localStorage.setItem(
+    localStorageSetItem(
       LOCAL_STORAGE_CAPTURE_SCREENSHOTS_KEY,
       value ? 'true' : 'false'
     );
@@ -198,7 +198,7 @@ export default class Store extends EventEmitter {
   set collapseNodesByDefault(value: boolean): void {
     this._collapseNodesByDefault = value;
 
-    localStorage.setItem(
+    localStorageSetItem(
       LOCAL_STORAGE_COLLAPSE_ROOTS_BY_DEFAULT_KEY,
       value ? 'true' : 'false'
     );

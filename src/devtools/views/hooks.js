@@ -2,6 +2,7 @@
 
 import throttle from 'lodash.throttle';
 import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
+import { localStorageGetItem, localStorageSetItem } from 'src/storage';
 
 export function useIsOverflowing(
   containerRef: { current: HTMLDivElement | null },
@@ -42,7 +43,7 @@ export function useLocalStorage<T>(
 ): [T, (value: T | (() => T)) => void] {
   const getValueFromLocalStorage = useCallback(() => {
     try {
-      const item = window.localStorage.getItem(key);
+      const item = localStorageGetItem(key);
       if (item != null) {
         return JSON.parse(item);
       }
@@ -64,7 +65,7 @@ export function useLocalStorage<T>(
         const valueToStore =
           value instanceof Function ? (value: any)(storedValue) : value;
         setStoredValue(valueToStore);
-        window.localStorage.setItem(key, JSON.stringify(valueToStore));
+        localStorageSetItem(key, JSON.stringify(valueToStore));
       } catch (error) {
         console.log(error);
       }

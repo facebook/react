@@ -9,6 +9,7 @@ import {
   ElementTypeFunction,
   ElementTypeMemo,
 } from 'src/types';
+import { localStorageGetItem, localStorageSetItem } from './storage';
 
 import type { ComponentFilter, ElementType } from './types';
 
@@ -82,7 +83,7 @@ export function getDefaultComponentFilters(): Array<ComponentFilter> {
 
 export function getSavedComponentFilters(): Array<ComponentFilter> {
   try {
-    const raw = localStorage.getItem(LOCAL_STORAGE_FILTER_PREFERENCES_KEY);
+    const raw = localStorageGetItem(LOCAL_STORAGE_FILTER_PREFERENCES_KEY);
     if (raw != null) {
       return JSON.parse(raw);
     }
@@ -93,7 +94,7 @@ export function getSavedComponentFilters(): Array<ComponentFilter> {
 export function saveComponentFilters(
   componentFilters: Array<ComponentFilter>
 ): void {
-  localStorage.setItem(
+  localStorageSetItem(
     LOCAL_STORAGE_FILTER_PREFERENCES_KEY,
     JSON.stringify(componentFilters)
   );

@@ -25,6 +25,7 @@ import {
   getUID,
   utfEncodeString,
 } from 'src/utils';
+import { localStorageGetItem } from 'src/storage';
 import { cleanForBridge, copyWithSet, setInObject } from './utils';
 import {
   __DEBUG__,
@@ -2200,7 +2201,8 @@ export function attach(
   }
 
   // Automatically start profiling so that we don't miss timing info from initial "mount".
-  if (localStorage.getItem(LOCAL_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true') {
+  // TODO This doens't seem right
+  if (localStorageGetItem(LOCAL_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true') {
     startProfiling();
   }
 
