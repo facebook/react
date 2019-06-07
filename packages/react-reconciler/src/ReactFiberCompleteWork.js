@@ -36,6 +36,7 @@ import {
   Mode,
   Profiler,
   SuspenseComponent,
+  SuspenseListComponent,
   DehydratedSuspenseComponent,
   MemoComponent,
   SimpleMemoComponent,
@@ -832,6 +833,10 @@ function completeWork(
           workInProgress.stateNode = null;
         }
       }
+      break;
+    }
+    case SuspenseListComponent: {
+      // TODO
       break;
     }
     case EventComponent: {

@@ -17,6 +17,7 @@ import {
   HostPortal,
   ContextProvider,
   SuspenseComponent,
+  SuspenseListComponent,
   DehydratedSuspenseComponent,
   EventComponent,
   EventTarget,
@@ -95,6 +96,10 @@ function unwindWork(
       }
       return null;
     }
+    case SuspenseListComponent: {
+      // TODO
+      return null;
+    }
     case HostPortal:
       popHostContainer(workInProgress);
       return null;
@@ -141,6 +146,9 @@ function unwindInterruptedWork(interruptedWork: Fiber) {
         // TODO: popHydrationState
         popSuspenseContext(interruptedWork);
       }
+      break;
+    case SuspenseListComponent:
+      // TODO
       break;
     case ContextProvider:
       popProvider(interruptedWork);

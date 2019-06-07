@@ -31,6 +31,7 @@ import {
   ContextConsumer,
   Profiler,
   SuspenseComponent,
+  SuspenseListComponent,
   DehydratedSuspenseComponent,
   MemoComponent,
   SimpleMemoComponent,
@@ -1918,6 +1919,22 @@ function updateDehydratedSuspenseComponent(
   }
 }
 
+function updateSuspenseListComponent(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  renderExpirationTime: ExpirationTime,
+) {
+  // TODO
+  const nextChildren = workInProgress.pendingProps.children;
+  reconcileChildren(
+    current,
+    workInProgress,
+    nextChildren,
+    renderExpirationTime,
+  );
+  return workInProgress.child;
+}
+
 function updatePortalComponent(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -2555,6 +2572,13 @@ function beginWork(
         );
       }
       break;
+    }
+    case SuspenseListComponent: {
+      return updateSuspenseListComponent(
+        current,
+        workInProgress,
+        renderExpirationTime,
+      );
     }
     case EventComponent: {
       if (enableEventAPI) {
