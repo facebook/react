@@ -60,18 +60,6 @@ export function beforeEachProfiling(): void {
   );
 }
 
-export function createElementTypeFilter(
-  elementType: ElementType,
-  isEnabled: boolean = true
-) {
-  const Types = require('src/types');
-  return {
-    type: Types.ComponentFilterElementType,
-    isEnabled,
-    value: elementType,
-  };
-}
-
 export function createDisplayNameFilter(
   source: string,
   isEnabled: boolean = true
@@ -88,6 +76,27 @@ export function createDisplayNameFilter(
     isEnabled,
     isValid,
     value: source,
+  };
+}
+
+export function createHOCFilter(isEnabled: boolean = true) {
+  const Types = require('src/types');
+  return {
+    type: Types.ComponentFilterHOC,
+    isEnabled,
+    isValid: true,
+  };
+}
+
+export function createElementTypeFilter(
+  elementType: ElementType,
+  isEnabled: boolean = true
+) {
+  const Types = require('src/types');
+  return {
+    type: Types.ComponentFilterElementType,
+    isEnabled,
+    value: elementType,
   };
 }
 

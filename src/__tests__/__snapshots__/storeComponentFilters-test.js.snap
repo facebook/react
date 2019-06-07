@@ -1,5 +1,25 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Store component filters should filter HOCs: 1: mount 1`] = `
+[root]
+  ▾ <Component>
+    ▾ <Component>
+        <div>
+`;
+
+exports[`Store component filters should filter HOCs: 2: hide all HOCs 1`] = `
+[root]
+  ▾ <Component>
+      <div>
+`;
+
+exports[`Store component filters should filter HOCs: 3: disable HOC filter 1`] = `
+[root]
+  ▾ <Component>
+    ▾ <Component>
+        <div>
+`;
+
 exports[`Store component filters should filter by display name: 1: mount 1`] = `
 [root]
   ▾ <Foo>

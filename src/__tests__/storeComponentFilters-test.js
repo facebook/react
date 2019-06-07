@@ -167,4 +167,23 @@ describe('Store component filters', () => {
 
     expect(store).toMatchSnapshot('3: hide components in a made up fake path');
   });
+
+  it('should filter HOCs', () => {
+    const Component = () => <div>Hi</div>;
+    const WrappedComponent = () => <Component />;
+    WrappedComponent.displayName = 'withWrapper(Component)';
+
+    act(() =>
+      ReactDOM.render(<WrappedComponent />, document.createElement('div'))
+    );
+    expect(store).toMatchSnapshot('1: mount');
+
+    act(() => (store.componentFilters = [utils.createHOCFilter(true)]));
+
+    expect(store).toMatchSnapshot('2: hide all HOCs');
+
+    act(() => (store.componentFilters = [utils.createHOCFilter(false)]));
+
+    expect(store).toMatchSnapshot('3: disable HOC filter');
+  });
 });
