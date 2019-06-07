@@ -195,8 +195,8 @@ const eventResponderContext: ReactResponderContext = {
     const nativeEvent = event.nativeEvent;
     // We should always be dealing with a mouse event or touch event here.
     // If we are not, these won't exist and we can early return.
-    const x = nativeEvent.clientX;
-    const y = nativeEvent.clientY;
+    const x = (nativeEvent: any).clientX;
+    const y = (nativeEvent: any).clientY;
     if (x === undefined || y === undefined) {
       return false;
     }
