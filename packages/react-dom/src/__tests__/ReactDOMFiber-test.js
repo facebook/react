@@ -1046,7 +1046,11 @@ describe('ReactDOMFiber', () => {
     class Click extends React.Component {
       constructor() {
         super();
-        node.click();
+        expect(() => {
+          node.click();
+        }).toWarnDev(
+          'Warning: unstable_flushDiscreteUpdates: Cannot flush updates when React is already rendering.',
+        );
       }
       render() {
         return null;

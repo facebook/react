@@ -4,6 +4,7 @@
     "packages/*"
   ],
   "devDependencies": {
+    "@mattiasbuelens/web-streams-polyfill": "0.1.0",
     "art": "^0.10.1",
     "babel-cli": "^6.6.5",
     "babel-code-frame": "^6.26.0",
@@ -62,6 +63,7 @@
     "jasmine-check": "^1.0.0-rc.0",
     "jest": "^23.1.0",
     "jest-diff": "^23.0.1",
+    "jest-snapshot-serializer-raw": "^1.1.0",
     "minimatch": "^3.0.4",
     "minimist": "^1.2.0",
     "mkdirp": "^0.5.1",
@@ -83,8 +85,7 @@
     "targz": "^1.0.1",
     "through2": "^2.0.0",
     "tmp": "~0.0.28",
-    "typescript": "~1.8.10",
-    "@mattiasbuelens/web-streams-polyfill": "0.1.0"
+    "typescript": "~1.8.10"
   },
   "devEngines": {
     "node": "8.x || 9.x || 10.x || 11.x || 12.x"
@@ -97,6 +98,7 @@
     "linc": "node ./scripts/tasks/linc.js",
     "lint": "node ./scripts/tasks/eslint.js",
     "lint-build": "node ./scripts/rollup/validate/index.js",
+    "extract-errors": "yarn build --type=dev --extract-errors",
     "postinstall": "node node_modules/fbjs-scripts/node/check-dev-engines.js package.json && node ./scripts/flow/createFlowConfigs.js",
     "debug-test": "cross-env NODE_ENV=development node --inspect-brk node_modules/.bin/jest --config ./scripts/jest/config.source.js --runInBand",
     "test": "cross-env NODE_ENV=development jest --config ./scripts/jest/config.source.js",
@@ -107,6 +109,7 @@
     "test-prod-build": "yarn test-build-prod",
     "test-build": "cross-env NODE_ENV=development jest --config ./scripts/jest/config.build.js",
     "test-build-prod": "cross-env NODE_ENV=production jest --config ./scripts/jest/config.build.js",
+    "test-dom-fixture": "cd fixtures/dom && yarn && yarn prestart && yarn test",
     "flow": "node ./scripts/tasks/flow.js",
     "flow-ci": "node ./scripts/tasks/flow-ci.js",
     "prettier": "node ./scripts/prettier/index.js write-changed",

@@ -13,7 +13,7 @@ import type {
 } from 'shared/ReactTypes';
 
 import React from 'react';
-import {isEventPositionWithinTouchHitTarget} from './utils';
+import {UserBlockingEvent} from 'shared/ReactTypes';
 
 type HoverProps = {
   disabled: boolean,
@@ -32,8 +32,8 @@ type HoverState = {
   isHovered: boolean,
   isOverTouchHitTarget: boolean,
   isTouched: boolean,
-  hoverStartTimeout: null | Symbol,
-  hoverEndTimeout: null | Symbol,
+  hoverStartTimeout: null | number,
+  hoverEndTimeout: null | number,
   ignoreEmulatedMouseEvents: boolean,
 };
 
@@ -43,6 +43,14 @@ type HoverEvent = {|
   target: Element | Document,
   type: HoverEventType,
   timeStamp: number,
+  clientX: null | number,
+  clientY: null | number,
+  pageX: null | number,
+  pageY: null | number,
+  screenX: null | number,
+  screenY: null | number,
+  x: null | number,
+  y: null | number,
 |};
 
 const DEFAULT_HOVER_END_DELAY_MS = 0;
@@ -61,18 +69,40 @@ if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
 }
 
 function createHoverEvent(
+  event: ?ReactResponderEvent,
   context: ReactResponderContext,
   type: HoverEventType,
   target: Element | Document,
 ): HoverEvent {
+  let clientX = null;
+  let clientY = null;
+  let pageX = null;
+  let pageY = null;
+  let screenX = null;
+  let screenY = null;
+
+  if (event) {
+    const nativeEvent = (event.nativeEvent: any);
+    ({clientX, clientY, pageX, pageY, screenX, screenY} = nativeEvent);
+  }
+
   return {
     target,
     type,
     timeStamp: context.getTimeStamp(),
+    clientX,
+    clientY,
+    pageX,
+    pageY,
+    screenX,
+    screenY,
+    x: clientX,
+    y: clientY,
   };
 }
 
 function dispatchHoverChangeEvent(
+  event: null | ReactResponderEvent,
   context: ReactResponderContext,
   props: HoverProps,
   state: HoverState,
@@ -82,11 +112,12 @@ function dispatchHoverChangeEvent(
     props.onHoverChange(bool);
   };
   const syntheticEvent = createHoverEvent(
+    event,
     context,
     'hoverchange',
     ((state.hoverTarget: any): Element | Document),
   );
-  context.dispatchEvent(syntheticEvent, listener, {discrete: true});
+  context.dispatchEvent(syntheticEvent, listener, UserBlockingEvent);
 }
 
 function dispatchHoverStartEvents(
@@ -119,16 +150,19 @@ function dispatchHoverStartEvents(
 
     if (props.onHoverStart) {
       const syntheticEvent = createHoverEvent(
+        event,
         context,
         'hoverstart',
         ((target: any): Element | Document),
       );
-      context.dispatchEvent(syntheticEvent, props.onHoverStart, {
-        discrete: true,
-      });
+      context.dispatchEvent(
+        syntheticEvent,
+        props.onHoverStart,
+        UserBlockingEvent,
+      );
     }
     if (props.onHoverChange) {
-      dispatchHoverChangeEvent(context, props, state);
+      dispatchHoverChangeEvent(event, context, props, state);
     }
   };
 
@@ -179,14 +213,19 @@ function dispatchHoverEndEvents(
 
     if (props.onHoverEnd) {
       const syntheticEvent = createHoverEvent(
+        event,
         context,
         'hoverend',
         ((target: any): Element | Document),
       );
-      context.dispatchEvent(syntheticEvent, props.onHoverEnd, {discrete: true});
+      context.dispatchEvent(
+        syntheticEvent,
+        props.onHoverEnd,
+        UserBlockingEvent,
+      );
     }
     if (props.onHoverChange) {
-      dispatchHoverChangeEvent(context, props, state);
+      dispatchHoverChangeEvent(event, context, props, state);
     }
 
     state.isOverTouchHitTarget = false;
@@ -247,6 +286,7 @@ const HoverResponder = {
       ignoreEmulatedMouseEvents: false,
     };
   },
+  allowMultipleHostChildren: false,
   stopLocalPropagation: true,
   onEvent(
     event: ReactResponderEvent,
@@ -285,7 +325,7 @@ const HoverResponder = {
             return;
           }
 
-          if (isEventPositionWithinTouchHitTarget(event, context)) {
+          if (context.isEventWithinTouchHitTarget(event)) {
             state.isOverTouchHitTarget = true;
             return;
           }
@@ -304,26 +344,29 @@ const HoverResponder = {
             if (state.isOverTouchHitTarget) {
               // If we were moving over the TouchHitTarget and have now moved
               // over the Responder target
-              if (!isEventPositionWithinTouchHitTarget(event, context)) {
+              if (!context.isEventWithinTouchHitTarget(event)) {
                 dispatchHoverStartEvents(event, context, props, state);
                 state.isOverTouchHitTarget = false;
               }
             } else {
               // If we were moving over the Responder target and have now moved
               // over the TouchHitTarget
-              if (isEventPositionWithinTouchHitTarget(event, context)) {
+              if (context.isEventWithinTouchHitTarget(event)) {
                 dispatchHoverEndEvents(event, context, props, state);
                 state.isOverTouchHitTarget = true;
               } else {
                 if (props.onHoverMove && state.hoverTarget !== null) {
                   const syntheticEvent = createHoverEvent(
+                    event,
                     context,
                     'hovermove',
                     state.hoverTarget,
                   );
-                  context.dispatchEvent(syntheticEvent, props.onHoverMove, {
-                    discrete: false,
-                  });
+                  context.dispatchEvent(
+                    syntheticEvent,
+                    props.onHoverMove,
+                    UserBlockingEvent,
+                  );
                 }
               }
             }

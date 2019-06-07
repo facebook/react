@@ -11,15 +11,17 @@ import type {
   ReactResponderEvent,
   ReactResponderContext,
 } from 'shared/ReactTypes';
+import type {EventPriority} from 'shared/ReactTypes';
 
 import React from 'react';
-import {isEventPositionWithinTouchHitTarget} from './utils';
+import {DiscreteEvent, UserBlockingEvent} from 'shared/ReactTypes';
 
 type PressProps = {
   disabled: boolean,
   delayLongPress: number,
   delayPressEnd: number,
   delayPressStart: number,
+  onContextMenu: (e: PressEvent) => void,
   onLongPress: (e: PressEvent) => void,
   onLongPressChange: boolean => void,
   onLongPressShouldCancelPress: () => boolean,
@@ -41,8 +43,8 @@ type PointerType = '' | 'mouse' | 'keyboard' | 'pen' | 'touch';
 
 type PressState = {
   activationPosition: null | $ReadOnly<{|
-    pageX: number,
-    pageY: number,
+    x: number,
+    y: number,
   |}>,
   addedRootEvents: boolean,
   isActivePressed: boolean,
@@ -50,11 +52,11 @@ type PressState = {
   isLongPressed: boolean,
   isPressed: boolean,
   isPressWithinResponderRegion: boolean,
-  longPressTimeout: null | Symbol,
+  longPressTimeout: null | number,
   pointerType: PointerType,
   pressTarget: null | Element,
-  pressEndTimeout: null | Symbol,
-  pressStartTimeout: null | Symbol,
+  pressEndTimeout: null | number,
+  pressStartTimeout: null | number,
   responderRegionOnActivation: null | $ReadOnly<{|
     bottom: number,
     left: number,
@@ -78,7 +80,8 @@ type PressEventType =
   | 'pressend'
   | 'presschange'
   | 'longpress'
-  | 'longpresschange';
+  | 'longpresschange'
+  | 'contextmenu';
 
 type PressEvent = {|
   target: Element | Document,
@@ -99,6 +102,10 @@ type PressEvent = {|
   shiftKey: boolean,
 |};
 
+const isMac =
+  typeof window !== 'undefined' && window.navigator != null
+    ? /^Mac/.test(window.navigator.platform)
+    : false;
 const DEFAULT_PRESS_END_DELAY_MS = 0;
 const DEFAULT_PRESS_START_DELAY_MS = 0;
 const DEFAULT_LONG_PRESS_DELAY_MS = 500;
@@ -112,7 +119,6 @@ const DEFAULT_PRESS_RETENTION_OFFSET = {
 const targetEventTypes = [
   {name: 'click', passive: false},
   {name: 'keydown', passive: false},
-  {name: 'keypress', passive: false},
   {name: 'contextmenu', passive: false},
   // We need to preventDefault on pointerdown for mouse/pen events
   // that are in hit target area but not the element area.
@@ -200,7 +206,7 @@ function dispatchEvent(
   state: PressState,
   name: PressEventType,
   listener: (e: Object) => void,
-  discrete: boolean,
+  eventPriority: EventPriority,
 ): void {
   const target = ((state.pressTarget: any): Element | Document);
   const pointerType = state.pointerType;
@@ -211,9 +217,7 @@ function dispatchEvent(
     pointerType,
     event,
   );
-  context.dispatchEvent(syntheticEvent, listener, {
-    discrete,
-  });
+  context.dispatchEvent(syntheticEvent, listener, eventPriority);
 }
 
 function dispatchPressChangeEvent(
@@ -226,7 +230,7 @@ function dispatchPressChangeEvent(
   const listener = () => {
     props.onPressChange(bool);
   };
-  dispatchEvent(event, context, state, 'presschange', listener, true);
+  dispatchEvent(event, context, state, 'presschange', listener, DiscreteEvent);
 }
 
 function dispatchLongPressChangeEvent(
@@ -239,19 +243,23 @@ function dispatchLongPressChangeEvent(
   const listener = () => {
     props.onLongPressChange(bool);
   };
-  dispatchEvent(event, context, state, 'longpresschange', listener, true);
+  dispatchEvent(
+    event,
+    context,
+    state,
+    'longpresschange',
+    listener,
+    DiscreteEvent,
+  );
 }
 
 function activate(event: ReactResponderEvent, context, props, state) {
   const nativeEvent: any = event.nativeEvent;
-  const {x, y} = getEventPageCoords(nativeEvent);
+  const {x, y} = getEventViewportCoords(nativeEvent);
   const wasActivePressed = state.isActivePressed;
   state.isActivePressed = true;
   if (x !== null && y !== null) {
-    state.activationPosition = {
-      pageX: x,
-      pageY: y,
-    };
+    state.activationPosition = {x, y};
   }
 
   if (props.onPressStart) {
@@ -261,7 +269,7 @@ function activate(event: ReactResponderEvent, context, props, state) {
       state,
       'pressstart',
       props.onPressStart,
-      true,
+      DiscreteEvent,
     );
   }
   if (!wasActivePressed && props.onPressChange) {
@@ -275,7 +283,14 @@ function deactivate(event: ?ReactResponderEvent, context, props, state) {
   state.isLongPressed = false;
 
   if (props.onPressEnd) {
-    dispatchEvent(event, context, state, 'pressend', props.onPressEnd, true);
+    dispatchEvent(
+      event,
+      context,
+      state,
+      'pressend',
+      props.onPressEnd,
+      DiscreteEvent,
+    );
   }
   if (props.onPressChange) {
     dispatchPressChangeEvent(event, context, props, state);
@@ -321,7 +336,7 @@ function dispatchPressStartEvents(
             state,
             'longpress',
             props.onLongPress,
-            true,
+            DiscreteEvent,
           );
         }
         if (props.onLongPressChange) {
@@ -402,29 +417,26 @@ function dispatchCancel(
   props: PressProps,
   state: PressState,
 ): void {
-  const nativeEvent: any = event.nativeEvent;
-  const type = event.type;
-
   if (state.isPressed) {
-    if (type === 'contextmenu' && props.preventDefault !== false) {
-      nativeEvent.preventDefault();
-    } else {
-      state.ignoreEmulatedMouseEvents = false;
-      removeRootEventTypes(context, state);
-      dispatchPressEndEvents(event, context, props, state);
-    }
+    state.ignoreEmulatedMouseEvents = false;
+    removeRootEventTypes(context, state);
+    dispatchPressEndEvents(event, context, props, state);
   } else if (state.allowPressReentry) {
     removeRootEventTypes(context, state);
   }
 }
 
-function isAnchorTagElement(eventTarget: EventTarget): boolean {
-  return (eventTarget: any).nodeName === 'A';
-}
-
-function isValidKeyPress(key: string): boolean {
+function isValidKeyboardEvent(nativeEvent: Object): boolean {
+  const {key, target} = nativeEvent;
+  const {tagName, isContentEditable} = target;
   // Accessibility for keyboards. Space and Enter only.
-  return key === ' ' || key === 'Enter';
+  // "Spacebar" is for IE 11
+  return (
+    (key === 'Enter' || key === ' ' || key === 'Spacebar') &&
+    (tagName !== 'INPUT' &&
+      tagName !== 'TEXTAREA' &&
+      isContentEditable !== true)
+  );
 }
 
 function calculateDelayMS(delay: ?number, min = 0, fallback = 0) {
@@ -444,12 +456,7 @@ function calculateResponderRegion(
     props.pressRetentionOffset,
   );
 
-  const clientRect = target.getBoundingClientRect();
-
-  let bottom = clientRect.bottom;
-  let left = clientRect.left;
-  let right = clientRect.right;
-  let top = clientRect.top;
+  let {left, right, bottom, top} = target.getBoundingClientRect();
 
   if (pressRetentionOffset) {
     if (pressRetentionOffset.bottom != null) {
@@ -475,7 +482,8 @@ function calculateResponderRegion(
 }
 
 function isTouchEvent(nativeEvent: Event): boolean {
-  return Array.isArray((nativeEvent: any).changedTouches);
+  const changedTouches = ((nativeEvent: any): TouchEvent).changedTouches;
+  return changedTouches && typeof changedTouches.length === 'number';
 }
 
 function getTouchFromPressEvent(nativeEvent: TouchEvent): Touch {
@@ -487,18 +495,18 @@ function getTouchFromPressEvent(nativeEvent: TouchEvent): Touch {
       : (nativeEvent: any);
 }
 
-function getEventPageCoords(
+function getEventViewportCoords(
   nativeEvent: Event,
 ): {x: null | number, y: null | number} {
   let eventObject = (nativeEvent: any);
   if (isTouchEvent(eventObject)) {
     eventObject = getTouchFromPressEvent(eventObject);
   }
-  const pageX = eventObject.pageX;
-  const pageY = eventObject.pageY;
+  const x = eventObject.clientX;
+  const y = eventObject.clientY;
   return {
-    x: pageX != null ? pageX : null,
-    y: pageY != null ? pageY : null,
+    x: x != null ? x : null,
+    y: y != null ? y : null,
   };
 }
 
@@ -522,7 +530,7 @@ function isPressWithinResponderRegion(
       bottom = Math.max(bottom, responderRegionOnDeactivation.bottom);
     }
   }
-  const {x, y} = getEventPageCoords(((nativeEvent: any): Event));
+  const {x, y} = getEventViewportCoords(((nativeEvent: any): Event));
 
   return (
     left != null &&
@@ -590,6 +598,7 @@ const PressResponder = {
       allowPressReentry: false,
     };
   },
+  allowMultipleHostChildren: false,
   stopLocalPropagation: true,
   onEvent(
     event: ReactResponderEvent,
@@ -612,7 +621,6 @@ const PressResponder = {
       // START
       case 'pointerdown':
       case 'keydown':
-      case 'keypress':
       case 'mousedown':
       case 'touchstart': {
         if (!state.isPressed) {
@@ -622,7 +630,7 @@ const PressResponder = {
 
           // Ignore unrelated key events
           if (pointerType === 'keyboard') {
-            if (!isValidKeyPress(nativeEvent.key)) {
+            if (!isValidKeyboardEvent(nativeEvent)) {
               return;
             }
           }
@@ -632,23 +640,32 @@ const PressResponder = {
             return;
           }
           // Ignore mouse/pen pressing on touch hit target area
+          const isMouseType = pointerType === 'mouse';
           if (
-            (pointerType === 'mouse' || pointerType === 'pen') &&
-            isEventPositionWithinTouchHitTarget(event, context)
+            (isMouseType || pointerType === 'pen') &&
+            context.isEventWithinTouchHitTarget(event)
           ) {
             // We need to prevent the native event to block the focus
             nativeEvent.preventDefault();
             return;
           }
 
-          // Ignore any device buttons except left-mouse and touch/pen contact
-          if (nativeEvent.button > 0) {
+          // We set these here, before the button check so we have this
+          // data around for handling of the context menu
+          state.pointerType = pointerType;
+          state.pressTarget = context.getEventCurrentTarget(event);
+
+          // Ignore any device buttons except left-mouse and touch/pen contact.
+          // Additionally we ignore left-mouse + ctrl-key with Macs as that
+          // acts like right-click and opens the contextmenu.
+          if (
+            nativeEvent.button > 0 ||
+            (isMac && isMouseType && nativeEvent.ctrlKey)
+          ) {
             return;
           }
 
           state.allowPressReentry = true;
-          state.pointerType = pointerType;
-          state.pressTarget = context.getEventCurrentTarget(event);
           state.responderRegionOnActivation = calculateResponderRegion(
             context,
             state.pressTarget,
@@ -659,21 +676,37 @@ const PressResponder = {
           addRootEventTypes(context, state);
         } else {
           // Prevent spacebar press from scrolling the window
-          if (isValidKeyPress(nativeEvent.key) && nativeEvent.key === ' ') {
+          if (isValidKeyboardEvent(nativeEvent) && nativeEvent.key === ' ') {
             nativeEvent.preventDefault();
           }
         }
         break;
       }
 
-      // CANCEL
       case 'contextmenu': {
-        dispatchCancel(event, context, props, state);
+        if (state.isPressed) {
+          dispatchCancel(event, context, props, state);
+          if (props.preventDefault !== false) {
+            // Skip dispatching of onContextMenu below
+            nativeEvent.preventDefault();
+            return;
+          }
+        }
+        if (props.onContextMenu) {
+          dispatchEvent(
+            event,
+            context,
+            state,
+            'contextmenu',
+            props.onContextMenu,
+            DiscreteEvent,
+          );
+        }
         break;
       }
 
       case 'click': {
-        if (isAnchorTagElement(target)) {
+        if (context.isTargetWithinHostComponent(target, 'a', true)) {
           const {
             altKey,
             ctrlKey,
@@ -745,17 +778,15 @@ const PressResponder = {
                   state,
                   'pressmove',
                   props.onPressMove,
-                  false,
+                  UserBlockingEvent,
                 );
               }
               if (
                 state.activationPosition != null &&
                 state.longPressTimeout != null
               ) {
-                const deltaX =
-                  state.activationPosition.pageX - nativeEvent.pageX;
-                const deltaY =
-                  state.activationPosition.pageY - nativeEvent.pageY;
+                const deltaX = state.activationPosition.x - nativeEvent.clientX;
+                const deltaY = state.activationPosition.y - nativeEvent.clientY;
                 if (
                   Math.hypot(deltaX, deltaY) > 10 &&
                   state.longPressTimeout != null
@@ -785,7 +816,7 @@ const PressResponder = {
           // Ignore unrelated keyboard events and verify press is within
           // responder region for non-keyboard events.
           if (pointerType === 'keyboard') {
-            if (!isValidKeyPress(nativeEvent.key)) {
+            if (!isValidKeyboardEvent(nativeEvent)) {
               return;
             }
             // If the event target isn't within the press target, check if we're still
@@ -829,7 +860,7 @@ const PressResponder = {
                   state,
                   'press',
                   props.onPress,
-                  true,
+                  DiscreteEvent,
                 );
               }
             }

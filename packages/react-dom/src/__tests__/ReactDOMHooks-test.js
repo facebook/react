@@ -72,42 +72,6 @@ describe('ReactDOMHooks', () => {
     expect(container3.textContent).toBe('6');
   });
 
-  it('can batch synchronous work inside effects with other work', () => {
-    let otherContainer = document.createElement('div');
-
-    let calledA = false;
-    function A() {
-      calledA = true;
-      return 'A';
-    }
-
-    let calledB = false;
-    function B() {
-      calledB = true;
-      return 'B';
-    }
-
-    let _set;
-    function Foo() {
-      _set = React.useState(0)[1];
-      React.useEffect(() => {
-        ReactDOM.render(<A />, otherContainer);
-      });
-      return null;
-    }
-
-    ReactDOM.render(<Foo />, container);
-    ReactDOM.unstable_batchedUpdates(() => {
-      _set(0); // Forces the effect to be flushed
-      expect(otherContainer.textContent).toBe('A');
-      ReactDOM.render(<B />, otherContainer);
-      expect(otherContainer.textContent).toBe('A');
-    });
-    expect(otherContainer.textContent).toBe('B');
-    expect(calledA).toBe(true);
-    expect(calledB).toBe(true);
-  });
-
   it('should not bail out when an update is scheduled from within an event handler', () => {
     const {createRef, useCallback, useState} = React;
 
@@ -141,7 +105,7 @@ describe('ReactDOMHooks', () => {
     expect(labelRef.current.innerHTML).toBe('abc');
   });
 
-  it('should not bail out when an update is scheduled from within an event handler in ConcurrentMode', () => {
+  it('should not bail out when an update is scheduled from within an event handler in Concurrent Mode', () => {
     const {createRef, useCallback, useState} = React;
 
     const Example = ({inputRef, labelRef}) => {
@@ -162,11 +126,7 @@ describe('ReactDOMHooks', () => {
     const labelRef = createRef();
 
     const root = ReactDOM.unstable_createRoot(container);
-    root.render(
-      <React.unstable_ConcurrentMode>
-        <Example inputRef={inputRef} labelRef={labelRef} />
-      </React.unstable_ConcurrentMode>,
-    );
+    root.render(<Example inputRef={inputRef} labelRef={labelRef} />);
 
     Scheduler.flushAll();
 

@@ -155,7 +155,7 @@ describe('Drag event responder', () => {
     ReactDOM.render(<Component />, container);
 
     const mouseOverEvent = document.createEvent('MouseEvents');
-    mouseOverEvent.initEvent('mousedown', true, true);
+    mouseOverEvent.initEvent('mousedown', true, true, window, 1, 0, 0);
     divRef.current.dispatchEvent(mouseOverEvent);
 
     const mouseMoveEvent = document.createEvent('MouseEvents');
@@ -166,8 +166,8 @@ describe('Drag event responder', () => {
         true,
         window,
         1,
-        index,
-        index,
+        index + 1,
+        index + 1,
         50,
         50,
       );
@@ -178,12 +178,15 @@ describe('Drag event responder', () => {
     mouseUpEvent.initEvent('mouseup', true, true);
     divRef.current.dispatchEvent(mouseUpEvent);
     expect(events).toHaveLength(20);
-    let index = 0;
     expect(events).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          diffX: index,
-          diffY: index++,
+          diffX: 2,
+          diffY: 2,
+        }),
+        expect.objectContaining({
+          diffX: 21,
+          diffY: 21,
         }),
       ]),
     );

@@ -45,16 +45,6 @@ ReactIs.isValidElementType(React.createFactory("div")); // true
 
 ### Determining an Element's Type
 
-#### ConcurrentMode
-
-```js
-import React from "react";
-import * as ReactIs from 'react-is';
-
-ReactIs.isConcurrentMode(<React.unstable_ConcurrentMode />); // true
-ReactIs.typeOf(<React.unstable_ConcurrentMode />) === ReactIs.ConcurrentMode; // true
-```
-
 #### Context
 
 ```js

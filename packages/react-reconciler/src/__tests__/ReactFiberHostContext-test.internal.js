@@ -12,12 +12,14 @@
 
 let React;
 let ReactFiberReconciler;
+let ConcurrentRoot;
 
 describe('ReactFiberHostContext', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
     ReactFiberReconciler = require('react-reconciler');
+    ConcurrentRoot = require('shared/ReactRootTags');
   });
 
   it('works with null host context', () => {
@@ -58,7 +60,11 @@ describe('ReactFiberHostContext', () => {
       supportsMutation: true,
     });
 
-    const container = Renderer.createContainer(/* root: */ null);
+    const container = Renderer.createContainer(
+      /* root: */ null,
+      ConcurrentRoot,
+      false,
+    );
     Renderer.updateContainer(
       <a>
         <b />
@@ -106,7 +112,11 @@ describe('ReactFiberHostContext', () => {
       supportsMutation: true,
     });
 
-    const container = Renderer.createContainer(rootContext);
+    const container = Renderer.createContainer(
+      rootContext,
+      ConcurrentRoot,
+      false,
+    );
     Renderer.updateContainer(
       <a>
         <b />

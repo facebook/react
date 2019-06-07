@@ -13,6 +13,7 @@ let React;
 let ReactFeatureFlags;
 let ReactDOM;
 let Press;
+let Scheduler;
 
 const DEFAULT_LONG_PRESS_DELAY = 500;
 
@@ -35,17 +36,21 @@ const createKeyboardEvent = (type, data) => {
   });
 };
 
+function init() {
+  ReactFeatureFlags = require('shared/ReactFeatureFlags');
+  ReactFeatureFlags.enableEventAPI = true;
+  React = require('react');
+  ReactDOM = require('react-dom');
+  Press = require('react-events/press');
+  Scheduler = require('scheduler');
+}
+
 describe('Event responder: Press', () => {
   let container;
 
   beforeEach(() => {
     jest.resetModules();
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableEventAPI = true;
-    React = require('react');
-    ReactDOM = require('react-dom');
-    Press = require('react-events/press');
-
+    init();
     container = document.createElement('div');
     document.body.appendChild(container);
   });
@@ -201,8 +206,8 @@ describe('Event responder: Press', () => {
         expect(onPressStart).toHaveBeenCalledTimes(0);
         ref.current.dispatchEvent(
           createEvent('pointerup', {
-            pageX: 55,
-            pageY: 55,
+            clientX: 55,
+            clientY: 55,
           }),
         );
         expect(onPressStart).toHaveBeenCalledTimes(1);
@@ -466,8 +471,8 @@ describe('Event responder: Press', () => {
       jest.advanceTimersByTime(100);
       ref.current.dispatchEvent(
         createEvent('pointerup', {
-          pageX: 55,
-          pageY: 55,
+          clientX: 55,
+          clientY: 55,
         }),
       );
       jest.advanceTimersByTime(10);
@@ -539,7 +544,7 @@ describe('Event responder: Press', () => {
         createEvent('pointerdown', {pointerType: 'pen'}),
       );
       ref.current.dispatchEvent(
-        createEvent('pointerup', {pageX: 10, pageY: 10}),
+        createEvent('pointerup', {clientX: 10, clientY: 10}),
       );
       expect(onPress).toHaveBeenCalledTimes(1);
       expect(onPress).toHaveBeenCalledWith(
@@ -556,6 +561,27 @@ describe('Event responder: Press', () => {
       );
     });
 
+    it('is not called after invalid "keyup" event', () => {
+      const inputRef = React.createRef();
+      const element = (
+        <Press onPress={onPress}>
+          <input ref={inputRef} />
+        </Press>
+      );
+      ReactDOM.render(element, container);
+      inputRef.current.dispatchEvent(
+        createKeyboardEvent('keydown', {key: 'Enter'}),
+      );
+      inputRef.current.dispatchEvent(
+        createKeyboardEvent('keyup', {key: 'Enter'}),
+      );
+      inputRef.current.dispatchEvent(
+        createKeyboardEvent('keydown', {key: ' '}),
+      );
+      inputRef.current.dispatchEvent(createKeyboardEvent('keyup', {key: ' '}));
+      expect(onPress).not.toBeCalled();
+    });
+
     it('is always called immediately after press is released', () => {
       const element = (
         <Press delayPressEnd={500} onPress={onPress}>
@@ -566,7 +592,7 @@ describe('Event responder: Press', () => {
 
       ref.current.dispatchEvent(createEvent('pointerdown'));
       ref.current.dispatchEvent(
-        createEvent('pointerup', {pageX: 10, pageY: 10}),
+        createEvent('pointerup', {clientX: 10, clientY: 10}),
       );
       expect(onPress).toHaveBeenCalledTimes(1);
     });
@@ -642,10 +668,10 @@ describe('Event responder: Press', () => {
         right: 100,
       });
       ref.current.dispatchEvent(
-        createEvent('pointerdown', {pageX: 10, pageY: 10}),
+        createEvent('pointerdown', {clientX: 10, clientY: 10}),
       );
       ref.current.dispatchEvent(
-        createEvent('pointermove', {pageX: 50, pageY: 50}),
+        createEvent('pointermove', {clientX: 50, clientY: 50}),
       );
       jest.runAllTimers();
       expect(onLongPress).not.toBeCalled();
@@ -794,8 +820,8 @@ describe('Event responder: Press', () => {
       ref.current.dispatchEvent(
         createEvent('pointermove', {
           pointerType: 'touch',
-          pageX: 10,
-          pageY: 10,
+          clientX: 10,
+          clientY: 10,
         }),
       );
       expect(onPressMove).toHaveBeenCalledTimes(1);
@@ -824,8 +850,8 @@ describe('Event responder: Press', () => {
       ref.current.dispatchEvent(
         createEvent('pointermove', {
           pointerType: 'mouse',
-          pageX: 10,
-          pageY: 10,
+          clientX: 10,
+          clientY: 10,
         }),
       );
       expect(onPressMove).not.toBeCalled();
@@ -854,8 +880,8 @@ describe('Event responder: Press', () => {
       ref.current.dispatchEvent(
         createEvent('pointermove', {
           pointerType: 'touch',
-          pageX: 10,
-          pageY: 10,
+          clientX: 10,
+          clientY: 10,
         }),
       );
       ref.current.dispatchEvent(createEvent('touchmove'));
@@ -876,12 +902,12 @@ describe('Event responder: Press', () => {
     const pressRectOffset = 20;
     const getBoundingClientRectMock = () => rectMock;
     const coordinatesInside = {
-      pageX: rectMock.left - pressRectOffset,
-      pageY: rectMock.top - pressRectOffset,
+      clientX: rectMock.left - pressRectOffset,
+      clientY: rectMock.top - pressRectOffset,
     };
     const coordinatesOutside = {
-      pageX: rectMock.left - pressRectOffset - 1,
-      pageY: rectMock.top - pressRectOffset - 1,
+      clientX: rectMock.left - pressRectOffset - 1,
+      clientY: rectMock.top - pressRectOffset - 1,
     };
 
     describe('within bounds of hit rect', () => {
@@ -993,8 +1019,8 @@ describe('Event responder: Press', () => {
         ref.current.dispatchEvent(createEvent('pointerdown'));
         ref.current.dispatchEvent(
           createEvent('pointermove', {
-            pageX: rectMock.left - pressRetentionOffset.left,
-            pageY: rectMock.top - pressRetentionOffset.top,
+            clientX: rectMock.left - pressRetentionOffset.left,
+            clientY: rectMock.top - pressRetentionOffset.top,
           }),
         );
         ref.current.dispatchEvent(createEvent('pointerup', coordinatesInside));
@@ -1037,8 +1063,8 @@ describe('Event responder: Press', () => {
           bottom: 490,
         });
         const coordinates = {
-          pageX: rectMock.left,
-          pageY: rectMock.top,
+          clientX: rectMock.left,
+          clientY: rectMock.top,
         };
         // move to an area within the pre-activation region
         ref.current.dispatchEvent(createEvent('pointermove', coordinates));
@@ -1075,8 +1101,8 @@ describe('Event responder: Press', () => {
           bottom: 550,
         });
         const coordinates = {
-          pageX: rectMock.left - 50,
-          pageY: rectMock.top - 50,
+          clientX: rectMock.left - 50,
+          clientY: rectMock.top - 50,
         };
         // move to an area within the post-activation region
         ref.current.dispatchEvent(createEvent('pointermove', coordinates));
@@ -1373,16 +1399,16 @@ describe('Event responder: Press', () => {
     const coordinatesInside = {
       changedTouches: [
         {
-          pageX: rectMock.left - pressRectOffset,
-          pageY: rectMock.top - pressRectOffset,
+          clientX: rectMock.left - pressRectOffset,
+          clientY: rectMock.top - pressRectOffset,
         },
       ],
     };
     const coordinatesOutside = {
       changedTouches: [
         {
-          pageX: rectMock.left - pressRectOffset - 1,
-          pageY: rectMock.top - pressRectOffset - 1,
+          clientX: rectMock.left - pressRectOffset - 1,
+          clientY: rectMock.top - pressRectOffset - 1,
         },
       ],
     };
@@ -1492,8 +1518,8 @@ describe('Event responder: Press', () => {
         ref.current.dispatchEvent(createEvent('touchstart'));
         ref.current.dispatchEvent(
           createEvent('touchmove', {
-            pageX: rectMock.left - pressRetentionOffset.left,
-            pageY: rectMock.top - pressRetentionOffset.top,
+            clientX: rectMock.left - pressRetentionOffset.left,
+            clientY: rectMock.top - pressRetentionOffset.top,
           }),
         );
         ref.current.dispatchEvent(createEvent('touchend', coordinatesInside));
@@ -1536,8 +1562,8 @@ describe('Event responder: Press', () => {
           bottom: 490,
         });
         const coordinates = {
-          pageX: rectMock.left,
-          pageY: rectMock.top,
+          clientX: rectMock.left,
+          clientY: rectMock.top,
         };
         // move to an area within the pre-activation region
         ref.current.dispatchEvent(createEvent('touchmove', coordinates));
@@ -1574,8 +1600,8 @@ describe('Event responder: Press', () => {
           bottom: 550,
         });
         const coordinates = {
-          pageX: rectMock.left - 50,
-          pageY: rectMock.top - 50,
+          clientX: rectMock.left - 50,
+          clientY: rectMock.top - 50,
         };
         // move to an area within the post-activation region
         ref.current.dispatchEvent(createEvent('touchmove', coordinates));
@@ -1767,11 +1793,11 @@ describe('Event responder: Press', () => {
       events = [];
       ref.current.dispatchEvent(createEvent('pointerdown'));
       ref.current.dispatchEvent(
-        createEvent('pointerup', {pageX: 10, pageY: 10}),
+        createEvent('pointerup', {clientX: 10, clientY: 10}),
       );
       ref.current.dispatchEvent(createEvent('pointerdown'));
       ref.current.dispatchEvent(
-        createEvent('pointerup', {pageX: 10, pageY: 10}),
+        createEvent('pointerup', {clientX: 10, clientY: 10}),
       );
       jest.runAllTimers();
 
@@ -1791,7 +1817,7 @@ describe('Event responder: Press', () => {
       jest.advanceTimersByTime(250);
       jest.advanceTimersByTime(500);
       ref.current.dispatchEvent(
-        createEvent('pointerup', {pageX: 10, pageY: 10}),
+        createEvent('pointerup', {clientX: 10, clientY: 10}),
       );
       jest.runAllTimers();
 
@@ -1849,7 +1875,7 @@ describe('Event responder: Press', () => {
 
       ref.current.dispatchEvent(createEvent('pointerdown'));
       ref.current.dispatchEvent(
-        createEvent('pointerup', {pageX: 10, pageY: 10}),
+        createEvent('pointerup', {clientX: 10, clientY: 10}),
       );
       expect(events).toEqual([
         'inner: onPressStart',
@@ -1883,7 +1909,7 @@ describe('Event responder: Press', () => {
 
         ref.current.dispatchEvent(createEvent('pointerdown'));
         ref.current.dispatchEvent(
-          createEvent('pointerup', {pageX: 10, pageY: 10}),
+          createEvent('pointerup', {clientX: 10, clientY: 10}),
         );
         expect(fn).toHaveBeenCalledTimes(1);
       });
@@ -1955,6 +1981,44 @@ describe('Event responder: Press', () => {
       const element = (
         <Press onPress={onPress}>
           <a href="#" ref={ref} />
+        </Press>
+      );
+      ReactDOM.render(element, container);
+
+      ref.current.dispatchEvent(createEvent('pointerdown'));
+      ref.current.dispatchEvent(createEvent('pointerup'));
+      ref.current.dispatchEvent(createEvent('click', {preventDefault}));
+      expect(preventDefault).toBeCalled();
+    });
+
+    it('deeply prevents native behaviour by default', () => {
+      const onPress = jest.fn();
+      const preventDefault = jest.fn();
+      const buttonRef = React.createRef();
+      const element = (
+        <a href="#">
+          <Press onPress={onPress}>
+            <button ref={buttonRef} />
+          </Press>
+        </a>
+      );
+      ReactDOM.render(element, container);
+
+      buttonRef.current.dispatchEvent(createEvent('pointerdown'));
+      buttonRef.current.dispatchEvent(createEvent('pointerup'));
+      buttonRef.current.dispatchEvent(createEvent('click', {preventDefault}));
+      expect(preventDefault).toBeCalled();
+    });
+
+    it('prevents native behaviour by default with nested elements', () => {
+      const onPress = jest.fn();
+      const preventDefault = jest.fn();
+      const ref = React.createRef();
+      const element = (
+        <Press onPress={onPress}>
+          <a href="#">
+            <div ref={ref} />
+          </a>
         </Press>
       );
       ReactDOM.render(element, container);
@@ -2110,6 +2174,13 @@ describe('Event responder: Press', () => {
     );
     ReactDOM.render(element, container);
 
+    ref.current.getBoundingClientRect = () => ({
+      top: 10,
+      left: 10,
+      bottom: 20,
+      right: 20,
+    });
+
     ref.current.dispatchEvent(
       createEvent('pointerdown', {
         pointerType: 'mouse',
@@ -2230,5 +2301,294 @@ describe('Event responder: Press', () => {
         type: 'pressstart',
       },
     ]);
+  });
+
+  function dispatchEventWithTimeStamp(elem, name, timeStamp) {
+    const event = createEvent(name);
+    Object.defineProperty(event, 'timeStamp', {
+      value: timeStamp,
+    });
+    elem.dispatchEvent(event);
+  }
+
+  it('should properly only flush sync once when the event systems are mixed', () => {
+    const ref = React.createRef();
+    let renderCounts = 0;
+
+    function MyComponent() {
+      const [, updateCounter] = React.useState(0);
+      renderCounts++;
+
+      function handlePress() {
+        updateCounter(count => count + 1);
+      }
+
+      return (
+        <div>
+          <Press onPress={handlePress}>
+            <button
+              ref={ref}
+              onClick={() => {
+                updateCounter(count => count + 1);
+              }}>
+              Press me
+            </button>
+          </Press>
+        </div>
+      );
+    }
+
+    const newContainer = document.createElement('div');
+    const root = ReactDOM.unstable_createRoot(newContainer);
+    document.body.appendChild(newContainer);
+    root.render(<MyComponent />);
+    Scheduler.flushAll();
+
+    dispatchEventWithTimeStamp(ref.current, 'pointerdown', 100);
+    dispatchEventWithTimeStamp(ref.current, 'pointerup', 100);
+    dispatchEventWithTimeStamp(ref.current, 'click', 100);
+
+    if (__DEV__) {
+      expect(renderCounts).toBe(2);
+    } else {
+      expect(renderCounts).toBe(1);
+    }
+    Scheduler.flushAll();
+    if (__DEV__) {
+      expect(renderCounts).toBe(4);
+    } else {
+      expect(renderCounts).toBe(2);
+    }
+
+    dispatchEventWithTimeStamp(ref.current, 'pointerdown', 100);
+    dispatchEventWithTimeStamp(ref.current, 'pointerup', 100);
+    // Ensure the timeStamp logic works
+    dispatchEventWithTimeStamp(ref.current, 'click', 101);
+
+    if (__DEV__) {
+      expect(renderCounts).toBe(6);
+    } else {
+      expect(renderCounts).toBe(3);
+    }
+
+    Scheduler.flushAll();
+    document.body.removeChild(newContainer);
+  });
+
+  it('should properly flush sync when the event systems are mixed with unstable_flushDiscreteUpdates', () => {
+    const ref = React.createRef();
+    let renderCounts = 0;
+
+    function MyComponent() {
+      const [, updateCounter] = React.useState(0);
+      renderCounts++;
+
+      function handlePress() {
+        updateCounter(count => count + 1);
+      }
+
+      return (
+        <div>
+          <Press onPress={handlePress}>
+            <button
+              ref={ref}
+              onClick={() => {
+                // This should flush synchronously
+                ReactDOM.unstable_flushDiscreteUpdates();
+                updateCounter(count => count + 1);
+              }}>
+              Press me
+            </button>
+          </Press>
+        </div>
+      );
+    }
+
+    const newContainer = document.createElement('div');
+    const root = ReactDOM.unstable_createRoot(newContainer);
+    document.body.appendChild(newContainer);
+    root.render(<MyComponent />);
+    Scheduler.flushAll();
+
+    dispatchEventWithTimeStamp(ref.current, 'pointerdown', 100);
+    dispatchEventWithTimeStamp(ref.current, 'pointerup', 100);
+    dispatchEventWithTimeStamp(ref.current, 'click', 100);
+
+    if (__DEV__) {
+      expect(renderCounts).toBe(4);
+    } else {
+      expect(renderCounts).toBe(2);
+    }
+    Scheduler.flushAll();
+    if (__DEV__) {
+      expect(renderCounts).toBe(6);
+    } else {
+      expect(renderCounts).toBe(3);
+    }
+
+    dispatchEventWithTimeStamp(ref.current, 'pointerdown', 100);
+    dispatchEventWithTimeStamp(ref.current, 'pointerup', 100);
+    // Ensure the timeStamp logic works
+    dispatchEventWithTimeStamp(ref.current, 'click', 101);
+
+    if (__DEV__) {
+      expect(renderCounts).toBe(8);
+    } else {
+      expect(renderCounts).toBe(4);
+    }
+
+    Scheduler.flushAll();
+    document.body.removeChild(newContainer);
+  });
+
+  it(
+    'should only flush before outermost discrete event handler when mixing ' +
+      'event systems',
+    async () => {
+      const {useState} = React;
+
+      const button = React.createRef();
+
+      const ops = [];
+
+      function MyComponent() {
+        const [pressesCount, updatePressesCount] = useState(0);
+        const [clicksCount, updateClicksCount] = useState(0);
+
+        function handlePress() {
+          // This dispatches a synchronous, discrete event in the legacy event
+          // system. However, because it's nested inside the new event system,
+          // its updates should not flush until the end of the outer handler.
+          button.current.click();
+          // Text context should not have changed
+          ops.push(newContainer.textContent);
+          updatePressesCount(pressesCount + 1);
+        }
+
+        return (
+          <div>
+            <Press onPress={handlePress}>
+              <button
+                ref={button}
+                onClick={() => updateClicksCount(clicksCount + 1)}>
+                Presses: {pressesCount}, Clicks: {clicksCount}
+              </button>
+            </Press>
+          </div>
+        );
+      }
+
+      const newContainer = document.createElement('div');
+      document.body.appendChild(newContainer);
+      const root = ReactDOM.unstable_createRoot(newContainer);
+
+      root.render(<MyComponent />);
+      Scheduler.flushAll();
+      expect(newContainer.textContent).toEqual('Presses: 0, Clicks: 0');
+
+      dispatchEventWithTimeStamp(button.current, 'pointerdown', 100);
+      dispatchEventWithTimeStamp(button.current, 'pointerup', 100);
+      dispatchEventWithTimeStamp(button.current, 'click', 100);
+      Scheduler.flushAll();
+      expect(newContainer.textContent).toEqual('Presses: 1, Clicks: 1');
+
+      expect(ops).toEqual(['Presses: 0, Clicks: 0']);
+    },
+  );
+
+  describe('onContextMenu', () => {
+    it('is called after a right mouse click', () => {
+      const onContextMenu = jest.fn();
+      const ref = React.createRef();
+      const element = (
+        <Press onContextMenu={onContextMenu}>
+          <div ref={ref} />
+        </Press>
+      );
+      ReactDOM.render(element, container);
+
+      ref.current.dispatchEvent(
+        createEvent('pointerdown', {pointerType: 'mouse', button: 2}),
+      );
+      ref.current.dispatchEvent(createEvent('contextmenu'));
+      expect(onContextMenu).toHaveBeenCalledTimes(1);
+      expect(onContextMenu).toHaveBeenCalledWith(
+        expect.objectContaining({pointerType: 'mouse', type: 'contextmenu'}),
+      );
+    });
+
+    it('is called after a left mouse click + ctrl key on Mac', () => {
+      jest.resetModules();
+      const platformGetter = jest.spyOn(global.navigator, 'platform', 'get');
+      platformGetter.mockReturnValue('MacIntel');
+      init();
+
+      const onContextMenu = jest.fn();
+      const ref = React.createRef();
+      const element = (
+        <Press onContextMenu={onContextMenu}>
+          <div ref={ref} />
+        </Press>
+      );
+      ReactDOM.render(element, container);
+
+      ref.current.dispatchEvent(
+        createEvent('pointerdown', {
+          pointerType: 'mouse',
+          button: 0,
+          ctrlKey: true,
+        }),
+      );
+      ref.current.dispatchEvent(createEvent('contextmenu'));
+      expect(onContextMenu).toHaveBeenCalledTimes(1);
+      expect(onContextMenu).toHaveBeenCalledWith(
+        expect.objectContaining({pointerType: 'mouse', type: 'contextmenu'}),
+      );
+      platformGetter.mockClear();
+    });
+
+    it('is not called after a left mouse click + ctrl key on Windows', () => {
+      jest.resetModules();
+      const platformGetter = jest.spyOn(global.navigator, 'platform', 'get');
+      platformGetter.mockReturnValue('Win32');
+      init();
+
+      const onContextMenu = jest.fn();
+      const ref = React.createRef();
+      const element = (
+        <Press onContextMenu={onContextMenu}>
+          <div ref={ref} />
+        </Press>
+      );
+      ReactDOM.render(element, container);
+
+      ref.current.dispatchEvent(
+        createEvent('pointerdown', {
+          pointerType: 'mouse',
+          button: 0,
+          ctrlKey: true,
+        }),
+      );
+      ref.current.dispatchEvent(createEvent('contextmenu'));
+      expect(onContextMenu).toHaveBeenCalledTimes(0);
+      platformGetter.mockClear();
+    });
+
+    it('is not called after a right mouse click occurs during an active press', () => {
+      const onContextMenu = jest.fn();
+      const ref = React.createRef();
+      const element = (
+        <Press onContextMenu={onContextMenu}>
+          <div ref={ref} />
+        </Press>
+      );
+      ReactDOM.render(element, container);
+
+      ref.current.dispatchEvent(
+        createEvent('pointerdown', {pointerType: 'mouse', button: 0}),
+      );
+      ref.current.dispatchEvent(createEvent('contextmenu'));
+      expect(onContextMenu).toHaveBeenCalledTimes(0);
+    });
   });
 });

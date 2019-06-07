@@ -5,8 +5,7 @@ let Scheduler;
 let ReactFeatureFlags;
 let Random;
 
-const SEED = 0;
-
+const SEED = process.env.FUZZ_TEST_SEED || 'default';
 const prettyFormatPkg = require('pretty-format');
 
 function prettyFormat(thing) {
@@ -161,32 +160,35 @@ describe('ReactSuspenseFuzz', () => {
       );
 
       resetCache();
-      ReactNoop.renderToRootWithID(
+      const expectedRoot = ReactNoop.createRoot();
+      expectedRoot.render(
         <ShouldSuspendContext.Provider value={false}>
           {children}
         </ShouldSuspendContext.Provider>,
-        'expected',
       );
       resolveAllTasks();
-      const expectedOutput = ReactNoop.getChildrenAsJSX('expected');
-      ReactNoop.renderToRootWithID(null, 'expected');
-      Scheduler.unstable_flushWithoutYielding();
+      const expectedOutput = expectedRoot.getChildrenAsJSX();
 
       resetCache();
       ReactNoop.renderLegacySyncRoot(children);
       resolveAllTasks();
-      const syncOutput = ReactNoop.getChildrenAsJSX();
-      expect(syncOutput).toEqual(expectedOutput);
+      const legacyOutput = ReactNoop.getChildrenAsJSX();
+      expect(legacyOutput).toEqual(expectedOutput);
       ReactNoop.renderLegacySyncRoot(null);
 
       resetCache();
-      ReactNoop.renderToRootWithID(children, 'concurrent');
-      Scheduler.unstable_flushWithoutYielding();
+      const batchedSyncRoot = ReactNoop.createSyncRoot();
+      batchedSyncRoot.render(children);
       resolveAllTasks();
-      const concurrentOutput = ReactNoop.getChildrenAsJSX('concurrent');
+      const batchedSyncOutput = batchedSyncRoot.getChildrenAsJSX();
+      expect(batchedSyncOutput).toEqual(expectedOutput);
+
+      resetCache();
+      const concurrentRoot = ReactNoop.createRoot();
+      concurrentRoot.render(children);
+      resolveAllTasks();
+      const concurrentOutput = concurrentRoot.getChildrenAsJSX();
       expect(concurrentOutput).toEqual(expectedOutput);
-      ReactNoop.renderToRootWithID(null, 'concurrent');
-      Scheduler.unstable_flushWithoutYielding();
     }
 
     function pickRandomWeighted(rand, options) {
@@ -322,29 +324,7 @@ describe('ReactSuspenseFuzz', () => {
     );
   });
 
-  it('hard-coded cases', () => {
-    const {Text, testResolvedOutput} = createFuzzer();
-
-    testResolvedOutput(
-      <React.Fragment>
-        <Text
-          initialDelay={20}
-          text="A"
-          updates={[{beginAfter: 10, suspendFor: 20}]}
-        />
-        <Suspense fallback="Loading... (B)">
-          <Text
-            initialDelay={10}
-            text="B"
-            updates={[{beginAfter: 30, suspendFor: 50}]}
-          />
-          <Text text="C" />
-        </Suspense>
-      </React.Fragment>,
-    );
-  });
-
-  it('generative tests', () => {
+  it(`generative tests (random seed: ${SEED})`, () => {
     const {generateTestCase, testResolvedOutput} = createFuzzer();
 
     const rand = Random.create(SEED);
@@ -361,10 +341,87 @@ describe('ReactSuspenseFuzz', () => {
 Failed fuzzy test case:
 
 ${prettyFormat(randomTestCase)}
+
+Random seed is ${SEED}
 `);
 
         throw e;
       }
     }
+  });
+
+  describe('hard-coded cases', () => {
+    it('1', () => {
+      const {Text, testResolvedOutput} = createFuzzer();
+      testResolvedOutput(
+        <React.Fragment>
+          <Text
+            initialDelay={20}
+            text="A"
+            updates={[{beginAfter: 10, suspendFor: 20}]}
+          />
+          <Suspense fallback="Loading... (B)">
+            <Text
+              initialDelay={10}
+              text="B"
+              updates={[{beginAfter: 30, suspendFor: 50}]}
+            />
+            <Text text="C" />
+          </Suspense>
+        </React.Fragment>,
+      );
+    });
+
+    it('2', () => {
+      const {Text, Container, testResolvedOutput} = createFuzzer();
+      testResolvedOutput(
+        <React.Fragment>
+          <Suspense fallback="Loading...">
+            <Text initialDelay={7200} text="A" />
+          </Suspense>
+          <Suspense fallback="Loading...">
+            <Container>
+              <Text initialDelay={1000} text="B" />
+              <Text initialDelay={7200} text="C" />
+              <Text initialDelay={9000} text="D" />
+            </Container>
+          </Suspense>
+        </React.Fragment>,
+      );
+    });
+
+    it('3', () => {
+      const {Text, Container, testResolvedOutput} = createFuzzer();
+      testResolvedOutput(
+        <React.Fragment>
+          <Suspense fallback="Loading...">
+            <Text
+              initialDelay={3183}
+              text="A"
+              updates={[
+                {
+                  beginAfter: 2256,
+                  suspendFor: 6696,
+                },
+              ]}
+            />
+            <Text initialDelay={3251} text="B" />
+          </Suspense>
+          <Container>
+            <Text
+              initialDelay={2700}
+              text="C"
+              updates={[
+                {
+                  beginAfter: 3266,
+                  suspendFor: 9139,
+                },
+              ]}
+            />
+            <Text initialDelay={6732} text="D" />
+          </Container>
+        </React.Fragment>,
+      );
+    });
   });
 });

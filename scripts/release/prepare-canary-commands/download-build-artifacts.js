@@ -2,23 +2,27 @@
 
 'use strict';
 
-const http = require('request-promise-json');
 const {exec} = require('child-process-promise');
 const {existsSync, readdirSync} = require('fs');
 const {readJsonSync} = require('fs-extra');
 const {join} = require('path');
-const {logPromise} = require('../utils');
+const {getArtifactsList, logPromise} = require('../utils');
 const theme = require('../theme');
 
 const run = async ({build, cwd}) => {
-  // https://circleci.com/docs/2.0/artifacts/#downloading-all-artifacts-for-a-build-on-circleci
-  const metadataURL = `https://circleci.com/api/v1.1/project/github/facebook/react/${build}/artifacts?circle-token=${
-    process.env.CIRCLE_CI_API_TOKEN
-  }`;
-  const metadata = await http.get(metadataURL, true);
-  const nodeModulesURL = metadata.find(
+  const artifacts = await getArtifactsList(build);
+  const nodeModulesArtifact = artifacts.find(
     entry => entry.path === 'home/circleci/project/node_modules.tgz'
-  ).url;
+  );
+
+  if (!nodeModulesArtifact) {
+    console.log(
+      theme`{error The specified build (${build}) does not contain any build artifacts.}`
+    );
+    process.exit(1);
+  }
+
+  const nodeModulesURL = nodeModulesArtifact.url;
 
   if (!existsSync(join(cwd, 'build'))) {
     await exec(`mkdir ./build`, {cwd});

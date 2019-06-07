@@ -11,7 +11,6 @@ import type {LazyComponent} from 'shared/ReactLazyComponent';
 
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {
-  REACT_CONCURRENT_MODE_TYPE,
   REACT_CONTEXT_TYPE,
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
@@ -64,8 +63,6 @@ function getComponentName(type: mixed): string | null {
     return type;
   }
   switch (type) {
-    case REACT_CONCURRENT_MODE_TYPE:
-      return 'ConcurrentMode';
     case REACT_FRAGMENT_TYPE:
       return 'Fragment';
     case REACT_PORTAL_TYPE:
@@ -98,10 +95,7 @@ function getComponentName(type: mixed): string | null {
       case REACT_EVENT_COMPONENT_TYPE: {
         if (enableEventAPI) {
           const eventComponent = ((type: any): ReactEventComponent);
-          const displayName = eventComponent.displayName;
-          if (displayName !== undefined) {
-            return displayName;
-          }
+          return eventComponent.displayName;
         }
         break;
       }

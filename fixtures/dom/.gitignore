@@ -8,6 +8,8 @@ coverage
 
 # production
 build
+public/scheduler-unstable_mock.development.js
+public/scheduler-unstable_mock.production.min.js
 public/react.development.js
 public/react.production.min.js
 public/react-dom.development.js

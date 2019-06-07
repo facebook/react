@@ -9,6 +9,7 @@
 
 import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
+import type {RootTag} from 'shared/ReactRootTags';
 import type {
   Instance,
   TextInstance,
@@ -17,6 +18,7 @@ import type {
 } from './ReactFiberHostConfig';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
 
 import {
   findCurrentHostFiber,
@@ -44,16 +46,19 @@ import {
   computeExpirationForFiber,
   scheduleWork,
   flushRoot,
+  batchedEventUpdates,
   batchedUpdates,
   unbatchedUpdates,
   flushSync,
   flushControlled,
   deferredUpdates,
   syncUpdates,
-  interactiveUpdates,
-  flushInteractiveUpdates,
+  discreteUpdates,
+  flushDiscreteUpdates,
   flushPassiveEffects,
-} from './ReactFiberScheduler';
+  warnIfNotScopedWithMatchingAct,
+  ReactActingRendererSigil,
+} from './ReactFiberWorkLoop';
 import {createUpdate, enqueueUpdate} from './ReactUpdateQueue';
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
 import {
@@ -63,6 +68,9 @@ import {
 } from './ReactCurrentFiber';
 import {StrictMode} from './ReactTypeOfMode';
 import {Sync} from './ReactFiberExpirationTime';
+import {revertPassiveEffectsChange} from 'shared/ReactFeatureFlags';
+import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
+import {scheduleHotUpdate} from './ReactFiberHotReloading';
 
 type OpaqueRoot = FiberRoot;
 
@@ -115,6 +123,7 @@ function scheduleRootUpdate(
   current: Fiber,
   element: ReactNodeList,
   expirationTime: ExpirationTime,
+  suspenseConfig: null | SuspenseConfig,
   callback: ?Function,
 ) {
   if (__DEV__) {
@@ -135,7 +144,7 @@ function scheduleRootUpdate(
     }
   }
 
-  const update = createUpdate(expirationTime);
+  const update = createUpdate(expirationTime, suspenseConfig);
   // Caution: React DevTools currently depends on this property
   // being called "element".
   update.payload = {element};
@@ -151,7 +160,9 @@ function scheduleRootUpdate(
     update.callback = callback;
   }
 
-  flushPassiveEffects();
+  if (revertPassiveEffectsChange) {
+    flushPassiveEffects();
+  }
   enqueueUpdate(current, update);
   scheduleWork(current, expirationTime);
 
@@ -163,6 +174,7 @@ export function updateContainerAtExpirationTime(
   container: OpaqueRoot,
   parentComponent: ?React$Component<any, any>,
   expirationTime: ExpirationTime,
+  suspenseConfig: null | SuspenseConfig,
   callback: ?Function,
 ) {
   // TODO: If this is a nested container, this won't be the root.
@@ -187,7 +199,13 @@ export function updateContainerAtExpirationTime(
     container.pendingContext = context;
   }
 
-  return scheduleRootUpdate(current, element, expirationTime, callback);
+  return scheduleRootUpdate(
+    current,
+    element,
+    expirationTime,
+    suspenseConfig,
+    callback,
+  );
 }
 
 function findHostInstance(component: Object): PublicInstance | null {
@@ -273,10 +291,10 @@ function findHostInstanceWithWarning(
 
 export function createContainer(
   containerInfo: Container,
-  isConcurrent: boolean,
+  tag: RootTag,
   hydrate: boolean,
 ): OpaqueRoot {
-  return createFiberRoot(containerInfo, isConcurrent, hydrate);
+  return createFiberRoot(containerInfo, tag, hydrate);
 }
 
 export function updateContainer(
@@ -287,12 +305,24 @@ export function updateContainer(
 ): ExpirationTime {
   const current = container.current;
   const currentTime = requestCurrentTime();
-  const expirationTime = computeExpirationForFiber(currentTime, current);
+  if (__DEV__) {
+    // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
+    if ('undefined' !== typeof jest) {
+      warnIfNotScopedWithMatchingAct(current);
+    }
+  }
+  const suspenseConfig = requestCurrentSuspenseConfig();
+  const expirationTime = computeExpirationForFiber(
+    currentTime,
+    current,
+    suspenseConfig,
+  );
   return updateContainerAtExpirationTime(
     element,
     container,
     parentComponent,
     expirationTime,
+    suspenseConfig,
     callback,
   );
 }
@@ -300,15 +330,17 @@ export function updateContainer(
 export {
   flushRoot,
   computeUniqueAsyncExpiration,
+  batchedEventUpdates,
   batchedUpdates,
   unbatchedUpdates,
   deferredUpdates,
   syncUpdates,
-  interactiveUpdates,
-  flushInteractiveUpdates,
+  discreteUpdates,
+  flushDiscreteUpdates,
   flushControlled,
   flushSync,
   flushPassiveEffects,
+  ReactActingRendererSigil,
 };
 
 export function getPublicRootInstance(
@@ -391,7 +423,9 @@ if (__DEV__) {
       id--;
     }
     if (currentHook !== null) {
-      flushPassiveEffects();
+      if (revertPassiveEffectsChange) {
+        flushPassiveEffects();
+      }
 
       const newState = copyWithSet(currentHook.memoizedState, path, value);
       currentHook.memoizedState = newState;
@@ -410,7 +444,9 @@ if (__DEV__) {
 
   // Support DevTools props for function components, forwardRef, memo, host components, etc.
   overrideProps = (fiber: Fiber, path: Array<string | number>, value: any) => {
-    flushPassiveEffects();
+    if (revertPassiveEffectsChange) {
+      flushPassiveEffects();
+    }
     fiber.pendingProps = copyWithSet(fiber.memoizedProps, path, value);
     if (fiber.alternate) {
       fiber.alternate.pendingProps = fiber.pendingProps;
@@ -419,7 +455,9 @@ if (__DEV__) {
   };
 
   scheduleUpdate = (fiber: Fiber) => {
-    flushPassiveEffects();
+    if (revertPassiveEffectsChange) {
+      flushPassiveEffects();
+    }
     scheduleWork(fiber, Sync);
   };
 
@@ -434,6 +472,7 @@ export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
 
   return injectInternals({
     ...devToolsConfig,
+    scheduleHotUpdate: __DEV__ ? scheduleHotUpdate : null,
     overrideHookState,
     overrideProps,
     setSuspenseHandler,

@@ -8,6 +8,8 @@
  * @flow strict-local
  */
 
+/* eslint-disable react-internal/warning-and-invariant-args */
+
 'use strict';
 
 import type {
@@ -20,11 +22,9 @@ const invariant = require('invariant');
 // Event configs
 const customBubblingEventTypes = {};
 const customDirectEventTypes = {};
-const eventTypes = {};
 
 exports.customBubblingEventTypes = customBubblingEventTypes;
 exports.customDirectEventTypes = customDirectEventTypes;
-exports.eventTypes = eventTypes;
 
 const viewConfigCallbacks = new Map();
 const viewConfigs = new Map();
@@ -49,7 +49,7 @@ function processEventTypes(
   if (bubblingEventTypes != null) {
     for (const topLevelType in bubblingEventTypes) {
       if (customBubblingEventTypes[topLevelType] == null) {
-        eventTypes[topLevelType] = customBubblingEventTypes[topLevelType] =
+        customBubblingEventTypes[topLevelType] =
           bubblingEventTypes[topLevelType];
       }
     }
@@ -58,8 +58,7 @@ function processEventTypes(
   if (directEventTypes != null) {
     for (const topLevelType in directEventTypes) {
       if (customDirectEventTypes[topLevelType] == null) {
-        eventTypes[topLevelType] = customDirectEventTypes[topLevelType] =
-          directEventTypes[topLevelType];
+        customDirectEventTypes[topLevelType] = directEventTypes[topLevelType];
       }
     }
   }

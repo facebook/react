@@ -189,14 +189,12 @@ describe('ReactDebugFiberPerf', () => {
     expect(getFlameChart()).toMatchSnapshot();
   });
 
-  it('does not include ConcurrentMode, StrictMode, or Profiler components in measurements', () => {
+  it('does not include StrictMode or Profiler components in measurements', () => {
     ReactNoop.render(
       <React.Profiler id="test" onRender={jest.fn()}>
         <React.StrictMode>
           <Parent>
-            <React.unstable_ConcurrentMode>
-              <Child />
-            </React.unstable_ConcurrentMode>
+            <Child />
           </Parent>
         </React.StrictMode>
       </React.Profiler>,
@@ -597,6 +595,16 @@ describe('ReactDebugFiberPerf', () => {
         }),
     );
 
+    // Initial render
+    ReactNoop.render(
+      <Parent>
+        <React.Suspense fallback={<Spinner />} />
+      </Parent>,
+    );
+    expect(Scheduler).toFlushWithoutYielding();
+    expect(getFlameChart()).toMatchSnapshot();
+
+    // Update that suspends
     ReactNoop.render(
       <Parent>
         <React.Suspense fallback={<Spinner />}>

@@ -127,7 +127,7 @@ Component instance.
 
 Returns `true` if the instance has taken ownership of the responder.
 
-### isPositionWithinTouchHitTarget(x: number, y: number): boolean
+### isEventWithinTouchHitTarget(event: ResponderEvent): boolean
 
 Returns `true` if the global coordinates lie within the TouchHitTarget.
 

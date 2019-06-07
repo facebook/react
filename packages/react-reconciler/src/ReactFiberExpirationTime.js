@@ -23,9 +23,10 @@ export type ExpirationTime = number;
 export const NoWork = 0;
 export const Never = 1;
 export const Sync = MAX_SIGNED_31_BIT_INT;
+export const Batched = Sync - 1;
 
 const UNIT_SIZE = 10;
-const MAGIC_NUMBER_OFFSET = MAX_SIGNED_31_BIT_INT - 1;
+const MAGIC_NUMBER_OFFSET = Batched - 1;
 
 // 1 unit of expiration time represents 10ms.
 export function msToExpirationTime(ms: number): ExpirationTime {
@@ -70,12 +71,16 @@ export function computeAsyncExpiration(
   );
 }
 
-// Same as computeAsyncExpiration but without the bucketing logic. This is
-// used to compute timestamps instead of actual expiration times.
-export function computeAsyncExpirationNoBucket(
+export function computeSuspenseExpiration(
   currentTime: ExpirationTime,
+  timeoutMs: number,
 ): ExpirationTime {
-  return currentTime - LOW_PRIORITY_EXPIRATION / UNIT_SIZE;
+  // TODO: Should we warn if timeoutMs is lower than the normal pri expiration time?
+  return computeExpirationBucket(
+    currentTime,
+    timeoutMs,
+    LOW_PRIORITY_BATCH_SIZE,
+  );
 }
 
 // We intentionally set a higher expiration time for interactive updates in
