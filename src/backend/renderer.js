@@ -25,11 +25,11 @@ import {
   getUID,
   utfEncodeString,
 } from 'src/utils';
-import { localStorageGetItem } from 'src/storage';
+import { sessionStorageGetItem } from 'src/storage';
 import { cleanForBridge, copyWithSet, setInObject } from './utils';
 import {
   __DEBUG__,
-  LOCAL_STORAGE_RELOAD_AND_PROFILE_KEY,
+  SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
   TREE_OPERATION_REORDER_CHILDREN,
@@ -339,7 +339,7 @@ export function attach(
   if (window.__REACT_DEVTOOLS_COMPONENT_FILTERS__ != null) {
     applyComponentFilters(window.__REACT_DEVTOOLS_COMPONENT_FILTERS__);
   } else {
-    console.warn('⚛️ DevTools: Invalid component filters');
+    console.warn('⚛️ DevTools: Could not locate saved component filters');
 
     // Fallback to assuming the default filters in this case.
     applyComponentFilters(getDefaultComponentFilters());
@@ -2201,8 +2201,9 @@ export function attach(
   }
 
   // Automatically start profiling so that we don't miss timing info from initial "mount".
-  // TODO This doens't seem right
-  if (localStorageGetItem(LOCAL_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true') {
+  if (
+    sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true'
+  ) {
     startProfiling();
   }
 

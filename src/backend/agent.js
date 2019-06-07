@@ -4,14 +4,11 @@ import EventEmitter from 'events';
 import memoize from 'memoize-one';
 import throttle from 'lodash.throttle';
 import {
-  LOCAL_STORAGE_RELOAD_AND_PROFILE_KEY,
   SESSION_STORAGE_LAST_SELECTION_KEY,
+  SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
   __DEBUG__,
 } from '../constants';
 import {
-  localStorageGetItem,
-  localStorageRemoveItem,
-  localStorageSetItem,
   sessionStorageGetItem,
   sessionStorageRemoveItem,
   sessionStorageSetItem,
@@ -79,10 +76,12 @@ export default class Agent extends EventEmitter {
   constructor(bridge: Bridge) {
     super();
 
-    if (localStorageGetItem(LOCAL_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true') {
+    if (
+      sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true'
+    ) {
       this._isProfiling = true;
 
-      localStorageRemoveItem(LOCAL_STORAGE_RELOAD_AND_PROFILE_KEY);
+      sessionStorageRemoveItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY);
     }
 
     const persistedSelectionString = sessionStorageGetItem(
@@ -243,7 +242,7 @@ export default class Agent extends EventEmitter {
   };
 
   reloadAndProfile = () => {
-    localStorageSetItem(LOCAL_STORAGE_RELOAD_AND_PROFILE_KEY, 'true');
+    sessionStorageSetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY, 'true');
 
     // This code path should only be hit if the shell has explicitly told the Store that it supports profiling.
     // In that case, the shell must also listen for this specific message to know when it needs to reload the app.
