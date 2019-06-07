@@ -72,28 +72,28 @@ function scheduleHostCallbackIfNeeded() {
   }
 }
 
-function flushFirstTask() {
-  const currentlyFlushingTask = firstTask;
-
+function flushTask(task) {
   // Remove the task from the list before calling the callback. That way the
   // list is in a consistent state even if the callback throws.
-  var next = firstTask.next;
-  if (firstTask === next) {
-    // This is the last task in the list.
+  var next = task.next;
+  if (next === task) {
+    // This is the only scheduled task. Clear the list.
     firstTask = null;
-    next = null;
   } else {
-    var lastTask = firstTask.previous;
-    firstTask = lastTask.next = next;
-    next.previous = lastTask;
+    // Remove the task from its position in the list.
+    if (task === firstTask) {
+      firstTask = next;
+    }
+    var previous = task.previous;
+    previous.next = next;
+    next.previous = previous;
   }
-
-  currentlyFlushingTask.next = currentlyFlushingTask.previous = null;
+  task.next = task.previous = null;
 
   // Now it's safe to execute the task.
-  var callback = currentlyFlushingTask.callback;
-  var expirationTime = currentlyFlushingTask.expirationTime;
-  var priorityLevel = currentlyFlushingTask.priorityLevel;
+  var callback = task.callback;
+  var expirationTime = task.expirationTime;
+  var priorityLevel = task.priorityLevel;
   var previousPriorityLevel = currentPriorityLevel;
   var previousExpirationTime = currentExpirationTime;
   currentPriorityLevel = priorityLevel;
@@ -187,7 +187,7 @@ function flushWork(didUserCallbackTimeout) {
         var currentTime = getCurrentTime();
         if (firstTask.expirationTime <= currentTime) {
           do {
-            flushFirstTask();
+            flushTask(firstTask);
           } while (
             firstTask !== null &&
             firstTask.expirationTime <= currentTime &&
@@ -204,7 +204,7 @@ function flushWork(didUserCallbackTimeout) {
           if (enableSchedulerDebugging && isSchedulerPaused) {
             break;
           }
-          flushFirstTask();
+          flushTask(firstTask);
         } while (firstTask !== null && !shouldYieldToHost());
       }
     }
