@@ -45,9 +45,8 @@ var currentHostCallbackDidTimeout = false;
 // Pausing the scheduler is useful for debugging.
 var isSchedulerPaused = false;
 
+var currentTask = null;
 var currentPriorityLevel = NormalPriority;
-var currentEventStartTime = -1;
-var currentExpirationTime = -1;
 
 // This is set while performing work, to prevent re-entrancy.
 var isPerformingWork = false;
@@ -60,15 +59,13 @@ function scheduleHostCallbackIfNeeded() {
     return;
   }
   if (firstTask !== null) {
-    // Schedule the host callback using the earliest expiration in the list.
-    var expirationTime = firstTask.expirationTime;
     if (isHostCallbackScheduled) {
       // Cancel the existing host callback.
       cancelHostCallback();
     } else {
       isHostCallbackScheduled = true;
     }
-    requestHostCallback(flushWork, expirationTime);
+    requestHostCallback(flushWork, firstTask.expirationTime);
   }
 }
 
@@ -92,57 +89,56 @@ function flushTask(task) {
 
   // Now it's safe to execute the task.
   var callback = task.callback;
-  var expirationTime = task.expirationTime;
-  var priorityLevel = task.priorityLevel;
   var previousPriorityLevel = currentPriorityLevel;
-  var previousExpirationTime = currentExpirationTime;
-  currentPriorityLevel = priorityLevel;
-  currentExpirationTime = expirationTime;
+  var previousTask = currentTask;
+  currentPriorityLevel = task.priorityLevel;
+  currentTask = task;
   var continuationCallback;
   try {
-    const didUserCallbackTimeout =
+    var didUserCallbackTimeout =
       currentHostCallbackDidTimeout ||
       // Immediate priority callbacks are always called as if they timed out
-      priorityLevel === ImmediatePriority;
+      currentPriorityLevel === ImmediatePriority;
     continuationCallback = callback(didUserCallbackTimeout);
   } catch (error) {
     throw error;
   } finally {
     currentPriorityLevel = previousPriorityLevel;
-    currentExpirationTime = previousExpirationTime;
+    currentTask = previousTask;
   }
 
   // A callback may return a continuation. The continuation should be scheduled
   // with the same priority and expiration as the just-finished callback.
   if (typeof continuationCallback === 'function') {
+    var expirationTime = task.expirationTime;
     var continuationTask = {
       callback: continuationCallback,
-      priorityLevel,
+      priorityLevel: task.priorityLevel,
+      startTime: task.startTime,
       expirationTime,
       next: null,
       previous: null,
     };
 
-    // Insert the new callback into the list, sorted by its expiration. This is
+    // Insert the new callback into the list, sorted by its timeout. This is
     // almost the same as the code in `scheduleCallback`, except the callback
-    // is inserted into the list *before* callbacks of equal expiration instead
+    // is inserted into the list *before* callbacks of equal timeout instead
     // of after.
     if (firstTask === null) {
       // This is the first callback in the list.
       firstTask = continuationTask.next = continuationTask.previous = continuationTask;
     } else {
       var nextAfterContinuation = null;
-      var task = firstTask;
+      var t = firstTask;
       do {
-        if (task.expirationTime >= expirationTime) {
-          // This task expires at or after the continuation. We will insert the
-          // continuation *before* this task.
-          nextAfterContinuation = task;
+        if (expirationTime <= t.expirationTime) {
+          // This task times out at or after the continuation. We will insert
+          // the continuation *before* this task.
+          nextAfterContinuation = t;
           break;
         }
-        task = task.next;
-      } while (task !== firstTask);
-
+        t = t.next;
+      } while (t !== firstTask);
       if (nextAfterContinuation === null) {
         // No equal or lower priority task was found, which means the new task
         // is the lowest priority task in the list.
@@ -171,7 +167,7 @@ function flushWork(didUserCallbackTimeout) {
   isHostCallbackScheduled = false;
 
   isPerformingWork = true;
-  const previousDidTimeout = currentHostCallbackDidTimeout;
+  var previousDidTimeout = currentHostCallbackDidTimeout;
   currentHostCallbackDidTimeout = didUserCallbackTimeout;
   try {
     if (didUserCallbackTimeout) {
@@ -229,9 +225,7 @@ function unstable_runWithPriority(priorityLevel, eventHandler) {
   }
 
   var previousPriorityLevel = currentPriorityLevel;
-  var previousEventStartTime = currentEventStartTime;
   currentPriorityLevel = priorityLevel;
-  currentEventStartTime = getCurrentTime();
 
   try {
     return eventHandler();
@@ -241,12 +235,11 @@ function unstable_runWithPriority(priorityLevel, eventHandler) {
     throw error;
   } finally {
     currentPriorityLevel = previousPriorityLevel;
-    currentEventStartTime = previousEventStartTime;
   }
 }
 
 function unstable_next(eventHandler) {
-  let priorityLevel;
+  var priorityLevel;
   switch (currentPriorityLevel) {
     case ImmediatePriority:
     case UserBlockingPriority:
@@ -261,9 +254,7 @@ function unstable_next(eventHandler) {
   }
 
   var previousPriorityLevel = currentPriorityLevel;
-  var previousEventStartTime = currentEventStartTime;
   currentPriorityLevel = priorityLevel;
-  currentEventStartTime = getCurrentTime();
 
   try {
     return eventHandler();
@@ -273,7 +264,6 @@ function unstable_next(eventHandler) {
     throw error;
   } finally {
     currentPriorityLevel = previousPriorityLevel;
-    currentEventStartTime = previousEventStartTime;
   }
 }
 
@@ -282,9 +272,7 @@ function unstable_wrapCallback(callback) {
   return function() {
     // This is a fork of runWithPriority, inlined for performance.
     var previousPriorityLevel = currentPriorityLevel;
-    var previousEventStartTime = currentEventStartTime;
     currentPriorityLevel = parentPriorityLevel;
-    currentEventStartTime = getCurrentTime();
 
     try {
       return callback.apply(this, arguments);
@@ -294,58 +282,54 @@ function unstable_wrapCallback(callback) {
       throw error;
     } finally {
       currentPriorityLevel = previousPriorityLevel;
-      currentEventStartTime = previousEventStartTime;
     }
   };
 }
 
-function unstable_scheduleCallback(
-  priorityLevel,
-  callback,
-  deprecated_options,
-) {
-  var startTime =
-    currentEventStartTime !== -1 ? currentEventStartTime : getCurrentTime();
+function unstable_scheduleCallback(priorityLevel, callback, options) {
+  var startTime = getCurrentTime();
 
-  var expirationTime;
+  var timeout;
   if (
-    typeof deprecated_options === 'object' &&
-    deprecated_options !== null &&
-    typeof deprecated_options.timeout === 'number'
+    typeof options === 'object' &&
+    options !== null &&
+    typeof options.timeout === 'number'
   ) {
-    // FIXME: Remove this branch once we lift expiration times out of React.
-    expirationTime = startTime + deprecated_options.timeout;
+    timeout = options.timeout;
   } else {
     switch (priorityLevel) {
       case ImmediatePriority:
-        expirationTime = startTime + IMMEDIATE_PRIORITY_TIMEOUT;
+        timeout = IMMEDIATE_PRIORITY_TIMEOUT;
         break;
       case UserBlockingPriority:
-        expirationTime = startTime + USER_BLOCKING_PRIORITY;
+        timeout = USER_BLOCKING_PRIORITY;
         break;
       case IdlePriority:
-        expirationTime = startTime + IDLE_PRIORITY;
+        timeout = IDLE_PRIORITY;
         break;
       case LowPriority:
-        expirationTime = startTime + LOW_PRIORITY_TIMEOUT;
+        timeout = LOW_PRIORITY_TIMEOUT;
         break;
       case NormalPriority:
       default:
-        expirationTime = startTime + NORMAL_PRIORITY_TIMEOUT;
+        timeout = NORMAL_PRIORITY_TIMEOUT;
     }
   }
 
+  var expirationTime = startTime + timeout;
+
   var newTask = {
     callback,
-    priorityLevel: priorityLevel,
+    priorityLevel,
+    startTime,
     expirationTime,
     next: null,
     previous: null,
   };
 
-  // Insert the new task into the list, ordered first by expiration, then by
-  // insertion. So the new task is inserted after any other task with
-  // equal expiration.
+  // Insert the new task into the list, ordered first by its timeout, then by
+  // insertion. So the new task is inserted after any other task the
+  // same timeout
   if (firstTask === null) {
     // This is the first task in the list.
     firstTask = newTask.next = newTask.previous = newTask;
@@ -354,8 +338,8 @@ function unstable_scheduleCallback(
     var next = null;
     var task = firstTask;
     do {
-      if (task.expirationTime > expirationTime) {
-        // The new task expires before this one.
+      if (expirationTime < task.expirationTime) {
+        // The new task times out before this one.
         next = task;
         break;
       }
@@ -363,8 +347,8 @@ function unstable_scheduleCallback(
     } while (task !== firstTask);
 
     if (next === null) {
-      // No task with a later expiration was found, which means the new task has
-      // the latest expiration in the list.
+      // No task with a later timeout was found, which means the new task has
+      // the latest timeout in the list.
       next = firstTask;
     } else if (next === firstTask) {
       // The new task has the earliest expiration in the entire list.
@@ -426,8 +410,11 @@ function unstable_getCurrentPriorityLevel() {
 function unstable_shouldYield() {
   return (
     !currentHostCallbackDidTimeout &&
-    ((firstTask !== null && firstTask.expirationTime < currentExpirationTime) ||
-      shouldYieldToHost())
+    (shouldYieldToHost() ||
+      (currentTask !== null &&
+        firstTask !== null &&
+        firstTask.startTime <= getCurrentTime() &&
+        firstTask.expirationTime < currentTask.expirationTime))
   );
 }
 
