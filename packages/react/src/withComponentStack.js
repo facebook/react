@@ -7,7 +7,7 @@
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
-function noop() {}
+const noop = () => {};
 
 let error = noop;
 let warn = noop;
