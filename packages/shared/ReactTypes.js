@@ -176,7 +176,7 @@ export type ReactResponderContext = {
   ) => boolean,
   isTargetWithinEventComponent: (Element | Document) => boolean,
   isTargetWithinEventResponderScope: (Element | Document) => boolean,
-  isPositionWithinTouchHitTarget: (x: number, y: number) => boolean,
+  isEventWithinTouchHitTarget: (event: ReactResponderEvent) => boolean,
   addRootEventTypes: (
     rootEventTypes: Array<ReactEventResponderEventType>,
   ) => void,

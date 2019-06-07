@@ -14,7 +14,6 @@ import type {
 import type {EventPriority} from 'shared/ReactTypes';
 
 import React from 'react';
-import {isEventPositionWithinTouchHitTarget} from './utils';
 import {DiscreteEvent, UserBlockingEvent} from 'shared/ReactTypes';
 
 type PressProps = {
@@ -644,7 +643,7 @@ const PressResponder = {
           const isMouseType = pointerType === 'mouse';
           if (
             (isMouseType || pointerType === 'pen') &&
-            isEventPositionWithinTouchHitTarget(event, context)
+            context.isEventWithinTouchHitTarget(event)
           ) {
             // We need to prevent the native event to block the focus
             nativeEvent.preventDefault();
