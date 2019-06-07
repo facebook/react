@@ -31,7 +31,17 @@ export type SnapshotNode = {|
   type: ElementType,
 |};
 
+// TODO (change descriptions) Is it important to handle context?
+export type ChangeDescription = {|
+  didHooksChange: boolean,
+  props: Array<string>,
+  state: Array<string>,
+|};
+
 export type CommitDataFrontend = {|
+  // Map of Fiber (ID) to a description of what changed in this commit.
+  changeDescriptions: Map<number, ChangeDescription> | null,
+
   // How long was this commit?
   duration: number,
 
@@ -93,6 +103,7 @@ export type ProfilingDataFrontend = {|
 |};
 
 export type CommitDataExport = {|
+  changeDescriptions: Array<[number, ChangeDescription]> | null,
   duration: number,
   // Tuple of fiber ID and actual duration
   fiberActualDurations: Array<[number, number]>,

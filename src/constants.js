@@ -14,6 +14,9 @@ export const LOCAL_STORAGE_FILTER_PREFERENCES_KEY =
 export const SESSION_STORAGE_LAST_SELECTION_KEY =
   'React::DevTools::lastSelection';
 
+export const SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY =
+  'React::DevTools::recordChangeDescriptions';
+
 export const SESSION_STORAGE_RELOAD_AND_PROFILE_KEY =
   'React::DevTools::reloadAndProfile';
 

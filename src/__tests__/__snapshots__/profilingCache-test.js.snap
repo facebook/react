@@ -2,6 +2,7 @@
 
 exports[`ProfilingCache should calculate a self duration based on actual children (not filtered children): CommitDetails with filtered self durations 1`] = `
 Object {
+  "changeDescriptions": Map {},
   "duration": 16,
   "fiberActualDurations": Map {
     1 => 16,
@@ -24,6 +25,7 @@ Object {
 
 exports[`ProfilingCache should calculate self duration correctly for suspended views: CommitDetails with filtered self durations 1`] = `
 Object {
+  "changeDescriptions": Map {},
   "duration": 15,
   "fiberActualDurations": Map {
     1 => 15,
@@ -46,6 +48,7 @@ Object {
 
 exports[`ProfilingCache should calculate self duration correctly for suspended views: CommitDetails with filtered self durations 2`] = `
 Object {
+  "changeDescriptions": Map {},
   "duration": 3,
   "fiberActualDurations": Map {
     5 => 3,
@@ -64,6 +67,7 @@ Object {
 
 exports[`ProfilingCache should collect data for each commit: CommitDetails commitIndex: 0 1`] = `
 Object {
+  "changeDescriptions": Map {},
   "duration": 12,
   "fiberActualDurations": Map {
     1 => 12,
@@ -88,6 +92,25 @@ Object {
 
 exports[`ProfilingCache should collect data for each commit: CommitDetails commitIndex: 1 1`] = `
 Object {
+  "changeDescriptions": Map {
+    3 => Object {
+      "didHooksChange": false,
+      "props": Array [],
+      "state": Array [],
+    },
+    4 => Object {
+      "didHooksChange": false,
+      "props": Array [],
+      "state": Array [],
+    },
+    2 => Object {
+      "didHooksChange": false,
+      "props": Array [
+        "count",
+      ],
+      "state": Array [],
+    },
+  },
   "duration": 13,
   "fiberActualDurations": Map {
     3 => 0,
@@ -112,6 +135,20 @@ Object {
 
 exports[`ProfilingCache should collect data for each commit: CommitDetails commitIndex: 2 1`] = `
 Object {
+  "changeDescriptions": Map {
+    3 => Object {
+      "didHooksChange": false,
+      "props": Array [],
+      "state": Array [],
+    },
+    2 => Object {
+      "didHooksChange": false,
+      "props": Array [
+        "count",
+      ],
+      "state": Array [],
+    },
+  },
   "duration": 10,
   "fiberActualDurations": Map {
     3 => 0,
@@ -132,6 +169,15 @@ Object {
 
 exports[`ProfilingCache should collect data for each commit: CommitDetails commitIndex: 3 1`] = `
 Object {
+  "changeDescriptions": Map {
+    2 => Object {
+      "didHooksChange": false,
+      "props": Array [
+        "count",
+      ],
+      "state": Array [],
+    },
+  },
   "duration": 10,
   "fiberActualDurations": Map {
     2 => 10,
@@ -154,6 +200,7 @@ Object {
     Object {
       "commitData": Array [
         Object {
+          "changeDescriptions": Array [],
           "duration": 12,
           "fiberActualDurations": Array [
             Array [
@@ -205,6 +252,34 @@ Object {
           "timestamp": 12,
         },
         Object {
+          "changeDescriptions": Array [
+            Array [
+              3,
+              Object {
+                "didHooksChange": false,
+                "props": Array [],
+                "state": Array [],
+              },
+            ],
+            Array [
+              4,
+              Object {
+                "didHooksChange": false,
+                "props": Array [],
+                "state": Array [],
+              },
+            ],
+            Array [
+              2,
+              Object {
+                "didHooksChange": false,
+                "props": Array [
+                  "count",
+                ],
+                "state": Array [],
+              },
+            ],
+          ],
           "duration": 13,
           "fiberActualDurations": Array [
             Array [
@@ -256,6 +331,26 @@ Object {
           "timestamp": 25,
         },
         Object {
+          "changeDescriptions": Array [
+            Array [
+              3,
+              Object {
+                "didHooksChange": false,
+                "props": Array [],
+                "state": Array [],
+              },
+            ],
+            Array [
+              2,
+              Object {
+                "didHooksChange": false,
+                "props": Array [
+                  "count",
+                ],
+                "state": Array [],
+              },
+            ],
+          ],
           "duration": 10,
           "fiberActualDurations": Array [
             Array [
@@ -291,6 +386,18 @@ Object {
           "timestamp": 35,
         },
         Object {
+          "changeDescriptions": Array [
+            Array [
+              2,
+              Object {
+                "didHooksChange": false,
+                "props": Array [
+                  "count",
+                ],
+                "state": Array [],
+              },
+            ],
+          ],
           "duration": 10,
           "fiberActualDurations": Array [
             Array [
@@ -507,6 +614,7 @@ Object {
     Object {
       "commitData": Array [
         Object {
+          "changeDescriptions": Array [],
           "duration": 11,
           "fiberActualDurations": Array [
             Array [
@@ -550,6 +658,26 @@ Object {
           "timestamp": 11,
         },
         Object {
+          "changeDescriptions": Array [
+            Array [
+              3,
+              Object {
+                "didHooksChange": false,
+                "props": Array [],
+                "state": Array [],
+              },
+            ],
+            Array [
+              2,
+              Object {
+                "didHooksChange": false,
+                "props": Array [
+                  "count",
+                ],
+                "state": Array [],
+              },
+            ],
+          ],
           "duration": 11,
           "fiberActualDurations": Array [
             Array [
@@ -593,6 +721,34 @@ Object {
           "timestamp": 22,
         },
         Object {
+          "changeDescriptions": Array [
+            Array [
+              3,
+              Object {
+                "didHooksChange": false,
+                "props": Array [],
+                "state": Array [],
+              },
+            ],
+            Array [
+              5,
+              Object {
+                "didHooksChange": false,
+                "props": Array [],
+                "state": Array [],
+              },
+            ],
+            Array [
+              2,
+              Object {
+                "didHooksChange": false,
+                "props": Array [
+                  "count",
+                ],
+                "state": Array [],
+              },
+            ],
+          ],
           "duration": 13,
           "fiberActualDurations": Array [
             Array [
@@ -791,6 +947,25 @@ exports[`ProfilingCache should collect data for each root (including ones added 
 Object {
   "commitData": Array [
     Object {
+      "changeDescriptions": Map {
+        3 => Object {
+          "didHooksChange": false,
+          "props": Array [],
+          "state": Array [],
+        },
+        4 => Object {
+          "didHooksChange": false,
+          "props": Array [],
+          "state": Array [],
+        },
+        2 => Object {
+          "didHooksChange": false,
+          "props": Array [
+            "count",
+          ],
+          "state": Array [],
+        },
+      },
       "duration": 13,
       "fiberActualDurations": Map {
         3 => 0,
@@ -812,6 +987,20 @@ Object {
       "timestamp": 13,
     },
     Object {
+      "changeDescriptions": Map {
+        3 => Object {
+          "didHooksChange": false,
+          "props": Array [],
+          "state": Array [],
+        },
+        2 => Object {
+          "didHooksChange": false,
+          "props": Array [
+            "count",
+          ],
+          "state": Array [],
+        },
+      },
       "duration": 10,
       "fiberActualDurations": Map {
         3 => 0,
@@ -829,6 +1018,15 @@ Object {
       "timestamp": 34,
     },
     Object {
+      "changeDescriptions": Map {
+        2 => Object {
+          "didHooksChange": false,
+          "props": Array [
+            "count",
+          ],
+          "state": Array [],
+        },
+      },
       "duration": 10,
       "fiberActualDurations": Map {
         2 => 10,
@@ -971,6 +1169,7 @@ exports[`ProfilingCache should collect data for each root (including ones added 
 Object {
   "commitData": Array [
     Object {
+      "changeDescriptions": Map {},
       "duration": 11,
       "fiberActualDurations": Map {
         11 => 11,
@@ -1063,6 +1262,7 @@ exports[`ProfilingCache should collect data for each root (including ones added 
 Object {
   "commitData": Array [
     Object {
+      "changeDescriptions": Map {},
       "duration": 0,
       "fiberActualDurations": Map {},
       "fiberSelfDurations": Map {},
@@ -1139,6 +1339,34 @@ Object {
     Object {
       "commitData": Array [
         Object {
+          "changeDescriptions": Array [
+            Array [
+              3,
+              Object {
+                "didHooksChange": false,
+                "props": Array [],
+                "state": Array [],
+              },
+            ],
+            Array [
+              4,
+              Object {
+                "didHooksChange": false,
+                "props": Array [],
+                "state": Array [],
+              },
+            ],
+            Array [
+              2,
+              Object {
+                "didHooksChange": false,
+                "props": Array [
+                  "count",
+                ],
+                "state": Array [],
+              },
+            ],
+          ],
           "duration": 13,
           "fiberActualDurations": Array [
             Array [
@@ -1190,6 +1418,26 @@ Object {
           "timestamp": 13,
         },
         Object {
+          "changeDescriptions": Array [
+            Array [
+              3,
+              Object {
+                "didHooksChange": false,
+                "props": Array [],
+                "state": Array [],
+              },
+            ],
+            Array [
+              2,
+              Object {
+                "didHooksChange": false,
+                "props": Array [
+                  "count",
+                ],
+                "state": Array [],
+              },
+            ],
+          ],
           "duration": 10,
           "fiberActualDurations": Array [
             Array [
@@ -1225,6 +1473,18 @@ Object {
           "timestamp": 34,
         },
         Object {
+          "changeDescriptions": Array [
+            Array [
+              2,
+              Object {
+                "didHooksChange": false,
+                "props": Array [
+                  "count",
+                ],
+                "state": Array [],
+              },
+            ],
+          ],
           "duration": 10,
           "fiberActualDurations": Array [
             Array [
@@ -1406,6 +1666,7 @@ Object {
     Object {
       "commitData": Array [
         Object {
+          "changeDescriptions": Array [],
           "duration": 11,
           "fiberActualDurations": Array [
             Array [
@@ -1519,6 +1780,7 @@ Object {
     Object {
       "commitData": Array [
         Object {
+          "changeDescriptions": Array [],
           "duration": 0,
           "fiberActualDurations": Array [],
           "fiberSelfDurations": Array [],
@@ -1639,6 +1901,7 @@ Object {
     Object {
       "commitData": Array [
         Object {
+          "changeDescriptions": Array [],
           "duration": 11,
           "fiberActualDurations": Array [
             Array [
@@ -1684,6 +1947,26 @@ Object {
           "timestamp": 11,
         },
         Object {
+          "changeDescriptions": Array [
+            Array [
+              3,
+              Object {
+                "didHooksChange": false,
+                "props": Array [],
+                "state": Array [],
+              },
+            ],
+            Array [
+              2,
+              Object {
+                "didHooksChange": false,
+                "props": Array [
+                  "count",
+                ],
+                "state": Array [],
+              },
+            ],
+          ],
           "duration": 11,
           "fiberActualDurations": Array [
             Array [

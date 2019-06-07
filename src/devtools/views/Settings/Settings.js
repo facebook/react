@@ -1,6 +1,6 @@
 // @flow
 
-import React, { useCallback, useContext, useMemo } from 'react';
+import React, { Fragment, useCallback, useContext, useMemo } from 'react';
 import { useSubscription } from '../hooks';
 import { StoreContext } from '../context';
 import { SettingsContext } from './SettingsContext';
@@ -43,6 +43,20 @@ function Settings(_: {||}) {
     collapseNodesByDefaultSubscription
   );
 
+  const recordChangeDescriptionsSubscription = useMemo(
+    () => ({
+      getCurrentValue: () => store.recordChangeDescriptions,
+      subscribe: (callback: Function) => {
+        store.addListener('recordChangeDescriptions', callback);
+        return () => store.removeListener('recordChangeDescriptions', callback);
+      },
+    }),
+    [store]
+  );
+  const recordChangeDescriptions = useSubscription<boolean, Store>(
+    recordChangeDescriptionsSubscription
+  );
+
   const updateDisplayDensity = useCallback(
     ({ currentTarget }) => {
       setDisplayDensity(currentTarget.value);
@@ -66,6 +80,12 @@ function Settings(_: {||}) {
   const updateCollapseNodesByDefault = useCallback(
     ({ currentTarget }) => {
       store.collapseNodesByDefault = currentTarget.checked;
+    },
+    [store]
+  );
+  const updateRecordChangeDescriptions = useCallback(
+    ({ currentTarget }) => {
+      store.recordChangeDescriptions = currentTarget.checked;
     },
     [store]
   );
@@ -145,25 +165,37 @@ function Settings(_: {||}) {
         </label>
       </div>
 
-      {store.supportsCaptureScreenshots && (
-        <div className={styles.Section}>
-          <div className={styles.Header}>Profiler</div>
-          <label className={styles.CheckboxOption}>
-            <input
-              type="checkbox"
-              checked={captureScreenshots}
-              onChange={updateCaptureScreenshotsWhileProfiling}
-            />{' '}
-            Capture screenshots while profiling
-          </label>
-          {captureScreenshots && (
-            <div className={styles.ScreenshotThrottling}>
-              Screenshots will be throttled in order to reduce the negative
-              impact on performance.
-            </div>
-          )}
-        </div>
-      )}
+      <div className={styles.Section}>
+        <div className={styles.Header}>Profiler</div>
+
+        <label className={styles.CheckboxOption}>
+          <input
+            type="checkbox"
+            checked={recordChangeDescriptions}
+            onChange={updateRecordChangeDescriptions}
+          />{' '}
+          Record which props/state/hooks changed while profiling
+        </label>
+
+        {store.supportsCaptureScreenshots && (
+          <Fragment>
+            <label className={styles.CheckboxOption}>
+              <input
+                type="checkbox"
+                checked={captureScreenshots}
+                onChange={updateCaptureScreenshotsWhileProfiling}
+              />{' '}
+              Capture screenshots while profiling
+            </label>
+            {captureScreenshots && (
+              <div className={styles.ScreenshotThrottling}>
+                Screenshots will be throttled in order to reduce the negative
+                impact on performance.
+              </div>
+            )}
+          </Fragment>
+        )}
+      </div>
     </div>
   );
 }

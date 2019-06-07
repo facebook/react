@@ -58,6 +58,10 @@ export function prepareProfilingDataFrontendFromBackendAndStore(
 
         dataForRoots.set(rootID, {
           commitData: commitData.map((commitDataBackend, commitIndex) => ({
+            changeDescriptions:
+              commitDataBackend.changeDescriptions != null
+                ? new Map(commitDataBackend.changeDescriptions)
+                : null,
             duration: commitDataBackend.duration,
             fiberActualDurations: new Map(
               commitDataBackend.fiberActualDurations
@@ -109,6 +113,7 @@ export function prepareProfilingDataFrontendFromExport(
       dataForRoots.set(rootID, {
         commitData: commitData.map(
           ({
+            changeDescriptions,
             duration,
             fiberActualDurations,
             fiberSelfDurations,
@@ -117,6 +122,8 @@ export function prepareProfilingDataFrontendFromExport(
             screenshot,
             timestamp,
           }) => ({
+            changeDescriptions:
+              changeDescriptions != null ? new Map(changeDescriptions) : null,
             duration,
             fiberActualDurations: new Map(fiberActualDurations),
             fiberSelfDurations: new Map(fiberSelfDurations),
@@ -159,6 +166,7 @@ export function prepareProfilingDataExport(
       dataForRoots.push({
         commitData: commitData.map(
           ({
+            changeDescriptions,
             duration,
             fiberActualDurations,
             fiberSelfDurations,
@@ -167,6 +175,10 @@ export function prepareProfilingDataExport(
             screenshot,
             timestamp,
           }) => ({
+            changeDescriptions:
+              changeDescriptions != null
+                ? Array.from(changeDescriptions.entries())
+                : null,
             duration,
             fiberActualDurations: Array.from(fiberActualDurations.entries()),
             fiberSelfDurations: Array.from(fiberSelfDurations.entries()),

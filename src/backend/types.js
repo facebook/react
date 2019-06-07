@@ -112,7 +112,16 @@ export type ReactRenderer = {
   currentDispatcherRef?: {| current: null | Dispatcher |},
 };
 
+// TODO (change descriptions) Is it important to handle context?
+export type ChangeDescription = {|
+  didHooksChange: boolean,
+  props: Array<string>,
+  state: Array<string>,
+|};
+
 export type CommitDataBackend = {|
+  // Tuple of fiber ID and change description
+  changeDescriptions: Array<[number, ChangeDescription]> | null,
   duration: number,
   // Tuple of fiber ID and actual duration
   fiberActualDurations: Array<[number, number]>,
@@ -226,7 +235,7 @@ export type RendererInterface = {
   setInProps: (id: number, path: Array<string | number>, value: any) => void,
   setInState: (id: number, path: Array<string | number>, value: any) => void,
   setTrackedPath: (path: Array<PathFrame> | null) => void,
-  startProfiling: () => void,
+  startProfiling: (recordChangeDescriptions: boolean) => void,
   stopProfiling: () => void,
   updateComponentFilters: (somponentFilters: Array<ComponentFilter>) => void,
 };

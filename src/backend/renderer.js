@@ -30,6 +30,7 @@ import { cleanForBridge, copyWithSet, setInObject } from './utils';
 import {
   __DEBUG__,
   SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
+  SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
   TREE_OPERATION_REORDER_CHILDREN,
@@ -38,6 +39,7 @@ import {
 import { inspectHooksOfFiber } from './ReactDebugHooks';
 
 import type {
+  ChangeDescription,
   CommitDataBackend,
   DevToolsHook,
   Fiber,
@@ -350,7 +352,7 @@ export function attach(
   // The unmount operations are already significantly smaller than mount opreations though.
   // This is something to keep in mind for later.
   function updateComponentFilters(componentFilters: Array<ComponentFilter>) {
-    if (this._isProfiling) {
+    if (isProfiling) {
       // Re-mounting a tree while profiling is in progress might break a lot of assumptions.
       // If necessary, we could support this- but it doesn't seem like a necessary use case.
       throw Error('Cannot modify filter preferences while profiling');
@@ -646,8 +648,87 @@ export function attach(
     return ((fiberToIDMap.get(primaryFiber): any): number);
   }
 
+  function getChangeDescription(
+    prevFiber: Fiber,
+    nextFiber: Fiber
+  ): ChangeDescription | null {
+    switch (getElementTypeForFiber(nextFiber)) {
+      case ElementTypeClass:
+      case ElementTypeFunction:
+      case ElementTypeMemo:
+      case ElementTypeForwardRef:
+        return {
+          didHooksChange: didHooksChange(
+            prevFiber.memoizedState,
+            nextFiber.memoizedState
+          ),
+          props: getChangedKeys(
+            prevFiber.memoizedProps,
+            nextFiber.memoizedProps
+          ),
+          state: getChangedKeys(
+            prevFiber.memoizedState,
+            nextFiber.memoizedState
+          ),
+        };
+      default:
+        return null;
+    }
+  }
+
+  function didHooksChange(prev: any, next: any): boolean {
+    if (next == null) {
+      return false;
+    }
+
+    // We can't report anything meaningful for hooks changes.
+    if (
+      next.hasOwnProperty('baseState') &&
+      next.hasOwnProperty('memoizedState') &&
+      next.hasOwnProperty('next') &&
+      next.hasOwnProperty('queue')
+    ) {
+      while (next !== null) {
+        if (next.memoizedState !== prev.memoizedState) {
+          return true;
+        } else {
+          next = next.next;
+          prev = prev.next;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  function getChangedKeys(prev: any, next: any): Array<string> {
+    const keys = [];
+
+    if (next == null) {
+      return keys;
+    }
+
+    // We can't report anything meaningful for hooks changes.
+    if (
+      next.hasOwnProperty('baseState') &&
+      next.hasOwnProperty('memoizedState') &&
+      next.hasOwnProperty('next') &&
+      next.hasOwnProperty('queue')
+    ) {
+      return keys;
+    }
+
+    // TODO (change descriptions) This does not account for props that were added or removed.
+    for (let key in prev) {
+      if (prev[key] !== next[key]) {
+        keys.push(key);
+      }
+    }
+    return keys;
+  }
+
   // eslint-disable-next-line no-unused-vars
-  function hasDataChanged(prevFiber: Fiber, nextFiber: Fiber): boolean {
+  function didFiberRender(prevFiber: Fiber, nextFiber: Fiber): boolean {
     switch (nextFiber.tag) {
       case ClassComponent:
       case FunctionComponent:
@@ -1024,7 +1105,7 @@ export function attach(
         pushOperation(treeBaseDuration);
       }
 
-      if (alternate == null || hasDataChanged(alternate, fiber)) {
+      if (alternate == null || didFiberRender(alternate, fiber)) {
         if (actualDuration != null) {
           // The actual duration reported by React includes time spent working on children.
           // This is useful information, but it's also useful to be able to exclude child durations.
@@ -1049,6 +1130,16 @@ export function attach(
             metadata.maxActualDuration,
             actualDuration
           );
+
+          if (recordChangeDescriptions && metadata.changeDescriptions) {
+            const changeDescription =
+              alternate === null
+                ? null
+                : getChangeDescription(alternate, fiber);
+            if (changeDescription !== null) {
+              metadata.changeDescriptions.set(id, changeDescription);
+            }
+          }
         }
       }
     }
@@ -1110,7 +1201,7 @@ export function attach(
       mostRecentlyInspectedElementID !== null &&
       mostRecentlyInspectedElementID ===
         getFiberID(getPrimaryFiber(nextFiber)) &&
-      hasDataChanged(prevFiber, nextFiber)
+      didFiberRender(prevFiber, nextFiber)
     ) {
       // If this Fiber has updated, clear cached inspected data.
       // If it is inspected again, it may need to be re-run to obtain updated hooks values.
@@ -1300,6 +1391,7 @@ export function attach(
           // If profiling is active, store commit time and duration, and the current interactions.
           // The frontend may request this information after profiling has stopped.
           currentCommitProfilingMetadata = {
+            changeDescriptions: recordChangeDescriptions ? new Map() : null,
             durations: [],
             commitTime: performance.now() - profilingStartTime,
             interactions: Array.from(root.memoizedInteractions).map(
@@ -1343,6 +1435,7 @@ export function attach(
       // If profiling is active, store commit time and duration, and the current interactions.
       // The frontend may request this information after profiling has stopped.
       currentCommitProfilingMetadata = {
+        changeDescriptions: recordChangeDescriptions ? new Map() : null,
         durations: [],
         commitTime: performance.now() - profilingStartTime,
         interactions: Array.from(root.memoizedInteractions).map(
@@ -2058,6 +2151,7 @@ export function attach(
   }
 
   type CommitProfilingData = {|
+    changeDescriptions: Map<number, ChangeDescription> | null,
     commitTime: number,
     durations: Array<number>,
     interactions: Array<Interaction>,
@@ -2074,6 +2168,7 @@ export function attach(
   let initialIDToRootMap: Map<number, number> | null = null;
   let isProfiling: boolean = false;
   let profilingStartTime: number = 0;
+  let recordChangeDescriptions: boolean = false;
   let rootToCommitProfilingMetadataMap: CommitProfilingMetadataMap | null = null;
 
   function getProfilingData(): ProfilingDataBackend {
@@ -2111,6 +2206,7 @@ export function attach(
 
         commitProfilingMetadata.forEach((commitProfilingData, commitIndex) => {
           const {
+            changeDescriptions,
             durations,
             interactions,
             maxActualDuration,
@@ -2144,6 +2240,10 @@ export function attach(
           }
 
           commitData.push({
+            changeDescriptions:
+              changeDescriptions !== null
+                ? Array.from(changeDescriptions.entries())
+                : null,
             duration: maxActualDuration,
             fiberActualDurations,
             fiberSelfDurations,
@@ -2170,10 +2270,12 @@ export function attach(
     };
   }
 
-  function startProfiling() {
+  function startProfiling(shouldRecordChangeDescriptions: boolean) {
     if (isProfiling) {
       return;
     }
+
+    recordChangeDescriptions = shouldRecordChangeDescriptions;
 
     // Capture initial values as of the time profiling starts.
     // It's important we snapshot both the durations and the id-to-root map,
@@ -2198,13 +2300,17 @@ export function attach(
 
   function stopProfiling() {
     isProfiling = false;
+    recordChangeDescriptions = false;
   }
 
   // Automatically start profiling so that we don't miss timing info from initial "mount".
   if (
     sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true'
   ) {
-    startProfiling();
+    startProfiling(
+      sessionStorageGetItem(SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY) ===
+        'true'
+    );
   }
 
   // React will switch between these implementations depending on whether
