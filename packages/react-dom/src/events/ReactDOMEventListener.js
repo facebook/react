@@ -60,8 +60,6 @@ const {
   unstable_runWithPriority: runWithPriority,
 } = Scheduler;
 
-const {getEventPriority} = SimpleEventPlugin;
-
 const CALLBACK_BOOKKEEPING_POOL_SIZE = 10;
 const callbackBookkeepingPool = [];
 
@@ -236,7 +234,8 @@ function trapEventForPluginEventSystem(
 ): void {
   if (enablePluginEventSystem) {
     let listener;
-    switch (getEventPriority(topLevelType)) {
+    // $FlowFixMe: getEventPriority exists because this is behind a flag
+    switch (SimpleEventPlugin.getEventPriority(topLevelType)) {
       case DiscreteEvent:
         listener = dispatchDiscreteEvent.bind(
           null,
