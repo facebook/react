@@ -69,23 +69,6 @@ describe('ReactIs', () => {
     expect(ReactIs.isValidElementType({type: 'div', props: {}})).toEqual(false);
   });
 
-  it('should identify concurrent mode', () => {
-    expect(ReactIs.typeOf(<React.unstable_ConcurrentMode />)).toBe(
-      ReactIs.ConcurrentMode,
-    );
-    expect(ReactIs.typeOfElementType(React.unstable_ConcurrentMode)).toBe(
-      ReactIs.ConcurrentMode,
-    );
-    expect(ReactIs.isConcurrentMode(<React.unstable_ConcurrentMode />)).toBe(
-      true,
-    );
-    expect(ReactIs.isConcurrentMode({type: ReactIs.ConcurrentMode})).toBe(
-      false,
-    );
-    expect(ReactIs.isConcurrentMode(<React.StrictMode />)).toBe(false);
-    expect(ReactIs.isConcurrentMode(<div />)).toBe(false);
-  });
-
   it('should identify context consumers', () => {
     const Context = React.createContext(false);
     expect(ReactIs.typeOf(<Context.Consumer />)).toBe(ReactIs.ContextConsumer);
