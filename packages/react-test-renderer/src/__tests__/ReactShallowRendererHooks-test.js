@@ -294,9 +294,7 @@ describe('ReactShallowRenderer with hooks', () => {
     function SomeComponent() {
       const noop = React.useCallback(() => {}, []);
 
-      return (
-        <div onClick={noop} />
-      );
+      return <div onClick={noop} />;
     }
 
     const shallowRenderer = createRenderer();

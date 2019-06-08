@@ -337,7 +337,7 @@ class ReactShallowRenderer {
 
     const useCallback = <T>(
       callback: T,
-      deps: Array<mixed> | void | null
+      deps: Array<mixed> | void | null,
     ): T => {
       this._validateCurrentlyRenderingComponent();
       this._createWorkInProgressHook();
@@ -361,7 +361,7 @@ class ReactShallowRenderer {
       (this._workInProgressHook: any).memoizedState = [nextValue, nextDeps];
       return nextValue;
     };
-        
+
     const useRef = <T>(initialValue: T): {current: T} => {
       this._validateCurrentlyRenderingComponent();
       this._createWorkInProgressHook();
