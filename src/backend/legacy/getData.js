@@ -26,16 +26,8 @@ export default function getData(internalInstance: InternalInstance): FiberData {
       type = ElementTypeHostComponent;
       displayName = elementType;
     } else if (typeof elementType === 'function') {
-      // TODO Can we differentiate between function and class component types?
-      //      Dan said _compositeType tells you PureClass, ImpureClass, StatelessFunctional but it was only added in v14
-      //      getPublicInstance() returns null for function components
+      // TODO: detect function components.
       type = ElementTypeClass;
-      displayName = getDisplayName(elementType);
-    } else if (typeof internalInstance._stringText === 'string') {
-      // ...
-    } else {
-      // TODO What kind of case does this cover?
-      console.log('what is this type?');
       displayName = getDisplayName(elementType);
     }
   }
