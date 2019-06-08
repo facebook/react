@@ -97,7 +97,9 @@ function unwindWork(
       return null;
     }
     case SuspenseListComponent: {
-      // TODO
+      popSuspenseContext(workInProgress);
+      // SuspenseList doesn't actually catch anything. It should've been
+      // caught by a nested boundary. If not, it should bubble through.
       return null;
     }
     case HostPortal:
@@ -148,7 +150,7 @@ function unwindInterruptedWork(interruptedWork: Fiber) {
       }
       break;
     case SuspenseListComponent:
-      // TODO
+      popSuspenseContext(interruptedWork);
       break;
     case ContextProvider:
       popProvider(interruptedWork);

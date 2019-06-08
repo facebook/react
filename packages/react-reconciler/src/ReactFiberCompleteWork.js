@@ -836,6 +836,7 @@ function completeWork(
       break;
     }
     case SuspenseListComponent: {
+      popSuspenseContext(workInProgress);
       // TODO
       break;
     }

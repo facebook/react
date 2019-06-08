@@ -122,6 +122,7 @@ import {
   hasSuspenseContext,
   setDefaultShallowSuspenseContext,
   addSubtreeSuspenseContext,
+  setShallowSuspenseContext,
 } from './ReactFiberSuspenseContext';
 import {
   pushProvider,
@@ -1919,20 +1920,71 @@ function updateDehydratedSuspenseComponent(
   }
 }
 
+type SuspenseListDisplayOrder = 'together' | void;
+
 function updateSuspenseListComponent(
   current: Fiber | null,
   workInProgress: Fiber,
   renderExpirationTime: ExpirationTime,
 ) {
-  // TODO
-  const nextChildren = workInProgress.pendingProps.children;
-  reconcileChildren(
-    current,
-    workInProgress,
-    nextChildren,
-    renderExpirationTime,
+  const nextProps = workInProgress.pendingProps;
+  const displayOrder: SuspenseListDisplayOrder = nextProps.displayOrder;
+  const nextChildren = nextProps.children;
+
+  let suspenseContext: SuspenseContext = suspenseStackCursor.current;
+
+  let shouldForceFallback = hasSuspenseContext(
+    suspenseContext,
+    (ForceSuspenseFallback: SuspenseContext),
   );
-  return workInProgress.child;
+
+  if (shouldForceFallback) {
+    // A parent SuspenseList is telling us to force all our fallbacks.
+    suspenseContext = setShallowSuspenseContext(
+      suspenseContext,
+      ForceSuspenseFallback,
+    );
+  } else {
+    suspenseContext = setDefaultShallowSuspenseContext(suspenseContext);
+  }
+
+  pushSuspenseContext(workInProgress, suspenseContext);
+
+  let nextChildFibers;
+  if (current === null) {
+    nextChildFibers = mountChildFibers(
+      workInProgress,
+      null,
+      nextChildren,
+      renderExpirationTime,
+    );
+  } else {
+    nextChildFibers = reconcileChildFibers(
+      workInProgress,
+      current.child,
+      nextChildren,
+      renderExpirationTime,
+    );
+  }
+
+  switch (displayOrder) {
+    // TODO: For other display orders we'll need to split the nextChildFibers set.
+    case 'together': {
+      break;
+    }
+    default: {
+      // The default display order is the same as not having
+      // a boundary.
+      // TODO: Warn if displayOrder is not `undefined`, since anything
+      // else is an unsupported option.
+      // We mark this as having captured but it really just says to the
+      // complete phase that we should treat this as done, whatever form
+      // it is in. No need for a second pass.
+      workInProgress.effectTag |= DidCapture;
+    }
+  }
+  workInProgress.child = nextChildFibers;
+  return nextChildFibers;
 }
 
 function updatePortalComponent(
@@ -2383,6 +2435,21 @@ function beginWork(
             workInProgress.effectTag |= DidCapture;
           }
           break;
+        }
+        case SuspenseListComponent: {
+          // Check if the children have any pending work.
+          const childExpirationTime = workInProgress.childExpirationTime;
+          if (childExpirationTime < renderExpirationTime) {
+            pushSuspenseContext(workInProgress, suspenseStackCursor.current);
+            // None of the children have any work, so we can do a fast bailout.
+            return null;
+          }
+          // Try the normal path.
+          return updateSuspenseListComponent(
+            current,
+            workInProgress,
+            renderExpirationTime,
+          );
         }
         case EventComponent:
           if (enableEventAPI) {
