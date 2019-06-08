@@ -150,12 +150,7 @@ export function attach(
     // React 15
     oldReconcilerMethods = decorateMany(renderer.Reconciler, {
       mountComponent(fn, args) {
-        const [
-          internalInstance,
-          transaction,
-          hostParent,
-          hostContainerInfo,
-        ] = args;
+        const [internalInstance, , , hostContainerInfo] = args;
         if (getElementType(internalInstance) === ElementTypeOtherOrUnknown) {
           return fn.apply(this, args);
         }
