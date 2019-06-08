@@ -31,11 +31,12 @@ export type SnapshotNode = {|
   type: ElementType,
 |};
 
-// TODO (change descriptions) Is it important to handle context?
+// TODO (change descriptions) Should we report changed hooks keys?
 export type ChangeDescription = {|
+  context: Array<string> | boolean | null,
   didHooksChange: boolean,
-  props: Array<string>,
-  state: Array<string>,
+  props: Array<string> | null,
+  state: Array<string> | null,
 |};
 
 export type CommitDataFrontend = {|

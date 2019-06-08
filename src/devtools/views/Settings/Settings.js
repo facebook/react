@@ -174,7 +174,7 @@ function Settings(_: {||}) {
             checked={recordChangeDescriptions}
             onChange={updateRecordChangeDescriptions}
           />{' '}
-          Record which props/state/hooks changed while profiling
+          Record why each component rendered while profiling.
         </label>
 
         {store.supportsCaptureScreenshots && (

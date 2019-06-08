@@ -662,6 +662,7 @@ export function attach(
             prevFiber.memoizedState,
             nextFiber.memoizedState
           ),
+          context: getContextChangedKeys(nextFiber),
           props: getChangedKeys(
             prevFiber.memoizedProps,
             nextFiber.memoizedProps
@@ -674,6 +675,88 @@ export function attach(
       default:
         return null;
     }
+  }
+
+  function updateContextsForFiber(fiber: Fiber) {
+    switch (getElementTypeForFiber(fiber)) {
+      case ElementTypeClass:
+        if (idToContextsMap !== null) {
+          const id = getFiberID(getPrimaryFiber(fiber));
+          const contexts = getContextsForFiber(fiber);
+          if (contexts !== null) {
+            idToContextsMap.set(id, contexts);
+          }
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
+  const NO_CONTEXT = {};
+
+  function getContextsForFiber(fiber: Fiber): [Object, any] | null {
+    switch (getElementTypeForFiber(fiber)) {
+      case ElementTypeClass:
+        const instance = fiber.stateNode;
+        let legacyContext = NO_CONTEXT;
+        let modernContext = NO_CONTEXT;
+        if (instance != null) {
+          if (
+            instance.constructor &&
+            instance.constructor.contextType != null
+          ) {
+            modernContext = instance.context;
+          } else {
+            legacyContext = instance.context;
+            if (legacyContext && Object.keys(legacyContext).length === 0) {
+              legacyContext = NO_CONTEXT;
+            }
+          }
+        }
+        return [legacyContext, modernContext];
+      default:
+        return null;
+    }
+  }
+
+  function crawlToInitializeContextsMap(fiber: Fiber) {
+    updateContextsForFiber(fiber);
+    let current = fiber.child;
+    while (current !== null) {
+      crawlToInitializeContextsMap(current);
+      current = current.sibling;
+    }
+  }
+
+  function getContextChangedKeys(fiber: Fiber): null | boolean | Array<string> {
+    switch (getElementTypeForFiber(fiber)) {
+      case ElementTypeClass:
+        if (idToContextsMap !== null) {
+          const id = getFiberID(getPrimaryFiber(fiber));
+          const prevContexts = idToContextsMap.has(id)
+            ? idToContextsMap.get(id)
+            : null;
+          const nextContexts = getContextsForFiber(fiber);
+
+          if (prevContexts == null || nextContexts == null) {
+            return null;
+          }
+
+          const [prevLegacyContext, prevModernContext] = prevContexts;
+          const [nextLegacyContext, nextModernContext] = nextContexts;
+
+          if (nextLegacyContext !== NO_CONTEXT) {
+            return getChangedKeys(prevLegacyContext, nextLegacyContext);
+          } else if (nextModernContext !== NO_CONTEXT) {
+            return prevModernContext !== nextModernContext;
+          }
+        }
+        break;
+      default:
+        break;
+    }
+    return null;
   }
 
   function didHooksChange(prev: any, next: any): boolean {
@@ -701,11 +784,9 @@ export function attach(
     return false;
   }
 
-  function getChangedKeys(prev: any, next: any): Array<string> {
-    const keys = [];
-
-    if (next == null) {
-      return keys;
+  function getChangedKeys(prev: any, next: any): null | Array<string> {
+    if (prev == null || next == null) {
+      return null;
     }
 
     // We can't report anything meaningful for hooks changes.
@@ -715,16 +796,18 @@ export function attach(
       next.hasOwnProperty('next') &&
       next.hasOwnProperty('queue')
     ) {
-      return keys;
+      return null;
     }
 
-    // TODO (change descriptions) This does not account for props that were added or removed.
-    for (let key in prev) {
+    const keys = new Set([...Object.keys(prev), ...Object.keys(next)]);
+    const changedKeys = [];
+    for (let key of keys) {
       if (prev[key] !== next[key]) {
-        keys.push(key);
+        changedKeys.push(key);
       }
     }
-    return keys;
+
+    return changedKeys;
   }
 
   // eslint-disable-next-line no-unused-vars
@@ -1139,6 +1222,8 @@ export function attach(
             if (changeDescription !== null) {
               metadata.changeDescriptions.set(id, changeDescription);
             }
+
+            updateContextsForFiber(fiber);
           }
         }
       }
@@ -2164,6 +2249,7 @@ export function attach(
 
   let currentCommitProfilingMetadata: CommitProfilingData | null = null;
   let displayNamesByRootID: DisplayNamesByRootID | null = null;
+  let idToContextsMap: Map<number, any> | null = null;
   let initialTreeBaseDurationsMap: Map<number, number> | null = null;
   let initialIDToRootMap: Map<number, number> | null = null;
   let isProfiling: boolean = false;
@@ -2284,6 +2370,7 @@ export function attach(
     displayNamesByRootID = new Map();
     initialTreeBaseDurationsMap = new Map(idToTreeBaseDurationMap);
     initialIDToRootMap = new Map(idToRootMap);
+    idToContextsMap = new Map();
 
     hook.getFiberRoots(rendererID).forEach(root => {
       const rootID = getFiberID(getPrimaryFiber(root.current));
@@ -2291,6 +2378,10 @@ export function attach(
         rootID,
         getDisplayNameForRoot(root.current)
       );
+
+      if (shouldRecordChangeDescriptions) {
+        crawlToInitializeContextsMap(root.current);
+      }
     });
 
     isProfiling = true;

@@ -5,6 +5,7 @@ import type Bridge from 'src/bridge';
 import type Store from 'src/devtools/store';
 
 describe('ProfilingCache', () => {
+  let PropTypes;
   let React;
   let ReactDOM;
   let Scheduler;
@@ -23,6 +24,7 @@ describe('ProfilingCache', () => {
     store.collapseNodesByDefault = false;
     store.recordChangeDescriptions = true;
 
+    PropTypes = require('prop-types');
     React = require('react');
     ReactDOM = require('react-dom');
     Scheduler = require('scheduler');
@@ -176,6 +178,110 @@ describe('ProfilingCache', () => {
     utils.exportImportHelper(bridge, store);
 
     for (let commitIndex = 0; commitIndex < 4; commitIndex++) {
+      utils.act(() => {
+        TestRenderer.create(
+          <Validator
+            commitIndex={commitIndex}
+            previousCommitDetails={allCommitData[commitIndex]}
+            rootID={rootID}
+          />
+        );
+      });
+    }
+  });
+
+  it('should record when props/state/hooks change', () => {
+    let instance = null;
+
+    const ModernContext = React.createContext(0);
+
+    class LegacyContextProvider extends React.Component<
+      any,
+      {| count: number |}
+    > {
+      static childContextTypes = {
+        count: PropTypes.number,
+      };
+      state = { count: 0 };
+      getChildContext() {
+        return this.state;
+      }
+      render() {
+        instance = this;
+        return (
+          <ModernContext.Provider value={this.state.count}>
+            <React.Fragment>
+              <ModernContextConsumer />
+              <LegacyContextConsumer />
+            </React.Fragment>
+          </ModernContext.Provider>
+        );
+      }
+    }
+
+    const FunctionComponentWithHooks = ({ count }) => {
+      React.useMemo(() => count, [count]);
+      return null;
+    };
+
+    class ModernContextConsumer extends React.Component<any> {
+      static contextType = ModernContext;
+      render() {
+        return <FunctionComponentWithHooks count={this.context} />;
+      }
+    }
+
+    class LegacyContextConsumer extends React.Component<any> {
+      static contextTypes = {
+        count: PropTypes.number,
+      };
+      render() {
+        return <FunctionComponentWithHooks count={this.context.count} />;
+      }
+    }
+
+    const container = document.createElement('div');
+
+    utils.act(() => store.profilerStore.startProfiling());
+    utils.act(() => ReactDOM.render(<LegacyContextProvider />, container));
+    expect(instance).not.toBeNull();
+    utils.act(() => (instance: any).setState({ count: 1 }));
+    utils.act(() => store.profilerStore.stopProfiling());
+
+    const allCommitData = [];
+
+    function Validator({ commitIndex, previousCommitDetails, rootID }) {
+      const commitData = store.profilerStore.getCommitData(rootID, commitIndex);
+      if (previousCommitDetails != null) {
+        expect(commitData).toEqual(previousCommitDetails);
+      } else {
+        allCommitData.push(commitData);
+        expect(commitData).toMatchSnapshot(
+          `CommitDetails commitIndex: ${commitIndex}`
+        );
+      }
+      return null;
+    }
+
+    const rootID = store.roots[0];
+
+    for (let commitIndex = 0; commitIndex < 2; commitIndex++) {
+      utils.act(() => {
+        TestRenderer.create(
+          <Validator
+            commitIndex={commitIndex}
+            previousCommitDetails={null}
+            rootID={rootID}
+          />
+        );
+      });
+    }
+
+    expect(allCommitData).toHaveLength(2);
+
+    utils.exportImportHelper(bridge, store);
+
+    for (let commitIndex = 0; commitIndex < 2; commitIndex++) {
       utils.act(() => {
         TestRenderer.create(
           <Validator

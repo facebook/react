@@ -104,21 +104,33 @@ function WhatChanged({
 
   const changeDescription = changeDescriptions.get(fiberID);
   if (changeDescription == null) {
-    return null;
-  }
-
-  const changes = [];
-  if (changeDescription.didHooksChange) {
-    changes.push(
-      <div key="hooks" className={styles.WhatChangedItem}>
-        • Hooks
+    // This indicates that the component mounted during this commit
+    return (
+      <div className={styles.Content}>
+        <label className={styles.Label}>Why did this render?</label>
+        <div className={styles.WhatChangedItem}>
+          This is the first time the component rendered.
+        </div>
       </div>
     );
   }
-  if (changeDescription.props.length !== 0) {
+
+  const changes = [];
+
+  if (changeDescription.didHooksChange) {
+    changes.push(
+      <div key="hooks" className={styles.WhatChangedItem}>
+        • Hooks changed
+      </div>
+    );
+  }
+  if (
+    changeDescription.props !== null &&
+    changeDescription.props.length !== 0
+  ) {
     changes.push(
       <div key="props" className={styles.WhatChangedItem}>
-        • Props
+        • Props changed:
         {changeDescription.props.map(key => (
           <span key={key} className={styles.WhatChangedKey}>
             {key}
@@ -127,10 +139,13 @@ function WhatChanged({
       </div>
     );
   }
-  if (changeDescription.state.length !== 0) {
+  if (
+    changeDescription.state !== null &&
+    changeDescription.state.length !== 0
+  ) {
     changes.push(
       <div key="state" className={styles.WhatChangedItem}>
-        • State
+        • State changed:
         {changeDescription.state.map(key => (
           <span key={key} className={styles.WhatChangedKey}>
             {key}
@@ -141,12 +156,16 @@ function WhatChanged({
   }
 
   if (changes.length === 0) {
-    changes.push(<div className={styles.WhatChangedItem}>Nothing</div>);
+    changes.push(
+      <div key="nothing" className={styles.WhatChangedItem}>
+        The parent component rendered.
+      </div>
+    );
   }
 
   return (
     <div className={styles.Content}>
-      <label className={styles.Label}>What changed?</label>
+      <label className={styles.Label}>Why did this render?</label>
       {changes}
     </div>
   );
