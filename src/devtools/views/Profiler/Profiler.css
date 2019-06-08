@@ -21,6 +21,7 @@
   flex-direction: column;
   flex: 1 1 100px;
   max-width: 300px;
+  overflow-x: hidden;
   border-left: 1px solid var(--color-border);
   border-top: 1px solid var(--color-border);
 }

@@ -16,6 +16,9 @@
 .Component {
   flex: 1;
   color: var(--color-component-name);
+  white-space: nowrap;
+  overflow-x: hidden;
+  text-overflow: ellipsis;
 }
 .Component:before {
   white-space: nowrap;
