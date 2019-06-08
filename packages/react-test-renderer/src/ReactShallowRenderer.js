@@ -335,6 +335,33 @@ class ReactShallowRenderer {
       return nextValue;
     };
 
+    const useCallback = <T>(
+      callback: T,
+      deps: Array<mixed> | void | null
+    ): T => {
+      this._validateCurrentlyRenderingComponent();
+      this._createWorkInProgressHook();
+
+      const nextDeps = deps !== undefined ? deps : null;
+
+      if (
+        this._workInProgressHook !== null &&
+        this._workInProgressHook.memoizedState !== null
+      ) {
+        const prevState = this._workInProgressHook.memoizedState;
+        const prevDeps = prevState[1];
+        if (nextDeps !== null) {
+          if (areHookInputsEqual(nextDeps, prevDeps)) {
+            return prevState[0];
+          }
+        }
+      }
+
+      const nextValue = callback;
+      (this._workInProgressHook: any).memoizedState = [nextValue, nextDeps];
+      return nextValue;
+    };
+        
     const useRef = <T>(initialValue: T): {current: T} => {
       this._validateCurrentlyRenderingComponent();
       this._createWorkInProgressHook();
@@ -362,13 +389,9 @@ class ReactShallowRenderer {
       this._validateCurrentlyRenderingComponent();
     };
 
-    const identity = (fn: Function): Function => {
-      return fn;
-    };
-
     return {
       readContext,
-      useCallback: (identity: any),
+      useCallback,
       useContext: <T>(context: ReactContext<T>): T => {
         this._validateCurrentlyRenderingComponent();
         return readContext(context);
