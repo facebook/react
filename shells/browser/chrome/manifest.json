@@ -3,8 +3,7 @@
   "name": "React Developer Tools",
   "description": "Adds React debugging tools to the Chrome Developer Tools.",
   "version": "4.0.0",
-
-  "update_url": "https://react-devtools-experimental-chrome.now.sh/updates.xml",
+  "version_name": "4.0.0",
 
   "minimum_chrome_version": "49",
 

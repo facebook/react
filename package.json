@@ -90,7 +90,6 @@
     "cli-spinners": "^1.0.0",
     "clipboard-js": "^0.3.6",
     "cross-env": "^5.2.0",
-    "crx": "git+https://github.com/oncletom/crx#ef150e8",
     "css-loader": "^1.0.1",
     "error-stack-parser": "^2.0.2",
     "es6-symbol": "3.0.2",
@@ -140,7 +139,7 @@
     "react-is": "^0.0.0-50b50c26f",
     "react-test-renderer": "^0.0.0-50b50c26f",
     "react-virtualized-auto-sizer": "^1.0.2",
-    "react-window": "^1.8.0",
+    "react-window": "./vendor/react-window",
     "request-promise": "^4.2.4",
     "rimraf": "^2.6.3",
     "scheduler": "^0.0.0-50b50c26f",
@@ -149,7 +148,6 @@
     "web-ext": "^3.0.0",
     "webpack": "^4.26.0",
     "webpack-cli": "^3.1.2",
-    "webpack-dev-server": "^3.3.1",
-    "xml-js": "^1.6.11"
+    "webpack-dev-server": "^3.3.1"
   }
 }

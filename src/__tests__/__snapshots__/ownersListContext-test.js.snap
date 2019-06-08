@@ -11,15 +11,21 @@ exports[`OwnersListContext should fetch the owners list for the selected element
 Array [
   Object {
     "displayName": "Grandparent",
+    "hocDisplayNames": null,
     "id": 7,
+    "type": 5,
   },
   Object {
     "displayName": "Parent",
+    "hocDisplayNames": null,
     "id": 9,
+    "type": 5,
   },
   Object {
     "displayName": "Child",
+    "hocDisplayNames": null,
     "id": 8,
+    "type": 5,
   },
 ]
 `;
@@ -36,15 +42,21 @@ exports[`OwnersListContext should fetch the owners list for the selected element
 Array [
   Object {
     "displayName": "Grandparent",
+    "hocDisplayNames": null,
     "id": 2,
+    "type": 5,
   },
   Object {
     "displayName": "Parent",
+    "hocDisplayNames": null,
     "id": 3,
+    "type": 5,
   },
   Object {
     "displayName": "Child",
+    "hocDisplayNames": null,
     "id": 4,
+    "type": 5,
   },
 ]
 `;
@@ -53,11 +65,15 @@ exports[`OwnersListContext should fetch the owners list for the selected element
 Array [
   Object {
     "displayName": "Grandparent",
+    "hocDisplayNames": null,
     "id": 2,
+    "type": 5,
   },
   Object {
     "displayName": "Parent",
+    "hocDisplayNames": null,
     "id": 3,
+    "type": 5,
   },
 ]
 `;
@@ -71,7 +87,9 @@ exports[`OwnersListContext should include the current element even if there are 
 Array [
   Object {
     "displayName": "Grandparent",
+    "hocDisplayNames": null,
     "id": 5,
+    "type": 5,
   },
 ]
 `;

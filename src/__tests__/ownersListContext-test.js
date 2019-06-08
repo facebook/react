@@ -84,30 +84,26 @@ describe('OwnersListContext', () => {
       return null;
     }
 
-    await utils.actAsync(
-      () =>
-        TestRenderer.create(
-          <Contexts defaultOwnerID={parent.id}>
-            <React.Suspense fallback={null}>
-              <Suspender owner={parent} />
-            </React.Suspense>
-          </Contexts>
-        ),
-      3
+    await utils.actAsync(() =>
+      TestRenderer.create(
+        <Contexts defaultOwnerID={parent.id}>
+          <React.Suspense fallback={null}>
+            <Suspender owner={parent} />
+          </React.Suspense>
+        </Contexts>
+      )
     );
     expect(didFinish).toBe(true);
 
     didFinish = false;
-    await utils.actAsync(
-      () =>
-        TestRenderer.create(
-          <Contexts defaultOwnerID={firstChild.id}>
-            <React.Suspense fallback={null}>
-              <Suspender owner={firstChild} />
-            </React.Suspense>
-          </Contexts>
-        ),
-      3
+    await utils.actAsync(() =>
+      TestRenderer.create(
+        <Contexts defaultOwnerID={firstChild.id}>
+          <React.Suspense fallback={null}>
+            <Suspender owner={firstChild} />
+          </React.Suspense>
+        </Contexts>
+      )
     );
     expect(didFinish).toBe(true);
 
@@ -148,16 +144,14 @@ describe('OwnersListContext', () => {
       return null;
     }
 
-    await utils.actAsync(
-      () =>
-        TestRenderer.create(
-          <Contexts defaultOwnerID={firstChild.id}>
-            <React.Suspense fallback={null}>
-              <Suspender owner={firstChild} />
-            </React.Suspense>
-          </Contexts>
-        ),
-      3
+    await utils.actAsync(() =>
+      TestRenderer.create(
+        <Contexts defaultOwnerID={firstChild.id}>
+          <React.Suspense fallback={null}>
+            <Suspender owner={firstChild} />
+          </React.Suspense>
+        </Contexts>
+      )
     );
     expect(didFinish).toBe(true);
 
@@ -190,16 +184,14 @@ describe('OwnersListContext', () => {
       return null;
     }
 
-    await utils.actAsync(
-      () =>
-        TestRenderer.create(
-          <Contexts defaultOwnerID={grandparent.id}>
-            <React.Suspense fallback={null}>
-              <Suspender owner={grandparent} />
-            </React.Suspense>
-          </Contexts>
-        ),
-      3
+    await utils.actAsync(() =>
+      TestRenderer.create(
+        <Contexts defaultOwnerID={grandparent.id}>
+          <React.Suspense fallback={null}>
+            <Suspender owner={grandparent} />
+          </React.Suspense>
+        </Contexts>
+      )
     );
     expect(didFinish).toBe(true);
 

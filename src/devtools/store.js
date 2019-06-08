@@ -12,8 +12,10 @@ import { ElementTypeRoot } from '../types';
 import {
   getSavedComponentFilters,
   saveComponentFilters,
+  separateDisplayNameAndHOCs,
   utfDecodeString,
 } from '../utils';
+import { localStorageGetItem, localStorageSetItem } from '../storage';
 import { __DEBUG__ } from '../constants';
 import { printStore } from 'src/__tests__/storeSerializer';
 import ProfilerStore from './ProfilerStore';
@@ -71,6 +73,10 @@ export default class Store extends EventEmitter {
   // The InspectedElementContext also relies on this mutability for its WeakMap usage.
   _idToElement: Map<number, Element> = new Map();
 
+  // Can the backend use the Storage API (e.g. localStorage)?
+  // If not, features like reload-and-profile will not work correctly and must be disabled.
+  _isBackendStorageAPISupported: boolean = false;
+
   // Map of element (id) to the set of elements (ids) it owns.
   // This map enables getOwnersListForElement() to avoid traversing the entire tree.
   _ownersMap: Map<number, Set<number>> = new Map();
@@ -109,7 +115,7 @@ export default class Store extends EventEmitter {
 
     // Default this setting to true unless otherwise specified.
     this._collapseNodesByDefault =
-      localStorage.getItem(LOCAL_STORAGE_COLLAPSE_ROOTS_BY_DEFAULT_KEY) !==
+      localStorageGetItem(LOCAL_STORAGE_COLLAPSE_ROOTS_BY_DEFAULT_KEY) !==
       'false';
 
     this._componentFilters = getSavedComponentFilters();
@@ -126,8 +132,7 @@ export default class Store extends EventEmitter {
       if (supportsCaptureScreenshots) {
         this._supportsCaptureScreenshots = true;
         this._captureScreenshots =
-          localStorage.getItem(LOCAL_STORAGE_CAPTURE_SCREENSHOTS_KEY) ===
-          'true';
+          localStorageGetItem(LOCAL_STORAGE_CAPTURE_SCREENSHOTS_KEY) === 'true';
       }
       if (supportsProfiling) {
         this._supportsProfiling = true;
@@ -140,6 +145,10 @@ export default class Store extends EventEmitter {
     this._bridge = bridge;
     bridge.addListener('operations', this.onBridgeOperations);
     bridge.addListener('shutdown', this.onBridgeShutdown);
+    bridge.addListener(
+      'isBackendStorageAPISupported',
+      this.onBridgeStorageSupported
+    );
 
     this._profilerStore = new ProfilerStore(bridge, this, isProfiling);
   }
@@ -183,7 +192,7 @@ export default class Store extends EventEmitter {
   set captureScreenshots(value: boolean): void {
     this._captureScreenshots = value;
 
-    localStorage.setItem(
+    localStorageSetItem(
       LOCAL_STORAGE_CAPTURE_SCREENSHOTS_KEY,
       value ? 'true' : 'false'
     );
@@ -197,7 +206,7 @@ export default class Store extends EventEmitter {
   set collapseNodesByDefault(value: boolean): void {
     this._collapseNodesByDefault = value;
 
-    localStorage.setItem(
+    localStorageSetItem(
       LOCAL_STORAGE_COLLAPSE_ROOTS_BY_DEFAULT_KEY,
       value ? 'true' : 'false'
     );
@@ -260,7 +269,10 @@ export default class Store extends EventEmitter {
   }
 
   get supportsReloadAndProfile(): boolean {
-    return this._supportsReloadAndProfile;
+    // Does the DevTools shell support reloading and eagerly injecting the renderer interface?
+    // And if so, can the backend use the localStorage API?
+    // Both of these are required for the reload-and-profile feature to work.
+    return this._supportsReloadAndProfile && this._isBackendStorageAPISupported;
   }
 
   containsElement(id: number): boolean {
@@ -674,6 +686,7 @@ export default class Store extends EventEmitter {
               children: [],
               depth: -1,
               displayName: null,
+              hocDisplayNames: null,
               id,
               isCollapsed: false, // Never collapse roots; it would hide the entire tree.
               key: null,
@@ -717,10 +730,16 @@ export default class Store extends EventEmitter {
             ): any): Element);
             parentElement.children.push(id);
 
+            const [
+              displayNameWithoutHOCs,
+              hocDisplayNames,
+            ] = separateDisplayNameAndHOCs(displayName, type);
+
             const element: Element = {
               children: [],
               depth: parentElement.depth + 1,
-              displayName,
+              displayName: displayNameWithoutHOCs,
+              hocDisplayNames,
               id,
               isCollapsed: this._collapseNodesByDefault,
               key,
@@ -896,5 +915,15 @@ export default class Store extends EventEmitter {
 
     this._bridge.removeListener('operations', this.onBridgeOperations);
     this._bridge.removeListener('shutdown', this.onBridgeShutdown);
+    this._bridge.removeListener(
+      'isBackendStorageAPISupported',
+      this.onBridgeStorageSupported
+    );
+  };
+
+  onBridgeStorageSupported = (isBackendStorageAPISupported: boolean) => {
+    this._isBackendStorageAPISupported = isBackendStorageAPISupported;
+
+    this.emit('supportsReloadAndProfile');
   };
 }

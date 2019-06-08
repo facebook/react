@@ -4,19 +4,24 @@ import EventEmitter from 'events';
 import memoize from 'memoize-one';
 import throttle from 'lodash.throttle';
 import {
-  LOCAL_STORAGE_RELOAD_AND_PROFILE_KEY,
   SESSION_STORAGE_LAST_SELECTION_KEY,
+  SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
   __DEBUG__,
 } from '../constants';
+import {
+  sessionStorageGetItem,
+  sessionStorageRemoveItem,
+  sessionStorageSetItem,
+} from 'src/storage';
 import { hideOverlay, showOverlay } from './views/Highlighter';
 
 import type {
+  OwnersList,
   PathFrame,
   PathMatch,
   RendererID,
   RendererInterface,
 } from './types';
-import type { OwnersList } from 'src/devtools/views/Components/types';
 import type { Bridge, ComponentFilter } from '../types';
 
 const debug = (methodName, ...args) => {
@@ -71,19 +76,19 @@ export default class Agent extends EventEmitter {
   constructor(bridge: Bridge) {
     super();
 
-    if (localStorage.getItem(LOCAL_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true') {
+    if (
+      sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true'
+    ) {
       this._isProfiling = true;
 
-      localStorage.removeItem(LOCAL_STORAGE_RELOAD_AND_PROFILE_KEY);
+      sessionStorageRemoveItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY);
     }
 
-    if (typeof sessionStorage !== 'undefined') {
-      const persistedSelectionString = sessionStorage.getItem(
-        SESSION_STORAGE_LAST_SELECTION_KEY
-      );
-      if (persistedSelectionString != null) {
-        this._persistedSelection = JSON.parse(persistedSelectionString);
-      }
+    const persistedSelectionString = sessionStorageGetItem(
+      SESSION_STORAGE_LAST_SELECTION_KEY
+    );
+    if (persistedSelectionString != null) {
+      this._persistedSelection = JSON.parse(persistedSelectionString);
     }
 
     this._bridge = bridge;
@@ -122,6 +127,15 @@ export default class Agent extends EventEmitter {
     if (this._isProfiling) {
       bridge.send('profilingStatus', true);
     }
+
+    // Notify the frontend if the backend supports the Storage API (e.g. localStorage).
+    // If not, features like reload-and-profile will not work correctly and must be disabled.
+    let isBackendStorageAPISupported = false;
+    try {
+      localStorage.getItem('test');
+      isBackendStorageAPISupported = true;
+    } catch (error) {}
+    bridge.send('isBackendStorageAPISupported', isBackendStorageAPISupported);
   }
 
   captureScreenshot = ({
@@ -237,7 +251,7 @@ export default class Agent extends EventEmitter {
   };
 
   reloadAndProfile = () => {
-    localStorage.setItem(LOCAL_STORAGE_RELOAD_AND_PROFILE_KEY, 'true');
+    sessionStorageSetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY, 'true');
 
     // This code path should only be hit if the shell has explicitly told the Store that it supports profiling.
     // In that case, the shell must also listen for this specific message to know when it needs to reload the app.
@@ -547,15 +561,13 @@ export default class Agent extends EventEmitter {
     // This is why we need the defensive checks here.
     const renderer = this._rendererInterfaces[rendererID];
     const path = renderer != null ? renderer.getPathForElement(id) : null;
-    if (typeof sessionStorage !== 'undefined') {
-      if (path !== null) {
-        sessionStorage.setItem(
-          SESSION_STORAGE_LAST_SELECTION_KEY,
-          JSON.stringify(({ rendererID, path }: PersistedSelection))
-        );
-      } else {
-        sessionStorage.removeItem(SESSION_STORAGE_LAST_SELECTION_KEY);
-      }
+    if (path !== null) {
+      sessionStorageSetItem(
+        SESSION_STORAGE_LAST_SELECTION_KEY,
+        JSON.stringify(({ rendererID, path }: PersistedSelection))
+      );
+    } else {
+      sessionStorageRemoveItem(SESSION_STORAGE_LAST_SELECTION_KEY);
     }
   }, 1000);
 }

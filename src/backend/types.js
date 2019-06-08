@@ -1,10 +1,6 @@
 // @flow
 
 import type { ComponentFilter, ElementType } from 'src/types';
-import type {
-  InspectedElement,
-  Owner,
-} from 'src/devtools/views/Components/types';
 import type { Interaction } from 'src/devtools/views/Profiler/types';
 
 type BundleType =
@@ -160,6 +156,50 @@ export type PathFrame = {|
 export type PathMatch = {|
   id: number,
   isFullMatch: boolean,
+|};
+
+export type Owner = {|
+  displayName: string | null,
+  id: number,
+  type: ElementType,
+|};
+
+export type OwnersList = {|
+  id: number,
+  owners: Array<Owner> | null,
+|};
+
+export type InspectedElement = {|
+  id: number,
+
+  displayName: string | null,
+
+  // Does the current renderer support editable hooks?
+  canEditHooks: boolean,
+
+  // Does the current renderer support editable function props?
+  canEditFunctionProps: boolean,
+
+  // Is this Suspense, and can its value be overriden now?
+  canToggleSuspense: boolean,
+
+  // Can view component source location.
+  canViewSource: boolean,
+
+  // Inspectable properties.
+  context: Object | null,
+  events: Object | null,
+  hooks: Object | null,
+  props: Object | null,
+  state: Object | null,
+
+  // List of owners
+  owners: Array<Owner> | null,
+
+  // Location of component in source coude.
+  source: Source | null,
+
+  type: ElementType,
 |};
 
 export type RendererInterface = {

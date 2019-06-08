@@ -8,10 +8,12 @@ import ButtonIcon from '../ButtonIcon';
 import HooksTree from './HooksTree';
 import EventsTree from './EventsTree';
 import { ModalDialogContext } from '../ModalDialog';
+import HocBadges from './HocBadges';
 import InspectedElementTree from './InspectedElementTree';
 import { InspectedElementContext } from './InspectedElementContext';
 import ViewElementSourceContext from './ViewElementSourceContext';
 import Toggle from '../Toggle';
+import Badge from './Badge';
 import {
   ComponentFilterElementType,
   ElementTypeClass,
@@ -24,6 +26,7 @@ import {
 import styles from './SelectedElement.css';
 
 import type { Element, InspectedElement } from './types';
+import type { ElementType } from 'src/types';
 
 export type Props = {||};
 
@@ -272,6 +275,7 @@ function InspectedElementView({
 
   return (
     <div className={styles.InspectedElement}>
+      <HocBadges element={element} />
       <InspectedElementTree
         label="props"
         data={props}
@@ -308,8 +312,10 @@ function InspectedElementView({
             <OwnerView
               key={owner.id}
               displayName={owner.displayName || 'Anonymous'}
+              hocDisplayNames={owner.hocDisplayNames}
               id={owner.id}
               isInStore={store.containsElement(owner.id)}
+              type={owner.type}
             />
           ))}
         </div>
@@ -318,9 +324,21 @@ function InspectedElementView({
   );
 }
 
-type OwnerViewProps = {| displayName: string, id: number, isInStore: boolean |};
+type OwnerViewProps = {|
+  displayName: string,
+  hocDisplayNames: Array<string> | null,
+  id: number,
+  isInStore: boolean,
+  type: ElementType,
+|};
 
-function OwnerView({ displayName, id, isInStore }: OwnerViewProps) {
+function OwnerView({
+  displayName,
+  hocDisplayNames,
+  id,
+  isInStore,
+  type,
+}: OwnerViewProps) {
   const dispatch = useContext(TreeDispatcherContext);
 
   const handleClick = useCallback(
@@ -333,15 +351,20 @@ function OwnerView({ displayName, id, isInStore }: OwnerViewProps) {
   );
 
   return (
-    <button
+    <Button
       key={id}
-      className={`${styles.Owner} ${isInStore ? '' : styles.NotInStore}`}
+      className={styles.OwnerButton}
       disabled={!isInStore}
       onClick={handleClick}
-      title={displayName}
     >
-      {displayName}
-    </button>
+      <span
+        className={`${styles.Owner} ${isInStore ? '' : styles.NotInStore}`}
+        title={displayName}
+      >
+        {displayName}
+      </span>
+      <Badge hocDisplayNames={hocDisplayNames} type={type} />
+    </Button>
   );
 }
 

@@ -22,13 +22,18 @@ export function printElement(element, includeWeight = false) {
     key = ` key="${element.key}"`;
   }
 
+  let hocs = '';
+  if (element.hocDisplayNames !== null) {
+    hocs = ` [${element.hocDisplayNames.join('][')}]`;
+  }
+
   let suffix = '';
   if (includeWeight) {
     suffix = ` (${element.isCollapsed ? 1 : element.weight})`;
   }
 
   return `${'  '.repeat(element.depth + 1)}${prefix} <${element.displayName ||
-    'null'}${key}>${suffix}`;
+    'null'}${key}>${hocs}${suffix}`;
 }
 
 export function printOwnersList(elements, includeWeight = false) {

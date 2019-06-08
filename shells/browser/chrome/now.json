@@ -1,5 +1,5 @@
 {
   "name": "react-devtools-experimental-chrome",
   "alias": ["react-devtools-experimental-chrome"],
-  "files": ["index.html", "updates.xml", "ReactDevTools.crx"]
+  "files": ["index.html", "ReactDevTools.zip"]
 }

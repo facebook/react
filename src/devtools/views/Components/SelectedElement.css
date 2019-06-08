@@ -33,11 +33,13 @@
 
 .Component,
 .Owner {
-  overflow: hidden;
-  text-overflow: ellipsis;
   color: var(--color-component-name);
   font-family: var(--font-family-monospace);
   font-size: var(--font-size-monospace-normal);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 .Component:before,
 .Owner:before {
@@ -67,7 +69,6 @@
 .Owner {
   border-radius: 0.25rem;
   padding: 0.125rem 0.25rem;
-  margin-left: 0.5rem;
   cursor: pointer;
   background: none;
   border: none;
@@ -91,4 +92,11 @@
 .NotInStore {
   color: var(--color-dim);
   cursor: default;
+}
+
+.OwnerButton {
+  display: flex;
+  align-items: center;
+  margin-left: 0.5rem;
+  padding: 0;
 }

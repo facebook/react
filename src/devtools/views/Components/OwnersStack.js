@@ -13,6 +13,7 @@ import { Menu, MenuList, MenuButton, MenuItem } from '@reach/menu-button';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import Toggle from '../Toggle';
+import Badge from './Badge';
 import { OwnersListContext } from './OwnersListContext';
 import { TreeDispatcherContext, TreeStateContext } from './TreeContext';
 import { useIsOverflowing } from '../hooks';
@@ -211,6 +212,12 @@ function ElementsDropdown({
         onSelect={() => (isInStore ? selectOwner(owner) : null)}
       >
         {owner.displayName}
+
+        <Badge
+          className={styles.Badge}
+          hocDisplayNames={owner.hocDisplayNames}
+          type={owner.type}
+        />
       </MenuItem>
     );
   }
@@ -237,7 +244,7 @@ type ElementViewProps = {
 function ElementView({ isSelected, owner, selectOwner }: ElementViewProps) {
   const store = useContext(StoreContext);
 
-  const { displayName } = owner;
+  const { displayName, hocDisplayNames, type } = owner;
   const isInStore = store.containsElement(owner.id);
 
   const handleChange = useCallback(() => {
@@ -253,6 +260,12 @@ function ElementView({ isSelected, owner, selectOwner }: ElementViewProps) {
       onChange={handleChange}
     >
       {displayName}
+
+      <Badge
+        className={styles.Badge}
+        hocDisplayNames={hocDisplayNames}
+        type={type}
+      />
     </Toggle>
   );
 }

@@ -14,32 +14,33 @@ export function act(callback: Function): void {
   });
 
   // Flush Bridge operations
-  jest.runAllTimers();
+  TestUtils.act(() => {
+    jest.runAllTimers();
+  });
 }
 
 export async function actAsync(
-  callback: Function,
-  numTimesToFlush: number = 1
+  cb: () => *,
+  recursivelyFlush: boolean = true
 ): Promise<void> {
   const TestUtils = require('react-dom/test-utils');
-  const Scheduler = require('scheduler');
 
   // $FlowFixMe Flow doens't know about "await act()" yet
   await TestUtils.act(async () => {
-    callback();
-
-    // Resolve pending suspense promises
-    jest.runOnlyPendingTimers();
+    await cb();
   });
 
-  // Run cascading microtasks and flush scheduled React work.
-  // Components that suspend multiple times will need to do this once per suspend operation.
-  // HACK Ideally the mock scheduler would provide an API to ask if there was outstanding work.
-  while (--numTimesToFlush >= 0) {
-    // $FlowFixMe Flow doens't know about "await act()" yet
+  if (recursivelyFlush) {
+    while (jest.getTimerCount() > 0) {
+      // $FlowFixMe Flow doens't know about "await act()" yet
+      await TestUtils.act(async () => {
+        jest.runAllTimers();
+      });
+    }
+  } else {
+    // $FlowFixMe Flow doesn't know about "await act()" yet
     await TestUtils.act(async () => {
       jest.runOnlyPendingTimers();
-      Scheduler.flushAll();
     });
   }
 }
@@ -55,18 +56,6 @@ export function beforeEachProfiling(): void {
     .mockImplementation(
       jest.requireActual('scheduler/unstable_mock').unstable_now
     );
-}
-
-export function createElementTypeFilter(
-  elementType: ElementType,
-  isEnabled: boolean = true
-) {
-  const Types = require('src/types');
-  return {
-    type: Types.ComponentFilterElementType,
-    isEnabled,
-    value: elementType,
-  };
 }
 
 export function createDisplayNameFilter(
@@ -85,6 +74,27 @@ export function createDisplayNameFilter(
     isEnabled,
     isValid,
     value: source,
+  };
+}
+
+export function createHOCFilter(isEnabled: boolean = true) {
+  const Types = require('src/types');
+  return {
+    type: Types.ComponentFilterHOC,
+    isEnabled,
+    isValid: true,
+  };
+}
+
+export function createElementTypeFilter(
+  elementType: ElementType,
+  isEnabled: boolean = true
+) {
+  const Types = require('src/types');
+  return {
+    type: Types.ComponentFilterElementType,
+    isEnabled,
+    value: elementType,
   };
 }
 

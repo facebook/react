@@ -25,12 +25,15 @@ module.exports = api => {
     targets.chrome = minChromeVersion.toString();
     targets.firefox = minFirefoxVersion.toString();
   }
+  const plugins = [
+    ['@babel/plugin-transform-flow-strip-types'],
+    ['@babel/plugin-proposal-class-properties', { loose: false }],
+  ];
+  if (process.env.NODE_ENV !== 'production') {
+    plugins.push(['@babel/plugin-transform-react-jsx-source']);
+  }
   return {
-    plugins: [
-      ['@babel/plugin-transform-flow-strip-types'],
-      ['@babel/plugin-proposal-class-properties', { loose: false }],
-      ['@babel/plugin-transform-react-jsx-source'],
-    ],
+    plugins,
     presets: [
       ['@babel/preset-env', { targets }],
       '@babel/preset-react',

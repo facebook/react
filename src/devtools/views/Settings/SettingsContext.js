@@ -5,7 +5,7 @@ import { useLocalStorage } from '../hooks';
 
 import type { BrowserTheme } from '../DevTools';
 
-export type DisplayDensity = 'compact' | 'comfortable';
+export type DisplayDensity = 'comfortable' | 'compact';
 export type Theme = 'auto' | 'light' | 'dark';
 
 type Context = {|
@@ -78,26 +78,23 @@ function SettingsContextController({
     settingsPortalContainer,
   ]);
 
+  const computedStyle = getComputedStyle((document.body: any));
   const comfortableLineHeight = parseInt(
-    getComputedStyle((document.body: any)).getPropertyValue(
-      '--comfortable-line-height-data'
-    ),
+    computedStyle.getPropertyValue('--comfortable-line-height-data'),
     10
   );
   const compactLineHeight = parseInt(
-    getComputedStyle((document.body: any)).getPropertyValue(
-      '--compact-line-height-data'
-    ),
+    computedStyle.getPropertyValue('--compact-line-height-data'),
     10
   );
 
   useLayoutEffect(() => {
     switch (displayDensity) {
-      case 'compact':
-        updateDisplayDensity('compact', documentElements);
-        break;
       case 'comfortable':
         updateDisplayDensity('comfortable', documentElements);
+        break;
+      case 'compact':
+        updateDisplayDensity('compact', documentElements);
         break;
       default:
         throw Error(`Unsupported displayDensity value "${displayDensity}"`);
@@ -193,6 +190,15 @@ function updateDisplayDensity(
   updateStyleHelper(displayDensity, 'font-size-sans-large', documentElements);
   updateStyleHelper(displayDensity, 'font-size-sans-small', documentElements);
   updateStyleHelper(displayDensity, 'line-height-data', documentElements);
+
+  // Sizes and paddings/margins are all rem-based,
+  // so update the root font-size as well when the display preference changes.
+  const computedStyle = getComputedStyle((document.body: any));
+  const fontSize = computedStyle.getPropertyValue(
+    `--${displayDensity}-root-font-size`
+  );
+  const root = ((document.querySelector(':root'): any): HTMLElement);
+  root.style.fontSize = fontSize;
 }
 
 function updateThemeVariables(
@@ -200,7 +206,9 @@ function updateThemeVariables(
   documentElements: DocumentElements
 ): void {
   updateStyleHelper(theme, 'color-attribute-name', documentElements);
+  updateStyleHelper(theme, 'color-attribute-name-inverted', documentElements);
   updateStyleHelper(theme, 'color-attribute-value', documentElements);
+  updateStyleHelper(theme, 'color-attribute-value-inverted', documentElements);
   updateStyleHelper(theme, 'color-attribute-editable-value', documentElements);
   updateStyleHelper(theme, 'color-background', documentElements);
   updateStyleHelper(theme, 'color-background-hover', documentElements);
@@ -257,6 +265,12 @@ function updateThemeVariables(
     'color-component-badge-background-inverted',
     documentElements
   );
+  updateStyleHelper(theme, 'color-component-badge-count', documentElements);
+  updateStyleHelper(
+    theme,
+    'color-component-badge-count-inverted',
+    documentElements
+  );
   updateStyleHelper(theme, 'color-dim', documentElements);
   updateStyleHelper(theme, 'color-dimmer', documentElements);
   updateStyleHelper(theme, 'color-dimmest', documentElements);
@@ -271,8 +285,20 @@ function updateThemeVariables(
   updateStyleHelper(theme, 'color-record-active', documentElements);
   updateStyleHelper(theme, 'color-record-hover', documentElements);
   updateStyleHelper(theme, 'color-record-inactive', documentElements);
+  updateStyleHelper(theme, 'color-color-scroll-thumb', documentElements);
+  updateStyleHelper(theme, 'color-color-scroll-track', documentElements);
   updateStyleHelper(theme, 'color-search-match', documentElements);
   updateStyleHelper(theme, 'color-search-match-current', documentElements);
+  updateStyleHelper(
+    theme,
+    'color-selected-tree-highlight-active',
+    documentElements
+  );
+  updateStyleHelper(
+    theme,
+    'color-selected-tree-highlight-inactive',
+    documentElements
+  );
   updateStyleHelper(theme, 'color-tab-selected-border', documentElements);
   updateStyleHelper(theme, 'color-text', documentElements);
   updateStyleHelper(theme, 'color-text-selected', documentElements);
@@ -285,6 +311,15 @@ function updateThemeVariables(
 
   // Font smoothing varies based on the theme.
   updateStyleHelper(theme, 'font-smoothing', documentElements);
+
+  // Update scrollbar color to match theme.
+  // this CSS property is currently only supported in Firefox,
+  // but it makes a significant UI improvement in dark mode.
+  // https://developer.mozilla.org/en-US/docs/Web/CSS/scrollbar-color
+  documentElements.forEach(documentElement => {
+    // $FlowFixMe scrollbarColor is missing in CSSStyleDeclaration
+    documentElement.style.scrollbarColor = `var(${`--${theme}-color-scroll-thumb`}) var(${`--${theme}-color-scroll-track`})`;
+  });
 }
 
 export { SettingsContext, SettingsContextController };
