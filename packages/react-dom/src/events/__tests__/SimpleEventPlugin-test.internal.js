@@ -230,7 +230,7 @@ describe('SimpleEventPlugin', function() {
     expect(button.textContent).toEqual('Count: 3');
   });
 
-  describe('interactive events, in async mode', () => {
+  describe('interactive events, in concurrent mode', () => {
     beforeEach(() => {
       jest.resetModules();
       ReactFeatureFlags = require('shared/ReactFeatureFlags');
