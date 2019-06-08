@@ -1907,6 +1907,1039 @@ Object {
 }
 `;
 
+exports[`ProfilingCache should record changed props/state/context/hooks: CommitDetails commitIndex: 0 1`] = `
+Object {
+  "changeDescriptions": Map {},
+  "duration": 0,
+  "fiberActualDurations": Map {
+    1 => 0,
+    2 => 0,
+    3 => 0,
+    4 => 0,
+    5 => 0,
+    6 => 0,
+    7 => 0,
+  },
+  "fiberSelfDurations": Map {
+    1 => 0,
+    2 => 0,
+    3 => 0,
+    4 => 0,
+    5 => 0,
+    6 => 0,
+    7 => 0,
+  },
+  "interactionIDs": Array [],
+  "priorityLevel": "Immediate",
+  "screenshot": null,
+  "timestamp": 0,
+}
+`;
+
+exports[`ProfilingCache should record changed props/state/context/hooks: CommitDetails commitIndex: 1 1`] = `
+Object {
+  "changeDescriptions": Map {
+    5 => Object {
+      "context": null,
+      "didHooksChange": true,
+      "props": Array [
+        "count",
+      ],
+      "state": null,
+    },
+    4 => Object {
+      "context": true,
+      "didHooksChange": false,
+      "props": Array [],
+      "state": null,
+    },
+    7 => Object {
+      "context": null,
+      "didHooksChange": true,
+      "props": Array [
+        "count",
+      ],
+      "state": null,
+    },
+    6 => Object {
+      "context": Array [
+        "count",
+      ],
+      "didHooksChange": false,
+      "props": Array [],
+      "state": null,
+    },
+    2 => Object {
+      "context": null,
+      "didHooksChange": false,
+      "props": Array [],
+      "state": Array [
+        "count",
+      ],
+    },
+  },
+  "duration": 0,
+  "fiberActualDurations": Map {
+    5 => 0,
+    4 => 0,
+    7 => 0,
+    6 => 0,
+    3 => 0,
+    2 => 0,
+  },
+  "fiberSelfDurations": Map {
+    5 => 0,
+    4 => 0,
+    7 => 0,
+    6 => 0,
+    3 => 0,
+    2 => 0,
+  },
+  "interactionIDs": Array [],
+  "priorityLevel": "Immediate",
+  "screenshot": null,
+  "timestamp": 0,
+}
+`;
+
+exports[`ProfilingCache should record changed props/state/context/hooks: CommitDetails commitIndex: 2 1`] = `
+Object {
+  "changeDescriptions": Map {
+    5 => Object {
+      "context": null,
+      "didHooksChange": false,
+      "props": Array [],
+      "state": null,
+    },
+    4 => Object {
+      "context": false,
+      "didHooksChange": false,
+      "props": Array [],
+      "state": null,
+    },
+    7 => Object {
+      "context": null,
+      "didHooksChange": false,
+      "props": Array [],
+      "state": null,
+    },
+    6 => Object {
+      "context": Array [],
+      "didHooksChange": false,
+      "props": Array [],
+      "state": null,
+    },
+    2 => Object {
+      "context": null,
+      "didHooksChange": false,
+      "props": Array [
+        "foo",
+      ],
+      "state": Array [],
+    },
+  },
+  "duration": 0,
+  "fiberActualDurations": Map {
+    5 => 0,
+    4 => 0,
+    7 => 0,
+    6 => 0,
+    3 => 0,
+    2 => 0,
+    1 => 0,
+  },
+  "fiberSelfDurations": Map {
+    5 => 0,
+    4 => 0,
+    7 => 0,
+    6 => 0,
+    3 => 0,
+    2 => 0,
+    1 => 0,
+  },
+  "interactionIDs": Array [],
+  "priorityLevel": "Immediate",
+  "screenshot": null,
+  "timestamp": 0,
+}
+`;
+
+exports[`ProfilingCache should record changed props/state/context/hooks: CommitDetails commitIndex: 3 1`] = `
+Object {
+  "changeDescriptions": Map {
+    5 => Object {
+      "context": null,
+      "didHooksChange": false,
+      "props": Array [],
+      "state": null,
+    },
+    4 => Object {
+      "context": false,
+      "didHooksChange": false,
+      "props": Array [],
+      "state": null,
+    },
+    7 => Object {
+      "context": null,
+      "didHooksChange": false,
+      "props": Array [],
+      "state": null,
+    },
+    6 => Object {
+      "context": Array [],
+      "didHooksChange": false,
+      "props": Array [],
+      "state": null,
+    },
+    2 => Object {
+      "context": null,
+      "didHooksChange": false,
+      "props": Array [
+        "foo",
+        "bar",
+      ],
+      "state": Array [],
+    },
+  },
+  "duration": 0,
+  "fiberActualDurations": Map {
+    5 => 0,
+    4 => 0,
+    7 => 0,
+    6 => 0,
+    3 => 0,
+    2 => 0,
+    1 => 0,
+  },
+  "fiberSelfDurations": Map {
+    5 => 0,
+    4 => 0,
+    7 => 0,
+    6 => 0,
+    3 => 0,
+    2 => 0,
+    1 => 0,
+  },
+  "interactionIDs": Array [],
+  "priorityLevel": "Immediate",
+  "screenshot": null,
+  "timestamp": 0,
+}
+`;
+
+exports[`ProfilingCache should record changed props/state/context/hooks: CommitDetails commitIndex: 4 1`] = `
+Object {
+  "changeDescriptions": Map {
+    5 => Object {
+      "context": null,
+      "didHooksChange": false,
+      "props": Array [],
+      "state": null,
+    },
+    4 => Object {
+      "context": false,
+      "didHooksChange": false,
+      "props": Array [],
+      "state": null,
+    },
+    7 => Object {
+      "context": null,
+      "didHooksChange": false,
+      "props": Array [],
+      "state": null,
+    },
+    6 => Object {
+      "context": Array [],
+      "didHooksChange": false,
+      "props": Array [],
+      "state": null,
+    },
+    2 => Object {
+      "context": null,
+      "didHooksChange": false,
+      "props": Array [
+        "bar",
+      ],
+      "state": Array [],
+    },
+  },
+  "duration": 0,
+  "fiberActualDurations": Map {
+    5 => 0,
+    4 => 0,
+    7 => 0,
+    6 => 0,
+    3 => 0,
+    2 => 0,
+    1 => 0,
+  },
+  "fiberSelfDurations": Map {
+    5 => 0,
+    4 => 0,
+    7 => 0,
+    6 => 0,
+    3 => 0,
+    2 => 0,
+    1 => 0,
+  },
+  "interactionIDs": Array [],
+  "priorityLevel": "Immediate",
+  "screenshot": null,
+  "timestamp": 0,
+}
+`;
+
+exports[`ProfilingCache should record changed props/state/context/hooks: imported data 1`] = `
+Object {
+  "dataForRoots": Array [
+    Object {
+      "commitData": Array [
+        Object {
+          "changeDescriptions": Array [],
+          "duration": 0,
+          "fiberActualDurations": Array [
+            Array [
+              1,
+              0,
+            ],
+            Array [
+              2,
+              0,
+            ],
+            Array [
+              3,
+              0,
+            ],
+            Array [
+              4,
+              0,
+            ],
+            Array [
+              5,
+              0,
+            ],
+            Array [
+              6,
+              0,
+            ],
+            Array [
+              7,
+              0,
+            ],
+          ],
+          "fiberSelfDurations": Array [
+            Array [
+              1,
+              0,
+            ],
+            Array [
+              2,
+              0,
+            ],
+            Array [
+              3,
+              0,
+            ],
+            Array [
+              4,
+              0,
+            ],
+            Array [
+              5,
+              0,
+            ],
+            Array [
+              6,
+              0,
+            ],
+            Array [
+              7,
+              0,
+            ],
+          ],
+          "interactionIDs": Array [],
+          "priorityLevel": "Immediate",
+          "screenshot": null,
+          "timestamp": 0,
+        },
+        Object {
+          "changeDescriptions": Array [
+            Array [
+              5,
+              Object {
+                "context": null,
+                "didHooksChange": true,
+                "props": Array [
+                  "count",
+                ],
+                "state": null,
+              },
+            ],
+            Array [
+              4,
+              Object {
+                "context": true,
+                "didHooksChange": false,
+                "props": Array [],
+                "state": null,
+              },
+            ],
+            Array [
+              7,
+              Object {
+                "context": null,
+                "didHooksChange": true,
+                "props": Array [
+                  "count",
+                ],
+                "state": null,
+              },
+            ],
+            Array [
+              6,
+              Object {
+                "context": Array [
+                  "count",
+                ],
+                "didHooksChange": false,
+                "props": Array [],
+                "state": null,
+              },
+            ],
+            Array [
+              2,
+              Object {
+                "context": null,
+                "didHooksChange": false,
+                "props": Array [],
+                "state": Array [
+                  "count",
+                ],
+              },
+            ],
+          ],
+          "duration": 0,
+          "fiberActualDurations": Array [
+            Array [
+              5,
+              0,
+            ],
+            Array [
+              4,
+              0,
+            ],
+            Array [
+              7,
+              0,
+            ],
+            Array [
+              6,
+              0,
+            ],
+            Array [
+              3,
+              0,
+            ],
+            Array [
+              2,
+              0,
+            ],
+          ],
+          "fiberSelfDurations": Array [
+            Array [
+              5,
+              0,
+            ],
+            Array [
+              4,
+              0,
+            ],
+            Array [
+              7,
+              0,
+            ],
+            Array [
+              6,
+              0,
+            ],
+            Array [
+              3,
+              0,
+            ],
+            Array [
+              2,
+              0,
+            ],
+          ],
+          "interactionIDs": Array [],
+          "priorityLevel": "Immediate",
+          "screenshot": null,
+          "timestamp": 0,
+        },
+        Object {
+          "changeDescriptions": Array [
+            Array [
+              5,
+              Object {
+                "context": null,
+                "didHooksChange": false,
+                "props": Array [],
+                "state": null,
+              },
+            ],
+            Array [
+              4,
+              Object {
+                "context": false,
+                "didHooksChange": false,
+                "props": Array [],
+                "state": null,
+              },
+            ],
+            Array [
+              7,
+              Object {
+                "context": null,
+                "didHooksChange": false,
+                "props": Array [],
+                "state": null,
+              },
+            ],
+            Array [
+              6,
+              Object {
+                "context": Array [],
+                "didHooksChange": false,
+                "props": Array [],
+                "state": null,
+              },
+            ],
+            Array [
+              2,
+              Object {
+                "context": null,
+                "didHooksChange": false,
+                "props": Array [
+                  "foo",
+                ],
+                "state": Array [],
+              },
+            ],
+          ],
+          "duration": 0,
+          "fiberActualDurations": Array [
+            Array [
+              5,
+              0,
+            ],
+            Array [
+              4,
+              0,
+            ],
+            Array [
+              7,
+              0,
+            ],
+            Array [
+              6,
+              0,
+            ],
+            Array [
+              3,
+              0,
+            ],
+            Array [
+              2,
+              0,
+            ],
+            Array [
+              1,
+              0,
+            ],
+          ],
+          "fiberSelfDurations": Array [
+            Array [
+              5,
+              0,
+            ],
+            Array [
+              4,
+              0,
+            ],
+            Array [
+              7,
+              0,
+            ],
+            Array [
+              6,
+              0,
+            ],
+            Array [
+              3,
+              0,
+            ],
+            Array [
+              2,
+              0,
+            ],
+            Array [
+              1,
+              0,
+            ],
+          ],
+          "interactionIDs": Array [],
+          "priorityLevel": "Immediate",
+          "screenshot": null,
+          "timestamp": 0,
+        },
+        Object {
+          "changeDescriptions": Array [
+            Array [
+              5,
+              Object {
+                "context": null,
+                "didHooksChange": false,
+                "props": Array [],
+                "state": null,
+              },
+            ],
+            Array [
+              4,
+              Object {
+                "context": false,
+                "didHooksChange": false,
+                "props": Array [],
+                "state": null,
+              },
+            ],
+            Array [
+              7,
+              Object {
+                "context": null,
+                "didHooksChange": false,
+                "props": Array [],
+                "state": null,
+              },
+            ],
+            Array [
+              6,
+              Object {
+                "context": Array [],
+                "didHooksChange": false,
+                "props": Array [],
+                "state": null,
+              },
+            ],
+            Array [
+              2,
+              Object {
+                "context": null,
+                "didHooksChange": false,
+                "props": Array [
+                  "foo",
+                  "bar",
+                ],
+                "state": Array [],
+              },
+            ],
+          ],
+          "duration": 0,
+          "fiberActualDurations": Array [
+            Array [
+              5,
+              0,
+            ],
+            Array [
+              4,
+              0,
+            ],
+            Array [
+              7,
+              0,
+            ],
+            Array [
+              6,
+              0,
+            ],
+            Array [
+              3,
+              0,
+            ],
+            Array [
+              2,
+              0,
+            ],
+            Array [
+              1,
+              0,
+            ],
+          ],
+          "fiberSelfDurations": Array [
+            Array [
+              5,
+              0,
+            ],
+            Array [
+              4,
+              0,
+            ],
+            Array [
+              7,
+              0,
+            ],
+            Array [
+              6,
+              0,
+            ],
+            Array [
+              3,
+              0,
+            ],
+            Array [
+              2,
+              0,
+            ],
+            Array [
+              1,
+              0,
+            ],
+          ],
+          "interactionIDs": Array [],
+          "priorityLevel": "Immediate",
+          "screenshot": null,
+          "timestamp": 0,
+        },
+        Object {
+          "changeDescriptions": Array [
+            Array [
+              5,
+              Object {
+                "context": null,
+                "didHooksChange": false,
+                "props": Array [],
+                "state": null,
+              },
+            ],
+            Array [
+              4,
+              Object {
+                "context": false,
+                "didHooksChange": false,
+                "props": Array [],
+                "state": null,
+              },
+            ],
+            Array [
+              7,
+              Object {
+                "context": null,
+                "didHooksChange": false,
+                "props": Array [],
+                "state": null,
+              },
+            ],
+            Array [
+              6,
+              Object {
+                "context": Array [],
+                "didHooksChange": false,
+                "props": Array [],
+                "state": null,
+              },
+            ],
+            Array [
+              2,
+              Object {
+                "context": null,
+                "didHooksChange": false,
+                "props": Array [
+                  "bar",
+                ],
+                "state": Array [],
+              },
+            ],
+          ],
+          "duration": 0,
+          "fiberActualDurations": Array [
+            Array [
+              5,
+              0,
+            ],
+            Array [
+              4,
+              0,
+            ],
+            Array [
+              7,
+              0,
+            ],
+            Array [
+              6,
+              0,
+            ],
+            Array [
+              3,
+              0,
+            ],
+            Array [
+              2,
+              0,
+            ],
+            Array [
+              1,
+              0,
+            ],
+          ],
+          "fiberSelfDurations": Array [
+            Array [
+              5,
+              0,
+            ],
+            Array [
+              4,
+              0,
+            ],
+            Array [
+              7,
+              0,
+            ],
+            Array [
+              6,
+              0,
+            ],
+            Array [
+              3,
+              0,
+            ],
+            Array [
+              2,
+              0,
+            ],
+            Array [
+              1,
+              0,
+            ],
+          ],
+          "interactionIDs": Array [],
+          "priorityLevel": "Immediate",
+          "screenshot": null,
+          "timestamp": 0,
+        },
+      ],
+      "displayName": "LegacyContextProvider",
+      "initialTreeBaseDurations": Array [],
+      "interactionCommits": Array [],
+      "interactions": Array [],
+      "operations": Array [
+        Array [
+          1,
+          1,
+          110,
+          21,
+          76,
+          101,
+          103,
+          97,
+          99,
+          121,
+          67,
+          111,
+          110,
+          116,
+          101,
+          120,
+          116,
+          80,
+          114,
+          111,
+          118,
+          105,
+          100,
+          101,
+          114,
+          16,
+          67,
+          111,
+          110,
+          116,
+          101,
+          120,
+          116,
+          46,
+          80,
+          114,
+          111,
+          118,
+          105,
+          100,
+          101,
+          114,
+          21,
+          77,
+          111,
+          100,
+          101,
+          114,
+          110,
+          67,
+          111,
+          110,
+          116,
+          101,
+          120,
+          116,
+          67,
+          111,
+          110,
+          115,
+          117,
+          109,
+          101,
+          114,
+          26,
+          70,
+          117,
+          110,
+          99,
+          116,
+          105,
+          111,
+          110,
+          67,
+          111,
+          109,
+          112,
+          111,
+          110,
+          101,
+          110,
+          116,
+          87,
+          105,
+          116,
+          104,
+          72,
+          111,
+          111,
+          107,
+          115,
+          21,
+          76,
+          101,
+          103,
+          97,
+          99,
+          121,
+          67,
+          111,
+          110,
+          116,
+          101,
+          120,
+          116,
+          67,
+          111,
+          110,
+          115,
+          117,
+          109,
+          101,
+          114,
+          1,
+          1,
+          11,
+          1,
+          1,
+          1,
+          2,
+          1,
+          1,
+          0,
+          1,
+          0,
+          4,
+          2,
+          0,
+          1,
+          3,
+          2,
+          2,
+          2,
+          2,
+          0,
+          4,
+          3,
+          0,
+          1,
+          4,
+          1,
+          3,
+          2,
+          3,
+          0,
+          4,
+          4,
+          0,
+          1,
+          5,
+          5,
+          4,
+          4,
+          4,
+          0,
+          4,
+          5,
+          0,
+          1,
+          6,
+          1,
+          3,
+          2,
+          5,
+          0,
+          4,
+          6,
+          0,
+          1,
+          7,
+          5,
+          6,
+          6,
+          4,
+          0,
+          4,
+          7,
+          0,
+        ],
+        Array [
+          1,
+          1,
+          0,
+        ],
+        Array [
+          1,
+          1,
+          0,
+        ],
+        Array [
+          1,
+          1,
+          0,
+        ],
+        Array [
+          1,
+          1,
+          0,
+        ],
+      ],
+      "rootID": 1,
+      "snapshots": Array [],
+    },
+  ],
+  "version": 4,
+}
+`;
+
 exports[`ProfilingCache should record when props/state/hooks change: CommitDetails commitIndex: 0 1`] = `
 Object {
   "changeDescriptions": Map {},

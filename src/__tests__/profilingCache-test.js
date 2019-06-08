@@ -190,7 +190,7 @@ describe('ProfilingCache', () => {
     }
   });
 
-  it('should record when props/state/hooks change', () => {
+  it('should record changed props/state/context/hooks', () => {
     let instance = null;
 
     const ModernContext = React.createContext(0);
@@ -246,6 +246,13 @@ describe('ProfilingCache', () => {
     utils.act(() => ReactDOM.render(<LegacyContextProvider />, container));
     expect(instance).not.toBeNull();
     utils.act(() => (instance: any).setState({ count: 1 }));
+    utils.act(() =>
+      ReactDOM.render(<LegacyContextProvider foo={123} />, container)
+    );
+    utils.act(() =>
+      ReactDOM.render(<LegacyContextProvider bar="abc" />, container)
+    );
+    utils.act(() => ReactDOM.render(<LegacyContextProvider />, container));
     utils.act(() => store.profilerStore.stopProfiling());
 
     const allCommitData = [];
@@ -265,7 +272,7 @@ describe('ProfilingCache', () => {
 
     const rootID = store.roots[0];
 
-    for (let commitIndex = 0; commitIndex < 2; commitIndex++) {
+    for (let commitIndex = 0; commitIndex < 5; commitIndex++) {
       utils.act(() => {
         TestRenderer.create(
           <Validator
@@ -277,11 +284,11 @@ describe('ProfilingCache', () => {
       });
     }
 
-    expect(allCommitData).toHaveLength(2);
+    expect(allCommitData).toHaveLength(5);
 
     utils.exportImportHelper(bridge, store);
 
-    for (let commitIndex = 0; commitIndex < 2; commitIndex++) {
+    for (let commitIndex = 0; commitIndex < 5; commitIndex++) {
       utils.act(() => {
         TestRenderer.create(
           <Validator
