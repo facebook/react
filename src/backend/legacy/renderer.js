@@ -27,10 +27,7 @@ import type {
   RendererInterface,
 } from '../types';
 import type { ComponentFilter, ElementType } from 'src/types';
-import type {
-  InspectedElement,
-  Owner,
-} from 'src/devtools/views/Components/types';
+import type { Owner, InspectedElement } from '../types';
 
 export type InternalInstance = Object;
 type LegacyRenderer = Object;
@@ -87,7 +84,14 @@ export function attach(
   global: Object
 ): RendererInterface {
   const idToInternalInstanceMap: Map<number, InternalInstance> = new Map();
-  const internalInstanceToIDMap: Map<InternalInstance, number> = new Map();
+  const internalInstanceToIDMap: WeakMap<
+    InternalInstance,
+    number
+  > = new WeakMap();
+  const internalInstanceToRootIDMap: WeakMap<
+    InternalInstance,
+    number
+  > = new WeakMap();
 
   let getInternalIDForNative: GetFiberIDForNative = ((null: any): GetFiberIDForNative);
   let findNativeNodeForInternalID: (id: number) => ?NativeType;
@@ -143,9 +147,15 @@ export function attach(
 
   let oldReconcilerMethods = null;
   if (renderer.Reconciler) {
+    // React 15
     oldReconcilerMethods = decorateMany(renderer.Reconciler, {
       mountComponent(fn, args) {
-        const [internalInstance] = args;
+        const [
+          internalInstance,
+          transaction,
+          hostParent,
+          hostContainerInfo,
+        ] = args;
         if (getElementType(internalInstance) === ElementTypeOtherOrUnknown) {
           return fn.apply(this, args);
         }
@@ -160,6 +170,12 @@ export function attach(
         recordMount(internalInstance, id, parentID);
         parentIDStack.push(id);
 
+        // Remember the root.
+        internalInstanceToRootIDMap.set(
+          internalInstance,
+          getID(hostContainerInfo._topLevelWrapper)
+        );
+
         try {
           const result = fn.apply(this, args);
           parentIDStack.pop();
@@ -169,7 +185,11 @@ export function attach(
           throw err;
         } finally {
           if (parentIDStack.length === 0) {
-            flushPendingEvents(id);
+            const rootID = internalInstanceToRootIDMap.get(internalInstance);
+            if (rootID === undefined) {
+              throw new Error('Expected to find root ID.');
+            }
+            flushPendingEvents(rootID);
           }
         }
       },
@@ -199,11 +219,10 @@ export function attach(
           throw err;
         } finally {
           if (parentIDStack.length === 0) {
-            // TODO: this is probably wrong!
-            const rootID =
-              internalInstance._topLevelWrapper === null
-                ? id
-                : getID(internalInstance._topLevelWrapper);
+            const rootID = internalInstanceToRootIDMap.get(internalInstance);
+            if (rootID === undefined) {
+              throw new Error('Expected to find root ID.');
+            }
             flushPendingEvents(rootID);
           }
         }
@@ -234,11 +253,10 @@ export function attach(
           throw err;
         } finally {
           if (parentIDStack.length === 0) {
-            // TODO: this is probably wrong!
-            const rootID =
-              internalInstance._topLevelWrapper === null
-                ? id
-                : getID(internalInstance._topLevelWrapper);
+            const rootID = internalInstanceToRootIDMap.get(internalInstance);
+            if (rootID === undefined) {
+              throw new Error('Expected to find root ID.');
+            }
             flushPendingEvents(rootID);
           }
         }
@@ -264,7 +282,11 @@ export function attach(
           throw err;
         } finally {
           if (parentIDStack.length === 0) {
-            flushPendingEvents(id);
+            const rootID = internalInstanceToRootIDMap.get(internalInstance);
+            if (rootID === undefined) {
+              throw new Error('Expected to find root ID.');
+            }
+            flushPendingEvents(rootID);
           }
         }
       },
@@ -346,7 +368,6 @@ export function attach(
 
   function recordUnmount(internalInstance: InternalInstance, id: number) {
     pendingUnmountedIDs.push(id);
-    internalInstanceToIDMap.delete(internalInstance);
     idToInternalInstanceMap.delete(id);
   }
 
@@ -525,9 +546,11 @@ export function attach(
         if (owner) {
           owners = [];
           while (owner != null) {
+            const ownerData = getData(owner);
             owners.push({
-              displayName: getData(owner).displayName || 'Unknown',
+              displayName: ownerData.displayName || 'Unknown',
               id: getID(owner),
+              type: ownerData.type,
             });
             owner = owner.owner;
           }
@@ -554,6 +577,8 @@ export function attach(
         data.type === ElementTypeClass || data.type === ElementTypeFunction,
 
       displayName: data.displayName,
+
+      type: data.type,
 
       // New events system did not exist in legacy versions
       events: null,
@@ -717,23 +742,26 @@ export function attach(
   };
 
   function getBestMatchForTrackedPath(): PathMatch | null {
-    return null; // TODO (legacy)
+    // Not implemented.
+    return null;
   }
 
   function getPathForElement(id: number): Array<PathFrame> | null {
-    return null; // TODO (legacy)
+    // Not implemented.
+    return null;
   }
 
   function updateComponentFilters(componentFilters: Array<ComponentFilter>) {
-    // TODO (legacy)
+    // Not implemented.
   }
 
   function setTrackedPath(path: Array<PathFrame> | null) {
-    // TODO (legacy)
+    // Not implemented.
   }
 
   function getOwnersList(id: number): Array<Owner> | null {
-    return null; // TODO (legacy)
+    // Not implemented.
+    return null;
   }
 
   return {
