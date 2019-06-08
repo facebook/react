@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Store (legacy) collapseNodesByDefault:false should filter DOM nodes from the store tree: 1: mount 1`] = `
+exports[`Store (legacy) collapseNodesByDefault:false should not filter DOM nodes from the store tree: 1: mount 1`] = `
 [root]
   ▾ <Grandparent>
     ▾ <div>
@@ -13,7 +13,26 @@ exports[`Store (legacy) collapseNodesByDefault:false should filter DOM nodes fro
         ▾ <div>
           ▾ <Child>
               <div>
+        <Nothing>
 `;
+
+exports[`Store (legacy) collapseNodesByDefault:false should not filter DOM nodes from the store tree: 2: update 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <div>
+      ▾ <div>
+        ▾ <Parent>
+          ▾ <div>
+            ▾ <Child>
+                <div>
+      ▾ <Parent>
+        ▾ <div>
+          ▾ <Child>
+              <div>
+        <Nothing>
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:false should not filter DOM nodes from the store tree: 5: unmount 1`] = ``;
 
 exports[`Store (legacy) collapseNodesByDefault:false should support adding and removing children: 1: mount 1`] = `
 [root]
@@ -281,7 +300,19 @@ exports[`Store (legacy) collapseNodesByDefault:true should not filter DOM nodes 
     ▾ <div>
       ▸ <div>
       ▸ <Parent>
+        <Nothing>
 `;
+
+exports[`Store (legacy) collapseNodesByDefault:true should not filter DOM nodes from the store tree: 4: final update 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <div>
+      ▸ <div>
+      ▸ <Parent>
+        <Nothing>
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:true should not filter DOM nodes from the store tree: 5: unmount 1`] = ``;
 
 exports[`Store (legacy) collapseNodesByDefault:true should support expanding deep parts of the tree: 1: mount 1`] = `
 [root]
@@ -421,6 +452,45 @@ exports[`Store (legacy) collapseNodesByDefault:true should support mount and upd
 `;
 
 exports[`Store (legacy) collapseNodesByDefault:true should support mount and update operations: 3: unmount 1`] = ``;
+
+exports[`Store (legacy) collapseNodesByDefault:true should support reordering of children: 1: mount 1`] = `
+[root]
+  ▸ <Root>
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:true should support reordering of children: 2: reorder children 1`] = `
+[root]
+  ▸ <Root>
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:true should support reordering of children: 3: expand root 1`] = `
+[root]
+  ▾ <Root>
+    ▸ <div>
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:true should support reordering of children: 4: expand div 1`] = `
+[root]
+  ▾ <Root>
+    ▾ <div>
+      ▸ <Bar key="bar">
+      ▸ <Foo key="foo">
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:true should support reordering of children: 4: expand leaves 1`] = `
+[root]
+  ▾ <Root>
+    ▾ <div>
+      ▾ <Bar key="bar">
+        ▸ <div>
+      ▾ <Foo key="foo">
+        ▸ <div>
+`;
+
+exports[`Store (legacy) collapseNodesByDefault:true should support reordering of children: 5: collapse root 1`] = `
+[root]
+  ▸ <Root>
+`;
 
 exports[`Store (legacy) should not allow a root node to be collapsed: 1: mount 1`] = `
 [root]

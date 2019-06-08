@@ -4,6 +4,7 @@ import {
   ElementTypeClass,
   ElementTypeFunction,
   ElementTypeRoot,
+  ElementTypeHostComponent,
   ElementTypeOtherOrUnknown,
 } from 'src/types';
 import { getUID, utfEncodeString, printOperationsArray } from '../../utils';
@@ -14,15 +15,8 @@ import {
   TREE_OPERATION_REMOVE,
   TREE_OPERATION_REORDER_CHILDREN,
 } from '../../constants';
-import getChildren from './getChildren';
 import getData from './getData';
-import getElementType from './getElementType';
-import {
-  decorateResult,
-  decorateMany,
-  forceUpdate,
-  restoreMany,
-} from './utils';
+import { decorateMany, forceUpdate, restoreMany } from './utils';
 
 import type {
   DevToolsHook,
@@ -32,7 +26,7 @@ import type {
   PathMatch,
   RendererInterface,
 } from '../types';
-import type { ComponentFilter } from 'src/types';
+import type { ComponentFilter, ElementType } from 'src/types';
 import type {
   InspectedElement,
   Owner,
@@ -41,6 +35,51 @@ import type {
 export type InternalInstance = Object;
 type LegacyRenderer = Object;
 
+function getElementType(internalInstance: InternalInstance): ElementType {
+  // != used deliberately here to catch undefined and null
+  if (internalInstance._currentElement != null) {
+    const elementType = internalInstance._currentElement.type;
+    if (typeof elementType === 'function') {
+      return ElementTypeClass;
+    } else if (typeof elementType === 'string') {
+      return ElementTypeHostComponent;
+    }
+  }
+  return ElementTypeOtherOrUnknown;
+}
+
+function getChildren(internalInstance: Object): Array<any> {
+  let children = [];
+
+  // If the parent is a native node without rendered children, but with
+  // multiple string children, then the `element` that gets passed in here is
+  // a plain value -- a string or number.
+  if (typeof internalInstance !== 'object') {
+    // No children
+  } else if (
+    internalInstance._currentElement === null ||
+    internalInstance._currentElement === false
+  ) {
+    // No children
+  } else if (internalInstance._renderedComponent) {
+    const child = internalInstance._renderedComponent;
+    if (getElementType(child) !== ElementTypeOtherOrUnknown) {
+      children.push(child);
+    }
+  } else if (internalInstance._renderedChildren) {
+    const renderedChildren = internalInstance._renderedChildren;
+    for (let name in renderedChildren) {
+      const child = renderedChildren[name];
+      if (getElementType(child) !== ElementTypeOtherOrUnknown) {
+        children.push(child);
+      }
+    }
+  }
+  // Note: we skip the case where children are just strings or numbers
+  // because the new DevTools skips over host text nodes anyway.
+  return children;
+}
+
 export function attach(
   hook: DevToolsHook,
   rendererID: number,
@@ -48,13 +87,32 @@ export function attach(
   global: Object
 ): RendererInterface {
   const idToInternalInstanceMap: Map<number, InternalInstance> = new Map();
-  const idToParentIDMap: Map<number, number> = new Map();
   const internalInstanceToIDMap: Map<InternalInstance, number> = new Map();
-  const internalInstanceToLastKnownChildrenMap: WeakMap<
-    InternalInstance,
-    Array<number>
-  > = new WeakMap();
-  const rootIDs: Set<number> = new Set();
+
+  let getInternalIDForNative: GetFiberIDForNative = ((null: any): GetFiberIDForNative);
+  let findNativeNodeForInternalID: (id: number) => ?NativeType;
+
+  if (renderer.ComponentTree) {
+    getInternalIDForNative = (node, findNearestUnfilteredAncestor) => {
+      const internalInstance = renderer.ComponentTree.getClosestInstanceFromNode(
+        node
+      );
+      return internalInstanceToIDMap.get(internalInstance) || null;
+    };
+    findNativeNodeForInternalID = (id: number) => {
+      const internalInstance = idToInternalInstanceMap.get(id);
+      return renderer.ComponentTree.getNodeFromInstance(internalInstance);
+    };
+  } else if (renderer.Mount.getID && renderer.Mount.getNode) {
+    getInternalIDForNative = (node, findNearestUnfilteredAncestor) => {
+      // Not implemented.
+      return null;
+    };
+    findNativeNodeForInternalID = (id: number) => {
+      // Not implemented.
+      return null;
+    };
+  }
 
   function getID(internalInstance: InternalInstance): number {
     if (typeof internalInstance !== 'object') {
@@ -68,181 +126,147 @@ export function attach(
     return ((internalInstanceToIDMap.get(internalInstance): any): number);
   }
 
-  function getChildIDs(internalInstance: InternalInstance): Array<number> {
-    return getChildren(internalInstance).map(getID);
-  }
-
-  function findNearestAncestorInTree(
-    internalInstance: InternalInstance
-  ): number | null {
-    let current = internalInstance;
-    while (current != null) {
-      const id = getID(current);
-      if (
-        rootIDs.has(id) ||
-        getElementType(current) !== ElementTypeOtherOrUnknown
-      ) {
-        return id;
-      }
-      const parentID = idToParentIDMap.get(id);
-      current = parentID != null ? idToInternalInstanceMap.get(parentID) : null;
+  function areEqualArrays(a, b) {
+    if (a.length !== b.length) {
+      return false;
     }
-    return null;
-  }
-
-  let getInternalIDForNative: GetFiberIDForNative = ((null: any): GetFiberIDForNative);
-  let findNativeNodeForInternalID: (id: number) => ?NativeType;
-
-  // React Native
-  if (renderer.Mount.findNodeHandle && renderer.Mount.nativeTagToRootNodeID) {
-    getInternalIDForNative = (nativeTag, findNearestUnfilteredAncestor) => {
-      const internalInstance = renderer.Mount.nativeTagToRootNodeID(nativeTag);
-      return findNearestAncestorInTree(internalInstance);
-    };
-    findNativeNodeForInternalID = (id: number) => {
-      const internalInstance = idToInternalInstanceMap.get(id);
-      return renderer.Mount.findNodeHandle(internalInstance);
-    };
-
-    // React DOM 15+
-  } else if (renderer.ComponentTree) {
-    getInternalIDForNative = (node, findNearestUnfilteredAncestor) => {
-      const internalInstance = renderer.ComponentTree.getClosestInstanceFromNode(
-        node
-      );
-      return findNearestAncestorInTree(internalInstance);
-    };
-    findNativeNodeForInternalID = (id: number) => {
-      const internalInstance = idToInternalInstanceMap.get(id);
-      return renderer.ComponentTree.getNodeFromInstance(internalInstance);
-    };
-
-    // React DOM
-  } else if (renderer.Mount.getID && renderer.Mount.getNode) {
-    getInternalIDForNative = (node, findNearestUnfilteredAncestor) => {
-      let id = renderer.Mount.getID(node);
-      while (node && node.parentNode && !id) {
-        node = node.parentNode;
-        id = renderer.Mount.getID(node);
+    for (let i = 0; i < a.length; i++) {
+      if (a[i] !== b[i]) {
+        return false;
       }
-      return id;
-    };
-
-    findNativeNodeForInternalID = (id: number) => {
-      try {
-        const internalInstance = idToInternalInstanceMap.get(id);
-        if (internalInstance != null) {
-          return renderer.Mount.getNode(internalInstance._rootNodeID);
-        }
-      } catch (e) {}
-
-      return null;
-    };
-  } else {
-    console.warn(
-      'Unknown React version (does not have getID), probably an unshimmed React Native'
-    );
-  }
-
-  let oldReconcilerMethods = null;
-  let oldRenderComponent = null;
-  let oldRenderRoot = null;
-
-  // React DOM
-  if (renderer.Mount._renderNewRootComponent) {
-    oldRenderRoot = decorateResult(
-      renderer.Mount,
-      '_renderNewRootComponent',
-      internalInstance => {
-        // TODO: we might need to reset currentParentID before this runs.
-
-        const id = getID(internalInstance);
-        rootIDs.add(id);
-
-        if (__DEBUG__) {
-          console.log('renderer.Mount._renderNewRootComponent()', id);
-        }
-
-        // TODO: maybe we need to record this mount.
-        // Needs testing.
-
-        // If we're mounting a root, we've just finished a batch of work,
-        // so it's safe to synchronously flush.
-        flushPendingEvents(id);
-      }
-    );
-
-    // React Native
-  } else if (renderer.Mount.renderComponent) {
-    oldRenderComponent = decorateResult(
-      renderer.Mount,
-      'renderComponent',
-      internalInstance => {
-        // TODO: we might need to reset currentParentID before this runs.
-
-        const id = getID(internalInstance);
-        rootIDs.add(id);
-
-        if (__DEBUG__) {
-          console.log('renderer.Mount.renderComponent()', id);
-        }
-
-        // TODO: maybe we need to record this mount.
-        // Needs testing.
-
-        // If we're mounting a root, we've just finished a batch of work,
-        // so it's safe to synchronously flush.
-        flushPendingEvents(id);
-      }
-    );
+    }
+    return true;
   }
 
   // This is shared mutable state that lets us keep track of where we are.
-  let currentParentID = 0;
+  let parentIDStack = [];
 
+  let oldReconcilerMethods = null;
   if (renderer.Reconciler) {
     oldReconcilerMethods = decorateMany(renderer.Reconciler, {
       mountComponent(fn, args) {
         const [internalInstance] = args;
+        if (getElementType(internalInstance) === ElementTypeOtherOrUnknown) {
+          return fn.apply(this, args);
+        }
 
-        recordPendingMount(internalInstance);
+        const id = getID(internalInstance);
 
-        let prevParentID = currentParentID;
-        currentParentID = getID(internalInstance);
-        const result = fn.apply(this, args);
-        currentParentID = prevParentID;
+        // Push the operation.
+        const parentID =
+          parentIDStack.length > 0
+            ? parentIDStack[parentIDStack.length - 1]
+            : 0;
+        recordMount(internalInstance, id, parentID);
+        parentIDStack.push(id);
 
-        return result;
+        try {
+          const result = fn.apply(this, args);
+          parentIDStack.pop();
+          return result;
+        } catch (err) {
+          parentIDStack = [];
+          throw err;
+        } finally {
+          if (parentIDStack.length === 0) {
+            flushPendingEvents(id);
+          }
+        }
       },
       performUpdateIfNecessary(fn, args) {
         const [internalInstance] = args;
+        if (getElementType(internalInstance) === ElementTypeOtherOrUnknown) {
+          return fn.apply(this, args);
+        }
 
-        let prevParentID = currentParentID;
-        currentParentID = getID(internalInstance);
-        const result = fn.apply(this, args);
-        currentParentID = prevParentID;
+        const id = getID(internalInstance);
+        parentIDStack.push(id);
 
-        recordPendingReorder(internalInstance);
-        return result;
+        const prevChildren = getChildren(internalInstance);
+        try {
+          const result = fn.apply(this, args);
+
+          const nextChildren = getChildren(internalInstance);
+          if (!areEqualArrays(prevChildren, nextChildren)) {
+            // Push the operation
+            recordReorder(internalInstance, id, nextChildren);
+          }
+
+          parentIDStack.pop();
+          return result;
+        } catch (err) {
+          parentIDStack = [];
+          throw err;
+        } finally {
+          if (parentIDStack.length === 0) {
+            // TODO: this is probably wrong!
+            const rootID =
+              internalInstance._topLevelWrapper === null
+                ? id
+                : getID(internalInstance._topLevelWrapper);
+            flushPendingEvents(rootID);
+          }
+        }
       },
       receiveComponent(fn, args) {
         const [internalInstance] = args;
+        if (getElementType(internalInstance) === ElementTypeOtherOrUnknown) {
+          return fn.apply(this, args);
+        }
 
-        let prevParentID = currentParentID;
-        currentParentID = getID(internalInstance);
-        const result = fn.apply(this, args);
-        currentParentID = prevParentID;
+        const id = getID(internalInstance);
+        parentIDStack.push(id);
 
-        recordPendingReorder(internalInstance);
-        return result;
+        const prevChildren = getChildren(internalInstance);
+        try {
+          const result = fn.apply(this, args);
+
+          const nextChildren = getChildren(internalInstance);
+          if (!areEqualArrays(prevChildren, nextChildren)) {
+            // Push the operation
+            recordReorder(internalInstance, id, nextChildren);
+          }
+
+          parentIDStack.pop();
+          return result;
+        } catch (err) {
+          parentIDStack = [];
+          throw err;
+        } finally {
+          if (parentIDStack.length === 0) {
+            // TODO: this is probably wrong!
+            const rootID =
+              internalInstance._topLevelWrapper === null
+                ? id
+                : getID(internalInstance._topLevelWrapper);
+            flushPendingEvents(rootID);
+          }
+        }
       },
       unmountComponent(fn, args) {
         const [internalInstance] = args;
+        if (getElementType(internalInstance) === ElementTypeOtherOrUnknown) {
+          return fn.apply(this, args);
+        }
 
-        const result = fn.apply(this, args);
+        const id = getID(internalInstance);
+        parentIDStack.push(id);
+        try {
+          const result = fn.apply(this, args);
+          parentIDStack.pop();
 
-        recordPendingUnmount(internalInstance);
-        return result;
+          // Push the operation.
+          recordUnmount(internalInstance, id);
+
+          return result;
+        } catch (err) {
+          parentIDStack = [];
+          throw err;
+        } finally {
+          if (parentIDStack.length === 0) {
+            flushPendingEvents(id);
+          }
+        }
       },
     });
   }
@@ -255,75 +279,95 @@ export function attach(
         restoreMany(renderer.Reconciler, oldReconcilerMethods);
       }
     }
-    if (oldRenderRoot !== null) {
-      renderer.Mount._renderNewRootComponent = oldRenderRoot;
-    }
-    if (oldRenderComponent !== null) {
-      renderer.Mount.renderComponent = oldRenderComponent;
-    }
     oldReconcilerMethods = null;
-    oldRenderRoot = null;
-    oldRenderComponent = null;
   }
 
-  const pendingMountIDs: Set<number> = new Set();
-  const pendingUnmountIDs: Set<number> = new Set();
-  const pendingReorderIDs: Set<number> = new Set();
-  const pendingOperations: Array<number> = [];
-  const pendingStringTable: Map<string, number> = new Map();
-  let pendingStringTableLength: number = 0;
-  let pendingUnmountedRootID: number | null = null;
+  function recordMount(
+    internalInstance: InternalInstance,
+    id: number,
+    parentID: number
+  ) {
+    const isRoot = parentID === 0;
 
-  function pushOperation(op: number): void {
-    if (__DEV__) {
-      if (!Number.isInteger(op)) {
-        console.error(
-          'pushOperation() was called but the value is not an integer.',
-          op
-        );
-      }
+    if (__DEBUG__) {
+      console.log(
+        '%crecordMount()',
+        'color: green; font-weight: bold;',
+        id,
+        getData(internalInstance).displayName
+      );
     }
-    pendingOperations.push(op);
+
+    if (isRoot) {
+      // TODO Is this right? For all versions?
+      const hasOwnerMetadata =
+        internalInstance._currentElement != null &&
+        internalInstance._currentElement._owner != null;
+
+      pushOperation(TREE_OPERATION_ADD);
+      pushOperation(id);
+      pushOperation(ElementTypeRoot);
+      pushOperation(0); // isProfilingSupported?
+      pushOperation(hasOwnerMetadata ? 1 : 0);
+    } else {
+      const { displayName, key, type } = getData(internalInstance);
+
+      const ownerID =
+        internalInstance._currentElement != null &&
+        internalInstance._currentElement._owner != null
+          ? getID(internalInstance._currentElement._owner)
+          : 0;
+
+      let displayNameStringID = getStringID(displayName);
+      let keyStringID = getStringID(key);
+      pushOperation(TREE_OPERATION_ADD);
+      pushOperation(id);
+      pushOperation(type);
+      pushOperation(parentID);
+      pushOperation(ownerID);
+      pushOperation(displayNameStringID);
+      pushOperation(keyStringID);
+    }
   }
 
-  // TODO Rethink the below queueing mechanism.
-  // Every mount is some parent's update (except for the root mount which we can explicitly handle)
-  // So maybe we only need to call queueFlushPendingEvents() for updates,
-  // and maybe we can rely on an id-to-root Map for this case, to limit the scope of what  we crawl.
+  function recordReorder(
+    internalInstance: InternalInstance,
+    id: number,
+    nextChildren: Array<InternalInstance>
+  ) {
+    pushOperation(TREE_OPERATION_REORDER_CHILDREN);
+    pushOperation(id);
+    const nextChildIDs = nextChildren.map(getID);
+    pushOperation(nextChildIDs.length);
+    for (let i = 0; i < nextChildIDs.length; i++) {
+      pushOperation(nextChildIDs[i]);
+    }
+  }
 
-  // Older React renderers did not have the concept of a commit.
-  // The data structure was just ad-hoc mutated in place.
-  // So except for the case of the root mounting the first time,
-  // there is no event we can observe to signal that a render is finished.
-  // However since older renderers were always synchronous,
-  // we can use setTimeout to batch operations together.
-  // In the case of a cascading update, we might batch multiple "commits"-
-  // but that should be okay, since the batching is not strictly necessary.
-  let flushPendingEventsTimeoutID: TimeoutID | null = null;
-  function queueFlushPendingEvents() {
-    if (flushPendingEventsTimeoutID === null) {
-      flushPendingEventsTimeoutID = setTimeout(() => {
-        flushPendingEventsTimeoutID = null;
+  function recordUnmount(internalInstance: InternalInstance, id: number) {
+    pendingUnmountedIDs.push(id);
+    internalInstanceToIDMap.delete(internalInstance);
+    idToInternalInstanceMap.delete(id);
+  }
 
-        // If there are pending operations, walk the tree and find them.
-        // Ideally we wouldjust pluck the pending operations out of the sets directly,
-        // but without doing a full traversal, it would be hard for us to determine the filtered parent.
-        // It should be possible to improve this though, by maintaining a map of id-to-parent,
-        // and crawling upward to the first non-filtered node.
-        // TODO Revisit this and think about it more...
-        if (
-          pendingMountIDs.size > 0 ||
-          pendingUnmountIDs.size > 0 ||
-          pendingReorderIDs.size > 0
-        ) {
-          rootIDs.forEach(flushPendingEvents);
-        }
-      }, 0);
+  function crawlAndRecordInitialMounts(id: number, parentID: number) {
+    const internalInstance = idToInternalInstanceMap.get(id);
+
+    if (__DEBUG__) {
+      console.group('crawlAndRecordInitialMounts() id:', id);
+    }
+
+    recordMount(internalInstance, id, parentID);
+    getChildren(internalInstance).forEach(child =>
+      crawlAndRecordInitialMounts(getID(child), id)
+    );
+
+    if (__DEBUG__) {
+      console.groupEnd();
     }
   }
 
   function flushInitialOperations() {
-    // Older versions of React do not support profiling mode, so there's nothing to flush.
     // Crawl roots though and register any nodes that mounted before we were injected.
 
     const roots =
@@ -333,82 +377,29 @@ export function attach(
     for (let key in roots) {
       const internalInstance = roots[key];
       const id = getID(internalInstance);
-
-      rootIDs.add(id);
-
       crawlAndRecordInitialMounts(id, 0);
-
-      // It's safe to synchronously flush for the root we just crawled.
       flushPendingEvents(id);
     }
   }
 
-  // TODO: this isn't covered by tests.
-  // Might be broken.
-  function crawlAndRecordInitialMounts(id: number, parentID: number) {
-    const internalInstance = idToInternalInstanceMap.get(id);
+  let pendingOperations: Array<number> = [];
+  let pendingStringTable: Map<string, number> = new Map();
+  let pendingUnmountedIDs: Array<number> = [];
+  let pendingStringTableLength: number = 0;
+  let pendingUnmountedRootID: number | null = null;
 
-    // Not all nodes are mounted in the frontend DevTools tree,
-    // but it's important to track parent info even for the unmounted ones.
-    idToParentIDMap.set(id, parentID);
-
-    if (__DEBUG__) {
-      console.group('crawlAndRecordInitialMounts() id:', id);
+  function flushPendingEvents(rootID: number) {
+    if (
+      pendingOperations.length === 0 &&
+      pendingUnmountedIDs.length === 0 &&
+      pendingUnmountedRootID === null
+    ) {
+      return;
     }
-
-    recordMount(id, parentID);
-    getChildIDs(internalInstance).forEach(childID =>
-      crawlAndRecordInitialMounts(childID, id)
-    );
-
-    if (__DEBUG__) {
-      console.groupEnd();
-    }
-  }
-
-  function flushPendingEvents(rootID: number): void {
-    // Record pending deletions.
-    const unmountIDs = [];
-    pendingUnmountIDs.forEach(id => {
-      const internalInstance = idToInternalInstanceMap.get(id);
-      const isRoot = rootIDs.has(id);
-
-      if (__DEBUG__) {
-        console.log(
-          '%crecordUnmount()',
-          'color: red; font-weight: bold;',
-          id,
-          getData(internalInstance).displayName
-        );
-      }
-
-      // TODO: handle the case where it was never mounted.
-      if (isRoot) {
-        pendingUnmountedRootID = id;
-        rootIDs.delete(id);
-      } else {
-        unmountIDs.push(id);
-      }
-
-      idToInternalInstanceMap.delete(id);
-      internalInstanceToIDMap.delete(internalInstance);
-    });
-
-    pendingMountIDs.forEach(id => {
-      if (pendingUnmountIDs.has(id)) {
-        return;
-      }
-      const parentID = idToParentIDMap.get(id);
-      if (parentID === undefined) {
-        return;
-      }
-      recordMount(id, parentID);
-    });
 
     const numUnmountIDs =
-      unmountIDs.length + (pendingUnmountedRootID === null ? 0 : 1);
+      pendingUnmountedIDs.length + (pendingUnmountedRootID === null ? 0 : 1);
 
-    const reorderOperations = computePendingReorderOperations();
     const operations = new Uint32Array(
       // Identify which renderer this update is coming from.
       2 + // [rendererID, rootFiberID]
@@ -420,11 +411,7 @@ export function attach(
         // [TREE_OPERATION_REMOVE, removedIDLength, ...ids]
         (numUnmountIDs > 0 ? 2 + numUnmountIDs : 0) +
         // Mount operations
-        pendingOperations.length +
-        // Reorder operation come last because
-        // bridge expects them to not change children length.
-        // So both mounts and unmounts need to have happened by now.
-        reorderOperations.length
+        pendingOperations.length
     );
 
     // Identify which renderer this update is coming from.
@@ -449,8 +436,8 @@ export function attach(
       // The first number is how many unmounted IDs we're gonna send.
       operations[i++] = numUnmountIDs;
       // Fill in the unmounts
-      for (let j = 0; j < unmountIDs.length; j++) {
-        operations[i++] = unmountIDs[j];
+      for (let j = 0; j < pendingUnmountedIDs.length; j++) {
+        operations[i++] = pendingUnmountedIDs[j];
       }
       // The root ID should always be unmounted last.
       if (pendingUnmountedRootID !== null) {
@@ -463,8 +450,6 @@ export function attach(
     operations.set(pendingOperations, i);
     i += pendingOperations.length;
 
-    operations.set(reorderOperations, i);
-
     if (__DEBUG__) {
       printOperationsArray(operations);
     }
@@ -473,59 +458,22 @@ export function attach(
     hook.emit('operations', operations);
 
     pendingOperations.length = 0;
-    pendingMountIDs.clear();
-    pendingReorderIDs.clear();
-    pendingUnmountIDs.clear();
+    pendingUnmountedIDs = [];
     pendingUnmountedRootID = null;
     pendingStringTable.clear();
     pendingStringTableLength = 0;
   }
 
-  function computePendingReorderOperations(): Array<number> {
-    const ops = [];
-    pendingReorderIDs.forEach(id => {
-      const internalInstance = idToInternalInstanceMap.get(id);
-      if (internalInstance === undefined) {
-        return;
+  function pushOperation(op: number): void {
+    if (__DEV__) {
+      if (!Number.isInteger(op)) {
+        console.error(
+          'pushOperation() was called but the value is not an integer.',
+          op
+        );
       }
-      const prevChildIDs = internalInstanceToLastKnownChildrenMap.get(
-        internalInstance
-      );
-      const nextChildIDs = getChildIDs(internalInstance);
-      internalInstanceToLastKnownChildrenMap.set(
-        internalInstance,
-        nextChildIDs
-      );
-
-      let shouldResetChildren = false;
-      if (prevChildIDs === undefined) {
-        // We haven't computed children before.
-        // So we'll have to do it now.
-        // Next time they'll be cached for comparison
-        // TODO: this might not make sense. Revisit.
-        shouldResetChildren = true;
-      } else if (nextChildIDs.length > 1) {
-        if (prevChildIDs.length !== nextChildIDs.length) {
-          shouldResetChildren = true;
-        } else {
-          for (let i = 0; i < prevChildIDs.length; i++) {
-            if (prevChildIDs[i] !== nextChildIDs[i]) {
-              shouldResetChildren = true;
-              break;
-            }
-          }
-        }
-      }
-      if (shouldResetChildren) {
-        ops.push(TREE_OPERATION_REORDER_CHILDREN);
-        ops.push(getID(internalInstance));
-        ops.push(nextChildIDs.length);
-        for (let i = 0; i < nextChildIDs.length; i++) {
-          ops.push(nextChildIDs[i]);
-        }
-      }
-    });
-    return ops;
+    }
+    pendingOperations.push(op);
   }
 
   function getStringID(str: string | null): number {
@@ -701,100 +649,6 @@ export function attach(
         break;
       default:
         break;
-    }
-  }
-
-  function recordPendingMount(internalInstance: InternalInstance) {
-    const id = getID(internalInstance);
-    pendingMountIDs.add(id);
-    idToParentIDMap.set(id, currentParentID);
-
-    if (__DEBUG__) {
-      console.log(
-        '%crecordPendingMount()',
-        'color: green',
-        getID(internalInstance)
-      );
-    }
-
-    queueFlushPendingEvents();
-  }
-
-  function recordPendingReorder(internalInstance: InternalInstance) {
-    const id = getID(internalInstance);
-    pendingReorderIDs.add(id);
-
-    if (__DEBUG__) {
-      console.log('%crecordPendingReorder()', 'color: green', id);
-    }
-
-    queueFlushPendingEvents();
-  }
-
-  function recordPendingUnmount(internalInstance: InternalInstance) {
-    const id = getID(internalInstance);
-
-    pendingUnmountIDs.add(id);
-
-    // Not all nodes are mounted (or unmounted) in the frontend DevTools tree,
-    // so it's important to remove entries from this map on pending unmount.
-    idToParentIDMap.delete(id);
-
-    if (__DEBUG__) {
-      console.log(
-        '%crecordPendingUnmount()',
-        'color: red',
-        getID(internalInstance)
-      );
-    }
-
-    queueFlushPendingEvents();
-  }
-
-  function recordMount(id: number, parentID: number) {
-    const internalInstance = ((idToInternalInstanceMap.get(
-      id
-    ): any): InternalInstance);
-    const isRoot = rootIDs.has(id);
-
-    if (__DEBUG__) {
-      console.log(
-        '%crecordMount()',
-        'color: green; font-weight: bold;',
-        id,
-        getData(internalInstance).displayName
-      );
-    }
-
-    if (isRoot) {
-      // TODO Is this right? For all versions?
-      const hasOwnerMetadata =
-        internalInstance._currentElement != null &&
-        internalInstance._currentElement._owner != null;
-
-      pushOperation(TREE_OPERATION_ADD);
-      pushOperation(id);
-      pushOperation(ElementTypeRoot);
-      pushOperation(0); // isProfilingSupported?
-      pushOperation(hasOwnerMetadata ? 1 : 0);
-    } else {
-      const { displayName, key, type } = getData(internalInstance);
-
-      const ownerID =
-        internalInstance._currentElement != null &&
-        internalInstance._currentElement._owner != null
-          ? getID(internalInstance._currentElement._owner)
-          : 0;
-
-      let displayNameStringID = getStringID(displayName);
-      let keyStringID = getStringID(key);
-      pushOperation(TREE_OPERATION_ADD);
-      pushOperation(id);
-      pushOperation(type);
-      pushOperation(parentID);
-      pushOperation(ownerID);
-      pushOperation(displayNameStringID);
-      pushOperation(keyStringID);
     }
   }
 

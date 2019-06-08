@@ -2,20 +2,6 @@
 
 import type { InternalInstance } from './renderer';
 
-export function decorateResult(
-  object: Object,
-  attr: string,
-  fn: Function
-): Function {
-  const old = object[attr];
-  object[attr] = function(instance: InternalInstance) {
-    const res = old.apply(this, arguments);
-    fn(res);
-    return res;
-  };
-  return old;
-}
-
 export function decorate(object: Object, attr: string, fn: Function): Function {
   const old = object[attr];
   object[attr] = function(instance: InternalInstance) {

@@ -107,29 +107,40 @@ describe('Store (legacy)', () => {
       expect(store).toMatchSnapshot('4: unmount A');
     });
 
-    it('should filter DOM nodes from the store tree', () => {
-      const Grandparent = () => (
+    it('should not filter DOM nodes from the store tree', () => {
+      const Grandparent = ({ flip }) => (
         <div>
           <div>
-            <Parent />
+            <Parent flip={flip} />
           </div>
-          <Parent />
+          <Parent flip={flip} />
+          <Nothing />
         </div>
       );
-      const Parent = () => (
+      const Parent = ({ flip }) => (
         <div>
+          {flip ? 'foo' : null}
           <Child />
+          {flip && [null, 'hello', 42]}
+          {flip ? 'bar' : 'baz'}
         </div>
       );
       const Child = () => <div>Hi!</div>;
+      const Nothing = () => null;
 
+      const container = document.createElement('div');
       act(() =>
-        ReactDOM.render(
-          <Grandparent count={4} />,
-          document.createElement('div')
-        )
+        ReactDOM.render(<Grandparent count={4} flip={false} />, container)
       );
       expect(store).toMatchSnapshot('1: mount');
+
+      act(() =>
+        ReactDOM.render(<Grandparent count={4} flip={true} />, container)
+      );
+      expect(store).toMatchSnapshot('2: update');
+
+      act(() => ReactDOM.unmountComponentAtNode(container));
+      expect(store).toMatchSnapshot('5: unmount');
     });
 
     it('should support collapsing parts of the tree', () => {
@@ -317,26 +328,29 @@ describe('Store (legacy)', () => {
     });
 
     it('should not filter DOM nodes from the store tree', () => {
-      const Grandparent = () => (
+      const Grandparent = ({ flip }) => (
         <div>
           <div>
-            <Parent />
+            <Parent flip={flip} />
           </div>
-          <Parent />
+          <Parent flip={flip} />
+          <Nothing />
         </div>
       );
-      const Parent = () => (
+      const Parent = ({ flip }) => (
         <div>
+          {flip ? 'foo' : null}
           <Child />
+          {flip && [null, 'hello', 42]}
+          {flip ? 'bar' : 'baz'}
         </div>
       );
       const Child = () => <div>Hi!</div>;
+      const Nothing = () => null;
 
+      const container = document.createElement('div');
       act(() =>
-        ReactDOM.render(
-          <Grandparent count={4} />,
-          document.createElement('div')
-        )
+        ReactDOM.render(<Grandparent count={4} flip={false} />, container)
       );
       expect(store).toMatchSnapshot('1: mount');
 
@@ -345,6 +359,14 @@ describe('Store (legacy)', () => {
 
       act(() => store.toggleIsCollapsed(store.getElementIDAtIndex(1), false));
       expect(store).toMatchSnapshot('3: expand div');
+
+      act(() =>
+        ReactDOM.render(<Grandparent count={4} flip={true} />, container)
+      );
+      expect(store).toMatchSnapshot('4: final update');
+
+      act(() => ReactDOM.unmountComponentAtNode(container));
+      expect(store).toMatchSnapshot('5: unmount');
     });
 
     it('should support expanding parts of the tree', () => {
@@ -445,7 +467,7 @@ describe('Store (legacy)', () => {
       expect(store).toMatchSnapshot('6: expand middle node');
     });
 
-    xit('should support reordering of children', () => {
+    it('should support reordering of children', () => {
       const Root = ({ children }) => <div>{children}</div>;
       const Component = () => <div />;
 
@@ -467,9 +489,12 @@ describe('Store (legacy)', () => {
       act(() => store.toggleIsCollapsed(store.getElementIDAtIndex(0), false));
       expect(store).toMatchSnapshot('3: expand root');
 
+      act(() => store.toggleIsCollapsed(store.getElementIDAtIndex(1), false));
+      expect(store).toMatchSnapshot('4: expand div');
+
       act(() => {
+        store.toggleIsCollapsed(store.getElementIDAtIndex(3), false);
         store.toggleIsCollapsed(store.getElementIDAtIndex(2), false);
-        store.toggleIsCollapsed(store.getElementIDAtIndex(1), false);
       });
       expect(store).toMatchSnapshot('4: expand leaves');
 
