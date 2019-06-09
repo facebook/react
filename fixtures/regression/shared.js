@@ -153,7 +153,7 @@ switch (major) {
             );
           }
         }
-        const onRender = (...args) => console.log('onRender()', ...args);
+        const onRender = (...args) => {};
         const Profiler = React.unstable_Profiler || React.Profiler;
         apps.push(
           <Feature
