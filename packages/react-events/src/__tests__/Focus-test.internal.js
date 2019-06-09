@@ -138,6 +138,21 @@ describe('Focus event responder', () => {
       expect(onFocus).not.toBeCalled();
     });
 
+    it('is called if descendants of target receive focus with the `within` prop set', () => {
+      const element = (
+        <Focus within={true} onFocus={onFocus}>
+          <div ref={ref}>
+            <a ref={innerRef} />
+          </div>
+        </Focus>
+      );
+      ReactDOM.render(element, container);
+
+      const target = innerRef.current;
+      target.dispatchEvent(createFocusEvent('focus'));
+      expect(onFocus).toHaveBeenCalledTimes(1);
+    });
+
     it('is called with the correct pointerType using pointer events', () => {
       // Pointer mouse
       ref.current.dispatchEvent(
@@ -349,6 +364,53 @@ describe('Focus event responder', () => {
         'inner: onFocusChange',
         'inner: onBlur',
         'inner: onFocusChange',
+      ]);
+    });
+
+    it('propagate when the within prop is set', () => {
+      const events = [];
+      const innerRef = React.createRef();
+      const outerRef = React.createRef();
+      const createEventHandler = msg => () => {
+        events.push(msg);
+      };
+
+      const element = (
+        <Focus
+          within={true}
+          onBlur={createEventHandler('outer: onBlur')}
+          onFocus={createEventHandler('outer: onFocus')}
+          onFocusChange={createEventHandler('outer: onFocusChange')}>
+          <div ref={outerRef}>
+            <Focus
+              onBlur={createEventHandler('inner: onBlur')}
+              onFocus={createEventHandler('inner: onFocus')}
+              onFocusChange={createEventHandler('inner: onFocusChange')}>
+              <div ref={innerRef} />
+            </Focus>
+          </div>
+        </Focus>
+      );
+
+      ReactDOM.render(element, container);
+
+      outerRef.current.dispatchEvent(createFocusEvent('focus'));
+      outerRef.current.dispatchEvent(createFocusEvent('blur'));
+      innerRef.current.dispatchEvent(createFocusEvent('focus'));
+      innerRef.current.dispatchEvent(createFocusEvent('blur'));
+      expect(events).toEqual([
+        'outer: onFocus',
+        'outer: onFocusChange',
+        'outer: onBlur',
+        'outer: onFocusChange',
+        'inner: onFocus',
+        'inner: onFocusChange',
+        'outer: onFocus',
+        'outer: onFocusChange',
+        'inner: onBlur',
+        'inner: onFocusChange',
+        'outer: onBlur',
+        'outer: onFocusChange',
       ]);
     });
   });

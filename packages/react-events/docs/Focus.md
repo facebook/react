@@ -4,8 +4,6 @@ The `Focus` module responds to focus and blur events on its child. Focus events
 are dispatched for all input types, with the exception of `onFocusVisibleChange`
 which is only dispatched when focusing with a keyboard.
 
-Focus events do not propagate between `Focus` event responders.
-
 ```js
 // Example
 const Button = (props) => {
@@ -42,6 +40,11 @@ type FocusEvent = {
 ### disabled: boolean = false
 
 Disables all `Focus` events.
+
+### within: boolean = false
+
+By default, events are only fired for the immediate child of the `Focus` component.
+When the `within` prop is set to `true`, events are fired for descendents as well.
 
 ### onBlur: (e: FocusEvent) => void
 

@@ -17,6 +17,7 @@ import {DiscreteEvent} from 'shared/ReactTypes';
 
 type FocusProps = {
   disabled: boolean,
+  within: boolean,
   onBlur: (e: FocusEvent) => void,
   onFocus: (e: FocusEvent) => void,
   onFocusChange: boolean => void,
@@ -228,7 +229,7 @@ const FocusResponder = {
     };
   },
   allowMultipleHostChildren: false,
-  stopLocalPropagation: true,
+  stopLocalPropagation: false,
   onEvent(
     event: ReactResponderEvent,
     context: ReactResponderContext,
@@ -249,10 +250,10 @@ const FocusResponder = {
     switch (type) {
       case 'focus': {
         if (!state.isFocused) {
-          // Limit focus events to the direct child of the event component.
-          // Browser focus is not expected to bubble.
+          // Limit focus events to the direct child of the event component
+          // unless the `within` prop is set. Browser focus is not expected to bubble.
           state.focusTarget = context.getEventCurrentTarget(event);
-          if (state.focusTarget === target) {
+          if (props.within || state.focusTarget === target) {
             state.isFocused = true;
             state.isLocalFocusVisible = isGlobalFocusVisible;
             dispatchFocusInEvents(context, props, state);
