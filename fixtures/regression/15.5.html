@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>React 15.5</title>
+    <link rel="stylesheet" href="styles.css" />
+
+    <script type="text/javascript">
+      // Enable DevTools to inspect React inside of an <iframe>
+      // This must run before React is loaded
+      __REACT_DEVTOOLS_GLOBAL_HOOK__ = parent.__REACT_DEVTOOLS_GLOBAL_HOOK__;
+    </script>
+
+    <script src="https://unpkg.com/react@15.5/dist/react.js"></script>
+    <script src="https://unpkg.com/react-dom@15.5/dist/react-dom.js"></script>
+    
+    <!-- Don't use this in production: -->
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+  </head>
+  <body>
+    <div id="root">
+      If you are seeing this message, you are likely viewing this file using the <code>file</code> protocol which does not support cross origin requests.
+      <br/><br/>
+      Use the <code>server</code> script instead:
+      <br/><br/>
+      <code>node ./fixtures/regression/server.js</code><br/>
+      <code>open <a href="http://localhost:3000/fixtures/regression/15.5.html">http://localhost:3000/fixtures/regression/15.5.html</a></code>
+    </div>
+
+    <script src="shared.js" type="text/babel"></script>
+
+    <!--
+      This is a great way to try React but it's not suitable for production.
+      It slowly compiles JSX with Babel in the browser and uses a large development build of React.
+      Learn more at https://reactjs.org/docs/getting-started.html
+    -->
+  </body>
+</html>

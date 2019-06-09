@@ -79,10 +79,16 @@ export type FiberData = {|
   type: ElementType,
 |};
 
-export type NativeType = {};
+export type NativeType = Object;
 export type RendererID = number;
 
 type Dispatcher = any;
+
+export type GetFiberIDForNative = (
+  component: NativeType,
+  findNearestUnfilteredAncestor?: boolean
+) => number | null;
+export type FindNativeNodesForFiberID = (id: number) => ?Array<NativeType>;
 
 export type ReactRenderer = {
   findFiberByHostInstance: (hostInstance: NativeType) => ?Fiber,
@@ -208,13 +214,10 @@ export type InspectedElement = {|
 
 export type RendererInterface = {
   cleanup: () => void,
-  findNativeNodesForFiberID: (id: number) => ?Array<NativeType>,
+  findNativeNodesForFiberID: FindNativeNodesForFiberID,
   flushInitialOperations: () => void,
   getBestMatchForTrackedPath: () => PathMatch | null,
-  getFiberIDForNative: (
-    component: NativeType,
-    findNearestUnfilteredAncestor?: boolean
-  ) => number | null,
+  getFiberIDForNative: GetFiberIDForNative,
   getProfilingData(): ProfilingDataBackend,
   getOwnersList: (id: number) => Array<Owner> | null,
   getPathForElement: (id: number) => Array<PathFrame> | null,

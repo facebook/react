@@ -133,11 +133,13 @@ type JestPromiseType = {
    * Use rejects to unwrap the reason of a rejected promise so any other
    * matcher can be chained. If the promise is fulfilled the assertion fails.
    */
+  // eslint-disable-next-line no-use-before-define
   rejects: JestExpectType,
   /**
    * Use resolves to unwrap the value of a fulfilled promise so any other
    * matcher can be chained. If the promise is rejected the assertion fails.
    */
+  // eslint-disable-next-line no-use-before-define
   resolves: JestExpectType,
 };
 
@@ -1085,8 +1087,10 @@ type JestPrettyFormatColors = {
 };
 
 type JestPrettyFormatIndent = string => string;
+// eslint-disable-next-line no-unused-vars
 type JestPrettyFormatRefs = Array<any>;
 type JestPrettyFormatPrint = any => string;
+// eslint-disable-next-line no-unused-vars
 type JestPrettyFormatStringOrNull = string | null;
 
 type JestPrettyFormatOptions = {|
@@ -1097,6 +1101,7 @@ type JestPrettyFormatOptions = {|
   indent: number,
   maxDepth: number,
   min: boolean,
+  // eslint-disable-next-line no-use-before-define
   plugins: JestPrettyFormatPlugins,
   printFunctionName: boolean,
   spacing: string,

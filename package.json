@@ -28,7 +28,7 @@
       "<rootDir>/src/__tests__/storeSerializer"
     ],
     "testMatch": [
-      "**/__tests__/*-test.js"
+      "**/__tests__/**/*-test.js"
     ]
   },
   "scripts": {
@@ -132,8 +132,10 @@
     "prettier": "^1.16.4",
     "prop-types": "^15.6.2",
     "react": "^0.0.0-50b50c26f",
+    "react-15": "npm:react@^15",
     "react-color": "^2.11.7",
     "react-dom": "^0.0.0-50b50c26f",
+    "react-dom-15": "npm:react-dom@^15",
     "react-is": "^0.0.0-50b50c26f",
     "react-test-renderer": "^0.0.0-50b50c26f",
     "react-virtualized-auto-sizer": "^1.0.2",
@@ -142,6 +144,7 @@
     "rimraf": "^2.6.3",
     "scheduler": "^0.0.0-50b50c26f",
     "semver": "^5.5.1",
+    "serve-static": "^1.14.1",
     "style-loader": "^0.23.1",
     "web-ext": "^3.0.0",
     "webpack": "^4.26.0",

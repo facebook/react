@@ -47,17 +47,15 @@ export async function actAsync(
 
 export function beforeEachProfiling(): void {
   // Mock React's timing information so that test runs are predictable.
-  jest.mock('scheduler', () =>
-    // $FlowFixMe Flow does not konw about requireActual
-    require.requireActual('scheduler/unstable_mock')
-  );
+  jest.mock('scheduler', () => jest.requireActual('scheduler/unstable_mock'));
 
   // DevTools itself uses performance.now() to offset commit times
   // so they appear relative to when profiling was started in the UI.
-  jest.spyOn(performance, 'now').mockImplementation(
-    // $FlowFixMe Flow does not konw about requireActual
-    require.requireActual('scheduler/unstable_mock').unstable_now
-  );
+  jest
+    .spyOn(performance, 'now')
+    .mockImplementation(
+      jest.requireActual('scheduler/unstable_mock').unstable_now
+    );
 }
 
 export function createDisplayNameFilter(
