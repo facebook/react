@@ -4,7 +4,7 @@ const finalhandler = require('finalhandler');
 const http = require('http');
 const serveStatic = require('serve-static');
 
-// Serve regression folder
+// Serve fixtures folder
 const serve = serveStatic(__dirname, { index: 'index.html' });
 
 // Create server
