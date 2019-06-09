@@ -80,6 +80,9 @@ export default function SidebarSelectedFiberInfo(_: Props) {
             <label className={styles.Label}>Rendered at</label>: {listItems}
           </Fragment>
         )}
+        {listItems.length === 0 && (
+          <div>Did not render during this profiling session.</div>
+        )}
       </div>
     </Fragment>
   );
