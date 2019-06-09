@@ -3,9 +3,11 @@
 import EventEmitter from 'events';
 import memoize from 'memoize-one';
 import throttle from 'lodash.throttle';
+import Bridge from 'src/bridge';
 import {
   SESSION_STORAGE_LAST_SELECTION_KEY,
   SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
+  SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
   __DEBUG__,
 } from '../constants';
 import {
@@ -22,7 +24,7 @@ import type {
   RendererID,
   RendererInterface,
 } from './types';
-import type { Bridge, ComponentFilter } from '../types';
+import type { ComponentFilter } from '../types';
 
 const debug = (methodName, ...args) => {
   if (__DEBUG__) {
@@ -66,9 +68,12 @@ type PersistedSelection = {|
   path: Array<PathFrame>,
 |};
 
-export default class Agent extends EventEmitter {
+export default class Agent extends EventEmitter<{|
+  shutdown: [],
+|}> {
   _bridge: Bridge;
   _isProfiling: boolean = false;
+  _recordChangeDescriptions: boolean = false;
   _rendererInterfaces: { [key: RendererID]: RendererInterface } = {};
   _persistedSelection: PersistedSelection | null = null;
   _persistedSelectionMatch: PathMatch | null = null;
@@ -79,8 +84,13 @@ export default class Agent extends EventEmitter {
     if (
       sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true'
     ) {
+      this._recordChangeDescriptions =
+        sessionStorageGetItem(
+          SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY
+        ) === 'true';
       this._isProfiling = true;
 
+      sessionStorageRemoveItem(SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY);
       sessionStorageRemoveItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY);
     }
 
@@ -250,8 +260,12 @@ export default class Agent extends EventEmitter {
     }
   };
 
-  reloadAndProfile = () => {
+  reloadAndProfile = (recordChangeDescriptions: boolean) => {
     sessionStorageSetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY, 'true');
+    sessionStorageSetItem(
+      SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
+      recordChangeDescriptions ? 'true' : 'false'
+    );
 
     // This code path should only be hit if the shell has explicitly told the Store that it supports profiling.
     // In that case, the shell must also listen for this specific message to know when it needs to reload the app.
@@ -262,9 +276,11 @@ export default class Agent extends EventEmitter {
   screenshotCaptured = ({
     commitIndex,
     dataURL,
+    rootID,
   }: {|
     commitIndex: number,
     dataURL: string,
+    rootID: number,
   |}) => {
     this._bridge.send('screenshotCaptured', { commitIndex, dataURL });
   };
@@ -358,7 +374,7 @@ export default class Agent extends EventEmitter {
     this._rendererInterfaces[rendererID] = rendererInterface;
 
     if (this._isProfiling) {
-      rendererInterface.startProfiling();
+      rendererInterface.startProfiling(this._recordChangeDescriptions);
     }
 
     // When the renderer is attached, we need to tell it whether
@@ -397,13 +413,14 @@ export default class Agent extends EventEmitter {
     window.addEventListener('pointerup', this._onPointerUp, true);
   };
 
-  startProfiling = () => {
+  startProfiling = (recordChangeDescriptions: boolean) => {
+    this._recordChangeDescriptions = recordChangeDescriptions;
     this._isProfiling = true;
     for (let rendererID in this._rendererInterfaces) {
       const renderer = ((this._rendererInterfaces[
         (rendererID: any)
       ]: any): RendererInterface);
-      renderer.startProfiling();
+      renderer.startProfiling(recordChangeDescriptions);
     }
     this._bridge.send('profilingStatus', this._isProfiling);
   };
@@ -422,6 +439,7 @@ export default class Agent extends EventEmitter {
 
   stopProfiling = () => {
     this._isProfiling = false;
+    this._recordChangeDescriptions = false;
     for (let rendererID in this._rendererInterfaces) {
       const renderer = ((this._rendererInterfaces[
         (rendererID: any)

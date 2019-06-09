@@ -1,6 +1,6 @@
 // @flow
 
-import type { Bridge } from '../types';
+import Bridge from 'src/bridge';
 
 type Shell = {|
   connect: (callback: Function) => void,

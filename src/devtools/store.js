@@ -2,6 +2,7 @@
 
 import EventEmitter from 'events';
 import { inspect } from 'util';
+import Bridge from 'src/bridge';
 import {
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
@@ -21,7 +22,7 @@ import { printStore } from 'src/__tests__/storeSerializer';
 import ProfilerStore from './ProfilerStore';
 
 import type { Element } from './views/Components/types';
-import type { Bridge, ComponentFilter, ElementType } from '../types';
+import type { ComponentFilter, ElementType } from '../types';
 
 const debug = (methodName, ...args) => {
   if (__DEBUG__) {
@@ -38,6 +39,8 @@ const LOCAL_STORAGE_CAPTURE_SCREENSHOTS_KEY =
   'React::DevTools::captureScreenshots';
 const LOCAL_STORAGE_COLLAPSE_ROOTS_BY_DEFAULT_KEY =
   'React::DevTools::collapseNodesByDefault';
+const LOCAL_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY =
+  'React::DevTools::recordChangeDescriptions';
 
 type Config = {|
   isProfiling?: boolean,
@@ -55,7 +58,16 @@ export type Capabilities = {|
  * The store is the single source of truth for updates from the backend.
  * ContextProviders can subscribe to the Store for specific things they want to provide.
  */
-export default class Store extends EventEmitter {
+export default class Store extends EventEmitter<{|
+  captureScreenshots: [],
+  collapseNodesByDefault: [],
+  componentFilters: [],
+  mutated: [[Array<number>, Map<number, number>]],
+  recordChangeDescriptions: [],
+  roots: [],
+  supportsProfiling: [],
+  supportsReloadAndProfile: [],
+|}> {
   _bridge: Bridge;
 
   _captureScreenshots: boolean = false;
@@ -82,6 +94,8 @@ export default class Store extends EventEmitter {
   _ownersMap: Map<number, Set<number>> = new Map();
 
   _profilerStore: ProfilerStore;
+
+  _recordChangeDescriptions: boolean = false;
 
   // Incremented each time the store is mutated.
   // This enables a passive effect to detect a mutation between render and commit phase.
@@ -117,6 +131,10 @@ export default class Store extends EventEmitter {
     this._collapseNodesByDefault =
       localStorageGetItem(LOCAL_STORAGE_COLLAPSE_ROOTS_BY_DEFAULT_KEY) !==
       'false';
+
+    this._recordChangeDescriptions =
+      localStorageGetItem(LOCAL_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY) ===
+      'true';
 
     this._componentFilters = getSavedComponentFilters();
 
@@ -246,6 +264,20 @@ export default class Store extends EventEmitter {
 
   get profilerStore(): ProfilerStore {
     return this._profilerStore;
+  }
+
+  get recordChangeDescriptions(): boolean {
+    return this._recordChangeDescriptions;
+  }
+  set recordChangeDescriptions(value: boolean): void {
+    this._recordChangeDescriptions = value;
+
+    localStorageSetItem(
+      LOCAL_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
+      value ? 'true' : 'false'
+    );
+
+    this.emit('recordChangeDescriptions');
   }
 
   get revision(): number {

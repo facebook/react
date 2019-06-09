@@ -52,8 +52,6 @@ export type Source = {|
 export type InspectedElement = {|
   id: number,
 
-  displayName: string | null,
-
   // Does the current renderer support editable hooks?
   canEditHooks: boolean,
 

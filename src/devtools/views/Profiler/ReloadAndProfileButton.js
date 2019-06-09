@@ -7,27 +7,41 @@ import { BridgeContext, StoreContext } from '../context';
 import { useSubscription } from '../hooks';
 import Store from 'src/devtools/store';
 
+type SubscriptionData = {|
+  recordChangeDescriptions: boolean,
+  supportsReloadAndProfile: boolean,
+|};
+
 export default function ReloadAndProfileButton() {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 
-  const supportsReloadAndProfileSubscription = useMemo(
+  const subscription = useMemo(
     () => ({
-      getCurrentValue: () => store.supportsReloadAndProfile,
+      getCurrentValue: () => ({
+        recordChangeDescriptions: store.recordChangeDescriptions,
+        supportsReloadAndProfile: store.supportsReloadAndProfile,
+      }),
       subscribe: (callback: Function) => {
+        store.addListener('recordChangeDescriptions', callback);
         store.addListener('supportsReloadAndProfile', callback);
-        return () => store.removeListener('supportsReloadAndProfile', callback);
+        return () => {
+          store.removeListener('recordChangeDescriptions', callback);
+          store.removeListener('supportsReloadAndProfile', callback);
+        };
       },
     }),
     [store]
   );
-  const supportsReloadAndProfile = useSubscription<boolean, Store>(
-    supportsReloadAndProfileSubscription
-  );
+  const {
+    recordChangeDescriptions,
+    supportsReloadAndProfile,
+  } = useSubscription<SubscriptionData, Store>(subscription);
 
-  const reloadAndProfile = useCallback(() => bridge.send('reloadAndProfile'), [
-    bridge,
-  ]);
+  const reloadAndProfile = useCallback(
+    () => bridge.send('reloadAndProfile', recordChangeDescriptions),
+    [bridge, recordChangeDescriptions]
+  );
 
   if (!supportsReloadAndProfile) {
     return null;

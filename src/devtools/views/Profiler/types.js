@@ -31,7 +31,18 @@ export type SnapshotNode = {|
   type: ElementType,
 |};
 
+export type ChangeDescription = {|
+  context: Array<string> | boolean | null,
+  didHooksChange: boolean,
+  isFirstMount: boolean,
+  props: Array<string> | null,
+  state: Array<string> | null,
+|};
+
 export type CommitDataFrontend = {|
+  // Map of Fiber (ID) to a description of what changed in this commit.
+  changeDescriptions: Map<number, ChangeDescription> | null,
+
   // How long was this commit?
   duration: number,
 
@@ -93,6 +104,7 @@ export type ProfilingDataFrontend = {|
 |};
 
 export type CommitDataExport = {|
+  changeDescriptions: Array<[number, ChangeDescription]> | null,
   duration: number,
   // Tuple of fiber ID and actual duration
   fiberActualDurations: Array<[number, number]>,

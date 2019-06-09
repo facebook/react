@@ -1,8 +1,7 @@
 // @flow
 
 import { createContext } from 'react';
-
-import type { Bridge } from '../../types';
+import Bridge from 'src/bridge';
 
 import Store from '../store';
 

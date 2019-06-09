@@ -6,6 +6,7 @@ import '@reach/menu-button/styles.css';
 import '@reach/tooltip/styles.css';
 
 import React, { useState } from 'react';
+import Bridge from 'src/bridge';
 import Store from '../store';
 import { BridgeContext, StoreContext } from './context';
 import Components from './Components/Components';
@@ -22,8 +23,6 @@ import ReactLogo from './ReactLogo';
 import styles from './DevTools.css';
 
 import './root.css';
-
-import type { Bridge } from '../../types';
 
 export type BrowserName = 'Chrome' | 'Firefox';
 export type BrowserTheme = 'dark' | 'light';

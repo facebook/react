@@ -2,16 +2,85 @@
 
 import EventEmitter from 'events';
 
-import type { Wall } from './types';
+import type { ComponentFilter, Wall } from './types';
+import type {
+  InspectedElement,
+  OwnersList,
+  ProfilingDataBackend,
+  RendererID,
+} from 'src/backend/types';
 
 const BATCH_DURATION = 100;
+
+type ElementAndRendererID = {| id: number, rendererID: RendererID |};
 
 type Message = {|
   event: string,
   payload: any,
 |};
 
-export default class Bridge extends EventEmitter {
+type HighlightElementInDOM = {|
+  ...ElementAndRendererID,
+  displayName: string,
+  hideAfterTimeout: boolean,
+  openNativeElementsPanel: boolean,
+  scrollIntoView: boolean,
+|};
+
+type OverrideValue = {|
+  ...ElementAndRendererID,
+  path: Array<string | number>,
+  value: any,
+|};
+
+type OverrideHookState = {|
+  ...OverrideValue,
+  hookID: number,
+|};
+
+type OverrideSuspense = {|
+  ...ElementAndRendererID,
+  forceFallback: boolean,
+|};
+
+export default class Bridge extends EventEmitter<{|
+  captureScreenshot: [{| commitIndex: number, rootID: number |}],
+  clearHighlightedElementInDOM: [],
+  getOwnersList: [ElementAndRendererID],
+  getProfilingData: [{| rendererID: RendererID |}],
+  getProfilingStatus: [],
+  highlightElementInDOM: [HighlightElementInDOM],
+  init: [],
+  inspectElement: [ElementAndRendererID],
+  inspectedElement: [InspectedElement | number | null],
+  isBackendStorageAPISupported: [boolean],
+  logElementToConsole: [ElementAndRendererID],
+  operations: [Uint32Array],
+  ownersList: [OwnersList],
+  overrideContext: [OverrideValue],
+  overrideHookState: [OverrideHookState],
+  overrideProps: [OverrideValue],
+  overrideState: [OverrideValue],
+  overrideSuspense: [OverrideSuspense],
+  profilingData: [ProfilingDataBackend],
+  profilingStatus: [boolean],
+  reloadAndProfile: [boolean],
+  reloadAppForProfiling: [],
+  screenshotCaptured: [
+    {| commitIndex: number, dataURL: string, rootID: number |},
+  ],
+  selectElement: [ElementAndRendererID],
+  selectFiber: [number],
+  shutdown: [],
+  startInspectingDOM: [],
+  startProfiling: [boolean],
+  stopInspectingDOM: [boolean],
+  stopProfiling: [],
+  syncSelectionFromNativeElementsPanel: [],
+  syncSelectionToNativeElementsPanel: [],
+  updateComponentFilters: [Array<ComponentFilter>],
+  viewElementSource: [ElementAndRendererID],
+|}> {
   _isShutdown: boolean = false;
   _messageQueue: Array<any> = [];
   _timeoutID: TimeoutID | null = null;
@@ -25,7 +94,7 @@ export default class Bridge extends EventEmitter {
 
     this._wallUnlisten =
       wall.listen((message: Message) => {
-        this.emit(message.event, message.payload);
+        (this: any).emit(message.event, message.payload);
       }) || null;
   }
 
@@ -64,7 +133,9 @@ export default class Bridge extends EventEmitter {
     this._isShutdown = true;
 
     // Disable the API inherited from EventEmitter that can add more listeners and send more messages.
+    // $FlowFixMe This property is not writable.
     this.addListener = function() {};
+    // $FlowFixMe This property is not writable.
     this.emit = function() {};
     // NOTE: There's also EventEmitter API like `on` and `prependListener` that we didn't add to our Flow type of EventEmitter.
 
