@@ -112,7 +112,6 @@ export type ReactRenderer = {
   currentDispatcherRef?: {| current: null | Dispatcher |},
 };
 
-// TODO (change descriptions) Should we report changed hooks keys?
 export type ChangeDescription = {|
   context: Array<string> | boolean | null,
   didHooksChange: boolean,

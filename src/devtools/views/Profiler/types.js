@@ -31,7 +31,6 @@ export type SnapshotNode = {|
   type: ElementType,
 |};
 
-// TODO (change descriptions) Should we report changed hooks keys?
 export type ChangeDescription = {|
   context: Array<string> | boolean | null,
   didHooksChange: boolean,

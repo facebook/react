@@ -704,6 +704,7 @@ export function attach(
     }
   }
 
+  // Differentiates between a null context value and no context.
   const NO_CONTEXT = {};
 
   function getContextsForFiber(fiber: Fiber): [Object, any] | null {
@@ -731,6 +732,9 @@ export function attach(
     }
   }
 
+  // Record all contexts at the time profiling is started.
+  // Fibers only store the current context value,
+  // so we need to track them separatenly in order to determine changed keys.
   function crawlToInitializeContextsMap(fiber: Fiber) {
     updateContextsForFiber(fiber);
     let current = fiber.child;
@@ -2390,6 +2394,9 @@ export function attach(
       );
 
       if (shouldRecordChangeDescriptions) {
+        // Record all contexts at the time profiling is started.
+        // Fibers only store the current context value,
+        // so we need to track them separatenly in order to determine changed keys.
         crawlToInitializeContextsMap(root.current);
       }
     });
