@@ -14,6 +14,7 @@ describe('ProfilerStore', () => {
 
     store = global.store;
     store.collapseNodesByDefault = false;
+    store.recordChangeDescriptions = true;
 
     React = require('react');
     ReactDOM = require('react-dom');

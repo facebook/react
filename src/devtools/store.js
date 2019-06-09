@@ -38,6 +38,8 @@ const LOCAL_STORAGE_CAPTURE_SCREENSHOTS_KEY =
   'React::DevTools::captureScreenshots';
 const LOCAL_STORAGE_COLLAPSE_ROOTS_BY_DEFAULT_KEY =
   'React::DevTools::collapseNodesByDefault';
+const LOCAL_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY =
+  'React::DevTools::recordChangeDescriptions';
 
 type Config = {|
   isProfiling?: boolean,
@@ -83,6 +85,8 @@ export default class Store extends EventEmitter {
 
   _profilerStore: ProfilerStore;
 
+  _recordChangeDescriptions: boolean = false;
+
   // Incremented each time the store is mutated.
   // This enables a passive effect to detect a mutation between render and commit phase.
   _revision: number = 0;
@@ -117,6 +121,10 @@ export default class Store extends EventEmitter {
     this._collapseNodesByDefault =
       localStorageGetItem(LOCAL_STORAGE_COLLAPSE_ROOTS_BY_DEFAULT_KEY) !==
       'false';
+
+    this._recordChangeDescriptions =
+      localStorageGetItem(LOCAL_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY) ===
+      'true';
 
     this._componentFilters = getSavedComponentFilters();
 
@@ -246,6 +254,20 @@ export default class Store extends EventEmitter {
 
   get profilerStore(): ProfilerStore {
     return this._profilerStore;
+  }
+
+  get recordChangeDescriptions(): boolean {
+    return this._recordChangeDescriptions;
+  }
+  set recordChangeDescriptions(value: boolean): void {
+    this._recordChangeDescriptions = value;
+
+    localStorageSetItem(
+      LOCAL_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
+      value ? 'true' : 'false'
+    );
+
+    this.emit('recordChangeDescriptions');
   }
 
   get revision(): number {

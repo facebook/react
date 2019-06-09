@@ -21,6 +21,7 @@ describe('Store component filters', () => {
     store = global.store;
     store.collapseNodesByDefault = false;
     store.componentFilters = [];
+    store.recordChangeDescriptions = true;
 
     React = require('react');
     ReactDOM = require('react-dom');
