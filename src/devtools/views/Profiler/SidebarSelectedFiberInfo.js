@@ -75,7 +75,11 @@ export default function SidebarSelectedFiberInfo(_: Props) {
         rootID={((rootID: any): number)}
       />
       <div className={styles.Content}>
-        <label className={styles.Label}>Rendered at</label>: {listItems}
+        {listItems.length > 0 && (
+          <Fragment>
+            <label className={styles.Label}>Rendered at</label>: {listItems}
+          </Fragment>
+        )}
       </div>
     </Fragment>
   );
