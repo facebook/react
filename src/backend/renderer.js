@@ -649,7 +649,7 @@ export function attach(
   }
 
   function getChangeDescription(
-    prevFiber: Fiber,
+    prevFiber: Fiber | null,
     nextFiber: Fiber
   ): ChangeDescription | null {
     switch (getElementTypeForFiber(nextFiber)) {
@@ -657,21 +657,32 @@ export function attach(
       case ElementTypeFunction:
       case ElementTypeMemo:
       case ElementTypeForwardRef:
-        return {
-          didHooksChange: didHooksChange(
-            prevFiber.memoizedState,
-            nextFiber.memoizedState
-          ),
-          context: getContextChangedKeys(nextFiber),
-          props: getChangedKeys(
-            prevFiber.memoizedProps,
-            nextFiber.memoizedProps
-          ),
-          state: getChangedKeys(
-            prevFiber.memoizedState,
-            nextFiber.memoizedState
-          ),
-        };
+        if (prevFiber === null) {
+          return {
+            context: null,
+            didHooksChange: false,
+            isFirstMount: true,
+            props: null,
+            state: null,
+          };
+        } else {
+          return {
+            context: getContextChangedKeys(nextFiber),
+            didHooksChange: didHooksChange(
+              prevFiber.memoizedState,
+              nextFiber.memoizedState
+            ),
+            isFirstMount: false,
+            props: getChangedKeys(
+              prevFiber.memoizedProps,
+              nextFiber.memoizedProps
+            ),
+            state: getChangedKeys(
+              prevFiber.memoizedState,
+              nextFiber.memoizedState
+            ),
+          };
+        }
       default:
         return null;
     }
@@ -1214,13 +1225,12 @@ export function attach(
             actualDuration
           );
 
-          if (recordChangeDescriptions && metadata.changeDescriptions) {
-            const changeDescription =
-              alternate === null
-                ? null
-                : getChangeDescription(alternate, fiber);
+          if (recordChangeDescriptions) {
+            const changeDescription = getChangeDescription(alternate, fiber);
             if (changeDescription !== null) {
-              metadata.changeDescriptions.set(id, changeDescription);
+              if (metadata.changeDescriptions !== null) {
+                metadata.changeDescriptions.set(id, changeDescription);
+              }
             }
 
             updateContextsForFiber(fiber);

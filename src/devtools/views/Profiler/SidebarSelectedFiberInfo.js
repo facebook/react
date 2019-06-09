@@ -104,7 +104,10 @@ function WhatChanged({
 
   const changeDescription = changeDescriptions.get(fiberID);
   if (changeDescription == null) {
-    // This indicates that the component mounted during this commit
+    return null;
+  }
+
+  if (changeDescription.isFirstMount) {
     return (
       <div className={styles.Content}>
         <label className={styles.Label}>Why did this render?</label>
@@ -117,6 +120,29 @@ function WhatChanged({
 
   const changes = [];
 
+  if (changeDescription.context === true) {
+    changes.push(
+      <div key="context" className={styles.WhatChangedItem}>
+        • Context changed
+      </div>
+    );
+  } else if (
+    typeof changeDescription.context === 'object' &&
+    changeDescription.context !== null &&
+    changeDescription.context.length !== 0
+  ) {
+    changes.push(
+      <div key="context" className={styles.WhatChangedItem}>
+        • Context changed:
+        {changeDescription.context.map(key => (
+          <span key={key} className={styles.WhatChangedKey}>
+            {key}
+          </span>
+        ))}
+      </div>
+    );
+  }
+
   if (changeDescription.didHooksChange) {
     changes.push(
       <div key="hooks" className={styles.WhatChangedItem}>
@@ -124,6 +150,7 @@ function WhatChanged({
       </div>
     );
   }
+
   if (
     changeDescription.props !== null &&
     changeDescription.props.length !== 0
@@ -139,6 +166,7 @@ function WhatChanged({
       </div>
     );
   }
+
   if (
     changeDescription.state !== null &&
     changeDescription.state.length !== 0
