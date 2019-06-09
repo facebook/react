@@ -14,28 +14,33 @@ import { hydrate } from 'src/hydration';
 import { TreeStateContext } from './TreeContext';
 import { separateDisplayNameAndHOCs } from 'src/utils';
 
+import type { InspectedElement as InspectedElementBackend } from 'src/backend/types';
 import type {
   DehydratedData,
   Element,
-  InspectedElement,
+  InspectedElement as InspectedElementFrontend,
 } from 'src/devtools/views/Components/types';
 import type { Resource, Thenable } from '../../cache';
 
 type Context = {|
-  read(id: number): InspectedElement | null,
+  read(id: number): InspectedElementFrontend | null,
 |};
 
 const InspectedElementContext = createContext<Context>(((null: any): Context));
 InspectedElementContext.displayName = 'InspectedElementContext';
 
-type ResolveFn = (inspectedElement: InspectedElement) => void;
+type ResolveFn = (inspectedElement: InspectedElementFrontend) => void;
 type InProgressRequest = {|
-  promise: Thenable<InspectedElement>,
+  promise: Thenable<InspectedElementFrontend>,
   resolveFn: ResolveFn,
 |};
 
 const inProgressRequests: WeakMap<Element, InProgressRequest> = new WeakMap();
-const resource: Resource<Element, Element, InspectedElement> = createResource(
+const resource: Resource<
+  Element,
+  Element,
+  InspectedElementFrontend
+> = createResource(
   (element: Element) => {
     let request = inProgressRequests.get(element);
     if (request != null) {
@@ -85,7 +90,7 @@ function InspectedElementContextController({ children }: Props) {
   // This effect handler invalidates the suspense cache and schedules rendering updates with React.
   useEffect(() => {
     const onInspectedElement = (
-      inspectedElement: InspectedElement | number | null
+      data: InspectedElementBackend | number | null
     ) => {
       // A null value means that the element no longer exists in the backend.
       // If it's the same element that's currently selected, that selection will be removed once the Store updates.
@@ -93,23 +98,21 @@ function InspectedElementContextController({ children }: Props) {
       // Either way there is nothing we need to do in this case.
       // A numeric value indicates that the element hasn't changed since we last requested its data,
       // in which case we don't need to invalidate the cache and re-render anything in the DevTools.
-      if (inspectedElement !== null && typeof inspectedElement === 'object') {
-        const id = inspectedElement.id;
+      if (data !== null && typeof data === 'object') {
+        const id = data.id;
 
-        const { displayName, type } = inspectedElement;
-
-        const [
-          displayNameWithoutHOCs,
-          hocDisplayNames,
-        ] = separateDisplayNameAndHOCs(displayName, type);
-
-        inspectedElement = (({
-          ...inspectedElement,
-          displayName: displayNameWithoutHOCs,
+        const inspectedElement: InspectedElementFrontend = {
+          canEditFunctionProps: data.canEditFunctionProps,
+          canEditHooks: data.canEditHooks,
+          canToggleSuspense: data.canToggleSuspense,
+          canViewSource: data.canViewSource,
+          id: data.id,
+          source: data.source,
+          type: data.type,
           owners:
-            inspectedElement.owners === null
+            data.owners === null
               ? null
-              : inspectedElement.owners.map(owner => {
+              : data.owners.map(owner => {
                   const [
                     displayName,
                     hocDisplayNames,
@@ -120,13 +123,12 @@ function InspectedElementContextController({ children }: Props) {
                     hocDisplayNames,
                   };
                 }),
-          hocDisplayNames,
-          context: hydrateHelper(inspectedElement.context),
-          events: hydrateHelper(inspectedElement.events),
-          hooks: hydrateHelper(inspectedElement.hooks),
-          props: hydrateHelper(inspectedElement.props),
-          state: hydrateHelper(inspectedElement.state),
-        }: any): InspectedElement);
+          context: hydrateHelper(data.context),
+          events: hydrateHelper(data.events),
+          hooks: hydrateHelper(data.hooks),
+          props: hydrateHelper(data.props),
+          state: hydrateHelper(data.state),
+        };
 
         const element = store.getElementByID(id);
         if (element !== null) {
@@ -174,16 +176,13 @@ function InspectedElementContextController({ children }: Props) {
     bridge.send('selectElement', { id: selectedElementID, rendererID });
 
     const onInspectedElement = (
-      inspectedElement: InspectedElement | number | null
+      data: InspectedElementBackend | number | null
     ) => {
-      if (inspectedElement !== null) {
+      if (data !== null) {
         // If this is the element we requested, wait a little bit and then ask for an update.
-        if (inspectedElement === selectedElementID) {
+        if (data === selectedElementID) {
           timeoutID = setTimeout(sendRequest, 1000);
-        } else if (
-          typeof inspectedElement === 'object' &&
-          inspectedElement.id === selectedElementID
-        ) {
+        } else if (typeof data === 'object' && data.id === selectedElementID) {
           timeoutID = setTimeout(sendRequest, 1000);
         }
       }

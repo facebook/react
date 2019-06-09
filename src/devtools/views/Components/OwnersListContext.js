@@ -11,11 +11,8 @@ import { BridgeContext, StoreContext } from '../context';
 import { TreeStateContext } from './TreeContext';
 import { separateDisplayNameAndHOCs } from 'src/utils';
 
-import type {
-  Element,
-  Owner,
-  OwnersList,
-} from 'src/devtools/views/Components/types';
+import type { OwnersList } from 'src/backend/types';
+import type { Element, Owner } from 'src/devtools/views/Components/types';
 import type { Resource, Thenable } from '../../cache';
 
 type Context = (id: number) => Array<Owner> | null;

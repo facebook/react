@@ -13,10 +13,10 @@ export type ExpirationTime = number;
 export type RefObject = {|
   current: any,
 |};
-export type Source = {
+export type Source = {|
   fileName: string,
   lineNumber: number,
-};
+|};
 export type HookType =
   | 'useState'
   | 'useReducer'

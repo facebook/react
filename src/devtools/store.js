@@ -2,6 +2,7 @@
 
 import EventEmitter from 'events';
 import { inspect } from 'util';
+import Bridge from 'src/bridge';
 import {
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
@@ -21,7 +22,7 @@ import { printStore } from 'src/__tests__/storeSerializer';
 import ProfilerStore from './ProfilerStore';
 
 import type { Element } from './views/Components/types';
-import type { Bridge, ComponentFilter, ElementType } from '../types';
+import type { ComponentFilter, ElementType } from '../types';
 
 const debug = (methodName, ...args) => {
   if (__DEBUG__) {
@@ -57,7 +58,16 @@ export type Capabilities = {|
  * The store is the single source of truth for updates from the backend.
  * ContextProviders can subscribe to the Store for specific things they want to provide.
  */
-export default class Store extends EventEmitter {
+export default class Store extends EventEmitter<{|
+  captureScreenshots: [],
+  collapseNodesByDefault: [],
+  componentFilters: [],
+  mutated: [[Array<number>, Map<number, number>]],
+  recordChangeDescriptions: [],
+  roots: [],
+  supportsProfiling: [],
+  supportsReloadAndProfile: [],
+|}> {
   _bridge: Bridge;
 
   _captureScreenshots: boolean = false;

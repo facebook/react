@@ -3,6 +3,7 @@
 import EventEmitter from 'events';
 import memoize from 'memoize-one';
 import throttle from 'lodash.throttle';
+import Bridge from 'src/bridge';
 import { prepareProfilingDataFrontendFromBackendAndStore } from './views/Profiler/utils';
 import ProfilingCache from './ProfilingCache';
 import Store from './store';
@@ -14,11 +15,14 @@ import type {
   ProfilingDataFrontend,
   SnapshotNode,
 } from './views/Profiler/types';
-import type { Bridge } from '../types';
 
 const THROTTLE_CAPTURE_SCREENSHOT_DURATION = 500;
 
-export default class ProfilerStore extends EventEmitter {
+export default class ProfilerStore extends EventEmitter<{|
+  isProcessingData: [],
+  isProfiling: [],
+  profilingData: [],
+|}> {
   _bridge: Bridge;
 
   // Suspense cache for lazily calculating derived profiling data.

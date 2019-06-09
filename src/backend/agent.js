@@ -3,6 +3,7 @@
 import EventEmitter from 'events';
 import memoize from 'memoize-one';
 import throttle from 'lodash.throttle';
+import Bridge from 'src/bridge';
 import {
   SESSION_STORAGE_LAST_SELECTION_KEY,
   SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
@@ -23,7 +24,7 @@ import type {
   RendererID,
   RendererInterface,
 } from './types';
-import type { Bridge, ComponentFilter } from '../types';
+import type { ComponentFilter } from '../types';
 
 const debug = (methodName, ...args) => {
   if (__DEBUG__) {
@@ -67,7 +68,9 @@ type PersistedSelection = {|
   path: Array<PathFrame>,
 |};
 
-export default class Agent extends EventEmitter {
+export default class Agent extends EventEmitter<{|
+  shutdown: [],
+|}> {
   _bridge: Bridge;
   _isProfiling: boolean = false;
   _recordChangeDescriptions: boolean = false;
@@ -273,9 +276,11 @@ export default class Agent extends EventEmitter {
   screenshotCaptured = ({
     commitIndex,
     dataURL,
+    rootID,
   }: {|
     commitIndex: number,
     dataURL: string,
+    rootID: number,
   |}) => {
     this._bridge.send('screenshotCaptured', { commitIndex, dataURL });
   };
