@@ -1,6 +1,6 @@
 // @flow
 
-import React, { useContext } from 'react';
+import React, { Fragment, useContext } from 'react';
 import { CommitFilterModalContextController } from './CommitFilterModalContext';
 import { ModalDialog } from '../ModalDialog';
 import { ProfilerContext } from './ProfilerContext';
@@ -98,8 +98,12 @@ function Profiler(_: {||}) {
             <RootSelector />
             <div className={styles.Spacer} />
             <ToggleCommitFilterModalButton />
-            <div className={styles.VRule} />
-            {didRecordCommits && <SnapshotSelector />}
+            {didRecordCommits && (
+              <Fragment>
+                <div className={styles.VRule} />
+                <SnapshotSelector />
+              </Fragment>
+            )}
           </div>
           <div className={styles.Content}>
             {view}
