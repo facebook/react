@@ -422,11 +422,9 @@ function dispatchCancel(
 ): void {
   if (state.isPressed) {
     state.ignoreEmulatedMouseEvents = false;
-    removeRootEventTypes(context, state);
     dispatchPressEndEvents(event, context, props, state);
-  } else if (state.allowPressReentry) {
-    removeRootEventTypes(context, state);
   }
+  removeRootEventTypes(context, state);
 }
 
 function isValidKeyboardEvent(nativeEvent: Object): boolean {
@@ -785,9 +783,6 @@ const PressResponder = {
               dispatchPressStartEvents(event, context, props, state);
             }
           } else {
-            if (!state.allowPressReentry) {
-              removeRootEventTypes(context, state);
-            }
             dispatchPressEndEvents(event, context, props, state);
           }
         }
@@ -853,8 +848,6 @@ const PressResponder = {
           }
         } else if (type === 'mouseup') {
           state.ignoreEmulatedMouseEvents = false;
-        } else if (state.allowPressReentry) {
-          removeRootEventTypes(context, state);
         }
         break;
       }
