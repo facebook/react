@@ -2591,4 +2591,22 @@ describe('Event responder: Press', () => {
       expect(onContextMenu).toHaveBeenCalledTimes(0);
     });
   });
+
+  it('should work correctly with stopPropagation set to true', () => {
+    const ref = React.createRef();
+    const element = (
+      <Press stopPropagation={true}>
+        <div ref={ref} />
+      </Press>
+    );
+    const pointerDownEvent = jest.fn();
+    container.addEventListener('pointerdown', pointerDownEvent);
+    ReactDOM.render(element, container);
+
+    ref.current.dispatchEvent(
+      createEvent('pointerdown', {pointerType: 'mouse', button: 0}),
+    );
+    container.removeEventListener('pointerdown', pointerDownEvent);
+    expect(pointerDownEvent).toHaveBeenCalledTimes(0);
+  });
 });
