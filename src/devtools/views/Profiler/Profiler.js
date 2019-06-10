@@ -111,7 +111,7 @@ function Profiler(_: {||}) {
           </div>
         </div>
         <div className={styles.RightColumn}>{sidebar}</div>
-        <SettingsModal defaultTabID="profiler" />
+        <SettingsModal />
       </div>
     </SettingsModalContextController>
   );

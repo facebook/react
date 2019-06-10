@@ -28,7 +28,7 @@ function Components(_: {||}) {
               </Suspense>
             </div>
             <ModalDialog />
-            <SettingsModal defaultTabID="components" />
+            <SettingsModal />
           </div>
         </InspectedElementContextController>
       </OwnersListContextController>

@@ -6,7 +6,6 @@ import React, {
   useEffect,
   useMemo,
   useRef,
-  useState,
 } from 'react';
 import { SettingsModalContext } from './SettingsModalContext';
 import Store from 'src/devtools/store';
@@ -14,7 +13,11 @@ import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import TabBar from '../TabBar';
 import { StoreContext } from '../context';
-import { useModalDismissSignal, useSubscription } from '../hooks';
+import {
+  useLocalStorage,
+  useModalDismissSignal,
+  useSubscription,
+} from '../hooks';
 import ComponentsSettings from './ComponentsSettings';
 import GeneralSettings from './GeneralSettings';
 import ProfilerSettings from './ProfilerSettings';
@@ -23,11 +26,7 @@ import styles from './SettingsModal.css';
 
 type TabID = 'general' | 'components' | 'profiler';
 
-type Props = {|
-  defaultTabID: TabID,
-|};
-
-export default function SettingsModal({ defaultTabID = 'general' }: Props) {
+export default function SettingsModal(_: {||}) {
   const { isModalShowing, setIsModalShowing } = useContext(
     SettingsModalContext
   );
@@ -55,16 +54,19 @@ export default function SettingsModal({ defaultTabID = 'general' }: Props) {
     return null;
   }
 
-  return <SettingsModalImpl defaultTabID={defaultTabID} />;
+  return <SettingsModalImpl />;
 }
 
-function SettingsModalImpl({ defaultTabID }: Props) {
+function SettingsModalImpl(_: {||}) {
   const { setIsModalShowing } = useContext(SettingsModalContext);
   const dismissModal = useCallback(() => setIsModalShowing(false), [
     setIsModalShowing,
   ]);
 
-  const [selectedTabID, selectTab] = useState<TabID>(defaultTabID);
+  const [selectedTabID, selectTab] = useLocalStorage<TabID>(
+    'React::DevTools::selectedSettingsTabID',
+    'general'
+  );
 
   const modalRef = useRef<HTMLDivElement | null>(null);
   useModalDismissSignal(modalRef, dismissModal);
@@ -117,18 +119,15 @@ const tabs = [
     id: 'general',
     icon: 'settings',
     label: 'General',
-    title: 'General preferences',
   },
   {
     id: 'components',
     icon: 'components',
     label: 'Components',
-    title: 'Components preferences',
   },
   {
     id: 'profiler',
     icon: 'profiler',
     label: 'Profiler',
-    title: 'Profiler preferences',
   },
 ];
