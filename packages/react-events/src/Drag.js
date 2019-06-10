@@ -10,9 +10,11 @@
 import type {
   ReactResponderEvent,
   ReactResponderContext,
+  EventPriority,
 } from 'shared/ReactTypes';
 
 import React from 'react';
+import {DiscreteEvent, UserBlockingEvent} from 'shared/ReactTypes';
 
 const targetEventTypes = ['pointerdown'];
 const rootEventTypes = [
@@ -74,12 +76,12 @@ function dispatchDragEvent(
   name: DragEventType,
   listener: DragEvent => void,
   state: DragState,
-  discrete: boolean,
+  eventPriority: EventPriority,
   eventData?: EventData,
 ): void {
   const target = ((state.dragTarget: any): Element | Document);
   const syntheticEvent = createDragEvent(context, name, target, eventData);
-  context.dispatchEvent(syntheticEvent, listener, discrete);
+  context.dispatchEvent(syntheticEvent, listener, eventPriority);
 }
 
 const DragResponder = {
@@ -130,7 +132,7 @@ const DragResponder = {
               'dragstart',
               props.onDragStart,
               state,
-              true,
+              DiscreteEvent,
             );
           }
 
@@ -164,7 +166,10 @@ const DragResponder = {
           const y = (obj: any).screenY;
           state.x = x;
           state.y = y;
-          if (!state.isDragging && x !== state.startX && y !== state.startY) {
+          if (x === state.startX && y === state.startY) {
+            return;
+          }
+          if (!state.isDragging) {
             let shouldEnableDragging = true;
 
             if (
@@ -184,7 +189,7 @@ const DragResponder = {
                   'dragchange',
                   dragChangeEventListener,
                   state,
-                  true,
+                  UserBlockingEvent,
                 );
               }
             } else {
@@ -203,7 +208,7 @@ const DragResponder = {
                 'dragmove',
                 props.onDragMove,
                 state,
-                false,
+                UserBlockingEvent,
                 eventData,
               );
             }
@@ -222,7 +227,13 @@ const DragResponder = {
             context.releaseOwnership();
           }
           if (props.onDragEnd) {
-            dispatchDragEvent(context, 'dragend', props.onDragEnd, state, true);
+            dispatchDragEvent(
+              context,
+              'dragend',
+              props.onDragEnd,
+              state,
+              DiscreteEvent,
+            );
           }
           if (props.onDragChange) {
             const dragChangeEventListener = () => {
@@ -233,7 +244,7 @@ const DragResponder = {
               'dragchange',
               dragChangeEventListener,
               state,
-              true,
+              UserBlockingEvent,
             );
           }
           state.isDragging = false;

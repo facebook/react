@@ -57,12 +57,14 @@ describe('ReactFreshIntegration', () => {
     }).code;
     const exportsObj = {};
     // eslint-disable-next-line no-new-func
-    new Function('React', 'exports', '__register__', '__signature__', compiled)(
-      React,
-      exportsObj,
-      __register__,
-      __signature__,
-    );
+    new Function(
+      'global',
+      'React',
+      'exports',
+      '__register__',
+      '__signature__',
+      compiled,
+    )(global, React, exportsObj, __register__, __signature__);
     return exportsObj.default;
   }
 
@@ -85,9 +87,25 @@ describe('ReactFreshIntegration', () => {
     ReactFreshRuntime.register(type, id);
   }
 
-  function __signature__(type, key, getCustomHooks) {
-    ReactFreshRuntime.setSignature(type, key, getCustomHooks);
-    return type;
+  function __signature__() {
+    let call = 0;
+    let savedType;
+    let hasCustomHooks;
+    return function(type, key, forceReset, getCustomHooks) {
+      switch (call++) {
+        case 0:
+          savedType = type;
+          hasCustomHooks = typeof getCustomHooks === 'function';
+          ReactFreshRuntime.setSignature(type, key, forceReset, getCustomHooks);
+          break;
+        case 1:
+          if (hasCustomHooks) {
+            ReactFreshRuntime.collectCustomHooksForSignature(savedType);
+          }
+          break;
+      }
+      return type;
+    };
   }
 
   it('reloads function declarations', () => {
@@ -551,6 +569,49 @@ describe('ReactFreshIntegration', () => {
     }
   });
 
+  it('does not get confused by Hooks defined inline', () => {
+    // This is not a recommended pattern but at least it shouldn't break.
+    if (__DEV__) {
+      render(`
+        const App = () => {
+          const useFancyState = (initialState) => {
+            const result = React.useState(initialState);
+            return result;
+          };
+          const [x, setX] = useFancyState('X1');
+          const [y, setY] = useFancyState('Y1');
+          return <h1>A{x}{y}</h1>;
+        };
+
+        export default App;
+      `);
+      let el = container.firstChild;
+      expect(el.textContent).toBe('AX1Y1');
+
+      patch(`
+        const App = () => {
+          const useFancyState = (initialState) => {
+            const result = React.useState(initialState);
+            return result;
+          };
+          const [x, setX] = useFancyState('X2');
+          const [y, setY] = useFancyState('Y2');
+          return <h1>B{x}{y}</h1>;
+        };
+
+        export default App;
+      `);
+      // Remount even though nothing changed because
+      // the custom Hook is inside -- and so we don't
+      // really know whether its signature has changed.
+      // We could potentially make it work, but for now
+      // let's assert we don't crash with confusing errors.
+      expect(container.firstChild).not.toBe(el);
+      el = container.firstChild;
+      expect(el.textContent).toBe('BX2Y2');
+    }
+  });
+
   it('remounts component if custom hook it uses changes order', () => {
     if (__DEV__) {
       render(`
@@ -690,5 +751,403 @@ describe('ReactFreshIntegration', () => {
       `);
       expect(container.textContent).toBe('Parent Child useMyThing');
     }
+  });
+
+  it('resets state on every edit with @hot reset annotation', () => {
+    if (__DEV__) {
+      render(`
+        const {useState} = React;
+
+        export default function App() {
+          const [foo, setFoo] = useState(1);
+          return <h1>A{foo}</h1>;
+        }
+      `);
+      let el = container.firstChild;
+      expect(el.textContent).toBe('A1');
+
+      patch(`
+        const {useState} = React;
+
+        export default function App() {
+          const [foo, setFoo] = useState('ignored');
+          return <h1>B{foo}</h1>;
+        }
+      `);
+      // Same state variable name, so state is preserved.
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('B1');
+
+      patch(`
+        const {useState} = React;
+
+        /* @hot reset */
+
+        export default function App() {
+          const [bar, setBar] = useState(2);
+          return <h1>C{bar}</h1>;
+        }
+      `);
+      // Found remount annotation, so state is reset.
+      expect(container.firstChild).not.toBe(el);
+      el = container.firstChild;
+      expect(el.textContent).toBe('C2');
+
+      patch(`
+        const {useState} = React;
+
+        export default function App() {
+
+          // @hot reset
+
+          const [bar, setBar] = useState(3);
+          return <h1>D{bar}</h1>;
+        }
+      `);
+      // Found remount annotation, so state is reset.
+      expect(container.firstChild).not.toBe(el);
+      el = container.firstChild;
+      expect(el.textContent).toBe('D3');
+
+      patch(`
+        const {useState} = React;
+
+        export default function App() {
+          const [bar, setBar] = useState(4);
+          return <h1>E{bar}</h1>;
+        }
+      `);
+      // There is no remount annotation anymore,
+      // so preserve the previous state.
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('E3');
+
+      patch(`
+        const {useState} = React;
+
+        export default function App() {
+          const [bar, setBar] = useState(4);
+          return <h1>F{bar}</h1>;
+        }
+      `);
+      // Continue editing.
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('F3');
+
+      patch(`
+        const {useState} = React;
+
+        export default function App() {
+
+          /* @hot reset */
+
+          const [bar, setBar] = useState(5);
+          return <h1>G{bar}</h1>;
+        }
+      `);
+      // Force remount one last time.
+      expect(container.firstChild).not.toBe(el);
+      el = container.firstChild;
+      expect(el.textContent).toBe('G5');
+    }
+  });
+
+  describe('with inline requires', () => {
+    beforeEach(() => {
+      global.FakeModuleSystem = {};
+    });
+
+    afterEach(() => {
+      delete global.FakeModuleSystem;
+    });
+
+    it('remounts component if custom hook it uses changes order on first edit', () => {
+      // This test verifies that remounting works even if calls to custom Hooks
+      // were transformed with an inline requires transform, like we have on RN.
+      // Inline requires make it harder to compare previous and next signatures
+      // because useFancyState inline require always resolves to the newest version.
+      // We're not actually using inline requires in the test, but it has similar semantics.
+      if (__DEV__) {
+        render(`
+          const FakeModuleSystem = global.FakeModuleSystem;
+
+          FakeModuleSystem.useFancyState = function(initialState) {
+            return React.useState(initialState);
+          };
+
+          const App = () => {
+            const [x, setX] = FakeModuleSystem.useFancyState('X');
+            const [y, setY] = FakeModuleSystem.useFancyState('Y');
+            return <h1>A{x}{y}</h1>;
+          };
+
+          export default App;
+        `);
+        let el = container.firstChild;
+        expect(el.textContent).toBe('AXY');
+
+        patch(`
+          const FakeModuleSystem = global.FakeModuleSystem;
+
+          FakeModuleSystem.useFancyState = function(initialState) {
+            React.useEffect(() => {});
+            return React.useState(initialState);
+          };
+
+          const App = () => {
+            const [x, setX] = FakeModuleSystem.useFancyState('X');
+            const [y, setY] = FakeModuleSystem.useFancyState('Y');
+            return <h1>B{x}{y}</h1>;
+          };
+
+          export default App;
+        `);
+        // The useFancyState Hook added an effect,
+        // so we had to remount the component.
+        expect(container.firstChild).not.toBe(el);
+        el = container.firstChild;
+        expect(el.textContent).toBe('BXY');
+
+        patch(`
+          const FakeModuleSystem = global.FakeModuleSystem;
+
+          FakeModuleSystem.useFancyState = function(initialState) {
+            React.useEffect(() => {});
+            return React.useState(initialState);
+          };
+
+          const App = () => {
+            const [x, setX] = FakeModuleSystem.useFancyState('X');
+            const [y, setY] = FakeModuleSystem.useFancyState('Y');
+            return <h1>C{x}{y}</h1>;
+          };
+
+          export default App;
+        `);
+        // We didn't change anything except the header text.
+        // So we don't expect a remount.
+        expect(container.firstChild).toBe(el);
+        expect(el.textContent).toBe('CXY');
+      }
+    });
+
+    it('remounts component if custom hook it uses changes order on second edit', () => {
+      if (__DEV__) {
+        render(`
+          const FakeModuleSystem = global.FakeModuleSystem;
+
+          FakeModuleSystem.useFancyState = function(initialState) {
+            return React.useState(initialState);
+          };
+
+          const App = () => {
+            const [x, setX] = FakeModuleSystem.useFancyState('X');
+            const [y, setY] = FakeModuleSystem.useFancyState('Y');
+            return <h1>A{x}{y}</h1>;
+          };
+
+          export default App;
+        `);
+        let el = container.firstChild;
+        expect(el.textContent).toBe('AXY');
+
+        patch(`
+          const FakeModuleSystem = global.FakeModuleSystem;
+
+          FakeModuleSystem.useFancyState = function(initialState) {
+            return React.useState(initialState);
+          };
+
+          const App = () => {
+            const [x, setX] = FakeModuleSystem.useFancyState('X');
+            const [y, setY] = FakeModuleSystem.useFancyState('Y');
+            return <h1>B{x}{y}</h1>;
+          };
+
+          export default App;
+        `);
+        expect(container.firstChild).toBe(el);
+        expect(el.textContent).toBe('BXY');
+
+        patch(`
+          const FakeModuleSystem = global.FakeModuleSystem;
+
+          FakeModuleSystem.useFancyState = function(initialState) {
+            React.useEffect(() => {});
+            return React.useState(initialState);
+          };
+
+          const App = () => {
+            const [x, setX] = FakeModuleSystem.useFancyState('X');
+            const [y, setY] = FakeModuleSystem.useFancyState('Y');
+            return <h1>C{x}{y}</h1>;
+          };
+
+          export default App;
+        `);
+        // The useFancyState Hook added an effect,
+        // so we had to remount the component.
+        expect(container.firstChild).not.toBe(el);
+        el = container.firstChild;
+        expect(el.textContent).toBe('CXY');
+
+        patch(`
+          const FakeModuleSystem = global.FakeModuleSystem;
+
+          FakeModuleSystem.useFancyState = function(initialState) {
+            React.useEffect(() => {});
+            return React.useState(initialState);
+          };
+
+          const App = () => {
+            const [x, setX] = FakeModuleSystem.useFancyState('X');
+            const [y, setY] = FakeModuleSystem.useFancyState('Y');
+            return <h1>D{x}{y}</h1>;
+          };
+
+          export default App;
+        `);
+        // We didn't change anything except the header text.
+        // So we don't expect a remount.
+        expect(container.firstChild).toBe(el);
+        expect(el.textContent).toBe('DXY');
+      }
+    });
+
+    it('recovers if evaluating Hook list throws', () => {
+      if (__DEV__) {
+        render(`
+        let FakeModuleSystem = null;
+
+        global.FakeModuleSystem.useFancyState = function(initialState) {
+          return React.useState(initialState);
+        };
+
+        const App = () => {
+          FakeModuleSystem = global.FakeModuleSystem;
+          const [x, setX] = FakeModuleSystem.useFancyState('X');
+          const [y, setY] = FakeModuleSystem.useFancyState('Y');
+          return <h1>A{x}{y}</h1>;
+        };
+
+        export default App;
+      `);
+        let el = container.firstChild;
+        expect(el.textContent).toBe('AXY');
+
+        patch(`
+        let FakeModuleSystem = null;
+
+        global.FakeModuleSystem.useFancyState = function(initialState) {
+          React.useEffect(() => {});
+          return React.useState(initialState);
+        };
+
+        const App = () => {
+          FakeModuleSystem = global.FakeModuleSystem;
+          const [x, setX] = FakeModuleSystem.useFancyState('X');
+          const [y, setY] = FakeModuleSystem.useFancyState('Y');
+          return <h1>B{x}{y}</h1>;
+        };
+
+        export default App;
+      `);
+        // We couldn't evaluate the Hook signatures
+        // so we had to remount the component.
+        expect(container.firstChild).not.toBe(el);
+        el = container.firstChild;
+        expect(el.textContent).toBe('BXY');
+      }
+    });
+
+    it('remounts component if custom hook it uses changes order behind an indirection', () => {
+      if (__DEV__) {
+        render(`
+          const FakeModuleSystem = global.FakeModuleSystem;
+
+          FakeModuleSystem.useFancyState = function(initialState) {
+            return FakeModuleSystem.useIndirection(initialState);
+          };
+
+          FakeModuleSystem.useIndirection = function(initialState) {
+            return FakeModuleSystem.useOtherIndirection(initialState);
+          };
+
+          FakeModuleSystem.useOtherIndirection = function(initialState) {
+            return React.useState(initialState);
+          };
+
+          const App = () => {
+            const [x, setX] = FakeModuleSystem.useFancyState('X');
+            const [y, setY] = FakeModuleSystem.useFancyState('Y');
+            return <h1>A{x}{y}</h1>;
+          };
+
+          export default App;
+        `);
+        let el = container.firstChild;
+        expect(el.textContent).toBe('AXY');
+
+        patch(`
+          const FakeModuleSystem = global.FakeModuleSystem;
+
+          FakeModuleSystem.useFancyState = function(initialState) {
+            return FakeModuleSystem.useIndirection(initialState);
+          };
+
+          FakeModuleSystem.useIndirection = function(initialState) {
+            return FakeModuleSystem.useOtherIndirection(initialState);
+          };
+
+          FakeModuleSystem.useOtherIndirection = function(initialState) {
+            React.useEffect(() => {});
+            return React.useState(initialState);
+          };
+
+          const App = () => {
+            const [x, setX] = FakeModuleSystem.useFancyState('X');
+            const [y, setY] = FakeModuleSystem.useFancyState('Y');
+            return <h1>B{x}{y}</h1>;
+          };
+
+          export default App;
+        `);
+
+        // The useFancyState Hook added an effect,
+        // so we had to remount the component.
+        expect(container.firstChild).not.toBe(el);
+        el = container.firstChild;
+        expect(el.textContent).toBe('BXY');
+
+        patch(`
+          const FakeModuleSystem = global.FakeModuleSystem;
+
+          FakeModuleSystem.useFancyState = function(initialState) {
+            return FakeModuleSystem.useIndirection(initialState);
+          };
+
+          FakeModuleSystem.useIndirection = function(initialState) {
+            return FakeModuleSystem.useOtherIndirection(initialState);
+          };
+
+          FakeModuleSystem.useOtherIndirection = function(initialState) {
+            React.useEffect(() => {});
+            return React.useState(initialState);
+          };
+
+          const App = () => {
+            const [x, setX] = FakeModuleSystem.useFancyState('X');
+            const [y, setY] = FakeModuleSystem.useFancyState('Y');
+            return <h1>C{x}{y}</h1>;
+          };
+
+          export default App;
+        `);
+        // We didn't change anything except the header text.
+        // So we don't expect a remount.
+        expect(container.firstChild).toBe(el);
+        expect(el.textContent).toBe('CXY');
+      }
+    });
   });
 });

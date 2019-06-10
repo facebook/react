@@ -10,7 +10,10 @@ const run = async () => {
   const metadataURL = `https://circleci.com/api/v1.1/project/github/facebook/react/tree/master`;
   const metadata = await http.get(metadataURL, true);
   const build = metadata.find(
-    entry => entry.branch === 'master' && entry.status === 'success'
+    entry =>
+      entry.branch === 'master' &&
+      entry.status === 'success' &&
+      entry.workflows.job_name === 'process_artifacts'
   ).build_num;
 
   return build;

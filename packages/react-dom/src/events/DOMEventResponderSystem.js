@@ -23,6 +23,7 @@ import type {
   ReactEventComponentInstance,
   ReactResponderContext,
   ReactResponderEvent,
+  EventPriority,
 } from 'shared/ReactTypes';
 import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
 import {
@@ -41,6 +42,20 @@ import {
 } from 'react-reconciler/src/ReactFiberEvents';
 
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
+import {
+  ContinuousEvent,
+  UserBlockingEvent,
+  DiscreteEvent,
+} from 'shared/ReactTypes';
+import {enableUserBlockingEvents} from 'shared/ReactFeatureFlags';
+
+// Intentionally not named imports because Rollup would use dynamic dispatch for
+// CommonJS interop named imports.
+import * as Scheduler from 'scheduler';
+const {
+  unstable_UserBlockingPriority: UserBlockingPriority,
+  unstable_runWithPriority: runWithPriority,
+} = Scheduler;
 
 export let listenToResponderEventTypesImpl;
 
@@ -54,7 +69,7 @@ type EventObjectType = $Shape<PartialEventObject>;
 
 type EventQueue = {
   events: Array<EventObjectType>,
-  discrete: boolean,
+  eventPriority: EventPriority,
 };
 
 type PartialEventObject = {
@@ -64,17 +79,17 @@ type PartialEventObject = {
 
 type ResponderTimeout = {|
   id: TimeoutID,
-  timers: Map<Symbol, ResponderTimer>,
+  timers: Map<number, ResponderTimer>,
 |};
 
 type ResponderTimer = {|
   instance: ReactEventComponentInstance,
   func: () => void,
-  id: Symbol,
+  id: number,
   timeStamp: number,
 |};
 
-const activeTimeouts: Map<Symbol, ResponderTimeout> = new Map();
+const activeTimeouts: Map<number, ResponderTimeout> = new Map();
 const rootEventTypesToEventComponentInstances: Map<
   DOMTopLevelEventType | string,
   Set<ReactEventComponentInstance>,
@@ -102,12 +117,13 @@ let currentTimeStamp = 0;
 let currentTimers = new Map();
 let currentInstance: null | ReactEventComponentInstance = null;
 let currentEventQueue: null | EventQueue = null;
+let currentTimerIDCounter = 0;
 
 const eventResponderContext: ReactResponderContext = {
   dispatchEvent(
     possibleEventObject: Object,
     listener: ($Shape<PartialEventObject>) => void,
-    discrete: boolean,
+    eventPriority: EventPriority,
   ): void {
     validateResponderContext();
     const {target, type, timeStamp} = possibleEventObject;
@@ -169,21 +185,19 @@ const eventResponderContext: ReactResponderContext = {
       PartialEventObject,
     >);
     const eventQueue = ((currentEventQueue: any): EventQueue);
-    if (discrete) {
-      eventQueue.discrete = true;
-    }
+    eventQueue.eventPriority = eventPriority;
     eventListeners.set(eventObject, listener);
     eventQueue.events.push(eventObject);
   },
-  isPositionWithinTouchHitTarget(x: number, y: number): boolean {
+  isEventWithinTouchHitTarget(event: ReactResponderEvent): boolean {
     validateResponderContext();
-    const doc = getActiveDocument();
-    // This isn't available in some environments (JSDOM)
-    if (typeof doc.elementFromPoint !== 'function') {
-      return false;
-    }
-    const target = doc.elementFromPoint(x, y);
-    if (target === null) {
+    const target = event.target;
+    const nativeEvent = event.nativeEvent;
+    // We should always be dealing with a mouse event or touch event here.
+    // If we are not, these won't exist and we can early return.
+    const x = (nativeEvent: any).clientX;
+    const y = (nativeEvent: any).clientY;
+    if (x === undefined || y === undefined) {
       return false;
     }
     const childFiber = getClosestInstanceFromNode(target);
@@ -327,14 +341,14 @@ const eventResponderContext: ReactResponderContext = {
       ((currentInstance: any): ReactEventComponentInstance),
     );
   },
-  setTimeout(func: () => void, delay): Symbol {
+  setTimeout(func: () => void, delay): number {
     validateResponderContext();
     if (currentTimers === null) {
       currentTimers = new Map();
     }
     let timeout = currentTimers.get(delay);
 
-    const timerId = Symbol();
+    const timerId = currentTimerIDCounter++;
     if (timeout === undefined) {
       const timers = new Map();
       const id = setTimeout(() => {
@@ -355,7 +369,7 @@ const eventResponderContext: ReactResponderContext = {
     activeTimeouts.set(timerId, timeout);
     return timerId;
   },
-  clearTimeout(timerId: Symbol): void {
+  clearTimeout(timerId: number): void {
     validateResponderContext();
     const timeout = activeTimeouts.get(timerId);
 
@@ -537,7 +551,7 @@ function isFiberHostComponentFocusable(fiber: Fiber): boolean {
 }
 
 function processTimers(
-  timers: Map<Symbol, ResponderTimer>,
+  timers: Map<number, ResponderTimer>,
   delay: number,
 ): void {
   const timersArr = Array.from(timers.values());
@@ -585,7 +599,7 @@ function createResponderEvent(
 function createEventQueue(): EventQueue {
   return {
     events: [],
-    discrete: false,
+    eventPriority: ContinuousEvent,
   };
 }
 
@@ -604,18 +618,35 @@ function processEvents(events: Array<EventObjectType>): void {
 }
 
 export function processEventQueue(): void {
-  const {events, discrete} = ((currentEventQueue: any): EventQueue);
+  const {events, eventPriority} = ((currentEventQueue: any): EventQueue);
 
   if (events.length === 0) {
     return;
   }
-  if (discrete) {
-    flushDiscreteUpdatesIfNeeded(currentTimeStamp);
-    discreteUpdates(() => {
+
+  switch (eventPriority) {
+    case DiscreteEvent: {
+      flushDiscreteUpdatesIfNeeded(currentTimeStamp);
+      discreteUpdates(() => {
+        batchedEventUpdates(processEvents, events);
+      });
+      break;
+    }
+    case UserBlockingEvent: {
+      if (enableUserBlockingEvents) {
+        runWithPriority(
+          UserBlockingPriority,
+          batchedEventUpdates.bind(null, processEvents, events),
+        );
+      } else {
+        batchedEventUpdates(processEvents, events);
+      }
+      break;
+    }
+    case ContinuousEvent: {
       batchedEventUpdates(processEvents, events);
-    });
-  } else {
-    batchedEventUpdates(processEvents, events);
+      break;
+    }
   }
 }
 

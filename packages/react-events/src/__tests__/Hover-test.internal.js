@@ -12,6 +12,8 @@
 let React;
 let ReactFeatureFlags;
 let ReactDOM;
+let TestUtils;
+let Scheduler;
 let Hover;
 
 const createPointerEvent = (type, data) => {
@@ -228,6 +230,48 @@ describe('Hover event responder', () => {
       ref.current.dispatchEvent(createPointerEvent('mouseout'));
       expect(onHoverChange).toHaveBeenCalledTimes(2);
       expect(onHoverChange).toHaveBeenCalledWith(false);
+    });
+
+    it('should be user-blocking but not discrete', async () => {
+      // This is currently behind a feature flag
+      jest.resetModules();
+      ReactFeatureFlags = require('shared/ReactFeatureFlags');
+      ReactFeatureFlags.enableEventAPI = true;
+      ReactFeatureFlags.enableUserBlockingEvents = true;
+      React = require('react');
+      ReactDOM = require('react-dom');
+      TestUtils = require('react-dom/test-utils');
+      Scheduler = require('scheduler');
+
+      const {act} = TestUtils;
+      const {useState} = React;
+
+      const newContainer = document.createElement('div');
+      document.body.appendChild(newContainer);
+      const root = ReactDOM.unstable_createRoot(newContainer);
+
+      const target = React.createRef(null);
+      function Foo() {
+        const [isHover, setHover] = useState(false);
+        return (
+          <Hover onHoverChange={setHover}>
+            <div ref={target}>{isHover ? 'hovered' : 'not hovered'}</div>
+          </Hover>
+        );
+      }
+
+      await act(async () => {
+        root.render(<Foo />);
+      });
+      expect(newContainer.textContent).toEqual('not hovered');
+
+      await act(async () => {
+        target.current.dispatchEvent(createPointerEvent('mouseover'));
+
+        // 3s should be enough to expire the updates
+        Scheduler.advanceTime(3000);
+        expect(newContainer.textContent).toEqual('hovered');
+      });
     });
   });
 
@@ -463,5 +507,112 @@ describe('Hover event responder', () => {
 
   it('expect displayName to show up for event component', () => {
     expect(Hover.displayName).toBe('Hover');
+  });
+
+  it('should correctly pass through event properties', () => {
+    const timeStamps = [];
+    const ref = React.createRef();
+    const eventLog = [];
+    const logEvent = event => {
+      const propertiesWeCareAbout = {
+        pageX: event.pageX,
+        pageY: event.pageY,
+        screenX: event.screenX,
+        screenY: event.screenY,
+        clientX: event.clientX,
+        clientY: event.clientY,
+        pointerType: event.pointerType,
+        target: event.target,
+        timeStamp: event.timeStamp,
+        type: event.type,
+      };
+      timeStamps.push(event.timeStamp);
+      eventLog.push(propertiesWeCareAbout);
+    };
+    const element = (
+      <Hover
+        onHoverStart={logEvent}
+        onHoverEnd={logEvent}
+        onHoverMove={logEvent}>
+        <button ref={ref} />
+      </Hover>
+    );
+    ReactDOM.render(element, container);
+
+    ref.current.getBoundingClientRect = () => ({
+      top: 10,
+      left: 10,
+      bottom: 20,
+      right: 20,
+    });
+
+    ref.current.dispatchEvent(
+      createPointerEvent('pointerover', {
+        pointerType: 'mouse',
+        pageX: 15,
+        pageY: 16,
+        screenX: 20,
+        screenY: 21,
+        clientX: 30,
+        clientY: 31,
+      }),
+    );
+    ref.current.dispatchEvent(
+      createPointerEvent('pointermove', {
+        pointerType: 'mouse',
+        pageX: 16,
+        pageY: 17,
+        screenX: 21,
+        screenY: 22,
+        clientX: 31,
+        clientY: 32,
+      }),
+    );
+    ref.current.dispatchEvent(
+      createPointerEvent('pointerout', {
+        pointerType: 'mouse',
+        pageX: 17,
+        pageY: 18,
+        screenX: 22,
+        screenY: 23,
+        clientX: 32,
+        clientY: 33,
+      }),
+    );
+    expect(eventLog).toEqual([
+      {
+        pageX: 15,
+        pageY: 16,
+        screenX: 20,
+        screenY: 21,
+        clientX: 30,
+        clientY: 31,
+        target: ref.current,
+        timeStamp: timeStamps[0],
+        type: 'hoverstart',
+      },
+      {
+        pageX: 16,
+        pageY: 17,
+        screenX: 21,
+        screenY: 22,
+        clientX: 31,
+        clientY: 32,
+        target: ref.current,
+        timeStamp: timeStamps[1],
+        type: 'hovermove',
+      },
+      {
+        pageX: 17,
+        pageY: 18,
+        screenX: 22,
+        screenY: 23,
+        clientX: 32,
+        clientY: 33,
+        target: ref.current,
+        timeStamp: timeStamps[2],
+        type: 'hoverend',
+      },
+    ]);
   });
 });

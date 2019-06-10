@@ -72,8 +72,8 @@ describe('ReactFresh', () => {
     ReactFreshRuntime.register(type, id);
   }
 
-  function __signature__(type, key, getCustomHooks) {
-    ReactFreshRuntime.setSignature(type, key, getCustomHooks);
+  function __signature__(type, key, forceReset, getCustomHooks) {
+    ReactFreshRuntime.setSignature(type, key, forceReset, getCustomHooks);
     return type;
   }
 
@@ -2707,6 +2707,231 @@ describe('ReactFresh', () => {
       });
       expect(container.firstChild.nextSibling).toBe(helloNode);
       expect(helloNode.textContent).toBe('Nice.');
+    }
+  });
+
+  it('remounts classes on every edit', () => {
+    if (__DEV__) {
+      let HelloV1 = render(() => {
+        class Hello extends React.Component {
+          state = {count: 0};
+          handleClick = () => {
+            this.setState(prev => ({
+              count: prev.count + 1,
+            }));
+          };
+          render() {
+            return (
+              <p style={{color: 'blue'}} onClick={this.handleClick}>
+                {this.state.count}
+              </p>
+            );
+          }
+        }
+        // For classes, we wouldn't do this call via Babel plugin.
+        // Instead, we'd do it at module boundaries.
+        // Normally classes would get a different type and remount anyway,
+        // but at module boundaries we may want to prevent propagation.
+        // However we still want to force a remount and use latest version.
+        __register__(Hello, 'Hello');
+        return Hello;
+      });
+
+      // Bump the state before patching.
+      const el = container.firstChild;
+      expect(el.textContent).toBe('0');
+      expect(el.style.color).toBe('blue');
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(el.textContent).toBe('1');
+
+      // Perform a hot update.
+      let HelloV2 = patch(() => {
+        class Hello extends React.Component {
+          state = {count: 0};
+          handleClick = () => {
+            this.setState(prev => ({
+              count: prev.count + 1,
+            }));
+          };
+          render() {
+            return (
+              <p style={{color: 'red'}} onClick={this.handleClick}>
+                {this.state.count}
+              </p>
+            );
+          }
+        }
+        __register__(Hello, 'Hello');
+        return Hello;
+      });
+
+      // It should have remounted the class.
+      expect(container.firstChild).not.toBe(el);
+      const newEl = container.firstChild;
+      expect(newEl.textContent).toBe('0');
+      expect(newEl.style.color).toBe('red');
+      act(() => {
+        newEl.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(newEl.textContent).toBe('1');
+
+      // Now top-level renders of both types resolve to latest.
+      render(() => HelloV1);
+      render(() => HelloV2);
+      expect(container.firstChild).toBe(newEl);
+      expect(newEl.style.color).toBe('red');
+      expect(newEl.textContent).toBe('1');
+
+      let HelloV3 = patch(() => {
+        class Hello extends React.Component {
+          state = {count: 0};
+          handleClick = () => {
+            this.setState(prev => ({
+              count: prev.count + 1,
+            }));
+          };
+          render() {
+            return (
+              <p style={{color: 'orange'}} onClick={this.handleClick}>
+                {this.state.count}
+              </p>
+            );
+          }
+        }
+        __register__(Hello, 'Hello');
+        return Hello;
+      });
+
+      // It should have remounted the class again.
+      expect(container.firstChild).not.toBe(el);
+      const finalEl = container.firstChild;
+      expect(finalEl.textContent).toBe('0');
+      expect(finalEl.style.color).toBe('orange');
+      act(() => {
+        finalEl.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(finalEl.textContent).toBe('1');
+
+      render(() => HelloV3);
+      render(() => HelloV2);
+      render(() => HelloV1);
+      expect(container.firstChild).toBe(finalEl);
+      expect(finalEl.style.color).toBe('orange');
+      expect(finalEl.textContent).toBe('1');
+    }
+  });
+
+  it('remounts on conversion from class to function and back', () => {
+    if (__DEV__) {
+      let HelloV1 = render(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+        return Hello;
+      });
+
+      // Bump the state before patching.
+      const el = container.firstChild;
+      expect(el.textContent).toBe('0');
+      expect(el.style.color).toBe('blue');
+      act(() => {
+        el.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(el.textContent).toBe('1');
+
+      // Perform a hot update that turns it into a class.
+      let HelloV2 = patch(() => {
+        class Hello extends React.Component {
+          state = {count: 0};
+          handleClick = () => {
+            this.setState(prev => ({
+              count: prev.count + 1,
+            }));
+          };
+          render() {
+            return (
+              <p style={{color: 'red'}} onClick={this.handleClick}>
+                {this.state.count}
+              </p>
+            );
+          }
+        }
+        __register__(Hello, 'Hello');
+        return Hello;
+      });
+
+      // It should have remounted.
+      expect(container.firstChild).not.toBe(el);
+      const newEl = container.firstChild;
+      expect(newEl.textContent).toBe('0');
+      expect(newEl.style.color).toBe('red');
+      act(() => {
+        newEl.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(newEl.textContent).toBe('1');
+
+      // Now top-level renders of both types resolve to latest.
+      render(() => HelloV1);
+      render(() => HelloV2);
+      expect(container.firstChild).toBe(newEl);
+      expect(newEl.style.color).toBe('red');
+      expect(newEl.textContent).toBe('1');
+
+      // Now convert it back to a function.
+      let HelloV3 = patch(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'orange'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+        return Hello;
+      });
+
+      // It should have remounted again.
+      expect(container.firstChild).not.toBe(el);
+      const finalEl = container.firstChild;
+      expect(finalEl.textContent).toBe('0');
+      expect(finalEl.style.color).toBe('orange');
+      act(() => {
+        finalEl.dispatchEvent(new MouseEvent('click', {bubbles: true}));
+      });
+      expect(finalEl.textContent).toBe('1');
+
+      render(() => HelloV3);
+      render(() => HelloV2);
+      render(() => HelloV1);
+      expect(container.firstChild).toBe(finalEl);
+      expect(finalEl.style.color).toBe('orange');
+      expect(finalEl.textContent).toBe('1');
+
+      // Now that it's a function, verify edits keep state.
+      patch(() => {
+        function Hello() {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'purple'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        }
+        __register__(Hello, 'Hello');
+        return Hello;
+      });
+      expect(container.firstChild).toBe(finalEl);
+      expect(finalEl.style.color).toBe('purple');
+      expect(finalEl.textContent).toBe('1');
     }
   });
 });

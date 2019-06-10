@@ -54,6 +54,7 @@ import getComponentName from 'shared/getComponentName';
 
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {
+  resolveClassForHotReloading,
   resolveFunctionForHotReloading,
   resolveForwardRefForHotReloading,
 } from './ReactFiberHotReloading';
@@ -449,6 +450,9 @@ export function createWorkInProgress(
       case SimpleMemoComponent:
         workInProgress.type = resolveFunctionForHotReloading(current.type);
         break;
+      case ClassComponent:
+        workInProgress.type = resolveClassForHotReloading(current.type);
+        break;
       case ForwardRef:
         workInProgress.type = resolveForwardRefForHotReloading(current.type);
         break;
@@ -496,6 +500,9 @@ export function createFiberFromTypeAndProps(
   if (typeof type === 'function') {
     if (shouldConstruct(type)) {
       fiberTag = ClassComponent;
+      if (__DEV__) {
+        resolvedType = resolveClassForHotReloading(resolvedType);
+      }
     } else {
       if (__DEV__) {
         resolvedType = resolveFunctionForHotReloading(resolvedType);

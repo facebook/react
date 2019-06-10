@@ -8,13 +8,16 @@
 'use strict';
 
 let babel = require('babel-core');
+let {wrap} = require('jest-snapshot-serializer-raw');
 let freshPlugin = require('react-fresh/babel');
 
 function transform(input, options = {}) {
-  return babel.transform(input, {
-    babelrc: false,
-    plugins: ['syntax-jsx', freshPlugin],
-  }).code;
+  return wrap(
+    babel.transform(input, {
+      babelrc: false,
+      plugins: ['syntax-jsx', freshPlugin],
+    }).code,
+  );
 }
 
 describe('ReactFreshBabelPlugin', () => {
@@ -379,6 +382,27 @@ describe('ReactFreshBabelPlugin', () => {
         export default function App() {
           const bar = useFancyState();
           return <h1>{bar}</h1>;
+        }
+    `),
+    ).toMatchSnapshot();
+  });
+
+  it('generates valid signature for exotic ways to call Hooks', () => {
+    expect(
+      transform(`
+        import FancyHook from 'fancy';
+
+        export default function App() {
+          function useFancyState() {
+            const [foo, setFoo] = React.useState(0);
+            useFancyEffect();
+            return foo;
+          }
+          const bar = useFancyState();
+          const baz = FancyHook.useThing();
+          React.useState();
+          useThePlatform();
+          return <h1>{bar}{baz}</h1>;
         }
     `),
     ).toMatchSnapshot();
