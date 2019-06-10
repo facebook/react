@@ -1,37 +1,61 @@
-.Background {
-  position: absolute;
-  width: 100%;
-  height: 100%;
+.Settings {
   display: flex;
+  flex-direction: column;
   align-items: flex-start;
-  justify-content: center;
-  padding: 1rem;
-  background-color: var(--color-modal-background);
-  overflow: auto;
+  justify-content: flex-start;
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-sans-normal);
 }
 
-.Modal {
-  position: relative;
-  z-index: 3;
-  min-width: 20rem;
-  max-width: 100%;
+.Setting {
+  margin-bottom: 0.5rem;
+}
+.Setting:last-of-type {
+  margin-bottom: 0;
+}
+
+.OptionGroup {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  user-select: none;
+  margin: 0 1rem 0.5rem 0;
+}
+.OptionGroup:last-of-type {
+  margin-right: 0;
+}
+
+.RadioLabel {
+  display: inline;
+  margin-right: 0.5rem;
+}
+
+.Select {
+}
+
+.CheckboxOption {
+  display: block;
+  padding: 0 0 0.5rem;
+}
+
+.ScreenshotThrottling {
   display: inline-block;
-  background-color: var(--color-background);
-  padding: 0.5rem;
-  border: 1px solid var(--color-border);
+  background-color: var(--color-background-hover);
+  padding: 0.25rem 0.5rem;
   border-radius: 0.25rem;
 }
 
-.LeftRight {
-  display: flex;
+.HRule {
+  height: 1px;
+  background-color: var(--color-border);
+  width: 100%;
+  border: none;
+  margin: 0.5rem 0;
 }
-.Left {
-}
-.Right {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
+
+.Header {
+  font-size: var(--font-size-sans-large);
+  margin-top: 0.5rem;
 }
 
 .ButtonIcon {
@@ -62,17 +86,10 @@
   padding-right: 0;
 }
 
-.Select {
-}
-
 .Input {
   border: 1px solid var(--color-border);
   border-radius: 0.125rem;
   padding: 0.125rem;
-}
-
-.CancelButton {
-  margin-right: 0.25rem;
 }
 
 .InvalidRegExp,

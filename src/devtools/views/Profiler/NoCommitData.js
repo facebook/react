@@ -1,7 +1,6 @@
 // @flow
 
 import React from 'react';
-import ToggleCommitFilterModalButton from './ToggleCommitFilterModalButton';
 
 import styles from './NoCommitData.css';
 
@@ -12,7 +11,7 @@ export default function NoCommitData(_: {||}) {
         There is no data matching the current filter criteria.
       </div>
       <div className={styles.FilterMessage}>
-        Try adjusting the commit filter <ToggleCommitFilterModalButton />
+        Try adjusting the commit filter in Profiler settings.
       </div>
     </div>
   );

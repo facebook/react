@@ -7,7 +7,6 @@
   cursor: pointer;
   border-top: 3px solid transparent;
   border-bottom: 3px solid transparent;
-  cursor: pointer;
   user-select: none;
   color: var(--color-text);
 }
@@ -30,9 +29,11 @@
 }
 
 .TabSizeLarge {
+  font-size: var(--font-size-sans-large);
   padding: 0.5rem 1rem;
 }
 .TabSizeSmall {
+  font-size: var(--font-size-sans-normal);
   padding: 0.25rem 0.5rem;
 }
 
@@ -76,7 +77,7 @@
   }
 }
 
-@media screen and (max-width: 600px) {
+@media screen and (max-width: 525px) {
   .IconSizeLarge {
     margin-right: 0;
   }
