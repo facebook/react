@@ -713,7 +713,6 @@ const PressResponder = {
       }
 
       case 'click': {
-        removeRootEventTypes(context, state);
         if (context.isTargetWithinHostComponent(target, 'a', true)) {
           const {
             altKey,
@@ -875,7 +874,8 @@ const PressResponder = {
               }
             }
           }
-        } else if (type === 'mouseup' && state.ignoreEmulatedMouseEvents) {
+        } else if (type === 'mouseup') {
+          removeRootEventTypes(context, state);
           state.ignoreEmulatedMouseEvents = false;
         } else if (state.allowPressReentry) {
           removeRootEventTypes(context, state);
