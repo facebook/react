@@ -652,6 +652,7 @@ const PressResponder = {
             context.isEventWithinTouchHitTarget(event)
           ) {
             // We need to prevent the native event to block the focus
+            removeRootEventTypes(context, state);
             nativeEvent.preventDefault();
             return;
           }
@@ -712,6 +713,7 @@ const PressResponder = {
       }
 
       case 'click': {
+        removeRootEventTypes(context, state);
         if (context.isTargetWithinHostComponent(target, 'a', true)) {
           const {
             altKey,
@@ -851,7 +853,6 @@ const PressResponder = {
           }
 
           const wasLongPressed = state.isLongPressed;
-          removeRootEventTypes(context, state);
           dispatchPressEndEvents(event, context, props, state);
 
           if (state.pressTarget !== null && props.onPress) {
