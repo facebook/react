@@ -14,6 +14,7 @@ import {
   getSavedComponentFilters,
   saveComponentFilters,
   separateDisplayNameAndHOCs,
+  shallowDiffers,
   utfDecodeString,
 } from '../utils';
 import { localStorageGetItem, localStorageSetItem } from '../storage';
@@ -242,14 +243,38 @@ export default class Store extends EventEmitter<{|
       throw Error('Cannot modify filter preferences while profiling');
     }
 
+    // Filter updates are expensive to apply (since they impact the entire tree).
+    // Let's determine if they've changed and avoid doing this work if they haven't.
+    const prevEnabledComponentFilters = this._componentFilters.filter(
+      filter => filter.isEnabled
+    );
+    const nextEnabledComponentFilters = value.filter(
+      filter => filter.isEnabled
+    );
+    let haveEnabledFiltersChanged =
+      prevEnabledComponentFilters.length !== nextEnabledComponentFilters.length;
+    if (!haveEnabledFiltersChanged) {
+      for (let i = 0; i < nextEnabledComponentFilters.length; i++) {
+        const prevFilter = prevEnabledComponentFilters[i];
+        const nextFilter = nextEnabledComponentFilters[i];
+        if (shallowDiffers(prevFilter, nextFilter)) {
+          haveEnabledFiltersChanged = true;
+          break;
+        }
+      }
+    }
+
     this._componentFilters = value;
 
     // Update persisted filter preferences stored in localStorage.
     saveComponentFilters(value);
 
     // Notify the renderer that filter prefernces have changed.
-    // This is an expensive opreation; it unmounts and remounts the entire tree.
-    this._bridge.send('updateComponentFilters', value);
+    // This is an expensive opreation; it unmounts and remounts the entire tree,
+    // so only do it if the set of enabled component filters has changed.
+    if (haveEnabledFiltersChanged) {
+      this._bridge.send('updateComponentFilters', value);
+    }
 
     this.emit('componentFilters');
   }

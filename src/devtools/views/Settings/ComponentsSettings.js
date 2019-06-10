@@ -14,7 +14,6 @@ import Store from 'src/devtools/store';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import Toggle from '../Toggle';
-import { shallowDiffers } from 'src/utils';
 import {
   ComponentFilterDisplayName,
   ComponentFilterElementType,
@@ -221,7 +220,9 @@ export default function ComponentsSettings(_: {||}) {
   );
 
   // Filter updates are expensive to apply (since they impact the entire tree).
-  // Only apply them on unmount, and only if they've actually changed.
+  // Only apply them on unmount.
+  // The Store will avoid doing any expensive work unless they've changed.
+  // We just want to batch the work in the event that they do change.
   const componentFiltersRef = useRef<Array<ComponentFilter>>(componentFilters);
   useEffect(() => {
     componentFiltersRef.current = componentFilters;
@@ -229,25 +230,7 @@ export default function ComponentsSettings(_: {||}) {
   }, [componentFilters]);
   useEffect(
     () => () => {
-      const prevComponentFilters = store.componentFilters;
-      const nextComponentFilters = componentFiltersRef.current;
-
-      let haveFiltersChanged =
-        prevComponentFilters.length !== nextComponentFilters.length;
-      if (!haveFiltersChanged) {
-        for (let i = 0; i < nextComponentFilters.length; i++) {
-          if (
-            shallowDiffers(prevComponentFilters[i], nextComponentFilters[i])
-          ) {
-            haveFiltersChanged = true;
-            break;
-          }
-        }
-      }
-
-      if (haveFiltersChanged) {
-        store.componentFilters = [...nextComponentFilters];
-      }
+      store.componentFilters = [...componentFiltersRef.current];
     },
     [store]
   );

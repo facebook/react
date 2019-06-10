@@ -1,5 +1,6 @@
 // @flow
 
+import type Bridge from 'src/bridge';
 import type Store from 'src/devtools/store';
 
 describe('Store component filters', () => {
@@ -7,6 +8,7 @@ describe('Store component filters', () => {
   let ReactDOM;
   let TestUtils;
   let Types;
+  let bridge: Bridge;
   let store: Store;
   let utils;
 
@@ -18,6 +20,7 @@ describe('Store component filters', () => {
   };
 
   beforeEach(() => {
+    bridge = global.bridge;
     store = global.store;
     store.collapseNodesByDefault = false;
     store.componentFilters = [];
@@ -186,5 +189,35 @@ describe('Store component filters', () => {
     act(() => (store.componentFilters = [utils.createHOCFilter(false)]));
 
     expect(store).toMatchSnapshot('3: disable HOC filter');
+  });
+
+  it('should not send a bridge update if the set of enabled filters has not changed', () => {
+    act(() => (store.componentFilters = [utils.createHOCFilter(true)]));
+
+    bridge.addListener('updateComponentFilters', componentFilters => {
+      throw Error('Unexpected component update');
+    });
+
+    act(
+      () =>
+        (store.componentFilters = [
+          utils.createHOCFilter(false),
+          utils.createHOCFilter(true),
+        ])
+    );
+    act(
+      () =>
+        (store.componentFilters = [
+          utils.createHOCFilter(true),
+          utils.createLocationFilter('abc', false),
+        ])
+    );
+    act(
+      () =>
+        (store.componentFilters = [
+          utils.createHOCFilter(true),
+          utils.createElementTypeFilter(Types.ElementTypeHostComponent, false),
+        ])
+    );
   });
 });
