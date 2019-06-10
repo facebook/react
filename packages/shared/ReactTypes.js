@@ -91,6 +91,7 @@ export type ReactEventResponder = {
   createInitialState?: (props: null | Object) => Object,
   allowMultipleHostChildren: boolean,
   stopLocalPropagation: boolean,
+  isFocusScope?: boolean,
   onEvent?: (
     event: ReactResponderEvent,
     context: ReactResponderContext,
@@ -164,6 +165,12 @@ export const DiscreteEvent: EventPriority = 0;
 export const UserBlockingEvent: EventPriority = 1;
 export const ContinuousEvent: EventPriority = 2;
 
+export type FocusManagerOptions = {
+  from?: HTMLElement,
+  tabbable?: boolean,
+  wrap?: boolean,
+};
+
 export type ReactResponderContext = {
   dispatchEvent: (
     eventObject: Object,
@@ -190,6 +197,11 @@ export type ReactResponderContext = {
   setTimeout: (func: () => void, timeout: number) => number,
   clearTimeout: (timerId: number) => void,
   getFocusableElementsInScope(): Array<HTMLElement>,
+  moveFocusInScope(
+    element: HTMLElement,
+    backwards: boolean,
+    options: FocusManagerOptions,
+  ): ?HTMLElement,
   getActiveDocument(): Document,
   objectAssign: Function,
   getEventPointerType(

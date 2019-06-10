@@ -36,10 +36,6 @@ import warning from 'shared/warning';
 import {enableEventAPI} from 'shared/ReactFeatureFlags';
 import {invokeGuardedCallbackAndCatchFirstError} from 'shared/ReactErrorUtils';
 import invariant from 'shared/invariant';
-import {
-  isFiberSuspenseAndTimedOut,
-  getSuspenseFallbackChild,
-} from 'react-reconciler/src/ReactFiberEvents';
 
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 import {
@@ -48,6 +44,7 @@ import {
   DiscreteEvent,
 } from 'shared/ReactTypes';
 import {enableUserBlockingEvents} from 'shared/ReactFeatureFlags';
+import {getFocusableElementsInScope, moveFocusInScope} from './FocusManager';
 
 // Intentionally not named imports because Rollup would use dynamic dispatch for
 // CommonJS interop named imports.
@@ -383,14 +380,18 @@ const eventResponderContext: ReactResponderContext = {
   },
   getFocusableElementsInScope(): Array<HTMLElement> {
     validateResponderContext();
-    const focusableElements = [];
     const eventComponentInstance = ((currentInstance: any): ReactEventComponentInstance);
-    const child = ((eventComponentInstance.currentFiber: any): Fiber).child;
-
-    if (child !== null) {
-      collectFocusableElements(child, focusableElements);
-    }
-    return focusableElements;
+    return getFocusableElementsInScope(eventComponentInstance);
+  },
+  moveFocusInScope(element: HTMLElement, backwards, options) {
+    validateResponderContext();
+    const eventComponentInstance = ((currentInstance: any): ReactEventComponentInstance);
+    return moveFocusInScope(
+      eventComponentInstance,
+      element,
+      backwards,
+      options,
+    );
   },
   getActiveDocument,
   objectAssign: Object.assign,
@@ -455,33 +456,6 @@ const eventResponderContext: ReactResponderContext = {
   },
 };
 
-function collectFocusableElements(
-  node: Fiber,
-  focusableElements: Array<HTMLElement>,
-): void {
-  if (isFiberSuspenseAndTimedOut(node)) {
-    const fallbackChild = getSuspenseFallbackChild(node);
-    if (fallbackChild !== null) {
-      collectFocusableElements(fallbackChild, focusableElements);
-    }
-  } else {
-    if (isFiberHostComponentFocusable(node)) {
-      focusableElements.push(node.stateNode);
-    } else {
-      const child = node.child;
-
-      if (child !== null) {
-        collectFocusableElements(child, focusableElements);
-      }
-    }
-  }
-  const sibling = node.sibling;
-
-  if (sibling !== null) {
-    collectFocusableElements(sibling, focusableElements);
-  }
-}
-
 function isTargetWithinEventComponent(target: Element | Document): boolean {
   validateResponderContext();
   if (target != null) {
@@ -521,33 +495,6 @@ function releaseOwnershipForEventComponentInstance(
   } else {
     return false;
   }
-}
-
-function isFiberHostComponentFocusable(fiber: Fiber): boolean {
-  if (fiber.tag !== HostComponent) {
-    return false;
-  }
-  const {type, memoizedProps} = fiber;
-  if (memoizedProps.tabIndex === -1 || memoizedProps.disabled) {
-    return false;
-  }
-  if (memoizedProps.tabIndex === 0 || memoizedProps.contentEditable === true) {
-    return true;
-  }
-  if (type === 'a' || type === 'area') {
-    return !!memoizedProps.href && memoizedProps.rel !== 'ignore';
-  }
-  if (type === 'input') {
-    return memoizedProps.type !== 'hidden' && memoizedProps.type !== 'file';
-  }
-  return (
-    type === 'button' ||
-    type === 'textarea' ||
-    type === 'object' ||
-    type === 'select' ||
-    type === 'iframe' ||
-    type === 'embed'
-  );
 }
 
 function processTimers(

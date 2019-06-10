@@ -103,6 +103,8 @@ describe('FocusScope event responder', () => {
     );
 
     ReactDOM.render(<SimpleFocusScope />, container);
+    expect(document.activeElement).toBe(inputRef.current);
+    document.activeElement.dispatchEvent(createTabForward());
     expect(document.activeElement).toBe(buttonRef.current);
     document.activeElement.dispatchEvent(createTabForward());
     expect(document.activeElement).toBe(button2Ref.current);

@@ -15,9 +15,9 @@ import type {
 import React from 'react';
 
 type FocusScopeProps = {
-  autoFocus: Boolean,
-  contain: Boolean,
-  restoreFocus: Boolean,
+  autoFocus: boolean,
+  contain: boolean,
+  restoreFocus: boolean,
 };
 
 type FocusScopeState = {
@@ -47,6 +47,7 @@ function getFirstFocusableElement(
 }
 
 const FocusScopeResponder = {
+  isFocusScope: true,
   targetEventTypes,
   rootEventTypes,
   createInitialState(): FocusScopeState {
@@ -81,43 +82,23 @@ const FocusScopeResponder = {
         if (altkey || ctrlKey || metaKey) {
           return;
         }
-        const elements = context.getFocusableElementsInScope();
-        const position = elements.indexOf(focusedElement);
-        const lastPosition = elements.length - 1;
-        let nextElement = null;
 
-        if (shiftKey) {
-          if (position === 0) {
-            if (props.contain) {
-              nextElement = elements[lastPosition];
-            } else {
-              // Out of bounds
-              context.releaseOwnership();
-              return;
-            }
-          } else {
-            nextElement = elements[position - 1];
-          }
-        } else {
-          if (position === lastPosition) {
-            if (props.contain) {
-              nextElement = elements[0];
-            } else {
-              // Out of bounds
-              context.releaseOwnership();
-              return;
-            }
-          } else {
-            nextElement = elements[position + 1];
-          }
+        const nextElement = context.moveFocusInScope(focusedElement, shiftKey, {
+          tabbable: true,
+          wrap: props.contain,
+        });
+
+        if (!nextElement) {
+          context.releaseOwnership();
+          return;
         }
+
         // If this element is possibly inside the scope of another
         // FocusScope responder or is out of bounds, then we release ownership.
         if (nextElement !== null) {
           if (!context.isTargetWithinEventResponderScope(nextElement)) {
             context.releaseOwnership();
           }
-          focusElement(nextElement);
           state.currentFocusedNode = nextElement;
           ((nativeEvent: any): KeyboardEvent).preventDefault();
         }
