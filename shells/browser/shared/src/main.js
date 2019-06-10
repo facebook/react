@@ -269,23 +269,6 @@ function createPanelIfReactLoaded() {
         });
       });
 
-      chrome.devtools.panels.create('⚛ Settings', '', 'panel.html', panel => {
-        panel.onShown.addListener(panel => {
-          if (currentPanel === panel) {
-            return;
-          }
-
-          currentPanel = panel;
-          settingsPortalContainer = panel.container;
-
-          if (settingsPortalContainer != null) {
-            ensureInitialHTMLIsCleared(settingsPortalContainer);
-            render('settings');
-            panel.injectStyles(cloneStyleTags);
-          }
-        });
-      });
-
       chrome.devtools.network.onNavigated.removeListener(checkPageForReact);
 
       // Shutdown bridge before a new page is loaded.

@@ -1,14 +1,12 @@
 // @flow
 
 import React, { Fragment, useContext } from 'react';
-import { CommitFilterModalContextController } from './CommitFilterModalContext';
 import { ModalDialog } from '../ModalDialog';
 import { ProfilerContext } from './ProfilerContext';
 import TabBar from '../TabBar';
 import ClearProfilingDataButton from './ClearProfilingDataButton';
 import CommitFlamegraph from './CommitFlamegraph';
 import CommitRanked from './CommitRanked';
-import CommitFilterModal from './CommitFilterModal';
 import Interactions from './Interactions';
 import RootSelector from './RootSelector';
 import RecordToggle from './RecordToggle';
@@ -18,7 +16,9 @@ import SnapshotSelector from './SnapshotSelector';
 import SidebarCommitInfo from './SidebarCommitInfo';
 import SidebarInteractions from './SidebarInteractions';
 import SidebarSelectedFiberInfo from './SidebarSelectedFiberInfo';
-import ToggleCommitFilterModalButton from './ToggleCommitFilterModalButton';
+import SettingsModal from 'src/devtools/views/Settings/SettingsModal';
+import SettingsModalContextToggle from 'src/devtools/views/Settings/SettingsModalContextToggle';
+import { SettingsModalContextController } from 'src/devtools/views/Settings/SettingsModalContext';
 import portaledContent from '../portaledContent';
 
 import styles from './Profiler.css';
@@ -79,7 +79,7 @@ function Profiler(_: {||}) {
   }
 
   return (
-    <CommitFilterModalContextController>
+    <SettingsModalContextController>
       <div className={styles.Profiler}>
         <div className={styles.LeftColumn}>
           <div className={styles.Toolbar}>
@@ -97,7 +97,7 @@ function Profiler(_: {||}) {
             />
             <RootSelector />
             <div className={styles.Spacer} />
-            <ToggleCommitFilterModalButton />
+            <SettingsModalContextToggle />
             {didRecordCommits && (
               <Fragment>
                 <div className={styles.VRule} />
@@ -107,13 +107,13 @@ function Profiler(_: {||}) {
           </div>
           <div className={styles.Content}>
             {view}
-            <CommitFilterModal />
             <ModalDialog />
           </div>
         </div>
         <div className={styles.RightColumn}>{sidebar}</div>
+        <SettingsModal />
       </div>
-    </CommitFilterModalContextController>
+    </SettingsModalContextController>
   );
 }
 

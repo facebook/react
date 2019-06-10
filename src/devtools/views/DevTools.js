@@ -11,7 +11,6 @@ import Store from '../store';
 import { BridgeContext, StoreContext } from './context';
 import Components from './Components/Components';
 import Profiler from './Profiler/Profiler';
-import Settings from './Settings/Settings';
 import TabBar from './TabBar';
 import { SettingsContextController } from './Settings/SettingsContext';
 import { TreeContextController } from './Components/TreeContext';
@@ -63,14 +62,8 @@ const profilerTab = {
   label: 'Profiler',
   title: 'React Profiler',
 };
-const settingsTab = {
-  id: ('settings': TabID),
-  icon: 'settings',
-  label: 'Settings',
-  title: 'React Settings',
-};
 
-const tabs = [componentsTab, profilerTab, settingsTab];
+const tabs = [componentsTab, profilerTab];
 
 export default function DevTools({
   bridge,
@@ -131,12 +124,6 @@ export default function DevTools({
                       hidden={tab !== 'profiler'}
                     >
                       <Profiler portalContainer={profilerPortalContainer} />
-                    </div>
-                    <div
-                      className={styles.TabContent}
-                      hidden={tab !== 'settings'}
-                    >
-                      <Settings portalContainer={settingsPortalContainer} />
                     </div>
                   </div>
                 </ProfilerContextController>

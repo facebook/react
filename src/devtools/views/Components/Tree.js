@@ -19,9 +19,7 @@ import ElementView from './Element';
 import InspectHostNodesToggle from './InspectHostNodesToggle';
 import OwnersStack from './OwnersStack';
 import SearchInput from './SearchInput';
-import { ComponentFiltersModalContextController } from './ComponentFiltersModalContext';
-import ToggleComponentFiltersModalButton from './ToggleComponentFiltersModalButton';
-import ComponentFiltersModal from './ComponentFiltersModal';
+import SettingsModalContextToggle from 'src/devtools/views/Settings/SettingsModalContextToggle';
 import SelectedTreeHighlight from './SelectedTreeHighlight';
 import TreeFocusedContext from './TreeFocusedContext';
 
@@ -284,49 +282,46 @@ export default function Tree(props: Props) {
 
   return (
     <TreeFocusedContext.Provider value={treeFocused}>
-      <ComponentFiltersModalContextController>
-        <div className={styles.Tree} ref={treeRef}>
-          <div className={styles.SearchInput}>
-            <InspectHostNodesToggle />
-            <div className={styles.VRule} />
-            <Suspense fallback={<Loading />}>
-              {ownerID !== null ? <OwnersStack /> : <SearchInput />}
-            </Suspense>
-            <div className={styles.VRule} />
-            <ToggleComponentFiltersModalButton />
-          </div>
-          <div
-            className={styles.AutoSizerWrapper}
-            onBlur={handleBlur}
-            onFocus={handleFocus}
-            onKeyPress={handleKeyPress}
-            onMouseMove={handleMouseMove}
-            onMouseLeave={handleMouseLeave}
-            ref={focusTargetRef}
-            tabIndex={0}
-          >
-            <AutoSizer>
-              {({ height, width }) => (
-                // $FlowFixMe https://github.com/facebook/flow/issues/7341
-                <FixedSizeList
-                  className={styles.List}
-                  height={height}
-                  innerElementType={InnerElementType}
-                  itemCount={numElements}
-                  itemData={itemData}
-                  itemKey={itemKey}
-                  itemSize={lineHeight}
-                  ref={listRef}
-                  width={width}
-                >
-                  {ElementView}
-                </FixedSizeList>
-              )}
-            </AutoSizer>
-          </div>
-          <ComponentFiltersModal />
+      <div className={styles.Tree} ref={treeRef}>
+        <div className={styles.SearchInput}>
+          <InspectHostNodesToggle />
+          <div className={styles.VRule} />
+          <Suspense fallback={<Loading />}>
+            {ownerID !== null ? <OwnersStack /> : <SearchInput />}
+          </Suspense>
+          <div className={styles.VRule} />
+          <SettingsModalContextToggle />
         </div>
-      </ComponentFiltersModalContextController>
+        <div
+          className={styles.AutoSizerWrapper}
+          onBlur={handleBlur}
+          onFocus={handleFocus}
+          onKeyPress={handleKeyPress}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+          ref={focusTargetRef}
+          tabIndex={0}
+        >
+          <AutoSizer>
+            {({ height, width }) => (
+              // $FlowFixMe https://github.com/facebook/flow/issues/7341
+              <FixedSizeList
+                className={styles.List}
+                height={height}
+                innerElementType={InnerElementType}
+                itemCount={numElements}
+                itemData={itemData}
+                itemKey={itemKey}
+                itemSize={lineHeight}
+                ref={listRef}
+                width={width}
+              >
+                {ElementView}
+              </FixedSizeList>
+            )}
+          </AutoSizer>
+        </div>
+      </div>
     </TreeFocusedContext.Provider>
   );
 }
