@@ -118,7 +118,6 @@ const DEFAULT_PRESS_RETENTION_OFFSET = {
 };
 
 const targetEventTypes = [
-  {name: 'click', passive: false},
   {name: 'keydown', passive: false},
   {name: 'contextmenu', passive: false},
   // We need to preventDefault on pointerdown for mouse/pen events
@@ -126,6 +125,7 @@ const targetEventTypes = [
   {name: 'pointerdown', passive: false},
 ];
 const rootEventTypes = [
+  {name: 'click', passive: false},
   'keyup',
   'pointerup',
   'pointermove',
@@ -609,7 +609,7 @@ const PressResponder = {
     props: PressProps,
     state: PressState,
   ): void {
-    const {target, type} = event;
+    const {type} = event;
 
     if (props.disabled) {
       removeRootEventTypes(context, state);
@@ -708,29 +708,6 @@ const PressResponder = {
             props.onContextMenu,
             DiscreteEvent,
           );
-        }
-        break;
-      }
-
-      case 'click': {
-        if (context.isTargetWithinHostComponent(target, 'a', true)) {
-          const {
-            altKey,
-            ctrlKey,
-            metaKey,
-            shiftKey,
-          } = (nativeEvent: MouseEvent);
-          // Check "open in new window/tab" and "open context menu" key modifiers
-          const preventDefault = props.preventDefault;
-          if (
-            preventDefault !== false &&
-            !shiftKey &&
-            !metaKey &&
-            !ctrlKey &&
-            !altKey
-          ) {
-            nativeEvent.preventDefault();
-          }
         }
         break;
       }
@@ -875,10 +852,36 @@ const PressResponder = {
             }
           }
         } else if (type === 'mouseup') {
-          removeRootEventTypes(context, state);
           state.ignoreEmulatedMouseEvents = false;
         } else if (state.allowPressReentry) {
           removeRootEventTypes(context, state);
+        }
+        break;
+      }
+
+      case 'click': {
+        removeRootEventTypes(context, state);
+        if (
+          context.isTargetWithinEventComponent(target) &&
+          context.isTargetWithinHostComponent(target, 'a', true)
+        ) {
+          const {
+            altKey,
+            ctrlKey,
+            metaKey,
+            shiftKey,
+          } = (nativeEvent: MouseEvent);
+          // Check "open in new window/tab" and "open context menu" key modifiers
+          const preventDefault = props.preventDefault;
+          if (
+            preventDefault !== false &&
+            !shiftKey &&
+            !metaKey &&
+            !ctrlKey &&
+            !altKey
+          ) {
+            nativeEvent.preventDefault();
+          }
         }
         break;
       }
