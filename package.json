@@ -74,7 +74,7 @@
     "random-seed": "^0.3.0",
     "react-lifecycles-compat": "^3.0.2",
     "rimraf": "^2.6.1",
-    "rollup": "^1.13.1",
+    "rollup": "^1.14.6",
     "rollup-plugin-babel": "^3.0.7",
     "rollup-plugin-commonjs": "^9.3.4",
     "rollup-plugin-node-resolve": "^2.1.1",
