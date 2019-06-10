@@ -897,18 +897,19 @@ export function mountEventComponent(
 ): void {
   if (enableEventAPI) {
     const rootContainerInstance = ((eventComponentInstance.rootInstance: any): Container);
-    const rootElement = rootContainerInstance.ownerDocument;
+    const doc = rootContainerInstance.ownerDocument;
+    const documentBody = doc.body || doc;
     const responder = eventComponentInstance.responder;
     const {rootEventTypes, targetEventTypes} = responder;
     if (targetEventTypes !== undefined) {
-      listenToEventResponderEventTypes(targetEventTypes, rootElement);
+      listenToEventResponderEventTypes(targetEventTypes, documentBody);
     }
     if (rootEventTypes !== undefined) {
       addRootEventTypesForComponentInstance(
         eventComponentInstance,
         rootEventTypes,
       );
-      listenToEventResponderEventTypes(rootEventTypes, rootElement);
+      listenToEventResponderEventTypes(rootEventTypes, documentBody);
     }
     mountEventResponder(eventComponentInstance);
   }

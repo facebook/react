@@ -37,6 +37,7 @@ type PressProps = {
     left: number,
   },
   preventDefault: boolean,
+  stopPropagation: boolean,
 };
 
 type PointerType = '' | 'mouse' | 'keyboard' | 'pen' | 'touch';
@@ -130,16 +131,18 @@ const rootEventTypes = [
   'pointermove',
   'scroll',
   'pointercancel',
+  // We listen to this here so stopPropagation can
+  // block other mouseup events used internally
+  {name: 'mouseup', passive: false},
+  'touchend',
 ];
 
 // If PointerEvents is not supported (e.g., Safari), also listen to touch and mouse events.
 if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
   targetEventTypes.push('touchstart', 'mousedown');
   rootEventTypes.push(
-    {name: 'mouseup', passive: false},
     'mousemove',
     'touchmove',
-    'touchend',
     'touchcancel',
     // Used as a 'cancel' signal for mouse interactions
     'dragstart',
@@ -617,6 +620,9 @@ const PressResponder = {
     const nativeEvent: any = event.nativeEvent;
     const pointerType = context.getEventPointerType(event);
 
+    if (props.stopPropagation === true) {
+      nativeEvent.stopPropagation();
+    }
     switch (type) {
       // START
       case 'pointerdown':
@@ -740,6 +746,9 @@ const PressResponder = {
     const nativeEvent: any = event.nativeEvent;
     const pointerType = context.getEventPointerType(event);
 
+    if (props.stopPropagation === true) {
+      nativeEvent.stopPropagation();
+    }
     switch (type) {
       // MOVE
       case 'pointermove':
