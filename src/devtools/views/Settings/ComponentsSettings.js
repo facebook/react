@@ -224,7 +224,6 @@ export default function ComponentsSettings(_: {||}) {
   // Only apply them on unmount, and only if they've actually changed.
   const componentFiltersRef = useRef<Array<ComponentFilter>>(componentFilters);
   useEffect(() => {
-    console.log('update componentFilters ref:', componentFilters);
     componentFiltersRef.current = componentFilters;
     return () => {};
   }, [componentFilters]);
@@ -246,7 +245,6 @@ export default function ComponentsSettings(_: {||}) {
         }
       }
 
-      console.log('haveFiltersChanged?', haveFiltersChanged);
       if (haveFiltersChanged) {
         store.componentFilters = [...nextComponentFilters];
       }
