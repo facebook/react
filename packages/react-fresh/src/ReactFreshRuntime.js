@@ -210,3 +210,7 @@ export function collectCustomHooksForSignature(type: any) {
     computeFullKey(signature);
   }
 }
+
+export function getFamilyByID(id: string): Family | void {
+  return allFamiliesByID.get(id);
+}
