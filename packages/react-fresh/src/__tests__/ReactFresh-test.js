@@ -20,6 +20,7 @@ let act;
 describe('ReactFresh', () => {
   let container;
   let lastRoot;
+  let findHostNodesForHotUpdate;
   let scheduleHotUpdate;
 
   beforeEach(() => {
@@ -27,6 +28,7 @@ describe('ReactFresh', () => {
       supportsFiber: true,
       inject: injected => {
         scheduleHotUpdate = injected.scheduleHotUpdate;
+        findHostNodesForHotUpdate = injected.findHostNodesForHotUpdate;
       },
       onCommitFiberRoot: (id, root) => {
         lastRoot = root;
@@ -1357,7 +1359,7 @@ describe('ReactFresh', () => {
       const fallbackChild = container.childNodes[1];
       expect(primaryChild.textContent).toBe('Content 1');
       expect(primaryChild.style.color).toBe('green');
-      expect(primaryChild.style.display).toBe('none');
+      expect(primaryChild.style.display).toBe('none !important');
       expect(fallbackChild.textContent).toBe('Fallback 0');
       expect(fallbackChild.style.color).toBe('green');
       expect(fallbackChild.style.display).toBe('');
@@ -1371,7 +1373,7 @@ describe('ReactFresh', () => {
       expect(container.childNodes[1]).toBe(fallbackChild);
       expect(primaryChild.textContent).toBe('Content 1');
       expect(primaryChild.style.color).toBe('green');
-      expect(primaryChild.style.display).toBe('none');
+      expect(primaryChild.style.display).toBe('none !important');
       expect(fallbackChild.textContent).toBe('Fallback 1');
       expect(fallbackChild.style.color).toBe('green');
       expect(fallbackChild.style.display).toBe('');
@@ -1395,7 +1397,7 @@ describe('ReactFresh', () => {
       expect(container.childNodes[1]).toBe(fallbackChild);
       expect(primaryChild.textContent).toBe('Content 1');
       expect(primaryChild.style.color).toBe('red');
-      expect(primaryChild.style.display).toBe('none');
+      expect(primaryChild.style.display).toBe('none !important');
       expect(fallbackChild.textContent).toBe('Fallback 1');
       expect(fallbackChild.style.color).toBe('red');
       expect(fallbackChild.style.display).toBe('');
@@ -2934,4 +2936,112 @@ describe('ReactFresh', () => {
       expect(finalEl.textContent).toBe('1');
     }
   });
+
+  it('can find host nodes for a family', () => {
+    if (__DEV__) {
+      render(() => {
+        function Child({children}) {
+          return <div className="Child">{children}</div>;
+        }
+        __register__(Child, 'Child');
+
+        function Parent({children}) {
+          return (
+            <div className="Parent">
+              <div>
+                <Child />
+              </div>
+              <div>
+                <Child />
+              </div>
+            </div>
+          );
+        }
+        __register__(Parent, 'Parent');
+
+        function App() {
+          return (
+            <div className="App">
+              <Parent />
+              <Cls>
+                <Parent />
+              </Cls>
+              <Indirection>
+                <Empty />
+              </Indirection>
+            </div>
+          );
+        }
+        __register__(App, 'App');
+
+        class Cls extends React.Component {
+          render() {
+            return this.props.children;
+          }
+        }
+
+        function Indirection({children}) {
+          return children;
+        }
+
+        function Empty() {
+          return null;
+        }
+        __register__(Empty, 'Empty');
+
+        function Frag() {
+          return (
+            <React.Fragment>
+              <div className="Frag">
+                <div />
+              </div>
+              <div className="Frag">
+                <div />
+              </div>
+            </React.Fragment>
+          );
+        }
+        __register__(Frag, 'Frag');
+
+        return App;
+      });
+
+      const parentFamily = ReactFreshRuntime.getFamilyByID('Parent');
+      const childFamily = ReactFreshRuntime.getFamilyByID('Child');
+      const emptyFamily = ReactFreshRuntime.getFamilyByID('Empty');
+
+      testFindNodesForFamilies(
+        [parentFamily],
+        container.querySelectorAll('.Parent'),
+      );
+
+      testFindNodesForFamilies(
+        [childFamily],
+        container.querySelectorAll('.Child'),
+      );
+
+      // When searching for both Parent and Child,
+      // we'll stop visual highlighting at the Parent.
+      testFindNodesForFamilies(
+        [parentFamily, childFamily],
+        container.querySelectorAll('.Parent'),
+      );
+
+      // When we can't find host nodes, use the closest parent.
+      testFindNodesForFamilies(
+        [emptyFamily],
+        container.querySelectorAll('.App'),
+      );
+    }
+  });
+
+  function testFindNodesForFamilies(families, expectedNodes) {
+    const foundNodes = Array.from(
+      findHostNodesForHotUpdate(lastRoot, families),
+    );
+    expect(foundNodes.length).toEqual(expectedNodes.length);
+    foundNodes.forEach((node, i) => {
+      expect(node).toBe(expectedNodes[i]);
+    });
+  }
 });

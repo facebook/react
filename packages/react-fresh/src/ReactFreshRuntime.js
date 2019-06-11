@@ -115,7 +115,11 @@ function resolveFamily(type) {
   return familiesByType.get(type);
 }
 
-export function prepareUpdate(): HotUpdate {
+export function prepareUpdate(): HotUpdate | null {
+  if (pendingUpdates.length === 0) {
+    return null;
+  }
+
   const staleFamilies = new Set();
   const updatedFamilies = new Set();
 
@@ -205,4 +209,8 @@ export function collectCustomHooksForSignature(type: any) {
   if (signature !== undefined) {
     computeFullKey(signature);
   }
+}
+
+export function getFamilyByID(id: string): Family | void {
+  return allFamiliesByID.get(id);
 }

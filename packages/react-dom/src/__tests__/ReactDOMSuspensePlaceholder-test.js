@@ -90,9 +90,9 @@ describe('ReactDOMSuspensePlaceholder', () => {
       );
     }
     ReactDOM.render(<App />, container);
-    expect(divs[0].current.style.display).toEqual('none');
-    expect(divs[1].current.style.display).toEqual('none');
-    expect(divs[2].current.style.display).toEqual('none');
+    expect(divs[0].current.style.display).toEqual('none !important');
+    expect(divs[1].current.style.display).toEqual('none !important');
+    expect(divs[2].current.style.display).toEqual('none !important');
 
     await advanceTimers(500);
 
@@ -156,12 +156,14 @@ describe('ReactDOMSuspensePlaceholder', () => {
         ReactDOM.render(<App />, container);
       });
       expect(container.innerHTML).toEqual(
-        '<span style="display: none;">Sibling</span><span style="display: none;"></span>Loading...',
+        '<span style="display: none !important;">Sibling</span><span style=' +
+          '"display: none !important;"></span>Loading...',
       );
 
       act(() => setIsVisible(true));
       expect(container.innerHTML).toEqual(
-        '<span style="display: none;">Sibling</span><span style="display: none;"></span>Loading...',
+        '<span style="display: none !important;">Sibling</span><span style=' +
+          '"display: none !important;"></span>Loading...',
       );
 
       await advanceTimers(500);
