@@ -175,6 +175,17 @@ export default function(babel) {
       // TODO: if there is no LHS, consider some other heuristic.
       key = hookCallPath.parentPath.get('id').getSource();
     }
+
+    // Some built-in Hooks reset on edits to arguments.
+    const args = hookCallPath.get('arguments');
+    if (hookName === 'useState' && args.length > 0) {
+      // useState second argument is initial state.
+      key += '(' + args[0].getSource() + ')';
+    } else if (hookName === 'useReducer' && args.length > 1) {
+      // useReducer second argument is initial state.
+      key += '(' + args[1].getSource() + ')';
+    }
+
     hookCallsForFn.push({
       name: hookName,
       callee: hookCallPath.node.callee,
