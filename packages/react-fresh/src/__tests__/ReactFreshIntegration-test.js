@@ -73,6 +73,8 @@ describe('ReactFreshIntegration', () => {
     act(() => {
       ReactDOM.render(<Component />, container);
     });
+    // Module initialization shouldn't be counted as a hot update.
+    expect(ReactFreshRuntime.prepareUpdate()).toBe(null);
   }
 
   function patch(source) {
