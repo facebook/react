@@ -784,8 +784,8 @@ describe('ReactFreshIntegration', () => {
         /* @hot reset */
 
         export default function App() {
-          const [bar, setBar] = useState(2);
-          return <h1>C{bar}</h1>;
+          const [foo, setFoo] = useState(2);
+          return <h1>C{foo}</h1>;
         }
       `);
       // Found remount annotation, so state is reset.
@@ -800,8 +800,8 @@ describe('ReactFreshIntegration', () => {
 
           // @hot reset
 
-          const [bar, setBar] = useState(3);
-          return <h1>D{bar}</h1>;
+          const [foo, setFoo] = useState(3);
+          return <h1>D{foo}</h1>;
         }
       `);
       // Found remount annotation, so state is reset.
@@ -813,8 +813,8 @@ describe('ReactFreshIntegration', () => {
         const {useState} = React;
 
         export default function App() {
-          const [bar, setBar] = useState(4);
-          return <h1>E{bar}</h1>;
+          const [foo, setFoo] = useState(4);
+          return <h1>E{foo}</h1>;
         }
       `);
       // There is no remount annotation anymore,
@@ -826,8 +826,8 @@ describe('ReactFreshIntegration', () => {
         const {useState} = React;
 
         export default function App() {
-          const [bar, setBar] = useState(4);
-          return <h1>F{bar}</h1>;
+          const [foo, setFoo] = useState(4);
+          return <h1>F{foo}</h1>;
         }
       `);
       // Continue editing.
@@ -841,8 +841,8 @@ describe('ReactFreshIntegration', () => {
 
           /* @hot reset */
 
-          const [bar, setBar] = useState(5);
-          return <h1>G{bar}</h1>;
+          const [foo, setFoo] = useState(5);
+          return <h1>G{foo}</h1>;
         }
       `);
       // Force remount one last time.
