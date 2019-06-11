@@ -707,6 +707,8 @@ const PressResponder = {
             DiscreteEvent,
           );
         }
+        // Click won't occur, so we need to remove root events
+        removeRootEventTypes(context, state);
         break;
       }
     }
