@@ -73,6 +73,8 @@ describe('ReactFreshIntegration', () => {
     act(() => {
       ReactDOM.render(<Component />, container);
     });
+    // Module initialization shouldn't be counted as a hot update.
+    expect(ReactFreshRuntime.prepareUpdate()).toBe(null);
   }
 
   function patch(source) {
@@ -275,9 +277,10 @@ describe('ReactFreshIntegration', () => {
     if (__DEV__) {
       render(`
         const {useState} = React;
+        const S = 1;
 
         export default function App() {
-          const [foo, setFoo] = useState(1);
+          const [foo, setFoo] = useState(S);
           return <h1>A{foo}</h1>;
         }
       `);
@@ -286,9 +289,10 @@ describe('ReactFreshIntegration', () => {
 
       patch(`
         const {useState} = React;
+        const S = 2;
 
         export default function App() {
-          const [foo, setFoo] = useState('ignored');
+          const [foo, setFoo] = useState(S);
           return <h1>B{foo}</h1>;
         }
       `);
@@ -298,16 +302,17 @@ describe('ReactFreshIntegration', () => {
 
       patch(`
         const {useState} = React;
+        const S = 3;
 
         export default function App() {
-          const [bar, setBar] = useState(2);
+          const [bar, setBar] = useState(S);
           return <h1>C{bar}</h1>;
         }
       `);
       // Different state variable name, so state is reset.
       expect(container.firstChild).not.toBe(el);
       const newEl = container.firstChild;
-      expect(newEl.textContent).toBe('C2');
+      expect(newEl.textContent).toBe('C3');
     }
   });
 
@@ -315,10 +320,11 @@ describe('ReactFreshIntegration', () => {
     if (__DEV__) {
       render(`
         const {useState} = React;
+        const S = 1;
 
         function hoc(Wrapped) {
           return function Generated() {
-            const [foo, setFoo] = useState(1);
+            const [foo, setFoo] = useState(S);
             return <Wrapped value={foo} />;
           };
         }
@@ -332,10 +338,11 @@ describe('ReactFreshIntegration', () => {
 
       patch(`
         const {useState} = React;
+        const S = 2;
 
         function hoc(Wrapped) {
           return function Generated() {
-            const [foo, setFoo] = useState('ignored');
+            const [foo, setFoo] = useState(S);
             return <Wrapped value={foo} />;
           };
         }
@@ -350,10 +357,11 @@ describe('ReactFreshIntegration', () => {
 
       patch(`
         const {useState} = React;
+        const S = 3;
 
         function hoc(Wrapped) {
           return function Generated() {
-            const [bar, setBar] = useState(2);
+            const [bar, setBar] = useState(S);
             return <Wrapped value={bar} />;
           };
         }
@@ -365,7 +373,7 @@ describe('ReactFreshIntegration', () => {
       // Different state variable name, so state is reset.
       expect(container.firstChild).not.toBe(el);
       const newEl = container.firstChild;
-      expect(newEl.textContent).toBe('C2');
+      expect(newEl.textContent).toBe('C3');
     }
   });
 
@@ -373,10 +381,11 @@ describe('ReactFreshIntegration', () => {
     if (__DEV__) {
       render(`
         const {useState} = React;
+        const S = 1;
 
         function hoc(Wrapped) {
           return function Generated() {
-            const [foo, setFoo] = useState(1);
+            const [foo, setFoo] = useState(S);
             return <Wrapped value={foo} />;
           };
         }
@@ -392,10 +401,11 @@ describe('ReactFreshIntegration', () => {
 
       patch(`
         const {useState} = React;
+        const S = 2;
 
         function hoc(Wrapped) {
           return function Generated() {
-            const [foo, setFoo] = useState('ignored');
+            const [foo, setFoo] = useState(S);
             return <Wrapped value={foo} />;
           };
         }
@@ -412,10 +422,11 @@ describe('ReactFreshIntegration', () => {
 
       patch(`
         const {useState} = React;
+        const S = 3;
 
         function hoc(Wrapped) {
           return function Generated() {
-            const [bar, setBar] = useState(2);
+            const [bar, setBar] = useState(S);
             return <Wrapped value={bar} />;
           };
         }
@@ -429,7 +440,7 @@ describe('ReactFreshIntegration', () => {
       // Different state variable name, so state is reset.
       expect(container.firstChild).not.toBe(el);
       const newEl = container.firstChild;
-      expect(newEl.textContent).toBe('C2');
+      expect(newEl.textContent).toBe('C3');
     }
   });
 
@@ -757,6 +768,114 @@ describe('ReactFreshIntegration', () => {
     if (__DEV__) {
       render(`
         const {useState} = React;
+        const S = 1;
+
+        export default function App() {
+          const [foo, setFoo] = useState(S);
+          return <h1>A{foo}</h1>;
+        }
+      `);
+      let el = container.firstChild;
+      expect(el.textContent).toBe('A1');
+
+      patch(`
+        const {useState} = React;
+        const S = 2;
+
+        export default function App() {
+          const [foo, setFoo] = useState(S);
+          return <h1>B{foo}</h1>;
+        }
+      `);
+      // Same state variable name, so state is preserved.
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('B1');
+
+      patch(`
+        const {useState} = React;
+        const S = 3;
+
+        /* @hot reset */
+
+        export default function App() {
+          const [foo, setFoo] = useState(S);
+          return <h1>C{foo}</h1>;
+        }
+      `);
+      // Found remount annotation, so state is reset.
+      expect(container.firstChild).not.toBe(el);
+      el = container.firstChild;
+      expect(el.textContent).toBe('C3');
+
+      patch(`
+        const {useState} = React;
+        const S = 4;
+
+        export default function App() {
+
+          // @hot reset
+
+          const [foo, setFoo] = useState(S);
+          return <h1>D{foo}</h1>;
+        }
+      `);
+      // Found remount annotation, so state is reset.
+      expect(container.firstChild).not.toBe(el);
+      el = container.firstChild;
+      expect(el.textContent).toBe('D4');
+
+      patch(`
+        const {useState} = React;
+        const S = 5;
+
+        export default function App() {
+          const [foo, setFoo] = useState(S);
+          return <h1>E{foo}</h1>;
+        }
+      `);
+      // There is no remount annotation anymore,
+      // so preserve the previous state.
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('E4');
+
+      patch(`
+        const {useState} = React;
+        const S = 6;
+
+        export default function App() {
+          const [foo, setFoo] = useState(S);
+          return <h1>F{foo}</h1>;
+        }
+      `);
+      // Continue editing.
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('F4');
+
+      patch(`
+        const {useState} = React;
+        const S = 7;
+
+        export default function App() {
+
+          /* @hot reset */
+
+          const [foo, setFoo] = useState(S);
+          return <h1>G{foo}</h1>;
+        }
+      `);
+      // Force remount one last time.
+      expect(container.firstChild).not.toBe(el);
+      el = container.firstChild;
+      expect(el.textContent).toBe('G7');
+    }
+  });
+
+  // This is best effort for simple cases.
+  // We won't attempt to resolve identifiers.
+  it('resets state when useState initial state is edited', () => {
+    if (__DEV__) {
+      render(`
+        const {useState} = React;
 
         export default function App() {
           const [foo, setFoo] = useState(1);
@@ -770,85 +889,68 @@ describe('ReactFreshIntegration', () => {
         const {useState} = React;
 
         export default function App() {
-          const [foo, setFoo] = useState('ignored');
+          const [foo, setFoo] = useState(1);
           return <h1>B{foo}</h1>;
         }
       `);
-      // Same state variable name, so state is preserved.
+      // Same initial state, so it's preserved.
       expect(container.firstChild).toBe(el);
       expect(el.textContent).toBe('B1');
 
       patch(`
         const {useState} = React;
 
-        /* @hot reset */
-
         export default function App() {
-          const [bar, setBar] = useState(2);
-          return <h1>C{bar}</h1>;
+          const [foo, setFoo] = useState(2);
+          return <h1>C{foo}</h1>;
         }
       `);
-      // Found remount annotation, so state is reset.
+      // Different initial state, so state is reset.
       expect(container.firstChild).not.toBe(el);
       el = container.firstChild;
       expect(el.textContent).toBe('C2');
+    }
+  });
 
-      patch(`
-        const {useState} = React;
+  // This is best effort for simple cases.
+  // We won't attempt to resolve identifiers.
+  it('resets state when useReducer initial state is edited', () => {
+    if (__DEV__) {
+      render(`
+        const {useReducer} = React;
 
         export default function App() {
-
-          // @hot reset
-
-          const [bar, setBar] = useState(3);
-          return <h1>D{bar}</h1>;
+          const [foo, setFoo] = useReducer(x => x, 1);
+          return <h1>A{foo}</h1>;
         }
       `);
-      // Found remount annotation, so state is reset.
+      let el = container.firstChild;
+      expect(el.textContent).toBe('A1');
+
+      patch(`
+        const {useReducer} = React;
+
+        export default function App() {
+          const [foo, setFoo] = useReducer(x => x, 1);
+          return <h1>B{foo}</h1>;
+        }
+      `);
+      // Same initial state, so it's preserved.
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('B1');
+
+      patch(`
+        const {useReducer} = React;
+
+        export default function App() {
+          const [foo, setFoo] = useReducer(x => x, 2);
+          return <h1>C{foo}</h1>;
+        }
+      `);
+      // Different initial state, so state is reset.
       expect(container.firstChild).not.toBe(el);
       el = container.firstChild;
-      expect(el.textContent).toBe('D3');
-
-      patch(`
-        const {useState} = React;
-
-        export default function App() {
-          const [bar, setBar] = useState(4);
-          return <h1>E{bar}</h1>;
-        }
-      `);
-      // There is no remount annotation anymore,
-      // so preserve the previous state.
-      expect(container.firstChild).toBe(el);
-      expect(el.textContent).toBe('E3');
-
-      patch(`
-        const {useState} = React;
-
-        export default function App() {
-          const [bar, setBar] = useState(4);
-          return <h1>F{bar}</h1>;
-        }
-      `);
-      // Continue editing.
-      expect(container.firstChild).toBe(el);
-      expect(el.textContent).toBe('F3');
-
-      patch(`
-        const {useState} = React;
-
-        export default function App() {
-
-          /* @hot reset */
-
-          const [bar, setBar] = useState(5);
-          return <h1>G{bar}</h1>;
-        }
-      `);
-      // Force remount one last time.
-      expect(container.firstChild).not.toBe(el);
-      el = container.firstChild;
-      expect(el.textContent).toBe('G5');
+      expect(el.textContent).toBe('C2');
     }
   });
 
