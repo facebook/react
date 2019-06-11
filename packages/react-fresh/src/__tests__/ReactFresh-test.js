@@ -1359,7 +1359,7 @@ describe('ReactFresh', () => {
       const fallbackChild = container.childNodes[1];
       expect(primaryChild.textContent).toBe('Content 1');
       expect(primaryChild.style.color).toBe('green');
-      expect(primaryChild.style.display).toBe('none');
+      expect(primaryChild.style.display).toBe('none !important');
       expect(fallbackChild.textContent).toBe('Fallback 0');
       expect(fallbackChild.style.color).toBe('green');
       expect(fallbackChild.style.display).toBe('');
@@ -1373,7 +1373,7 @@ describe('ReactFresh', () => {
       expect(container.childNodes[1]).toBe(fallbackChild);
       expect(primaryChild.textContent).toBe('Content 1');
       expect(primaryChild.style.color).toBe('green');
-      expect(primaryChild.style.display).toBe('none');
+      expect(primaryChild.style.display).toBe('none !important');
       expect(fallbackChild.textContent).toBe('Fallback 1');
       expect(fallbackChild.style.color).toBe('green');
       expect(fallbackChild.style.display).toBe('');
@@ -1397,7 +1397,7 @@ describe('ReactFresh', () => {
       expect(container.childNodes[1]).toBe(fallbackChild);
       expect(primaryChild.textContent).toBe('Content 1');
       expect(primaryChild.style.color).toBe('red');
-      expect(primaryChild.style.display).toBe('none');
+      expect(primaryChild.style.display).toBe('none !important');
       expect(fallbackChild.textContent).toBe('Fallback 1');
       expect(fallbackChild.style.color).toBe('red');
       expect(fallbackChild.style.display).toBe('');
