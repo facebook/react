@@ -271,23 +271,25 @@ describe('Focus event responder', () => {
   });
 
   describe('onFocusWithinChange', () => {
-    let onFocusWithinChange, ref, innerRef;
+    let onFocusWithinChange, ref, innerRef, innerRef2;
 
     beforeEach(() => {
       onFocusWithinChange = jest.fn();
       ref = React.createRef();
       innerRef = React.createRef();
+      innerRef2 = React.createRef();
       const element = (
         <Focus onFocusWithinChange={onFocusWithinChange}>
           <div ref={ref}>
             <a ref={innerRef} />
+            <a ref={innerRef2} />
           </div>
         </Focus>
       );
       ReactDOM.render(element, container);
     });
 
-    it('is called after "blur" and "focus" events immediate child', () => {
+    it('is called after "blur" and "focus" events on immediate child', () => {
       ref.current.dispatchEvent(createFocusEvent('focus'));
       expect(onFocusWithinChange).toHaveBeenCalledTimes(1);
       expect(onFocusWithinChange).toHaveBeenCalledWith(true);
@@ -298,6 +300,17 @@ describe('Focus event responder', () => {
 
     it('is called after "blur" and "focus" events on descendants', () => {
       innerRef.current.dispatchEvent(createFocusEvent('focus'));
+      expect(onFocusWithinChange).toHaveBeenCalledTimes(1);
+      expect(onFocusWithinChange).toHaveBeenCalledWith(true);
+      innerRef.current.dispatchEvent(createFocusEvent('blur'));
+      expect(onFocusWithinChange).toHaveBeenCalledTimes(2);
+      expect(onFocusWithinChange).toHaveBeenCalledWith(false);
+    });
+
+    it('is only called once when focus moves within the subtree', () => {
+      innerRef.current.dispatchEvent(createFocusEvent('focus'));
+      innerRef2.current.dispatchEvent(createFocusEvent('focus'));
+      ref.current.dispatchEvent(createFocusEvent('focus'));
       expect(onFocusWithinChange).toHaveBeenCalledTimes(1);
       expect(onFocusWithinChange).toHaveBeenCalledWith(true);
       innerRef.current.dispatchEvent(createFocusEvent('blur'));
@@ -472,7 +485,7 @@ describe('Focus event responder', () => {
       ]);
     });
 
-    it('propagates focus within events', () => {
+    it('allows focus within events to propagate', () => {
       const events = [];
       const innerRef = React.createRef();
       const outerRef = React.createRef();
