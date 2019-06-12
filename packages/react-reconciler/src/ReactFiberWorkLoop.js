@@ -1675,19 +1675,14 @@ function commitRootImpl(root) {
 
   stopCommitTimer();
 
+  const rootDidHavePassiveEffects = rootDoesHavePassiveEffects;
+
   if (rootDoesHavePassiveEffects) {
     // This commit has passive effects. Stash a reference to them. But don't
     // schedule a callback until after flushing layout work.
     rootDoesHavePassiveEffects = false;
     rootWithPendingPassiveEffects = root;
     pendingPassiveEffectsExpirationTime = expirationTime;
-  } else {
-    if (enableSchedulerTracing) {
-      // If there are no passive effects, then we can complete the pending
-      // interactions. Otherwise, we'll wait until after the passive effects
-      // are flushed.
-      finishPendingInteractions(root, expirationTime);
-    }
   }
 
   // Check if there's remaining work on this root
@@ -1698,11 +1693,33 @@ function commitRootImpl(root) {
       currentTime,
       remainingExpirationTime,
     );
+
+    let prevInteractions: Set<Interaction> | null = null;
+    if (enableSchedulerTracing) {
+      // Temporarily restore interactions so that scheduled work (e.g. hidden subtrees) are associated.
+      prevInteractions = __interactionsRef.current;
+      __interactionsRef.current = root.memoizedInteractions;
+    }
+
     scheduleCallbackForRoot(root, priorityLevel, remainingExpirationTime);
+
+    if (enableSchedulerTracing) {
+      __interactionsRef.current = ((prevInteractions: any): Set<Interaction>);
+    }
   } else {
     // If there's no remaining work, we can clear the set of already failed
     // error boundaries.
     legacyErrorBoundariesThatAlreadyFailed = null;
+  }
+
+  if (enableSchedulerTracing) {
+    if (!rootDidHavePassiveEffects) {
+      // If there are no passive effects, then we can complete the pending interactions.
+      // Otherwise, we'll wait until after the passive effects are flushed.
+      // Wait to do this until after remaining work has been scheduled,
+      // so that we don't prematurely signal complete for interactions when there's e.g. hidden work.
+      finishPendingInteractions(root, expirationTime);
+    }
   }
 
   onCommitRoot(finishedWork.stateNode, expirationTime);
@@ -2621,6 +2638,7 @@ function finishPendingInteractions(root, committedExpirationTime) {
           pendingInteractionMap.delete(scheduledExpirationTime);
 
           scheduledInteractions.forEach(interaction => {
+            // TODO (interaction-tracing) Don't decrement count if pri is Never and there's remaining Never work.
             interaction.__count--;
 
             if (subscriber !== null && interaction.__count === 0) {
