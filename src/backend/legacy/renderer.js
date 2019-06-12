@@ -586,7 +586,9 @@ export function attach(
               id: getID(owner),
               type: getElementType(owner),
             });
-            owner = owner.owner;
+            if (owner._currentElement) {
+              owner = owner._currentElement._owner;
+            }
           }
         }
       }
