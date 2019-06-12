@@ -257,4 +257,63 @@ describe('InspectedElementContext', () => {
 
     done();
   });
+
+  it('should support custom objects with enumerable properties and getters', async done => {
+    class CustomData {
+      _number = 42;
+      get number() {
+        return this._number;
+      }
+      set number(value) {
+        this._number = value;
+      }
+    }
+
+    const descriptor = ((Object.getOwnPropertyDescriptor(
+      CustomData.prototype,
+      'number'
+    ): any): PropertyDescriptor<number>);
+    descriptor.enumerable = true;
+    Object.defineProperty(CustomData.prototype, 'number', descriptor);
+
+    const Example = ({ data }) => null;
+
+    const container = document.createElement('div');
+    await utils.actAsync(() =>
+      ReactDOM.render(<Example data={new CustomData()} />, container)
+    );
+    expect(store).toMatchSnapshot('1: mount');
+
+    const example = ((store.getElementAtIndex(0): any): Element);
+
+    let didFinish = false;
+
+    function Suspender({ target }) {
+      const { read } = React.useContext(InspectedElementContext);
+      const inspectedElement = read(target.id);
+      expect(inspectedElement).toMatchSnapshot(
+        `2: Inspected element ${target.id}`
+      );
+      didFinish = true;
+      return null;
+    }
+
+    await utils.actAsync(
+      () =>
+        TestRenderer.create(
+          <Contexts
+            defaultSelectedElementID={example.id}
+            defaultSelectedElementIndex={0}
+          >
+            <React.Suspense fallback={null}>
+              <Suspender target={example} />
+            </React.Suspense>
+          </Contexts>
+        ),
+      false
+    );
+    expect(didFinish).toBe(true);
+
+    done();
+  });
 });

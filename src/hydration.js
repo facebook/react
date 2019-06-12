@@ -194,12 +194,7 @@ export function dehydrate(
         },
       };
     case 'object':
-      if (
-        level > LEVEL_THRESHOLD ||
-        (data.constructor &&
-          typeof data.constructor === 'function' &&
-          data.constructor.name !== 'Object')
-      ) {
+      if (level > LEVEL_THRESHOLD) {
         return createDehydrated(type, data, cleaned, path);
       } else {
         const res = {};

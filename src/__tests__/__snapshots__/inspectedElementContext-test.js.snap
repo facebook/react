@@ -114,3 +114,25 @@ exports[`InspectedElementContext should poll for updates for the currently selec
   "state": null
 }
 `;
+
+exports[`InspectedElementContext should support custom objects with enumerable properties and getters: 1: mount 1`] = `
+[root]
+    <Example>
+`;
+
+exports[`InspectedElementContext should support custom objects with enumerable properties and getters: 2: Inspected element 2 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "events": null,
+  "hooks": null,
+  "props": {
+    "data": {
+      "_number": 42,
+      "number": 42
+    }
+  },
+  "state": null
+}
+`;
