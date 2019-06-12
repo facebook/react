@@ -9,13 +9,13 @@ import {
 } from 'src/types';
 import { getUID, utfEncodeString, printOperationsArray } from '../../utils';
 import { cleanForBridge, copyWithSet } from '../utils';
+import { getDisplayName } from 'src/utils';
 import {
   __DEBUG__,
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
   TREE_OPERATION_REORDER_CHILDREN,
 } from '../../constants';
-import getData from './getData';
 import { decorateMany, forceUpdate, restoreMany } from './utils';
 
 import type {
@@ -32,12 +32,41 @@ import type { Owner, InspectedElement } from '../types';
 export type InternalInstance = Object;
 type LegacyRenderer = Object;
 
+function getData(internalInstance: InternalInstance) {
+  let displayName = null;
+  let key = null;
+
+  // != used deliberately here to catch undefined and null
+  if (internalInstance._currentElement != null) {
+    if (internalInstance._currentElement.key) {
+      key = String(internalInstance._currentElement.key);
+    }
+
+    const elementType = internalInstance._currentElement.type;
+    if (typeof elementType === 'string') {
+      displayName = elementType;
+    } else if (typeof elementType === 'function') {
+      displayName = getDisplayName(elementType);
+    }
+  }
+
+  return {
+    displayName,
+    key,
+  };
+}
+
 function getElementType(internalInstance: InternalInstance): ElementType {
   // != used deliberately here to catch undefined and null
   if (internalInstance._currentElement != null) {
     const elementType = internalInstance._currentElement.type;
     if (typeof elementType === 'function') {
-      return ElementTypeClass;
+      const publicInstance = internalInstance.getPublicInstance();
+      if (publicInstance !== null) {
+        return ElementTypeClass;
+      } else {
+        return ElementTypeFunction;
+      }
     } else if (typeof elementType === 'string') {
       return ElementTypeHostComponent;
     }
@@ -150,13 +179,17 @@ export function attach(
     // React 15
     oldReconcilerMethods = decorateMany(renderer.Reconciler, {
       mountComponent(fn, args) {
-        const [internalInstance, , , hostContainerInfo] = args;
+        const internalInstance = args[0];
+        const hostContainerInfo = args[3];
         if (getElementType(internalInstance) === ElementTypeOtherOrUnknown) {
+          return fn.apply(this, args);
+        }
+        if (hostContainerInfo._topLevelWrapper === undefined) {
+          // SSR
           return fn.apply(this, args);
         }
 
         const id = getID(internalInstance);
-
         // Push the operation.
         const parentID =
           parentIDStack.length > 0
@@ -189,7 +222,7 @@ export function attach(
         }
       },
       performUpdateIfNecessary(fn, args) {
-        const [internalInstance] = args;
+        const internalInstance = args[0];
         if (getElementType(internalInstance) === ElementTypeOtherOrUnknown) {
           return fn.apply(this, args);
         }
@@ -223,7 +256,7 @@ export function attach(
         }
       },
       receiveComponent(fn, args) {
-        const [internalInstance] = args;
+        const internalInstance = args[0];
         if (getElementType(internalInstance) === ElementTypeOtherOrUnknown) {
           return fn.apply(this, args);
         }
@@ -257,7 +290,7 @@ export function attach(
         }
       },
       unmountComponent(fn, args) {
-        const [internalInstance] = args;
+        const internalInstance = args[0];
         if (getElementType(internalInstance) === ElementTypeOtherOrUnknown) {
           return fn.apply(this, args);
         }
@@ -327,7 +360,8 @@ export function attach(
       pushOperation(0); // isProfilingSupported?
       pushOperation(hasOwnerMetadata ? 1 : 0);
     } else {
-      const { displayName, key, type } = getData(internalInstance);
+      const type = getElementType(internalInstance);
+      const { displayName, key } = getData(internalInstance);
 
       const ownerID =
         internalInstance._currentElement != null &&
@@ -366,16 +400,21 @@ export function attach(
     idToInternalInstanceMap.delete(id);
   }
 
-  function crawlAndRecordInitialMounts(id: number, parentID: number) {
+  function crawlAndRecordInitialMounts(
+    id: number,
+    parentID: number,
+    rootID: number
+  ) {
     const internalInstance = idToInternalInstanceMap.get(id);
 
     if (__DEBUG__) {
       console.group('crawlAndRecordInitialMounts() id:', id);
     }
 
+    internalInstanceToRootIDMap.set(internalInstance, rootID);
     recordMount(internalInstance, id, parentID);
     getChildren(internalInstance).forEach(child =>
-      crawlAndRecordInitialMounts(getID(child), id)
+      crawlAndRecordInitialMounts(getID(child), id, rootID)
     );
 
     if (__DEBUG__) {
@@ -393,7 +432,7 @@ export function attach(
     for (let key in roots) {
       const internalInstance = roots[key];
       const id = getID(internalInstance);
-      crawlAndRecordInitialMounts(id, 0);
+      crawlAndRecordInitialMounts(id, 0, id);
       flushPendingEvents(id);
     }
   }
@@ -523,7 +562,8 @@ export function attach(
 
   function inspectElementRaw(id: number): InspectedElement | null {
     const internalInstance = idToInternalInstanceMap.get(id);
-    const data = getData(internalInstance);
+    const displayName = getData(internalInstance).displayName;
+    const type = getElementType(internalInstance);
 
     let context = null;
     let owners = null;
@@ -541,18 +581,21 @@ export function attach(
         if (owner) {
           owners = [];
           while (owner != null) {
-            const ownerData = getData(owner);
             owners.push({
-              displayName: ownerData.displayName || 'Unknown',
+              displayName: getData(owner).displayName || 'Unknown',
               id: getID(owner),
-              type: ownerData.type,
+              type: getElementType(owner),
             });
             owner = owner.owner;
           }
         }
       }
-      context = internalInstance.context || null;
-      state = internalInstance.state || null;
+
+      const publicInstance = internalInstance._instance;
+      if (publicInstance != null) {
+        context = publicInstance.context || null;
+        state = publicInstance.state || null;
+      }
     }
 
     return {
@@ -568,12 +611,11 @@ export function attach(
       canToggleSuspense: false,
 
       // Can view component source location.
-      canViewSource:
-        data.type === ElementTypeClass || data.type === ElementTypeFunction,
+      canViewSource: type === ElementTypeClass || type === ElementTypeFunction,
 
-      displayName: data.displayName,
+      displayName: displayName,
 
-      type: data.type,
+      type: type,
 
       // New events system did not exist in legacy versions
       events: null,
@@ -614,7 +656,7 @@ export function attach(
       console.log('State:', result.state);
     }
     if (result.context !== null) {
-      console.log('State:', result.context);
+      console.log('Context:', result.context);
     }
     const nativeNode = findNativeNodeForInternalID(id);
     if (nativeNode !== null) {
@@ -655,6 +697,8 @@ export function attach(
 
     switch (getElementType(internalInstance)) {
       case ElementTypeClass:
+        global.$r = internalInstance._instance;
+        break;
       case ElementTypeFunction:
         const element = internalInstance._currentElement;
         if (element == null) {
@@ -687,16 +731,22 @@ export function attach(
   function setInState(id: number, path: Array<string | number>, value: any) {
     const internalInstance = idToInternalInstanceMap.get(id);
     if (internalInstance != null) {
-      setIn(internalInstance.state, path, value);
-      internalInstance.forceUpdate();
+      const publicInstance = internalInstance._instance;
+      if (publicInstance != null) {
+        setIn(publicInstance.state, path, value);
+        forceUpdate(publicInstance);
+      }
     }
   }
 
   function setInContext(id: number, path: Array<string | number>, value: any) {
     const internalInstance = idToInternalInstanceMap.get(id);
     if (internalInstance != null) {
-      setIn(internalInstance.context, path, value);
-      forceUpdate(internalInstance);
+      const publicInstance = internalInstance._instance;
+      if (publicInstance != null) {
+        setIn(publicInstance.context, path, value);
+        forceUpdate(publicInstance);
+      }
     }
   }
 
