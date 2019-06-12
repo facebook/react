@@ -488,10 +488,22 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
     case 'SELECT_ELEMENT_BY_ID':
       if (ownerFlatTree !== null) {
         const payload = (action: ACTION_SELECT_ELEMENT_BY_ID).payload;
-        selectedElementIndex =
-          payload === null
-            ? null
-            : ownerFlatTree.findIndex(element => element.id === payload);
+        if (payload === null) {
+          selectedElementIndex = null;
+        } else {
+          selectedElementIndex = ownerFlatTree.findIndex(
+            element => element.id === payload
+          );
+
+          // If the selected element is outside of the current owners list,
+          // exit the list and select the element in the main tree.
+          // This supports features like toggling Suspense.
+          if (selectedElementIndex !== null && selectedElementIndex < 0) {
+            ownerID = null;
+            ownerFlatTree = null;
+            selectedElementIndex = store.getIndexOfElementID(payload);
+          }
+        }
       }
       break;
     case 'SELECT_NEXT_ELEMENT_IN_TREE':

@@ -546,5 +546,52 @@ describe('TreeListContext', () => {
 
       done();
     });
+
+    // This tests ensures support for toggling Suspense boundaries outside of the active owners list.
+    it('should exit the owners list if an element outside the list is selected', () => {
+      const Grandchild = () => null;
+      const Child = () => (
+        <React.Suspense fallback="Loading">
+          <Grandchild />
+        </React.Suspense>
+      );
+      const Parent = () => (
+        <React.Suspense fallback="Loading">
+          <Child />
+        </React.Suspense>
+      );
+
+      const container = document.createElement('div');
+      utils.act(() => ReactDOM.render(<Parent />, container));
+
+      expect(store).toMatchSnapshot('0: mount');
+
+      let renderer;
+      utils.act(() => (renderer = TestRenderer.create(<Contexts />)));
+      expect(state).toMatchSnapshot('1: initial state');
+
+      const outerSuspenseID = ((store.getElementIDAtIndex(1): any): number);
+      const childID = ((store.getElementIDAtIndex(2): any): number);
+      const innerSuspenseID = ((store.getElementIDAtIndex(3): any): number);
+      const grandchildID = ((store.getElementIDAtIndex(4): any): number);
+
+      utils.act(() => dispatch({ type: 'SELECT_OWNER', payload: childID }));
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state).toMatchSnapshot('2: child owners tree');
+
+      // Toggling a Suspense boundary inside of the flat list should update selected index
+      utils.act(() =>
+        dispatch({ type: 'SELECT_ELEMENT_BY_ID', payload: innerSuspenseID })
+      );
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state).toMatchSnapshot('3: child owners tree');
+
+      // Toggling a Suspense boundary outside of the flat list should exit owners list and update index
+      utils.act(() =>
+        dispatch({ type: 'SELECT_ELEMENT_BY_ID', payload: outerSuspenseID })
+      );
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state).toMatchSnapshot('4: main tree');
+    });
   });
 });

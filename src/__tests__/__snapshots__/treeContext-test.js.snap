@@ -1,5 +1,158 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`TreeListContext owners state should exit the owners list if an element outside the list is selected: 0: mount 1`] = `
+[root]
+  ▾ <Parent>
+    ▾ <Suspense>
+      ▾ <Child>
+        ▾ <Suspense>
+            <Grandchild>
+`;
+
+exports[`TreeListContext owners state should exit the owners list if an element outside the list is selected: 1: initial state 1`] = `
+Object {
+  "inspectedElementID": null,
+  "numElements": 5,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": null,
+  "selectedElementIndex": null,
+}
+`;
+
+exports[`TreeListContext owners state should exit the owners list if an element outside the list is selected: 2: child owners tree 1`] = `
+Object {
+  "inspectedElementID": 4,
+  "numElements": 3,
+  "ownerFlatTree": Array [
+    Object {
+      "children": Array [
+        5,
+      ],
+      "depth": 0,
+      "displayName": "Child",
+      "hocDisplayNames": null,
+      "id": 4,
+      "isCollapsed": false,
+      "key": null,
+      "ownerID": 2,
+      "parentID": 3,
+      "type": 5,
+      "weight": 3,
+    },
+    Object {
+      "children": Array [
+        6,
+      ],
+      "depth": 1,
+      "displayName": "Suspense",
+      "hocDisplayNames": null,
+      "id": 5,
+      "isCollapsed": false,
+      "key": null,
+      "ownerID": 4,
+      "parentID": 4,
+      "type": 12,
+      "weight": 2,
+    },
+    Object {
+      "children": Array [],
+      "depth": 2,
+      "displayName": "Grandchild",
+      "hocDisplayNames": null,
+      "id": 6,
+      "isCollapsed": false,
+      "key": null,
+      "ownerID": 4,
+      "parentID": 5,
+      "type": 5,
+      "weight": 1,
+    },
+  ],
+  "ownerID": 4,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": 4,
+  "selectedElementIndex": 0,
+}
+`;
+
+exports[`TreeListContext owners state should exit the owners list if an element outside the list is selected: 3: child owners tree 1`] = `
+Object {
+  "inspectedElementID": 5,
+  "numElements": 3,
+  "ownerFlatTree": Array [
+    Object {
+      "children": Array [
+        5,
+      ],
+      "depth": 0,
+      "displayName": "Child",
+      "hocDisplayNames": null,
+      "id": 4,
+      "isCollapsed": false,
+      "key": null,
+      "ownerID": 2,
+      "parentID": 3,
+      "type": 5,
+      "weight": 3,
+    },
+    Object {
+      "children": Array [
+        6,
+      ],
+      "depth": 1,
+      "displayName": "Suspense",
+      "hocDisplayNames": null,
+      "id": 5,
+      "isCollapsed": false,
+      "key": null,
+      "ownerID": 4,
+      "parentID": 4,
+      "type": 12,
+      "weight": 2,
+    },
+    Object {
+      "children": Array [],
+      "depth": 2,
+      "displayName": "Grandchild",
+      "hocDisplayNames": null,
+      "id": 6,
+      "isCollapsed": false,
+      "key": null,
+      "ownerID": 4,
+      "parentID": 5,
+      "type": 5,
+      "weight": 1,
+    },
+  ],
+  "ownerID": 4,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": 5,
+  "selectedElementIndex": 1,
+}
+`;
+
+exports[`TreeListContext owners state should exit the owners list if an element outside the list is selected: 4: main tree 1`] = `
+Object {
+  "inspectedElementID": 5,
+  "numElements": 5,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": 5,
+  "selectedElementIndex": 1,
+}
+`;
+
 exports[`TreeListContext owners state should exit the owners list if the current owner is unmounted: 0: mount 1`] = `
 [root]
   ▾ <Parent>
