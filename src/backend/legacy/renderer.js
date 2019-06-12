@@ -150,13 +150,17 @@ export function attach(
     // React 15
     oldReconcilerMethods = decorateMany(renderer.Reconciler, {
       mountComponent(fn, args) {
-        const [internalInstance, , , hostContainerInfo] = args;
+        const internalInstance = args[0];
+        const hostContainerInfo = args[3];
         if (getElementType(internalInstance) === ElementTypeOtherOrUnknown) {
+          return fn.apply(this, args);
+        }
+        if (hostContainerInfo._topLevelWrapper === undefined) {
+          // SSR
           return fn.apply(this, args);
         }
 
         const id = getID(internalInstance);
-
         // Push the operation.
         const parentID =
           parentIDStack.length > 0
@@ -189,7 +193,7 @@ export function attach(
         }
       },
       performUpdateIfNecessary(fn, args) {
-        const [internalInstance] = args;
+        const internalInstance = args[0];
         if (getElementType(internalInstance) === ElementTypeOtherOrUnknown) {
           return fn.apply(this, args);
         }
@@ -223,7 +227,7 @@ export function attach(
         }
       },
       receiveComponent(fn, args) {
-        const [internalInstance] = args;
+        const internalInstance = args[0];
         if (getElementType(internalInstance) === ElementTypeOtherOrUnknown) {
           return fn.apply(this, args);
         }
@@ -257,7 +261,7 @@ export function attach(
         }
       },
       unmountComponent(fn, args) {
-        const [internalInstance] = args;
+        const internalInstance = args[0];
         if (getElementType(internalInstance) === ElementTypeOtherOrUnknown) {
           return fn.apply(this, args);
         }
