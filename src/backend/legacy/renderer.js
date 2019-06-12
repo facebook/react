@@ -560,8 +560,12 @@ export function attach(
           }
         }
       }
-      context = internalInstance.context || null;
-      state = internalInstance.state || null;
+
+      const publicInstance = internalInstance._instance;
+      if (publicInstance != null) {
+        context = publicInstance.context || null;
+        state = publicInstance.state || null;
+      }
     }
 
     return {
@@ -696,16 +700,22 @@ export function attach(
   function setInState(id: number, path: Array<string | number>, value: any) {
     const internalInstance = idToInternalInstanceMap.get(id);
     if (internalInstance != null) {
-      setIn(internalInstance.state, path, value);
-      internalInstance.forceUpdate();
+      const publicInstance = internalInstance._instance;
+      if (publicInstance != null) {
+        setIn(publicInstance.state, path, value);
+        forceUpdate(publicInstance);
+      }
     }
   }
 
   function setInContext(id: number, path: Array<string | number>, value: any) {
     const internalInstance = idToInternalInstanceMap.get(id);
     if (internalInstance != null) {
-      setIn(internalInstance.context, path, value);
-      forceUpdate(internalInstance);
+      const publicInstance = internalInstance._instance;
+      if (publicInstance != null) {
+        setIn(publicInstance.context, path, value);
+        forceUpdate(publicInstance);
+      }
     }
   }
 
