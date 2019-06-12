@@ -693,9 +693,9 @@ function processPressEnd(
 ): void {
   const wasLongPressed = state.isLongPressed;
   dispatchPressEndEvents(nativeEvent, touchEvent, context, props, state);
-  if (state.pressTarget !== null) {
+  if (state.pressTarget !== null && props.onPress) {
     processPressResponderRegion(nativeEvent, touchEvent, context, props, state);
-    if (state.isPressWithinResponderRegion && props.onPress) {
+    if (state.isPressWithinResponderRegion) {
       if (
         !(
           wasLongPressed &&
