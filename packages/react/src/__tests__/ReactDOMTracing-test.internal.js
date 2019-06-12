@@ -206,7 +206,84 @@ describe('ReactDOMTracing', () => {
         ).toHaveBeenLastNotifiedOfInteraction(interaction);
       });
 
-      // TODO (interaction-tracing) Write test where Never-pri work schedules more Never-pri work.
+      it('traces interaction through hidden subtree that schedules more idle/never work', () => {
+        const Child = () => {
+          const [didMount, setDidMount] = React.useState(false);
+          Scheduler.yieldValue('Child');
+          React.useLayoutEffect(
+            () => {
+              if (didMount) {
+                Scheduler.yieldValue('Child:update');
+              } else {
+                Scheduler.yieldValue('Child:mount');
+                Scheduler.unstable_runWithPriority(
+                  Scheduler.unstable_IdlePriority,
+                  () => setDidMount(true),
+                );
+              }
+            },
+            [didMount],
+          );
+          return <div />;
+        };
+
+        const App = () => {
+          Scheduler.yieldValue('App');
+          React.useEffect(() => {
+            Scheduler.yieldValue('App:mount');
+          }, []);
+          return (
+            <div hidden={true}>
+              <Child />
+            </div>
+          );
+        };
+
+        let interaction;
+
+        const onRender = jest.fn();
+
+        const container = document.createElement('div');
+        const root = ReactDOM.unstable_createRoot(container);
+        SchedulerTracing.unstable_trace('initialization', 0, () => {
+          interaction = Array.from(SchedulerTracing.unstable_getCurrent())[0];
+
+          root.render(
+            <React.Profiler id="test" onRender={onRender}>
+              <App />
+            </React.Profiler>,
+          );
+        });
+
+        expect(onInteractionTraced).toHaveBeenCalledTimes(1);
+        expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
+          interaction,
+        );
+
+        expect(Scheduler).toFlushAndYieldThrough(['App', 'App:mount']);
+        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+        expect(onRender).toHaveBeenCalledTimes(1);
+        expect(onRender).toHaveLastRenderedWithInteractions(
+          new Set([interaction]),
+        );
+
+        expect(Scheduler).toFlushAndYieldThrough(['Child', 'Child:mount']);
+        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+        expect(onRender).toHaveBeenCalledTimes(2);
+        expect(onRender).toHaveLastRenderedWithInteractions(
+          new Set([interaction]),
+        );
+
+        expect(Scheduler).toFlushAndYield(['Child', 'Child:update']);
+        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
+        expect(
+          onInteractionScheduledWorkCompleted,
+        ).toHaveBeenLastNotifiedOfInteraction(interaction);
+        expect(onRender).toHaveBeenCalledTimes(3);
+        expect(onRender).toHaveLastRenderedWithInteractions(
+          new Set([interaction]),
+        );
+      });
     });
 
     describe('hydration', () => {
