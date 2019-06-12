@@ -94,18 +94,6 @@
     lodash "^4.17.10"
     to-fast-properties "^2.0.0"
 
-"@mattiasbuelens/web-streams-polyfill@0.1.0":
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/@mattiasbuelens/web-streams-polyfill/-/web-streams-polyfill-0.1.0.tgz#c06ebfa7e00cc512a878c3aaae4cf113ac89ac24"
-  integrity sha512-oMsvblvOezdM/j1ph0uU8s6Wm0EfCyMZtZcxQ232CqSpjm08lrKPizeMltN0eVv4dQf0DDFaxUFyiz8x51lgAA==
-  dependencies:
-    "@types/whatwg-streams" "^0.0.6"
-
-"@types/whatwg-streams@^0.0.6":
-  version "0.0.6"
-  resolved "https://registry.yarnpkg.com/@types/whatwg-streams/-/whatwg-streams-0.0.6.tgz#5062c67efb695c886fe3dbb9618df35aac418503"
-  integrity sha512-O4Hat94N1RUCObqAbVUtd6EcucseqBcpfbFXzy12CYF6BQVHWR+ztDA3YPjewCmdKHYZ5VA7TZ5hq2bMyqxiBw==
-
 abab@^1.0.4:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/abab/-/abab-1.0.4.tgz#5faad9c2c07f60dd76770f71cf025b62a63cfd4e"
@@ -5155,6 +5143,11 @@ watch@~0.18.0:
   dependencies:
     exec-sh "^0.2.0"
     minimist "^1.2.0"
+
+web-streams-polyfill@2.0.3:
+  version "2.0.3"
+  resolved "https://registry.yarnpkg.com/web-streams-polyfill/-/web-streams-polyfill-2.0.3.tgz#0c396f069a5eedc96c711393b12f2c67cf283a00"
+  integrity sha512-pOqiHmL3RBAGS+SgOR42RbPU6nc8/n15N2rsOXFYHLnTfs2Z8QHs8AizOeOaYEnhwPN4+hu3M2D9XvAqzvt6MA==
 
 webidl-conversions@^4.0.2:
   version "4.0.2"

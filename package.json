@@ -4,7 +4,7 @@
     "packages/*"
   ],
   "devDependencies": {
-    "@mattiasbuelens/web-streams-polyfill": "0.1.0",
+    "web-streams-polyfill": "2.0.3",
     "art": "^0.10.1",
     "babel-cli": "^6.6.5",
     "babel-code-frame": "^6.26.0",
