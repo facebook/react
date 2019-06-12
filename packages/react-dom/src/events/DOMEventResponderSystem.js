@@ -881,11 +881,11 @@ export function mountEventResponder(
   }
   const onMount = responder.onMount;
   if (onMount !== undefined) {
-    let {props, state} = eventComponentInstance;
+    let {props, ref, state} = eventComponentInstance;
     currentEventQueue = createEventQueue();
     currentInstance = eventComponentInstance;
     try {
-      onMount(eventResponderContext, props, state);
+      onMount(eventResponderContext, props, state, ref);
     } finally {
       currentEventQueue = null;
       currentInstance = null;
@@ -900,11 +900,11 @@ export function unmountEventResponder(
   const responder = eventComponentInstance.responder;
   const onUnmount = responder.onUnmount;
   if (onUnmount !== undefined) {
-    let {props, state} = eventComponentInstance;
+    let {props, ref, state} = eventComponentInstance;
     currentEventQueue = createEventQueue();
     currentInstance = eventComponentInstance;
     try {
-      onUnmount(eventResponderContext, props, state);
+      onUnmount(eventResponderContext, props, state, ref);
     } finally {
       currentEventQueue = null;
       currentInstance = null;

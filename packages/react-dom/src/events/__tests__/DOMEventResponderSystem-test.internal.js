@@ -26,6 +26,7 @@ function createReactEventComponent({
   onRootEvent,
   onMount,
   onUnmount,
+  transformProps,
   onOwnershipChange,
   stopLocalPropagation,
   allowMultipleHostChildren,
@@ -39,6 +40,7 @@ function createReactEventComponent({
     onRootEvent,
     onMount,
     onUnmount,
+    transformProps,
     onOwnershipChange,
     stopLocalPropagation: stopLocalPropagation || false,
     allowMultipleHostChildren: allowMultipleHostChildren || false,
@@ -78,6 +80,7 @@ describe('DOMEventResponderSystem', () => {
   });
 
   afterEach(() => {
+    ReactDOM.render(null, container);
     document.body.removeChild(container);
     container = null;
   });
@@ -606,6 +609,58 @@ describe('DOMEventResponderSystem', () => {
     expect(counter).toEqual(5);
   });
 
+  it('the event responder onMount() and onUnmount() functions should fire and have access to ref', () => {
+    const testSymbol = Symbol();
+
+    const EventComponent = createReactEventComponent({
+      targetEventTypes: [],
+      createInitialState() {
+        return {
+          testSymbol,
+        };
+      },
+      onMount: (context, props, state, ref) => {
+        if (typeof ref === 'function') {
+          ref(state);
+        } else if (typeof ref === 'object' && ref !== null) {
+          ref.current = state;
+        }
+      },
+      onUnmount: (context, props, state, ref) => {
+        if (typeof ref === 'function') {
+          ref(null);
+        } else if (typeof ref === 'object' && ref !== null) {
+          ref.current = null;
+        }
+      },
+    });
+
+    let ref = React.createRef();
+    let Test = () => (
+      <EventComponent ref={ref}>
+        <button />
+      </EventComponent>
+    );
+
+    ReactDOM.render(<Test />, container);
+    expect(ref.current.testSymbol).toEqual(testSymbol);
+    ReactDOM.render(null, container);
+    expect(ref.current).toEqual(null);
+
+    let val;
+    ref = _val => (val = _val);
+    Test = () => (
+      <EventComponent ref={ref}>
+        <button />
+      </EventComponent>
+    );
+
+    ReactDOM.render(<Test />, container);
+    expect(val.testSymbol).toEqual(testSymbol);
+    ReactDOM.render(null, container);
+    expect(val).toEqual(null);
+  });
+
   it('the event responder onOwnershipChange() function should fire', () => {
     let onOwnershipChangeFired = 0;
     let ownershipGained = false;
@@ -1065,5 +1120,41 @@ describe('DOMEventResponderSystem', () => {
     );
 
     ReactDOM.render(<Test2 />, container);
+  });
+
+  it('the event responder transformProps() function should fire and mutate props', () => {
+    let transformPropsFired = 0;
+    const ref = React.createRef();
+
+    const EventComponent = createReactEventComponent({
+      targetEventTypes: ['click'],
+      transformProps: ({children, number}) => {
+        transformPropsFired++;
+        return {
+          children,
+          number: number + 1,
+        };
+      },
+      onMount(context, props) {
+        expect(props.number).toEqual(1);
+      },
+      onEvent(event, context, props) {
+        expect(props.number).toEqual(2);
+      },
+    });
+
+    let baseNumber = 0;
+
+    const Test = () => (
+      <EventComponent number={baseNumber}>
+        <button ref={ref} />
+      </EventComponent>
+    );
+
+    ReactDOM.render(<Test />, container);
+    baseNumber++;
+    ReactDOM.render(<Test />, container);
+    dispatchClickEvent(ref.current);
+    expect(transformPropsFired).toEqual(2);
   });
 });

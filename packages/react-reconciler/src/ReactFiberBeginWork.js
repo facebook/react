@@ -2067,15 +2067,24 @@ function updateContextConsumer(
 }
 
 function updateEventComponent(current, workInProgress, renderExpirationTime) {
-  const nextProps = workInProgress.pendingProps;
-  let nextChildren = nextProps.children;
+  const eventResponder = workInProgress.type.responder;
+  const transformProps = eventResponder.transformProps;
+  let nextPendingProps = workInProgress.pendingProps;
+  if (typeof transformProps === 'function') {
+    workInProgress.pendingProps = nextPendingProps = transformProps(
+      nextPendingProps,
+    );
+  }
+  if (nextPendingProps !== null) {
+    const nextChildren = nextPendingProps.children;
 
-  reconcileChildren(
-    current,
-    workInProgress,
-    nextChildren,
-    renderExpirationTime,
-  );
+    reconcileChildren(
+      current,
+      workInProgress,
+      nextChildren,
+      renderExpirationTime,
+    );
+  }
   pushHostContextForEventComponent(workInProgress);
   return workInProgress.child;
 }
