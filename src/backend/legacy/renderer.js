@@ -370,16 +370,21 @@ export function attach(
     idToInternalInstanceMap.delete(id);
   }
 
-  function crawlAndRecordInitialMounts(id: number, parentID: number) {
+  function crawlAndRecordInitialMounts(
+    id: number,
+    parentID: number,
+    rootID: number
+  ) {
     const internalInstance = idToInternalInstanceMap.get(id);
 
     if (__DEBUG__) {
       console.group('crawlAndRecordInitialMounts() id:', id);
     }
 
+    internalInstanceToRootIDMap.set(internalInstance, rootID);
     recordMount(internalInstance, id, parentID);
     getChildren(internalInstance).forEach(child =>
-      crawlAndRecordInitialMounts(getID(child), id)
+      crawlAndRecordInitialMounts(getID(child), id, rootID)
     );
 
     if (__DEBUG__) {
@@ -397,7 +402,7 @@ export function attach(
     for (let key in roots) {
       const internalInstance = roots[key];
       const id = getID(internalInstance);
-      crawlAndRecordInitialMounts(id, 0);
+      crawlAndRecordInitialMounts(id, 0, id);
       flushPendingEvents(id);
     }
   }
