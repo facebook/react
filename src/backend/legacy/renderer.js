@@ -9,13 +9,13 @@ import {
 } from 'src/types';
 import { getUID, utfEncodeString, printOperationsArray } from '../../utils';
 import { cleanForBridge, copyWithSet } from '../utils';
+import { getDisplayName } from 'src/utils';
 import {
   __DEBUG__,
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
   TREE_OPERATION_REORDER_CHILDREN,
 } from '../../constants';
-import getData from './getData';
 import { decorateMany, forceUpdate, restoreMany } from './utils';
 
 import type {
@@ -32,12 +32,41 @@ import type { Owner, InspectedElement } from '../types';
 export type InternalInstance = Object;
 type LegacyRenderer = Object;
 
+function getData(internalInstance: InternalInstance) {
+  let displayName = null;
+  let key = null;
+
+  // != used deliberately here to catch undefined and null
+  if (internalInstance._currentElement != null) {
+    if (internalInstance._currentElement.key) {
+      key = String(internalInstance._currentElement.key);
+    }
+
+    const elementType = internalInstance._currentElement.type;
+    if (typeof elementType === 'string') {
+      displayName = elementType;
+    } else if (typeof elementType === 'function') {
+      displayName = getDisplayName(elementType);
+    }
+  }
+
+  return {
+    displayName,
+    key,
+  };
+}
+
 function getElementType(internalInstance: InternalInstance): ElementType {
   // != used deliberately here to catch undefined and null
   if (internalInstance._currentElement != null) {
     const elementType = internalInstance._currentElement.type;
     if (typeof elementType === 'function') {
-      return ElementTypeClass;
+      const publicInstance = internalInstance.getPublicInstance();
+      if (publicInstance !== null) {
+        return ElementTypeClass;
+      } else {
+        return ElementTypeFunction;
+      }
     } else if (typeof elementType === 'string') {
       return ElementTypeHostComponent;
     }
@@ -331,7 +360,8 @@ export function attach(
       pushOperation(0); // isProfilingSupported?
       pushOperation(hasOwnerMetadata ? 1 : 0);
     } else {
-      const { displayName, key, type } = getData(internalInstance);
+      const type = getElementType(internalInstance);
+      const { displayName, key } = getData(internalInstance);
 
       const ownerID =
         internalInstance._currentElement != null &&
@@ -532,7 +562,8 @@ export function attach(
 
   function inspectElementRaw(id: number): InspectedElement | null {
     const internalInstance = idToInternalInstanceMap.get(id);
-    const data = getData(internalInstance);
+    const displayName = getData(internalInstance).displayName;
+    const type = getElementType(internalInstance);
 
     let context = null;
     let owners = null;
@@ -550,11 +581,10 @@ export function attach(
         if (owner) {
           owners = [];
           while (owner != null) {
-            const ownerData = getData(owner);
             owners.push({
-              displayName: ownerData.displayName || 'Unknown',
+              displayName: getData(owner).displayName || 'Unknown',
               id: getID(owner),
-              type: ownerData.type,
+              type: getElementType(owner),
             });
             owner = owner.owner;
           }
@@ -581,12 +611,11 @@ export function attach(
       canToggleSuspense: false,
 
       // Can view component source location.
-      canViewSource:
-        data.type === ElementTypeClass || data.type === ElementTypeFunction,
+      canViewSource: type === ElementTypeClass || type === ElementTypeFunction,
 
-      displayName: data.displayName,
+      displayName: displayName,
 
-      type: data.type,
+      type: type,
 
       // New events system did not exist in legacy versions
       events: null,
@@ -627,7 +656,7 @@ export function attach(
       console.log('State:', result.state);
     }
     if (result.context !== null) {
-      console.log('State:', result.context);
+      console.log('Context:', result.context);
     }
     const nativeNode = findNativeNodeForInternalID(id);
     if (nativeNode !== null) {
@@ -668,6 +697,8 @@ export function attach(
 
     switch (getElementType(internalInstance)) {
       case ElementTypeClass:
+        global.$r = internalInstance._instance;
+        break;
       case ElementTypeFunction:
         const element = internalInstance._currentElement;
         if (element == null) {
