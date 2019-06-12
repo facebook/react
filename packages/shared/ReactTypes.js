@@ -176,7 +176,7 @@ export type ReactResponderContext = {
   ) => boolean,
   isTargetWithinEventComponent: (Element | Document) => boolean,
   isTargetWithinEventResponderScope: (Element | Document) => boolean,
-  isEventWithinTouchHitTarget: (event: ReactResponderEvent) => boolean,
+  isEventWithinTouchHitTarget: (nativeEvent: Event | Touch) => boolean,
   addRootEventTypes: (
     rootEventTypes: Array<ReactEventResponderEventType>,
   ) => void,
@@ -195,7 +195,7 @@ export type ReactResponderContext = {
   getEventPointerType(
     event: ReactResponderEvent,
   ): '' | 'mouse' | 'keyboard' | 'pen' | 'touch',
-  getEventCurrentTarget(event: ReactResponderEvent): Element,
+  getCurrentTargetFromTarget(target: Element | Document): Element,
   getTimeStamp: () => number,
   isTargetWithinHostComponent: (
     target: Element | Document,

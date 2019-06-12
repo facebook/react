@@ -189,10 +189,9 @@ const eventResponderContext: ReactResponderContext = {
     eventListeners.set(eventObject, listener);
     eventQueue.events.push(eventObject);
   },
-  isEventWithinTouchHitTarget(event: ReactResponderEvent): boolean {
+  isEventWithinTouchHitTarget(nativeEvent: Event | Touch): boolean {
     validateResponderContext();
-    const target = event.target;
-    const nativeEvent = event.nativeEvent;
+    const target = ((nativeEvent.target: any): Node);
     // We should always be dealing with a mouse event or touch event here.
     // If we are not, these won't exist and we can early return.
     const x = (nativeEvent: any).clientX;
@@ -414,9 +413,8 @@ const eventResponderContext: ReactResponderContext = {
     }
     return '';
   },
-  getEventCurrentTarget(event: ReactResponderEvent): Element {
+  getCurrentTargetFromTarget(target: Element | Document): Element {
     validateResponderContext();
-    const target = event.target;
     let fiber = getClosestInstanceFromNode(target);
     let hostComponent = target;
 

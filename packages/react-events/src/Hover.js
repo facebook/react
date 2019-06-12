@@ -294,7 +294,7 @@ const HoverResponder = {
     props: HoverProps,
     state: HoverState,
   ): void {
-    const {type} = event;
+    const {nativeEvent, target, type} = event;
 
     if (props.disabled) {
       if (state.isHovered) {
@@ -325,11 +325,11 @@ const HoverResponder = {
             return;
           }
 
-          if (context.isEventWithinTouchHitTarget(event)) {
+          if (context.isEventWithinTouchHitTarget(nativeEvent)) {
             state.isOverTouchHitTarget = true;
             return;
           }
-          state.hoverTarget = context.getEventCurrentTarget(event);
+          state.hoverTarget = context.getCurrentTargetFromTarget(target);
           state.ignoreEmulatedMouseEvents = true;
           dispatchHoverStartEvents(event, context, props, state);
         }
@@ -344,14 +344,14 @@ const HoverResponder = {
             if (state.isOverTouchHitTarget) {
               // If we were moving over the TouchHitTarget and have now moved
               // over the Responder target
-              if (!context.isEventWithinTouchHitTarget(event)) {
+              if (!context.isEventWithinTouchHitTarget(nativeEvent)) {
                 dispatchHoverStartEvents(event, context, props, state);
                 state.isOverTouchHitTarget = false;
               }
             } else {
               // If we were moving over the Responder target and have now moved
               // over the TouchHitTarget
-              if (context.isEventWithinTouchHitTarget(event)) {
+              if (context.isEventWithinTouchHitTarget(nativeEvent)) {
                 dispatchHoverEndEvents(event, context, props, state);
                 state.isOverTouchHitTarget = true;
               } else {

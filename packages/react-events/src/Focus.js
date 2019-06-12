@@ -207,7 +207,7 @@ function handleRootPointerEvent(
   // Focus should stop being visible if a pointer is used on the element
   // after it was focused using a keyboard.
   if (
-    state.focusTarget === context.getEventCurrentTarget(event) &&
+    state.focusTarget === context.getCurrentTargetFromTarget(target) &&
     (type === 'mousedown' || type === 'touchstart' || type === 'pointerdown')
   ) {
     dispatchFocusVisibleOutEvent(context, props, state);
@@ -251,7 +251,7 @@ const FocusResponder = {
         if (!state.isFocused) {
           // Limit focus events to the direct child of the event component.
           // Browser focus is not expected to bubble.
-          state.focusTarget = context.getEventCurrentTarget(event);
+          state.focusTarget = context.getCurrentTargetFromTarget(target);
           if (state.focusTarget === target) {
             state.isFocused = true;
             state.isLocalFocusVisible = isGlobalFocusVisible;
