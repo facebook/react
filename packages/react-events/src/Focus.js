@@ -17,22 +17,31 @@ import {DiscreteEvent} from 'shared/ReactTypes';
 
 type FocusProps = {
   disabled: boolean,
-  within: boolean,
   onBlur: (e: FocusEvent) => void,
   onFocus: (e: FocusEvent) => void,
   onFocusChange: boolean => void,
   onFocusVisibleChange: boolean => void,
+  onFocusWithinChange: boolean => void,
+  onFocusVisibleWithinChange: boolean => void,
 };
 
 type FocusState = {
   focusTarget: null | Element | Document,
   isFocused: boolean,
   isLocalFocusVisible: boolean,
+  isFocusWithin: boolean,
+  isFocusWithinVisible: boolean,
   pointerType: PointerType,
 };
 
 type PointerType = '' | 'mouse' | 'keyboard' | 'pen' | 'touch';
-type FocusEventType = 'focus' | 'blur' | 'focuschange' | 'focusvisiblechange';
+type FocusEventType =
+  | 'focus'
+  | 'blur'
+  | 'focuschange'
+  | 'focusvisiblechange'
+  | 'focuswithinchange'
+  | 'focusvisiblewithinchange';
 
 type FocusEvent = {|
   target: Element | Document,
@@ -126,6 +135,38 @@ function dispatchFocusInEvents(
     context.dispatchEvent(syntheticEvent, listener, DiscreteEvent);
   }
 }
+function dispatchFocusWithinEvents(
+  context: ReactResponderContext,
+  props: FocusProps,
+  state: FocusState,
+) {
+  const pointerType = state.pointerType;
+  const target = ((state.focusTarget: any): Element | Document);
+  if (props.onFocusWithinChange) {
+    const listener = () => {
+      props.onFocusWithinChange(true);
+    };
+    const syntheticEvent = createFocusEvent(
+      context,
+      'focuswithinchange',
+      target,
+      pointerType,
+    );
+    context.dispatchEvent(syntheticEvent, listener, DiscreteEvent);
+  }
+  if (props.onFocusVisibleWithinChange && state.isFocusWithinVisible) {
+    const listener = () => {
+      props.onFocusVisibleWithinChange(true);
+    };
+    const syntheticEvent = createFocusEvent(
+      context,
+      'focusvisiblewithinchange',
+      target,
+      pointerType,
+    );
+    context.dispatchEvent(syntheticEvent, listener, DiscreteEvent);
+  }
+}
 
 function dispatchFocusOutEvents(
   context: ReactResponderContext,
@@ -134,7 +175,7 @@ function dispatchFocusOutEvents(
 ) {
   const pointerType = state.pointerType;
   const target = ((state.focusTarget: any): Element | Document);
-  if (props.onBlur) {
+  if (props.onBlur && state.isFocused) {
     const syntheticEvent = createFocusEvent(
       context,
       'blur',
@@ -143,7 +184,7 @@ function dispatchFocusOutEvents(
     );
     context.dispatchEvent(syntheticEvent, props.onBlur, DiscreteEvent);
   }
-  if (props.onFocusChange) {
+  if (props.onFocusChange && state.isFocused) {
     const listener = () => {
       props.onFocusChange(false);
     };
@@ -155,10 +196,22 @@ function dispatchFocusOutEvents(
     );
     context.dispatchEvent(syntheticEvent, listener, DiscreteEvent);
   }
-  dispatchFocusVisibleOutEvent(context, props, state);
+  if (props.onFocusWithinChange && state.isFocusWithin) {
+    const listener = () => {
+      props.onFocusWithinChange(false);
+    };
+    const syntheticEvent = createFocusEvent(
+      context,
+      'focuswithinchange',
+      target,
+      pointerType,
+    );
+    context.dispatchEvent(syntheticEvent, listener, DiscreteEvent);
+  }
+  dispatchFocusVisibleOutEvents(context, props, state);
 }
 
-function dispatchFocusVisibleOutEvent(
+function dispatchFocusVisibleOutEvents(
   context: ReactResponderContext,
   props: FocusProps,
   state: FocusState,
@@ -178,6 +231,19 @@ function dispatchFocusVisibleOutEvent(
     context.dispatchEvent(syntheticEvent, listener, DiscreteEvent);
     state.isLocalFocusVisible = false;
   }
+  if (props.onFocusVisibleWithinChange && state.isFocusWithinVisible) {
+    const listener = () => {
+      props.onFocusVisibleWithinChange(false);
+    };
+    const syntheticEvent = createFocusEvent(
+      context,
+      'focusvisiblewithinchange',
+      target,
+      pointerType,
+    );
+    context.dispatchEvent(syntheticEvent, listener, DiscreteEvent);
+    state.isFocusWithinVisible = false;
+  }
 }
 
 function unmountResponder(
@@ -185,7 +251,7 @@ function unmountResponder(
   props: FocusProps,
   state: FocusState,
 ): void {
-  if (state.isFocused) {
+  if (state.isFocused || state.isFocusWithin) {
     dispatchFocusOutEvents(context, props, state);
   }
 }
@@ -211,7 +277,7 @@ function handleRootPointerEvent(
     state.focusTarget === context.getEventCurrentTarget(event) &&
     (type === 'mousedown' || type === 'touchstart' || type === 'pointerdown')
   ) {
-    dispatchFocusVisibleOutEvent(context, props, state);
+    dispatchFocusVisibleOutEvents(context, props, state);
   }
 }
 
@@ -225,6 +291,8 @@ const FocusResponder = {
       focusTarget: null,
       isFocused: false,
       isLocalFocusVisible: false,
+      isFocusWithin: false,
+      isFocusWithinVisible: false,
       pointerType: '',
     };
   },
@@ -249,22 +317,28 @@ const FocusResponder = {
 
     switch (type) {
       case 'focus': {
-        if (!state.isFocused) {
-          // Limit focus events to the direct child of the event component
-          // unless the `within` prop is set. Browser focus is not expected to bubble.
+        if (!state.isFocused || !state.isFocusWithin) {
           state.focusTarget = context.getEventCurrentTarget(event);
-          if (props.within || state.focusTarget === target) {
-            state.isFocused = true;
-            state.isLocalFocusVisible = isGlobalFocusVisible;
-            dispatchFocusInEvents(context, props, state);
-          }
+        }
+        // Limit focus events to the direct child of the event component
+        // Browser focus is not expected to bubble.
+        if (!state.isFocused && state.focusTarget === target) {
+          state.isFocused = true;
+          state.isLocalFocusVisible = isGlobalFocusVisible;
+          dispatchFocusInEvents(context, props, state);
+        }
+        if (!state.isFocusWithin) {
+          state.isFocusWithin = true;
+          state.isFocusWithinVisible = isGlobalFocusVisible;
+          dispatchFocusWithinEvents(context, props, state);
         }
         break;
       }
       case 'blur': {
-        if (state.isFocused) {
+        if (state.isFocused || state.isFocusWithin) {
           dispatchFocusOutEvents(context, props, state);
           state.isFocused = false;
+          state.isFocusWithin = false;
           state.focusTarget = null;
         }
         break;
