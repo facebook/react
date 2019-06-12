@@ -73,6 +73,7 @@ type PressState = {
   activeTouchID: null | number,
   pointerType: PointerType,
   activeTouchPointerType: PointerType,
+  touchPointerCancelled: boolean,
 };
 
 type PressEventType =
@@ -273,7 +274,7 @@ function activate(
   props: PressProps,
   state: PressState,
 ): void {
-  const {clientX: x, clientY: y} = ((touchEvent || nativeEvent): any);
+  const {clientX: x, clientY: y} = (touchEvent || nativeEvent: any);
   const wasActivePressed = state.isActivePressed;
   state.isActivePressed = true;
   if (x !== null && y !== null) {
@@ -608,16 +609,6 @@ function processPressStart(
   addRootEventTypes(context, state);
 }
 
-function isValidMousePress(nativeEvent) {
-  // Ignore any device buttons except left-mouse and touch/pen contact.
-  // Additionally we ignore left-mouse + ctrl-key with Macs as that
-  // acts like right-click and opens the contextmenu.
-  if (nativeEvent.button > 0 || (isMac && nativeEvent.ctrlKey)) {
-    return false;
-  }
-  return true;
-}
-
 function getTouchPointerType(
   touchEvent: Touch,
   pointerType: PointerType,
@@ -671,6 +662,9 @@ function processPressResponderRegion(
   // pressed. So the only way to find the latest target is document.elementFromPoint
   if (touchEvent !== null) {
     const doc = context.getActiveDocument();
+    if (doc.elementFromPoint === undefined) {
+      return;
+    }
     target = doc.elementFromPoint(
       (touchEvent: any).clientX,
       (touchEvent: any).clientY,
@@ -690,17 +684,18 @@ function processPressResponderRegion(
   }
 }
 
-function dispatchPressEvent(
+function processPressEnd(
   nativeEvent: Event,
   touchEvent: null | Touch,
   context: ReactResponderContext,
   props: PressProps,
   state: PressState,
 ): void {
-  if (state.pressTarget !== null && props.onPress) {
+  const wasLongPressed = state.isLongPressed;
+  dispatchPressEndEvents(nativeEvent, touchEvent, context, props, state);
+  if (state.pressTarget !== null) {
     processPressResponderRegion(nativeEvent, touchEvent, context, props, state);
-    if (state.isPressWithinResponderRegion) {
-      const wasLongPressed = state.isLongPressed;
+    if (state.isPressWithinResponderRegion && props.onPress) {
       if (
         !(
           wasLongPressed &&
@@ -784,6 +779,7 @@ const PressResponder = {
       activeTouchID: null,
       pointerType: '',
       activeTouchPointerType: '',
+      touchPointerCancelled: false,
     };
   },
   allowMultipleHostChildren: false,
@@ -833,6 +829,7 @@ const PressResponder = {
             }
             state.activeTouchID = id;
             state.activeTouchPointerType = pointerType;
+            state.pointerType = pointerType;
             processPressStart(nativeEvent, touchEvent, context, props, state);
           }
         }
@@ -846,11 +843,10 @@ const PressResponder = {
           }
           state.pointerType = 'keyboard';
           processPressStart(nativeEvent, null, context, props, state);
-        } else {
-          // Prevent spacebar press from scrolling the window
-          if (isValidKeyboardEvent(nativeEvent) && nativeEvent.key === ' ') {
-            nativeEvent.preventDefault();
-          }
+        }
+        // Prevent spacebar press from scrolling the window
+        if (isValidKeyboardEvent(nativeEvent) && nativeEvent.key === ' ') {
+          nativeEvent.preventDefault();
         }
         break;
       }
@@ -858,12 +854,20 @@ const PressResponder = {
       case 'mousedown':
       case 'pointerdown': {
         if (!isPressed) {
-          const {pointerType} = nativeEvent;
-          state.pointerType = pointerType || 'mouse';
+          const pointerType =
+            type === 'mousedown' ? 'mouse' : nativeEvent.pointerType || '';
+          state.pointerType = pointerType;
           if (
-            (pointerType === 'mouse' && isValidMousePress(nativeEvent)) ||
-            pointerType === 'trackpad' // trackpad support is in iOS 13
+            pointerType === 'mouse' ||
+            pointerType === 'trackpad' || // trackpad support is in iOS 13
+            pointerType === '' // Handle unknown
           ) {
+            // Ignore any device buttons except left-mouse and touch/pen contact.
+            // Additionally we ignore left-mouse + ctrl-key with Macs as that
+            // acts like right-click and opens the contextmenu.
+            if (nativeEvent.button > 0 || (isMac && nativeEvent.ctrlKey)) {
+              return;
+            }
             if (context.isEventWithinTouchHitTarget(nativeEvent)) {
               // We need to prevent the native event to block the focus
               nativeEvent.preventDefault();
@@ -877,12 +881,12 @@ const PressResponder = {
       // CONTEXT MENU END
       case 'contextmenu': {
         if (isPressed) {
-          dispatchCancel(nativeEvent, null, context, props, state);
           if (props.preventDefault !== false) {
             // Skip dispatching of onContextMenu below
             nativeEvent.preventDefault();
             return;
           }
+          dispatchCancel(nativeEvent, null, context, props, state);
         }
         if (props.onContextMenu) {
           state.pressTarget = nativeEvent.target;
@@ -941,10 +945,20 @@ const PressResponder = {
       // MOUSE + TRACKPAD MOVE
       case 'mousemove':
       case 'pointermove': {
-        const pointerType = nativeEvent.pointerType || 'mouse';
+        let pointerType = nativeEvent.pointerType || '';
+        if (type === 'mousemove') {
+          pointerType = 'mouse';
+        }
+        // If the pointer types do not match, then we're likely
+        // simulating the mouse events or we're invoking keyboard
+        // events during a move.
+        if (state.pointerType !== pointerType) {
+          return;
+        }
         if (
-          (pointerType === 'mouse' && !state.ignoreEmulatedMouseEvents) ||
-          pointerType === 'trackpad'
+          pointerType === 'mouse' ||
+          pointerType === 'trackpad' ||
+          pointerType === ''
         ) {
           // Update pointer type to reflect the final state of press move events
           state.pointerType = ((pointerType: any): PointerType);
@@ -963,44 +977,38 @@ const PressResponder = {
               const pointerType = state.activeTouchPointerType;
               // Update pointer type to reflect the final state of press up events
               state.pointerType = ((pointerType: any): PointerType);
-              dispatchPressEndEvents(
-                nativeEvent,
-                touchEvent,
-                context,
-                props,
-                state,
-              );
-              dispatchPressEvent(
-                nativeEvent,
-                touchEvent,
-                context,
-                props,
-                state,
-              );
+              processPressEnd(nativeEvent, touchEvent, context, props, state);
               break;
             }
           }
         }
-
+        // If the pointer was cancelled, then "click"
+        // will never fire so we need to ensure we remove
+        // the root event types here.
+        if (state.touchPointerCancelled) {
+          state.touchPointerCancelled = false;
+          removeRootEventTypes(context, state);
+        }
         break;
       }
       // MOUSE + TRACKPAD END
       case 'mouseup':
       case 'pointerup': {
+        let pointerType = nativeEvent.pointerType || '';
+        if (type === 'mouseup') {
+          state.ignoreEmulatedMouseEvents = false;
+          pointerType = 'mouse';
+        }
         if (isPressed) {
-          const pointerType = nativeEvent.pointerType || 'mouse';
           if (
-            (pointerType === 'mouse' && !state.ignoreEmulatedMouseEvents) ||
-            pointerType === 'trackpad'
+            pointerType === 'mouse' ||
+            pointerType === 'trackpad' ||
+            pointerType === ''
           ) {
             // Update pointer type to reflect the final state of press up events
             state.pointerType = ((pointerType: any): PointerType);
-            dispatchPressEndEvents(nativeEvent, null, context, props, state);
-            dispatchPressEvent(nativeEvent, null, context, props, state);
+            processPressEnd(nativeEvent, null, context, props, state);
           }
-        }
-        if (type === 'mouseup') {
-          state.ignoreEmulatedMouseEvents = false;
         }
         break;
       }
@@ -1063,6 +1071,8 @@ const PressResponder = {
         const pointerType = nativeEvent.pointerType;
         if (pointerType === 'mouse' || pointerType === 'trackpad') {
           dispatchCancel(nativeEvent, null, context, props, state);
+        } else {
+          state.touchPointerCancelled = true;
         }
       }
     }
