@@ -1696,15 +1696,20 @@ function commitRootImpl(root) {
 
     let prevInteractions: Set<Interaction> | null = null;
     if (enableSchedulerTracing) {
-      // Temporarily restore interactions so that scheduled work (e.g. hidden subtrees) are associated.
-      prevInteractions = __interactionsRef.current;
-      __interactionsRef.current = root.memoizedInteractions;
+      if (remainingExpirationTime === Never) {
+        // Temporarily restore interactions in the case of e.g. hidden subtrees and suspended hydration.
+        // Don't restore otherwise or it would blur interrupting high-pri udpates with low-pri work.
+        prevInteractions = __interactionsRef.current;
+        __interactionsRef.current = root.memoizedInteractions;
+      }
     }
 
     scheduleCallbackForRoot(root, priorityLevel, remainingExpirationTime);
 
     if (enableSchedulerTracing) {
-      __interactionsRef.current = ((prevInteractions: any): Set<Interaction>);
+      if (remainingExpirationTime === Never) {
+        __interactionsRef.current = ((prevInteractions: any): Set<Interaction>);
+      }
     }
   } else {
     // If there's no remaining work, we can clear the set of already failed
