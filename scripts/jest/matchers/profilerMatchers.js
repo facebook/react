@@ -26,7 +26,6 @@ function toHaveLastRenderedWithInteractions(
 
   const lastCall = calls[calls.length - 1];
   const actualInteractions = lastCall[6];
-  console.log({lastCall, actualInteractions});
 
   return toMatchInteractions(actualInteractions, expectedInteractions);
 }
