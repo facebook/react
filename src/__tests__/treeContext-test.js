@@ -573,7 +573,6 @@ describe('TreeListContext', () => {
       const outerSuspenseID = ((store.getElementIDAtIndex(1): any): number);
       const childID = ((store.getElementIDAtIndex(2): any): number);
       const innerSuspenseID = ((store.getElementIDAtIndex(3): any): number);
-      const grandchildID = ((store.getElementIDAtIndex(4): any): number);
 
       utils.act(() => dispatch({ type: 'SELECT_OWNER', payload: childID }));
       utils.act(() => renderer.update(<Contexts />));
