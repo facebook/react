@@ -651,7 +651,7 @@ const PressResponder = {
     props: PressProps,
     state: PressState,
   ): void {
-    const {pointerType, type} = event;
+    const {pointerId, pointerType, type} = event;
 
     if (props.disabled) {
       removeRootEventTypes(context, state);
@@ -705,7 +705,7 @@ const PressResponder = {
           state.pointerType = pointerType;
           state.pressTarget = context.getEventCurrentTarget(event);
           if (isPointerEvent) {
-            state.activePointerId = (nativeEvent: any).pointerId;
+            state.activePointerId = pointerId;
           } else if (isTouchEvent) {
             const touchEvent = getTouchFromPressEvent(nativeEvent);
             state.activePointerId = touchEvent.identifier;
@@ -769,7 +769,7 @@ const PressResponder = {
     props: PressProps,
     state: PressState,
   ): void {
-    let {pointerType, target, type} = event;
+    let {pointerId, pointerType, target, type} = event;
 
     const nativeEvent: any = event.nativeEvent;
     const isPressed = state.isPressed;
@@ -791,7 +791,7 @@ const PressResponder = {
         }
         if (
           type === 'pointermove' &&
-          activePointerId !== nativeEvent.pointerId
+          activePointerId !== pointerId
         ) {
           return;
         } else if (type === 'touchmove') {
@@ -856,7 +856,7 @@ const PressResponder = {
           let touchEvent;
           if (
             type === 'pointerup' &&
-            activePointerId !== nativeEvent.pointerId
+            activePointerId !== pointerId
           ) {
             return;
           } else if (type === 'touchend') {
