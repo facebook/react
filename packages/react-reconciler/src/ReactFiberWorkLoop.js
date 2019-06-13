@@ -23,7 +23,6 @@ import {
   enableSuspenseServerRenderer,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   enableProfilerTimer,
-  disableYielding,
   enableSchedulerTracing,
   revertPassiveEffectsChange,
 } from 'shared/ReactFeatureFlags';
@@ -1004,7 +1003,7 @@ function renderRoot(
       // possible.
       const hasNotProcessedNewUpdates =
         workInProgressRootLatestProcessedExpirationTime === Sync;
-      if (hasNotProcessedNewUpdates && !disableYielding && !isSync) {
+      if (hasNotProcessedNewUpdates && !isSync) {
         // If we have not processed any new updates during this pass, then this is
         // either a retry of an existing fallback state or a hidden tree.
         // Hidden trees shouldn't be batched with other work and after that's
@@ -1041,7 +1040,7 @@ function renderRoot(
       return commitRoot.bind(null, root);
     }
     case RootSuspendedWithDelay: {
-      if (!disableYielding && !isSync) {
+      if (!isSync) {
         // We're suspended in a state that should be avoided. We'll try to avoid committing
         // it for as long as the timeouts let us.
         if (workInProgressRootHasPendingPing) {
@@ -2147,11 +2146,6 @@ function computeMsUntilSuspenseLoadingDelay(
   committedExpirationTime: ExpirationTime,
   suspenseConfig: SuspenseConfig,
 ) {
-  if (disableYielding) {
-    // Timeout immediately when yielding is disabled.
-    return 0;
-  }
-
   const busyMinDurationMs = (suspenseConfig.busyMinDurationMs: any) | 0;
   if (busyMinDurationMs <= 0) {
     return 0;
