@@ -70,23 +70,28 @@ export function createRegExp(string: string): RegExp {
 }
 
 export function getMetaValueLabel(data: Object): string | null {
-  switch (data[meta.type]) {
+  const name = data[meta.name];
+  const type = data[meta.type];
+
+  switch (type) {
+    case 'html_element':
+      return name ? `<${name.toLowerCase()} />` : '';
     case 'react_element':
-      return `<${data[meta.name]} />`;
+      return `<${name} />`;
     case 'function':
-      return `${data[meta.name] || 'fn'}()`;
+      return `${name || 'fn'}()`;
     case 'object':
       return 'Object';
     case 'date':
     case 'symbol':
-      return data[meta.name];
+      return name;
     case 'iterator':
-      return `${data[meta.name]}(…)`;
+      return `${name}(…)`;
     case 'array_buffer':
     case 'data_view':
     case 'array':
     case 'typed_array':
-      return `${data[meta.name]}[${data[meta.meta].length}]`;
+      return `${name}[${data[meta.meta].length}]`;
     default:
       return null;
   }

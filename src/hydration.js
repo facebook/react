@@ -50,6 +50,10 @@ function getPropType(data: Object): string | null {
     return 'react_element';
   }
 
+  if (data instanceof HTMLElement) {
+    return 'html_element';
+  }
+
   const type = typeof data;
   if (type === 'object') {
     if (Array.isArray(data)) {
@@ -132,6 +136,13 @@ export function dehydrate(
   const type = getPropType(data);
 
   switch (type) {
+    case 'html_element':
+      cleaned.push(path);
+      return {
+        name: data.tagName,
+        type: 'html_element',
+      };
+
     case 'function':
       cleaned.push(path);
       return {
