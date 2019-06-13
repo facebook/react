@@ -130,6 +130,10 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   if (process.env.NODE_ENV === 'production') {
     // In production, we strip error messages and turn them into codes.
     // This decodes them back so that the test assertions on them work.
+    // 1. `ErrorProxy` decodes error messages at Error construction time and
+    //    also proxies error instances with `proxyErrorInstance`.
+    // 2. `proxyErrorInstance` decodes error messages when the `message`
+    //    property is changed.
     const decodeErrorMessage = function(message) {
       if (!message) {
         return message;
@@ -150,16 +154,51 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
       return format.replace(/%s/g, () => args[argIndex++]);
     };
     const OriginalError = global.Error;
+    // V8's Error.captureStackTrace (used in Jest) fails if the error object is
+    // a Proxy, so we need to pass it the unproxied instance.
+    const originalErrorInstances = new WeakMap();
+    const captureStackTrace = function(error, ...args) {
+      return OriginalError.captureStackTrace.call(
+        this,
+        originalErrorInstances.get(error) ||
+          // Sometimes this wrapper receives an already-unproxied instance.
+          error,
+        ...args
+      );
+    };
+    const proxyErrorInstance = error => {
+      const proxy = new Proxy(error, {
+        set(target, key, value, receiver) {
+          if (key === 'message') {
+            return Reflect.set(
+              target,
+              key,
+              decodeErrorMessage(value),
+              receiver
+            );
+          }
+          return Reflect.set(target, key, value, receiver);
+        },
+      });
+      originalErrorInstances.set(proxy, error);
+      return proxy;
+    };
     const ErrorProxy = new Proxy(OriginalError, {
       apply(target, thisArg, argumentsList) {
         const error = Reflect.apply(target, thisArg, argumentsList);
         error.message = decodeErrorMessage(error.message);
-        return error;
+        return proxyErrorInstance(error);
       },
       construct(target, argumentsList, newTarget) {
         const error = Reflect.construct(target, argumentsList, newTarget);
         error.message = decodeErrorMessage(error.message);
-        return error;
+        return proxyErrorInstance(error);
+      },
+      get(target, key, receiver) {
+        if (key === 'captureStackTrace') {
+          return captureStackTrace;
+        }
+        return Reflect.get(target, key, receiver);
       },
     });
     ErrorProxy.OriginalError = OriginalError;

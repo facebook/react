@@ -6,7 +6,7 @@ exports[`error transform should correctly transform invariants that are not in t
 import invariant from 'shared/invariant';
 /*FIXME (minify-errors-in-prod): Unminified error message in production build!*/(function () {
   if (!condition) {
-    throw _ReactError(\`This is not a real error message.\`);
+    throw _ReactError(Error(\`This is not a real error message.\`));
   }
 })();"
 `;
@@ -17,7 +17,7 @@ exports[`error transform should handle escaped characters 1`] = `
 import invariant from 'shared/invariant';
 /*FIXME (minify-errors-in-prod): Unminified error message in production build!*/(function () {
   if (!condition) {
-    throw _ReactError(\`What's up?\`);
+    throw _ReactError(Error(\`What's up?\`));
   }
 })();"
 `;
@@ -30,18 +30,18 @@ import invariant from 'shared/invariant';
 (function () {
   if (!condition) {
     if (__DEV__) {
-      throw _ReactError(\`Do not override existing functions.\`);
+      throw _ReactError(Error(\`Do not override existing functions.\`));
     } else {
-      throw _ReactErrorProd(16);
+      throw _ReactErrorProd(Error(16));
     }
   }
 })();
 (function () {
   if (!condition) {
     if (__DEV__) {
-      throw _ReactError(\`Do not override existing functions.\`);
+      throw _ReactError(Error(\`Do not override existing functions.\`));
     } else {
-      throw _ReactErrorProd(16);
+      throw _ReactErrorProd(Error(16));
     }
   }
 })();"
@@ -55,9 +55,9 @@ import invariant from 'shared/invariant';
 (function () {
   if (!condition) {
     if (__DEV__) {
-      throw _ReactError(\`Do not override existing functions.\`);
+      throw _ReactError(Error(\`Do not override existing functions.\`));
     } else {
-      throw _ReactErrorProd(16);
+      throw _ReactErrorProd(Error(16));
     }
   }
 })();"
@@ -71,9 +71,9 @@ import invariant from 'shared/invariant';
 (function () {
   if (!condition) {
     if (__DEV__) {
-      throw _ReactError(\`Expected a component class, got \${Foo}.\${Bar}\`);
+      throw _ReactError(Error(\`Expected a component class, got \${Foo}.\${Bar}\`));
     } else {
-      throw _ReactErrorProd(18, Foo, Bar);
+      throw _ReactErrorProd(Error(18), Foo, Bar);
     }
   }
 })();"
@@ -87,9 +87,9 @@ import invariant from 'shared/invariant';
 (function () {
   if (!condition) {
     if (__DEV__) {
-      throw _ReactError(\`Expected \${foo} target to be an array; got \${bar}\`);
+      throw _ReactError(Error(\`Expected \${foo} target to be an array; got \${bar}\`));
     } else {
-      throw _ReactErrorProd(7, foo, bar);
+      throw _ReactErrorProd(Error(7), foo, bar);
     }
   }
 })();"
@@ -101,7 +101,7 @@ exports[`error transform should support noMinify option 1`] = `
 import invariant from 'shared/invariant';
 (function () {
   if (!condition) {
-    throw _ReactError(\`Do not override existing functions.\`);
+    throw _ReactError(Error(\`Do not override existing functions.\`));
   }
 })();"
 `;
