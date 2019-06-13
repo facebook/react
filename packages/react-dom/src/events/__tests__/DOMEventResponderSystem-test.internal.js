@@ -609,58 +609,6 @@ describe('DOMEventResponderSystem', () => {
     expect(counter).toEqual(5);
   });
 
-  it('the event responder onMount() and onUnmount() functions should fire and have access to ref', () => {
-    const testSymbol = Symbol();
-
-    const EventComponent = createReactEventComponent({
-      targetEventTypes: [],
-      createInitialState() {
-        return {
-          testSymbol,
-        };
-      },
-      onMount: (context, props, state, ref) => {
-        if (typeof ref === 'function') {
-          ref(state);
-        } else if (typeof ref === 'object' && ref !== null) {
-          ref.current = state;
-        }
-      },
-      onUnmount: (context, props, state, ref) => {
-        if (typeof ref === 'function') {
-          ref(null);
-        } else if (typeof ref === 'object' && ref !== null) {
-          ref.current = null;
-        }
-      },
-    });
-
-    let ref = React.createRef();
-    let Test = () => (
-      <EventComponent ref={ref}>
-        <button />
-      </EventComponent>
-    );
-
-    ReactDOM.render(<Test />, container);
-    expect(ref.current.testSymbol).toEqual(testSymbol);
-    ReactDOM.render(null, container);
-    expect(ref.current).toEqual(null);
-
-    let val;
-    ref = _val => (val = _val);
-    Test = () => (
-      <EventComponent ref={ref}>
-        <button />
-      </EventComponent>
-    );
-
-    ReactDOM.render(<Test />, container);
-    expect(val.testSymbol).toEqual(testSymbol);
-    ReactDOM.render(null, container);
-    expect(val).toEqual(null);
-  });
-
   it('the event responder onOwnershipChange() function should fire', () => {
     let onOwnershipChangeFired = 0;
     let ownershipGained = false;

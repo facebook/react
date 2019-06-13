@@ -114,13 +114,11 @@ export type ReactEventResponder = {
     context: ReactResponderContext,
     props: null | Object,
     state: null | Object,
-    ref?: mixed,
   ) => void,
   onUnmount?: (
     context: ReactResponderContext,
     props: null | Object,
     state: null | Object,
-    ref?: mixed,
   ) => void,
   onOwnershipChange?: (
     context: ReactResponderContext,
@@ -132,7 +130,6 @@ export type ReactEventResponder = {
 export type ReactEventComponentInstance = {|
   currentFiber: mixed,
   props: null | Object,
-  ref: mixed,
   responder: ReactEventResponder,
   rootEventTypes: null | Set<string>,
   rootInstance: mixed,

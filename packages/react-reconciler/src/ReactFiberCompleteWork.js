@@ -836,7 +836,6 @@ function completeWork(
         const responder = workInProgress.type.responder;
         let eventComponentInstance: ReactEventComponentInstance | null =
           workInProgress.stateNode;
-        const ref = workInProgress.ref;
 
         if (eventComponentInstance === null) {
           let responderState = null;
@@ -856,7 +855,6 @@ function completeWork(
           eventComponentInstance = workInProgress.stateNode = {
             currentFiber: workInProgress,
             props: newProps,
-            ref,
             responder,
             rootEventTypes: null,
             rootInstance: rootContainerInstance,
@@ -866,8 +864,6 @@ function completeWork(
         } else {
           // Update the props on the event component state node
           eventComponentInstance.props = newProps;
-          // Update the ref on the event component state node
-          eventComponentInstance.ref = ref;
           // Update the root container, so we can properly unmount events at some point
           eventComponentInstance.rootInstance = rootContainerInstance;
           // Update the current fiber
