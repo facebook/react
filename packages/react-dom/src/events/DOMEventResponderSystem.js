@@ -394,26 +394,6 @@ const eventResponderContext: ReactResponderContext = {
   },
   getActiveDocument,
   objectAssign: Object.assign,
-  getEventPointerType(
-    event: ReactResponderEvent,
-  ): '' | 'mouse' | 'keyboard' | 'pen' | 'touch' {
-    validateResponderContext();
-    const nativeEvent: any = event.nativeEvent;
-    const {type, pointerType} = nativeEvent;
-    if (pointerType != null) {
-      return pointerType;
-    }
-    if (type.indexOf('mouse') === 0) {
-      return 'mouse';
-    }
-    if (type.indexOf('touch') === 0) {
-      return 'touch';
-    }
-    if (type.indexOf('key') === 0) {
-      return 'keyboard';
-    }
-    return '';
-  },
   getEventCurrentTarget(event: ReactResponderEvent): Element {
     validateResponderContext();
     const target = event.target;
@@ -583,12 +563,29 @@ function createResponderEvent(
   passive: boolean,
   passiveSupported: boolean,
 ): ReactResponderEvent {
+  const {pointerType} = (nativeEvent: any);
+  let eventPointerType = '';
+  let pointerId = null;
+
+  if (pointerType !== undefined) {
+    eventPointerType = pointerType;
+    pointerId = (nativeEvent: any).pointerId;
+  } else if (nativeEvent.key !== undefined) {
+    eventPointerType = 'keyboard';
+  } else if (nativeEvent.button !== undefined) {
+    eventPointerType = 'mouse';
+  } else if ((nativeEvent: any).changedTouches !== undefined) {
+    eventPointerType = 'touch';
+  }
+
   const responderEvent = {
     nativeEvent: nativeEvent,
-    target: nativeEventTarget,
-    type: topLevelType,
     passive,
     passiveSupported,
+    pointerId,
+    pointerType: eventPointerType,
+    target: nativeEventTarget,
+    type: topLevelType,
   };
   if (__DEV__) {
     Object.freeze(responderEvent);

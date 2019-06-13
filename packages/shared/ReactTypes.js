@@ -150,12 +150,22 @@ export type ReactEventTarget = {|
 
 type AnyNativeEvent = Event | KeyboardEvent | MouseEvent | Touch;
 
+export type PointerType =
+  | ''
+  | 'mouse'
+  | 'keyboard'
+  | 'pen'
+  | 'touch'
+  | 'trackpad';
+
 export type ReactResponderEvent = {
   nativeEvent: AnyNativeEvent,
-  target: Element | Document,
-  type: string,
   passive: boolean,
   passiveSupported: boolean,
+  pointerId: null | number,
+  pointerType: PointerType,
+  target: Element | Document,
+  type: string,
 };
 
 export opaque type EventPriority = 0 | 1 | 2;
@@ -192,9 +202,6 @@ export type ReactResponderContext = {
   getFocusableElementsInScope(): Array<HTMLElement>,
   getActiveDocument(): Document,
   objectAssign: Function,
-  getEventPointerType(
-    event: ReactResponderEvent,
-  ): '' | 'mouse' | 'keyboard' | 'pen' | 'touch',
   getEventCurrentTarget(event: ReactResponderEvent): Element,
   getTimeStamp: () => number,
   isTargetWithinHostComponent: (
