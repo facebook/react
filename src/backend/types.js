@@ -116,6 +116,9 @@ export type ReactRenderer = {
 
   // Only injected by React v16.8+ in order to support hooks inspection.
   currentDispatcherRef?: {| current: null | Dispatcher |},
+
+  // <= 15
+  Mount?: any,
 };
 
 export type ChangeDescription = {|
