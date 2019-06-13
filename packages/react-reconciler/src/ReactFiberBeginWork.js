@@ -2068,10 +2068,10 @@ function updateContextConsumer(
 
 function updateEventComponent(current, workInProgress, renderExpirationTime) {
   const eventResponder = workInProgress.type.responder;
-  const transformProps = eventResponder.transformProps;
+  const getTransformedProps = eventResponder.getTransformedProps;
   let nextPendingProps = workInProgress.pendingProps;
-  if (typeof transformProps === 'function') {
-    workInProgress.pendingProps = nextPendingProps = transformProps(
+  if (typeof getTransformedProps === 'function') {
+    workInProgress.pendingProps = nextPendingProps = getTransformedProps(
       nextPendingProps,
     );
   }

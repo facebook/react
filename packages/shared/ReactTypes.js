@@ -91,7 +91,7 @@ export type ReactEventResponder = {
   createInitialState?: (props: null | Object) => Object,
   allowMultipleHostChildren: boolean,
   stopLocalPropagation: boolean,
-  transformProps?: (props: null | Object) => null | Object,
+  getTransformedProps?: (props: null | Object) => null | Object,
   onEvent?: (
     event: ReactResponderEvent,
     context: ReactResponderContext,

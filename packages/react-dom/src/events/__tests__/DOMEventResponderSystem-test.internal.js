@@ -26,7 +26,7 @@ function createReactEventComponent({
   onRootEvent,
   onMount,
   onUnmount,
-  transformProps,
+  getTransformedProps,
   onOwnershipChange,
   stopLocalPropagation,
   allowMultipleHostChildren,
@@ -40,7 +40,7 @@ function createReactEventComponent({
     onRootEvent,
     onMount,
     onUnmount,
-    transformProps,
+    getTransformedProps,
     onOwnershipChange,
     stopLocalPropagation: stopLocalPropagation || false,
     allowMultipleHostChildren: allowMultipleHostChildren || false,
@@ -1122,14 +1122,14 @@ describe('DOMEventResponderSystem', () => {
     ReactDOM.render(<Test2 />, container);
   });
 
-  it('the event responder transformProps() function should fire and mutate props', () => {
-    let transformPropsFired = 0;
+  it('the event responder getTransformedProps() function should fire and mutate props', () => {
+    let getTransformedPropsFired = 0;
     const ref = React.createRef();
 
     const EventComponent = createReactEventComponent({
       targetEventTypes: ['click'],
-      transformProps: ({children, number}) => {
-        transformPropsFired++;
+      getTransformedProps: ({children, number}) => {
+        getTransformedPropsFired++;
         return {
           children,
           number: number + 1,
@@ -1155,6 +1155,6 @@ describe('DOMEventResponderSystem', () => {
     baseNumber++;
     ReactDOM.render(<Test />, container);
     dispatchClickEvent(ref.current);
-    expect(transformPropsFired).toEqual(2);
+    expect(getTransformedPropsFired).toEqual(2);
   });
 });
