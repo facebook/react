@@ -301,7 +301,7 @@ describe('Event responder: Press', () => {
           target: ref.current,
         }),
       );
-      ref.current.dispatchEvent(createEvent('pointerup'));
+      ref.current.dispatchEvent(createEvent('pointerup', {pointerType: 'pen'}));
       expect(onPressEnd).toHaveBeenCalledTimes(1);
       expect(onPressEnd).toHaveBeenCalledWith(
         expect.objectContaining({pointerType: 'pen', type: 'pressend'}),
@@ -623,9 +623,7 @@ describe('Event responder: Press', () => {
           target: ref.current,
         }),
       );
-      ref.current.dispatchEvent(
-        createEvent('pointerup', {clientX: 10, clientY: 10}),
-      );
+      ref.current.dispatchEvent(createEvent('pointerup', {pointerType: 'pen'}));
       expect(onPress).toHaveBeenCalledTimes(1);
       expect(onPress).toHaveBeenCalledWith(
         expect.objectContaining({pointerType: 'pen', type: 'press'}),

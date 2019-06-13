@@ -789,10 +789,7 @@ const PressResponder = {
         if (state.pointerType !== pointerType) {
           return;
         }
-        if (
-          type === 'pointermove' &&
-          activePointerId !== pointerId
-        ) {
+        if (type === 'pointermove' && activePointerId !== pointerId) {
           return;
         } else if (type === 'touchmove') {
           touchEvent = getTouchById(nativeEvent, activePointerId);
@@ -854,10 +851,7 @@ const PressResponder = {
         if (isPressed) {
           let isKeyboardEvent = false;
           let touchEvent;
-          if (
-            type === 'pointerup' &&
-            activePointerId !== pointerId
-          ) {
+          if (type === 'pointerup' && activePointerId !== pointerId) {
             return;
           } else if (type === 'touchend') {
             touchEvent = getTouchById(nativeEvent, activePointerId);
