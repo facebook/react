@@ -302,6 +302,40 @@ export default function(babel) {
   let seenForHookCalls = new WeakSet();
   let seenForOutro = new WeakSet();
 
+  const HookCallsVisitor = {
+    CallExpression(path) {
+      const node = path.node;
+      const callee = node.callee;
+
+      let name = null;
+      switch (callee.type) {
+        case 'Identifier':
+          name = callee.name;
+          break;
+        case 'MemberExpression':
+          name = callee.property.name;
+          break;
+      }
+      if (name === null || !/^use[A-Z]/.test(name)) {
+        return;
+      }
+
+      // Make sure we're not recording the same calls twice.
+      // This can happen if another Babel plugin replaces parents.
+      if (seenForHookCalls.has(node)) {
+        return;
+      }
+      seenForHookCalls.add(node);
+      // Don't mutate the tree above this point.
+
+      const fn = path.scope.getFunctionParent();
+      if (fn === null) {
+        return;
+      }
+      recordHookCall(fn.block, path, name);
+    },
+  };
+
   return {
     visitor: {
       ExportDefaultDeclaration(path) {
@@ -617,38 +651,14 @@ export default function(babel) {
           },
         );
       },
-      CallExpression(path) {
-        const node = path.node;
-        const callee = node.callee;
-
-        let name = null;
-        switch (callee.type) {
-          case 'Identifier':
-            name = callee.name;
-            break;
-          case 'MemberExpression':
-            name = callee.property.name;
-            break;
-        }
-        if (name === null || !/^use[A-Z]/.test(name)) {
-          return;
-        }
-
-        // Make sure we're not recording the same calls twice.
-        // This can happen if another Babel plugin replaces parents.
-        if (seenForHookCalls.has(node)) {
-          return;
-        }
-        seenForHookCalls.add(node);
-        // Don't mutate the tree above this point.
-
-        const fn = path.scope.getFunctionParent();
-        if (fn === null) {
-          return;
-        }
-        recordHookCall(fn.block, path, name);
-      },
       Program: {
+        enter(path) {
+          // This is a separate early visitor because we need to collect Hook calls
+          // and "const [foo, setFoo] = ..." signatures before the destructuring
+          // transform mangles them. This extra traversal is not ideal for perf,
+          // but it's the best we can do until we stop transpiling destructuring.
+          path.traverse(HookCallsVisitor);
+        },
         exit(path) {
           const registrations = registrationsByProgramPath.get(path);
           if (registrations === undefined) {
