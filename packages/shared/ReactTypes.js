@@ -90,7 +90,6 @@ export type ReactEventResponder = {
   rootEventTypes?: Array<ReactEventResponderEventType>,
   createInitialState?: (props: null | Object) => Object,
   allowMultipleHostChildren: boolean,
-  stopLocalPropagation: boolean,
   onEvent?: (
     event: ReactResponderEvent,
     context: ReactResponderContext,
@@ -194,7 +193,6 @@ export type ReactResponderContext = {
     rootEventTypes: Array<ReactEventResponderEventType>,
   ) => void,
   hasOwnership: () => boolean,
-  requestResponderOwnership: () => boolean,
   requestGlobalOwnership: () => boolean,
   releaseOwnership: () => boolean,
   setTimeout: (func: () => void, timeout: number) => number,
@@ -209,4 +207,5 @@ export type ReactResponderContext = {
     elementType: string,
     deep: boolean,
   ) => boolean,
+  continueLocalPropagation(): void,
 };
