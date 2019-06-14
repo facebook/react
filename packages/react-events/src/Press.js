@@ -510,39 +510,6 @@ function getEventViewportCoords(
   };
 }
 
-function isPressWithinResponderRegion(
-  nativeEventOrTouchEvent: Event | Touch,
-  state: PressState,
-): boolean {
-  const {responderRegionOnActivation, responderRegionOnDeactivation} = state;
-  let left, top, right, bottom;
-
-  if (responderRegionOnActivation != null) {
-    left = responderRegionOnActivation.left;
-    top = responderRegionOnActivation.top;
-    right = responderRegionOnActivation.right;
-    bottom = responderRegionOnActivation.bottom;
-
-    if (responderRegionOnDeactivation != null) {
-      left = Math.min(left, responderRegionOnDeactivation.left);
-      top = Math.min(top, responderRegionOnDeactivation.top);
-      right = Math.max(right, responderRegionOnDeactivation.right);
-      bottom = Math.max(bottom, responderRegionOnDeactivation.bottom);
-    }
-  }
-  const {clientX: x, clientY: y} = (nativeEventOrTouchEvent: any);
-
-  return (
-    left != null &&
-    right != null &&
-    top != null &&
-    bottom != null &&
-    x !== null &&
-    y !== null &&
-    (x >= left && x <= right && y >= top && y <= bottom)
-  );
-}
-
 function unmountResponder(
   context: ReactResponderContext,
   props: PressProps,
@@ -593,7 +560,7 @@ function getTouchTarget(context: ReactResponderContext, touchEvent: Touch) {
   return doc.elementFromPoint(touchEvent.clientX, touchEvent.clientY);
 }
 
-function updatePressResponderRegion(
+function updateIsPressWithinResponderRegion(
   target: Element | Document,
   nativeEventOrTouchEvent: Event | Touch,
   context: ReactResponderContext,
@@ -613,10 +580,32 @@ function updatePressResponderRegion(
         props,
       );
     }
-    state.isPressWithinResponderRegion = isPressWithinResponderRegion(
-      nativeEventOrTouchEvent,
-      state,
-    );
+    const {responderRegionOnActivation, responderRegionOnDeactivation} = state;
+    let left, top, right, bottom;
+
+    if (responderRegionOnActivation != null) {
+      left = responderRegionOnActivation.left;
+      top = responderRegionOnActivation.top;
+      right = responderRegionOnActivation.right;
+      bottom = responderRegionOnActivation.bottom;
+
+      if (responderRegionOnDeactivation != null) {
+        left = Math.min(left, responderRegionOnDeactivation.left);
+        top = Math.min(top, responderRegionOnDeactivation.top);
+        right = Math.max(right, responderRegionOnDeactivation.right);
+        bottom = Math.max(bottom, responderRegionOnDeactivation.bottom);
+      }
+    }
+    const {clientX: x, clientY: y} = (nativeEventOrTouchEvent: any);
+
+    state.isPressWithinResponderRegion =
+      left != null &&
+      right != null &&
+      top != null &&
+      bottom != null &&
+      x !== null &&
+      y !== null &&
+      (x >= left && x <= right && y >= top && y <= bottom);
   }
 }
 
@@ -801,7 +790,7 @@ const PressResponder = {
 
         // Calculate the responder region we use for deactivation, as the
         // element dimensions may have changed since activation.
-        updatePressResponderRegion(
+        updateIsPressWithinResponderRegion(
           target,
           touchEvent || nativeEvent,
           context,
@@ -875,7 +864,7 @@ const PressResponder = {
               // If the event target isn't within the press target, check if we're still
               // within the responder region. The region may have changed if the
               // element's layout was modified after activation.
-              updatePressResponderRegion(
+              updateIsPressWithinResponderRegion(
                 target,
                 touchEvent || nativeEvent,
                 context,
