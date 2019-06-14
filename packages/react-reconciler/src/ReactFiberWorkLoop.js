@@ -1696,7 +1696,7 @@ function commitRootImpl(root) {
 
     let prevInteractions: Set<Interaction> | null = null;
     if (enableSchedulerTracing) {
-      if (remainingExpirationTime === Never) {
+      if (reschedulePendingInteractionsWithRootUpdate) {
         // Temporarily restore interactions in the case of e.g. hidden subtrees and suspended hydration.
         // Don't restore otherwise or it would blur interrupting high-pri udpates with low-pri work.
         prevInteractions = __interactionsRef.current;
@@ -1707,7 +1707,7 @@ function commitRootImpl(root) {
     scheduleCallbackForRoot(root, priorityLevel, remainingExpirationTime);
 
     if (enableSchedulerTracing) {
-      if (remainingExpirationTime === Never) {
+      if (reschedulePendingInteractionsWithRootUpdate) {
         __interactionsRef.current = ((prevInteractions: any): Set<Interaction>);
       }
     }
@@ -1728,6 +1728,10 @@ function commitRootImpl(root) {
   }
 
   onCommitRoot(finishedWork.stateNode, expirationTime);
+
+  if (enableSchedulerTracing) {
+    reschedulePendingInteractionsWithRootUpdate = false;
+  }
 
   if (remainingExpirationTime === Sync) {
     // Count the number of times the root synchronously re-renders without
@@ -1760,6 +1764,14 @@ function commitRootImpl(root) {
   // If layout work was scheduled, flush it now.
   flushSyncCallbackQueue();
   return null;
+}
+
+let reschedulePendingInteractionsWithRootUpdate: boolean = false;
+
+export function markPendingInteractionsToBeRescheduled() {
+  if (enableSchedulerTracing) {
+    reschedulePendingInteractionsWithRootUpdate = true;
+  }
 }
 
 function commitBeforeMutationEffects() {
@@ -2643,7 +2655,6 @@ function finishPendingInteractions(root, committedExpirationTime) {
           pendingInteractionMap.delete(scheduledExpirationTime);
 
           scheduledInteractions.forEach(interaction => {
-            // TODO (interaction-tracing) Don't decrement count if pri is Never and there's remaining Never work.
             interaction.__count--;
 
             if (subscriber !== null && interaction.__count === 0) {

@@ -101,6 +101,7 @@ import {
   enableEventAPI,
 } from 'shared/ReactFeatureFlags';
 import {
+  markPendingInteractionsToBeRescheduled,
   renderDidSuspend,
   renderDidSuspendDelayIfPossible,
 } from './ReactFiberWorkLoop';
@@ -815,6 +816,7 @@ function completeWork(
             'A dehydrated suspense component was completed without a hydrated node. ' +
               'This is probably a bug in React.',
           );
+          markPendingInteractionsToBeRescheduled();
           skipPastDehydratedSuspenseInstance(workInProgress);
         } else if ((workInProgress.effectTag & DidCapture) === NoEffect) {
           // This boundary did not suspend so it's now hydrated.

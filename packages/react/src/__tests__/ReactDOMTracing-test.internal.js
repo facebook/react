@@ -15,6 +15,7 @@ let ReactDOMServer;
 let ReactFeatureFlags;
 let Scheduler;
 let SchedulerTracing;
+let TestUtils;
 let onInteractionScheduledWorkCompleted;
 let onInteractionTraced;
 let onWorkCanceled;
@@ -36,6 +37,7 @@ function loadModules() {
   ReactDOMServer = require('react-dom/server');
   Scheduler = require('scheduler');
   SchedulerTracing = require('scheduler/tracing');
+  TestUtils = require('react-dom/test-utils');
 
   onInteractionScheduledWorkCompleted = jest.fn();
   onInteractionTraced = jest.fn();
@@ -283,6 +285,106 @@ describe('ReactDOMTracing', () => {
         expect(onRender).toHaveLastRenderedWithInteractions(
           new Set([interaction]),
         );
+      });
+
+      it('does not continue interactions across pre-existing idle work', () => {
+        const Child = () => {
+          Scheduler.yieldValue('Child');
+          return <div />;
+        };
+
+        let update = null;
+
+        const WithHiddenWork = () => {
+          Scheduler.yieldValue('WithHiddenWork');
+          return (
+            <div hidden={true}>
+              <Child />
+            </div>
+          );
+        };
+
+        const Updater = () => {
+          Scheduler.yieldValue('Updater');
+          React.useEffect(() => {
+            Scheduler.yieldValue('Updater:effect');
+          });
+
+          const setCount = React.useState(0)[1];
+          update = () => {
+            setCount(current => current + 1);
+          };
+
+          return <div />;
+        };
+
+        const App = () => {
+          Scheduler.yieldValue('App');
+          React.useEffect(() => {
+            Scheduler.yieldValue('App:effect');
+          });
+
+          return (
+            <React.Fragment>
+              <WithHiddenWork />
+              <Updater />
+            </React.Fragment>
+          );
+        };
+
+        const onRender = jest.fn();
+        const container = document.createElement('div');
+        const root = ReactDOM.unstable_createRoot(container);
+
+        // Schedule some idle work without any interactions.
+        TestUtils.act(() => {
+          root.render(
+            <React.Profiler id="test" onRender={onRender}>
+              <App />
+            </React.Profiler>,
+          );
+          expect(Scheduler).toFlushAndYieldThrough([
+            'App',
+            'WithHiddenWork',
+            'Updater',
+            'Updater:effect',
+            'App:effect',
+          ]);
+          expect(update).not.toBeNull();
+
+          // Trace a higher-priority update.
+          let interaction = null;
+          SchedulerTracing.unstable_trace('update', 0, () => {
+            interaction = Array.from(SchedulerTracing.unstable_getCurrent())[0];
+            update();
+          });
+          expect(interaction).not.toBeNull();
+          expect(onRender).toHaveBeenCalledTimes(1);
+          expect(onInteractionTraced).toHaveBeenCalledTimes(1);
+          expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
+            interaction,
+          );
+
+          // Ensure the traced interaction completes without being attributed to the pre-existing idle work.
+          expect(Scheduler).toFlushAndYieldThrough([
+            'Updater',
+            'Updater:effect',
+          ]);
+          expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
+          expect(
+            onInteractionScheduledWorkCompleted,
+          ).toHaveBeenLastNotifiedOfInteraction(interaction);
+          expect(onRender).toHaveBeenCalledTimes(2);
+          expect(onRender).toHaveLastRenderedWithInteractions(
+            new Set([interaction]),
+          );
+
+          // Complete low-priority work and ensure no lingering interaction.
+          expect(Scheduler).toFlushAndYield(['Child']);
+          expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
+          expect(onRender).toHaveBeenCalledTimes(3);
+          expect(onRender).toHaveLastRenderedWithInteractions(new Set([]));
+        });
       });
     });
 
