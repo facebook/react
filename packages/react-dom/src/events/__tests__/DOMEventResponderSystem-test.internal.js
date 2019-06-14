@@ -213,7 +213,7 @@ describe('DOMEventResponderSystem', () => {
     const ClickEventComponent = createReactEventComponent({
       targetEventTypes: ['click'],
       onEvent: (event, context, props) => {
-        context.cotinueLocalPropagation();
+        context.continueLocalPropagation();
         eventResponderFiredCount++;
         eventLog.push({
           name: event.type,
@@ -223,7 +223,7 @@ describe('DOMEventResponderSystem', () => {
         });
       },
       onEventCapture: (event, context, props) => {
-        context.cotinueLocalPropagation();
+        context.continueLocalPropagation();
         eventResponderFiredCount++;
         eventLog.push({
           name: event.type,
@@ -324,18 +324,18 @@ describe('DOMEventResponderSystem', () => {
     ]);
   });
 
-  it('nested event responders should fire in the correct order with cotinueLocalPropagation', () => {
+  it('nested event responders should fire in the correct order with continueLocalPropagation', () => {
     let eventLog = [];
     const buttonRef = React.createRef();
 
     const ClickEventComponent = createReactEventComponent({
       targetEventTypes: ['click'],
       onEvent: (event, context, props) => {
-        context.cotinueLocalPropagation();
+        context.continueLocalPropagation();
         eventLog.push(`${props.name} [bubble]`);
       },
       onEventCapture: (event, context, props) => {
-        context.cotinueLocalPropagation();
+        context.continueLocalPropagation();
         eventLog.push(`${props.name} [capture]`);
       },
     });
@@ -686,7 +686,7 @@ describe('DOMEventResponderSystem', () => {
     const EventComponent = createReactEventComponent({
       targetEventTypes: ['pointerout'],
       onEvent: (event, context) => {
-        context.cotinueLocalPropagation();
+        context.continueLocalPropagation();
         const isWithin = context.isTargetWithinEventResponderScope(
           event.nativeEvent.relatedTarget,
         );

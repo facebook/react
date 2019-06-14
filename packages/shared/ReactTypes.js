@@ -200,5 +200,5 @@ export type ReactResponderContext = {
     elementType: string,
     deep: boolean,
   ) => boolean,
-  cotinueLocalPropagation(): void,
+  continueLocalPropagation(): void,
 };

@@ -84,7 +84,7 @@ const FocusScopeResponder = {
               nextElement = elements[lastPosition];
             } else {
               // Out of bounds
-              context.cotinueLocalPropagation();
+              context.continueLocalPropagation();
               return;
             }
           } else {
@@ -96,7 +96,7 @@ const FocusScopeResponder = {
               nextElement = elements[0];
             } else {
               // Out of bounds
-              context.cotinueLocalPropagation();
+              context.continueLocalPropagation();
               return;
             }
           } else {

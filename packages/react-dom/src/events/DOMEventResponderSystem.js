@@ -434,7 +434,7 @@ const eventResponderContext: ReactResponderContext = {
     }
     return false;
   },
-  cotinueLocalPropagation() {
+  continueLocalPropagation() {
     validateResponderContext();
     continueLocalPropagation = true;
   },
