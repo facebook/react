@@ -8,9 +8,9 @@
  */
 
 import type {
-  ReactResponderEvent,
-  ReactResponderContext,
-} from 'shared/ReactTypes';
+  ReactDOMResponderEvent,
+  ReactDOMResponderContext,
+} from 'shared/ReactDOMTypes';
 import type {EventPriority} from 'shared/ReactTypes';
 
 import React from 'react';
@@ -150,11 +150,11 @@ if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
 }
 
 function createPressEvent(
-  context: ReactResponderContext,
+  context: ReactDOMResponderContext,
   type: PressEventType,
   target: Element | Document,
   pointerType: PointerType,
-  event: ?ReactResponderEvent,
+  event: ?ReactDOMResponderEvent,
 ): PressEvent {
   const timeStamp = context.getTimeStamp();
   let clientX = null;
@@ -204,8 +204,8 @@ function createPressEvent(
 }
 
 function dispatchEvent(
-  event: ?ReactResponderEvent,
-  context: ReactResponderContext,
+  event: ?ReactDOMResponderEvent,
+  context: ReactDOMResponderContext,
   state: PressState,
   name: PressEventType,
   listener: (e: Object) => void,
@@ -224,8 +224,8 @@ function dispatchEvent(
 }
 
 function dispatchPressChangeEvent(
-  event: ?ReactResponderEvent,
-  context: ReactResponderContext,
+  event: ?ReactDOMResponderEvent,
+  context: ReactDOMResponderContext,
   props: PressProps,
   state: PressState,
 ): void {
@@ -237,8 +237,8 @@ function dispatchPressChangeEvent(
 }
 
 function dispatchLongPressChangeEvent(
-  event: ?ReactResponderEvent,
-  context: ReactResponderContext,
+  event: ?ReactDOMResponderEvent,
+  context: ReactDOMResponderContext,
   props: PressProps,
   state: PressState,
 ): void {
@@ -256,7 +256,7 @@ function dispatchLongPressChangeEvent(
   );
 }
 
-function activate(event: ReactResponderEvent, context, props, state) {
+function activate(event: ReactDOMResponderEvent, context, props, state) {
   const nativeEvent: any = event.nativeEvent;
   const {x, y} = getEventViewportCoords(nativeEvent);
   const wasActivePressed = state.isActivePressed;
@@ -280,7 +280,7 @@ function activate(event: ReactResponderEvent, context, props, state) {
   }
 }
 
-function deactivate(event: ?ReactResponderEvent, context, props, state) {
+function deactivate(event: ?ReactDOMResponderEvent, context, props, state) {
   const wasLongPressed = state.isLongPressed;
   state.isActivePressed = false;
   state.isLongPressed = false;
@@ -304,8 +304,8 @@ function deactivate(event: ?ReactResponderEvent, context, props, state) {
 }
 
 function dispatchPressStartEvents(
-  event: ReactResponderEvent,
-  context: ReactResponderContext,
+  event: ReactDOMResponderEvent,
+  context: ReactDOMResponderContext,
   props: PressProps,
   state: PressState,
 ): void {
@@ -367,8 +367,8 @@ function dispatchPressStartEvents(
 }
 
 function dispatchPressEndEvents(
-  event: ?ReactResponderEvent,
-  context: ReactResponderContext,
+  event: ?ReactDOMResponderEvent,
+  context: ReactDOMResponderContext,
   props: PressProps,
   state: PressState,
 ): void {
@@ -415,8 +415,8 @@ function dispatchPressEndEvents(
 }
 
 function dispatchCancel(
-  event: ReactResponderEvent,
-  context: ReactResponderContext,
+  event: ReactDOMResponderEvent,
+  context: ReactDOMResponderContext,
   props: PressProps,
   state: PressState,
 ): void {
@@ -447,7 +447,7 @@ function calculateDelayMS(delay: ?number, min = 0, fallback = 0) {
 
 // TODO: account for touch hit slop
 function calculateResponderRegion(
-  context: ReactResponderContext,
+  context: ReactDOMResponderContext,
   target: Element,
   props: PressProps,
 ) {
@@ -512,7 +512,7 @@ function getEventViewportCoords(
 }
 
 function isPressWithinResponderRegion(
-  nativeEvent: $PropertyType<ReactResponderEvent, 'nativeEvent'>,
+  nativeEvent: $PropertyType<ReactDOMResponderEvent, 'nativeEvent'>,
   state: PressState,
 ): boolean {
   const {responderRegionOnActivation, responderRegionOnDeactivation} = state;
@@ -545,7 +545,7 @@ function isPressWithinResponderRegion(
 }
 
 function unmountResponder(
-  context: ReactResponderContext,
+  context: ReactDOMResponderContext,
   props: PressProps,
   state: PressState,
 ): void {
@@ -556,7 +556,7 @@ function unmountResponder(
 }
 
 function addRootEventTypes(
-  context: ReactResponderContext,
+  context: ReactDOMResponderContext,
   state: PressState,
 ): void {
   if (!state.addedRootEvents) {
@@ -566,7 +566,7 @@ function addRootEventTypes(
 }
 
 function removeRootEventTypes(
-  context: ReactResponderContext,
+  context: ReactDOMResponderContext,
   state: PressState,
 ): void {
   if (state.addedRootEvents) {
@@ -602,8 +602,8 @@ const PressResponder = {
   allowMultipleHostChildren: false,
   stopLocalPropagation: true,
   onEvent(
-    event: ReactResponderEvent,
-    context: ReactResponderContext,
+    event: ReactDOMResponderEvent,
+    context: ReactDOMResponderContext,
     props: PressProps,
     state: PressState,
   ): void {
@@ -714,8 +714,8 @@ const PressResponder = {
     }
   },
   onRootEvent(
-    event: ReactResponderEvent,
-    context: ReactResponderContext,
+    event: ReactDOMResponderEvent,
+    context: ReactDOMResponderContext,
     props: PressProps,
     state: PressState,
   ): void {
@@ -891,14 +891,14 @@ const PressResponder = {
     }
   },
   onUnmount(
-    context: ReactResponderContext,
+    context: ReactDOMResponderContext,
     props: PressProps,
     state: PressState,
   ) {
     unmountResponder(context, props, state);
   },
   onOwnershipChange(
-    context: ReactResponderContext,
+    context: ReactDOMResponderContext,
     props: PressProps,
     state: PressState,
   ) {

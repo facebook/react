@@ -8,8 +8,10 @@
  */
 
 import type {
-  ReactResponderEvent,
-  ReactResponderContext,
+  ReactDOMResponderEvent,
+  ReactDOMResponderContext,
+} from 'shared/ReactDOMTypes';
+import type {
   EventPriority,
 } from 'shared/ReactTypes';
 
@@ -58,7 +60,7 @@ type DragEvent = {|
 |};
 
 function createDragEvent(
-  context: ReactResponderContext,
+  context: ReactDOMResponderContext,
   type: DragEventType,
   target: Element | Document,
   eventData?: EventData,
@@ -72,7 +74,7 @@ function createDragEvent(
 }
 
 function dispatchDragEvent(
-  context: ReactResponderContext,
+  context: ReactDOMResponderContext,
   name: DragEventType,
   listener: DragEvent => void,
   state: DragState,
@@ -100,8 +102,8 @@ const DragResponder = {
   allowMultipleHostChildren: false,
   stopLocalPropagation: true,
   onEvent(
-    event: ReactResponderEvent,
-    context: ReactResponderContext,
+    event: ReactDOMResponderEvent,
+    context: ReactDOMResponderContext,
     props: Object,
     state: DragState,
   ): void {
@@ -143,8 +145,8 @@ const DragResponder = {
     }
   },
   onRootEvent(
-    event: ReactResponderEvent,
-    context: ReactResponderContext,
+    event: ReactDOMResponderEvent,
+    context: ReactDOMResponderContext,
     props: Object,
     state: DragState,
   ): void {

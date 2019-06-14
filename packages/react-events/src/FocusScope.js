@@ -8,9 +8,9 @@
  */
 
 import type {
-  ReactResponderEvent,
-  ReactResponderContext,
-} from 'shared/ReactTypes';
+  ReactDOMResponderEvent,
+  ReactDOMResponderContext,
+} from 'shared/ReactDOMTypes';
 
 import React from 'react';
 
@@ -37,7 +37,7 @@ function focusElement(element: ?HTMLElement) {
 }
 
 function getFirstFocusableElement(
-  context: ReactResponderContext,
+  context: ReactDOMResponderContext,
   state: FocusScopeState,
 ): ?HTMLElement {
   const elements = context.getFocusableElementsInScope();
@@ -58,8 +58,8 @@ const FocusScopeResponder = {
   allowMultipleHostChildren: true,
   stopLocalPropagation: false,
   onEvent(
-    event: ReactResponderEvent,
-    context: ReactResponderContext,
+    event: ReactDOMResponderEvent,
+    context: ReactDOMResponderContext,
     props: FocusScopeProps,
     state: FocusScopeState,
   ) {
@@ -125,8 +125,8 @@ const FocusScopeResponder = {
     }
   },
   onRootEvent(
-    event: ReactResponderEvent,
-    context: ReactResponderContext,
+    event: ReactDOMResponderEvent,
+    context: ReactDOMResponderContext,
     props: FocusScopeProps,
     state: FocusScopeState,
   ) {
@@ -146,7 +146,7 @@ const FocusScopeResponder = {
     }
   },
   onMount(
-    context: ReactResponderContext,
+    context: ReactDOMResponderContext,
     props: FocusScopeProps,
     state: FocusScopeState,
   ): void {
@@ -159,7 +159,7 @@ const FocusScopeResponder = {
     }
   },
   onUnmount(
-    context: ReactResponderContext,
+    context: ReactDOMResponderContext,
     props: FocusScopeProps,
     state: FocusScopeState,
   ): void {
@@ -172,7 +172,7 @@ const FocusScopeResponder = {
     }
   },
   onOwnershipChange(
-    context: ReactResponderContext,
+    context: ReactDOMResponderContext,
     props: FocusScopeProps,
     state: FocusScopeState,
   ): void {

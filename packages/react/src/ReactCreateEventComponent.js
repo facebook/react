@@ -6,7 +6,9 @@
  * @flow
  */
 
-import type {ReactEventComponent, ReactEventResponder} from 'shared/ReactTypes';
+import type {ReactEventComponent} from 'shared/ReactTypes';
+import type {ReactDOMEventResponder} from 'shared/ReactDOMTypes';
+import type {ReactFabricEventResponder} from 'shared/ReactNativeTypes';
 import {enableEventAPI} from 'shared/ReactFeatureFlags';
 
 import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
@@ -31,7 +33,7 @@ if (__DEV__) {
 }
 
 export function createEventComponent(
-  responder: ReactEventResponder,
+  responder: ReactDOMEventResponder | ReactFabricEventResponder,
   displayName: string,
 ): ?ReactEventComponent {
   if (enableEventAPI) {

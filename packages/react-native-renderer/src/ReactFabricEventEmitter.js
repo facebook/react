@@ -17,7 +17,9 @@ import {registrationNameModules} from 'events/EventPluginRegistry';
 import {batchedUpdates} from 'events/ReactGenericBatching';
 
 import type {AnyNativeEvent} from 'events/PluginModuleType';
+import {enableEventAPI} from 'shared/ReactFeatureFlags';
 import type {TopLevelType} from 'events/TopLevelEventTypes';
+import {dispatchEventForResponderEventSystem} from './ReactFabricEventResponderSystem';
 
 export {getListener, registrationNameModules as registrationNames};
 
@@ -27,7 +29,12 @@ export function dispatchEvent(
   nativeEvent: AnyNativeEvent,
 ) {
   const targetFiber = (target: null | Fiber);
+  if (enableEventAPI) {
+    // React Flare event system
+    dispatchEventForResponderEventSystem((topLevelType: any), target, nativeEvent);
+  }
   batchedUpdates(function() {
+    // Heritage plugin event system
     runExtractedPluginEventsInBatch(
       topLevelType,
       targetFiber,

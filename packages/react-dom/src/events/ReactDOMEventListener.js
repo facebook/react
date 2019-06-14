@@ -332,7 +332,7 @@ export function dispatchEvent(
         targetInst,
       );
     } else {
-      // Responder event system (experimental event API)
+      // React Flare event system
       dispatchEventForResponderEventSystem(
         topLevelType,
         targetInst,
