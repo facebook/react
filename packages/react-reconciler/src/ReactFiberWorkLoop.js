@@ -323,6 +323,9 @@ export function computeExpirationForFiber(
 
   // If we're in the middle of rendering a tree, do not update at the same
   // expiration time that is already rendering.
+  // TODO: We shouldn't have to do this if the update is on a different root.
+  // Refactor computeExpirationForFiber + scheduleUpdate so we have access to
+  // the root when we check for this condition.
   if (workInProgressRoot !== null && expirationTime === renderExpirationTime) {
     // This is a trick to move this update into a separate batch
     expirationTime -= 1;
@@ -806,8 +809,10 @@ function renderRoot(
     return null;
   }
 
-  if (root.finishedExpirationTime === expirationTime) {
+  if (isSync && root.finishedExpirationTime === expirationTime) {
     // There's already a pending commit at this expiration time.
+    // TODO: This is poorly factored. This case only exists for the
+    // batch.commit() API.
     return commitRoot.bind(null, root);
   }
 
