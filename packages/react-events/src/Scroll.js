@@ -127,7 +127,6 @@ const ScrollResponder = {
     };
   },
   allowMultipleHostChildren: true,
-  stopLocalPropagation: true,
   onEvent(
     event: ReactResponderEvent,
     context: ReactResponderContext,
