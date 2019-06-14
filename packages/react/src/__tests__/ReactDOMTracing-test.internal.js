@@ -386,6 +386,127 @@ describe('ReactDOMTracing', () => {
           expect(onRender).toHaveLastRenderedWithInteractions(new Set([]));
         });
       });
+
+      it('should properly trace interactions when there is work of interleaved priorities', () => {
+        const Child = () => {
+          Scheduler.yieldValue('Child');
+          return <div />;
+        };
+
+        let scheduleUpdate = null;
+        let scheduleUpdateWithHidden = null;
+
+        const MaybeHiddenWork = () => {
+          const [flag, setFlag] = React.useState(false);
+          scheduleUpdateWithHidden = () => setFlag(true);
+          Scheduler.yieldValue('MaybeHiddenWork');
+          React.useEffect(() => {
+            Scheduler.yieldValue('MaybeHiddenWork:effect');
+          });
+          return flag ? (
+            <div hidden={true}>
+              <Child />
+            </div>
+          ) : null;
+        };
+
+        const Updater = () => {
+          Scheduler.yieldValue('Updater');
+          React.useEffect(() => {
+            Scheduler.yieldValue('Updater:effect');
+          });
+
+          const setCount = React.useState(0)[1];
+          scheduleUpdate = () => setCount(current => current + 1);
+
+          return <div />;
+        };
+
+        const App = () => {
+          Scheduler.yieldValue('App');
+          React.useEffect(() => {
+            Scheduler.yieldValue('App:effect');
+          });
+
+          return (
+            <React.Fragment>
+              <MaybeHiddenWork />
+              <Updater />
+            </React.Fragment>
+          );
+        };
+
+        const onRender = jest.fn();
+        const container = document.createElement('div');
+        const root = ReactDOM.unstable_createRoot(container);
+
+        TestUtils.act(() => {
+          root.render(
+            <React.Profiler id="test" onRender={onRender}>
+              <App />
+            </React.Profiler>,
+          );
+          expect(Scheduler).toFlushAndYield([
+            'App',
+            'MaybeHiddenWork',
+            'Updater',
+            'MaybeHiddenWork:effect',
+            'Updater:effect',
+            'App:effect',
+          ]);
+          expect(scheduleUpdate).not.toBeNull();
+          expect(scheduleUpdateWithHidden).not.toBeNull();
+          expect(onRender).toHaveBeenCalledTimes(1);
+
+          // schedule traced high-pri update and a (non-traced) low-pri update.
+          let interaction = null;
+          SchedulerTracing.unstable_trace('update', 0, () => {
+            interaction = Array.from(SchedulerTracing.unstable_getCurrent())[0];
+            Scheduler.unstable_runWithPriority(
+              Scheduler.unstable_UserBlockingPriority,
+              () => scheduleUpdateWithHidden(),
+            );
+          });
+          scheduleUpdate();
+          expect(interaction).not.toBeNull();
+          expect(onRender).toHaveBeenCalledTimes(1);
+          expect(onInteractionTraced).toHaveBeenCalledTimes(1);
+          expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
+            interaction,
+          );
+
+          // high-pri update should leave behind idle work and should not complete the interaction
+          expect(Scheduler).toFlushAndYieldThrough([
+            'MaybeHiddenWork',
+            'MaybeHiddenWork:effect',
+          ]);
+          expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+          expect(onRender).toHaveBeenCalledTimes(2);
+          expect(onRender).toHaveLastRenderedWithInteractions(
+            new Set([interaction]),
+          );
+
+          // low-pri update should not have the interaction
+          expect(Scheduler).toFlushAndYieldThrough([
+            'Updater',
+            'Updater:effect',
+          ]);
+          expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+          expect(onRender).toHaveBeenCalledTimes(3);
+          expect(onRender).toHaveLastRenderedWithInteractions(new Set([]));
+
+          // idle work should complete the interaction
+          expect(Scheduler).toFlushAndYield(['Child']);
+          expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
+          expect(
+            onInteractionScheduledWorkCompleted,
+          ).toHaveBeenLastNotifiedOfInteraction(interaction);
+          expect(onRender).toHaveBeenCalledTimes(4);
+          expect(onRender).toHaveLastRenderedWithInteractions(
+            new Set([interaction]),
+          );
+        });
+      });
     });
 
     describe('hydration', () => {

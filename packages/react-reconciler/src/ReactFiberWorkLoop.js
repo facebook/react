@@ -246,6 +246,10 @@ let nestedPassiveUpdateCount: number = 0;
 
 let interruptedBy: Fiber | null = null;
 
+// Marks the need to reschedule pending interactions at Never priority during the commit phase.
+// This enables them to be traced accross hidden boundaries or suspended SSR hydration.
+let reschedulePendingInteractionsAtNeverPriority: boolean = false;
+
 // Expiration times are computed by adding to the current time (the start
 // time). However, if two updates are scheduled within the same event, we
 // should treat their start times as simultaneous, even if the actual clock
@@ -375,7 +379,7 @@ export function scheduleUpdateOnFiber(
       (executionContext & (RenderContext | CommitContext)) === NoContext
     ) {
       // Register pending interactions on the root to avoid losing traced interaction data.
-      schedulePendingInteraction(root, expirationTime);
+      schedulePendingInteractions(root, expirationTime);
 
       // This is a legacy edge case. The initial mount of a ReactDOM.render-ed
       // root inside of batchedUpdates should be synchronous, but layout updates
@@ -538,9 +542,8 @@ function scheduleCallbackForRoot(
     }
   }
 
-  // Add the current set of interactions to the pending set associated with
-  // this root.
-  schedulePendingInteraction(root, expirationTime);
+  // Associate the current interactions with this new root+priority.
+  schedulePendingInteractions(root, expirationTime);
 }
 
 function runRootCallback(root, callback, isSync) {
@@ -817,7 +820,7 @@ function renderRoot(
   // and prepare a fresh one. Otherwise we'll continue where we left off.
   if (root !== workInProgressRoot || expirationTime !== renderExpirationTime) {
     prepareFreshStack(root, expirationTime);
-    startWorkOnPendingInteraction(root, expirationTime);
+    startWorkOnPendingInteractions(root, expirationTime);
   } else if (workInProgressRootExitStatus === RootSuspendedWithDelay) {
     // We could've received an update at a lower priority while we yielded.
     // We're suspended in a delayed state. Once we complete this render we're
@@ -1694,23 +1697,15 @@ function commitRootImpl(root) {
       remainingExpirationTime,
     );
 
-    let prevInteractions: Set<Interaction> | null = null;
     if (enableSchedulerTracing) {
-      if (reschedulePendingInteractionsWithRootUpdate) {
-        // Temporarily restore interactions in the case of e.g. hidden subtrees and suspended hydration.
-        // Don't restore otherwise or it would blur interrupting high-pri udpates with low-pri work.
-        prevInteractions = __interactionsRef.current;
-        __interactionsRef.current = root.memoizedInteractions;
+      // Temporarily restore interactions in the case of e.g. hidden subtrees and suspended hydration.
+      // Don't restore otherwise or it would blur interrupting high-pri udpates with low-pri work.
+      if (reschedulePendingInteractionsAtNeverPriority) {
+        scheduleInteractions(root, Never, root.memoizedInteractions);
       }
     }
 
     scheduleCallbackForRoot(root, priorityLevel, remainingExpirationTime);
-
-    if (enableSchedulerTracing) {
-      if (reschedulePendingInteractionsWithRootUpdate) {
-        __interactionsRef.current = ((prevInteractions: any): Set<Interaction>);
-      }
-    }
   } else {
     // If there's no remaining work, we can clear the set of already failed
     // error boundaries.
@@ -1730,7 +1725,7 @@ function commitRootImpl(root) {
   onCommitRoot(finishedWork.stateNode, expirationTime);
 
   if (enableSchedulerTracing) {
-    reschedulePendingInteractionsWithRootUpdate = false;
+    reschedulePendingInteractionsAtNeverPriority = false;
   }
 
   if (remainingExpirationTime === Sync) {
@@ -1764,14 +1759,6 @@ function commitRootImpl(root) {
   // If layout work was scheduled, flush it now.
   flushSyncCallbackQueue();
   return null;
-}
-
-let reschedulePendingInteractionsWithRootUpdate: boolean = false;
-
-export function markPendingInteractionsToBeRescheduled() {
-  if (enableSchedulerTracing) {
-    reschedulePendingInteractionsWithRootUpdate = true;
-  }
 }
 
 function commitBeforeMutationEffects() {
@@ -2541,14 +2528,17 @@ function computeThreadID(root, expirationTime) {
   return expirationTime * 1000 + root.interactionThreadID;
 }
 
-function schedulePendingInteraction(root, expirationTime) {
-  // This is called when work is scheduled on a root. It sets up a pending
-  // interaction, which is completed once the work commits.
+export function markPendingInteractionsToBeRescheduledAtNeverPriority() {
+  if (enableSchedulerTracing) {
+    reschedulePendingInteractionsAtNeverPriority = true;
+  }
+}
+
+function scheduleInteractions(root, expirationTime, interactions) {
   if (!enableSchedulerTracing) {
     return;
   }
 
-  const interactions = __interactionsRef.current;
   if (interactions.size > 0) {
     const pendingInteractionMap = root.pendingInteractionMap;
     const pendingInteractions = pendingInteractionMap.get(expirationTime);
@@ -2578,7 +2568,18 @@ function schedulePendingInteraction(root, expirationTime) {
   }
 }
 
-function startWorkOnPendingInteraction(root, expirationTime) {
+function schedulePendingInteractions(root, expirationTime) {
+  // This is called when work is scheduled on a root.
+  // It associates the current interactions with the newly-scheduled expiration.
+  // They will be restored when that expiration is later committed.
+  if (!enableSchedulerTracing) {
+    return;
+  }
+
+  scheduleInteractions(root, expirationTime, __interactionsRef.current);
+}
+
+function startWorkOnPendingInteractions(root, expirationTime) {
   // This is called when new work is started on a root.
   if (!enableSchedulerTracing) {
     return;
