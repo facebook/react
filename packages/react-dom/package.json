@@ -3,6 +3,7 @@
   "version": "16.8.6",
   "description": "React package for working with the DOM.",
   "main": "index.js",
+  "module": "src/client/ReactDOM.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/facebook/react.git",
