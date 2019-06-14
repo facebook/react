@@ -589,7 +589,12 @@ export function hideInstance(instance: Instance): void {
   // TODO: Does this work for all element types? What about MathML? Should we
   // pass host context to this method?
   instance = ((instance: any): HTMLElement);
-  instance.style.display = 'none !important';
+  const style = instance.style;
+  if (typeof style.setProperty === 'function') {
+    style.setProperty('display', 'none', 'important');
+  } else {
+    style.display = 'none';
+  }
 }
 
 export function hideTextInstance(textInstance: TextInstance): void {
