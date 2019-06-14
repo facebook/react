@@ -13,7 +13,7 @@ import {registrationNameModules} from 'events/EventPluginRegistry';
 import warning from 'shared/warning';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import type {ReactDOMEventResponderEventType} from 'react-dom/src/ReactDOMTypes';
+import type {ReactDOMEventResponderEventType} from 'shared/ReactDOMTypes';
 import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
 import {
   setListenToResponderEventTypes,

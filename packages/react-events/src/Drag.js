@@ -10,7 +10,7 @@
 import type {
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
-} from 'react-dom/src/ReactDOMTypes';
+} from 'shared/ReactDOMTypes';
 import type {EventPriority} from 'shared/ReactTypes';
 
 import ReactDOM from 'react-dom';
@@ -98,7 +98,6 @@ const DragResponder = {
     };
   },
   allowMultipleHostChildren: false,
-  stopLocalPropagation: true,
   onEvent(
     event: ReactDOMResponderEvent,
     context: ReactDOMResponderContext,

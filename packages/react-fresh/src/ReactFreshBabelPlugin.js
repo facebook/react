@@ -163,36 +163,6 @@ export default function(babel) {
     return false;
   }
 
-  let hookCalls = new WeakMap();
-
-  function recordHookCall(functionNode, hookCallPath, hookName) {
-    if (!hookCalls.has(functionNode)) {
-      hookCalls.set(functionNode, []);
-    }
-    let hookCallsForFn = hookCalls.get(functionNode);
-    let key = '';
-    if (hookCallPath.parent.type === 'VariableDeclarator') {
-      // TODO: if there is no LHS, consider some other heuristic.
-      key = hookCallPath.parentPath.get('id').getSource();
-    }
-
-    // Some built-in Hooks reset on edits to arguments.
-    const args = hookCallPath.get('arguments');
-    if (hookName === 'useState' && args.length > 0) {
-      // useState second argument is initial state.
-      key += '(' + args[0].getSource() + ')';
-    } else if (hookName === 'useReducer' && args.length > 1) {
-      // useReducer second argument is initial state.
-      key += '(' + args[1].getSource() + ')';
-    }
-
-    hookCallsForFn.push({
-      name: hookName,
-      callee: hookCallPath.node.callee,
-      key,
-    });
-  }
-
   function isBuiltinHook(hookName) {
     switch (hookName) {
       case 'useState':
@@ -299,8 +269,63 @@ export default function(babel) {
 
   let seenForRegistration = new WeakSet();
   let seenForSignature = new WeakSet();
-  let seenForHookCalls = new WeakSet();
   let seenForOutro = new WeakSet();
+
+  let hookCalls = new WeakMap();
+  const HookCallsVisitor = {
+    CallExpression(path) {
+      const node = path.node;
+      const callee = node.callee;
+
+      // Note: this visitor MUST NOT mutate the tree in any way.
+      // It runs early in a separate traversal and should be very fast.
+
+      let name = null;
+      switch (callee.type) {
+        case 'Identifier':
+          name = callee.name;
+          break;
+        case 'MemberExpression':
+          name = callee.property.name;
+          break;
+      }
+      if (name === null || !/^use[A-Z]/.test(name)) {
+        return;
+      }
+      const fnScope = path.scope.getFunctionParent();
+      if (fnScope === null) {
+        return;
+      }
+
+      // This is a Hook call. Record it.
+      const fnNode = fnScope.block;
+      if (!hookCalls.has(fnNode)) {
+        hookCalls.set(fnNode, []);
+      }
+      let hookCallsForFn = hookCalls.get(fnNode);
+      let key = '';
+      if (path.parent.type === 'VariableDeclarator') {
+        // TODO: if there is no LHS, consider some other heuristic.
+        key = path.parentPath.get('id').getSource();
+      }
+
+      // Some built-in Hooks reset on edits to arguments.
+      const args = path.get('arguments');
+      if (name === 'useState' && args.length > 0) {
+        // useState second argument is initial state.
+        key += '(' + args[0].getSource() + ')';
+      } else if (name === 'useReducer' && args.length > 1) {
+        // useReducer second argument is initial state.
+        key += '(' + args[1].getSource() + ')';
+      }
+
+      hookCallsForFn.push({
+        callee: path.node.callee,
+        name,
+        key,
+      });
+    },
+  };
 
   return {
     visitor: {
@@ -617,38 +642,14 @@ export default function(babel) {
           },
         );
       },
-      CallExpression(path) {
-        const node = path.node;
-        const callee = node.callee;
-
-        let name = null;
-        switch (callee.type) {
-          case 'Identifier':
-            name = callee.name;
-            break;
-          case 'MemberExpression':
-            name = callee.property.name;
-            break;
-        }
-        if (name === null || !/^use[A-Z]/.test(name)) {
-          return;
-        }
-
-        // Make sure we're not recording the same calls twice.
-        // This can happen if another Babel plugin replaces parents.
-        if (seenForHookCalls.has(node)) {
-          return;
-        }
-        seenForHookCalls.add(node);
-        // Don't mutate the tree above this point.
-
-        const fn = path.scope.getFunctionParent();
-        if (fn === null) {
-          return;
-        }
-        recordHookCall(fn.block, path, name);
-      },
       Program: {
+        enter(path) {
+          // This is a separate early visitor because we need to collect Hook calls
+          // and "const [foo, setFoo] = ..." signatures before the destructuring
+          // transform mangles them. This extra traversal is not ideal for perf,
+          // but it's the best we can do until we stop transpiling destructuring.
+          path.traverse(HookCallsVisitor);
+        },
         exit(path) {
           const registrations = registrationsByProgramPath.get(path);
           if (registrations === undefined) {

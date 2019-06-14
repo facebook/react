@@ -65,11 +65,8 @@ const eventListeners:
       ($Shape<PartialEventObject>) => void,
     > = new PossiblyWeakMap();
 
-const responderOwners: Map<
-  ReactFabricEventResponder,
-  ReactEventComponentInstance,
-> = new Map();
 let globalOwner = null;
+let continueLocalPropagation = false;
 
 let currentTimeStamp = 0;
 let currentTimers = new Map();
@@ -205,10 +202,10 @@ function getTargetEventResponderInstances(
 // somehow share the logic
 function shouldSkipEventComponent(
   eventResponderInstance: ReactEventComponentInstance,
+  responder: ReactFabricEventResponder,
   propagatedEventResponders: null | Set<ReactFabricEventResponder>,
 ): boolean {
-  const responder = ((eventResponderInstance.responder: any): ReactFabricEventResponder);
-  if (propagatedEventResponders !== null && responder.stopLocalPropagation) {
+  if (propagatedEventResponders !== null) {
     if (propagatedEventResponders.has(responder)) {
       return true;
     }
@@ -217,13 +214,17 @@ function shouldSkipEventComponent(
   if (globalOwner && globalOwner !== eventResponderInstance) {
     return true;
   }
-  if (
-    responderOwners.has(responder) &&
-    responderOwners.get(responder) !== eventResponderInstance
-  ) {
-    return true;
-  }
   return false;
+}
+
+function checkForLocalPropagationContinuation(
+  responder: ReactFabricEventResponder,
+  propagatedEventResponders: Set<ReactFabricEventResponder>,
+): void {
+  if (continueLocalPropagation === true) {
+    propagatedEventResponders.delete(responder);
+    continueLocalPropagation = false;
+  }
 }
 
 // TODO this function is almost an exact copy of the DOM version, we should
@@ -267,6 +268,7 @@ function traverseAndHandleEventResponderInstances(
         if (
           shouldSkipEventComponent(
             targetEventResponderInstance,
+            ((responder: any): ReactFabricEventResponder),
             propagatedEventResponders,
           )
         ) {
@@ -274,6 +276,10 @@ function traverseAndHandleEventResponderInstances(
         }
         currentInstance = targetEventResponderInstance;
         eventListener(responderEvent, eventResponderContext, props, state);
+        checkForLocalPropagationContinuation(
+          ((responder: any): ReactFabricEventResponder),
+          propagatedEventResponders,
+        );
       }
     }
     // We clean propagated event responders between phases.
@@ -288,6 +294,7 @@ function traverseAndHandleEventResponderInstances(
         if (
           shouldSkipEventComponent(
             targetEventResponderInstance,
+            ((responder: any): ReactFabricEventResponder),
             propagatedEventResponders,
           )
         ) {
@@ -295,6 +302,10 @@ function traverseAndHandleEventResponderInstances(
         }
         currentInstance = targetEventResponderInstance;
         eventListener(responderEvent, eventResponderContext, props, state);
+        checkForLocalPropagationContinuation(
+          ((responder: any): ReactFabricEventResponder),
+          propagatedEventResponders,
+        );
       }
     }
   }

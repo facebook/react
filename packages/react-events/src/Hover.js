@@ -10,7 +10,7 @@
 import type {
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
-} from 'react-dom/src/ReactDOMTypes';
+} from 'shared/ReactDOMTypes';
 
 import ReactDOM from 'react-dom';
 import {UserBlockingEvent} from 'shared/ReactTypes';
@@ -287,14 +287,13 @@ const HoverResponder = {
     };
   },
   allowMultipleHostChildren: false,
-  stopLocalPropagation: true,
   onEvent(
     event: ReactDOMResponderEvent,
     context: ReactDOMResponderContext,
     props: HoverProps,
     state: HoverState,
   ): void {
-    const {type} = event;
+    const {pointerType, type} = event;
 
     if (props.disabled) {
       if (state.isHovered) {
@@ -306,7 +305,6 @@ const HoverResponder = {
       }
       return;
     }
-    const pointerType = context.getEventPointerType(event);
 
     switch (type) {
       // START

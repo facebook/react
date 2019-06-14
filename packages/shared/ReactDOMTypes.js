@@ -15,12 +15,22 @@ export type ReactDOMEventResponderEventType =
   | string
   | {name: string, passive?: boolean};
 
+export type PointerType =
+  | ''
+  | 'mouse'
+  | 'keyboard'
+  | 'pen'
+  | 'touch'
+  | 'trackpad';
+
 export type ReactDOMResponderEvent = {
   nativeEvent: AnyNativeEvent,
-  target: Element | Document,
-  type: string,
   passive: boolean,
   passiveSupported: boolean,
+  pointerId: null | number,
+  pointerType: PointerType,
+  target: Element | Document,
+  type: string,
 };
 
 export type ReactDOMEventResponder = {
@@ -84,7 +94,6 @@ export type ReactDOMResponderContext = {
     rootEventTypes: Array<ReactDOMEventResponderEventType>,
   ) => void,
   hasOwnership: () => boolean,
-  requestResponderOwnership: () => boolean,
   requestGlobalOwnership: () => boolean,
   releaseOwnership: () => boolean,
   setTimeout: (func: () => void, timeout: number) => number,
@@ -92,9 +101,6 @@ export type ReactDOMResponderContext = {
   getFocusableElementsInScope(): Array<HTMLElement>,
   getActiveDocument(): Document,
   objectAssign: Function,
-  getEventPointerType(
-    event: ReactDOMResponderEvent,
-  ): '' | 'mouse' | 'keyboard' | 'pen' | 'touch',
   getEventCurrentTarget(event: ReactDOMResponderEvent): Element,
   getTimeStamp: () => number,
   isTargetWithinHostComponent: (
@@ -102,4 +108,5 @@ export type ReactDOMResponderContext = {
     elementType: string,
     deep: boolean,
   ) => boolean,
+  continueLocalPropagation(): void,
 };

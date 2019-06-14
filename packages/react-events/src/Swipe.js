@@ -10,7 +10,7 @@
 import type {
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
-} from 'react-dom/src/ReactDOMTypes';
+} from 'shared/ReactDOMTypes';
 import type {EventPriority} from 'shared/ReactTypes';
 
 import ReactDOM from 'react-dom';
@@ -104,7 +104,6 @@ const SwipeResponder = {
     };
   },
   allowMultipleHostChildren: false,
-  stopLocalPropagation: true,
   onEvent(
     event: ReactDOMResponderEvent,
     context: ReactDOMResponderContext,

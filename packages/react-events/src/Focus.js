@@ -10,7 +10,8 @@
 import type {
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
-} from 'react-dom/src/ReactDOMTypes';
+  PointerType,
+} from 'shared/ReactDOMTypes';
 
 import ReactDOM from 'react-dom';
 import {DiscreteEvent} from 'shared/ReactTypes';
@@ -30,7 +31,6 @@ type FocusState = {
   pointerType: PointerType,
 };
 
-type PointerType = '' | 'mouse' | 'keyboard' | 'pen' | 'touch';
 type FocusEventType = 'focus' | 'blur' | 'focuschange' | 'focusvisiblechange';
 
 type FocusEvent = {|
@@ -228,7 +228,6 @@ const FocusResponder = {
     };
   },
   allowMultipleHostChildren: false,
-  stopLocalPropagation: true,
   onEvent(
     event: ReactDOMResponderEvent,
     context: ReactDOMResponderContext,

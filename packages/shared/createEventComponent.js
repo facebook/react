@@ -7,8 +7,6 @@
  */
 
 import type {ReactEventComponent} from 'shared/ReactTypes';
-import {enableEventAPI} from 'shared/ReactFeatureFlags';
-
 import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
 
 let hasBadMapPolyfill;
