@@ -42,6 +42,7 @@ import {
 } from 'react-reconciler/inline.dom';
 import {createPortal as createPortalImpl} from 'shared/ReactPortal';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
+import createEventComponent from 'shared/createEventComponent';
 import {setBatchingImplementation} from 'events/ReactGenericBatching';
 import {
   setRestoreImplementation,
@@ -63,7 +64,10 @@ import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import {enableStableConcurrentModeAPIs} from 'shared/ReactFeatureFlags';
+import {
+  enableStableConcurrentModeAPIs,
+  enableEventAPI,
+} from 'shared/ReactFeatureFlags';
 
 import {
   getInstanceFromNode,
@@ -875,6 +879,10 @@ function warnIfReactDOMContainerInDEV(container) {
 if (enableStableConcurrentModeAPIs) {
   ReactDOM.createRoot = createRoot;
   ReactDOM.createSyncRoot = createSyncRoot;
+}
+
+if (enableEventAPI) {
+  ReactDOM.unstable_createEventComponent = createEventComponent;
 }
 
 const foundDevTools = injectIntoDevTools({
