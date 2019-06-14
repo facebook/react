@@ -48,6 +48,7 @@ export type ChildSet = void; // Unused
 
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
+export type EventResponder = any;
 
 const UPDATE_SIGNAL = {};
 if (__DEV__) {
