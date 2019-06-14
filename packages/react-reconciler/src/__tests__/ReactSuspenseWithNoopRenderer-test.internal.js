@@ -2299,7 +2299,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     // Regression test
     function App({text}) {
       return (
-        <Suspense fallback="Outer fallback">
+        <Suspense fallback="Loading...">
           <AsyncText ms={2000} text={text} />
         </Suspense>
       );
@@ -2322,7 +2322,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     ]);
     expect(root).toMatchRenderedOutput(<span prop="Initial" />);
 
-    // Suspend B. Since showing a fallback would hide content that's already
+    // Update. Since showing a fallback would hide content that's already
     // visible, it should suspend for a bit without committing.
     await ReactNoop.act(async () => {
       root.render(<App text="First update" />);
@@ -2332,7 +2332,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       expect(root).toMatchRenderedOutput(<span prop="Initial" />);
     });
 
-    // Suspend A. This should also suspend for a JND.
+    // Update again. This should also suspend for a bit.
     await ReactNoop.act(async () => {
       root.render(<App text="Second update" />);
 
