@@ -773,13 +773,12 @@ function traverseAndHandleEventResponderInstances(
     for (i = length; i-- > 0; ) {
       const targetEventResponderInstance = targetEventResponderInstances[i];
       const {responder, props, state} = targetEventResponderInstance;
-      const eventListener = ((responder: any): ReactDOMEventResponder)
-        .onEventCapture;
+      const eventListener = responder.onEventCapture;
       if (eventListener !== undefined) {
         if (
           shouldSkipEventComponent(
             targetEventResponderInstance,
-            ((responder: any): ReactDOMEventResponder),
+            responder,
             propagatedEventResponders,
           )
         ) {
@@ -788,7 +787,7 @@ function traverseAndHandleEventResponderInstances(
         currentInstance = targetEventResponderInstance;
         eventListener(responderEvent, eventResponderContext, props, state);
         checkForLocalPropagationContinuation(
-          ((responder: any): ReactDOMEventResponder),
+          responder,
           propagatedEventResponders,
         );
       }
@@ -799,12 +798,12 @@ function traverseAndHandleEventResponderInstances(
     for (i = 0; i < length; i++) {
       const targetEventResponderInstance = targetEventResponderInstances[i];
       const {responder, props, state} = targetEventResponderInstance;
-      const eventListener = ((responder: any): ReactDOMEventResponder).onEvent;
+      const eventListener = responder.onEvent;
       if (eventListener !== undefined) {
         if (
           shouldSkipEventComponent(
             targetEventResponderInstance,
-            ((responder: any): ReactDOMEventResponder),
+            responder,
             propagatedEventResponders,
           )
         ) {
@@ -813,7 +812,7 @@ function traverseAndHandleEventResponderInstances(
         currentInstance = targetEventResponderInstance;
         eventListener(responderEvent, eventResponderContext, props, state);
         checkForLocalPropagationContinuation(
-          ((responder: any): ReactDOMEventResponder),
+          responder,
           propagatedEventResponders,
         );
       }
@@ -828,15 +827,10 @@ function traverseAndHandleEventResponderInstances(
     for (i = 0; i < length; i++) {
       const rootEventResponderInstance = rootEventResponderInstances[i];
       const {responder, props, state} = rootEventResponderInstance;
-      const eventListener = ((responder: any): ReactDOMEventResponder)
-        .onRootEvent;
+      const eventListener = responder.onRootEvent;
       if (eventListener !== undefined) {
         if (
-          shouldSkipEventComponent(
-            rootEventResponderInstance,
-            ((responder: any): ReactDOMEventResponder),
-            null,
-          )
+          shouldSkipEventComponent(rootEventResponderInstance, responder, null)
         ) {
           continue;
         }
@@ -855,8 +849,7 @@ function triggerOwnershipListeners(): void {
       const instance = listeningInstances[i];
       const {props, responder, state} = instance;
       currentInstance = instance;
-      const onOwnershipChange = ((responder: any): ReactDOMEventResponder)
-        .onOwnershipChange;
+      const onOwnershipChange = responder.onOwnershipChange;
       if (onOwnershipChange !== undefined) {
         onOwnershipChange(eventResponderContext, props, state);
       }
@@ -869,7 +862,7 @@ function triggerOwnershipListeners(): void {
 export function mountEventResponder(
   eventComponentInstance: ReactEventComponentInstance,
 ) {
-  const responder = ((eventComponentInstance.responder: any): ReactDOMEventResponder);
+  const responder = eventComponentInstance.responder;
   if (responder.onOwnershipChange !== undefined) {
     ownershipChangeListeners.add(eventComponentInstance);
   }
@@ -891,7 +884,7 @@ export function mountEventResponder(
 export function unmountEventResponder(
   eventComponentInstance: ReactEventComponentInstance,
 ): void {
-  const responder = ((eventComponentInstance.responder: any): ReactDOMEventResponder);
+  const responder = eventComponentInstance.responder;
   const onUnmount = responder.onUnmount;
   if (onUnmount !== undefined) {
     let {props, state} = eventComponentInstance;
@@ -1024,9 +1017,7 @@ function registerRootEventType(
     name,
   );
   rootEventTypesSet.add(listeningName);
-  rootEventComponentInstances.add(
-    ((eventComponentInstance: any): ReactEventComponentInstance),
-  );
+  rootEventComponentInstances.add(eventComponentInstance);
 }
 
 export function generateListeningKey(

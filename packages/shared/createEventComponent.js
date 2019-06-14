@@ -6,6 +6,7 @@
  * @flow
  */
 
+import type {EventResponder} from 'react-reconciler/src/ReactFiberHostConfig';
 import type {ReactEventComponent} from 'shared/ReactTypes';
 import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
 
@@ -28,8 +29,8 @@ if (__DEV__) {
   }
 }
 
-export default function createEventComponent<Responder>(
-  responder: Responder,
+export default function createEventComponent(
+  responder: EventResponder,
   displayName: string,
 ): ReactEventComponent {
   // We use responder as a Map key later on. When we have a bad

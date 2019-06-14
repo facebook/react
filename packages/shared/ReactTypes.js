@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {EventResponder} from 'react-reconciler/src/ReactFiberHostConfig';
+
 export type ReactNode =
   | React$Element<any>
   | ReactPortal
@@ -84,7 +86,7 @@ export type RefObject = {|
 export type ReactEventComponentInstance = {|
   currentFiber: mixed,
   props: null | Object,
-  responder: mixed,
+  responder: EventResponder,
   rootEventTypes: null | Set<string>,
   rootInstance: mixed,
   state: null | Object,
@@ -94,7 +96,7 @@ export type ReactEventComponent = {|
   $$typeof: Symbol | number,
   displayName: string,
   props: null | Object,
-  responder: mixed,
+  responder: EventResponder,
 |};
 
 export type ReactEventTarget = {|
