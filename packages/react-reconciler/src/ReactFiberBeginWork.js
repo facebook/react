@@ -54,6 +54,7 @@ import {
   debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode,
   enableProfilerTimer,
+  enableSchedulerTracing,
   enableSuspenseServerRenderer,
   enableEventAPI,
 } from 'shared/ReactFeatureFlags';
@@ -992,7 +993,9 @@ function updateHostComponent(current, workInProgress, renderExpirationTime) {
     renderExpirationTime !== Never &&
     shouldDeprioritizeSubtree(type, nextProps)
   ) {
-    markPendingInteractionsToBeRescheduled();
+    if (enableSchedulerTracing) {
+      markPendingInteractionsToBeRescheduled();
+    }
     // Schedule this fiber to re-render at offscreen priority. Then bailout.
     workInProgress.expirationTime = workInProgress.childExpirationTime = Never;
     return null;
@@ -2270,7 +2273,9 @@ function beginWork(
             renderExpirationTime !== Never &&
             shouldDeprioritizeSubtree(workInProgress.type, newProps)
           ) {
-            markPendingInteractionsToBeRescheduled();
+            if (enableSchedulerTracing) {
+              markPendingInteractionsToBeRescheduled();
+            }
             // Schedule this fiber to re-render at offscreen priority. Then bailout.
             workInProgress.expirationTime = workInProgress.childExpirationTime = Never;
             return null;
