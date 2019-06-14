@@ -293,7 +293,7 @@ const HoverResponder = {
     props: HoverProps,
     state: HoverState,
   ): void {
-    const {type} = event;
+    const {pointerType, type} = event;
 
     if (props.disabled) {
       if (state.isHovered) {
@@ -305,7 +305,6 @@ const HoverResponder = {
       }
       return;
     }
-    const pointerType = context.getEventPointerType(event);
 
     switch (type) {
       // START
