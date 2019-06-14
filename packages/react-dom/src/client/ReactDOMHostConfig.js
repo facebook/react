@@ -906,7 +906,10 @@ export function mountEventComponent(
     const doc = rootContainerInstance.ownerDocument;
     const documentBody = doc.body || doc;
     const responder = eventComponentInstance.responder;
-    const {rootEventTypes, targetEventTypes} = ((responder: any): ReactDOMEventResponder);
+    const {
+      rootEventTypes,
+      targetEventTypes,
+    } = ((responder: any): ReactDOMEventResponder);
     if (targetEventTypes !== undefined) {
       listenToEventResponderEventTypes(targetEventTypes, documentBody);
     }

@@ -11,9 +11,7 @@ import type {
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
 } from 'shared/ReactDOMTypes';
-import type {
-  EventPriority,
-} from 'shared/ReactTypes';
+import type {EventPriority} from 'shared/ReactTypes';
 
 import React from 'react';
 import {DiscreteEvent, UserBlockingEvent} from 'shared/ReactTypes';

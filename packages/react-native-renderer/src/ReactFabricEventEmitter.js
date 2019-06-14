@@ -31,7 +31,11 @@ export function dispatchEvent(
   const targetFiber = (target: null | Fiber);
   if (enableEventAPI) {
     // React Flare event system
-    dispatchEventForResponderEventSystem((topLevelType: any), target, nativeEvent);
+    dispatchEventForResponderEventSystem(
+      (topLevelType: any),
+      target,
+      nativeEvent,
+    );
   }
   batchedUpdates(function() {
     // Heritage plugin event system

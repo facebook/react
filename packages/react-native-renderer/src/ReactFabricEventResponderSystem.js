@@ -55,14 +55,14 @@ type EventQueue = {
 
 const targetEventTypeCached: Map<
   Array<TopLevelEventType>,
-  Set<TopLevelEventType>
+  Set<TopLevelEventType>,
 > = new Map();
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 const eventListeners:
   | WeakMap
   | Map<
       $Shape<PartialEventObject>,
-      ($Shape<PartialEventObject>) => void
+      ($Shape<PartialEventObject>) => void,
     > = new PossiblyWeakMap();
 
 let currentTimeStamp = 0;
@@ -113,7 +113,7 @@ function processEventQueue(): void {
       if (enableUserBlockingEvents) {
         runWithPriority(
           UserBlockingPriority,
-          batchedEventUpdates.bind(null, processEvents, events)
+          batchedEventUpdates.bind(null, processEvents, events),
         );
       } else {
         batchedEventUpdates(processEvents, events);
@@ -130,7 +130,7 @@ function processEventQueue(): void {
 function processEvent(event: $Shape<PartialEventObject>): void {
   const type = event.type;
   const listener = ((eventListeners.get(event): any): (
-    $Shape<PartialEventObject>
+    $Shape<PartialEventObject>,
   ) => void);
   invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, event);
 }
@@ -142,7 +142,7 @@ function processEvents(events: Array<EventObjectType>): void {
 }
 
 function getTargetEventTypesSet(
-  eventTypes: Array<TopLevelEventType>
+  eventTypes: Array<TopLevelEventType>,
 ): Set<TopLevelEventType> {
   let cachedSet = targetEventTypeCached.get(eventTypes);
 
@@ -158,7 +158,7 @@ function getTargetEventTypesSet(
 
 function getTargetEventResponderInstances(
   topLevelType: TopLevelEventType,
-  targetFiber: null | Fiber
+  targetFiber: null | Fiber,
 ): Array<ReactEventComponentInstance> {
   const eventResponderInstances = [];
   let node = targetFiber;
@@ -184,11 +184,11 @@ function getTargetEventResponderInstances(
 function traverseAndHandleEventResponderInstances(
   topLevelType: TopLevelEventType,
   targetFiber: null | Fiber,
-  nativeEvent: AnyNativeEvent
+  nativeEvent: AnyNativeEvent,
 ): void {
   const targetEventResponderInstances = getTargetEventResponderInstances(
     topLevelType,
-    targetFiber
+    targetFiber,
   );
   const responderEvent = createResponderEvent(
     topLevelType,
@@ -200,7 +200,7 @@ function traverseAndHandleEventResponderInstances(
 export function dispatchEventForResponderEventSystem(
   topLevelType: TopLevelEventType,
   targetFiber: null | Fiber,
-  nativeEvent: AnyNativeEvent
+  nativeEvent: AnyNativeEvent,
 ): void {
   const previousEventQueue = currentEventQueue;
   const previousInstance = currentInstance;
@@ -214,7 +214,7 @@ export function dispatchEventForResponderEventSystem(
     traverseAndHandleEventResponderInstances(
       topLevelType,
       targetFiber,
-      nativeEvent
+      nativeEvent,
     );
     processEventQueue();
   } finally {
