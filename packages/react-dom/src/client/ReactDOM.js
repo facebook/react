@@ -64,7 +64,10 @@ import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import {enableStableConcurrentModeAPIs, enableEventAPI} from 'shared/ReactFeatureFlags';
+import {
+  enableStableConcurrentModeAPIs,
+  enableEventAPI,
+} from 'shared/ReactFeatureFlags';
 
 import {
   getInstanceFromNode,

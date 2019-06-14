@@ -580,7 +580,7 @@ function processTimers(
   }
 }
 
-function createResponderEvent(
+function createDOMResponderEvent(
   topLevelType: string,
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: Element | Document,
@@ -654,7 +654,7 @@ function processEventQueue(): void {
   }
 }
 
-function getTargetEventTypesSet(
+function getDOMTargetEventTypesSet(
   eventTypes: Array<ReactDOMEventResponderEventType>,
 ): Set<string> {
   let cachedSet = targetEventTypeCached.get(eventTypes);
@@ -701,7 +701,7 @@ function getTargetEventResponderInstances(
       const targetEventTypes = responder.targetEventTypes;
       // Validate the target event type exists on the responder
       if (targetEventTypes !== undefined) {
-        const targetEventTypesSet = getTargetEventTypesSet(targetEventTypes);
+        const targetEventTypesSet = getDOMTargetEventTypesSet(targetEventTypes);
         if (targetEventTypesSet.has(listeningName)) {
           eventResponderInstances.push(eventComponentInstance);
         }
@@ -776,7 +776,7 @@ function traverseAndHandleEventResponderInstances(
     listeningName,
     targetFiber,
   );
-  const responderEvent = createResponderEvent(
+  const responderEvent = createDOMResponderEvent(
     ((topLevelType: any): string),
     nativeEvent,
     ((nativeEventTarget: any): Element | Document),

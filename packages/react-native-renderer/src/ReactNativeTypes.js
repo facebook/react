@@ -155,10 +155,12 @@ export type ReactFabricType = {
     callback: ?Function,
   ): any,
   unmountComponentAtNode(containerTag: number): any,
-  unstable_createEventComponent: void | (
-    responder: ReactFabricEventResponder,
-    displayName: string,
-  ) => ReactEventComponent,
+  unstable_createEventComponent:
+    | void
+    | ((
+        responder: ReactFabricEventResponder,
+        displayName: string,
+      ) => ReactEventComponent),
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: SecretInternalsFabricType,
 };
 
