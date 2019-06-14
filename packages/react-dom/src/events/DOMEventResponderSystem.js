@@ -26,7 +26,7 @@ import type {
   ReactDOMEventResponderEventType,
   ReactDOMResponderContext,
   ReactDOMResponderEvent,
-} from 'shared/ReactDOMTypes';
+} from '../ReactDOMTypes';
 import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
 import {
   batchedEventUpdates,

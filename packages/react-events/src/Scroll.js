@@ -10,11 +10,11 @@
 import type {
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
-} from 'shared/ReactDOMTypes';
+} from 'react-dom/src/ReactDOMTypes';
 import {UserBlockingEvent} from 'shared/ReactTypes';
 import type {EventPriority} from 'shared/ReactTypes';
 
-import React from 'react';
+import ReactDOM from 'react-dom';
 
 type ScrollProps = {
   disabled: boolean,
@@ -215,4 +215,4 @@ const ScrollResponder = {
   },
 };
 
-export default React.unstable_createEventComponent(ScrollResponder, 'Scroll');
+export default ReactDOM.unstable_createEventComponent(ScrollResponder, 'Scroll');

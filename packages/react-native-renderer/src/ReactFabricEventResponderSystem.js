@@ -21,10 +21,10 @@ import type {
 } from 'shared/ReactTypes';
 import type {
   TopLevelEventType,
-  ReactFabricEventResponder,
-  ReactFabricResponderContext,
+  // ReactFabricEventResponder,
+  // ReactFabricResponderContext,
   ReactFabricResponderEvent,
-} from 'shared/ReactNativeTypes';
+} from './ReactNativeTypes';
 import {
   ContinuousEvent,
   UserBlockingEvent,
@@ -69,7 +69,7 @@ let currentTimeStamp = 0;
 let currentTimers = new Map();
 let currentInstance: null | ReactEventComponentInstance = null;
 let currentEventQueue: null | EventQueue = null;
-let currentTimerIDCounter = 0;
+// let currentTimerIDCounter = 0;
 
 function createResponderEvent(
   topLevelType: TopLevelEventType,
@@ -186,11 +186,12 @@ function traverseAndHandleEventResponderInstances(
   targetFiber: null | Fiber,
   nativeEvent: AnyNativeEvent,
 ): void {
-  const targetEventResponderInstances = getTargetEventResponderInstances(
+  // TODO: finish this function
+  getTargetEventResponderInstances(
     topLevelType,
     targetFiber,
   );
-  const responderEvent = createResponderEvent(
+  createResponderEvent(
     topLevelType,
     nativeEvent,
     targetFiber,

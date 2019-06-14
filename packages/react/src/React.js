@@ -14,7 +14,6 @@ import {
 } from 'shared/ReactSymbols';
 
 import {Component, PureComponent} from './ReactBaseClasses';
-import {createEventComponent} from './ReactCreateEventComponent';
 import {createRef} from './ReactCreateRef';
 import {forEach, map, count, toArray, only} from './ReactChildren';
 import {
@@ -51,7 +50,7 @@ import {
 } from './ReactElementValidator';
 import ReactSharedInternals from './ReactSharedInternals';
 import {error, warn} from './withComponentStack';
-import {enableEventAPI, enableJSXTransformAPI} from 'shared/ReactFeatureFlags';
+import {enableJSXTransformAPI} from 'shared/ReactFeatureFlags';
 const React = {
   Children: {
     map,
@@ -105,10 +104,6 @@ const React = {
 // Make sure that stable builds for open source
 // don't modify the React object to avoid deopts.
 // Also let's not expose their names in stable builds.
-
-if (enableEventAPI) {
-  React.unstable_createEventComponent = createEventComponent;
-}
 
 if (enableJSXTransformAPI) {
   if (__DEV__) {

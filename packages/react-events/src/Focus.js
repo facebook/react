@@ -10,9 +10,9 @@
 import type {
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
-} from 'shared/ReactDOMTypes';
+} from 'react-dom/src/ReactDOMTypes';
 
-import React from 'react';
+import ReactDOM from 'react-dom';
 import {DiscreteEvent} from 'shared/ReactTypes';
 
 type FocusProps = {
@@ -337,4 +337,4 @@ const FocusResponder = {
   },
 };
 
-export default React.unstable_createEventComponent(FocusResponder, 'Focus');
+export default ReactDOM.unstable_createEventComponent(FocusResponder, 'Focus');

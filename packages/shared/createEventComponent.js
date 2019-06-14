@@ -7,8 +7,6 @@
  */
 
 import type {ReactEventComponent} from 'shared/ReactTypes';
-import type {ReactDOMEventResponder} from 'shared/ReactDOMTypes';
-import type {ReactFabricEventResponder} from 'shared/ReactNativeTypes';
 import {enableEventAPI} from 'shared/ReactFeatureFlags';
 
 import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
@@ -32,26 +30,24 @@ if (__DEV__) {
   }
 }
 
-export function createEventComponent(
-  responder: ReactDOMEventResponder | ReactFabricEventResponder,
+export default function createEventComponent<Responder>(
+  responder: Responder,
   displayName: string,
-): ?ReactEventComponent {
-  if (enableEventAPI) {
-    // We use responder as a Map key later on. When we have a bad
-    // polyfill, then we can't use it as a key as the polyfill tries
-    // to add a property to the object.
-    if (__DEV__ && !hasBadMapPolyfill) {
-      Object.freeze(responder);
-    }
-    const eventComponent = {
-      $$typeof: REACT_EVENT_COMPONENT_TYPE,
-      displayName: displayName,
-      props: null,
-      responder: responder,
-    };
-    if (__DEV__) {
-      Object.freeze(eventComponent);
-    }
-    return eventComponent;
+): ReactEventComponent {
+  // We use responder as a Map key later on. When we have a bad
+  // polyfill, then we can't use it as a key as the polyfill tries
+  // to add a property to the object.
+  if (__DEV__ && !hasBadMapPolyfill) {
+    Object.freeze(responder);
   }
+  const eventComponent = {
+    $$typeof: REACT_EVENT_COMPONENT_TYPE,
+    displayName: displayName,
+    props: null,
+    responder: responder,
+  };
+  if (__DEV__) {
+    Object.freeze(eventComponent);
+  }
+  return eventComponent;
 }

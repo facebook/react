@@ -10,9 +10,9 @@
 import type {
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
-} from 'shared/ReactDOMTypes';
+} from 'react-dom/src/ReactDOMTypes';
 
-import React from 'react';
+import ReactDOM from 'react-dom';
 import {UserBlockingEvent} from 'shared/ReactTypes';
 
 type HoverProps = {
@@ -408,4 +408,4 @@ const HoverResponder = {
   },
 };
 
-export default React.unstable_createEventComponent(HoverResponder, 'Hover');
+export default ReactDOM.unstable_createEventComponent(HoverResponder, 'Hover');

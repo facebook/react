@@ -10,10 +10,10 @@
 import type {
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
-} from 'shared/ReactDOMTypes';
+} from 'react-dom/src/ReactDOMTypes';
 import type {EventPriority} from 'shared/ReactTypes';
 
-import React from 'react';
+import ReactDOM from 'react-dom';
 import {UserBlockingEvent, DiscreteEvent} from 'shared/ReactTypes';
 
 const targetEventTypes = ['pointerdown'];
@@ -263,4 +263,4 @@ const SwipeResponder = {
   },
 };
 
-export default React.unstable_createEventComponent(SwipeResponder, 'Swipe');
+export default ReactDOM.unstable_createEventComponent(SwipeResponder, 'Swipe');

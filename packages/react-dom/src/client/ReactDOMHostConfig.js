@@ -46,7 +46,7 @@ import dangerousStyleValue from '../shared/dangerousStyleValue';
 
 import type {DOMContainer} from './ReactDOM';
 import type {ReactEventComponentInstance} from 'shared/ReactTypes';
-import type {ReactDOMEventResponder} from 'shared/ReactDOMTypes';
+import type {ReactDOMEventResponder} from '../ReactDOMTypes';
 import {
   mountEventResponder,
   unmountEventResponder,

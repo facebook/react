@@ -10,10 +10,10 @@
 import type {
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
-} from 'shared/ReactDOMTypes';
+} from 'react-dom/src/ReactDOMTypes';
 import type {EventPriority} from 'shared/ReactTypes';
 
-import React from 'react';
+import ReactDOM from 'react-dom';
 import {DiscreteEvent, UserBlockingEvent} from 'shared/ReactTypes';
 
 type PressProps = {
@@ -906,4 +906,4 @@ const PressResponder = {
   },
 };
 
-export default React.unstable_createEventComponent(PressResponder, 'Press');
+export default ReactDOM.unstable_createEventComponent(PressResponder, 'Press');
