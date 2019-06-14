@@ -8,6 +8,7 @@
   "homepage": "https://reactjs.org/",
   "bugs": "https://github.com/facebook/react/issues",
   "license": "MIT",
+  "module": "src/React.js",
   "files": [
     "LICENSE",
     "README.md",
