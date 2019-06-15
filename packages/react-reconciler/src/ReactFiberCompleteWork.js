@@ -102,7 +102,7 @@ import {
   enableEventAPI,
 } from 'shared/ReactFeatureFlags';
 import {
-  markPendingInteractionsToBeRescheduledAtNeverPriority,
+  markDidDeprioritizeIdleSubtree,
   renderDidSuspend,
   renderDidSuspendDelayIfPossible,
 } from './ReactFiberWorkLoop';
@@ -818,7 +818,7 @@ function completeWork(
               'This is probably a bug in React.',
           );
           if (enableSchedulerTracing) {
-            markPendingInteractionsToBeRescheduledAtNeverPriority();
+            markDidDeprioritizeIdleSubtree();
           }
           skipPastDehydratedSuspenseInstance(workInProgress);
         } else if ((workInProgress.effectTag & DidCapture) === NoEffect) {

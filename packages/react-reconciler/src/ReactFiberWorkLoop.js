@@ -248,7 +248,7 @@ let interruptedBy: Fiber | null = null;
 
 // Marks the need to reschedule pending interactions at Never priority during the commit phase.
 // This enables them to be traced accross hidden boundaries or suspended SSR hydration.
-let reschedulePendingInteractionsAtNeverPriority: boolean = false;
+let didDeprioritizeIdleSubtree: boolean = false;
 
 // Expiration times are computed by adding to the current time (the start
 // time). However, if two updates are scheduled within the same event, we
@@ -780,6 +780,10 @@ function prepareFreshStack(root, expirationTime) {
   workInProgressRootLatestSuspenseTimeout = Sync;
   workInProgressRootCanSuspendUsingConfig = null;
   workInProgressRootHasPendingPing = false;
+
+  if (enableSchedulerTracing) {
+    didDeprioritizeIdleSubtree = false;
+  }
 
   if (__DEV__) {
     ReactStrictModeWarnings.discardPendingWarnings();
@@ -1698,9 +1702,8 @@ function commitRootImpl(root) {
     );
 
     if (enableSchedulerTracing) {
-      // Temporarily restore interactions in the case of e.g. hidden subtrees and suspended hydration.
-      // Don't restore otherwise or it would blur interrupting high-pri udpates with low-pri work.
-      if (reschedulePendingInteractionsAtNeverPriority) {
+      if (didDeprioritizeIdleSubtree) {
+        didDeprioritizeIdleSubtree = false;
         scheduleInteractions(root, Never, root.memoizedInteractions);
       }
     }
@@ -1723,10 +1726,6 @@ function commitRootImpl(root) {
   }
 
   onCommitRoot(finishedWork.stateNode, expirationTime);
-
-  if (enableSchedulerTracing) {
-    reschedulePendingInteractionsAtNeverPriority = false;
-  }
 
   if (remainingExpirationTime === Sync) {
     // Count the number of times the root synchronously re-renders without
@@ -2528,10 +2527,11 @@ function computeThreadID(root, expirationTime) {
   return expirationTime * 1000 + root.interactionThreadID;
 }
 
-export function markPendingInteractionsToBeRescheduledAtNeverPriority() {
-  if (enableSchedulerTracing) {
-    reschedulePendingInteractionsAtNeverPriority = true;
+export function markDidDeprioritizeIdleSubtree() {
+  if (!enableSchedulerTracing) {
+    return;
   }
+  didDeprioritizeIdleSubtree = true;
 }
 
 function scheduleInteractions(root, expirationTime, interactions) {

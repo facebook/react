@@ -166,7 +166,7 @@ import {
   isSimpleFunctionComponent,
 } from './ReactFiber';
 import {
-  markPendingInteractionsToBeRescheduledAtNeverPriority,
+  markDidDeprioritizeIdleSubtree,
   requestCurrentTime,
   retryTimedOutBoundary,
 } from './ReactFiberWorkLoop';
@@ -994,7 +994,7 @@ function updateHostComponent(current, workInProgress, renderExpirationTime) {
     shouldDeprioritizeSubtree(type, nextProps)
   ) {
     if (enableSchedulerTracing) {
-      markPendingInteractionsToBeRescheduledAtNeverPriority();
+      markDidDeprioritizeIdleSubtree();
     }
     // Schedule this fiber to re-render at offscreen priority. Then bailout.
     workInProgress.expirationTime = workInProgress.childExpirationTime = Never;
@@ -2274,7 +2274,7 @@ function beginWork(
             shouldDeprioritizeSubtree(workInProgress.type, newProps)
           ) {
             if (enableSchedulerTracing) {
-              markPendingInteractionsToBeRescheduledAtNeverPriority();
+              markDidDeprioritizeIdleSubtree();
             }
             // Schedule this fiber to re-render at offscreen priority. Then bailout.
             workInProgress.expirationTime = workInProgress.childExpirationTime = Never;
