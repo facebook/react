@@ -29,9 +29,6 @@ let forwardRef;
 let memo;
 let act;
 
-// These tests use React Noop Renderer. All new tests should use React Test
-// Renderer and go in ReactHooks-test; plan is gradually migrate the noop tests
-// to that file.
 describe('ReactHooksWithNoopRenderer', () => {
   beforeEach(() => {
     jest.resetModules();
