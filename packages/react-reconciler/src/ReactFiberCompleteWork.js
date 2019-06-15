@@ -523,6 +523,55 @@ if (supportsMutation) {
   };
 }
 
+function hasSuspendedChildrenAndNewContent(
+  workInProgress: Fiber,
+  firstChild: null | Fiber,
+): boolean {
+  // Traversal to see if any of the immediately nested Suspense boundaries
+  // are in their fallback states. I.e. something suspended in them.
+  // And if some of them have new content that wasn't already visible.
+  let hasSuspendedBoundaries = false;
+  let hasNewContent = false;
+
+  let node = firstChild;
+  while (node !== null) {
+    // TODO: Hidden subtrees should not be considered.
+    if (node.tag === SuspenseComponent) {
+      const state: SuspenseState | null = node.memoizedState;
+      const isShowingFallback = state !== null;
+      if (isShowingFallback) {
+        hasSuspendedBoundaries = true;
+      } else {
+        const current = node.alternate;
+        const wasNotShowingContent =
+          current === null || current.memoizedState !== null;
+        if (wasNotShowingContent) {
+          hasNewContent = true;
+        }
+      }
+      if (hasSuspendedBoundaries && hasNewContent) {
+        return true;
+      }
+    } else if (node.child !== null) {
+      node.child.return = node;
+      node = node.child;
+      continue;
+    }
+    if (node === workInProgress) {
+      return false;
+    }
+    while (node.sibling === null) {
+      if (node.return === null || node.return === workInProgress) {
+        return false;
+      }
+      node = node.return;
+    }
+    node.sibling.return = node.return;
+    node = node.sibling;
+  }
+  return false;
+}
+
 function completeWork(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -837,7 +886,31 @@ function completeWork(
     }
     case SuspenseListComponent: {
       popSuspenseContext(workInProgress);
-      // TODO
+
+      if ((workInProgress.effectTag & DidCapture) === NoEffect) {
+        // This is the first pass. We need to figure out if anything is still
+        // suspended in the rendered set.
+        const renderedChildren = workInProgress.child;
+        // If new content unsuspended, but there's still some content that
+        // didn't. Then we need to do a second pass that forces everything
+        // to keep showing their fallbacks.
+        const needsRerender = hasSuspendedChildrenAndNewContent(
+          workInProgress,
+          renderedChildren,
+        );
+        if (needsRerender) {
+          // Rerender the whole list, but this time, we'll force fallbacks
+          // to stay in place.
+          workInProgress.effectTag |= DidCapture;
+          // Reset the effect list before doing the second pass since that's now invalid.
+          workInProgress.firstEffect = workInProgress.lastEffect = null;
+          // Schedule work so we know not to bail out.
+          workInProgress.expirationTime = renderExpirationTime;
+          return workInProgress;
+        }
+      } else {
+        workInProgress.effectTag &= ~DidCapture;
+      }
       break;
     }
     case EventComponent: {

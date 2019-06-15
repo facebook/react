@@ -130,6 +130,7 @@ import {
   readContext,
   prepareToReadContext,
   calculateChangedBits,
+  scheduleWorkOnParentPath,
 } from './ReactFiberNewContext';
 import {resetHooks, renderWithHooks, bailoutHooks} from './ReactFiberHooks';
 import {stopProfilerTimerIfRunning} from './ReactProfilerTimer';
@@ -1435,6 +1436,22 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
 // TODO: This is now an empty object. Should we just make it a boolean?
 const SUSPENDED_MARKER: SuspenseState = ({}: any);
 
+function shouldRemainOnFallback(
+  suspenseContext: SuspenseContext,
+  current: null | Fiber,
+  workInProgress: Fiber,
+) {
+  // If the context is telling us that we should show a fallback, and we're not
+  // already showing content, then we should show the fallback instead.
+  return (
+    hasSuspenseContext(
+      suspenseContext,
+      (ForceSuspenseFallback: SuspenseContext),
+    ) &&
+    (current === null || current.memoizedState !== null)
+  );
+}
+
 function updateSuspenseComponent(
   current,
   workInProgress,
@@ -1457,10 +1474,7 @@ function updateSuspenseComponent(
 
   if (
     (workInProgress.effectTag & DidCapture) !== NoEffect ||
-    hasSuspenseContext(
-      suspenseContext,
-      (ForceSuspenseFallback: SuspenseContext),
-    )
+    shouldRemainOnFallback(suspenseContext, current, workInProgress)
   ) {
     // Something in this boundary's subtree already suspended. Switch to
     // rendering the fallback children.
@@ -1920,6 +1934,50 @@ function updateDehydratedSuspenseComponent(
   }
 }
 
+function propagateSuspenseContextChange(
+  workInProgress: Fiber,
+  firstChild: null | Fiber,
+  renderExpirationTime: ExpirationTime,
+): void {
+  // Mark any Suspense boundaries with fallbacks as having work to do.
+  // If they were previously forced into fallbacks, they may now be able
+  // to unblock.
+  let node = firstChild;
+  while (node !== null) {
+    if (node.tag === SuspenseComponent) {
+      const state: SuspenseState | null = node.memoizedState;
+      if (state !== null) {
+        if (node.expirationTime < renderExpirationTime) {
+          node.expirationTime = renderExpirationTime;
+        }
+        let alternate = node.alternate;
+        if (
+          alternate !== null &&
+          alternate.expirationTime < renderExpirationTime
+        ) {
+          alternate.expirationTime = renderExpirationTime;
+        }
+        scheduleWorkOnParentPath(node.return, renderExpirationTime);
+      }
+    } else if (node.child !== null) {
+      node.child.return = node;
+      node = node.child;
+      continue;
+    }
+    if (node === workInProgress) {
+      return;
+    }
+    while (node.sibling === null) {
+      if (node.return === null || node.return === workInProgress) {
+        return;
+      }
+      node = node.return;
+    }
+    node.sibling.return = node.return;
+    node = node.sibling;
+  }
+}
+
 type SuspenseListDisplayOrder = 'together' | void;
 
 function updateSuspenseListComponent(
@@ -1930,25 +1988,6 @@ function updateSuspenseListComponent(
   const nextProps = workInProgress.pendingProps;
   const displayOrder: SuspenseListDisplayOrder = nextProps.displayOrder;
   const nextChildren = nextProps.children;
-
-  let suspenseContext: SuspenseContext = suspenseStackCursor.current;
-
-  let shouldForceFallback = hasSuspenseContext(
-    suspenseContext,
-    (ForceSuspenseFallback: SuspenseContext),
-  );
-
-  if (shouldForceFallback) {
-    // A parent SuspenseList is telling us to force all our fallbacks.
-    suspenseContext = setShallowSuspenseContext(
-      suspenseContext,
-      ForceSuspenseFallback,
-    );
-  } else {
-    suspenseContext = setDefaultShallowSuspenseContext(suspenseContext);
-  }
-
-  pushSuspenseContext(workInProgress, suspenseContext);
 
   let nextChildFibers;
   if (current === null) {
@@ -1966,6 +2005,43 @@ function updateSuspenseListComponent(
       renderExpirationTime,
     );
   }
+
+  let suspenseContext: SuspenseContext = suspenseStackCursor.current;
+
+  let shouldForceFallback = hasSuspenseContext(
+    suspenseContext,
+    (ForceSuspenseFallback: SuspenseContext),
+  );
+
+  if ((workInProgress.effectTag & DidCapture) !== NoEffect) {
+    // This is the second pass. In this pass, we should force the
+    // fallbacks in place.
+    shouldForceFallback = true;
+  }
+
+  if (shouldForceFallback) {
+    suspenseContext = setShallowSuspenseContext(
+      suspenseContext,
+      ForceSuspenseFallback,
+    );
+    workInProgress.memoizedState = true;
+  } else {
+    let didForceFallback = current !== null && current.memoizedState === true;
+    if (didForceFallback) {
+      // If we previously forced a fallback, we need to schedule work
+      // on any nested boundaries to let them know to try to render
+      // again. This is the same as context updating.
+      propagateSuspenseContextChange(
+        workInProgress,
+        nextChildFibers,
+        renderExpirationTime,
+      );
+    }
+    workInProgress.memoizedState = false;
+    suspenseContext = setDefaultShallowSuspenseContext(suspenseContext);
+  }
+
+  pushSuspenseContext(workInProgress, suspenseContext);
 
   switch (displayOrder) {
     // TODO: For other display orders we'll need to split the nextChildFibers set.

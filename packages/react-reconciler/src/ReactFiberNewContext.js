@@ -155,7 +155,7 @@ export function calculateChangedBits<T>(
   }
 }
 
-function scheduleWorkOnParentPath(
+export function scheduleWorkOnParentPath(
   parent: Fiber | null,
   renderExpirationTime: ExpirationTime,
 ) {
