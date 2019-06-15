@@ -39,7 +39,7 @@ describe('ReactFresh', () => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactFreshRuntime = require('react-fresh/runtime');
+    ReactFreshRuntime = require('react-refresh/runtime');
     Scheduler = require('scheduler');
     act = require('react-dom/test-utils').act;
     container = document.createElement('div');

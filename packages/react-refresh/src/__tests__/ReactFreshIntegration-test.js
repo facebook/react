@@ -17,7 +17,7 @@ let ReactFreshRuntime;
 let act;
 
 let babel = require('babel-core');
-let freshPlugin = require('react-fresh/babel');
+let freshPlugin = require('react-refresh/babel');
 
 describe('ReactFreshIntegration', () => {
   let container;
@@ -39,7 +39,7 @@ describe('ReactFreshIntegration', () => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactFreshRuntime = require('react-fresh/runtime');
+    ReactFreshRuntime = require('react-refresh/runtime');
     act = require('react-dom/test-utils').act;
     container = document.createElement('div');
     document.body.appendChild(container);
