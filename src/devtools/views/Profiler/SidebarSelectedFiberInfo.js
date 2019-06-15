@@ -74,7 +74,7 @@ export default function SidebarSelectedFiberInfo(_: Props) {
         profilerStore={profilerStore}
         rootID={((rootID: any): number)}
       />
-      <div className={styles.Content}>
+      <div className={`${styles.Content} ${styles.ContentMaybeLong}`}>
         {listItems.length > 0 && (
           <Fragment>
             <label className={styles.Label}>Rendered at</label>: {listItems}
@@ -116,7 +116,7 @@ function WhatChanged({
 
   if (changeDescription.isFirstMount) {
     return (
-      <div className={styles.Content}>
+      <div className={`${styles.Content} ${styles.ContentShort}`}>
         <label className={styles.Label}>Why did this render?</label>
         <div className={styles.WhatChangedItem}>
           This is the first time the component rendered.
@@ -199,7 +199,7 @@ function WhatChanged({
   }
 
   return (
-    <div className={styles.Content}>
+    <div className={`${styles.Content} ${styles.ContentShort}`}>
       <label className={styles.Label}>Why did this render?</label>
       {changes}
     </div>
