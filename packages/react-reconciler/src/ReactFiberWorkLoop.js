@@ -246,6 +246,10 @@ let nestedPassiveUpdateCount: number = 0;
 
 let interruptedBy: Fiber | null = null;
 
+// Marks the need to reschedule pending interactions at Never priority during the commit phase.
+// This enables them to be traced accross hidden boundaries or suspended SSR hydration.
+let didDeprioritizeIdleSubtree: boolean = false;
+
 // Expiration times are computed by adding to the current time (the start
 // time). However, if two updates are scheduled within the same event, we
 // should treat their start times as simultaneous, even if the actual clock
@@ -378,7 +382,7 @@ export function scheduleUpdateOnFiber(
       (executionContext & (RenderContext | CommitContext)) === NoContext
     ) {
       // Register pending interactions on the root to avoid losing traced interaction data.
-      schedulePendingInteraction(root, expirationTime);
+      schedulePendingInteractions(root, expirationTime);
 
       // This is a legacy edge case. The initial mount of a ReactDOM.render-ed
       // root inside of batchedUpdates should be synchronous, but layout updates
@@ -541,9 +545,8 @@ function scheduleCallbackForRoot(
     }
   }
 
-  // Add the current set of interactions to the pending set associated with
-  // this root.
-  schedulePendingInteraction(root, expirationTime);
+  // Associate the current interactions with this new root+priority.
+  schedulePendingInteractions(root, expirationTime);
 }
 
 function runRootCallback(root, callback, isSync) {
@@ -781,6 +784,10 @@ function prepareFreshStack(root, expirationTime) {
   workInProgressRootCanSuspendUsingConfig = null;
   workInProgressRootHasPendingPing = false;
 
+  if (enableSchedulerTracing) {
+    didDeprioritizeIdleSubtree = false;
+  }
+
   if (__DEV__) {
     ReactStrictModeWarnings.discardPendingWarnings();
     componentsWithSuspendedDiscreteUpdates = null;
@@ -822,7 +829,7 @@ function renderRoot(
   // and prepare a fresh one. Otherwise we'll continue where we left off.
   if (root !== workInProgressRoot || expirationTime !== renderExpirationTime) {
     prepareFreshStack(root, expirationTime);
-    startWorkOnPendingInteraction(root, expirationTime);
+    startWorkOnPendingInteractions(root, expirationTime);
   } else if (workInProgressRootExitStatus === RootSuspendedWithDelay) {
     // We could've received an update at a lower priority while we yielded.
     // We're suspended in a delayed state. Once we complete this render we're
@@ -1680,19 +1687,14 @@ function commitRootImpl(root) {
 
   stopCommitTimer();
 
+  const rootDidHavePassiveEffects = rootDoesHavePassiveEffects;
+
   if (rootDoesHavePassiveEffects) {
     // This commit has passive effects. Stash a reference to them. But don't
     // schedule a callback until after flushing layout work.
     rootDoesHavePassiveEffects = false;
     rootWithPendingPassiveEffects = root;
     pendingPassiveEffectsExpirationTime = expirationTime;
-  } else {
-    if (enableSchedulerTracing) {
-      // If there are no passive effects, then we can complete the pending
-      // interactions. Otherwise, we'll wait until after the passive effects
-      // are flushed.
-      finishPendingInteractions(root, expirationTime);
-    }
   }
 
   // Check if there's remaining work on this root
@@ -1703,11 +1705,29 @@ function commitRootImpl(root) {
       currentTime,
       remainingExpirationTime,
     );
+
+    if (enableSchedulerTracing) {
+      if (didDeprioritizeIdleSubtree) {
+        didDeprioritizeIdleSubtree = false;
+        scheduleInteractions(root, Never, root.memoizedInteractions);
+      }
+    }
+
     scheduleCallbackForRoot(root, priorityLevel, remainingExpirationTime);
   } else {
     // If there's no remaining work, we can clear the set of already failed
     // error boundaries.
     legacyErrorBoundariesThatAlreadyFailed = null;
+  }
+
+  if (enableSchedulerTracing) {
+    if (!rootDidHavePassiveEffects) {
+      // If there are no passive effects, then we can complete the pending interactions.
+      // Otherwise, we'll wait until after the passive effects are flushed.
+      // Wait to do this until after remaining work has been scheduled,
+      // so that we don't prematurely signal complete for interactions when there's e.g. hidden work.
+      finishPendingInteractions(root, expirationTime);
+    }
   }
 
   onCommitRoot(finishedWork.stateNode, expirationTime);
@@ -2512,14 +2532,18 @@ function computeThreadID(root, expirationTime) {
   return expirationTime * 1000 + root.interactionThreadID;
 }
 
-function schedulePendingInteraction(root, expirationTime) {
-  // This is called when work is scheduled on a root. It sets up a pending
-  // interaction, which is completed once the work commits.
+export function markDidDeprioritizeIdleSubtree() {
+  if (!enableSchedulerTracing) {
+    return;
+  }
+  didDeprioritizeIdleSubtree = true;
+}
+
+function scheduleInteractions(root, expirationTime, interactions) {
   if (!enableSchedulerTracing) {
     return;
   }
 
-  const interactions = __interactionsRef.current;
   if (interactions.size > 0) {
     const pendingInteractionMap = root.pendingInteractionMap;
     const pendingInteractions = pendingInteractionMap.get(expirationTime);
@@ -2549,7 +2573,18 @@ function schedulePendingInteraction(root, expirationTime) {
   }
 }
 
-function startWorkOnPendingInteraction(root, expirationTime) {
+function schedulePendingInteractions(root, expirationTime) {
+  // This is called when work is scheduled on a root.
+  // It associates the current interactions with the newly-scheduled expiration.
+  // They will be restored when that expiration is later committed.
+  if (!enableSchedulerTracing) {
+    return;
+  }
+
+  scheduleInteractions(root, expirationTime, __interactionsRef.current);
+}
+
+function startWorkOnPendingInteractions(root, expirationTime) {
   // This is called when new work is started on a root.
   if (!enableSchedulerTracing) {
     return;
