@@ -54,6 +54,7 @@ import {
   debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode,
   enableProfilerTimer,
+  enableSchedulerTracing,
   enableSuspenseServerRenderer,
   enableEventAPI,
 } from 'shared/ReactFeatureFlags';
@@ -164,7 +165,11 @@ import {
   createWorkInProgress,
   isSimpleFunctionComponent,
 } from './ReactFiber';
-import {requestCurrentTime, retryTimedOutBoundary} from './ReactFiberWorkLoop';
+import {
+  markDidDeprioritizeIdleSubtree,
+  requestCurrentTime,
+  retryTimedOutBoundary,
+} from './ReactFiberWorkLoop';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -988,6 +993,9 @@ function updateHostComponent(current, workInProgress, renderExpirationTime) {
     renderExpirationTime !== Never &&
     shouldDeprioritizeSubtree(type, nextProps)
   ) {
+    if (enableSchedulerTracing) {
+      markDidDeprioritizeIdleSubtree();
+    }
     // Schedule this fiber to re-render at offscreen priority. Then bailout.
     workInProgress.expirationTime = workInProgress.childExpirationTime = Never;
     return null;
@@ -2265,6 +2273,9 @@ function beginWork(
             renderExpirationTime !== Never &&
             shouldDeprioritizeSubtree(workInProgress.type, newProps)
           ) {
+            if (enableSchedulerTracing) {
+              markDidDeprioritizeIdleSubtree();
+            }
             // Schedule this fiber to re-render at offscreen priority. Then bailout.
             workInProgress.expirationTime = workInProgress.childExpirationTime = Never;
             return null;

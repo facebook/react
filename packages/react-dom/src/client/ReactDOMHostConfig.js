@@ -589,7 +589,12 @@ export function hideInstance(instance: Instance): void {
   // TODO: Does this work for all element types? What about MathML? Should we
   // pass host context to this method?
   instance = ((instance: any): HTMLElement);
-  instance.style.display = 'none';
+  const style = instance.style;
+  if (typeof style.setProperty === 'function') {
+    style.setProperty('display', 'none', 'important');
+  } else {
+    style.display = 'none';
+  }
 }
 
 export function hideTextInstance(textInstance: TextInstance): void {
@@ -897,18 +902,19 @@ export function mountEventComponent(
 ): void {
   if (enableEventAPI) {
     const rootContainerInstance = ((eventComponentInstance.rootInstance: any): Container);
-    const rootElement = rootContainerInstance.ownerDocument;
+    const doc = rootContainerInstance.ownerDocument;
+    const documentBody = doc.body || doc;
     const responder = eventComponentInstance.responder;
     const {rootEventTypes, targetEventTypes} = responder;
     if (targetEventTypes !== undefined) {
-      listenToEventResponderEventTypes(targetEventTypes, rootElement);
+      listenToEventResponderEventTypes(targetEventTypes, documentBody);
     }
     if (rootEventTypes !== undefined) {
       addRootEventTypesForComponentInstance(
         eventComponentInstance,
         rootEventTypes,
       );
-      listenToEventResponderEventTypes(rootEventTypes, rootElement);
+      listenToEventResponderEventTypes(rootEventTypes, documentBody);
     }
     mountEventResponder(eventComponentInstance);
   }

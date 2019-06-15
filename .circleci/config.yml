@@ -204,10 +204,8 @@ jobs:
       - run:
           name: Run fuzz tests
           command: |
-            FUZZ_TEST_SEED=$RANDOM
-            echo $FUZZ_TEST_SEED
-            yarn test fuzz --maxWorkers=2
-            yarn test-prod fuzz --maxWorkers=2
+            FUZZ_TEST_SEED=$RANDOM yarn test fuzz --maxWorkers=2
+            FUZZ_TEST_SEED=$RANDOM yarn test-prod fuzz --maxWorkers=2
 
   test_build_prod:
     docker: *docker

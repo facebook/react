@@ -82,12 +82,6 @@ Called before an Event Component in unmounted.
 
 Defines the DOM events to listen to on the root of the app.
 
-### stopLocalPropagation: boolean
-
-Defines whether or not synthetic events propagate to other Event Components *of
-the same type*. This has no effect on propagation of the source DOM events or
-the synthetic events dispatched to Event Components of different types.
-
 ### targetEventTypes?: Array<ResponderEventType>
 
 Defines the DOM events to listen to within the Event Component subtree.
@@ -158,14 +152,6 @@ The current Event Component instance can request global ownership of the event s
 has global ownership, only that instance and its responder are active. To release ownership to other event responders,
 either `releaseOwnership()` must be called or the Event Component instance that had global ownership must be
 unmounted. Calling `requestGlobalOwnership` also returns `true`/`false` if the request was successful.
-
-### requestResponderOwnership(): boolean
-
-The current Event Component instance can request responder ownership within the event system. When an Event Component
-instance has responder ownership, all other Event Component instances that have the same responder as the Event Component
-instance will no longer be active. To release ownership to other event responders, either `releaseOwnership()` must be
-called or the Event Component instance that had global ownership must be unmounted. Calling `requestResponderOwnership`
-also returns `true`/`false` if the request was successful.
 
 ### setTimeout(func: () => void, delay: number): Symbol
 

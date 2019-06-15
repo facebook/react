@@ -6,12 +6,10 @@
  *
  * @flow
  */
-
 import type {
   ReactResponderEvent,
   ReactResponderContext,
 } from 'shared/ReactTypes';
-
 import React from 'react';
 
 type FocusScopeProps = {
@@ -57,7 +55,6 @@ const FocusScopeResponder = {
     };
   },
   allowMultipleHostChildren: true,
-  stopLocalPropagation: false,
   onEvent(
     event: ReactResponderEvent,
     context: ReactResponderContext,
@@ -65,12 +62,7 @@ const FocusScopeResponder = {
     state: FocusScopeState,
   ) {
     const {type, nativeEvent} = event;
-    const hasOwnership =
-      context.hasOwnership() || context.requestResponderOwnership();
 
-    if (!hasOwnership) {
-      return;
-    }
     if (type === 'keydown' && nativeEvent.key === 'Tab') {
       const focusedElement = context.getActiveDocument().activeElement;
       if (
@@ -89,7 +81,7 @@ const FocusScopeResponder = {
         });
 
         if (!nextElement) {
-          context.releaseOwnership();
+          context.continueLocalPropagation();
           return;
         }
 
@@ -97,7 +89,7 @@ const FocusScopeResponder = {
         // FocusScope responder or is out of bounds, then we release ownership.
         if (nextElement !== null) {
           if (!context.isTargetWithinEventResponderScope(nextElement)) {
-            context.releaseOwnership();
+            context.continueLocalPropagation();
           }
           state.currentFocusedNode = nextElement;
           ((nativeEvent: any): KeyboardEvent).preventDefault();
@@ -144,21 +136,8 @@ const FocusScopeResponder = {
     props: FocusScopeProps,
     state: FocusScopeState,
   ): void {
-    if (
-      props.restoreFocus &&
-      state.nodeToRestore !== null &&
-      context.hasOwnership()
-    ) {
+    if (props.restoreFocus && state.nodeToRestore !== null) {
       focusElement(state.nodeToRestore);
-    }
-  },
-  onOwnershipChange(
-    context: ReactResponderContext,
-    props: FocusScopeProps,
-    state: FocusScopeState,
-  ): void {
-    if (!context.hasOwnership()) {
-      state.currentFocusedNode = null;
     }
   },
 };
