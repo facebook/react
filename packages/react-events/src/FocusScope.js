@@ -18,13 +18,13 @@ import {
 } from 'react-reconciler/src/ReactFiberEvents';
 import {HostComponent} from 'shared/ReactWorkTags';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
-import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
 
 type FocusScopeProps = {
   autoFocus: boolean,
   contain: boolean,
   restoreFocus: boolean,
+  getFocusManager: (focusManager: FocusManager) => void,
 };
 
 type FocusScopeState = {
@@ -209,6 +209,17 @@ function moveFocus(
   return moveFocusInScope(scope, node, backwards, options);
 }
 
+function createFocusManager(scope: ReactEventComponentInstance) {
+  return {
+    focusNext(options: FocusManagerOptions = {}) {
+      return moveFocus(scope, options, false);
+    },
+    focusPrevious(options: FocusManagerOptions = {}) {
+      return moveFocus(scope, options, true);
+    },
+  };
+}
+
 function getFirstFocusableElement(
   context: ReactResponderContext,
   state: FocusScopeState,
@@ -220,7 +231,6 @@ function getFirstFocusableElement(
 }
 
 const FocusScopeResponder = {
-  isFocusScope: true,
   targetEventTypes,
   rootEventTypes,
   createInitialState(): FocusScopeState {
@@ -302,6 +312,9 @@ const FocusScopeResponder = {
       const firstElement = getFirstFocusableElement(context, state);
       focusElement(firstElement);
     }
+    if (props.getFocusManager) {
+      props.getFocusManager(createFocusManager(context.getCurrentInstance()));
+    }
   },
   onUnmount(
     context: ReactResponderContext,
@@ -323,18 +336,31 @@ const FocusScopeContext: React.Context<FocusManager> = React.createContext();
 
 export const FocusScope = React.forwardRef(
   (props: FocusScopeProps, ref: React.Ref<FocusManager>) => {
-    let fiber = ReactSharedInternals.ReactCurrentOwner.current;
+    let internalFocusManager: ?FocusManager;
     let focusManager = {
       focusNext(options: FocusManagerOptions = {}) {
-        // forwardRef -> context provider -> event component -> responder
-        return moveFocus(fiber.child.child.stateNode, options, false);
+        invariant(
+          internalFocusManager != null,
+          'Attempt to use a focus manager method on an unmounted component.',
+        );
+        return internalFocusManager.focusNext(options);
       },
       focusPrevious(options: FocusManagerOptions = {}) {
-        return moveFocus(fiber.child.child.stateNode, options, true);
+        invariant(
+          internalFocusManager != null,
+          'Attempt to use a focus manager method on an unmounted component.',
+        );
+        return internalFocusManager.focusPrevious(options);
       },
     };
 
     React.useImperativeHandle(ref, () => focusManager);
+    props = {
+      ...props,
+      getFocusManager(manager) {
+        internalFocusManager = manager;
+      },
+    };
 
     return React.createElement(FocusScopeContext.Provider, {
       value: focusManager,

@@ -590,5 +590,33 @@ describe('FocusScope event responder', () => {
       divRef.current.click();
       expect(document.activeElement).toBe(input2Ref.current);
     });
+
+    it('throws when trying to use a focus manager method on an unmounted component', () => {
+      const inputRef = React.createRef();
+      const input2Ref = React.createRef();
+      const ScopeParent = () => (
+        <div>
+          <FocusScope autoFocus={true} contain={true}>
+            <input ref={inputRef} />
+            <span />
+            <Child />
+            <span />
+            <input ref={input2Ref} />
+          </FocusScope>
+        </div>
+      );
+
+      const Child = () => {
+        let focusManager = useFocusManager();
+        focusManager.focusNext();
+        return null;
+      };
+
+      expect(() => {
+        ReactDOM.render(<ScopeParent />, container);
+      }).toThrow(
+        'Attempt to use a focus manager method on an unmounted component.',
+      );
+    });
   });
 });
