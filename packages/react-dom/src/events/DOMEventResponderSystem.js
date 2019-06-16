@@ -359,7 +359,8 @@ const eventResponderContext: ReactResponderContext = {
     }
   },
   getCurrentInstance(): ReactEventComponentInstance {
-    return currentInstance;
+    validateResponderContext();
+    return ((currentInstance: any): ReactEventComponentInstance);
   },
   getActiveDocument,
   objectAssign: Object.assign,

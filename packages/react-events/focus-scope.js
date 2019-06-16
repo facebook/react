@@ -11,4 +11,4 @@
 
 const FocusScope = require('./src/FocusScope');
 
-module.exports = FocusScope.default || FocusScope;
+module.exports = FocusScope;
