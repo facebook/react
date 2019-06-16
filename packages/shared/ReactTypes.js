@@ -173,12 +173,6 @@ export const DiscreteEvent: EventPriority = 0;
 export const UserBlockingEvent: EventPriority = 1;
 export const ContinuousEvent: EventPriority = 2;
 
-export type FocusManagerOptions = {
-  from?: HTMLElement,
-  tabbable?: boolean,
-  wrap?: boolean,
-};
-
 export type ReactResponderContext = {
   dispatchEvent: (
     eventObject: Object,
@@ -203,12 +197,7 @@ export type ReactResponderContext = {
   releaseOwnership: () => boolean,
   setTimeout: (func: () => void, timeout: number) => number,
   clearTimeout: (timerId: number) => void,
-  getFocusableElementsInScope(): Array<HTMLElement>,
-  moveFocusInScope(
-    element: HTMLElement,
-    backwards: boolean,
-    options: FocusManagerOptions,
-  ): ?HTMLElement,
+  getCurrentInstance(): ReactEventComponentInstance,
   getActiveDocument(): Document,
   objectAssign: Function,
   getEventCurrentTarget(event: ReactResponderEvent): Element,

@@ -44,7 +44,6 @@ import {
   DiscreteEvent,
 } from 'shared/ReactTypes';
 import {enableUserBlockingEvents} from 'shared/ReactFeatureFlags';
-import {getFocusableElementsInScope, moveFocusInScope} from './FocusManager';
 
 // Intentionally not named imports because Rollup would use dynamic dispatch for
 // CommonJS interop named imports.
@@ -359,20 +358,8 @@ const eventResponderContext: ReactResponderContext = {
       }
     }
   },
-  getFocusableElementsInScope(): Array<HTMLElement> {
-    validateResponderContext();
-    const eventComponentInstance = ((currentInstance: any): ReactEventComponentInstance);
-    return getFocusableElementsInScope(eventComponentInstance);
-  },
-  moveFocusInScope(element: HTMLElement, backwards, options) {
-    validateResponderContext();
-    const eventComponentInstance = ((currentInstance: any): ReactEventComponentInstance);
-    return moveFocusInScope(
-      eventComponentInstance,
-      element,
-      backwards,
-      options,
-    );
+  getCurrentInstance(): ReactEventComponentInstance {
+    return currentInstance;
   },
   getActiveDocument,
   objectAssign: Object.assign,

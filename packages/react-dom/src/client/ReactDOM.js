@@ -80,8 +80,6 @@ import {
   DOCUMENT_FRAGMENT_NODE,
 } from '../shared/HTMLNodeType';
 import {ROOT_ATTRIBUTE_NAME} from '../shared/DOMProperty';
-import {enableEventAPI} from 'shared/ReactFeatureFlags';
-import FocusManager from '../events/FocusManager';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -910,10 +908,6 @@ if (__DEV__) {
       }
     }
   }
-}
-
-if (enableEventAPI) {
-  ReactDOM.unstable_FocusManager = FocusManager;
 }
 
 export default ReactDOM;
