@@ -145,13 +145,14 @@ export function calculateChangedBits<T>(
 
     if (__DEV__) {
       warning(
-        (changedBits & MAX_SIGNED_31_BIT_INT) === changedBits,
+        typeof changedBits === 'number' &&
+          (changedBits & MAX_SIGNED_31_BIT_INT) === changedBits,
         'calculateChangedBits: Expected the return value to be a ' +
           '31-bit integer. Instead received: %s',
         changedBits,
       );
     }
-    return changedBits | 0;
+    return Math.floor(changedBits);
   }
 }
 
