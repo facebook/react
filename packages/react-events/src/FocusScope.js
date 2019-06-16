@@ -39,8 +39,8 @@ type FocusManagerOptions = {
 };
 
 type FocusManager = {
-  focusNext(opts: FocusManagerOptions): HTMLElement,
-  focusPrevious(opts: FocusManagerOptions): HTMLElement,
+  focusNext(opts: ?FocusManagerOptions): ?HTMLElement,
+  focusPrevious(opts: ?FocusManagerOptions): ?HTMLElement,
 };
 
 const targetEventTypes = [{name: 'keydown', passive: false}];
@@ -209,13 +209,13 @@ function moveFocus(
   return moveFocusInScope(scope, node, backwards, options);
 }
 
-function createFocusManager(scope: ReactEventComponentInstance) {
+function createFocusManager(scope: ReactEventComponentInstance): FocusManager {
   return {
-    focusNext(options: FocusManagerOptions = {}) {
-      return moveFocus(scope, options, false);
+    focusNext(options: ?FocusManagerOptions) {
+      return moveFocus(scope, options || {}, false);
     },
-    focusPrevious(options: FocusManagerOptions = {}) {
-      return moveFocus(scope, options, true);
+    focusPrevious(options: ?FocusManagerOptions) {
+      return moveFocus(scope, options || {}, true);
     },
   };
 }
