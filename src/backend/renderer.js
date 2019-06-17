@@ -2168,7 +2168,7 @@ export function attach(
               ((mostRecentlyInspectedElement: any): InspectedElement),
               path
             ),
-            mergeInspectedPaths,
+            currentlyInspectedPaths,
             path
           ),
         };

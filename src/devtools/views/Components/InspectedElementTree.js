@@ -8,10 +8,13 @@ import KeyValue from './KeyValue';
 import { serializeDataForCopy } from '../utils';
 import styles from './InspectedElementTree.css';
 
+import type { InspectPath } from './SelectedElement';
+
 type OverrideValueFn = (path: Array<string | number>, value: any) => void;
 
 type Props = {|
   data: Object | null,
+  inspectPath?: InspectPath,
   label: string,
   overrideValueFn?: ?OverrideValueFn,
   showWhenEmpty?: boolean,
@@ -19,6 +22,7 @@ type Props = {|
 
 export default function InspectedElementTree({
   data,
+  inspectPath,
   label,
   overrideValueFn,
   showWhenEmpty = false,
@@ -32,7 +36,6 @@ export default function InspectedElementTree({
   if (isEmpty && !showWhenEmpty) {
     return null;
   } else {
-    // TODO Add click and key handlers for toggling element open/close state.
     return (
       <div className={styles.InspectedElementTree}>
         <div className={styles.HeaderRow}>
@@ -49,6 +52,7 @@ export default function InspectedElementTree({
             <KeyValue
               key={name}
               depth={1}
+              inspectPath={inspectPath}
               name={name}
               overrideValueFn={overrideValueFn}
               path={[name]}

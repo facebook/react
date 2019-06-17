@@ -132,10 +132,10 @@ describe('InspectedElementContext', () => {
     expect(symbol[meta.type]).toBe('symbol');
     expect(react_element[meta.name]).toBe('span');
     expect(react_element[meta.type]).toBe('react_element');
-    expect(array_buffer[meta.meta].length).toBe(3);
+    expect(array_buffer[meta.size]).toBe(3);
     expect(array_buffer[meta.name]).toBe('ArrayBuffer');
     expect(array_buffer[meta.type]).toBe('array_buffer');
-    expect(typed_array[meta.meta].length).toBe(3);
+    expect(typed_array[meta.size]).toBe(3);
     expect(typed_array[meta.name]).toBe('Uint8Array');
     expect(typed_array[meta.type]).toBe('typed_array');
     expect(date[meta.type]).toBe('date');

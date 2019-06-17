@@ -315,18 +315,24 @@ describe('InspectedElementContext', () => {
       typed_array,
       date,
     } = (inspectedElement: any).props;
+    expect(html_element[meta.inspectable]).toBe(false);
     expect(html_element[meta.name]).toBe('DIV');
     expect(html_element[meta.type]).toBe('html_element');
+    expect(fn[meta.inspectable]).toBe(false);
     expect(fn[meta.name]).toBe('exmapleFunction');
     expect(fn[meta.type]).toBe('function');
+    expect(symbol[meta.inspectable]).toBe(false);
     expect(symbol[meta.name]).toBe('Symbol(symbol)');
     expect(symbol[meta.type]).toBe('symbol');
+    expect(react_element[meta.inspectable]).toBe(false);
     expect(react_element[meta.name]).toBe('span');
     expect(react_element[meta.type]).toBe('react_element');
-    expect(array_buffer[meta.meta].length).toBe(3);
+    expect(array_buffer[meta.size]).toBe(3);
+    expect(array_buffer[meta.inspectable]).toBe(false);
     expect(array_buffer[meta.name]).toBe('ArrayBuffer');
     expect(array_buffer[meta.type]).toBe('array_buffer');
-    expect(typed_array[meta.meta].length).toBe(3);
+    expect(typed_array[meta.size]).toBe(3);
+    expect(typed_array[meta.inspectable]).toBe(false);
     expect(typed_array[meta.name]).toBe('Uint8Array');
     expect(typed_array[meta.type]).toBe('typed_array');
     expect(date[meta.type]).toBe('date');

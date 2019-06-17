@@ -1,6 +1,6 @@
 // @flow
 
-import React, { useCallback, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import type { Element } from 'react';
 import EditableValue from './EditableValue';
 import ExpandCollapseToggle from './ExpandCollapseToggle';
@@ -8,11 +8,14 @@ import { getMetaValueLabel } from '../utils';
 import { meta } from '../../../hydration';
 import styles from './KeyValue.css';
 
+import type { InspectPath } from './SelectedElement';
+
 type OverrideValueFn = (path: Array<string | number>, value: any) => void;
 
 type KeyValueProps = {|
   depth: number,
   hidden?: boolean,
+  inspectPath?: InspectPath,
   name: string,
   overrideValueFn?: ?OverrideValueFn,
   path?: Array<any>,
@@ -24,6 +27,7 @@ type KeyValueProps = {|
 
 export default function KeyValue({
   depth,
+  inspectPath,
   hidden,
   name,
   overrideValueFn,
@@ -31,11 +35,27 @@ export default function KeyValue({
   value,
 }: KeyValueProps) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
+  const prevIsOpenRef = useRef(isOpen);
 
-  const toggleIsOpen = useCallback(
-    () => setIsOpen(prevIsOpen => !prevIsOpen),
-    []
-  );
+  const isInspectable =
+    value !== null &&
+    typeof value === 'object' &&
+    value[meta.inspectable] &&
+    value[meta.size] !== 0;
+
+  useEffect(() => {
+    if (
+      isInspectable &&
+      isOpen &&
+      !prevIsOpenRef.current &&
+      typeof inspectPath === 'function'
+    ) {
+      inspectPath(path);
+    }
+    prevIsOpenRef.current = isOpen;
+  }, [inspectPath, isInspectable, isOpen, path]);
+
+  const toggleIsOpen = () => setIsOpen(prevIsOpen => !prevIsOpen);
 
   const dataType = typeof value;
   const isSimpleType =
@@ -81,12 +101,19 @@ export default function KeyValue({
       </div>
     );
   } else if (value.hasOwnProperty(meta.type)) {
-    // TODO (hydration) show UI to load its data?
-    // TODO Is this type even necessary? Can we just drop it?
     children = (
       <div key="root" className={styles.Item} hidden={hidden} style={style}>
-        <div className={styles.ExpandCollapseToggleSpacer} />
-        <span className={styles.Name}>{name}</span>
+        {isInspectable ? (
+          <ExpandCollapseToggle isOpen={isOpen} setIsOpen={setIsOpen} />
+        ) : (
+          <div className={styles.ExpandCollapseToggleSpacer} />
+        )}
+        <span
+          className={styles.Name}
+          onClick={isInspectable ? toggleIsOpen : undefined}
+        >
+          {name}
+        </span>
         <span className={styles.Value}>{getMetaValueLabel(value)}</span>
       </div>
     );
@@ -98,6 +125,7 @@ export default function KeyValue({
         <KeyValue
           key={index}
           depth={depth + 1}
+          inspectPath={inspectPath}
           hidden={hidden || !isOpen}
           name={index}
           overrideValueFn={overrideValueFn}
@@ -133,6 +161,7 @@ export default function KeyValue({
         <KeyValue
           key={name}
           depth={depth + 1}
+          inspectPath={inspectPath}
           hidden={hidden || !isOpen}
           name={name}
           overrideValueFn={overrideValueFn}
