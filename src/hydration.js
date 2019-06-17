@@ -120,20 +120,6 @@ function createDehydrated(
   return dehydrated;
 }
 
-function isInspectedPath(
-  path: Array<string | number> = [],
-  inspectedPaths: Object
-): boolean {
-  let current = inspectedPaths;
-  for (let i = 0; i < path.length; i++) {
-    current = current[path[i]];
-    if (!current) {
-      return false;
-    }
-  }
-  return true;
-}
-
 /**
  * Strip out complex data (instances, functions, and data nested > LEVEL_THRESHOLD levels deep).
  * The paths of the stripped out objects are appended to the `cleaned` list.
@@ -156,7 +142,7 @@ export function dehydrate(
   data: Object,
   cleaned: Array<Array<string | number>>,
   path: Array<string | number>,
-  inspectedPaths: Object,
+  isPathWhitelisted: (path: Array<string | number>) => boolean,
   level?: number = 0
 ): string | Dehydrated | { [key: string]: string | Dehydrated } {
   const type = getPropType(data);
@@ -213,7 +199,7 @@ export function dehydrate(
       };
 
     case 'array':
-      const arrayPathCheck = isInspectedPath(path, inspectedPaths);
+      const arrayPathCheck = isPathWhitelisted(path);
       if (level >= LEVEL_THRESHOLD && !arrayPathCheck) {
         return createDehydrated(type, true, data, cleaned, path);
       }
@@ -222,7 +208,7 @@ export function dehydrate(
           item,
           cleaned,
           path.concat([i]),
-          inspectedPaths,
+          isPathWhitelisted,
           arrayPathCheck ? 1 : level + 1
         )
       );
@@ -240,7 +226,7 @@ export function dehydrate(
       };
 
     case 'object':
-      const objectPathCheck = isInspectedPath(path, inspectedPaths);
+      const objectPathCheck = isPathWhitelisted(path);
       if (level >= LEVEL_THRESHOLD && !objectPathCheck) {
         return createDehydrated(type, true, data, cleaned, path);
       } else {
@@ -250,7 +236,7 @@ export function dehydrate(
             data[name],
             cleaned,
             path.concat([name]),
-            inspectedPaths,
+            isPathWhitelisted,
             objectPathCheck ? 1 : level + 1
           );
         }

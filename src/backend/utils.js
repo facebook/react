@@ -6,14 +6,14 @@ import type { DehydratedData } from 'src/devtools/views/Components/types';
 
 export function cleanForBridge(
   data: Object | null,
-  inspectedPaths?: Object = {},
+  isPathWhitelisted: (path: Array<string | number>) => boolean,
   path?: Array<string | number> = []
 ): DehydratedData | null {
   if (data !== null) {
     const cleaned = [];
 
     return {
-      data: dehydrate(data, cleaned, path, inspectedPaths),
+      data: dehydrate(data, cleaned, path, isPathWhitelisted),
       cleaned,
     };
   } else {
@@ -27,6 +27,7 @@ export function copyWithSet(
   value: any,
   index: number = 0
 ): Object | Array<any> {
+  console.log('[utils] copyWithSet()', obj, path, index, value);
   if (index >= path.length) {
     return value;
   }

@@ -107,7 +107,7 @@ exports[`InspectedElementContext should inspect the currently selected element: 
       "isStateEditable": true,
       "name": "State",
       "value": 1,
-      "subHooks": {}
+      "subHooks": []
     }
   ],
   "props": {
@@ -124,7 +124,15 @@ exports[`InspectedElementContext should not dehydrate nested values until explic
   "owners": null,
   "context": null,
   "events": null,
-  "hooks": null,
+  "hooks": [
+    {
+      "id": 0,
+      "isStateEditable": true,
+      "name": "State",
+      "value": {},
+      "subHooks": []
+    }
+  ],
   "props": {
     "nestedObject": {
       "a": {}
@@ -140,7 +148,15 @@ exports[`InspectedElementContext should not dehydrate nested values until explic
   "owners": null,
   "context": null,
   "events": null,
-  "hooks": null,
+  "hooks": [
+    {
+      "id": 0,
+      "isStateEditable": true,
+      "name": "State",
+      "value": {},
+      "subHooks": []
+    }
+  ],
   "props": {
     "nestedObject": {
       "a": {
@@ -160,7 +176,15 @@ exports[`InspectedElementContext should not dehydrate nested values until explic
   "owners": null,
   "context": null,
   "events": null,
-  "hooks": null,
+  "hooks": [
+    {
+      "id": 0,
+      "isStateEditable": true,
+      "name": "State",
+      "value": {},
+      "subHooks": []
+    }
+  ],
   "props": {
     "nestedObject": {
       "a": {
@@ -184,7 +208,93 @@ exports[`InspectedElementContext should not dehydrate nested values until explic
   "owners": null,
   "context": null,
   "events": null,
-  "hooks": null,
+  "hooks": [
+    {
+      "id": 0,
+      "isStateEditable": true,
+      "name": "State",
+      "value": {},
+      "subHooks": []
+    }
+  ],
+  "props": {
+    "nestedObject": {
+      "a": {
+        "b": {
+          "c": [
+            {
+              "d": {
+                "e": {}
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should not dehydrate nested values until explicitly requested: 5: Inspect hooks.0.value 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "events": null,
+  "hooks": [
+    {
+      "id": 0,
+      "isStateEditable": true,
+      "name": "State",
+      "value": {
+        "foo": {
+          "bar": {}
+        }
+      },
+      "subHooks": []
+    }
+  ],
+  "props": {
+    "nestedObject": {
+      "a": {
+        "b": {
+          "c": [
+            {
+              "d": {
+                "e": {}
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should not dehydrate nested values until explicitly requested: 6: Inspect hooks.0.value.foo.bar 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "events": null,
+  "hooks": [
+    {
+      "id": 0,
+      "isStateEditable": true,
+      "name": "State",
+      "value": {
+        "foo": {
+          "bar": {
+            "baz": "hi"
+          }
+        }
+      },
+      "subHooks": []
+    }
+  ],
   "props": {
     "nestedObject": {
       "a": {
@@ -216,7 +326,7 @@ exports[`InspectedElementContext should not re-render a function with hooks if i
       "isStateEditable": true,
       "name": "State",
       "value": 0,
-      "subHooks": {}
+      "subHooks": []
     }
   ],
   "props": {
@@ -239,7 +349,7 @@ exports[`InspectedElementContext should not re-render a function with hooks if i
       "isStateEditable": true,
       "name": "State",
       "value": 0,
-      "subHooks": {}
+      "subHooks": []
     }
   ],
   "props": {

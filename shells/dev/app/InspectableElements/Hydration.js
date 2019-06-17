@@ -1,6 +1,6 @@
 // @flow
 
-import React from 'react';
+import React, { useDebugValue, useState } from 'react';
 
 const div = document.createElement('div');
 const exmapleFunction = () => {};
@@ -35,6 +35,61 @@ const objectOfObjects = {
   qux: {},
 };
 
+function useOuterFoo() {
+  useDebugValue({
+    debugA: {
+      debugB: {
+        debugC: 'abc',
+      },
+    },
+  });
+  useState({
+    valueA: {
+      valueB: {
+        valueC: 'abc',
+      },
+    },
+  });
+  return useInnerFoo();
+}
+
+function useInnerFoo() {
+  const [value] = useState([[['a', 'b', 'c']]]);
+  return value;
+}
+
+function useOuterBar() {
+  useDebugValue({
+    debugA: {
+      debugB: {
+        debugC: 'abc',
+      },
+    },
+  });
+  return useInnerBar();
+}
+
+function useInnerBar() {
+  useDebugValue({
+    debugA: {
+      debugB: {
+        debugC: 'abc',
+      },
+    },
+  });
+  const [count] = useState(123);
+  return count;
+}
+
+function useOuterBaz() {
+  return useInnerBaz();
+}
+
+function useInnerBaz() {
+  const [count] = useState(123);
+  return count;
+}
+
 export default function Hydration() {
   return (
     <ChildComponent
@@ -52,5 +107,8 @@ export default function Hydration() {
 }
 
 function ChildComponent(props: any) {
+  useOuterFoo();
+  useOuterBar();
+  useOuterBaz();
   return null;
 }

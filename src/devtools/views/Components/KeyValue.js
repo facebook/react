@@ -18,7 +18,7 @@ type KeyValueProps = {|
   inspectPath?: InspectPath,
   name: string,
   overrideValueFn?: ?OverrideValueFn,
-  path?: Array<any>,
+  path: Array<any>,
   value: any,
 |};
 
@@ -31,7 +31,7 @@ export default function KeyValue({
   hidden,
   name,
   overrideValueFn,
-  path = [],
+  path,
   value,
 }: KeyValueProps) {
   const [isOpen, setIsOpen] = useState<boolean>(false);

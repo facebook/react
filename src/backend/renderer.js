@@ -2147,6 +2147,28 @@ export function attach(
     });
   }
 
+  function isKeyedPathWhitelisted(
+    key: string,
+    isHooks: boolean
+  ): (path: Array<string | number>) => boolean {
+    return (path: Array<string | number>) =>
+      isPathWhitelisted([key].concat(path)) ||
+      // Dehydrating the 'subHooks' property makes the HooksTree UI a lot more complicated,
+      // so it's easiest for now if we just don't break on this boundary.
+      (isHooks && path[path.length - 1] === 'subHooks');
+  }
+
+  function isPathWhitelisted(path: Array<string | number>): boolean {
+    let current = currentlyInspectedPaths;
+    for (let i = 0; i < path.length; i++) {
+      current = current[path[i]];
+      if (!current) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   function inspectElement(
     id: number,
     path?: Array<string | number>
@@ -2168,7 +2190,7 @@ export function attach(
               ((mostRecentlyInspectedElement: any): InspectedElement),
               path
             ),
-            currentlyInspectedPaths,
+            isPathWhitelisted,
             path
           ),
         };
@@ -2206,23 +2228,23 @@ export function attach(
 
       cleanedInspectedElement.context = cleanForBridge(
         cleanedInspectedElement.context,
-        currentlyInspectedPaths.context
+        isKeyedPathWhitelisted('context', false)
       );
       cleanedInspectedElement.events = cleanForBridge(
         cleanedInspectedElement.events,
-        currentlyInspectedPaths.events
+        isKeyedPathWhitelisted('events', false)
       );
       cleanedInspectedElement.hooks = cleanForBridge(
         cleanedInspectedElement.hooks,
-        currentlyInspectedPaths.hooks
+        isKeyedPathWhitelisted('hooks', true)
       );
       cleanedInspectedElement.props = cleanForBridge(
         cleanedInspectedElement.props,
-        currentlyInspectedPaths.props
+        isKeyedPathWhitelisted('props', false)
       );
       cleanedInspectedElement.state = cleanForBridge(
         cleanedInspectedElement.state,
-        currentlyInspectedPaths.state
+        isKeyedPathWhitelisted('state', false)
       );
 
       return {
@@ -2285,6 +2307,7 @@ export function attach(
     const fiber = findCurrentFiberUsingSlowPathById(id);
     if (fiber !== null) {
       if (typeof overrideHookState === 'function') {
+        console.log('[renderer] overrideHookState()', { path, value, index });
         overrideHookState(fiber, index, path, value);
       }
     }

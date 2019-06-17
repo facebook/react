@@ -562,6 +562,24 @@ export function attach(
     });
   }
 
+  function isKeyedPathWhitelisted(
+    key: string
+  ): (path: Array<string | number>) => boolean {
+    return (path: Array<string | number>) =>
+      isPathWhitelisted([key].concat(path));
+  }
+
+  function isPathWhitelisted(path: Array<string | number>): boolean {
+    let current = currentlyInspectedPaths;
+    for (let i = 0; i < path.length; i++) {
+      current = current[path[i]];
+      if (!current) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   function inspectElement(
     id: number,
     path?: Array<string | number>
@@ -585,15 +603,15 @@ export function attach(
 
     inspectedElement.context = cleanForBridge(
       inspectedElement.context,
-      currentlyInspectedPaths['context']
+      isKeyedPathWhitelisted('context')
     );
     inspectedElement.props = cleanForBridge(
       inspectedElement.props,
-      currentlyInspectedPaths['props']
+      isKeyedPathWhitelisted('props')
     );
     inspectedElement.state = cleanForBridge(
       inspectedElement.state,
-      currentlyInspectedPaths['state']
+      isKeyedPathWhitelisted('state')
     );
 
     return {

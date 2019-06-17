@@ -397,7 +397,17 @@ describe('InspectedElementContext', () => {
   });
 
   it('should not dehydrate nested values until explicitly requested', async done => {
-    const Example = () => null;
+    const Example = () => {
+      const [state] = React.useState({
+        foo: {
+          bar: {
+            baz: 'hi',
+          },
+        },
+      });
+
+      return state.foo.bar.baz;
+    };
 
     const container = document.createElement('div');
     await utils.actAsync(() =>
@@ -477,6 +487,24 @@ describe('InspectedElementContext', () => {
     expect(inspectedElement).not.toBeNull();
     expect(inspectedElement).toMatchSnapshot(
       '4: Inspect props.nestedObject.a.b.c.0.d'
+    );
+
+    inspectedElement = null;
+    TestUtils.act(() => {
+      getPath(id, ['hooks', 0, 'value']);
+      jest.runOnlyPendingTimers();
+    });
+    expect(inspectedElement).not.toBeNull();
+    expect(inspectedElement).toMatchSnapshot('5: Inspect hooks.0.value');
+
+    inspectedElement = null;
+    TestUtils.act(() => {
+      getPath(id, ['hooks', 0, 'value', 'foo', 'bar']);
+      jest.runOnlyPendingTimers();
+    });
+    expect(inspectedElement).not.toBeNull();
+    expect(inspectedElement).toMatchSnapshot(
+      '6: Inspect hooks.0.value.foo.bar'
     );
 
     done();
