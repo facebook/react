@@ -196,4 +196,209 @@ describe('ReactSuspenseList', () => {
       </Fragment>,
     );
   });
+
+  it('displays all "together" even when nested as siblings', async () => {
+    let A = createAsyncText('A');
+    let B = createAsyncText('B');
+    let C = createAsyncText('C');
+
+    function Foo() {
+      return (
+        <SuspenseList displayOrder="together">
+          <div>
+            <Suspense fallback={<Text text="Loading A" />}>
+              <A />
+            </Suspense>
+            <Suspense fallback={<Text text="Loading B" />}>
+              <B />
+            </Suspense>
+          </div>
+          <div>
+            <Suspense fallback={<Text text="Loading C" />}>
+              <C />
+            </Suspense>
+          </div>
+        </SuspenseList>
+      );
+    }
+
+    await A.resolve();
+
+    ReactNoop.render(<Foo />);
+
+    expect(Scheduler).toFlushAndYield([
+      'A',
+      'Suspend! [B]',
+      'Loading B',
+      'Suspend! [C]',
+      'Loading C',
+      'Loading A',
+      'Loading B',
+      'Loading C',
+    ]);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <Fragment>
+        <div>
+          <span>Loading A</span>
+          <span>Loading B</span>
+        </div>
+        <div>
+          <span>Loading C</span>
+        </div>
+      </Fragment>,
+    );
+
+    await B.resolve();
+
+    expect(Scheduler).toFlushAndYield(['A', 'B', 'Suspend! [C]']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <Fragment>
+        <div>
+          <span>Loading A</span>
+          <span>Loading B</span>
+        </div>
+        <div>
+          <span>Loading C</span>
+        </div>
+      </Fragment>,
+    );
+
+    await C.resolve();
+
+    expect(Scheduler).toFlushAndYield(['A', 'B', 'C']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <Fragment>
+        <div>
+          <span>A</span>
+          <span>B</span>
+        </div>
+        <div>
+          <span>C</span>
+        </div>
+      </Fragment>,
+    );
+  });
+
+  it('displays all "together" in nested SuspenseLists', async () => {
+    let A = createAsyncText('A');
+    let B = createAsyncText('B');
+    let C = createAsyncText('C');
+
+    function Foo() {
+      return (
+        <SuspenseList displayOrder="together">
+          <Suspense fallback={<Text text="Loading A" />}>
+            <A />
+          </Suspense>
+          <SuspenseList displayOrder="together">
+            <Suspense fallback={<Text text="Loading B" />}>
+              <B />
+            </Suspense>
+            <Suspense fallback={<Text text="Loading C" />}>
+              <C />
+            </Suspense>
+          </SuspenseList>
+        </SuspenseList>
+      );
+    }
+
+    await A.resolve();
+    await B.resolve();
+
+    ReactNoop.render(<Foo />);
+
+    expect(Scheduler).toFlushAndYield([
+      'A',
+      'B',
+      'Suspend! [C]',
+      'Loading C',
+      'Loading B',
+      'Loading C',
+      'Loading A',
+      'Loading B',
+      'Loading C',
+    ]);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <Fragment>
+        <span>Loading A</span>
+        <span>Loading B</span>
+        <span>Loading C</span>
+      </Fragment>,
+    );
+
+    await C.resolve();
+
+    expect(Scheduler).toFlushAndYield(['A', 'B', 'C']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <Fragment>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+      </Fragment>,
+    );
+  });
+
+  it('displays all "together" in nested SuspenseLists where the inner is default', async () => {
+    let A = createAsyncText('A');
+    let B = createAsyncText('B');
+    let C = createAsyncText('C');
+
+    function Foo() {
+      return (
+        <SuspenseList displayOrder="together">
+          <Suspense fallback={<Text text="Loading A" />}>
+            <A />
+          </Suspense>
+          <SuspenseList>
+            <Suspense fallback={<Text text="Loading B" />}>
+              <B />
+            </Suspense>
+            <Suspense fallback={<Text text="Loading C" />}>
+              <C />
+            </Suspense>
+          </SuspenseList>
+        </SuspenseList>
+      );
+    }
+
+    await A.resolve();
+    await B.resolve();
+
+    ReactNoop.render(<Foo />);
+
+    expect(Scheduler).toFlushAndYield([
+      'A',
+      'B',
+      'Suspend! [C]',
+      'Loading C',
+      'Loading A',
+      'Loading B',
+      'Loading C',
+    ]);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <Fragment>
+        <span>Loading A</span>
+        <span>Loading B</span>
+        <span>Loading C</span>
+      </Fragment>,
+    );
+
+    await C.resolve();
+
+    expect(Scheduler).toFlushAndYield(['A', 'B', 'C']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <Fragment>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+      </Fragment>,
+    );
+  });
 });
