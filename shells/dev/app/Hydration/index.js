@@ -1,6 +1,6 @@
 // @flow
 
-import React, { useDebugValue, useState } from 'react';
+import React, { Fragment, useDebugValue, useState } from 'react';
 
 const div = document.createElement('div');
 const exmapleFunction = () => {};
@@ -92,23 +92,42 @@ function useInnerBaz() {
 
 export default function Hydration() {
   return (
-    <ChildComponent
-      html_element={div}
-      fn={exmapleFunction}
-      symbol={Symbol('symbol')}
-      react_element={<span />}
-      array_buffer={typedArray.buffer}
-      typed_array={typedArray}
-      date={new Date()}
-      array={arrayOfArrays}
-      object={objectOfObjects}
-    />
+    <Fragment>
+      <h1>Hydration</h1>
+      <DehydratableProps
+        html_element={div}
+        fn={exmapleFunction}
+        symbol={Symbol('symbol')}
+        react_element={<span />}
+        array_buffer={typedArray.buffer}
+        typed_array={typedArray}
+        date={new Date()}
+        array={arrayOfArrays}
+        object={objectOfObjects}
+      />
+      <DeepHooks />
+    </Fragment>
   );
 }
 
-function ChildComponent(props: any) {
-  useOuterFoo();
-  useOuterBar();
-  useOuterBaz();
-  return null;
+function DehydratableProps({ array, object }: any) {
+  return (
+    <ul>
+      <li>array: {JSON.stringify(array, null, 2)}</li>
+      <li>object: {JSON.stringify(object, null, 2)}</li>
+    </ul>
+  );
+}
+
+function DeepHooks(props: any) {
+  const foo = useOuterFoo();
+  const bar = useOuterBar();
+  const baz = useOuterBaz();
+  return (
+    <ul>
+      <li>foo: {foo}</li>
+      <li>bar: {bar}</li>
+      <li>baz: {baz}</li>
+    </ul>
+  );
 }
