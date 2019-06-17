@@ -523,6 +523,7 @@ if (supportsMutation) {
   };
 }
 
+// Note this, might mutate the workInProgress passed in.
 function hasSuspendedChildrenAndNewContent(
   workInProgress: Fiber,
   firstChild: null | Fiber,
@@ -541,6 +542,25 @@ function hasSuspendedChildrenAndNewContent(
       const isShowingFallback = state !== null;
       if (isShowingFallback) {
         hasSuspendedBoundaries = true;
+
+        if (node.updateQueue !== null) {
+          // If this is a newly suspended tree, it might not get committed as
+          // part of the second pass. In that case nothing will subscribe to
+          // its thennables. Instead, we'll transfer its thennables to the
+          // SuspenseList so that it can retry if they resolve.
+          // There might be multiple of these in the list but since we're
+          // going to wait for all of them anyway, it doesn't really matter
+          // which ones gets to ping. In theory we could get clever and keep
+          // track of how many dependencies remain but it gets tricky because
+          // in the meantime, we can add/remove/change items and dependencies.
+          // We might bail out of the loop before finding any but that
+          // doesn't matter since that means that the other boundaries that
+          // we did find already has their listeners attached.
+          // TODO: Do we need to do the same for nested SuspenseList in case
+          // this list gets cleared in the second pass of the outer list?
+          workInProgress.updateQueue = node.updateQueue;
+          workInProgress.effectTag |= Update;
+        }
       } else {
         const current = node.alternate;
         const wasNotShowingContent =

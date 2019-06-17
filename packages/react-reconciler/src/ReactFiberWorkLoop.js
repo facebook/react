@@ -2092,10 +2092,10 @@ export function pingSuspendedRoot(
 }
 
 export function retryTimedOutBoundary(boundaryFiber: Fiber) {
-  // The boundary fiber (a Suspense component) previously timed out and was
-  // rendered in its fallback state. One of the promises that suspended it has
-  // resolved, which means at least part of the tree was likely unblocked. Try
-  // rendering again, at a new expiration time.
+  // The boundary fiber (a Suspense component or SuspenseList component)
+  // previously was rendered in its fallback state. One of the promises that
+  // suspended it has resolved, which means at least part of the tree was
+  // likely unblocked. Try rendering again, at a new expiration time.
   const currentTime = requestCurrentTime();
   const suspenseConfig = null; // Retries don't carry over the already committed update.
   const retryTime = computeExpirationForFiber(
