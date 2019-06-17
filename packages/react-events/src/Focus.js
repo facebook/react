@@ -8,6 +8,7 @@
  */
 
 import type {
+  PointerType,
   ReactResponderEvent,
   ReactResponderContext,
 } from 'shared/ReactTypes';
@@ -30,7 +31,6 @@ type FocusState = {
   pointerType: PointerType,
 };
 
-type PointerType = '' | 'mouse' | 'keyboard' | 'pen' | 'touch';
 type FocusEventType = 'focus' | 'blur' | 'focuschange' | 'focusvisiblechange';
 
 type FocusEvent = {|
@@ -228,7 +228,6 @@ const FocusResponder = {
     };
   },
   allowMultipleHostChildren: false,
-  stopLocalPropagation: true,
   onEvent(
     event: ReactResponderEvent,
     context: ReactResponderContext,

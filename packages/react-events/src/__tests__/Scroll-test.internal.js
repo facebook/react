@@ -121,8 +121,16 @@ describe('Scroll event responder', () => {
       });
 
       it('with a keyboard pointerType', () => {
-        ref.current.dispatchEvent(createEvent('keydown'));
-        ref.current.dispatchEvent(createEvent('keyup'));
+        ref.current.dispatchEvent(
+          createEvent('keydown', {
+            key: 'A',
+          }),
+        );
+        ref.current.dispatchEvent(
+          createEvent('keyup', {
+            key: 'A',
+          }),
+        );
         ref.current.dispatchEvent(createEvent('scroll'));
         expect(onScroll).toHaveBeenCalledTimes(1);
         expect(onScroll).toHaveBeenCalledWith(

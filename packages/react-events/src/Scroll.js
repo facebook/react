@@ -8,6 +8,7 @@
  */
 
 import type {
+  PointerType,
   ReactResponderEvent,
   ReactResponderContext,
 } from 'shared/ReactTypes';
@@ -37,8 +38,6 @@ type ScrollEventType =
   | 'scrolldragend'
   | 'scrollmomentumstart'
   | 'scrollmomentumend';
-
-type PointerType = '' | 'mouse' | 'keyboard' | 'pen' | 'touch';
 
 type ScrollDirection = '' | 'up' | 'down' | 'left' | 'right';
 
@@ -127,14 +126,13 @@ const ScrollResponder = {
     };
   },
   allowMultipleHostChildren: true,
-  stopLocalPropagation: true,
   onEvent(
     event: ReactResponderEvent,
     context: ReactResponderContext,
     props: ScrollProps,
     state: ScrollState,
   ): void {
-    const {target, type} = event;
+    const {pointerType, target, type} = event;
 
     if (props.disabled) {
       if (state.isPointerDown) {
@@ -144,7 +142,6 @@ const ScrollResponder = {
       }
       return;
     }
-    const pointerType = context.getEventPointerType(event);
 
     switch (type) {
       case 'scroll': {
@@ -181,8 +178,7 @@ const ScrollResponder = {
     props: ScrollProps,
     state: ScrollState,
   ) {
-    const {type} = event;
-    const pointerType = context.getEventPointerType(event);
+    const {pointerType, type} = event;
 
     switch (type) {
       case 'pointercancel':

@@ -44,7 +44,8 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   }
 
   expect.extend({
-    ...require('./matchers/interactionTracing'),
+    ...require('./matchers/interactionTracingMatchers'),
+    ...require('./matchers/profilerMatchers'),
     ...require('./matchers/toWarnDev'),
     ...require('./matchers/reactTestMatchers'),
   });

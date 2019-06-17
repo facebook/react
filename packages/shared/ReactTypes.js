@@ -90,7 +90,6 @@ export type ReactEventResponder = {
   rootEventTypes?: Array<ReactEventResponderEventType>,
   createInitialState?: (props: null | Object) => Object,
   allowMultipleHostChildren: boolean,
-  stopLocalPropagation: boolean,
   onEvent?: (
     event: ReactResponderEvent,
     context: ReactResponderContext,
@@ -150,12 +149,22 @@ export type ReactEventTarget = {|
 
 type AnyNativeEvent = Event | KeyboardEvent | MouseEvent | Touch;
 
+export type PointerType =
+  | ''
+  | 'mouse'
+  | 'keyboard'
+  | 'pen'
+  | 'touch'
+  | 'trackpad';
+
 export type ReactResponderEvent = {
   nativeEvent: AnyNativeEvent,
-  target: Element | Document,
-  type: string,
   passive: boolean,
   passiveSupported: boolean,
+  pointerId: null | number,
+  pointerType: PointerType,
+  target: Element | Document,
+  type: string,
 };
 
 export opaque type EventPriority = 0 | 1 | 2;
@@ -184,7 +193,6 @@ export type ReactResponderContext = {
     rootEventTypes: Array<ReactEventResponderEventType>,
   ) => void,
   hasOwnership: () => boolean,
-  requestResponderOwnership: () => boolean,
   requestGlobalOwnership: () => boolean,
   releaseOwnership: () => boolean,
   setTimeout: (func: () => void, timeout: number) => number,
@@ -192,9 +200,6 @@ export type ReactResponderContext = {
   getFocusableElementsInScope(): Array<HTMLElement>,
   getActiveDocument(): Document,
   objectAssign: Function,
-  getEventPointerType(
-    event: ReactResponderEvent,
-  ): '' | 'mouse' | 'keyboard' | 'pen' | 'touch',
   getEventCurrentTarget(event: ReactResponderEvent): Element,
   getTimeStamp: () => number,
   isTargetWithinHostComponent: (
@@ -202,4 +207,5 @@ export type ReactResponderContext = {
     elementType: string,
     deep: boolean,
   ) => boolean,
+  continueLocalPropagation(): void,
 };
