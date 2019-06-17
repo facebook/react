@@ -556,8 +556,6 @@ function hasSuspendedChildrenAndNewContent(
           // We might bail out of the loop before finding any but that
           // doesn't matter since that means that the other boundaries that
           // we did find already has their listeners attached.
-          // TODO: Do we need to do the same for nested SuspenseList in case
-          // this list gets cleared in the second pass of the outer list?
           workInProgress.updateQueue = node.updateQueue;
           workInProgress.effectTag |= Update;
         }
@@ -572,10 +570,21 @@ function hasSuspendedChildrenAndNewContent(
       if (hasSuspendedBoundaries && hasNewContent) {
         return true;
       }
-    } else if (node.child !== null) {
-      node.child.return = node;
-      node = node.child;
-      continue;
+    } else {
+      // TODO: We can probably just use the information from the list and not
+      // drill into its children just like if it was a Suspense boundary.
+      if (node.tag === SuspenseListComponent && node.updateQueue !== null) {
+        // If there's a nested SuspenseList, we might have transferred
+        // the thennables set to it already so we must get it from there.
+        workInProgress.updateQueue = node.updateQueue;
+        workInProgress.effectTag |= Update;
+      }
+
+      if (node.child !== null) {
+        node.child.return = node;
+        node = node.child;
+        continue;
+      }
     }
     if (node === workInProgress) {
       return false;
