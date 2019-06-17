@@ -185,7 +185,7 @@ let didWarnAboutGetDerivedStateOnFunctionComponent;
 let didWarnAboutFunctionRefs;
 export let didWarnAboutReassigningProps;
 let didWarnAboutMaxDuration;
-let didWarnAboutDisplayOrder;
+let didWarnAboutRevealOrder;
 
 if (__DEV__) {
   didWarnAboutBadClass = {};
@@ -195,7 +195,7 @@ if (__DEV__) {
   didWarnAboutFunctionRefs = {};
   didWarnAboutReassigningProps = false;
   didWarnAboutMaxDuration = false;
-  didWarnAboutDisplayOrder = {};
+  didWarnAboutRevealOrder = {};
 }
 
 export function reconcileChildren(
@@ -1980,7 +1980,7 @@ function propagateSuspenseContextChange(
   }
 }
 
-type SuspenseListDisplayOrder = 'together' | void;
+type SuspenseListRevealOrder = 'together' | void;
 
 function updateSuspenseListComponent(
   current: Fiber | null,
@@ -1988,7 +1988,7 @@ function updateSuspenseListComponent(
   renderExpirationTime: ExpirationTime,
 ) {
   const nextProps = workInProgress.pendingProps;
-  const displayOrder: SuspenseListDisplayOrder = nextProps.displayOrder;
+  const revealOrder: SuspenseListRevealOrder = nextProps.revealOrder;
   const nextChildren = nextProps.children;
 
   let nextChildFibers;
@@ -2045,25 +2045,25 @@ function updateSuspenseListComponent(
 
   pushSuspenseContext(workInProgress, suspenseContext);
 
-  switch (displayOrder) {
-    // TODO: For other display orders we'll need to split the nextChildFibers set.
+  switch (revealOrder) {
+    // TODO: For other reveal orders we'll need to split the nextChildFibers set.
     case 'together': {
       break;
     }
     default: {
-      // The default display order is the same as not having
+      // The default reveal order is the same as not having
       // a boundary.
       if (__DEV__) {
         if (
-          displayOrder !== undefined &&
-          !didWarnAboutDisplayOrder[displayOrder]
+          revealOrder !== undefined &&
+          !didWarnAboutRevealOrder[revealOrder]
         ) {
-          didWarnAboutDisplayOrder[displayOrder] = true;
+          didWarnAboutRevealOrder[revealOrder] = true;
           warning(
             false,
-            '"%s" is not a supported displayOrder on <SuspenseList />. ' +
+            '"%s" is not a supported revealOrder on <SuspenseList />. ' +
               'Did you mean "together"?',
-            displayOrder,
+            revealOrder,
           );
         }
       }

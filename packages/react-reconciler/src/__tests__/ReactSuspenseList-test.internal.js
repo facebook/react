@@ -43,10 +43,10 @@ describe('ReactSuspenseList', () => {
     return Component;
   }
 
-  it('warns if an unsupported displayOrder option is used', () => {
+  it('warns if an unsupported revealOrder option is used', () => {
     function Foo() {
       return (
-        <SuspenseList displayOrder="something">
+        <SuspenseList revealOrder="something">
           <Suspense fallback="Loading">Content</Suspense>
         </SuspenseList>
       );
@@ -55,7 +55,7 @@ describe('ReactSuspenseList', () => {
     ReactNoop.render(<Foo />);
 
     expect(() => Scheduler.flushAll()).toWarnDev([
-      'Warning: "something" is not a supported displayOrder on ' +
+      'Warning: "something" is not a supported revealOrder on ' +
         '<SuspenseList />. Did you mean "together"?' +
         '\n    in SuspenseList (at **)' +
         '\n    in Foo (at **)',
@@ -135,7 +135,7 @@ describe('ReactSuspenseList', () => {
 
     function Foo() {
       return (
-        <SuspenseList displayOrder="together">
+        <SuspenseList revealOrder="together">
           <Suspense fallback={<Text text="Loading A" />}>
             <A />
           </Suspense>
@@ -204,7 +204,7 @@ describe('ReactSuspenseList', () => {
 
     function Foo() {
       return (
-        <SuspenseList displayOrder="together">
+        <SuspenseList revealOrder="together">
           <div>
             <Suspense fallback={<Text text="Loading A" />}>
               <A />
@@ -289,11 +289,11 @@ describe('ReactSuspenseList', () => {
 
     function Foo() {
       return (
-        <SuspenseList displayOrder="together">
+        <SuspenseList revealOrder="together">
           <Suspense fallback={<Text text="Loading A" />}>
             <A />
           </Suspense>
-          <SuspenseList displayOrder="together">
+          <SuspenseList revealOrder="together">
             <Suspense fallback={<Text text="Loading B" />}>
               <B />
             </Suspense>
@@ -350,7 +350,7 @@ describe('ReactSuspenseList', () => {
 
     function Foo() {
       return (
-        <SuspenseList displayOrder="together">
+        <SuspenseList revealOrder="together">
           <Suspense fallback={<Text text="Loading A" />}>
             <A />
           </Suspense>
