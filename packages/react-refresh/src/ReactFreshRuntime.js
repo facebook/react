@@ -21,14 +21,22 @@ type Signature = {|
   getCustomHooks: () => Array<Function>,
 |};
 
+// In old environments, we'll leak previous types after every edit.
+const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
+const PossiblyWeakSet = typeof WeakSet === 'function' ? WeakSet : Set;
+
 // We never remove these associations.
 // It's OK to reference families, but use WeakMap/Set for types.
 const allFamiliesByID: Map<string, Family> = new Map();
-const allTypes: WeakSet<any> = new WeakSet();
-const allSignaturesByType: WeakMap<any, Signature> = new WeakMap();
+// $FlowIssue
+const allTypes: WeakSet<any> | Set<any> = new PossiblyWeakSet();
+const allSignaturesByType: // $FlowIssue
+WeakMap<any, Signature> | Map<any, Signature> = new PossiblyWeakMap();
 // This WeakMap is read by React, so we only put families
 // that have actually been edited here. This keeps checks fast.
-const familiesByType: WeakMap<any, Family> = new WeakMap();
+// $FlowIssue
+const familiesByType: // $FlowIssue
+WeakMap<any, Family> | Map<any, Family> = new PossiblyWeakMap();
 
 // This is cleared on every prepareUpdate() call.
 // It is an array of [Family, NextType] tuples.
