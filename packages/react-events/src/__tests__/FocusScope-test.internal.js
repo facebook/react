@@ -246,285 +246,7 @@ describe('FocusScope event responder', () => {
     expect(document.activeElement).toBe(button2Ref.current);
   });
 
-  describe('FocusManager ref', () => {
-    describe('focusNext', () => {
-      it('focuses the next focusable element in the current scope', () => {
-        const focusManagerRef = React.createRef();
-        const inputRef = React.createRef();
-        const divRef = React.createRef();
-        const input2Ref = React.createRef();
-
-        const SimpleFocusScope = () => (
-          <div>
-            <FocusScope autoFocus={true} contain={true} ref={focusManagerRef}>
-              <input ref={inputRef} />
-              <span />
-              <div ref={divRef} tabIndex={-1} />
-              <span />
-              <input ref={input2Ref} />
-            </FocusScope>
-          </div>
-        );
-
-        ReactDOM.render(<SimpleFocusScope />, container);
-
-        expect(document.activeElement).toBe(inputRef.current);
-        focusManagerRef.current.focusNext();
-        expect(document.activeElement).toBe(divRef.current);
-        focusManagerRef.current.focusNext();
-        expect(document.activeElement).toBe(input2Ref.current);
-        focusManagerRef.current.focusNext();
-        expect(document.activeElement).toBe(input2Ref.current);
-      });
-
-      it('focuses the next focusable element in the current scope and wraps around', () => {
-        const focusManagerRef = React.createRef();
-        const inputRef = React.createRef();
-        const divRef = React.createRef();
-        const input2Ref = React.createRef();
-
-        const SimpleFocusScope = () => (
-          <div>
-            <FocusScope autoFocus={true} contain={true} ref={focusManagerRef}>
-              <input ref={inputRef} />
-              <span />
-              <div ref={divRef} tabIndex={-1} />
-              <span />
-              <input ref={input2Ref} />
-            </FocusScope>
-          </div>
-        );
-
-        ReactDOM.render(<SimpleFocusScope />, container);
-
-        expect(document.activeElement).toBe(inputRef.current);
-        focusManagerRef.current.focusNext({wrap: true});
-        expect(document.activeElement).toBe(divRef.current);
-        focusManagerRef.current.focusNext({wrap: true});
-        expect(document.activeElement).toBe(input2Ref.current);
-        focusManagerRef.current.focusNext({wrap: true});
-        expect(document.activeElement).toBe(inputRef.current);
-      });
-
-      it('focuses the next tabbable element in the current scope', () => {
-        const focusManagerRef = React.createRef();
-        const inputRef = React.createRef();
-        const divRef = React.createRef();
-        const input2Ref = React.createRef();
-
-        const SimpleFocusScope = () => (
-          <div>
-            <FocusScope autoFocus={true} contain={true} ref={focusManagerRef}>
-              <input ref={inputRef} />
-              <span />
-              <div ref={divRef} tabIndex={-1} />
-              <span />
-              <input ref={input2Ref} />
-            </FocusScope>
-          </div>
-        );
-
-        ReactDOM.render(<SimpleFocusScope />, container);
-
-        expect(document.activeElement).toBe(inputRef.current);
-        focusManagerRef.current.focusNext({tabbable: true});
-        expect(document.activeElement).toBe(input2Ref.current);
-        focusManagerRef.current.focusNext({tabbable: true});
-        expect(document.activeElement).toBe(input2Ref.current);
-      });
-
-      it('focuses the next tabbable element in the current scope and wraps around', () => {
-        const focusManagerRef = React.createRef();
-        const inputRef = React.createRef();
-        const divRef = React.createRef();
-        const input2Ref = React.createRef();
-
-        const SimpleFocusScope = () => (
-          <div>
-            <FocusScope autoFocus={true} contain={true} ref={focusManagerRef}>
-              <input ref={inputRef} />
-              <span />
-              <div ref={divRef} tabIndex={-1} />
-              <span />
-              <input ref={input2Ref} />
-            </FocusScope>
-          </div>
-        );
-
-        ReactDOM.render(<SimpleFocusScope />, container);
-
-        expect(document.activeElement).toBe(inputRef.current);
-        focusManagerRef.current.focusNext({tabbable: true, wrap: true});
-        expect(document.activeElement).toBe(input2Ref.current);
-        focusManagerRef.current.focusNext({tabbable: true, wrap: true});
-        expect(document.activeElement).toBe(inputRef.current);
-      });
-
-      it('focuses the next focusable element after the given element', () => {
-        const focusManagerRef = React.createRef();
-        const inputRef = React.createRef();
-        const divRef = React.createRef();
-        const input2Ref = React.createRef();
-
-        const SimpleFocusScope = () => (
-          <div>
-            <FocusScope autoFocus={true} contain={true} ref={focusManagerRef}>
-              <input ref={inputRef} />
-              <span />
-              <div ref={divRef} tabIndex={-1} />
-              <span />
-              <input ref={input2Ref} />
-            </FocusScope>
-          </div>
-        );
-
-        ReactDOM.render(<SimpleFocusScope />, container);
-
-        focusManagerRef.current.focusNext({from: divRef.current});
-        expect(document.activeElement).toBe(input2Ref.current);
-      });
-    });
-
-    describe('focusPrevious', () => {
-      it('focuses the previous focusable element in the current scope', () => {
-        const focusManagerRef = React.createRef();
-        const inputRef = React.createRef();
-        const divRef = React.createRef();
-        const input2Ref = React.createRef();
-
-        const SimpleFocusScope = () => (
-          <div>
-            <FocusScope autoFocus={true} contain={true} ref={focusManagerRef}>
-              <input ref={inputRef} />
-              <span />
-              <div ref={divRef} tabIndex={-1} />
-              <span />
-              <input ref={input2Ref} />
-            </FocusScope>
-          </div>
-        );
-
-        ReactDOM.render(<SimpleFocusScope />, container);
-
-        input2Ref.current.focus();
-        focusManagerRef.current.focusPrevious();
-        expect(document.activeElement).toBe(divRef.current);
-        focusManagerRef.current.focusPrevious();
-        expect(document.activeElement).toBe(inputRef.current);
-        focusManagerRef.current.focusPrevious();
-        expect(document.activeElement).toBe(inputRef.current);
-      });
-
-      it('focuses the previous focusable element in the current scope and wraps around', () => {
-        const focusManagerRef = React.createRef();
-        const inputRef = React.createRef();
-        const divRef = React.createRef();
-        const input2Ref = React.createRef();
-
-        const SimpleFocusScope = () => (
-          <div>
-            <FocusScope autoFocus={true} contain={true} ref={focusManagerRef}>
-              <input ref={inputRef} />
-              <span />
-              <div ref={divRef} tabIndex={-1} />
-              <span />
-              <input ref={input2Ref} />
-            </FocusScope>
-          </div>
-        );
-
-        ReactDOM.render(<SimpleFocusScope />, container);
-
-        input2Ref.current.focus();
-        focusManagerRef.current.focusPrevious({wrap: true});
-        expect(document.activeElement).toBe(divRef.current);
-        focusManagerRef.current.focusPrevious({wrap: true});
-        expect(document.activeElement).toBe(inputRef.current);
-        focusManagerRef.current.focusPrevious({wrap: true});
-        expect(document.activeElement).toBe(input2Ref.current);
-      });
-
-      it('focuses the previous tabbable element in the current scope', () => {
-        const focusManagerRef = React.createRef();
-        const inputRef = React.createRef();
-        const divRef = React.createRef();
-        const input2Ref = React.createRef();
-
-        const SimpleFocusScope = () => (
-          <div>
-            <FocusScope autoFocus={true} contain={true} ref={focusManagerRef}>
-              <input ref={inputRef} />
-              <span />
-              <div ref={divRef} tabIndex={-1} />
-              <span />
-              <input ref={input2Ref} />
-            </FocusScope>
-          </div>
-        );
-
-        ReactDOM.render(<SimpleFocusScope />, container);
-
-        input2Ref.current.focus();
-        focusManagerRef.current.focusPrevious({tabbable: true});
-        expect(document.activeElement).toBe(inputRef.current);
-        focusManagerRef.current.focusPrevious({tabbable: true});
-        expect(document.activeElement).toBe(inputRef.current);
-      });
-
-      it('focuses the previous tabbable element in the current scope and wraps around', () => {
-        const focusManagerRef = React.createRef();
-        const inputRef = React.createRef();
-        const divRef = React.createRef();
-        const input2Ref = React.createRef();
-
-        const SimpleFocusScope = () => (
-          <div>
-            <FocusScope autoFocus={true} contain={true} ref={focusManagerRef}>
-              <input ref={inputRef} />
-              <span />
-              <div ref={divRef} tabIndex={-1} />
-              <span />
-              <input ref={input2Ref} />
-            </FocusScope>
-          </div>
-        );
-
-        ReactDOM.render(<SimpleFocusScope />, container);
-
-        input2Ref.current.focus();
-        focusManagerRef.current.focusPrevious({tabbable: true, wrap: true});
-        expect(document.activeElement).toBe(inputRef.current);
-        focusManagerRef.current.focusPrevious({tabbable: true, wrap: true});
-        expect(document.activeElement).toBe(input2Ref.current);
-      });
-
-      it('focuses the previous focusable element before the given element', () => {
-        const focusManagerRef = React.createRef();
-        const inputRef = React.createRef();
-        const divRef = React.createRef();
-        const input2Ref = React.createRef();
-
-        const SimpleFocusScope = () => (
-          <div>
-            <FocusScope autoFocus={true} contain={true} ref={focusManagerRef}>
-              <input ref={inputRef} />
-              <span />
-              <div ref={divRef} tabIndex={-1} />
-              <span />
-              <input ref={input2Ref} />
-            </FocusScope>
-          </div>
-        );
-
-        ReactDOM.render(<SimpleFocusScope />, container);
-
-        focusManagerRef.current.focusPrevious({from: divRef.current});
-        expect(document.activeElement).toBe(inputRef.current);
-      });
-    });
-  });
-
-  describe('useFocusManager hook', () => {
+  describe('useFocusManager', () => {
     it('returns a focus manager', () => {
       let focusManager;
 
@@ -617,6 +339,372 @@ describe('FocusScope event responder', () => {
       }).toThrow(
         'Attempt to use a focus manager method on an unmounted component.',
       );
+    });
+
+    describe('focusNext', () => {
+      it('focuses the next focusable element in the current scope', () => {
+        const inputRef = React.createRef();
+        const divRef = React.createRef();
+        const input2Ref = React.createRef();
+        let focusManager;
+
+        const ScopeParent = () => (
+          <div>
+            <FocusScope autoFocus={true} contain={true}>
+              <Child />
+            </FocusScope>
+          </div>
+        );
+
+        const Child = () => {
+          focusManager = useFocusManager();
+          return (
+            <div>
+              <input ref={inputRef} />
+              <span />
+              <div ref={divRef} tabIndex={-1} />
+              <span />
+              <input ref={input2Ref} />
+            </div>
+          );
+        };
+
+        ReactDOM.render(<ScopeParent />, container);
+
+        expect(document.activeElement).toBe(inputRef.current);
+        focusManager.focusNext();
+        expect(document.activeElement).toBe(divRef.current);
+        focusManager.focusNext();
+        expect(document.activeElement).toBe(input2Ref.current);
+        focusManager.focusNext();
+        expect(document.activeElement).toBe(input2Ref.current);
+      });
+
+      it('focuses the next focusable element in the current scope and wraps around', () => {
+        const inputRef = React.createRef();
+        const divRef = React.createRef();
+        const input2Ref = React.createRef();
+        let focusManager;
+
+        const ScopeParent = () => (
+          <div>
+            <FocusScope autoFocus={true} contain={true}>
+              <Child />
+            </FocusScope>
+          </div>
+        );
+
+        const Child = () => {
+          focusManager = useFocusManager();
+          return (
+            <div>
+              <input ref={inputRef} />
+              <span />
+              <div ref={divRef} tabIndex={-1} />
+              <span />
+              <input ref={input2Ref} />
+            </div>
+          );
+        };
+
+        ReactDOM.render(<ScopeParent />, container);
+
+        expect(document.activeElement).toBe(inputRef.current);
+        focusManager.focusNext({wrap: true});
+        expect(document.activeElement).toBe(divRef.current);
+        focusManager.focusNext({wrap: true});
+        expect(document.activeElement).toBe(input2Ref.current);
+        focusManager.focusNext({wrap: true});
+        expect(document.activeElement).toBe(inputRef.current);
+      });
+
+      it('focuses the next tabbable element in the current scope', () => {
+        const inputRef = React.createRef();
+        const divRef = React.createRef();
+        const input2Ref = React.createRef();
+        let focusManager;
+
+        const ScopeParent = () => (
+          <div>
+            <FocusScope autoFocus={true} contain={true}>
+              <Child />
+            </FocusScope>
+          </div>
+        );
+
+        const Child = () => {
+          focusManager = useFocusManager();
+          return (
+            <div>
+              <input ref={inputRef} />
+              <span />
+              <div ref={divRef} tabIndex={-1} />
+              <span />
+              <input ref={input2Ref} />
+            </div>
+          );
+        };
+
+        ReactDOM.render(<ScopeParent />, container);
+
+        expect(document.activeElement).toBe(inputRef.current);
+        focusManager.focusNext({tabbable: true});
+        expect(document.activeElement).toBe(input2Ref.current);
+        focusManager.focusNext({tabbable: true});
+        expect(document.activeElement).toBe(input2Ref.current);
+      });
+
+      it('focuses the next tabbable element in the current scope and wraps around', () => {
+        const inputRef = React.createRef();
+        const divRef = React.createRef();
+        const input2Ref = React.createRef();
+        let focusManager;
+
+        const ScopeParent = () => (
+          <div>
+            <FocusScope autoFocus={true} contain={true}>
+              <Child />
+            </FocusScope>
+          </div>
+        );
+
+        const Child = () => {
+          focusManager = useFocusManager();
+          return (
+            <div>
+              <input ref={inputRef} />
+              <span />
+              <div ref={divRef} tabIndex={-1} />
+              <span />
+              <input ref={input2Ref} />
+            </div>
+          );
+        };
+
+        ReactDOM.render(<ScopeParent />, container);
+
+        expect(document.activeElement).toBe(inputRef.current);
+        focusManager.focusNext({tabbable: true, wrap: true});
+        expect(document.activeElement).toBe(input2Ref.current);
+        focusManager.focusNext({tabbable: true, wrap: true});
+        expect(document.activeElement).toBe(inputRef.current);
+      });
+
+      it('focuses the next focusable element after the given element', () => {
+        const inputRef = React.createRef();
+        const divRef = React.createRef();
+        const input2Ref = React.createRef();
+        let focusManager;
+
+        const ScopeParent = () => (
+          <div>
+            <FocusScope autoFocus={true} contain={true}>
+              <Child />
+            </FocusScope>
+          </div>
+        );
+
+        const Child = () => {
+          focusManager = useFocusManager();
+          return (
+            <div>
+              <input ref={inputRef} />
+              <span />
+              <div ref={divRef} tabIndex={-1} />
+              <span />
+              <input ref={input2Ref} />
+            </div>
+          );
+        };
+
+        ReactDOM.render(<ScopeParent />, container);
+
+        focusManager.focusNext({from: divRef.current});
+        expect(document.activeElement).toBe(input2Ref.current);
+      });
+    });
+
+    describe('focusPrevious', () => {
+      it('focuses the previous focusable element in the current scope', () => {
+        const inputRef = React.createRef();
+        const divRef = React.createRef();
+        const input2Ref = React.createRef();
+        let focusManager;
+
+        const ScopeParent = () => (
+          <div>
+            <FocusScope autoFocus={true} contain={true}>
+              <Child />
+            </FocusScope>
+          </div>
+        );
+
+        const Child = () => {
+          focusManager = useFocusManager();
+          return (
+            <div>
+              <input ref={inputRef} />
+              <span />
+              <div ref={divRef} tabIndex={-1} />
+              <span />
+              <input ref={input2Ref} />
+            </div>
+          );
+        };
+
+        ReactDOM.render(<ScopeParent />, container);
+
+        input2Ref.current.focus();
+        focusManager.focusPrevious();
+        expect(document.activeElement).toBe(divRef.current);
+        focusManager.focusPrevious();
+        expect(document.activeElement).toBe(inputRef.current);
+        focusManager.focusPrevious();
+        expect(document.activeElement).toBe(inputRef.current);
+      });
+
+      it('focuses the previous focusable element in the current scope and wraps around', () => {
+        const inputRef = React.createRef();
+        const divRef = React.createRef();
+        const input2Ref = React.createRef();
+        let focusManager;
+
+        const ScopeParent = () => (
+          <div>
+            <FocusScope autoFocus={true} contain={true}>
+              <Child />
+            </FocusScope>
+          </div>
+        );
+
+        const Child = () => {
+          focusManager = useFocusManager();
+          return (
+            <div>
+              <input ref={inputRef} />
+              <span />
+              <div ref={divRef} tabIndex={-1} />
+              <span />
+              <input ref={input2Ref} />
+            </div>
+          );
+        };
+
+        ReactDOM.render(<ScopeParent />, container);
+
+        input2Ref.current.focus();
+        focusManager.focusPrevious({wrap: true});
+        expect(document.activeElement).toBe(divRef.current);
+        focusManager.focusPrevious({wrap: true});
+        expect(document.activeElement).toBe(inputRef.current);
+        focusManager.focusPrevious({wrap: true});
+        expect(document.activeElement).toBe(input2Ref.current);
+      });
+
+      it('focuses the previous tabbable element in the current scope', () => {
+        const inputRef = React.createRef();
+        const divRef = React.createRef();
+        const input2Ref = React.createRef();
+        let focusManager;
+
+        const ScopeParent = () => (
+          <div>
+            <FocusScope autoFocus={true} contain={true}>
+              <Child />
+            </FocusScope>
+          </div>
+        );
+
+        const Child = () => {
+          focusManager = useFocusManager();
+          return (
+            <div>
+              <input ref={inputRef} />
+              <span />
+              <div ref={divRef} tabIndex={-1} />
+              <span />
+              <input ref={input2Ref} />
+            </div>
+          );
+        };
+
+        ReactDOM.render(<ScopeParent />, container);
+
+        input2Ref.current.focus();
+        focusManager.focusPrevious({tabbable: true});
+        expect(document.activeElement).toBe(inputRef.current);
+        focusManager.focusPrevious({tabbable: true});
+        expect(document.activeElement).toBe(inputRef.current);
+      });
+
+      it('focuses the previous tabbable element in the current scope and wraps around', () => {
+        const inputRef = React.createRef();
+        const divRef = React.createRef();
+        const input2Ref = React.createRef();
+        let focusManager;
+
+        const ScopeParent = () => (
+          <div>
+            <FocusScope autoFocus={true} contain={true}>
+              <Child />
+            </FocusScope>
+          </div>
+        );
+
+        const Child = () => {
+          focusManager = useFocusManager();
+          return (
+            <div>
+              <input ref={inputRef} />
+              <span />
+              <div ref={divRef} tabIndex={-1} />
+              <span />
+              <input ref={input2Ref} />
+            </div>
+          );
+        };
+
+        ReactDOM.render(<ScopeParent />, container);
+
+        input2Ref.current.focus();
+        focusManager.focusPrevious({tabbable: true, wrap: true});
+        expect(document.activeElement).toBe(inputRef.current);
+        focusManager.focusPrevious({tabbable: true, wrap: true});
+        expect(document.activeElement).toBe(input2Ref.current);
+      });
+
+      it('focuses the previous focusable element before the given element', () => {
+        const inputRef = React.createRef();
+        const divRef = React.createRef();
+        const input2Ref = React.createRef();
+        let focusManager;
+
+        const ScopeParent = () => (
+          <div>
+            <FocusScope autoFocus={true} contain={true}>
+              <Child />
+            </FocusScope>
+          </div>
+        );
+
+        const Child = () => {
+          focusManager = useFocusManager();
+          return (
+            <div>
+              <input ref={inputRef} />
+              <span />
+              <div ref={divRef} tabIndex={-1} />
+              <span />
+              <input ref={input2Ref} />
+            </div>
+          );
+        };
+
+        ReactDOM.render(<ScopeParent />, container);
+
+        focusManager.focusPrevious({from: divRef.current});
+        expect(document.activeElement).toBe(inputRef.current);
+      });
     });
   });
 });

@@ -334,40 +334,37 @@ export const FocusScopeEventComponent = React.unstable_createEventComponent(
 
 const FocusScopeContext: React.Context<FocusManager> = React.createContext();
 
-export const FocusScope = React.forwardRef(
-  (props: FocusScopeProps, ref: React.Ref<FocusManager>) => {
-    let internalFocusManager: ?FocusManager;
-    let focusManager = {
-      focusNext(options: FocusManagerOptions = {}) {
-        invariant(
-          internalFocusManager != null,
-          'Attempt to use a focus manager method on an unmounted component.',
-        );
-        return internalFocusManager.focusNext(options);
-      },
-      focusPrevious(options: FocusManagerOptions = {}) {
-        invariant(
-          internalFocusManager != null,
-          'Attempt to use a focus manager method on an unmounted component.',
-        );
-        return internalFocusManager.focusPrevious(options);
-      },
-    };
+export function FocusScope(props: FocusScopeProps) {
+  let internalFocusManager: ?FocusManager;
+  let focusManager = {
+    focusNext(options: FocusManagerOptions = {}) {
+      invariant(
+        internalFocusManager != null,
+        'Attempt to use a focus manager method on an unmounted component.',
+      );
+      return internalFocusManager.focusNext(options);
+    },
+    focusPrevious(options: FocusManagerOptions = {}) {
+      invariant(
+        internalFocusManager != null,
+        'Attempt to use a focus manager method on an unmounted component.',
+      );
+      return internalFocusManager.focusPrevious(options);
+    },
+  };
 
-    React.useImperativeHandle(ref, () => focusManager);
-    props = {
-      ...props,
-      getFocusManager(manager) {
-        internalFocusManager = manager;
-      },
-    };
+  props = {
+    ...props,
+    getFocusManager(manager) {
+      internalFocusManager = manager;
+    },
+  };
 
-    return React.createElement(FocusScopeContext.Provider, {
-      value: focusManager,
-      children: React.createElement(FocusScopeEventComponent, props),
-    });
-  },
-);
+  return React.createElement(FocusScopeContext.Provider, {
+    value: focusManager,
+    children: React.createElement(FocusScopeEventComponent, props),
+  });
+}
 
 export function useFocusManager(): FocusManager {
   let focusManager = React.useContext(FocusScopeContext);
