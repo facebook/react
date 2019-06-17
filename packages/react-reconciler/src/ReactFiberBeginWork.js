@@ -185,6 +185,7 @@ let didWarnAboutGetDerivedStateOnFunctionComponent;
 let didWarnAboutFunctionRefs;
 export let didWarnAboutReassigningProps;
 let didWarnAboutMaxDuration;
+let didWarnAboutDisplayOrder;
 
 if (__DEV__) {
   didWarnAboutBadClass = {};
@@ -194,6 +195,7 @@ if (__DEV__) {
   didWarnAboutFunctionRefs = {};
   didWarnAboutReassigningProps = false;
   didWarnAboutMaxDuration = false;
+  didWarnAboutDisplayOrder = {};
 }
 
 export function reconcileChildren(
@@ -2051,8 +2053,20 @@ function updateSuspenseListComponent(
     default: {
       // The default display order is the same as not having
       // a boundary.
-      // TODO: Warn if displayOrder is not `undefined`, since anything
-      // else is an unsupported option.
+      if (__DEV__) {
+        if (
+          displayOrder !== undefined &&
+          !didWarnAboutDisplayOrder[displayOrder]
+        ) {
+          didWarnAboutDisplayOrder[displayOrder] = true;
+          warning(
+            false,
+            '"%s" is not a supported displayOrder on <SuspenseList />. ' +
+              'Did you mean "together"?',
+            displayOrder,
+          );
+        }
+      }
       // We mark this as having captured but it really just says to the
       // complete phase that we should treat this as done, whatever form
       // it is in. No need for a second pass.

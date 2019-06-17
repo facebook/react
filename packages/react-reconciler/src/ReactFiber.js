@@ -731,9 +731,10 @@ export function createFiberFromSuspense(
   const fiber = createFiber(SuspenseComponent, pendingProps, key, mode);
 
   // TODO: The SuspenseComponent fiber shouldn't have a type. It has a tag.
-  const type = REACT_SUSPENSE_TYPE;
-  fiber.elementType = type;
-  fiber.type = type;
+  // This needs to be fixed in getComponentName so that it relies on the tag
+  // instead.
+  fiber.type = REACT_SUSPENSE_TYPE;
+  fiber.elementType = REACT_SUSPENSE_TYPE;
 
   fiber.expirationTime = expirationTime;
   return fiber;
@@ -746,6 +747,12 @@ export function createFiberFromSuspenseList(
   key: null | string,
 ) {
   const fiber = createFiber(SuspenseListComponent, pendingProps, key, mode);
+  if (__DEV__) {
+    // TODO: The SuspenseListComponent fiber shouldn't have a type. It has a tag.
+    // This needs to be fixed in getComponentName so that it relies on the tag
+    // instead.
+    fiber.type = REACT_SUSPENSE_LIST_TYPE;
+  }
   fiber.elementType = REACT_SUSPENSE_LIST_TYPE;
   fiber.expirationTime = expirationTime;
   return fiber;

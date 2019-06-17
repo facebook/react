@@ -43,6 +43,25 @@ describe('ReactSuspenseList', () => {
     return Component;
   }
 
+  it('warns if an unsupported displayOrder option is used', () => {
+    function Foo() {
+      return (
+        <SuspenseList displayOrder="something">
+          <Suspense fallback="Loading">Content</Suspense>
+        </SuspenseList>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+
+    expect(() => Scheduler.flushAll()).toWarnDev([
+      'Warning: "something" is not a supported displayOrder on ' +
+        '<SuspenseList />. Did you mean "together"?' +
+        '\n    in SuspenseList (at **)' +
+        '\n    in Foo (at **)',
+    ]);
+  });
+
   it('shows content independently by default', async () => {
     let A = createAsyncText('A');
     let B = createAsyncText('B');
