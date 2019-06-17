@@ -30,16 +30,13 @@ const PossiblyWeakSet = typeof WeakSet === 'function' ? WeakSet : Set;
 const allFamiliesByID: Map<string, Family> = new Map();
 // $FlowIssue
 const allTypes: WeakSet<any> | Set<any> = new PossiblyWeakSet();
-// $FlowIssue
-const allSignaturesByType:
-  | WeakMap<any, Signature>
-  | Map<any, Signature> = new PossiblyWeakMap();
+const allSignaturesByType: // $FlowIssue
+WeakMap<any, Signature> | Map<any, Signature> = new PossiblyWeakMap();
 // This WeakMap is read by React, so we only put families
 // that have actually been edited here. This keeps checks fast.
 // $FlowIssue
-const familiesByType:
-  | WeakMap<any, Family>
-  | Map<any, Family> = new PossiblyWeakMap();
+const familiesByType: // $FlowIssue
+WeakMap<any, Family> | Map<any, Family> = new PossiblyWeakMap();
 
 // This is cleared on every prepareUpdate() call.
 // It is an array of [Family, NextType] tuples.
