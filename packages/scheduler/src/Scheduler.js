@@ -11,7 +11,6 @@
 import {enableSchedulerDebugging} from './SchedulerFeatureFlags';
 import {
   requestHostCallback,
-  cancelHostCallback,
   shouldYieldToHost,
   getCurrentTime,
   forceFrameRate,
@@ -41,7 +40,6 @@ var IDLE_PRIORITY = maxSigned31BitInt;
 // Tasks are stored as a circular, doubly linked list.
 var firstTask = null;
 
-var currentHostCallbackDidTimeout = false;
 // Pausing the scheduler is useful for debugging.
 var isSchedulerPaused = false;
 
@@ -53,26 +51,10 @@ var isPerformingWork = false;
 
 var isHostCallbackScheduled = false;
 
-function scheduleHostCallbackIfNeeded() {
-  if (isPerformingWork) {
-    // Don't schedule work yet; wait until the next time we yield.
-    return;
-  }
-  if (firstTask !== null) {
-    if (isHostCallbackScheduled) {
-      // Cancel the existing host callback.
-      cancelHostCallback();
-    } else {
-      isHostCallbackScheduled = true;
-    }
-    requestHostCallback(flushWork, firstTask.expirationTime);
-  }
-}
-
-function flushTask(task) {
+function flushTask(task, currentTime) {
   // Remove the task from the list before calling the callback. That way the
   // list is in a consistent state even if the callback throws.
-  var next = task.next;
+  const next = task.next;
   if (next === task) {
     // This is the only scheduled task. Clear the list.
     firstTask = null;
@@ -81,7 +63,7 @@ function flushTask(task) {
     if (task === firstTask) {
       firstTask = next;
     }
-    var previous = task.previous;
+    const previous = task.previous;
     previous.next = next;
     next.previous = previous;
   }
@@ -95,10 +77,7 @@ function flushTask(task) {
   currentTask = task;
   var continuationCallback;
   try {
-    var didUserCallbackTimeout =
-      currentHostCallbackDidTimeout ||
-      // Immediate priority callbacks are always called as if they timed out
-      currentPriorityLevel === ImmediatePriority;
+    var didUserCallbackTimeout = task.expirationTime <= currentTime;
     continuationCallback = callback(didUserCallbackTimeout);
   } catch (error) {
     throw error;
@@ -146,10 +125,9 @@ function flushTask(task) {
       } else if (nextAfterContinuation === firstTask) {
         // The new task is the highest priority task in the list.
         firstTask = continuationTask;
-        scheduleHostCallbackIfNeeded();
       }
 
-      var previous = nextAfterContinuation.previous;
+      const previous = nextAfterContinuation.previous;
       previous.next = nextAfterContinuation.previous = continuationTask;
       continuationTask.next = nextAfterContinuation;
       continuationTask.previous = previous;
@@ -157,7 +135,7 @@ function flushTask(task) {
   }
 }
 
-function flushWork(didUserCallbackTimeout) {
+function flushWork(hasTimeRemaining, initialTime) {
   // Exit right away if we're currently paused
   if (enableSchedulerDebugging && isSchedulerPaused) {
     return;
@@ -167,48 +145,38 @@ function flushWork(didUserCallbackTimeout) {
   isHostCallbackScheduled = false;
 
   isPerformingWork = true;
-  var previousDidTimeout = currentHostCallbackDidTimeout;
-  currentHostCallbackDidTimeout = didUserCallbackTimeout;
   try {
-    if (didUserCallbackTimeout) {
+    if (!hasTimeRemaining) {
       // Flush all the expired callbacks without yielding.
+      // TODO: Split flushWork into two separate functions instead of using
+      // a boolean argument?
+      let currentTime = initialTime;
       while (
         firstTask !== null &&
+        firstTask.expirationTime <= currentTime &&
         !(enableSchedulerDebugging && isSchedulerPaused)
       ) {
-        // TODO Wrap in feature flag
-        // Read the current time. Flush all the callbacks that expire at or
-        // earlier than that time. Then read the current time again and repeat.
-        // This optimizes for as few performance.now calls as possible.
-        var currentTime = getCurrentTime();
-        if (firstTask.expirationTime <= currentTime) {
-          do {
-            flushTask(firstTask);
-          } while (
-            firstTask !== null &&
-            firstTask.expirationTime <= currentTime &&
-            !(enableSchedulerDebugging && isSchedulerPaused)
-          );
-          continue;
-        }
-        break;
+        flushTask(firstTask, currentTime);
+        currentTime = getCurrentTime();
       }
     } else {
       // Keep flushing callbacks until we run out of time in the frame.
+      let currentTime = initialTime;
       if (firstTask !== null) {
         do {
-          if (enableSchedulerDebugging && isSchedulerPaused) {
-            break;
-          }
-          flushTask(firstTask);
-        } while (firstTask !== null && !shouldYieldToHost());
+          flushTask(firstTask, currentTime);
+          currentTime = getCurrentTime();
+        } while (
+          firstTask !== null &&
+          !shouldYieldToHost() &&
+          !(enableSchedulerDebugging && isSchedulerPaused)
+        );
       }
     }
+    // Return whether there's additional work
+    return firstTask !== null;
   } finally {
     isPerformingWork = false;
-    currentHostCallbackDidTimeout = previousDidTimeout;
-    // There's still work remaining. Request another callback.
-    scheduleHostCallbackIfNeeded();
   }
 }
 
@@ -229,10 +197,6 @@ function unstable_runWithPriority(priorityLevel, eventHandler) {
 
   try {
     return eventHandler();
-  } catch (error) {
-    // There's still work remaining. Request another callback.
-    scheduleHostCallbackIfNeeded();
-    throw error;
   } finally {
     currentPriorityLevel = previousPriorityLevel;
   }
@@ -258,10 +222,6 @@ function unstable_next(eventHandler) {
 
   try {
     return eventHandler();
-  } catch (error) {
-    // There's still work remaining. Request another callback.
-    scheduleHostCallbackIfNeeded();
-    throw error;
   } finally {
     currentPriorityLevel = previousPriorityLevel;
   }
@@ -276,10 +236,6 @@ function unstable_wrapCallback(callback) {
 
     try {
       return callback.apply(this, arguments);
-    } catch (error) {
-      // There's still work remaining. Request another callback.
-      scheduleHostCallbackIfNeeded();
-      throw error;
     } finally {
       currentPriorityLevel = previousPriorityLevel;
     }
@@ -333,7 +289,6 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
   if (firstTask === null) {
     // This is the first task in the list.
     firstTask = newTask.next = newTask.previous = newTask;
-    scheduleHostCallbackIfNeeded();
   } else {
     var next = null;
     var task = firstTask;
@@ -353,13 +308,19 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
     } else if (next === firstTask) {
       // The new task has the earliest expiration in the entire list.
       firstTask = newTask;
-      scheduleHostCallbackIfNeeded();
     }
 
     var previous = next.previous;
     previous.next = next.previous = newTask;
     newTask.next = next;
     newTask.previous = previous;
+  }
+
+  // Schedule a host callback, if needed. If we're already performing work, wait
+  // until the next time we yield.
+  if (!isHostCallbackScheduled && !isPerformingWork) {
+    isHostCallbackScheduled = true;
+    requestHostCallback(flushWork);
   }
 
   return newTask;
@@ -371,8 +332,9 @@ function unstable_pauseExecution() {
 
 function unstable_continueExecution() {
   isSchedulerPaused = false;
-  if (firstTask !== null) {
-    scheduleHostCallbackIfNeeded();
+  if (!isHostCallbackScheduled && !isPerformingWork) {
+    isHostCallbackScheduled = true;
+    requestHostCallback(flushWork);
   }
 }
 
@@ -409,12 +371,10 @@ function unstable_getCurrentPriorityLevel() {
 
 function unstable_shouldYield() {
   return (
-    !currentHostCallbackDidTimeout &&
-    (shouldYieldToHost() ||
-      (currentTask !== null &&
-        firstTask !== null &&
-        firstTask.startTime <= getCurrentTime() &&
-        firstTask.expirationTime < currentTask.expirationTime))
+    (currentTask !== null &&
+      firstTask !== null &&
+      firstTask.expirationTime < currentTask.expirationTime) ||
+    shouldYieldToHost()
   );
 }
 

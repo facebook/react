@@ -8,33 +8,25 @@
  */
 
 let currentTime: number = 0;
-let scheduledCallback: (boolean => void) | null = null;
-let scheduledCallbackExpiration: number = -1;
+let scheduledCallback: ((boolean, number) => void) | null = null;
 let yieldedValues: Array<mixed> | null = null;
 let expectedNumberOfYields: number = -1;
 let didStop: boolean = false;
 let isFlushing: boolean = false;
 
-export function requestHostCallback(
-  callback: boolean => void,
-  expiration: number,
-) {
+export function requestHostCallback(callback: boolean => void) {
   scheduledCallback = callback;
-  scheduledCallbackExpiration = expiration;
 }
 
 export function cancelHostCallback(): void {
   scheduledCallback = null;
-  scheduledCallbackExpiration = -1;
 }
 
 export function shouldYieldToHost(): boolean {
   if (
-    (expectedNumberOfYields !== -1 &&
-      yieldedValues !== null &&
-      yieldedValues.length >= expectedNumberOfYields) ||
-    (scheduledCallbackExpiration !== -1 &&
-      scheduledCallbackExpiration <= currentTime)
+    expectedNumberOfYields !== -1 &&
+    yieldedValues !== null &&
+    yieldedValues.length >= expectedNumberOfYields
   ) {
     // We yielded at least as many values as expected. Stop flushing.
     didStop = true;
@@ -57,7 +49,6 @@ export function reset() {
   }
   currentTime = 0;
   scheduledCallback = null;
-  scheduledCallbackExpiration = -1;
   yieldedValues = null;
   expectedNumberOfYields = -1;
   didStop = false;
@@ -69,21 +60,23 @@ export function unstable_flushNumberOfYields(count: number): void {
   if (isFlushing) {
     throw new Error('Already flushing work.');
   }
-  expectedNumberOfYields = count;
-  isFlushing = true;
-  try {
-    while (scheduledCallback !== null && !didStop) {
-      const cb = scheduledCallback;
-      scheduledCallback = null;
-      const didTimeout =
-        scheduledCallbackExpiration !== -1 &&
-        scheduledCallbackExpiration <= currentTime;
-      cb(didTimeout);
+  if (scheduledCallback !== null) {
+    const cb = scheduledCallback;
+    expectedNumberOfYields = count;
+    isFlushing = true;
+    try {
+      let hasMoreWork = true;
+      do {
+        hasMoreWork = cb(true, currentTime);
+      } while (hasMoreWork && !didStop);
+      if (!hasMoreWork) {
+        scheduledCallback = null;
+      }
+    } finally {
+      expectedNumberOfYields = -1;
+      didStop = false;
+      isFlushing = false;
     }
-  } finally {
-    expectedNumberOfYields = -1;
-    didStop = false;
-    isFlushing = false;
   }
 }
 
@@ -92,11 +85,12 @@ export function unstable_flushExpired() {
     throw new Error('Already flushing work.');
   }
   if (scheduledCallback !== null) {
-    const cb = scheduledCallback;
-    scheduledCallback = null;
     isFlushing = true;
     try {
-      cb(true);
+      const hasMoreWork = scheduledCallback(false, currentTime);
+      if (!hasMoreWork) {
+        scheduledCallback = null;
+      }
     } finally {
       isFlushing = false;
     }
@@ -104,27 +98,27 @@ export function unstable_flushExpired() {
 }
 
 export function unstable_flushWithoutYielding(): boolean {
+  // Returns false if no work was flushed.
   if (isFlushing) {
     throw new Error('Already flushing work.');
   }
-  isFlushing = true;
-  try {
-    if (scheduledCallback === null) {
-      return false;
+  if (scheduledCallback !== null) {
+    const cb = scheduledCallback;
+    isFlushing = true;
+    try {
+      let hasMoreWork = true;
+      do {
+        hasMoreWork = cb(true, currentTime);
+      } while (hasMoreWork);
+      if (!hasMoreWork) {
+        scheduledCallback = null;
+      }
+      return true;
+    } finally {
+      isFlushing = false;
     }
-    while (scheduledCallback !== null) {
-      const cb = scheduledCallback;
-      scheduledCallback = null;
-      const didTimeout =
-        scheduledCallbackExpiration !== -1 &&
-        scheduledCallbackExpiration <= currentTime;
-      cb(didTimeout);
-    }
-    return true;
-  } finally {
-    expectedNumberOfYields = -1;
-    didStop = false;
-    isFlushing = false;
+  } else {
+    return false;
   }
 }
 
@@ -164,12 +158,7 @@ export function yieldValue(value: mixed): void {
 
 export function advanceTime(ms: number) {
   currentTime += ms;
-  // If the host callback timed out, flush the expired work.
-  if (
-    !isFlushing &&
-    scheduledCallbackExpiration !== -1 &&
-    scheduledCallbackExpiration <= currentTime
-  ) {
+  if (!isFlushing) {
     unstable_flushExpired();
   }
 }

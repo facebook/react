@@ -88,22 +88,26 @@ if (
   // If this accidentally gets imported in a non-browser environment, e.g. JavaScriptCore,
   // fallback to a naive implementation.
   let _callback = null;
-  const _flushCallback = function(didTimeout) {
+  const _flushCallback = function() {
     if (_callback !== null) {
       try {
-        _callback(didTimeout);
-      } finally {
+        const currentTime = getCurrentTime();
+        const hasRemainingTime = true;
+        _callback(hasRemainingTime, currentTime);
         _callback = null;
+      } catch (e) {
+        setTimeout(_flushCallback, 0);
+        throw e;
       }
     }
   };
-  requestHostCallback = function(cb, ms) {
+  requestHostCallback = function(cb) {
     if (_callback !== null) {
       // Protect against re-entrancy.
       setTimeout(requestHostCallback, 0, cb);
     } else {
       _callback = cb;
-      setTimeout(_flushCallback, 0, false);
+      setTimeout(_flushCallback, 0);
     }
   };
   cancelHostCallback = function() {
@@ -134,11 +138,8 @@ if (
 
   let scheduledHostCallback = null;
   let isMessageEventScheduled = false;
-  let timeoutTime = -1;
 
   let isAnimationFrameScheduled = false;
-
-  let isFlushingHostCallback = false;
 
   let frameDeadline = 0;
   // We start out assuming that we run at 30fps but then the heuristic tracking
@@ -175,42 +176,30 @@ if (
   const port = channel.port2;
   channel.port1.onmessage = function(event) {
     isMessageEventScheduled = false;
-
-    const prevScheduledCallback = scheduledHostCallback;
-    const prevTimeoutTime = timeoutTime;
-    scheduledHostCallback = null;
-    timeoutTime = -1;
-
-    const currentTime = getCurrentTime();
-
-    let didTimeout = false;
-    if (frameDeadline - currentTime <= 0) {
-      // There's no time left in this idle period. Check if the callback has
-      // a timeout and whether it's been exceeded.
-      if (prevTimeoutTime !== -1 && prevTimeoutTime <= currentTime) {
-        // Exceeded the timeout. Invoke the callback even though there's no
-        // time left.
-        didTimeout = true;
-      } else {
-        // No timeout.
-        if (!isAnimationFrameScheduled) {
-          // Schedule another animation callback so we retry later.
-          isAnimationFrameScheduled = true;
-          requestAnimationFrameWithTimeout(animationTick);
-        }
-        // Exit without invoking the callback.
-        scheduledHostCallback = prevScheduledCallback;
-        timeoutTime = prevTimeoutTime;
-        return;
-      }
-    }
-
-    if (prevScheduledCallback !== null) {
-      isFlushingHostCallback = true;
+    if (scheduledHostCallback !== null) {
+      const currentTime = getCurrentTime();
+      const hasTimeRemaining = frameDeadline - currentTime > 0;
       try {
-        prevScheduledCallback(didTimeout);
-      } finally {
-        isFlushingHostCallback = false;
+        const hasMoreWork = scheduledHostCallback(
+          hasTimeRemaining,
+          currentTime,
+        );
+        if (hasMoreWork) {
+          // Ensure the next frame is scheduled.
+          if (!isAnimationFrameScheduled) {
+            isAnimationFrameScheduled = true;
+            requestAnimationFrameWithTimeout(animationTick);
+          }
+        } else {
+          scheduledHostCallback = null;
+        }
+      } catch (error) {
+        // If a scheduler task throws, exit the current browser task so the
+        // error can be observed, and post a new task as soon as possible
+        // so we can continue where we left off.
+        isMessageEventScheduled = true;
+        port.postMessage(undefined);
+        throw error;
       }
     }
   };
@@ -262,25 +251,22 @@ if (
     }
   };
 
-  requestHostCallback = function(callback, absoluteTimeout) {
-    scheduledHostCallback = callback;
-    timeoutTime = absoluteTimeout;
-    if (isFlushingHostCallback || absoluteTimeout < 0) {
-      // Don't wait for the next frame. Continue working ASAP, in a new event.
-      port.postMessage(undefined);
-    } else if (!isAnimationFrameScheduled) {
-      // If rAF didn't already schedule one, we need to schedule a frame.
-      // TODO: If this rAF doesn't materialize because the browser throttles, we
-      // might want to still have setTimeout trigger rIC as a backup to ensure
-      // that we keep performing work.
-      isAnimationFrameScheduled = true;
-      requestAnimationFrameWithTimeout(animationTick);
+  requestHostCallback = function(callback) {
+    if (scheduledHostCallback === null) {
+      scheduledHostCallback = callback;
+      if (!isAnimationFrameScheduled) {
+        // If rAF didn't already schedule one, we need to schedule a frame.
+        // TODO: If this rAF doesn't materialize because the browser throttles,
+        // we might want to still have setTimeout trigger rIC as a backup to
+        // ensure that we keep performing work.
+        isAnimationFrameScheduled = true;
+        requestAnimationFrameWithTimeout(animationTick);
+      }
     }
   };
 
   cancelHostCallback = function() {
     scheduledHostCallback = null;
     isMessageEventScheduled = false;
-    timeoutTime = -1;
   };
 }
