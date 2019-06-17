@@ -20,7 +20,7 @@ let act;
 describe('ReactFresh', () => {
   let container;
   let lastRoot;
-  let findHostNodesForHotUpdate;
+  let findHostInstancesForHotUpdate;
   let scheduleHotUpdate;
 
   beforeEach(() => {
@@ -28,7 +28,7 @@ describe('ReactFresh', () => {
       supportsFiber: true,
       inject: injected => {
         scheduleHotUpdate = injected.scheduleHotUpdate;
-        findHostNodesForHotUpdate = injected.findHostNodesForHotUpdate;
+        findHostInstancesForHotUpdate = injected.findHostInstancesForHotUpdate;
       },
       onCommitFiberRoot: (id, root) => {
         lastRoot = root;
@@ -2937,7 +2937,7 @@ describe('ReactFresh', () => {
     }
   });
 
-  it('can find host nodes for a family', () => {
+  it('can find host instances for a family', () => {
     if (__DEV__) {
       render(() => {
         function Child({children}) {
@@ -3010,37 +3010,37 @@ describe('ReactFresh', () => {
       const childFamily = ReactFreshRuntime.getFamilyByID('Child');
       const emptyFamily = ReactFreshRuntime.getFamilyByID('Empty');
 
-      testFindNodesForFamilies(
+      testFindHostInstancesForFamilies(
         [parentFamily],
         container.querySelectorAll('.Parent'),
       );
 
-      testFindNodesForFamilies(
+      testFindHostInstancesForFamilies(
         [childFamily],
         container.querySelectorAll('.Child'),
       );
 
       // When searching for both Parent and Child,
       // we'll stop visual highlighting at the Parent.
-      testFindNodesForFamilies(
+      testFindHostInstancesForFamilies(
         [parentFamily, childFamily],
         container.querySelectorAll('.Parent'),
       );
 
       // When we can't find host nodes, use the closest parent.
-      testFindNodesForFamilies(
+      testFindHostInstancesForFamilies(
         [emptyFamily],
         container.querySelectorAll('.App'),
       );
     }
   });
 
-  function testFindNodesForFamilies(families, expectedNodes) {
-    const foundNodes = Array.from(
-      findHostNodesForHotUpdate(lastRoot, families),
+  function testFindHostInstancesForFamilies(families, expectedNodes) {
+    const foundInstances = Array.from(
+      findHostInstancesForHotUpdate(lastRoot, families),
     );
-    expect(foundNodes.length).toEqual(expectedNodes.length);
-    foundNodes.forEach((node, i) => {
+    expect(foundInstances.length).toEqual(expectedNodes.length);
+    foundInstances.forEach((node, i) => {
       expect(node).toBe(expectedNodes[i]);
     });
   }

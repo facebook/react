@@ -72,7 +72,7 @@ import {revertPassiveEffectsChange} from 'shared/ReactFeatureFlags';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 import {
   scheduleHotUpdate,
-  findHostNodesForHotUpdate,
+  findHostInstancesForHotUpdate,
 } from './ReactFiberHotReloading';
 
 type OpaqueRoot = FiberRoot;
@@ -475,7 +475,9 @@ export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
 
   return injectInternals({
     ...devToolsConfig,
-    findHostNodesForHotUpdate: __DEV__ ? findHostNodesForHotUpdate : null,
+    findHostInstancesForHotUpdate: __DEV__
+      ? findHostInstancesForHotUpdate
+      : null,
     scheduleHotUpdate: __DEV__ ? scheduleHotUpdate : null,
     overrideHookState,
     overrideProps,
