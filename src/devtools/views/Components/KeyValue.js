@@ -19,6 +19,9 @@ type KeyValueProps = {|
   value: any,
 |};
 
+// TODO (hydration) Don't display meta objects.
+// Add event listener to request a "read" instead.
+
 export default function KeyValue({
   depth,
   hidden,
@@ -78,6 +81,7 @@ export default function KeyValue({
       </div>
     );
   } else if (value.hasOwnProperty(meta.type)) {
+    // TODO (hydration) show UI to load its data?
     // TODO Is this type even necessary? Can we just drop it?
     children = (
       <div key="root" className={styles.Item} hidden={hidden} style={style}>

@@ -21,6 +21,7 @@ import { decorateMany, forceUpdate, restoreMany } from './utils';
 import type {
   DevToolsHook,
   GetFiberIDForNative,
+  InspectedElementPayload,
   NativeType,
   PathFrame,
   PathMatch,
@@ -548,16 +549,58 @@ export function attach(
     return stringID;
   }
 
-  function inspectElement(id: number): InspectedElement | null {
-    let result = inspectElementRaw(id);
-    if (result === null) {
-      return null;
+  let currentlyInspectedElementID: number | null = null;
+  let currentlyInspectedPaths: Object = {};
+
+  function mergeInspectedPaths(path: Array<string | number>) {
+    let current = currentlyInspectedPaths;
+    path.forEach(key => {
+      if (!current[key]) {
+        current[key] = {};
+      }
+      current = current[key];
+    });
+  }
+
+  function inspectElement(
+    id: number,
+    path?: Array<string | number>
+  ): InspectedElementPayload {
+    if (currentlyInspectedElementID !== id) {
+      currentlyInspectedElementID = id;
+      currentlyInspectedPaths = {};
     }
-    // TODO Review sanitization approach for the below inspectable values.
-    result.context = cleanForBridge(result.context);
-    result.props = cleanForBridge(result.props);
-    result.state = cleanForBridge(result.state);
-    return result;
+
+    const inspectedElement = inspectElementRaw(id);
+    if (inspectedElement === null) {
+      return {
+        id,
+        type: 'not-found',
+      };
+    }
+
+    if (path != null) {
+      mergeInspectedPaths(path);
+    }
+
+    inspectedElement.context = cleanForBridge(
+      inspectedElement.context,
+      currentlyInspectedPaths['context']
+    );
+    inspectedElement.props = cleanForBridge(
+      inspectedElement.props,
+      currentlyInspectedPaths['props']
+    );
+    inspectedElement.state = cleanForBridge(
+      inspectedElement.state,
+      currentlyInspectedPaths['state']
+    );
+
+    return {
+      id,
+      type: 'full-data',
+      value: inspectedElement,
+    };
   }
 
   function inspectElementRaw(id: number): InspectedElement | null {

@@ -1,7 +1,7 @@
 // @flow
 
 import typeof ReactTestRenderer from 'react-test-renderer';
-import type { Element } from 'src/devtools/views/Components/types';
+import type { GetPath } from 'src/devtools/views/Components/InspectedElementContext';
 import type Bridge from 'src/bridge';
 import type Store from 'src/devtools/store';
 
@@ -11,17 +11,21 @@ describe('InspectedElementContext', () => {
   let TestRenderer: ReactTestRenderer;
   let bridge: Bridge;
   let store: Store;
+  let meta;
   let utils;
 
   let BridgeContext;
   let InspectedElementContext;
   let InspectedElementContextController;
   let StoreContext;
+  let TestUtils;
   let TreeContextController;
 
   beforeEach(() => {
     utils = require('./utils');
     utils.beforeEachProfiling();
+
+    meta = require('src/hydration').meta;
 
     bridge = global.bridge;
     store = global.store;
@@ -29,6 +33,7 @@ describe('InspectedElementContext', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
+    TestUtils = require('react-dom/test-utils');
     TestRenderer = utils.requireTestRenderer();
 
     BridgeContext = require('src/devtools/views/context').BridgeContext;
@@ -68,20 +73,17 @@ describe('InspectedElementContext', () => {
 
     const container = document.createElement('div');
     await utils.actAsync(() =>
-      ReactDOM.render(<Example foo={1} bar="abc" />, container)
+      ReactDOM.render(<Example a={1} b="abc" />, container)
     );
-    expect(store).toMatchSnapshot('1: mount');
 
-    const example = ((store.getElementAtIndex(0): any): Element);
+    const id = ((store.getElementIDAtIndex(0): any): number);
 
     let didFinish = false;
 
     function Suspender({ target }) {
       const { read } = React.useContext(InspectedElementContext);
-      const inspectedElement = read(target.id);
-      expect(inspectedElement).toMatchSnapshot(
-        `2: Inspected element ${target.id}`
-      );
+      const inspectedElement = read(id);
+      expect(inspectedElement).toMatchSnapshot(`1: Inspected element ${id}`);
       didFinish = true;
       return null;
     }
@@ -90,11 +92,11 @@ describe('InspectedElementContext', () => {
       () =>
         TestRenderer.create(
           <Contexts
-            defaultSelectedElementID={example.id}
+            defaultSelectedElementID={id}
             defaultSelectedElementIndex={0}
           >
             <React.Suspense fallback={null}>
-              <Suspender target={example} />
+              <Suspender target={id} />
             </React.Suspense>
           </Contexts>
         ),
@@ -110,18 +112,17 @@ describe('InspectedElementContext', () => {
 
     const container = document.createElement('div');
     await utils.actAsync(
-      () => ReactDOM.render(<Example foo={1} bar="abc" />, container),
+      () => ReactDOM.render(<Example a={1} b="abc" />, container),
       false
     );
-    expect(store).toMatchSnapshot('1: mount');
 
-    const example = ((store.getElementAtIndex(0): any): Element);
+    const id = ((store.getElementIDAtIndex(0): any): number);
 
     let inspectedElement = null;
 
     function Suspender({ target }) {
       const { read } = React.useContext(InspectedElementContext);
-      inspectedElement = read(target.id);
+      inspectedElement = read(id);
       return null;
     }
 
@@ -129,20 +130,17 @@ describe('InspectedElementContext', () => {
 
     await utils.actAsync(() => {
       renderer = TestRenderer.create(
-        <Contexts
-          defaultSelectedElementID={example.id}
-          defaultSelectedElementIndex={0}
-        >
+        <Contexts defaultSelectedElementID={id} defaultSelectedElementIndex={0}>
           <React.Suspense fallback={null}>
-            <Suspender target={example} />
+            <Suspender target={id} />
           </React.Suspense>
         </Contexts>
       );
     }, false);
-    expect(inspectedElement).toMatchSnapshot('2: initial render');
+    expect(inspectedElement).toMatchSnapshot('1: initial render');
 
     await utils.actAsync(
-      () => ReactDOM.render(<Example foo={2} bar="def" />, container),
+      () => ReactDOM.render(<Example a={2} b="def" />, container),
       false
     );
 
@@ -151,11 +149,11 @@ describe('InspectedElementContext', () => {
       () =>
         renderer.update(
           <Contexts
-            defaultSelectedElementID={example.id}
+            defaultSelectedElementID={id}
             defaultSelectedElementIndex={0}
           >
             <React.Suspense fallback={null}>
-              <Suspender target={example} />
+              <Suspender target={id} />
             </React.Suspense>
           </Contexts>
         ),
@@ -180,12 +178,11 @@ describe('InspectedElementContext', () => {
     await utils.actAsync(() =>
       ReactDOM.render(
         <Wrapper>
-          <Target foo={1} bar="abc" />
+          <Target a={1} b="abc" />
         </Wrapper>,
         container
       )
     );
-    expect(store).toMatchSnapshot('1: mount');
 
     const id = ((store.getElementIDAtIndex(1): any): number);
 
@@ -215,7 +212,7 @@ describe('InspectedElementContext', () => {
       false
     );
     expect(targetRenderCount).toBe(1);
-    expect(inspectedElement).toMatchSnapshot('2: initial render');
+    expect(inspectedElement).toMatchSnapshot('1: initial render');
 
     const initialInspectedElement = inspectedElement;
 
@@ -244,7 +241,7 @@ describe('InspectedElementContext', () => {
       () =>
         ReactDOM.render(
           <Wrapper>
-            <Target foo={2} bar="def" />
+            <Target a={2} b="def" />
           </Wrapper>,
           container
         ),
@@ -253,7 +250,86 @@ describe('InspectedElementContext', () => {
 
     // Target should have been rendered once (by ReactDOM) and once by DevTools for inspection.
     expect(targetRenderCount).toBe(2);
-    expect(inspectedElement).toMatchSnapshot('3: updated state');
+    expect(inspectedElement).toMatchSnapshot('2: updated state');
+
+    done();
+  });
+
+  it('should support complex data types', async done => {
+    const Example = () => null;
+
+    const div = document.createElement('div');
+    const exmapleFunction = () => {};
+    const typedArray = new Uint8Array(3);
+
+    const container = document.createElement('div');
+    await utils.actAsync(() =>
+      ReactDOM.render(
+        <Example
+          html_element={div}
+          fn={exmapleFunction}
+          symbol={Symbol('symbol')}
+          react_element={<span />}
+          array_buffer={typedArray.buffer}
+          typed_array={typedArray}
+          date={new Date()}
+        />,
+        container
+      )
+    );
+
+    const id = ((store.getElementIDAtIndex(0): any): number);
+
+    let inspectedElement = null;
+
+    function Suspender({ target }) {
+      const { read } = React.useContext(InspectedElementContext);
+      inspectedElement = read(id);
+      return null;
+    }
+
+    await utils.actAsync(
+      () =>
+        TestRenderer.create(
+          <Contexts
+            defaultSelectedElementID={id}
+            defaultSelectedElementIndex={0}
+          >
+            <React.Suspense fallback={null}>
+              <Suspender target={id} />
+            </React.Suspense>
+          </Contexts>
+        ),
+      false
+    );
+
+    expect(inspectedElement).not.toBeNull();
+    expect(inspectedElement).toMatchSnapshot(`1: Inspected element ${id}`);
+
+    const {
+      html_element,
+      fn,
+      symbol,
+      react_element,
+      array_buffer,
+      typed_array,
+      date,
+    } = (inspectedElement: any).props;
+    expect(html_element[meta.name]).toBe('DIV');
+    expect(html_element[meta.type]).toBe('html_element');
+    expect(fn[meta.name]).toBe('exmapleFunction');
+    expect(fn[meta.type]).toBe('function');
+    expect(symbol[meta.name]).toBe('Symbol(symbol)');
+    expect(symbol[meta.type]).toBe('symbol');
+    expect(react_element[meta.name]).toBe('span');
+    expect(react_element[meta.type]).toBe('react_element');
+    expect(array_buffer[meta.meta].length).toBe(3);
+    expect(array_buffer[meta.name]).toBe('ArrayBuffer');
+    expect(array_buffer[meta.type]).toBe('array_buffer');
+    expect(typed_array[meta.meta].length).toBe(3);
+    expect(typed_array[meta.name]).toBe('Uint8Array');
+    expect(typed_array[meta.type]).toBe('typed_array');
+    expect(date[meta.type]).toBe('date');
 
     done();
   });
@@ -276,24 +352,21 @@ describe('InspectedElementContext', () => {
     descriptor.enumerable = true;
     Object.defineProperty(CustomData.prototype, 'number', descriptor);
 
-    const Example = ({ data }) => null;
+    const Example = () => null;
 
     const container = document.createElement('div');
     await utils.actAsync(() =>
       ReactDOM.render(<Example data={new CustomData()} />, container)
     );
-    expect(store).toMatchSnapshot('1: mount');
 
-    const example = ((store.getElementAtIndex(0): any): Element);
+    const id = ((store.getElementIDAtIndex(0): any): number);
 
     let didFinish = false;
 
     function Suspender({ target }) {
       const { read } = React.useContext(InspectedElementContext);
-      const inspectedElement = read(target.id);
-      expect(inspectedElement).toMatchSnapshot(
-        `2: Inspected element ${target.id}`
-      );
+      const inspectedElement = read(id);
+      expect(inspectedElement).toMatchSnapshot(`1: Inspected element ${id}`);
       didFinish = true;
       return null;
     }
@@ -302,17 +375,290 @@ describe('InspectedElementContext', () => {
       () =>
         TestRenderer.create(
           <Contexts
-            defaultSelectedElementID={example.id}
+            defaultSelectedElementID={id}
             defaultSelectedElementIndex={0}
           >
             <React.Suspense fallback={null}>
-              <Suspender target={example} />
+              <Suspender target={id} />
             </React.Suspense>
           </Contexts>
         ),
       false
     );
     expect(didFinish).toBe(true);
+
+    done();
+  });
+
+  it('should not dehydrate nested values until explicitly requested', async done => {
+    const Example = () => null;
+
+    const container = document.createElement('div');
+    await utils.actAsync(() =>
+      ReactDOM.render(
+        <Example
+          nestedObject={{
+            a: {
+              b: {
+                c: [
+                  {
+                    d: {
+                      e: {},
+                    },
+                  },
+                ],
+              },
+            },
+          }}
+        />,
+        container
+      )
+    );
+
+    const id = ((store.getElementIDAtIndex(0): any): number);
+
+    let getPath: GetPath = ((null: any): GetPath);
+    let inspectedElement = null;
+
+    function Suspender({ target }) {
+      const context = React.useContext(InspectedElementContext);
+      getPath = context.getPath;
+      inspectedElement = context.read(target);
+      return null;
+    }
+
+    await utils.actAsync(
+      () =>
+        TestRenderer.create(
+          <Contexts
+            defaultSelectedElementID={id}
+            defaultSelectedElementIndex={0}
+          >
+            <React.Suspense fallback={null}>
+              <Suspender target={id} />
+            </React.Suspense>
+          </Contexts>
+        ),
+      false
+    );
+    expect(getPath).not.toBeNull();
+    expect(inspectedElement).not.toBeNull();
+    expect(inspectedElement).toMatchSnapshot('1: Initially inspect element');
+
+    inspectedElement = null;
+    TestUtils.act(() => {
+      getPath(id, ['props', 'nestedObject', 'a']);
+      jest.runOnlyPendingTimers();
+    });
+    expect(inspectedElement).not.toBeNull();
+    expect(inspectedElement).toMatchSnapshot('2: Inspect props.nestedObject.a');
+
+    inspectedElement = null;
+    TestUtils.act(() => {
+      getPath(id, ['props', 'nestedObject', 'a', 'b', 'c']);
+      jest.runOnlyPendingTimers();
+    });
+    expect(inspectedElement).not.toBeNull();
+    expect(inspectedElement).toMatchSnapshot(
+      '3: Inspect props.nestedObject.a.b.c'
+    );
+
+    inspectedElement = null;
+    TestUtils.act(() => {
+      getPath(id, ['props', 'nestedObject', 'a', 'b', 'c', 0, 'd']);
+      jest.runOnlyPendingTimers();
+    });
+    expect(inspectedElement).not.toBeNull();
+    expect(inspectedElement).toMatchSnapshot(
+      '4: Inspect props.nestedObject.a.b.c.0.d'
+    );
+
+    done();
+  });
+
+  it('should include updates for nested values that were previously hydrated', async done => {
+    const Example = () => null;
+
+    const container = document.createElement('div');
+    await utils.actAsync(() =>
+      ReactDOM.render(
+        <Example
+          nestedObject={{
+            a: {
+              value: 1,
+              b: {
+                value: 1,
+              },
+            },
+            c: {
+              value: 1,
+              d: {
+                value: 1,
+                e: {
+                  value: 1,
+                },
+              },
+            },
+          }}
+        />,
+        container
+      )
+    );
+
+    const id = ((store.getElementIDAtIndex(0): any): number);
+
+    let getPath: GetPath = ((null: any): GetPath);
+    let inspectedElement = null;
+
+    function Suspender({ target }) {
+      const context = React.useContext(InspectedElementContext);
+      getPath = context.getPath;
+      inspectedElement = context.read(id);
+      return null;
+    }
+
+    await utils.actAsync(
+      () =>
+        TestRenderer.create(
+          <Contexts
+            defaultSelectedElementID={id}
+            defaultSelectedElementIndex={0}
+          >
+            <React.Suspense fallback={null}>
+              <Suspender target={id} />
+            </React.Suspense>
+          </Contexts>
+        ),
+      false
+    );
+    expect(getPath).not.toBeNull();
+    expect(inspectedElement).not.toBeNull();
+    expect(inspectedElement).toMatchSnapshot('1: Initially inspect element');
+
+    inspectedElement = null;
+    TestUtils.act(() => {
+      getPath(id, ['props', 'nestedObject', 'a']);
+      jest.runOnlyPendingTimers();
+    });
+    expect(inspectedElement).not.toBeNull();
+    expect(inspectedElement).toMatchSnapshot('2: Inspect props.nestedObject.a');
+
+    inspectedElement = null;
+    TestUtils.act(() => {
+      getPath(id, ['props', 'nestedObject', 'c']);
+      jest.runOnlyPendingTimers();
+    });
+    expect(inspectedElement).not.toBeNull();
+    expect(inspectedElement).toMatchSnapshot('3: Inspect props.nestedObject.c');
+
+    TestUtils.act(() => {
+      ReactDOM.render(
+        <Example
+          nestedObject={{
+            a: {
+              value: 2,
+              b: {
+                value: 2,
+              },
+            },
+            c: {
+              value: 2,
+              d: {
+                value: 2,
+                e: {
+                  value: 2,
+                },
+              },
+            },
+          }}
+        />,
+        container
+      );
+    });
+
+    TestUtils.act(() => {
+      inspectedElement = null;
+      jest.runOnlyPendingTimers();
+      expect(inspectedElement).not.toBeNull();
+      expect(inspectedElement).toMatchSnapshot('4: update inspected element');
+    });
+
+    done();
+  });
+
+  it('should not tear if hydration is requested after an update', async done => {
+    const Example = () => null;
+
+    const container = document.createElement('div');
+    await utils.actAsync(() =>
+      ReactDOM.render(
+        <Example
+          nestedObject={{
+            a: {
+              value: 1,
+              b: {
+                value: 1,
+              },
+            },
+          }}
+        />,
+        container
+      )
+    );
+
+    const id = ((store.getElementIDAtIndex(0): any): number);
+
+    let getPath: GetPath = ((null: any): GetPath);
+    let inspectedElement = null;
+
+    function Suspender({ target }) {
+      const context = React.useContext(InspectedElementContext);
+      getPath = context.getPath;
+      inspectedElement = context.read(id);
+      return null;
+    }
+
+    await utils.actAsync(
+      () =>
+        TestRenderer.create(
+          <Contexts
+            defaultSelectedElementID={id}
+            defaultSelectedElementIndex={0}
+          >
+            <React.Suspense fallback={null}>
+              <Suspender target={id} />
+            </React.Suspense>
+          </Contexts>
+        ),
+      false
+    );
+    expect(getPath).not.toBeNull();
+    expect(inspectedElement).not.toBeNull();
+    expect(inspectedElement).toMatchSnapshot('1: Initially inspect element');
+
+    TestUtils.act(() => {
+      ReactDOM.render(
+        <Example
+          nestedObject={{
+            a: {
+              value: 2,
+              b: {
+                value: 2,
+              },
+            },
+          }}
+        />,
+        container
+      );
+    });
+
+    inspectedElement = null;
+    TestUtils.act(() => {
+      getPath(id, ['props', 'nestedObject', 'a']);
+      jest.runOnlyPendingTimers();
+    });
+    expect(inspectedElement).not.toBeNull();
+    expect(inspectedElement).toMatchSnapshot('2: Inspect props.nestedObject.a');
 
     done();
   });

@@ -16,7 +16,7 @@ import {
   StrictMode,
   Suspense,
 } from 'react-is';
-import { getDisplayName } from './utils';
+import { getDisplayName, getInObject, setInObject } from './utils';
 
 export const meta = {
   name: Symbol('name'),
@@ -29,14 +29,12 @@ export const meta = {
 // This threshold determines the depth at which the bridge "dehydrates" nested data.
 // Dehydration means that we don't serialize the data for e.g. postMessage or stringify,
 // unless the frontend explicitly requests it (e.g. a user clicks to expand a props object).
-// We tried reducing this value from 2 to 1 to improve performance:
-// https://github.com/facebook/react-devtools/issues/1200
-// But this caused problems with the Profiler's interaction tracing output.
-// Because React mutates Fibers, profiling data that is dehydrated for old commits–
-// will not be available later from within the Profiler.
-// This impacts props/state as well as Interactions.
-// https://github.com/facebook/react-devtools/issues/1262
-const LEVEL_THRESHOLD = 6;
+//
+// Reducing this threshold will improve the speed of initial component inspection,
+// but may decrease the responsiveness of expanding objects/arrays to inspect further.
+//
+// Note that reducing the threshold to below two effectively breaks the inspected hooks interface.
+const LEVEL_THRESHOLD = 2;
 
 /**
  * Get a enhanced/artificial type string based on the object instance
@@ -85,8 +83,8 @@ function getPropType(data: Object): string | null {
 function createDehydrated(
   type: string,
   data: Object,
-  cleaned: Array<Array<string>>,
-  path: Array<string>
+  cleaned: Array<Array<string | number>>,
+  path: Array<string | number>
 ): Object {
   const meta = {};
 
@@ -109,6 +107,20 @@ function createDehydrated(
   };
 }
 
+function isInspectedPath(
+  path: Array<string | number> = [],
+  inspectedPaths: Object
+): boolean {
+  let current = inspectedPaths;
+  for (let i = 0; i < path.length; i++) {
+    current = current[path[i]];
+    if (!current) {
+      return false;
+    }
+  }
+  return true;
+}
+
 /**
  * Strip out complex data (instances, functions, and data nested > LEVEL_THRESHOLD levels deep).
  * The paths of the stripped out objects are appended to the `cleaned` list.
@@ -129,8 +141,9 @@ function createDehydrated(
  */
 export function dehydrate(
   data: Object,
-  cleaned: Array<Array<string>>,
-  path?: Array<string> = [],
+  cleaned: Array<Array<string | number>>,
+  path: Array<string | number>,
+  inspectedPaths: Object,
   level?: number = 0
 ): string | Object {
   const type = getPropType(data);
@@ -185,11 +198,18 @@ export function dehydrate(
       };
 
     case 'array':
-      if (level > LEVEL_THRESHOLD) {
+      const arrayPathCheck = isInspectedPath(path, inspectedPaths);
+      if (level >= LEVEL_THRESHOLD && !arrayPathCheck) {
         return createDehydrated(type, data, cleaned, path);
       }
       return data.map((item, i) =>
-        dehydrate(item, cleaned, path.concat([i]), level + 1)
+        dehydrate(
+          item,
+          cleaned,
+          path.concat([i]),
+          inspectedPaths,
+          arrayPathCheck ? 1 : level + 1
+        )
       );
 
     case 'typed_array':
@@ -205,7 +225,8 @@ export function dehydrate(
         },
       };
     case 'object':
-      if (level > LEVEL_THRESHOLD) {
+      const objectPathCheck = isInspectedPath(path, inspectedPaths);
+      if (level >= LEVEL_THRESHOLD && !objectPathCheck) {
         return createDehydrated(type, data, cleaned, path);
       } else {
         const res = {};
@@ -214,7 +235,8 @@ export function dehydrate(
             data[name],
             cleaned,
             path.concat([name]),
-            level + 1
+            inspectedPaths,
+            objectPathCheck ? 1 : level + 1
           );
         }
         return res;
@@ -225,24 +247,47 @@ export function dehydrate(
   }
 }
 
-export function hydrate(data: Object, cleaned: Array<Array<string>>): Object {
-  cleaned.forEach((path: Array<string>) => {
-    const last = path.pop();
-    const reduced: Object = path.reduce(
-      (object: Object, attr: string) => (object ? object[attr] : (null: any)),
-      data
-    );
-    if (!reduced || !reduced[last]) {
+export function fillInPath(
+  object: Object,
+  path: Array<string | number>,
+  value: any
+) {
+  const length = path.length;
+  const parent = getInObject(object, path.slice(0, length - 1));
+  if (object != null) {
+    delete parent[meta.name];
+    delete parent[meta.type];
+    delete parent[meta.meta];
+    delete parent[meta.inspected];
+
+    setInObject(object, path, value);
+  }
+}
+
+export function hydrate(
+  object: Object,
+  cleaned: Array<Array<string | number>>
+): Object {
+  cleaned.forEach((path: Array<string | number>) => {
+    const length = path.length;
+    const last = path[length - 1];
+    const parent = getInObject(object, path.slice(0, length - 1));
+    if (!parent || !parent[last]) {
       return;
     }
-    const replace: { [key: Symbol]: boolean | string } = {};
-    replace[meta.name] = reduced[last].name;
-    replace[meta.type] = reduced[last].type;
-    replace[meta.meta] = reduced[last].meta;
-    replace[meta.inspected] = false;
-    reduced[last] = replace;
+
+    const value = parent[last];
+
+    // Replace the string keys with Symbols so they're non-enumerable.
+    const replaced: { [key: Symbol]: boolean | string } = {};
+    replaced[meta.inspected] = false;
+    replaced[meta.meta] = value.meta;
+    replaced[meta.name] = value.name;
+    replaced[meta.type] = value.type;
+
+    parent[last] = replaced;
   });
-  return data;
+  return object;
 }
 
 export function getDisplayNameForReactElement(

@@ -22,11 +22,13 @@ import {
 import {
   getDisplayName,
   getDefaultComponentFilters,
+  getInObject,
   getUID,
+  setInObject,
   utfEncodeString,
 } from 'src/utils';
 import { sessionStorageGetItem } from 'src/storage';
-import { cleanForBridge, copyWithSet, setInObject } from './utils';
+import { cleanForBridge, copyWithSet } from './utils';
 import {
   __DEBUG__,
   SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
@@ -44,6 +46,7 @@ import type {
   DevToolsHook,
   Fiber,
   InspectedElement,
+  InspectedElementPayload,
   Owner,
   PathFrame,
   PathMatch,
@@ -1297,8 +1300,8 @@ export function attach(
     }
 
     if (
-      mostRecentlyInspectedElementID !== null &&
-      mostRecentlyInspectedElementID ===
+      mostRecentlyInspectedElement !== null &&
+      mostRecentlyInspectedElement.id ===
         getFiberID(getPrimaryFiber(nextFiber)) &&
       didFiberRender(prevFiber, nextFiber)
     ) {
@@ -2122,37 +2125,118 @@ export function attach(
     };
   }
 
-  let mostRecentlyInspectedElementID: number | null = null;
+  let mostRecentlyInspectedElement: InspectedElement | null = null;
   let hasElementUpdatedSinceLastInspected: boolean = false;
+  let currentlyInspectedPaths: Object = {};
 
-  function inspectElement(id: number): InspectedElement | number | null {
-    // If this element has not been updated since it was last inspected, we don't need to re-run it.
-    // Instead we can just return the ID to indicate that it has not changed.
-    if (
-      mostRecentlyInspectedElementID === id &&
+  function isMostRecentlyInspectedElementCurrent(id: number): boolean {
+    return (
+      mostRecentlyInspectedElement !== null &&
+      mostRecentlyInspectedElement.id === id &&
       !hasElementUpdatedSinceLastInspected
-    ) {
-      return id;
+    );
+  }
+
+  function mergeInspectedPaths(path: Array<string | number>) {
+    let current = currentlyInspectedPaths;
+    path.forEach(key => {
+      if (!current[key]) {
+        current[key] = {};
+      }
+      current = current[key];
+    });
+  }
+
+  function inspectElement(
+    id: number,
+    path?: Array<string | number>
+  ): InspectedElementPayload {
+    const isCurrent = isMostRecentlyInspectedElementCurrent(id);
+
+    if (isCurrent) {
+      if (path != null) {
+        mergeInspectedPaths(path);
+
+        // If this element has not been updated since it was last inspected,
+        // we can just return the subset of data in the newly-inspected path.
+        return {
+          id,
+          type: 'hydrated-path',
+          path,
+          value: cleanForBridge(
+            getInObject(
+              ((mostRecentlyInspectedElement: any): InspectedElement),
+              path
+            ),
+            mergeInspectedPaths,
+            path
+          ),
+        };
+      } else {
+        // If this element has not been updated since it was last inspected, we don't need to re-run it.
+        // Instead we can just return the ID to indicate that it has not changed.
+        return {
+          id,
+          type: 'no-change',
+        };
+      }
+    } else {
+      hasElementUpdatedSinceLastInspected = false;
+
+      if (
+        mostRecentlyInspectedElement === null ||
+        mostRecentlyInspectedElement.id !== id
+      ) {
+        currentlyInspectedPaths = {};
+      }
+
+      mostRecentlyInspectedElement = inspectElementRaw(id);
+      if (mostRecentlyInspectedElement === null) {
+        return {
+          id,
+          type: 'not-found',
+        };
+      }
+
+      if (path != null) {
+        mergeInspectedPaths(path);
+      }
+
+      const cleanedInspectedElement = { ...mostRecentlyInspectedElement };
+
+      cleanedInspectedElement.context = cleanForBridge(
+        cleanedInspectedElement.context,
+        currentlyInspectedPaths.context
+      );
+      cleanedInspectedElement.events = cleanForBridge(
+        cleanedInspectedElement.events,
+        currentlyInspectedPaths.events
+      );
+      cleanedInspectedElement.hooks = cleanForBridge(
+        cleanedInspectedElement.hooks,
+        currentlyInspectedPaths.hooks
+      );
+      cleanedInspectedElement.props = cleanForBridge(
+        cleanedInspectedElement.props,
+        currentlyInspectedPaths.props
+      );
+      cleanedInspectedElement.state = cleanForBridge(
+        cleanedInspectedElement.state,
+        currentlyInspectedPaths.state
+      );
+
+      return {
+        id,
+        type: 'full-data',
+        value: cleanedInspectedElement,
+      };
     }
-
-    mostRecentlyInspectedElementID = id;
-    hasElementUpdatedSinceLastInspected = false;
-
-    const inspectedElement = inspectElementRaw(id);
-    if (inspectedElement === null) {
-      return null;
-    }
-    inspectedElement.context = cleanForBridge(inspectedElement.context);
-    inspectedElement.events = cleanForBridge(inspectedElement.events);
-    inspectedElement.hooks = cleanForBridge(inspectedElement.hooks);
-    inspectedElement.props = cleanForBridge(inspectedElement.props);
-    inspectedElement.state = cleanForBridge(inspectedElement.state);
-
-    return inspectedElement;
   }
 
   function logElementToConsole(id) {
-    const result = inspectElementRaw(id);
+    const result = isMostRecentlyInspectedElementCurrent(id)
+      ? mostRecentlyInspectedElement
+      : inspectElementRaw(id);
     if (result === null) {
       console.warn(`Could not find Fiber with id "${id}"`);
       return;
@@ -2690,10 +2774,10 @@ export function attach(
 
   return {
     cleanup,
+    findNativeNodesForFiberID,
     flushInitialOperations,
     getBestMatchForTrackedPath,
     getFiberIDForNative,
-    findNativeNodesForFiberID,
     getOwnersList,
     getPathForElement,
     getProfilingData,

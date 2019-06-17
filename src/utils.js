@@ -245,3 +245,30 @@ export function shallowDiffers(prev: Object, next: Object): boolean {
   }
   return false;
 }
+
+export function getInObject(object: Object, path: Array<string | number>): any {
+  return path.reduce((reduced: Object, attr: string | number): any => {
+    if (typeof reduced === 'object' && reduced !== null) {
+      return reduced[attr];
+    } else if (Array.isArray(reduced)) {
+      return reduced[attr];
+    } else {
+      return null;
+    }
+  }, object);
+}
+
+export function setInObject(
+  object: Object,
+  path: Array<string | number>,
+  value: any
+) {
+  const length = path.length;
+  const last = path[length - 1];
+  if (object != null) {
+    const parent = getInObject(object, path.slice(0, length - 1));
+    if (parent) {
+      parent[last] = value;
+    }
+  }
+}

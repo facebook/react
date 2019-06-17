@@ -8,13 +8,17 @@ import React, {
   useMemo,
   useState,
 } from 'react';
+import { unstable_batchedUpdates as batchedUpdates } from 'react-dom';
 import { createResource } from '../../cache';
 import { BridgeContext, StoreContext } from '../context';
-import { hydrate } from 'src/hydration';
+import { hydrate, fillInPath } from 'src/hydration';
 import { TreeStateContext } from './TreeContext';
 import { separateDisplayNameAndHOCs } from 'src/utils';
 
-import type { InspectedElement as InspectedElementBackend } from 'src/backend/types';
+import type {
+  InspectedElement as InspectedElementBackend,
+  InspectedElementPayload,
+} from 'src/backend/types';
 import type {
   DehydratedData,
   Element,
@@ -22,8 +26,12 @@ import type {
 } from 'src/devtools/views/Components/types';
 import type { Resource, Thenable } from '../../cache';
 
+export type GetPath = (id: number, path: Array<string | number>) => void;
+export type Read = (id: number) => InspectedElementFrontend | null;
+
 type Context = {|
-  read(id: number): InspectedElementFrontend | null,
+  getPath: GetPath,
+  read: Read,
 |};
 
 const InspectedElementContext = createContext<Context>(((null: any): Context));
@@ -68,7 +76,15 @@ function InspectedElementContextController({ children }: Props) {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 
-  const read = useCallback(
+  const getPath = useCallback<GetPath>(
+    (id: number, path: Array<string | number>) => {
+      const rendererID = store.getRendererIDForElement(id);
+      bridge.send('inspectElement', { id, path, rendererID });
+    },
+    [bridge, store]
+  );
+
+  const read = useCallback<Read>(
     (id: number) => {
       const element = store.getElementByID(id);
       if (element !== null) {
@@ -85,72 +101,117 @@ function InspectedElementContextController({ children }: Props) {
   // would itself be blocked by the same render that suspends (waiting for the data).
   const { selectedElementID } = useContext(TreeStateContext);
 
-  const [count, setCount] = useState<number>(0);
+  const [
+    currentlyInspectedElement,
+    setCurrentlyInspectedElement,
+  ] = useState<InspectedElementFrontend | null>(null);
 
   // This effect handler invalidates the suspense cache and schedules rendering updates with React.
   useEffect(() => {
-    const onInspectedElement = (
-      data: InspectedElementBackend | number | null
-    ) => {
-      // A null value means that the element no longer exists in the backend.
-      // If it's the same element that's currently selected, that selection will be removed once the Store updates.
-      // If it's not- then we can just ignore it anyway.
-      // Either way there is nothing we need to do in this case.
-      // A numeric value indicates that the element hasn't changed since we last requested its data,
-      // in which case we don't need to invalidate the cache and re-render anything in the DevTools.
-      if (data !== null && typeof data === 'object') {
-        const id = data.id;
+    const onInspectedElement = (data: InspectedElementPayload) => {
+      const { id } = data;
 
-        const inspectedElement: InspectedElementFrontend = {
-          canEditFunctionProps: data.canEditFunctionProps,
-          canEditHooks: data.canEditHooks,
-          canToggleSuspense: data.canToggleSuspense,
-          canViewSource: data.canViewSource,
-          id: data.id,
-          source: data.source,
-          type: data.type,
-          owners:
-            data.owners === null
-              ? null
-              : data.owners.map(owner => {
-                  const [
-                    displayName,
-                    hocDisplayNames,
-                  ] = separateDisplayNameAndHOCs(owner.displayName, owner.type);
-                  return {
-                    ...owner,
-                    displayName,
-                    hocDisplayNames,
-                  };
-                }),
-          context: hydrateHelper(data.context),
-          events: hydrateHelper(data.events),
-          hooks: hydrateHelper(data.hooks),
-          props: hydrateHelper(data.props),
-          state: hydrateHelper(data.state),
-        };
+      let element;
 
-        const element = store.getElementByID(id);
-        if (element !== null) {
-          const request = inProgressRequests.get(element);
-          if (request != null) {
-            inProgressRequests.delete(element);
-            request.resolveFn(inspectedElement);
-          } else {
-            resource.write(element, inspectedElement);
+      switch (data.type) {
+        case 'no-change':
+        case 'not-found':
+          // No-op
+          break;
+        case 'hydrated-path':
+          // Merge new data into previous object and invalidate cache
+          element = store.getElementByID(id);
+          if (element !== null) {
+            if (currentlyInspectedElement != null) {
+              const value = hydrateHelper(data.value, data.path);
+              const inspectedElement = { ...currentlyInspectedElement };
 
-            // Schedule update with React if the curently-selected element has been invalidated.
-            if (id === selectedElementID) {
-              setCount(count => count + 1);
+              fillInPath(inspectedElement, data.path, value);
+
+              resource.write(element, inspectedElement);
+
+              // Schedule update with React if the curently-selected element has been invalidated.
+              if (id === selectedElementID) {
+                setCurrentlyInspectedElement(inspectedElement);
+              }
             }
           }
-        }
+          break;
+        case 'full-data':
+          const {
+            canEditFunctionProps,
+            canEditHooks,
+            canToggleSuspense,
+            canViewSource,
+            source,
+            type,
+            owners,
+            context,
+            events,
+            hooks,
+            props,
+            state,
+          } = ((data.value: any): InspectedElementBackend);
+
+          const inspectedElement: InspectedElementFrontend = {
+            canEditFunctionProps,
+            canEditHooks,
+            canToggleSuspense,
+            canViewSource,
+            id,
+            source,
+            type,
+            owners:
+              owners === null
+                ? null
+                : owners.map(owner => {
+                    const [
+                      displayName,
+                      hocDisplayNames,
+                    ] = separateDisplayNameAndHOCs(
+                      owner.displayName,
+                      owner.type
+                    );
+                    return {
+                      ...owner,
+                      displayName,
+                      hocDisplayNames,
+                    };
+                  }),
+            context: hydrateHelper(context),
+            events: hydrateHelper(events),
+            hooks: hydrateHelper(hooks),
+            props: hydrateHelper(props),
+            state: hydrateHelper(state),
+          };
+
+          element = store.getElementByID(id);
+          if (element !== null) {
+            const request = inProgressRequests.get(element);
+            if (request != null) {
+              inProgressRequests.delete(element);
+              batchedUpdates(() => {
+                request.resolveFn(inspectedElement);
+                setCurrentlyInspectedElement(inspectedElement);
+              });
+            } else {
+              resource.write(element, inspectedElement);
+
+              // Schedule update with React if the curently-selected element has been invalidated.
+              if (id === selectedElementID) {
+                setCurrentlyInspectedElement(inspectedElement);
+              }
+            }
+          }
+          break;
+        default:
+          break;
       }
     };
 
     bridge.addListener('inspectedElement', onInspectedElement);
     return () => bridge.removeListener('inspectedElement', onInspectedElement);
-  }, [bridge, selectedElementID, store]);
+  }, [bridge, currentlyInspectedElement, selectedElementID, store]);
 
   // This effect handler polls for updates on the currently selected element.
   useEffect(() => {
@@ -175,16 +236,10 @@ function InspectedElementContextController({ children }: Props) {
     // Update the $r variable.
     bridge.send('selectElement', { id: selectedElementID, rendererID });
 
-    const onInspectedElement = (
-      data: InspectedElementBackend | number | null
-    ) => {
-      if (data !== null) {
-        // If this is the element we requested, wait a little bit and then ask for an update.
-        if (data === selectedElementID) {
-          timeoutID = setTimeout(sendRequest, 1000);
-        } else if (typeof data === 'object' && data.id === selectedElementID) {
-          timeoutID = setTimeout(sendRequest, 1000);
-        }
+    const onInspectedElement = ({ id }: InspectedElementPayload) => {
+      // If this is the element we requested, wait a little bit and then ask for another update.
+      if (id === selectedElementID) {
+        timeoutID = setTimeout(sendRequest, 1000);
       }
     };
 
@@ -200,10 +255,10 @@ function InspectedElementContextController({ children }: Props) {
   }, [bridge, selectedElementID, store]);
 
   const value = useMemo(
-    () => ({ read }),
-    // Count is used to invalidate the cache and schedule an update with React.
+    () => ({ getPath, read }),
+    // InspectedElement is used to invalidate the cache and schedule an update with React.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [count, read]
+    [currentlyInspectedElement, getPath, read]
   );
 
   return (
@@ -213,9 +268,21 @@ function InspectedElementContextController({ children }: Props) {
   );
 }
 
-function hydrateHelper(dehydratedData: DehydratedData | null): Object | null {
+function hydrateHelper(
+  dehydratedData: DehydratedData | null,
+  path?: Array<string | number>
+): Object | null {
   if (dehydratedData !== null) {
-    return hydrate(dehydratedData.data, dehydratedData.cleaned);
+    let { cleaned, data } = dehydratedData;
+
+    if (path) {
+      const { length } = path;
+      if (length > 0) {
+        cleaned = cleaned.map(cleanedPath => cleanedPath.slice(length));
+      }
+    }
+
+    return hydrate(data, cleaned);
   } else {
     return null;
   }

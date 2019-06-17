@@ -4,7 +4,7 @@ import EventEmitter from 'events';
 
 import type { ComponentFilter, Wall } from './types';
 import type {
-  InspectedElement,
+  InspectedElementPayload,
   OwnersList,
   ProfilingDataBackend,
   RendererID,
@@ -43,6 +43,11 @@ type OverrideSuspense = {|
   forceFallback: boolean,
 |};
 
+type InspectElementParams = {|
+  ...ElementAndRendererID,
+  path?: Array<string | number>,
+|};
+
 export default class Bridge extends EventEmitter<{|
   captureScreenshot: [{| commitIndex: number, rootID: number |}],
   clearHighlightedElementInDOM: [],
@@ -51,8 +56,8 @@ export default class Bridge extends EventEmitter<{|
   getProfilingStatus: [],
   highlightElementInDOM: [HighlightElementInDOM],
   init: [],
-  inspectElement: [ElementAndRendererID],
-  inspectedElement: [InspectedElement | number | null],
+  inspectElement: [InspectElementParams],
+  inspectedElement: [InspectedElementPayload],
   isBackendStorageAPISupported: [boolean],
   logElementToConsole: [ElementAndRendererID],
   operations: [Uint32Array],

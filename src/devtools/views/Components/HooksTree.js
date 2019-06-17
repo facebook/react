@@ -86,7 +86,7 @@ function HookView({ canEditHooks, hook, id, path = [] }: HookViewProps) {
 
   if (hook.hasOwnProperty(meta.inspected)) {
     // This Hook is too deep and hasn't been hydrated.
-    // TODO: show UI to load its data.
+    // TODO (hydration) show UI to load its data.
     return (
       <div className={styles.Hook}>
         <div className={styles.NameValueRow}>

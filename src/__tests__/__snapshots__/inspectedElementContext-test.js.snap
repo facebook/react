@@ -1,11 +1,101 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`InspectedElementContext should inspect the currently selected element: 1: mount 1`] = `
-[root]
-    <Example>
+exports[`InspectedElementContext should include updates for nested values that were previously hydrated: 1: Initially inspect element 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "events": null,
+  "hooks": null,
+  "props": {
+    "nestedObject": {
+      "a": {},
+      "c": {}
+    }
+  },
+  "state": null
+}
 `;
 
-exports[`InspectedElementContext should inspect the currently selected element: 2: Inspected element 2 1`] = `
+exports[`InspectedElementContext should include updates for nested values that were previously hydrated: 2: Inspect props.nestedObject.a 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "events": null,
+  "hooks": null,
+  "props": {
+    "nestedObject": {
+      "a": {
+        "value": 1,
+        "b": {
+          "value": 1
+        }
+      },
+      "c": {}
+    }
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should include updates for nested values that were previously hydrated: 3: Inspect props.nestedObject.c 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "events": null,
+  "hooks": null,
+  "props": {
+    "nestedObject": {
+      "a": {
+        "value": 1,
+        "b": {
+          "value": 1
+        }
+      },
+      "c": {
+        "value": 1,
+        "d": {
+          "value": 1,
+          "e": {}
+        }
+      }
+    }
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should include updates for nested values that were previously hydrated: 4: update inspected element 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "events": null,
+  "hooks": null,
+  "props": {
+    "nestedObject": {
+      "a": {
+        "value": 2,
+        "b": {
+          "value": 2
+        }
+      },
+      "c": {
+        "value": 2,
+        "d": {
+          "value": 2,
+          "e": {}
+        }
+      }
+    }
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should inspect the currently selected element: 1: Inspected element 2 1`] = `
 {
   "id": 2,
   "owners": null,
@@ -17,75 +107,18 @@ exports[`InspectedElementContext should inspect the currently selected element: 
       "isStateEditable": true,
       "name": "State",
       "value": 1,
-      "subHooks": []
+      "subHooks": {}
     }
   ],
   "props": {
-    "foo": 1,
-    "bar": "abc"
+    "a": 1,
+    "b": "abc"
   },
   "state": null
 }
 `;
 
-exports[`InspectedElementContext should not re-render a function with hooks if it did not update since it was last inspected: 1: mount 1`] = `
-[root]
-  ▾ <Wrapper>
-      <Anonymous>
-`;
-
-exports[`InspectedElementContext should not re-render a function with hooks if it did not update since it was last inspected: 2: initial render 1`] = `
-{
-  "id": 3,
-  "owners": null,
-  "context": null,
-  "events": null,
-  "hooks": [
-    {
-      "id": 0,
-      "isStateEditable": true,
-      "name": "State",
-      "value": 0,
-      "subHooks": []
-    }
-  ],
-  "props": {
-    "foo": 1,
-    "bar": "abc"
-  },
-  "state": null
-}
-`;
-
-exports[`InspectedElementContext should not re-render a function with hooks if it did not update since it was last inspected: 3: updated state 1`] = `
-{
-  "id": 3,
-  "owners": null,
-  "context": null,
-  "events": null,
-  "hooks": [
-    {
-      "id": 0,
-      "isStateEditable": true,
-      "name": "State",
-      "value": 0,
-      "subHooks": []
-    }
-  ],
-  "props": {
-    "foo": 2,
-    "bar": "def"
-  },
-  "state": null
-}
-`;
-
-exports[`InspectedElementContext should poll for updates for the currently selected element: 1: mount 1`] = `
-[root]
-    <Example>
-`;
-
-exports[`InspectedElementContext should poll for updates for the currently selected element: 2: initial render 1`] = `
+exports[`InspectedElementContext should not dehydrate nested values until explicitly requested: 1: Initially inspect element 1`] = `
 {
   "id": 2,
   "owners": null,
@@ -93,8 +126,177 @@ exports[`InspectedElementContext should poll for updates for the currently selec
   "events": null,
   "hooks": null,
   "props": {
-    "foo": 1,
-    "bar": "abc"
+    "nestedObject": {
+      "a": {}
+    }
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should not dehydrate nested values until explicitly requested: 2: Inspect props.nestedObject.a 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "events": null,
+  "hooks": null,
+  "props": {
+    "nestedObject": {
+      "a": {
+        "b": {
+          "c": {}
+        }
+      }
+    }
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should not dehydrate nested values until explicitly requested: 3: Inspect props.nestedObject.a.b.c 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "events": null,
+  "hooks": null,
+  "props": {
+    "nestedObject": {
+      "a": {
+        "b": {
+          "c": [
+            {
+              "d": {}
+            }
+          ]
+        }
+      }
+    }
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should not dehydrate nested values until explicitly requested: 4: Inspect props.nestedObject.a.b.c.0.d 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "events": null,
+  "hooks": null,
+  "props": {
+    "nestedObject": {
+      "a": {
+        "b": {
+          "c": [
+            {
+              "d": {
+                "e": {}
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should not re-render a function with hooks if it did not update since it was last inspected: 1: initial render 1`] = `
+{
+  "id": 3,
+  "owners": null,
+  "context": null,
+  "events": null,
+  "hooks": [
+    {
+      "id": 0,
+      "isStateEditable": true,
+      "name": "State",
+      "value": 0,
+      "subHooks": {}
+    }
+  ],
+  "props": {
+    "a": 1,
+    "b": "abc"
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should not re-render a function with hooks if it did not update since it was last inspected: 2: updated state 1`] = `
+{
+  "id": 3,
+  "owners": null,
+  "context": null,
+  "events": null,
+  "hooks": [
+    {
+      "id": 0,
+      "isStateEditable": true,
+      "name": "State",
+      "value": 0,
+      "subHooks": {}
+    }
+  ],
+  "props": {
+    "a": 2,
+    "b": "def"
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should not tear if hydration is requested after an update: 1: Initially inspect element 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "events": null,
+  "hooks": null,
+  "props": {
+    "nestedObject": {
+      "a": {}
+    }
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should not tear if hydration is requested after an update: 2: Inspect props.nestedObject.a 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "events": null,
+  "hooks": null,
+  "props": {
+    "nestedObject": {
+      "a": {
+        "value": 2,
+        "b": {
+          "value": 2
+        }
+      }
+    }
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should poll for updates for the currently selected element: 1: initial render 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "events": null,
+  "hooks": null,
+  "props": {
+    "a": 1,
+    "b": "abc"
   },
   "state": null
 }
@@ -108,19 +310,34 @@ exports[`InspectedElementContext should poll for updates for the currently selec
   "events": null,
   "hooks": null,
   "props": {
-    "foo": 2,
-    "bar": "def"
+    "a": 2,
+    "b": "def"
   },
   "state": null
 }
 `;
 
-exports[`InspectedElementContext should support custom objects with enumerable properties and getters: 1: mount 1`] = `
-[root]
-    <Example>
+exports[`InspectedElementContext should support complex data types: 1: Inspected element 2 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "events": null,
+  "hooks": null,
+  "props": {
+    "html_element": {},
+    "fn": {},
+    "symbol": {},
+    "react_element": {},
+    "array_buffer": {},
+    "typed_array": {},
+    "date": {}
+  },
+  "state": null
+}
 `;
 
-exports[`InspectedElementContext should support custom objects with enumerable properties and getters: 2: Inspected element 2 1`] = `
+exports[`InspectedElementContext should support custom objects with enumerable properties and getters: 1: Inspected element 2 1`] = `
 {
   "id": 2,
   "owners": null,
