@@ -335,6 +335,7 @@ describe('InspectedElementContext', () => {
     expect(typed_array[meta.inspectable]).toBe(false);
     expect(typed_array[meta.name]).toBe('Uint8Array');
     expect(typed_array[meta.type]).toBe('typed_array');
+    expect(date[meta.inspectable]).toBe(false);
     expect(date[meta.type]).toBe('date');
 
     done();

@@ -2147,26 +2147,27 @@ export function attach(
     });
   }
 
-  function isKeyedPathWhitelisted(
-    key: string,
-    isHooks: boolean
-  ): (path: Array<string | number>) => boolean {
-    return (path: Array<string | number>) =>
-      isPathWhitelisted([key].concat(path)) ||
+  function createIsPathWhitelisted(isHooksPath: boolean, key: string | null) {
+    return function isPathWhitelisted(path: Array<string | number>): boolean {
       // Dehydrating the 'subHooks' property makes the HooksTree UI a lot more complicated,
       // so it's easiest for now if we just don't break on this boundary.
-      (isHooks && path[path.length - 1] === 'subHooks');
-  }
+      if (isHooksPath && path[path.length - 1] === 'subHooks') {
+        return true;
+      }
 
-  function isPathWhitelisted(path: Array<string | number>): boolean {
-    let current = currentlyInspectedPaths;
-    for (let i = 0; i < path.length; i++) {
-      current = current[path[i]];
+      let current =
+        key === null ? currentlyInspectedPaths : currentlyInspectedPaths[key];
       if (!current) {
         return false;
       }
-    }
-    return true;
+      for (let i = 0; i < path.length; i++) {
+        current = current[path[i]];
+        if (!current) {
+          return false;
+        }
+      }
+      return true;
+    };
   }
 
   function inspectElement(
@@ -2190,7 +2191,7 @@ export function attach(
               ((mostRecentlyInspectedElement: any): InspectedElement),
               path
             ),
-            isPathWhitelisted,
+            createIsPathWhitelisted(path[0] === 'hooks', null),
             path
           ),
         };
@@ -2228,23 +2229,23 @@ export function attach(
 
       cleanedInspectedElement.context = cleanForBridge(
         cleanedInspectedElement.context,
-        isKeyedPathWhitelisted('context', false)
+        createIsPathWhitelisted(false, 'context')
       );
       cleanedInspectedElement.events = cleanForBridge(
         cleanedInspectedElement.events,
-        isKeyedPathWhitelisted('events', false)
+        createIsPathWhitelisted(false, 'events')
       );
       cleanedInspectedElement.hooks = cleanForBridge(
         cleanedInspectedElement.hooks,
-        isKeyedPathWhitelisted('hooks', true)
+        createIsPathWhitelisted(true, 'hooks')
       );
       cleanedInspectedElement.props = cleanForBridge(
         cleanedInspectedElement.props,
-        isKeyedPathWhitelisted('props', false)
+        createIsPathWhitelisted(false, 'props')
       );
       cleanedInspectedElement.state = cleanForBridge(
         cleanedInspectedElement.state,
-        isKeyedPathWhitelisted('state', false)
+        createIsPathWhitelisted(false, 'state')
       );
 
       return {
