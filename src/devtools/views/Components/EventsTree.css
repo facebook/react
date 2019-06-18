@@ -20,6 +20,10 @@
   display: flex;
 }
 
+.Name {
+  user-select: none;
+}
+
 .Empty {
   color: var(--color-dimmer);
   font-style: italic;

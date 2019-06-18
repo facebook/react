@@ -1,3 +1,5 @@
+// @flow
+
 import { copy } from 'clipboard-js';
 import React, { useCallback, useState } from 'react';
 import styles from './EventsTree.css';
@@ -7,14 +9,31 @@ import KeyValue from './KeyValue';
 import ExpandCollapseToggle from './ExpandCollapseToggle';
 import { serializeDataForCopy } from '../utils';
 
-type Props = {|
+import type { GetInspectedElementPath } from './InspectedElementContext';
+
+type InspectPath = (path: Array<string | number>) => void;
+
+type EventsTreeViewProps = {|
   events: Object,
+  getInspectedElementPath: GetInspectedElementPath,
+  id: number,
 |};
 
-function EventsTreeView({ events }: Props) {
+function EventsTreeView({
+  events,
+  getInspectedElementPath,
+  id,
+}: EventsTreeViewProps) {
   const handleCopy = useCallback(() => copy(serializeDataForCopy(events)), [
     events,
   ]);
+
+  const inspectPath = useCallback(
+    (path: Array<string | number>) => {
+      getInspectedElementPath(id, ['events', ...path]);
+    },
+    [getInspectedElementPath, id]
+  );
 
   return (
     <div className={styles.EventsTree}>
@@ -26,16 +45,26 @@ function EventsTreeView({ events }: Props) {
           </Button>
         }
       </div>
-      <InnerEventsTreeView events={events} />
+      <InnerEventsTreeView events={events} inspectPath={inspectPath} />
     </div>
   );
 }
 
-function InnerEventsTreeView({ events }: Props) {
+type InnerEventsTreeViewProps = {|
+  events: Object,
+  inspectPath: InspectPath,
+|};
+
+function InnerEventsTreeView({
+  events,
+  inspectPath,
+}: InnerEventsTreeViewProps) {
   return events.map((event, index) => (
     <EventComponentView
       key={index}
       displayName={event.displayName}
+      index={index}
+      inspectPath={inspectPath}
       props={event.props}
     />
   ));
@@ -43,11 +72,19 @@ function InnerEventsTreeView({ events }: Props) {
 
 type EventComponentViewProps = {|
   displayName: string,
+  index: number,
+  inspectPath: InspectPath,
   props: null | Object,
 |};
 
-function EventComponentView({ displayName, props }: EventComponentViewProps) {
+function EventComponentView({
+  displayName,
+  index,
+  inspectPath,
+  props,
+}: EventComponentViewProps) {
   const [isOpen, setIsOpen] = useState(false);
+
   let eventComponentProps = null;
   // eslint-disable-next-line no-unused-vars
   let children;
@@ -74,8 +111,9 @@ function EventComponentView({ displayName, props }: EventComponentViewProps) {
             <KeyValue
               key={name}
               depth={1}
+              inspectPath={inspectPath}
               name={name}
-              path={[name]}
+              path={[index]}
               value={(eventComponentProps: any)[name]}
             />
           ))}

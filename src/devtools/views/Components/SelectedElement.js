@@ -336,7 +336,13 @@ function InspectedElementView({
         inspectPath={inspectContextPath}
         overrideValueFn={overrideContextFn}
       />
-      {events !== null && events.length > 0 && <EventsTree events={events} />}
+      {events !== null && events.length > 0 && (
+        <EventsTree
+          events={events}
+          getInspectedElementPath={getInspectedElementPath}
+          id={id}
+        />
+      )}
 
       {ownerID === null && owners !== null && owners.length > 0 && (
         <div className={styles.Owners}>

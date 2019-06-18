@@ -2149,25 +2149,37 @@ export function attach(
     });
   }
 
-  function createIsPathWhitelisted(isHooksPath: boolean, key: string | null) {
+  function createIsPathWhitelisted(
+    key: string | null,
+    secondaryCategory: 'events' | 'hooks' | null
+  ) {
     // This function helps prevent previously-inspected paths from being dehydrated in updates.
     // This is important to avoid a bad user experience where expanded toggles collapse on update.
     return function isPathWhitelisted(path: Array<string | number>): boolean {
-      // Dehydrating the 'subHooks' property makes the HooksTree UI a lot more complicated,
-      // so it's easiest for now if we just don't break on this boundary.
-      // We can always dehydrate a level deeper (in the value object).
-      if (isHooksPath) {
-        if (path.length === 1) {
-          // Never dehydrate the hooks object at the top level.
-          return true;
-        }
-        if (
-          path[path.length - 1] === 'subHooks' ||
-          path[path.length - 2] === 'subHooks'
-        ) {
-          // Never dehydrate the subHooks array
-          return true;
-        }
+      switch (secondaryCategory) {
+        case 'events':
+          if (path.length <= 2) {
+            // Never dehydrate the "hooks" object at the top level (becaues it's always just an array).
+            return true;
+          }
+          break;
+        case 'hooks':
+          if (path.length === 1) {
+            // Never dehydrate the "hooks" object at the top levels.
+            return true;
+          }
+          if (
+            path[path.length - 1] === 'subHooks' ||
+            path[path.length - 2] === 'subHooks'
+          ) {
+            // Dehydrating the 'subHooks' property makes the HooksTree UI a lot more complicated,
+            // so it's easiest for now if we just don't break on this boundary.
+            // We can always dehydrate a level deeper (in the value object).
+            return true;
+          }
+          break;
+        default:
+          break;
       }
 
       let current =
@@ -2195,6 +2207,13 @@ export function attach(
       if (path != null) {
         mergeInspectedPaths(path);
 
+        let secondaryCategory = null;
+        if (path[0] === 'events') {
+          secondaryCategory = 'events';
+        } else if (path[0] === 'hooks') {
+          secondaryCategory = 'hooks';
+        }
+
         // If this element has not been updated since it was last inspected,
         // we can just return the subset of data in the newly-inspected path.
         return {
@@ -2206,7 +2225,7 @@ export function attach(
               ((mostRecentlyInspectedElement: any): InspectedElement),
               path
             ),
-            createIsPathWhitelisted(path[0] === 'hooks', null),
+            createIsPathWhitelisted(null, secondaryCategory),
             path
           ),
         };
@@ -2246,23 +2265,23 @@ export function attach(
       const cleanedInspectedElement = { ...mostRecentlyInspectedElement };
       cleanedInspectedElement.context = cleanForBridge(
         cleanedInspectedElement.context,
-        createIsPathWhitelisted(false, 'context')
+        createIsPathWhitelisted('context', null)
       );
       cleanedInspectedElement.events = cleanForBridge(
         cleanedInspectedElement.events,
-        createIsPathWhitelisted(false, 'events')
+        createIsPathWhitelisted('events', 'events')
       );
       cleanedInspectedElement.hooks = cleanForBridge(
         cleanedInspectedElement.hooks,
-        createIsPathWhitelisted(true, 'hooks')
+        createIsPathWhitelisted('hooks', 'hooks')
       );
       cleanedInspectedElement.props = cleanForBridge(
         cleanedInspectedElement.props,
-        createIsPathWhitelisted(false, 'props')
+        createIsPathWhitelisted('props', null)
       );
       cleanedInspectedElement.state = cleanForBridge(
         cleanedInspectedElement.state,
-        createIsPathWhitelisted(false, 'state')
+        createIsPathWhitelisted('state', null)
       );
 
       return {
