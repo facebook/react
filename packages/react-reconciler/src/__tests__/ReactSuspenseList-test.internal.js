@@ -128,6 +128,72 @@ describe('ReactSuspenseList', () => {
     );
   });
 
+  it('shows content independently in legacy mode regardless of option', async () => {
+    let A = createAsyncText('A');
+    let B = createAsyncText('B');
+    let C = createAsyncText('C');
+
+    function Foo() {
+      return (
+        <SuspenseList revealOrder="together">
+          <Suspense fallback={<Text text="Loading A" />}>
+            <A />
+          </Suspense>
+          <Suspense fallback={<Text text="Loading B" />}>
+            <B />
+          </Suspense>
+          <Suspense fallback={<Text text="Loading C" />}>
+            <C />
+          </Suspense>
+        </SuspenseList>
+      );
+    }
+
+    await A.resolve();
+
+    ReactNoop.renderLegacySyncRoot(<Foo />);
+
+    expect(Scheduler).toHaveYielded([
+      'A',
+      'Suspend! [B]',
+      'Loading B',
+      'Suspend! [C]',
+      'Loading C',
+    ]);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <Fragment>
+        <span>A</span>
+        <span>Loading B</span>
+        <span>Loading C</span>
+      </Fragment>,
+    );
+
+    await C.resolve();
+
+    expect(Scheduler).toFlushAndYield(['C']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <Fragment>
+        <span>A</span>
+        <span>Loading B</span>
+        <span>C</span>
+      </Fragment>,
+    );
+
+    await B.resolve();
+
+    expect(Scheduler).toFlushAndYield(['B']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <Fragment>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+      </Fragment>,
+    );
+  });
+
   it('displays all "together"', async () => {
     let A = createAsyncText('A');
     let B = createAsyncText('B');

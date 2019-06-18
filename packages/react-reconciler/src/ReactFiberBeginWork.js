@@ -2045,6 +2045,14 @@ function updateSuspenseListComponent(
 
   pushSuspenseContext(workInProgress, suspenseContext);
 
+  if ((workInProgress.mode & BatchedMode) === NoMode) {
+    // Outside of batched mode, SuspenseList doesn't work so we just
+    // use make it a noop by treating it as the default revealOrder.
+    workInProgress.effectTag |= DidCapture;
+    workInProgress.child = nextChildFibers;
+    return nextChildFibers;
+  }
+
   switch (revealOrder) {
     // TODO: For other reveal orders we'll need to split the nextChildFibers set.
     case 'together': {
