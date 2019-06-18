@@ -2221,6 +2221,9 @@ describe('Event responder: Press', () => {
       ref.current.dispatchEvent(createEvent('pointerup'));
       ref.current.dispatchEvent(createEvent('click', {preventDefault}));
       expect(preventDefault).toBeCalled();
+      expect(onPress).toHaveBeenCalledWith(
+        expect.objectContaining({defaultPrevented: true}),
+      );
     });
 
     it('deeply prevents native behaviour by default', () => {
@@ -2259,6 +2262,9 @@ describe('Event responder: Press', () => {
       ref.current.dispatchEvent(createEvent('pointerup'));
       ref.current.dispatchEvent(createEvent('click', {preventDefault}));
       expect(preventDefault).toBeCalled();
+      expect(onPress).toHaveBeenCalledWith(
+        expect.objectContaining({defaultPrevented: true}),
+      );
     });
 
     it('uses native behaviour for interactions with modifier keys', () => {
@@ -2283,6 +2289,9 @@ describe('Event responder: Press', () => {
           createEvent('click', {[modifierKey]: true, preventDefault}),
         );
         expect(preventDefault).not.toBeCalled();
+        expect(onPress).toHaveBeenCalledWith(
+          expect.objectContaining({defaultPrevented: false}),
+        );
       });
     });
 
@@ -2301,6 +2310,9 @@ describe('Event responder: Press', () => {
       ref.current.dispatchEvent(createEvent('pointerup'));
       ref.current.dispatchEvent(createEvent('click', {preventDefault}));
       expect(preventDefault).not.toBeCalled();
+      expect(onPress).toHaveBeenCalledWith(
+        expect.objectContaining({defaultPrevented: false}),
+      );
     });
   });
 
@@ -2839,11 +2851,11 @@ describe('Event responder: Press', () => {
       expect(onContextMenu).toHaveBeenCalledTimes(0);
     });
 
-    it('is not called if "disableContextMenu" is true', () => {
+    it('is still called if "preventContextMenu" is true', () => {
       const onContextMenu = jest.fn();
       const ref = React.createRef();
       const element = (
-        <Press disableContextMenu={true} onContextMenu={onContextMenu}>
+        <Press onContextMenu={onContextMenu} preventContextMenu={true}>
           <div ref={ref} />
         </Press>
       );
@@ -2852,7 +2864,10 @@ describe('Event responder: Press', () => {
         createEvent('pointerdown', {pointerType: 'mouse', button: 2}),
       );
       ref.current.dispatchEvent(createEvent('contextmenu'));
-      expect(onContextMenu).toHaveBeenCalledTimes(0);
+      expect(onContextMenu).toHaveBeenCalledTimes(1);
+      expect(onContextMenu).toHaveBeenCalledWith(
+        expect.objectContaining({defaultPrevented: true}),
+      );
     });
   });
 

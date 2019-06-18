@@ -37,9 +37,34 @@ const Button = (props) => (
 
 ```js
 type PressEvent = {
-  pointerType: 'mouse' | 'touch' | 'pen' | 'trackpad' | 'keyboard',
+  altKey: boolean,
+  ctrlKey: boolean,
+  defaultPrevented: boolean,
+  metaKey: boolean,
+  pageX: number,
+  pageY: number,
+  pointerType:
+    | 'mouse'
+    | 'touch'
+    | 'pen'
+    | 'trackpad'
+    | 'keyboard',
+  screenX: number,
+  screenY: number,
+  shiftKey: boolean,
   target: Element,
-  type: 'press' | 'pressstart' | 'pressend' | 'presschange' | 'pressmove' | 'longpress' | 'longpresschange' | 'contextmenu'
+  timeStamp: number,
+  type:
+    | 'press'
+    | 'pressstart'
+    | 'pressend'
+    | 'presschange'
+    | 'pressmove'
+    | 'longpress'
+    | 'longpresschange'
+    | 'contextmenu',
+  x: number,
+  y: number
 }
 
 type PressOffset = {
@@ -70,11 +95,6 @@ released before the threshold is exceeded.
 ### disabled: boolean = false
 
 Disables all `Press` events.
-
-### disableContextMenu: boolean = false
-
-Disables the native context menu so that it is never shown and `onContextMenu`
-is never called.
 
 ### onContextMenu: (e: PressEvent) => void
 
@@ -134,6 +154,11 @@ element before it is deactivated. Once deactivated, the pointer (still held
 down) can be moved back within the bounds of the element to reactivate it.
 Ensure you pass in a constant to reduce memory allocations. Default is `20` for
 each offset.
+
+### preventContextMenu: boolean = false
+
+Prevents the native context menu from being shown, but `onContextMenu`
+is still called.
 
 ### preventDefault: boolean = true
 
