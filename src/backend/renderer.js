@@ -2156,9 +2156,18 @@ export function attach(
       // Dehydrating the 'subHooks' property makes the HooksTree UI a lot more complicated,
       // so it's easiest for now if we just don't break on this boundary.
       // We can always dehydrate a level deeper (in the value object).
-      // TODO (hydration) This check depends on a LEVEL_THRESHOLD of 2 to avoid dehydrating a hook incorrectly.
-      if (isHooksPath && path[path.length - 1] === 'subHooks') {
-        return true;
+      if (isHooksPath) {
+        if (path.length === 1) {
+          // Never dehydrate the hooks object at the top level.
+          return true;
+        }
+        if (
+          path[path.length - 1] === 'subHooks' ||
+          path[path.length - 2] === 'subHooks'
+        ) {
+          // Never dehydrate the subHooks array
+          return true;
+        }
       }
 
       let current =

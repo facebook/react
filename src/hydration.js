@@ -41,9 +41,6 @@ type Dehydrated = {|
 //
 // Reducing this threshold will improve the speed of initial component inspection,
 // but may decrease the responsiveness of expanding objects/arrays to inspect further.
-//
-// Note that reducing the threshold to below 2 effectively breaks the inspected hooks interface.
-// It is only safe to dehydrate hooks within the "value" key, never within the "subHooks" array directly.
 const LEVEL_THRESHOLD = 2;
 
 /**

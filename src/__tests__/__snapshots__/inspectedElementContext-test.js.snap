@@ -129,7 +129,9 @@ exports[`InspectedElementContext should not dehydrate nested values until explic
       "id": 0,
       "isStateEditable": true,
       "name": "State",
-      "value": {},
+      "value": {
+        "foo": {}
+      },
       "subHooks": []
     }
   ],
@@ -153,7 +155,9 @@ exports[`InspectedElementContext should not dehydrate nested values until explic
       "id": 0,
       "isStateEditable": true,
       "name": "State",
-      "value": {},
+      "value": {
+        "foo": {}
+      },
       "subHooks": []
     }
   ],
@@ -181,7 +185,9 @@ exports[`InspectedElementContext should not dehydrate nested values until explic
       "id": 0,
       "isStateEditable": true,
       "name": "State",
-      "value": {},
+      "value": {
+        "foo": {}
+      },
       "subHooks": []
     }
   ],
@@ -213,7 +219,9 @@ exports[`InspectedElementContext should not dehydrate nested values until explic
       "id": 0,
       "isStateEditable": true,
       "name": "State",
-      "value": {},
+      "value": {
+        "foo": {}
+      },
       "subHooks": []
     }
   ],
