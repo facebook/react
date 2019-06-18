@@ -2286,12 +2286,12 @@ describe('Event responder: Press', () => {
       });
     });
 
-    it('uses native behaviour if preventDefault is false', () => {
+    it('uses native behaviour if preventNativeDefault is false', () => {
       const onPress = jest.fn();
       const preventDefault = jest.fn();
       const ref = React.createRef();
       const element = (
-        <Press onPress={onPress} preventDefault={false}>
+        <Press onPress={onPress} preventNativeDefault={false}>
           <a href="#" ref={ref} />
         </Press>
       );
@@ -2839,11 +2839,11 @@ describe('Event responder: Press', () => {
       expect(onContextMenu).toHaveBeenCalledTimes(0);
     });
 
-    it('is not called if "disableContextMenu" is true', () => {
+    it('is still called if "disableNativeContextMenu" is true', () => {
       const onContextMenu = jest.fn();
       const ref = React.createRef();
       const element = (
-        <Press disableContextMenu={true} onContextMenu={onContextMenu}>
+        <Press disableNativeContextMenu={true} onContextMenu={onContextMenu}>
           <div ref={ref} />
         </Press>
       );
@@ -2852,14 +2852,14 @@ describe('Event responder: Press', () => {
         createEvent('pointerdown', {pointerType: 'mouse', button: 2}),
       );
       ref.current.dispatchEvent(createEvent('contextmenu'));
-      expect(onContextMenu).toHaveBeenCalledTimes(0);
+      expect(onContextMenu).toHaveBeenCalledTimes(1);
     });
   });
 
-  it('should work correctly with stopPropagation set to true', () => {
+  it('should work correctly with "disableNativePropagation" set to true', () => {
     const ref = React.createRef();
     const element = (
-      <Press stopPropagation={true}>
+      <Press disableNativePropagation={true}>
         <div ref={ref} />
       </Press>
     );

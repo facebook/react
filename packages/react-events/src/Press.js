@@ -19,7 +19,9 @@ import {DiscreteEvent, UserBlockingEvent} from 'shared/ReactTypes';
 
 type PressProps = {
   disabled: boolean,
-  disableContextMenu: boolean,
+  preventNativeDefault: boolean,
+  disableNativeContextMenu: boolean,
+  disableNativePropagation: boolean,
   delayLongPress: number,
   delayPressEnd: number,
   delayPressStart: number,
@@ -38,8 +40,6 @@ type PressProps = {
     bottom: number,
     left: number,
   },
-  preventDefault: boolean,
-  stopPropagation: boolean,
 };
 
 type PressState = {
@@ -651,7 +651,7 @@ const PressResponder = {
     const nativeEvent: any = event.nativeEvent;
     const isPressed = state.isPressed;
 
-    if (props.stopPropagation === true) {
+    if (props.disableNativePropagation === true) {
       nativeEvent.stopPropagation();
     }
     switch (type) {
@@ -728,14 +728,11 @@ const PressResponder = {
       }
 
       case 'contextmenu': {
-        if (props.disableContextMenu) {
+        if (props.disableNativeContextMenu === true) {
           // Skip dispatching of onContextMenu below
           nativeEvent.preventDefault();
-          return;
-        }
-
-        if (isPressed) {
-          if (props.preventDefault !== false) {
+        } else if (isPressed) {
+          if (props.preventNativeDefault !== false) {
             // Skip dispatching of onContextMenu below
             nativeEvent.preventDefault();
             return;
@@ -771,7 +768,7 @@ const PressResponder = {
     const isPressed = state.isPressed;
     const activePointerId = state.activePointerId;
 
-    if (props.stopPropagation === true) {
+    if (props.disableNativePropagation === true) {
       nativeEvent.stopPropagation();
     }
     switch (type) {
@@ -917,9 +914,9 @@ const PressResponder = {
             shiftKey,
           } = (nativeEvent: MouseEvent);
           // Check "open in new window/tab" and "open context menu" key modifiers
-          const preventDefault = props.preventDefault;
+          const preventNativeDefault = props.preventNativeDefault;
           if (
-            preventDefault !== false &&
+            preventNativeDefault !== false &&
             !shiftKey &&
             !metaKey &&
             !ctrlKey &&
