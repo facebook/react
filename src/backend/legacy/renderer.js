@@ -552,6 +552,8 @@ export function attach(
   let currentlyInspectedElementID: number | null = null;
   let currentlyInspectedPaths: Object = {};
 
+  // Track the intersection of currently inspected paths,
+  // so that we can send their data along if the element is re-rendered.
   function mergeInspectedPaths(path: Array<string | number>) {
     let current = currentlyInspectedPaths;
     path.forEach(key => {
@@ -563,6 +565,8 @@ export function attach(
   }
 
   function createIsPathWhitelisted(key: string) {
+    // This function helps prevent previously-inspected paths from being dehydrated in updates.
+    // This is important to avoid a bad user experience where expanded toggles collapse on update.
     return function isPathWhitelisted(path: Array<string | number>): boolean {
       let current = currentlyInspectedPaths[key];
       if (!current) {

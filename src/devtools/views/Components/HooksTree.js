@@ -23,12 +23,12 @@ type HooksTreeViewProps = {|
 |};
 
 export function HooksTreeView({ canEditHooks, hooks, id }: HooksTreeViewProps) {
-  const { getPath } = useContext(InspectedElementContext);
+  const { getInspectedElementPath } = useContext(InspectedElementContext);
   const inspectPath = useCallback(
     (path: Array<string | number>) => {
-      getPath(id, ['hooks', ...path]);
+      getInspectedElementPath(id, ['hooks', ...path]);
     },
-    [getPath, id]
+    [getInspectedElementPath, id]
   );
   const handleCopy = useCallback(() => copy(serializeHooksForCopy(hooks)), [
     hooks,
@@ -114,7 +114,9 @@ function HookView({
 
   if (hook.hasOwnProperty(meta.inspected)) {
     // This Hook is too deep and hasn't been hydrated.
-    // TODO (hydration) show UI to load its data.
+    if (__DEV__) {
+      console.warn('Unexpected dehydrated hook; this is a DevTools error.');
+    }
     return (
       <div className={styles.Hook}>
         <div className={styles.NameValueRow}>
@@ -123,8 +125,6 @@ function HookView({
       </div>
     );
   }
-
-  // TODO Add click and key handlers for toggling element open/close state.
 
   const isCustomHook = subHooks.length > 0;
 
@@ -218,8 +218,10 @@ function HookView({
         bridge.send('overrideHookState', {
           id,
           hookID,
-          // Hooks override function expects a relative path for the specified hook (id).
-          // This should not include the fake tree structure DevTools uses for display.
+          // Hooks override function expects a relative path for the specified hook (id),
+          // starting with its id within the (flat) hooks list structure.
+          // This relative path does not include the fake tree structure DevTools uses for display,
+          // so it's important that we remove that part of the path before sending the update.
           path: absolutePath.slice(path.length + 1),
           rendererID,
           value,

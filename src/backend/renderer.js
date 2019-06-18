@@ -2137,6 +2137,8 @@ export function attach(
     );
   }
 
+  // Track the intersection of currently inspected paths,
+  // so that we can send their data along if the element is re-rendered.
   function mergeInspectedPaths(path: Array<string | number>) {
     let current = currentlyInspectedPaths;
     path.forEach(key => {
@@ -2148,9 +2150,13 @@ export function attach(
   }
 
   function createIsPathWhitelisted(isHooksPath: boolean, key: string | null) {
+    // This function helps prevent previously-inspected paths from being dehydrated in updates.
+    // This is important to avoid a bad user experience where expanded toggles collapse on update.
     return function isPathWhitelisted(path: Array<string | number>): boolean {
       // Dehydrating the 'subHooks' property makes the HooksTree UI a lot more complicated,
       // so it's easiest for now if we just don't break on this boundary.
+      // We can always dehydrate a level deeper (in the value object).
+      // TODO (hydration) This check depends on a LEVEL_THRESHOLD of 2 to avoid dehydrating a hook incorrectly.
       if (isHooksPath && path[path.length - 1] === 'subHooks') {
         return true;
       }
@@ -2225,8 +2231,10 @@ export function attach(
         mergeInspectedPaths(path);
       }
 
+      // Clone before cleaning so that we preserve the full data.
+      // This will enable us to send patches without re-inspecting if hydrated paths are requested.
+      // (Reducing how often we shallow-render is a better DX for function components that use hooks.)
       const cleanedInspectedElement = { ...mostRecentlyInspectedElement };
-
       cleanedInspectedElement.context = cleanForBridge(
         cleanedInspectedElement.context,
         createIsPathWhitelisted(false, 'context')
@@ -2308,7 +2316,6 @@ export function attach(
     const fiber = findCurrentFiberUsingSlowPathById(id);
     if (fiber !== null) {
       if (typeof overrideHookState === 'function') {
-        console.log('[renderer] overrideHookState()', { path, value, index });
         overrideHookState(fiber, index, path, value);
       }
     }

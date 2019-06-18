@@ -1,7 +1,7 @@
 // @flow
 
 import typeof ReactTestRenderer from 'react-test-renderer';
-import type { GetPath } from 'src/devtools/views/Components/InspectedElementContext';
+import type { GetInspectedElementPath } from 'src/devtools/views/Components/InspectedElementContext';
 import type Bridge from 'src/bridge';
 import type Store from 'src/devtools/store';
 
@@ -81,8 +81,8 @@ describe('InspectedElementContext', () => {
     let didFinish = false;
 
     function Suspender({ target }) {
-      const { read } = React.useContext(InspectedElementContext);
-      const inspectedElement = read(id);
+      const { getInspectedElement } = React.useContext(InspectedElementContext);
+      const inspectedElement = getInspectedElement(id);
       expect(inspectedElement).toMatchSnapshot(`1: Inspected element ${id}`);
       didFinish = true;
       return null;
@@ -121,8 +121,8 @@ describe('InspectedElementContext', () => {
     let inspectedElement = null;
 
     function Suspender({ target }) {
-      const { read } = React.useContext(InspectedElementContext);
-      inspectedElement = read(id);
+      const { getInspectedElement } = React.useContext(InspectedElementContext);
+      inspectedElement = getInspectedElement(id);
       return null;
     }
 
@@ -189,8 +189,8 @@ describe('InspectedElementContext', () => {
     let inspectedElement = null;
 
     function Suspender({ target }) {
-      const { read } = React.useContext(InspectedElementContext);
-      inspectedElement = read(target);
+      const { getInspectedElement } = React.useContext(InspectedElementContext);
+      inspectedElement = getInspectedElement(target);
       return null;
     }
 
@@ -283,8 +283,8 @@ describe('InspectedElementContext', () => {
     let inspectedElement = null;
 
     function Suspender({ target }) {
-      const { read } = React.useContext(InspectedElementContext);
-      inspectedElement = read(id);
+      const { getInspectedElement } = React.useContext(InspectedElementContext);
+      inspectedElement = getInspectedElement(id);
       return null;
     }
 
@@ -371,8 +371,8 @@ describe('InspectedElementContext', () => {
     let didFinish = false;
 
     function Suspender({ target }) {
-      const { read } = React.useContext(InspectedElementContext);
-      const inspectedElement = read(id);
+      const { getInspectedElement } = React.useContext(InspectedElementContext);
+      const inspectedElement = getInspectedElement(id);
       expect(inspectedElement).toMatchSnapshot(`1: Inspected element ${id}`);
       didFinish = true;
       return null;
@@ -434,13 +434,13 @@ describe('InspectedElementContext', () => {
 
     const id = ((store.getElementIDAtIndex(0): any): number);
 
-    let getPath: GetPath = ((null: any): GetPath);
+    let getInspectedElementPath: GetInspectedElementPath = ((null: any): GetInspectedElementPath);
     let inspectedElement = null;
 
     function Suspender({ target }) {
       const context = React.useContext(InspectedElementContext);
-      getPath = context.getPath;
-      inspectedElement = context.read(target);
+      getInspectedElementPath = context.getInspectedElementPath;
+      inspectedElement = context.getInspectedElement(target);
       return null;
     }
 
@@ -458,13 +458,13 @@ describe('InspectedElementContext', () => {
         ),
       false
     );
-    expect(getPath).not.toBeNull();
+    expect(getInspectedElementPath).not.toBeNull();
     expect(inspectedElement).not.toBeNull();
     expect(inspectedElement).toMatchSnapshot('1: Initially inspect element');
 
     inspectedElement = null;
     TestUtils.act(() => {
-      getPath(id, ['props', 'nestedObject', 'a']);
+      getInspectedElementPath(id, ['props', 'nestedObject', 'a']);
       jest.runOnlyPendingTimers();
     });
     expect(inspectedElement).not.toBeNull();
@@ -472,7 +472,7 @@ describe('InspectedElementContext', () => {
 
     inspectedElement = null;
     TestUtils.act(() => {
-      getPath(id, ['props', 'nestedObject', 'a', 'b', 'c']);
+      getInspectedElementPath(id, ['props', 'nestedObject', 'a', 'b', 'c']);
       jest.runOnlyPendingTimers();
     });
     expect(inspectedElement).not.toBeNull();
@@ -482,7 +482,15 @@ describe('InspectedElementContext', () => {
 
     inspectedElement = null;
     TestUtils.act(() => {
-      getPath(id, ['props', 'nestedObject', 'a', 'b', 'c', 0, 'd']);
+      getInspectedElementPath(id, [
+        'props',
+        'nestedObject',
+        'a',
+        'b',
+        'c',
+        0,
+        'd',
+      ]);
       jest.runOnlyPendingTimers();
     });
     expect(inspectedElement).not.toBeNull();
@@ -492,7 +500,7 @@ describe('InspectedElementContext', () => {
 
     inspectedElement = null;
     TestUtils.act(() => {
-      getPath(id, ['hooks', 0, 'value']);
+      getInspectedElementPath(id, ['hooks', 0, 'value']);
       jest.runOnlyPendingTimers();
     });
     expect(inspectedElement).not.toBeNull();
@@ -500,7 +508,7 @@ describe('InspectedElementContext', () => {
 
     inspectedElement = null;
     TestUtils.act(() => {
-      getPath(id, ['hooks', 0, 'value', 'foo', 'bar']);
+      getInspectedElementPath(id, ['hooks', 0, 'value', 'foo', 'bar']);
       jest.runOnlyPendingTimers();
     });
     expect(inspectedElement).not.toBeNull();
@@ -542,13 +550,13 @@ describe('InspectedElementContext', () => {
 
     const id = ((store.getElementIDAtIndex(0): any): number);
 
-    let getPath: GetPath = ((null: any): GetPath);
+    let getInspectedElementPath: GetInspectedElementPath = ((null: any): GetInspectedElementPath);
     let inspectedElement = null;
 
     function Suspender({ target }) {
       const context = React.useContext(InspectedElementContext);
-      getPath = context.getPath;
-      inspectedElement = context.read(id);
+      getInspectedElementPath = context.getInspectedElementPath;
+      inspectedElement = context.getInspectedElement(id);
       return null;
     }
 
@@ -566,13 +574,13 @@ describe('InspectedElementContext', () => {
         ),
       false
     );
-    expect(getPath).not.toBeNull();
+    expect(getInspectedElementPath).not.toBeNull();
     expect(inspectedElement).not.toBeNull();
     expect(inspectedElement).toMatchSnapshot('1: Initially inspect element');
 
     inspectedElement = null;
     TestUtils.act(() => {
-      getPath(id, ['props', 'nestedObject', 'a']);
+      getInspectedElementPath(id, ['props', 'nestedObject', 'a']);
       jest.runOnlyPendingTimers();
     });
     expect(inspectedElement).not.toBeNull();
@@ -580,7 +588,7 @@ describe('InspectedElementContext', () => {
 
     inspectedElement = null;
     TestUtils.act(() => {
-      getPath(id, ['props', 'nestedObject', 'c']);
+      getInspectedElementPath(id, ['props', 'nestedObject', 'c']);
       jest.runOnlyPendingTimers();
     });
     expect(inspectedElement).not.toBeNull();
@@ -629,6 +637,7 @@ describe('InspectedElementContext', () => {
       ReactDOM.render(
         <Example
           nestedObject={{
+            value: 1,
             a: {
               value: 1,
               b: {
@@ -643,13 +652,13 @@ describe('InspectedElementContext', () => {
 
     const id = ((store.getElementIDAtIndex(0): any): number);
 
-    let getPath: GetPath = ((null: any): GetPath);
+    let getInspectedElementPath: GetInspectedElementPath = ((null: any): GetInspectedElementPath);
     let inspectedElement = null;
 
     function Suspender({ target }) {
       const context = React.useContext(InspectedElementContext);
-      getPath = context.getPath;
-      inspectedElement = context.read(id);
+      getInspectedElementPath = context.getInspectedElementPath;
+      inspectedElement = context.getInspectedElement(id);
       return null;
     }
 
@@ -667,7 +676,7 @@ describe('InspectedElementContext', () => {
         ),
       false
     );
-    expect(getPath).not.toBeNull();
+    expect(getInspectedElementPath).not.toBeNull();
     expect(inspectedElement).not.toBeNull();
     expect(inspectedElement).toMatchSnapshot('1: Initially inspect element');
 
@@ -675,6 +684,7 @@ describe('InspectedElementContext', () => {
       ReactDOM.render(
         <Example
           nestedObject={{
+            value: 2,
             a: {
               value: 2,
               b: {
@@ -689,7 +699,7 @@ describe('InspectedElementContext', () => {
 
     inspectedElement = null;
     TestUtils.act(() => {
-      getPath(id, ['props', 'nestedObject', 'a']);
+      getInspectedElementPath(id, ['props', 'nestedObject', 'a']);
       jest.runOnlyPendingTimers();
     });
     expect(inspectedElement).not.toBeNull();

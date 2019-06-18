@@ -22,9 +22,6 @@ type KeyValueProps = {|
   value: any,
 |};
 
-// TODO (hydration) Don't display meta objects.
-// Add event listener to request a "read" instead.
-
 export default function KeyValue({
   depth,
   inspectPath,

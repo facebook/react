@@ -26,12 +26,17 @@ import type {
 } from 'src/devtools/views/Components/types';
 import type { Resource, Thenable } from '../../cache';
 
-export type GetPath = (id: number, path: Array<string | number>) => void;
-export type Read = (id: number) => InspectedElementFrontend | null;
+export type GetInspectedElementPath = (
+  id: number,
+  path: Array<string | number>
+) => void;
+export type GetInspectedElement = (
+  id: number
+) => InspectedElementFrontend | null;
 
 type Context = {|
-  getPath: GetPath,
-  read: Read,
+  getInspectedElementPath: GetInspectedElementPath,
+  getInspectedElement: GetInspectedElement,
 |};
 
 const InspectedElementContext = createContext<Context>(((null: any): Context));
@@ -76,7 +81,8 @@ function InspectedElementContextController({ children }: Props) {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 
-  const getPath = useCallback<GetPath>(
+  // Ask the backend to fill in a "dehydrated" path; this will result in a "inspectedElement".
+  const getInspectedElementPath = useCallback<GetInspectedElementPath>(
     (id: number, path: Array<string | number>) => {
       const rendererID = store.getRendererIDForElement(id);
       bridge.send('inspectElement', { id, path, rendererID });
@@ -84,7 +90,7 @@ function InspectedElementContextController({ children }: Props) {
     [bridge, store]
   );
 
-  const read = useCallback<Read>(
+  const getInspectedElement = useCallback<GetInspectedElement>(
     (id: number) => {
       const element = store.getElementByID(id);
       if (element !== null) {
@@ -266,10 +272,10 @@ function InspectedElementContextController({ children }: Props) {
   }, [bridge, selectedElementID, store]);
 
   const value = useMemo(
-    () => ({ getPath, read }),
+    () => ({ getInspectedElement, getInspectedElementPath }),
     // InspectedElement is used to invalidate the cache and schedule an update with React.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [currentlyInspectedElement, getPath, read]
+    [currentlyInspectedElement, getInspectedElement, getInspectedElementPath]
   );
 
   return (
@@ -289,6 +295,8 @@ function hydrateHelper(
     if (path) {
       const { length } = path;
       if (length > 0) {
+        // Hydration helper requires full paths, but inspection dehydrates with relative paths.
+        // In that event it's important that we adjust the "cleaned" paths to match.
         cleaned = cleaned.map(cleanedPath => cleanedPath.slice(length));
       }
     }

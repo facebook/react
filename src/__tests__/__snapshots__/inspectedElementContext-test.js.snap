@@ -369,6 +369,7 @@ exports[`InspectedElementContext should not tear if hydration is requested after
   "hooks": null,
   "props": {
     "nestedObject": {
+      "value": 1,
       "a": {}
     }
   },
@@ -385,6 +386,7 @@ exports[`InspectedElementContext should not tear if hydration is requested after
   "hooks": null,
   "props": {
     "nestedObject": {
+      "value": 2,
       "a": {
         "value": 2,
         "b": {

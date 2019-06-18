@@ -25,7 +25,7 @@ import {
 
 import styles from './SelectedElement.css';
 
-import type { GetPath } from './InspectedElementContext';
+import type { GetInspectedElementPath } from './InspectedElementContext';
 import type { Element, InspectedElement } from './types';
 import type { ElementType } from 'src/types';
 
@@ -39,7 +39,9 @@ export default function SelectedElement(_: Props) {
   const store = useContext(StoreContext);
   const { dispatch: modalDialogDispatch } = useContext(ModalDialogContext);
 
-  const { getPath, read } = useContext(InspectedElementContext);
+  const { getInspectedElementPath, getInspectedElement } = useContext(
+    InspectedElementContext
+  );
 
   const element =
     inspectedElementID !== null
@@ -47,7 +49,7 @@ export default function SelectedElement(_: Props) {
       : null;
 
   const inspectedElement =
-    inspectedElementID != null ? read(inspectedElementID) : null;
+    inspectedElementID != null ? getInspectedElement(inspectedElementID) : null;
 
   const highlightElement = useCallback(() => {
     if (element !== null && inspectedElementID !== null) {
@@ -202,10 +204,10 @@ export default function SelectedElement(_: Props) {
       {inspectedElement !== null && (
         <InspectedElementView
           key={
-            inspectedElementID /* Ensure state resets between seleted Elements */
+            inspectedElementID /* Force reset when seleted Element changes */
           }
           element={element}
-          getPath={getPath}
+          getInspectedElementPath={getInspectedElementPath}
           inspectedElement={inspectedElement}
         />
       )}
@@ -217,7 +219,7 @@ export type InspectPath = (path: Array<string | number>) => void;
 
 type InspectedElementViewProps = {|
   element: Element,
-  getPath: GetPath,
+  getInspectedElementPath: GetInspectedElementPath,
   inspectedElement: InspectedElement,
 |};
 
@@ -225,7 +227,7 @@ const IS_SUSPENDED = 'Suspended';
 
 function InspectedElementView({
   element,
-  getPath,
+  getInspectedElementPath,
   inspectedElement,
 }: InspectedElementViewProps) {
   const { id, type } = element;
@@ -247,21 +249,21 @@ function InspectedElementView({
 
   const inspectContextPath = useCallback(
     (path: Array<string | number>) => {
-      getPath(id, ['context', ...path]);
+      getInspectedElementPath(id, ['context', ...path]);
     },
-    [getPath, id]
+    [getInspectedElementPath, id]
   );
   const inspectPropsPath = useCallback(
     (path: Array<string | number>) => {
-      getPath(id, ['props', ...path]);
+      getInspectedElementPath(id, ['props', ...path]);
     },
-    [getPath, id]
+    [getInspectedElementPath, id]
   );
   const inspectStatePath = useCallback(
     (path: Array<string | number>) => {
-      getPath(id, ['state', ...path]);
+      getInspectedElementPath(id, ['state', ...path]);
     },
-    [getPath, id]
+    [getInspectedElementPath, id]
   );
 
   let overrideContextFn = null;
