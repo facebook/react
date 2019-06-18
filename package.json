@@ -36,6 +36,7 @@
     "build:extension": "cross-env NODE_ENV=production yarn run build:extension:chrome && yarn run build:extension:firefox",
     "build:extension:dev": "cross-env NODE_ENV=development yarn run build:extension:chrome && yarn run build:extension:firefox",
     "build:extension:chrome": "cross-env NODE_ENV=production node ./shells/browser/chrome/build",
+    "build:extension:chrome:crx": "cross-env NODE_ENV=production node ./shells/browser/chrome/build --crx",
     "build:extension:chrome:dev": "cross-env NODE_ENV=development node ./shells/browser/chrome/build",
     "build:extension:firefox": "cross-env NODE_ENV=production node ./shells/browser/firefox/build",
     "build:extension:firefox:dev": "cross-env NODE_ENV=development node ./shells/browser/firefox/build",
@@ -90,6 +91,7 @@
     "cli-spinners": "^1.0.0",
     "clipboard-js": "^0.3.6",
     "cross-env": "^5.2.0",
+    "crx": "^5.0.0",
     "css-loader": "^1.0.1",
     "error-stack-parser": "^2.0.2",
     "es6-symbol": "3.0.2",
@@ -149,6 +151,7 @@
     "web-ext": "^3.0.0",
     "webpack": "^4.26.0",
     "webpack-cli": "^3.1.2",
-    "webpack-dev-server": "^3.3.1"
+    "webpack-dev-server": "^3.3.1",
+    "yargs": "^13.2.4"
   }
 }
