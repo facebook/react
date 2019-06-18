@@ -16,27 +16,32 @@ import {
   StrictMode,
   Suspense,
 } from 'react-is';
-import { getDisplayName } from './utils';
+import { getDisplayName, getInObject, setInObject } from './utils';
 
 export const meta = {
-  name: Symbol('name'),
-  type: Symbol('type'),
+  inspectable: Symbol('inspectable'),
   inspected: Symbol('inspected'),
-  meta: Symbol('meta'),
-  proto: Symbol('proto'),
+  name: Symbol('name'),
+  readonly: Symbol('readonly'),
+  size: Symbol('size'),
+  type: Symbol('type'),
 };
+
+type Dehydrated = {|
+  inspectable: boolean,
+  name: string | null,
+  readonly?: boolean,
+  size?: number,
+  type: string,
+|};
 
 // This threshold determines the depth at which the bridge "dehydrates" nested data.
 // Dehydration means that we don't serialize the data for e.g. postMessage or stringify,
 // unless the frontend explicitly requests it (e.g. a user clicks to expand a props object).
-// We tried reducing this value from 2 to 1 to improve performance:
-// https://github.com/facebook/react-devtools/issues/1200
-// But this caused problems with the Profiler's interaction tracing output.
-// Because React mutates Fibers, profiling data that is dehydrated for old commits–
-// will not be available later from within the Profiler.
-// This impacts props/state as well as Interactions.
-// https://github.com/facebook/react-devtools/issues/1262
-const LEVEL_THRESHOLD = 6;
+//
+// Reducing this threshold will improve the speed of initial component inspection,
+// but may decrease the responsiveness of expanding objects/arrays to inspect further.
+const LEVEL_THRESHOLD = 2;
 
 /**
  * Get a enhanced/artificial type string based on the object instance
@@ -84,29 +89,33 @@ function getPropType(data: Object): string | null {
  */
 function createDehydrated(
   type: string,
+  inspectable: boolean,
   data: Object,
-  cleaned: Array<Array<string>>,
-  path: Array<string>
-): Object {
-  const meta = {};
-
-  if (type === 'array' || type === 'typed_array') {
-    meta.length = data.length;
-  }
-  if (type === 'iterator' || type === 'typed_array') {
-    meta.readOnly = true;
-  }
-
+  cleaned: Array<Array<string | number>>,
+  path: Array<string | number>
+): Dehydrated {
   cleaned.push(path);
 
-  return {
+  const dehydrated: Dehydrated = {
+    inspectable,
     type,
-    meta,
     name:
       !data.constructor || data.constructor.name === 'Object'
         ? ''
         : data.constructor.name,
   };
+
+  if (type === 'array' || type === 'typed_array') {
+    dehydrated.size = data.length;
+  } else if (type === 'object') {
+    dehydrated.size = Object.keys(data).length;
+  }
+
+  if (type === 'iterator' || type === 'typed_array') {
+    dehydrated.readonly = true;
+  }
+
+  return dehydrated;
 }
 
 /**
@@ -129,16 +138,18 @@ function createDehydrated(
  */
 export function dehydrate(
   data: Object,
-  cleaned: Array<Array<string>>,
-  path?: Array<string> = [],
+  cleaned: Array<Array<string | number>>,
+  path: Array<string | number>,
+  isPathWhitelisted: (path: Array<string | number>) => boolean,
   level?: number = 0
-): string | Object {
+): string | Dehydrated | { [key: string]: string | Dehydrated } {
   const type = getPropType(data);
 
   switch (type) {
     case 'html_element':
       cleaned.push(path);
       return {
+        inspectable: false,
         name: data.tagName,
         type: 'html_element',
       };
@@ -146,6 +157,7 @@ export function dehydrate(
     case 'function':
       cleaned.push(path);
       return {
+        inspectable: false,
         name: data.name,
         type: 'function',
       };
@@ -158,8 +170,9 @@ export function dehydrate(
     case 'symbol':
       cleaned.push(path);
       return {
-        type: 'symbol',
+        inspectable: false,
         name: data.toString(),
+        type: 'symbol',
       };
 
     // React Elements aren't very inspector-friendly,
@@ -167,6 +180,7 @@ export function dehydrate(
     case 'react_element':
       cleaned.push(path);
       return {
+        inspectable: false,
         name: getDisplayNameForReactElement(data),
         type: 'react_element',
       };
@@ -176,48 +190,55 @@ export function dehydrate(
     case 'data_view':
       cleaned.push(path);
       return {
-        type,
+        inspectable: false,
         name: type === 'data_view' ? 'DataView' : 'ArrayBuffer',
-        meta: {
-          length: data.byteLength,
-          uninspectable: true,
-        },
+        size: data.byteLength,
+        type,
       };
 
     case 'array':
-      if (level > LEVEL_THRESHOLD) {
-        return createDehydrated(type, data, cleaned, path);
+      const arrayPathCheck = isPathWhitelisted(path);
+      if (level >= LEVEL_THRESHOLD && !arrayPathCheck) {
+        return createDehydrated(type, true, data, cleaned, path);
       }
       return data.map((item, i) =>
-        dehydrate(item, cleaned, path.concat([i]), level + 1)
+        dehydrate(
+          item,
+          cleaned,
+          path.concat([i]),
+          isPathWhitelisted,
+          arrayPathCheck ? 1 : level + 1
+        )
       );
 
     case 'typed_array':
     case 'iterator':
-      return createDehydrated(type, data, cleaned, path);
+      return createDehydrated(type, false, data, cleaned, path);
+
     case 'date':
       cleaned.push(path);
       return {
+        inspectable: false,
         name: data.toString(),
         type: 'date',
-        meta: {
-          uninspectable: true,
-        },
       };
+
     case 'object':
-      if (level > LEVEL_THRESHOLD) {
-        return createDehydrated(type, data, cleaned, path);
+      const objectPathCheck = isPathWhitelisted(path);
+      if (level >= LEVEL_THRESHOLD && !objectPathCheck) {
+        return createDehydrated(type, true, data, cleaned, path);
       } else {
-        const res = {};
+        const object = {};
         for (let name in data) {
-          res[name] = dehydrate(
+          object[name] = dehydrate(
             data[name],
             cleaned,
             path.concat([name]),
-            level + 1
+            isPathWhitelisted,
+            objectPathCheck ? 1 : level + 1
           );
         }
-        return res;
+        return object;
       }
 
     default:
@@ -225,24 +246,49 @@ export function dehydrate(
   }
 }
 
-export function hydrate(data: Object, cleaned: Array<Array<string>>): Object {
-  cleaned.forEach((path: Array<string>) => {
-    const last = path.pop();
-    const reduced: Object = path.reduce(
-      (object: Object, attr: string) => (object ? object[attr] : (null: any)),
-      data
-    );
-    if (!reduced || !reduced[last]) {
+export function fillInPath(
+  object: Object,
+  path: Array<string | number>,
+  value: any
+) {
+  const target = getInObject(object, path);
+  if (target != null) {
+    delete target[meta.inspectable];
+    delete target[meta.inspected];
+    delete target[meta.name];
+    delete target[meta.readonly];
+    delete target[meta.size];
+    delete target[meta.type];
+  }
+  setInObject(object, path, value);
+}
+
+export function hydrate(
+  object: Object,
+  cleaned: Array<Array<string | number>>
+): Object {
+  cleaned.forEach((path: Array<string | number>) => {
+    const length = path.length;
+    const last = path[length - 1];
+    const parent = getInObject(object, path.slice(0, length - 1));
+    if (!parent || !parent[last]) {
       return;
     }
-    const replace: { [key: Symbol]: boolean | string } = {};
-    replace[meta.name] = reduced[last].name;
-    replace[meta.type] = reduced[last].type;
-    replace[meta.meta] = reduced[last].meta;
-    replace[meta.inspected] = false;
-    reduced[last] = replace;
+
+    const value = parent[last];
+
+    // Replace the string keys with Symbols so they're non-enumerable.
+    const replaced: { [key: Symbol]: boolean | string } = {};
+    replaced[meta.inspectable] = !!value.inspectable;
+    replaced[meta.inspected] = false;
+    replaced[meta.name] = value.name;
+    replaced[meta.size] = value.size;
+    replaced[meta.readonly] = !!value.readonly;
+    replaced[meta.type] = value.type;
+
+    parent[last] = replaced;
   });
-  return data;
+  return object;
 }
 
 export function getDisplayNameForReactElement(

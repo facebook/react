@@ -215,6 +215,40 @@ export type InspectedElement = {|
   type: ElementType,
 |};
 
+export const InspectElementFullDataType = 'full-data';
+export const InspectElementNoChangeType = 'no-change';
+export const InspectElementNotFoundType = 'not-found';
+export const InspectElementHydratedPathType = 'hydrated-path';
+
+type InspectElementFullData = {|
+  id: number,
+  type: 'full-data',
+  value: InspectedElement,
+|};
+
+type InspectElementHydratedPath = {|
+  id: number,
+  type: 'hydrated-path',
+  path: Array<string | number>,
+  value: any,
+|};
+
+type InspectElementNoChange = {|
+  id: number,
+  type: 'no-change',
+|};
+
+type InspectElementNotFound = {|
+  id: number,
+  type: 'not-found',
+|};
+
+export type InspectedElementPayload =
+  | InspectElementFullData
+  | InspectElementHydratedPath
+  | InspectElementNoChange
+  | InspectElementNotFound;
+
 export type RendererInterface = {
   cleanup: () => void,
   findNativeNodesForFiberID: FindNativeNodesForFiberID,
@@ -226,7 +260,10 @@ export type RendererInterface = {
   getPathForElement: (id: number) => Array<PathFrame> | null,
   handleCommitFiberRoot: (fiber: Object, commitPriority?: number) => void,
   handleCommitFiberUnmount: (fiber: Object) => void,
-  inspectElement: (id: number) => InspectedElement | number | null,
+  inspectElement: (
+    id: number,
+    path?: Array<string | number>
+  ) => InspectedElementPayload,
   logElementToConsole: (id: number) => void,
   overrideSuspense: (id: number, forceFallback: boolean) => void,
   prepareViewElementSource: (id: number) => void,

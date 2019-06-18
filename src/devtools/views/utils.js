@@ -91,7 +91,7 @@ export function getMetaValueLabel(data: Object): string | null {
     case 'data_view':
     case 'array':
     case 'typed_array':
-      return `${name}[${data[meta.meta].length}]`;
+      return `${name}[${data[meta.size]}]`;
     default:
       return null;
   }

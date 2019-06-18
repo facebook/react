@@ -21,6 +21,7 @@ import { decorateMany, forceUpdate, restoreMany } from './utils';
 import type {
   DevToolsHook,
   GetFiberIDForNative,
+  InspectedElementPayload,
   NativeType,
   PathFrame,
   PathMatch,
@@ -548,16 +549,78 @@ export function attach(
     return stringID;
   }
 
-  function inspectElement(id: number): InspectedElement | null {
-    let result = inspectElementRaw(id);
-    if (result === null) {
-      return null;
+  let currentlyInspectedElementID: number | null = null;
+  let currentlyInspectedPaths: Object = {};
+
+  // Track the intersection of currently inspected paths,
+  // so that we can send their data along if the element is re-rendered.
+  function mergeInspectedPaths(path: Array<string | number>) {
+    let current = currentlyInspectedPaths;
+    path.forEach(key => {
+      if (!current[key]) {
+        current[key] = {};
+      }
+      current = current[key];
+    });
+  }
+
+  function createIsPathWhitelisted(key: string) {
+    // This function helps prevent previously-inspected paths from being dehydrated in updates.
+    // This is important to avoid a bad user experience where expanded toggles collapse on update.
+    return function isPathWhitelisted(path: Array<string | number>): boolean {
+      let current = currentlyInspectedPaths[key];
+      if (!current) {
+        return false;
+      }
+      for (let i = 0; i < path.length; i++) {
+        current = current[path[i]];
+        if (!current) {
+          return false;
+        }
+      }
+      return true;
+    };
+  }
+
+  function inspectElement(
+    id: number,
+    path?: Array<string | number>
+  ): InspectedElementPayload {
+    if (currentlyInspectedElementID !== id) {
+      currentlyInspectedElementID = id;
+      currentlyInspectedPaths = {};
     }
-    // TODO Review sanitization approach for the below inspectable values.
-    result.context = cleanForBridge(result.context);
-    result.props = cleanForBridge(result.props);
-    result.state = cleanForBridge(result.state);
-    return result;
+
+    const inspectedElement = inspectElementRaw(id);
+    if (inspectedElement === null) {
+      return {
+        id,
+        type: 'not-found',
+      };
+    }
+
+    if (path != null) {
+      mergeInspectedPaths(path);
+    }
+
+    inspectedElement.context = cleanForBridge(
+      inspectedElement.context,
+      createIsPathWhitelisted('context')
+    );
+    inspectedElement.props = cleanForBridge(
+      inspectedElement.props,
+      createIsPathWhitelisted('props')
+    );
+    inspectedElement.state = cleanForBridge(
+      inspectedElement.state,
+      createIsPathWhitelisted('state')
+    );
+
+    return {
+      id,
+      type: 'full-data',
+      value: inspectedElement,
+    };
   }
 
   function inspectElementRaw(id: number): InspectedElement | null {

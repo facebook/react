@@ -25,6 +25,7 @@ import {
 
 import styles from './SelectedElement.css';
 
+import type { GetInspectedElementPath } from './InspectedElementContext';
 import type { Element, InspectedElement } from './types';
 import type { ElementType } from 'src/types';
 
@@ -38,7 +39,9 @@ export default function SelectedElement(_: Props) {
   const store = useContext(StoreContext);
   const { dispatch: modalDialogDispatch } = useContext(ModalDialogContext);
 
-  const { read } = useContext(InspectedElementContext);
+  const { getInspectedElementPath, getInspectedElement } = useContext(
+    InspectedElementContext
+  );
 
   const element =
     inspectedElementID !== null
@@ -46,7 +49,7 @@ export default function SelectedElement(_: Props) {
       : null;
 
   const inspectedElement =
-    inspectedElementID != null ? read(inspectedElementID) : null;
+    inspectedElementID != null ? getInspectedElement(inspectedElementID) : null;
 
   const highlightElement = useCallback(() => {
     if (element !== null && inspectedElementID !== null) {
@@ -200,7 +203,11 @@ export default function SelectedElement(_: Props) {
 
       {inspectedElement !== null && (
         <InspectedElementView
+          key={
+            inspectedElementID /* Force reset when seleted Element changes */
+          }
           element={element}
+          getInspectedElementPath={getInspectedElementPath}
           inspectedElement={inspectedElement}
         />
       )}
@@ -208,8 +215,11 @@ export default function SelectedElement(_: Props) {
   );
 }
 
+export type InspectPath = (path: Array<string | number>) => void;
+
 type InspectedElementViewProps = {|
   element: Element,
+  getInspectedElementPath: GetInspectedElementPath,
   inspectedElement: InspectedElement,
 |};
 
@@ -217,6 +227,7 @@ const IS_SUSPENDED = 'Suspended';
 
 function InspectedElementView({
   element,
+  getInspectedElementPath,
   inspectedElement,
 }: InspectedElementViewProps) {
   const { id, type } = element;
@@ -235,6 +246,25 @@ function InspectedElementView({
   const { ownerID } = useContext(TreeStateContext);
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
+
+  const inspectContextPath = useCallback(
+    (path: Array<string | number>) => {
+      getInspectedElementPath(id, ['context', ...path]);
+    },
+    [getInspectedElementPath, id]
+  );
+  const inspectPropsPath = useCallback(
+    (path: Array<string | number>) => {
+      getInspectedElementPath(id, ['props', ...path]);
+    },
+    [getInspectedElementPath, id]
+  );
+  const inspectStatePath = useCallback(
+    (path: Array<string | number>) => {
+      getInspectedElementPath(id, ['state', ...path]);
+    },
+    [getInspectedElementPath, id]
+  );
 
   let overrideContextFn = null;
   let overridePropsFn = null;
@@ -279,6 +309,7 @@ function InspectedElementView({
       <InspectedElementTree
         label="props"
         data={props}
+        inspectPath={inspectPropsPath}
         overrideValueFn={overridePropsFn}
         showWhenEmpty
       />
@@ -294,6 +325,7 @@ function InspectedElementView({
         <InspectedElementTree
           label="state"
           data={state}
+          inspectPath={inspectStatePath}
           overrideValueFn={overrideStateFn}
         />
       )}
@@ -301,6 +333,7 @@ function InspectedElementView({
       <InspectedElementTree
         label="context"
         data={context}
+        inspectPath={inspectContextPath}
         overrideValueFn={overrideContextFn}
       />
       {events !== null && events.length > 0 && <EventsTree events={events} />}

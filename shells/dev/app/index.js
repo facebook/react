@@ -10,6 +10,7 @@ import {
 import DeeplyNestedComponents from './DeeplyNestedComponents';
 import EditableProps from './EditableProps';
 import ElementTypes from './ElementTypes';
+import Hydration from './Hydration';
 import InspectableElements from './InspectableElements';
 import InteractionTracing from './InteractionTracing';
 import PriorityLevels from './PriorityLevels';
@@ -36,6 +37,7 @@ function mountTestApp() {
   mountHelper(ToDoList);
   mountHelper(InteractionTracing);
   mountHelper(InspectableElements);
+  mountHelper(Hydration);
   mountHelper(ElementTypes);
   mountHelper(EditableProps);
   mountHelper(PriorityLevels);

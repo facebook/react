@@ -1,6 +1,6 @@
 // @flow
 
-import React, { useCallback } from 'react';
+import React from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 
@@ -15,14 +15,10 @@ export default function ExpandCollapseToggle({
   isOpen,
   setIsOpen,
 }: ExpandCollapseToggleProps) {
-  const handleClick = useCallback(() => {
-    setIsOpen(prevIsOpen => !prevIsOpen);
-  }, [setIsOpen]);
-
   return (
     <Button
       className={styles.ExpandCollapseToggle}
-      onClick={handleClick}
+      onClick={() => setIsOpen(prevIsOpen => !prevIsOpen)}
       title={`${isOpen ? 'Collapse' : 'Expand'} prop value`}
     >
       <ButtonIcon type={isOpen ? 'expanded' : 'collapsed'} />

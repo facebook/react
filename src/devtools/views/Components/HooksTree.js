@@ -7,11 +7,13 @@ import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import EditableValue from './EditableValue';
 import ExpandCollapseToggle from './ExpandCollapseToggle';
+import { InspectedElementContext } from './InspectedElementContext';
 import KeyValue from './KeyValue';
 import { serializeHooksForCopy } from '../utils';
 import styles from './HooksTree.css';
 import { meta } from '../../../hydration';
 
+import type { InspectPath } from './SelectedElement';
 import type { HooksNode, HooksTree } from 'src/backend/types';
 
 type HooksTreeViewProps = {|
@@ -21,6 +23,13 @@ type HooksTreeViewProps = {|
 |};
 
 export function HooksTreeView({ canEditHooks, hooks, id }: HooksTreeViewProps) {
+  const { getInspectedElementPath } = useContext(InspectedElementContext);
+  const inspectPath = useCallback(
+    (path: Array<string | number>) => {
+      getInspectedElementPath(id, ['hooks', ...path]);
+    },
+    [getInspectedElementPath, id]
+  );
   const handleCopy = useCallback(() => copy(serializeHooksForCopy(hooks)), [
     hooks,
   ]);
@@ -36,7 +45,13 @@ export function HooksTreeView({ canEditHooks, hooks, id }: HooksTreeViewProps) {
             <ButtonIcon type="copy" />
           </Button>
         </div>
-        <InnerHooksTreeView canEditHooks={canEditHooks} hooks={hooks} id={id} />
+        <InnerHooksTreeView
+          canEditHooks={canEditHooks}
+          hooks={hooks}
+          id={id}
+          inspectPath={inspectPath}
+          path={[]}
+        />
       </div>
     );
   }
@@ -46,12 +61,16 @@ type InnerHooksTreeViewProps = {|
   canEditHooks: boolean,
   hooks: HooksTree,
   id: number,
+  inspectPath: InspectPath,
+  path: Array<string | number>,
 |};
 
 export function InnerHooksTreeView({
   canEditHooks,
   hooks,
   id,
+  inspectPath,
+  path,
 }: InnerHooksTreeViewProps) {
   // $FlowFixMe "Missing type annotation for U" whatever that means
   return hooks.map((hook, index) => (
@@ -60,6 +79,8 @@ export function InnerHooksTreeView({
       canEditHooks={canEditHooks}
       hook={hooks[index]}
       id={id}
+      inspectPath={inspectPath}
+      path={path.concat([index])}
     />
   ));
 }
@@ -68,10 +89,17 @@ type HookViewProps = {|
   canEditHooks: boolean,
   hook: HooksNode,
   id: number,
-  path?: Array<any>,
+  inspectPath: InspectPath,
+  path: Array<string | number>,
 |};
 
-function HookView({ canEditHooks, hook, id, path = [] }: HookViewProps) {
+function HookView({
+  canEditHooks,
+  hook,
+  id,
+  inspectPath,
+  path,
+}: HookViewProps) {
   const { name, id: hookID, isStateEditable, subHooks, value } = hook;
 
   const bridge = useContext(BridgeContext);
@@ -86,7 +114,9 @@ function HookView({ canEditHooks, hook, id, path = [] }: HookViewProps) {
 
   if (hook.hasOwnProperty(meta.inspected)) {
     // This Hook is too deep and hasn't been hydrated.
-    // TODO: show UI to load its data.
+    if (__DEV__) {
+      console.warn('Unexpected dehydrated hook; this is a DevTools error.');
+    }
     return (
       <div className={styles.Hook}>
         <div className={styles.NameValueRow}>
@@ -95,8 +125,6 @@ function HookView({ canEditHooks, hook, id, path = [] }: HookViewProps) {
       </div>
     );
   }
-
-  // TODO Add click and key handlers for toggling element open/close state.
 
   const isCustomHook = subHooks.length > 0;
 
@@ -125,6 +153,24 @@ function HookView({ canEditHooks, hook, id, path = [] }: HookViewProps) {
   }
 
   if (isCustomHook) {
+    const subHooksView = Array.isArray(subHooks) ? (
+      <InnerHooksTreeView
+        canEditHooks={canEditHooks}
+        hooks={subHooks}
+        id={id}
+        inspectPath={inspectPath}
+        path={path.concat(['subHooks'])}
+      />
+    ) : (
+      <KeyValue
+        depth={1}
+        inspectPath={inspectPath}
+        name="subHooks"
+        path={path.concat(['subHooks'])}
+        value={subHooks}
+      />
+    );
+
     if (isComplexDisplayValue) {
       return (
         <div className={styles.Hook}>
@@ -135,12 +181,14 @@ function HookView({ canEditHooks, hook, id, path = [] }: HookViewProps) {
             </span>
           </div>
           <div className={styles.Children} hidden={!isOpen}>
-            <KeyValue depth={1} name="DebugValue" value={value} />
-            <InnerHooksTreeView
-              canEditHooks={canEditHooks}
-              hooks={subHooks}
-              id={id}
+            <KeyValue
+              depth={1}
+              inspectPath={inspectPath}
+              name="DebugValue"
+              path={path.concat(['value'])}
+              value={value}
             />
+            {subHooksView}
           </div>
         </div>
       );
@@ -156,11 +204,7 @@ function HookView({ canEditHooks, hook, id, path = [] }: HookViewProps) {
             <span className={styles.Value}>{displayValue}</span>
           </div>
           <div className={styles.Children} hidden={!isOpen}>
-            <InnerHooksTreeView
-              canEditHooks={canEditHooks}
-              hooks={subHooks}
-              id={id}
-            />
+            {subHooksView}
           </div>
         </div>
       );
@@ -169,12 +213,16 @@ function HookView({ canEditHooks, hook, id, path = [] }: HookViewProps) {
     let overrideValueFn = null;
     // TODO Maybe read editable value from debug hook?
     if (canEditHooks && isStateEditable) {
-      overrideValueFn = (path: Array<string | number>, value: any) => {
+      overrideValueFn = (absolutePath: Array<string | number>, value: any) => {
         const rendererID = store.getRendererIDForElement(id);
         bridge.send('overrideHookState', {
           id,
           hookID,
-          path,
+          // Hooks override function expects a relative path for the specified hook (id),
+          // starting with its id within the (flat) hooks list structure.
+          // This relative path does not include the fake tree structure DevTools uses for display,
+          // so it's important that we remove that part of the path before sending the update.
+          path: absolutePath.slice(path.length + 1),
           rendererID,
           value,
         });
@@ -186,8 +234,10 @@ function HookView({ canEditHooks, hook, id, path = [] }: HookViewProps) {
         <div className={styles.Hook}>
           <KeyValue
             depth={1}
+            inspectPath={inspectPath}
             name={name}
             overrideValueFn={overrideValueFn}
+            path={path.concat(['value'])}
             value={value}
           />
         </div>

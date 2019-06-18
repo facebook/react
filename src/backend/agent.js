@@ -42,6 +42,12 @@ type ElementAndRendererID = {|
   rendererID: number,
 |};
 
+type InspectElementParams = {|
+  id: number,
+  path?: Array<string | number>,
+  rendererID: number,
+|};
+
 type OverrideHookParams = {|
   id: number,
   hookID: number,
@@ -242,12 +248,12 @@ export default class Agent extends EventEmitter<{|
     }
   };
 
-  inspectElement = ({ id, rendererID }: ElementAndRendererID) => {
+  inspectElement = ({ id, path, rendererID }: InspectElementParams) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
     } else {
-      this._bridge.send('inspectedElement', renderer.inspectElement(id));
+      this._bridge.send('inspectedElement', renderer.inspectElement(id, path));
     }
   };
 

@@ -83,6 +83,6 @@ export type InspectedElement = {|
 // TODO: Add profiling type
 
 export type DehydratedData = {|
-  cleaned: Array<Array<string>>,
+  cleaned: Array<Array<string | number>>,
   data: Object,
 |};
