@@ -236,10 +236,21 @@ function InspectedElementContextController({ children }: Props) {
     // Update the $r variable.
     bridge.send('selectElement', { id: selectedElementID, rendererID });
 
-    const onInspectedElement = ({ id }: InspectedElementPayload) => {
+    const onInspectedElement = (data: InspectedElementPayload) => {
       // If this is the element we requested, wait a little bit and then ask for another update.
-      if (id === selectedElementID) {
-        timeoutID = setTimeout(sendRequest, 1000);
+      if (data.id === selectedElementID) {
+        switch (data.type) {
+          case 'no-change':
+          case 'full-data':
+          case 'hydrated-path':
+            if (timeoutID !== null) {
+              clearTimeout(timeoutID);
+            }
+            timeoutID = setTimeout(sendRequest, 1000);
+            break;
+          default:
+            break;
+        }
       }
     };
 

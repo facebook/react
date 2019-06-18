@@ -613,7 +613,7 @@ describe('InspectedElementContext', () => {
 
     TestUtils.act(() => {
       inspectedElement = null;
-      jest.runOnlyPendingTimers();
+      jest.advanceTimersByTime(1000);
       expect(inspectedElement).not.toBeNull();
       expect(inspectedElement).toMatchSnapshot('4: update inspected element');
     });
