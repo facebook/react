@@ -15,6 +15,8 @@
 
 export let requestHostCallback;
 export let cancelHostCallback;
+export let requestHostTimeout;
+export let cancelHostTimeout;
 export let shouldYieldToHost;
 export let getCurrentTime;
 export let forceFrameRate;
@@ -88,6 +90,7 @@ if (
   // If this accidentally gets imported in a non-browser environment, e.g. JavaScriptCore,
   // fallback to a naive implementation.
   let _callback = null;
+  let _timeoutID = null;
   const _flushCallback = function() {
     if (_callback !== null) {
       try {
@@ -112,6 +115,12 @@ if (
   };
   cancelHostCallback = function() {
     _callback = null;
+  };
+  requestHostTimeout = function(cb, ms) {
+    _timeoutID = setTimeout(cb, ms);
+  };
+  cancelHostTimeout = function() {
+    clearTimeout(_timeoutID);
   };
   shouldYieldToHost = function() {
     return false;
@@ -140,6 +149,8 @@ if (
   let isMessageEventScheduled = false;
 
   let isAnimationFrameScheduled = false;
+
+  let timeoutID = -1;
 
   let frameDeadline = 0;
   // We start out assuming that we run at 30fps but then the heuristic tracking
@@ -268,5 +279,16 @@ if (
   cancelHostCallback = function() {
     scheduledHostCallback = null;
     isMessageEventScheduled = false;
+  };
+
+  requestHostTimeout = function(callback, ms) {
+    timeoutID = localSetTimeout(() => {
+      callback(getCurrentTime());
+    }, ms);
+  };
+
+  cancelHostTimeout = function() {
+    localClearTimeout(timeoutID);
+    timeoutID = -1;
   };
 }

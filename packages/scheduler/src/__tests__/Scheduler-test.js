@@ -395,4 +395,201 @@ describe('Scheduler', () => {
       ImmediatePriority,
     ]);
   });
+
+  describe('delayed tasks', () => {
+    it('schedules a delayed task', () => {
+      scheduleCallback(NormalPriority, () => Scheduler.yieldValue('A'), {
+        delay: 1000,
+      });
+
+      // Should flush nothing, because delay hasn't elapsed
+      expect(Scheduler).toFlushAndYield([]);
+
+      // Advance time until right before the threshold
+      Scheduler.advanceTime(999);
+      // Still nothing
+      expect(Scheduler).toFlushAndYield([]);
+
+      // Advance time past the threshold
+      Scheduler.advanceTime(1);
+
+      // Now it should flush like normal
+      expect(Scheduler).toFlushAndYield(['A']);
+    });
+
+    it('schedules multiple delayed tasks', () => {
+      scheduleCallback(NormalPriority, () => Scheduler.yieldValue('C'), {
+        delay: 300,
+      });
+
+      scheduleCallback(NormalPriority, () => Scheduler.yieldValue('B'), {
+        delay: 200,
+      });
+
+      scheduleCallback(NormalPriority, () => Scheduler.yieldValue('D'), {
+        delay: 400,
+      });
+
+      scheduleCallback(NormalPriority, () => Scheduler.yieldValue('A'), {
+        delay: 100,
+      });
+
+      // Should flush nothing, because delay hasn't elapsed
+      expect(Scheduler).toFlushAndYield([]);
+
+      // Advance some time.
+      Scheduler.advanceTime(200);
+      // Both A and B are no longer delayed. They can now flush incrementally.
+      expect(Scheduler).toFlushAndYieldThrough(['A']);
+      expect(Scheduler).toFlushAndYield(['B']);
+
+      // Advance the rest
+      Scheduler.advanceTime(200);
+      expect(Scheduler).toFlushAndYield(['C', 'D']);
+    });
+
+    it('interleaves normal tasks and delayed tasks', () => {
+      // Schedule some high priority callbacks with a delay. When their delay
+      // elapses, they will be the most important callback in the queue.
+      scheduleCallback(
+        UserBlockingPriority,
+        () => Scheduler.yieldValue('Timer 2'),
+        {delay: 300},
+      );
+      scheduleCallback(
+        UserBlockingPriority,
+        () => Scheduler.yieldValue('Timer 1'),
+        {delay: 100},
+      );
+
+      // Schedule some tasks at default priority.
+      scheduleCallback(NormalPriority, () => {
+        Scheduler.yieldValue('A');
+        Scheduler.advanceTime(100);
+      });
+      scheduleCallback(NormalPriority, () => {
+        Scheduler.yieldValue('B');
+        Scheduler.advanceTime(100);
+      });
+      scheduleCallback(NormalPriority, () => {
+        Scheduler.yieldValue('C');
+        Scheduler.advanceTime(100);
+      });
+      scheduleCallback(NormalPriority, () => {
+        Scheduler.yieldValue('D');
+        Scheduler.advanceTime(100);
+      });
+
+      // Flush all the work. The timers should be interleaved with the
+      // other tasks.
+      expect(Scheduler).toFlushAndYield([
+        'A',
+        'Timer 1',
+        'B',
+        'C',
+        'Timer 2',
+        'D',
+      ]);
+    });
+
+    it('interleaves delayed tasks with time-sliced tasks', () => {
+      // Schedule some high priority callbacks with a delay. When their delay
+      // elapses, they will be the most important callback in the queue.
+      scheduleCallback(
+        UserBlockingPriority,
+        () => Scheduler.yieldValue('Timer 2'),
+        {delay: 300},
+      );
+      scheduleCallback(
+        UserBlockingPriority,
+        () => Scheduler.yieldValue('Timer 1'),
+        {delay: 100},
+      );
+
+      // Schedule a time-sliced task at default priority.
+      const tasks = [['A', 100], ['B', 100], ['C', 100], ['D', 100]];
+      const work = () => {
+        while (tasks.length > 0) {
+          const task = tasks.shift();
+          const [label, ms] = task;
+          Scheduler.advanceTime(ms);
+          Scheduler.yieldValue(label);
+          if (tasks.length > 0 && shouldYield()) {
+            return work;
+          }
+        }
+      };
+      scheduleCallback(NormalPriority, work);
+
+      // Flush all the work. The timers should be interleaved with the
+      // other tasks.
+      expect(Scheduler).toFlushAndYield([
+        'A',
+        'Timer 1',
+        'B',
+        'C',
+        'Timer 2',
+        'D',
+      ]);
+    });
+
+    it('schedules callback with both delay and timeout', () => {
+      scheduleCallback(
+        NormalPriority,
+        () => {
+          Scheduler.yieldValue('A');
+          Scheduler.advanceTime(100);
+        },
+        {delay: 100, timeout: 900},
+      );
+
+      Scheduler.advanceTime(99);
+      // Does not flush because delay has not elapsed
+      expect(Scheduler).toFlushAndYield([]);
+
+      // Delay has elapsed but task has not expired
+      Scheduler.advanceTime(1);
+      expect(Scheduler).toFlushExpired([]);
+
+      // Still not expired
+      Scheduler.advanceTime(899);
+      expect(Scheduler).toFlushExpired([]);
+
+      // Now it expires
+      Scheduler.advanceTime(1);
+      expect(Scheduler).toHaveYielded(['A']);
+    });
+
+    it('cancels a delayed task', () => {
+      // Schedule several tasks with the same delay
+      const options = {delay: 100};
+
+      scheduleCallback(
+        NormalPriority,
+        () => Scheduler.yieldValue('A'),
+        options,
+      );
+      const taskB = scheduleCallback(
+        NormalPriority,
+        () => Scheduler.yieldValue('B'),
+        options,
+      );
+      const taskC = scheduleCallback(
+        NormalPriority,
+        () => Scheduler.yieldValue('C'),
+        options,
+      );
+
+      // Cancel B before its delay has elapsed
+      expect(Scheduler).toFlushAndYield([]);
+      cancelCallback(taskB);
+
+      // Cancel C after its delay has elapsed
+      Scheduler.advanceTime(500);
+      cancelCallback(taskC);
+
+      // Only A should flush
+      expect(Scheduler).toFlushAndYield(['A']);
+    });
+  });
 });
