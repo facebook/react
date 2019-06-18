@@ -176,8 +176,11 @@ function HookView({
         <div className={styles.Hook}>
           <div className={styles.NameValueRow}>
             <ExpandCollapseToggle isOpen={isOpen} setIsOpen={setIsOpen} />
-            <span onClick={toggleIsOpen} className={styles.Name}>
-              {name}
+            <span
+              onClick={toggleIsOpen}
+              className={name !== '' ? styles.Name : styles.NameAnonymous}
+            >
+              {name || 'Anonymous'}
             </span>
           </div>
           <div className={styles.Children} hidden={!isOpen}>
@@ -197,8 +200,11 @@ function HookView({
         <div className={styles.Hook}>
           <div className={styles.NameValueRow}>
             <ExpandCollapseToggle isOpen={isOpen} setIsOpen={setIsOpen} />
-            <span onClick={toggleIsOpen} className={styles.Name}>
-              {name}
+            <span
+              onClick={toggleIsOpen}
+              className={name !== '' ? styles.Name : styles.NameAnonymous}
+            >
+              {name || 'Anonymous'}
             </span>{' '}
             {/* $FlowFixMe */}
             <span className={styles.Value}>{displayValue}</span>

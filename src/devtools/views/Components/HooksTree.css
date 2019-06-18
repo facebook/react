@@ -24,11 +24,18 @@
   display: flex;
 }
 
-.Name {
-  color: var(--color-dim);
+.Name,
+.NameAnonymous {
   flex: 0 0 auto;
   user-select: none;
 }
+.Name {
+  color: var(--color-dim);
+}
+.NameAnonymous {
+  color: var(--color-dimmer);
+}
+
 .EditableName {
   color: var(--color-attribute-name);
   flex: 0 0 auto;
