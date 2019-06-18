@@ -10,14 +10,11 @@
 .Content {
   padding: 0.5rem;
   user-select: none;
-}
-
-.ContentShort {
-  overflow-y: visible;
-}
-
-.ContentMaybeLong {
   overflow-y: auto;
+}
+
+.WhatChanged {
+  margin-bottom: 1rem;
 }
 
 .Component {
