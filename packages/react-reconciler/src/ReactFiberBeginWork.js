@@ -11,7 +11,10 @@ import type {ReactProviderType, ReactContext} from 'shared/ReactTypes';
 import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
-import type {SuspenseState} from './ReactFiberSuspenseComponent';
+import type {
+  SuspenseState,
+  SuspenseListState,
+} from './ReactFiberSuspenseComponent';
 import type {SuspenseContext} from './ReactFiberSuspenseContext';
 
 import checkPropTypes from 'prop-types/checkPropTypes';
@@ -2021,14 +2024,21 @@ function updateSuspenseListComponent(
     shouldForceFallback = true;
   }
 
+  let suspenseListState: null | SuspenseListState = null;
+
   if (shouldForceFallback) {
     suspenseContext = setShallowSuspenseContext(
       suspenseContext,
       ForceSuspenseFallback,
     );
-    workInProgress.memoizedState = true;
+    suspenseListState = {
+      didSuspend: true,
+    };
   } else {
-    let didForceFallback = current !== null && current.memoizedState === true;
+    let didForceFallback =
+      current !== null &&
+      current.memoizedState !== null &&
+      (current.memoizedState: SuspenseListState).didSuspend;
     if (didForceFallback) {
       // If we previously forced a fallback, we need to schedule work
       // on any nested boundaries to let them know to try to render
@@ -2039,7 +2049,6 @@ function updateSuspenseListComponent(
         renderExpirationTime,
       );
     }
-    workInProgress.memoizedState = false;
     suspenseContext = setDefaultShallowSuspenseContext(suspenseContext);
   }
 
@@ -2081,6 +2090,7 @@ function updateSuspenseListComponent(
       workInProgress.effectTag |= DidCapture;
     }
   }
+  workInProgress.memoizedState = suspenseListState;
   workInProgress.child = nextChildFibers;
   return nextChildFibers;
 }
