@@ -1,11 +1,11 @@
 # Press
 
 The `Press` module responds to press events on the element it wraps. Press
-events are dispatched for `mouse`, `pen`, `touch`, and `keyboard` pointer types.
-Press events are only dispatched for keyboards when pressing the Enter or
-Spacebar keys. If neither `onPress` nor `onLongPress` are called, this signifies
-that the press ended outside of the element hit bounds (i.e., the user aborted
-the press).
+events are dispatched for `mouse`, `pen`, `touch`, `trackpad`, and `keyboard`
+pointer types. Press events are only dispatched for keyboards when pressing the
+Enter or Spacebar keys. If neither `onPress` nor `onLongPress` are called, this
+signifies that the press ended outside of the element hit bounds (i.e., the user
+aborted the press).
 
 Press events do not propagate between `Press` event responders.
 
@@ -37,9 +37,9 @@ const Button = (props) => (
 
 ```js
 type PressEvent = {
-  pointerType: 'mouse' | 'touch' | 'pen' | 'keyboard',
+  pointerType: 'mouse' | 'touch' | 'pen' | 'trackpad' | 'keyboard',
   target: Element,
-  type: 'press' | 'pressstart' | 'pressend' | 'presschange' | 'pressmove' | 'longpress' | 'longpresschange'
+  type: 'press' | 'pressstart' | 'pressend' | 'presschange' | 'pressmove' | 'longpress' | 'longpresschange' | 'contextmenu'
 }
 
 type PressOffset = {
@@ -70,6 +70,16 @@ released before the threshold is exceeded.
 ### disabled: boolean = false
 
 Disables all `Press` events.
+
+### disableContextMenu: boolean = false
+
+Disables the native context menu so that it is never shown and `onContextMenu`
+is never called.
+
+### onContextMenu: (e: PressEvent) => void
+
+Called when the context menu is shown. When a press is active, the context menu
+will only be shown (and the press cancelled) if `preventDefault` is `false`.
 
 ### onLongPress: (e: PressEvent) => void
 
