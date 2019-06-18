@@ -2838,6 +2838,22 @@ describe('Event responder: Press', () => {
       ref.current.dispatchEvent(createEvent('contextmenu'));
       expect(onContextMenu).toHaveBeenCalledTimes(0);
     });
+
+    it('is not called if "disableContextMenu" is true', () => {
+      const onContextMenu = jest.fn();
+      const ref = React.createRef();
+      const element = (
+        <Press disableContextMenu={true} onContextMenu={onContextMenu}>
+          <div ref={ref} />
+        </Press>
+      );
+      ReactDOM.render(element, container);
+      ref.current.dispatchEvent(
+        createEvent('pointerdown', {pointerType: 'mouse', button: 2}),
+      );
+      ref.current.dispatchEvent(createEvent('contextmenu'));
+      expect(onContextMenu).toHaveBeenCalledTimes(0);
+    });
   });
 
   it('should work correctly with stopPropagation set to true', () => {

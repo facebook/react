@@ -19,6 +19,7 @@ import {DiscreteEvent, UserBlockingEvent} from 'shared/ReactTypes';
 
 type PressProps = {
   disabled: boolean,
+  disableContextMenu: boolean,
   delayLongPress: number,
   delayPressEnd: number,
   delayPressStart: number,
@@ -727,6 +728,12 @@ const PressResponder = {
       }
 
       case 'contextmenu': {
+        if (props.disableContextMenu) {
+          // Skip dispatching of onContextMenu below
+          nativeEvent.preventDefault();
+          return;
+        }
+
         if (isPressed) {
           if (props.preventDefault !== false) {
             // Skip dispatching of onContextMenu below
@@ -735,6 +742,7 @@ const PressResponder = {
           }
           dispatchCancel(event, context, props, state);
         }
+
         if (props.onContextMenu) {
           dispatchEvent(
             event,
