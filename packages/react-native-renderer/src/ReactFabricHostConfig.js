@@ -76,6 +76,7 @@ export type UpdatePayload = Object;
 
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
+export type EventResponder = any;
 
 // TODO: Remove this conditional once all changes have propagated.
 if (registerEventHandler) {

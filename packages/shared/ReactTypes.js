@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {EventResponder} from 'react-reconciler/src/ReactFiberHostConfig';
+
 export type ReactNode =
   | React$Element<any>
   | ReactPortal
@@ -81,54 +83,10 @@ export type RefObject = {|
   current: any,
 |};
 
-export type ReactEventResponderEventType =
-  | string
-  | {name: string, passive?: boolean};
-
-export type ReactEventResponder = {
-  targetEventTypes?: Array<ReactEventResponderEventType>,
-  rootEventTypes?: Array<ReactEventResponderEventType>,
-  createInitialState?: (props: null | Object) => Object,
-  allowMultipleHostChildren: boolean,
-  onEvent?: (
-    event: ReactResponderEvent,
-    context: ReactResponderContext,
-    props: null | Object,
-    state: null | Object,
-  ) => void,
-  onEventCapture?: (
-    event: ReactResponderEvent,
-    context: ReactResponderContext,
-    props: null | Object,
-    state: null | Object,
-  ) => void,
-  onRootEvent?: (
-    event: ReactResponderEvent,
-    context: ReactResponderContext,
-    props: null | Object,
-    state: null | Object,
-  ) => void,
-  onMount?: (
-    context: ReactResponderContext,
-    props: null | Object,
-    state: null | Object,
-  ) => void,
-  onUnmount?: (
-    context: ReactResponderContext,
-    props: null | Object,
-    state: null | Object,
-  ) => void,
-  onOwnershipChange?: (
-    context: ReactResponderContext,
-    props: null | Object,
-    state: null | Object,
-  ) => void,
-};
-
 export type ReactEventComponentInstance = {|
   currentFiber: mixed,
   props: null | Object,
-  responder: ReactEventResponder,
+  responder: EventResponder,
   rootEventTypes: null | Set<string>,
   rootInstance: mixed,
   state: null | Object,
@@ -138,7 +96,7 @@ export type ReactEventComponent = {|
   $$typeof: Symbol | number,
   displayName: string,
   props: null | Object,
-  responder: ReactEventResponder,
+  responder: EventResponder,
 |};
 
 export type ReactEventTarget = {|
@@ -147,65 +105,8 @@ export type ReactEventTarget = {|
   type: Symbol | number,
 |};
 
-type AnyNativeEvent = Event | KeyboardEvent | MouseEvent | Touch;
-
-export type PointerType =
-  | ''
-  | 'mouse'
-  | 'keyboard'
-  | 'pen'
-  | 'touch'
-  | 'trackpad';
-
-export type ReactResponderEvent = {
-  nativeEvent: AnyNativeEvent,
-  passive: boolean,
-  passiveSupported: boolean,
-  pointerId: null | number,
-  pointerType: PointerType,
-  target: Element | Document,
-  type: string,
-};
-
 export opaque type EventPriority = 0 | 1 | 2;
 
 export const DiscreteEvent: EventPriority = 0;
 export const UserBlockingEvent: EventPriority = 1;
 export const ContinuousEvent: EventPriority = 2;
-
-export type ReactResponderContext = {
-  dispatchEvent: (
-    eventObject: Object,
-    listener: (Object) => void,
-    eventPriority: EventPriority,
-  ) => void,
-  isTargetWithinElement: (
-    childTarget: Element | Document,
-    parentTarget: Element | Document,
-  ) => boolean,
-  isTargetWithinEventComponent: (Element | Document) => boolean,
-  isTargetWithinEventResponderScope: (Element | Document) => boolean,
-  isEventWithinTouchHitTarget: (event: ReactResponderEvent) => boolean,
-  addRootEventTypes: (
-    rootEventTypes: Array<ReactEventResponderEventType>,
-  ) => void,
-  removeRootEventTypes: (
-    rootEventTypes: Array<ReactEventResponderEventType>,
-  ) => void,
-  hasOwnership: () => boolean,
-  requestGlobalOwnership: () => boolean,
-  releaseOwnership: () => boolean,
-  setTimeout: (func: () => void, timeout: number) => number,
-  clearTimeout: (timerId: number) => void,
-  getFocusableElementsInScope(): Array<HTMLElement>,
-  getActiveDocument(): Document,
-  objectAssign: Function,
-  getEventCurrentTarget(event: ReactResponderEvent): Element,
-  getTimeStamp: () => number,
-  isTargetWithinHostComponent: (
-    target: Element | Document,
-    elementType: string,
-    deep: boolean,
-  ) => boolean,
-  continueLocalPropagation(): void,
-};

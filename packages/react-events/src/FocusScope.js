@@ -7,10 +7,11 @@
  * @flow
  */
 import type {
-  ReactResponderEvent,
-  ReactResponderContext,
-} from 'shared/ReactTypes';
-import React from 'react';
+  ReactDOMResponderEvent,
+  ReactDOMResponderContext,
+} from 'shared/ReactDOMTypes';
+
+import ReactDOM from 'react-dom';
 
 type FocusScopeProps = {
   autoFocus: Boolean,
@@ -35,7 +36,7 @@ function focusElement(element: ?HTMLElement) {
 }
 
 function getFirstFocusableElement(
-  context: ReactResponderContext,
+  context: ReactDOMResponderContext,
   state: FocusScopeState,
 ): ?HTMLElement {
   const elements = context.getFocusableElementsInScope();
@@ -55,8 +56,8 @@ const FocusScopeResponder = {
   },
   allowMultipleHostChildren: true,
   onEvent(
-    event: ReactResponderEvent,
-    context: ReactResponderContext,
+    event: ReactDOMResponderEvent,
+    context: ReactDOMResponderContext,
     props: FocusScopeProps,
     state: FocusScopeState,
   ) {
@@ -112,8 +113,8 @@ const FocusScopeResponder = {
     }
   },
   onRootEvent(
-    event: ReactResponderEvent,
-    context: ReactResponderContext,
+    event: ReactDOMResponderEvent,
+    context: ReactDOMResponderContext,
     props: FocusScopeProps,
     state: FocusScopeState,
   ) {
@@ -133,7 +134,7 @@ const FocusScopeResponder = {
     }
   },
   onMount(
-    context: ReactResponderContext,
+    context: ReactDOMResponderContext,
     props: FocusScopeProps,
     state: FocusScopeState,
   ): void {
@@ -146,7 +147,7 @@ const FocusScopeResponder = {
     }
   },
   onUnmount(
-    context: ReactResponderContext,
+    context: ReactDOMResponderContext,
     props: FocusScopeProps,
     state: FocusScopeState,
   ): void {
@@ -156,7 +157,7 @@ const FocusScopeResponder = {
   },
 };
 
-export default React.unstable_createEventComponent(
+export default ReactDOM.unstable_createEventComponent(
   FocusScopeResponder,
   'FocusScope',
 );
