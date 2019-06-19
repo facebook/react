@@ -23,21 +23,25 @@ describe('ReactFreshIntegration', () => {
   let container;
 
   beforeEach(() => {
-    jest.resetModules();
-    React = require('react');
-    ReactFreshRuntime = require('react-refresh/runtime');
-    ReactFreshRuntime.injectIntoGlobalHook(global);
-    ReactDOM = require('react-dom');
-    act = require('react-dom/test-utils').act;
-    container = document.createElement('div');
-    document.body.appendChild(container);
+    if (__DEV__) {
+      jest.resetModules();
+      React = require('react');
+      ReactFreshRuntime = require('react-refresh/runtime');
+      ReactFreshRuntime.injectIntoGlobalHook(global);
+      ReactDOM = require('react-dom');
+      act = require('react-dom/test-utils').act;
+      container = document.createElement('div');
+      document.body.appendChild(container);
+    }
   });
 
   afterEach(() => {
-    ReactDOM.unmountComponentAtNode(container);
-    // Ensure we don't leak memory by holding onto dead roots.
-    expect(ReactFreshRuntime._getMountedRootCount()).toBe(0);
-    document.body.removeChild(container);
+    if (__DEV__) {
+      ReactDOM.unmountComponentAtNode(container);
+      // Ensure we don't leak memory by holding onto dead roots.
+      expect(ReactFreshRuntime._getMountedRootCount()).toBe(0);
+      document.body.removeChild(container);
+    }
   });
 
   describe('with compiled destructuring', () => {

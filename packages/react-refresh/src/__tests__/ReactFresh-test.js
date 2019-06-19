@@ -22,24 +22,28 @@ describe('ReactFresh', () => {
   let container;
 
   beforeEach(() => {
-    jest.resetModules();
-    React = require('react');
-    ReactFreshRuntime = require('react-refresh/runtime');
-    ReactFreshRuntime.injectIntoGlobalHook(global);
-    ReactDOM = require('react-dom');
-    Scheduler = require('scheduler');
-    act = require('react-dom/test-utils').act;
-    createReactClass = require('create-react-class/factory')(
-      React.Component,
-      React.isValidElement,
-      new React.Component().updater,
-    );
-    container = document.createElement('div');
-    document.body.appendChild(container);
+    if (__DEV__) {
+      jest.resetModules();
+      React = require('react');
+      ReactFreshRuntime = require('react-refresh/runtime');
+      ReactFreshRuntime.injectIntoGlobalHook(global);
+      ReactDOM = require('react-dom');
+      Scheduler = require('scheduler');
+      act = require('react-dom/test-utils').act;
+      createReactClass = require('create-react-class/factory')(
+        React.Component,
+        React.isValidElement,
+        new React.Component().updater,
+      );
+      container = document.createElement('div');
+      document.body.appendChild(container);
+    }
   });
 
   afterEach(() => {
-    document.body.removeChild(container);
+    if (__DEV__) {
+      document.body.removeChild(container);
+    }
   });
 
   function prepare(version) {
@@ -3157,66 +3161,23 @@ describe('ReactFresh', () => {
   // or to stop at the current module because it's a component.
   // This can't and doesn't need to be 100% precise.
   it('can detect likely component types', () => {
-    expect(ReactFreshRuntime.isLikelyComponentType(false)).toBe(false);
-    expect(ReactFreshRuntime.isLikelyComponentType(null)).toBe(false);
-    expect(ReactFreshRuntime.isLikelyComponentType('foo')).toBe(false);
-
-    // We need to hit a balance here.
-    // If we lean towards assuming everything is a component,
-    // editing modules that export plain functions won't trigger
-    // a proper reload because we will bottle up the update.
-    // So we're being somewhat conservative.
-    expect(ReactFreshRuntime.isLikelyComponentType(() => {})).toBe(false);
-    expect(ReactFreshRuntime.isLikelyComponentType(function() {})).toBe(false);
-    expect(
-      ReactFreshRuntime.isLikelyComponentType(function lightenColor() {}),
-    ).toBe(false);
-    const loadUser = () => {};
-    expect(ReactFreshRuntime.isLikelyComponentType(loadUser)).toBe(false);
-    const useStore = () => {};
-    expect(ReactFreshRuntime.isLikelyComponentType(useStore)).toBe(false);
     function useTheme() {}
-    expect(ReactFreshRuntime.isLikelyComponentType(useTheme)).toBe(false);
-
-    // These seem like function components.
-    let Button = () => {};
-    expect(ReactFreshRuntime.isLikelyComponentType(Button)).toBe(true);
     function Widget() {}
-    expect(ReactFreshRuntime.isLikelyComponentType(Widget)).toBe(true);
-    let anon = (() => () => {})();
-    anon.displayName = 'Foo';
-    expect(ReactFreshRuntime.isLikelyComponentType(anon)).toBe(true);
 
-    // These seem like class components.
-    class Btn extends React.Component {}
-    class PureBtn extends React.PureComponent {}
-    expect(ReactFreshRuntime.isLikelyComponentType(Btn)).toBe(true);
-    expect(ReactFreshRuntime.isLikelyComponentType(PureBtn)).toBe(true);
-    expect(
-      ReactFreshRuntime.isLikelyComponentType(createReactClass({render() {}})),
-    ).toBe(true);
+    if (__DEV__) {
+      expect(ReactFreshRuntime.isLikelyComponentType(false)).toBe(false);
+      expect(ReactFreshRuntime.isLikelyComponentType(null)).toBe(false);
+      expect(ReactFreshRuntime.isLikelyComponentType('foo')).toBe(false);
 
-    // These don't.
-    class Figure {
-      move() {}
-    }
-    expect(ReactFreshRuntime.isLikelyComponentType(Figure)).toBe(false);
-    class Point extends Figure {}
-    expect(ReactFreshRuntime.isLikelyComponentType(Point)).toBe(false);
-
-    // Run the same tests without Babel.
-    // This tests real arrow functions and classes, as implemented in Node.
-
-    // eslint-disable-next-line no-new-func
-    new Function(
-      'global',
-      'React',
-      'ReactFreshRuntime',
-      'expect',
-      'createReactClass',
-      `
+      // We need to hit a balance here.
+      // If we lean towards assuming everything is a component,
+      // editing modules that export plain functions won't trigger
+      // a proper reload because we will bottle up the update.
+      // So we're being somewhat conservative.
       expect(ReactFreshRuntime.isLikelyComponentType(() => {})).toBe(false);
-      expect(ReactFreshRuntime.isLikelyComponentType(function() {})).toBe(false);
+      expect(ReactFreshRuntime.isLikelyComponentType(function() {})).toBe(
+        false,
+      );
       expect(
         ReactFreshRuntime.isLikelyComponentType(function lightenColor() {}),
       ).toBe(false);
@@ -3224,13 +3185,11 @@ describe('ReactFresh', () => {
       expect(ReactFreshRuntime.isLikelyComponentType(loadUser)).toBe(false);
       const useStore = () => {};
       expect(ReactFreshRuntime.isLikelyComponentType(useStore)).toBe(false);
-      function useTheme() {}
       expect(ReactFreshRuntime.isLikelyComponentType(useTheme)).toBe(false);
 
       // These seem like function components.
       let Button = () => {};
       expect(ReactFreshRuntime.isLikelyComponentType(Button)).toBe(true);
-      function Widget() {}
       expect(ReactFreshRuntime.isLikelyComponentType(Widget)).toBe(true);
       let anon = (() => () => {})();
       anon.displayName = 'Foo';
@@ -3242,7 +3201,9 @@ describe('ReactFresh', () => {
       expect(ReactFreshRuntime.isLikelyComponentType(Btn)).toBe(true);
       expect(ReactFreshRuntime.isLikelyComponentType(PureBtn)).toBe(true);
       expect(
-        ReactFreshRuntime.isLikelyComponentType(createReactClass({render() {}})),
+        ReactFreshRuntime.isLikelyComponentType(
+          createReactClass({render() {}}),
+        ),
       ).toBe(true);
 
       // These don't.
@@ -3252,7 +3213,57 @@ describe('ReactFresh', () => {
       expect(ReactFreshRuntime.isLikelyComponentType(Figure)).toBe(false);
       class Point extends Figure {}
       expect(ReactFreshRuntime.isLikelyComponentType(Point)).toBe(false);
-    `,
-    )(global, React, ReactFreshRuntime, expect, createReactClass);
+
+      // Run the same tests without Babel.
+      // This tests real arrow functions and classes, as implemented in Node.
+
+      // eslint-disable-next-line no-new-func
+      new Function(
+        'global',
+        'React',
+        'ReactFreshRuntime',
+        'expect',
+        'createReactClass',
+        `
+        expect(ReactFreshRuntime.isLikelyComponentType(() => {})).toBe(false);
+        expect(ReactFreshRuntime.isLikelyComponentType(function() {})).toBe(false);
+        expect(
+          ReactFreshRuntime.isLikelyComponentType(function lightenColor() {}),
+        ).toBe(false);
+        const loadUser = () => {};
+        expect(ReactFreshRuntime.isLikelyComponentType(loadUser)).toBe(false);
+        const useStore = () => {};
+        expect(ReactFreshRuntime.isLikelyComponentType(useStore)).toBe(false);
+        function useTheme() {}
+        expect(ReactFreshRuntime.isLikelyComponentType(useTheme)).toBe(false);
+
+        // These seem like function components.
+        let Button = () => {};
+        expect(ReactFreshRuntime.isLikelyComponentType(Button)).toBe(true);
+        function Widget() {}
+        expect(ReactFreshRuntime.isLikelyComponentType(Widget)).toBe(true);
+        let anon = (() => () => {})();
+        anon.displayName = 'Foo';
+        expect(ReactFreshRuntime.isLikelyComponentType(anon)).toBe(true);
+
+        // These seem like class components.
+        class Btn extends React.Component {}
+        class PureBtn extends React.PureComponent {}
+        expect(ReactFreshRuntime.isLikelyComponentType(Btn)).toBe(true);
+        expect(ReactFreshRuntime.isLikelyComponentType(PureBtn)).toBe(true);
+        expect(
+          ReactFreshRuntime.isLikelyComponentType(createReactClass({render() {}})),
+        ).toBe(true);
+
+        // These don't.
+        class Figure {
+          move() {}
+        }
+        expect(ReactFreshRuntime.isLikelyComponentType(Figure)).toBe(false);
+        class Point extends Figure {}
+        expect(ReactFreshRuntime.isLikelyComponentType(Point)).toBe(false);
+      `,
+      )(global, React, ReactFreshRuntime, expect, createReactClass);
+    }
   });
 });
