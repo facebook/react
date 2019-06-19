@@ -11,6 +11,8 @@
 import {enableSchedulerDebugging} from './SchedulerFeatureFlags';
 import {
   requestHostCallback,
+  requestHostTimeout,
+  cancelHostTimeout,
   shouldYieldToHost,
   getCurrentTime,
   forceFrameRate,
@@ -39,6 +41,7 @@ var IDLE_PRIORITY = maxSigned31BitInt;
 
 // Tasks are stored as a circular, doubly linked list.
 var firstTask = null;
+var firstDelayedTask = null;
 
 // Pausing the scheduler is useful for debugging.
 var isSchedulerPaused = false;
@@ -50,6 +53,7 @@ var currentPriorityLevel = NormalPriority;
 var isPerformingWork = false;
 
 var isHostCallbackScheduled = false;
+var isHostTimeoutScheduled = false;
 
 function flushTask(task, currentTime) {
   // Remove the task from the list before calling the callback. That way the
@@ -135,14 +139,62 @@ function flushTask(task, currentTime) {
   }
 }
 
+function advanceTimers(currentTime) {
+  // Check for tasks that are no longer delayed and add them to the queue.
+  if (firstDelayedTask !== null && firstDelayedTask.startTime <= currentTime) {
+    do {
+      const task = firstDelayedTask;
+      const next = task.next;
+      if (task === next) {
+        firstDelayedTask = null;
+      } else {
+        firstDelayedTask = next;
+        const previous = task.previous;
+        previous.next = next;
+        next.previous = previous;
+      }
+      task.next = task.previous = null;
+      insertScheduledTask(task, task.expirationTime);
+    } while (
+      firstDelayedTask !== null &&
+      firstDelayedTask.startTime <= currentTime
+    );
+  }
+}
+
+function handleTimeout(currentTime) {
+  isHostTimeoutScheduled = false;
+  advanceTimers(currentTime);
+
+  if (!isHostCallbackScheduled) {
+    if (firstTask !== null) {
+      isHostCallbackScheduled = true;
+      requestHostCallback(flushWork);
+    } else if (firstDelayedTask !== null) {
+      requestHostTimeout(
+        handleTimeout,
+        firstDelayedTask.startTime - currentTime,
+      );
+    }
+  }
+}
+
 function flushWork(hasTimeRemaining, initialTime) {
   // Exit right away if we're currently paused
   if (enableSchedulerDebugging && isSchedulerPaused) {
     return;
   }
 
-  // We'll need a new host callback the next time work is scheduled.
+  // We'll need a host callback the next time work is scheduled.
   isHostCallbackScheduled = false;
+  if (isHostTimeoutScheduled) {
+    // We scheduled a timeout but it's no longer needed. Cancel it.
+    isHostTimeoutScheduled = false;
+    cancelHostTimeout();
+  }
+
+  let currentTime = initialTime;
+  advanceTimers(currentTime);
 
   isPerformingWork = true;
   try {
@@ -150,7 +202,6 @@ function flushWork(hasTimeRemaining, initialTime) {
       // Flush all the expired callbacks without yielding.
       // TODO: Split flushWork into two separate functions instead of using
       // a boolean argument?
-      let currentTime = initialTime;
       while (
         firstTask !== null &&
         firstTask.expirationTime <= currentTime &&
@@ -158,14 +209,15 @@ function flushWork(hasTimeRemaining, initialTime) {
       ) {
         flushTask(firstTask, currentTime);
         currentTime = getCurrentTime();
+        advanceTimers(currentTime);
       }
     } else {
       // Keep flushing callbacks until we run out of time in the frame.
-      let currentTime = initialTime;
       if (firstTask !== null) {
         do {
           flushTask(firstTask, currentTime);
           currentTime = getCurrentTime();
+          advanceTimers(currentTime);
         } while (
           firstTask !== null &&
           !shouldYieldToHost() &&
@@ -174,7 +226,17 @@ function flushWork(hasTimeRemaining, initialTime) {
       }
     }
     // Return whether there's additional work
-    return firstTask !== null;
+    if (firstTask !== null) {
+      return true;
+    } else {
+      if (firstDelayedTask !== null) {
+        requestHostTimeout(
+          handleTimeout,
+          firstDelayedTask.startTime - currentTime,
+        );
+      }
+      return false;
+    }
   } finally {
     isPerformingWork = false;
   }
@@ -242,34 +304,41 @@ function unstable_wrapCallback(callback) {
   };
 }
 
-function unstable_scheduleCallback(priorityLevel, callback, options) {
-  var startTime = getCurrentTime();
+function timeoutForPriorityLevel(priorityLevel) {
+  switch (priorityLevel) {
+    case ImmediatePriority:
+      return IMMEDIATE_PRIORITY_TIMEOUT;
+    case UserBlockingPriority:
+      return USER_BLOCKING_PRIORITY;
+    case IdlePriority:
+      return IDLE_PRIORITY;
+    case LowPriority:
+      return LOW_PRIORITY_TIMEOUT;
+    case NormalPriority:
+    default:
+      return NORMAL_PRIORITY_TIMEOUT;
+  }
+}
 
+function unstable_scheduleCallback(priorityLevel, callback, options) {
+  var currentTime = getCurrentTime();
+
+  var startTime;
   var timeout;
-  if (
-    typeof options === 'object' &&
-    options !== null &&
-    typeof options.timeout === 'number'
-  ) {
-    timeout = options.timeout;
-  } else {
-    switch (priorityLevel) {
-      case ImmediatePriority:
-        timeout = IMMEDIATE_PRIORITY_TIMEOUT;
-        break;
-      case UserBlockingPriority:
-        timeout = USER_BLOCKING_PRIORITY;
-        break;
-      case IdlePriority:
-        timeout = IDLE_PRIORITY;
-        break;
-      case LowPriority:
-        timeout = LOW_PRIORITY_TIMEOUT;
-        break;
-      case NormalPriority:
-      default:
-        timeout = NORMAL_PRIORITY_TIMEOUT;
+  if (typeof options === 'object' && options !== null) {
+    var delay = options.delay;
+    if (typeof delay === 'number' && delay > 0) {
+      startTime = currentTime + delay;
+    } else {
+      startTime = currentTime;
     }
+    timeout =
+      typeof options.timeout === 'number'
+        ? options.timeout
+        : timeoutForPriorityLevel(priorityLevel);
+  } else {
+    timeout = timeoutForPriorityLevel(priorityLevel);
+    startTime = currentTime;
   }
 
   var expirationTime = startTime + timeout;
@@ -283,6 +352,34 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
     previous: null,
   };
 
+  if (startTime > currentTime) {
+    // This is a delayed task.
+    insertDelayedTask(newTask, startTime);
+    if (firstTask === null && firstDelayedTask === newTask) {
+      // All tasks are delayed, and this is the task with the earliest delay.
+      if (isHostTimeoutScheduled) {
+        // Cancel an existing timeout.
+        cancelHostTimeout();
+      } else {
+        isHostTimeoutScheduled = true;
+      }
+      // Schedule a timeout.
+      requestHostTimeout(handleTimeout, startTime - currentTime);
+    }
+  } else {
+    insertScheduledTask(newTask, expirationTime);
+    // Schedule a host callback, if needed. If we're already performing work,
+    // wait until the next time we yield.
+    if (!isHostCallbackScheduled && !isPerformingWork) {
+      isHostCallbackScheduled = true;
+      requestHostCallback(flushWork);
+    }
+  }
+
+  return newTask;
+}
+
+function insertScheduledTask(newTask, expirationTime) {
   // Insert the new task into the list, ordered first by its timeout, then by
   // insertion. So the new task is inserted after any other task the
   // same timeout
@@ -315,15 +412,39 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
     newTask.next = next;
     newTask.previous = previous;
   }
+}
 
-  // Schedule a host callback, if needed. If we're already performing work, wait
-  // until the next time we yield.
-  if (!isHostCallbackScheduled && !isPerformingWork) {
-    isHostCallbackScheduled = true;
-    requestHostCallback(flushWork);
+function insertDelayedTask(newTask, startTime) {
+  // Insert the new task into the list, ordered by its start time.
+  if (firstDelayedTask === null) {
+    // This is the first task in the list.
+    firstDelayedTask = newTask.next = newTask.previous = newTask;
+  } else {
+    var next = null;
+    var task = firstDelayedTask;
+    do {
+      if (startTime < task.startTime) {
+        // The new task times out before this one.
+        next = task;
+        break;
+      }
+      task = task.next;
+    } while (task !== firstDelayedTask);
+
+    if (next === null) {
+      // No task with a later timeout was found, which means the new task has
+      // the latest timeout in the list.
+      next = firstDelayedTask;
+    } else if (next === firstDelayedTask) {
+      // The new task has the earliest expiration in the entire list.
+      firstDelayedTask = newTask;
+    }
+
+    var previous = next.previous;
+    previous.next = next.previous = newTask;
+    newTask.next = next;
+    newTask.previous = previous;
   }
-
-  return newTask;
 }
 
 function unstable_pauseExecution() {
@@ -349,13 +470,17 @@ function unstable_cancelCallback(task) {
     return;
   }
 
-  if (next === task) {
-    // This is the only scheduled task. Clear the list.
-    firstTask = null;
+  if (task === next) {
+    if (task === firstTask) {
+      firstTask = null;
+    } else if (task === firstDelayedTask) {
+      firstDelayedTask = null;
+    }
   } else {
-    // Remove the task from its position in the list.
     if (task === firstTask) {
       firstTask = next;
+    } else if (task === firstDelayedTask) {
+      firstDelayedTask = next;
     }
     var previous = task.previous;
     previous.next = next;
@@ -370,9 +495,12 @@ function unstable_getCurrentPriorityLevel() {
 }
 
 function unstable_shouldYield() {
+  const currentTime = getCurrentTime();
+  advanceTimers(currentTime);
   return (
     (currentTask !== null &&
       firstTask !== null &&
+      firstTask.startTime <= currentTime &&
       firstTask.expirationTime < currentTask.expirationTime) ||
     shouldYieldToHost()
   );

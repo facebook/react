@@ -9,6 +9,8 @@
 
 let currentTime: number = 0;
 let scheduledCallback: ((boolean, number) => void) | null = null;
+let scheduledTimeout: (number => void) | null = null;
+let timeoutTime: number = -1;
 let yieldedValues: Array<mixed> | null = null;
 let expectedNumberOfYields: number = -1;
 let didStop: boolean = false;
@@ -20,6 +22,16 @@ export function requestHostCallback(callback: boolean => void) {
 
 export function cancelHostCallback(): void {
   scheduledCallback = null;
+}
+
+export function requestHostTimeout(callback: number => void, ms: number) {
+  scheduledTimeout = callback;
+  timeoutTime = currentTime + ms;
+}
+
+export function cancelHostTimeout(): void {
+  scheduledTimeout = null;
+  timeoutTime = -1;
 }
 
 export function shouldYieldToHost(): boolean {
@@ -49,6 +61,8 @@ export function reset() {
   }
   currentTime = 0;
   scheduledCallback = null;
+  scheduledTimeout = null;
+  timeoutTime = -1;
   yieldedValues = null;
   expectedNumberOfYields = -1;
   didStop = false;
@@ -159,6 +173,11 @@ export function yieldValue(value: mixed): void {
 export function advanceTime(ms: number) {
   currentTime += ms;
   if (!isFlushing) {
+    if (scheduledTimeout !== null && timeoutTime <= currentTime) {
+      scheduledTimeout(currentTime);
+      timeoutTime = -1;
+      scheduledTimeout = null;
+    }
     unstable_flushExpired();
   }
 }
