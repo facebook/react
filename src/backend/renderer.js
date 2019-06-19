@@ -479,7 +479,7 @@ export function attach(
       case IndeterminateComponent:
         return getDisplayName(resolvedType);
       case EventComponent:
-        return type.displayName || 'EventComponent';
+        return type.responder.displayName || 'EventComponent';
       case EventTarget:
         switch (getTypeSymbol(elementType.type)) {
           case EVENT_TARGET_TOUCH_HIT_NUMBER:
