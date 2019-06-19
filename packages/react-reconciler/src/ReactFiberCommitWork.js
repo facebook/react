@@ -730,11 +730,11 @@ function commitUnmount(current: Fiber): void {
       if (typeof instance.componentWillUnmount === 'function') {
         safelyCallComponentWillUnmount(current, instance);
       }
-      return;
+      break;
     }
     case HostComponent: {
       safelyDetachRef(current);
-      return;
+      break;
     }
     case HostPortal: {
       // TODO: this is recursive.
@@ -745,7 +745,7 @@ function commitUnmount(current: Fiber): void {
       } else if (supportsPersistence) {
         emptyPortalContainer(current);
       }
-      return;
+      break;
     }
     case EventComponent: {
       if (enableEventAPI) {
