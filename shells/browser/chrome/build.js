@@ -3,7 +3,7 @@
 const chalk = require('chalk');
 const { execSync } = require('child_process');
 const { existsSync } = require('fs');
-const { join, relative } = require('path');
+const { isAbsolute, join, relative } = require('path');
 const { argv } = require('yargs');
 const build = require('../shared/build');
 
@@ -21,8 +21,13 @@ const main = async () => {
 
   if (crx) {
     const cwd = join(__dirname, 'build');
-    const relativeKeyPath = join(relative(cwd, process.cwd()), keyPath);
-    execSync(`crx pack ./unpacked -o ReactDevTools.crx -p ${relativeKeyPath}`, {
+
+    let safeKeyPath = keyPath;
+    if (!isAbsolute(keyPath)) {
+      safeKeyPath = join(relative(cwd, process.cwd()), keyPath);
+    }
+
+    execSync(`crx pack ./unpacked -o ReactDevTools.crx -p ${safeKeyPath}`, {
       cwd,
     });
   }
