@@ -7,6 +7,7 @@
  * @flow
  */
 
+// NOTE: this line is changed in the RN build, see: copyRNShims in packaging.js
 import type {EventResponder} from 'react-reconciler/src/ReactFiberHostConfig';
 
 export type ReactNode =

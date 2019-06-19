@@ -13,6 +13,7 @@ import type {
   MeasureOnSuccessCallback,
   NativeMethodsMixinType,
   ReactNativeBaseComponentViewConfig,
+  ReactNativeEventResponder,
 } from './ReactNativeTypes';
 import type {ReactEventComponentInstance} from 'shared/ReactTypes';
 
@@ -76,7 +77,7 @@ export type UpdatePayload = Object;
 
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
-export type EventResponder = any;
+export type EventResponder = ReactNativeEventResponder;
 
 // TODO: Remove this conditional once all changes have propagated.
 if (registerEventHandler) {
