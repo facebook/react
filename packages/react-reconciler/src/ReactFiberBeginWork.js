@@ -2005,7 +2005,7 @@ function findLastContentRow(firstChild: null | Fiber): null | Fiber {
   return lastContentRow;
 }
 
-type SuspenseListRevealOrder = 'forwards' | 'together' | void;
+type SuspenseListRevealOrder = 'forwards' | 'backwards' | 'together' | void;
 
 function updateSuspenseListComponent(
   current: Fiber | null,
@@ -2055,6 +2055,7 @@ function updateSuspenseListComponent(
     );
     suspenseListState = {
       didSuspend: true,
+      isBackwards: false,
       rendering: null,
       last: null,
       tail: null,
@@ -2109,6 +2110,7 @@ function updateSuspenseListComponent(
         if (suspenseListState === null) {
           suspenseListState = {
             didSuspend: false,
+            isBackwards: false,
             rendering: null,
             last: lastContentRow,
             tail: tail,
@@ -2119,7 +2121,47 @@ function updateSuspenseListComponent(
       }
       break;
     }
-    // TODO: Add "backwards" option.
+    case 'backwards': {
+      // If need to force fallbacks in this pass we're just going to
+      // force the whole set to suspend so we don't have to do anything
+      // further here.
+      if (!shouldForceFallback) {
+        // We're going to find the first row that has existing content.
+        // At the same time we're going to reverse the list of everything
+        // we pass in the meantime. That's going to be our tail in reverse
+        // order.
+        let tail = null;
+        let row = nextChildFibers;
+        nextChildFibers = null;
+        while (row !== null) {
+          let currentRow = row.alternate;
+          // New rows can't be content rows.
+          if (currentRow !== null && !isShowingAnyFallbacks(currentRow)) {
+            // This is the beginning of the main content.
+            nextChildFibers = row;
+            break;
+          }
+          let nextRow = row.sibling;
+          row.sibling = tail;
+          tail = row;
+          row = nextRow;
+        }
+        // TODO: If nextChildFibers is null, we can continue on the tail immediately.
+        if (suspenseListState === null) {
+          suspenseListState = {
+            didSuspend: false,
+            isBackwards: true,
+            rendering: null,
+            last: null,
+            tail: tail,
+          };
+        } else {
+          suspenseListState.isBackwards = true;
+          suspenseListState.tail = tail;
+        }
+      }
+      break;
+    }
     case 'together': {
       break;
     }

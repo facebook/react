@@ -15,6 +15,7 @@ export type SuspenseState = {||};
 
 export type SuspenseListState = {|
   didSuspend: boolean,
+  isBackwards: boolean,
   // The currently rendering tail row.
   rendering: null | Fiber,
   // The last of the already rendered children.

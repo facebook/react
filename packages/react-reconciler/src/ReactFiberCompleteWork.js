@@ -957,13 +957,23 @@ function completeWork(
           if (!suspenseListState.didSuspend) {
             suspenseListState.didSuspend = isShowingAnyFallbacks(rendered);
           }
-          let previousSibling = suspenseListState.last;
-          if (previousSibling !== null) {
-            previousSibling.sibling = rendered;
-          } else {
+          if (suspenseListState.isBackwards) {
+            // The effect list of the backwards tail will have been added
+            // to the end. This breaks the guarantee that life-cycles fire in
+            // sibling order but that isn't a strong guarantee promised by React.
+            // Especially since these might also just pop in during future commits.
+            // Append to the beginning of the list.
+            rendered.sibling = workInProgress.child;
             workInProgress.child = rendered;
+          } else {
+            let previousSibling = suspenseListState.last;
+            if (previousSibling !== null) {
+              previousSibling.sibling = rendered;
+            } else {
+              workInProgress.child = rendered;
+            }
+            suspenseListState.last = rendered;
           }
-          suspenseListState.last = rendered;
         }
 
         if (suspenseListState !== null && suspenseListState.tail !== null) {
