@@ -1116,5 +1116,25 @@ describe('DOMEventResponderSystem', () => {
     buttonRef.current.dispatchEvent(createEvent('foo'));
     // No events shold fire, as there are no event components in the branch
     expect(eventLogs).toEqual([]);
+
+    const Test3 = () => {
+      React.unstable_useEvent(EventComponent.responder, {
+        onFoo: e => eventLogs.push('hook 2a'),
+      });
+      React.unstable_useEvent(EventComponent.responder, {
+        onFoo: e => eventLogs.push('hook 2b'),
+      });
+      return (
+        <EventComponent onFoo={e => eventLogs.push('should not fire')}>
+          <EventComponent onFoo={e => eventLogs.push('prop 2')}>
+            <button ref={buttonRef} />
+          </EventComponent>
+        </EventComponent>
+      );
+    };
+
+    ReactDOM.render(<Test3 />, container);
+    buttonRef.current.dispatchEvent(createEvent('foo'));
+    expect(eventLogs).toEqual(['prop 2', 'hook 2a', 'hook 2b']);
   });
 });
