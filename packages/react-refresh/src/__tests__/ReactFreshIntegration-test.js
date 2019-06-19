@@ -21,31 +21,22 @@ let freshPlugin = require('react-refresh/babel');
 
 describe('ReactFreshIntegration', () => {
   let container;
-  let lastRoot;
-  let scheduleHotUpdate;
 
   beforeEach(() => {
-    global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
-      supportsFiber: true,
-      inject: injected => {
-        scheduleHotUpdate = injected.scheduleHotUpdate;
-      },
-      onCommitFiberRoot: (id, root) => {
-        lastRoot = root;
-      },
-      onCommitFiberUnmount: () => {},
-    };
-
     jest.resetModules();
     React = require('react');
-    ReactDOM = require('react-dom');
     ReactFreshRuntime = require('react-refresh/runtime');
+    ReactFreshRuntime.injectIntoGlobalHook(global);
+    ReactDOM = require('react-dom');
     act = require('react-dom/test-utils').act;
     container = document.createElement('div');
     document.body.appendChild(container);
   });
 
   afterEach(() => {
+    ReactDOM.unmountComponentAtNode(container);
+    // Ensure we don't leak memory by holding onto dead roots.
+    expect(ReactFreshRuntime._getMountedRootCount()).toBe(0);
     document.body.removeChild(container);
   });
 
@@ -87,15 +78,15 @@ describe('ReactFreshIntegration', () => {
         ReactDOM.render(<Component />, container);
       });
       // Module initialization shouldn't be counted as a hot update.
-      expect(ReactFreshRuntime.prepareUpdate()).toBe(null);
+      expect(ReactFreshRuntime.performReactRefresh()).toBe(false);
     }
 
     function patch(source) {
       execute(source);
-      const hotUpdate = ReactFreshRuntime.prepareUpdate();
       act(() => {
-        scheduleHotUpdate(lastRoot, hotUpdate);
+        expect(ReactFreshRuntime.performReactRefresh()).toBe(true);
       });
+      expect(ReactFreshRuntime._getMountedRootCount()).toBe(1);
     }
 
     function __register__(type, id) {

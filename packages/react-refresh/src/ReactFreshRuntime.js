@@ -7,12 +7,18 @@
  * @flow
  */
 
+import type {Instance} from 'react-reconciler/src/ReactFiberHostConfig';
+import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
 import type {
   Family,
-  HotUpdate,
+  RefreshUpdate,
+  ScheduleRefresh,
+  FindHostInstancesForRefresh,
+  SetRefreshHandler,
 } from 'react-reconciler/src/ReactFiberHotReloading';
 
 import {REACT_MEMO_TYPE, REACT_FORWARD_REF_TYPE} from 'shared/ReactSymbols';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
 type Signature = {|
   ownKey: string,
@@ -38,9 +44,16 @@ WeakMap<any, Signature> | Map<any, Signature> = new PossiblyWeakMap();
 const familiesByType: // $FlowIssue
 WeakMap<any, Family> | Map<any, Family> = new PossiblyWeakMap();
 
-// This is cleared on every prepareUpdate() call.
+// This is cleared on every performReactRefresh() call.
 // It is an array of [Family, NextType] tuples.
 let pendingUpdates: Array<[Family, any]> = [];
+
+// This is injected by the renderer via DevTools global hook.
+let setRefreshHandler: null | SetRefreshHandler = null;
+let scheduleRefresh: null | ScheduleRefresh = null;
+let findHostInstancesForRefresh: null | FindHostInstancesForRefresh = null;
+
+let mountedRoots = new Set();
 
 function computeFullKey(signature: Signature): string {
   if (signature.fullKey !== null) {
@@ -123,9 +136,9 @@ function resolveFamily(type) {
   return familiesByType.get(type);
 }
 
-export function prepareUpdate(): HotUpdate | null {
+export function performReactRefresh(): boolean {
   if (pendingUpdates.length === 0) {
-    return null;
+    return false;
   }
 
   const staleFamilies = new Set();
@@ -149,11 +162,55 @@ export function prepareUpdate(): HotUpdate | null {
     }
   });
 
-  return {
-    resolveFamily,
+  const update: RefreshUpdate = {
     updatedFamilies,
     staleFamilies,
   };
+
+  if (typeof setRefreshHandler !== 'function') {
+    warningWithoutStack(
+      false,
+      'Could not find the setRefreshHandler() implementation. ' +
+        'This likely means that injectIntoGlobalHook() was either ' +
+        'called before the global DevTools hook was set up, or after the ' +
+        'renderer has already initialized. Please file an issue with a reproducing case.',
+    );
+    return false;
+  }
+
+  if (typeof scheduleRefresh !== 'function') {
+    warningWithoutStack(
+      false,
+      'Could not find the scheduleRefresh() implementation. ' +
+        'This likely means that injectIntoGlobalHook() was either ' +
+        'called before the global DevTools hook was set up, or after the ' +
+        'renderer has already initialized. Please file an issue with a reproducing case.',
+    );
+    return false;
+  }
+  const scheduleRefreshForRoot = scheduleRefresh;
+
+  // Even if there are no roots, set the handler on first update.
+  // This ensures that if *new* roots are mounted, they'll use the resolve handler.
+  setRefreshHandler(resolveFamily);
+
+  let didError = false;
+  let firstError = null;
+  mountedRoots.forEach(root => {
+    try {
+      scheduleRefreshForRoot(root, update);
+    } catch (err) {
+      if (!didError) {
+        didError = true;
+        firstError = err;
+      }
+      // Keep trying other roots.
+    }
+  });
+  if (didError) {
+    throw firstError;
+  }
+  return true;
 }
 
 export function register(type: any, id: string): void {
@@ -221,4 +278,98 @@ export function collectCustomHooksForSignature(type: any) {
 
 export function getFamilyByID(id: string): Family | void {
   return allFamiliesByID.get(id);
+}
+
+export function findAffectedHostInstances(
+  families: Array<Family>,
+): Set<Instance> {
+  if (typeof findHostInstancesForRefresh !== 'function') {
+    warningWithoutStack(
+      false,
+      'Could not find the findHostInstancesForRefresh() implementation. ' +
+        'This likely means that injectIntoGlobalHook() was either ' +
+        'called before the global DevTools hook was set up, or after the ' +
+        'renderer has already initialized. Please file an issue with a reproducing case.',
+    );
+    return new Set();
+  }
+  const findInstances = findHostInstancesForRefresh;
+  let affectedInstances = new Set();
+  mountedRoots.forEach(root => {
+    const instancesForRoot = findInstances(root, families);
+    instancesForRoot.forEach(inst => {
+      affectedInstances.add(inst);
+    });
+  });
+  return affectedInstances;
+}
+
+export function injectIntoGlobalHook(globalObject: any): void {
+  // For React Native, the global hook will be set up by require('react-devtools-core').
+  // That code will run before us. So we need to monkeypatch functions on existing hook.
+
+  // For React Web, the global hook will be set up by the extension.
+  // This will also run before us.
+  let hook = globalObject.__REACT_DEVTOOLS_GLOBAL_HOOK__;
+  if (hook === undefined) {
+    // However, if there is no DevTools extension, we'll need to set up the global hook ourselves.
+    // Note that in this case it's important that renderer code runs *after* this method call.
+    // Otherwise, the renderer will think that there is no global hook, and won't do the injection.
+    globalObject.__REACT_DEVTOOLS_GLOBAL_HOOK__ = hook = {
+      supportsFiber: true,
+      inject() {},
+      onCommitFiberRoot(id: mixed, root: FiberRoot) {},
+      onCommitFiberUnmount() {},
+    };
+  }
+
+  // Here, we just want to get a reference to scheduleRefresh.
+  const oldInject = hook.inject;
+  hook.inject = function(injected) {
+    findHostInstancesForRefresh = ((injected: any)
+      .findHostInstancesForRefresh: FindHostInstancesForRefresh);
+    scheduleRefresh = ((injected: any).scheduleRefresh: ScheduleRefresh);
+    setRefreshHandler = ((injected: any).setRefreshHandler: SetRefreshHandler);
+    return oldInject.apply(this, arguments);
+  };
+
+  // We also want to track currently mounted roots.
+  const oldOnCommitFiberRoot = hook.onCommitFiberRoot;
+  hook.onCommitFiberRoot = function(id: mixed, root: FiberRoot) {
+    const current = root.current;
+    const alternate = current.alternate;
+
+    // We need to determine whether this root has just (un)mounted.
+    // This logic is copy-pasted from similar logic in the DevTools backend.
+    // If this breaks with some refactoring, you'll want to update DevTools too.
+
+    if (alternate !== null) {
+      const wasMounted =
+        alternate.memoizedState != null &&
+        alternate.memoizedState.element != null;
+      const isMounted =
+        current.memoizedState != null && current.memoizedState.element != null;
+
+      if (!wasMounted && isMounted) {
+        // Mount a new root.
+        mountedRoots.add(root);
+      } else if (wasMounted && isMounted) {
+        // Update an existing root.
+        // This doesn't affect our mounted root Set.
+      } else if (wasMounted && !isMounted) {
+        // Unmount an existing root.
+        mountedRoots.delete(root);
+      }
+    } else {
+      // Mount a new root.
+      mountedRoots.add(root);
+    }
+
+    return oldOnCommitFiberRoot.apply(this, arguments);
+  };
+}
+
+// Exposed for testing.
+export function _getMountedRootCount() {
+  return mountedRoots.size;
 }

@@ -19,27 +19,13 @@ let act;
 
 describe('ReactFresh', () => {
   let container;
-  let lastRoot;
-  let findHostInstancesForHotUpdate;
-  let scheduleHotUpdate;
 
   beforeEach(() => {
-    global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
-      supportsFiber: true,
-      inject: injected => {
-        scheduleHotUpdate = injected.scheduleHotUpdate;
-        findHostInstancesForHotUpdate = injected.findHostInstancesForHotUpdate;
-      },
-      onCommitFiberRoot: (id, root) => {
-        lastRoot = root;
-      },
-      onCommitFiberUnmount: () => {},
-    };
-
     jest.resetModules();
     React = require('react');
-    ReactDOM = require('react-dom');
     ReactFreshRuntime = require('react-refresh/runtime');
+    ReactFreshRuntime.injectIntoGlobalHook(global);
+    ReactDOM = require('react-dom');
     Scheduler = require('scheduler');
     act = require('react-dom/test-utils').act;
     container = document.createElement('div');
@@ -65,8 +51,7 @@ describe('ReactFresh', () => {
 
   function patch(version) {
     const Component = version();
-    const hotUpdate = ReactFreshRuntime.prepareUpdate();
-    scheduleHotUpdate(lastRoot, hotUpdate);
+    ReactFreshRuntime.performReactRefresh();
     return Component;
   }
 
@@ -1919,7 +1904,7 @@ describe('ReactFresh', () => {
 
     ReactDOM.render(tree, container);
     const elements = container.querySelectorAll('section');
-    // Each tree above products exactly three <section> elements:
+    // Each tree above produces exactly three <section> elements:
     expect(elements.length).toBe(3);
     elements.forEach(el => {
       expect(el.dataset.color).toBe('blue');
@@ -3037,11 +3022,127 @@ describe('ReactFresh', () => {
 
   function testFindHostInstancesForFamilies(families, expectedNodes) {
     const foundInstances = Array.from(
-      findHostInstancesForHotUpdate(lastRoot, families),
+      ReactFreshRuntime.findAffectedHostInstances(families),
     );
     expect(foundInstances.length).toEqual(expectedNodes.length);
     foundInstances.forEach((node, i) => {
       expect(node).toBe(expectedNodes[i]);
     });
   }
+
+  it('can update multiple roots independently', () => {
+    if (__DEV__) {
+      // Declare the first version.
+      const HelloV1 = () => {
+        const [val, setVal] = React.useState(0);
+        return (
+          <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
+            {val}
+          </p>
+        );
+      };
+      __register__(HelloV1, 'Hello');
+
+      // Perform a hot update before any roots exist.
+      const HelloV2 = () => {
+        const [val, setVal] = React.useState(0);
+        return (
+          <p style={{color: 'red'}} onClick={() => setVal(val + 1)}>
+            {val}
+          </p>
+        );
+      };
+      __register__(HelloV2, 'Hello');
+      ReactFreshRuntime.performReactRefresh();
+
+      // Mount three roots.
+      let cont1 = document.createElement('div');
+      let cont2 = document.createElement('div');
+      let cont3 = document.createElement('div');
+      document.body.appendChild(cont1);
+      document.body.appendChild(cont2);
+      document.body.appendChild(cont3);
+      try {
+        ReactDOM.render(<HelloV1 id={1} />, cont1);
+        ReactDOM.render(<HelloV2 id={2} />, cont2);
+        ReactDOM.render(<HelloV1 id={3} />, cont3);
+
+        // Expect we see the V2 color.
+        expect(cont1.firstChild.style.color).toBe('red');
+        expect(cont2.firstChild.style.color).toBe('red');
+        expect(cont3.firstChild.style.color).toBe('red');
+        expect(cont1.firstChild.textContent).toBe('0');
+        expect(cont2.firstChild.textContent).toBe('0');
+        expect(cont3.firstChild.textContent).toBe('0');
+
+        // Bump the state for each of them.
+        act(() => {
+          cont1.firstChild.dispatchEvent(
+            new MouseEvent('click', {bubbles: true}),
+          );
+          cont2.firstChild.dispatchEvent(
+            new MouseEvent('click', {bubbles: true}),
+          );
+          cont3.firstChild.dispatchEvent(
+            new MouseEvent('click', {bubbles: true}),
+          );
+        });
+        expect(cont1.firstChild.style.color).toBe('red');
+        expect(cont2.firstChild.style.color).toBe('red');
+        expect(cont3.firstChild.style.color).toBe('red');
+        expect(cont1.firstChild.textContent).toBe('1');
+        expect(cont2.firstChild.textContent).toBe('1');
+        expect(cont3.firstChild.textContent).toBe('1');
+
+        // Perform another hot update.
+        const HelloV3 = () => {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'green'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        };
+        __register__(HelloV3, 'Hello');
+        ReactFreshRuntime.performReactRefresh();
+
+        // It should affect all roots.
+        expect(cont1.firstChild.style.color).toBe('green');
+        expect(cont2.firstChild.style.color).toBe('green');
+        expect(cont3.firstChild.style.color).toBe('green');
+        expect(cont1.firstChild.textContent).toBe('1');
+        expect(cont2.firstChild.textContent).toBe('1');
+        expect(cont3.firstChild.textContent).toBe('1');
+
+        // Unmount the second root.
+        ReactDOM.unmountComponentAtNode(cont2);
+        // Make the first root throw and unmount on hot update.
+        const HelloV4 = ({id}) => {
+          if (id === 1) {
+            throw new Error('Oops.');
+          }
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'orange'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        };
+        __register__(HelloV4, 'Hello');
+        expect(() => {
+          ReactFreshRuntime.performReactRefresh();
+        }).toThrow('Oops.');
+
+        // Still, we expect the last root to be updated.
+        expect(cont1.innerHTML).toBe('');
+        expect(cont2.innerHTML).toBe('');
+        expect(cont3.firstChild.style.color).toBe('orange');
+        expect(cont3.firstChild.textContent).toBe('1');
+      } finally {
+        document.body.removeChild(cont1);
+        document.body.removeChild(cont2);
+        document.body.removeChild(cont3);
+      }
+    }
+  });
 });
