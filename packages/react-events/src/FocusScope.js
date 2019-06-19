@@ -46,6 +46,7 @@ function getFirstFocusableElement(
 }
 
 const FocusScopeResponder = {
+  displayName: 'FocusScope',
   targetEventTypes,
   rootEventTypes,
   createInitialState(): FocusScopeState {
@@ -55,6 +56,7 @@ const FocusScopeResponder = {
     };
   },
   allowMultipleHostChildren: true,
+  allowEventHooks: false,
   onEvent(
     event: ReactDOMResponderEvent,
     context: ReactDOMResponderContext,
@@ -157,7 +159,4 @@ const FocusScopeResponder = {
   },
 };
 
-export default ReactDOM.unstable_createEventComponent(
-  FocusScopeResponder,
-  'FocusScope',
-);
+export default ReactDOM.unstable_createEventComponent(FocusScopeResponder);

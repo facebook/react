@@ -23,6 +23,7 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {UpdateQueue} from './ReactUpdateQueue';
 import type {ContextDependencyList} from './ReactFiberNewContext';
 import type {HookType} from './ReactFiberHooks';
+import type {ReactEventComponentInstance} from 'shared/ReactTypes';
 
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
@@ -163,6 +164,9 @@ export type Fiber = {|
   // A linked-list of contexts that this fiber depends on
   contextDependencies: ContextDependencyList | null,
 
+  // An array of event component instances for this fiber
+  events: Array<ReactEventComponentInstance> | null,
+
   // Bitfield that describes properties about the fiber and its subtree. E.g.
   // the ConcurrentMode flag indicates whether the subtree should be async-by-
   // default. When a fiber is created, it inherits the mode of its
@@ -262,6 +266,7 @@ function FiberNode(
   this.updateQueue = null;
   this.memoizedState = null;
   this.contextDependencies = null;
+  this.events = null;
 
   this.mode = mode;
 
@@ -431,6 +436,7 @@ export function createWorkInProgress(
   workInProgress.memoizedState = current.memoizedState;
   workInProgress.updateQueue = current.updateQueue;
   workInProgress.contextDependencies = current.contextDependencies;
+  workInProgress.events = current.events;
 
   // These will be overridden during the parent's reconciliation
   workInProgress.sibling = current.sibling;
@@ -796,6 +802,7 @@ export function assignFiberPropertiesInDEV(
   target.updateQueue = source.updateQueue;
   target.memoizedState = source.memoizedState;
   target.contextDependencies = source.contextDependencies;
+  target.events = source.events;
   target.mode = source.mode;
   target.effectTag = source.effectTag;
   target.nextEffect = source.nextEffect;

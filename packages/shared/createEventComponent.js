@@ -31,7 +31,6 @@ if (__DEV__) {
 
 export default function createEventComponent(
   responder: EventResponder,
-  displayName: string,
 ): ReactEventComponent {
   // We use responder as a Map key later on. When we have a bad
   // polyfill, then we can't use it as a key as the polyfill tries
@@ -41,7 +40,6 @@ export default function createEventComponent(
   }
   const eventComponent = {
     $$typeof: REACT_EVENT_COMPONENT_TYPE,
-    displayName: displayName,
     props: null,
     responder: responder,
   };
