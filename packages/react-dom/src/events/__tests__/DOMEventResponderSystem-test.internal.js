@@ -45,11 +45,7 @@ function createReactEventComponent({
     allowEventHooks: allowEventHooks || true,
   };
 
-  return {
-    $$typeof: Symbol.for('react.event_component'),
-    props: null,
-    responder: testEventResponder,
-  };
+  return ReactDOM.unstable_createEvent(testEventResponder);
 }
 
 const createEvent = (type, data) => {
@@ -927,19 +923,6 @@ describe('DOMEventResponderSystem', () => {
         ' Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.nativeEvent }`',
       {withoutStack: true},
     );
-    expect(() => {
-      handler = event => {
-        return event.defaultPrevented;
-      };
-      ReactDOM.render(<Test />, container);
-      dispatchClickEvent(document.body);
-    }).toWarnDev(
-      'Warning: defaultPrevented is not available on event objects created from event responder modules ' +
-        '(React Flare).' +
-        ' Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.defaultPrevented }`',
-      {withoutStack: true},
-    );
-
     expect(container.innerHTML).toBe('<button>Click me!</button>');
   });
 

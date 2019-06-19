@@ -261,4 +261,4 @@ const DragResponder = {
   },
 };
 
-export default ReactDOM.unstable_createEventComponent(DragResponder);
+export default ReactDOM.unstable_createEvent(DragResponder);

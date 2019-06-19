@@ -408,4 +408,4 @@ const HoverResponder = {
   },
 };
 
-export default ReactDOM.unstable_createEventComponent(HoverResponder);
+export default ReactDOM.unstable_createEvent(HoverResponder);

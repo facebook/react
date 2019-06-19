@@ -1,6 +1,12 @@
 'use strict';
 
-const {existsSync, readdirSync, unlinkSync} = require('fs');
+const {
+  existsSync,
+  readdirSync,
+  unlinkSync,
+  readFileSync,
+  writeFileSync,
+} = require('fs');
 const Bundles = require('./bundles');
 const {
   asyncCopyTo,
@@ -87,18 +93,22 @@ async function copyWWWShims() {
 }
 
 async function copyRNShims() {
+  const reactTypesBuildTarget = 'build/react-native/shims/ReactTypes.js';
   await Promise.all([
     // React Native
     asyncCopyTo(`${__dirname}/shims/react-native`, 'build/react-native/shims'),
-    asyncCopyTo(
-      require.resolve('shared/ReactTypes.js'),
-      'build/react-native/shims/ReactTypes.js'
-    ),
+    asyncCopyTo(require.resolve('shared/ReactTypes.js'), reactTypesBuildTarget),
     asyncCopyTo(
       require.resolve('react-native-renderer/src/ReactNativeTypes.js'),
       'build/react-native/shims/ReactNativeTypes.js'
     ),
   ]);
+  // Modify the EventResponder type in ReactTypes
+  const reactTypesSource = readFileSync(reactTypesBuildTarget, 'utf8');
+  const original = `import type {EventResponder} from 'react-reconciler/src/ReactFiberHostConfig';`;
+  const changeTo = `import type {ReactNativeEventResponder as EventResponder} from './ReactNativeTypes';`;
+  const modifiedSource = reactTypesSource.replace(original, changeTo);
+  writeFileSync(reactTypesBuildTarget, modifiedSource);
 }
 
 async function copyAllShims() {

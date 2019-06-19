@@ -264,4 +264,4 @@ const SwipeResponder = {
   },
 };
 
-export default ReactDOM.unstable_createEventComponent(SwipeResponder);
+export default ReactDOM.unstable_createEvent(SwipeResponder);
