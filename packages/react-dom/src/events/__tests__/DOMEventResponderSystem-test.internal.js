@@ -42,12 +42,10 @@ function createReactEventComponent({
     allowMultipleHostChildren: allowMultipleHostChildren || false,
   };
 
-  return {
-    $$typeof: Symbol.for('react.event_component'),
-    displayName: 'TestEventComponent',
-    props: null,
-    responder: testEventResponder,
-  };
+  return ReactDOM.unstable_createEvent(
+    testEventResponder,
+    'TestEventComponent',
+  );
 }
 
 function dispatchEvent(element, type) {

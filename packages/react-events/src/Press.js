@@ -956,4 +956,4 @@ const PressResponder = {
   },
 };
 
-export default ReactDOM.unstable_createEventComponent(PressResponder, 'Press');
+export default ReactDOM.unstable_createEvent(PressResponder, 'Press');

@@ -12,10 +12,10 @@ can be found [here](./docs).
 
 ## EventComponent
 
-An Event Component is defined using `React.unstable_createEventComponent`:
+An Event Component is defined using `ReactDOM.unstable_createEvent`:
 
 ```js
-const EventComponent = React.unstable_createEventComponent(
+const EventComponent = ReactDOM.unstable_createEvent(
   responder: EventResponder,
   displayName: string
 );

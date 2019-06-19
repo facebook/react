@@ -406,4 +406,4 @@ const HoverResponder = {
   },
 };
 
-export default ReactDOM.unstable_createEventComponent(HoverResponder, 'Hover');
+export default ReactDOM.unstable_createEvent(HoverResponder, 'Hover');
