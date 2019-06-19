@@ -127,6 +127,7 @@ import {
   addSubtreeSuspenseContext,
   setShallowSuspenseContext,
 } from './ReactFiberSuspenseContext';
+import {isShowingAnyFallbacks} from './ReactFiberSuspenseComponent';
 import {
   pushProvider,
   propagateContextChange,
@@ -1983,7 +1984,28 @@ function propagateSuspenseContextChange(
   }
 }
 
-type SuspenseListRevealOrder = 'together' | void;
+function findLastContentRow(firstChild: null | Fiber): null | Fiber {
+  // This is going to find the last row among these children that is already
+  // showing content on the screen, as opposed to being in fallback state or
+  // new. If a row has multiple Suspense boundaries, any of them being in the
+  // fallback state, counts as the whole row being in a fallback state.
+  // Note that the "rows" will be workInProgress, but any nested children
+  // will still be current since we haven't rendered them yet. The mounted
+  // order may not be the same as the new order. We use the new order.
+  let row = firstChild;
+  let lastContentRow: null | Fiber = null;
+  while (row !== null) {
+    let currentRow = row.alternate;
+    // New rows can't be content rows.
+    if (currentRow !== null && !isShowingAnyFallbacks(currentRow)) {
+      lastContentRow = row;
+    }
+    row = row.sibling;
+  }
+  return lastContentRow;
+}
+
+type SuspenseListRevealOrder = 'forwards' | 'together' | void;
 
 function updateSuspenseListComponent(
   current: Fiber | null,
@@ -2033,6 +2055,9 @@ function updateSuspenseListComponent(
     );
     suspenseListState = {
       didSuspend: true,
+      rendering: null,
+      last: null,
+      tail: null,
     };
   } else {
     let didForceFallback =
@@ -2063,7 +2088,38 @@ function updateSuspenseListComponent(
   }
 
   switch (revealOrder) {
-    // TODO: For other reveal orders we'll need to split the nextChildFibers set.
+    case 'forwards': {
+      // If need to force fallbacks in this pass we're just going to
+      // force the whole set to suspend so we don't have to do anything
+      // further here.
+      if (!shouldForceFallback) {
+        let lastContentRow = findLastContentRow(nextChildFibers);
+        let tail;
+        if (lastContentRow === null) {
+          // The whole list is part of the tail.
+          // TODO: We could fast path by just rendering the tail now.
+          tail = nextChildFibers;
+          nextChildFibers = null;
+        } else {
+          // Disconnect the tail rows after the content row.
+          // We're going to render them separately later.
+          tail = lastContentRow.sibling;
+          lastContentRow.sibling = null;
+        }
+        if (suspenseListState === null) {
+          suspenseListState = {
+            didSuspend: false,
+            rendering: null,
+            last: lastContentRow,
+            tail: tail,
+          };
+        } else {
+          suspenseListState.tail = tail;
+        }
+      }
+      break;
+    }
+    // TODO: Add "backwards" option.
     case 'together': {
       break;
     }
