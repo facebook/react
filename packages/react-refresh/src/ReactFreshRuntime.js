@@ -373,3 +373,96 @@ export function injectIntoGlobalHook(globalObject: any): void {
 export function _getMountedRootCount() {
   return mountedRoots.size;
 }
+
+// This is a wrapper over more primitive functions for setting signature.
+// Signatures let us decide whether the Hook order has changed on refresh.
+//
+// This function is intended to be used as a transform target, e.g.:
+// var _s = createSignatureFunctionForTransform()
+//
+// function Hello() {
+//   const [foo, setFoo] = useState(0);
+//   const value = useCustomHook();
+//   _s(); /* Second call triggers collecting the custom Hook list.
+//          * This doesn't happen during the module evaluation because we
+//          * don't want to change the module order with inline requires.
+//          * Next calls are noops. */
+//   return <h1>Hi</h1>;
+// }
+//
+// /* First call specifies the signature: */
+// _s(
+//   Hello,
+//   'useState{[foo, setFoo]}(0)',
+//   () => [useCustomHook], /* Lazy to avoid triggering inline requires */
+// );
+export function createSignatureFunctionForTransform() {
+  let call = 0;
+  let savedType;
+  let hasCustomHooks;
+  return function<T>(
+    type: T,
+    key: string,
+    forceReset?: boolean,
+    getCustomHooks?: () => Array<Function>,
+  ): T {
+    switch (call++) {
+      case 0:
+        savedType = type;
+        hasCustomHooks = typeof getCustomHooks === 'function';
+        setSignature(type, key, forceReset, getCustomHooks);
+        break;
+      case 1:
+        if (hasCustomHooks) {
+          collectCustomHooksForSignature(savedType);
+        }
+        break;
+    }
+    return type;
+  };
+}
+
+export function isLikelyComponentType(type: any): boolean {
+  switch (typeof type) {
+    case 'function': {
+      // First, deal with classes.
+      if (type.prototype != null) {
+        if (type.prototype.isReactComponent) {
+          // React class.
+          return true;
+        }
+        const ownNames = Object.getOwnPropertyNames(type.prototype);
+        if (ownNames.length > 1 || ownNames[0] !== 'constructor') {
+          // This looks like a class.
+          return false;
+        }
+        // eslint-disable-next-line no-proto
+        if (type.prototype.__proto__ !== Object.prototype) {
+          // It has a superclass.
+          return false;
+        }
+        // Pass through.
+        // This looks like a regular function with empty prototype.
+      }
+      // For plain functions and arrows, use name as a heuristic.
+      const name = type.name || type.displayName;
+      return typeof name === 'string' && /^[A-Z]/.test(name);
+    }
+    case 'object': {
+      if (type != null) {
+        switch (type.$$typeof) {
+          case REACT_FORWARD_REF_TYPE:
+          case REACT_MEMO_TYPE:
+            // Definitely React components.
+            return true;
+          default:
+            return false;
+        }
+      }
+      return false;
+    }
+    default: {
+      return false;
+    }
+  }
+}
