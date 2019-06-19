@@ -19,7 +19,6 @@ import {DiscreteEvent, UserBlockingEvent} from 'shared/ReactTypes';
 
 type PressProps = {
   disabled: boolean,
-  disableContextMenu: boolean,
   delayLongPress: number,
   delayPressEnd: number,
   delayPressStart: number,
@@ -38,6 +37,7 @@ type PressProps = {
     bottom: number,
     left: number,
   },
+  preventContextMenu: boolean,
   preventDefault: boolean,
   stopPropagation: boolean,
 };
@@ -72,6 +72,7 @@ type PressState = {
   |}>,
   ignoreEmulatedMouseEvents: boolean,
   activePointerId: null | number,
+  shouldPreventClick: boolean,
 };
 
 type PressEventType =
@@ -85,6 +86,7 @@ type PressEventType =
   | 'contextmenu';
 
 type PressEvent = {|
+  defaultPrevented: boolean,
   target: Element | Document,
   type: PressEventType,
   pointerType: PointerType,
@@ -155,6 +157,7 @@ function createPressEvent(
   target: Element | Document,
   pointerType: PointerType,
   event: ?ReactDOMResponderEvent,
+  defaultPrevented: boolean,
 ): PressEvent {
   const timeStamp = context.getTimeStamp();
   let clientX = null;
@@ -184,6 +187,7 @@ function createPressEvent(
     }
   }
   return {
+    defaultPrevented,
     target,
     type,
     pointerType,
@@ -213,12 +217,16 @@ function dispatchEvent(
 ): void {
   const target = ((state.pressTarget: any): Element | Document);
   const pointerType = state.pointerType;
+  const defaultPrevented =
+    (event != null && event.nativeEvent.defaultPrevented === true) ||
+    (name === 'press' && state.shouldPreventClick);
   const syntheticEvent = createPressEvent(
     context,
     name,
     target,
     pointerType,
     event,
+    defaultPrevented,
   );
   context.dispatchEvent(syntheticEvent, listener, eventPriority);
 }
@@ -631,6 +639,7 @@ const PressResponder = {
       responderRegionOnDeactivation: null,
       ignoreEmulatedMouseEvents: false,
       activePointerId: null,
+      shouldPreventClick: false,
     };
   },
   allowMultipleHostChildren: false,
@@ -728,14 +737,13 @@ const PressResponder = {
       }
 
       case 'contextmenu': {
-        if (props.disableContextMenu) {
+        if (props.preventContextMenu) {
           // Skip dispatching of onContextMenu below
           nativeEvent.preventDefault();
-          return;
         }
 
         if (isPressed) {
-          if (props.preventDefault !== false) {
+          if (props.preventDefault !== false && !nativeEvent.defaultPrevented) {
             // Skip dispatching of onContextMenu below
             nativeEvent.preventDefault();
             return;
@@ -863,6 +871,31 @@ const PressResponder = {
             isKeyboardEvent = true;
           }
 
+          // Determine whether to call preventDefault on subsequent native events.
+          state.shouldPreventClick = false;
+          if (
+            context.isTargetWithinEventComponent(target) &&
+            context.isTargetWithinHostComponent(target, 'a', true)
+          ) {
+            const {
+              altKey,
+              ctrlKey,
+              metaKey,
+              shiftKey,
+            } = (nativeEvent: MouseEvent);
+            // Check "open in new window/tab" and "open context menu" key modifiers
+            const preventDefault = props.preventDefault;
+            if (
+              preventDefault !== false &&
+              !shiftKey &&
+              !metaKey &&
+              !ctrlKey &&
+              !altKey
+            ) {
+              state.shouldPreventClick = true;
+            }
+          }
+
           const wasLongPressed = state.isLongPressed;
           dispatchPressEndEvents(event, context, props, state);
 
@@ -906,27 +939,8 @@ const PressResponder = {
 
       case 'click': {
         removeRootEventTypes(context, state);
-        if (
-          context.isTargetWithinEventComponent(target) &&
-          context.isTargetWithinHostComponent(target, 'a', true)
-        ) {
-          const {
-            altKey,
-            ctrlKey,
-            metaKey,
-            shiftKey,
-          } = (nativeEvent: MouseEvent);
-          // Check "open in new window/tab" and "open context menu" key modifiers
-          const preventDefault = props.preventDefault;
-          if (
-            preventDefault !== false &&
-            !shiftKey &&
-            !metaKey &&
-            !ctrlKey &&
-            !altKey
-          ) {
-            nativeEvent.preventDefault();
-          }
+        if (state.shouldPreventClick) {
+          nativeEvent.preventDefault();
         }
         break;
       }

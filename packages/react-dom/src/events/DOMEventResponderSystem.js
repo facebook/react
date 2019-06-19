@@ -171,14 +171,6 @@ const eventResponderContext: ReactDOMResponderContext = {
         }
       },
     });
-    // $FlowFixMe: we don't need value, Flow thinks we do
-    Object.defineProperty(possibleEventObject, 'defaultPrevented', {
-      get() {
-        if (__DEV__) {
-          showWarning('defaultPrevented');
-        }
-      },
-    });
 
     const eventObject = ((possibleEventObject: any): $Shape<
       PartialEventObject,
