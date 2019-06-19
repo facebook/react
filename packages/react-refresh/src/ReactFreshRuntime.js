@@ -7,12 +7,18 @@
  * @flow
  */
 
+import type {Instance} from 'react-reconciler/src/ReactFiberHostConfig';
+import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
 import type {
   Family,
-  HotUpdate,
+  RefreshUpdate,
+  ScheduleRefresh,
+  FindHostInstancesForRefresh,
+  SetRefreshHandler,
 } from 'react-reconciler/src/ReactFiberHotReloading';
 
 import {REACT_MEMO_TYPE, REACT_FORWARD_REF_TYPE} from 'shared/ReactSymbols';
+import warningWithoutStack from 'shared/warningWithoutStack';
 
 type Signature = {|
   ownKey: string,
@@ -38,9 +44,16 @@ WeakMap<any, Signature> | Map<any, Signature> = new PossiblyWeakMap();
 const familiesByType: // $FlowIssue
 WeakMap<any, Family> | Map<any, Family> = new PossiblyWeakMap();
 
-// This is cleared on every prepareUpdate() call.
+// This is cleared on every performReactRefresh() call.
 // It is an array of [Family, NextType] tuples.
 let pendingUpdates: Array<[Family, any]> = [];
+
+// This is injected by the renderer via DevTools global hook.
+let setRefreshHandler: null | SetRefreshHandler = null;
+let scheduleRefresh: null | ScheduleRefresh = null;
+let findHostInstancesForRefresh: null | FindHostInstancesForRefresh = null;
+
+let mountedRoots = new Set();
 
 function computeFullKey(signature: Signature): string {
   if (signature.fullKey !== null) {
@@ -123,76 +136,132 @@ function resolveFamily(type) {
   return familiesByType.get(type);
 }
 
-export function prepareUpdate(): HotUpdate | null {
-  if (pendingUpdates.length === 0) {
-    return null;
-  }
-
-  const staleFamilies = new Set();
-  const updatedFamilies = new Set();
-
-  const updates = pendingUpdates;
-  pendingUpdates = [];
-  updates.forEach(([family, nextType]) => {
-    // Now that we got a real edit, we can create associations
-    // that will be read by the React reconciler.
-    const prevType = family.current;
-    familiesByType.set(prevType, family);
-    familiesByType.set(nextType, family);
-    family.current = nextType;
-
-    // Determine whether this should be a re-render or a re-mount.
-    if (canPreserveStateBetween(prevType, nextType)) {
-      updatedFamilies.add(family);
-    } else {
-      staleFamilies.add(family);
+export function performReactRefresh(): boolean {
+  if (__DEV__) {
+    if (pendingUpdates.length === 0) {
+      return false;
     }
-  });
 
-  return {
-    resolveFamily,
-    updatedFamilies,
-    staleFamilies,
-  };
+    const staleFamilies = new Set();
+    const updatedFamilies = new Set();
+
+    const updates = pendingUpdates;
+    pendingUpdates = [];
+    updates.forEach(([family, nextType]) => {
+      // Now that we got a real edit, we can create associations
+      // that will be read by the React reconciler.
+      const prevType = family.current;
+      familiesByType.set(prevType, family);
+      familiesByType.set(nextType, family);
+      family.current = nextType;
+
+      // Determine whether this should be a re-render or a re-mount.
+      if (canPreserveStateBetween(prevType, nextType)) {
+        updatedFamilies.add(family);
+      } else {
+        staleFamilies.add(family);
+      }
+    });
+
+    const update: RefreshUpdate = {
+      updatedFamilies,
+      staleFamilies,
+    };
+
+    if (typeof setRefreshHandler !== 'function') {
+      warningWithoutStack(
+        false,
+        'Could not find the setRefreshHandler() implementation. ' +
+          'This likely means that injectIntoGlobalHook() was either ' +
+          'called before the global DevTools hook was set up, or after the ' +
+          'renderer has already initialized. Please file an issue with a reproducing case.',
+      );
+      return false;
+    }
+
+    if (typeof scheduleRefresh !== 'function') {
+      warningWithoutStack(
+        false,
+        'Could not find the scheduleRefresh() implementation. ' +
+          'This likely means that injectIntoGlobalHook() was either ' +
+          'called before the global DevTools hook was set up, or after the ' +
+          'renderer has already initialized. Please file an issue with a reproducing case.',
+      );
+      return false;
+    }
+    const scheduleRefreshForRoot = scheduleRefresh;
+
+    // Even if there are no roots, set the handler on first update.
+    // This ensures that if *new* roots are mounted, they'll use the resolve handler.
+    setRefreshHandler(resolveFamily);
+
+    let didError = false;
+    let firstError = null;
+    mountedRoots.forEach(root => {
+      try {
+        scheduleRefreshForRoot(root, update);
+      } catch (err) {
+        if (!didError) {
+          didError = true;
+          firstError = err;
+        }
+        // Keep trying other roots.
+      }
+    });
+    if (didError) {
+      throw firstError;
+    }
+    return true;
+  } else {
+    throw new Error(
+      'Unexpected call to React Refresh in a production environment.',
+    );
+  }
 }
 
 export function register(type: any, id: string): void {
-  if (type === null) {
-    return;
-  }
-  if (typeof type !== 'function' && typeof type !== 'object') {
-    return;
-  }
-
-  // This can happen in an edge case, e.g. if we register
-  // return value of a HOC but it returns a cached component.
-  // Ignore anything but the first registration for each type.
-  if (allTypes.has(type)) {
-    return;
-  }
-  allTypes.add(type);
-
-  // Create family or remember to update it.
-  // None of this bookkeeping affects reconciliation
-  // until the first prepareUpdate() call above.
-  let family = allFamiliesByID.get(id);
-  if (family === undefined) {
-    family = {current: type};
-    allFamiliesByID.set(id, family);
-  } else {
-    pendingUpdates.push([family, type]);
-  }
-
-  // Visit inner types because we might not have registered them.
-  if (typeof type === 'object' && type !== null) {
-    switch (type.$$typeof) {
-      case REACT_FORWARD_REF_TYPE:
-        register(type.render, id + '$render');
-        break;
-      case REACT_MEMO_TYPE:
-        register(type.type, id + '$type');
-        break;
+  if (__DEV__) {
+    if (type === null) {
+      return;
     }
+    if (typeof type !== 'function' && typeof type !== 'object') {
+      return;
+    }
+
+    // This can happen in an edge case, e.g. if we register
+    // return value of a HOC but it returns a cached component.
+    // Ignore anything but the first registration for each type.
+    if (allTypes.has(type)) {
+      return;
+    }
+    allTypes.add(type);
+
+    // Create family or remember to update it.
+    // None of this bookkeeping affects reconciliation
+    // until the first prepareUpdate() call above.
+    let family = allFamiliesByID.get(id);
+    if (family === undefined) {
+      family = {current: type};
+      allFamiliesByID.set(id, family);
+    } else {
+      pendingUpdates.push([family, type]);
+    }
+
+    // Visit inner types because we might not have registered them.
+    if (typeof type === 'object' && type !== null) {
+      switch (type.$$typeof) {
+        case REACT_FORWARD_REF_TYPE:
+          register(type.render, id + '$render');
+          break;
+        case REACT_MEMO_TYPE:
+          register(type.type, id + '$type');
+          break;
+      }
+    }
+  } else {
+    throw new Error(
+      'Unexpected call to React Refresh in a production environment.',
+    );
   }
 }
 
@@ -202,23 +271,260 @@ export function setSignature(
   forceReset?: boolean = false,
   getCustomHooks?: () => Array<Function>,
 ): void {
-  allSignaturesByType.set(type, {
-    forceReset,
-    ownKey: key,
-    fullKey: null,
-    getCustomHooks: getCustomHooks || (() => []),
-  });
+  if (__DEV__) {
+    allSignaturesByType.set(type, {
+      forceReset,
+      ownKey: key,
+      fullKey: null,
+      getCustomHooks: getCustomHooks || (() => []),
+    });
+  } else {
+    throw new Error(
+      'Unexpected call to React Refresh in a production environment.',
+    );
+  }
 }
 
 // This is lazily called during first render for a type.
 // It captures Hook list at that time so inline requires don't break comparisons.
 export function collectCustomHooksForSignature(type: any) {
-  const signature = allSignaturesByType.get(type);
-  if (signature !== undefined) {
-    computeFullKey(signature);
+  if (__DEV__) {
+    const signature = allSignaturesByType.get(type);
+    if (signature !== undefined) {
+      computeFullKey(signature);
+    }
+  } else {
+    throw new Error(
+      'Unexpected call to React Refresh in a production environment.',
+    );
   }
 }
 
 export function getFamilyByID(id: string): Family | void {
-  return allFamiliesByID.get(id);
+  if (__DEV__) {
+    return allFamiliesByID.get(id);
+  } else {
+    throw new Error(
+      'Unexpected call to React Refresh in a production environment.',
+    );
+  }
+}
+
+export function findAffectedHostInstances(
+  families: Array<Family>,
+): Set<Instance> {
+  if (__DEV__) {
+    if (typeof findHostInstancesForRefresh !== 'function') {
+      warningWithoutStack(
+        false,
+        'Could not find the findHostInstancesForRefresh() implementation. ' +
+          'This likely means that injectIntoGlobalHook() was either ' +
+          'called before the global DevTools hook was set up, or after the ' +
+          'renderer has already initialized. Please file an issue with a reproducing case.',
+      );
+      return new Set();
+    }
+    const findInstances = findHostInstancesForRefresh;
+    let affectedInstances = new Set();
+    mountedRoots.forEach(root => {
+      const instancesForRoot = findInstances(root, families);
+      instancesForRoot.forEach(inst => {
+        affectedInstances.add(inst);
+      });
+    });
+    return affectedInstances;
+  } else {
+    throw new Error(
+      'Unexpected call to React Refresh in a production environment.',
+    );
+  }
+}
+
+export function injectIntoGlobalHook(globalObject: any): void {
+  if (__DEV__) {
+    // For React Native, the global hook will be set up by require('react-devtools-core').
+    // That code will run before us. So we need to monkeypatch functions on existing hook.
+
+    // For React Web, the global hook will be set up by the extension.
+    // This will also run before us.
+    let hook = globalObject.__REACT_DEVTOOLS_GLOBAL_HOOK__;
+    if (hook === undefined) {
+      // However, if there is no DevTools extension, we'll need to set up the global hook ourselves.
+      // Note that in this case it's important that renderer code runs *after* this method call.
+      // Otherwise, the renderer will think that there is no global hook, and won't do the injection.
+      globalObject.__REACT_DEVTOOLS_GLOBAL_HOOK__ = hook = {
+        supportsFiber: true,
+        inject() {},
+        onCommitFiberRoot(id: mixed, root: FiberRoot) {},
+        onCommitFiberUnmount() {},
+      };
+    }
+
+    // Here, we just want to get a reference to scheduleRefresh.
+    const oldInject = hook.inject;
+    hook.inject = function(injected) {
+      findHostInstancesForRefresh = ((injected: any)
+        .findHostInstancesForRefresh: FindHostInstancesForRefresh);
+      scheduleRefresh = ((injected: any).scheduleRefresh: ScheduleRefresh);
+      setRefreshHandler = ((injected: any)
+        .setRefreshHandler: SetRefreshHandler);
+      return oldInject.apply(this, arguments);
+    };
+
+    // We also want to track currently mounted roots.
+    const oldOnCommitFiberRoot = hook.onCommitFiberRoot;
+    hook.onCommitFiberRoot = function(id: mixed, root: FiberRoot) {
+      const current = root.current;
+      const alternate = current.alternate;
+
+      // We need to determine whether this root has just (un)mounted.
+      // This logic is copy-pasted from similar logic in the DevTools backend.
+      // If this breaks with some refactoring, you'll want to update DevTools too.
+
+      if (alternate !== null) {
+        const wasMounted =
+          alternate.memoizedState != null &&
+          alternate.memoizedState.element != null;
+        const isMounted =
+          current.memoizedState != null &&
+          current.memoizedState.element != null;
+
+        if (!wasMounted && isMounted) {
+          // Mount a new root.
+          mountedRoots.add(root);
+        } else if (wasMounted && isMounted) {
+          // Update an existing root.
+          // This doesn't affect our mounted root Set.
+        } else if (wasMounted && !isMounted) {
+          // Unmount an existing root.
+          mountedRoots.delete(root);
+        }
+      } else {
+        // Mount a new root.
+        mountedRoots.add(root);
+      }
+
+      return oldOnCommitFiberRoot.apply(this, arguments);
+    };
+  } else {
+    throw new Error(
+      'Unexpected call to React Refresh in a production environment.',
+    );
+  }
+}
+
+// Exposed for testing.
+export function _getMountedRootCount() {
+  if (__DEV__) {
+    return mountedRoots.size;
+  } else {
+    throw new Error(
+      'Unexpected call to React Refresh in a production environment.',
+    );
+  }
+}
+
+// This is a wrapper over more primitive functions for setting signature.
+// Signatures let us decide whether the Hook order has changed on refresh.
+//
+// This function is intended to be used as a transform target, e.g.:
+// var _s = createSignatureFunctionForTransform()
+//
+// function Hello() {
+//   const [foo, setFoo] = useState(0);
+//   const value = useCustomHook();
+//   _s(); /* Second call triggers collecting the custom Hook list.
+//          * This doesn't happen during the module evaluation because we
+//          * don't want to change the module order with inline requires.
+//          * Next calls are noops. */
+//   return <h1>Hi</h1>;
+// }
+//
+// /* First call specifies the signature: */
+// _s(
+//   Hello,
+//   'useState{[foo, setFoo]}(0)',
+//   () => [useCustomHook], /* Lazy to avoid triggering inline requires */
+// );
+export function createSignatureFunctionForTransform() {
+  if (__DEV__) {
+    let call = 0;
+    let savedType;
+    let hasCustomHooks;
+    return function<T>(
+      type: T,
+      key: string,
+      forceReset?: boolean,
+      getCustomHooks?: () => Array<Function>,
+    ): T {
+      switch (call++) {
+        case 0:
+          savedType = type;
+          hasCustomHooks = typeof getCustomHooks === 'function';
+          setSignature(type, key, forceReset, getCustomHooks);
+          break;
+        case 1:
+          if (hasCustomHooks) {
+            collectCustomHooksForSignature(savedType);
+          }
+          break;
+      }
+      return type;
+    };
+  } else {
+    throw new Error(
+      'Unexpected call to React Refresh in a production environment.',
+    );
+  }
+}
+
+export function isLikelyComponentType(type: any): boolean {
+  if (__DEV__) {
+    switch (typeof type) {
+      case 'function': {
+        // First, deal with classes.
+        if (type.prototype != null) {
+          if (type.prototype.isReactComponent) {
+            // React class.
+            return true;
+          }
+          const ownNames = Object.getOwnPropertyNames(type.prototype);
+          if (ownNames.length > 1 || ownNames[0] !== 'constructor') {
+            // This looks like a class.
+            return false;
+          }
+          // eslint-disable-next-line no-proto
+          if (type.prototype.__proto__ !== Object.prototype) {
+            // It has a superclass.
+            return false;
+          }
+          // Pass through.
+          // This looks like a regular function with empty prototype.
+        }
+        // For plain functions and arrows, use name as a heuristic.
+        const name = type.name || type.displayName;
+        return typeof name === 'string' && /^[A-Z]/.test(name);
+      }
+      case 'object': {
+        if (type != null) {
+          switch (type.$$typeof) {
+            case REACT_FORWARD_REF_TYPE:
+            case REACT_MEMO_TYPE:
+              // Definitely React components.
+              return true;
+            default:
+              return false;
+          }
+        }
+        return false;
+      }
+      default: {
+        return false;
+      }
+    }
+  } else {
+    throw new Error(
+      'Unexpected call to React Refresh in a production environment.',
+    );
+  }
 }

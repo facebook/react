@@ -21,32 +21,27 @@ let freshPlugin = require('react-refresh/babel');
 
 describe('ReactFreshIntegration', () => {
   let container;
-  let lastRoot;
-  let scheduleHotUpdate;
 
   beforeEach(() => {
-    global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
-      supportsFiber: true,
-      inject: injected => {
-        scheduleHotUpdate = injected.scheduleHotUpdate;
-      },
-      onCommitFiberRoot: (id, root) => {
-        lastRoot = root;
-      },
-      onCommitFiberUnmount: () => {},
-    };
-
-    jest.resetModules();
-    React = require('react');
-    ReactDOM = require('react-dom');
-    ReactFreshRuntime = require('react-refresh/runtime');
-    act = require('react-dom/test-utils').act;
-    container = document.createElement('div');
-    document.body.appendChild(container);
+    if (__DEV__) {
+      jest.resetModules();
+      React = require('react');
+      ReactFreshRuntime = require('react-refresh/runtime');
+      ReactFreshRuntime.injectIntoGlobalHook(global);
+      ReactDOM = require('react-dom');
+      act = require('react-dom/test-utils').act;
+      container = document.createElement('div');
+      document.body.appendChild(container);
+    }
   });
 
   afterEach(() => {
-    document.body.removeChild(container);
+    if (__DEV__) {
+      ReactDOM.unmountComponentAtNode(container);
+      // Ensure we don't leak memory by holding onto dead roots.
+      expect(ReactFreshRuntime._getMountedRootCount()).toBe(0);
+      document.body.removeChild(container);
+    }
   });
 
   describe('with compiled destructuring', () => {
@@ -87,15 +82,15 @@ describe('ReactFreshIntegration', () => {
         ReactDOM.render(<Component />, container);
       });
       // Module initialization shouldn't be counted as a hot update.
-      expect(ReactFreshRuntime.prepareUpdate()).toBe(null);
+      expect(ReactFreshRuntime.performReactRefresh()).toBe(false);
     }
 
     function patch(source) {
       execute(source);
-      const hotUpdate = ReactFreshRuntime.prepareUpdate();
       act(() => {
-        scheduleHotUpdate(lastRoot, hotUpdate);
+        expect(ReactFreshRuntime.performReactRefresh()).toBe(true);
       });
+      expect(ReactFreshRuntime._getMountedRootCount()).toBe(1);
     }
 
     function __register__(type, id) {
@@ -103,29 +98,7 @@ describe('ReactFreshIntegration', () => {
     }
 
     function __signature__() {
-      let call = 0;
-      let savedType;
-      let hasCustomHooks;
-      return function(type, key, forceReset, getCustomHooks) {
-        switch (call++) {
-          case 0:
-            savedType = type;
-            hasCustomHooks = typeof getCustomHooks === 'function';
-            ReactFreshRuntime.setSignature(
-              type,
-              key,
-              forceReset,
-              getCustomHooks,
-            );
-            break;
-          case 1:
-            if (hasCustomHooks) {
-              ReactFreshRuntime.collectCustomHooksForSignature(savedType);
-            }
-            break;
-        }
-        return type;
-      };
+      return ReactFreshRuntime.createSignatureFunctionForTransform();
     }
 
     it('reloads function declarations', () => {
