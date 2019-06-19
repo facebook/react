@@ -79,7 +79,7 @@
     "@babel/preset-flow": "^7.0.0",
     "@babel/preset-react": "^7.0.0",
     "@reach/menu-button": "^0.1.17",
-    "@reach/tooltip": "^0.2.0",
+    "@reach/tooltip": "^0.2.2",
     "archiver": "^3.0.0",
     "babel-core": "^7.0.0-bridge",
     "babel-eslint": "^9.0.0",
