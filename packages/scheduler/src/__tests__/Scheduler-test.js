@@ -227,7 +227,7 @@ describe('Scheduler', () => {
   });
 
   it(
-    'continutations are interrupted by higher priority work scheduled ' +
+    'continuations are interrupted by higher priority work scheduled ' +
       'inside an executing callback',
     () => {
       const tasks = [['A', 100], ['B', 100], ['C', 100], ['D', 100]];
@@ -237,7 +237,7 @@ describe('Scheduler', () => {
           const [label, ms] = task;
           Scheduler.advanceTime(ms);
           Scheduler.yieldValue(label);
-          if (task[0] === 'B') {
+          if (label === 'B') {
             // Schedule high pri work from inside another callback
             Scheduler.yieldValue('Schedule high pri');
             scheduleCallback(UserBlockingPriority, () => {
