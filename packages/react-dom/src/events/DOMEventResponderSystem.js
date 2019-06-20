@@ -85,7 +85,7 @@ type ResponderTimeout = {|
 |};
 
 type ResponderTimer = {|
-  instance: ReactEventComponentInstance,
+  instance: ReactEventComponentInstance<ReactDOMEventResponder>,
   func: () => void,
   id: number,
   timeStamp: number,
@@ -94,13 +94,15 @@ type ResponderTimer = {|
 const activeTimeouts: Map<number, ResponderTimeout> = new Map();
 const rootEventTypesToEventComponentInstances: Map<
   DOMTopLevelEventType | string,
-  Set<ReactEventComponentInstance>,
+  Set<ReactEventComponentInstance<ReactDOMEventResponder>>,
 > = new Map();
 const targetEventTypeCached: Map<
   Array<ReactDOMEventResponderEventType>,
   Set<string>,
 > = new Map();
-const ownershipChangeListeners: Set<ReactEventComponentInstance> = new Set();
+const ownershipChangeListeners: Set<
+  ReactEventComponentInstance<ReactDOMEventResponder>,
+> = new Set();
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 const eventListeners:
   | WeakMap
@@ -114,7 +116,9 @@ let continueLocalPropagation = false;
 
 let currentTimeStamp = 0;
 let currentTimers = new Map();
-let currentInstance: null | ReactEventComponentInstance = null;
+let currentInstance: null | ReactEventComponentInstance<
+  ReactDOMEventResponder,
+> = null;
 let currentEventQueue: null | EventQueue = null;
 let currentTimerIDCounter = 0;
 
@@ -171,14 +175,6 @@ const eventResponderContext: ReactDOMResponderContext = {
         }
       },
     });
-    // $FlowFixMe: we don't need value, Flow thinks we do
-    Object.defineProperty(possibleEventObject, 'defaultPrevented', {
-      get() {
-        if (__DEV__) {
-          showWarning('defaultPrevented');
-        }
-      },
-    });
 
     const eventObject = ((possibleEventObject: any): $Shape<
       PartialEventObject,
@@ -220,8 +216,9 @@ const eventResponderContext: ReactDOMResponderContext = {
   isTargetWithinEventComponent,
   isTargetWithinEventResponderScope(target: Element | Document): boolean {
     validateResponderContext();
-    const responder = ((currentInstance: any): ReactEventComponentInstance)
-      .responder;
+    const responder = ((currentInstance: any): ReactEventComponentInstance<
+      ReactDOMEventResponder,
+    >).responder;
     if (target != null) {
       let fiber = getClosestInstanceFromNode(target);
       while (fiber !== null) {
@@ -264,7 +261,9 @@ const eventResponderContext: ReactDOMResponderContext = {
     listenToResponderEventTypesImpl(rootEventTypes, activeDocument);
     for (let i = 0; i < rootEventTypes.length; i++) {
       const rootEventType = rootEventTypes[i];
-      const eventComponentInstance = ((currentInstance: any): ReactEventComponentInstance);
+      const eventComponentInstance = ((currentInstance: any): ReactEventComponentInstance<
+        ReactDOMEventResponder,
+      >);
       registerRootEventType(rootEventType, eventComponentInstance);
     }
   },
@@ -295,14 +294,17 @@ const eventResponderContext: ReactDOMResponderContext = {
       let rootEventComponents = rootEventTypesToEventComponentInstances.get(
         listeningName,
       );
-      let rootEventTypesSet = ((currentInstance: any): ReactEventComponentInstance)
-        .rootEventTypes;
+      let rootEventTypesSet = ((currentInstance: any): ReactEventComponentInstance<
+        ReactDOMEventResponder,
+      >).rootEventTypes;
       if (rootEventTypesSet !== null) {
         rootEventTypesSet.delete(listeningName);
       }
       if (rootEventComponents !== undefined) {
         rootEventComponents.delete(
-          ((currentInstance: any): ReactEventComponentInstance),
+          ((currentInstance: any): ReactEventComponentInstance<
+            ReactDOMEventResponder,
+          >),
         );
       }
     }
@@ -323,7 +325,9 @@ const eventResponderContext: ReactDOMResponderContext = {
   releaseOwnership(): boolean {
     validateResponderContext();
     return releaseOwnershipForEventComponentInstance(
-      ((currentInstance: any): ReactEventComponentInstance),
+      ((currentInstance: any): ReactEventComponentInstance<
+        ReactDOMEventResponder,
+      >),
     );
   },
   setTimeout(func: () => void, delay): number {
@@ -346,7 +350,9 @@ const eventResponderContext: ReactDOMResponderContext = {
       currentTimers.set(delay, timeout);
     }
     timeout.timers.set(timerId, {
-      instance: ((currentInstance: any): ReactEventComponentInstance),
+      instance: ((currentInstance: any): ReactEventComponentInstance<
+        ReactDOMEventResponder,
+      >),
       func,
       id: timerId,
       timeStamp: currentTimeStamp,
@@ -369,7 +375,9 @@ const eventResponderContext: ReactDOMResponderContext = {
   getFocusableElementsInScope(): Array<HTMLElement> {
     validateResponderContext();
     const focusableElements = [];
-    const eventComponentInstance = ((currentInstance: any): ReactEventComponentInstance);
+    const eventComponentInstance = ((currentInstance: any): ReactEventComponentInstance<
+      ReactDOMEventResponder,
+    >);
     const child = ((eventComponentInstance.currentFiber: any): Fiber).child;
 
     if (child !== null) {
@@ -466,13 +474,15 @@ function isTargetWithinEventComponent(target: Element | Document): boolean {
 }
 
 function getActiveDocument(): Document {
-  const eventComponentInstance = ((currentInstance: any): ReactEventComponentInstance);
+  const eventComponentInstance = ((currentInstance: any): ReactEventComponentInstance<
+    ReactDOMEventResponder,
+  >);
   const rootElement = ((eventComponentInstance.rootInstance: any): Element);
   return rootElement.ownerDocument;
 }
 
 function releaseOwnershipForEventComponentInstance(
-  eventComponentInstance: ReactEventComponentInstance,
+  eventComponentInstance: ReactEventComponentInstance<ReactDOMEventResponder>,
 ): boolean {
   if (globalOwner === eventComponentInstance) {
     globalOwner = null;
@@ -662,7 +672,7 @@ function getDOMTargetEventTypesSet(
 function getTargetEventResponderInstances(
   listeningName: string,
   targetFiber: null | Fiber,
-): Array<ReactEventComponentInstance> {
+): Array<ReactEventComponentInstance<ReactDOMEventResponder>> {
   const eventResponderInstances = [];
   let node = targetFiber;
   while (node !== null) {
@@ -686,7 +696,7 @@ function getTargetEventResponderInstances(
 
 function getRootEventResponderInstances(
   listeningName: string,
-): Array<ReactEventComponentInstance> {
+): Array<ReactEventComponentInstance<ReactDOMEventResponder>> {
   const eventResponderInstances = [];
   const rootEventInstances = rootEventTypesToEventComponentInstances.get(
     listeningName,
@@ -703,7 +713,7 @@ function getRootEventResponderInstances(
 }
 
 function shouldSkipEventComponent(
-  eventResponderInstance: ReactEventComponentInstance,
+  eventResponderInstance: ReactEventComponentInstance<ReactDOMEventResponder>,
   responder: ReactDOMEventResponder,
   propagatedEventResponders: null | Set<ReactDOMEventResponder>,
 ): boolean {
@@ -867,7 +877,7 @@ function triggerOwnershipListeners(): void {
 }
 
 export function mountEventResponder(
-  eventComponentInstance: ReactEventComponentInstance,
+  eventComponentInstance: ReactEventComponentInstance<ReactDOMEventResponder>,
 ) {
   const responder = ((eventComponentInstance.responder: any): ReactDOMEventResponder);
   if (responder.onOwnershipChange !== undefined) {
@@ -889,7 +899,7 @@ export function mountEventResponder(
 }
 
 export function unmountEventResponder(
-  eventComponentInstance: ReactEventComponentInstance,
+  eventComponentInstance: ReactEventComponentInstance<ReactDOMEventResponder>,
 ): void {
   const responder = ((eventComponentInstance.responder: any): ReactDOMEventResponder);
   const onUnmount = responder.onUnmount;
@@ -974,7 +984,7 @@ export function dispatchEventForResponderEventSystem(
 }
 
 export function addRootEventTypesForComponentInstance(
-  eventComponentInstance: ReactEventComponentInstance,
+  eventComponentInstance: ReactEventComponentInstance<ReactDOMEventResponder>,
   rootEventTypes: Array<ReactDOMEventResponderEventType>,
 ): void {
   for (let i = 0; i < rootEventTypes.length; i++) {
@@ -985,7 +995,7 @@ export function addRootEventTypesForComponentInstance(
 
 function registerRootEventType(
   rootEventType: ReactDOMEventResponderEventType,
-  eventComponentInstance: ReactEventComponentInstance,
+  eventComponentInstance: ReactEventComponentInstance<ReactDOMEventResponder>,
 ): void {
   let name = rootEventType;
   let passive = true;
@@ -1024,9 +1034,7 @@ function registerRootEventType(
     name,
   );
   rootEventTypesSet.add(listeningName);
-  rootEventComponentInstances.add(
-    ((eventComponentInstance: any): ReactEventComponentInstance),
-  );
+  rootEventComponentInstances.add(eventComponentInstance);
 }
 
 export function generateListeningKey(

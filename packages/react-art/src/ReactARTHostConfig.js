@@ -441,19 +441,19 @@ export function unhideTextInstance(textInstance, text): void {
 }
 
 export function mountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance,
+  eventComponentInstance: ReactEventComponentInstance<any>,
 ) {
   throw new Error('Not yet implemented.');
 }
 
 export function updateEventComponent(
-  eventComponentInstance: ReactEventComponentInstance,
+  eventComponentInstance: ReactEventComponentInstance<any>,
 ) {
   throw new Error('Not yet implemented.');
 }
 
 export function unmountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance,
+  eventComponentInstance: ReactEventComponentInstance<any>,
 ): void {
   throw new Error('Not yet implemented.');
 }

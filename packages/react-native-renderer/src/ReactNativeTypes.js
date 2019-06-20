@@ -155,12 +155,12 @@ export type ReactFabricType = {
     callback: ?Function,
   ): any,
   unmountComponentAtNode(containerTag: number): any,
-  unstable_createEventComponent:
+  unstable_createEvent:
     | void
     | ((
-        responder: ReactFabricEventResponder,
+        responder: ReactNativeEventResponder,
         displayName: string,
-      ) => ReactEventComponent),
+      ) => ReactEventComponent<ReactNativeEventResponder>),
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: SecretInternalsFabricType,
 };
 
@@ -177,70 +177,68 @@ export type TopLevelEventType =
   | 'topTouchMove'
   | 'topTouchStart';
 
-export type ReactFabricResponderEvent = {
+export type ReactNativeResponderEvent = {
   nativeEvent: mixed,
   target: mixed,
   type: TopLevelEventType,
 };
 
-export type ReactFabricEventResponder = {
+export type ReactNativeEventResponder = {
   targetEventTypes?: Array<TopLevelEventType>,
   rootEventTypes?: Array<TopLevelEventType>,
   createInitialState?: (props: null | Object) => Object,
-  stopLocalPropagation: boolean,
   onEvent?: (
-    event: ReactFabricResponderEvent,
-    context: ReactFabricResponderContext,
+    event: ReactNativeResponderEvent,
+    context: ReactNativeResponderContext,
     props: null | Object,
     state: null | Object,
   ) => void,
   onEventCapture?: (
-    event: ReactFabricResponderEvent,
-    context: ReactFabricResponderContext,
+    event: ReactNativeResponderEvent,
+    context: ReactNativeResponderContext,
     props: null | Object,
     state: null | Object,
   ) => void,
   onRootEvent?: (
-    event: ReactFabricResponderEvent,
-    context: ReactFabricResponderContext,
+    event: ReactNativeResponderEvent,
+    context: ReactNativeResponderContext,
     props: null | Object,
     state: null | Object,
   ) => void,
   onMount?: (
-    context: ReactFabricResponderContext,
+    context: ReactNativeResponderContext,
     props: null | Object,
     state: null | Object,
   ) => void,
   onUnmount?: (
-    context: ReactFabricResponderContext,
+    context: ReactNativeResponderContext,
     props: null | Object,
     state: null | Object,
   ) => void,
   onOwnershipChange?: (
-    context: ReactFabricResponderContext,
+    context: ReactNativeResponderContext,
     props: null | Object,
     state: null | Object,
   ) => void,
 };
 
-export type ReactFabricResponderContext = {
+export type ReactNativeResponderContext = {
   dispatchEvent: (
     eventObject: Object,
     listener: (Object) => void,
     eventPriority: EventPriority,
   ) => void,
-  isTargetWithinElement: (childTarget: mixed, parentTarget: mixed) => boolean,
-  isTargetWithinEventComponent: mixed => boolean,
-  isTargetWithinEventResponderScope: mixed => boolean,
-  isEventWithinTouchHitTarget: (event: ReactFabricResponderEvent) => boolean,
-  addRootEventTypes: (rootEventTypes: Array<TopLevelEventType>) => void,
-  removeRootEventTypes: (rootEventTypes: Array<TopLevelEventType>) => void,
-  hasOwnership: () => boolean,
-  requestResponderOwnership: () => boolean,
-  requestGlobalOwnership: () => boolean,
-  releaseOwnership: () => boolean,
-  setTimeout: (func: () => void, timeout: number) => number,
-  clearTimeout: (timerId: number) => void,
-  getEventCurrentTarget(event: ReactFabricResponderEvent): Element,
   getTimeStamp: () => number,
+  // TODO
+  // isTargetWithinElement: (childTarget: mixed, parentTarget: mixed) => boolean,
+  // isTargetWithinEventComponent: mixed => boolean,
+  // isTargetWithinEventResponderScope: mixed => boolean,
+  // isEventWithinTouchHitTarget: (event: ReactNativeResponderEvent) => boolean,
+  // hasOwnership: () => boolean,
+  // requestResponderOwnership: () => boolean,
+  // requestGlobalOwnership: () => boolean,
+  // releaseOwnership: () => boolean,
+  // setTimeout: (func: () => void, timeout: number) => number,
+  // clearTimeout: (timerId: number) => void,
+  // getEventCurrentTarget(event: ReactNativeResponderEvent): Element,
 };

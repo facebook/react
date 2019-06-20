@@ -38,7 +38,6 @@ export type ReactDOMEventResponder = {
   rootEventTypes?: Array<ReactDOMEventResponderEventType>,
   createInitialState?: (props: null | Object) => Object,
   allowMultipleHostChildren: boolean,
-  stopLocalPropagation: boolean,
   onEvent?: (
     event: ReactDOMResponderEvent,
     context: ReactDOMResponderContext,

@@ -9,9 +9,6 @@ let Suspense;
 let TextResource;
 let textResourceShouldFail;
 
-// These tests use React Noop Renderer.  All new tests should use React Test
-// Renderer and go in ReactSuspense-test; plan is gradually migrate the noop
-// tests to that file.
 describe('ReactSuspenseWithNoopRenderer', () => {
   beforeEach(() => {
     jest.resetModules();
@@ -2292,6 +2289,53 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       // However, since we exceeded the minimum time to show
       // the loading indicator, we commit immediately.
       expect(ReactNoop.getChildren()).toEqual([span('D')]);
+    });
+  });
+
+  it("suspended commit remains suspended even if there's another update at same expiration", async () => {
+    // Regression test
+    function App({text}) {
+      return (
+        <Suspense fallback="Loading...">
+          <AsyncText ms={2000} text={text} />
+        </Suspense>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await ReactNoop.act(async () => {
+      root.render(<App text="Initial" />);
+    });
+
+    // Resolve initial render
+    await ReactNoop.act(async () => {
+      Scheduler.advanceTime(2000);
+      await advanceTimers(2000);
+    });
+    expect(Scheduler).toHaveYielded([
+      'Suspend! [Initial]',
+      'Promise resolved [Initial]',
+      'Initial',
+    ]);
+    expect(root).toMatchRenderedOutput(<span prop="Initial" />);
+
+    // Update. Since showing a fallback would hide content that's already
+    // visible, it should suspend for a bit without committing.
+    await ReactNoop.act(async () => {
+      root.render(<App text="First update" />);
+
+      expect(Scheduler).toFlushAndYield(['Suspend! [First update]']);
+      // Should not display a fallback
+      expect(root).toMatchRenderedOutput(<span prop="Initial" />);
+    });
+
+    // Update again. This should also suspend for a bit.
+    await ReactNoop.act(async () => {
+      root.render(<App text="Second update" />);
+
+      expect(Scheduler).toFlushAndYield(['Suspend! [Second update]']);
+      // Should not display a fallback
+      expect(root).toMatchRenderedOutput(<span prop="Initial" />);
     });
   });
 });

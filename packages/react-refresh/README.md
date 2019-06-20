@@ -1,4 +1,4 @@
-# react-fresh
+# react-refresh
 
 This is an experimental package for hot reloading.
 

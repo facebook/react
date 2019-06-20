@@ -1049,6 +1049,55 @@ describe('Event responder: Press', () => {
         ]);
       });
 
+      it('no delay and "onPress*" events are correctly called with target change', () => {
+        let events = [];
+        const outerRef = React.createRef();
+        const innerRef = React.createRef();
+        const createEventHandler = msg => () => {
+          events.push(msg);
+        };
+
+        const element = (
+          <div ref={outerRef}>
+            <Press
+              onPress={createEventHandler('onPress')}
+              onPressChange={createEventHandler('onPressChange')}
+              onPressMove={createEventHandler('onPressMove')}
+              onPressStart={createEventHandler('onPressStart')}
+              onPressEnd={createEventHandler('onPressEnd')}>
+              <div ref={innerRef} />
+            </Press>
+          </div>
+        );
+
+        ReactDOM.render(element, container);
+
+        innerRef.current.getBoundingClientRect = getBoundingClientRectMock;
+        innerRef.current.dispatchEvent(createEvent('pointerdown'));
+        outerRef.current.dispatchEvent(
+          createEvent('pointermove', coordinatesOutside),
+        );
+        innerRef.current.dispatchEvent(
+          createEvent('pointermove', coordinatesInside),
+        );
+        innerRef.current.dispatchEvent(
+          createEvent('pointerup', coordinatesInside),
+        );
+        jest.runAllTimers();
+
+        expect(events).toEqual([
+          'onPressStart',
+          'onPressChange',
+          'onPressEnd',
+          'onPressChange',
+          'onPressStart',
+          'onPressChange',
+          'onPressEnd',
+          'onPressChange',
+          'onPress',
+        ]);
+      });
+
       it('delay and "onPressMove" is called before "onPress*" events', () => {
         let events = [];
         const ref = React.createRef();
@@ -2221,6 +2270,9 @@ describe('Event responder: Press', () => {
       ref.current.dispatchEvent(createEvent('pointerup'));
       ref.current.dispatchEvent(createEvent('click', {preventDefault}));
       expect(preventDefault).toBeCalled();
+      expect(onPress).toHaveBeenCalledWith(
+        expect.objectContaining({defaultPrevented: true}),
+      );
     });
 
     it('deeply prevents native behaviour by default', () => {
@@ -2259,6 +2311,9 @@ describe('Event responder: Press', () => {
       ref.current.dispatchEvent(createEvent('pointerup'));
       ref.current.dispatchEvent(createEvent('click', {preventDefault}));
       expect(preventDefault).toBeCalled();
+      expect(onPress).toHaveBeenCalledWith(
+        expect.objectContaining({defaultPrevented: true}),
+      );
     });
 
     it('uses native behaviour for interactions with modifier keys', () => {
@@ -2283,6 +2338,9 @@ describe('Event responder: Press', () => {
           createEvent('click', {[modifierKey]: true, preventDefault}),
         );
         expect(preventDefault).not.toBeCalled();
+        expect(onPress).toHaveBeenCalledWith(
+          expect.objectContaining({defaultPrevented: false}),
+        );
       });
     });
 
@@ -2301,6 +2359,9 @@ describe('Event responder: Press', () => {
       ref.current.dispatchEvent(createEvent('pointerup'));
       ref.current.dispatchEvent(createEvent('click', {preventDefault}));
       expect(preventDefault).not.toBeCalled();
+      expect(onPress).toHaveBeenCalledWith(
+        expect.objectContaining({defaultPrevented: false}),
+      );
     });
   });
 
@@ -2837,6 +2898,25 @@ describe('Event responder: Press', () => {
       );
       ref.current.dispatchEvent(createEvent('contextmenu'));
       expect(onContextMenu).toHaveBeenCalledTimes(0);
+    });
+
+    it('is still called if "preventContextMenu" is true', () => {
+      const onContextMenu = jest.fn();
+      const ref = React.createRef();
+      const element = (
+        <Press onContextMenu={onContextMenu} preventContextMenu={true}>
+          <div ref={ref} />
+        </Press>
+      );
+      ReactDOM.render(element, container);
+      ref.current.dispatchEvent(
+        createEvent('pointerdown', {pointerType: 'mouse', button: 2}),
+      );
+      ref.current.dispatchEvent(createEvent('contextmenu'));
+      expect(onContextMenu).toHaveBeenCalledTimes(1);
+      expect(onContextMenu).toHaveBeenCalledWith(
+        expect.objectContaining({defaultPrevented: true}),
+      );
     });
   });
 

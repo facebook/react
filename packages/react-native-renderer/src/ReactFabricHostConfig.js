@@ -13,6 +13,7 @@ import type {
   MeasureOnSuccessCallback,
   NativeMethodsMixinType,
   ReactNativeBaseComponentViewConfig,
+  ReactNativeEventResponder,
 } from './ReactNativeTypes';
 import type {ReactEventComponentInstance} from 'shared/ReactTypes';
 
@@ -76,6 +77,7 @@ export type UpdatePayload = Object;
 
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
+export type EventResponder = ReactNativeEventResponder;
 
 // TODO: Remove this conditional once all changes have propagated.
 if (registerEventHandler) {
@@ -434,19 +436,25 @@ export function replaceContainerChildren(
 ): void {}
 
 export function mountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance,
+  eventComponentInstance: ReactEventComponentInstance<
+    ReactNativeEventResponder,
+  >,
 ) {
   throw new Error('Not yet implemented.');
 }
 
 export function updateEventComponent(
-  eventComponentInstance: ReactEventComponentInstance,
+  eventComponentInstance: ReactEventComponentInstance<
+    ReactNativeEventResponder,
+  >,
 ) {
   throw new Error('Not yet implemented.');
 }
 
 export function unmountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance,
+  eventComponentInstance: ReactEventComponentInstance<
+    ReactNativeEventResponder,
+  >,
 ): void {
   throw new Error('Not yet implemented.');
 }

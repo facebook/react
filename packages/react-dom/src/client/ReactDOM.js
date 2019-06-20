@@ -15,6 +15,7 @@ import type {
   FiberRoot,
   Batch as FiberRootBatch,
 } from 'react-reconciler/src/ReactFiberRoot';
+import type {ReactDOMEventResponder} from 'shared/ReactDOMTypes';
 
 import '../shared/checkReact';
 import './ReactDOMClientInjection';
@@ -42,7 +43,7 @@ import {
 } from 'react-reconciler/inline.dom';
 import {createPortal as createPortalImpl} from 'shared/ReactPortal';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
-import createEventComponent from 'shared/createEventComponent';
+import createEvent from 'shared/createEventComponent';
 import {setBatchingImplementation} from 'events/ReactGenericBatching';
 import {
   setRestoreImplementation,
@@ -882,7 +883,7 @@ if (enableStableConcurrentModeAPIs) {
 }
 
 if (enableEventAPI) {
-  ReactDOM.unstable_createEventComponent = createEventComponent;
+  ReactDOM.unstable_createEvent = createEvent;
 }
 
 const foundDevTools = injectIntoDevTools({

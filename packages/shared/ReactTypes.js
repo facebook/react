@@ -14,7 +14,7 @@ export type ReactNode =
   | ReactFragment
   | ReactProvider<any>
   | ReactConsumer<any>
-  | ReactEventComponent
+  | ReactEventComponent<any>
   | ReactEventTarget;
 
 export type ReactEmpty = null | void | boolean;
@@ -81,20 +81,20 @@ export type RefObject = {|
   current: any,
 |};
 
-export type ReactEventComponentInstance = {|
+export type ReactEventComponentInstance<Responder> = {|
   currentFiber: mixed,
   props: null | Object,
-  responder: mixed,
+  responder: Responder,
   rootEventTypes: null | Set<string>,
   rootInstance: mixed,
   state: null | Object,
 |};
 
-export type ReactEventComponent = {|
+export type ReactEventComponent<Responder> = {|
   $$typeof: Symbol | number,
   displayName: string,
   props: null | Object,
-  responder: mixed,
+  responder: Responder,
 |};
 
 export type ReactEventTarget = {|

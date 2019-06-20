@@ -38,15 +38,31 @@ export type Family = {|
   current: any,
 |};
 
-export type HotUpdate = {|
-  resolveFamily: (any => Family | void) | null,
+export type RefreshUpdate = {|
   staleFamilies: Set<Family>,
   updatedFamilies: Set<Family>,
 |};
 
-let resolveFamily: (any => Family | void) | null = null;
+// Resolves type to a family.
+type RefreshHandler = any => Family | void;
+
+// Used by React Refresh runtime through DevTools Global Hook.
+export type SetRefreshHandler = (handler: RefreshHandler | null) => void;
+export type ScheduleRefresh = (root: FiberRoot, update: RefreshUpdate) => void;
+export type FindHostInstancesForRefresh = (
+  root: FiberRoot,
+  families: Array<Family>,
+) => Set<Instance>;
+
+let resolveFamily: RefreshHandler | null = null;
 // $FlowFixMe Flow gets confused by a WeakSet feature check below.
 let failedBoundaries: WeakSet<Fiber> | null = null;
+
+export let setRefreshHandler = (handler: RefreshHandler | null): void => {
+  if (__DEV__) {
+    resolveFamily = handler;
+  }
+};
 
 export function resolveFunctionForHotReloading(type: any): any {
   if (__DEV__) {
@@ -192,7 +208,7 @@ export function isCompatibleFamilyForHotReloading(
 export function markFailedErrorBoundaryForHotReloading(fiber: Fiber) {
   if (__DEV__) {
     if (resolveFamily === null) {
-      // Not hot reloading.
+      // Hot reloading is disabled.
       return;
     }
     if (typeof WeakSet !== 'function') {
@@ -205,12 +221,16 @@ export function markFailedErrorBoundaryForHotReloading(fiber: Fiber) {
   }
 }
 
-export function scheduleHotUpdate(root: FiberRoot, hotUpdate: HotUpdate): void {
+export let scheduleRefresh: ScheduleRefresh = (
+  root: FiberRoot,
+  update: RefreshUpdate,
+): void => {
   if (__DEV__) {
-    // TODO: warn if its identity changes over time?
-    resolveFamily = hotUpdate.resolveFamily;
-
-    const {staleFamilies, updatedFamilies} = hotUpdate;
+    if (resolveFamily === null) {
+      // Hot reloading is disabled.
+      return;
+    }
+    const {staleFamilies, updatedFamilies} = update;
     flushPassiveEffects();
     flushSync(() => {
       scheduleFibersWithFamiliesRecursively(
@@ -220,7 +240,7 @@ export function scheduleHotUpdate(root: FiberRoot, hotUpdate: HotUpdate): void {
       );
     });
   }
-}
+};
 
 function scheduleFibersWithFamiliesRecursively(
   fiber: Fiber,
@@ -292,26 +312,30 @@ function scheduleFibersWithFamiliesRecursively(
   }
 }
 
-export function findHostNodesForHotUpdate(
+export let findHostInstancesForRefresh: FindHostInstancesForRefresh = (
   root: FiberRoot,
   families: Array<Family>,
-): Set<Instance> {
+): Set<Instance> => {
   if (__DEV__) {
-    const hostNodes = new Set();
+    const hostInstances = new Set();
     const types = new Set(families.map(family => family.current));
-    findHostNodesForMatchingFibersRecursively(root.current, types, hostNodes);
-    return hostNodes;
+    findHostInstancesForMatchingFibersRecursively(
+      root.current,
+      types,
+      hostInstances,
+    );
+    return hostInstances;
   } else {
     throw new Error(
-      'Did not expect findHostNodesForHotUpdate to be called in production.',
+      'Did not expect findHostInstancesForRefresh to be called in production.',
     );
   }
-}
+};
 
-function findHostNodesForMatchingFibersRecursively(
+function findHostInstancesForMatchingFibersRecursively(
   fiber: Fiber,
   types: Set<any>,
-  hostNodes: Set<Instance>,
+  hostInstances: Set<Instance>,
 ) {
   if (__DEV__) {
     const {child, sibling, tag, type} = fiber;
@@ -341,30 +365,38 @@ function findHostNodesForMatchingFibersRecursively(
       // We have a match. This only drills down to the closest host components.
       // There's no need to search deeper because for the purpose of giving
       // visual feedback, "flashing" outermost parent rectangles is sufficient.
-      findHostNodesForFiberShallowly(fiber, hostNodes);
+      findHostInstancesForFiberShallowly(fiber, hostInstances);
     } else {
       // If there's no match, maybe there will be one further down in the child tree.
       if (child !== null) {
-        findHostNodesForMatchingFibersRecursively(child, types, hostNodes);
+        findHostInstancesForMatchingFibersRecursively(
+          child,
+          types,
+          hostInstances,
+        );
       }
     }
 
     if (sibling !== null) {
-      findHostNodesForMatchingFibersRecursively(sibling, types, hostNodes);
+      findHostInstancesForMatchingFibersRecursively(
+        sibling,
+        types,
+        hostInstances,
+      );
     }
   }
 }
 
-function findHostNodesForFiberShallowly(
+function findHostInstancesForFiberShallowly(
   fiber: Fiber,
-  hostNodes: Set<Instance>,
+  hostInstances: Set<Instance>,
 ): void {
   if (__DEV__) {
-    const foundHostNodes = findChildHostNodesForFiberShallowly(
+    const foundHostInstances = findChildHostInstancesForFiberShallowly(
       fiber,
-      hostNodes,
+      hostInstances,
     );
-    if (foundHostNodes) {
+    if (foundHostInstances) {
       return;
     }
     // If we didn't find any host children, fallback to closest host parent.
@@ -372,13 +404,13 @@ function findHostNodesForFiberShallowly(
     while (true) {
       switch (node.tag) {
         case HostComponent:
-          hostNodes.add(node.stateNode);
+          hostInstances.add(node.stateNode);
           return;
         case HostPortal:
-          hostNodes.add(node.stateNode.containerInfo);
+          hostInstances.add(node.stateNode.containerInfo);
           return;
         case HostRoot:
-          hostNodes.add(node.stateNode.containerInfo);
+          hostInstances.add(node.stateNode.containerInfo);
           return;
       }
       if (node.return === null) {
@@ -389,18 +421,18 @@ function findHostNodesForFiberShallowly(
   }
 }
 
-function findChildHostNodesForFiberShallowly(
+function findChildHostInstancesForFiberShallowly(
   fiber: Fiber,
-  hostNodes: Set<Instance>,
+  hostInstances: Set<Instance>,
 ): boolean {
   if (__DEV__) {
     let node: Fiber = fiber;
-    let foundHostNodes = false;
+    let foundHostInstances = false;
     while (true) {
       if (node.tag === HostComponent) {
         // We got a match.
-        foundHostNodes = true;
-        hostNodes.add(node.stateNode);
+        foundHostInstances = true;
+        hostInstances.add(node.stateNode);
         // There may still be more, so keep searching.
       } else if (node.child !== null) {
         node.child.return = node;
@@ -408,11 +440,11 @@ function findChildHostNodesForFiberShallowly(
         continue;
       }
       if (node === fiber) {
-        return foundHostNodes;
+        return foundHostInstances;
       }
       while (node.sibling === null) {
         if (node.return === null || node.return === fiber) {
-          return foundHostNodes;
+          return foundHostInstances;
         }
         node = node.return;
       }

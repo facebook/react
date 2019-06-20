@@ -155,11 +155,11 @@ const ReactFabric: ReactFabricType = {
     // Used as a mixin in many createClass-based components
     NativeMethodsMixin: NativeMethodsMixin(findNodeHandle, findHostInstance),
   },
-  unstable_createEventComponent: undefined,
+  unstable_createEvent: undefined,
 };
 
 if (enableEventAPI) {
-  ReactFabric.unstable_createEventComponent = createEventComponent;
+  ReactFabric.unstable_createEvent = createEventComponent;
 }
 
 injectIntoDevTools({

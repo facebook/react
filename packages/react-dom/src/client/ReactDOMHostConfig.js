@@ -899,7 +899,7 @@ export function didNotFindHydratableSuspenseInstance(
 }
 
 export function mountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance,
+  eventComponentInstance: ReactEventComponentInstance<ReactDOMEventResponder>,
 ): void {
   if (enableEventAPI) {
     const rootContainerInstance = ((eventComponentInstance.rootInstance: any): Container);
@@ -925,13 +925,13 @@ export function mountEventComponent(
 }
 
 export function updateEventComponent(
-  eventComponentInstance: ReactEventComponentInstance,
+  eventComponentInstance: ReactEventComponentInstance<ReactDOMEventResponder>,
 ): void {
   // NO-OP, why might use this in the future
 }
 
 export function unmountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance,
+  eventComponentInstance: ReactEventComponentInstance<ReactDOMEventResponder>,
 ): void {
   if (enableEventAPI) {
     // TODO stop listening to targetEventTypes

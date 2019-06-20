@@ -9,7 +9,7 @@
 
 let babel = require('babel-core');
 let {wrap} = require('jest-snapshot-serializer-raw');
-let freshPlugin = require('react-fresh/babel');
+let freshPlugin = require('react-refresh/babel');
 
 function transform(input, options = {}) {
   return wrap(

@@ -157,7 +157,4 @@ const FocusScopeResponder = {
   },
 };
 
-export default ReactDOM.unstable_createEventComponent(
-  FocusScopeResponder,
-  'FocusScope',
-);
+export default ReactDOM.unstable_createEvent(FocusScopeResponder, 'FocusScope');

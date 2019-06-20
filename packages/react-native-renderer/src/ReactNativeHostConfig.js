@@ -7,7 +7,10 @@
  * @flow
  */
 
-import type {ReactNativeBaseComponentViewConfig} from './ReactNativeTypes';
+import type {
+  ReactNativeBaseComponentViewConfig,
+  ReactNativeEventResponder,
+} from './ReactNativeTypes';
 import type {ReactEventComponentInstance} from 'shared/ReactTypes';
 
 import invariant from 'shared/invariant';
@@ -493,19 +496,25 @@ export function unhideTextInstance(
 }
 
 export function mountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance,
+  eventComponentInstance: ReactEventComponentInstance<
+    ReactNativeEventResponder,
+  >,
 ) {
   throw new Error('Not yet implemented.');
 }
 
 export function updateEventComponent(
-  eventComponentInstance: ReactEventComponentInstance,
+  eventComponentInstance: ReactEventComponentInstance<
+    ReactNativeEventResponder,
+  >,
 ) {
   throw new Error('Not yet implemented.');
 }
 
 export function unmountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance,
+  eventComponentInstance: ReactEventComponentInstance<
+    ReactNativeEventResponder,
+  >,
 ): void {
   throw new Error('Not yet implemented.');
 }
