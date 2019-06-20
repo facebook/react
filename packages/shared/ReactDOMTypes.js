@@ -7,7 +7,10 @@
  * @flow
  */
 
-import type {EventPriority, ReactEventComponentInstance} from 'shared/ReactTypes';
+import type {
+  EventPriority,
+  ReactEventComponentInstance,
+} from 'shared/ReactTypes';
 
 type AnyNativeEvent = Event | KeyboardEvent | MouseEvent | Touch;
 
