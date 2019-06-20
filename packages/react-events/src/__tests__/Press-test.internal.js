@@ -335,6 +335,8 @@ describe('Event responder: Press', () => {
 
     it('is called after "keyup" event for Enter', () => {
       ref.current.dispatchEvent(createKeyboardEvent('keydown', {key: 'Enter'}));
+      // click occurs before keyup
+      ref.current.dispatchEvent(createKeyboardEvent('click'));
       ref.current.dispatchEvent(createKeyboardEvent('keyup', {key: 'Enter'}));
       expect(onPressEnd).toHaveBeenCalledTimes(1);
       expect(onPressEnd).toHaveBeenCalledWith(
