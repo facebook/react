@@ -89,7 +89,15 @@ function act(callback: () => Thenable) {
     }
   }
 
-  const result = batchedUpdates(callback);
+  let result;
+  try {
+    result = batchedUpdates(callback);
+  } catch (error) {
+    // on sync errors, we still want to 'cleanup' and decrement actingUpdatesScopeDepth
+    onDone();
+    throw error;
+  }
+
   if (
     result !== null &&
     typeof result === 'object' &&
