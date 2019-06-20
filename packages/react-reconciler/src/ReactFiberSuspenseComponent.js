@@ -12,6 +12,10 @@ import type {Fiber} from './ReactFiber';
 // TODO: This is now an empty object. Should we switch this to a boolean?
 export type SuspenseState = {||};
 
+export type SuspenseListState = {|
+  didSuspend: boolean,
+|};
+
 export function shouldCaptureSuspense(
   workInProgress: Fiber,
   hasInvisibleParent: boolean,

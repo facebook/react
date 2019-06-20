@@ -36,6 +36,7 @@ import {
   Mode,
   Profiler,
   SuspenseComponent,
+  SuspenseListComponent,
   DehydratedSuspenseComponent,
   MemoComponent,
   SimpleMemoComponent,
@@ -522,6 +523,84 @@ if (supportsMutation) {
   };
 }
 
+// Note this, might mutate the workInProgress passed in.
+function hasSuspendedChildrenAndNewContent(
+  workInProgress: Fiber,
+  firstChild: null | Fiber,
+): boolean {
+  // Traversal to see if any of the immediately nested Suspense boundaries
+  // are in their fallback states. I.e. something suspended in them.
+  // And if some of them have new content that wasn't already visible.
+  let hasSuspendedBoundaries = false;
+  let hasNewContent = false;
+
+  let node = firstChild;
+  while (node !== null) {
+    // TODO: Hidden subtrees should not be considered.
+    if (node.tag === SuspenseComponent) {
+      const state: SuspenseState | null = node.memoizedState;
+      const isShowingFallback = state !== null;
+      if (isShowingFallback) {
+        hasSuspendedBoundaries = true;
+
+        if (node.updateQueue !== null) {
+          // If this is a newly suspended tree, it might not get committed as
+          // part of the second pass. In that case nothing will subscribe to
+          // its thennables. Instead, we'll transfer its thennables to the
+          // SuspenseList so that it can retry if they resolve.
+          // There might be multiple of these in the list but since we're
+          // going to wait for all of them anyway, it doesn't really matter
+          // which ones gets to ping. In theory we could get clever and keep
+          // track of how many dependencies remain but it gets tricky because
+          // in the meantime, we can add/remove/change items and dependencies.
+          // We might bail out of the loop before finding any but that
+          // doesn't matter since that means that the other boundaries that
+          // we did find already has their listeners attached.
+          workInProgress.updateQueue = node.updateQueue;
+          workInProgress.effectTag |= Update;
+        }
+      } else {
+        const current = node.alternate;
+        const wasNotShowingContent =
+          current === null || current.memoizedState !== null;
+        if (wasNotShowingContent) {
+          hasNewContent = true;
+        }
+      }
+      if (hasSuspendedBoundaries && hasNewContent) {
+        return true;
+      }
+    } else {
+      // TODO: We can probably just use the information from the list and not
+      // drill into its children just like if it was a Suspense boundary.
+      if (node.tag === SuspenseListComponent && node.updateQueue !== null) {
+        // If there's a nested SuspenseList, we might have transferred
+        // the thennables set to it already so we must get it from there.
+        workInProgress.updateQueue = node.updateQueue;
+        workInProgress.effectTag |= Update;
+      }
+
+      if (node.child !== null) {
+        node.child.return = node;
+        node = node.child;
+        continue;
+      }
+    }
+    if (node === workInProgress) {
+      return false;
+    }
+    while (node.sibling === null) {
+      if (node.return === null || node.return === workInProgress) {
+        return false;
+      }
+      node = node.return;
+    }
+    node.sibling.return = node.return;
+    node = node.sibling;
+  }
+  return false;
+}
+
 function completeWork(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -831,6 +910,35 @@ function completeWork(
           workInProgress.memoizedState = null;
           workInProgress.stateNode = null;
         }
+      }
+      break;
+    }
+    case SuspenseListComponent: {
+      popSuspenseContext(workInProgress);
+
+      if ((workInProgress.effectTag & DidCapture) === NoEffect) {
+        // This is the first pass. We need to figure out if anything is still
+        // suspended in the rendered set.
+        const renderedChildren = workInProgress.child;
+        // If new content unsuspended, but there's still some content that
+        // didn't. Then we need to do a second pass that forces everything
+        // to keep showing their fallbacks.
+        const needsRerender = hasSuspendedChildrenAndNewContent(
+          workInProgress,
+          renderedChildren,
+        );
+        if (needsRerender) {
+          // Rerender the whole list, but this time, we'll force fallbacks
+          // to stay in place.
+          workInProgress.effectTag |= DidCapture;
+          // Reset the effect list before doing the second pass since that's now invalid.
+          workInProgress.firstEffect = workInProgress.lastEffect = null;
+          // Schedule work so we know not to bail out.
+          workInProgress.expirationTime = renderExpirationTime;
+          return workInProgress;
+        }
+      } else {
+        workInProgress.effectTag &= ~DidCapture;
       }
       break;
     }

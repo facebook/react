@@ -11,7 +11,10 @@ import type {ReactProviderType, ReactContext} from 'shared/ReactTypes';
 import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
-import type {SuspenseState} from './ReactFiberSuspenseComponent';
+import type {
+  SuspenseState,
+  SuspenseListState,
+} from './ReactFiberSuspenseComponent';
 import type {SuspenseContext} from './ReactFiberSuspenseContext';
 
 import checkPropTypes from 'prop-types/checkPropTypes';
@@ -31,6 +34,7 @@ import {
   ContextConsumer,
   Profiler,
   SuspenseComponent,
+  SuspenseListComponent,
   DehydratedSuspenseComponent,
   MemoComponent,
   SimpleMemoComponent,
@@ -121,6 +125,7 @@ import {
   hasSuspenseContext,
   setDefaultShallowSuspenseContext,
   addSubtreeSuspenseContext,
+  setShallowSuspenseContext,
 } from './ReactFiberSuspenseContext';
 import {
   pushProvider,
@@ -128,6 +133,7 @@ import {
   readContext,
   prepareToReadContext,
   calculateChangedBits,
+  scheduleWorkOnParentPath,
 } from './ReactFiberNewContext';
 import {resetHooks, renderWithHooks, bailoutHooks} from './ReactFiberHooks';
 import {stopProfilerTimerIfRunning} from './ReactProfilerTimer';
@@ -182,6 +188,7 @@ let didWarnAboutGetDerivedStateOnFunctionComponent;
 let didWarnAboutFunctionRefs;
 export let didWarnAboutReassigningProps;
 let didWarnAboutMaxDuration;
+let didWarnAboutRevealOrder;
 
 if (__DEV__) {
   didWarnAboutBadClass = {};
@@ -191,6 +198,7 @@ if (__DEV__) {
   didWarnAboutFunctionRefs = {};
   didWarnAboutReassigningProps = false;
   didWarnAboutMaxDuration = false;
+  didWarnAboutRevealOrder = {};
 }
 
 export function reconcileChildren(
@@ -1433,6 +1441,22 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
 // TODO: This is now an empty object. Should we just make it a boolean?
 const SUSPENDED_MARKER: SuspenseState = ({}: any);
 
+function shouldRemainOnFallback(
+  suspenseContext: SuspenseContext,
+  current: null | Fiber,
+  workInProgress: Fiber,
+) {
+  // If the context is telling us that we should show a fallback, and we're not
+  // already showing content, then we should show the fallback instead.
+  return (
+    hasSuspenseContext(
+      suspenseContext,
+      (ForceSuspenseFallback: SuspenseContext),
+    ) &&
+    (current === null || current.memoizedState !== null)
+  );
+}
+
 function updateSuspenseComponent(
   current,
   workInProgress,
@@ -1455,10 +1479,7 @@ function updateSuspenseComponent(
 
   if (
     (workInProgress.effectTag & DidCapture) !== NoEffect ||
-    hasSuspenseContext(
-      suspenseContext,
-      (ForceSuspenseFallback: SuspenseContext),
-    )
+    shouldRemainOnFallback(suspenseContext, current, workInProgress)
   ) {
     // Something in this boundary's subtree already suspended. Switch to
     // rendering the fallback children.
@@ -1918,6 +1939,162 @@ function updateDehydratedSuspenseComponent(
   }
 }
 
+function propagateSuspenseContextChange(
+  workInProgress: Fiber,
+  firstChild: null | Fiber,
+  renderExpirationTime: ExpirationTime,
+): void {
+  // Mark any Suspense boundaries with fallbacks as having work to do.
+  // If they were previously forced into fallbacks, they may now be able
+  // to unblock.
+  let node = firstChild;
+  while (node !== null) {
+    if (node.tag === SuspenseComponent) {
+      const state: SuspenseState | null = node.memoizedState;
+      if (state !== null) {
+        if (node.expirationTime < renderExpirationTime) {
+          node.expirationTime = renderExpirationTime;
+        }
+        let alternate = node.alternate;
+        if (
+          alternate !== null &&
+          alternate.expirationTime < renderExpirationTime
+        ) {
+          alternate.expirationTime = renderExpirationTime;
+        }
+        scheduleWorkOnParentPath(node.return, renderExpirationTime);
+      }
+    } else if (node.child !== null) {
+      node.child.return = node;
+      node = node.child;
+      continue;
+    }
+    if (node === workInProgress) {
+      return;
+    }
+    while (node.sibling === null) {
+      if (node.return === null || node.return === workInProgress) {
+        return;
+      }
+      node = node.return;
+    }
+    node.sibling.return = node.return;
+    node = node.sibling;
+  }
+}
+
+type SuspenseListRevealOrder = 'together' | void;
+
+function updateSuspenseListComponent(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  renderExpirationTime: ExpirationTime,
+) {
+  const nextProps = workInProgress.pendingProps;
+  const revealOrder: SuspenseListRevealOrder = nextProps.revealOrder;
+  const nextChildren = nextProps.children;
+
+  let nextChildFibers;
+  if (current === null) {
+    nextChildFibers = mountChildFibers(
+      workInProgress,
+      null,
+      nextChildren,
+      renderExpirationTime,
+    );
+  } else {
+    nextChildFibers = reconcileChildFibers(
+      workInProgress,
+      current.child,
+      nextChildren,
+      renderExpirationTime,
+    );
+  }
+
+  let suspenseContext: SuspenseContext = suspenseStackCursor.current;
+
+  let shouldForceFallback = hasSuspenseContext(
+    suspenseContext,
+    (ForceSuspenseFallback: SuspenseContext),
+  );
+
+  if ((workInProgress.effectTag & DidCapture) !== NoEffect) {
+    // This is the second pass. In this pass, we should force the
+    // fallbacks in place.
+    shouldForceFallback = true;
+  }
+
+  let suspenseListState: null | SuspenseListState = null;
+
+  if (shouldForceFallback) {
+    suspenseContext = setShallowSuspenseContext(
+      suspenseContext,
+      ForceSuspenseFallback,
+    );
+    suspenseListState = {
+      didSuspend: true,
+    };
+  } else {
+    let didForceFallback =
+      current !== null &&
+      current.memoizedState !== null &&
+      (current.memoizedState: SuspenseListState).didSuspend;
+    if (didForceFallback) {
+      // If we previously forced a fallback, we need to schedule work
+      // on any nested boundaries to let them know to try to render
+      // again. This is the same as context updating.
+      propagateSuspenseContextChange(
+        workInProgress,
+        nextChildFibers,
+        renderExpirationTime,
+      );
+    }
+    suspenseContext = setDefaultShallowSuspenseContext(suspenseContext);
+  }
+
+  pushSuspenseContext(workInProgress, suspenseContext);
+
+  if ((workInProgress.mode & BatchedMode) === NoMode) {
+    // Outside of batched mode, SuspenseList doesn't work so we just
+    // use make it a noop by treating it as the default revealOrder.
+    workInProgress.effectTag |= DidCapture;
+    workInProgress.child = nextChildFibers;
+    return nextChildFibers;
+  }
+
+  switch (revealOrder) {
+    // TODO: For other reveal orders we'll need to split the nextChildFibers set.
+    case 'together': {
+      break;
+    }
+    default: {
+      // The default reveal order is the same as not having
+      // a boundary.
+      if (__DEV__) {
+        if (
+          revealOrder !== undefined &&
+          !didWarnAboutRevealOrder[revealOrder]
+        ) {
+          didWarnAboutRevealOrder[revealOrder] = true;
+          warning(
+            false,
+            '"%s" is not a supported revealOrder on <SuspenseList />. ' +
+              'Did you mean "together"?',
+            revealOrder,
+          );
+        }
+      }
+      // We mark this as having captured but it really just says to the
+      // complete phase that we should treat this as done, whatever form
+      // it is in. No need for a second pass.
+      workInProgress.effectTag |= DidCapture;
+    }
+  }
+  workInProgress.memoizedState = suspenseListState;
+  workInProgress.child = nextChildFibers;
+  return nextChildFibers;
+}
+
 function updatePortalComponent(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -2367,6 +2544,21 @@ function beginWork(
           }
           break;
         }
+        case SuspenseListComponent: {
+          // Check if the children have any pending work.
+          const childExpirationTime = workInProgress.childExpirationTime;
+          if (childExpirationTime < renderExpirationTime) {
+            pushSuspenseContext(workInProgress, suspenseStackCursor.current);
+            // None of the children have any work, so we can do a fast bailout.
+            return null;
+          }
+          // Try the normal path.
+          return updateSuspenseListComponent(
+            current,
+            workInProgress,
+            renderExpirationTime,
+          );
+        }
         case EventComponent:
           if (enableEventAPI) {
             pushHostContextForEventComponent(workInProgress);
@@ -2555,6 +2747,13 @@ function beginWork(
         );
       }
       break;
+    }
+    case SuspenseListComponent: {
+      return updateSuspenseListComponent(
+        current,
+        workInProgress,
+        renderExpirationTime,
+      );
     }
     case EventComponent: {
       if (enableEventAPI) {
