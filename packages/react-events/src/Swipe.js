@@ -8,12 +8,12 @@
  */
 
 import type {
-  ReactResponderEvent,
-  ReactResponderContext,
-} from 'shared/ReactTypes';
+  ReactDOMResponderEvent,
+  ReactDOMResponderContext,
+} from 'shared/ReactDOMTypes';
 import type {EventPriority} from 'shared/ReactTypes';
 
-import React from 'react';
+import ReactDOM from 'react-dom';
 import {UserBlockingEvent, DiscreteEvent} from 'shared/ReactTypes';
 
 const targetEventTypes = ['pointerdown'];
@@ -48,7 +48,7 @@ type SwipeEvent = {|
 |};
 
 function createSwipeEvent(
-  context: ReactResponderContext,
+  context: ReactDOMResponderContext,
   type: SwipeEventType,
   target: Element | Document,
   eventData?: EventData,
@@ -64,7 +64,7 @@ function createSwipeEvent(
 }
 
 function dispatchSwipeEvent(
-  context: ReactResponderContext,
+  context: ReactDOMResponderContext,
   name: SwipeEventType,
   listener: SwipeEvent => void,
   state: SwipeState,
@@ -104,10 +104,9 @@ const SwipeResponder = {
     };
   },
   allowMultipleHostChildren: false,
-  stopLocalPropagation: true,
   onEvent(
-    event: ReactResponderEvent,
-    context: ReactResponderContext,
+    event: ReactDOMResponderEvent,
+    context: ReactDOMResponderContext,
     props: Object,
     state: SwipeState,
   ): void {
@@ -148,8 +147,8 @@ const SwipeResponder = {
     }
   },
   onRootEvent(
-    event: ReactResponderEvent,
-    context: ReactResponderContext,
+    event: ReactDOMResponderEvent,
+    context: ReactDOMResponderContext,
     props: Object,
     state: SwipeState,
   ): void {
@@ -263,4 +262,4 @@ const SwipeResponder = {
   },
 };
 
-export default React.unstable_createEventComponent(SwipeResponder, 'Swipe');
+export default ReactDOM.unstable_createEvent(SwipeResponder, 'Swipe');

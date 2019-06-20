@@ -27,7 +27,6 @@ function createReactEventComponent({
   onMount,
   onUnmount,
   onOwnershipChange,
-  stopLocalPropagation,
   allowMultipleHostChildren,
 }) {
   const testEventResponder = {
@@ -40,16 +39,13 @@ function createReactEventComponent({
     onMount,
     onUnmount,
     onOwnershipChange,
-    stopLocalPropagation: stopLocalPropagation || false,
     allowMultipleHostChildren: allowMultipleHostChildren || false,
   };
 
-  return {
-    $$typeof: Symbol.for('react.event_component'),
-    displayName: 'TestEventComponent',
-    props: null,
-    responder: testEventResponder,
-  };
+  return ReactDOM.unstable_createEvent(
+    testEventResponder,
+    'TestEventComponent',
+  );
 }
 
 function dispatchEvent(element, type) {
@@ -215,6 +211,7 @@ describe('DOMEventResponderSystem', () => {
     const ClickEventComponent = createReactEventComponent({
       targetEventTypes: ['click'],
       onEvent: (event, context, props) => {
+        context.continueLocalPropagation();
         eventResponderFiredCount++;
         eventLog.push({
           name: event.type,
@@ -224,6 +221,7 @@ describe('DOMEventResponderSystem', () => {
         });
       },
       onEventCapture: (event, context, props) => {
+        context.continueLocalPropagation();
         eventResponderFiredCount++;
         eventLog.push({
           name: event.type,
@@ -324,19 +322,20 @@ describe('DOMEventResponderSystem', () => {
     ]);
   });
 
-  it('nested event responders should fire in the correct order without stopLocalPropagation', () => {
+  it('nested event responders should fire in the correct order with continueLocalPropagation', () => {
     let eventLog = [];
     const buttonRef = React.createRef();
 
     const ClickEventComponent = createReactEventComponent({
       targetEventTypes: ['click'],
       onEvent: (event, context, props) => {
+        context.continueLocalPropagation();
         eventLog.push(`${props.name} [bubble]`);
       },
       onEventCapture: (event, context, props) => {
+        context.continueLocalPropagation();
         eventLog.push(`${props.name} [capture]`);
       },
-      stopLocalPropagation: false,
     });
 
     const Test = () => (
@@ -361,7 +360,7 @@ describe('DOMEventResponderSystem', () => {
     ]);
   });
 
-  it('nested event responders should fire in the correct order with stopLocalPropagation', () => {
+  it('nested event responders should fire in the correct order', () => {
     let eventLog = [];
     const buttonRef = React.createRef();
 
@@ -373,7 +372,6 @@ describe('DOMEventResponderSystem', () => {
       onEventCapture: (event, context, props) => {
         eventLog.push(`${props.name} [capture]`);
       },
-      stopLocalPropagation: true,
     });
 
     const Test = () => (
@@ -686,6 +684,7 @@ describe('DOMEventResponderSystem', () => {
     const EventComponent = createReactEventComponent({
       targetEventTypes: ['pointerout'],
       onEvent: (event, context) => {
+        context.continueLocalPropagation();
         const isWithin = context.isTargetWithinEventResponderScope(
           event.nativeEvent.relatedTarget,
         );
@@ -924,19 +923,6 @@ describe('DOMEventResponderSystem', () => {
         ' Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.nativeEvent }`',
       {withoutStack: true},
     );
-    expect(() => {
-      handler = event => {
-        return event.defaultPrevented;
-      };
-      ReactDOM.render(<Test />, container);
-      dispatchClickEvent(document.body);
-    }).toWarnDev(
-      'Warning: defaultPrevented is not available on event objects created from event responder modules ' +
-        '(React Flare).' +
-        ' Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.defaultPrevented }`',
-      {withoutStack: true},
-    );
-
     expect(container.innerHTML).toBe('<button>Click me!</button>');
   });
 

@@ -11,7 +11,7 @@ export default function App() {
   return <h1>{foo}</h1>;
 }
 
-_s(App, "useState{[foo, setFoo]}\\nuseEffect{}");
+_s(App, "useState{[foo, setFoo](0)}\\nuseEffect{}");
 
 _c = App;
 
@@ -30,7 +30,7 @@ export const A = _c3 = React.memo(_c2 = React.forwardRef(_c = _s((props, ref) =>
   const [foo, setFoo] = useState(0);
   React.useEffect(() => {});
   return <h1 ref={ref}>{foo}</h1>;
-}, "useState{[foo, setFoo]}\\nuseEffect{}")));
+}, "useState{[foo, setFoo](0)}\\nuseEffect{}")));
 
 export const B = _c6 = React.memo(_c5 = React.forwardRef(_c4 = _s2(function (props, ref) {
   _s2();
@@ -38,7 +38,7 @@ export const B = _c6 = React.memo(_c5 = React.forwardRef(_c4 = _s2(function (pro
   const [foo, setFoo] = useState(0);
   React.useEffect(() => {});
   return <h1 ref={ref}>{foo}</h1>;
-}, "useState{[foo, setFoo]}\\nuseEffect{}")));
+}, "useState{[foo, setFoo](0)}\\nuseEffect{}")));
 
 function hoc() {
   var _s3 = __signature__();
@@ -49,7 +49,7 @@ function hoc() {
     const [foo, setFoo] = useState(0);
     React.useEffect(() => {});
     return <h1 ref={ref}>{foo}</h1>;
-  }, "useState{[foo, setFoo]}\\nuseEffect{}");
+  }, "useState{[foo, setFoo](0)}\\nuseEffect{}");
 }
 
 export let C = hoc();
@@ -87,7 +87,7 @@ export default function App() {
     return foo;
   }
 
-  _s(useFancyState, 'useState{[foo, setFoo]}\\nuseFancyEffect{}', true);
+  _s(useFancyState, 'useState{[foo, setFoo](0)}\\nuseFancyEffect{}', true);
 
   const bar = useFancyState();
   const baz = FancyHook.useThing();
@@ -169,7 +169,7 @@ function useFancyState() {
   return foo;
 }
 
-_s(useFancyState, "useState{[foo, setFoo]}\\nuseFancyEffect{}", false, () => [useFancyEffect]);
+_s(useFancyState, "useState{[foo, setFoo](0)}\\nuseFancyEffect{}", false, () => [useFancyEffect]);
 
 const useFancyEffect = () => {
   _s2();

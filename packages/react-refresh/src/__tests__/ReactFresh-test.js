@@ -16,36 +16,34 @@ let ReactDOM;
 let ReactFreshRuntime;
 let Scheduler;
 let act;
+let createReactClass;
 
 describe('ReactFresh', () => {
   let container;
-  let lastRoot;
-  let scheduleHotUpdate;
 
   beforeEach(() => {
-    global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
-      supportsFiber: true,
-      inject: injected => {
-        scheduleHotUpdate = injected.scheduleHotUpdate;
-      },
-      onCommitFiberRoot: (id, root) => {
-        lastRoot = root;
-      },
-      onCommitFiberUnmount: () => {},
-    };
-
-    jest.resetModules();
-    React = require('react');
-    ReactDOM = require('react-dom');
-    ReactFreshRuntime = require('react-fresh/runtime');
-    Scheduler = require('scheduler');
-    act = require('react-dom/test-utils').act;
-    container = document.createElement('div');
-    document.body.appendChild(container);
+    if (__DEV__) {
+      jest.resetModules();
+      React = require('react');
+      ReactFreshRuntime = require('react-refresh/runtime');
+      ReactFreshRuntime.injectIntoGlobalHook(global);
+      ReactDOM = require('react-dom');
+      Scheduler = require('scheduler');
+      act = require('react-dom/test-utils').act;
+      createReactClass = require('create-react-class/factory')(
+        React.Component,
+        React.isValidElement,
+        new React.Component().updater,
+      );
+      container = document.createElement('div');
+      document.body.appendChild(container);
+    }
   });
 
   afterEach(() => {
-    document.body.removeChild(container);
+    if (__DEV__) {
+      document.body.removeChild(container);
+    }
   });
 
   function prepare(version) {
@@ -63,8 +61,7 @@ describe('ReactFresh', () => {
 
   function patch(version) {
     const Component = version();
-    const hotUpdate = ReactFreshRuntime.prepareUpdate();
-    scheduleHotUpdate(lastRoot, hotUpdate);
+    ReactFreshRuntime.performReactRefresh();
     return Component;
   }
 
@@ -1917,7 +1914,7 @@ describe('ReactFresh', () => {
 
     ReactDOM.render(tree, container);
     const elements = container.querySelectorAll('section');
-    // Each tree above products exactly three <section> elements:
+    // Each tree above produces exactly three <section> elements:
     expect(elements.length).toBe(3);
     elements.forEach(el => {
       expect(el.dataset.color).toBe('blue');
@@ -2932,6 +2929,341 @@ describe('ReactFresh', () => {
       expect(container.firstChild).toBe(finalEl);
       expect(finalEl.style.color).toBe('purple');
       expect(finalEl.textContent).toBe('1');
+    }
+  });
+
+  it('can find host instances for a family', () => {
+    if (__DEV__) {
+      render(() => {
+        function Child({children}) {
+          return <div className="Child">{children}</div>;
+        }
+        __register__(Child, 'Child');
+
+        function Parent({children}) {
+          return (
+            <div className="Parent">
+              <div>
+                <Child />
+              </div>
+              <div>
+                <Child />
+              </div>
+            </div>
+          );
+        }
+        __register__(Parent, 'Parent');
+
+        function App() {
+          return (
+            <div className="App">
+              <Parent />
+              <Cls>
+                <Parent />
+              </Cls>
+              <Indirection>
+                <Empty />
+              </Indirection>
+            </div>
+          );
+        }
+        __register__(App, 'App');
+
+        class Cls extends React.Component {
+          render() {
+            return this.props.children;
+          }
+        }
+
+        function Indirection({children}) {
+          return children;
+        }
+
+        function Empty() {
+          return null;
+        }
+        __register__(Empty, 'Empty');
+
+        function Frag() {
+          return (
+            <React.Fragment>
+              <div className="Frag">
+                <div />
+              </div>
+              <div className="Frag">
+                <div />
+              </div>
+            </React.Fragment>
+          );
+        }
+        __register__(Frag, 'Frag');
+
+        return App;
+      });
+
+      const parentFamily = ReactFreshRuntime.getFamilyByID('Parent');
+      const childFamily = ReactFreshRuntime.getFamilyByID('Child');
+      const emptyFamily = ReactFreshRuntime.getFamilyByID('Empty');
+
+      testFindHostInstancesForFamilies(
+        [parentFamily],
+        container.querySelectorAll('.Parent'),
+      );
+
+      testFindHostInstancesForFamilies(
+        [childFamily],
+        container.querySelectorAll('.Child'),
+      );
+
+      // When searching for both Parent and Child,
+      // we'll stop visual highlighting at the Parent.
+      testFindHostInstancesForFamilies(
+        [parentFamily, childFamily],
+        container.querySelectorAll('.Parent'),
+      );
+
+      // When we can't find host nodes, use the closest parent.
+      testFindHostInstancesForFamilies(
+        [emptyFamily],
+        container.querySelectorAll('.App'),
+      );
+    }
+  });
+
+  function testFindHostInstancesForFamilies(families, expectedNodes) {
+    const foundInstances = Array.from(
+      ReactFreshRuntime.findAffectedHostInstances(families),
+    );
+    expect(foundInstances.length).toEqual(expectedNodes.length);
+    foundInstances.forEach((node, i) => {
+      expect(node).toBe(expectedNodes[i]);
+    });
+  }
+
+  it('can update multiple roots independently', () => {
+    if (__DEV__) {
+      // Declare the first version.
+      const HelloV1 = () => {
+        const [val, setVal] = React.useState(0);
+        return (
+          <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
+            {val}
+          </p>
+        );
+      };
+      __register__(HelloV1, 'Hello');
+
+      // Perform a hot update before any roots exist.
+      const HelloV2 = () => {
+        const [val, setVal] = React.useState(0);
+        return (
+          <p style={{color: 'red'}} onClick={() => setVal(val + 1)}>
+            {val}
+          </p>
+        );
+      };
+      __register__(HelloV2, 'Hello');
+      ReactFreshRuntime.performReactRefresh();
+
+      // Mount three roots.
+      let cont1 = document.createElement('div');
+      let cont2 = document.createElement('div');
+      let cont3 = document.createElement('div');
+      document.body.appendChild(cont1);
+      document.body.appendChild(cont2);
+      document.body.appendChild(cont3);
+      try {
+        ReactDOM.render(<HelloV1 id={1} />, cont1);
+        ReactDOM.render(<HelloV2 id={2} />, cont2);
+        ReactDOM.render(<HelloV1 id={3} />, cont3);
+
+        // Expect we see the V2 color.
+        expect(cont1.firstChild.style.color).toBe('red');
+        expect(cont2.firstChild.style.color).toBe('red');
+        expect(cont3.firstChild.style.color).toBe('red');
+        expect(cont1.firstChild.textContent).toBe('0');
+        expect(cont2.firstChild.textContent).toBe('0');
+        expect(cont3.firstChild.textContent).toBe('0');
+
+        // Bump the state for each of them.
+        act(() => {
+          cont1.firstChild.dispatchEvent(
+            new MouseEvent('click', {bubbles: true}),
+          );
+          cont2.firstChild.dispatchEvent(
+            new MouseEvent('click', {bubbles: true}),
+          );
+          cont3.firstChild.dispatchEvent(
+            new MouseEvent('click', {bubbles: true}),
+          );
+        });
+        expect(cont1.firstChild.style.color).toBe('red');
+        expect(cont2.firstChild.style.color).toBe('red');
+        expect(cont3.firstChild.style.color).toBe('red');
+        expect(cont1.firstChild.textContent).toBe('1');
+        expect(cont2.firstChild.textContent).toBe('1');
+        expect(cont3.firstChild.textContent).toBe('1');
+
+        // Perform another hot update.
+        const HelloV3 = () => {
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'green'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        };
+        __register__(HelloV3, 'Hello');
+        ReactFreshRuntime.performReactRefresh();
+
+        // It should affect all roots.
+        expect(cont1.firstChild.style.color).toBe('green');
+        expect(cont2.firstChild.style.color).toBe('green');
+        expect(cont3.firstChild.style.color).toBe('green');
+        expect(cont1.firstChild.textContent).toBe('1');
+        expect(cont2.firstChild.textContent).toBe('1');
+        expect(cont3.firstChild.textContent).toBe('1');
+
+        // Unmount the second root.
+        ReactDOM.unmountComponentAtNode(cont2);
+        // Make the first root throw and unmount on hot update.
+        const HelloV4 = ({id}) => {
+          if (id === 1) {
+            throw new Error('Oops.');
+          }
+          const [val, setVal] = React.useState(0);
+          return (
+            <p style={{color: 'orange'}} onClick={() => setVal(val + 1)}>
+              {val}
+            </p>
+          );
+        };
+        __register__(HelloV4, 'Hello');
+        expect(() => {
+          ReactFreshRuntime.performReactRefresh();
+        }).toThrow('Oops.');
+
+        // Still, we expect the last root to be updated.
+        expect(cont1.innerHTML).toBe('');
+        expect(cont2.innerHTML).toBe('');
+        expect(cont3.firstChild.style.color).toBe('orange');
+        expect(cont3.firstChild.textContent).toBe('1');
+      } finally {
+        document.body.removeChild(cont1);
+        document.body.removeChild(cont2);
+        document.body.removeChild(cont3);
+      }
+    }
+  });
+
+  // Module runtimes can use this to decide whether
+  // to propagate an update up to the modules that imported it,
+  // or to stop at the current module because it's a component.
+  // This can't and doesn't need to be 100% precise.
+  it('can detect likely component types', () => {
+    function useTheme() {}
+    function Widget() {}
+
+    if (__DEV__) {
+      expect(ReactFreshRuntime.isLikelyComponentType(false)).toBe(false);
+      expect(ReactFreshRuntime.isLikelyComponentType(null)).toBe(false);
+      expect(ReactFreshRuntime.isLikelyComponentType('foo')).toBe(false);
+
+      // We need to hit a balance here.
+      // If we lean towards assuming everything is a component,
+      // editing modules that export plain functions won't trigger
+      // a proper reload because we will bottle up the update.
+      // So we're being somewhat conservative.
+      expect(ReactFreshRuntime.isLikelyComponentType(() => {})).toBe(false);
+      expect(ReactFreshRuntime.isLikelyComponentType(function() {})).toBe(
+        false,
+      );
+      expect(
+        ReactFreshRuntime.isLikelyComponentType(function lightenColor() {}),
+      ).toBe(false);
+      const loadUser = () => {};
+      expect(ReactFreshRuntime.isLikelyComponentType(loadUser)).toBe(false);
+      const useStore = () => {};
+      expect(ReactFreshRuntime.isLikelyComponentType(useStore)).toBe(false);
+      expect(ReactFreshRuntime.isLikelyComponentType(useTheme)).toBe(false);
+
+      // These seem like function components.
+      let Button = () => {};
+      expect(ReactFreshRuntime.isLikelyComponentType(Button)).toBe(true);
+      expect(ReactFreshRuntime.isLikelyComponentType(Widget)).toBe(true);
+      let anon = (() => () => {})();
+      anon.displayName = 'Foo';
+      expect(ReactFreshRuntime.isLikelyComponentType(anon)).toBe(true);
+
+      // These seem like class components.
+      class Btn extends React.Component {}
+      class PureBtn extends React.PureComponent {}
+      expect(ReactFreshRuntime.isLikelyComponentType(Btn)).toBe(true);
+      expect(ReactFreshRuntime.isLikelyComponentType(PureBtn)).toBe(true);
+      expect(
+        ReactFreshRuntime.isLikelyComponentType(
+          createReactClass({render() {}}),
+        ),
+      ).toBe(true);
+
+      // These don't.
+      class Figure {
+        move() {}
+      }
+      expect(ReactFreshRuntime.isLikelyComponentType(Figure)).toBe(false);
+      class Point extends Figure {}
+      expect(ReactFreshRuntime.isLikelyComponentType(Point)).toBe(false);
+
+      // Run the same tests without Babel.
+      // This tests real arrow functions and classes, as implemented in Node.
+
+      // eslint-disable-next-line no-new-func
+      new Function(
+        'global',
+        'React',
+        'ReactFreshRuntime',
+        'expect',
+        'createReactClass',
+        `
+        expect(ReactFreshRuntime.isLikelyComponentType(() => {})).toBe(false);
+        expect(ReactFreshRuntime.isLikelyComponentType(function() {})).toBe(false);
+        expect(
+          ReactFreshRuntime.isLikelyComponentType(function lightenColor() {}),
+        ).toBe(false);
+        const loadUser = () => {};
+        expect(ReactFreshRuntime.isLikelyComponentType(loadUser)).toBe(false);
+        const useStore = () => {};
+        expect(ReactFreshRuntime.isLikelyComponentType(useStore)).toBe(false);
+        function useTheme() {}
+        expect(ReactFreshRuntime.isLikelyComponentType(useTheme)).toBe(false);
+
+        // These seem like function components.
+        let Button = () => {};
+        expect(ReactFreshRuntime.isLikelyComponentType(Button)).toBe(true);
+        function Widget() {}
+        expect(ReactFreshRuntime.isLikelyComponentType(Widget)).toBe(true);
+        let anon = (() => () => {})();
+        anon.displayName = 'Foo';
+        expect(ReactFreshRuntime.isLikelyComponentType(anon)).toBe(true);
+
+        // These seem like class components.
+        class Btn extends React.Component {}
+        class PureBtn extends React.PureComponent {}
+        expect(ReactFreshRuntime.isLikelyComponentType(Btn)).toBe(true);
+        expect(ReactFreshRuntime.isLikelyComponentType(PureBtn)).toBe(true);
+        expect(
+          ReactFreshRuntime.isLikelyComponentType(createReactClass({render() {}})),
+        ).toBe(true);
+
+        // These don't.
+        class Figure {
+          move() {}
+        }
+        expect(ReactFreshRuntime.isLikelyComponentType(Figure)).toBe(false);
+        class Point extends Figure {}
+        expect(ReactFreshRuntime.isLikelyComponentType(Point)).toBe(false);
+      `,
+      )(global, React, ReactFreshRuntime, expect, createReactClass);
     }
   });
 });

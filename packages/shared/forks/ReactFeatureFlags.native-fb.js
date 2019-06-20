@@ -27,7 +27,6 @@ export const warnAboutShorthandPropertyCollision = false;
 export const enableSchedulerDebugging = false;
 export const debugRenderPhaseSideEffectsForStrictMode = true;
 export const disableJavaScriptURLs = false;
-export const disableYielding = false;
 export const disableInputAttributeSyncing = false;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 export const warnAboutDeprecatedLifecycles = true;

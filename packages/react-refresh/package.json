@@ -1,6 +1,5 @@
 {
-  "name": "react-fresh",
-  "private": true,
+  "name": "react-refresh",
   "description": "React is a JavaScript library for building user interfaces.",
   "keywords": [
     "react"

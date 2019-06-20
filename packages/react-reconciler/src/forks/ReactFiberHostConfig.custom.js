@@ -37,6 +37,7 @@ export opaque type UpdatePayload = mixed; // eslint-disable-line no-undef
 export opaque type ChildSet = mixed; // eslint-disable-line no-undef
 export opaque type TimeoutHandle = mixed; // eslint-disable-line no-undef
 export opaque type NoTimeout = mixed; // eslint-disable-line no-undef
+export type EventResponder = any;
 
 export const getPublicInstance = $$$hostConfig.getPublicInstance;
 export const getRootHostContext = $$$hostConfig.getRootHostContext;

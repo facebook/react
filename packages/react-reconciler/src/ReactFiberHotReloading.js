@@ -10,6 +10,7 @@
 import type {ReactElement} from 'shared/ReactElementType';
 import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
+import type {Instance} from './ReactFiberHostConfig';
 
 import {
   flushSync,
@@ -21,6 +22,9 @@ import {
   ClassComponent,
   FunctionComponent,
   ForwardRef,
+  HostComponent,
+  HostPortal,
+  HostRoot,
   MemoComponent,
   SimpleMemoComponent,
 } from 'shared/ReactWorkTags';
@@ -34,15 +38,31 @@ export type Family = {|
   current: any,
 |};
 
-export type HotUpdate = {|
-  resolveFamily: (any => Family | void) | null,
+export type RefreshUpdate = {|
   staleFamilies: Set<Family>,
   updatedFamilies: Set<Family>,
 |};
 
-let resolveFamily: (any => Family | void) | null = null;
+// Resolves type to a family.
+type RefreshHandler = any => Family | void;
+
+// Used by React Refresh runtime through DevTools Global Hook.
+export type SetRefreshHandler = (handler: RefreshHandler | null) => void;
+export type ScheduleRefresh = (root: FiberRoot, update: RefreshUpdate) => void;
+export type FindHostInstancesForRefresh = (
+  root: FiberRoot,
+  families: Array<Family>,
+) => Set<Instance>;
+
+let resolveFamily: RefreshHandler | null = null;
 // $FlowFixMe Flow gets confused by a WeakSet feature check below.
 let failedBoundaries: WeakSet<Fiber> | null = null;
+
+export let setRefreshHandler = (handler: RefreshHandler | null): void => {
+  if (__DEV__) {
+    resolveFamily = handler;
+  }
+};
 
 export function resolveFunctionForHotReloading(type: any): any {
   if (__DEV__) {
@@ -188,7 +208,7 @@ export function isCompatibleFamilyForHotReloading(
 export function markFailedErrorBoundaryForHotReloading(fiber: Fiber) {
   if (__DEV__) {
     if (resolveFamily === null) {
-      // Not hot reloading.
+      // Hot reloading is disabled.
       return;
     }
     if (typeof WeakSet !== 'function') {
@@ -201,12 +221,16 @@ export function markFailedErrorBoundaryForHotReloading(fiber: Fiber) {
   }
 }
 
-export function scheduleHotUpdate(root: FiberRoot, hotUpdate: HotUpdate): void {
+export let scheduleRefresh: ScheduleRefresh = (
+  root: FiberRoot,
+  update: RefreshUpdate,
+): void => {
   if (__DEV__) {
-    // TODO: warn if its identity changes over time?
-    resolveFamily = hotUpdate.resolveFamily;
-
-    const {staleFamilies, updatedFamilies} = hotUpdate;
+    if (resolveFamily === null) {
+      // Hot reloading is disabled.
+      return;
+    }
+    const {staleFamilies, updatedFamilies} = update;
     flushPassiveEffects();
     flushSync(() => {
       scheduleFibersWithFamiliesRecursively(
@@ -216,7 +240,7 @@ export function scheduleHotUpdate(root: FiberRoot, hotUpdate: HotUpdate): void {
       );
     });
   }
-}
+};
 
 function scheduleFibersWithFamiliesRecursively(
   fiber: Fiber,
@@ -286,4 +310,147 @@ function scheduleFibersWithFamiliesRecursively(
       );
     }
   }
+}
+
+export let findHostInstancesForRefresh: FindHostInstancesForRefresh = (
+  root: FiberRoot,
+  families: Array<Family>,
+): Set<Instance> => {
+  if (__DEV__) {
+    const hostInstances = new Set();
+    const types = new Set(families.map(family => family.current));
+    findHostInstancesForMatchingFibersRecursively(
+      root.current,
+      types,
+      hostInstances,
+    );
+    return hostInstances;
+  } else {
+    throw new Error(
+      'Did not expect findHostInstancesForRefresh to be called in production.',
+    );
+  }
+};
+
+function findHostInstancesForMatchingFibersRecursively(
+  fiber: Fiber,
+  types: Set<any>,
+  hostInstances: Set<Instance>,
+) {
+  if (__DEV__) {
+    const {child, sibling, tag, type} = fiber;
+
+    let candidateType = null;
+    switch (tag) {
+      case FunctionComponent:
+      case SimpleMemoComponent:
+      case ClassComponent:
+        candidateType = type;
+        break;
+      case ForwardRef:
+        candidateType = type.render;
+        break;
+      default:
+        break;
+    }
+
+    let didMatch = false;
+    if (candidateType !== null) {
+      if (types.has(candidateType)) {
+        didMatch = true;
+      }
+    }
+
+    if (didMatch) {
+      // We have a match. This only drills down to the closest host components.
+      // There's no need to search deeper because for the purpose of giving
+      // visual feedback, "flashing" outermost parent rectangles is sufficient.
+      findHostInstancesForFiberShallowly(fiber, hostInstances);
+    } else {
+      // If there's no match, maybe there will be one further down in the child tree.
+      if (child !== null) {
+        findHostInstancesForMatchingFibersRecursively(
+          child,
+          types,
+          hostInstances,
+        );
+      }
+    }
+
+    if (sibling !== null) {
+      findHostInstancesForMatchingFibersRecursively(
+        sibling,
+        types,
+        hostInstances,
+      );
+    }
+  }
+}
+
+function findHostInstancesForFiberShallowly(
+  fiber: Fiber,
+  hostInstances: Set<Instance>,
+): void {
+  if (__DEV__) {
+    const foundHostInstances = findChildHostInstancesForFiberShallowly(
+      fiber,
+      hostInstances,
+    );
+    if (foundHostInstances) {
+      return;
+    }
+    // If we didn't find any host children, fallback to closest host parent.
+    let node = fiber;
+    while (true) {
+      switch (node.tag) {
+        case HostComponent:
+          hostInstances.add(node.stateNode);
+          return;
+        case HostPortal:
+          hostInstances.add(node.stateNode.containerInfo);
+          return;
+        case HostRoot:
+          hostInstances.add(node.stateNode.containerInfo);
+          return;
+      }
+      if (node.return === null) {
+        throw new Error('Expected to reach root first.');
+      }
+      node = node.return;
+    }
+  }
+}
+
+function findChildHostInstancesForFiberShallowly(
+  fiber: Fiber,
+  hostInstances: Set<Instance>,
+): boolean {
+  if (__DEV__) {
+    let node: Fiber = fiber;
+    let foundHostInstances = false;
+    while (true) {
+      if (node.tag === HostComponent) {
+        // We got a match.
+        foundHostInstances = true;
+        hostInstances.add(node.stateNode);
+        // There may still be more, so keep searching.
+      } else if (node.child !== null) {
+        node.child.return = node;
+        node = node.child;
+        continue;
+      }
+      if (node === fiber) {
+        return foundHostInstances;
+      }
+      while (node.sibling === null) {
+        if (node.return === null || node.return === fiber) {
+          return foundHostInstances;
+        }
+        node = node.return;
+      }
+      node.sibling.return = node.return;
+      node = node.sibling;
+    }
+  }
+  return false;
 }

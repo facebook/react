@@ -6,13 +6,12 @@
  *
  * @flow
  */
-
 import type {
-  ReactResponderEvent,
-  ReactResponderContext,
-} from 'shared/ReactTypes';
+  ReactDOMResponderEvent,
+  ReactDOMResponderContext,
+} from 'shared/ReactDOMTypes';
 
-import React from 'react';
+import ReactDOM from 'react-dom';
 
 type FocusScopeProps = {
   autoFocus: Boolean,
@@ -37,7 +36,7 @@ function focusElement(element: ?HTMLElement) {
 }
 
 function getFirstFocusableElement(
-  context: ReactResponderContext,
+  context: ReactDOMResponderContext,
   state: FocusScopeState,
 ): ?HTMLElement {
   const elements = context.getFocusableElementsInScope();
@@ -56,20 +55,14 @@ const FocusScopeResponder = {
     };
   },
   allowMultipleHostChildren: true,
-  stopLocalPropagation: false,
   onEvent(
-    event: ReactResponderEvent,
-    context: ReactResponderContext,
+    event: ReactDOMResponderEvent,
+    context: ReactDOMResponderContext,
     props: FocusScopeProps,
     state: FocusScopeState,
   ) {
     const {type, nativeEvent} = event;
-    const hasOwnership =
-      context.hasOwnership() || context.requestResponderOwnership();
 
-    if (!hasOwnership) {
-      return;
-    }
     if (type === 'keydown' && nativeEvent.key === 'Tab') {
       const focusedElement = context.getActiveDocument().activeElement;
       if (
@@ -92,7 +85,7 @@ const FocusScopeResponder = {
               nextElement = elements[lastPosition];
             } else {
               // Out of bounds
-              context.releaseOwnership();
+              context.continueLocalPropagation();
               return;
             }
           } else {
@@ -104,19 +97,14 @@ const FocusScopeResponder = {
               nextElement = elements[0];
             } else {
               // Out of bounds
-              context.releaseOwnership();
+              context.continueLocalPropagation();
               return;
             }
           } else {
             nextElement = elements[position + 1];
           }
         }
-        // If this element is possibly inside the scope of another
-        // FocusScope responder or is out of bounds, then we release ownership.
         if (nextElement !== null) {
-          if (!context.isTargetWithinEventResponderScope(nextElement)) {
-            context.releaseOwnership();
-          }
           focusElement(nextElement);
           state.currentFocusedNode = nextElement;
           ((nativeEvent: any): KeyboardEvent).preventDefault();
@@ -125,8 +113,8 @@ const FocusScopeResponder = {
     }
   },
   onRootEvent(
-    event: ReactResponderEvent,
-    context: ReactResponderContext,
+    event: ReactDOMResponderEvent,
+    context: ReactDOMResponderContext,
     props: FocusScopeProps,
     state: FocusScopeState,
   ) {
@@ -146,7 +134,7 @@ const FocusScopeResponder = {
     }
   },
   onMount(
-    context: ReactResponderContext,
+    context: ReactDOMResponderContext,
     props: FocusScopeProps,
     state: FocusScopeState,
   ): void {
@@ -159,30 +147,14 @@ const FocusScopeResponder = {
     }
   },
   onUnmount(
-    context: ReactResponderContext,
+    context: ReactDOMResponderContext,
     props: FocusScopeProps,
     state: FocusScopeState,
   ): void {
-    if (
-      props.restoreFocus &&
-      state.nodeToRestore !== null &&
-      context.hasOwnership()
-    ) {
+    if (props.restoreFocus && state.nodeToRestore !== null) {
       focusElement(state.nodeToRestore);
-    }
-  },
-  onOwnershipChange(
-    context: ReactResponderContext,
-    props: FocusScopeProps,
-    state: FocusScopeState,
-  ): void {
-    if (!context.hasOwnership()) {
-      state.currentFocusedNode = null;
     }
   },
 };
 
-export default React.unstable_createEventComponent(
-  FocusScopeResponder,
-  'FocusScope',
-);
+export default ReactDOM.unstable_createEvent(FocusScopeResponder, 'FocusScope');
