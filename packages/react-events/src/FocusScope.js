@@ -7,17 +7,19 @@
  * @flow
  */
 import type {
-  ReactResponderEvent,
-  ReactResponderContext,
-  ReactEventComponentInstance,
-} from 'shared/ReactTypes';
+  ReactDOMResponderEvent,
+  ReactDOMResponderContext,
+} from 'shared/ReactDOMTypes';
+import type {ReactEventComponentInstance} from 'shared/ReactTypes';
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
+
 import React from 'react';
+import ReactDOM from 'react-dom';
 import {
   isFiberSuspenseAndTimedOut,
   getSuspenseFallbackChild,
 } from 'react-reconciler/src/ReactFiberEvents';
 import {HostComponent} from 'shared/ReactWorkTags';
-import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import invariant from 'shared/invariant';
 
 type FocusScopeProps = {
@@ -221,7 +223,7 @@ function createFocusManager(scope: ReactEventComponentInstance): FocusManager {
 }
 
 function getFirstFocusableElement(
-  context: ReactResponderContext,
+  context: ReactDOMResponderContext,
   state: FocusScopeState,
 ): ?HTMLElement {
   const elements = getFocusableElementsInScope(context.getCurrentInstance());
@@ -241,8 +243,8 @@ const FocusScopeResponder = {
   },
   allowMultipleHostChildren: true,
   onEvent(
-    event: ReactResponderEvent,
-    context: ReactResponderContext,
+    event: ReactDOMResponderEvent,
+    context: ReactDOMResponderContext,
     props: FocusScopeProps,
     state: FocusScopeState,
   ) {
@@ -280,8 +282,8 @@ const FocusScopeResponder = {
     }
   },
   onRootEvent(
-    event: ReactResponderEvent,
-    context: ReactResponderContext,
+    event: ReactDOMResponderEvent,
+    context: ReactDOMResponderContext,
     props: FocusScopeProps,
     state: FocusScopeState,
   ) {
@@ -301,7 +303,7 @@ const FocusScopeResponder = {
     }
   },
   onMount(
-    context: ReactResponderContext,
+    context: ReactDOMResponderContext,
     props: FocusScopeProps,
     state: FocusScopeState,
   ): void {
@@ -317,7 +319,7 @@ const FocusScopeResponder = {
     }
   },
   onUnmount(
-    context: ReactResponderContext,
+    context: ReactDOMResponderContext,
     props: FocusScopeProps,
     state: FocusScopeState,
   ): void {
@@ -327,7 +329,7 @@ const FocusScopeResponder = {
   },
 };
 
-export const FocusScopeEventComponent = React.unstable_createEventComponent(
+export const FocusScopeEventComponent = ReactDOM.unstable_createEvent(
   FocusScopeResponder,
   'FocusScope',
 );

@@ -46,6 +46,7 @@ import dangerousStyleValue from '../shared/dangerousStyleValue';
 
 import type {DOMContainer} from './ReactDOM';
 import type {ReactEventComponentInstance} from 'shared/ReactTypes';
+import type {ReactDOMEventResponder} from 'shared/ReactDOMTypes';
 import {
   mountEventResponder,
   unmountEventResponder,
@@ -101,6 +102,7 @@ export type UpdatePayload = Array<mixed>;
 export type ChildSet = void; // Unused
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
+export type EventResponder = ReactDOMEventResponder;
 
 import {
   enableSuspenseServerRenderer,
@@ -905,7 +907,10 @@ export function mountEventComponent(
     const doc = rootContainerInstance.ownerDocument;
     const documentBody = doc.body || doc;
     const responder = eventComponentInstance.responder;
-    const {rootEventTypes, targetEventTypes} = responder;
+    const {
+      rootEventTypes,
+      targetEventTypes,
+    } = ((responder: any): ReactDOMEventResponder);
     if (targetEventTypes !== undefined) {
       listenToEventResponderEventTypes(targetEventTypes, documentBody);
     }

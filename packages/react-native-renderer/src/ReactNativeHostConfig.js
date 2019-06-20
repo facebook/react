@@ -7,7 +7,10 @@
  * @flow
  */
 
-import type {ReactNativeBaseComponentViewConfig} from './ReactNativeTypes';
+import type {
+  ReactNativeBaseComponentViewConfig,
+  ReactNativeEventResponder,
+} from './ReactNativeTypes';
 import type {ReactEventComponentInstance} from 'shared/ReactTypes';
 
 import invariant from 'shared/invariant';
@@ -48,6 +51,7 @@ export type ChildSet = void; // Unused
 
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
+export type EventResponder = ReactNativeEventResponder;
 
 const UPDATE_SIGNAL = {};
 if (__DEV__) {

@@ -157,3 +157,6 @@ export type ReactFabricType = {
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: SecretInternalsFabricType,
 };
+
+// TODO will be addressed with upcoming React Flare support
+export type ReactNativeEventResponder = any;
