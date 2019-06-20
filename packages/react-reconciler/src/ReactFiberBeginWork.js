@@ -2007,6 +2007,13 @@ function findLastContentRow(firstChild: null | Fiber): null | Fiber {
 
 type SuspenseListRevealOrder = 'forwards' | 'backwards' | 'together' | void;
 
+// This can end up rendering this component multiple passes.
+// The first pass splits the children fibers into two sets. A head and tail.
+// We first render the head. If anything is in fallback state, we do another
+// pass through beginWork to rerender all children (including the tail) with
+// the force suspend context. If the first render didn't have anything in
+// in fallback state. Then we render each row in the tail one-by-one.
+// That happens in the completeWork phase without going back to beginWork.
 function updateSuspenseListComponent(
   current: Fiber | null,
   workInProgress: Fiber,
