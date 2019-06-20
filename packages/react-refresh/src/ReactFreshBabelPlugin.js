@@ -496,7 +496,7 @@ export default function(babel) {
           const sigCallID = path.scope.generateUidIdentifier('_s');
           path.scope.parent.push({
             id: sigCallID,
-            init: t.callExpression(t.identifier('__signature__'), []),
+            init: t.callExpression(t.identifier('$RefreshSig$'), []),
           });
 
           // The signature call is split in two parts. One part is called inside the function.
@@ -511,7 +511,7 @@ export default function(babel) {
           // The second call is around the function itself.
           // This is used to associate a type with a signature.
 
-          // Unlike with __register__, this needs to work for nested
+          // Unlike with $RefreshReg$, this needs to work for nested
           // declarations too. So we need to search for a path where
           // we can insert a statement rather than hardcoding it.
           let insertAfterPath = null;
@@ -558,7 +558,7 @@ export default function(babel) {
           const sigCallID = path.scope.generateUidIdentifier('_s');
           path.scope.parent.push({
             id: sigCallID,
-            init: t.callExpression(t.identifier('__signature__'), []),
+            init: t.callExpression(t.identifier('$RefreshSig$'), []),
           });
 
           // The signature call is split in two parts. One part is called inside the function.
@@ -717,7 +717,7 @@ export default function(babel) {
             path.pushContainer(
               'body',
               t.expressionStatement(
-                t.callExpression(t.identifier('__register__'), [
+                t.callExpression(t.identifier('$RefreshReg$'), [
                   handle,
                   t.stringLiteral(persistentID),
                 ]),

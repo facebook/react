@@ -19,11 +19,11 @@ _c = App;
 
 var _c;
 
-__register__(_c, 'App');
+$RefreshReg$(_c, 'App');
 `;
 
 exports[`ReactFreshBabelPlugin generates signatures for function declarations calling hooks 1`] = `
-var _s = __signature__();
+var _s = $RefreshSig$();
 
 export default function App() {
   _s();
@@ -39,12 +39,12 @@ _c = App;
 
 var _c;
 
-__register__(_c, "App");
+$RefreshReg$(_c, "App");
 `;
 
 exports[`ReactFreshBabelPlugin generates signatures for function expressions calling hooks 1`] = `
-var _s = __signature__(),
-    _s2 = __signature__();
+var _s = $RefreshSig$(),
+    _s2 = $RefreshSig$();
 
 export const A = _c3 = React.memo(_c2 = React.forwardRef(_c = _s((props, ref) => {
   _s();
@@ -63,7 +63,7 @@ export const B = _c6 = React.memo(_c5 = React.forwardRef(_c4 = _s2(function (pro
 }, "useState{[foo, setFoo](0)}\\nuseEffect{}")));
 
 function hoc() {
-  var _s3 = __signature__();
+  var _s3 = $RefreshSig$();
 
   return _s3(function Inner() {
     _s3();
@@ -78,28 +78,23 @@ export let C = hoc();
 
 var _c, _c2, _c3, _c4, _c5, _c6;
 
-__register__(_c, "A$React.memo$React.forwardRef");
-
-__register__(_c2, "A$React.memo");
-
-__register__(_c3, "A");
-
-__register__(_c4, "B$React.memo$React.forwardRef");
-
-__register__(_c5, "B$React.memo");
-
-__register__(_c6, "B");
+$RefreshReg$(_c, "A$React.memo$React.forwardRef");
+$RefreshReg$(_c2, "A$React.memo");
+$RefreshReg$(_c3, "A");
+$RefreshReg$(_c4, "B$React.memo$React.forwardRef");
+$RefreshReg$(_c5, "B$React.memo");
+$RefreshReg$(_c6, "B");
 `;
 
 exports[`ReactFreshBabelPlugin generates valid signature for exotic ways to call Hooks 1`] = `
-var _s2 = __signature__();
+var _s2 = $RefreshSig$();
 
 import FancyHook from 'fancy';
 
 export default function App() {
   _s2();
 
-  var _s = __signature__();
+  var _s = $RefreshSig$();
 
   function useFancyState() {
     _s();
@@ -124,7 +119,7 @@ _c = App;
 
 var _c;
 
-__register__(_c, 'App');
+$RefreshReg$(_c, 'App');
 `;
 
 exports[`ReactFreshBabelPlugin ignores HOC definitions 1`] = `
@@ -179,9 +174,9 @@ export default function () {}
 `;
 
 exports[`ReactFreshBabelPlugin includes custom hooks into the signatures 1`] = `
-var _s = __signature__(),
-    _s2 = __signature__(),
-    _s3 = __signature__();
+var _s = $RefreshSig$(),
+    _s2 = $RefreshSig$(),
+    _s3 = $RefreshSig$();
 
 function useFancyState() {
   _s();
@@ -214,7 +209,7 @@ _c = App;
 
 var _c;
 
-__register__(_c, "App");
+$RefreshReg$(_c, "App");
 `;
 
 exports[`ReactFreshBabelPlugin only registers pascal case functions 1`] = `
@@ -237,13 +232,10 @@ const B = _c4 = hoc(Foo);
 
 var _c, _c2, _c3, _c4;
 
-__register__(_c, "Foo");
-
-__register__(_c2, "%default%");
-
-__register__(_c3, "A");
-
-__register__(_c4, "B");
+$RefreshReg$(_c, "Foo");
+$RefreshReg$(_c2, "%default%");
+$RefreshReg$(_c3, "A");
+$RefreshReg$(_c4, "B");
 `;
 
 exports[`ReactFreshBabelPlugin registers identifiers used in JSX at definition site 1`] = `
@@ -272,13 +264,10 @@ const NotAComponent = _c4 = wow(A);
 
 var _c, _c2, _c3, _c4;
 
-__register__(_c, 'Header');
-
-__register__(_c2, 'Foo');
-
-__register__(_c3, 'B');
-
-__register__(_c4, 'NotAComponent');
+$RefreshReg$(_c, 'Header');
+$RefreshReg$(_c2, 'Foo');
+$RefreshReg$(_c3, 'B');
+$RefreshReg$(_c4, 'NotAComponent');
 `;
 
 exports[`ReactFreshBabelPlugin registers identifiers used in React.createElement at definition site 1`] = `
@@ -309,13 +298,10 @@ const NotAComponent = _c4 = wow(A);
 
 var _c, _c2, _c3, _c4;
 
-__register__(_c, 'Header');
-
-__register__(_c2, 'Foo');
-
-__register__(_c3, 'B');
-
-__register__(_c4, 'NotAComponent');
+$RefreshReg$(_c, 'Header');
+$RefreshReg$(_c2, 'Foo');
+$RefreshReg$(_c3, 'B');
+$RefreshReg$(_c4, 'NotAComponent');
 `;
 
 exports[`ReactFreshBabelPlugin registers likely HOCs with inline functions 1`] = `
@@ -332,21 +318,14 @@ export default _c8 = React.memo(_c7 = forwardRef(_c6 = (props, ref) => {
 
 var _c, _c2, _c3, _c4, _c5, _c6, _c7, _c8;
 
-__register__(_c, "A$forwardRef");
-
-__register__(_c2, "A");
-
-__register__(_c3, "B$memo$React.forwardRef");
-
-__register__(_c4, "B$memo");
-
-__register__(_c5, "B");
-
-__register__(_c6, "%default%$React.memo$forwardRef");
-
-__register__(_c7, "%default%$React.memo");
-
-__register__(_c8, "%default%");
+$RefreshReg$(_c, "A$forwardRef");
+$RefreshReg$(_c2, "A");
+$RefreshReg$(_c3, "B$memo$React.forwardRef");
+$RefreshReg$(_c4, "B$memo");
+$RefreshReg$(_c5, "B");
+$RefreshReg$(_c6, "%default%$React.memo$forwardRef");
+$RefreshReg$(_c7, "%default%$React.memo");
+$RefreshReg$(_c8, "%default%");
 `;
 
 exports[`ReactFreshBabelPlugin registers likely HOCs with inline functions 2`] = `
@@ -357,11 +336,9 @@ export default _c3 = React.memo(_c2 = forwardRef(_c = function (props, ref) {
 
 var _c, _c2, _c3;
 
-__register__(_c, "%default%$React.memo$forwardRef");
-
-__register__(_c2, "%default%$React.memo");
-
-__register__(_c3, "%default%");
+$RefreshReg$(_c, "%default%$React.memo$forwardRef");
+$RefreshReg$(_c2, "%default%$React.memo");
+$RefreshReg$(_c3, "%default%");
 `;
 
 exports[`ReactFreshBabelPlugin registers likely HOCs with inline functions 3`] = `
@@ -372,11 +349,9 @@ export default _c3 = React.memo(_c2 = forwardRef(_c = function Named(props, ref)
 
 var _c, _c2, _c3;
 
-__register__(_c, "%default%$React.memo$forwardRef");
-
-__register__(_c2, "%default%$React.memo");
-
-__register__(_c3, "%default%");
+$RefreshReg$(_c, "%default%$React.memo$forwardRef");
+$RefreshReg$(_c2, "%default%$React.memo");
+$RefreshReg$(_c3, "%default%");
 `;
 
 exports[`ReactFreshBabelPlugin registers top-level exported function declarations 1`] = `
@@ -405,11 +380,9 @@ export const Bad = 42;
 
 var _c, _c2, _c3;
 
-__register__(_c, 'Hello');
-
-__register__(_c2, 'Bar');
-
-__register__(_c3, 'Baz');
+$RefreshReg$(_c, 'Hello');
+$RefreshReg$(_c2, 'Bar');
+$RefreshReg$(_c3, 'Baz');
 `;
 
 exports[`ReactFreshBabelPlugin registers top-level exported named arrow functions 1`] = `
@@ -431,9 +404,8 @@ export default (() => {
 
 var _c, _c2;
 
-__register__(_c, "Hello");
-
-__register__(_c2, "Bar");
+$RefreshReg$(_c, "Hello");
+$RefreshReg$(_c2, "Bar");
 `;
 
 exports[`ReactFreshBabelPlugin registers top-level function declarations 1`] = `
@@ -451,9 +423,8 @@ _c2 = Bar;
 
 var _c, _c2;
 
-__register__(_c, "Hello");
-
-__register__(_c2, "Bar");
+$RefreshReg$(_c, "Hello");
+$RefreshReg$(_c2, "Bar");
 `;
 
 exports[`ReactFreshBabelPlugin registers top-level variable declarations with arrow functions 1`] = `
@@ -473,11 +444,9 @@ var sum = () => {};
 
 var _c, _c2, _c3;
 
-__register__(_c, "Hello");
-
-__register__(_c2, "Bar");
-
-__register__(_c3, "Baz");
+$RefreshReg$(_c, "Hello");
+$RefreshReg$(_c2, "Bar");
+$RefreshReg$(_c3, "Baz");
 `;
 
 exports[`ReactFreshBabelPlugin registers top-level variable declarations with function expressions 1`] = `
@@ -497,9 +466,8 @@ var Qux;
 
 var _c, _c2;
 
-__register__(_c, "Hello");
-
-__register__(_c2, "Bar");
+$RefreshReg$(_c, "Hello");
+$RefreshReg$(_c2, "Bar");
 `;
 
 exports[`ReactFreshBabelPlugin uses original function declaration if it get reassigned 1`] = `
@@ -512,5 +480,5 @@ Hello = connect(Hello);
 
 var _c;
 
-__register__(_c, "Hello");
+$RefreshReg$(_c, "Hello");
 `;
