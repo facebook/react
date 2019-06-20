@@ -115,8 +115,40 @@ export default function(babel) {
         if (!isComponentishName(name)) {
           return false;
         }
-        if (init.type === 'Identifier' || init.type === 'MemberExpression') {
-          return false;
+        switch (init.type) {
+          case 'ArrowFunctionExpression':
+          case 'FunctionExpression':
+            // Likely component definitions.
+            break;
+          case 'CallExpression': {
+            // Maybe a HOC.
+            // Try to determine if this is some form of import.
+            const callee = init.callee;
+            const calleeType = callee.type;
+            if (calleeType === 'Import') {
+              return false;
+            } else if (calleeType === 'Identifier') {
+              if (callee.name.indexOf('require') === 0) {
+                return false;
+              } else if (callee.name.indexOf('import') === 0) {
+                return false;
+              }
+              // Neither require nor import. Might be a HOC.
+              // Pass through.
+            } else if (calleeType === 'MemberExpression') {
+              // Could be something like React.forwardRef(...)
+              // Pass through.
+            } else {
+              // More complicated call.
+              return false;
+            }
+            break;
+          }
+          case 'TaggedTemplateExpression':
+            // Maybe something like styled.div`...`
+            break;
+          default:
+            return false;
         }
         const initPath = path.get('init');
         const foundInside = findInnerComponents(

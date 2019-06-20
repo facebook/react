@@ -1,5 +1,27 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`ReactFreshBabelPlugin does not consider require-like methods to be HOCs 1`] = `
+
+const A = require('A');
+const B = foo ? require('X') : require('Y');
+const C = requireCond(gk, 'C');
+const D = import('D');
+
+export default function App() {
+  return <div>
+              <A />
+              <B />
+              <C />
+              <D />
+            </div>;
+}
+_c = App;
+
+var _c;
+
+__register__(_c, 'App');
+`;
+
 exports[`ReactFreshBabelPlugin generates signatures for function declarations calling hooks 1`] = `
 var _s = __signature__();
 
