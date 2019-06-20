@@ -510,8 +510,8 @@ function runActTests(label, render, unmount) {
         });
       }
     });
-    describe('errors', () => {
-      it('should propogate errors from effects - sync', () => {
+    describe('error propagation', () => {
+      it('should propagate errors from effects - sync', () => {
         function App() {
           React.useEffect(() => {
             throw new Error('oh no');
