@@ -511,6 +511,20 @@ function runActTests(label, render, unmount) {
       }
     });
     describe('error propagation', () => {
+      it('propagates errors - sync', () => {
+        let err;
+        try {
+          act(() => {
+            throw new Error('some error');
+          });
+        } catch (_err) {
+          err = _err;
+        } finally {
+          expect(err instanceof Error).toBe(true);
+          expect(err.message).toBe('some error');
+        }
+      });
+
       it('should propagate errors from effects - sync', () => {
         function App() {
           React.useEffect(() => {
@@ -571,6 +585,7 @@ function runActTests(label, render, unmount) {
           expect(Scheduler).toHaveYielded(['oh yes']);
         }
       });
+
       it('should cleanup after errors - async', async () => {
         function App() {
           async function somethingAsync() {
