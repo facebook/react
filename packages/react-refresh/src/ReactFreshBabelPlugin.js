@@ -8,6 +8,19 @@
 'use strict';
 
 export default function(babel) {
+  if (typeof babel.getEnv === 'function') {
+    // Only available in Babel 7.
+    const env = babel.getEnv();
+    if (env !== 'development') {
+      throw new Error(
+        'React Refresh Babel transform should only be enabled in development environment. ' +
+          'Instead, the environment is: "' +
+          env +
+          '".',
+      );
+    }
+  }
+
   const {types: t} = babel;
 
   const registrationsByProgramPath = new Map();
