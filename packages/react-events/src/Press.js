@@ -420,6 +420,8 @@ function dispatchPressEndEvents(
       deactivate(event, context, props, state);
     }
   }
+
+  state.responderRegionOnDeactivation = null;
 }
 
 function dispatchCancel(
@@ -726,6 +728,7 @@ const PressResponder = {
             state.pressTarget,
             props,
           );
+          state.responderRegionOnDeactivation = null;
           state.isPressWithinResponderRegion = true;
           dispatchPressStartEvents(event, context, props, state);
           addRootEventTypes(context, state);

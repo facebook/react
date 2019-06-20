@@ -991,8 +991,8 @@ describe('Event responder: Press', () => {
       height: 100,
       top: 50,
       left: 50,
-      right: 500,
-      bottom: 500,
+      right: 150,
+      bottom: 150,
     };
     const pressRectOffset = 20;
     const getBoundingClientRectMock = () => rectMock;
@@ -1564,8 +1564,8 @@ describe('Event responder: Press', () => {
       height: 100,
       top: 50,
       left: 50,
-      right: 500,
-      bottom: 500,
+      right: 150,
+      bottom: 150,
     };
     const pressRectOffset = 20;
     const getBoundingClientRectMock = () => rectMock;
@@ -1771,8 +1771,8 @@ describe('Event responder: Press', () => {
           height: 80,
           top: 60,
           left: 60,
-          right: 490,
-          bottom: 490,
+          right: 140,
+          bottom: 140,
         });
         const coordinates = {
           clientX: rectMock.left,
@@ -1825,8 +1825,8 @@ describe('Event responder: Press', () => {
           height: 200,
           top: 0,
           left: 0,
-          right: 550,
-          bottom: 550,
+          right: 200,
+          bottom: 200,
         });
         const coordinates = {
           clientX: rectMock.left - 50,
@@ -1893,16 +1893,16 @@ describe('Event responder: Press', () => {
           }),
         );
         document.elementFromPoint = () => container;
-        ref.current.dispatchEvent(
+        container.dispatchEvent(
           createTouchEvent('touchmove', 0, {
             ...coordinatesOutside,
-            target: ref.current,
+            target: container,
           }),
         );
-        ref.current.dispatchEvent(
+        container.dispatchEvent(
           createTouchEvent('touchend', 0, {
             ...coordinatesOutside,
-            target: ref.current,
+            target: container,
           }),
         );
         jest.runAllTimers();
@@ -1962,10 +1962,10 @@ describe('Event responder: Press', () => {
         jest.runAllTimers();
         expect(events).toEqual(['onPressMove']);
         events = [];
-        ref.current.dispatchEvent(
+        container.dispatchEvent(
           createTouchEvent('touchend', 0, {
             ...coordinatesOutside,
-            target: ref.current,
+            target: container,
           }),
         );
         jest.runAllTimers();
@@ -2007,10 +2007,10 @@ describe('Event responder: Press', () => {
         }),
       );
       document.elementFromPoint = () => container;
-      ref.current.dispatchEvent(
+      container.dispatchEvent(
         createTouchEvent('touchmove', 0, {
           ...coordinatesOutside,
-          target: ref.current,
+          target: container,
         }),
       );
       ref.current.dispatchEvent(
@@ -2068,8 +2068,8 @@ describe('Event responder: Press', () => {
       ref.current.getBoundingClientRect = () => ({
         top: 0,
         left: 0,
-        bottom: 0,
-        right: 0,
+        bottom: 100,
+        right: 100,
       });
 
       // 1
@@ -2152,8 +2152,8 @@ describe('Event responder: Press', () => {
       ref.current.getBoundingClientRect = () => ({
         top: 0,
         left: 0,
-        bottom: 0,
-        right: 0,
+        bottom: 100,
+        right: 100,
       });
 
       ref.current.dispatchEvent(createEvent('pointerdown'));
@@ -2186,8 +2186,8 @@ describe('Event responder: Press', () => {
         ref.current.getBoundingClientRect = () => ({
           top: 0,
           left: 0,
-          bottom: 0,
-          right: 0,
+          bottom: 100,
+          right: 100,
         });
 
         ref.current.dispatchEvent(createEvent('pointerdown'));
@@ -2488,8 +2488,8 @@ describe('Event responder: Press', () => {
     ref.current.getBoundingClientRect = () => ({
       top: 10,
       left: 10,
-      bottom: 20,
-      right: 20,
+      bottom: 110,
+      right: 110,
     });
 
     ref.current.dispatchEvent(
