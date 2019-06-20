@@ -69,10 +69,10 @@ describe('ReactFreshIntegration', () => {
         'global',
         'React',
         'exports',
-        '__register__',
-        '__signature__',
+        '$RefreshReg$',
+        '$RefreshSig$',
         compiled,
-      )(global, React, exportsObj, __register__, __signature__);
+      )(global, React, exportsObj, $RefreshReg$, $RefreshSig$);
       return exportsObj.default;
     }
 
@@ -93,11 +93,11 @@ describe('ReactFreshIntegration', () => {
       expect(ReactFreshRuntime._getMountedRootCount()).toBe(1);
     }
 
-    function __register__(type, id) {
+    function $RefreshReg$(type, id) {
       ReactFreshRuntime.register(type, id);
     }
 
-    function __signature__() {
+    function $RefreshSig$() {
       return ReactFreshRuntime.createSignatureFunctionForTransform();
     }
 
