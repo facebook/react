@@ -755,7 +755,7 @@ describe('ReactFreshIntegration', () => {
       }
     });
 
-    it('resets state on every edit with @hot reset annotation', () => {
+    it('resets state on every edit with @refresh reset annotation', () => {
       if (__DEV__) {
         render(`
           const {useState} = React;
@@ -786,7 +786,7 @@ describe('ReactFreshIntegration', () => {
           const {useState} = React;
           const S = 3;
 
-          /* @hot reset */
+          /* @refresh reset */
 
           export default function App() {
             const [foo, setFoo] = useState(S);
@@ -804,7 +804,7 @@ describe('ReactFreshIntegration', () => {
 
           export default function App() {
 
-            // @hot reset
+            // @refresh reset
 
             const [foo, setFoo] = useState(S);
             return <h1>D{foo}</h1>;
@@ -848,7 +848,7 @@ describe('ReactFreshIntegration', () => {
 
           export default function App() {
 
-            /* @hot reset */
+            /* @refresh reset */
 
             const [foo, setFoo] = useState(S);
             return <h1>G{foo}</h1>;

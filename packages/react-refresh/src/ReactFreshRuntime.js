@@ -27,6 +27,12 @@ type Signature = {|
   getCustomHooks: () => Array<Function>,
 |};
 
+if (!__DEV__) {
+  throw new Error(
+    'React Refresh runtime should not be included in the production bundle.',
+  );
+}
+
 // In old environments, we'll leak previous types after every edit.
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 const PossiblyWeakSet = typeof WeakSet === 'function' ? WeakSet : Set;
