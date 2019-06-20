@@ -871,6 +871,7 @@ const PressResponder = {
               return;
             }
             isKeyboardEvent = true;
+            removeRootEventTypes(context, state);
           }
 
           // Determine whether to call preventDefault on subsequent native events.
@@ -940,7 +941,10 @@ const PressResponder = {
       }
 
       case 'click': {
-        removeRootEventTypes(context, state);
+        // "keyup" occurs after "click"
+        if (state.pointerType !== 'keyboard') {
+          removeRootEventTypes(context, state);
+        }
         if (state.shouldPreventClick) {
           nativeEvent.preventDefault();
         }
