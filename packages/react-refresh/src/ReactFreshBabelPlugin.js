@@ -219,7 +219,7 @@ export default function(babel) {
 
   let hasForceResetCommentByFile = new WeakMap();
 
-  // We let user do /* @hot reset */ to reset state in the whole file.
+  // We let user do /* @refresh reset */ to reset state in the whole file.
   function hasForceResetComment(path) {
     const file = path.hub.file;
     let hasForceReset = hasForceResetCommentByFile.get(file);
@@ -231,7 +231,7 @@ export default function(babel) {
     const comments = file.ast.comments;
     for (let i = 0; i < comments.length; i++) {
       const cmt = comments[i];
-      if (cmt.value.indexOf('@hot reset') !== -1) {
+      if (cmt.value.indexOf('@refresh reset') !== -1) {
         hasForceReset = true;
         break;
       }
