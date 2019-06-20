@@ -2181,12 +2181,48 @@ function updateSuspenseListComponent(
           !didWarnAboutRevealOrder[revealOrder]
         ) {
           didWarnAboutRevealOrder[revealOrder] = true;
-          warning(
-            false,
-            '"%s" is not a supported revealOrder on <SuspenseList />. ' +
-              'Did you mean "together"?',
-            revealOrder,
-          );
+          if (typeof revealOrder === 'string') {
+            switch (revealOrder.toLowerCase()) {
+              case 'together':
+              case 'forwards':
+              case 'backwards': {
+                warning(
+                  false,
+                  '"%s" is not a valid value for revealOrder on <SuspenseList />. ' +
+                    'Use lowercase "%s" instead.',
+                  revealOrder,
+                  revealOrder.toLowerCase(),
+                );
+                break;
+              }
+              case 'forward':
+              case 'backward': {
+                warning(
+                  false,
+                  '"%s" is not a valid value for revealOrder on <SuspenseList />. ' +
+                    'React uses the -s suffix in the spelling. Use "%ss" instead.',
+                  revealOrder,
+                  revealOrder.toLowerCase(),
+                );
+                break;
+              }
+              default:
+                warning(
+                  false,
+                  '"%s" is not a supported revealOrder on <SuspenseList />. ' +
+                    'Did you mean "together", "forwards" or "backwards"?',
+                  revealOrder,
+                );
+                break;
+            }
+          } else {
+            warning(
+              false,
+              '%s is not a supported value for revealOrder on <SuspenseList />. ' +
+                'Did you mean "together", "forwards" or "backwards"?',
+              revealOrder,
+            );
+          }
         }
       }
       // We mark this as having captured but it really just says to the

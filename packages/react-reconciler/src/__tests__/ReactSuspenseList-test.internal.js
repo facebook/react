@@ -56,7 +56,46 @@ describe('ReactSuspenseList', () => {
 
     expect(() => Scheduler.flushAll()).toWarnDev([
       'Warning: "something" is not a supported revealOrder on ' +
-        '<SuspenseList />. Did you mean "together"?' +
+        '<SuspenseList />. Did you mean "together", "forwards" or "backwards"?' +
+        '\n    in SuspenseList (at **)' +
+        '\n    in Foo (at **)',
+    ]);
+  });
+
+  it('warns if a upper case revealOrder option is used', () => {
+    function Foo() {
+      return (
+        <SuspenseList revealOrder="TOGETHER">
+          <Suspense fallback="Loading">Content</Suspense>
+        </SuspenseList>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+
+    expect(() => Scheduler.flushAll()).toWarnDev([
+      'Warning: "TOGETHER" is not a valid value for revealOrder on ' +
+        '<SuspenseList />. Use lowercase "together" instead.' +
+        '\n    in SuspenseList (at **)' +
+        '\n    in Foo (at **)',
+    ]);
+  });
+
+  it('warns if a misspelled revealOrder option is used', () => {
+    function Foo() {
+      return (
+        <SuspenseList revealOrder="forward">
+          <Suspense fallback="Loading">Content</Suspense>
+        </SuspenseList>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+
+    expect(() => Scheduler.flushAll()).toWarnDev([
+      'Warning: "forward" is not a valid value for revealOrder on ' +
+        '<SuspenseList />. React uses the -s suffix in the spelling. ' +
+        'Use "forwards" instead.' +
         '\n    in SuspenseList (at **)' +
         '\n    in Foo (at **)',
     ]);
