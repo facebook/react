@@ -27,7 +27,7 @@ import {
   REACT_EVENT_TARGET_TOUCH_HIT,
 } from 'shared/ReactSymbols';
 import {refineResolvedLazyComponent} from 'shared/ReactLazyComponent';
-import type {ReactEventComponent, ReactEventTarget} from 'shared/ReactTypes';
+import type {ReactEventTarget} from 'shared/ReactTypes';
 
 import {enableEventAPI} from './ReactFeatureFlags';
 

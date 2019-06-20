@@ -15,7 +15,6 @@ import type {
   FiberRoot,
   Batch as FiberRootBatch,
 } from 'react-reconciler/src/ReactFiberRoot';
-import type {ReactDOMEventResponder} from 'shared/ReactDOMTypes';
 
 import '../shared/checkReact';
 import './ReactDOMClientInjection';
