@@ -31,7 +31,6 @@ type FocusState = {
   isFocused: boolean,
   isLocalFocusVisible: boolean,
   isFocusWithin: boolean,
-  isFocusWithinVisible: boolean,
   pointerType: PointerType,
 };
 
@@ -136,7 +135,7 @@ function dispatchFocusInEvents(
   }
 }
 function dispatchFocusWithinEvents(
-  context: ReactResponderContext,
+  context: ReactDOMResponderContext,
   props: FocusProps,
   state: FocusState,
 ) {
@@ -154,7 +153,7 @@ function dispatchFocusWithinEvents(
     );
     context.dispatchEvent(syntheticEvent, listener, DiscreteEvent);
   }
-  if (props.onFocusVisibleWithinChange && state.isFocusWithinVisible) {
+  if (props.onFocusVisibleWithinChange && state.isLocalFocusVisible) {
     const listener = () => {
       props.onFocusVisibleWithinChange(true);
     };
@@ -216,9 +215,13 @@ function dispatchFocusVisibleOutEvents(
   props: FocusProps,
   state: FocusState,
 ) {
+  if (!state.isLocalFocusVisible) {
+    return;
+  }
+
   const pointerType = state.pointerType;
   const target = ((state.focusTarget: any): Element | Document);
-  if (props.onFocusVisibleChange && state.isLocalFocusVisible) {
+  if (props.onFocusVisibleChange && state.isFocused) {
     const listener = () => {
       props.onFocusVisibleChange(false);
     };
@@ -229,9 +232,8 @@ function dispatchFocusVisibleOutEvents(
       pointerType,
     );
     context.dispatchEvent(syntheticEvent, listener, DiscreteEvent);
-    state.isLocalFocusVisible = false;
   }
-  if (props.onFocusVisibleWithinChange && state.isFocusWithinVisible) {
+  if (props.onFocusVisibleWithinChange && state.isFocusWithin) {
     const listener = () => {
       props.onFocusVisibleWithinChange(false);
     };
@@ -242,8 +244,8 @@ function dispatchFocusVisibleOutEvents(
       pointerType,
     );
     context.dispatchEvent(syntheticEvent, listener, DiscreteEvent);
-    state.isFocusWithinVisible = false;
   }
+  state.isLocalFocusVisible = false;
 }
 
 function unmountResponder(
@@ -292,7 +294,6 @@ const FocusResponder = {
       isFocused: false,
       isLocalFocusVisible: false,
       isFocusWithin: false,
-      isFocusWithinVisible: false,
       pointerType: '',
     };
   },
@@ -319,21 +320,28 @@ const FocusResponder = {
         if (!state.isFocused || !state.isFocusWithin) {
           state.focusTarget = context.getEventCurrentTarget(event);
         }
+
+        state.isLocalFocusVisible = isGlobalFocusVisible;
+
         // Limit focus events to the direct child of the event component
         // Browser focus is not expected to bubble.
         if (!state.isFocused && state.focusTarget === target) {
           state.isFocused = true;
-          state.isLocalFocusVisible = isGlobalFocusVisible;
           dispatchFocusInEvents(context, props, state);
         }
         if (!state.isFocusWithin) {
           state.isFocusWithin = true;
-          state.isFocusWithinVisible = isGlobalFocusVisible;
           dispatchFocusWithinEvents(context, props, state);
         }
         break;
       }
       case 'blur': {
+        // Ignore blur events when focus moves within the subtree
+        let relatedTarget = ((event.nativeEvent: any).relatedTarget: Element);
+        if (context.isTargetWithinEventComponent(relatedTarget)) {
+          break;
+        }
+
         if (state.isFocused || state.isFocusWithin) {
           dispatchFocusOutEvents(context, props, state);
           state.isFocused = false;

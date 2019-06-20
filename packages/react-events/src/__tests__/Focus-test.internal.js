@@ -380,16 +380,18 @@ describe('Focus event responder', () => {
   });
 
   describe('onFocusVisibleWithinChange', () => {
-    let onFocusVisibleWithinChange, ref, innerRef;
+    let onFocusVisibleWithinChange, ref, innerRef, innerRef2;
 
     beforeEach(() => {
       onFocusVisibleWithinChange = jest.fn();
       ref = React.createRef();
       innerRef = React.createRef();
+      innerRef2 = React.createRef();
       const element = (
         <Focus onFocusVisibleWithinChange={onFocusVisibleWithinChange}>
           <div ref={ref}>
-            <a ref={innerRef} />
+            <button ref={innerRef} />
+            <button ref={innerRef2} />
           </div>
         </Focus>
       );
@@ -440,6 +442,19 @@ describe('Focus event responder', () => {
       innerRef.current.dispatchEvent(createFocusEvent('blur'));
       expect(onFocusVisibleWithinChange).toHaveBeenCalledTimes(0);
     });
+
+    it('is only called once when focus moves within the subtree', () => {
+      // use keyboard first
+      container.dispatchEvent(createKeyboardEvent('keydown', {key: 'Tab'}));
+      innerRef.current.focus();
+      innerRef2.current.focus();
+      ref.current.focus();
+      expect(onFocusVisibleWithinChange).toHaveBeenCalledTimes(1);
+      expect(onFocusVisibleWithinChange).toHaveBeenCalledWith(true);
+      innerRef.current.dispatchEvent(createFocusEvent('blur'));
+      expect(onFocusVisibleWithinChange).toHaveBeenCalledTimes(2);
+      expect(onFocusVisibleWithinChange).toHaveBeenCalledWith(false);
+    });
   });
 
   describe('nested Focus components', () => {
@@ -482,46 +497,6 @@ describe('Focus event responder', () => {
         'inner: onFocusChange',
         'inner: onBlur',
         'inner: onFocusChange',
-      ]);
-    });
-
-    it('allows focus within events to propagate', () => {
-      const events = [];
-      const innerRef = React.createRef();
-      const outerRef = React.createRef();
-      const createEventHandler = msg => () => {
-        events.push(msg);
-      };
-
-      const element = (
-        <Focus
-          onFocusWithinChange={createEventHandler(
-            'outer: onFocusWithinChange',
-          )}>
-          <div ref={outerRef}>
-            <Focus
-              onFocusWithinChange={createEventHandler(
-                'inner: onFocusWithinChange',
-              )}>
-              <div ref={innerRef} />
-            </Focus>
-          </div>
-        </Focus>
-      );
-
-      ReactDOM.render(element, container);
-
-      outerRef.current.dispatchEvent(createFocusEvent('focus'));
-      outerRef.current.dispatchEvent(createFocusEvent('blur'));
-      innerRef.current.dispatchEvent(createFocusEvent('focus'));
-      innerRef.current.dispatchEvent(createFocusEvent('blur'));
-      expect(events).toEqual([
-        'outer: onFocusWithinChange',
-        'outer: onFocusWithinChange',
-        'inner: onFocusWithinChange',
-        'outer: onFocusWithinChange',
-        'inner: onFocusWithinChange',
-        'outer: onFocusWithinChange',
       ]);
     });
   });
