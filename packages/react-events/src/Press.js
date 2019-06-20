@@ -576,6 +576,7 @@ function updateIsPressWithinResponderRegion(
   props: PressProps,
   state: PressState,
 ): void {
+  let isPressWithinResponderRegion = true;
   if (
     state.pressTarget != null &&
     !context.isTargetWithinElement(target, state.pressTarget)
@@ -607,7 +608,7 @@ function updateIsPressWithinResponderRegion(
     }
     const {clientX: x, clientY: y} = (nativeEventOrTouchEvent: any);
 
-    state.isPressWithinResponderRegion =
+    isPressWithinResponderRegion =
       left != null &&
       right != null &&
       top != null &&
@@ -616,6 +617,7 @@ function updateIsPressWithinResponderRegion(
       y !== null &&
       (x >= left && x <= right && y >= top && y <= bottom);
   }
+  state.isPressWithinResponderRegion = isPressWithinResponderRegion;
 }
 
 const PressResponder = {
