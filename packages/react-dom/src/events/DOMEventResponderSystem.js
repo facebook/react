@@ -219,11 +219,12 @@ const eventResponderContext: ReactDOMResponderContext = {
         .currentFiber;
 
       while (fiber !== null) {
-        if (fiber.tag === EventComponent) {
+        const stateNode = fiber.stateNode;
+        if (fiber.tag === EventComponent && stateNode !== null) {
           // Switch to the current fiber tree
-          fiber = fiber.stateNode.currentFiber;
+          fiber = stateNode.currentFiber;
         }
-        if (fiber === currentFiber || fiber.stateNode === currentInstance) {
+        if (fiber === currentFiber || stateNode === currentInstance) {
           return true;
         }
         fiber = fiber.return;
@@ -241,16 +242,17 @@ const eventResponderContext: ReactDOMResponderContext = {
       const currentFiber = ((currentInstance: any): ReactEventComponentInstance)
         .currentFiber;
       while (fiber !== null) {
-        if (fiber.tag === EventComponent) {
+        const stateNode = fiber.stateNode;
+        if (fiber.tag === EventComponent && stateNode !== null) {
           // Switch to the current fiber tree
-          fiber = fiber.stateNode.currentFiber;
+          fiber = stateNode.currentFiber;
         }
-        if (fiber === currentFiber || fiber.stateNode === currentInstance) {
+        if (fiber === currentFiber || stateNode === currentInstance) {
           return true;
         }
         if (
           fiber.tag === EventComponent &&
-          (fiber.stateNode === null || fiber.stateNode.responder === responder)
+          (stateNode === null || stateNode.responder === responder)
         ) {
           return false;
         }
