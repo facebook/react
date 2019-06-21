@@ -623,6 +623,7 @@ function updateIsPressWithinResponderRegion(
 }
 
 const PressResponder = {
+  displayName: 'Press',
   targetEventTypes,
   createInitialState(): PressState {
     return {
@@ -647,6 +648,7 @@ const PressResponder = {
     };
   },
   allowMultipleHostChildren: false,
+  allowEventHooks: true,
   onEvent(
     event: ReactDOMResponderEvent,
     context: ReactDOMResponderContext,
@@ -979,4 +981,4 @@ const PressResponder = {
   },
 };
 
-export default ReactDOM.unstable_createEvent(PressResponder, 'Press');
+export default ReactDOM.unstable_createEvent(PressResponder);

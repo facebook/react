@@ -2434,7 +2434,7 @@ describe('Event responder: Press', () => {
   });
 
   it('expect displayName to show up for event component', () => {
-    expect(Press.displayName).toBe('Press');
+    expect(Press.responder.displayName).toBe('Press');
   });
 
   it('should not trigger an invariant in addRootEventTypes()', () => {

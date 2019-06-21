@@ -22,6 +22,7 @@ let EventTarget;
 let ReactSymbols;
 
 const noOpResponder = {
+  displayName: 'TestEventComponent',
   targetEventTypes: [],
   handleEvent() {},
 };
@@ -29,7 +30,6 @@ const noOpResponder = {
 function createReactEventComponent() {
   return {
     $$typeof: ReactSymbols.REACT_EVENT_COMPONENT_TYPE,
-    displayName: 'TestEventComponent',
     props: null,
     responder: noOpResponder,
   };

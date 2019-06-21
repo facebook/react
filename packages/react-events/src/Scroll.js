@@ -117,6 +117,7 @@ function dispatchEvent(
 }
 
 const ScrollResponder = {
+  displayName: 'Scroll',
   targetEventTypes,
   createInitialState() {
     return {
@@ -126,6 +127,7 @@ const ScrollResponder = {
     };
   },
   allowMultipleHostChildren: true,
+  allowEventHooks: true,
   onEvent(
     event: ReactDOMResponderEvent,
     context: ReactDOMResponderContext,
@@ -211,4 +213,4 @@ const ScrollResponder = {
   },
 };
 
-export default ReactDOM.unstable_createEvent(ScrollResponder, 'Scroll');
+export default ReactDOM.unstable_createEvent(ScrollResponder);

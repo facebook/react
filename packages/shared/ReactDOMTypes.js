@@ -34,11 +34,12 @@ export type ReactDOMResponderEvent = {
 };
 
 export type ReactDOMEventResponder = {
+  displayName: string,
   targetEventTypes?: Array<ReactDOMEventResponderEventType>,
   rootEventTypes?: Array<ReactDOMEventResponderEventType>,
   createInitialState?: (props: null | Object) => Object,
   allowMultipleHostChildren: boolean,
-  stopLocalPropagation: boolean,
+  allowEventHooks: boolean,
   onEvent?: (
     event: ReactDOMResponderEvent,
     context: ReactDOMResponderContext,

@@ -39,6 +39,7 @@ import {
   useReducer,
   useRef,
   useState,
+  useEvent,
 } from './ReactHooks';
 import {withSuspenseConfig} from './ReactBatchConfig';
 import {
@@ -51,7 +52,7 @@ import {
 } from './ReactElementValidator';
 import ReactSharedInternals from './ReactSharedInternals';
 import {error, warn} from './withComponentStack';
-import {enableJSXTransformAPI} from 'shared/ReactFeatureFlags';
+import {enableJSXTransformAPI, enableEventAPI} from 'shared/ReactFeatureFlags';
 const React = {
   Children: {
     map,
@@ -118,6 +119,10 @@ if (enableJSXTransformAPI) {
     // for now we can ship identical prod functions
     React.jsxs = jsx;
   }
+}
+
+if (enableEventAPI) {
+  React.unstable_useEvent = useEvent;
 }
 
 export default React;

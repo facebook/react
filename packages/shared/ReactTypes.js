@@ -86,16 +86,16 @@ export type RefObject = {|
 
 export type ReactEventComponentInstance = {|
   currentFiber: mixed,
+  localPropagation: boolean,
   props: null | Object,
   responder: EventResponder,
   rootEventTypes: null | Set<string>,
-  rootInstance: mixed,
+  rootInstance: null | mixed,
   state: null | Object,
 |};
 
 export type ReactEventComponent = {|
   $$typeof: Symbol | number,
-  displayName: string,
   props: null | Object,
   responder: EventResponder,
 |};

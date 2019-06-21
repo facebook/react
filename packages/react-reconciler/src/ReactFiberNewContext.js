@@ -12,12 +12,7 @@ import type {Fiber} from './ReactFiber';
 import type {StackCursor} from './ReactFiberStack';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
-export type ContextDependencyList = {
-  first: ContextDependency<mixed>,
-  expirationTime: ExpirationTime,
-};
-
-type ContextDependency<T> = {
+export type ContextDependency<T> = {
   context: ReactContext<T>,
   observedBits: number,
   next: ContextDependency<mixed> | null,
@@ -201,11 +196,12 @@ export function propagateContextChange(
     let nextFiber;
 
     // Visit this fiber.
-    const list = fiber.contextDependencies;
+    const dependencies = fiber.dependencies;
+    const list = dependencies.firstContext;
     if (list !== null) {
       nextFiber = fiber.child;
 
-      let dependency = list.first;
+      let dependency = list;
       while (dependency !== null) {
         // Check if the context matches.
         if (
@@ -239,8 +235,8 @@ export function propagateContextChange(
           scheduleWorkOnParentPath(fiber.return, renderExpirationTime);
 
           // Mark the expiration time on the list, too.
-          if (list.expirationTime < renderExpirationTime) {
-            list.expirationTime = renderExpirationTime;
+          if (dependencies.expirationTime < renderExpirationTime) {
+            dependencies.expirationTime = renderExpirationTime;
           }
 
           // Since we already found a match, we can stop traversing the
@@ -315,17 +311,18 @@ export function prepareToReadContext(
   lastContextDependency = null;
   lastContextWithAllBitsObserved = null;
 
-  const currentDependencies = workInProgress.contextDependencies;
+  const dependencies = workInProgress.dependencies;
+  const firstContext = dependencies.firstContext;
   if (
-    currentDependencies !== null &&
-    currentDependencies.expirationTime >= renderExpirationTime
+    firstContext !== null &&
+    dependencies.expirationTime >= renderExpirationTime
   ) {
     // Context list has a pending update. Mark that this fiber performed work.
     markWorkInProgressReceivedUpdate();
   }
 
   // Reset the work-in-progress list
-  workInProgress.contextDependencies = null;
+  dependencies.firstContext = null;
 }
 
 export function readContext<T>(
@@ -378,10 +375,9 @@ export function readContext<T>(
 
       // This is the first dependency for this component. Create a new list.
       lastContextDependency = contextItem;
-      currentlyRenderingFiber.contextDependencies = {
-        first: contextItem,
-        expirationTime: NoWork,
-      };
+      const dependencies = currentlyRenderingFiber.dependencies;
+      dependencies.expirationTime = NoWork;
+      dependencies.firstContext = contextItem;
     } else {
       // Append a new context item.
       lastContextDependency = lastContextDependency.next = contextItem;

@@ -85,6 +85,7 @@ function dispatchDragEvent(
 }
 
 const DragResponder = {
+  displayName: 'Drag',
   targetEventTypes,
   createInitialState(): DragState {
     return {
@@ -98,6 +99,7 @@ const DragResponder = {
     };
   },
   allowMultipleHostChildren: false,
+  allowEventHooks: false,
   onEvent(
     event: ReactDOMResponderEvent,
     context: ReactDOMResponderContext,
@@ -259,4 +261,4 @@ const DragResponder = {
   },
 };
 
-export default ReactDOM.unstable_createEvent(DragResponder, 'Drag');
+export default ReactDOM.unstable_createEvent(DragResponder);

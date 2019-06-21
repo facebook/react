@@ -89,6 +89,7 @@ type SwipeState = {
 };
 
 const SwipeResponder = {
+  displayName: 'Scroll',
   targetEventTypes,
   createInitialState(): SwipeState {
     return {
@@ -104,6 +105,7 @@ const SwipeResponder = {
     };
   },
   allowMultipleHostChildren: false,
+  allowEventHooks: false,
   onEvent(
     event: ReactDOMResponderEvent,
     context: ReactDOMResponderContext,
@@ -262,4 +264,4 @@ const SwipeResponder = {
   },
 };
 
-export default ReactDOM.unstable_createEvent(SwipeResponder, 'Swipe');
+export default ReactDOM.unstable_createEvent(SwipeResponder);

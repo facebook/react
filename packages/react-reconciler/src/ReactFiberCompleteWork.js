@@ -115,7 +115,10 @@ import {
   renderDidSuspend,
   renderDidSuspendDelayIfPossible,
 } from './ReactFiberWorkLoop';
-import {getEventComponentHostChildrenCount} from './ReactFiberEvents';
+import {
+  getEventComponentHostChildrenCount,
+  createEventComponentInstance,
+} from './ReactFiberEvents';
 import getComponentName from 'shared/getComponentName';
 import warning from 'shared/warning';
 
@@ -1028,20 +1031,18 @@ function completeWork(
           if (responder.createInitialState !== undefined) {
             responderState = responder.createInitialState(newProps);
           }
-          eventComponentInstance = workInProgress.stateNode = {
-            currentFiber: workInProgress,
-            props: newProps,
+          eventComponentInstance = workInProgress.stateNode = createEventComponentInstance(
+            workInProgress,
+            newProps,
             responder,
-            rootEventTypes: null,
-            rootInstance: rootContainerInstance,
-            state: responderState,
-          };
+            rootContainerInstance,
+            responderState,
+            true,
+          );
           markUpdate(workInProgress);
         } else {
           // Update the props on the event component state node
           eventComponentInstance.props = newProps;
-          // Update the root container, so we can properly unmount events at some point
-          eventComponentInstance.rootInstance = rootContainerInstance;
           // Update the current fiber
           eventComponentInstance.currentFiber = workInProgress;
           updateEventComponent(eventComponentInstance);

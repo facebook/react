@@ -177,6 +177,7 @@ import {
   requestCurrentTime,
   retryTimedOutBoundary,
 } from './ReactFiberWorkLoop';
+import {prepareToReadEventComponents} from './ReactFiberEvents';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -301,6 +302,7 @@ function updateForwardRef(
   // The rest is a fork of updateFunctionComponent
   let nextChildren;
   prepareToReadContext(workInProgress, renderExpirationTime);
+  prepareToReadEventComponents(workInProgress);
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
     setCurrentPhase('render');
@@ -621,6 +623,7 @@ function updateFunctionComponent(
 
   let nextChildren;
   prepareToReadContext(workInProgress, renderExpirationTime);
+  prepareToReadEventComponents(workInProgress);
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
     setCurrentPhase('render');
@@ -1235,7 +1238,7 @@ function mountIndeterminateComponent(
   const context = getMaskedContext(workInProgress, unmaskedContext);
 
   prepareToReadContext(workInProgress, renderExpirationTime);
-
+  prepareToReadEventComponents(workInProgress);
   let value;
 
   if (__DEV__) {
@@ -2450,8 +2453,8 @@ function bailoutOnAlreadyFinishedWork(
   cancelWorkTimer(workInProgress);
 
   if (current !== null) {
-    // Reuse previous context list
-    workInProgress.contextDependencies = current.contextDependencies;
+    // Reuse previous dependencies
+    workInProgress.dependencies = current.dependencies;
   }
 
   if (enableProfilerTimer) {

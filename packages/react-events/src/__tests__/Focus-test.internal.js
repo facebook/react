@@ -354,6 +354,6 @@ describe('Focus event responder', () => {
   });
 
   it('expect displayName to show up for event component', () => {
-    expect(Focus.displayName).toBe('Focus');
+    expect(Focus.responder.displayName).toBe('Focus');
   });
 });
