@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactEventResponder, ReactContext} from 'shared/ReactTypes';
+import type {ReactEventComponent, ReactContext} from 'shared/ReactTypes';
 import type {SideEffectTag} from 'shared/ReactSideEffectTags';
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
@@ -83,7 +83,7 @@ export type Dispatcher = {
   ): void,
   useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void,
   useEvent<T, E, C>(
-    responder: ReactEventResponder<T, E, C>,
+    eventComponent: ReactEventComponent<T, E, C>,
     props: Object,
   ): void,
 };
@@ -1399,10 +1399,10 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountDebugValue(value, formatterFn);
     },
-    useEvent<T, E, C>(responder: ReactEventResponder<T, E, C>, props) {
+    useEvent<T, E, C>(eventComponent: ReactEventComponent<T, E, C>, props) {
       currentHookNameInDev = 'useEvent';
       mountHookTypesDev();
-      updateEventComponentInstance(responder, props);
+      updateEventComponentInstance(eventComponent, props);
     },
   };
 
@@ -1501,10 +1501,10 @@ if (__DEV__) {
       updateHookTypesDev();
       return mountDebugValue(value, formatterFn);
     },
-    useEvent<T, E, C>(responder: ReactEventResponder<T, E, C>, props) {
+    useEvent<T, E, C>(eventComponent: ReactEventComponent<T, E, C>, props) {
       currentHookNameInDev = 'useEvent';
       updateHookTypesDev();
-      updateEventComponentInstance(responder, props);
+      updateEventComponentInstance(eventComponent, props);
     },
   };
 
@@ -1603,10 +1603,10 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
     },
-    useEvent<T, E, C>(responder: ReactEventResponder<T, E, C>, props) {
+    useEvent<T, E, C>(eventComponent: ReactEventComponent<T, E, C>, props) {
       currentHookNameInDev = 'useEvent';
       updateHookTypesDev();
-      updateEventComponentInstance(responder, props);
+      updateEventComponentInstance(eventComponent, props);
     },
   };
 
@@ -1716,11 +1716,11 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountDebugValue(value, formatterFn);
     },
-    useEvent<T, E, C>(responder: ReactEventResponder<T, E, C>, props) {
+    useEvent<T, E, C>(eventComponent: ReactEventComponent<T, E, C>, props) {
       currentHookNameInDev = 'useEvent';
       warnInvalidHookAccess();
       mountHookTypesDev();
-      updateEventComponentInstance(responder, props);
+      updateEventComponentInstance(eventComponent, props);
     },
   };
 
@@ -1830,11 +1830,11 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
     },
-    useEvent<T, E, C>(responder: ReactEventResponder<T, E, C>, props) {
+    useEvent<T, E, C>(eventComponent: ReactEventComponent<T, E, C>, props) {
       currentHookNameInDev = 'useEvent';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      updateEventComponentInstance(responder, props);
+      updateEventComponentInstance(eventComponent, props);
     },
   };
 }

@@ -1041,7 +1041,7 @@ function completeWork(
             responder,
             rootContainerInstance,
             responderState || {},
-            true,
+            false,
           );
           markUpdate(workInProgress);
         } else {
