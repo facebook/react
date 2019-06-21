@@ -27,7 +27,7 @@ import {
   REACT_EVENT_TARGET_TOUCH_HIT,
 } from 'shared/ReactSymbols';
 import {refineResolvedLazyComponent} from 'shared/ReactLazyComponent';
-import type {ReactEventComponent, ReactEventTarget} from 'shared/ReactTypes';
+import type {ReactEventTarget} from 'shared/ReactTypes';
 
 import {enableEventAPI} from './ReactFeatureFlags';
 
@@ -97,8 +97,7 @@ function getComponentName(type: mixed): string | null {
       }
       case REACT_EVENT_COMPONENT_TYPE: {
         if (enableEventAPI) {
-          const eventComponent = ((type: any): ReactEventComponent);
-          return eventComponent.responder.displayName;
+          return (type: any).responder.displayName;
         }
         break;
       }

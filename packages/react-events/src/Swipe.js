@@ -8,6 +8,7 @@
  */
 
 import type {
+  ReactDOMEventResponder,
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
 } from 'shared/ReactDOMTypes';
@@ -88,7 +89,7 @@ type SwipeState = {
   y: number,
 };
 
-const SwipeResponder = {
+const SwipeResponder: ReactDOMEventResponder = {
   displayName: 'Scroll',
   targetEventTypes,
   createInitialState(): SwipeState {

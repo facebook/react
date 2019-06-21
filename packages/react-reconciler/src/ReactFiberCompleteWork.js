@@ -1013,7 +1013,11 @@ function completeWork(
         popHostContext(workInProgress);
         const rootContainerInstance = getRootHostContainer();
         const responder = workInProgress.type.responder;
-        let eventComponentInstance: ReactEventComponentInstance | null =
+        let eventComponentInstance: ReactEventComponentInstance<
+          any,
+          any,
+          any,
+        > | null =
           workInProgress.stateNode;
 
         if (eventComponentInstance === null) {
@@ -1036,7 +1040,7 @@ function completeWork(
             newProps,
             responder,
             rootContainerInstance,
-            responderState,
+            responderState || {},
             true,
           );
           markUpdate(workInProgress);

@@ -7,13 +7,12 @@
  * @flow
  */
 
-import type {ReactContext} from 'shared/ReactTypes';
+import type {ReactEventResponder, ReactContext} from 'shared/ReactTypes';
 import type {SideEffectTag} from 'shared/ReactSideEffectTags';
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {HookEffectTag} from './ReactHookEffectTags';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
-import type {EventResponder} from 'react-reconciler/src/ReactFiberHostConfig';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
@@ -83,7 +82,10 @@ export type Dispatcher = {
     deps: Array<mixed> | void | null,
   ): void,
   useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void,
-  useEvent(responder: EventResponder, props: null | Object): void,
+  useEvent<T, E, C>(
+    responder: ReactEventResponder<T, E, C>,
+    props: Object,
+  ): void,
 };
 
 type Update<S, A> = {
@@ -1397,7 +1399,7 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountDebugValue(value, formatterFn);
     },
-    useEvent(responder, props) {
+    useEvent<T, E, C>(responder: ReactEventResponder<T, E, C>, props) {
       currentHookNameInDev = 'useEvent';
       mountHookTypesDev();
       updateEventComponentInstance(responder, props);
@@ -1499,7 +1501,7 @@ if (__DEV__) {
       updateHookTypesDev();
       return mountDebugValue(value, formatterFn);
     },
-    useEvent(responder, props) {
+    useEvent<T, E, C>(responder: ReactEventResponder<T, E, C>, props) {
       currentHookNameInDev = 'useEvent';
       updateHookTypesDev();
       updateEventComponentInstance(responder, props);
@@ -1601,7 +1603,7 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
     },
-    useEvent(responder, props) {
+    useEvent<T, E, C>(responder: ReactEventResponder<T, E, C>, props) {
       currentHookNameInDev = 'useEvent';
       updateHookTypesDev();
       updateEventComponentInstance(responder, props);
@@ -1714,7 +1716,7 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountDebugValue(value, formatterFn);
     },
-    useEvent(responder, props) {
+    useEvent<T, E, C>(responder: ReactEventResponder<T, E, C>, props) {
       currentHookNameInDev = 'useEvent';
       warnInvalidHookAccess();
       mountHookTypesDev();
@@ -1828,7 +1830,7 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
     },
-    useEvent(responder, props) {
+    useEvent<T, E, C>(responder: ReactEventResponder<T, E, C>, props) {
       currentHookNameInDev = 'useEvent';
       warnInvalidHookAccess();
       updateHookTypesDev();

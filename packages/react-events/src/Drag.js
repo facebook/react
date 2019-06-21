@@ -8,6 +8,7 @@
  */
 
 import type {
+  ReactDOMEventResponder,
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
 } from 'shared/ReactDOMTypes';
@@ -84,7 +85,7 @@ function dispatchDragEvent(
   context.dispatchEvent(syntheticEvent, listener, eventPriority);
 }
 
-const DragResponder = {
+const DragResponder: ReactDOMEventResponder = {
   displayName: 'Drag',
   targetEventTypes,
   createInitialState(): DragState {

@@ -8,8 +8,10 @@
  */
 
 import type {Fiber, Dependencies} from './ReactFiber';
-import type {ReactEventComponentInstance} from 'shared/ReactTypes';
-import type {EventResponder} from 'react-reconciler/src/ReactFiberHostConfig';
+import type {
+  ReactEventResponder,
+  ReactEventComponentInstance,
+} from 'shared/ReactTypes';
 
 import {
   HostComponent,
@@ -29,9 +31,9 @@ export function prepareToReadEventComponents(workInProgress: Fiber): void {
   currentEventComponentInstanceIndex = 0;
 }
 
-export function updateEventComponentInstance(
-  responder: EventResponder,
-  props: null | Object,
+export function updateEventComponentInstance<T, E, C>(
+  responder: ReactEventResponder<T, E, C>,
+  props: Object,
 ): void {
   invariant(
     responder.allowEventHooks,
@@ -64,7 +66,7 @@ export function updateEventComponentInstance(
       props,
       responder,
       null,
-      responderState,
+      responderState || {},
       false,
     );
     events.push(eventComponentInstance);
@@ -77,14 +79,14 @@ export function updateEventComponentInstance(
   }
 }
 
-export function createEventComponentInstance(
+export function createEventComponentInstance<T, E, C>(
   currentFiber: Fiber,
-  props: null | Object,
-  responder: EventResponder,
+  props: Object,
+  responder: ReactEventResponder<T, E, C>,
   rootInstance: mixed,
-  state: null | Object,
+  state: Object,
   localPropagation: boolean,
-): ReactEventComponentInstance {
+): ReactEventComponentInstance<T, E, C> {
   return {
     currentFiber,
     localPropagation,
