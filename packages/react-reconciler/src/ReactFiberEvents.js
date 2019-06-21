@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Fiber} from './ReactFiber';
+import type {Fiber, Dependencies} from './ReactFiber';
 import type {ReactEventComponentInstance} from 'shared/ReactTypes';
 import type {EventResponder} from 'react-reconciler/src/ReactFiberHostConfig';
 
@@ -18,6 +18,7 @@ import {
   SuspenseComponent,
   Fragment,
 } from 'shared/ReactWorkTags';
+import {NoWork} from './ReactFiberExpirationTime';
 import invariant from 'shared/invariant';
 
 let currentlyRenderingFiber: null | Fiber = null;
@@ -37,10 +38,21 @@ export function updateEventComponentInstance(
     'The "%s" event responder cannot be used via the "useEvent" hook.',
     responder.displayName,
   );
-  const dependencies = ((currentlyRenderingFiber: any): Fiber).dependencies;
-  let events = dependencies.events;
-  if (events === null) {
-    dependencies.events = events = [];
+  let events;
+  let dependencies: Dependencies | null = ((currentlyRenderingFiber: any): Fiber)
+    .dependencies;
+  if (dependencies === null) {
+    events = [];
+    dependencies = ((currentlyRenderingFiber: any): Fiber).dependencies = {
+      expirationTime: NoWork,
+      firstContext: null,
+      events,
+    };
+  } else {
+    events = dependencies.events;
+    if (events === null) {
+      dependencies.events = events = [];
+    }
   }
   if (currentEventComponentInstanceIndex === events.length) {
     let responderState = null;

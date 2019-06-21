@@ -169,8 +169,8 @@ export type Fiber = {|
   // The state used to create the output
   memoizedState: any,
 
-  // An object of dependencies for this fiber
-  dependencies: Dependencies,
+  // Dependencies (contexts, events) for this fiber, if it has any
+  dependencies: Dependencies | null,
 
   // Bitfield that describes properties about the fiber and its subtree. E.g.
   // the ConcurrentMode flag indicates whether the subtree should be async-by-
@@ -270,11 +270,7 @@ function FiberNode(
   this.memoizedProps = null;
   this.updateQueue = null;
   this.memoizedState = null;
-  this.dependencies = {
-    expirationTime: 0,
-    firstContext: null,
-    events: null,
-  };
+  this.dependencies = null;
 
   this.mode = mode;
 
@@ -443,7 +439,18 @@ export function createWorkInProgress(
   workInProgress.memoizedProps = current.memoizedProps;
   workInProgress.memoizedState = current.memoizedState;
   workInProgress.updateQueue = current.updateQueue;
-  workInProgress.dependencies = current.dependencies;
+
+  // Clone the dependencies object. This is mutated during the render phase, so
+  // it cannot be shared with the current fiber.
+  const currentDependencies = current.dependencies;
+  workInProgress.dependencies =
+    currentDependencies === null
+      ? null
+      : {
+          expirationTime: currentDependencies.expirationTime,
+          firstContext: currentDependencies.firstContext,
+          events: currentDependencies.events,
+        };
 
   // These will be overridden during the parent's reconciliation
   workInProgress.sibling = current.sibling;
