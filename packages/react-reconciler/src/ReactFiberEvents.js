@@ -61,7 +61,7 @@ export function updateEventComponentInstance<T, E, C>(
     if (responder.createInitialState !== undefined) {
       responderState = responder.createInitialState(props);
     }
-    const eventComponentInstance = createEventComponentInstance<T, E, C>(
+    const eventComponentInstance = createEventComponentInstance(
       ((currentlyRenderingFiber: any): Fiber),
       props,
       responder,

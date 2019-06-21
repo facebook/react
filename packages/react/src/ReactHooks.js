@@ -141,5 +141,5 @@ export function useEvent<T, E, C>(
   props: null | Object,
 ) {
   const dispatcher = resolveDispatcher();
-  return dispatcher.useEvent<T, E, C>(responder, props);
+  return dispatcher.useEvent(responder, props);
 }

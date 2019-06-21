@@ -1402,7 +1402,7 @@ if (__DEV__) {
     useEvent<T, E, C>(responder: ReactEventResponder<T, E, C>, props) {
       currentHookNameInDev = 'useEvent';
       mountHookTypesDev();
-      updateEventComponentInstance<T, E, C>(responder, props);
+      updateEventComponentInstance(responder, props);
     },
   };
 
@@ -1504,7 +1504,7 @@ if (__DEV__) {
     useEvent<T, E, C>(responder: ReactEventResponder<T, E, C>, props) {
       currentHookNameInDev = 'useEvent';
       updateHookTypesDev();
-      updateEventComponentInstance<T, E, C>(responder, props);
+      updateEventComponentInstance(responder, props);
     },
   };
 
@@ -1606,7 +1606,7 @@ if (__DEV__) {
     useEvent<T, E, C>(responder: ReactEventResponder<T, E, C>, props) {
       currentHookNameInDev = 'useEvent';
       updateHookTypesDev();
-      updateEventComponentInstance<T, E, C>(responder, props);
+      updateEventComponentInstance(responder, props);
     },
   };
 
@@ -1720,7 +1720,7 @@ if (__DEV__) {
       currentHookNameInDev = 'useEvent';
       warnInvalidHookAccess();
       mountHookTypesDev();
-      updateEventComponentInstance<T, E, C>(responder, props);
+      updateEventComponentInstance(responder, props);
     },
   };
 
@@ -1834,7 +1834,7 @@ if (__DEV__) {
       currentHookNameInDev = 'useEvent';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      updateEventComponentInstance<T, E, C>(responder, props);
+      updateEventComponentInstance(responder, props);
     },
   };
 }
