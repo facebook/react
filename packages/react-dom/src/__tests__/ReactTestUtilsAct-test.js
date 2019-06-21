@@ -404,20 +404,6 @@ function runActTests(label, render, unmount) {
         expect(container.innerHTML).toBe('1');
       });
 
-      it('propagates errors', async () => {
-        let err;
-        try {
-          await act(async () => {
-            await sleep(100);
-            throw new Error('some error');
-          });
-        } catch (_err) {
-          err = _err;
-        } finally {
-          expect(err instanceof Error).toBe(true);
-          expect(err.message).toBe('some error');
-        }
-      });
       it('can handle cascading promises', async () => {
         // this component triggers an effect, that waits a tick,
         // then sets state. repeats this 5 times.
@@ -523,6 +509,112 @@ function runActTests(label, render, unmount) {
           unmount(secondContainer);
         });
       }
+    });
+    describe('error propagation', () => {
+      it('propagates errors - sync', () => {
+        let err;
+        try {
+          act(() => {
+            throw new Error('some error');
+          });
+        } catch (_err) {
+          err = _err;
+        } finally {
+          expect(err instanceof Error).toBe(true);
+          expect(err.message).toBe('some error');
+        }
+      });
+
+      it('should propagate errors from effects - sync', () => {
+        function App() {
+          React.useEffect(() => {
+            throw new Error('oh no');
+          });
+          return null;
+        }
+        let error;
+
+        try {
+          act(() => {
+            render(<App />, container);
+          });
+        } catch (_error) {
+          error = _error;
+        } finally {
+          expect(error instanceof Error).toBe(true);
+          expect(error.message).toBe('oh no');
+        }
+      });
+
+      it('propagates errors - async', async () => {
+        let err;
+        try {
+          await act(async () => {
+            await sleep(100);
+            throw new Error('some error');
+          });
+        } catch (_err) {
+          err = _err;
+        } finally {
+          expect(err instanceof Error).toBe(true);
+          expect(err.message).toBe('some error');
+        }
+      });
+
+      it('should cleanup after errors - sync', () => {
+        function App() {
+          React.useEffect(() => {
+            Scheduler.yieldValue('oh yes');
+          });
+          return null;
+        }
+        let error;
+        try {
+          act(() => {
+            throw new Error('oh no');
+          });
+        } catch (_error) {
+          error = _error;
+        } finally {
+          expect(error instanceof Error).toBe(true);
+          expect(error.message).toBe('oh no');
+          // should be able to render components after this tho
+          act(() => {
+            render(<App />, container);
+          });
+          expect(Scheduler).toHaveYielded(['oh yes']);
+        }
+      });
+
+      it('should cleanup after errors - async', async () => {
+        function App() {
+          async function somethingAsync() {
+            await null;
+            Scheduler.yieldValue('oh yes');
+          }
+          React.useEffect(() => {
+            somethingAsync();
+          });
+          return null;
+        }
+        let error;
+        try {
+          await act(async () => {
+            await sleep(100);
+            throw new Error('oh no');
+          });
+        } catch (_error) {
+          error = _error;
+        } finally {
+          expect(error instanceof Error).toBe(true);
+          expect(error.message).toBe('oh no');
+          // should be able to render components after this tho
+          await act(async () => {
+            render(<App />, container);
+          });
+          expect(Scheduler).toHaveYielded(['oh yes']);
+        }
+      });
     });
   });
 }

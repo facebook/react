@@ -7,7 +7,9 @@
  * @flow
  */
 
-import type {Fiber} from './ReactFiber';
+import type {Fiber, Dependencies} from './ReactFiber';
+import type {ReactEventComponentInstance} from 'shared/ReactTypes';
+import type {EventResponder} from 'react-reconciler/src/ReactFiberHostConfig';
 
 import {
   HostComponent,
@@ -16,6 +18,83 @@ import {
   SuspenseComponent,
   Fragment,
 } from 'shared/ReactWorkTags';
+import {NoWork} from './ReactFiberExpirationTime';
+import invariant from 'shared/invariant';
+
+let currentlyRenderingFiber: null | Fiber = null;
+let currentEventComponentInstanceIndex: number = 0;
+
+export function prepareToReadEventComponents(workInProgress: Fiber): void {
+  currentlyRenderingFiber = workInProgress;
+  currentEventComponentInstanceIndex = 0;
+}
+
+export function updateEventComponentInstance(
+  responder: EventResponder,
+  props: null | Object,
+): void {
+  invariant(
+    responder.allowEventHooks,
+    'The "%s" event responder cannot be used via the "useEvent" hook.',
+    responder.displayName,
+  );
+  let events;
+  let dependencies: Dependencies | null = ((currentlyRenderingFiber: any): Fiber)
+    .dependencies;
+  if (dependencies === null) {
+    events = [];
+    dependencies = ((currentlyRenderingFiber: any): Fiber).dependencies = {
+      expirationTime: NoWork,
+      firstContext: null,
+      events,
+    };
+  } else {
+    events = dependencies.events;
+    if (events === null) {
+      dependencies.events = events = [];
+    }
+  }
+  if (currentEventComponentInstanceIndex === events.length) {
+    let responderState = null;
+    if (responder.createInitialState !== undefined) {
+      responderState = responder.createInitialState(props);
+    }
+    const eventComponentInstance = createEventComponentInstance(
+      ((currentlyRenderingFiber: any): Fiber),
+      props,
+      responder,
+      null,
+      responderState,
+      false,
+    );
+    events.push(eventComponentInstance);
+    currentEventComponentInstanceIndex++;
+  } else {
+    const eventComponentInstance = events[currentEventComponentInstanceIndex++];
+    eventComponentInstance.responder = responder;
+    eventComponentInstance.props = props;
+    eventComponentInstance.currentFiber = ((currentlyRenderingFiber: any): Fiber);
+  }
+}
+
+export function createEventComponentInstance(
+  currentFiber: Fiber,
+  props: null | Object,
+  responder: EventResponder,
+  rootInstance: mixed,
+  state: null | Object,
+  localPropagation: boolean,
+): ReactEventComponentInstance {
+  return {
+    currentFiber,
+    localPropagation,
+    props,
+    responder,
+    rootEventTypes: null,
+    rootInstance,
+    state,
+  };
+}
 
 export function isFiberSuspenseAndTimedOut(fiber: Fiber): boolean {
   return fiber.tag === SuspenseComponent && fiber.memoizedState !== null;

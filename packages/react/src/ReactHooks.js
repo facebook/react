@@ -8,6 +8,7 @@
  */
 
 import type {ReactContext} from 'shared/ReactTypes';
+import type {EventResponder} from 'react-reconciler/src/ReactFiberHostConfig';
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
 
@@ -134,4 +135,9 @@ export function useDebugValue(value: any, formatterFn: ?(value: any) => any) {
     const dispatcher = resolveDispatcher();
     return dispatcher.useDebugValue(value, formatterFn);
   }
+}
+
+export function useEvent(responder: EventResponder, props: null | Object) {
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useEvent(responder, props);
 }

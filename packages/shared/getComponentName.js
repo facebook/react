@@ -98,7 +98,7 @@ function getComponentName(type: mixed): string | null {
       case REACT_EVENT_COMPONENT_TYPE: {
         if (enableEventAPI) {
           const eventComponent = ((type: any): ReactEventComponent);
-          return eventComponent.displayName;
+          return eventComponent.responder.displayName;
         }
         break;
       }

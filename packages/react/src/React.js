@@ -39,6 +39,7 @@ import {
   useReducer,
   useRef,
   useState,
+  useEvent,
 } from './ReactHooks';
 import {withSuspenseConfig} from './ReactBatchConfig';
 import {
@@ -105,6 +106,7 @@ const React = {
 
 if (enableEventAPI) {
   React.unstable_createEvent = createEvent;
+  React.unstable_useEvent = useEvent;
 }
 
 // Note: some APIs are added with feature flags.
