@@ -13,7 +13,7 @@ import type {
 } from 'shared/ReactDOMTypes';
 import type {EventPriority} from 'shared/ReactTypes';
 
-import ReactDOM from 'react-dom';
+import React from 'react';
 import {DiscreteEvent, UserBlockingEvent} from 'shared/ReactTypes';
 
 const targetEventTypes = ['pointerdown'];
@@ -259,4 +259,4 @@ const DragResponder = {
   },
 };
 
-export default ReactDOM.unstable_createEvent(DragResponder, 'Drag');
+export default React.unstable_createEvent(DragResponder, 'Drag');

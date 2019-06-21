@@ -14,7 +14,7 @@ import type {
 } from 'shared/ReactDOMTypes';
 import type {EventPriority} from 'shared/ReactTypes';
 
-import ReactDOM from 'react-dom';
+import React from 'react';
 import {DiscreteEvent, UserBlockingEvent} from 'shared/ReactTypes';
 
 type PressProps = {
@@ -972,4 +972,4 @@ const PressResponder = {
   },
 };
 
-export default ReactDOM.unstable_createEvent(PressResponder, 'Press');
+export default React.unstable_createEvent(PressResponder, 'Press');

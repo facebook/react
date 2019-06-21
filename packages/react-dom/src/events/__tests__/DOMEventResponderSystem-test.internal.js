@@ -42,10 +42,7 @@ function createReactEventComponent({
     allowMultipleHostChildren: allowMultipleHostChildren || false,
   };
 
-  return ReactDOM.unstable_createEvent(
-    testEventResponder,
-    'TestEventComponent',
-  );
+  return React.unstable_createEvent(testEventResponder, 'TestEventComponent');
 }
 
 function dispatchEvent(element, type) {
