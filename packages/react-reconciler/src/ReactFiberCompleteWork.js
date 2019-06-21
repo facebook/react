@@ -122,8 +122,6 @@ import {
 import getComponentName from 'shared/getComponentName';
 import warning from 'shared/warning';
 
-const emptyObject = {};
-
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
   // a PlacementAndUpdate.
