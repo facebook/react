@@ -37,9 +37,10 @@ export function updateEventComponentInstance(
     'The "%s" event responder cannot be used via the "useEvent" hook.',
     responder.displayName,
   );
-  let events = ((currentlyRenderingFiber: any): Fiber).events;
+  const dependencies = ((currentlyRenderingFiber: any): Fiber).dependencies;
+  let events = dependencies.events;
   if (events === null) {
-    ((currentlyRenderingFiber: any): Fiber).events = events = [];
+    dependencies.events = events = [];
   }
   if (currentEventComponentInstanceIndex === events.length) {
     let responderState = null;

@@ -2312,9 +2312,8 @@ function bailoutOnAlreadyFinishedWork(
   cancelWorkTimer(workInProgress);
 
   if (current !== null) {
-    // Reuse previous context list and event component list
-    workInProgress.contextDependencies = current.contextDependencies;
-    workInProgress.events = current.events;
+    // Reuse previous dependencies
+    workInProgress.dependencies = current.dependencies;
   }
 
   if (enableProfilerTimer) {

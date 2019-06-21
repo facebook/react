@@ -709,7 +709,7 @@ function getTargetEventResponderInstances(
   while (node !== null) {
     // Traverse up the fiber tree till we find event component fibers.
     const tag = node.tag;
-    const events = node.events;
+    const events = node.dependencies.events;
 
     if (tag === EventComponent) {
       const eventComponentInstance = node.stateNode;
