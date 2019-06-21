@@ -709,8 +709,7 @@ function getTargetEventResponderInstances(
   while (node !== null) {
     // Traverse up the fiber tree till we find event component fibers.
     const tag = node.tag;
-    const events = node.dependencies.events;
-
+    const dependencies = node.dependencies;
     if (tag === EventComponent) {
       const eventComponentInstance = node.stateNode;
       // Switch to the current fiber tree
@@ -721,16 +720,19 @@ function getTargetEventResponderInstances(
         eventResponderInstances,
         eventComponentResponders,
       );
-    } else if (tag === FunctionComponent && events !== null) {
-      for (let i = 0; i < events.length; i++) {
-        const eventComponentInstance = events[i];
-        if (eventComponentResponders.has(eventComponentInstance.responder)) {
-          storeTargetEventResponderInstance(
-            listeningName,
-            eventComponentInstance,
-            eventResponderInstances,
-            null,
-          );
+    } else if (tag === FunctionComponent && dependencies !== null) {
+      const events = dependencies.events;
+      if (events !== null) {
+        for (let i = 0; i < events.length; i++) {
+          const eventComponentInstance = events[i];
+          if (eventComponentResponders.has(eventComponentInstance.responder)) {
+            storeTargetEventResponderInstance(
+              listeningName,
+              eventComponentInstance,
+              eventResponderInstances,
+              null,
+            );
+          }
         }
       }
     }
