@@ -837,12 +837,14 @@ function detachFiber(current: Fiber) {
   current.child = null;
   current.memoizedState = null;
   current.updateQueue = null;
+  current.dependencies = null;
   const alternate = current.alternate;
   if (alternate !== null) {
     alternate.return = null;
     alternate.child = null;
     alternate.memoizedState = null;
     alternate.updateQueue = null;
+    alternate.dependencies = null;
   }
 }
 
