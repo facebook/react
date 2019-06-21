@@ -52,6 +52,7 @@ import {
 } from './ReactElementValidator';
 import ReactSharedInternals from './ReactSharedInternals';
 import {error, warn} from './withComponentStack';
+import createEvent from 'shared/createEventComponent';
 import {enableJSXTransformAPI, enableEventAPI} from 'shared/ReactFeatureFlags';
 const React = {
   Children: {
@@ -103,6 +104,11 @@ const React = {
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: ReactSharedInternals,
 };
 
+if (enableEventAPI) {
+  React.unstable_createEvent = createEvent;
+  React.unstable_useEvent = useEvent;
+}
+
 // Note: some APIs are added with feature flags.
 // Make sure that stable builds for open source
 // don't modify the React object to avoid deopts.
@@ -119,10 +125,6 @@ if (enableJSXTransformAPI) {
     // for now we can ship identical prod functions
     React.jsxs = jsx;
   }
-}
-
-if (enableEventAPI) {
-  React.unstable_useEvent = useEvent;
 }
 
 export default React;

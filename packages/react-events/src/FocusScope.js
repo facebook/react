@@ -11,7 +11,7 @@ import type {
   ReactDOMResponderContext,
 } from 'shared/ReactDOMTypes';
 
-import ReactDOM from 'react-dom';
+import React from 'react';
 
 type FocusScopeProps = {
   autoFocus: Boolean,
@@ -159,4 +159,4 @@ const FocusScopeResponder = {
   },
 };
 
-export default ReactDOM.unstable_createEvent(FocusScopeResponder);
+export default React.unstable_createEvent(FocusScopeResponder);

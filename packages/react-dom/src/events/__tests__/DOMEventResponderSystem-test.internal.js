@@ -45,7 +45,7 @@ function createReactEventComponent({
     allowEventHooks: allowEventHooks || true,
   };
 
-  return ReactDOM.unstable_createEvent(testEventResponder);
+  return React.unstable_createEvent(testEventResponder);
 }
 
 const createEvent = (type, data) => {

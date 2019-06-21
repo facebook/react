@@ -13,7 +13,7 @@ import type {
   PointerType,
 } from 'shared/ReactDOMTypes';
 
-import ReactDOM from 'react-dom';
+import React from 'react';
 import {DiscreteEvent} from 'shared/ReactTypes';
 
 type FocusProps = {
@@ -338,4 +338,4 @@ const FocusResponder = {
   },
 };
 
-export default ReactDOM.unstable_createEvent(FocusResponder);
+export default React.unstable_createEvent(FocusResponder);
