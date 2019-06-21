@@ -507,6 +507,85 @@ describe('ReactDOMTracing', () => {
           );
         });
       });
+
+      it('should properly trace interactions through a multi-pass SuspenseList render', () => {
+        const SuspenseList = React.unstable_SuspenseList;
+        const Suspense = React.Suspense;
+        function Text({text}) {
+          Scheduler.yieldValue(text);
+          React.useEffect(() => {
+            Scheduler.yieldValue('Commit ' + text);
+          });
+          return <span>{text}</span>;
+        }
+        function App() {
+          return (
+            <SuspenseList revealOrder="forwards">
+              <Suspense fallback={<Text text="Loading A" />}>
+                <Text text="A" />
+              </Suspense>
+              <Suspense fallback={<Text text="Loading B" />}>
+                <Text text="B" />
+              </Suspense>
+              <Suspense fallback={<Text text="Loading C" />}>
+                <Text text="C" />
+              </Suspense>
+            </SuspenseList>
+          );
+        }
+
+        const container = document.createElement('div');
+        const root = ReactDOM.unstable_createRoot(container);
+
+        let interaction;
+        SchedulerTracing.unstable_trace('initialization', 0, () => {
+          interaction = Array.from(SchedulerTracing.unstable_getCurrent())[0];
+          // This render is only CPU bound. Nothing suspends.
+          root.render(<App />);
+        });
+
+        expect(Scheduler).toFlushAndYieldThrough(['A']);
+
+        Scheduler.advanceTime(300);
+        jest.advanceTimersByTime(300);
+
+        expect(Scheduler).toFlushAndYieldThrough(['B']);
+
+        Scheduler.advanceTime(300);
+        jest.advanceTimersByTime(300);
+
+        // Time has now elapsed for so long that we're just going to give up
+        // rendering the rest of the content. So that we can at least show
+        // something.
+        expect(Scheduler).toFlushAndYieldThrough([
+          'Loading C',
+          'Commit A',
+          'Commit B',
+          'Commit Loading C',
+        ]);
+
+        // Schedule an unrelated low priority update that shouldn't be included
+        // in the previous interaction. This is meant to ensure that we don't
+        // rely on the whole tree completing to cover up bugs.
+        Scheduler.unstable_runWithPriority(
+          Scheduler.unstable_IdlePriority,
+          () => root.render(<App />),
+        );
+
+        expect(onInteractionTraced).toHaveBeenCalledTimes(1);
+        expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
+          interaction,
+        );
+        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+
+        // Then we do a second pass to commit the last item.
+        expect(Scheduler).toFlushAndYieldThrough(['C', 'Commit C']);
+
+        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
+        expect(
+          onInteractionScheduledWorkCompleted,
+        ).toHaveBeenLastNotifiedOfInteraction(interaction);
+      });
     });
 
     describe('hydration', () => {

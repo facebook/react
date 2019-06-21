@@ -113,7 +113,7 @@ import {
   enableEventAPI,
 } from 'shared/ReactFeatureFlags';
 import {
-  markDidDeprioritizeIdleSubtree,
+  markSpawnedWork,
   renderDidSuspend,
   renderDidSuspendDelayIfPossible,
 } from './ReactFiberWorkLoop';
@@ -911,7 +911,7 @@ function completeWork(
               'This is probably a bug in React.',
           );
           if (enableSchedulerTracing) {
-            markDidDeprioritizeIdleSubtree();
+            markSpawnedWork(Never);
           }
           skipPastDehydratedSuspenseInstance(workInProgress);
         } else if ((workInProgress.effectTag & DidCapture) === NoEffect) {
@@ -974,8 +974,12 @@ function completeWork(
               // them, then they really have the same priority as this render.
               // So we'll pick it back up the very next render pass once we've had
               // an opportunity to yield for paint.
-              workInProgress.expirationTime = workInProgress.childExpirationTime =
-                renderExpirationTime - 1;
+
+              const nextPriority = renderExpirationTime - 1;
+              workInProgress.expirationTime = workInProgress.childExpirationTime = nextPriority;
+              if (enableSchedulerTracing) {
+                markSpawnedWork(nextPriority);
+              }
             } else {
               suspenseListState.didSuspend = isShowingAnyFallbacks(rendered);
             }
