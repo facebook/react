@@ -265,4 +265,8 @@ const SwipeResponder: ReactDOMEventResponder = {
   },
 };
 
-export default React.unstable_createEvent(SwipeResponder);
+export function useSwipe(props: Object): void {
+  React.unstable_useEvent(SwipeResponder, props);
+}
+
+export const Swipe = React.unstable_createEvent(SwipeResponder);

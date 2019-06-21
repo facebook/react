@@ -44,7 +44,7 @@ const modulesInit = () => {
   ReactFeatureFlags.enableEventAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
-  Focus = require('react-events/focus');
+  Focus = require('react-events/focus').Focus;
 };
 
 describe('Focus event responder', () => {

@@ -339,4 +339,8 @@ const FocusResponder: ReactDOMEventResponder = {
   },
 };
 
-export default React.unstable_createEvent(FocusResponder);
+export function useFocus(props: FocusProps): void {
+  React.unstable_useEvent(FocusResponder, props);
+}
+
+export const Focus = React.unstable_createEvent(FocusResponder);

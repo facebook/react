@@ -47,7 +47,7 @@ describe('Hover event responder', () => {
     ReactFeatureFlags.enableEventAPI = true;
     React = require('react');
     ReactDOM = require('react-dom');
-    Hover = require('react-events/hover');
+    Hover = require('react-events/hover').Hover;
 
     container = document.createElement('div');
     document.body.appendChild(container);
