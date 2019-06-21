@@ -2069,6 +2069,7 @@ function updateSuspenseListComponent(
       rendering: null,
       last: null,
       tail: null,
+      tailExpiration: 0,
     };
   } else {
     let didForceFallback =
@@ -2124,6 +2125,7 @@ function updateSuspenseListComponent(
             rendering: null,
             last: lastContentRow,
             tail: tail,
+            tailExpiration: 0,
           };
         } else {
           suspenseListState.tail = tail;
@@ -2164,6 +2166,7 @@ function updateSuspenseListComponent(
             rendering: null,
             last: null,
             tail: tail,
+            tailExpiration: 0,
           };
         } else {
           suspenseListState.isBackwards = true;
