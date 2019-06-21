@@ -8,6 +8,7 @@
  */
 
 import type {
+  ReactDOMEventResponder,
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
   PointerType,
@@ -622,7 +623,7 @@ function updateIsPressWithinResponderRegion(
   state.isPressWithinResponderRegion = isPressWithinResponderRegion;
 }
 
-const PressResponder = {
+const PressResponder: ReactDOMEventResponder = {
   displayName: 'Press',
   targetEventTypes,
   createInitialState(): PressState {

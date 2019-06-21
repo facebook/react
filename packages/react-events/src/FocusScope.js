@@ -7,6 +7,7 @@
  * @flow
  */
 import type {
+  ReactDOMEventResponder,
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
 } from 'shared/ReactDOMTypes';
@@ -45,7 +46,7 @@ function getFirstFocusableElement(
   }
 }
 
-const FocusScopeResponder = {
+const FocusScopeResponder: ReactDOMEventResponder = {
   displayName: 'FocusScope',
   targetEventTypes,
   rootEventTypes,

@@ -8,6 +8,7 @@
  */
 
 import type {
+  ReactDOMEventResponder,
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
   PointerType,
@@ -116,7 +117,7 @@ function dispatchEvent(
   context.dispatchEvent(syntheticEvent, listener, eventPriority);
 }
 
-const ScrollResponder = {
+const ScrollResponder: ReactDOMEventResponder = {
   displayName: 'Scroll',
   targetEventTypes,
   createInitialState() {

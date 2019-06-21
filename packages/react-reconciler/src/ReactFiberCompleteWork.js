@@ -122,6 +122,8 @@ import {
 import getComponentName from 'shared/getComponentName';
 import warning from 'shared/warning';
 
+const emptyObject = {};
+
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
   // a PlacementAndUpdate.
@@ -1013,7 +1015,11 @@ function completeWork(
         popHostContext(workInProgress);
         const rootContainerInstance = getRootHostContainer();
         const responder = workInProgress.type.responder;
-        let eventComponentInstance: ReactEventComponentInstance | null =
+        let eventComponentInstance: ReactEventComponentInstance<
+          any,
+          any,
+          any,
+        > | null =
           workInProgress.stateNode;
 
         if (eventComponentInstance === null) {
@@ -1036,7 +1042,7 @@ function completeWork(
             newProps,
             responder,
             rootContainerInstance,
-            responderState,
+            responderState || {},
             true,
           );
           markUpdate(workInProgress);

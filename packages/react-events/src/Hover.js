@@ -8,6 +8,7 @@
  */
 
 import type {
+  ReactDOMEventResponder,
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
 } from 'shared/ReactDOMTypes';
@@ -273,7 +274,7 @@ function isEmulatedMouseEvent(event, state) {
   );
 }
 
-const HoverResponder = {
+const HoverResponder: ReactDOMEventResponder = {
   displayName: 'Hover',
   targetEventTypes,
   createInitialState() {

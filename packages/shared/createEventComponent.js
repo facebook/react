@@ -6,8 +6,7 @@
  * @flow
  */
 
-import type {EventResponder} from 'react-reconciler/src/ReactFiberHostConfig';
-import type {ReactEventComponent} from 'shared/ReactTypes';
+import type {ReactEventResponder, ReactEventComponent} from 'shared/ReactTypes';
 import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
 
 let hasBadMapPolyfill;
@@ -29,9 +28,9 @@ if (__DEV__) {
   }
 }
 
-export default function createEventComponent(
-  responder: EventResponder,
-): ReactEventComponent {
+export default function createEventComponent<T, E, C>(
+  responder: ReactEventResponder<T, E, C>,
+): ReactEventComponent<T, E, C> {
   // We use responder as a Map key later on. When we have a bad
   // polyfill, then we can't use it as a key as the polyfill tries
   // to add a property to the object.
@@ -40,7 +39,6 @@ export default function createEventComponent(
   }
   const eventComponent = {
     $$typeof: REACT_EVENT_COMPONENT_TYPE,
-    props: null,
     responder: responder,
   };
   if (__DEV__) {

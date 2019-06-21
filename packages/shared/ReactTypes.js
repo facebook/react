@@ -7,9 +7,6 @@
  * @flow
  */
 
-// NOTE: this line is changed in the RN build, see: copyRNShims in packaging.js
-import type {EventResponder} from 'react-reconciler/src/ReactFiberHostConfig';
-
 export type ReactNode =
   | React$Element<any>
   | ReactPortal
@@ -17,7 +14,7 @@ export type ReactNode =
   | ReactFragment
   | ReactProvider<any>
   | ReactConsumer<any>
-  | ReactEventComponent
+  | ReactEventComponent<any, any, any>
   | ReactEventTarget;
 
 export type ReactEmpty = null | void | boolean;
@@ -84,20 +81,34 @@ export type RefObject = {|
   current: any,
 |};
 
-export type ReactEventComponentInstance = {|
+export type ReactEventComponentInstance<T, E, C> = {|
   currentFiber: mixed,
   localPropagation: boolean,
-  props: null | Object,
-  responder: EventResponder,
+  props: Object,
+  responder: ReactEventResponder<T, E, C>,
   rootEventTypes: null | Set<string>,
   rootInstance: null | mixed,
-  state: null | Object,
+  state: Object,
 |};
 
-export type ReactEventComponent = {|
+export type ReactEventResponder<T, E, C> = {
+  displayName: string,
+  targetEventTypes?: Array<T>,
+  rootEventTypes?: Array<T>,
+  createInitialState?: (props: Object) => Object,
+  allowMultipleHostChildren: boolean,
+  allowEventHooks: boolean,
+  onEvent?: (event: E, context: C, props: Object, state: Object) => void,
+  onEventCapture?: (event: E, context: C, props: Object, state: Object) => void,
+  onRootEvent?: (event: E, context: C, props: Object, state: Object) => void,
+  onMount?: (context: C, props: Object, state: Object) => void,
+  onUnmount?: (context: C, props: Object, state: Object) => void,
+  onOwnershipChange?: (context: C, props: Object, state: Object) => void,
+};
+
+export type ReactEventComponent<T, E, C> = {|
   $$typeof: Symbol | number,
-  props: null | Object,
-  responder: EventResponder,
+  responder: ReactEventResponder<T, E, C>,
 |};
 
 export type ReactEventTarget = {|
