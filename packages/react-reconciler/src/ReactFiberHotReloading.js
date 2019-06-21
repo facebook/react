@@ -38,15 +38,31 @@ export type Family = {|
   current: any,
 |};
 
-export type HotUpdate = {|
-  resolveFamily: (any => Family | void) | null,
+export type RefreshUpdate = {|
   staleFamilies: Set<Family>,
   updatedFamilies: Set<Family>,
 |};
 
-let resolveFamily: (any => Family | void) | null = null;
+// Resolves type to a family.
+type RefreshHandler = any => Family | void;
+
+// Used by React Refresh runtime through DevTools Global Hook.
+export type SetRefreshHandler = (handler: RefreshHandler | null) => void;
+export type ScheduleRefresh = (root: FiberRoot, update: RefreshUpdate) => void;
+export type FindHostInstancesForRefresh = (
+  root: FiberRoot,
+  families: Array<Family>,
+) => Set<Instance>;
+
+let resolveFamily: RefreshHandler | null = null;
 // $FlowFixMe Flow gets confused by a WeakSet feature check below.
 let failedBoundaries: WeakSet<Fiber> | null = null;
+
+export let setRefreshHandler = (handler: RefreshHandler | null): void => {
+  if (__DEV__) {
+    resolveFamily = handler;
+  }
+};
 
 export function resolveFunctionForHotReloading(type: any): any {
   if (__DEV__) {
@@ -192,7 +208,7 @@ export function isCompatibleFamilyForHotReloading(
 export function markFailedErrorBoundaryForHotReloading(fiber: Fiber) {
   if (__DEV__) {
     if (resolveFamily === null) {
-      // Not hot reloading.
+      // Hot reloading is disabled.
       return;
     }
     if (typeof WeakSet !== 'function') {
@@ -205,12 +221,16 @@ export function markFailedErrorBoundaryForHotReloading(fiber: Fiber) {
   }
 }
 
-export function scheduleHotUpdate(root: FiberRoot, hotUpdate: HotUpdate): void {
+export let scheduleRefresh: ScheduleRefresh = (
+  root: FiberRoot,
+  update: RefreshUpdate,
+): void => {
   if (__DEV__) {
-    // TODO: warn if its identity changes over time?
-    resolveFamily = hotUpdate.resolveFamily;
-
-    const {staleFamilies, updatedFamilies} = hotUpdate;
+    if (resolveFamily === null) {
+      // Hot reloading is disabled.
+      return;
+    }
+    const {staleFamilies, updatedFamilies} = update;
     flushPassiveEffects();
     flushSync(() => {
       scheduleFibersWithFamiliesRecursively(
@@ -220,7 +240,7 @@ export function scheduleHotUpdate(root: FiberRoot, hotUpdate: HotUpdate): void {
       );
     });
   }
-}
+};
 
 function scheduleFibersWithFamiliesRecursively(
   fiber: Fiber,
@@ -292,10 +312,10 @@ function scheduleFibersWithFamiliesRecursively(
   }
 }
 
-export function findHostInstancesForHotUpdate(
+export let findHostInstancesForRefresh: FindHostInstancesForRefresh = (
   root: FiberRoot,
   families: Array<Family>,
-): Set<Instance> {
+): Set<Instance> => {
   if (__DEV__) {
     const hostInstances = new Set();
     const types = new Set(families.map(family => family.current));
@@ -307,10 +327,10 @@ export function findHostInstancesForHotUpdate(
     return hostInstances;
   } else {
     throw new Error(
-      'Did not expect findHostInstancesForHotUpdate to be called in production.',
+      'Did not expect findHostInstancesForRefresh to be called in production.',
     );
   }
-}
+};
 
 function findHostInstancesForMatchingFibersRecursively(
   fiber: Fiber,

@@ -20,6 +20,7 @@ import {
   REACT_PROVIDER_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
+  REACT_SUSPENSE_LIST_TYPE,
   REACT_LAZY_TYPE,
   REACT_EVENT_COMPONENT_TYPE,
   REACT_EVENT_TARGET_TYPE,
@@ -73,6 +74,8 @@ function getComponentName(type: mixed): string | null {
       return 'StrictMode';
     case REACT_SUSPENSE_TYPE:
       return 'Suspense';
+    case REACT_SUSPENSE_LIST_TYPE:
+      return 'SuspenseList';
   }
   if (typeof type === 'object') {
     switch (type.$$typeof) {
