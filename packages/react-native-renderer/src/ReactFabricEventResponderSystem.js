@@ -16,20 +16,20 @@ import {
   flushDiscreteUpdatesIfNeeded,
 } from 'events/ReactGenericBatching';
 import type {
+  ReactEventResponder,
   ReactEventComponentInstance,
-  EventPriority,
 } from 'shared/ReactTypes';
 import type {
-  TopLevelEventType,
-  ReactNativeEventResponder,
+  ReactNativeEventResponderEventType,
   ReactNativeResponderContext,
   ReactNativeResponderEvent,
+  EventPriority,
 } from './ReactNativeTypes';
 import {
   ContinuousEvent,
   UserBlockingEvent,
   DiscreteEvent,
-} from 'shared/ReactTypes';
+} from './ReactNativeTypes';
 import {invokeGuardedCallbackAndCatchFirstError} from 'shared/ReactErrorUtils';
 import {enableUserBlockingEvents} from 'shared/ReactFeatureFlags';
 import warning from 'shared/warning';
@@ -55,9 +55,21 @@ type EventQueue = {
   eventPriority: EventPriority,
 };
 
+type ReactNativeEventResponder = ReactEventResponder<
+  ReactNativeEventResponderEventType,
+  ReactNativeResponderEvent,
+  ReactNativeResponderContext,
+>;
+
+type ReactNativeEventComponentInstance = ReactEventComponentInstance<
+  ReactNativeEventResponderEventType,
+  ReactNativeResponderEvent,
+  ReactNativeResponderContext,
+>;
+
 const targetEventTypeCached: Map<
-  Array<TopLevelEventType>,
-  Set<TopLevelEventType>,
+  Array<ReactNativeEventResponderEventType>,
+  Set<ReactNativeEventResponderEventType>,
 > = new Map();
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 const eventListeners:
@@ -72,9 +84,7 @@ let continueLocalPropagation = false;
 
 let currentTimeStamp = 0;
 let currentTimers = new Map();
-let currentInstance: null | ReactEventComponentInstance<
-  ReactNativeEventResponder,
-> = null;
+let currentInstance: null | ReactNativeEventComponentInstance = null;
 let currentEventQueue: null | EventQueue = null;
 // let currentTimerIDCounter = 0;
 
@@ -147,7 +157,7 @@ const eventResponderContext: ReactNativeResponderContext = {
 };
 
 function createFabricResponderEvent(
-  topLevelType: TopLevelEventType,
+  topLevelType: ReactNativeEventResponderEventType,
   nativeEvent: AnyNativeEvent,
   target: null | Fiber,
 ): ReactNativeResponderEvent {
@@ -233,8 +243,8 @@ function processEvents(events: Array<EventObjectType>): void {
 }
 
 function getFabricTargetEventTypesSet(
-  eventTypes: Array<TopLevelEventType>,
-): Set<TopLevelEventType> {
+  eventTypes: Array<ReactNativeEventResponderEventType>,
+): Set<ReactNativeEventResponderEventType> {
   let cachedSet = targetEventTypeCached.get(eventTypes);
 
   if (cachedSet === undefined) {
@@ -250,9 +260,9 @@ function getFabricTargetEventTypesSet(
 // TODO this function is almost an exact copy of the DOM version, we should
 // somehow share the logic
 function getTargetEventResponderInstances(
-  topLevelType: TopLevelEventType,
+  topLevelType: ReactNativeEventResponderEventType,
   targetFiber: null | Fiber,
-): Array<ReactEventComponentInstance<ReactNativeEventResponder>> {
+): Array<ReactNativeEventComponentInstance> {
   const eventResponderInstances = [];
   let node = targetFiber;
   while (node !== null) {
@@ -279,9 +289,7 @@ function getTargetEventResponderInstances(
 // TODO this function is almost an exact copy of the DOM version, we should
 // somehow share the logic
 function shouldSkipEventComponent(
-  eventResponderInstance: ReactEventComponentInstance<
-    ReactNativeEventResponder,
-  >,
+  eventResponderInstance: ReactNativeEventComponentInstance,
   responder: ReactNativeEventResponder,
   propagatedEventResponders: null | Set<ReactNativeEventResponder>,
 ): boolean {
@@ -310,7 +318,7 @@ function checkForLocalPropagationContinuation(
 // TODO this function is almost an exact copy of the DOM version, we should
 // somehow share the logic
 function traverseAndHandleEventResponderInstances(
-  topLevelType: TopLevelEventType,
+  topLevelType: ReactNativeEventResponderEventType,
   targetFiber: null | Fiber,
   nativeEvent: AnyNativeEvent,
 ): void {
@@ -394,7 +402,7 @@ function traverseAndHandleEventResponderInstances(
 // TODO this function is almost an exact copy of the DOM version, we should
 // somehow share the logic
 export function dispatchEventForResponderEventSystem(
-  topLevelType: TopLevelEventType,
+  topLevelType: ReactNativeEventResponderEventType,
   targetFiber: null | Fiber,
   nativeEvent: AnyNativeEvent,
 ): void {

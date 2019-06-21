@@ -546,7 +546,7 @@ describe('Hover event responder', () => {
   });
 
   it('expect displayName to show up for event component', () => {
-    expect(Hover.displayName).toBe('Hover');
+    expect(Hover.responder.displayName).toBe('Hover');
   });
 
   it('should correctly pass through event properties', () => {

@@ -12,7 +12,7 @@ import type {
   ReactDOMResponderContext,
 } from 'shared/ReactDOMTypes';
 
-import ReactDOM from 'react-dom';
+import React from 'react';
 import {UserBlockingEvent} from 'shared/ReactTypes';
 
 type HoverProps = {
@@ -274,6 +274,7 @@ function isEmulatedMouseEvent(event, state) {
 }
 
 const HoverResponder = {
+  displayName: 'Hover',
   targetEventTypes,
   createInitialState() {
     return {
@@ -287,6 +288,7 @@ const HoverResponder = {
     };
   },
   allowMultipleHostChildren: false,
+  allowEventHooks: true,
   onEvent(
     event: ReactDOMResponderEvent,
     context: ReactDOMResponderContext,
@@ -406,4 +408,4 @@ const HoverResponder = {
   },
 };
 
-export default ReactDOM.unstable_createEvent(HoverResponder, 'Hover');
+export default React.unstable_createEvent(HoverResponder);

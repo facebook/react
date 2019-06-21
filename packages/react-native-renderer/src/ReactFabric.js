@@ -28,7 +28,6 @@ import {
 import {createPortal} from 'shared/ReactPortal';
 import {setBatchingImplementation} from 'events/ReactGenericBatching';
 import ReactVersion from 'shared/ReactVersion';
-import createEventComponent from 'shared/createEventComponent';
 
 import NativeMethodsMixin from './NativeMethodsMixin';
 import ReactNativeComponent from './ReactNativeComponent';
@@ -39,8 +38,6 @@ import {LegacyRoot} from 'shared/ReactRootTags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentName from 'shared/getComponentName';
 import warningWithoutStack from 'shared/warningWithoutStack';
-
-import {enableEventAPI} from 'shared/ReactFeatureFlags';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -155,12 +152,7 @@ const ReactFabric: ReactFabricType = {
     // Used as a mixin in many createClass-based components
     NativeMethodsMixin: NativeMethodsMixin(findNodeHandle, findHostInstance),
   },
-  unstable_createEvent: undefined,
 };
-
-if (enableEventAPI) {
-  ReactFabric.unstable_createEvent = createEventComponent;
-}
 
 injectIntoDevTools({
   findFiberByHostInstance: getClosestInstanceFromNode,

@@ -97,7 +97,7 @@ function getComponentName(type: mixed): string | null {
       }
       case REACT_EVENT_COMPONENT_TYPE: {
         if (enableEventAPI) {
-          return (type: any).displayName;
+          return (type: any).responder.displayName;
         }
         break;
       }

@@ -9,7 +9,6 @@
  */
 
 import React from 'react';
-import type {ReactEventComponent} from 'shared/ReactTypes';
 
 export type MeasureOnSuccessCallback = (
   x: number,
@@ -155,18 +154,10 @@ export type ReactFabricType = {
     callback: ?Function,
   ): any,
   unmountComponentAtNode(containerTag: number): any,
-  unstable_createEvent:
-    | void
-    | ((
-        responder: ReactNativeEventResponder,
-        displayName: string,
-      ) => ReactEventComponent<ReactNativeEventResponder>),
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: SecretInternalsFabricType,
 };
 
-import type {EventPriority} from 'shared/ReactTypes';
-
-export type TopLevelEventType =
+export type ReactNativeEventResponderEventType =
   | 'topMouseDown'
   | 'topMouseMove'
   | 'topMouseUp'
@@ -180,46 +171,7 @@ export type TopLevelEventType =
 export type ReactNativeResponderEvent = {
   nativeEvent: mixed,
   target: mixed,
-  type: TopLevelEventType,
-};
-
-export type ReactNativeEventResponder = {
-  targetEventTypes?: Array<TopLevelEventType>,
-  rootEventTypes?: Array<TopLevelEventType>,
-  createInitialState?: (props: null | Object) => Object,
-  onEvent?: (
-    event: ReactNativeResponderEvent,
-    context: ReactNativeResponderContext,
-    props: null | Object,
-    state: null | Object,
-  ) => void,
-  onEventCapture?: (
-    event: ReactNativeResponderEvent,
-    context: ReactNativeResponderContext,
-    props: null | Object,
-    state: null | Object,
-  ) => void,
-  onRootEvent?: (
-    event: ReactNativeResponderEvent,
-    context: ReactNativeResponderContext,
-    props: null | Object,
-    state: null | Object,
-  ) => void,
-  onMount?: (
-    context: ReactNativeResponderContext,
-    props: null | Object,
-    state: null | Object,
-  ) => void,
-  onUnmount?: (
-    context: ReactNativeResponderContext,
-    props: null | Object,
-    state: null | Object,
-  ) => void,
-  onOwnershipChange?: (
-    context: ReactNativeResponderContext,
-    props: null | Object,
-    state: null | Object,
-  ) => void,
+  type: ReactNativeEventResponderEventType,
 };
 
 export type ReactNativeResponderContext = {
@@ -242,3 +194,9 @@ export type ReactNativeResponderContext = {
   // clearTimeout: (timerId: number) => void,
   // getEventCurrentTarget(event: ReactNativeResponderEvent): Element,
 };
+
+export opaque type EventPriority = 0 | 1 | 2;
+
+export const DiscreteEvent: EventPriority = 0;
+export const UserBlockingEvent: EventPriority = 1;
+export const ContinuousEvent: EventPriority = 2;

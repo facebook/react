@@ -45,8 +45,10 @@ import {
 import dangerousStyleValue from '../shared/dangerousStyleValue';
 
 import type {DOMContainer} from './ReactDOM';
-import type {ReactEventComponentInstance} from 'shared/ReactTypes';
-import type {ReactDOMEventResponder} from 'shared/ReactDOMTypes';
+import type {
+  ReactDOMEventResponder,
+  ReactDOMEventComponentInstance,
+} from 'shared/ReactDOMTypes';
 import {
   mountEventResponder,
   unmountEventResponder,
@@ -899,7 +901,7 @@ export function didNotFindHydratableSuspenseInstance(
 }
 
 export function mountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance<ReactDOMEventResponder>,
+  eventComponentInstance: ReactDOMEventComponentInstance,
 ): void {
   if (enableEventAPI) {
     const rootContainerInstance = ((eventComponentInstance.rootInstance: any): Container);
@@ -925,13 +927,13 @@ export function mountEventComponent(
 }
 
 export function updateEventComponent(
-  eventComponentInstance: ReactEventComponentInstance<ReactDOMEventResponder>,
+  eventComponentInstance: ReactDOMEventComponentInstance,
 ): void {
   // NO-OP, why might use this in the future
 }
 
 export function unmountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance<ReactDOMEventResponder>,
+  eventComponentInstance: ReactDOMEventComponentInstance,
 ): void {
   if (enableEventAPI) {
     // TODO stop listening to targetEventTypes

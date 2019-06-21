@@ -9,7 +9,9 @@
 
 import type {
   ReactNativeBaseComponentViewConfig,
-  ReactNativeEventResponder,
+  ReactNativeEventResponderEventType,
+  ReactNativeResponderEvent,
+  ReactNativeResponderContext,
 } from './ReactNativeTypes';
 import type {ReactEventComponentInstance} from 'shared/ReactTypes';
 
@@ -31,6 +33,12 @@ import {
 import ReactNativeFiberHostComponent from './ReactNativeFiberHostComponent';
 
 const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
+
+type ReactNativeEventComponentInstance = ReactEventComponentInstance<
+  ReactNativeEventResponderEventType,
+  ReactNativeResponderEvent,
+  ReactNativeResponderContext,
+>;
 
 export type Type = string;
 export type Props = Object;
@@ -496,25 +504,19 @@ export function unhideTextInstance(
 }
 
 export function mountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance<
-    ReactNativeEventResponder,
-  >,
+  eventComponentInstance: ReactNativeEventComponentInstance,
 ) {
   throw new Error('Not yet implemented.');
 }
 
 export function updateEventComponent(
-  eventComponentInstance: ReactEventComponentInstance<
-    ReactNativeEventResponder,
-  >,
+  eventComponentInstance: ReactNativeEventComponentInstance,
 ) {
   throw new Error('Not yet implemented.');
 }
 
 export function unmountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance<
-    ReactNativeEventResponder,
-  >,
+  eventComponentInstance: ReactNativeEventComponentInstance,
 ): void {
   throw new Error('Not yet implemented.');
 }

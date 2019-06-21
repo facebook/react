@@ -329,19 +329,19 @@ export function unhideTextInstance(
 }
 
 export function mountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance<any>,
+  eventComponentInstance: ReactEventComponentInstance<any, any, any>,
 ): void {
   // noop
 }
 
 export function updateEventComponent(
-  eventComponentInstance: ReactEventComponentInstance<any>,
+  eventComponentInstance: ReactEventComponentInstance<any, any, any>,
 ): void {
   // noop
 }
 
 export function unmountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance<any>,
+  eventComponentInstance: ReactEventComponentInstance<any, any, any>,
 ): void {
   // noop
 }

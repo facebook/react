@@ -13,7 +13,9 @@ import type {
   MeasureOnSuccessCallback,
   NativeMethodsMixinType,
   ReactNativeBaseComponentViewConfig,
-  ReactNativeEventResponder,
+  ReactNativeEventResponderEventType,
+  ReactNativeResponderEvent,
+  ReactNativeResponderContext,
 } from './ReactNativeTypes';
 import type {ReactEventComponentInstance} from 'shared/ReactTypes';
 
@@ -56,6 +58,12 @@ const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 // This means that they never overlap.
 let nextReactTag = 2;
 
+type ReactNativeEventComponentInstance = ReactEventComponentInstance<
+  ReactNativeEventResponderEventType,
+  ReactNativeResponderEvent,
+  ReactNativeResponderContext,
+>;
+
 type Node = Object;
 export type Type = string;
 export type Props = Object;
@@ -77,7 +85,6 @@ export type UpdatePayload = Object;
 
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
-export type EventResponder = ReactNativeEventResponder;
 
 // TODO: Remove this conditional once all changes have propagated.
 if (registerEventHandler) {
@@ -436,25 +443,19 @@ export function replaceContainerChildren(
 ): void {}
 
 export function mountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance<
-    ReactNativeEventResponder,
-  >,
+  eventComponentInstance: ReactNativeEventComponentInstance,
 ) {
   throw new Error('Not yet implemented.');
 }
 
 export function updateEventComponent(
-  eventComponentInstance: ReactEventComponentInstance<
-    ReactNativeEventResponder,
-  >,
+  eventComponentInstance: ReactNativeEventComponentInstance,
 ) {
   throw new Error('Not yet implemented.');
 }
 
 export function unmountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance<
-    ReactNativeEventResponder,
-  >,
+  eventComponentInstance: ReactNativeEventComponentInstance,
 ): void {
   throw new Error('Not yet implemented.');
 }

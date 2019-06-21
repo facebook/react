@@ -18,7 +18,10 @@ import type {
   ChildSet,
 } from './ReactFiberHostConfig';
 import type {ReactEventComponentInstance} from 'shared/ReactTypes';
-import type {SuspenseState} from './ReactFiberSuspenseComponent';
+import type {
+  SuspenseState,
+  SuspenseListState,
+} from './ReactFiberSuspenseComponent';
 import type {SuspenseContext} from './ReactFiberSuspenseContext';
 
 import {
@@ -84,7 +87,12 @@ import {
   InvisibleParentSuspenseContext,
   hasSuspenseContext,
   popSuspenseContext,
+  pushSuspenseContext,
+  setShallowSuspenseContext,
+  ForceSuspenseFallback,
+  setDefaultShallowSuspenseContext,
 } from './ReactFiberSuspenseContext';
+import {isShowingAnyFallbacks} from './ReactFiberSuspenseComponent';
 import {
   isContextProvider as isLegacyContextProvider,
   popContext as popLegacyContext,
@@ -107,7 +115,10 @@ import {
   renderDidSuspend,
   renderDidSuspendDelayIfPossible,
 } from './ReactFiberWorkLoop';
-import {getEventComponentHostChildrenCount} from './ReactFiberEvents';
+import {
+  getEventComponentHostChildrenCount,
+  createEventComponentInstance,
+} from './ReactFiberEvents';
 import getComponentName from 'shared/getComponentName';
 import warning from 'shared/warning';
 
@@ -917,25 +928,80 @@ function completeWork(
       popSuspenseContext(workInProgress);
 
       if ((workInProgress.effectTag & DidCapture) === NoEffect) {
-        // This is the first pass. We need to figure out if anything is still
-        // suspended in the rendered set.
-        const renderedChildren = workInProgress.child;
-        // If new content unsuspended, but there's still some content that
-        // didn't. Then we need to do a second pass that forces everything
-        // to keep showing their fallbacks.
-        const needsRerender = hasSuspendedChildrenAndNewContent(
-          workInProgress,
-          renderedChildren,
-        );
-        if (needsRerender) {
-          // Rerender the whole list, but this time, we'll force fallbacks
-          // to stay in place.
-          workInProgress.effectTag |= DidCapture;
-          // Reset the effect list before doing the second pass since that's now invalid.
-          workInProgress.firstEffect = workInProgress.lastEffect = null;
-          // Schedule work so we know not to bail out.
-          workInProgress.expirationTime = renderExpirationTime;
-          return workInProgress;
+        let suspenseListState: null | SuspenseListState =
+          workInProgress.memoizedState;
+        if (
+          suspenseListState === null ||
+          suspenseListState.rendering === null
+        ) {
+          // This is the first pass. We need to figure out if anything is still
+          // suspended in the rendered set.
+          const renderedChildren = workInProgress.child;
+          // If new content unsuspended, but there's still some content that
+          // didn't. Then we need to do a second pass that forces everything
+          // to keep showing their fallbacks.
+          const needsRerender = hasSuspendedChildrenAndNewContent(
+            workInProgress,
+            renderedChildren,
+          );
+          if (needsRerender) {
+            // Rerender the whole list, but this time, we'll force fallbacks
+            // to stay in place.
+            workInProgress.effectTag |= DidCapture;
+            // Reset the effect list before doing the second pass since that's now invalid.
+            workInProgress.firstEffect = workInProgress.lastEffect = null;
+            // Schedule work so we know not to bail out.
+            workInProgress.expirationTime = renderExpirationTime;
+            return workInProgress;
+          }
+        } else {
+          // Append the rendered row to the child list.
+          let rendered = suspenseListState.rendering;
+          if (!suspenseListState.didSuspend) {
+            suspenseListState.didSuspend = isShowingAnyFallbacks(rendered);
+          }
+          if (suspenseListState.isBackwards) {
+            // The effect list of the backwards tail will have been added
+            // to the end. This breaks the guarantee that life-cycles fire in
+            // sibling order but that isn't a strong guarantee promised by React.
+            // Especially since these might also just pop in during future commits.
+            // Append to the beginning of the list.
+            rendered.sibling = workInProgress.child;
+            workInProgress.child = rendered;
+          } else {
+            let previousSibling = suspenseListState.last;
+            if (previousSibling !== null) {
+              previousSibling.sibling = rendered;
+            } else {
+              workInProgress.child = rendered;
+            }
+            suspenseListState.last = rendered;
+          }
+        }
+
+        if (suspenseListState !== null && suspenseListState.tail !== null) {
+          // We still have tail rows to render.
+          // Pop a row.
+          let next = suspenseListState.tail;
+          suspenseListState.rendering = next;
+          suspenseListState.tail = next.sibling;
+          next.sibling = null;
+
+          // Restore the context.
+          // TODO: We can probably just avoid popping it instead and only
+          // setting it the first time we go from not suspended to suspended.
+          let suspenseContext = suspenseStackCursor.current;
+          if (suspenseListState.didSuspend) {
+            suspenseContext = setShallowSuspenseContext(
+              suspenseContext,
+              ForceSuspenseFallback,
+            );
+          } else {
+            suspenseContext = setDefaultShallowSuspenseContext(suspenseContext);
+          }
+          pushSuspenseContext(workInProgress, suspenseContext);
+          // Do a pass over the next row.
+          return next;
         }
       } else {
         workInProgress.effectTag &= ~DidCapture;
@@ -947,7 +1013,11 @@ function completeWork(
         popHostContext(workInProgress);
         const rootContainerInstance = getRootHostContainer();
         const responder = workInProgress.type.responder;
-        let eventComponentInstance: ReactEventComponentInstance<any> | null =
+        let eventComponentInstance: ReactEventComponentInstance<
+          any,
+          any,
+          any,
+        > | null =
           workInProgress.stateNode;
 
         if (eventComponentInstance === null) {
@@ -965,20 +1035,18 @@ function completeWork(
           if (responder.createInitialState !== undefined) {
             responderState = responder.createInitialState(newProps);
           }
-          eventComponentInstance = workInProgress.stateNode = {
-            currentFiber: workInProgress,
-            props: newProps,
+          eventComponentInstance = workInProgress.stateNode = createEventComponentInstance(
+            workInProgress,
+            newProps,
             responder,
-            rootEventTypes: null,
-            rootInstance: rootContainerInstance,
-            state: responderState,
-          };
+            rootContainerInstance,
+            responderState,
+            true,
+          );
           markUpdate(workInProgress);
         } else {
           // Update the props on the event component state node
           eventComponentInstance.props = newProps;
-          // Update the root container, so we can properly unmount events at some point
-          eventComponentInstance.rootInstance = rootContainerInstance;
           // Update the current fiber
           eventComponentInstance.currentFiber = workInProgress;
           updateEventComponent(eventComponentInstance);

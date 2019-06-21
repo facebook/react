@@ -8,12 +8,20 @@
  */
 
 import type {Fiber} from './ReactFiber';
+import {SuspenseComponent} from 'shared/ReactWorkTags';
 
 // TODO: This is now an empty object. Should we switch this to a boolean?
 export type SuspenseState = {||};
 
 export type SuspenseListState = {|
   didSuspend: boolean,
+  isBackwards: boolean,
+  // The currently rendering tail row.
+  rendering: null | Fiber,
+  // The last of the already rendered children.
+  last: null | Fiber,
+  // Remaining rows on the tail of the list.
+  tail: null | Fiber,
 |};
 
 export function shouldCaptureSuspense(
@@ -42,4 +50,32 @@ export function shouldCaptureSuspense(
   }
   // If the parent is not able to handle it, we must handle it.
   return true;
+}
+
+export function isShowingAnyFallbacks(row: Fiber): boolean {
+  let node = row;
+  while (node !== null) {
+    if (node.tag === SuspenseComponent) {
+      const state: SuspenseState | null = node.memoizedState;
+      if (state !== null) {
+        return true;
+      }
+    } else if (node.child !== null) {
+      node.child.return = node;
+      node = node.child;
+      continue;
+    }
+    if (node === row) {
+      return false;
+    }
+    while (node.sibling === null) {
+      if (node.return === null || node.return === row) {
+        return false;
+      }
+      node = node.return;
+    }
+    node.sibling.return = node.return;
+    node = node.sibling;
+  }
+  return false;
 }

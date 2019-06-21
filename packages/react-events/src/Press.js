@@ -14,7 +14,7 @@ import type {
 } from 'shared/ReactDOMTypes';
 import type {EventPriority} from 'shared/ReactTypes';
 
-import ReactDOM from 'react-dom';
+import React from 'react';
 import {DiscreteEvent, UserBlockingEvent} from 'shared/ReactTypes';
 
 type PressProps = {
@@ -420,6 +420,8 @@ function dispatchPressEndEvents(
       deactivate(event, context, props, state);
     }
   }
+
+  state.responderRegionOnDeactivation = null;
 }
 
 function dispatchCancel(
@@ -621,6 +623,7 @@ function updateIsPressWithinResponderRegion(
 }
 
 const PressResponder = {
+  displayName: 'Press',
   targetEventTypes,
   createInitialState(): PressState {
     return {
@@ -645,6 +648,7 @@ const PressResponder = {
     };
   },
   allowMultipleHostChildren: false,
+  allowEventHooks: true,
   onEvent(
     event: ReactDOMResponderEvent,
     context: ReactDOMResponderContext,
@@ -726,6 +730,7 @@ const PressResponder = {
             state.pressTarget,
             props,
           );
+          state.responderRegionOnDeactivation = null;
           state.isPressWithinResponderRegion = true;
           dispatchPressStartEvents(event, context, props, state);
           addRootEventTypes(context, state);
@@ -871,6 +876,7 @@ const PressResponder = {
               return;
             }
             isKeyboardEvent = true;
+            removeRootEventTypes(context, state);
           }
 
           // Determine whether to call preventDefault on subsequent native events.
@@ -940,7 +946,10 @@ const PressResponder = {
       }
 
       case 'click': {
-        removeRootEventTypes(context, state);
+        // "keyup" occurs after "click"
+        if (state.pointerType !== 'keyboard') {
+          removeRootEventTypes(context, state);
+        }
         if (state.shouldPreventClick) {
           nativeEvent.preventDefault();
         }
@@ -972,4 +981,4 @@ const PressResponder = {
   },
 };
 
-export default ReactDOM.unstable_createEvent(PressResponder, 'Press');
+export default React.unstable_createEvent(PressResponder);

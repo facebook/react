@@ -14,7 +14,7 @@ export type ReactNode =
   | ReactFragment
   | ReactProvider<any>
   | ReactConsumer<any>
-  | ReactEventComponent<any>
+  | ReactEventComponent<any, any, any>
   | ReactEventTarget;
 
 export type ReactEmpty = null | void | boolean;
@@ -81,20 +81,54 @@ export type RefObject = {|
   current: any,
 |};
 
-export type ReactEventComponentInstance<Responder> = {|
+export type ReactEventComponentInstance<T, E, C> = {|
   currentFiber: mixed,
+  localPropagation: boolean,
   props: null | Object,
-  responder: Responder,
+  responder: ReactEventResponder<T, E, C>,
   rootEventTypes: null | Set<string>,
-  rootInstance: mixed,
+  rootInstance: null | mixed,
   state: null | Object,
 |};
 
-export type ReactEventComponent<Responder> = {|
-  $$typeof: Symbol | number,
+export type ReactEventResponder<T, E, C> = {
   displayName: string,
+  targetEventTypes?: Array<T>,
+  rootEventTypes?: Array<T>,
+  createInitialState?: (props: null | Object) => Object,
+  allowMultipleHostChildren: boolean,
+  allowEventHooks: boolean,
+  onEvent?: (
+    event: E,
+    context: C,
+    props: null | Object,
+    state: null | Object,
+  ) => void,
+  onEventCapture?: (
+    event: E,
+    context: C,
+    props: null | Object,
+    state: null | Object,
+  ) => void,
+  onRootEvent?: (
+    event: E,
+    context: C,
+    props: null | Object,
+    state: null | Object,
+  ) => void,
+  onMount?: (context: C, props: null | Object, state: null | Object) => void,
+  onUnmount?: (context: C, props: null | Object, state: null | Object) => void,
+  onOwnershipChange?: (
+    context: C,
+    props: null | Object,
+    state: null | Object,
+  ) => void,
+};
+
+export type ReactEventComponent<T, E, C> = {|
+  $$typeof: Symbol | number,
   props: null | Object,
-  responder: Responder,
+  responder: ReactEventResponder<T, E, C>,
 |};
 
 export type ReactEventTarget = {|
