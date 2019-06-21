@@ -84,6 +84,7 @@ type ResponderTimeout = {|
 |};
 
 type ResponderTimer = {|
+  isHook: boolean,
   instance: ReactDOMEventComponentInstance,
   func: () => void,
   id: number,
@@ -117,6 +118,7 @@ let currentInstance: null | ReactDOMEventComponentInstance = null;
 let currentEventQueue: null | EventQueue = null;
 let currentTimerIDCounter = 0;
 let currentDocument: null | Document = null;
+let currentlyInHook = false;
 
 const eventResponderContext: ReactDOMResponderContext = {
   dispatchEvent(
@@ -366,6 +368,7 @@ const eventResponderContext: ReactDOMResponderContext = {
       currentTimers.set(delay, timeout);
     }
     timeout.timers.set(timerId, {
+      isHook: currentlyInHook,
       instance: ((currentInstance: any): ReactDOMEventComponentInstance),
       func,
       id: timerId,
@@ -456,6 +459,9 @@ const eventResponderContext: ReactDOMResponderContext = {
     validateResponderContext();
     continueLocalPropagation = true;
   },
+  isRespondingToHook() {
+    return currentlyInHook;
+  },
 };
 
 function collectFocusableElements(
@@ -535,9 +541,10 @@ function processTimers(
   currentEventQueue = createEventQueue();
   try {
     for (let i = 0; i < timersArr.length; i++) {
-      const {instance, func, id, timeStamp} = timersArr[i];
+      const {isHook, instance, func, id, timeStamp} = timersArr[i];
       currentInstance = instance;
       currentTimeStamp = timeStamp + delay;
+      currentlyInHook = isHook;
       try {
         func();
       } finally {
@@ -763,9 +770,9 @@ function shouldSkipEventComponent(
   eventResponderInstance: ReactDOMEventComponentInstance,
   responder: ReactDOMEventResponder,
   propagatedEventResponders: null | Set<ReactDOMEventResponder>,
-  localPropagation: boolean,
+  isHook: boolean,
 ): boolean {
-  if (propagatedEventResponders !== null && localPropagation) {
+  if (propagatedEventResponders !== null && !isHook) {
     if (propagatedEventResponders.has(responder)) {
       return true;
     }
@@ -830,12 +837,7 @@ function traverseAndHandleEventResponderInstances(
     // Capture target phase
     for (i = length; i-- > 0; ) {
       const targetEventResponderInstance = targetEventResponderInstances[i];
-      const {
-        localPropagation,
-        props,
-        responder,
-        state,
-      } = targetEventResponderInstance;
+      const {isHook, props, responder, state} = targetEventResponderInstance;
       const eventListener = responder.onEventCapture;
       if (eventListener !== undefined) {
         if (
@@ -843,14 +845,15 @@ function traverseAndHandleEventResponderInstances(
             targetEventResponderInstance,
             ((responder: any): ReactDOMEventResponder),
             propagatedEventResponders,
-            localPropagation,
+            isHook,
           )
         ) {
           continue;
         }
         currentInstance = targetEventResponderInstance;
+        currentlyInHook = isHook;
         eventListener(responderEvent, eventResponderContext, props, state);
-        if (localPropagation) {
+        if (!isHook) {
           checkForLocalPropagationContinuation(
             responder,
             propagatedEventResponders,
@@ -863,12 +866,7 @@ function traverseAndHandleEventResponderInstances(
     // Bubble target phase
     for (i = 0; i < length; i++) {
       const targetEventResponderInstance = targetEventResponderInstances[i];
-      const {
-        localPropagation,
-        props,
-        responder,
-        state,
-      } = targetEventResponderInstance;
+      const {isHook, props, responder, state} = targetEventResponderInstance;
       const eventListener = responder.onEvent;
       if (eventListener !== undefined) {
         if (
@@ -876,14 +874,15 @@ function traverseAndHandleEventResponderInstances(
             targetEventResponderInstance,
             ((responder: any): ReactDOMEventResponder),
             propagatedEventResponders,
-            localPropagation,
+            isHook,
           )
         ) {
           continue;
         }
         currentInstance = targetEventResponderInstance;
+        currentlyInHook = isHook;
         eventListener(responderEvent, eventResponderContext, props, state);
-        if (localPropagation) {
+        if (!isHook) {
           checkForLocalPropagationContinuation(
             responder,
             propagatedEventResponders,
@@ -900,12 +899,7 @@ function traverseAndHandleEventResponderInstances(
   if (length > 0) {
     for (i = 0; i < length; i++) {
       const rootEventResponderInstance = rootEventResponderInstances[i];
-      const {
-        localPropagation,
-        props,
-        responder,
-        state,
-      } = rootEventResponderInstance;
+      const {isHook, props, responder, state} = rootEventResponderInstance;
       const eventListener = responder.onRootEvent;
       if (eventListener !== undefined) {
         if (
@@ -913,12 +907,13 @@ function traverseAndHandleEventResponderInstances(
             rootEventResponderInstance,
             responder,
             null,
-            localPropagation,
+            isHook,
           )
         ) {
           continue;
         }
         currentInstance = rootEventResponderInstance;
+        currentlyInHook = isHook;
         eventListener(responderEvent, eventResponderContext, props, state);
       }
     }
@@ -928,19 +923,24 @@ function traverseAndHandleEventResponderInstances(
 function triggerOwnershipListeners(): void {
   const listeningInstances = Array.from(ownershipChangeListeners);
   const previousInstance = currentInstance;
+  const previouslyInHook = currentlyInHook;
+  currentEventQueue = createEventQueue();
   try {
     for (let i = 0; i < listeningInstances.length; i++) {
       const instance = listeningInstances[i];
-      const {props, responder, state} = instance;
+      const {isHook, props, responder, state} = instance;
       currentInstance = instance;
+      currentlyInHook = isHook;
       const onOwnershipChange = ((responder: any): ReactDOMEventResponder)
         .onOwnershipChange;
       if (onOwnershipChange !== undefined) {
         onOwnershipChange(eventResponderContext, props, state);
       }
     }
+    processEventQueue();
   } finally {
     currentInstance = previousInstance;
+    currentlyInHook = previouslyInHook;
   }
 }
 
@@ -953,11 +953,13 @@ export function mountEventResponder(
   }
   const onMount = responder.onMount;
   if (onMount !== undefined) {
-    let {props, state} = eventComponentInstance;
+    let {isHook, props, state} = eventComponentInstance;
     currentEventQueue = createEventQueue();
     currentInstance = eventComponentInstance;
+    currentlyInHook = isHook;
     try {
       onMount(eventResponderContext, props, state);
+      processEventQueue();
     } finally {
       currentEventQueue = null;
       currentInstance = null;
@@ -972,11 +974,13 @@ export function unmountEventResponder(
   const responder = ((eventComponentInstance.responder: any): ReactDOMEventResponder);
   const onUnmount = responder.onUnmount;
   if (onUnmount !== undefined) {
-    let {props, state} = eventComponentInstance;
+    let {isHook, props, state} = eventComponentInstance;
     currentEventQueue = createEventQueue();
     currentInstance = eventComponentInstance;
+    currentlyInHook = isHook;
     try {
       onUnmount(eventResponderContext, props, state);
+      processEventQueue();
     } finally {
       currentEventQueue = null;
       currentInstance = null;
@@ -1030,6 +1034,7 @@ export function dispatchEventForResponderEventSystem(
     const previousTimers = currentTimers;
     const previousTimeStamp = currentTimeStamp;
     const previousDocument = currentDocument;
+    const previouslyInHook = currentlyInHook;
     currentTimers = null;
     currentEventQueue = createEventQueue();
     currentDocument = (nativeEventTarget: any).ownerDocument;
@@ -1050,6 +1055,7 @@ export function dispatchEventForResponderEventSystem(
       currentEventQueue = previousEventQueue;
       currentTimeStamp = previousTimeStamp;
       currentDocument = previousDocument;
+      currentlyInHook = previouslyInHook;
     }
   }
 }

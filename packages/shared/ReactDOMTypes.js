@@ -84,4 +84,5 @@ export type ReactDOMResponderContext = {
     deep: boolean,
   ) => boolean,
   continueLocalPropagation(): void,
+  isRespondingToHook(): boolean,
 };
