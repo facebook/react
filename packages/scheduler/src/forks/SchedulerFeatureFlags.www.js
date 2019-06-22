@@ -6,4 +6,7 @@
  *
  */
 
-export const enableSchedulerDebugging = true;
+export const {
+  enableIsInputPending,
+  enableSchedulerDebugging,
+} = require('SchedulerFeatureFlags');
