@@ -160,8 +160,38 @@ if (
   let activeFrameTime = 33;
   let fpsLocked = false;
 
+  // TODO: Make this configurable
+  // TODO: Adjust this based on priority?
+  let maxFrameLength = 300;
+
+  const isInputPending =
+    navigator !== undefined &&
+    navigator.scheduling !== undefined &&
+    navigator.scheduling.isInputPending !== undefined
+      ? navigator.scheduling.isInputPending
+      : null;
+
   shouldYieldToHost = function() {
-    return frameDeadline <= getCurrentTime();
+    const currentTime = getCurrentTime();
+    if (currentTime < frameDeadline) {
+      // There's still time left in the frame.
+      return false;
+    } else {
+      // There's no time left in the frame. We may want to yield control of the
+      // main thread, so the browser can perform high priority tasks. The main
+      // ones are painting and user input. If we're certain there's no user
+      // input, then we can yield less often without making the app less
+      // responsive. We'll eventually yield regardless, since there could be
+      // other main thread tasks that we don't know about.
+      if (isInputPending !== null && !isInputPending()) {
+        // There's no pending input. Only yield if we've reached the max
+        // frame length.
+        return currentTime >= frameDeadline + maxFrameLength;
+      }
+      // Either there is pending input, or there's no way for us to be sure
+      // because `isInputPending` is not available.
+      return true;
+    }
   };
 
   forceFrameRate = function(fps) {
