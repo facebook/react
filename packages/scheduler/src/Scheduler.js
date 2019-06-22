@@ -16,6 +16,7 @@ import {
   shouldYieldToHost,
   getCurrentTime,
   forceFrameRate,
+  requestPaint,
 } from './SchedulerHostConfig';
 
 // TODO: Use symbols?
@@ -506,6 +507,8 @@ function unstable_shouldYield() {
   );
 }
 
+const unstable_requestPaint = requestPaint;
+
 export {
   ImmediatePriority as unstable_ImmediatePriority,
   UserBlockingPriority as unstable_UserBlockingPriority,
@@ -519,6 +522,7 @@ export {
   unstable_wrapCallback,
   unstable_getCurrentPriorityLevel,
   unstable_shouldYield,
+  unstable_requestPaint,
   unstable_continueExecution,
   unstable_pauseExecution,
   unstable_getFirstCallbackNode,

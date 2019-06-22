@@ -18,6 +18,7 @@ export let cancelHostCallback;
 export let requestHostTimeout;
 export let cancelHostTimeout;
 export let shouldYieldToHost;
+export let requestPaint;
 export let getCurrentTime;
 export let forceFrameRate;
 
@@ -125,7 +126,7 @@ if (
   shouldYieldToHost = function() {
     return false;
   };
-  forceFrameRate = function() {};
+  requestPaint = forceFrameRate = function() {};
 } else {
   if (typeof console !== 'undefined') {
     // TODO: Remove fb.me link
@@ -162,7 +163,8 @@ if (
 
   // TODO: Make this configurable
   // TODO: Adjust this based on priority?
-  let maxFrameLength = 300;
+  let maxFrameLength = 150;
+  let needsPaint = false;
 
   const isInputPending =
     navigator !== undefined &&
@@ -181,11 +183,12 @@ if (
       // main thread, so the browser can perform high priority tasks. The main
       // ones are painting and user input. If we're certain there's no user
       // input, then we can yield less often without making the app less
-      // responsive. We'll eventually yield regardless, since there could be
-      // other main thread tasks that we don't know about.
-      if (isInputPending !== null && !isInputPending()) {
-        // There's no pending input. Only yield if we've reached the max
-        // frame length.
+      // responsive. We'll also check if a paint was requested. We'll eventually
+      // yield regardless, since there could be other main thread tasks that we
+      // don't know about.
+      if (!needsPaint && isInputPending !== null && !isInputPending()) {
+        // There's no pending input, and no task requested a paint. Only yield
+        // if we've reached the max frame length.
         return currentTime >= frameDeadline + maxFrameLength;
       }
       // Either there is pending input, or there's no way for us to be sure
@@ -242,6 +245,9 @@ if (
         port.postMessage(undefined);
         throw error;
       }
+      // Yielding to the browser will give it a chance to paint, so we can
+      // reset this.
+      needsPaint = false;
     }
   };
 
@@ -320,5 +326,9 @@ if (
   cancelHostTimeout = function() {
     localClearTimeout(timeoutID);
     timeoutID = -1;
+  };
+
+  requestPaint = function() {
+    needsPaint = true;
   };
 }

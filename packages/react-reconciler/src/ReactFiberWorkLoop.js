@@ -36,6 +36,7 @@ import {
   getCurrentPriorityLevel,
   runWithPriority,
   shouldYield,
+  requestPaint,
   now,
   ImmediatePriority,
   UserBlockingPriority,
@@ -1665,6 +1666,10 @@ function commitRootImpl(root) {
     stopCommitLifeCyclesTimer();
 
     nextEffect = null;
+
+    // Tell Scheduler to yield at the end of the frame, so the browser has an
+    // opportunity to paint.
+    requestPaint();
 
     if (enableSchedulerTracing) {
       __interactionsRef.current = ((prevInteractions: any): Set<Interaction>);
