@@ -3266,4 +3266,35 @@ describe('ReactFresh', () => {
       )(global, React, ReactFreshRuntime, expect, createReactClass);
     }
   });
+
+  it('reports updated and remounted families to the caller', () => {
+    if (__DEV__) {
+      const HelloV1 = () => {
+        const [val, setVal] = React.useState(0);
+        return (
+          <p style={{color: 'blue'}} onClick={() => setVal(val + 1)}>
+            {val}
+          </p>
+        );
+      };
+      $RefreshReg$(HelloV1, 'Hello');
+
+      const HelloV2 = () => {
+        const [val, setVal] = React.useState(0);
+        return (
+          <p style={{color: 'red'}} onClick={() => setVal(val + 1)}>
+            {val}
+          </p>
+        );
+      };
+      $RefreshReg$(HelloV2, 'Hello');
+
+      const update = ReactFreshRuntime.performReactRefresh();
+      expect(update.updatedFamilies.size).toBe(1);
+      expect(update.staleFamilies.size).toBe(0);
+      const family = update.updatedFamilies.values().next().value;
+      expect(family.current.name).toBe('HelloV2');
+      // For example, we can use this to print a log of what was updated.
+    }
+  });
 });
