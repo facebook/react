@@ -165,7 +165,7 @@ if (
 
   // TODO: Make this configurable
   // TODO: Adjust this based on priority?
-  let maxFrameLength = 150;
+  let maxFrameLength = 300;
   let needsPaint = false;
 
   if (
