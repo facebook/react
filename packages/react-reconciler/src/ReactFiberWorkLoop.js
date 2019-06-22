@@ -246,9 +246,11 @@ let nestedPassiveUpdateCount: number = 0;
 
 let interruptedBy: Fiber | null = null;
 
-// Marks the need to reschedule pending interactions at Never priority during the commit phase.
-// This enables them to be traced accross hidden boundaries or suspended SSR hydration.
-let didDeprioritizeIdleSubtree: boolean = false;
+// Marks the need to reschedule pending interactions at these expiration times
+// during the commit phase. This enables them to be traced across components
+// that spawn new work during render. E.g. hidden boundaries, suspended SSR
+// hydration or SuspenseList.
+let spawnedWorkDuringRender: null | Array<ExpirationTime> = null;
 
 // Expiration times are computed by adding to the current time (the start
 // time). However, if two updates are scheduled within the same event, we
@@ -785,7 +787,7 @@ function prepareFreshStack(root, expirationTime) {
   workInProgressRootHasPendingPing = false;
 
   if (enableSchedulerTracing) {
-    didDeprioritizeIdleSubtree = false;
+    spawnedWorkDuringRender = null;
   }
 
   if (__DEV__) {
@@ -1707,9 +1709,16 @@ function commitRootImpl(root) {
     );
 
     if (enableSchedulerTracing) {
-      if (didDeprioritizeIdleSubtree) {
-        didDeprioritizeIdleSubtree = false;
-        scheduleInteractions(root, Never, root.memoizedInteractions);
+      if (spawnedWorkDuringRender !== null) {
+        const expirationTimes = spawnedWorkDuringRender;
+        spawnedWorkDuringRender = null;
+        for (let i = 0; i < expirationTimes.length; i++) {
+          scheduleInteractions(
+            root,
+            expirationTimes[i],
+            root.memoizedInteractions,
+          );
+        }
       }
     }
 
@@ -2532,11 +2541,15 @@ function computeThreadID(root, expirationTime) {
   return expirationTime * 1000 + root.interactionThreadID;
 }
 
-export function markDidDeprioritizeIdleSubtree() {
+export function markSpawnedWork(expirationTime: ExpirationTime) {
   if (!enableSchedulerTracing) {
     return;
   }
-  didDeprioritizeIdleSubtree = true;
+  if (spawnedWorkDuringRender === null) {
+    spawnedWorkDuringRender = [expirationTime];
+  } else {
+    spawnedWorkDuringRender.push(expirationTime);
+  }
 }
 
 function scheduleInteractions(root, expirationTime, interactions) {

@@ -24,6 +24,8 @@ import type {
 } from './ReactFiberSuspenseComponent';
 import type {SuspenseContext} from './ReactFiberSuspenseContext';
 
+import {now} from './SchedulerWithReactIntegration';
+
 import {
   IndeterminateComponent,
   FunctionComponent,
@@ -111,7 +113,7 @@ import {
   enableEventAPI,
 } from 'shared/ReactFeatureFlags';
 import {
-  markDidDeprioritizeIdleSubtree,
+  markSpawnedWork,
   renderDidSuspend,
   renderDidSuspendDelayIfPossible,
 } from './ReactFiberWorkLoop';
@@ -121,6 +123,7 @@ import {
 } from './ReactFiberEvents';
 import getComponentName from 'shared/getComponentName';
 import warning from 'shared/warning';
+import {Never} from './ReactFiberExpirationTime';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -908,7 +911,7 @@ function completeWork(
               'This is probably a bug in React.',
           );
           if (enableSchedulerTracing) {
-            markDidDeprioritizeIdleSubtree();
+            markSpawnedWork(Never);
           }
           skipPastDehydratedSuspenseInstance(workInProgress);
         } else if ((workInProgress.effectTag & DidCapture) === NoEffect) {
@@ -958,7 +961,28 @@ function completeWork(
           // Append the rendered row to the child list.
           let rendered = suspenseListState.rendering;
           if (!suspenseListState.didSuspend) {
-            suspenseListState.didSuspend = isShowingAnyFallbacks(rendered);
+            if (
+              now() > suspenseListState.tailExpiration &&
+              renderExpirationTime > Never
+            ) {
+              // We have now passed our CPU deadline and we'll just give up further
+              // attempts to render the main content and only render fallbacks.
+              // The assumption is that this is usually faster.
+              suspenseListState.didSuspend = true;
+              // Since nothing actually suspended, there will nothing to ping this
+              // to get it started back up to attempt the next item. If we can show
+              // them, then they really have the same priority as this render.
+              // So we'll pick it back up the very next render pass once we've had
+              // an opportunity to yield for paint.
+
+              const nextPriority = renderExpirationTime - 1;
+              workInProgress.expirationTime = workInProgress.childExpirationTime = nextPriority;
+              if (enableSchedulerTracing) {
+                markSpawnedWork(nextPriority);
+              }
+            } else {
+              suspenseListState.didSuspend = isShowingAnyFallbacks(rendered);
+            }
           }
           if (suspenseListState.isBackwards) {
             // The effect list of the backwards tail will have been added
@@ -981,6 +1005,13 @@ function completeWork(
 
         if (suspenseListState !== null && suspenseListState.tail !== null) {
           // We still have tail rows to render.
+          if (suspenseListState.tailExpiration === 0) {
+            // Heuristic for how long we're willing to spend rendering rows
+            // until we just give up and show what we have so far.
+            const TAIL_EXPIRATION_TIMEOUT_MS = 500;
+            suspenseListState.tailExpiration =
+              now() + TAIL_EXPIRATION_TIMEOUT_MS;
+          }
           // Pop a row.
           let next = suspenseListState.tail;
           suspenseListState.rendering = next;
