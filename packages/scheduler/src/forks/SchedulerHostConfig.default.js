@@ -174,7 +174,7 @@ if (
     navigator.scheduling !== undefined &&
     navigator.scheduling.isInputPending !== undefined
   ) {
-    const isInputPending = navigator.scheduling.isInputPending;
+    const scheduling = navigator.scheduling;
     shouldYieldToHost = function() {
       const currentTime = getCurrentTime();
       if (currentTime >= frameDeadline) {
@@ -186,7 +186,7 @@ if (
         // yield regardless, since there could be a pending paint that wasn't
         // accompanied by a call to `requestPaint`, or other main thread tasks
         // like network events.
-        if (needsPaint || isInputPending()) {
+        if (needsPaint || scheduling.isInputPending()) {
           // There is either a pending paint or a pending input.
           return true;
         }
