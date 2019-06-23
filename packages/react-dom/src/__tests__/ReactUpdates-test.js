@@ -1621,20 +1621,23 @@ describe('ReactUpdates', () => {
       let stack = null;
       let originalConsoleError = console.error;
       console.error = (e, s) => {
-        // skip the missing act() error
-        if (e.slice(0, 40) !== 'Warning: Your test just caused an effect') {
-          error = e;
-          stack = s;
-        }
+        error = e;
+        stack = s;
       };
       try {
         const container = document.createElement('div');
-        ReactDOM.render(<App />, container);
-        while (error === null) {
-          Scheduler.unstable_flushNumberOfYields(1);
-        }
-        expect(error).toContain('Warning: Maximum update depth exceeded.');
-        expect(stack).toContain('in NonTerminating');
+        expect(() => {
+          act(() => {
+            ReactDOM.render(<App />, container);
+            while (error === null) {
+              Scheduler.unstable_flushNumberOfYields(1);
+            }
+            expect(error).toContain('Warning: Maximum update depth exceeded.');
+            expect(stack).toContain('in NonTerminating');
+            // rethrow error to prevent going into an infinite loop when act() exits
+            throw error;
+          });
+        }).toThrow('Maximum update depth exceeded.');
       } finally {
         console.error = originalConsoleError;
       }

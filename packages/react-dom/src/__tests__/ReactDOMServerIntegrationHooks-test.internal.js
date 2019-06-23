@@ -17,7 +17,7 @@ let React;
 let ReactFeatureFlags;
 let ReactDOM;
 let ReactDOMServer;
-let act;
+let ReactTestUtils;
 let useState;
 let useReducer;
 let useEffect;
@@ -42,7 +42,7 @@ function initModules() {
   React = require('react');
   ReactDOM = require('react-dom');
   ReactDOMServer = require('react-dom/server');
-  act = require('react-dom/test-utils').act;
+  ReactTestUtils = require('react-dom/test-utils');
   useState = React.useState;
   useReducer = React.useReducer;
   useEffect = React.useEffect;
@@ -69,6 +69,7 @@ function initModules() {
   return {
     ReactDOM,
     ReactDOMServer,
+    ReactTestUtils,
   };
 }
 
@@ -541,19 +542,29 @@ describe('ReactDOMServerHooks', () => {
   });
 
   describe('useEffect', () => {
+    const yields = [];
     itRenders('should ignore effects on the server', async render => {
       function Counter(props) {
         useEffect(() => {
-          yieldValue('should not be invoked');
+          yieldValue('invoked on client');
         });
         return <Text text={'Count: ' + props.count} />;
       }
-      await act(async () => {
-        const domNode = await render(<Counter count={0} />);
-        expect(clearYields()).toEqual(['Count: 0']);
-        expect(domNode.tagName).toEqual('SPAN');
-        expect(domNode.textContent).toEqual('Count: 0');
-      });
+
+      const domNode = await render(<Counter count={0} />);
+      yields.push(clearYields());
+      expect(domNode.tagName).toEqual('SPAN');
+      expect(domNode.textContent).toEqual('Count: 0');
+    });
+
+    it('verifies yields in order', () => {
+      expect(yields).toEqual([
+        ['Count: 0'], // server render
+        ['Count: 0'], // server stream
+        ['Count: 0', 'invoked on client'], // clean render
+        ['Count: 0', 'invoked on client'], // hydrated render
+        // nothing yielded for bad markup
+      ]);
     });
   });
 

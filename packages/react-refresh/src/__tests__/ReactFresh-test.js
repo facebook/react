@@ -2685,9 +2685,8 @@ describe('ReactFresh', () => {
             return <h1>Fixed!</h1>;
           }
           $RefreshReg$(Hello, 'Hello');
-        });  
-      })
-      
+        });
+      });
 
       // This should remount the error boundary (but not anything above it).
       expect(container.innerHTML).toBe('<p>A</p><h1>Fixed!</h1><p>B</p>');
@@ -2705,9 +2704,9 @@ describe('ReactFresh', () => {
             return <h1>Nice.</h1>;
           }
           $RefreshReg$(Hello, 'Hello');
-        });  
-      })
-      
+        });
+      });
+
       expect(container.firstChild.nextSibling).toBe(helloNode);
       expect(helloNode.textContent).toBe('Nice.');
     }

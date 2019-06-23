@@ -2047,7 +2047,6 @@ describe('ReactHooksWithNoopRenderer', () => {
         expect(Scheduler).toFlushAndYieldThrough(['Sync effect']);
       });
 
-      // ReactNoop.flushPassiveEffects();
       expect(Scheduler).toHaveYielded(['Mount A']);
 
       act(() => {
