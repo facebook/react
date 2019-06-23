@@ -2794,48 +2794,6 @@ describe('ReactFresh', () => {
         $RefreshReg$(Hello, 'Hello');
       });
       expect(container.innerHTML).toBe('');
-
-      // Render into container again.
-      render(() => {
-        function Hello() {
-          return <h1>Hi</h1>;
-        }
-        $RefreshReg$(Hello, 'Hello');
-
-        return Hello;
-      });
-      expect(container.innerHTML).toBe('<h1>Hi</h1>');
-
-      // Break.
-      expect(() => {
-        patch(() => {
-          function Hello() {
-            throw new Error('No');
-          }
-          $RefreshReg$(Hello, 'Hello');
-        });
-      }).toThrow('No');
-      expect(container.innerHTML).toBe('');
-
-      // Now render null intentionally.
-      ReactDOM.render(null, container);
-      expect(container.innerHTML).toBe('');
-      patch(() => {
-        function Hello() {
-          return <h1>Never mind me!</h1>;
-        }
-        $RefreshReg$(Hello, 'Hello');
-      });
-      expect(container.innerHTML).toBe('');
-
-      // This shouldn't affect anything because we wanted a null.
-      patch(() => {
-        function Hello() {
-          return <h1>Wonderful.</h1>;
-        }
-        $RefreshReg$(Hello, 'Hello');
-      });
-      expect(container.innerHTML).toBe('');
     }
   });
 

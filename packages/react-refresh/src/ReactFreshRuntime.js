@@ -450,11 +450,6 @@ export function injectIntoGlobalHook(globalObject: any): void {
             // Remember what was rendered so we can restore it.
             failedRoots.set(root, alternate.memoizedState.element);
           }
-        } else {
-          // An update from null to null.
-          if (!didError) {
-            failedRoots.delete(root);
-          }
         }
       } else {
         // Mount a new root.
