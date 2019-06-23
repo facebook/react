@@ -55,7 +55,6 @@ describe('ReactDOMHooks', () => {
 
     // we explicitly catch the missing act() warnings
     // to simulate this tricky repro
-    // todo - is this ok?
     expect(() => {
       ReactDOM.render(<Example1 n={1} />, container);
       expect(container.textContent).toBe('1');
