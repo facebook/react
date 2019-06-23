@@ -15,6 +15,7 @@ import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
+import {DidCapture} from 'shared/ReactSideEffectTags';
 import warningWithoutStack from 'shared/warningWithoutStack';
 
 declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: Object | void;
@@ -55,15 +56,16 @@ export function injectInternals(internals: Object): boolean {
     // We have successfully injected, so now it is safe to set up hooks.
     onCommitFiberRoot = (root, expirationTime) => {
       try {
+        const didError = (root.current.effectTag & DidCapture) === DidCapture;
         if (enableProfilerTimer) {
           const currentTime = requestCurrentTime();
           const priorityLevel = inferPriorityFromExpirationTime(
             currentTime,
             expirationTime,
           );
-          hook.onCommitFiberRoot(rendererID, root, priorityLevel);
+          hook.onCommitFiberRoot(rendererID, root, priorityLevel, didError);
         } else {
-          hook.onCommitFiberRoot(rendererID, root);
+          hook.onCommitFiberRoot(rendererID, root, undefined, didError);
         }
       } catch (err) {
         if (__DEV__ && !hasLoggedError) {
