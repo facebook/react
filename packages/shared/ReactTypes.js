@@ -83,7 +83,7 @@ export type RefObject = {|
 
 export type ReactEventComponentInstance<T, E, C> = {|
   currentFiber: mixed,
-  localPropagation: boolean,
+  isHook: boolean,
   props: Object,
   responder: ReactEventResponder<T, E, C>,
   rootEventTypes: null | Set<string>,

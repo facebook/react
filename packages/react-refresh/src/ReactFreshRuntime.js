@@ -142,10 +142,10 @@ function resolveFamily(type) {
   return familiesByType.get(type);
 }
 
-export function performReactRefresh(): boolean {
+export function performReactRefresh(): RefreshUpdate | null {
   if (__DEV__) {
     if (pendingUpdates.length === 0) {
-      return false;
+      return null;
     }
 
     const staleFamilies = new Set();
@@ -169,9 +169,10 @@ export function performReactRefresh(): boolean {
       }
     });
 
+    // TODO: rename these fields to something more meaningful.
     const update: RefreshUpdate = {
-      updatedFamilies,
-      staleFamilies,
+      updatedFamilies, // Families that will re-render preserving state
+      staleFamilies, // Families that will be remounted
     };
 
     if (typeof setRefreshHandler !== 'function') {
@@ -182,7 +183,7 @@ export function performReactRefresh(): boolean {
           'called before the global DevTools hook was set up, or after the ' +
           'renderer has already initialized. Please file an issue with a reproducing case.',
       );
-      return false;
+      return null;
     }
 
     if (typeof scheduleRefresh !== 'function') {
@@ -193,7 +194,7 @@ export function performReactRefresh(): boolean {
           'called before the global DevTools hook was set up, or after the ' +
           'renderer has already initialized. Please file an issue with a reproducing case.',
       );
-      return false;
+      return null;
     }
     const scheduleRefreshForRoot = scheduleRefresh;
 
@@ -217,7 +218,7 @@ export function performReactRefresh(): boolean {
     if (didError) {
       throw firstError;
     }
-    return true;
+    return update;
   } else {
     throw new Error(
       'Unexpected call to React Refresh in a production environment.',

@@ -166,6 +166,32 @@ describe('ReactSchedulerIntegration', () => {
     expect(Scheduler).toFlushAndYield(['A [UserBlocking]', 'B [Normal]']);
   });
 
+  it('requests a paint after committing', () => {
+    const scheduleCallback = Scheduler.unstable_scheduleCallback;
+
+    const root = ReactNoop.createRoot();
+    root.render('Initial');
+    Scheduler.flushAll();
+
+    scheduleCallback(NormalPriority, () => Scheduler.yieldValue('A'));
+    scheduleCallback(NormalPriority, () => Scheduler.yieldValue('B'));
+    scheduleCallback(NormalPriority, () => Scheduler.yieldValue('C'));
+
+    // Schedule a React render. React will request a paint after committing it.
+    root.render('Update');
+
+    // Advance time just to be sure the next tasks have lower priority
+    Scheduler.advanceTime(2000);
+
+    scheduleCallback(NormalPriority, () => Scheduler.yieldValue('D'));
+    scheduleCallback(NormalPriority, () => Scheduler.yieldValue('E'));
+
+    // Flush everything up to the next paint. Should yield after the
+    // React commit.
+    Scheduler.unstable_flushUntilNextPaint();
+    expect(Scheduler).toHaveYielded(['A', 'B', 'C']);
+  });
+
   // TODO
   it.skip('passive effects have render priority even if they are flushed early', () => {});
 });

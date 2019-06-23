@@ -9,6 +9,7 @@
 
 import type {Fiber, Dependencies} from './ReactFiber';
 import type {
+  ReactEventComponent,
   ReactEventResponder,
   ReactEventComponentInstance,
 } from 'shared/ReactTypes';
@@ -32,9 +33,10 @@ export function prepareToReadEventComponents(workInProgress: Fiber): void {
 }
 
 export function updateEventComponentInstance<T, E, C>(
-  responder: ReactEventResponder<T, E, C>,
+  eventComponent: ReactEventComponent<T, E, C>,
   props: Object,
 ): void {
+  const responder = eventComponent.responder;
   invariant(
     responder.allowEventHooks,
     'The "%s" event responder cannot be used via the "useEvent" hook.',
@@ -67,7 +69,7 @@ export function updateEventComponentInstance<T, E, C>(
       responder,
       null,
       responderState || {},
-      false,
+      true,
     );
     events.push(eventComponentInstance);
     currentEventComponentInstanceIndex++;
@@ -85,11 +87,11 @@ export function createEventComponentInstance<T, E, C>(
   responder: ReactEventResponder<T, E, C>,
   rootInstance: mixed,
   state: Object,
-  localPropagation: boolean,
+  isHook: boolean,
 ): ReactEventComponentInstance<T, E, C> {
   return {
     currentFiber,
-    localPropagation,
+    isHook,
     props,
     responder,
     rootEventTypes: null,

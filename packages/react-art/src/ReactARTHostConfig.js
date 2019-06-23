@@ -7,22 +7,10 @@
 
 import Transform from 'art/core/transform';
 import Mode from 'art/modes/current';
-import * as Scheduler from 'scheduler';
 import invariant from 'shared/invariant';
 
 import {TYPES, EVENT_TYPES, childrenAsString} from './ReactARTInternals';
 import type {ReactEventComponentInstance} from 'shared/ReactTypes';
-
-// Intentionally not named imports because Rollup would
-// use dynamic dispatch for CommonJS interop named imports.
-const {
-  unstable_now: now,
-  unstable_scheduleCallback: scheduleDeferredCallback,
-  unstable_shouldYield: shouldYield,
-  unstable_cancelCallback: cancelDeferredCallback,
-} = Scheduler;
-
-export {now, scheduleDeferredCallback, shouldYield, cancelDeferredCallback};
 
 const pooledTransform = new Transform();
 

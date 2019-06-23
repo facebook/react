@@ -19,6 +19,7 @@ const {
   unstable_scheduleCallback: Scheduler_scheduleCallback,
   unstable_cancelCallback: Scheduler_cancelCallback,
   unstable_shouldYield: Scheduler_shouldYield,
+  unstable_requestPaint: Scheduler_requestPaint,
   unstable_now: Scheduler_now,
   unstable_getCurrentPriorityLevel: Scheduler_getCurrentPriorityLevel,
   unstable_ImmediatePriority: Scheduler_ImmediatePriority,
@@ -63,6 +64,9 @@ export const IdlePriority: ReactPriorityLevel = 95;
 export const NoPriority: ReactPriorityLevel = 90;
 
 export const shouldYield = Scheduler_shouldYield;
+export const requestPaint =
+  // Fall back gracefully if we're running an older verison of Scheduler.
+  Scheduler_requestPaint !== undefined ? Scheduler_requestPaint : () => {};
 
 let syncQueue: Array<SchedulerCallback> | null = null;
 let immediateQueueCallbackNode: mixed | null = null;
