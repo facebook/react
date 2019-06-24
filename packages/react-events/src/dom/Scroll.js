@@ -214,8 +214,8 @@ const ScrollResponder: ReactDOMEventResponder = {
   },
 };
 
-export function useScroll(props: ScrollProps): void {
-  React.unstable_useEvent(ScrollResponder, props);
-}
-
 export const Scroll = React.unstable_createEvent(ScrollResponder);
+
+export function useScroll(props: ScrollProps): void {
+  React.unstable_useEvent(Scroll, props);
+}

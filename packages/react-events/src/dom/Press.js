@@ -1041,8 +1041,8 @@ const PressResponder: ReactDOMEventResponder = {
   },
 };
 
-export function usePress(props: PressProps): void {
-  React.unstable_useEvent(PressResponder, props);
-}
-
 export const Press = React.unstable_createEvent(PressResponder);
+
+export function usePress(props: PressProps): void {
+  React.unstable_useEvent(Press, props);
+}

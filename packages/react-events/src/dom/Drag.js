@@ -262,8 +262,8 @@ const DragResponder: ReactDOMEventResponder = {
   },
 };
 
-export function useDrag(props: Object): void {
-  React.unstable_useEvent(DragResponder, props);
-}
-
 export const Drag = React.unstable_createEvent(DragResponder);
+
+export function useDrag(props: Object): void {
+  React.unstable_useEvent(Drag, props);
+}
