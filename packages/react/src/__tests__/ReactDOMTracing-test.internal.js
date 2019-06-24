@@ -538,6 +538,7 @@ describe('ReactDOMTracing', () => {
         const root = ReactDOM.unstable_createRoot(container);
 
         let interaction;
+
         TestUtils.act(() => {
           SchedulerTracing.unstable_trace('initialization', 0, () => {
             interaction = Array.from(SchedulerTracing.unstable_getCurrent())[0];
