@@ -7,6 +7,7 @@
   },
   "dependencies": {
     "@babel/standalone": "^7.0.0",
+    "art": "^0.10.3",
     "classnames": "^2.2.5",
     "codemirror": "^5.40.0",
     "core-js": "^2.4.1",
