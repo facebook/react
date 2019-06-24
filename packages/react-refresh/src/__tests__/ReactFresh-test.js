@@ -2712,6 +2712,96 @@ describe('ReactFresh', () => {
     }
   });
 
+  it('remounts a failed root on update', () => {
+    if (__DEV__) {
+      render(() => {
+        function Hello() {
+          return <h1>Hi</h1>;
+        }
+        $RefreshReg$(Hello, 'Hello');
+
+        return Hello;
+      });
+      expect(container.innerHTML).toBe('<h1>Hi</h1>');
+
+      // Perform a hot update that fails.
+      // This removes the root.
+      expect(() => {
+        patch(() => {
+          function Hello() {
+            throw new Error('No');
+          }
+          $RefreshReg$(Hello, 'Hello');
+        });
+      }).toThrow('No');
+      expect(container.innerHTML).toBe('');
+
+      // A bad retry
+      expect(() => {
+        patch(() => {
+          function Hello() {
+            throw new Error('Not yet');
+          }
+          $RefreshReg$(Hello, 'Hello');
+        });
+      }).toThrow('Not yet');
+      expect(container.innerHTML).toBe('');
+
+      // Perform a hot update that fixes the error.
+      patch(() => {
+        function Hello() {
+          return <h1>Fixed!</h1>;
+        }
+        $RefreshReg$(Hello, 'Hello');
+      });
+      // This should remount the root.
+      expect(container.innerHTML).toBe('<h1>Fixed!</h1>');
+
+      // Verify next hot reload doesn't remount anything.
+      let helloNode = container.firstChild;
+      patch(() => {
+        function Hello() {
+          return <h1>Nice.</h1>;
+        }
+        $RefreshReg$(Hello, 'Hello');
+      });
+      expect(container.firstChild).toBe(helloNode);
+      expect(helloNode.textContent).toBe('Nice.');
+
+      // Break again.
+      expect(() => {
+        patch(() => {
+          function Hello() {
+            throw new Error('Oops');
+          }
+          $RefreshReg$(Hello, 'Hello');
+        });
+      }).toThrow('Oops');
+      expect(container.innerHTML).toBe('');
+
+      // Perform a hot update that fixes the error.
+      patch(() => {
+        function Hello() {
+          return <h1>At last.</h1>;
+        }
+        $RefreshReg$(Hello, 'Hello');
+      });
+      // This should remount the root.
+      expect(container.innerHTML).toBe('<h1>At last.</h1>');
+
+      // Check we don't attempt to reverse an intentional unmount.
+      ReactDOM.unmountComponentAtNode(container);
+      expect(container.innerHTML).toBe('');
+      patch(() => {
+        function Hello() {
+          return <h1>Never mind me!</h1>;
+        }
+        $RefreshReg$(Hello, 'Hello');
+      });
+      expect(container.innerHTML).toBe('');
+    }
+  });
+
   it('remounts classes on every edit', () => {
     if (__DEV__) {
       let HelloV1 = render(() => {
