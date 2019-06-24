@@ -14,6 +14,7 @@ export {
   unstable_flushNumberOfYields,
   unstable_flushExpired,
   unstable_clearYields,
+  unstable_flushUntilNextPaint,
   flushAll,
   yieldValue,
   advanceTime,

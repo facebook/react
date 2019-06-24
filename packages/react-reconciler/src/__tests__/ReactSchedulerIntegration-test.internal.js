@@ -133,21 +133,22 @@ describe('ReactSchedulerIntegration', () => {
       });
       return null;
     }
-
-    ReactNoop.render(<ReadPriority />);
-    expect(Scheduler).toFlushAndYield([
-      'Render priority: Normal',
-      'Passive priority: Normal',
-    ]);
-
-    runWithPriority(UserBlockingPriority, () => {
+    ReactNoop.act(() => {
       ReactNoop.render(<ReadPriority />);
-    });
+      expect(Scheduler).toFlushAndYield([
+        'Render priority: Normal',
+        'Passive priority: Normal',
+      ]);
 
-    expect(Scheduler).toFlushAndYield([
-      'Render priority: UserBlocking',
-      'Passive priority: UserBlocking',
-    ]);
+      runWithPriority(UserBlockingPriority, () => {
+        ReactNoop.render(<ReadPriority />);
+      });
+
+      expect(Scheduler).toFlushAndYield([
+        'Render priority: UserBlocking',
+        'Passive priority: UserBlocking',
+      ]);
+    });
   });
 
   it('after completing a level of work, infers priority of the next batch based on its expiration time', () => {
@@ -164,6 +165,32 @@ describe('ReactSchedulerIntegration', () => {
 
     // The second update should run at normal priority
     expect(Scheduler).toFlushAndYield(['A [UserBlocking]', 'B [Normal]']);
+  });
+
+  it('requests a paint after committing', () => {
+    const scheduleCallback = Scheduler.unstable_scheduleCallback;
+
+    const root = ReactNoop.createRoot();
+    root.render('Initial');
+    Scheduler.flushAll();
+
+    scheduleCallback(NormalPriority, () => Scheduler.yieldValue('A'));
+    scheduleCallback(NormalPriority, () => Scheduler.yieldValue('B'));
+    scheduleCallback(NormalPriority, () => Scheduler.yieldValue('C'));
+
+    // Schedule a React render. React will request a paint after committing it.
+    root.render('Update');
+
+    // Advance time just to be sure the next tasks have lower priority
+    Scheduler.advanceTime(2000);
+
+    scheduleCallback(NormalPriority, () => Scheduler.yieldValue('D'));
+    scheduleCallback(NormalPriority, () => Scheduler.yieldValue('E'));
+
+    // Flush everything up to the next paint. Should yield after the
+    // React commit.
+    Scheduler.unstable_flushUntilNextPaint();
+    expect(Scheduler).toHaveYielded(['A', 'B', 'C']);
   });
 
   // TODO

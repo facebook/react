@@ -8,6 +8,7 @@
  */
 
 import type {
+  ReactDOMEventResponder,
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
   PointerType,
@@ -216,7 +217,7 @@ function handleRootPointerEvent(
 
 let isGlobalFocusVisible = true;
 
-const FocusResponder = {
+const FocusResponder: ReactDOMEventResponder = {
   displayName: 'Focus',
   targetEventTypes,
   rootEventTypes,

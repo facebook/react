@@ -173,7 +173,7 @@ import {
   isSimpleFunctionComponent,
 } from './ReactFiber';
 import {
-  markDidDeprioritizeIdleSubtree,
+  markSpawnedWork,
   requestCurrentTime,
   retryTimedOutBoundary,
 } from './ReactFiberWorkLoop';
@@ -1006,7 +1006,7 @@ function updateHostComponent(current, workInProgress, renderExpirationTime) {
     shouldDeprioritizeSubtree(type, nextProps)
   ) {
     if (enableSchedulerTracing) {
-      markDidDeprioritizeIdleSubtree();
+      markSpawnedWork(Never);
     }
     // Schedule this fiber to re-render at offscreen priority. Then bailout.
     workInProgress.expirationTime = workInProgress.childExpirationTime = Never;
@@ -2069,6 +2069,7 @@ function updateSuspenseListComponent(
       rendering: null,
       last: null,
       tail: null,
+      tailExpiration: 0,
     };
   } else {
     let didForceFallback =
@@ -2124,6 +2125,7 @@ function updateSuspenseListComponent(
             rendering: null,
             last: lastContentRow,
             tail: tail,
+            tailExpiration: 0,
           };
         } else {
           suspenseListState.tail = tail;
@@ -2164,6 +2166,7 @@ function updateSuspenseListComponent(
             rendering: null,
             last: null,
             tail: tail,
+            tailExpiration: 0,
           };
         } else {
           suspenseListState.isBackwards = true;
@@ -2595,7 +2598,7 @@ function beginWork(
             shouldDeprioritizeSubtree(workInProgress.type, newProps)
           ) {
             if (enableSchedulerTracing) {
-              markDidDeprioritizeIdleSubtree();
+              markSpawnedWork(Never);
             }
             // Schedule this fiber to re-render at offscreen priority. Then bailout.
             workInProgress.expirationTime = workInProgress.childExpirationTime = Never;

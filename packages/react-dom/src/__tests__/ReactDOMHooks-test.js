@@ -53,23 +53,32 @@ describe('ReactDOMHooks', () => {
       return 3 * n;
     }
 
-    ReactDOM.render(<Example1 n={1} />, container);
-    expect(container.textContent).toBe('1');
-    expect(container2.textContent).toBe('');
-    expect(container3.textContent).toBe('');
-    Scheduler.flushAll();
-    expect(container.textContent).toBe('1');
-    expect(container2.textContent).toBe('2');
-    expect(container3.textContent).toBe('3');
+    // we explicitly catch the missing act() warnings
+    // to simulate this tricky repro
+    expect(() => {
+      ReactDOM.render(<Example1 n={1} />, container);
+      expect(container.textContent).toBe('1');
+      expect(container2.textContent).toBe('');
+      expect(container3.textContent).toBe('');
+      Scheduler.flushAll();
+      expect(container.textContent).toBe('1');
+      expect(container2.textContent).toBe('2');
+      expect(container3.textContent).toBe('3');
 
-    ReactDOM.render(<Example1 n={2} />, container);
-    expect(container.textContent).toBe('2');
-    expect(container2.textContent).toBe('2'); // Not flushed yet
-    expect(container3.textContent).toBe('3'); // Not flushed yet
-    Scheduler.flushAll();
-    expect(container.textContent).toBe('2');
-    expect(container2.textContent).toBe('4');
-    expect(container3.textContent).toBe('6');
+      ReactDOM.render(<Example1 n={2} />, container);
+      expect(container.textContent).toBe('2');
+      expect(container2.textContent).toBe('2'); // Not flushed yet
+      expect(container3.textContent).toBe('3'); // Not flushed yet
+      Scheduler.flushAll();
+      expect(container.textContent).toBe('2');
+      expect(container2.textContent).toBe('4');
+      expect(container3.textContent).toBe('6');
+    }).toWarnDev([
+      'An update to Example1 ran an effect',
+      'An update to Example2 ran an effect',
+      'An update to Example1 ran an effect',
+      'An update to Example2 ran an effect',
+    ]);
   });
 
   it('should not bail out when an update is scheduled from within an event handler', () => {

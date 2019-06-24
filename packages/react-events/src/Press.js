@@ -8,11 +8,13 @@
  */
 
 import type {
+  ReactDOMEventResponder,
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
   PointerType,
 } from 'shared/ReactDOMTypes';
 import type {EventPriority} from 'shared/ReactTypes';
+import warning from 'shared/warning';
 
 import React from 'react';
 import {DiscreteEvent, UserBlockingEvent} from 'shared/ReactTypes';
@@ -622,7 +624,25 @@ function updateIsPressWithinResponderRegion(
   state.isPressWithinResponderRegion = isPressWithinResponderRegion;
 }
 
-const PressResponder = {
+function handleStopPropagation(
+  props: PressProps,
+  context: ReactDOMResponderContext,
+  nativeEvent,
+): void {
+  const stopPropagation = props.stopPropagation;
+  if (stopPropagation !== undefined && context.isRespondingToHook()) {
+    if (__DEV__) {
+      warning(
+        false,
+        '"stopPropagation" prop cannot be passed to Press event hooks. This will result in a no-op.',
+      );
+    }
+  } else if (stopPropagation === true) {
+    nativeEvent.stopPropagation();
+  }
+}
+
+const PressResponder: ReactDOMEventResponder = {
   displayName: 'Press',
   targetEventTypes,
   createInitialState(): PressState {
@@ -666,9 +686,7 @@ const PressResponder = {
     const nativeEvent: any = event.nativeEvent;
     const isPressed = state.isPressed;
 
-    if (props.stopPropagation === true) {
-      nativeEvent.stopPropagation();
-    }
+    handleStopPropagation(props, context, nativeEvent);
     switch (type) {
       // START
       case 'pointerdown':
@@ -744,13 +762,34 @@ const PressResponder = {
       }
 
       case 'contextmenu': {
-        if (props.preventContextMenu) {
+        const preventContextMenu = props.preventContextMenu;
+
+        if (preventContextMenu !== undefined && context.isRespondingToHook()) {
+          if (__DEV__) {
+            warning(
+              false,
+              '"preventContextMenu" prop cannot be passed to Press event hooks. This will result in a no-op.',
+            );
+          }
+        } else if (preventContextMenu === true) {
           // Skip dispatching of onContextMenu below
           nativeEvent.preventDefault();
         }
 
         if (isPressed) {
-          if (props.preventDefault !== false && !nativeEvent.defaultPrevented) {
+          const preventDefault = props.preventDefault;
+
+          if (preventDefault !== undefined && context.isRespondingToHook()) {
+            if (__DEV__) {
+              warning(
+                false,
+                '"preventDefault" prop cannot be passed to Press event hooks. This will result in a no-op.',
+              );
+            }
+          } else if (
+            preventDefault !== false &&
+            !nativeEvent.defaultPrevented
+          ) {
             // Skip dispatching of onContextMenu below
             nativeEvent.preventDefault();
             return;
@@ -786,9 +825,7 @@ const PressResponder = {
     const isPressed = state.isPressed;
     const activePointerId = state.activePointerId;
 
-    if (props.stopPropagation === true) {
-      nativeEvent.stopPropagation();
-    }
+    handleStopPropagation(props, context, nativeEvent);
     switch (type) {
       // MOVE
       case 'pointermove':
@@ -893,7 +930,15 @@ const PressResponder = {
             } = (nativeEvent: MouseEvent);
             // Check "open in new window/tab" and "open context menu" key modifiers
             const preventDefault = props.preventDefault;
-            if (
+
+            if (preventDefault !== undefined && context.isRespondingToHook()) {
+              if (__DEV__) {
+                warning(
+                  false,
+                  '"preventDefault" prop cannot be passed to Press event hooks. This will result in a no-op.',
+                );
+              }
+            } else if (
               preventDefault !== false &&
               !shiftKey &&
               !metaKey &&

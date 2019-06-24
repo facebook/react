@@ -1067,11 +1067,12 @@ describe('DOMEventResponderSystem', () => {
           };
           context.dispatchEvent(fooEvent, props.onFoo, DiscreteEvent);
         }
+        eventLogs.push(context.isRespondingToHook() ? '[hook]' : '[component]');
       },
     });
 
     const Test = () => {
-      React.unstable_useEvent(EventComponent.responder, {
+      React.unstable_useEvent(EventComponent, {
         onFoo: e => eventLogs.push('hook'),
       });
       return (
@@ -1083,13 +1084,13 @@ describe('DOMEventResponderSystem', () => {
 
     ReactDOM.render(<Test />, container);
     buttonRef.current.dispatchEvent(createEvent('foo'));
-    expect(eventLogs).toEqual(['prop', 'hook']);
+    expect(eventLogs).toEqual(['[component]', '[hook]', 'prop', 'hook']);
 
     // Clear events
     eventLogs.length = 0;
 
     const Test2 = () => {
-      React.unstable_useEvent(EventComponent.responder, {
+      React.unstable_useEvent(EventComponent, {
         onFoo: e => eventLogs.push('hook'),
       });
       return <button ref={buttonRef} />;
@@ -1101,10 +1102,10 @@ describe('DOMEventResponderSystem', () => {
     expect(eventLogs).toEqual([]);
 
     const Test3 = () => {
-      React.unstable_useEvent(EventComponent.responder, {
+      React.unstable_useEvent(EventComponent, {
         onFoo: e => eventLogs.push('hook 2a'),
       });
-      React.unstable_useEvent(EventComponent.responder, {
+      React.unstable_useEvent(EventComponent, {
         onFoo: e => eventLogs.push('hook 2b'),
       });
       return (
@@ -1118,6 +1119,13 @@ describe('DOMEventResponderSystem', () => {
 
     ReactDOM.render(<Test3 />, container);
     buttonRef.current.dispatchEvent(createEvent('foo'));
-    expect(eventLogs).toEqual(['prop 2', 'hook 2a', 'hook 2b']);
+    expect(eventLogs).toEqual([
+      '[component]',
+      '[hook]',
+      '[hook]',
+      'prop 2',
+      'hook 2a',
+      'hook 2b',
+    ]);
   });
 });

@@ -83,51 +83,31 @@ export type RefObject = {|
 
 export type ReactEventComponentInstance<T, E, C> = {|
   currentFiber: mixed,
-  localPropagation: boolean,
-  props: null | Object,
+  isHook: boolean,
+  props: Object,
   responder: ReactEventResponder<T, E, C>,
   rootEventTypes: null | Set<string>,
   rootInstance: null | mixed,
-  state: null | Object,
+  state: Object,
 |};
 
 export type ReactEventResponder<T, E, C> = {
   displayName: string,
   targetEventTypes?: Array<T>,
   rootEventTypes?: Array<T>,
-  createInitialState?: (props: null | Object) => Object,
+  createInitialState?: (props: Object) => Object,
   allowMultipleHostChildren: boolean,
   allowEventHooks: boolean,
-  onEvent?: (
-    event: E,
-    context: C,
-    props: null | Object,
-    state: null | Object,
-  ) => void,
-  onEventCapture?: (
-    event: E,
-    context: C,
-    props: null | Object,
-    state: null | Object,
-  ) => void,
-  onRootEvent?: (
-    event: E,
-    context: C,
-    props: null | Object,
-    state: null | Object,
-  ) => void,
-  onMount?: (context: C, props: null | Object, state: null | Object) => void,
-  onUnmount?: (context: C, props: null | Object, state: null | Object) => void,
-  onOwnershipChange?: (
-    context: C,
-    props: null | Object,
-    state: null | Object,
-  ) => void,
+  onEvent?: (event: E, context: C, props: Object, state: Object) => void,
+  onEventCapture?: (event: E, context: C, props: Object, state: Object) => void,
+  onRootEvent?: (event: E, context: C, props: Object, state: Object) => void,
+  onMount?: (context: C, props: Object, state: Object) => void,
+  onUnmount?: (context: C, props: Object, state: Object) => void,
+  onOwnershipChange?: (context: C, props: Object, state: Object) => void,
 };
 
 export type ReactEventComponent<T, E, C> = {|
   $$typeof: Symbol | number,
-  props: null | Object,
   responder: ReactEventResponder<T, E, C>,
 |};
 

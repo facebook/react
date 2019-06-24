@@ -12,8 +12,8 @@
 let PropTypes;
 let React;
 let ReactDOM;
+let act;
 let ReactFeatureFlags;
-let Scheduler;
 
 describe('ReactErrorBoundaries', () => {
   let log;
@@ -45,7 +45,7 @@ describe('ReactErrorBoundaries', () => {
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     ReactDOM = require('react-dom');
     React = require('react');
-    Scheduler = require('scheduler');
+    act = require('react-dom/test-utils').act;
 
     log = [];
 
@@ -1835,25 +1835,26 @@ describe('ReactErrorBoundaries', () => {
 
   it('catches errors in useEffect', () => {
     const container = document.createElement('div');
-    ReactDOM.render(
-      <ErrorBoundary>
-        <BrokenUseEffect>Initial value</BrokenUseEffect>
-      </ErrorBoundary>,
-      container,
-    );
-    expect(log).toEqual([
-      'ErrorBoundary constructor',
-      'ErrorBoundary componentWillMount',
-      'ErrorBoundary render success',
-      'BrokenUseEffect render',
-      'ErrorBoundary componentDidMount',
-    ]);
+    act(() => {
+      ReactDOM.render(
+        <ErrorBoundary>
+          <BrokenUseEffect>Initial value</BrokenUseEffect>
+        </ErrorBoundary>,
+        container,
+      );
+      expect(log).toEqual([
+        'ErrorBoundary constructor',
+        'ErrorBoundary componentWillMount',
+        'ErrorBoundary render success',
+        'BrokenUseEffect render',
+        'ErrorBoundary componentDidMount',
+      ]);
 
-    expect(container.firstChild.textContent).toBe('Initial value');
-    log.length = 0;
+      expect(container.firstChild.textContent).toBe('Initial value');
+      log.length = 0;
+    });
 
-    // Flush passive effects and handle the error
-    Scheduler.flushAll();
+    // verify flushed passive effects and handle the error
     expect(log).toEqual([
       'BrokenUseEffect useEffect [!]',
       // Handle the error

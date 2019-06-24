@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactEventResponder, ReactContext} from 'shared/ReactTypes';
+import type {ReactEventComponent, ReactContext} from 'shared/ReactTypes';
 import type {SideEffectTag} from 'shared/ReactSideEffectTags';
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
@@ -35,6 +35,7 @@ import {
   computeExpirationForFiber,
   flushPassiveEffects,
   requestCurrentTime,
+  warnIfNotCurrentlyActingEffectsInDEV,
   warnIfNotCurrentlyActingUpdatesInDev,
   warnIfNotScopedWithMatchingAct,
   markRenderEventTimeAndConfig,
@@ -83,8 +84,8 @@ export type Dispatcher = {
   ): void,
   useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void,
   useEvent<T, E, C>(
-    responder: ReactEventResponder<T, E, C>,
-    props: null | Object,
+    eventComponent: ReactEventComponent<T, E, C>,
+    props: Object,
   ): void,
 };
 
@@ -898,6 +899,14 @@ function mountEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
+  if (__DEV__) {
+    // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
+    if ('undefined' !== typeof jest) {
+      warnIfNotCurrentlyActingEffectsInDEV(
+        ((currentlyRenderingFiber: any): Fiber),
+      );
+    }
+  }
   return mountEffectImpl(
     UpdateEffect | PassiveEffect,
     UnmountPassive | MountPassive,
@@ -910,6 +919,14 @@ function updateEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
+  if (__DEV__) {
+    // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
+    if ('undefined' !== typeof jest) {
+      warnIfNotCurrentlyActingEffectsInDEV(
+        ((currentlyRenderingFiber: any): Fiber),
+      );
+    }
+  }
   return updateEffectImpl(
     UpdateEffect | PassiveEffect,
     UnmountPassive | MountPassive,
@@ -1399,10 +1416,10 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountDebugValue(value, formatterFn);
     },
-    useEvent<T, E, C>(responder: ReactEventResponder<T, E, C>, props) {
+    useEvent<T, E, C>(eventComponent: ReactEventComponent<T, E, C>, props) {
       currentHookNameInDev = 'useEvent';
       mountHookTypesDev();
-      updateEventComponentInstance(responder, props);
+      updateEventComponentInstance(eventComponent, props);
     },
   };
 
@@ -1501,10 +1518,10 @@ if (__DEV__) {
       updateHookTypesDev();
       return mountDebugValue(value, formatterFn);
     },
-    useEvent<T, E, C>(responder: ReactEventResponder<T, E, C>, props) {
+    useEvent<T, E, C>(eventComponent: ReactEventComponent<T, E, C>, props) {
       currentHookNameInDev = 'useEvent';
       updateHookTypesDev();
-      updateEventComponentInstance(responder, props);
+      updateEventComponentInstance(eventComponent, props);
     },
   };
 
@@ -1603,10 +1620,10 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
     },
-    useEvent<T, E, C>(responder: ReactEventResponder<T, E, C>, props) {
+    useEvent<T, E, C>(eventComponent: ReactEventComponent<T, E, C>, props) {
       currentHookNameInDev = 'useEvent';
       updateHookTypesDev();
-      updateEventComponentInstance(responder, props);
+      updateEventComponentInstance(eventComponent, props);
     },
   };
 
@@ -1716,11 +1733,11 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountDebugValue(value, formatterFn);
     },
-    useEvent<T, E, C>(responder: ReactEventResponder<T, E, C>, props) {
+    useEvent<T, E, C>(eventComponent: ReactEventComponent<T, E, C>, props) {
       currentHookNameInDev = 'useEvent';
       warnInvalidHookAccess();
       mountHookTypesDev();
-      updateEventComponentInstance(responder, props);
+      updateEventComponentInstance(eventComponent, props);
     },
   };
 
@@ -1830,11 +1847,11 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
     },
-    useEvent<T, E, C>(responder: ReactEventResponder<T, E, C>, props) {
+    useEvent<T, E, C>(eventComponent: ReactEventComponent<T, E, C>, props) {
       currentHookNameInDev = 'useEvent';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      updateEventComponentInstance(responder, props);
+      updateEventComponentInstance(eventComponent, props);
     },
   };
 }

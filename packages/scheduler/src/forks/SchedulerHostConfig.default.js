@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import {enableIsInputPending} from '../SchedulerFeatureFlags';
+
 // The DOM Scheduler implementation is similar to requestIdleCallback. It
 // works by scheduling a requestAnimationFrame, storing the time for the start
 // of the frame, then scheduling a postMessage which gets scheduled after paint.
@@ -18,6 +20,7 @@ export let cancelHostCallback;
 export let requestHostTimeout;
 export let cancelHostTimeout;
 export let shouldYieldToHost;
+export let requestPaint;
 export let getCurrentTime;
 export let forceFrameRate;
 
@@ -125,7 +128,7 @@ if (
   shouldYieldToHost = function() {
     return false;
   };
-  forceFrameRate = function() {};
+  requestPaint = forceFrameRate = function() {};
 } else {
   if (typeof console !== 'undefined') {
     // TODO: Remove fb.me link
@@ -160,9 +163,55 @@ if (
   let activeFrameTime = 33;
   let fpsLocked = false;
 
-  shouldYieldToHost = function() {
-    return frameDeadline <= getCurrentTime();
-  };
+  // TODO: Make this configurable
+  // TODO: Adjust this based on priority?
+  let maxFrameLength = 300;
+  let needsPaint = false;
+
+  if (
+    enableIsInputPending &&
+    navigator !== undefined &&
+    navigator.scheduling !== undefined &&
+    navigator.scheduling.isInputPending !== undefined
+  ) {
+    const scheduling = navigator.scheduling;
+    shouldYieldToHost = function() {
+      const currentTime = getCurrentTime();
+      if (currentTime >= frameDeadline) {
+        // There's no time left in the frame. We may want to yield control of
+        // the main thread, so the browser can perform high priority tasks. The
+        // main ones are painting and user input. If there's a pending paint or
+        // a pending input, then we should yield. But if there's neither, then
+        // we can yield less often while remaining responsive. We'll eventually
+        // yield regardless, since there could be a pending paint that wasn't
+        // accompanied by a call to `requestPaint`, or other main thread tasks
+        // like network events.
+        if (needsPaint || scheduling.isInputPending()) {
+          // There is either a pending paint or a pending input.
+          return true;
+        }
+        // There's no pending input. Only yield if we've reached the max
+        // frame length.
+        return currentTime >= frameDeadline + maxFrameLength;
+      } else {
+        // There's still time left in the frame.
+        return false;
+      }
+    };
+
+    requestPaint = function() {
+      needsPaint = true;
+    };
+  } else {
+    // `isInputPending` is not available. Since we have no way of knowing if
+    // there's pending input, always yield at the end of the frame.
+    shouldYieldToHost = function() {
+      return getCurrentTime() >= frameDeadline;
+    };
+
+    // Since we yield every frame regardless, `requestPaint` has no effect.
+    requestPaint = function() {};
+  }
 
   forceFrameRate = function(fps) {
     if (fps < 0 || fps > 125) {
@@ -212,6 +261,9 @@ if (
         port.postMessage(undefined);
         throw error;
       }
+      // Yielding to the browser will give it a chance to paint, so we can
+      // reset this.
+      needsPaint = false;
     }
   };
 

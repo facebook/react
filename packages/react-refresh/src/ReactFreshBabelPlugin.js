@@ -306,7 +306,15 @@ export default function(babel) {
     }
     if (customHooksInScope.length > 0) {
       args.push(
-        t.arrowFunctionExpression([], t.arrayExpression(customHooksInScope)),
+        // TODO: We could use an arrow here to be more compact.
+        // However, don't do it until AMA can run them natively.
+        t.functionExpression(
+          null,
+          [],
+          t.blockStatement([
+            t.returnStatement(t.arrayExpression(customHooksInScope)),
+          ]),
+        ),
       );
     }
     return args;

@@ -22,6 +22,8 @@ export type SuspenseListState = {|
   last: null | Fiber,
   // Remaining rows on the tail of the list.
   tail: null | Fiber,
+  // The absolute time in ms that we'll expire the tail rendering.
+  tailExpiration: number,
 |};
 
 export function shouldCaptureSuspense(

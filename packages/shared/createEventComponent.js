@@ -39,7 +39,6 @@ export default function createEventComponent<T, E, C>(
   }
   const eventComponent = {
     $$typeof: REACT_EVENT_COMPONENT_TYPE,
-    props: null,
     responder: responder,
   };
   if (__DEV__) {

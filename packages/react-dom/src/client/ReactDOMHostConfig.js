@@ -7,8 +7,6 @@
  * @flow
  */
 
-import * as Scheduler from 'scheduler';
-
 import {precacheFiberNode, updateFiberProps} from './ReactDOMComponentTree';
 import {
   createElement,
@@ -112,17 +110,6 @@ import {
 import warning from 'shared/warning';
 
 const {html: HTML_NAMESPACE} = Namespaces;
-
-// Intentionally not named imports because Rollup would
-// use dynamic dispatch for CommonJS interop named imports.
-const {
-  unstable_now: now,
-  unstable_scheduleCallback: scheduleDeferredCallback,
-  unstable_shouldYield: shouldYield,
-  unstable_cancelCallback: cancelDeferredCallback,
-} = Scheduler;
-
-export {now, scheduleDeferredCallback, shouldYield, cancelDeferredCallback};
 
 let SUPPRESS_HYDRATION_WARNING;
 if (__DEV__) {
@@ -403,6 +390,7 @@ export function createTextInstance(
 }
 
 export const isPrimaryRenderer = true;
+export const shouldWarnUnactedUpdates = true;
 // This initialization code may run even on server environments
 // if a component just imports ReactDOM (e.g. for findDOMNode).
 // Some environments might not have setTimeout or clearTimeout.

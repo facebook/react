@@ -434,6 +434,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     now: Scheduler.unstable_now,
 
     isPrimaryRenderer: true,
+    shouldWarnUnactedUpdates: true,
     supportsHydration: false,
 
     mountEventComponent(): void {

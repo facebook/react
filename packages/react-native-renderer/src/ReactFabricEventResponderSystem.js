@@ -87,6 +87,7 @@ let currentTimers = new Map();
 let currentInstance: null | ReactNativeEventComponentInstance = null;
 let currentEventQueue: null | EventQueue = null;
 // let currentTimerIDCounter = 0;
+let currentlyInHook = false;
 
 const eventResponderContext: ReactNativeResponderContext = {
   dispatchEvent(
@@ -292,8 +293,9 @@ function shouldSkipEventComponent(
   eventResponderInstance: ReactNativeEventComponentInstance,
   responder: ReactNativeEventResponder,
   propagatedEventResponders: null | Set<ReactNativeEventResponder>,
+  isHook: boolean,
 ): boolean {
-  if (propagatedEventResponders !== null) {
+  if (propagatedEventResponders !== null && !isHook) {
     if (propagatedEventResponders.has(responder)) {
       return true;
     }
@@ -349,7 +351,7 @@ function traverseAndHandleEventResponderInstances(
     // Capture target phase
     for (i = length; i-- > 0; ) {
       const targetEventResponderInstance = targetEventResponderInstances[i];
-      const {responder, props, state} = targetEventResponderInstance;
+      const {isHook, responder, props, state} = targetEventResponderInstance;
       const eventListener = ((responder: any): ReactNativeEventResponder)
         .onEventCapture;
       if (eventListener !== undefined) {
@@ -358,16 +360,20 @@ function traverseAndHandleEventResponderInstances(
             targetEventResponderInstance,
             ((responder: any): ReactNativeEventResponder),
             propagatedEventResponders,
+            isHook,
           )
         ) {
           continue;
         }
         currentInstance = targetEventResponderInstance;
+        currentlyInHook = isHook;
         eventListener(responderEvent, eventResponderContext, props, state);
-        checkForLocalPropagationContinuation(
-          ((responder: any): ReactNativeEventResponder),
-          propagatedEventResponders,
-        );
+        if (!isHook) {
+          checkForLocalPropagationContinuation(
+            ((responder: any): ReactNativeEventResponder),
+            propagatedEventResponders,
+          );
+        }
       }
     }
     // We clean propagated event responders between phases.
@@ -375,7 +381,7 @@ function traverseAndHandleEventResponderInstances(
     // Bubble target phase
     for (i = 0; i < length; i++) {
       const targetEventResponderInstance = targetEventResponderInstances[i];
-      const {responder, props, state} = targetEventResponderInstance;
+      const {isHook, responder, props, state} = targetEventResponderInstance;
       const eventListener = ((responder: any): ReactNativeEventResponder)
         .onEvent;
       if (eventListener !== undefined) {
@@ -384,16 +390,20 @@ function traverseAndHandleEventResponderInstances(
             targetEventResponderInstance,
             ((responder: any): ReactNativeEventResponder),
             propagatedEventResponders,
+            isHook,
           )
         ) {
           continue;
         }
         currentInstance = targetEventResponderInstance;
+        currentlyInHook = isHook;
         eventListener(responderEvent, eventResponderContext, props, state);
-        checkForLocalPropagationContinuation(
-          ((responder: any): ReactNativeEventResponder),
-          propagatedEventResponders,
-        );
+        if (!isHook) {
+          checkForLocalPropagationContinuation(
+            ((responder: any): ReactNativeEventResponder),
+            propagatedEventResponders,
+          );
+        }
       }
     }
   }
@@ -410,10 +420,11 @@ export function dispatchEventForResponderEventSystem(
   const previousInstance = currentInstance;
   const previousTimers = currentTimers;
   const previousTimeStamp = currentTimeStamp;
+  const previouslyInHook = currentlyInHook;
   currentTimers = null;
   currentEventQueue = createEventQueue();
   // We might want to control timeStamp another way here
-  currentTimeStamp = (nativeEvent: any).timeStamp;
+  currentTimeStamp = Date.now();
   try {
     traverseAndHandleEventResponderInstances(
       topLevelType,
@@ -426,5 +437,6 @@ export function dispatchEventForResponderEventSystem(
     currentInstance = previousInstance;
     currentEventQueue = previousEventQueue;
     currentTimeStamp = previousTimeStamp;
+    currentlyInHook = previouslyInHook;
   }
 }
