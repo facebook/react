@@ -1,4 +1,4 @@
-// forked from root
+// copied from scripts/jest/matchers/toWarnDev.js
 'use strict';
 
 const jestDiff = require('jest-diff');

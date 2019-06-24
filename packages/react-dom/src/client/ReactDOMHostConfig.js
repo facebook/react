@@ -390,6 +390,7 @@ export function createTextInstance(
 }
 
 export const isPrimaryRenderer = true;
+export const shouldWarnUnactedUpdates = true;
 // This initialization code may run even on server environments
 // if a component just imports ReactDOM (e.g. for findDOMNode).
 // Some environments might not have setTimeout or clearTimeout.

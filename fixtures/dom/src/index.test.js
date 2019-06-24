@@ -114,3 +114,47 @@ it('warns when using the wrong act version - dom + test: updates', () => {
     "It looks like you're using the wrong act()",
   ]);
 });
+
+const {Surface, Group, Shape} = ReactART;
+function ARTTest(props) {
+  return (
+    <Surface width={150} height={200}>
+      <Group>
+        <Shape
+          d="M0,0l50,0l0,50l-50,0z"
+          fill={new ReactART.LinearGradient(['black', 'white'])}
+          key="a"
+          width={50}
+          height={50}
+          x={50}
+          y={50}
+          opacity={0.1}
+        />
+        <Shape
+          fill="#3C5A99"
+          key="b"
+          scale={0.5}
+          x={50}
+          y={50}
+          title="This is an F"
+          cursor="pointer">
+          M64.564,38.583H54l0.008-5.834c0-3.035,0.293-4.666,4.657-4.666
+          h5.833V16.429h-9.33c-11.213,0-15.159,5.654-15.159,15.16v6.994
+          h-6.99v11.652h6.99v33.815H54V50.235h9.331L64.564,38.583z
+        </Shape>
+      </Group>
+    </Surface>
+  );
+}
+
+it('does not warn when nesting react-act inside react-dom', () => {
+  TestUtils.act(() => {
+    TestUtils.renderIntoDocument(<ARTTest />);
+  });
+});
+
+it('does not warn when nesting react-act inside react-test-renderer', () => {
+  TestRenderer.act(() => {
+    TestRenderer.create(<ARTTest />);
+  });
+});
