@@ -111,30 +111,30 @@ describe('ReactIncrementalScheduling', () => {
     expect(ReactNoop.getChildrenAsJSX('c')).toEqual('c:1');
 
     // Schedule deferred work in the reverse order
-    ReactNoop.batchedUpdates(() => {
+    ReactNoop.act(() => {
       ReactNoop.renderToRootWithID(<Text text="c:2" />, 'c');
       ReactNoop.renderToRootWithID(<Text text="b:2" />, 'b');
-    });
-    // Ensure it starts in the order it was scheduled
-    expect(Scheduler).toFlushAndYieldThrough(['c:2']);
+      // Ensure it starts in the order it was scheduled
+      expect(Scheduler).toFlushAndYieldThrough(['c:2']);
 
-    expect(ReactNoop.getChildrenAsJSX('a')).toEqual('a:1');
-    expect(ReactNoop.getChildrenAsJSX('b')).toEqual('b:1');
-    expect(ReactNoop.getChildrenAsJSX('c')).toEqual('c:2');
-    // Schedule last bit of work, it will get processed the last
-    ReactNoop.batchedUpdates(() => {
+      expect(ReactNoop.getChildrenAsJSX('a')).toEqual('a:1');
+      expect(ReactNoop.getChildrenAsJSX('b')).toEqual('b:1');
+      expect(ReactNoop.getChildrenAsJSX('c')).toEqual('c:2');
+      // Schedule last bit of work, it will get processed the last
+
       ReactNoop.renderToRootWithID(<Text text="a:2" />, 'a');
-    });
-    // Keep performing work in the order it was scheduled
-    expect(Scheduler).toFlushAndYieldThrough(['b:2']);
-    expect(ReactNoop.getChildrenAsJSX('a')).toEqual('a:1');
-    expect(ReactNoop.getChildrenAsJSX('b')).toEqual('b:2');
-    expect(ReactNoop.getChildrenAsJSX('c')).toEqual('c:2');
 
-    expect(Scheduler).toFlushAndYieldThrough(['a:2']);
-    expect(ReactNoop.getChildrenAsJSX('a')).toEqual('a:2');
-    expect(ReactNoop.getChildrenAsJSX('b')).toEqual('b:2');
-    expect(ReactNoop.getChildrenAsJSX('c')).toEqual('c:2');
+      // Keep performing work in the order it was scheduled
+      expect(Scheduler).toFlushAndYieldThrough(['b:2']);
+      expect(ReactNoop.getChildrenAsJSX('a')).toEqual('a:1');
+      expect(ReactNoop.getChildrenAsJSX('b')).toEqual('b:2');
+      expect(ReactNoop.getChildrenAsJSX('c')).toEqual('c:2');
+
+      expect(Scheduler).toFlushAndYieldThrough(['a:2']);
+      expect(ReactNoop.getChildrenAsJSX('a')).toEqual('a:2');
+      expect(ReactNoop.getChildrenAsJSX('b')).toEqual('b:2');
+      expect(ReactNoop.getChildrenAsJSX('c')).toEqual('c:2');
+    });
   });
 
   it('schedules sync updates when inside componentDidMount/Update', () => {

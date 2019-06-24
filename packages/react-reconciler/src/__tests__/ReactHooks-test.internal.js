@@ -652,7 +652,9 @@ describe('ReactHooks', () => {
     }
 
     expect(() => {
-      ReactTestRenderer.create(<App deps={'hello'} />);
+      act(() => {
+        ReactTestRenderer.create(<App deps={'hello'} />);
+      });
     }).toWarnDev([
       'Warning: useEffect received a final argument that is not an array (instead, received `string`). ' +
         'When specified, the final argument must be an array.',
@@ -664,7 +666,9 @@ describe('ReactHooks', () => {
         'When specified, the final argument must be an array.',
     ]);
     expect(() => {
-      ReactTestRenderer.create(<App deps={100500} />);
+      act(() => {
+        ReactTestRenderer.create(<App deps={100500} />);
+      });
     }).toWarnDev([
       'Warning: useEffect received a final argument that is not an array (instead, received `number`). ' +
         'When specified, the final argument must be an array.',
@@ -676,7 +680,9 @@ describe('ReactHooks', () => {
         'When specified, the final argument must be an array.',
     ]);
     expect(() => {
-      ReactTestRenderer.create(<App deps={{}} />);
+      act(() => {
+        ReactTestRenderer.create(<App deps={{}} />);
+      });
     }).toWarnDev([
       'Warning: useEffect received a final argument that is not an array (instead, received `object`). ' +
         'When specified, the final argument must be an array.',
@@ -687,9 +693,12 @@ describe('ReactHooks', () => {
       'Warning: useCallback received a final argument that is not an array (instead, received `object`). ' +
         'When specified, the final argument must be an array.',
     ]);
-    ReactTestRenderer.create(<App deps={[]} />);
-    ReactTestRenderer.create(<App deps={null} />);
-    ReactTestRenderer.create(<App deps={undefined} />);
+
+    act(() => {
+      ReactTestRenderer.create(<App deps={[]} />);
+      ReactTestRenderer.create(<App deps={null} />);
+      ReactTestRenderer.create(<App deps={undefined} />);
+    });
   });
 
   it('warns if deps is not an array for useImperativeHandle', () => {
@@ -980,8 +989,11 @@ describe('ReactHooks', () => {
       return null;
     }
 
-    const root = ReactTestRenderer.create(<App />);
-    expect(() => root.update(<App />)).toThrow(
+    expect(() => {
+      act(() => {
+        ReactTestRenderer.create(<App />);
+      });
+    }).toThrow(
       // The exact message doesn't matter, just make sure we don't allow this
       'Context can only be read while React is rendering',
     );
@@ -1173,7 +1185,9 @@ describe('ReactHooks', () => {
     }
     // Verify it doesn't think we're still inside a Hook.
     // Should have no warnings.
-    ReactTestRenderer.create(<Valid />);
+    act(() => {
+      ReactTestRenderer.create(<Valid />);
+    });
 
     // Verify warnings don't get permanently disabled.
     expect(() => {
@@ -1499,10 +1513,15 @@ describe('ReactHooks', () => {
           return null;
           /* eslint-enable no-unused-vars */
         }
-        let root = ReactTestRenderer.create(<App update={false} />);
+        let root;
+        act(() => {
+          root = ReactTestRenderer.create(<App update={false} />);
+        });
         expect(() => {
           try {
-            root.update(<App update={true} />);
+            act(() => {
+              root.update(<App update={true} />);
+            });
           } catch (error) {
             // Swapping certain types of hooks will cause runtime errors.
             // This is okay as far as this test is concerned.
@@ -1521,7 +1540,9 @@ describe('ReactHooks', () => {
 
         // further warnings for this component are silenced
         try {
-          root.update(<App update={false} />);
+          act(() => {
+            root.update(<App update={false} />);
+          });
         } catch (error) {
           // Swapping certain types of hooks will cause runtime errors.
           // This is okay as far as this test is concerned.
@@ -1542,10 +1563,16 @@ describe('ReactHooks', () => {
           return null;
           /* eslint-enable no-unused-vars */
         }
-        let root = ReactTestRenderer.create(<App update={false} />);
+        let root;
+        act(() => {
+          root = ReactTestRenderer.create(<App update={false} />);
+        });
+
         expect(() => {
           try {
-            root.update(<App update={true} />);
+            act(() => {
+              root.update(<App update={true} />);
+            });
           } catch (error) {
             // Swapping certain types of hooks will cause runtime errors.
             // This is okay as far as this test is concerned.
@@ -1604,9 +1631,15 @@ describe('ReactHooks', () => {
           return null;
           /* eslint-enable no-unused-vars */
         }
-        let root = ReactTestRenderer.create(<App update={false} />);
+        let root;
+        act(() => {
+          root = ReactTestRenderer.create(<App update={false} />);
+        });
+
         expect(() => {
-          root.update(<App update={true} />);
+          act(() => {
+            root.update(<App update={true} />);
+          });
         }).toThrow('Rendered fewer hooks than expected.');
       });
     });
@@ -1767,6 +1800,7 @@ describe('ReactHooks', () => {
       globalListener();
       globalListener();
     }).toWarnDev([
+      'An update to C ran an effect',
       'An update to C inside a test was not wrapped in act',
       'An update to C inside a test was not wrapped in act',
       // Note: should *not* warn about updates on unmounted component.
@@ -1908,11 +1942,14 @@ describe('ReactHooks', () => {
       return 'Throw!';
     }
 
-    const root = ReactTestRenderer.create(
-      <ErrorBoundary>
-        <Thrower />
-      </ErrorBoundary>,
-    );
+    let root;
+    act(() => {
+      root = ReactTestRenderer.create(
+        <ErrorBoundary>
+          <Thrower />
+        </ErrorBoundary>,
+      );
+    });
 
     expect(root).toMatchRenderedOutput('Throw!');
     act(() => setShouldThrow(true));

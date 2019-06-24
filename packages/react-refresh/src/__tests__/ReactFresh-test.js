@@ -2676,14 +2676,16 @@ describe('ReactFresh', () => {
       expect(container.firstChild.nextSibling.nextSibling).toBe(secondP);
 
       // Perform a hot update that fixes the error.
-      patch(() => {
-        function Hello() {
-          const [x] = React.useState('');
-          React.useEffect(() => {}, []); // Removes the bad effect code.
-          x.slice(); // Doesn't throw initially.
-          return <h1>Fixed!</h1>;
-        }
-        $RefreshReg$(Hello, 'Hello');
+      act(() => {
+        patch(() => {
+          function Hello() {
+            const [x] = React.useState('');
+            React.useEffect(() => {}, []); // Removes the bad effect code.
+            x.slice(); // Doesn't throw initially.
+            return <h1>Fixed!</h1>;
+          }
+          $RefreshReg$(Hello, 'Hello');
+        });
       });
 
       // This should remount the error boundary (but not anything above it).
@@ -2693,15 +2695,18 @@ describe('ReactFresh', () => {
 
       // Verify next hot reload doesn't remount anything.
       const helloNode = container.firstChild.nextSibling;
-      patch(() => {
-        function Hello() {
-          const [x] = React.useState('');
-          React.useEffect(() => {}, []);
-          x.slice();
-          return <h1>Nice.</h1>;
-        }
-        $RefreshReg$(Hello, 'Hello');
+      act(() => {
+        patch(() => {
+          function Hello() {
+            const [x] = React.useState('');
+            React.useEffect(() => {}, []);
+            x.slice();
+            return <h1>Nice.</h1>;
+          }
+          $RefreshReg$(Hello, 'Hello');
+        });
       });
+
       expect(container.firstChild.nextSibling).toBe(helloNode);
       expect(helloNode.textContent).toBe('Nice.');
     }
