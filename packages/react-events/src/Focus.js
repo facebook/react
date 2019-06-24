@@ -8,10 +8,11 @@
  */
 
 import type {
+  ReactDOMEventResponder,
+  ReactDOMResponderEvent,
+  ReactDOMResponderContext,
   PointerType,
-  ReactResponderEvent,
-  ReactResponderContext,
-} from 'shared/ReactTypes';
+} from 'shared/ReactDOMTypes';
 
 import React from 'react';
 import {DiscreteEvent} from 'shared/ReactTypes';
@@ -71,7 +72,7 @@ if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
 }
 
 function createFocusEvent(
-  context: ReactResponderContext,
+  context: ReactDOMResponderContext,
   type: FocusEventType,
   target: Element | Document,
   pointerType: PointerType,
@@ -85,7 +86,7 @@ function createFocusEvent(
 }
 
 function dispatchFocusInEvents(
-  context: ReactResponderContext,
+  context: ReactDOMResponderContext,
   props: FocusProps,
   state: FocusState,
 ) {
@@ -127,7 +128,7 @@ function dispatchFocusInEvents(
 }
 
 function dispatchFocusOutEvents(
-  context: ReactResponderContext,
+  context: ReactDOMResponderContext,
   props: FocusProps,
   state: FocusState,
 ) {
@@ -158,7 +159,7 @@ function dispatchFocusOutEvents(
 }
 
 function dispatchFocusVisibleOutEvent(
-  context: ReactResponderContext,
+  context: ReactDOMResponderContext,
   props: FocusProps,
   state: FocusState,
 ) {
@@ -180,7 +181,7 @@ function dispatchFocusVisibleOutEvent(
 }
 
 function unmountResponder(
-  context: ReactResponderContext,
+  context: ReactDOMResponderContext,
   props: FocusProps,
   state: FocusState,
 ): void {
@@ -190,8 +191,8 @@ function unmountResponder(
 }
 
 function handleRootPointerEvent(
-  event: ReactResponderEvent,
-  context: ReactResponderContext,
+  event: ReactDOMResponderEvent,
+  context: ReactDOMResponderContext,
   props: FocusProps,
   state: FocusState,
 ): void {
@@ -216,7 +217,8 @@ function handleRootPointerEvent(
 
 let isGlobalFocusVisible = true;
 
-const FocusResponder = {
+const FocusResponder: ReactDOMEventResponder = {
+  displayName: 'Focus',
   targetEventTypes,
   rootEventTypes,
   createInitialState(): FocusState {
@@ -228,9 +230,10 @@ const FocusResponder = {
     };
   },
   allowMultipleHostChildren: false,
+  allowEventHooks: true,
   onEvent(
-    event: ReactResponderEvent,
-    context: ReactResponderContext,
+    event: ReactDOMResponderEvent,
+    context: ReactDOMResponderContext,
     props: FocusProps,
     state: FocusState,
   ): void {
@@ -270,8 +273,8 @@ const FocusResponder = {
     }
   },
   onRootEvent(
-    event: ReactResponderEvent,
-    context: ReactResponderContext,
+    event: ReactDOMResponderEvent,
+    context: ReactDOMResponderContext,
     props: FocusProps,
     state: FocusState,
   ): void {
@@ -321,14 +324,14 @@ const FocusResponder = {
     }
   },
   onUnmount(
-    context: ReactResponderContext,
+    context: ReactDOMResponderContext,
     props: FocusProps,
     state: FocusState,
   ) {
     unmountResponder(context, props, state);
   },
   onOwnershipChange(
-    context: ReactResponderContext,
+    context: ReactDOMResponderContext,
     props: FocusProps,
     state: FocusState,
   ) {
@@ -336,4 +339,4 @@ const FocusResponder = {
   },
 };
 
-export default React.unstable_createEventComponent(FocusResponder, 'Focus');
+export default React.unstable_createEvent(FocusResponder);

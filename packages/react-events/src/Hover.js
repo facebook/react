@@ -8,9 +8,10 @@
  */
 
 import type {
-  ReactResponderEvent,
-  ReactResponderContext,
-} from 'shared/ReactTypes';
+  ReactDOMEventResponder,
+  ReactDOMResponderEvent,
+  ReactDOMResponderContext,
+} from 'shared/ReactDOMTypes';
 
 import React from 'react';
 import {UserBlockingEvent} from 'shared/ReactTypes';
@@ -69,8 +70,8 @@ if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
 }
 
 function createHoverEvent(
-  event: ?ReactResponderEvent,
-  context: ReactResponderContext,
+  event: ?ReactDOMResponderEvent,
+  context: ReactDOMResponderContext,
   type: HoverEventType,
   target: Element | Document,
 ): HoverEvent {
@@ -102,8 +103,8 @@ function createHoverEvent(
 }
 
 function dispatchHoverChangeEvent(
-  event: null | ReactResponderEvent,
-  context: ReactResponderContext,
+  event: null | ReactDOMResponderEvent,
+  context: ReactDOMResponderContext,
   props: HoverProps,
   state: HoverState,
 ): void {
@@ -121,8 +122,8 @@ function dispatchHoverChangeEvent(
 }
 
 function dispatchHoverStartEvents(
-  event: ReactResponderEvent,
-  context: ReactResponderContext,
+  event: ReactDOMResponderEvent,
+  context: ReactDOMResponderContext,
   props: HoverProps,
   state: HoverState,
 ): void {
@@ -184,8 +185,8 @@ function dispatchHoverStartEvents(
 }
 
 function dispatchHoverEndEvents(
-  event: null | ReactResponderEvent,
-  context: ReactResponderContext,
+  event: null | ReactDOMResponderEvent,
+  context: ReactDOMResponderContext,
   props: HoverProps,
   state: HoverState,
 ) {
@@ -256,7 +257,7 @@ function calculateDelayMS(delay: ?number, min = 0, fallback = 0) {
 }
 
 function unmountResponder(
-  context: ReactResponderContext,
+  context: ReactDOMResponderContext,
   props: HoverProps,
   state: HoverState,
 ): void {
@@ -273,7 +274,8 @@ function isEmulatedMouseEvent(event, state) {
   );
 }
 
-const HoverResponder = {
+const HoverResponder: ReactDOMEventResponder = {
+  displayName: 'Hover',
   targetEventTypes,
   createInitialState() {
     return {
@@ -287,9 +289,10 @@ const HoverResponder = {
     };
   },
   allowMultipleHostChildren: false,
+  allowEventHooks: true,
   onEvent(
-    event: ReactResponderEvent,
-    context: ReactResponderContext,
+    event: ReactDOMResponderEvent,
+    context: ReactDOMResponderContext,
     props: HoverProps,
     state: HoverState,
   ): void {
@@ -391,14 +394,14 @@ const HoverResponder = {
     }
   },
   onUnmount(
-    context: ReactResponderContext,
+    context: ReactDOMResponderContext,
     props: HoverProps,
     state: HoverState,
   ) {
     unmountResponder(context, props, state);
   },
   onOwnershipChange(
-    context: ReactResponderContext,
+    context: ReactDOMResponderContext,
     props: HoverProps,
     state: HoverState,
   ) {
@@ -406,4 +409,4 @@ const HoverResponder = {
   },
 };
 
-export default React.unstable_createEventComponent(HoverResponder, 'Hover');
+export default React.unstable_createEvent(HoverResponder);

@@ -8,10 +8,11 @@
  */
 
 import type {
+  ReactDOMEventResponder,
+  ReactDOMResponderEvent,
+  ReactDOMResponderContext,
   PointerType,
-  ReactResponderEvent,
-  ReactResponderContext,
-} from 'shared/ReactTypes';
+} from 'shared/ReactDOMTypes';
 import type {EventPriority} from 'shared/ReactTypes';
 
 import React from 'react';
@@ -37,6 +38,7 @@ type PressProps = {
     bottom: number,
     left: number,
   },
+  preventContextMenu: boolean,
   preventDefault: boolean,
   stopPropagation: boolean,
 };
@@ -71,6 +73,7 @@ type PressState = {
   |}>,
   ignoreEmulatedMouseEvents: boolean,
   activePointerId: null | number,
+  shouldPreventClick: boolean,
 };
 
 type PressEventType =
@@ -84,6 +87,7 @@ type PressEventType =
   | 'contextmenu';
 
 type PressEvent = {|
+  defaultPrevented: boolean,
   target: Element | Document,
   type: PressEventType,
   pointerType: PointerType,
@@ -149,11 +153,12 @@ if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
 }
 
 function createPressEvent(
-  context: ReactResponderContext,
+  context: ReactDOMResponderContext,
   type: PressEventType,
   target: Element | Document,
   pointerType: PointerType,
-  event: ?ReactResponderEvent,
+  event: ?ReactDOMResponderEvent,
+  defaultPrevented: boolean,
 ): PressEvent {
   const timeStamp = context.getTimeStamp();
   let clientX = null;
@@ -183,6 +188,7 @@ function createPressEvent(
     }
   }
   return {
+    defaultPrevented,
     target,
     type,
     pointerType,
@@ -203,8 +209,8 @@ function createPressEvent(
 }
 
 function dispatchEvent(
-  event: ?ReactResponderEvent,
-  context: ReactResponderContext,
+  event: ?ReactDOMResponderEvent,
+  context: ReactDOMResponderContext,
   state: PressState,
   name: PressEventType,
   listener: (e: Object) => void,
@@ -212,19 +218,23 @@ function dispatchEvent(
 ): void {
   const target = ((state.pressTarget: any): Element | Document);
   const pointerType = state.pointerType;
+  const defaultPrevented =
+    (event != null && event.nativeEvent.defaultPrevented === true) ||
+    (name === 'press' && state.shouldPreventClick);
   const syntheticEvent = createPressEvent(
     context,
     name,
     target,
     pointerType,
     event,
+    defaultPrevented,
   );
   context.dispatchEvent(syntheticEvent, listener, eventPriority);
 }
 
 function dispatchPressChangeEvent(
-  event: ?ReactResponderEvent,
-  context: ReactResponderContext,
+  event: ?ReactDOMResponderEvent,
+  context: ReactDOMResponderContext,
   props: PressProps,
   state: PressState,
 ): void {
@@ -236,8 +246,8 @@ function dispatchPressChangeEvent(
 }
 
 function dispatchLongPressChangeEvent(
-  event: ?ReactResponderEvent,
-  context: ReactResponderContext,
+  event: ?ReactDOMResponderEvent,
+  context: ReactDOMResponderContext,
   props: PressProps,
   state: PressState,
 ): void {
@@ -255,7 +265,7 @@ function dispatchLongPressChangeEvent(
   );
 }
 
-function activate(event: ReactResponderEvent, context, props, state) {
+function activate(event: ReactDOMResponderEvent, context, props, state) {
   const nativeEvent: any = event.nativeEvent;
   const {x, y} = getEventViewportCoords(nativeEvent);
   const wasActivePressed = state.isActivePressed;
@@ -279,7 +289,7 @@ function activate(event: ReactResponderEvent, context, props, state) {
   }
 }
 
-function deactivate(event: ?ReactResponderEvent, context, props, state) {
+function deactivate(event: ?ReactDOMResponderEvent, context, props, state) {
   const wasLongPressed = state.isLongPressed;
   state.isActivePressed = false;
   state.isLongPressed = false;
@@ -303,8 +313,8 @@ function deactivate(event: ?ReactResponderEvent, context, props, state) {
 }
 
 function dispatchPressStartEvents(
-  event: ReactResponderEvent,
-  context: ReactResponderContext,
+  event: ReactDOMResponderEvent,
+  context: ReactDOMResponderContext,
   props: PressProps,
   state: PressState,
 ): void {
@@ -366,8 +376,8 @@ function dispatchPressStartEvents(
 }
 
 function dispatchPressEndEvents(
-  event: ?ReactResponderEvent,
-  context: ReactResponderContext,
+  event: ?ReactDOMResponderEvent,
+  context: ReactDOMResponderContext,
   props: PressProps,
   state: PressState,
 ): void {
@@ -411,11 +421,13 @@ function dispatchPressEndEvents(
       deactivate(event, context, props, state);
     }
   }
+
+  state.responderRegionOnDeactivation = null;
 }
 
 function dispatchCancel(
-  event: ReactResponderEvent,
-  context: ReactResponderContext,
+  event: ReactDOMResponderEvent,
+  context: ReactDOMResponderContext,
   props: PressProps,
   state: PressState,
 ): void {
@@ -446,7 +458,7 @@ function calculateDelayMS(delay: ?number, min = 0, fallback = 0) {
 
 // TODO: account for touch hit slop
 function calculateResponderRegion(
-  context: ReactResponderContext,
+  context: ReactDOMResponderContext,
   target: Element,
   props: PressProps,
 ) {
@@ -511,7 +523,7 @@ function getEventViewportCoords(
 }
 
 function unmountResponder(
-  context: ReactResponderContext,
+  context: ReactDOMResponderContext,
   props: PressProps,
   state: PressState,
 ): void {
@@ -522,7 +534,7 @@ function unmountResponder(
 }
 
 function addRootEventTypes(
-  context: ReactResponderContext,
+  context: ReactDOMResponderContext,
   state: PressState,
 ): void {
   if (!state.addedRootEvents) {
@@ -532,7 +544,7 @@ function addRootEventTypes(
 }
 
 function removeRootEventTypes(
-  context: ReactResponderContext,
+  context: ReactDOMResponderContext,
   state: PressState,
 ): void {
   if (state.addedRootEvents) {
@@ -555,7 +567,7 @@ function getTouchById(
   return null;
 }
 
-function getTouchTarget(context: ReactResponderContext, touchEvent: Touch) {
+function getTouchTarget(context: ReactDOMResponderContext, touchEvent: Touch) {
   const doc = context.getActiveDocument();
   return doc.elementFromPoint(touchEvent.clientX, touchEvent.clientY);
 }
@@ -563,10 +575,11 @@ function getTouchTarget(context: ReactResponderContext, touchEvent: Touch) {
 function updateIsPressWithinResponderRegion(
   target: Element | Document,
   nativeEventOrTouchEvent: Event | Touch,
-  context: ReactResponderContext,
+  context: ReactDOMResponderContext,
   props: PressProps,
   state: PressState,
 ): void {
+  let isPressWithinResponderRegion = true;
   if (
     state.pressTarget != null &&
     !context.isTargetWithinElement(target, state.pressTarget)
@@ -598,7 +611,7 @@ function updateIsPressWithinResponderRegion(
     }
     const {clientX: x, clientY: y} = (nativeEventOrTouchEvent: any);
 
-    state.isPressWithinResponderRegion =
+    isPressWithinResponderRegion =
       left != null &&
       right != null &&
       top != null &&
@@ -607,9 +620,11 @@ function updateIsPressWithinResponderRegion(
       y !== null &&
       (x >= left && x <= right && y >= top && y <= bottom);
   }
+  state.isPressWithinResponderRegion = isPressWithinResponderRegion;
 }
 
-const PressResponder = {
+const PressResponder: ReactDOMEventResponder = {
+  displayName: 'Press',
   targetEventTypes,
   createInitialState(): PressState {
     return {
@@ -630,12 +645,14 @@ const PressResponder = {
       responderRegionOnDeactivation: null,
       ignoreEmulatedMouseEvents: false,
       activePointerId: null,
+      shouldPreventClick: false,
     };
   },
   allowMultipleHostChildren: false,
+  allowEventHooks: true,
   onEvent(
-    event: ReactResponderEvent,
-    context: ReactResponderContext,
+    event: ReactDOMResponderEvent,
+    context: ReactDOMResponderContext,
     props: PressProps,
     state: PressState,
   ): void {
@@ -714,6 +731,7 @@ const PressResponder = {
             state.pressTarget,
             props,
           );
+          state.responderRegionOnDeactivation = null;
           state.isPressWithinResponderRegion = true;
           dispatchPressStartEvents(event, context, props, state);
           addRootEventTypes(context, state);
@@ -727,14 +745,20 @@ const PressResponder = {
       }
 
       case 'contextmenu': {
+        if (props.preventContextMenu) {
+          // Skip dispatching of onContextMenu below
+          nativeEvent.preventDefault();
+        }
+
         if (isPressed) {
-          if (props.preventDefault !== false) {
+          if (props.preventDefault !== false && !nativeEvent.defaultPrevented) {
             // Skip dispatching of onContextMenu below
             nativeEvent.preventDefault();
             return;
           }
           dispatchCancel(event, context, props, state);
         }
+
         if (props.onContextMenu) {
           dispatchEvent(
             event,
@@ -752,8 +776,8 @@ const PressResponder = {
     }
   },
   onRootEvent(
-    event: ReactResponderEvent,
-    context: ReactResponderContext,
+    event: ReactDOMResponderEvent,
+    context: ReactDOMResponderContext,
     props: PressProps,
     state: PressState,
   ): void {
@@ -853,6 +877,32 @@ const PressResponder = {
               return;
             }
             isKeyboardEvent = true;
+            removeRootEventTypes(context, state);
+          }
+
+          // Determine whether to call preventDefault on subsequent native events.
+          state.shouldPreventClick = false;
+          if (
+            context.isTargetWithinEventComponent(target) &&
+            context.isTargetWithinHostComponent(target, 'a', true)
+          ) {
+            const {
+              altKey,
+              ctrlKey,
+              metaKey,
+              shiftKey,
+            } = (nativeEvent: MouseEvent);
+            // Check "open in new window/tab" and "open context menu" key modifiers
+            const preventDefault = props.preventDefault;
+            if (
+              preventDefault !== false &&
+              !shiftKey &&
+              !metaKey &&
+              !ctrlKey &&
+              !altKey
+            ) {
+              state.shouldPreventClick = true;
+            }
           }
 
           const wasLongPressed = state.isLongPressed;
@@ -897,28 +947,12 @@ const PressResponder = {
       }
 
       case 'click': {
-        removeRootEventTypes(context, state);
-        if (
-          context.isTargetWithinEventComponent(target) &&
-          context.isTargetWithinHostComponent(target, 'a', true)
-        ) {
-          const {
-            altKey,
-            ctrlKey,
-            metaKey,
-            shiftKey,
-          } = (nativeEvent: MouseEvent);
-          // Check "open in new window/tab" and "open context menu" key modifiers
-          const preventDefault = props.preventDefault;
-          if (
-            preventDefault !== false &&
-            !shiftKey &&
-            !metaKey &&
-            !ctrlKey &&
-            !altKey
-          ) {
-            nativeEvent.preventDefault();
-          }
+        // "keyup" occurs after "click"
+        if (state.pointerType !== 'keyboard') {
+          removeRootEventTypes(context, state);
+        }
+        if (state.shouldPreventClick) {
+          nativeEvent.preventDefault();
         }
         break;
       }
@@ -933,14 +967,14 @@ const PressResponder = {
     }
   },
   onUnmount(
-    context: ReactResponderContext,
+    context: ReactDOMResponderContext,
     props: PressProps,
     state: PressState,
   ) {
     unmountResponder(context, props, state);
   },
   onOwnershipChange(
-    context: ReactResponderContext,
+    context: ReactDOMResponderContext,
     props: PressProps,
     state: PressState,
   ) {
@@ -948,4 +982,4 @@ const PressResponder = {
   },
 };
 
-export default React.unstable_createEventComponent(PressResponder, 'Press');
+export default React.unstable_createEvent(PressResponder);

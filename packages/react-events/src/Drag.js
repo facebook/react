@@ -8,10 +8,11 @@
  */
 
 import type {
-  ReactResponderEvent,
-  ReactResponderContext,
-  EventPriority,
-} from 'shared/ReactTypes';
+  ReactDOMEventResponder,
+  ReactDOMResponderEvent,
+  ReactDOMResponderContext,
+} from 'shared/ReactDOMTypes';
+import type {EventPriority} from 'shared/ReactTypes';
 
 import React from 'react';
 import {DiscreteEvent, UserBlockingEvent} from 'shared/ReactTypes';
@@ -58,7 +59,7 @@ type DragEvent = {|
 |};
 
 function createDragEvent(
-  context: ReactResponderContext,
+  context: ReactDOMResponderContext,
   type: DragEventType,
   target: Element | Document,
   eventData?: EventData,
@@ -72,7 +73,7 @@ function createDragEvent(
 }
 
 function dispatchDragEvent(
-  context: ReactResponderContext,
+  context: ReactDOMResponderContext,
   name: DragEventType,
   listener: DragEvent => void,
   state: DragState,
@@ -84,7 +85,8 @@ function dispatchDragEvent(
   context.dispatchEvent(syntheticEvent, listener, eventPriority);
 }
 
-const DragResponder = {
+const DragResponder: ReactDOMEventResponder = {
+  displayName: 'Drag',
   targetEventTypes,
   createInitialState(): DragState {
     return {
@@ -98,9 +100,10 @@ const DragResponder = {
     };
   },
   allowMultipleHostChildren: false,
+  allowEventHooks: false,
   onEvent(
-    event: ReactResponderEvent,
-    context: ReactResponderContext,
+    event: ReactDOMResponderEvent,
+    context: ReactDOMResponderContext,
     props: Object,
     state: DragState,
   ): void {
@@ -142,8 +145,8 @@ const DragResponder = {
     }
   },
   onRootEvent(
-    event: ReactResponderEvent,
-    context: ReactResponderContext,
+    event: ReactDOMResponderEvent,
+    context: ReactDOMResponderContext,
     props: Object,
     state: DragState,
   ): void {
@@ -259,4 +262,4 @@ const DragResponder = {
   },
 };
 
-export default React.unstable_createEventComponent(DragResponder, 'Drag');
+export default React.unstable_createEvent(DragResponder);

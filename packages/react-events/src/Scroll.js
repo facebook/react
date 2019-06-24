@@ -8,10 +8,11 @@
  */
 
 import type {
+  ReactDOMEventResponder,
+  ReactDOMResponderEvent,
+  ReactDOMResponderContext,
   PointerType,
-  ReactResponderEvent,
-  ReactResponderContext,
-} from 'shared/ReactTypes';
+} from 'shared/ReactDOMTypes';
 import {UserBlockingEvent} from 'shared/ReactTypes';
 import type {EventPriority} from 'shared/ReactTypes';
 
@@ -61,8 +62,8 @@ const targetEventTypes = ['scroll', 'pointerdown', 'keyup'];
 const rootEventTypes = ['pointermove', 'pointerup', 'pointercancel'];
 
 function createScrollEvent(
-  event: ?ReactResponderEvent,
-  context: ReactResponderContext,
+  event: ?ReactDOMResponderEvent,
+  context: ReactDOMResponderContext,
   type: ScrollEventType,
   target: Element | Document,
   pointerType: PointerType,
@@ -97,8 +98,8 @@ function createScrollEvent(
 }
 
 function dispatchEvent(
-  event: ?ReactResponderEvent,
-  context: ReactResponderContext,
+  event: ?ReactDOMResponderEvent,
+  context: ReactDOMResponderContext,
   state: ScrollState,
   name: ScrollEventType,
   listener: (e: Object) => void,
@@ -116,7 +117,8 @@ function dispatchEvent(
   context.dispatchEvent(syntheticEvent, listener, eventPriority);
 }
 
-const ScrollResponder = {
+const ScrollResponder: ReactDOMEventResponder = {
+  displayName: 'Scroll',
   targetEventTypes,
   createInitialState() {
     return {
@@ -126,9 +128,10 @@ const ScrollResponder = {
     };
   },
   allowMultipleHostChildren: true,
+  allowEventHooks: true,
   onEvent(
-    event: ReactResponderEvent,
-    context: ReactResponderContext,
+    event: ReactDOMResponderEvent,
+    context: ReactDOMResponderContext,
     props: ScrollProps,
     state: ScrollState,
   ): void {
@@ -173,8 +176,8 @@ const ScrollResponder = {
     }
   },
   onRootEvent(
-    event: ReactResponderEvent,
-    context: ReactResponderContext,
+    event: ReactDOMResponderEvent,
+    context: ReactDOMResponderContext,
     props: ScrollProps,
     state: ScrollState,
   ) {
@@ -196,14 +199,14 @@ const ScrollResponder = {
     }
   },
   onUnmount(
-    context: ReactResponderContext,
+    context: ReactDOMResponderContext,
     props: ScrollProps,
     state: ScrollState,
   ) {
     // TODO
   },
   onOwnershipChange(
-    context: ReactResponderContext,
+    context: ReactDOMResponderContext,
     props: ScrollProps,
     state: ScrollState,
   ) {
@@ -211,4 +214,4 @@ const ScrollResponder = {
   },
 };
 
-export default React.unstable_createEventComponent(ScrollResponder, 'Scroll');
+export default React.unstable_createEvent(ScrollResponder);

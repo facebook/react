@@ -20,13 +20,14 @@ import {
   REACT_PROVIDER_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
+  REACT_SUSPENSE_LIST_TYPE,
   REACT_LAZY_TYPE,
   REACT_EVENT_COMPONENT_TYPE,
   REACT_EVENT_TARGET_TYPE,
   REACT_EVENT_TARGET_TOUCH_HIT,
 } from 'shared/ReactSymbols';
 import {refineResolvedLazyComponent} from 'shared/ReactLazyComponent';
-import type {ReactEventComponent, ReactEventTarget} from 'shared/ReactTypes';
+import type {ReactEventTarget} from 'shared/ReactTypes';
 
 import {enableEventAPI} from './ReactFeatureFlags';
 
@@ -73,6 +74,8 @@ function getComponentName(type: mixed): string | null {
       return 'StrictMode';
     case REACT_SUSPENSE_TYPE:
       return 'Suspense';
+    case REACT_SUSPENSE_LIST_TYPE:
+      return 'SuspenseList';
   }
   if (typeof type === 'object') {
     switch (type.$$typeof) {
@@ -94,8 +97,7 @@ function getComponentName(type: mixed): string | null {
       }
       case REACT_EVENT_COMPONENT_TYPE: {
         if (enableEventAPI) {
-          const eventComponent = ((type: any): ReactEventComponent);
-          return eventComponent.displayName;
+          return (type: any).responder.displayName;
         }
         break;
       }

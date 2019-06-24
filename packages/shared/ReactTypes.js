@@ -14,7 +14,7 @@ export type ReactNode =
   | ReactFragment
   | ReactProvider<any>
   | ReactConsumer<any>
-  | ReactEventComponent
+  | ReactEventComponent<any, any, any>
   | ReactEventTarget;
 
 export type ReactEmpty = null | void | boolean;
@@ -81,64 +81,34 @@ export type RefObject = {|
   current: any,
 |};
 
-export type ReactEventResponderEventType =
-  | string
-  | {name: string, passive?: boolean};
-
-export type ReactEventResponder = {
-  targetEventTypes?: Array<ReactEventResponderEventType>,
-  rootEventTypes?: Array<ReactEventResponderEventType>,
-  createInitialState?: (props: null | Object) => Object,
-  allowMultipleHostChildren: boolean,
-  onEvent?: (
-    event: ReactResponderEvent,
-    context: ReactResponderContext,
-    props: null | Object,
-    state: null | Object,
-  ) => void,
-  onEventCapture?: (
-    event: ReactResponderEvent,
-    context: ReactResponderContext,
-    props: null | Object,
-    state: null | Object,
-  ) => void,
-  onRootEvent?: (
-    event: ReactResponderEvent,
-    context: ReactResponderContext,
-    props: null | Object,
-    state: null | Object,
-  ) => void,
-  onMount?: (
-    context: ReactResponderContext,
-    props: null | Object,
-    state: null | Object,
-  ) => void,
-  onUnmount?: (
-    context: ReactResponderContext,
-    props: null | Object,
-    state: null | Object,
-  ) => void,
-  onOwnershipChange?: (
-    context: ReactResponderContext,
-    props: null | Object,
-    state: null | Object,
-  ) => void,
-};
-
-export type ReactEventComponentInstance = {|
+export type ReactEventComponentInstance<T, E, C> = {|
   currentFiber: mixed,
-  props: null | Object,
-  responder: ReactEventResponder,
+  isHook: boolean,
+  props: Object,
+  responder: ReactEventResponder<T, E, C>,
   rootEventTypes: null | Set<string>,
-  rootInstance: mixed,
-  state: null | Object,
+  rootInstance: null | mixed,
+  state: Object,
 |};
 
-export type ReactEventComponent = {|
-  $$typeof: Symbol | number,
+export type ReactEventResponder<T, E, C> = {
   displayName: string,
-  props: null | Object,
-  responder: ReactEventResponder,
+  targetEventTypes?: Array<T>,
+  rootEventTypes?: Array<T>,
+  createInitialState?: (props: Object) => Object,
+  allowMultipleHostChildren: boolean,
+  allowEventHooks: boolean,
+  onEvent?: (event: E, context: C, props: Object, state: Object) => void,
+  onEventCapture?: (event: E, context: C, props: Object, state: Object) => void,
+  onRootEvent?: (event: E, context: C, props: Object, state: Object) => void,
+  onMount?: (context: C, props: Object, state: Object) => void,
+  onUnmount?: (context: C, props: Object, state: Object) => void,
+  onOwnershipChange?: (context: C, props: Object, state: Object) => void,
+};
+
+export type ReactEventComponent<T, E, C> = {|
+  $$typeof: Symbol | number,
+  responder: ReactEventResponder<T, E, C>,
 |};
 
 export type ReactEventTarget = {|
@@ -147,65 +117,8 @@ export type ReactEventTarget = {|
   type: Symbol | number,
 |};
 
-type AnyNativeEvent = Event | KeyboardEvent | MouseEvent | Touch;
-
-export type PointerType =
-  | ''
-  | 'mouse'
-  | 'keyboard'
-  | 'pen'
-  | 'touch'
-  | 'trackpad';
-
-export type ReactResponderEvent = {
-  nativeEvent: AnyNativeEvent,
-  passive: boolean,
-  passiveSupported: boolean,
-  pointerId: null | number,
-  pointerType: PointerType,
-  target: Element | Document,
-  type: string,
-};
-
 export opaque type EventPriority = 0 | 1 | 2;
 
 export const DiscreteEvent: EventPriority = 0;
 export const UserBlockingEvent: EventPriority = 1;
 export const ContinuousEvent: EventPriority = 2;
-
-export type ReactResponderContext = {
-  dispatchEvent: (
-    eventObject: Object,
-    listener: (Object) => void,
-    eventPriority: EventPriority,
-  ) => void,
-  isTargetWithinElement: (
-    childTarget: Element | Document,
-    parentTarget: Element | Document,
-  ) => boolean,
-  isTargetWithinEventComponent: (Element | Document) => boolean,
-  isTargetWithinEventResponderScope: (Element | Document) => boolean,
-  isEventWithinTouchHitTarget: (event: ReactResponderEvent) => boolean,
-  addRootEventTypes: (
-    rootEventTypes: Array<ReactEventResponderEventType>,
-  ) => void,
-  removeRootEventTypes: (
-    rootEventTypes: Array<ReactEventResponderEventType>,
-  ) => void,
-  hasOwnership: () => boolean,
-  requestGlobalOwnership: () => boolean,
-  releaseOwnership: () => boolean,
-  setTimeout: (func: () => void, timeout: number) => number,
-  clearTimeout: (timerId: number) => void,
-  getFocusableElementsInScope(): Array<HTMLElement>,
-  getActiveDocument(): Document,
-  objectAssign: Function,
-  getEventCurrentTarget(event: ReactResponderEvent): Element,
-  getTimeStamp: () => number,
-  isTargetWithinHostComponent: (
-    target: Element | Document,
-    elementType: string,
-    deep: boolean,
-  ) => boolean,
-  continueLocalPropagation(): void,
-};

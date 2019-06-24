@@ -13,7 +13,7 @@ import {registrationNameModules} from 'events/EventPluginRegistry';
 import warning from 'shared/warning';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import type {ReactEventResponderEventType} from 'shared/ReactTypes';
+import type {ReactDOMEventResponderEventType} from 'shared/ReactDOMTypes';
 import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
 import {
   setListenToResponderEventTypes,
@@ -1287,7 +1287,7 @@ export function restoreControlledState(
 }
 
 export function listenToEventResponderEventTypes(
-  eventTypes: Array<ReactEventResponderEventType>,
+  eventTypes: Array<ReactDOMEventResponderEventType>,
   element: Element | Document,
 ): void {
   if (enableEventAPI) {

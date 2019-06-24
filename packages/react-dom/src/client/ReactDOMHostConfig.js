@@ -7,8 +7,6 @@
  * @flow
  */
 
-import * as Scheduler from 'scheduler';
-
 import {precacheFiberNode, updateFiberProps} from './ReactDOMComponentTree';
 import {
   createElement,
@@ -45,7 +43,10 @@ import {
 import dangerousStyleValue from '../shared/dangerousStyleValue';
 
 import type {DOMContainer} from './ReactDOM';
-import type {ReactEventComponentInstance} from 'shared/ReactTypes';
+import type {
+  ReactDOMEventResponder,
+  ReactDOMEventComponentInstance,
+} from 'shared/ReactDOMTypes';
 import {
   mountEventResponder,
   unmountEventResponder,
@@ -109,17 +110,6 @@ import {
 import warning from 'shared/warning';
 
 const {html: HTML_NAMESPACE} = Namespaces;
-
-// Intentionally not named imports because Rollup would
-// use dynamic dispatch for CommonJS interop named imports.
-const {
-  unstable_now: now,
-  unstable_scheduleCallback: scheduleDeferredCallback,
-  unstable_shouldYield: shouldYield,
-  unstable_cancelCallback: cancelDeferredCallback,
-} = Scheduler;
-
-export {now, scheduleDeferredCallback, shouldYield, cancelDeferredCallback};
 
 let SUPPRESS_HYDRATION_WARNING;
 if (__DEV__) {
@@ -898,14 +888,17 @@ export function didNotFindHydratableSuspenseInstance(
 }
 
 export function mountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance,
+  eventComponentInstance: ReactDOMEventComponentInstance,
 ): void {
   if (enableEventAPI) {
     const rootContainerInstance = ((eventComponentInstance.rootInstance: any): Container);
     const doc = rootContainerInstance.ownerDocument;
     const documentBody = doc.body || doc;
     const responder = eventComponentInstance.responder;
-    const {rootEventTypes, targetEventTypes} = responder;
+    const {
+      rootEventTypes,
+      targetEventTypes,
+    } = ((responder: any): ReactDOMEventResponder);
     if (targetEventTypes !== undefined) {
       listenToEventResponderEventTypes(targetEventTypes, documentBody);
     }
@@ -921,13 +914,13 @@ export function mountEventComponent(
 }
 
 export function updateEventComponent(
-  eventComponentInstance: ReactEventComponentInstance,
+  eventComponentInstance: ReactDOMEventComponentInstance,
 ): void {
   // NO-OP, why might use this in the future
 }
 
 export function unmountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance,
+  eventComponentInstance: ReactDOMEventComponentInstance,
 ): void {
   if (enableEventAPI) {
     // TODO stop listening to targetEventTypes

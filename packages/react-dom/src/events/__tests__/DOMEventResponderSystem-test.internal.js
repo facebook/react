@@ -28,8 +28,10 @@ function createReactEventComponent({
   onUnmount,
   onOwnershipChange,
   allowMultipleHostChildren,
+  allowEventHooks,
 }) {
   const testEventResponder = {
+    displayName: 'TestEventComponent',
     targetEventTypes,
     rootEventTypes,
     createInitialState,
@@ -40,15 +42,22 @@ function createReactEventComponent({
     onUnmount,
     onOwnershipChange,
     allowMultipleHostChildren: allowMultipleHostChildren || false,
+    allowEventHooks: allowEventHooks || true,
   };
 
-  return {
-    $$typeof: Symbol.for('react.event_component'),
-    displayName: 'TestEventComponent',
-    props: null,
-    responder: testEventResponder,
-  };
+  return React.unstable_createEvent(testEventResponder);
 }
+
+const createEvent = (type, data) => {
+  const event = document.createEvent('CustomEvent');
+  event.initCustomEvent(type, true, true);
+  if (data != null) {
+    Object.entries(data).forEach(([key, value]) => {
+      event[key] = value;
+    });
+  }
+  return event;
+};
 
 function dispatchEvent(element, type) {
   const event = document.createEvent('Event');
@@ -705,17 +714,6 @@ describe('DOMEventResponderSystem', () => {
     );
     ReactDOM.render(<Test />, container);
 
-    const createEvent = (type, data) => {
-      const event = document.createEvent('CustomEvent');
-      event.initCustomEvent(type, true, true);
-      if (data != null) {
-        Object.entries(data).forEach(([key, value]) => {
-          event[key] = value;
-        });
-      }
-      return event;
-    };
-
     buttonRef.current.dispatchEvent(
       createEvent('pointerout', {relatedTarget: divRef.current}),
     );
@@ -925,19 +923,6 @@ describe('DOMEventResponderSystem', () => {
         ' Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.nativeEvent }`',
       {withoutStack: true},
     );
-    expect(() => {
-      handler = event => {
-        return event.defaultPrevented;
-      };
-      ReactDOM.render(<Test />, container);
-      dispatchClickEvent(document.body);
-    }).toWarnDev(
-      'Warning: defaultPrevented is not available on event objects created from event responder modules ' +
-        '(React Flare).' +
-        ' Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.defaultPrevented }`',
-      {withoutStack: true},
-    );
-
     expect(container.innerHTML).toBe('<button>Click me!</button>');
   });
 
@@ -1066,5 +1051,81 @@ describe('DOMEventResponderSystem', () => {
     );
 
     ReactDOM.render(<Test2 />, container);
+  });
+
+  it('should work with event component hooks', () => {
+    const buttonRef = React.createRef();
+    const eventLogs = [];
+    const EventComponent = createReactEventComponent({
+      targetEventTypes: ['foo'],
+      onEvent: (event, context, props) => {
+        if (props.onFoo) {
+          const fooEvent = {
+            target: event.target,
+            type: 'foo',
+            timeStamp: context.getTimeStamp(),
+          };
+          context.dispatchEvent(fooEvent, props.onFoo, DiscreteEvent);
+        }
+        eventLogs.push(context.isRespondingToHook() ? '[hook]' : '[component]');
+      },
+    });
+
+    const Test = () => {
+      React.unstable_useEvent(EventComponent, {
+        onFoo: e => eventLogs.push('hook'),
+      });
+      return (
+        <EventComponent onFoo={e => eventLogs.push('prop')}>
+          <button ref={buttonRef} />
+        </EventComponent>
+      );
+    };
+
+    ReactDOM.render(<Test />, container);
+    buttonRef.current.dispatchEvent(createEvent('foo'));
+    expect(eventLogs).toEqual(['[component]', '[hook]', 'prop', 'hook']);
+
+    // Clear events
+    eventLogs.length = 0;
+
+    const Test2 = () => {
+      React.unstable_useEvent(EventComponent, {
+        onFoo: e => eventLogs.push('hook'),
+      });
+      return <button ref={buttonRef} />;
+    };
+
+    ReactDOM.render(<Test2 />, container);
+    buttonRef.current.dispatchEvent(createEvent('foo'));
+    // No events shold fire, as there are no event components in the branch
+    expect(eventLogs).toEqual([]);
+
+    const Test3 = () => {
+      React.unstable_useEvent(EventComponent, {
+        onFoo: e => eventLogs.push('hook 2a'),
+      });
+      React.unstable_useEvent(EventComponent, {
+        onFoo: e => eventLogs.push('hook 2b'),
+      });
+      return (
+        <EventComponent onFoo={e => eventLogs.push('should not fire')}>
+          <EventComponent onFoo={e => eventLogs.push('prop 2')}>
+            <button ref={buttonRef} />
+          </EventComponent>
+        </EventComponent>
+      );
+    };
+
+    ReactDOM.render(<Test3 />, container);
+    buttonRef.current.dispatchEvent(createEvent('foo'));
+    expect(eventLogs).toEqual([
+      '[component]',
+      '[hook]',
+      '[hook]',
+      'prop 2',
+      'hook 2a',
+      'hook 2b',
+    ]);
   });
 });

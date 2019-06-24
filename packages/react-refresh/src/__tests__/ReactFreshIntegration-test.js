@@ -21,32 +21,27 @@ let freshPlugin = require('react-refresh/babel');
 
 describe('ReactFreshIntegration', () => {
   let container;
-  let lastRoot;
-  let scheduleHotUpdate;
 
   beforeEach(() => {
-    global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
-      supportsFiber: true,
-      inject: injected => {
-        scheduleHotUpdate = injected.scheduleHotUpdate;
-      },
-      onCommitFiberRoot: (id, root) => {
-        lastRoot = root;
-      },
-      onCommitFiberUnmount: () => {},
-    };
-
-    jest.resetModules();
-    React = require('react');
-    ReactDOM = require('react-dom');
-    ReactFreshRuntime = require('react-refresh/runtime');
-    act = require('react-dom/test-utils').act;
-    container = document.createElement('div');
-    document.body.appendChild(container);
+    if (__DEV__) {
+      jest.resetModules();
+      React = require('react');
+      ReactFreshRuntime = require('react-refresh/runtime');
+      ReactFreshRuntime.injectIntoGlobalHook(global);
+      ReactDOM = require('react-dom');
+      act = require('react-dom/test-utils').act;
+      container = document.createElement('div');
+      document.body.appendChild(container);
+    }
   });
 
   afterEach(() => {
-    document.body.removeChild(container);
+    if (__DEV__) {
+      ReactDOM.unmountComponentAtNode(container);
+      // Ensure we don't leak memory by holding onto dead roots.
+      expect(ReactFreshRuntime._getMountedRootCount()).toBe(0);
+      document.body.removeChild(container);
+    }
   });
 
   describe('with compiled destructuring', () => {
@@ -74,10 +69,10 @@ describe('ReactFreshIntegration', () => {
         'global',
         'React',
         'exports',
-        '__register__',
-        '__signature__',
+        '$RefreshReg$',
+        '$RefreshSig$',
         compiled,
-      )(global, React, exportsObj, __register__, __signature__);
+      )(global, React, exportsObj, $RefreshReg$, $RefreshSig$);
       return exportsObj.default;
     }
 
@@ -87,45 +82,23 @@ describe('ReactFreshIntegration', () => {
         ReactDOM.render(<Component />, container);
       });
       // Module initialization shouldn't be counted as a hot update.
-      expect(ReactFreshRuntime.prepareUpdate()).toBe(null);
+      expect(ReactFreshRuntime.performReactRefresh()).toBe(null);
     }
 
     function patch(source) {
       execute(source);
-      const hotUpdate = ReactFreshRuntime.prepareUpdate();
       act(() => {
-        scheduleHotUpdate(lastRoot, hotUpdate);
+        expect(ReactFreshRuntime.performReactRefresh()).not.toBe(null);
       });
+      expect(ReactFreshRuntime._getMountedRootCount()).toBe(1);
     }
 
-    function __register__(type, id) {
+    function $RefreshReg$(type, id) {
       ReactFreshRuntime.register(type, id);
     }
 
-    function __signature__() {
-      let call = 0;
-      let savedType;
-      let hasCustomHooks;
-      return function(type, key, forceReset, getCustomHooks) {
-        switch (call++) {
-          case 0:
-            savedType = type;
-            hasCustomHooks = typeof getCustomHooks === 'function';
-            ReactFreshRuntime.setSignature(
-              type,
-              key,
-              forceReset,
-              getCustomHooks,
-            );
-            break;
-          case 1:
-            if (hasCustomHooks) {
-              ReactFreshRuntime.collectCustomHooksForSignature(savedType);
-            }
-            break;
-        }
-        return type;
-      };
+    function $RefreshSig$() {
+      return ReactFreshRuntime.createSignatureFunctionForTransform();
     }
 
     it('reloads function declarations', () => {
@@ -782,7 +755,7 @@ describe('ReactFreshIntegration', () => {
       }
     });
 
-    it('resets state on every edit with @hot reset annotation', () => {
+    it('resets state on every edit with @refresh reset annotation', () => {
       if (__DEV__) {
         render(`
           const {useState} = React;
@@ -813,7 +786,7 @@ describe('ReactFreshIntegration', () => {
           const {useState} = React;
           const S = 3;
 
-          /* @hot reset */
+          /* @refresh reset */
 
           export default function App() {
             const [foo, setFoo] = useState(S);
@@ -831,7 +804,7 @@ describe('ReactFreshIntegration', () => {
 
           export default function App() {
 
-            // @hot reset
+            // @refresh reset
 
             const [foo, setFoo] = useState(S);
             return <h1>D{foo}</h1>;
@@ -875,7 +848,7 @@ describe('ReactFreshIntegration', () => {
 
           export default function App() {
 
-            /* @hot reset */
+            /* @refresh reset */
 
             const [foo, setFoo] = useState(S);
             return <h1>G{foo}</h1>;

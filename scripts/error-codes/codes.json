@@ -333,5 +333,6 @@
   "332": "Unknown priority level.",
   "333": "This should have a parent host component initialized. This error is likely caused by a bug in React. Please file an issue.",
   "334": "accumulate(...): Accumulated items must not be null or undefined.",
-  "335": "ReactDOMServer does not yet support the event API."
+  "335": "ReactDOMServer does not yet support the event API.",
+  "336": "The \"%s\" event responder cannot be used via the \"useEvent\" hook."
 }

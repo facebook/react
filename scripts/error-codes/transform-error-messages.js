@@ -29,9 +29,9 @@ module.exports = function(babel) {
           //
           // if (!condition) {
           //   if (__DEV__) {
-          //     throw ReactError(`A ${adj} message that contains ${noun}`);
+          //     throw ReactError(Error(`A ${adj} message that contains ${noun}`));
           //   } else {
-          //     throw ReactErrorProd(ERR_CODE, adj, noun);
+          //     throw ReactErrorProd(Error(ERR_CODE), adj, noun);
           //   }
           // }
           //
@@ -53,10 +53,12 @@ module.exports = function(babel) {
           );
 
           // Outputs:
-          //   throw ReactError(`A ${adj} message that contains ${noun}`);
+          //   throw ReactError(Error(`A ${adj} message that contains ${noun}`));
           const devThrow = t.throwStatement(
             t.callExpression(reactErrorIdentfier, [
-              t.templateLiteral(errorMsgQuasis, errorMsgExpressions),
+              t.callExpression(t.identifier('Error'), [
+                t.templateLiteral(errorMsgQuasis, errorMsgExpressions),
+              ]),
             ])
           );
 
@@ -65,7 +67,7 @@ module.exports = function(babel) {
             //
             // Outputs:
             //   if (!condition) {
-            //     throw ReactError(`A ${adj} message that contains ${noun}`);
+            //     throw ReactError(Error(`A ${adj} message that contains ${noun}`));
             //   }
             path.replaceWith(
               t.ifStatement(
@@ -92,7 +94,7 @@ module.exports = function(babel) {
             // Outputs:
             //   /* FIXME (minify-errors-in-prod): Unminified error message in production build! */
             //   if (!condition) {
-            //     throw ReactError(`A ${adj} message that contains ${noun}`);
+            //     throw ReactError(Error(`A ${adj} message that contains ${noun}`));
             //   }
             path.replaceWith(
               t.ifStatement(
@@ -116,10 +118,12 @@ module.exports = function(babel) {
           );
 
           // Outputs:
-          //   throw ReactErrorProd(ERR_CODE, adj, noun);
+          //   throw ReactErrorProd(Error(ERR_CODE), adj, noun);
           const prodThrow = t.throwStatement(
             t.callExpression(reactErrorProdIdentfier, [
-              t.numericLiteral(prodErrorId),
+              t.callExpression(t.identifier('Error'), [
+                t.numericLiteral(prodErrorId),
+              ]),
               ...errorMsgExpressions,
             ])
           );
@@ -127,9 +131,9 @@ module.exports = function(babel) {
           // Outputs:
           //   if (!condition) {
           //     if (__DEV__) {
-          //       throw ReactError(`A ${adj} message that contains ${noun}`);
+          //       throw ReactError(Error(`A ${adj} message that contains ${noun}`));
           //     } else {
-          //       throw ReactErrorProd(ERR_CODE, adj, noun);
+          //       throw ReactErrorProd(Error(ERR_CODE), adj, noun);
           //     }
           //   }
           path.replaceWith(
