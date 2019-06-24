@@ -2434,7 +2434,7 @@ export function warnIfNotCurrentlyActingEffectsInDEV(fiber: Fiber): void {
     if (ReactCurrentActingRendererSigil.current !== ReactActingRendererSigil) {
       warningWithoutStack(
         false,
-        'Your test just caused an effect from %s, but was not wrapped in act(...).\n\n' +
+        'An update to %s ran an effect, but was not wrapped in act(...).\n\n' +
           'When testing, code that causes React state updates should be ' +
           'wrapped into act(...):\n\n' +
           'act(() => {\n' +

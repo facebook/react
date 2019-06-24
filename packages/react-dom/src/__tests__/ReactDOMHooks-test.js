@@ -74,10 +74,10 @@ describe('ReactDOMHooks', () => {
       expect(container2.textContent).toBe('4');
       expect(container3.textContent).toBe('6');
     }).toWarnDev([
-      'Your test just caused an effect from Example1',
-      'Your test just caused an effect from Example2',
-      'Your test just caused an effect from Example1',
-      'Your test just caused an effect from Example2',
+      'An update to Example1 ran an effect',
+      'An update to Example2 ran an effect',
+      'An update to Example1 ran an effect',
+      'An update to Example2 ran an effect',
     ]);
   });
 

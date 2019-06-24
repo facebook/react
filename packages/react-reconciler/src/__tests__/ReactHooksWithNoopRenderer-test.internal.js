@@ -674,7 +674,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         expect(Scheduler).toFlushAndYield(['Passive effect']);
         expect(ReactNoop.getChildren()).toEqual([span('Passive')]);
       });
-      // exiting act calls flushePassiveEffects(), but there none are left with flush.
+      // exiting act calls flushPassiveEffects(), but there are none left to flush.
       expect(Scheduler).toHaveYielded([]);
     });
 
@@ -885,14 +885,13 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       // we explicitly wait for missing act() warnings here since
       // it's a lot harder to simulate this condition inside an act scope
-      // todo - is this ok?
       expect(() => {
         ReactNoop.render(<Counter count={0} />, () =>
           Scheduler.yieldValue('Sync effect'),
         );
         expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
         expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
-      }).toWarnDev(['Your test just caused an effect from Counter']);
+      }).toWarnDev(['An update to Counter ran an effect']);
 
       // A discrete event forces the passive effect to be flushed --
       // updateCount(1) happens first, so 2 wins.
@@ -907,8 +906,8 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(() => {
         expect(Scheduler).toFlushAndYield(['Count: 2']);
       }).toWarnDev([
-        'Your test just caused an effect from Counter',
-        'Your test just caused an effect from Counter',
+        'An update to Counter ran an effect',
+        'An update to Counter ran an effect',
       ]);
 
       expect(ReactNoop.getChildren()).toEqual([span('Count: 2')]);
@@ -943,7 +942,6 @@ describe('ReactHooksWithNoopRenderer', () => {
       const tracingEvent = {id: 0, name: 'hello', timestamp: 0};
       // we explicitly wait for missing act() warnings here since
       // it's a lot harder to simulate this condition inside an act scope
-      // todo - is this ok?
       expect(() => {
         SchedulerTracing.unstable_trace(
           tracingEvent.name,
@@ -956,7 +954,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         );
         expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
         expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
-      }).toWarnDev(['Your test just caused an effect from Counter']);
+      }).toWarnDev(['An update to Counter ran an effect']);
 
       expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(0);
 
@@ -973,8 +971,8 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(() => {
         expect(Scheduler).toFlushAndYield(['Count: 2']);
       }).toWarnDev([
-        'Your test just caused an effect from Counter',
-        'Your test just caused an effect from Counter',
+        'An update to Counter ran an effect',
+        'An update to Counter ran an effect',
       ]);
 
       expect(ReactNoop.getChildren()).toEqual([span('Count: 2')]);

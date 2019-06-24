@@ -1800,7 +1800,7 @@ describe('ReactHooks', () => {
       globalListener();
       globalListener();
     }).toWarnDev([
-      'Your test just caused an effect from C',
+      'An update to C ran an effect',
       'An update to C inside a test was not wrapped in act',
       'An update to C inside a test was not wrapped in act',
       // Note: should *not* warn about updates on unmounted component.
