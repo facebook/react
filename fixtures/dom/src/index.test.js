@@ -9,22 +9,17 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom';
+import ReactART from 'react-art';
+import ARTSVGMode from 'art/modes/svg';
+import ARTCurrentMode from 'art/modes/current';
 import TestUtils from 'react-dom/test-utils';
 import TestRenderer from 'react-test-renderer';
 
-let spy;
-beforeEach(() => {
-  spy = jest.spyOn(console, 'error').mockImplementation(() => {});
-});
+ARTCurrentMode.setCurrent(ARTSVGMode);
 
-function confirmWarning() {
-  expect(spy).toHaveBeenCalledWith(
-    expect.stringContaining(
-      "It looks like you're using the wrong act() around your test interactions."
-    ),
-    ''
-  );
-}
+global.__DEV__ = process.env.NODE_ENV !== 'production';
+
+expect.extend(require('./toWarnDev'));
 
 function App(props) {
   return 'hello world';
@@ -34,29 +29,33 @@ it("doesn't warn when you use the right act + renderer: dom", () => {
   TestUtils.act(() => {
     TestUtils.renderIntoDocument(<App />);
   });
-  expect(spy).not.toHaveBeenCalled();
 });
 
 it("doesn't warn when you use the right act + renderer: test", () => {
   TestRenderer.act(() => {
     TestRenderer.create(<App />);
   });
-  expect(spy).not.toHaveBeenCalled();
 });
 
-it('works with createRoot().render combo', () => {
+it('warns when using createRoot() + .render', () => {
   const root = ReactDOM.unstable_createRoot(document.createElement('div'));
-  TestRenderer.act(() => {
-    root.render(<App />);
+  expect(() => {
+    TestRenderer.act(() => {
+      root.render(<App />);
+    });
+  }).toWarnDev(["It looks like you're using the wrong act()"], {
+    withoutStack: true,
   });
-  confirmWarning();
 });
 
 it('warns when using the wrong act version - test + dom: render', () => {
-  TestRenderer.act(() => {
-    TestUtils.renderIntoDocument(<App />);
+  expect(() => {
+    TestRenderer.act(() => {
+      TestUtils.renderIntoDocument(<App />);
+    });
+  }).toWarnDev(["It looks like you're using the wrong act()"], {
+    withoutStack: true,
   });
-  confirmWarning();
 });
 
 it('warns when using the wrong act version - test + dom: updates', () => {
@@ -67,29 +66,35 @@ it('warns when using the wrong act version - test + dom: updates', () => {
     return ctr;
   }
   TestUtils.renderIntoDocument(<Counter />);
-  TestRenderer.act(() => {
-    setCtr(1);
-  });
-  confirmWarning();
+  expect(() => {
+    TestRenderer.act(() => {
+      setCtr(1);
+    });
+  }).toWarnDev([
+    'An update to Counter inside a test was not wrapped in act',
+    "It looks like you're using the wrong act()",
+  ]);
 });
 
 it('warns when using the wrong act version - dom + test: .create()', () => {
-  TestUtils.act(() => {
-    TestRenderer.create(<App />);
+  expect(() => {
+    TestUtils.act(() => {
+      TestRenderer.create(<App />);
+    });
+  }).toWarnDev(["It looks like you're using the wrong act()"], {
+    withoutStack: true,
   });
-  confirmWarning();
 });
 
 it('warns when using the wrong act version - dom + test: .update()', () => {
-  let root;
-  // use the right one here so we don't get the first warning
-  TestRenderer.act(() => {
-    root = TestRenderer.create(<App key="one" />);
+  const root = TestRenderer.create(<App key="one" />);
+  expect(() => {
+    TestUtils.act(() => {
+      root.update(<App key="two" />);
+    });
+  }).toWarnDev(["It looks like you're using the wrong act()"], {
+    withoutStack: true,
   });
-  TestUtils.act(() => {
-    root.update(<App key="two" />);
-  });
-  confirmWarning();
 });
 
 it('warns when using the wrong act version - dom + test: updates', () => {
@@ -100,8 +105,12 @@ it('warns when using the wrong act version - dom + test: updates', () => {
     return ctr;
   }
   const root = TestRenderer.create(<Counter />);
-  TestUtils.act(() => {
-    setCtr(1);
-  });
-  confirmWarning();
+  expect(() => {
+    TestUtils.act(() => {
+      setCtr(1);
+    });
+  }).toWarnDev([
+    'An update to Counter inside a test was not wrapped in act',
+    "It looks like you're using the wrong act()",
+  ]);
 });
