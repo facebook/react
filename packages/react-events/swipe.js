@@ -9,6 +9,6 @@
 
 'use strict';
 
-const Swipe = require('./src/Swipe');
+const Swipe = require('./src/dom/Swipe');
 
 module.exports = Swipe.default || Swipe;
