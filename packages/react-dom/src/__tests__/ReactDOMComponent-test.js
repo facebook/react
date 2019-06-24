@@ -1491,6 +1491,20 @@ describe('ReactDOMComponent', () => {
 
       expect(onError).toHaveBeenCalledTimes(1);
     });
+
+    it('should sanitize script tags when they contain uppercase letters', () => {
+      const container = document.createElement('div');
+      spyOnDevAndProd(document, 'createElement').and.callThrough();
+      expect(() => {
+        ReactDOM.render(<scRipt>alert(1)</scRipt>, container);
+      }).toWarnDev(
+        '<scRipt /> is using incorrect casing. Use PascalCase for React components, ' +
+          'or lowercase for HTML elements.',
+      );
+      expect(document.createElement).toHaveBeenCalledTimes(1);
+      // creates div and adds script tag via innerHTML instead of creating 'scRipt' element
+      expect(document.createElement.calls.argsFor(0)[0]).toContain('div');
+    });
   });
 
   describe('updateComponent', () => {
