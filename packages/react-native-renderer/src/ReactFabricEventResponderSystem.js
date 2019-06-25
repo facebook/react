@@ -67,10 +67,17 @@ type ReactNativeEventComponentInstance = ReactEventComponentInstance<
   ReactNativeResponderContext,
 >;
 
+const rootEventTypesToEventComponentInstances: Map<
+  ReactNativeEventResponderEventType | string,
+  Set<ReactNativeEventComponentInstance>,
+> = new Map();
 const targetEventTypeCached: Map<
   Array<ReactNativeEventResponderEventType>,
   Set<ReactNativeEventResponderEventType>,
 > = new Map();
+const ownershipChangeListeners: Set<
+  ReactNativeEventComponentInstance,
+> = new Set();
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 const eventListeners:
   | WeakMap
@@ -227,6 +234,45 @@ function processEventQueue(): void {
 
 // TODO this function is almost an exact copy of the DOM version, we should
 // somehow share the logic
+function triggerOwnershipListeners(): void {
+  const listeningInstances = Array.from(ownershipChangeListeners);
+  const previousInstance = currentInstance;
+  const previouslyInHook = currentlyInHook;
+  currentEventQueue = createEventQueue();
+  try {
+    for (let i = 0; i < listeningInstances.length; i++) {
+      const instance = listeningInstances[i];
+      const {isHook, props, responder, state} = instance;
+      currentInstance = instance;
+      currentlyInHook = isHook;
+      const onOwnershipChange = ((responder: any): ReactNativeEventResponder)
+        .onOwnershipChange;
+      if (onOwnershipChange !== undefined) {
+        onOwnershipChange(eventResponderContext, props, state);
+      }
+    }
+    processEventQueue();
+  } finally {
+    currentInstance = previousInstance;
+    currentlyInHook = previouslyInHook;
+  }
+}
+
+// TODO this function is almost an exact copy of the DOM version, we should
+// somehow share the logic
+function releaseOwnershipForEventComponentInstance(
+  eventComponentInstance: ReactNativeEventComponentInstance,
+): boolean {
+  if (globalOwner === eventComponentInstance) {
+    globalOwner = null;
+    triggerOwnershipListeners();
+    return true;
+  }
+  return false;
+}
+
+// TODO this function is almost an exact copy of the DOM version, we should
+// somehow share the logic
 function processEvent(event: $Shape<PartialEventObject>): void {
   const type = event.type;
   const listener = ((eventListeners.get(event): any): (
@@ -319,6 +365,26 @@ function checkForLocalPropagationContinuation(
 
 // TODO this function is almost an exact copy of the DOM version, we should
 // somehow share the logic
+function getRootEventResponderInstances(
+  topLevelType: string,
+): Array<ReactNativeEventComponentInstance> {
+  const eventResponderInstances = [];
+  const rootEventInstances = rootEventTypesToEventComponentInstances.get(
+    topLevelType,
+  );
+  if (rootEventInstances !== undefined) {
+    const rootEventComponentInstances = Array.from(rootEventInstances);
+
+    for (let i = 0; i < rootEventComponentInstances.length; i++) {
+      const rootEventComponentInstance = rootEventComponentInstances[i];
+      eventResponderInstances.push(rootEventComponentInstance);
+    }
+  }
+  return eventResponderInstances;
+}
+
+// TODO this function is almost an exact copy of the DOM version, we should
+// somehow share the logic
 function traverseAndHandleEventResponderInstances(
   topLevelType: ReactNativeEventResponderEventType,
   targetFiber: null | Fiber,
@@ -407,6 +473,33 @@ function traverseAndHandleEventResponderInstances(
       }
     }
   }
+  // Root phase
+  const rootEventResponderInstances = getRootEventResponderInstances(
+    topLevelType,
+  );
+  length = rootEventResponderInstances.length;
+  if (length > 0) {
+    for (i = 0; i < length; i++) {
+      const rootEventResponderInstance = rootEventResponderInstances[i];
+      const {isHook, props, responder, state} = rootEventResponderInstance;
+      const eventListener = responder.onRootEvent;
+      if (eventListener !== undefined) {
+        if (
+          shouldSkipEventComponent(
+            rootEventResponderInstance,
+            responder,
+            null,
+            isHook,
+          )
+        ) {
+          continue;
+        }
+        currentInstance = rootEventResponderInstance;
+        currentlyInHook = isHook;
+        eventListener(responderEvent, eventResponderContext, props, state);
+      }
+    }
+  }
 }
 
 // TODO this function is almost an exact copy of the DOM version, we should
@@ -438,5 +531,117 @@ export function dispatchEventForResponderEventSystem(
     currentEventQueue = previousEventQueue;
     currentTimeStamp = previousTimeStamp;
     currentlyInHook = previouslyInHook;
+  }
+}
+
+// TODO this function is almost an exact copy of the DOM version, we should
+// somehow share the logic
+export function mountEventResponder(
+  eventComponentInstance: ReactNativeEventComponentInstance,
+) {
+  const responder = ((eventComponentInstance.responder: any): ReactNativeEventResponder);
+  if (responder.onOwnershipChange !== undefined) {
+    ownershipChangeListeners.add(eventComponentInstance);
+  }
+  const onMount = responder.onMount;
+  if (onMount !== undefined) {
+    let {isHook, props, state} = eventComponentInstance;
+    currentEventQueue = createEventQueue();
+    currentInstance = eventComponentInstance;
+    currentlyInHook = isHook;
+    try {
+      onMount(eventResponderContext, props, state);
+      processEventQueue();
+    } finally {
+      currentEventQueue = null;
+      currentInstance = null;
+      currentTimers = null;
+    }
+  }
+}
+
+// TODO this function is almost an exact copy of the DOM version, we should
+// somehow share the logic
+export function unmountEventResponder(
+  eventComponentInstance: ReactNativeEventComponentInstance,
+): void {
+  const responder = ((eventComponentInstance.responder: any): ReactNativeEventResponder);
+  const onUnmount = responder.onUnmount;
+  if (onUnmount !== undefined) {
+    let {isHook, props, state} = eventComponentInstance;
+    currentEventQueue = createEventQueue();
+    currentInstance = eventComponentInstance;
+    currentlyInHook = isHook;
+    try {
+      onUnmount(eventResponderContext, props, state);
+      processEventQueue();
+    } finally {
+      currentEventQueue = null;
+      currentInstance = null;
+      currentTimers = null;
+    }
+  }
+  try {
+    currentEventQueue = createEventQueue();
+    releaseOwnershipForEventComponentInstance(eventComponentInstance);
+    processEventQueue();
+  } finally {
+    currentEventQueue = null;
+  }
+  if (responder.onOwnershipChange !== undefined) {
+    ownershipChangeListeners.delete(eventComponentInstance);
+  }
+  const rootEventTypesSet = eventComponentInstance.rootEventTypes;
+  if (rootEventTypesSet !== null) {
+    const rootEventTypes = Array.from(rootEventTypesSet);
+
+    for (let i = 0; i < rootEventTypes.length; i++) {
+      const topLevelEventType = rootEventTypes[i];
+      let rootEventComponentInstances = rootEventTypesToEventComponentInstances.get(
+        topLevelEventType,
+      );
+      if (rootEventComponentInstances !== undefined) {
+        rootEventComponentInstances.delete(eventComponentInstance);
+      }
+    }
+  }
+}
+
+function registerRootEventType(
+  rootEventType: ReactNativeEventResponderEventType,
+  eventComponentInstance: ReactNativeEventComponentInstance,
+) {
+  let rootEventComponentInstances = rootEventTypesToEventComponentInstances.get(
+    rootEventType,
+  );
+  if (rootEventComponentInstances === undefined) {
+    rootEventComponentInstances = new Set();
+    rootEventTypesToEventComponentInstances.set(
+      rootEventType,
+      rootEventComponentInstances,
+    );
+  }
+  let rootEventTypesSet = eventComponentInstance.rootEventTypes;
+  if (rootEventTypesSet === null) {
+    rootEventTypesSet = eventComponentInstance.rootEventTypes = new Set();
+  }
+  invariant(
+    !rootEventTypesSet.has(rootEventType),
+    'addRootEventTypes() found a duplicate root event ' +
+      'type of "%s". This might be because the event type exists in the event responder "rootEventTypes" ' +
+      'array or because of a previous addRootEventTypes() using this root event type.',
+    rootEventType,
+  );
+  rootEventTypesSet.add(rootEventType);
+  rootEventComponentInstances.add(eventComponentInstance);
+}
+
+export function addRootEventTypesForComponentInstance(
+  eventComponentInstance: ReactNativeEventComponentInstance,
+  rootEventTypes: Array<ReactNativeEventResponderEventType>,
+): void {
+  for (let i = 0; i < rootEventTypes.length; i++) {
+    const rootEventType = rootEventTypes[i];
+    registerRootEventType(rootEventType, eventComponentInstance);
   }
 }

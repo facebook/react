@@ -26,6 +26,13 @@ import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
 
 import {dispatchEvent} from './ReactFabricEventEmitter';
+import {
+  addRootEventTypesForComponentInstance,
+  mountEventResponder,
+  unmountEventResponder,
+} from './ReactFabricEventResponderSystem';
+
+import {enableEventAPI} from 'shared/ReactFeatureFlags';
 
 // Modules provided by RN:
 import {
@@ -448,19 +455,32 @@ export function replaceContainerChildren(
 export function mountEventComponent(
   eventComponentInstance: ReactNativeEventComponentInstance,
 ) {
-  throw new Error('Not yet implemented.');
+  if (enableEventAPI) {
+    const responder = eventComponentInstance.responder;
+    const {rootEventTypes} = responder;
+    if (rootEventTypes !== undefined) {
+      addRootEventTypesForComponentInstance(
+        eventComponentInstance,
+        rootEventTypes,
+      );
+    }
+    mountEventResponder(eventComponentInstance);
+  }
 }
 
 export function updateEventComponent(
   eventComponentInstance: ReactNativeEventComponentInstance,
 ) {
-  throw new Error('Not yet implemented.');
+  // NO-OP, why might use this in the future
 }
 
 export function unmountEventComponent(
   eventComponentInstance: ReactNativeEventComponentInstance,
 ): void {
-  throw new Error('Not yet implemented.');
+  if (enableEventAPI) {
+    // TODO stop listening to targetEventTypes
+    unmountEventResponder(eventComponentInstance);
+  }
 }
 
 export function getEventTargetChildElement(
