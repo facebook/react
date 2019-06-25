@@ -9,6 +9,6 @@
 
 'use strict';
 
-const Hover = require('./src/Hover');
+const Hover = require('./src/dom/Hover');
 
 module.exports = Hover.default || Hover;

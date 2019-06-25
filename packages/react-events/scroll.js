@@ -9,6 +9,6 @@
 
 'use strict';
 
-const Scroll = require('./src/Scroll');
+const Scroll = require('./src/dom/Scroll');
 
 module.exports = Scroll.default || Scroll;
