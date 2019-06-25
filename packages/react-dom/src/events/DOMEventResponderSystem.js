@@ -1037,7 +1037,11 @@ export function dispatchEventForResponderEventSystem(
     const previouslyInHook = currentlyInHook;
     currentTimers = null;
     currentEventQueue = createEventQueue();
-    currentDocument = (nativeEventTarget: any).ownerDocument;
+    // nodeType 9 is DOCUMENT_NODE
+    currentDocument =
+      (nativeEventTarget: any).nodeType === 9
+        ? ((nativeEventTarget: any): Document)
+        : (nativeEventTarget: any).ownerDocument;
     // We might want to control timeStamp another way here
     currentTimeStamp = (nativeEvent: any).timeStamp;
     try {
