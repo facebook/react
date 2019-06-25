@@ -76,25 +76,23 @@ it('warns when using the wrong act version - test + dom: updates', () => {
   ]);
 });
 
-it('warns when using the wrong act version - dom + test: .create()', () => {
+it('does *not* warn when using the wrong act version - dom + test: .create()', () => {
+  // since TestRenderer.create wraps its own act(), there's no warning to trigger
   expect(() => {
     TestUtils.act(() => {
       TestRenderer.create(<App />);
     });
-  }).toWarnDev(["It looks like you're using the wrong act()"], {
-    withoutStack: true,
-  });
+  }).toWarnDev([]);
 });
 
 it('warns when using the wrong act version - dom + test: .update()', () => {
+  // since TestRenderer.update wraps its own act(), there's no warning to trigger
   const root = TestRenderer.create(<App key="one" />);
   expect(() => {
     TestUtils.act(() => {
       root.update(<App key="two" />);
     });
-  }).toWarnDev(["It looks like you're using the wrong act()"], {
-    withoutStack: true,
-  });
+  }).toWarnDev([]);
 });
 
 it('warns when using the wrong act version - dom + test: updates', () => {
