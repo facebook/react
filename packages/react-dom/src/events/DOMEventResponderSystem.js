@@ -1039,8 +1039,8 @@ export function dispatchEventForResponderEventSystem(
     currentEventQueue = createEventQueue();
     // nodeType 9 is DOCUMENT_NODE
     currentDocument =
-      nativeEventTarget.nodeType === 9
-        ? nativeEventTarget
+      (nativeEventTarget: any).nodeType === 9
+        ? ((nativeEventTarget: any): Document)
         : (nativeEventTarget: any).ownerDocument;
     // We might want to control timeStamp another way here
     currentTimeStamp = (nativeEvent: any).timeStamp;
