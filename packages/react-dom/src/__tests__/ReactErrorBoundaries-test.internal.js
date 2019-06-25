@@ -37,14 +37,9 @@ describe('ReactErrorBoundaries', () => {
   let RetryErrorBoundary;
   let Normal;
 
-  afterEach(() => {
-    console.error.mockRestore();
-  });
-
   beforeEach(() => {
     jest.useFakeTimers();
     jest.resetModules();
-    jest.spyOn(console, 'error');
     PropTypes = require('prop-types');
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
@@ -649,6 +644,39 @@ describe('ReactErrorBoundaries', () => {
     expect(container3.firstChild).toBe(null);
   });
 
+  it('logs a single error when using error boundary', () => {
+    const container = document.createElement('div');
+    expect(() =>
+      ReactDOM.render(
+        <ErrorBoundary>
+          <BrokenRender />
+        </ErrorBoundary>,
+        container,
+      ),
+    ).toWarnDev('The above error occurred in the <BrokenRender> component:', {
+      logAllErrors: true,
+    });
+
+    expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
+    expect(log).toEqual([
+      'ErrorBoundary constructor',
+      'ErrorBoundary componentWillMount',
+      'ErrorBoundary render success',
+      'BrokenRender constructor',
+      'BrokenRender componentWillMount',
+      'BrokenRender render [!]',
+      // Catch and render an error message
+      'ErrorBoundary static getDerivedStateFromError',
+      'ErrorBoundary componentWillMount',
+      'ErrorBoundary render error',
+      'ErrorBoundary componentDidMount',
+    ]);
+
+    log.length = 0;
+    ReactDOM.unmountComponentAtNode(container);
+    expect(log).toEqual(['ErrorBoundary componentWillUnmount']);
+  });
+
   it('renders an error state if child throws in render', () => {
     const container = document.createElement('div');
     ReactDOM.render(
@@ -658,13 +686,6 @@ describe('ReactErrorBoundaries', () => {
       container,
     );
     expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
-    expect(console.error).toHaveBeenCalledWith(
-      __DEV__
-        ? expect.stringMatching(
-            /^The above error occurred in the <BrokenRender> component/,
-          )
-        : new Error('Hello'),
-    );
     expect(log).toEqual([
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
