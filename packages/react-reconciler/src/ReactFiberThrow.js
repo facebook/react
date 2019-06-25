@@ -102,6 +102,7 @@ function createClassErrorUpdate(
   if (typeof getDerivedStateFromError === 'function') {
     const error = errorInfo.value;
     update.payload = () => {
+      logError(fiber, errorInfo);
       return getDerivedStateFromError(error);
     };
   }
