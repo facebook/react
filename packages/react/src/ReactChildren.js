@@ -43,7 +43,6 @@ function escape(key) {
  * pattern.
  */
 
-let didWarnAboutMaps = false;
 
 const userProvidedKeyEscapeRegex = /\/+/g;
 function escapeUserProvidedKey(text) {
@@ -88,7 +87,10 @@ function releaseTraverseContext(traverseContext) {
   }
 }
 
+
+
 /**
+ * @var {!boolean} didWarnAboutMaps So we don't warn them two times
  * @param {?*} children Children tree container.
  * @param {!string} nameSoFar Name of the key path so far.
  * @param {!function} callback Callback to invoke with each child found.
@@ -96,39 +98,17 @@ function releaseTraverseContext(traverseContext) {
  * process.
  * @return {!number} The number of children in this subtree.
  */
+
+let didWarnAboutMaps = false;
+
 function traverseAllChildrenImpl(
   children,
   nameSoFar,
   callback,
   traverseContext,
 ) {
-  const type = typeof children;
-
-  if (type === 'undefined' || type === 'boolean') {
-    // All of the above are perceived as null.
-    children = null;
-  }
-
-  let invokeCallback = false;
-
-  if (children === null) {
-    invokeCallback = true;
-  } else {
-    switch (type) {
-      case 'string':
-      case 'number':
-        invokeCallback = true;
-        break;
-      case 'object':
-        switch (children.$$typeof) {
-          case REACT_ELEMENT_TYPE:
-          case REACT_PORTAL_TYPE:
-            invokeCallback = true;
-        }
-    }
-  }
-
-  if (invokeCallback) {
+  children = childrenAreNullElements(children) ? null : children;
+  if (shouldInvokeCallback(children)) {
     callback(
       traverseContext,
       children,
@@ -137,75 +117,163 @@ function traverseAllChildrenImpl(
       nameSoFar === '' ? SEPARATOR + getComponentKey(children, 0) : nameSoFar,
     );
     return 1;
+  } else {
+    return traverseMultipleChildren(children, nameSoFar, callback, traverseContext);
   }
+}
 
-  let child;
-  let nextName;
+/**
+ * Can someone find a better name for this?
+ * @param {?*} children Children tree container.
+ * @param {!string} nameSoFar Name of the key path so far.
+ * @param {!function} callback Callback to invoke with each child found.
+ * @param {?*} traverseContext Used to pass information throughout the traversal
+ * process.
+ * @return {!number} The number of children in this subtree.
+ */
+function traverseMultipleChildren(children, nameSoFar, callback, traverseContext) {
   let subtreeCount = 0; // Count of children found in the current subtree.
   const nextNamePrefix =
     nameSoFar === '' ? SEPARATOR : nameSoFar + SUBSEPARATOR;
 
   if (Array.isArray(children)) {
-    for (let i = 0; i < children.length; i++) {
-      child = children[i];
-      nextName = nextNamePrefix + getComponentKey(child, i);
-      subtreeCount += traverseAllChildrenImpl(
-        child,
-        nextName,
-        callback,
-        traverseContext,
-      );
-    }
+    subtreeCount += traverseArrayOfChildren(children, nextNamePrefix, callback, traverseContext);
   } else {
     const iteratorFn = getIteratorFn(children);
     if (typeof iteratorFn === 'function') {
-      if (__DEV__) {
-        // Warn about using Maps as children
-        if (iteratorFn === children.entries) {
-          warning(
-            didWarnAboutMaps,
-            'Using Maps as children is unsupported and will likely yield ' +
-              'unexpected results. Convert it to a sequence/iterable of keyed ' +
-              'ReactElements instead.',
-          );
-          didWarnAboutMaps = true;
-        }
-      }
-
-      const iterator = iteratorFn.call(children);
-      let step;
-      let ii = 0;
-      while (!(step = iterator.next()).done) {
-        child = step.value;
-        nextName = nextNamePrefix + getComponentKey(child, ii++);
-        subtreeCount += traverseAllChildrenImpl(
-          child,
-          nextName,
-          callback,
-          traverseContext,
-        );
-      }
-    } else if (type === 'object') {
-      let addendum = '';
-      if (__DEV__) {
-        addendum =
-          ' If you meant to render a collection of children, use an array ' +
-          'instead.' +
-          ReactDebugCurrentFrame.getStackAddendum();
-      }
-      const childrenString = '' + children;
-      invariant(
-        false,
-        'Objects are not valid as a React child (found: %s).%s',
-        childrenString === '[object Object]'
-          ? 'object with keys {' + Object.keys(children).join(', ') + '}'
-          : childrenString,
-        addendum,
-      );
+      subtreeCount += traverseChildrenWithIteratorFn(children, nextNamePrefix, callback, traverseContext);
+    } else if (typeof children === 'object') {
+      showErrorForTryingToIterateAnObject(children);
     }
-  }
-
+  }  
   return subtreeCount;
+}
+/**
+ * @param {?*} children Children tree container.
+ * @param {!string} nextNamePrefix Name of the key path so far.
+ * @param {!function} callback Callback to invoke with each child found.
+ * @param {?*} traverseContext Used to pass information throughout the traversal
+ * process.
+ * @return {!number} The number of children in this subtree.
+ */
+function traverseArrayOfChildren(children, nextNamePrefix, callback, traverseContext) {
+  let subtreeCount = 0;
+  children.forEach((child, i) => {
+    subtreeCount += traverseChild(
+      child, 
+      i, 
+      nextNamePrefix, 
+      callback, 
+      traverseContext
+    );
+  });
+  return subtreeCount;
+}
+/**
+ * @param {?*} children Children tree container.
+ * @param {!string} nextNamePrefix Name of the key path so far.
+ * @param {!function} callback Callback to invoke with each child found.
+ * @param {?*} traverseContext Used to pass information throughout the traversal
+ * process.
+ * @return {!number} The number of children in this subtree.
+ */
+function traverseChildrenWithIteratorFn(children, nextNamePrefix, callback, traverseContext) {
+  warnAboutMapsIfDev(children);
+
+  let subtreeCount = 0; // Count of children found in the current subtree.
+  const iterator = getIteratorFn(children).call(children);
+  let step;
+  let i = 0;
+  while (!(step = iterator.next()).done) {
+    const child = step.value;
+    subtreeCount += traverseChild(
+      child, 
+      i++, 
+      nextNamePrefix, 
+      callback, 
+      traverseContext
+    );
+  }
+  return subtreeCount;
+}
+
+/**
+ * @param {!object} children Children tree container
+ */
+function showErrorForTryingToIterateAnObject(children) {
+  let addendum = '';
+  if (__DEV__) {
+    addendum =
+      ' If you meant to render a collection of children, use an array ' +
+      'instead.' +
+      ReactDebugCurrentFrame.getStackAddendum();
+  }
+  const childrenString = '' + children;
+  invariant(
+    false,
+    'Objects are not valid as a React child (found: %s).%s',
+    childrenString === '[object Object]'
+      ? 'object with keys {' + Object.keys(children).join(', ') + '}'
+      : childrenString,
+    addendum,
+  );
+}
+
+/**
+ * Warns about using Maps as children
+ * @param {?*} children 
+ */
+function warnAboutMapsIfDev(children) {
+  if (__DEV__ && getIteratorFn(children) === children.entries) {
+    warning(
+      didWarnAboutMaps,
+      'Using Maps as children is unsupported and will likely yield ' +
+        'unexpected results. Convert it to a sequence/iterable of keyed ' +
+        'ReactElements instead.',
+    );
+    didWarnAboutMaps = true;
+  }
+}
+
+/**
+ * @param {?*} children Children tree container
+ * @return {!boolean} If the callback in traversal should be invoked
+ */
+function shouldInvokeCallback(children) {
+  return childrenAreNullElements(children) ||
+    typeof children === 'string' ||
+    typeof children === 'number' ||
+    typeof children === 'object' &&
+    children.$$typeof === REACT_ELEMENT_TYPE ||
+    children.$$typeof === REACT_PORTAL_TYPE; 
+}
+
+/**
+ * @param {?*} children Children tree container
+ * @return {!boolean} True if children are null elements false otherwise
+ */
+function childrenAreNullElements(children) {
+  return children === null ||
+    typeof children === 'undefined' ||
+    typeof children === 'boolean';
+}
+
+/**
+ * 
+ * @param {?*} child Child node being traversed
+ * @param {!number} index Index of current iteration
+ * @param {!string} nextNamePrefix The name so far of traversal
+ * @param {!function} callback Callback to be invoked on children
+ * @param {?*} traverseContext Used to pass information throughout the traversal
+ */
+function traverseChild(child, index, nextNamePrefix, callback, traverseContext) {
+  const nextName = nextNamePrefix + getComponentKey(child, index);
+  return traverseAllChildrenImpl(
+    child,
+    nextName,
+    callback,
+    traverseContext,
+  ); 
 }
 
 /**
