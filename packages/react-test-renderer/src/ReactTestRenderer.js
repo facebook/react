@@ -438,13 +438,19 @@ const ReactTestRendererFiber = {
       createNodeMock,
       tag: 'CONTAINER',
     };
-    let root: FiberRoot | null = createContainer(
-      container,
-      isConcurrent ? ConcurrentRoot : LegacyRoot,
-      false,
-    );
+    let root: FiberRoot | null = null;
+    act(() => {
+      root = createContainer(
+        container,
+        isConcurrent ? ConcurrentRoot : LegacyRoot,
+        false,
+      );
+    });
+
     invariant(root != null, 'something went wrong');
-    updateContainer(element, root, null, null);
+    act(() => {
+      updateContainer(element, root, null, null);
+    });
 
     const entry = {
       _Scheduler: Scheduler,
@@ -495,13 +501,17 @@ const ReactTestRendererFiber = {
         if (root == null || root.current == null) {
           return;
         }
-        updateContainer(newElement, root, null, null);
+        act(() => {
+          updateContainer(newElement, root, null, null);
+        });
       },
       unmount() {
         if (root == null || root.current == null) {
           return;
         }
-        updateContainer(null, root, null, null);
+        act(() => {
+          updateContainer(null, root, null, null);
+        });
         container = null;
         root = null;
       },

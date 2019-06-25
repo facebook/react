@@ -106,16 +106,17 @@ describe('ReactCache', () => {
         </Suspense>
       );
     }
+    ReactTestRenderer.act(() => {
+      ReactTestRenderer.create(<App />, {
+        unstable_isConcurrent: true,
+      });
 
-    ReactTestRenderer.create(<App />, {
-      unstable_isConcurrent: true,
+      expect(Scheduler).toFlushAndYield(['Suspend! [Hi]', 'Loading...']);
+
+      jest.advanceTimersByTime(100);
+      expect(Scheduler).toHaveYielded(['Promise resolved [Hi]']);
+      expect(Scheduler).toFlushAndYield(['Hi']);
     });
-
-    expect(Scheduler).toFlushAndYield(['Suspend! [Hi]', 'Loading...']);
-
-    jest.advanceTimersByTime(100);
-    expect(Scheduler).toHaveYielded(['Promise resolved [Hi]']);
-    expect(Scheduler).toFlushAndYield(['Hi']);
   });
 
   it('throws an error on the subsequent read if the promise is rejected', async () => {
@@ -126,24 +127,25 @@ describe('ReactCache', () => {
         </Suspense>
       );
     }
+    ReactTestRenderer.act(() => {
+      const root = ReactTestRenderer.create(<App />, {
+        unstable_isConcurrent: true,
+      });
 
-    const root = ReactTestRenderer.create(<App />, {
-      unstable_isConcurrent: true,
+      expect(Scheduler).toFlushAndYield(['Suspend! [Hi]', 'Loading...']);
+
+      textResourceShouldFail = true;
+      jest.advanceTimersByTime(100);
+      expect(Scheduler).toHaveYielded(['Promise rejected [Hi]']);
+
+      expect(Scheduler).toFlushAndThrow('Failed to load: Hi');
+      expect(Scheduler).toHaveYielded(['Error! [Hi]', 'Error! [Hi]']);
+
+      // Should throw again on a subsequent read
+      root.update(<App />);
+      expect(Scheduler).toFlushAndThrow('Failed to load: Hi');
+      expect(Scheduler).toHaveYielded(['Error! [Hi]', 'Error! [Hi]']);
     });
-
-    expect(Scheduler).toFlushAndYield(['Suspend! [Hi]', 'Loading...']);
-
-    textResourceShouldFail = true;
-    jest.advanceTimersByTime(100);
-    expect(Scheduler).toHaveYielded(['Promise rejected [Hi]']);
-
-    expect(Scheduler).toFlushAndThrow('Failed to load: Hi');
-    expect(Scheduler).toHaveYielded(['Error! [Hi]', 'Error! [Hi]']);
-
-    // Should throw again on a subsequent read
-    root.update(<App />);
-    expect(Scheduler).toFlushAndThrow('Failed to load: Hi');
-    expect(Scheduler).toHaveYielded(['Error! [Hi]', 'Error! [Hi]']);
   });
 
   it('warns if non-primitive key is passed to a resource without a hash function', () => {
@@ -159,111 +161,114 @@ describe('ReactCache', () => {
       Scheduler.yieldValue('App');
       return BadTextResource.read(['Hi', 100]);
     }
-
-    ReactTestRenderer.create(
-      <Suspense fallback={<Text text="Loading..." />}>
-        <App />
-      </Suspense>,
-      {
-        unstable_isConcurrent: true,
-      },
-    );
-
-    if (__DEV__) {
-      expect(() => {
-        expect(Scheduler).toFlushAndYield(['App', 'Loading...']);
-      }).toWarnDev(
-        [
-          'Invalid key type. Expected a string, number, symbol, or ' +
-            'boolean, but instead received: Hi,100\n\n' +
-            'To use non-primitive values as keys, you must pass a hash ' +
-            'function as the second argument to createResource().',
-        ],
-        {withoutStack: true},
+    ReactTestRenderer.act(() => {
+      ReactTestRenderer.create(
+        <Suspense fallback={<Text text="Loading..." />}>
+          <App />
+        </Suspense>,
+        {
+          unstable_isConcurrent: true,
+        },
       );
-    } else {
-      expect(Scheduler).toFlushAndYield(['App', 'Loading...']);
-    }
+
+      if (__DEV__) {
+        expect(() => {
+          expect(Scheduler).toFlushAndYield(['App', 'Loading...']);
+        }).toWarnDev(
+          [
+            'Invalid key type. Expected a string, number, symbol, or ' +
+              'boolean, but instead received: Hi,100\n\n' +
+              'To use non-primitive values as keys, you must pass a hash ' +
+              'function as the second argument to createResource().',
+          ],
+          {withoutStack: true},
+        );
+      } else {
+        expect(Scheduler).toFlushAndYield(['App', 'Loading...']);
+      }
+    });
   });
 
   it('evicts least recently used values', async () => {
     ReactCache.unstable_setGlobalCacheLimit(3);
 
-    // Render 1, 2, and 3
-    const root = ReactTestRenderer.create(
-      <Suspense fallback={<Text text="Loading..." />}>
-        <AsyncText ms={100} text={1} />
-        <AsyncText ms={100} text={2} />
-        <AsyncText ms={100} text={3} />
-      </Suspense>,
-      {
-        unstable_isConcurrent: true,
-      },
-    );
-    expect(Scheduler).toFlushAndYield([
-      'Suspend! [1]',
-      'Suspend! [2]',
-      'Suspend! [3]',
-      'Loading...',
-    ]);
-    jest.advanceTimersByTime(100);
-    expect(Scheduler).toHaveYielded([
-      'Promise resolved [1]',
-      'Promise resolved [2]',
-      'Promise resolved [3]',
-    ]);
-    expect(Scheduler).toFlushAndYield([1, 2, 3]);
-    expect(root).toMatchRenderedOutput('123');
+    ReactTestRenderer.act(() => {
+      // Render 1, 2, and 3
+      const root = ReactTestRenderer.create(
+        <Suspense fallback={<Text text="Loading..." />}>
+          <AsyncText ms={100} text={1} />
+          <AsyncText ms={100} text={2} />
+          <AsyncText ms={100} text={3} />
+        </Suspense>,
+        {
+          unstable_isConcurrent: true,
+        },
+      );
+      expect(Scheduler).toFlushAndYield([
+        'Suspend! [1]',
+        'Suspend! [2]',
+        'Suspend! [3]',
+        'Loading...',
+      ]);
+      jest.advanceTimersByTime(100);
+      expect(Scheduler).toHaveYielded([
+        'Promise resolved [1]',
+        'Promise resolved [2]',
+        'Promise resolved [3]',
+      ]);
+      expect(Scheduler).toFlushAndYield([1, 2, 3]);
+      expect(root).toMatchRenderedOutput('123');
 
-    // Render 1, 4, 5
-    root.update(
-      <Suspense fallback={<Text text="Loading..." />}>
-        <AsyncText ms={100} text={1} />
-        <AsyncText ms={100} text={4} />
-        <AsyncText ms={100} text={5} />
-      </Suspense>,
-    );
+      // Render 1, 4, 5
+      root.update(
+        <Suspense fallback={<Text text="Loading..." />}>
+          <AsyncText ms={100} text={1} />
+          <AsyncText ms={100} text={4} />
+          <AsyncText ms={100} text={5} />
+        </Suspense>,
+      );
 
-    expect(Scheduler).toFlushAndYield([
-      1,
-      'Suspend! [4]',
-      'Suspend! [5]',
-      'Loading...',
-    ]);
-    jest.advanceTimersByTime(100);
-    expect(Scheduler).toHaveYielded([
-      'Promise resolved [4]',
-      'Promise resolved [5]',
-    ]);
-    expect(Scheduler).toFlushAndYield([1, 4, 5]);
-    expect(root).toMatchRenderedOutput('145');
+      expect(Scheduler).toFlushAndYield([
+        1,
+        'Suspend! [4]',
+        'Suspend! [5]',
+        'Loading...',
+      ]);
+      jest.advanceTimersByTime(100);
+      expect(Scheduler).toHaveYielded([
+        'Promise resolved [4]',
+        'Promise resolved [5]',
+      ]);
+      expect(Scheduler).toFlushAndYield([1, 4, 5]);
+      expect(root).toMatchRenderedOutput('145');
 
-    // We've now rendered values 1, 2, 3, 4, 5, over our limit of 3. The least
-    // recently used values are 2 and 3. They should have been evicted.
+      // We've now rendered values 1, 2, 3, 4, 5, over our limit of 3. The least
+      // recently used values are 2 and 3. They should have been evicted.
 
-    root.update(
-      <Suspense fallback={<Text text="Loading..." />}>
-        <AsyncText ms={100} text={1} />
-        <AsyncText ms={100} text={2} />
-        <AsyncText ms={100} text={3} />
-      </Suspense>,
-    );
+      root.update(
+        <Suspense fallback={<Text text="Loading..." />}>
+          <AsyncText ms={100} text={1} />
+          <AsyncText ms={100} text={2} />
+          <AsyncText ms={100} text={3} />
+        </Suspense>,
+      );
 
-    expect(Scheduler).toFlushAndYield([
-      // 1 is still cached
-      1,
-      // 2 and 3 suspend because they were evicted from the cache
-      'Suspend! [2]',
-      'Suspend! [3]',
-      'Loading...',
-    ]);
-    jest.advanceTimersByTime(100);
-    expect(Scheduler).toHaveYielded([
-      'Promise resolved [2]',
-      'Promise resolved [3]',
-    ]);
-    expect(Scheduler).toFlushAndYield([1, 2, 3]);
-    expect(root).toMatchRenderedOutput('123');
+      expect(Scheduler).toFlushAndYield([
+        // 1 is still cached
+        1,
+        // 2 and 3 suspend because they were evicted from the cache
+        'Suspend! [2]',
+        'Suspend! [3]',
+        'Loading...',
+      ]);
+      jest.advanceTimersByTime(100);
+      expect(Scheduler).toHaveYielded([
+        'Promise resolved [2]',
+        'Promise resolved [3]',
+      ]);
+      expect(Scheduler).toFlushAndYield([1, 2, 3]);
+      expect(root).toMatchRenderedOutput('123');
+    });
   });
 
   it('preloads during the render phase', async () => {
@@ -273,25 +278,26 @@ describe('ReactCache', () => {
       TextResource.read(['B', 1000]);
       return <Text text="Result" />;
     }
+    ReactTestRenderer.act(() => {
+      const root = ReactTestRenderer.create(
+        <Suspense fallback={<Text text="Loading..." />}>
+          <App />
+        </Suspense>,
+        {
+          unstable_isConcurrent: true,
+        },
+      );
 
-    const root = ReactTestRenderer.create(
-      <Suspense fallback={<Text text="Loading..." />}>
-        <App />
-      </Suspense>,
-      {
-        unstable_isConcurrent: true,
-      },
-    );
+      expect(Scheduler).toFlushAndYield(['Loading...']);
 
-    expect(Scheduler).toFlushAndYield(['Loading...']);
-
-    jest.advanceTimersByTime(1000);
-    expect(Scheduler).toHaveYielded([
-      'Promise resolved [B]',
-      'Promise resolved [A]',
-    ]);
-    expect(Scheduler).toFlushAndYield(['Result']);
-    expect(root).toMatchRenderedOutput('Result');
+      jest.advanceTimersByTime(1000);
+      expect(Scheduler).toHaveYielded([
+        'Promise resolved [B]',
+        'Promise resolved [A]',
+      ]);
+      expect(Scheduler).toFlushAndYield(['Result']);
+      expect(root).toMatchRenderedOutput('Result');
+    });
   });
 
   it('if a thenable resolves multiple times, does not update the first cached value', () => {
@@ -332,35 +338,36 @@ describe('ReactCache', () => {
         throw promise;
       }
     }
+    ReactTestRenderer.act(() => {
+      const root = ReactTestRenderer.create(
+        <Suspense fallback={<Text text="Loading..." />}>
+          <BadAsyncText text="Hi" />
+        </Suspense>,
+        {
+          unstable_isConcurrent: true,
+        },
+      );
 
-    const root = ReactTestRenderer.create(
-      <Suspense fallback={<Text text="Loading..." />}>
-        <BadAsyncText text="Hi" />
-      </Suspense>,
-      {
-        unstable_isConcurrent: true,
-      },
-    );
+      expect(Scheduler).toFlushAndYield(['Suspend! [Hi]', 'Loading...']);
 
-    expect(Scheduler).toFlushAndYield(['Suspend! [Hi]', 'Loading...']);
+      resolveThenable('Hi');
+      // This thenable improperly resolves twice. We should not update the
+      // cached value.
+      resolveThenable('Hi muahahaha I am different');
 
-    resolveThenable('Hi');
-    // This thenable improperly resolves twice. We should not update the
-    // cached value.
-    resolveThenable('Hi muahahaha I am different');
+      root.update(
+        <Suspense fallback={<Text text="Loading..." />}>
+          <BadAsyncText text="Hi" />
+        </Suspense>,
+        {
+          unstable_isConcurrent: true,
+        },
+      );
 
-    root.update(
-      <Suspense fallback={<Text text="Loading..." />}>
-        <BadAsyncText text="Hi" />
-      </Suspense>,
-      {
-        unstable_isConcurrent: true,
-      },
-    );
-
-    expect(Scheduler).toHaveYielded([]);
-    expect(Scheduler).toFlushAndYield(['Hi']);
-    expect(root).toMatchRenderedOutput('Hi');
+      expect(Scheduler).toHaveYielded([]);
+      expect(Scheduler).toFlushAndYield(['Hi']);
+      expect(root).toMatchRenderedOutput('Hi');
+    });
   });
 
   it('throws if read is called outside render', () => {

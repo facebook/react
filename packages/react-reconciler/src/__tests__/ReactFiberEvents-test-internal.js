@@ -807,23 +807,24 @@ describe('ReactFiberEvents', () => {
         Scheduler.yieldValue(props.text);
         return props.text;
       }
+      ReactTestRenderer.act(() => {
+        ReactTestRenderer.create(
+          <React.Suspense fallback={<Text text="Loading..." />}>
+            <EventComponent>
+              <div>
+                <Async />
+                <Text text="Sibling" />
+              </div>
+            </EventComponent>
+          </React.Suspense>,
+          {
+            unstable_isConcurrent: true,
+          },
+        );
 
-      ReactTestRenderer.create(
-        <React.Suspense fallback={<Text text="Loading..." />}>
-          <EventComponent>
-            <div>
-              <Async />
-              <Text text="Sibling" />
-            </div>
-          </EventComponent>
-        </React.Suspense>,
-        {
-          unstable_isConcurrent: true,
-        },
-      );
-
-      expect(Scheduler).toFlushAndYieldThrough(['Suspend!']);
-      resolveThenable();
+        expect(Scheduler).toFlushAndYieldThrough(['Suspend!']);
+        resolveThenable();
+      });
     });
   });
 
