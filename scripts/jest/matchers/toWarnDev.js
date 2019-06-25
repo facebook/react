@@ -38,6 +38,7 @@ const createMatcherFor = consoleMethod =>
       }
 
       const withoutStack = options.withoutStack;
+      const logAllErrors = options.logAllErrors;
       const warningsWithoutComponentStack = [];
       const warningsWithComponentStack = [];
       const unexpectedWarnings = [];
@@ -58,6 +59,7 @@ const createMatcherFor = consoleMethod =>
         // Ignore uncaught errors reported by jsdom
         // and React addendums because they're too noisy.
         if (
+          !logAllErrors &&
           consoleMethod === 'error' &&
           shouldIgnoreConsoleError(format, args)
         ) {
