@@ -439,16 +439,19 @@ const ReactTestRendererFiber = {
       tag: 'CONTAINER',
     };
     let root: FiberRoot | null = null;
+    // make flow happy by retaining a reference to container
+    // before using it inside act()
+    const rootContainer = container;
     act(() => {
       root = createContainer(
-        container,
+        rootContainer,
         isConcurrent ? ConcurrentRoot : LegacyRoot,
         false,
       );
     });
 
-    invariant(root != null, 'something went wrong');
     act(() => {
+      invariant(root != null, 'something went wrong');
       updateContainer(element, root, null, null);
     });
 
@@ -498,22 +501,22 @@ const ReactTestRendererFiber = {
         return toTree(root.current);
       },
       update(newElement: React$Element<any>) {
-        if (root == null || root.current == null) {
-          return;
-        }
         act(() => {
+          if (root == null || root.current == null) {
+            return;
+          }
           updateContainer(newElement, root, null, null);
         });
       },
       unmount() {
-        if (root == null || root.current == null) {
-          return;
-        }
         act(() => {
+          if (root == null || root.current == null) {
+            return;
+          }
           updateContainer(null, root, null, null);
+          container = null;
+          root = null;
         });
-        container = null;
-        root = null;
       },
       getInstance() {
         if (root == null || root.current == null) {

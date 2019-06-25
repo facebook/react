@@ -65,7 +65,7 @@ function flushWorkAndMicroTasks(onDone: (err: ?Error) => void) {
 
 let actingUpdatesScopeDepth = 0;
 
-function act(callback: () => Thenable) {
+function act(callback: () => Thenable | void) {
   let previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
   let previousActingUpdatesSigil;
   actingUpdatesScopeDepth++;
@@ -127,10 +127,11 @@ function act(callback: () => Thenable) {
     // in the async case, the returned thenable runs the callback, flushes
     // effects and  microtasks in a loop until flushPassiveEffects() === false,
     // and cleans up
+
     return {
       then(resolve: () => void, reject: (?Error) => void) {
         called = true;
-        result.then(
+        ((result: any): Thenable).then(
           () => {
             if (actingUpdatesScopeDepth > 1) {
               onDone();
