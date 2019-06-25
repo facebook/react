@@ -1002,8 +1002,23 @@ const PressResponder: ReactDOMEventResponder = {
       }
 
       // CANCEL
+      case 'scroll': {
+        const pressTarget = state.pressTarget;
+        const scrollTarget = nativeEvent.target;
+        const doc = context.getActiveDocument();
+        // If the scroll target is the document or if the press target
+        // is inside the scroll target, then this a scroll that should
+        // trigger a cancel.
+        if (
+          pressTarget !== null &&
+          (scrollTarget === doc ||
+            context.isTargetWithinElement(pressTarget, scrollTarget))
+        ) {
+          dispatchCancel(event, context, props, state);
+        }
+        break;
+      }
       case 'pointercancel':
-      case 'scroll':
       case 'touchcancel':
       case 'dragstart': {
         dispatchCancel(event, context, props, state);
