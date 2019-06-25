@@ -2676,14 +2676,16 @@ describe('ReactFresh', () => {
       expect(container.firstChild.nextSibling.nextSibling).toBe(secondP);
 
       // Perform a hot update that fixes the error.
-      patch(() => {
-        function Hello() {
-          const [x] = React.useState('');
-          React.useEffect(() => {}, []); // Removes the bad effect code.
-          x.slice(); // Doesn't throw initially.
-          return <h1>Fixed!</h1>;
-        }
-        $RefreshReg$(Hello, 'Hello');
+      act(() => {
+        patch(() => {
+          function Hello() {
+            const [x] = React.useState('');
+            React.useEffect(() => {}, []); // Removes the bad effect code.
+            x.slice(); // Doesn't throw initially.
+            return <h1>Fixed!</h1>;
+          }
+          $RefreshReg$(Hello, 'Hello');
+        });
       });
 
       // This should remount the error boundary (but not anything above it).
@@ -2693,17 +2695,110 @@ describe('ReactFresh', () => {
 
       // Verify next hot reload doesn't remount anything.
       const helloNode = container.firstChild.nextSibling;
+      act(() => {
+        patch(() => {
+          function Hello() {
+            const [x] = React.useState('');
+            React.useEffect(() => {}, []);
+            x.slice();
+            return <h1>Nice.</h1>;
+          }
+          $RefreshReg$(Hello, 'Hello');
+        });
+      });
+
+      expect(container.firstChild.nextSibling).toBe(helloNode);
+      expect(helloNode.textContent).toBe('Nice.');
+    }
+  });
+
+  it('remounts a failed root on update', () => {
+    if (__DEV__) {
+      render(() => {
+        function Hello() {
+          return <h1>Hi</h1>;
+        }
+        $RefreshReg$(Hello, 'Hello');
+
+        return Hello;
+      });
+      expect(container.innerHTML).toBe('<h1>Hi</h1>');
+
+      // Perform a hot update that fails.
+      // This removes the root.
+      expect(() => {
+        patch(() => {
+          function Hello() {
+            throw new Error('No');
+          }
+          $RefreshReg$(Hello, 'Hello');
+        });
+      }).toThrow('No');
+      expect(container.innerHTML).toBe('');
+
+      // A bad retry
+      expect(() => {
+        patch(() => {
+          function Hello() {
+            throw new Error('Not yet');
+          }
+          $RefreshReg$(Hello, 'Hello');
+        });
+      }).toThrow('Not yet');
+      expect(container.innerHTML).toBe('');
+
+      // Perform a hot update that fixes the error.
       patch(() => {
         function Hello() {
-          const [x] = React.useState('');
-          React.useEffect(() => {}, []);
-          x.slice();
+          return <h1>Fixed!</h1>;
+        }
+        $RefreshReg$(Hello, 'Hello');
+      });
+      // This should remount the root.
+      expect(container.innerHTML).toBe('<h1>Fixed!</h1>');
+
+      // Verify next hot reload doesn't remount anything.
+      let helloNode = container.firstChild;
+      patch(() => {
+        function Hello() {
           return <h1>Nice.</h1>;
         }
         $RefreshReg$(Hello, 'Hello');
       });
-      expect(container.firstChild.nextSibling).toBe(helloNode);
+      expect(container.firstChild).toBe(helloNode);
       expect(helloNode.textContent).toBe('Nice.');
+
+      // Break again.
+      expect(() => {
+        patch(() => {
+          function Hello() {
+            throw new Error('Oops');
+          }
+          $RefreshReg$(Hello, 'Hello');
+        });
+      }).toThrow('Oops');
+      expect(container.innerHTML).toBe('');
+
+      // Perform a hot update that fixes the error.
+      patch(() => {
+        function Hello() {
+          return <h1>At last.</h1>;
+        }
+        $RefreshReg$(Hello, 'Hello');
+      });
+      // This should remount the root.
+      expect(container.innerHTML).toBe('<h1>At last.</h1>');
+
+      // Check we don't attempt to reverse an intentional unmount.
+      ReactDOM.unmountComponentAtNode(container);
+      expect(container.innerHTML).toBe('');
+      patch(() => {
+        function Hello() {
+          return <h1>Never mind me!</h1>;
+        }
+        $RefreshReg$(Hello, 'Hello');
+      });
+      expect(container.innerHTML).toBe('');
     }
   });
 

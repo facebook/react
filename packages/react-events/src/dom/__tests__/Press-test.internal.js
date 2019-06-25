@@ -2365,6 +2365,31 @@ describe('Event responder: Press', () => {
         expect.objectContaining({defaultPrevented: false}),
       );
     });
+
+    it('warns when preventDefault is used in an event hook', () => {
+      const onPress = jest.fn();
+      const preventDefault = jest.fn();
+      const ref = React.createRef();
+      const Component = () => {
+        React.unstable_useEvent(Press, {preventDefault: false});
+
+        return (
+          <Press onPress={onPress}>
+            <a href="#" ref={ref} />
+          </Press>
+        );
+      };
+      ReactDOM.render(<Component />, container);
+
+      expect(() => {
+        ref.current.dispatchEvent(createEvent('pointerdown'));
+        ref.current.dispatchEvent(createEvent('pointerup'));
+        ref.current.dispatchEvent(createEvent('click', {preventDefault}));
+      }).toWarnDev(
+        '"preventDefault" prop cannot be passed to Press event hooks. This will result in a no-op.',
+        {withoutStack: true},
+      );
+    });
   });
 
   describe('responder cancellation', () => {
@@ -2431,6 +2456,60 @@ describe('Event responder: Press', () => {
       jest.runAllTimers();
       expect(onLongPress).not.toBeCalled();
     });
+  });
+
+  it('does end on "scroll" to document', () => {
+    const onPressEnd = jest.fn();
+    const ref = React.createRef();
+    const element = (
+      <div>
+        <Press onPressEnd={onPressEnd}>
+          <a href="#" ref={ref} />
+        </Press>
+      </div>
+    );
+    ReactDOM.render(element, container);
+
+    ref.current.dispatchEvent(createEvent('pointerdown'));
+    document.dispatchEvent(createEvent('scroll'));
+    expect(onPressEnd).toHaveBeenCalledTimes(1);
+  });
+
+  it('does end on "scroll" to a parent container', () => {
+    const onPressEnd = jest.fn();
+    const ref = React.createRef();
+    const containerRef = React.createRef();
+    const element = (
+      <div ref={containerRef}>
+        <Press onPressEnd={onPressEnd}>
+          <a href="#" ref={ref} />
+        </Press>
+      </div>
+    );
+    ReactDOM.render(element, container);
+
+    ref.current.dispatchEvent(createEvent('pointerdown'));
+    containerRef.current.dispatchEvent(createEvent('scroll'));
+    expect(onPressEnd).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not end on "scroll" to an element outside', () => {
+    const onPressEnd = jest.fn();
+    const ref = React.createRef();
+    const outsideRef = React.createRef();
+    const element = (
+      <div>
+        <Press onPressEnd={onPressEnd}>
+          <a href="#" ref={ref} />
+        </Press>
+        <span ref={outsideRef} />
+      </div>
+    );
+    ReactDOM.render(element, container);
+
+    ref.current.dispatchEvent(createEvent('pointerdown'));
+    outsideRef.current.dispatchEvent(createEvent('scroll'));
+    expect(onPressEnd).not.toBeCalled();
   });
 
   it('expect displayName to show up for event component', () => {
@@ -2922,6 +3001,30 @@ describe('Event responder: Press', () => {
     });
   });
 
+  it('warns when preventContextMenu is used in an event hook', () => {
+    const ref = React.createRef();
+    const Component = () => {
+      React.unstable_useEvent(Press, {preventContextMenu: false});
+
+      return (
+        <Press preventContextMenu={true}>
+          <div ref={ref} />
+        </Press>
+      );
+    };
+    ReactDOM.render(<Component />, container);
+
+    expect(() => {
+      ref.current.dispatchEvent(
+        createEvent('pointerdown', {pointerType: 'mouse', button: 2}),
+      );
+      ref.current.dispatchEvent(createEvent('contextmenu'));
+    }).toWarnDev(
+      '"preventContextMenu" prop cannot be passed to Press event hooks. This will result in a no-op.',
+      {withoutStack: true},
+    );
+  });
+
   it('should work correctly with stopPropagation set to true', () => {
     const ref = React.createRef();
     const element = (
@@ -2935,6 +3038,33 @@ describe('Event responder: Press', () => {
 
     ref.current.dispatchEvent(
       createEvent('pointerdown', {pointerType: 'mouse', button: 0}),
+    );
+    container.removeEventListener('pointerdown', pointerDownEvent);
+    expect(pointerDownEvent).toHaveBeenCalledTimes(0);
+  });
+
+  it('warns when stopPropagation is used in an event hook', () => {
+    const ref = React.createRef();
+    const Component = () => {
+      React.unstable_useEvent(Press, {stopPropagation: false});
+
+      return (
+        <Press stopPropagation={true}>
+          <a href="#" ref={ref} />
+        </Press>
+      );
+    };
+    const pointerDownEvent = jest.fn();
+    container.addEventListener('pointerdown', pointerDownEvent);
+    ReactDOM.render(<Component />, container);
+
+    expect(() => {
+      ref.current.dispatchEvent(
+        createEvent('pointerdown', {pointerType: 'mouse', button: 0}),
+      );
+    }).toWarnDev(
+      '"stopPropagation" prop cannot be passed to Press event hooks. This will result in a no-op.',
+      {withoutStack: true},
     );
     container.removeEventListener('pointerdown', pointerDownEvent);
     expect(pointerDownEvent).toHaveBeenCalledTimes(0);

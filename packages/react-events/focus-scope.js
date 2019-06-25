@@ -9,6 +9,6 @@
 
 'use strict';
 
-const FocusScope = require('./src/FocusScope');
+const FocusScope = require('./src/dom/FocusScope');
 
 module.exports = FocusScope.default || FocusScope;

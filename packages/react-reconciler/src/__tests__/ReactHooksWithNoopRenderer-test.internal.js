@@ -622,21 +622,25 @@ describe('ReactHooksWithNoopRenderer', () => {
         });
         return <Text text={'Count: ' + props.count} />;
       }
-      ReactNoop.render(<Counter count={0} />, () =>
-        Scheduler.yieldValue('Sync effect'),
-      );
-      expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
-      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
-      // Effects are deferred until after the commit
-      expect(Scheduler).toFlushAndYield(['Passive effect [0]']);
+      act(() => {
+        ReactNoop.render(<Counter count={0} />, () =>
+          Scheduler.yieldValue('Sync effect'),
+        );
+        expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
+        expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+        // Effects are deferred until after the commit
+        expect(Scheduler).toFlushAndYield(['Passive effect [0]']);
+      });
 
-      ReactNoop.render(<Counter count={1} />, () =>
-        Scheduler.yieldValue('Sync effect'),
-      );
-      expect(Scheduler).toFlushAndYieldThrough(['Count: 1', 'Sync effect']);
-      expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
-      // Effects are deferred until after the commit
-      expect(Scheduler).toFlushAndYield(['Passive effect [1]']);
+      act(() => {
+        ReactNoop.render(<Counter count={1} />, () =>
+          Scheduler.yieldValue('Sync effect'),
+        );
+        expect(Scheduler).toFlushAndYieldThrough(['Count: 1', 'Sync effect']);
+        expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
+        // Effects are deferred until after the commit
+        expect(Scheduler).toFlushAndYield(['Passive effect [1]']);
+      });
     });
 
     it('flushes passive effects even with sibling deletions', () => {
@@ -653,25 +657,24 @@ describe('ReactHooksWithNoopRenderer', () => {
         return <Text text="Passive" />;
       }
       let passive = <PassiveEffect key="p" />;
-      ReactNoop.render([<LayoutEffect key="l" />, passive]);
-      expect(Scheduler).toFlushAndYieldThrough([
-        'Layout',
-        'Passive',
-        'Layout effect',
-      ]);
-      expect(ReactNoop.getChildren()).toEqual([
-        span('Layout'),
-        span('Passive'),
-      ]);
-
-      // Destroying the first child shouldn't prevent the passive effect from
-      // being executed
-      ReactNoop.render([passive]);
-      expect(Scheduler).toFlushAndYield(['Passive effect']);
-      expect(ReactNoop.getChildren()).toEqual([span('Passive')]);
-
-      // (No effects are left to flush.)
-      ReactNoop.flushPassiveEffects();
+      act(() => {
+        ReactNoop.render([<LayoutEffect key="l" />, passive]);
+        expect(Scheduler).toFlushAndYieldThrough([
+          'Layout',
+          'Passive',
+          'Layout effect',
+        ]);
+        expect(ReactNoop.getChildren()).toEqual([
+          span('Layout'),
+          span('Passive'),
+        ]);
+        // Destroying the first child shouldn't prevent the passive effect from
+        // being executed
+        ReactNoop.render([passive]);
+        expect(Scheduler).toFlushAndYield(['Passive effect']);
+        expect(ReactNoop.getChildren()).toEqual([span('Passive')]);
+      });
+      // exiting act calls flushPassiveEffects(), but there are none left to flush.
       expect(Scheduler).toHaveYielded([]);
     });
 
@@ -728,18 +731,20 @@ describe('ReactHooksWithNoopRenderer', () => {
         });
         return <Text text="Layout" />;
       }
-      ReactNoop.render([<PassiveEffect key="p" />, <LayoutEffect key="l" />]);
-      expect(Scheduler).toFlushAndYield([
-        'Passive',
-        'Layout',
-        'Layout effect',
-        'Passive effect',
-        'New Root',
-      ]);
-      expect(ReactNoop.getChildren()).toEqual([
-        span('Passive'),
-        span('Layout'),
-      ]);
+      act(() => {
+        ReactNoop.render([<PassiveEffect key="p" />, <LayoutEffect key="l" />]);
+        expect(Scheduler).toFlushAndYield([
+          'Passive',
+          'Layout',
+          'Layout effect',
+          'Passive effect',
+          'New Root',
+        ]);
+        expect(ReactNoop.getChildren()).toEqual([
+          span('Passive'),
+          span('Layout'),
+        ]);
+      });
     });
 
     it(
@@ -762,25 +767,25 @@ describe('ReactHooksWithNoopRenderer', () => {
           });
           return <Text text={props.count} />;
         }
-        ReactNoop.render(<Counter count={0} />, () =>
-          Scheduler.yieldValue('Sync effect'),
-        );
-        expect(Scheduler).toFlushAndYieldThrough([0, 'Sync effect']);
-        expect(ReactNoop.getChildren()).toEqual([span(0)]);
+        act(() => {
+          ReactNoop.render(<Counter count={0} />, () =>
+            Scheduler.yieldValue('Sync effect'),
+          );
+          expect(Scheduler).toFlushAndYieldThrough([0, 'Sync effect']);
+          expect(ReactNoop.getChildren()).toEqual([span(0)]);
+          // Before the effects have a chance to flush, schedule another update
+          ReactNoop.render(<Counter count={1} />, () =>
+            Scheduler.yieldValue('Sync effect'),
+          );
+          expect(Scheduler).toFlushAndYieldThrough([
+            // The previous effect flushes before the reconciliation
+            'Committed state when effect was fired: 0',
+            1,
+            'Sync effect',
+          ]);
+          expect(ReactNoop.getChildren()).toEqual([span(1)]);
+        });
 
-        // Before the effects have a chance to flush, schedule another update
-        ReactNoop.render(<Counter count={1} />, () =>
-          Scheduler.yieldValue('Sync effect'),
-        );
-        expect(Scheduler).toFlushAndYieldThrough([
-          // The previous effect flushes before the reconciliation
-          'Committed state when effect was fired: 0',
-          1,
-          'Sync effect',
-        ]);
-        expect(ReactNoop.getChildren()).toEqual([span(1)]);
-
-        ReactNoop.flushPassiveEffects();
         expect(Scheduler).toHaveYielded([
           'Committed state when effect was fired: 1',
         ]);
@@ -799,26 +804,30 @@ describe('ReactHooksWithNoopRenderer', () => {
         );
         return <Text text={'Count: ' + count} />;
       }
-      ReactNoop.render(<Counter count={0} />, () =>
-        Scheduler.yieldValue('Sync effect'),
-      );
-      expect(Scheduler).toFlushAndYieldThrough([
-        'Count: (empty)',
-        'Sync effect',
-      ]);
-      expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
-      ReactNoop.flushPassiveEffects();
-      expect(Scheduler).toHaveYielded(['Schedule update [0]']);
-      expect(Scheduler).toFlushAndYield(['Count: 0']);
+      act(() => {
+        ReactNoop.render(<Counter count={0} />, () =>
+          Scheduler.yieldValue('Sync effect'),
+        );
+        expect(Scheduler).toFlushAndYieldThrough([
+          'Count: (empty)',
+          'Sync effect',
+        ]);
+        expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
+        ReactNoop.flushPassiveEffects();
+        expect(Scheduler).toHaveYielded(['Schedule update [0]']);
+        expect(Scheduler).toFlushAndYield(['Count: 0']);
+      });
 
-      ReactNoop.render(<Counter count={1} />, () =>
-        Scheduler.yieldValue('Sync effect'),
-      );
-      expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
-      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
-      ReactNoop.flushPassiveEffects();
-      expect(Scheduler).toHaveYielded(['Schedule update [1]']);
-      expect(Scheduler).toFlushAndYield(['Count: 1']);
+      act(() => {
+        ReactNoop.render(<Counter count={1} />, () =>
+          Scheduler.yieldValue('Sync effect'),
+        );
+        expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
+        expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+        ReactNoop.flushPassiveEffects();
+        expect(Scheduler).toHaveYielded(['Schedule update [1]']);
+        expect(Scheduler).toFlushAndYield(['Count: 1']);
+      });
     });
 
     it('updates have async priority even if effects are flushed early', () => {
@@ -833,32 +842,33 @@ describe('ReactHooksWithNoopRenderer', () => {
         );
         return <Text text={'Count: ' + count} />;
       }
-      ReactNoop.render(<Counter count={0} />, () =>
-        Scheduler.yieldValue('Sync effect'),
-      );
-      expect(Scheduler).toFlushAndYieldThrough([
-        'Count: (empty)',
-        'Sync effect',
-      ]);
-      expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
+      act(() => {
+        ReactNoop.render(<Counter count={0} />, () =>
+          Scheduler.yieldValue('Sync effect'),
+        );
+        expect(Scheduler).toFlushAndYieldThrough([
+          'Count: (empty)',
+          'Sync effect',
+        ]);
+        expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
 
-      // Rendering again should flush the previous commit's effects
-      ReactNoop.render(<Counter count={1} />, () =>
-        Scheduler.yieldValue('Sync effect'),
-      );
-      expect(Scheduler).toFlushAndYieldThrough([
-        'Schedule update [0]',
-        'Count: 0',
-      ]);
-      expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
+        // Rendering again should flush the previous commit's effects
+        ReactNoop.render(<Counter count={1} />, () =>
+          Scheduler.yieldValue('Sync effect'),
+        );
+        expect(Scheduler).toFlushAndYieldThrough([
+          'Schedule update [0]',
+          'Count: 0',
+        ]);
+        expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
 
-      expect(Scheduler).toFlushAndYieldThrough(['Sync effect']);
-      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
-
-      ReactNoop.flushPassiveEffects();
-      expect(Scheduler).toHaveYielded(['Schedule update [1]']);
-      expect(Scheduler).toFlushAndYield(['Count: 1']);
-      expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
+        expect(Scheduler).toFlushAndYieldThrough(['Sync effect']);
+        expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+        ReactNoop.flushPassiveEffects();
+        expect(Scheduler).toHaveYielded(['Schedule update [1]']);
+        expect(Scheduler).toFlushAndYield(['Count: 1']);
+        expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
+      });
     });
 
     it('flushes passive effects when flushing discrete updates', () => {
@@ -873,15 +883,18 @@ describe('ReactHooksWithNoopRenderer', () => {
         return <Text text={'Count: ' + count} />;
       }
 
-      ReactNoop.render(<Counter count={0} />, () =>
-        Scheduler.yieldValue('Sync effect'),
-      );
-      expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
-      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+      // we explicitly wait for missing act() warnings here since
+      // it's a lot harder to simulate this condition inside an act scope
+      expect(() => {
+        ReactNoop.render(<Counter count={0} />, () =>
+          Scheduler.yieldValue('Sync effect'),
+        );
+        expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
+        expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+      }).toWarnDev(['An update to Counter ran an effect']);
 
       // A discrete event forces the passive effect to be flushed --
       // updateCount(1) happens first, so 2 wins.
-
       ReactNoop.flushDiscreteUpdates();
       ReactNoop.discreteUpdates(() => {
         // (use batchedUpdates to silence the act() warning)
@@ -890,7 +903,13 @@ describe('ReactHooksWithNoopRenderer', () => {
         });
       });
       expect(Scheduler).toHaveYielded(['Will set count to 1']);
-      expect(Scheduler).toFlushAndYield(['Count: 2']);
+      expect(() => {
+        expect(Scheduler).toFlushAndYield(['Count: 2']);
+      }).toWarnDev([
+        'An update to Counter ran an effect',
+        'An update to Counter ran an effect',
+      ]);
+
       expect(ReactNoop.getChildren()).toEqual([span('Count: 2')]);
     });
 
@@ -921,17 +940,21 @@ describe('ReactHooksWithNoopRenderer', () => {
       }
 
       const tracingEvent = {id: 0, name: 'hello', timestamp: 0};
-      SchedulerTracing.unstable_trace(
-        tracingEvent.name,
-        tracingEvent.timestamp,
-        () => {
-          ReactNoop.render(<Counter count={0} />, () =>
-            Scheduler.yieldValue('Sync effect'),
-          );
-        },
-      );
-      expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
-      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+      // we explicitly wait for missing act() warnings here since
+      // it's a lot harder to simulate this condition inside an act scope
+      expect(() => {
+        SchedulerTracing.unstable_trace(
+          tracingEvent.name,
+          tracingEvent.timestamp,
+          () => {
+            ReactNoop.render(<Counter count={0} />, () =>
+              Scheduler.yieldValue('Sync effect'),
+            );
+          },
+        );
+        expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
+        expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+      }).toWarnDev(['An update to Counter ran an effect']);
 
       expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(0);
 
@@ -939,11 +962,19 @@ describe('ReactHooksWithNoopRenderer', () => {
       // updateCount(1) happens first, so 2 wins.
       ReactNoop.flushDiscreteUpdates();
       ReactNoop.discreteUpdates(() => {
-        // use batchedUpdates to silence the act warning
-        ReactNoop.batchedUpdates(() => _updateCount(2));
+        // (use batchedUpdates to silence the act() warning)
+        ReactNoop.batchedUpdates(() => {
+          _updateCount(2);
+        });
       });
       expect(Scheduler).toHaveYielded(['Will set count to 1']);
-      expect(Scheduler).toFlushAndYield(['Count: 2']);
+      expect(() => {
+        expect(Scheduler).toFlushAndYield(['Count: 2']);
+      }).toWarnDev([
+        'An update to Counter ran an effect',
+        'An update to Counter ran an effect',
+      ]);
+
       expect(ReactNoop.getChildren()).toEqual([span('Count: 2')]);
 
       expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
@@ -971,12 +1002,14 @@ describe('ReactHooksWithNoopRenderer', () => {
           );
           return <Text text={'Count: ' + count} />;
         }
-        ReactNoop.renderLegacySyncRoot(<Counter count={0} />);
-        // Even in sync mode, effects are deferred until after paint
-        expect(Scheduler).toHaveYielded(['Count: (empty)']);
-        expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
-        // Now fire the effects
-        ReactNoop.flushPassiveEffects();
+        act(() => {
+          ReactNoop.renderLegacySyncRoot(<Counter count={0} />);
+          // Even in sync mode, effects are deferred until after paint
+          expect(Scheduler).toFlushAndYieldThrough(['Count: (empty)']);
+          expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
+        });
+
+        // effects get fored on exiting act()
         // There were multiple updates, but there should only be a
         // single render
         expect(Scheduler).toHaveYielded(['Count: 0']);
@@ -998,18 +1031,19 @@ describe('ReactHooksWithNoopRenderer', () => {
         );
         return <Text text={'Count: ' + count} />;
       }
-      ReactNoop.render(<Counter count={0} />, () =>
-        Scheduler.yieldValue('Sync effect'),
-      );
-      expect(Scheduler).toFlushAndYieldThrough([
-        'Count: (empty)',
-        'Sync effect',
-      ]);
-      expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
-
-      expect(() => {
-        ReactNoop.flushPassiveEffects();
-      }).toThrow('flushSync was called from inside a lifecycle method');
+      act(() => {
+        ReactNoop.render(<Counter count={0} />, () =>
+          Scheduler.yieldValue('Sync effect'),
+        );
+        expect(Scheduler).toFlushAndYieldThrough([
+          'Count: (empty)',
+          'Sync effect',
+        ]);
+        expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
+        expect(() => {
+          ReactNoop.flushPassiveEffects();
+        }).toThrow('flushSync was called from inside a lifecycle method');
+      });
     });
 
     it('unmounts previous effect', () => {
@@ -1022,20 +1056,24 @@ describe('ReactHooksWithNoopRenderer', () => {
         });
         return <Text text={'Count: ' + props.count} />;
       }
-      ReactNoop.render(<Counter count={0} />, () =>
-        Scheduler.yieldValue('Sync effect'),
-      );
-      expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
-      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
-      ReactNoop.flushPassiveEffects();
+      act(() => {
+        ReactNoop.render(<Counter count={0} />, () =>
+          Scheduler.yieldValue('Sync effect'),
+        );
+        expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
+        expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+      });
+
       expect(Scheduler).toHaveYielded(['Did create [0]']);
 
-      ReactNoop.render(<Counter count={1} />, () =>
-        Scheduler.yieldValue('Sync effect'),
-      );
-      expect(Scheduler).toFlushAndYieldThrough(['Count: 1', 'Sync effect']);
-      expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
-      ReactNoop.flushPassiveEffects();
+      act(() => {
+        ReactNoop.render(<Counter count={1} />, () =>
+          Scheduler.yieldValue('Sync effect'),
+        );
+        expect(Scheduler).toFlushAndYieldThrough(['Count: 1', 'Sync effect']);
+        expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
+      });
+
       expect(Scheduler).toHaveYielded(['Did destroy [0]', 'Did create [1]']);
     });
 
@@ -1049,12 +1087,14 @@ describe('ReactHooksWithNoopRenderer', () => {
         });
         return <Text text={'Count: ' + props.count} />;
       }
-      ReactNoop.render(<Counter count={0} />, () =>
-        Scheduler.yieldValue('Sync effect'),
-      );
-      expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
-      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
-      ReactNoop.flushPassiveEffects();
+      act(() => {
+        ReactNoop.render(<Counter count={0} />, () =>
+          Scheduler.yieldValue('Sync effect'),
+        );
+        expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
+        expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+      });
+
       expect(Scheduler).toHaveYielded(['Did create [0]']);
 
       ReactNoop.render(null);
@@ -1072,20 +1112,24 @@ describe('ReactHooksWithNoopRenderer', () => {
         }, []);
         return <Text text={'Count: ' + props.count} />;
       }
-      ReactNoop.render(<Counter count={0} />, () =>
-        Scheduler.yieldValue('Sync effect'),
-      );
-      expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
-      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
-      ReactNoop.flushPassiveEffects();
+      act(() => {
+        ReactNoop.render(<Counter count={0} />, () =>
+          Scheduler.yieldValue('Sync effect'),
+        );
+        expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
+        expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+      });
+
       expect(Scheduler).toHaveYielded(['Did create [0]']);
 
-      ReactNoop.render(<Counter count={1} />, () =>
-        Scheduler.yieldValue('Sync effect'),
-      );
-      expect(Scheduler).toFlushAndYieldThrough(['Count: 1', 'Sync effect']);
-      expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
-      ReactNoop.flushPassiveEffects();
+      act(() => {
+        ReactNoop.render(<Counter count={1} />, () =>
+          Scheduler.yieldValue('Sync effect'),
+        );
+        expect(Scheduler).toFlushAndYieldThrough(['Count: 1', 'Sync effect']);
+        expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
+      });
+
       expect(Scheduler).toHaveYielded([]);
 
       ReactNoop.render(null);
@@ -1104,20 +1148,24 @@ describe('ReactHooksWithNoopRenderer', () => {
         useEffect(effect);
         return <Text text={'Count: ' + props.count} />;
       }
-      ReactNoop.render(<Counter count={0} />, () =>
-        Scheduler.yieldValue('Sync effect'),
-      );
-      expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
-      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
-      ReactNoop.flushPassiveEffects();
+      act(() => {
+        ReactNoop.render(<Counter count={0} />, () =>
+          Scheduler.yieldValue('Sync effect'),
+        );
+        expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
+        expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+      });
+
       expect(Scheduler).toHaveYielded(['Did create']);
 
-      ReactNoop.render(<Counter count={1} />, () =>
-        Scheduler.yieldValue('Sync effect'),
-      );
-      expect(Scheduler).toFlushAndYieldThrough(['Count: 1', 'Sync effect']);
-      expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
-      ReactNoop.flushPassiveEffects();
+      act(() => {
+        ReactNoop.render(<Counter count={1} />, () =>
+          Scheduler.yieldValue('Sync effect'),
+        );
+        expect(Scheduler).toFlushAndYieldThrough(['Count: 1', 'Sync effect']);
+        expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
+      });
+
       expect(Scheduler).toHaveYielded(['Did destroy', 'Did create']);
 
       ReactNoop.render(null);
@@ -1139,42 +1187,50 @@ describe('ReactHooksWithNoopRenderer', () => {
         );
         return <Text text={text} />;
       }
-      ReactNoop.render(<Counter label="Count" count={0} />, () =>
-        Scheduler.yieldValue('Sync effect'),
-      );
-      expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
-      ReactNoop.flushPassiveEffects();
+      act(() => {
+        ReactNoop.render(<Counter label="Count" count={0} />, () =>
+          Scheduler.yieldValue('Sync effect'),
+        );
+        expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
+      });
+
       expect(Scheduler).toHaveYielded(['Did create [Count: 0]']);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
 
-      ReactNoop.render(<Counter label="Count" count={1} />, () =>
-        Scheduler.yieldValue('Sync effect'),
-      );
-      // Count changed
-      expect(Scheduler).toFlushAndYieldThrough(['Count: 1', 'Sync effect']);
-      expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
-      ReactNoop.flushPassiveEffects();
+      act(() => {
+        ReactNoop.render(<Counter label="Count" count={1} />, () =>
+          Scheduler.yieldValue('Sync effect'),
+        );
+        // Count changed
+        expect(Scheduler).toFlushAndYieldThrough(['Count: 1', 'Sync effect']);
+        expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
+      });
+
       expect(Scheduler).toHaveYielded([
         'Did destroy [Count: 0]',
         'Did create [Count: 1]',
       ]);
 
-      ReactNoop.render(<Counter label="Count" count={1} />, () =>
-        Scheduler.yieldValue('Sync effect'),
-      );
-      // Nothing changed, so no effect should have fired
-      expect(Scheduler).toFlushAndYieldThrough(['Count: 1', 'Sync effect']);
-      ReactNoop.flushPassiveEffects();
+      act(() => {
+        ReactNoop.render(<Counter label="Count" count={1} />, () =>
+          Scheduler.yieldValue('Sync effect'),
+        );
+        // Nothing changed, so no effect should have fired
+        expect(Scheduler).toFlushAndYieldThrough(['Count: 1', 'Sync effect']);
+      });
+
       expect(Scheduler).toHaveYielded([]);
       expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
 
-      ReactNoop.render(<Counter label="Total" count={1} />, () =>
-        Scheduler.yieldValue('Sync effect'),
-      );
-      // Label changed
-      expect(Scheduler).toFlushAndYieldThrough(['Total: 1', 'Sync effect']);
-      expect(ReactNoop.getChildren()).toEqual([span('Total: 1')]);
-      ReactNoop.flushPassiveEffects();
+      act(() => {
+        ReactNoop.render(<Counter label="Total" count={1} />, () =>
+          Scheduler.yieldValue('Sync effect'),
+        );
+        // Label changed
+        expect(Scheduler).toFlushAndYieldThrough(['Total: 1', 'Sync effect']);
+        expect(ReactNoop.getChildren()).toEqual([span('Total: 1')]);
+      });
+
       expect(Scheduler).toHaveYielded([
         'Did destroy [Count: 1]',
         'Did create [Total: 1]',
@@ -1191,20 +1247,23 @@ describe('ReactHooksWithNoopRenderer', () => {
         });
         return <Text text={'Count: ' + props.count} />;
       }
-      ReactNoop.render(<Counter count={0} />, () =>
-        Scheduler.yieldValue('Sync effect'),
-      );
-      expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
-      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
-      ReactNoop.flushPassiveEffects();
+      act(() => {
+        ReactNoop.render(<Counter count={0} />, () =>
+          Scheduler.yieldValue('Sync effect'),
+        );
+        expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
+        expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+      });
+
       expect(Scheduler).toHaveYielded(['Did commit 1 [0]', 'Did commit 2 [0]']);
 
-      ReactNoop.render(<Counter count={1} />, () =>
-        Scheduler.yieldValue('Sync effect'),
-      );
-      expect(Scheduler).toFlushAndYieldThrough(['Count: 1', 'Sync effect']);
-      expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
-      ReactNoop.flushPassiveEffects();
+      act(() => {
+        ReactNoop.render(<Counter count={1} />, () =>
+          Scheduler.yieldValue('Sync effect'),
+        );
+        expect(Scheduler).toFlushAndYieldThrough(['Count: 1', 'Sync effect']);
+        expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
+      });
       expect(Scheduler).toHaveYielded(['Did commit 1 [1]', 'Did commit 2 [1]']);
     });
 
@@ -1224,20 +1283,23 @@ describe('ReactHooksWithNoopRenderer', () => {
         });
         return <Text text={'Count: ' + props.count} />;
       }
-      ReactNoop.render(<Counter count={0} />, () =>
-        Scheduler.yieldValue('Sync effect'),
-      );
-      expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
-      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
-      ReactNoop.flushPassiveEffects();
+      act(() => {
+        ReactNoop.render(<Counter count={0} />, () =>
+          Scheduler.yieldValue('Sync effect'),
+        );
+        expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
+        expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+      });
+
       expect(Scheduler).toHaveYielded(['Mount A [0]', 'Mount B [0]']);
 
-      ReactNoop.render(<Counter count={1} />, () =>
-        Scheduler.yieldValue('Sync effect'),
-      );
-      expect(Scheduler).toFlushAndYieldThrough(['Count: 1', 'Sync effect']);
-      expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
-      ReactNoop.flushPassiveEffects();
+      act(() => {
+        ReactNoop.render(<Counter count={1} />, () =>
+          Scheduler.yieldValue('Sync effect'),
+        );
+        expect(Scheduler).toFlushAndYieldThrough(['Count: 1', 'Sync effect']);
+        expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
+      });
       expect(Scheduler).toHaveYielded([
         'Unmount A [0]',
         'Unmount B [0]',
@@ -1265,12 +1327,15 @@ describe('ReactHooksWithNoopRenderer', () => {
         });
         return <Text text={'Count: ' + props.count} />;
       }
-      ReactNoop.render(<Counter count={0} />, () =>
-        Scheduler.yieldValue('Sync effect'),
-      );
-      expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
-      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
-      expect(() => ReactNoop.flushPassiveEffects()).toThrow('Oops');
+      act(() => {
+        ReactNoop.render(<Counter count={0} />, () =>
+          Scheduler.yieldValue('Sync effect'),
+        );
+        expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
+        expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+        expect(() => ReactNoop.flushPassiveEffects()).toThrow('Oops');
+      });
+
       expect(Scheduler).toHaveYielded([
         'Mount A [0]',
         'Oops!',
@@ -1301,31 +1366,35 @@ describe('ReactHooksWithNoopRenderer', () => {
         });
         return <Text text={'Count: ' + props.count} />;
       }
-      ReactNoop.render(<Counter count={0} />, () =>
-        Scheduler.yieldValue('Sync effect'),
-      );
-      expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
-      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
-      ReactNoop.flushPassiveEffects();
-      expect(Scheduler).toHaveYielded(['Mount A [0]', 'Mount B [0]']);
+      act(() => {
+        ReactNoop.render(<Counter count={0} />, () =>
+          Scheduler.yieldValue('Sync effect'),
+        );
+        expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
+        expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+        ReactNoop.flushPassiveEffects();
+        expect(Scheduler).toHaveYielded(['Mount A [0]', 'Mount B [0]']);
+      });
 
-      // This update will trigger an errror
-      ReactNoop.render(<Counter count={1} />, () =>
-        Scheduler.yieldValue('Sync effect'),
-      );
-      expect(Scheduler).toFlushAndYieldThrough(['Count: 1', 'Sync effect']);
-      expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
-      expect(() => ReactNoop.flushPassiveEffects()).toThrow('Oops');
-      expect(Scheduler).toHaveYielded([
-        'Unmount A [0]',
-        'Unmount B [0]',
-        'Mount A [1]',
-        'Oops!',
-        // Clean up effect A. There's no effect B to clean-up, because it
-        // never mounted.
-        'Unmount A [1]',
-      ]);
-      expect(ReactNoop.getChildren()).toEqual([]);
+      act(() => {
+        // This update will trigger an errror
+        ReactNoop.render(<Counter count={1} />, () =>
+          Scheduler.yieldValue('Sync effect'),
+        );
+        expect(Scheduler).toFlushAndYieldThrough(['Count: 1', 'Sync effect']);
+        expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
+        expect(() => ReactNoop.flushPassiveEffects()).toThrow('Oops');
+        expect(Scheduler).toHaveYielded([
+          'Unmount A [0]',
+          'Unmount B [0]',
+          'Mount A [1]',
+          'Oops!',
+          // Clean up effect A. There's no effect B to clean-up, because it
+          // never mounted.
+          'Unmount A [1]',
+        ]);
+        expect(ReactNoop.getChildren()).toEqual([]);
+      });
     });
 
     it('handles errors on unmount', () => {
@@ -1347,27 +1416,31 @@ describe('ReactHooksWithNoopRenderer', () => {
         });
         return <Text text={'Count: ' + props.count} />;
       }
-      ReactNoop.render(<Counter count={0} />, () =>
-        Scheduler.yieldValue('Sync effect'),
-      );
-      expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
-      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
-      ReactNoop.flushPassiveEffects();
-      expect(Scheduler).toHaveYielded(['Mount A [0]', 'Mount B [0]']);
+      act(() => {
+        ReactNoop.render(<Counter count={0} />, () =>
+          Scheduler.yieldValue('Sync effect'),
+        );
+        expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
+        expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+        ReactNoop.flushPassiveEffects();
+        expect(Scheduler).toHaveYielded(['Mount A [0]', 'Mount B [0]']);
+      });
 
-      // This update will trigger an errror
-      ReactNoop.render(<Counter count={1} />, () =>
-        Scheduler.yieldValue('Sync effect'),
-      );
-      expect(Scheduler).toFlushAndYieldThrough(['Count: 1', 'Sync effect']);
-      expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
-      expect(() => ReactNoop.flushPassiveEffects()).toThrow('Oops');
-      expect(Scheduler).toHaveYielded([
-        'Oops!',
-        // B unmounts even though an error was thrown in the previous effect
-        'Unmount B [0]',
-      ]);
-      expect(ReactNoop.getChildren()).toEqual([]);
+      act(() => {
+        // This update will trigger an errror
+        ReactNoop.render(<Counter count={1} />, () =>
+          Scheduler.yieldValue('Sync effect'),
+        );
+        expect(Scheduler).toFlushAndYieldThrough(['Count: 1', 'Sync effect']);
+        expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
+        expect(() => ReactNoop.flushPassiveEffects()).toThrow('Oops');
+        expect(Scheduler).toHaveYielded([
+          'Oops!',
+          // B unmounts even though an error was thrown in the previous effect
+          'Unmount B [0]',
+        ]);
+        expect(ReactNoop.getChildren()).toEqual([]);
+      });
     });
 
     it('works with memo', () => {
@@ -1470,27 +1543,27 @@ describe('ReactHooksWithNoopRenderer', () => {
         return null;
       }
 
-      ReactNoop.render(<Counter count={0} />, () =>
-        Scheduler.yieldValue('Sync effect'),
-      );
-      expect(Scheduler).toFlushAndYieldThrough([
-        'Mount layout [current: 0]',
-        'Sync effect',
-      ]);
-      expect(committedText).toEqual('0');
+      act(() => {
+        ReactNoop.render(<Counter count={0} />, () =>
+          Scheduler.yieldValue('Sync effect'),
+        );
+        expect(Scheduler).toFlushAndYieldThrough([
+          'Mount layout [current: 0]',
+          'Sync effect',
+        ]);
+        expect(committedText).toEqual('0');
+        ReactNoop.render(<Counter count={1} />, () =>
+          Scheduler.yieldValue('Sync effect'),
+        );
+        expect(Scheduler).toFlushAndYieldThrough([
+          'Mount normal [current: 0]',
+          'Unmount layout [current: 0]',
+          'Mount layout [current: 1]',
+          'Sync effect',
+        ]);
+        expect(committedText).toEqual('1');
+      });
 
-      ReactNoop.render(<Counter count={1} />, () =>
-        Scheduler.yieldValue('Sync effect'),
-      );
-      expect(Scheduler).toFlushAndYieldThrough([
-        'Mount normal [current: 0]',
-        'Unmount layout [current: 0]',
-        'Mount layout [current: 1]',
-        'Sync effect',
-      ]);
-      expect(committedText).toEqual('1');
-
-      ReactNoop.flushPassiveEffects();
       expect(Scheduler).toHaveYielded([
         'Unmount normal [current: 1]',
         'Mount normal [current: 1]',
@@ -1684,8 +1757,10 @@ describe('ReactHooksWithNoopRenderer', () => {
         return null;
       }
 
-      ReactNoop.render(<App />);
-      expect(Scheduler).toFlushAndYield([]);
+      act(() => {
+        ReactNoop.render(<App />);
+      });
+      expect(Scheduler).toHaveYielded([]);
 
       ping(1);
       ping(2);
@@ -1963,28 +2038,32 @@ describe('ReactHooksWithNoopRenderer', () => {
         return null;
       }
 
-      ReactNoop.render(<App showMore={false} />, () =>
-        Scheduler.yieldValue('Sync effect'),
-      );
-      expect(Scheduler).toFlushAndYieldThrough(['Sync effect']);
-      ReactNoop.flushPassiveEffects();
+      act(() => {
+        ReactNoop.render(<App showMore={false} />, () =>
+          Scheduler.yieldValue('Sync effect'),
+        );
+        expect(Scheduler).toFlushAndYieldThrough(['Sync effect']);
+      });
+
       expect(Scheduler).toHaveYielded(['Mount A']);
 
-      ReactNoop.render(<App showMore={true} />);
-      expect(() => {
+      act(() => {
+        ReactNoop.render(<App showMore={true} />);
         expect(() => {
-          expect(Scheduler).toFlushAndYield([]);
-        }).toThrow('Rendered more hooks than during the previous render');
-      }).toWarnDev([
-        'Warning: React has detected a change in the order of Hooks called by App. ' +
-          'This will lead to bugs and errors if not fixed. For more information, ' +
-          'read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
-          '   Previous render            Next render\n' +
-          '   ------------------------------------------------------\n' +
-          '1. useEffect                  useEffect\n' +
-          '2. undefined                  useEffect\n' +
-          '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n',
-      ]);
+          expect(() => {
+            expect(Scheduler).toFlushAndYield([]);
+          }).toThrow('Rendered more hooks than during the previous render');
+        }).toWarnDev([
+          'Warning: React has detected a change in the order of Hooks called by App. ' +
+            'This will lead to bugs and errors if not fixed. For more information, ' +
+            'read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
+            '   Previous render            Next render\n' +
+            '   ------------------------------------------------------\n' +
+            '1. useEffect                  useEffect\n' +
+            '2. undefined                  useEffect\n' +
+            '   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\n',
+        ]);
+      });
 
       // Uncomment if/when we support this again
       // ReactNoop.flushPassiveEffects();
@@ -2026,15 +2105,17 @@ describe('ReactHooksWithNoopRenderer', () => {
       return count;
     }
 
-    ReactNoop.render(<App />);
-    expect(Scheduler).toFlushAndYield([
-      'Render: -1',
-      'Effect: 1',
-      'Reducer: 1',
-      'Reducer: 1',
-      'Render: 1',
-    ]);
-    expect(ReactNoop).toMatchRenderedOutput('1');
+    act(() => {
+      ReactNoop.render(<App />);
+      expect(Scheduler).toFlushAndYield([
+        'Render: -1',
+        'Effect: 1',
+        'Reducer: 1',
+        'Reducer: 1',
+        'Render: 1',
+      ]);
+      expect(ReactNoop).toMatchRenderedOutput('1');
+    });
 
     act(() => {
       setCounter(2);
@@ -2109,19 +2190,19 @@ describe('ReactHooksWithNoopRenderer', () => {
         return <Text text={'Count: ' + count} />;
       }
 
-      ReactNoop.render(<Counter count={0} />, () =>
-        Scheduler.yieldValue('Sync effect'),
-      );
-      expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
-      expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
-
-      // Enqueuing this update forces the passive effect to be flushed --
-      // updateCount(1) happens first, so 2 wins.
-      // (use batchedUpdates to silence the act() warning)
-      ReactNoop.batchedUpdates(() => _updateCount(2));
-      expect(Scheduler).toHaveYielded(['Will set count to 1']);
-      expect(Scheduler).toFlushAndYield(['Count: 2']);
-      expect(ReactNoop.getChildren()).toEqual([span('Count: 2')]);
+      act(() => {
+        ReactNoop.render(<Counter count={0} />, () =>
+          Scheduler.yieldValue('Sync effect'),
+        );
+        expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
+        expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+        // Enqueuing this update forces the passive effect to be flushed --
+        // updateCount(1) happens first, so 2 wins.
+        act(() => _updateCount(2));
+        expect(Scheduler).toHaveYielded(['Will set count to 1']);
+        expect(Scheduler).toFlushAndYield(['Count: 2']);
+        expect(ReactNoop.getChildren()).toEqual([span('Count: 2')]);
+      });
     });
   });
 });

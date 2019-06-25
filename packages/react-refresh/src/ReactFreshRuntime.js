@@ -13,9 +13,11 @@ import type {
   Family,
   RefreshUpdate,
   ScheduleRefresh,
+  ScheduleRoot,
   FindHostInstancesForRefresh,
   SetRefreshHandler,
 } from 'react-reconciler/src/ReactFiberHotReloading';
+import type {ReactNodeList} from 'shared/ReactTypes';
 
 import {REACT_MEMO_TYPE, REACT_FORWARD_REF_TYPE} from 'shared/ReactSymbols';
 import warningWithoutStack from 'shared/warningWithoutStack';
@@ -57,9 +59,13 @@ let pendingUpdates: Array<[Family, any]> = [];
 // This is injected by the renderer via DevTools global hook.
 let setRefreshHandler: null | SetRefreshHandler = null;
 let scheduleRefresh: null | ScheduleRefresh = null;
+let scheduleRoot: null | ScheduleRoot = null;
 let findHostInstancesForRefresh: null | FindHostInstancesForRefresh = null;
 
-let mountedRoots = new Set();
+// We keep track of mounted roots so we can schedule updates.
+let mountedRoots: Set<FiberRoot> = new Set();
+// If a root captures an error, we add its element to this Map so we can retry on edit.
+let failedRoots: Map<FiberRoot, ReactNodeList> = new Map();
 
 function computeFullKey(signature: Signature): string {
   if (signature.fullKey !== null) {
@@ -196,7 +202,18 @@ export function performReactRefresh(): RefreshUpdate | null {
       );
       return null;
     }
+    if (typeof scheduleRoot !== 'function') {
+      warningWithoutStack(
+        false,
+        'Could not find the scheduleRoot() implementation. ' +
+          'This likely means that injectIntoGlobalHook() was either ' +
+          'called before the global DevTools hook was set up, or after the ' +
+          'renderer has already initialized. Please file an issue with a reproducing case.',
+      );
+      return null;
+    }
     const scheduleRefreshForRoot = scheduleRefresh;
+    const scheduleRenderForRoot = scheduleRoot;
 
     // Even if there are no roots, set the handler on first update.
     // This ensures that if *new* roots are mounted, they'll use the resolve handler.
@@ -204,6 +221,17 @@ export function performReactRefresh(): RefreshUpdate | null {
 
     let didError = false;
     let firstError = null;
+    failedRoots.forEach((element, root) => {
+      try {
+        scheduleRenderForRoot(root, element);
+      } catch (err) {
+        if (!didError) {
+          didError = true;
+          firstError = err;
+        }
+        // Keep trying other roots.
+      }
+    });
     mountedRoots.forEach(root => {
       try {
         scheduleRefreshForRoot(root, update);
@@ -245,7 +273,7 @@ export function register(type: any, id: string): void {
 
     // Create family or remember to update it.
     // None of this bookkeeping affects reconciliation
-    // until the first prepareUpdate() call above.
+    // until the first performReactRefresh() call above.
     let family = allFamiliesByID.get(id);
     if (family === undefined) {
       family = {current: type};
@@ -362,7 +390,12 @@ export function injectIntoGlobalHook(globalObject: any): void {
       globalObject.__REACT_DEVTOOLS_GLOBAL_HOOK__ = hook = {
         supportsFiber: true,
         inject() {},
-        onCommitFiberRoot(id: mixed, root: FiberRoot) {},
+        onCommitFiberRoot(
+          id: mixed,
+          root: FiberRoot,
+          maybePriorityLevel: mixed,
+          didError: boolean,
+        ) {},
         onCommitFiberUnmount() {},
       };
     }
@@ -373,6 +406,7 @@ export function injectIntoGlobalHook(globalObject: any): void {
       findHostInstancesForRefresh = ((injected: any)
         .findHostInstancesForRefresh: FindHostInstancesForRefresh);
       scheduleRefresh = ((injected: any).scheduleRefresh: ScheduleRefresh);
+      scheduleRoot = ((injected: any).scheduleRoot: ScheduleRoot);
       setRefreshHandler = ((injected: any)
         .setRefreshHandler: SetRefreshHandler);
       return oldInject.apply(this, arguments);
@@ -380,7 +414,12 @@ export function injectIntoGlobalHook(globalObject: any): void {
 
     // We also want to track currently mounted roots.
     const oldOnCommitFiberRoot = hook.onCommitFiberRoot;
-    hook.onCommitFiberRoot = function(id: mixed, root: FiberRoot) {
+    hook.onCommitFiberRoot = function(
+      id: mixed,
+      root: FiberRoot,
+      maybePriorityLevel: mixed,
+      didError: boolean,
+    ) {
       const current = root.current;
       const alternate = current.alternate;
 
@@ -399,12 +438,18 @@ export function injectIntoGlobalHook(globalObject: any): void {
         if (!wasMounted && isMounted) {
           // Mount a new root.
           mountedRoots.add(root);
+          failedRoots.delete(root);
         } else if (wasMounted && isMounted) {
           // Update an existing root.
           // This doesn't affect our mounted root Set.
         } else if (wasMounted && !isMounted) {
           // Unmount an existing root.
           mountedRoots.delete(root);
+          if (didError) {
+            // We'll remount it on future edits.
+            // Remember what was rendered so we can restore it.
+            failedRoots.set(root, alternate.memoizedState.element);
+          }
         }
       } else {
         // Mount a new root.

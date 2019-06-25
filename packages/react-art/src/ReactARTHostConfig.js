@@ -350,6 +350,9 @@ export function shouldSetTextContent(type, props) {
 // The ART renderer is secondary to the React DOM renderer.
 export const isPrimaryRenderer = false;
 
+// The ART renderer shouldn't trigger missing act() warnings
+export const shouldWarnUnactedUpdates = false;
+
 export const supportsMutation = true;
 
 export function appendChild(parentInstance, child) {

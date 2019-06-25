@@ -1,8 +1,38 @@
+// copied from scripts/jest/matchers/toWarnDev.js
 'use strict';
 
 const jestDiff = require('jest-diff');
 const util = require('util');
-const shouldIgnoreConsoleError = require('../shouldIgnoreConsoleError');
+
+function shouldIgnoreConsoleError(format, args) {
+  if (__DEV__) {
+    if (typeof format === 'string') {
+      if (format.indexOf('Error: Uncaught [') === 0) {
+        // This looks like an uncaught error from invokeGuardedCallback() wrapper
+        // in development that is reported by jsdom. Ignore because it's noisy.
+        return true;
+      }
+      if (format.indexOf('The above error occurred') === 0) {
+        // This looks like an error addendum from ReactFiberErrorLogger.
+        // Ignore it too.
+        return true;
+      }
+    }
+  } else {
+    if (
+      format != null &&
+      typeof format.message === 'string' &&
+      typeof format.stack === 'string' &&
+      args.length === 0
+    ) {
+      // In production, ReactFiberErrorLogger logs error objects directly.
+      // They are noisy too so we'll try to ignore them.
+      return true;
+    }
+  }
+  // Looks legit
+  return false;
+}
 
 function normalizeCodeLocInfo(str) {
   return str && str.replace(/at .+?:\d+/g, 'at **');
@@ -38,7 +68,6 @@ const createMatcherFor = consoleMethod =>
       }
 
       const withoutStack = options.withoutStack;
-      const logAllErrors = options.logAllErrors;
       const warningsWithoutComponentStack = [];
       const warningsWithComponentStack = [];
       const unexpectedWarnings = [];
@@ -59,7 +88,6 @@ const createMatcherFor = consoleMethod =>
         // Ignore uncaught errors reported by jsdom
         // and React addendums because they're too noisy.
         if (
-          !logAllErrors &&
           consoleMethod === 'error' &&
           shouldIgnoreConsoleError(format, args)
         ) {

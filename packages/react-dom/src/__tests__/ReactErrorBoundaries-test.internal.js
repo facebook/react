@@ -12,8 +12,8 @@
 let PropTypes;
 let React;
 let ReactDOM;
+let act;
 let ReactFeatureFlags;
-let Scheduler;
 
 describe('ReactErrorBoundaries', () => {
   let log;
@@ -45,7 +45,7 @@ describe('ReactErrorBoundaries', () => {
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     ReactDOM = require('react-dom');
     React = require('react');
-    Scheduler = require('scheduler');
+    act = require('react-dom/test-utils').act;
 
     log = [];
 
@@ -642,6 +642,39 @@ describe('ReactErrorBoundaries', () => {
     expect(container1.firstChild).toBe(null);
     expect(container2.firstChild).toBe(null);
     expect(container3.firstChild).toBe(null);
+  });
+
+  it('logs a single error when using error boundary', () => {
+    const container = document.createElement('div');
+    expect(() =>
+      ReactDOM.render(
+        <ErrorBoundary>
+          <BrokenRender />
+        </ErrorBoundary>,
+        container,
+      ),
+    ).toWarnDev('The above error occurred in the <BrokenRender> component:', {
+      logAllErrors: true,
+    });
+
+    expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
+    expect(log).toEqual([
+      'ErrorBoundary constructor',
+      'ErrorBoundary componentWillMount',
+      'ErrorBoundary render success',
+      'BrokenRender constructor',
+      'BrokenRender componentWillMount',
+      'BrokenRender render [!]',
+      // Catch and render an error message
+      'ErrorBoundary static getDerivedStateFromError',
+      'ErrorBoundary componentWillMount',
+      'ErrorBoundary render error',
+      'ErrorBoundary componentDidMount',
+    ]);
+
+    log.length = 0;
+    ReactDOM.unmountComponentAtNode(container);
+    expect(log).toEqual(['ErrorBoundary componentWillUnmount']);
   });
 
   it('renders an error state if child throws in render', () => {
@@ -1835,25 +1868,26 @@ describe('ReactErrorBoundaries', () => {
 
   it('catches errors in useEffect', () => {
     const container = document.createElement('div');
-    ReactDOM.render(
-      <ErrorBoundary>
-        <BrokenUseEffect>Initial value</BrokenUseEffect>
-      </ErrorBoundary>,
-      container,
-    );
-    expect(log).toEqual([
-      'ErrorBoundary constructor',
-      'ErrorBoundary componentWillMount',
-      'ErrorBoundary render success',
-      'BrokenUseEffect render',
-      'ErrorBoundary componentDidMount',
-    ]);
+    act(() => {
+      ReactDOM.render(
+        <ErrorBoundary>
+          <BrokenUseEffect>Initial value</BrokenUseEffect>
+        </ErrorBoundary>,
+        container,
+      );
+      expect(log).toEqual([
+        'ErrorBoundary constructor',
+        'ErrorBoundary componentWillMount',
+        'ErrorBoundary render success',
+        'BrokenUseEffect render',
+        'ErrorBoundary componentDidMount',
+      ]);
 
-    expect(container.firstChild.textContent).toBe('Initial value');
-    log.length = 0;
+      expect(container.firstChild.textContent).toBe('Initial value');
+      log.length = 0;
+    });
 
-    // Flush passive effects and handle the error
-    Scheduler.flushAll();
+    // verify flushed passive effects and handle the error
     expect(log).toEqual([
       'BrokenUseEffect useEffect [!]',
       // Handle the error

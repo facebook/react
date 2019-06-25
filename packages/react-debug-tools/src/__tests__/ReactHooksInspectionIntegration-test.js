@@ -146,7 +146,10 @@ describe('ReactHooksInspectionIntegration', () => {
         </div>
       );
     }
-    let renderer = ReactTestRenderer.create(<Foo prop="prop" />);
+    let renderer;
+    act(() => {
+      renderer = ReactTestRenderer.create(<Foo prop="prop" />);
+    });
 
     let childFiber = renderer.root.findByType(Foo)._currentFiber();
 

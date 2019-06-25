@@ -133,21 +133,22 @@ describe('ReactSchedulerIntegration', () => {
       });
       return null;
     }
-
-    ReactNoop.render(<ReadPriority />);
-    expect(Scheduler).toFlushAndYield([
-      'Render priority: Normal',
-      'Passive priority: Normal',
-    ]);
-
-    runWithPriority(UserBlockingPriority, () => {
+    ReactNoop.act(() => {
       ReactNoop.render(<ReadPriority />);
-    });
+      expect(Scheduler).toFlushAndYield([
+        'Render priority: Normal',
+        'Passive priority: Normal',
+      ]);
 
-    expect(Scheduler).toFlushAndYield([
-      'Render priority: UserBlocking',
-      'Passive priority: UserBlocking',
-    ]);
+      runWithPriority(UserBlockingPriority, () => {
+        ReactNoop.render(<ReadPriority />);
+      });
+
+      expect(Scheduler).toFlushAndYield([
+        'Render priority: UserBlocking',
+        'Passive priority: UserBlocking',
+      ]);
+    });
   });
 
   it('after completing a level of work, infers priority of the next batch based on its expiration time', () => {

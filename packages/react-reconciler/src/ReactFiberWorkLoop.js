@@ -55,6 +55,7 @@ import {
   scheduleTimeout,
   cancelTimeout,
   noTimeout,
+  shouldWarnUnactedUpdates,
 } from './ReactFiberHostConfig';
 
 import {createWorkInProgress, assignFiberPropertiesInDEV} from './ReactFiber';
@@ -2420,6 +2421,7 @@ export const ReactActingRendererSigil = {};
 export function warnIfNotScopedWithMatchingAct(fiber: Fiber): void {
   if (__DEV__) {
     if (
+      shouldWarnUnactedUpdates === true &&
       ReactCurrentActingRendererSigil.current !== null &&
       ReactCurrentActingRendererSigil.current !== ReactActingRendererSigil
     ) {
@@ -2443,9 +2445,36 @@ export function warnIfNotScopedWithMatchingAct(fiber: Fiber): void {
   }
 }
 
+export function warnIfNotCurrentlyActingEffectsInDEV(fiber: Fiber): void {
+  if (__DEV__) {
+    if (
+      shouldWarnUnactedUpdates === true &&
+      ReactCurrentActingRendererSigil.current !== ReactActingRendererSigil
+    ) {
+      warningWithoutStack(
+        false,
+        'An update to %s ran an effect, but was not wrapped in act(...).\n\n' +
+          'When testing, code that causes React state updates should be ' +
+          'wrapped into act(...):\n\n' +
+          'act(() => {\n' +
+          '  /* fire events that update state */\n' +
+          '});\n' +
+          '/* assert on the output */\n\n' +
+          "This ensures that you're testing the behavior the user would see " +
+          'in the browser.' +
+          ' Learn more at https://fb.me/react-wrap-tests-with-act' +
+          '%s',
+        getComponentName(fiber.type),
+        getStackByFiberInDevAndProd(fiber),
+      );
+    }
+  }
+}
+
 function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
   if (__DEV__) {
     if (
+      shouldWarnUnactedUpdates === true &&
       executionContext === NoContext &&
       ReactCurrentActingRendererSigil.current !== ReactActingRendererSigil
     ) {

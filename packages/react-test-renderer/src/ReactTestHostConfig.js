@@ -261,6 +261,7 @@ export function createTextInstance(
 }
 
 export const isPrimaryRenderer = false;
+export const shouldWarnUnactedUpdates = true;
 
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;
