@@ -43,7 +43,6 @@ function escape(key) {
  * pattern.
  */
 
-
 const userProvidedKeyEscapeRegex = /\/+/g;
 function escapeUserProvidedKey(text) {
   return ('' + text).replace(userProvidedKeyEscapeRegex, '$&/');
@@ -87,8 +86,6 @@ function releaseTraverseContext(traverseContext) {
   }
 }
 
-
-
 /**
  * @var {!boolean} didWarnAboutMaps So we don't warn them two times
  * @param {?*} children Children tree container.
@@ -118,7 +115,12 @@ function traverseAllChildrenImpl(
     );
     return 1;
   } else {
-    return traverseMultipleChildren(children, nameSoFar, callback, traverseContext);
+    return traverseMultipleChildren(
+      children,
+      nameSoFar,
+      callback,
+      traverseContext,
+    );
   }
 }
 
@@ -131,21 +133,36 @@ function traverseAllChildrenImpl(
  * process.
  * @return {!number} The number of children in this subtree.
  */
-function traverseMultipleChildren(children, nameSoFar, callback, traverseContext) {
+function traverseMultipleChildren(
+  children,
+  nameSoFar,
+  callback,
+  traverseContext,
+) {
   let subtreeCount = 0; // Count of children found in the current subtree.
   const nextNamePrefix =
     nameSoFar === '' ? SEPARATOR : nameSoFar + SUBSEPARATOR;
 
   if (Array.isArray(children)) {
-    subtreeCount += traverseArrayOfChildren(children, nextNamePrefix, callback, traverseContext);
+    subtreeCount += traverseArrayOfChildren(
+      children,
+      nextNamePrefix,
+      callback,
+      traverseContext,
+    );
   } else {
     const iteratorFn = getIteratorFn(children);
     if (typeof iteratorFn === 'function') {
-      subtreeCount += traverseChildrenWithIteratorFn(children, nextNamePrefix, callback, traverseContext);
+      subtreeCount += traverseChildrenWithIteratorFn(
+        children,
+        nextNamePrefix,
+        callback,
+        traverseContext,
+      );
     } else if (typeof children === 'object') {
       showErrorForTryingToIterateAnObject(children);
     }
-  }  
+  }
   return subtreeCount;
 }
 /**
@@ -156,15 +173,20 @@ function traverseMultipleChildren(children, nameSoFar, callback, traverseContext
  * process.
  * @return {!number} The number of children in this subtree.
  */
-function traverseArrayOfChildren(children, nextNamePrefix, callback, traverseContext) {
+function traverseArrayOfChildren(
+  children,
+  nextNamePrefix,
+  callback,
+  traverseContext,
+) {
   let subtreeCount = 0;
   children.forEach((child, i) => {
     subtreeCount += traverseChild(
-      child, 
-      i, 
-      nextNamePrefix, 
-      callback, 
-      traverseContext
+      child,
+      i,
+      nextNamePrefix,
+      callback,
+      traverseContext,
     );
   });
   return subtreeCount;
@@ -177,7 +199,12 @@ function traverseArrayOfChildren(children, nextNamePrefix, callback, traverseCon
  * process.
  * @return {!number} The number of children in this subtree.
  */
-function traverseChildrenWithIteratorFn(children, nextNamePrefix, callback, traverseContext) {
+function traverseChildrenWithIteratorFn(
+  children,
+  nextNamePrefix,
+  callback,
+  traverseContext,
+) {
   warnAboutMapsIfDev(children);
 
   let subtreeCount = 0; // Count of children found in the current subtree.
@@ -187,11 +214,11 @@ function traverseChildrenWithIteratorFn(children, nextNamePrefix, callback, trav
   while (!(step = iterator.next()).done) {
     const child = step.value;
     subtreeCount += traverseChild(
-      child, 
-      i++, 
-      nextNamePrefix, 
-      callback, 
-      traverseContext
+      child,
+      i++,
+      nextNamePrefix,
+      callback,
+      traverseContext,
     );
   }
   return subtreeCount;
@@ -221,7 +248,7 @@ function showErrorForTryingToIterateAnObject(children) {
 
 /**
  * Warns about using Maps as children
- * @param {?*} children 
+ * @param {?*} children
  */
 function warnAboutMapsIfDev(children) {
   if (__DEV__ && getIteratorFn(children) === children.entries) {
@@ -240,12 +267,14 @@ function warnAboutMapsIfDev(children) {
  * @return {!boolean} If the callback in traversal should be invoked
  */
 function shouldInvokeCallback(children) {
-  return childrenAreNullElements(children) ||
+  return (
+    childrenAreNullElements(children) ||
     typeof children === 'string' ||
     typeof children === 'number' ||
-    typeof children === 'object' &&
-    children.$$typeof === REACT_ELEMENT_TYPE ||
-    children.$$typeof === REACT_PORTAL_TYPE; 
+    (typeof children === 'object' &&
+      children.$$typeof === REACT_ELEMENT_TYPE) ||
+    children.$$typeof === REACT_PORTAL_TYPE
+  );
 }
 
 /**
@@ -253,27 +282,30 @@ function shouldInvokeCallback(children) {
  * @return {!boolean} True if children are null elements false otherwise
  */
 function childrenAreNullElements(children) {
-  return children === null ||
+  return (
+    children === null ||
     typeof children === 'undefined' ||
-    typeof children === 'boolean';
+    typeof children === 'boolean'
+  );
 }
 
 /**
- * 
+ *
  * @param {?*} child Child node being traversed
  * @param {!number} index Index of current iteration
  * @param {!string} nextNamePrefix The name so far of traversal
  * @param {!function} callback Callback to be invoked on children
  * @param {?*} traverseContext Used to pass information throughout the traversal
  */
-function traverseChild(child, index, nextNamePrefix, callback, traverseContext) {
+function traverseChild(
+  child,
+  index,
+  nextNamePrefix,
+  callback,
+  traverseContext,
+) {
   const nextName = nextNamePrefix + getComponentKey(child, index);
-  return traverseAllChildrenImpl(
-    child,
-    nextName,
-    callback,
-    traverseContext,
-  ); 
+  return traverseAllChildrenImpl(child, nextName, callback, traverseContext);
 }
 
 /**
