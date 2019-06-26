@@ -46,12 +46,12 @@ describe('ReactSuspensePlaceholder', () => {
                 listeners = [{resolve, reject}];
                 setTimeout(() => {
                   if (textResourceShouldFail) {
-                    Scheduler.yieldValue(`Promise rejected [${text}]`);
+                    Scheduler.unstable_yieldValue(`Promise rejected [${text}]`);
                     status = 'rejected';
                     value = new Error('Failed to load: ' + text);
                     listeners.forEach(listener => listener.reject(value));
                   } else {
-                    Scheduler.yieldValue(`Promise resolved [${text}]`);
+                    Scheduler.unstable_yieldValue(`Promise resolved [${text}]`);
                     status = 'resolved';
                     value = text;
                     listeners.forEach(listener => listener.resolve(value));
@@ -78,22 +78,22 @@ describe('ReactSuspensePlaceholder', () => {
   });
 
   function Text({fakeRenderDuration = 0, text = 'Text'}) {
-    Scheduler.advanceTime(fakeRenderDuration);
-    Scheduler.yieldValue(text);
+    Scheduler.unstable_advanceTime(fakeRenderDuration);
+    Scheduler.unstable_yieldValue(text);
     return text;
   }
 
   function AsyncText({fakeRenderDuration = 0, ms, text}) {
-    Scheduler.advanceTime(fakeRenderDuration);
+    Scheduler.unstable_advanceTime(fakeRenderDuration);
     try {
       TextResource.read([text, ms]);
-      Scheduler.yieldValue(text);
+      Scheduler.unstable_yieldValue(text);
       return text;
     } catch (promise) {
       if (typeof promise.then === 'function') {
-        Scheduler.yieldValue(`Suspend! [${text}]`);
+        Scheduler.unstable_yieldValue(`Suspend! [${text}]`);
       } else {
-        Scheduler.yieldValue(`Error! [${text}]`);
+        Scheduler.unstable_yieldValue(`Error! [${text}]`);
       }
       throw promise;
     }
@@ -103,7 +103,7 @@ describe('ReactSuspensePlaceholder', () => {
     class HiddenText extends React.PureComponent {
       render() {
         const text = this.props.text;
-        Scheduler.yieldValue(text);
+        Scheduler.unstable_yieldValue(text);
         return <span hidden={true}>{text}</span>;
       }
     }
@@ -278,19 +278,19 @@ describe('ReactSuspensePlaceholder', () => {
       onRender = jest.fn();
 
       const Fallback = () => {
-        Scheduler.yieldValue('Fallback');
-        Scheduler.advanceTime(10);
+        Scheduler.unstable_yieldValue('Fallback');
+        Scheduler.unstable_advanceTime(10);
         return 'Loading...';
       };
 
       const Suspending = () => {
-        Scheduler.yieldValue('Suspending');
-        Scheduler.advanceTime(2);
+        Scheduler.unstable_yieldValue('Suspending');
+        Scheduler.unstable_advanceTime(2);
         return <AsyncText ms={1000} text="Loaded" fakeRenderDuration={1} />;
       };
 
       App = ({shouldSuspend, text = 'Text', textRenderDuration = 5}) => {
-        Scheduler.yieldValue('App');
+        Scheduler.unstable_yieldValue('App');
         return (
           <Profiler id="root" onRender={onRender}>
             <Suspense fallback={<Fallback />}>

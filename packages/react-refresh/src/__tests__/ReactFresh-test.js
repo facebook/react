@@ -2355,7 +2355,7 @@ describe('ReactFresh', () => {
       const AppV1 = prepare(() => {
         function Hello() {
           React.useLayoutEffect(() => {
-            Scheduler.yieldValue('Hello#layout');
+            Scheduler.unstable_yieldValue('Hello#layout');
           });
           const [val, setVal] = React.useState(0);
           return (
@@ -2368,7 +2368,7 @@ describe('ReactFresh', () => {
 
         return function App({offscreen}) {
           React.useLayoutEffect(() => {
-            Scheduler.yieldValue('App#layout');
+            Scheduler.unstable_yieldValue('App#layout');
           });
           return (
             <div hidden={offscreen}>
@@ -2389,7 +2389,7 @@ describe('ReactFresh', () => {
       patch(() => {
         function Hello() {
           React.useLayoutEffect(() => {
-            Scheduler.yieldValue('Hello#layout');
+            Scheduler.unstable_yieldValue('Hello#layout');
           });
           const [val, setVal] = React.useState(0);
           return (
@@ -2423,7 +2423,7 @@ describe('ReactFresh', () => {
       patch(() => {
         function Hello() {
           React.useLayoutEffect(() => {
-            Scheduler.yieldValue('Hello#layout');
+            Scheduler.unstable_yieldValue('Hello#layout');
           });
           const [val, setVal] = React.useState(0);
           return (

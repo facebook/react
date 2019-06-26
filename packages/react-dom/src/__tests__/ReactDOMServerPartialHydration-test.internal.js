@@ -74,7 +74,7 @@ describe('ReactDOMServerPartialHydration', () => {
     suspend = true;
     let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
     root.render(<App />);
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
     expect(ref.current).toBe(null);
@@ -83,7 +83,7 @@ describe('ReactDOMServerPartialHydration', () => {
     suspend = false;
     resolve();
     await promise;
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
     // We should now have hydrated with a ref on the existing span.
@@ -242,7 +242,7 @@ describe('ReactDOMServerPartialHydration', () => {
     suspend = true;
     let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
     root.render(<App text="Hello" className="hello" />);
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
     expect(ref.current).toBe(null);
@@ -258,7 +258,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     // Flushing both of these in the same batch won't be able to hydrate so we'll
     // probably throw away the existing subtree.
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
     // Pick up the new span. In an ideal implementation this might be the same span
@@ -311,14 +311,14 @@ describe('ReactDOMServerPartialHydration', () => {
     suspend = true;
     let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
     root.render(<App text="Hello" className="hello" />);
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
     expect(ref.current).toBe(null);
 
     // Render an update, but leave it still suspended.
     root.render(<App text="Hi" className="hi" />);
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
     // Flushing now should delete the existing content and show the fallback.
@@ -332,7 +332,7 @@ describe('ReactDOMServerPartialHydration', () => {
     resolve();
     await promise;
 
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
     let span = container.getElementsByTagName('span')[0];
@@ -384,7 +384,7 @@ describe('ReactDOMServerPartialHydration', () => {
     suspend = true;
     let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
     root.render(<App text="Hello" className="hello" />);
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
     expect(ref.current).toBe(null);
@@ -393,7 +393,7 @@ describe('ReactDOMServerPartialHydration', () => {
     root.render(<App text="Hi" className="hi" />);
 
     // Flushing now should delete the existing content and show the fallback.
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
     expect(container.getElementsByTagName('span').length).toBe(0);
@@ -405,7 +405,7 @@ describe('ReactDOMServerPartialHydration', () => {
     resolve();
     await promise;
 
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
     let span = container.getElementsByTagName('span')[0];
@@ -456,7 +456,7 @@ describe('ReactDOMServerPartialHydration', () => {
     suspend = true;
     let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
     root.render(<App text="Hello" className="hello" />);
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
     expect(ref.current).toBe(null);
@@ -465,7 +465,7 @@ describe('ReactDOMServerPartialHydration', () => {
     root.render(<App text="Hi" className="hi" />);
 
     // Flushing now should delete the existing content and show the fallback.
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
     expect(container.getElementsByTagName('span').length).toBe(0);
@@ -477,7 +477,7 @@ describe('ReactDOMServerPartialHydration', () => {
     resolve();
     await promise;
 
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
     let span = container.getElementsByTagName('span')[0];
@@ -537,7 +537,7 @@ describe('ReactDOMServerPartialHydration', () => {
         <App />
       </Context.Provider>,
     );
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
     expect(ref.current).toBe(null);
@@ -557,7 +557,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     // Flushing both of these in the same batch won't be able to hydrate so we'll
     // probably throw away the existing subtree.
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
     // Pick up the new span. In an ideal implementation this might be the same span
@@ -620,7 +620,7 @@ describe('ReactDOMServerPartialHydration', () => {
         <App />
       </Context.Provider>,
     );
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
     expect(ref.current).toBe(null);
@@ -633,7 +633,7 @@ describe('ReactDOMServerPartialHydration', () => {
     );
 
     // Flushing now should delete the existing content and show the fallback.
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
     expect(container.getElementsByTagName('span').length).toBe(0);
@@ -645,7 +645,7 @@ describe('ReactDOMServerPartialHydration', () => {
     resolve();
     await promise;
 
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
     let span = container.getElementsByTagName('span')[0];
@@ -694,7 +694,7 @@ describe('ReactDOMServerPartialHydration', () => {
     suspend = false;
     let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
     root.render(<App />);
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
     expect(container.textContent).toBe('Hello');
@@ -750,7 +750,7 @@ describe('ReactDOMServerPartialHydration', () => {
     suspend = false;
     let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
     root.render(<App />);
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     // This will have exceeded the suspended time so we should timeout.
     jest.advanceTimersByTime(500);
     // The boundary should longer be suspended for the middle content
@@ -811,7 +811,7 @@ describe('ReactDOMServerPartialHydration', () => {
     suspend = false;
     let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
     root.render(<App />);
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     // This will have exceeded the suspended time so we should timeout.
     jest.advanceTimersByTime(500);
     // The boundary should longer be suspended for the middle content
@@ -887,7 +887,7 @@ describe('ReactDOMServerPartialHydration', () => {
     suspend = false;
     let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
     root.render(<App />);
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
     // We're still loading because we're waiting for the server to stream more content.
@@ -903,7 +903,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // But it is not yet hydrated.
     expect(ref.current).toBe(null);
 
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
     // Now it's hydrated.
@@ -980,7 +980,7 @@ describe('ReactDOMServerPartialHydration', () => {
     suspend = false;
     let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
     root.render(<App />);
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
     // We're still loading because we're waiting for the server to stream more content.
@@ -994,7 +994,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('Loading...');
     expect(ref.current).toBe(null);
 
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
     // Hydrating should've generated an error and replaced the suspense boundary.

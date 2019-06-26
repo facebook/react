@@ -30,7 +30,7 @@ describe('ReactNewContext', () => {
   });
 
   function Text(props) {
-    Scheduler.yieldValue(props.text);
+    Scheduler.unstable_yieldValue(props.text);
     return <span prop={props.text} />;
   }
 
@@ -160,7 +160,7 @@ describe('ReactNewContext', () => {
         const ContextConsumer = getConsumer(Context);
 
         function Provider(props) {
-          Scheduler.yieldValue('Provider');
+          Scheduler.unstable_yieldValue('Provider');
           return (
             <Context.Provider value={props.value}>
               {props.children}
@@ -169,11 +169,11 @@ describe('ReactNewContext', () => {
         }
 
         function Consumer(props) {
-          Scheduler.yieldValue('Consumer');
+          Scheduler.unstable_yieldValue('Consumer');
           return (
             <ContextConsumer>
               {value => {
-                Scheduler.yieldValue('Consumer render prop');
+                Scheduler.unstable_yieldValue('Consumer render prop');
                 return <span prop={'Result: ' + value} />;
               }}
             </ContextConsumer>
@@ -185,13 +185,13 @@ describe('ReactNewContext', () => {
             return false;
           }
           render() {
-            Scheduler.yieldValue('Indirection');
+            Scheduler.unstable_yieldValue('Indirection');
             return this.props.children;
           }
         }
 
         function App(props) {
-          Scheduler.yieldValue('App');
+          Scheduler.unstable_yieldValue('App');
           return (
             <Provider value={props.value}>
               <Indirection>
@@ -229,7 +229,7 @@ describe('ReactNewContext', () => {
         const ContextConsumer = getConsumer(Context);
 
         function Provider(props) {
-          Scheduler.yieldValue('Provider');
+          Scheduler.unstable_yieldValue('Provider');
           return (
             <Context.Provider value={props.value}>
               {props.children}
@@ -238,11 +238,11 @@ describe('ReactNewContext', () => {
         }
 
         function Consumer(props) {
-          Scheduler.yieldValue('Consumer');
+          Scheduler.unstable_yieldValue('Consumer');
           return (
             <ContextConsumer>
               {value => {
-                Scheduler.yieldValue('Consumer render prop');
+                Scheduler.unstable_yieldValue('Consumer render prop');
                 return <span prop={'Result: ' + value} />;
               }}
             </ContextConsumer>
@@ -254,13 +254,13 @@ describe('ReactNewContext', () => {
             return false;
           }
           render() {
-            Scheduler.yieldValue('Indirection');
+            Scheduler.unstable_yieldValue('Indirection');
             return this.props.children;
           }
         }
 
         function App(props) {
-          Scheduler.yieldValue('App');
+          Scheduler.unstable_yieldValue('App');
           return (
             <Provider value={props.value}>
               <Indirection>
@@ -463,7 +463,7 @@ describe('ReactNewContext', () => {
         const ContextConsumer = getConsumer(Context);
 
         function Provider(props) {
-          Scheduler.yieldValue('Provider');
+          Scheduler.unstable_yieldValue('Provider');
           return (
             <Context.Provider value={props.value}>
               {props.children}
@@ -472,11 +472,11 @@ describe('ReactNewContext', () => {
         }
 
         function Consumer(props) {
-          Scheduler.yieldValue('Consumer');
+          Scheduler.unstable_yieldValue('Consumer');
           return (
             <ContextConsumer>
               {value => {
-                Scheduler.yieldValue('Consumer render prop');
+                Scheduler.unstable_yieldValue('Consumer render prop');
                 return <span prop={'Result: ' + value} />;
               }}
             </ContextConsumer>
@@ -488,13 +488,13 @@ describe('ReactNewContext', () => {
             return false;
           }
           render() {
-            Scheduler.yieldValue('Indirection');
+            Scheduler.unstable_yieldValue('Indirection');
             return this.props.children;
           }
         }
 
         function App(props) {
-          Scheduler.yieldValue('App');
+          Scheduler.unstable_yieldValue('App');
           return (
             <Provider value={props.value}>
               <Indirection>
@@ -605,7 +605,7 @@ describe('ReactNewContext', () => {
           return (
             <Consumer unstable_observedBits={0b01}>
               {value => {
-                Scheduler.yieldValue('Foo');
+                Scheduler.unstable_yieldValue('Foo');
                 return <span prop={'Foo: ' + value.foo} />;
               }}
             </Consumer>
@@ -616,7 +616,7 @@ describe('ReactNewContext', () => {
           return (
             <Consumer unstable_observedBits={0b10}>
               {value => {
-                Scheduler.yieldValue('Bar');
+                Scheduler.unstable_yieldValue('Bar');
                 return <span prop={'Bar: ' + value.bar} />;
               }}
             </Consumer>
@@ -704,7 +704,7 @@ describe('ReactNewContext', () => {
           return (
             <Consumer unstable_observedBits={0b01}>
               {value => {
-                Scheduler.yieldValue('Foo');
+                Scheduler.unstable_yieldValue('Foo');
                 return (
                   <React.Fragment>
                     <span prop={'Foo: ' + value.foo} />
@@ -720,7 +720,7 @@ describe('ReactNewContext', () => {
           return (
             <Consumer unstable_observedBits={0b10}>
               {value => {
-                Scheduler.yieldValue('Bar');
+                Scheduler.unstable_yieldValue('Bar');
                 return (
                   <React.Fragment>
                     <span prop={'Bar: ' + value.bar} />
@@ -808,7 +808,7 @@ describe('ReactNewContext', () => {
         class Child extends React.Component {
           state = {step: 0};
           render() {
-            Scheduler.yieldValue('Child');
+            Scheduler.unstable_yieldValue('Child');
             return (
               <span
                 prop={`Context: ${this.props.context}, Step: ${
@@ -824,7 +824,7 @@ describe('ReactNewContext', () => {
             <Context.Provider value={props.value}>
               <Consumer>
                 {value => {
-                  Scheduler.yieldValue('Consumer render prop');
+                  Scheduler.unstable_yieldValue('Consumer render prop');
                   return <Child ref={inst => (child = inst)} context={value} />;
                 }}
               </Consumer>
@@ -847,24 +847,24 @@ describe('ReactNewContext', () => {
         const Consumer = getConsumer(Context);
 
         function renderChildValue(value) {
-          Scheduler.yieldValue('Consumer');
+          Scheduler.unstable_yieldValue('Consumer');
           return <span prop={value} />;
         }
 
         function ChildWithInlineRenderCallback() {
-          Scheduler.yieldValue('ChildWithInlineRenderCallback');
+          Scheduler.unstable_yieldValue('ChildWithInlineRenderCallback');
           // Note: we are intentionally passing an inline arrow. Don't refactor.
           return <Consumer>{value => renderChildValue(value)}</Consumer>;
         }
 
         function ChildWithCachedRenderCallback() {
-          Scheduler.yieldValue('ChildWithCachedRenderCallback');
+          Scheduler.unstable_yieldValue('ChildWithCachedRenderCallback');
           return <Consumer>{renderChildValue}</Consumer>;
         }
 
         class PureIndirection extends React.PureComponent {
           render() {
-            Scheduler.yieldValue('PureIndirection');
+            Scheduler.unstable_yieldValue('PureIndirection');
             return (
               <React.Fragment>
                 <ChildWithInlineRenderCallback />
@@ -876,7 +876,7 @@ describe('ReactNewContext', () => {
 
         class App extends React.Component {
           render() {
-            Scheduler.yieldValue('App');
+            Scheduler.unstable_yieldValue('App');
             return (
               <Context.Provider value={this.props.value}>
                 <PureIndirection />
@@ -988,7 +988,7 @@ describe('ReactNewContext', () => {
           };
 
           render() {
-            Scheduler.yieldValue('App');
+            Scheduler.unstable_yieldValue('App');
             return (
               <Context.Provider value={this.state.step}>
                 <StaticContent />
@@ -1016,7 +1016,7 @@ describe('ReactNewContext', () => {
             return (
               <ContextConsumer>
                 {value => {
-                  Scheduler.yieldValue('Consumer');
+                  Scheduler.unstable_yieldValue('Consumer');
                   return <span prop={value} />;
                 }}
               </ContextConsumer>
@@ -1079,7 +1079,7 @@ describe('ReactNewContext', () => {
       const Context = React.createContext(0);
 
       function Foo(props) {
-        Scheduler.yieldValue('Foo');
+        Scheduler.unstable_yieldValue('Foo');
         return null;
       }
 
@@ -1119,14 +1119,14 @@ describe('ReactNewContext', () => {
       const Context = React.createContext(0);
 
       function Child() {
-        Scheduler.yieldValue('Child');
+        Scheduler.unstable_yieldValue('Child');
         return <span prop="Child" />;
       }
 
       const children = <Child />;
 
       function App(props) {
-        Scheduler.yieldValue('App');
+        Scheduler.unstable_yieldValue('App');
         return (
           <Context.Provider value={props.value}>{children}</Context.Provider>
         );
@@ -1150,7 +1150,7 @@ describe('ReactNewContext', () => {
       const Context = React.createContext(0);
 
       function Child() {
-        Scheduler.yieldValue('Child');
+        Scheduler.unstable_yieldValue('Child');
         return <span prop="Child" />;
       }
 
@@ -1165,7 +1165,7 @@ describe('ReactNewContext', () => {
           return {legacyValue: this.state.legacyValue};
         }
         render() {
-          Scheduler.yieldValue('LegacyProvider');
+          Scheduler.unstable_yieldValue('LegacyProvider');
           return this.props.children;
         }
       }
@@ -1173,7 +1173,7 @@ describe('ReactNewContext', () => {
       class App extends React.Component {
         state = {value: 1};
         render() {
-          Scheduler.yieldValue('App');
+          Scheduler.unstable_yieldValue('App');
           return (
             <Context.Provider value={this.state.value}>
               {this.props.children}
@@ -1299,12 +1299,12 @@ describe('ReactNewContext', () => {
         };
 
         renderConsumer = context => {
-          Scheduler.yieldValue('App#renderConsumer');
+          Scheduler.unstable_yieldValue('App#renderConsumer');
           return <span prop={this.state.text} />;
         };
 
         render() {
-          Scheduler.yieldValue('App');
+          Scheduler.unstable_yieldValue('App');
           return (
             <Context.Provider value={this.props.value}>
               <Consumer>{this.renderConsumer}</Consumer>
@@ -1439,12 +1439,12 @@ describe('ReactNewContext', () => {
         };
 
         renderConsumer = context => {
-          Scheduler.yieldValue('App#renderConsumer');
+          Scheduler.unstable_yieldValue('App#renderConsumer');
           return <span prop={this.state.text} />;
         };
 
         render() {
-          Scheduler.yieldValue('App');
+          Scheduler.unstable_yieldValue('App');
           return (
             <Context.Provider value={this.props.value}>
               <Consumer>{this.renderConsumer}</Consumer>
@@ -1571,12 +1571,12 @@ describe('ReactNewContext', () => {
         };
 
         renderConsumer = context => {
-          Scheduler.yieldValue('App#renderConsumer');
+          Scheduler.unstable_yieldValue('App#renderConsumer');
           return <span prop={this.state.text} />;
         };
 
         render() {
-          Scheduler.yieldValue('App');
+          Scheduler.unstable_yieldValue('App');
           return (
             <Context.Provider value={this.props.value}>
               <Consumer>{this.renderConsumer}</Consumer>
@@ -1699,7 +1699,7 @@ describe('ReactNewContext', () => {
           return false;
         }
         render() {
-          Scheduler.yieldValue();
+          Scheduler.unstable_yieldValue();
           if (this.props.depth >= this.props.maxDepth) {
             return null;
           }
@@ -1777,7 +1777,7 @@ describe('ReactNewContext', () => {
         actions.forEach(action => {
           switch (action.type) {
             case FLUSH_ALL:
-              Scheduler.unstable_flushWithoutYielding();
+              Scheduler.unstable_flushAllWithoutAsserting();
               break;
             case FLUSH:
               Scheduler.unstable_flushNumberOfYields(action.unitsOfWork);
@@ -1795,7 +1795,7 @@ describe('ReactNewContext', () => {
           assertConsistentTree();
         });
 
-        Scheduler.unstable_flushWithoutYielding();
+        Scheduler.unstable_flushAllWithoutAsserting();
         assertConsistentTree(finalExpectedValues);
       }
 

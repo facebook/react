@@ -58,7 +58,7 @@ describe('ReactHooksWithNoopRenderer', () => {
   }
 
   function Text(props) {
-    Scheduler.yieldValue(props.text);
+    Scheduler.unstable_yieldValue(props.text);
     return <span prop={props.text} />;
   }
 
@@ -197,7 +197,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     it('lazy state initializer', () => {
       function Counter(props, ref) {
         const [count, updateCount] = useState(() => {
-          Scheduler.yieldValue('getInitialState');
+          Scheduler.unstable_yieldValue('getInitialState');
           return props.initialState;
         });
         useImperativeHandle(ref, () => ({updateCount}));
@@ -346,7 +346,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         if (count < 3) {
           setCount(count + 1);
         }
-        Scheduler.yieldValue('Render: ' + count);
+        Scheduler.unstable_yieldValue('Render: ' + count);
         return <Text text={count} />;
       }
 
@@ -369,7 +369,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           setCount(c => c + 1);
           setCount(c => c + 1);
         }
-        Scheduler.yieldValue('Render: ' + count);
+        Scheduler.unstable_yieldValue('Render: ' + count);
         return <Text text={count} />;
       }
 
@@ -390,7 +390,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       function Counter({row: newRow}) {
         let [count, setCount] = useState(0);
         setCount(count + 1);
-        Scheduler.yieldValue('Render: ' + count);
+        Scheduler.unstable_yieldValue('Render: ' + count);
         return <Text text={count} />;
       }
       ReactNoop.render(<Counter />);
@@ -409,7 +409,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         if (count < 3) {
           dispatch('increment');
         }
-        Scheduler.yieldValue('Render: ' + count);
+        Scheduler.unstable_yieldValue('Render: ' + count);
         return <Text text={count} />;
       }
 
@@ -458,7 +458,7 @@ describe('ReactHooksWithNoopRenderer', () => {
             setReducer(() => reducerA);
           }
         }
-        Scheduler.yieldValue('Render: ' + count);
+        Scheduler.unstable_yieldValue('Render: ' + count);
         return <Text text={count} />;
       }
       Counter = forwardRef(Counter);
@@ -550,7 +550,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       function Counter(props, ref) {
         const [count, dispatch] = useReducer(reducer, props, p => {
-          Scheduler.yieldValue('Init');
+          Scheduler.unstable_yieldValue('Init');
           return p.initialCount;
         });
         useImperativeHandle(ref, () => ({dispatch}));
@@ -618,13 +618,13 @@ describe('ReactHooksWithNoopRenderer', () => {
     it('simple mount and update', () => {
       function Counter(props) {
         useEffect(() => {
-          Scheduler.yieldValue(`Passive effect [${props.count}]`);
+          Scheduler.unstable_yieldValue(`Passive effect [${props.count}]`);
         });
         return <Text text={'Count: ' + props.count} />;
       }
       act(() => {
         ReactNoop.render(<Counter count={0} />, () =>
-          Scheduler.yieldValue('Sync effect'),
+          Scheduler.unstable_yieldValue('Sync effect'),
         );
         expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
         expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
@@ -634,7 +634,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       act(() => {
         ReactNoop.render(<Counter count={1} />, () =>
-          Scheduler.yieldValue('Sync effect'),
+          Scheduler.unstable_yieldValue('Sync effect'),
         );
         expect(Scheduler).toFlushAndYieldThrough(['Count: 1', 'Sync effect']);
         expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
@@ -646,13 +646,13 @@ describe('ReactHooksWithNoopRenderer', () => {
     it('flushes passive effects even with sibling deletions', () => {
       function LayoutEffect(props) {
         useLayoutEffect(() => {
-          Scheduler.yieldValue(`Layout effect`);
+          Scheduler.unstable_yieldValue(`Layout effect`);
         });
         return <Text text="Layout" />;
       }
       function PassiveEffect(props) {
         useEffect(() => {
-          Scheduler.yieldValue(`Passive effect`);
+          Scheduler.unstable_yieldValue(`Passive effect`);
         }, []);
         return <Text text="Passive" />;
       }
@@ -681,7 +681,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     it('flushes passive effects even if siblings schedule an update', () => {
       function PassiveEffect(props) {
         useEffect(() => {
-          Scheduler.yieldValue('Passive effect');
+          Scheduler.unstable_yieldValue('Passive effect');
         });
         return <Text text="Passive" />;
       }
@@ -692,7 +692,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           if (count === 0) {
             setCount(1);
           }
-          Scheduler.yieldValue('Layout effect ' + count);
+          Scheduler.unstable_yieldValue('Layout effect ' + count);
         });
         return <Text text="Layout" />;
       }
@@ -719,13 +719,13 @@ describe('ReactHooksWithNoopRenderer', () => {
     it('flushes passive effects even if siblings schedule a new root', () => {
       function PassiveEffect(props) {
         useEffect(() => {
-          Scheduler.yieldValue('Passive effect');
+          Scheduler.unstable_yieldValue('Passive effect');
         }, []);
         return <Text text="Passive" />;
       }
       function LayoutEffect(props) {
         useLayoutEffect(() => {
-          Scheduler.yieldValue('Layout effect');
+          Scheduler.unstable_yieldValue('Layout effect');
           // Scheduling work shouldn't interfere with the queued passive effect
           ReactNoop.renderToRootWithID(<Text text="New Root" />, 'root2');
         });
@@ -761,7 +761,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
         function Counter(props) {
           useEffect(() => {
-            Scheduler.yieldValue(
+            Scheduler.unstable_yieldValue(
               `Committed state when effect was fired: ${getCommittedText()}`,
             );
           });
@@ -769,13 +769,13 @@ describe('ReactHooksWithNoopRenderer', () => {
         }
         act(() => {
           ReactNoop.render(<Counter count={0} />, () =>
-            Scheduler.yieldValue('Sync effect'),
+            Scheduler.unstable_yieldValue('Sync effect'),
           );
           expect(Scheduler).toFlushAndYieldThrough([0, 'Sync effect']);
           expect(ReactNoop.getChildren()).toEqual([span(0)]);
           // Before the effects have a chance to flush, schedule another update
           ReactNoop.render(<Counter count={1} />, () =>
-            Scheduler.yieldValue('Sync effect'),
+            Scheduler.unstable_yieldValue('Sync effect'),
           );
           expect(Scheduler).toFlushAndYieldThrough([
             // The previous effect flushes before the reconciliation
@@ -797,7 +797,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         const [count, updateCount] = useState('(empty)');
         useEffect(
           () => {
-            Scheduler.yieldValue(`Schedule update [${props.count}]`);
+            Scheduler.unstable_yieldValue(`Schedule update [${props.count}]`);
             updateCount(props.count);
           },
           [props.count],
@@ -806,7 +806,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       }
       act(() => {
         ReactNoop.render(<Counter count={0} />, () =>
-          Scheduler.yieldValue('Sync effect'),
+          Scheduler.unstable_yieldValue('Sync effect'),
         );
         expect(Scheduler).toFlushAndYieldThrough([
           'Count: (empty)',
@@ -820,7 +820,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       act(() => {
         ReactNoop.render(<Counter count={1} />, () =>
-          Scheduler.yieldValue('Sync effect'),
+          Scheduler.unstable_yieldValue('Sync effect'),
         );
         expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
         expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
@@ -835,7 +835,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         const [count, updateCount] = useState('(empty)');
         useEffect(
           () => {
-            Scheduler.yieldValue(`Schedule update [${props.count}]`);
+            Scheduler.unstable_yieldValue(`Schedule update [${props.count}]`);
             updateCount(props.count);
           },
           [props.count],
@@ -844,7 +844,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       }
       act(() => {
         ReactNoop.render(<Counter count={0} />, () =>
-          Scheduler.yieldValue('Sync effect'),
+          Scheduler.unstable_yieldValue('Sync effect'),
         );
         expect(Scheduler).toFlushAndYieldThrough([
           'Count: (empty)',
@@ -854,7 +854,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
         // Rendering again should flush the previous commit's effects
         ReactNoop.render(<Counter count={1} />, () =>
-          Scheduler.yieldValue('Sync effect'),
+          Scheduler.unstable_yieldValue('Sync effect'),
         );
         expect(Scheduler).toFlushAndYieldThrough([
           'Schedule update [0]',
@@ -877,7 +877,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         const [count, updateCount] = useState(0);
         _updateCount = updateCount;
         useEffect(() => {
-          Scheduler.yieldValue(`Will set count to 1`);
+          Scheduler.unstable_yieldValue(`Will set count to 1`);
           updateCount(1);
         }, []);
         return <Text text={'Count: ' + count} />;
@@ -887,7 +887,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       // it's a lot harder to simulate this condition inside an act scope
       expect(() => {
         ReactNoop.render(<Counter count={0} />, () =>
-          Scheduler.yieldValue('Sync effect'),
+          Scheduler.unstable_yieldValue('Sync effect'),
         );
         expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
         expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
@@ -933,7 +933,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           expect(SchedulerTracing.unstable_getCurrent()).toMatchInteractions([
             tracingEvent,
           ]);
-          Scheduler.yieldValue(`Will set count to 1`);
+          Scheduler.unstable_yieldValue(`Will set count to 1`);
           updateCount(1);
         }, []);
         return <Text text={'Count: ' + count} />;
@@ -948,7 +948,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           tracingEvent.timestamp,
           () => {
             ReactNoop.render(<Counter count={0} />, () =>
-              Scheduler.yieldValue('Sync effect'),
+              Scheduler.unstable_yieldValue('Sync effect'),
             );
           },
         );
@@ -1022,7 +1022,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         const [count, updateCount] = useState('(empty)');
         useEffect(
           () => {
-            Scheduler.yieldValue(`Schedule update [${props.count}]`);
+            Scheduler.unstable_yieldValue(`Schedule update [${props.count}]`);
             ReactNoop.flushSync(() => {
               updateCount(props.count);
             });
@@ -1033,7 +1033,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       }
       act(() => {
         ReactNoop.render(<Counter count={0} />, () =>
-          Scheduler.yieldValue('Sync effect'),
+          Scheduler.unstable_yieldValue('Sync effect'),
         );
         expect(Scheduler).toFlushAndYieldThrough([
           'Count: (empty)',
@@ -1049,16 +1049,16 @@ describe('ReactHooksWithNoopRenderer', () => {
     it('unmounts previous effect', () => {
       function Counter(props) {
         useEffect(() => {
-          Scheduler.yieldValue(`Did create [${props.count}]`);
+          Scheduler.unstable_yieldValue(`Did create [${props.count}]`);
           return () => {
-            Scheduler.yieldValue(`Did destroy [${props.count}]`);
+            Scheduler.unstable_yieldValue(`Did destroy [${props.count}]`);
           };
         });
         return <Text text={'Count: ' + props.count} />;
       }
       act(() => {
         ReactNoop.render(<Counter count={0} />, () =>
-          Scheduler.yieldValue('Sync effect'),
+          Scheduler.unstable_yieldValue('Sync effect'),
         );
         expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
         expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
@@ -1068,7 +1068,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       act(() => {
         ReactNoop.render(<Counter count={1} />, () =>
-          Scheduler.yieldValue('Sync effect'),
+          Scheduler.unstable_yieldValue('Sync effect'),
         );
         expect(Scheduler).toFlushAndYieldThrough(['Count: 1', 'Sync effect']);
         expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
@@ -1080,16 +1080,16 @@ describe('ReactHooksWithNoopRenderer', () => {
     it('unmounts on deletion', () => {
       function Counter(props) {
         useEffect(() => {
-          Scheduler.yieldValue(`Did create [${props.count}]`);
+          Scheduler.unstable_yieldValue(`Did create [${props.count}]`);
           return () => {
-            Scheduler.yieldValue(`Did destroy [${props.count}]`);
+            Scheduler.unstable_yieldValue(`Did destroy [${props.count}]`);
           };
         });
         return <Text text={'Count: ' + props.count} />;
       }
       act(() => {
         ReactNoop.render(<Counter count={0} />, () =>
-          Scheduler.yieldValue('Sync effect'),
+          Scheduler.unstable_yieldValue('Sync effect'),
         );
         expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
         expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
@@ -1105,16 +1105,16 @@ describe('ReactHooksWithNoopRenderer', () => {
     it('unmounts on deletion after skipped effect', () => {
       function Counter(props) {
         useEffect(() => {
-          Scheduler.yieldValue(`Did create [${props.count}]`);
+          Scheduler.unstable_yieldValue(`Did create [${props.count}]`);
           return () => {
-            Scheduler.yieldValue(`Did destroy [${props.count}]`);
+            Scheduler.unstable_yieldValue(`Did destroy [${props.count}]`);
           };
         }, []);
         return <Text text={'Count: ' + props.count} />;
       }
       act(() => {
         ReactNoop.render(<Counter count={0} />, () =>
-          Scheduler.yieldValue('Sync effect'),
+          Scheduler.unstable_yieldValue('Sync effect'),
         );
         expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
         expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
@@ -1124,7 +1124,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       act(() => {
         ReactNoop.render(<Counter count={1} />, () =>
-          Scheduler.yieldValue('Sync effect'),
+          Scheduler.unstable_yieldValue('Sync effect'),
         );
         expect(Scheduler).toFlushAndYieldThrough(['Count: 1', 'Sync effect']);
         expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
@@ -1139,9 +1139,9 @@ describe('ReactHooksWithNoopRenderer', () => {
 
     it('always fires effects if no dependencies are provided', () => {
       function effect() {
-        Scheduler.yieldValue(`Did create`);
+        Scheduler.unstable_yieldValue(`Did create`);
         return () => {
-          Scheduler.yieldValue(`Did destroy`);
+          Scheduler.unstable_yieldValue(`Did destroy`);
         };
       }
       function Counter(props) {
@@ -1150,7 +1150,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       }
       act(() => {
         ReactNoop.render(<Counter count={0} />, () =>
-          Scheduler.yieldValue('Sync effect'),
+          Scheduler.unstable_yieldValue('Sync effect'),
         );
         expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
         expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
@@ -1160,7 +1160,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       act(() => {
         ReactNoop.render(<Counter count={1} />, () =>
-          Scheduler.yieldValue('Sync effect'),
+          Scheduler.unstable_yieldValue('Sync effect'),
         );
         expect(Scheduler).toFlushAndYieldThrough(['Count: 1', 'Sync effect']);
         expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
@@ -1178,9 +1178,9 @@ describe('ReactHooksWithNoopRenderer', () => {
         const text = `${props.label}: ${props.count}`;
         useEffect(
           () => {
-            Scheduler.yieldValue(`Did create [${text}]`);
+            Scheduler.unstable_yieldValue(`Did create [${text}]`);
             return () => {
-              Scheduler.yieldValue(`Did destroy [${text}]`);
+              Scheduler.unstable_yieldValue(`Did destroy [${text}]`);
             };
           },
           [props.label, props.count],
@@ -1189,7 +1189,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       }
       act(() => {
         ReactNoop.render(<Counter label="Count" count={0} />, () =>
-          Scheduler.yieldValue('Sync effect'),
+          Scheduler.unstable_yieldValue('Sync effect'),
         );
         expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
       });
@@ -1199,7 +1199,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       act(() => {
         ReactNoop.render(<Counter label="Count" count={1} />, () =>
-          Scheduler.yieldValue('Sync effect'),
+          Scheduler.unstable_yieldValue('Sync effect'),
         );
         // Count changed
         expect(Scheduler).toFlushAndYieldThrough(['Count: 1', 'Sync effect']);
@@ -1213,7 +1213,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       act(() => {
         ReactNoop.render(<Counter label="Count" count={1} />, () =>
-          Scheduler.yieldValue('Sync effect'),
+          Scheduler.unstable_yieldValue('Sync effect'),
         );
         // Nothing changed, so no effect should have fired
         expect(Scheduler).toFlushAndYieldThrough(['Count: 1', 'Sync effect']);
@@ -1224,7 +1224,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       act(() => {
         ReactNoop.render(<Counter label="Total" count={1} />, () =>
-          Scheduler.yieldValue('Sync effect'),
+          Scheduler.unstable_yieldValue('Sync effect'),
         );
         // Label changed
         expect(Scheduler).toFlushAndYieldThrough(['Total: 1', 'Sync effect']);
@@ -1240,16 +1240,16 @@ describe('ReactHooksWithNoopRenderer', () => {
     it('multiple effects', () => {
       function Counter(props) {
         useEffect(() => {
-          Scheduler.yieldValue(`Did commit 1 [${props.count}]`);
+          Scheduler.unstable_yieldValue(`Did commit 1 [${props.count}]`);
         });
         useEffect(() => {
-          Scheduler.yieldValue(`Did commit 2 [${props.count}]`);
+          Scheduler.unstable_yieldValue(`Did commit 2 [${props.count}]`);
         });
         return <Text text={'Count: ' + props.count} />;
       }
       act(() => {
         ReactNoop.render(<Counter count={0} />, () =>
-          Scheduler.yieldValue('Sync effect'),
+          Scheduler.unstable_yieldValue('Sync effect'),
         );
         expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
         expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
@@ -1259,7 +1259,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       act(() => {
         ReactNoop.render(<Counter count={1} />, () =>
-          Scheduler.yieldValue('Sync effect'),
+          Scheduler.unstable_yieldValue('Sync effect'),
         );
         expect(Scheduler).toFlushAndYieldThrough(['Count: 1', 'Sync effect']);
         expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
@@ -1270,22 +1270,22 @@ describe('ReactHooksWithNoopRenderer', () => {
     it('unmounts all previous effects before creating any new ones', () => {
       function Counter(props) {
         useEffect(() => {
-          Scheduler.yieldValue(`Mount A [${props.count}]`);
+          Scheduler.unstable_yieldValue(`Mount A [${props.count}]`);
           return () => {
-            Scheduler.yieldValue(`Unmount A [${props.count}]`);
+            Scheduler.unstable_yieldValue(`Unmount A [${props.count}]`);
           };
         });
         useEffect(() => {
-          Scheduler.yieldValue(`Mount B [${props.count}]`);
+          Scheduler.unstable_yieldValue(`Mount B [${props.count}]`);
           return () => {
-            Scheduler.yieldValue(`Unmount B [${props.count}]`);
+            Scheduler.unstable_yieldValue(`Unmount B [${props.count}]`);
           };
         });
         return <Text text={'Count: ' + props.count} />;
       }
       act(() => {
         ReactNoop.render(<Counter count={0} />, () =>
-          Scheduler.yieldValue('Sync effect'),
+          Scheduler.unstable_yieldValue('Sync effect'),
         );
         expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
         expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
@@ -1295,7 +1295,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       act(() => {
         ReactNoop.render(<Counter count={1} />, () =>
-          Scheduler.yieldValue('Sync effect'),
+          Scheduler.unstable_yieldValue('Sync effect'),
         );
         expect(Scheduler).toFlushAndYieldThrough(['Count: 1', 'Sync effect']);
         expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
@@ -1311,25 +1311,25 @@ describe('ReactHooksWithNoopRenderer', () => {
     it('handles errors on mount', () => {
       function Counter(props) {
         useEffect(() => {
-          Scheduler.yieldValue(`Mount A [${props.count}]`);
+          Scheduler.unstable_yieldValue(`Mount A [${props.count}]`);
           return () => {
-            Scheduler.yieldValue(`Unmount A [${props.count}]`);
+            Scheduler.unstable_yieldValue(`Unmount A [${props.count}]`);
           };
         });
         useEffect(() => {
-          Scheduler.yieldValue('Oops!');
+          Scheduler.unstable_yieldValue('Oops!');
           throw new Error('Oops!');
           // eslint-disable-next-line no-unreachable
-          Scheduler.yieldValue(`Mount B [${props.count}]`);
+          Scheduler.unstable_yieldValue(`Mount B [${props.count}]`);
           return () => {
-            Scheduler.yieldValue(`Unmount B [${props.count}]`);
+            Scheduler.unstable_yieldValue(`Unmount B [${props.count}]`);
           };
         });
         return <Text text={'Count: ' + props.count} />;
       }
       act(() => {
         ReactNoop.render(<Counter count={0} />, () =>
-          Scheduler.yieldValue('Sync effect'),
+          Scheduler.unstable_yieldValue('Sync effect'),
         );
         expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
         expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
@@ -1349,26 +1349,26 @@ describe('ReactHooksWithNoopRenderer', () => {
     it('handles errors on update', () => {
       function Counter(props) {
         useEffect(() => {
-          Scheduler.yieldValue(`Mount A [${props.count}]`);
+          Scheduler.unstable_yieldValue(`Mount A [${props.count}]`);
           return () => {
-            Scheduler.yieldValue(`Unmount A [${props.count}]`);
+            Scheduler.unstable_yieldValue(`Unmount A [${props.count}]`);
           };
         });
         useEffect(() => {
           if (props.count === 1) {
-            Scheduler.yieldValue('Oops!');
+            Scheduler.unstable_yieldValue('Oops!');
             throw new Error('Oops!');
           }
-          Scheduler.yieldValue(`Mount B [${props.count}]`);
+          Scheduler.unstable_yieldValue(`Mount B [${props.count}]`);
           return () => {
-            Scheduler.yieldValue(`Unmount B [${props.count}]`);
+            Scheduler.unstable_yieldValue(`Unmount B [${props.count}]`);
           };
         });
         return <Text text={'Count: ' + props.count} />;
       }
       act(() => {
         ReactNoop.render(<Counter count={0} />, () =>
-          Scheduler.yieldValue('Sync effect'),
+          Scheduler.unstable_yieldValue('Sync effect'),
         );
         expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
         expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
@@ -1379,7 +1379,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       act(() => {
         // This update will trigger an errror
         ReactNoop.render(<Counter count={1} />, () =>
-          Scheduler.yieldValue('Sync effect'),
+          Scheduler.unstable_yieldValue('Sync effect'),
         );
         expect(Scheduler).toFlushAndYieldThrough(['Count: 1', 'Sync effect']);
         expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
@@ -1400,25 +1400,25 @@ describe('ReactHooksWithNoopRenderer', () => {
     it('handles errors on unmount', () => {
       function Counter(props) {
         useEffect(() => {
-          Scheduler.yieldValue(`Mount A [${props.count}]`);
+          Scheduler.unstable_yieldValue(`Mount A [${props.count}]`);
           return () => {
-            Scheduler.yieldValue('Oops!');
+            Scheduler.unstable_yieldValue('Oops!');
             throw new Error('Oops!');
             // eslint-disable-next-line no-unreachable
-            Scheduler.yieldValue(`Unmount A [${props.count}]`);
+            Scheduler.unstable_yieldValue(`Unmount A [${props.count}]`);
           };
         });
         useEffect(() => {
-          Scheduler.yieldValue(`Mount B [${props.count}]`);
+          Scheduler.unstable_yieldValue(`Mount B [${props.count}]`);
           return () => {
-            Scheduler.yieldValue(`Unmount B [${props.count}]`);
+            Scheduler.unstable_yieldValue(`Unmount B [${props.count}]`);
           };
         });
         return <Text text={'Count: ' + props.count} />;
       }
       act(() => {
         ReactNoop.render(<Counter count={0} />, () =>
-          Scheduler.yieldValue('Sync effect'),
+          Scheduler.unstable_yieldValue('Sync effect'),
         );
         expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
         expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
@@ -1429,7 +1429,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       act(() => {
         // This update will trigger an errror
         ReactNoop.render(<Counter count={1} />, () =>
-          Scheduler.yieldValue('Sync effect'),
+          Scheduler.unstable_yieldValue('Sync effect'),
         );
         expect(Scheduler).toFlushAndYieldThrough(['Count: 1', 'Sync effect']);
         expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
@@ -1446,15 +1446,15 @@ describe('ReactHooksWithNoopRenderer', () => {
     it('works with memo', () => {
       function Counter({count}) {
         useLayoutEffect(() => {
-          Scheduler.yieldValue('Mount: ' + count);
-          return () => Scheduler.yieldValue('Unmount: ' + count);
+          Scheduler.unstable_yieldValue('Mount: ' + count);
+          return () => Scheduler.unstable_yieldValue('Unmount: ' + count);
         });
         return <Text text={'Count: ' + count} />;
       }
       Counter = memo(Counter);
 
       ReactNoop.render(<Counter count={0} />, () =>
-        Scheduler.yieldValue('Sync effect'),
+        Scheduler.unstable_yieldValue('Sync effect'),
       );
       expect(Scheduler).toFlushAndYieldThrough([
         'Count: 0',
@@ -1464,7 +1464,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
 
       ReactNoop.render(<Counter count={1} />, () =>
-        Scheduler.yieldValue('Sync effect'),
+        Scheduler.unstable_yieldValue('Sync effect'),
       );
       expect(Scheduler).toFlushAndYieldThrough([
         'Count: 1',
@@ -1485,7 +1485,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       function getCommittedText() {
         const yields = Scheduler.unstable_clearYields();
         const children = ReactNoop.getChildren();
-        Scheduler.yieldValue(yields);
+        Scheduler.unstable_yieldValue(yields);
         if (children === null) {
           return null;
         }
@@ -1494,13 +1494,13 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       function Counter(props) {
         useLayoutEffect(() => {
-          Scheduler.yieldValue(`Current: ${getCommittedText()}`);
+          Scheduler.unstable_yieldValue(`Current: ${getCommittedText()}`);
         });
         return <Text text={props.count} />;
       }
 
       ReactNoop.render(<Counter count={0} />, () =>
-        Scheduler.yieldValue('Sync effect'),
+        Scheduler.unstable_yieldValue('Sync effect'),
       );
       expect(Scheduler).toFlushAndYieldThrough([
         [0],
@@ -1510,7 +1510,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([span(0)]);
 
       ReactNoop.render(<Counter count={1} />, () =>
-        Scheduler.yieldValue('Sync effect'),
+        Scheduler.unstable_yieldValue('Sync effect'),
       );
       expect(Scheduler).toFlushAndYieldThrough([
         [1],
@@ -1529,15 +1529,23 @@ describe('ReactHooksWithNoopRenderer', () => {
           // intentionally omits a mutation effect.
           committedText = props.count + '';
 
-          Scheduler.yieldValue(`Mount layout [current: ${committedText}]`);
+          Scheduler.unstable_yieldValue(
+            `Mount layout [current: ${committedText}]`,
+          );
           return () => {
-            Scheduler.yieldValue(`Unmount layout [current: ${committedText}]`);
+            Scheduler.unstable_yieldValue(
+              `Unmount layout [current: ${committedText}]`,
+            );
           };
         });
         useEffect(() => {
-          Scheduler.yieldValue(`Mount normal [current: ${committedText}]`);
+          Scheduler.unstable_yieldValue(
+            `Mount normal [current: ${committedText}]`,
+          );
           return () => {
-            Scheduler.yieldValue(`Unmount normal [current: ${committedText}]`);
+            Scheduler.unstable_yieldValue(
+              `Unmount normal [current: ${committedText}]`,
+            );
           };
         });
         return null;
@@ -1545,7 +1553,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       act(() => {
         ReactNoop.render(<Counter count={0} />, () =>
-          Scheduler.yieldValue('Sync effect'),
+          Scheduler.unstable_yieldValue('Sync effect'),
         );
         expect(Scheduler).toFlushAndYieldThrough([
           'Mount layout [current: 0]',
@@ -1553,7 +1561,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         ]);
         expect(committedText).toEqual('0');
         ReactNoop.render(<Counter count={1} />, () =>
-          Scheduler.yieldValue('Sync effect'),
+          Scheduler.unstable_yieldValue('Sync effect'),
         );
         expect(Scheduler).toFlushAndYieldThrough([
           'Mount normal [current: 0]',
@@ -1642,7 +1650,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         const text = props.text;
         const capitalizedText = useMemo(
           () => {
-            Scheduler.yieldValue(`Capitalize '${text}'`);
+            Scheduler.unstable_yieldValue(`Capitalize '${text}'`);
             return text.toUpperCase();
           },
           [text],
@@ -1674,12 +1682,12 @@ describe('ReactHooksWithNoopRenderer', () => {
       }
 
       function computeA() {
-        Scheduler.yieldValue('compute A');
+        Scheduler.unstable_yieldValue('compute A');
         return 'A';
       }
 
       function computeB() {
-        Scheduler.yieldValue('compute B');
+        Scheduler.unstable_yieldValue('compute B');
         return 'B';
       }
 
@@ -1709,7 +1717,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       }
 
       function compute(val) {
-        Scheduler.yieldValue('compute ' + val);
+        Scheduler.unstable_yieldValue('compute ' + val);
         return val;
       }
 
@@ -1749,7 +1757,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       function App() {
         ping = useDebouncedCallback(
           value => {
-            Scheduler.yieldValue('ping: ' + value);
+            Scheduler.unstable_yieldValue('ping: ' + value);
           },
           100,
           [],
@@ -2020,17 +2028,17 @@ describe('ReactHooksWithNoopRenderer', () => {
     it('unmount effects', () => {
       function App(props) {
         useEffect(() => {
-          Scheduler.yieldValue('Mount A');
+          Scheduler.unstable_yieldValue('Mount A');
           return () => {
-            Scheduler.yieldValue('Unmount A');
+            Scheduler.unstable_yieldValue('Unmount A');
           };
         }, []);
 
         if (props.showMore) {
           useEffect(() => {
-            Scheduler.yieldValue('Mount B');
+            Scheduler.unstable_yieldValue('Mount B');
             return () => {
-              Scheduler.yieldValue('Unmount B');
+              Scheduler.unstable_yieldValue('Unmount B');
             };
           }, []);
         }
@@ -2040,7 +2048,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       act(() => {
         ReactNoop.render(<App showMore={false} />, () =>
-          Scheduler.yieldValue('Sync effect'),
+          Scheduler.unstable_yieldValue('Sync effect'),
         );
         expect(Scheduler).toFlushAndYieldThrough(['Sync effect']);
       });
@@ -2091,17 +2099,17 @@ describe('ReactHooksWithNoopRenderer', () => {
         // This reducer closes over a value from props. If the reducer is not
         // properly updated, the eager reducer will compare to an old value
         // and bail out incorrectly.
-        Scheduler.yieldValue('Reducer: ' + count);
+        Scheduler.unstable_yieldValue('Reducer: ' + count);
         return count;
       }, -1);
       useEffect(
         () => {
-          Scheduler.yieldValue('Effect: ' + count);
+          Scheduler.unstable_yieldValue('Effect: ' + count);
           dispatch();
         },
         [count],
       );
-      Scheduler.yieldValue('Render: ' + state);
+      Scheduler.unstable_yieldValue('Render: ' + state);
       return count;
     }
 
@@ -2143,7 +2151,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         setStep(step + 1);
       }
 
-      Scheduler.yieldValue(`Step: ${step}, Shadow: ${shadow}`);
+      Scheduler.unstable_yieldValue(`Step: ${step}, Shadow: ${shadow}`);
       return shadow;
     }
 
@@ -2184,7 +2192,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         const [count, updateCount] = useState(0);
         _updateCount = updateCount;
         useEffect(() => {
-          Scheduler.yieldValue(`Will set count to 1`);
+          Scheduler.unstable_yieldValue(`Will set count to 1`);
           updateCount(1);
         }, []);
         return <Text text={'Count: ' + count} />;
@@ -2192,7 +2200,7 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       act(() => {
         ReactNoop.render(<Counter count={0} />, () =>
-          Scheduler.yieldValue('Sync effect'),
+          Scheduler.unstable_yieldValue('Sync effect'),
         );
         expect(Scheduler).toFlushAndYieldThrough(['Count: 0', 'Sync effect']);
         expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);

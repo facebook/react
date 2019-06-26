@@ -375,12 +375,12 @@ describe('ReactIncrementalSideEffects', () => {
 
   it('does not update child nodes if a flush is aborted', () => {
     function Bar(props) {
-      Scheduler.yieldValue('Bar');
+      Scheduler.unstable_yieldValue('Bar');
       return <span prop={props.text} />;
     }
 
     function Foo(props) {
-      Scheduler.yieldValue('Foo');
+      Scheduler.unstable_yieldValue('Foo');
       return (
         <div>
           <div>
@@ -409,12 +409,12 @@ describe('ReactIncrementalSideEffects', () => {
 
   it('preserves a previously rendered node when deprioritized', () => {
     function Middle(props) {
-      Scheduler.yieldValue('Middle');
+      Scheduler.unstable_yieldValue('Middle');
       return <span prop={props.children} />;
     }
 
     function Foo(props) {
-      Scheduler.yieldValue('Foo');
+      Scheduler.unstable_yieldValue('Foo');
       return (
         <div>
           <div hidden={true}>
@@ -435,7 +435,9 @@ describe('ReactIncrementalSideEffects', () => {
       </div>,
     );
 
-    ReactNoop.render(<Foo text="bar" />, () => Scheduler.yieldValue('commit'));
+    ReactNoop.render(<Foo text="bar" />, () =>
+      Scheduler.unstable_yieldValue('commit'),
+    );
     expect(Scheduler).toFlushAndYieldThrough(['Foo', 'commit']);
     expect(ReactNoop.getChildrenAsJSX()).toEqual(
       <div>
@@ -457,7 +459,7 @@ describe('ReactIncrementalSideEffects', () => {
 
   it('can reuse side-effects after being preempted', () => {
     function Bar(props) {
-      Scheduler.yieldValue('Bar');
+      Scheduler.unstable_yieldValue('Bar');
       return <span prop={props.children} />;
     }
 
@@ -469,7 +471,7 @@ describe('ReactIncrementalSideEffects', () => {
     );
 
     function Foo(props) {
-      Scheduler.yieldValue('Foo');
+      Scheduler.unstable_yieldValue('Foo');
       return (
         <div hidden={true}>
           {props.step === 0 ? (
@@ -500,7 +502,7 @@ describe('ReactIncrementalSideEffects', () => {
     // Make a quick update which will schedule low priority work to
     // update the middle content.
     ReactNoop.render(<Foo text="bar" step={1} />, () =>
-      Scheduler.yieldValue('commit'),
+      Scheduler.unstable_yieldValue('commit'),
     );
     expect(Scheduler).toFlushAndYieldThrough(['Foo', 'commit', 'Bar']);
 
@@ -540,7 +542,7 @@ describe('ReactIncrementalSideEffects', () => {
         return this.props.children !== nextProps.children;
       }
       render() {
-        Scheduler.yieldValue('Bar');
+        Scheduler.unstable_yieldValue('Bar');
         return <span prop={this.props.children} />;
       }
     }
@@ -550,7 +552,7 @@ describe('ReactIncrementalSideEffects', () => {
         return this.props.step !== nextProps.step;
       }
       render() {
-        Scheduler.yieldValue('Content');
+        Scheduler.unstable_yieldValue('Content');
         return (
           <div>
             <Bar>{this.props.step === 0 ? 'Hi' : 'Hello'}</Bar>
@@ -561,7 +563,7 @@ describe('ReactIncrementalSideEffects', () => {
     }
 
     function Foo(props) {
-      Scheduler.yieldValue('Foo');
+      Scheduler.unstable_yieldValue('Foo');
       return (
         <div hidden={true}>
           <Content step={props.step} text={props.text} />
@@ -619,7 +621,7 @@ describe('ReactIncrementalSideEffects', () => {
 
   it('can update a completed tree before it has a chance to commit', () => {
     function Foo(props) {
-      Scheduler.yieldValue('Foo');
+      Scheduler.unstable_yieldValue('Foo');
       return <span prop={props.step} />;
     }
     ReactNoop.render(<Foo step={1} />);
@@ -901,12 +903,12 @@ describe('ReactIncrementalSideEffects', () => {
         this.setState({active: true});
       }
       render() {
-        Scheduler.yieldValue('Bar');
+        Scheduler.unstable_yieldValue('Bar');
         return <span prop={this.state.active ? 'X' : this.props.idx} />;
       }
     }
     function Foo(props) {
-      Scheduler.yieldValue('Foo');
+      Scheduler.unstable_yieldValue('Foo');
       return (
         <div>
           <span prop={props.tick} />
