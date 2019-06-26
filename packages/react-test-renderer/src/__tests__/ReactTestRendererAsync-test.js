@@ -48,7 +48,7 @@ describe('ReactTestRendererAsync', () => {
 
   it('flushAll returns array of yielded values', () => {
     function Child(props) {
-      Scheduler.yieldValue(props.children);
+      Scheduler.unstable_yieldValue(props.children);
       return props.children;
     }
     function Parent(props) {
@@ -74,7 +74,7 @@ describe('ReactTestRendererAsync', () => {
 
   it('flushThrough flushes until the expected values is yielded', () => {
     function Child(props) {
-      Scheduler.yieldValue(props.children);
+      Scheduler.unstable_yieldValue(props.children);
       return props.children;
     }
     function Parent(props) {
@@ -102,7 +102,7 @@ describe('ReactTestRendererAsync', () => {
 
   it('supports high priority interruptions', () => {
     function Child(props) {
-      Scheduler.yieldValue(props.children);
+      Scheduler.unstable_yieldValue(props.children);
       return props.children;
     }
 
@@ -143,7 +143,7 @@ describe('ReactTestRendererAsync', () => {
   describe('Jest matchers', () => {
     it('toFlushAndYieldThrough', () => {
       const Yield = ({id}) => {
-        Scheduler.yieldValue(id);
+        Scheduler.unstable_yieldValue(id);
         return id;
       };
 
@@ -165,7 +165,7 @@ describe('ReactTestRendererAsync', () => {
 
     it('toFlushAndYield', () => {
       const Yield = ({id}) => {
-        Scheduler.yieldValue(id);
+        Scheduler.unstable_yieldValue(id);
         return id;
       };
 
@@ -199,7 +199,7 @@ describe('ReactTestRendererAsync', () => {
 
     it('toFlushAndThrow', () => {
       const Yield = ({id}) => {
-        Scheduler.yieldValue(id);
+        Scheduler.unstable_yieldValue(id);
         return id;
       };
 
@@ -238,7 +238,7 @@ describe('ReactTestRendererAsync', () => {
 
   it('toHaveYielded', () => {
     const Yield = ({id}) => {
-      Scheduler.yieldValue(id);
+      Scheduler.unstable_yieldValue(id);
       return id;
     };
 
@@ -262,7 +262,7 @@ describe('ReactTestRendererAsync', () => {
     ReactTestRenderer.create(<div />, {
       unstable_isConcurrent: true,
     });
-    Scheduler.yieldValue('Something');
+    Scheduler.unstable_yieldValue('Something');
     expect(() => expect(Scheduler).toFlushWithoutYielding()).toThrow(
       'Log of yielded values is not empty.',
     );

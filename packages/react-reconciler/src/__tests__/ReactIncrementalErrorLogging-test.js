@@ -167,10 +167,12 @@ describe('ReactIncrementalErrorLogging', () => {
         this.setState({step: 1});
       }
       componentWillUnmount() {
-        Scheduler.yieldValue('componentWillUnmount: ' + this.state.step);
+        Scheduler.unstable_yieldValue(
+          'componentWillUnmount: ' + this.state.step,
+        );
       }
       render() {
-        Scheduler.yieldValue('render: ' + this.state.step);
+        Scheduler.unstable_yieldValue('render: ' + this.state.step);
         if (this.state.step > 0) {
           throw new Error('oops');
         }

@@ -301,7 +301,7 @@ describe('Hover event responder', () => {
         target.current.dispatchEvent(createEvent('mouseover'));
 
         // 3s should be enough to expire the updates
-        Scheduler.advanceTime(3000);
+        Scheduler.unstable_advanceTime(3000);
         expect(newContainer.textContent).toEqual('hovered');
       });
     });

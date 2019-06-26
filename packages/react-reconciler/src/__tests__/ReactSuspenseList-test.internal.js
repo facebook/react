@@ -21,7 +21,7 @@ describe('ReactSuspenseList', () => {
   });
 
   function Text(props) {
-    Scheduler.yieldValue(props.text);
+    Scheduler.unstable_yieldValue(props.text);
     return <span>{props.text}</span>;
   }
 
@@ -29,7 +29,7 @@ describe('ReactSuspenseList', () => {
     let resolved = false;
     let Component = function() {
       if (!resolved) {
-        Scheduler.yieldValue('Suspend! [' + text + ']');
+        Scheduler.unstable_yieldValue('Suspend! [' + text + ']');
         throw promise;
       }
       return <Text text={text} />;
@@ -54,7 +54,7 @@ describe('ReactSuspenseList', () => {
 
     ReactNoop.render(<Foo />);
 
-    expect(() => Scheduler.flushAll()).toWarnDev([
+    expect(() => Scheduler.unstable_flushAll()).toWarnDev([
       'Warning: "something" is not a supported revealOrder on ' +
         '<SuspenseList />. Did you mean "together", "forwards" or "backwards"?' +
         '\n    in SuspenseList (at **)' +
@@ -73,7 +73,7 @@ describe('ReactSuspenseList', () => {
 
     ReactNoop.render(<Foo />);
 
-    expect(() => Scheduler.flushAll()).toWarnDev([
+    expect(() => Scheduler.unstable_flushAll()).toWarnDev([
       'Warning: "TOGETHER" is not a valid value for revealOrder on ' +
         '<SuspenseList />. Use lowercase "together" instead.' +
         '\n    in SuspenseList (at **)' +
@@ -92,7 +92,7 @@ describe('ReactSuspenseList', () => {
 
     ReactNoop.render(<Foo />);
 
-    expect(() => Scheduler.flushAll()).toWarnDev([
+    expect(() => Scheduler.unstable_flushAll()).toWarnDev([
       'Warning: "forward" is not a valid value for revealOrder on ' +
         '<SuspenseList />. React uses the -s suffix in the spelling. ' +
         'Use "forwards" instead.' +
@@ -1050,12 +1050,12 @@ describe('ReactSuspenseList', () => {
 
     expect(Scheduler).toFlushAndYieldThrough(['A']);
 
-    Scheduler.advanceTime(300);
+    Scheduler.unstable_advanceTime(300);
     jest.advanceTimersByTime(300);
 
     expect(Scheduler).toFlushAndYieldThrough(['B']);
 
-    Scheduler.advanceTime(300);
+    Scheduler.unstable_advanceTime(300);
     jest.advanceTimersByTime(300);
 
     // We've still not been able to show anything on the screen even though

@@ -2732,7 +2732,7 @@ describe('Event responder: Press', () => {
     const root = ReactDOM.unstable_createRoot(newContainer);
     document.body.appendChild(newContainer);
     root.render(<MyComponent />);
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
 
     dispatchEventWithTimeStamp(ref.current, 'pointerdown', 100);
     dispatchEventWithTimeStamp(ref.current, 'pointerup', 100);
@@ -2743,7 +2743,7 @@ describe('Event responder: Press', () => {
     } else {
       expect(renderCounts).toBe(1);
     }
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     if (__DEV__) {
       expect(renderCounts).toBe(4);
     } else {
@@ -2761,7 +2761,7 @@ describe('Event responder: Press', () => {
       expect(renderCounts).toBe(3);
     }
 
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     document.body.removeChild(newContainer);
   });
 
@@ -2798,7 +2798,7 @@ describe('Event responder: Press', () => {
     const root = ReactDOM.unstable_createRoot(newContainer);
     document.body.appendChild(newContainer);
     root.render(<MyComponent />);
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
 
     dispatchEventWithTimeStamp(ref.current, 'pointerdown', 100);
     dispatchEventWithTimeStamp(ref.current, 'pointerup', 100);
@@ -2809,7 +2809,7 @@ describe('Event responder: Press', () => {
     } else {
       expect(renderCounts).toBe(2);
     }
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     if (__DEV__) {
       expect(renderCounts).toBe(6);
     } else {
@@ -2827,7 +2827,7 @@ describe('Event responder: Press', () => {
       expect(renderCounts).toBe(4);
     }
 
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     document.body.removeChild(newContainer);
   });
 
@@ -2873,13 +2873,13 @@ describe('Event responder: Press', () => {
       const root = ReactDOM.unstable_createRoot(newContainer);
 
       root.render(<MyComponent />);
-      Scheduler.flushAll();
+      Scheduler.unstable_flushAll();
       expect(newContainer.textContent).toEqual('Presses: 0, Clicks: 0');
 
       dispatchEventWithTimeStamp(button.current, 'pointerdown', 100);
       dispatchEventWithTimeStamp(button.current, 'pointerup', 100);
       dispatchEventWithTimeStamp(button.current, 'click', 100);
-      Scheduler.flushAll();
+      Scheduler.unstable_flushAll();
       expect(newContainer.textContent).toEqual('Presses: 1, Clicks: 1');
 
       expect(ops).toEqual(['Presses: 0, Clicks: 0']);
