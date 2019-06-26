@@ -73,7 +73,9 @@ export type ReactDOMResponderContext = {
   releaseOwnership: () => boolean,
   setTimeout: (func: () => void, timeout: number) => number,
   clearTimeout: (timerId: number) => void,
-  getFocusableElementsInScope(): Array<HTMLElement>,
+  getFocusableElementsInScope(
+    includeNegativeTabIndex: boolean,
+  ): Array<HTMLElement>,
   getActiveDocument(): Document,
   objectAssign: Function,
   getEventCurrentTarget(event: ReactDOMResponderEvent): Element,

@@ -1128,4 +1128,50 @@ describe('DOMEventResponderSystem', () => {
       'hook 2b',
     ]);
   });
+
+  it('getFocusableElementsInScope works', () => {
+    let includeNegativeTabIndex = false;
+    let focusableElementsInScope = [];
+
+    const EventComponent = createReactEventComponent({
+      targetEventTypes: ['keydown'],
+      onEvent(event, context) {
+        focusableElementsInScope = context.getFocusableElementsInScope(
+          includeNegativeTabIndex,
+        );
+      },
+      allowMultipleHostChildren: true,
+    });
+
+    const buttonProps = [
+      {id: 'button1', ref: React.createRef(), tabIndex: 0},
+      {id: 'button2', ref: React.createRef(), tabIndex: -1},
+      {id: 'button3', ref: React.createRef(), tabIndex: 2},
+      {id: 'button4', ref: React.createRef(), disabled: true},
+    ];
+
+    const Test = () => (
+      <EventComponent>
+        {buttonProps.map((props, index) => <button {...props} key={index} />)}
+      </EventComponent>
+    );
+
+    ReactDOM.render(<Test />, container);
+
+    dispatchEvent(buttonProps[0].ref.current, 'keydown');
+    expect(focusableElementsInScope.length).toBe(2);
+    expect(focusableElementsInScope).toEqual([
+      buttonProps[0].ref.current,
+      buttonProps[2].ref.current,
+    ]);
+
+    includeNegativeTabIndex = true;
+    dispatchEvent(buttonProps[0].ref.current, 'keydown');
+    expect(focusableElementsInScope.length).toBe(3);
+    expect(focusableElementsInScope).toEqual([
+      buttonProps[0].ref.current,
+      buttonProps[1].ref.current,
+      buttonProps[2].ref.current,
+    ]);
+  });
 });

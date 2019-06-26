@@ -40,7 +40,7 @@ function getFirstFocusableElement(
   context: ReactDOMResponderContext,
   state: FocusScopeState,
 ): ?HTMLElement {
-  const elements = context.getFocusableElementsInScope();
+  const elements = context.getFocusableElementsInScope(false);
   if (elements.length > 0) {
     return elements[0];
   }
@@ -77,7 +77,7 @@ const FocusScopeResponder: ReactDOMEventResponder = {
         if (altkey || ctrlKey || metaKey) {
           return;
         }
-        const elements = context.getFocusableElementsInScope();
+        const elements = context.getFocusableElementsInScope(false);
         const position = elements.indexOf(focusedElement);
         const lastPosition = elements.length - 1;
         let nextElement = null;

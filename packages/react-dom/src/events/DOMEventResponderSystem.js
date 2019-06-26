@@ -389,14 +389,20 @@ const eventResponderContext: ReactDOMResponderContext = {
       }
     }
   },
-  getFocusableElementsInScope(): Array<HTMLElement> {
+  getFocusableElementsInScope(
+    includeNegativeTabIndex: boolean,
+  ): Array<HTMLElement> {
     validateResponderContext();
     const focusableElements = [];
     const eventComponentInstance = ((currentInstance: any): ReactDOMEventComponentInstance);
     const child = ((eventComponentInstance.currentFiber: any): Fiber).child;
 
     if (child !== null) {
-      collectFocusableElements(child, focusableElements);
+      collectFocusableElements(
+        child,
+        focusableElements,
+        includeNegativeTabIndex,
+      );
     }
     return focusableElements;
   },
@@ -467,27 +473,40 @@ const eventResponderContext: ReactDOMResponderContext = {
 function collectFocusableElements(
   node: Fiber,
   focusableElements: Array<HTMLElement>,
+  includeNegativeTabIndex: boolean,
 ): void {
   if (isFiberSuspenseAndTimedOut(node)) {
     const fallbackChild = getSuspenseFallbackChild(node);
     if (fallbackChild !== null) {
-      collectFocusableElements(fallbackChild, focusableElements);
+      collectFocusableElements(
+        fallbackChild,
+        focusableElements,
+        includeNegativeTabIndex,
+      );
     }
   } else {
-    if (isFiberHostComponentFocusable(node)) {
+    if (isFiberHostComponentFocusable(node, includeNegativeTabIndex)) {
       focusableElements.push(node.stateNode);
     } else {
       const child = node.child;
 
       if (child !== null) {
-        collectFocusableElements(child, focusableElements);
+        collectFocusableElements(
+          child,
+          focusableElements,
+          includeNegativeTabIndex,
+        );
       }
     }
   }
   const sibling = node.sibling;
 
   if (sibling !== null) {
-    collectFocusableElements(sibling, focusableElements);
+    collectFocusableElements(
+      sibling,
+      focusableElements,
+      includeNegativeTabIndex,
+    );
   }
 }
 
@@ -506,15 +525,27 @@ function releaseOwnershipForEventComponentInstance(
   return false;
 }
 
-function isFiberHostComponentFocusable(fiber: Fiber): boolean {
+function isInteger(value: any): boolean {
+  return (
+    typeof value === 'number' && isFinite(value) && Math.floor(value) === value
+  );
+}
+
+function isFiberHostComponentFocusable(
+  fiber: Fiber,
+  includeNegativeTabIndex: boolean,
+): boolean {
   if (fiber.tag !== HostComponent) {
     return false;
   }
   const {type, memoizedProps} = fiber;
-  if (memoizedProps.tabIndex === -1 || memoizedProps.disabled) {
+  if (memoizedProps.disabled) {
     return false;
   }
-  if (memoizedProps.tabIndex === 0 || memoizedProps.contentEditable === true) {
+  if (isInteger(memoizedProps.tabIndex)) {
+    return includeNegativeTabIndex ? true : memoizedProps.tabIndex >= 0;
+  }
+  if (memoizedProps.contentEditable === true) {
     return true;
   }
   if (type === 'a' || type === 'area') {
