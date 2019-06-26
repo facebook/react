@@ -537,6 +537,43 @@ if (supportsMutation) {
   };
 }
 
+function cutOffTailIfNeeded(renderState: SuspenseListRenderState) {
+  switch (renderState.tailMode) {
+    case 'collapsed': {
+      // Any insertions at the end of the tail list after this point
+      // should be invisible. If there are already mounted boundaries
+      // anything before them are not considered for collapsing.
+      // Therefore we need to go through the whole tail to find if
+      // there are any.
+      let tailNode = renderState.tail;
+      let lastTailNode = null;
+      while (tailNode !== null) {
+        if (tailNode.alternate !== null) {
+          lastTailNode = tailNode;
+        }
+        tailNode = tailNode.sibling;
+      }
+      // Next we're simply going to delete all insertions after the
+      // last rendered item.
+      if (lastTailNode === null) {
+        // All remaining items in the tail are insertions.
+        if (renderState.rendering === null && renderState.tail !== null) {
+          // We suspended during the head. We want to show at least one
+          // row at the tail. So we'll keep on and cut off the rest.
+          renderState.tail.sibling = null;
+        } else {
+          renderState.tail = null;
+        }
+      } else {
+        // Detach the insertion after the last node that was already
+        // inserted.
+        lastTailNode.sibling = null;
+      }
+      break;
+    }
+  }
+}
+
 // Note this, might mutate the workInProgress passed in.
 function hasSuspendedChildrenAndNewContent(
   workInProgress: Fiber,
@@ -991,6 +1028,9 @@ function completeWork(
           didSuspendAlready =
             (workInProgress.effectTag & DidCapture) !== NoEffect;
         }
+        if (didSuspendAlready) {
+          cutOffTailIfNeeded(renderState);
+        }
         // Next we're going to render the tail.
       } else {
         // Append the rendered row to the child list.
@@ -1004,6 +1044,9 @@ function completeWork(
             // The assumption is that this is usually faster.
             workInProgress.effectTag |= DidCapture;
             didSuspendAlready = true;
+
+            cutOffTailIfNeeded(renderState);
+
             // Since nothing actually suspended, there will nothing to ping this
             // to get it started back up to attempt the next item. If we can show
             // them, then they really have the same priority as this render.
@@ -1018,6 +1061,7 @@ function completeWork(
           } else if (isShowingAnyFallbacks(renderedTail)) {
             workInProgress.effectTag |= DidCapture;
             didSuspendAlready = true;
+            cutOffTailIfNeeded(renderState);
           }
         }
         if (renderState.isBackwards) {
