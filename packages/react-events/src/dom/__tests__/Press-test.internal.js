@@ -36,6 +36,12 @@ function createTouchEvent(type, id, data) {
         identifier: id,
       },
     ],
+    targetTouches: [
+      {
+        ...data,
+        identifier: id,
+      },
+    ],
   });
 }
 
@@ -618,14 +624,24 @@ describe('Event responder: Press', () => {
       ref.current.dispatchEvent(
         createTouchEvent('touchstart', 0, {
           target: ref.current,
+          clientX: 0,
+          clientY: 0,
         }),
       );
       ref.current.dispatchEvent(
         createTouchEvent('touchend', 0, {
           target: ref.current,
+          clientX: 0,
+          clientY: 0,
         }),
       );
-      ref.current.dispatchEvent(createEvent('pointerup', {pointerType: 'pen'}));
+      ref.current.dispatchEvent(
+        createEvent('pointerup', {
+          pointerType: 'pen',
+          clientX: 0,
+          clientY: 0,
+        }),
+      );
       expect(onPress).toHaveBeenCalledTimes(1);
       expect(onPress).toHaveBeenCalledWith(
         expect.objectContaining({pointerType: 'pen', type: 'press'}),
@@ -2022,6 +2038,7 @@ describe('Event responder: Press', () => {
       document.elementFromPoint = () => ref.current;
       ref.current.dispatchEvent(
         createTouchEvent('touchend', 0, {
+          ...coordinatesInside,
           target: ref.current,
         }),
       );
@@ -2269,7 +2286,12 @@ describe('Event responder: Press', () => {
       ReactDOM.render(element, container);
 
       ref.current.dispatchEvent(createEvent('pointerdown'));
-      ref.current.dispatchEvent(createEvent('pointerup'));
+      ref.current.dispatchEvent(
+        createEvent('pointerup', {
+          clientX: 0,
+          clientY: 0,
+        }),
+      );
       ref.current.dispatchEvent(createEvent('click', {preventDefault}));
       expect(preventDefault).toBeCalled();
       expect(onPress).toHaveBeenCalledWith(
@@ -2291,7 +2313,12 @@ describe('Event responder: Press', () => {
       ReactDOM.render(element, container);
 
       buttonRef.current.dispatchEvent(createEvent('pointerdown'));
-      buttonRef.current.dispatchEvent(createEvent('pointerup'));
+      buttonRef.current.dispatchEvent(
+        createEvent('pointerup', {
+          clientX: 0,
+          clientY: 0,
+        }),
+      );
       buttonRef.current.dispatchEvent(createEvent('click', {preventDefault}));
       expect(preventDefault).toBeCalled();
     });
@@ -2310,7 +2337,12 @@ describe('Event responder: Press', () => {
       ReactDOM.render(element, container);
 
       ref.current.dispatchEvent(createEvent('pointerdown'));
-      ref.current.dispatchEvent(createEvent('pointerup'));
+      ref.current.dispatchEvent(
+        createEvent('pointerup', {
+          clientX: 0,
+          clientY: 0,
+        }),
+      );
       ref.current.dispatchEvent(createEvent('click', {preventDefault}));
       expect(preventDefault).toBeCalled();
       expect(onPress).toHaveBeenCalledWith(
@@ -2334,7 +2366,11 @@ describe('Event responder: Press', () => {
           createEvent('pointerdown', {[modifierKey]: true}),
         );
         ref.current.dispatchEvent(
-          createEvent('pointerup', {[modifierKey]: true}),
+          createEvent('pointerup', {
+            [modifierKey]: true,
+            clientX: 0,
+            clientY: 0,
+          }),
         );
         ref.current.dispatchEvent(
           createEvent('click', {[modifierKey]: true, preventDefault}),
@@ -2358,7 +2394,12 @@ describe('Event responder: Press', () => {
       ReactDOM.render(element, container);
 
       ref.current.dispatchEvent(createEvent('pointerdown'));
-      ref.current.dispatchEvent(createEvent('pointerup'));
+      ref.current.dispatchEvent(
+        createEvent('pointerup', {
+          clientX: 0,
+          clientY: 0,
+        }),
+      );
       ref.current.dispatchEvent(createEvent('click', {preventDefault}));
       expect(preventDefault).not.toBeCalled();
       expect(onPress).toHaveBeenCalledWith(
@@ -2694,7 +2735,10 @@ describe('Event responder: Press', () => {
   });
 
   function dispatchEventWithTimeStamp(elem, name, timeStamp) {
-    const event = createEvent(name);
+    const event = createEvent(name, {
+      clientX: 0,
+      clientY: 0,
+    });
     Object.defineProperty(event, 'timeStamp', {
       value: timeStamp,
     });
