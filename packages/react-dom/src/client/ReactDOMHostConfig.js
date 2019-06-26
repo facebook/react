@@ -670,45 +670,40 @@ export function registerSuspenseInstanceRetry(
   instance._reactRetry = callback;
 }
 
-function isHydratableNode(node: Node) {
-  const nodeType = node.nodeType;
-  if (nodeType === ELEMENT_NODE || nodeType === TEXT_NODE) {
-    return true;
-  }
-  if (enableSuspenseServerRenderer) {
-    if (nodeType === COMMENT_NODE) {
-      return true;
+function getNextHydratable(node) {
+  // Skip non-hydratable nodes.
+  for (; node != null; node = node.nextSibling) {
+    const nodeType = node.nodeType;
+    if (nodeType === ELEMENT_NODE || nodeType === TEXT_NODE) {
+      break;
     }
-    const nodeData = (node: any).data;
-    return (
-      nodeData === SUSPENSE_START_DATA ||
-      nodeData === SUSPENSE_FALLBACK_START_DATA ||
-      nodeData === SUSPENSE_PENDING_START_DATA
-    );
+    if (enableSuspenseServerRenderer) {
+      if (nodeType === COMMENT_NODE) {
+        break;
+      }
+      const nodeData = (node: any).data;
+      if (
+        nodeData === SUSPENSE_START_DATA ||
+        nodeData === SUSPENSE_FALLBACK_START_DATA ||
+        nodeData === SUSPENSE_PENDING_START_DATA
+      ) {
+        break;
+      }
+    }
   }
-  return false;
+  return (node: any);
 }
 
 export function getNextHydratableSibling(
   instance: HydratableInstance,
 ): null | HydratableInstance {
-  let node = instance.nextSibling;
-  // Skip non-hydratable nodes.
-  while (node != null && !isHydratableNode(node)) {
-    node = node.nextSibling;
-  }
-  return (node: any);
+  return getNextHydratable(instance.nextSibling);
 }
 
 export function getFirstHydratableChild(
   parentInstance: Container | Instance,
 ): null | HydratableInstance {
-  let node = parentInstance.firstChild;
-  // Skip non-hydratable nodes.
-  while (node != null && !isHydratableNode(node)) {
-    node = node.nextSibling;
-  }
-  return (node: any);
+  return getNextHydratable(parentInstance.firstChild);
 }
 
 export function hydrateInstance(
