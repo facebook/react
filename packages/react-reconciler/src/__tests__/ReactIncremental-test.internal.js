@@ -42,7 +42,7 @@ describe('ReactIncremental', () => {
 
   it('should render a simple component, in steps if needed', () => {
     function Bar() {
-      Scheduler.yieldValue('Bar');
+      Scheduler.unstable_yieldValue('Bar');
       return (
         <span>
           <div>Hello World</div>
@@ -51,11 +51,11 @@ describe('ReactIncremental', () => {
     }
 
     function Foo() {
-      Scheduler.yieldValue('Foo');
+      Scheduler.unstable_yieldValue('Foo');
       return [<Bar key="a" isBar={true} />, <Bar key="b" isBar={true} />];
     }
 
-    ReactNoop.render(<Foo />, () => Scheduler.yieldValue('callback'));
+    ReactNoop.render(<Foo />, () => Scheduler.unstable_yieldValue('callback'));
     // Do one step of work.
     expect(ReactNoop.flushNextYield()).toEqual(['Foo']);
 
@@ -132,12 +132,12 @@ describe('ReactIncremental', () => {
 
   it('can cancel partially rendered work and restart', () => {
     function Bar(props) {
-      Scheduler.yieldValue('Bar');
+      Scheduler.unstable_yieldValue('Bar');
       return <div>{props.children}</div>;
     }
 
     function Foo(props) {
-      Scheduler.yieldValue('Foo');
+      Scheduler.unstable_yieldValue('Foo');
       return (
         <div>
           <Bar>{props.text}</Bar>
@@ -192,10 +192,10 @@ describe('ReactIncremental', () => {
 
     inst.setState(
       () => {
-        Scheduler.yieldValue('setState1');
+        Scheduler.unstable_yieldValue('setState1');
         return {text: 'bar'};
       },
-      () => Scheduler.yieldValue('callback1'),
+      () => Scheduler.unstable_yieldValue('callback1'),
     );
 
     // Flush part of the work
@@ -205,10 +205,10 @@ describe('ReactIncremental', () => {
     ReactNoop.flushSync(() => ReactNoop.render(<Foo />));
     inst.setState(
       () => {
-        Scheduler.yieldValue('setState2');
+        Scheduler.unstable_yieldValue('setState2');
         return {text2: 'baz'};
       },
-      () => Scheduler.yieldValue('callback2'),
+      () => Scheduler.unstable_yieldValue('callback2'),
     );
 
     // Flush the rest of the work which now includes the low priority
@@ -223,17 +223,17 @@ describe('ReactIncremental', () => {
 
   it('can deprioritize unfinished work and resume it later', () => {
     function Bar(props) {
-      Scheduler.yieldValue('Bar');
+      Scheduler.unstable_yieldValue('Bar');
       return <div>{props.children}</div>;
     }
 
     function Middle(props) {
-      Scheduler.yieldValue('Middle');
+      Scheduler.unstable_yieldValue('Middle');
       return <span>{props.children}</span>;
     }
 
     function Foo(props) {
-      Scheduler.yieldValue('Foo');
+      Scheduler.unstable_yieldValue('Foo');
       return (
         <div>
           <Bar>{props.text}</Bar>
@@ -1086,7 +1086,7 @@ describe('ReactIncremental', () => {
     class Foo extends React.PureComponent {
       render() {
         const msg = `A: ${a}, B: ${this.props.b}`;
-        Scheduler.yieldValue(msg);
+        Scheduler.unstable_yieldValue(msg);
         return msg;
       }
     }
@@ -1456,18 +1456,18 @@ describe('ReactIncremental', () => {
     class Parent extends React.Component {
       state = {parentRenders: 0};
       static getDerivedStateFromProps(props, prevState) {
-        Scheduler.yieldValue('getDerivedStateFromProps');
+        Scheduler.unstable_yieldValue('getDerivedStateFromProps');
         return prevState.parentRenders + 1;
       }
       render() {
-        Scheduler.yieldValue('Parent');
+        Scheduler.unstable_yieldValue('Parent');
         return <Child parentRenders={this.state.parentRenders} ref={child} />;
       }
     }
 
     class Child extends React.Component {
       render() {
-        Scheduler.yieldValue('Child');
+        Scheduler.unstable_yieldValue('Child');
         return this.props.parentRenders;
       }
     }
@@ -1819,7 +1819,7 @@ describe('ReactIncremental', () => {
         };
       }
       render() {
-        Scheduler.yieldValue('Intl ' + JSON.stringify(this.context));
+        Scheduler.unstable_yieldValue('Intl ' + JSON.stringify(this.context));
         return this.props.children;
       }
     }
@@ -1834,7 +1834,7 @@ describe('ReactIncremental', () => {
         };
       }
       render() {
-        Scheduler.yieldValue('Router ' + JSON.stringify(this.context));
+        Scheduler.unstable_yieldValue('Router ' + JSON.stringify(this.context));
         return this.props.children;
       }
     }
@@ -1844,7 +1844,9 @@ describe('ReactIncremental', () => {
         locale: PropTypes.string,
       };
       render() {
-        Scheduler.yieldValue('ShowLocale ' + JSON.stringify(this.context));
+        Scheduler.unstable_yieldValue(
+          'ShowLocale ' + JSON.stringify(this.context),
+        );
         return this.context.locale;
       }
     }
@@ -1854,13 +1856,15 @@ describe('ReactIncremental', () => {
         route: PropTypes.string,
       };
       render() {
-        Scheduler.yieldValue('ShowRoute ' + JSON.stringify(this.context));
+        Scheduler.unstable_yieldValue(
+          'ShowRoute ' + JSON.stringify(this.context),
+        );
         return this.context.route;
       }
     }
 
     function ShowBoth(props, context) {
-      Scheduler.yieldValue('ShowBoth ' + JSON.stringify(context));
+      Scheduler.unstable_yieldValue('ShowBoth ' + JSON.stringify(context));
       return `${context.route} in ${context.locale}`;
     }
     ShowBoth.contextTypes = {
@@ -1870,14 +1874,18 @@ describe('ReactIncremental', () => {
 
     class ShowNeither extends React.Component {
       render() {
-        Scheduler.yieldValue('ShowNeither ' + JSON.stringify(this.context));
+        Scheduler.unstable_yieldValue(
+          'ShowNeither ' + JSON.stringify(this.context),
+        );
         return null;
       }
     }
 
     class Indirection extends React.Component {
       render() {
-        Scheduler.yieldValue('Indirection ' + JSON.stringify(this.context));
+        Scheduler.unstable_yieldValue(
+          'Indirection ' + JSON.stringify(this.context),
+        );
         return [
           <ShowLocale key="a" />,
           <ShowRoute key="b" />,
@@ -2056,7 +2064,7 @@ describe('ReactIncremental', () => {
         };
       }
       render() {
-        Scheduler.yieldValue('Intl ' + JSON.stringify(this.context));
+        Scheduler.unstable_yieldValue('Intl ' + JSON.stringify(this.context));
         return this.props.children;
       }
     }
@@ -2066,7 +2074,9 @@ describe('ReactIncremental', () => {
         locale: PropTypes.string,
       };
       render() {
-        Scheduler.yieldValue('ShowLocale ' + JSON.stringify(this.context));
+        Scheduler.unstable_yieldValue(
+          'ShowLocale ' + JSON.stringify(this.context),
+        );
         return this.context.locale;
       }
     }
@@ -2817,12 +2827,12 @@ describe('ReactIncremental', () => {
 
   it('does not interrupt for update at same priority', () => {
     function Parent(props) {
-      Scheduler.yieldValue('Parent: ' + props.step);
+      Scheduler.unstable_yieldValue('Parent: ' + props.step);
       return <Child step={props.step} />;
     }
 
     function Child(props) {
-      Scheduler.yieldValue('Child: ' + props.step);
+      Scheduler.unstable_yieldValue('Child: ' + props.step);
       return null;
     }
 
@@ -2837,12 +2847,12 @@ describe('ReactIncremental', () => {
 
   it('does not interrupt for update at lower priority', () => {
     function Parent(props) {
-      Scheduler.yieldValue('Parent: ' + props.step);
+      Scheduler.unstable_yieldValue('Parent: ' + props.step);
       return <Child step={props.step} />;
     }
 
     function Child(props) {
-      Scheduler.yieldValue('Child: ' + props.step);
+      Scheduler.unstable_yieldValue('Child: ' + props.step);
       return null;
     }
 
@@ -2858,12 +2868,12 @@ describe('ReactIncremental', () => {
 
   it('does interrupt for update at higher priority', () => {
     function Parent(props) {
-      Scheduler.yieldValue('Parent: ' + props.step);
+      Scheduler.unstable_yieldValue('Parent: ' + props.step);
       return <Child step={props.step} />;
     }
 
     function Child(props) {
-      Scheduler.yieldValue('Child: ' + props.step);
+      Scheduler.unstable_yieldValue('Child: ' + props.step);
       return null;
     }
 

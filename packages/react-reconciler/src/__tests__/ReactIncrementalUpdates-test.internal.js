@@ -34,7 +34,7 @@ describe('ReactIncrementalUpdates', () => {
     class Foo extends React.Component {
       state = {};
       componentDidMount() {
-        Scheduler.yieldValue('commit');
+        Scheduler.unstable_yieldValue('commit');
         ReactNoop.deferredUpdates(() => {
           // Has low priority
           this.setState({b: 'b'});
@@ -150,7 +150,7 @@ describe('ReactIncrementalUpdates', () => {
 
     function createUpdate(letter) {
       return () => {
-        Scheduler.yieldValue(letter);
+        Scheduler.unstable_yieldValue(letter);
         return {
           [letter]: letter,
         };
@@ -221,7 +221,7 @@ describe('ReactIncrementalUpdates', () => {
 
     function createUpdate(letter) {
       return () => {
-        Scheduler.yieldValue(letter);
+        Scheduler.unstable_yieldValue(letter);
         return {
           [letter]: letter,
         };
@@ -461,9 +461,9 @@ describe('ReactIncrementalUpdates', () => {
     const {useEffect} = React;
 
     function App({label}) {
-      Scheduler.yieldValue('Render: ' + label);
+      Scheduler.unstable_yieldValue('Render: ' + label);
       useEffect(() => {
-        Scheduler.yieldValue('Commit: ' + label);
+        Scheduler.unstable_yieldValue('Commit: ' + label);
       });
       return label;
     }
@@ -478,22 +478,22 @@ describe('ReactIncrementalUpdates', () => {
     // updates in separate batches are all flushed in the same callback
     ReactNoop.act(() => {
       ReactNoop.render(<App label="" />);
-      Scheduler.advanceTime(1000);
+      Scheduler.unstable_advanceTime(1000);
       expect(Scheduler).toFlushAndYieldThrough(['Render: ']);
       interrupt();
 
       ReactNoop.render(<App label="he" />);
-      Scheduler.advanceTime(1000);
+      Scheduler.unstable_advanceTime(1000);
       expect(Scheduler).toFlushAndYieldThrough(['Render: ']);
       interrupt();
 
       ReactNoop.render(<App label="hell" />);
-      Scheduler.advanceTime(1000);
+      Scheduler.unstable_advanceTime(1000);
       expect(Scheduler).toFlushAndYieldThrough(['Render: ']);
       interrupt();
 
       ReactNoop.render(<App label="hello" />);
-      Scheduler.advanceTime(1000);
+      Scheduler.unstable_advanceTime(1000);
       expect(Scheduler).toFlushAndYieldThrough(['Render: ']);
       interrupt();
 
@@ -519,27 +519,27 @@ describe('ReactIncrementalUpdates', () => {
       // Now do the same thing over again, but this time, expire all the updates
       // instead of flushing them normally.
       ReactNoop.render(<App label="" />);
-      Scheduler.advanceTime(1000);
+      Scheduler.unstable_advanceTime(1000);
       expect(Scheduler).toFlushAndYieldThrough(['Render: ']);
       interrupt();
 
       ReactNoop.render(<App label="go" />);
-      Scheduler.advanceTime(1000);
+      Scheduler.unstable_advanceTime(1000);
       expect(Scheduler).toFlushAndYieldThrough(['Render: ']);
       interrupt();
 
       ReactNoop.render(<App label="good" />);
-      Scheduler.advanceTime(1000);
+      Scheduler.unstable_advanceTime(1000);
       expect(Scheduler).toFlushAndYieldThrough(['Render: ']);
       interrupt();
 
       ReactNoop.render(<App label="goodbye" />);
-      Scheduler.advanceTime(1000);
+      Scheduler.unstable_advanceTime(1000);
       expect(Scheduler).toFlushAndYieldThrough(['Render: ']);
       interrupt();
 
       // All the updates should render and commit in a single batch.
-      Scheduler.advanceTime(10000);
+      Scheduler.unstable_advanceTime(10000);
       expect(Scheduler).toHaveYielded(['Render: goodbye']);
       // Passive effect
       expect(Scheduler).toFlushAndYield(['Commit: goodbye']);
@@ -551,9 +551,9 @@ describe('ReactIncrementalUpdates', () => {
     const {useEffect} = React;
 
     function App({label}) {
-      Scheduler.yieldValue('Render: ' + label);
+      Scheduler.unstable_yieldValue('Render: ' + label);
       useEffect(() => {
-        Scheduler.yieldValue('Commit: ' + label);
+        Scheduler.unstable_yieldValue('Commit: ' + label);
       });
       return label;
     }
@@ -568,25 +568,25 @@ describe('ReactIncrementalUpdates', () => {
       // updates in separate batches are all flushed in the same callback
       ReactNoop.renderToRootWithID(<App label="" />, 'a');
       ReactNoop.renderToRootWithID(<App label="" />, 'b');
-      Scheduler.advanceTime(1000);
+      Scheduler.unstable_advanceTime(1000);
       expect(Scheduler).toFlushAndYieldThrough(['Render: ']);
       interrupt();
 
       ReactNoop.renderToRootWithID(<App label="he" />, 'a');
       ReactNoop.renderToRootWithID(<App label="he" />, 'b');
-      Scheduler.advanceTime(1000);
+      Scheduler.unstable_advanceTime(1000);
       expect(Scheduler).toFlushAndYieldThrough(['Render: ']);
       interrupt();
 
       ReactNoop.renderToRootWithID(<App label="hell" />, 'a');
       ReactNoop.renderToRootWithID(<App label="hell" />, 'b');
-      Scheduler.advanceTime(1000);
+      Scheduler.unstable_advanceTime(1000);
       expect(Scheduler).toFlushAndYieldThrough(['Render: ']);
       interrupt();
 
       ReactNoop.renderToRootWithID(<App label="hello" />, 'a');
       ReactNoop.renderToRootWithID(<App label="hello" />, 'b');
-      Scheduler.advanceTime(1000);
+      Scheduler.unstable_advanceTime(1000);
       expect(Scheduler).toFlushAndYieldThrough(['Render: ']);
       interrupt();
 
@@ -621,30 +621,30 @@ describe('ReactIncrementalUpdates', () => {
       // instead of flushing them normally.
       ReactNoop.renderToRootWithID(<App label="" />, 'a');
       ReactNoop.renderToRootWithID(<App label="" />, 'b');
-      Scheduler.advanceTime(1000);
+      Scheduler.unstable_advanceTime(1000);
       expect(Scheduler).toFlushAndYieldThrough(['Render: ']);
       interrupt();
 
       ReactNoop.renderToRootWithID(<App label="go" />, 'a');
       ReactNoop.renderToRootWithID(<App label="go" />, 'b');
-      Scheduler.advanceTime(1000);
+      Scheduler.unstable_advanceTime(1000);
       expect(Scheduler).toFlushAndYieldThrough(['Render: ']);
       interrupt();
 
       ReactNoop.renderToRootWithID(<App label="good" />, 'a');
       ReactNoop.renderToRootWithID(<App label="good" />, 'b');
-      Scheduler.advanceTime(1000);
+      Scheduler.unstable_advanceTime(1000);
       expect(Scheduler).toFlushAndYieldThrough(['Render: ']);
       interrupt();
 
       ReactNoop.renderToRootWithID(<App label="goodbye" />, 'a');
       ReactNoop.renderToRootWithID(<App label="goodbye" />, 'b');
-      Scheduler.advanceTime(1000);
+      Scheduler.unstable_advanceTime(1000);
       expect(Scheduler).toFlushAndYieldThrough(['Render: ']);
       interrupt();
 
       // All the updates should render and commit in a single batch.
-      Scheduler.advanceTime(10000);
+      Scheduler.unstable_advanceTime(10000);
       expect(Scheduler).toHaveYielded([
         'Render: goodbye',
         'Commit: goodbye',

@@ -409,4 +409,8 @@ const HoverResponder: ReactDOMEventResponder = {
   },
 };
 
-export default React.unstable_createEvent(HoverResponder);
+export const Hover = React.unstable_createEvent(HoverResponder);
+
+export function useHover(props: HoverProps): void {
+  React.unstable_useEvent(Hover, props);
+}

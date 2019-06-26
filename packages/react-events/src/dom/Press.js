@@ -127,9 +127,10 @@ const targetEventTypes = [
   // We need to preventDefault on pointerdown for mouse/pen events
   // that are in hit target area but not the element area.
   {name: 'pointerdown', passive: false},
+  {name: 'click', passive: false},
 ];
 const rootEventTypes = [
-  {name: 'click', passive: false},
+  'click',
   'keyup',
   'pointerup',
   'pointermove',
@@ -810,6 +811,13 @@ const PressResponder: ReactDOMEventResponder = {
         removeRootEventTypes(context, state);
         break;
       }
+
+      case 'click': {
+        if (state.shouldPreventClick) {
+          nativeEvent.preventDefault();
+        }
+        break;
+      }
     }
   },
   onRootEvent(
@@ -994,15 +1002,27 @@ const PressResponder: ReactDOMEventResponder = {
         if (state.pointerType !== 'keyboard') {
           removeRootEventTypes(context, state);
         }
-        if (state.shouldPreventClick) {
-          nativeEvent.preventDefault();
-        }
         break;
       }
 
       // CANCEL
+      case 'scroll': {
+        const pressTarget = state.pressTarget;
+        const scrollTarget = nativeEvent.target;
+        const doc = context.getActiveDocument();
+        // If the scroll target is the document or if the press target
+        // is inside the scroll target, then this a scroll that should
+        // trigger a cancel.
+        if (
+          pressTarget !== null &&
+          (scrollTarget === doc ||
+            context.isTargetWithinElement(pressTarget, scrollTarget))
+        ) {
+          dispatchCancel(event, context, props, state);
+        }
+        break;
+      }
       case 'pointercancel':
-      case 'scroll':
       case 'touchcancel':
       case 'dragstart': {
         dispatchCancel(event, context, props, state);
@@ -1025,4 +1045,8 @@ const PressResponder: ReactDOMEventResponder = {
   },
 };
 
-export default React.unstable_createEvent(PressResponder);
+export const Press = React.unstable_createEvent(PressResponder);
+
+export function usePress(props: PressProps): void {
+  React.unstable_useEvent(Press, props);
+}

@@ -662,7 +662,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
   let hasWarnedAboutMissingMockScheduler = false;
   const flushWork =
-    Scheduler.unstable_flushWithoutYielding ||
+    Scheduler.unstable_flushAllWithoutAsserting ||
     function() {
       if (warnAboutMissingMockScheduler === true) {
         if (hasWarnedAboutMissingMockScheduler === false) {
@@ -1108,7 +1108,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       hostUpdateCounter = 0;
       hostCloneCounter = 0;
       try {
-        Scheduler.flushAll();
+        Scheduler.unstable_flushAll();
         return useMutation
           ? {
               hostDiffCounter,
@@ -1125,7 +1125,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       }
     },
 
-    expire: Scheduler.advanceTime,
+    expire: Scheduler.unstable_advanceTime,
 
     flushExpired(): Array<mixed> {
       return Scheduler.unstable_flushExpired();
@@ -1261,7 +1261,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         _next: null,
       };
       root.firstBatch = batch;
-      Scheduler.unstable_flushWithoutYielding();
+      Scheduler.unstable_flushAllWithoutAsserting();
       const actual = Scheduler.unstable_clearYields();
       expect(actual).toEqual(expectedFlush);
       return (expectedCommit: Array<mixed>) => {

@@ -216,7 +216,7 @@ describe('ReactIncrementalTriangle', () => {
       }
       render() {
         if (yieldAfterEachRender) {
-          Scheduler.yieldValue(this);
+          Scheduler.unstable_yieldValue(this);
         }
         const {counter, remainingDepth} = this.props;
         return (
@@ -308,7 +308,7 @@ describe('ReactIncrementalTriangle', () => {
       } else {
         ReactNoop.render(<App remainingDepth={MAX_DEPTH} key={keyCounter++} />);
       }
-      Scheduler.unstable_flushWithoutYielding();
+      Scheduler.unstable_flushAllWithoutAsserting();
       assertConsistentTree();
       return appInstance;
     }
@@ -390,7 +390,7 @@ describe('ReactIncrementalTriangle', () => {
               Scheduler.unstable_flushNumberOfYields(action.unitsOfWork);
               break;
             case FLUSH_ALL:
-              Scheduler.unstable_flushWithoutYielding();
+              Scheduler.unstable_flushAllWithoutAsserting();
               break;
             case STEP:
               ReactNoop.deferredUpdates(() => {
@@ -432,7 +432,7 @@ describe('ReactIncrementalTriangle', () => {
         assertConsistentTree(activeLeafIndices);
       }
       // Flush remaining work
-      Scheduler.unstable_flushWithoutYielding();
+      Scheduler.unstable_flushAllWithoutAsserting();
       assertConsistentTree(activeLeafIndices, expectedCounterAtEnd);
     }
 
