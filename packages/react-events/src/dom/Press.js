@@ -649,7 +649,6 @@ const PressResponder: ReactDOMEventResponder = {
     return {
       activationPosition: null,
       addedRootEvents: false,
-      didDispatchEvent: false,
       isActivePressed: false,
       isActivePressStart: false,
       isLongPressed: false,

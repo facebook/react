@@ -8,7 +8,7 @@
  */
 
 import type {AnyNativeEvent} from 'events/PluginModuleType';
-import {EventComponent} from 'shared/ReactWorkTags';
+import {EventComponent, HostComponent} from 'shared/ReactWorkTags';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import {
   batchedEventUpdates,
@@ -50,6 +50,19 @@ type PartialEventObject = {
   type: string,
 };
 
+type ResponderTimeout = {|
+  id: TimeoutID,
+  timers: Map<number, ResponderTimer>,
+|};
+
+type ResponderTimer = {|
+  isHook: boolean,
+  instance: ReactNativeEventComponentInstance,
+  func: () => void,
+  id: number,
+  timeStamp: number,
+|};
+
 type EventQueue = {
   events: Array<EventObjectType>,
   eventPriority: EventPriority,
@@ -67,6 +80,9 @@ type ReactNativeEventComponentInstance = ReactEventComponentInstance<
   ReactNativeResponderContext,
 >;
 
+const {measureInWindow} = nativeFabricUIManager;
+
+const activeTimeouts: Map<number, ResponderTimeout> = new Map();
 const rootEventTypesToEventComponentInstances: Map<
   ReactNativeEventResponderEventType | string,
   Set<ReactNativeEventComponentInstance>,
@@ -93,7 +109,7 @@ let currentTimeStamp = 0;
 let currentTimers = new Map();
 let currentInstance: null | ReactNativeEventComponentInstance = null;
 let currentEventQueue: null | EventQueue = null;
-// let currentTimerIDCounter = 0;
+let currentTimerIDCounter = 0;
 let currentlyInHook = false;
 
 const eventResponderContext: ReactNativeResponderContext = {
@@ -158,11 +174,112 @@ const eventResponderContext: ReactNativeResponderContext = {
     eventListeners.set(eventObject, listener);
     eventQueue.events.push(eventObject);
   },
+  getEventCurrentTarget(event: ReactNativeResponderEvent): Element {
+    validateResponderContext();
+    const target = ((event.target: any): null | Fiber);
+    let fiber = target;
+    let hostComponent = target;
+    const currentResponder = ((currentInstance: any): ReactNativeEventComponentInstance)
+      .responder;
+
+    while (fiber !== null) {
+      const stateNode = fiber.stateNode;
+      if (
+        fiber.tag === EventComponent &&
+        (stateNode === null || stateNode.responder === currentResponder)
+      ) {
+        break;
+      }
+      if (fiber.tag === HostComponent) {
+        hostComponent = fiber.stateNode;
+      }
+      fiber = fiber.return;
+    }
+    return ((hostComponent: any): Element);
+  },
+  getTargetBoundingRect(target, callback) {
+    measureInWindow(target.node, (x, y, width, height) => {
+      callback({
+        left: x,
+        right: x + width,
+        top: y,
+        bottom: y + height,
+      });
+    });
+  },
+  setTimeout(func: () => void, delay): number {
+    validateResponderContext();
+    if (currentTimers === null) {
+      currentTimers = new Map();
+    }
+    let timeout = currentTimers.get(delay);
+
+    const timerId = currentTimerIDCounter++;
+    if (timeout === undefined) {
+      const timers = new Map();
+      const id = setTimeout(() => {
+        processTimers(timers, delay);
+      }, delay);
+      timeout = {
+        id,
+        timers,
+      };
+      currentTimers.set(delay, timeout);
+    }
+    timeout.timers.set(timerId, {
+      isHook: currentlyInHook,
+      instance: ((currentInstance: any): ReactNativeEventComponentInstance),
+      func,
+      id: timerId,
+      timeStamp: currentTimeStamp,
+    });
+    activeTimeouts.set(timerId, timeout);
+    return timerId;
+  },
+  clearTimeout(timerId: number): void {
+    validateResponderContext();
+    const timeout = activeTimeouts.get(timerId);
+
+    if (timeout !== undefined) {
+      const timers = timeout.timers;
+      timers.delete(timerId);
+      if (timers.size === 0) {
+        clearTimeout(timeout.id);
+      }
+    }
+  },
   getTimeStamp(): number {
     validateResponderContext();
     return currentTimeStamp;
   },
 };
+
+function processTimers(
+  timers: Map<number, ResponderTimer>,
+  delay: number,
+): void {
+  const timersArr = Array.from(timers.values());
+  currentEventQueue = createEventQueue();
+  try {
+    for (let i = 0; i < timersArr.length; i++) {
+      const {isHook, instance, func, id, timeStamp} = timersArr[i];
+      currentInstance = instance;
+      currentTimeStamp = timeStamp + delay;
+      currentlyInHook = isHook;
+      try {
+        func();
+      } finally {
+        activeTimeouts.delete(id);
+      }
+    }
+    processEventQueue();
+  } finally {
+    currentTimers = null;
+    currentInstance = null;
+    currentEventQueue = null;
+    currentTimeStamp = 0;
+  }
+}
 
 function createFabricResponderEvent(
   topLevelType: ReactNativeEventResponderEventType,
