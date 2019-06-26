@@ -670,21 +670,31 @@ export function registerSuspenseInstanceRetry(
   instance._reactRetry = callback;
 }
 
+function isHydratableNode(node: Node) {
+  const nodeType = node.nodeType;
+  if (nodeType === ELEMENT_NODE || nodeType === TEXT_NODE) {
+    return true;
+  }
+  if (enableSuspenseServerRenderer) {
+    if (nodeType === COMMENT_NODE) {
+      return false;
+    }
+    const nodeData = (node: any).data;
+    return (
+      nodeData === SUSPENSE_START_DATA ||
+      nodeData === SUSPENSE_FALLBACK_START_DATA ||
+      nodeData === SUSPENSE_PENDING_START_DATA
+    );
+  }
+  return false;
+}
+
 export function getNextHydratableSibling(
   instance: HydratableInstance,
 ): null | HydratableInstance {
   let node = instance.nextSibling;
   // Skip non-hydratable nodes.
-  while (
-    node &&
-    node.nodeType !== ELEMENT_NODE &&
-    node.nodeType !== TEXT_NODE &&
-    (!enableSuspenseServerRenderer ||
-      node.nodeType !== COMMENT_NODE ||
-      ((node: any).data !== SUSPENSE_START_DATA &&
-        (node: any).data !== SUSPENSE_PENDING_START_DATA &&
-        (node: any).data !== SUSPENSE_FALLBACK_START_DATA))
-  ) {
+  while (node != null && !isHydratableNode(node)) {
     node = node.nextSibling;
   }
   return (node: any);
@@ -693,21 +703,12 @@ export function getNextHydratableSibling(
 export function getFirstHydratableChild(
   parentInstance: Container | Instance,
 ): null | HydratableInstance {
-  let next = parentInstance.firstChild;
+  let node = parentInstance.firstChild;
   // Skip non-hydratable nodes.
-  while (
-    next &&
-    next.nodeType !== ELEMENT_NODE &&
-    next.nodeType !== TEXT_NODE &&
-    (!enableSuspenseServerRenderer ||
-      next.nodeType !== COMMENT_NODE ||
-      ((next: any).data !== SUSPENSE_START_DATA &&
-        (next: any).data !== SUSPENSE_FALLBACK_START_DATA &&
-        (next: any).data !== SUSPENSE_PENDING_START_DATA))
-  ) {
-    next = next.nextSibling;
+  while (node != null && !isHydratableNode(node)) {
+    node = node.nextSibling;
   }
-  return (next: any);
+  return (node: any);
 }
 
 export function hydrateInstance(
