@@ -677,7 +677,7 @@ function isHydratableNode(node: Node) {
   }
   if (enableSuspenseServerRenderer) {
     if (nodeType === COMMENT_NODE) {
-      return false;
+      return true;
     }
     const nodeData = (node: any).data;
     return (
