@@ -125,7 +125,7 @@ Returns `true` if the instance has taken ownership of the responder.
 
 Returns `true` if the global coordinates lie within the TouchHitTarget.
 
-### isTargetWithinElement(target: Element, element: Element): boolean
+### isTargetWithinNode(target: Element, element: Element): boolean
 
 Returns `true` if `target` is a child of `element`.
 

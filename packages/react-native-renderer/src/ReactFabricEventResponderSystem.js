@@ -24,12 +24,14 @@ import type {
   ReactNativeResponderContext,
   ReactNativeResponderEvent,
   EventPriority,
+  ReactNativeEventTarget,
 } from './ReactNativeTypes';
 import {
   ContinuousEvent,
   UserBlockingEvent,
   DiscreteEvent,
 } from './ReactNativeTypes';
+import {getInstanceFromTag} from './ReactNativeComponentTree';
 import {invokeGuardedCallbackAndCatchFirstError} from 'shared/ReactErrorUtils';
 import {enableUserBlockingEvents} from 'shared/ReactFeatureFlags';
 import warning from 'shared/warning';
@@ -46,7 +48,7 @@ const {
 type EventObjectType = $Shape<PartialEventObject>;
 
 type PartialEventObject = {
-  target: Element | Document,
+  target: ReactNativeEventTarget,
   type: string,
 };
 
@@ -174,10 +176,27 @@ const eventResponderContext: ReactNativeResponderContext = {
     eventListeners.set(eventObject, listener);
     eventQueue.events.push(eventObject);
   },
+  isTargetWithinNode(
+    childTarget: ReactNativeEventTarget,
+    parentTarget: ReactNativeEventTarget,
+  ) {
+    validateResponderContext();
+    const childFiber = getFiberFromTarget(childTarget);
+    const parentFiber = getFiberFromTarget(parentTarget);
+
+    let node = childFiber;
+    while (node !== null) {
+      if (node === parentFiber) {
+        return true;
+      }
+      node = node.return;
+    }
+    return false;
+  },
   getEventCurrentTarget(event: ReactNativeResponderEvent): Element {
     validateResponderContext();
-    const target = ((event.target: any): null | Fiber);
-    let fiber = target;
+    const target = event.target;
+    let fiber = getFiberFromTarget(target);
     let hostComponent = target;
     const currentResponder = ((currentInstance: any): ReactNativeEventComponentInstance)
       .responder;
@@ -197,7 +216,15 @@ const eventResponderContext: ReactNativeResponderContext = {
     }
     return ((hostComponent: any): Element);
   },
-  getTargetBoundingRect(target, callback) {
+  getTargetBoundingRect(
+    target: ReactNativeEventTarget,
+    callback: ({
+      left: number,
+      right: number,
+      top: number,
+      bottom: number,
+    }) => void,
+  ) {
     measureInWindow(target.node, (x, y, width, height) => {
       callback({
         left: x,
@@ -286,6 +313,16 @@ const eventResponderContext: ReactNativeResponderContext = {
   },
 };
 
+function getFiberFromTarget(
+  target: null | ReactNativeEventTarget,
+): Fiber | null {
+  if (target === null) {
+    return null;
+  }
+  const tag = target.canonical._nativeTag;
+  return getInstanceFromTag(tag);
+}
+
 function processTimers(
   timers: Map<number, ResponderTimer>,
   delay: number,
@@ -316,7 +353,7 @@ function processTimers(
 function createFabricResponderEvent(
   topLevelType: ReactNativeEventResponderEventType,
   nativeEvent: AnyNativeEvent,
-  target: null | Fiber,
+  target: null | ReactNativeEventTarget,
 ): ReactNativeResponderEvent {
   const responderEvent = {
     nativeEvent,
@@ -551,7 +588,9 @@ function traverseAndHandleEventResponderInstances(
   const responderEvent = createFabricResponderEvent(
     topLevelType,
     nativeEvent,
-    targetFiber,
+    targetFiber !== null
+      ? ((targetFiber.stateNode: any): ReactNativeEventTarget)
+      : null,
   );
   const propagatedEventResponders: Set<ReactNativeEventResponder> = new Set();
   let length = targetEventResponderInstances.length;

@@ -583,7 +583,7 @@ function updateIsPressWithinResponderRegion(
   let isPressWithinResponderRegion = true;
   if (
     state.pressTarget != null &&
-    !context.isTargetWithinElement(target, state.pressTarget)
+    !context.isTargetWithinNode(target, state.pressTarget)
   ) {
     // Calculate the responder region we use for deactivation if not
     // already done during move event.

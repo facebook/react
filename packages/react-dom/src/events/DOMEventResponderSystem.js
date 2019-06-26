@@ -261,7 +261,7 @@ const eventResponderContext: ReactDOMResponderContext = {
     }
     return false;
   },
-  isTargetWithinElement(
+  isTargetWithinNode(
     childTarget: Element | Document,
     parentTarget: Element | Document,
   ): boolean {

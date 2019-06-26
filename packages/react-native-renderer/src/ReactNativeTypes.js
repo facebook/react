@@ -168,9 +168,19 @@ export type ReactNativeEventResponderEventType =
   | 'topTouchMove'
   | 'topTouchStart';
 
+export type ReactNativeEventTarget = {
+  node: Object,
+  canonical: {
+    _nativeTag: number,
+    viewConfig: ReactNativeBaseComponentViewConfig<>,
+    currentProps: Object,
+    _internalInstanceHandle: Object,
+  },
+};
+
 export type ReactNativeResponderEvent = {
   nativeEvent: mixed,
-  target: mixed,
+  target: null | ReactNativeEventTarget,
   type: ReactNativeEventResponderEventType,
 };
 
@@ -181,18 +191,6 @@ export type ReactNativeResponderContext = {
     eventPriority: EventPriority,
   ) => void,
   getTimeStamp: () => number,
-  // TODO
-  // isTargetWithinElement: (childTarget: mixed, parentTarget: mixed) => boolean,
-  // isTargetWithinEventComponent: mixed => boolean,
-  // isTargetWithinEventResponderScope: mixed => boolean,
-  // isEventWithinTouchHitTarget: (event: ReactNativeResponderEvent) => boolean,
-  // hasOwnership: () => boolean,
-  // requestResponderOwnership: () => boolean,
-  // requestGlobalOwnership: () => boolean,
-  // releaseOwnership: () => boolean,
-  // setTimeout: (func: () => void, timeout: number) => number,
-  // clearTimeout: (timerId: number) => void,
-  // getEventCurrentTarget(event: ReactNativeResponderEvent): Element,
 };
 
 export opaque type EventPriority = 0 | 1 | 2;
