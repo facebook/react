@@ -31,7 +31,7 @@ import {
   UserBlockingEvent,
   DiscreteEvent,
 } from './ReactNativeTypes';
-import {getInstanceFromTag} from './ReactNativeComponentTree';
+import {getClosestInstanceFromNode} from './ReactNativeComponentTree';
 import {invokeGuardedCallbackAndCatchFirstError} from 'shared/ReactErrorUtils';
 import {enableUserBlockingEvents} from 'shared/ReactFeatureFlags';
 import warning from 'shared/warning';
@@ -320,7 +320,7 @@ function getFiberFromTarget(
     return null;
   }
   const tag = target.canonical._nativeTag;
-  return getInstanceFromTag(tag);
+  return getClosestInstanceFromNode(tag);
 }
 
 function processTimers(
