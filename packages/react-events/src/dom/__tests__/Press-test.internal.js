@@ -52,7 +52,7 @@ function init() {
   ReactFeatureFlags.enableEventAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
-  Press = require('react-events/press');
+  Press = require('react-events/press').Press;
   Scheduler = require('scheduler');
 }
 
