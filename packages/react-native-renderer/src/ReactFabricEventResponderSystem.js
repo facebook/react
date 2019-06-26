@@ -207,6 +207,38 @@ const eventResponderContext: ReactNativeResponderContext = {
       });
     });
   },
+  addRootEventTypes(
+    rootEventTypes: Array<ReactNativeEventResponderEventType>,
+  ): void {
+    validateResponderContext();
+    for (let i = 0; i < rootEventTypes.length; i++) {
+      const rootEventType = rootEventTypes[i];
+      const eventComponentInstance = ((currentInstance: any): ReactNativeEventComponentInstance);
+      registerRootEventType(rootEventType, eventComponentInstance);
+    }
+  },
+  removeRootEventTypes(
+    rootEventTypes: Array<ReactNativeEventResponderEventType>,
+  ): void {
+    validateResponderContext();
+    for (let i = 0; i < rootEventTypes.length; i++) {
+      const rootEventType = rootEventTypes[i];
+
+      let rootEventComponents = rootEventTypesToEventComponentInstances.get(
+        rootEventType,
+      );
+      let rootEventTypesSet = ((currentInstance: any): ReactNativeEventComponentInstance)
+        .rootEventTypes;
+      if (rootEventTypesSet !== null) {
+        rootEventTypesSet.delete(rootEventType);
+      }
+      if (rootEventComponents !== undefined) {
+        rootEventComponents.delete(
+          ((currentInstance: any): ReactNativeEventComponentInstance),
+        );
+      }
+    }
+  },
   setTimeout(func: () => void, delay): number {
     validateResponderContext();
     if (currentTimers === null) {
