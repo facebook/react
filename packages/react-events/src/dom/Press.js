@@ -127,9 +127,10 @@ const targetEventTypes = [
   // We need to preventDefault on pointerdown for mouse/pen events
   // that are in hit target area but not the element area.
   {name: 'pointerdown', passive: false},
+  {name: 'click', passive: false},
 ];
 const rootEventTypes = [
-  {name: 'click', passive: false},
+  'click',
   'keyup',
   'pointerup',
   'pointermove',
@@ -811,6 +812,13 @@ const PressResponder: ReactDOMEventResponder = {
         removeRootEventTypes(context, state);
         break;
       }
+
+      case 'click': {
+        if (state.shouldPreventClick) {
+          nativeEvent.preventDefault();
+        }
+        break;
+      }
     }
   },
   onRootEvent(
@@ -994,9 +1002,6 @@ const PressResponder: ReactDOMEventResponder = {
         // "keyup" occurs after "click"
         if (state.pointerType !== 'keyboard') {
           removeRootEventTypes(context, state);
-        }
-        if (state.shouldPreventClick) {
-          nativeEvent.preventDefault();
         }
         break;
       }
