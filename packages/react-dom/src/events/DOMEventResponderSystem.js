@@ -525,12 +525,6 @@ function releaseOwnershipForEventComponentInstance(
   return false;
 }
 
-function isInteger(value: any): boolean {
-  return (
-    typeof value === 'number' && isFinite(value) && Math.floor(value) === value
-  );
-}
-
 function isFiberHostComponentFocusable(
   fiber: Fiber,
   includeNegativeTabIndex: boolean,
@@ -539,13 +533,13 @@ function isFiberHostComponentFocusable(
     return false;
   }
   const {type, memoizedProps} = fiber;
-  if (memoizedProps.disabled) {
+  if (
+    (!includeNegativeTabIndex && memoizedProps.tabIndex === -1) ||
+    memoizedProps.disabled
+  ) {
     return false;
   }
-  if (isInteger(memoizedProps.tabIndex)) {
-    return includeNegativeTabIndex ? true : memoizedProps.tabIndex >= 0;
-  }
-  if (memoizedProps.contentEditable === true) {
+  if (memoizedProps.tabIndex === 0 || memoizedProps.contentEditable === true) {
     return true;
   }
   if (type === 'a' || type === 'area') {

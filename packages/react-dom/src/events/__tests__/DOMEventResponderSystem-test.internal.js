@@ -1146,7 +1146,7 @@ describe('DOMEventResponderSystem', () => {
     const buttonProps = [
       {id: 'button1', ref: React.createRef(), tabIndex: 0},
       {id: 'button2', ref: React.createRef(), tabIndex: -1},
-      {id: 'button3', ref: React.createRef(), tabIndex: 2},
+      {id: 'button3', ref: React.createRef()},
       {id: 'button4', ref: React.createRef(), disabled: true},
     ];
 
