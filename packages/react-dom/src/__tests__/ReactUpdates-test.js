@@ -1296,7 +1296,7 @@ describe('ReactUpdates', () => {
     const container = document.createElement('div');
 
     function Baz() {
-      Scheduler.yieldValue('Baz');
+      Scheduler.unstable_yieldValue('Baz');
       return <p>baz</p>;
     }
 
@@ -1304,14 +1304,14 @@ describe('ReactUpdates', () => {
     function Bar() {
       const [counter, _setCounter] = React.useState(0);
       setCounter = _setCounter;
-      Scheduler.yieldValue('Bar');
+      Scheduler.unstable_yieldValue('Bar');
       return <p>bar {counter}</p>;
     }
 
     function Foo() {
-      Scheduler.yieldValue('Foo');
+      Scheduler.unstable_yieldValue('Foo');
       React.useEffect(() => {
-        Scheduler.yieldValue('Foo#effect');
+        Scheduler.unstable_yieldValue('Foo#effect');
       });
       return (
         <div>
@@ -1608,7 +1608,7 @@ describe('ReactUpdates', () => {
         const [step, setStep] = React.useState(0);
         React.useEffect(() => {
           setStep(x => x + 1);
-          Scheduler.yieldValue(step);
+          Scheduler.unstable_yieldValue(step);
         });
         return step;
       }
@@ -1653,7 +1653,7 @@ describe('ReactUpdates', () => {
         React.useEffect(() => {
           if (step < LIMIT) {
             setStep(x => x + 1);
-            Scheduler.yieldValue(step);
+            Scheduler.unstable_yieldValue(step);
           }
         });
         return step;
@@ -1690,7 +1690,7 @@ describe('ReactUpdates', () => {
           for (let i = 0; i < 1000; i++) {
             setStep(x => x + 1);
           }
-          Scheduler.yieldValue('Done');
+          Scheduler.unstable_yieldValue('Done');
         }, []);
         return step;
       }

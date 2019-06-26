@@ -58,7 +58,7 @@ function init() {
   ReactFeatureFlags.enableEventAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
-  Press = require('react-events/press');
+  Press = require('react-events/press').Press;
   Scheduler = require('scheduler');
 }
 
@@ -2499,6 +2499,60 @@ describe('Event responder: Press', () => {
     });
   });
 
+  it('does end on "scroll" to document', () => {
+    const onPressEnd = jest.fn();
+    const ref = React.createRef();
+    const element = (
+      <div>
+        <Press onPressEnd={onPressEnd}>
+          <a href="#" ref={ref} />
+        </Press>
+      </div>
+    );
+    ReactDOM.render(element, container);
+
+    ref.current.dispatchEvent(createEvent('pointerdown'));
+    document.dispatchEvent(createEvent('scroll'));
+    expect(onPressEnd).toHaveBeenCalledTimes(1);
+  });
+
+  it('does end on "scroll" to a parent container', () => {
+    const onPressEnd = jest.fn();
+    const ref = React.createRef();
+    const containerRef = React.createRef();
+    const element = (
+      <div ref={containerRef}>
+        <Press onPressEnd={onPressEnd}>
+          <a href="#" ref={ref} />
+        </Press>
+      </div>
+    );
+    ReactDOM.render(element, container);
+
+    ref.current.dispatchEvent(createEvent('pointerdown'));
+    containerRef.current.dispatchEvent(createEvent('scroll'));
+    expect(onPressEnd).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not end on "scroll" to an element outside', () => {
+    const onPressEnd = jest.fn();
+    const ref = React.createRef();
+    const outsideRef = React.createRef();
+    const element = (
+      <div>
+        <Press onPressEnd={onPressEnd}>
+          <a href="#" ref={ref} />
+        </Press>
+        <span ref={outsideRef} />
+      </div>
+    );
+    ReactDOM.render(element, container);
+
+    ref.current.dispatchEvent(createEvent('pointerdown'));
+    outsideRef.current.dispatchEvent(createEvent('scroll'));
+    expect(onPressEnd).not.toBeCalled();
+  });
+
   it('expect displayName to show up for event component', () => {
     expect(Press.responder.displayName).toBe('Press');
   });
@@ -2722,7 +2776,7 @@ describe('Event responder: Press', () => {
     const root = ReactDOM.unstable_createRoot(newContainer);
     document.body.appendChild(newContainer);
     root.render(<MyComponent />);
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
 
     dispatchEventWithTimeStamp(ref.current, 'pointerdown', 100);
     dispatchEventWithTimeStamp(ref.current, 'pointerup', 100);
@@ -2733,7 +2787,7 @@ describe('Event responder: Press', () => {
     } else {
       expect(renderCounts).toBe(1);
     }
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     if (__DEV__) {
       expect(renderCounts).toBe(4);
     } else {
@@ -2751,7 +2805,7 @@ describe('Event responder: Press', () => {
       expect(renderCounts).toBe(3);
     }
 
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     document.body.removeChild(newContainer);
   });
 
@@ -2788,7 +2842,7 @@ describe('Event responder: Press', () => {
     const root = ReactDOM.unstable_createRoot(newContainer);
     document.body.appendChild(newContainer);
     root.render(<MyComponent />);
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
 
     dispatchEventWithTimeStamp(ref.current, 'pointerdown', 100);
     dispatchEventWithTimeStamp(ref.current, 'pointerup', 100);
@@ -2799,7 +2853,7 @@ describe('Event responder: Press', () => {
     } else {
       expect(renderCounts).toBe(2);
     }
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     if (__DEV__) {
       expect(renderCounts).toBe(6);
     } else {
@@ -2817,7 +2871,7 @@ describe('Event responder: Press', () => {
       expect(renderCounts).toBe(4);
     }
 
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     document.body.removeChild(newContainer);
   });
 
@@ -2863,13 +2917,13 @@ describe('Event responder: Press', () => {
       const root = ReactDOM.unstable_createRoot(newContainer);
 
       root.render(<MyComponent />);
-      Scheduler.flushAll();
+      Scheduler.unstable_flushAll();
       expect(newContainer.textContent).toEqual('Presses: 0, Clicks: 0');
 
       dispatchEventWithTimeStamp(button.current, 'pointerdown', 100);
       dispatchEventWithTimeStamp(button.current, 'pointerup', 100);
       dispatchEventWithTimeStamp(button.current, 'click', 100);
-      Scheduler.flushAll();
+      Scheduler.unstable_flushAll();
       expect(newContainer.textContent).toEqual('Presses: 1, Clicks: 1');
 
       expect(ops).toEqual(['Presses: 0, Clicks: 0']);

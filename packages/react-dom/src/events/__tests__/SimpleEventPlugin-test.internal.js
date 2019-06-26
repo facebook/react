@@ -275,7 +275,7 @@ describe('SimpleEventPlugin', function() {
       expect(ops).toEqual([]);
       expect(button).toBe(undefined);
       // Flush async work
-      Scheduler.flushAll();
+      Scheduler.unstable_flushAll();
       expect(ops).toEqual(['render button: enabled']);
 
       ops = [];
@@ -315,7 +315,7 @@ describe('SimpleEventPlugin', function() {
       click();
       click();
       click();
-      Scheduler.flushAll();
+      Scheduler.unstable_flushAll();
       expect(ops).toEqual([]);
     });
 
@@ -346,7 +346,7 @@ describe('SimpleEventPlugin', function() {
       // Should not have flushed yet because it's async
       expect(button).toBe(undefined);
       // Flush async work
-      Scheduler.flushAll();
+      Scheduler.unstable_flushAll();
       expect(button.textContent).toEqual('Count: 0');
 
       function click() {
@@ -369,7 +369,7 @@ describe('SimpleEventPlugin', function() {
       click();
 
       // Flush the remaining work
-      Scheduler.flushAll();
+      Scheduler.unstable_flushAll();
       // The counter should equal the total number of clicks
       expect(button.textContent).toEqual('Count: 7');
     });
@@ -385,7 +385,7 @@ describe('SimpleEventPlugin', function() {
           const text = `High-pri count: ${
             this.props.highPriCount
           }, Low-pri count: ${this.state.lowPriCount}`;
-          Scheduler.yieldValue(text);
+          Scheduler.unstable_yieldValue(text);
           return (
             <button
               ref={el => (button = el)}

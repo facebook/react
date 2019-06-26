@@ -623,7 +623,7 @@ describe('ReactHooksInspectionIntegration', () => {
 
     await LazyFoo;
 
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
 
     let childFiber = renderer.root._currentFiber();
     let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);

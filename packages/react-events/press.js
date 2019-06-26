@@ -9,6 +9,4 @@
 
 'use strict';
 
-const Press = require('./src/dom/Press');
-
-module.exports = Press.default || Press;
+module.exports = require('./src/dom/Press');

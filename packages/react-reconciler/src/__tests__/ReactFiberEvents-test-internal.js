@@ -799,12 +799,12 @@ describe('ReactFiberEvents', () => {
       };
 
       function Async() {
-        Scheduler.yieldValue('Suspend!');
+        Scheduler.unstable_yieldValue('Suspend!');
         throw thenable;
       }
 
       function Text(props) {
-        Scheduler.yieldValue(props.text);
+        Scheduler.unstable_yieldValue(props.text);
         return props.text;
       }
 
