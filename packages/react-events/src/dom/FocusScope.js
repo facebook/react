@@ -342,7 +342,7 @@ const FocusScopeContext: React.Context<FocusManager> = React.createContext();
 
 export function FocusScope(props: FocusScopeProps) {
   let internalFocusManager: ?FocusManager;
-  let focusManager = {
+  let focusManager = React.useRef({
     focusNext(options: FocusManagerOptions = {}) {
       invariant(
         internalFocusManager != null,
@@ -357,7 +357,7 @@ export function FocusScope(props: FocusScopeProps) {
       );
       return internalFocusManager.focusPrevious(options);
     },
-  };
+  });
 
   props = {
     ...props,
@@ -367,7 +367,7 @@ export function FocusScope(props: FocusScopeProps) {
   };
 
   return React.createElement(FocusScopeContext.Provider, {
-    value: focusManager,
+    value: focusManager.current,
     children: React.createElement(FocusScopeEventComponent, props),
   });
 }
