@@ -2063,6 +2063,32 @@ function validateRevealOrder(revealOrder: SuspenseListRevealOrder) {
   }
 }
 
+function initSuspenseListRenderState(
+  workInProgress: Fiber,
+  isBackwards: boolean,
+  tail: null | Fiber,
+  lastContentRow: null | Fiber,
+): void {
+  let renderState: null | SuspenseListRenderState =
+    workInProgress.memoizedState;
+  if (renderState === null) {
+    workInProgress.memoizedState = {
+      isBackwards: isBackwards,
+      rendering: null,
+      last: lastContentRow,
+      tail: tail,
+      tailExpiration: 0,
+    };
+  } else {
+    // We can reuse the existing object from previous renders.
+    renderState.isBackwards = isBackwards;
+    renderState.rendering = null;
+    renderState.last = lastContentRow;
+    renderState.tail = tail;
+    renderState.tailExpiration = 0;
+  }
+}
+
 // This can end up rendering this component multiple passes.
 // The first pass splits the children fibers into two sets. A head and tail.
 // We first render the head. If anything is in fallback state, we do another
@@ -2091,8 +2117,6 @@ function updateSuspenseListComponent(
   printChildren(current && current.child);
 
   reconcileChildren(current, workInProgress, newChildren, renderExpirationTime);
-
-  let renderState: null | SuspenseListRenderState = null;
 
   let suspenseContext: SuspenseContext = suspenseStackCursor.current;
 
@@ -2123,7 +2147,9 @@ function updateSuspenseListComponent(
   }
   pushSuspenseContext(workInProgress, suspenseContext);
 
-  if ((workInProgress.mode & BatchedMode) !== NoMode) {
+  if ((workInProgress.mode & BatchedMode) === NoMode) {
+    workInProgress.memoizedState = null;
+  } else {
     // Outside of batched mode, SuspenseList doesn't work so we just
     // use make it a noop by treating it as the default revealOrder.
     switch (revealOrder) {
@@ -2141,17 +2167,12 @@ function updateSuspenseListComponent(
           tail = lastContentRow.sibling;
           lastContentRow.sibling = null;
         }
-        if (renderState === null) {
-          renderState = {
-            isBackwards: false,
-            rendering: null,
-            last: lastContentRow,
-            tail: tail,
-            tailExpiration: 0,
-          };
-        } else {
-          renderState.tail = tail;
-        }
+        initSuspenseListRenderState(
+          workInProgress,
+          false, // isBackwards
+          tail,
+          lastContentRow,
+        );
         break;
       }
       case 'backwards': {
@@ -2176,37 +2197,30 @@ function updateSuspenseListComponent(
           row = nextRow;
         }
         // TODO: If workInProgress.child is null, we can continue on the tail immediately.
-        if (renderState === null) {
-          renderState = {
-            isBackwards: true,
-            rendering: null,
-            last: null,
-            tail: tail,
-            tailExpiration: 0,
-          };
-        } else {
-          renderState.isBackwards = true;
-          renderState.tail = tail;
-        }
+        initSuspenseListRenderState(
+          workInProgress,
+          true, // isBackwards
+          tail,
+          null, // last
+        );
         break;
       }
       case 'together': {
-        renderState = {
-          isBackwards: false,
-          rendering: null,
-          last: null,
-          tail: null,
-          tailExpiration: 0,
-        };
+        initSuspenseListRenderState(
+          workInProgress,
+          false, // isBackwards
+          null, // tail
+          null, // last
+        );
         break;
       }
       default: {
         // The default reveal order is the same as not having
         // a boundary.
+        workInProgress.memoizedState = null;
       }
     }
   }
-  workInProgress.memoizedState = renderState;
   return workInProgress.child;
 }
 
@@ -2655,9 +2669,17 @@ function beginWork(
               renderExpirationTime,
             );
           }
+
           // If nothing suspended before and we're rendering the same children,
           // then the tail doesn't matter. Anything new that suspends will work
           // in the "together" mode, so we can continue from the state we had.
+          let renderState = workInProgress.memoizedState;
+          if (renderState !== null) {
+            // Reset to the "together" mode in case we've started a different
+            // update in the past but didn't complete it.
+            renderState.rendering = null;
+            renderState.tail = null;
+          }
           pushSuspenseContext(workInProgress, suspenseStackCursor.current);
           break;
         }
