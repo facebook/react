@@ -48,7 +48,6 @@ import {
   LazyComponent,
   IncompleteClassComponent,
   EventComponent,
-  EventTarget,
 } from 'shared/ReactWorkTags';
 import {NoMode, BatchedMode} from './ReactTypeOfMode';
 import {
@@ -76,7 +75,6 @@ import {
   appendChildToContainerChildSet,
   finalizeContainerChildren,
   updateEventComponent,
-  handleEventTarget,
 } from './ReactFiberHostConfig';
 import {
   getRootHostContainer,
@@ -1081,26 +1079,6 @@ function completeWork(
           // Update the current fiber
           eventComponentInstance.currentFiber = workInProgress;
           updateEventComponent(eventComponentInstance);
-        }
-      }
-      break;
-    }
-    case EventTarget: {
-      if (enableEventAPI) {
-        popHostContext(workInProgress);
-        const type = workInProgress.type.type;
-        const rootContainerInstance = getRootHostContainer();
-        const shouldUpdate = handleEventTarget(
-          type,
-          newProps,
-          rootContainerInstance,
-          workInProgress,
-        );
-        // Update the latest props on the stateNode. This is used
-        // during the event phase to find the most current props.
-        workInProgress.stateNode.props = newProps;
-        if (shouldUpdate) {
-          markUpdate(workInProgress);
         }
       }
       break;

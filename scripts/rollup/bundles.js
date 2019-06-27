@@ -447,21 +447,6 @@ const bundles = [
       FB_WWW_DEV,
       FB_WWW_PROD,
     ],
-    moduleType: ISOMORPHIC,
-    entry: 'react-events',
-    global: 'ReactEvents',
-    externals: [],
-  },
-
-  {
-    bundleTypes: [
-      UMD_DEV,
-      UMD_PROD,
-      NODE_DEV,
-      NODE_PROD,
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-    ],
     moduleType: NON_FIBER_RENDERER,
     entry: 'react-events/press',
     global: 'ReactEventsPress',

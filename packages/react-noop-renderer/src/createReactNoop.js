@@ -23,11 +23,7 @@ import type {RootTag} from 'shared/ReactRootTags';
 import * as Scheduler from 'scheduler/unstable_mock';
 import {createPortal} from 'shared/ReactPortal';
 import expect from 'expect';
-import {
-  REACT_FRAGMENT_TYPE,
-  REACT_ELEMENT_TYPE,
-  REACT_EVENT_TARGET_TOUCH_HIT,
-} from 'shared/ReactSymbols';
+import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import warning from 'shared/warning';
 import enqueueTask from 'shared/enqueueTask';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -38,18 +34,6 @@ import {
 } from 'shared/ReactFeatureFlags';
 import {ConcurrentRoot, BatchedRoot, LegacyRoot} from 'shared/ReactRootTags';
 
-type EventTargetChildElement = {
-  type: string,
-  props: null | {
-    style?: {
-      position?: string,
-      bottom?: string,
-      left?: string,
-      right?: string,
-      top?: string,
-    },
-  },
-};
 type Container = {
   rootID: string,
   children: Array<Instance | TextInstance>,
@@ -86,8 +70,6 @@ const {ReactCurrentActingRendererSigil} = ReactSharedInternals;
 const NO_CONTEXT = {};
 const UPPERCASE_CONTEXT = {};
 const EVENT_COMPONENT_CONTEXT = {};
-const EVENT_TARGET_CONTEXT = {};
-const EVENT_TOUCH_HIT_TARGET_CONTEXT = {};
 const UPDATE_SIGNAL = {};
 if (__DEV__) {
   Object.freeze(NO_CONTEXT);
@@ -286,30 +268,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     getChildHostContextForEventComponent(parentHostContext: HostContext) {
       if (__DEV__ && enableEventAPI) {
-        warning(
-          parentHostContext !== EVENT_TARGET_CONTEXT &&
-            parentHostContext !== EVENT_TOUCH_HIT_TARGET_CONTEXT,
-          'validateDOMNesting: React event targets must not have event components as children.',
-        );
         return EVENT_COMPONENT_CONTEXT;
-      }
-      return parentHostContext;
-    },
-
-    getChildHostContextForEventTarget(
-      parentHostContext: HostContext,
-      type: Symbol | number,
-    ) {
-      if (__DEV__ && enableEventAPI) {
-        if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
-          warning(
-            parentHostContext !== EVENT_COMPONENT_CONTEXT,
-            'validateDOMNesting: <TouchHitTarget> cannot not be a direct child of an event component. ' +
-              'Ensure <TouchHitTarget> is a direct child of a DOM element.',
-          );
-          return EVENT_TOUCH_HIT_TARGET_CONTEXT;
-        }
-        return EVENT_TARGET_CONTEXT;
       }
       return parentHostContext;
     },
@@ -446,53 +405,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     },
 
     unmountEventComponent(): void {
-      // NO-OP
-    },
-
-    getEventTargetChildElement(
-      type: Symbol | number,
-      props: Props,
-    ): null | EventTargetChildElement {
-      if (enableEventAPI) {
-        if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
-          const {bottom, left, right, top} = props;
-
-          if (!bottom && !left && !right && !top) {
-            return null;
-          }
-          return {
-            type: 'div',
-            props: {
-              style: {
-                position: 'absolute',
-                zIndex: -1,
-                bottom: bottom ? `-${bottom}px` : '0px',
-                left: left ? `-${left}px` : '0px',
-                right: right ? `-${right}px` : '0px',
-                top: top ? `-${top}px` : '0px',
-              },
-            },
-          };
-        }
-      }
-      return null;
-    },
-
-    handleEventTarget(
-      type: Symbol | number,
-      props: Props,
-      rootContainerInstance: Container,
-      internalInstanceHandle: Object,
-    ): boolean {
-      return false;
-    },
-
-    commitEventTarget(
-      type: Symbol | number,
-      props: Props,
-      instance: Instance,
-      parentInstance: Instance,
-    ): void {
       // NO-OP
     },
   };

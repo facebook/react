@@ -31,7 +31,7 @@ import {
   isEnabled as ReactBrowserEventEmitterIsEnabled,
   setEnabled as ReactBrowserEventEmitterSetEnabled,
 } from '../events/ReactBrowserEventEmitter';
-import {Namespaces, getChildNamespace} from '../shared/DOMNamespaces';
+import {getChildNamespace} from '../shared/DOMNamespaces';
 import {addRootEventTypesForComponentInstance} from '../events/DOMEventResponderSystem';
 import {
   ELEMENT_NODE,
@@ -51,8 +51,6 @@ import {
   mountEventResponder,
   unmountEventResponder,
 } from '../events/DOMEventResponderSystem';
-import {REACT_EVENT_TARGET_TOUCH_HIT} from 'shared/ReactSymbols';
-import {canUseDOM} from 'shared/ExecutionEnvironment';
 
 export type Type = string;
 export type Props = {
@@ -93,7 +91,6 @@ type HostContextDev = {
   ancestorInfo: mixed,
   eventData: null | {|
     isEventComponent?: boolean,
-    isEventTarget?: boolean,
   |},
 };
 type HostContextProd = string;
@@ -108,8 +105,6 @@ import {
   enableEventAPI,
 } from 'shared/ReactFeatureFlags';
 import warning from 'shared/warning';
-
-const {html: HTML_NAMESPACE} = Namespaces;
 
 let SUPPRESS_HYDRATION_WARNING;
 if (__DEV__) {
@@ -196,45 +191,8 @@ export function getChildHostContextForEventComponent(
   if (__DEV__) {
     const parentHostContextDev = ((parentHostContext: any): HostContextDev);
     const {namespace, ancestorInfo} = parentHostContextDev;
-    warning(
-      parentHostContextDev.eventData === null ||
-        !parentHostContextDev.eventData.isEventTarget,
-      'validateDOMNesting: React event targets must not have event components as children.',
-    );
     const eventData = {
       isEventComponent: true,
-      isEventTarget: false,
-    };
-    return {namespace, ancestorInfo, eventData};
-  }
-  return parentHostContext;
-}
-
-export function getChildHostContextForEventTarget(
-  parentHostContext: HostContext,
-  type: Symbol | number,
-): HostContext {
-  if (__DEV__) {
-    const parentHostContextDev = ((parentHostContext: any): HostContextDev);
-    const {namespace, ancestorInfo} = parentHostContextDev;
-    if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
-      warning(
-        parentHostContextDev.eventData === null ||
-          !parentHostContextDev.eventData.isEventComponent,
-        'validateDOMNesting: <TouchHitTarget> cannot not be a direct child of an event component. ' +
-          'Ensure <TouchHitTarget> is a direct child of a DOM element.',
-      );
-      const parentNamespace = parentHostContextDev.namespace;
-      if (parentNamespace !== HTML_NAMESPACE) {
-        throw new Error(
-          '<TouchHitTarget> was used in an unsupported DOM namespace. ' +
-            'Ensure the <TouchHitTarget> is used in an HTML namespace.',
-        );
-      }
-    }
-    const eventData = {
-      isEventComponent: false,
-      isEventTarget: true,
     };
     return {namespace, ancestorInfo, eventData};
   }
@@ -922,87 +880,5 @@ export function unmountEventComponent(
   if (enableEventAPI) {
     // TODO stop listening to targetEventTypes
     unmountEventResponder(eventComponentInstance);
-  }
-}
-
-export function getEventTargetChildElement(
-  type: Symbol | number,
-  props: Props,
-): null | EventTargetChildElement {
-  if (enableEventAPI) {
-    if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
-      const {bottom, left, right, top} = props;
-
-      if (!bottom && !left && !right && !top) {
-        return null;
-      }
-      return {
-        type: 'div',
-        props: {
-          style: {
-            position: 'absolute',
-            zIndex: -1,
-            pointerEvents: null,
-            bottom: bottom ? `-${bottom}px` : '0px',
-            left: left ? `-${left}px` : '0px',
-            right: right ? `-${right}px` : '0px',
-            top: top ? `-${top}px` : '0px',
-          },
-          hydrateTouchHitTarget: true,
-          suppressHydrationWarning: true,
-        },
-      };
-    }
-  }
-  return null;
-}
-
-export function handleEventTarget(
-  type: Symbol | number,
-  props: Props,
-  rootContainerInstance: Container,
-  internalInstanceHandle: Object,
-): boolean {
-  if (
-    __DEV__ &&
-    type === REACT_EVENT_TARGET_TOUCH_HIT &&
-    (props.left || props.right || props.top || props.bottom)
-  ) {
-    return true;
-  }
-  return false;
-}
-
-export function commitEventTarget(
-  type: Symbol | number,
-  props: Props,
-  instance: Instance,
-  parentInstance: Instance,
-): void {
-  if (enableEventAPI) {
-    if (type === REACT_EVENT_TARGET_TOUCH_HIT) {
-      if (__DEV__ && canUseDOM) {
-        // This is done at DEV time because getComputedStyle will
-        // typically force a style recalculation and force a layout,
-        // reflow -– both of which are sync are expensive.
-        const computedStyles = window.getComputedStyle(parentInstance);
-        const position = computedStyles.getPropertyValue('position');
-        warning(
-          position !== '' && position !== 'static',
-          '<TouchHitTarget> inserts an empty absolutely positioned <div>. ' +
-            'This requires its parent DOM node to be positioned too, but the ' +
-            'parent DOM node was found to have the style "position" set to ' +
-            'either no value, or a value of "static". Try using a "position" ' +
-            'value of "relative".',
-        );
-        warning(
-          computedStyles.getPropertyValue('z-index') !== '',
-          '<TouchHitTarget> inserts an empty <div> with "z-index" of "-1". ' +
-            'This requires its parent DOM node to have a "z-index" greater than "-1",' +
-            'but the parent DOM node was found to no "z-index" value set.' +
-            ' Try using a "z-index" value of "0" or greater.',
-        );
-      }
-    }
   }
 }
