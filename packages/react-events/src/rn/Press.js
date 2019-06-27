@@ -52,7 +52,7 @@ type PressProps = {
 };
 
 type PressEvent = {|
-  target: Element | Document,
+  target: ReactNativeEventTarget,
   type: PressEventType,
   pointerType: PointerType,
   timeStamp: number,
@@ -127,7 +127,7 @@ function calculateDelayMS(delay: ?number, min = 0, fallback = 0) {
 function createPressEvent(
   context: ReactNativeResponderContext,
   type: PressEventType,
-  target: Element | Document,
+  target: ReactNativeEventTarget,
   pointerType: PointerType,
   touchEvent: null | ReactFaricEventTouch,
 ): PressEvent {
@@ -175,7 +175,7 @@ function dispatchEvent(
   listener: (e: Object) => void,
   eventPriority: EventPriority,
 ): void {
-  const target = ((state.pressTarget: any): Element | Document);
+  const target = ((state.pressTarget: any): ReactNativeEventTarget);
   const pointerType = state.pointerType;
   const syntheticEvent = createPressEvent(
     context,
