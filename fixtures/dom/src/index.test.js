@@ -42,10 +42,10 @@ it('resets correctly across renderers', () => {
     React.useEffect(() => {}, []);
     return null;
   }
-  TestUtils.act(() => {
-    TestRenderer.act(() => {});
+  TestRenderer.act(() => {
+    TestUtils.act(() => {});
     expect(() => {
-      TestRenderer.create(<Effecty />);
+      ReactDOM.render(<Effecty />, document.createElement('div'));
     }).toWarnDev(["It looks like you're using the wrong act()"], {
       withoutStack: true,
     });
@@ -88,25 +88,23 @@ it('warns when using the wrong act version - test + dom: updates', () => {
   }).toWarnDev(["It looks like you're using the wrong act()"]);
 });
 
-it('warns when using the wrong act version - dom + test: .create()', () => {
+it('does not warn with - dom + test: .create()', () => {
+  // since TestRenderer.create wraps its own act(), there's no warning to trigger
   expect(() => {
     TestUtils.act(() => {
       TestRenderer.create(<App />);
     });
-  }).toWarnDev(["It looks like you're using the wrong act()"], {
-    withoutStack: true,
-  });
+  }).toWarnDev([]);
 });
 
-it('warns when using the wrong act version - dom + test: .update()', () => {
+it('does not warn with - dom + test: .update()', () => {
   const root = TestRenderer.create(<App key="one" />);
+  // since TestRenderer.update wraps its own act(), there's no warning to trigger
   expect(() => {
     TestUtils.act(() => {
       root.update(<App key="two" />);
     });
-  }).toWarnDev(["It looks like you're using the wrong act()"], {
-    withoutStack: true,
-  });
+  }).toWarnDev([]);
 });
 
 it('warns when using the wrong act version - dom + test: updates', () => {

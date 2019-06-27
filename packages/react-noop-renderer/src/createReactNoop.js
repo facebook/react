@@ -613,7 +613,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
   let actingUpdatesScopeDepth = 0;
 
-  function act(callback: () => Thenable) {
+  function act(callback: () => Thenable | void) {
     let previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
     let previousIsSomeRendererActing;
     let previousIsThisRendererActing;

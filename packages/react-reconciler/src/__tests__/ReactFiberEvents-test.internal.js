@@ -508,40 +508,42 @@ describe('ReactFiberEvents', () => {
     });
 
     it('should handle unwinding event component fibers in concurrent mode', () => {
-      let resolveThenable;
+      ReactTestRenderer.act(() => {
+        let resolveThenable;
 
-      const thenable = {
-        then(resolve) {
-          resolveThenable = resolve;
-        },
-      };
+        const thenable = {
+          then(resolve) {
+            resolveThenable = resolve;
+          },
+        };
 
-      function Async() {
-        Scheduler.unstable_yieldValue('Suspend!');
-        throw thenable;
-      }
+        function Async() {
+          Scheduler.unstable_yieldValue('Suspend!');
+          throw thenable;
+        }
 
-      function Text(props) {
-        Scheduler.unstable_yieldValue(props.text);
-        return props.text;
-      }
+        function Text(props) {
+          Scheduler.unstable_yieldValue(props.text);
+          return props.text;
+        }
 
-      ReactTestRenderer.create(
-        <React.Suspense fallback={<Text text="Loading..." />}>
-          <EventComponent>
-            <div>
-              <Async />
-              <Text text="Sibling" />
-            </div>
-          </EventComponent>
-        </React.Suspense>,
-        {
-          unstable_isConcurrent: true,
-        },
-      );
+        ReactTestRenderer.create(
+          <React.Suspense fallback={<Text text="Loading..." />}>
+            <EventComponent>
+              <div>
+                <Async />
+                <Text text="Sibling" />
+              </div>
+            </EventComponent>
+          </React.Suspense>,
+          {
+            unstable_isConcurrent: true,
+          },
+        );
 
-      expect(Scheduler).toFlushAndYieldThrough(['Suspend!']);
-      resolveThenable();
+        expect(Scheduler).toFlushAndYieldThrough(['Suspend!']);
+        resolveThenable();
+      });
     });
   });
 

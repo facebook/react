@@ -438,13 +438,19 @@ const ReactTestRendererFiber = {
       createNodeMock,
       tag: 'CONTAINER',
     };
+    // make flow happy by retaining a reference to container
+    // before using it inside act()
+    const rootContainer = container;
     let root: FiberRoot | null = createContainer(
-      container,
+      rootContainer,
       isConcurrent ? ConcurrentRoot : LegacyRoot,
       false,
     );
-    invariant(root != null, 'something went wrong');
-    updateContainer(element, root, null, null);
+
+    act(() => {
+      invariant(root != null, 'something went wrong');
+      updateContainer(element, root, null, null);
+    });
 
     const entry = {
       _Scheduler: Scheduler,
@@ -492,16 +498,20 @@ const ReactTestRendererFiber = {
         return toTree(root.current);
       },
       update(newElement: React$Element<any>) {
-        if (root == null || root.current == null) {
-          return;
-        }
-        updateContainer(newElement, root, null, null);
+        act(() => {
+          if (root == null || root.current == null) {
+            return;
+          }
+          updateContainer(newElement, root, null, null);
+        });
       },
       unmount() {
-        if (root == null || root.current == null) {
-          return;
-        }
-        updateContainer(null, root, null, null);
+        act(() => {
+          if (root == null || root.current == null) {
+            return;
+          }
+          updateContainer(null, root, null, null);
+        });
         container = null;
         root = null;
       },

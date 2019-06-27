@@ -65,7 +65,7 @@ function flushWorkAndMicroTasks(onDone: (err: ?Error) => void) {
 
 let actingUpdatesScopeDepth = 0;
 
-function act(callback: () => Thenable) {
+function act(callback: () => Thenable | void) {
   let previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
   let previousIsSomeRendererActing;
   let previousIsThisRendererActing;
@@ -134,7 +134,7 @@ function act(callback: () => Thenable) {
     return {
       then(resolve: () => void, reject: (?Error) => void) {
         called = true;
-        result.then(
+        ((result: any): Thenable).then(
           () => {
             if (actingUpdatesScopeDepth > 1) {
               onDone();
