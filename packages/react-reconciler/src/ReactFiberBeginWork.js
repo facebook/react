@@ -13,7 +13,7 @@ import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {
   SuspenseState,
-  SuspenseListState,
+  SuspenseListRenderState,
 } from './ReactFiberSuspenseComponent';
 import type {SuspenseContext} from './ReactFiberSuspenseContext';
 
@@ -2092,7 +2092,7 @@ function updateSuspenseListComponent(
 
   reconcileChildren(current, workInProgress, newChildren, renderExpirationTime);
 
-  let suspenseListState: null | SuspenseListState = null;
+  let renderState: null | SuspenseListRenderState = null;
 
   let suspenseContext: SuspenseContext = suspenseStackCursor.current;
 
@@ -2141,8 +2141,8 @@ function updateSuspenseListComponent(
           tail = lastContentRow.sibling;
           lastContentRow.sibling = null;
         }
-        if (suspenseListState === null) {
-          suspenseListState = {
+        if (renderState === null) {
+          renderState = {
             isBackwards: false,
             rendering: null,
             last: lastContentRow,
@@ -2150,7 +2150,7 @@ function updateSuspenseListComponent(
             tailExpiration: 0,
           };
         } else {
-          suspenseListState.tail = tail;
+          renderState.tail = tail;
         }
         break;
       }
@@ -2176,8 +2176,8 @@ function updateSuspenseListComponent(
           row = nextRow;
         }
         // TODO: If workInProgress.child is null, we can continue on the tail immediately.
-        if (suspenseListState === null) {
-          suspenseListState = {
+        if (renderState === null) {
+          renderState = {
             isBackwards: true,
             rendering: null,
             last: null,
@@ -2185,13 +2185,13 @@ function updateSuspenseListComponent(
             tailExpiration: 0,
           };
         } else {
-          suspenseListState.isBackwards = true;
-          suspenseListState.tail = tail;
+          renderState.isBackwards = true;
+          renderState.tail = tail;
         }
         break;
       }
       case 'together': {
-        suspenseListState = {
+        renderState = {
           isBackwards: false,
           rendering: null,
           last: null,
@@ -2206,7 +2206,7 @@ function updateSuspenseListComponent(
       }
     }
   }
-  workInProgress.memoizedState = suspenseListState;
+  workInProgress.memoizedState = renderState;
   return workInProgress.child;
 }
 

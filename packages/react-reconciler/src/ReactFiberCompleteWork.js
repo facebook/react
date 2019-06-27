@@ -20,7 +20,7 @@ import type {
 import type {ReactEventComponentInstance} from 'shared/ReactTypes';
 import type {
   SuspenseState,
-  SuspenseListState,
+  SuspenseListRenderState,
 } from './ReactFiberSuspenseComponent';
 import type {SuspenseContext} from './ReactFiberSuspenseContext';
 
@@ -929,10 +929,10 @@ function completeWork(
     case SuspenseListComponent: {
       popSuspenseContext(workInProgress);
 
-      let suspenseListState: null | SuspenseListState =
+      const renderState: null | SuspenseListRenderState =
         workInProgress.memoizedState;
 
-      if (suspenseListState === null) {
+      if (renderState === null) {
         // We're running in the default, "independent" mode. We don't do anything
         // in this mode.
         break;
@@ -941,7 +941,7 @@ function completeWork(
       let didSuspendAlready =
         (workInProgress.effectTag & DidCapture) !== NoEffect;
 
-      let renderedTail = suspenseListState.rendering;
+      let renderedTail = renderState.rendering;
       if (renderedTail === null) {
         // We just rendered the head.
         if (!didSuspendAlready) {
@@ -983,7 +983,7 @@ function completeWork(
         // Append the rendered row to the child list.
         if (!didSuspendAlready) {
           if (
-            now() > suspenseListState.tailExpiration &&
+            now() > renderState.tailExpiration &&
             renderExpirationTime > Never
           ) {
             // We have now passed our CPU deadline and we'll just give up further
@@ -1007,7 +1007,7 @@ function completeWork(
             didSuspendAlready = true;
           }
         }
-        if (suspenseListState.isBackwards) {
+        if (renderState.isBackwards) {
           // The effect list of the backwards tail will have been added
           // to the end. This breaks the guarantee that life-cycles fire in
           // sibling order but that isn't a strong guarantee promised by React.
@@ -1016,28 +1016,28 @@ function completeWork(
           renderedTail.sibling = workInProgress.child;
           workInProgress.child = renderedTail;
         } else {
-          let previousSibling = suspenseListState.last;
+          let previousSibling = renderState.last;
           if (previousSibling !== null) {
             previousSibling.sibling = renderedTail;
           } else {
             workInProgress.child = renderedTail;
           }
-          suspenseListState.last = renderedTail;
+          renderState.last = renderedTail;
         }
       }
 
-      if (suspenseListState.tail !== null) {
+      if (renderState.tail !== null) {
         // We still have tail rows to render.
-        if (suspenseListState.tailExpiration === 0) {
+        if (renderState.tailExpiration === 0) {
           // Heuristic for how long we're willing to spend rendering rows
           // until we just give up and show what we have so far.
           const TAIL_EXPIRATION_TIMEOUT_MS = 500;
-          suspenseListState.tailExpiration = now() + TAIL_EXPIRATION_TIMEOUT_MS;
+          renderState.tailExpiration = now() + TAIL_EXPIRATION_TIMEOUT_MS;
         }
         // Pop a row.
-        let next = suspenseListState.tail;
-        suspenseListState.rendering = next;
-        suspenseListState.tail = next.sibling;
+        let next = renderState.tail;
+        renderState.rendering = next;
+        renderState.tail = next.sibling;
         next.sibling = null;
 
         // Restore the context.
