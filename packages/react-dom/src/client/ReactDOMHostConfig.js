@@ -670,44 +670,40 @@ export function registerSuspenseInstanceRetry(
   instance._reactRetry = callback;
 }
 
+function getNextHydratable(node) {
+  // Skip non-hydratable nodes.
+  for (; node != null; node = node.nextSibling) {
+    const nodeType = node.nodeType;
+    if (nodeType === ELEMENT_NODE || nodeType === TEXT_NODE) {
+      break;
+    }
+    if (enableSuspenseServerRenderer) {
+      if (nodeType === COMMENT_NODE) {
+        break;
+      }
+      const nodeData = (node: any).data;
+      if (
+        nodeData === SUSPENSE_START_DATA ||
+        nodeData === SUSPENSE_FALLBACK_START_DATA ||
+        nodeData === SUSPENSE_PENDING_START_DATA
+      ) {
+        break;
+      }
+    }
+  }
+  return (node: any);
+}
+
 export function getNextHydratableSibling(
   instance: HydratableInstance,
 ): null | HydratableInstance {
-  let node = instance.nextSibling;
-  // Skip non-hydratable nodes.
-  while (
-    node &&
-    node.nodeType !== ELEMENT_NODE &&
-    node.nodeType !== TEXT_NODE &&
-    (!enableSuspenseServerRenderer ||
-      node.nodeType !== COMMENT_NODE ||
-      ((node: any).data !== SUSPENSE_START_DATA &&
-        (node: any).data !== SUSPENSE_PENDING_START_DATA &&
-        (node: any).data !== SUSPENSE_FALLBACK_START_DATA))
-  ) {
-    node = node.nextSibling;
-  }
-  return (node: any);
+  return getNextHydratable(instance.nextSibling);
 }
 
 export function getFirstHydratableChild(
   parentInstance: Container | Instance,
 ): null | HydratableInstance {
-  let next = parentInstance.firstChild;
-  // Skip non-hydratable nodes.
-  while (
-    next &&
-    next.nodeType !== ELEMENT_NODE &&
-    next.nodeType !== TEXT_NODE &&
-    (!enableSuspenseServerRenderer ||
-      next.nodeType !== COMMENT_NODE ||
-      ((next: any).data !== SUSPENSE_START_DATA &&
-        (next: any).data !== SUSPENSE_FALLBACK_START_DATA &&
-        (next: any).data !== SUSPENSE_PENDING_START_DATA))
-  ) {
-    next = next.nextSibling;
-  }
-  return (next: any);
+  return getNextHydratable(parentInstance.firstChild);
 }
 
 export function hydrateInstance(
