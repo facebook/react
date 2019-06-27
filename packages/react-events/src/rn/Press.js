@@ -7,8 +7,104 @@
  * @flow
  */
 
+import type {
+  ReactNativeResponderEvent,
+  ReactNativeResponderContext,
+  ReactNativeEventResponderEventType,
+  ReactNativeEventTarget,
+  PointerType,
+  ReactFaricEventTouch,
+  EventPriority,
+} from 'react-native-renderer/src/ReactNativeTypes';
+import type {ReactEventResponder} from 'shared/ReactTypes';
 import React from 'react';
-import {DiscreteEvent, UserBlockingEvent} from 'shared/ReactTypes';
+import {
+  DiscreteEvent,
+  UserBlockingEvent,
+} from 'react-native-renderer/src/ReactNativeTypes';
+
+type ReactNativeEventResponder = ReactEventResponder<
+  ReactNativeEventResponderEventType,
+  ReactNativeResponderEvent,
+  ReactNativeResponderContext,
+>;
+
+type PressProps = {
+  disabled: boolean,
+  delayLongPress: number,
+  delayPressEnd: number,
+  delayPressStart: number,
+  onContextMenu: (e: PressEvent) => void,
+  onLongPress: (e: PressEvent) => void,
+  onLongPressChange: boolean => void,
+  onLongPressShouldCancelPress: () => boolean,
+  onPress: (e: PressEvent) => void,
+  onPressChange: boolean => void,
+  onPressEnd: (e: PressEvent) => void,
+  onPressMove: (e: PressEvent) => void,
+  onPressStart: (e: PressEvent) => void,
+  pressRetentionOffset: {
+    top: number,
+    right: number,
+    bottom: number,
+    left: number,
+  },
+};
+
+type PressEvent = {|
+  target: Element | Document,
+  type: PressEventType,
+  pointerType: PointerType,
+  timeStamp: number,
+  locationX: null | number,
+  locationY: null | number,
+  pageX: null | number,
+  pageY: null | number,
+  screenX: null | number,
+  screenY: null | number,
+  force: null | number,
+|};
+
+type PressState = {
+  activationPosition: null | $ReadOnly<{|
+    x: number,
+    y: number,
+  |}>,
+  addedRootEvents: boolean,
+  isActivePressed: boolean,
+  isActivePressStart: boolean,
+  isLongPressed: boolean,
+  isPressed: boolean,
+  isPressWithinResponderRegion: boolean,
+  longPressTimeout: null | number,
+  pointerType: PointerType,
+  pressTarget: null | ReactNativeEventTarget,
+  pressEndTimeout: null | number,
+  pressStartTimeout: null | number,
+  responderRegionOnActivation: null | $ReadOnly<{|
+    bottom: number,
+    left: number,
+    right: number,
+    top: number,
+  |}>,
+  responderRegionOnDeactivation: null | $ReadOnly<{|
+    bottom: number,
+    left: number,
+    right: number,
+    top: number,
+  |}>,
+  activePointerId: null | number,
+  touchEvent: null | ReactFaricEventTouch,
+};
+
+type PressEventType =
+  | 'press'
+  | 'pressmove'
+  | 'pressstart'
+  | 'pressend'
+  | 'presschange'
+  | 'longpress'
+  | 'longpresschange';
 
 const DEFAULT_PRESS_END_DELAY_MS = 0;
 const DEFAULT_PRESS_START_DELAY_MS = 0;
@@ -29,42 +125,51 @@ function calculateDelayMS(delay: ?number, min = 0, fallback = 0) {
 }
 
 function createPressEvent(
-  context: ReactDOMResponderContext,
+  context: ReactNativeResponderContext,
   type: PressEventType,
   target: Element | Document,
   pointerType: PointerType,
-  touchEvent: null | Touch,
-  defaultPrevented: boolean,
+  touchEvent: null | ReactFaricEventTouch,
 ): PressEvent {
-  const timeStamp = context.getTimeStamp();
+  let timestamp = context.getTimeStamp();
   let locationX = null;
   let locationY = null;
   let pageX = null;
   let pageY = null;
   let screenX = null;
   let screenY = null;
+  let force = null;
 
   if (touchEvent) {
-    ({pageX, pageY, screenX, screenY, locationX, locationY} = touchEvent);
+    ({
+      force,
+      pageX,
+      pageY,
+      screenX,
+      screenY,
+      timestamp,
+      locationX,
+      locationY,
+    } = touchEvent);
   }
   return {
-    defaultPrevented,
     target,
     type,
     pointerType,
-    timeStamp,
+    timeStamp: timestamp,
     pageX,
     pageY,
     screenX,
     screenY,
     locationX,
     locationY,
+    force,
   };
 }
 
 function dispatchEvent(
-  event: ?ReactDOMResponderEvent,
-  context: ReactDOMResponderContext,
+  event: ?ReactNativeResponderEvent,
+  context: ReactNativeResponderContext,
   state: PressState,
   name: PressEventType,
   listener: (e: Object) => void,
@@ -72,16 +177,12 @@ function dispatchEvent(
 ): void {
   const target = ((state.pressTarget: any): Element | Document);
   const pointerType = state.pointerType;
-  const defaultPrevented =
-    (event != null && event.nativeEvent.defaultPrevented === true) ||
-    (name === 'press' && state.shouldPreventClick);
   const syntheticEvent = createPressEvent(
     context,
     name,
     target,
     pointerType,
     state.touchEvent,
-    defaultPrevented,
   );
   context.dispatchEvent(syntheticEvent, listener, eventPriority);
 }
@@ -108,12 +209,7 @@ function removeRootEventTypes(context, state): void {
   }
 }
 
-function isNativeTouchEvent(nativeEvent: Event): boolean {
-  const changedTouches = ((nativeEvent: any): TouchEvent).changedTouches;
-  return changedTouches && typeof changedTouches.length === 'number';
-}
-
-function getTouchFromPressEvent(nativeEvent): Touch {
+function getTouchFromPressEvent(nativeEvent): ReactFaricEventTouch | null {
   const targetTouches = nativeEvent.targetTouches;
   if (targetTouches.length > 0) {
     return targetTouches[0];
@@ -121,7 +217,7 @@ function getTouchFromPressEvent(nativeEvent): Touch {
   return null;
 }
 
-function getTouchById(nativeEvent, pointerId): null | Touch {
+function getTouchById(nativeEvent, pointerId): null | ReactFaricEventTouch {
   const changedTouches = nativeEvent.changedTouches;
   for (let i = 0; i < changedTouches.length; i++) {
     const touch = changedTouches[i];
@@ -132,7 +228,17 @@ function getTouchById(nativeEvent, pointerId): null | Touch {
   return null;
 }
 
-function calculateResponderRegion(context, target, props, cb) {
+function calculateResponderRegion(
+  context: ReactNativeResponderContext,
+  target: ReactNativeEventTarget,
+  props: PressProps,
+  cb: ({|
+    bottom: number,
+    top: number,
+    left: number,
+    right: number,
+  |}) => void,
+) {
   const pressRetentionOffset = Object.assign(
     {},
     DEFAULT_PRESS_RETENTION_OFFSET,
@@ -189,9 +295,8 @@ function dispatchLongPressChangeEvent(event, context, props, state): void {
   );
 }
 
-function activate(event: ReactDOMResponderEvent, context, props, state) {
-  const nativeEvent: any = event.nativeEvent;
-  const {x, y} = state.touchEvent || nativeEvent;
+function activate(event: ReactNativeResponderEvent, context, props, state) {
+  const {pageX: x, pageY: y} = ((state.touchEvent: any): ReactFaricEventTouch);
   const wasActivePressed = state.isActivePressed;
   state.isActivePressed = true;
   if (x !== null && y !== null) {
@@ -253,7 +358,7 @@ function validateRegion(touchEvent, state) {
       bottom = Math.max(bottom, responderRegionOnDeactivation.bottom);
     }
   }
-  const {pageX: x, pageY: y} = (touchEvent: any);
+  const {pageX: x, pageY: y} = touchEvent;
 
   state.isPressWithinResponderRegion =
     left != null &&
@@ -273,11 +378,12 @@ function updateIsPressWithinResponderRegion(
   state,
   cb,
 ): void {
-  if (state.pressTarget != null) {
+  const pressTarget = state.pressTarget;
+  if (pressTarget != null) {
     // Calculate the responder region we use for deactivation if not
     // already done during move event.
     if (state.responderRegionOnDeactivation == null) {
-      calculateResponderRegion(context, state.pressTarget, props, obj => {
+      calculateResponderRegion(context, pressTarget, props, obj => {
         state.responderRegionOnDeactivation = obj;
         validateRegion(touchEvent, state);
         cb();
@@ -395,10 +501,14 @@ function dispatchPressEndEvents(event, context, props, state): void {
   state.responderRegionOnDeactivation = null;
 }
 
-const PressResponder = {
+const PressResponder: ReactNativeEventResponder = {
+  displayName: 'Press',
   targetEventTypes,
-  createInitialState() {
+  allowEventHooks: true,
+  allowMultipleHostChildren: false,
+  createInitialState(): PressState {
     return {
+      activationPosition: null,
       activePointerId: null,
       addedRootEvents: false,
       isActivePressed: false,
@@ -416,13 +526,20 @@ const PressResponder = {
       touchEvent: null,
     };
   },
-  onEvent(event, context, props, state) {
+  onEvent(
+    event: ReactNativeResponderEvent,
+    context: ReactNativeResponderContext,
+    props: PressProps,
+    state: PressState,
+  ): void {
     const {nativeEvent, type} = event;
 
     if (type === 'topTouchStart') {
       if (!state.isPressed) {
         state.pointerType = 'touch';
-        state.pressTarget = context.getEventCurrentTarget(event);
+        const pressTarget = (state.pressTarget = context.getEventCurrentTarget(
+          event,
+        ));
 
         const touchEvent = getTouchFromPressEvent(nativeEvent);
         if (touchEvent === null) {
@@ -430,9 +547,14 @@ const PressResponder = {
         }
         state.touchEvent = touchEvent;
         state.activePointerId = touchEvent.identifier;
-        calculateResponderRegion(context, state.pressTarget, props, obj => {
-          state.responderRegionOnActivation = obj;
-        });
+        calculateResponderRegion(
+          context,
+          ((pressTarget: any): ReactNativeEventTarget),
+          props,
+          obj => {
+            state.responderRegionOnActivation = obj;
+          },
+        );
         state.responderRegionOnDeactivation = null;
         state.isPressWithinResponderRegion = true;
 
@@ -441,7 +563,12 @@ const PressResponder = {
       }
     }
   },
-  onRootEvent(event, context, props, state) {
+  onRootEvent(
+    event: ReactNativeResponderEvent,
+    context: ReactNativeResponderContext,
+    props: PressProps,
+    state: PressState,
+  ): void {
     const {nativeEvent, target, type} = event;
     const activePointerId = state.activePointerId;
 
@@ -476,8 +603,8 @@ const PressResponder = {
                   state.activationPosition != null &&
                   state.longPressTimeout != null
                 ) {
-                  const deltaX = state.activationPosition.x - nativeEvent.pageX;
-                  const deltaY = state.activationPosition.y - nativeEvent.pageY;
+                  const deltaX = state.activationPosition.x - touchEvent.pageX;
+                  const deltaY = state.activationPosition.y - touchEvent.pageY;
                   if (
                     Math.hypot(deltaX, deltaY) > 10 &&
                     state.longPressTimeout != null

@@ -34,7 +34,7 @@ export function dispatchEvent(
     dispatchEventForResponderEventSystem(
       (topLevelType: any),
       target,
-      nativeEvent,
+      (nativeEvent: any),
     );
   }
   batchedUpdates(function() {

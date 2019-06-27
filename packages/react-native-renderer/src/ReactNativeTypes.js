@@ -178,8 +178,28 @@ export type ReactNativeEventTarget = {
   },
 };
 
+export type ReactFaricEventTouch = {
+  identifier: number,
+  locationX: number,
+  locationY: number,
+  pageX: number,
+  pageY: number,
+  screenX: number,
+  screenY: number,
+  target: number,
+  timestamp: number,
+  force: number,
+};
+
+export type ReactFaricEvent = {
+  touches: Array<ReactFaricEventTouch>,
+  changedTouches: Array<ReactFaricEventTouch>,
+  targetTouches: Array<ReactFaricEventTouch>,
+  target: number,
+};
+
 export type ReactNativeResponderEvent = {
-  nativeEvent: mixed,
+  nativeEvent: ReactFaricEvent,
   target: null | ReactNativeEventTarget,
   type: ReactNativeEventResponderEventType,
 };
@@ -190,8 +210,40 @@ export type ReactNativeResponderContext = {
     listener: (Object) => void,
     eventPriority: EventPriority,
   ) => void,
+  isTargetWithinNode: (
+    childTarget: ReactNativeEventTarget,
+    parentTarget: ReactNativeEventTarget,
+  ) => boolean,
+  getTargetBoundingRect(
+    target: ReactNativeEventTarget,
+    cb: ({
+      left: number,
+      right: number,
+      top: number,
+      bottom: number,
+    }) => void,
+  ): void,
+  addRootEventTypes: (
+    rootEventTypes: Array<ReactNativeEventResponderEventType>,
+  ) => void,
+  removeRootEventTypes: (
+    rootEventTypes: Array<ReactNativeEventResponderEventType>,
+  ) => void,
+  getEventCurrentTarget(
+    event: ReactNativeResponderEvent,
+  ): ReactNativeEventTarget,
+  setTimeout: (func: () => void, timeout: number) => number,
+  clearTimeout: (timerId: number) => void,
   getTimeStamp: () => number,
 };
+
+export type PointerType =
+  | ''
+  | 'mouse'
+  | 'keyboard'
+  | 'pen'
+  | 'touch'
+  | 'trackpad';
 
 export opaque type EventPriority = 0 | 1 | 2;
 

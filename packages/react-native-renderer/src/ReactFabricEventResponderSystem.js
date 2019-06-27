@@ -7,7 +7,6 @@
  * @flow
  */
 
-import type {AnyNativeEvent} from 'events/PluginModuleType';
 import {EventComponent, HostComponent} from 'shared/ReactWorkTags';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import {
@@ -25,6 +24,7 @@ import type {
   ReactNativeResponderEvent,
   EventPriority,
   ReactNativeEventTarget,
+  ReactFaricEvent,
 } from './ReactNativeTypes';
 import {
   ContinuousEvent,
@@ -192,7 +192,9 @@ const eventResponderContext: ReactNativeResponderContext = {
     }
     return false;
   },
-  getEventCurrentTarget(event: ReactNativeResponderEvent): Element {
+  getEventCurrentTarget(
+    event: ReactNativeResponderEvent,
+  ): ReactNativeEventTarget {
     validateResponderContext();
     const target = event.target;
     let fiber = getFiberFromTarget(target);
@@ -213,7 +215,7 @@ const eventResponderContext: ReactNativeResponderContext = {
       }
       fiber = fiber.return;
     }
-    return ((hostComponent: any): Element);
+    return ((hostComponent: any): ReactNativeEventTarget);
   },
   getTargetBoundingRect(
     target: ReactNativeEventTarget,
@@ -350,7 +352,7 @@ function processTimers(
 
 function createFabricResponderEvent(
   topLevelType: ReactNativeEventResponderEventType,
-  nativeEvent: AnyNativeEvent,
+  nativeEvent: ReactFaricEvent,
   target: null | ReactNativeEventTarget,
 ): ReactNativeResponderEvent {
   const responderEvent = {
@@ -572,7 +574,7 @@ function getRootEventResponderInstances(
 function traverseAndHandleEventResponderInstances(
   topLevelType: ReactNativeEventResponderEventType,
   targetFiber: null | Fiber,
-  nativeEvent: AnyNativeEvent,
+  nativeEvent: ReactFaricEvent,
 ): void {
   // Trigger event responders in this order:
   // - Capture target phase
@@ -693,7 +695,7 @@ function traverseAndHandleEventResponderInstances(
 export function dispatchEventForResponderEventSystem(
   topLevelType: ReactNativeEventResponderEventType,
   targetFiber: null | Fiber,
-  nativeEvent: AnyNativeEvent,
+  nativeEvent: ReactFaricEvent,
 ): void {
   const previousEventQueue = currentEventQueue;
   const previousInstance = currentInstance;
