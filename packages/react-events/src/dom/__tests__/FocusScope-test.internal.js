@@ -341,6 +341,45 @@ describe('FocusScope event responder', () => {
       );
     });
 
+    it('moves focus only within the current scope', () => {
+      const inputRef = React.createRef();
+      const input2Ref = React.createRef();
+      const divRef = React.createRef();
+
+      const ScopeParent = () => (
+        <div>
+          <FocusScope>
+            <input />
+            <FocusScope autoFocus={true}>
+              <input ref={inputRef} />
+              <Child />
+              <input ref={input2Ref} />
+            </FocusScope>
+            <input />
+          </FocusScope>
+        </div>
+      );
+
+      const Child = () => {
+        let focusManager = useFocusManager();
+        return (
+          <div
+            ref={divRef}
+            onClick={() => focusManager.focusNext({wrap: true})}>
+            Focus Next
+          </div>
+        );
+      };
+
+      ReactDOM.render(<ScopeParent />, container);
+
+      expect(document.activeElement).toBe(inputRef.current);
+      divRef.current.click();
+      expect(document.activeElement).toBe(input2Ref.current);
+      divRef.current.click();
+      expect(document.activeElement).toBe(inputRef.current);
+    });
+
     describe('focusNext', () => {
       it('focuses the next focusable element in the current scope', () => {
         const inputRef = React.createRef();
