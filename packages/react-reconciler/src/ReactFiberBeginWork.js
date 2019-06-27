@@ -2105,19 +2105,10 @@ function updateSuspenseListComponent(
       suspenseContext,
       ForceSuspenseFallback,
     );
-    suspenseListState = {
-      didSuspend: true,
-      isBackwards: false,
-      rendering: null,
-      last: null,
-      tail: null,
-      tailExpiration: 0,
-    };
+    workInProgress.effectTag |= DidCapture;
   } else {
-    let didSuspendBefore =
-      current !== null &&
-      current.memoizedState !== null &&
-      (current.memoizedState: SuspenseListState).didSuspend;
+    const didSuspendBefore =
+      current !== null && (current.effectTag & DidCapture) !== NoEffect;
     if (didSuspendBefore) {
       // If we previously forced a fallback, we need to schedule work
       // on any nested boundaries to let them know to try to render
@@ -2132,90 +2123,87 @@ function updateSuspenseListComponent(
   }
   pushSuspenseContext(workInProgress, suspenseContext);
 
-  if ((workInProgress.mode & BatchedMode) === NoMode) {
+  if ((workInProgress.mode & BatchedMode) !== NoMode) {
     // Outside of batched mode, SuspenseList doesn't work so we just
     // use make it a noop by treating it as the default revealOrder.
-    workInProgress.effectTag |= DidCapture;
-    return workInProgress.child;
-  }
-
-  switch (revealOrder) {
-    case 'forwards': {
-      let lastContentRow = findLastContentRow(workInProgress.child);
-      let tail;
-      if (lastContentRow === null) {
-        // The whole list is part of the tail.
-        // TODO: We could fast path by just rendering the tail now.
-        tail = workInProgress.child;
-        workInProgress.child = null;
-      } else {
-        // Disconnect the tail rows after the content row.
-        // We're going to render them separately later.
-        tail = lastContentRow.sibling;
-        lastContentRow.sibling = null;
+    switch (revealOrder) {
+      case 'forwards': {
+        let lastContentRow = findLastContentRow(workInProgress.child);
+        let tail;
+        if (lastContentRow === null) {
+          // The whole list is part of the tail.
+          // TODO: We could fast path by just rendering the tail now.
+          tail = workInProgress.child;
+          workInProgress.child = null;
+        } else {
+          // Disconnect the tail rows after the content row.
+          // We're going to render them separately later.
+          tail = lastContentRow.sibling;
+          lastContentRow.sibling = null;
+        }
+        if (suspenseListState === null) {
+          suspenseListState = {
+            isBackwards: false,
+            rendering: null,
+            last: lastContentRow,
+            tail: tail,
+            tailExpiration: 0,
+          };
+        } else {
+          suspenseListState.tail = tail;
+        }
+        break;
       }
-      if (suspenseListState === null) {
+      case 'backwards': {
+        // We're going to find the first row that has existing content.
+        // At the same time we're going to reverse the list of everything
+        // we pass in the meantime. That's going to be our tail in reverse
+        // order.
+        let tail = null;
+        let row = workInProgress.child;
+        workInProgress.child = null;
+        while (row !== null) {
+          let currentRow = row.alternate;
+          // New rows can't be content rows.
+          if (currentRow !== null && !isShowingAnyFallbacks(currentRow)) {
+            // This is the beginning of the main content.
+            workInProgress.child = row;
+            break;
+          }
+          let nextRow = row.sibling;
+          row.sibling = tail;
+          tail = row;
+          row = nextRow;
+        }
+        // TODO: If workInProgress.child is null, we can continue on the tail immediately.
+        if (suspenseListState === null) {
+          suspenseListState = {
+            isBackwards: true,
+            rendering: null,
+            last: null,
+            tail: tail,
+            tailExpiration: 0,
+          };
+        } else {
+          suspenseListState.isBackwards = true;
+          suspenseListState.tail = tail;
+        }
+        break;
+      }
+      case 'together': {
         suspenseListState = {
-          didSuspend: false,
           isBackwards: false,
           rendering: null,
-          last: lastContentRow,
-          tail: tail,
-          tailExpiration: 0,
-        };
-      } else {
-        suspenseListState.tail = tail;
-      }
-      break;
-    }
-    case 'backwards': {
-      // We're going to find the first row that has existing content.
-      // At the same time we're going to reverse the list of everything
-      // we pass in the meantime. That's going to be our tail in reverse
-      // order.
-      let tail = null;
-      let row = workInProgress.child;
-      workInProgress.child = null;
-      while (row !== null) {
-        let currentRow = row.alternate;
-        // New rows can't be content rows.
-        if (currentRow !== null && !isShowingAnyFallbacks(currentRow)) {
-          // This is the beginning of the main content.
-          workInProgress.child = row;
-          break;
-        }
-        let nextRow = row.sibling;
-        row.sibling = tail;
-        tail = row;
-        row = nextRow;
-      }
-      // TODO: If workInProgress.child is null, we can continue on the tail immediately.
-      if (suspenseListState === null) {
-        suspenseListState = {
-          didSuspend: false,
-          isBackwards: true,
-          rendering: null,
           last: null,
-          tail: tail,
+          tail: null,
           tailExpiration: 0,
         };
-      } else {
-        suspenseListState.isBackwards = true;
-        suspenseListState.tail = tail;
+        break;
       }
-      break;
-    }
-    case 'together': {
-      break;
-    }
-    default: {
-      // The default reveal order is the same as not having
-      // a boundary.
-
-      // We mark this as having captured but it really just says to the
-      // complete phase that we should treat this as done, whatever form
-      // it is in. No need for a second pass.
-      workInProgress.effectTag |= DidCapture;
+      default: {
+        // The default reveal order is the same as not having
+        // a boundary.
+      }
     }
   }
   workInProgress.memoizedState = suspenseListState;
@@ -2640,19 +2628,21 @@ function beginWork(
           break;
         }
         case SuspenseListComponent: {
+          const didSuspendBefore =
+            (current.effectTag & DidCapture) !== NoEffect;
+
           const childExpirationTime = workInProgress.childExpirationTime;
           if (childExpirationTime < renderExpirationTime) {
             // If none of the children had any work, that means that none of
             // them got retried so they'll still be blocked in the same way
             // as before. We can fast bail out.
             pushSuspenseContext(workInProgress, suspenseStackCursor.current);
-            // We keep memoizedState as it is.
+            if (didSuspendBefore) {
+              workInProgress.effectTag |= DidCapture;
+            }
             return null;
           }
 
-          const didSuspendBefore =
-            current.memoizedState !== null &&
-            (current.memoizedState: SuspenseListState).didSuspend;
           if (didSuspendBefore) {
             // If something was in fallback state last time, and we have all the
             // same children then we're still in progressive loading state.
@@ -2665,28 +2655,10 @@ function beginWork(
               renderExpirationTime,
             );
           }
-
-          // Figure out if we need to use the default mode.
-          if ((workInProgress.mode & BatchedMode) === NoMode) {
-            workInProgress.effectTag |= DidCapture;
-          } else {
-            switch ((newProps.revealOrder: SuspenseListRevealOrder)) {
-              case 'forwards':
-              case 'backwards':
-              case 'together':
-                break;
-              default: {
-                workInProgress.effectTag |= DidCapture;
-              }
-            }
-          }
-
           // If nothing suspended before and we're rendering the same children,
           // then the tail doesn't matter. Anything new that suspends will work
-          // in the "together" mode. Therefore, we can fast
+          // in the "together" mode, so we can continue from the state we had.
           pushSuspenseContext(workInProgress, suspenseStackCursor.current);
-          // We reset memoizedState as a precaution that the tail is reset.
-          workInProgress.memoizedState = null;
           break;
         }
         case EventComponent:

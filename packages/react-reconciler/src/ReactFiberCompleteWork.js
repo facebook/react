@@ -931,8 +931,20 @@ function completeWork(
 
       let suspenseListState: null | SuspenseListState =
         workInProgress.memoizedState;
-      if (suspenseListState === null || suspenseListState.rendering === null) {
-        if ((workInProgress.effectTag & DidCapture) === NoEffect) {
+
+      if (suspenseListState === null) {
+        // We're running in the default, "independent" mode. We don't do anything
+        // in this mode.
+        break;
+      }
+
+      let didSuspendAlready =
+        (workInProgress.effectTag & DidCapture) !== NoEffect;
+
+      let renderedTail = suspenseListState.rendering;
+      if (renderedTail === null) {
+        // We just rendered the head.
+        if (!didSuspendAlready) {
           // This is the first pass. We need to figure out if anything is still
           // suspended in the rendered set.
           const renderedChildren = workInProgress.child;
@@ -963,30 +975,13 @@ function completeWork(
                 ForceSuspenseFallback,
               ),
             );
-            // We need to store that we already suspended in the state.
-            if (suspenseListState === null) {
-              workInProgress.memoizedState = {
-                didSuspend: true,
-                isBackwards: false,
-                rendering: null,
-                last: null,
-                tail: null,
-                tailExpiration: 0,
-              };
-            } else {
-              suspenseListState.didSuspend = true;
-            }
             return workInProgress.child;
           }
-        } else {
-          // This is the second pass or an independent render.
-          workInProgress.effectTag &= ~DidCapture;
         }
         // Next we're going to render the tail.
       } else {
         // Append the rendered row to the child list.
-        let rendered = suspenseListState.rendering;
-        if (!suspenseListState.didSuspend) {
+        if (!didSuspendAlready) {
           if (
             now() > suspenseListState.tailExpiration &&
             renderExpirationTime > Never
@@ -994,7 +989,8 @@ function completeWork(
             // We have now passed our CPU deadline and we'll just give up further
             // attempts to render the main content and only render fallbacks.
             // The assumption is that this is usually faster.
-            suspenseListState.didSuspend = true;
+            workInProgress.effectTag |= DidCapture;
+            didSuspendAlready = true;
             // Since nothing actually suspended, there will nothing to ping this
             // to get it started back up to attempt the next item. If we can show
             // them, then they really have the same priority as this render.
@@ -1006,8 +1002,9 @@ function completeWork(
             if (enableSchedulerTracing) {
               markSpawnedWork(nextPriority);
             }
-          } else {
-            suspenseListState.didSuspend = isShowingAnyFallbacks(rendered);
+          } else if (isShowingAnyFallbacks(renderedTail)) {
+            workInProgress.effectTag |= DidCapture;
+            didSuspendAlready = true;
           }
         }
         if (suspenseListState.isBackwards) {
@@ -1016,20 +1013,20 @@ function completeWork(
           // sibling order but that isn't a strong guarantee promised by React.
           // Especially since these might also just pop in during future commits.
           // Append to the beginning of the list.
-          rendered.sibling = workInProgress.child;
-          workInProgress.child = rendered;
+          renderedTail.sibling = workInProgress.child;
+          workInProgress.child = renderedTail;
         } else {
           let previousSibling = suspenseListState.last;
           if (previousSibling !== null) {
-            previousSibling.sibling = rendered;
+            previousSibling.sibling = renderedTail;
           } else {
-            workInProgress.child = rendered;
+            workInProgress.child = renderedTail;
           }
-          suspenseListState.last = rendered;
+          suspenseListState.last = renderedTail;
         }
       }
 
-      if (suspenseListState !== null && suspenseListState.tail !== null) {
+      if (suspenseListState.tail !== null) {
         // We still have tail rows to render.
         if (suspenseListState.tailExpiration === 0) {
           // Heuristic for how long we're willing to spend rendering rows
@@ -1047,7 +1044,7 @@ function completeWork(
         // TODO: We can probably just avoid popping it instead and only
         // setting it the first time we go from not suspended to suspended.
         let suspenseContext = suspenseStackCursor.current;
-        if (suspenseListState.didSuspend) {
+        if (didSuspendAlready) {
           suspenseContext = setShallowSuspenseContext(
             suspenseContext,
             ForceSuspenseFallback,

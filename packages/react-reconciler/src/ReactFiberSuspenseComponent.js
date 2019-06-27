@@ -14,7 +14,6 @@ import {SuspenseComponent} from 'shared/ReactWorkTags';
 export type SuspenseState = {||};
 
 export type SuspenseListState = {|
-  didSuspend: boolean,
   isBackwards: boolean,
   // The currently rendering tail row.
   rendering: null | Fiber,
