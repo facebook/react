@@ -44,8 +44,6 @@ export const getRootHostContext = $$$hostConfig.getRootHostContext;
 export const getChildHostContext = $$$hostConfig.getChildHostContext;
 export const getChildHostContextForEventComponent =
   $$$hostConfig.getChildHostContextForEventComponent;
-export const getChildHostContextForEventTarget =
-  $$$hostConfig.getChildHostContextForEventTarget;
 export const prepareForCommit = $$$hostConfig.prepareForCommit;
 export const resetAfterCommit = $$$hostConfig.resetAfterCommit;
 export const createInstance = $$$hostConfig.createInstance;
@@ -90,8 +88,6 @@ export const hideTextInstance = $$$hostConfig.hideTextInstance;
 export const unhideInstance = $$$hostConfig.unhideInstance;
 export const unhideTextInstance = $$$hostConfig.unhideTextInstance;
 export const unmountEventComponent = $$$hostConfig.unmountEventComponent;
-export const commitTouchHitTargetUpdate =
-  $$$hostConfig.commitTouchHitTargetUpdate;
 export const commitEventTarget = $$$hostConfig.commitEventTarget;
 
 // -------------------

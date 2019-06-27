@@ -671,7 +671,6 @@ const PressResponder: ReactDOMEventResponder = {
           const isPointerEvent = type === 'pointerdown';
           const isKeyboardEvent = pointerType === 'keyboard';
           const isMouseEvent = pointerType === 'mouse';
-          const isPenEvent = pointerType === 'pen';
 
           if (isPointerEvent || isTouchEvent) {
             state.ignoreEmulatedMouseEvents = true;
@@ -683,16 +682,6 @@ const PressResponder: ReactDOMEventResponder = {
             if (!isValidKeyboardEvent(nativeEvent)) {
               return;
             }
-          }
-          // Ignore mouse/pen pressing on touch hit target area
-          if (
-            (isMouseEvent || isPenEvent) &&
-            context.isEventWithinTouchHitTarget(event)
-          ) {
-            // We need to prevent the native event to block the focus
-            removeRootEventTypes(context, state);
-            nativeEvent.preventDefault();
-            return;
           }
 
           // We set these here, before the button check so we have this

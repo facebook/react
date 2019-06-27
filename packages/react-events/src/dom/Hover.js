@@ -31,7 +31,6 @@ type HoverState = {
   hoverTarget: null | Element | Document,
   isActiveHovered: boolean,
   isHovered: boolean,
-  isOverTouchHitTarget: boolean,
   isTouched: boolean,
   hoverStartTimeout: null | number,
   hoverEndTimeout: null | number,
@@ -228,8 +227,6 @@ function dispatchHoverEndEvents(
     if (props.onHoverChange) {
       dispatchHoverChangeEvent(event, context, props, state);
     }
-
-    state.isOverTouchHitTarget = false;
     state.hoverTarget = null;
     state.ignoreEmulatedMouseEvents = false;
     state.isTouched = false;
@@ -281,7 +278,6 @@ const HoverResponder: ReactDOMEventResponder = {
     return {
       isActiveHovered: false,
       isHovered: false,
-      isOverTouchHitTarget: false,
       isTouched: false,
       hoverStartTimeout: null,
       hoverEndTimeout: null,
@@ -325,11 +321,6 @@ const HoverResponder: ReactDOMEventResponder = {
           if (isEmulatedMouseEvent(event, state)) {
             return;
           }
-
-          if (context.isEventWithinTouchHitTarget(event)) {
-            state.isOverTouchHitTarget = true;
-            return;
-          }
           state.hoverTarget = context.getEventCurrentTarget(event);
           state.ignoreEmulatedMouseEvents = true;
           dispatchHoverStartEvents(event, context, props, state);
@@ -342,34 +333,18 @@ const HoverResponder: ReactDOMEventResponder = {
       case 'mousemove': {
         if (state.isHovered && !isEmulatedMouseEvent(event, state)) {
           if (state.isHovered) {
-            if (state.isOverTouchHitTarget) {
-              // If we were moving over the TouchHitTarget and have now moved
-              // over the Responder target
-              if (!context.isEventWithinTouchHitTarget(event)) {
-                dispatchHoverStartEvents(event, context, props, state);
-                state.isOverTouchHitTarget = false;
-              }
-            } else {
-              // If we were moving over the Responder target and have now moved
-              // over the TouchHitTarget
-              if (context.isEventWithinTouchHitTarget(event)) {
-                dispatchHoverEndEvents(event, context, props, state);
-                state.isOverTouchHitTarget = true;
-              } else {
-                if (props.onHoverMove && state.hoverTarget !== null) {
-                  const syntheticEvent = createHoverEvent(
-                    event,
-                    context,
-                    'hovermove',
-                    state.hoverTarget,
-                  );
-                  context.dispatchEvent(
-                    syntheticEvent,
-                    props.onHoverMove,
-                    UserBlockingEvent,
-                  );
-                }
-              }
+            if (props.onHoverMove && state.hoverTarget !== null) {
+              const syntheticEvent = createHoverEvent(
+                event,
+                context,
+                'hovermove',
+                state.hoverTarget,
+              );
+              context.dispatchEvent(
+                syntheticEvent,
+                props.onHoverMove,
+                UserBlockingEvent,
+              );
             }
           }
         }
