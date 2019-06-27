@@ -37,19 +37,18 @@ if (!__DEV__) {
 
 // In old environments, we'll leak previous types after every edit.
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
-const PossiblyWeakSet = typeof WeakSet === 'function' ? WeakSet : Set;
 
 // We never remove these associations.
 // It's OK to reference families, but use WeakMap/Set for types.
 const allFamiliesByID: Map<string, Family> = new Map();
-// $FlowIssue
-const allTypes: WeakSet<any> | Set<any> = new PossiblyWeakSet();
+const allFamiliesByType: // $FlowIssue
+WeakMap<any, Family> | Map<any, Family> = new PossiblyWeakMap();
 const allSignaturesByType: // $FlowIssue
 WeakMap<any, Signature> | Map<any, Signature> = new PossiblyWeakMap();
 // This WeakMap is read by React, so we only put families
 // that have actually been edited here. This keeps checks fast.
 // $FlowIssue
-const familiesByType: // $FlowIssue
+const updatedFamiliesByType: // $FlowIssue
 WeakMap<any, Family> | Map<any, Family> = new PossiblyWeakMap();
 
 // This is cleared on every performReactRefresh() call.
@@ -145,7 +144,8 @@ function canPreserveStateBetween(prevType, nextType) {
 }
 
 function resolveFamily(type) {
-  return familiesByType.get(type);
+  // Only check updated types to keep lookups fast.
+  return updatedFamiliesByType.get(type);
 }
 
 export function performReactRefresh(): RefreshUpdate | null {
@@ -163,8 +163,8 @@ export function performReactRefresh(): RefreshUpdate | null {
       // Now that we got a real edit, we can create associations
       // that will be read by the React reconciler.
       const prevType = family.current;
-      familiesByType.set(prevType, family);
-      familiesByType.set(nextType, family);
+      updatedFamiliesByType.set(prevType, family);
+      updatedFamiliesByType.set(nextType, family);
       family.current = nextType;
 
       // Determine whether this should be a re-render or a re-mount.
@@ -266,11 +266,9 @@ export function register(type: any, id: string): void {
     // This can happen in an edge case, e.g. if we register
     // return value of a HOC but it returns a cached component.
     // Ignore anything but the first registration for each type.
-    if (allTypes.has(type)) {
+    if (allFamiliesByType.has(type)) {
       return;
     }
-    allTypes.add(type);
-
     // Create family or remember to update it.
     // None of this bookkeeping affects reconciliation
     // until the first performReactRefresh() call above.
@@ -281,6 +279,7 @@ export function register(type: any, id: string): void {
     } else {
       pendingUpdates.push([family, type]);
     }
+    allFamiliesByType.set(type, family);
 
     // Visit inner types because we might not have registered them.
     if (typeof type === 'object' && type !== null) {
@@ -338,6 +337,16 @@ export function collectCustomHooksForSignature(type: any) {
 export function getFamilyByID(id: string): Family | void {
   if (__DEV__) {
     return allFamiliesByID.get(id);
+  } else {
+    throw new Error(
+      'Unexpected call to React Refresh in a production environment.',
+    );
+  }
+}
+
+export function getFamilyByType(type: any): Family | void {
+  if (__DEV__) {
+    return allFamiliesByType.get(type);
   } else {
     throw new Error(
       'Unexpected call to React Refresh in a production environment.',
