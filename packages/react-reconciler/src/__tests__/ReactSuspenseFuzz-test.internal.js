@@ -56,7 +56,7 @@ describe('ReactSuspenseFuzz', () => {
               };
               const timeoutID = setTimeout(() => {
                 pendingTasks.delete(task);
-                Scheduler.yieldValue(task.label);
+                Scheduler.unstable_yieldValue(task.label);
                 setStep(i + 1);
               }, remountAfter);
               pendingTasks.add(task);
@@ -89,7 +89,7 @@ describe('ReactSuspenseFuzz', () => {
               };
               const timeoutID = setTimeout(() => {
                 pendingTasks.delete(task);
-                Scheduler.yieldValue(task.label);
+                Scheduler.unstable_yieldValue(task.label);
                 setStep([i + 1, suspendFor]);
               }, beginAfter);
               pendingTasks.add(task);
@@ -121,36 +121,36 @@ describe('ReactSuspenseFuzz', () => {
               setTimeout(() => {
                 cache.set(fullText, fullText);
                 pendingTasks.delete(task);
-                Scheduler.yieldValue(task.label);
+                Scheduler.unstable_yieldValue(task.label);
                 resolve();
               }, delay);
             },
           };
           cache.set(fullText, thenable);
-          Scheduler.yieldValue(`Suspended! [${fullText}]`);
+          Scheduler.unstable_yieldValue(`Suspended! [${fullText}]`);
           throw thenable;
         } else if (typeof resolvedText.then === 'function') {
           const thenable = resolvedText;
-          Scheduler.yieldValue(`Suspended! [${fullText}]`);
+          Scheduler.unstable_yieldValue(`Suspended! [${fullText}]`);
           throw thenable;
         }
       } else {
         resolvedText = fullText;
       }
 
-      Scheduler.yieldValue(resolvedText);
+      Scheduler.unstable_yieldValue(resolvedText);
       return resolvedText;
     }
 
     function resolveAllTasks() {
-      Scheduler.unstable_flushWithoutYielding();
+      Scheduler.unstable_flushAllWithoutAsserting();
       let elapsedTime = 0;
       while (pendingTasks && pendingTasks.size > 0) {
         if ((elapsedTime += 1000) > 1000000) {
           throw new Error('Something did not resolve properly.');
         }
         ReactNoop.act(() => jest.advanceTimersByTime(1000));
-        Scheduler.unstable_flushWithoutYielding();
+        Scheduler.unstable_flushAllWithoutAsserting();
       }
     }
 

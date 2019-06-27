@@ -15,6 +15,8 @@ let yieldedValues: Array<mixed> | null = null;
 let expectedNumberOfYields: number = -1;
 let didStop: boolean = false;
 let isFlushing: boolean = false;
+let needsPaint: boolean = false;
+let shouldYieldForPaint: boolean = false;
 
 export function requestHostCallback(callback: boolean => void) {
   scheduledCallback = callback;
@@ -36,9 +38,10 @@ export function cancelHostTimeout(): void {
 
 export function shouldYieldToHost(): boolean {
   if (
-    expectedNumberOfYields !== -1 &&
-    yieldedValues !== null &&
-    yieldedValues.length >= expectedNumberOfYields
+    (expectedNumberOfYields !== -1 &&
+      yieldedValues !== null &&
+      yieldedValues.length >= expectedNumberOfYields) ||
+    (shouldYieldForPaint && needsPaint)
   ) {
     // We yielded at least as many values as expected. Stop flushing.
     didStop = true;
@@ -67,6 +70,7 @@ export function reset() {
   expectedNumberOfYields = -1;
   didStop = false;
   isFlushing = false;
+  needsPaint = false;
 }
 
 // Should only be used via an assertion helper that inspects the yielded values.
@@ -94,6 +98,31 @@ export function unstable_flushNumberOfYields(count: number): void {
   }
 }
 
+export function unstable_flushUntilNextPaint(): void {
+  if (isFlushing) {
+    throw new Error('Already flushing work.');
+  }
+  if (scheduledCallback !== null) {
+    const cb = scheduledCallback;
+    shouldYieldForPaint = true;
+    needsPaint = false;
+    isFlushing = true;
+    try {
+      let hasMoreWork = true;
+      do {
+        hasMoreWork = cb(true, currentTime);
+      } while (hasMoreWork && !didStop);
+      if (!hasMoreWork) {
+        scheduledCallback = null;
+      }
+    } finally {
+      shouldYieldForPaint = false;
+      didStop = false;
+      isFlushing = false;
+    }
+  }
+}
+
 export function unstable_flushExpired() {
   if (isFlushing) {
     throw new Error('Already flushing work.');
@@ -111,7 +140,7 @@ export function unstable_flushExpired() {
   }
 }
 
-export function unstable_flushWithoutYielding(): boolean {
+export function unstable_flushAllWithoutAsserting(): boolean {
   // Returns false if no work was flushed.
   if (isFlushing) {
     throw new Error('Already flushing work.');
@@ -145,14 +174,14 @@ export function unstable_clearYields(): Array<mixed> {
   return values;
 }
 
-export function flushAll(): void {
+export function unstable_flushAll(): void {
   if (yieldedValues !== null) {
     throw new Error(
       'Log is not empty. Assert on the log of yielded values before ' +
         'flushing additional work.',
     );
   }
-  unstable_flushWithoutYielding();
+  unstable_flushAllWithoutAsserting();
   if (yieldedValues !== null) {
     throw new Error(
       'While flushing work, something yielded a value. Use an ' +
@@ -162,7 +191,7 @@ export function flushAll(): void {
   }
 }
 
-export function yieldValue(value: mixed): void {
+export function unstable_yieldValue(value: mixed): void {
   if (yieldedValues === null) {
     yieldedValues = [value];
   } else {
@@ -170,7 +199,7 @@ export function yieldValue(value: mixed): void {
   }
 }
 
-export function advanceTime(ms: number) {
+export function unstable_advanceTime(ms: number) {
   currentTime += ms;
   if (!isFlushing) {
     if (scheduledTimeout !== null && timeoutTime <= currentTime) {
@@ -180,4 +209,8 @@ export function advanceTime(ms: number) {
     }
     unstable_flushExpired();
   }
+}
+
+export function requestPaint() {
+  needsPaint = true;
 }

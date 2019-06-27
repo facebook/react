@@ -69,10 +69,10 @@ describe('ReactFreshIntegration', () => {
         'global',
         'React',
         'exports',
-        '__register__',
-        '__signature__',
+        '$RefreshReg$',
+        '$RefreshSig$',
         compiled,
-      )(global, React, exportsObj, __register__, __signature__);
+      )(global, React, exportsObj, $RefreshReg$, $RefreshSig$);
       return exportsObj.default;
     }
 
@@ -82,22 +82,22 @@ describe('ReactFreshIntegration', () => {
         ReactDOM.render(<Component />, container);
       });
       // Module initialization shouldn't be counted as a hot update.
-      expect(ReactFreshRuntime.performReactRefresh()).toBe(false);
+      expect(ReactFreshRuntime.performReactRefresh()).toBe(null);
     }
 
     function patch(source) {
       execute(source);
       act(() => {
-        expect(ReactFreshRuntime.performReactRefresh()).toBe(true);
+        expect(ReactFreshRuntime.performReactRefresh()).not.toBe(null);
       });
       expect(ReactFreshRuntime._getMountedRootCount()).toBe(1);
     }
 
-    function __register__(type, id) {
+    function $RefreshReg$(type, id) {
       ReactFreshRuntime.register(type, id);
     }
 
-    function __signature__() {
+    function $RefreshSig$() {
       return ReactFreshRuntime.createSignatureFunctionForTransform();
     }
 
@@ -755,7 +755,7 @@ describe('ReactFreshIntegration', () => {
       }
     });
 
-    it('resets state on every edit with @hot reset annotation', () => {
+    it('resets state on every edit with @refresh reset annotation', () => {
       if (__DEV__) {
         render(`
           const {useState} = React;
@@ -786,7 +786,7 @@ describe('ReactFreshIntegration', () => {
           const {useState} = React;
           const S = 3;
 
-          /* @hot reset */
+          /* @refresh reset */
 
           export default function App() {
             const [foo, setFoo] = useState(S);
@@ -804,7 +804,7 @@ describe('ReactFreshIntegration', () => {
 
           export default function App() {
 
-            // @hot reset
+            // @refresh reset
 
             const [foo, setFoo] = useState(S);
             return <h1>D{foo}</h1>;
@@ -848,7 +848,7 @@ describe('ReactFreshIntegration', () => {
 
           export default function App() {
 
-            /* @hot reset */
+            /* @refresh reset */
 
             const [foo, setFoo] = useState(S);
             return <h1>G{foo}</h1>;

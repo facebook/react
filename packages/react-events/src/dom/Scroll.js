@@ -8,6 +8,7 @@
  */
 
 import type {
+  ReactDOMEventResponder,
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
   PointerType,
@@ -15,7 +16,7 @@ import type {
 import {UserBlockingEvent} from 'shared/ReactTypes';
 import type {EventPriority} from 'shared/ReactTypes';
 
-import ReactDOM from 'react-dom';
+import React from 'react';
 
 type ScrollProps = {
   disabled: boolean,
@@ -116,7 +117,8 @@ function dispatchEvent(
   context.dispatchEvent(syntheticEvent, listener, eventPriority);
 }
 
-const ScrollResponder = {
+const ScrollResponder: ReactDOMEventResponder = {
+  displayName: 'Scroll',
   targetEventTypes,
   createInitialState() {
     return {
@@ -126,6 +128,7 @@ const ScrollResponder = {
     };
   },
   allowMultipleHostChildren: true,
+  allowEventHooks: true,
   onEvent(
     event: ReactDOMResponderEvent,
     context: ReactDOMResponderContext,
@@ -211,4 +214,8 @@ const ScrollResponder = {
   },
 };
 
-export default ReactDOM.unstable_createEvent(ScrollResponder, 'Scroll');
+export const Scroll = React.unstable_createEvent(ScrollResponder);
+
+export function useScroll(props: ScrollProps): void {
+  React.unstable_useEvent(Scroll, props);
+}

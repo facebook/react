@@ -22,6 +22,7 @@ let EventTarget;
 let ReactSymbols;
 
 const noOpResponder = {
+  displayName: 'TestEventComponent',
   targetEventTypes: [],
   handleEvent() {},
 };
@@ -29,7 +30,6 @@ const noOpResponder = {
 function createReactEventComponent() {
   return {
     $$typeof: ReactSymbols.REACT_EVENT_COMPONENT_TYPE,
-    displayName: 'TestEventComponent',
     props: null,
     responder: noOpResponder,
   };
@@ -799,12 +799,12 @@ describe('ReactFiberEvents', () => {
       };
 
       function Async() {
-        Scheduler.yieldValue('Suspend!');
+        Scheduler.unstable_yieldValue('Suspend!');
         throw thenable;
       }
 
       function Text(props) {
-        Scheduler.yieldValue(props.text);
+        Scheduler.unstable_yieldValue(props.text);
         return props.text;
       }
 

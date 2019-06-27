@@ -8,8 +8,9 @@
  */
 
 import type {
-  EventPriority,
+  ReactEventResponder,
   ReactEventComponentInstance,
+  EventPriority,
 } from 'shared/ReactTypes';
 
 type AnyNativeEvent = Event | KeyboardEvent | MouseEvent | Touch;
@@ -36,46 +37,17 @@ export type ReactDOMResponderEvent = {
   type: string,
 };
 
-export type ReactDOMEventResponder = {
-  targetEventTypes?: Array<ReactDOMEventResponderEventType>,
-  rootEventTypes?: Array<ReactDOMEventResponderEventType>,
-  createInitialState?: (props: null | Object) => Object,
-  allowMultipleHostChildren: boolean,
-  stopLocalPropagation: boolean,
-  onEvent?: (
-    event: ReactDOMResponderEvent,
-    context: ReactDOMResponderContext,
-    props: null | Object,
-    state: null | Object,
-  ) => void,
-  onEventCapture?: (
-    event: ReactDOMResponderEvent,
-    context: ReactDOMResponderContext,
-    props: null | Object,
-    state: null | Object,
-  ) => void,
-  onRootEvent?: (
-    event: ReactDOMResponderEvent,
-    context: ReactDOMResponderContext,
-    props: null | Object,
-    state: null | Object,
-  ) => void,
-  onMount?: (
-    context: ReactDOMResponderContext,
-    props: null | Object,
-    state: null | Object,
-  ) => void,
-  onUnmount?: (
-    context: ReactDOMResponderContext,
-    props: null | Object,
-    state: null | Object,
-  ) => void,
-  onOwnershipChange?: (
-    context: ReactDOMResponderContext,
-    props: null | Object,
-    state: null | Object,
-  ) => void,
-};
+export type ReactDOMEventResponder = ReactEventResponder<
+  ReactDOMEventResponderEventType,
+  ReactDOMResponderEvent,
+  ReactDOMResponderContext,
+>;
+
+export type ReactDOMEventComponentInstance = ReactEventComponentInstance<
+  ReactDOMEventResponderEventType,
+  ReactDOMResponderEvent,
+  ReactDOMResponderContext,
+>;
 
 export type ReactDOMResponderContext = {
   dispatchEvent: (
@@ -101,7 +73,7 @@ export type ReactDOMResponderContext = {
   releaseOwnership: () => boolean,
   setTimeout: (func: () => void, timeout: number) => number,
   clearTimeout: (timerId: number) => void,
-  getCurrentInstance(): ReactEventComponentInstance,
+  getCurrentInstance(): ReactDOMEventComponentInstance,
   getActiveDocument(): Document,
   objectAssign: Function,
   getEventCurrentTarget(event: ReactDOMResponderEvent): Element,
@@ -112,4 +84,5 @@ export type ReactDOMResponderContext = {
     deep: boolean,
   ) => boolean,
   continueLocalPropagation(): void,
+  isRespondingToHook(): boolean,
 };

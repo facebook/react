@@ -46,6 +46,7 @@ import {
   SimpleMemoComponent,
   EventComponent,
   EventTarget,
+  SuspenseListComponent,
 } from 'shared/ReactWorkTags';
 import {
   invokeGuardedCallback,
@@ -590,6 +591,7 @@ function commitLifeCycles(
       return;
     }
     case SuspenseComponent:
+    case SuspenseListComponent:
     case IncompleteClassComponent:
       return;
     case EventTarget: {
@@ -835,12 +837,14 @@ function detachFiber(current: Fiber) {
   current.child = null;
   current.memoizedState = null;
   current.updateQueue = null;
+  current.dependencies = null;
   const alternate = current.alternate;
   if (alternate !== null) {
     alternate.return = null;
     alternate.child = null;
     alternate.memoizedState = null;
     alternate.updateQueue = null;
+    alternate.dependencies = null;
   }
 }
 
@@ -1182,6 +1186,11 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       }
       case SuspenseComponent: {
         commitSuspenseComponent(finishedWork);
+        attachSuspenseRetryListeners(finishedWork);
+        return;
+      }
+      case SuspenseListComponent: {
+        attachSuspenseRetryListeners(finishedWork);
         return;
       }
     }
@@ -1256,6 +1265,11 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
     }
     case SuspenseComponent: {
       commitSuspenseComponent(finishedWork);
+      attachSuspenseRetryListeners(finishedWork);
+      return;
+    }
+    case SuspenseListComponent: {
+      attachSuspenseRetryListeners(finishedWork);
       return;
     }
     case IncompleteClassComponent: {
@@ -1290,7 +1304,9 @@ function commitSuspenseComponent(finishedWork: Fiber) {
   if (supportsMutation && primaryChildParent !== null) {
     hideOrUnhideAllChildren(primaryChildParent, newDidTimeout);
   }
+}
 
+function attachSuspenseRetryListeners(finishedWork: Fiber) {
   // If this boundary just timed out, then it will have a set of thenables.
   // For each thenable, attach a listener so that when it resolves, React
   // attempts to re-render the boundary in the primary (pre-timeout) state.

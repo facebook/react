@@ -7,8 +7,6 @@
  * @flow
  */
 
-import * as Scheduler from 'scheduler';
-
 import {precacheFiberNode, updateFiberProps} from './ReactDOMComponentTree';
 import {
   createElement,
@@ -45,8 +43,10 @@ import {
 import dangerousStyleValue from '../shared/dangerousStyleValue';
 
 import type {DOMContainer} from './ReactDOM';
-import type {ReactEventComponentInstance} from 'shared/ReactTypes';
-import type {ReactDOMEventResponder} from 'shared/ReactDOMTypes';
+import type {
+  ReactDOMEventResponder,
+  ReactDOMEventComponentInstance,
+} from 'shared/ReactDOMTypes';
 import {
   mountEventResponder,
   unmountEventResponder,
@@ -102,7 +102,6 @@ export type UpdatePayload = Array<mixed>;
 export type ChildSet = void; // Unused
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
-export type EventResponder = ReactDOMEventResponder;
 
 import {
   enableSuspenseServerRenderer,
@@ -111,17 +110,6 @@ import {
 import warning from 'shared/warning';
 
 const {html: HTML_NAMESPACE} = Namespaces;
-
-// Intentionally not named imports because Rollup would
-// use dynamic dispatch for CommonJS interop named imports.
-const {
-  unstable_now: now,
-  unstable_scheduleCallback: scheduleDeferredCallback,
-  unstable_shouldYield: shouldYield,
-  unstable_cancelCallback: cancelDeferredCallback,
-} = Scheduler;
-
-export {now, scheduleDeferredCallback, shouldYield, cancelDeferredCallback};
 
 let SUPPRESS_HYDRATION_WARNING;
 if (__DEV__) {
@@ -402,6 +390,7 @@ export function createTextInstance(
 }
 
 export const isPrimaryRenderer = true;
+export const shouldWarnUnactedUpdates = true;
 // This initialization code may run even on server environments
 // if a component just imports ReactDOM (e.g. for findDOMNode).
 // Some environments might not have setTimeout or clearTimeout.
@@ -900,7 +889,7 @@ export function didNotFindHydratableSuspenseInstance(
 }
 
 export function mountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance,
+  eventComponentInstance: ReactDOMEventComponentInstance,
 ): void {
   if (enableEventAPI) {
     const rootContainerInstance = ((eventComponentInstance.rootInstance: any): Container);
@@ -926,13 +915,13 @@ export function mountEventComponent(
 }
 
 export function updateEventComponent(
-  eventComponentInstance: ReactEventComponentInstance,
+  eventComponentInstance: ReactDOMEventComponentInstance,
 ): void {
   // NO-OP, why might use this in the future
 }
 
 export function unmountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance,
+  eventComponentInstance: ReactDOMEventComponentInstance,
 ): void {
   if (enableEventAPI) {
     // TODO stop listening to targetEventTypes

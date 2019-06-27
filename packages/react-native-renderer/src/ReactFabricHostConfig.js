@@ -345,6 +345,9 @@ export function shouldSetTextContent(type: string, props: Props): boolean {
 // The Fabric renderer is secondary to the existing React Native renderer.
 export const isPrimaryRenderer = false;
 
+// The Fabric renderer shouldn't trigger missing act() warnings
+export const shouldWarnUnactedUpdates = false;
+
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;
 export const noTimeout = -1;
@@ -436,19 +439,19 @@ export function replaceContainerChildren(
 ): void {}
 
 export function mountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance,
+  eventComponentInstance: ReactEventComponentInstance<any, any, any>,
 ) {
   throw new Error('Not yet implemented.');
 }
 
 export function updateEventComponent(
-  eventComponentInstance: ReactEventComponentInstance,
+  eventComponentInstance: ReactEventComponentInstance<any, any, any>,
 ) {
   throw new Error('Not yet implemented.');
 }
 
 export function unmountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance,
+  eventComponentInstance: ReactEventComponentInstance<any, any, any>,
 ): void {
   throw new Error('Not yet implemented.');
 }

@@ -261,6 +261,7 @@ export function createTextInstance(
 }
 
 export const isPrimaryRenderer = false;
+export const shouldWarnUnactedUpdates = true;
 
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;
@@ -329,19 +330,19 @@ export function unhideTextInstance(
 }
 
 export function mountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance,
+  eventComponentInstance: ReactEventComponentInstance<any, any, any>,
 ): void {
   // noop
 }
 
 export function updateEventComponent(
-  eventComponentInstance: ReactEventComponentInstance,
+  eventComponentInstance: ReactEventComponentInstance<any, any, any>,
 ): void {
   // noop
 }
 
 export function unmountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance,
+  eventComponentInstance: ReactEventComponentInstance<any, any, any>,
 ): void {
   // noop
 }

@@ -146,7 +146,10 @@ describe('ReactHooksInspectionIntegration', () => {
         </div>
       );
     }
-    let renderer = ReactTestRenderer.create(<Foo prop="prop" />);
+    let renderer;
+    act(() => {
+      renderer = ReactTestRenderer.create(<Foo prop="prop" />);
+    });
 
     let childFiber = renderer.root.findByType(Foo)._currentFiber();
 
@@ -620,7 +623,7 @@ describe('ReactHooksInspectionIntegration', () => {
 
     await LazyFoo;
 
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
 
     let childFiber = renderer.root._currentFiber();
     let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);

@@ -70,7 +70,6 @@ import invariant from 'shared/invariant';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {enableStableConcurrentModeAPIs} from 'shared/ReactFeatureFlags';
-import createEvent from 'shared/createEventComponent';
 
 import {
   getInstanceFromNode,
@@ -87,7 +86,6 @@ import {
   DOCUMENT_FRAGMENT_NODE,
 } from '../shared/HTMLNodeType';
 import {ROOT_ATTRIBUTE_NAME} from '../shared/DOMProperty';
-import {enableEventAPI} from 'shared/ReactFeatureFlags';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -883,10 +881,6 @@ function warnIfReactDOMContainerInDEV(container) {
 if (enableStableConcurrentModeAPIs) {
   ReactDOM.createRoot = createRoot;
   ReactDOM.createSyncRoot = createSyncRoot;
-}
-
-if (enableEventAPI) {
-  ReactDOM.unstable_createEvent = createEvent;
 }
 
 const foundDevTools = injectIntoDevTools({

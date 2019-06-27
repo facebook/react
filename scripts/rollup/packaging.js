@@ -1,12 +1,6 @@
 'use strict';
 
-const {
-  existsSync,
-  readdirSync,
-  unlinkSync,
-  readFileSync,
-  writeFileSync,
-} = require('fs');
+const {existsSync, readdirSync, unlinkSync} = require('fs');
 const Bundles = require('./bundles');
 const {
   asyncCopyTo,
@@ -103,12 +97,6 @@ async function copyRNShims() {
       'build/react-native/shims/ReactNativeTypes.js'
     ),
   ]);
-  // Modify the EventResponder type in ReactTypes
-  const reactTypesSource = readFileSync(reactTypesBuildTarget, 'utf8');
-  const original = `import type {EventResponder} from 'react-reconciler/src/ReactFiberHostConfig';`;
-  const changeTo = `import type {ReactNativeEventResponder as EventResponder} from './ReactNativeTypes';`;
-  const modifiedSource = reactTypesSource.replace(original, changeTo);
-  writeFileSync(reactTypesBuildTarget, modifiedSource);
 }
 
 async function copyAllShims() {

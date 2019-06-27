@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactContext} from 'shared/ReactTypes';
+import type {ReactEventComponent, ReactContext} from 'shared/ReactTypes';
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
 
@@ -134,4 +134,14 @@ export function useDebugValue(value: any, formatterFn: ?(value: any) => any) {
     const dispatcher = resolveDispatcher();
     return dispatcher.useDebugValue(value, formatterFn);
   }
+}
+
+export const emptyObject = {};
+
+export function useEvent<T, E, C>(
+  eventComponent: ReactEventComponent<T, E, C>,
+  props: null | Object,
+) {
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useEvent(eventComponent, props || emptyObject);
 }

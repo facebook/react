@@ -18,8 +18,13 @@ import type {
   ChildSet,
 } from './ReactFiberHostConfig';
 import type {ReactEventComponentInstance} from 'shared/ReactTypes';
-import type {SuspenseState} from './ReactFiberSuspenseComponent';
+import type {
+  SuspenseState,
+  SuspenseListState,
+} from './ReactFiberSuspenseComponent';
 import type {SuspenseContext} from './ReactFiberSuspenseContext';
+
+import {now} from './SchedulerWithReactIntegration';
 
 import {
   IndeterminateComponent,
@@ -36,6 +41,7 @@ import {
   Mode,
   Profiler,
   SuspenseComponent,
+  SuspenseListComponent,
   DehydratedSuspenseComponent,
   MemoComponent,
   SimpleMemoComponent,
@@ -83,7 +89,12 @@ import {
   InvisibleParentSuspenseContext,
   hasSuspenseContext,
   popSuspenseContext,
+  pushSuspenseContext,
+  setShallowSuspenseContext,
+  ForceSuspenseFallback,
+  setDefaultShallowSuspenseContext,
 } from './ReactFiberSuspenseContext';
+import {isShowingAnyFallbacks} from './ReactFiberSuspenseComponent';
 import {
   isContextProvider as isLegacyContextProvider,
   popContext as popLegacyContext,
@@ -102,13 +113,17 @@ import {
   enableEventAPI,
 } from 'shared/ReactFeatureFlags';
 import {
-  markDidDeprioritizeIdleSubtree,
+  markSpawnedWork,
   renderDidSuspend,
   renderDidSuspendDelayIfPossible,
 } from './ReactFiberWorkLoop';
-import {getEventComponentHostChildrenCount} from './ReactFiberEvents';
+import {
+  getEventComponentHostChildrenCount,
+  createEventComponentInstance,
+} from './ReactFiberEvents';
 import getComponentName from 'shared/getComponentName';
 import warning from 'shared/warning';
+import {Never} from './ReactFiberExpirationTime';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -522,6 +537,84 @@ if (supportsMutation) {
   };
 }
 
+// Note this, might mutate the workInProgress passed in.
+function hasSuspendedChildrenAndNewContent(
+  workInProgress: Fiber,
+  firstChild: null | Fiber,
+): boolean {
+  // Traversal to see if any of the immediately nested Suspense boundaries
+  // are in their fallback states. I.e. something suspended in them.
+  // And if some of them have new content that wasn't already visible.
+  let hasSuspendedBoundaries = false;
+  let hasNewContent = false;
+
+  let node = firstChild;
+  while (node !== null) {
+    // TODO: Hidden subtrees should not be considered.
+    if (node.tag === SuspenseComponent) {
+      const state: SuspenseState | null = node.memoizedState;
+      const isShowingFallback = state !== null;
+      if (isShowingFallback) {
+        hasSuspendedBoundaries = true;
+
+        if (node.updateQueue !== null) {
+          // If this is a newly suspended tree, it might not get committed as
+          // part of the second pass. In that case nothing will subscribe to
+          // its thennables. Instead, we'll transfer its thennables to the
+          // SuspenseList so that it can retry if they resolve.
+          // There might be multiple of these in the list but since we're
+          // going to wait for all of them anyway, it doesn't really matter
+          // which ones gets to ping. In theory we could get clever and keep
+          // track of how many dependencies remain but it gets tricky because
+          // in the meantime, we can add/remove/change items and dependencies.
+          // We might bail out of the loop before finding any but that
+          // doesn't matter since that means that the other boundaries that
+          // we did find already has their listeners attached.
+          workInProgress.updateQueue = node.updateQueue;
+          workInProgress.effectTag |= Update;
+        }
+      } else {
+        const current = node.alternate;
+        const wasNotShowingContent =
+          current === null || current.memoizedState !== null;
+        if (wasNotShowingContent) {
+          hasNewContent = true;
+        }
+      }
+      if (hasSuspendedBoundaries && hasNewContent) {
+        return true;
+      }
+    } else {
+      // TODO: We can probably just use the information from the list and not
+      // drill into its children just like if it was a Suspense boundary.
+      if (node.tag === SuspenseListComponent && node.updateQueue !== null) {
+        // If there's a nested SuspenseList, we might have transferred
+        // the thennables set to it already so we must get it from there.
+        workInProgress.updateQueue = node.updateQueue;
+        workInProgress.effectTag |= Update;
+      }
+
+      if (node.child !== null) {
+        node.child.return = node;
+        node = node.child;
+        continue;
+      }
+    }
+    if (node === workInProgress) {
+      return false;
+    }
+    while (node.sibling === null) {
+      if (node.return === null || node.return === workInProgress) {
+        return false;
+      }
+      node = node.return;
+    }
+    node.sibling.return = node.return;
+    node = node.sibling;
+  }
+  return false;
+}
+
 function completeWork(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -818,7 +911,7 @@ function completeWork(
               'This is probably a bug in React.',
           );
           if (enableSchedulerTracing) {
-            markDidDeprioritizeIdleSubtree();
+            markSpawnedWork(Never);
           }
           skipPastDehydratedSuspenseInstance(workInProgress);
         } else if ((workInProgress.effectTag & DidCapture) === NoEffect) {
@@ -834,12 +927,128 @@ function completeWork(
       }
       break;
     }
+    case SuspenseListComponent: {
+      popSuspenseContext(workInProgress);
+
+      if ((workInProgress.effectTag & DidCapture) === NoEffect) {
+        let suspenseListState: null | SuspenseListState =
+          workInProgress.memoizedState;
+        if (
+          suspenseListState === null ||
+          suspenseListState.rendering === null
+        ) {
+          // This is the first pass. We need to figure out if anything is still
+          // suspended in the rendered set.
+          const renderedChildren = workInProgress.child;
+          // If new content unsuspended, but there's still some content that
+          // didn't. Then we need to do a second pass that forces everything
+          // to keep showing their fallbacks.
+          const needsRerender = hasSuspendedChildrenAndNewContent(
+            workInProgress,
+            renderedChildren,
+          );
+          if (needsRerender) {
+            // Rerender the whole list, but this time, we'll force fallbacks
+            // to stay in place.
+            workInProgress.effectTag |= DidCapture;
+            // Reset the effect list before doing the second pass since that's now invalid.
+            workInProgress.firstEffect = workInProgress.lastEffect = null;
+            // Schedule work so we know not to bail out.
+            workInProgress.expirationTime = renderExpirationTime;
+            return workInProgress;
+          }
+        } else {
+          // Append the rendered row to the child list.
+          let rendered = suspenseListState.rendering;
+          if (!suspenseListState.didSuspend) {
+            if (
+              now() > suspenseListState.tailExpiration &&
+              renderExpirationTime > Never
+            ) {
+              // We have now passed our CPU deadline and we'll just give up further
+              // attempts to render the main content and only render fallbacks.
+              // The assumption is that this is usually faster.
+              suspenseListState.didSuspend = true;
+              // Since nothing actually suspended, there will nothing to ping this
+              // to get it started back up to attempt the next item. If we can show
+              // them, then they really have the same priority as this render.
+              // So we'll pick it back up the very next render pass once we've had
+              // an opportunity to yield for paint.
+
+              const nextPriority = renderExpirationTime - 1;
+              workInProgress.expirationTime = workInProgress.childExpirationTime = nextPriority;
+              if (enableSchedulerTracing) {
+                markSpawnedWork(nextPriority);
+              }
+            } else {
+              suspenseListState.didSuspend = isShowingAnyFallbacks(rendered);
+            }
+          }
+          if (suspenseListState.isBackwards) {
+            // The effect list of the backwards tail will have been added
+            // to the end. This breaks the guarantee that life-cycles fire in
+            // sibling order but that isn't a strong guarantee promised by React.
+            // Especially since these might also just pop in during future commits.
+            // Append to the beginning of the list.
+            rendered.sibling = workInProgress.child;
+            workInProgress.child = rendered;
+          } else {
+            let previousSibling = suspenseListState.last;
+            if (previousSibling !== null) {
+              previousSibling.sibling = rendered;
+            } else {
+              workInProgress.child = rendered;
+            }
+            suspenseListState.last = rendered;
+          }
+        }
+
+        if (suspenseListState !== null && suspenseListState.tail !== null) {
+          // We still have tail rows to render.
+          if (suspenseListState.tailExpiration === 0) {
+            // Heuristic for how long we're willing to spend rendering rows
+            // until we just give up and show what we have so far.
+            const TAIL_EXPIRATION_TIMEOUT_MS = 500;
+            suspenseListState.tailExpiration =
+              now() + TAIL_EXPIRATION_TIMEOUT_MS;
+          }
+          // Pop a row.
+          let next = suspenseListState.tail;
+          suspenseListState.rendering = next;
+          suspenseListState.tail = next.sibling;
+          next.sibling = null;
+
+          // Restore the context.
+          // TODO: We can probably just avoid popping it instead and only
+          // setting it the first time we go from not suspended to suspended.
+          let suspenseContext = suspenseStackCursor.current;
+          if (suspenseListState.didSuspend) {
+            suspenseContext = setShallowSuspenseContext(
+              suspenseContext,
+              ForceSuspenseFallback,
+            );
+          } else {
+            suspenseContext = setDefaultShallowSuspenseContext(suspenseContext);
+          }
+          pushSuspenseContext(workInProgress, suspenseContext);
+          // Do a pass over the next row.
+          return next;
+        }
+      } else {
+        workInProgress.effectTag &= ~DidCapture;
+      }
+      break;
+    }
     case EventComponent: {
       if (enableEventAPI) {
         popHostContext(workInProgress);
         const rootContainerInstance = getRootHostContainer();
         const responder = workInProgress.type.responder;
-        let eventComponentInstance: ReactEventComponentInstance | null =
+        let eventComponentInstance: ReactEventComponentInstance<
+          any,
+          any,
+          any,
+        > | null =
           workInProgress.stateNode;
 
         if (eventComponentInstance === null) {
@@ -857,20 +1066,18 @@ function completeWork(
           if (responder.createInitialState !== undefined) {
             responderState = responder.createInitialState(newProps);
           }
-          eventComponentInstance = workInProgress.stateNode = {
-            currentFiber: workInProgress,
-            props: newProps,
+          eventComponentInstance = workInProgress.stateNode = createEventComponentInstance(
+            workInProgress,
+            newProps,
             responder,
-            rootEventTypes: null,
-            rootInstance: rootContainerInstance,
-            state: responderState,
-          };
+            rootContainerInstance,
+            responderState || {},
+            false,
+          );
           markUpdate(workInProgress);
         } else {
           // Update the props on the event component state node
           eventComponentInstance.props = newProps;
-          // Update the root container, so we can properly unmount events at some point
-          eventComponentInstance.rootInstance = rootContainerInstance;
           // Update the current fiber
           eventComponentInstance.currentFiber = workInProgress;
           updateEventComponent(eventComponentInstance);

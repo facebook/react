@@ -17,6 +17,7 @@ import {
   HostPortal,
   ContextProvider,
   SuspenseComponent,
+  SuspenseListComponent,
   DehydratedSuspenseComponent,
   EventComponent,
   EventTarget,
@@ -95,6 +96,12 @@ function unwindWork(
       }
       return null;
     }
+    case SuspenseListComponent: {
+      popSuspenseContext(workInProgress);
+      // SuspenseList doesn't actually catch anything. It should've been
+      // caught by a nested boundary. If not, it should bubble through.
+      return null;
+    }
     case HostPortal:
       popHostContainer(workInProgress);
       return null;
@@ -141,6 +148,9 @@ function unwindInterruptedWork(interruptedWork: Fiber) {
         // TODO: popHydrationState
         popSuspenseContext(interruptedWork);
       }
+      break;
+    case SuspenseListComponent:
+      popSuspenseContext(interruptedWork);
       break;
     case ContextProvider:
       popProvider(interruptedWork);

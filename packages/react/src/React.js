@@ -11,6 +11,7 @@ import {
   REACT_PROFILER_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
+  REACT_SUSPENSE_LIST_TYPE,
 } from 'shared/ReactSymbols';
 
 import {Component, PureComponent} from './ReactBaseClasses';
@@ -38,6 +39,7 @@ import {
   useReducer,
   useRef,
   useState,
+  useEvent,
 } from './ReactHooks';
 import {withSuspenseConfig} from './ReactBatchConfig';
 import {
@@ -50,7 +52,8 @@ import {
 } from './ReactElementValidator';
 import ReactSharedInternals from './ReactSharedInternals';
 import {error, warn} from './withComponentStack';
-import {enableJSXTransformAPI} from 'shared/ReactFeatureFlags';
+import createEvent from 'shared/createEventComponent';
+import {enableJSXTransformAPI, enableEventAPI} from 'shared/ReactFeatureFlags';
 const React = {
   Children: {
     map,
@@ -87,6 +90,7 @@ const React = {
   Profiler: REACT_PROFILER_TYPE,
   StrictMode: REACT_STRICT_MODE_TYPE,
   Suspense: REACT_SUSPENSE_TYPE,
+  unstable_SuspenseList: REACT_SUSPENSE_LIST_TYPE,
 
   createElement: __DEV__ ? createElementWithValidation : createElement,
   cloneElement: __DEV__ ? cloneElementWithValidation : cloneElement,
@@ -99,6 +103,11 @@ const React = {
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: ReactSharedInternals,
 };
+
+if (enableEventAPI) {
+  React.unstable_createEvent = createEvent;
+  React.unstable_useEvent = useEvent;
+}
 
 // Note: some APIs are added with feature flags.
 // Make sure that stable builds for open source

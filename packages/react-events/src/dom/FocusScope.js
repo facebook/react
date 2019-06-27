@@ -7,14 +7,14 @@
  * @flow
  */
 import type {
+  ReactDOMEventResponder,
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
+  ReactDOMEventComponentInstance,
 } from 'shared/ReactDOMTypes';
-import type {ReactEventComponentInstance} from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
 import React from 'react';
-import ReactDOM from 'react-dom';
 import {
   isFiberSuspenseAndTimedOut,
   getSuspenseFallbackChild,
@@ -49,7 +49,7 @@ const targetEventTypes = [{name: 'keydown', passive: false}];
 const rootEventTypes = [{name: 'focus', passive: true}];
 
 function getFocusableElementsInScope(
-  eventComponentInstance: ReactEventComponentInstance,
+  eventComponentInstance: ReactDOMEventComponentInstance,
   tabbable?: boolean,
   searchNode?: Element,
 ): Array<HTMLElement> {
@@ -147,7 +147,7 @@ function focusElement(element: ?HTMLElement) {
 }
 
 function moveFocusInScope(
-  scope: ReactEventComponentInstance,
+  scope: ReactDOMEventComponentInstance,
   node: Element,
   backwards: boolean,
   options: FocusManagerOptions = {},
@@ -194,7 +194,7 @@ function moveFocusInScope(
 }
 
 function moveFocus(
-  scope: ReactEventComponentInstance,
+  scope: ReactDOMEventComponentInstance,
   options: FocusManagerOptions = {},
   backwards: boolean,
 ) {
@@ -211,7 +211,9 @@ function moveFocus(
   return moveFocusInScope(scope, node, backwards, options);
 }
 
-function createFocusManager(scope: ReactEventComponentInstance): FocusManager {
+function createFocusManager(
+  scope: ReactDOMEventComponentInstance,
+): FocusManager {
   return {
     focusNext(options: ?FocusManagerOptions) {
       return moveFocus(scope, options || {}, false);
@@ -232,7 +234,8 @@ function getFirstFocusableElement(
   }
 }
 
-const FocusScopeResponder = {
+const FocusScopeResponder: ReactDOMEventResponder = {
+  displayName: 'FocusScope',
   targetEventTypes,
   rootEventTypes,
   createInitialState(): FocusScopeState {
@@ -242,6 +245,7 @@ const FocusScopeResponder = {
     };
   },
   allowMultipleHostChildren: true,
+  allowEventHooks: false,
   onEvent(
     event: ReactDOMResponderEvent,
     context: ReactDOMResponderContext,
@@ -329,7 +333,7 @@ const FocusScopeResponder = {
   },
 };
 
-export const FocusScopeEventComponent = ReactDOM.unstable_createEvent(
+export const FocusScopeEventComponent = React.unstable_createEvent(
   FocusScopeResponder,
   'FocusScope',
 );

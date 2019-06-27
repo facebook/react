@@ -8,12 +8,13 @@
  */
 
 import type {
+  ReactDOMEventResponder,
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
   PointerType,
 } from 'shared/ReactDOMTypes';
 
-import ReactDOM from 'react-dom';
+import React from 'react';
 import {DiscreteEvent} from 'shared/ReactTypes';
 
 type FocusProps = {
@@ -216,7 +217,8 @@ function handleRootPointerEvent(
 
 let isGlobalFocusVisible = true;
 
-const FocusResponder = {
+const FocusResponder: ReactDOMEventResponder = {
+  displayName: 'Focus',
   targetEventTypes,
   rootEventTypes,
   createInitialState(): FocusState {
@@ -228,6 +230,7 @@ const FocusResponder = {
     };
   },
   allowMultipleHostChildren: false,
+  allowEventHooks: true,
   onEvent(
     event: ReactDOMResponderEvent,
     context: ReactDOMResponderContext,
@@ -336,4 +339,8 @@ const FocusResponder = {
   },
 };
 
-export default ReactDOM.unstable_createEvent(FocusResponder, 'Focus');
+export const Focus = React.unstable_createEvent(FocusResponder);
+
+export function useFocus(props: FocusProps): void {
+  React.unstable_useEvent(Focus, props);
+}

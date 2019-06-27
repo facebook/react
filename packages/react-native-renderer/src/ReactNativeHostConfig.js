@@ -248,6 +248,7 @@ export function resetAfterCommit(containerInfo: Container): void {
 }
 
 export const isPrimaryRenderer = true;
+export const shouldWarnUnactedUpdates = true;
 
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;
@@ -497,19 +498,19 @@ export function unhideTextInstance(
 }
 
 export function mountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance,
+  eventComponentInstance: ReactEventComponentInstance<any, any, any>,
 ) {
   throw new Error('Not yet implemented.');
 }
 
 export function updateEventComponent(
-  eventComponentInstance: ReactEventComponentInstance,
+  eventComponentInstance: ReactEventComponentInstance<any, any, any>,
 ) {
   throw new Error('Not yet implemented.');
 }
 
 export function unmountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance,
+  eventComponentInstance: ReactEventComponentInstance<any, any, any>,
 ): void {
   throw new Error('Not yet implemented.');
 }

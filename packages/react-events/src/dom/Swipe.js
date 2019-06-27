@@ -8,12 +8,13 @@
  */
 
 import type {
+  ReactDOMEventResponder,
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
 } from 'shared/ReactDOMTypes';
 import type {EventPriority} from 'shared/ReactTypes';
 
-import ReactDOM from 'react-dom';
+import React from 'react';
 import {UserBlockingEvent, DiscreteEvent} from 'shared/ReactTypes';
 
 const targetEventTypes = ['pointerdown'];
@@ -88,7 +89,8 @@ type SwipeState = {
   y: number,
 };
 
-const SwipeResponder = {
+const SwipeResponder: ReactDOMEventResponder = {
+  displayName: 'Scroll',
   targetEventTypes,
   createInitialState(): SwipeState {
     return {
@@ -104,6 +106,7 @@ const SwipeResponder = {
     };
   },
   allowMultipleHostChildren: false,
+  allowEventHooks: false,
   onEvent(
     event: ReactDOMResponderEvent,
     context: ReactDOMResponderContext,
@@ -262,4 +265,8 @@ const SwipeResponder = {
   },
 };
 
-export default ReactDOM.unstable_createEvent(SwipeResponder, 'Swipe');
+export const Swipe = React.unstable_createEvent(SwipeResponder);
+
+export function useSwipe(props: Object): void {
+  React.unstable_useEvent(Swipe, props);
+}

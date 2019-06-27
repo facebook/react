@@ -8,12 +8,13 @@
  */
 
 import type {
+  ReactDOMEventResponder,
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
 } from 'shared/ReactDOMTypes';
 import type {EventPriority} from 'shared/ReactTypes';
 
-import ReactDOM from 'react-dom';
+import React from 'react';
 import {DiscreteEvent, UserBlockingEvent} from 'shared/ReactTypes';
 
 const targetEventTypes = ['pointerdown'];
@@ -84,7 +85,8 @@ function dispatchDragEvent(
   context.dispatchEvent(syntheticEvent, listener, eventPriority);
 }
 
-const DragResponder = {
+const DragResponder: ReactDOMEventResponder = {
+  displayName: 'Drag',
   targetEventTypes,
   createInitialState(): DragState {
     return {
@@ -98,6 +100,7 @@ const DragResponder = {
     };
   },
   allowMultipleHostChildren: false,
+  allowEventHooks: false,
   onEvent(
     event: ReactDOMResponderEvent,
     context: ReactDOMResponderContext,
@@ -259,4 +262,8 @@ const DragResponder = {
   },
 };
 
-export default ReactDOM.unstable_createEvent(DragResponder, 'Drag');
+export const Drag = React.unstable_createEvent(DragResponder);
+
+export function useDrag(props: Object): void {
+  React.unstable_useEvent(Drag, props);
+}

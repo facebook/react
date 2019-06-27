@@ -11,7 +11,10 @@ import type {ReactProviderType, ReactContext} from 'shared/ReactTypes';
 import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
-import type {SuspenseState} from './ReactFiberSuspenseComponent';
+import type {
+  SuspenseState,
+  SuspenseListState,
+} from './ReactFiberSuspenseComponent';
 import type {SuspenseContext} from './ReactFiberSuspenseContext';
 
 import checkPropTypes from 'prop-types/checkPropTypes';
@@ -31,6 +34,7 @@ import {
   ContextConsumer,
   Profiler,
   SuspenseComponent,
+  SuspenseListComponent,
   DehydratedSuspenseComponent,
   MemoComponent,
   SimpleMemoComponent,
@@ -121,13 +125,16 @@ import {
   hasSuspenseContext,
   setDefaultShallowSuspenseContext,
   addSubtreeSuspenseContext,
+  setShallowSuspenseContext,
 } from './ReactFiberSuspenseContext';
+import {isShowingAnyFallbacks} from './ReactFiberSuspenseComponent';
 import {
   pushProvider,
   propagateContextChange,
   readContext,
   prepareToReadContext,
   calculateChangedBits,
+  scheduleWorkOnParentPath,
 } from './ReactFiberNewContext';
 import {resetHooks, renderWithHooks, bailoutHooks} from './ReactFiberHooks';
 import {stopProfilerTimerIfRunning} from './ReactProfilerTimer';
@@ -166,10 +173,11 @@ import {
   isSimpleFunctionComponent,
 } from './ReactFiber';
 import {
-  markDidDeprioritizeIdleSubtree,
+  markSpawnedWork,
   requestCurrentTime,
   retryTimedOutBoundary,
 } from './ReactFiberWorkLoop';
+import {prepareToReadEventComponents} from './ReactFiberEvents';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -182,6 +190,7 @@ let didWarnAboutGetDerivedStateOnFunctionComponent;
 let didWarnAboutFunctionRefs;
 export let didWarnAboutReassigningProps;
 let didWarnAboutMaxDuration;
+let didWarnAboutRevealOrder;
 
 if (__DEV__) {
   didWarnAboutBadClass = {};
@@ -191,6 +200,7 @@ if (__DEV__) {
   didWarnAboutFunctionRefs = {};
   didWarnAboutReassigningProps = false;
   didWarnAboutMaxDuration = false;
+  didWarnAboutRevealOrder = {};
 }
 
 export function reconcileChildren(
@@ -292,6 +302,7 @@ function updateForwardRef(
   // The rest is a fork of updateFunctionComponent
   let nextChildren;
   prepareToReadContext(workInProgress, renderExpirationTime);
+  prepareToReadEventComponents(workInProgress);
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
     setCurrentPhase('render');
@@ -612,6 +623,7 @@ function updateFunctionComponent(
 
   let nextChildren;
   prepareToReadContext(workInProgress, renderExpirationTime);
+  prepareToReadEventComponents(workInProgress);
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
     setCurrentPhase('render');
@@ -994,7 +1006,7 @@ function updateHostComponent(current, workInProgress, renderExpirationTime) {
     shouldDeprioritizeSubtree(type, nextProps)
   ) {
     if (enableSchedulerTracing) {
-      markDidDeprioritizeIdleSubtree();
+      markSpawnedWork(Never);
     }
     // Schedule this fiber to re-render at offscreen priority. Then bailout.
     workInProgress.expirationTime = workInProgress.childExpirationTime = Never;
@@ -1226,7 +1238,7 @@ function mountIndeterminateComponent(
   const context = getMaskedContext(workInProgress, unmaskedContext);
 
   prepareToReadContext(workInProgress, renderExpirationTime);
-
+  prepareToReadEventComponents(workInProgress);
   let value;
 
   if (__DEV__) {
@@ -1433,6 +1445,22 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
 // TODO: This is now an empty object. Should we just make it a boolean?
 const SUSPENDED_MARKER: SuspenseState = ({}: any);
 
+function shouldRemainOnFallback(
+  suspenseContext: SuspenseContext,
+  current: null | Fiber,
+  workInProgress: Fiber,
+) {
+  // If the context is telling us that we should show a fallback, and we're not
+  // already showing content, then we should show the fallback instead.
+  return (
+    hasSuspenseContext(
+      suspenseContext,
+      (ForceSuspenseFallback: SuspenseContext),
+    ) &&
+    (current === null || current.memoizedState !== null)
+  );
+}
+
 function updateSuspenseComponent(
   current,
   workInProgress,
@@ -1455,10 +1483,7 @@ function updateSuspenseComponent(
 
   if (
     (workInProgress.effectTag & DidCapture) !== NoEffect ||
-    hasSuspenseContext(
-      suspenseContext,
-      (ForceSuspenseFallback: SuspenseContext),
-    )
+    shouldRemainOnFallback(suspenseContext, current, workInProgress)
   ) {
     // Something in this boundary's subtree already suspended. Switch to
     // rendering the fallback children.
@@ -1918,6 +1943,305 @@ function updateDehydratedSuspenseComponent(
   }
 }
 
+function propagateSuspenseContextChange(
+  workInProgress: Fiber,
+  firstChild: null | Fiber,
+  renderExpirationTime: ExpirationTime,
+): void {
+  // Mark any Suspense boundaries with fallbacks as having work to do.
+  // If they were previously forced into fallbacks, they may now be able
+  // to unblock.
+  let node = firstChild;
+  while (node !== null) {
+    if (node.tag === SuspenseComponent) {
+      const state: SuspenseState | null = node.memoizedState;
+      if (state !== null) {
+        if (node.expirationTime < renderExpirationTime) {
+          node.expirationTime = renderExpirationTime;
+        }
+        let alternate = node.alternate;
+        if (
+          alternate !== null &&
+          alternate.expirationTime < renderExpirationTime
+        ) {
+          alternate.expirationTime = renderExpirationTime;
+        }
+        scheduleWorkOnParentPath(node.return, renderExpirationTime);
+      }
+    } else if (node.child !== null) {
+      node.child.return = node;
+      node = node.child;
+      continue;
+    }
+    if (node === workInProgress) {
+      return;
+    }
+    while (node.sibling === null) {
+      if (node.return === null || node.return === workInProgress) {
+        return;
+      }
+      node = node.return;
+    }
+    node.sibling.return = node.return;
+    node = node.sibling;
+  }
+}
+
+function findLastContentRow(firstChild: null | Fiber): null | Fiber {
+  // This is going to find the last row among these children that is already
+  // showing content on the screen, as opposed to being in fallback state or
+  // new. If a row has multiple Suspense boundaries, any of them being in the
+  // fallback state, counts as the whole row being in a fallback state.
+  // Note that the "rows" will be workInProgress, but any nested children
+  // will still be current since we haven't rendered them yet. The mounted
+  // order may not be the same as the new order. We use the new order.
+  let row = firstChild;
+  let lastContentRow: null | Fiber = null;
+  while (row !== null) {
+    let currentRow = row.alternate;
+    // New rows can't be content rows.
+    if (currentRow !== null && !isShowingAnyFallbacks(currentRow)) {
+      lastContentRow = row;
+    }
+    row = row.sibling;
+  }
+  return lastContentRow;
+}
+
+type SuspenseListRevealOrder = 'forwards' | 'backwards' | 'together' | void;
+
+// This can end up rendering this component multiple passes.
+// The first pass splits the children fibers into two sets. A head and tail.
+// We first render the head. If anything is in fallback state, we do another
+// pass through beginWork to rerender all children (including the tail) with
+// the force suspend context. If the first render didn't have anything in
+// in fallback state. Then we render each row in the tail one-by-one.
+// That happens in the completeWork phase without going back to beginWork.
+function updateSuspenseListComponent(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  renderExpirationTime: ExpirationTime,
+) {
+  const nextProps = workInProgress.pendingProps;
+  const revealOrder: SuspenseListRevealOrder = nextProps.revealOrder;
+  const nextChildren = nextProps.children;
+
+  let nextChildFibers;
+  if (current === null) {
+    nextChildFibers = mountChildFibers(
+      workInProgress,
+      null,
+      nextChildren,
+      renderExpirationTime,
+    );
+  } else {
+    nextChildFibers = reconcileChildFibers(
+      workInProgress,
+      current.child,
+      nextChildren,
+      renderExpirationTime,
+    );
+  }
+
+  let suspenseContext: SuspenseContext = suspenseStackCursor.current;
+
+  let shouldForceFallback = hasSuspenseContext(
+    suspenseContext,
+    (ForceSuspenseFallback: SuspenseContext),
+  );
+
+  if ((workInProgress.effectTag & DidCapture) !== NoEffect) {
+    // This is the second pass. In this pass, we should force the
+    // fallbacks in place.
+    shouldForceFallback = true;
+  }
+
+  let suspenseListState: null | SuspenseListState = null;
+
+  if (shouldForceFallback) {
+    suspenseContext = setShallowSuspenseContext(
+      suspenseContext,
+      ForceSuspenseFallback,
+    );
+    suspenseListState = {
+      didSuspend: true,
+      isBackwards: false,
+      rendering: null,
+      last: null,
+      tail: null,
+      tailExpiration: 0,
+    };
+  } else {
+    let didForceFallback =
+      current !== null &&
+      current.memoizedState !== null &&
+      (current.memoizedState: SuspenseListState).didSuspend;
+    if (didForceFallback) {
+      // If we previously forced a fallback, we need to schedule work
+      // on any nested boundaries to let them know to try to render
+      // again. This is the same as context updating.
+      propagateSuspenseContextChange(
+        workInProgress,
+        nextChildFibers,
+        renderExpirationTime,
+      );
+    }
+    suspenseContext = setDefaultShallowSuspenseContext(suspenseContext);
+  }
+
+  pushSuspenseContext(workInProgress, suspenseContext);
+
+  if ((workInProgress.mode & BatchedMode) === NoMode) {
+    // Outside of batched mode, SuspenseList doesn't work so we just
+    // use make it a noop by treating it as the default revealOrder.
+    workInProgress.effectTag |= DidCapture;
+    workInProgress.child = nextChildFibers;
+    return nextChildFibers;
+  }
+
+  switch (revealOrder) {
+    case 'forwards': {
+      // If need to force fallbacks in this pass we're just going to
+      // force the whole set to suspend so we don't have to do anything
+      // further here.
+      if (!shouldForceFallback) {
+        let lastContentRow = findLastContentRow(nextChildFibers);
+        let tail;
+        if (lastContentRow === null) {
+          // The whole list is part of the tail.
+          // TODO: We could fast path by just rendering the tail now.
+          tail = nextChildFibers;
+          nextChildFibers = null;
+        } else {
+          // Disconnect the tail rows after the content row.
+          // We're going to render them separately later.
+          tail = lastContentRow.sibling;
+          lastContentRow.sibling = null;
+        }
+        if (suspenseListState === null) {
+          suspenseListState = {
+            didSuspend: false,
+            isBackwards: false,
+            rendering: null,
+            last: lastContentRow,
+            tail: tail,
+            tailExpiration: 0,
+          };
+        } else {
+          suspenseListState.tail = tail;
+        }
+      }
+      break;
+    }
+    case 'backwards': {
+      // If need to force fallbacks in this pass we're just going to
+      // force the whole set to suspend so we don't have to do anything
+      // further here.
+      if (!shouldForceFallback) {
+        // We're going to find the first row that has existing content.
+        // At the same time we're going to reverse the list of everything
+        // we pass in the meantime. That's going to be our tail in reverse
+        // order.
+        let tail = null;
+        let row = nextChildFibers;
+        nextChildFibers = null;
+        while (row !== null) {
+          let currentRow = row.alternate;
+          // New rows can't be content rows.
+          if (currentRow !== null && !isShowingAnyFallbacks(currentRow)) {
+            // This is the beginning of the main content.
+            nextChildFibers = row;
+            break;
+          }
+          let nextRow = row.sibling;
+          row.sibling = tail;
+          tail = row;
+          row = nextRow;
+        }
+        // TODO: If nextChildFibers is null, we can continue on the tail immediately.
+        if (suspenseListState === null) {
+          suspenseListState = {
+            didSuspend: false,
+            isBackwards: true,
+            rendering: null,
+            last: null,
+            tail: tail,
+            tailExpiration: 0,
+          };
+        } else {
+          suspenseListState.isBackwards = true;
+          suspenseListState.tail = tail;
+        }
+      }
+      break;
+    }
+    case 'together': {
+      break;
+    }
+    default: {
+      // The default reveal order is the same as not having
+      // a boundary.
+      if (__DEV__) {
+        if (
+          revealOrder !== undefined &&
+          !didWarnAboutRevealOrder[revealOrder]
+        ) {
+          didWarnAboutRevealOrder[revealOrder] = true;
+          if (typeof revealOrder === 'string') {
+            switch (revealOrder.toLowerCase()) {
+              case 'together':
+              case 'forwards':
+              case 'backwards': {
+                warning(
+                  false,
+                  '"%s" is not a valid value for revealOrder on <SuspenseList />. ' +
+                    'Use lowercase "%s" instead.',
+                  revealOrder,
+                  revealOrder.toLowerCase(),
+                );
+                break;
+              }
+              case 'forward':
+              case 'backward': {
+                warning(
+                  false,
+                  '"%s" is not a valid value for revealOrder on <SuspenseList />. ' +
+                    'React uses the -s suffix in the spelling. Use "%ss" instead.',
+                  revealOrder,
+                  revealOrder.toLowerCase(),
+                );
+                break;
+              }
+              default:
+                warning(
+                  false,
+                  '"%s" is not a supported revealOrder on <SuspenseList />. ' +
+                    'Did you mean "together", "forwards" or "backwards"?',
+                  revealOrder,
+                );
+                break;
+            }
+          } else {
+            warning(
+              false,
+              '%s is not a supported value for revealOrder on <SuspenseList />. ' +
+                'Did you mean "together", "forwards" or "backwards"?',
+              revealOrder,
+            );
+          }
+        }
+      }
+      // We mark this as having captured but it really just says to the
+      // complete phase that we should treat this as done, whatever form
+      // it is in. No need for a second pass.
+      workInProgress.effectTag |= DidCapture;
+    }
+  }
+  workInProgress.memoizedState = suspenseListState;
+  workInProgress.child = nextChildFibers;
+  return nextChildFibers;
+}
+
 function updatePortalComponent(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -2132,8 +2456,8 @@ function bailoutOnAlreadyFinishedWork(
   cancelWorkTimer(workInProgress);
 
   if (current !== null) {
-    // Reuse previous context list
-    workInProgress.contextDependencies = current.contextDependencies;
+    // Reuse previous dependencies
+    workInProgress.dependencies = current.dependencies;
   }
 
   if (enableProfilerTimer) {
@@ -2274,7 +2598,7 @@ function beginWork(
             shouldDeprioritizeSubtree(workInProgress.type, newProps)
           ) {
             if (enableSchedulerTracing) {
-              markDidDeprioritizeIdleSubtree();
+              markSpawnedWork(Never);
             }
             // Schedule this fiber to re-render at offscreen priority. Then bailout.
             workInProgress.expirationTime = workInProgress.childExpirationTime = Never;
@@ -2366,6 +2690,21 @@ function beginWork(
             workInProgress.effectTag |= DidCapture;
           }
           break;
+        }
+        case SuspenseListComponent: {
+          // Check if the children have any pending work.
+          const childExpirationTime = workInProgress.childExpirationTime;
+          if (childExpirationTime < renderExpirationTime) {
+            pushSuspenseContext(workInProgress, suspenseStackCursor.current);
+            // None of the children have any work, so we can do a fast bailout.
+            return null;
+          }
+          // Try the normal path.
+          return updateSuspenseListComponent(
+            current,
+            workInProgress,
+            renderExpirationTime,
+          );
         }
         case EventComponent:
           if (enableEventAPI) {
@@ -2555,6 +2894,13 @@ function beginWork(
         );
       }
       break;
+    }
+    case SuspenseListComponent: {
+      return updateSuspenseListComponent(
+        current,
+        workInProgress,
+        renderExpirationTime,
+      );
     }
     case EventComponent: {
       if (enableEventAPI) {
