@@ -14,7 +14,6 @@ import {
 import type {AnyNativeEvent} from 'events/PluginModuleType';
 import {
   EventComponent,
-  EventTarget as EventTargetWorkTag,
   HostComponent,
   FunctionComponent,
 } from 'shared/ReactWorkTags';
@@ -181,35 +180,6 @@ const eventResponderContext: ReactDOMResponderContext = {
     eventQueue.eventPriority = eventPriority;
     eventListeners.set(eventObject, listener);
     eventQueue.events.push(eventObject);
-  },
-  isEventWithinTouchHitTarget(event: ReactDOMResponderEvent): boolean {
-    validateResponderContext();
-    const target = event.target;
-    const nativeEvent = event.nativeEvent;
-    // We should always be dealing with a mouse event or touch event here.
-    // If we are not, these won't exist and we can early return.
-    const x = (nativeEvent: any).clientX;
-    const y = (nativeEvent: any).clientY;
-    if (x === undefined || y === undefined) {
-      return false;
-    }
-    const childFiber = getClosestInstanceFromNode(target);
-    if (childFiber === null) {
-      return false;
-    }
-    const parentFiber = childFiber.return;
-    if (parentFiber !== null && parentFiber.tag === EventTargetWorkTag) {
-      const parentNode = ((target.parentNode: any): Element);
-      // TODO find another way to do this without using the
-      // expensive getBoundingClientRect.
-      const {left, top, right, bottom} = parentNode.getBoundingClientRect();
-      // Check if the co-ords intersect with the target element's rect.
-      if (x > left && y > top && x < right && y < bottom) {
-        return false;
-      }
-      return true;
-    }
-    return false;
   },
   isTargetWithinEventComponent(target: Element | Document): boolean {
     validateResponderContext();

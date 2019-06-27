@@ -45,7 +45,6 @@ import {
   MemoComponent,
   SimpleMemoComponent,
   EventComponent,
-  EventTarget,
   SuspenseListComponent,
 } from 'shared/ReactWorkTags';
 import {
@@ -94,7 +93,6 @@ import {
   unhideInstance,
   unhideTextInstance,
   unmountEventComponent,
-  commitEventTarget,
   mountEventComponent,
 } from './ReactFiberHostConfig';
 import {
@@ -305,7 +303,6 @@ function commitBeforeMutationLifeCycles(
     case HostText:
     case HostPortal:
     case IncompleteClassComponent:
-    case EventTarget:
       // Nothing to do for these component types
       return;
     default: {
@@ -594,34 +591,6 @@ function commitLifeCycles(
     case SuspenseListComponent:
     case IncompleteClassComponent:
       return;
-    case EventTarget: {
-      if (enableEventAPI) {
-        const type = finishedWork.type.type;
-        const props = finishedWork.memoizedProps;
-        const instance = finishedWork.stateNode;
-        let parentInstance = null;
-
-        let node = finishedWork.return;
-        // Traverse up the fiber tree until we find the parent host node.
-        while (node !== null) {
-          if (node.tag === HostComponent) {
-            parentInstance = node.stateNode;
-            break;
-          } else if (node.tag === HostRoot) {
-            parentInstance = node.stateNode.containerInfo;
-            break;
-          }
-          node = node.return;
-        }
-        invariant(
-          parentInstance !== null,
-          'This should have a parent host component initialized. This error is likely ' +
-            'caused by a bug in React. Please file an issue.',
-        );
-        commitEventTarget(type, props, instance, parentInstance);
-      }
-      return;
-    }
     case EventComponent: {
       if (enableEventAPI) {
         mountEventComponent(finishedWork.stateNode);
@@ -869,7 +838,6 @@ function commitContainer(finishedWork: Fiber) {
     case ClassComponent:
     case HostComponent:
     case HostText:
-    case EventTarget:
     case EventComponent: {
       return;
     }
@@ -1252,9 +1220,6 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       const oldText: string =
         current !== null ? current.memoizedProps : newText;
       commitTextUpdate(textInstance, oldText, newText);
-      return;
-    }
-    case EventTarget: {
       return;
     }
     case HostRoot: {
