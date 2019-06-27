@@ -861,7 +861,7 @@ describe('ReactSuspenseList', () => {
     );
   });
 
-  it('displays added row at the top "together" and the bottom in "forwards" order', async () => {
+  it('displays added row at the top "together" and the bottom in "backwards" order', async () => {
     let A = createAsyncText('A');
     let B = createAsyncText('B');
     let D = createAsyncText('D');

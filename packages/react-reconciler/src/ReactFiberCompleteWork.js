@@ -122,6 +122,7 @@ import {
 import getComponentName from 'shared/getComponentName';
 import warning from 'shared/warning';
 import {Never} from './ReactFiberExpirationTime';
+import {resetChildFibers} from './ReactChildFiber';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -928,13 +929,10 @@ function completeWork(
     case SuspenseListComponent: {
       popSuspenseContext(workInProgress);
 
-      if ((workInProgress.effectTag & DidCapture) === NoEffect) {
-        let suspenseListState: null | SuspenseListState =
-          workInProgress.memoizedState;
-        if (
-          suspenseListState === null ||
-          suspenseListState.rendering === null
-        ) {
+      let suspenseListState: null | SuspenseListState =
+        workInProgress.memoizedState;
+      if (suspenseListState === null || suspenseListState.rendering === null) {
+        if ((workInProgress.effectTag & DidCapture) === NoEffect) {
           // This is the first pass. We need to figure out if anything is still
           // suspended in the rendered set.
           const renderedChildren = workInProgress.child;
@@ -948,92 +946,118 @@ function completeWork(
           if (needsRerender) {
             // Rerender the whole list, but this time, we'll force fallbacks
             // to stay in place.
+            // Mark this as having captured already so we know not to do this
+            // again.
             workInProgress.effectTag |= DidCapture;
             // Reset the effect list before doing the second pass since that's now invalid.
             workInProgress.firstEffect = workInProgress.lastEffect = null;
-            // Schedule work so we know not to bail out.
-            workInProgress.expirationTime = renderExpirationTime;
-            return workInProgress;
+            // Reset the child fibers to their original state.
+            resetChildFibers(workInProgress, renderExpirationTime);
+
+            // Set up the Suspense Context to force suspense and immediately
+            // rerender the children.
+            pushSuspenseContext(
+              workInProgress,
+              setShallowSuspenseContext(
+                suspenseStackCursor.current,
+                ForceSuspenseFallback,
+              ),
+            );
+            // We need to store that we already suspended in the state.
+            if (suspenseListState === null) {
+              workInProgress.memoizedState = {
+                didSuspend: true,
+                isBackwards: false,
+                rendering: null,
+                last: null,
+                tail: null,
+                tailExpiration: 0,
+              };
+            } else {
+              suspenseListState.didSuspend = true;
+            }
+            return workInProgress.child;
           }
         } else {
-          // Append the rendered row to the child list.
-          let rendered = suspenseListState.rendering;
-          if (!suspenseListState.didSuspend) {
-            if (
-              now() > suspenseListState.tailExpiration &&
-              renderExpirationTime > Never
-            ) {
-              // We have now passed our CPU deadline and we'll just give up further
-              // attempts to render the main content and only render fallbacks.
-              // The assumption is that this is usually faster.
-              suspenseListState.didSuspend = true;
-              // Since nothing actually suspended, there will nothing to ping this
-              // to get it started back up to attempt the next item. If we can show
-              // them, then they really have the same priority as this render.
-              // So we'll pick it back up the very next render pass once we've had
-              // an opportunity to yield for paint.
-
-              const nextPriority = renderExpirationTime - 1;
-              workInProgress.expirationTime = workInProgress.childExpirationTime = nextPriority;
-              if (enableSchedulerTracing) {
-                markSpawnedWork(nextPriority);
-              }
-            } else {
-              suspenseListState.didSuspend = isShowingAnyFallbacks(rendered);
-            }
-          }
-          if (suspenseListState.isBackwards) {
-            // The effect list of the backwards tail will have been added
-            // to the end. This breaks the guarantee that life-cycles fire in
-            // sibling order but that isn't a strong guarantee promised by React.
-            // Especially since these might also just pop in during future commits.
-            // Append to the beginning of the list.
-            rendered.sibling = workInProgress.child;
-            workInProgress.child = rendered;
-          } else {
-            let previousSibling = suspenseListState.last;
-            if (previousSibling !== null) {
-              previousSibling.sibling = rendered;
-            } else {
-              workInProgress.child = rendered;
-            }
-            suspenseListState.last = rendered;
-          }
+          // This is the second pass or an independent render.
+          workInProgress.effectTag &= ~DidCapture;
         }
-
-        if (suspenseListState !== null && suspenseListState.tail !== null) {
-          // We still have tail rows to render.
-          if (suspenseListState.tailExpiration === 0) {
-            // Heuristic for how long we're willing to spend rendering rows
-            // until we just give up and show what we have so far.
-            const TAIL_EXPIRATION_TIMEOUT_MS = 500;
-            suspenseListState.tailExpiration =
-              now() + TAIL_EXPIRATION_TIMEOUT_MS;
-          }
-          // Pop a row.
-          let next = suspenseListState.tail;
-          suspenseListState.rendering = next;
-          suspenseListState.tail = next.sibling;
-          next.sibling = null;
-
-          // Restore the context.
-          // TODO: We can probably just avoid popping it instead and only
-          // setting it the first time we go from not suspended to suspended.
-          let suspenseContext = suspenseStackCursor.current;
-          if (suspenseListState.didSuspend) {
-            suspenseContext = setShallowSuspenseContext(
-              suspenseContext,
-              ForceSuspenseFallback,
-            );
-          } else {
-            suspenseContext = setDefaultShallowSuspenseContext(suspenseContext);
-          }
-          pushSuspenseContext(workInProgress, suspenseContext);
-          // Do a pass over the next row.
-          return next;
-        }
+        // Next we're going to render the tail.
       } else {
-        workInProgress.effectTag &= ~DidCapture;
+        // Append the rendered row to the child list.
+        let rendered = suspenseListState.rendering;
+        if (!suspenseListState.didSuspend) {
+          if (
+            now() > suspenseListState.tailExpiration &&
+            renderExpirationTime > Never
+          ) {
+            // We have now passed our CPU deadline and we'll just give up further
+            // attempts to render the main content and only render fallbacks.
+            // The assumption is that this is usually faster.
+            suspenseListState.didSuspend = true;
+            // Since nothing actually suspended, there will nothing to ping this
+            // to get it started back up to attempt the next item. If we can show
+            // them, then they really have the same priority as this render.
+            // So we'll pick it back up the very next render pass once we've had
+            // an opportunity to yield for paint.
+
+            const nextPriority = renderExpirationTime - 1;
+            workInProgress.expirationTime = workInProgress.childExpirationTime = nextPriority;
+            if (enableSchedulerTracing) {
+              markSpawnedWork(nextPriority);
+            }
+          } else {
+            suspenseListState.didSuspend = isShowingAnyFallbacks(rendered);
+          }
+        }
+        if (suspenseListState.isBackwards) {
+          // The effect list of the backwards tail will have been added
+          // to the end. This breaks the guarantee that life-cycles fire in
+          // sibling order but that isn't a strong guarantee promised by React.
+          // Especially since these might also just pop in during future commits.
+          // Append to the beginning of the list.
+          rendered.sibling = workInProgress.child;
+          workInProgress.child = rendered;
+        } else {
+          let previousSibling = suspenseListState.last;
+          if (previousSibling !== null) {
+            previousSibling.sibling = rendered;
+          } else {
+            workInProgress.child = rendered;
+          }
+          suspenseListState.last = rendered;
+        }
+      }
+
+      if (suspenseListState !== null && suspenseListState.tail !== null) {
+        // We still have tail rows to render.
+        if (suspenseListState.tailExpiration === 0) {
+          // Heuristic for how long we're willing to spend rendering rows
+          // until we just give up and show what we have so far.
+          const TAIL_EXPIRATION_TIMEOUT_MS = 500;
+          suspenseListState.tailExpiration = now() + TAIL_EXPIRATION_TIMEOUT_MS;
+        }
+        // Pop a row.
+        let next = suspenseListState.tail;
+        suspenseListState.rendering = next;
+        suspenseListState.tail = next.sibling;
+        next.sibling = null;
+
+        // Restore the context.
+        // TODO: We can probably just avoid popping it instead and only
+        // setting it the first time we go from not suspended to suspended.
+        let suspenseContext = suspenseStackCursor.current;
+        if (suspenseListState.didSuspend) {
+          suspenseContext = setShallowSuspenseContext(
+            suspenseContext,
+            ForceSuspenseFallback,
+          );
+        } else {
+          suspenseContext = setDefaultShallowSuspenseContext(suspenseContext);
+        }
+        pushSuspenseContext(workInProgress, suspenseContext);
+        // Do a pass over the next row.
+        return next;
       }
       break;
     }
