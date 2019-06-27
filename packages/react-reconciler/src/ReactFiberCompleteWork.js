@@ -114,6 +114,7 @@ import {
   markSpawnedWork,
   renderDidSuspend,
   renderDidSuspendDelayIfPossible,
+  renderHasNotSuspendedYet,
 } from './ReactFiberWorkLoop';
 import {
   getEventComponentHostChildrenCount,
@@ -554,6 +555,11 @@ function hasSuspendedChildrenAndNewContent(
       const state: SuspenseState | null = node.memoizedState;
       const isShowingFallback = state !== null;
       if (isShowingFallback) {
+        // Tag the parent fiber as having suspended boundaries.
+        if (!hasSuspendedBoundaries) {
+          workInProgress.effectTag |= DidCapture;
+        }
+
         hasSuspendedBoundaries = true;
 
         if (node.updateQueue !== null) {
@@ -951,16 +957,20 @@ function completeWork(
           // If new content unsuspended, but there's still some content that
           // didn't. Then we need to do a second pass that forces everything
           // to keep showing their fallbacks.
-          const needsRerender = hasSuspendedChildrenAndNewContent(
-            workInProgress,
-            renderedChildren,
-          );
+
+          // We might be suspended if something in this render pass suspended, or
+          // something in the previous committed pass suspended. Otherwise,
+          // there's no chance so we can skip the expensive call to
+          // hasSuspendedChildrenAndNewContent.
+          let cannotBeSuspended =
+            renderHasNotSuspendedYet() &&
+            (current === null || (current.effectTag & DidCapture) === NoEffect);
+          let needsRerender =
+            !cannotBeSuspended &&
+            hasSuspendedChildrenAndNewContent(workInProgress, renderedChildren);
           if (needsRerender) {
             // Rerender the whole list, but this time, we'll force fallbacks
             // to stay in place.
-            // Mark this as having captured already so we know not to do this
-            // again.
-            workInProgress.effectTag |= DidCapture;
             // Reset the effect list before doing the second pass since that's now invalid.
             workInProgress.firstEffect = workInProgress.lastEffect = null;
             // Reset the child fibers to their original state.
@@ -977,6 +987,9 @@ function completeWork(
             );
             return workInProgress.child;
           }
+          // hasSuspendedChildrenAndNewContent could've set didSuspendAlready
+          didSuspendAlready =
+            (workInProgress.effectTag & DidCapture) !== NoEffect;
         }
         // Next we're going to render the tail.
       } else {
