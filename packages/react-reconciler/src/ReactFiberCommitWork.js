@@ -29,6 +29,7 @@ import {
   enableProfilerTimer,
   enableSuspenseServerRenderer,
   enableFlareAPI,
+  enableFundamentalAPI,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -46,6 +47,7 @@ import {
   SimpleMemoComponent,
   EventComponent,
   SuspenseListComponent,
+  Foundation,
 } from 'shared/ReactWorkTags';
 import {
   invokeGuardedCallback,
@@ -94,6 +96,7 @@ import {
   unhideTextInstance,
   unmountEventComponent,
   mountEventComponent,
+  unmountFoundation,
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
@@ -590,6 +593,7 @@ function commitLifeCycles(
     case SuspenseComponent:
     case SuspenseListComponent:
     case IncompleteClassComponent:
+    case Foundation:
       return;
     case EventComponent: {
       if (enableFlareAPI) {
@@ -755,6 +759,14 @@ function commitUnmount(current: Fiber): void {
       if (enableFlareAPI) {
         const eventComponentInstance = current.stateNode;
         unmountEventComponent(eventComponentInstance);
+        current.stateNode = null;
+      }
+      break;
+    }
+    case Foundation: {
+      if (enableFundamentalAPI) {
+        const fundamentalInstance = current.stateNode;
+        unmountFoundation(fundamentalInstance);
         current.stateNode = null;
       }
     }
@@ -975,8 +987,9 @@ function commitPlacement(finishedWork: Fiber): void {
   // children to find all the terminal nodes.
   let node: Fiber = finishedWork;
   while (true) {
-    if (node.tag === HostComponent || node.tag === HostText) {
-      const stateNode = node.stateNode;
+    const isHost = node.tag === HostComponent || node.tag === HostText;
+    if (isHost || node.tag === Foundation) {
+      const stateNode = isHost ? node.stateNode : node.stateNode.node;
       if (before) {
         if (isContainer) {
           insertInContainerBefore(parent, stateNode, before);

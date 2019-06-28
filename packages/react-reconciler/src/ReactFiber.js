@@ -13,6 +13,7 @@ import type {
   ReactPortal,
   RefObject,
   ReactEventComponent,
+  ReactFoundation,
 } from 'shared/ReactTypes';
 import type {RootTag} from 'shared/ReactRootTags';
 import type {WorkTag} from 'shared/ReactWorkTags';
@@ -26,7 +27,7 @@ import type {ReactEventComponentInstance} from 'shared/ReactTypes';
 
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import {enableProfilerTimer, enableFlareAPI} from 'shared/ReactFeatureFlags';
+import {enableProfilerTimer, enableFlareAPI, enableFundamentalAPI} from 'shared/ReactFeatureFlags';
 import {NoEffect} from 'shared/ReactSideEffectTags';
 import {ConcurrentRoot, BatchedRoot} from 'shared/ReactRootTags';
 import {
@@ -49,6 +50,7 @@ import {
   SimpleMemoComponent,
   LazyComponent,
   EventComponent,
+  Foundation,
 } from 'shared/ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 
@@ -79,6 +81,7 @@ import {
   REACT_MEMO_TYPE,
   REACT_LAZY_TYPE,
   REACT_EVENT_COMPONENT_TYPE,
+  REACT_FOUNDATION_TYPE,
 } from 'shared/ReactSymbols';
 
 let hasBadMapPolyfill;
@@ -589,6 +592,17 @@ export function createFiberFromTypeAndProps(
                 );
               }
               break;
+            case REACT_FOUNDATION_TYPE:
+              if (enableFundamentalAPI) {
+                return createFiberFromFoundation(
+                  type,
+                  pendingProps,
+                  mode,
+                  expirationTime,
+                  key,
+                );
+              }
+              break;
           }
         }
         let info = '';
@@ -668,7 +682,7 @@ export function createFiberFromFragment(
 }
 
 export function createFiberFromEventComponent(
-  eventComponent: ReactEventComponent<any>,
+  eventComponent: ReactEventComponent<any, any, any>,
   pendingProps: any,
   mode: TypeOfMode,
   expirationTime: ExpirationTime,
@@ -677,6 +691,20 @@ export function createFiberFromEventComponent(
   const fiber = createFiber(EventComponent, pendingProps, key, mode);
   fiber.elementType = eventComponent;
   fiber.type = eventComponent;
+  fiber.expirationTime = expirationTime;
+  return fiber;
+}
+
+export function createFiberFromFoundation(
+  foundation: ReactFoundation<any, any>,
+  pendingProps: any,
+  mode: TypeOfMode,
+  expirationTime: ExpirationTime,
+  key: null | string,
+): Fiber {
+  const fiber = createFiber(Foundation, pendingProps, key, mode);
+  fiber.elementType = foundation;
+  fiber.type = foundation;
   fiber.expirationTime = expirationTime;
   return fiber;
 }

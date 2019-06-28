@@ -17,7 +17,10 @@ import type {
   Container,
   ChildSet,
 } from './ReactFiberHostConfig';
-import type {ReactEventComponentInstance} from 'shared/ReactTypes';
+import type {
+  ReactEventComponentInstance,
+  ReactFundamentalInstance,
+} from 'shared/ReactTypes';
 import type {
   SuspenseState,
   SuspenseListState,
@@ -48,6 +51,7 @@ import {
   LazyComponent,
   IncompleteClassComponent,
   EventComponent,
+  Foundation,
 } from 'shared/ReactWorkTags';
 import {NoMode, BatchedMode} from './ReactTypeOfMode';
 import {
@@ -75,6 +79,7 @@ import {
   appendChildToContainerChildSet,
   finalizeContainerChildren,
   updateEventComponent,
+  mountFoundation,
 } from './ReactFiberHostConfig';
 import {
   getRootHostContainer,
@@ -109,6 +114,7 @@ import {
   enableSchedulerTracing,
   enableSuspenseServerRenderer,
   enableFlareAPI,
+  enableFundamentalAPI,
 } from 'shared/ReactFeatureFlags';
 import {
   markSpawnedWork,
@@ -119,6 +125,7 @@ import {
   getEventComponentHostChildrenCount,
   createEventComponentInstance,
 } from './ReactFiberEvents';
+import {createFoundationInstance} from './ReactFiberFoundation';
 import getComponentName from 'shared/getComponentName';
 import warning from 'shared/warning';
 import {Never} from './ReactFiberExpirationTime';
@@ -152,6 +159,8 @@ if (supportsMutation) {
     while (node !== null) {
       if (node.tag === HostComponent || node.tag === HostText) {
         appendInitialChild(parent, node.stateNode);
+      } else if (node.tag === Foundation) {
+        appendInitialChild(parent, node.stateNode.node);
       } else if (node.tag === HostPortal) {
         // If we have a portal child, then we don't want to traverse
         // down its children. Instead, we'll get insertions from each child in
@@ -1050,7 +1059,7 @@ function completeWork(
           workInProgress.stateNode;
 
         if (eventComponentInstance === null) {
-          let responderState = null;
+          let responderState;
           if (__DEV__ && !responder.allowMultipleHostChildren) {
             const hostChildrenCount = getEventComponentHostChildrenCount(
               workInProgress,
@@ -1061,8 +1070,9 @@ function completeWork(
               getComponentName(workInProgress.type),
             );
           }
-          if (responder.createInitialState !== undefined) {
-            responderState = responder.createInitialState(newProps);
+          const createInitialState = responder.createInitialState;
+          if (createInitialState !== undefined) {
+            responderState = createInitialState(newProps);
           }
           eventComponentInstance = workInProgress.stateNode = createEventComponentInstance(
             workInProgress,
@@ -1079,6 +1089,34 @@ function completeWork(
           // Update the current fiber
           eventComponentInstance.currentFiber = workInProgress;
           updateEventComponent(eventComponentInstance);
+        }
+      }
+      break;
+    }
+    case Foundation: {
+      if (enableFundamentalAPI) {
+        const foundationImpl = workInProgress.type.impl;
+        let fundamentalInstance: ReactFundamentalInstance<any, any> | null =
+          workInProgress.stateNode;
+
+        if (fundamentalInstance === null) {
+          const createInitialState = foundationImpl.createInitialState;
+          let foundationState;
+          if (createInitialState !== undefined) {
+            foundationState = createInitialState(newProps);
+          }
+          fundamentalInstance = workInProgress.stateNode = createFoundationInstance(
+            workInProgress,
+            newProps,
+            foundationImpl,
+            foundationState || {},
+          );
+          mountFoundation(fundamentalInstance);
+          if (foundationImpl.reconcileChildren === false) {
+            return null;
+          }
+          appendAllChildren(fundamentalInstance.node, workInProgress, false, false);
+        } else {
         }
       }
       break;

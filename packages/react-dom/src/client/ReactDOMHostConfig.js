@@ -882,3 +882,13 @@ export function unmountEventComponent(
     unmountEventResponder(eventComponentInstance);
   }
 }
+
+export function mountFoundation(foundationInstance) {
+  const {impl, props, state} = foundationInstance;
+  const onMount = impl.onMount;
+  if (onMount !== undefined) {
+    foundationInstance.node = onMount(null, props, state);
+  }
+}
+
+export function unmountFoundation(foundationInstance) {}

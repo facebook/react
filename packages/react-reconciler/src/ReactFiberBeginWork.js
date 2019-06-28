@@ -41,6 +41,7 @@ import {
   LazyComponent,
   IncompleteClassComponent,
   EventComponent,
+  Foundation,
 } from 'shared/ReactWorkTags';
 import {
   NoEffect,
@@ -60,6 +61,7 @@ import {
   enableSchedulerTracing,
   enableSuspenseServerRenderer,
   enableFlareAPI,
+  enableFundamentalAPI,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import shallowEqual from 'shared/shallowEqual';
@@ -2397,7 +2399,7 @@ function updateContextConsumer(
 
 function updateEventComponent(current, workInProgress, renderExpirationTime) {
   const nextProps = workInProgress.pendingProps;
-  let nextChildren = nextProps.children;
+  const nextChildren = nextProps.children;
 
   reconcileChildren(
     current,
@@ -2406,6 +2408,23 @@ function updateEventComponent(current, workInProgress, renderExpirationTime) {
     renderExpirationTime,
   );
   pushHostContextForEventComponent(workInProgress);
+  return workInProgress.child;
+}
+
+function updateFoundation(current, workInProgress, renderExpirationTime) {
+  const foundationImpl = workInProgress.type.impl;
+  if (foundationImpl.reconcileChildren === false) {
+    return null;
+  }
+  const nextProps = workInProgress.pendingProps;
+  const nextChildren = nextProps.children;
+
+  reconcileChildren(
+    current,
+    workInProgress,
+    nextChildren,
+    renderExpirationTime,
+  );
   return workInProgress.child;
 }
 
@@ -2864,6 +2883,16 @@ function beginWork(
     case EventComponent: {
       if (enableFlareAPI) {
         return updateEventComponent(
+          current,
+          workInProgress,
+          renderExpirationTime,
+        );
+      }
+      break;
+    }
+    case Foundation: {
+      if (enableFundamentalAPI) {
+        return updateFoundation(
           current,
           workInProgress,
           renderExpirationTime,
