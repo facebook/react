@@ -102,7 +102,7 @@ export type NoTimeout = -1;
 
 import {
   enableSuspenseServerRenderer,
-  enableEventAPI,
+  enableFlareAPI,
 } from 'shared/ReactFeatureFlags';
 import warning from 'shared/warning';
 
@@ -330,7 +330,7 @@ export function createTextInstance(
   if (__DEV__) {
     const hostContextDev = ((hostContext: any): HostContextDev);
     validateDOMNesting(null, text, hostContextDev.ancestorInfo);
-    if (enableEventAPI) {
+    if (enableFlareAPI) {
       const eventData = hostContextDev.eventData;
       if (eventData !== null) {
         warning(
@@ -845,7 +845,7 @@ export function didNotFindHydratableSuspenseInstance(
 export function mountEventComponent(
   eventComponentInstance: ReactDOMEventComponentInstance,
 ): void {
-  if (enableEventAPI) {
+  if (enableFlareAPI) {
     const rootContainerInstance = ((eventComponentInstance.rootInstance: any): Container);
     const doc = rootContainerInstance.ownerDocument;
     const documentBody = doc.body || doc;
@@ -877,7 +877,7 @@ export function updateEventComponent(
 export function unmountEventComponent(
   eventComponentInstance: ReactDOMEventComponentInstance,
 ): void {
-  if (enableEventAPI) {
+  if (enableFlareAPI) {
     // TODO stop listening to targetEventTypes
     unmountEventResponder(eventComponentInstance);
   }

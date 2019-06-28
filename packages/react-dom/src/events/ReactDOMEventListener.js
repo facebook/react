@@ -45,7 +45,7 @@ import {getRawEventName} from './DOMTopLevelEventTypes';
 import {passiveBrowserEventsSupported} from './checkPassiveEvents';
 
 import {
-  enableEventAPI,
+  enableFlareAPI,
   enableUserBlockingEvents,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -190,7 +190,7 @@ export function trapEventForResponderEventSystem(
   topLevelType: DOMTopLevelEventType,
   passive: boolean,
 ): void {
-  if (enableEventAPI) {
+  if (enableFlareAPI) {
     const rawEventName = getRawEventName(topLevelType);
     let eventFlags = RESPONDER_EVENT_SYSTEM;
 
@@ -323,7 +323,7 @@ export function dispatchEvent(
     targetInst = null;
   }
 
-  if (enableEventAPI) {
+  if (enableFlareAPI) {
     if (eventSystemFlags === PLUGIN_EVENT_SYSTEM) {
       dispatchEventForPluginEventSystem(
         topLevelType,

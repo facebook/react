@@ -9,7 +9,7 @@ import {
   needsStateRestore,
   restoreStateIfNeeded,
 } from './ReactControlledComponent';
-import {enableEventAPI} from 'shared/ReactFeatureFlags';
+import {enableFlareAPI} from 'shared/ReactFeatureFlags';
 
 // Used as a way to call batchedUpdates when we don't have a reference to
 // the renderer. Such as when we're dispatching events or if third party
@@ -103,7 +103,7 @@ export function flushDiscreteUpdatesIfNeeded(timeStamp: number) {
   // behaviour as we had before this change, so the risks are low.
   if (
     !isInsideEventHandler &&
-    (!enableEventAPI ||
+    (!enableFlareAPI ||
       (timeStamp === 0 || lastFlushedEventTimeStamp !== timeStamp))
   ) {
     lastFlushedEventTimeStamp = timeStamp;

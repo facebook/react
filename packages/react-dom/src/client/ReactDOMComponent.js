@@ -89,7 +89,7 @@ import {validateProperties as validateARIAProperties} from '../shared/ReactDOMIn
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
 
-import {enableEventAPI} from 'shared/ReactFeatureFlags';
+import {enableFlareAPI} from 'shared/ReactFeatureFlags';
 
 let didWarnInvalidHydration = false;
 let didWarnShadyDOM = false;
@@ -1287,7 +1287,7 @@ export function listenToEventResponderEventTypes(
   eventTypes: Array<ReactDOMEventResponderEventType>,
   element: Element | Document,
 ): void {
-  if (enableEventAPI) {
+  if (enableFlareAPI) {
     // Get the listening Set for this element. We use this to track
     // what events we're listening to.
     const listeningSet = getListeningSetForElement(element);
@@ -1334,6 +1334,6 @@ export function listenToEventResponderEventTypes(
 }
 
 // We can remove this once the event API is stable and out of a flag
-if (enableEventAPI) {
+if (enableFlareAPI) {
   setListenToResponderEventTypes(listenToEventResponderEventTypes);
 }

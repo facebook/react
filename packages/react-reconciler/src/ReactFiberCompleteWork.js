@@ -108,7 +108,7 @@ import {
 import {
   enableSchedulerTracing,
   enableSuspenseServerRenderer,
-  enableEventAPI,
+  enableFlareAPI,
 } from 'shared/ReactFeatureFlags';
 import {
   markSpawnedWork,
@@ -1038,7 +1038,7 @@ function completeWork(
       break;
     }
     case EventComponent: {
-      if (enableEventAPI) {
+      if (enableFlareAPI) {
         popHostContext(workInProgress);
         const rootContainerInstance = getRootHostContainer();
         const responder = workInProgress.type.responder;

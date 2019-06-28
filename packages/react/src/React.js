@@ -53,7 +53,7 @@ import {
 import ReactSharedInternals from './ReactSharedInternals';
 import {error, warn} from './withComponentStack';
 import createEvent from 'shared/createEventComponent';
-import {enableJSXTransformAPI, enableEventAPI} from 'shared/ReactFeatureFlags';
+import {enableJSXTransformAPI, enableFlareAPI} from 'shared/ReactFeatureFlags';
 const React = {
   Children: {
     map,
@@ -104,7 +104,7 @@ const React = {
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: ReactSharedInternals,
 };
 
-if (enableEventAPI) {
+if (enableFlareAPI) {
   React.unstable_createEvent = createEvent;
   React.unstable_useEvent = useEvent;
 }
