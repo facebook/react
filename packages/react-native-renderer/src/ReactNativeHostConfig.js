@@ -9,7 +9,9 @@
 
 import type {
   ReactNativeBaseComponentViewConfig,
-  ReactNativeEventResponder,
+  ReactNativeEventResponderEventType,
+  ReactNativeResponderEvent,
+  ReactNativeResponderContext,
 } from './ReactNativeTypes';
 import type {ReactEventComponentInstance} from 'shared/ReactTypes';
 
@@ -32,6 +34,12 @@ import ReactNativeFiberHostComponent from './ReactNativeFiberHostComponent';
 
 const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 
+type ReactNativeEventComponentInstance = ReactEventComponentInstance<
+  ReactNativeEventResponderEventType,
+  ReactNativeResponderEvent,
+  ReactNativeResponderContext,
+>;
+
 export type Type = string;
 export type Props = Object;
 export type Container = number;
@@ -51,7 +59,6 @@ export type ChildSet = void; // Unused
 
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
-export type EventResponder = ReactNativeEventResponder;
 
 const UPDATE_SIGNAL = {};
 if (__DEV__) {
@@ -490,19 +497,19 @@ export function unhideTextInstance(
 }
 
 export function mountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance<any, any, any>,
+  eventComponentInstance: ReactNativeEventComponentInstance,
 ) {
   throw new Error('Not yet implemented.');
 }
 
 export function updateEventComponent(
-  eventComponentInstance: ReactEventComponentInstance<any, any, any>,
+  eventComponentInstance: ReactNativeEventComponentInstance,
 ) {
   throw new Error('Not yet implemented.');
 }
 
 export function unmountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance<any, any, any>,
+  eventComponentInstance: ReactNativeEventComponentInstance,
 ): void {
   throw new Error('Not yet implemented.');
 }

@@ -13,7 +13,9 @@ import type {
   MeasureOnSuccessCallback,
   NativeMethodsMixinType,
   ReactNativeBaseComponentViewConfig,
-  ReactNativeEventResponder,
+  ReactNativeEventResponderEventType,
+  ReactNativeResponderEvent,
+  ReactNativeResponderContext,
 } from './ReactNativeTypes';
 import type {ReactEventComponentInstance} from 'shared/ReactTypes';
 
@@ -24,6 +26,13 @@ import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
 
 import {dispatchEvent} from './ReactFabricEventEmitter';
+import {
+  addRootEventTypesForComponentInstance,
+  mountEventResponder,
+  unmountEventResponder,
+} from './ReactFabricEventResponderSystem';
+
+import {enableFlareAPI} from 'shared/ReactFeatureFlags';
 
 // Modules provided by RN:
 import {
@@ -56,6 +65,12 @@ const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 // This means that they never overlap.
 let nextReactTag = 2;
 
+type ReactNativeEventComponentInstance = ReactEventComponentInstance<
+  ReactNativeEventResponderEventType,
+  ReactNativeResponderEvent,
+  ReactNativeResponderContext,
+>;
+
 type Node = Object;
 export type Type = string;
 export type Props = Object;
@@ -77,7 +92,6 @@ export type UpdatePayload = Object;
 
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
-export type EventResponder = ReactNativeEventResponder;
 
 // TODO: Remove this conditional once all changes have propagated.
 if (registerEventHandler) {
@@ -431,21 +445,34 @@ export function replaceContainerChildren(
 ): void {}
 
 export function mountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance<any, any, any>,
+  eventComponentInstance: ReactNativeEventComponentInstance,
 ) {
-  throw new Error('Not yet implemented.');
+  if (enableFlareAPI) {
+    const responder = eventComponentInstance.responder;
+    const {rootEventTypes} = responder;
+    if (rootEventTypes !== undefined) {
+      addRootEventTypesForComponentInstance(
+        eventComponentInstance,
+        rootEventTypes,
+      );
+    }
+    mountEventResponder(eventComponentInstance);
+  }
 }
 
 export function updateEventComponent(
-  eventComponentInstance: ReactEventComponentInstance<any, any, any>,
+  eventComponentInstance: ReactNativeEventComponentInstance,
 ) {
-  throw new Error('Not yet implemented.');
+  // NO-OP, why might use this in the future
 }
 
 export function unmountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance<any, any, any>,
+  eventComponentInstance: ReactNativeEventComponentInstance,
 ): void {
-  throw new Error('Not yet implemented.');
+  if (enableFlareAPI) {
+    // TODO stop listening to targetEventTypes
+    unmountEventResponder(eventComponentInstance);
+  }
 }
 
 export function getEventTargetChildElement(

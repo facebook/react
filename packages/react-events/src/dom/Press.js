@@ -823,7 +823,7 @@ const PressResponder: ReactDOMEventResponder = {
         if (
           state.pressTarget !== null &&
           (pointerType !== 'mouse' ||
-            !context.isTargetWithinElement(target, state.pressTarget))
+            !context.isTargetWithinNode(target, state.pressTarget))
         ) {
           // Calculate the responder region we use for deactivation, as the
           // element dimensions may have changed since activation.
@@ -936,7 +936,7 @@ const PressResponder: ReactDOMEventResponder = {
               !isKeyboardEvent &&
               state.pressTarget !== null &&
               (pointerType !== 'mouse' ||
-                !context.isTargetWithinElement(target, state.pressTarget))
+                !context.isTargetWithinNode(target, state.pressTarget))
             ) {
               // If the event target isn't within the press target, check if we're still
               // within the responder region. The region may have changed if the
@@ -993,7 +993,7 @@ const PressResponder: ReactDOMEventResponder = {
         if (
           pressTarget !== null &&
           (scrollTarget === doc ||
-            context.isTargetWithinElement(pressTarget, scrollTarget))
+            context.isTargetWithinNode(pressTarget, scrollTarget))
         ) {
           dispatchCancel(event, context, props, state);
         }

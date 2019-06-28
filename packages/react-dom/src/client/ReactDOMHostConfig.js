@@ -32,7 +32,6 @@ import {
   setEnabled as ReactBrowserEventEmitterSetEnabled,
 } from '../events/ReactBrowserEventEmitter';
 import {getChildNamespace} from '../shared/DOMNamespaces';
-import {addRootEventTypesForComponentInstance} from '../events/DOMEventResponderSystem';
 import {
   ELEMENT_NODE,
   TEXT_NODE,
@@ -48,6 +47,7 @@ import type {
   ReactDOMEventComponentInstance,
 } from 'shared/ReactDOMTypes';
 import {
+  addRootEventTypesForComponentInstance,
   mountEventResponder,
   unmountEventResponder,
 } from '../events/DOMEventResponderSystem';
