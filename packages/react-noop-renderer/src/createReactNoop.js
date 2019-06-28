@@ -30,7 +30,7 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {
   warnAboutMissingMockScheduler,
-  enableEventAPI,
+  enableFlareAPI,
 } from 'shared/ReactFeatureFlags';
 import {ConcurrentRoot, BatchedRoot, LegacyRoot} from 'shared/ReactRootTags';
 
@@ -267,7 +267,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     },
 
     getChildHostContextForEventComponent(parentHostContext: HostContext) {
-      if (__DEV__ && enableEventAPI) {
+      if (__DEV__ && enableFlareAPI) {
         return EVENT_COMPONENT_CONTEXT;
       }
       return parentHostContext;
@@ -356,7 +356,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       hostContext: Object,
       internalInstanceHandle: Object,
     ): TextInstance {
-      if (__DEV__ && enableEventAPI) {
+      if (__DEV__ && enableFlareAPI) {
         warning(
           hostContext !== EVENT_COMPONENT_CONTEXT,
           'validateDOMNesting: React event components cannot have text DOM nodes as children. ' +

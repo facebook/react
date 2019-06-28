@@ -59,7 +59,7 @@ import {
   enableProfilerTimer,
   enableSchedulerTracing,
   enableSuspenseServerRenderer,
-  enableEventAPI,
+  enableFlareAPI,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import shallowEqual from 'shared/shallowEqual';
@@ -2672,7 +2672,7 @@ function beginWork(
           );
         }
         case EventComponent:
-          if (enableEventAPI) {
+          if (enableFlareAPI) {
             pushHostContextForEventComponent(workInProgress);
           }
           break;
@@ -2862,7 +2862,7 @@ function beginWork(
       );
     }
     case EventComponent: {
-      if (enableEventAPI) {
+      if (enableFlareAPI) {
         return updateEventComponent(
           current,
           workInProgress,

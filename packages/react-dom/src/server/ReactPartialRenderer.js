@@ -22,7 +22,7 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   warnAboutDeprecatedLifecycles,
   enableSuspenseServerRenderer,
-  enableEventAPI,
+  enableFlareAPI,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -1167,7 +1167,7 @@ class ReactDOMServerRenderer {
             return '';
           }
           case REACT_EVENT_COMPONENT_TYPE: {
-            if (enableEventAPI) {
+            if (enableFlareAPI) {
               const nextChildren = toArray(
                 ((nextChild: any): ReactElement).props.children,
               );
