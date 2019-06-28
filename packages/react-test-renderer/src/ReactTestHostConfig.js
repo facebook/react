@@ -11,7 +11,7 @@ import warning from 'shared/warning';
 
 import type {ReactEventComponentInstance} from 'shared/ReactTypes';
 
-import {enableEventAPI} from 'shared/ReactFeatureFlags';
+import {enableFlareAPI} from 'shared/ReactFeatureFlags';
 
 export type Type = string;
 export type Props = Object;
@@ -124,7 +124,7 @@ export function getChildHostContext(
 export function getChildHostContextForEventComponent(
   parentHostContext: HostContext,
 ): HostContext {
-  if (__DEV__ && enableEventAPI) {
+  if (__DEV__ && enableFlareAPI) {
     return EVENT_COMPONENT_CONTEXT;
   }
   return NO_CONTEXT;
@@ -201,7 +201,7 @@ export function createTextInstance(
   hostContext: Object,
   internalInstanceHandle: Object,
 ): TextInstance {
-  if (__DEV__ && enableEventAPI) {
+  if (__DEV__ && enableFlareAPI) {
     warning(
       hostContext !== EVENT_COMPONENT_CONTEXT,
       'validateDOMNesting: React event components cannot have text DOM nodes as children. ' +

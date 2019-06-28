@@ -24,7 +24,7 @@ import {
 import {DidCapture, NoEffect, ShouldCapture} from 'shared/ReactSideEffectTags';
 import {
   enableSuspenseServerRenderer,
-  enableEventAPI,
+  enableFlareAPI,
 } from 'shared/ReactFeatureFlags';
 
 import {popHostContainer, popHostContext} from './ReactFiberHostContext';
@@ -108,7 +108,7 @@ function unwindWork(
       popProvider(workInProgress);
       return null;
     case EventComponent:
-      if (enableEventAPI) {
+      if (enableFlareAPI) {
         popHostContext(workInProgress);
       }
       return null;
@@ -154,7 +154,7 @@ function unwindInterruptedWork(interruptedWork: Fiber) {
       popProvider(interruptedWork);
       break;
     case EventComponent:
-      if (enableEventAPI) {
+      if (enableFlareAPI) {
         popHostContext(interruptedWork);
       }
       break;

@@ -26,7 +26,7 @@ import {
 } from 'shared/ReactSymbols';
 import {refineResolvedLazyComponent} from 'shared/ReactLazyComponent';
 
-import {enableEventAPI} from './ReactFeatureFlags';
+import {enableFlareAPI} from './ReactFeatureFlags';
 
 function getWrappedName(
   outerType: mixed,
@@ -93,7 +93,7 @@ function getComponentName(type: mixed): string | null {
         break;
       }
       case REACT_EVENT_COMPONENT_TYPE: {
-        if (enableEventAPI) {
+        if (enableFlareAPI) {
           return (type: any).responder.displayName;
         }
         break;

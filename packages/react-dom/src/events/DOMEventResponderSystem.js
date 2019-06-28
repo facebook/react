@@ -33,7 +33,7 @@ import {
 } from 'events/ReactGenericBatching';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import warning from 'shared/warning';
-import {enableEventAPI} from 'shared/ReactFeatureFlags';
+import {enableFlareAPI} from 'shared/ReactFeatureFlags';
 import {invokeGuardedCallbackAndCatchFirstError} from 'shared/ReactErrorUtils';
 import invariant from 'shared/invariant';
 import {
@@ -998,7 +998,7 @@ export function dispatchEventForResponderEventSystem(
   nativeEventTarget: EventTarget,
   eventSystemFlags: EventSystemFlags,
 ): void {
-  if (enableEventAPI) {
+  if (enableFlareAPI) {
     const previousEventQueue = currentEventQueue;
     const previousInstance = currentInstance;
     const previousTimers = currentTimers;

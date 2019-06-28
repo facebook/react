@@ -26,7 +26,7 @@ import type {ReactEventComponentInstance} from 'shared/ReactTypes';
 
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import {enableProfilerTimer, enableEventAPI} from 'shared/ReactFeatureFlags';
+import {enableProfilerTimer, enableFlareAPI} from 'shared/ReactFeatureFlags';
 import {NoEffect} from 'shared/ReactSideEffectTags';
 import {ConcurrentRoot, BatchedRoot} from 'shared/ReactRootTags';
 import {
@@ -579,7 +579,7 @@ export function createFiberFromTypeAndProps(
               resolvedType = null;
               break getTag;
             case REACT_EVENT_COMPONENT_TYPE:
-              if (enableEventAPI) {
+              if (enableFlareAPI) {
                 return createFiberFromEventComponent(
                   type,
                   pendingProps,
