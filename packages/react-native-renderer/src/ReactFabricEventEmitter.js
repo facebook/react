@@ -17,7 +17,7 @@ import {registrationNameModules} from 'events/EventPluginRegistry';
 import {batchedUpdates} from 'events/ReactGenericBatching';
 
 import type {AnyNativeEvent} from 'events/PluginModuleType';
-import {enableEventAPI} from 'shared/ReactFeatureFlags';
+import {enableFlareAPI} from 'shared/ReactFeatureFlags';
 import type {TopLevelType} from 'events/TopLevelEventTypes';
 import {dispatchEventForResponderEventSystem} from './ReactFabricEventResponderSystem';
 
@@ -29,7 +29,7 @@ export function dispatchEvent(
   nativeEvent: AnyNativeEvent,
 ) {
   const targetFiber = (target: null | Fiber);
-  if (enableEventAPI) {
+  if (enableFlareAPI) {
     // React Flare event system
     dispatchEventForResponderEventSystem(
       (topLevelType: any),

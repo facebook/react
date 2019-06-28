@@ -32,7 +32,7 @@ import {
   unmountEventResponder,
 } from './ReactFabricEventResponderSystem';
 
-import {enableEventAPI} from 'shared/ReactFeatureFlags';
+import {enableFlareAPI} from 'shared/ReactFeatureFlags';
 
 // Modules provided by RN:
 import {
@@ -447,7 +447,7 @@ export function replaceContainerChildren(
 export function mountEventComponent(
   eventComponentInstance: ReactNativeEventComponentInstance,
 ) {
-  if (enableEventAPI) {
+  if (enableFlareAPI) {
     const responder = eventComponentInstance.responder;
     const {rootEventTypes} = responder;
     if (rootEventTypes !== undefined) {
@@ -469,7 +469,7 @@ export function updateEventComponent(
 export function unmountEventComponent(
   eventComponentInstance: ReactNativeEventComponentInstance,
 ): void {
-  if (enableEventAPI) {
+  if (enableFlareAPI) {
     // TODO stop listening to targetEventTypes
     unmountEventResponder(eventComponentInstance);
   }
