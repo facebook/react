@@ -28,12 +28,12 @@ function compare(input, output) {
 describe('remove-getters', () => {
   it('should remove getters', () => {
     compare(
-`const object = {
+      `const object = {
   get prop() {
     return variable;
   }
 };`,
-`const object = {
+      `const object = {
   prop: variable
 };`
     );
@@ -41,13 +41,13 @@ describe('remove-getters', () => {
 
   it('should not remove other methods or properties', () => {
     compare(
-`const object = {
+      `const object = {
   prop: 'foo',
   method() {
     return 'bar';
   }
 };`,
-`const object = {
+      `const object = {
   prop: 'foo',
   method() {
     return 'bar';
@@ -58,7 +58,7 @@ describe('remove-getters', () => {
 
   it('should ignore when finding getters with a different syntax', () => {
     compare(
-`try {
+      `try {
   const options = {};
   Object.defineProperty(options, 'passive', {
     get: function () {
@@ -69,7 +69,7 @@ describe('remove-getters', () => {
   passiveBrowserEventsSupported = false;
 }`,
 
-`try {
+      `try {
   const options = {};
   Object.defineProperty(options, 'passive', {
     get: function () {
@@ -83,10 +83,9 @@ describe('remove-getters', () => {
   });
 });
 
-
 it('should ignore when finding getters with a different syntax', () => {
   compare(
-`const obj = {
+    `const obj = {
   log: ['a', 'b', 'c'],
   get latest() {
     if (this.log.length === 0) {
@@ -96,7 +95,7 @@ it('should ignore when finding getters with a different syntax', () => {
   }
 };`,
 
-`const obj = {
+    `const obj = {
   log: ['a', 'b', 'c'],
   get latest() {
     if (this.log.length === 0) {
