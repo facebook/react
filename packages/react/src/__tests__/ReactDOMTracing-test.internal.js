@@ -69,13 +69,13 @@ describe('ReactDOMTracing', () => {
       it('traces interaction through hidden subtree', () => {
         const Child = () => {
           const [didMount, setDidMount] = React.useState(false);
-          Scheduler.yieldValue('Child');
+          Scheduler.unstable_yieldValue('Child');
           React.useEffect(
             () => {
               if (didMount) {
-                Scheduler.yieldValue('Child:update');
+                Scheduler.unstable_yieldValue('Child:update');
               } else {
-                Scheduler.yieldValue('Child:mount');
+                Scheduler.unstable_yieldValue('Child:mount');
                 setDidMount(true);
               }
             },
@@ -85,9 +85,9 @@ describe('ReactDOMTracing', () => {
         };
 
         const App = () => {
-          Scheduler.yieldValue('App');
+          Scheduler.unstable_yieldValue('App');
           React.useEffect(() => {
-            Scheduler.yieldValue('App:mount');
+            Scheduler.unstable_yieldValue('App:mount');
           }, []);
           return (
             <div hidden={true}>
@@ -142,17 +142,17 @@ describe('ReactDOMTracing', () => {
 
       it('traces interaction through hidden subtree when there is other pending traced work', () => {
         const Child = () => {
-          Scheduler.yieldValue('Child');
+          Scheduler.unstable_yieldValue('Child');
           return <div />;
         };
 
         let wrapped = null;
 
         const App = () => {
-          Scheduler.yieldValue('App');
+          Scheduler.unstable_yieldValue('App');
           React.useEffect(() => {
             wrapped = SchedulerTracing.unstable_wrap(() => {});
-            Scheduler.yieldValue('App:mount');
+            Scheduler.unstable_yieldValue('App:mount');
           }, []);
           return (
             <div hidden={true}>
@@ -210,13 +210,13 @@ describe('ReactDOMTracing', () => {
       it('traces interaction through hidden subtree that schedules more idle/never work', () => {
         const Child = () => {
           const [didMount, setDidMount] = React.useState(false);
-          Scheduler.yieldValue('Child');
+          Scheduler.unstable_yieldValue('Child');
           React.useLayoutEffect(
             () => {
               if (didMount) {
-                Scheduler.yieldValue('Child:update');
+                Scheduler.unstable_yieldValue('Child:update');
               } else {
-                Scheduler.yieldValue('Child:mount');
+                Scheduler.unstable_yieldValue('Child:mount');
                 Scheduler.unstable_runWithPriority(
                   Scheduler.unstable_IdlePriority,
                   () => setDidMount(true),
@@ -229,9 +229,9 @@ describe('ReactDOMTracing', () => {
         };
 
         const App = () => {
-          Scheduler.yieldValue('App');
+          Scheduler.unstable_yieldValue('App');
           React.useEffect(() => {
-            Scheduler.yieldValue('App:mount');
+            Scheduler.unstable_yieldValue('App:mount');
           }, []);
           return (
             <div hidden={true}>
@@ -289,14 +289,14 @@ describe('ReactDOMTracing', () => {
 
       it('does not continue interactions across pre-existing idle work', () => {
         const Child = () => {
-          Scheduler.yieldValue('Child');
+          Scheduler.unstable_yieldValue('Child');
           return <div />;
         };
 
         let update = null;
 
         const WithHiddenWork = () => {
-          Scheduler.yieldValue('WithHiddenWork');
+          Scheduler.unstable_yieldValue('WithHiddenWork');
           return (
             <div hidden={true}>
               <Child />
@@ -305,9 +305,9 @@ describe('ReactDOMTracing', () => {
         };
 
         const Updater = () => {
-          Scheduler.yieldValue('Updater');
+          Scheduler.unstable_yieldValue('Updater');
           React.useEffect(() => {
-            Scheduler.yieldValue('Updater:effect');
+            Scheduler.unstable_yieldValue('Updater:effect');
           });
 
           const setCount = React.useState(0)[1];
@@ -319,9 +319,9 @@ describe('ReactDOMTracing', () => {
         };
 
         const App = () => {
-          Scheduler.yieldValue('App');
+          Scheduler.unstable_yieldValue('App');
           React.useEffect(() => {
-            Scheduler.yieldValue('App:effect');
+            Scheduler.unstable_yieldValue('App:effect');
           });
 
           return (
@@ -389,7 +389,7 @@ describe('ReactDOMTracing', () => {
 
       it('should properly trace interactions when there is work of interleaved priorities', () => {
         const Child = () => {
-          Scheduler.yieldValue('Child');
+          Scheduler.unstable_yieldValue('Child');
           return <div />;
         };
 
@@ -399,9 +399,9 @@ describe('ReactDOMTracing', () => {
         const MaybeHiddenWork = () => {
           const [flag, setFlag] = React.useState(false);
           scheduleUpdateWithHidden = () => setFlag(true);
-          Scheduler.yieldValue('MaybeHiddenWork');
+          Scheduler.unstable_yieldValue('MaybeHiddenWork');
           React.useEffect(() => {
-            Scheduler.yieldValue('MaybeHiddenWork:effect');
+            Scheduler.unstable_yieldValue('MaybeHiddenWork:effect');
           });
           return flag ? (
             <div hidden={true}>
@@ -411,9 +411,9 @@ describe('ReactDOMTracing', () => {
         };
 
         const Updater = () => {
-          Scheduler.yieldValue('Updater');
+          Scheduler.unstable_yieldValue('Updater');
           React.useEffect(() => {
-            Scheduler.yieldValue('Updater:effect');
+            Scheduler.unstable_yieldValue('Updater:effect');
           });
 
           const setCount = React.useState(0)[1];
@@ -423,9 +423,9 @@ describe('ReactDOMTracing', () => {
         };
 
         const App = () => {
-          Scheduler.yieldValue('App');
+          Scheduler.unstable_yieldValue('App');
           React.useEffect(() => {
-            Scheduler.yieldValue('App:effect');
+            Scheduler.unstable_yieldValue('App:effect');
           });
 
           return (
@@ -512,9 +512,9 @@ describe('ReactDOMTracing', () => {
         const SuspenseList = React.unstable_SuspenseList;
         const Suspense = React.Suspense;
         function Text({text}) {
-          Scheduler.yieldValue(text);
+          Scheduler.unstable_yieldValue(text);
           React.useEffect(() => {
-            Scheduler.yieldValue('Commit ' + text);
+            Scheduler.unstable_yieldValue('Commit ' + text);
           });
           return <span>{text}</span>;
         }
@@ -548,12 +548,12 @@ describe('ReactDOMTracing', () => {
 
           expect(Scheduler).toFlushAndYieldThrough(['A']);
 
-          Scheduler.advanceTime(300);
+          Scheduler.unstable_advanceTime(300);
           jest.advanceTimersByTime(300);
 
           expect(Scheduler).toFlushAndYieldThrough(['B']);
 
-          Scheduler.advanceTime(300);
+          Scheduler.unstable_advanceTime(300);
           jest.advanceTimersByTime(300);
 
           // Time has now elapsed for so long that we're just going to give up
@@ -625,7 +625,7 @@ describe('ReactDOMTracing', () => {
 
           root.render(<App />);
         });
-        Scheduler.flushAll();
+        Scheduler.unstable_flushAll();
         jest.runAllTimers();
 
         expect(ref.current).not.toBe(null);
@@ -685,7 +685,7 @@ describe('ReactDOMTracing', () => {
 
           root.render(<App />);
         });
-        Scheduler.flushAll();
+        Scheduler.unstable_flushAll();
         jest.runAllTimers();
 
         expect(ref.current).toBe(null);
@@ -699,7 +699,7 @@ describe('ReactDOMTracing', () => {
         suspend = false;
         resolve();
         await promise;
-        Scheduler.flushAll();
+        Scheduler.unstable_flushAll();
         jest.runAllTimers();
 
         expect(ref.current).not.toBe(null);

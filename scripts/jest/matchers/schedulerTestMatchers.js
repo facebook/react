@@ -28,7 +28,7 @@ function assertYieldsWereCleared(Scheduler) {
 
 function toFlushAndYield(Scheduler, expectedYields) {
   assertYieldsWereCleared(Scheduler);
-  Scheduler.unstable_flushWithoutYielding();
+  Scheduler.unstable_flushAllWithoutAsserting();
   const actualYields = Scheduler.unstable_clearYields();
   return captureAssertion(() => {
     expect(actualYields).toEqual(expectedYields);
@@ -68,7 +68,7 @@ function toFlushAndThrow(Scheduler, ...rest) {
   assertYieldsWereCleared(Scheduler);
   return captureAssertion(() => {
     expect(() => {
-      Scheduler.unstable_flushWithoutYielding();
+      Scheduler.unstable_flushAllWithoutAsserting();
     }).toThrow(...rest);
   });
 }

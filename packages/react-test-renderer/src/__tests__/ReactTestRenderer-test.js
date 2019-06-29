@@ -72,7 +72,7 @@ describe('ReactTestRenderer', () => {
       const root = ReactTestRenderer.create(<App text="initial" />);
       PendingResources.initial('initial');
       await Promise.resolve();
-      Scheduler.flushAll();
+      Scheduler.unstable_flushAll();
       expect(root.toJSON()).toEqual('initial');
 
       root.update(<App text="dynamic" />);
@@ -80,7 +80,7 @@ describe('ReactTestRenderer', () => {
 
       PendingResources.dynamic('dynamic');
       await Promise.resolve();
-      Scheduler.flushAll();
+      Scheduler.unstable_flushAll();
       expect(root.toJSON()).toEqual('dynamic');
 
       done();
@@ -100,7 +100,7 @@ describe('ReactTestRenderer', () => {
       const root = ReactTestRenderer.create(<App text="initial" />);
       PendingResources.initial('initial');
       await Promise.resolve();
-      Scheduler.flushAll();
+      Scheduler.unstable_flushAll();
       expect(root.toJSON().children).toEqual(['initial']);
 
       root.update(<App text="dynamic" />);
@@ -108,7 +108,7 @@ describe('ReactTestRenderer', () => {
 
       PendingResources.dynamic('dynamic');
       await Promise.resolve();
-      Scheduler.flushAll();
+      Scheduler.unstable_flushAll();
       expect(root.toJSON().children).toEqual(['dynamic']);
 
       done();

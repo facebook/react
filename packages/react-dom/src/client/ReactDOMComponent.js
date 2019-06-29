@@ -89,7 +89,7 @@ import {validateProperties as validateARIAProperties} from '../shared/ReactDOMIn
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
 
-import {enableEventAPI} from 'shared/ReactFeatureFlags';
+import {enableFlareAPI} from 'shared/ReactFeatureFlags';
 
 let didWarnInvalidHydration = false;
 let didWarnShadyDOM = false;
@@ -97,7 +97,6 @@ let didWarnShadyDOM = false;
 const DANGEROUSLY_SET_INNER_HTML = 'dangerouslySetInnerHTML';
 const SUPPRESS_CONTENT_EDITABLE_WARNING = 'suppressContentEditableWarning';
 const SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
-const HYDRATE_TOUCH_HIT_TARGET = 'hydrateTouchHitTarget';
 const AUTOFOCUS = 'autoFocus';
 const CHILDREN = 'children';
 const STYLE = 'style';
@@ -1034,8 +1033,6 @@ export function diffHydratedProperties(
         }
         ensureListeningTo(rootContainerElement, propKey);
       }
-    } else if (enableEventAPI && propKey === HYDRATE_TOUCH_HIT_TARGET) {
-      updatePayload = [STYLE, rawProps.style];
     } else if (
       __DEV__ &&
       // Convince Flow we've calculated it (it's DEV-only in this method.)
@@ -1290,7 +1287,7 @@ export function listenToEventResponderEventTypes(
   eventTypes: Array<ReactDOMEventResponderEventType>,
   element: Element | Document,
 ): void {
-  if (enableEventAPI) {
+  if (enableFlareAPI) {
     // Get the listening Set for this element. We use this to track
     // what events we're listening to.
     const listeningSet = getListeningSetForElement(element);
@@ -1337,6 +1334,6 @@ export function listenToEventResponderEventTypes(
 }
 
 // We can remove this once the event API is stable and out of a flag
-if (enableEventAPI) {
+if (enableFlareAPI) {
   setListenToResponderEventTypes(listenToEventResponderEventTypes);
 }

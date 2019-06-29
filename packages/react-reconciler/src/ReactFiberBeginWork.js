@@ -41,7 +41,6 @@ import {
   LazyComponent,
   IncompleteClassComponent,
   EventComponent,
-  EventTarget,
 } from 'shared/ReactWorkTags';
 import {
   NoEffect,
@@ -60,7 +59,7 @@ import {
   enableProfilerTimer,
   enableSchedulerTracing,
   enableSuspenseServerRenderer,
-  enableEventAPI,
+  enableFlareAPI,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import shallowEqual from 'shared/shallowEqual';
@@ -108,13 +107,11 @@ import {
   registerSuspenseInstanceRetry,
 } from './ReactFiberHostConfig';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
-import {getEventTargetChildElement} from './ReactFiberHostConfig';
 import {shouldSuspend} from './ReactFiberReconciler';
 import {
   pushHostContext,
   pushHostContainer,
   pushHostContextForEventComponent,
-  pushHostContextForEventTarget,
 } from './ReactFiberHostContext';
 import {
   suspenseStackCursor,
@@ -2412,38 +2409,6 @@ function updateEventComponent(current, workInProgress, renderExpirationTime) {
   return workInProgress.child;
 }
 
-function updateEventTarget(current, workInProgress, renderExpirationTime) {
-  const type = workInProgress.type.type;
-  const nextProps = workInProgress.pendingProps;
-  const eventTargetChild = getEventTargetChildElement(type, nextProps);
-
-  if (__DEV__) {
-    warning(
-      nextProps.children == null,
-      'Event targets should not have children.',
-    );
-  }
-  if (eventTargetChild !== null) {
-    const child = (workInProgress.child = createFiberFromTypeAndProps(
-      eventTargetChild.type,
-      null,
-      eventTargetChild.props,
-      null,
-      workInProgress.mode,
-      renderExpirationTime,
-    ));
-    child.return = workInProgress;
-
-    if (current === null || current.child === null) {
-      child.effectTag = Placement;
-    }
-  } else {
-    reconcileChildren(current, workInProgress, null, renderExpirationTime);
-  }
-  pushHostContextForEventTarget(workInProgress);
-  return workInProgress.child;
-}
-
 export function markWorkInProgressReceivedUpdate() {
   didReceiveUpdate = true;
 }
@@ -2707,16 +2672,10 @@ function beginWork(
           );
         }
         case EventComponent:
-          if (enableEventAPI) {
+          if (enableFlareAPI) {
             pushHostContextForEventComponent(workInProgress);
           }
           break;
-        case EventTarget: {
-          if (enableEventAPI) {
-            pushHostContextForEventTarget(workInProgress);
-          }
-          break;
-        }
       }
       return bailoutOnAlreadyFinishedWork(
         current,
@@ -2903,18 +2862,12 @@ function beginWork(
       );
     }
     case EventComponent: {
-      if (enableEventAPI) {
+      if (enableFlareAPI) {
         return updateEventComponent(
           current,
           workInProgress,
           renderExpirationTime,
         );
-      }
-      break;
-    }
-    case EventTarget: {
-      if (enableEventAPI) {
-        return updateEventTarget(current, workInProgress, renderExpirationTime);
       }
       break;
     }

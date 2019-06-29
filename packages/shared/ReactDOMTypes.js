@@ -55,13 +55,12 @@ export type ReactDOMResponderContext = {
     listener: (Object) => void,
     eventPriority: EventPriority,
   ) => void,
-  isTargetWithinElement: (
+  isTargetWithinNode: (
     childTarget: Element | Document,
     parentTarget: Element | Document,
   ) => boolean,
   isTargetWithinEventComponent: (Element | Document) => boolean,
   isTargetWithinEventResponderScope: (Element | Document) => boolean,
-  isEventWithinTouchHitTarget: (event: ReactDOMResponderEvent) => boolean,
   addRootEventTypes: (
     rootEventTypes: Array<ReactDOMEventResponderEventType>,
   ) => void,

@@ -140,7 +140,7 @@ export function unstable_flushExpired() {
   }
 }
 
-export function unstable_flushWithoutYielding(): boolean {
+export function unstable_flushAllWithoutAsserting(): boolean {
   // Returns false if no work was flushed.
   if (isFlushing) {
     throw new Error('Already flushing work.');
@@ -174,14 +174,14 @@ export function unstable_clearYields(): Array<mixed> {
   return values;
 }
 
-export function flushAll(): void {
+export function unstable_flushAll(): void {
   if (yieldedValues !== null) {
     throw new Error(
       'Log is not empty. Assert on the log of yielded values before ' +
         'flushing additional work.',
     );
   }
-  unstable_flushWithoutYielding();
+  unstable_flushAllWithoutAsserting();
   if (yieldedValues !== null) {
     throw new Error(
       'While flushing work, something yielded a value. Use an ' +
@@ -191,7 +191,7 @@ export function flushAll(): void {
   }
 }
 
-export function yieldValue(value: mixed): void {
+export function unstable_yieldValue(value: mixed): void {
   if (yieldedValues === null) {
     yieldedValues = [value];
   } else {
@@ -199,7 +199,7 @@ export function yieldValue(value: mixed): void {
   }
 }
 
-export function advanceTime(ms: number) {
+export function unstable_advanceTime(ms: number) {
   currentTime += ms;
   if (!isFlushing) {
     if (scheduledTimeout !== null && timeoutTime <= currentTime) {

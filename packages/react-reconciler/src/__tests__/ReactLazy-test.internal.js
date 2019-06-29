@@ -21,7 +21,7 @@ describe('ReactLazy', () => {
   });
 
   function Text(props) {
-    Scheduler.yieldValue(props.text);
+    Scheduler.unstable_yieldValue(props.text);
     return props.text;
   }
 
@@ -205,10 +205,10 @@ describe('ReactLazy', () => {
   it('mount and reorder', async () => {
     class Child extends React.Component {
       componentDidMount() {
-        Scheduler.yieldValue('Did mount: ' + this.props.label);
+        Scheduler.unstable_yieldValue('Did mount: ' + this.props.label);
       }
       componentDidUpdate() {
-        Scheduler.yieldValue('Did update: ' + this.props.label);
+        Scheduler.unstable_yieldValue('Did update: ' + this.props.label);
       }
       render() {
         return <Text text={this.props.label} />;
@@ -299,7 +299,7 @@ describe('ReactLazy', () => {
 
   it('resolves defaultProps without breaking memoization', async () => {
     function LazyImpl(props) {
-      Scheduler.yieldValue('Lazy');
+      Scheduler.unstable_yieldValue('Lazy');
       return (
         <React.Fragment>
           <Text text={props.siblingText} />
@@ -349,38 +349,42 @@ describe('ReactLazy', () => {
       state = {};
 
       static getDerivedStateFromProps(props) {
-        Scheduler.yieldValue(`getDerivedStateFromProps: ${props.text}`);
+        Scheduler.unstable_yieldValue(
+          `getDerivedStateFromProps: ${props.text}`,
+        );
         return null;
       }
 
       constructor(props) {
         super(props);
-        Scheduler.yieldValue(`constructor: ${this.props.text}`);
+        Scheduler.unstable_yieldValue(`constructor: ${this.props.text}`);
       }
 
       componentDidMount() {
-        Scheduler.yieldValue(`componentDidMount: ${this.props.text}`);
+        Scheduler.unstable_yieldValue(`componentDidMount: ${this.props.text}`);
       }
 
       componentDidUpdate(prevProps) {
-        Scheduler.yieldValue(
+        Scheduler.unstable_yieldValue(
           `componentDidUpdate: ${prevProps.text} -> ${this.props.text}`,
         );
       }
 
       componentWillUnmount() {
-        Scheduler.yieldValue(`componentWillUnmount: ${this.props.text}`);
+        Scheduler.unstable_yieldValue(
+          `componentWillUnmount: ${this.props.text}`,
+        );
       }
 
       shouldComponentUpdate(nextProps) {
-        Scheduler.yieldValue(
+        Scheduler.unstable_yieldValue(
           `shouldComponentUpdate: ${this.props.text} -> ${nextProps.text}`,
         );
         return true;
       }
 
       getSnapshotBeforeUpdate(prevProps) {
-        Scheduler.yieldValue(
+        Scheduler.unstable_yieldValue(
           `getSnapshotBeforeUpdate: ${prevProps.text} -> ${this.props.text}`,
         );
         return null;
@@ -449,17 +453,19 @@ describe('ReactLazy', () => {
       state = {};
 
       UNSAFE_componentWillMount() {
-        Scheduler.yieldValue(`UNSAFE_componentWillMount: ${this.props.text}`);
+        Scheduler.unstable_yieldValue(
+          `UNSAFE_componentWillMount: ${this.props.text}`,
+        );
       }
 
       UNSAFE_componentWillUpdate(nextProps) {
-        Scheduler.yieldValue(
+        Scheduler.unstable_yieldValue(
           `UNSAFE_componentWillUpdate: ${this.props.text} -> ${nextProps.text}`,
         );
       }
 
       UNSAFE_componentWillReceiveProps(nextProps) {
-        Scheduler.yieldValue(
+        Scheduler.unstable_yieldValue(
           `UNSAFE_componentWillReceiveProps: ${this.props.text} -> ${
             nextProps.text
           }`,
@@ -512,7 +518,7 @@ describe('ReactLazy', () => {
 
   it('resolves defaultProps on the outer wrapper but warns', async () => {
     function T(props) {
-      Scheduler.yieldValue(props.inner + ' ' + props.outer);
+      Scheduler.unstable_yieldValue(props.inner + ' ' + props.outer);
       return props.inner + ' ' + props.outer;
     }
     T.defaultProps = {inner: 'Hi'};
@@ -655,7 +661,7 @@ describe('ReactLazy', () => {
     await Promise.resolve();
     expect(() => {
       expect(Scheduler);
-      Scheduler.flushAll();
+      Scheduler.unstable_flushAll();
     }).toWarnDev([
       'Invalid prop `inner` of type `string` supplied to `Add`, expected `number`.',
     ]);
@@ -862,7 +868,7 @@ describe('ReactLazy', () => {
 
   it('includes lazy-loaded component in warning stack', async () => {
     const LazyFoo = lazy(() => {
-      Scheduler.yieldValue('Started loading');
+      Scheduler.unstable_yieldValue('Started loading');
       const Foo = props => <div>{[<Text text="A" />, <Text text="B" />]}</div>;
       return fakeImport(Foo);
     });
@@ -905,7 +911,7 @@ describe('ReactLazy', () => {
       }
       return fakeImport(
         React.forwardRef((props, ref) => {
-          Scheduler.yieldValue('forwardRef');
+          Scheduler.unstable_yieldValue('forwardRef');
           return <Bar ref={ref} />;
         }),
       );

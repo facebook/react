@@ -36,6 +36,12 @@ function createTouchEvent(type, id, data) {
         identifier: id,
       },
     ],
+    targetTouches: [
+      {
+        ...data,
+        identifier: id,
+      },
+    ],
   });
 }
 
@@ -49,10 +55,10 @@ const createKeyboardEvent = (type, data) => {
 
 function init() {
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
-  ReactFeatureFlags.enableEventAPI = true;
+  ReactFeatureFlags.enableFlareAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
-  Press = require('react-events/press');
+  Press = require('react-events/press').Press;
   Scheduler = require('scheduler');
 }
 
@@ -618,14 +624,24 @@ describe('Event responder: Press', () => {
       ref.current.dispatchEvent(
         createTouchEvent('touchstart', 0, {
           target: ref.current,
+          clientX: 0,
+          clientY: 0,
         }),
       );
       ref.current.dispatchEvent(
         createTouchEvent('touchend', 0, {
           target: ref.current,
+          clientX: 0,
+          clientY: 0,
         }),
       );
-      ref.current.dispatchEvent(createEvent('pointerup', {pointerType: 'pen'}));
+      ref.current.dispatchEvent(
+        createEvent('pointerup', {
+          pointerType: 'pen',
+          clientX: 0,
+          clientY: 0,
+        }),
+      );
       expect(onPress).toHaveBeenCalledTimes(1);
       expect(onPress).toHaveBeenCalledWith(
         expect.objectContaining({pointerType: 'pen', type: 'press'}),
@@ -2022,6 +2038,7 @@ describe('Event responder: Press', () => {
       document.elementFromPoint = () => ref.current;
       ref.current.dispatchEvent(
         createTouchEvent('touchend', 0, {
+          ...coordinatesInside,
           target: ref.current,
         }),
       );
@@ -2269,7 +2286,12 @@ describe('Event responder: Press', () => {
       ReactDOM.render(element, container);
 
       ref.current.dispatchEvent(createEvent('pointerdown'));
-      ref.current.dispatchEvent(createEvent('pointerup'));
+      ref.current.dispatchEvent(
+        createEvent('pointerup', {
+          clientX: 0,
+          clientY: 0,
+        }),
+      );
       ref.current.dispatchEvent(createEvent('click', {preventDefault}));
       expect(preventDefault).toBeCalled();
       expect(onPress).toHaveBeenCalledWith(
@@ -2291,7 +2313,12 @@ describe('Event responder: Press', () => {
       ReactDOM.render(element, container);
 
       buttonRef.current.dispatchEvent(createEvent('pointerdown'));
-      buttonRef.current.dispatchEvent(createEvent('pointerup'));
+      buttonRef.current.dispatchEvent(
+        createEvent('pointerup', {
+          clientX: 0,
+          clientY: 0,
+        }),
+      );
       buttonRef.current.dispatchEvent(createEvent('click', {preventDefault}));
       expect(preventDefault).toBeCalled();
     });
@@ -2310,7 +2337,12 @@ describe('Event responder: Press', () => {
       ReactDOM.render(element, container);
 
       ref.current.dispatchEvent(createEvent('pointerdown'));
-      ref.current.dispatchEvent(createEvent('pointerup'));
+      ref.current.dispatchEvent(
+        createEvent('pointerup', {
+          clientX: 0,
+          clientY: 0,
+        }),
+      );
       ref.current.dispatchEvent(createEvent('click', {preventDefault}));
       expect(preventDefault).toBeCalled();
       expect(onPress).toHaveBeenCalledWith(
@@ -2334,7 +2366,11 @@ describe('Event responder: Press', () => {
           createEvent('pointerdown', {[modifierKey]: true}),
         );
         ref.current.dispatchEvent(
-          createEvent('pointerup', {[modifierKey]: true}),
+          createEvent('pointerup', {
+            [modifierKey]: true,
+            clientX: 0,
+            clientY: 0,
+          }),
         );
         ref.current.dispatchEvent(
           createEvent('click', {[modifierKey]: true, preventDefault}),
@@ -2358,7 +2394,12 @@ describe('Event responder: Press', () => {
       ReactDOM.render(element, container);
 
       ref.current.dispatchEvent(createEvent('pointerdown'));
-      ref.current.dispatchEvent(createEvent('pointerup'));
+      ref.current.dispatchEvent(
+        createEvent('pointerup', {
+          clientX: 0,
+          clientY: 0,
+        }),
+      );
       ref.current.dispatchEvent(createEvent('click', {preventDefault}));
       expect(preventDefault).not.toBeCalled();
       expect(onPress).toHaveBeenCalledWith(
@@ -2694,7 +2735,10 @@ describe('Event responder: Press', () => {
   });
 
   function dispatchEventWithTimeStamp(elem, name, timeStamp) {
-    const event = createEvent(name);
+    const event = createEvent(name, {
+      clientX: 0,
+      clientY: 0,
+    });
     Object.defineProperty(event, 'timeStamp', {
       value: timeStamp,
     });
@@ -2732,7 +2776,7 @@ describe('Event responder: Press', () => {
     const root = ReactDOM.unstable_createRoot(newContainer);
     document.body.appendChild(newContainer);
     root.render(<MyComponent />);
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
 
     dispatchEventWithTimeStamp(ref.current, 'pointerdown', 100);
     dispatchEventWithTimeStamp(ref.current, 'pointerup', 100);
@@ -2743,7 +2787,7 @@ describe('Event responder: Press', () => {
     } else {
       expect(renderCounts).toBe(1);
     }
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     if (__DEV__) {
       expect(renderCounts).toBe(4);
     } else {
@@ -2761,7 +2805,7 @@ describe('Event responder: Press', () => {
       expect(renderCounts).toBe(3);
     }
 
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     document.body.removeChild(newContainer);
   });
 
@@ -2798,7 +2842,7 @@ describe('Event responder: Press', () => {
     const root = ReactDOM.unstable_createRoot(newContainer);
     document.body.appendChild(newContainer);
     root.render(<MyComponent />);
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
 
     dispatchEventWithTimeStamp(ref.current, 'pointerdown', 100);
     dispatchEventWithTimeStamp(ref.current, 'pointerup', 100);
@@ -2809,7 +2853,7 @@ describe('Event responder: Press', () => {
     } else {
       expect(renderCounts).toBe(2);
     }
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     if (__DEV__) {
       expect(renderCounts).toBe(6);
     } else {
@@ -2827,7 +2871,7 @@ describe('Event responder: Press', () => {
       expect(renderCounts).toBe(4);
     }
 
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     document.body.removeChild(newContainer);
   });
 
@@ -2873,13 +2917,13 @@ describe('Event responder: Press', () => {
       const root = ReactDOM.unstable_createRoot(newContainer);
 
       root.render(<MyComponent />);
-      Scheduler.flushAll();
+      Scheduler.unstable_flushAll();
       expect(newContainer.textContent).toEqual('Presses: 0, Clicks: 0');
 
       dispatchEventWithTimeStamp(button.current, 'pointerdown', 100);
       dispatchEventWithTimeStamp(button.current, 'pointerup', 100);
       dispatchEventWithTimeStamp(button.current, 'click', 100);
-      Scheduler.flushAll();
+      Scheduler.unstable_flushAll();
       expect(newContainer.textContent).toEqual('Presses: 1, Clicks: 1');
 
       expect(ops).toEqual(['Presses: 0, Clicks: 0']);

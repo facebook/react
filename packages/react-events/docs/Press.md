@@ -119,7 +119,7 @@ Determines whether calling `onPress` should be cancelled if `onLongPress` or
 
 Called immediately after a press is released, unless either 1) the press is
 released outside the hit bounds of the element (accounting for
-`pressRetentionOffset` and `TouchHitTarget`), or 2) the press was a long press,
+`pressRetentionOffset`), or 2) the press was a long press,
 and `onLongPress` or `onLongPressChange` props are provided, and
 `onLongPressCancelsPress()` is `true`.
 

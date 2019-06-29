@@ -51,13 +51,13 @@ describe('ReactExpiration', () => {
   it('two updates of like priority in the same event always flush within the same batch', () => {
     class Text extends React.Component {
       componentDidMount() {
-        Scheduler.yieldValue(`${this.props.text} [commit]`);
+        Scheduler.unstable_yieldValue(`${this.props.text} [commit]`);
       }
       componentDidUpdate() {
-        Scheduler.yieldValue(`${this.props.text} [commit]`);
+        Scheduler.unstable_yieldValue(`${this.props.text} [commit]`);
       }
       render() {
-        Scheduler.yieldValue(`${this.props.text} [render]`);
+        Scheduler.unstable_yieldValue(`${this.props.text} [render]`);
         return <span prop={this.props.text} />;
       }
     }
@@ -72,7 +72,7 @@ describe('ReactExpiration', () => {
     // Schedule an update.
     ReactNoop.render(<Text text="A" />);
     // Advance the timer.
-    Scheduler.advanceTime(2000);
+    Scheduler.unstable_advanceTime(2000);
     // Partially flush the the first update, then interrupt it.
     expect(Scheduler).toFlushAndYieldThrough(['A [render]']);
     interrupt();
@@ -100,7 +100,7 @@ describe('ReactExpiration', () => {
     // Now do the same thing again, except this time don't flush any work in
     // between the two updates.
     ReactNoop.render(<Text text="A" />);
-    Scheduler.advanceTime(2000);
+    Scheduler.unstable_advanceTime(2000);
     expect(Scheduler).toHaveYielded([]);
     expect(ReactNoop.getChildren()).toEqual([span('B')]);
     // Schedule another update.
@@ -116,13 +116,13 @@ describe('ReactExpiration', () => {
     () => {
       class Text extends React.Component {
         componentDidMount() {
-          Scheduler.yieldValue(`${this.props.text} [commit]`);
+          Scheduler.unstable_yieldValue(`${this.props.text} [commit]`);
         }
         componentDidUpdate() {
-          Scheduler.yieldValue(`${this.props.text} [commit]`);
+          Scheduler.unstable_yieldValue(`${this.props.text} [commit]`);
         }
         render() {
-          Scheduler.yieldValue(`${this.props.text} [render]`);
+          Scheduler.unstable_yieldValue(`${this.props.text} [render]`);
           return <span prop={this.props.text} />;
         }
       }
@@ -137,7 +137,7 @@ describe('ReactExpiration', () => {
       // Schedule an update.
       ReactNoop.render(<Text text="A" />);
       // Advance the timer.
-      Scheduler.advanceTime(2000);
+      Scheduler.unstable_advanceTime(2000);
       // Partially flush the the first update, then interrupt it.
       expect(Scheduler).toFlushAndYieldThrough(['A [render]']);
       interrupt();
@@ -165,7 +165,7 @@ describe('ReactExpiration', () => {
       // Now do the same thing again, except this time don't flush any work in
       // between the two updates.
       ReactNoop.render(<Text text="A" />);
-      Scheduler.advanceTime(2000);
+      Scheduler.unstable_advanceTime(2000);
       expect(Scheduler).toHaveYielded([]);
       expect(ReactNoop.getChildren()).toEqual([span('B')]);
 
@@ -188,17 +188,17 @@ describe('ReactExpiration', () => {
       state = {text: store.text};
       componentDidMount() {
         subscribers.push(this);
-        Scheduler.yieldValue(
+        Scheduler.unstable_yieldValue(
           `${this.state.text} [${this.props.label}] [commit]`,
         );
       }
       componentDidUpdate() {
-        Scheduler.yieldValue(
+        Scheduler.unstable_yieldValue(
           `${this.state.text} [${this.props.label}] [commit]`,
         );
       }
       render() {
-        Scheduler.yieldValue(
+        Scheduler.unstable_yieldValue(
           `${this.state.text} [${this.props.label}] [render]`,
         );
         return <span prop={this.state.text} />;
@@ -255,7 +255,7 @@ describe('ReactExpiration', () => {
     // Before importing the renderer, advance the current time by a number
     // larger than the maximum allowed for bitwise operations.
     const maxSigned31BitInt = 1073741823;
-    Scheduler.advanceTime(maxSigned31BitInt * 100);
+    Scheduler.unstable_advanceTime(maxSigned31BitInt * 100);
 
     // Now import the renderer. On module initialization, it will read the
     // current time.
@@ -268,7 +268,7 @@ describe('ReactExpiration', () => {
     expect(ReactNoop).toMatchRenderedOutput(null);
 
     // Advance the time some more to expire the update.
-    Scheduler.advanceTime(10000);
+    Scheduler.unstable_advanceTime(10000);
     expect(Scheduler).toFlushExpired([]);
     expect(ReactNoop).toMatchRenderedOutput('Hi');
   });
@@ -279,7 +279,7 @@ describe('ReactExpiration', () => {
     // default to 0, and most tests don't advance time.
 
     // Before scheduling an update, advance the current time.
-    Scheduler.advanceTime(10000);
+    Scheduler.unstable_advanceTime(10000);
 
     ReactNoop.render('Hi');
     expect(Scheduler).toFlushExpired([]);
@@ -287,7 +287,7 @@ describe('ReactExpiration', () => {
 
     // Advancing by ~5 seconds should be sufficient to expire the update. (I
     // used a slightly larger number to allow for possible rounding.)
-    Scheduler.advanceTime(6000);
+    Scheduler.unstable_advanceTime(6000);
 
     ReactNoop.render('Hi');
     expect(Scheduler).toFlushExpired([]);

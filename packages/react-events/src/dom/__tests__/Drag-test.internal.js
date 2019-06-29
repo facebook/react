@@ -19,10 +19,10 @@ describe('Drag event responder', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableEventAPI = true;
+    ReactFeatureFlags.enableFlareAPI = true;
     React = require('react');
     ReactDOM = require('react-dom');
-    Drag = require('react-events/drag');
+    Drag = require('react-events/drag').Drag;
 
     container = document.createElement('div');
     document.body.appendChild(container);
