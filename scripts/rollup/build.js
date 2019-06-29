@@ -377,8 +377,7 @@ function getPlugins(
             require('../babel/remove-getters'),
           ],
         };
-        const result = babelCore.transform(source, babelOptions);
-        return result.code;
+        return babelCore.transform(source, babelOptions).code;
       },
     },
     // Apply dead code elimination and/or minification.
