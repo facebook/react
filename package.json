@@ -77,7 +77,7 @@
     "rimraf": "^2.6.1",
     "rollup": "^1.16.3",
     "rollup-plugin-babel": "^3.0.7",
-    "rollup-plugin-commonjs": "^8.4.1",
+    "rollup-plugin-commonjs": "^9.3.4",
     "rollup-plugin-node-resolve": "^2.1.1",
     "rollup-plugin-prettier": "^0.6.0",
     "rollup-plugin-replace": "^2.2.0",
