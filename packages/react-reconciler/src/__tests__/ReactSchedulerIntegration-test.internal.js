@@ -55,9 +55,11 @@ describe('ReactSchedulerIntegration', () => {
     }
   }
 
-  fit('flush sync has correct priority', () => {
+  it('flush sync has correct priority', () => {
     function ReadPriority() {
-      Scheduler.yieldValue('Priority: ' + getCurrentPriorityAsString());
+      Scheduler.unstable_yieldValue(
+        'Priority: ' + getCurrentPriorityAsString(),
+      );
       return null;
     }
     ReactNoop.flushSync(() => ReactNoop.render(<ReadPriority />));
