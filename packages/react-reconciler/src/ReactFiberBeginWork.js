@@ -13,7 +13,7 @@ import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {
   SuspenseState,
-  SuspenseListState,
+  SuspenseListRenderState,
 } from './ReactFiberSuspenseComponent';
 import type {SuspenseContext} from './ReactFiberSuspenseContext';
 
@@ -2007,6 +2007,88 @@ function findLastContentRow(firstChild: null | Fiber): null | Fiber {
 
 type SuspenseListRevealOrder = 'forwards' | 'backwards' | 'together' | void;
 
+function validateRevealOrder(revealOrder: SuspenseListRevealOrder) {
+  if (__DEV__) {
+    if (
+      revealOrder !== undefined &&
+      revealOrder !== 'forwards' &&
+      revealOrder !== 'backwards' &&
+      revealOrder !== 'together' &&
+      !didWarnAboutRevealOrder[revealOrder]
+    ) {
+      didWarnAboutRevealOrder[revealOrder] = true;
+      if (typeof revealOrder === 'string') {
+        switch (revealOrder.toLowerCase()) {
+          case 'together':
+          case 'forwards':
+          case 'backwards': {
+            warning(
+              false,
+              '"%s" is not a valid value for revealOrder on <SuspenseList />. ' +
+                'Use lowercase "%s" instead.',
+              revealOrder,
+              revealOrder.toLowerCase(),
+            );
+            break;
+          }
+          case 'forward':
+          case 'backward': {
+            warning(
+              false,
+              '"%s" is not a valid value for revealOrder on <SuspenseList />. ' +
+                'React uses the -s suffix in the spelling. Use "%ss" instead.',
+              revealOrder,
+              revealOrder.toLowerCase(),
+            );
+            break;
+          }
+          default:
+            warning(
+              false,
+              '"%s" is not a supported revealOrder on <SuspenseList />. ' +
+                'Did you mean "together", "forwards" or "backwards"?',
+              revealOrder,
+            );
+            break;
+        }
+      } else {
+        warning(
+          false,
+          '%s is not a supported value for revealOrder on <SuspenseList />. ' +
+            'Did you mean "together", "forwards" or "backwards"?',
+          revealOrder,
+        );
+      }
+    }
+  }
+}
+
+function initSuspenseListRenderState(
+  workInProgress: Fiber,
+  isBackwards: boolean,
+  tail: null | Fiber,
+  lastContentRow: null | Fiber,
+): void {
+  let renderState: null | SuspenseListRenderState =
+    workInProgress.memoizedState;
+  if (renderState === null) {
+    workInProgress.memoizedState = {
+      isBackwards: isBackwards,
+      rendering: null,
+      last: lastContentRow,
+      tail: tail,
+      tailExpiration: 0,
+    };
+  } else {
+    // We can reuse the existing object from previous renders.
+    renderState.isBackwards = isBackwards;
+    renderState.rendering = null;
+    renderState.last = lastContentRow;
+    renderState.tail = tail;
+    renderState.tailExpiration = 0;
+  }
+}
+
 // This can end up rendering this component multiple passes.
 // The first pass splits the children fibers into two sets. A head and tail.
 // We first render the head. If anything is in fallback state, we do another
@@ -2021,24 +2103,11 @@ function updateSuspenseListComponent(
 ) {
   const nextProps = workInProgress.pendingProps;
   const revealOrder: SuspenseListRevealOrder = nextProps.revealOrder;
-  const nextChildren = nextProps.children;
+  const newChildren = nextProps.children;
 
-  let nextChildFibers;
-  if (current === null) {
-    nextChildFibers = mountChildFibers(
-      workInProgress,
-      null,
-      nextChildren,
-      renderExpirationTime,
-    );
-  } else {
-    nextChildFibers = reconcileChildFibers(
-      workInProgress,
-      current.child,
-      nextChildren,
-      renderExpirationTime,
-    );
-  }
+  validateRevealOrder(revealOrder);
+
+  reconcileChildren(current, workInProgress, newChildren, renderExpirationTime);
 
   let suspenseContext: SuspenseContext = suspenseStackCursor.current;
 
@@ -2046,108 +2115,71 @@ function updateSuspenseListComponent(
     suspenseContext,
     (ForceSuspenseFallback: SuspenseContext),
   );
-
-  if ((workInProgress.effectTag & DidCapture) !== NoEffect) {
-    // This is the second pass. In this pass, we should force the
-    // fallbacks in place.
-    shouldForceFallback = true;
-  }
-
-  let suspenseListState: null | SuspenseListState = null;
-
   if (shouldForceFallback) {
     suspenseContext = setShallowSuspenseContext(
       suspenseContext,
       ForceSuspenseFallback,
     );
-    suspenseListState = {
-      didSuspend: true,
-      isBackwards: false,
-      rendering: null,
-      last: null,
-      tail: null,
-      tailExpiration: 0,
-    };
+    workInProgress.effectTag |= DidCapture;
   } else {
-    let didForceFallback =
-      current !== null &&
-      current.memoizedState !== null &&
-      (current.memoizedState: SuspenseListState).didSuspend;
-    if (didForceFallback) {
+    const didSuspendBefore =
+      current !== null && (current.effectTag & DidCapture) !== NoEffect;
+    if (didSuspendBefore) {
       // If we previously forced a fallback, we need to schedule work
       // on any nested boundaries to let them know to try to render
       // again. This is the same as context updating.
       propagateSuspenseContextChange(
         workInProgress,
-        nextChildFibers,
+        workInProgress.child,
         renderExpirationTime,
       );
     }
     suspenseContext = setDefaultShallowSuspenseContext(suspenseContext);
   }
-
   pushSuspenseContext(workInProgress, suspenseContext);
 
   if ((workInProgress.mode & BatchedMode) === NoMode) {
+    workInProgress.memoizedState = null;
+  } else {
     // Outside of batched mode, SuspenseList doesn't work so we just
     // use make it a noop by treating it as the default revealOrder.
-    workInProgress.effectTag |= DidCapture;
-    workInProgress.child = nextChildFibers;
-    return nextChildFibers;
-  }
-
-  switch (revealOrder) {
-    case 'forwards': {
-      // If need to force fallbacks in this pass we're just going to
-      // force the whole set to suspend so we don't have to do anything
-      // further here.
-      if (!shouldForceFallback) {
-        let lastContentRow = findLastContentRow(nextChildFibers);
+    switch (revealOrder) {
+      case 'forwards': {
+        let lastContentRow = findLastContentRow(workInProgress.child);
         let tail;
         if (lastContentRow === null) {
           // The whole list is part of the tail.
           // TODO: We could fast path by just rendering the tail now.
-          tail = nextChildFibers;
-          nextChildFibers = null;
+          tail = workInProgress.child;
+          workInProgress.child = null;
         } else {
           // Disconnect the tail rows after the content row.
           // We're going to render them separately later.
           tail = lastContentRow.sibling;
           lastContentRow.sibling = null;
         }
-        if (suspenseListState === null) {
-          suspenseListState = {
-            didSuspend: false,
-            isBackwards: false,
-            rendering: null,
-            last: lastContentRow,
-            tail: tail,
-            tailExpiration: 0,
-          };
-        } else {
-          suspenseListState.tail = tail;
-        }
+        initSuspenseListRenderState(
+          workInProgress,
+          false, // isBackwards
+          tail,
+          lastContentRow,
+        );
+        break;
       }
-      break;
-    }
-    case 'backwards': {
-      // If need to force fallbacks in this pass we're just going to
-      // force the whole set to suspend so we don't have to do anything
-      // further here.
-      if (!shouldForceFallback) {
+      case 'backwards': {
         // We're going to find the first row that has existing content.
         // At the same time we're going to reverse the list of everything
         // we pass in the meantime. That's going to be our tail in reverse
         // order.
         let tail = null;
-        let row = nextChildFibers;
-        nextChildFibers = null;
+        let row = workInProgress.child;
+        workInProgress.child = null;
         while (row !== null) {
           let currentRow = row.alternate;
           // New rows can't be content rows.
           if (currentRow !== null && !isShowingAnyFallbacks(currentRow)) {
             // This is the beginning of the main content.
-            nextChildFibers = row;
+            workInProgress.child = row;
             break;
           }
           let nextRow = row.sibling;
@@ -2155,88 +2187,32 @@ function updateSuspenseListComponent(
           tail = row;
           row = nextRow;
         }
-        // TODO: If nextChildFibers is null, we can continue on the tail immediately.
-        if (suspenseListState === null) {
-          suspenseListState = {
-            didSuspend: false,
-            isBackwards: true,
-            rendering: null,
-            last: null,
-            tail: tail,
-            tailExpiration: 0,
-          };
-        } else {
-          suspenseListState.isBackwards = true;
-          suspenseListState.tail = tail;
-        }
+        // TODO: If workInProgress.child is null, we can continue on the tail immediately.
+        initSuspenseListRenderState(
+          workInProgress,
+          true, // isBackwards
+          tail,
+          null, // last
+        );
+        break;
       }
-      break;
-    }
-    case 'together': {
-      break;
-    }
-    default: {
-      // The default reveal order is the same as not having
-      // a boundary.
-      if (__DEV__) {
-        if (
-          revealOrder !== undefined &&
-          !didWarnAboutRevealOrder[revealOrder]
-        ) {
-          didWarnAboutRevealOrder[revealOrder] = true;
-          if (typeof revealOrder === 'string') {
-            switch (revealOrder.toLowerCase()) {
-              case 'together':
-              case 'forwards':
-              case 'backwards': {
-                warning(
-                  false,
-                  '"%s" is not a valid value for revealOrder on <SuspenseList />. ' +
-                    'Use lowercase "%s" instead.',
-                  revealOrder,
-                  revealOrder.toLowerCase(),
-                );
-                break;
-              }
-              case 'forward':
-              case 'backward': {
-                warning(
-                  false,
-                  '"%s" is not a valid value for revealOrder on <SuspenseList />. ' +
-                    'React uses the -s suffix in the spelling. Use "%ss" instead.',
-                  revealOrder,
-                  revealOrder.toLowerCase(),
-                );
-                break;
-              }
-              default:
-                warning(
-                  false,
-                  '"%s" is not a supported revealOrder on <SuspenseList />. ' +
-                    'Did you mean "together", "forwards" or "backwards"?',
-                  revealOrder,
-                );
-                break;
-            }
-          } else {
-            warning(
-              false,
-              '%s is not a supported value for revealOrder on <SuspenseList />. ' +
-                'Did you mean "together", "forwards" or "backwards"?',
-              revealOrder,
-            );
-          }
-        }
+      case 'together': {
+        initSuspenseListRenderState(
+          workInProgress,
+          false, // isBackwards
+          null, // tail
+          null, // last
+        );
+        break;
       }
-      // We mark this as having captured but it really just says to the
-      // complete phase that we should treat this as done, whatever form
-      // it is in. No need for a second pass.
-      workInProgress.effectTag |= DidCapture;
+      default: {
+        // The default reveal order is the same as not having
+        // a boundary.
+        workInProgress.memoizedState = null;
+      }
     }
   }
-  workInProgress.memoizedState = suspenseListState;
-  workInProgress.child = nextChildFibers;
-  return nextChildFibers;
+  return workInProgress.child;
 }
 
 function updatePortalComponent(
@@ -2657,19 +2633,46 @@ function beginWork(
           break;
         }
         case SuspenseListComponent: {
-          // Check if the children have any pending work.
+          const didSuspendBefore =
+            (current.effectTag & DidCapture) !== NoEffect;
+
           const childExpirationTime = workInProgress.childExpirationTime;
           if (childExpirationTime < renderExpirationTime) {
+            // If none of the children had any work, that means that none of
+            // them got retried so they'll still be blocked in the same way
+            // as before. We can fast bail out.
             pushSuspenseContext(workInProgress, suspenseStackCursor.current);
-            // None of the children have any work, so we can do a fast bailout.
+            if (didSuspendBefore) {
+              workInProgress.effectTag |= DidCapture;
+            }
             return null;
           }
-          // Try the normal path.
-          return updateSuspenseListComponent(
-            current,
-            workInProgress,
-            renderExpirationTime,
-          );
+
+          if (didSuspendBefore) {
+            // If something was in fallback state last time, and we have all the
+            // same children then we're still in progressive loading state.
+            // Something might get unblocked by state updates or retries in the
+            // tree which will affect the tail. So we need to use the normal
+            // path to compute the correct tail.
+            return updateSuspenseListComponent(
+              current,
+              workInProgress,
+              renderExpirationTime,
+            );
+          }
+
+          // If nothing suspended before and we're rendering the same children,
+          // then the tail doesn't matter. Anything new that suspends will work
+          // in the "together" mode, so we can continue from the state we had.
+          let renderState = workInProgress.memoizedState;
+          if (renderState !== null) {
+            // Reset to the "together" mode in case we've started a different
+            // update in the past but didn't complete it.
+            renderState.rendering = null;
+            renderState.tail = null;
+          }
+          pushSuspenseContext(workInProgress, suspenseStackCursor.current);
+          break;
         }
         case EventComponent:
           if (enableFlareAPI) {
