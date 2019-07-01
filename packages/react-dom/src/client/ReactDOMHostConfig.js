@@ -891,4 +891,16 @@ export function mountFoundation(foundationInstance) {
   }
 }
 
+export function updateFoundation(foundationInstance) {
+  const {impl, node, prevProps, props, state} = foundationInstance;
+  const onUpdate = impl.onUpdate;
+  if (onUpdate !== undefined) {
+    const nextNode = onUpdate(null, node, prevProps, props, state);
+    if (nextNode !== node) {
+      node.parentNode.replaceChild(nextNode, node);
+      foundationInstance.node = nextNode;
+    }
+  }
+}
+
 export function unmountFoundation(foundationInstance) {}

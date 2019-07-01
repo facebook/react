@@ -1117,6 +1117,11 @@ function completeWork(
           }
           appendAllChildren(fundamentalInstance.node, workInProgress, false, false);
         } else {
+          // We fire update in commit phase
+          fundamentalInstance.prevProps = fundamentalInstance.props;
+          fundamentalInstance.props = newProps;
+          fundamentalInstance.currentFiber = workInProgress;
+          markUpdate(workInProgress);
         }
       }
       break;

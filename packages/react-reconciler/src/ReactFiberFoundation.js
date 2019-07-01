@@ -12,6 +12,7 @@ export function createFoundationInstance(currentFiber, props, impl, state) {
     currentFiber,
     impl,
     node: null,
+    prevProps: null,
     props,
     rootEventTypes: null,
     state,
