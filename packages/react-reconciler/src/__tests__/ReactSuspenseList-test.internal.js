@@ -578,7 +578,7 @@ describe('ReactSuspenseList', () => {
 
     await B.resolve();
 
-    expect(Scheduler).toFlushAndYield(['B']);
+    expect(Scheduler).toFlushAndYield(['B', 'Suspend! [C]']);
 
     // Even though we could now show B, we're still waiting on C.
     expect(ReactNoop).toMatchRenderedOutput(
@@ -780,7 +780,6 @@ describe('ReactSuspenseList', () => {
       'Suspend! [C]',
       'Loading C',
       'D',
-      'Suspend! [E]',
       'Loading E',
       'Loading F',
     ]);
@@ -861,7 +860,7 @@ describe('ReactSuspenseList', () => {
     );
   });
 
-  it('displays added row at the top "together" and the bottom in "forwards" order', async () => {
+  it('displays added row at the top "together" and the bottom in "backwards" order', async () => {
     let A = createAsyncText('A');
     let B = createAsyncText('B');
     let D = createAsyncText('D');
@@ -958,7 +957,7 @@ describe('ReactSuspenseList', () => {
 
     await F.resolve();
 
-    expect(Scheduler).toFlushAndYield(['F']);
+    expect(Scheduler).toFlushAndYield(['Suspend! [D]', 'F']);
 
     // Even though we could show F, it is still in a fallback state because
     // E is not yet resolved. We need to resolve everything in the head first.
