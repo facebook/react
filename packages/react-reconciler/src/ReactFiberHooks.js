@@ -13,6 +13,7 @@ import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {HookEffectTag} from './ReactHookEffectTags';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
+import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
@@ -48,6 +49,7 @@ import is from 'shared/objectIs';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork';
 import {revertPassiveEffectsChange} from 'shared/ReactFeatureFlags';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
+import {getCurrentPriorityLevel} from './SchedulerWithReactIntegration';
 
 const {ReactCurrentDispatcher} = ReactSharedInternals;
 
@@ -96,6 +98,8 @@ type Update<S, A> = {
   eagerReducer: ((S, A) => S) | null,
   eagerState: S | null,
   next: Update<S, A> | null,
+
+  priority: ReactPriorityLevel | null,
 };
 
 type UpdateQueue<S, A> = {
@@ -1124,6 +1128,7 @@ function dispatchAction<S, A>(
   }
 
   const alternate = fiber.alternate;
+  const priority = __DEV__ ? getCurrentPriorityLevel() : null;
   if (
     fiber === currentlyRenderingFiber ||
     (alternate !== null && alternate === currentlyRenderingFiber)
@@ -1139,6 +1144,7 @@ function dispatchAction<S, A>(
       eagerReducer: null,
       eagerState: null,
       next: null,
+      priority,
     };
     if (renderPhaseUpdates === null) {
       renderPhaseUpdates = new Map();
@@ -1171,6 +1177,7 @@ function dispatchAction<S, A>(
       expirationTime,
       suspenseConfig,
       action,
+      priority,
       eagerReducer: null,
       eagerState: null,
       next: null,

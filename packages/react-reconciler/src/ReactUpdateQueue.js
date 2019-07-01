@@ -87,6 +87,7 @@
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
+import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
 
 import {NoWork} from './ReactFiberExpirationTime';
 import {
@@ -106,6 +107,7 @@ import {markRenderEventTimeAndConfig} from './ReactFiberWorkLoop';
 
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
+import {getCurrentPriorityLevel} from './SchedulerWithReactIntegration';
 
 export type Update<State> = {
   expirationTime: ExpirationTime,
@@ -117,6 +119,9 @@ export type Update<State> = {
 
   next: Update<State> | null,
   nextEffect: Update<State> | null,
+
+  //DEV only
+  priority: ReactPriorityLevel | null,
 };
 
 export type UpdateQueue<State> = {
@@ -197,6 +202,7 @@ export function createUpdate(
   expirationTime: ExpirationTime,
   suspenseConfig: null | SuspenseConfig,
 ): Update<*> {
+  const priority = __DEV__ ? getCurrentPriorityLevel() : null;
   return {
     expirationTime,
     suspenseConfig,
@@ -207,6 +213,8 @@ export function createUpdate(
 
     next: null,
     nextEffect: null,
+
+    priority,
   };
 }
 
@@ -430,7 +438,6 @@ export function processUpdateQueue<State>(
   hasForceUpdate = false;
 
   queue = ensureWorkInProgressQueueIsAClone(workInProgress, queue);
-
   if (__DEV__) {
     currentlyProcessingQueue = queue;
   }

@@ -290,6 +290,7 @@ export function computeExpirationForFiber(
   }
 
   const priorityLevel = getCurrentPriorityLevel();
+
   if ((mode & ConcurrentMode) === NoMode) {
     return priorityLevel === ImmediatePriority ? Sync : Batched;
   }
@@ -2501,10 +2502,15 @@ function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
 export const warnIfNotCurrentlyActingUpdatesInDev = warnIfNotCurrentlyActingUpdatesInDEV;
 
 let componentsWithSuspendedDiscreteUpdates = null;
+let componentsThatCallSuspendedDiscreteUpdates = new Set();
 export function checkForWrongSuspensePriorityInDEV(sourceFiber: Fiber) {
   if (__DEV__) {
+    const priorityLevel = getCurrentPriorityLevel();
+    console.log(priorityLevel);
     if (
       (sourceFiber.mode & ConcurrentMode) !== NoEffect &&
+      (priorityLevel === UserBlockingPriority ||
+        priorityLevel === ImmediatePriority)
       // Check if we're currently rendering a discrete update. Ideally, all we
       // would need to do is check the current priority level. But we currently
       // have no rigorous way to distinguish work that was scheduled at user-
@@ -2520,11 +2526,71 @@ export function checkForWrongSuspensePriorityInDEV(sourceFiber: Fiber) {
       //
       // My rationale is that it's better for this warning to have false
       // negatives than false positives.
-      rootsWithPendingDiscreteUpdates !== null &&
-      workInProgressRoot !== null &&
-      renderExpirationTime ===
-        rootsWithPendingDiscreteUpdates.get(workInProgressRoot)
     ) {
+      let WIPNode = sourceFiber;
+      while (WIPNode != null) {
+        // Add the component that triggered the suspense
+        const current = WIPNode.alternate;
+        if (current !== null) {
+          switch (WIPNode.tag) {
+            case HostRoot:
+            case ClassComponent:
+              // Loop through the component's update queue and see whether the component
+              // has triggered any high priority updates
+              let queueElem = (current.updateQueue || {}).firstUpdate;
+              while (queueElem != null) {
+                const fooPriorityLevel = queueElem.priority;
+                if (
+                  fooPriorityLevel === UserBlockingPriority ||
+                  fooPriorityLevel === ImmediatePriority
+                ) {
+                  if (WIPNode.tag === HostRoot) {
+                    componentsThatCallSuspendedDiscreteUpdates.add(WIPNode.tag);
+                  } else {
+                    componentsThatCallSuspendedDiscreteUpdates.add(
+                      getComponentName(WIPNode.type),
+                    );
+                  }
+                  break;
+                }
+                queueElem = queueElem.next;
+              }
+              break;
+            case FunctionComponent:
+            case ForwardRef:
+            case SimpleMemoComponent:
+              console.log('in here trollin');
+              if (
+                WIPNode.memoizedState != null &&
+                WIPNode.memoizedState.baseUpdate != null
+              ) {
+                let update = WIPNode.memoizedState.baseUpdate;
+                // Loop through the functional component's memoized state to see whether
+                // the component has triggered any high pri updates
+                while (update != null) {
+                  const priorityLevel = update.priority;
+                  if (
+                    priorityLevel === UserBlockingPriority ||
+                    priorityLevel === ImmediatePriority
+                  ) {
+                    componentsThatCallSuspendedDiscreteUpdates.add(
+                      getComponentName(WIPNode.type),
+                    );
+                    break;
+                  }
+                  if (update.next === WIPNode.memoizedState.baseUpdate) {
+                    break;
+                  }
+                }
+              }
+              break;
+            default:
+              break;
+          }
+        }
+        WIPNode = WIPNode.return;
+      }
+
       // Add the component name to a set.
       const componentName = getComponentName(sourceFiber.type);
       if (componentsWithSuspendedDiscreteUpdates === null) {
@@ -2538,20 +2604,35 @@ export function checkForWrongSuspensePriorityInDEV(sourceFiber: Fiber) {
 
 function flushSuspensePriorityWarningInDEV() {
   if (__DEV__) {
-    if (componentsWithSuspendedDiscreteUpdates !== null) {
+    if (
+      componentsWithSuspendedDiscreteUpdates !== null &&
+      componentsThatCallSuspendedDiscreteUpdates.size > 0
+    ) {
       const componentNames = [];
       componentsWithSuspendedDiscreteUpdates.forEach(name => {
         componentNames.push(name);
       });
       componentsWithSuspendedDiscreteUpdates = null;
 
-      // TODO: A more helpful version of this message could include the names of
-      // the component that were updated, not the ones that suspended. To do
-      // that we'd need to track all the components that updated during this
-      // render, perhaps using the same mechanism as `markRenderEventTime`.
+      const parentComponentNamesString = Array.from(
+        componentsThatCallSuspendedDiscreteUpdates,
+      )
+        .sort()
+        .join(', ');
+
+      const callerErroMessage = componentsThatCallSuspendedDiscreteUpdates.has(
+        HostRoot,
+      )
+        ? 'Component was suspended when root was mounted or updated'
+        : `The components that called suspense are: ${parentComponentNamesString}`;
+
+      componentsThatCallSuspendedDiscreteUpdates.clear();
+
       warningWithoutStack(
         false,
         'The following components suspended during a user-blocking update: %s' +
+          '\n' +
+          '%s' +
           '\n\n' +
           'Updates triggered by user interactions (e.g. click events) are ' +
           'considered user-blocking by default. They should not suspend. ' +
@@ -2565,6 +2646,7 @@ function flushSuspensePriorityWarningInDEV() {
           'feedback, and another update to perform the actual change.',
         // TODO: Add link to React docs with more information, once it exists
         componentNames.sort().join(', '),
+        callerErroMessage,
       );
     }
   }
