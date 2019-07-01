@@ -172,13 +172,16 @@ function flushSyncCallbackQueueImpl() {
     let i = 0;
     try {
       const isSync = true;
-      for (; i < syncQueue.length; i++) {
-        let callback = syncQueue[i];
-        do {
-          callback = callback(isSync);
-        } while (callback !== null);
-      }
-      syncQueue = null;
+      runWithPriority(ImmediatePriority, () => {
+        for (; i < syncQueue.length; i++) {
+          let callback = syncQueue[i];
+          do {
+            //wrap stuff
+            callback = callback(isSync);
+          } while (callback !== null);
+        }
+        syncQueue = null;
+      });
     } catch (error) {
       // If something throws, leave the remaining callbacks on the queue.
       if (syncQueue !== null) {
