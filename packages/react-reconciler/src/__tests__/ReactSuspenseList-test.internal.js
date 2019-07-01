@@ -1251,7 +1251,7 @@ describe('ReactSuspenseList', () => {
 
     expect(() => Scheduler.unstable_flushAll()).toWarnDev([
       'Warning: "collapse" is not a supported value for tail on ' +
-        '<SuspenseList />. Did you mean "collapsed"?' +
+        '<SuspenseList />. Did you mean "collapsed" or "hidden"?' +
         '\n    in SuspenseList (at **)' +
         '\n    in Foo (at **)',
     ]);
@@ -1730,6 +1730,69 @@ describe('ReactSuspenseList', () => {
         <span>D</span>
         <span>E</span>
         <span>F</span>
+      </Fragment>,
+    );
+  });
+
+  it('only shows no initial loading state "hidden" tail insertions', async () => {
+    let A = createAsyncText('A');
+    let B = createAsyncText('B');
+    let C = createAsyncText('C');
+
+    function Foo() {
+      return (
+        <SuspenseList revealOrder="forwards" tail="hidden">
+          <Suspense fallback={<Text text="Loading A" />}>
+            <A />
+          </Suspense>
+          <Suspense fallback={<Text text="Loading B" />}>
+            <B />
+          </Suspense>
+          <Suspense fallback={<Text text="Loading C" />}>
+            <C />
+          </Suspense>
+        </SuspenseList>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+
+    expect(Scheduler).toFlushAndYield(['Suspend! [A]', 'Loading A']);
+
+    expect(ReactNoop).toMatchRenderedOutput(null);
+
+    await A.resolve();
+
+    expect(Scheduler).toFlushAndYield(['A', 'Suspend! [B]', 'Loading B']);
+
+    // Incremental loading is suspended.
+    jest.advanceTimersByTime(500);
+
+    expect(ReactNoop).toMatchRenderedOutput(<span>A</span>);
+
+    await B.resolve();
+
+    expect(Scheduler).toFlushAndYield(['B', 'Suspend! [C]', 'Loading C']);
+
+    // Incremental loading is suspended.
+    jest.advanceTimersByTime(500);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <Fragment>
+        <span>A</span>
+        <span>B</span>
+      </Fragment>,
+    );
+
+    await C.resolve();
+
+    expect(Scheduler).toFlushAndYield(['C']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <Fragment>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
       </Fragment>,
     );
   });

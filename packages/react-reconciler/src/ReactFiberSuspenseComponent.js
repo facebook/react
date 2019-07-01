@@ -14,7 +14,7 @@ import {SuspenseComponent} from 'shared/ReactWorkTags';
 // Alternatively we can make this use an effect tag similar to SuspenseList.
 export type SuspenseState = {||};
 
-export type SuspenseListTailMode = 'collapsed' | void;
+export type SuspenseListTailMode = 'collapsed' | 'hidden' | void;
 
 export type SuspenseListRenderState = {|
   isBackwards: boolean,
@@ -28,6 +28,9 @@ export type SuspenseListRenderState = {|
   tailExpiration: number,
   // Tail insertions setting.
   tailMode: SuspenseListTailMode,
+  // Last Effect before we rendered the "rendering" item.
+  // Used to remove new effects added by the rendered item.
+  lastEffect: null | Fiber,
 |};
 
 export function shouldCaptureSuspense(

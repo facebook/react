@@ -537,6 +537,32 @@ function cutOffTailIfNeeded(
   hasRenderedATailFallback: boolean,
 ) {
   switch (renderState.tailMode) {
+    case 'hidden': {
+      // Any insertions at the end of the tail list after this point
+      // should be invisible. If there are already mounted boundaries
+      // anything before them are not considered for collapsing.
+      // Therefore we need to go through the whole tail to find if
+      // there are any.
+      let tailNode = renderState.tail;
+      let lastTailNode = null;
+      while (tailNode !== null) {
+        if (tailNode.alternate !== null) {
+          lastTailNode = tailNode;
+        }
+        tailNode = tailNode.sibling;
+      }
+      // Next we're simply going to delete all insertions after the
+      // last rendered item.
+      if (lastTailNode === null) {
+        // All remaining items in the tail are insertions.
+        renderState.tail = null;
+      } else {
+        // Detach the insertion after the last node that was already
+        // inserted.
+        lastTailNode.sibling = null;
+      }
+      break;
+    }
     case 'collapsed': {
       // Any insertions at the end of the tail list after this point
       // should be invisible. If there are already mounted boundaries
@@ -1037,6 +1063,27 @@ function completeWork(
             workInProgress.effectTag |= DidCapture;
             didSuspendAlready = true;
             cutOffTailIfNeeded(renderState, true);
+            // This might have been modified.
+            if (
+              renderState.tail === null &&
+              renderState.tailMode === 'hidden'
+            ) {
+              // We need to delete the row we just rendered.
+              // Ensure we transfer the update queue to the parent.
+              // TODO: This just reuses the code from the other path but could
+              // be optimized better.
+              hasSuspendedChildrenAndNewContent(workInProgress, renderedTail);
+              // Reset the effect list to what it w as before we rendered this
+              // child. The nested children have already appended themselves.
+              let lastEffect = (workInProgress.lastEffect =
+                renderState.lastEffect);
+              // Remove any effects that were appended after this point.
+              if (lastEffect !== null) {
+                lastEffect.nextEffect = null;
+              }
+              // We're done.
+              return null;
+            }
           } else if (
             now() > renderState.tailExpiration &&
             renderExpirationTime > Never
@@ -1093,6 +1140,7 @@ function completeWork(
         let next = renderState.tail;
         renderState.rendering = next;
         renderState.tail = next.sibling;
+        renderState.lastEffect = workInProgress.lastEffect;
         next.sibling = null;
 
         // Restore the context.

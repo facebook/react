@@ -2072,12 +2072,12 @@ function validateTailOptions(
 ) {
   if (__DEV__) {
     if (tailMode !== undefined && !didWarnAboutTailOptions[tailMode]) {
-      if (tailMode !== 'collapsed') {
+      if (tailMode !== 'collapsed' && tailMode !== 'hidden') {
         didWarnAboutTailOptions[tailMode] = true;
         warning(
           false,
           '"%s" is not a supported value for tail on <SuspenseList />. ' +
-            'Did you mean "collapsed"?',
+            'Did you mean "collapsed" or "hidden"?',
           tailMode,
         );
       } else if (revealOrder !== 'forwards' && revealOrder !== 'backwards') {
