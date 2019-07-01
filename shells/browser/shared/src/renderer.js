@@ -15,6 +15,7 @@ Object.defineProperty(
   '__REACT_DEVTOOLS_ATTACH__',
   ({
     enumerable: false,
+    configurable: true,
     get() {
       return attach;
     },
