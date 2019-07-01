@@ -2107,15 +2107,6 @@ function updateSuspenseListComponent(
 
   validateRevealOrder(revealOrder);
 
-  function printChildren(child) {
-    if (!child) {
-      return;
-    }
-    printChildren(child.sibling);
-  }
-
-  printChildren(current && current.child);
-
   reconcileChildren(current, workInProgress, newChildren, renderExpirationTime);
 
   let suspenseContext: SuspenseContext = suspenseStackCursor.current;
