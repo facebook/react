@@ -488,6 +488,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   it('tries rendering a lower priority pending update even if a higher priority one suspends', async () => {
+    spyOnDev(console, 'error');
     function App(props) {
       if (props.hide) {
         return <Text text="(empty)" />;
@@ -1573,6 +1574,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   it('does not suspend for very long after a higher priority update', async () => {
+    spyOnDev(console, 'error');
     function Foo({renderContent}) {
       Scheduler.unstable_yieldValue('Foo');
       return (
@@ -1604,13 +1606,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     // Flush some of the time
     Scheduler.unstable_advanceTime(500);
-    expect(() => {
-      jest.advanceTimersByTime(500);
-    }).toWarnDev(
-      'The following components suspended during a user-blocking ' +
-        'update: AsyncText',
-      {withoutStack: true},
-    );
+    jest.advanceTimersByTime(500);
 
     // We should have already shown the fallback.
     // When we wrote this test, we inferred the start time of high priority
