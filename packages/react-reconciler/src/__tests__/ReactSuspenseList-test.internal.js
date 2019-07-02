@@ -1088,4 +1088,569 @@ describe('ReactSuspenseList', () => {
       </Fragment>,
     );
   });
+
+  it('only shows one loading state at a time for "collapsed" tail insertions', async () => {
+    let A = createAsyncText('A');
+    let B = createAsyncText('B');
+    let C = createAsyncText('C');
+
+    function Foo() {
+      return (
+        <SuspenseList revealOrder="forwards" tail="collapsed">
+          <Suspense fallback={<Text text="Loading A" />}>
+            <A />
+          </Suspense>
+          <Suspense fallback={<Text text="Loading B" />}>
+            <B />
+          </Suspense>
+          <Suspense fallback={<Text text="Loading C" />}>
+            <C />
+          </Suspense>
+        </SuspenseList>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+
+    expect(Scheduler).toFlushAndYield(['Suspend! [A]', 'Loading A']);
+
+    expect(ReactNoop).toMatchRenderedOutput(<span>Loading A</span>);
+
+    await A.resolve();
+
+    expect(Scheduler).toFlushAndYield(['A', 'Suspend! [B]', 'Loading B']);
+
+    // Incremental loading is suspended.
+    jest.advanceTimersByTime(500);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <Fragment>
+        <span>A</span>
+        <span>Loading B</span>
+      </Fragment>,
+    );
+
+    await B.resolve();
+
+    expect(Scheduler).toFlushAndYield(['B', 'Suspend! [C]', 'Loading C']);
+
+    // Incremental loading is suspended.
+    jest.advanceTimersByTime(500);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <Fragment>
+        <span>A</span>
+        <span>B</span>
+        <span>Loading C</span>
+      </Fragment>,
+    );
+
+    await C.resolve();
+
+    expect(Scheduler).toFlushAndYield(['C']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <Fragment>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+      </Fragment>,
+    );
+  });
+
+  it('warns if an unsupported tail option is used', () => {
+    function Foo() {
+      return (
+        <SuspenseList revealOrder="forwards" tail="collapse">
+          <Suspense fallback="Loading">Content</Suspense>
+        </SuspenseList>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+
+    expect(() => Scheduler.unstable_flushAll()).toWarnDev([
+      'Warning: "collapse" is not a supported value for tail on ' +
+        '<SuspenseList />. Did you mean "collapsed"?' +
+        '\n    in SuspenseList (at **)' +
+        '\n    in Foo (at **)',
+    ]);
+  });
+
+  it('warns if a tail option is used with "together"', () => {
+    function Foo() {
+      return (
+        <SuspenseList revealOrder="together" tail="collapsed">
+          <Suspense fallback="Loading">Content</Suspense>
+        </SuspenseList>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+
+    expect(() => Scheduler.unstable_flushAll()).toWarnDev([
+      'Warning: <SuspenseList tail="collapsed" /> is only valid if ' +
+        'revealOrder is "forwards" or "backwards". ' +
+        'Did you mean to specify revealOrder="forwards"?' +
+        '\n    in SuspenseList (at **)' +
+        '\n    in Foo (at **)',
+    ]);
+  });
+
+  it('renders one "collapsed" fallback even if CPU time elapsed', async () => {
+    function Foo() {
+      return (
+        <SuspenseList revealOrder="forwards" tail="collapsed">
+          <Suspense fallback={<Text text="Loading A" />}>
+            <Text text="A" />
+          </Suspense>
+          <Suspense fallback={<Text text="Loading B" />}>
+            <Text text="B" />
+          </Suspense>
+          <Suspense fallback={<Text text="Loading C" />}>
+            <Text text="C" />
+          </Suspense>
+          <Suspense fallback={<Text text="Loading D" />}>
+            <Text text="D" />
+          </Suspense>
+        </SuspenseList>
+      );
+    }
+
+    // This render is only CPU bound. Nothing suspends.
+    ReactNoop.render(<Foo />);
+
+    expect(Scheduler).toFlushAndYieldThrough(['A']);
+
+    Scheduler.unstable_advanceTime(300);
+    jest.advanceTimersByTime(300);
+
+    expect(Scheduler).toFlushAndYieldThrough(['B']);
+
+    Scheduler.unstable_advanceTime(300);
+    jest.advanceTimersByTime(300);
+
+    // We've still not been able to show anything on the screen even though
+    // we have two items ready.
+    expect(ReactNoop).toMatchRenderedOutput(null);
+
+    // Time has now elapsed for so long that we're just going to give up
+    // rendering the rest of the content. So that we can at least show
+    // something.
+    expect(Scheduler).toFlushAndYieldThrough([
+      'Loading C',
+      'C', // I'll flush through into the next render so that the first commits.
+    ]);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <Fragment>
+        <span>A</span>
+        <span>B</span>
+        <span>Loading C</span>
+      </Fragment>,
+    );
+
+    // Then we do a second pass to commit the last two items.
+    expect(Scheduler).toFlushAndYield(['D']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <Fragment>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+        <span>D</span>
+      </Fragment>,
+    );
+  });
+
+  it('adding to the middle does not collapse insertions (forwards)', async () => {
+    let A = createAsyncText('A');
+    let B = createAsyncText('B');
+    let C = createAsyncText('C');
+    let D = createAsyncText('D');
+    let E = createAsyncText('E');
+    let F = createAsyncText('F');
+
+    function Foo({items}) {
+      return (
+        <SuspenseList revealOrder="forwards" tail="collapsed">
+          {items.map(([key, Component]) => (
+            <Suspense key={key} fallback={<Text text={'Loading ' + key} />}>
+              <Component />
+            </Suspense>
+          ))}
+        </SuspenseList>
+      );
+    }
+
+    ReactNoop.render(<Foo items={[['A', A], ['D', D]]} />);
+
+    await A.resolve();
+    await D.resolve();
+
+    expect(Scheduler).toFlushAndYield(['A', 'D']);
+
+    // First render commits A and D.
+    expect(ReactNoop).toMatchRenderedOutput(
+      <Fragment>
+        <span>A</span>
+        <span>D</span>
+      </Fragment>,
+    );
+
+    // For the second render, we're going to insert items in the middle and end.
+    ReactNoop.render(
+      <Foo
+        items={[['A', A], ['B', B], ['C', C], ['D', D], ['E', E], ['F', F]]}
+      />,
+    );
+
+    expect(Scheduler).toFlushAndYield([
+      'A',
+      'Suspend! [B]',
+      'Loading B',
+      'Suspend! [C]',
+      'Loading C',
+      'D',
+      'Loading E',
+    ]);
+
+    // B and C don't get collapsed, but F gets collapsed with E.
+    expect(ReactNoop).toMatchRenderedOutput(
+      <Fragment>
+        <span>A</span>
+        <span>Loading B</span>
+        <span>Loading C</span>
+        <span>D</span>
+        <span>Loading E</span>
+      </Fragment>,
+    );
+
+    await B.resolve();
+
+    expect(Scheduler).toFlushAndYield(['B', 'Suspend! [C]']);
+
+    // Incremental loading is suspended.
+    jest.advanceTimersByTime(500);
+
+    // Even though B is unsuspended, it's still in loading state because
+    // it is blocked by C.
+    expect(ReactNoop).toMatchRenderedOutput(
+      <Fragment>
+        <span>A</span>
+        <span>Loading B</span>
+        <span>Loading C</span>
+        <span>D</span>
+        <span>Loading E</span>
+      </Fragment>,
+    );
+
+    await C.resolve();
+    await E.resolve();
+
+    expect(Scheduler).toFlushAndYield([
+      'B',
+      'C',
+      'E',
+      'Suspend! [F]',
+      'Loading F',
+    ]);
+
+    jest.advanceTimersByTime(500);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <Fragment>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+        <span>D</span>
+        <span>E</span>
+        <span>Loading F</span>
+      </Fragment>,
+    );
+
+    await F.resolve();
+
+    expect(Scheduler).toFlushAndYield(['F']);
+
+    jest.advanceTimersByTime(500);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <Fragment>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+        <span>D</span>
+        <span>E</span>
+        <span>F</span>
+      </Fragment>,
+    );
+  });
+
+  it('adding to the middle does not collapse insertions (backwards)', async () => {
+    let A = createAsyncText('A');
+    let B = createAsyncText('B');
+    let C = createAsyncText('C');
+    let D = createAsyncText('D');
+    let E = createAsyncText('E');
+    let F = createAsyncText('F');
+
+    function Foo({items}) {
+      return (
+        <SuspenseList revealOrder="backwards" tail="collapsed">
+          {items.map(([key, Component]) => (
+            <Suspense key={key} fallback={<Text text={'Loading ' + key} />}>
+              <Component />
+            </Suspense>
+          ))}
+        </SuspenseList>
+      );
+    }
+
+    ReactNoop.render(<Foo items={[['C', C], ['F', F]]} />);
+
+    await C.resolve();
+    await F.resolve();
+
+    expect(Scheduler).toFlushAndYield(['F', 'C']);
+
+    // First render commits C and F.
+    expect(ReactNoop).toMatchRenderedOutput(
+      <Fragment>
+        <span>C</span>
+        <span>F</span>
+      </Fragment>,
+    );
+
+    // For the second render, we're going to insert items in the middle and end.
+    ReactNoop.render(
+      <Foo
+        items={[['A', A], ['B', B], ['C', C], ['D', D], ['E', E], ['F', F]]}
+      />,
+    );
+
+    expect(Scheduler).toFlushAndYield([
+      'C',
+      'Suspend! [D]',
+      'Loading D',
+      'Suspend! [E]',
+      'Loading E',
+      'F',
+      'Loading B',
+    ]);
+
+    // D and E don't get collapsed, but A gets collapsed with B.
+    expect(ReactNoop).toMatchRenderedOutput(
+      <Fragment>
+        <span>Loading B</span>
+        <span>C</span>
+        <span>Loading D</span>
+        <span>Loading E</span>
+        <span>F</span>
+      </Fragment>,
+    );
+
+    await E.resolve();
+
+    expect(Scheduler).toFlushAndYield(['Suspend! [D]', 'E']);
+
+    // Incremental loading is suspended.
+    jest.advanceTimersByTime(500);
+
+    // Even though E is unsuspended, it's still in loading state because
+    // it is blocked by D.
+    expect(ReactNoop).toMatchRenderedOutput(
+      <Fragment>
+        <span>Loading B</span>
+        <span>C</span>
+        <span>Loading D</span>
+        <span>Loading E</span>
+        <span>F</span>
+      </Fragment>,
+    );
+
+    await C.resolve();
+    await E.resolve();
+
+    await B.resolve();
+    await C.resolve();
+    await D.resolve();
+    await E.resolve();
+
+    expect(Scheduler).toFlushAndYield([
+      'D',
+      'E',
+      'B',
+      'Suspend! [A]',
+      'Loading A',
+    ]);
+
+    jest.advanceTimersByTime(500);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <Fragment>
+        <span>Loading A</span>
+        <span>B</span>
+        <span>C</span>
+        <span>D</span>
+        <span>E</span>
+        <span>F</span>
+      </Fragment>,
+    );
+
+    await A.resolve();
+
+    expect(Scheduler).toFlushAndYield(['A']);
+
+    jest.advanceTimersByTime(500);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <Fragment>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+        <span>D</span>
+        <span>E</span>
+        <span>F</span>
+      </Fragment>,
+    );
+  });
+
+  it('adding to the middle of committeed tail does not collapse insertions', async () => {
+    let A = createAsyncText('A');
+    let B = createAsyncText('B');
+    let C = createAsyncText('C');
+    let D = createAsyncText('D');
+    let E = createAsyncText('E');
+    let F = createAsyncText('F');
+
+    function SyncD() {
+      return <Text text="D" />;
+    }
+
+    function Foo({items}) {
+      return (
+        <SuspenseList revealOrder="forwards" tail="collapsed">
+          {items.map(([key, Component]) => (
+            <Suspense key={key} fallback={<Text text={'Loading ' + key} />}>
+              <Component />
+            </Suspense>
+          ))}
+        </SuspenseList>
+      );
+    }
+
+    ReactNoop.render(<Foo items={[['A', A], ['D', SyncD]]} />);
+
+    await A.resolve();
+
+    expect(Scheduler).toFlushAndYield(['A', 'D']);
+
+    // First render commits A and D.
+    expect(ReactNoop).toMatchRenderedOutput(
+      <Fragment>
+        <span>A</span>
+        <span>D</span>
+      </Fragment>,
+    );
+
+    // For the second render, we're going to insert items in the middle and end.
+    // Note that D now suspends even though it didn't in the first pass.
+    ReactNoop.render(
+      <Foo
+        items={[['A', A], ['B', B], ['C', C], ['D', D], ['E', E], ['F', F]]}
+      />,
+    );
+
+    expect(Scheduler).toFlushAndYield([
+      'A',
+      'Suspend! [B]',
+      'Loading B',
+      'Suspend! [C]',
+      'Loading C',
+      'Suspend! [D]',
+      'Loading D',
+      'Loading E',
+    ]);
+
+    // This is suspended due to the update to D causing a loading state.
+    jest.advanceTimersByTime(500);
+
+    // B and C don't get collapsed, but F gets collapsed with E.
+    // Even though everything in the bottom of the list is suspended, we don't
+    // collapse them because D was an update. Not an insertion.
+    expect(ReactNoop).toMatchRenderedOutput(
+      <Fragment>
+        <span>A</span>
+        <span>Loading B</span>
+        <span>Loading C</span>
+        <span hidden={true}>D</span>
+        <span>Loading D</span>
+        <span>Loading E</span>
+      </Fragment>,
+    );
+
+    await B.resolve();
+
+    expect(Scheduler).toFlushAndYield(['B', 'Suspend! [C]']);
+
+    // Incremental loading is suspended.
+    jest.advanceTimersByTime(500);
+
+    // B is able to unblock here because it's part of the tail.
+    // If D was still visible it wouldn't be part of the tail
+    // and would be blocked on C like in the other test.
+    expect(ReactNoop).toMatchRenderedOutput(
+      <Fragment>
+        <span>A</span>
+        <span>B</span>
+        <span>Loading C</span>
+        <span hidden={true}>D</span>
+        <span>Loading D</span>
+        <span>Loading E</span>
+      </Fragment>,
+    );
+
+    await C.resolve();
+    await D.resolve();
+    await E.resolve();
+
+    expect(Scheduler).toFlushAndYield([
+      'C',
+      'D',
+      'E',
+      'Suspend! [F]',
+      'Loading F',
+    ]);
+
+    jest.advanceTimersByTime(500);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <Fragment>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+        <span>D</span>
+        <span>E</span>
+        <span>Loading F</span>
+      </Fragment>,
+    );
+
+    await F.resolve();
+
+    expect(Scheduler).toFlushAndYield(['F']);
+
+    jest.advanceTimersByTime(500);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <Fragment>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+        <span>D</span>
+        <span>E</span>
+        <span>F</span>
+      </Fragment>,
+    );
+  });
 });

@@ -14,6 +14,8 @@ import {SuspenseComponent} from 'shared/ReactWorkTags';
 // Alternatively we can make this use an effect tag similar to SuspenseList.
 export type SuspenseState = {||};
 
+export type SuspenseListTailMode = 'collapsed' | void;
+
 export type SuspenseListRenderState = {|
   isBackwards: boolean,
   // The currently rendering tail row.
@@ -24,6 +26,8 @@ export type SuspenseListRenderState = {|
   tail: null | Fiber,
   // The absolute time in ms that we'll expire the tail rendering.
   tailExpiration: number,
+  // Tail insertions setting.
+  tailMode: SuspenseListTailMode,
 |};
 
 export function shouldCaptureSuspense(
