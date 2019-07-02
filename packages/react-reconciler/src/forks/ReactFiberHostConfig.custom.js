@@ -37,14 +37,13 @@ export opaque type UpdatePayload = mixed; // eslint-disable-line no-undef
 export opaque type ChildSet = mixed; // eslint-disable-line no-undef
 export opaque type TimeoutHandle = mixed; // eslint-disable-line no-undef
 export opaque type NoTimeout = mixed; // eslint-disable-line no-undef
+export type EventResponder = any;
 
 export const getPublicInstance = $$$hostConfig.getPublicInstance;
 export const getRootHostContext = $$$hostConfig.getRootHostContext;
 export const getChildHostContext = $$$hostConfig.getChildHostContext;
 export const getChildHostContextForEventComponent =
   $$$hostConfig.getChildHostContextForEventComponent;
-export const getChildHostContextForEventTarget =
-  $$$hostConfig.getChildHostContextForEventTarget;
 export const prepareForCommit = $$$hostConfig.prepareForCommit;
 export const resetAfterCommit = $$$hostConfig.resetAfterCommit;
 export const createInstance = $$$hostConfig.createInstance;
@@ -60,6 +59,7 @@ export const cancelTimeout = $$$hostConfig.clearTimeout;
 export const noTimeout = $$$hostConfig.noTimeout;
 export const now = $$$hostConfig.now;
 export const isPrimaryRenderer = $$$hostConfig.isPrimaryRenderer;
+export const shouldWarnUnactedUpdates = $$$hostConfig.shouldWarnUnactedUpdates;
 export const supportsMutation = $$$hostConfig.supportsMutation;
 export const supportsPersistence = $$$hostConfig.supportsPersistence;
 export const supportsHydration = $$$hostConfig.supportsHydration;
@@ -88,8 +88,6 @@ export const hideTextInstance = $$$hostConfig.hideTextInstance;
 export const unhideInstance = $$$hostConfig.unhideInstance;
 export const unhideTextInstance = $$$hostConfig.unhideTextInstance;
 export const unmountEventComponent = $$$hostConfig.unmountEventComponent;
-export const commitTouchHitTargetUpdate =
-  $$$hostConfig.commitTouchHitTargetUpdate;
 export const commitEventTarget = $$$hostConfig.commitEventTarget;
 
 // -------------------

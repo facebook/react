@@ -9,6 +9,4 @@
 
 'use strict';
 
-const Focus = require('./src/Focus');
-
-module.exports = Focus.default || Focus;
+module.exports = require('./src/dom/Focus');

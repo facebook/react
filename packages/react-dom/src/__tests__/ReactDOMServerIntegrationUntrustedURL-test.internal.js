@@ -16,6 +16,7 @@ const ReactDOMServerIntegrationUtils = require('./utils/ReactDOMServerIntegratio
 let React;
 let ReactDOM;
 let ReactDOMServer;
+let ReactTestUtils;
 
 function runTests(itRenders, itRejectsRendering, expectToReject) {
   itRenders('a http link with the word javascript in it', async render => {
@@ -152,11 +153,13 @@ describe('ReactDOMServerIntegration - Untrusted URLs', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
+    ReactTestUtils = require('react-dom/test-utils');
 
     // Make them available to the helpers.
     return {
       ReactDOM,
       ReactDOMServer,
+      ReactTestUtils,
     };
   }
 
@@ -185,11 +188,13 @@ describe('ReactDOMServerIntegration - Untrusted URLs - disableJavaScriptURLs', (
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
+    ReactTestUtils = require('react-dom/test-utils');
 
     // Make them available to the helpers.
     return {
       ReactDOM,
       ReactDOMServer,
+      ReactTestUtils,
     };
   }
 

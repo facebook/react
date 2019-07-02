@@ -410,14 +410,14 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: ISOMORPHIC,
-    entry: 'react-fresh/babel',
+    entry: 'react-refresh/babel',
     global: 'ReactFreshBabelPlugin',
     externals: [],
   },
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: ISOMORPHIC,
-    entry: 'react-fresh/runtime',
+    entry: 'react-refresh/runtime',
     global: 'ReactFreshRuntime',
     externals: [],
   },
@@ -438,21 +438,6 @@ const bundles = [
   },
 
   /******* React Events (experimental) *******/
-  {
-    bundleTypes: [
-      UMD_DEV,
-      UMD_PROD,
-      NODE_DEV,
-      NODE_PROD,
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-    ],
-    moduleType: ISOMORPHIC,
-    entry: 'react-events',
-    global: 'ReactEvents',
-    externals: [],
-  },
-
   {
     bundleTypes: [
       UMD_DEV,

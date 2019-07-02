@@ -26,7 +26,7 @@ class ClassComponent extends React.Component {
   }
 }
 
-const StatelessComponent = () => React.createElement("div");
+const FunctionComponent = () => React.createElement("div");
 
 const ForwardRefComponent = React.forwardRef((props, ref) =>
   React.createElement(Component, { forwardedRef: ref, ...props })
@@ -36,7 +36,7 @@ const Context = React.createContext(false);
 
 ReactIs.isValidElementType("div"); // true
 ReactIs.isValidElementType(ClassComponent); // true
-ReactIs.isValidElementType(StatelessComponent); // true
+ReactIs.isValidElementType(FunctionComponent); // true
 ReactIs.isValidElementType(ForwardRefComponent); // true
 ReactIs.isValidElementType(Context.Provider); // true
 ReactIs.isValidElementType(Context.Consumer); // true

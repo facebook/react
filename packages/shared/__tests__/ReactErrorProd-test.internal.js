@@ -36,7 +36,7 @@ describe('ReactErrorProd', () => {
 
   it('should throw with the correct number of `%s`s in the URL', () => {
     expect(function() {
-      throw ReactErrorProd(124, 'foo', 'bar');
+      throw ReactErrorProd(Error(124), 'foo', 'bar');
     }).toThrowError(
       'Minified React error #124; visit ' +
         'https://reactjs.org/docs/error-decoder.html?invariant=124&args[]=foo&args[]=bar' +
@@ -45,7 +45,7 @@ describe('ReactErrorProd', () => {
     );
 
     expect(function() {
-      throw ReactErrorProd(20);
+      throw ReactErrorProd(Error(20));
     }).toThrowError(
       'Minified React error #20; visit ' +
         'https://reactjs.org/docs/error-decoder.html?invariant=20' +
@@ -54,7 +54,7 @@ describe('ReactErrorProd', () => {
     );
 
     expect(function() {
-      throw ReactErrorProd(77, '<div>', '&?bar');
+      throw ReactErrorProd(Error(77), '<div>', '&?bar');
     }).toThrowError(
       'Minified React error #77; visit ' +
         'https://reactjs.org/docs/error-decoder.html?invariant=77&args[]=%3Cdiv%3E&args[]=%26%3Fbar' +

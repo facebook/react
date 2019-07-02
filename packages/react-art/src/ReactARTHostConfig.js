@@ -7,22 +7,10 @@
 
 import Transform from 'art/core/transform';
 import Mode from 'art/modes/current';
-import * as Scheduler from 'scheduler';
 import invariant from 'shared/invariant';
 
 import {TYPES, EVENT_TYPES, childrenAsString} from './ReactARTInternals';
 import type {ReactEventComponentInstance} from 'shared/ReactTypes';
-
-// Intentionally not named imports because Rollup would
-// use dynamic dispatch for CommonJS interop named imports.
-const {
-  unstable_now: now,
-  unstable_scheduleCallback: scheduleDeferredCallback,
-  unstable_shouldYield: shouldYield,
-  unstable_cancelCallback: cancelDeferredCallback,
-} = Scheduler;
-
-export {now, scheduleDeferredCallback, shouldYield, cancelDeferredCallback};
 
 const pooledTransform = new Transform();
 
@@ -345,10 +333,6 @@ export function getChildHostContextForEventComponent() {
   return NO_CONTEXT;
 }
 
-export function getChildHostContextForEventTarget() {
-  return NO_CONTEXT;
-}
-
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;
 export const noTimeout = -1;
@@ -361,6 +345,9 @@ export function shouldSetTextContent(type, props) {
 
 // The ART renderer is secondary to the React DOM renderer.
 export const isPrimaryRenderer = false;
+
+// The ART renderer shouldn't trigger missing act() warnings
+export const shouldWarnUnactedUpdates = false;
 
 export const supportsMutation = true;
 
@@ -441,19 +428,19 @@ export function unhideTextInstance(textInstance, text): void {
 }
 
 export function mountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance,
+  eventComponentInstance: ReactEventComponentInstance<any, any, any>,
 ) {
   throw new Error('Not yet implemented.');
 }
 
 export function updateEventComponent(
-  eventComponentInstance: ReactEventComponentInstance,
+  eventComponentInstance: ReactEventComponentInstance<any, any, any>,
 ) {
   throw new Error('Not yet implemented.');
 }
 
 export function unmountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance,
+  eventComponentInstance: ReactEventComponentInstance<any, any, any>,
 ): void {
   throw new Error('Not yet implemented.');
 }

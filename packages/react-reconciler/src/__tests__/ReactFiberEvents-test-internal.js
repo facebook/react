@@ -18,10 +18,10 @@ let ReactTestRenderer;
 let ReactDOM;
 let ReactDOMServer;
 let ReactTestUtils;
-let EventTarget;
 let ReactSymbols;
 
 const noOpResponder = {
+  displayName: 'TestEventComponent',
   targetEventTypes: [],
   handleEvent() {},
 };
@@ -29,24 +29,15 @@ const noOpResponder = {
 function createReactEventComponent() {
   return {
     $$typeof: ReactSymbols.REACT_EVENT_COMPONENT_TYPE,
-    displayName: 'TestEventComponent',
     props: null,
     responder: noOpResponder,
-  };
-}
-
-function createReactEventTarget() {
-  return {
-    $$typeof: ReactSymbols.REACT_EVENT_TARGET_TYPE,
-    displayName: 'TestEventTarget',
-    type: Symbol.for('react.event_target.test'),
   };
 }
 
 function init() {
   jest.resetModules();
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
-  ReactFeatureFlags.enableEventAPI = true;
+  ReactFeatureFlags.enableFlareAPI = true;
   React = require('react');
   Scheduler = require('scheduler');
   ReactSymbols = require('shared/ReactSymbols');
@@ -80,7 +71,6 @@ describe('ReactFiberEvents', () => {
     beforeEach(() => {
       initNoopRenderer();
       EventComponent = createReactEventComponent();
-      EventTarget = createReactEventTarget();
     });
 
     it('should render a simple event component with a single child', () => {
@@ -122,85 +112,6 @@ describe('ReactFiberEvents', () => {
         'Warning: validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
           'Wrap the child text "Hello world" in an element.',
       );
-    });
-
-    it('should render a simple event component with a single event target', () => {
-      const Test = () => (
-        <EventComponent>
-          <div>
-            Hello world<EventTarget />
-          </div>
-        </EventComponent>
-      );
-
-      ReactNoop.render(<Test />);
-      expect(Scheduler).toFlushWithoutYielding();
-      expect(ReactNoop).toMatchRenderedOutput(<div>Hello world</div>);
-    });
-
-    it('should warn when an event target has a direct text child', () => {
-      const Test = () => (
-        <EventComponent>
-          <EventTarget>Hello world</EventTarget>
-        </EventComponent>
-      );
-
-      expect(() => {
-        ReactNoop.render(<Test />);
-        expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev('Warning: Event targets should not have children.');
-    });
-
-    it('should warn when an event target has a direct text child #2', () => {
-      const ChildWrapper = () => 'Hello world';
-      const Test = () => (
-        <EventComponent>
-          <EventTarget>
-            <ChildWrapper />
-          </EventTarget>
-        </EventComponent>
-      );
-
-      expect(() => {
-        ReactNoop.render(<Test />);
-        expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev('Warning: Event targets should not have children.');
-    });
-
-    it('should not warn if an event target is not a direct child of an event component', () => {
-      const Test = () => (
-        <EventComponent>
-          <div>
-            <EventTarget />
-            <span>Child 1</span>
-          </div>
-        </EventComponent>
-      );
-
-      ReactNoop.render(<Test />);
-      expect(Scheduler).toFlushWithoutYielding();
-      expect(ReactNoop).toMatchRenderedOutput(
-        <div>
-          <span>Child 1</span>
-        </div>,
-      );
-    });
-
-    it('should warn if an event target has an event component as a child', () => {
-      const Test = () => (
-        <EventComponent>
-          <EventTarget>
-            <EventComponent>
-              <span>Child 1</span>
-            </EventComponent>
-          </EventTarget>
-        </EventComponent>
-      );
-
-      expect(() => {
-        ReactNoop.render(<Test />);
-        expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev('Warning: Event targets should not have children.');
     });
 
     it('should handle event components correctly with error boundaries', () => {
@@ -331,51 +242,6 @@ describe('ReactFiberEvents', () => {
       );
     });
 
-    it('should handle re-renders where there is a bail-out in a parent and an error occurs #2', () => {
-      let _updateCounter;
-
-      function Child() {
-        const [counter, updateCounter] = React.useState(0);
-
-        _updateCounter = updateCounter;
-
-        if (counter === 1) {
-          return <EventTarget>123</EventTarget>;
-        }
-
-        return (
-          <div>
-            <span>Child - {counter}</span>
-          </div>
-        );
-      }
-
-      const Parent = () => (
-        <div>
-          <EventComponent>
-            <Child />
-          </EventComponent>
-        </div>
-      );
-
-      ReactNoop.render(<Parent />);
-      expect(Scheduler).toFlushWithoutYielding();
-      expect(ReactNoop).toMatchRenderedOutput(
-        <div>
-          <div>
-            <span>Child - 0</span>
-          </div>
-        </div>,
-      );
-
-      expect(() => {
-        ReactNoop.act(() => {
-          _updateCounter(counter => counter + 1);
-        });
-        expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev('Warning: Event targets should not have children.');
-    });
-
     it('should error with a component stack contains the names of the event components and event targets', () => {
       let componentStackMessage;
 
@@ -426,7 +292,6 @@ describe('ReactFiberEvents', () => {
     beforeEach(() => {
       initTestRenderer();
       EventComponent = createReactEventComponent();
-      EventTarget = createReactEventTarget();
     });
 
     it('should render a simple event component with a single child', () => {
@@ -471,101 +336,6 @@ describe('ReactFiberEvents', () => {
         'Warning: validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
           'Wrap the child text "Hello world" in an element.',
       );
-    });
-
-    it('should render a simple event component with a single event target', () => {
-      const Test = () => (
-        <EventComponent>
-          <div>
-            Hello world<EventTarget />
-          </div>
-        </EventComponent>
-      );
-
-      const root = ReactTestRenderer.create(null);
-      root.update(<Test />);
-      expect(Scheduler).toFlushWithoutYielding();
-      expect(root).toMatchRenderedOutput(<div>Hello world</div>);
-
-      const Test2 = () => (
-        <EventComponent>
-          <EventTarget />
-          <span>I am now a span</span>
-        </EventComponent>
-      );
-
-      root.update(<Test2 />);
-      expect(Scheduler).toFlushWithoutYielding();
-      expect(root).toMatchRenderedOutput(<span>I am now a span</span>);
-    });
-
-    it('should warn when an event target has a direct text child', () => {
-      const Test = () => (
-        <EventComponent>
-          <EventTarget>Hello world</EventTarget>
-        </EventComponent>
-      );
-
-      const root = ReactTestRenderer.create(null);
-      expect(() => {
-        root.update(<Test />);
-        expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev('Warning: Event targets should not have children.');
-    });
-
-    it('should warn when an event target has a direct text child #2', () => {
-      const ChildWrapper = () => 'Hello world';
-      const Test = () => (
-        <EventComponent>
-          <EventTarget>
-            <ChildWrapper />
-          </EventTarget>
-        </EventComponent>
-      );
-
-      const root = ReactTestRenderer.create(null);
-      expect(() => {
-        root.update(<Test />);
-        expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev('Warning: Event targets should not have children.');
-    });
-
-    it('should not warn if an event target is not a direct child of an event component', () => {
-      const Test = () => (
-        <EventComponent>
-          <div>
-            <EventTarget />
-            <span>Child 1</span>
-          </div>
-        </EventComponent>
-      );
-
-      const root = ReactTestRenderer.create(null);
-      root.update(<Test />);
-      expect(Scheduler).toFlushWithoutYielding();
-      expect(root).toMatchRenderedOutput(
-        <div>
-          <span>Child 1</span>
-        </div>,
-      );
-    });
-
-    it('should warn if an event target has an event component as a child', () => {
-      const Test = () => (
-        <EventComponent>
-          <EventTarget>
-            <EventComponent>
-              <span>Child 1</span>
-            </EventComponent>
-          </EventTarget>
-        </EventComponent>
-      );
-
-      const root = ReactTestRenderer.create(null);
-      expect(() => {
-        root.update(<Test />);
-        expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev('Warning: Event targets should not have children.');
     });
 
     it('should handle event components correctly with error boundaries', () => {
@@ -697,52 +467,6 @@ describe('ReactFiberEvents', () => {
       );
     });
 
-    it('should handle re-renders where there is a bail-out in a parent and an error occurs #2', () => {
-      let _updateCounter;
-
-      function Child() {
-        const [counter, updateCounter] = React.useState(0);
-
-        _updateCounter = updateCounter;
-
-        if (counter === 1) {
-          return <EventTarget>123</EventTarget>;
-        }
-
-        return (
-          <div>
-            <span>Child - {counter}</span>
-          </div>
-        );
-      }
-
-      const Parent = () => (
-        <div>
-          <EventComponent>
-            <Child />
-          </EventComponent>
-        </div>
-      );
-
-      const root = ReactTestRenderer.create(null);
-      root.update(<Parent />);
-      expect(Scheduler).toFlushWithoutYielding();
-      expect(root).toMatchRenderedOutput(
-        <div>
-          <div>
-            <span>Child - 0</span>
-          </div>
-        </div>,
-      );
-
-      expect(() => {
-        ReactTestRenderer.act(() => {
-          _updateCounter(counter => counter + 1);
-        });
-        expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev('Warning: Event targets should not have children.');
-    });
-
     it('should error with a component stack contains the names of the event components and event targets', () => {
       let componentStackMessage;
 
@@ -799,12 +523,12 @@ describe('ReactFiberEvents', () => {
       };
 
       function Async() {
-        Scheduler.yieldValue('Suspend!');
+        Scheduler.unstable_yieldValue('Suspend!');
         throw thenable;
       }
 
       function Text(props) {
-        Scheduler.yieldValue(props.text);
+        Scheduler.unstable_yieldValue(props.text);
         return props.text;
       }
 
@@ -831,7 +555,6 @@ describe('ReactFiberEvents', () => {
     beforeEach(() => {
       initReactDOM();
       EventComponent = createReactEventComponent();
-      EventTarget = createReactEventTarget();
     });
 
     it('should render a simple event component with a single child', () => {
@@ -875,97 +598,6 @@ describe('ReactFiberEvents', () => {
         'Warning: validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
           'Wrap the child text "Hello world" in an element.',
       );
-    });
-
-    it('should render a simple event component with a single event target', () => {
-      const Test = () => (
-        <EventComponent>
-          <div>
-            Hello world<EventTarget />
-          </div>
-        </EventComponent>
-      );
-
-      const container = document.createElement('div');
-      ReactDOM.render(<Test />, container);
-      expect(Scheduler).toFlushWithoutYielding();
-      expect(container.innerHTML).toBe('<div>Hello world</div>');
-
-      const Test2 = () => (
-        <EventComponent>
-          <EventTarget />
-          <span>I am now a span</span>
-        </EventComponent>
-      );
-
-      ReactDOM.render(<Test2 />, container);
-      expect(Scheduler).toFlushWithoutYielding();
-      expect(container.innerHTML).toBe('<span>I am now a span</span>');
-    });
-
-    it('should warn when an event target has a direct text child', () => {
-      const Test = () => (
-        <EventComponent>
-          <EventTarget>Hello world</EventTarget>
-        </EventComponent>
-      );
-
-      expect(() => {
-        const container = document.createElement('div');
-        ReactDOM.render(<Test />, container);
-        expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev('Warning: Event targets should not have children.');
-    });
-
-    it('should warn when an event target has a direct text child #2', () => {
-      const ChildWrapper = () => 'Hello world';
-      const Test = () => (
-        <EventComponent>
-          <EventTarget>
-            <ChildWrapper />
-          </EventTarget>
-        </EventComponent>
-      );
-
-      expect(() => {
-        const container = document.createElement('div');
-        ReactDOM.render(<Test />, container);
-        expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev('Warning: Event targets should not have children.');
-    });
-
-    it('should not warn if an event target is not a direct child of an event component', () => {
-      const Test = () => (
-        <EventComponent>
-          <div>
-            <EventTarget />
-            <span>Child 1</span>
-          </div>
-        </EventComponent>
-      );
-
-      const container = document.createElement('div');
-      ReactDOM.render(<Test />, container);
-      expect(Scheduler).toFlushWithoutYielding();
-      expect(container.innerHTML).toBe('<div><span>Child 1</span></div>');
-    });
-
-    it('should warn if an event target has an event component as a child', () => {
-      const Test = () => (
-        <EventComponent>
-          <EventTarget>
-            <EventComponent>
-              <span>Child 1</span>
-            </EventComponent>
-          </EventTarget>
-        </EventComponent>
-      );
-
-      expect(() => {
-        const container = document.createElement('div');
-        ReactDOM.render(<Test />, container);
-        expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev('Warning: Event targets should not have children.');
     });
 
     it('should handle event components correctly with error boundaries', () => {
@@ -1084,47 +716,6 @@ describe('ReactFiberEvents', () => {
       );
     });
 
-    it('should handle re-renders where there is a bail-out in a parent and an error occurs #2', () => {
-      let _updateCounter;
-
-      function Child() {
-        const [counter, updateCounter] = React.useState(0);
-
-        _updateCounter = updateCounter;
-
-        if (counter === 1) {
-          return <EventTarget>123</EventTarget>;
-        }
-
-        return (
-          <div>
-            <span>Child - {counter}</span>
-          </div>
-        );
-      }
-
-      const Parent = () => (
-        <div>
-          <EventComponent>
-            <Child />
-          </EventComponent>
-        </div>
-      );
-
-      const container = document.createElement('div');
-      ReactDOM.render(<Parent />, container);
-      expect(container.innerHTML).toBe(
-        '<div><div><span>Child - 0</span></div></div>',
-      );
-
-      expect(() => {
-        ReactTestUtils.act(() => {
-          _updateCounter(counter => counter + 1);
-        });
-        expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev('Warning: Event targets should not have children.');
-    });
-
     it('should error with a component stack contains the names of the event components and event targets', () => {
       let componentStackMessage;
 
@@ -1175,7 +766,6 @@ describe('ReactFiberEvents', () => {
     beforeEach(() => {
       initReactDOMServer();
       EventComponent = createReactEventComponent();
-      EventTarget = createReactEventTarget();
     });
 
     it('should render a simple event component with a single child', () => {
@@ -1186,30 +776,6 @@ describe('ReactFiberEvents', () => {
       );
       const output = ReactDOMServer.renderToString(<Test />);
       expect(output).toBe('<div>Hello world</div>');
-    });
-
-    it('should render a simple event component with a single event target', () => {
-      const Test = () => (
-        <EventComponent>
-          <div>
-            Hello world<EventTarget />
-          </div>
-        </EventComponent>
-      );
-
-      let output = ReactDOMServer.renderToString(<Test />);
-      expect(output).toBe('<div>Hello world</div>');
-
-      const Test2 = () => (
-        <EventComponent>
-          <EventTarget>
-            <span>I am now a span</span>
-          </EventTarget>
-        </EventComponent>
-      );
-
-      output = ReactDOMServer.renderToString(<Test2 />);
-      expect(output).toBe('<span>I am now a span</span>');
     });
   });
 });

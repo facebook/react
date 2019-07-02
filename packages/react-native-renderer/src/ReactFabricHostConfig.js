@@ -13,6 +13,9 @@ import type {
   MeasureOnSuccessCallback,
   NativeMethodsMixinType,
   ReactNativeBaseComponentViewConfig,
+  ReactNativeEventResponderEventType,
+  ReactNativeResponderEvent,
+  ReactNativeResponderContext,
 } from './ReactNativeTypes';
 import type {ReactEventComponentInstance} from 'shared/ReactTypes';
 
@@ -23,6 +26,13 @@ import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
 
 import {dispatchEvent} from './ReactFabricEventEmitter';
+import {
+  addRootEventTypesForComponentInstance,
+  mountEventResponder,
+  unmountEventResponder,
+} from './ReactFabricEventResponderSystem';
+
+import {enableFlareAPI} from 'shared/ReactFeatureFlags';
 
 // Modules provided by RN:
 import {
@@ -54,6 +64,12 @@ const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 // % 2 === 0 means it is a Fabric tag.
 // This means that they never overlap.
 let nextReactTag = 2;
+
+type ReactNativeEventComponentInstance = ReactEventComponentInstance<
+  ReactNativeEventResponderEventType,
+  ReactNativeResponderEvent,
+  ReactNativeResponderContext,
+>;
 
 type Node = Object;
 export type Type = string;
@@ -289,14 +305,6 @@ export function getChildHostContextForEventComponent(
   return parentHostContext;
 }
 
-export function getChildHostContextForEventTarget(
-  parentHostContext: HostContext,
-  type: Symbol | number,
-) {
-  // TODO: add getChildHostContextForEventTarget implementation
-  return parentHostContext;
-}
-
 export function getPublicInstance(instance: Instance): * {
   return instance.canonical;
 }
@@ -342,6 +350,9 @@ export function shouldSetTextContent(type: string, props: Props): boolean {
 
 // The Fabric renderer is secondary to the existing React Native renderer.
 export const isPrimaryRenderer = false;
+
+// The Fabric renderer shouldn't trigger missing act() warnings
+export const shouldWarnUnactedUpdates = false;
 
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;
@@ -434,21 +445,34 @@ export function replaceContainerChildren(
 ): void {}
 
 export function mountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance,
+  eventComponentInstance: ReactNativeEventComponentInstance,
 ) {
-  throw new Error('Not yet implemented.');
+  if (enableFlareAPI) {
+    const responder = eventComponentInstance.responder;
+    const {rootEventTypes} = responder;
+    if (rootEventTypes !== undefined) {
+      addRootEventTypesForComponentInstance(
+        eventComponentInstance,
+        rootEventTypes,
+      );
+    }
+    mountEventResponder(eventComponentInstance);
+  }
 }
 
 export function updateEventComponent(
-  eventComponentInstance: ReactEventComponentInstance,
+  eventComponentInstance: ReactNativeEventComponentInstance,
 ) {
-  throw new Error('Not yet implemented.');
+  // NO-OP, why might use this in the future
 }
 
 export function unmountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance,
+  eventComponentInstance: ReactNativeEventComponentInstance,
 ): void {
-  throw new Error('Not yet implemented.');
+  if (enableFlareAPI) {
+    // TODO stop listening to targetEventTypes
+    unmountEventResponder(eventComponentInstance);
+  }
 }
 
 export function getEventTargetChildElement(

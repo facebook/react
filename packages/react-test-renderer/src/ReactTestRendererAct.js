@@ -26,7 +26,7 @@ const {ReactCurrentActingRendererSigil} = ReactSharedInternals;
 
 let hasWarnedAboutMissingMockScheduler = false;
 const flushWork =
-  Scheduler.unstable_flushWithoutYielding ||
+  Scheduler.unstable_flushAllWithoutAsserting ||
   function() {
     if (warnAboutMissingMockScheduler === true) {
       if (hasWarnedAboutMissingMockScheduler === false) {
@@ -89,7 +89,15 @@ function act(callback: () => Thenable) {
     }
   }
 
-  const result = batchedUpdates(callback);
+  let result;
+  try {
+    result = batchedUpdates(callback);
+  } catch (error) {
+    // on sync errors, we still want to 'cleanup' and decrement actingUpdatesScopeDepth
+    onDone();
+    throw error;
+  }
+
   if (
     result !== null &&
     typeof result === 'object' &&

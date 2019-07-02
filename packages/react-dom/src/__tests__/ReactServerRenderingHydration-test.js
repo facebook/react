@@ -500,7 +500,7 @@ describe('ReactDOMServerHydration', () => {
 
     jest.runAllTimers();
     await Promise.resolve();
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     expect(element.textContent).toBe('Hello world');
   });
 });

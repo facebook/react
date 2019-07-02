@@ -215,6 +215,10 @@ function useMemo<T>(
   return value;
 }
 
+function useEvent() {
+  throw new Error('TODO: not yet implemented');
+}
+
 const Dispatcher: DispatcherType = {
   readContext,
   useCallback,
@@ -227,6 +231,7 @@ const Dispatcher: DispatcherType = {
   useReducer,
   useRef,
   useState,
+  useEvent,
 };
 
 // Inspect

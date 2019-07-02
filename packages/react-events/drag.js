@@ -9,6 +9,4 @@
 
 'use strict';
 
-const Drag = require('./src/Drag');
-
-module.exports = Drag.default || Drag;
+module.exports = require('./src/dom/Drag');

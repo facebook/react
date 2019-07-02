@@ -12,6 +12,7 @@
 let React;
 let ReactDOM;
 let ReactTestUtils;
+let act;
 let Scheduler;
 
 describe('ReactUpdates', () => {
@@ -20,6 +21,7 @@ describe('ReactUpdates', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
+    act = ReactTestUtils.act;
     Scheduler = require('scheduler');
   });
 
@@ -1294,7 +1296,7 @@ describe('ReactUpdates', () => {
     const container = document.createElement('div');
 
     function Baz() {
-      Scheduler.yieldValue('Baz');
+      Scheduler.unstable_yieldValue('Baz');
       return <p>baz</p>;
     }
 
@@ -1302,14 +1304,14 @@ describe('ReactUpdates', () => {
     function Bar() {
       const [counter, _setCounter] = React.useState(0);
       setCounter = _setCounter;
-      Scheduler.yieldValue('Bar');
+      Scheduler.unstable_yieldValue('Bar');
       return <p>bar {counter}</p>;
     }
 
     function Foo() {
-      Scheduler.yieldValue('Foo');
+      Scheduler.unstable_yieldValue('Foo');
       React.useEffect(() => {
-        Scheduler.yieldValue('Foo#effect');
+        Scheduler.unstable_yieldValue('Foo#effect');
       });
       return (
         <div>
@@ -1322,30 +1324,31 @@ describe('ReactUpdates', () => {
     }
 
     const root = ReactDOM.unstable_createRoot(container);
-    root.render(<Foo />);
-    if (__DEV__) {
-      expect(Scheduler).toFlushAndYieldThrough([
-        'Foo',
-        'Foo',
-        'Baz',
-        'Foo#effect',
-      ]);
-    } else {
-      expect(Scheduler).toFlushAndYieldThrough(['Foo', 'Baz', 'Foo#effect']);
-    }
-
-    const hiddenDiv = container.firstChild.firstChild;
-    expect(hiddenDiv.hidden).toBe(true);
-    expect(hiddenDiv.innerHTML).toBe('');
-
-    // Run offscreen update
-    if (__DEV__) {
-      expect(Scheduler).toFlushAndYield(['Bar', 'Bar']);
-    } else {
-      expect(Scheduler).toFlushAndYield(['Bar']);
-    }
-    expect(hiddenDiv.hidden).toBe(true);
-    expect(hiddenDiv.innerHTML).toBe('<p>bar 0</p>');
+    let hiddenDiv;
+    act(() => {
+      root.render(<Foo />);
+      if (__DEV__) {
+        expect(Scheduler).toFlushAndYieldThrough([
+          'Foo',
+          'Foo',
+          'Baz',
+          'Foo#effect',
+        ]);
+      } else {
+        expect(Scheduler).toFlushAndYieldThrough(['Foo', 'Baz', 'Foo#effect']);
+      }
+      hiddenDiv = container.firstChild.firstChild;
+      expect(hiddenDiv.hidden).toBe(true);
+      expect(hiddenDiv.innerHTML).toBe('');
+      // Run offscreen update
+      if (__DEV__) {
+        expect(Scheduler).toFlushAndYield(['Bar', 'Bar']);
+      } else {
+        expect(Scheduler).toFlushAndYield(['Bar']);
+      }
+      expect(hiddenDiv.hidden).toBe(true);
+      expect(hiddenDiv.innerHTML).toBe('<p>bar 0</p>');
+    });
 
     ReactDOM.flushSync(() => {
       setCounter(1);
@@ -1605,7 +1608,7 @@ describe('ReactUpdates', () => {
         const [step, setStep] = React.useState(0);
         React.useEffect(() => {
           setStep(x => x + 1);
-          Scheduler.yieldValue(step);
+          Scheduler.unstable_yieldValue(step);
         });
         return step;
       }
@@ -1623,12 +1626,18 @@ describe('ReactUpdates', () => {
       };
       try {
         const container = document.createElement('div');
-        ReactDOM.render(<App />, container);
-        while (error === null) {
-          Scheduler.unstable_flushNumberOfYields(1);
-        }
-        expect(error).toContain('Warning: Maximum update depth exceeded.');
-        expect(stack).toContain('in NonTerminating');
+        expect(() => {
+          act(() => {
+            ReactDOM.render(<App />, container);
+            while (error === null) {
+              Scheduler.unstable_flushNumberOfYields(1);
+            }
+            expect(error).toContain('Warning: Maximum update depth exceeded.');
+            expect(stack).toContain('in NonTerminating');
+            // rethrow error to prevent going into an infinite loop when act() exits
+            throw error;
+          });
+        }).toThrow('Maximum update depth exceeded.');
       } finally {
         console.error = originalConsoleError;
       }
@@ -1644,14 +1653,16 @@ describe('ReactUpdates', () => {
         React.useEffect(() => {
           if (step < LIMIT) {
             setStep(x => x + 1);
-            Scheduler.yieldValue(step);
+            Scheduler.unstable_yieldValue(step);
           }
         });
         return step;
       }
 
       const container = document.createElement('div');
-      ReactDOM.render(<Terminating />, container);
+      act(() => {
+        ReactDOM.render(<Terminating />, container);
+      });
 
       // Verify we can flush them asynchronously without warning
       for (let i = 0; i < LIMIT * 2; i++) {
@@ -1660,16 +1671,16 @@ describe('ReactUpdates', () => {
       expect(container.textContent).toBe('50');
 
       // Verify restarting from 0 doesn't cross the limit
-      expect(() => {
+      act(() => {
         _setStep(0);
-      }).toWarnDev(
-        'An update to Terminating inside a test was not wrapped in act',
-      );
-      expect(container.textContent).toBe('0');
-      for (let i = 0; i < LIMIT * 2; i++) {
+        // flush once to update the dom
         Scheduler.unstable_flushNumberOfYields(1);
-      }
-      expect(container.textContent).toBe('50');
+        expect(container.textContent).toBe('0');
+        for (let i = 0; i < LIMIT * 2; i++) {
+          Scheduler.unstable_flushNumberOfYields(1);
+        }
+        expect(container.textContent).toBe('50');
+      });
     });
 
     it('can have many updates inside useEffect without triggering a warning', () => {
@@ -1679,14 +1690,17 @@ describe('ReactUpdates', () => {
           for (let i = 0; i < 1000; i++) {
             setStep(x => x + 1);
           }
-          Scheduler.yieldValue('Done');
+          Scheduler.unstable_yieldValue('Done');
         }, []);
         return step;
       }
 
       const container = document.createElement('div');
-      ReactDOM.render(<Terminating />, container);
-      expect(Scheduler).toFlushAndYield(['Done']);
+      act(() => {
+        ReactDOM.render(<Terminating />, container);
+      });
+
+      expect(Scheduler).toHaveYielded(['Done']);
       expect(container.textContent).toBe('1000');
     });
   }
