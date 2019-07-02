@@ -2453,6 +2453,7 @@ export function warnIfNotCurrentlyActingEffectsInDEV(fiber: Fiber): void {
   if (__DEV__) {
     if (
       warnsIfNotActing === true &&
+      fiber.mode &&
       IsSomeRendererActing.current === false &&
       IsThisRendererActing.current === false
     ) {

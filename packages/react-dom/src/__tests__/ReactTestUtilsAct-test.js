@@ -48,6 +48,20 @@ describe('ReactTestUtils.act()', () => {
     ReactDOM.unmountComponentAtNode(dom);
   }
   runActTests('legacy sync mode', renderSync, unmountSync);
+
+  // and then in batched mode
+  let batchedRoot;
+  function renderBatched(el, dom) {
+    batchedRoot = ReactDOM.unstable_createSyncRoot(dom);
+    batchedRoot.render(el);
+  }
+  function unmountBatched(dom) {
+    if (batchedRoot !== null) {
+      batchedRoot.unmount();
+      batchedRoot = null;
+    }
+  }
+  runActTests('batched mode', renderBatched, unmountBatched);
 });
 
 function runActTests(label, render, unmount) {
@@ -68,6 +82,26 @@ function runActTests(label, render, unmount) {
       document.body.removeChild(container);
     });
     describe('sync', () => {
+      it('warns if an effect is queued outside an act scope, except in legacy sync+non-strict mode', () => {
+        function App() {
+          React.useEffect(() => {}, []);
+          return null;
+        }
+        expect(() => {
+          render(<App />, container);
+          // flush all queued work
+          Scheduler.unstable_flushAll();
+        }).toWarnDev(
+          label !== 'legacy sync mode'
+            ? [
+                // warns twice because we're in strict+dev mode
+                'An update to App ran an effect, but was not wrapped in act(...)',
+                'An update to App ran an effect, but was not wrapped in act(...)',
+              ]
+            : [],
+        );
+      });
+
       it('can use act to flush effects', () => {
         function App() {
           React.useEffect(() => {
