@@ -352,7 +352,7 @@ export function shouldSetTextContent(type: string, props: Props): boolean {
 export const isPrimaryRenderer = false;
 
 // The Fabric renderer shouldn't trigger missing act() warnings
-export const shouldWarnUnactedUpdates = false;
+export const warnsIfNotActing = false;
 
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;

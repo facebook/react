@@ -57,7 +57,7 @@ import {
   flushDiscreteUpdates,
   flushPassiveEffects,
   warnIfNotScopedWithMatchingAct,
-  ReactActingRendererSigil,
+  IsThisRendererActing,
 } from './ReactFiberWorkLoop';
 import {createUpdate, enqueueUpdate} from './ReactUpdateQueue';
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
@@ -345,7 +345,7 @@ export {
   flushControlled,
   flushSync,
   flushPassiveEffects,
-  ReactActingRendererSigil,
+  IsThisRendererActing,
 };
 
 export function getPublicRootInstance(

@@ -70,10 +70,7 @@ it('warns when using the wrong act version - test + dom: updates', () => {
     TestRenderer.act(() => {
       setCtr(1);
     });
-  }).toWarnDev([
-    'An update to Counter inside a test was not wrapped in act',
-    "It looks like you're using the wrong act()",
-  ]);
+  }).toWarnDev(["It looks like you're using the wrong act()"]);
 });
 
 it('warns when using the wrong act version - dom + test: .create()', () => {
@@ -109,10 +106,7 @@ it('warns when using the wrong act version - dom + test: updates', () => {
     TestUtils.act(() => {
       setCtr(1);
     });
-  }).toWarnDev([
-    'An update to Counter inside a test was not wrapped in act',
-    "It looks like you're using the wrong act()",
-  ]);
+  }).toWarnDev(["It looks like you're using the wrong act()"]);
 });
 
 const {Surface, Group, Shape} = ReactART;
@@ -156,5 +150,13 @@ it('does not warn when nesting react-act inside react-dom', () => {
 it('does not warn when nesting react-act inside react-test-renderer', () => {
   TestRenderer.act(() => {
     TestRenderer.create(<ARTTest />);
+  });
+});
+
+it("doesn't warn if you use nested acts from different renderers", () => {
+  TestRenderer.act(() => {
+    TestUtils.act(() => {
+      TestRenderer.create(<App />);
+    });
   });
 });
