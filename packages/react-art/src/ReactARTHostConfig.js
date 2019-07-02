@@ -347,7 +347,7 @@ export function shouldSetTextContent(type, props) {
 export const isPrimaryRenderer = false;
 
 // The ART renderer shouldn't trigger missing act() warnings
-export const shouldWarnUnactedUpdates = false;
+export const warnsIfNotActing = false;
 
 export const supportsMutation = true;
 

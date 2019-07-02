@@ -33,12 +33,12 @@ const [
   runEventsInBatch,
   /* eslint-enable no-unused-vars */
   flushPassiveEffects,
-  ReactActingRendererSigil,
+  ReactRendererIsActing,
 ] = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
 
 const batchedUpdates = ReactDOM.unstable_batchedUpdates;
 
-const {ReactCurrentActingRendererSigil} = ReactSharedInternals;
+const {ReactIsActing} = ReactSharedInternals;
 
 // this implementation should be exactly the same in
 // ReactTestUtilsAct.js, ReactTestRendererAct.js, createReactNoop.js
@@ -86,17 +86,21 @@ let actingUpdatesScopeDepth = 0;
 
 function act(callback: () => Thenable) {
   let previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
-  let previousActingUpdatesSigil;
+  let previousReactIsActing;
+  let previousReactRendererIsActing;
   actingUpdatesScopeDepth++;
   if (__DEV__) {
-    previousActingUpdatesSigil = ReactCurrentActingRendererSigil.current;
-    ReactCurrentActingRendererSigil.current = ReactActingRendererSigil;
+    previousReactIsActing = ReactIsActing.current;
+    previousReactRendererIsActing = ReactIsActing.current;
+    ReactIsActing.current = true;
+    ReactRendererIsActing.current = true;
   }
 
   function onDone() {
     actingUpdatesScopeDepth--;
     if (__DEV__) {
-      ReactCurrentActingRendererSigil.current = previousActingUpdatesSigil;
+      ReactIsActing.current = previousReactIsActing;
+      ReactRendererIsActing.current = previousReactRendererIsActing;
       if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
         // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
         warningWithoutStack(
