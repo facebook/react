@@ -1197,6 +1197,72 @@ describe('ReactSuspenseList', () => {
     ]);
   });
 
+  it('renders one "collapsed" fallback even if CPU time elapsed', async () => {
+    function Foo() {
+      return (
+        <SuspenseList revealOrder="forwards" tail="collapsed">
+          <Suspense fallback={<Text text="Loading A" />}>
+            <Text text="A" />
+          </Suspense>
+          <Suspense fallback={<Text text="Loading B" />}>
+            <Text text="B" />
+          </Suspense>
+          <Suspense fallback={<Text text="Loading C" />}>
+            <Text text="C" />
+          </Suspense>
+          <Suspense fallback={<Text text="Loading D" />}>
+            <Text text="D" />
+          </Suspense>
+        </SuspenseList>
+      );
+    }
+
+    // This render is only CPU bound. Nothing suspends.
+    ReactNoop.render(<Foo />);
+
+    expect(Scheduler).toFlushAndYieldThrough(['A']);
+
+    Scheduler.unstable_advanceTime(300);
+    jest.advanceTimersByTime(300);
+
+    expect(Scheduler).toFlushAndYieldThrough(['B']);
+
+    Scheduler.unstable_advanceTime(300);
+    jest.advanceTimersByTime(300);
+
+    // We've still not been able to show anything on the screen even though
+    // we have two items ready.
+    expect(ReactNoop).toMatchRenderedOutput(null);
+
+    // Time has now elapsed for so long that we're just going to give up
+    // rendering the rest of the content. So that we can at least show
+    // something.
+    expect(Scheduler).toFlushAndYieldThrough([
+      'Loading C',
+      'C', // I'll flush through into the next render so that the first commits.
+    ]);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <Fragment>
+        <span>A</span>
+        <span>B</span>
+        <span>Loading C</span>
+      </Fragment>,
+    );
+
+    // Then we do a second pass to commit the last two items.
+    expect(Scheduler).toFlushAndYield(['D']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <Fragment>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+        <span>D</span>
+      </Fragment>,
+    );
+  });
+
   it('adding to the middle does not collapse insertions (forwards)', async () => {
     let A = createAsyncText('A');
     let B = createAsyncText('B');

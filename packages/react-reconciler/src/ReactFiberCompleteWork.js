@@ -537,7 +537,10 @@ if (supportsMutation) {
   };
 }
 
-function cutOffTailIfNeeded(renderState: SuspenseListRenderState) {
+function cutOffTailIfNeeded(
+  renderState: SuspenseListRenderState,
+  hasRenderedATailFallback: boolean,
+) {
   switch (renderState.tailMode) {
     case 'collapsed': {
       // Any insertions at the end of the tail list after this point
@@ -557,7 +560,7 @@ function cutOffTailIfNeeded(renderState: SuspenseListRenderState) {
       // last rendered item.
       if (lastTailNode === null) {
         // All remaining items in the tail are insertions.
-        if (renderState.rendering === null && renderState.tail !== null) {
+        if (!hasRenderedATailFallback && renderState.tail !== null) {
           // We suspended during the head. We want to show at least one
           // row at the tail. So we'll keep on and cut off the rest.
           renderState.tail.sibling = null;
@@ -1029,13 +1032,17 @@ function completeWork(
             (workInProgress.effectTag & DidCapture) !== NoEffect;
         }
         if (didSuspendAlready) {
-          cutOffTailIfNeeded(renderState);
+          cutOffTailIfNeeded(renderState, false);
         }
         // Next we're going to render the tail.
       } else {
         // Append the rendered row to the child list.
         if (!didSuspendAlready) {
-          if (
+          if (isShowingAnyFallbacks(renderedTail)) {
+            workInProgress.effectTag |= DidCapture;
+            didSuspendAlready = true;
+            cutOffTailIfNeeded(renderState, true);
+          } else if (
             now() > renderState.tailExpiration &&
             renderExpirationTime > Never
           ) {
@@ -1045,7 +1052,7 @@ function completeWork(
             workInProgress.effectTag |= DidCapture;
             didSuspendAlready = true;
 
-            cutOffTailIfNeeded(renderState);
+            cutOffTailIfNeeded(renderState, false);
 
             // Since nothing actually suspended, there will nothing to ping this
             // to get it started back up to attempt the next item. If we can show
@@ -1058,10 +1065,6 @@ function completeWork(
             if (enableSchedulerTracing) {
               markSpawnedWork(nextPriority);
             }
-          } else if (isShowingAnyFallbacks(renderedTail)) {
-            workInProgress.effectTag |= DidCapture;
-            didSuspendAlready = true;
-            cutOffTailIfNeeded(renderState);
           }
         }
         if (renderState.isBackwards) {
