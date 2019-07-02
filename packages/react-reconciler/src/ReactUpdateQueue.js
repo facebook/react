@@ -438,6 +438,7 @@ export function processUpdateQueue<State>(
   hasForceUpdate = false;
 
   queue = ensureWorkInProgressQueueIsAClone(workInProgress, queue);
+
   if (__DEV__) {
     currentlyProcessingQueue = queue;
   }

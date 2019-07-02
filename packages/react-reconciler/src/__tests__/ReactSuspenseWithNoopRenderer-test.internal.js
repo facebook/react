@@ -1574,7 +1574,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   it('does not suspend for very long after a higher priority update', async () => {
-    spyOnDev(console, 'error');
     function Foo({renderContent}) {
       Scheduler.unstable_yieldValue('Foo');
       return (
@@ -1596,11 +1595,18 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     Scheduler.unstable_advanceTime(100);
     await advanceTimers(100);
 
-    expect(Scheduler).toFlushAndYield([
-      // A suspends
-      'Suspend! [A]',
-      'Loading...',
-    ]);
+    expect(() => {
+      expect(Scheduler).toFlushAndYield([
+        // A suspends
+        'Suspend! [A]',
+        'Loading...',
+      ]);
+    }).toWarnDev(
+      'The following components suspended during a user-blocking ' +
+        'update: AsyncText',
+      {withoutStack: true},
+    );
+
     // We're now suspended and we haven't shown anything yet.
     expect(ReactNoop.getChildren()).toEqual([]);
 

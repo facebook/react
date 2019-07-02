@@ -290,7 +290,6 @@ export function computeExpirationForFiber(
   }
 
   const priorityLevel = getCurrentPriorityLevel();
-
   if ((mode & ConcurrentMode) === NoMode) {
     return priorityLevel === ImmediatePriority ? Sync : Batched;
   }
@@ -981,7 +980,9 @@ function renderRoot(
 
   // Set this to null to indicate there's no in-progress render.
   workInProgressRoot = null;
+
   flushSuspensePriorityWarningInDEV();
+
   switch (workInProgressRootExitStatus) {
     case RootIncomplete: {
       invariant(false, 'Should have a work-in-progress.');
@@ -1262,6 +1263,7 @@ function performUnitOfWork(unitOfWork: Fiber): Fiber | null {
   } else {
     next = beginWork(current, unitOfWork, renderExpirationTime);
   }
+
   resetCurrentDebugFiberInDEV();
   unitOfWork.memoizedProps = unitOfWork.pendingProps;
   if (next === null) {
