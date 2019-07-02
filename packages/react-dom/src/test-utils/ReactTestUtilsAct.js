@@ -34,6 +34,7 @@ const [
   /* eslint-enable no-unused-vars */
   flushPassiveEffects,
   ReactActingRendererSigil,
+  flushSuspenseTimeouts,
 ] = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
 
 const batchedUpdates = ReactDOM.unstable_batchedUpdates;
@@ -67,6 +68,7 @@ const flushWork =
 function flushWorkAndMicroTasks(onDone: (err: ?Error) => void) {
   try {
     flushWork();
+    flushSuspenseTimeouts();
     enqueueTask(() => {
       if (flushWork()) {
         flushWorkAndMicroTasks(onDone);
@@ -190,6 +192,7 @@ function act(callback: () => Thenable) {
         // we're about to exit the act() scope,
         // now's the time to flush effects
         flushWork();
+        flushSuspenseTimeouts();
       }
       onDone();
     } catch (err) {

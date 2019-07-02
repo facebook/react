@@ -264,6 +264,8 @@ let spawnedWorkDuringRender: null | Array<ExpirationTime> = null;
 // receive the same expiration time. Otherwise we get tearing.
 let currentEventTime: ExpirationTime = NoWork;
 
+const SuspenseTimeouts: Map<TimeoutID, FiberRoot> = new Map();
+
 export function requestCurrentTime() {
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
     // We're inside React, so it's fine to read the actual time.
@@ -770,6 +772,8 @@ function prepareFreshStack(root, expirationTime) {
     root.timeoutHandle = noTimeout;
     // $FlowFixMe Complains noTimeout is not a TimeoutID, despite the check above
     cancelTimeout(timeoutHandle);
+    // $FlowFixMe Complains noTimeout is not a TimeoutID, despite the check above
+    SuspenseTimeouts.delete(timeoutHandle);
   }
 
   if (workInProgress !== null) {
@@ -1049,6 +1053,7 @@ function renderRoot(
             commitRoot.bind(null, root),
             msUntilTimeout,
           );
+          SuspenseTimeouts.set(root.timeoutHandle, root);
           return null;
         }
       }
@@ -1117,6 +1122,7 @@ function renderRoot(
             commitRoot.bind(null, root),
             msUntilTimeout,
           );
+          SuspenseTimeouts.set(root.timeoutHandle, root);
           return null;
         }
       }
@@ -1143,6 +1149,7 @@ function renderRoot(
             commitRoot.bind(null, root),
             msUntilTimeout,
           );
+          SuspenseTimeouts.set(root.timeoutHandle, root);
           return null;
         }
       }
@@ -1891,6 +1898,16 @@ function commitLayoutEffects(
 
     resetCurrentDebugFiberInDEV();
     nextEffect = nextEffect.nextEffect;
+  }
+}
+
+export function flushSuspenseTimeouts() {
+  while (SuspenseTimeouts.size > 0) {
+    // $FlowFixMe Flow can't tell that the entry exists, despite the size check
+    let [handle, root] = SuspenseTimeouts.entries().next().value;
+    cancelTimeout(handle);
+    SuspenseTimeouts.delete(handle);
+    commitRoot(root);
   }
 }
 

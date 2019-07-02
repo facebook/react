@@ -56,6 +56,7 @@ import {
   discreteUpdates,
   flushDiscreteUpdates,
   flushPassiveEffects,
+  flushSuspenseTimeouts,
   warnIfNotScopedWithMatchingAct,
   ReactActingRendererSigil,
 } from './ReactFiberWorkLoop';
@@ -345,6 +346,7 @@ export {
   flushControlled,
   flushSync,
   flushPassiveEffects,
+  flushSuspenseTimeouts,
   ReactActingRendererSigil,
 };
 

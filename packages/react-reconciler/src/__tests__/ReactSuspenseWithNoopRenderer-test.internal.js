@@ -2329,10 +2329,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       expect(Scheduler).toFlushAndYield(['Suspend! [First update]']);
       // Should not display a fallback
       expect(root).toMatchRenderedOutput(<span prop="Initial" />);
-    });
 
-    // Update again. This should also suspend for a bit.
-    await ReactNoop.act(async () => {
+      // Update again. This should also suspend for a bit.
       root.render(<App text="Second update" />);
 
       expect(Scheduler).toFlushAndYield(['Suspend! [Second update]']);

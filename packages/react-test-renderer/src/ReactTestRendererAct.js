@@ -12,6 +12,7 @@ import {
   batchedUpdates,
   flushPassiveEffects,
   ReactActingRendererSigil,
+  flushSuspenseTimeouts,
 } from 'react-reconciler/inline.test';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import warningWithoutStack from 'shared/warningWithoutStack';
@@ -48,6 +49,7 @@ const flushWork =
 function flushWorkAndMicroTasks(onDone: (err: ?Error) => void) {
   try {
     flushWork();
+    flushSuspenseTimeouts();
     enqueueTask(() => {
       if (flushWork()) {
         flushWorkAndMicroTasks(onDone);
@@ -171,6 +173,7 @@ function act(callback: () => Thenable) {
         // we're about to exit the act() scope,
         // now's the time to flush effects
         flushWork();
+        flushSuspenseTimeouts();
       }
       onDone();
     } catch (err) {

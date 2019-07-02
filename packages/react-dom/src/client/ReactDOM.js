@@ -39,6 +39,7 @@ import {
   findHostInstanceWithWarning,
   flushPassiveEffects,
   ReactActingRendererSigil,
+  flushSuspenseTimeouts,
 } from 'react-reconciler/inline.dom';
 import {createPortal as createPortalImpl} from 'shared/ReactPortal';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
@@ -818,6 +819,7 @@ const ReactDOM: Object = {
       runEventsInBatch,
       flushPassiveEffects,
       ReactActingRendererSigil,
+      flushSuspenseTimeouts,
     ],
   },
 };

@@ -48,6 +48,71 @@ describe('ReactTestUtils.act()', () => {
     ReactDOM.unmountComponentAtNode(dom);
   }
   runActTests('legacy sync mode', renderSync, unmountSync);
+
+  describe('suspense', () => {
+    beforeEach(() => {
+      container = document.createElement('div');
+      document.body.appendChild(container);
+    });
+    afterEach(() => {
+      unmountConcurrent();
+      document.body.removeChild(container);
+    });
+    it('should trigger fallbacks', async () => {
+      // We run this test in concurrent mode (since sync mode already triggers fallbacks)
+
+      // This is a simple promise, that we'll resolve at some point
+      let resolved = false;
+      let resolve;
+      let promise = new Promise(_resolve => {
+        resolve = _resolve;
+      });
+
+      // A component that prints A. How original.
+      function A() {
+        return 'A';
+      }
+      // A component that will suspend until `promise`` is resolved,
+      // after which it will print B.
+      function B() {
+        if (!resolved) {
+          throw promise;
+        }
+        return 'B';
+      }
+
+      // An app that renders A first, and then flips to B
+      function App(props) {
+        return (
+          <React.Suspense fallback="loading">
+            {props.first ? <A /> : <B />}
+          </React.Suspense>
+        );
+      }
+      // So we render it with A
+      act(() => {
+        renderConcurrent(<App first={true} />, container);
+      });
+      expect(container.textContent).toBe('A');
+
+      // Now we render B
+      act(() => {
+        concurrentRoot.render(<App first={false} />);
+        Scheduler.unstable_flushAll();
+        // despite flushing, we note that we're still showing the previous screen
+        expect(container.textContent).toBe('A');
+      });
+      expect(container.textContent).toBe('loading');
+      // If we hadn't flushed fallbacks, it would still show A
+
+      // Finally, resolve the promise
+      await act(async () => {
+        resolved = true;
+        resolve(true);
+      });
+      expect(container.textContent).toBe('B');
+    });
+  });
 });
 
 function runActTests(label, render, unmount) {

@@ -567,6 +567,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     flushPassiveEffects,
     batchedUpdates,
     ReactActingRendererSigil,
+    flushSuspenseTimeouts,
   } = NoopRenderer;
 
   // this act() implementation should be exactly the same in
@@ -596,6 +597,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   function flushWorkAndMicroTasks(onDone: (err: ?Error) => void) {
     try {
       flushWork();
+      flushSuspenseTimeouts();
       enqueueTask(() => {
         if (flushWork()) {
           flushWorkAndMicroTasks(onDone);
@@ -719,6 +721,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           // we're about to exit the act() scope,
           // now's the time to flush effects
           flushWork();
+          flushSuspenseTimeouts();
         }
         onDone();
       } catch (err) {
