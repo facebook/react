@@ -41,7 +41,7 @@ describe('ReactFreshIntegration', () => {
     if (__DEV__) {
       ReactDOM.unmountComponentAtNode(container);
       // Ensure we don't leak memory by holding onto dead roots.
-      expect(ReactFreshRuntime._getMountedRootCount()).toBe(0);
+      expect(ReactFreshRuntime.getMountedRootCount()).toBe(0);
       document.body.removeChild(container);
     }
   });
@@ -124,7 +124,7 @@ describe('ReactFreshIntegration', () => {
           // (Instead, the export change branch above would take care of it.)
         }
       });
-      expect(ReactFreshRuntime._getMountedRootCount()).toBe(1);
+      expect(ReactFreshRuntime.getMountedRootCount()).toBe(1);
     }
 
     function $RefreshReg$(type, id) {

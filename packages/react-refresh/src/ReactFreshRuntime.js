@@ -474,8 +474,7 @@ export function injectIntoGlobalHook(globalObject: any): void {
   }
 }
 
-// Exposed for testing.
-export function _getMountedRootCount() {
+export function getMountedRootCount() {
   if (__DEV__) {
     return mountedRoots.size;
   } else {
