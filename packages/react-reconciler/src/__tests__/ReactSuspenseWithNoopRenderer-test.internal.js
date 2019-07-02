@@ -644,7 +644,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         </Fragment>,
       ),
     );
-
     expect(Scheduler).toHaveYielded([
       // The async child suspends
       'Suspend! [Async]',
@@ -678,7 +677,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         </Fragment>,
       ),
     );
-
     expect(Scheduler).toHaveYielded([
       'Suspend! [Async]',
       'Suspend! [Loading (inner)...]',
@@ -1633,7 +1631,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       _setFoo = setFoo;
       return (
         <Suspense fallback="Loading...">
-          {foo && <AsyncText ms={1000} text="A" />}
+          {foo && <AsyncText text="A" />}
           <B />
         </Suspense>
       );
@@ -1671,7 +1669,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         _setFoo = () => this.setState({foo: true});
         return (
           <Suspense fallback="Loading...">
-            {this.state.foo && <AsyncText ms={1000} text="A" />}
+            {this.state.foo && <AsyncText text="A" />}
             <B />
           </Suspense>
         );
@@ -1748,7 +1746,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         setFoo = () => this.setState({foo: true});
         return (
           <Suspense fallback="Loading...">
-            {this.state.foo && <AsyncText ms={1000} text="A" />}
+            {this.state.foo && <AsyncText text="A" />}
           </Suspense>
         );
       }
@@ -1765,6 +1763,12 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         () => setFoo(true),
       );
     });
+
+    expect(Scheduler).toHaveYielded(['Suspend! [A]']);
+    Scheduler.unstable_advanceTime(100);
+    await advanceTimers(100);
+
+    expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
   });
 
   it('normal priority updates suspending do not warn for functional components', async () => {
@@ -1774,7 +1778,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       _setFoo = setFoo;
       return (
         <Suspense fallback="Loading...">
-          {foo && <AsyncText ms={1000} text="A" />}
+          {foo && <AsyncText text="A" />}
         </Suspense>
       );
     }
@@ -1790,6 +1794,12 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         () => _setFoo(true),
       );
     });
+
+    expect(Scheduler).toHaveYielded(['Suspend! [A]']);
+    Scheduler.unstable_advanceTime(100);
+    await advanceTimers(100);
+
+    expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
   });
 
   it('shows the parent fallback if the inner fallback should be avoided', async () => {
