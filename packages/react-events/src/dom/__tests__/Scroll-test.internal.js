@@ -90,7 +90,31 @@ describe('Scroll event responder', () => {
         ref.current.dispatchEvent(createEvent('scroll'));
         expect(onScroll).toHaveBeenCalledTimes(1);
         expect(onScroll).toHaveBeenCalledWith(
-          expect.objectContaining({pointerType: 'mouse', type: 'scroll'}),
+          expect.objectContaining({
+            pointerType: 'mouse',
+            type: 'scroll',
+            direction: '',
+          }),
+        );
+        onScroll.mockReset();
+        ref.current.scrollTop = -1;
+        ref.current.dispatchEvent(createEvent('scroll'));
+        expect(onScroll).toHaveBeenCalledWith(
+          expect.objectContaining({
+            pointerType: 'mouse',
+            type: 'scroll',
+            direction: 'up',
+          }),
+        );
+        onScroll.mockReset();
+        ref.current.scrollTop = 1;
+        ref.current.dispatchEvent(createEvent('scroll'));
+        expect(onScroll).toHaveBeenCalledWith(
+          expect.objectContaining({
+            pointerType: 'mouse',
+            type: 'scroll',
+            direction: 'down',
+          }),
         );
       });
 
@@ -103,7 +127,31 @@ describe('Scroll event responder', () => {
         ref.current.dispatchEvent(createEvent('scroll'));
         expect(onScroll).toHaveBeenCalledTimes(1);
         expect(onScroll).toHaveBeenCalledWith(
-          expect.objectContaining({pointerType: 'touch', type: 'scroll'}),
+          expect.objectContaining({
+            pointerType: 'touch',
+            type: 'scroll',
+            direction: '',
+          }),
+        );
+        onScroll.mockReset();
+        ref.current.scrollTop = -1;
+        ref.current.dispatchEvent(createEvent('scroll'));
+        expect(onScroll).toHaveBeenCalledWith(
+          expect.objectContaining({
+            pointerType: 'touch',
+            type: 'scroll',
+            direction: 'up',
+          }),
+        );
+        onScroll.mockReset();
+        ref.current.scrollTop = 1;
+        ref.current.dispatchEvent(createEvent('scroll'));
+        expect(onScroll).toHaveBeenCalledWith(
+          expect.objectContaining({
+            pointerType: 'touch',
+            type: 'scroll',
+            direction: 'down',
+          }),
         );
       });
 
@@ -116,7 +164,31 @@ describe('Scroll event responder', () => {
         ref.current.dispatchEvent(createEvent('scroll'));
         expect(onScroll).toHaveBeenCalledTimes(1);
         expect(onScroll).toHaveBeenCalledWith(
-          expect.objectContaining({pointerType: 'pen', type: 'scroll'}),
+          expect.objectContaining({
+            pointerType: 'pen',
+            type: 'scroll',
+            direction: '',
+          }),
+        );
+        onScroll.mockReset();
+        ref.current.scrollTop = -1;
+        ref.current.dispatchEvent(createEvent('scroll'));
+        expect(onScroll).toHaveBeenCalledWith(
+          expect.objectContaining({
+            pointerType: 'pen',
+            type: 'scroll',
+            direction: 'up',
+          }),
+        );
+        onScroll.mockReset();
+        ref.current.scrollTop = 1;
+        ref.current.dispatchEvent(createEvent('scroll'));
+        expect(onScroll).toHaveBeenCalledWith(
+          expect.objectContaining({
+            pointerType: 'pen',
+            type: 'scroll',
+            direction: 'down',
+          }),
         );
       });
 
@@ -134,9 +206,80 @@ describe('Scroll event responder', () => {
         ref.current.dispatchEvent(createEvent('scroll'));
         expect(onScroll).toHaveBeenCalledTimes(1);
         expect(onScroll).toHaveBeenCalledWith(
-          expect.objectContaining({pointerType: 'keyboard', type: 'scroll'}),
+          expect.objectContaining({
+            pointerType: 'keyboard',
+            type: 'scroll',
+            direction: '',
+          }),
         );
       });
+    });
+  });
+
+  describe('onScrollDragStart', () => {
+    let onScrollDragStart, ref;
+
+    beforeEach(() => {
+      onScrollDragStart = jest.fn();
+      ref = React.createRef();
+      const element = (
+        <Scroll onScrollDragStart={onScrollDragStart}>
+          <div ref={ref} />
+        </Scroll>
+      );
+      ReactDOM.render(element, container);
+    });
+
+    it('works as expected with touch events', () => {
+      ref.current.dispatchEvent(
+        createEvent('pointerdown', {
+          pointerType: 'touch',
+        }),
+      );
+      ref.current.dispatchEvent(createEvent('touchstart'));
+      ref.current.dispatchEvent(createEvent('scroll'));
+      expect(onScrollDragStart).toHaveBeenCalledTimes(1);
+      expect(onScrollDragStart).toHaveBeenCalledWith(
+        expect.objectContaining({
+          pointerType: 'touch',
+          type: 'scrolldragstart',
+          direction: '',
+        }),
+      );
+    });
+  });
+
+  describe('onScrollDragEnd', () => {
+    let onScrollDragEnd, ref;
+
+    beforeEach(() => {
+      onScrollDragEnd = jest.fn();
+      ref = React.createRef();
+      const element = (
+        <Scroll onScrollDragEnd={onScrollDragEnd}>
+          <div ref={ref} />
+        </Scroll>
+      );
+      ReactDOM.render(element, container);
+    });
+
+    it('works as expected with touch events', () => {
+      ref.current.dispatchEvent(
+        createEvent('pointerdown', {
+          pointerType: 'touch',
+        }),
+      );
+      ref.current.dispatchEvent(createEvent('touchstart'));
+      ref.current.dispatchEvent(createEvent('scroll'));
+      ref.current.dispatchEvent(createEvent('touchend'));
+      expect(onScrollDragEnd).toHaveBeenCalledTimes(1);
+      expect(onScrollDragEnd).toHaveBeenCalledWith(
+        expect.objectContaining({
+          pointerType: 'touch',
+          type: 'scrolldragend',
+          direction: '',
+        }),
+      );
     });
   });
 });
