@@ -2628,6 +2628,7 @@ describe('Profiler', () => {
       });
 
       it('handles high-pri renderers between suspended and resolved (async) trees', async () => {
+        spyOnDev(console, 'error');
         // Set up an initial shell. We need to set this up before the test sceanrio
         // because we want initial render to suspend on navigation to the initial state.
         let renderer = ReactTestRenderer.create(

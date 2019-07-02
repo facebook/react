@@ -981,7 +981,7 @@ function renderRoot(
 
   // Set this to null to indicate there's no in-progress render.
   workInProgressRoot = null;
-
+  flushSuspensePriorityWarningInDEV();
   switch (workInProgressRootExitStatus) {
     case RootIncomplete: {
       invariant(false, 'Should have a work-in-progress.');
@@ -1262,7 +1262,6 @@ function performUnitOfWork(unitOfWork: Fiber): Fiber | null {
   } else {
     next = beginWork(current, unitOfWork, renderExpirationTime);
   }
-
   resetCurrentDebugFiberInDEV();
   unitOfWork.memoizedProps = unitOfWork.pendingProps;
   if (next === null) {
@@ -1491,7 +1490,6 @@ function commitRoot(root) {
 function commitRootImpl(root) {
   flushPassiveEffects();
   flushRenderPhaseStrictModeWarningsInDEV();
-  flushSuspensePriorityWarningInDEV();
 
   invariant(
     (executionContext & (RenderContext | CommitContext)) === NoContext,
@@ -2513,27 +2511,11 @@ let componentsWithSuspendedDiscreteUpdates = null;
 let componentsThatCallSuspendedDiscreteUpdates = new Set();
 export function checkForWrongSuspensePriorityInDEV(sourceFiber: Fiber) {
   if (__DEV__) {
-    const priorityLevel = getCurrentPriorityLevel();
-    console.log(priorityLevel);
+    const currentPriorityLevel = getCurrentPriorityLevel();
     if (
       (sourceFiber.mode & ConcurrentMode) !== NoEffect &&
-      (priorityLevel === UserBlockingPriority ||
-        priorityLevel === ImmediatePriority)
-      // Check if we're currently rendering a discrete update. Ideally, all we
-      // would need to do is check the current priority level. But we currently
-      // have no rigorous way to distinguish work that was scheduled at user-
-      // blocking priority from work that expired a bit and was "upgraded" to
-      // a higher priority. That's because we don't schedule separate callbacks
-      // for every level, only the highest priority level per root. The priority
-      // of subsequent levels is inferred from the expiration time, but this is
-      // an imprecise heuristic.
-      //
-      // However, we do store the last discrete pending update per root. So we
-      // can reliably compare to that one. (If we broaden this warning to include
-      // high pri updates that aren't discrete, then this won't be sufficient.)
-      //
-      // My rationale is that it's better for this warning to have false
-      // negatives than false positives.
+      (currentPriorityLevel === UserBlockingPriority ||
+        currentPriorityLevel === ImmediatePriority)
     ) {
       let WIPNode = sourceFiber;
       while (WIPNode != null) {
@@ -2547,10 +2529,10 @@ export function checkForWrongSuspensePriorityInDEV(sourceFiber: Fiber) {
               // has triggered any high priority updates
               let queueElem = (current.updateQueue || {}).firstUpdate;
               while (queueElem != null) {
-                const fooPriorityLevel = queueElem.priority;
+                const piorityLevel = queueElem.priority;
                 if (
-                  fooPriorityLevel === UserBlockingPriority ||
-                  fooPriorityLevel === ImmediatePriority
+                  piorityLevel === UserBlockingPriority ||
+                  piorityLevel === ImmediatePriority
                 ) {
                   if (WIPNode.tag === HostRoot) {
                     componentsThatCallSuspendedDiscreteUpdates.add(WIPNode.tag);

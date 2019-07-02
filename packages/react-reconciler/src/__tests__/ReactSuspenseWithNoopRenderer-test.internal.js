@@ -631,6 +631,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   it('renders an expiration boundary synchronously', async () => {
+    spyOnDev(console, 'error');
     // Synchronously render a tree that suspends
     ReactNoop.flushSync(() =>
       ReactNoop.render(
@@ -642,6 +643,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         </Fragment>,
       ),
     );
+
     expect(Scheduler).toHaveYielded([
       // The async child suspends
       'Suspend! [Async]',
@@ -661,6 +663,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   it('suspending inside an expired expiration boundary will bubble to the next one', async () => {
+    spyOnDev(console, 'error');
+
     ReactNoop.flushSync(() =>
       ReactNoop.render(
         <Fragment>
@@ -673,6 +677,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         </Fragment>,
       ),
     );
+
     expect(Scheduler).toHaveYielded([
       'Suspend! [Async]',
       'Suspend! [Loading (inner)...]',
@@ -757,10 +762,9 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Async')]);
   });
 
-  fit('throws a helpful error when an update is suspends without a placeholder', () => {
-    expect(() => {
-      ReactNoop.flushSync(() => ReactNoop.render(<AsyncText text="Async" />));
-    }).toThrow(
+  it('throws a helpful error when an update is suspends without a placeholder', () => {
+    ReactNoop.render(<AsyncText ms={1000} text="Async" />);
+    expect(Scheduler).toFlushAndThrow(
       'AsyncText suspended while rendering, but no fallback UI was specified.',
     );
   });
@@ -1616,14 +1620,14 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
   });
 
-  it('warns when a low pri update suspends for functional components', async () => {
+  it('warns when a low pri update suspends inside a high pri call for functional components', async () => {
     function B() {
       return 'B';
     }
 
     let _setFoo;
     function App() {
-      let [foo, setFoo] = React.useState(true);
+      let [foo, setFoo] = React.useState(false);
       _setFoo = setFoo;
       return (
         <Suspense fallback="Loading...">
@@ -1636,25 +1640,25 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     await ReactNoop.act(async () => {
       ReactNoop.render(<App />);
     });
-    ReactNoop.discreteUpdates(() => {
-      ReactNoop.batchedUpdates(() => {
-        _setFoo();
+
+    expect(() => {
+      ReactNoop.act(() => {
+        Scheduler.unstable_runWithPriority(
+          Scheduler.unstable_UserBlockingPriority,
+          () => {
+            _setFoo(true);
+          },
+        );
       });
-    });
-    expect(Scheduler).toHaveYielded(['Suspend! [A]']);
-    Scheduler.advanceTime(1000);
-    jest.advanceTimersByTime(1000);
-    // expect(() => {
-    //   jest.advanceTimersByTime(1000);
-    // }).toWarnDev(
-    //   'The following components suspended during a user-blocking update: AsyncText' +
-    //     '\n' +
-    //     'The components that called suspense are: App',
-    //   {withoutStack: true},
-    // );
+    }).toWarnDev(
+      'The following components suspended during a user-blocking update: AsyncText' +
+        '\n' +
+        'The components that called suspense are: App',
+      {withoutStack: true},
+    );
   });
 
-  it('warns when a low pri update suspends for class components inside discrete update', async () => {
+  it('warns when a low pri update suspends inside a high pri call for class components', async () => {
     function B() {
       return 'B';
     }
@@ -1677,15 +1681,14 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     await ReactNoop.act(async () => {
       ReactNoop.render(<App />);
     });
-    ReactNoop.discreteUpdates(() => {
-      ReactNoop.batchedUpdates(() => {
-        _setFoo();
-      });
-    });
-    expect(Scheduler).toFlushAndYield(['Suspend! [A]']);
-    Scheduler.advanceTime(1000);
+
     expect(() => {
-      jest.advanceTimersByTime(1000);
+      ReactNoop.act(() => {
+        Scheduler.unstable_runWithPriority(
+          Scheduler.unstable_UserBlockingPriority,
+          () => _setFoo(),
+        );
+      });
     }).toWarnDev(
       'The following components suspended during a user-blocking update: AsyncText' +
         '\n' +
@@ -1730,13 +1733,13 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     // Timeout and commit the fallback
     expect(() => {
-      Scheduler.flushAll();
+      Scheduler.unstable_flushAll();
     }).toWarnDev('Component was suspended when root was mounted or updated', {
       withoutStack: true,
     });
   });
 
-  it('low pri class updates do not fail', async () => {
+  it('normal priority updates suspending do not warn for class components', async () => {
     let setFoo;
     class App extends React.Component {
       state = {foo: false};
@@ -1762,21 +1765,18 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         () => setFoo(true),
       );
     });
-
-    Scheduler.advanceTime(1000);
-    jest.advanceTimersByTime(1000);
   });
 
-  it('low pri function component updates do not fail', async () => {
-    function B() {
-      return 'B';
-    }
-
+  it('normal priority updates suspending do not warn for functional components', async () => {
     let _setFoo;
     function App() {
       let [foo, setFoo] = React.useState(false);
       _setFoo = setFoo;
-      return <Suspense fallback="Loading...">{foo && <B />}</Suspense>;
+      return (
+        <Suspense fallback="Loading...">
+          {foo && <AsyncText ms={1000} text="A" />}
+        </Suspense>
+      );
     }
 
     await ReactNoop.act(async () => {
@@ -1790,9 +1790,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         () => _setFoo(true),
       );
     });
-
-    Scheduler.advanceTime(1000);
-    jest.advanceTimersByTime(1000);
   });
 
   it('shows the parent fallback if the inner fallback should be avoided', async () => {
