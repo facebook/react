@@ -2445,14 +2445,30 @@ describe('Event responder: Press', () => {
       );
       ReactDOM.render(element, container);
 
-      ref.current.dispatchEvent(createEvent('pointerdown'));
+      // Should cancel for non-mouse events
+      ref.current.dispatchEvent(
+        createEvent('pointerdown', {
+          pointerType: 'touch',
+        }),
+      );
       ref.current.dispatchEvent(createEvent('scroll'));
       expect(onPressEnd).toHaveBeenCalledTimes(1);
       jest.runAllTimers();
       expect(onLongPress).not.toBeCalled();
 
-      onLongPress.mockReset();
       onPressEnd.mockReset();
+
+      // Should not cancel for mouse events
+      ref.current.dispatchEvent(
+        createEvent('pointerdown', {
+          pointerType: 'mouse',
+        }),
+      );
+      ref.current.dispatchEvent(createEvent('scroll'));
+      expect(onPressEnd).toHaveBeenCalledTimes(0);
+      jest.runAllTimers();
+
+      onLongPress.mockReset();
 
       // When pointer events are supported
       ref.current.dispatchEvent(
