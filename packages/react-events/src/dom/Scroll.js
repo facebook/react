@@ -23,14 +23,16 @@ type ScrollProps = {
   onScroll: ScrollEvent => void,
   onScrollDragStart: ScrollEvent => void,
   onScrollDragEnd: ScrollEvent => void,
-  onScrollMomentumStart: ScrollEvent => void,
-  onScrollMomentumEnd: ScrollEvent => void,
 };
 
 type ScrollState = {
+  direction: ScrollDirection,
   pointerType: PointerType,
   scrollTarget: null | Element | Document,
-  isPointerDown: boolean,
+  isDragging: boolean,
+  isTouching: boolean,
+  scrollLeft: number,
+  scrollTop: number,
 };
 
 type ScrollEventType =
@@ -58,8 +60,14 @@ type ScrollEvent = {|
   y: null | number,
 |};
 
-const targetEventTypes = ['scroll', 'pointerdown', 'keyup'];
-const rootEventTypes = ['pointermove', 'pointerup', 'pointercancel'];
+const targetEventTypes = [
+  'scroll',
+  'pointerdown',
+  'touchstart',
+  'keyup',
+  'wheel',
+];
+const rootEventTypes = ['touchcancel', 'touchend'];
 
 function createScrollEvent(
   event: ?ReactDOMResponderEvent,
@@ -67,6 +75,7 @@ function createScrollEvent(
   type: ScrollEventType,
   target: Element | Document,
   pointerType: PointerType,
+  direction: ScrollDirection,
 ): ScrollEvent {
   let clientX = null;
   let clientY = null;
@@ -84,7 +93,7 @@ function createScrollEvent(
     target,
     type,
     pointerType,
-    direction: '', // TODO
+    direction,
     timeStamp: context.getTimeStamp(),
     clientX,
     clientY,
@@ -107,12 +116,14 @@ function dispatchEvent(
 ): void {
   const target = ((state.scrollTarget: any): Element | Document);
   const pointerType = state.pointerType;
+  const direction = state.direction;
   const syntheticEvent = createScrollEvent(
     event,
     context,
     name,
     target,
     pointerType,
+    direction,
   );
   context.dispatchEvent(syntheticEvent, listener, eventPriority);
 }
@@ -122,9 +133,12 @@ const ScrollResponder: ReactDOMEventResponder = {
   targetEventTypes,
   createInitialState() {
     return {
+      direction: '',
+      isTouching: false,
       pointerType: '',
+      prevScrollTop: 0,
+      prevScrollLeft: 0,
       scrollTarget: null,
-      isPointerDown: false,
     };
   },
   allowMultipleHostChildren: true,
@@ -138,17 +152,68 @@ const ScrollResponder: ReactDOMEventResponder = {
     const {pointerType, target, type} = event;
 
     if (props.disabled) {
-      if (state.isPointerDown) {
-        state.isPointerDown = false;
+      if (state.isTouching) {
+        state.isTouching = false;
         state.scrollTarget = null;
-        context.addRootEventTypes(rootEventTypes);
+        state.isDragging = false;
+        state.direction = '';
+        context.removeRootEventTypes(rootEventTypes);
       }
       return;
     }
 
     switch (type) {
       case 'scroll': {
+        const prevScrollTarget = state.scrollTarget;
+        let scrollLeft = 0;
+        let scrollTop = 0;
+
+        // Check if target is the document
+        if (target.nodeType === 9) {
+          const bodyNode = ((target: any): Document).body;
+          if (bodyNode !== null) {
+            scrollLeft = bodyNode.offsetLeft;
+            scrollTop = bodyNode.offsetTop;
+          }
+        } else {
+          scrollLeft = ((target: any): Element).scrollLeft;
+          scrollTop = ((target: any): Element).scrollTop;
+        }
+
+        if (prevScrollTarget !== null) {
+          if (scrollTop === state.scrollTop) {
+            if (scrollLeft > state.scrollLeft) {
+              state.direction = 'right';
+            } else {
+              state.direction = 'left';
+            }
+          } else {
+            if (scrollTop > state.scrollTop) {
+              state.direction = 'down';
+            } else {
+              state.direction = 'up';
+            }
+          }
+        } else {
+          state.direction = '';
+        }
         state.scrollTarget = ((target: any): Element | Document);
+        state.scrollLeft = scrollLeft;
+        state.scrollTop = scrollTop;
+
+        if (state.isTouching && !state.isDragging) {
+          state.isDragging = true;
+          if (props.onScrollDragStart) {
+            dispatchEvent(
+              event,
+              context,
+              state,
+              'scrolldragstart',
+              props.onScrollDragStart,
+              UserBlockingEvent,
+            );
+          }
+        }
         if (props.onScroll) {
           dispatchEvent(
             event,
@@ -165,13 +230,19 @@ const ScrollResponder: ReactDOMEventResponder = {
         state.pointerType = pointerType;
         break;
       }
+      case 'wheel': {
+        state.pointerType = 'mouse';
+        break;
+      }
       case 'pointerdown': {
         state.pointerType = pointerType;
-        if (!state.isPointerDown) {
-          state.isPointerDown = true;
+        break;
+      }
+      case 'touchstart': {
+        if (!state.isTouching) {
+          state.isTouching = true;
           context.addRootEventTypes(rootEventTypes);
         }
-        break;
       }
     }
   },
@@ -181,20 +252,28 @@ const ScrollResponder: ReactDOMEventResponder = {
     props: ScrollProps,
     state: ScrollState,
   ) {
-    const {pointerType, type} = event;
+    const {type} = event;
 
     switch (type) {
-      case 'pointercancel':
-      case 'pointerup': {
-        state.pointerType = pointerType;
-        if (state.isPointerDown) {
-          state.isPointerDown = false;
+      case 'touchcancel':
+      case 'touchend': {
+        if (state.isTouching) {
+          if (state.isDragging && props.onScrollDragEnd) {
+            dispatchEvent(
+              event,
+              context,
+              state,
+              'scrolldragend',
+              props.onScrollDragEnd,
+              UserBlockingEvent,
+            );
+          }
+          state.isTouching = false;
+          state.isDragging = false;
+          state.scrollTarget = null;
+          state.pointerType = '';
           context.removeRootEventTypes(rootEventTypes);
         }
-        break;
-      }
-      case 'pointermove': {
-        state.pointerType = pointerType;
       }
     }
   },
