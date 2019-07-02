@@ -14,6 +14,7 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {
   SuspenseState,
   SuspenseListRenderState,
+  SuspenseListTailMode,
 } from './ReactFiberSuspenseComponent';
 import type {SuspenseContext} from './ReactFiberSuspenseContext';
 
@@ -190,6 +191,7 @@ let didWarnAboutFunctionRefs;
 export let didWarnAboutReassigningProps;
 let didWarnAboutMaxDuration;
 let didWarnAboutRevealOrder;
+let didWarnAboutTailOptions;
 
 if (__DEV__) {
   didWarnAboutBadClass = {};
@@ -200,6 +202,7 @@ if (__DEV__) {
   didWarnAboutReassigningProps = false;
   didWarnAboutMaxDuration = false;
   didWarnAboutRevealOrder = {};
+  didWarnAboutTailOptions = {};
 }
 
 export function reconcileChildren(
@@ -2065,11 +2068,40 @@ function validateRevealOrder(revealOrder: SuspenseListRevealOrder) {
   }
 }
 
+function validateTailOptions(
+  tailMode: SuspenseListTailMode,
+  revealOrder: SuspenseListRevealOrder,
+) {
+  if (__DEV__) {
+    if (tailMode !== undefined && !didWarnAboutTailOptions[tailMode]) {
+      if (tailMode !== 'collapsed') {
+        didWarnAboutTailOptions[tailMode] = true;
+        warning(
+          false,
+          '"%s" is not a supported value for tail on <SuspenseList />. ' +
+            'Did you mean "collapsed"?',
+          tailMode,
+        );
+      } else if (revealOrder !== 'forwards' && revealOrder !== 'backwards') {
+        didWarnAboutTailOptions[tailMode] = true;
+        warning(
+          false,
+          '<SuspenseList tail="%s" /> is only valid if revealOrder is ' +
+            '"forwards" or "backwards". ' +
+            'Did you mean to specify revealOrder="forwards"?',
+          tailMode,
+        );
+      }
+    }
+  }
+}
+
 function initSuspenseListRenderState(
   workInProgress: Fiber,
   isBackwards: boolean,
   tail: null | Fiber,
   lastContentRow: null | Fiber,
+  tailMode: SuspenseListTailMode,
 ): void {
   let renderState: null | SuspenseListRenderState =
     workInProgress.memoizedState;
@@ -2080,6 +2112,7 @@ function initSuspenseListRenderState(
       last: lastContentRow,
       tail: tail,
       tailExpiration: 0,
+      tailMode: tailMode,
     };
   } else {
     // We can reuse the existing object from previous renders.
@@ -2088,6 +2121,7 @@ function initSuspenseListRenderState(
     renderState.last = lastContentRow;
     renderState.tail = tail;
     renderState.tailExpiration = 0;
+    renderState.tailMode = tailMode;
   }
 }
 
@@ -2105,9 +2139,11 @@ function updateSuspenseListComponent(
 ) {
   const nextProps = workInProgress.pendingProps;
   const revealOrder: SuspenseListRevealOrder = nextProps.revealOrder;
+  const tailMode: SuspenseListTailMode = nextProps.tail;
   const newChildren = nextProps.children;
 
   validateRevealOrder(revealOrder);
+  validateTailOptions(tailMode, revealOrder);
 
   reconcileChildren(current, workInProgress, newChildren, renderExpirationTime);
 
@@ -2165,6 +2201,7 @@ function updateSuspenseListComponent(
           false, // isBackwards
           tail,
           lastContentRow,
+          tailMode,
         );
         break;
       }
@@ -2195,6 +2232,7 @@ function updateSuspenseListComponent(
           true, // isBackwards
           tail,
           null, // last
+          tailMode,
         );
         break;
       }
@@ -2204,6 +2242,7 @@ function updateSuspenseListComponent(
           false, // isBackwards
           null, // tail
           null, // last
+          undefined,
         );
         break;
       }
