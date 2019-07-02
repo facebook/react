@@ -631,6 +631,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   it('renders an expiration boundary synchronously', async () => {
+    spyOnDev(console, 'error');
     // Synchronously render a tree that suspends
     ReactNoop.flushSync(() =>
       ReactNoop.render(
@@ -642,6 +643,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         </Fragment>,
       ),
     );
+
     expect(Scheduler).toHaveYielded([
       // The async child suspends
       'Suspend! [Async]',
@@ -661,6 +663,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   it('suspending inside an expired expiration boundary will bubble to the next one', async () => {
+    spyOnDev(console, 'error');
+
     ReactNoop.flushSync(() =>
       ReactNoop.render(
         <Fragment>
@@ -673,6 +677,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         </Fragment>,
       ),
     );
+
     expect(Scheduler).toHaveYielded([
       'Suspend! [Async]',
       'Suspend! [Loading (inner)...]',
@@ -757,10 +762,9 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Async')]);
   });
 
-  fit('throws a helpful error when an update is suspends without a placeholder', () => {
-    expect(() => {
-      ReactNoop.flushSync(() => ReactNoop.render(<AsyncText text="Async" />));
-    }).toThrow(
+  it('throws a helpful error when an update is suspends without a placeholder', () => {
+    ReactNoop.render(<AsyncText ms={1000} text="Async" />);
+    expect(Scheduler).toFlushAndThrow(
       'AsyncText suspended while rendering, but no fallback UI was specified.',
     );
   });
@@ -1616,7 +1620,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
   });
 
-  it('warns when a low pri update suspends for functional components', async () => {
+  fit('warns when a low pri update suspends for functional components', async () => {
     function B() {
       return 'B';
     }
@@ -1636,22 +1640,22 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     await ReactNoop.act(async () => {
       ReactNoop.render(<App />);
     });
-    ReactNoop.discreteUpdates(() => {
-      ReactNoop.batchedUpdates(() => {
-        _setFoo();
+
+    expect(() => {
+      ReactNoop.act(() => {
+        Scheduler.unstable_runWithPriority(
+          Scheduler.unstable_UserBlockingPriority,
+          () => {
+            _setFoo();
+          },
+        );
       });
-    });
-    expect(Scheduler).toHaveYielded(['Suspend! [A]']);
-    Scheduler.advanceTime(1000);
-    jest.advanceTimersByTime(1000);
-    // expect(() => {
-    //   jest.advanceTimersByTime(1000);
-    // }).toWarnDev(
-    //   'The following components suspended during a user-blocking update: AsyncText' +
-    //     '\n' +
-    //     'The components that called suspense are: App',
-    //   {withoutStack: true},
-    // );
+    }).toWarnDev(
+      'The following components suspended during a user-blocking update: AsyncText' +
+        '\n' +
+        'The components that called suspense are: App',
+      {withoutStack: true},
+    );
   });
 
   it('warns when a low pri update suspends for class components inside discrete update', async () => {
@@ -1677,15 +1681,14 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     await ReactNoop.act(async () => {
       ReactNoop.render(<App />);
     });
-    ReactNoop.discreteUpdates(() => {
-      ReactNoop.batchedUpdates(() => {
-        _setFoo();
-      });
-    });
-    expect(Scheduler).toFlushAndYield(['Suspend! [A]']);
-    Scheduler.advanceTime(1000);
+
     expect(() => {
-      jest.advanceTimersByTime(1000);
+      ReactNoop.act(() => {
+        Scheduler.unstable_runWithPriority(
+          Scheduler.unstable_UserBlockingPriority,
+          () => _setFoo(),
+        );
+      });
     }).toWarnDev(
       'The following components suspended during a user-blocking update: AsyncText' +
         '\n' +
@@ -1730,7 +1733,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     // Timeout and commit the fallback
     expect(() => {
-      Scheduler.flushAll();
+      Scheduler.unstable_flushAll();
     }).toWarnDev('Component was suspended when root was mounted or updated', {
       withoutStack: true,
     });
@@ -1763,7 +1766,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       );
     });
 
-    Scheduler.advanceTime(1000);
+    Scheduler.unstable_advanceTime(1000);
     jest.advanceTimersByTime(1000);
   });
 
@@ -1791,7 +1794,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       );
     });
 
-    Scheduler.advanceTime(1000);
+    Scheduler.unstable_advanceTime(1000);
     jest.advanceTimersByTime(1000);
   });
 
