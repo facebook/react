@@ -11,10 +11,12 @@ import type {Fiber} from './ReactFiber';
 import {SuspenseComponent} from 'shared/ReactWorkTags';
 
 // TODO: This is now an empty object. Should we switch this to a boolean?
+// Alternatively we can make this use an effect tag similar to SuspenseList.
 export type SuspenseState = {||};
 
-export type SuspenseListState = {|
-  didSuspend: boolean,
+export type SuspenseListTailMode = 'collapsed' | void;
+
+export type SuspenseListRenderState = {|
   isBackwards: boolean,
   // The currently rendering tail row.
   rendering: null | Fiber,
@@ -24,6 +26,8 @@ export type SuspenseListState = {|
   tail: null | Fiber,
   // The absolute time in ms that we'll expire the tail rendering.
   tailExpiration: number,
+  // Tail insertions setting.
+  tailMode: SuspenseListTailMode,
 |};
 
 export function shouldCaptureSuspense(

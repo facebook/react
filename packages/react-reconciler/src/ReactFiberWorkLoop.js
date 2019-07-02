@@ -1201,6 +1201,14 @@ export function renderDidError() {
   }
 }
 
+// Called during render to determine if anything has suspended.
+// Returns false if we're not sure.
+export function renderHasNotSuspendedYet(): boolean {
+  // If something errored or completed, we can't really be sure,
+  // so those are false.
+  return workInProgressRootExitStatus === RootIncomplete;
+}
+
 function inferTimeFromExpirationTime(expirationTime: ExpirationTime): number {
   // We don't know exactly when the update was scheduled, but we can infer an
   // approximate start time from the expiration time.
