@@ -31,10 +31,10 @@ describe('Scroll event responder', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableEventAPI = true;
+    ReactFeatureFlags.enableFlareAPI = true;
     React = require('react');
     ReactDOM = require('react-dom');
-    Scroll = require('react-events/scroll');
+    Scroll = require('react-events/scroll').Scroll;
 
     container = document.createElement('div');
     document.body.appendChild(container);

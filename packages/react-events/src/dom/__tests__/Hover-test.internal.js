@@ -44,10 +44,10 @@ describe('Hover event responder', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableEventAPI = true;
+    ReactFeatureFlags.enableFlareAPI = true;
     React = require('react');
     ReactDOM = require('react-dom');
-    Hover = require('react-events/hover');
+    Hover = require('react-events/hover').Hover;
 
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -268,7 +268,7 @@ describe('Hover event responder', () => {
       // This is currently behind a feature flag
       jest.resetModules();
       ReactFeatureFlags = require('shared/ReactFeatureFlags');
-      ReactFeatureFlags.enableEventAPI = true;
+      ReactFeatureFlags.enableFlareAPI = true;
       ReactFeatureFlags.enableUserBlockingEvents = true;
       React = require('react');
       ReactDOM = require('react-dom');
@@ -301,7 +301,7 @@ describe('Hover event responder', () => {
         target.current.dispatchEvent(createEvent('mouseover'));
 
         // 3s should be enough to expire the updates
-        Scheduler.advanceTime(3000);
+        Scheduler.unstable_advanceTime(3000);
         expect(newContainer.textContent).toEqual('hovered');
       });
     });

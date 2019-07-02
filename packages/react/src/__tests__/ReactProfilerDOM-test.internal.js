@@ -105,7 +105,7 @@ describe('ProfilerDOM', () => {
           resourcePromise.then(
             SchedulerTracing.unstable_wrap(() => {
               jest.runAllTimers();
-              Scheduler.flushAll();
+              Scheduler.unstable_flushAll();
 
               expect(element.textContent).toBe('Text');
               expect(onInteractionTraced).toHaveBeenCalledTimes(1);
@@ -133,7 +133,7 @@ describe('ProfilerDOM', () => {
         }),
       );
 
-      Scheduler.flushAll();
+      Scheduler.unstable_flushAll();
     });
 
     expect(onInteractionTraced).toHaveBeenCalledTimes(1);
@@ -141,7 +141,7 @@ describe('ProfilerDOM', () => {
       interaction,
     );
     expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     jest.advanceTimersByTime(500);
   });
 });

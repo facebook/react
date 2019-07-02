@@ -36,7 +36,7 @@ describe('memo', () => {
   }
 
   function Text(props) {
-    Scheduler.yieldValue(props.text);
+    Scheduler.unstable_yieldValue(props.text);
     return <span prop={props.text} />;
   }
 
@@ -184,7 +184,7 @@ describe('memo', () => {
           return <Text text={count} />;
         }
         Counter = memo(Counter, (oldProps, newProps) => {
-          Scheduler.yieldValue(
+          Scheduler.unstable_yieldValue(
             `Old count: ${oldProps.count}, New count: ${newProps.count}`,
           );
           return oldProps.count === newProps.count;

@@ -71,7 +71,7 @@ function runActTests(label, render, unmount) {
       it('can use act to flush effects', () => {
         function App() {
           React.useEffect(() => {
-            Scheduler.yieldValue(100);
+            Scheduler.unstable_yieldValue(100);
           });
           return null;
         }
@@ -87,7 +87,7 @@ function runActTests(label, render, unmount) {
         function App() {
           let [ctr, setCtr] = React.useState(0);
           React.useEffect(() => {
-            Scheduler.yieldValue(ctr);
+            Scheduler.unstable_yieldValue(ctr);
           });
           return (
             <button id="button" onClick={() => setCtr(x => x + 1)}>
@@ -140,7 +140,7 @@ function runActTests(label, render, unmount) {
       it('should flush effects only on exiting the outermost act', () => {
         function App() {
           React.useEffect(() => {
-            Scheduler.yieldValue(0);
+            Scheduler.unstable_yieldValue(0);
           });
           return null;
         }
@@ -390,7 +390,7 @@ function runActTests(label, render, unmount) {
             something();
           }, []);
           React.useEffect(() => {
-            Scheduler.yieldValue(state);
+            Scheduler.unstable_yieldValue(state);
           });
           return state;
         }
@@ -415,7 +415,7 @@ function runActTests(label, render, unmount) {
           }
           React.useEffect(
             () => {
-              Scheduler.yieldValue(state);
+              Scheduler.unstable_yieldValue(state);
               ticker();
             },
             [Math.min(state, 4)],
@@ -564,7 +564,7 @@ function runActTests(label, render, unmount) {
       it('should cleanup after errors - sync', () => {
         function App() {
           React.useEffect(() => {
-            Scheduler.yieldValue('oh yes');
+            Scheduler.unstable_yieldValue('oh yes');
           });
           return null;
         }
@@ -590,7 +590,7 @@ function runActTests(label, render, unmount) {
         function App() {
           async function somethingAsync() {
             await null;
-            Scheduler.yieldValue('oh yes');
+            Scheduler.unstable_yieldValue('oh yes');
           }
           React.useEffect(() => {
             somethingAsync();

@@ -92,7 +92,7 @@ describe('ReactIncrementalScheduling', () => {
     function Text({text}) {
       useEffect(
         () => {
-          Scheduler.yieldValue(text);
+          Scheduler.unstable_yieldValue(text);
         },
         [text],
       );
@@ -144,24 +144,24 @@ describe('ReactIncrementalScheduling', () => {
       state = {tick: 0};
 
       componentDidMount() {
-        Scheduler.yieldValue(
+        Scheduler.unstable_yieldValue(
           'componentDidMount (before setState): ' + this.state.tick,
         );
         this.setState({tick: 1});
         // We're in a batch. Update hasn't flushed yet.
-        Scheduler.yieldValue(
+        Scheduler.unstable_yieldValue(
           'componentDidMount (after setState): ' + this.state.tick,
         );
       }
 
       componentDidUpdate() {
-        Scheduler.yieldValue('componentDidUpdate: ' + this.state.tick);
+        Scheduler.unstable_yieldValue('componentDidUpdate: ' + this.state.tick);
         if (this.state.tick === 2) {
-          Scheduler.yieldValue(
+          Scheduler.unstable_yieldValue(
             'componentDidUpdate (before setState): ' + this.state.tick,
           );
           this.setState({tick: 3});
-          Scheduler.yieldValue(
+          Scheduler.unstable_yieldValue(
             'componentDidUpdate (after setState): ' + this.state.tick,
           );
           // We're in a batch. Update hasn't flushed yet.
@@ -169,7 +169,7 @@ describe('ReactIncrementalScheduling', () => {
       }
 
       render() {
-        Scheduler.yieldValue('render: ' + this.state.tick);
+        Scheduler.unstable_yieldValue('render: ' + this.state.tick);
         instance = this;
         return <span prop={this.state.tick} />;
       }
@@ -209,11 +209,11 @@ describe('ReactIncrementalScheduling', () => {
 
       componentDidMount() {
         ReactNoop.deferredUpdates(() => {
-          Scheduler.yieldValue(
+          Scheduler.unstable_yieldValue(
             'componentDidMount (before setState): ' + this.state.tick,
           );
           this.setState({tick: 1});
-          Scheduler.yieldValue(
+          Scheduler.unstable_yieldValue(
             'componentDidMount (after setState): ' + this.state.tick,
           );
         });
@@ -221,13 +221,15 @@ describe('ReactIncrementalScheduling', () => {
 
       componentDidUpdate() {
         ReactNoop.deferredUpdates(() => {
-          Scheduler.yieldValue('componentDidUpdate: ' + this.state.tick);
+          Scheduler.unstable_yieldValue(
+            'componentDidUpdate: ' + this.state.tick,
+          );
           if (this.state.tick === 2) {
-            Scheduler.yieldValue(
+            Scheduler.unstable_yieldValue(
               'componentDidUpdate (before setState): ' + this.state.tick,
             );
             this.setState({tick: 3});
-            Scheduler.yieldValue(
+            Scheduler.unstable_yieldValue(
               'componentDidUpdate (after setState): ' + this.state.tick,
             );
           }
@@ -235,7 +237,7 @@ describe('ReactIncrementalScheduling', () => {
       }
 
       render() {
-        Scheduler.yieldValue('render: ' + this.state.tick);
+        Scheduler.unstable_yieldValue('render: ' + this.state.tick);
         instance = this;
         return <span prop={this.state.tick} />;
       }
@@ -285,7 +287,7 @@ describe('ReactIncrementalScheduling', () => {
         });
       }
       render() {
-        Scheduler.yieldValue('Foo');
+        Scheduler.unstable_yieldValue('Foo');
         return <span prop={this.state.step} />;
       }
     }

@@ -29,17 +29,17 @@ describe('ReactDOMRoot', () => {
   it('renders children', () => {
     const root = ReactDOM.unstable_createRoot(container);
     root.render(<div>Hi</div>);
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     expect(container.textContent).toEqual('Hi');
   });
 
   it('unmounts children', () => {
     const root = ReactDOM.unstable_createRoot(container);
     root.render(<div>Hi</div>);
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     expect(container.textContent).toEqual('Hi');
     root.unmount();
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     expect(container.textContent).toEqual('');
   });
 
@@ -51,7 +51,7 @@ describe('ReactDOMRoot', () => {
       ops.push('inside callback: ' + container.textContent);
     });
     ops.push('before committing: ' + container.textContent);
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     ops.push('after committing: ' + container.textContent);
     expect(ops).toEqual([
       'before committing: ',
@@ -64,7 +64,7 @@ describe('ReactDOMRoot', () => {
   it('resolves `work.then` callback synchronously if the work already committed', () => {
     const root = ReactDOM.unstable_createRoot(container);
     const work = root.render('Hi');
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     let ops = [];
     work.then(() => {
       ops.push('inside callback');
@@ -92,7 +92,7 @@ describe('ReactDOMRoot', () => {
         <span />
       </div>,
     );
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
 
     // Accepts `hydrate` option
     const container2 = document.createElement('div');
@@ -103,7 +103,7 @@ describe('ReactDOMRoot', () => {
         <span />
       </div>,
     );
-    expect(() => Scheduler.flushAll()).toWarnDev('Extra attributes', {
+    expect(() => Scheduler.unstable_flushAll()).toWarnDev('Extra attributes', {
       withoutStack: true,
     });
   });
@@ -117,7 +117,7 @@ describe('ReactDOMRoot', () => {
         <span>d</span>
       </div>,
     );
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     expect(container.textContent).toEqual('abcd');
     root.render(
       <div>
@@ -125,7 +125,7 @@ describe('ReactDOMRoot', () => {
         <span>c</span>
       </div>,
     );
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     expect(container.textContent).toEqual('abdc');
   });
 
@@ -157,7 +157,7 @@ describe('ReactDOMRoot', () => {
     const batch = root.createBatch();
     batch.render(<App />);
 
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
 
     // Hasn't updated yet
     expect(container.textContent).toEqual('');
@@ -186,7 +186,7 @@ describe('ReactDOMRoot', () => {
     const batch = root.createBatch();
     batch.render(<Foo>Hi</Foo>);
     // Flush all async work.
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     // Root should complete without committing.
     expect(ops).toEqual(['Foo']);
     expect(container.textContent).toEqual('');
@@ -204,7 +204,7 @@ describe('ReactDOMRoot', () => {
     const batch = root.createBatch();
     batch.render('Foo');
 
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
 
     // Hasn't updated yet
     expect(container.textContent).toEqual('');
@@ -244,7 +244,7 @@ describe('ReactDOMRoot', () => {
     const root = ReactDOM.unstable_createRoot(container);
     root.render(1);
 
-    Scheduler.advanceTime(2000);
+    Scheduler.unstable_advanceTime(2000);
     // This batch has a later expiration time than the earlier update.
     const batch = root.createBatch();
 
@@ -252,7 +252,7 @@ describe('ReactDOMRoot', () => {
     batch.commit();
     expect(container.textContent).toEqual('');
 
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     expect(container.textContent).toEqual('1');
   });
 
@@ -279,7 +279,7 @@ describe('ReactDOMRoot', () => {
     batch1.render(1);
 
     // This batch has a later expiration time
-    Scheduler.advanceTime(2000);
+    Scheduler.unstable_advanceTime(2000);
     const batch2 = root.createBatch();
     batch2.render(2);
 
@@ -298,7 +298,7 @@ describe('ReactDOMRoot', () => {
     batch1.render(1);
 
     // This batch has a later expiration time
-    Scheduler.advanceTime(2000);
+    Scheduler.unstable_advanceTime(2000);
     const batch2 = root.createBatch();
     batch2.render(2);
 
@@ -308,7 +308,7 @@ describe('ReactDOMRoot', () => {
     expect(container.textContent).toEqual('2');
 
     batch1.commit();
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     expect(container.textContent).toEqual('1');
   });
 
@@ -334,7 +334,7 @@ describe('ReactDOMRoot', () => {
   it('warns when rendering with legacy API into createRoot() container', () => {
     const root = ReactDOM.unstable_createRoot(container);
     root.render(<div>Hi</div>);
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     expect(container.textContent).toEqual('Hi');
     expect(() => {
       ReactDOM.render(<div>Bye</div>, container);
@@ -349,7 +349,7 @@ describe('ReactDOMRoot', () => {
       ],
       {withoutStack: true},
     );
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     // This works now but we could disallow it:
     expect(container.textContent).toEqual('Bye');
   });
@@ -357,7 +357,7 @@ describe('ReactDOMRoot', () => {
   it('warns when hydrating with legacy API into createRoot() container', () => {
     const root = ReactDOM.unstable_createRoot(container);
     root.render(<div>Hi</div>);
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     expect(container.textContent).toEqual('Hi');
     expect(() => {
       ReactDOM.hydrate(<div>Hi</div>, container);
@@ -377,7 +377,7 @@ describe('ReactDOMRoot', () => {
   it('warns when unmounting with legacy API (no previous content)', () => {
     const root = ReactDOM.unstable_createRoot(container);
     root.render(<div>Hi</div>);
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     expect(container.textContent).toEqual('Hi');
     let unmounted = false;
     expect(() => {
@@ -393,10 +393,10 @@ describe('ReactDOMRoot', () => {
       {withoutStack: true},
     );
     expect(unmounted).toBe(false);
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     expect(container.textContent).toEqual('Hi');
     root.unmount();
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     expect(container.textContent).toEqual('');
   });
 
@@ -406,17 +406,17 @@ describe('ReactDOMRoot', () => {
     // The rest is the same as test above.
     const root = ReactDOM.unstable_createRoot(container);
     root.render(<div>Hi</div>);
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     expect(container.textContent).toEqual('Hi');
     let unmounted = false;
     expect(() => {
       unmounted = ReactDOM.unmountComponentAtNode(container);
     }).toWarnDev('Did you mean to call root.unmount()?', {withoutStack: true});
     expect(unmounted).toBe(false);
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     expect(container.textContent).toEqual('Hi');
     root.unmount();
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
     expect(container.textContent).toEqual('');
   });
 

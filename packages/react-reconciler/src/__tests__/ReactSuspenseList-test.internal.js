@@ -21,7 +21,7 @@ describe('ReactSuspenseList', () => {
   });
 
   function Text(props) {
-    Scheduler.yieldValue(props.text);
+    Scheduler.unstable_yieldValue(props.text);
     return <span>{props.text}</span>;
   }
 
@@ -29,7 +29,7 @@ describe('ReactSuspenseList', () => {
     let resolved = false;
     let Component = function() {
       if (!resolved) {
-        Scheduler.yieldValue('Suspend! [' + text + ']');
+        Scheduler.unstable_yieldValue('Suspend! [' + text + ']');
         throw promise;
       }
       return <Text text={text} />;
@@ -54,7 +54,7 @@ describe('ReactSuspenseList', () => {
 
     ReactNoop.render(<Foo />);
 
-    expect(() => Scheduler.flushAll()).toWarnDev([
+    expect(() => Scheduler.unstable_flushAll()).toWarnDev([
       'Warning: "something" is not a supported revealOrder on ' +
         '<SuspenseList />. Did you mean "together", "forwards" or "backwards"?' +
         '\n    in SuspenseList (at **)' +
@@ -73,7 +73,7 @@ describe('ReactSuspenseList', () => {
 
     ReactNoop.render(<Foo />);
 
-    expect(() => Scheduler.flushAll()).toWarnDev([
+    expect(() => Scheduler.unstable_flushAll()).toWarnDev([
       'Warning: "TOGETHER" is not a valid value for revealOrder on ' +
         '<SuspenseList />. Use lowercase "together" instead.' +
         '\n    in SuspenseList (at **)' +
@@ -92,7 +92,7 @@ describe('ReactSuspenseList', () => {
 
     ReactNoop.render(<Foo />);
 
-    expect(() => Scheduler.flushAll()).toWarnDev([
+    expect(() => Scheduler.unstable_flushAll()).toWarnDev([
       'Warning: "forward" is not a valid value for revealOrder on ' +
         '<SuspenseList />. React uses the -s suffix in the spelling. ' +
         'Use "forwards" instead.' +
@@ -578,7 +578,7 @@ describe('ReactSuspenseList', () => {
 
     await B.resolve();
 
-    expect(Scheduler).toFlushAndYield(['B']);
+    expect(Scheduler).toFlushAndYield(['B', 'Suspend! [C]']);
 
     // Even though we could now show B, we're still waiting on C.
     expect(ReactNoop).toMatchRenderedOutput(
@@ -780,7 +780,6 @@ describe('ReactSuspenseList', () => {
       'Suspend! [C]',
       'Loading C',
       'D',
-      'Suspend! [E]',
       'Loading E',
       'Loading F',
     ]);
@@ -861,7 +860,7 @@ describe('ReactSuspenseList', () => {
     );
   });
 
-  it('displays added row at the top "together" and the bottom in "forwards" order', async () => {
+  it('displays added row at the top "together" and the bottom in "backwards" order', async () => {
     let A = createAsyncText('A');
     let B = createAsyncText('B');
     let D = createAsyncText('D');
@@ -958,7 +957,7 @@ describe('ReactSuspenseList', () => {
 
     await F.resolve();
 
-    expect(Scheduler).toFlushAndYield(['F']);
+    expect(Scheduler).toFlushAndYield(['Suspend! [D]', 'F']);
 
     // Even though we could show F, it is still in a fallback state because
     // E is not yet resolved. We need to resolve everything in the head first.
@@ -1050,12 +1049,12 @@ describe('ReactSuspenseList', () => {
 
     expect(Scheduler).toFlushAndYieldThrough(['A']);
 
-    Scheduler.advanceTime(300);
+    Scheduler.unstable_advanceTime(300);
     jest.advanceTimersByTime(300);
 
     expect(Scheduler).toFlushAndYieldThrough(['B']);
 
-    Scheduler.advanceTime(300);
+    Scheduler.unstable_advanceTime(300);
     jest.advanceTimersByTime(300);
 
     // We've still not been able to show anything on the screen even though
