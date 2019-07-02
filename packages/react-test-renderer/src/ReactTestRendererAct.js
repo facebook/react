@@ -11,7 +11,7 @@ import type {Thenable} from 'react-reconciler/src/ReactFiberWorkLoop';
 import {
   batchedUpdates,
   flushPassiveEffects,
-  ReactRendererIsActing,
+  IsThisRendererActing,
 } from 'react-reconciler/inline.test';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import warningWithoutStack from 'shared/warningWithoutStack';
@@ -19,7 +19,7 @@ import {warnAboutMissingMockScheduler} from 'shared/ReactFeatureFlags';
 import enqueueTask from 'shared/enqueueTask';
 import * as Scheduler from 'scheduler';
 
-const {ReactIsActing} = ReactSharedInternals;
+const {IsSomeRendererActing} = ReactSharedInternals;
 
 // this implementation should be exactly the same in
 // ReactTestUtilsAct.js, ReactTestRendererAct.js, createReactNoop.js
@@ -67,21 +67,21 @@ let actingUpdatesScopeDepth = 0;
 
 function act(callback: () => Thenable) {
   let previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
-  let previousReactIsActing;
-  let previousReactRendererIsActing;
+  let previousIsSomeRendererActing;
+  let previousIsThisRendererActing;
   actingUpdatesScopeDepth++;
   if (__DEV__) {
-    previousReactIsActing = ReactIsActing.current;
-    previousReactRendererIsActing = ReactIsActing.current;
-    ReactIsActing.current = true;
-    ReactRendererIsActing.current = true;
+    previousIsSomeRendererActing = IsSomeRendererActing.current;
+    previousIsThisRendererActing = IsSomeRendererActing.current;
+    IsSomeRendererActing.current = true;
+    IsThisRendererActing.current = true;
   }
 
   function onDone() {
     actingUpdatesScopeDepth--;
     if (__DEV__) {
-      ReactIsActing.current = previousReactIsActing;
-      ReactRendererIsActing.current = previousReactRendererIsActing;
+      IsSomeRendererActing.current = previousIsSomeRendererActing;
+      IsThisRendererActing.current = previousIsThisRendererActing;
       if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
         // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
         warningWithoutStack(

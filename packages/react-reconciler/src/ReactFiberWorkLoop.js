@@ -174,7 +174,7 @@ const ceil = Math.ceil;
 const {
   ReactCurrentDispatcher,
   ReactCurrentOwner,
-  ReactIsActing,
+  IsSomeRendererActing,
 } = ReactSharedInternals;
 
 type ExecutionContext = number;
@@ -2420,14 +2420,14 @@ function warnAboutInvalidUpdatesOnClassComponentsInDEV(fiber) {
   }
 }
 
-export const ReactRendererIsActing = {current: (false: boolean)};
+export const IsThisRendererActing = {current: (false: boolean)};
 
 export function warnIfNotScopedWithMatchingAct(fiber: Fiber): void {
   if (__DEV__) {
     if (
       warnsIfNotActing === true &&
-      ReactIsActing.current === true &&
-      ReactRendererIsActing.current !== true
+      IsSomeRendererActing.current === true &&
+      IsThisRendererActing.current !== true
     ) {
       warningWithoutStack(
         false,
@@ -2453,8 +2453,8 @@ export function warnIfNotCurrentlyActingEffectsInDEV(fiber: Fiber): void {
   if (__DEV__) {
     if (
       warnsIfNotActing === true &&
-      ReactIsActing.current === false &&
-      ReactRendererIsActing.current === false
+      IsSomeRendererActing.current === false &&
+      IsThisRendererActing.current === false
     ) {
       warningWithoutStack(
         false,
@@ -2481,8 +2481,8 @@ function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
     if (
       warnsIfNotActing === true &&
       executionContext === NoContext &&
-      ReactIsActing.current === false &&
-      ReactRendererIsActing.current === false
+      IsSomeRendererActing.current === false &&
+      IsThisRendererActing.current === false
     ) {
       warningWithoutStack(
         false,

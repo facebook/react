@@ -65,7 +65,7 @@ type TextInstance = {|
 |};
 type HostContext = Object;
 
-const {ReactIsActing} = ReactSharedInternals;
+const {IsSomeRendererActing} = ReactSharedInternals;
 
 const NO_CONTEXT = {};
 const UPPERCASE_CONTEXT = {};
@@ -566,7 +566,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   const {
     flushPassiveEffects,
     batchedUpdates,
-    ReactRendererIsActing,
+    IsThisRendererActing,
   } = NoopRenderer;
 
   // this act() implementation should be exactly the same in
@@ -615,21 +615,21 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
   function act(callback: () => Thenable) {
     let previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
-    let previousReactIsActing;
-    let previousReactRendererIsActing;
+    let previousIsSomeRendererActing;
+    let previousIsThisRendererActing;
     actingUpdatesScopeDepth++;
     if (__DEV__) {
-      previousReactIsActing = ReactIsActing.current;
-      previousReactRendererIsActing = ReactIsActing.current;
-      ReactIsActing.current = true;
-      ReactRendererIsActing.current = true;
+      previousIsSomeRendererActing = IsSomeRendererActing.current;
+      previousIsThisRendererActing = IsSomeRendererActing.current;
+      IsSomeRendererActing.current = true;
+      IsThisRendererActing.current = true;
     }
 
     function onDone() {
       actingUpdatesScopeDepth--;
       if (__DEV__) {
-        ReactIsActing.current = previousReactIsActing;
-        ReactRendererIsActing.current = previousReactRendererIsActing;
+        IsSomeRendererActing.current = previousIsSomeRendererActing;
+        IsThisRendererActing.current = previousIsThisRendererActing;
         if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
           // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
           warningWithoutStack(
