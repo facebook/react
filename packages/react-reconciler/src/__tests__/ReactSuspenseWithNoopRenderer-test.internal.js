@@ -1645,9 +1645,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       ReactNoop.act(() => {
         Scheduler.unstable_runWithPriority(
           Scheduler.unstable_UserBlockingPriority,
-          () => {
-            _setFoo(true);
-          },
+          () => _setFoo(true),
         );
       });
     }).toWarnDev(

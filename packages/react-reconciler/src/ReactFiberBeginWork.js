@@ -2719,6 +2719,7 @@ function beginWork(
         workInProgress.elementType === Component
           ? unresolvedProps
           : resolveDefaultProps(Component, unresolvedProps);
+      console.log('updating function component');
       return updateFunctionComponent(
         current,
         workInProgress,

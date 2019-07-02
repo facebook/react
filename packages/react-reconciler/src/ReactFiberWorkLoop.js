@@ -913,6 +913,7 @@ function renderRoot(
         }
         break;
       } catch (thrownValue) {
+        console.log('thrownAHHH');
         // Reset module-level state that was set during the render phase.
         resetContextDependencies();
         resetHooks();
@@ -1270,6 +1271,7 @@ function performUnitOfWork(unitOfWork: Fiber): Fiber | null {
   }
 
   ReactCurrentOwner.current = null;
+  // console.log(next.type, next.tag);
   return next;
 }
 
@@ -2594,6 +2596,7 @@ export function checkForWrongSuspensePriorityInDEV(sourceFiber: Fiber) {
 
 function flushSuspensePriorityWarningInDEV() {
   if (__DEV__) {
+    console.log('flush');
     if (
       componentsWithSuspendedDiscreteUpdates !== null &&
       componentsThatCallSuspendedDiscreteUpdates.size > 0
