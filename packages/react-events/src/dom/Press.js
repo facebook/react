@@ -985,7 +985,7 @@ const PressResponder: ReactDOMEventResponder = {
 
       // CANCEL
       case 'scroll': {
-        // We ignore incoing scroll events when using mouse events
+        // We ignore incoming scroll events when using mouse events
         if (previousPointerType === 'mouse') {
           return;
         }
