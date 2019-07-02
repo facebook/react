@@ -399,7 +399,12 @@ function getPlugins(
     isProduction && stripUnusedImports(pureExternalModules),
     // Add the whitespace back if necessary.
     shouldStayReadable &&
-      prettier({parser: 'babylon', singleQuote: false, trailingComma: 'none'}),
+      prettier({
+        parser: 'babylon',
+        singleQuote: false,
+        trailingComma: 'none',
+        bracketSpacing: true,
+      }),
     // License and haste headers, top-level `if` blocks.
     {
       renderChunk(source) {
