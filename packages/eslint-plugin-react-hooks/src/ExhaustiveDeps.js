@@ -1282,7 +1282,8 @@ function getDependency(node) {
     !(
       node.parent.parent != null &&
       node.parent.parent.type === 'CallExpression' &&
-      node.parent.parent.callee === node.parent
+      node.parent.parent.callee === node.parent &&
+      node.parent.parent.parent.type !== 'ExpressionStatement'
     )
   ) {
     return getDependency(node.parent);
