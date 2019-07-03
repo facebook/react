@@ -445,27 +445,18 @@ export function unmountEventComponent(
   throw new Error('Not yet implemented.');
 }
 
-export function getEventTargetChildElement(
-  type: Symbol | number,
-  props: Props,
-): null {
+export function getFundamentalComponentInstance(fundamentalInstance) {
   throw new Error('Not yet implemented.');
 }
 
-export function handleEventTarget(
-  type: Symbol | number,
-  props: Props,
-  rootContainerInstance: Container,
-  internalInstanceHandle: Object,
-): boolean {
+export function mountFundamentalComponent(fundamentalInstance) {
   throw new Error('Not yet implemented.');
 }
 
-export function commitEventTarget(
-  type: Symbol | number,
-  props: Props,
-  instance: Instance,
-  parentInstance: Instance,
-): void {
+export function updateFundamentalComponent(fundamentalInstance) {
+  throw new Error('Not yet implemented.');
+}
+
+export function unmountFundamentalComponent(fundamentalInstance) {
   throw new Error('Not yet implemented.');
 }

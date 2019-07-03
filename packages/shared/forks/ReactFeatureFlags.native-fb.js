@@ -32,6 +32,7 @@ export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 export const warnAboutDeprecatedLifecycles = true;
 export const warnAboutDeprecatedSetNativeProps = true;
 export const enableFlareAPI = false;
+export const enableFundamentalAPI = false;
 export const enableJSXTransformAPI = false;
 export const warnAboutMissingMockScheduler = true;
 export const revertPassiveEffectsChange = false;

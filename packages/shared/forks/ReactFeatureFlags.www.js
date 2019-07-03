@@ -70,6 +70,8 @@ function updateFlagOutsideOfReactCallStack() {
 
 export const enableFlareAPI = true;
 
+export const enableFundamentalAPI = false;
+
 export const enableJSXTransformAPI = true;
 
 export const warnAboutMissingMockScheduler = true;

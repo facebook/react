@@ -53,7 +53,12 @@ import {
 import ReactSharedInternals from './ReactSharedInternals';
 import {error, warn} from './withComponentStack';
 import createEvent from 'shared/createEventComponent';
-import {enableJSXTransformAPI, enableFlareAPI} from 'shared/ReactFeatureFlags';
+import createFundamental from 'shared/createFundamentalComponent';
+import {
+  enableJSXTransformAPI,
+  enableFlareAPI,
+  enableFundamentalAPI,
+} from 'shared/ReactFeatureFlags';
 const React = {
   Children: {
     map,
@@ -107,6 +112,10 @@ const React = {
 if (enableFlareAPI) {
   React.unstable_createEvent = createEvent;
   React.unstable_useEvent = useEvent;
+}
+
+if (enableFundamentalAPI) {
+  React.unstable_createFundamental = createFundamental;
 }
 
 // Note: some APIs are added with feature flags.
