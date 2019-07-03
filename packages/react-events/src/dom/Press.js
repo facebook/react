@@ -797,6 +797,7 @@ const PressResponder: ReactDOMEventResponder = {
     const nativeEvent: any = event.nativeEvent;
     const isPressed = state.isPressed;
     const activePointerId = state.activePointerId;
+    const previousPointerType = state.pointerType;
 
     handleStopPropagation(props, context, nativeEvent);
     switch (type) {
@@ -807,7 +808,7 @@ const PressResponder: ReactDOMEventResponder = {
         let touchEvent;
         // Ignore emulated events (pointermove will dispatch touch and mouse events)
         // Ignore pointermove events during a keyboard press.
-        if (state.pointerType !== pointerType) {
+        if (previousPointerType !== pointerType) {
           return;
         }
         if (type === 'pointermove' && activePointerId !== pointerId) {
@@ -976,7 +977,7 @@ const PressResponder: ReactDOMEventResponder = {
 
       case 'click': {
         // "keyup" occurs after "click"
-        if (state.pointerType !== 'keyboard') {
+        if (previousPointerType !== 'keyboard') {
           removeRootEventTypes(context, state);
         }
         break;
@@ -984,6 +985,10 @@ const PressResponder: ReactDOMEventResponder = {
 
       // CANCEL
       case 'scroll': {
+        // We ignore incoming scroll events when using mouse events
+        if (previousPointerType === 'mouse') {
+          return;
+        }
         const pressTarget = state.pressTarget;
         const scrollTarget = nativeEvent.target;
         const doc = context.getActiveDocument();

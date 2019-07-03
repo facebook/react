@@ -37,6 +37,21 @@ it("doesn't warn when you use the right act + renderer: test", () => {
   });
 });
 
+it('resets correctly across renderers', () => {
+  function Effecty() {
+    React.useEffect(() => {}, []);
+    return null;
+  }
+  TestUtils.act(() => {
+    TestRenderer.act(() => {});
+    expect(() => {
+      TestRenderer.create(<Effecty />);
+    }).toWarnDev(["It looks like you're using the wrong act()"], {
+      withoutStack: true,
+    });
+  });
+});
+
 it('warns when using createRoot() + .render', () => {
   const root = ReactDOM.unstable_createRoot(document.createElement('div'));
   expect(() => {
@@ -70,10 +85,7 @@ it('warns when using the wrong act version - test + dom: updates', () => {
     TestRenderer.act(() => {
       setCtr(1);
     });
-  }).toWarnDev([
-    'An update to Counter inside a test was not wrapped in act',
-    "It looks like you're using the wrong act()",
-  ]);
+  }).toWarnDev(["It looks like you're using the wrong act()"]);
 });
 
 it('warns when using the wrong act version - dom + test: .create()', () => {
@@ -109,10 +121,7 @@ it('warns when using the wrong act version - dom + test: updates', () => {
     TestUtils.act(() => {
       setCtr(1);
     });
-  }).toWarnDev([
-    'An update to Counter inside a test was not wrapped in act',
-    "It looks like you're using the wrong act()",
-  ]);
+  }).toWarnDev(["It looks like you're using the wrong act()"]);
 });
 
 const {Surface, Group, Shape} = ReactART;
@@ -156,5 +165,13 @@ it('does not warn when nesting react-act inside react-dom', () => {
 it('does not warn when nesting react-act inside react-test-renderer', () => {
   TestRenderer.act(() => {
     TestRenderer.create(<ARTTest />);
+  });
+});
+
+it("doesn't warn if you use nested acts from different renderers", () => {
+  TestRenderer.act(() => {
+    TestUtils.act(() => {
+      TestRenderer.create(<App />);
+    });
   });
 });

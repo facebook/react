@@ -55,12 +55,13 @@ import {
   scheduleTimeout,
   cancelTimeout,
   noTimeout,
-  shouldWarnUnactedUpdates,
+  warnsIfNotActing,
 } from './ReactFiberHostConfig';
 
 import {createWorkInProgress, assignFiberPropertiesInDEV} from './ReactFiber';
 import {
   NoMode,
+  StrictMode,
   ProfileMode,
   BatchedMode,
   ConcurrentMode,
@@ -174,7 +175,7 @@ const ceil = Math.ceil;
 const {
   ReactCurrentDispatcher,
   ReactCurrentOwner,
-  ReactCurrentActingRendererSigil,
+  IsSomeRendererActing,
 } = ReactSharedInternals;
 
 type ExecutionContext = number;
@@ -2420,18 +2421,14 @@ function warnAboutInvalidUpdatesOnClassComponentsInDEV(fiber) {
   }
 }
 
-// We export a simple object here to be used by a renderer/test-utils
-// as the value of ReactCurrentActingRendererSigil.current
-// This identity lets us identify (ha!) when the wrong renderer's act()
-// wraps anothers' updates/effects
-export const ReactActingRendererSigil = {};
+export const IsThisRendererActing = {current: (false: boolean)};
 
 export function warnIfNotScopedWithMatchingAct(fiber: Fiber): void {
   if (__DEV__) {
     if (
-      shouldWarnUnactedUpdates === true &&
-      ReactCurrentActingRendererSigil.current !== null &&
-      ReactCurrentActingRendererSigil.current !== ReactActingRendererSigil
+      warnsIfNotActing === true &&
+      IsSomeRendererActing.current === true &&
+      IsThisRendererActing.current !== true
     ) {
       warningWithoutStack(
         false,
@@ -2456,8 +2453,10 @@ export function warnIfNotScopedWithMatchingAct(fiber: Fiber): void {
 export function warnIfNotCurrentlyActingEffectsInDEV(fiber: Fiber): void {
   if (__DEV__) {
     if (
-      shouldWarnUnactedUpdates === true &&
-      ReactCurrentActingRendererSigil.current !== ReactActingRendererSigil
+      warnsIfNotActing === true &&
+      (fiber.mode & StrictMode) !== NoMode &&
+      IsSomeRendererActing.current === false &&
+      IsThisRendererActing.current === false
     ) {
       warningWithoutStack(
         false,
@@ -2482,9 +2481,10 @@ export function warnIfNotCurrentlyActingEffectsInDEV(fiber: Fiber): void {
 function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
   if (__DEV__) {
     if (
-      shouldWarnUnactedUpdates === true &&
+      warnsIfNotActing === true &&
       executionContext === NoContext &&
-      ReactCurrentActingRendererSigil.current !== ReactActingRendererSigil
+      IsSomeRendererActing.current === false &&
+      IsThisRendererActing.current === false
     ) {
       warningWithoutStack(
         false,

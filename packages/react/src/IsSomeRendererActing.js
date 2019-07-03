@@ -7,8 +7,11 @@
  * @flow
  */
 
-// This is just to get the setup running.
-// TODO: real implementation.
-// console.log('Hello from Fire host config.');
+/**
+ * Used by act() to track whether you're inside an act() scope.
+ */
 
-export * from '../client/ReactDOMHostConfig';
+const IsSomeRendererActing = {
+  current: (false: boolean),
+};
+export default IsSomeRendererActing;
