@@ -407,6 +407,27 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     unmountEventComponent(): void {
       // NO-OP
     },
+
+    mountFundamentalComponent(fundamentalInstance): Instance {
+      const {impl, props, state} = fundamentalInstance;
+      return impl.onMount(null, props, state);
+    },
+
+    updateFundamentalComponent(fundamentalInstance): void {
+      const {impl, instance, prevProps, props, state} = fundamentalInstance;
+      const onUpdate = impl.onUpdate;
+      if (onUpdate !== undefined) {
+        onUpdate(null, instance, prevProps, props, state);
+      }
+    },
+
+    unmountFundamentalComponent(fundamentalInstance): void {
+      const {impl, instance, props, state} = fundamentalInstance;
+      const onUnmount = impl.onUnmount;
+      if (onUnmount !== undefined) {
+        onUnmount(null, instance, props, state);
+      }
+    },
   };
 
   const hostConfig = useMutation

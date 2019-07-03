@@ -118,9 +118,9 @@ export const ContinuousEvent: EventPriority = 2;
 
 export type ReactFundamentalInstance<C, H> = {|
   currentFiber: mixed,
+  instance: mixed,
   prevProps: null | Object,
   props: Object,
-  node: mixed,
   impl: ReactFundamentalImpl<C, H>,
   state: Object,
 |};
@@ -131,13 +131,20 @@ export type ReactFundamentalImpl<C, H> = {
   onMount: (context: C, props: Object, state: Object) => H,
   onUpdate?: (
     context: C,
-    lastProps: Object,
+    instance: mixed,
+    prevProps: null | Object,
     nextProps: Object,
     state: Object,
-  ) => H,
-  onUnmount?: (context: C, props: Object, state: Object) => void,
-  onHydrate?: (context: C, props: Object, state: Object) => H,
-  onFocus?: (context: C, props: Object, state: Object) => H,
+  ) => void,
+  onUnmount?: (
+    context: C,
+    instance: mixed,
+    props: Object,
+    state: Object,
+  ) => void,
+  onHydrate?: (context: C, props: Object, state: Object) => boolean,
+  onServerTagOpen?: (context: C, props: Object) => void,
+  onServerTagClose?: (context: C, props: Object) => void,
 };
 
 export type ReactFundamentalComponent<C, H> = {|

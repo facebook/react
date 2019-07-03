@@ -45,6 +45,7 @@ import type {DOMContainer} from './ReactDOM';
 import type {
   ReactDOMEventResponder,
   ReactDOMEventComponentInstance,
+  ReactDOMFundamentalInstance,
 } from 'shared/ReactDOMTypes';
 import {
   addRootEventTypesForComponentInstance,
@@ -883,24 +884,31 @@ export function unmountEventComponent(
   }
 }
 
-export function mountFundamentalComponent(fundamentalInstance) {
-  const {impl, props, state} = fundamentalInstance;
-  const onMount = impl.onMount;
-  if (onMount !== undefined) {
-    fundamentalInstance.node = onMount(null, props, state);
-  }
+export function mountFundamentalComponent(
+  fundamentalInstance: ReactDOMFundamentalInstance,
+): Instance {
+  const {currentFiber, impl, props, state} = fundamentalInstance;
+  const instance = impl.onMount(null, props, state);
+  precacheFiberNode(currentFiber, instance);
+  return instance;
 }
 
-export function updateFundamentalComponent(fundamentalInstance) {
-  const {impl, node, prevProps, props, state} = fundamentalInstance;
+export function updateFundamentalComponent(
+  fundamentalInstance: ReactDOMFundamentalInstance,
+): void {
+  const {impl, instance, prevProps, props, state} = fundamentalInstance;
   const onUpdate = impl.onUpdate;
   if (onUpdate !== undefined) {
-    const nextNode = onUpdate(null, node, prevProps, props, state);
-    if (nextNode !== node) {
-      node.parentNode.replaceChild(nextNode, node);
-      fundamentalInstance.node = nextNode;
-    }
+    onUpdate(null, instance, prevProps, props, state);
   }
 }
 
-export function unmountFundamentalComponent(fundamentalInstance) {}
+export function unmountFundamentalComponent(
+  fundamentalInstance: ReactDOMFundamentalInstance,
+): void {
+  const {impl, instance, props, state} = fundamentalInstance;
+  const onUnmount = impl.onUnmount;
+  if (onUnmount !== undefined) {
+    onUnmount(null, instance, props, state);
+  }
+}

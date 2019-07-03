@@ -9,7 +9,10 @@
 
 import warning from 'shared/warning';
 
-import type {ReactEventComponentInstance} from 'shared/ReactTypes';
+import type {
+  ReactEventComponentInstance,
+  ReactFundamentalInstance,
+} from 'shared/ReactTypes';
 
 import {enableFlareAPI} from 'shared/ReactFeatureFlags';
 
@@ -301,4 +304,31 @@ export function unmountEventComponent(
   eventComponentInstance: ReactEventComponentInstance<any, any, any>,
 ): void {
   // noop
+}
+
+export function mountFundamentalComponent(
+  fundamentalInstance: ReactFundamentalInstance<any, any>,
+): Instance {
+  const {impl, props, state} = fundamentalInstance;
+  return impl.onMount(null, props, state);
+}
+
+export function updateFundamentalComponent(
+  fundamentalInstance: ReactFundamentalInstance<any, any>,
+): void {
+  const {impl, instance, prevProps, props, state} = fundamentalInstance;
+  const onUpdate = impl.onUpdate;
+  if (onUpdate !== undefined) {
+    onUpdate(null, instance, prevProps, props, state);
+  }
+}
+
+export function unmountFundamentalComponent(
+  fundamentalInstance: ReactFundamentalInstance<any, any>,
+): void {
+  const {impl, instance, props, state} = fundamentalInstance;
+  const onUnmount = impl.onUnmount;
+  if (onUnmount !== undefined) {
+    onUnmount(null, instance, props, state);
+  }
 }

@@ -42,6 +42,6 @@ export default function isValidElementType(type: mixed) {
         type.$$typeof === REACT_CONTEXT_TYPE ||
         type.$$typeof === REACT_FORWARD_REF_TYPE ||
         type.$$typeof === REACT_EVENT_COMPONENT_TYPE ||
-        type.$$typeof === REACT_FUNDAMENTAL_TYPE)) 
+        type.$$typeof === REACT_FUNDAMENTAL_TYPE))
   );
 }

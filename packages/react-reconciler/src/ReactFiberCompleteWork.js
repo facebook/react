@@ -162,7 +162,7 @@ if (supportsMutation) {
       if (node.tag === HostComponent || node.tag === HostText) {
         appendInitialChild(parent, node.stateNode);
       } else if (node.tag === FundamentalComponent) {
-        appendInitialChild(parent, node.stateNode.node);
+        appendInitialChild(parent, node.stateNode.instance);
       } else if (node.tag === HostPortal) {
         // If we have a portal child, then we don't want to traverse
         // down its children. Instead, we'll get insertions from each child in
@@ -1192,11 +1192,13 @@ function completeWork(
             fundamentalImpl,
             fundamentalState || {},
           );
-          mountFundamentalComponent(fundamentalInstance);
+          const instance = ((mountFundamentalComponent(
+            fundamentalInstance,
+          ): any): Instance);
+          fundamentalInstance.instance = instance;
           if (fundamentalImpl.reconcileChildren === false) {
             return null;
           }
-          const instance = ((fundamentalInstance.node: any): Instance);
           appendAllChildren(instance, workInProgress, false, false);
         } else {
           // We fire update in commit phase

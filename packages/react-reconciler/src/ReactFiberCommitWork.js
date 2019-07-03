@@ -962,7 +962,7 @@ function commitPlacement(finishedWork: Fiber): void {
       isContainer = false;
       break;
     case FundamentalComponent:
-      parent = parentStateNode.node;
+      parent = parentStateNode.instance;
       isContainer = false;
       break;
     case HostRoot:
@@ -994,7 +994,7 @@ function commitPlacement(finishedWork: Fiber): void {
   while (true) {
     const isHost = node.tag === HostComponent || node.tag === HostText;
     if (isHost || node.tag === FundamentalComponent) {
-      const stateNode = isHost ? node.stateNode : node.stateNode.node;
+      const stateNode = isHost ? node.stateNode : node.stateNode.instance;
       if (before) {
         if (isContainer) {
           insertInContainerBefore(parent, stateNode, before);
@@ -1060,7 +1060,7 @@ function unmountHostComponents(current): void {
             currentParentIsContainer = false;
             break findParent;
           case FundamentalComponent:
-            currentParent = parentStateNode.node;
+            currentParent = parentStateNode.instance;
             currentParentIsContainer = false;
             break findParent;
           case HostRoot:
@@ -1094,7 +1094,7 @@ function unmountHostComponents(current): void {
       }
       // Don't visit children because we already visited them.
     } else if (node.tag === FundamentalComponent) {
-      const fundamentalNode = node.stateNode.node;
+      const fundamentalNode = node.stateNode.instance;
       commitNestedUnmounts(node);
       // After all the children have unmounted, it is now safe to remove the
       // node from the tree.

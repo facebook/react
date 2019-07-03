@@ -8,7 +8,10 @@
  */
 
 import type {Fiber} from './ReactFiber';
-import type {ReactFundamentalImpl, ReactFundamentalInstance} from 'shared/ReactTypes';
+import type {
+  ReactFundamentalImpl,
+  ReactFundamentalInstance,
+} from 'shared/ReactTypes';
 
 export function createFundamentalInstance<C, H>(
   currentFiber: Fiber,
@@ -19,7 +22,7 @@ export function createFundamentalInstance<C, H>(
   return {
     currentFiber,
     impl,
-    node: null,
+    instance: null,
     prevProps: null,
     props,
     state,

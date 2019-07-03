@@ -28,6 +28,7 @@ export const enableSchedulerDebugging = false;
 export const warnAboutDeprecatedSetNativeProps = false;
 export const disableJavaScriptURLs = false;
 export const enableFlareAPI = true;
+export const enableFundamentalAPI = false;
 export const enableJSXTransformAPI = true;
 export const warnAboutMissingMockScheduler = true;
 export const enableUserBlockingEvents = false;

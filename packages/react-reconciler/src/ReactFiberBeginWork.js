@@ -2426,7 +2426,11 @@ function updateEventComponent(current, workInProgress, renderExpirationTime) {
   return workInProgress.child;
 }
 
-function updateFundamentalComponent(current, workInProgress, renderExpirationTime) {
+function updateFundamentalComponent(
+  current,
+  workInProgress,
+  renderExpirationTime,
+) {
   const fundamentalImpl = workInProgress.type.impl;
   if (fundamentalImpl.reconcileChildren === false) {
     return null;

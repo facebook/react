@@ -27,7 +27,11 @@ import type {ReactEventComponentInstance} from 'shared/ReactTypes';
 
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import {enableProfilerTimer, enableFlareAPI, enableFundamentalAPI} from 'shared/ReactFeatureFlags';
+import {
+  enableProfilerTimer,
+  enableFlareAPI,
+  enableFundamentalAPI,
+} from 'shared/ReactFeatureFlags';
 import {NoEffect} from 'shared/ReactSideEffectTags';
 import {ConcurrentRoot, BatchedRoot} from 'shared/ReactRootTags';
 import {

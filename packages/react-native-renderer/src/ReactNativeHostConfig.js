@@ -514,27 +514,14 @@ export function unmountEventComponent(
   throw new Error('Not yet implemented.');
 }
 
-export function getEventTargetChildElement(
-  type: Symbol | number,
-  props: Props,
-): null {
+export function mountFundamentalComponent(eventComponentInstance) {
   throw new Error('Not yet implemented.');
 }
 
-export function handleEventTarget(
-  type: Symbol | number,
-  props: Props,
-  rootContainerInstance: Container,
-  internalInstanceHandle: Object,
-): boolean {
+export function updateFundamentalComponent(eventComponentInstance) {
   throw new Error('Not yet implemented.');
 }
 
-export function commitEventTarget(
-  type: Symbol | number,
-  props: Props,
-  instance: Instance,
-  parentInstance: Instance,
-): void {
+export function unmountFundamentalComponent(eventComponentInstance) {
   throw new Error('Not yet implemented.');
 }

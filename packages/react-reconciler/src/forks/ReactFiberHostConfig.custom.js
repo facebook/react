@@ -65,9 +65,8 @@ export const supportsPersistence = $$$hostConfig.supportsPersistence;
 export const supportsHydration = $$$hostConfig.supportsHydration;
 export const mountEventComponent = $$$hostConfig.mountEventComponent;
 export const updateEventComponent = $$$hostConfig.updateEventComponent;
-export const handleEventTarget = $$$hostConfig.handleEventTarget;
-export const getEventTargetChildElement =
-  $$$hostConfig.getEventTargetChildElement;
+export const mountFundamentalComponent =
+  $$$hostConfig.mountFundamentalComponent;
 
 // -------------------
 //      Mutation
@@ -89,6 +88,10 @@ export const unhideInstance = $$$hostConfig.unhideInstance;
 export const unhideTextInstance = $$$hostConfig.unhideTextInstance;
 export const unmountEventComponent = $$$hostConfig.unmountEventComponent;
 export const commitEventTarget = $$$hostConfig.commitEventTarget;
+export const updateFundamentalComponent =
+  $$$hostConfig.updateFundamentalComponent;
+export const unmountFundamentalComponent =
+  $$$hostConfig.unmountFundamentalComponent;
 
 // -------------------
 //     Persistence

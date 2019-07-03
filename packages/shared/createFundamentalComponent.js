@@ -6,11 +6,14 @@
  * @flow
  */
 
-import type {ReactFundamentalImpl, ReactFundamentalComponent} from 'shared/ReactTypes';
+import type {
+  ReactFundamentalImpl,
+  ReactFundamentalComponent,
+} from 'shared/ReactTypes';
 import {REACT_FUNDAMENTAL_TYPE} from 'shared/ReactSymbols';
 import {hasBadMapPolyfill} from './hasBadMapPolyfill';
 
-export default function createFundamental<C, H>(
+export default function createFundamentalComponent<C, H>(
   impl: ReactFundamentalImpl<C, H>,
 ): ReactFundamentalComponent<C, H> {
   // We use responder as a Map key later on. When we have a bad
