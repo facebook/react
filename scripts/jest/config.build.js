@@ -23,7 +23,7 @@ const packages = readdirSync(packagesRoot).filter(dir => {
 const moduleNameMapper = {};
 
 // Allow bundle tests to read (but not write!) default feature flags.
-// This lets us determine whether we're running in Fire mode
+// This lets us determine whether we're running in different modes
 // without making relevant tests internal-only.
 moduleNameMapper[
   '^shared/ReactFeatureFlags'
