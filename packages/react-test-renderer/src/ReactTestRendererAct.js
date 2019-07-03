@@ -72,7 +72,7 @@ function act(callback: () => Thenable) {
   actingUpdatesScopeDepth++;
   if (__DEV__) {
     previousIsSomeRendererActing = IsSomeRendererActing.current;
-    previousIsThisRendererActing = IsSomeRendererActing.current;
+    previousIsThisRendererActing = IsThisRendererActing.current;
     IsSomeRendererActing.current = true;
     IsThisRendererActing.current = true;
   }
