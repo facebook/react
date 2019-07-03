@@ -61,6 +61,7 @@ import {
 import {createWorkInProgress, assignFiberPropertiesInDEV} from './ReactFiber';
 import {
   NoMode,
+  StrictMode,
   ProfileMode,
   BatchedMode,
   ConcurrentMode,
@@ -2453,7 +2454,10 @@ export function warnIfNotCurrentlyActingEffectsInDEV(fiber: Fiber): void {
   if (__DEV__) {
     if (
       warnsIfNotActing === true &&
-      fiber.mode &&
+      (fiber.mode & StrictMode ||
+        fiber.mode & ProfileMode ||
+        fiber.mode & BatchedMode ||
+        fiber.mode & ConcurrentMode) &&
       IsSomeRendererActing.current === false &&
       IsThisRendererActing.current === false
     ) {

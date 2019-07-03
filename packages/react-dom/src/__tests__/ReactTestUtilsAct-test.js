@@ -62,6 +62,59 @@ describe('ReactTestUtils.act()', () => {
     }
   }
   runActTests('batched mode', renderBatched, unmountBatched);
+
+  describe('unacted effects', () => {
+    function App() {
+      React.useEffect(() => {}, []);
+      return null;
+    }
+
+    it('does not warn in legacy sync mode', () => {
+      expect(() => {
+        ReactDOM.render(<App />, document.createElement('div'));
+      }).toWarnDev([]);
+    });
+
+    it('warns in strict mode', () => {
+      expect(() => {
+        ReactDOM.render(
+          <React.StrictMode>
+            <App />
+          </React.StrictMode>,
+          document.createElement('div'),
+        );
+      }).toWarnDev([
+        'An update to App ran an effect, but was not wrapped in act(...)',
+        'An update to App ran an effect, but was not wrapped in act(...)',
+      ]);
+    });
+
+    it('warns in batched mode', () => {
+      expect(() => {
+        const root = ReactDOM.unstable_createSyncRoot(
+          document.createElement('div'),
+        );
+        root.render(<App />);
+        Scheduler.unstable_flushAll();
+      }).toWarnDev([
+        'An update to App ran an effect, but was not wrapped in act(...)',
+        'An update to App ran an effect, but was not wrapped in act(...)',
+      ]);
+    });
+
+    it('warns in concurrent mode', () => {
+      expect(() => {
+        const root = ReactDOM.unstable_createRoot(
+          document.createElement('div'),
+        );
+        root.render(<App />);
+        Scheduler.unstable_flushAll();
+      }).toWarnDev([
+        'An update to App ran an effect, but was not wrapped in act(...)',
+        'An update to App ran an effect, but was not wrapped in act(...)',
+      ]);
+    });
+  });
 });
 
 function runActTests(label, render, unmount) {
@@ -82,26 +135,6 @@ function runActTests(label, render, unmount) {
       document.body.removeChild(container);
     });
     describe('sync', () => {
-      it('warns if an effect is queued outside an act scope, except in legacy sync+non-strict mode', () => {
-        function App() {
-          React.useEffect(() => {}, []);
-          return null;
-        }
-        expect(() => {
-          render(<App />, container);
-          // flush all queued work
-          Scheduler.unstable_flushAll();
-        }).toWarnDev(
-          label !== 'legacy sync mode'
-            ? [
-                // warns twice because we're in strict+dev mode
-                'An update to App ran an effect, but was not wrapped in act(...)',
-                'An update to App ran an effect, but was not wrapped in act(...)',
-              ]
-            : [],
-        );
-      });
-
       it('can use act to flush effects', () => {
         function App() {
           React.useEffect(() => {
