@@ -14,8 +14,7 @@ export type ReactNode =
   | ReactFragment
   | ReactProvider<any>
   | ReactConsumer<any>
-  | ReactEventComponent<any, any, any>
-  | ReactEventTarget;
+  | ReactEventComponent<any, any, any>;
 
 export type ReactEmpty = null | void | boolean;
 
@@ -111,37 +110,37 @@ export type ReactEventComponent<T, E, C> = {|
   responder: ReactEventResponder<T, E, C>,
 |};
 
-export type ReactEventTarget = {|
-  $$typeof: Symbol | number,
-  displayName?: string,
-  type: Symbol | number,
-|};
-
 export opaque type EventPriority = 0 | 1 | 2;
 
 export const DiscreteEvent: EventPriority = 0;
 export const UserBlockingEvent: EventPriority = 1;
 export const ContinuousEvent: EventPriority = 2;
 
-export type ReactFundamentalInstance<C, H> = {
+export type ReactFundamentalInstance<C, H> = {|
   currentFiber: mixed,
+  prevProps: null | Object,
   props: Object,
   node: mixed,
-  impl: ReactFoundationImpl<C, H>,
+  impl: ReactFundamentalImpl<C, H>,
   state: Object,
-}
+|};
 
-export type ReactFoundationImpl<C, H> = {
+export type ReactFundamentalImpl<C, H> = {
   displayName: string,
   reconcileChildren: boolean,
   onMount: (context: C, props: Object, state: Object) => H,
-  onUpdate?: (context: C, lastProps: Object, nextProps: Object, state: Object) => H,
+  onUpdate?: (
+    context: C,
+    lastProps: Object,
+    nextProps: Object,
+    state: Object,
+  ) => H,
   onUnmount?: (context: C, props: Object, state: Object) => void,
   onHydrate?: (context: C, props: Object, state: Object) => H,
   onFocus?: (context: C, props: Object, state: Object) => H,
-}
+};
 
-export type ReactFoundation<C, H> = {|
+export type ReactFundamentalComponent<C, H> = {|
   $$typeof: Symbol | number,
-  impl: ReactFoundationImpl<C, H>,
+  impl: ReactFundamentalImpl<C, H>,
 |};

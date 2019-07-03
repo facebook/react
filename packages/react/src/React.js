@@ -53,7 +53,7 @@ import {
 import ReactSharedInternals from './ReactSharedInternals';
 import {error, warn} from './withComponentStack';
 import createEvent from 'shared/createEventComponent';
-import createFoundation from 'shared/createFoundation';
+import createFundamental from 'shared/createFundamental';
 import {
   enableJSXTransformAPI,
   enableFlareAPI,
@@ -115,7 +115,7 @@ if (enableFlareAPI) {
 }
 
 if (enableFundamentalAPI) {
-  React.unstable_createFoundation = createFoundation;
+  React.unstable_ccreateFundamental = createFundamental;
 }
 
 // Note: some APIs are added with feature flags.

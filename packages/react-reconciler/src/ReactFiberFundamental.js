@@ -7,14 +7,21 @@
  * @flow
  */
 
-export function createFoundationInstance(currentFiber, props, impl, state) {
+import type {Fiber} from './ReactFiber';
+import type {ReactFundamentalImpl, ReactFundamentalInstance} from 'shared/ReactTypes';
+
+export function createFundamentalInstance<C, H>(
+  currentFiber: Fiber,
+  props: Object,
+  impl: ReactFundamentalImpl<C, H>,
+  state: Object,
+): ReactFundamentalInstance<C, H> {
   return {
     currentFiber,
     impl,
     node: null,
     prevProps: null,
     props,
-    rootEventTypes: null,
     state,
   };
 }

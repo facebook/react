@@ -51,7 +51,7 @@ import {
   LazyComponent,
   IncompleteClassComponent,
   EventComponent,
-  Foundation,
+  FundamentalComponent,
 } from 'shared/ReactWorkTags';
 import {NoMode, BatchedMode} from './ReactTypeOfMode';
 import {
@@ -79,7 +79,7 @@ import {
   appendChildToContainerChildSet,
   finalizeContainerChildren,
   updateEventComponent,
-  mountFoundation,
+  mountFundamentalComponent,
 } from './ReactFiberHostConfig';
 import {
   getRootHostContainer,
@@ -125,7 +125,7 @@ import {
   getEventComponentHostChildrenCount,
   createEventComponentInstance,
 } from './ReactFiberEvents';
-import {createFoundationInstance} from './ReactFiberFoundation';
+import {createFundamentalInstance} from './ReactFiberFundamental';
 import getComponentName from 'shared/getComponentName';
 import warning from 'shared/warning';
 import {Never} from './ReactFiberExpirationTime';
@@ -159,7 +159,7 @@ if (supportsMutation) {
     while (node !== null) {
       if (node.tag === HostComponent || node.tag === HostText) {
         appendInitialChild(parent, node.stateNode);
-      } else if (node.tag === Foundation) {
+      } else if (node.tag === FundamentalComponent) {
         appendInitialChild(parent, node.stateNode.node);
       } else if (node.tag === HostPortal) {
         // If we have a portal child, then we don't want to traverse
@@ -1093,29 +1093,30 @@ function completeWork(
       }
       break;
     }
-    case Foundation: {
+    case FundamentalComponent: {
       if (enableFundamentalAPI) {
-        const foundationImpl = workInProgress.type.impl;
+        const fundamentalImpl = workInProgress.type.impl;
         let fundamentalInstance: ReactFundamentalInstance<any, any> | null =
           workInProgress.stateNode;
 
         if (fundamentalInstance === null) {
-          const createInitialState = foundationImpl.createInitialState;
-          let foundationState;
+          const createInitialState = fundamentalImpl.createInitialState;
+          let fundamentalState;
           if (createInitialState !== undefined) {
-            foundationState = createInitialState(newProps);
+            fundamentalState = createInitialState(newProps);
           }
-          fundamentalInstance = workInProgress.stateNode = createFoundationInstance(
+          fundamentalInstance = workInProgress.stateNode = createFundamentalInstance(
             workInProgress,
             newProps,
-            foundationImpl,
-            foundationState || {},
+            fundamentalImpl,
+            fundamentalState || {},
           );
-          mountFoundation(fundamentalInstance);
-          if (foundationImpl.reconcileChildren === false) {
+          mountFundamentalComponent(fundamentalInstance);
+          if (fundamentalImpl.reconcileChildren === false) {
             return null;
           }
-          appendAllChildren(fundamentalInstance.node, workInProgress, false, false);
+          const instance = ((fundamentalInstance.node: any): Instance);
+          appendAllChildren(instance, workInProgress, false, false);
         } else {
           // We fire update in commit phase
           fundamentalInstance.prevProps = fundamentalInstance.props;

@@ -47,7 +47,7 @@ import {
   SimpleMemoComponent,
   EventComponent,
   SuspenseListComponent,
-  Foundation,
+  FundamentalComponent,
 } from 'shared/ReactWorkTags';
 import {
   invokeGuardedCallback,
@@ -96,8 +96,8 @@ import {
   unhideTextInstance,
   unmountEventComponent,
   mountEventComponent,
-  unmountFoundation,
-  updateFoundation,
+  unmountFundamentalComponent,
+  updateFundamentalComponent,
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
@@ -594,7 +594,7 @@ function commitLifeCycles(
     case SuspenseComponent:
     case SuspenseListComponent:
     case IncompleteClassComponent:
-    case Foundation:
+    case FundamentalComponent:
       return;
     case EventComponent: {
       if (enableFlareAPI) {
@@ -764,10 +764,10 @@ function commitUnmount(current: Fiber): void {
       }
       break;
     }
-    case Foundation: {
+    case FundamentalComponent: {
       if (enableFundamentalAPI) {
         const fundamentalInstance = current.stateNode;
-        unmountFoundation(fundamentalInstance);
+        unmountFundamentalComponent(fundamentalInstance);
         current.stateNode = null;
       }
     }
@@ -961,7 +961,7 @@ function commitPlacement(finishedWork: Fiber): void {
       parent = parentStateNode;
       isContainer = false;
       break;
-    case Foundation:
+    case FundamentalComponent:
       parent = parentStateNode.node;
       isContainer = false;
       break;
@@ -993,7 +993,7 @@ function commitPlacement(finishedWork: Fiber): void {
   let node: Fiber = finishedWork;
   while (true) {
     const isHost = node.tag === HostComponent || node.tag === HostText;
-    if (isHost || node.tag === Foundation) {
+    if (isHost || node.tag === FundamentalComponent) {
       const stateNode = isHost ? node.stateNode : node.stateNode.node;
       if (before) {
         if (isContainer) {
@@ -1059,7 +1059,7 @@ function unmountHostComponents(current): void {
             currentParent = parentStateNode;
             currentParentIsContainer = false;
             break findParent;
-          case Foundation:
+          case FundamentalComponent:
             currentParent = parentStateNode.node;
             currentParentIsContainer = false;
             break findParent;
@@ -1093,20 +1093,20 @@ function unmountHostComponents(current): void {
         );
       }
       // Don't visit children because we already visited them.
-    } else if (node.tag === Foundation) {
-      const foundationNode = node.stateNode.node;
+    } else if (node.tag === FundamentalComponent) {
+      const fundamentalNode = node.stateNode.node;
       commitNestedUnmounts(node);
       // After all the children have unmounted, it is now safe to remove the
       // node from the tree.
       if (currentParentIsContainer) {
         removeChildFromContainer(
           ((currentParent: any): Container),
-          (foundationNode: Instance),
+          (fundamentalNode: Instance),
         );
       } else {
         removeChild(
           ((currentParent: any): Instance),
-          (foundationNode: Instance),
+          (fundamentalNode: Instance),
         );
       }
     } else if (
@@ -1282,12 +1282,10 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
     case EventComponent: {
       return;
     }
-    case Foundation: {
+    case FundamentalComponent: {
       if (enableFundamentalAPI) {
-        const foundationInstance = finishedWork.stateNode;
-        if (foundationInstance !== null) {
-          updateFoundation(foundationInstance);
-        }
+        const fundamentalInstance = finishedWork.stateNode;
+        updateFundamentalComponent(fundamentalInstance);
       }
       return;
     }

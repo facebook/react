@@ -41,7 +41,7 @@ import {
   LazyComponent,
   IncompleteClassComponent,
   EventComponent,
-  Foundation,
+  FundamentalComponent,
 } from 'shared/ReactWorkTags';
 import {
   NoEffect,
@@ -2411,9 +2411,9 @@ function updateEventComponent(current, workInProgress, renderExpirationTime) {
   return workInProgress.child;
 }
 
-function updateFoundation(current, workInProgress, renderExpirationTime) {
-  const foundationImpl = workInProgress.type.impl;
-  if (foundationImpl.reconcileChildren === false) {
+function updateFundamentalComponent(current, workInProgress, renderExpirationTime) {
+  const fundamentalImpl = workInProgress.type.impl;
+  if (fundamentalImpl.reconcileChildren === false) {
     return null;
   }
   const nextProps = workInProgress.pendingProps;
@@ -2890,9 +2890,9 @@ function beginWork(
       }
       break;
     }
-    case Foundation: {
+    case FundamentalComponent: {
       if (enableFundamentalAPI) {
-        return updateFoundation(
+        return updateFundamentalComponent(
           current,
           workInProgress,
           renderExpirationTime,

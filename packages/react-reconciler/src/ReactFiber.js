@@ -13,7 +13,7 @@ import type {
   ReactPortal,
   RefObject,
   ReactEventComponent,
-  ReactFoundation,
+  ReactFundamentalComponent,
 } from 'shared/ReactTypes';
 import type {RootTag} from 'shared/ReactRootTags';
 import type {WorkTag} from 'shared/ReactWorkTags';
@@ -50,7 +50,7 @@ import {
   SimpleMemoComponent,
   LazyComponent,
   EventComponent,
-  Foundation,
+  FundamentalComponent,
 } from 'shared/ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 
@@ -81,7 +81,7 @@ import {
   REACT_MEMO_TYPE,
   REACT_LAZY_TYPE,
   REACT_EVENT_COMPONENT_TYPE,
-  REACT_FOUNDATION_TYPE,
+  REACT_FUNDAMENTAL_TYPE,
 } from 'shared/ReactSymbols';
 
 let hasBadMapPolyfill;
@@ -592,9 +592,9 @@ export function createFiberFromTypeAndProps(
                 );
               }
               break;
-            case REACT_FOUNDATION_TYPE:
+            case REACT_FUNDAMENTAL_TYPE:
               if (enableFundamentalAPI) {
-                return createFiberFromFoundation(
+                return createFiberFromFundamental(
                   type,
                   pendingProps,
                   mode,
@@ -695,16 +695,16 @@ export function createFiberFromEventComponent(
   return fiber;
 }
 
-export function createFiberFromFoundation(
-  foundation: ReactFoundation<any, any>,
+export function createFiberFromFundamental(
+  fundamentalComponent: ReactFundamentalComponent<any, any>,
   pendingProps: any,
   mode: TypeOfMode,
   expirationTime: ExpirationTime,
   key: null | string,
 ): Fiber {
-  const fiber = createFiber(Foundation, pendingProps, key, mode);
-  fiber.elementType = foundation;
-  fiber.type = foundation;
+  const fiber = createFiber(FundamentalComponent, pendingProps, key, mode);
+  fiber.elementType = fundamentalComponent;
+  fiber.type = fundamentalComponent;
   fiber.expirationTime = expirationTime;
   return fiber;
 }

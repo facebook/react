@@ -883,24 +883,24 @@ export function unmountEventComponent(
   }
 }
 
-export function mountFoundation(foundationInstance) {
-  const {impl, props, state} = foundationInstance;
+export function mountFundamentalComponent(fundamentalInstance) {
+  const {impl, props, state} = fundamentalInstance;
   const onMount = impl.onMount;
   if (onMount !== undefined) {
-    foundationInstance.node = onMount(null, props, state);
+    fundamentalInstance.node = onMount(null, props, state);
   }
 }
 
-export function updateFoundation(foundationInstance) {
-  const {impl, node, prevProps, props, state} = foundationInstance;
+export function updateFundamentalComponent(fundamentalInstance) {
+  const {impl, node, prevProps, props, state} = fundamentalInstance;
   const onUpdate = impl.onUpdate;
   if (onUpdate !== undefined) {
     const nextNode = onUpdate(null, node, prevProps, props, state);
     if (nextNode !== node) {
       node.parentNode.replaceChild(nextNode, node);
-      foundationInstance.node = nextNode;
+      fundamentalInstance.node = nextNode;
     }
   }
 }
 
-export function unmountFoundation(foundationInstance) {}
+export function unmountFundamentalComponent(fundamentalInstance) {}
