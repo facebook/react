@@ -37,6 +37,21 @@ it("doesn't warn when you use the right act + renderer: test", () => {
   });
 });
 
+it('resets correctly across renderers', () => {
+  function Effecty() {
+    React.useEffect(() => {}, []);
+    return null;
+  }
+  TestUtils.act(() => {
+    TestRenderer.act(() => {});
+    expect(() => {
+      TestRenderer.create(<Effecty />);
+    }).toWarnDev(["It looks like you're using the wrong act()"], {
+      withoutStack: true,
+    });
+  });
+});
+
 it('warns when using createRoot() + .render', () => {
   const root = ReactDOM.unstable_createRoot(document.createElement('div'));
   expect(() => {
