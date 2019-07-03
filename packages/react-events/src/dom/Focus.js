@@ -221,7 +221,7 @@ const FocusResponder: ReactDOMEventResponder = {
   displayName: 'Focus',
   targetEventTypes,
   rootEventTypes,
-  createInitialState(): FocusState {
+  getInitialState(): FocusState {
     return {
       focusTarget: null,
       isFocused: false,

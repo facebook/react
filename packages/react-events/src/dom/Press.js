@@ -618,7 +618,7 @@ function handleStopPropagation(
 const PressResponder: ReactDOMEventResponder = {
   displayName: 'Press',
   targetEventTypes,
-  createInitialState(): PressState {
+  getInitialState(): PressState {
     return {
       activationPosition: null,
       addedRootEvents: false,

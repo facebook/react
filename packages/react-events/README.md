@@ -48,7 +48,7 @@ type CustomEvent = {
 }
 ```
 
-### createInitialState?: (props: null | Object) => Object
+### getInitialState?: (props: null | Object) => Object
 
 The initial state of that the Event Component is created with.
 
