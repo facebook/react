@@ -552,7 +552,7 @@ function createDOMResponderEvent(
     eventPointerType = 'touch';
   }
 
-  const responderEvent = {
+  return {
     nativeEvent: nativeEvent,
     passive,
     passiveSupported,
@@ -561,10 +561,6 @@ function createDOMResponderEvent(
     target: nativeEventTarget,
     type: topLevelType,
   };
-  if (__DEV__) {
-    Object.freeze(responderEvent);
-  }
-  return responderEvent;
 }
 
 function createEventQueue(): EventQueue {
@@ -779,7 +775,6 @@ function traverseAndHandleEventResponderInstances(
   );
 
   // Trigger event responders in this order:
-  // - Capture target phase
   // - Bubble target phase
   // - Root phase
 
@@ -798,41 +793,12 @@ function traverseAndHandleEventResponderInstances(
   let length = targetEventResponderInstances.length;
   let i;
 
-  // Captured and bubbled event phases have the notion of local propagation.
+  // Bubbled event phases have the notion of local propagation.
   // This means that the propgation chain can be stopped part of the the way
   // through processing event component instances. The major difference to other
-  // events systems is that the stopping of propgation is localized to a single
+  // events systems is that the stopping of propagation is localized to a single
   // phase, rather than both phases.
   if (length > 0) {
-    // Capture target phase
-    for (i = length; i-- > 0; ) {
-      const targetEventResponderInstance = targetEventResponderInstances[i];
-      const {isHook, props, responder, state} = targetEventResponderInstance;
-      const eventListener = responder.onEventCapture;
-      if (eventListener !== undefined) {
-        if (
-          shouldSkipEventComponent(
-            targetEventResponderInstance,
-            ((responder: any): ReactDOMEventResponder),
-            propagatedEventResponders,
-            isHook,
-          )
-        ) {
-          continue;
-        }
-        currentInstance = targetEventResponderInstance;
-        currentlyInHook = isHook;
-        eventListener(responderEvent, eventResponderContext, props, state);
-        if (!isHook) {
-          checkForLocalPropagationContinuation(
-            responder,
-            propagatedEventResponders,
-          );
-        }
-      }
-    }
-    // We clean propagated event responders between phases.
-    propagatedEventResponders.clear();
     // Bubble target phase
     for (i = 0; i < length; i++) {
       const targetEventResponderInstance = targetEventResponderInstances[i];
