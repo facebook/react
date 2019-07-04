@@ -46,12 +46,12 @@ const isMac =
     ? /^Mac/.test(window.navigator.platform)
     : false;
 
-const targetEventTypes = [
+const hostTargetEvents = [
   {name: 'focus', passive: true},
   {name: 'blur', passive: true},
 ];
 
-const rootEventTypes = [
+const hostRootEvents = [
   'keydown',
   'keyup',
   'pointermove',
@@ -61,7 +61,7 @@ const rootEventTypes = [
 
 // If PointerEvents is not supported (e.g., Safari), also listen to touch and mouse events.
 if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
-  rootEventTypes.push(
+  hostRootEvents.push(
     'mousemove',
     'mousedown',
     'mouseup',
@@ -219,8 +219,8 @@ let isGlobalFocusVisible = true;
 
 const FocusResponder: ReactDOMEventResponder = {
   displayName: 'Focus',
-  targetEventTypes,
-  rootEventTypes,
+  hostTargetEvents,
+  hostRootEvents,
   createInitialState(): FocusState {
     return {
       focusTarget: null,

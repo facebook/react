@@ -56,7 +56,7 @@ type HoverEvent = {|
 const DEFAULT_HOVER_END_DELAY_MS = 0;
 const DEFAULT_HOVER_START_DELAY_MS = 0;
 
-const targetEventTypes = [
+const hostTargetEvents = [
   'pointerover',
   'pointermove',
   'pointerout',
@@ -65,7 +65,7 @@ const targetEventTypes = [
 
 // If PointerEvents is not supported (e.g., Safari), also listen to touch and mouse events.
 if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
-  targetEventTypes.push('touchstart', 'mouseover', 'mousemove', 'mouseout');
+  hostTargetEvents.push('touchstart', 'mouseover', 'mousemove', 'mouseout');
 }
 
 function createHoverEvent(
@@ -273,7 +273,7 @@ function isEmulatedMouseEvent(event, state) {
 
 const HoverResponder: ReactDOMEventResponder = {
   displayName: 'Hover',
-  targetEventTypes,
+  hostTargetEvents,
   createInitialState() {
     return {
       isActiveHovered: false,

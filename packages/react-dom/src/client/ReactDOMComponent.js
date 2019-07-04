@@ -16,7 +16,7 @@ import warningWithoutStack from 'shared/warningWithoutStack';
 import type {ReactDOMEventResponderEventType} from 'shared/ReactDOMTypes';
 import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
 import {
-  setListenToResponderEventTypes,
+  setListenToResponderHostEvents,
   generateListeningKey,
 } from '../events/DOMEventResponderSystem';
 
@@ -1283,8 +1283,8 @@ export function restoreControlledState(
   }
 }
 
-export function listenToEventResponderEventTypes(
-  eventTypes: Array<ReactDOMEventResponderEventType>,
+export function listenToEventResponderHostEvents(
+  hostEvents: Array<ReactDOMEventResponderEventType>,
   element: Element | Document,
 ): void {
   if (enableFlareAPI) {
@@ -1293,8 +1293,8 @@ export function listenToEventResponderEventTypes(
     const listeningSet = getListeningSetForElement(element);
 
     // Go through each target event type of the event responder
-    for (let i = 0, length = eventTypes.length; i < length; ++i) {
-      const targetEventType = eventTypes[i];
+    for (let i = 0, length = hostEvents.length; i < length; ++i) {
+      const targetEventType = hostEvents[i];
       let topLevelType;
       let passive = true;
 
@@ -1335,5 +1335,5 @@ export function listenToEventResponderEventTypes(
 
 // We can remove this once the event API is stable and out of a flag
 if (enableFlareAPI) {
-  setListenToResponderEventTypes(listenToEventResponderEventTypes);
+  setListenToResponderHostEvents(listenToEventResponderHostEvents);
 }

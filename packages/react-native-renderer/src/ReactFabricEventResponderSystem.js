@@ -84,7 +84,7 @@ type ReactNativeEventComponentInstance = ReactEventComponentInstance<
 const {measureInWindow} = nativeFabricUIManager;
 
 const activeTimeouts: Map<number, ResponderTimeout> = new Map();
-const rootEventTypesToEventComponentInstances: Map<
+const hostRootEventsToEventComponentInstances: Map<
   ReactNativeEventResponderEventType | string,
   Set<ReactNativeEventComponentInstance>,
 > = new Map();
@@ -235,30 +235,30 @@ const eventResponderContext: ReactNativeResponderContext = {
       });
     });
   },
-  addRootEventTypes(
-    rootEventTypes: Array<ReactNativeEventResponderEventType>,
+  addHostRootEvents(
+    hostRootEvents: Array<ReactNativeEventResponderEventType>,
   ): void {
     validateResponderContext();
-    for (let i = 0; i < rootEventTypes.length; i++) {
-      const rootEventType = rootEventTypes[i];
+    for (let i = 0; i < hostRootEvents.length; i++) {
+      const hostRootEvent = hostRootEvents[i];
       const eventComponentInstance = ((currentInstance: any): ReactNativeEventComponentInstance);
-      registerRootEventType(rootEventType, eventComponentInstance);
+      registerHostRootEvent(hostRootEvent, eventComponentInstance);
     }
   },
-  removeRootEventTypes(
-    rootEventTypes: Array<ReactNativeEventResponderEventType>,
+  removeHostRootEvents(
+    hostRootEvents: Array<ReactNativeEventResponderEventType>,
   ): void {
     validateResponderContext();
-    for (let i = 0; i < rootEventTypes.length; i++) {
-      const rootEventType = rootEventTypes[i];
+    for (let i = 0; i < hostRootEvents.length; i++) {
+      const hostRootEvent = hostRootEvents[i];
 
-      let rootEventComponents = rootEventTypesToEventComponentInstances.get(
-        rootEventType,
+      let rootEventComponents = hostRootEventsToEventComponentInstances.get(
+        hostRootEvent,
       );
-      let rootEventTypesSet = ((currentInstance: any): ReactNativeEventComponentInstance)
-        .rootEventTypes;
-      if (rootEventTypesSet !== null) {
-        rootEventTypesSet.delete(rootEventType);
+      let hostRootEventsSet = ((currentInstance: any): ReactNativeEventComponentInstance)
+        .hostRootEvents;
+      if (hostRootEventsSet !== null) {
+        hostRootEventsSet.delete(hostRootEvent);
       }
       if (rootEventComponents !== undefined) {
         rootEventComponents.delete(
@@ -475,7 +475,7 @@ function processEvents(events: Array<EventObjectType>): void {
   }
 }
 
-function getFabricTargetEventTypesSet(
+function getFabricTargetEventsSet(
   eventTypes: Array<ReactNativeEventResponderEventType>,
 ): Set<ReactNativeEventResponderEventType> {
   let cachedSet = targetEventTypeCached.get(eventTypes);
@@ -503,13 +503,11 @@ function getTargetEventResponderInstances(
     if (node.tag === EventComponent) {
       const eventComponentInstance = node.stateNode;
       const responder = eventComponentInstance.responder;
-      const targetEventTypes = responder.targetEventTypes;
+      const hostTargetEvents = responder.hostTargetEvents;
       // Validate the target event type exists on the responder
-      if (targetEventTypes !== undefined) {
-        const targetEventTypesSet = getFabricTargetEventTypesSet(
-          targetEventTypes,
-        );
-        if (targetEventTypesSet.has(topLevelType)) {
+      if (hostTargetEvents !== undefined) {
+        const hostTargetEventsSet = getFabricTargetEventsSet(hostTargetEvents);
+        if (hostTargetEventsSet.has(topLevelType)) {
           eventResponderInstances.push(eventComponentInstance);
         }
       }
@@ -555,7 +553,7 @@ function getRootEventResponderInstances(
   topLevelType: string,
 ): Array<ReactNativeEventComponentInstance> {
   const eventResponderInstances = [];
-  const rootEventInstances = rootEventTypesToEventComponentInstances.get(
+  const rootEventInstances = hostRootEventsToEventComponentInstances.get(
     topLevelType,
   );
   if (rootEventInstances !== undefined) {
@@ -779,13 +777,13 @@ export function unmountEventResponder(
   if (responder.onOwnershipChange !== undefined) {
     ownershipChangeListeners.delete(eventComponentInstance);
   }
-  const rootEventTypesSet = eventComponentInstance.rootEventTypes;
-  if (rootEventTypesSet !== null) {
-    const rootEventTypes = Array.from(rootEventTypesSet);
+  const hostRootEventsSet = eventComponentInstance.hostRootEvents;
+  if (hostRootEventsSet !== null) {
+    const hostRootEvents = Array.from(hostRootEventsSet);
 
-    for (let i = 0; i < rootEventTypes.length; i++) {
-      const topLevelEventType = rootEventTypes[i];
-      let rootEventComponentInstances = rootEventTypesToEventComponentInstances.get(
+    for (let i = 0; i < hostRootEvents.length; i++) {
+      const topLevelEventType = hostRootEvents[i];
+      let rootEventComponentInstances = hostRootEventsToEventComponentInstances.get(
         topLevelEventType,
       );
       if (rootEventComponentInstances !== undefined) {
@@ -795,41 +793,41 @@ export function unmountEventResponder(
   }
 }
 
-function registerRootEventType(
-  rootEventType: ReactNativeEventResponderEventType,
+function registerHostRootEvent(
+  hostRootEvent: ReactNativeEventResponderEventType,
   eventComponentInstance: ReactNativeEventComponentInstance,
 ) {
-  let rootEventComponentInstances = rootEventTypesToEventComponentInstances.get(
-    rootEventType,
+  let rootEventComponentInstances = hostRootEventsToEventComponentInstances.get(
+    hostRootEvent,
   );
   if (rootEventComponentInstances === undefined) {
     rootEventComponentInstances = new Set();
-    rootEventTypesToEventComponentInstances.set(
-      rootEventType,
+    hostRootEventsToEventComponentInstances.set(
+      hostRootEvent,
       rootEventComponentInstances,
     );
   }
-  let rootEventTypesSet = eventComponentInstance.rootEventTypes;
-  if (rootEventTypesSet === null) {
-    rootEventTypesSet = eventComponentInstance.rootEventTypes = new Set();
+  let hostRootEventsSet = eventComponentInstance.hostRootEvents;
+  if (hostRootEventsSet === null) {
+    hostRootEventsSet = eventComponentInstance.hostRootEvents = new Set();
   }
   invariant(
-    !rootEventTypesSet.has(rootEventType),
-    'addRootEventTypes() found a duplicate root event ' +
-      'type of "%s". This might be because the event type exists in the event responder "rootEventTypes" ' +
-      'array or because of a previous addRootEventTypes() using this root event type.',
-    rootEventType,
+    !hostRootEventsSet.has(hostRootEvent),
+    'addHostRootEvents() found a duplicate root event ' +
+      'type of "%s". This might be because the event type exists in the event responder "hostRootEvents" ' +
+      'array or because of a previous addHostRootEvents() using this root event type.',
+    hostRootEvent,
   );
-  rootEventTypesSet.add(rootEventType);
+  hostRootEventsSet.add(hostRootEvent);
   rootEventComponentInstances.add(eventComponentInstance);
 }
 
-export function addRootEventTypesForComponentInstance(
+export function addHostRootEventsForComponentInstance(
   eventComponentInstance: ReactNativeEventComponentInstance,
-  rootEventTypes: Array<ReactNativeEventResponderEventType>,
+  hostRootEvents: Array<ReactNativeEventResponderEventType>,
 ): void {
-  for (let i = 0; i < rootEventTypes.length; i++) {
-    const rootEventType = rootEventTypes[i];
-    registerRootEventType(rootEventType, eventComponentInstance);
+  for (let i = 0; i < hostRootEvents.length; i++) {
+    const hostRootEvent = hostRootEvents[i];
+    registerHostRootEvent(hostRootEvent, eventComponentInstance);
   }
 }

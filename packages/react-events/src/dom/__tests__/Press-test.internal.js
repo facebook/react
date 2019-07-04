@@ -2573,7 +2573,7 @@ describe('Event responder: Press', () => {
     expect(Press.responder.displayName).toBe('Press');
   });
 
-  it('should not trigger an invariant in addRootEventTypes()', () => {
+  it('should not trigger an invariant in addHostRootEvents()', () => {
     const ref = React.createRef();
     const element = (
       <Press>

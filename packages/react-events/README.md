@@ -92,7 +92,7 @@ Defines the DOM events to listen to within the Event Component subtree.
 The Event Responder Context is exposed via the `context` argument for certain methods
 on the `EventResponder` object.
 
-### addRootEventTypes(eventTypes: Array<ResponderEventType>)
+### addHostRootEvents(hostEvents: Array<ResponderEventType>)
 
 This can be used to dynamically listen to events on the root of the app only
 when it is necessary to do so.
@@ -138,9 +138,9 @@ is within the scope of the same responder, but owned by another Event Component 
 
 Returns `true` if the instance released ownership of the Event Component instance.
 
-### removeRootEventTypes(eventTypes: Array<ResponderEventType>)
+### removeHostRootEvents(hostEvents: Array<ResponderEventType>)
 
-Remove the root event types added with `addRootEventTypes`.
+Remove the root event types added with `addHostRootEvents`.
 
 ### requestGlobalOwnership(): boolean
 

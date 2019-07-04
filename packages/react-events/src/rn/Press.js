@@ -116,8 +116,8 @@ const DEFAULT_PRESS_RETENTION_OFFSET = {
   right: 20,
 };
 
-const targetEventTypes = ['topTouchStart'];
-const rootEventTypes = ['topTouchMove', 'topTouchEnd', 'topTouchCancel'];
+const hostTargetEvents = ['topTouchStart'];
+const hostRootEvents = ['topTouchMove', 'topTouchEnd', 'topTouchCancel'];
 
 function calculateDelayMS(delay: ?number, min = 0, fallback = 0) {
   const maybeNumber = delay == null ? null : delay;
@@ -192,20 +192,20 @@ function dispatchCancel(event, context, props, state): void {
   if (state.isPressed) {
     dispatchPressEndEvents(event, context, props, state);
   }
-  removeRootEventTypes(context, state);
+  removeHostRootEvents(context, state);
 }
 
-function addRootEventTypes(context, state): void {
+function addHostRootEvents(context, state): void {
   if (!state.addedRootEvents) {
     state.addedRootEvents = true;
-    context.addRootEventTypes(rootEventTypes);
+    context.addHostRootEvents(hostRootEvents);
   }
 }
 
-function removeRootEventTypes(context, state): void {
+function removeHostRootEvents(context, state): void {
   if (state.addedRootEvents) {
     state.addedRootEvents = false;
-    context.removeRootEventTypes(rootEventTypes);
+    context.removeHostRootEvents(hostRootEvents);
   }
 }
 
@@ -503,7 +503,7 @@ function dispatchPressEndEvents(event, context, props, state): void {
 
 const PressResponder: ReactNativeEventResponder = {
   displayName: 'Press',
-  targetEventTypes,
+  hostTargetEvents,
   allowEventHooks: true,
   allowMultipleHostChildren: false,
   createInitialState(): PressState {
@@ -559,7 +559,7 @@ const PressResponder: ReactNativeEventResponder = {
         state.isPressWithinResponderRegion = true;
 
         dispatchPressStartEvents(event, context, props, state);
-        addRootEventTypes(context, state);
+        addHostRootEvents(context, state);
       }
     }
   },
@@ -666,7 +666,7 @@ const PressResponder: ReactNativeEventResponder = {
           }
         }
         state.touchEvent = null;
-        removeRootEventTypes(context, state);
+        removeHostRootEvents(context, state);
         break;
       }
       case 'topTouchCancel': {

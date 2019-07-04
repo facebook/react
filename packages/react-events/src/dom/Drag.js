@@ -17,8 +17,8 @@ import type {EventPriority} from 'shared/ReactTypes';
 import React from 'react';
 import {DiscreteEvent, UserBlockingEvent} from 'shared/ReactTypes';
 
-const targetEventTypes = ['pointerdown'];
-const rootEventTypes = [
+const hostTargetEvents = ['pointerdown'];
+const hostRootEvents = [
   'pointerup',
   'pointercancel',
   {name: 'pointermove', passive: false},
@@ -37,8 +37,8 @@ type DragState = {
 // In the case we don't have PointerEvents (Safari), we listen to touch events
 // too
 if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
-  targetEventTypes.push('touchstart', 'mousedown');
-  rootEventTypes.push('mouseup', 'mousemove', 'touchend', 'touchcancel', {
+  hostTargetEvents.push('touchstart', 'mousedown');
+  hostRootEvents.push('mouseup', 'mousemove', 'touchend', 'touchcancel', {
     name: 'touchmove',
     passive: false,
   });
@@ -87,7 +87,7 @@ function dispatchDragEvent(
 
 const DragResponder: ReactDOMEventResponder = {
   displayName: 'Drag',
-  targetEventTypes,
+  hostTargetEvents,
   createInitialState(): DragState {
     return {
       dragTarget: null,
@@ -138,7 +138,7 @@ const DragResponder: ReactDOMEventResponder = {
             );
           }
 
-          context.addRootEventTypes(rootEventTypes);
+          context.addHostRootEvents(hostRootEvents);
         }
         break;
       }
@@ -197,7 +197,7 @@ const DragResponder: ReactDOMEventResponder = {
             } else {
               state.dragTarget = null;
               state.isPointerDown = false;
-              context.removeRootEventTypes(rootEventTypes);
+              context.removeHostRootEvents(hostRootEvents);
             }
           } else {
             if (props.onDragMove) {
@@ -254,7 +254,7 @@ const DragResponder: ReactDOMEventResponder = {
         if (state.isPointerDown) {
           state.dragTarget = null;
           state.isPointerDown = false;
-          context.removeRootEventTypes(rootEventTypes);
+          context.removeHostRootEvents(hostRootEvents);
         }
         break;
       }

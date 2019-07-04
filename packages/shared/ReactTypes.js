@@ -85,15 +85,15 @@ export type ReactEventComponentInstance<T, E, C> = {|
   isHook: boolean,
   props: Object,
   responder: ReactEventResponder<T, E, C>,
-  rootEventTypes: null | Set<string>,
+  hostRootEvents: null | Set<string>,
   rootInstance: null | mixed,
   state: Object,
 |};
 
 export type ReactEventResponder<T, E, C> = {
   displayName: string,
-  targetEventTypes?: Array<T>,
-  rootEventTypes?: Array<T>,
+  hostTargetEvents?: Array<T>,
+  hostRootEvents?: Array<T>,
   createInitialState?: (props: Object) => Object,
   allowMultipleHostChildren: boolean,
   allowEventHooks: boolean,

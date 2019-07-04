@@ -91,10 +91,10 @@ export function createEventComponentInstance<T, E, C>(
 ): ReactEventComponentInstance<T, E, C> {
   return {
     currentFiber,
+    hostRootEvents: null,
     isHook,
     props,
     responder,
-    rootEventTypes: null,
     rootInstance,
     state,
   };

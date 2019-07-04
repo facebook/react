@@ -22,7 +22,7 @@ import {
   warnForDeletedHydratableText,
   warnForInsertedHydratedElement,
   warnForInsertedHydratedText,
-  listenToEventResponderEventTypes,
+  listenToEventResponderHostEvents,
 } from './ReactDOMComponent';
 import {getSelectionInformation, restoreSelection} from './ReactInputSelection';
 import setTextContent from './setTextContent';
@@ -47,7 +47,7 @@ import type {
   ReactDOMEventComponentInstance,
 } from 'shared/ReactDOMTypes';
 import {
-  addRootEventTypesForComponentInstance,
+  addHostRootEventsForComponentInstance,
   mountEventResponder,
   unmountEventResponder,
 } from '../events/DOMEventResponderSystem';
@@ -851,18 +851,18 @@ export function mountEventComponent(
     const documentBody = doc.body || doc;
     const responder = eventComponentInstance.responder;
     const {
-      rootEventTypes,
-      targetEventTypes,
+      hostRootEvents,
+      hostTargetEvents,
     } = ((responder: any): ReactDOMEventResponder);
-    if (targetEventTypes !== undefined) {
-      listenToEventResponderEventTypes(targetEventTypes, documentBody);
+    if (hostTargetEvents !== undefined) {
+      listenToEventResponderHostEvents(hostTargetEvents, documentBody);
     }
-    if (rootEventTypes !== undefined) {
-      addRootEventTypesForComponentInstance(
+    if (hostRootEvents !== undefined) {
+      addHostRootEventsForComponentInstance(
         eventComponentInstance,
-        rootEventTypes,
+        hostRootEvents,
       );
-      listenToEventResponderEventTypes(rootEventTypes, documentBody);
+      listenToEventResponderHostEvents(hostRootEvents, documentBody);
     }
     mountEventResponder(eventComponentInstance);
   }
@@ -878,7 +878,7 @@ export function unmountEventComponent(
   eventComponentInstance: ReactDOMEventComponentInstance,
 ): void {
   if (enableFlareAPI) {
-    // TODO stop listening to targetEventTypes
+    // TODO stop listening to hostTargetEvents
     unmountEventResponder(eventComponentInstance);
   }
 }

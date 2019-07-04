@@ -21,7 +21,7 @@ let ReactTestUtils;
 
 const noOpResponder = {
   displayName: 'TestEventComponent',
-  targetEventTypes: [],
+  hostTargetEvents: [],
   handleEvent() {},
 };
 

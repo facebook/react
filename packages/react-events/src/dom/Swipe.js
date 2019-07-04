@@ -17,8 +17,8 @@ import type {EventPriority} from 'shared/ReactTypes';
 import React from 'react';
 import {UserBlockingEvent, DiscreteEvent} from 'shared/ReactTypes';
 
-const targetEventTypes = ['pointerdown'];
-const rootEventTypes = [
+const hostTargetEvents = ['pointerdown'];
+const hostRootEvents = [
   'pointerup',
   'pointercancel',
   {name: 'pointermove', passive: false},
@@ -27,8 +27,8 @@ const rootEventTypes = [
 // In the case we don't have PointerEvents (Safari), we listen to touch events
 // too
 if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
-  targetEventTypes.push('touchstart', 'mousedown');
-  rootEventTypes.push('mouseup', 'mousemove', 'touchend', 'touchcancel', {
+  hostTargetEvents.push('touchstart', 'mousedown');
+  hostRootEvents.push('mouseup', 'mousemove', 'touchend', 'touchcancel', {
     name: 'touchmove',
     passive: false,
   });
@@ -91,7 +91,7 @@ type SwipeState = {
 
 const SwipeResponder: ReactDOMEventResponder = {
   displayName: 'Scroll',
-  targetEventTypes,
+  hostTargetEvents,
   createInitialState(): SwipeState {
     return {
       direction: 0,
@@ -140,7 +140,7 @@ const SwipeResponder: ReactDOMEventResponder = {
             state.x = x;
             state.y = y;
             state.swipeTarget = target;
-            context.addRootEventTypes(rootEventTypes);
+            context.addHostRootEvents(hostRootEvents);
           } else {
             state.touchId = null;
           }
@@ -181,7 +181,7 @@ const SwipeResponder: ReactDOMEventResponder = {
             state.isSwiping = false;
             state.swipeTarget = null;
             state.touchId = null;
-            context.removeRootEventTypes(rootEventTypes);
+            context.removeHostRootEvents(hostRootEvents);
             return;
           }
           const x = (obj: any).screenX;
@@ -257,7 +257,7 @@ const SwipeResponder: ReactDOMEventResponder = {
           state.isSwiping = false;
           state.swipeTarget = null;
           state.touchId = null;
-          context.removeRootEventTypes(rootEventTypes);
+          context.removeHostRootEvents(hostRootEvents);
         }
         break;
       }

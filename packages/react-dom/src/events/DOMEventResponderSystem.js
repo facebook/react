@@ -57,12 +57,12 @@ const {
   unstable_runWithPriority: runWithPriority,
 } = Scheduler;
 
-export let listenToResponderEventTypesImpl;
+export let listenToResponderHostEventsImpl;
 
-export function setListenToResponderEventTypes(
-  _listenToResponderEventTypesImpl: Function,
+export function setListenToResponderHostEvents(
+  _listenToResponderHostEventsImpl: Function,
 ) {
-  listenToResponderEventTypesImpl = _listenToResponderEventTypesImpl;
+  listenToResponderHostEventsImpl = _listenToResponderHostEventsImpl;
 }
 
 type EventObjectType = $Shape<PartialEventObject>;
@@ -91,7 +91,7 @@ type ResponderTimer = {|
 |};
 
 const activeTimeouts: Map<number, ResponderTimeout> = new Map();
-const rootEventTypesToEventComponentInstances: Map<
+const hostRootEventsToEventComponentInstances: Map<
   DOMTopLevelEventType | string,
   Set<ReactDOMEventComponentInstance>,
 > = new Map();
@@ -248,29 +248,29 @@ const eventResponderContext: ReactDOMResponderContext = {
     }
     return false;
   },
-  addRootEventTypes(
-    rootEventTypes: Array<ReactDOMEventResponderEventType>,
+  addHostRootEvents(
+    hostRootEvents: Array<ReactDOMEventResponderEventType>,
   ): void {
     validateResponderContext();
     const activeDocument = getActiveDocument();
-    listenToResponderEventTypesImpl(rootEventTypes, activeDocument);
-    for (let i = 0; i < rootEventTypes.length; i++) {
-      const rootEventType = rootEventTypes[i];
+    listenToResponderHostEventsImpl(hostRootEvents, activeDocument);
+    for (let i = 0; i < hostRootEvents.length; i++) {
+      const hostRootEvent = hostRootEvents[i];
       const eventComponentInstance = ((currentInstance: any): ReactDOMEventComponentInstance);
-      registerRootEventType(rootEventType, eventComponentInstance);
+      registerHostRootEvent(hostRootEvent, eventComponentInstance);
     }
   },
-  removeRootEventTypes(
-    rootEventTypes: Array<ReactDOMEventResponderEventType>,
+  removeHostRootEvents(
+    hostRootEvents: Array<ReactDOMEventResponderEventType>,
   ): void {
     validateResponderContext();
-    for (let i = 0; i < rootEventTypes.length; i++) {
-      const rootEventType = rootEventTypes[i];
-      let name = rootEventType;
+    for (let i = 0; i < hostRootEvents.length; i++) {
+      const hostRootEvent = hostRootEvents[i];
+      let name = hostRootEvent;
       let passive = true;
 
-      if (typeof rootEventType !== 'string') {
-        const targetEventConfigObject = ((rootEventType: any): {
+      if (typeof hostRootEvent !== 'string') {
+        const targetEventConfigObject = ((hostRootEvent: any): {
           name: string,
           passive?: boolean,
         });
@@ -284,13 +284,13 @@ const eventResponderContext: ReactDOMResponderContext = {
         ((name: any): string),
         passive,
       );
-      let rootEventComponents = rootEventTypesToEventComponentInstances.get(
+      let rootEventComponents = hostRootEventsToEventComponentInstances.get(
         listeningName,
       );
-      let rootEventTypesSet = ((currentInstance: any): ReactDOMEventComponentInstance)
-        .rootEventTypes;
-      if (rootEventTypesSet !== null) {
-        rootEventTypesSet.delete(listeningName);
+      let hostRootEventsSet = ((currentInstance: any): ReactDOMEventComponentInstance)
+        .hostRootEvents;
+      if (hostRootEventsSet !== null) {
+        hostRootEventsSet.delete(listeningName);
       }
       if (rootEventComponents !== undefined) {
         rootEventComponents.delete(
@@ -621,7 +621,7 @@ function processEventQueue(): void {
   }
 }
 
-function getDOMTargetEventTypesSet(
+function getDOMTargetEventSet(
   eventTypes: Array<ReactDOMEventResponderEventType>,
 ): Set<string> {
   let cachedSet = targetEventTypeCached.get(eventTypes);
@@ -661,11 +661,11 @@ function storeTargetEventResponderInstance(
   eventComponentResponders: null | Set<ReactDOMEventResponder>,
 ): void {
   const responder = eventComponentInstance.responder;
-  const targetEventTypes = responder.targetEventTypes;
+  const hostTargetEvents = responder.hostTargetEvents;
   // Validate the target event type exists on the responder
-  if (targetEventTypes !== undefined) {
-    const targetEventTypesSet = getDOMTargetEventTypesSet(targetEventTypes);
-    if (targetEventTypesSet.has(listeningName)) {
+  if (hostTargetEvents !== undefined) {
+    const hostTargetEventsSet = getDOMTargetEventSet(hostTargetEvents);
+    if (hostTargetEventsSet.has(listeningName)) {
       eventResponderInstances.push(eventComponentInstance);
       if (eventComponentResponders !== null) {
         eventComponentResponders.add(responder);
@@ -722,11 +722,11 @@ function getRootEventResponderInstances(
   listeningName: string,
 ): Array<ReactDOMEventComponentInstance> {
   const eventResponderInstances = [];
-  const rootEventInstances = rootEventTypesToEventComponentInstances.get(
+  const hostRootEventInstances = hostRootEventsToEventComponentInstances.get(
     listeningName,
   );
-  if (rootEventInstances !== undefined) {
-    const rootEventComponentInstances = Array.from(rootEventInstances);
+  if (hostRootEventInstances !== undefined) {
+    const rootEventComponentInstances = Array.from(hostRootEventInstances);
 
     for (let i = 0; i < rootEventComponentInstances.length; i++) {
       const rootEventComponentInstance = rootEventComponentInstances[i];
@@ -967,13 +967,13 @@ export function unmountEventResponder(
   if (responder.onOwnershipChange !== undefined) {
     ownershipChangeListeners.delete(eventComponentInstance);
   }
-  const rootEventTypesSet = eventComponentInstance.rootEventTypes;
-  if (rootEventTypesSet !== null) {
-    const rootEventTypes = Array.from(rootEventTypesSet);
+  const hostRootEventsSet = eventComponentInstance.hostRootEvents;
+  if (hostRootEventsSet !== null) {
+    const hostRootEvents = Array.from(hostRootEventsSet);
 
-    for (let i = 0; i < rootEventTypes.length; i++) {
-      const topLevelEventType = rootEventTypes[i];
-      let rootEventComponentInstances = rootEventTypesToEventComponentInstances.get(
+    for (let i = 0; i < hostRootEvents.length; i++) {
+      const topLevelEventType = hostRootEvents[i];
+      let rootEventComponentInstances = hostRootEventsToEventComponentInstances.get(
         topLevelEventType,
       );
       if (rootEventComponentInstances !== undefined) {
@@ -1034,25 +1034,25 @@ export function dispatchEventForResponderEventSystem(
   }
 }
 
-export function addRootEventTypesForComponentInstance(
+export function addHostRootEventsForComponentInstance(
   eventComponentInstance: ReactDOMEventComponentInstance,
-  rootEventTypes: Array<ReactDOMEventResponderEventType>,
+  hostRootEvents: Array<ReactDOMEventResponderEventType>,
 ): void {
-  for (let i = 0; i < rootEventTypes.length; i++) {
-    const rootEventType = rootEventTypes[i];
-    registerRootEventType(rootEventType, eventComponentInstance);
+  for (let i = 0; i < hostRootEvents.length; i++) {
+    const hostRootEvent = hostRootEvents[i];
+    registerHostRootEvent(hostRootEvent, eventComponentInstance);
   }
 }
 
-function registerRootEventType(
-  rootEventType: ReactDOMEventResponderEventType,
+function registerHostRootEvent(
+  hostRootEvent: ReactDOMEventResponderEventType,
   eventComponentInstance: ReactDOMEventComponentInstance,
 ): void {
-  let name = rootEventType;
+  let name = hostRootEvent;
   let passive = true;
 
-  if (typeof rootEventType !== 'string') {
-    const targetEventConfigObject = ((rootEventType: any): {
+  if (typeof hostRootEvent !== 'string') {
+    const targetEventConfigObject = ((hostRootEvent: any): {
       name: string,
       passive?: boolean,
     });
@@ -1063,28 +1063,28 @@ function registerRootEventType(
   }
 
   const listeningName = generateListeningKey(((name: any): string), passive);
-  let rootEventComponentInstances = rootEventTypesToEventComponentInstances.get(
+  let rootEventComponentInstances = hostRootEventsToEventComponentInstances.get(
     listeningName,
   );
   if (rootEventComponentInstances === undefined) {
     rootEventComponentInstances = new Set();
-    rootEventTypesToEventComponentInstances.set(
+    hostRootEventsToEventComponentInstances.set(
       listeningName,
       rootEventComponentInstances,
     );
   }
-  let rootEventTypesSet = eventComponentInstance.rootEventTypes;
-  if (rootEventTypesSet === null) {
-    rootEventTypesSet = eventComponentInstance.rootEventTypes = new Set();
+  let hostRootEventsSet = eventComponentInstance.hostRootEvents;
+  if (hostRootEventsSet === null) {
+    hostRootEventsSet = eventComponentInstance.hostRootEvents = new Set();
   }
   invariant(
-    !rootEventTypesSet.has(listeningName),
-    'addRootEventTypes() found a duplicate root event ' +
-      'type of "%s". This might be because the event type exists in the event responder "rootEventTypes" ' +
-      'array or because of a previous addRootEventTypes() using this root event type.',
+    !hostRootEventsSet.has(listeningName),
+    'addHostRootEvents() found a duplicate root event ' +
+      'type of "%s". This might be because the event type exists in the event responder "hostRootEvents" ' +
+      'array or because of a previous addHostRootEvents() using this root event type.',
     name,
   );
-  rootEventTypesSet.add(listeningName);
+  hostRootEventsSet.add(listeningName);
   rootEventComponentInstances.add(eventComponentInstance);
 }
 

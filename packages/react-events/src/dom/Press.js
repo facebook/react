@@ -122,7 +122,7 @@ const DEFAULT_PRESS_RETENTION_OFFSET = {
   right: 20,
 };
 
-const targetEventTypes = [
+const hostTargetEvents = [
   {name: 'keydown', passive: false},
   {name: 'contextmenu', passive: false},
   // We need to preventDefault on pointerdown for mouse/pen events
@@ -130,7 +130,7 @@ const targetEventTypes = [
   {name: 'pointerdown', passive: false},
   {name: 'click', passive: false},
 ];
-const rootEventTypes = [
+const hostRootEvents = [
   'click',
   'keyup',
   'pointerup',
@@ -145,8 +145,8 @@ const rootEventTypes = [
 
 // If PointerEvents is not supported (e.g., Safari), also listen to touch and mouse events.
 if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
-  targetEventTypes.push('touchstart', 'mousedown');
-  rootEventTypes.push(
+  hostTargetEvents.push('touchstart', 'mousedown');
+  hostRootEvents.push(
     'mousemove',
     'touchmove',
     'touchcancel',
@@ -438,7 +438,7 @@ function dispatchCancel(
     state.ignoreEmulatedMouseEvents = false;
     dispatchPressEndEvents(event, context, props, state);
   }
-  removeRootEventTypes(context, state);
+  removeHostRootEvents(context, state);
 }
 
 function isValidKeyboardEvent(nativeEvent: Object): boolean {
@@ -510,28 +510,28 @@ function unmountResponder(
   state: PressState,
 ): void {
   if (state.isPressed) {
-    removeRootEventTypes(context, state);
+    removeHostRootEvents(context, state);
     dispatchPressEndEvents(null, context, props, state);
   }
 }
 
-function addRootEventTypes(
+function addHostRootEvents(
   context: ReactDOMResponderContext,
   state: PressState,
 ): void {
   if (!state.addedRootEvents) {
     state.addedRootEvents = true;
-    context.addRootEventTypes(rootEventTypes);
+    context.addHostRootEvents(hostRootEvents);
   }
 }
 
-function removeRootEventTypes(
+function removeHostRootEvents(
   context: ReactDOMResponderContext,
   state: PressState,
 ): void {
   if (state.addedRootEvents) {
     state.addedRootEvents = false;
-    context.removeRootEventTypes(rootEventTypes);
+    context.removeHostRootEvents(hostRootEvents);
   }
 }
 
@@ -617,7 +617,7 @@ function handleStopPropagation(
 
 const PressResponder: ReactDOMEventResponder = {
   displayName: 'Press',
-  targetEventTypes,
+  hostTargetEvents,
   createInitialState(): PressState {
     return {
       activationPosition: null,
@@ -651,7 +651,7 @@ const PressResponder: ReactDOMEventResponder = {
     const {pointerId, pointerType, type} = event;
 
     if (props.disabled) {
-      removeRootEventTypes(context, state);
+      removeHostRootEvents(context, state);
       dispatchPressEndEvents(event, context, props, state);
       state.ignoreEmulatedMouseEvents = false;
       return;
@@ -717,7 +717,7 @@ const PressResponder: ReactDOMEventResponder = {
           state.responderRegionOnDeactivation = null;
           state.isPressWithinResponderRegion = true;
           dispatchPressStartEvents(event, context, props, state);
-          addRootEventTypes(context, state);
+          addHostRootEvents(context, state);
         } else {
           // Prevent spacebar press from scrolling the window
           if (isValidKeyboardEvent(nativeEvent) && nativeEvent.key === ' ') {
@@ -774,7 +774,7 @@ const PressResponder: ReactDOMEventResponder = {
           );
         }
         // Click won't occur, so we need to remove root events
-        removeRootEventTypes(context, state);
+        removeHostRootEvents(context, state);
         break;
       }
 
@@ -893,7 +893,7 @@ const PressResponder: ReactDOMEventResponder = {
               return;
             }
             isKeyboardEvent = true;
-            removeRootEventTypes(context, state);
+            removeHostRootEvents(context, state);
           }
 
           // Determine whether to call preventDefault on subsequent native events.
@@ -978,7 +978,7 @@ const PressResponder: ReactDOMEventResponder = {
       case 'click': {
         // "keyup" occurs after "click"
         if (previousPointerType !== 'keyboard') {
-          removeRootEventTypes(context, state);
+          removeHostRootEvents(context, state);
         }
         break;
       }

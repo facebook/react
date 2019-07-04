@@ -27,7 +27,7 @@ import warningWithoutStack from 'shared/warningWithoutStack';
 
 import {dispatchEvent} from './ReactFabricEventEmitter';
 import {
-  addRootEventTypesForComponentInstance,
+  addHostRootEventsForComponentInstance,
   mountEventResponder,
   unmountEventResponder,
 } from './ReactFabricEventResponderSystem';
@@ -449,11 +449,11 @@ export function mountEventComponent(
 ) {
   if (enableFlareAPI) {
     const responder = eventComponentInstance.responder;
-    const {rootEventTypes} = responder;
-    if (rootEventTypes !== undefined) {
-      addRootEventTypesForComponentInstance(
+    const {hostRootEvents} = responder;
+    if (hostRootEvents !== undefined) {
+      addHostRootEventsForComponentInstance(
         eventComponentInstance,
-        rootEventTypes,
+        hostRootEvents,
       );
     }
     mountEventResponder(eventComponentInstance);
@@ -470,7 +470,7 @@ export function unmountEventComponent(
   eventComponentInstance: ReactNativeEventComponentInstance,
 ): void {
   if (enableFlareAPI) {
-    // TODO stop listening to targetEventTypes
+    // TODO stop listening to hostTargetEvents
     unmountEventResponder(eventComponentInstance);
   }
 }

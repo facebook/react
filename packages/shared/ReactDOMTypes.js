@@ -61,11 +61,11 @@ export type ReactDOMResponderContext = {
   ) => boolean,
   isTargetWithinEventComponent: (Element | Document) => boolean,
   isTargetWithinEventResponderScope: (Element | Document) => boolean,
-  addRootEventTypes: (
-    rootEventTypes: Array<ReactDOMEventResponderEventType>,
+  addHostRootEvents: (
+    hostRootEvents: Array<ReactDOMEventResponderEventType>,
   ) => void,
-  removeRootEventTypes: (
-    rootEventTypes: Array<ReactDOMEventResponderEventType>,
+  removeHostRootEvents: (
+    hostRootEvents: Array<ReactDOMEventResponderEventType>,
   ) => void,
   hasOwnership: () => boolean,
   requestGlobalOwnership: () => boolean,

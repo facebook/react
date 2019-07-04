@@ -223,11 +223,11 @@ export type ReactNativeResponderContext = {
       bottom: number,
     }) => void,
   ): void,
-  addRootEventTypes: (
-    rootEventTypes: Array<ReactNativeEventResponderEventType>,
+  addHostRootEvents: (
+    hostRootEvents: Array<ReactNativeEventResponderEventType>,
   ) => void,
-  removeRootEventTypes: (
-    rootEventTypes: Array<ReactNativeEventResponderEventType>,
+  removeHostRootEvents: (
+    hostRootEvents: Array<ReactNativeEventResponderEventType>,
   ) => void,
   getEventCurrentTarget(
     event: ReactNativeResponderEvent,

@@ -60,14 +60,14 @@ type ScrollEvent = {|
   y: null | number,
 |};
 
-const targetEventTypes = [
+const hostTargetEvents = [
   'scroll',
   'pointerdown',
   'touchstart',
   'keyup',
   'wheel',
 ];
-const rootEventTypes = ['touchcancel', 'touchend'];
+const hostRootEvents = ['touchcancel', 'touchend'];
 
 function createScrollEvent(
   event: ?ReactDOMResponderEvent,
@@ -130,7 +130,7 @@ function dispatchEvent(
 
 const ScrollResponder: ReactDOMEventResponder = {
   displayName: 'Scroll',
-  targetEventTypes,
+  hostTargetEvents,
   createInitialState() {
     return {
       direction: '',
@@ -157,7 +157,7 @@ const ScrollResponder: ReactDOMEventResponder = {
         state.scrollTarget = null;
         state.isDragging = false;
         state.direction = '';
-        context.removeRootEventTypes(rootEventTypes);
+        context.removeHostRootEvents(hostRootEvents);
       }
       return;
     }
@@ -241,7 +241,7 @@ const ScrollResponder: ReactDOMEventResponder = {
       case 'touchstart': {
         if (!state.isTouching) {
           state.isTouching = true;
-          context.addRootEventTypes(rootEventTypes);
+          context.addHostRootEvents(hostRootEvents);
         }
       }
     }
@@ -272,7 +272,7 @@ const ScrollResponder: ReactDOMEventResponder = {
           state.isDragging = false;
           state.scrollTarget = null;
           state.pointerType = '';
-          context.removeRootEventTypes(rootEventTypes);
+          context.removeHostRootEvents(hostRootEvents);
         }
       }
     }
