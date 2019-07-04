@@ -392,6 +392,20 @@ describe('ReactFreshBabelPlugin', () => {
     ).toMatchSnapshot();
   });
 
+  it('does not include non accessible custom hooks into the signatures', () => {
+    expect(
+      transform(`       
+        export default function App({useProp}) {
+          const useFancyEffect = () => {
+            React.useEffect(useProp);
+          };
+          const bar = useFancyState();
+          return <h1>{bar}</h1>;
+        }
+    `),
+    ).toMatchSnapshot();
+  });
+
   it('includes custom hooks into the signatures when commonjs target is used', () => {
     // this test is passing with Babel 6
     // but would fail for Babel 7 _without_ custom hook node being cloned for signature

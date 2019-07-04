@@ -236,7 +236,7 @@ export default function(babel) {
     }
   }
 
-  function getHookCallsSignature(functionNode) {
+  function getHookCallsSignature(functionNode, scope) {
     const fnHookCalls = hookCalls.get(functionNode);
     if (fnHookCalls === undefined) {
       return null;
@@ -245,6 +245,7 @@ export default function(babel) {
       key: fnHookCalls.map(call => call.name + '{' + call.key + '}').join('\n'),
       customHooks: fnHookCalls
         .filter(call => !isBuiltinHook(call.name))
+        .filter(call => scope.parent.hasBinding(call.name))
         .map(call => t.cloneDeep(call.callee)),
     };
   }
@@ -488,7 +489,7 @@ export default function(babel) {
           if (id === null) {
             return;
           }
-          const signature = getHookCallsSignature(node);
+          const signature = getHookCallsSignature(node, path.scope);
           if (signature === null) {
             return;
           }
@@ -550,7 +551,7 @@ export default function(babel) {
       'ArrowFunctionExpression|FunctionExpression': {
         exit(path) {
           const node = path.node;
-          const signature = getHookCallsSignature(node);
+          const signature = getHookCallsSignature(node, path.scope);
           if (signature === null) {
             return;
           }
