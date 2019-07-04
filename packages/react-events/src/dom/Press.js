@@ -57,7 +57,7 @@ type PressState = {
   isPressWithinResponderRegion: boolean,
   longPressTimeout: null | number,
   pointerType: PointerType,
-  pressTarget: null | Element,
+  pressTarget: null | Element | Document,
   pressEndTimeout: null | number,
   pressStartTimeout: null | number,
   responderRegionOnActivation: null | $ReadOnly<{|
@@ -615,6 +615,11 @@ function handleStopPropagation(
   }
 }
 
+function targetIsDocument(target: null | Node): boolean {
+  // When target is null, it is the root
+  return target === null || target.nodeType === 9;
+}
+
 const PressResponder: ReactDOMEventResponder = {
   displayName: 'Press',
   targetEventTypes,
@@ -687,7 +692,7 @@ const PressResponder: ReactDOMEventResponder = {
           // We set these here, before the button check so we have this
           // data around for handling of the context menu
           state.pointerType = pointerType;
-          state.pressTarget = context.getEventCurrentTarget(event);
+          const pressTarget = (state.pressTarget = event.currentTarget);
           if (isPointerEvent) {
             state.activePointerId = pointerId;
           } else if (isTouchEvent) {
@@ -708,12 +713,14 @@ const PressResponder: ReactDOMEventResponder = {
           ) {
             return;
           }
-
-          state.responderRegionOnActivation = calculateResponderRegion(
-            context,
-            state.pressTarget,
-            props,
-          );
+          // Exclude document targets
+          if (!targetIsDocument(pressTarget)) {
+            state.responderRegionOnActivation = calculateResponderRegion(
+              context,
+              ((pressTarget: any): Element),
+              props,
+            );
+          }
           state.responderRegionOnDeactivation = null;
           state.isPressWithinResponderRegion = true;
           dispatchPressStartEvents(event, context, props, state);
@@ -820,11 +827,13 @@ const PressResponder: ReactDOMEventResponder = {
           }
           state.touchEvent = touchEvent;
         }
+        const pressTarget = state.pressTarget;
 
         if (
-          state.pressTarget !== null &&
+          pressTarget !== null &&
+          !targetIsDocument(pressTarget) &&
           (pointerType !== 'mouse' ||
-            !context.isTargetWithinNode(target, state.pressTarget))
+            !context.isTargetWithinNode(target, pressTarget))
         ) {
           // Calculate the responder region we use for deactivation, as the
           // element dimensions may have changed since activation.
@@ -930,14 +939,16 @@ const PressResponder: ReactDOMEventResponder = {
           }
 
           const wasLongPressed = state.isLongPressed;
+          const pressTarget = state.pressTarget;
           dispatchPressEndEvents(event, context, props, state);
 
-          if (state.pressTarget !== null && props.onPress) {
+          if (pressTarget !== null && props.onPress) {
             if (
               !isKeyboardEvent &&
-              state.pressTarget !== null &&
+              pressTarget !== null &&
+              !targetIsDocument(pressTarget) &&
               (pointerType !== 'mouse' ||
-                !context.isTargetWithinNode(target, state.pressTarget))
+                !context.isTargetWithinNode(target, pressTarget))
             ) {
               // If the event target isn't within the press target, check if we're still
               // within the responder region. The region may have changed if the
