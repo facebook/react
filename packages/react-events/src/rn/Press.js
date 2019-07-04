@@ -506,7 +506,7 @@ const PressResponder: ReactNativeEventResponder = {
   targetEventTypes,
   allowEventHooks: true,
   allowMultipleHostChildren: false,
-  createInitialState(): PressState {
+  getInitialState(): PressState {
     return {
       activationPosition: null,
       activePointerId: null,

@@ -274,7 +274,7 @@ function isEmulatedMouseEvent(event, state) {
 const HoverResponder: ReactDOMEventResponder = {
   displayName: 'Hover',
   targetEventTypes,
-  createInitialState() {
+  getInitialState() {
     return {
       isActiveHovered: false,
       isHovered: false,

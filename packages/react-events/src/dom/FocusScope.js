@@ -50,7 +50,7 @@ const FocusScopeResponder: ReactDOMEventResponder = {
   displayName: 'FocusScope',
   targetEventTypes,
   rootEventTypes,
-  createInitialState(): FocusScopeState {
+  getInitialState(): FocusScopeState {
     return {
       nodeToRestore: null,
       currentFocusedNode: null,

@@ -66,8 +66,6 @@ export const supportsHydration = $$$hostConfig.supportsHydration;
 export const mountEventComponent = $$$hostConfig.mountEventComponent;
 export const updateEventComponent = $$$hostConfig.updateEventComponent;
 export const handleEventTarget = $$$hostConfig.handleEventTarget;
-export const getEventTargetChildElement =
-  $$$hostConfig.getEventTargetChildElement;
 
 // -------------------
 //      Mutation
