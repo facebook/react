@@ -598,7 +598,7 @@ function traverseAndHandleEventResponderInstances(
   // Bubbled event phases have the notion of local propagation.
   // This means that the propgation chain can be stopped part of the the way
   // through processing event component instances. The major difference to other
-  // events systems is that the stopping of propgation is localized to a single
+  // events systems is that the stopping of propagation is localized to a single
   // phase, rather than both phases.
   if (length > 0) {
     // Bubble target phase
