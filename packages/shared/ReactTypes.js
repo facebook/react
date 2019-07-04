@@ -14,8 +14,7 @@ export type ReactNode =
   | ReactFragment
   | ReactProvider<any>
   | ReactConsumer<any>
-  | ReactEventComponent<any, any, any>
-  | ReactEventTarget;
+  | ReactEventComponent<any, any, any>;
 
 export type ReactEmpty = null | void | boolean;
 
@@ -109,12 +108,6 @@ export type ReactEventResponder<T, E, C> = {
 export type ReactEventComponent<T, E, C> = {|
   $$typeof: Symbol | number,
   responder: ReactEventResponder<T, E, C>,
-|};
-
-export type ReactEventTarget = {|
-  $$typeof: Symbol | number,
-  displayName?: string,
-  type: Symbol | number,
 |};
 
 export opaque type EventPriority = 0 | 1 | 2;
