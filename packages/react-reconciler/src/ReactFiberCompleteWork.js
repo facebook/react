@@ -1142,8 +1142,9 @@ function completeWork(
               getComponentName(workInProgress.type),
             );
           }
-          if (responder.createInitialState !== undefined) {
-            responderState = responder.createInitialState(newProps);
+          const getInitialState = responder.getInitialState;
+          if (getInitialState !== undefined) {
+            responderState = getInitialState(newProps);
           }
           eventComponentInstance = workInProgress.stateNode = createEventComponentInstance(
             workInProgress,

@@ -60,8 +60,9 @@ export function updateEventComponentInstance<T, E, C>(
   }
   if (currentEventComponentInstanceIndex === events.length) {
     let responderState = null;
-    if (responder.createInitialState !== undefined) {
-      responderState = responder.createInitialState(props);
+    const getInitialState = responder.getInitialState;
+    if (getInitialState !== undefined) {
+      responderState = getInitialState(props);
     }
     const eventComponentInstance = createEventComponentInstance(
       ((currentlyRenderingFiber: any): Fiber),

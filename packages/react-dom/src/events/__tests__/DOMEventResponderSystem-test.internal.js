@@ -20,7 +20,7 @@ const DiscreteEvent = 0;
 function createReactEventComponent({
   targetEventTypes,
   rootEventTypes,
-  createInitialState,
+  getInitialState,
   onEvent,
   onEventCapture,
   onRootEvent,
@@ -34,7 +34,7 @@ function createReactEventComponent({
     displayName: 'TestEventComponent',
     targetEventTypes,
     rootEventTypes,
-    createInitialState,
+    getInitialState,
     onEvent,
     onEventCapture,
     onRootEvent,
@@ -596,7 +596,7 @@ describe('DOMEventResponderSystem', () => {
 
     const EventComponent = createReactEventComponent({
       targetEventTypes: [],
-      createInitialState: () => ({
+      getInitialState: () => ({
         incrementAmount: 5,
       }),
       onUnmount: (context, props, state) => {

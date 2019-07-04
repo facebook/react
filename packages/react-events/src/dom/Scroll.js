@@ -131,7 +131,7 @@ function dispatchEvent(
 const ScrollResponder: ReactDOMEventResponder = {
   displayName: 'Scroll',
   targetEventTypes,
-  createInitialState() {
+  getInitialState() {
     return {
       direction: '',
       isTouching: false,

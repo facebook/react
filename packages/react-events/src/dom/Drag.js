@@ -88,7 +88,7 @@ function dispatchDragEvent(
 const DragResponder: ReactDOMEventResponder = {
   displayName: 'Drag',
   targetEventTypes,
-  createInitialState(): DragState {
+  getInitialState(): DragState {
     return {
       dragTarget: null,
       isPointerDown: false,

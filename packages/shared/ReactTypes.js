@@ -94,7 +94,7 @@ export type ReactEventResponder<T, E, C> = {
   displayName: string,
   targetEventTypes?: Array<T>,
   rootEventTypes?: Array<T>,
-  createInitialState?: (props: Object) => Object,
+  getInitialState?: (props: Object) => Object,
   allowMultipleHostChildren: boolean,
   allowEventHooks: boolean,
   onEvent?: (event: E, context: C, props: Object, state: Object) => void,
