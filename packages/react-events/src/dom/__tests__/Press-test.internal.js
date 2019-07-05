@@ -257,6 +257,22 @@ describe('Event responder: Press', () => {
         ref.current.dispatchEvent(createEvent('pointerdown'));
         expect(onPressStart).toHaveBeenCalledTimes(1);
       });
+
+      it('onPressStart should not be called if pointerCancel is fired before delayPressStart is finished', () => {
+        const element = (
+          <Press delayPressStart={500} onPressStart={onPressStart}>
+            <div ref={ref} />
+          </Press>
+        );
+        ReactDOM.render(element, container);
+
+        ref.current.dispatchEvent(createEvent('pointerdown'));
+        jest.advanceTimersByTime(499);
+        expect(onPressStart).toHaveBeenCalledTimes(0);
+        ref.current.dispatchEvent(createEvent('pointercancel'));
+        jest.runAllTimers();
+        expect(onPressStart).toHaveBeenCalledTimes(0);
+      });
     });
 
     describe('delayPressEnd', () => {

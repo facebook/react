@@ -434,6 +434,10 @@ function dispatchCancel(
   state: PressState,
 ): void {
   state.touchEvent = null;
+  if (state.pressStartTimeout !== null) {
+    context.clearTimeout(state.pressStartTimeout);
+    state.pressStartTimeout = null;
+  }
   if (state.isPressed) {
     state.ignoreEmulatedMouseEvents = false;
     dispatchPressEndEvents(event, context, props, state);
