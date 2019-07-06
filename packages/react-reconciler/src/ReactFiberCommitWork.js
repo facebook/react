@@ -47,6 +47,7 @@ import {
   EventComponent,
   SuspenseListComponent,
 } from 'shared/ReactWorkTags';
+import {SmooshMode} from './ReactTypeOfMode';
 import {
   invokeGuardedCallback,
   hasCaughtError,
@@ -975,7 +976,12 @@ function commitPlacement(finishedWork: Fiber): void {
   // children to find all the terminal nodes.
   let node: Fiber = finishedWork;
   while (true) {
-    if (node.tag === HostComponent || node.tag === HostText) {
+    const SMOOSH_DA_DIV =
+      node.type === 'div' && (node.mode & SmooshMode) === SmooshMode;
+    if (
+      (node.tag === HostComponent && !SMOOSH_DA_DIV) ||
+      node.tag === HostText
+    ) {
       const stateNode = node.stateNode;
       if (before) {
         if (isContainer) {

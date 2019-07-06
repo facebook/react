@@ -11,6 +11,7 @@ export type TypeOfMode = number;
 
 export const NoMode = 0b0000;
 export const StrictMode = 0b0001;
+export const SmooshMode = 0b1001;
 // TODO: Remove BatchedMode and ConcurrentMode by reading from the root
 // tag instead
 export const BatchedMode = 0b0010;

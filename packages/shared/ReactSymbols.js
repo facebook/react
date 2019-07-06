@@ -23,6 +23,9 @@ export const REACT_FRAGMENT_TYPE = hasSymbol
 export const REACT_STRICT_MODE_TYPE = hasSymbol
   ? Symbol.for('react.strict_mode')
   : 0xeacc;
+export const REACT_SMOOSH_MODE_TYPE = hasSymbol
+  ? Symbol.for('react.smoosh_mode')
+  : 0x736d;
 export const REACT_PROFILER_TYPE = hasSymbol
   ? Symbol.for('react.profiler')
   : 0xead2;

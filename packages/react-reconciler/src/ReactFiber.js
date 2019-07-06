@@ -64,12 +64,14 @@ import {
   ConcurrentMode,
   ProfileMode,
   StrictMode,
+  SmooshMode,
   BatchedMode,
 } from './ReactTypeOfMode';
 import {
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_STRICT_MODE_TYPE,
+  REACT_SMOOSH_MODE_TYPE,
   REACT_PROFILER_TYPE,
   REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
@@ -616,6 +618,10 @@ export function createFiberFromTypeAndProps(
       case REACT_STRICT_MODE_TYPE:
         fiberTag = Mode;
         mode |= StrictMode;
+        break;
+      case REACT_SMOOSH_MODE_TYPE:
+        fiberTag = Mode;
+        mode |= SmooshMode;
         break;
       case REACT_PROFILER_TYPE:
         return createFiberFromProfiler(pendingProps, mode, expirationTime, key);

@@ -1,5 +1,7 @@
 # [React](https://reactjs.org/) &middot; [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/facebook/react/blob/master/LICENSE) [![npm version](https://img.shields.io/npm/v/react.svg?style=flat)](https://www.npmjs.com/package/react) [![CircleCI Status](https://circleci.com/gh/facebook/react.svg?style=shield&circle-token=:circle-token)](https://circleci.com/gh/facebook/react) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://reactjs.org/docs/how-to-contribute.html#your-first-pull-request)
 
+## REACT SMOOSH DA DIV
+
 React is a JavaScript library for building user interfaces.
 
 * **Declarative:** React makes it painless to create interactive UIs. Design simple views for each state in your application, and React will efficiently update and render just the right components when your data changes. Declarative views make your code more predictable, simpler to understand, and easier to debug.
@@ -20,7 +22,7 @@ You can use React as a `<script>` tag from a [CDN](https://reactjs.org/docs/cdn-
 
 ## Documentation
 
-You can find the React documentation [on the website](https://reactjs.org/docs).  
+You can find the React documentation [on the website](https://reactjs.org/docs).
 
 Check out the [Getting Started](https://reactjs.org/docs/getting-started.html) page for a quick overview.
 

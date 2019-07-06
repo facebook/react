@@ -15,6 +15,7 @@ import {
   REACT_PROFILER_TYPE,
   REACT_PROVIDER_TYPE,
   REACT_STRICT_MODE_TYPE,
+  REACT_SMOOSH_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
   REACT_MEMO_TYPE,
@@ -26,6 +27,7 @@ export default function isValidElementType(type: mixed) {
   return (
     typeof type === 'string' ||
     typeof type === 'function' ||
+    type === REACT_SMOOSH_MODE_TYPE ||
     // Note: its typeof might be other than 'symbol' or 'number' if it's a polyfill.
     type === REACT_FRAGMENT_TYPE ||
     type === REACT_CONCURRENT_MODE_TYPE ||
