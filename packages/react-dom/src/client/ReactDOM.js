@@ -499,13 +499,13 @@ function legacyCreateRootFromDOMContainer(
   // First clear any existing content.
   if (!shouldHydrate) {
     let warned = false;
-    let rootSibling;
-    while ((rootSibling = container.lastChild)) {
+    let rootChild;
+    while ((rootChild = container.lastChild)) {
       if (__DEV__) {
         if (
           !warned &&
-          rootSibling.nodeType === ELEMENT_NODE &&
-          (rootSibling: any).hasAttribute(ROOT_ATTRIBUTE_NAME)
+          rootChild.nodeType === ELEMENT_NODE &&
+          (rootChild: any).hasAttribute(ROOT_ATTRIBUTE_NAME)
         ) {
           warned = true;
           warningWithoutStack(
@@ -516,7 +516,7 @@ function legacyCreateRootFromDOMContainer(
           );
         }
       }
-      container.removeChild(rootSibling);
+      container.removeChild(rootChild);
     }
   }
   if (__DEV__) {
