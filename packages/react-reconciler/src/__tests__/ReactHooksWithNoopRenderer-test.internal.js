@@ -1377,7 +1377,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       });
 
       act(() => {
-        // This update will trigger an errror
+        // This update will trigger an error
         ReactNoop.render(<Counter count={1} />, () =>
           Scheduler.unstable_yieldValue('Sync effect'),
         );
@@ -1427,7 +1427,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       });
 
       act(() => {
-        // This update will trigger an errror
+        // This update will trigger an error
         ReactNoop.render(<Counter count={1} />, () =>
           Scheduler.unstable_yieldValue('Sync effect'),
         );

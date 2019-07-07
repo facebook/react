@@ -304,7 +304,7 @@ describe('ReactIncremental', () => {
 
     ops = [];
 
-    // Render the high priority work (everying except the hidden trees).
+    // Render the high priority work (everything except the hidden trees).
     ReactNoop.flushSync(() => {
       ReactNoop.render(<Foo text="foo" />);
     });

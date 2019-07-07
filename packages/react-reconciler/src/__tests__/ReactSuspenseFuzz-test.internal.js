@@ -52,7 +52,7 @@ describe('ReactSuspenseFuzz', () => {
             const cleanUps = new Set();
             updates.forEach(({remountAfter}, i) => {
               const task = {
-                label: `Remount childen after ${remountAfter}ms`,
+                label: `Remount children after ${remountAfter}ms`,
               };
               const timeoutID = setTimeout(() => {
                 pendingTasks.delete(task);

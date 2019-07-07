@@ -65,7 +65,7 @@ export const NoPriority: ReactPriorityLevel = 90;
 
 export const shouldYield = Scheduler_shouldYield;
 export const requestPaint =
-  // Fall back gracefully if we're running an older verison of Scheduler.
+  // Fall back gracefully if we're running an older version of Scheduler.
   Scheduler_requestPaint !== undefined ? Scheduler_requestPaint : () => {};
 
 let syncQueue: Array<SchedulerCallback> | null = null;
