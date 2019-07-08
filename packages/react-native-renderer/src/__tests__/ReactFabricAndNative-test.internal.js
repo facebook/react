@@ -70,7 +70,7 @@ describe('ReactFabric', () => {
     expect(UIManager.dispatchViewManagerCommand).toHaveBeenCalledWith(
       expect.any(Number),
       'myCommand',
-      [10,20],
+      [10, 20],
     );
   });
 
