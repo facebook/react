@@ -696,7 +696,7 @@ const PressResponder: ReactDOMEventResponder = {
           // We set these here, before the button check so we have this
           // data around for handling of the context menu
           state.pointerType = pointerType;
-          const pressTarget = (state.pressTarget = event.currentTarget);
+          const pressTarget = (state.pressTarget = event.responderTarget);
           if (isPointerEvent) {
             state.activePointerId = pointerId;
           } else if (isTouchEvent) {

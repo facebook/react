@@ -252,7 +252,7 @@ const FocusResponder: ReactDOMEventResponder = {
         if (!state.isFocused) {
           // Limit focus events to the direct child of the event component.
           // Browser focus is not expected to bubble.
-          state.focusTarget = event.currentTarget;
+          state.focusTarget = event.responderTarget;
           if (state.focusTarget === target) {
             state.isFocused = true;
             state.isLocalFocusVisible = isGlobalFocusVisible;

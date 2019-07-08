@@ -24,12 +24,12 @@ export type PointerType =
   | 'trackpad';
 
 export type ReactDOMResponderEvent = {
-  currentTarget: null | Element | Document,
   nativeEvent: AnyNativeEvent,
   passive: boolean,
   passiveSupported: boolean,
   pointerId: null | number,
   pointerType: PointerType,
+  responderTarget: null | Element | Document,
   target: Element | Document,
   type: string,
 };
