@@ -119,9 +119,11 @@ const ReactFabric: ReactFabricType = {
   },
 
   dispatchCommand(handle: any, command: string, args: Array<any>) {
-    if (handle._nativeTag == null) {
+    const invalid = handle._nativeTag == null || handle._internalInstanceHandle == null;
+
+    if (invalid) {
       warningWithoutStack(
-        handle._nativeTag != null,
+        !invalid,
         "dispatchCommand was called with a ref that isn't a " +
           'native component. Use React.forwardRef to get access to the underlying native component',
       );
