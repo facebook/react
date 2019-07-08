@@ -44,6 +44,11 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
       rootTag: number,
       props: ?Object,
     ) => void,
+    dispatchViewManagerCommand: (
+      reactTag: number,
+      command: string,
+      args: Array<any>,
+    ) => void,
     manageChildren: (
       containerTag: number,
       moveFromIndices: Array<number>,
@@ -119,6 +124,8 @@ declare var nativeFabricUIManager: {
       payload: Object,
     ) => void,
   ) => void,
+
+  dispatchCommand: (node: Object, command: string, args: Array<any>) => void,
 
   measure: (node: Node, callback: MeasureOnSuccessCallback) => void,
   measureInWindow: (
