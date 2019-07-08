@@ -23,7 +23,6 @@ import type {
   ReactEventComponentInstance,
 } from 'shared/ReactTypes';
 import type {
-  ReactNativeEventResponderEventType,
   ReactNativeResponderContext,
   ReactNativeResponderEvent,
   EventPriority,
@@ -74,13 +73,11 @@ type EventQueue = {
 };
 
 type ReactNativeEventResponder = ReactEventResponder<
-  ReactNativeEventResponderEventType,
   ReactNativeResponderEvent,
   ReactNativeResponderContext,
 >;
 
 type ReactNativeEventComponentInstance = ReactEventComponentInstance<
-  ReactNativeEventResponderEventType,
   ReactNativeResponderEvent,
   ReactNativeResponderContext,
 >;
@@ -89,12 +86,8 @@ const {measureInWindow} = nativeFabricUIManager;
 
 const activeTimeouts: Map<number, ResponderTimeout> = new Map();
 const rootEventTypesToEventComponentInstances: Map<
-  ReactNativeEventResponderEventType | string,
+  string,
   Set<ReactNativeEventComponentInstance>,
-> = new Map();
-const targetEventTypeCached: Map<
-  Array<ReactNativeEventResponderEventType>,
-  Set<ReactNativeEventResponderEventType>,
 > = new Map();
 const ownershipChangeListeners: Set<
   ReactNativeEventComponentInstance,
@@ -214,9 +207,7 @@ const eventResponderContext: ReactNativeResponderContext = {
       });
     });
   },
-  addRootEventTypes(
-    rootEventTypes: Array<ReactNativeEventResponderEventType>,
-  ): void {
+  addRootEventTypes(rootEventTypes: Array<string>): void {
     validateResponderContext();
     for (let i = 0; i < rootEventTypes.length; i++) {
       const rootEventType = rootEventTypes[i];
@@ -224,9 +215,7 @@ const eventResponderContext: ReactNativeResponderContext = {
       registerRootEventType(rootEventType, eventComponentInstance);
     }
   },
-  removeRootEventTypes(
-    rootEventTypes: Array<ReactNativeEventResponderEventType>,
-  ): void {
+  removeRootEventTypes(rootEventTypes: Array<string>): void {
     validateResponderContext();
     for (let i = 0; i < rootEventTypes.length; i++) {
       const rootEventType = rootEventTypes[i];
@@ -330,7 +319,7 @@ function processTimers(
 }
 
 function createFabricResponderEvent(
-  topLevelType: ReactNativeEventResponderEventType,
+  topLevelType: string,
   nativeEvent: ReactFaricEvent,
   target: null | ReactNativeEventTarget,
 ): ReactNativeResponderEvent {
@@ -451,19 +440,18 @@ function processEvents(events: Array<EventObjectType>): void {
   }
 }
 
-function getFabricTargetEventTypesSet(
-  eventTypes: Array<ReactNativeEventResponderEventType>,
-): Set<ReactNativeEventResponderEventType> {
-  let cachedSet = targetEventTypeCached.get(eventTypes);
-
-  if (cachedSet === undefined) {
-    cachedSet = new Set();
-    for (let i = 0; i < eventTypes.length; i++) {
-      cachedSet.add(eventTypes[i]);
+// TODO this function is almost an exact copy of the DOM version, we should
+// somehow share the logic
+function responderEventTypesContainType(
+  eventTypes: Array<string>,
+  type: string,
+): boolean {
+  for (let i = 0, len = eventTypes.length; i < len; i++) {
+    if (eventTypes[i] === type) {
+      return true;
     }
-    targetEventTypeCached.set(eventTypes, cachedSet);
   }
-  return cachedSet;
+  return false;
 }
 
 // TODO this function is almost an exact copy of the DOM version, we should
@@ -499,7 +487,7 @@ function checkForLocalPropagationContinuation(
 // TODO this function is almost an exact copy of the DOM version, we should
 // somehow share the logic
 function handleTargetEventResponderInstance(
-  topLevelType: ReactNativeEventResponderEventType,
+  topLevelType: string,
   responderEvent: ReactNativeResponderEvent,
   eventComponentInstance: ReactNativeEventComponentInstance,
   hookComponentResponderValidation: null | Set<ReactNativeEventResponder>,
@@ -509,8 +497,7 @@ function handleTargetEventResponderInstance(
   const targetEventTypes = responder.targetEventTypes;
   // Validate the target event type exists on the responder
   if (targetEventTypes !== undefined) {
-    const targetEventTypesSet = getFabricTargetEventTypesSet(targetEventTypes);
-    if (targetEventTypesSet.has(topLevelType)) {
+    if (responderEventTypesContainType(targetEventTypes, topLevelType)) {
       if (hookComponentResponderValidation !== null) {
         hookComponentResponderValidation.add(responder);
       }
@@ -544,7 +531,7 @@ function handleTargetEventResponderInstance(
 // TODO this function is almost an exact copy of the DOM version, we should
 // somehow share the logic
 function traverseAndHandleEventResponderInstances(
-  topLevelType: ReactNativeEventResponderEventType,
+  topLevelType: string,
   targetFiber: null | Fiber,
   nativeEvent: ReactFaricEvent,
 ): void {
@@ -642,7 +629,7 @@ function traverseAndHandleEventResponderInstances(
 // TODO this function is almost an exact copy of the DOM version, we should
 // somehow share the logic
 export function dispatchEventForResponderEventSystem(
-  topLevelType: ReactNativeEventResponderEventType,
+  topLevelType: string,
   targetFiber: null | Fiber,
   nativeEvent: ReactFaricEvent,
 ): void {
@@ -745,7 +732,7 @@ export function unmountEventResponder(
 }
 
 function registerRootEventType(
-  rootEventType: ReactNativeEventResponderEventType,
+  rootEventType: string,
   eventComponentInstance: ReactNativeEventComponentInstance,
 ) {
   let rootEventComponentInstances = rootEventTypesToEventComponentInstances.get(
@@ -775,7 +762,7 @@ function registerRootEventType(
 
 export function addRootEventTypesForComponentInstance(
   eventComponentInstance: ReactNativeEventComponentInstance,
-  rootEventTypes: Array<ReactNativeEventResponderEventType>,
+  rootEventTypes: Array<string>,
 ): void {
   for (let i = 0; i < rootEventTypes.length; i++) {
     const rootEventType = rootEventTypes[i];

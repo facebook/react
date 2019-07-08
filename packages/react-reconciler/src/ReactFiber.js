@@ -103,7 +103,7 @@ if (__DEV__) {
 export type Dependencies = {
   expirationTime: ExpirationTime,
   firstContext: ContextDependency<mixed> | null,
-  events: Array<ReactEventComponentInstance<any, any, any>> | null,
+  events: Array<ReactEventComponentInstance<any, any>> | null,
 };
 
 // A Fiber is work on a Component that needs to be done or was done. There can

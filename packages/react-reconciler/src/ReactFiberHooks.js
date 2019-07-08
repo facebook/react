@@ -83,8 +83,8 @@ export type Dispatcher = {
     deps: Array<mixed> | void | null,
   ): void,
   useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void,
-  useEvent<T, E, C>(
-    eventComponent: ReactEventComponent<T, E, C>,
+  useEvent<E, C>(
+    eventComponent: ReactEventComponent<E, C>,
     props: Object,
   ): void,
 };
@@ -1416,7 +1416,7 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountDebugValue(value, formatterFn);
     },
-    useEvent<T, E, C>(eventComponent: ReactEventComponent<T, E, C>, props) {
+    useEvent<E, C>(eventComponent: ReactEventComponent<E, C>, props) {
       currentHookNameInDev = 'useEvent';
       mountHookTypesDev();
       updateEventComponentInstance(eventComponent, props);
@@ -1518,7 +1518,7 @@ if (__DEV__) {
       updateHookTypesDev();
       return mountDebugValue(value, formatterFn);
     },
-    useEvent<T, E, C>(eventComponent: ReactEventComponent<T, E, C>, props) {
+    useEvent<E, C>(eventComponent: ReactEventComponent<E, C>, props) {
       currentHookNameInDev = 'useEvent';
       updateHookTypesDev();
       updateEventComponentInstance(eventComponent, props);
@@ -1620,7 +1620,7 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
     },
-    useEvent<T, E, C>(eventComponent: ReactEventComponent<T, E, C>, props) {
+    useEvent<E, C>(eventComponent: ReactEventComponent<E, C>, props) {
       currentHookNameInDev = 'useEvent';
       updateHookTypesDev();
       updateEventComponentInstance(eventComponent, props);
@@ -1733,7 +1733,7 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountDebugValue(value, formatterFn);
     },
-    useEvent<T, E, C>(eventComponent: ReactEventComponent<T, E, C>, props) {
+    useEvent<E, C>(eventComponent: ReactEventComponent<E, C>, props) {
       currentHookNameInDev = 'useEvent';
       warnInvalidHookAccess();
       mountHookTypesDev();
@@ -1847,7 +1847,7 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
     },
-    useEvent<T, E, C>(eventComponent: ReactEventComponent<T, E, C>, props) {
+    useEvent<E, C>(eventComponent: ReactEventComponent<E, C>, props) {
       currentHookNameInDev = 'useEvent';
       warnInvalidHookAccess();
       updateHookTypesDev();

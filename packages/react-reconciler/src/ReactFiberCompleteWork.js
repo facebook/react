@@ -1126,7 +1126,6 @@ function completeWork(
         let eventComponentInstance: ReactEventComponentInstance<
           any,
           any,
-          any,
         > | null =
           workInProgress.stateNode;
 

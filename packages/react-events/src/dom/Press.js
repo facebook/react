@@ -123,12 +123,12 @@ const DEFAULT_PRESS_RETENTION_OFFSET = {
 };
 
 const targetEventTypes = [
-  {name: 'keydown', passive: false},
-  {name: 'contextmenu', passive: false},
+  'keydown_active',
+  'contextmenu_active',
   // We need to preventDefault on pointerdown for mouse/pen events
   // that are in hit target area but not the element area.
-  {name: 'pointerdown', passive: false},
-  {name: 'click', passive: false},
+  'pointerdown_active',
+  'click_active',
 ];
 const rootEventTypes = [
   'click',
@@ -139,7 +139,7 @@ const rootEventTypes = [
   'pointercancel',
   // We listen to this here so stopPropagation can
   // block other mouseup events used internally
-  {name: 'mouseup', passive: false},
+  'mouseup_active',
   'touchend',
 ];
 
