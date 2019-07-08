@@ -28,6 +28,7 @@ export type PointerType =
   | 'trackpad';
 
 export type ReactDOMResponderEvent = {
+  currentTarget: null | Element | Document,
   nativeEvent: AnyNativeEvent,
   passive: boolean,
   passiveSupported: boolean,
@@ -75,7 +76,6 @@ export type ReactDOMResponderContext = {
   getFocusableElementsInScope(): Array<HTMLElement>,
   getActiveDocument(): Document,
   objectAssign: Function,
-  getEventCurrentTarget(event: ReactDOMResponderEvent): Element,
   getTimeStamp: () => number,
   isTargetWithinHostComponent: (
     target: Element | Document,

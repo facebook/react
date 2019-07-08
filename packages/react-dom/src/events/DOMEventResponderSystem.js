@@ -372,29 +372,6 @@ const eventResponderContext: ReactDOMResponderContext = {
   },
   getActiveDocument,
   objectAssign: Object.assign,
-  getEventCurrentTarget(event: ReactDOMResponderEvent): Element {
-    validateResponderContext();
-    const target = event.target;
-    let fiber = getClosestInstanceFromNode(target);
-    let hostComponent = target;
-    const currentResponder = ((currentInstance: any): ReactDOMEventComponentInstance)
-      .responder;
-
-    while (fiber !== null) {
-      const stateNode = fiber.stateNode;
-      if (
-        fiber.tag === EventComponent &&
-        (stateNode === null || stateNode.responder === currentResponder)
-      ) {
-        break;
-      }
-      if (fiber.tag === HostComponent) {
-        hostComponent = fiber.stateNode;
-      }
-      fiber = fiber.return;
-    }
-    return ((hostComponent: any): Element);
-  },
   getTimeStamp(): number {
     validateResponderContext();
     return currentTimeStamp;
@@ -553,6 +530,7 @@ function createDOMResponderEvent(
   }
 
   return {
+    currentTarget: nativeEventTarget,
     nativeEvent: nativeEvent,
     passive,
     passiveSupported,
@@ -650,11 +628,12 @@ function getDOMTargetEventTypesSet(
   return cachedSet;
 }
 
-function storeTargetEventResponderInstance(
+function handleTargetEventResponderInstance(
   listeningName: string,
+  responderEvent: ReactDOMResponderEvent,
   eventComponentInstance: ReactDOMEventComponentInstance,
-  eventResponderInstances: Array<ReactDOMEventComponentInstance>,
-  eventComponentResponders: null | Set<ReactDOMEventResponder>,
+  hookComponentResponderValidation: null | Set<ReactDOMEventResponder>,
+  propagatedEventResponders: null | Set<ReactDOMEventResponder>,
 ): void {
   const responder = eventComponentInstance.responder;
   const targetEventTypes = responder.targetEventTypes;
@@ -662,74 +641,34 @@ function storeTargetEventResponderInstance(
   if (targetEventTypes !== undefined) {
     const targetEventTypesSet = getDOMTargetEventTypesSet(targetEventTypes);
     if (targetEventTypesSet.has(listeningName)) {
-      eventResponderInstances.push(eventComponentInstance);
-      if (eventComponentResponders !== null) {
-        eventComponentResponders.add(responder);
+      if (hookComponentResponderValidation !== null) {
+        hookComponentResponderValidation.add(responder);
       }
-    }
-  }
-}
-
-function getTargetEventResponderInstances(
-  listeningName: string,
-  targetFiber: null | Fiber,
-): Array<ReactDOMEventComponentInstance> {
-  // We use this to know if we should check add hooks. If there are
-  // no event targets, then we don't add the hook forms.
-  const eventComponentResponders = new Set();
-  const eventResponderInstances = [];
-  let node = targetFiber;
-  while (node !== null) {
-    // Traverse up the fiber tree till we find event component fibers.
-    const tag = node.tag;
-    const dependencies = node.dependencies;
-    if (tag === EventComponent) {
-      const eventComponentInstance = node.stateNode;
-      // Switch to the current fiber tree
-      node = eventComponentInstance.currentFiber;
-      storeTargetEventResponderInstance(
-        listeningName,
-        eventComponentInstance,
-        eventResponderInstances,
-        eventComponentResponders,
-      );
-    } else if (tag === FunctionComponent && dependencies !== null) {
-      const events = dependencies.events;
-      if (events !== null) {
-        for (let i = 0; i < events.length; i++) {
-          const eventComponentInstance = events[i];
-          if (eventComponentResponders.has(eventComponentInstance.responder)) {
-            storeTargetEventResponderInstance(
-              listeningName,
-              eventComponentInstance,
-              eventResponderInstances,
-              null,
-            );
-          }
+      const {isHook, props, state} = eventComponentInstance;
+      const onEvent = responder.onEvent;
+      if (onEvent !== undefined) {
+        if (
+          shouldSkipEventComponent(
+            eventComponentInstance,
+            ((responder: any): ReactDOMEventResponder),
+            propagatedEventResponders,
+            isHook,
+          )
+        ) {
+          return;
+        }
+        currentInstance = eventComponentInstance;
+        currentlyInHook = isHook;
+        onEvent(responderEvent, eventResponderContext, props, state);
+        if (!isHook) {
+          checkForLocalPropagationContinuation(
+            responder,
+            ((propagatedEventResponders: any): Set<ReactDOMEventResponder>),
+          );
         }
       }
     }
-    node = node.return;
   }
-  return eventResponderInstances;
-}
-
-function getRootEventResponderInstances(
-  listeningName: string,
-): Array<ReactDOMEventComponentInstance> {
-  const eventResponderInstances = [];
-  const rootEventInstances = rootEventTypesToEventComponentInstances.get(
-    listeningName,
-  );
-  if (rootEventInstances !== undefined) {
-    const rootEventComponentInstances = Array.from(rootEventInstances);
-
-    for (let i = 0; i < rootEventComponentInstances.length; i++) {
-      const rootEventComponentInstance = rootEventComponentInstances[i];
-      eventResponderInstances.push(rootEventComponentInstance);
-    }
-  }
-  return eventResponderInstances;
 }
 
 function shouldSkipEventComponent(
@@ -778,10 +717,6 @@ function traverseAndHandleEventResponderInstances(
   // - Bubble target phase
   // - Root phase
 
-  const targetEventResponderInstances = getTargetEventResponderInstances(
-    listeningName,
-    targetFiber,
-  );
   const responderEvent = createDOMResponderEvent(
     ((topLevelType: any): string),
     nativeEvent,
@@ -790,57 +725,70 @@ function traverseAndHandleEventResponderInstances(
     isPassiveSupported,
   );
   const propagatedEventResponders: Set<ReactDOMEventResponder> = new Set();
-  let length = targetEventResponderInstances.length;
-  let i;
+
+  // We use this to know if we should check add hooks. If there are
+  // no event targets, then we don't add the hook forms.
+  const hookComponentResponderValidation = new Set();
 
   // Bubbled event phases have the notion of local propagation.
   // This means that the propgation chain can be stopped part of the the way
-  // through processing event component instances. The major difference to other
-  // events systems is that the stopping of propagation is localized to a single
-  // phase, rather than both phases.
-  if (length > 0) {
-    // Bubble target phase
-    for (i = 0; i < length; i++) {
-      const targetEventResponderInstance = targetEventResponderInstances[i];
-      const {isHook, props, responder, state} = targetEventResponderInstance;
-      const eventListener = responder.onEvent;
-      if (eventListener !== undefined) {
-        if (
-          shouldSkipEventComponent(
-            targetEventResponderInstance,
-            ((responder: any): ReactDOMEventResponder),
-            propagatedEventResponders,
-            isHook,
-          )
-        ) {
-          continue;
-        }
-        currentInstance = targetEventResponderInstance;
-        currentlyInHook = isHook;
-        eventListener(responderEvent, eventResponderContext, props, state);
-        if (!isHook) {
-          checkForLocalPropagationContinuation(
-            responder,
-            propagatedEventResponders,
-          );
+  // through processing event component instances.
+  let node = targetFiber;
+  while (node !== null) {
+    const {dependencies, stateNode, tag} = node;
+    if (tag === HostComponent) {
+      responderEvent.currentTarget = stateNode;
+    } else if (tag === EventComponent) {
+      const eventComponentInstance = stateNode;
+      // Switch to the current fiber tree
+      node = eventComponentInstance.currentFiber;
+      handleTargetEventResponderInstance(
+        listeningName,
+        responderEvent,
+        eventComponentInstance,
+        hookComponentResponderValidation,
+        propagatedEventResponders,
+      );
+    } else if (tag === FunctionComponent && dependencies !== null) {
+      const events = dependencies.events;
+      if (events !== null) {
+        for (let i = 0; i < events.length; i++) {
+          const eventComponentInstance = events[i];
+          if (
+            hookComponentResponderValidation.has(
+              eventComponentInstance.responder,
+            )
+          ) {
+            handleTargetEventResponderInstance(
+              listeningName,
+              responderEvent,
+              eventComponentInstance,
+              null,
+              null,
+            );
+          }
         }
       }
     }
+    node = node.return;
   }
+  // Reset currentTarget to be null
+  responderEvent.currentTarget = null;
   // Root phase
-  const rootEventResponderInstances = getRootEventResponderInstances(
+  const rootEventInstances = rootEventTypesToEventComponentInstances.get(
     listeningName,
   );
-  length = rootEventResponderInstances.length;
-  if (length > 0) {
-    for (i = 0; i < length; i++) {
-      const rootEventResponderInstance = rootEventResponderInstances[i];
-      const {isHook, props, responder, state} = rootEventResponderInstance;
-      const eventListener = responder.onRootEvent;
-      if (eventListener !== undefined) {
+  if (rootEventInstances !== undefined) {
+    const rootEventComponentInstances = Array.from(rootEventInstances);
+
+    for (let i = 0; i < rootEventComponentInstances.length; i++) {
+      const rootEventComponentInstance = rootEventComponentInstances[i];
+      const {isHook, props, responder, state} = rootEventComponentInstance;
+      const onRootEvent = responder.onRootEvent;
+      if (onRootEvent !== undefined) {
         if (
           shouldSkipEventComponent(
-            rootEventResponderInstance,
+            rootEventComponentInstance,
             responder,
             null,
             isHook,
@@ -848,9 +796,9 @@ function traverseAndHandleEventResponderInstances(
         ) {
           continue;
         }
-        currentInstance = rootEventResponderInstance;
+        currentInstance = rootEventComponentInstance;
         currentlyInHook = isHook;
-        eventListener(responderEvent, eventResponderContext, props, state);
+        onRootEvent(responderEvent, eventResponderContext, props, state);
       }
     }
   }
