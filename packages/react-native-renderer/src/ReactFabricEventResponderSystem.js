@@ -7,7 +7,11 @@
  * @flow
  */
 
-import {EventComponent, HostComponent} from 'shared/ReactWorkTags';
+import {
+  EventComponent,
+  HostComponent,
+  FunctionComponent,
+} from 'shared/ReactWorkTags';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import {
   batchedEventUpdates,
@@ -19,7 +23,6 @@ import type {
   ReactEventComponentInstance,
 } from 'shared/ReactTypes';
 import type {
-  ReactNativeEventResponderEventType,
   ReactNativeResponderContext,
   ReactNativeResponderEvent,
   EventPriority,
@@ -70,13 +73,11 @@ type EventQueue = {
 };
 
 type ReactNativeEventResponder = ReactEventResponder<
-  ReactNativeEventResponderEventType,
   ReactNativeResponderEvent,
   ReactNativeResponderContext,
 >;
 
 type ReactNativeEventComponentInstance = ReactEventComponentInstance<
-  ReactNativeEventResponderEventType,
   ReactNativeResponderEvent,
   ReactNativeResponderContext,
 >;
@@ -85,12 +86,8 @@ const {measureInWindow} = nativeFabricUIManager;
 
 const activeTimeouts: Map<number, ResponderTimeout> = new Map();
 const rootEventTypesToEventComponentInstances: Map<
-  ReactNativeEventResponderEventType | string,
+  string,
   Set<ReactNativeEventComponentInstance>,
-> = new Map();
-const targetEventTypeCached: Map<
-  Array<ReactNativeEventResponderEventType>,
-  Set<ReactNativeEventResponderEventType>,
 > = new Map();
 const ownershipChangeListeners: Set<
   ReactNativeEventComponentInstance,
@@ -192,31 +189,6 @@ const eventResponderContext: ReactNativeResponderContext = {
     }
     return false;
   },
-  getEventCurrentTarget(
-    event: ReactNativeResponderEvent,
-  ): ReactNativeEventTarget {
-    validateResponderContext();
-    const target = event.target;
-    let fiber = getFiberFromTarget(target);
-    let hostComponent = target;
-    const currentResponder = ((currentInstance: any): ReactNativeEventComponentInstance)
-      .responder;
-
-    while (fiber !== null) {
-      const stateNode = fiber.stateNode;
-      if (
-        fiber.tag === EventComponent &&
-        (stateNode === null || stateNode.responder === currentResponder)
-      ) {
-        break;
-      }
-      if (fiber.tag === HostComponent) {
-        hostComponent = fiber.stateNode;
-      }
-      fiber = fiber.return;
-    }
-    return ((hostComponent: any): ReactNativeEventTarget);
-  },
   getTargetBoundingRect(
     target: ReactNativeEventTarget,
     callback: ({
@@ -235,9 +207,7 @@ const eventResponderContext: ReactNativeResponderContext = {
       });
     });
   },
-  addRootEventTypes(
-    rootEventTypes: Array<ReactNativeEventResponderEventType>,
-  ): void {
+  addRootEventTypes(rootEventTypes: Array<string>): void {
     validateResponderContext();
     for (let i = 0; i < rootEventTypes.length; i++) {
       const rootEventType = rootEventTypes[i];
@@ -245,9 +215,7 @@ const eventResponderContext: ReactNativeResponderContext = {
       registerRootEventType(rootEventType, eventComponentInstance);
     }
   },
-  removeRootEventTypes(
-    rootEventTypes: Array<ReactNativeEventResponderEventType>,
-  ): void {
+  removeRootEventTypes(rootEventTypes: Array<string>): void {
     validateResponderContext();
     for (let i = 0; i < rootEventTypes.length; i++) {
       const rootEventType = rootEventTypes[i];
@@ -320,7 +288,7 @@ function getFiberFromTarget(
   if (target === null) {
     return null;
   }
-  return ((target.canonical._internalInstanceHandle: any): Fiber);
+  return ((target.canonical._internalInstanceHandle: any): Fiber) || null;
 }
 
 function processTimers(
@@ -351,19 +319,16 @@ function processTimers(
 }
 
 function createFabricResponderEvent(
-  topLevelType: ReactNativeEventResponderEventType,
+  topLevelType: string,
   nativeEvent: ReactFaricEvent,
   target: null | ReactNativeEventTarget,
 ): ReactNativeResponderEvent {
-  const responderEvent = {
+  return {
+    currentTarget: target,
     nativeEvent,
     target,
     type: topLevelType,
   };
-  if (__DEV__) {
-    Object.freeze(responderEvent);
-  }
-  return responderEvent;
 }
 
 function validateResponderContext(): void {
@@ -475,48 +440,18 @@ function processEvents(events: Array<EventObjectType>): void {
   }
 }
 
-function getFabricTargetEventTypesSet(
-  eventTypes: Array<ReactNativeEventResponderEventType>,
-): Set<ReactNativeEventResponderEventType> {
-  let cachedSet = targetEventTypeCached.get(eventTypes);
-
-  if (cachedSet === undefined) {
-    cachedSet = new Set();
-    for (let i = 0; i < eventTypes.length; i++) {
-      cachedSet.add(eventTypes[i]);
-    }
-    targetEventTypeCached.set(eventTypes, cachedSet);
-  }
-  return cachedSet;
-}
-
 // TODO this function is almost an exact copy of the DOM version, we should
 // somehow share the logic
-function getTargetEventResponderInstances(
-  topLevelType: ReactNativeEventResponderEventType,
-  targetFiber: null | Fiber,
-): Array<ReactNativeEventComponentInstance> {
-  const eventResponderInstances = [];
-  let node = targetFiber;
-  while (node !== null) {
-    // Traverse up the fiber tree till we find event component fibers.
-    if (node.tag === EventComponent) {
-      const eventComponentInstance = node.stateNode;
-      const responder = eventComponentInstance.responder;
-      const targetEventTypes = responder.targetEventTypes;
-      // Validate the target event type exists on the responder
-      if (targetEventTypes !== undefined) {
-        const targetEventTypesSet = getFabricTargetEventTypesSet(
-          targetEventTypes,
-        );
-        if (targetEventTypesSet.has(topLevelType)) {
-          eventResponderInstances.push(eventComponentInstance);
-        }
-      }
+function responderEventTypesContainType(
+  eventTypes: Array<string>,
+  type: string,
+): boolean {
+  for (let i = 0, len = eventTypes.length; i < len; i++) {
+    if (eventTypes[i] === type) {
+      return true;
     }
-    node = node.return;
   }
-  return eventResponderInstances;
+  return false;
 }
 
 // TODO this function is almost an exact copy of the DOM version, we should
@@ -551,40 +486,59 @@ function checkForLocalPropagationContinuation(
 
 // TODO this function is almost an exact copy of the DOM version, we should
 // somehow share the logic
-function getRootEventResponderInstances(
+function handleTargetEventResponderInstance(
   topLevelType: string,
-): Array<ReactNativeEventComponentInstance> {
-  const eventResponderInstances = [];
-  const rootEventInstances = rootEventTypesToEventComponentInstances.get(
-    topLevelType,
-  );
-  if (rootEventInstances !== undefined) {
-    const rootEventComponentInstances = Array.from(rootEventInstances);
-
-    for (let i = 0; i < rootEventComponentInstances.length; i++) {
-      const rootEventComponentInstance = rootEventComponentInstances[i];
-      eventResponderInstances.push(rootEventComponentInstance);
+  responderEvent: ReactNativeResponderEvent,
+  eventComponentInstance: ReactNativeEventComponentInstance,
+  hookComponentResponderValidation: null | Set<ReactNativeEventResponder>,
+  propagatedEventResponders: null | Set<ReactNativeEventResponder>,
+): void {
+  const responder = eventComponentInstance.responder;
+  const targetEventTypes = responder.targetEventTypes;
+  // Validate the target event type exists on the responder
+  if (targetEventTypes !== undefined) {
+    if (responderEventTypesContainType(targetEventTypes, topLevelType)) {
+      if (hookComponentResponderValidation !== null) {
+        hookComponentResponderValidation.add(responder);
+      }
+      const {isHook, props, state} = eventComponentInstance;
+      const eventListener = responder.onEvent;
+      if (eventListener !== undefined) {
+        if (
+          shouldSkipEventComponent(
+            eventComponentInstance,
+            ((responder: any): ReactNativeEventResponder),
+            propagatedEventResponders,
+            isHook,
+          )
+        ) {
+          return;
+        }
+        currentInstance = eventComponentInstance;
+        currentlyInHook = isHook;
+        eventListener(responderEvent, eventResponderContext, props, state);
+        if (!isHook) {
+          checkForLocalPropagationContinuation(
+            responder,
+            ((propagatedEventResponders: any): Set<ReactNativeEventResponder>),
+          );
+        }
+      }
     }
   }
-  return eventResponderInstances;
 }
 
 // TODO this function is almost an exact copy of the DOM version, we should
 // somehow share the logic
 function traverseAndHandleEventResponderInstances(
-  topLevelType: ReactNativeEventResponderEventType,
+  topLevelType: string,
   targetFiber: null | Fiber,
   nativeEvent: ReactFaricEvent,
 ): void {
   // Trigger event responders in this order:
-  // - Capture target phase
   // - Bubble target phase
   // - Root phase
 
-  const targetEventResponderInstances = getTargetEventResponderInstances(
-    topLevelType,
-    targetFiber,
-  );
   const responderEvent = createFabricResponderEvent(
     topLevelType,
     nativeEvent,
@@ -593,88 +547,70 @@ function traverseAndHandleEventResponderInstances(
       : null,
   );
   const propagatedEventResponders: Set<ReactNativeEventResponder> = new Set();
-  let length = targetEventResponderInstances.length;
-  let i;
 
-  // Captured and bubbled event phases have the notion of local propagation.
+  // We use this to know if we should check add hooks. If there are
+  // no event targets, then we don't add the hook forms.
+  const hookComponentResponderValidation = new Set();
+
+  // Bubbled event phases have the notion of local propagation.
   // This means that the propgation chain can be stopped part of the the way
-  // through processing event component instances. The major difference to other
-  // events systems is that the stopping of propgation is localized to a single
-  // phase, rather than both phases.
-  if (length > 0) {
-    // Capture target phase
-    for (i = length; i-- > 0; ) {
-      const targetEventResponderInstance = targetEventResponderInstances[i];
-      const {isHook, responder, props, state} = targetEventResponderInstance;
-      const eventListener = ((responder: any): ReactNativeEventResponder)
-        .onEventCapture;
-      if (eventListener !== undefined) {
-        if (
-          shouldSkipEventComponent(
-            targetEventResponderInstance,
-            ((responder: any): ReactNativeEventResponder),
-            propagatedEventResponders,
-            isHook,
-          )
-        ) {
-          continue;
-        }
-        currentInstance = targetEventResponderInstance;
-        currentlyInHook = isHook;
-        eventListener(responderEvent, eventResponderContext, props, state);
-        if (!isHook) {
-          checkForLocalPropagationContinuation(
-            ((responder: any): ReactNativeEventResponder),
-            propagatedEventResponders,
-          );
-        }
-      }
-    }
-    // We clean propagated event responders between phases.
-    propagatedEventResponders.clear();
-    // Bubble target phase
-    for (i = 0; i < length; i++) {
-      const targetEventResponderInstance = targetEventResponderInstances[i];
-      const {isHook, responder, props, state} = targetEventResponderInstance;
-      const eventListener = ((responder: any): ReactNativeEventResponder)
-        .onEvent;
-      if (eventListener !== undefined) {
-        if (
-          shouldSkipEventComponent(
-            targetEventResponderInstance,
-            ((responder: any): ReactNativeEventResponder),
-            propagatedEventResponders,
-            isHook,
-          )
-        ) {
-          continue;
-        }
-        currentInstance = targetEventResponderInstance;
-        currentlyInHook = isHook;
-        eventListener(responderEvent, eventResponderContext, props, state);
-        if (!isHook) {
-          checkForLocalPropagationContinuation(
-            ((responder: any): ReactNativeEventResponder),
-            propagatedEventResponders,
-          );
+  // through processing event component instances.
+  let node = targetFiber;
+  while (node !== null) {
+    const {dependencies, stateNode, tag} = node;
+    if (tag === HostComponent) {
+      responderEvent.currentTarget = stateNode;
+    } else if (tag === EventComponent) {
+      const eventComponentInstance = stateNode;
+      // Switch to the current fiber tree
+      node = eventComponentInstance.currentFiber;
+      handleTargetEventResponderInstance(
+        topLevelType,
+        responderEvent,
+        eventComponentInstance,
+        hookComponentResponderValidation,
+        propagatedEventResponders,
+      );
+    } else if (tag === FunctionComponent && dependencies !== null) {
+      const events = dependencies.events;
+      if (events !== null) {
+        for (let i = 0; i < events.length; i++) {
+          const eventComponentInstance = events[i];
+          if (
+            hookComponentResponderValidation.has(
+              eventComponentInstance.responder,
+            )
+          ) {
+            handleTargetEventResponderInstance(
+              topLevelType,
+              responderEvent,
+              eventComponentInstance,
+              null,
+              null,
+            );
+          }
         }
       }
     }
+    node = node.return;
   }
+  // Reset currentTarget to be null
+  responderEvent.currentTarget = null;
   // Root phase
-  const rootEventResponderInstances = getRootEventResponderInstances(
+  const rootEventInstances = rootEventTypesToEventComponentInstances.get(
     topLevelType,
   );
-  length = rootEventResponderInstances.length;
-  if (length > 0) {
-    for (i = 0; i < length; i++) {
-      const rootEventResponderInstance = rootEventResponderInstances[i];
-      const {isHook, props, responder, state} = rootEventResponderInstance;
-      const eventListener = responder.onRootEvent;
-      if (eventListener !== undefined) {
+  if (rootEventInstances !== undefined) {
+    const rootEventComponentInstances = Array.from(rootEventInstances);
+
+    for (let i = 0; i < rootEventComponentInstances.length; i++) {
+      const rootEventComponentInstance = rootEventComponentInstances[i];
+      const {isHook, props, responder, state} = rootEventComponentInstance;
+      const onRootEvent = responder.onRootEvent;
+      if (onRootEvent !== undefined) {
         if (
           shouldSkipEventComponent(
-            rootEventResponderInstance,
+            rootEventComponentInstance,
             responder,
             null,
             isHook,
@@ -682,9 +618,9 @@ function traverseAndHandleEventResponderInstances(
         ) {
           continue;
         }
-        currentInstance = rootEventResponderInstance;
+        currentInstance = rootEventComponentInstance;
         currentlyInHook = isHook;
-        eventListener(responderEvent, eventResponderContext, props, state);
+        onRootEvent(responderEvent, eventResponderContext, props, state);
       }
     }
   }
@@ -693,7 +629,7 @@ function traverseAndHandleEventResponderInstances(
 // TODO this function is almost an exact copy of the DOM version, we should
 // somehow share the logic
 export function dispatchEventForResponderEventSystem(
-  topLevelType: ReactNativeEventResponderEventType,
+  topLevelType: string,
   targetFiber: null | Fiber,
   nativeEvent: ReactFaricEvent,
 ): void {
@@ -796,7 +732,7 @@ export function unmountEventResponder(
 }
 
 function registerRootEventType(
-  rootEventType: ReactNativeEventResponderEventType,
+  rootEventType: string,
   eventComponentInstance: ReactNativeEventComponentInstance,
 ) {
   let rootEventComponentInstances = rootEventTypesToEventComponentInstances.get(
@@ -826,7 +762,7 @@ function registerRootEventType(
 
 export function addRootEventTypesForComponentInstance(
   eventComponentInstance: ReactNativeEventComponentInstance,
-  rootEventTypes: Array<ReactNativeEventResponderEventType>,
+  rootEventTypes: Array<string>,
 ): void {
   for (let i = 0; i < rootEventTypes.length; i++) {
     const rootEventType = rootEventTypes[i];

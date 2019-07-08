@@ -13,7 +13,6 @@ import type {
   MeasureOnSuccessCallback,
   NativeMethodsMixinType,
   ReactNativeBaseComponentViewConfig,
-  ReactNativeEventResponderEventType,
   ReactNativeResponderEvent,
   ReactNativeResponderContext,
 } from './ReactNativeTypes';
@@ -66,7 +65,6 @@ const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 let nextReactTag = 2;
 
 type ReactNativeEventComponentInstance = ReactEventComponentInstance<
-  ReactNativeEventResponderEventType,
   ReactNativeResponderEvent,
   ReactNativeResponderContext,
 >;

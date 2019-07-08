@@ -57,11 +57,6 @@ The initial state of that the Event Component is created with.
 Called during the bubble phase of the `targetEventTypes` dispatched on DOM
 elements within the Event Component.
 
-### onEventCapture?: (event: ResponderEvent, context: ResponderContext, props, state)
-
-Called during the capture phase of the `targetEventTypes` dispatched on DOM
-elements within the Event Component.
-
 ### onMount?: (context: ResponderContext, props, state)
 
 Called after an Event Component in mounted.

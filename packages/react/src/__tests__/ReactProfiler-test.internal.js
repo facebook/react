@@ -2628,7 +2628,7 @@ describe('Profiler', () => {
       });
 
       it('handles high-pri renderers between suspended and resolved (async) trees', async () => {
-        // Set up an initial shell. We need to set this up before the test sceanrio
+        // Set up an initial shell. We need to set this up before the test scenario
         // because we want initial render to suspend on navigation to the initial state.
         let renderer = ReactTestRenderer.create(
           <React.Profiler id="app" onRender={() => {}}>

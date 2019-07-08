@@ -103,7 +103,7 @@ if (__DEV__) {
 export type Dependencies = {
   expirationTime: ExpirationTime,
   firstContext: ContextDependency<mixed> | null,
-  events: Array<ReactEventComponentInstance<any, any, any>> | null,
+  events: Array<ReactEventComponentInstance<any, any>> | null,
 };
 
 // A Fiber is work on a Component that needs to be done or was done. There can
@@ -217,7 +217,7 @@ export type Fiber = {|
   // This field is only set when the enableProfilerTimer flag is enabled.
   selfBaseDuration?: number,
 
-  // Sum of base times for all descedents of this Fiber.
+  // Sum of base times for all descendants of this Fiber.
   // This value bubbles up during the "complete" phase.
   // This field is only set when the enableProfilerTimer flag is enabled.
   treeBaseDuration?: number,
