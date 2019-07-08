@@ -119,7 +119,8 @@ const ReactFabric: ReactFabricType = {
   },
 
   dispatchCommand(handle: any, command: string, args: Array<any>) {
-    const invalid = handle._nativeTag == null || handle._internalInstanceHandle == null;
+    const invalid =
+      handle._nativeTag == null || handle._internalInstanceHandle == null;
 
     if (invalid) {
       warningWithoutStack(
