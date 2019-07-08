@@ -9,7 +9,6 @@
 
 import type {
   ReactNativeBaseComponentViewConfig,
-  ReactNativeEventResponderEventType,
   ReactNativeResponderEvent,
   ReactNativeResponderContext,
 } from './ReactNativeTypes';
@@ -35,7 +34,6 @@ import ReactNativeFiberHostComponent from './ReactNativeFiberHostComponent';
 const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 
 type ReactNativeEventComponentInstance = ReactEventComponentInstance<
-  ReactNativeEventResponderEventType,
   ReactNativeResponderEvent,
   ReactNativeResponderContext,
 >;

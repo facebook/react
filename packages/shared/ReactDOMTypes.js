@@ -15,10 +15,6 @@ import type {
 
 type AnyNativeEvent = Event | KeyboardEvent | MouseEvent | Touch;
 
-export type ReactDOMEventResponderEventType =
-  | string
-  | {name: string, passive?: boolean};
-
 export type PointerType =
   | ''
   | 'mouse'
@@ -39,13 +35,11 @@ export type ReactDOMResponderEvent = {
 };
 
 export type ReactDOMEventResponder = ReactEventResponder<
-  ReactDOMEventResponderEventType,
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
 >;
 
 export type ReactDOMEventComponentInstance = ReactEventComponentInstance<
-  ReactDOMEventResponderEventType,
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
 >;
@@ -62,12 +56,8 @@ export type ReactDOMResponderContext = {
   ) => boolean,
   isTargetWithinEventComponent: (Element | Document) => boolean,
   isTargetWithinEventResponderScope: (Element | Document) => boolean,
-  addRootEventTypes: (
-    rootEventTypes: Array<ReactDOMEventResponderEventType>,
-  ) => void,
-  removeRootEventTypes: (
-    rootEventTypes: Array<ReactDOMEventResponderEventType>,
-  ) => void,
+  addRootEventTypes: (rootEventTypes: Array<string>) => void,
+  removeRootEventTypes: (rootEventTypes: Array<string>) => void,
   hasOwnership: () => boolean,
   requestGlobalOwnership: () => boolean,
   releaseOwnership: () => boolean,

@@ -28,9 +28,9 @@ if (__DEV__) {
   }
 }
 
-export default function createEventComponent<T, E, C>(
-  responder: ReactEventResponder<T, E, C>,
-): ReactEventComponent<T, E, C> {
+export default function createEventComponent<E, C>(
+  responder: ReactEventResponder<E, C>,
+): ReactEventComponent<E, C> {
   // We use responder as a Map key later on. When we have a bad
   // polyfill, then we can't use it as a key as the polyfill tries
   // to add a property to the object.

@@ -46,10 +46,7 @@ const isMac =
     ? /^Mac/.test(window.navigator.platform)
     : false;
 
-const targetEventTypes = [
-  {name: 'focus', passive: true},
-  {name: 'blur', passive: true},
-];
+const targetEventTypes = ['focus', 'blur'];
 
 const rootEventTypes = [
   'keydown',

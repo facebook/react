@@ -13,12 +13,9 @@ import {registrationNameModules} from 'events/EventPluginRegistry';
 import warning from 'shared/warning';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import type {ReactDOMEventResponderEventType} from 'shared/ReactDOMTypes';
+import endsWith from 'shared/endsWith';
 import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
-import {
-  setListenToResponderEventTypes,
-  generateListeningKey,
-} from '../events/DOMEventResponderSystem';
+import {setListenToResponderEventTypes} from '../events/DOMEventResponderSystem';
 
 import {
   getValueForAttribute,
@@ -1284,7 +1281,7 @@ export function restoreControlledState(
 }
 
 export function listenToEventResponderEventTypes(
-  eventTypes: Array<ReactDOMEventResponderEventType>,
+  eventTypes: Array<string>,
   element: Element | Document,
 ): void {
   if (enableFlareAPI) {
@@ -1294,40 +1291,19 @@ export function listenToEventResponderEventTypes(
 
     // Go through each target event type of the event responder
     for (let i = 0, length = eventTypes.length; i < length; ++i) {
-      const targetEventType = eventTypes[i];
-      let topLevelType;
-      let passive = true;
-
-      // If no event config object is provided (i.e. - only a string),
-      // we default to enabling passive and not capture.
-      if (typeof targetEventType === 'string') {
-        topLevelType = targetEventType;
-      } else {
-        if (__DEV__) {
-          warning(
-            typeof targetEventType === 'object' && targetEventType !== null,
-            'Event Responder: invalid entry in event types array. ' +
-              'Entry must be string or an object. Instead, got %s.',
-            targetEventType,
-          );
-        }
-        const targetEventConfigObject = ((targetEventType: any): {
-          name: string,
-          passive?: boolean,
-        });
-        topLevelType = targetEventConfigObject.name;
-        if (targetEventConfigObject.passive !== undefined) {
-          passive = targetEventConfigObject.passive;
-        }
-      }
-      const listeningName = generateListeningKey(topLevelType, passive);
-      if (!listeningSet.has(listeningName)) {
+      const eventType = eventTypes[i];
+      const isPassive = !endsWith(eventType, '_active');
+      const eventKey = isPassive ? eventType + '_passive' : eventType;
+      const targetEventType = isPassive
+        ? eventType
+        : eventType.substring(0, eventType.length - 7);
+      if (!listeningSet.has(eventKey)) {
         trapEventForResponderEventSystem(
           element,
-          ((topLevelType: any): DOMTopLevelEventType),
-          passive,
+          ((targetEventType: any): DOMTopLevelEventType),
+          isPassive,
         );
-        listeningSet.add(listeningName);
+        listeningSet.add(eventKey);
       }
     }
   }

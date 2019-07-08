@@ -157,17 +157,6 @@ export type ReactFabricType = {
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: SecretInternalsFabricType,
 };
 
-export type ReactNativeEventResponderEventType =
-  | 'topMouseDown'
-  | 'topMouseMove'
-  | 'topMouseUp'
-  | 'topScroll'
-  | 'topSelectionChange'
-  | 'topTouchCancel'
-  | 'topTouchEnd'
-  | 'topTouchMove'
-  | 'topTouchStart';
-
 export type ReactNativeEventTarget = {
   node: Object,
   canonical: {
@@ -202,7 +191,7 @@ export type ReactNativeResponderEvent = {
   currentTarget: null | ReactNativeEventTarget,
   nativeEvent: ReactFaricEvent,
   target: null | ReactNativeEventTarget,
-  type: ReactNativeEventResponderEventType,
+  type: string,
 };
 
 export type ReactNativeResponderContext = {
@@ -224,12 +213,8 @@ export type ReactNativeResponderContext = {
       bottom: number,
     }) => void,
   ): void,
-  addRootEventTypes: (
-    rootEventTypes: Array<ReactNativeEventResponderEventType>,
-  ) => void,
-  removeRootEventTypes: (
-    rootEventTypes: Array<ReactNativeEventResponderEventType>,
-  ) => void,
+  addRootEventTypes: (rootEventTypes: Array<string>) => void,
+  removeRootEventTypes: (rootEventTypes: Array<string>) => void,
   setTimeout: (func: () => void, timeout: number) => number,
   clearTimeout: (timerId: number) => void,
   getTimeStamp: () => number,

@@ -10,7 +10,6 @@
 import type {
   ReactNativeResponderEvent,
   ReactNativeResponderContext,
-  ReactNativeEventResponderEventType,
   ReactNativeEventTarget,
   PointerType,
   ReactFaricEventTouch,
@@ -24,7 +23,6 @@ import {
 } from 'react-native-renderer/src/ReactNativeTypes';
 
 type ReactNativeEventResponder = ReactEventResponder<
-  ReactNativeEventResponderEventType,
   ReactNativeResponderEvent,
   ReactNativeResponderContext,
 >;

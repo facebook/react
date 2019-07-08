@@ -334,7 +334,7 @@ export function dispatchEvent(
     } else {
       // React Flare event system
       dispatchEventForResponderEventSystem(
-        topLevelType,
+        (topLevelType: any),
         targetInst,
         nativeEvent,
         nativeEventTarget,

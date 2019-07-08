@@ -627,7 +627,7 @@ describe('DOMEventResponderSystem', () => {
     const buttonRef = React.createRef();
 
     const ClickEventComponent1 = createReactEventComponent({
-      targetEventTypes: [{name: 'click', passive: false, capture: false}],
+      targetEventTypes: ['click_active'],
       onEvent: event => {
         clickEventComponent1Fired++;
         eventLog.push({
@@ -639,7 +639,7 @@ describe('DOMEventResponderSystem', () => {
     });
 
     const ClickEventComponent2 = createReactEventComponent({
-      targetEventTypes: [{name: 'click', passive: true, capture: false}],
+      targetEventTypes: ['click'],
       onEvent: event => {
         clickEventComponent2Fired++;
         eventLog.push({
@@ -686,7 +686,7 @@ describe('DOMEventResponderSystem', () => {
     let eventLog = [];
 
     const ClickEventComponent1 = createReactEventComponent({
-      rootEventTypes: [{name: 'click', passive: false, capture: false}],
+      rootEventTypes: ['click_active'],
       onRootEvent: event => {
         clickEventComponent1Fired++;
         eventLog.push({
@@ -698,7 +698,7 @@ describe('DOMEventResponderSystem', () => {
     });
 
     const ClickEventComponent2 = createReactEventComponent({
-      rootEventTypes: [{name: 'click', passive: true, capture: false}],
+      rootEventTypes: ['click'],
       onRootEvent: event => {
         clickEventComponent2Fired++;
         eventLog.push({
