@@ -3119,6 +3119,34 @@ describe('Event responder: Press', () => {
     expect(pointerDownEvent).toHaveBeenCalledTimes(0);
   });
 
+  it('has the correct press target when used with event hook', () => {
+    const ref = React.createRef();
+    const onPress = jest.fn();
+    const Component = () => {
+      React.unstable_useEvent(Press, {onPress});
+
+      return (
+        <div>
+          <Press>
+            <a href="#" ref={ref} />
+          </Press>
+        </div>
+      );
+    };
+    ReactDOM.render(<Component />, container);
+
+    ref.current.dispatchEvent(
+      createEvent('pointerdown', {pointerType: 'mouse', button: 0}),
+    );
+    ref.current.dispatchEvent(
+      createEvent('pointerup', {pointerType: 'mouse', button: 0}),
+    );
+    expect(onPress).toHaveBeenCalledTimes(1);
+    expect(onPress).toHaveBeenCalledWith(
+      expect.objectContaining({target: ref.current}),
+    );
+  });
+
   it('warns when stopPropagation is used in an event hook', () => {
     const ref = React.createRef();
     const Component = () => {

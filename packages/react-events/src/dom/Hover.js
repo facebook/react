@@ -321,7 +321,7 @@ const HoverResponder: ReactDOMEventResponder = {
           if (isEmulatedMouseEvent(event, state)) {
             return;
           }
-          state.hoverTarget = event.currentTarget;
+          state.hoverTarget = event.responderTarget;
           state.ignoreEmulatedMouseEvents = true;
           dispatchHoverStartEvents(event, context, props, state);
         }

@@ -503,12 +503,12 @@ function createDOMResponderEvent(
   }
 
   return {
-    currentTarget: nativeEventTarget,
     nativeEvent: nativeEvent,
     passive,
     passiveSupported,
     pointerId,
     pointerType: eventPointerType,
+    responderTarget: null,
     target: nativeEventTarget,
     type: topLevelType,
   };
@@ -580,81 +580,43 @@ function responderEventTypesContainType(
   return false;
 }
 
-function handleTargetEventResponderInstance(
+function validateEventTargetTypesForResponder(
   eventType: string,
-  responderEvent: ReactDOMResponderEvent,
-  eventComponentInstance: ReactDOMEventComponentInstance,
-  hookComponentResponderValidation: null | Set<ReactDOMEventResponder>,
-  propagatedEventResponders: null | Set<ReactDOMEventResponder>,
-): void {
-  const responder = eventComponentInstance.responder;
+  responder: ReactDOMEventResponder,
+): boolean {
   const targetEventTypes = responder.targetEventTypes;
   // Validate the target event type exists on the responder
   if (targetEventTypes !== undefined) {
-    if (responderEventTypesContainType(targetEventTypes, eventType)) {
-      if (hookComponentResponderValidation !== null) {
-        hookComponentResponderValidation.add(responder);
-      }
-      const {isHook, props, state} = eventComponentInstance;
-      const onEvent = responder.onEvent;
-      if (onEvent !== undefined) {
-        if (
-          shouldSkipEventComponent(
-            eventComponentInstance,
-            ((responder: any): ReactDOMEventResponder),
-            propagatedEventResponders,
-            isHook,
-          )
-        ) {
-          return;
-        }
-        currentInstance = eventComponentInstance;
-        currentlyInHook = isHook;
-        onEvent(responderEvent, eventResponderContext, props, state);
-        if (!isHook) {
-          checkForLocalPropagationContinuation(
-            responder,
-            ((propagatedEventResponders: any): Set<ReactDOMEventResponder>),
-          );
-        }
-      }
-    }
-  }
-}
-
-function shouldSkipEventComponent(
-  eventResponderInstance: ReactDOMEventComponentInstance,
-  responder: ReactDOMEventResponder,
-  propagatedEventResponders: null | Set<ReactDOMEventResponder>,
-  isHook: boolean,
-): boolean {
-  if (propagatedEventResponders !== null && !isHook) {
-    if (propagatedEventResponders.has(responder)) {
-      return true;
-    }
-    propagatedEventResponders.add(responder);
-  }
-  if (globalOwner && globalOwner !== eventResponderInstance) {
-    return true;
+    return responderEventTypesContainType(targetEventTypes, eventType);
   }
   return false;
 }
 
-function checkForLocalPropagationContinuation(
+function handleTargetEventResponderInstance(
+  responderEvent: ReactDOMResponderEvent,
+  eventComponentInstance: ReactDOMEventComponentInstance,
   responder: ReactDOMEventResponder,
-  propagatedEventResponders: Set<ReactDOMEventResponder>,
 ): void {
-  if (continueLocalPropagation === true) {
-    propagatedEventResponders.delete(responder);
-    continueLocalPropagation = false;
+  const {isHook, props, state} = eventComponentInstance;
+  const onEvent = responder.onEvent;
+  if (onEvent !== undefined) {
+    currentInstance = eventComponentInstance;
+    currentlyInHook = isHook;
+    onEvent(responderEvent, eventResponderContext, props, state);
   }
+}
+
+function validateOwnership(
+  eventComponentInstance: ReactDOMEventComponentInstance,
+): boolean {
+  return globalOwner === null || globalOwner === eventComponentInstance;
 }
 
 function traverseAndHandleEventResponderInstances(
   topLevelType: string,
   targetFiber: null | Fiber,
   nativeEvent: AnyNativeEvent,
-  nativeEventTarget: EventTarget,
+  nativeEventTarget: Document | Element,
   eventSystemFlags: EventSystemFlags,
 ): void {
   const isPassiveEvent = (eventSystemFlags & IS_PASSIVE) !== 0;
@@ -669,60 +631,87 @@ function traverseAndHandleEventResponderInstances(
   const responderEvent = createDOMResponderEvent(
     topLevelType,
     nativeEvent,
-    ((nativeEventTarget: any): Element | Document),
+    nativeEventTarget,
     isPassiveEvent,
     isPassiveSupported,
   );
-  const propagatedEventResponders: Set<ReactDOMEventResponder> = new Set();
-
-  // We use this to know if we should check add hooks. If there are
-  // no event targets, then we don't add the hook forms.
-  const hookComponentResponderValidation = new Set();
+  const responderTargets = new Map();
+  const allowLocalPropagation = new Set();
 
   // Bubbled event phases have the notion of local propagation.
   // This means that the propgation chain can be stopped part of the the way
   // through processing event component instances.
   let node = targetFiber;
+  let currentTarget = nativeEventTarget;
   while (node !== null) {
     const {dependencies, stateNode, tag} = node;
     if (tag === HostComponent) {
-      responderEvent.currentTarget = stateNode;
+      currentTarget = stateNode;
     } else if (tag === EventComponent) {
       const eventComponentInstance = stateNode;
-      // Switch to the current fiber tree
-      node = eventComponentInstance.currentFiber;
-      handleTargetEventResponderInstance(
-        eventType,
-        responderEvent,
-        eventComponentInstance,
-        hookComponentResponderValidation,
-        propagatedEventResponders,
-      );
+      if (validateOwnership(eventComponentInstance)) {
+        const responder = eventComponentInstance.responder;
+        let responderTarget = responderTargets.get(responder);
+        let skipCurrentNode = false;
+
+        if (responderTarget === undefined) {
+          if (validateEventTargetTypesForResponder(eventType, responder)) {
+            responderTarget = currentTarget;
+            responderTargets.set(responder, currentTarget);
+          } else {
+            skipCurrentNode = true;
+          }
+        } else if (allowLocalPropagation.has(responder)) {
+          // TODO: remove continueLocalPropagation
+          allowLocalPropagation.delete(responder);
+        } else {
+          skipCurrentNode = true;
+        }
+        if (!skipCurrentNode) {
+          responderEvent.responderTarget = ((responderTarget: any):
+            | Document
+            | Element);
+          // Switch to the current fiber tree
+          node = eventComponentInstance.currentFiber;
+          handleTargetEventResponderInstance(
+            responderEvent,
+            eventComponentInstance,
+            responder,
+          );
+          // TODO: remove continueLocalPropagation
+          if (continueLocalPropagation) {
+            continueLocalPropagation = false;
+            allowLocalPropagation.add(responder);
+          }
+        }
+      }
     } else if (tag === FunctionComponent && dependencies !== null) {
       const events = dependencies.events;
       if (events !== null) {
         for (let i = 0; i < events.length; i++) {
           const eventComponentInstance = events[i];
-          if (
-            hookComponentResponderValidation.has(
-              eventComponentInstance.responder,
-            )
-          ) {
-            handleTargetEventResponderInstance(
-              eventType,
-              responderEvent,
-              eventComponentInstance,
-              null,
-              null,
-            );
+          if (validateOwnership(eventComponentInstance)) {
+            const responder = eventComponentInstance.responder;
+            const responderTarget = responderTargets.get(responder);
+            if (responderTarget !== undefined) {
+              responderEvent.responderTarget = responderTarget;
+              handleTargetEventResponderInstance(
+                responderEvent,
+                eventComponentInstance,
+                responder,
+              );
+              // TODO: remove continueLocalPropagation
+              if (continueLocalPropagation) {
+                continueLocalPropagation = false;
+                allowLocalPropagation.add(responder);
+              }
+            }
           }
         }
       }
     }
     node = node.return;
   }
-  // Reset currentTarget to be null
-  responderEvent.currentTarget = null;
   // Root phase
   const rootEventInstances = rootEventTypesToEventComponentInstances.get(
     eventType,
@@ -732,21 +721,16 @@ function traverseAndHandleEventResponderInstances(
 
     for (let i = 0; i < rootEventComponentInstances.length; i++) {
       const rootEventComponentInstance = rootEventComponentInstances[i];
+      if (!validateOwnership(rootEventComponentInstance)) {
+        continue;
+      }
       const {isHook, props, responder, state} = rootEventComponentInstance;
       const onRootEvent = responder.onRootEvent;
       if (onRootEvent !== undefined) {
-        if (
-          shouldSkipEventComponent(
-            rootEventComponentInstance,
-            responder,
-            null,
-            isHook,
-          )
-        ) {
-          continue;
-        }
         currentInstance = rootEventComponentInstance;
         currentlyInHook = isHook;
+        const responderTarget = responderTargets.get(responder);
+        responderEvent.responderTarget = responderTarget || null;
         onRootEvent(responderEvent, eventResponderContext, props, state);
       }
     }
@@ -858,7 +842,7 @@ export function dispatchEventForResponderEventSystem(
   topLevelType: string,
   targetFiber: null | Fiber,
   nativeEvent: AnyNativeEvent,
-  nativeEventTarget: EventTarget,
+  nativeEventTarget: Document | Element,
   eventSystemFlags: EventSystemFlags,
 ): void {
   if (enableFlareAPI) {
