@@ -332,20 +332,18 @@ const HoverResponder: ReactDOMEventResponder = {
       case 'pointermove':
       case 'mousemove': {
         if (state.isHovered && !isEmulatedMouseEvent(event, state)) {
-          if (state.isHovered) {
-            if (props.onHoverMove && state.hoverTarget !== null) {
-              const syntheticEvent = createHoverEvent(
-                event,
-                context,
-                'hovermove',
-                state.hoverTarget,
-              );
-              context.dispatchEvent(
-                syntheticEvent,
-                props.onHoverMove,
-                UserBlockingEvent,
-              );
-            }
+          if (props.onHoverMove && state.hoverTarget !== null) {
+            const syntheticEvent = createHoverEvent(
+              event,
+              context,
+              'hovermove',
+              state.hoverTarget,
+            );
+            context.dispatchEvent(
+              syntheticEvent,
+              props.onHoverMove,
+              UserBlockingEvent,
+            );
           }
         }
         return;

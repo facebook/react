@@ -22,7 +22,6 @@ import {
   Fragment,
 } from 'shared/ReactWorkTags';
 import {NoWork} from './ReactFiberExpirationTime';
-import invariant from 'shared/invariant';
 
 let currentlyRenderingFiber: null | Fiber = null;
 let currentEventComponentInstanceIndex: number = 0;
@@ -37,11 +36,6 @@ export function updateEventComponentInstance<E, C>(
   props: Object,
 ): void {
   const responder = eventComponent.responder;
-  invariant(
-    responder.allowEventHooks,
-    'The "%s" event responder cannot be used via the "useEvent" hook.',
-    responder.displayName,
-  );
   let events;
   let dependencies: Dependencies | null = ((currentlyRenderingFiber: any): Fiber)
     .dependencies;

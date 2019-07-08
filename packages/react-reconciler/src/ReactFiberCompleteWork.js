@@ -116,12 +116,7 @@ import {
   renderDidSuspendDelayIfPossible,
   renderHasNotSuspendedYet,
 } from './ReactFiberWorkLoop';
-import {
-  getEventComponentHostChildrenCount,
-  createEventComponentInstance,
-} from './ReactFiberEvents';
-import getComponentName from 'shared/getComponentName';
-import warning from 'shared/warning';
+import {createEventComponentInstance} from './ReactFiberEvents';
 import {Never} from './ReactFiberExpirationTime';
 import {resetChildFibers} from './ReactChildFiber';
 
@@ -1131,16 +1126,6 @@ function completeWork(
 
         if (eventComponentInstance === null) {
           let responderState = null;
-          if (__DEV__ && !responder.allowMultipleHostChildren) {
-            const hostChildrenCount = getEventComponentHostChildrenCount(
-              workInProgress,
-            );
-            warning(
-              (hostChildrenCount || 0) < 2,
-              'A "<%s>" event component cannot contain multiple host children.',
-              getComponentName(workInProgress.type),
-            );
-          }
           const getInitialState = responder.getInitialState;
           if (getInitialState !== undefined) {
             responderState = getInitialState(newProps);

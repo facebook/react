@@ -141,8 +141,6 @@ const ScrollResponder: ReactDOMEventResponder = {
       scrollTarget: null,
     };
   },
-  allowMultipleHostChildren: true,
-  allowEventHooks: true,
   onEvent(
     event: ReactDOMResponderEvent,
     context: ReactDOMResponderContext,

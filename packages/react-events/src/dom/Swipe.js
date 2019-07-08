@@ -104,8 +104,6 @@ const SwipeResponder: ReactDOMEventResponder = {
       y: 0,
     };
   },
-  allowMultipleHostChildren: false,
-  allowEventHooks: false,
   onEvent(
     event: ReactDOMResponderEvent,
     context: ReactDOMResponderContext,
