@@ -131,6 +131,7 @@ type SecretInternalsFabricType = {
 export type ReactNativeType = {
   NativeComponent: typeof ReactNativeComponent,
   findNodeHandle(componentOrHandle: any): ?number,
+  dispatchCommand(handle: any, command: string, args: Array<any>): void,
   setNativeProps(handle: any, nativeProps: Object): void,
   render(
     element: React$Element<any>,
@@ -147,6 +148,7 @@ export type ReactNativeType = {
 export type ReactFabricType = {
   NativeComponent: typeof ReactNativeComponent,
   findNodeHandle(componentOrHandle: any): ?number,
+  dispatchCommand(handle: any, command: string, args: Array<any>): void,
   setNativeProps(handle: any, nativeProps: Object): void,
   render(
     element: React$Element<any>,

@@ -22,6 +22,10 @@ let NativeMethodsMixin;
 const SET_NATIVE_PROPS_NOT_SUPPORTED_MESSAGE =
   'Warning: setNativeProps is not currently supported in Fabric';
 
+const DISPATCH_COMMAND_REQUIRES_HOST_COMPONENT =
+  "Warning: dispatchCommand was called with a ref that isn't a " +
+  'native component. Use React.forwardRef to get access to the underlying native component';
+
 jest.mock('shared/ReactFeatureFlags', () =>
   require('shared/forks/ReactFeatureFlags.native-oss'),
 );
@@ -252,6 +256,85 @@ describe('ReactFabric', () => {
         withoutStack: true,
       });
       expect(UIManager.updateView).not.toBeCalled();
+    });
+  });
+
+  it('should call dispatchCommand for native refs', () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    [View].forEach(Component => {
+      nativeFabricUIManager.dispatchCommand.mockClear();
+
+      let viewRef;
+      ReactFabric.render(
+        <Component
+          ref={ref => {
+            viewRef = ref;
+          }}
+        />,
+        11,
+      );
+
+      expect(nativeFabricUIManager.dispatchCommand).not.toBeCalled();
+      ReactFabric.dispatchCommand(viewRef, 'updateCommand', [10, 20]);
+      expect(nativeFabricUIManager.dispatchCommand).toHaveBeenCalledTimes(1);
+      expect(nativeFabricUIManager.dispatchCommand).toHaveBeenCalledWith(
+        expect.any(Object),
+        'updateCommand',
+        [10, 20],
+      );
+    });
+  });
+
+  it('should warn and no-op if calling dispatchCommand on non native refs', () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    class BasicClass extends React.Component {
+      render() {
+        return <React.Fragment />;
+      }
+    }
+
+    class Subclass extends ReactFabric.NativeComponent {
+      render() {
+        return <View />;
+      }
+    }
+
+    const CreateClass = createReactClass({
+      mixins: [NativeMethodsMixin],
+      render: () => {
+        return <View />;
+      },
+    });
+
+    [BasicClass, Subclass, CreateClass].forEach(Component => {
+      nativeFabricUIManager.dispatchCommand.mockReset();
+
+      let viewRef;
+      ReactFabric.render(
+        <Component
+          ref={ref => {
+            viewRef = ref;
+          }}
+        />,
+        11,
+      );
+
+      expect(nativeFabricUIManager.dispatchCommand).not.toBeCalled();
+      expect(() => {
+        ReactFabric.dispatchCommand(viewRef, 'updateCommand', [10, 20]);
+      }).toWarnDev([DISPATCH_COMMAND_REQUIRES_HOST_COMPONENT], {
+        withoutStack: true,
+      });
+
+      expect(nativeFabricUIManager.dispatchCommand).not.toBeCalled();
     });
   });
 
