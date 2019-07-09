@@ -189,14 +189,15 @@ export type ReactFaricEvent = {
   target: number,
 };
 
-export type ReactNativeResponderEvent = {
+export type ReactNativeResponderEvent = {|
   currentTarget: null | ReactNativeEventTarget,
   nativeEvent: ReactFaricEvent,
+  responderTarget: null | ReactNativeEventTarget,
   target: null | ReactNativeEventTarget,
   type: string,
-};
+|};
 
-export type ReactNativeResponderContext = {
+export type ReactNativeResponderContext = {|
   dispatchEvent: (
     eventObject: Object,
     listener: (Object) => void,
@@ -220,7 +221,7 @@ export type ReactNativeResponderContext = {
   setTimeout: (func: () => void, timeout: number) => number,
   clearTimeout: (timerId: number) => void,
   getTimeStamp: () => number,
-};
+|};
 
 export type PointerType =
   | ''

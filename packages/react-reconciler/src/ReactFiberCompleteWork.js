@@ -17,13 +17,12 @@ import type {
   Container,
   ChildSet,
 } from './ReactFiberHostConfig';
-import type {ReactEventComponentInstance} from 'shared/ReactTypes';
 import type {
   SuspenseState,
   SuspenseListRenderState,
 } from './ReactFiberSuspenseComponent';
 import type {SuspenseContext} from './ReactFiberSuspenseContext';
-
+import type {ReactEventResponderHook} from 'shared/ReactTypes';
 import {now} from './SchedulerWithReactIntegration';
 
 import {
@@ -47,7 +46,6 @@ import {
   SimpleMemoComponent,
   LazyComponent,
   IncompleteClassComponent,
-  EventComponent,
 } from 'shared/ReactWorkTags';
 import {NoMode, BatchedMode} from './ReactTypeOfMode';
 import {
@@ -74,7 +72,7 @@ import {
   createContainerChildSet,
   appendChildToContainerChildSet,
   finalizeContainerChildren,
-  updateEventComponent,
+  updateEventResponder,
 } from './ReactFiberHostConfig';
 import {
   getRootHostContainer,
@@ -116,7 +114,10 @@ import {
   renderDidSuspendDelayIfPossible,
   renderHasNotSuspendedYet,
 } from './ReactFiberWorkLoop';
-import {createEventComponentInstance} from './ReactFiberEvents';
+import {
+  createEventResponderInstance,
+  forEachEventResponderHookOnFiber,
+} from './ReactFiberEvents';
 import {Never} from './ReactFiberExpirationTime';
 import {resetChildFibers} from './ReactChildFiber';
 
@@ -655,6 +656,36 @@ function hasSuspendedChildrenAndNewContent(
   return false;
 }
 
+function updateEventResponderHook(
+  eventResponderHook: ReactEventResponderHook<any, any>,
+  fiber: Fiber,
+): void {
+  const {instance, props, responder} = eventResponderHook;
+  const rootContainerInstance = getRootHostContainer();
+
+  if (instance === null) {
+    let responderState = null;
+    const getInitialState = responder.getInitialState;
+    if (getInitialState !== undefined) {
+      responderState = getInitialState(props);
+    }
+    eventResponderHook.instance = createEventResponderInstance(
+      fiber,
+      props,
+      responder,
+      rootContainerInstance,
+      responderState || {},
+    );
+    markUpdate(fiber);
+  } else {
+    // Update the props
+    instance.props = props;
+    // Update the current fiber
+    instance.currentFiber = fiber;
+    updateEventResponder(instance);
+  }
+}
+
 function completeWork(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -667,8 +698,15 @@ function completeWork(
       break;
     case LazyComponent:
       break;
+    case ForwardRef:
     case SimpleMemoComponent:
     case FunctionComponent:
+      if (enableFlareAPI) {
+        forEachEventResponderHookOnFiber(
+          workInProgress,
+          updateEventResponderHook,
+        );
+      }
       break;
     case ClassComponent: {
       const Component = workInProgress.type;
@@ -812,8 +850,6 @@ function completeWork(
       }
       break;
     }
-    case ForwardRef:
-      break;
     case SuspenseComponent: {
       popSuspenseContext(workInProgress);
       const nextState: null | SuspenseState = workInProgress.memoizedState;
@@ -1110,42 +1146,6 @@ function completeWork(
         pushSuspenseContext(workInProgress, suspenseContext);
         // Do a pass over the next row.
         return next;
-      }
-      break;
-    }
-    case EventComponent: {
-      if (enableFlareAPI) {
-        popHostContext(workInProgress);
-        const rootContainerInstance = getRootHostContainer();
-        const responder = workInProgress.type.responder;
-        let eventComponentInstance: ReactEventComponentInstance<
-          any,
-          any,
-        > | null =
-          workInProgress.stateNode;
-
-        if (eventComponentInstance === null) {
-          let responderState = null;
-          const getInitialState = responder.getInitialState;
-          if (getInitialState !== undefined) {
-            responderState = getInitialState(newProps);
-          }
-          eventComponentInstance = workInProgress.stateNode = createEventComponentInstance(
-            workInProgress,
-            newProps,
-            responder,
-            rootContainerInstance,
-            responderState || {},
-            false,
-          );
-          markUpdate(workInProgress);
-        } else {
-          // Update the props on the event component state node
-          eventComponentInstance.props = newProps;
-          // Update the current fiber
-          eventComponentInstance.currentFiber = workInProgress;
-          updateEventComponent(eventComponentInstance);
-        }
       }
       break;
     }

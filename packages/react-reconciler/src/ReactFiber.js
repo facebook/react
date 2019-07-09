@@ -8,12 +8,7 @@
  */
 
 import type {ReactElement, Source} from 'shared/ReactElementType';
-import type {
-  ReactFragment,
-  ReactPortal,
-  RefObject,
-  ReactEventComponent,
-} from 'shared/ReactTypes';
+import type {ReactFragment, ReactPortal, RefObject} from 'shared/ReactTypes';
 import type {RootTag} from 'shared/ReactRootTags';
 import type {WorkTag} from 'shared/ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
@@ -22,11 +17,11 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {UpdateQueue} from './ReactUpdateQueue';
 import type {ContextDependency} from './ReactFiberNewContext';
 import type {HookType} from './ReactFiberHooks';
-import type {ReactEventComponentInstance} from 'shared/ReactTypes';
+import type {ReactEventResponderHook} from 'shared/ReactTypes';
 
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import {enableProfilerTimer, enableFlareAPI} from 'shared/ReactFeatureFlags';
+import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 import {NoEffect} from 'shared/ReactSideEffectTags';
 import {ConcurrentRoot, BatchedRoot} from 'shared/ReactRootTags';
 import {
@@ -48,7 +43,6 @@ import {
   MemoComponent,
   SimpleMemoComponent,
   LazyComponent,
-  EventComponent,
 } from 'shared/ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 
@@ -78,7 +72,6 @@ import {
   REACT_SUSPENSE_LIST_TYPE,
   REACT_MEMO_TYPE,
   REACT_LAZY_TYPE,
-  REACT_EVENT_COMPONENT_TYPE,
 } from 'shared/ReactSymbols';
 
 let hasBadMapPolyfill;
@@ -103,7 +96,7 @@ if (__DEV__) {
 export type Dependencies = {
   expirationTime: ExpirationTime,
   firstContext: ContextDependency<mixed> | null,
-  events: Array<ReactEventComponentInstance<any, any>> | null,
+  events: Array<ReactEventResponderHook<any, any>> | null,
 };
 
 // A Fiber is work on a Component that needs to be done or was done. There can
@@ -651,17 +644,6 @@ export function createFiberFromTypeAndProps(
               fiberTag = LazyComponent;
               resolvedType = null;
               break getTag;
-            case REACT_EVENT_COMPONENT_TYPE:
-              if (enableFlareAPI) {
-                return createFiberFromEventComponent(
-                  type,
-                  pendingProps,
-                  mode,
-                  expirationTime,
-                  key,
-                );
-              }
-              break;
           }
         }
         let info = '';
@@ -736,20 +718,6 @@ export function createFiberFromFragment(
   key: null | string,
 ): Fiber {
   const fiber = createFiber(Fragment, elements, key, mode);
-  fiber.expirationTime = expirationTime;
-  return fiber;
-}
-
-export function createFiberFromEventComponent(
-  eventComponent: ReactEventComponent<any>,
-  pendingProps: any,
-  mode: TypeOfMode,
-  expirationTime: ExpirationTime,
-  key: null | string,
-): Fiber {
-  const fiber = createFiber(EventComponent, pendingProps, key, mode);
-  fiber.elementType = eventComponent;
-  fiber.type = eventComponent;
   fiber.expirationTime = expirationTime;
   return fiber;
 }

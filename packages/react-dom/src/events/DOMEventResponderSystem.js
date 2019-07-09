@@ -13,16 +13,18 @@ import {
 } from 'events/EventSystemFlags';
 import type {AnyNativeEvent} from 'events/PluginModuleType';
 import {
-  EventComponent,
   HostComponent,
   FunctionComponent,
+  SimpleMemoComponent,
+  ForwardRef,
 } from 'shared/ReactWorkTags';
 import type {EventPriority} from 'shared/ReactTypes';
 import type {
   ReactDOMEventResponder,
-  ReactDOMEventComponentInstance,
+  ReactDOMEventResponderInstance,
   ReactDOMResponderContext,
   ReactDOMResponderEvent,
+  ReactDOMEventResponderHook,
 } from 'shared/ReactDOMTypes';
 import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
 import {
@@ -82,8 +84,7 @@ type ResponderTimeout = {|
 |};
 
 type ResponderTimer = {|
-  isHook: boolean,
-  instance: ReactDOMEventComponentInstance,
+  instance: ReactDOMEventResponderInstance,
   func: () => void,
   id: number,
   timeStamp: number,
@@ -92,9 +93,9 @@ type ResponderTimer = {|
 const activeTimeouts: Map<number, ResponderTimeout> = new Map();
 const rootEventTypesToEventComponentInstances: Map<
   DOMTopLevelEventType | string,
-  Set<ReactDOMEventComponentInstance>,
+  Set<ReactDOMEventResponderInstance>,
 > = new Map();
-const ownershipChangeListeners: Set<ReactDOMEventComponentInstance> = new Set();
+const ownershipChangeListeners: Set<ReactDOMEventResponderInstance> = new Set();
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 const eventListeners:
   | WeakMap
@@ -104,15 +105,13 @@ const eventListeners:
     > = new PossiblyWeakMap();
 
 let globalOwner = null;
-let continueLocalPropagation = false;
 
 let currentTimeStamp = 0;
 let currentTimers = new Map();
-let currentInstance: null | ReactDOMEventComponentInstance = null;
+let currentInstance: null | ReactDOMEventResponderInstance = null;
 let currentEventQueue: null | EventQueue = null;
 let currentTimerIDCounter = 0;
 let currentDocument: null | Document = null;
-let currentlyInHook = false;
 
 const eventResponderContext: ReactDOMResponderContext = {
   dispatchEvent(
@@ -176,20 +175,15 @@ const eventResponderContext: ReactDOMResponderContext = {
     eventListeners.set(eventObject, listener);
     eventQueue.events.push(eventObject);
   },
-  isTargetWithinEventComponent(target: Element | Document): boolean {
+  isTargetWithinResponder(target: Element | Document): boolean {
     validateResponderContext();
     if (target != null) {
       let fiber = getClosestInstanceFromNode(target);
-      const currentFiber = ((currentInstance: any): ReactDOMEventComponentInstance)
+      const currentFiber = ((currentInstance: any): ReactDOMEventResponderInstance)
         .currentFiber;
 
       while (fiber !== null) {
-        const stateNode = fiber.stateNode;
-        if (fiber.tag === EventComponent && stateNode !== null) {
-          // Switch to the current fiber tree
-          fiber = stateNode.currentFiber;
-        }
-        if (fiber === currentFiber || stateNode === currentInstance) {
+        if (fiber === currentFiber || fiber.alternate === currentFiber) {
           return true;
         }
         fiber = fiber.return;
@@ -197,28 +191,18 @@ const eventResponderContext: ReactDOMResponderContext = {
     }
     return false;
   },
-  isTargetWithinEventResponderScope(target: Element | Document): boolean {
+  isTargetWithinResponderScope(target: Element | Document): boolean {
     validateResponderContext();
-    const componentInstance = ((currentInstance: any): ReactDOMEventComponentInstance);
-    const responder = componentInstance.responder;
 
     if (target != null) {
       let fiber = getClosestInstanceFromNode(target);
-      const currentFiber = ((currentInstance: any): ReactDOMEventComponentInstance)
+      const currentFiber = ((currentInstance: any): ReactDOMEventResponderInstance)
         .currentFiber;
       while (fiber !== null) {
-        const stateNode = fiber.stateNode;
-        if (fiber.tag === EventComponent && stateNode !== null) {
-          // Switch to the current fiber tree
-          fiber = stateNode.currentFiber;
-        }
-        if (fiber === currentFiber || stateNode === currentInstance) {
+        if (fiber === currentFiber || fiber.alternate === currentFiber) {
           return true;
         }
-        if (
-          fiber.tag === EventComponent &&
-          (stateNode === null || stateNode.responder === responder)
-        ) {
+        if (isFiberValidEventResponderNode(fiber)) {
           return false;
         }
         fiber = fiber.return;
@@ -249,8 +233,8 @@ const eventResponderContext: ReactDOMResponderContext = {
     listenToResponderEventTypesImpl(rootEventTypes, activeDocument);
     for (let i = 0; i < rootEventTypes.length; i++) {
       const rootEventType = rootEventTypes[i];
-      const eventComponentInstance = ((currentInstance: any): ReactDOMEventComponentInstance);
-      registerRootEventType(rootEventType, eventComponentInstance);
+      const eventResponderInstance = ((currentInstance: any): ReactDOMEventResponderInstance);
+      registerRootEventType(rootEventType, eventResponderInstance);
     }
   },
   removeRootEventTypes(rootEventTypes: Array<string>): void {
@@ -260,14 +244,14 @@ const eventResponderContext: ReactDOMResponderContext = {
       let rootEventComponents = rootEventTypesToEventComponentInstances.get(
         rootEventType,
       );
-      let rootEventTypesSet = ((currentInstance: any): ReactDOMEventComponentInstance)
+      let rootEventTypesSet = ((currentInstance: any): ReactDOMEventResponderInstance)
         .rootEventTypes;
       if (rootEventTypesSet !== null) {
         rootEventTypesSet.delete(rootEventType);
       }
       if (rootEventComponents !== undefined) {
         rootEventComponents.delete(
-          ((currentInstance: any): ReactDOMEventComponentInstance),
+          ((currentInstance: any): ReactDOMEventResponderInstance),
         );
       }
     }
@@ -288,7 +272,7 @@ const eventResponderContext: ReactDOMResponderContext = {
   releaseOwnership(): boolean {
     validateResponderContext();
     return releaseOwnershipForEventComponentInstance(
-      ((currentInstance: any): ReactDOMEventComponentInstance),
+      ((currentInstance: any): ReactDOMEventResponderInstance),
     );
   },
   setTimeout(func: () => void, delay): number {
@@ -311,8 +295,7 @@ const eventResponderContext: ReactDOMResponderContext = {
       currentTimers.set(delay, timeout);
     }
     timeout.timers.set(timerId, {
-      isHook: currentlyInHook,
-      instance: ((currentInstance: any): ReactDOMEventComponentInstance),
+      instance: ((currentInstance: any): ReactDOMEventResponderInstance),
       func,
       id: timerId,
       timeStamp: currentTimeStamp,
@@ -332,11 +315,27 @@ const eventResponderContext: ReactDOMResponderContext = {
       }
     }
   },
-  getFocusableElementsInScope(): Array<HTMLElement> {
+  getFocusableElementsInScope(deep: boolean): Array<HTMLElement> {
     validateResponderContext();
     const focusableElements = [];
-    const eventComponentInstance = ((currentInstance: any): ReactDOMEventComponentInstance);
-    const child = ((eventComponentInstance.currentFiber: any): Fiber).child;
+    const eventResponderInstance = ((currentInstance: any): ReactDOMEventResponderInstance);
+    const currentResponder = eventResponderInstance.responder;
+    let focusScopeFiber = ((eventResponderInstance.currentFiber: any): Fiber);
+    if (deep) {
+      let deepNode = focusScopeFiber;
+      while (deepNode !== null) {
+        if (isFiberValidEventResponderNode(deepNode)) {
+          const eventHooks = ((deepNode: any).dependencies: any).events;
+          for (let i = 0; i < eventHooks.length; i++) {
+            if (eventHooks[i].responder === currentResponder) {
+              focusScopeFiber = deepNode;
+            }
+          }
+        }
+        deepNode = deepNode.return;
+      }
+    }
+    const child = focusScopeFiber.child;
 
     if (child !== null) {
       collectFocusableElements(child, focusableElements);
@@ -349,38 +348,20 @@ const eventResponderContext: ReactDOMResponderContext = {
     validateResponderContext();
     return currentTimeStamp;
   },
-  isTargetWithinHostComponent(
+  isTargetWithinNodeOfType(
     target: Element | Document,
     elementType: string,
-    deep: boolean,
   ): boolean {
     validateResponderContext();
     let fiber = getClosestInstanceFromNode(target);
-    const currentResponder = ((currentInstance: any): ReactDOMEventComponentInstance)
-      .responder;
 
     while (fiber !== null) {
-      const stateNode = fiber.stateNode;
-      if (
-        !deep &&
-        (fiber.tag === EventComponent &&
-          (stateNode === null || stateNode.responder === currentResponder))
-      ) {
-        return false;
-      }
       if (fiber.tag === HostComponent && fiber.type === elementType) {
         return true;
       }
       fiber = fiber.return;
     }
     return false;
-  },
-  continueLocalPropagation() {
-    validateResponderContext();
-    continueLocalPropagation = true;
-  },
-  isRespondingToHook() {
-    return currentlyInHook;
   },
 };
 
@@ -416,9 +397,9 @@ function getActiveDocument(): Document {
 }
 
 function releaseOwnershipForEventComponentInstance(
-  eventComponentInstance: ReactDOMEventComponentInstance,
+  eventResponderInstance: ReactDOMEventResponderInstance,
 ): boolean {
-  if (globalOwner === eventComponentInstance) {
+  if (globalOwner === eventResponderInstance) {
     globalOwner = null;
     triggerOwnershipListeners();
     return true;
@@ -461,10 +442,9 @@ function processTimers(
   currentEventQueue = createEventQueue();
   try {
     for (let i = 0; i < timersArr.length; i++) {
-      const {isHook, instance, func, id, timeStamp} = timersArr[i];
+      const {instance, func, id, timeStamp} = timersArr[i];
       currentInstance = instance;
       currentTimeStamp = timeStamp + delay;
-      currentlyInHook = isHook;
       try {
         func();
       } finally {
@@ -568,18 +548,6 @@ function processEventQueue(): void {
   }
 }
 
-function responderEventTypesContainType(
-  eventTypes: Array<string>,
-  type: string,
-): boolean {
-  for (let i = 0, len = eventTypes.length; i < len; i++) {
-    if (eventTypes[i] === type) {
-      return true;
-    }
-  }
-  return false;
-}
-
 function validateEventTargetTypesForResponder(
   eventType: string,
   responder: ReactDOMEventResponder,
@@ -587,29 +555,36 @@ function validateEventTargetTypesForResponder(
   const targetEventTypes = responder.targetEventTypes;
   // Validate the target event type exists on the responder
   if (targetEventTypes !== undefined) {
-    return responderEventTypesContainType(targetEventTypes, eventType);
+    for (let i = 0, len = targetEventTypes.length; i < len; i++) {
+      if (targetEventTypes[i] === eventType) {
+        return true;
+      }
+    }
   }
   return false;
 }
 
-function handleTargetEventResponderInstance(
-  responderEvent: ReactDOMResponderEvent,
-  eventComponentInstance: ReactDOMEventComponentInstance,
-  responder: ReactDOMEventResponder,
-): void {
-  const {isHook, props, state} = eventComponentInstance;
-  const onEvent = responder.onEvent;
-  if (onEvent !== undefined) {
-    currentInstance = eventComponentInstance;
-    currentlyInHook = isHook;
-    onEvent(responderEvent, eventResponderContext, props, state);
-  }
+function validateOwnership(
+  eventResponderInstance: ReactDOMEventResponderInstance,
+): boolean {
+  return globalOwner === null || globalOwner === eventResponderInstance;
 }
 
-function validateOwnership(
-  eventComponentInstance: ReactDOMEventComponentInstance,
-): boolean {
-  return globalOwner === null || globalOwner === eventComponentInstance;
+function isFiberValidEventResponderNode(fiber: Fiber): boolean {
+  const {dependencies, tag} = fiber;
+
+  if (
+    (tag === FunctionComponent ||
+      tag === ForwardRef ||
+      tag === SimpleMemoComponent) &&
+    dependencies !== null
+  ) {
+    const eventHooks = dependencies.events;
+    if (eventHooks !== null) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function traverseAndHandleEventResponderInstances(
@@ -628,6 +603,7 @@ function traverseAndHandleEventResponderInstances(
   // - Bubble target phase
   // - Root phase
 
+  const capturedResponders = new Set();
   const responderEvent = createDOMResponderEvent(
     topLevelType,
     nativeEvent,
@@ -635,79 +611,46 @@ function traverseAndHandleEventResponderInstances(
     isPassiveEvent,
     isPassiveSupported,
   );
-  const responderTargets = new Map();
-  const allowLocalPropagation = new Set();
 
-  // Bubbled event phases have the notion of local propagation.
-  // This means that the propgation chain can be stopped part of the the way
-  // through processing event component instances.
-  let node = targetFiber;
-  let currentTarget = nativeEventTarget;
+  let node = ((targetFiber: any): null | Fiber);
+  debugger;
   while (node !== null) {
-    const {dependencies, stateNode, tag} = node;
-    if (tag === HostComponent) {
-      currentTarget = stateNode;
-    } else if (tag === EventComponent) {
-      const eventComponentInstance = stateNode;
-      if (validateOwnership(eventComponentInstance)) {
-        const responder = eventComponentInstance.responder;
-        let responderTarget = responderTargets.get(responder);
-        let skipCurrentNode = false;
-
-        if (responderTarget === undefined) {
-          if (validateEventTargetTypesForResponder(eventType, responder)) {
-            responderTarget = currentTarget;
-            responderTargets.set(responder, currentTarget);
-          } else {
-            skipCurrentNode = true;
-          }
-        } else if (allowLocalPropagation.has(responder)) {
-          // TODO: remove continueLocalPropagation
-          allowLocalPropagation.delete(responder);
-        } else {
-          skipCurrentNode = true;
-        }
-        if (!skipCurrentNode) {
-          responderEvent.responderTarget = ((responderTarget: any):
-            | Document
-            | Element);
-          // Switch to the current fiber tree
-          node = eventComponentInstance.currentFiber;
-          handleTargetEventResponderInstance(
-            responderEvent,
-            eventComponentInstance,
-            responder,
-          );
-          // TODO: remove continueLocalPropagation
-          if (continueLocalPropagation) {
-            continueLocalPropagation = false;
-            allowLocalPropagation.add(responder);
-          }
-        }
-      }
-    } else if (tag === FunctionComponent && dependencies !== null) {
-      const events = dependencies.events;
-      if (events !== null) {
-        for (let i = 0; i < events.length; i++) {
-          const eventComponentInstance = events[i];
-          if (validateOwnership(eventComponentInstance)) {
-            const responder = eventComponentInstance.responder;
-            const responderTarget = responderTargets.get(responder);
-            if (responderTarget !== undefined) {
-              responderEvent.responderTarget = responderTarget;
-              handleTargetEventResponderInstance(
-                responderEvent,
-                eventComponentInstance,
-                responder,
-              );
-              // TODO: remove continueLocalPropagation
-              if (continueLocalPropagation) {
-                continueLocalPropagation = false;
-                allowLocalPropagation.add(responder);
-              }
+    const {dependencies} = node;
+    if (isFiberValidEventResponderNode(node)) {
+      const eventHooks = (((dependencies: any).events: any): Array<
+        ReactDOMEventResponderHook,
+      >);
+      const localResponders = [];
+      for (let i = 0; i < eventHooks.length; i++) {
+        const {instance, ref} = eventHooks[i];
+        const responderTarget = ref.current;
+        node = ((((instance: any): ReactDOMEventResponderInstance)
+          .currentFiber: any): Fiber);
+        if (
+          instance !== null &&
+          responderTarget !== null &&
+          validateOwnership(instance)
+        ) {
+          const responder = instance.responder;
+          if (
+            !capturedResponders.has(responder) &&
+            validateEventTargetTypesForResponder(eventType, responder)
+          ) {
+            responderEvent.responderTarget = ((responderTarget: any):
+              | Document
+              | Element);
+            localResponders.push(responder);
+            const {props, state} = instance;
+            const onEvent = responder.onEvent;
+            if (onEvent !== undefined) {
+              currentInstance = instance;
+              onEvent(responderEvent, eventResponderContext, props, state);
             }
           }
         }
+      }
+      for (let i = 0; i < localResponders.length; i++) {
+        capturedResponders.add(localResponders[i]);
       }
     }
     node = node.return;
@@ -724,13 +667,11 @@ function traverseAndHandleEventResponderInstances(
       if (!validateOwnership(rootEventComponentInstance)) {
         continue;
       }
-      const {isHook, props, responder, state} = rootEventComponentInstance;
+      const {props, responder, state} = rootEventComponentInstance;
       const onRootEvent = responder.onRootEvent;
       if (onRootEvent !== undefined) {
         currentInstance = rootEventComponentInstance;
-        currentlyInHook = isHook;
-        const responderTarget = responderTargets.get(responder);
-        responderEvent.responderTarget = responderTarget || null;
+        responderEvent.responderTarget = null;
         onRootEvent(responderEvent, eventResponderContext, props, state);
       }
     }
@@ -740,14 +681,12 @@ function traverseAndHandleEventResponderInstances(
 function triggerOwnershipListeners(): void {
   const listeningInstances = Array.from(ownershipChangeListeners);
   const previousInstance = currentInstance;
-  const previouslyInHook = currentlyInHook;
   currentEventQueue = createEventQueue();
   try {
     for (let i = 0; i < listeningInstances.length; i++) {
       const instance = listeningInstances[i];
-      const {isHook, props, responder, state} = instance;
+      const {props, responder, state} = instance;
       currentInstance = instance;
-      currentlyInHook = isHook;
       const onOwnershipChange = ((responder: any): ReactDOMEventResponder)
         .onOwnershipChange;
       if (onOwnershipChange !== undefined) {
@@ -757,23 +696,21 @@ function triggerOwnershipListeners(): void {
     processEventQueue();
   } finally {
     currentInstance = previousInstance;
-    currentlyInHook = previouslyInHook;
   }
 }
 
-export function mountEventResponder(
-  eventComponentInstance: ReactDOMEventComponentInstance,
+export function mountDOMEventResponder(
+  eventResponderInstance: ReactDOMEventResponderInstance,
 ) {
-  const responder = ((eventComponentInstance.responder: any): ReactDOMEventResponder);
+  const responder = ((eventResponderInstance.responder: any): ReactDOMEventResponder);
   if (responder.onOwnershipChange !== undefined) {
-    ownershipChangeListeners.add(eventComponentInstance);
+    ownershipChangeListeners.add(eventResponderInstance);
   }
   const onMount = responder.onMount;
   if (onMount !== undefined) {
-    let {isHook, props, state} = eventComponentInstance;
+    let {props, state} = eventResponderInstance;
     currentEventQueue = createEventQueue();
-    currentInstance = eventComponentInstance;
-    currentlyInHook = isHook;
+    currentInstance = eventResponderInstance;
     try {
       onMount(eventResponderContext, props, state);
       processEventQueue();
@@ -785,16 +722,15 @@ export function mountEventResponder(
   }
 }
 
-export function unmountEventResponder(
-  eventComponentInstance: ReactDOMEventComponentInstance,
+export function unmountDOMEventResponder(
+  eventResponderInstance: ReactDOMEventResponderInstance,
 ): void {
-  const responder = ((eventComponentInstance.responder: any): ReactDOMEventResponder);
+  const responder = ((eventResponderInstance.responder: any): ReactDOMEventResponder);
   const onUnmount = responder.onUnmount;
   if (onUnmount !== undefined) {
-    let {isHook, props, state} = eventComponentInstance;
+    let {props, state} = eventResponderInstance;
     currentEventQueue = createEventQueue();
-    currentInstance = eventComponentInstance;
-    currentlyInHook = isHook;
+    currentInstance = eventResponderInstance;
     try {
       onUnmount(eventResponderContext, props, state);
       processEventQueue();
@@ -806,15 +742,15 @@ export function unmountEventResponder(
   }
   try {
     currentEventQueue = createEventQueue();
-    releaseOwnershipForEventComponentInstance(eventComponentInstance);
+    releaseOwnershipForEventComponentInstance(eventResponderInstance);
     processEventQueue();
   } finally {
     currentEventQueue = null;
   }
   if (responder.onOwnershipChange !== undefined) {
-    ownershipChangeListeners.delete(eventComponentInstance);
+    ownershipChangeListeners.delete(eventResponderInstance);
   }
-  const rootEventTypesSet = eventComponentInstance.rootEventTypes;
+  const rootEventTypesSet = eventResponderInstance.rootEventTypes;
   if (rootEventTypesSet !== null) {
     const rootEventTypes = Array.from(rootEventTypesSet);
 
@@ -824,7 +760,7 @@ export function unmountEventResponder(
         topLevelEventType,
       );
       if (rootEventComponentInstances !== undefined) {
-        rootEventComponentInstances.delete(eventComponentInstance);
+        rootEventComponentInstances.delete(eventResponderInstance);
       }
     }
   }
@@ -851,7 +787,6 @@ export function dispatchEventForResponderEventSystem(
     const previousTimers = currentTimers;
     const previousTimeStamp = currentTimeStamp;
     const previousDocument = currentDocument;
-    const previouslyInHook = currentlyInHook;
     currentTimers = null;
     currentEventQueue = createEventQueue();
     // nodeType 9 is DOCUMENT_NODE
@@ -876,24 +811,23 @@ export function dispatchEventForResponderEventSystem(
       currentEventQueue = previousEventQueue;
       currentTimeStamp = previousTimeStamp;
       currentDocument = previousDocument;
-      currentlyInHook = previouslyInHook;
     }
   }
 }
 
 export function addRootEventTypesForComponentInstance(
-  eventComponentInstance: ReactDOMEventComponentInstance,
+  eventResponderInstance: ReactDOMEventResponderInstance,
   rootEventTypes: Array<string>,
 ): void {
   for (let i = 0; i < rootEventTypes.length; i++) {
     const rootEventType = rootEventTypes[i];
-    registerRootEventType(rootEventType, eventComponentInstance);
+    registerRootEventType(rootEventType, eventResponderInstance);
   }
 }
 
 function registerRootEventType(
   rootEventType: string,
-  eventComponentInstance: ReactDOMEventComponentInstance,
+  eventResponderInstance: ReactDOMEventResponderInstance,
 ): void {
   let rootEventComponentInstances = rootEventTypesToEventComponentInstances.get(
     rootEventType,
@@ -905,9 +839,9 @@ function registerRootEventType(
       rootEventComponentInstances,
     );
   }
-  let rootEventTypesSet = eventComponentInstance.rootEventTypes;
+  let rootEventTypesSet = eventResponderInstance.rootEventTypes;
   if (rootEventTypesSet === null) {
-    rootEventTypesSet = eventComponentInstance.rootEventTypes = new Set();
+    rootEventTypesSet = eventResponderInstance.rootEventTypes = new Set();
   }
   invariant(
     !rootEventTypesSet.has(rootEventType),
@@ -917,5 +851,5 @@ function registerRootEventType(
     rootEventType,
   );
   rootEventTypesSet.add(rootEventType);
-  rootEventComponentInstances.add(eventComponentInstance);
+  rootEventComponentInstances.add(eventResponderInstance);
 }

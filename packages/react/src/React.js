@@ -39,7 +39,7 @@ import {
   useReducer,
   useRef,
   useState,
-  useEvent,
+  useResponder,
 } from './ReactHooks';
 import {withSuspenseConfig} from './ReactBatchConfig';
 import {
@@ -52,7 +52,6 @@ import {
 } from './ReactElementValidator';
 import ReactSharedInternals from './ReactSharedInternals';
 import {error, warn} from './withComponentStack';
-import createEvent from 'shared/createEventComponent';
 import {enableJSXTransformAPI, enableFlareAPI} from 'shared/ReactFeatureFlags';
 const React = {
   Children: {
@@ -105,8 +104,7 @@ const React = {
 };
 
 if (enableFlareAPI) {
-  React.unstable_createEvent = createEvent;
-  React.unstable_useEvent = useEvent;
+  React.unstable_useResponder = useResponder;
 }
 
 // Note: some APIs are added with feature flags.

@@ -41,7 +41,6 @@ import {
   SimpleMemoComponent,
   LazyComponent,
   IncompleteClassComponent,
-  EventComponent,
 } from 'shared/ReactWorkTags';
 import {
   NoEffect,
@@ -60,7 +59,6 @@ import {
   enableProfilerTimer,
   enableSchedulerTracing,
   enableSuspenseServerRenderer,
-  enableFlareAPI,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import shallowEqual from 'shared/shallowEqual';
@@ -109,11 +107,7 @@ import {
 } from './ReactFiberHostConfig';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import {shouldSuspend} from './ReactFiberReconciler';
-import {
-  pushHostContext,
-  pushHostContainer,
-  pushHostContextForEventComponent,
-} from './ReactFiberHostContext';
+import {pushHostContext, pushHostContainer} from './ReactFiberHostContext';
 import {
   suspenseStackCursor,
   pushSuspenseContext,
@@ -2410,20 +2404,6 @@ function updateContextConsumer(
   return workInProgress.child;
 }
 
-function updateEventComponent(current, workInProgress, renderExpirationTime) {
-  const nextProps = workInProgress.pendingProps;
-  let nextChildren = nextProps.children;
-
-  reconcileChildren(
-    current,
-    workInProgress,
-    nextChildren,
-    renderExpirationTime,
-  );
-  pushHostContextForEventComponent(workInProgress);
-  return workInProgress.child;
-}
-
 export function markWorkInProgressReceivedUpdate() {
   didReceiveUpdate = true;
 }
@@ -2713,11 +2693,6 @@ function beginWork(
           pushSuspenseContext(workInProgress, suspenseStackCursor.current);
           break;
         }
-        case EventComponent:
-          if (enableFlareAPI) {
-            pushHostContextForEventComponent(workInProgress);
-          }
-          break;
       }
       return bailoutOnAlreadyFinishedWork(
         current,
@@ -2902,16 +2877,6 @@ function beginWork(
         workInProgress,
         renderExpirationTime,
       );
-    }
-    case EventComponent: {
-      if (enableFlareAPI) {
-        return updateEventComponent(
-          current,
-          workInProgress,
-          renderExpirationTime,
-        );
-      }
-      break;
     }
   }
   invariant(

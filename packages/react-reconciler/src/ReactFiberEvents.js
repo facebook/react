@@ -9,9 +9,10 @@
 
 import type {Fiber, Dependencies} from './ReactFiber';
 import type {
-  ReactEventComponent,
+  RefObject,
   ReactEventResponder,
-  ReactEventComponentInstance,
+  ReactEventResponderInstance,
+  ReactEventResponderHook,
 } from 'shared/ReactTypes';
 
 import {
@@ -24,18 +25,18 @@ import {
 import {NoWork} from './ReactFiberExpirationTime';
 
 let currentlyRenderingFiber: null | Fiber = null;
-let currentEventComponentInstanceIndex: number = 0;
+let currentEventResponderHookIndex: number = 0;
 
 export function prepareToReadEventComponents(workInProgress: Fiber): void {
   currentlyRenderingFiber = workInProgress;
-  currentEventComponentInstanceIndex = 0;
+  currentEventResponderHookIndex = 0;
 }
 
-export function updateEventComponentInstance<E, C>(
-  eventComponent: ReactEventComponent<E, C>,
+export function updateEventResponderHooks<E, C>(
+  responder: ReactEventResponder<E, C>,
+  ref: RefObject,
   props: Object,
 ): void {
-  const responder = eventComponent.responder;
   let events;
   let dependencies: Dependencies | null = ((currentlyRenderingFiber: any): Fiber)
     .dependencies;
@@ -52,41 +53,40 @@ export function updateEventComponentInstance<E, C>(
       dependencies.events = events = [];
     }
   }
-  if (currentEventComponentInstanceIndex === events.length) {
-    let responderState = null;
-    const getInitialState = responder.getInitialState;
-    if (getInitialState !== undefined) {
-      responderState = getInitialState(props);
-    }
-    const eventComponentInstance = createEventComponentInstance(
-      ((currentlyRenderingFiber: any): Fiber),
-      props,
-      responder,
-      null,
-      responderState || {},
-      true,
-    );
-    events.push(eventComponentInstance);
-    currentEventComponentInstanceIndex++;
+  if (currentEventResponderHookIndex === events.length) {
+    const eventResponderHook = createEventResponderHook(props, ref, responder);
+    events.push(eventResponderHook);
+    currentEventResponderHookIndex++;
   } else {
-    const eventComponentInstance = events[currentEventComponentInstanceIndex++];
-    eventComponentInstance.responder = responder;
-    eventComponentInstance.props = props;
-    eventComponentInstance.currentFiber = ((currentlyRenderingFiber: any): Fiber);
+    const eventResponderHook = events[currentEventResponderHookIndex++];
+    // We don't update responder or ref, as they remain constant from
+    // when the hook gets mounted.
+    eventResponderHook.props = props;
   }
 }
 
-export function createEventComponentInstance<E, C>(
+function createEventResponderHook<E, C>(
+  props: Object,
+  ref: RefObject,
+  responder: ReactEventResponder<E, C>,
+): ReactEventResponderHook<E, C> {
+  return {
+    instance: null,
+    props,
+    ref,
+    responder,
+  };
+}
+
+export function createEventResponderInstance<E, C>(
   currentFiber: Fiber,
   props: Object,
   responder: ReactEventResponder<E, C>,
   rootInstance: mixed,
   state: Object,
-  isHook: boolean,
-): ReactEventComponentInstance<E, C> {
+): ReactEventResponderInstance<E, C> {
   return {
     currentFiber,
-    isHook,
     props,
     responder,
     rootEventTypes: null,
@@ -160,5 +160,20 @@ export function getEventComponentHostChildrenCount(
     }
 
     return hostChildrenCount;
+  }
+}
+
+export function forEachEventResponderHookOnFiber<E, C>(
+  fiber: Fiber,
+  cb: (ReactEventResponderHook<E, C>, Fiber) => void,
+): void {
+  const dependencies = fiber.dependencies;
+  if (dependencies !== null) {
+    const events = dependencies.events;
+    if (events !== null) {
+      for (let i = 0, len = events.length; i < len; i++) {
+        cb(events[i], fiber);
+      }
+    }
   }
 }

@@ -13,8 +13,7 @@ export type ReactNode =
   | ReactText
   | ReactFragment
   | ReactProvider<any>
-  | ReactConsumer<any>
-  | ReactEventComponent<any, any>;
+  | ReactConsumer<any>;
 
 export type ReactEmpty = null | void | boolean;
 
@@ -77,12 +76,11 @@ export type ReactPortal = {
 };
 
 export type RefObject = {|
-  current: any,
+  current: null | mixed,
 |};
 
-export type ReactEventComponentInstance<E, C> = {|
+export type ReactEventResponderInstance<E, C> = {|
   currentFiber: mixed,
-  isHook: boolean,
   props: Object,
   responder: ReactEventResponder<E, C>,
   rootEventTypes: null | Set<string>,
@@ -90,7 +88,7 @@ export type ReactEventComponentInstance<E, C> = {|
   state: Object,
 |};
 
-export type ReactEventResponder<E, C> = {
+export type ReactEventResponder<E, C> = {|
   displayName: string,
   targetEventTypes?: Array<string>,
   rootEventTypes?: Array<string>,
@@ -100,10 +98,12 @@ export type ReactEventResponder<E, C> = {
   onMount?: (context: C, props: Object, state: Object) => void,
   onUnmount?: (context: C, props: Object, state: Object) => void,
   onOwnershipChange?: (context: C, props: Object, state: Object) => void,
-};
+|};
 
-export type ReactEventComponent<E, C> = {|
-  $$typeof: Symbol | number,
+export type ReactEventResponderHook<E, C> = {|
+  instance: null | ReactEventResponderInstance<E, C>,
+  props: Object,
+  ref: RefObject,
   responder: ReactEventResponder<E, C>,
 |};
 

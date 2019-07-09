@@ -12,7 +12,7 @@
 let React;
 let ReactFeatureFlags;
 let ReactDOM;
-let Scroll;
+let useScrollResponder;
 
 const createEvent = (type, data) => {
   const event = document.createEvent('CustomEvent');
@@ -25,6 +25,11 @@ const createEvent = (type, data) => {
   return event;
 };
 
+function ScrollResponderTest({_ref, children, ...props}) {
+  useScrollResponder(_ref, props);
+  return children;
+}
+
 describe('Scroll event responder', () => {
   let container;
 
@@ -34,7 +39,7 @@ describe('Scroll event responder', () => {
     ReactFeatureFlags.enableFlareAPI = true;
     React = require('react');
     ReactDOM = require('react-dom');
-    Scroll = require('react-events/scroll').Scroll;
+    useScrollResponder = require('react-events/scroll').useScrollResponder;
 
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -53,9 +58,9 @@ describe('Scroll event responder', () => {
       onScroll = jest.fn();
       ref = React.createRef();
       const element = (
-        <Scroll disabled={true} onScroll={onScroll}>
+        <ScrollResponderTest _ref={ref} disabled={true} onScroll={onScroll}>
           <div ref={ref} />
-        </Scroll>
+        </ScrollResponderTest>
       );
       ReactDOM.render(element, container);
     });
@@ -73,9 +78,9 @@ describe('Scroll event responder', () => {
       onScroll = jest.fn();
       ref = React.createRef();
       const element = (
-        <Scroll onScroll={onScroll}>
+        <ScrollResponderTest _ref={ref} onScroll={onScroll}>
           <div ref={ref} />
-        </Scroll>
+        </ScrollResponderTest>
       );
       ReactDOM.render(element, container);
     });
@@ -223,9 +228,9 @@ describe('Scroll event responder', () => {
       onScrollDragStart = jest.fn();
       ref = React.createRef();
       const element = (
-        <Scroll onScrollDragStart={onScrollDragStart}>
+        <ScrollResponderTest _ref={ref} onScrollDragStart={onScrollDragStart}>
           <div ref={ref} />
-        </Scroll>
+        </ScrollResponderTest>
       );
       ReactDOM.render(element, container);
     });
@@ -256,9 +261,9 @@ describe('Scroll event responder', () => {
       onScrollDragEnd = jest.fn();
       ref = React.createRef();
       const element = (
-        <Scroll onScrollDragEnd={onScrollDragEnd}>
+        <ScrollResponderTest _ref={ref} onScrollDragEnd={onScrollDragEnd}>
           <div ref={ref} />
-        </Scroll>
+        </ScrollResponderTest>
       );
       ReactDOM.render(element, container);
     });

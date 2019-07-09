@@ -12,8 +12,9 @@
 let React;
 let ReactFeatureFlags;
 let ReactDOM;
-let Press;
+let usePressResponder;
 let Scheduler;
+let PressResponder;
 
 const DEFAULT_LONG_PRESS_DELAY = 500;
 
@@ -58,7 +59,8 @@ function init() {
   ReactFeatureFlags.enableFlareAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
-  Press = require('react-events/press').Press;
+  usePressResponder = require('react-events/press').usePressResponder;
+  PressResponder = require('react-events/press').PressResponder;
   Scheduler = require('scheduler');
 }
 
@@ -86,16 +88,16 @@ describe('Event responder: Press', () => {
       onPress = jest.fn();
       onPressEnd = jest.fn();
       ref = React.createRef();
-      const element = (
-        <Press
-          disabled={true}
-          onPressStart={onPressStart}
-          onPress={onPress}
-          onPressEnd={onPressEnd}>
-          <div ref={ref} />
-        </Press>
-      );
-      ReactDOM.render(element, container);
+      function Test() {
+        usePressResponder(ref, {
+          disabled: true,
+          onPressStart,
+          onPress,
+          onPressEnd,
+        });
+        return <div ref={ref} />;
+      }
+      ReactDOM.render(<Test />, container);
     });
 
     it('prevents custom events being dispatched', () => {
@@ -113,12 +115,13 @@ describe('Event responder: Press', () => {
     beforeEach(() => {
       onPressStart = jest.fn();
       ref = React.createRef();
-      const element = (
-        <Press onPressStart={onPressStart}>
-          <div ref={ref} />
-        </Press>
-      );
-      ReactDOM.render(element, container);
+      function Test() {
+        usePressResponder(ref, {
+          onPressStart,
+        });
+        return <div ref={ref} />;
+      }
+      ReactDOM.render(<Test />, container);
     });
 
     it('is called after "pointerdown" event', () => {
@@ -203,12 +206,14 @@ describe('Event responder: Press', () => {
 
     describe('delayPressStart', () => {
       it('can be configured', () => {
-        const element = (
-          <Press delayPressStart={2000} onPressStart={onPressStart}>
-            <div ref={ref} />
-          </Press>
-        );
-        ReactDOM.render(element, container);
+        function Test() {
+          usePressResponder(ref, {
+            delayPressStart: 2000,
+            onPressStart,
+          });
+          return <div ref={ref} />;
+        }
+        ReactDOM.render(<Test />, container);
 
         ref.current.dispatchEvent(createEvent('pointerdown'));
         jest.advanceTimersByTime(1999);
@@ -218,12 +223,14 @@ describe('Event responder: Press', () => {
       });
 
       it('is cut short if the press is released during a delay', () => {
-        const element = (
-          <Press delayPressStart={2000} onPressStart={onPressStart}>
-            <div ref={ref} />
-          </Press>
-        );
-        ReactDOM.render(element, container);
+        function Test() {
+          usePressResponder(ref, {
+            delayPressStart: 2000,
+            onPressStart,
+          });
+          return <div ref={ref} />;
+        }
+        ReactDOM.render(<Test />, container);
 
         ref.current.getBoundingClientRect = () => ({
           top: 50,
@@ -247,24 +254,28 @@ describe('Event responder: Press', () => {
       });
 
       it('onPressStart is called synchronously if delay is 0ms', () => {
-        const element = (
-          <Press delayPressStart={0} onPressStart={onPressStart}>
-            <div ref={ref} />
-          </Press>
-        );
-        ReactDOM.render(element, container);
+        function Test() {
+          usePressResponder(ref, {
+            delayPressStart: 0,
+            onPressStart,
+          });
+          return <div ref={ref} />;
+        }
+        ReactDOM.render(<Test />, container);
 
         ref.current.dispatchEvent(createEvent('pointerdown'));
         expect(onPressStart).toHaveBeenCalledTimes(1);
       });
 
       it('onPressStart should not be called if pointerCancel is fired before delayPressStart is finished', () => {
-        const element = (
-          <Press delayPressStart={500} onPressStart={onPressStart}>
-            <div ref={ref} />
-          </Press>
-        );
-        ReactDOM.render(element, container);
+        function Test() {
+          usePressResponder(ref, {
+            delayPressStart: 500,
+            onPressStart,
+          });
+          return <div ref={ref} />;
+        }
+        ReactDOM.render(<Test />, container);
 
         ref.current.dispatchEvent(createEvent('pointerdown'));
         jest.advanceTimersByTime(499);
@@ -280,12 +291,14 @@ describe('Event responder: Press', () => {
         // This test makes sure that onPressStart is called each time a press
         // starts, even if a delayPressEnd is delaying the deactivation of the
         // previous press.
-        const element = (
-          <Press delayPressEnd={2000} onPressStart={onPressStart}>
-            <div ref={ref} />
-          </Press>
-        );
-        ReactDOM.render(element, container);
+        function Test() {
+          usePressResponder(ref, {
+            delayPressEnd: 500,
+            onPressStart,
+          });
+          return <div ref={ref} />;
+        }
+        ReactDOM.render(<Test />, container);
 
         ref.current.dispatchEvent(createEvent('pointerdown'));
         ref.current.dispatchEvent(createEvent('pointerup'));
@@ -301,12 +314,13 @@ describe('Event responder: Press', () => {
     beforeEach(() => {
       onPressEnd = jest.fn();
       ref = React.createRef();
-      const element = (
-        <Press onPressEnd={onPressEnd}>
-          <div ref={ref} />
-        </Press>
-      );
-      ReactDOM.render(element, container);
+      function Test() {
+        usePressResponder(ref, {
+          onPressEnd,
+        });
+        return <div ref={ref} />;
+      }
+      ReactDOM.render(<Test />, container);
     });
 
     it('is called after "pointerup" event', () => {
@@ -441,12 +455,14 @@ describe('Event responder: Press', () => {
 
     describe('delayPressEnd', () => {
       it('can be configured', () => {
-        const element = (
-          <Press delayPressEnd={2000} onPressEnd={onPressEnd}>
-            <div ref={ref} />
-          </Press>
-        );
-        ReactDOM.render(element, container);
+        function Test() {
+          usePressResponder(ref, {
+            delayPressEnd: 2000,
+            onPressEnd,
+          });
+          return <div ref={ref} />;
+        }
+        ReactDOM.render(<Test />, container);
 
         ref.current.dispatchEvent(createEvent('pointerdown'));
         ref.current.dispatchEvent(createEvent('pointerup'));
@@ -457,12 +473,14 @@ describe('Event responder: Press', () => {
       });
 
       it('is reset if "pointerdown" is dispatched during a delay', () => {
-        const element = (
-          <Press delayPressEnd={500} onPressEnd={onPressEnd}>
-            <div ref={ref} />
-          </Press>
-        );
-        ReactDOM.render(element, container);
+        function Test() {
+          usePressResponder(ref, {
+            delayPressEnd: 500,
+            onPressEnd,
+          });
+          return <div ref={ref} />;
+        }
+        ReactDOM.render(<Test />, container);
 
         ref.current.dispatchEvent(createEvent('pointerdown'));
         ref.current.dispatchEvent(createEvent('pointerup'));
@@ -477,12 +495,14 @@ describe('Event responder: Press', () => {
     });
 
     it('onPressEnd is called synchronously if delay is 0ms', () => {
-      const element = (
-        <Press delayPressEnd={0} onPressEnd={onPressEnd}>
-          <div ref={ref} />
-        </Press>
-      );
-      ReactDOM.render(element, container);
+      function Test() {
+        usePressResponder(ref, {
+          delayPressEnd: 0,
+          onPressEnd,
+        });
+        return <div ref={ref} />;
+      }
+      ReactDOM.render(<Test />, container);
 
       ref.current.dispatchEvent(createEvent('pointerdown'));
       ref.current.dispatchEvent(createEvent('pointerup'));
@@ -496,12 +516,13 @@ describe('Event responder: Press', () => {
     beforeEach(() => {
       onPressChange = jest.fn();
       ref = React.createRef();
-      const element = (
-        <Press onPressChange={onPressChange}>
-          <div ref={ref} />
-        </Press>
-      );
-      ReactDOM.render(element, container);
+      function Test() {
+        usePressResponder(ref, {
+          onPressChange,
+        });
+        return <div ref={ref} />;
+      }
+      ReactDOM.render(<Test />, container);
     });
 
     it('is called after "pointerdown" and "pointerup" events', () => {
@@ -523,12 +544,14 @@ describe('Event responder: Press', () => {
     });
 
     it('is called after delayed onPressStart', () => {
-      const element = (
-        <Press delayPressStart={500} onPressChange={onPressChange}>
-          <div ref={ref} />
-        </Press>
-      );
-      ReactDOM.render(element, container);
+      function Test() {
+        usePressResponder(ref, {
+          delayPressStart: 500,
+          onPressChange,
+        });
+        return <div ref={ref} />;
+      }
+      ReactDOM.render(<Test />, container);
 
       ref.current.dispatchEvent(createEvent('pointerdown'));
       jest.advanceTimersByTime(499);
@@ -539,12 +562,14 @@ describe('Event responder: Press', () => {
     });
 
     it('is called after delayPressStart is cut short', () => {
-      const element = (
-        <Press delayPressStart={500} onPressChange={onPressChange}>
-          <div ref={ref} />
-        </Press>
-      );
-      ReactDOM.render(element, container);
+      function Test() {
+        usePressResponder(ref, {
+          delayPressStart: 500,
+          onPressChange,
+        });
+        return <div ref={ref} />;
+      }
+      ReactDOM.render(<Test />, container);
 
       ref.current.getBoundingClientRect = () => ({
         top: 50,
@@ -568,12 +593,14 @@ describe('Event responder: Press', () => {
     });
 
     it('is called after delayed onPressEnd', () => {
-      const element = (
-        <Press delayPressEnd={500} onPressChange={onPressChange}>
-          <div ref={ref} />
-        </Press>
-      );
-      ReactDOM.render(element, container);
+      function Test() {
+        usePressResponder(ref, {
+          delayPressEnd: 500,
+          onPressChange,
+        });
+        return <div ref={ref} />;
+      }
+      ReactDOM.render(<Test />, container);
 
       ref.current.dispatchEvent(createEvent('pointerdown'));
       expect(onPressChange).toHaveBeenCalledTimes(1);
@@ -619,12 +646,13 @@ describe('Event responder: Press', () => {
     beforeEach(() => {
       onPress = jest.fn();
       ref = React.createRef();
-      const element = (
-        <Press onPress={onPress}>
-          <div ref={ref} />
-        </Press>
-      );
-      ReactDOM.render(element, container);
+      function Test() {
+        usePressResponder(ref, {
+          onPress,
+        });
+        return <div ref={ref} />;
+      }
+      ReactDOM.render(<Test />, container);
       ref.current.getBoundingClientRect = () => ({
         top: 0,
         left: 0,
@@ -675,12 +703,13 @@ describe('Event responder: Press', () => {
 
     it('is not called after invalid "keyup" event', () => {
       const inputRef = React.createRef();
-      const element = (
-        <Press onPress={onPress}>
-          <input ref={inputRef} />
-        </Press>
-      );
-      ReactDOM.render(element, container);
+      function Test() {
+        usePressResponder(inputRef, {
+          onPress,
+        });
+        return <input ref={inputRef} />;
+      }
+      ReactDOM.render(<Test />, container);
       inputRef.current.dispatchEvent(
         createKeyboardEvent('keydown', {key: 'Enter'}),
       );
@@ -695,12 +724,14 @@ describe('Event responder: Press', () => {
     });
 
     it('is always called immediately after press is released', () => {
-      const element = (
-        <Press delayPressEnd={500} onPress={onPress}>
-          <div ref={ref} />
-        </Press>
-      );
-      ReactDOM.render(element, container);
+      function Test() {
+        usePressResponder(ref, {
+          delayPressEnd: 500,
+          onPress,
+        });
+        return <div ref={ref} />;
+      }
+      ReactDOM.render(<Test />, container);
 
       ref.current.dispatchEvent(createEvent('pointerdown'));
       ref.current.dispatchEvent(
@@ -724,12 +755,13 @@ describe('Event responder: Press', () => {
     beforeEach(() => {
       onLongPress = jest.fn();
       ref = React.createRef();
-      const element = (
-        <Press onLongPress={onLongPress}>
-          <div ref={ref} />
-        </Press>
-      );
-      ReactDOM.render(element, container);
+      function Test() {
+        usePressResponder(ref, {
+          onLongPress,
+        });
+        return <div ref={ref} />;
+      }
+      ReactDOM.render(<Test />, container);
     });
 
     it('is called if "pointerdown" lasts default delay', () => {
@@ -796,12 +828,14 @@ describe('Event responder: Press', () => {
 
     describe('delayLongPress', () => {
       it('can be configured', () => {
-        const element = (
-          <Press delayLongPress={2000} onLongPress={onLongPress}>
-            <div ref={ref} />
-          </Press>
-        );
-        ReactDOM.render(element, container);
+        function Test() {
+          usePressResponder(ref, {
+            delayLongPress: 2000,
+            onLongPress,
+          });
+          return <div ref={ref} />;
+        }
+        ReactDOM.render(<Test />, container);
 
         ref.current.dispatchEvent(createEvent('pointerdown'));
         jest.advanceTimersByTime(1999);
@@ -811,12 +845,14 @@ describe('Event responder: Press', () => {
       });
 
       it('uses 10ms minimum delay length', () => {
-        const element = (
-          <Press delayLongPress={0} onLongPress={onLongPress}>
-            <div ref={ref} />
-          </Press>
-        );
-        ReactDOM.render(element, container);
+        function Test() {
+          usePressResponder(ref, {
+            delayLongPress: 0,
+            onLongPress,
+          });
+          return <div ref={ref} />;
+        }
+        ReactDOM.render(<Test />, container);
 
         ref.current.dispatchEvent(createEvent('pointerdown'));
         jest.advanceTimersByTime(9);
@@ -827,12 +863,14 @@ describe('Event responder: Press', () => {
 
       it('compounds with "delayPressStart"', () => {
         const delayPressStart = 100;
-        const element = (
-          <Press delayPressStart={delayPressStart} onLongPress={onLongPress}>
-            <div ref={ref} />
-          </Press>
-        );
-        ReactDOM.render(element, container);
+        function Test() {
+          usePressResponder(ref, {
+            delayPressStart,
+            onLongPress,
+          });
+          return <div ref={ref} />;
+        }
+        ReactDOM.render(<Test />, container);
 
         ref.current.dispatchEvent(createEvent('pointerdown'));
         jest.advanceTimersByTime(
@@ -849,12 +887,13 @@ describe('Event responder: Press', () => {
     it('is called when long press state changes', () => {
       const onLongPressChange = jest.fn();
       const ref = React.createRef();
-      const element = (
-        <Press onLongPressChange={onLongPressChange}>
-          <div ref={ref} />
-        </Press>
-      );
-      ReactDOM.render(element, container);
+      function Test() {
+        usePressResponder(ref, {
+          onLongPressChange,
+        });
+        return <div ref={ref} />;
+      }
+      ReactDOM.render(<Test />, container);
 
       ref.current.dispatchEvent(createEvent('pointerdown'));
       jest.advanceTimersByTime(DEFAULT_LONG_PRESS_DELAY);
@@ -868,12 +907,14 @@ describe('Event responder: Press', () => {
     it('is called after delayed onPressEnd', () => {
       const onLongPressChange = jest.fn();
       const ref = React.createRef();
-      const element = (
-        <Press delayPressEnd={500} onLongPressChange={onLongPressChange}>
-          <div ref={ref} />
-        </Press>
-      );
-      ReactDOM.render(element, container);
+      function Test() {
+        usePressResponder(ref, {
+          delayPressEnd: 500,
+          onLongPressChange,
+        });
+        return <div ref={ref} />;
+      }
+      ReactDOM.render(<Test />, container);
 
       ref.current.dispatchEvent(createEvent('pointerdown'));
       jest.advanceTimersByTime(DEFAULT_LONG_PRESS_DELAY);
@@ -893,16 +934,16 @@ describe('Event responder: Press', () => {
       const onPress = jest.fn();
       const onPressChange = jest.fn();
       const ref = React.createRef();
-      const element = (
-        <Press
-          onLongPress={() => {}}
-          onLongPressShouldCancelPress={() => true}
-          onPressChange={onPressChange}
-          onPress={onPress}>
-          <div ref={ref} />
-        </Press>
-      );
-      ReactDOM.render(element, container);
+      function Test() {
+        usePressResponder(ref, {
+          onLongPress: () => {},
+          onLongPressShouldCancelPress: () => true,
+          onPressChange,
+          onPress,
+        });
+        return <div ref={ref} />;
+      }
+      ReactDOM.render(<Test />, container);
 
       // NOTE: onPressChange behavior should not be affected
       ref.current.dispatchEvent(createEvent('pointerdown'));
@@ -918,12 +959,13 @@ describe('Event responder: Press', () => {
     it('is called after "pointermove"', () => {
       const onPressMove = jest.fn();
       const ref = React.createRef();
-      const element = (
-        <Press onPressMove={onPressMove}>
-          <div ref={ref} />
-        </Press>
-      );
-      ReactDOM.render(element, container);
+      function Test() {
+        usePressResponder(ref, {
+          onPressMove,
+        });
+        return <div ref={ref} />;
+      }
+      ReactDOM.render(<Test />, container);
 
       ref.current.getBoundingClientRect = () => ({
         top: 0,
@@ -950,12 +992,13 @@ describe('Event responder: Press', () => {
     it('is not called if "pointermove" occurs during keyboard press', () => {
       const onPressMove = jest.fn();
       const ref = React.createRef();
-      const element = (
-        <Press onPressMove={onPressMove}>
-          <div ref={ref} />
-        </Press>
-      );
-      ReactDOM.render(element, container);
+      function Test() {
+        usePressResponder(ref, {
+          onPressMove,
+        });
+        return <div ref={ref} />;
+      }
+      ReactDOM.render(<Test />, container);
 
       ref.current.getBoundingClientRect = () => ({
         top: 0,
@@ -977,12 +1020,13 @@ describe('Event responder: Press', () => {
     it('ignores browser emulated events', () => {
       const onPressMove = jest.fn();
       const ref = React.createRef();
-      const element = (
-        <Press onPressMove={onPressMove}>
-          <div ref={ref} />
-        </Press>
-      );
-      ReactDOM.render(element, container);
+      function Test() {
+        usePressResponder(ref, {
+          onPressMove,
+        });
+        return <div ref={ref} />;
+      }
+      ReactDOM.render(<Test />, container);
 
       ref.current.getBoundingClientRect = () => ({
         top: 0,
@@ -1052,18 +1096,17 @@ describe('Event responder: Press', () => {
           events.push(msg);
         };
 
-        const element = (
-          <Press
-            onPress={createEventHandler('onPress')}
-            onPressChange={createEventHandler('onPressChange')}
-            onPressMove={createEventHandler('onPressMove')}
-            onPressStart={createEventHandler('onPressStart')}
-            onPressEnd={createEventHandler('onPressEnd')}>
-            <div ref={ref} />
-          </Press>
-        );
-
-        ReactDOM.render(element, container);
+        function Test() {
+          usePressResponder(ref, {
+            onPress: createEventHandler('onPress'),
+            onPressChange: createEventHandler('onPressChange'),
+            onPressMove: createEventHandler('onPressMove'),
+            onPressStart: createEventHandler('onPressStart'),
+            onPressEnd: createEventHandler('onPressEnd'),
+          });
+          return <div ref={ref} />;
+        }
+        ReactDOM.render(<Test />, container);
 
         ref.current.getBoundingClientRect = getBoundingClientRectMock;
         ref.current.dispatchEvent(createEvent('pointerdown'));
@@ -1091,20 +1134,21 @@ describe('Event responder: Press', () => {
           events.push(msg);
         };
 
-        const element = (
-          <div ref={outerRef}>
-            <Press
-              onPress={createEventHandler('onPress')}
-              onPressChange={createEventHandler('onPressChange')}
-              onPressMove={createEventHandler('onPressMove')}
-              onPressStart={createEventHandler('onPressStart')}
-              onPressEnd={createEventHandler('onPressEnd')}>
+        function Test() {
+          usePressResponder(innerRef, {
+            onPress: createEventHandler('onPress'),
+            onPressChange: createEventHandler('onPressChange'),
+            onPressMove: createEventHandler('onPressMove'),
+            onPressStart: createEventHandler('onPressStart'),
+            onPressEnd: createEventHandler('onPressEnd'),
+          });
+          return (
+            <div ref={outerRef}>
               <div ref={innerRef} />
-            </Press>
-          </div>
-        );
-
-        ReactDOM.render(element, container);
+            </div>
+          );
+        }
+        ReactDOM.render(<Test />, container);
 
         innerRef.current.getBoundingClientRect = getBoundingClientRectMock;
         innerRef.current.dispatchEvent(createEvent('pointerdown'));
@@ -1139,19 +1183,18 @@ describe('Event responder: Press', () => {
           events.push(msg);
         };
 
-        const element = (
-          <Press
-            delayPressStart={500}
-            onPress={createEventHandler('onPress')}
-            onPressChange={createEventHandler('onPressChange')}
-            onPressMove={createEventHandler('onPressMove')}
-            onPressStart={createEventHandler('onPressStart')}
-            onPressEnd={createEventHandler('onPressEnd')}>
-            <div ref={ref} />
-          </Press>
-        );
-
-        ReactDOM.render(element, container);
+        function Test() {
+          usePressResponder(ref, {
+            delayPressStart: 500,
+            onPress: createEventHandler('onPress'),
+            onPressChange: createEventHandler('onPressChange'),
+            onPressMove: createEventHandler('onPressMove'),
+            onPressStart: createEventHandler('onPressStart'),
+            onPressEnd: createEventHandler('onPressEnd'),
+          });
+          return <div ref={ref} />;
+        }
+        ReactDOM.render(<Test />, container);
 
         ref.current.getBoundingClientRect = getBoundingClientRectMock;
         ref.current.dispatchEvent(createEvent('pointerdown'));
@@ -1178,19 +1221,19 @@ describe('Event responder: Press', () => {
         };
         const pressRetentionOffset = {top: 40, bottom: 40, left: 40, right: 40};
 
-        const element = (
-          <Press
-            pressRetentionOffset={pressRetentionOffset}
-            onPress={createEventHandler('onPress')}
-            onPressChange={createEventHandler('onPressChange')}
-            onPressMove={createEventHandler('onPressMove')}
-            onPressStart={createEventHandler('onPressStart')}
-            onPressEnd={createEventHandler('onPressEnd')}>
-            <div ref={ref} />
-          </Press>
-        );
+        function Test() {
+          usePressResponder(ref, {
+            pressRetentionOffset: pressRetentionOffset,
+            onPress: createEventHandler('onPress'),
+            onPressChange: createEventHandler('onPressChange'),
+            onPressMove: createEventHandler('onPressMove'),
+            onPressStart: createEventHandler('onPressStart'),
+            onPressEnd: createEventHandler('onPressEnd'),
+          });
+          return <div ref={ref} />;
+        }
+        ReactDOM.render(<Test />, container);
 
-        ReactDOM.render(element, container);
         ref.current.getBoundingClientRect = getBoundingClientRectMock;
         ref.current.dispatchEvent(createEvent('pointerdown'));
         ref.current.dispatchEvent(
@@ -1217,16 +1260,16 @@ describe('Event responder: Press', () => {
           events.push(msg);
         };
 
-        const element = (
-          <Press
-            onPress={createEventHandler('onPress')}
-            onPressStart={createEventHandler('onPressStart')}
-            onPressEnd={createEventHandler('onPressEnd')}>
-            <div ref={ref} />
-          </Press>
-        );
+        function Test() {
+          usePressResponder(ref, {
+            onPress: createEventHandler('onPress'),
+            onPressStart: createEventHandler('onPressStart'),
+            onPressEnd: createEventHandler('onPressEnd'),
+          });
+          return <div ref={ref} />;
+        }
+        ReactDOM.render(<Test />, container);
 
-        ReactDOM.render(element, container);
         ref.current.getBoundingClientRect = getBoundingClientRectMock;
         ref.current.dispatchEvent(createEvent('pointerdown'));
         // emulate smaller dimensions change on activation
@@ -1255,16 +1298,16 @@ describe('Event responder: Press', () => {
           events.push(msg);
         };
 
-        const element = (
-          <Press
-            onPress={createEventHandler('onPress')}
-            onPressStart={createEventHandler('onPressStart')}
-            onPressEnd={createEventHandler('onPressEnd')}>
-            <div ref={ref} />
-          </Press>
-        );
+        function Test() {
+          usePressResponder(ref, {
+            onPress: createEventHandler('onPress'),
+            onPressStart: createEventHandler('onPressStart'),
+            onPressEnd: createEventHandler('onPressEnd'),
+          });
+          return <div ref={ref} />;
+        }
+        ReactDOM.render(<Test />, container);
 
-        ReactDOM.render(element, container);
         ref.current.getBoundingClientRect = getBoundingClientRectMock;
         ref.current.dispatchEvent(createEvent('pointerdown'));
         // emulate larger dimensions change on activation
@@ -1304,18 +1347,17 @@ describe('Event responder: Press', () => {
           events.push(msg);
         };
 
-        const element = (
-          <Press
-            onPress={createEventHandler('onPress')}
-            onPressChange={createEventHandler('onPressChange')}
-            onPressMove={createEventHandler('onPressMove')}
-            onPressStart={createEventHandler('onPressStart')}
-            onPressEnd={createEventHandler('onPressEnd')}>
-            <div ref={ref} />
-          </Press>
-        );
-
-        ReactDOM.render(element, container);
+        function Test() {
+          usePressResponder(ref, {
+            onPress: createEventHandler('onPress'),
+            onPressChange: createEventHandler('onPressChange'),
+            onPressMove: createEventHandler('onPressMove'),
+            onPressStart: createEventHandler('onPressStart'),
+            onPressEnd: createEventHandler('onPressEnd'),
+          });
+          return <div ref={ref} />;
+        }
+        ReactDOM.render(<Test />, container);
 
         ref.current.getBoundingClientRect = getBoundingClientRectMock;
         ref.current.dispatchEvent(createEvent('pointerdown'));
@@ -1342,21 +1384,20 @@ describe('Event responder: Press', () => {
           events.push(msg);
         };
 
-        const element = (
-          <Press
-            delayPressStart={500}
-            delayPressEnd={500}
-            onLongPress={createEventHandler('onLongPress')}
-            onPress={createEventHandler('onPress')}
-            onPressChange={createEventHandler('onPressChange')}
-            onPressMove={createEventHandler('onPressMove')}
-            onPressStart={createEventHandler('onPressStart')}
-            onPressEnd={createEventHandler('onPressEnd')}>
-            <div ref={ref} />
-          </Press>
-        );
-
-        ReactDOM.render(element, container);
+        function Test() {
+          usePressResponder(ref, {
+            delayPressStart: 500,
+            delayPressEnd: 500,
+            onLongPress: createEventHandler('onLongPress'),
+            onPress: createEventHandler('onPress'),
+            onPressChange: createEventHandler('onPressChange'),
+            onPressMove: createEventHandler('onPressMove'),
+            onPressStart: createEventHandler('onPressStart'),
+            onPressEnd: createEventHandler('onPressEnd'),
+          });
+          return <div ref={ref} />;
+        }
+        ReactDOM.render(<Test />, container);
 
         ref.current.getBoundingClientRect = getBoundingClientRectMock;
         ref.current.dispatchEvent(createEvent('pointerdown'));
@@ -1380,18 +1421,17 @@ describe('Event responder: Press', () => {
         events.push(msg);
       };
 
-      const element = (
-        <Press
-          onPress={createEventHandler('onPress')}
-          onPressChange={createEventHandler('onPressChange')}
-          onPressMove={createEventHandler('onPressMove')}
-          onPressStart={createEventHandler('onPressStart')}
-          onPressEnd={createEventHandler('onPressEnd')}>
-          <div ref={ref} />
-        </Press>
-      );
-
-      ReactDOM.render(element, container);
+      function Test() {
+        usePressResponder(ref, {
+          onPress: createEventHandler('onPress'),
+          onPressChange: createEventHandler('onPressChange'),
+          onPressMove: createEventHandler('onPressMove'),
+          onPressStart: createEventHandler('onPressStart'),
+          onPressEnd: createEventHandler('onPressEnd'),
+        });
+        return <div ref={ref} />;
+      }
+      ReactDOM.render(<Test />, container);
 
       ref.current.getBoundingClientRect = getBoundingClientRectMock;
       ref.current.dispatchEvent(
@@ -1435,18 +1475,17 @@ describe('Event responder: Press', () => {
         events.push(msg);
       };
 
-      const element = (
-        <Press
-          onPress={createEventHandler('onPress')}
-          onPressChange={createEventHandler('onPressChange')}
-          onPressMove={createEventHandler('onPressMove')}
-          onPressStart={createEventHandler('onPressStart')}
-          onPressEnd={createEventHandler('onPressEnd')}>
-          <div ref={ref} />
-        </Press>
-      );
-
-      ReactDOM.render(element, container);
+      function Test() {
+        usePressResponder(ref, {
+          onPress: createEventHandler('onPress'),
+          onPressChange: createEventHandler('onPressChange'),
+          onPressMove: createEventHandler('onPressMove'),
+          onPressStart: createEventHandler('onPressStart'),
+          onPressEnd: createEventHandler('onPressEnd'),
+        });
+        return <div ref={ref} />;
+      }
+      ReactDOM.render(<Test />, container);
 
       ref.current.getBoundingClientRect = getBoundingClientRectMock;
       ref.current.dispatchEvent(
@@ -1501,18 +1540,17 @@ describe('Event responder: Press', () => {
         events.push(msg);
       };
 
-      const element = (
-        <Press
-          onPress={createEventHandler('onPress')}
-          onPressChange={createEventHandler('onPressChange')}
-          onPressMove={createEventHandler('onPressMove')}
-          onPressStart={createEventHandler('onPressStart')}
-          onPressEnd={createEventHandler('onPressEnd')}>
-          <div ref={ref} />
-        </Press>
-      );
-
-      ReactDOM.render(element, container);
+      function Test() {
+        usePressResponder(ref, {
+          onPress: createEventHandler('onPress'),
+          onPressChange: createEventHandler('onPressChange'),
+          onPressMove: createEventHandler('onPressMove'),
+          onPressStart: createEventHandler('onPressStart'),
+          onPressEnd: createEventHandler('onPressEnd'),
+        });
+        return <div ref={ref} />;
+      }
+      ReactDOM.render(<Test />, container);
 
       ref.current.getBoundingClientRect = getBoundingClientRectMock;
       ref.current.dispatchEvent(
@@ -1625,18 +1663,17 @@ describe('Event responder: Press', () => {
           events.push(msg);
         };
 
-        const element = (
-          <Press
-            onPress={createEventHandler('onPress')}
-            onPressChange={createEventHandler('onPressChange')}
-            onPressMove={createEventHandler('onPressMove')}
-            onPressStart={createEventHandler('onPressStart')}
-            onPressEnd={createEventHandler('onPressEnd')}>
-            <div ref={ref} />
-          </Press>
-        );
-
-        ReactDOM.render(element, container);
+        function Test() {
+          usePressResponder(ref, {
+            onPress: createEventHandler('onPress'),
+            onPressChange: createEventHandler('onPressChange'),
+            onPressMove: createEventHandler('onPressMove'),
+            onPressStart: createEventHandler('onPressStart'),
+            onPressEnd: createEventHandler('onPressEnd'),
+          });
+          return <div ref={ref} />;
+        }
+        ReactDOM.render(<Test />, container);
 
         document.elementFromPoint = () => ref.current;
         ref.current.getBoundingClientRect = getBoundingClientRectMock;
@@ -1676,19 +1713,18 @@ describe('Event responder: Press', () => {
           events.push(msg);
         };
 
-        const element = (
-          <Press
-            delayPressStart={500}
-            onPress={createEventHandler('onPress')}
-            onPressChange={createEventHandler('onPressChange')}
-            onPressMove={createEventHandler('onPressMove')}
-            onPressStart={createEventHandler('onPressStart')}
-            onPressEnd={createEventHandler('onPressEnd')}>
-            <div ref={ref} />
-          </Press>
-        );
-
-        ReactDOM.render(element, container);
+        function Test() {
+          usePressResponder(ref, {
+            delayPressStart: 500,
+            onPress: createEventHandler('onPress'),
+            onPressChange: createEventHandler('onPressChange'),
+            onPressMove: createEventHandler('onPressMove'),
+            onPressStart: createEventHandler('onPressStart'),
+            onPressEnd: createEventHandler('onPressEnd'),
+          });
+          return <div ref={ref} />;
+        }
+        ReactDOM.render(<Test />, container);
 
         document.elementFromPoint = () => ref.current;
         ref.current.getBoundingClientRect = getBoundingClientRectMock;
@@ -1728,19 +1764,18 @@ describe('Event responder: Press', () => {
         };
         const pressRetentionOffset = {top: 40, bottom: 40, left: 40, right: 40};
 
-        const element = (
-          <Press
-            pressRetentionOffset={pressRetentionOffset}
-            onPress={createEventHandler('onPress')}
-            onPressChange={createEventHandler('onPressChange')}
-            onPressMove={createEventHandler('onPressMove')}
-            onPressStart={createEventHandler('onPressStart')}
-            onPressEnd={createEventHandler('onPressEnd')}>
-            <div ref={ref} />
-          </Press>
-        );
-
-        ReactDOM.render(element, container);
+        function Test() {
+          usePressResponder(ref, {
+            pressRetentionOffset,
+            onPress: createEventHandler('onPress'),
+            onPressChange: createEventHandler('onPressChange'),
+            onPressMove: createEventHandler('onPressMove'),
+            onPressStart: createEventHandler('onPressStart'),
+            onPressEnd: createEventHandler('onPressEnd'),
+          });
+          return <div ref={ref} />;
+        }
+        ReactDOM.render(<Test />, container);
 
         document.elementFromPoint = () => ref.current;
         ref.current.getBoundingClientRect = getBoundingClientRectMock;
@@ -1779,16 +1814,15 @@ describe('Event responder: Press', () => {
           events.push(msg);
         };
 
-        const element = (
-          <Press
-            onPress={createEventHandler('onPress')}
-            onPressStart={createEventHandler('onPressStart')}
-            onPressEnd={createEventHandler('onPressEnd')}>
-            <div ref={ref} />
-          </Press>
-        );
-
-        ReactDOM.render(element, container);
+        function Test() {
+          usePressResponder(ref, {
+            onPress: createEventHandler('onPress'),
+            onPressStart: createEventHandler('onPressStart'),
+            onPressEnd: createEventHandler('onPressEnd'),
+          });
+          return <div ref={ref} />;
+        }
+        ReactDOM.render(<Test />, container);
 
         document.elementFromPoint = () => ref.current;
         ref.current.getBoundingClientRect = getBoundingClientRectMock;
@@ -1833,16 +1867,15 @@ describe('Event responder: Press', () => {
           events.push(msg);
         };
 
-        const element = (
-          <Press
-            onPress={createEventHandler('onPress')}
-            onPressStart={createEventHandler('onPressStart')}
-            onPressEnd={createEventHandler('onPressEnd')}>
-            <div ref={ref} />
-          </Press>
-        );
-
-        ReactDOM.render(element, container);
+        function Test() {
+          usePressResponder(ref, {
+            onPress: createEventHandler('onPress'),
+            onPressStart: createEventHandler('onPressStart'),
+            onPressEnd: createEventHandler('onPressEnd'),
+          });
+          return <div ref={ref} />;
+        }
+        ReactDOM.render(<Test />, container);
 
         document.elementFromPoint = () => ref.current;
         ref.current.getBoundingClientRect = getBoundingClientRectMock;
@@ -1898,18 +1931,17 @@ describe('Event responder: Press', () => {
           events.push(msg);
         };
 
-        const element = (
-          <Press
-            onPress={createEventHandler('onPress')}
-            onPressChange={createEventHandler('onPressChange')}
-            onPressMove={createEventHandler('onPressMove')}
-            onPressStart={createEventHandler('onPressStart')}
-            onPressEnd={createEventHandler('onPressEnd')}>
-            <div ref={ref} />
-          </Press>
-        );
-
-        ReactDOM.render(element, container);
+        function Test() {
+          usePressResponder(ref, {
+            onPress: createEventHandler('onPress'),
+            onPressChange: createEventHandler('onPressChange'),
+            onPressMove: createEventHandler('onPressMove'),
+            onPressStart: createEventHandler('onPressStart'),
+            onPressEnd: createEventHandler('onPressEnd'),
+          });
+          return <div ref={ref} />;
+        }
+        ReactDOM.render(<Test />, container);
 
         document.elementFromPoint = () => ref.current;
         ref.current.getBoundingClientRect = getBoundingClientRectMock;
@@ -1955,21 +1987,20 @@ describe('Event responder: Press', () => {
           events.push(msg);
         };
 
-        const element = (
-          <Press
-            delayPressStart={500}
-            delayPressEnd={500}
-            onLongPress={createEventHandler('onLongPress')}
-            onPress={createEventHandler('onPress')}
-            onPressChange={createEventHandler('onPressChange')}
-            onPressMove={createEventHandler('onPressMove')}
-            onPressStart={createEventHandler('onPressStart')}
-            onPressEnd={createEventHandler('onPressEnd')}>
-            <div ref={ref} />
-          </Press>
-        );
-
-        ReactDOM.render(element, container);
+        function Test() {
+          usePressResponder(ref, {
+            delayPressStart: 500,
+            delayPressEnd: 500,
+            onLongPress: createEventHandler('onLongPress'),
+            onPress: createEventHandler('onPress'),
+            onPressChange: createEventHandler('onPressChange'),
+            onPressMove: createEventHandler('onPressMove'),
+            onPressStart: createEventHandler('onPressStart'),
+            onPressEnd: createEventHandler('onPressEnd'),
+          });
+          return <div ref={ref} />;
+        }
+        ReactDOM.render(<Test />, container);
 
         document.elementFromPoint = () => ref.current;
         ref.current.getBoundingClientRect = getBoundingClientRectMock;
@@ -2012,18 +2043,17 @@ describe('Event responder: Press', () => {
         events.push(msg);
       };
 
-      const element = (
-        <Press
-          onPress={createEventHandler('onPress')}
-          onPressChange={createEventHandler('onPressChange')}
-          onPressMove={createEventHandler('onPressMove')}
-          onPressStart={createEventHandler('onPressStart')}
-          onPressEnd={createEventHandler('onPressEnd')}>
-          <div ref={ref} />
-        </Press>
-      );
-
-      ReactDOM.render(element, container);
+      function Test() {
+        usePressResponder(ref, {
+          onPress: createEventHandler('onPress'),
+          onPressChange: createEventHandler('onPressChange'),
+          onPressMove: createEventHandler('onPressMove'),
+          onPressStart: createEventHandler('onPressStart'),
+          onPressEnd: createEventHandler('onPressEnd'),
+        });
+        return <div ref={ref} />;
+      }
+      ReactDOM.render(<Test />, container);
 
       document.elementFromPoint = () => ref.current;
       ref.current.getBoundingClientRect = getBoundingClientRectMock;
@@ -2083,21 +2113,21 @@ describe('Event responder: Press', () => {
         events.push(msg);
       };
 
-      const element = (
-        <Press
-          delayPressStart={250}
-          delayPressEnd={250}
-          onLongPress={createEventHandler('onLongPress')}
-          onLongPressChange={createEventHandler('onLongPressChange')}
-          onPress={createEventHandler('onPress')}
-          onPressChange={createEventHandler('onPressChange')}
-          onPressStart={createEventHandler('onPressStart')}
-          onPressEnd={createEventHandler('onPressEnd')}>
-          <div ref={ref} />
-        </Press>
-      );
+      function Test() {
+        usePressResponder(ref, {
+          delayPressStart: 250,
+          delayPressEnd: 250,
+          onLongPress: createEventHandler('onLongPress'),
+          onLongPressChange: createEventHandler('onLongPressChange'),
+          onPress: createEventHandler('onPress'),
+          onPressChange: createEventHandler('onPressChange'),
+          onPressStart: createEventHandler('onPressStart'),
+          onPressEnd: createEventHandler('onPressEnd'),
+        });
+        return <div ref={ref} />;
+      }
+      ReactDOM.render(<Test />, container);
 
-      ReactDOM.render(element, container);
       ref.current.getBoundingClientRect = () => ({
         top: 0,
         left: 0,
@@ -2150,72 +2180,27 @@ describe('Event responder: Press', () => {
     });
   });
 
-  describe('nested responders', () => {
-    it('dispatch events in the correct order', () => {
-      const events = [];
-      const ref = React.createRef();
-      const createEventHandler = msg => () => {
-        events.push(msg);
-      };
-
-      const element = (
-        <Press
-          onPress={createEventHandler('outer: onPress')}
-          onPressChange={createEventHandler('outer: onPressChange')}
-          onPressStart={createEventHandler('outer: onPressStart')}
-          onPressEnd={createEventHandler('outer: onPressEnd')}>
-          <Press
-            onPress={createEventHandler('inner: onPress')}
-            onPressChange={createEventHandler('inner: onPressChange')}
-            onPressStart={createEventHandler('inner: onPressStart')}
-            onPressEnd={createEventHandler('inner: onPressEnd')}
-            stopPropagation={false}>
-            <div
-              ref={ref}
-              onPointerDown={createEventHandler('pointerdown')}
-              onPointerUp={createEventHandler('pointerup')}
-              onKeyDown={createEventHandler('keydown')}
-              onKeyUp={createEventHandler('keyup')}
-            />
-          </Press>
-        </Press>
-      );
-
-      ReactDOM.render(element, container);
-      ref.current.getBoundingClientRect = () => ({
-        top: 0,
-        left: 0,
-        bottom: 100,
-        right: 100,
-      });
-
-      ref.current.dispatchEvent(createEvent('pointerdown'));
-      ref.current.dispatchEvent(
-        createEvent('pointerup', {clientX: 10, clientY: 10}),
-      );
-      expect(events).toEqual([
-        'inner: onPressStart',
-        'inner: onPressChange',
-        'pointerdown',
-        'inner: onPressEnd',
-        'inner: onPressChange',
-        'inner: onPress',
-        'pointerup',
-      ]);
-    });
-
-    describe('correctly get propagation stopped and do not bubble', () => {
+  describe('nested Press responders', () => {
+    describe('should not bubble to other Press responders', () => {
       it('for onPress', () => {
         const ref = React.createRef();
         const fn = jest.fn();
-        const element = (
-          <Press onPress={fn}>
-            <Press onPress={fn}>
+
+        function Test({children}) {
+          usePressResponder(ref, {
+            onPress: fn,
+          });
+          return children;
+        }
+        ReactDOM.render(
+          <Test>
+            <Test>
               <div ref={ref} />
-            </Press>
-          </Press>
+            </Test>
+          </Test>,
+          container,
         );
-        ReactDOM.render(element, container);
+
         ref.current.getBoundingClientRect = () => ({
           top: 0,
           left: 0,
@@ -2233,14 +2218,21 @@ describe('Event responder: Press', () => {
       it('for onLongPress', () => {
         const ref = React.createRef();
         const fn = jest.fn();
-        const element = (
-          <Press onLongPress={fn}>
-            <Press onLongPress={fn}>
+
+        function Test({children}) {
+          usePressResponder(ref, {
+            onLongPress: fn,
+          });
+          return children;
+        }
+        ReactDOM.render(
+          <Test>
+            <Test>
               <div ref={ref} />
-            </Press>
-          </Press>
+            </Test>
+          </Test>,
+          container,
         );
-        ReactDOM.render(element, container);
 
         ref.current.dispatchEvent(createEvent('pointerdown'));
         jest.advanceTimersByTime(DEFAULT_LONG_PRESS_DELAY);
@@ -2252,14 +2244,22 @@ describe('Event responder: Press', () => {
         const ref = React.createRef();
         const fn = jest.fn();
         const fn2 = jest.fn();
-        const element = (
-          <Press onPressStart={fn} onPressEnd={fn2}>
-            <Press onPressStart={fn} onPressEnd={fn2}>
+
+        function Test({children}) {
+          usePressResponder(ref, {
+            onPressStart: fn,
+            onPressEnd: fn2,
+          });
+          return children;
+        }
+        ReactDOM.render(
+          <Test>
+            <Test>
               <div ref={ref} />
-            </Press>
-          </Press>
+            </Test>
+          </Test>,
+          container,
         );
-        ReactDOM.render(element, container);
 
         ref.current.dispatchEvent(createEvent('pointerdown'));
         expect(fn).toHaveBeenCalledTimes(1);
@@ -2272,14 +2272,21 @@ describe('Event responder: Press', () => {
       it('for onPressChange', () => {
         const ref = React.createRef();
         const fn = jest.fn();
-        const element = (
-          <Press onPressChange={fn}>
-            <Press onPressChange={fn}>
+
+        function Test({children}) {
+          usePressResponder(ref, {
+            onPressChange: fn,
+          });
+          return children;
+        }
+        ReactDOM.render(
+          <Test>
+            <Test>
               <div ref={ref} />
-            </Press>
-          </Press>
+            </Test>
+          </Test>,
+          container,
         );
-        ReactDOM.render(element, container);
 
         ref.current.dispatchEvent(createEvent('pointerdown'));
         expect(fn).toHaveBeenCalledTimes(1);
@@ -2294,12 +2301,19 @@ describe('Event responder: Press', () => {
       const onPress = jest.fn();
       const preventDefault = jest.fn();
       const ref = React.createRef();
-      const element = (
-        <Press onPress={onPress}>
+
+      function Test({children}) {
+        usePressResponder(ref, {
+          onPress,
+        });
+        return children;
+      }
+      ReactDOM.render(
+        <Test>
           <a href="#" ref={ref} />
-        </Press>
+        </Test>,
+        container,
       );
-      ReactDOM.render(element, container);
 
       ref.current.dispatchEvent(createEvent('pointerdown'));
       ref.current.dispatchEvent(
@@ -2319,14 +2333,21 @@ describe('Event responder: Press', () => {
       const onPress = jest.fn();
       const preventDefault = jest.fn();
       const buttonRef = React.createRef();
-      const element = (
+
+      function Test({children}) {
+        usePressResponder(buttonRef, {
+          onPress,
+        });
+        return children;
+      }
+      ReactDOM.render(
         <a href="#">
-          <Press onPress={onPress}>
+          <Test>
             <button ref={buttonRef} />
-          </Press>
-        </a>
+          </Test>
+        </a>,
+        container,
       );
-      ReactDOM.render(element, container);
 
       buttonRef.current.dispatchEvent(createEvent('pointerdown'));
       buttonRef.current.dispatchEvent(
@@ -2343,14 +2364,21 @@ describe('Event responder: Press', () => {
       const onPress = jest.fn();
       const preventDefault = jest.fn();
       const ref = React.createRef();
-      const element = (
-        <Press onPress={onPress}>
+
+      function Test({children}) {
+        usePressResponder(ref, {
+          onPress,
+        });
+        return children;
+      }
+      ReactDOM.render(
+        <Test>
           <a href="#">
             <div ref={ref} />
           </a>
-        </Press>
+        </Test>,
+        container,
       );
-      ReactDOM.render(element, container);
 
       ref.current.dispatchEvent(createEvent('pointerdown'));
       ref.current.dispatchEvent(
@@ -2370,12 +2398,19 @@ describe('Event responder: Press', () => {
       const onPress = jest.fn();
       const preventDefault = jest.fn();
       const ref = React.createRef();
-      const element = (
-        <Press onPress={onPress}>
+
+      function Test({children}) {
+        usePressResponder(ref, {
+          onPress,
+        });
+        return children;
+      }
+      ReactDOM.render(
+        <Test>
           <a href="#" ref={ref} />
-        </Press>
+        </Test>,
+        container,
       );
-      ReactDOM.render(element, container);
 
       ['metaKey', 'ctrlKey', 'shiftKey'].forEach(modifierKey => {
         ref.current.dispatchEvent(
@@ -2402,12 +2437,20 @@ describe('Event responder: Press', () => {
       const onPress = jest.fn();
       const preventDefault = jest.fn();
       const ref = React.createRef();
-      const element = (
-        <Press onPress={onPress} preventDefault={false}>
+
+      function Test({children}) {
+        usePressResponder(ref, {
+          onPress,
+          preventDefault: false,
+        });
+        return children;
+      }
+      ReactDOM.render(
+        <Test>
           <a href="#" ref={ref} />
-        </Press>
+        </Test>,
+        container,
       );
-      ReactDOM.render(element, container);
 
       ref.current.dispatchEvent(createEvent('pointerdown'));
       ref.current.dispatchEvent(
@@ -2422,31 +2465,6 @@ describe('Event responder: Press', () => {
         expect.objectContaining({defaultPrevented: false}),
       );
     });
-
-    it('warns when preventDefault is used in an event hook', () => {
-      const onPress = jest.fn();
-      const preventDefault = jest.fn();
-      const ref = React.createRef();
-      const Component = () => {
-        React.unstable_useEvent(Press, {preventDefault: false});
-
-        return (
-          <Press onPress={onPress}>
-            <a href="#" ref={ref} />
-          </Press>
-        );
-      };
-      ReactDOM.render(<Component />, container);
-
-      expect(() => {
-        ref.current.dispatchEvent(createEvent('pointerdown'));
-        ref.current.dispatchEvent(createEvent('pointerup'));
-        ref.current.dispatchEvent(createEvent('click', {preventDefault}));
-      }).toWarnDev(
-        '"preventDefault" prop cannot be passed to Press event hooks. This will result in a no-op.',
-        {withoutStack: true},
-      );
-    });
   });
 
   describe('responder cancellation', () => {
@@ -2454,12 +2472,20 @@ describe('Event responder: Press', () => {
       const onLongPress = jest.fn();
       const onPressEnd = jest.fn();
       const ref = React.createRef();
-      const element = (
-        <Press onLongPress={onLongPress} onPressEnd={onPressEnd}>
+
+      function Test({children}) {
+        usePressResponder(ref, {
+          onLongPress,
+          onPressEnd,
+        });
+        return children;
+      }
+      ReactDOM.render(
+        <Test>
           <a href="#" ref={ref} />
-        </Press>
+        </Test>,
+        container,
       );
-      ReactDOM.render(element, container);
 
       // Should cancel for non-mouse events
       ref.current.dispatchEvent(
@@ -2534,14 +2560,21 @@ describe('Event responder: Press', () => {
   it('does end on "scroll" to document', () => {
     const onPressEnd = jest.fn();
     const ref = React.createRef();
-    const element = (
+
+    function Test({children}) {
+      usePressResponder(ref, {
+        onPressEnd,
+      });
+      return children;
+    }
+    ReactDOM.render(
       <div>
-        <Press onPressEnd={onPressEnd}>
+        <Test>
           <a href="#" ref={ref} />
-        </Press>
-      </div>
+        </Test>
+      </div>,
+      container,
     );
-    ReactDOM.render(element, container);
 
     ref.current.dispatchEvent(createEvent('pointerdown'));
     document.dispatchEvent(createEvent('scroll'));
@@ -2552,14 +2585,21 @@ describe('Event responder: Press', () => {
     const onPressEnd = jest.fn();
     const ref = React.createRef();
     const containerRef = React.createRef();
-    const element = (
+
+    function Test({children}) {
+      usePressResponder(ref, {
+        onPressEnd,
+      });
+      return children;
+    }
+    ReactDOM.render(
       <div ref={containerRef}>
-        <Press onPressEnd={onPressEnd}>
+        <Test>
           <a href="#" ref={ref} />
-        </Press>
-      </div>
+        </Test>
+      </div>,
+      container,
     );
-    ReactDOM.render(element, container);
 
     ref.current.dispatchEvent(createEvent('pointerdown'));
     containerRef.current.dispatchEvent(createEvent('scroll'));
@@ -2570,15 +2610,22 @@ describe('Event responder: Press', () => {
     const onPressEnd = jest.fn();
     const ref = React.createRef();
     const outsideRef = React.createRef();
-    const element = (
+
+    function Test({children}) {
+      usePressResponder(ref, {
+        onPressEnd,
+      });
+      return children;
+    }
+    ReactDOM.render(
       <div>
-        <Press onPressEnd={onPressEnd}>
+        <Test>
           <a href="#" ref={ref} />
-        </Press>
+        </Test>
         <span ref={outsideRef} />
-      </div>
+      </div>,
+      container,
     );
-    ReactDOM.render(element, container);
 
     ref.current.dispatchEvent(createEvent('pointerdown'));
     outsideRef.current.dispatchEvent(createEvent('scroll'));
@@ -2586,17 +2633,24 @@ describe('Event responder: Press', () => {
   });
 
   it('expect displayName to show up for event component', () => {
-    expect(Press.responder.displayName).toBe('Press');
+    expect(PressResponder.displayName).toBe('Press');
   });
 
   it('should not trigger an invariant in addRootEventTypes()', () => {
     const ref = React.createRef();
-    const element = (
-      <Press>
-        <button ref={ref} />
-      </Press>
+
+    function Test({children}) {
+      usePressResponder(ref);
+      return children;
+    }
+    ReactDOM.render(
+      <div>
+        <Test>
+          <button ref={ref} />
+        </Test>
+      </div>,
+      container,
     );
-    ReactDOM.render(element, container);
 
     ref.current.dispatchEvent(createEvent('pointerdown'));
     jest.advanceTimersByTime(DEFAULT_LONG_PRESS_DELAY);
@@ -2625,17 +2679,23 @@ describe('Event responder: Press', () => {
       timeStamps.push(event.timeStamp);
       eventLog.push(propertiesWeCareAbout);
     };
-    const element = (
-      <Press
-        onPressStart={logEvent}
-        onPressEnd={logEvent}
-        onPressMove={logEvent}
-        onLongPress={logEvent}
-        onPress={logEvent}>
+
+    function Test({children}) {
+      usePressResponder(ref, {
+        onPressStart: logEvent,
+        onPressEnd: logEvent,
+        onPressMove: logEvent,
+        onLongPress: logEvent,
+        onPress: logEvent,
+      });
+      return children;
+    }
+    ReactDOM.render(
+      <Test>
         <button ref={ref} />
-      </Press>
+      </Test>,
+      container,
     );
-    ReactDOM.render(element, container);
 
     ref.current.getBoundingClientRect = () => ({
       top: 10,
@@ -2781,6 +2841,13 @@ describe('Event responder: Press', () => {
     const ref = React.createRef();
     let renderCounts = 0;
 
+    function PressTest({children, onPress}) {
+      usePressResponder(ref, {
+        onPress,
+      });
+      return children;
+    }
+
     function MyComponent() {
       const [, updateCounter] = React.useState(0);
       renderCounts++;
@@ -2791,7 +2858,7 @@ describe('Event responder: Press', () => {
 
       return (
         <div>
-          <Press onPress={handlePress}>
+          <PressTest onPress={handlePress}>
             <button
               ref={ref}
               onClick={() => {
@@ -2799,7 +2866,7 @@ describe('Event responder: Press', () => {
               }}>
               Press me
             </button>
-          </Press>
+          </PressTest>
         </div>
       );
     }
@@ -2845,6 +2912,13 @@ describe('Event responder: Press', () => {
     const ref = React.createRef();
     let renderCounts = 0;
 
+    function PressTest({children, onPress}) {
+      usePressResponder(ref, {
+        onPress,
+      });
+      return children;
+    }
+
     function MyComponent() {
       const [, updateCounter] = React.useState(0);
       renderCounts++;
@@ -2855,7 +2929,7 @@ describe('Event responder: Press', () => {
 
       return (
         <div>
-          <Press onPress={handlePress}>
+          <PressTest onPress={handlePress}>
             <button
               ref={ref}
               onClick={() => {
@@ -2865,7 +2939,7 @@ describe('Event responder: Press', () => {
               }}>
               Press me
             </button>
-          </Press>
+          </PressTest>
         </div>
       );
     }
@@ -2917,6 +2991,13 @@ describe('Event responder: Press', () => {
 
       const ops = [];
 
+      function PressTest({children, onPress}) {
+        usePressResponder(button, {
+          onPress,
+        });
+        return children;
+      }
+
       function MyComponent() {
         const [pressesCount, updatePressesCount] = useState(0);
         const [clicksCount, updateClicksCount] = useState(0);
@@ -2933,13 +3014,13 @@ describe('Event responder: Press', () => {
 
         return (
           <div>
-            <Press onPress={handlePress}>
+            <PressTest onPress={handlePress}>
               <button
                 ref={button}
                 onClick={() => updateClicksCount(clicksCount + 1)}>
                 Presses: {pressesCount}, Clicks: {clicksCount}
               </button>
-            </Press>
+            </PressTest>
           </div>
         );
       }
@@ -2966,10 +3047,18 @@ describe('Event responder: Press', () => {
     it('is called after a right mouse click', () => {
       const onContextMenu = jest.fn();
       const ref = React.createRef();
+
+      function PressTest({children}) {
+        usePressResponder(ref, {
+          onContextMenu,
+        });
+        return children;
+      }
+
       const element = (
-        <Press onContextMenu={onContextMenu}>
+        <PressTest>
           <div ref={ref} />
-        </Press>
+        </PressTest>
       );
       ReactDOM.render(element, container);
 
@@ -2991,10 +3080,18 @@ describe('Event responder: Press', () => {
 
       const onContextMenu = jest.fn();
       const ref = React.createRef();
+
+      function PressTest({children}) {
+        usePressResponder(ref, {
+          onContextMenu,
+        });
+        return children;
+      }
+
       const element = (
-        <Press onContextMenu={onContextMenu}>
+        <PressTest>
           <div ref={ref} />
-        </Press>
+        </PressTest>
       );
       ReactDOM.render(element, container);
 
@@ -3021,10 +3118,18 @@ describe('Event responder: Press', () => {
 
       const onContextMenu = jest.fn();
       const ref = React.createRef();
+
+      function PressTest({children}) {
+        usePressResponder(ref, {
+          onContextMenu,
+        });
+        return children;
+      }
+
       const element = (
-        <Press onContextMenu={onContextMenu}>
+        <PressTest>
           <div ref={ref} />
-        </Press>
+        </PressTest>
       );
       ReactDOM.render(element, container);
 
@@ -3043,10 +3148,18 @@ describe('Event responder: Press', () => {
     it('is not called after a right mouse click occurs during an active press', () => {
       const onContextMenu = jest.fn();
       const ref = React.createRef();
+
+      function PressTest({children}) {
+        usePressResponder(ref, {
+          onContextMenu,
+        });
+        return children;
+      }
+
       const element = (
-        <Press onContextMenu={onContextMenu}>
+        <PressTest>
           <div ref={ref} />
-        </Press>
+        </PressTest>
       );
       ReactDOM.render(element, container);
 
@@ -3060,10 +3173,19 @@ describe('Event responder: Press', () => {
     it('is still called if "preventContextMenu" is true', () => {
       const onContextMenu = jest.fn();
       const ref = React.createRef();
+
+      function PressTest({children}) {
+        usePressResponder(ref, {
+          preventContextMenu: true,
+          onContextMenu,
+        });
+        return children;
+      }
+
       const element = (
-        <Press onContextMenu={onContextMenu} preventContextMenu={true}>
+        <PressTest>
           <div ref={ref} />
-        </Press>
+        </PressTest>
       );
       ReactDOM.render(element, container);
       ref.current.dispatchEvent(
@@ -3077,36 +3199,20 @@ describe('Event responder: Press', () => {
     });
   });
 
-  it('warns when preventContextMenu is used in an event hook', () => {
-    const ref = React.createRef();
-    const Component = () => {
-      React.unstable_useEvent(Press, {preventContextMenu: false});
-
-      return (
-        <Press preventContextMenu={true}>
-          <div ref={ref} />
-        </Press>
-      );
-    };
-    ReactDOM.render(<Component />, container);
-
-    expect(() => {
-      ref.current.dispatchEvent(
-        createEvent('pointerdown', {pointerType: 'mouse', button: 2}),
-      );
-      ref.current.dispatchEvent(createEvent('contextmenu'));
-    }).toWarnDev(
-      '"preventContextMenu" prop cannot be passed to Press event hooks. This will result in a no-op.',
-      {withoutStack: true},
-    );
-  });
-
   it('should work correctly with stopPropagation set to true', () => {
     const ref = React.createRef();
+
+    function PressTest({children}) {
+      usePressResponder(ref, {
+        stopPropagation: true,
+      });
+      return children;
+    }
+
     const element = (
-      <Press stopPropagation={true}>
+      <PressTest>
         <div ref={ref} />
-      </Press>
+      </PressTest>
     );
     const pointerDownEvent = jest.fn();
     container.addEventListener('pointerdown', pointerDownEvent);
@@ -3114,61 +3220,6 @@ describe('Event responder: Press', () => {
 
     ref.current.dispatchEvent(
       createEvent('pointerdown', {pointerType: 'mouse', button: 0}),
-    );
-    container.removeEventListener('pointerdown', pointerDownEvent);
-    expect(pointerDownEvent).toHaveBeenCalledTimes(0);
-  });
-
-  it('has the correct press target when used with event hook', () => {
-    const ref = React.createRef();
-    const onPress = jest.fn();
-    const Component = () => {
-      React.unstable_useEvent(Press, {onPress});
-
-      return (
-        <div>
-          <Press>
-            <a href="#" ref={ref} />
-          </Press>
-        </div>
-      );
-    };
-    ReactDOM.render(<Component />, container);
-
-    ref.current.dispatchEvent(
-      createEvent('pointerdown', {pointerType: 'mouse', button: 0}),
-    );
-    ref.current.dispatchEvent(
-      createEvent('pointerup', {pointerType: 'mouse', button: 0}),
-    );
-    expect(onPress).toHaveBeenCalledTimes(1);
-    expect(onPress).toHaveBeenCalledWith(
-      expect.objectContaining({target: ref.current}),
-    );
-  });
-
-  it('warns when stopPropagation is used in an event hook', () => {
-    const ref = React.createRef();
-    const Component = () => {
-      React.unstable_useEvent(Press, {stopPropagation: false});
-
-      return (
-        <Press stopPropagation={true}>
-          <a href="#" ref={ref} />
-        </Press>
-      );
-    };
-    const pointerDownEvent = jest.fn();
-    container.addEventListener('pointerdown', pointerDownEvent);
-    ReactDOM.render(<Component />, container);
-
-    expect(() => {
-      ref.current.dispatchEvent(
-        createEvent('pointerdown', {pointerType: 'mouse', button: 0}),
-      );
-    }).toWarnDev(
-      '"stopPropagation" prop cannot be passed to Press event hooks. This will result in a no-op.',
-      {withoutStack: true},
     );
     container.removeEventListener('pointerdown', pointerDownEvent);
     expect(pointerDownEvent).toHaveBeenCalledTimes(0);

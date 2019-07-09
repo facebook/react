@@ -12,6 +12,7 @@ import type {
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
 } from 'shared/ReactDOMTypes';
+import type {RefObject} from 'shared/ReactTypes';
 
 import React from 'react';
 import {UserBlockingEvent} from 'shared/ReactTypes';
@@ -130,9 +131,7 @@ function dispatchHoverStartEvents(
   if (event !== null) {
     const {nativeEvent} = event;
     if (
-      context.isTargetWithinEventResponderScope(
-        (nativeEvent: any).relatedTarget,
-      )
+      context.isTargetWithinResponderScope((nativeEvent: any).relatedTarget)
     ) {
       return;
     }
@@ -193,9 +192,7 @@ function dispatchHoverEndEvents(
   if (event !== null) {
     const {nativeEvent} = event;
     if (
-      context.isTargetWithinEventResponderScope(
-        (nativeEvent: any).relatedTarget,
-      )
+      context.isTargetWithinResponderScope((nativeEvent: any).relatedTarget)
     ) {
       return;
     }
@@ -271,7 +268,7 @@ function isEmulatedMouseEvent(event, state) {
   );
 }
 
-const HoverResponder: ReactDOMEventResponder = {
+export const HoverResponder: ReactDOMEventResponder = {
   displayName: 'Hover',
   targetEventTypes,
   getInitialState() {
@@ -284,8 +281,6 @@ const HoverResponder: ReactDOMEventResponder = {
       ignoreEmulatedMouseEvents: false,
     };
   },
-  allowMultipleHostChildren: false,
-  allowEventHooks: true,
   onEvent(
     event: ReactDOMResponderEvent,
     context: ReactDOMResponderContext,
@@ -382,8 +377,6 @@ const HoverResponder: ReactDOMEventResponder = {
   },
 };
 
-export const Hover = React.unstable_createEvent(HoverResponder);
-
-export function useHover(props: HoverProps): void {
-  React.unstable_useEvent(Hover, props);
+export function useHoverResponder(ref: RefObject, props: HoverProps): void {
+  React.unstable_useResponder(HoverResponder, ref, props);
 }

@@ -7,7 +7,11 @@
  * @flow
  */
 
-import type {ReactEventComponent, ReactContext} from 'shared/ReactTypes';
+import type {
+  RefObject,
+  ReactContext,
+  ReactEventResponder,
+} from 'shared/ReactTypes';
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
 
@@ -138,10 +142,11 @@ export function useDebugValue(value: any, formatterFn: ?(value: any) => any) {
 
 export const emptyObject = {};
 
-export function useEvent<E, C>(
-  eventComponent: ReactEventComponent<E, C>,
+export function useResponder<E, C>(
+  responder: ReactEventResponder<E, C>,
+  ref: RefObject,
   props: null | Object,
 ) {
   const dispatcher = resolveDispatcher();
-  return dispatcher.useEvent(eventComponent, props || emptyObject);
+  return dispatcher.useResponder(responder, ref, props || emptyObject);
 }

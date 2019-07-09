@@ -14,7 +14,7 @@ import type {
   PointerType,
 } from 'shared/ReactDOMTypes';
 import {UserBlockingEvent} from 'shared/ReactTypes';
-import type {EventPriority} from 'shared/ReactTypes';
+import type {EventPriority, RefObject} from 'shared/ReactTypes';
 
 import React from 'react';
 
@@ -128,7 +128,7 @@ function dispatchEvent(
   context.dispatchEvent(syntheticEvent, listener, eventPriority);
 }
 
-const ScrollResponder: ReactDOMEventResponder = {
+export const ScrollResponder: ReactDOMEventResponder = {
   displayName: 'Scroll',
   targetEventTypes,
   getInitialState() {
@@ -291,8 +291,6 @@ const ScrollResponder: ReactDOMEventResponder = {
   },
 };
 
-export const Scroll = React.unstable_createEvent(ScrollResponder);
-
-export function useScroll(props: ScrollProps): void {
-  React.unstable_useEvent(Scroll, props);
+export function useScrollResponder(ref: RefObject, props: ScrollProps): void {
+  React.unstable_useResponder(ScrollResponder, ref, props);
 }

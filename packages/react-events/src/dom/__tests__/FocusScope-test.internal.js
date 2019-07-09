@@ -12,7 +12,7 @@
 let React;
 let ReactFeatureFlags;
 let ReactDOM;
-let FocusScope;
+let useFocusScopeResponder;
 
 const createTabForward = type => {
   const event = new KeyboardEvent('keydown', {
@@ -42,7 +42,8 @@ describe('FocusScope event responder', () => {
     ReactFeatureFlags.enableFlareAPI = true;
     React = require('react');
     ReactDOM = require('react-dom');
-    FocusScope = require('react-events/focus-scope');
+    useFocusScopeResponder = require('react-events/focus-scope')
+      .useFocusScopeResponder;
 
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -54,6 +55,11 @@ describe('FocusScope event responder', () => {
     container = null;
   });
 
+  function FocusScopeResponderTest({children, ...props}) {
+    useFocusScopeResponder({}, props);
+    return children;
+  }
+
   it('should work as expected with autofocus', () => {
     const inputRef = React.createRef();
     const input2Ref = React.createRef();
@@ -63,13 +69,13 @@ describe('FocusScope event responder', () => {
 
     const SimpleFocusScope = () => (
       <div>
-        <FocusScope autoFocus={true}>
+        <FocusScopeResponderTest autoFocus={true}>
           <input ref={inputRef} />
           <button ref={buttonRef} />
           <div ref={divRef} tabIndex={0} />
           <input ref={input2Ref} tabIndex={-1} />
           <button ref={butto2nRef} />
-        </FocusScope>
+        </FocusScopeResponderTest>
       </div>
     );
 
@@ -93,12 +99,12 @@ describe('FocusScope event responder', () => {
 
     const SimpleFocusScope = () => (
       <div>
-        <FocusScope autoFocus={true} contain={true}>
+        <FocusScopeResponderTest autoFocus={true} contain={true}>
           <input ref={inputRef} tabIndex={-1} />
           <button ref={buttonRef} id={1} />
           <button ref={button2Ref} id={2} />
           <input ref={input2Ref} tabIndex={-1} />
-        </FocusScope>
+        </FocusScopeResponderTest>
       </div>
     );
 
@@ -126,16 +132,16 @@ describe('FocusScope event responder', () => {
 
     const SimpleFocusScope = () => (
       <div>
-        <FocusScope>
+        <FocusScopeResponderTest>
           <input ref={inputRef} tabIndex={-1} />
           <button ref={buttonRef} id={1} />
-          <FocusScope>
+          <FocusScopeResponderTest>
             <button ref={button2Ref} id={2} />
             <button ref={button3Ref} id={3} />
-          </FocusScope>
+          </FocusScopeResponderTest>
           <input ref={input2Ref} tabIndex={-1} />
           <button ref={button4Ref} id={4} />
-        </FocusScope>
+        </FocusScopeResponderTest>
       </div>
     );
 
@@ -164,16 +170,16 @@ describe('FocusScope event responder', () => {
 
     const SimpleFocusScope = () => (
       <div>
-        <FocusScope>
+        <FocusScopeResponderTest>
           <input ref={inputRef} tabIndex={-1} />
           <button ref={buttonRef} id={1} />
-          <FocusScope contain={true}>
+          <FocusScopeResponderTest contain={true}>
             <button ref={button2Ref} id={2} />
             <button ref={button3Ref} id={3} />
-          </FocusScope>
+          </FocusScopeResponderTest>
           <input ref={input2Ref} tabIndex={-1} />
           <button ref={button4Ref} id={4} />
-        </FocusScope>
+        </FocusScopeResponderTest>
       </div>
     );
 
@@ -216,14 +222,14 @@ describe('FocusScope event responder', () => {
 
     const SimpleFocusScope = () => (
       <div>
-        <FocusScope>
+        <FocusScopeResponderTest>
           <button ref={buttonRef} id={1} />
           <button ref={button2Ref} id={2} />
           <React.Suspense fallback={<button ref={button3Ref} id={3} />}>
             <Component />
           </React.Suspense>
           <button ref={button4Ref} id={4} />
-        </FocusScope>
+        </FocusScopeResponderTest>
       </div>
     );
 

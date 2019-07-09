@@ -12,7 +12,7 @@ import type {
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
 } from 'shared/ReactDOMTypes';
-import type {EventPriority} from 'shared/ReactTypes';
+import type {EventPriority, RefObject} from 'shared/ReactTypes';
 
 import React from 'react';
 import {UserBlockingEvent, DiscreteEvent} from 'shared/ReactTypes';
@@ -88,7 +88,7 @@ type SwipeState = {
   y: number,
 };
 
-const SwipeResponder: ReactDOMEventResponder = {
+export const SwipeResponder: ReactDOMEventResponder = {
   displayName: 'Scroll',
   targetEventTypes,
   getInitialState(): SwipeState {
@@ -262,8 +262,6 @@ const SwipeResponder: ReactDOMEventResponder = {
   },
 };
 
-export const Swipe = React.unstable_createEvent(SwipeResponder);
-
-export function useSwipe(props: Object): void {
-  React.unstable_useEvent(Swipe, props);
+export function useDragResponder(ref: RefObject, props: Object): void {
+  React.unstable_useResponder(SwipeResponder, ref, props);
 }

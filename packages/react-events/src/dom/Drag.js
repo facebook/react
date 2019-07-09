@@ -12,7 +12,7 @@ import type {
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
 } from 'shared/ReactDOMTypes';
-import type {EventPriority} from 'shared/ReactTypes';
+import type {EventPriority, RefObject} from 'shared/ReactTypes';
 
 import React from 'react';
 import {DiscreteEvent, UserBlockingEvent} from 'shared/ReactTypes';
@@ -84,7 +84,7 @@ function dispatchDragEvent(
   context.dispatchEvent(syntheticEvent, listener, eventPriority);
 }
 
-const DragResponder: ReactDOMEventResponder = {
+export const DragResponder: ReactDOMEventResponder = {
   displayName: 'Drag',
   targetEventTypes,
   getInitialState(): DragState {
@@ -259,8 +259,6 @@ const DragResponder: ReactDOMEventResponder = {
   },
 };
 
-export const Drag = React.unstable_createEvent(DragResponder);
-
-export function useDrag(props: Object): void {
-  React.unstable_useEvent(Drag, props);
+export function useDragResponder(ref: RefObject, props: Object): void {
+  React.unstable_useResponder(DragResponder, ref, props);
 }

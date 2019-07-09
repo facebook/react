@@ -50,6 +50,4 @@ export const SimpleMemoComponent = 15;
 export const LazyComponent = 16;
 export const IncompleteClassComponent = 17;
 export const DehydratedSuspenseComponent = 18;
-export const EventComponent = 19;
-export const EventTarget = 20;
-export const SuspenseListComponent = 21;
+export const SuspenseListComponent = 19;

@@ -13,8 +13,7 @@ import type {
   ReactDOMResponderContext,
   PointerType,
 } from 'shared/ReactDOMTypes';
-import type {EventPriority} from 'shared/ReactTypes';
-import warning from 'shared/warning';
+import type {EventPriority, RefObject} from 'shared/ReactTypes';
 
 import React from 'react';
 import {DiscreteEvent, UserBlockingEvent} from 'shared/ReactTypes';
@@ -606,15 +605,7 @@ function handleStopPropagation(
   context: ReactDOMResponderContext,
   nativeEvent,
 ): void {
-  const stopPropagation = props.stopPropagation;
-  if (stopPropagation !== undefined && context.isRespondingToHook()) {
-    if (__DEV__) {
-      warning(
-        false,
-        '"stopPropagation" prop cannot be passed to Press event hooks. This will result in a no-op.',
-      );
-    }
-  } else if (stopPropagation === true) {
+  if (props.stopPropagation === true) {
     nativeEvent.stopPropagation();
   }
 }
@@ -624,7 +615,7 @@ function targetIsDocument(target: null | Node): boolean {
   return target === null || target.nodeType === 9;
 }
 
-const PressResponder: ReactDOMEventResponder = {
+export const PressResponder: ReactDOMEventResponder = {
   displayName: 'Press',
   targetEventTypes,
   getInitialState(): PressState {
@@ -739,14 +730,7 @@ const PressResponder: ReactDOMEventResponder = {
       case 'contextmenu': {
         const preventContextMenu = props.preventContextMenu;
 
-        if (preventContextMenu !== undefined && context.isRespondingToHook()) {
-          if (__DEV__) {
-            warning(
-              false,
-              '"preventContextMenu" prop cannot be passed to Press event hooks. This will result in a no-op.',
-            );
-          }
-        } else if (preventContextMenu === true) {
+        if (preventContextMenu === true) {
           // Skip dispatching of onContextMenu below
           nativeEvent.preventDefault();
         }
@@ -754,17 +738,7 @@ const PressResponder: ReactDOMEventResponder = {
         if (isPressed) {
           const preventDefault = props.preventDefault;
 
-          if (preventDefault !== undefined && context.isRespondingToHook()) {
-            if (__DEV__) {
-              warning(
-                false,
-                '"preventDefault" prop cannot be passed to Press event hooks. This will result in a no-op.',
-              );
-            }
-          } else if (
-            preventDefault !== false &&
-            !nativeEvent.defaultPrevented
-          ) {
+          if (preventDefault !== false && !nativeEvent.defaultPrevented) {
             // Skip dispatching of onContextMenu below
             nativeEvent.preventDefault();
             return;
@@ -910,8 +884,8 @@ const PressResponder: ReactDOMEventResponder = {
           // Determine whether to call preventDefault on subsequent native events.
           state.shouldPreventClick = false;
           if (
-            context.isTargetWithinEventComponent(target) &&
-            context.isTargetWithinHostComponent(target, 'a', true)
+            context.isTargetWithinResponder(target) &&
+            context.isTargetWithinNodeOfType(target, 'a')
           ) {
             const {
               altKey,
@@ -922,14 +896,7 @@ const PressResponder: ReactDOMEventResponder = {
             // Check "open in new window/tab" and "open context menu" key modifiers
             const preventDefault = props.preventDefault;
 
-            if (preventDefault !== undefined && context.isRespondingToHook()) {
-              if (__DEV__) {
-                warning(
-                  false,
-                  '"preventDefault" prop cannot be passed to Press event hooks. This will result in a no-op.',
-                );
-              }
-            } else if (
+            if (
               preventDefault !== false &&
               !shiftKey &&
               !metaKey &&
@@ -1040,8 +1007,6 @@ const PressResponder: ReactDOMEventResponder = {
   },
 };
 
-export const Press = React.unstable_createEvent(PressResponder);
-
-export function usePress(props: PressProps): void {
-  React.unstable_useEvent(Press, props);
+export function usePressResponder(ref: RefObject, props: PressProps): void {
+  React.unstable_useResponder(PressResponder, ref, props);
 }

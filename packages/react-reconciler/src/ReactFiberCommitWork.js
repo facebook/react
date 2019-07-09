@@ -15,6 +15,10 @@ import type {
   ChildSet,
   UpdatePayload,
 } from './ReactFiberHostConfig';
+import type {
+  ReactEventResponderHook,
+  ReactEventResponderInstance,
+} from 'shared/ReactTypes';
 import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
@@ -30,6 +34,7 @@ import {
   enableSuspenseServerRenderer,
   enableFlareAPI,
 } from 'shared/ReactFeatureFlags';
+import {forEachEventResponderHookOnFiber} from './ReactFiberEvents';
 import {
   FunctionComponent,
   ForwardRef,
@@ -44,7 +49,6 @@ import {
   IncompleteClassComponent,
   MemoComponent,
   SimpleMemoComponent,
-  EventComponent,
   SuspenseListComponent,
 } from 'shared/ReactWorkTags';
 import {
@@ -92,8 +96,8 @@ import {
   hideTextInstance,
   unhideInstance,
   unhideTextInstance,
-  unmountEventComponent,
-  mountEventComponent,
+  unmountEventResponder,
+  mountEventResponder,
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
@@ -384,6 +388,13 @@ export function commitPassiveHookEffects(finishedWork: Fiber): void {
   commitHookEffectList(NoHookEffect, MountPassive, finishedWork);
 }
 
+function mountEventResponderHook(
+  eventResponderHook: ReactEventResponderHook<any, any>,
+): void {
+  const {instance} = eventResponderHook;
+  mountEventResponder(((instance: any): ReactEventResponderInstance<any, any>));
+}
+
 function commitLifeCycles(
   finishedRoot: FiberRoot,
   current: Fiber | null,
@@ -394,6 +405,13 @@ function commitLifeCycles(
     case FunctionComponent:
     case ForwardRef:
     case SimpleMemoComponent: {
+      if (
+        enableFlareAPI &&
+        current === null &&
+        finishedWork.effectTag & Update
+      ) {
+        forEachEventResponderHookOnFiber(finishedWork, mountEventResponderHook);
+      }
       commitHookEffectList(UnmountLayout, MountLayout, finishedWork);
       break;
     }
@@ -591,12 +609,6 @@ function commitLifeCycles(
     case SuspenseListComponent:
     case IncompleteClassComponent:
       return;
-    case EventComponent: {
-      if (enableFlareAPI) {
-        mountEventComponent(finishedWork.stateNode);
-      }
-      return;
-    }
     default: {
       invariant(
         false,
@@ -700,6 +712,16 @@ function commitDetachRef(current: Fiber) {
   }
 }
 
+function unmountEventResponderHook(
+  eventResponderHook: ReactEventResponderHook<any, any>,
+  fiber: Fiber,
+): void {
+  const {instance} = eventResponderHook;
+  if (instance !== null) {
+    unmountEventResponder(instance);
+  }
+}
+
 // User-originating errors (lifecycles and refs) should not interrupt
 // deletion, so don't let them throw. Host-originating errors should
 // interrupt deletion, so it's okay
@@ -711,6 +733,9 @@ function commitUnmount(current: Fiber): void {
     case ForwardRef:
     case MemoComponent:
     case SimpleMemoComponent: {
+      if (enableFlareAPI) {
+        forEachEventResponderHookOnFiber(current, unmountEventResponderHook);
+      }
       const updateQueue: FunctionComponentUpdateQueue | null = (current.updateQueue: any);
       if (updateQueue !== null) {
         const lastEffect = updateQueue.lastEffect;
@@ -750,13 +775,6 @@ function commitUnmount(current: Fiber): void {
         emptyPortalContainer(current);
       }
       return;
-    }
-    case EventComponent: {
-      if (enableFlareAPI) {
-        const eventComponentInstance = current.stateNode;
-        unmountEventComponent(eventComponentInstance);
-        current.stateNode = null;
-      }
     }
   }
 }
@@ -837,8 +855,7 @@ function commitContainer(finishedWork: Fiber) {
   switch (finishedWork.tag) {
     case ClassComponent:
     case HostComponent:
-    case HostText:
-    case EventComponent: {
+    case HostText: {
       return;
     }
     case HostRoot:
@@ -1238,9 +1255,6 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       return;
     }
     case IncompleteClassComponent: {
-      return;
-    }
-    case EventComponent: {
       return;
     }
     default: {

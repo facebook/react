@@ -9,7 +9,7 @@
 
 import warning from 'shared/warning';
 
-import type {ReactEventComponentInstance} from 'shared/ReactTypes';
+import type {ReactEventResponderInstance} from 'shared/ReactTypes';
 
 import {enableFlareAPI} from 'shared/ReactFeatureFlags';
 
@@ -118,15 +118,6 @@ export function getChildHostContext(
   type: string,
   rootContainerInstance: Container,
 ): HostContext {
-  return NO_CONTEXT;
-}
-
-export function getChildHostContextForEventComponent(
-  parentHostContext: HostContext,
-): HostContext {
-  if (__DEV__ && enableFlareAPI) {
-    return EVENT_COMPONENT_CONTEXT;
-  }
   return NO_CONTEXT;
 }
 
@@ -285,20 +276,20 @@ export function unhideTextInstance(
   textInstance.isHidden = false;
 }
 
-export function mountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance<any, any>,
+export function mountEventResponder(
+  eventResponderInstance: ReactEventResponderInstance<any, any>,
 ): void {
   // noop
 }
 
-export function updateEventComponent(
-  eventComponentInstance: ReactEventComponentInstance<any, any>,
+export function updateEventResponder(
+  eventResponderInstance: ReactEventResponderInstance<any, any>,
 ): void {
   // noop
 }
 
-export function unmountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance<any, any>,
+export function unmountEventResponder(
+  eventResponderInstance: ReactEventResponderInstance<any, any>,
 ): void {
   // noop
 }
