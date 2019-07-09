@@ -88,6 +88,7 @@ const RCTUIManager = {
       viewName: viewName,
     });
   }),
+  dispatchViewManagerCommand: jest.fn(),
   setJSResponder: jest.fn(),
   setChildren: jest.fn(function setChildren(parentTag, reactTags) {
     autoCreateRoot(parentTag);

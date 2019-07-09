@@ -279,7 +279,7 @@ export default function(babel) {
     let forceReset = hasForceResetComment(scope.path);
     let customHooksInScope = [];
     customHooks.forEach(callee => {
-      // Check if a correponding binding exists where we emit the signature.
+      // Check if a corresponding binding exists where we emit the signature.
       let bindingName;
       switch (callee.type) {
         case 'MemberExpression':

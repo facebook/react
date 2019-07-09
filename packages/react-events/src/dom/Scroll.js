@@ -131,7 +131,7 @@ function dispatchEvent(
 const ScrollResponder: ReactDOMEventResponder = {
   displayName: 'Scroll',
   targetEventTypes,
-  createInitialState() {
+  getInitialState() {
     return {
       direction: '',
       isTouching: false,
@@ -141,8 +141,6 @@ const ScrollResponder: ReactDOMEventResponder = {
       scrollTarget: null,
     };
   },
-  allowMultipleHostChildren: true,
-  allowEventHooks: true,
   onEvent(
     event: ReactDOMResponderEvent,
     context: ReactDOMResponderContext,

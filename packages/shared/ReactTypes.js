@@ -14,7 +14,7 @@ export type ReactNode =
   | ReactFragment
   | ReactProvider<any>
   | ReactConsumer<any>
-  | ReactEventComponent<any, any, any>;
+  | ReactEventComponent<any, any>;
 
 export type ReactEmpty = null | void | boolean;
 
@@ -80,34 +80,31 @@ export type RefObject = {|
   current: any,
 |};
 
-export type ReactEventComponentInstance<T, E, C> = {|
+export type ReactEventComponentInstance<E, C> = {|
   currentFiber: mixed,
   isHook: boolean,
   props: Object,
-  responder: ReactEventResponder<T, E, C>,
+  responder: ReactEventResponder<E, C>,
   rootEventTypes: null | Set<string>,
   rootInstance: null | mixed,
   state: Object,
 |};
 
-export type ReactEventResponder<T, E, C> = {
+export type ReactEventResponder<E, C> = {
   displayName: string,
-  targetEventTypes?: Array<T>,
-  rootEventTypes?: Array<T>,
-  createInitialState?: (props: Object) => Object,
-  allowMultipleHostChildren: boolean,
-  allowEventHooks: boolean,
+  targetEventTypes?: Array<string>,
+  rootEventTypes?: Array<string>,
+  getInitialState?: (props: Object) => Object,
   onEvent?: (event: E, context: C, props: Object, state: Object) => void,
-  onEventCapture?: (event: E, context: C, props: Object, state: Object) => void,
   onRootEvent?: (event: E, context: C, props: Object, state: Object) => void,
   onMount?: (context: C, props: Object, state: Object) => void,
   onUnmount?: (context: C, props: Object, state: Object) => void,
   onOwnershipChange?: (context: C, props: Object, state: Object) => void,
 };
 
-export type ReactEventComponent<T, E, C> = {|
+export type ReactEventComponent<E, C> = {|
   $$typeof: Symbol | number,
-  responder: ReactEventResponder<T, E, C>,
+  responder: ReactEventResponder<E, C>,
 |};
 
 export opaque type EventPriority = 0 | 1 | 2;

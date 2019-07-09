@@ -18,7 +18,6 @@ let ReactTestRenderer;
 let ReactDOM;
 let ReactDOMServer;
 let ReactTestUtils;
-let ReactSymbols;
 
 const noOpResponder = {
   displayName: 'TestEventComponent',
@@ -27,11 +26,7 @@ const noOpResponder = {
 };
 
 function createReactEventComponent() {
-  return {
-    $$typeof: ReactSymbols.REACT_EVENT_COMPONENT_TYPE,
-    props: null,
-    responder: noOpResponder,
-  };
+  return React.unstable_createEvent(noOpResponder);
 }
 
 function init() {
@@ -40,7 +35,6 @@ function init() {
   ReactFeatureFlags.enableFlareAPI = true;
   React = require('react');
   Scheduler = require('scheduler');
-  ReactSymbols = require('shared/ReactSymbols');
 }
 
 function initNoopRenderer() {

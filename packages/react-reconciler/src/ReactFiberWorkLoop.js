@@ -402,7 +402,7 @@ export function scheduleUpdateOnFiber(
         // Flush the synchronous work now, wnless we're already working or inside
         // a batch. This is intentionally inside scheduleUpdateOnFiber instead of
         // scheduleCallbackForFiber to preserve the ability to schedule a callback
-        // without immediately flushing it. We only do this for user-initated
+        // without immediately flushing it. We only do this for user-initiated
         // updates, to preserve historical behavior of sync mode.
         flushSyncCallbackQueue();
       }

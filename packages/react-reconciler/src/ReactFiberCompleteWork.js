@@ -124,13 +124,8 @@ import {
   renderDidSuspendDelayIfPossible,
   renderHasNotSuspendedYet,
 } from './ReactFiberWorkLoop';
-import {
-  getEventComponentHostChildrenCount,
-  createEventComponentInstance,
-} from './ReactFiberEvents';
+import {createEventComponentInstance} from './ReactFiberEvents';
 import {createFundamentalStateInstance} from './ReactFiberFundamental';
-import getComponentName from 'shared/getComponentName';
-import warning from 'shared/warning';
 import {Never} from './ReactFiberExpirationTime';
 import {resetChildFibers} from './ReactChildFiber';
 
@@ -1155,25 +1150,14 @@ function completeWork(
         let eventComponentInstance: ReactEventComponentInstance<
           any,
           any,
-          any,
         > | null =
           workInProgress.stateNode;
 
         if (eventComponentInstance === null) {
-          let responderState;
-          if (__DEV__ && !responder.allowMultipleHostChildren) {
-            const hostChildrenCount = getEventComponentHostChildrenCount(
-              workInProgress,
-            );
-            warning(
-              (hostChildrenCount || 0) < 2,
-              'A "<%s>" event component cannot contain multiple host children.',
-              getComponentName(workInProgress.type),
-            );
-          }
-          const createInitialState = responder.createInitialState;
-          if (createInitialState !== undefined) {
-            responderState = createInitialState(newProps);
+          let responderState = null;
+          const getInitialState = responder.getInitialState;
+          if (getInitialState !== undefined) {
+            responderState = getInitialState(newProps);
           }
           eventComponentInstance = workInProgress.stateNode = createEventComponentInstance(
             workInProgress,
