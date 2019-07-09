@@ -228,8 +228,6 @@ const FocusResponder: ReactDOMEventResponder = {
       pointerType: '',
     };
   },
-  allowMultipleHostChildren: false,
-  allowEventHooks: true,
   onEvent(
     event: ReactDOMResponderEvent,
     context: ReactDOMResponderContext,

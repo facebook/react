@@ -26,8 +26,6 @@ function createReactEventComponent({
   onMount,
   onUnmount,
   onOwnershipChange,
-  allowMultipleHostChildren,
-  allowEventHooks,
 }) {
   const testEventResponder = {
     displayName: 'TestEventComponent',
@@ -39,8 +37,6 @@ function createReactEventComponent({
     onMount,
     onUnmount,
     onOwnershipChange,
-    allowMultipleHostChildren: allowMultipleHostChildren || false,
-    allowEventHooks: allowEventHooks || true,
   };
 
   return React.unstable_createEvent(testEventResponder);
@@ -820,133 +816,6 @@ describe('DOMEventResponderSystem', () => {
       {withoutStack: true},
     );
     expect(container.innerHTML).toBe('<button>Click me!</button>');
-  });
-
-  it('should warn if multiple host components are detected without allowMultipleHostChildren', () => {
-    const EventComponent = createReactEventComponent({
-      targetEventTypes: [],
-      onEvent: () => {},
-      allowMultipleHostChildren: false,
-    });
-
-    const Test = () => (
-      <EventComponent>
-        <div />
-        <div />
-      </EventComponent>
-    );
-
-    expect(() => {
-      ReactDOM.render(<Test />, container);
-    }).toWarnDev(
-      'Warning: A "<TestEventComponent>" event component cannot contain multiple host children.',
-    );
-
-    function Component() {
-      return <div />;
-    }
-
-    const Test2 = () => (
-      <EventComponent>
-        <div />
-        <Component />
-      </EventComponent>
-    );
-
-    expect(() => {
-      ReactDOM.render(<Test2 />, container);
-    }).toWarnDev(
-      'Warning: A "<TestEventComponent>" event component cannot contain multiple host children.',
-    );
-  });
-
-  it('should handle suspended nodes correctly when detecting host components without allowMultipleHostChildren', () => {
-    const EventComponent = createReactEventComponent({
-      targetEventTypes: [],
-      onEvent: () => {},
-      allowMultipleHostChildren: false,
-    });
-
-    function SuspendedComponent() {
-      throw Promise.resolve();
-    }
-
-    function Component() {
-      return (
-        <React.Fragment>
-          <div />
-          <SuspendedComponent />
-        </React.Fragment>
-      );
-    }
-
-    const Test = () => (
-      <EventComponent>
-        <React.Suspense fallback={<div>Loading...</div>}>
-          <Component />
-        </React.Suspense>
-      </EventComponent>
-    );
-
-    ReactDOM.render(<Test />, container);
-
-    function Component2() {
-      return (
-        <React.Fragment>
-          <SuspendedComponent />
-        </React.Fragment>
-      );
-    }
-
-    const Test2 = () => (
-      <EventComponent>
-        <React.Suspense
-          fallback={
-            <React.Fragment>
-              <div />
-              <div />
-            </React.Fragment>
-          }>
-          <Component2 />
-        </React.Suspense>
-      </EventComponent>
-    );
-
-    expect(() => {
-      ReactDOM.render(<Test2 />, container);
-    }).toWarnDev(
-      'Warning: A "<TestEventComponent>" event component cannot contain multiple host children.',
-    );
-  });
-
-  it('should not warn if multiple host components are detected with allowMultipleHostChildren', () => {
-    const EventComponent = createReactEventComponent({
-      targetEventTypes: [],
-      onEvent: () => {},
-      allowMultipleHostChildren: true,
-    });
-
-    const Test = () => (
-      <EventComponent>
-        <div />
-        <div />
-      </EventComponent>
-    );
-
-    ReactDOM.render(<Test />, container);
-
-    function Component() {
-      return <div />;
-    }
-
-    const Test2 = () => (
-      <EventComponent>
-        <div />
-        <Component />
-      </EventComponent>
-    );
-
-    ReactDOM.render(<Test2 />, container);
   });
 
   it('should work with event component hooks', () => {

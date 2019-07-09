@@ -95,8 +95,6 @@ export type ReactEventResponder<E, C> = {
   targetEventTypes?: Array<string>,
   rootEventTypes?: Array<string>,
   getInitialState?: (props: Object) => Object,
-  allowMultipleHostChildren: boolean,
-  allowEventHooks: boolean,
   onEvent?: (event: E, context: C, props: Object, state: Object) => void,
   onRootEvent?: (event: E, context: C, props: Object, state: Object) => void,
   onMount?: (context: C, props: Object, state: Object) => void,

@@ -649,8 +649,6 @@ const PressResponder: ReactDOMEventResponder = {
       touchEvent: null,
     };
   },
-  allowMultipleHostChildren: false,
-  allowEventHooks: true,
   onEvent(
     event: ReactDOMResponderEvent,
     context: ReactDOMResponderContext,

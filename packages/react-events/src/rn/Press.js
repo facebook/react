@@ -502,8 +502,6 @@ function dispatchPressEndEvents(event, context, props, state): void {
 const PressResponder: ReactNativeEventResponder = {
   displayName: 'Press',
   targetEventTypes,
-  allowEventHooks: true,
-  allowMultipleHostChildren: false,
   getInitialState(): PressState {
     return {
       activationPosition: null,

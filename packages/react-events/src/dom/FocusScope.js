@@ -56,8 +56,6 @@ const FocusScopeResponder: ReactDOMEventResponder = {
       currentFocusedNode: null,
     };
   },
-  allowMultipleHostChildren: true,
-  allowEventHooks: false,
   onEvent(
     event: ReactDOMResponderEvent,
     context: ReactDOMResponderContext,
