@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {useEffect, useState} from 'react';
+import {useDebugValue, useEffect, useState} from 'react';
 
 // Hook used for safely managing subscriptions in concurrent mode.
 //
@@ -54,6 +54,9 @@ export function useSubscription<Value>({
       value: valueToReturn,
     });
   }
+
+  // Display the current value for this hook in React DevTools.
+  useDebugValue(valueToReturn);
 
   // It is important not to subscribe while rendering because this can lead to memory leaks.
   // (Learn more at reactjs.org/docs/strict-mode.html#detecting-unexpected-side-effects)
