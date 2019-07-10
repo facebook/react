@@ -14,6 +14,8 @@ let runWithPriority;
 let ImmediatePriority;
 let UserBlockingPriority;
 let NormalPriority;
+let LowPriority;
+let IdlePriority;
 let scheduleCallback;
 let cancelCallback;
 let wrapCallback;
@@ -31,6 +33,8 @@ describe('Scheduler', () => {
     ImmediatePriority = Scheduler.unstable_ImmediatePriority;
     UserBlockingPriority = Scheduler.unstable_UserBlockingPriority;
     NormalPriority = Scheduler.unstable_NormalPriority;
+    LowPriority = Scheduler.unstable_LowPriority;
+    IdlePriority = Scheduler.unstable_IdlePriority;
     scheduleCallback = Scheduler.unstable_scheduleCallback;
     cancelCallback = Scheduler.unstable_cancelCallback;
     wrapCallback = Scheduler.unstable_wrapCallback;
@@ -413,6 +417,73 @@ describe('Scheduler', () => {
       ImmediatePriority,
     ]);
   });
+
+  if (__DEV__) {
+    // Function names are minified in prod, though you could still infer the
+    // priority if you have sourcemaps.
+    it('adds extra function to the JS stack whose name includes the priority level', () => {
+      function inferPriorityFromCallstack() {
+        try {
+          throw Error();
+        } catch (e) {
+          const stack = e.stack;
+          const lines = stack.split('\n');
+          for (let i = lines.length - 1; i >= 0; i--) {
+            const line = lines[i];
+            const found = line.match(
+              /scheduler_flushTaskAtPriority_([A-Za-z]+)/,
+            );
+            if (found !== null) {
+              const priorityStr = found[1];
+              switch (priorityStr) {
+                case 'Immediate':
+                  return ImmediatePriority;
+                case 'UserBlocking':
+                  return UserBlockingPriority;
+                case 'Normal':
+                  return NormalPriority;
+                case 'Low':
+                  return LowPriority;
+                case 'Idle':
+                  return IdlePriority;
+              }
+            }
+          }
+          return null;
+        }
+      }
+
+      scheduleCallback(ImmediatePriority, () =>
+        Scheduler.unstable_yieldValue(
+          'Immediate: ' + inferPriorityFromCallstack(),
+        ),
+      );
+      scheduleCallback(UserBlockingPriority, () =>
+        Scheduler.unstable_yieldValue(
+          'UserBlocking: ' + inferPriorityFromCallstack(),
+        ),
+      );
+      scheduleCallback(NormalPriority, () =>
+        Scheduler.unstable_yieldValue(
+          'Normal: ' + inferPriorityFromCallstack(),
+        ),
+      );
+      scheduleCallback(LowPriority, () =>
+        Scheduler.unstable_yieldValue('Low: ' + inferPriorityFromCallstack()),
+      );
+      scheduleCallback(IdlePriority, () =>
+        Scheduler.unstable_yieldValue('Idle: ' + inferPriorityFromCallstack()),
+      );
+
+      expect(Scheduler).toFlushAndYield([
+        'Immediate: ' + ImmediatePriority,
+        'UserBlocking: ' + UserBlockingPriority,
+        'Normal: ' + NormalPriority,
+        'Low: ' + LowPriority,
+        'Idle: ' + IdlePriority,
+      ]);
+    });
+  }
 
   describe('delayed tasks', () => {
     it('schedules a delayed task', () => {
