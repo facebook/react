@@ -67,7 +67,7 @@ import shallowEqual from 'shared/shallowEqual';
 import getComponentName from 'shared/getComponentName';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {refineResolvedLazyComponent} from 'shared/ReactLazyComponent';
-import {REACT_LAZY_TYPE} from 'shared/ReactSymbols';
+import {REACT_LAZY_TYPE, getIteratorFn} from 'shared/ReactSymbols';
 import warning from 'shared/warning';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {
@@ -2094,6 +2094,72 @@ function validateTailOptions(
   }
 }
 
+function validateSuspenseListNestedChild(childSlot: mixed, index: number) {
+  if (__DEV__) {
+    let isArray = Array.isArray(childSlot);
+    let isIterable = !isArray && typeof getIteratorFn(childSlot) === 'function';
+    if (isArray || isIterable) {
+      let type = isArray ? 'array' : 'iterable';
+      warning(
+        false,
+        'A nested %s was passed to row #%s in <SuspenseList />. Wrap it in ' +
+          'an additional SuspenseList to configure its revealOrder: ' +
+          '<SuspenseList revealOrder=...> ... ' +
+          '<SuspenseList revealOrder=...>{%s}</SuspenseList> ... ' +
+          '</SuspenseList>',
+        type,
+        index,
+        type,
+      );
+      return false;
+    }
+  }
+  return true;
+}
+
+function validateSuspenseListChildren(
+  children: mixed,
+  revealOrder: SuspenseListRevealOrder,
+) {
+  if (__DEV__) {
+    if (
+      (revealOrder === 'forwards' || revealOrder === 'backwards') &&
+      (children !== undefined && children !== null && children !== false)
+    ) {
+      if (Array.isArray(children)) {
+        for (let i = 0; i < children.length; i++) {
+          if (!validateSuspenseListNestedChild(children[i], i)) {
+            return;
+          }
+        }
+      } else {
+        let iteratorFn = getIteratorFn(children);
+        if (typeof iteratorFn === 'function') {
+          const childrenIterator = iteratorFn.call(children);
+          if (childrenIterator) {
+            let step = childrenIterator.next();
+            let i = 0;
+            for (; !step.done; step = childrenIterator.next()) {
+              if (!validateSuspenseListNestedChild(step.value, i)) {
+                return;
+              }
+              i++;
+            }
+          }
+        } else {
+          warning(
+            false,
+            'A single row was passed to a <SuspenseList revealOrder="%s" />. ' +
+              'This is not useful since it needs multiple rows. ' +
+              'Did you mean to pass multiple children or an array?',
+            revealOrder,
+          );
+        }
+      }
+    }
+  }
+}
+
 function initSuspenseListRenderState(
   workInProgress: Fiber,
   isBackwards: boolean,
@@ -2142,6 +2208,7 @@ function updateSuspenseListComponent(
 
   validateRevealOrder(revealOrder);
   validateTailOptions(tailMode, revealOrder);
+  validateSuspenseListChildren(newChildren, revealOrder);
 
   reconcileChildren(current, workInProgress, newChildren, renderExpirationTime);
 

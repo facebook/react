@@ -101,6 +101,85 @@ describe('ReactSuspenseList', () => {
     ]);
   });
 
+  it('warns if a single element is passed to a "forwards" list', () => {
+    function Foo({children}) {
+      return <SuspenseList revealOrder="forwards">{children}</SuspenseList>;
+    }
+
+    ReactNoop.render(<Foo />);
+    // No warning
+    Scheduler.unstable_flushAll();
+
+    ReactNoop.render(<Foo>{null}</Foo>);
+    // No warning
+    Scheduler.unstable_flushAll();
+
+    ReactNoop.render(<Foo>{false}</Foo>);
+    // No warning
+    Scheduler.unstable_flushAll();
+
+    ReactNoop.render(
+      <Foo>
+        <Suspense fallback="Loading">Child</Suspense>
+      </Foo>,
+    );
+
+    expect(() => Scheduler.unstable_flushAll()).toWarnDev([
+      'Warning: A single row was passed to a <SuspenseList revealOrder="forwards" />. ' +
+        'This is not useful since it needs multiple rows. ' +
+        'Did you mean to pass multiple children or an array?' +
+        '\n    in SuspenseList (at **)' +
+        '\n    in Foo (at **)',
+    ]);
+  });
+
+  it('warns if a single fragment is passed to a "backwards" list', () => {
+    function Foo() {
+      return (
+        <SuspenseList revealOrder="backwards">
+          <Fragment>{[]}</Fragment>
+        </SuspenseList>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+
+    expect(() => Scheduler.unstable_flushAll()).toWarnDev([
+      'Warning: A single row was passed to a <SuspenseList revealOrder="backwards" />. ' +
+        'This is not useful since it needs multiple rows. ' +
+        'Did you mean to pass multiple children or an array?' +
+        '\n    in SuspenseList (at **)' +
+        '\n    in Foo (at **)',
+    ]);
+  });
+
+  it('warns if a nested array is passed to a "forwards" list', () => {
+    function Foo({items}) {
+      return (
+        <SuspenseList revealOrder="forwards">
+          {items.map(name => (
+            <Suspense key={name} fallback="Loading">
+              {name}
+            </Suspense>
+          ))}
+          <div>Tail</div>
+        </SuspenseList>
+      );
+    }
+
+    ReactNoop.render(<Foo items={['A', 'B']} />);
+
+    expect(() => Scheduler.unstable_flushAll()).toWarnDev([
+      'Warning: A nested array was passed to row #0 in <SuspenseList />. ' +
+        'Wrap it in an additional SuspenseList to configure its revealOrder: ' +
+        '<SuspenseList revealOrder=...> ... ' +
+        '<SuspenseList revealOrder=...>{array}</SuspenseList> ... ' +
+        '</SuspenseList>' +
+        '\n    in SuspenseList (at **)' +
+        '\n    in Foo (at **)',
+    ]);
+  });
+
   it('shows content independently by default', async () => {
     let A = createAsyncText('A');
     let B = createAsyncText('B');
@@ -1162,7 +1241,8 @@ describe('ReactSuspenseList', () => {
     function Foo() {
       return (
         <SuspenseList revealOrder="forwards" tail="collapse">
-          <Suspense fallback="Loading">Content</Suspense>
+          <Suspense fallback="Loading">A</Suspense>
+          <Suspense fallback="Loading">B</Suspense>
         </SuspenseList>
       );
     }
