@@ -136,6 +136,20 @@ describe('Event responder: Press', () => {
       );
     });
 
+    it('is called after auxillary-button "pointerdown" event', () => {
+      ref.current.dispatchEvent(
+        createEvent('pointerdown', {button: 1, pointerType: 'mouse'}),
+      );
+      expect(onPressStart).toHaveBeenCalledTimes(1);
+      expect(onPressStart).toHaveBeenCalledWith(
+        expect.objectContaining({
+          button: 'auxillary',
+          pointerType: 'mouse',
+          type: 'pressstart',
+        }),
+      );
+    });
+
     it('ignores browser emulated events', () => {
       ref.current.dispatchEvent(createEvent('pointerdown'));
       ref.current.dispatchEvent(createEvent('touchstart'));
@@ -143,8 +157,7 @@ describe('Event responder: Press', () => {
       expect(onPressStart).toHaveBeenCalledTimes(1);
     });
 
-    it('ignores any events not caused by left-click or touch/pen contact', () => {
-      ref.current.dispatchEvent(createEvent('pointerdown', {button: 1}));
+    it('ignores any events not caused by primary/auxillary-click or touch/pen contact', () => {
       ref.current.dispatchEvent(createEvent('pointerdown', {button: 5}));
       ref.current.dispatchEvent(createEvent('mousedown', {button: 2}));
       expect(onPressStart).toHaveBeenCalledTimes(0);
@@ -327,6 +340,23 @@ describe('Event responder: Press', () => {
       expect(onPressEnd).toHaveBeenCalledTimes(1);
       expect(onPressEnd).toHaveBeenCalledWith(
         expect.objectContaining({pointerType: 'pen', type: 'pressend'}),
+      );
+    });
+
+    it('is called after auxillary-button "pointerup" event', () => {
+      ref.current.dispatchEvent(
+        createEvent('pointerdown', {button: 1, pointerType: 'mouse'}),
+      );
+      ref.current.dispatchEvent(
+        createEvent('pointerup', {button: 1, pointerType: 'mouse'}),
+      );
+      expect(onPressEnd).toHaveBeenCalledTimes(1);
+      expect(onPressEnd).toHaveBeenCalledWith(
+        expect.objectContaining({
+          button: 'auxillary',
+          pointerType: 'mouse',
+          type: 'pressend',
+        }),
       );
     });
 
@@ -664,6 +694,21 @@ describe('Event responder: Press', () => {
       );
     });
 
+    it('is not called after auxillary-button press', () => {
+      const element = (
+        <Press onPress={onPress}>
+          <div ref={ref} />
+        </Press>
+      );
+      ReactDOM.render(element, container);
+
+      ref.current.dispatchEvent(createEvent('pointerdown', {button: 1}));
+      ref.current.dispatchEvent(
+        createEvent('pointerup', {button: 1, clientX: 10, clientY: 10}),
+      );
+      expect(onPress).not.toHaveBeenCalled();
+    });
+
     it('is called after valid "keyup" event', () => {
       ref.current.dispatchEvent(createKeyboardEvent('keydown', {key: 'Enter'}));
       ref.current.dispatchEvent(createKeyboardEvent('keyup', {key: 'Enter'}));
@@ -707,6 +752,22 @@ describe('Event responder: Press', () => {
         createEvent('pointerup', {clientX: 10, clientY: 10}),
       );
       expect(onPress).toHaveBeenCalledTimes(1);
+    });
+
+    it('is called with modifier keys', () => {
+      ref.current.dispatchEvent(
+        createEvent('pointerdown', {metaKey: true, pointerType: 'mouse'}),
+      );
+      ref.current.dispatchEvent(
+        createEvent('pointerup', {metaKey: true, pointerType: 'mouse'}),
+      );
+      expect(onPress).toHaveBeenCalledWith(
+        expect.objectContaining({
+          pointerType: 'mouse',
+          type: 'press',
+          metaKey: true,
+        }),
+      );
     });
 
     // No PointerEvent fallbacks
