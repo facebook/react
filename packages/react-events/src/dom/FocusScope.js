@@ -11,7 +11,6 @@ import type {
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
 } from 'shared/ReactDOMTypes';
-import type {RefObject} from 'shared/ReactTypes';
 
 import React from 'react';
 
@@ -161,9 +160,6 @@ export const FocusScopeResponder: ReactDOMEventResponder = {
   },
 };
 
-export function useFocusScopeResponder(
-  ref: RefObject,
-  props: FocusScopeProps,
-): void {
-  React.unstable_useResponder(FocusScopeResponder, ref, props);
+export function useFocusScopeResponder(props: FocusScopeProps): void {
+  React.unstable_useResponder(FocusScopeResponder, null, props);
 }

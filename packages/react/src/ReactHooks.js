@@ -144,7 +144,7 @@ export const emptyObject = {};
 
 export function useResponder<E, C>(
   responder: ReactEventResponder<E, C>,
-  ref: RefObject,
+  ref: null | RefObject,
   props: null | Object,
 ) {
   const dispatcher = resolveDispatcher();

@@ -89,7 +89,7 @@ export type Dispatcher = {
   useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void,
   useResponder<E, C>(
     responder: ReactEventResponder<E, C>,
-    ref: RefObject,
+    ref: null | RefObject,
     props: Object,
   ): void,
 };

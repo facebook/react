@@ -103,7 +103,7 @@ export type ReactEventResponder<E, C> = {|
 export type ReactEventResponderHook<E, C> = {|
   instance: null | ReactEventResponderInstance<E, C>,
   props: Object,
-  ref: RefObject,
+  ref: null | RefObject,
   responder: ReactEventResponder<E, C>,
 |};
 

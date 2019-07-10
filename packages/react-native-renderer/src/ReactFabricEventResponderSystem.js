@@ -514,12 +514,13 @@ function traverseAndHandleEventResponderInstances(
       const localResponders = [];
       for (let i = 0; i < eventHooks.length; i++) {
         const {instance, ref} = eventHooks[i];
-        const responderTarget = ref.current;
+        const hasResponderTarget = ref !== null;
+        const responderTarget = hasResponderTarget ? (ref: any).current : null;
         node = ((((instance: any): ReactNativeEventResponderInstance)
           .currentFiber: any): Fiber);
         if (
           instance !== null &&
-          responderTarget !== null &&
+          (!hasResponderTarget || responderTarget !== null) &&
           validateOwnership(instance)
         ) {
           const responder = instance.responder;

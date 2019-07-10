@@ -34,7 +34,7 @@ export function prepareToReadEventComponents(workInProgress: Fiber): void {
 
 export function updateEventResponderHooks<E, C>(
   responder: ReactEventResponder<E, C>,
-  ref: RefObject,
+  ref: null | RefObject,
   props: Object,
 ): void {
   let events;
@@ -67,7 +67,7 @@ export function updateEventResponderHooks<E, C>(
 
 function createEventResponderHook<E, C>(
   props: Object,
-  ref: RefObject,
+  ref: null | RefObject,
   responder: ReactEventResponder<E, C>,
 ): ReactEventResponderHook<E, C> {
   return {

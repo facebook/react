@@ -56,7 +56,7 @@ describe('FocusScope event responder', () => {
   });
 
   function FocusScopeResponderTest({children, ...props}) {
-    useFocusScopeResponder({}, props);
+    useFocusScopeResponder(props);
     return children;
   }
 
