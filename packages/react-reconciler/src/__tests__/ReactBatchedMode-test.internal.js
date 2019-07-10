@@ -161,4 +161,56 @@ describe('ReactBatchedMode', () => {
     expect(Scheduler).toFlushExpired(['A1']);
     expect(root).toMatchRenderedOutput('A1B1');
   });
+
+  it('batchedUpdates can have callback', () => {
+    const {useState, forwardRef, useImperativeHandle} = React;
+    const root = ReactNoop.createSyncRoot();
+
+    const Foo = forwardRef(({label}, ref) => {
+      const [step, setStep] = useState(0);
+      useImperativeHandle(ref, () => ({setStep}));
+      return <Text text={label + step} />;
+    });
+
+    const foo1 = React.createRef(null);
+    const foo2 = React.createRef(null);
+    root.render(
+      <React.Fragment>
+        <Foo label="A" ref={foo1} />
+        <Foo label="B" ref={foo2} />
+      </React.Fragment>,
+    );
+
+    // Mount
+    expect(Scheduler).toFlushExpired(['A0', 'B0']);
+    expect(root).toMatchRenderedOutput('A0B0');
+
+    let called = [];
+
+    // Before it flushes, update the second sibling inside flushSync
+    ReactNoop.batchedUpdates(
+      () => {
+        // Schedule a batched update to the first sibling
+        ReactNoop.batchedUpdates(
+          () => {
+            foo1.current.setStep(1);
+          },
+          undefined,
+          () => {
+            called.push(2);
+          },
+        );
+        foo2.current.setStep(1);
+      },
+      undefined,
+      () => {
+        called.push(1);
+      },
+    );
+
+    expect(called).toEqual([1, 2]);
+    // Now flush the first update
+    expect(Scheduler).toFlushExpired(['A1', 'B1']);
+    expect(root).toMatchRenderedOutput('A1B1');
+  });
 });

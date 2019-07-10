@@ -344,6 +344,7 @@ export function computeExpirationForFiber(
 }
 
 let lastUniqueAsyncExpiration = NoWork;
+
 export function computeUniqueAsyncExpiration(): ExpirationTime {
   const currentTime = requestCurrentTime();
   let result = computeAsyncExpiration(currentTime);
@@ -430,6 +431,7 @@ export function scheduleUpdateOnFiber(
     }
   }
 }
+
 export const scheduleWork = scheduleUpdateOnFiber;
 
 // This is split into a separate function so we can mark a fiber with pending
@@ -662,9 +664,18 @@ function flushPendingDiscreteUpdates() {
   }
 }
 
-export function batchedUpdates<A, R>(fn: A => R, a: A): R {
+let batchedUpdatesCallbackQueue = [];
+
+export function batchedUpdates<A, R>(
+  fn: A => R,
+  a: A,
+  callback?: () => void,
+): R {
   const prevExecutionContext = executionContext;
   executionContext |= BatchedContext;
+  if (callback) {
+    batchedUpdatesCallbackQueue.push(callback);
+  }
   try {
     return fn(a);
   } finally {
@@ -672,6 +683,11 @@ export function batchedUpdates<A, R>(fn: A => R, a: A): R {
     if (executionContext === NoContext) {
       // Flush the immediate callbacks that were scheduled during this batch
       flushSyncCallbackQueue();
+      const clonedQueue = batchedUpdatesCallbackQueue.concat();
+      batchedUpdatesCallbackQueue = [];
+      for (let i = 0, l = clonedQueue.length; i < l; i++) {
+        clonedQueue[i]();
+      }
     }
   }
 }
@@ -1987,6 +2003,7 @@ function prepareToThrowUncaughtError(error: mixed) {
     firstUncaughtError = error;
   }
 }
+
 export const onUncaughtError = prepareToThrowUncaughtError;
 
 function captureCommitPhaseErrorOnRoot(
@@ -2283,6 +2300,7 @@ function checkForInterruption(
 }
 
 let didWarnStateUpdateForUnmountedComponent: Set<string> | null = null;
+
 function warnAboutUpdateOnUnmountedFiberInDEV(fiber) {
   if (__DEV__) {
     const tag = fiber.tag;
@@ -2390,6 +2408,7 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
 
 let didWarnAboutUpdateInRender = false;
 let didWarnAboutUpdateInGetChildContext = false;
+
 function warnAboutInvalidUpdatesOnClassComponentsInDEV(fiber) {
   if (__DEV__) {
     if (fiber.tag === ClassComponent) {
@@ -2509,6 +2528,7 @@ function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
 export const warnIfNotCurrentlyActingUpdatesInDev = warnIfNotCurrentlyActingUpdatesInDEV;
 
 let componentsWithSuspendedDiscreteUpdates = null;
+
 export function checkForWrongSuspensePriorityInDEV(sourceFiber: Fiber) {
   if (__DEV__) {
     if (
