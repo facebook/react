@@ -52,8 +52,17 @@ function transform(file, enc, cb) {
 
             // warning messages can be concatenated (`+`) at runtime, so here's
             // a trivial partial evaluator that interprets the literal value
-            const warningMsgLiteral = evalToString(node.arguments[1]);
-            warnings.add(JSON.stringify(warningMsgLiteral));
+            try {
+              const warningMsgLiteral = evalToString(node.arguments[1]);
+              warnings.add(JSON.stringify(warningMsgLiteral));
+            } catch (error) {
+              console.error(
+                'Failed to extract warning message from',
+                file.path
+              );
+              console.error(astPath.node.loc);
+              throw error;
+            }
           }
         },
       },
