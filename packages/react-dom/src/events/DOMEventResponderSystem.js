@@ -613,7 +613,6 @@ function traverseAndHandleEventResponderInstances(
   );
 
   let node = ((targetFiber: any): null | Fiber);
-  debugger;
   while (node !== null) {
     const {dependencies} = node;
     if (isFiberValidEventResponderNode(node)) {
