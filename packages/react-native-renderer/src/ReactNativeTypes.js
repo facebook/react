@@ -190,8 +190,8 @@ export type ReactFaricEvent = {
 };
 
 export type ReactNativeResponderEvent = {
-  currentTarget: null | ReactNativeEventTarget,
   nativeEvent: ReactFaricEvent,
+  responderTarget: null | ReactNativeEventTarget,
   target: null | ReactNativeEventTarget,
   type: string,
 };

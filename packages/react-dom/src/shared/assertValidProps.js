@@ -12,6 +12,8 @@ import warning from 'shared/warning';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 import voidElementTags from './voidElementTags';
+import {enableFlareAPI} from 'shared/ReactFeatureFlags';
+import {REACT_RESPONDER_TYPE} from 'shared/ReactSymbols';
 
 const HTML = '__html';
 
@@ -20,12 +22,22 @@ if (__DEV__) {
   ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
 }
 
+function isChildAnEventResponder(child: any): boolean {
+  if (enableFlareAPI && child != null) {
+    const type = child.type;
+    if (type != null && type.$$typeof === REACT_RESPONDER_TYPE) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function assertValidProps(tag: string, props: ?Object) {
   if (!props) {
     return;
   }
   // Note the use of `==` which checks for null or undefined.
-  if (voidElementTags[tag]) {
+  if (voidElementTags[tag] && !isChildAnEventResponder(props.children)) {
     invariant(
       props.children == null && props.dangerouslySetInnerHTML == null,
       '%s is a void element tag and must neither have `children` nor ' +

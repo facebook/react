@@ -15,14 +15,14 @@ import type {
   ReactFaricEventTouch,
   EventPriority,
 } from 'react-native-renderer/src/ReactNativeTypes';
-import type {ReactEventResponder} from 'shared/ReactTypes';
+import type {ReactEventResponderImpl} from 'shared/ReactTypes';
 import React from 'react';
 import {
   DiscreteEvent,
   UserBlockingEvent,
 } from 'react-native-renderer/src/ReactNativeTypes';
 
-type ReactNativeEventResponder = ReactEventResponder<
+type ReactNativeEventResponderImpl = ReactEventResponderImpl<
   ReactNativeResponderEvent,
   ReactNativeResponderContext,
 >;
@@ -499,7 +499,7 @@ function dispatchPressEndEvents(event, context, props, state): void {
   state.responderRegionOnDeactivation = null;
 }
 
-const PressResponder: ReactNativeEventResponder = {
+const PressResponderImpl: ReactNativeEventResponderImpl = {
   displayName: 'Press',
   targetEventTypes,
   getInitialState(): PressState {
@@ -533,7 +533,7 @@ const PressResponder: ReactNativeEventResponder = {
     if (type === 'topTouchStart') {
       if (!state.isPressed) {
         state.pointerType = 'touch';
-        const pressTarget = (state.pressTarget = event.currentTarget);
+        const pressTarget = (state.pressTarget = event.responderTarget);
 
         const touchEvent = getTouchFromPressEvent(nativeEvent);
         if (touchEvent === null) {
@@ -670,8 +670,6 @@ const PressResponder: ReactNativeEventResponder = {
   },
 };
 
-export const Press = React.unstable_createEvent(PressResponder);
-
-export function usePress(props: PressProps): void {
-  React.unstable_useEvent(Press, props);
-}
+export const PressResponder = React.unstable_createResponder(
+  PressResponderImpl,
+);

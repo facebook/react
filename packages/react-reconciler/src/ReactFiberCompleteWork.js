@@ -17,7 +17,7 @@ import type {
   Container,
   ChildSet,
 } from './ReactFiberHostConfig';
-import type {ReactEventComponentInstance} from 'shared/ReactTypes';
+import type {ReactEventResponderInstance} from 'shared/ReactTypes';
 import type {
   SuspenseState,
   SuspenseListRenderState,
@@ -47,7 +47,7 @@ import {
   SimpleMemoComponent,
   LazyComponent,
   IncompleteClassComponent,
-  EventComponent,
+  EventResponder,
 } from 'shared/ReactWorkTags';
 import {NoMode, BatchedMode} from './ReactTypeOfMode';
 import {
@@ -74,7 +74,8 @@ import {
   createContainerChildSet,
   appendChildToContainerChildSet,
   finalizeContainerChildren,
-  updateEventComponent,
+  updateEventResponder,
+  initializeEventResponder,
 } from './ReactFiberHostConfig';
 import {
   getRootHostContainer,
@@ -116,7 +117,10 @@ import {
   renderDidSuspendDelayIfPossible,
   renderHasNotSuspendedYet,
 } from './ReactFiberWorkLoop';
-import {createEventComponentInstance} from './ReactFiberEvents';
+import {
+  createEventResponderInstance,
+  attachEventResponderToTargetFiber,
+} from './ReactFiberEvents';
 import {Never} from './ReactFiberExpirationTime';
 import {resetChildFibers} from './ReactChildFiber';
 
@@ -149,6 +153,8 @@ if (supportsMutation) {
     while (node !== null) {
       if (node.tag === HostComponent || node.tag === HostText) {
         appendInitialChild(parent, node.stateNode);
+      } else if (node.tag === EventResponder) {
+        attachEventResponderToTargetFiber(node, workInProgress);
       } else if (node.tag === HostPortal) {
         // If we have a portal child, then we don't want to traverse
         // down its children. Instead, we'll get insertions from each child in
@@ -1113,38 +1119,39 @@ function completeWork(
       }
       break;
     }
-    case EventComponent: {
+    case EventResponder: {
       if (enableFlareAPI) {
-        popHostContext(workInProgress);
         const rootContainerInstance = getRootHostContainer();
-        const responder = workInProgress.type.responder;
-        let eventComponentInstance: ReactEventComponentInstance<
+        const responderImpl = workInProgress.type.impl;
+        let eventResponderInstance: ReactEventResponderInstance<
           any,
           any,
         > | null =
           workInProgress.stateNode;
 
-        if (eventComponentInstance === null) {
+        if (eventResponderInstance === null) {
+          const {getInitialState, onMount, onOwnershipChange} = responderImpl;
           let responderState = null;
-          const getInitialState = responder.getInitialState;
-          if (getInitialState !== undefined) {
+          if (typeof getInitialState === 'function') {
             responderState = getInitialState(newProps);
           }
-          eventComponentInstance = workInProgress.stateNode = createEventComponentInstance(
-            workInProgress,
+          eventResponderInstance = workInProgress.stateNode = createEventResponderInstance(
             newProps,
-            responder,
+            responderImpl,
             rootContainerInstance,
             responderState || {},
-            false,
           );
-          markUpdate(workInProgress);
+          initializeEventResponder(eventResponderInstance);
+          if (
+            typeof onMount === 'function' ||
+            typeof onOwnershipChange === 'function'
+          ) {
+            markUpdate(workInProgress);
+          }
         } else {
-          // Update the props on the event component state node
-          eventComponentInstance.props = newProps;
-          // Update the current fiber
-          eventComponentInstance.currentFiber = workInProgress;
-          updateEventComponent(eventComponentInstance);
+          // Update the props on the event responder instance
+          eventResponderInstance.props = newProps;
+          updateEventResponder(eventResponderInstance);
         }
       }
       break;

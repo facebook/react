@@ -13,20 +13,20 @@ let React;
 let ReactNoop;
 let Scheduler;
 let ReactFeatureFlags;
-let EventComponent;
+let EventResponder;
 let ReactTestRenderer;
 let ReactDOM;
 let ReactDOMServer;
 let ReactTestUtils;
 
 const noOpResponder = {
-  displayName: 'TestEventComponent',
+  displayName: 'TestEventResponder',
   targetEventTypes: [],
   handleEvent() {},
 };
 
-function createReactEventComponent() {
-  return React.unstable_createEvent(noOpResponder);
+function createReactEventResponder() {
+  return React.unstable_createResponder(noOpResponder);
 }
 
 function init() {
@@ -64,48 +64,19 @@ describe('ReactFiberEvents', () => {
   describe('NoopRenderer', () => {
     beforeEach(() => {
       initNoopRenderer();
-      EventComponent = createReactEventComponent();
+      EventResponder = createReactEventResponder();
     });
 
-    it('should render a simple event component with a single child', () => {
+    it('should render a simple event responder', () => {
       const Test = () => (
-        <EventComponent>
-          <div>Hello world</div>
-        </EventComponent>
+        <div>
+          <EventResponder />Hello world
+        </div>
       );
 
       ReactNoop.render(<Test />);
       expect(Scheduler).toFlushWithoutYielding();
       expect(ReactNoop).toMatchRenderedOutput(<div>Hello world</div>);
-    });
-
-    it('should warn when an event component has a direct text child', () => {
-      const Test = () => <EventComponent>Hello world</EventComponent>;
-
-      expect(() => {
-        ReactNoop.render(<Test />);
-        expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev(
-        'Warning: validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
-          'Wrap the child text "Hello world" in an element.',
-      );
-    });
-
-    it('should warn when an event component has a direct text child #2', () => {
-      const ChildWrapper = () => 'Hello world';
-      const Test = () => (
-        <EventComponent>
-          <ChildWrapper />
-        </EventComponent>
-      );
-
-      expect(() => {
-        ReactNoop.render(<Test />);
-        expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev(
-        'Warning: validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
-          'Wrap the child text "Hello world" in an element.',
-      );
     });
 
     it('should handle event components correctly with error boundaries', () => {
@@ -114,11 +85,10 @@ describe('ReactFiberEvents', () => {
       }
 
       const Test = () => (
-        <EventComponent>
-          <span>
-            <ErrorComponent />
-          </span>
-        </EventComponent>
+        <span>
+          <ErrorComponent />
+          <EventResponder />
+        </span>
       );
 
       class Wrapper extends React.Component {
@@ -161,11 +131,10 @@ describe('ReactFiberEvents', () => {
       }
 
       const Parent = () => (
-        <EventComponent>
-          <div>
-            <Child />
-          </div>
-        </EventComponent>
+        <div>
+          <Child />
+          <EventResponder />
+        </div>
       );
 
       ReactNoop.render(<Parent />);
@@ -191,108 +160,19 @@ describe('ReactFiberEvents', () => {
         </div>,
       );
     });
-
-    it('should handle re-renders where there is a bail-out in a parent and an error occurs', () => {
-      let _updateCounter;
-
-      function Child() {
-        const [counter, updateCounter] = React.useState(0);
-
-        _updateCounter = updateCounter;
-
-        if (counter === 1) {
-          return 'Text!';
-        }
-
-        return (
-          <div>
-            <span>Child - {counter}</span>
-          </div>
-        );
-      }
-
-      const Parent = () => (
-        <EventComponent>
-          <Child />
-        </EventComponent>
-      );
-
-      ReactNoop.render(<Parent />);
-      expect(Scheduler).toFlushWithoutYielding();
-      expect(ReactNoop).toMatchRenderedOutput(
-        <div>
-          <span>Child - 0</span>
-        </div>,
-      );
-
-      expect(() => {
-        ReactNoop.act(() => {
-          _updateCounter(counter => counter + 1);
-        });
-        expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev(
-        'Warning: validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
-          'Wrap the child text "Text!" in an element.',
-      );
-    });
-
-    it('should error with a component stack contains the names of the event components and event targets', () => {
-      let componentStackMessage;
-
-      function ErrorComponent() {
-        throw new Error('Failed!');
-      }
-
-      const Test = () => (
-        <EventComponent>
-          <span>
-            <ErrorComponent />
-          </span>
-        </EventComponent>
-      );
-
-      class Wrapper extends React.Component {
-        state = {
-          error: null,
-        };
-
-        componentDidCatch(error, errMessage) {
-          componentStackMessage = errMessage.componentStack;
-          this.setState({
-            error,
-          });
-        }
-
-        render() {
-          if (this.state.error) {
-            return null;
-          }
-          return <Test />;
-        }
-      }
-
-      ReactNoop.render(<Wrapper />);
-      expect(Scheduler).toFlushWithoutYielding();
-
-      expect(componentStackMessage.includes('ErrorComponent')).toBe(true);
-      expect(componentStackMessage.includes('span')).toBe(true);
-      expect(componentStackMessage.includes('TestEventComponent')).toBe(true);
-      expect(componentStackMessage.includes('Test')).toBe(true);
-      expect(componentStackMessage.includes('Wrapper')).toBe(true);
-    });
   });
 
   describe('TestRenderer', () => {
     beforeEach(() => {
       initTestRenderer();
-      EventComponent = createReactEventComponent();
+      EventResponder = createReactEventResponder();
     });
 
-    it('should render a simple event component with a single child', () => {
+    it('should render a simple event responder with a single child', () => {
       const Test = () => (
-        <EventComponent>
-          <div>Hello world</div>
-        </EventComponent>
+        <div>
+          <EventResponder />Hello world
+        </div>
       );
 
       const root = ReactTestRenderer.create(null);
@@ -301,48 +181,16 @@ describe('ReactFiberEvents', () => {
       expect(root).toMatchRenderedOutput(<div>Hello world</div>);
     });
 
-    it('should warn when an event component has a direct text child', () => {
-      const Test = () => <EventComponent>Hello world</EventComponent>;
-
-      const root = ReactTestRenderer.create(null);
-      expect(() => {
-        root.update(<Test />);
-        expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev(
-        'Warning: validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
-          'Wrap the child text "Hello world" in an element.',
-      );
-    });
-
-    it('should warn when an event component has a direct text child #2', () => {
-      const ChildWrapper = () => 'Hello world';
-      const Test = () => (
-        <EventComponent>
-          <ChildWrapper />
-        </EventComponent>
-      );
-
-      const root = ReactTestRenderer.create(null);
-      expect(() => {
-        root.update(<Test />);
-        expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev(
-        'Warning: validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
-          'Wrap the child text "Hello world" in an element.',
-      );
-    });
-
-    it('should handle event components correctly with error boundaries', () => {
+    it('should handle event responders correctly with error boundaries', () => {
       function ErrorComponent() {
         throw new Error('Failed!');
       }
 
       const Test = () => (
-        <EventComponent>
-          <span>
-            <ErrorComponent />
-          </span>
-        </EventComponent>
+        <span>
+          <ErrorComponent />
+          <EventResponder />
+        </span>
       );
 
       class Wrapper extends React.Component {
@@ -386,11 +234,10 @@ describe('ReactFiberEvents', () => {
       }
 
       const Parent = () => (
-        <EventComponent>
-          <div>
-            <Child />
-          </div>
-        </EventComponent>
+        <div>
+          <Child />
+          <EventResponder />
+        </div>
       );
 
       const root = ReactTestRenderer.create(null);
@@ -417,97 +264,7 @@ describe('ReactFiberEvents', () => {
       );
     });
 
-    it('should handle re-renders where there is a bail-out in a parent and an error occurs', () => {
-      let _updateCounter;
-
-      function Child() {
-        const [counter, updateCounter] = React.useState(0);
-
-        _updateCounter = updateCounter;
-
-        if (counter === 1) {
-          return 'Text!';
-        }
-
-        return (
-          <div>
-            <span>Child - {counter}</span>
-          </div>
-        );
-      }
-
-      const Parent = () => (
-        <EventComponent>
-          <Child />
-        </EventComponent>
-      );
-
-      const root = ReactTestRenderer.create(null);
-      root.update(<Parent />);
-      expect(Scheduler).toFlushWithoutYielding();
-      expect(root).toMatchRenderedOutput(
-        <div>
-          <span>Child - 0</span>
-        </div>,
-      );
-
-      expect(() => {
-        ReactTestRenderer.act(() => {
-          _updateCounter(counter => counter + 1);
-        });
-      }).toWarnDev(
-        'Warning: validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
-          'Wrap the child text "Text!" in an element.',
-      );
-    });
-
-    it('should error with a component stack contains the names of the event components and event targets', () => {
-      let componentStackMessage;
-
-      function ErrorComponent() {
-        throw new Error('Failed!');
-      }
-
-      const Test = () => (
-        <EventComponent>
-          <span>
-            <ErrorComponent />
-          </span>
-        </EventComponent>
-      );
-
-      class Wrapper extends React.Component {
-        state = {
-          error: null,
-        };
-
-        componentDidCatch(error, errMessage) {
-          componentStackMessage = errMessage.componentStack;
-          this.setState({
-            error,
-          });
-        }
-
-        render() {
-          if (this.state.error) {
-            return null;
-          }
-          return <Test />;
-        }
-      }
-
-      const root = ReactTestRenderer.create(null);
-      root.update(<Wrapper />);
-      expect(Scheduler).toFlushWithoutYielding();
-
-      expect(componentStackMessage.includes('ErrorComponent')).toBe(true);
-      expect(componentStackMessage.includes('span')).toBe(true);
-      expect(componentStackMessage.includes('TestEventComponent')).toBe(true);
-      expect(componentStackMessage.includes('Test')).toBe(true);
-      expect(componentStackMessage.includes('Wrapper')).toBe(true);
-    });
-
-    it('should handle unwinding event component fibers in concurrent mode', () => {
+    it('should handle unwinding event responder fibers in concurrent mode', () => {
       let resolveThenable;
 
       const thenable = {
@@ -528,12 +285,11 @@ describe('ReactFiberEvents', () => {
 
       ReactTestRenderer.create(
         <React.Suspense fallback={<Text text="Loading..." />}>
-          <EventComponent>
-            <div>
-              <Async />
-              <Text text="Sibling" />
-            </div>
-          </EventComponent>
+          <div>
+            <Async />
+            <Text text="Sibling" />
+            <EventResponder />
+          </div>
         </React.Suspense>,
         {
           unstable_isConcurrent: true,
@@ -548,50 +304,19 @@ describe('ReactFiberEvents', () => {
   describe('ReactDOM', () => {
     beforeEach(() => {
       initReactDOM();
-      EventComponent = createReactEventComponent();
+      EventResponder = createReactEventResponder();
     });
 
-    it('should render a simple event component with a single child', () => {
+    it('should render a simple event responder with a single child', () => {
       const Test = () => (
-        <EventComponent>
-          <div>Hello world</div>
-        </EventComponent>
+        <div>
+          <EventResponder />Hello world
+        </div>
       );
       const container = document.createElement('div');
       ReactDOM.render(<Test />, container);
       expect(Scheduler).toFlushWithoutYielding();
       expect(container.innerHTML).toBe('<div>Hello world</div>');
-    });
-
-    it('should warn when an event component has a direct text child', () => {
-      const Test = () => <EventComponent>Hello world</EventComponent>;
-
-      expect(() => {
-        const container = document.createElement('div');
-        ReactDOM.render(<Test />, container);
-        expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev(
-        'Warning: validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
-          'Wrap the child text "Hello world" in an element.',
-      );
-    });
-
-    it('should warn when an event component has a direct text child #2', () => {
-      const ChildWrapper = () => 'Hello world';
-      const Test = () => (
-        <EventComponent>
-          <ChildWrapper />
-        </EventComponent>
-      );
-
-      expect(() => {
-        const container = document.createElement('div');
-        ReactDOM.render(<Test />, container);
-        expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev(
-        'Warning: validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
-          'Wrap the child text "Hello world" in an element.',
-      );
     });
 
     it('should handle event components correctly with error boundaries', () => {
@@ -600,11 +325,10 @@ describe('ReactFiberEvents', () => {
       }
 
       const Test = () => (
-        <EventComponent>
-          <span>
-            <ErrorComponent />
-          </span>
-        </EventComponent>
+        <span>
+          <ErrorComponent />
+          <EventResponder />
+        </span>
       );
 
       class Wrapper extends React.Component {
@@ -648,11 +372,10 @@ describe('ReactFiberEvents', () => {
       }
 
       const Parent = () => (
-        <EventComponent>
-          <div>
-            <Child />
-          </div>
-        </EventComponent>
+        <div>
+          <Child />
+          <EventResponder />
+        </div>
       );
 
       const container = document.createElement('div');
@@ -669,107 +392,22 @@ describe('ReactFiberEvents', () => {
         '<div><div><span>Child - 1</span></div></div>',
       );
     });
-
-    it('should handle re-renders where there is a bail-out in a parent and an error occurs', () => {
-      let _updateCounter;
-
-      function Child() {
-        const [counter, updateCounter] = React.useState(0);
-
-        _updateCounter = updateCounter;
-
-        if (counter === 1) {
-          return 'Text!';
-        }
-
-        return (
-          <div>
-            <span>Child - {counter}</span>
-          </div>
-        );
-      }
-
-      const Parent = () => (
-        <EventComponent>
-          <Child />
-        </EventComponent>
-      );
-
-      const container = document.createElement('div');
-      ReactDOM.render(<Parent />, container);
-      expect(container.innerHTML).toBe('<div><span>Child - 0</span></div>');
-
-      expect(() => {
-        ReactTestUtils.act(() => {
-          _updateCounter(counter => counter + 1);
-        });
-        expect(Scheduler).toFlushWithoutYielding();
-      }).toWarnDev(
-        'Warning: validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
-          'Wrap the child text "Text!" in an element.',
-      );
-    });
-
-    it('should error with a component stack contains the names of the event components and event targets', () => {
-      let componentStackMessage;
-
-      function ErrorComponent() {
-        throw new Error('Failed!');
-      }
-
-      const Test = () => (
-        <EventComponent>
-          <span>
-            <ErrorComponent />
-          </span>
-        </EventComponent>
-      );
-
-      class Wrapper extends React.Component {
-        state = {
-          error: null,
-        };
-
-        componentDidCatch(error, errMessage) {
-          componentStackMessage = errMessage.componentStack;
-          this.setState({
-            error,
-          });
-        }
-
-        render() {
-          if (this.state.error) {
-            return null;
-          }
-          return <Test />;
-        }
-      }
-
-      const container = document.createElement('div');
-      ReactDOM.render(<Wrapper />, container);
-
-      expect(componentStackMessage.includes('ErrorComponent')).toBe(true);
-      expect(componentStackMessage.includes('span')).toBe(true);
-      expect(componentStackMessage.includes('TestEventComponent')).toBe(true);
-      expect(componentStackMessage.includes('Test')).toBe(true);
-      expect(componentStackMessage.includes('Wrapper')).toBe(true);
-    });
   });
 
   describe('ReactDOMServer', () => {
     beforeEach(() => {
       initReactDOMServer();
-      EventComponent = createReactEventComponent();
+      EventResponder = createReactEventResponder();
     });
 
-    it('should render a simple event component with a single child', () => {
+    it('should render a simple event responder with a single child', () => {
       const Test = () => (
-        <EventComponent>
-          <div>Hello world</div>
-        </EventComponent>
+        <div>
+          <EventResponder />Hello world
+        </div>
       );
       const output = ReactDOMServer.renderToString(<Test />);
-      expect(output).toBe('<div>Hello world</div>');
+      expect(output).toBe('<div data-reactroot="">Hello world</div>');
     });
   });
 });

@@ -12,7 +12,7 @@
 let React;
 let ReactFeatureFlags;
 let ReactDOM;
-let FocusScope;
+let FocusScopeResponder;
 
 const createTabForward = type => {
   const event = new KeyboardEvent('keydown', {
@@ -42,7 +42,8 @@ describe('FocusScope event responder', () => {
     ReactFeatureFlags.enableFlareAPI = true;
     React = require('react');
     ReactDOM = require('react-dom');
-    FocusScope = require('react-events/focus-scope');
+    FocusScopeResponder = require('react-events/focus-scope')
+      .FocusScopeResponder;
 
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -63,13 +64,12 @@ describe('FocusScope event responder', () => {
 
     const SimpleFocusScope = () => (
       <div>
-        <FocusScope autoFocus={true}>
-          <input ref={inputRef} />
-          <button ref={buttonRef} />
-          <div ref={divRef} tabIndex={0} />
-          <input ref={input2Ref} tabIndex={-1} />
-          <button ref={butto2nRef} />
-        </FocusScope>
+        <FocusScopeResponder autoFocus={true} />
+        <input ref={inputRef} />
+        <button ref={buttonRef} />
+        <div ref={divRef} tabIndex={0} />
+        <input ref={input2Ref} tabIndex={-1} />
+        <button ref={butto2nRef} />
       </div>
     );
 
@@ -93,12 +93,11 @@ describe('FocusScope event responder', () => {
 
     const SimpleFocusScope = () => (
       <div>
-        <FocusScope autoFocus={true} contain={true}>
-          <input ref={inputRef} tabIndex={-1} />
-          <button ref={buttonRef} id={1} />
-          <button ref={button2Ref} id={2} />
-          <input ref={input2Ref} tabIndex={-1} />
-        </FocusScope>
+        <FocusScopeResponder autoFocus={true} contain={true} />
+        <input ref={inputRef} tabIndex={-1} />
+        <button ref={buttonRef} id={1} />
+        <button ref={button2Ref} id={2} />
+        <input ref={input2Ref} tabIndex={-1} />
       </div>
     );
 
@@ -126,16 +125,16 @@ describe('FocusScope event responder', () => {
 
     const SimpleFocusScope = () => (
       <div>
-        <FocusScope>
-          <input ref={inputRef} tabIndex={-1} />
-          <button ref={buttonRef} id={1} />
-          <FocusScope>
-            <button ref={button2Ref} id={2} />
-            <button ref={button3Ref} id={3} />
-          </FocusScope>
-          <input ref={input2Ref} tabIndex={-1} />
-          <button ref={button4Ref} id={4} />
-        </FocusScope>
+        <FocusScopeResponder />
+        <input ref={inputRef} tabIndex={-1} />
+        <button ref={buttonRef} id={1} />
+        <div>
+          <FocusScopeResponder />
+          <button ref={button2Ref} id={2} />
+          <button ref={button3Ref} id={3} />
+        </div>
+        <input ref={input2Ref} tabIndex={-1} />
+        <button ref={button4Ref} id={4} />
       </div>
     );
 
@@ -164,16 +163,16 @@ describe('FocusScope event responder', () => {
 
     const SimpleFocusScope = () => (
       <div>
-        <FocusScope>
-          <input ref={inputRef} tabIndex={-1} />
-          <button ref={buttonRef} id={1} />
-          <FocusScope contain={true}>
-            <button ref={button2Ref} id={2} />
-            <button ref={button3Ref} id={3} />
-          </FocusScope>
-          <input ref={input2Ref} tabIndex={-1} />
-          <button ref={button4Ref} id={4} />
-        </FocusScope>
+        <FocusScopeResponder />
+        <input ref={inputRef} tabIndex={-1} />
+        <button ref={buttonRef} id={1} />
+        <div>
+          <FocusScopeResponder contain={true} />
+          <button ref={button2Ref} id={2} />
+          <button ref={button3Ref} id={3} />
+        </div>
+        <input ref={input2Ref} tabIndex={-1} />
+        <button ref={button4Ref} id={4} />
       </div>
     );
 
@@ -216,14 +215,13 @@ describe('FocusScope event responder', () => {
 
     const SimpleFocusScope = () => (
       <div>
-        <FocusScope>
-          <button ref={buttonRef} id={1} />
-          <button ref={button2Ref} id={2} />
-          <React.Suspense fallback={<button ref={button3Ref} id={3} />}>
-            <Component />
-          </React.Suspense>
-          <button ref={button4Ref} id={4} />
-        </FocusScope>
+        <FocusScopeResponder />
+        <button ref={buttonRef} id={1} />
+        <button ref={button2Ref} id={2} />
+        <React.Suspense fallback={<button ref={button3Ref} id={3} />}>
+          <Component />
+        </React.Suspense>
+        <button ref={button4Ref} id={4} />
       </div>
     );
 

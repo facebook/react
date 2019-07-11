@@ -6,8 +6,11 @@
  * @flow
  */
 
-import type {ReactEventResponder, ReactEventComponent} from 'shared/ReactTypes';
-import {REACT_EVENT_COMPONENT_TYPE} from 'shared/ReactSymbols';
+import type {
+  ReactEventResponder,
+  ReactEventResponderImpl,
+} from 'shared/ReactTypes';
+import {REACT_RESPONDER_TYPE} from 'shared/ReactSymbols';
 
 let hasBadMapPolyfill;
 
@@ -28,21 +31,21 @@ if (__DEV__) {
   }
 }
 
-export default function createEventComponent<E, C>(
-  responder: ReactEventResponder<E, C>,
-): ReactEventComponent<E, C> {
+export default function createEventResponder<E, C>(
+  impl: ReactEventResponderImpl<E, C>,
+): ReactEventResponder<E, C> {
   // We use responder as a Map key later on. When we have a bad
   // polyfill, then we can't use it as a key as the polyfill tries
   // to add a property to the object.
   if (__DEV__ && !hasBadMapPolyfill) {
-    Object.freeze(responder);
+    Object.freeze(impl);
   }
-  const eventComponent = {
-    $$typeof: REACT_EVENT_COMPONENT_TYPE,
-    responder: responder,
+  const eventResponder = {
+    $$typeof: REACT_RESPONDER_TYPE,
+    impl,
   };
   if (__DEV__) {
-    Object.freeze(eventComponent);
+    Object.freeze(eventResponder);
   }
-  return eventComponent;
+  return eventResponder;
 }

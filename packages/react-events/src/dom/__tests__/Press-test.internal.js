@@ -12,7 +12,7 @@
 let React;
 let ReactFeatureFlags;
 let ReactDOM;
-let Press;
+let PressResponder;
 let Scheduler;
 
 const DEFAULT_LONG_PRESS_DELAY = 500;
@@ -58,7 +58,7 @@ function init() {
   ReactFeatureFlags.enableFlareAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
-  Press = require('react-events/press').Press;
+  PressResponder = require('react-events/press').PressResponder;
   Scheduler = require('scheduler');
 }
 
@@ -87,13 +87,14 @@ describe('Event responder: Press', () => {
       onPressEnd = jest.fn();
       ref = React.createRef();
       const element = (
-        <Press
-          disabled={true}
-          onPressStart={onPressStart}
-          onPress={onPress}
-          onPressEnd={onPressEnd}>
-          <div ref={ref} />
-        </Press>
+        <div ref={ref}>
+          <PressResponder
+            disabled={true}
+            onPressStart={onPressStart}
+            onPress={onPress}
+            onPressEnd={onPressEnd}
+          />
+        </div>
       );
       ReactDOM.render(element, container);
     });
@@ -114,9 +115,9 @@ describe('Event responder: Press', () => {
       onPressStart = jest.fn();
       ref = React.createRef();
       const element = (
-        <Press onPressStart={onPressStart}>
-          <div ref={ref} />
-        </Press>
+        <div ref={ref}>
+          <PressResponder onPressStart={onPressStart} />
+        </div>
       );
       ReactDOM.render(element, container);
     });
@@ -217,9 +218,12 @@ describe('Event responder: Press', () => {
     describe('delayPressStart', () => {
       it('can be configured', () => {
         const element = (
-          <Press delayPressStart={2000} onPressStart={onPressStart}>
-            <div ref={ref} />
-          </Press>
+          <div ref={ref}>
+            <PressResponder
+              delayPressStart={2000}
+              onPressStart={onPressStart}
+            />
+          </div>
         );
         ReactDOM.render(element, container);
 
@@ -232,9 +236,12 @@ describe('Event responder: Press', () => {
 
       it('is cut short if the press is released during a delay', () => {
         const element = (
-          <Press delayPressStart={2000} onPressStart={onPressStart}>
-            <div ref={ref} />
-          </Press>
+          <div ref={ref}>
+            <PressResponder
+              delayPressStart={2000}
+              onPressStart={onPressStart}
+            />
+          </div>
         );
         ReactDOM.render(element, container);
 
@@ -261,9 +268,9 @@ describe('Event responder: Press', () => {
 
       it('onPressStart is called synchronously if delay is 0ms', () => {
         const element = (
-          <Press delayPressStart={0} onPressStart={onPressStart}>
-            <div ref={ref} />
-          </Press>
+          <div ref={ref}>
+            <PressResponder delayPressStart={0} onPressStart={onPressStart} />
+          </div>
         );
         ReactDOM.render(element, container);
 
@@ -273,9 +280,9 @@ describe('Event responder: Press', () => {
 
       it('onPressStart should not be called if pointerCancel is fired before delayPressStart is finished', () => {
         const element = (
-          <Press delayPressStart={500} onPressStart={onPressStart}>
-            <div ref={ref} />
-          </Press>
+          <div ref={ref}>
+            <PressResponder delayPressStart={500} onPressStart={onPressStart} />
+          </div>
         );
         ReactDOM.render(element, container);
 
@@ -294,9 +301,9 @@ describe('Event responder: Press', () => {
         // starts, even if a delayPressEnd is delaying the deactivation of the
         // previous press.
         const element = (
-          <Press delayPressEnd={2000} onPressStart={onPressStart}>
-            <div ref={ref} />
-          </Press>
+          <div ref={ref}>
+            <PressResponder delayPressEnd={2000} onPressStart={onPressStart} />
+          </div>
         );
         ReactDOM.render(element, container);
 
@@ -315,9 +322,9 @@ describe('Event responder: Press', () => {
       onPressEnd = jest.fn();
       ref = React.createRef();
       const element = (
-        <Press onPressEnd={onPressEnd}>
-          <div ref={ref} />
-        </Press>
+        <div ref={ref}>
+          <PressResponder onPressEnd={onPressEnd} />
+        </div>
       );
       ReactDOM.render(element, container);
     });
@@ -472,9 +479,9 @@ describe('Event responder: Press', () => {
     describe('delayPressEnd', () => {
       it('can be configured', () => {
         const element = (
-          <Press delayPressEnd={2000} onPressEnd={onPressEnd}>
-            <div ref={ref} />
-          </Press>
+          <div ref={ref}>
+            <PressResponder delayPressEnd={2000} onPressEnd={onPressEnd} />
+          </div>
         );
         ReactDOM.render(element, container);
 
@@ -488,9 +495,9 @@ describe('Event responder: Press', () => {
 
       it('is reset if "pointerdown" is dispatched during a delay', () => {
         const element = (
-          <Press delayPressEnd={500} onPressEnd={onPressEnd}>
-            <div ref={ref} />
-          </Press>
+          <div ref={ref}>
+            <PressResponder delayPressEnd={500} onPressEnd={onPressEnd} />
+          </div>
         );
         ReactDOM.render(element, container);
 
@@ -508,9 +515,9 @@ describe('Event responder: Press', () => {
 
     it('onPressEnd is called synchronously if delay is 0ms', () => {
       const element = (
-        <Press delayPressEnd={0} onPressEnd={onPressEnd}>
-          <div ref={ref} />
-        </Press>
+        <div ref={ref}>
+          <PressResponder delayPressEnd={0} onPressEnd={onPressEnd} />
+        </div>
       );
       ReactDOM.render(element, container);
 
@@ -527,9 +534,9 @@ describe('Event responder: Press', () => {
       onPressChange = jest.fn();
       ref = React.createRef();
       const element = (
-        <Press onPressChange={onPressChange}>
-          <div ref={ref} />
-        </Press>
+        <div ref={ref}>
+          <PressResponder onPressChange={onPressChange} />
+        </div>
       );
       ReactDOM.render(element, container);
     });
@@ -554,9 +561,9 @@ describe('Event responder: Press', () => {
 
     it('is called after delayed onPressStart', () => {
       const element = (
-        <Press delayPressStart={500} onPressChange={onPressChange}>
-          <div ref={ref} />
-        </Press>
+        <div ref={ref}>
+          <PressResponder delayPressStart={500} onPressChange={onPressChange} />
+        </div>
       );
       ReactDOM.render(element, container);
 
@@ -570,9 +577,9 @@ describe('Event responder: Press', () => {
 
     it('is called after delayPressStart is cut short', () => {
       const element = (
-        <Press delayPressStart={500} onPressChange={onPressChange}>
-          <div ref={ref} />
-        </Press>
+        <div ref={ref}>
+          <PressResponder delayPressStart={500} onPressChange={onPressChange} />
+        </div>
       );
       ReactDOM.render(element, container);
 
@@ -599,9 +606,9 @@ describe('Event responder: Press', () => {
 
     it('is called after delayed onPressEnd', () => {
       const element = (
-        <Press delayPressEnd={500} onPressChange={onPressChange}>
-          <div ref={ref} />
-        </Press>
+        <div ref={ref}>
+          <PressResponder delayPressEnd={500} onPressChange={onPressChange} />
+        </div>
       );
       ReactDOM.render(element, container);
 
@@ -650,9 +657,9 @@ describe('Event responder: Press', () => {
       onPress = jest.fn();
       ref = React.createRef();
       const element = (
-        <Press onPress={onPress}>
-          <div ref={ref} />
-        </Press>
+        <div ref={ref}>
+          <PressResponder onPress={onPress} />
+        </div>
       );
       ReactDOM.render(element, container);
       ref.current.getBoundingClientRect = () => ({
@@ -696,9 +703,9 @@ describe('Event responder: Press', () => {
 
     it('is not called after auxillary-button press', () => {
       const element = (
-        <Press onPress={onPress}>
-          <div ref={ref} />
-        </Press>
+        <div ref={ref}>
+          <PressResponder onPress={onPress} />
+        </div>
       );
       ReactDOM.render(element, container);
 
@@ -721,9 +728,9 @@ describe('Event responder: Press', () => {
     it('is not called after invalid "keyup" event', () => {
       const inputRef = React.createRef();
       const element = (
-        <Press onPress={onPress}>
-          <input ref={inputRef} />
-        </Press>
+        <input ref={inputRef}>
+          <PressResponder onPress={onPress} />
+        </input>
       );
       ReactDOM.render(element, container);
       inputRef.current.dispatchEvent(
@@ -741,9 +748,9 @@ describe('Event responder: Press', () => {
 
     it('is always called immediately after press is released', () => {
       const element = (
-        <Press delayPressEnd={500} onPress={onPress}>
-          <div ref={ref} />
-        </Press>
+        <div ref={ref}>
+          <PressResponder delayPressEnd={500} onPress={onPress} />
+        </div>
       );
       ReactDOM.render(element, container);
 
@@ -786,9 +793,9 @@ describe('Event responder: Press', () => {
       onLongPress = jest.fn();
       ref = React.createRef();
       const element = (
-        <Press onLongPress={onLongPress}>
-          <div ref={ref} />
-        </Press>
+        <div ref={ref}>
+          <PressResponder onLongPress={onLongPress} />
+        </div>
       );
       ReactDOM.render(element, container);
     });
@@ -858,9 +865,9 @@ describe('Event responder: Press', () => {
     describe('delayLongPress', () => {
       it('can be configured', () => {
         const element = (
-          <Press delayLongPress={2000} onLongPress={onLongPress}>
-            <div ref={ref} />
-          </Press>
+          <div ref={ref}>
+            <PressResponder delayLongPress={2000} onLongPress={onLongPress} />
+          </div>
         );
         ReactDOM.render(element, container);
 
@@ -873,9 +880,9 @@ describe('Event responder: Press', () => {
 
       it('uses 10ms minimum delay length', () => {
         const element = (
-          <Press delayLongPress={0} onLongPress={onLongPress}>
-            <div ref={ref} />
-          </Press>
+          <div ref={ref}>
+            <PressResponder delayLongPress={0} onLongPress={onLongPress} />
+          </div>
         );
         ReactDOM.render(element, container);
 
@@ -889,9 +896,12 @@ describe('Event responder: Press', () => {
       it('compounds with "delayPressStart"', () => {
         const delayPressStart = 100;
         const element = (
-          <Press delayPressStart={delayPressStart} onLongPress={onLongPress}>
-            <div ref={ref} />
-          </Press>
+          <div ref={ref}>
+            <PressResponder
+              delayPressStart={delayPressStart}
+              onLongPress={onLongPress}
+            />
+          </div>
         );
         ReactDOM.render(element, container);
 
@@ -911,9 +921,9 @@ describe('Event responder: Press', () => {
       const onLongPressChange = jest.fn();
       const ref = React.createRef();
       const element = (
-        <Press onLongPressChange={onLongPressChange}>
-          <div ref={ref} />
-        </Press>
+        <div ref={ref}>
+          <PressResponder onLongPressChange={onLongPressChange} />
+        </div>
       );
       ReactDOM.render(element, container);
 
@@ -930,9 +940,12 @@ describe('Event responder: Press', () => {
       const onLongPressChange = jest.fn();
       const ref = React.createRef();
       const element = (
-        <Press delayPressEnd={500} onLongPressChange={onLongPressChange}>
-          <div ref={ref} />
-        </Press>
+        <div ref={ref}>
+          <PressResponder
+            delayPressEnd={500}
+            onLongPressChange={onLongPressChange}
+          />
+        </div>
       );
       ReactDOM.render(element, container);
 
@@ -955,13 +968,14 @@ describe('Event responder: Press', () => {
       const onPressChange = jest.fn();
       const ref = React.createRef();
       const element = (
-        <Press
-          onLongPress={() => {}}
-          onLongPressShouldCancelPress={() => true}
-          onPressChange={onPressChange}
-          onPress={onPress}>
-          <div ref={ref} />
-        </Press>
+        <div ref={ref}>
+          <PressResponder
+            onLongPress={() => {}}
+            onLongPressShouldCancelPress={() => true}
+            onPressChange={onPressChange}
+            onPress={onPress}
+          />
+        </div>
       );
       ReactDOM.render(element, container);
 
@@ -980,9 +994,9 @@ describe('Event responder: Press', () => {
       const onPressMove = jest.fn();
       const ref = React.createRef();
       const element = (
-        <Press onPressMove={onPressMove}>
-          <div ref={ref} />
-        </Press>
+        <div ref={ref}>
+          <PressResponder onPressMove={onPressMove} />
+        </div>
       );
       ReactDOM.render(element, container);
 
@@ -1012,9 +1026,9 @@ describe('Event responder: Press', () => {
       const onPressMove = jest.fn();
       const ref = React.createRef();
       const element = (
-        <Press onPressMove={onPressMove}>
-          <div ref={ref} />
-        </Press>
+        <div ref={ref}>
+          <PressResponder onPressMove={onPressMove} />
+        </div>
       );
       ReactDOM.render(element, container);
 
@@ -1039,9 +1053,9 @@ describe('Event responder: Press', () => {
       const onPressMove = jest.fn();
       const ref = React.createRef();
       const element = (
-        <Press onPressMove={onPressMove}>
-          <div ref={ref} />
-        </Press>
+        <div ref={ref}>
+          <PressResponder onPressMove={onPressMove} />
+        </div>
       );
       ReactDOM.render(element, container);
 
@@ -1114,14 +1128,15 @@ describe('Event responder: Press', () => {
         };
 
         const element = (
-          <Press
-            onPress={createEventHandler('onPress')}
-            onPressChange={createEventHandler('onPressChange')}
-            onPressMove={createEventHandler('onPressMove')}
-            onPressStart={createEventHandler('onPressStart')}
-            onPressEnd={createEventHandler('onPressEnd')}>
-            <div ref={ref} />
-          </Press>
+          <div ref={ref}>
+            <PressResponder
+              onPress={createEventHandler('onPress')}
+              onPressChange={createEventHandler('onPressChange')}
+              onPressMove={createEventHandler('onPressMove')}
+              onPressStart={createEventHandler('onPressStart')}
+              onPressEnd={createEventHandler('onPressEnd')}
+            />
+          </div>
         );
 
         ReactDOM.render(element, container);
@@ -1154,14 +1169,15 @@ describe('Event responder: Press', () => {
 
         const element = (
           <div ref={outerRef}>
-            <Press
-              onPress={createEventHandler('onPress')}
-              onPressChange={createEventHandler('onPressChange')}
-              onPressMove={createEventHandler('onPressMove')}
-              onPressStart={createEventHandler('onPressStart')}
-              onPressEnd={createEventHandler('onPressEnd')}>
-              <div ref={innerRef} />
-            </Press>
+            <div ref={innerRef}>
+              <PressResponder
+                onPress={createEventHandler('onPress')}
+                onPressChange={createEventHandler('onPressChange')}
+                onPressMove={createEventHandler('onPressMove')}
+                onPressStart={createEventHandler('onPressStart')}
+                onPressEnd={createEventHandler('onPressEnd')}
+              />
+            </div>
           </div>
         );
 
@@ -1201,15 +1217,16 @@ describe('Event responder: Press', () => {
         };
 
         const element = (
-          <Press
-            delayPressStart={500}
-            onPress={createEventHandler('onPress')}
-            onPressChange={createEventHandler('onPressChange')}
-            onPressMove={createEventHandler('onPressMove')}
-            onPressStart={createEventHandler('onPressStart')}
-            onPressEnd={createEventHandler('onPressEnd')}>
-            <div ref={ref} />
-          </Press>
+          <div ref={ref}>
+            <PressResponder
+              delayPressStart={500}
+              onPress={createEventHandler('onPress')}
+              onPressChange={createEventHandler('onPressChange')}
+              onPressMove={createEventHandler('onPressMove')}
+              onPressStart={createEventHandler('onPressStart')}
+              onPressEnd={createEventHandler('onPressEnd')}
+            />
+          </div>
         );
 
         ReactDOM.render(element, container);
@@ -1240,15 +1257,16 @@ describe('Event responder: Press', () => {
         const pressRetentionOffset = {top: 40, bottom: 40, left: 40, right: 40};
 
         const element = (
-          <Press
-            pressRetentionOffset={pressRetentionOffset}
-            onPress={createEventHandler('onPress')}
-            onPressChange={createEventHandler('onPressChange')}
-            onPressMove={createEventHandler('onPressMove')}
-            onPressStart={createEventHandler('onPressStart')}
-            onPressEnd={createEventHandler('onPressEnd')}>
-            <div ref={ref} />
-          </Press>
+          <div ref={ref}>
+            <PressResponder
+              pressRetentionOffset={pressRetentionOffset}
+              onPress={createEventHandler('onPress')}
+              onPressChange={createEventHandler('onPressChange')}
+              onPressMove={createEventHandler('onPressMove')}
+              onPressStart={createEventHandler('onPressStart')}
+              onPressEnd={createEventHandler('onPressEnd')}
+            />
+          </div>
         );
 
         ReactDOM.render(element, container);
@@ -1279,12 +1297,13 @@ describe('Event responder: Press', () => {
         };
 
         const element = (
-          <Press
-            onPress={createEventHandler('onPress')}
-            onPressStart={createEventHandler('onPressStart')}
-            onPressEnd={createEventHandler('onPressEnd')}>
-            <div ref={ref} />
-          </Press>
+          <div ref={ref}>
+            <PressResponder
+              onPress={createEventHandler('onPress')}
+              onPressStart={createEventHandler('onPressStart')}
+              onPressEnd={createEventHandler('onPressEnd')}
+            />
+          </div>
         );
 
         ReactDOM.render(element, container);
@@ -1317,12 +1336,13 @@ describe('Event responder: Press', () => {
         };
 
         const element = (
-          <Press
-            onPress={createEventHandler('onPress')}
-            onPressStart={createEventHandler('onPressStart')}
-            onPressEnd={createEventHandler('onPressEnd')}>
-            <div ref={ref} />
-          </Press>
+          <div ref={ref}>
+            <PressResponder
+              onPress={createEventHandler('onPress')}
+              onPressStart={createEventHandler('onPressStart')}
+              onPressEnd={createEventHandler('onPressEnd')}
+            />
+          </div>
         );
 
         ReactDOM.render(element, container);
@@ -1366,14 +1386,15 @@ describe('Event responder: Press', () => {
         };
 
         const element = (
-          <Press
-            onPress={createEventHandler('onPress')}
-            onPressChange={createEventHandler('onPressChange')}
-            onPressMove={createEventHandler('onPressMove')}
-            onPressStart={createEventHandler('onPressStart')}
-            onPressEnd={createEventHandler('onPressEnd')}>
-            <div ref={ref} />
-          </Press>
+          <div ref={ref}>
+            <PressResponder
+              onPress={createEventHandler('onPress')}
+              onPressChange={createEventHandler('onPressChange')}
+              onPressMove={createEventHandler('onPressMove')}
+              onPressStart={createEventHandler('onPressStart')}
+              onPressEnd={createEventHandler('onPressEnd')}
+            />
+          </div>
         );
 
         ReactDOM.render(element, container);
@@ -1404,17 +1425,18 @@ describe('Event responder: Press', () => {
         };
 
         const element = (
-          <Press
-            delayPressStart={500}
-            delayPressEnd={500}
-            onLongPress={createEventHandler('onLongPress')}
-            onPress={createEventHandler('onPress')}
-            onPressChange={createEventHandler('onPressChange')}
-            onPressMove={createEventHandler('onPressMove')}
-            onPressStart={createEventHandler('onPressStart')}
-            onPressEnd={createEventHandler('onPressEnd')}>
-            <div ref={ref} />
-          </Press>
+          <div ref={ref}>
+            <PressResponder
+              delayPressStart={500}
+              delayPressEnd={500}
+              onLongPress={createEventHandler('onLongPress')}
+              onPress={createEventHandler('onPress')}
+              onPressChange={createEventHandler('onPressChange')}
+              onPressMove={createEventHandler('onPressMove')}
+              onPressStart={createEventHandler('onPressStart')}
+              onPressEnd={createEventHandler('onPressEnd')}
+            />
+          </div>
         );
 
         ReactDOM.render(element, container);
@@ -1442,14 +1464,15 @@ describe('Event responder: Press', () => {
       };
 
       const element = (
-        <Press
-          onPress={createEventHandler('onPress')}
-          onPressChange={createEventHandler('onPressChange')}
-          onPressMove={createEventHandler('onPressMove')}
-          onPressStart={createEventHandler('onPressStart')}
-          onPressEnd={createEventHandler('onPressEnd')}>
-          <div ref={ref} />
-        </Press>
+        <div ref={ref}>
+          <PressResponder
+            onPress={createEventHandler('onPress')}
+            onPressChange={createEventHandler('onPressChange')}
+            onPressMove={createEventHandler('onPressMove')}
+            onPressStart={createEventHandler('onPressStart')}
+            onPressEnd={createEventHandler('onPressEnd')}
+          />
+        </div>
       );
 
       ReactDOM.render(element, container);
@@ -1497,14 +1520,15 @@ describe('Event responder: Press', () => {
       };
 
       const element = (
-        <Press
-          onPress={createEventHandler('onPress')}
-          onPressChange={createEventHandler('onPressChange')}
-          onPressMove={createEventHandler('onPressMove')}
-          onPressStart={createEventHandler('onPressStart')}
-          onPressEnd={createEventHandler('onPressEnd')}>
-          <div ref={ref} />
-        </Press>
+        <div ref={ref}>
+          <PressResponder
+            onPress={createEventHandler('onPress')}
+            onPressChange={createEventHandler('onPressChange')}
+            onPressMove={createEventHandler('onPressMove')}
+            onPressStart={createEventHandler('onPressStart')}
+            onPressEnd={createEventHandler('onPressEnd')}
+          />
+        </div>
       );
 
       ReactDOM.render(element, container);
@@ -1563,14 +1587,15 @@ describe('Event responder: Press', () => {
       };
 
       const element = (
-        <Press
-          onPress={createEventHandler('onPress')}
-          onPressChange={createEventHandler('onPressChange')}
-          onPressMove={createEventHandler('onPressMove')}
-          onPressStart={createEventHandler('onPressStart')}
-          onPressEnd={createEventHandler('onPressEnd')}>
-          <div ref={ref} />
-        </Press>
+        <div ref={ref}>
+          <PressResponder
+            onPress={createEventHandler('onPress')}
+            onPressChange={createEventHandler('onPressChange')}
+            onPressMove={createEventHandler('onPressMove')}
+            onPressStart={createEventHandler('onPressStart')}
+            onPressEnd={createEventHandler('onPressEnd')}
+          />
+        </div>
       );
 
       ReactDOM.render(element, container);
@@ -1687,14 +1712,15 @@ describe('Event responder: Press', () => {
         };
 
         const element = (
-          <Press
-            onPress={createEventHandler('onPress')}
-            onPressChange={createEventHandler('onPressChange')}
-            onPressMove={createEventHandler('onPressMove')}
-            onPressStart={createEventHandler('onPressStart')}
-            onPressEnd={createEventHandler('onPressEnd')}>
-            <div ref={ref} />
-          </Press>
+          <div ref={ref}>
+            <PressResponder
+              onPress={createEventHandler('onPress')}
+              onPressChange={createEventHandler('onPressChange')}
+              onPressMove={createEventHandler('onPressMove')}
+              onPressStart={createEventHandler('onPressStart')}
+              onPressEnd={createEventHandler('onPressEnd')}
+            />
+          </div>
         );
 
         ReactDOM.render(element, container);
@@ -1738,15 +1764,16 @@ describe('Event responder: Press', () => {
         };
 
         const element = (
-          <Press
-            delayPressStart={500}
-            onPress={createEventHandler('onPress')}
-            onPressChange={createEventHandler('onPressChange')}
-            onPressMove={createEventHandler('onPressMove')}
-            onPressStart={createEventHandler('onPressStart')}
-            onPressEnd={createEventHandler('onPressEnd')}>
-            <div ref={ref} />
-          </Press>
+          <div ref={ref}>
+            <PressResponder
+              delayPressStart={500}
+              onPress={createEventHandler('onPress')}
+              onPressChange={createEventHandler('onPressChange')}
+              onPressMove={createEventHandler('onPressMove')}
+              onPressStart={createEventHandler('onPressStart')}
+              onPressEnd={createEventHandler('onPressEnd')}
+            />
+          </div>
         );
 
         ReactDOM.render(element, container);
@@ -1790,15 +1817,16 @@ describe('Event responder: Press', () => {
         const pressRetentionOffset = {top: 40, bottom: 40, left: 40, right: 40};
 
         const element = (
-          <Press
-            pressRetentionOffset={pressRetentionOffset}
-            onPress={createEventHandler('onPress')}
-            onPressChange={createEventHandler('onPressChange')}
-            onPressMove={createEventHandler('onPressMove')}
-            onPressStart={createEventHandler('onPressStart')}
-            onPressEnd={createEventHandler('onPressEnd')}>
-            <div ref={ref} />
-          </Press>
+          <div ref={ref}>
+            <PressResponder
+              pressRetentionOffset={pressRetentionOffset}
+              onPress={createEventHandler('onPress')}
+              onPressChange={createEventHandler('onPressChange')}
+              onPressMove={createEventHandler('onPressMove')}
+              onPressStart={createEventHandler('onPressStart')}
+              onPressEnd={createEventHandler('onPressEnd')}
+            />
+          </div>
         );
 
         ReactDOM.render(element, container);
@@ -1841,12 +1869,13 @@ describe('Event responder: Press', () => {
         };
 
         const element = (
-          <Press
-            onPress={createEventHandler('onPress')}
-            onPressStart={createEventHandler('onPressStart')}
-            onPressEnd={createEventHandler('onPressEnd')}>
-            <div ref={ref} />
-          </Press>
+          <div ref={ref}>
+            <PressResponder
+              onPress={createEventHandler('onPress')}
+              onPressStart={createEventHandler('onPressStart')}
+              onPressEnd={createEventHandler('onPressEnd')}
+            />
+          </div>
         );
 
         ReactDOM.render(element, container);
@@ -1895,12 +1924,13 @@ describe('Event responder: Press', () => {
         };
 
         const element = (
-          <Press
-            onPress={createEventHandler('onPress')}
-            onPressStart={createEventHandler('onPressStart')}
-            onPressEnd={createEventHandler('onPressEnd')}>
-            <div ref={ref} />
-          </Press>
+          <div ref={ref}>
+            <PressResponder
+              onPress={createEventHandler('onPress')}
+              onPressStart={createEventHandler('onPressStart')}
+              onPressEnd={createEventHandler('onPressEnd')}
+            />
+          </div>
         );
 
         ReactDOM.render(element, container);
@@ -1960,14 +1990,15 @@ describe('Event responder: Press', () => {
         };
 
         const element = (
-          <Press
-            onPress={createEventHandler('onPress')}
-            onPressChange={createEventHandler('onPressChange')}
-            onPressMove={createEventHandler('onPressMove')}
-            onPressStart={createEventHandler('onPressStart')}
-            onPressEnd={createEventHandler('onPressEnd')}>
-            <div ref={ref} />
-          </Press>
+          <div ref={ref}>
+            <PressResponder
+              onPress={createEventHandler('onPress')}
+              onPressChange={createEventHandler('onPressChange')}
+              onPressMove={createEventHandler('onPressMove')}
+              onPressStart={createEventHandler('onPressStart')}
+              onPressEnd={createEventHandler('onPressEnd')}
+            />
+          </div>
         );
 
         ReactDOM.render(element, container);
@@ -2017,17 +2048,18 @@ describe('Event responder: Press', () => {
         };
 
         const element = (
-          <Press
-            delayPressStart={500}
-            delayPressEnd={500}
-            onLongPress={createEventHandler('onLongPress')}
-            onPress={createEventHandler('onPress')}
-            onPressChange={createEventHandler('onPressChange')}
-            onPressMove={createEventHandler('onPressMove')}
-            onPressStart={createEventHandler('onPressStart')}
-            onPressEnd={createEventHandler('onPressEnd')}>
-            <div ref={ref} />
-          </Press>
+          <div ref={ref}>
+            <PressResponder
+              delayPressStart={500}
+              delayPressEnd={500}
+              onLongPress={createEventHandler('onLongPress')}
+              onPress={createEventHandler('onPress')}
+              onPressChange={createEventHandler('onPressChange')}
+              onPressMove={createEventHandler('onPressMove')}
+              onPressStart={createEventHandler('onPressStart')}
+              onPressEnd={createEventHandler('onPressEnd')}
+            />
+          </div>
         );
 
         ReactDOM.render(element, container);
@@ -2074,14 +2106,15 @@ describe('Event responder: Press', () => {
       };
 
       const element = (
-        <Press
-          onPress={createEventHandler('onPress')}
-          onPressChange={createEventHandler('onPressChange')}
-          onPressMove={createEventHandler('onPressMove')}
-          onPressStart={createEventHandler('onPressStart')}
-          onPressEnd={createEventHandler('onPressEnd')}>
-          <div ref={ref} />
-        </Press>
+        <div ref={ref}>
+          <PressResponder
+            onPress={createEventHandler('onPress')}
+            onPressChange={createEventHandler('onPressChange')}
+            onPressMove={createEventHandler('onPressMove')}
+            onPressStart={createEventHandler('onPressStart')}
+            onPressEnd={createEventHandler('onPressEnd')}
+          />
+        </div>
       );
 
       ReactDOM.render(element, container);
@@ -2145,17 +2178,18 @@ describe('Event responder: Press', () => {
       };
 
       const element = (
-        <Press
-          delayPressStart={250}
-          delayPressEnd={250}
-          onLongPress={createEventHandler('onLongPress')}
-          onLongPressChange={createEventHandler('onLongPressChange')}
-          onPress={createEventHandler('onPress')}
-          onPressChange={createEventHandler('onPressChange')}
-          onPressStart={createEventHandler('onPressStart')}
-          onPressEnd={createEventHandler('onPressEnd')}>
-          <div ref={ref} />
-        </Press>
+        <div ref={ref}>
+          <PressResponder
+            delayPressStart={250}
+            delayPressEnd={250}
+            onLongPress={createEventHandler('onLongPress')}
+            onLongPressChange={createEventHandler('onLongPressChange')}
+            onPress={createEventHandler('onPress')}
+            onPressChange={createEventHandler('onPressChange')}
+            onPressStart={createEventHandler('onPressStart')}
+            onPressEnd={createEventHandler('onPressEnd')}
+          />
+        </div>
       );
 
       ReactDOM.render(element, container);
@@ -2212,69 +2246,17 @@ describe('Event responder: Press', () => {
   });
 
   describe('nested responders', () => {
-    it('dispatch events in the correct order', () => {
-      const events = [];
-      const ref = React.createRef();
-      const createEventHandler = msg => () => {
-        events.push(msg);
-      };
-
-      const element = (
-        <Press
-          onPress={createEventHandler('outer: onPress')}
-          onPressChange={createEventHandler('outer: onPressChange')}
-          onPressStart={createEventHandler('outer: onPressStart')}
-          onPressEnd={createEventHandler('outer: onPressEnd')}>
-          <Press
-            onPress={createEventHandler('inner: onPress')}
-            onPressChange={createEventHandler('inner: onPressChange')}
-            onPressStart={createEventHandler('inner: onPressStart')}
-            onPressEnd={createEventHandler('inner: onPressEnd')}
-            stopPropagation={false}>
-            <div
-              ref={ref}
-              onPointerDown={createEventHandler('pointerdown')}
-              onPointerUp={createEventHandler('pointerup')}
-              onKeyDown={createEventHandler('keydown')}
-              onKeyUp={createEventHandler('keyup')}
-            />
-          </Press>
-        </Press>
-      );
-
-      ReactDOM.render(element, container);
-      ref.current.getBoundingClientRect = () => ({
-        top: 0,
-        left: 0,
-        bottom: 100,
-        right: 100,
-      });
-
-      ref.current.dispatchEvent(createEvent('pointerdown'));
-      ref.current.dispatchEvent(
-        createEvent('pointerup', {clientX: 10, clientY: 10}),
-      );
-      expect(events).toEqual([
-        'inner: onPressStart',
-        'inner: onPressChange',
-        'pointerdown',
-        'inner: onPressEnd',
-        'inner: onPressChange',
-        'inner: onPress',
-        'pointerup',
-      ]);
-    });
-
     describe('correctly get propagation stopped and do not bubble', () => {
       it('for onPress', () => {
         const ref = React.createRef();
         const fn = jest.fn();
         const element = (
-          <Press onPress={fn}>
-            <Press onPress={fn}>
-              <div ref={ref} />
-            </Press>
-          </Press>
+          <div>
+            <PressResponder onPress={fn} />
+            <div ref={ref}>
+              <PressResponder onPress={fn} />
+            </div>
+          </div>
         );
         ReactDOM.render(element, container);
         ref.current.getBoundingClientRect = () => ({
@@ -2295,11 +2277,12 @@ describe('Event responder: Press', () => {
         const ref = React.createRef();
         const fn = jest.fn();
         const element = (
-          <Press onLongPress={fn}>
-            <Press onLongPress={fn}>
-              <div ref={ref} />
-            </Press>
-          </Press>
+          <div>
+            <PressResponder onLongPress={fn} />
+            <div ref={ref}>
+              <PressResponder onLongPress={fn} />
+            </div>
+          </div>
         );
         ReactDOM.render(element, container);
 
@@ -2314,11 +2297,12 @@ describe('Event responder: Press', () => {
         const fn = jest.fn();
         const fn2 = jest.fn();
         const element = (
-          <Press onPressStart={fn} onPressEnd={fn2}>
-            <Press onPressStart={fn} onPressEnd={fn2}>
-              <div ref={ref} />
-            </Press>
-          </Press>
+          <div>
+            <PressResponder onPressStart={fn} onPressEnd={fn2} />
+            <div ref={ref}>
+              <PressResponder onPressStart={fn} onPressEnd={fn2} />
+            </div>
+          </div>
         );
         ReactDOM.render(element, container);
 
@@ -2334,11 +2318,12 @@ describe('Event responder: Press', () => {
         const ref = React.createRef();
         const fn = jest.fn();
         const element = (
-          <Press onPressChange={fn}>
-            <Press onPressChange={fn}>
-              <div ref={ref} />
-            </Press>
-          </Press>
+          <div>
+            <PressResponder onPressChange={fn} />
+            <div ref={ref}>
+              <PressResponder onPressChange={fn} />
+            </div>
+          </div>
         );
         ReactDOM.render(element, container);
 
@@ -2356,9 +2341,9 @@ describe('Event responder: Press', () => {
       const preventDefault = jest.fn();
       const ref = React.createRef();
       const element = (
-        <Press onPress={onPress}>
-          <a href="#" ref={ref} />
-        </Press>
+        <a href="#" ref={ref}>
+          <PressResponder onPress={onPress} />
+        </a>
       );
       ReactDOM.render(element, container);
 
@@ -2382,9 +2367,9 @@ describe('Event responder: Press', () => {
       const buttonRef = React.createRef();
       const element = (
         <a href="#">
-          <Press onPress={onPress}>
-            <button ref={buttonRef} />
-          </Press>
+          <button ref={buttonRef}>
+            <PressResponder onPress={onPress} />
+          </button>
         </a>
       );
       ReactDOM.render(element, container);
@@ -2405,11 +2390,10 @@ describe('Event responder: Press', () => {
       const preventDefault = jest.fn();
       const ref = React.createRef();
       const element = (
-        <Press onPress={onPress}>
-          <a href="#">
-            <div ref={ref} />
-          </a>
-        </Press>
+        <a href="#">
+          <PressResponder onPress={onPress} />
+          <div ref={ref} />
+        </a>
       );
       ReactDOM.render(element, container);
 
@@ -2432,9 +2416,9 @@ describe('Event responder: Press', () => {
       const preventDefault = jest.fn();
       const ref = React.createRef();
       const element = (
-        <Press onPress={onPress}>
-          <a href="#" ref={ref} />
-        </Press>
+        <a href="#" ref={ref}>
+          <PressResponder onPress={onPress} />
+        </a>
       );
       ReactDOM.render(element, container);
 
@@ -2464,9 +2448,9 @@ describe('Event responder: Press', () => {
       const preventDefault = jest.fn();
       const ref = React.createRef();
       const element = (
-        <Press onPress={onPress} preventDefault={false}>
-          <a href="#" ref={ref} />
-        </Press>
+        <a href="#" ref={ref}>
+          <PressResponder onPress={onPress} preventDefault={false} />
+        </a>
       );
       ReactDOM.render(element, container);
 
@@ -2483,31 +2467,6 @@ describe('Event responder: Press', () => {
         expect.objectContaining({defaultPrevented: false}),
       );
     });
-
-    it('warns when preventDefault is used in an event hook', () => {
-      const onPress = jest.fn();
-      const preventDefault = jest.fn();
-      const ref = React.createRef();
-      const Component = () => {
-        React.unstable_useEvent(Press, {preventDefault: false});
-
-        return (
-          <Press onPress={onPress}>
-            <a href="#" ref={ref} />
-          </Press>
-        );
-      };
-      ReactDOM.render(<Component />, container);
-
-      expect(() => {
-        ref.current.dispatchEvent(createEvent('pointerdown'));
-        ref.current.dispatchEvent(createEvent('pointerup'));
-        ref.current.dispatchEvent(createEvent('click', {preventDefault}));
-      }).toWarnDev(
-        '"preventDefault" prop cannot be passed to Press event hooks. This will result in a no-op.',
-        {withoutStack: true},
-      );
-    });
   });
 
   describe('responder cancellation', () => {
@@ -2516,9 +2475,9 @@ describe('Event responder: Press', () => {
       const onPressEnd = jest.fn();
       const ref = React.createRef();
       const element = (
-        <Press onLongPress={onLongPress} onPressEnd={onPressEnd}>
-          <a href="#" ref={ref} />
-        </Press>
+        <a href="#" ref={ref}>
+          <PressResponder onLongPress={onLongPress} onPressEnd={onPressEnd} />
+        </a>
       );
       ReactDOM.render(element, container);
 
@@ -2597,9 +2556,9 @@ describe('Event responder: Press', () => {
     const ref = React.createRef();
     const element = (
       <div>
-        <Press onPressEnd={onPressEnd}>
-          <a href="#" ref={ref} />
-        </Press>
+        <a href="#" ref={ref}>
+          <PressResponder onPressEnd={onPressEnd} />
+        </a>
       </div>
     );
     ReactDOM.render(element, container);
@@ -2615,9 +2574,9 @@ describe('Event responder: Press', () => {
     const containerRef = React.createRef();
     const element = (
       <div ref={containerRef}>
-        <Press onPressEnd={onPressEnd}>
-          <a href="#" ref={ref} />
-        </Press>
+        <a href="#" ref={ref}>
+          <PressResponder onPressEnd={onPressEnd} />
+        </a>
       </div>
     );
     ReactDOM.render(element, container);
@@ -2633,9 +2592,9 @@ describe('Event responder: Press', () => {
     const outsideRef = React.createRef();
     const element = (
       <div>
-        <Press onPressEnd={onPressEnd}>
-          <a href="#" ref={ref} />
-        </Press>
+        <a href="#" ref={ref}>
+          <PressResponder onPressEnd={onPressEnd} />
+        </a>
         <span ref={outsideRef} />
       </div>
     );
@@ -2646,16 +2605,16 @@ describe('Event responder: Press', () => {
     expect(onPressEnd).not.toBeCalled();
   });
 
-  it('expect displayName to show up for event component', () => {
-    expect(Press.responder.displayName).toBe('Press');
+  it('expect displayName to show up for event responder', () => {
+    expect(PressResponder.impl.displayName).toBe('Press');
   });
 
   it('should not trigger an invariant in addRootEventTypes()', () => {
     const ref = React.createRef();
     const element = (
-      <Press>
-        <button ref={ref} />
-      </Press>
+      <button ref={ref}>
+        <PressResponder />
+      </button>
     );
     ReactDOM.render(element, container);
 
@@ -2687,14 +2646,15 @@ describe('Event responder: Press', () => {
       eventLog.push(propertiesWeCareAbout);
     };
     const element = (
-      <Press
-        onPressStart={logEvent}
-        onPressEnd={logEvent}
-        onPressMove={logEvent}
-        onLongPress={logEvent}
-        onPress={logEvent}>
-        <button ref={ref} />
-      </Press>
+      <button ref={ref}>
+        <PressResponder
+          onPressStart={logEvent}
+          onPressEnd={logEvent}
+          onPressMove={logEvent}
+          onLongPress={logEvent}
+          onPress={logEvent}
+        />
+      </button>
     );
     ReactDOM.render(element, container);
 
@@ -2852,15 +2812,14 @@ describe('Event responder: Press', () => {
 
       return (
         <div>
-          <Press onPress={handlePress}>
-            <button
-              ref={ref}
-              onClick={() => {
-                updateCounter(count => count + 1);
-              }}>
-              Press me
-            </button>
-          </Press>
+          <button
+            ref={ref}
+            onClick={() => {
+              updateCounter(count => count + 1);
+            }}>
+            <PressResponder onPress={handlePress} />
+            Press me
+          </button>
         </div>
       );
     }
@@ -2916,17 +2875,16 @@ describe('Event responder: Press', () => {
 
       return (
         <div>
-          <Press onPress={handlePress}>
-            <button
-              ref={ref}
-              onClick={() => {
-                // This should flush synchronously
-                ReactDOM.unstable_flushDiscreteUpdates();
-                updateCounter(count => count + 1);
-              }}>
-              Press me
-            </button>
-          </Press>
+          <button
+            ref={ref}
+            onClick={() => {
+              // This should flush synchronously
+              ReactDOM.unstable_flushDiscreteUpdates();
+              updateCounter(count => count + 1);
+            }}>
+            <PressResponder onPress={handlePress} />
+            Press me
+          </button>
         </div>
       );
     }
@@ -2994,13 +2952,12 @@ describe('Event responder: Press', () => {
 
         return (
           <div>
-            <Press onPress={handlePress}>
-              <button
-                ref={button}
-                onClick={() => updateClicksCount(clicksCount + 1)}>
-                Presses: {pressesCount}, Clicks: {clicksCount}
-              </button>
-            </Press>
+            <button
+              ref={button}
+              onClick={() => updateClicksCount(clicksCount + 1)}>
+              <PressResponder onPress={handlePress} />
+              Presses: {pressesCount}, Clicks: {clicksCount}
+            </button>
           </div>
         );
       }
@@ -3028,9 +2985,9 @@ describe('Event responder: Press', () => {
       const onContextMenu = jest.fn();
       const ref = React.createRef();
       const element = (
-        <Press onContextMenu={onContextMenu}>
-          <div ref={ref} />
-        </Press>
+        <div ref={ref}>
+          <PressResponder onContextMenu={onContextMenu} />
+        </div>
       );
       ReactDOM.render(element, container);
 
@@ -3053,9 +3010,9 @@ describe('Event responder: Press', () => {
       const onContextMenu = jest.fn();
       const ref = React.createRef();
       const element = (
-        <Press onContextMenu={onContextMenu}>
-          <div ref={ref} />
-        </Press>
+        <div ref={ref}>
+          <PressResponder onContextMenu={onContextMenu} />
+        </div>
       );
       ReactDOM.render(element, container);
 
@@ -3083,9 +3040,9 @@ describe('Event responder: Press', () => {
       const onContextMenu = jest.fn();
       const ref = React.createRef();
       const element = (
-        <Press onContextMenu={onContextMenu}>
-          <div ref={ref} />
-        </Press>
+        <div ref={ref}>
+          <PressResponder onContextMenu={onContextMenu} />
+        </div>
       );
       ReactDOM.render(element, container);
 
@@ -3105,9 +3062,9 @@ describe('Event responder: Press', () => {
       const onContextMenu = jest.fn();
       const ref = React.createRef();
       const element = (
-        <Press onContextMenu={onContextMenu}>
-          <div ref={ref} />
-        </Press>
+        <div ref={ref}>
+          <PressResponder onContextMenu={onContextMenu} />
+        </div>
       );
       ReactDOM.render(element, container);
 
@@ -3122,9 +3079,12 @@ describe('Event responder: Press', () => {
       const onContextMenu = jest.fn();
       const ref = React.createRef();
       const element = (
-        <Press onContextMenu={onContextMenu} preventContextMenu={true}>
-          <div ref={ref} />
-        </Press>
+        <div ref={ref}>
+          <PressResponder
+            onContextMenu={onContextMenu}
+            preventContextMenu={true}
+          />
+        </div>
       );
       ReactDOM.render(element, container);
       ref.current.dispatchEvent(
@@ -3138,36 +3098,12 @@ describe('Event responder: Press', () => {
     });
   });
 
-  it('warns when preventContextMenu is used in an event hook', () => {
-    const ref = React.createRef();
-    const Component = () => {
-      React.unstable_useEvent(Press, {preventContextMenu: false});
-
-      return (
-        <Press preventContextMenu={true}>
-          <div ref={ref} />
-        </Press>
-      );
-    };
-    ReactDOM.render(<Component />, container);
-
-    expect(() => {
-      ref.current.dispatchEvent(
-        createEvent('pointerdown', {pointerType: 'mouse', button: 2}),
-      );
-      ref.current.dispatchEvent(createEvent('contextmenu'));
-    }).toWarnDev(
-      '"preventContextMenu" prop cannot be passed to Press event hooks. This will result in a no-op.',
-      {withoutStack: true},
-    );
-  });
-
   it('should work correctly with stopPropagation set to true', () => {
     const ref = React.createRef();
     const element = (
-      <Press stopPropagation={true}>
-        <div ref={ref} />
-      </Press>
+      <div ref={ref}>
+        <PressResponder stopPropagation={true} />
+      </div>
     );
     const pointerDownEvent = jest.fn();
     container.addEventListener('pointerdown', pointerDownEvent);
@@ -3175,61 +3111,6 @@ describe('Event responder: Press', () => {
 
     ref.current.dispatchEvent(
       createEvent('pointerdown', {pointerType: 'mouse', button: 0}),
-    );
-    container.removeEventListener('pointerdown', pointerDownEvent);
-    expect(pointerDownEvent).toHaveBeenCalledTimes(0);
-  });
-
-  it('has the correct press target when used with event hook', () => {
-    const ref = React.createRef();
-    const onPress = jest.fn();
-    const Component = () => {
-      React.unstable_useEvent(Press, {onPress});
-
-      return (
-        <div>
-          <Press>
-            <a href="#" ref={ref} />
-          </Press>
-        </div>
-      );
-    };
-    ReactDOM.render(<Component />, container);
-
-    ref.current.dispatchEvent(
-      createEvent('pointerdown', {pointerType: 'mouse', button: 0}),
-    );
-    ref.current.dispatchEvent(
-      createEvent('pointerup', {pointerType: 'mouse', button: 0}),
-    );
-    expect(onPress).toHaveBeenCalledTimes(1);
-    expect(onPress).toHaveBeenCalledWith(
-      expect.objectContaining({target: ref.current}),
-    );
-  });
-
-  it('warns when stopPropagation is used in an event hook', () => {
-    const ref = React.createRef();
-    const Component = () => {
-      React.unstable_useEvent(Press, {stopPropagation: false});
-
-      return (
-        <Press stopPropagation={true}>
-          <a href="#" ref={ref} />
-        </Press>
-      );
-    };
-    const pointerDownEvent = jest.fn();
-    container.addEventListener('pointerdown', pointerDownEvent);
-    ReactDOM.render(<Component />, container);
-
-    expect(() => {
-      ref.current.dispatchEvent(
-        createEvent('pointerdown', {pointerType: 'mouse', button: 0}),
-      );
-    }).toWarnDev(
-      '"stopPropagation" prop cannot be passed to Press event hooks. This will result in a no-op.',
-      {withoutStack: true},
     );
     container.removeEventListener('pointerdown', pointerDownEvent);
     expect(pointerDownEvent).toHaveBeenCalledTimes(0);

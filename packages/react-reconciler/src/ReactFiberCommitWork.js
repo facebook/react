@@ -44,7 +44,7 @@ import {
   IncompleteClassComponent,
   MemoComponent,
   SimpleMemoComponent,
-  EventComponent,
+  EventResponder,
   SuspenseListComponent,
 } from 'shared/ReactWorkTags';
 import {
@@ -92,8 +92,8 @@ import {
   hideTextInstance,
   unhideInstance,
   unhideTextInstance,
-  unmountEventComponent,
-  mountEventComponent,
+  unmountEventResponder,
+  mountEventResponder,
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
@@ -111,6 +111,7 @@ import {
   MountPassive,
 } from './ReactHookEffectTags';
 import {didWarnAboutReassigningProps} from './ReactFiberBeginWork';
+import {detachEventResponderFromTargetFiber} from './ReactFiberEvents';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {
@@ -591,9 +592,13 @@ function commitLifeCycles(
     case SuspenseListComponent:
     case IncompleteClassComponent:
       return;
-    case EventComponent: {
-      if (enableFlareAPI) {
-        mountEventComponent(finishedWork.stateNode);
+    case EventResponder: {
+      if (
+        enableFlareAPI &&
+        current === null &&
+        finishedWork.effectTag & Update
+      ) {
+        mountEventResponder(finishedWork.stateNode);
       }
       return;
     }
@@ -751,11 +756,23 @@ function commitUnmount(current: Fiber): void {
       }
       return;
     }
-    case EventComponent: {
+    case EventResponder: {
       if (enableFlareAPI) {
         const eventComponentInstance = current.stateNode;
-        unmountEventComponent(eventComponentInstance);
-        current.stateNode = null;
+        if (eventComponentInstance !== null) {
+          let target = current;
+          while (target !== null) {
+            if (target.tag === HostComponent) {
+              break;
+            }
+            target = target.return;
+          }
+          if (target !== null) {
+            detachEventResponderFromTargetFiber(current, target);
+          }
+          unmountEventResponder(eventComponentInstance);
+          current.stateNode = null;
+        }
       }
     }
   }
@@ -838,7 +855,7 @@ function commitContainer(finishedWork: Fiber) {
     case ClassComponent:
     case HostComponent:
     case HostText:
-    case EventComponent: {
+    case EventResponder: {
       return;
     }
     case HostRoot:
@@ -1069,7 +1086,6 @@ function unmountHostComponents(current): void {
           (node.stateNode: Instance | TextInstance),
         );
       }
-      // Don't visit children because we already visited them.
     } else if (
       enableSuspenseServerRenderer &&
       node.tag === DehydratedSuspenseComponent
@@ -1240,7 +1256,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
     case IncompleteClassComponent: {
       return;
     }
-    case EventComponent: {
+    case EventResponder: {
       return;
     }
     default: {

@@ -41,7 +41,7 @@ import {
   SimpleMemoComponent,
   LazyComponent,
   IncompleteClassComponent,
-  EventComponent,
+  EventResponder,
 } from 'shared/ReactWorkTags';
 import {
   NoEffect,
@@ -60,7 +60,6 @@ import {
   enableProfilerTimer,
   enableSchedulerTracing,
   enableSuspenseServerRenderer,
-  enableFlareAPI,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import shallowEqual from 'shared/shallowEqual';
@@ -109,11 +108,7 @@ import {
 } from './ReactFiberHostConfig';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import {shouldSuspend} from './ReactFiberReconciler';
-import {
-  pushHostContext,
-  pushHostContainer,
-  pushHostContextForEventComponent,
-} from './ReactFiberHostContext';
+import {pushHostContext, pushHostContainer} from './ReactFiberHostContext';
 import {
   suspenseStackCursor,
   pushSuspenseContext,
@@ -175,7 +170,6 @@ import {
   requestCurrentTime,
   retryTimedOutBoundary,
 } from './ReactFiberWorkLoop';
-import {prepareToReadEventComponents} from './ReactFiberEvents';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -302,7 +296,6 @@ function updateForwardRef(
   // The rest is a fork of updateFunctionComponent
   let nextChildren;
   prepareToReadContext(workInProgress, renderExpirationTime);
-  prepareToReadEventComponents(workInProgress);
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
     setCurrentPhase('render');
@@ -623,7 +616,6 @@ function updateFunctionComponent(
 
   let nextChildren;
   prepareToReadContext(workInProgress, renderExpirationTime);
-  prepareToReadEventComponents(workInProgress);
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
     setCurrentPhase('render');
@@ -1238,7 +1230,6 @@ function mountIndeterminateComponent(
   const context = getMaskedContext(workInProgress, unmaskedContext);
 
   prepareToReadContext(workInProgress, renderExpirationTime);
-  prepareToReadEventComponents(workInProgress);
   let value;
 
   if (__DEV__) {
@@ -2477,20 +2468,6 @@ function updateContextConsumer(
   return workInProgress.child;
 }
 
-function updateEventComponent(current, workInProgress, renderExpirationTime) {
-  const nextProps = workInProgress.pendingProps;
-  let nextChildren = nextProps.children;
-
-  reconcileChildren(
-    current,
-    workInProgress,
-    nextChildren,
-    renderExpirationTime,
-  );
-  pushHostContextForEventComponent(workInProgress);
-  return workInProgress.child;
-}
-
 export function markWorkInProgressReceivedUpdate() {
   didReceiveUpdate = true;
 }
@@ -2780,11 +2757,6 @@ function beginWork(
           pushSuspenseContext(workInProgress, suspenseStackCursor.current);
           break;
         }
-        case EventComponent:
-          if (enableFlareAPI) {
-            pushHostContextForEventComponent(workInProgress);
-          }
-          break;
       }
       return bailoutOnAlreadyFinishedWork(
         current,
@@ -2970,15 +2942,8 @@ function beginWork(
         renderExpirationTime,
       );
     }
-    case EventComponent: {
-      if (enableFlareAPI) {
-        return updateEventComponent(
-          current,
-          workInProgress,
-          renderExpirationTime,
-        );
-      }
-      break;
+    case EventResponder: {
+      return null;
     }
   }
   invariant(

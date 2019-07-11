@@ -8,7 +8,7 @@
  */
 
 import type {
-  ReactDOMEventResponder,
+  ReactDOMEventResponderImpl,
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
 } from 'shared/ReactDOMTypes';
@@ -88,7 +88,7 @@ type SwipeState = {
   y: number,
 };
 
-const SwipeResponder: ReactDOMEventResponder = {
+const SwipeResponderImpl: ReactDOMEventResponderImpl = {
   displayName: 'Scroll',
   targetEventTypes,
   getInitialState(): SwipeState {
@@ -262,8 +262,6 @@ const SwipeResponder: ReactDOMEventResponder = {
   },
 };
 
-export const Swipe = React.unstable_createEvent(SwipeResponder);
-
-export function useSwipe(props: Object): void {
-  React.unstable_useEvent(Swipe, props);
-}
+export const SwipeResponder = React.unstable_createResponder(
+  SwipeResponderImpl,
+);

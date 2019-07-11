@@ -19,7 +19,7 @@ import {
   REACT_SUSPENSE_LIST_TYPE,
   REACT_MEMO_TYPE,
   REACT_LAZY_TYPE,
-  REACT_EVENT_COMPONENT_TYPE,
+  REACT_RESPONDER_TYPE,
 } from 'shared/ReactSymbols';
 
 export default function isValidElementType(type: mixed) {
@@ -40,6 +40,6 @@ export default function isValidElementType(type: mixed) {
         type.$$typeof === REACT_PROVIDER_TYPE ||
         type.$$typeof === REACT_CONTEXT_TYPE ||
         type.$$typeof === REACT_FORWARD_REF_TYPE ||
-        type.$$typeof === REACT_EVENT_COMPONENT_TYPE))
+        type.$$typeof === REACT_RESPONDER_TYPE))
   );
 }

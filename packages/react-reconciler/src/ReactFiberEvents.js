@@ -7,13 +7,14 @@
  * @flow
  */
 
-import type {Fiber, Dependencies} from './ReactFiber';
+import type {Fiber} from './ReactFiber';
 import type {
-  ReactEventComponent,
-  ReactEventResponder,
-  ReactEventComponentInstance,
+  ReactEventResponderImpl,
+  ReactEventResponderInstance,
+  EventResponderDependency,
 } from 'shared/ReactTypes';
 
+import {NoWork} from './ReactFiberExpirationTime';
 import {
   HostComponent,
   HostText,
@@ -21,77 +22,20 @@ import {
   SuspenseComponent,
   Fragment,
 } from 'shared/ReactWorkTags';
-import {NoWork} from './ReactFiberExpirationTime';
 
-let currentlyRenderingFiber: null | Fiber = null;
-let currentEventComponentInstanceIndex: number = 0;
-
-export function prepareToReadEventComponents(workInProgress: Fiber): void {
-  currentlyRenderingFiber = workInProgress;
-  currentEventComponentInstanceIndex = 0;
-}
-
-export function updateEventComponentInstance<E, C>(
-  eventComponent: ReactEventComponent<E, C>,
+export function createEventResponderInstance<E, C>(
   props: Object,
-): void {
-  const responder = eventComponent.responder;
-  let events;
-  let dependencies: Dependencies | null = ((currentlyRenderingFiber: any): Fiber)
-    .dependencies;
-  if (dependencies === null) {
-    events = [];
-    dependencies = ((currentlyRenderingFiber: any): Fiber).dependencies = {
-      expirationTime: NoWork,
-      firstContext: null,
-      events,
-    };
-  } else {
-    events = dependencies.events;
-    if (events === null) {
-      dependencies.events = events = [];
-    }
-  }
-  if (currentEventComponentInstanceIndex === events.length) {
-    let responderState = null;
-    const getInitialState = responder.getInitialState;
-    if (getInitialState !== undefined) {
-      responderState = getInitialState(props);
-    }
-    const eventComponentInstance = createEventComponentInstance(
-      ((currentlyRenderingFiber: any): Fiber),
-      props,
-      responder,
-      null,
-      responderState || {},
-      true,
-    );
-    events.push(eventComponentInstance);
-    currentEventComponentInstanceIndex++;
-  } else {
-    const eventComponentInstance = events[currentEventComponentInstanceIndex++];
-    eventComponentInstance.responder = responder;
-    eventComponentInstance.props = props;
-    eventComponentInstance.currentFiber = ((currentlyRenderingFiber: any): Fiber);
-  }
-}
-
-export function createEventComponentInstance<E, C>(
-  currentFiber: Fiber,
-  props: Object,
-  responder: ReactEventResponder<E, C>,
+  impl: ReactEventResponderImpl<E, C>,
   rootInstance: mixed,
   state: Object,
-  isHook: boolean,
-): ReactEventComponentInstance<E, C> {
+): ReactEventResponderInstance<E, C> {
   return {
-    currentFiber,
-    isHook,
+    impl,
     props,
-    responder,
     rootEventTypes: null,
     rootInstance,
     state,
+    targetFiber: null,
   };
 }
 
@@ -160,5 +104,78 @@ export function getEventComponentHostChildrenCount(
     }
 
     return hostChildrenCount;
+  }
+}
+
+function createEventResponderDependency<C, E>(
+  impl: ReactEventResponderImpl<C, E>,
+  instance: ReactEventResponderInstance<C, E>,
+): EventResponderDependency<C, E> {
+  return {
+    impl,
+    instance,
+    next: null,
+  };
+}
+
+export function attachEventResponderToTargetFiber(
+  responderFiber: Fiber,
+  targetFiber: Fiber,
+): void {
+  const instance = responderFiber.stateNode;
+  const impl = instance.impl;
+  const dependencies = targetFiber.dependencies;
+  const responderDependency = createEventResponderDependency(impl, instance);
+  instance.targetFiber = targetFiber;
+  if (dependencies === null) {
+    targetFiber.dependencies = {
+      expirationTime: NoWork,
+      firstContext: null,
+      firstResponder: responderDependency,
+    };
+  } else {
+    let currentResponder = dependencies.firstResponder;
+    if (currentResponder === null) {
+      dependencies.firstResponder = responderDependency;
+    } else {
+      while (currentResponder !== null) {
+        if (currentResponder.impl === impl) {
+          // Show warning of no-op
+          return;
+        }
+        const next = currentResponder.next;
+        if (next === null) {
+          currentResponder.next = responderDependency;
+          break;
+        }
+        currentResponder = next;
+      }
+    }
+  }
+}
+
+export function detachEventResponderFromTargetFiber(
+  responderFiber: Fiber,
+  targetFiber: Fiber,
+): void {
+  const instance = responderFiber.stateNode;
+  const impl = instance.impl;
+  const dependencies = targetFiber.dependencies;
+  if (dependencies !== null) {
+    let currentResponder = dependencies.firstResponder;
+    let previousResponder = null;
+    while (currentResponder !== null) {
+      if (currentResponder.impl === impl) {
+        if (previousResponder === null) {
+          dependencies.firstResponder = null;
+        } else {
+          previousResponder.next = null;
+        }
+        return;
+      }
+      const next = currentResponder.next;
+      previousResponder = currentResponder;
+      currentResponder = next;
+    }
   }
 }

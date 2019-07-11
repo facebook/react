@@ -14,7 +14,7 @@ export type ReactNode =
   | ReactFragment
   | ReactProvider<any>
   | ReactConsumer<any>
-  | ReactEventComponent<any, any>;
+  | ReactEventResponder<any, any>;
 
 export type ReactEmpty = null | void | boolean;
 
@@ -80,17 +80,22 @@ export type RefObject = {|
   current: any,
 |};
 
-export type ReactEventComponentInstance<E, C> = {|
-  currentFiber: mixed,
-  isHook: boolean,
+export type EventResponderDependency<C, E> = {|
+  impl: ReactEventResponderImpl<C, E>,
+  instance: ReactEventResponderInstance<C, E>,
+  next: null | EventResponderDependency<C, E>,
+|};
+
+export type ReactEventResponderInstance<E, C> = {|
+  impl: ReactEventResponderImpl<E, C>,
   props: Object,
-  responder: ReactEventResponder<E, C>,
   rootEventTypes: null | Set<string>,
   rootInstance: null | mixed,
   state: Object,
+  targetFiber: mixed,
 |};
 
-export type ReactEventResponder<E, C> = {
+export type ReactEventResponderImpl<E, C> = {
   displayName: string,
   targetEventTypes?: Array<string>,
   rootEventTypes?: Array<string>,
@@ -102,9 +107,9 @@ export type ReactEventResponder<E, C> = {
   onOwnershipChange?: (context: C, props: Object, state: Object) => void,
 };
 
-export type ReactEventComponent<E, C> = {|
+export type ReactEventResponder<E, C> = {|
   $$typeof: Symbol | number,
-  responder: ReactEventResponder<E, C>,
+  impl: ReactEventResponderImpl<E, C>,
 |};
 
 export opaque type EventPriority = 0 | 1 | 2;

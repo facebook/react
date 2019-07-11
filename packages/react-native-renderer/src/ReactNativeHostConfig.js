@@ -12,7 +12,7 @@ import type {
   ReactNativeResponderEvent,
   ReactNativeResponderContext,
 } from './ReactNativeTypes';
-import type {ReactEventComponentInstance} from 'shared/ReactTypes';
+import type {ReactEventResponderInstance} from 'shared/ReactTypes';
 
 import invariant from 'shared/invariant';
 
@@ -33,7 +33,7 @@ import ReactNativeFiberHostComponent from './ReactNativeFiberHostComponent';
 
 const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 
-type ReactNativeEventComponentInstance = ReactEventComponentInstance<
+type ReactNativeEventResponderInstance = ReactEventResponderInstance<
   ReactNativeResponderEvent,
   ReactNativeResponderContext,
 >;
@@ -212,13 +212,6 @@ export function getChildHostContext(
   } else {
     return parentHostContext;
   }
-}
-
-export function getChildHostContextForEventComponent(
-  parentHostContext: HostContext,
-) {
-  // TODO: add getChildHostContextForEventComponent implementation
-  return parentHostContext;
 }
 
 export function getPublicInstance(instance: Instance): * {
@@ -494,20 +487,26 @@ export function unhideTextInstance(
   throw new Error('Not yet implemented.');
 }
 
-export function mountEventComponent(
-  eventComponentInstance: ReactNativeEventComponentInstance,
+export function initializeEventResponder(
+  eventResponderInstance: ReactNativeEventResponderInstance,
 ) {
   throw new Error('Not yet implemented.');
 }
 
-export function updateEventComponent(
-  eventComponentInstance: ReactNativeEventComponentInstance,
+export function mountEventResponder(
+  eventResponderInstance: ReactNativeEventResponderInstance,
 ) {
   throw new Error('Not yet implemented.');
 }
 
-export function unmountEventComponent(
-  eventComponentInstance: ReactNativeEventComponentInstance,
+export function updateEventResponder(
+  eventResponderInstance: ReactNativeEventResponderInstance,
+) {
+  throw new Error('Not yet implemented.');
+}
+
+export function unmountEventResponder(
+  eventResponderInstance: ReactNativeEventResponderInstance,
 ): void {
   throw new Error('Not yet implemented.');
 }

@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactEventComponent, ReactContext} from 'shared/ReactTypes';
+import type {ReactContext} from 'shared/ReactTypes';
 import type {SideEffectTag} from 'shared/ReactSideEffectTags';
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
@@ -18,7 +18,6 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 import {NoWork} from './ReactFiberExpirationTime';
 import {readContext} from './ReactFiberNewContext';
-import {updateEventComponentInstance} from './ReactFiberEvents';
 import {
   Update as UpdateEffect,
   Passive as PassiveEffect,
@@ -83,10 +82,6 @@ export type Dispatcher = {
     deps: Array<mixed> | void | null,
   ): void,
   useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void,
-  useEvent<E, C>(
-    eventComponent: ReactEventComponent<E, C>,
-    props: Object,
-  ): void,
 };
 
 type Update<S, A> = {
@@ -115,8 +110,7 @@ export type HookType =
   | 'useCallback'
   | 'useMemo'
   | 'useImperativeHandle'
-  | 'useDebugValue'
-  | 'useEvent';
+  | 'useDebugValue';
 
 let didWarnAboutMismatchedHooksForComponent;
 if (__DEV__) {
@@ -1254,7 +1248,6 @@ export const ContextOnlyDispatcher: Dispatcher = {
   useRef: throwInvalidHookError,
   useState: throwInvalidHookError,
   useDebugValue: throwInvalidHookError,
-  useEvent: updateEventComponentInstance,
 };
 
 const HooksDispatcherOnMount: Dispatcher = {
@@ -1270,7 +1263,6 @@ const HooksDispatcherOnMount: Dispatcher = {
   useRef: mountRef,
   useState: mountState,
   useDebugValue: mountDebugValue,
-  useEvent: updateEventComponentInstance,
 };
 
 const HooksDispatcherOnUpdate: Dispatcher = {
@@ -1286,7 +1278,6 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   useRef: updateRef,
   useState: updateState,
   useDebugValue: updateDebugValue,
-  useEvent: updateEventComponentInstance,
 };
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
@@ -1416,11 +1407,6 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountDebugValue(value, formatterFn);
     },
-    useEvent<E, C>(eventComponent: ReactEventComponent<E, C>, props) {
-      currentHookNameInDev = 'useEvent';
-      mountHookTypesDev();
-      updateEventComponentInstance(eventComponent, props);
-    },
   };
 
   HooksDispatcherOnMountWithHookTypesInDEV = {
@@ -1518,11 +1504,6 @@ if (__DEV__) {
       updateHookTypesDev();
       return mountDebugValue(value, formatterFn);
     },
-    useEvent<E, C>(eventComponent: ReactEventComponent<E, C>, props) {
-      currentHookNameInDev = 'useEvent';
-      updateHookTypesDev();
-      updateEventComponentInstance(eventComponent, props);
-    },
   };
 
   HooksDispatcherOnUpdateInDEV = {
@@ -1619,11 +1600,6 @@ if (__DEV__) {
       currentHookNameInDev = 'useDebugValue';
       updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
-    },
-    useEvent<E, C>(eventComponent: ReactEventComponent<E, C>, props) {
-      currentHookNameInDev = 'useEvent';
-      updateHookTypesDev();
-      updateEventComponentInstance(eventComponent, props);
     },
   };
 
@@ -1733,12 +1709,6 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountDebugValue(value, formatterFn);
     },
-    useEvent<E, C>(eventComponent: ReactEventComponent<E, C>, props) {
-      currentHookNameInDev = 'useEvent';
-      warnInvalidHookAccess();
-      mountHookTypesDev();
-      updateEventComponentInstance(eventComponent, props);
-    },
   };
 
   InvalidNestedHooksDispatcherOnUpdateInDEV = {
@@ -1846,12 +1816,6 @@ if (__DEV__) {
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
-    },
-    useEvent<E, C>(eventComponent: ReactEventComponent<E, C>, props) {
-      currentHookNameInDev = 'useEvent';
-      warnInvalidHookAccess();
-      updateHookTypesDev();
-      updateEventComponentInstance(eventComponent, props);
     },
   };
 }

@@ -22,7 +22,6 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   warnAboutDeprecatedLifecycles,
   enableSuspenseServerRenderer,
-  enableFlareAPI,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -38,7 +37,7 @@ import {
   REACT_CONTEXT_TYPE,
   REACT_LAZY_TYPE,
   REACT_MEMO_TYPE,
-  REACT_EVENT_COMPONENT_TYPE,
+  REACT_RESPONDER_TYPE,
 } from 'shared/ReactSymbols';
 
 import {
@@ -1166,29 +1165,8 @@ class ReactDOMServerRenderer {
             this.stack.push(frame);
             return '';
           }
-          case REACT_EVENT_COMPONENT_TYPE: {
-            if (enableFlareAPI) {
-              const nextChildren = toArray(
-                ((nextChild: any): ReactElement).props.children,
-              );
-              const frame: Frame = {
-                type: null,
-                domNamespace: parentNamespace,
-                children: nextChildren,
-                childIndex: 0,
-                context: context,
-                footer: '',
-              };
-              if (__DEV__) {
-                ((frame: any): FrameDev).debugElementStack = [];
-              }
-              this.stack.push(frame);
-              return '';
-            }
-            invariant(
-              false,
-              'ReactDOMServer does not yet support the event API.',
-            );
+          case REACT_RESPONDER_TYPE: {
+            return '';
           }
           // eslint-disable-next-line-no-fallthrough
           case REACT_LAZY_TYPE:

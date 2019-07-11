@@ -12,7 +12,7 @@
 let React;
 let ReactFeatureFlags;
 let ReactDOM;
-let Focus;
+let FocusResponder;
 
 const createFocusEvent = type => {
   const event = document.createEvent('Event');
@@ -44,7 +44,7 @@ const modulesInit = () => {
   ReactFeatureFlags.enableFlareAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
-  Focus = require('react-events/focus').Focus;
+  FocusResponder = require('react-events/focus').FocusResponder;
 };
 
 describe('Focus event responder', () => {
@@ -72,9 +72,9 @@ describe('Focus event responder', () => {
       onFocus = jest.fn();
       ref = React.createRef();
       const element = (
-        <Focus disabled={true} onBlur={onBlur} onFocus={onFocus}>
-          <div ref={ref} />
-        </Focus>
+        <div ref={ref}>
+          <FocusResponder disabled={true} onBlur={onBlur} onFocus={onFocus} />
+        </div>
       );
       ReactDOM.render(element, container);
     });
@@ -94,9 +94,9 @@ describe('Focus event responder', () => {
       onBlur = jest.fn();
       ref = React.createRef();
       const element = (
-        <Focus onBlur={onBlur}>
-          <div ref={ref} />
-        </Focus>
+        <div ref={ref}>
+          <FocusResponder onBlur={onBlur} />
+        </div>
       );
       ReactDOM.render(element, container);
     });
@@ -116,11 +116,10 @@ describe('Focus event responder', () => {
       ref = React.createRef();
       innerRef = React.createRef();
       const element = (
-        <Focus onFocus={onFocus}>
-          <div ref={ref}>
-            <a ref={innerRef} />
-          </div>
-        </Focus>
+        <div ref={ref}>
+          <FocusResponder onFocus={onFocus} />
+          <a ref={innerRef} />
+        </div>
       );
       ReactDOM.render(element, container);
     };
@@ -212,6 +211,8 @@ describe('Focus event responder', () => {
     });
 
     it('is called with the correct pointerType using Tab+altKey on Mac', () => {
+      // Clear the container before we reset
+      ReactDOM.render(null, container);
       jest.resetModules();
       const platformGetter = jest.spyOn(global.navigator, 'platform', 'get');
       platformGetter.mockReturnValue('MacIntel');
@@ -243,9 +244,9 @@ describe('Focus event responder', () => {
       onFocusChange = jest.fn();
       ref = React.createRef();
       const element = (
-        <Focus onFocusChange={onFocusChange}>
-          <div ref={ref} />
-        </Focus>
+        <div ref={ref}>
+          <FocusResponder onFocusChange={onFocusChange} />
+        </div>
       );
       ReactDOM.render(element, container);
     });
@@ -267,9 +268,9 @@ describe('Focus event responder', () => {
       onFocusVisibleChange = jest.fn();
       ref = React.createRef();
       const element = (
-        <Focus onFocusVisibleChange={onFocusVisibleChange}>
-          <div ref={ref} />
-        </Focus>
+        <div ref={ref}>
+          <FocusResponder onFocusVisibleChange={onFocusVisibleChange} />
+        </div>
       );
       ReactDOM.render(element, container);
     });
@@ -319,19 +320,20 @@ describe('Focus event responder', () => {
       };
 
       const element = (
-        <Focus
-          onBlur={createEventHandler('outer: onBlur')}
-          onFocus={createEventHandler('outer: onFocus')}
-          onFocusChange={createEventHandler('outer: onFocusChange')}>
-          <div ref={outerRef}>
-            <Focus
+        <div ref={outerRef}>
+          <FocusResponder
+            onBlur={createEventHandler('outer: onBlur')}
+            onFocus={createEventHandler('outer: onFocus')}
+            onFocusChange={createEventHandler('outer: onFocusChange')}
+          />
+          <div ref={innerRef}>
+            <FocusResponder
               onBlur={createEventHandler('inner: onBlur')}
               onFocus={createEventHandler('inner: onFocus')}
-              onFocusChange={createEventHandler('inner: onFocusChange')}>
-              <div ref={innerRef} />
-            </Focus>
+              onFocusChange={createEventHandler('inner: onFocusChange')}
+            />
           </div>
-        </Focus>
+        </div>
       );
 
       ReactDOM.render(element, container);
@@ -353,7 +355,7 @@ describe('Focus event responder', () => {
     });
   });
 
-  it('expect displayName to show up for event component', () => {
-    expect(Focus.responder.displayName).toBe('Focus');
+  it('expect displayName to show up for event responder', () => {
+    expect(FocusResponder.impl.displayName).toBe('Focus');
   });
 });

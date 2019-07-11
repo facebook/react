@@ -8,7 +8,7 @@
  */
 
 import type {
-  ReactDOMEventResponder,
+  ReactDOMEventResponderImpl,
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
   PointerType,
@@ -216,7 +216,7 @@ function handleRootPointerEvent(
 
 let isGlobalFocusVisible = true;
 
-const FocusResponder: ReactDOMEventResponder = {
+const FocusResponderImpl: ReactDOMEventResponderImpl = {
   displayName: 'Focus',
   targetEventTypes,
   rootEventTypes,
@@ -248,7 +248,7 @@ const FocusResponder: ReactDOMEventResponder = {
     switch (type) {
       case 'focus': {
         if (!state.isFocused) {
-          // Limit focus events to the direct child of the event component.
+          // Limit focus events to the direct child of the event responder.
           // Browser focus is not expected to bubble.
           state.focusTarget = event.responderTarget;
           if (state.focusTarget === target) {
@@ -336,8 +336,6 @@ const FocusResponder: ReactDOMEventResponder = {
   },
 };
 
-export const Focus = React.unstable_createEvent(FocusResponder);
-
-export function useFocus(props: FocusProps): void {
-  React.unstable_useEvent(Focus, props);
-}
+export const FocusResponder = React.unstable_createResponder(
+  FocusResponderImpl,
+);

@@ -8,8 +8,8 @@
  */
 
 import type {
-  ReactEventResponder,
-  ReactEventComponentInstance,
+  ReactEventResponderImpl,
+  ReactEventResponderInstance,
   EventPriority,
 } from 'shared/ReactTypes';
 
@@ -34,12 +34,12 @@ export type ReactDOMResponderEvent = {
   type: string,
 };
 
-export type ReactDOMEventResponder = ReactEventResponder<
+export type ReactDOMEventResponderImpl = ReactEventResponderImpl<
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
 >;
 
-export type ReactDOMEventComponentInstance = ReactEventComponentInstance<
+export type ReactDOMEventResponderInstance = ReactEventResponderInstance<
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
 >;
@@ -54,8 +54,8 @@ export type ReactDOMResponderContext = {
     childTarget: Element | Document,
     parentTarget: Element | Document,
   ) => boolean,
-  isTargetWithinEventComponent: (Element | Document) => boolean,
-  isTargetWithinEventResponderScope: (Element | Document) => boolean,
+  isTargetWithinResponder: (Element | Document) => boolean,
+  isTargetWithinResponderScope: (Element | Document) => boolean,
   addRootEventTypes: (rootEventTypes: Array<string>) => void,
   removeRootEventTypes: (rootEventTypes: Array<string>) => void,
   hasOwnership: () => boolean,
@@ -63,15 +63,12 @@ export type ReactDOMResponderContext = {
   releaseOwnership: () => boolean,
   setTimeout: (func: () => void, timeout: number) => number,
   clearTimeout: (timerId: number) => void,
-  getFocusableElementsInScope(): Array<HTMLElement>,
+  getFocusableElementsInScope(deep: boolean): Array<HTMLElement>,
   getActiveDocument(): Document,
   objectAssign: Function,
   getTimeStamp: () => number,
-  isTargetWithinHostComponent: (
+  isTargetWithinNodeOfType: (
     target: Element | Document,
     elementType: string,
-    deep: boolean,
   ) => boolean,
-  continueLocalPropagation(): void,
-  isRespondingToHook(): boolean,
 };
