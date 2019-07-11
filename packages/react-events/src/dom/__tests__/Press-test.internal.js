@@ -150,6 +150,48 @@ describe('Event responder: Press', () => {
       );
     });
 
+    it('is not called after "pointermove" following auxillary-button press', () => {
+      ref.current.getBoundingClientRect = () => ({
+        top: 0,
+        left: 0,
+        bottom: 100,
+        right: 100,
+      });
+      ref.current.dispatchEvent(
+        createEvent('pointerdown', {
+          button: 1,
+          pointerType: 'mouse',
+          clientX: 50,
+          clientY: 50,
+        }),
+      );
+      ref.current.dispatchEvent(
+        createEvent('pointerup', {
+          button: 1,
+          pointerType: 'mouse',
+          clientX: 50,
+          clientY: 50,
+        }),
+      );
+      container.dispatchEvent(
+        createEvent('pointermove', {
+          button: 1,
+          pointerType: 'mouse',
+          clientX: 110,
+          clientY: 110,
+        }),
+      );
+      container.dispatchEvent(
+        createEvent('pointermove', {
+          button: 1,
+          pointerType: 'mouse',
+          clientX: 50,
+          clientY: 50,
+        }),
+      );
+      expect(onPressStart).toHaveBeenCalledTimes(1);
+    });
+
     it('ignores browser emulated events', () => {
       ref.current.dispatchEvent(createEvent('pointerdown'));
       ref.current.dispatchEvent(createEvent('touchstart'));
