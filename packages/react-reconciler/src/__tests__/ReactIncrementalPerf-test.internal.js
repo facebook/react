@@ -397,21 +397,21 @@ describe('ReactDebugFiberPerf', () => {
   it('measures deferred work in chunks', () => {
     class A extends React.Component {
       render() {
-        Scheduler.yieldValue('A');
+        Scheduler.unstable_yieldValue('A');
         return <div>{this.props.children}</div>;
       }
     }
 
     class B extends React.Component {
       render() {
-        Scheduler.yieldValue('B');
+        Scheduler.unstable_yieldValue('B');
         return <div>{this.props.children}</div>;
       }
     }
 
     class C extends React.Component {
       render() {
-        Scheduler.yieldValue('C');
+        Scheduler.unstable_yieldValue('C');
         return <div>{this.props.children}</div>;
       }
     }
@@ -652,7 +652,7 @@ describe('ReactDebugFiberPerf', () => {
 
   it('warns if an in-progress update is interrupted', () => {
     function Foo() {
-      Scheduler.yieldValue('Foo');
+      Scheduler.unstable_yieldValue('Foo');
       return <span />;
     }
 

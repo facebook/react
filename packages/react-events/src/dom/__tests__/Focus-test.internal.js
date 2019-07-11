@@ -41,10 +41,10 @@ const createPointerEvent = (type, data) => {
 
 const modulesInit = () => {
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
-  ReactFeatureFlags.enableEventAPI = true;
+  ReactFeatureFlags.enableFlareAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
-  Focus = require('react-events/focus');
+  Focus = require('react-events/focus').Focus;
 };
 
 describe('Focus event responder', () => {
@@ -354,6 +354,6 @@ describe('Focus event responder', () => {
   });
 
   it('expect displayName to show up for event component', () => {
-    expect(Focus.displayName).toBe('Focus');
+    expect(Focus.responder.displayName).toBe('Focus');
   });
 });

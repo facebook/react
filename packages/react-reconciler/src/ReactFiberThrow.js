@@ -102,6 +102,7 @@ function createClassErrorUpdate(
   if (typeof getDerivedStateFromError === 'function') {
     const error = errorInfo.value;
     update.payload = () => {
+      logError(fiber, errorInfo);
       return getDerivedStateFromError(error);
     };
   }
@@ -119,10 +120,12 @@ function createClassErrorUpdate(
         // TODO: Warn in strict mode if getDerivedStateFromError is
         // not defined.
         markLegacyErrorBoundaryAsFailed(this);
+
+        // Only log here if componentDidCatch is the only error boundary method defined
+        logError(fiber, errorInfo);
       }
       const error = errorInfo.value;
       const stack = errorInfo.stack;
-      logError(fiber, errorInfo);
       this.componentDidCatch(error, {
         componentStack: stack !== null ? stack : '',
       });
@@ -257,7 +260,7 @@ function throwException(
               sourceFiber.tag = IncompleteClassComponent;
             } else {
               // When we try rendering again, we should not reuse the current fiber,
-              // since it's known to be in an inconsistent state. Use a force updte to
+              // since it's known to be in an inconsistent state. Use a force update to
               // prevent a bail out.
               const update = createUpdate(Sync, null);
               update.tag = ForceUpdate;

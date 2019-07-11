@@ -9,7 +9,7 @@ import {
   needsStateRestore,
   restoreStateIfNeeded,
 } from './ReactControlledComponent';
-import {enableEventAPI} from 'shared/ReactFeatureFlags';
+import {enableFlareAPI} from 'shared/ReactFeatureFlags';
 
 // Used as a way to call batchedUpdates when we don't have a reference to
 // the renderer. Such as when we're dispatching events or if third party
@@ -92,7 +92,7 @@ export function flushDiscreteUpdatesIfNeeded(timeStamp: number) {
   // event.timeStamp isn't overly reliable due to inconsistencies in
   // how different browsers have historically provided the time stamp.
   // Some browsers provide high-resolution time stamps for all events,
-  // some provide low-resoltion time stamps for all events. FF < 52
+  // some provide low-resolution time stamps for all events. FF < 52
   // even mixes both time stamps together. Some browsers even report
   // negative time stamps or time stamps that are 0 (iOS9) in some cases.
   // Given we are only comparing two time stamps with equality (!==),
@@ -103,7 +103,7 @@ export function flushDiscreteUpdatesIfNeeded(timeStamp: number) {
   // behaviour as we had before this change, so the risks are low.
   if (
     !isInsideEventHandler &&
-    (!enableEventAPI ||
+    (!enableFlareAPI ||
       (timeStamp === 0 || lastFlushedEventTimeStamp !== timeStamp))
   ) {
     lastFlushedEventTimeStamp = timeStamp;

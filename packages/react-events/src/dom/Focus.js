@@ -8,10 +8,11 @@
  */
 
 import type {
+  ReactDOMEventResponder,
+  ReactDOMResponderEvent,
+  ReactDOMResponderContext,
   PointerType,
-  ReactResponderEvent,
-  ReactResponderContext,
-} from 'shared/ReactTypes';
+} from 'shared/ReactDOMTypes';
 
 import React from 'react';
 import {DiscreteEvent} from 'shared/ReactTypes';
@@ -45,10 +46,7 @@ const isMac =
     ? /^Mac/.test(window.navigator.platform)
     : false;
 
-const targetEventTypes = [
-  {name: 'focus', passive: true},
-  {name: 'blur', passive: true},
-];
+const targetEventTypes = ['focus', 'blur'];
 
 const rootEventTypes = [
   'keydown',
@@ -71,7 +69,7 @@ if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
 }
 
 function createFocusEvent(
-  context: ReactResponderContext,
+  context: ReactDOMResponderContext,
   type: FocusEventType,
   target: Element | Document,
   pointerType: PointerType,
@@ -85,7 +83,7 @@ function createFocusEvent(
 }
 
 function dispatchFocusInEvents(
-  context: ReactResponderContext,
+  context: ReactDOMResponderContext,
   props: FocusProps,
   state: FocusState,
 ) {
@@ -127,7 +125,7 @@ function dispatchFocusInEvents(
 }
 
 function dispatchFocusOutEvents(
-  context: ReactResponderContext,
+  context: ReactDOMResponderContext,
   props: FocusProps,
   state: FocusState,
 ) {
@@ -158,7 +156,7 @@ function dispatchFocusOutEvents(
 }
 
 function dispatchFocusVisibleOutEvent(
-  context: ReactResponderContext,
+  context: ReactDOMResponderContext,
   props: FocusProps,
   state: FocusState,
 ) {
@@ -180,7 +178,7 @@ function dispatchFocusVisibleOutEvent(
 }
 
 function unmountResponder(
-  context: ReactResponderContext,
+  context: ReactDOMResponderContext,
   props: FocusProps,
   state: FocusState,
 ): void {
@@ -190,8 +188,8 @@ function unmountResponder(
 }
 
 function handleRootPointerEvent(
-  event: ReactResponderEvent,
-  context: ReactResponderContext,
+  event: ReactDOMResponderEvent,
+  context: ReactDOMResponderContext,
   props: FocusProps,
   state: FocusState,
 ): void {
@@ -206,8 +204,10 @@ function handleRootPointerEvent(
 
   // Focus should stop being visible if a pointer is used on the element
   // after it was focused using a keyboard.
+  const focusTarget = state.focusTarget;
   if (
-    state.focusTarget === context.getEventCurrentTarget(event) &&
+    focusTarget !== null &&
+    context.isTargetWithinNode(event.target, focusTarget) &&
     (type === 'mousedown' || type === 'touchstart' || type === 'pointerdown')
   ) {
     dispatchFocusVisibleOutEvent(context, props, state);
@@ -216,10 +216,11 @@ function handleRootPointerEvent(
 
 let isGlobalFocusVisible = true;
 
-const FocusResponder = {
+const FocusResponder: ReactDOMEventResponder = {
+  displayName: 'Focus',
   targetEventTypes,
   rootEventTypes,
-  createInitialState(): FocusState {
+  getInitialState(): FocusState {
     return {
       focusTarget: null,
       isFocused: false,
@@ -227,10 +228,9 @@ const FocusResponder = {
       pointerType: '',
     };
   },
-  allowMultipleHostChildren: false,
   onEvent(
-    event: ReactResponderEvent,
-    context: ReactResponderContext,
+    event: ReactDOMResponderEvent,
+    context: ReactDOMResponderContext,
     props: FocusProps,
     state: FocusState,
   ): void {
@@ -250,7 +250,7 @@ const FocusResponder = {
         if (!state.isFocused) {
           // Limit focus events to the direct child of the event component.
           // Browser focus is not expected to bubble.
-          state.focusTarget = context.getEventCurrentTarget(event);
+          state.focusTarget = event.responderTarget;
           if (state.focusTarget === target) {
             state.isFocused = true;
             state.isLocalFocusVisible = isGlobalFocusVisible;
@@ -270,8 +270,8 @@ const FocusResponder = {
     }
   },
   onRootEvent(
-    event: ReactResponderEvent,
-    context: ReactResponderContext,
+    event: ReactDOMResponderEvent,
+    context: ReactDOMResponderContext,
     props: FocusProps,
     state: FocusState,
   ): void {
@@ -321,14 +321,14 @@ const FocusResponder = {
     }
   },
   onUnmount(
-    context: ReactResponderContext,
+    context: ReactDOMResponderContext,
     props: FocusProps,
     state: FocusState,
   ) {
     unmountResponder(context, props, state);
   },
   onOwnershipChange(
-    context: ReactResponderContext,
+    context: ReactDOMResponderContext,
     props: FocusProps,
     state: FocusState,
   ) {
@@ -336,4 +336,8 @@ const FocusResponder = {
   },
 };
 
-export default React.unstable_createEventComponent(FocusResponder, 'Focus');
+export const Focus = React.unstable_createEvent(FocusResponder);
+
+export function useFocus(props: FocusProps): void {
+  React.unstable_useEvent(Focus, props);
+}

@@ -36,6 +36,7 @@ import {
   getCurrentPriorityLevel,
   runWithPriority,
   shouldYield,
+  requestPaint,
   now,
   ImmediatePriority,
   UserBlockingPriority,
@@ -54,11 +55,13 @@ import {
   scheduleTimeout,
   cancelTimeout,
   noTimeout,
+  warnsIfNotActing,
 } from './ReactFiberHostConfig';
 
 import {createWorkInProgress, assignFiberPropertiesInDEV} from './ReactFiber';
 import {
   NoMode,
+  StrictMode,
   ProfileMode,
   BatchedMode,
   ConcurrentMode,
@@ -172,7 +175,7 @@ const ceil = Math.ceil;
 const {
   ReactCurrentDispatcher,
   ReactCurrentOwner,
-  ReactCurrentActingRendererSigil,
+  IsSomeRendererActing,
 } = ReactSharedInternals;
 
 type ExecutionContext = number;
@@ -246,9 +249,11 @@ let nestedPassiveUpdateCount: number = 0;
 
 let interruptedBy: Fiber | null = null;
 
-// Marks the need to reschedule pending interactions at Never priority during the commit phase.
-// This enables them to be traced accross hidden boundaries or suspended SSR hydration.
-let didDeprioritizeIdleSubtree: boolean = false;
+// Marks the need to reschedule pending interactions at these expiration times
+// during the commit phase. This enables them to be traced across components
+// that spawn new work during render. E.g. hidden boundaries, suspended SSR
+// hydration or SuspenseList.
+let spawnedWorkDuringRender: null | Array<ExpirationTime> = null;
 
 // Expiration times are computed by adding to the current time (the start
 // time). However, if two updates are scheduled within the same event, we
@@ -397,7 +402,7 @@ export function scheduleUpdateOnFiber(
         // Flush the synchronous work now, wnless we're already working or inside
         // a batch. This is intentionally inside scheduleUpdateOnFiber instead of
         // scheduleCallbackForFiber to preserve the ability to schedule a callback
-        // without immediately flushing it. We only do this for user-initated
+        // without immediately flushing it. We only do this for user-initiated
         // updates, to preserve historical behavior of sync mode.
         flushSyncCallbackQueue();
       }
@@ -785,7 +790,7 @@ function prepareFreshStack(root, expirationTime) {
   workInProgressRootHasPendingPing = false;
 
   if (enableSchedulerTracing) {
-    didDeprioritizeIdleSubtree = false;
+    spawnedWorkDuringRender = null;
   }
 
   if (__DEV__) {
@@ -1195,6 +1200,14 @@ export function renderDidError() {
   if (workInProgressRootExitStatus !== RootCompleted) {
     workInProgressRootExitStatus = RootErrored;
   }
+}
+
+// Called during render to determine if anything has suspended.
+// Returns false if we're not sure.
+export function renderHasNotSuspendedYet(): boolean {
+  // If something errored or completed, we can't really be sure,
+  // so those are false.
+  return workInProgressRootExitStatus === RootIncomplete;
 }
 
 function inferTimeFromExpirationTime(expirationTime: ExpirationTime): number {
@@ -1664,6 +1677,10 @@ function commitRootImpl(root) {
 
     nextEffect = null;
 
+    // Tell Scheduler to yield at the end of the frame, so the browser has an
+    // opportunity to paint.
+    requestPaint();
+
     if (enableSchedulerTracing) {
       __interactionsRef.current = ((prevInteractions: any): Set<Interaction>);
     }
@@ -1707,9 +1724,16 @@ function commitRootImpl(root) {
     );
 
     if (enableSchedulerTracing) {
-      if (didDeprioritizeIdleSubtree) {
-        didDeprioritizeIdleSubtree = false;
-        scheduleInteractions(root, Never, root.memoizedInteractions);
+      if (spawnedWorkDuringRender !== null) {
+        const expirationTimes = spawnedWorkDuringRender;
+        spawnedWorkDuringRender = null;
+        for (let i = 0; i < expirationTimes.length; i++) {
+          scheduleInteractions(
+            root,
+            expirationTimes[i],
+            root.memoizedInteractions,
+          );
+        }
       }
     }
 
@@ -2092,10 +2116,10 @@ export function pingSuspendedRoot(
 }
 
 export function retryTimedOutBoundary(boundaryFiber: Fiber) {
-  // The boundary fiber (a Suspense component) previously timed out and was
-  // rendered in its fallback state. One of the promises that suspended it has
-  // resolved, which means at least part of the tree was likely unblocked. Try
-  // rendering again, at a new expiration time.
+  // The boundary fiber (a Suspense component or SuspenseList component)
+  // previously was rendered in its fallback state. One of the promises that
+  // suspended it has resolved, which means at least part of the tree was
+  // likely unblocked. Try rendering again, at a new expiration time.
   const currentTime = requestCurrentTime();
   const suspenseConfig = null; // Retries don't carry over the already committed update.
   const retryTime = computeExpirationForFiber(
@@ -2397,17 +2421,14 @@ function warnAboutInvalidUpdatesOnClassComponentsInDEV(fiber) {
   }
 }
 
-// We export a simple object here to be used by a renderer/test-utils
-// as the value of ReactCurrentActingRendererSigil.current
-// This identity lets us identify (ha!) when the wrong renderer's act()
-// wraps anothers' updates/effects
-export const ReactActingRendererSigil = {};
+export const IsThisRendererActing = {current: (false: boolean)};
 
 export function warnIfNotScopedWithMatchingAct(fiber: Fiber): void {
   if (__DEV__) {
     if (
-      ReactCurrentActingRendererSigil.current !== null &&
-      ReactCurrentActingRendererSigil.current !== ReactActingRendererSigil
+      warnsIfNotActing === true &&
+      IsSomeRendererActing.current === true &&
+      IsThisRendererActing.current !== true
     ) {
       warningWithoutStack(
         false,
@@ -2429,11 +2450,41 @@ export function warnIfNotScopedWithMatchingAct(fiber: Fiber): void {
   }
 }
 
+export function warnIfNotCurrentlyActingEffectsInDEV(fiber: Fiber): void {
+  if (__DEV__) {
+    if (
+      warnsIfNotActing === true &&
+      (fiber.mode & StrictMode) !== NoMode &&
+      IsSomeRendererActing.current === false &&
+      IsThisRendererActing.current === false
+    ) {
+      warningWithoutStack(
+        false,
+        'An update to %s ran an effect, but was not wrapped in act(...).\n\n' +
+          'When testing, code that causes React state updates should be ' +
+          'wrapped into act(...):\n\n' +
+          'act(() => {\n' +
+          '  /* fire events that update state */\n' +
+          '});\n' +
+          '/* assert on the output */\n\n' +
+          "This ensures that you're testing the behavior the user would see " +
+          'in the browser.' +
+          ' Learn more at https://fb.me/react-wrap-tests-with-act' +
+          '%s',
+        getComponentName(fiber.type),
+        getStackByFiberInDevAndProd(fiber),
+      );
+    }
+  }
+}
+
 function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
   if (__DEV__) {
     if (
+      warnsIfNotActing === true &&
       executionContext === NoContext &&
-      ReactCurrentActingRendererSigil.current !== ReactActingRendererSigil
+      IsSomeRendererActing.current === false &&
+      IsThisRendererActing.current === false
     ) {
       warningWithoutStack(
         false,
@@ -2532,11 +2583,15 @@ function computeThreadID(root, expirationTime) {
   return expirationTime * 1000 + root.interactionThreadID;
 }
 
-export function markDidDeprioritizeIdleSubtree() {
+export function markSpawnedWork(expirationTime: ExpirationTime) {
   if (!enableSchedulerTracing) {
     return;
   }
-  didDeprioritizeIdleSubtree = true;
+  if (spawnedWorkDuringRender === null) {
+    spawnedWorkDuringRender = [expirationTime];
+  } else {
+    spawnedWorkDuringRender.push(expirationTime);
+  }
 }
 
 function scheduleInteractions(root, expirationTime, interactions) {

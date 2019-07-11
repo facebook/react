@@ -15,7 +15,12 @@ function transform(input, options = {}) {
   return wrap(
     babel.transform(input, {
       babelrc: false,
-      plugins: ['syntax-jsx', freshPlugin],
+      plugins: [
+        'syntax-jsx',
+        'syntax-dynamic-import',
+        freshPlugin,
+        ...(options.plugins || []),
+      ],
     }).code,
   );
 }
@@ -387,6 +392,26 @@ describe('ReactFreshBabelPlugin', () => {
     ).toMatchSnapshot();
   });
 
+  it('includes custom hooks into the signatures when commonjs target is used', () => {
+    // this test is passing with Babel 6
+    // but would fail for Babel 7 _without_ custom hook node being cloned for signature
+    expect(
+      transform(
+        `
+        import {useFancyState} from './hooks';
+        
+        export default function App() {
+          const bar = useFancyState();
+          return <h1>{bar}</h1>;
+        }
+    `,
+        {
+          plugins: ['transform-es2015-modules-commonjs'],
+        },
+      ),
+    ).toMatchSnapshot();
+  });
+
   it('generates valid signature for exotic ways to call Hooks', () => {
     expect(
       transform(`
@@ -403,6 +428,33 @@ describe('ReactFreshBabelPlugin', () => {
           React.useState();
           useThePlatform();
           return <h1>{bar}{baz}</h1>;
+        }
+    `),
+    ).toMatchSnapshot();
+  });
+
+  it('does not consider require-like methods to be HOCs', () => {
+    // None of these were declared in this file.
+    // It's bad to register them because that would trigger
+    // modules to execute in an environment with inline requires.
+    // So we expect the transform to skip all of them even though
+    // they are used in JSX.
+    expect(
+      transform(`
+        const A = require('A');
+        const B = foo ? require('X') : require('Y');
+        const C = requireCond(gk, 'C');
+        const D = import('D');
+
+        export default function App() {
+          return (
+            <div>
+              <A />
+              <B />
+              <C />
+              <D />
+            </div>
+          );
         }
     `),
     ).toMatchSnapshot();

@@ -94,17 +94,6 @@ jobs:
       - *run_yarn
       - run: yarn test-prod --maxWorkers=2
 
-  test_source_fire:
-    docker: *docker
-    environment: *environment
-
-    steps:
-      - checkout
-      - *restore_yarn_cache
-      - *run_yarn
-      - run: yarn test-fire --maxWorkers=2
-      - run: yarn test-fire-prod --maxWorkers=2
-
   test_coverage:
     docker: *docker
     environment: *environment
@@ -235,9 +224,6 @@ workflows:
           requires:
             - setup
       - test_source_persistent:
-          requires:
-            - setup
-      - test_source_fire:
           requires:
             - setup
       - build:

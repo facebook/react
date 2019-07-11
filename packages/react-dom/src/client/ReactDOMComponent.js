@@ -13,12 +13,9 @@ import {registrationNameModules} from 'events/EventPluginRegistry';
 import warning from 'shared/warning';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import type {ReactEventResponderEventType} from 'shared/ReactTypes';
+import endsWith from 'shared/endsWith';
 import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
-import {
-  setListenToResponderEventTypes,
-  generateListeningKey,
-} from '../events/DOMEventResponderSystem';
+import {setListenToResponderEventTypes} from '../events/DOMEventResponderSystem';
 
 import {
   getValueForAttribute,
@@ -89,7 +86,7 @@ import {validateProperties as validateARIAProperties} from '../shared/ReactDOMIn
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
 
-import {enableEventAPI} from 'shared/ReactFeatureFlags';
+import {enableFlareAPI} from 'shared/ReactFeatureFlags';
 
 let didWarnInvalidHydration = false;
 let didWarnShadyDOM = false;
@@ -97,7 +94,6 @@ let didWarnShadyDOM = false;
 const DANGEROUSLY_SET_INNER_HTML = 'dangerouslySetInnerHTML';
 const SUPPRESS_CONTENT_EDITABLE_WARNING = 'suppressContentEditableWarning';
 const SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
-const HYDRATE_TOUCH_HIT_TARGET = 'hydrateTouchHitTarget';
 const AUTOFOCUS = 'autoFocus';
 const CHILDREN = 'children';
 const STYLE = 'style';
@@ -1034,8 +1030,6 @@ export function diffHydratedProperties(
         }
         ensureListeningTo(rootContainerElement, propKey);
       }
-    } else if (enableEventAPI && propKey === HYDRATE_TOUCH_HIT_TARGET) {
-      updatePayload = [STYLE, rawProps.style];
     } else if (
       __DEV__ &&
       // Convince Flow we've calculated it (it's DEV-only in this method.)
@@ -1287,56 +1281,35 @@ export function restoreControlledState(
 }
 
 export function listenToEventResponderEventTypes(
-  eventTypes: Array<ReactEventResponderEventType>,
+  eventTypes: Array<string>,
   element: Element | Document,
 ): void {
-  if (enableEventAPI) {
+  if (enableFlareAPI) {
     // Get the listening Set for this element. We use this to track
     // what events we're listening to.
     const listeningSet = getListeningSetForElement(element);
 
     // Go through each target event type of the event responder
     for (let i = 0, length = eventTypes.length; i < length; ++i) {
-      const targetEventType = eventTypes[i];
-      let topLevelType;
-      let passive = true;
-
-      // If no event config object is provided (i.e. - only a string),
-      // we default to enabling passive and not capture.
-      if (typeof targetEventType === 'string') {
-        topLevelType = targetEventType;
-      } else {
-        if (__DEV__) {
-          warning(
-            typeof targetEventType === 'object' && targetEventType !== null,
-            'Event Responder: invalid entry in event types array. ' +
-              'Entry must be string or an object. Instead, got %s.',
-            targetEventType,
-          );
-        }
-        const targetEventConfigObject = ((targetEventType: any): {
-          name: string,
-          passive?: boolean,
-        });
-        topLevelType = targetEventConfigObject.name;
-        if (targetEventConfigObject.passive !== undefined) {
-          passive = targetEventConfigObject.passive;
-        }
-      }
-      const listeningName = generateListeningKey(topLevelType, passive);
-      if (!listeningSet.has(listeningName)) {
+      const eventType = eventTypes[i];
+      const isPassive = !endsWith(eventType, '_active');
+      const eventKey = isPassive ? eventType + '_passive' : eventType;
+      const targetEventType = isPassive
+        ? eventType
+        : eventType.substring(0, eventType.length - 7);
+      if (!listeningSet.has(eventKey)) {
         trapEventForResponderEventSystem(
           element,
-          ((topLevelType: any): DOMTopLevelEventType),
-          passive,
+          ((targetEventType: any): DOMTopLevelEventType),
+          isPassive,
         );
-        listeningSet.add(listeningName);
+        listeningSet.add(eventKey);
       }
     }
   }
 }
 
 // We can remove this once the event API is stable and out of a flag
-if (enableEventAPI) {
+if (enableFlareAPI) {
   setListenToResponderEventTypes(listenToEventResponderEventTypes);
 }

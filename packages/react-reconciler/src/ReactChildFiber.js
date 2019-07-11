@@ -33,6 +33,7 @@ import warningWithoutStack from 'shared/warningWithoutStack';
 
 import {
   createWorkInProgress,
+  resetWorkInProgress,
   createFiberFromElement,
   createFiberFromFragment,
   createFiberFromText,
@@ -1385,4 +1386,16 @@ export function cloneChildFibers(
     newChild.return = workInProgress;
   }
   newChild.sibling = null;
+}
+
+// Reset a workInProgress child set to prepare it for a second pass.
+export function resetChildFibers(
+  workInProgress: Fiber,
+  renderExpirationTime: ExpirationTime,
+): void {
+  let child = workInProgress.child;
+  while (child !== null) {
+    resetWorkInProgress(child, renderExpirationTime);
+    child = child.sibling;
+  }
 }

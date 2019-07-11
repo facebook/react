@@ -15,6 +15,7 @@ let React;
 let ReactDOM;
 let ReactDOMServer;
 let ReactFeatureFlags;
+let ReactTestUtils;
 
 function initModules() {
   // Reset warning cache.
@@ -26,15 +27,17 @@ function initModules() {
   React = require('react');
   ReactDOM = require('react-dom');
   ReactDOMServer = require('react-dom/server');
+  ReactTestUtils = require('react-dom/test-utils');
 
   // Make them available to the helpers.
   return {
     ReactDOM,
     ReactDOMServer,
+    ReactTestUtils,
   };
 }
 
-const {resetModules, serverRender} = ReactDOMServerIntegrationUtils(
+const {resetModules, serverRender, itRenders} = ReactDOMServerIntegrationUtils(
   initModules,
 );
 
@@ -97,5 +100,25 @@ describe('ReactDOMServerSuspense', () => {
     expect(e.innerHTML).toBe(
       '<div>Children</div><!--$!--><div>Fallback</div><!--/$-->',
     );
+  });
+
+  itRenders('a SuspenseList component and its children', async render => {
+    const element = await render(
+      <React.unstable_SuspenseList>
+        <React.Suspense fallback="Loading A">
+          <div>A</div>
+        </React.Suspense>
+        <React.Suspense fallback="Loading B">
+          <div>B</div>
+        </React.Suspense>
+      </React.unstable_SuspenseList>,
+    );
+    const parent = element.parentNode;
+    const divA = parent.children[0];
+    expect(divA.tagName).toBe('DIV');
+    expect(divA.textContent).toBe('A');
+    const divB = parent.children[1];
+    expect(divB.tagName).toBe('DIV');
+    expect(divB.textContent).toBe('B');
   });
 });

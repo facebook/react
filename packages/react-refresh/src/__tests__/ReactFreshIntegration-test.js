@@ -21,32 +21,29 @@ let freshPlugin = require('react-refresh/babel');
 
 describe('ReactFreshIntegration', () => {
   let container;
-  let lastRoot;
-  let scheduleHotUpdate;
+  let exportsObj;
 
   beforeEach(() => {
-    global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
-      supportsFiber: true,
-      inject: injected => {
-        scheduleHotUpdate = injected.scheduleHotUpdate;
-      },
-      onCommitFiberRoot: (id, root) => {
-        lastRoot = root;
-      },
-      onCommitFiberUnmount: () => {},
-    };
-
-    jest.resetModules();
-    React = require('react');
-    ReactDOM = require('react-dom');
-    ReactFreshRuntime = require('react-refresh/runtime');
-    act = require('react-dom/test-utils').act;
-    container = document.createElement('div');
-    document.body.appendChild(container);
+    if (__DEV__) {
+      jest.resetModules();
+      React = require('react');
+      ReactFreshRuntime = require('react-refresh/runtime');
+      ReactFreshRuntime.injectIntoGlobalHook(global);
+      ReactDOM = require('react-dom');
+      act = require('react-dom/test-utils').act;
+      container = document.createElement('div');
+      document.body.appendChild(container);
+      exportsObj = undefined;
+    }
   });
 
   afterEach(() => {
-    document.body.removeChild(container);
+    if (__DEV__) {
+      ReactDOM.unmountComponentAtNode(container);
+      // Ensure we don't leak memory by holding onto dead roots.
+      expect(ReactFreshRuntime._getMountedRootCount()).toBe(0);
+      document.body.removeChild(container);
+    }
   });
 
   describe('with compiled destructuring', () => {
@@ -68,16 +65,20 @@ describe('ReactFreshIntegration', () => {
           compileDestructuring && 'transform-es2015-destructuring',
         ].filter(Boolean),
       }).code;
-      const exportsObj = {};
+      exportsObj = {};
       // eslint-disable-next-line no-new-func
       new Function(
         'global',
         'React',
         'exports',
-        '__register__',
-        '__signature__',
+        '$RefreshReg$',
+        '$RefreshSig$',
         compiled,
-      )(global, React, exportsObj, __register__, __signature__);
+      )(global, React, exportsObj, $RefreshReg$, $RefreshSig$);
+      // Module systems will register exports as a fallback.
+      // This is useful for cases when e.g. a class is exported,
+      // and we don't want to propagate the update beyond this module.
+      $RefreshReg$(exportsObj.default, 'exports.default');
       return exportsObj.default;
     }
 
@@ -87,45 +88,51 @@ describe('ReactFreshIntegration', () => {
         ReactDOM.render(<Component />, container);
       });
       // Module initialization shouldn't be counted as a hot update.
-      expect(ReactFreshRuntime.prepareUpdate()).toBe(null);
+      expect(ReactFreshRuntime.performReactRefresh()).toBe(null);
     }
 
     function patch(source) {
+      const prevExports = exportsObj;
       execute(source);
-      const hotUpdate = ReactFreshRuntime.prepareUpdate();
+      const nextExports = exportsObj;
+
+      // Check if exported families have changed.
+      // (In a real module system we'd do this for *all* exports.)
+      // For example, this can happen if you convert a class to a function.
+      // Or if you wrap something in a HOC.
+      let didExportsChange =
+        ReactFreshRuntime.getFamilyByType(prevExports.default) !==
+        ReactFreshRuntime.getFamilyByType(nextExports.default);
+      if (didExportsChange) {
+        // In a real module system, we would propagate such updates upwards,
+        // and re-execute modules that imported this one. (Just like if we edited them.)
+        // This makes adding/removing/renaming exports re-render references to them.
+        // Here, we'll just force a re-render using the newer type to emulate this.
+        const NextComponent = nextExports.default;
+        act(() => {
+          ReactDOM.render(<NextComponent />, container);
+        });
+      }
       act(() => {
-        scheduleHotUpdate(lastRoot, hotUpdate);
+        const result = ReactFreshRuntime.performReactRefresh();
+        if (!didExportsChange) {
+          // Normally we expect that some components got updated in our tests.
+          expect(result).not.toBe(null);
+        } else {
+          // However, we have tests where we convert functions to classes,
+          // and in those cases it's expected nothing would get updated.
+          // (Instead, the export change branch above would take care of it.)
+        }
       });
+      expect(ReactFreshRuntime._getMountedRootCount()).toBe(1);
     }
 
-    function __register__(type, id) {
+    function $RefreshReg$(type, id) {
       ReactFreshRuntime.register(type, id);
     }
 
-    function __signature__() {
-      let call = 0;
-      let savedType;
-      let hasCustomHooks;
-      return function(type, key, forceReset, getCustomHooks) {
-        switch (call++) {
-          case 0:
-            savedType = type;
-            hasCustomHooks = typeof getCustomHooks === 'function';
-            ReactFreshRuntime.setSignature(
-              type,
-              key,
-              forceReset,
-              getCustomHooks,
-            );
-            break;
-          case 1:
-            if (hasCustomHooks) {
-              ReactFreshRuntime.collectCustomHooksForSignature(savedType);
-            }
-            break;
-        }
-        return type;
-      };
+    function $RefreshSig$() {
+      return ReactFreshRuntime.createSignatureFunctionForTransform();
     }
 
     it('reloads function declarations', () => {
@@ -782,7 +789,7 @@ describe('ReactFreshIntegration', () => {
       }
     });
 
-    it('resets state on every edit with @hot reset annotation', () => {
+    it('resets state on every edit with @refresh reset annotation', () => {
       if (__DEV__) {
         render(`
           const {useState} = React;
@@ -813,7 +820,7 @@ describe('ReactFreshIntegration', () => {
           const {useState} = React;
           const S = 3;
 
-          /* @hot reset */
+          /* @refresh reset */
 
           export default function App() {
             const [foo, setFoo] = useState(S);
@@ -831,7 +838,7 @@ describe('ReactFreshIntegration', () => {
 
           export default function App() {
 
-            // @hot reset
+            // @refresh reset
 
             const [foo, setFoo] = useState(S);
             return <h1>D{foo}</h1>;
@@ -875,7 +882,7 @@ describe('ReactFreshIntegration', () => {
 
           export default function App() {
 
-            /* @hot reset */
+            /* @refresh reset */
 
             const [foo, setFoo] = useState(S);
             return <h1>G{foo}</h1>;
@@ -968,6 +975,326 @@ describe('ReactFreshIntegration', () => {
         // Different initial state, so state is reset.
         expect(container.firstChild).not.toBe(el);
         el = container.firstChild;
+        expect(el.textContent).toBe('C2');
+      }
+    });
+
+    it('remounts when switching export from function to class', () => {
+      if (__DEV__) {
+        render(`
+          export default function App() {
+            return <h1>A1</h1>;
+          }
+        `);
+        let el = container.firstChild;
+        expect(el.textContent).toBe('A1');
+        patch(`
+          export default function App() {
+            return <h1>A2</h1>;
+          }
+        `);
+        // Keep state.
+        expect(container.firstChild).toBe(el);
+        expect(el.textContent).toBe('A2');
+
+        patch(`
+          export default class App extends React.Component {
+            render() {
+              return <h1>B1</h1>
+            }
+          }
+        `);
+        // Reset (function -> class).
+        expect(container.firstChild).not.toBe(el);
+        el = container.firstChild;
+        expect(el.textContent).toBe('B1');
+        patch(`
+          export default class App extends React.Component {
+            render() {
+              return <h1>B2</h1>
+            }
+          }
+        `);
+        // Reset (classes always do).
+        expect(container.firstChild).not.toBe(el);
+        el = container.firstChild;
+        expect(el.textContent).toBe('B2');
+
+        patch(`
+          export default function App() {
+            return <h1>C1</h1>;
+          }
+        `);
+        // Reset (class -> function).
+        expect(container.firstChild).not.toBe(el);
+        el = container.firstChild;
+        expect(el.textContent).toBe('C1');
+        patch(`
+          export default function App() {
+            return <h1>C2</h1>;
+          }
+        `);
+        expect(container.firstChild).toBe(el);
+        expect(el.textContent).toBe('C2');
+
+        patch(`
+          export default function App() {
+            return <h1>D1</h1>;
+          }
+        `);
+        el = container.firstChild;
+        expect(el.textContent).toBe('D1');
+        patch(`
+          export default function App() {
+            return <h1>D2</h1>;
+          }
+        `);
+        // Keep state.
+        expect(container.firstChild).toBe(el);
+        expect(el.textContent).toBe('D2');
+      }
+    });
+
+    it('remounts when switching export from class to function', () => {
+      if (__DEV__) {
+        render(`
+          export default class App extends React.Component {
+            render() {
+              return <h1>A1</h1>
+            }
+          }
+        `);
+        let el = container.firstChild;
+        expect(el.textContent).toBe('A1');
+        patch(`
+          export default class App extends React.Component {
+            render() {
+              return <h1>A2</h1>
+            }
+          }
+        `);
+        // Reset (classes always do).
+        expect(container.firstChild).not.toBe(el);
+        el = container.firstChild;
+        expect(el.textContent).toBe('A2');
+
+        patch(`
+          export default function App() {
+            return <h1>B1</h1>;
+          }
+        `);
+        // Reset (class -> function).
+        expect(container.firstChild).not.toBe(el);
+        el = container.firstChild;
+        expect(el.textContent).toBe('B1');
+        patch(`
+          export default function App() {
+            return <h1>B2</h1>;
+          }
+        `);
+        // Keep state.
+        expect(container.firstChild).toBe(el);
+        expect(el.textContent).toBe('B2');
+
+        patch(`
+          export default class App extends React.Component {
+            render() {
+              return <h1>C1</h1>
+            }
+          }
+        `);
+        // Reset (function -> class).
+        expect(container.firstChild).not.toBe(el);
+        el = container.firstChild;
+        expect(el.textContent).toBe('C1');
+      }
+    });
+
+    it('remounts when wrapping export in a HOC', () => {
+      if (__DEV__) {
+        render(`
+          export default function App() {
+            return <h1>A1</h1>;
+          }
+        `);
+        let el = container.firstChild;
+        expect(el.textContent).toBe('A1');
+        patch(`
+          export default function App() {
+            return <h1>A2</h1>;
+          }
+        `);
+        // Keep state.
+        expect(container.firstChild).toBe(el);
+        expect(el.textContent).toBe('A2');
+
+        patch(`
+          function hoc(Inner) {
+            return function Wrapper() {
+              return <Inner />;
+            }
+          }
+
+          function App() {
+            return <h1>B1</h1>;
+          }
+
+          export default hoc(App);
+        `);
+        // Reset (wrapped in HOC).
+        expect(container.firstChild).not.toBe(el);
+        el = container.firstChild;
+        expect(el.textContent).toBe('B1');
+        patch(`
+          function hoc(Inner) {
+            return function Wrapper() {
+              return <Inner />;
+            }
+          }
+
+          function App() {
+            return <h1>B2</h1>;
+          }
+
+          export default hoc(App);
+        `);
+        // Keep state.
+        expect(container.firstChild).toBe(el);
+        expect(el.textContent).toBe('B2');
+
+        patch(`
+          export default function App() {
+            return <h1>C1</h1>;
+          }
+        `);
+        // Reset (unwrapped).
+        expect(container.firstChild).not.toBe(el);
+        el = container.firstChild;
+        expect(el.textContent).toBe('C1');
+        patch(`
+          export default function App() {
+            return <h1>C2</h1>;
+          }
+        `);
+        expect(container.firstChild).toBe(el);
+        expect(el.textContent).toBe('C2');
+      }
+    });
+
+    it('remounts when wrapping export in memo()', () => {
+      if (__DEV__) {
+        render(`
+          export default function App() {
+            return <h1>A1</h1>;
+          }
+        `);
+        let el = container.firstChild;
+        expect(el.textContent).toBe('A1');
+        patch(`
+          export default function App() {
+            return <h1>A2</h1>;
+          }
+        `);
+        // Keep state.
+        expect(container.firstChild).toBe(el);
+        expect(el.textContent).toBe('A2');
+
+        patch(`
+          function App() {
+            return <h1>B1</h1>;
+          }
+
+          export default React.memo(App);
+        `);
+        // Reset (wrapped in HOC).
+        expect(container.firstChild).not.toBe(el);
+        el = container.firstChild;
+        expect(el.textContent).toBe('B1');
+        patch(`
+          function App() {
+            return <h1>B2</h1>;
+          }
+
+          export default React.memo(App);
+        `);
+        // Keep state.
+        expect(container.firstChild).toBe(el);
+        expect(el.textContent).toBe('B2');
+
+        patch(`
+          export default function App() {
+            return <h1>C1</h1>;
+          }
+        `);
+        // Reset (unwrapped).
+        expect(container.firstChild).not.toBe(el);
+        el = container.firstChild;
+        expect(el.textContent).toBe('C1');
+        patch(`
+          export default function App() {
+            return <h1>C2</h1>;
+          }
+        `);
+        expect(container.firstChild).toBe(el);
+        expect(el.textContent).toBe('C2');
+      }
+    });
+
+    it('remounts when wrapping export in forwardRef()', () => {
+      if (__DEV__) {
+        render(`
+          export default function App() {
+            return <h1>A1</h1>;
+          }
+        `);
+        let el = container.firstChild;
+        expect(el.textContent).toBe('A1');
+        patch(`
+          export default function App() {
+            return <h1>A2</h1>;
+          }
+        `);
+        // Keep state.
+        expect(container.firstChild).toBe(el);
+        expect(el.textContent).toBe('A2');
+
+        patch(`
+          function App() {
+            return <h1>B1</h1>;
+          }
+
+          export default React.forwardRef(App);
+        `);
+        // Reset (wrapped in HOC).
+        expect(container.firstChild).not.toBe(el);
+        el = container.firstChild;
+        expect(el.textContent).toBe('B1');
+        patch(`
+          function App() {
+            return <h1>B2</h1>;
+          }
+
+          export default React.forwardRef(App);
+        `);
+        // Keep state.
+        expect(container.firstChild).toBe(el);
+        expect(el.textContent).toBe('B2');
+
+        patch(`
+          export default function App() {
+            return <h1>C1</h1>;
+          }
+        `);
+        // Reset (unwrapped).
+        expect(container.firstChild).not.toBe(el);
+        el = container.firstChild;
+        expect(el.textContent).toBe('C1');
+        patch(`
+          export default function App() {
+            return <h1>C2</h1>;
+          }
+        `);
+        expect(container.firstChild).toBe(el);
         expect(el.textContent).toBe('C2');
       }
     });

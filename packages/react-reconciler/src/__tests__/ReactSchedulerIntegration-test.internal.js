@@ -55,9 +55,22 @@ describe('ReactSchedulerIntegration', () => {
     }
   }
 
+  it('flush sync has correct priority', () => {
+    function ReadPriority() {
+      Scheduler.unstable_yieldValue(
+        'Priority: ' + getCurrentPriorityAsString(),
+      );
+      return null;
+    }
+    ReactNoop.flushSync(() => ReactNoop.render(<ReadPriority />));
+    expect(Scheduler).toHaveYielded(['Priority: Immediate']);
+  });
+
   it('has correct priority during rendering', () => {
     function ReadPriority() {
-      Scheduler.yieldValue('Priority: ' + getCurrentPriorityAsString());
+      Scheduler.unstable_yieldValue(
+        'Priority: ' + getCurrentPriorityAsString(),
+      );
       return null;
     }
     ReactNoop.render(<ReadPriority />);
@@ -76,7 +89,9 @@ describe('ReactSchedulerIntegration', () => {
 
   it('has correct priority when continuing a render after yielding', () => {
     function ReadPriority() {
-      Scheduler.yieldValue('Priority: ' + getCurrentPriorityAsString());
+      Scheduler.unstable_yieldValue(
+        'Priority: ' + getCurrentPriorityAsString(),
+      );
       return null;
     }
 
@@ -106,9 +121,11 @@ describe('ReactSchedulerIntegration', () => {
   it('layout effects have immediate priority', () => {
     const {useLayoutEffect} = React;
     function ReadPriority() {
-      Scheduler.yieldValue('Render priority: ' + getCurrentPriorityAsString());
+      Scheduler.unstable_yieldValue(
+        'Render priority: ' + getCurrentPriorityAsString(),
+      );
       useLayoutEffect(() => {
-        Scheduler.yieldValue(
+        Scheduler.unstable_yieldValue(
           'Layout priority: ' + getCurrentPriorityAsString(),
         );
       });
@@ -125,34 +142,39 @@ describe('ReactSchedulerIntegration', () => {
   it('passive effects have the same priority as render', () => {
     const {useEffect} = React;
     function ReadPriority() {
-      Scheduler.yieldValue('Render priority: ' + getCurrentPriorityAsString());
+      Scheduler.unstable_yieldValue(
+        'Render priority: ' + getCurrentPriorityAsString(),
+      );
       useEffect(() => {
-        Scheduler.yieldValue(
+        Scheduler.unstable_yieldValue(
           'Passive priority: ' + getCurrentPriorityAsString(),
         );
       });
       return null;
     }
-
-    ReactNoop.render(<ReadPriority />);
-    expect(Scheduler).toFlushAndYield([
-      'Render priority: Normal',
-      'Passive priority: Normal',
-    ]);
-
-    runWithPriority(UserBlockingPriority, () => {
+    ReactNoop.act(() => {
       ReactNoop.render(<ReadPriority />);
-    });
+      expect(Scheduler).toFlushAndYield([
+        'Render priority: Normal',
+        'Passive priority: Normal',
+      ]);
 
-    expect(Scheduler).toFlushAndYield([
-      'Render priority: UserBlocking',
-      'Passive priority: UserBlocking',
-    ]);
+      runWithPriority(UserBlockingPriority, () => {
+        ReactNoop.render(<ReadPriority />);
+      });
+
+      expect(Scheduler).toFlushAndYield([
+        'Render priority: UserBlocking',
+        'Passive priority: UserBlocking',
+      ]);
+    });
   });
 
   it('after completing a level of work, infers priority of the next batch based on its expiration time', () => {
     function App({label}) {
-      Scheduler.yieldValue(`${label} [${getCurrentPriorityAsString()}]`);
+      Scheduler.unstable_yieldValue(
+        `${label} [${getCurrentPriorityAsString()}]`,
+      );
       return label;
     }
 
@@ -164,6 +186,32 @@ describe('ReactSchedulerIntegration', () => {
 
     // The second update should run at normal priority
     expect(Scheduler).toFlushAndYield(['A [UserBlocking]', 'B [Normal]']);
+  });
+
+  it('requests a paint after committing', () => {
+    const scheduleCallback = Scheduler.unstable_scheduleCallback;
+
+    const root = ReactNoop.createRoot();
+    root.render('Initial');
+    Scheduler.unstable_flushAll();
+
+    scheduleCallback(NormalPriority, () => Scheduler.unstable_yieldValue('A'));
+    scheduleCallback(NormalPriority, () => Scheduler.unstable_yieldValue('B'));
+    scheduleCallback(NormalPriority, () => Scheduler.unstable_yieldValue('C'));
+
+    // Schedule a React render. React will request a paint after committing it.
+    root.render('Update');
+
+    // Advance time just to be sure the next tasks have lower priority
+    Scheduler.unstable_advanceTime(2000);
+
+    scheduleCallback(NormalPriority, () => Scheduler.unstable_yieldValue('D'));
+    scheduleCallback(NormalPriority, () => Scheduler.unstable_yieldValue('E'));
+
+    // Flush everything up to the next paint. Should yield after the
+    // React commit.
+    Scheduler.unstable_flushUntilNextPaint();
+    expect(Scheduler).toHaveYielded(['A', 'B', 'C']);
   });
 
   // TODO

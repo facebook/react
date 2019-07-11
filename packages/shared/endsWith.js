@@ -7,8 +7,7 @@
  * @flow
  */
 
-// This is just to get the setup running.
-// TODO: real implementation.
-// console.log('Hello from Fire host config.');
-
-export * from '../client/ReactDOMHostConfig';
+export default function endsWith(subject: string, search: string): boolean {
+  const length = subject.length;
+  return subject.substring(length - search.length, length) === search;
+}

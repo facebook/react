@@ -348,7 +348,7 @@ describe('ReactStrictMode', () => {
         unstable_isConcurrent: true,
       });
       root.update(<AsyncRoot />);
-      expect(() => Scheduler.flushAll()).toWarnDev(
+      expect(() => Scheduler.unstable_flushAll()).toWarnDev(
         'Unsafe lifecycle methods were found within a strict-mode tree:' +
           '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: AsyncRoot' +
@@ -363,7 +363,7 @@ describe('ReactStrictMode', () => {
 
       // Dedupe
       root.update(<AsyncRoot />);
-      Scheduler.flushAll();
+      Scheduler.unstable_flushAll();
     });
 
     it('should coalesce warnings by lifecycle name', () => {
@@ -395,7 +395,7 @@ describe('ReactStrictMode', () => {
       root.update(<AsyncRoot />);
 
       expect(() => {
-        expect(() => Scheduler.flushAll()).toWarnDev(
+        expect(() => Scheduler.unstable_flushAll()).toWarnDev(
           'Unsafe lifecycle methods were found within a strict-mode tree:' +
             '\n\ncomponentWillMount: Please update the following components ' +
             'to use componentDidMount instead: AsyncRoot, Parent' +
@@ -418,7 +418,7 @@ describe('ReactStrictMode', () => {
 
       // Dedupe
       root.update(<AsyncRoot />);
-      Scheduler.flushAll();
+      Scheduler.unstable_flushAll();
     });
 
     it('should warn about components not present during the initial render', () => {
@@ -444,7 +444,7 @@ describe('ReactStrictMode', () => {
         unstable_isConcurrent: true,
       });
       root.update(<AsyncRoot foo={true} />);
-      expect(() => Scheduler.flushAll()).toWarnDev(
+      expect(() => Scheduler.unstable_flushAll()).toWarnDev(
         'Unsafe lifecycle methods were found within a strict-mode tree:' +
           '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: Foo' +
@@ -454,7 +454,7 @@ describe('ReactStrictMode', () => {
       );
 
       root.update(<AsyncRoot foo={false} />);
-      expect(() => Scheduler.flushAll()).toWarnDev(
+      expect(() => Scheduler.unstable_flushAll()).toWarnDev(
         'Unsafe lifecycle methods were found within a strict-mode tree:' +
           '\n\ncomponentWillMount: Please update the following components ' +
           'to use componentDidMount instead: Bar' +
@@ -465,9 +465,9 @@ describe('ReactStrictMode', () => {
 
       // Dedupe
       root.update(<AsyncRoot foo={true} />);
-      Scheduler.flushAll();
+      Scheduler.unstable_flushAll();
       root.update(<AsyncRoot foo={false} />);
-      Scheduler.flushAll();
+      Scheduler.unstable_flushAll();
     });
 
     it('should also warn inside of "strict" mode trees', () => {

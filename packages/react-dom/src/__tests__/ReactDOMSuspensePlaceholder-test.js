@@ -96,7 +96,7 @@ describe('ReactDOMSuspensePlaceholder', () => {
 
     await advanceTimers(500);
 
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
 
     expect(window.getComputedStyle(divs[0].current).display).toEqual('block');
     expect(window.getComputedStyle(divs[1].current).display).toEqual('block');
@@ -119,7 +119,7 @@ describe('ReactDOMSuspensePlaceholder', () => {
 
     await advanceTimers(500);
 
-    Scheduler.flushAll();
+    Scheduler.unstable_flushAll();
 
     expect(container.textContent).toEqual('ABC');
   });
@@ -168,7 +168,7 @@ describe('ReactDOMSuspensePlaceholder', () => {
 
       await advanceTimers(500);
 
-      Scheduler.flushAll();
+      Scheduler.unstable_flushAll();
 
       expect(container.innerHTML).toEqual(
         '<span style="display: inline;">Sibling</span><span style="">Async</span>',

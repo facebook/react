@@ -7,9 +7,11 @@
  * @flow
  */
 import type {
-  ReactResponderEvent,
-  ReactResponderContext,
-} from 'shared/ReactTypes';
+  ReactDOMEventResponder,
+  ReactDOMResponderEvent,
+  ReactDOMResponderContext,
+} from 'shared/ReactDOMTypes';
+
 import React from 'react';
 
 type FocusScopeProps = {
@@ -23,8 +25,8 @@ type FocusScopeState = {
   currentFocusedNode: null | HTMLElement,
 };
 
-const targetEventTypes = [{name: 'keydown', passive: false}];
-const rootEventTypes = [{name: 'focus', passive: true}];
+const targetEventTypes = ['keydown_active'];
+const rootEventTypes = ['focus'];
 
 function focusElement(element: ?HTMLElement) {
   if (element != null) {
@@ -35,7 +37,7 @@ function focusElement(element: ?HTMLElement) {
 }
 
 function getFirstFocusableElement(
-  context: ReactResponderContext,
+  context: ReactDOMResponderContext,
   state: FocusScopeState,
 ): ?HTMLElement {
   const elements = context.getFocusableElementsInScope();
@@ -44,19 +46,19 @@ function getFirstFocusableElement(
   }
 }
 
-const FocusScopeResponder = {
+const FocusScopeResponder: ReactDOMEventResponder = {
+  displayName: 'FocusScope',
   targetEventTypes,
   rootEventTypes,
-  createInitialState(): FocusScopeState {
+  getInitialState(): FocusScopeState {
     return {
       nodeToRestore: null,
       currentFocusedNode: null,
     };
   },
-  allowMultipleHostChildren: true,
   onEvent(
-    event: ReactResponderEvent,
-    context: ReactResponderContext,
+    event: ReactDOMResponderEvent,
+    context: ReactDOMResponderContext,
     props: FocusScopeProps,
     state: FocusScopeState,
   ) {
@@ -112,8 +114,8 @@ const FocusScopeResponder = {
     }
   },
   onRootEvent(
-    event: ReactResponderEvent,
-    context: ReactResponderContext,
+    event: ReactDOMResponderEvent,
+    context: ReactDOMResponderContext,
     props: FocusScopeProps,
     state: FocusScopeState,
   ) {
@@ -133,7 +135,7 @@ const FocusScopeResponder = {
     }
   },
   onMount(
-    context: ReactResponderContext,
+    context: ReactDOMResponderContext,
     props: FocusScopeProps,
     state: FocusScopeState,
   ): void {
@@ -146,7 +148,7 @@ const FocusScopeResponder = {
     }
   },
   onUnmount(
-    context: ReactResponderContext,
+    context: ReactDOMResponderContext,
     props: FocusScopeProps,
     state: FocusScopeState,
   ): void {
@@ -156,7 +158,4 @@ const FocusScopeResponder = {
   },
 };
 
-export default React.unstable_createEventComponent(
-  FocusScopeResponder,
-  'FocusScope',
-);
+export default React.unstable_createEvent(FocusScopeResponder);

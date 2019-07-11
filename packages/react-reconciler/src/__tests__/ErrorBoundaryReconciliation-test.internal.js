@@ -58,7 +58,7 @@ describe('ErrorBoundaryReconciliation', () => {
         </ErrorBoundary>,
         {unstable_isConcurrent: isConcurrent},
       );
-      Scheduler.flushAll();
+      Scheduler.unstable_flushAll();
       expect(renderer).toMatchRenderedOutput(<span prop="BrokenRender" />);
 
       expect(() => {
@@ -67,7 +67,7 @@ describe('ErrorBoundaryReconciliation', () => {
             <BrokenRender fail={true} />
           </ErrorBoundary>,
         );
-        Scheduler.flushAll();
+        Scheduler.unstable_flushAll();
       }).toWarnDev(isConcurrent ? ['invalid', 'invalid'] : ['invalid']);
       const Fallback = fallbackTagName;
       expect(renderer).toMatchRenderedOutput(<Fallback prop="ErrorBoundary" />);

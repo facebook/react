@@ -8,29 +8,29 @@
  */
 
 import type {
-  ReactResponderEvent,
-  ReactResponderContext,
-} from 'shared/ReactTypes';
+  ReactDOMEventResponder,
+  ReactDOMResponderEvent,
+  ReactDOMResponderContext,
+} from 'shared/ReactDOMTypes';
 import type {EventPriority} from 'shared/ReactTypes';
 
 import React from 'react';
 import {UserBlockingEvent, DiscreteEvent} from 'shared/ReactTypes';
 
 const targetEventTypes = ['pointerdown'];
-const rootEventTypes = [
-  'pointerup',
-  'pointercancel',
-  {name: 'pointermove', passive: false},
-];
+const rootEventTypes = ['pointerup', 'pointercancel', 'pointermove_active'];
 
 // In the case we don't have PointerEvents (Safari), we listen to touch events
 // too
 if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
   targetEventTypes.push('touchstart', 'mousedown');
-  rootEventTypes.push('mouseup', 'mousemove', 'touchend', 'touchcancel', {
-    name: 'touchmove',
-    passive: false,
-  });
+  rootEventTypes.push(
+    'mouseup',
+    'mousemove',
+    'touchend',
+    'touchcancel',
+    'touchmove_active',
+  );
 }
 
 type EventData = {
@@ -48,7 +48,7 @@ type SwipeEvent = {|
 |};
 
 function createSwipeEvent(
-  context: ReactResponderContext,
+  context: ReactDOMResponderContext,
   type: SwipeEventType,
   target: Element | Document,
   eventData?: EventData,
@@ -64,7 +64,7 @@ function createSwipeEvent(
 }
 
 function dispatchSwipeEvent(
-  context: ReactResponderContext,
+  context: ReactDOMResponderContext,
   name: SwipeEventType,
   listener: SwipeEvent => void,
   state: SwipeState,
@@ -88,9 +88,10 @@ type SwipeState = {
   y: number,
 };
 
-const SwipeResponder = {
+const SwipeResponder: ReactDOMEventResponder = {
+  displayName: 'Scroll',
   targetEventTypes,
-  createInitialState(): SwipeState {
+  getInitialState(): SwipeState {
     return {
       direction: 0,
       isSwiping: false,
@@ -103,10 +104,9 @@ const SwipeResponder = {
       y: 0,
     };
   },
-  allowMultipleHostChildren: false,
   onEvent(
-    event: ReactResponderEvent,
-    context: ReactResponderContext,
+    event: ReactDOMResponderEvent,
+    context: ReactDOMResponderContext,
     props: Object,
     state: SwipeState,
   ): void {
@@ -147,8 +147,8 @@ const SwipeResponder = {
     }
   },
   onRootEvent(
-    event: ReactResponderEvent,
-    context: ReactResponderContext,
+    event: ReactDOMResponderEvent,
+    context: ReactDOMResponderContext,
     props: Object,
     state: SwipeState,
   ): void {
@@ -262,4 +262,8 @@ const SwipeResponder = {
   },
 };
 
-export default React.unstable_createEventComponent(SwipeResponder, 'Swipe');
+export const Swipe = React.unstable_createEvent(SwipeResponder);
+
+export function useSwipe(props: Object): void {
+  React.unstable_useEvent(Swipe, props);
+}

@@ -8,9 +8,10 @@
  */
 
 import type {
-  ReactResponderEvent,
-  ReactResponderContext,
-} from 'shared/ReactTypes';
+  ReactDOMEventResponder,
+  ReactDOMResponderEvent,
+  ReactDOMResponderContext,
+} from 'shared/ReactDOMTypes';
 
 import React from 'react';
 import {UserBlockingEvent} from 'shared/ReactTypes';
@@ -30,7 +31,6 @@ type HoverState = {
   hoverTarget: null | Element | Document,
   isActiveHovered: boolean,
   isHovered: boolean,
-  isOverTouchHitTarget: boolean,
   isTouched: boolean,
   hoverStartTimeout: null | number,
   hoverEndTimeout: null | number,
@@ -69,8 +69,8 @@ if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
 }
 
 function createHoverEvent(
-  event: ?ReactResponderEvent,
-  context: ReactResponderContext,
+  event: ?ReactDOMResponderEvent,
+  context: ReactDOMResponderContext,
   type: HoverEventType,
   target: Element | Document,
 ): HoverEvent {
@@ -102,8 +102,8 @@ function createHoverEvent(
 }
 
 function dispatchHoverChangeEvent(
-  event: null | ReactResponderEvent,
-  context: ReactResponderContext,
+  event: null | ReactDOMResponderEvent,
+  context: ReactDOMResponderContext,
   props: HoverProps,
   state: HoverState,
 ): void {
@@ -121,8 +121,8 @@ function dispatchHoverChangeEvent(
 }
 
 function dispatchHoverStartEvents(
-  event: ReactResponderEvent,
-  context: ReactResponderContext,
+  event: ReactDOMResponderEvent,
+  context: ReactDOMResponderContext,
   props: HoverProps,
   state: HoverState,
 ): void {
@@ -184,8 +184,8 @@ function dispatchHoverStartEvents(
 }
 
 function dispatchHoverEndEvents(
-  event: null | ReactResponderEvent,
-  context: ReactResponderContext,
+  event: null | ReactDOMResponderEvent,
+  context: ReactDOMResponderContext,
   props: HoverProps,
   state: HoverState,
 ) {
@@ -227,8 +227,6 @@ function dispatchHoverEndEvents(
     if (props.onHoverChange) {
       dispatchHoverChangeEvent(event, context, props, state);
     }
-
-    state.isOverTouchHitTarget = false;
     state.hoverTarget = null;
     state.ignoreEmulatedMouseEvents = false;
     state.isTouched = false;
@@ -256,7 +254,7 @@ function calculateDelayMS(delay: ?number, min = 0, fallback = 0) {
 }
 
 function unmountResponder(
-  context: ReactResponderContext,
+  context: ReactDOMResponderContext,
   props: HoverProps,
   state: HoverState,
 ): void {
@@ -273,13 +271,13 @@ function isEmulatedMouseEvent(event, state) {
   );
 }
 
-const HoverResponder = {
+const HoverResponder: ReactDOMEventResponder = {
+  displayName: 'Hover',
   targetEventTypes,
-  createInitialState() {
+  getInitialState() {
     return {
       isActiveHovered: false,
       isHovered: false,
-      isOverTouchHitTarget: false,
       isTouched: false,
       hoverStartTimeout: null,
       hoverEndTimeout: null,
@@ -287,9 +285,10 @@ const HoverResponder = {
     };
   },
   allowMultipleHostChildren: false,
+  allowEventHooks: true,
   onEvent(
-    event: ReactResponderEvent,
-    context: ReactResponderContext,
+    event: ReactDOMResponderEvent,
+    context: ReactDOMResponderContext,
     props: HoverProps,
     state: HoverState,
   ): void {
@@ -322,12 +321,7 @@ const HoverResponder = {
           if (isEmulatedMouseEvent(event, state)) {
             return;
           }
-
-          if (context.isEventWithinTouchHitTarget(event)) {
-            state.isOverTouchHitTarget = true;
-            return;
-          }
-          state.hoverTarget = context.getEventCurrentTarget(event);
+          state.hoverTarget = event.responderTarget;
           state.ignoreEmulatedMouseEvents = true;
           dispatchHoverStartEvents(event, context, props, state);
         }
@@ -338,36 +332,18 @@ const HoverResponder = {
       case 'pointermove':
       case 'mousemove': {
         if (state.isHovered && !isEmulatedMouseEvent(event, state)) {
-          if (state.isHovered) {
-            if (state.isOverTouchHitTarget) {
-              // If we were moving over the TouchHitTarget and have now moved
-              // over the Responder target
-              if (!context.isEventWithinTouchHitTarget(event)) {
-                dispatchHoverStartEvents(event, context, props, state);
-                state.isOverTouchHitTarget = false;
-              }
-            } else {
-              // If we were moving over the Responder target and have now moved
-              // over the TouchHitTarget
-              if (context.isEventWithinTouchHitTarget(event)) {
-                dispatchHoverEndEvents(event, context, props, state);
-                state.isOverTouchHitTarget = true;
-              } else {
-                if (props.onHoverMove && state.hoverTarget !== null) {
-                  const syntheticEvent = createHoverEvent(
-                    event,
-                    context,
-                    'hovermove',
-                    state.hoverTarget,
-                  );
-                  context.dispatchEvent(
-                    syntheticEvent,
-                    props.onHoverMove,
-                    UserBlockingEvent,
-                  );
-                }
-              }
-            }
+          if (props.onHoverMove && state.hoverTarget !== null) {
+            const syntheticEvent = createHoverEvent(
+              event,
+              context,
+              'hovermove',
+              state.hoverTarget,
+            );
+            context.dispatchEvent(
+              syntheticEvent,
+              props.onHoverMove,
+              UserBlockingEvent,
+            );
           }
         }
         return;
@@ -391,14 +367,14 @@ const HoverResponder = {
     }
   },
   onUnmount(
-    context: ReactResponderContext,
+    context: ReactDOMResponderContext,
     props: HoverProps,
     state: HoverState,
   ) {
     unmountResponder(context, props, state);
   },
   onOwnershipChange(
-    context: ReactResponderContext,
+    context: ReactDOMResponderContext,
     props: HoverProps,
     state: HoverState,
   ) {
@@ -406,4 +382,8 @@ const HoverResponder = {
   },
 };
 
-export default React.unstable_createEventComponent(HoverResponder, 'Hover');
+export const Hover = React.unstable_createEvent(HoverResponder);
+
+export function useHover(props: HoverProps): void {
+  React.unstable_useEvent(Hover, props);
+}

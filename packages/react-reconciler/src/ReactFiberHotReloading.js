@@ -11,12 +11,15 @@ import type {ReactElement} from 'shared/ReactElementType';
 import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {Instance} from './ReactFiberHostConfig';
+import type {ReactNodeList} from 'shared/ReactTypes';
 
 import {
   flushSync,
   scheduleWork,
   flushPassiveEffects,
 } from './ReactFiberWorkLoop';
+import {updateContainerAtExpirationTime} from './ReactFiberReconciler';
+import {emptyContextObject} from './ReactFiberContext';
 import {Sync} from './ReactFiberExpirationTime';
 import {
   ClassComponent,
@@ -38,15 +41,32 @@ export type Family = {|
   current: any,
 |};
 
-export type HotUpdate = {|
-  resolveFamily: (any => Family | void) | null,
+export type RefreshUpdate = {|
   staleFamilies: Set<Family>,
   updatedFamilies: Set<Family>,
 |};
 
-let resolveFamily: (any => Family | void) | null = null;
+// Resolves type to a family.
+type RefreshHandler = any => Family | void;
+
+// Used by React Refresh runtime through DevTools Global Hook.
+export type SetRefreshHandler = (handler: RefreshHandler | null) => void;
+export type ScheduleRefresh = (root: FiberRoot, update: RefreshUpdate) => void;
+export type ScheduleRoot = (root: FiberRoot, element: ReactNodeList) => void;
+export type FindHostInstancesForRefresh = (
+  root: FiberRoot,
+  families: Array<Family>,
+) => Set<Instance>;
+
+let resolveFamily: RefreshHandler | null = null;
 // $FlowFixMe Flow gets confused by a WeakSet feature check below.
 let failedBoundaries: WeakSet<Fiber> | null = null;
+
+export let setRefreshHandler = (handler: RefreshHandler | null): void => {
+  if (__DEV__) {
+    resolveFamily = handler;
+  }
+};
 
 export function resolveFunctionForHotReloading(type: any): any {
   if (__DEV__) {
@@ -192,7 +212,7 @@ export function isCompatibleFamilyForHotReloading(
 export function markFailedErrorBoundaryForHotReloading(fiber: Fiber) {
   if (__DEV__) {
     if (resolveFamily === null) {
-      // Not hot reloading.
+      // Hot reloading is disabled.
       return;
     }
     if (typeof WeakSet !== 'function') {
@@ -205,12 +225,16 @@ export function markFailedErrorBoundaryForHotReloading(fiber: Fiber) {
   }
 }
 
-export function scheduleHotUpdate(root: FiberRoot, hotUpdate: HotUpdate): void {
+export let scheduleRefresh: ScheduleRefresh = (
+  root: FiberRoot,
+  update: RefreshUpdate,
+): void => {
   if (__DEV__) {
-    // TODO: warn if its identity changes over time?
-    resolveFamily = hotUpdate.resolveFamily;
-
-    const {staleFamilies, updatedFamilies} = hotUpdate;
+    if (resolveFamily === null) {
+      // Hot reloading is disabled.
+      return;
+    }
+    const {staleFamilies, updatedFamilies} = update;
     flushPassiveEffects();
     flushSync(() => {
       scheduleFibersWithFamiliesRecursively(
@@ -220,7 +244,23 @@ export function scheduleHotUpdate(root: FiberRoot, hotUpdate: HotUpdate): void {
       );
     });
   }
-}
+};
+
+export let scheduleRoot: ScheduleRoot = (
+  root: FiberRoot,
+  element: ReactNodeList,
+): void => {
+  if (__DEV__) {
+    if (root.context !== emptyContextObject) {
+      // Super edge case: root has a legacy _renderSubtree context
+      // but we don't know the parentComponent so we can't pass it.
+      // Just ignore. We'll delete this with _renderSubtree code path later.
+      return;
+    }
+    flushPassiveEffects();
+    updateContainerAtExpirationTime(element, root, null, Sync, null);
+  }
+};
 
 function scheduleFibersWithFamiliesRecursively(
   fiber: Fiber,
@@ -292,10 +332,10 @@ function scheduleFibersWithFamiliesRecursively(
   }
 }
 
-export function findHostInstancesForHotUpdate(
+export let findHostInstancesForRefresh: FindHostInstancesForRefresh = (
   root: FiberRoot,
   families: Array<Family>,
-): Set<Instance> {
+): Set<Instance> => {
   if (__DEV__) {
     const hostInstances = new Set();
     const types = new Set(families.map(family => family.current));
@@ -307,10 +347,10 @@ export function findHostInstancesForHotUpdate(
     return hostInstances;
   } else {
     throw new Error(
-      'Did not expect findHostInstancesForHotUpdate to be called in production.',
+      'Did not expect findHostInstancesForRefresh to be called in production.',
     );
   }
-}
+};
 
 function findHostInstancesForMatchingFibersRecursively(
   fiber: Fiber,

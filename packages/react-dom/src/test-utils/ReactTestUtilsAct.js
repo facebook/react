@@ -33,19 +33,19 @@ const [
   runEventsInBatch,
   /* eslint-enable no-unused-vars */
   flushPassiveEffects,
-  ReactActingRendererSigil,
+  IsThisRendererActing,
 ] = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
 
 const batchedUpdates = ReactDOM.unstable_batchedUpdates;
 
-const {ReactCurrentActingRendererSigil} = ReactSharedInternals;
+const {IsSomeRendererActing} = ReactSharedInternals;
 
 // this implementation should be exactly the same in
 // ReactTestUtilsAct.js, ReactTestRendererAct.js, createReactNoop.js
 
 let hasWarnedAboutMissingMockScheduler = false;
 const flushWork =
-  Scheduler.unstable_flushWithoutYielding ||
+  Scheduler.unstable_flushAllWithoutAsserting ||
   function() {
     if (warnAboutMissingMockScheduler === true) {
       if (hasWarnedAboutMissingMockScheduler === false) {
@@ -86,17 +86,21 @@ let actingUpdatesScopeDepth = 0;
 
 function act(callback: () => Thenable) {
   let previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
-  let previousActingUpdatesSigil;
+  let previousIsSomeRendererActing;
+  let previousIsThisRendererActing;
   actingUpdatesScopeDepth++;
   if (__DEV__) {
-    previousActingUpdatesSigil = ReactCurrentActingRendererSigil.current;
-    ReactCurrentActingRendererSigil.current = ReactActingRendererSigil;
+    previousIsSomeRendererActing = IsSomeRendererActing.current;
+    previousIsThisRendererActing = IsThisRendererActing.current;
+    IsSomeRendererActing.current = true;
+    IsThisRendererActing.current = true;
   }
 
   function onDone() {
     actingUpdatesScopeDepth--;
     if (__DEV__) {
-      ReactCurrentActingRendererSigil.current = previousActingUpdatesSigil;
+      IsSomeRendererActing.current = previousIsSomeRendererActing;
+      IsThisRendererActing.current = previousIsThisRendererActing;
       if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
         // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
         warningWithoutStack(
@@ -108,7 +112,15 @@ function act(callback: () => Thenable) {
     }
   }
 
-  const result = batchedUpdates(callback);
+  let result;
+  try {
+    result = batchedUpdates(callback);
+  } catch (error) {
+    // on sync errors, we still want to 'cleanup' and decrement actingUpdatesScopeDepth
+    onDone();
+    throw error;
+  }
+
   if (
     result !== null &&
     typeof result === 'object' &&

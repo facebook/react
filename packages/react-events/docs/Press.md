@@ -1,11 +1,11 @@
 # Press
 
 The `Press` module responds to press events on the element it wraps. Press
-events are dispatched for `mouse`, `pen`, `touch`, and `keyboard` pointer types.
-Press events are only dispatched for keyboards when pressing the Enter or
-Spacebar keys. If neither `onPress` nor `onLongPress` are called, this signifies
-that the press ended outside of the element hit bounds (i.e., the user aborted
-the press).
+events are dispatched for `mouse`, `pen`, `touch`, `trackpad`, and `keyboard`
+pointer types. Press events are only dispatched for keyboards when pressing the
+Enter or Spacebar keys. If neither `onPress` nor `onLongPress` are called, this
+signifies that the press ended outside of the element hit bounds (i.e., the user
+aborted the press).
 
 Press events do not propagate between `Press` event responders.
 
@@ -37,9 +37,34 @@ const Button = (props) => (
 
 ```js
 type PressEvent = {
-  pointerType: 'mouse' | 'touch' | 'pen' | 'keyboard',
+  altKey: boolean,
+  ctrlKey: boolean,
+  defaultPrevented: boolean,
+  metaKey: boolean,
+  pageX: number,
+  pageY: number,
+  pointerType:
+    | 'mouse'
+    | 'touch'
+    | 'pen'
+    | 'trackpad'
+    | 'keyboard',
+  screenX: number,
+  screenY: number,
+  shiftKey: boolean,
   target: Element,
-  type: 'press' | 'pressstart' | 'pressend' | 'presschange' | 'pressmove' | 'longpress' | 'longpresschange'
+  timeStamp: number,
+  type:
+    | 'press'
+    | 'pressstart'
+    | 'pressend'
+    | 'presschange'
+    | 'pressmove'
+    | 'longpress'
+    | 'longpresschange'
+    | 'contextmenu',
+  x: number,
+  y: number
 }
 
 type PressOffset = {
@@ -71,6 +96,11 @@ released before the threshold is exceeded.
 
 Disables all `Press` events.
 
+### onContextMenu: (e: PressEvent) => void
+
+Called when the context menu is shown. When a press is active, the context menu
+will only be shown (and the press cancelled) if `preventDefault` is `false`.
+
 ### onLongPress: (e: PressEvent) => void
 
 Called once the element has been pressed for the length of `delayLongPress`. If
@@ -89,7 +119,7 @@ Determines whether calling `onPress` should be cancelled if `onLongPress` or
 
 Called immediately after a press is released, unless either 1) the press is
 released outside the hit bounds of the element (accounting for
-`pressRetentionOffset` and `TouchHitTarget`), or 2) the press was a long press,
+`pressRetentionOffset`), or 2) the press was a long press,
 and `onLongPress` or `onLongPressChange` props are provided, and
 `onLongPressCancelsPress()` is `true`.
 
@@ -124,6 +154,11 @@ element before it is deactivated. Once deactivated, the pointer (still held
 down) can be moved back within the bounds of the element to reactivate it.
 Ensure you pass in a constant to reduce memory allocations. Default is `20` for
 each offset.
+
+### preventContextMenu: boolean = false
+
+Prevents the native context menu from being shown, but `onContextMenu`
+is still called.
 
 ### preventDefault: boolean = true
 

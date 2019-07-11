@@ -46,19 +46,14 @@ export const REACT_FORWARD_REF_TYPE = hasSymbol
 export const REACT_SUSPENSE_TYPE = hasSymbol
   ? Symbol.for('react.suspense')
   : 0xead1;
+export const REACT_SUSPENSE_LIST_TYPE = hasSymbol
+  ? Symbol.for('react.suspense_list')
+  : 0xead8;
 export const REACT_MEMO_TYPE = hasSymbol ? Symbol.for('react.memo') : 0xead3;
 export const REACT_LAZY_TYPE = hasSymbol ? Symbol.for('react.lazy') : 0xead4;
 export const REACT_EVENT_COMPONENT_TYPE = hasSymbol
   ? Symbol.for('react.event_component')
   : 0xead5;
-export const REACT_EVENT_TARGET_TYPE = hasSymbol
-  ? Symbol.for('react.event_target')
-  : 0xead6;
-
-// React event targets
-export const REACT_EVENT_TARGET_TOUCH_HIT = hasSymbol
-  ? Symbol.for('react.event_target.touch_hit')
-  : 0xead7;
 
 const MAYBE_ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
 const FAUX_ITERATOR_SYMBOL = '@@iterator';

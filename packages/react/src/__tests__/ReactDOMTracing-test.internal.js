@@ -69,13 +69,13 @@ describe('ReactDOMTracing', () => {
       it('traces interaction through hidden subtree', () => {
         const Child = () => {
           const [didMount, setDidMount] = React.useState(false);
-          Scheduler.yieldValue('Child');
+          Scheduler.unstable_yieldValue('Child');
           React.useEffect(
             () => {
               if (didMount) {
-                Scheduler.yieldValue('Child:update');
+                Scheduler.unstable_yieldValue('Child:update');
               } else {
-                Scheduler.yieldValue('Child:mount');
+                Scheduler.unstable_yieldValue('Child:mount');
                 setDidMount(true);
               }
             },
@@ -85,9 +85,9 @@ describe('ReactDOMTracing', () => {
         };
 
         const App = () => {
-          Scheduler.yieldValue('App');
+          Scheduler.unstable_yieldValue('App');
           React.useEffect(() => {
-            Scheduler.yieldValue('App:mount');
+            Scheduler.unstable_yieldValue('App:mount');
           }, []);
           return (
             <div hidden={true}>
@@ -104,34 +104,32 @@ describe('ReactDOMTracing', () => {
         const root = ReactDOM.unstable_createRoot(container);
         SchedulerTracing.unstable_trace('initialization', 0, () => {
           interaction = Array.from(SchedulerTracing.unstable_getCurrent())[0];
+          TestUtils.act(() => {
+            root.render(
+              <React.Profiler id="test" onRender={onRender}>
+                <App />
+              </React.Profiler>,
+            );
+            expect(onInteractionTraced).toHaveBeenCalledTimes(1);
+            expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
+              interaction,
+            );
+            expect(Scheduler).toFlushAndYieldThrough(['App', 'App:mount']);
+            expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+            expect(onRender).toHaveBeenCalledTimes(1);
+            expect(onRender).toHaveLastRenderedWithInteractions(
+              new Set([interaction]),
+            );
+            expect(Scheduler).toFlushAndYieldThrough(['Child', 'Child:mount']);
+            expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+            expect(onRender).toHaveBeenCalledTimes(2);
+            expect(onRender).toHaveLastRenderedWithInteractions(
+              new Set([interaction]),
+            );
 
-          root.render(
-            <React.Profiler id="test" onRender={onRender}>
-              <App />
-            </React.Profiler>,
-          );
+            expect(Scheduler).toFlushAndYield(['Child', 'Child:update']);
+          });
         });
-
-        expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-        expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
-          interaction,
-        );
-
-        expect(Scheduler).toFlushAndYieldThrough(['App', 'App:mount']);
-        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
-        expect(onRender).toHaveBeenCalledTimes(1);
-        expect(onRender).toHaveLastRenderedWithInteractions(
-          new Set([interaction]),
-        );
-
-        expect(Scheduler).toFlushAndYieldThrough(['Child', 'Child:mount']);
-        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
-        expect(onRender).toHaveBeenCalledTimes(2);
-        expect(onRender).toHaveLastRenderedWithInteractions(
-          new Set([interaction]),
-        );
-
-        expect(Scheduler).toFlushAndYield(['Child', 'Child:update']);
         expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
         expect(
           onInteractionScheduledWorkCompleted,
@@ -144,17 +142,17 @@ describe('ReactDOMTracing', () => {
 
       it('traces interaction through hidden subtree when there is other pending traced work', () => {
         const Child = () => {
-          Scheduler.yieldValue('Child');
+          Scheduler.unstable_yieldValue('Child');
           return <div />;
         };
 
         let wrapped = null;
 
         const App = () => {
-          Scheduler.yieldValue('App');
+          Scheduler.unstable_yieldValue('App');
           React.useEffect(() => {
             wrapped = SchedulerTracing.unstable_wrap(() => {});
-            Scheduler.yieldValue('App:mount');
+            Scheduler.unstable_yieldValue('App:mount');
           }, []);
           return (
             <div hidden={true}>
@@ -172,33 +170,34 @@ describe('ReactDOMTracing', () => {
         SchedulerTracing.unstable_trace('initialization', 0, () => {
           interaction = Array.from(SchedulerTracing.unstable_getCurrent())[0];
 
-          root.render(
-            <React.Profiler id="test" onRender={onRender}>
-              <App />
-            </React.Profiler>,
-          );
+          TestUtils.act(() => {
+            root.render(
+              <React.Profiler id="test" onRender={onRender}>
+                <App />
+              </React.Profiler>,
+            );
+            expect(onInteractionTraced).toHaveBeenCalledTimes(1);
+            expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
+              interaction,
+            );
+
+            expect(Scheduler).toFlushAndYieldThrough(['App', 'App:mount']);
+            expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+            expect(onRender).toHaveBeenCalledTimes(1);
+            expect(onRender).toHaveLastRenderedWithInteractions(
+              new Set([interaction]),
+            );
+
+            expect(wrapped).not.toBeNull();
+
+            expect(Scheduler).toFlushAndYield(['Child']);
+            expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+            expect(onRender).toHaveBeenCalledTimes(2);
+            expect(onRender).toHaveLastRenderedWithInteractions(
+              new Set([interaction]),
+            );
+          });
         });
-
-        expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-        expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
-          interaction,
-        );
-
-        expect(Scheduler).toFlushAndYieldThrough(['App', 'App:mount']);
-        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
-        expect(onRender).toHaveBeenCalledTimes(1);
-        expect(onRender).toHaveLastRenderedWithInteractions(
-          new Set([interaction]),
-        );
-
-        expect(wrapped).not.toBeNull();
-
-        expect(Scheduler).toFlushAndYield(['Child']);
-        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
-        expect(onRender).toHaveBeenCalledTimes(2);
-        expect(onRender).toHaveLastRenderedWithInteractions(
-          new Set([interaction]),
-        );
 
         wrapped();
         expect(onInteractionTraced).toHaveBeenCalledTimes(1);
@@ -211,13 +210,13 @@ describe('ReactDOMTracing', () => {
       it('traces interaction through hidden subtree that schedules more idle/never work', () => {
         const Child = () => {
           const [didMount, setDidMount] = React.useState(false);
-          Scheduler.yieldValue('Child');
+          Scheduler.unstable_yieldValue('Child');
           React.useLayoutEffect(
             () => {
               if (didMount) {
-                Scheduler.yieldValue('Child:update');
+                Scheduler.unstable_yieldValue('Child:update');
               } else {
-                Scheduler.yieldValue('Child:mount');
+                Scheduler.unstable_yieldValue('Child:mount');
                 Scheduler.unstable_runWithPriority(
                   Scheduler.unstable_IdlePriority,
                   () => setDidMount(true),
@@ -230,9 +229,9 @@ describe('ReactDOMTracing', () => {
         };
 
         const App = () => {
-          Scheduler.yieldValue('App');
+          Scheduler.unstable_yieldValue('App');
           React.useEffect(() => {
-            Scheduler.yieldValue('App:mount');
+            Scheduler.unstable_yieldValue('App:mount');
           }, []);
           return (
             <div hidden={true}>
@@ -249,34 +248,35 @@ describe('ReactDOMTracing', () => {
         const root = ReactDOM.unstable_createRoot(container);
         SchedulerTracing.unstable_trace('initialization', 0, () => {
           interaction = Array.from(SchedulerTracing.unstable_getCurrent())[0];
+          TestUtils.act(() => {
+            root.render(
+              <React.Profiler id="test" onRender={onRender}>
+                <App />
+              </React.Profiler>,
+            );
+            expect(onInteractionTraced).toHaveBeenCalledTimes(1);
+            expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
+              interaction,
+            );
 
-          root.render(
-            <React.Profiler id="test" onRender={onRender}>
-              <App />
-            </React.Profiler>,
-          );
+            expect(Scheduler).toFlushAndYieldThrough(['App', 'App:mount']);
+            expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+            expect(onRender).toHaveBeenCalledTimes(1);
+            expect(onRender).toHaveLastRenderedWithInteractions(
+              new Set([interaction]),
+            );
+
+            expect(Scheduler).toFlushAndYieldThrough(['Child', 'Child:mount']);
+            expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+            expect(onRender).toHaveBeenCalledTimes(2);
+            expect(onRender).toHaveLastRenderedWithInteractions(
+              new Set([interaction]),
+            );
+
+            expect(Scheduler).toFlushAndYield(['Child', 'Child:update']);
+          });
         });
 
-        expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-        expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
-          interaction,
-        );
-
-        expect(Scheduler).toFlushAndYieldThrough(['App', 'App:mount']);
-        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
-        expect(onRender).toHaveBeenCalledTimes(1);
-        expect(onRender).toHaveLastRenderedWithInteractions(
-          new Set([interaction]),
-        );
-
-        expect(Scheduler).toFlushAndYieldThrough(['Child', 'Child:mount']);
-        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
-        expect(onRender).toHaveBeenCalledTimes(2);
-        expect(onRender).toHaveLastRenderedWithInteractions(
-          new Set([interaction]),
-        );
-
-        expect(Scheduler).toFlushAndYield(['Child', 'Child:update']);
         expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
         expect(
           onInteractionScheduledWorkCompleted,
@@ -289,14 +289,14 @@ describe('ReactDOMTracing', () => {
 
       it('does not continue interactions across pre-existing idle work', () => {
         const Child = () => {
-          Scheduler.yieldValue('Child');
+          Scheduler.unstable_yieldValue('Child');
           return <div />;
         };
 
         let update = null;
 
         const WithHiddenWork = () => {
-          Scheduler.yieldValue('WithHiddenWork');
+          Scheduler.unstable_yieldValue('WithHiddenWork');
           return (
             <div hidden={true}>
               <Child />
@@ -305,9 +305,9 @@ describe('ReactDOMTracing', () => {
         };
 
         const Updater = () => {
-          Scheduler.yieldValue('Updater');
+          Scheduler.unstable_yieldValue('Updater');
           React.useEffect(() => {
-            Scheduler.yieldValue('Updater:effect');
+            Scheduler.unstable_yieldValue('Updater:effect');
           });
 
           const setCount = React.useState(0)[1];
@@ -319,9 +319,9 @@ describe('ReactDOMTracing', () => {
         };
 
         const App = () => {
-          Scheduler.yieldValue('App');
+          Scheduler.unstable_yieldValue('App');
           React.useEffect(() => {
-            Scheduler.yieldValue('App:effect');
+            Scheduler.unstable_yieldValue('App:effect');
           });
 
           return (
@@ -389,7 +389,7 @@ describe('ReactDOMTracing', () => {
 
       it('should properly trace interactions when there is work of interleaved priorities', () => {
         const Child = () => {
-          Scheduler.yieldValue('Child');
+          Scheduler.unstable_yieldValue('Child');
           return <div />;
         };
 
@@ -399,9 +399,9 @@ describe('ReactDOMTracing', () => {
         const MaybeHiddenWork = () => {
           const [flag, setFlag] = React.useState(false);
           scheduleUpdateWithHidden = () => setFlag(true);
-          Scheduler.yieldValue('MaybeHiddenWork');
+          Scheduler.unstable_yieldValue('MaybeHiddenWork');
           React.useEffect(() => {
-            Scheduler.yieldValue('MaybeHiddenWork:effect');
+            Scheduler.unstable_yieldValue('MaybeHiddenWork:effect');
           });
           return flag ? (
             <div hidden={true}>
@@ -411,9 +411,9 @@ describe('ReactDOMTracing', () => {
         };
 
         const Updater = () => {
-          Scheduler.yieldValue('Updater');
+          Scheduler.unstable_yieldValue('Updater');
           React.useEffect(() => {
-            Scheduler.yieldValue('Updater:effect');
+            Scheduler.unstable_yieldValue('Updater:effect');
           });
 
           const setCount = React.useState(0)[1];
@@ -423,9 +423,9 @@ describe('ReactDOMTracing', () => {
         };
 
         const App = () => {
-          Scheduler.yieldValue('App');
+          Scheduler.unstable_yieldValue('App');
           React.useEffect(() => {
-            Scheduler.yieldValue('App:effect');
+            Scheduler.unstable_yieldValue('App:effect');
           });
 
           return (
@@ -507,6 +507,88 @@ describe('ReactDOMTracing', () => {
           );
         });
       });
+
+      it('should properly trace interactions through a multi-pass SuspenseList render', () => {
+        const SuspenseList = React.unstable_SuspenseList;
+        const Suspense = React.Suspense;
+        function Text({text}) {
+          Scheduler.unstable_yieldValue(text);
+          React.useEffect(() => {
+            Scheduler.unstable_yieldValue('Commit ' + text);
+          });
+          return <span>{text}</span>;
+        }
+        function App() {
+          return (
+            <SuspenseList revealOrder="forwards">
+              <Suspense fallback={<Text text="Loading A" />}>
+                <Text text="A" />
+              </Suspense>
+              <Suspense fallback={<Text text="Loading B" />}>
+                <Text text="B" />
+              </Suspense>
+              <Suspense fallback={<Text text="Loading C" />}>
+                <Text text="C" />
+              </Suspense>
+            </SuspenseList>
+          );
+        }
+
+        const container = document.createElement('div');
+        const root = ReactDOM.unstable_createRoot(container);
+
+        let interaction;
+
+        TestUtils.act(() => {
+          SchedulerTracing.unstable_trace('initialization', 0, () => {
+            interaction = Array.from(SchedulerTracing.unstable_getCurrent())[0];
+            // This render is only CPU bound. Nothing suspends.
+            root.render(<App />);
+          });
+
+          expect(Scheduler).toFlushAndYieldThrough(['A']);
+
+          Scheduler.unstable_advanceTime(300);
+          jest.advanceTimersByTime(300);
+
+          expect(Scheduler).toFlushAndYieldThrough(['B']);
+
+          Scheduler.unstable_advanceTime(300);
+          jest.advanceTimersByTime(300);
+
+          // Time has now elapsed for so long that we're just going to give up
+          // rendering the rest of the content. So that we can at least show
+          // something.
+          expect(Scheduler).toFlushAndYieldThrough([
+            'Loading C',
+            'Commit A',
+            'Commit B',
+            'Commit Loading C',
+          ]);
+
+          // Schedule an unrelated low priority update that shouldn't be included
+          // in the previous interaction. This is meant to ensure that we don't
+          // rely on the whole tree completing to cover up bugs.
+          Scheduler.unstable_runWithPriority(
+            Scheduler.unstable_IdlePriority,
+            () => root.render(<App />),
+          );
+
+          expect(onInteractionTraced).toHaveBeenCalledTimes(1);
+          expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
+            interaction,
+          );
+          expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+
+          // Then we do a second pass to commit the last item.
+          expect(Scheduler).toFlushAndYieldThrough(['C', 'Commit C']);
+
+          expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
+          expect(
+            onInteractionScheduledWorkCompleted,
+          ).toHaveBeenLastNotifiedOfInteraction(interaction);
+        });
+      });
     });
 
     describe('hydration', () => {
@@ -543,7 +625,7 @@ describe('ReactDOMTracing', () => {
 
           root.render(<App />);
         });
-        Scheduler.flushAll();
+        Scheduler.unstable_flushAll();
         jest.runAllTimers();
 
         expect(ref.current).not.toBe(null);
@@ -603,7 +685,7 @@ describe('ReactDOMTracing', () => {
 
           root.render(<App />);
         });
-        Scheduler.flushAll();
+        Scheduler.unstable_flushAll();
         jest.runAllTimers();
 
         expect(ref.current).toBe(null);
@@ -617,7 +699,7 @@ describe('ReactDOMTracing', () => {
         suspend = false;
         resolve();
         await promise;
-        Scheduler.flushAll();
+        Scheduler.unstable_flushAll();
         jest.runAllTimers();
 
         expect(ref.current).not.toBe(null);

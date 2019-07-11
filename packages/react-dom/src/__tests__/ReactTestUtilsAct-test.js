@@ -48,6 +48,73 @@ describe('ReactTestUtils.act()', () => {
     ReactDOM.unmountComponentAtNode(dom);
   }
   runActTests('legacy sync mode', renderSync, unmountSync);
+
+  // and then in batched mode
+  let batchedRoot;
+  function renderBatched(el, dom) {
+    batchedRoot = ReactDOM.unstable_createSyncRoot(dom);
+    batchedRoot.render(el);
+  }
+  function unmountBatched(dom) {
+    if (batchedRoot !== null) {
+      batchedRoot.unmount();
+      batchedRoot = null;
+    }
+  }
+  runActTests('batched mode', renderBatched, unmountBatched);
+
+  describe('unacted effects', () => {
+    function App() {
+      React.useEffect(() => {}, []);
+      return null;
+    }
+
+    it('does not warn in legacy sync mode', () => {
+      expect(() => {
+        ReactDOM.render(<App />, document.createElement('div'));
+      }).toWarnDev([]);
+    });
+
+    it('warns in strict mode', () => {
+      expect(() => {
+        ReactDOM.render(
+          <React.StrictMode>
+            <App />
+          </React.StrictMode>,
+          document.createElement('div'),
+        );
+      }).toWarnDev([
+        'An update to App ran an effect, but was not wrapped in act(...)',
+        'An update to App ran an effect, but was not wrapped in act(...)',
+      ]);
+    });
+
+    it('warns in batched mode', () => {
+      expect(() => {
+        const root = ReactDOM.unstable_createSyncRoot(
+          document.createElement('div'),
+        );
+        root.render(<App />);
+        Scheduler.unstable_flushAll();
+      }).toWarnDev([
+        'An update to App ran an effect, but was not wrapped in act(...)',
+        'An update to App ran an effect, but was not wrapped in act(...)',
+      ]);
+    });
+
+    it('warns in concurrent mode', () => {
+      expect(() => {
+        const root = ReactDOM.unstable_createRoot(
+          document.createElement('div'),
+        );
+        root.render(<App />);
+        Scheduler.unstable_flushAll();
+      }).toWarnDev([
+        'An update to App ran an effect, but was not wrapped in act(...)',
+        'An update to App ran an effect, but was not wrapped in act(...)',
+      ]);
+    });
+  });
 });
 
 function runActTests(label, render, unmount) {
@@ -71,7 +138,7 @@ function runActTests(label, render, unmount) {
       it('can use act to flush effects', () => {
         function App() {
           React.useEffect(() => {
-            Scheduler.yieldValue(100);
+            Scheduler.unstable_yieldValue(100);
           });
           return null;
         }
@@ -87,7 +154,7 @@ function runActTests(label, render, unmount) {
         function App() {
           let [ctr, setCtr] = React.useState(0);
           React.useEffect(() => {
-            Scheduler.yieldValue(ctr);
+            Scheduler.unstable_yieldValue(ctr);
           });
           return (
             <button id="button" onClick={() => setCtr(x => x + 1)}>
@@ -140,7 +207,7 @@ function runActTests(label, render, unmount) {
       it('should flush effects only on exiting the outermost act', () => {
         function App() {
           React.useEffect(() => {
-            Scheduler.yieldValue(0);
+            Scheduler.unstable_yieldValue(0);
           });
           return null;
         }
@@ -390,7 +457,7 @@ function runActTests(label, render, unmount) {
             something();
           }, []);
           React.useEffect(() => {
-            Scheduler.yieldValue(state);
+            Scheduler.unstable_yieldValue(state);
           });
           return state;
         }
@@ -404,20 +471,6 @@ function runActTests(label, render, unmount) {
         expect(container.innerHTML).toBe('1');
       });
 
-      it('propagates errors', async () => {
-        let err;
-        try {
-          await act(async () => {
-            await sleep(100);
-            throw new Error('some error');
-          });
-        } catch (_err) {
-          err = _err;
-        } finally {
-          expect(err instanceof Error).toBe(true);
-          expect(err.message).toBe('some error');
-        }
-      });
       it('can handle cascading promises', async () => {
         // this component triggers an effect, that waits a tick,
         // then sets state. repeats this 5 times.
@@ -429,7 +482,7 @@ function runActTests(label, render, unmount) {
           }
           React.useEffect(
             () => {
-              Scheduler.yieldValue(state);
+              Scheduler.unstable_yieldValue(state);
               ticker();
             },
             [Math.min(state, 4)],
@@ -523,6 +576,112 @@ function runActTests(label, render, unmount) {
           unmount(secondContainer);
         });
       }
+    });
+    describe('error propagation', () => {
+      it('propagates errors - sync', () => {
+        let err;
+        try {
+          act(() => {
+            throw new Error('some error');
+          });
+        } catch (_err) {
+          err = _err;
+        } finally {
+          expect(err instanceof Error).toBe(true);
+          expect(err.message).toBe('some error');
+        }
+      });
+
+      it('should propagate errors from effects - sync', () => {
+        function App() {
+          React.useEffect(() => {
+            throw new Error('oh no');
+          });
+          return null;
+        }
+        let error;
+
+        try {
+          act(() => {
+            render(<App />, container);
+          });
+        } catch (_error) {
+          error = _error;
+        } finally {
+          expect(error instanceof Error).toBe(true);
+          expect(error.message).toBe('oh no');
+        }
+      });
+
+      it('propagates errors - async', async () => {
+        let err;
+        try {
+          await act(async () => {
+            await sleep(100);
+            throw new Error('some error');
+          });
+        } catch (_err) {
+          err = _err;
+        } finally {
+          expect(err instanceof Error).toBe(true);
+          expect(err.message).toBe('some error');
+        }
+      });
+
+      it('should cleanup after errors - sync', () => {
+        function App() {
+          React.useEffect(() => {
+            Scheduler.unstable_yieldValue('oh yes');
+          });
+          return null;
+        }
+        let error;
+        try {
+          act(() => {
+            throw new Error('oh no');
+          });
+        } catch (_error) {
+          error = _error;
+        } finally {
+          expect(error instanceof Error).toBe(true);
+          expect(error.message).toBe('oh no');
+          // should be able to render components after this tho
+          act(() => {
+            render(<App />, container);
+          });
+          expect(Scheduler).toHaveYielded(['oh yes']);
+        }
+      });
+
+      it('should cleanup after errors - async', async () => {
+        function App() {
+          async function somethingAsync() {
+            await null;
+            Scheduler.unstable_yieldValue('oh yes');
+          }
+          React.useEffect(() => {
+            somethingAsync();
+          });
+          return null;
+        }
+        let error;
+        try {
+          await act(async () => {
+            await sleep(100);
+            throw new Error('oh no');
+          });
+        } catch (_error) {
+          error = _error;
+        } finally {
+          expect(error instanceof Error).toBe(true);
+          expect(error.message).toBe('oh no');
+          // should be able to render components after this tho
+          await act(async () => {
+            render(<App />, container);
+          });
+          expect(Scheduler).toHaveYielded(['oh yes']);
+        }
+      });
     });
   });
 }

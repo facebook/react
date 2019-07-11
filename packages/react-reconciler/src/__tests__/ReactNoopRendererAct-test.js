@@ -39,9 +39,9 @@ describe('ReactNoop.act()', () => {
     function App() {
       let [ctr, setCtr] = React.useState(0);
       async function someAsyncFunction() {
-        Scheduler.yieldValue('stage 1');
+        Scheduler.unstable_yieldValue('stage 1');
         await null;
-        Scheduler.yieldValue('stage 2');
+        Scheduler.unstable_yieldValue('stage 2');
         await null;
         setCtr(1);
       }
