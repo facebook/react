@@ -8,7 +8,8 @@
  */
 
 import type {Fiber} from './ReactFiber';
-import {SuspenseComponent} from 'shared/ReactWorkTags';
+import {SuspenseComponent, SuspenseListComponent} from 'shared/ReactWorkTags';
+import {NoEffect, DidCapture} from 'shared/ReactSideEffectTags';
 
 // TODO: This is now an empty object. Should we switch this to a boolean?
 // Alternatively we can make this use an effect tag similar to SuspenseList.
@@ -61,13 +62,18 @@ export function shouldCaptureSuspense(
   return true;
 }
 
-export function isShowingAnyFallbacks(row: Fiber): boolean {
+export function findFirstSuspended(row: Fiber): null | Fiber {
   let node = row;
   while (node !== null) {
     if (node.tag === SuspenseComponent) {
       const state: SuspenseState | null = node.memoizedState;
       if (state !== null) {
-        return true;
+        return node;
+      }
+    } else if (node.tag === SuspenseListComponent) {
+      let didSuspend = (node.effectTag & DidCapture) !== NoEffect;
+      if (didSuspend) {
+        return node;
       }
     } else if (node.child !== null) {
       node.child.return = node;
@@ -75,16 +81,16 @@ export function isShowingAnyFallbacks(row: Fiber): boolean {
       continue;
     }
     if (node === row) {
-      return false;
+      return null;
     }
     while (node.sibling === null) {
       if (node.return === null || node.return === row) {
-        return false;
+        return null;
       }
       node = node.return;
     }
     node.sibling.return = node.return;
     node = node.sibling;
   }
-  return false;
+  return null;
 }

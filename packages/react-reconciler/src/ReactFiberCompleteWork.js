@@ -92,7 +92,7 @@ import {
   ForceSuspenseFallback,
   setDefaultShallowSuspenseContext,
 } from './ReactFiberSuspenseContext';
-import {isShowingAnyFallbacks} from './ReactFiberSuspenseComponent';
+import {findFirstSuspended} from './ReactFiberSuspenseComponent';
 import {
   isContextProvider as isLegacyContextProvider,
   popContext as popLegacyContext,
@@ -1059,7 +1059,8 @@ function completeWork(
       } else {
         // Append the rendered row to the child list.
         if (!didSuspendAlready) {
-          if (isShowingAnyFallbacks(renderedTail)) {
+          let suspended = findFirstSuspended(renderedTail);
+          if (suspended !== null) {
             workInProgress.effectTag |= DidCapture;
             didSuspendAlready = true;
             cutOffTailIfNeeded(renderState, true);
@@ -1070,9 +1071,11 @@ function completeWork(
             ) {
               // We need to delete the row we just rendered.
               // Ensure we transfer the update queue to the parent.
-              // TODO: This just reuses the code from the other path but could
-              // be optimized better.
-              hasSuspendedChildrenAndNewContent(workInProgress, renderedTail);
+              let newThennables = suspended.updateQueue;
+              if (newThennables !== null) {
+                workInProgress.updateQueue = newThennables;
+                workInProgress.effectTag |= Update;
+              }
               // Reset the effect list to what it w as before we rendered this
               // child. The nested children have already appended themselves.
               let lastEffect = (workInProgress.lastEffect =

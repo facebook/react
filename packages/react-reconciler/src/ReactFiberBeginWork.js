@@ -125,7 +125,7 @@ import {
   addSubtreeSuspenseContext,
   setShallowSuspenseContext,
 } from './ReactFiberSuspenseContext';
-import {isShowingAnyFallbacks} from './ReactFiberSuspenseComponent';
+import {findFirstSuspended} from './ReactFiberSuspenseComponent';
 import {
   pushProvider,
   propagateContextChange,
@@ -2000,7 +2000,7 @@ function findLastContentRow(firstChild: null | Fiber): null | Fiber {
   while (row !== null) {
     let currentRow = row.alternate;
     // New rows can't be content rows.
-    if (currentRow !== null && !isShowingAnyFallbacks(currentRow)) {
+    if (currentRow !== null && findFirstSuspended(currentRow) === null) {
       lastContentRow = row;
     }
     row = row.sibling;
@@ -2281,7 +2281,7 @@ function updateSuspenseListComponent(
         while (row !== null) {
           let currentRow = row.alternate;
           // New rows can't be content rows.
-          if (currentRow !== null && !isShowingAnyFallbacks(currentRow)) {
+          if (currentRow !== null && findFirstSuspended(currentRow) === null) {
             // This is the beginning of the main content.
             workInProgress.child = row;
             break;
