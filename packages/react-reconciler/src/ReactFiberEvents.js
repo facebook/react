@@ -22,6 +22,7 @@ import {
   SuspenseComponent,
   Fragment,
 } from 'shared/ReactWorkTags';
+import warning from 'shared/warning';
 
 export function createEventResponderInstance<E, C>(
   props: Object,
@@ -140,7 +141,15 @@ export function attachEventResponderToTargetFiber(
     } else {
       while (currentResponder !== null) {
         if (currentResponder.impl === impl) {
-          // Show warning of no-op
+          if (__DEV__) {
+            warning(
+              false,
+              'The event responder <%s> was used multiple times for the same target.' +
+                ' A target can only have a single event responder of a given type, subsequent' +
+                ' responders of this type will be ignored.',
+              currentResponder.impl.displayName,
+            );
+          }
           return;
         }
         const next = currentResponder.next;

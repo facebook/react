@@ -215,7 +215,7 @@ describe('DOMEventResponderSystem', () => {
     expect(eventLog).toEqual(['B [bubble]', 'A [bubble]']);
   });
 
-  it('nested event responders types should not stack on the same taget', () => {
+  it('nested event responders types should not stack on the same target', () => {
     let eventLog = [];
     const buttonRef = React.createRef();
 
@@ -233,7 +233,13 @@ describe('DOMEventResponderSystem', () => {
       </button>
     );
 
-    ReactDOM.render(<Test />, container);
+    expect(() => {
+      ReactDOM.render(<Test />, container);
+    }).toWarnDev(
+      'The event responder <TestEventComponent> was used multiple times for the same target.' +
+        ' A target can only have a single event responder of a given type, subsequent' +
+        ' responders of this type will be ignored.',
+    );
 
     // Clicking the button should trigger the event responder onEvent()
     let buttonElement = buttonRef.current;
