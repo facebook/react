@@ -60,6 +60,7 @@ import {
   enableProfilerTimer,
   enableSchedulerTracing,
   enableSuspenseServerRenderer,
+  enableFlareAPI,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import shallowEqual from 'shared/shallowEqual';
@@ -108,6 +109,7 @@ import {
 } from './ReactFiberHostConfig';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import {shouldSuspend} from './ReactFiberReconciler';
+import {filterPropsChildren} from './ReactFiberEvents';
 import {pushHostContext, pushHostContainer} from './ReactFiberHostContext';
 import {
   suspenseStackCursor,
@@ -982,7 +984,11 @@ function updateHostComponent(current, workInProgress, renderExpirationTime) {
     // case. We won't handle it as a reified child. We will instead handle
     // this in the host environment that also have access to this prop. That
     // avoids allocating another HostText fiber and traversing it.
-    nextChildren = null;
+    if (enableFlareAPI) {
+      nextChildren = filterPropsChildren(nextChildren);
+    } else {
+      nextChildren = null;
+    }
   } else if (prevProps !== null && shouldSetTextContent(type, prevProps)) {
     // If we're switching from a direct text child to a normal child, or to
     // empty, we need to schedule the text content to be reset.

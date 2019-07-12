@@ -11,9 +11,11 @@ import invariant from 'shared/invariant';
 import warning from 'shared/warning';
 
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
+import removeEventRespondersFromChildren from '../events/removeEventRespondersFromChildren';
 import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
 import {getToStringValue, toString} from './ToStringValue';
 import type {ToStringValue} from './ToStringValue';
+import {enableFlareAPI} from 'shared/ReactFeatureFlags';
 
 let didWarnValDefaultVal = false;
 
@@ -91,7 +93,10 @@ export function initWrapperState(element: Element, props: Object) {
   if (initialValue == null) {
     let defaultValue = props.defaultValue;
     // TODO (yungsters): Remove support for children content in <textarea>.
-    let children = props.children;
+    let children = enableFlareAPI
+      ? removeEventRespondersFromChildren(props.children)
+      : props.children;
+    // Filter the children and remove any
     if (children != null) {
       if (__DEV__) {
         warning(

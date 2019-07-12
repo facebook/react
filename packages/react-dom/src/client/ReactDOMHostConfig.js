@@ -39,6 +39,7 @@ import {
   DOCUMENT_NODE,
   DOCUMENT_FRAGMENT_NODE,
 } from '../shared/HTMLNodeType';
+import removeEventRespondersFromChildren from '../events/removeEventRespondersFromChildren';
 import dangerousStyleValue from '../shared/dangerousStyleValue';
 
 import type {DOMContainer} from './ReactDOM';
@@ -287,12 +288,15 @@ export function prepareUpdate(
 }
 
 export function shouldSetTextContent(type: string, props: Props): boolean {
+  const children = enableFlareAPI
+    ? removeEventRespondersFromChildren(props.children)
+    : props.children;
   return (
     type === 'textarea' ||
     type === 'option' ||
     type === 'noscript' ||
-    typeof props.children === 'string' ||
-    typeof props.children === 'number' ||
+    typeof children === 'string' ||
+    typeof children === 'number' ||
     (typeof props.dangerouslySetInnerHTML === 'object' &&
       props.dangerouslySetInnerHTML !== null &&
       props.dangerouslySetInnerHTML.__html != null)

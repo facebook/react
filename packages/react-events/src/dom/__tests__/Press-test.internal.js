@@ -3115,4 +3115,34 @@ describe('Event responder: Press', () => {
     container.removeEventListener('pointerdown', pointerDownEvent);
     expect(pointerDownEvent).toHaveBeenCalledTimes(0);
   });
+
+  it('should work correctly with textarea elements', () => {
+    const ref = React.createRef();
+    const onPress = jest.fn();
+    const element = (
+      <textarea ref={ref}>
+        <PressResponder onPress={onPress} />
+        I am some text in a textarea!
+      </textarea>
+    );
+
+    expect(() => {
+      ReactDOM.render(element, container);
+    }).toWarnDev(
+      'Use the `defaultValue` or `value` props instead of setting ' +
+        'children on <textarea>.',
+    );
+
+    expect(container.innerHTML).toEqual(
+      '<textarea>I am some text in a textarea!</textarea>',
+    );
+
+    ref.current.dispatchEvent(
+      createEvent('pointerdown', {pointerType: 'mouse', button: 0}),
+    );
+    ref.current.dispatchEvent(
+      createEvent('pointerup', {pointerType: 'mouse', button: 0}),
+    );
+    expect(onPress).toHaveBeenCalledTimes(1);
+  });
 });

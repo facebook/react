@@ -14,6 +14,7 @@ import warning from 'shared/warning';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import endsWith from 'shared/endsWith';
+import removeEventRespondersFromChildren from '../events/removeEventRespondersFromChildren';
 import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
 import {setListenToResponderEventTypes} from '../events/DOMEventResponderSystem';
 
@@ -327,17 +328,20 @@ function setInitialDOMProperties(
         setInnerHTML(domElement, nextHtml);
       }
     } else if (propKey === CHILDREN) {
-      if (typeof nextProp === 'string') {
+      const children = enableFlareAPI
+        ? removeEventRespondersFromChildren(nextProp)
+        : nextProp;
+      if (typeof children === 'string') {
         // Avoid setting initial textContent when the text is empty. In IE11 setting
         // textContent on a <textarea> will cause the placeholder to not
         // show within the <textarea> until it has been focused and blurred again.
         // https://github.com/facebook/react/issues/6731#issuecomment-254874553
-        const canSetTextContent = tag !== 'textarea' || nextProp !== '';
+        const canSetTextContent = tag !== 'textarea' || children !== '';
         if (canSetTextContent) {
-          setTextContent(domElement, nextProp);
+          setTextContent(domElement, children);
         }
-      } else if (typeof nextProp === 'number') {
-        setTextContent(domElement, '' + nextProp);
+      } else if (typeof children === 'number') {
+        setTextContent(domElement, '' + children);
       }
     } else if (
       propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
@@ -780,11 +784,17 @@ export function diffProperties(
         // inserted already.
       }
     } else if (propKey === CHILDREN) {
+      const lastChildren = enableFlareAPI
+        ? removeEventRespondersFromChildren(lastProp)
+        : lastProp;
+      const nextChildren = enableFlareAPI
+        ? removeEventRespondersFromChildren(nextProp)
+        : nextProp;
       if (
-        lastProp !== nextProp &&
-        (typeof nextProp === 'string' || typeof nextProp === 'number')
+        lastChildren !== nextChildren &&
+        (typeof nextChildren === 'string' || typeof nextChildren === 'number')
       ) {
-        (updatePayload = updatePayload || []).push(propKey, '' + nextProp);
+        (updatePayload = updatePayload || []).push(propKey, '' + nextChildren);
       }
     } else if (
       propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||

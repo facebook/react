@@ -23,6 +23,9 @@ import {
   Fragment,
 } from 'shared/ReactWorkTags';
 import warning from 'shared/warning';
+import {REACT_RESPONDER_TYPE} from 'shared/ReactSymbols';
+
+const isArray = Array.isArray;
 
 export function createEventResponderInstance<E, C>(
   props: Object,
@@ -187,4 +190,37 @@ export function detachEventResponderFromTargetFiber(
       currentResponder = next;
     }
   }
+}
+
+function isEventResponderElement(element: Object) {
+  return (
+    element != null &&
+    element.type != null &&
+    element.type.$$typeof === REACT_RESPONDER_TYPE
+  );
+}
+
+export function filterPropsChildren(children: ?Object): null | mixed {
+  if (children != null) {
+    if (isArray(children)) {
+      const newChildren = [];
+      for (let i = 0; i < children.length; i++) {
+        const child = children[i];
+        if (isEventResponderElement(child)) {
+          newChildren.push(child);
+        }
+      }
+      const len = newChildren.length;
+      if (len === 0) {
+        return null;
+      }
+      if (len === 1) {
+        return newChildren[0];
+      }
+      return newChildren;
+    } else if (isEventResponderElement(children)) {
+      return children;
+    }
+  }
+  return null;
 }
