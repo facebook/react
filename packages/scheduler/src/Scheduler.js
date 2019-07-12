@@ -71,6 +71,12 @@ function scheduler_flushTaskAtPriority_Low(callback, didTimeout) {
 function scheduler_flushTaskAtPriority_Idle(callback, didTimeout) {
   return callback(didTimeout);
 }
+const flushTaskFns = [];
+flushTaskFns[ImmediatePriority] = scheduler_flushTaskAtPriority_Immediate;
+flushTaskFns[UserBlockingPriority] = scheduler_flushTaskAtPriority_UserBlocking;
+flushTaskFns[NormalPriority] = scheduler_flushTaskAtPriority_Normal;
+flushTaskFns[LowPriority] = scheduler_flushTaskAtPriority_Low;
+flushTaskFns[IdlePriority] = scheduler_flushTaskAtPriority_Idle;
 
 function flushTask(task, currentTime) {
   // Remove the task from the list before calling the callback. That way the
@@ -101,38 +107,11 @@ function flushTask(task, currentTime) {
     var didUserCallbackTimeout = task.expirationTime <= currentTime;
     // Add an extra function to the callstack. Profiling tools can use this
     // to infer the priority of work that appears higher in the stack.
-    switch (currentPriorityLevel) {
-      case ImmediatePriority:
-        continuationCallback = scheduler_flushTaskAtPriority_Immediate(
-          callback,
-          didUserCallbackTimeout,
-        );
-        break;
-      case UserBlockingPriority:
-        continuationCallback = scheduler_flushTaskAtPriority_UserBlocking(
-          callback,
-          didUserCallbackTimeout,
-        );
-        break;
-      case NormalPriority:
-        continuationCallback = scheduler_flushTaskAtPriority_Normal(
-          callback,
-          didUserCallbackTimeout,
-        );
-        break;
-      case LowPriority:
-        continuationCallback = scheduler_flushTaskAtPriority_Low(
-          callback,
-          didUserCallbackTimeout,
-        );
-        break;
-      case IdlePriority:
-        continuationCallback = scheduler_flushTaskAtPriority_Idle(
-          callback,
-          didUserCallbackTimeout,
-        );
-        break;
-    }
+    const flushTaskAtPriority = flushTaskFns[currentPriorityLevel];
+    continuationCallback = flushTaskAtPriority(
+      callback,
+      didUserCallbackTimeout,
+    );
   } catch (error) {
     throw error;
   } finally {
