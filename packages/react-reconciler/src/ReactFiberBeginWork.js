@@ -2242,10 +2242,10 @@ function updateSuspenseListComponent(
   pushSuspenseContext(workInProgress, suspenseContext);
 
   if ((workInProgress.mode & BatchedMode) === NoMode) {
-    workInProgress.memoizedState = null;
-  } else {
     // Outside of batched mode, SuspenseList doesn't work so we just
     // use make it a noop by treating it as the default revealOrder.
+    workInProgress.memoizedState = null;
+  } else {
     switch (revealOrder) {
       case 'forwards': {
         let lastContentRow = findLastContentRow(workInProgress.child);
