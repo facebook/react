@@ -70,7 +70,12 @@ export function findFirstSuspended(row: Fiber): null | Fiber {
       if (state !== null) {
         return node;
       }
-    } else if (node.tag === SuspenseListComponent) {
+    } else if (
+      node.tag === SuspenseListComponent &&
+      // revealOrder undefined can't be trusted because it don't
+      // keep track of whether it suspended or not.
+      node.memoizedProps.revealOrder !== undefined
+    ) {
       let didSuspend = (node.effectTag & DidCapture) !== NoEffect;
       if (didSuspend) {
         return node;

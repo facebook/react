@@ -640,6 +640,9 @@ describe('ReactSuspenseList', () => {
       'Loading B',
       'Suspend! [C]',
       'Loading C',
+      'A',
+      'Loading B',
+      'Loading C',
     ]);
 
     // This will suspend, since the boundaries are avoided. Give them
@@ -859,6 +862,10 @@ describe('ReactSuspenseList', () => {
       'Suspend! [C]',
       'Loading C',
       'D',
+      'Loading A',
+      'B',
+      'Loading C',
+      'D',
       'Loading E',
       'Loading F',
     ]);
@@ -1003,6 +1010,16 @@ describe('ReactSuspenseList', () => {
     );
 
     expect(Scheduler).toFlushAndYield([
+      'Suspend! [A]',
+      'Loading A',
+      'Suspend! [B]',
+      'Loading B',
+      'C',
+      'Suspend! [D]',
+      'Loading D',
+      'E',
+      'Suspend! [F]',
+      'Loading F',
       'Suspend! [A]',
       'Loading A',
       'Suspend! [B]',
@@ -1392,6 +1409,10 @@ describe('ReactSuspenseList', () => {
       'Suspend! [C]',
       'Loading C',
       'D',
+      'A',
+      'Loading B',
+      'Loading C',
+      'D',
       'Loading E',
     ]);
 
@@ -1516,6 +1537,10 @@ describe('ReactSuspenseList', () => {
       'Suspend! [E]',
       'Loading E',
       'F',
+      'C',
+      'Loading D',
+      'Loading E',
+      'F',
       'Loading B',
     ]);
 
@@ -1530,15 +1555,15 @@ describe('ReactSuspenseList', () => {
       </Fragment>,
     );
 
-    await E.resolve();
+    await D.resolve();
 
-    expect(Scheduler).toFlushAndYield(['Suspend! [D]', 'E']);
+    expect(Scheduler).toFlushAndYield(['D', 'Suspend! [E]']);
 
     // Incremental loading is suspended.
     jest.advanceTimersByTime(500);
 
-    // Even though E is unsuspended, it's still in loading state because
-    // it is blocked by D.
+    // Even though D is unsuspended, it's still in loading state because
+    // it is blocked by E.
     expect(ReactNoop).toMatchRenderedOutput(
       <Fragment>
         <span>Loading B</span>
@@ -1647,6 +1672,11 @@ describe('ReactSuspenseList', () => {
       'Suspend! [B]',
       'Loading B',
       'Suspend! [C]',
+      'Loading C',
+      'Suspend! [D]',
+      'Loading D',
+      'A',
+      'Loading B',
       'Loading C',
       'Suspend! [D]',
       'Loading D',
