@@ -125,7 +125,7 @@ import {
   addSubtreeSuspenseContext,
   setShallowSuspenseContext,
 } from './ReactFiberSuspenseContext';
-import {isShowingAnyFallbacks} from './ReactFiberSuspenseComponent';
+import {findFirstSuspended} from './ReactFiberSuspenseComponent';
 import {
   pushProvider,
   propagateContextChange,
@@ -2000,7 +2000,7 @@ function findLastContentRow(firstChild: null | Fiber): null | Fiber {
   while (row !== null) {
     let currentRow = row.alternate;
     // New rows can't be content rows.
-    if (currentRow !== null && !isShowingAnyFallbacks(currentRow)) {
+    if (currentRow !== null && findFirstSuspended(currentRow) === null) {
       lastContentRow = row;
     }
     row = row.sibling;
@@ -2072,12 +2072,12 @@ function validateTailOptions(
 ) {
   if (__DEV__) {
     if (tailMode !== undefined && !didWarnAboutTailOptions[tailMode]) {
-      if (tailMode !== 'collapsed') {
+      if (tailMode !== 'collapsed' && tailMode !== 'hidden') {
         didWarnAboutTailOptions[tailMode] = true;
         warning(
           false,
           '"%s" is not a supported value for tail on <SuspenseList />. ' +
-            'Did you mean "collapsed"?',
+            'Did you mean "collapsed" or "hidden"?',
           tailMode,
         );
       } else if (revealOrder !== 'forwards' && revealOrder !== 'backwards') {
@@ -2242,10 +2242,10 @@ function updateSuspenseListComponent(
   pushSuspenseContext(workInProgress, suspenseContext);
 
   if ((workInProgress.mode & BatchedMode) === NoMode) {
-    workInProgress.memoizedState = null;
-  } else {
     // Outside of batched mode, SuspenseList doesn't work so we just
     // use make it a noop by treating it as the default revealOrder.
+    workInProgress.memoizedState = null;
+  } else {
     switch (revealOrder) {
       case 'forwards': {
         let lastContentRow = findLastContentRow(workInProgress.child);
@@ -2281,7 +2281,7 @@ function updateSuspenseListComponent(
         while (row !== null) {
           let currentRow = row.alternate;
           // New rows can't be content rows.
-          if (currentRow !== null && !isShowingAnyFallbacks(currentRow)) {
+          if (currentRow !== null && findFirstSuspended(currentRow) === null) {
             // This is the beginning of the main content.
             workInProgress.child = row;
             break;
