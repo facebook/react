@@ -130,6 +130,12 @@ export type ReactFundamentalImpl<C, H> = {
   getServerSideString?: (context: C, props: Object) => string,
   getServerSideStringClose?: (context: C, props: Object) => string,
   onMount: (context: C, instance: mixed, props: Object, state: Object) => void,
+  shouldUpdate?: (
+    context: C,
+    prevProps: null | Object,
+    nextProps: Object,
+    state: Object,
+  ) => boolean,
   onUpdate?: (
     context: C,
     instance: mixed,

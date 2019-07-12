@@ -82,6 +82,7 @@ import {
   getFundamentalComponentInstance,
   mountFundamentalComponent,
   cloneFundamentalInstance,
+  shouldUpdateFundamentalComponent,
 } from './ReactFiberHostConfig';
 import {
   getRootHostContainer,
@@ -1210,7 +1211,8 @@ function completeWork(
           mountFundamentalComponent(fundamentalInstance);
         } else {
           // We fire update in commit phase
-          fundamentalInstance.prevProps = fundamentalInstance.props;
+          const prevProps = fundamentalInstance.props;
+          fundamentalInstance.prevProps = prevProps;
           fundamentalInstance.props = newProps;
           fundamentalInstance.currentFiber = workInProgress;
           if (supportsPersistence) {
@@ -1218,7 +1220,12 @@ function completeWork(
             fundamentalInstance.instance = instance;
             appendAllChildren(instance, workInProgress, false, false);
           }
-          markUpdate(workInProgress);
+          const shouldUpdate = shouldUpdateFundamentalComponent(
+            fundamentalInstance,
+          );
+          if (shouldUpdate) {
+            markUpdate(workInProgress);
+          }
         }
       }
       break;

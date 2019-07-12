@@ -767,8 +767,10 @@ function commitUnmount(current: Fiber): void {
     case FundamentalComponent: {
       if (enableFundamentalAPI) {
         const fundamentalInstance = current.stateNode;
-        unmountFundamentalComponent(fundamentalInstance);
-        current.stateNode = null;
+        if (fundamentalInstance !== null) {
+          unmountFundamentalComponent(fundamentalInstance);
+          current.stateNode = null;
+        }
       }
     }
   }

@@ -421,6 +421,15 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       }
     },
 
+    shouldUpdateFundamentalComponent(fundamentalInstance): boolean {
+      const {impl, instance, prevProps, props, state} = fundamentalInstance;
+      const shouldUpdate = impl.shouldUpdate;
+      if (shouldUpdate !== undefined) {
+        return shouldUpdate(null, instance, prevProps, props, state);
+      }
+      return true;
+    },
+
     updateFundamentalComponent(fundamentalInstance): void {
       const {impl, instance, prevProps, props, state} = fundamentalInstance;
       const onUpdate = impl.onUpdate;

@@ -520,6 +520,10 @@ export function mountFundamentalComponent(fundamentalInstance) {
   throw new Error('Not yet implemented.');
 }
 
+export function shouldUpdateFundamentalComponent(fundamentalInstance) {
+  throw new Error('Not yet implemented.');
+}
+
 export function updateFundamentalComponent(fundamentalInstance) {
   throw new Error('Not yet implemented.');
 }

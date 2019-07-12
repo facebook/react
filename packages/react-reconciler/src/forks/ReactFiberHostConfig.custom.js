@@ -69,6 +69,8 @@ export const getFundamentalComponentInstance =
   $$$hostConfig.getFundamentalComponentInstance;
 export const mountFundamentalComponent =
   $$$hostConfig.mountFundamentalComponent;
+export const shouldUpdateFundamentalComponent =
+  $$$hostConfig.shouldUpdateFundamentalComponent;
 
 // -------------------
 //      Mutation

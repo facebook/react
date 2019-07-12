@@ -321,6 +321,17 @@ export function mountFundamentalComponent(
   }
 }
 
+export function shouldUpdateFundamentalComponent(
+  fundamentalInstance: ReactFundamentalComponentInstance<any, any>,
+): boolean {
+  const {impl, prevProps, props, state} = fundamentalInstance;
+  const shouldUpdate = impl.shouldUpdate;
+  if (shouldUpdate !== undefined) {
+    return shouldUpdate(null, prevProps, props, state);
+  }
+  return true;
+}
+
 export function updateFundamentalComponent(
   fundamentalInstance: ReactFundamentalComponentInstance<any, any>,
 ): void {
