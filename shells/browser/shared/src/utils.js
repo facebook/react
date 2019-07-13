@@ -23,11 +23,15 @@ export function createViewElementSource(bridge: Bridge, store: Store) {
   };
 }
 
-export function getBrowserName() {
+export type BrowserName = 'Chrome' | 'Firefox';
+
+export function getBrowserName(): BrowserName {
   return IS_CHROME ? 'Chrome' : 'Firefox';
 }
 
-export function getBrowserTheme() {
+export type BrowserTheme = 'dark' | 'light';
+
+export function getBrowserTheme(): BrowserTheme {
   if (IS_CHROME) {
     // chrome.devtools.panels added in Chrome 18.
     // chrome.devtools.panels.themeName added in Chrome 54.

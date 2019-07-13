@@ -24,6 +24,14 @@
   .Components {
     flex-direction: column;
   }
+
+  .TreeWrapper {
+    flex: 0 0 50%;
+  }
+
+  .SelectedElementWrapper {
+    flex: 0 0 50%;
+  }
 }
 
 .Loading {

@@ -20,19 +20,11 @@
 .Component {
   flex: 1;
   color: var(--color-component-name);
+  font-family: var(--font-family-monospace);
+  font-size: var(--font-size-monospace-normal);
   white-space: nowrap;
   overflow-x: hidden;
   text-overflow: ellipsis;
-}
-.Component:before {
-  white-space: nowrap;
-  content: '<';
-  color: var(--color-jsx-arrow-brackets);
-}
-.Component:after {
-  white-space: nowrap;
-  content: '>';
-  color: var(--color-jsx-arrow-brackets);
 }
 
 .Label {

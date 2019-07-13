@@ -9,6 +9,9 @@
   border-bottom: 3px solid transparent;
   user-select: none;
   color: var(--color-text);
+
+  /* Electron drag area */
+  -webkit-app-region: no-drag;
 }
 .Tab:hover,
 .TabCurrent:hover {

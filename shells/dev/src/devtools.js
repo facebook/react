@@ -73,7 +73,6 @@ inject('dist/app.js', () => {
       batch.render(
         createElement(DevTools, {
           bridge,
-          browserName: 'Chrome',
           browserTheme: 'light',
           showTabBar: true,
           store,

@@ -28,7 +28,7 @@ const commitGradient = [
 // This format can then be quickly exported (and re-imported).
 export function prepareProfilingDataFrontendFromBackendAndStore(
   dataBackends: Array<ProfilingDataBackend>,
-  operationsByRootID: Map<number, Array<Uint32Array>>,
+  operationsByRootID: Map<number, Array<Array<number>>>,
   screenshotsByRootID: Map<number, Map<number, string>>,
   snapshotsByRootID: Map<number, Map<number, SnapshotNode>>
 ): ProfilingDataFrontend {
@@ -137,7 +137,7 @@ export function prepareProfilingDataFrontendFromExport(
         initialTreeBaseDurations: new Map(initialTreeBaseDurations),
         interactionCommits: new Map(interactionCommits),
         interactions: new Map(interactions),
-        operations: operations.map(array => Uint32Array.from(array)), // Convert Array back to Uint32Array
+        operations,
         rootID,
         snapshots: new Map(snapshots),
       });
@@ -194,7 +194,7 @@ export function prepareProfilingDataExport(
         ),
         interactionCommits: Array.from(interactionCommits.entries()),
         interactions: Array.from(interactions.entries()),
-        operations: operations.map(array => Array.from(array)), // Convert Uint32Array to Array for serialization
+        operations,
         rootID,
         snapshots: Array.from(snapshots.entries()),
       });

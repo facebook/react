@@ -5,11 +5,7 @@ import { unstable_createRoot as createRoot, flushSync } from 'react-dom';
 import Bridge from 'src/bridge';
 import Store from 'src/devtools/store';
 import inject from './inject';
-import {
-  createViewElementSource,
-  getBrowserName,
-  getBrowserTheme,
-} from './utils';
+import { createViewElementSource, getBrowserTheme } from './utils';
 import { getSavedComponentFilters } from 'src/utils';
 import {
   localStorageGetItem,
@@ -121,8 +117,6 @@ function createPanelIfReactLoaded() {
           localStorageRemoveItem(LOCAL_STORAGE_SUPPORTS_PROFILING_KEY);
         }
 
-        const browserName = getBrowserName();
-
         store = new Store(bridge, {
           isProfiling,
           supportsCaptureScreenshots: true,
@@ -135,7 +129,10 @@ function createPanelIfReactLoaded() {
         // Otherwise the Store may miss important initial tree op codes.
         inject(chrome.runtime.getURL('build/backend.js'));
 
-        const viewElementSource = createViewElementSource(bridge, store);
+        const viewElementSourceFunction = createViewElementSource(
+          bridge,
+          store
+        );
 
         root = createRoot(document.createElement('div'));
 
@@ -145,7 +142,6 @@ function createPanelIfReactLoaded() {
           root.render(
             createElement(DevTools, {
               bridge,
-              browserName,
               browserTheme: getBrowserTheme(),
               componentsPortalContainer,
               overrideTab,
@@ -153,7 +149,7 @@ function createPanelIfReactLoaded() {
               settingsPortalContainer,
               showTabBar: false,
               store,
-              viewElementSource,
+              viewElementSourceFunction,
             })
           );
         };

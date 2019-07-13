@@ -41,18 +41,6 @@
   text-overflow: ellipsis;
   max-width: 100%;
 }
-.Component:before,
-.Owner:before {
-  white-space: nowrap;
-  content: '<';
-  color: var(--color-jsx-arrow-brackets);
-}
-.Component:after,
-.Owner:after {
-  white-space: nowrap;
-  content: '>';
-  color: var(--color-jsx-arrow-brackets);
-}
 
 .Component {
   flex: 1 1 auto;

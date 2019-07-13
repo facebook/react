@@ -165,3 +165,30 @@ Object {
 },
 }
 `;
+
+exports[`InspectedElementContext should support simple data types: 1: Initial inspection 1`] = `
+Object {
+  "id": 2,
+  "type": "full-data",
+  "value": {
+  "id": 2,
+  "owners": null,
+  "context": {},
+  "events": null,
+  "hooks": null,
+  "props": {
+    "boolean_false": false,
+    "boolean_true": true,
+    "infinity": null,
+    "integer_zero": 0,
+    "integer_one": 1,
+    "float": 1.23,
+    "string": "abc",
+    "string_empty": "",
+    "nan": null,
+    "value_null": null
+  },
+  "state": null
+},
+}
+`;

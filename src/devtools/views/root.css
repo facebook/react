@@ -12,6 +12,7 @@
   --light-color-background: #ffffff;
   --light-color-background-hover: rgba(0, 136, 250, 0.1);
   --light-color-background-inactive: #e5e5e5;
+  --light-color-background-invalid: #fff0f0;
   --light-color-background-selected: #0088fa;
   --light-color-button-background: #ffffff;
   --light-color-button-background-focus: #ededed;
@@ -46,8 +47,6 @@
   --light-color-dimmer: #cfd1d5;
   --light-color-dimmest: #eff0f1;
   --light-color-expand-collapse-toggle: #777d88;
-  --light-color-jsx-arrow-brackets: #333333;
-  --light-color-jsx-arrow-brackets-inverted: rgba(255, 255, 255, 0.7);
   --light-color-modal-background: rgba(255, 255, 255, 0.75);
   --light-color-record-active: #fc3a4b;
   --light-color-record-hover: #3578e5;
@@ -60,6 +59,7 @@
   --light-color-selected-tree-highlight-inactive: rgba(0, 0, 0, 0.05);
   --light-color-tab-selected-border: #0088fa;
   --light-color-text: #000000;
+  --light-color-text-invalid: #ff0000;
   --light-color-text-selected: #ffffff;
   --light-color-toggle-background-invalid: #fc3a4b;
   --light-color-toggle-background-on: #0088fa;
@@ -77,6 +77,7 @@
   --dark-color-background: #282c34;
   --dark-color-background-hover: rgba(255, 255, 255, 0.1);
   --dark-color-background-inactive: #3d424a;
+  --dark-color-background-invalid: #5c0000;
   --dark-color-background-selected: #178fb9;
   --dark-color-button-background: #282c34;
   --dark-color-button-background-focus: #3d424a;
@@ -111,8 +112,6 @@
   --dark-color-dimmer: #777d88;
   --dark-color-dimmest: #4f5766;
   --dark-color-expand-collapse-toggle: #8f949d;
-  --dark-color-jsx-arrow-brackets: #777d88;
-  --dark-color-jsx-arrow-brackets-inverted: rgba(255, 255, 255, 0.7);
   --dark-color-modal-background: rgba(0, 0, 0, 0.75);
   --dark-color-record-active: #fc3a4b;
   --dark-color-record-hover: #a2e9fc;
@@ -125,6 +124,7 @@
   --dark-color-selected-tree-highlight-inactive: rgba(255, 255, 255, 0.05);
   --dark-color-tab-selected-border: #178fb9;
   --dark-color-text: #ffffff;
+  --dark-color-text-invalid: #ff8080;
   --dark-color-text-selected: #ffffff;
   --dark-color-toggle-background-invalid: #fc3a4b;
   --dark-color-toggle-background-on: #178fb9;

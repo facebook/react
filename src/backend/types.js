@@ -2,6 +2,7 @@
 
 import type { ComponentFilter, ElementType } from 'src/types';
 import type { Interaction } from 'src/devtools/views/Profiler/types';
+import type { ResolveNativeStyle } from 'src/backend/NativeStyleEditor/setupNativeStyleEditor';
 
 type BundleType =
   | 0 // PROD
@@ -249,12 +250,18 @@ export type InspectedElementPayload =
   | InspectElementNoChange
   | InspectElementNotFound;
 
+export type InstanceAndStyle = {|
+  instance: Object | null,
+  style: Object | null,
+|};
+
 export type RendererInterface = {
   cleanup: () => void,
   findNativeNodesForFiberID: FindNativeNodesForFiberID,
   flushInitialOperations: () => void,
   getBestMatchForTrackedPath: () => PathMatch | null,
   getFiberIDForNative: GetFiberIDForNative,
+  getInstanceAndStyle(id: number): InstanceAndStyle,
   getProfilingData(): ProfilingDataBackend,
   getOwnersList: (id: number) => Array<Owner> | null,
   getPathForElement: (id: number) => Array<PathFrame> | null,
@@ -298,6 +305,10 @@ export type DevToolsHook = {
   off: (event: string, handler: Handler) => void,
   reactDevtoolsAgent?: ?Object,
   sub: (event: string, handler: Handler) => () => void,
+
+  // Used by react-native-web and Flipper/Inspector
+  resolveRNStyle?: ResolveNativeStyle,
+  nativeStyleEditorValidAttributes?: $ReadOnlyArray<string>,
 
   // React uses these methods.
   checkDCE: (fn: Function) => void,

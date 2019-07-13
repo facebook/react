@@ -1289,7 +1289,7 @@ Object {
   "interactionCommits": Map {},
   "interactions": Map {},
   "operations": Array [
-    Uint32Array [
+    Array [
       1,
       1,
       8,
@@ -1325,7 +1325,7 @@ Object {
       1,
       14000,
     ],
-    Uint32Array [
+    Array [
       1,
       1,
       0,
@@ -1345,7 +1345,7 @@ Object {
       1,
       11000,
     ],
-    Uint32Array [
+    Array [
       1,
       1,
       0,
@@ -1452,7 +1452,7 @@ Object {
   "interactionCommits": Map {},
   "interactions": Map {},
   "operations": Array [
-    Uint32Array [
+    Array [
       1,
       11,
       15,
@@ -1540,7 +1540,7 @@ Object {
   "interactionCommits": Map {},
   "interactions": Map {},
   "operations": Array [
-    Uint32Array [
+    Array [
       1,
       6,
       0,

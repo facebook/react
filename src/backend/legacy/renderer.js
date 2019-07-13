@@ -22,6 +22,7 @@ import type {
   DevToolsHook,
   GetFiberIDForNative,
   InspectedElementPayload,
+  InstanceAndStyle,
   NativeType,
   PathFrame,
   PathMatch,
@@ -456,7 +457,7 @@ export function attach(
     const numUnmountIDs =
       pendingUnmountedIDs.length + (pendingUnmountedRootID === null ? 0 : 1);
 
-    const operations = new Uint32Array(
+    const operations = new Array(
       // Identify which renderer this update is coming from.
       2 + // [rendererID, rootFiberID]
       // How big is the string table?
@@ -482,7 +483,10 @@ export function attach(
     operations[i++] = pendingStringTableLength;
     pendingStringTable.forEach((value, key) => {
       operations[i++] = key.length;
-      operations.set(utfEncodeString(key), i);
+      const encodedKey = utfEncodeString(key);
+      for (let j = 0; j < encodedKey.length; j++) {
+        operations[i + j] = encodedKey[j];
+      }
       i += key.length;
     });
 
@@ -503,7 +507,9 @@ export function attach(
     }
 
     // Fill in the rest of the operations.
-    operations.set(pendingOperations, i);
+    for (let j = 0; j < pendingOperations.length; j++) {
+      operations[i + j] = pendingOperations[j];
+    }
     i += pendingOperations.length;
 
     if (__DEBUG__) {
@@ -579,6 +585,27 @@ export function attach(
         }
       }
       return true;
+    };
+  }
+
+  // Fast path props lookup for React Native style editor.
+  function getInstanceAndStyle(id: number): InstanceAndStyle {
+    let instance = null;
+    let style = null;
+
+    const internalInstance = idToInternalInstanceMap.get(id);
+    if (internalInstance != null) {
+      instance = internalInstance._instance || null;
+
+      const element = internalInstance._currentElement;
+      if (element != null && element.props != null) {
+        style = element.props.style || null;
+      }
+    }
+
+    return {
+      instance,
+      style,
     };
   }
 
@@ -879,6 +906,7 @@ export function attach(
     flushInitialOperations,
     getBestMatchForTrackedPath,
     getFiberIDForNative: getInternalIDForNative,
+    getInstanceAndStyle,
     findNativeNodesForFiberID: (id: number) => {
       const nativeNode = findNativeNodeForInternalID(id);
       return nativeNode == null ? null : [nativeNode];

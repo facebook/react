@@ -87,7 +87,7 @@ export type ProfilingDataForRootFrontend = {|
 
   // List of tree mutation that occur during profiling.
   // These mutations can be used along with initial snapshots to reconstruct the tree for any commit.
-  operations: Array<Uint32Array>,
+  operations: Array<Array<number>>,
 
   // Identifies the root this profiler data corresponds to.
   rootID: number,

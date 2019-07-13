@@ -213,6 +213,7 @@ function updateThemeVariables(
   updateStyleHelper(theme, 'color-background', documentElements);
   updateStyleHelper(theme, 'color-background-hover', documentElements);
   updateStyleHelper(theme, 'color-background-inactive', documentElements);
+  updateStyleHelper(theme, 'color-background-invalid', documentElements);
   updateStyleHelper(theme, 'color-background-selected', documentElements);
   updateStyleHelper(theme, 'color-border', documentElements);
   updateStyleHelper(theme, 'color-button-background', documentElements);
@@ -275,12 +276,6 @@ function updateThemeVariables(
   updateStyleHelper(theme, 'color-dimmer', documentElements);
   updateStyleHelper(theme, 'color-dimmest', documentElements);
   updateStyleHelper(theme, 'color-expand-collapse-toggle', documentElements);
-  updateStyleHelper(theme, 'color-jsx-arrow-brackets', documentElements);
-  updateStyleHelper(
-    theme,
-    'color-jsx-arrow-brackets-inverted',
-    documentElements
-  );
   updateStyleHelper(theme, 'color-modal-background', documentElements);
   updateStyleHelper(theme, 'color-record-active', documentElements);
   updateStyleHelper(theme, 'color-record-hover', documentElements);
@@ -301,6 +296,7 @@ function updateThemeVariables(
   );
   updateStyleHelper(theme, 'color-tab-selected-border', documentElements);
   updateStyleHelper(theme, 'color-text', documentElements);
+  updateStyleHelper(theme, 'color-text-invalid', documentElements);
   updateStyleHelper(theme, 'color-text-selected', documentElements);
   updateStyleHelper(theme, 'color-toggle-background-invalid', documentElements);
   updateStyleHelper(theme, 'color-toggle-background-on', documentElements);

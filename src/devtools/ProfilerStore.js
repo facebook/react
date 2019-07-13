@@ -60,7 +60,7 @@ export default class ProfilerStore extends EventEmitter<{|
   //
   // This map is only updated while profiling is in progress;
   // Upon completion, it is converted into the exportable ProfilingDataFrontend format.
-  _inProgressOperationsByRootID: Map<number, Array<Uint32Array>> = new Map();
+  _inProgressOperationsByRootID: Map<number, Array<Array<number>>> = new Map();
 
   // Map of root (id) to a Map of screenshots by commit ID.
   // Stores screenshots for each commit (when profiling).
@@ -228,12 +228,7 @@ export default class ProfilerStore extends EventEmitter<{|
     }
   };
 
-  onBridgeOperations = (operations: Uint32Array) => {
-    if (!(operations instanceof Uint32Array)) {
-      // $FlowFixMe TODO HACK Temporary workaround for the fact that Chrome is not transferring the typed array.
-      operations = Uint32Array.from(Object.values(operations));
-    }
-
+  onBridgeOperations = (operations: Array<number>) => {
     // The first two values are always rendererID and rootID
     const rendererID = operations[0];
     const rootID = operations[1];

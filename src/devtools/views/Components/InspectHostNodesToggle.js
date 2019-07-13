@@ -14,19 +14,19 @@ export default function InspectHostNodesToggle() {
       setIsInspecting(isChecked);
 
       if (isChecked) {
-        bridge.send('startInspectingDOM');
+        bridge.send('startInspectingNative');
       } else {
-        bridge.send('stopInspectingDOM', false);
+        bridge.send('stopInspectingNative', false);
       }
     },
     [bridge]
   );
 
   useEffect(() => {
-    const onStopInspectingDOM = () => setIsInspecting(false);
-    bridge.addListener('stopInspectingDOM', onStopInspectingDOM);
+    const onStopInspectingNative = () => setIsInspecting(false);
+    bridge.addListener('stopInspectingNative', onStopInspectingNative);
     return () =>
-      bridge.removeListener('stopInspectingDOM', onStopInspectingDOM);
+      bridge.removeListener('stopInspectingNative', onStopInspectingNative);
   }, [bridge]);
 
   return (

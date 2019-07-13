@@ -1,7 +1,7 @@
 {
   "version": "4.0.0",
   "repository": "bvaughn/react-devtools-experimental",
-  "license": "BSD-3-Clause",
+  "license": "MIT",
   "private": true,
   "workspaces": [
     "packages/*"
@@ -32,6 +32,8 @@
     ]
   },
   "scripts": {
+    "build:core:backend": "cd ./packages/react-devtools-core && yarn build:backend",
+    "build:core:standalone": "cd ./packages/react-devtools-core && yarn build:standalone",
     "build:demo": "cd ./shells/dev && cross-env NODE_ENV=development cross-env TARGET=remote webpack --config webpack.config.js",
     "build:extension": "cross-env NODE_ENV=production yarn run build:extension:chrome && yarn run build:extension:firefox",
     "build:extension:dev": "cross-env NODE_ENV=development yarn run build:extension:chrome && yarn run build:extension:firefox",
@@ -52,6 +54,9 @@
     "prettier": "prettier --write '**/*.{js,json,css}'",
     "prettier:ci": "prettier --check '**/*.{js,json,css}'",
     "start": "cd ./shells/dev && cross-env NODE_ENV=development cross-env TARGET=local webpack-dev-server --open",
+    "start:core:backend": "cd ./packages/react-devtools-core && yarn start:backend",
+    "start:core:standalone": "cd ./packages/react-devtools-core && yarn start:standalone",
+    "start:electron": "cd ./packages/react-devtools && node bin.js",
     "start:prod": "cd ./shells/dev && cross-env NODE_ENV=production cross-env TARGET=local webpack-dev-server --open",
     "test": "jest",
     "test-debug": "node --inspect-brk node_modules/.bin/jest --runInBand",

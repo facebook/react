@@ -139,7 +139,7 @@ function recursivelyInitializeTree(
 
 function updateTree(
   commitTree: CommitTree,
-  operations: Uint32Array
+  operations: Array<number>
 ): CommitTree {
   // Clone the original tree so edits don't affect it.
   const nodes = new Map(commitTree.nodes);

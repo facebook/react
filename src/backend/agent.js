@@ -1,7 +1,6 @@
 // @flow
 
 import EventEmitter from 'events';
-import memoize from 'memoize-one';
 import throttle from 'lodash.throttle';
 import Bridge from 'src/bridge';
 import {
@@ -15,9 +14,11 @@ import {
   sessionStorageRemoveItem,
   sessionStorageSetItem,
 } from 'src/storage';
-import { hideOverlay, showOverlay } from './views/Highlighter';
+import setupHighlighter from './views/Highlighter';
 
 import type {
+  InstanceAndStyle,
+  NativeType,
   OwnersList,
   PathFrame,
   PathMatch,
@@ -75,6 +76,8 @@ type PersistedSelection = {|
 |};
 
 export default class Agent extends EventEmitter<{|
+  hideNativeHighlight: [],
+  showNativeHighlight: [NativeType],
   shutdown: [],
 |}> {
   _bridge: Bridge;
@@ -110,13 +113,8 @@ export default class Agent extends EventEmitter<{|
     this._bridge = bridge;
 
     bridge.addListener('captureScreenshot', this.captureScreenshot);
-    bridge.addListener(
-      'clearHighlightedElementInDOM',
-      this.clearHighlightedElementInDOM
-    );
     bridge.addListener('getProfilingData', this.getProfilingData);
     bridge.addListener('getProfilingStatus', this.getProfilingStatus);
-    bridge.addListener('highlightElementInDOM', this.highlightElementInDOM);
     bridge.addListener('getOwnersList', this.getOwnersList);
     bridge.addListener('inspectElement', this.inspectElement);
     bridge.addListener('logElementToConsole', this.logElementToConsole);
@@ -128,9 +126,7 @@ export default class Agent extends EventEmitter<{|
     bridge.addListener('reloadAndProfile', this.reloadAndProfile);
     bridge.addListener('screenshotCaptured', this.screenshotCaptured);
     bridge.addListener('selectElement', this.selectElement);
-    bridge.addListener('startInspectingDOM', this.startInspectingDOM);
     bridge.addListener('startProfiling', this.startProfiling);
-    bridge.addListener('stopInspectingDOM', this.stopInspectingDOM);
     bridge.addListener('stopProfiling', this.stopProfiling);
     bridge.addListener(
       'syncSelectionFromNativeElementsPanel',
@@ -152,6 +148,12 @@ export default class Agent extends EventEmitter<{|
       isBackendStorageAPISupported = true;
     } catch (error) {}
     bridge.send('isBackendStorageAPISupported', isBackendStorageAPISupported);
+
+    setupHighlighter(bridge, this);
+  }
+
+  get rendererInterfaces(): { [key: RendererID]: RendererInterface } {
+    return this._rendererInterfaces;
   }
 
   captureScreenshot = ({
@@ -163,6 +165,18 @@ export default class Agent extends EventEmitter<{|
   }) => {
     this._bridge.send('captureScreenshot', { commitIndex, rootID });
   };
+
+  getInstanceAndStyle({
+    id,
+    rendererID,
+  }: ElementAndRendererID): InstanceAndStyle | null {
+    const renderer = this._rendererInterfaces[rendererID];
+    if (renderer == null) {
+      console.warn(`Invalid renderer id "${rendererID}"`);
+      return null;
+    }
+    return renderer.getInstanceAndStyle(id);
+  }
 
   getIDForNode(node: Object): number | null {
     for (let rendererID in this._rendererInterfaces) {
@@ -188,54 +202,6 @@ export default class Agent extends EventEmitter<{|
 
   getProfilingStatus = () => {
     this._bridge.send('profilingStatus', this._isProfiling);
-  };
-
-  clearHighlightedElementInDOM = () => {
-    hideOverlay();
-  };
-
-  highlightElementInDOM = ({
-    displayName,
-    hideAfterTimeout,
-    id,
-    openNativeElementsPanel,
-    rendererID,
-    scrollIntoView,
-  }: {
-    displayName: string,
-    hideAfterTimeout: boolean,
-    id: number,
-    openNativeElementsPanel: boolean,
-    rendererID: number,
-    scrollIntoView: boolean,
-  }) => {
-    const renderer = this._rendererInterfaces[rendererID];
-    if (renderer == null) {
-      console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
-    }
-
-    let nodes: ?Array<HTMLElement> = null;
-    if (renderer !== null) {
-      nodes = ((renderer.findNativeNodesForFiberID(
-        id
-      ): any): ?Array<HTMLElement>);
-    }
-
-    if (nodes != null && nodes[0] != null) {
-      const node = nodes[0];
-      if (scrollIntoView && typeof node.scrollIntoView === 'function') {
-        // If the node isn't visible show it before highlighting it.
-        // We may want to reconsider this; it might be a little disruptive.
-        node.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-      }
-      showOverlay(nodes, displayName, hideAfterTimeout);
-      if (openNativeElementsPanel) {
-        window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 = node;
-        this._bridge.send('syncSelectionToNativeElementsPanel');
-      }
-    } else {
-      hideOverlay();
-    }
   };
 
   getOwnersList = ({ id, rendererID }: ElementAndRendererID) => {
@@ -373,6 +339,13 @@ export default class Agent extends EventEmitter<{|
     }
   };
 
+  selectNode(target: Object): void {
+    const id = this.getIDForNode(target);
+    if (id !== null) {
+      this._bridge.send('selectFiber', id);
+    }
+  }
+
   setRendererInterface(
     rendererID: RendererID,
     rendererInterface: RendererInterface
@@ -397,26 +370,12 @@ export default class Agent extends EventEmitter<{|
     if (target == null) {
       return;
     }
-    const id = this.getIDForNode(target);
-    if (id !== null) {
-      this._bridge.send('selectFiber', id);
-    }
+    this.selectNode(target);
   };
 
   shutdown = () => {
     // Clean up the overlay if visible, and associated events.
-    this.stopInspectingDOM();
     this.emit('shutdown');
-  };
-
-  startInspectingDOM = () => {
-    window.addEventListener('click', this._onClick, true);
-    window.addEventListener('mousedown', this._onMouseEvent, true);
-    window.addEventListener('mouseover', this._onMouseEvent, true);
-    window.addEventListener('mouseup', this._onMouseEvent, true);
-    window.addEventListener('pointerdown', this._onPointerDown, true);
-    window.addEventListener('pointerover', this._onPointerOver, true);
-    window.addEventListener('pointerup', this._onPointerUp, true);
   };
 
   startProfiling = (recordChangeDescriptions: boolean) => {
@@ -429,18 +388,6 @@ export default class Agent extends EventEmitter<{|
       renderer.startProfiling(recordChangeDescriptions);
     }
     this._bridge.send('profilingStatus', this._isProfiling);
-  };
-
-  stopInspectingDOM = () => {
-    hideOverlay();
-
-    window.removeEventListener('click', this._onClick, true);
-    window.removeEventListener('mousedown', this._onMouseEvent, true);
-    window.removeEventListener('mouseover', this._onMouseEvent, true);
-    window.removeEventListener('mouseup', this._onMouseEvent, true);
-    window.removeEventListener('pointerdown', this._onPointerDown, true);
-    window.removeEventListener('pointerover', this._onPointerOver, true);
-    window.removeEventListener('pointerup', this._onPointerUp, true);
   };
 
   stopProfiling = () => {
@@ -473,7 +420,7 @@ export default class Agent extends EventEmitter<{|
     }
   };
 
-  onHookOperations = (operations: Uint32Array) => {
+  onHookOperations = (operations: Array<number>) => {
     if (__DEBUG__) {
       debug('onHookOperations', operations);
     }
@@ -505,79 +452,31 @@ export default class Agent extends EventEmitter<{|
       if (this._persistedSelection.rendererID === rendererID) {
         // Check if we can select a deeper match for the persisted selection.
         const renderer = this._rendererInterfaces[rendererID];
-        const prevMatch = this._persistedSelectionMatch;
-        const nextMatch = renderer.getBestMatchForTrackedPath();
-        this._persistedSelectionMatch = nextMatch;
-        const prevMatchID = prevMatch !== null ? prevMatch.id : null;
-        const nextMatchID = nextMatch !== null ? nextMatch.id : null;
-        if (prevMatchID !== nextMatchID) {
-          if (nextMatchID !== null) {
-            // We moved forward, unlocking a deeper node.
-            this._bridge.send('selectFiber', nextMatchID);
+        if (renderer == null) {
+          console.warn(`Invalid renderer id "${rendererID}"`);
+        } else {
+          const prevMatch = this._persistedSelectionMatch;
+          const nextMatch = renderer.getBestMatchForTrackedPath();
+          this._persistedSelectionMatch = nextMatch;
+          const prevMatchID = prevMatch !== null ? prevMatch.id : null;
+          const nextMatchID = nextMatch !== null ? nextMatch.id : null;
+          if (prevMatchID !== nextMatchID) {
+            if (nextMatchID !== null) {
+              // We moved forward, unlocking a deeper node.
+              this._bridge.send('selectFiber', nextMatchID);
+            }
           }
-        }
-        if (nextMatch !== null && nextMatch.isFullMatch) {
-          // We've just unlocked the innermost selected node.
-          // There's no point tracking it further.
-          this._persistedSelection = null;
-          this._persistedSelectionMatch = null;
-          renderer.setTrackedPath(null);
+          if (nextMatch !== null && nextMatch.isFullMatch) {
+            // We've just unlocked the innermost selected node.
+            // There's no point tracking it further.
+            this._persistedSelection = null;
+            this._persistedSelectionMatch = null;
+            renderer.setTrackedPath(null);
+          }
         }
       }
     }
   };
-
-  _onClick = (event: MouseEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    this.stopInspectingDOM();
-
-    this._bridge.send('stopInspectingDOM', true);
-  };
-
-  _onMouseEvent = (event: MouseEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-  };
-
-  _onPointerDown = (event: MouseEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    this._selectFiberForNode(((event.target: any): HTMLElement));
-  };
-
-  _onPointerOver = (event: MouseEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    const target = ((event.target: any): HTMLElement);
-
-    // Don't pass the name explicitly.
-    // It will be inferred from DOM tag and Fiber owner.
-    showOverlay([target], null, false);
-
-    this._selectFiberForNode(target);
-  };
-
-  _onPointerUp = (event: MouseEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-  };
-
-  _selectFiberForNode = throttle(
-    memoize((node: HTMLElement) => {
-      const id = this.getIDForNode(node);
-      if (id !== null) {
-        this._bridge.send('selectFiber', id);
-      }
-    }),
-    200,
-    // Don't change the selection in the very first 200ms
-    // because those are usually unintentional as you lift the cursor.
-    { leading: false }
-  );
 
   _throttledPersistSelection = throttle((rendererID: number, id: number) => {
     // This is throttled, so both renderer and selected ID

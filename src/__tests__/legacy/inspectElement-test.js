@@ -88,6 +88,49 @@ describe('InspectedElementContext', () => {
     done();
   });
 
+  it('should support simple data types', async done => {
+    const Example = () => null;
+
+    act(() =>
+      ReactDOM.render(
+        <Example
+          boolean_false={false}
+          boolean_true={true}
+          infinity={Infinity}
+          integer_zero={0}
+          integer_one={1}
+          float={1.23}
+          string="abc"
+          string_empty=""
+          nan={NaN}
+          value_null={null}
+          value_undefined={undefined}
+        />,
+        document.createElement('div')
+      )
+    );
+
+    const id = ((store.getElementIDAtIndex(0): any): number);
+    const inspectedElement = await read(id);
+
+    expect(inspectedElement).toMatchSnapshot('1: Initial inspection');
+
+    const { props } = inspectedElement.value;
+    expect(props.boolean_false).toBe(false);
+    expect(props.boolean_true).toBe(true);
+    expect(Number.isFinite(props.infinity)).toBe(false);
+    expect(props.integer_zero).toEqual(0);
+    expect(props.integer_one).toEqual(1);
+    expect(props.float).toEqual(1.23);
+    expect(props.string).toEqual('abc');
+    expect(props.string_empty).toEqual('');
+    expect(props.nan).toBeNaN();
+    expect(props.value_null).toBeNull();
+    expect(props.value_undefined).toBeUndefined();
+
+    done();
+  });
+
   it('should support complex data types', async done => {
     const Example = () => null;
 

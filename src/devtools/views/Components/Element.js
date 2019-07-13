@@ -119,7 +119,6 @@ export default function ElementView({ data, index, style }: Props) {
         {ownerID === null ? (
           <ExpandCollapseToggle element={element} store={store} />
         ) : null}
-        <span className={styles.Bracket}>&lt;</span>
         <DisplayName displayName={displayName} id={((id: any): number)} />
         {key && (
           <Fragment>
@@ -129,7 +128,6 @@ export default function ElementView({ data, index, style }: Props) {
             </span>
           </Fragment>
         )}
-        <span className={styles.Bracket}>&gt;</span>
         <Badge
           className={styles.Badge}
           hocDisplayNames={hocDisplayNames}

@@ -12,6 +12,7 @@ import HocBadges from './HocBadges';
 import InspectedElementTree from './InspectedElementTree';
 import { InspectedElementContext } from './InspectedElementContext';
 import ViewElementSourceContext from './ViewElementSourceContext';
+import NativeStyleEditor from './NativeStyleEditor';
 import Toggle from '../Toggle';
 import Badge from './Badge';
 import {
@@ -34,7 +35,9 @@ export type Props = {||};
 export default function SelectedElement(_: Props) {
   const { inspectedElementID } = useContext(TreeStateContext);
   const dispatch = useContext(TreeDispatcherContext);
-  const viewElementSource = useContext(ViewElementSourceContext);
+  const { isFileLocationRequired, viewElementSourceFunction } = useContext(
+    ViewElementSourceContext
+  );
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
   const { dispatch: modalDialogDispatch } = useContext(ModalDialogContext);
@@ -55,7 +58,7 @@ export default function SelectedElement(_: Props) {
     if (element !== null && inspectedElementID !== null) {
       const rendererID = store.getRendererIDForElement(inspectedElementID);
       if (rendererID !== null) {
-        bridge.send('highlightElementInDOM', {
+        bridge.send('highlightNativeElement', {
           displayName: element.displayName,
           hideAfterTimeout: true,
           id: inspectedElementID,
@@ -80,15 +83,19 @@ export default function SelectedElement(_: Props) {
   }, [bridge, inspectedElementID, store]);
 
   const viewSource = useCallback(() => {
-    if (viewElementSource != null && inspectedElementID !== null) {
-      viewElementSource(inspectedElementID);
+    if (viewElementSourceFunction != null && inspectedElement !== null) {
+      viewElementSourceFunction(
+        inspectedElement.id,
+        ((inspectedElement: any): InspectedElement)
+      );
     }
-  }, [inspectedElementID, viewElementSource]);
+  }, [inspectedElement, viewElementSourceFunction]);
 
   const canViewSource =
     inspectedElement &&
     inspectedElement.canViewSource &&
-    viewElementSource !== null;
+    viewElementSourceFunction !== null &&
+    (!isFileLocationRequired || inspectedElement.source !== null);
 
   const isSuspended =
     element !== null &&
@@ -343,6 +350,8 @@ function InspectedElementView({
           id={id}
         />
       )}
+
+      <NativeStyleEditor />
 
       {ownerID === null && owners !== null && owners.length > 0 && (
         <div className={styles.Owners}>

@@ -150,24 +150,22 @@ const NoProfilingData = () => (
 const ProfilingNotSupported = () => (
   <div className={styles.Column}>
     <div className={styles.Header}>Profiling not supported.</div>
-    <div className={styles.Column}>
-      <p>
-        Profiling support requires either a development or production-profiling
-        build of React v16.5+.
-      </p>
-      <p>
-        Learn more at{' '}
-        <a
-          className={styles.Link}
-          href="https://fb.me/react-profiling"
-          rel="noopener noreferrer"
-          target="_blank"
-        >
-          fb.me/react-profiling
-        </a>
-        .
-      </p>
-    </div>
+    <p className={styles.Paragraph}>
+      Profiling support requires either a development or production-profiling
+      build of React v16.5+.
+    </p>
+    <p className={styles.Paragraph}>
+      Learn more at{' '}
+      <a
+        className={styles.Link}
+        href="https://fb.me/react-profiling"
+        rel="noopener noreferrer"
+        target="_blank"
+      >
+        fb.me/react-profiling
+      </a>
+      .
+    </p>
   </div>
 );
 

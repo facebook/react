@@ -21,6 +21,11 @@ export function showOverlay(
   componentName: string | null,
   hideAfterTimeout: boolean
 ) {
+  // TODO (npm-packages) Detect RN and support it somehow
+  if (window.document == null) {
+    return;
+  }
+
   if (timeoutID !== null) {
     clearTimeout(timeoutID);
   }

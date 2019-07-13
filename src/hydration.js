@@ -43,45 +43,79 @@ type Dehydrated = {|
 // but may decrease the responsiveness of expanding objects/arrays to inspect further.
 const LEVEL_THRESHOLD = 2;
 
+type PropType =
+  | 'array'
+  | 'array_buffer'
+  | 'boolean'
+  | 'data_view'
+  | 'date'
+  | 'function'
+  | 'html_element'
+  | 'infinity'
+  | 'iterator'
+  | 'nan'
+  | 'null'
+  | 'number'
+  | 'object'
+  | 'react_element'
+  | 'string'
+  | 'symbol'
+  | 'typed_array'
+  | 'undefined'
+  | 'unknown';
+
 /**
  * Get a enhanced/artificial type string based on the object instance
  */
-function getPropType(data: Object): string | null {
-  if (!data) {
-    return null;
+function getDataType(data: Object): PropType {
+  if (data === null) {
+    return 'null';
+  } else if (data === undefined) {
+    return 'undefined';
   }
 
   if (isElement(data)) {
     return 'react_element';
   }
 
-  if (data instanceof HTMLElement) {
+  if (typeof HTMLElement !== 'undefined' && data instanceof HTMLElement) {
     return 'html_element';
   }
 
   const type = typeof data;
-  if (type === 'object') {
-    if (Array.isArray(data)) {
-      return 'array';
-    }
-    if (ArrayBuffer.isView(data)) {
-      if (data instanceof DataView) {
-        return 'data_view';
+  switch (type) {
+    case 'boolean':
+      return 'boolean';
+    case 'function':
+      return 'function';
+    case 'number':
+      if (Number.isNaN(data)) {
+        return 'nan';
+      } else if (!Number.isFinite(data)) {
+        return 'infinity';
+      } else {
+        return 'number';
       }
-      return 'typed_array';
-    }
-    if (data instanceof ArrayBuffer) {
-      return 'array_buffer';
-    }
-    if (typeof data[Symbol.iterator] === 'function') {
-      return 'iterator';
-    }
-    if (Object.prototype.toString.call(data) === '[object Date]') {
-      return 'date';
-    }
+    case 'object':
+      if (Array.isArray(data)) {
+        return 'array';
+      } else if (ArrayBuffer.isView(data)) {
+        return data instanceof DataView ? 'data_view' : 'typed_array';
+      } else if (data instanceof ArrayBuffer) {
+        return 'array_buffer';
+      } else if (typeof data[Symbol.iterator] === 'function') {
+        return 'iterator';
+      } else if (Object.prototype.toString.call(data) === '[object Date]') {
+        return 'date';
+      }
+      return 'object';
+    case 'string':
+      return 'string';
+    case 'symbol':
+      return 'symbol';
+    default:
+      return 'unknown';
   }
-
-  return type;
 }
 
 /**
@@ -143,7 +177,7 @@ export function dehydrate(
   isPathWhitelisted: (path: Array<string | number>) => boolean,
   level?: number = 0
 ): string | Dehydrated | { [key: string]: string | Dehydrated } {
-  const type = getPropType(data);
+  const type = getDataType(data);
 
   switch (type) {
     case 'html_element':
@@ -151,7 +185,7 @@ export function dehydrate(
       return {
         inspectable: false,
         name: data.tagName,
-        type: 'html_element',
+        type,
       };
 
     case 'function':
@@ -159,20 +193,18 @@ export function dehydrate(
       return {
         inspectable: false,
         name: data.name,
-        type: 'function',
+        type,
       };
 
     case 'string':
       return data.length <= 500 ? data : data.slice(0, 500) + '...';
 
-    // We have to do this assignment b/c Flow doesn't think "symbol" is
-    // something typeof would return. Error 'unexpected predicate "symbol"'
     case 'symbol':
       cleaned.push(path);
       return {
         inspectable: false,
         name: data.toString(),
-        type: 'symbol',
+        type,
       };
 
     // React Elements aren't very inspector-friendly,
@@ -182,7 +214,7 @@ export function dehydrate(
       return {
         inspectable: false,
         name: getDisplayNameForReactElement(data),
-        type: 'react_element',
+        type,
       };
 
     // ArrayBuffers error if you try to inspect them.
@@ -220,7 +252,7 @@ export function dehydrate(
       return {
         inspectable: false,
         name: data.toString(),
-        type: 'date',
+        type,
       };
 
     case 'object':
@@ -240,6 +272,16 @@ export function dehydrate(
         }
         return object;
       }
+
+    case 'infinity':
+    case 'nan':
+    case 'undefined':
+      // Some values are lossy when sent through a WebSocket.
+      // We dehydrate+rehydrate them to preserve their type.
+      cleaned.push(path);
+      return {
+        type,
+      };
 
     default:
       return data;
@@ -271,22 +313,30 @@ export function hydrate(
     const length = path.length;
     const last = path[length - 1];
     const parent = getInObject(object, path.slice(0, length - 1));
-    if (!parent || !parent[last]) {
+    if (!parent || !parent.hasOwnProperty(last)) {
       return;
     }
 
     const value = parent[last];
 
-    // Replace the string keys with Symbols so they're non-enumerable.
-    const replaced: { [key: Symbol]: boolean | string } = {};
-    replaced[meta.inspectable] = !!value.inspectable;
-    replaced[meta.inspected] = false;
-    replaced[meta.name] = value.name;
-    replaced[meta.size] = value.size;
-    replaced[meta.readonly] = !!value.readonly;
-    replaced[meta.type] = value.type;
+    if (value.type === 'infinity') {
+      parent[last] = Infinity;
+    } else if (value.type === 'nan') {
+      parent[last] = NaN;
+    } else if (value.type === 'undefined') {
+      parent[last] = undefined;
+    } else {
+      // Replace the string keys with Symbols so they're non-enumerable.
+      const replaced: { [key: Symbol]: boolean | string } = {};
+      replaced[meta.inspectable] = !!value.inspectable;
+      replaced[meta.inspected] = false;
+      replaced[meta.name] = value.name;
+      replaced[meta.size] = value.size;
+      replaced[meta.readonly] = !!value.readonly;
+      replaced[meta.type] = value.type;
 
-    parent[last] = replaced;
+      parent[last] = replaced;
+    }
   });
   return object;
 }

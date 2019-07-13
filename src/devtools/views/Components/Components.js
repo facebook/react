@@ -4,6 +4,7 @@ import React, { Suspense } from 'react';
 import Tree from './Tree';
 import SelectedElement from './SelectedElement';
 import { InspectedElementContextController } from './InspectedElementContext';
+import { NativeStyleContextController } from './NativeStyleEditor/context';
 import { OwnersListContextController } from './OwnersListContext';
 import portaledContent from '../portaledContent';
 import { ModalDialog } from '../ModalDialog';
@@ -23,9 +24,11 @@ function Components(_: {||}) {
               <Tree />
             </div>
             <div className={styles.SelectedElementWrapper}>
-              <Suspense fallback={<Loading />}>
-                <SelectedElement />
-              </Suspense>
+              <NativeStyleContextController>
+                <Suspense fallback={<Loading />}>
+                  <SelectedElement />
+                </Suspense>
+              </NativeStyleContextController>
             </div>
             <ModalDialog />
             <SettingsModal />

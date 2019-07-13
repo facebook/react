@@ -9,6 +9,7 @@ import type {
   ProfilingDataBackend,
   RendererID,
 } from 'src/backend/types';
+import type { StyleAndLayout as StyleAndLayoutPayload } from 'src/backend/NativeStyleEditor/types';
 
 const BATCH_DURATION = 100;
 
@@ -48,20 +49,34 @@ type InspectElementParams = {|
   path?: Array<string | number>,
 |};
 
+type NativeStyleEditor_RenameAttributeParams = {|
+  ...ElementAndRendererID,
+  oldName: string,
+  newName: string,
+  value: string,
+|};
+
+type NativeStyleEditor_SetValueParams = {|
+  ...ElementAndRendererID,
+  name: string,
+  value: string,
+|};
+
 export default class Bridge extends EventEmitter<{|
   captureScreenshot: [{| commitIndex: number, rootID: number |}],
-  clearHighlightedElementInDOM: [],
+  clearNativeElementHighlight: [],
   getOwnersList: [ElementAndRendererID],
   getProfilingData: [{| rendererID: RendererID |}],
   getProfilingStatus: [],
-  highlightElementInDOM: [HighlightElementInDOM],
+  highlightNativeElement: [HighlightElementInDOM],
   init: [],
   inspectElement: [InspectElementParams],
   inspectedElement: [InspectedElementPayload],
   isBackendStorageAPISupported: [boolean],
   logElementToConsole: [ElementAndRendererID],
-  operations: [Uint32Array],
+  operations: [Array<number>],
   ownersList: [OwnersList],
+  overrideComponentFilters: [Array<ComponentFilter>],
   overrideContext: [OverrideValue],
   overrideHookState: [OverrideHookState],
   overrideProps: [OverrideValue],
@@ -77,14 +92,23 @@ export default class Bridge extends EventEmitter<{|
   selectElement: [ElementAndRendererID],
   selectFiber: [number],
   shutdown: [],
-  startInspectingDOM: [],
+  startInspectingNative: [],
   startProfiling: [boolean],
-  stopInspectingDOM: [boolean],
+  stopInspectingNative: [boolean],
   stopProfiling: [],
   syncSelectionFromNativeElementsPanel: [],
   syncSelectionToNativeElementsPanel: [],
   updateComponentFilters: [Array<ComponentFilter>],
   viewElementSource: [ElementAndRendererID],
+
+  // React Native style editor plug-in.
+  isNativeStyleEditorSupported: [
+    {| isSupported: boolean, validAttributes: $ReadOnlyArray<string> |},
+  ],
+  NativeStyleEditor_measure: [ElementAndRendererID],
+  NativeStyleEditor_renameAttribute: [NativeStyleEditor_RenameAttributeParams],
+  NativeStyleEditor_setValue: [NativeStyleEditor_SetValueParams],
+  NativeStyleEditor_styleAndLayout: [StyleAndLayoutPayload],
 |}> {
   _isShutdown: boolean = false;
   _messageQueue: Array<any> = [];

@@ -24,6 +24,9 @@ module.exports = api => {
   } else {
     targets.chrome = minChromeVersion.toString();
     targets.firefox = minFirefoxVersion.toString();
+
+    // This targets RN/Hermes.
+    targets.IE = '11';
   }
   const plugins = [
     ['@babel/plugin-transform-flow-strip-types'],

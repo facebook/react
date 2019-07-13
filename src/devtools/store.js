@@ -46,6 +46,7 @@ const LOCAL_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY =
 type Config = {|
   isProfiling?: boolean,
   supportsCaptureScreenshots?: boolean,
+  supportsNativeInspection?: boolean,
   supportsReloadAndProfile?: boolean,
   supportsProfiling?: boolean,
 |};
@@ -66,6 +67,7 @@ export default class Store extends EventEmitter<{|
   mutated: [[Array<number>, Map<number, number>]],
   recordChangeDescriptions: [],
   roots: [],
+  supportsNativeStyleEditor: [],
   supportsProfiling: [],
   supportsReloadAndProfile: [],
 |}> {
@@ -86,9 +88,14 @@ export default class Store extends EventEmitter<{|
   // The InspectedElementContext also relies on this mutability for its WeakMap usage.
   _idToElement: Map<number, Element> = new Map();
 
+  // Should the React Native style editor panel be shown?
+  _isNativeStyleEditorSupported: boolean = false;
+
   // Can the backend use the Storage API (e.g. localStorage)?
   // If not, features like reload-and-profile will not work correctly and must be disabled.
   _isBackendStorageAPISupported: boolean = false;
+
+  _nativeStyleEditorValidAttributes: $ReadOnlyArray<string> | null = null;
 
   // Map of element (id) to the set of elements (ids) it owns.
   // This map enables getOwnersListForElement() to avoid traversing the entire tree.
@@ -114,6 +121,7 @@ export default class Store extends EventEmitter<{|
   // These options may be initially set by a confiugraiton option when constructing the Store.
   // In the case of "supportsProfiling", the option may be updated based on the injected renderers.
   _supportsCaptureScreenshots: boolean = false;
+  _supportsNativeInspection: boolean = false;
   _supportsProfiling: boolean = false;
   _supportsReloadAndProfile: boolean = false;
 
@@ -145,6 +153,7 @@ export default class Store extends EventEmitter<{|
 
       const {
         supportsCaptureScreenshots,
+        supportsNativeInspection,
         supportsProfiling,
         supportsReloadAndProfile,
       } = config;
@@ -153,6 +162,7 @@ export default class Store extends EventEmitter<{|
         this._captureScreenshots =
           localStorageGetItem(LOCAL_STORAGE_CAPTURE_SCREENSHOTS_KEY) === 'true';
       }
+      this._supportsNativeInspection = supportsNativeInspection !== false;
       if (supportsProfiling) {
         this._supportsProfiling = true;
       }
@@ -163,10 +173,18 @@ export default class Store extends EventEmitter<{|
 
     this._bridge = bridge;
     bridge.addListener('operations', this.onBridgeOperations);
+    bridge.addListener(
+      'overrideComponentFilters',
+      this.onBridgeOverrideComponentFilters
+    );
     bridge.addListener('shutdown', this.onBridgeShutdown);
     bridge.addListener(
       'isBackendStorageAPISupported',
       this.onBridgeStorageSupported
+    );
+    bridge.addListener(
+      'isNativeStyleEditorSupported',
+      this.onBridgeNativeStyleEditorSupported
     );
 
     this._profilerStore = new ProfilerStore(bridge, this, isProfiling);
@@ -283,6 +301,10 @@ export default class Store extends EventEmitter<{|
     return this._hasOwnerMetadata;
   }
 
+  get nativeStyleEditorValidAttributes(): $ReadOnlyArray<string> | null {
+    return this._nativeStyleEditorValidAttributes;
+  }
+
   get numElements(): number {
     return this._weightAcrossRoots;
   }
@@ -319,6 +341,14 @@ export default class Store extends EventEmitter<{|
 
   get supportsCaptureScreenshots(): boolean {
     return this._supportsCaptureScreenshots;
+  }
+
+  get supportsNativeInspection(): boolean {
+    return this._supportsNativeInspection;
+  }
+
+  get supportsNativeStyleEditor(): boolean {
+    return this._isNativeStyleEditorSupported;
   }
 
   get supportsProfiling(): boolean {
@@ -666,12 +696,20 @@ export default class Store extends EventEmitter<{|
     }
   };
 
-  onBridgeOperations = (operations: Uint32Array) => {
-    if (!(operations instanceof Uint32Array)) {
-      // $FlowFixMe TODO HACK Temporary workaround for the fact that Chrome is not transferring the typed array.
-      operations = Uint32Array.from(Object.values(operations));
-    }
+  onBridgeNativeStyleEditorSupported = ({
+    isSupported,
+    validAttributes,
+  }: {|
+    isSupported: boolean,
+    validAttributes: $ReadOnlyArray<string>,
+  |}) => {
+    this._isNativeStyleEditorSupported = isSupported;
+    this._nativeStyleEditorValidAttributes = validAttributes || null;
 
+    this.emit('supportsNativeStyleEditor');
+  };
+
+  onBridgeOperations = (operations: Array<number>) => {
     if (__DEBUG__) {
       console.groupCollapsed('onBridgeOperations');
       debug('onBridgeOperations', operations.join(','));
@@ -963,6 +1001,19 @@ export default class Store extends EventEmitter<{|
     }
 
     this.emit('mutated', [addedElementIDs, removedElementIDs]);
+  };
+
+  // Certain backends save filters on a per-domain basis.
+  // In order to prevent filter preferences and applied filters from being out of sync,
+  // this message enables the backend to override the frontend's current ("saved") filters.
+  // This action should also override the saved filters too,
+  // else reloading the frontend without reloading the backend would leave things out of sync.
+  onBridgeOverrideComponentFilters = (
+    componentFilters: Array<ComponentFilter>
+  ) => {
+    this._componentFilters = componentFilters;
+
+    saveComponentFilters(componentFilters);
   };
 
   onBridgeShutdown = () => {

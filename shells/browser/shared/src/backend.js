@@ -23,6 +23,8 @@ function setup(hook) {
   const Agent = require('src/backend/agent').default;
   const Bridge = require('src/bridge').default;
   const { initBackend } = require('src/backend');
+  const setupNativeStyleEditor = require('src/backend/NativeStyleEditor/setupNativeStyleEditor')
+    .default;
 
   const bridge = new Bridge({
     listen(fn) {
@@ -62,4 +64,14 @@ function setup(hook) {
   });
 
   initBackend(hook, agent, window);
+
+  // Setup React Native style editor if a renderer like react-native-web has injected it.
+  if (!!hook.resolveRNStyle) {
+    setupNativeStyleEditor(
+      bridge,
+      agent,
+      hook.resolveRNStyle,
+      hook.nativeStyleEditorValidAttributes
+    );
+  }
 }

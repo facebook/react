@@ -58,27 +58,25 @@ export function getUID(): number {
   return ++uidCounter;
 }
 
-export function utfDecodeString(array: Uint32Array): string {
+export function utfDecodeString(array: Array<number>): string {
   return String.fromCodePoint(...array);
 }
 
-export function utfEncodeString(string: string): Uint32Array {
+export function utfEncodeString(string: string): Array<number> {
   let cached = encodedStringCache.get(string);
   if (cached !== undefined) {
     return cached;
   }
 
-  // $FlowFixMe Flow's Uint32Array.from's type definition is wrong; first argument of mapFn will be string
-  const encoded = Uint32Array.from(string, toCodePoint);
+  const encoded = new Array(string.length);
+  for (let i = 0; i < string.length; i++) {
+    encoded[i] = string.codePointAt(i);
+  }
   encodedStringCache.set(string, encoded);
   return encoded;
 }
 
-function toCodePoint(string: string) {
-  return string.codePointAt(0);
-}
-
-export function printOperationsArray(operations: Uint32Array) {
+export function printOperationsArray(operations: Array<number>) {
   // The first two values are always rendererID and rootID
   const rendererID = operations[0];
   const rootID = operations[1];

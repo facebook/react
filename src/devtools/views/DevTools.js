@@ -5,7 +5,7 @@
 import '@reach/menu-button/styles.css';
 import '@reach/tooltip/styles.css';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import Bridge from 'src/bridge';
 import Store from '../store';
 import { BridgeContext, StoreContext } from './context';
@@ -23,18 +23,23 @@ import styles from './DevTools.css';
 
 import './root.css';
 
-export type BrowserName = 'Chrome' | 'Firefox';
+import type { InspectedElement } from 'src/devtools/views/Components/types';
+
 export type BrowserTheme = 'dark' | 'light';
 export type TabID = 'components' | 'profiler' | 'settings';
+export type ViewElementSource = (
+  id: number,
+  inspectedElement: InspectedElement
+) => void;
 
 export type Props = {|
   bridge: Bridge,
-  browserName: BrowserName,
-  browserTheme: BrowserTheme,
+  browserTheme?: BrowserTheme,
   defaultTab?: TabID,
   showTabBar?: boolean,
   store: Store,
-  viewElementSource?: ?Function,
+  viewElementSourceFunction?: ?ViewElementSource,
+  viewElementSourceRequiresFileLocation?: boolean,
 
   // This property is used only by the web extension target.
   // The built-in tab UI is hidden in that case, in favor of the browser's own panel tabs.
@@ -67,7 +72,6 @@ const tabs = [componentsTab, profilerTab];
 
 export default function DevTools({
   bridge,
-  browserName,
   browserTheme = 'light',
   defaultTab = 'components',
   componentsPortalContainer,
@@ -76,12 +80,21 @@ export default function DevTools({
   settingsPortalContainer,
   showTabBar = false,
   store,
-  viewElementSource = null,
+  viewElementSourceFunction,
+  viewElementSourceRequiresFileLocation = false,
 }: Props) {
   const [tab, setTab] = useState(defaultTab);
   if (overrideTab != null && overrideTab !== tab) {
     setTab(overrideTab);
   }
+
+  const viewElementSource = useMemo(
+    () => ({
+      isFileLocationRequired: viewElementSourceRequiresFileLocation,
+      viewElementSourceFunction: viewElementSourceFunction || null,
+    }),
+    [viewElementSourceFunction, viewElementSourceRequiresFileLocation]
+  );
 
   return (
     <BridgeContext.Provider value={bridge}>
