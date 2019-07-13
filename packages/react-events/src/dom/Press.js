@@ -868,6 +868,7 @@ const PressResponderImpl: ReactDOMEventResponderImpl = {
       case 'mouseup':
       case 'touchend': {
         if (isPressed) {
+          const button = nativeEvent.button;
           let isKeyboardEvent = false;
           let touchEvent;
           if (type === 'pointerup' && activePointerId !== pointerId) {
@@ -885,6 +886,9 @@ const PressResponderImpl: ReactDOMEventResponderImpl = {
               return;
             }
             isKeyboardEvent = true;
+            removeRootEventTypes(context, state);
+          } else if (button === 1) {
+            // Remove the root events here as no 'click' event is dispatched when this 'button' is pressed.
             removeRootEventTypes(context, state);
           }
 
@@ -936,10 +940,7 @@ const PressResponderImpl: ReactDOMEventResponderImpl = {
                 state,
               );
             }
-            if (
-              state.isPressWithinResponderRegion &&
-              nativeEvent.button !== 1
-            ) {
+            if (state.isPressWithinResponderRegion && button !== 1) {
               if (
                 !(
                   wasLongPressed &&

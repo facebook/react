@@ -50,7 +50,6 @@ import {
   jsxWithValidationDynamic,
 } from './ReactElementValidator';
 import ReactSharedInternals from './ReactSharedInternals';
-import {error, warn} from './withComponentStack';
 import createResponder from 'shared/createEventResponder';
 import {enableJSXTransformAPI, enableFlareAPI} from 'shared/ReactFeatureFlags';
 const React = {
@@ -70,9 +69,6 @@ const React = {
   forwardRef,
   lazy,
   memo,
-
-  error,
-  warn,
 
   useCallback,
   useContext,
