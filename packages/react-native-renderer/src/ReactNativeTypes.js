@@ -131,6 +131,7 @@ type SecretInternalsFabricType = {
 export type ReactNativeType = {
   NativeComponent: typeof ReactNativeComponent,
   findNodeHandle(componentOrHandle: any): ?number,
+  dispatchCommand(handle: any, command: string, args: Array<any>): void,
   setNativeProps(handle: any, nativeProps: Object): void,
   render(
     element: React$Element<any>,
@@ -147,6 +148,7 @@ export type ReactNativeType = {
 export type ReactFabricType = {
   NativeComponent: typeof ReactNativeComponent,
   findNodeHandle(componentOrHandle: any): ?number,
+  dispatchCommand(handle: any, command: string, args: Array<any>): void,
   setNativeProps(handle: any, nativeProps: Object): void,
   render(
     element: React$Element<any>,
@@ -156,17 +158,6 @@ export type ReactFabricType = {
   unmountComponentAtNode(containerTag: number): any,
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: SecretInternalsFabricType,
 };
-
-export type ReactNativeEventResponderEventType =
-  | 'topMouseDown'
-  | 'topMouseMove'
-  | 'topMouseUp'
-  | 'topScroll'
-  | 'topSelectionChange'
-  | 'topTouchCancel'
-  | 'topTouchEnd'
-  | 'topTouchMove'
-  | 'topTouchStart';
 
 export type ReactNativeEventTarget = {
   node: Object,
@@ -199,9 +190,10 @@ export type ReactFaricEvent = {
 };
 
 export type ReactNativeResponderEvent = {
+  currentTarget: null | ReactNativeEventTarget,
   nativeEvent: ReactFaricEvent,
   target: null | ReactNativeEventTarget,
-  type: ReactNativeEventResponderEventType,
+  type: string,
 };
 
 export type ReactNativeResponderContext = {
@@ -223,15 +215,8 @@ export type ReactNativeResponderContext = {
       bottom: number,
     }) => void,
   ): void,
-  addRootEventTypes: (
-    rootEventTypes: Array<ReactNativeEventResponderEventType>,
-  ) => void,
-  removeRootEventTypes: (
-    rootEventTypes: Array<ReactNativeEventResponderEventType>,
-  ) => void,
-  getEventCurrentTarget(
-    event: ReactNativeResponderEvent,
-  ): ReactNativeEventTarget,
+  addRootEventTypes: (rootEventTypes: Array<string>) => void,
+  removeRootEventTypes: (rootEventTypes: Array<string>) => void,
   setTimeout: (func: () => void, timeout: number) => number,
   clearTimeout: (timerId: number) => void,
   getTimeStamp: () => number,

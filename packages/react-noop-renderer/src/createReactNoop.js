@@ -65,7 +65,7 @@ type TextInstance = {|
 |};
 type HostContext = Object;
 
-const {ReactCurrentActingRendererSigil} = ReactSharedInternals;
+const {IsSomeRendererActing} = ReactSharedInternals;
 
 const NO_CONTEXT = {};
 const UPPERCASE_CONTEXT = {};
@@ -393,7 +393,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     now: Scheduler.unstable_now,
 
     isPrimaryRenderer: true,
-    shouldWarnUnactedUpdates: true,
+    warnsIfNotActing: true,
     supportsHydration: false,
 
     mountEventComponent(): void {
@@ -566,7 +566,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   const {
     flushPassiveEffects,
     batchedUpdates,
-    ReactActingRendererSigil,
+    IsThisRendererActing,
   } = NoopRenderer;
 
   // this act() implementation should be exactly the same in
@@ -615,17 +615,21 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
   function act(callback: () => Thenable) {
     let previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
-    let previousActingUpdatesSigil;
+    let previousIsSomeRendererActing;
+    let previousIsThisRendererActing;
     actingUpdatesScopeDepth++;
     if (__DEV__) {
-      previousActingUpdatesSigil = ReactCurrentActingRendererSigil.current;
-      ReactCurrentActingRendererSigil.current = ReactActingRendererSigil;
+      previousIsSomeRendererActing = IsSomeRendererActing.current;
+      previousIsThisRendererActing = IsThisRendererActing.current;
+      IsSomeRendererActing.current = true;
+      IsThisRendererActing.current = true;
     }
 
     function onDone() {
       actingUpdatesScopeDepth--;
       if (__DEV__) {
-        ReactCurrentActingRendererSigil.current = previousActingUpdatesSigil;
+        IsSomeRendererActing.current = previousIsSomeRendererActing;
+        IsThisRendererActing.current = previousIsThisRendererActing;
         if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
           // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
           warningWithoutStack(

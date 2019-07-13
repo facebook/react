@@ -22,7 +22,6 @@ import {
   Fragment,
 } from 'shared/ReactWorkTags';
 import {NoWork} from './ReactFiberExpirationTime';
-import invariant from 'shared/invariant';
 
 let currentlyRenderingFiber: null | Fiber = null;
 let currentEventComponentInstanceIndex: number = 0;
@@ -32,16 +31,11 @@ export function prepareToReadEventComponents(workInProgress: Fiber): void {
   currentEventComponentInstanceIndex = 0;
 }
 
-export function updateEventComponentInstance<T, E, C>(
-  eventComponent: ReactEventComponent<T, E, C>,
+export function updateEventComponentInstance<E, C>(
+  eventComponent: ReactEventComponent<E, C>,
   props: Object,
 ): void {
   const responder = eventComponent.responder;
-  invariant(
-    responder.allowEventHooks,
-    'The "%s" event responder cannot be used via the "useEvent" hook.',
-    responder.displayName,
-  );
   let events;
   let dependencies: Dependencies | null = ((currentlyRenderingFiber: any): Fiber)
     .dependencies;
@@ -60,8 +54,9 @@ export function updateEventComponentInstance<T, E, C>(
   }
   if (currentEventComponentInstanceIndex === events.length) {
     let responderState = null;
-    if (responder.createInitialState !== undefined) {
-      responderState = responder.createInitialState(props);
+    const getInitialState = responder.getInitialState;
+    if (getInitialState !== undefined) {
+      responderState = getInitialState(props);
     }
     const eventComponentInstance = createEventComponentInstance(
       ((currentlyRenderingFiber: any): Fiber),
@@ -81,14 +76,14 @@ export function updateEventComponentInstance<T, E, C>(
   }
 }
 
-export function createEventComponentInstance<T, E, C>(
+export function createEventComponentInstance<E, C>(
   currentFiber: Fiber,
   props: Object,
-  responder: ReactEventResponder<T, E, C>,
+  responder: ReactEventResponder<E, C>,
   rootInstance: mixed,
   state: Object,
   isHook: boolean,
-): ReactEventComponentInstance<T, E, C> {
+): ReactEventComponentInstance<E, C> {
   return {
     currentFiber,
     isHook,

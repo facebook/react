@@ -59,15 +59,13 @@ export const cancelTimeout = $$$hostConfig.clearTimeout;
 export const noTimeout = $$$hostConfig.noTimeout;
 export const now = $$$hostConfig.now;
 export const isPrimaryRenderer = $$$hostConfig.isPrimaryRenderer;
-export const shouldWarnUnactedUpdates = $$$hostConfig.shouldWarnUnactedUpdates;
+export const warnsIfNotActing = $$$hostConfig.warnsIfNotActing;
 export const supportsMutation = $$$hostConfig.supportsMutation;
 export const supportsPersistence = $$$hostConfig.supportsPersistence;
 export const supportsHydration = $$$hostConfig.supportsHydration;
 export const mountEventComponent = $$$hostConfig.mountEventComponent;
 export const updateEventComponent = $$$hostConfig.updateEventComponent;
 export const handleEventTarget = $$$hostConfig.handleEventTarget;
-export const getEventTargetChildElement =
-  $$$hostConfig.getEventTargetChildElement;
 
 // -------------------
 //      Mutation

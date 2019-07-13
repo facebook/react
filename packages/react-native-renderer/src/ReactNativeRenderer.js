@@ -120,6 +120,19 @@ const ReactNativeRenderer: ReactNativeType = {
 
   findNodeHandle,
 
+  dispatchCommand(handle: any, command: string, args: Array<any>) {
+    if (handle._nativeTag == null) {
+      warningWithoutStack(
+        handle._nativeTag != null,
+        "dispatchCommand was called with a ref that isn't a " +
+          'native component. Use React.forwardRef to get access to the underlying native component',
+      );
+      return;
+    }
+
+    UIManager.dispatchViewManagerCommand(handle._nativeTag, command, args);
+  },
+
   setNativeProps,
 
   render(element: React$Element<any>, containerTag: any, callback: ?Function) {

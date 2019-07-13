@@ -57,7 +57,7 @@ import {
   flushDiscreteUpdates,
   flushPassiveEffects,
   warnIfNotScopedWithMatchingAct,
-  ReactActingRendererSigil,
+  IsThisRendererActing,
 } from './ReactFiberWorkLoop';
 import {createUpdate, enqueueUpdate} from './ReactUpdateQueue';
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
@@ -345,7 +345,7 @@ export {
   flushControlled,
   flushSync,
   flushPassiveEffects,
-  ReactActingRendererSigil,
+  IsThisRendererActing,
 };
 
 export function getPublicRootInstance(
@@ -473,7 +473,7 @@ if (__DEV__) {
 
 export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
   const {findFiberByHostInstance} = devToolsConfig;
-  const {ReactCurrentDispatcher} = ReactSharedInternals;
+  const {ReactCurrentDispatcher, ReactDebugCurrentFrame} = ReactSharedInternals;
 
   return injectInternals({
     ...devToolsConfig,
@@ -501,5 +501,7 @@ export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
     scheduleRefresh: __DEV__ ? scheduleRefresh : null,
     scheduleRoot: __DEV__ ? scheduleRoot : null,
     setRefreshHandler: __DEV__ ? setRefreshHandler : null,
+    // Enables DevTools to append component stack to error messages in DEV mode.
+    debugCurrentFrame: ReactDebugCurrentFrame,
   });
 }

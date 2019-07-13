@@ -169,7 +169,7 @@ class TextInputFixtures extends React.Component {
               the "Go" button.
             </li>
             <li>
-              Intead of clicking "Go", which switches focus, press Command +
+              Instead of clicking "Go", which switches focus, press Command +
               Enter (or Control + Enter on Windows, Linux).
             </li>
           </TestCase.Steps>

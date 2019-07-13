@@ -38,7 +38,7 @@ import {
   findHostInstance,
   findHostInstanceWithWarning,
   flushPassiveEffects,
-  ReactActingRendererSigil,
+  IsThisRendererActing,
 } from 'react-reconciler/inline.dom';
 import {createPortal as createPortalImpl} from 'shared/ReactPortal';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
@@ -817,7 +817,7 @@ const ReactDOM: Object = {
       dispatchEvent,
       runEventsInBatch,
       flushPassiveEffects,
-      ReactActingRendererSigil,
+      IsThisRendererActing,
     ],
   },
 };

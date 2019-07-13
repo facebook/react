@@ -15,7 +15,12 @@ function transform(input, options = {}) {
   return wrap(
     babel.transform(input, {
       babelrc: false,
-      plugins: ['syntax-jsx', 'syntax-dynamic-import', freshPlugin],
+      plugins: [
+        'syntax-jsx',
+        'syntax-dynamic-import',
+        freshPlugin,
+        ...(options.plugins || []),
+      ],
     }).code,
   );
 }
@@ -384,6 +389,26 @@ describe('ReactFreshBabelPlugin', () => {
           return <h1>{bar}</h1>;
         }
     `),
+    ).toMatchSnapshot();
+  });
+
+  it('includes custom hooks into the signatures when commonjs target is used', () => {
+    // this test is passing with Babel 6
+    // but would fail for Babel 7 _without_ custom hook node being cloned for signature
+    expect(
+      transform(
+        `
+        import {useFancyState} from './hooks';
+        
+        export default function App() {
+          const bar = useFancyState();
+          return <h1>{bar}</h1>;
+        }
+    `,
+        {
+          plugins: ['transform-es2015-modules-commonjs'],
+        },
+      ),
     ).toMatchSnapshot();
   });
 
