@@ -33,8 +33,6 @@ export default function EditableValue({
       if (dataType === 'boolean') {
         setEditableValue(target.checked);
         overrideValueFn(path, target.checked);
-      } else if (dataType === 'number') {
-        setEditableValue(parseFloat(target.value));
       } else {
         setEditableValue(target.value);
       }
@@ -60,7 +58,11 @@ export default function EditableValue({
       const { key } = event;
 
       if (key === 'Enter') {
-        overrideValueFn(path, editableValue);
+        if (dataType === 'number') {
+          overrideValueFn(path, parseFloat(editableValue));
+        } else {
+          overrideValueFn(path, editableValue);
+        }
 
         // Don't reset the pending change flag here.
         // The inspected fiber won't be updated until after the next "inspectElement" message.
@@ -70,7 +72,7 @@ export default function EditableValue({
         setHasPendingChanges(false);
       }
     },
-    [path, editableValue, overrideValueFn, value]
+    [path, editableValue, overrideValueFn, value, dataType]
   );
 
   // Render different input types based on the dataType
