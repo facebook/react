@@ -26,6 +26,7 @@ import {
 } from 'react-reconciler/reflection';
 import {get as getInstance} from 'shared/ReactInstanceMap';
 import {HostComponent, ClassComponent} from 'shared/ReactWorkTags';
+import describeComponentFrame from 'shared/describeComponentFrame';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
@@ -502,6 +503,8 @@ export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
     scheduleRoot: __DEV__ ? scheduleRoot : null,
     setRefreshHandler: __DEV__ ? setRefreshHandler : null,
     // Enables DevTools to append owner stacks to error messages in DEV mode.
+    describeComponentFrame: __DEV__ ? describeComponentFrame : null,
+    getComponentName: __DEV__ ? getComponentName : null,
     getCurrentFiber: __DEV__ ? () => ReactCurrentFiberCurrent : null,
   });
 }
