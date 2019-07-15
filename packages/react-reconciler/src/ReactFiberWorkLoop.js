@@ -2247,11 +2247,10 @@ function checkForNestedUpdates() {
 
 function flushRenderPhaseStrictModeWarningsInDEV() {
   if (__DEV__) {
-    ReactStrictModeWarnings.flushPendingUnsafeLifecycleWarnings();
     ReactStrictModeWarnings.flushLegacyContextWarning();
 
     if (warnAboutDeprecatedLifecycles) {
-      ReactStrictModeWarnings.flushPendingDeprecationWarnings();
+      ReactStrictModeWarnings.flushPendingUnsafeLifecycleWarnings();
     }
   }
 }

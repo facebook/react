@@ -346,8 +346,7 @@ describe('ReactIncrementalUpdates', () => {
     }
     ReactNoop.render(<Foo />);
     expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
-      'componentWillReceiveProps: Please update the following components ' +
-        'to use static getDerivedStateFromProps instead: Foo',
+      'Using UNSAFE_componentWillReceiveProps in strict mode is not recommended',
       {withoutStack: true},
     );
 

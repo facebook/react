@@ -316,10 +316,8 @@ describe('ReactDebugFiberPerf', () => {
     addComment('Should not print a warning');
     expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
       [
-        'componentWillMount: Please update the following components ' +
-          'to use componentDidMount instead: NotCascading' +
-          '\n\ncomponentWillReceiveProps: Please update the following components ' +
-          'to use static getDerivedStateFromProps instead: NotCascading',
+        'Using UNSAFE_componentWillMount in strict mode is not recommended',
+        'Using UNSAFE_componentWillReceiveProps in strict mode is not recommended',
       ],
       {withoutStack: true},
     );
@@ -358,14 +356,10 @@ describe('ReactDebugFiberPerf', () => {
     addComment('Mount');
     expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
       [
-        'componentWillMount: Please update the following components ' +
-          'to use componentDidMount instead: AllLifecycles' +
-          '\n\ncomponentWillReceiveProps: Please update the following components ' +
-          'to use static getDerivedStateFromProps instead: AllLifecycles' +
-          '\n\ncomponentWillUpdate: Please update the following components ' +
-          'to use componentDidUpdate instead: AllLifecycles',
-        'Legacy context API has been detected within a strict-mode tree: \n\n' +
-          'Please update the following components: AllLifecycles',
+        'Using UNSAFE_componentWillMount in strict mode is not recommended',
+        'Using UNSAFE_componentWillReceiveProps in strict mode is not recommended',
+        'Using UNSAFE_componentWillUpdate in strict mode is not recommended',
+        'Legacy context API has been detected within a strict-mode tree',
       ],
       {withoutStack: true},
     );

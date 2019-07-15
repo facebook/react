@@ -362,20 +362,16 @@ describe('ReactDOMServerHydration', () => {
     const element = document.createElement('div');
     expect(() => {
       element.innerHTML = ReactDOMServer.renderToString(markup);
-    }).toLowPriorityWarnDev(
-      ['componentWillMount() is deprecated and will be removed'],
-      {withoutStack: true},
-    );
+    }).toLowPriorityWarnDev(['componentWillMount has been renamed'], {
+      withoutStack: true,
+    });
     expect(element.textContent).toBe('Hi');
 
     expect(() => {
-      expect(() => ReactDOM.hydrate(markup, element)).toWarnDev(
-        'Please update the following components to use componentDidMount instead: ComponentWithWarning',
-      );
-    }).toLowPriorityWarnDev(
-      ['componentWillMount is deprecated and will be removed'],
-      {withoutStack: true},
-    );
+      ReactDOM.hydrate(markup, element);
+    }).toLowPriorityWarnDev(['componentWillMount has been renamed'], {
+      withoutStack: true,
+    });
     expect(element.textContent).toBe('Hi');
   });
 
