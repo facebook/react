@@ -78,3 +78,8 @@ export const revertPassiveEffectsChange = false;
 // but without making them discrete. The flag exists in case it causes
 // starvation problems.
 export const enableUserBlockingEvents = false;
+
+// Add a callback property to suspense to notify which promises are currently
+// in the update queue. This allows reporting and tracing of what is causing
+// the user to see a loading state.
+export const enableSuspenseCallback = false;
