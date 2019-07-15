@@ -473,7 +473,7 @@ if (__DEV__) {
 
 export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
   const {findFiberByHostInstance} = devToolsConfig;
-  const {ReactCurrentDispatcher, ReactDebugCurrentFrame} = ReactSharedInternals;
+  const {ReactCurrentDispatcher} = ReactSharedInternals;
 
   return injectInternals({
     ...devToolsConfig,
@@ -501,7 +501,7 @@ export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
     scheduleRefresh: __DEV__ ? scheduleRefresh : null,
     scheduleRoot: __DEV__ ? scheduleRoot : null,
     setRefreshHandler: __DEV__ ? setRefreshHandler : null,
-    // Enables DevTools to append component stack to error messages in DEV mode.
-    debugCurrentFrame: ReactDebugCurrentFrame,
+    // Enables DevTools to append owner stacks to error messages in DEV mode.
+    getCurrentFiber: __DEV__ ? () => ReactCurrentFiberCurrent : null,
   });
 }
