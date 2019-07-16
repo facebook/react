@@ -1155,7 +1155,7 @@ describe('ReactShallowRenderer', () => {
   });
 
   it('should shallow render components with contextType', () => {
-    const TestContext = React.createContext({ name: 'foo' });
+    const TestContext = React.createContext({name: 'foo'});
     class SimpleComponent extends React.Component {
       static contextType = TestContext;
 

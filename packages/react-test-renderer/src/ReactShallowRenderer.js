@@ -536,7 +536,10 @@ class ReactShallowRenderer {
     this._element = element;
 
     if (elementType.contextType) {
-      this._context = context !== emptyObject ? context : elementType.contextType._currentValue;
+      this._context =
+        context !== emptyObject
+          ? context
+          : elementType.contextType._currentValue;
     } else {
       this._context = getMaskedContext(elementType.contextTypes, context);
     }
