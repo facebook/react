@@ -1137,6 +1137,38 @@ describe('ReactShallowRenderer', () => {
     expect(result).toEqual(<div>foo</div>);
   });
 
+  it('can pass context when shallowly rendering with contextType', () => {
+    const TestContext = React.createContext('none');
+    class SimpleComponent extends React.Component {
+      static contextType = TestContext;
+
+      render() {
+        return <div>{this.context.name}</div>;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    const result = shallowRenderer.render(<SimpleComponent />, {
+      name: 'foo',
+    });
+    expect(result).toEqual(<div>foo</div>);
+  });
+
+  it('should shallow render components with contextType', () => {
+    const TestContext = React.createContext({ name: 'foo' });
+    class SimpleComponent extends React.Component {
+      static contextType = TestContext;
+
+      render() {
+        return <div>{this.context.name}</div>;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    const result = shallowRenderer.render(<SimpleComponent />);
+    expect(result).toEqual(<div>foo</div>);
+  });
+
   it('should track context across updates', () => {
     class SimpleComponent extends React.Component {
       static contextTypes = {

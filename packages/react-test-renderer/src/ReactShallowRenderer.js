@@ -534,7 +534,12 @@ class ReactShallowRenderer {
 
     this._rendering = true;
     this._element = element;
-    this._context = getMaskedContext(elementType.contextTypes, context);
+
+    if (elementType.contextType) {
+      this._context = context !== emptyObject ? context : elementType.contextType._currentValue;
+    } else {
+      this._context = getMaskedContext(elementType.contextTypes, context);
+    }
 
     // Inner memo component props aren't currently validated in createElement.
     if (isMemo(element.type) && elementType.propTypes) {
