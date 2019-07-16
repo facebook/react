@@ -7,6 +7,7 @@
 
 import checkPropTypes from 'prop-types/checkPropTypes';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
+import {enableFlareAPI} from 'shared/ReactFeatureFlags';
 
 let ReactDebugCurrentFrame = null;
 
@@ -34,7 +35,8 @@ if (__DEV__) {
         props.onChange ||
         props.readOnly ||
         props.disabled ||
-        props[propName] == null
+        props[propName] == null ||
+        enableFlareAPI
       ) {
         return null;
       }
@@ -50,7 +52,8 @@ if (__DEV__) {
         props.onChange ||
         props.readOnly ||
         props.disabled ||
-        props[propName] == null
+        props[propName] == null ||
+        enableFlareAPI
       ) {
         return null;
       }
