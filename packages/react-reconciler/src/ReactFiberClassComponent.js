@@ -806,11 +806,6 @@ function mountClassInstance(
     }
 
     if (workInProgress.mode & StrictMode) {
-      ReactStrictModeWarnings.recordUnsafeLifecycleWarnings(
-        workInProgress,
-        instance,
-      );
-
       ReactStrictModeWarnings.recordLegacyContextWarning(
         workInProgress,
         instance,
@@ -818,7 +813,7 @@ function mountClassInstance(
     }
 
     if (warnAboutDeprecatedLifecycles) {
-      ReactStrictModeWarnings.recordDeprecationWarnings(
+      ReactStrictModeWarnings.recordUnsafeLifecycleWarnings(
         workInProgress,
         instance,
       );
