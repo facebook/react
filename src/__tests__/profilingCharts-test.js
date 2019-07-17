@@ -30,7 +30,7 @@ describe('profiling charts', () => {
   describe('flamegraph chart', () => {
     it('should contain valid data', () => {
       const Parent = ({ count }) => {
-        Scheduler.advanceTime(10);
+        Scheduler.unstable_advanceTime(10);
         return (
           <React.Fragment>
             <Child key="first" duration={3} />
@@ -42,7 +42,7 @@ describe('profiling charts', () => {
 
       // Memoize children to verify that chart doesn't include in the update.
       const Child = React.memo(function Child({ duration }) {
-        Scheduler.advanceTime(duration);
+        Scheduler.unstable_advanceTime(duration);
         return null;
       });
 
@@ -106,7 +106,7 @@ describe('profiling charts', () => {
   describe('ranked chart', () => {
     it('should contain valid data', () => {
       const Parent = ({ count }) => {
-        Scheduler.advanceTime(10);
+        Scheduler.unstable_advanceTime(10);
         return (
           <React.Fragment>
             <Child key="first" duration={3} />
@@ -118,7 +118,7 @@ describe('profiling charts', () => {
 
       // Memoize children to verify that chart doesn't include in the update.
       const Child = React.memo(function Child({ duration }) {
-        Scheduler.advanceTime(duration);
+        Scheduler.unstable_advanceTime(duration);
         return null;
       });
 
@@ -178,7 +178,7 @@ describe('profiling charts', () => {
   describe('interactions', () => {
     it('should contain valid data', () => {
       const Parent = ({ count }) => {
-        Scheduler.advanceTime(10);
+        Scheduler.unstable_advanceTime(10);
         return (
           <React.Fragment>
             <Child key="first" duration={3} />
@@ -190,7 +190,7 @@ describe('profiling charts', () => {
 
       // Memoize children to verify that chart doesn't include in the update.
       const Child = React.memo(function Child({ duration }) {
-        Scheduler.advanceTime(duration);
+        Scheduler.unstable_advanceTime(duration);
         return null;
       });
 

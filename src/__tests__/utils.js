@@ -8,14 +8,20 @@ import type { ProfilingDataFrontend } from 'src/devtools/views/Profiler/types';
 import type { ElementType } from 'src/types';
 
 export function act(callback: Function): void {
-  const TestUtils = require('react-dom/test-utils');
-  TestUtils.act(() => {
-    callback();
+  const { act: actTestRenderer } = require('react-test-renderer');
+  const { act: actDOM } = require('react-dom/test-utils');
+
+  actDOM(() => {
+    actTestRenderer(() => {
+      callback();
+    });
   });
 
   // Flush Bridge operations
-  TestUtils.act(() => {
-    jest.runAllTimers();
+  actDOM(() => {
+    actTestRenderer(() => {
+      jest.runAllTimers();
+    });
   });
 }
 
@@ -23,24 +29,31 @@ export async function actAsync(
   cb: () => *,
   recursivelyFlush: boolean = true
 ): Promise<void> {
-  const TestUtils = require('react-dom/test-utils');
+  const { act: actTestRenderer } = require('react-test-renderer');
+  const { act: actDOM } = require('react-dom/test-utils');
 
   // $FlowFixMe Flow doens't know about "await act()" yet
-  await TestUtils.act(async () => {
-    await cb();
+  await actDOM(async () => {
+    await actTestRenderer(async () => {
+      await cb();
+    });
   });
 
   if (recursivelyFlush) {
     while (jest.getTimerCount() > 0) {
       // $FlowFixMe Flow doens't know about "await act()" yet
-      await TestUtils.act(async () => {
-        jest.runAllTimers();
+      await actDOM(async () => {
+        await actTestRenderer(async () => {
+          jest.runAllTimers();
+        });
       });
     }
   } else {
     // $FlowFixMe Flow doesn't know about "await act()" yet
-    await TestUtils.act(async () => {
-      jest.runOnlyPendingTimers();
+    await actDOM(async () => {
+      await actTestRenderer(async () => {
+        jest.runOnlyPendingTimers();
+      });
     });
   }
 }
@@ -122,10 +135,17 @@ export function getRendererID(): number {
     throw Error('Agent unavailable.');
   }
   const ids = Object.keys(global.agent._rendererInterfaces);
-  if (ids.length !== 1) {
-    throw Error('Multiple renderers attached.');
+
+  const id = ids.find(id => {
+    const rendererInterface = global.agent._rendererInterfaces[id];
+    return rendererInterface.renderer.rendererPackageName === 'react-dom';
+  });
+
+  if (ids == null) {
+    throw Error('Could not find renderer.');
   }
-  return parseInt(ids[0], 10);
+
+  return parseInt(id, 10);
 }
 
 export function requireTestRenderer(): ReactTestRenderer {

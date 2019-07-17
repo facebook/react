@@ -98,6 +98,7 @@ export default class Bridge extends EventEmitter<{|
   stopProfiling: [],
   syncSelectionFromNativeElementsPanel: [],
   syncSelectionToNativeElementsPanel: [],
+  updateAppendComponentStack: [boolean],
   updateComponentFilters: [Array<ComponentFilter>],
   viewElementSource: [ElementAndRendererID],
 

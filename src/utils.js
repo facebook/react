@@ -8,7 +8,10 @@ import {
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
 } from './constants';
 import { ElementTypeRoot } from 'src/types';
-import { LOCAL_STORAGE_FILTER_PREFERENCES_KEY } from './constants';
+import {
+  LOCAL_STORAGE_FILTER_PREFERENCES_KEY,
+  LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY,
+} from './constants';
 import { ComponentFilterElementType, ElementTypeHostComponent } from './types';
 import {
   ElementTypeClass,
@@ -195,6 +198,23 @@ export function saveComponentFilters(
   localStorageSetItem(
     LOCAL_STORAGE_FILTER_PREFERENCES_KEY,
     JSON.stringify(componentFilters)
+  );
+}
+
+export function getAppendComponentStack(): boolean {
+  try {
+    const raw = localStorageGetItem(LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY);
+    if (raw != null) {
+      return JSON.parse(raw);
+    }
+  } catch (error) {}
+  return true;
+}
+
+export function setAppendComponentStack(value: boolean): void {
+  localStorageSetItem(
+    LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY,
+    JSON.stringify(value)
   );
 }
 

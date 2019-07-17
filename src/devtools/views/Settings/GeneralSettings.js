@@ -1,27 +1,25 @@
 // @flow
 
-import React, { useCallback, useContext } from 'react';
+import React, { useContext } from 'react';
 import { SettingsContext } from './SettingsContext';
 
 import styles from './SettingsShared.css';
 
 export default function GeneralSettings(_: {||}) {
-  const { displayDensity, setDisplayDensity, theme, setTheme } = useContext(
-    SettingsContext
-  );
+  const {
+    displayDensity,
+    setDisplayDensity,
+    theme,
+    setTheme,
+    appendComponentStack,
+    setAppendComponentStack,
+  } = useContext(SettingsContext);
 
-  const updateDisplayDensity = useCallback(
-    ({ currentTarget }) => {
-      setDisplayDensity(currentTarget.value);
-    },
-    [setDisplayDensity]
-  );
-  const updateTheme = useCallback(
-    ({ currentTarget }) => {
-      setTheme(currentTarget.value);
-    },
-    [setTheme]
-  );
+  const updateDisplayDensity = ({ currentTarget }) =>
+    setDisplayDensity(currentTarget.value);
+  const updateTheme = ({ currentTarget }) => setTheme(currentTarget.value);
+  const updateappendComponentStack = ({ currentTarget }) =>
+    setAppendComponentStack(currentTarget.checked);
 
   return (
     <div className={styles.Settings}>
@@ -44,6 +42,17 @@ export default function GeneralSettings(_: {||}) {
           <option value="compact">Compact</option>
           <option value="comfortable">Comfortable</option>
         </select>
+      </div>
+
+      <div className={styles.Setting}>
+        <label>
+          <input
+            type="checkbox"
+            checked={appendComponentStack}
+            onChange={updateappendComponentStack}
+          />{' '}
+          Append component stacks to console warnings and errors.
+        </label>
       </div>
     </div>
   );

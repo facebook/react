@@ -6,7 +6,7 @@ import Bridge from 'src/bridge';
 import Store from 'src/devtools/store';
 import inject from './inject';
 import { createViewElementSource, getBrowserTheme } from './utils';
-import { getSavedComponentFilters } from 'src/utils';
+import { getSavedComponentFilters, getAppendComponentStack } from 'src/utils';
 import {
   localStorageGetItem,
   localStorageRemoveItem,
@@ -22,16 +22,23 @@ let panelCreated = false;
 // The renderer interface can't read saved component filters directly,
 // because they are stored in localStorage within the context of the extension.
 // Instead it relies on the extension to pass filters through.
-function initializeSavedComponentFilters() {
+function syncSavedPreferences() {
   const componentFilters = getSavedComponentFilters();
   chrome.devtools.inspectedWindow.eval(
     `window.__REACT_DEVTOOLS_COMPONENT_FILTERS__ = ${JSON.stringify(
       componentFilters
     )};`
   );
+
+  const appendComponentStack = getAppendComponentStack();
+  chrome.devtools.inspectedWindow.eval(
+    `window.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = ${JSON.stringify(
+      appendComponentStack
+    )};`
+  );
 }
 
-initializeSavedComponentFilters();
+syncSavedPreferences();
 
 function createPanelIfReactLoaded() {
   if (panelCreated) {
@@ -286,7 +293,7 @@ function createPanelIfReactLoaded() {
       chrome.devtools.network.onNavigated.addListener(function onNavigated() {
         // Re-initialize saved filters on navigation,
         // since global values stored on window get reset in this case.
-        initializeSavedComponentFilters();
+        syncSavedPreferences();
 
         // It's easiest to recreate the DevTools panel (to clean up potential stale state).
         // We can revisit this in the future as a small optimization.
@@ -302,7 +309,7 @@ function createPanelIfReactLoaded() {
 
 // Load (or reload) the DevTools extension when the user navigates to a new page.
 function checkPageForReact() {
-  initializeSavedComponentFilters();
+  syncSavedPreferences();
   createPanelIfReactLoaded();
 }
 

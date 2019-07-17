@@ -34,7 +34,7 @@ describe('ProfilingCache', () => {
 
   it('should collect data for each root (including ones added or mounted after profiling started)', () => {
     const Parent = ({ count }) => {
-      Scheduler.advanceTime(10);
+      Scheduler.unstable_advanceTime(10);
       const children = new Array(count)
         .fill(true)
         .map((_, index) => <Child key={index} duration={index} />);
@@ -46,7 +46,7 @@ describe('ProfilingCache', () => {
       );
     };
     const Child = ({ duration }) => {
-      Scheduler.advanceTime(duration);
+      Scheduler.unstable_advanceTime(duration);
       return null;
     };
     const MemoizedChild = React.memo(Child);
@@ -118,7 +118,7 @@ describe('ProfilingCache', () => {
 
   it('should collect data for each commit', () => {
     const Parent = ({ count }) => {
-      Scheduler.advanceTime(10);
+      Scheduler.unstable_advanceTime(10);
       const children = new Array(count)
         .fill(true)
         .map((_, index) => <Child key={index} duration={index} />);
@@ -130,7 +130,7 @@ describe('ProfilingCache', () => {
       );
     };
     const Child = ({ duration }) => {
-      Scheduler.advanceTime(duration);
+      Scheduler.unstable_advanceTime(duration);
       return null;
     };
     const MemoizedChild = React.memo(Child);
@@ -305,7 +305,7 @@ describe('ProfilingCache', () => {
     store.componentFilters = [utils.createDisplayNameFilter('^Parent$')];
 
     const Grandparent = () => {
-      Scheduler.advanceTime(10);
+      Scheduler.unstable_advanceTime(10);
       return (
         <React.Fragment>
           <Parent key="one" />
@@ -314,11 +314,11 @@ describe('ProfilingCache', () => {
       );
     };
     const Parent = () => {
-      Scheduler.advanceTime(2);
+      Scheduler.unstable_advanceTime(2);
       return <Child />;
     };
     const Child = () => {
-      Scheduler.advanceTime(1);
+      Scheduler.unstable_advanceTime(1);
       return null;
     };
 
@@ -361,7 +361,7 @@ describe('ProfilingCache', () => {
     };
 
     const Parent = () => {
-      Scheduler.advanceTime(10);
+      Scheduler.unstable_advanceTime(10);
       return (
         <React.Suspense fallback={<Fallback />}>
           <Async />
@@ -369,11 +369,11 @@ describe('ProfilingCache', () => {
       );
     };
     const Fallback = () => {
-      Scheduler.advanceTime(2);
+      Scheduler.unstable_advanceTime(2);
       return 'Fallback...';
     };
     const Async = () => {
-      Scheduler.advanceTime(3);
+      Scheduler.unstable_advanceTime(3);
       const data = getData();
       return data;
     };
@@ -412,7 +412,7 @@ describe('ProfilingCache', () => {
 
   it('should collect data for each rendered fiber', () => {
     const Parent = ({ count }) => {
-      Scheduler.advanceTime(10);
+      Scheduler.unstable_advanceTime(10);
       const children = new Array(count)
         .fill(true)
         .map((_, index) => <Child key={index} duration={index} />);
@@ -424,7 +424,7 @@ describe('ProfilingCache', () => {
       );
     };
     const Child = ({ duration }) => {
-      Scheduler.advanceTime(duration);
+      Scheduler.unstable_advanceTime(duration);
       return null;
     };
     const MemoizedChild = React.memo(Child);
@@ -496,7 +496,7 @@ describe('ProfilingCache', () => {
 
   it('should report every traced interaction', () => {
     const Parent = ({ count }) => {
-      Scheduler.advanceTime(10);
+      Scheduler.unstable_advanceTime(10);
       const children = new Array(count)
         .fill(true)
         .map((_, index) => <Child key={index} duration={index} />);
@@ -508,7 +508,7 @@ describe('ProfilingCache', () => {
       );
     };
     const Child = ({ duration }) => {
-      Scheduler.advanceTime(duration);
+      Scheduler.unstable_advanceTime(duration);
       return null;
     };
     const MemoizedChild = React.memo(Child);

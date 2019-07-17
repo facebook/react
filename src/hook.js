@@ -7,6 +7,11 @@
  * @flow
  */
 
+import {
+  patch as patchConsole,
+  registerRenderer as registerRendererWithConsole,
+} from './backend/console';
+
 import type { DevToolsHook } from 'src/backend/types';
 
 declare var window: any;
@@ -154,6 +159,32 @@ export function installHook(target: any): DevToolsHook | null {
     const reactBuildType = hasDetectedBadDCE
       ? 'deadcode'
       : detectReactBuildType(renderer);
+
+    // Patching the console enables DevTools to do a few useful things:
+    // * Append component stacks to warnings and error messages
+    // * Disable logging during re-renders to inspect hooks (see inspectHooksOfFiber)
+    //
+    // For React Native, we intentionally patch early (during injection).
+    // This provides React Native developers with components stacks even if they don't run DevTools.
+    // This won't work for DOM though, since this entire file is eval'ed and inserted as a script tag.
+    // In that case, we'll patch later (when the frontend attaches).
+    //
+    // Don't patch in test environments because we don't want to interfere with Jest's own console overrides.
+    if (process.env.NODE_ENV !== 'test') {
+      try {
+        // The installHook() function is injected by being stringified in the browser,
+        // so imports outside of this function do not get included.
+        //
+        // Normally we could check "typeof patchConsole === 'function'",
+        // but Webpack wraps imports with an object (e.g. _backend_console__WEBPACK_IMPORTED_MODULE_0__)
+        // and the object itself will be undefined as well for the reasons mentioned above,
+        // so we use try/catch instead.
+        if (window.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ !== false) {
+          registerRendererWithConsole(renderer);
+          patchConsole();
+        }
+      } catch (error) {}
+    }
 
     // If we have just reloaded to profile, we need to inject the renderer interface before the app loads.
     // Otherwise the renderer won't yet exist and we can skip this step.

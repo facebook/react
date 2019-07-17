@@ -15,6 +15,7 @@ import {
   sessionStorageSetItem,
 } from 'src/storage';
 import setupHighlighter from './views/Highlighter';
+import { patch as patchConsole, unpatch as unpatchConsole } from './console';
 
 import type {
   InstanceAndStyle,
@@ -133,6 +134,10 @@ export default class Agent extends EventEmitter<{|
       this.syncSelectionFromNativeElementsPanel
     );
     bridge.addListener('shutdown', this.shutdown);
+    bridge.addListener(
+      'updateAppendComponentStack',
+      this.updateAppendComponentStack
+    );
     bridge.addListener('updateComponentFilters', this.updateComponentFilters);
     bridge.addListener('viewElementSource', this.viewElementSource);
 
@@ -400,6 +405,18 @@ export default class Agent extends EventEmitter<{|
       renderer.stopProfiling();
     }
     this._bridge.send('profilingStatus', this._isProfiling);
+  };
+
+  updateAppendComponentStack = (appendComponentStack: boolean) => {
+    // If the frontend preference has change,
+    // or in the case of React Native- if the backend is just finding out the preference-
+    // then install or uninstall the console overrides.
+    // It's safe to call these methods multiple times, so we don't need to worry about that.
+    if (appendComponentStack) {
+      patchConsole();
+    } else {
+      unpatchConsole();
+    }
   };
 
   updateComponentFilters = (componentFilters: Array<ComponentFilter>) => {

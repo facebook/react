@@ -27,13 +27,13 @@ describe('commit tree', () => {
 
   it('should be able to rebuild the store tree for each commit', () => {
     const Parent = ({ count }) => {
-      Scheduler.advanceTime(10);
+      Scheduler.unstable_advanceTime(10);
       return new Array(count)
         .fill(true)
         .map((_, index) => <Child key={index} />);
     };
     const Child = React.memo(function Child() {
-      Scheduler.advanceTime(2);
+      Scheduler.unstable_advanceTime(2);
       return null;
     });
 

@@ -9,7 +9,7 @@ import {
 } from 'react-dom';
 import Bridge from 'src/bridge';
 import Store from 'src/devtools/store';
-import { getSavedComponentFilters } from 'src/utils';
+import { getSavedComponentFilters, getAppendComponentStack } from 'src/utils';
 import { Server } from 'ws';
 import { existsSync, readFileSync } from 'fs';
 import { installHook } from 'src/hook';
@@ -241,12 +241,16 @@ function startServer(port?: number = 8097) {
     // because they are generally stored in localStorage within the context of the extension.
     // Because of this it relies on the extension to pass filters, so include them wth the response here.
     // This will ensure that saved filters are shared across different web pages.
-    const savedFiltersString = `window.__REACT_DEVTOOLS_COMPONENT_FILTERS__ = ${JSON.stringify(
-      getSavedComponentFilters()
-    )};`;
+    const savedPreferencesString = `
+      window.__REACT_DEVTOOLS_COMPONENT_FILTERS__ = ${JSON.stringify(
+        getSavedComponentFilters()
+      )};
+      window.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = ${JSON.stringify(
+        getAppendComponentStack()
+      )};`;
 
     response.end(
-      savedFiltersString +
+      savedPreferencesString +
         '\n;' +
         backendFile.toString() +
         '\n;' +

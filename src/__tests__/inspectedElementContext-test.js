@@ -530,16 +530,20 @@ describe('InspectedElementContext', () => {
 
     inspectedElement = null;
     TestUtils.act(() => {
-      getInspectedElementPath(id, ['props', 'nestedObject', 'a']);
-      jest.runOnlyPendingTimers();
+      TestRenderer.act(() => {
+        getInspectedElementPath(id, ['props', 'nestedObject', 'a']);
+        jest.runOnlyPendingTimers();
+      });
     });
     expect(inspectedElement).not.toBeNull();
     expect(inspectedElement).toMatchSnapshot('2: Inspect props.nestedObject.a');
 
     inspectedElement = null;
     TestUtils.act(() => {
-      getInspectedElementPath(id, ['props', 'nestedObject', 'a', 'b', 'c']);
-      jest.runOnlyPendingTimers();
+      TestRenderer.act(() => {
+        getInspectedElementPath(id, ['props', 'nestedObject', 'a', 'b', 'c']);
+        jest.runOnlyPendingTimers();
+      });
     });
     expect(inspectedElement).not.toBeNull();
     expect(inspectedElement).toMatchSnapshot(
@@ -548,16 +552,18 @@ describe('InspectedElementContext', () => {
 
     inspectedElement = null;
     TestUtils.act(() => {
-      getInspectedElementPath(id, [
-        'props',
-        'nestedObject',
-        'a',
-        'b',
-        'c',
-        0,
-        'd',
-      ]);
-      jest.runOnlyPendingTimers();
+      TestRenderer.act(() => {
+        getInspectedElementPath(id, [
+          'props',
+          'nestedObject',
+          'a',
+          'b',
+          'c',
+          0,
+          'd',
+        ]);
+        jest.runOnlyPendingTimers();
+      });
     });
     expect(inspectedElement).not.toBeNull();
     expect(inspectedElement).toMatchSnapshot(
@@ -566,16 +572,20 @@ describe('InspectedElementContext', () => {
 
     inspectedElement = null;
     TestUtils.act(() => {
-      getInspectedElementPath(id, ['hooks', 0, 'value']);
-      jest.runOnlyPendingTimers();
+      TestRenderer.act(() => {
+        getInspectedElementPath(id, ['hooks', 0, 'value']);
+        jest.runOnlyPendingTimers();
+      });
     });
     expect(inspectedElement).not.toBeNull();
     expect(inspectedElement).toMatchSnapshot('5: Inspect hooks.0.value');
 
     inspectedElement = null;
     TestUtils.act(() => {
-      getInspectedElementPath(id, ['hooks', 0, 'value', 'foo', 'bar']);
-      jest.runOnlyPendingTimers();
+      TestRenderer.act(() => {
+        getInspectedElementPath(id, ['hooks', 0, 'value', 'foo', 'bar']);
+        jest.runOnlyPendingTimers();
+      });
     });
     expect(inspectedElement).not.toBeNull();
     expect(inspectedElement).toMatchSnapshot(
@@ -645,7 +655,7 @@ describe('InspectedElementContext', () => {
     expect(inspectedElement).toMatchSnapshot('1: Initially inspect element');
 
     inspectedElement = null;
-    TestUtils.act(() => {
+    TestRenderer.act(() => {
       getInspectedElementPath(id, ['props', 'nestedObject', 'a']);
       jest.runOnlyPendingTimers();
     });
@@ -653,44 +663,46 @@ describe('InspectedElementContext', () => {
     expect(inspectedElement).toMatchSnapshot('2: Inspect props.nestedObject.a');
 
     inspectedElement = null;
-    TestUtils.act(() => {
+    TestRenderer.act(() => {
       getInspectedElementPath(id, ['props', 'nestedObject', 'c']);
       jest.runOnlyPendingTimers();
     });
     expect(inspectedElement).not.toBeNull();
     expect(inspectedElement).toMatchSnapshot('3: Inspect props.nestedObject.c');
 
-    TestUtils.act(() => {
-      ReactDOM.render(
-        <Example
-          nestedObject={{
-            a: {
-              value: 2,
-              b: {
+    TestRenderer.act(() => {
+      TestUtils.act(() => {
+        ReactDOM.render(
+          <Example
+            nestedObject={{
+              a: {
                 value: 2,
-              },
-            },
-            c: {
-              value: 2,
-              d: {
-                value: 2,
-                e: {
+                b: {
                   value: 2,
                 },
               },
-            },
-          }}
-        />,
-        container
-      );
+              c: {
+                value: 2,
+                d: {
+                  value: 2,
+                  e: {
+                    value: 2,
+                  },
+                },
+              },
+            }}
+          />,
+          container
+        );
+      });
     });
 
-    TestUtils.act(() => {
+    TestRenderer.act(() => {
       inspectedElement = null;
       jest.advanceTimersByTime(1000);
-      expect(inspectedElement).not.toBeNull();
-      expect(inspectedElement).toMatchSnapshot('4: update inspected element');
     });
+    expect(inspectedElement).not.toBeNull();
+    expect(inspectedElement).toMatchSnapshot('4: update inspected element');
 
     done();
   });
@@ -764,9 +776,12 @@ describe('InspectedElementContext', () => {
     });
 
     inspectedElement = null;
-    TestUtils.act(() => {
-      getInspectedElementPath(id, ['props', 'nestedObject', 'a']);
-      jest.runOnlyPendingTimers();
+
+    TestRenderer.act(() => {
+      TestUtils.act(() => {
+        getInspectedElementPath(id, ['props', 'nestedObject', 'a']);
+        jest.runOnlyPendingTimers();
+      });
     });
     expect(inspectedElement).not.toBeNull();
     expect(inspectedElement).toMatchSnapshot('2: Inspect props.nestedObject.a');

@@ -1,7 +1,15 @@
 // @flow
 
-import React, { createContext, useLayoutEffect, useMemo } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+} from 'react';
+import { LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY } from 'src/constants';
 import { useLocalStorage } from '../hooks';
+import { BridgeContext } from '../context';
 
 import type { BrowserTheme } from '../DevTools';
 
@@ -15,6 +23,9 @@ type Context = {|
   // Derived from display density.
   // Specified as a separate prop so it can trigger a re-render of FixedSizeList.
   lineHeight: number,
+
+  appendComponentStack: boolean,
+  setAppendComponentStack: (value: boolean) => void,
 
   theme: Theme,
   setTheme(value: Theme): void,
@@ -40,6 +51,8 @@ function SettingsContextController({
   profilerPortalContainer,
   settingsPortalContainer,
 }: Props) {
+  const bridge = useContext(BridgeContext);
+
   const [displayDensity, setDisplayDensity] = useLocalStorage<DisplayDensity>(
     'React::DevTools::displayDensity',
     'compact'
@@ -48,6 +61,10 @@ function SettingsContextController({
     'React::DevTools::theme',
     'auto'
   );
+  const [
+    appendComponentStack,
+    setAppendComponentStack,
+  ] = useLocalStorage<boolean>(LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY, true);
 
   const documentElements = useMemo<DocumentElements>(() => {
     const array: Array<HTMLElement> = [
@@ -117,12 +134,18 @@ function SettingsContextController({
     }
   }, [browserTheme, theme, documentElements]);
 
+  useEffect(() => {
+    bridge.send('updateAppendComponentStack', appendComponentStack);
+  }, [bridge, appendComponentStack]);
+
   const value = useMemo(
     () => ({
       displayDensity,
       setDisplayDensity,
       theme,
       setTheme,
+      appendComponentStack,
+      setAppendComponentStack,
       lineHeight:
         displayDensity === 'compact'
           ? compactLineHeight
@@ -134,6 +157,8 @@ function SettingsContextController({
       displayDensity,
       setDisplayDensity,
       setTheme,
+      appendComponentStack,
+      setAppendComponentStack,
       theme,
     ]
   );
