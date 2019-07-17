@@ -8,10 +8,14 @@
 
 /* eslint-disable no-var */
 
-import {enableSchedulerDebugging} from './SchedulerFeatureFlags';
 import {
-  requestHostCallback,
+  enableSchedulerDebugging,
+  enableProfiling,
+} from './SchedulerFeatureFlags';
+import {
+  requestHostCallback as requestHostCallbackWithoutProfiling,
   requestHostTimeout,
+  cancelHostCallback,
   cancelHostTimeout,
   shouldYieldToHost,
   getCurrentTime,
@@ -21,11 +25,23 @@ import {
 import {push, pop, peek} from './SchedulerMinHeap';
 
 // TODO: Use symbols?
-var ImmediatePriority = 1;
-var UserBlockingPriority = 2;
-var NormalPriority = 3;
-var LowPriority = 4;
-var IdlePriority = 5;
+import {
+  ImmediatePriority,
+  UserBlockingPriority,
+  NormalPriority,
+  LowPriority,
+  IdlePriority,
+} from './SchedulerPriorities';
+import {
+  markTaskRun,
+  markTaskYield,
+  markTaskCompleted,
+  markTaskCanceled,
+  markTaskErrored,
+  markSchedulerSuspended,
+  markSchedulerUnsuspended,
+  markTaskStart,
+} from './SchedulerProfiling';
 
 // Max 31 bit integer. The max integer size in V8 for 32-bit systems.
 // Math.pow(2, 30) - 1
@@ -60,13 +76,29 @@ var isPerformingWork = false;
 var isHostCallbackScheduled = false;
 var isHostTimeoutScheduled = false;
 
+function requestHostCallbackWithProfiling(cb) {
+  if (enableProfiling) {
+    markSchedulerSuspended();
+    requestHostCallbackWithoutProfiling(cb);
+  }
+}
+
+const requestHostCallback = enableProfiling
+  ? requestHostCallbackWithProfiling
+  : requestHostCallbackWithoutProfiling;
+
 function flushTask(task, callback, currentTime) {
   currentPriorityLevel = task.priorityLevel;
   var didUserCallbackTimeout = task.expirationTime <= currentTime;
+  markTaskRun(task);
   var continuationCallback = callback(didUserCallbackTimeout);
-  return typeof continuationCallback === 'function'
-    ? continuationCallback
-    : null;
+  if (typeof continuationCallback === 'function') {
+    markTaskYield(task);
+    return continuationCallback;
+  } else {
+    markTaskCompleted(task);
+    return null;
+  }
 }
 
 function advanceTimers(currentTime) {
@@ -81,6 +113,7 @@ function advanceTimers(currentTime) {
       pop(timerQueue);
       timer.sortIndex = timer.expirationTime;
       push(taskQueue, timer);
+      markTaskStart(timer);
     } else {
       // Remaining timers are pending.
       return;
@@ -107,6 +140,10 @@ function handleTimeout(currentTime) {
 }
 
 function flushWork(hasTimeRemaining, initialTime) {
+  if (isHostCallbackScheduled) {
+    markSchedulerUnsuspended();
+  }
+
   // We'll need a host callback the next time work is scheduled.
   isHostCallbackScheduled = false;
   if (isHostTimeoutScheduled) {
@@ -152,6 +189,8 @@ function flushWork(hasTimeRemaining, initialTime) {
     }
     // Return whether there's additional work
     if (currentTask !== null) {
+      markSchedulerSuspended();
+      isHostCallbackScheduled = true;
       return true;
     } else {
       let firstTimer = peek(timerQueue);
@@ -160,6 +199,14 @@ function flushWork(hasTimeRemaining, initialTime) {
       }
       return false;
     }
+  } catch (error) {
+    if (currentTask !== null) {
+      markTaskErrored(currentTask);
+      if (currentTask === peek(taskQueue)) {
+        pop(taskQueue);
+      }
+    }
+    throw error;
   } finally {
     currentTask = null;
     currentPriorityLevel = previousPriorityLevel;
@@ -250,6 +297,7 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
 
   var startTime;
   var timeout;
+  var label;
   if (typeof options === 'object' && options !== null) {
     var delay = options.delay;
     if (typeof delay === 'number' && delay > 0) {
@@ -261,6 +309,12 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
       typeof options.timeout === 'number'
         ? options.timeout
         : timeoutForPriorityLevel(priorityLevel);
+    if (enableProfiling) {
+      var _label = options.label;
+      if (typeof _label === 'string') {
+        label = _label;
+      }
+    }
   } else {
     timeout = timeoutForPriorityLevel(priorityLevel);
     startTime = currentTime;
@@ -269,13 +323,19 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
   var expirationTime = startTime + timeout;
 
   var newTask = {
-    id: taskIdCounter++,
+    id: ++taskIdCounter,
     callback,
     priorityLevel,
     startTime,
     expirationTime,
     sortIndex: -1,
   };
+
+  if (enableProfiling) {
+    if (typeof options === 'object' && options !== null) {
+      newTask.label = label;
+    }
+  }
 
   if (startTime > currentTime) {
     // This is a delayed task.
@@ -295,6 +355,7 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
   } else {
     newTask.sortIndex = expirationTime;
     push(taskQueue, newTask);
+    markTaskStart(newTask);
     // Schedule a host callback, if needed. If we're already performing work,
     // wait until the next time we yield.
     if (!isHostCallbackScheduled && !isPerformingWork) {
@@ -323,10 +384,23 @@ function unstable_getFirstCallbackNode() {
 }
 
 function unstable_cancelCallback(task) {
-  // Null out the callback to indicate the task has been canceled. (Can't remove
-  // from the queue because you can't remove arbitrary nodes from an array based
-  // heap, only the first one.)
-  task.callback = null;
+  if (enableProfiling && task.callback !== null) {
+    markTaskCanceled(task);
+  }
+  if (task !== null && task === peek(taskQueue)) {
+    pop(taskQueue);
+    if (enableProfiling && !isPerformingWork && taskQueue.length === 0) {
+      // The queue is now empty.
+      markSchedulerUnsuspended();
+      isHostCallbackScheduled = false;
+      cancelHostCallback();
+    }
+  } else {
+    // Null out the callback to indicate the task has been canceled. (Can't
+    // remove from the queue because you can't remove arbitrary nodes from an
+    // array based heap, only the first one.)
+    task.callback = null;
+  }
 }
 
 function unstable_getCurrentPriorityLevel() {
