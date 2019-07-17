@@ -4,10 +4,9 @@ describe('console', () => {
   let React;
   let ReactDOM;
   let act;
-  let enableConsole;
-  let disableConsole;
   let fakeConsole;
   let mockError;
+  let mockInfo;
   let mockLog;
   let mockWarn;
   let patchConsole;
@@ -15,8 +14,6 @@ describe('console', () => {
 
   beforeEach(() => {
     const Console = require('../backend/console');
-    enableConsole = Console.enable;
-    disableConsole = Console.disable;
     patchConsole = Console.patch;
     unpatchConsole = Console.unpatch;
 
@@ -37,25 +34,36 @@ describe('console', () => {
     // Patching the real console is too complicated,
     // because Jest itself has hooks into it as does our test env setup.
     mockError = jest.fn();
+    mockInfo = jest.fn();
     mockLog = jest.fn();
     mockWarn = jest.fn();
     fakeConsole = {
       error: mockError,
+      info: mockInfo,
       log: mockLog,
       warn: mockWarn,
     };
 
-    patchConsole(fakeConsole);
+    Console.dangerous_setTargetConsoleForTesting(fakeConsole);
+
+    patchConsole();
   });
 
   function normalizeCodeLocInfo(str) {
     return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
   }
 
+  it('should not patch console methods that do not receive component stacks', () => {
+    expect(fakeConsole.error).not.toBe(mockError);
+    expect(fakeConsole.info).toBe(mockInfo);
+    expect(fakeConsole.log).toBe(mockLog);
+    expect(fakeConsole.warn).not.toBe(mockWarn);
+  });
+
   it('should only patch the console once', () => {
     const { error, warn } = fakeConsole;
 
-    patchConsole(fakeConsole);
+    patchConsole();
 
     expect(fakeConsole.error).toBe(error);
     expect(fakeConsole.warn).toBe(warn);
@@ -75,30 +83,6 @@ describe('console', () => {
     expect(mockLog).toHaveBeenCalledTimes(0);
     expect(mockWarn).toHaveBeenCalledTimes(0);
     expect(mockError).toHaveBeenCalledTimes(0);
-    fakeConsole.log('log');
-    fakeConsole.warn('warn');
-    fakeConsole.error('error');
-    expect(mockLog).toHaveBeenCalledTimes(1);
-    expect(mockLog.mock.calls[0]).toHaveLength(1);
-    expect(mockLog.mock.calls[0][0]).toBe('log');
-    expect(mockWarn).toHaveBeenCalledTimes(1);
-    expect(mockWarn.mock.calls[0]).toHaveLength(1);
-    expect(mockWarn.mock.calls[0][0]).toBe('warn');
-    expect(mockError).toHaveBeenCalledTimes(1);
-    expect(mockError.mock.calls[0]).toHaveLength(1);
-    expect(mockError.mock.calls[0][0]).toBe('error');
-  });
-
-  it('should suppress console logging when disabled', () => {
-    disableConsole();
-    fakeConsole.log('log');
-    fakeConsole.warn('warn');
-    fakeConsole.error('error');
-    expect(mockLog).toHaveBeenCalledTimes(0);
-    expect(mockWarn).toHaveBeenCalledTimes(0);
-    expect(mockError).toHaveBeenCalledTimes(0);
-
-    enableConsole();
     fakeConsole.log('log');
     fakeConsole.warn('warn');
     fakeConsole.error('error');
@@ -330,7 +314,7 @@ describe('console', () => {
     expect(mockError.mock.calls[0]).toHaveLength(1);
     expect(mockError.mock.calls[0][0]).toBe('error');
 
-    patchConsole(fakeConsole);
+    patchConsole();
     act(() => ReactDOM.render(<Child />, document.createElement('div')));
 
     expect(mockWarn).toHaveBeenCalledTimes(2);

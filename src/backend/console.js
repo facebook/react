@@ -5,6 +5,8 @@ import describeComponentFrame from './describeComponentFrame';
 
 import type { Fiber, ReactRenderer } from './types';
 
+const APPEND_STACK_TO_METHODS = ['error', 'trace', 'warn'];
+
 const FRAME_REGEX = /\n {4}in /;
 
 const injectedRenderers: Map<
@@ -15,17 +17,29 @@ const injectedRenderers: Map<
   |}
 > = new Map();
 
-let isDisabled: boolean = false;
+let targetConsole: Object = console;
+let targetConsoleMethods = {};
+for (let method in console) {
+  targetConsoleMethods[method] = console[method];
+}
+
 let unpatchFn: null | (() => void) = null;
 
-export function disable(): void {
-  isDisabled = true;
+// Enables e.g. Jest tests to inject a mock console object.
+export function dangerous_setTargetConsoleForTesting(
+  targetConsoleForTesting: Object
+): void {
+  targetConsole = targetConsoleForTesting;
+
+  targetConsoleMethods = {};
+  for (let method in targetConsole) {
+    targetConsoleMethods[method] = console[method];
+  }
 }
 
-export function enable(): void {
-  isDisabled = false;
-}
-
+// v16 renderers should use this method to inject internals necessary to generate a component stack.
+// These internals will be used if the console is patched.
+// Injecting them separately allows the console to easily be patched or unpacted later (at runtime).
 export function registerRenderer(renderer: ReactRenderer): void {
   const { getCurrentFiber, findFiberByHostInstance, version } = renderer;
 
@@ -44,16 +58,18 @@ export function registerRenderer(renderer: ReactRenderer): void {
   }
 }
 
-export function patch(targetConsole?: Object = console): void {
+// Patches whitelisted console methods to append component stack for the current fiber.
+// Call unpatch() to remove the injected behavior.
+export function patch(): void {
   if (unpatchFn !== null) {
     // Don't patch twice.
     return;
   }
 
-  const originalConsoleMethods = { ...targetConsole };
+  const originalConsoleMethods = {};
 
   unpatchFn = () => {
-    for (let method in targetConsole) {
+    for (let method in originalConsoleMethods) {
       try {
         // $FlowFixMe property error|warn is not writable.
         targetConsole[method] = originalConsoleMethods[method];
@@ -61,15 +77,13 @@ export function patch(targetConsole?: Object = console): void {
     }
   };
 
-  for (let method in targetConsole) {
-    const appendComponentStack =
-      method === 'error' || method === 'warn' || method === 'trace';
+  APPEND_STACK_TO_METHODS.forEach(method => {
+    try {
+      const originalMethod = (originalConsoleMethods[method] =
+        targetConsole[method]);
 
-    const originalMethod = targetConsole[method];
-    const overrideMethod = (...args) => {
-      if (isDisabled) return;
-
-      if (appendComponentStack) {
+      // $FlowFixMe property error|warn is not writable.
+      targetConsole[method] = (...args) => {
         // If we are ever called with a string that already has a component stack, e.g. a React error/warning,
         // don't append a second stack.
         const alreadyHasComponentStack =
@@ -105,18 +119,14 @@ export function patch(targetConsole?: Object = console): void {
             }
           }
         }
-      }
 
-      originalMethod(...args);
-    };
-
-    try {
-      // $FlowFixMe property error|warn is not writable.
-      targetConsole[method] = overrideMethod;
+        originalMethod(...args);
+      };
     } catch (error) {}
-  }
+  });
 }
 
+// Removed component stack patch from whitelisted console methods.
 export function unpatch(): void {
   if (unpatchFn !== null) {
     unpatchFn();

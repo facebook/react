@@ -255,6 +255,74 @@ describe('InspectedElementContext', () => {
     done();
   });
 
+  it('should temporarily disable console logging when re-running a component to inspect its hooks', async done => {
+    let targetRenderCount = 0;
+
+    const errorSpy = ((console: any).error = jest.fn());
+    const infoSpy = ((console: any).info = jest.fn());
+    const logSpy = ((console: any).log = jest.fn());
+    const warnSpy = ((console: any).warn = jest.fn());
+
+    const Target = React.memo(props => {
+      targetRenderCount++;
+      console.error('error');
+      console.info('info');
+      console.log('log');
+      console.warn('warn');
+      React.useState(0);
+      return null;
+    });
+
+    const container = document.createElement('div');
+    await utils.actAsync(() =>
+      ReactDOM.render(<Target a={1} b="abc" />, container)
+    );
+
+    expect(targetRenderCount).toBe(1);
+    expect(errorSpy).toHaveBeenCalledTimes(1);
+    expect(errorSpy).toHaveBeenCalledWith('error');
+    expect(infoSpy).toHaveBeenCalledTimes(1);
+    expect(infoSpy).toHaveBeenCalledWith('info');
+    expect(logSpy).toHaveBeenCalledTimes(1);
+    expect(logSpy).toHaveBeenCalledWith('log');
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(warnSpy).toHaveBeenCalledWith('warn');
+
+    const id = ((store.getElementIDAtIndex(0): any): number);
+
+    let inspectedElement = null;
+
+    function Suspender({ target }) {
+      const { getInspectedElement } = React.useContext(InspectedElementContext);
+      inspectedElement = getInspectedElement(target);
+      return null;
+    }
+
+    await utils.actAsync(
+      () =>
+        TestRenderer.create(
+          <Contexts
+            defaultSelectedElementID={id}
+            defaultSelectedElementIndex={1}
+          >
+            <React.Suspense fallback={null}>
+              <Suspender target={id} />
+            </React.Suspense>
+          </Contexts>
+        ),
+      false
+    );
+
+    expect(inspectedElement).not.toBe(null);
+    expect(targetRenderCount).toBe(2);
+    expect(errorSpy).toHaveBeenCalledTimes(1);
+    expect(infoSpy).toHaveBeenCalledTimes(1);
+    expect(logSpy).toHaveBeenCalledTimes(1);
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+
+    done();
+  });
+
   it('should support simple data types', async done => {
     const Example = () => null;
 

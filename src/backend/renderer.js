@@ -40,8 +40,6 @@ import {
 } from '../constants';
 import { inspectHooksOfFiber } from './ReactDebugHooks';
 import {
-  disable as disableConsole,
-  enable as enableConsole,
   patch as patchConsole,
   registerRenderer as registerRendererWithConsole,
 } from './console';
@@ -2254,15 +2252,30 @@ export function attach(
 
     let hooks = null;
     if (usesHooks) {
-      // Suppress console logging while re-rendering
+      const originalConsoleMethods = {};
+
+      // Temporarily disable all console logging before re-running the hook.
+      for (let method in console) {
+        try {
+          originalConsoleMethods[method] = console[method];
+          // $FlowFixMe property error|warn is not writable.
+          console[method] = () => {};
+        } catch (error) {}
+      }
+
       try {
-        disableConsole();
         hooks = inspectHooksOfFiber(
           fiber,
           (renderer.currentDispatcherRef: any)
         );
       } finally {
-        enableConsole();
+        // Restore original console functionality.
+        for (let method in originalConsoleMethods) {
+          try {
+            // $FlowFixMe property error|warn is not writable.
+            console[method] = originalConsoleMethods[method];
+          } catch (error) {}
+        }
       }
     }
 
