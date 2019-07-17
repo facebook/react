@@ -17,13 +17,9 @@ import React from 'react';
 import {DiscreteEvent} from 'shared/ReactTypes';
 
 type InputEventType = 'change' | 'beforechange' | 'valuechange';
-type KeyboardEventType = 'keydown' | 'keyup' | 'keypress';
 
 type InputResponderProps = {
   disabled: boolean,
-  onKeyDown: (e: InputEvent) => void,
-  onKeyUp: (e: InputEvent) => void,
-  onKeyPress: (e: InputEvent) => void,
   onBeforeChange: (e: InputEvent) => void,
   onChange: (e: InputEvent) => void,
   onValueChange: (value: string | boolean) => void,
@@ -39,28 +35,7 @@ type InputEvent = {|
   timeStamp: number,
 |};
 
-type KeyboardEvent = {|
-  isComposing: boolean,
-  repeat: boolean,
-  key: null | string,
-  target: Element | Document,
-  type: KeyboardEventType,
-  timeStamp: number,
-  altKey: boolean,
-  ctrlKey: boolean,
-  metaKey: boolean,
-  shiftKey: boolean,
-|};
-
-const targetEventTypes = [
-  'input',
-  'change',
-  'beforeinput',
-  'keydown',
-  'keyup',
-  'keypress',
-  'click',
-];
+const targetEventTypes = ['input', 'change', 'beforeinput', 'click'];
 
 const supportedInputTypes = new Set([
   'color',
@@ -79,35 +54,6 @@ const supportedInputTypes = new Set([
   'url',
   'week',
 ]);
-
-function createKeyboardEvent(
-  event: ReactDOMResponderEvent,
-  context: ReactDOMResponderContext,
-  type: KeyboardEventType,
-  target: Document | Element,
-): KeyboardEvent {
-  const {
-    altKey,
-    ctrlKey,
-    key,
-    isComposing,
-    metaKey,
-    repeat,
-    shiftKey,
-  } = (event: any).nativeEvent;
-  return {
-    altKey,
-    ctrlKey,
-    key,
-    isComposing,
-    metaKey,
-    repeat,
-    shiftKey,
-    target,
-    timeStamp: context.getTimeStamp(),
-    type,
-  };
-}
 
 function createInputEvent(
   event: ReactDOMResponderEvent,
@@ -135,17 +81,6 @@ function dispatchInputEvent(
   target: Element | Document,
 ): void {
   const syntheticEvent = createInputEvent(event, context, type, target);
-  context.dispatchEvent(syntheticEvent, listener, DiscreteEvent);
-}
-
-function dispatchKeyboardEvent(
-  event: ReactDOMResponderEvent,
-  context: ReactDOMResponderContext,
-  type: KeyboardEventType,
-  listener: (e: Object) => void,
-  target: Element | Document,
-): void {
-  const syntheticEvent = createKeyboardEvent(event, context, type, target);
   context.dispatchEvent(syntheticEvent, listener, DiscreteEvent);
 }
 
@@ -255,45 +190,6 @@ const InputResponder: ReactDOMEventResponder = {
       return;
     }
     switch (type) {
-      case 'keydown': {
-        const onKeyDown = props.onKeyDown;
-        if (onKeyDown) {
-          dispatchKeyboardEvent(
-            event,
-            context,
-            'keydown',
-            onKeyDown,
-            responderTarget,
-          );
-        }
-        break;
-      }
-      case 'keyup': {
-        const onKeyUp = props.onKeyUp;
-        if (onKeyUp) {
-          dispatchKeyboardEvent(
-            event,
-            context,
-            'keyup',
-            onKeyUp,
-            responderTarget,
-          );
-        }
-        break;
-      }
-      case 'keypress': {
-        const onKeyPress = props.onKeyPress;
-        if (onKeyPress) {
-          dispatchKeyboardEvent(
-            event,
-            context,
-            'keypress',
-            onKeyPress,
-            responderTarget,
-          );
-        }
-        break;
-      }
       default: {
         if (shouldUseChangeEvent(target) && type === 'change') {
           dispatchBothChangeEvents(event, context, props, responderTarget);
