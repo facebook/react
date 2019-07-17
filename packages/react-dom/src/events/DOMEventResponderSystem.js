@@ -30,6 +30,7 @@ import {
   discreteUpdates,
   flushDiscreteUpdatesIfNeeded,
 } from 'events/ReactGenericBatching';
+import {enqueueStateRestore} from 'events/ReactControlledComponent';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import warning from 'shared/warning';
 import {enableFlareAPI} from 'shared/ReactFeatureFlags';
@@ -382,6 +383,7 @@ const eventResponderContext: ReactDOMResponderContext = {
   isRespondingToHook() {
     return currentlyInHook;
   },
+  enqueueStateRestore,
 };
 
 function collectFocusableElements(

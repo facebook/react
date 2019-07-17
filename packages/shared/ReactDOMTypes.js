@@ -74,4 +74,6 @@ export type ReactDOMResponderContext = {
   ) => boolean,
   continueLocalPropagation(): void,
   isRespondingToHook(): boolean,
+  // Used for controller components
+  enqueueStateRestore(Element | Document): void,
 };
