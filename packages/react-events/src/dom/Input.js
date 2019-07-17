@@ -32,7 +32,7 @@ type InputResponderProps = {
 type InputEvent = {|
   data: string,
   isComposing: boolean,
-  inputType: boolean,
+  inputType: string,
   dataTransfer: null | string,
   target: Element | Document,
   type: InputEventType,
