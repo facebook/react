@@ -18,11 +18,7 @@ import React from 'react';
 import {DiscreteEvent, UserBlockingEvent} from 'shared/ReactTypes';
 
 const targetEventTypes = ['pointerdown'];
-const rootEventTypes = [
-  'pointerup',
-  'pointercancel',
-  {name: 'pointermove', passive: false},
-];
+const rootEventTypes = ['pointerup', 'pointercancel', 'pointermove_active'];
 
 type DragState = {
   dragTarget: null | Element | Document,
@@ -38,10 +34,13 @@ type DragState = {
 // too
 if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
   targetEventTypes.push('touchstart', 'mousedown');
-  rootEventTypes.push('mouseup', 'mousemove', 'touchend', 'touchcancel', {
-    name: 'touchmove',
-    passive: false,
-  });
+  rootEventTypes.push(
+    'mouseup',
+    'mousemove',
+    'touchend',
+    'touchcancel',
+    'touchmove_active',
+  );
 }
 
 type EventData = {
@@ -88,7 +87,7 @@ function dispatchDragEvent(
 const DragResponder: ReactDOMEventResponder = {
   displayName: 'Drag',
   targetEventTypes,
-  createInitialState(): DragState {
+  getInitialState(): DragState {
     return {
       dragTarget: null,
       isPointerDown: false,
@@ -99,8 +98,6 @@ const DragResponder: ReactDOMEventResponder = {
       y: 0,
     };
   },
-  allowMultipleHostChildren: false,
-  allowEventHooks: false,
   onEvent(
     event: ReactDOMResponderEvent,
     context: ReactDOMResponderContext,

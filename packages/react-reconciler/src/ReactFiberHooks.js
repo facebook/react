@@ -85,8 +85,8 @@ export type Dispatcher = {
     deps: Array<mixed> | void | null,
   ): void,
   useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void,
-  useEvent<T, E, C>(
-    eventComponent: ReactEventComponent<T, E, C>,
+  useEvent<E, C>(
+    eventComponent: ReactEventComponent<E, C>,
     props: Object,
   ): void,
 };
@@ -692,7 +692,7 @@ function updateReducer<S, I, A>(
         }
 
         hook.memoizedState = newState;
-        // Don't persist the state accumlated from the render phase updates to
+        // Don't persist the state accumulated from the render phase updates to
         // the base state unless the queue is empty.
         // TODO: Not sure if this is the desired semantics, but it's what we
         // do for gDSFP. I can't remember why.
@@ -1423,7 +1423,7 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountDebugValue(value, formatterFn);
     },
-    useEvent<T, E, C>(eventComponent: ReactEventComponent<T, E, C>, props) {
+    useEvent<E, C>(eventComponent: ReactEventComponent<E, C>, props) {
       currentHookNameInDev = 'useEvent';
       mountHookTypesDev();
       updateEventComponentInstance(eventComponent, props);
@@ -1525,7 +1525,7 @@ if (__DEV__) {
       updateHookTypesDev();
       return mountDebugValue(value, formatterFn);
     },
-    useEvent<T, E, C>(eventComponent: ReactEventComponent<T, E, C>, props) {
+    useEvent<E, C>(eventComponent: ReactEventComponent<E, C>, props) {
       currentHookNameInDev = 'useEvent';
       updateHookTypesDev();
       updateEventComponentInstance(eventComponent, props);
@@ -1627,7 +1627,7 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
     },
-    useEvent<T, E, C>(eventComponent: ReactEventComponent<T, E, C>, props) {
+    useEvent<E, C>(eventComponent: ReactEventComponent<E, C>, props) {
       currentHookNameInDev = 'useEvent';
       updateHookTypesDev();
       updateEventComponentInstance(eventComponent, props);
@@ -1740,7 +1740,7 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountDebugValue(value, formatterFn);
     },
-    useEvent<T, E, C>(eventComponent: ReactEventComponent<T, E, C>, props) {
+    useEvent<E, C>(eventComponent: ReactEventComponent<E, C>, props) {
       currentHookNameInDev = 'useEvent';
       warnInvalidHookAccess();
       mountHookTypesDev();
@@ -1854,7 +1854,7 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
     },
-    useEvent<T, E, C>(eventComponent: ReactEventComponent<T, E, C>, props) {
+    useEvent<E, C>(eventComponent: ReactEventComponent<E, C>, props) {
       currentHookNameInDev = 'useEvent';
       warnInvalidHookAccess();
       updateHookTypesDev();

@@ -18,20 +18,19 @@ import React from 'react';
 import {UserBlockingEvent, DiscreteEvent} from 'shared/ReactTypes';
 
 const targetEventTypes = ['pointerdown'];
-const rootEventTypes = [
-  'pointerup',
-  'pointercancel',
-  {name: 'pointermove', passive: false},
-];
+const rootEventTypes = ['pointerup', 'pointercancel', 'pointermove_active'];
 
 // In the case we don't have PointerEvents (Safari), we listen to touch events
 // too
 if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
   targetEventTypes.push('touchstart', 'mousedown');
-  rootEventTypes.push('mouseup', 'mousemove', 'touchend', 'touchcancel', {
-    name: 'touchmove',
-    passive: false,
-  });
+  rootEventTypes.push(
+    'mouseup',
+    'mousemove',
+    'touchend',
+    'touchcancel',
+    'touchmove_active',
+  );
 }
 
 type EventData = {
@@ -92,7 +91,7 @@ type SwipeState = {
 const SwipeResponder: ReactDOMEventResponder = {
   displayName: 'Scroll',
   targetEventTypes,
-  createInitialState(): SwipeState {
+  getInitialState(): SwipeState {
     return {
       direction: 0,
       isSwiping: false,
@@ -105,8 +104,6 @@ const SwipeResponder: ReactDOMEventResponder = {
       y: 0,
     };
   },
-  allowMultipleHostChildren: false,
-  allowEventHooks: false,
   onEvent(
     event: ReactDOMResponderEvent,
     context: ReactDOMResponderContext,

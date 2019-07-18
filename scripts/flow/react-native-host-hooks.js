@@ -17,6 +17,7 @@ import type {
   ViewConfigGetter,
 } from 'react-native-renderer/src/ReactNativeTypes';
 import type {RNTopLevelEventType} from 'events/TopLevelEventTypes';
+import type {CapturedError} from 'react-reconciler/src/ReactCapturedValue';
 
 declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface' {
   declare export function deepDiffer(one: any, two: any): boolean;
@@ -29,8 +30,8 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
     blurTextInput: (object: any) => void,
     focusTextInput: (object: any) => void,
   };
-  declare export var ExceptionsManager: {
-    handleException: (error: Error, isFatal: boolean) => void,
+  declare export var ReactFiberErrorDialog: {
+    showErrorDialog: (error: CapturedError) => boolean,
   };
   declare export var Platform: {
     OS: string,
@@ -43,6 +44,11 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
       viewName: string,
       rootTag: number,
       props: ?Object,
+    ) => void,
+    dispatchViewManagerCommand: (
+      reactTag: number,
+      command: string,
+      args: Array<any>,
     ) => void,
     manageChildren: (
       containerTag: number,
@@ -119,6 +125,8 @@ declare var nativeFabricUIManager: {
       payload: Object,
     ) => void,
   ) => void,
+
+  dispatchCommand: (node: Object, command: string, args: Array<any>) => void,
 
   measure: (node: Node, callback: MeasureOnSuccessCallback) => void,
   measureInWindow: (

@@ -57,7 +57,7 @@ import {
   flushDiscreteUpdates,
   flushPassiveEffects,
   warnIfNotScopedWithMatchingAct,
-  ReactActingRendererSigil,
+  IsThisRendererActing,
 } from './ReactFiberWorkLoop';
 import {createUpdate, enqueueUpdate} from './ReactUpdateQueue';
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
@@ -345,7 +345,7 @@ export {
   flushControlled,
   flushSync,
   flushPassiveEffects,
-  ReactActingRendererSigil,
+  IsThisRendererActing,
 };
 
 export function getPublicRootInstance(
@@ -501,5 +501,7 @@ export function injectIntoDevTools(devToolsConfig: DevToolsConfig): boolean {
     scheduleRefresh: __DEV__ ? scheduleRefresh : null,
     scheduleRoot: __DEV__ ? scheduleRoot : null,
     setRefreshHandler: __DEV__ ? setRefreshHandler : null,
+    // Enables DevTools to append owner stacks to error messages in DEV mode.
+    getCurrentFiber: __DEV__ ? () => ReactCurrentFiberCurrent : null,
   });
 }

@@ -10,7 +10,6 @@
 import type {
   ReactNativeResponderEvent,
   ReactNativeResponderContext,
-  ReactNativeEventResponderEventType,
   ReactNativeEventTarget,
   PointerType,
   ReactFaricEventTouch,
@@ -24,7 +23,6 @@ import {
 } from 'react-native-renderer/src/ReactNativeTypes';
 
 type ReactNativeEventResponder = ReactEventResponder<
-  ReactNativeEventResponderEventType,
   ReactNativeResponderEvent,
   ReactNativeResponderContext,
 >;
@@ -504,9 +502,7 @@ function dispatchPressEndEvents(event, context, props, state): void {
 const PressResponder: ReactNativeEventResponder = {
   displayName: 'Press',
   targetEventTypes,
-  allowEventHooks: true,
-  allowMultipleHostChildren: false,
-  createInitialState(): PressState {
+  getInitialState(): PressState {
     return {
       activationPosition: null,
       activePointerId: null,
@@ -537,9 +533,7 @@ const PressResponder: ReactNativeEventResponder = {
     if (type === 'topTouchStart') {
       if (!state.isPressed) {
         state.pointerType = 'touch';
-        const pressTarget = (state.pressTarget = context.getEventCurrentTarget(
-          event,
-        ));
+        const pressTarget = (state.pressTarget = event.currentTarget);
 
         const touchEvent = getTouchFromPressEvent(nativeEvent);
         if (touchEvent === null) {

@@ -15,10 +15,6 @@ import type {
 
 type AnyNativeEvent = Event | KeyboardEvent | MouseEvent | Touch;
 
-export type ReactDOMEventResponderEventType =
-  | string
-  | {name: string, passive?: boolean};
-
 export type PointerType =
   | ''
   | 'mouse'
@@ -33,18 +29,17 @@ export type ReactDOMResponderEvent = {
   passiveSupported: boolean,
   pointerId: null | number,
   pointerType: PointerType,
+  responderTarget: null | Element | Document,
   target: Element | Document,
   type: string,
 };
 
 export type ReactDOMEventResponder = ReactEventResponder<
-  ReactDOMEventResponderEventType,
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
 >;
 
 export type ReactDOMEventComponentInstance = ReactEventComponentInstance<
-  ReactDOMEventResponderEventType,
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
 >;
@@ -61,12 +56,8 @@ export type ReactDOMResponderContext = {
   ) => boolean,
   isTargetWithinEventComponent: (Element | Document) => boolean,
   isTargetWithinEventResponderScope: (Element | Document) => boolean,
-  addRootEventTypes: (
-    rootEventTypes: Array<ReactDOMEventResponderEventType>,
-  ) => void,
-  removeRootEventTypes: (
-    rootEventTypes: Array<ReactDOMEventResponderEventType>,
-  ) => void,
+  addRootEventTypes: (rootEventTypes: Array<string>) => void,
+  removeRootEventTypes: (rootEventTypes: Array<string>) => void,
   hasOwnership: () => boolean,
   requestGlobalOwnership: () => boolean,
   releaseOwnership: () => boolean,
@@ -75,7 +66,6 @@ export type ReactDOMResponderContext = {
   getFocusableElementsInScope(): Array<HTMLElement>,
   getActiveDocument(): Document,
   objectAssign: Function,
-  getEventCurrentTarget(event: ReactDOMResponderEvent): Element,
   getTimeStamp: () => number,
   isTargetWithinHostComponent: (
     target: Element | Document,
@@ -84,4 +74,6 @@ export type ReactDOMResponderContext = {
   ) => boolean,
   continueLocalPropagation(): void,
   isRespondingToHook(): boolean,
+  // Used for controller components
+  enqueueStateRestore(Element | Document): void,
 };

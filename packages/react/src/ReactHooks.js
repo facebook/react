@@ -138,8 +138,8 @@ export function useDebugValue(value: any, formatterFn: ?(value: any) => any) {
 
 export const emptyObject = {};
 
-export function useEvent<T, E, C>(
-  eventComponent: ReactEventComponent<T, E, C>,
+export function useEvent<E, C>(
+  eventComponent: ReactEventComponent<E, C>,
   props: null | Object,
 ) {
   const dispatcher = resolveDispatcher();

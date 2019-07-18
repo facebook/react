@@ -39,6 +39,8 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentName from 'shared/getComponentName';
 import warningWithoutStack from 'shared/warningWithoutStack';
 
+const {dispatchCommand: fabricDispatchCommand} = nativeFabricUIManager;
+
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
 function findNodeHandle(componentOrHandle: any): ?number {
@@ -114,6 +116,26 @@ const ReactFabric: ReactFabricType = {
     );
 
     return;
+  },
+
+  dispatchCommand(handle: any, command: string, args: Array<any>) {
+    const invalid =
+      handle._nativeTag == null || handle._internalInstanceHandle == null;
+
+    if (invalid) {
+      warningWithoutStack(
+        !invalid,
+        "dispatchCommand was called with a ref that isn't a " +
+          'native component. Use React.forwardRef to get access to the underlying native component',
+      );
+      return;
+    }
+
+    fabricDispatchCommand(
+      handle._internalInstanceHandle.stateNode.node,
+      command,
+      args,
+    );
   },
 
   render(element: React$Element<any>, containerTag: any, callback: ?Function) {

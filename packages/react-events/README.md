@@ -48,18 +48,13 @@ type CustomEvent = {
 }
 ```
 
-### createInitialState?: (props: null | Object) => Object
+### getInitialState?: (props: null | Object) => Object
 
 The initial state of that the Event Component is created with.
 
 ### onEvent?: (event: ResponderEvent, context: ResponderContext, props, state)
 
 Called during the bubble phase of the `targetEventTypes` dispatched on DOM
-elements within the Event Component.
-
-### onEventCapture?: (event: ResponderEvent, context: ResponderContext, props, state)
-
-Called during the capture phase of the `targetEventTypes` dispatched on DOM
 elements within the Event Component.
 
 ### onMount?: (context: ResponderContext, props, state)

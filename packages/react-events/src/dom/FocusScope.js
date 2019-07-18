@@ -25,8 +25,8 @@ type FocusScopeState = {
   currentFocusedNode: null | HTMLElement,
 };
 
-const targetEventTypes = [{name: 'keydown', passive: false}];
-const rootEventTypes = [{name: 'focus', passive: true}];
+const targetEventTypes = ['keydown_active'];
+const rootEventTypes = ['focus'];
 
 function focusElement(element: ?HTMLElement) {
   if (element != null) {
@@ -50,14 +50,12 @@ const FocusScopeResponder: ReactDOMEventResponder = {
   displayName: 'FocusScope',
   targetEventTypes,
   rootEventTypes,
-  createInitialState(): FocusScopeState {
+  getInitialState(): FocusScopeState {
     return {
       nodeToRestore: null,
       currentFocusedNode: null,
     };
   },
-  allowMultipleHostChildren: true,
-  allowEventHooks: false,
   onEvent(
     event: ReactDOMResponderEvent,
     context: ReactDOMResponderContext,

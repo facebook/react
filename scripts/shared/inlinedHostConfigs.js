@@ -20,11 +20,6 @@ module.exports = [
     isFizzSupported: true,
   },
   {
-    shortName: 'fire',
-    entryPoints: ['react-dom/unstable-fire'],
-    isFlowTyped: true,
-  },
-  {
     shortName: 'art',
     entryPoints: ['react-art'],
     isFlowTyped: false, // TODO: type it.
