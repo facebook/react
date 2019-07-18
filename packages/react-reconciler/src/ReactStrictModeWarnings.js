@@ -237,6 +237,7 @@ if (__DEV__) {
     if (componentWillMountUniqueNames.size > 0) {
       const sortedNames = setToSortedString(componentWillMountUniqueNames);
 
+      // keep this warning in sync with ReactPartialRenderer.js
       lowPriorityWarning(
         false,
         'componentWillMount has been renamed, and is not recommended for use. ' +
@@ -245,7 +246,7 @@ if (__DEV__) {
           '* Rename componentWillMount to UNSAFE_componentWillMount to suppress ' +
           'this warning in non-strict mode. In React 17.x, only the UNSAFE_ name will work. ' +
           'To rename all deprecated lifecycles to their new names, you can run ' +
-          '`npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n' +
+          '`npx react-codemod@next rename-unsafe-lifecycles` in your project source folder.\n' +
           '\nPlease update the following components: %s',
         sortedNames,
       );
@@ -267,7 +268,7 @@ if (__DEV__) {
           '* Rename componentWillReceiveProps to UNSAFE_componentWillReceiveProps to suppress ' +
           'this warning in non-strict mode. In React 17.x, only the UNSAFE_ name will work. ' +
           'To rename all deprecated lifecycles to their new names, you can run ' +
-          '`npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n' +
+          '`npx react-codemod@next rename-unsafe-lifecycles` in your project source folder.\n' +
           '\nPlease update the following components: %s',
         sortedNames,
       );
@@ -284,7 +285,7 @@ if (__DEV__) {
           '* Rename componentWillUpdate to UNSAFE_componentWillUpdate to suppress ' +
           'this warning in non-strict mode. In React 17.x, only the UNSAFE_ name will work. ' +
           'To rename all deprecated lifecycles to their new names, you can run ' +
-          '`npx react-codemod rename-unsafe-lifecycles` in your project source folder.\n' +
+          '`npx react-codemod@next rename-unsafe-lifecycles` in your project source folder.\n' +
           '\nPlease update the following components: %s',
         sortedNames,
       );
