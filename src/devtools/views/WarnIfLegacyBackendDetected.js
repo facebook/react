@@ -25,7 +25,7 @@ export default function WarnIfLegacyBackendDetected(_: {||}) {
             canBeDismissed: false,
             type: 'SHOW',
             title:
-              'React DevTools v4 is incompatible with this version of React',
+              'DevTools v4 is incompatible with this version of React',
             content: <InvalidBackendDetected />,
           });
 
