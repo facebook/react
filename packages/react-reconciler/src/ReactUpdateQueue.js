@@ -202,7 +202,7 @@ export function createUpdate(
   expirationTime: ExpirationTime,
   suspenseConfig: null | SuspenseConfig,
 ): Update<*> {
-  const update = {
+  let update: Update<*> = {
     expirationTime,
     suspenseConfig,
 
