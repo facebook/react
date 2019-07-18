@@ -2639,7 +2639,7 @@ function flushSuspensePriorityWarningInDEV() {
         componentsThatTriggeredSuspendNames.push(name),
       );
 
-      const callerErrorMessage = componentsThatTriggeredHighPriSuspend.has(
+      const componentsThatTriggeredSuspendErrorMessage = componentsThatTriggeredHighPriSuspend.has(
         HostRoot,
       )
         ? 'Component was suspended when root was mounted or updated'
@@ -2667,7 +2667,7 @@ function flushSuspensePriorityWarningInDEV() {
           'feedback, and another update to perform the actual change.',
         // TODO: Add link to React docs with more information, once it exists
         componentNames.sort().join(', '),
-        callerErrorMessage,
+        componentsThatTriggeredSuspendErrorMessage,
       );
     }
   }
