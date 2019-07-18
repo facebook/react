@@ -77,6 +77,7 @@ inject('dist/app.js', () => {
           browserTheme: 'light',
           showTabBar: true,
           store,
+          warnIfLegacyBackendDetected: true,
         })
       );
       batch.then(() => {

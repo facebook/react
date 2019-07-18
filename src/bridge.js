@@ -128,6 +128,12 @@ export default class Bridge extends EventEmitter<{|
       }) || null;
   }
 
+  // Listening directly to the wall isn't advised.
+  // It can be used to listen for legacy (v3) messages (since they use a different format).
+  get wall(): Wall {
+    return this._wall;
+  }
+
   send(event: string, payload: any, transferable?: Array<any>) {
     if (this._isShutdown) {
       console.warn(

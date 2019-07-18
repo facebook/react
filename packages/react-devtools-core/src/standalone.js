@@ -86,6 +86,7 @@ function reload() {
         bridge: ((bridge: any): Bridge),
         showTabBar: true,
         store: ((store: any): Store),
+        warnIfLegacyBackendDetected: true,
         viewElementSourceFunction,
         viewElementSourceRequiresFileLocation: true,
       })

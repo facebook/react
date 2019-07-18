@@ -18,6 +18,7 @@ type DIALOG_ACTION_HIDE = {|
 |};
 type DIALOG_ACTION_SHOW = {|
   type: 'SHOW',
+  canBeDismissed?: boolean,
   content: React$Node,
   title?: React$Node | null,
 |};
@@ -27,6 +28,7 @@ type Action = DIALOG_ACTION_HIDE | DIALOG_ACTION_SHOW;
 type Dispatch = (action: Action) => void;
 
 type State = {|
+  canBeDismissed: boolean,
   content: React$Node | null,
   isVisible: boolean,
   title: React$Node | null,
@@ -46,12 +48,14 @@ function dialogReducer(state, action) {
   switch (action.type) {
     case 'HIDE':
       return {
+        canBeDismissed: true,
         content: null,
         isVisible: false,
         title: null,
       };
     case 'SHOW':
       return {
+        canBeDismissed: action.canBeDismissed !== false,
         content: action.content,
         isVisible: true,
         title: action.title || null,
@@ -67,6 +71,7 @@ type Props = {|
 
 function ModalDialogContextController({ children }: Props) {
   const [state, dispatch] = useReducer<State, Action>(dialogReducer, {
+    canBeDismissed: true,
     content: null,
     isVisible: false,
     title: null,
@@ -74,6 +79,7 @@ function ModalDialogContextController({ children }: Props) {
 
   const value = useMemo<ModalDialogContextType>(
     () => ({
+      canBeDismissed: state.canBeDismissed,
       content: state.content,
       isVisible: state.isVisible,
       title: state.title,
@@ -95,10 +101,14 @@ function ModalDialog(_: {||}) {
 }
 
 function ModalDialogImpl(_: {||}) {
-  const { content, dispatch, title } = useContext(ModalDialogContext);
-  const dismissModal = useCallback(() => dispatch({ type: 'HIDE' }), [
-    dispatch,
-  ]);
+  const { canBeDismissed, content, dispatch, title } = useContext(
+    ModalDialogContext
+  );
+  const dismissModal = useCallback(() => {
+    if (canBeDismissed) {
+      dispatch({ type: 'HIDE' });
+    }
+  }, [canBeDismissed, dispatch]);
   const modalRef = useRef<HTMLDivElement | null>(null);
 
   useModalDismissSignal(modalRef, dismissModal);
@@ -108,11 +118,13 @@ function ModalDialogImpl(_: {||}) {
       <div className={styles.Dialog} ref={modalRef}>
         {title !== null && <div className={styles.Title}>{title}</div>}
         {content}
-        <div className={styles.Buttons}>
-          <Button autoFocus onClick={dismissModal}>
-            Okay
-          </Button>
-        </div>
+        {canBeDismissed && (
+          <div className={styles.Buttons}>
+            <Button autoFocus onClick={dismissModal}>
+              Okay
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

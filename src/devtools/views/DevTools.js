@@ -18,6 +18,7 @@ import ViewElementSourceContext from './Components/ViewElementSourceContext';
 import { ProfilerContextController } from './Profiler/ProfilerContext';
 import { ModalDialogContextController } from './ModalDialog';
 import ReactLogo from './ReactLogo';
+import WarnIfLegacyBackendDetected from './WarnIfLegacyBackendDetected';
 
 import styles from './DevTools.css';
 
@@ -38,6 +39,7 @@ export type Props = {|
   defaultTab?: TabID,
   showTabBar?: boolean,
   store: Store,
+  warnIfLegacyBackendDetected?: boolean,
   viewElementSourceFunction?: ?ViewElementSource,
   viewElementSourceRequiresFileLocation?: boolean,
 
@@ -80,6 +82,7 @@ export default function DevTools({
   settingsPortalContainer,
   showTabBar = false,
   store,
+  warnIfLegacyBackendDetected = false,
   viewElementSourceFunction,
   viewElementSourceRequiresFileLocation = false,
 }: Props) {
@@ -143,6 +146,7 @@ export default function DevTools({
               </TreeContextController>
             </ViewElementSourceContext.Provider>
           </SettingsContextController>
+          {warnIfLegacyBackendDetected && <WarnIfLegacyBackendDetected />}
         </ModalDialogContextController>
       </StoreContext.Provider>
     </BridgeContext.Provider>
