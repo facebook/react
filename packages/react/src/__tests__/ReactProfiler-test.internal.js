@@ -2731,6 +2731,16 @@ describe('Profiler', () => {
         expect(
           onInteractionScheduledWorkCompleted.mock.calls[1][0],
         ).toMatchInteraction(highPriUpdateInteraction);
+
+        if (__DEV__) {
+          expect(console.error.calls.argsFor(0)[0]).toContain(
+            'Warning: The following components suspended during a user-blocking update: ',
+          );
+          expect(console.error.calls.argsFor(0)[1]).toContain('AsyncText');
+          expect(console.error.calls.argsFor(0)[2]).toContain(
+            'Component was suspended when root was mounted or updated',
+          );
+        }
       });
     });
   });

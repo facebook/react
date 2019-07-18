@@ -795,7 +795,8 @@ function prepareFreshStack(root, expirationTime) {
 
   if (__DEV__) {
     ReactStrictModeWarnings.discardPendingWarnings();
-    componentsWithSuspendedDiscreteUpdates = null;
+    componentsThatSuspendedAtHighPri = null;
+    componentsThatTriggeredHighPriSuspend = null;
   }
 }
 
@@ -2521,8 +2522,8 @@ function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
 
 export const warnIfNotCurrentlyActingUpdatesInDev = warnIfNotCurrentlyActingUpdatesInDEV;
 
-let componentsWithSuspendedDiscreteUpdates = null;
-let componentsThatCallSuspendedDiscreteUpdates = new Set();
+let componentsThatSuspendedAtHighPri = null;
+let componentsThatTriggeredHighPriSuspend = null;
 export function checkForWrongSuspensePriorityInDEV(sourceFiber: Fiber) {
   if (__DEV__) {
     const currentPriorityLevel = getCurrentPriorityLevel();
@@ -2531,57 +2532,73 @@ export function checkForWrongSuspensePriorityInDEV(sourceFiber: Fiber) {
       (currentPriorityLevel === UserBlockingPriority ||
         currentPriorityLevel === ImmediatePriority)
     ) {
-      let WIPNode = sourceFiber;
-      while (WIPNode != null) {
+      let workInProgressNode = sourceFiber;
+      while (workInProgressNode !== null) {
         // Add the component that triggered the suspense
-        const current = WIPNode.alternate;
+        const current = workInProgressNode.alternate;
         if (current !== null) {
-          switch (WIPNode.tag) {
+          switch (workInProgressNode.tag) {
             case HostRoot:
             case ClassComponent:
               // Loop through the component's update queue and see whether the component
               // has triggered any high priority updates
-              let queueElem = (current.updateQueue || {}).firstUpdate;
-              while (queueElem != null) {
-                const piorityLevel = queueElem.priority;
-                if (
-                  piorityLevel === UserBlockingPriority ||
-                  piorityLevel === ImmediatePriority
-                ) {
-                  if (WIPNode.tag === HostRoot) {
-                    componentsThatCallSuspendedDiscreteUpdates.add(WIPNode.tag);
-                  } else {
-                    componentsThatCallSuspendedDiscreteUpdates.add(
-                      getComponentName(WIPNode.type),
-                    );
+              const updateQueue = current.updateQueue;
+              if (updateQueue !== null) {
+                let update = updateQueue.firstUpdate;
+                while (update !== null) {
+                  const priorityLevel = update.priority;
+                  if (
+                    priorityLevel === UserBlockingPriority ||
+                    priorityLevel === ImmediatePriority
+                  ) {
+                    if (componentsThatTriggeredHighPriSuspend === null) {
+                      componentsThatTriggeredHighPriSuspend = new Set();
+                    }
+                    if (workInProgressNode.tag === HostRoot) {
+                      componentsThatTriggeredHighPriSuspend.add(
+                        workInProgressNode.tag,
+                      );
+                    } else {
+                      componentsThatTriggeredHighPriSuspend.add(
+                        getComponentName(workInProgressNode.type),
+                      );
+                    }
+                    break;
                   }
-                  break;
+                  update = update.next;
                 }
-                queueElem = queueElem.next;
               }
               break;
             case FunctionComponent:
             case ForwardRef:
             case SimpleMemoComponent:
               if (
-                WIPNode.memoizedState != null &&
-                WIPNode.memoizedState.baseUpdate != null
+                workInProgressNode.memoizedState !== null &&
+                workInProgressNode.memoizedState.baseUpdate !== null
               ) {
-                let update = WIPNode.memoizedState.baseUpdate;
+                let update = workInProgressNode.memoizedState.baseUpdate;
                 // Loop through the functional component's memoized state to see whether
                 // the component has triggered any high pri updates
-                while (update != null) {
-                  const priorityLevel = update.priority;
+                while (update !== null) {
+                  const priority = update.priority;
                   if (
-                    priorityLevel === UserBlockingPriority ||
-                    priorityLevel === ImmediatePriority
+                    priority === UserBlockingPriority ||
+                    priority === ImmediatePriority
                   ) {
-                    componentsThatCallSuspendedDiscreteUpdates.add(
-                      getComponentName(WIPNode.type),
-                    );
+                    if (componentsThatTriggeredHighPriSuspend === null) {
+                      componentsThatTriggeredHighPriSuspend = new Set([
+                        getComponentName(workInProgressNode.type),
+                      ]);
+                    } else {
+                      componentsThatTriggeredHighPriSuspend.add(
+                        getComponentName(workInProgressNode.type),
+                      );
+                    }
                     break;
                   }
-                  if (update.next === WIPNode.memoizedState.baseUpdate) {
+                  if (
+                    update.next === workInProgressNode.memoizedState.baseUpdate
+                  ) {
                     break;
                   }
                 }
@@ -2591,15 +2608,15 @@ export function checkForWrongSuspensePriorityInDEV(sourceFiber: Fiber) {
               break;
           }
         }
-        WIPNode = WIPNode.return;
+        workInProgressNode = workInProgressNode.return;
       }
 
       // Add the component name to a set.
       const componentName = getComponentName(sourceFiber.type);
-      if (componentsWithSuspendedDiscreteUpdates === null) {
-        componentsWithSuspendedDiscreteUpdates = new Set([componentName]);
+      if (componentsThatSuspendedAtHighPri === null) {
+        componentsThatSuspendedAtHighPri = new Set([componentName]);
       } else {
-        componentsWithSuspendedDiscreteUpdates.add(componentName);
+        componentsThatSuspendedAtHighPri.add(componentName);
       }
     }
   }
@@ -2608,28 +2625,29 @@ export function checkForWrongSuspensePriorityInDEV(sourceFiber: Fiber) {
 function flushSuspensePriorityWarningInDEV() {
   if (__DEV__) {
     if (
-      componentsWithSuspendedDiscreteUpdates !== null &&
-      componentsThatCallSuspendedDiscreteUpdates.size > 0
+      componentsThatSuspendedAtHighPri !== null &&
+      componentsThatTriggeredHighPriSuspend !== null
     ) {
       const componentNames = [];
-      componentsWithSuspendedDiscreteUpdates.forEach(name => {
+      componentsThatSuspendedAtHighPri.forEach(name => {
         componentNames.push(name);
       });
-      componentsWithSuspendedDiscreteUpdates = null;
+      componentsThatSuspendedAtHighPri = null;
 
-      const parentComponentNamesString = Array.from(
-        componentsThatCallSuspendedDiscreteUpdates,
-      )
-        .sort()
-        .join(', ');
+      const componentsThatTriggeredSuspendNames = [];
+      componentsThatTriggeredHighPriSuspend.forEach(name =>
+        componentsThatTriggeredSuspendNames.push(name),
+      );
 
-      const callerErroMessage = componentsThatCallSuspendedDiscreteUpdates.has(
+      const callerErrorMessage = componentsThatTriggeredHighPriSuspend.has(
         HostRoot,
       )
         ? 'Component was suspended when root was mounted or updated'
-        : `The components that called suspense are: ${parentComponentNamesString}`;
+        : `The components that called suspense are: ${componentsThatTriggeredSuspendNames
+            .sort()
+            .join(', ')}`;
 
-      componentsThatCallSuspendedDiscreteUpdates.clear();
+      componentsThatTriggeredHighPriSuspend = null;
 
       warningWithoutStack(
         false,
@@ -2649,7 +2667,7 @@ function flushSuspensePriorityWarningInDEV() {
           'feedback, and another update to perform the actual change.',
         // TODO: Add link to React docs with more information, once it exists
         componentNames.sort().join(', '),
-        callerErroMessage,
+        callerErrorMessage,
       );
     }
   }

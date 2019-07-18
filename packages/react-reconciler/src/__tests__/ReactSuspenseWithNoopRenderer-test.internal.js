@@ -516,6 +516,15 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       '(empty)',
     ]);
     expect(ReactNoop.getChildren()).toEqual([span('(empty)')]);
+    if (__DEV__) {
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: The following components suspended during a user-blocking update: ',
+      );
+      expect(console.error.calls.argsFor(0)[1]).toContain('AsyncText');
+      expect(console.error.calls.argsFor(0)[2]).toContain(
+        'Component was suspended when root was mounted or updated',
+      );
+    }
   });
 
   it('forces an expiration after an update times out', async () => {
@@ -660,6 +669,16 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(Scheduler).toHaveYielded(['Promise resolved [Async]']);
     expect(Scheduler).toFlushAndYield(['Async']);
     expect(ReactNoop.getChildren()).toEqual([span('Async'), span('Sync')]);
+
+    if (__DEV__) {
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: The following components suspended during a user-blocking update: ',
+      );
+      expect(console.error.calls.argsFor(0)[1]).toContain('AsyncText');
+      expect(console.error.calls.argsFor(0)[2]).toContain(
+        'Component was suspended when root was mounted or updated',
+      );
+    }
   });
 
   it('suspending inside an expired expiration boundary will bubble to the next one', async () => {
@@ -685,6 +704,16 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     ]);
     // The tree commits synchronously
     expect(ReactNoop.getChildren()).toEqual([span('Loading (outer)...')]);
+
+    if (__DEV__) {
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: The following components suspended during a user-blocking update: ',
+      );
+      expect(console.error.calls.argsFor(0)[1]).toContain('AsyncText');
+      expect(console.error.calls.argsFor(0)[2]).toContain(
+        'Component was suspended when root was mounted or updated',
+      );
+    }
   });
 
   it('expires early by default', async () => {
@@ -1620,19 +1649,14 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
   });
 
-  it('warns when a low pri update suspends inside a high pri call for functional components', async () => {
-    function B() {
-      return 'B';
-    }
-
-    let _setFoo;
+  it('warns when a low priority update suspends inside a high priority update for functional components', async () => {
+    let _setShow;
     function App() {
-      let [foo, setFoo] = React.useState(false);
-      _setFoo = setFoo;
+      let [show, setShow] = React.useState(false);
+      _setShow = setShow;
       return (
         <Suspense fallback="Loading...">
-          {foo && <AsyncText text="A" />}
-          <B />
+          {show && <AsyncText text="A" />}
         </Suspense>
       );
     }
@@ -1645,7 +1669,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       ReactNoop.act(() => {
         Scheduler.unstable_runWithPriority(
           Scheduler.unstable_UserBlockingPriority,
-          () => _setFoo(true),
+          () => _setShow(true),
         );
       });
     }).toWarnDev(
@@ -1656,21 +1680,16 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     );
   });
 
-  it('warns when a low pri update suspends inside a high pri call for class components', async () => {
-    function B() {
-      return 'B';
-    }
-
-    let _setFoo;
+  it('warns when a low priority update suspends inside a high priority update for class components', async () => {
+    let show;
     class App extends React.Component {
-      state = {foo: false};
+      state = {show: false};
 
       render() {
-        _setFoo = () => this.setState({foo: true});
+        show = () => this.setState({show: true});
         return (
           <Suspense fallback="Loading...">
-            {this.state.foo && <AsyncText text="A" />}
-            <B />
+            {this.state.show && <AsyncText text="A" />}
           </Suspense>
         );
       }
@@ -1684,7 +1703,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       ReactNoop.act(() => {
         Scheduler.unstable_runWithPriority(
           Scheduler.unstable_UserBlockingPriority,
-          () => _setFoo(),
+          () => show(),
         );
       });
     }).toWarnDev(
@@ -1738,15 +1757,15 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   it('normal priority updates suspending do not warn for class components', async () => {
-    let setFoo;
+    let show;
     class App extends React.Component {
-      state = {foo: false};
+      state = {show: false};
 
       render() {
-        setFoo = () => this.setState({foo: true});
+        show = () => this.setState({show: true});
         return (
           <Suspense fallback="Loading...">
-            {this.state.foo && <AsyncText text="A" />}
+            {this.state.show && <AsyncText text="A" />}
           </Suspense>
         );
       }
@@ -1757,12 +1776,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     });
 
     // also make sure lowpriority is okay
-    await ReactNoop.act(async () => {
-      Scheduler.unstable_runWithPriority(
-        Scheduler.unstable_NormalPriority,
-        () => setFoo(true),
-      );
-    });
+    await ReactNoop.act(async () => show(true));
 
     expect(Scheduler).toHaveYielded(['Suspend! [A]']);
     Scheduler.unstable_advanceTime(100);
@@ -1772,13 +1786,13 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   it('normal priority updates suspending do not warn for functional components', async () => {
-    let _setFoo;
+    let _setShow;
     function App() {
-      let [foo, setFoo] = React.useState(false);
-      _setFoo = setFoo;
+      let [show, setShow] = React.useState(false);
+      _setShow = setShow;
       return (
         <Suspense fallback="Loading...">
-          {foo && <AsyncText text="A" />}
+          {show && <AsyncText text="A" />}
         </Suspense>
       );
     }
@@ -1788,12 +1802,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     });
 
     // also make sure lowpriority is okay
-    await ReactNoop.act(async () => {
-      Scheduler.unstable_runWithPriority(
-        Scheduler.unstable_NormalPriority,
-        () => _setFoo(true),
-      );
-    });
+    await ReactNoop.act(async () => _setShow(true));
 
     expect(Scheduler).toHaveYielded(['Suspend! [A]']);
     Scheduler.unstable_advanceTime(100);

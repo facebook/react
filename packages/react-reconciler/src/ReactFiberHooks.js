@@ -99,7 +99,7 @@ type Update<S, A> = {
   eagerState: S | null,
   next: Update<S, A> | null,
 
-  priority: ReactPriorityLevel | null,
+  priority?: ReactPriorityLevel,
 };
 
 type UpdateQueue<S, A> = {
@@ -1128,7 +1128,6 @@ function dispatchAction<S, A>(
   }
 
   const alternate = fiber.alternate;
-  const priority = __DEV__ ? getCurrentPriorityLevel() : null;
   if (
     fiber === currentlyRenderingFiber ||
     (alternate !== null && alternate === currentlyRenderingFiber)
@@ -1144,8 +1143,10 @@ function dispatchAction<S, A>(
       eagerReducer: null,
       eagerState: null,
       next: null,
-      priority,
     };
+    if (__DEV__) {
+      update.priority = getCurrentPriorityLevel();
+    }
     if (renderPhaseUpdates === null) {
       renderPhaseUpdates = new Map();
     }
@@ -1177,11 +1178,14 @@ function dispatchAction<S, A>(
       expirationTime,
       suspenseConfig,
       action,
-      priority,
       eagerReducer: null,
       eagerState: null,
       next: null,
     };
+
+    if (__DEV__) {
+      update.priority = getCurrentPriorityLevel();
+    }
 
     // Append the update to the end of the list.
     const last = queue.last;

@@ -121,7 +121,7 @@ export type Update<State> = {
   nextEffect: Update<State> | null,
 
   //DEV only
-  priority: ReactPriorityLevel | null,
+  priority?: ReactPriorityLevel,
 };
 
 export type UpdateQueue<State> = {
@@ -202,8 +202,7 @@ export function createUpdate(
   expirationTime: ExpirationTime,
   suspenseConfig: null | SuspenseConfig,
 ): Update<*> {
-  const priority = __DEV__ ? getCurrentPriorityLevel() : null;
-  return {
+  const update = {
     expirationTime,
     suspenseConfig,
 
@@ -213,9 +212,11 @@ export function createUpdate(
 
     next: null,
     nextEffect: null,
-
-    priority,
   };
+  if (__DEV__) {
+    update.priority = getCurrentPriorityLevel();
+  }
+  return update;
 }
 
 function appendUpdateToQueue<State>(
