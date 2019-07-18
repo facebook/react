@@ -44,10 +44,10 @@ import dangerousStyleValue from '../shared/dangerousStyleValue';
 import type {DOMContainer} from './ReactDOM';
 import type {
   ReactDOMEventResponder,
-  ReactDOMEventComponentInstance,
+  ReactDOMEventResponderInstance,
 } from 'shared/ReactDOMTypes';
 import {
-  addRootEventTypesForComponentInstance,
+  addRootEventTypesForResponderInstance,
   mountEventResponder,
   unmountEventResponder,
 } from '../events/DOMEventResponderSystem';
@@ -89,9 +89,6 @@ export type PublicInstance = Element | Text;
 type HostContextDev = {
   namespace: string,
   ancestorInfo: mixed,
-  eventData: null | {|
-    isEventComponent?: boolean,
-  |},
 };
 type HostContextProd = string;
 export type HostContext = HostContextDev | HostContextProd;
@@ -104,7 +101,6 @@ import {
   enableSuspenseServerRenderer,
   enableFlareAPI,
 } from 'shared/ReactFeatureFlags';
-import warning from 'shared/warning';
 
 let SUPPRESS_HYDRATION_WARNING;
 if (__DEV__) {
@@ -162,7 +158,7 @@ export function getRootHostContext(
   if (__DEV__) {
     const validatedTag = type.toLowerCase();
     const ancestorInfo = updatedAncestorInfo(null, validatedTag);
-    return {namespace, ancestorInfo, eventData: null};
+    return {namespace, ancestorInfo};
   }
   return namespace;
 }
@@ -179,24 +175,10 @@ export function getChildHostContext(
       parentHostContextDev.ancestorInfo,
       type,
     );
-    return {namespace, ancestorInfo, eventData: null};
+    return {namespace, ancestorInfo};
   }
   const parentNamespace = ((parentHostContext: any): HostContextProd);
   return getChildNamespace(parentNamespace, type);
-}
-
-export function getChildHostContextForEventComponent(
-  parentHostContext: HostContext,
-): HostContext {
-  if (__DEV__) {
-    const parentHostContextDev = ((parentHostContext: any): HostContextDev);
-    const {namespace, ancestorInfo} = parentHostContextDev;
-    const eventData = {
-      isEventComponent: true,
-    };
-    return {namespace, ancestorInfo, eventData};
-  }
-  return parentHostContext;
 }
 
 export function getPublicInstance(instance: Instance): * {
@@ -330,17 +312,6 @@ export function createTextInstance(
   if (__DEV__) {
     const hostContextDev = ((hostContext: any): HostContextDev);
     validateDOMNesting(null, text, hostContextDev.ancestorInfo);
-    if (enableFlareAPI) {
-      const eventData = hostContextDev.eventData;
-      if (eventData !== null) {
-        warning(
-          !eventData.isEventComponent,
-          'validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
-            'Wrap the child text "%s" in an element.',
-          text,
-        );
-      }
-    }
   }
   const textNode: TextInstance = createTextNode(text, rootContainerInstance);
   precacheFiberNode(internalInstanceHandle, textNode);
@@ -842,43 +813,37 @@ export function didNotFindHydratableSuspenseInstance(
   }
 }
 
-export function mountEventComponent(
-  eventComponentInstance: ReactDOMEventComponentInstance,
-): void {
-  if (enableFlareAPI) {
-    const rootContainerInstance = ((eventComponentInstance.rootInstance: any): Container);
-    const doc = rootContainerInstance.ownerDocument;
-    const documentBody = doc.body || doc;
-    const responder = eventComponentInstance.responder;
-    const {
-      rootEventTypes,
-      targetEventTypes,
-    } = ((responder: any): ReactDOMEventResponder);
-    if (targetEventTypes !== undefined) {
-      listenToEventResponderEventTypes(targetEventTypes, documentBody);
-    }
-    if (rootEventTypes !== undefined) {
-      addRootEventTypesForComponentInstance(
-        eventComponentInstance,
-        rootEventTypes,
-      );
-      listenToEventResponderEventTypes(rootEventTypes, documentBody);
-    }
-    mountEventResponder(eventComponentInstance);
+export function mountResponderInstance(
+  responder: ReactDOMEventResponder,
+  responderInstance: ReactDOMEventResponderInstance,
+  props: Object,
+  state: Object,
+  instance: Instance,
+  rootContainerInstance: Container,
+): ReactDOMEventResponderInstance {
+  // Listen to events
+  const doc = rootContainerInstance.ownerDocument;
+  const documentBody = doc.body || doc;
+  const {
+    rootEventTypes,
+    targetEventTypes,
+  } = ((responder: any): ReactDOMEventResponder);
+  if (targetEventTypes !== undefined) {
+    listenToEventResponderEventTypes(targetEventTypes, documentBody);
   }
+  if (rootEventTypes !== undefined) {
+    addRootEventTypesForResponderInstance(responderInstance, rootEventTypes);
+    listenToEventResponderEventTypes(rootEventTypes, documentBody);
+  }
+  mountEventResponder(responder, responderInstance, props, state);
+  return responderInstance;
 }
 
-export function updateEventComponent(
-  eventComponentInstance: ReactDOMEventComponentInstance,
-): void {
-  // NO-OP, why might use this in the future
-}
-
-export function unmountEventComponent(
-  eventComponentInstance: ReactDOMEventComponentInstance,
+export function unmountResponderInstance(
+  responderInstance: ReactDOMEventResponderInstance,
 ): void {
   if (enableFlareAPI) {
     // TODO stop listening to targetEventTypes
-    unmountEventResponder(eventComponentInstance);
+    unmountEventResponder(responderInstance);
   }
 }

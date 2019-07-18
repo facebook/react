@@ -190,16 +190,16 @@ export type ReactFaricEvent = {
 };
 
 export type ReactNativeResponderEvent = {
-  currentTarget: null | ReactNativeEventTarget,
   nativeEvent: ReactFaricEvent,
+  responderTarget: null | ReactNativeEventTarget,
   target: null | ReactNativeEventTarget,
   type: string,
 };
 
 export type ReactNativeResponderContext = {
   dispatchEvent: (
-    eventObject: Object,
-    listener: (Object) => void,
+    eventProp: string,
+    eventValue: any,
     eventPriority: EventPriority,
   ) => void,
   isTargetWithinNode: (

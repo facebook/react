@@ -64,16 +64,16 @@ function createSwipeEvent(
 }
 
 function dispatchSwipeEvent(
+  eventPropName: string,
   context: ReactDOMResponderContext,
   name: SwipeEventType,
-  listener: SwipeEvent => void,
   state: SwipeState,
   eventPriority: EventPriority,
   eventData?: EventData,
 ) {
   const target = ((state.swipeTarget: any): Element | Document);
   const syntheticEvent = createSwipeEvent(context, name, target, eventData);
-  context.dispatchEvent(syntheticEvent, listener, eventPriority);
+  context.dispatchEvent(eventPropName, syntheticEvent, eventPriority);
 }
 
 type SwipeState = {
@@ -183,28 +183,26 @@ const SwipeResponder: ReactDOMEventResponder = {
           }
           const x = (obj: any).screenX;
           const y = (obj: any).screenY;
-          if (x < state.x && props.onSwipeLeft) {
+          if (x < state.x) {
             state.direction = 3;
-          } else if (x > state.x && props.onSwipeRight) {
+          } else if (x > state.x) {
             state.direction = 1;
           }
           state.x = x;
           state.y = y;
-          if (props.onSwipeMove) {
-            const eventData = {
-              diffX: x - state.startX,
-              diffY: y - state.startY,
-            };
-            dispatchSwipeEvent(
-              context,
-              'swipemove',
-              props.onSwipeMove,
-              state,
-              UserBlockingEvent,
-              eventData,
-            );
-            (nativeEvent: any).preventDefault();
-          }
+          const eventData = {
+            diffX: x - state.startX,
+            diffY: y - state.startY,
+          };
+          dispatchSwipeEvent(
+            'onSwipeMove',
+            context,
+            'swipemove',
+            state,
+            UserBlockingEvent,
+            eventData,
+          );
+          (nativeEvent: any).preventDefault();
         }
         break;
       }
@@ -225,17 +223,17 @@ const SwipeResponder: ReactDOMEventResponder = {
           if (direction !== lastDirection) {
             if (props.onSwipeLeft && direction === 3) {
               dispatchSwipeEvent(
+                'onSwipeLeft',
                 context,
                 'swipeleft',
-                props.onSwipeLeft,
                 state,
                 DiscreteEvent,
               );
             } else if (props.onSwipeRight && direction === 1) {
               dispatchSwipeEvent(
+                'onSwipeRight',
                 context,
                 'swiperight',
-                props.onSwipeRight,
                 state,
                 DiscreteEvent,
               );
@@ -243,9 +241,9 @@ const SwipeResponder: ReactDOMEventResponder = {
           }
           if (props.onSwipeEnd) {
             dispatchSwipeEvent(
+              'onSwipeEnd',
               context,
               'swipeend',
-              props.onSwipeEnd,
               state,
               DiscreteEvent,
             );

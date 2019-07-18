@@ -80,14 +80,13 @@ export type RefObject = {|
   current: any,
 |};
 
-export type ReactEventComponentInstance<E, C> = {|
-  currentFiber: mixed,
-  isHook: boolean,
+export type ReactEventResponderInstance<E, C> = {|
+  fiber: Object,
   props: Object,
   responder: ReactEventResponder<E, C>,
   rootEventTypes: null | Set<string>,
-  rootInstance: null | mixed,
   state: Object,
+  target: mixed,
 |};
 
 export type ReactEventResponder<E, C> = {
