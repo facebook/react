@@ -59,7 +59,10 @@ export default function EditableValue({
 
       if (key === 'Enter') {
         if (dataType === 'number') {
-          overrideValueFn(path, parseFloat(editableValue));
+          const parsedValue = parseFloat(editableValue);
+          if (!Number.isNaN(parsedValue)) {
+            overrideValueFn(path, parsedValue);
+          }
         } else {
           overrideValueFn(path, editableValue);
         }
@@ -72,7 +75,7 @@ export default function EditableValue({
         setHasPendingChanges(false);
       }
     },
-    [path, editableValue, overrideValueFn, value, dataType]
+    [editableValue, dataType, overrideValueFn, path, value]
   );
 
   // Render different input types based on the dataType
