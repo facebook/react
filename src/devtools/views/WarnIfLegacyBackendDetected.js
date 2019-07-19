@@ -15,8 +15,8 @@ export default function WarnIfLegacyBackendDetected(_: {||}) {
   // In this case the frontend should show upgrade instructions.
   useEffect(() => {
     // Wall.listen returns a cleanup function
-    let unlisten = bridge.wall.listen(event => {
-      switch (event.type) {
+    let unlisten = bridge.wall.listen(message => {
+      switch (message.type) {
         case 'call':
         case 'event':
         case 'many-events':
@@ -28,6 +28,23 @@ export default function WarnIfLegacyBackendDetected(_: {||}) {
             content: <InvalidBackendDetected />,
           });
 
+          // Once we've identified the backend version, it's safe to unsubscribe.
+          if (typeof unlisten === 'function') {
+            unlisten();
+            unlisten = null;
+          }
+          break;
+        default:
+          break;
+      }
+
+      switch (message.event) {
+        case 'isBackendStorageAPISupported':
+        case 'isNativeStyleEditorSupported':
+        case 'operations':
+        case 'overrideComponentFilters':
+          // Any of these is sufficient to indicate a v4 backend.
+          // Once we've identified the backend version, it's safe to unsubscribe.
           if (typeof unlisten === 'function') {
             unlisten();
             unlisten = null;
