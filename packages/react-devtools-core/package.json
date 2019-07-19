@@ -1,7 +1,7 @@
 {
   "name": "react-devtools-core",
+  "version": "4.0.0-alpha.0",
   "description": "Use react-devtools outside of the browser",
-  "version": "4.0.0",
   "license": "MIT",
   "main": "./dist/backend.js",
   "repository": {

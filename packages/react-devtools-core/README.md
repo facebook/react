@@ -1,6 +1,6 @@
 # `react-devtools-core`
 
-A standalone React DevTools implementation.  
+A standalone React DevTools implementation.
 
 This is a low-level package. If you're looking for the Electron app you can run, **use `react-devtools` package instead.**
 
