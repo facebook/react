@@ -45,6 +45,7 @@ import type {DOMContainer} from './ReactDOM';
 import type {
   ReactDOMEventResponder,
   ReactDOMEventComponentInstance,
+  ReactDOMFundamentalComponentInstance,
 } from 'shared/ReactDOMTypes';
 import {
   addRootEventTypesForComponentInstance,
@@ -103,6 +104,7 @@ export type NoTimeout = -1;
 import {
   enableSuspenseServerRenderer,
   enableFlareAPI,
+  enableFundamentalAPI,
 } from 'shared/ReactFeatureFlags';
 import warning from 'shared/warning';
 
@@ -880,5 +882,67 @@ export function unmountEventComponent(
   if (enableFlareAPI) {
     // TODO stop listening to targetEventTypes
     unmountEventResponder(eventComponentInstance);
+  }
+}
+
+export function getFundamentalComponentInstance(
+  fundamentalInstance: ReactDOMFundamentalComponentInstance,
+): Instance {
+  if (enableFundamentalAPI) {
+    const {currentFiber, impl, props, state} = fundamentalInstance;
+    const instance = impl.getInstance(null, props, state);
+    precacheFiberNode(currentFiber, instance);
+    return instance;
+  }
+  // Because of the flag above, this gets around the Flow error;
+  return (null: any);
+}
+
+export function mountFundamentalComponent(
+  fundamentalInstance: ReactDOMFundamentalComponentInstance,
+): void {
+  if (enableFundamentalAPI) {
+    const {impl, instance, props, state} = fundamentalInstance;
+    const onMount = impl.onMount;
+    if (onMount !== undefined) {
+      onMount(null, instance, props, state);
+    }
+  }
+}
+
+export function shouldUpdateFundamentalComponent(
+  fundamentalInstance: ReactDOMFundamentalComponentInstance,
+): boolean {
+  if (enableFundamentalAPI) {
+    const {impl, prevProps, props, state} = fundamentalInstance;
+    const shouldUpdate = impl.shouldUpdate;
+    if (shouldUpdate !== undefined) {
+      return shouldUpdate(null, prevProps, props, state);
+    }
+  }
+  return true;
+}
+
+export function updateFundamentalComponent(
+  fundamentalInstance: ReactDOMFundamentalComponentInstance,
+): void {
+  if (enableFundamentalAPI) {
+    const {impl, instance, prevProps, props, state} = fundamentalInstance;
+    const onUpdate = impl.onUpdate;
+    if (onUpdate !== undefined) {
+      onUpdate(null, instance, prevProps, props, state);
+    }
+  }
+}
+
+export function unmountFundamentalComponent(
+  fundamentalInstance: ReactDOMFundamentalComponentInstance,
+): void {
+  if (enableFundamentalAPI) {
+    const {impl, instance, props, state} = fundamentalInstance;
+    const onUnmount = impl.onUnmount;
+    if (onUnmount !== undefined) {
+      onUnmount(null, instance, props, state);
+    }
   }
 }

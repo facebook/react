@@ -29,6 +29,7 @@ import {
   enableProfilerTimer,
   enableSuspenseServerRenderer,
   enableFlareAPI,
+  enableFundamentalAPI,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -46,6 +47,7 @@ import {
   SimpleMemoComponent,
   EventComponent,
   SuspenseListComponent,
+  FundamentalComponent,
 } from 'shared/ReactWorkTags';
 import {
   invokeGuardedCallback,
@@ -94,6 +96,8 @@ import {
   unhideTextInstance,
   unmountEventComponent,
   mountEventComponent,
+  unmountFundamentalComponent,
+  updateFundamentalComponent,
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
@@ -590,6 +594,7 @@ function commitLifeCycles(
     case SuspenseComponent:
     case SuspenseListComponent:
     case IncompleteClassComponent:
+    case FundamentalComponent:
       return;
     case EventComponent: {
       if (enableFlareAPI) {
@@ -757,6 +762,16 @@ function commitUnmount(current: Fiber): void {
         unmountEventComponent(eventComponentInstance);
         current.stateNode = null;
       }
+      break;
+    }
+    case FundamentalComponent: {
+      if (enableFundamentalAPI) {
+        const fundamentalInstance = current.stateNode;
+        if (fundamentalInstance !== null) {
+          unmountFundamentalComponent(fundamentalInstance);
+          current.stateNode = null;
+        }
+      }
     }
   }
 }
@@ -838,6 +853,7 @@ function commitContainer(finishedWork: Fiber) {
     case ClassComponent:
     case HostComponent:
     case HostText:
+    case FundamentalComponent:
     case EventComponent: {
       return;
     }
@@ -942,20 +958,26 @@ function commitPlacement(finishedWork: Fiber): void {
   // Note: these two variables *must* always be updated together.
   let parent;
   let isContainer;
-
+  const parentStateNode = parentFiber.stateNode;
   switch (parentFiber.tag) {
     case HostComponent:
-      parent = parentFiber.stateNode;
+      parent = parentStateNode;
       isContainer = false;
       break;
     case HostRoot:
-      parent = parentFiber.stateNode.containerInfo;
+      parent = parentStateNode.containerInfo;
       isContainer = true;
       break;
     case HostPortal:
-      parent = parentFiber.stateNode.containerInfo;
+      parent = parentStateNode.containerInfo;
       isContainer = true;
       break;
+    case FundamentalComponent:
+      if (enableFundamentalAPI) {
+        parent = parentStateNode.instance;
+        isContainer = false;
+      }
+    // eslint-disable-next-line-no-fallthrough
     default:
       invariant(
         false,
@@ -975,8 +997,9 @@ function commitPlacement(finishedWork: Fiber): void {
   // children to find all the terminal nodes.
   let node: Fiber = finishedWork;
   while (true) {
-    if (node.tag === HostComponent || node.tag === HostText) {
-      const stateNode = node.stateNode;
+    const isHost = node.tag === HostComponent || node.tag === HostText;
+    if (isHost || node.tag === FundamentalComponent) {
+      const stateNode = isHost ? node.stateNode : node.stateNode.instance;
       if (before) {
         if (isContainer) {
           insertInContainerBefore(parent, stateNode, before);
@@ -1035,19 +1058,25 @@ function unmountHostComponents(current): void {
           'Expected to find a host parent. This error is likely caused by ' +
             'a bug in React. Please file an issue.',
         );
+        const parentStateNode = parent.stateNode;
         switch (parent.tag) {
           case HostComponent:
-            currentParent = parent.stateNode;
+            currentParent = parentStateNode;
             currentParentIsContainer = false;
             break findParent;
           case HostRoot:
-            currentParent = parent.stateNode.containerInfo;
+            currentParent = parentStateNode.containerInfo;
             currentParentIsContainer = true;
             break findParent;
           case HostPortal:
-            currentParent = parent.stateNode.containerInfo;
+            currentParent = parentStateNode.containerInfo;
             currentParentIsContainer = true;
             break findParent;
+          case FundamentalComponent:
+            if (enableFundamentalAPI) {
+              currentParent = parentStateNode.instance;
+              currentParentIsContainer = false;
+            }
         }
         parent = parent.return;
       }
@@ -1070,6 +1099,22 @@ function unmountHostComponents(current): void {
         );
       }
       // Don't visit children because we already visited them.
+    } else if (node.tag === FundamentalComponent) {
+      const fundamentalNode = node.stateNode.instance;
+      commitNestedUnmounts(node);
+      // After all the children have unmounted, it is now safe to remove the
+      // node from the tree.
+      if (currentParentIsContainer) {
+        removeChildFromContainer(
+          ((currentParent: any): Container),
+          (fundamentalNode: Instance),
+        );
+      } else {
+        removeChild(
+          ((currentParent: any): Instance),
+          (fundamentalNode: Instance),
+        );
+      }
     } else if (
       enableSuspenseServerRenderer &&
       node.tag === DehydratedSuspenseComponent
@@ -1241,6 +1286,13 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       return;
     }
     case EventComponent: {
+      return;
+    }
+    case FundamentalComponent: {
+      if (enableFundamentalAPI) {
+        const fundamentalInstance = finishedWork.stateNode;
+        updateFundamentalComponent(fundamentalInstance);
+      }
       return;
     }
     default: {
