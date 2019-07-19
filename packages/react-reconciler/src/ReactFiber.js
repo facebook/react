@@ -32,7 +32,7 @@ import {
   enableFlareAPI,
   enableFundamentalAPI,
 } from 'shared/ReactFeatureFlags';
-import {NoEffect} from 'shared/ReactSideEffectTags';
+import {NoEffect, Placement} from 'shared/ReactSideEffectTags';
 import {ConcurrentRoot, BatchedRoot} from 'shared/ReactRootTags';
 import {
   IndeterminateComponent,
@@ -501,8 +501,9 @@ export function resetWorkInProgress(
   // We assume pendingProps, index, key, ref, return are still untouched to
   // avoid doing another reconciliation.
 
-  // Reset the effect tag.
-  workInProgress.effectTag = NoEffect;
+  // Reset the effect tag but keep any Placement tags, since that's something
+  // that child fiber is setting, not the reconciliation.
+  workInProgress.effectTag &= Placement;
 
   // The effect list is no longer valid.
   workInProgress.nextEffect = null;

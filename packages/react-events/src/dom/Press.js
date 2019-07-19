@@ -89,6 +89,7 @@ type PressEventType =
   | 'contextmenu';
 
 type PressEvent = {|
+  button: 'primary' | 'auxillary',
   defaultPrevented: boolean,
   target: Element | Document,
   type: PressEventType,
@@ -165,6 +166,7 @@ function createPressEvent(
   defaultPrevented: boolean,
 ): PressEvent {
   const timeStamp = context.getTimeStamp();
+  let button = 'primary';
   let clientX = null;
   let clientY = null;
   let pageX = null;
@@ -186,8 +188,12 @@ function createPressEvent(
     if (eventObject) {
       ({clientX, clientY, pageX, pageY, screenX, screenY} = eventObject);
     }
+    if (nativeEvent.button === 1) {
+      button = 'auxillary';
+    }
   }
   return {
+    button,
     defaultPrevented,
     target,
     type,
@@ -706,11 +712,11 @@ const PressResponder: ReactDOMEventResponder = {
             state.activePointerId = touchEvent.identifier;
           }
 
-          // Ignore any device buttons except left-mouse and touch/pen contact.
-          // Additionally we ignore left-mouse + ctrl-key with Macs as that
+          // Ignore any device buttons except primary/auxillary and touch/pen contact.
+          // Additionally we ignore primary-button + ctrl-key with Macs as that
           // acts like right-click and opens the contextmenu.
           if (
-            nativeEvent.button > 0 ||
+            nativeEvent.button > 1 ||
             (isMac && isMouseEvent && nativeEvent.ctrlKey)
           ) {
             return;
@@ -887,6 +893,7 @@ const PressResponder: ReactDOMEventResponder = {
       case 'mouseup':
       case 'touchend': {
         if (isPressed) {
+          const button = nativeEvent.button;
           let isKeyboardEvent = false;
           let touchEvent;
           if (type === 'pointerup' && activePointerId !== pointerId) {
@@ -904,6 +911,9 @@ const PressResponder: ReactDOMEventResponder = {
               return;
             }
             isKeyboardEvent = true;
+            removeRootEventTypes(context, state);
+          } else if (button === 1) {
+            // Remove the root events here as no 'click' event is dispatched when this 'button' is pressed.
             removeRootEventTypes(context, state);
           }
 
@@ -962,7 +972,7 @@ const PressResponder: ReactDOMEventResponder = {
                 state,
               );
             }
-            if (state.isPressWithinResponderRegion) {
+            if (state.isPressWithinResponderRegion && button !== 1) {
               if (
                 !(
                   wasLongPressed &&

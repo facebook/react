@@ -51,7 +51,6 @@ import {
   jsxWithValidationDynamic,
 } from './ReactElementValidator';
 import ReactSharedInternals from './ReactSharedInternals';
-import {error, warn} from './withComponentStack';
 import createEvent from 'shared/createEventComponent';
 import createFundamental from 'shared/createFundamentalComponent';
 import {
@@ -76,9 +75,6 @@ const React = {
   forwardRef,
   lazy,
   memo,
-
-  error,
-  warn,
 
   useCallback,
   useContext,
