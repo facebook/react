@@ -23,6 +23,7 @@ import {
   warnAboutDeprecatedLifecycles,
   enableSuspenseServerRenderer,
   enableFlareAPI,
+  enableFundamentalAPI,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -39,6 +40,7 @@ import {
   REACT_LAZY_TYPE,
   REACT_MEMO_TYPE,
   REACT_EVENT_COMPONENT_TYPE,
+  REACT_FUNDAMENTAL_TYPE,
 } from 'shared/ReactSymbols';
 
 import {
@@ -1187,6 +1189,43 @@ class ReactDOMServerRenderer {
             invariant(
               false,
               'ReactDOMServer does not yet support the event API.',
+            );
+          }
+          // eslint-disable-next-line-no-fallthrough
+          case REACT_FUNDAMENTAL_TYPE: {
+            if (enableFundamentalAPI) {
+              const fundamentalImpl = elementType.impl;
+              const open = fundamentalImpl.getServerSideString(
+                null,
+                nextElement.props,
+              );
+              const getServerSideStringClose =
+                fundamentalImpl.getServerSideStringClose;
+              const close =
+                getServerSideStringClose !== undefined
+                  ? getServerSideStringClose(null, nextElement.props)
+                  : '';
+              const nextChildren =
+                fundamentalImpl.reconcileChildren !== false
+                  ? toArray(((nextChild: any): ReactElement).props.children)
+                  : [];
+              const frame: Frame = {
+                type: null,
+                domNamespace: parentNamespace,
+                children: nextChildren,
+                childIndex: 0,
+                context: context,
+                footer: close,
+              };
+              if (__DEV__) {
+                ((frame: any): FrameDev).debugElementStack = [];
+              }
+              this.stack.push(frame);
+              return open;
+            }
+            invariant(
+              false,
+              'ReactDOMServer does not yet support the fundamental API.',
             );
           }
           // eslint-disable-next-line-no-fallthrough
