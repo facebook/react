@@ -335,5 +335,6 @@
   "334": "accumulate(...): Accumulated items must not be null or undefined.",
   "335": "ReactDOMServer does not yet support the event API.",
   "336": "The \"%s\" event responder cannot be used via the \"useEvent\" hook.",
-  "337": "An invalid event responder was provided to host component"
+  "337": "An invalid event responder was provided to host component",
+  "338": "ReactDOMServer does not yet support the fundamental API."
 }

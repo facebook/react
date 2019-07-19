@@ -12,6 +12,7 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {
   ReactEventResponder,
   ReactEventResponderInstance,
+  ReactFundamentalComponentInstance,
 } from 'shared/ReactTypes';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {
@@ -50,6 +51,7 @@ import {
   SimpleMemoComponent,
   LazyComponent,
   IncompleteClassComponent,
+  FundamentalComponent,
 } from 'shared/ReactWorkTags';
 import {NoMode, BatchedMode} from './ReactTypeOfMode';
 import {
@@ -78,6 +80,10 @@ import {
   finalizeContainerChildren,
   mountResponderInstance,
   unmountResponderInstance,
+  getFundamentalComponentInstance,
+  mountFundamentalComponent,
+  cloneFundamentalInstance,
+  shouldUpdateFundamentalComponent,
 } from './ReactFiberHostConfig';
 import {
   getRootHostContainer,
@@ -114,6 +120,7 @@ import {
   enableSchedulerTracing,
   enableSuspenseServerRenderer,
   enableFlareAPI,
+  enableFundamentalAPI,
 } from 'shared/ReactFeatureFlags';
 import {
   markSpawnedWork,
@@ -121,6 +128,7 @@ import {
   renderDidSuspendDelayIfPossible,
   renderHasNotSuspendedYet,
 } from './ReactFiberWorkLoop';
+import {createFundamentalStateInstance} from './ReactFiberFundamental';
 import {Never} from './ReactFiberExpirationTime';
 import {resetChildFibers} from './ReactChildFiber';
 
@@ -155,6 +163,8 @@ if (supportsMutation) {
     while (node !== null) {
       if (node.tag === HostComponent || node.tag === HostText) {
         appendInitialChild(parent, node.stateNode);
+      } else if (node.tag === FundamentalComponent) {
+        appendInitialChild(parent, node.stateNode.instance);
       } else if (node.tag === HostPortal) {
         // If we have a portal child, then we don't want to traverse
         // down its children. Instead, we'll get insertions from each child in
@@ -264,6 +274,15 @@ if (supportsMutation) {
           instance = cloneHiddenTextInstance(instance, text, node);
         }
         appendInitialChild(parent, instance);
+      } else if (enableFundamentalAPI && node.tag === FundamentalComponent) {
+        let instance = node.stateNode.instance;
+        if (needsVisibilityToggle && isHidden) {
+          // This child is inside a timed out tree. Hide it.
+          const props = node.memoizedProps;
+          const type = node.type;
+          instance = cloneHiddenInstance(instance, type, props, node);
+        }
+        appendInitialChild(parent, instance);
       } else if (node.tag === HostPortal) {
         // If we have a portal child, then we don't want to traverse
         // down its children. Instead, we'll get insertions from each child in
@@ -347,6 +366,15 @@ if (supportsMutation) {
           // This child is inside a timed out tree. Hide it.
           const text = node.memoizedProps;
           instance = cloneHiddenTextInstance(instance, text, node);
+        }
+        appendChildToContainerChildSet(containerChildSet, instance);
+      } else if (enableFundamentalAPI && node.tag === FundamentalComponent) {
+        let instance = node.stateNode.instance;
+        if (needsVisibilityToggle && isHidden) {
+          // This child is inside a timed out tree. Hide it.
+          const props = node.memoizedProps;
+          const type = node.type;
+          instance = cloneHiddenInstance(instance, type, props, node);
         }
         appendChildToContainerChildSet(containerChildSet, instance);
       } else if (node.tag === HostPortal) {
@@ -1132,6 +1160,57 @@ function completeWork(
         pushSuspenseContext(workInProgress, suspenseContext);
         // Do a pass over the next row.
         return next;
+      }
+      break;
+    }
+    case FundamentalComponent: {
+      if (enableFundamentalAPI) {
+        const fundamentalImpl = workInProgress.type.impl;
+        let fundamentalInstance: ReactFundamentalComponentInstance<
+          any,
+          any,
+        > | null =
+          workInProgress.stateNode;
+
+        if (fundamentalInstance === null) {
+          const getInitialState = fundamentalImpl.getInitialState;
+          let fundamentalState;
+          if (getInitialState !== undefined) {
+            fundamentalState = getInitialState(newProps);
+          }
+          fundamentalInstance = workInProgress.stateNode = createFundamentalStateInstance(
+            workInProgress,
+            newProps,
+            fundamentalImpl,
+            fundamentalState || {},
+          );
+          const instance = ((getFundamentalComponentInstance(
+            fundamentalInstance,
+          ): any): Instance);
+          fundamentalInstance.instance = instance;
+          if (fundamentalImpl.reconcileChildren === false) {
+            return null;
+          }
+          appendAllChildren(instance, workInProgress, false, false);
+          mountFundamentalComponent(fundamentalInstance);
+        } else {
+          // We fire update in commit phase
+          const prevProps = fundamentalInstance.props;
+          fundamentalInstance.prevProps = prevProps;
+          fundamentalInstance.props = newProps;
+          fundamentalInstance.currentFiber = workInProgress;
+          if (supportsPersistence) {
+            const instance = cloneFundamentalInstance(fundamentalInstance);
+            fundamentalInstance.instance = instance;
+            appendAllChildren(instance, workInProgress, false, false);
+          }
+          const shouldUpdate = shouldUpdateFundamentalComponent(
+            fundamentalInstance,
+          );
+          if (shouldUpdate) {
+            markUpdate(workInProgress);
+          }
+        }
       }
       break;
     }

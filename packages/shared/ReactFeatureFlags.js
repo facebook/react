@@ -62,6 +62,9 @@ export const warnAboutDeprecatedSetNativeProps = false;
 // Experimental React Flare event system and event components support.
 export const enableFlareAPI = false;
 
+// Experimental Host Component support.
+export const enableFundamentalAPI = false;
+
 // New API for JSX transforms to target - https://github.com/reactjs/rfcs/pull/107
 export const enableJSXTransformAPI = false;
 

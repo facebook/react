@@ -14,6 +14,7 @@ import type {
   RefObject,
   ReactEventResponder,
   ReactEventResponderInstance,
+  ReactFundamentalComponent,
 } from 'shared/ReactTypes';
 import type {RootTag} from 'shared/ReactRootTags';
 import type {WorkTag} from 'shared/ReactWorkTags';
@@ -26,7 +27,10 @@ import type {HookType} from './ReactFiberHooks';
 
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
+import {
+  enableProfilerTimer,
+  enableFundamentalAPI,
+} from 'shared/ReactFeatureFlags';
 import {NoEffect, Placement} from 'shared/ReactSideEffectTags';
 import {ConcurrentRoot, BatchedRoot} from 'shared/ReactRootTags';
 import {
@@ -48,6 +52,7 @@ import {
   MemoComponent,
   SimpleMemoComponent,
   LazyComponent,
+  FundamentalComponent,
 } from 'shared/ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 
@@ -77,6 +82,7 @@ import {
   REACT_SUSPENSE_LIST_TYPE,
   REACT_MEMO_TYPE,
   REACT_LAZY_TYPE,
+  REACT_FUNDAMENTAL_TYPE,
 } from 'shared/ReactSymbols';
 
 let hasBadMapPolyfill;
@@ -659,6 +665,17 @@ export function createFiberFromTypeAndProps(
               fiberTag = LazyComponent;
               resolvedType = null;
               break getTag;
+            case REACT_FUNDAMENTAL_TYPE:
+              if (enableFundamentalAPI) {
+                return createFiberFromFundamental(
+                  type,
+                  pendingProps,
+                  mode,
+                  expirationTime,
+                  key,
+                );
+              }
+              break;
           }
         }
         let info = '';
@@ -733,6 +750,20 @@ export function createFiberFromFragment(
   key: null | string,
 ): Fiber {
   const fiber = createFiber(Fragment, elements, key, mode);
+  fiber.expirationTime = expirationTime;
+  return fiber;
+}
+
+export function createFiberFromFundamental(
+  fundamentalComponent: ReactFundamentalComponent<any, any>,
+  pendingProps: any,
+  mode: TypeOfMode,
+  expirationTime: ExpirationTime,
+  key: null | string,
+): Fiber {
+  const fiber = createFiber(FundamentalComponent, pendingProps, key, mode);
+  fiber.elementType = fundamentalComponent;
+  fiber.type = fundamentalComponent;
   fiber.expirationTime = expirationTime;
   return fiber;
 }

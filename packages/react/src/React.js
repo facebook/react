@@ -51,7 +51,12 @@ import {
   jsxWithValidationDynamic,
 } from './ReactElementValidator';
 import ReactSharedInternals from './ReactSharedInternals';
-import {enableJSXTransformAPI, enableFlareAPI} from 'shared/ReactFeatureFlags';
+import createFundamental from 'shared/createFundamentalComponent';
+import {
+  enableJSXTransformAPI,
+  enableFlareAPI,
+  enableFundamentalAPI,
+} from 'shared/ReactFeatureFlags';
 const React = {
   Children: {
     map,
@@ -101,6 +106,10 @@ const React = {
 
 if (enableFlareAPI) {
   React.unstable_useListener = useListener;
+}
+
+if (enableFundamentalAPI) {
+  React.unstable_createFundamental = createFundamental;
 }
 
 // Note: some APIs are added with feature flags.

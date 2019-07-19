@@ -8,6 +8,7 @@
  */
 
 import type {
+  ReactFundamentalComponentInstance,
   ReactEventResponder,
   ReactEventResponderInstance,
   EventPriority,
@@ -42,6 +43,11 @@ export type ReactDOMEventResponder = ReactEventResponder<
 export type ReactDOMEventResponderInstance = ReactEventResponderInstance<
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
+>;
+
+export type ReactDOMFundamentalComponentInstance = ReactFundamentalComponentInstance<
+  any,
+  any,
 >;
 
 export type ReactDOMResponderContext = {

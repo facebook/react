@@ -51,6 +51,9 @@ export const REACT_SUSPENSE_LIST_TYPE = hasSymbol
   : 0xead8;
 export const REACT_MEMO_TYPE = hasSymbol ? Symbol.for('react.memo') : 0xead3;
 export const REACT_LAZY_TYPE = hasSymbol ? Symbol.for('react.lazy') : 0xead4;
+export const REACT_FUNDAMENTAL_TYPE = hasSymbol
+  ? Symbol.for('react.fundamental')
+  : 0xead5;
 
 const MAYBE_ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
 const FAUX_ITERATOR_SYMBOL = '@@iterator';

@@ -63,6 +63,12 @@ export const supportsPersistence = $$$hostConfig.supportsPersistence;
 export const supportsHydration = $$$hostConfig.supportsHydration;
 export const mountResponderInstance = $$$hostConfig.mountResponderInstance;
 export const unmountResponderInstance = $$$hostConfig.unmountResponderInstance;
+export const getFundamentalComponentInstance =
+  $$$hostConfig.getFundamentalComponentInstance;
+export const mountFundamentalComponent =
+  $$$hostConfig.mountFundamentalComponent;
+export const shouldUpdateFundamentalComponent =
+  $$$hostConfig.shouldUpdateFundamentalComponent;
 
 // -------------------
 //      Mutation
@@ -82,6 +88,10 @@ export const hideInstance = $$$hostConfig.hideInstance;
 export const hideTextInstance = $$$hostConfig.hideTextInstance;
 export const unhideInstance = $$$hostConfig.unhideInstance;
 export const unhideTextInstance = $$$hostConfig.unhideTextInstance;
+export const updateFundamentalComponent =
+  $$$hostConfig.updateFundamentalComponent;
+export const unmountFundamentalComponent =
+  $$$hostConfig.unmountFundamentalComponent;
 
 // -------------------
 //     Persistence
@@ -96,6 +106,7 @@ export const finalizeContainerChildren =
 export const replaceContainerChildren = $$$hostConfig.replaceContainerChildren;
 export const cloneHiddenInstance = $$$hostConfig.cloneHiddenInstance;
 export const cloneHiddenTextInstance = $$$hostConfig.cloneHiddenTextInstance;
+export const cloneFundamentalInstance = $$$hostConfig.cloneInstance;
 
 // -------------------
 //     Hydration

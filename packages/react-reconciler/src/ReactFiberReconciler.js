@@ -16,6 +16,7 @@ import type {
   Container,
   PublicInstance,
 } from './ReactFiberHostConfig';
+import {FundamentalComponent} from 'shared/ReactWorkTags';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
@@ -373,6 +374,9 @@ export function findHostInstanceWithNoPortals(
   const hostFiber = findCurrentHostFiberWithNoPortals(fiber);
   if (hostFiber === null) {
     return null;
+  }
+  if (hostFiber.tag === FundamentalComponent) {
+    return hostFiber.stateNode.instance;
   }
   return hostFiber.stateNode;
 }

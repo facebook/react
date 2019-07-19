@@ -12,6 +12,7 @@ import warning from 'shared/warning';
 import type {
   ReactEventResponder,
   ReactEventResponderInstance,
+  ReactFundamentalComponentInstance,
 } from 'shared/ReactTypes';
 
 import {enableFlareAPI} from 'shared/ReactFeatureFlags';
@@ -294,4 +295,50 @@ export function unmountResponderInstance(
   responderInstance: ReactEventResponderInstance<any, any>,
 ): void {
   throw new Error('Not yet implemented.');
+}
+
+export function getFundamentalComponentInstance(fundamentalInstance): Instance {
+  const {impl, props, state} = fundamentalInstance;
+  return impl.getInstance(null, props, state);
+}
+
+export function mountFundamentalComponent(
+  fundamentalInstance: ReactFundamentalComponentInstance<any, any>,
+): void {
+  const {impl, instance, props, state} = fundamentalInstance;
+  const onMount = impl.onMount;
+  if (onMount !== undefined) {
+    onMount(null, instance, props, state);
+  }
+}
+
+export function shouldUpdateFundamentalComponent(
+  fundamentalInstance: ReactFundamentalComponentInstance<any, any>,
+): boolean {
+  const {impl, prevProps, props, state} = fundamentalInstance;
+  const shouldUpdate = impl.shouldUpdate;
+  if (shouldUpdate !== undefined) {
+    return shouldUpdate(null, prevProps, props, state);
+  }
+  return true;
+}
+
+export function updateFundamentalComponent(
+  fundamentalInstance: ReactFundamentalComponentInstance<any, any>,
+): void {
+  const {impl, instance, prevProps, props, state} = fundamentalInstance;
+  const onUpdate = impl.onUpdate;
+  if (onUpdate !== undefined) {
+    onUpdate(null, instance, prevProps, props, state);
+  }
+}
+
+export function unmountFundamentalComponent(
+  fundamentalInstance: ReactFundamentalComponentInstance<any, any>,
+): void {
+  const {impl, instance, props, state} = fundamentalInstance;
+  const onUnmount = impl.onUnmount;
+  if (onUnmount !== undefined) {
+    onUnmount(null, instance, props, state);
+  }
 }

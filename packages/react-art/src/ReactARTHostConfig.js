@@ -442,3 +442,23 @@ export function unmountResponderInstance(
 ): void {
   throw new Error('Not yet implemented.');
 }
+
+export function getFundamentalComponentInstance(fundamentalInstance) {
+  throw new Error('Not yet implemented.');
+}
+
+export function mountFundamentalComponent(fundamentalInstance) {
+  throw new Error('Not yet implemented.');
+}
+
+export function shouldUpdateFundamentalComponent(fundamentalInstance) {
+  throw new Error('Not yet implemented.');
+}
+
+export function updateFundamentalComponent(fundamentalInstance) {
+  throw new Error('Not yet implemented.');
+}
+
+export function unmountFundamentalComponent(fundamentalInstance) {
+  throw new Error('Not yet implemented.');
+}

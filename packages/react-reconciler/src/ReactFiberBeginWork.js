@@ -41,6 +41,7 @@ import {
   SimpleMemoComponent,
   LazyComponent,
   IncompleteClassComponent,
+  FundamentalComponent,
 } from 'shared/ReactWorkTags';
 import {
   NoEffect,
@@ -60,6 +61,7 @@ import {
   enableSchedulerTracing,
   enableSuspenseServerRenderer,
   enableFlareAPI,
+  enableFundamentalAPI,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import shallowEqual from 'shared/shallowEqual';
@@ -2481,6 +2483,27 @@ function updateContextConsumer(
   return workInProgress.child;
 }
 
+function updateFundamentalComponent(
+  current,
+  workInProgress,
+  renderExpirationTime,
+) {
+  const fundamentalImpl = workInProgress.type.impl;
+  if (fundamentalImpl.reconcileChildren === false) {
+    return null;
+  }
+  const nextProps = workInProgress.pendingProps;
+  const nextChildren = nextProps.children;
+
+  reconcileChildren(
+    current,
+    workInProgress,
+    nextChildren,
+    renderExpirationTime,
+  );
+  return workInProgress.child;
+}
+
 export function markWorkInProgressReceivedUpdate() {
   didReceiveUpdate = true;
 }
@@ -2954,6 +2977,16 @@ function beginWork(
         workInProgress,
         renderExpirationTime,
       );
+    }
+    case FundamentalComponent: {
+      if (enableFundamentalAPI) {
+        return updateFundamentalComponent(
+          current,
+          workInProgress,
+          renderExpirationTime,
+        );
+      }
+      break;
     }
   }
   invariant(
