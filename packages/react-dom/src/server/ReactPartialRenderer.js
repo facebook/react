@@ -232,7 +232,10 @@ function createMarkupForStyles(styles): string | null {
       }
     }
     if (styleValue != null) {
-      serialized += delimiter + processStyleName(styleName) + ':';
+      serialized +=
+        delimiter +
+        (isCustomProperty ? styleName : processStyleName(styleName)) +
+        ':';
       serialized += dangerousStyleValue(
         styleName,
         styleValue,
