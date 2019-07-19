@@ -10,6 +10,7 @@
 import type {ThreadID} from './ReactThreadIDAllocator';
 import type {ReactElement} from 'shared/ReactElementType';
 import type {ReactProvider, ReactContext} from 'shared/ReactTypes';
+import type {TrustedTypes} from './trustedTypes';
 
 import React from 'react';
 import invariant from 'shared/invariant';
@@ -273,10 +274,16 @@ function shouldConstruct(Component) {
   return Component.prototype && Component.prototype.isReactComponent;
 }
 
-function getNonChildrenInnerMarkup(props) {
+function getNonChildrenInnerMarkup(props, trustedTypes) {
   const innerHTML = props.dangerouslySetInnerHTML;
   if (innerHTML != null) {
     if (innerHTML.__html != null) {
+      if (trustedTypes && trustedTypes.isHTML(innerHTML.__html) === false) {
+        throw new Error(
+          'dangerouslySetInnerHTML requires TrustedHTML! Received: ' +
+            innerHTML.__html,
+        );
+      }
       return innerHTML.__html;
     }
   } else {
@@ -349,6 +356,7 @@ function createOpenTagMarkup(
   namespace: string,
   makeStaticMarkup: boolean,
   isRootElement: boolean,
+  trustedTypes: ?TrustedTypes,
 ): string {
   let ret = '<' + tagVerbatim;
 
@@ -369,7 +377,12 @@ function createOpenTagMarkup(
         markup = createMarkupForCustomAttribute(propKey, propValue);
       }
     } else {
-      markup = createMarkupForProperty(propKey, propValue);
+      markup = createMarkupForProperty(
+        propKey,
+        propValue,
+        tagLowercase,
+        trustedTypes,
+      );
     }
     if (markup) {
       ret += ' ' + markup;
@@ -693,6 +706,7 @@ class ReactDOMServerRenderer {
   currentSelectValue: any;
   previousWasTextNode: boolean;
   makeStaticMarkup: boolean;
+  trustedTypes: ?TrustedTypes;
   suspenseDepth: number;
 
   contextIndex: number;
@@ -700,7 +714,11 @@ class ReactDOMServerRenderer {
   contextValueStack: Array<any>;
   contextProviderStack: ?Array<ReactProvider<any>>; // DEV-only
 
-  constructor(children: mixed, makeStaticMarkup: boolean) {
+  constructor(
+    children: mixed,
+    makeStaticMarkup: boolean,
+    trustedTypes?: TrustedTypes,
+  ) {
     const flatChildren = flattenTopLevelChildren(children);
 
     const topFrame: Frame = {
@@ -722,6 +740,7 @@ class ReactDOMServerRenderer {
     this.currentSelectValue = null;
     this.previousWasTextNode = false;
     this.makeStaticMarkup = makeStaticMarkup;
+    this.trustedTypes = trustedTypes;
     this.suspenseDepth = 0;
 
     // Context (new API)
@@ -1467,6 +1486,7 @@ class ReactDOMServerRenderer {
       namespace,
       this.makeStaticMarkup,
       this.stack.length === 1,
+      this.trustedTypes,
     );
     let footer = '';
     if (omittedCloseTags.hasOwnProperty(tag)) {
@@ -1476,7 +1496,7 @@ class ReactDOMServerRenderer {
       footer = '</' + element.type + '>';
     }
     let children;
-    const innerMarkup = getNonChildrenInnerMarkup(props);
+    const innerMarkup = getNonChildrenInnerMarkup(props, this.trustedTypes);
     if (innerMarkup != null) {
       children = [];
       if (newlineEatingTags[tag] && innerMarkup.charAt(0) === '\n') {
