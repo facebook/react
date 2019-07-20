@@ -5,7 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {enableIsInputPending} from '../SchedulerFeatureFlags';
+import {
+  enableIsInputPending,
+  requestIdleCallbackBeforeFirstFrame as requestIdleCallbackBeforeFirstFrameFlag,
+  requestTimerEventBeforeFirstFrame,
+} from '../SchedulerFeatureFlags';
 
 // The DOM Scheduler implementation is similar to requestIdleCallback. It
 // works by scheduling a requestAnimationFrame, storing the time for the start
@@ -23,65 +27,6 @@ export let shouldYieldToHost;
 export let requestPaint;
 export let getCurrentTime;
 export let forceFrameRate;
-
-const hasNativePerformanceNow =
-  typeof performance === 'object' && typeof performance.now === 'function';
-
-// We capture a local reference to any global, in case it gets polyfilled after
-// this module is initially evaluated. We want to be using a
-// consistent implementation.
-const localDate = Date;
-
-// This initialization code may run even on server environments if a component
-// just imports ReactDOM (e.g. for findDOMNode). Some environments might not
-// have setTimeout or clearTimeout. However, we always expect them to be defined
-// on the client. https://github.com/facebook/react/pull/13088
-const localSetTimeout =
-  typeof setTimeout === 'function' ? setTimeout : undefined;
-const localClearTimeout =
-  typeof clearTimeout === 'function' ? clearTimeout : undefined;
-
-// We don't expect either of these to necessarily be defined, but we will error
-// later if they are missing on the client.
-const localRequestAnimationFrame =
-  typeof requestAnimationFrame === 'function'
-    ? requestAnimationFrame
-    : undefined;
-const localCancelAnimationFrame =
-  typeof cancelAnimationFrame === 'function' ? cancelAnimationFrame : undefined;
-
-// requestAnimationFrame does not run when the tab is in the background. If
-// we're backgrounded we prefer for that work to happen so that the page
-// continues to load in the background. So we also schedule a 'setTimeout' as
-// a fallback.
-// TODO: Need a better heuristic for backgrounded work.
-const ANIMATION_FRAME_TIMEOUT = 100;
-let rAFID;
-let rAFTimeoutID;
-const requestAnimationFrameWithTimeout = function(callback) {
-  // schedule rAF and also a setTimeout
-  rAFID = localRequestAnimationFrame(function(timestamp) {
-    // cancel the setTimeout
-    localClearTimeout(rAFTimeoutID);
-    callback(timestamp);
-  });
-  rAFTimeoutID = localSetTimeout(function() {
-    // cancel the requestAnimationFrame
-    localCancelAnimationFrame(rAFID);
-    callback(getCurrentTime());
-  }, ANIMATION_FRAME_TIMEOUT);
-};
-
-if (hasNativePerformanceNow) {
-  const Performance = performance;
-  getCurrentTime = function() {
-    return Performance.now();
-  };
-} else {
-  getCurrentTime = function() {
-    return localDate.now();
-  };
-}
 
 if (
   // If Scheduler runs in a non-DOM environment, it falls back to a naive
@@ -107,6 +52,9 @@ if (
       }
     }
   };
+  getCurrentTime = function() {
+    return Date.now();
+  };
   requestHostCallback = function(cb) {
     if (_callback !== null) {
       // Protect against re-entrancy.
@@ -130,16 +78,25 @@ if (
   };
   requestPaint = forceFrameRate = function() {};
 } else {
+  // Capture local references to native APIs, in case a polyfill overrides them.
+  const performance = window.performance;
+  const Date = window.Date;
+  const setTimeout = window.setTimeout;
+  const clearTimeout = window.clearTimeout;
+  const requestAnimationFrame = window.requestAnimationFrame;
+  const cancelAnimationFrame = window.cancelAnimationFrame;
+  const requestIdleCallback = window.requestIdleCallback;
+
   if (typeof console !== 'undefined') {
     // TODO: Remove fb.me link
-    if (typeof localRequestAnimationFrame !== 'function') {
+    if (typeof requestAnimationFrame !== 'function') {
       console.error(
         "This browser doesn't support requestAnimationFrame. " +
           'Make sure that you load a ' +
           'polyfill in older browsers. https://fb.me/react-polyfills',
       );
     }
-    if (typeof localCancelAnimationFrame !== 'function') {
+    if (typeof cancelAnimationFrame !== 'function') {
       console.error(
         "This browser doesn't support cancelAnimationFrame. " +
           'Make sure that you load a ' +
@@ -148,19 +105,29 @@ if (
     }
   }
 
+  const requestIdleCallbackBeforeFirstFrame =
+    requestIdleCallbackBeforeFirstFrameFlag &&
+    typeof requestIdleCallback === 'function' &&
+    typeof cancelIdleCallback === 'function';
+
+  getCurrentTime =
+    typeof performance === 'object' && typeof performance.now === 'function'
+      ? () => performance.now()
+      : () => Date.now();
+
+  let isRAFLoopRunning = false;
   let scheduledHostCallback = null;
-  let isMessageEventScheduled = false;
+  let rAFTimeoutID = -1;
+  let taskTimeoutID = -1;
 
-  let isAnimationFrameScheduled = false;
-
-  let timeoutID = -1;
-
-  let frameDeadline = 0;
   // We start out assuming that we run at 30fps but then the heuristic tracking
   // will adjust this value to a faster fps if we get more frequent animation
   // frames.
-  let previousFrameTime = 33;
-  let activeFrameTime = 33;
+  let frameLength = 33.33;
+  let prevRAFTime = -1;
+  let prevRAFInterval = -1;
+  let frameDeadline = 0;
+
   let fpsLocked = false;
 
   // TODO: Make this configurable
@@ -222,20 +189,16 @@ if (
       return;
     }
     if (fps > 0) {
-      activeFrameTime = Math.floor(1000 / fps);
+      frameLength = Math.floor(1000 / fps);
       fpsLocked = true;
     } else {
       // reset the framerate
-      activeFrameTime = 33;
+      frameLength = 33.33;
       fpsLocked = false;
     }
   };
 
-  // We use the postMessage trick to defer idle work until after the repaint.
-  const channel = new MessageChannel();
-  const port = channel.port2;
-  channel.port1.onmessage = function(event) {
-    isMessageEventScheduled = false;
+  const performWorkUntilDeadline = () => {
     if (scheduledHostCallback !== null) {
       const currentTime = getCurrentTime();
       const hasTimeRemaining = frameDeadline - currentTime > 0;
@@ -244,103 +207,162 @@ if (
           hasTimeRemaining,
           currentTime,
         );
-        if (hasMoreWork) {
-          // Ensure the next frame is scheduled.
-          if (!isAnimationFrameScheduled) {
-            isAnimationFrameScheduled = true;
-            requestAnimationFrameWithTimeout(animationTick);
-          }
-        } else {
+        if (!hasMoreWork) {
           scheduledHostCallback = null;
         }
       } catch (error) {
         // If a scheduler task throws, exit the current browser task so the
         // error can be observed, and post a new task as soon as possible
         // so we can continue where we left off.
-        isMessageEventScheduled = true;
-        port.postMessage(undefined);
+        port.postMessage(null);
         throw error;
       }
-      // Yielding to the browser will give it a chance to paint, so we can
-      // reset this.
-      needsPaint = false;
     }
+    // Yielding to the browser will give it a chance to paint, so we can
+    // reset this.
+    needsPaint = false;
   };
 
-  const animationTick = function(rafTime) {
-    if (scheduledHostCallback !== null) {
-      // Eagerly schedule the next animation callback at the beginning of the
-      // frame. If the scheduler queue is not empty at the end of the frame, it
-      // will continue flushing inside that callback. If the queue *is* empty,
-      // then it will exit immediately. Posting the callback at the start of the
-      // frame ensures it's fired within the earliest possible frame. If we
-      // waited until the end of the frame to post the callback, we risk the
-      // browser skipping a frame and not firing the callback until the frame
-      // after that.
-      requestAnimationFrameWithTimeout(animationTick);
-    } else {
-      // No pending work. Exit.
-      isAnimationFrameScheduled = false;
+  // We use the postMessage trick to defer idle work until after the repaint.
+  const channel = new MessageChannel();
+  const port = channel.port2;
+  channel.port1.onmessage = performWorkUntilDeadline;
+
+  const onAnimationFrame = rAFTime => {
+    if (scheduledHostCallback === null) {
+      // No scheduled work. Exit.
+      isRAFLoopRunning = false;
+      prevRAFTime = -1;
+      prevRAFInterval = -1;
+      return;
+    }
+    if (rAFTime - prevRAFTime < 0.1) {
+      // Defensive coding. Received two rAFs in the same frame. Exit and wait
+      // for the next frame.
+      // TODO: This could be an indication that the frame rate is too high. We
+      // don't currently handle the case where the browser dynamically lowers
+      // the framerate, e.g. in low power situation (other than the rAF timeout,
+      // but that's designed for when the tab is backgrounded and doesn't
+      // optimize for maxiumum CPU utilization).
       return;
     }
 
-    let nextFrameTime = rafTime - frameDeadline + activeFrameTime;
-    if (
-      nextFrameTime < activeFrameTime &&
-      previousFrameTime < activeFrameTime &&
-      !fpsLocked
-    ) {
-      if (nextFrameTime < 8) {
-        // Defensive coding. We don't support higher frame rates than 120hz.
-        // If the calculated frame time gets lower than 8, it is probably a bug.
-        nextFrameTime = 8;
+    // Eagerly schedule the next animation callback at the beginning of the
+    // frame. If the scheduler queue is not empty at the end of the frame, it
+    // will continue flushing inside that callback. If the queue *is* empty,
+    // then it will exit immediately. Posting the callback at the start of the
+    // frame ensures it's fired within the earliest possible frame. If we
+    // waited until the end of the frame to post the callback, we risk the
+    // browser skipping a frame and not firing the callback until the frame
+    // after that.
+    requestAnimationFrame(nextRAFTime => {
+      clearTimeout(rAFTimeoutID);
+      onAnimationFrame(nextRAFTime);
+    });
+    // requestAnimationFrame is throttled when the tab is backgrounded. We
+    // don't want to stop working entirely. So we'll fallback to a timeout loop.
+    // TODO: Need a better heuristic for backgrounded work.
+    const onTimeout = () => {
+      frameDeadline = getCurrentTime() + frameLength / 2;
+      performWorkUntilDeadline();
+      rAFTimeoutID = setTimeout(onTimeout, frameLength * 3);
+    };
+    rAFTimeoutID = setTimeout(onTimeout, frameLength * 3);
+
+    if (prevRAFTime !== -1) {
+      const rAFInterval = rAFTime - prevRAFTime;
+      if (!fpsLocked && prevRAFInterval !== -1) {
+        // We've observed two consecutive frame intervals. We'll use this to
+        // dynamically adjust the frame rate.
+        //
+        // If one frame goes long, then the next one can be short to catch up.
+        // If two frames are short in a row, then that's an indication that we
+        // actually have a higher frame rate than what we're currently
+        // optimizing. For example, if we're running on 120hz display or 90hz VR
+        // display. Take the max of the two in case one of them was an anomaly
+        // due to missed frame deadlines.
+        if (rAFInterval < frameLength && prevRAFInterval < frameLength) {
+          frameLength =
+            rAFInterval < prevRAFInterval ? prevRAFInterval : rAFInterval;
+          if (frameLength < 8.33) {
+            // Defensive coding. We don't support higher frame rates than 120hz.
+            // If the calculated frame length gets lower than 8, it is probably
+            // a bug.
+            frameLength = 8.33;
+          }
+        }
       }
-      // If one frame goes long, then the next one can be short to catch up.
-      // If two frames are short in a row, then that's an indication that we
-      // actually have a higher frame rate than what we're currently optimizing.
-      // We adjust our heuristic dynamically accordingly. For example, if we're
-      // running on 120hz display or 90hz VR display.
-      // Take the max of the two in case one of them was an anomaly due to
-      // missed frame deadlines.
-      activeFrameTime =
-        nextFrameTime < previousFrameTime ? previousFrameTime : nextFrameTime;
-    } else {
-      previousFrameTime = nextFrameTime;
+      prevRAFInterval = rAFInterval;
     }
-    frameDeadline = rafTime + activeFrameTime;
-    if (!isMessageEventScheduled) {
-      isMessageEventScheduled = true;
-      port.postMessage(undefined);
-    }
+    prevRAFTime = rAFTime;
+    frameDeadline = rAFTime + frameLength;
+
+    port.postMessage(null);
   };
 
   requestHostCallback = function(callback) {
-    if (scheduledHostCallback === null) {
-      scheduledHostCallback = callback;
-      if (!isAnimationFrameScheduled) {
-        // If rAF didn't already schedule one, we need to schedule a frame.
-        // TODO: If this rAF doesn't materialize because the browser throttles,
-        // we might want to still have setTimeout trigger rIC as a backup to
-        // ensure that we keep performing work.
-        isAnimationFrameScheduled = true;
-        requestAnimationFrameWithTimeout(animationTick);
+    scheduledHostCallback = callback;
+    if (!isRAFLoopRunning) {
+      isRAFLoopRunning = true;
+
+      // Start a rAF loop.
+      requestAnimationFrame(rAFTime => {
+        if (requestIdleCallbackBeforeFirstFrame) {
+          cancelIdleCallback(idleCallbackID);
+        }
+        if (requestTimerEventBeforeFirstFrame) {
+          clearTimeout(idleTimeoutID);
+        }
+        onAnimationFrame(rAFTime);
+      });
+
+      // If we just missed the last vsync, the next rAF might not happen for
+      // another frame. To claim as much idle time as possible, post a callback
+      // with `requestIdleCallback`, which should fire if there's idle time left
+      // in the frame.
+      //
+      // This should only be an issue for the first rAF in the loop; subsequent
+      // rAFs are scheduled at the beginning of the preceding frame.
+      let idleCallbackID;
+      if (requestIdleCallbackBeforeFirstFrame) {
+        idleCallbackID = requestIdleCallback(() => {
+          if (requestTimerEventBeforeFirstFrame) {
+            clearTimeout(idleTimeoutID);
+          }
+          frameDeadline = getCurrentTime() + frameLength;
+          performWorkUntilDeadline();
+        });
+      }
+      // Alternate strategy to address the same problem. Scheduler a timer with
+      // no delay. If this fires before the rAF, that likely indicates that
+      // there's idle time before the next vsync. This isn't always the case,
+      // but we'll be aggressive and assume it is, as a trade off to prevent
+      // idle periods.
+      let idleTimeoutID;
+      if (requestTimerEventBeforeFirstFrame) {
+        idleTimeoutID = setTimeout(() => {
+          if (requestIdleCallbackBeforeFirstFrame) {
+            cancelIdleCallback(idleCallbackID);
+          }
+          frameDeadline = getCurrentTime() + frameLength;
+          performWorkUntilDeadline();
+        }, 0);
       }
     }
   };
 
   cancelHostCallback = function() {
     scheduledHostCallback = null;
-    isMessageEventScheduled = false;
   };
 
   requestHostTimeout = function(callback, ms) {
-    timeoutID = localSetTimeout(() => {
+    taskTimeoutID = setTimeout(() => {
       callback(getCurrentTime());
     }, ms);
   };
 
   cancelHostTimeout = function() {
-    localClearTimeout(timeoutID);
-    timeoutID = -1;
+    clearTimeout(taskTimeoutID);
+    taskTimeoutID = -1;
   };
 }

@@ -9,4 +9,6 @@
 export const {
   enableIsInputPending,
   enableSchedulerDebugging,
+  requestIdleCallbackBeforeFirstFrame,
+  requestTimerEventBeforeFirstFrame,
 } = require('SchedulerFeatureFlags');
