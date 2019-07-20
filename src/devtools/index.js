@@ -1,6 +1,6 @@
 // @flow
 
-import Bridge from 'src/bridge';
+import type { FrontendBridge } from 'src/bridge';
 
 type Shell = {|
   connect: (callback: Function) => void,
@@ -8,7 +8,7 @@ type Shell = {|
 |};
 
 export function initDevTools(shell: Shell) {
-  shell.connect((bridge: Bridge) => {
+  shell.connect((bridge: FrontendBridge) => {
     // TODO ...
   });
 }

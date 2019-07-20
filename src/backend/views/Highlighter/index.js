@@ -2,11 +2,15 @@
 
 import memoize from 'memoize-one';
 import throttle from 'lodash.throttle';
-import Bridge from 'src/bridge';
 import Agent from 'src/backend/agent';
 import { hideOverlay, showOverlay } from './Highlighter';
 
-export default function setup(bridge: Bridge, agent: Agent): void {
+import type { BackendBridge } from 'src/bridge';
+
+export default function setupHighlighter(
+  bridge: BackendBridge,
+  agent: Agent
+): void {
   bridge.addListener(
     'clearNativeElementHighlight',
     clearNativeElementHighlight
@@ -50,7 +54,7 @@ export default function setup(bridge: Bridge, agent: Agent): void {
     rendererID,
     scrollIntoView,
   }: {
-    displayName: string,
+    displayName: string | null,
     hideAfterTimeout: boolean,
     id: number,
     openNativeElementsPanel: boolean,

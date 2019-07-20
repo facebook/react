@@ -6,7 +6,6 @@ import '@reach/menu-button/styles.css';
 import '@reach/tooltip/styles.css';
 
 import React, { useMemo, useState } from 'react';
-import Bridge from 'src/bridge';
 import Store from '../store';
 import { BridgeContext, StoreContext } from './context';
 import Components from './Components/Components';
@@ -25,6 +24,7 @@ import styles from './DevTools.css';
 import './root.css';
 
 import type { InspectedElement } from 'src/devtools/views/Components/types';
+import type { FrontendBridge } from 'src/bridge';
 
 export type BrowserTheme = 'dark' | 'light';
 export type TabID = 'components' | 'profiler' | 'settings';
@@ -34,7 +34,7 @@ export type ViewElementSource = (
 ) => void;
 
 export type Props = {|
-  bridge: Bridge,
+  bridge: FrontendBridge,
   browserTheme?: BrowserTheme,
   defaultTab?: TabID,
   showTabBar?: boolean,

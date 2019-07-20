@@ -221,17 +221,19 @@ function HookView({
     if (canEditHooks && isStateEditable) {
       overrideValueFn = (absolutePath: Array<string | number>, value: any) => {
         const rendererID = store.getRendererIDForElement(id);
-        bridge.send('overrideHookState', {
-          id,
-          hookID,
-          // Hooks override function expects a relative path for the specified hook (id),
-          // starting with its id within the (flat) hooks list structure.
-          // This relative path does not include the fake tree structure DevTools uses for display,
-          // so it's important that we remove that part of the path before sending the update.
-          path: absolutePath.slice(path.length + 1),
-          rendererID,
-          value,
-        });
+        if (rendererID !== null) {
+          bridge.send('overrideHookState', {
+            id,
+            hookID,
+            // Hooks override function expects a relative path for the specified hook (id),
+            // starting with its id within the (flat) hooks list structure.
+            // This relative path does not include the fake tree structure DevTools uses for display,
+            // so it's important that we remove that part of the path before sending the update.
+            path: absolutePath.slice(path.length + 1),
+            rendererID,
+            value,
+          });
+        }
       };
     }
 

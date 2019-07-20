@@ -17,6 +17,7 @@ import DevTools from 'src/devtools/views/DevTools';
 import launchEditor from './launchEditor';
 import { __DEBUG__ } from 'src/constants';
 
+import type { FrontendBridge } from 'src/bridge';
 import type { InspectedElement } from 'src/devtools/views/Components/types';
 
 installHook(window);
@@ -46,7 +47,7 @@ function setStatusListener(value: StatusListener) {
   return DevtoolsUI;
 }
 
-let bridge: Bridge | null = null;
+let bridge: FrontendBridge | null = null;
 let store: Store | null = null;
 let root = null;
 
@@ -83,7 +84,7 @@ function reload() {
     root = createRoot(node);
     root.render(
       createElement(DevTools, {
-        bridge: ((bridge: any): Bridge),
+        bridge: ((bridge: any): FrontendBridge),
         showTabBar: true,
         store: ((store: any): Store),
         warnIfLegacyBackendDetected: true,
@@ -166,7 +167,7 @@ function initialize(socket: WebSocket) {
       }
     },
   });
-  ((bridge: any): Bridge).addListener('shutdown', () => {
+  ((bridge: any): FrontendBridge).addListener('shutdown', () => {
     socket.close();
   });
 

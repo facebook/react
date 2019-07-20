@@ -85,7 +85,9 @@ function InspectedElementContextController({ children }: Props) {
   const getInspectedElementPath = useCallback<GetInspectedElementPath>(
     (id: number, path: Array<string | number>) => {
       const rendererID = store.getRendererIDForElement(id);
-      bridge.send('inspectElement', { id, path, rendererID });
+      if (rendererID !== null) {
+        bridge.send('inspectElement', { id, path, rendererID });
+      }
     },
     [bridge, store]
   );
@@ -232,7 +234,9 @@ function InspectedElementContextController({ children }: Props) {
     const sendRequest = () => {
       timeoutID = null;
 
-      bridge.send('inspectElement', { id: selectedElementID, rendererID });
+      if (rendererID !== null) {
+        bridge.send('inspectElement', { id: selectedElementID, rendererID });
+      }
     };
 
     // Send the initial inspection request.
@@ -240,7 +244,9 @@ function InspectedElementContextController({ children }: Props) {
     sendRequest();
 
     // Update the $r variable.
-    bridge.send('selectElement', { id: selectedElementID, rendererID });
+    if (rendererID !== null) {
+      bridge.send('selectElement', { id: selectedElementID, rendererID });
+    }
 
     const onInspectedElement = (data: InspectedElementPayload) => {
       // If this is the element we requested, wait a little bit and then ask for another update.

@@ -1,7 +1,7 @@
 // @flow
 
 import typeof ReactTestRenderer from 'react-test-renderer';
-import type Bridge from 'src/bridge';
+import type { FrontendBridge } from 'src/bridge';
 import type Store from 'src/devtools/store';
 import type {
   DispatcherContext,
@@ -12,7 +12,7 @@ describe('TreeListContext', () => {
   let React;
   let ReactDOM;
   let TestRenderer: ReactTestRenderer;
-  let bridge: Bridge;
+  let bridge: FrontendBridge;
   let store: Store;
   let utils;
 

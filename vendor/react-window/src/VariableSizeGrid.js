@@ -274,7 +274,11 @@ const getOffsetForIndexAndAlignment = (
     default:
       if (scrollOffset >= minOffset && scrollOffset <= maxOffset) {
         return scrollOffset;
-      } else if (scrollOffset - minOffset < maxOffset - scrollOffset) {
+      } else if (minOffset > maxOffset) {
+        // Because we only take into account the scrollbar size when calculating minOffset
+        // this value can be larger than maxOffset when at the end of the list
+        return minOffset;
+      } else if (scrollOffset < minOffset) {
         return minOffset;
       } else {
         return maxOffset;

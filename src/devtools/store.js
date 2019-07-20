@@ -2,7 +2,6 @@
 
 import EventEmitter from 'events';
 import { inspect } from 'util';
-import Bridge from 'src/bridge';
 import {
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
@@ -24,6 +23,7 @@ import ProfilerStore from './ProfilerStore';
 
 import type { Element } from './views/Components/types';
 import type { ComponentFilter, ElementType } from '../types';
+import type { FrontendBridge } from 'src/bridge';
 
 const debug = (methodName, ...args) => {
   if (__DEBUG__) {
@@ -71,7 +71,7 @@ export default class Store extends EventEmitter<{|
   supportsProfiling: [],
   supportsReloadAndProfile: [],
 |}> {
-  _bridge: Bridge;
+  _bridge: FrontendBridge;
 
   _captureScreenshots: boolean = false;
 
@@ -129,7 +129,7 @@ export default class Store extends EventEmitter<{|
   // Used for windowing purposes.
   _weightAcrossRoots: number = 0;
 
-  constructor(bridge: Bridge, config?: Config) {
+  constructor(bridge: FrontendBridge, config?: Config) {
     super();
 
     if (__DEBUG__) {
@@ -701,7 +701,7 @@ export default class Store extends EventEmitter<{|
     validAttributes,
   }: {|
     isSupported: boolean,
-    validAttributes: $ReadOnlyArray<string>,
+    validAttributes: ?$ReadOnlyArray<string>,
   |}) => {
     this._isNativeStyleEditorSupported = isSupported;
     this._nativeStyleEditorValidAttributes = validAttributes || null;

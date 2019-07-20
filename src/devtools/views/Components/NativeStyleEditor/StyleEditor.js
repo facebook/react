@@ -25,22 +25,28 @@ export default function StyleEditor({ id, style }: Props) {
   const store = useContext(StoreContext);
 
   const changeAttribute = (oldName: string, newName: string, value: any) => {
-    bridge.send('NativeStyleEditor_renameAttribute', {
-      id,
-      rendererID: store.getRendererIDForElement(id),
-      oldName,
-      newName,
-      value,
-    });
+    const rendererID = store.getRendererIDForElement(id);
+    if (rendererID !== null) {
+      bridge.send('NativeStyleEditor_renameAttribute', {
+        id,
+        rendererID,
+        oldName,
+        newName,
+        value,
+      });
+    }
   };
 
   const changeValue = (name: string, value: any) => {
-    bridge.send('NativeStyleEditor_setValue', {
-      id,
-      rendererID: store.getRendererIDForElement(id),
-      name,
-      value,
-    });
+    const rendererID = store.getRendererIDForElement(id);
+    if (rendererID !== null) {
+      bridge.send('NativeStyleEditor_setValue', {
+        id,
+        rendererID,
+        name,
+        value,
+      });
+    }
   };
 
   const keys = useMemo(() => Array.from(Object.keys(style)), [style]);

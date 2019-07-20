@@ -1,17 +1,17 @@
 // @flow
 
-import React, { Suspense, useState } from 'react';
+import React, { Fragment, Suspense, useState } from 'react';
 
 function SuspenseTree() {
   return (
-    <>
+    <Fragment>
       <h1>Suspense</h1>
       <h4>Primary to Fallback Cycle</h4>
       <PrimaryFallbackTest initialSuspend={false} />
       <h4>Fallback to Primary Cycle</h4>
       <PrimaryFallbackTest initialSuspend={true} />
       <NestedSuspenseTest />
-    </>
+    </Fragment>
   );
 }
 
@@ -20,7 +20,7 @@ function PrimaryFallbackTest({ initialSuspend }) {
   const fallbackStep = useTestSequence('fallback', Fallback1, Fallback2);
   const primaryStep = useTestSequence('primary', Primary1, Primary2);
   return (
-    <>
+    <Fragment>
       <label>
         <input
           checked={suspend}
@@ -33,7 +33,7 @@ function PrimaryFallbackTest({ initialSuspend }) {
       <Suspense fallback={fallbackStep}>
         {suspend ? <Never /> : primaryStep}
       </Suspense>
-    </>
+    </Fragment>
   );
 }
 
@@ -45,32 +45,32 @@ function useTestSequence(label, T1, T2) {
     </button>
   );
   let allSteps = [
-    <>{next}</>,
-    <>
+    <Fragment>{next}</Fragment>,
+    <Fragment>
       {next} <T1 prop={step}>mount</T1>
-    </>,
-    <>
+    </Fragment>,
+    <Fragment>
       {next} <T1 prop={step}>update</T1>
-    </>,
-    <>
+    </Fragment>,
+    <Fragment>
       {next} <T2 prop={step}>several</T2> <T1 prop={step}>different</T1>{' '}
       <T2 prop={step}>children</T2>
-    </>,
-    <>
+    </Fragment>,
+    <Fragment>
       {next} <T2 prop={step}>goodbye</T2>
-    </>,
+    </Fragment>,
   ];
   return allSteps[step];
 }
 
 function NestedSuspenseTest() {
   return (
-    <>
+    <Fragment>
       <h3>Nested Suspense</h3>
       <Suspense fallback={<Fallback1>Loading outer</Fallback1>}>
         <Parent />
       </Suspense>
-    </>
+    </Fragment>
   );
 }
 
@@ -118,19 +118,19 @@ function Never() {
   throw new Promise(resolve => {});
 }
 
-function Fallback1({ prop, ...rest }) {
+function Fallback1({ prop, ...rest }: any) {
   return <span {...rest} />;
 }
 
-function Fallback2({ prop, ...rest }) {
+function Fallback2({ prop, ...rest }: any) {
   return <span {...rest} />;
 }
 
-function Primary1({ prop, ...rest }) {
+function Primary1({ prop, ...rest }: any) {
   return <span {...rest} />;
 }
 
-function Primary2({ prop, ...rest }) {
+function Primary2({ prop, ...rest }: any) {
   return <span {...rest} />;
 }
 

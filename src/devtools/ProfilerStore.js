@@ -3,11 +3,11 @@
 import EventEmitter from 'events';
 import memoize from 'memoize-one';
 import throttle from 'lodash.throttle';
-import Bridge from 'src/bridge';
 import { prepareProfilingDataFrontendFromBackendAndStore } from './views/Profiler/utils';
 import ProfilingCache from './ProfilingCache';
 import Store from './store';
 
+import type { FrontendBridge } from 'src/bridge';
 import type { ProfilingDataBackend } from 'src/backend/types';
 import type {
   CommitDataFrontend,
@@ -23,7 +23,7 @@ export default class ProfilerStore extends EventEmitter<{|
   isProfiling: [],
   profilingData: [],
 |}> {
-  _bridge: Bridge;
+  _bridge: FrontendBridge;
 
   // Suspense cache for lazily calculating derived profiling data.
   _cache: ProfilingCache;
@@ -79,7 +79,11 @@ export default class ProfilerStore extends EventEmitter<{|
 
   _store: Store;
 
-  constructor(bridge: Bridge, store: Store, defaultIsProfiling: boolean) {
+  constructor(
+    bridge: FrontendBridge,
+    store: Store,
+    defaultIsProfiling: boolean
+  ) {
     super();
 
     this._bridge = bridge;

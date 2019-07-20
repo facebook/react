@@ -1,6 +1,6 @@
 {
   "name": "react-window",
-  "version": "1.8.0",
+  "version": "1.8.5",
   "description":
     "React components for efficiently rendering large, scrollable lists and tabular data",
   "author":
@@ -91,7 +91,7 @@
     "eslint-plugin-promise": "^3.7.0",
     "eslint-plugin-react": "^7.7.0",
     "eslint-plugin-standard": "^3.0.1",
-    "flow-bin": "^0.80.0",
+    "flow-bin": "^0.103.0",
     "gh-pages": "^1.1.0",
     "lint-staged": "^7.0.5",
     "prettier": "^1.12.1",
@@ -103,6 +103,8 @@
     "rollup": "^1.4.1",
     "rollup-plugin-babel": "^4.3.2",
     "rollup-plugin-commonjs": "^9.2.1",
-    "rollup-plugin-node-resolve": "^4.0.1"
+    "rollup-plugin-node-resolve": "^4.0.1",
+    "rollup-plugin-replace": "^2.2.0",
+    "rollup-plugin-terser": "^5.1.0"
   }
 }

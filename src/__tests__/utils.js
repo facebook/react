@@ -2,7 +2,7 @@
 
 import typeof ReactTestRenderer from 'react-test-renderer';
 
-import type Bridge from 'src/bridge';
+import type { FrontendBridge } from 'src/bridge';
 import type Store from 'src/devtools/store';
 import type { ProfilingDataFrontend } from 'src/devtools/views/Profiler/types';
 import type { ElementType } from 'src/types';
@@ -161,7 +161,7 @@ export function requireTestRenderer(): ReactTestRenderer {
   }
 }
 
-export function exportImportHelper(bridge: Bridge, store: Store): void {
+export function exportImportHelper(bridge: FrontendBridge, store: Store): void {
   const { act } = require('./utils');
   const {
     prepareProfilingDataExport,

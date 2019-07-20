@@ -22,7 +22,7 @@ type Message = {|
 
 type HighlightElementInDOM = {|
   ...ElementAndRendererID,
-  displayName: string,
+  displayName: string | null,
   hideAfterTimeout: boolean,
   openNativeElementsPanel: boolean,
   scrollIntoView: boolean,
@@ -62,33 +62,48 @@ type NativeStyleEditor_SetValueParams = {|
   value: string,
 |};
 
-export default class Bridge extends EventEmitter<{|
+type BackendEvents = {|
+  captureScreenshot: [{| commitIndex: number, rootID: number |}],
+  inspectedElement: [InspectedElementPayload],
+  isBackendStorageAPISupported: [boolean],
+  operations: [Array<number>],
+  ownersList: [OwnersList],
+  overrideComponentFilters: [Array<ComponentFilter>],
+  profilingData: [ProfilingDataBackend],
+  profilingStatus: [boolean],
+  reloadAppForProfiling: [],
+  screenshotCaptured: [
+    {| commitIndex: number, dataURL: string, rootID: number |},
+  ],
+  selectFiber: [number],
+  shutdown: [],
+  stopInspectingNative: [boolean],
+  syncSelectionFromNativeElementsPanel: [],
+  syncSelectionToNativeElementsPanel: [],
+
+  // React Native style editor plug-in.
+  isNativeStyleEditorSupported: [
+    {| isSupported: boolean, validAttributes: ?$ReadOnlyArray<string> |},
+  ],
+  NativeStyleEditor_styleAndLayout: [StyleAndLayoutPayload],
+|};
+
+type FrontendEvents = {|
   captureScreenshot: [{| commitIndex: number, rootID: number |}],
   clearNativeElementHighlight: [],
   getOwnersList: [ElementAndRendererID],
   getProfilingData: [{| rendererID: RendererID |}],
   getProfilingStatus: [],
   highlightNativeElement: [HighlightElementInDOM],
-  init: [],
   inspectElement: [InspectElementParams],
-  inspectedElement: [InspectedElementPayload],
-  isBackendStorageAPISupported: [boolean],
   logElementToConsole: [ElementAndRendererID],
-  operations: [Array<number>],
-  ownersList: [OwnersList],
-  overrideComponentFilters: [Array<ComponentFilter>],
   overrideContext: [OverrideValue],
   overrideHookState: [OverrideHookState],
   overrideProps: [OverrideValue],
   overrideState: [OverrideValue],
   overrideSuspense: [OverrideSuspense],
   profilingData: [ProfilingDataBackend],
-  profilingStatus: [boolean],
   reloadAndProfile: [boolean],
-  reloadAppForProfiling: [],
-  screenshotCaptured: [
-    {| commitIndex: number, dataURL: string, rootID: number |},
-  ],
   selectElement: [ElementAndRendererID],
   selectFiber: [number],
   shutdown: [],
@@ -96,20 +111,22 @@ export default class Bridge extends EventEmitter<{|
   startProfiling: [boolean],
   stopInspectingNative: [boolean],
   stopProfiling: [],
-  syncSelectionFromNativeElementsPanel: [],
-  syncSelectionToNativeElementsPanel: [],
   updateAppendComponentStack: [boolean],
   updateComponentFilters: [Array<ComponentFilter>],
   viewElementSource: [ElementAndRendererID],
 
   // React Native style editor plug-in.
-  isNativeStyleEditorSupported: [
-    {| isSupported: boolean, validAttributes: $ReadOnlyArray<string> |},
-  ],
   NativeStyleEditor_measure: [ElementAndRendererID],
   NativeStyleEditor_renameAttribute: [NativeStyleEditor_RenameAttributeParams],
   NativeStyleEditor_setValue: [NativeStyleEditor_SetValueParams],
-  NativeStyleEditor_styleAndLayout: [StyleAndLayoutPayload],
+|};
+
+class Bridge<
+  OutgoingEvents: Object,
+  IncomingEvents: Object
+> extends EventEmitter<{|
+  ...IncomingEvents,
+  ...OutgoingEvents,
 |}> {
   _isShutdown: boolean = false;
   _messageQueue: Array<any> = [];
@@ -134,7 +151,10 @@ export default class Bridge extends EventEmitter<{|
     return this._wall;
   }
 
-  send(event: string, payload: any, transferable?: Array<any>) {
+  send<EventName: $Keys<OutgoingEvents>>(
+    event: EventName,
+    ...payload: $ElementType<OutgoingEvents, EventName>
+  ) {
     if (this._isShutdown) {
       console.warn(
         `Cannot send message "${event}" through a Bridge that has been shutdown.`
@@ -150,7 +170,7 @@ export default class Bridge extends EventEmitter<{|
     // - if there *has* been a message flushed in the last BATCH_DURATION ms
     //   (or we're waiting for our setTimeout-0 to fire), then _timeoutID will
     //   be set, and we'll simply add to the queue and wait for that
-    this._messageQueue.push(event, payload, transferable);
+    this._messageQueue.push(event, payload);
     if (!this._timeoutID) {
       this._timeoutID = setTimeout(this._flush, 0);
     }
@@ -204,12 +224,8 @@ export default class Bridge extends EventEmitter<{|
     this._timeoutID = null;
 
     if (this._messageQueue.length) {
-      for (let i = 0; i < this._messageQueue.length; i += 3) {
-        this._wall.send(
-          this._messageQueue[i],
-          this._messageQueue[i + 1],
-          this._messageQueue[i + 2]
-        );
+      for (let i = 0; i < this._messageQueue.length; i += 2) {
+        this._wall.send(this._messageQueue[i], ...this._messageQueue[i + 1]);
       }
       this._messageQueue.length = 0;
 
@@ -220,3 +236,8 @@ export default class Bridge extends EventEmitter<{|
     }
   };
 }
+
+export type BackendBridge = Bridge<BackendEvents, FrontendEvents>;
+export type FrontendBridge = Bridge<FrontendEvents, BackendEvents>;
+
+export default Bridge;

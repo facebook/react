@@ -3,7 +3,7 @@
 import memoizeOne from 'memoize-one';
 import { createElement, PureComponent } from 'react';
 import { cancelTimeout, requestTimeout } from './timer';
-import { getScrollbarSize } from './domHelpers';
+import { getScrollbarSize, getRTLOffsetType } from './domHelpers';
 
 import type { TimeoutID } from './timer';
 
@@ -46,6 +46,22 @@ type OnScrollCallback = ({
 type ScrollEvent = SyntheticEvent<HTMLDivElement>;
 type ItemStyleCache = { [key: string]: Object };
 
+type OuterProps = {|
+  children: React$Node,
+  className: string | void,
+  onScroll: ScrollEvent => void,
+  style: {
+    [string]: mixed,
+  },
+|};
+
+type InnerProps = {|
+  children: React$Node,
+  style: {
+    [string]: mixed,
+  },
+|};
+
 export type Props<T> = {|
   children: RenderComponent<T>,
   className?: string,
@@ -56,7 +72,7 @@ export type Props<T> = {|
   initialScrollLeft?: number,
   initialScrollTop?: number,
   innerRef?: any,
-  innerElementType?: React$ElementType,
+  innerElementType?: string | React$AbstractComponent<InnerProps, any>,
   innerTagName?: string, // deprecated
   itemData: T,
   itemKey?: (params: {|
@@ -67,11 +83,13 @@ export type Props<T> = {|
   onItemsRendered?: OnItemsRenderedCallback,
   onScroll?: OnScrollCallback,
   outerRef?: any,
-  outerElementType?: React$ElementType,
+  outerElementType?: string | React$AbstractComponent<OuterProps, any>,
   outerTagName?: string, // deprecated
-  overscanColumnsCount?: number,
+  overscanColumnCount?: number,
+  overscanColumnsCount?: number, // deprecated
   overscanCount?: number, // deprecated
-  overscanRowsCount?: number,
+  overscanRowCount?: number,
+  overscanRowsCount?: number, // deprecated
   rowCount: number,
   rowHeight: itemSize,
   style?: Object,
@@ -130,10 +148,12 @@ const defaultItemKey = ({ columnIndex, data, rowIndex }) =>
 // In DEV mode, this Set helps us only log a warning once per component instance.
 // This avoids spamming the console every time a render happens.
 let devWarningsOverscanCount = null;
+let devWarningsOverscanRowsColumnsCount = null;
 let devWarningsTagName = null;
 if (process.env.NODE_ENV !== 'production') {
   if (typeof window !== 'undefined' && typeof window.WeakSet !== 'undefined') {
     devWarningsOverscanCount = new WeakSet();
+    devWarningsOverscanRowsColumnsCount = new WeakSet();
     devWarningsTagName = new WeakSet();
   }
 }
@@ -320,21 +340,47 @@ export default function createGridComponent({
 
     componentDidMount() {
       const { initialScrollLeft, initialScrollTop } = this.props;
-      if (typeof initialScrollLeft === 'number' && this._outerRef != null) {
-        ((this._outerRef: any): HTMLDivElement).scrollLeft = initialScrollLeft;
-      }
-      if (typeof initialScrollTop === 'number' && this._outerRef != null) {
-        ((this._outerRef: any): HTMLDivElement).scrollTop = initialScrollTop;
+
+      if (this._outerRef != null) {
+        const outerRef = ((this._outerRef: any): HTMLElement);
+        if (typeof initialScrollLeft === 'number') {
+          outerRef.scrollLeft = initialScrollLeft;
+        }
+        if (typeof initialScrollTop === 'number') {
+          outerRef.scrollTop = initialScrollTop;
+        }
       }
 
       this._callPropsCallbacks();
     }
 
     componentDidUpdate() {
+      const { direction } = this.props;
       const { scrollLeft, scrollTop, scrollUpdateWasRequested } = this.state;
-      if (scrollUpdateWasRequested && this._outerRef !== null) {
-        ((this._outerRef: any): HTMLDivElement).scrollLeft = scrollLeft;
-        ((this._outerRef: any): HTMLDivElement).scrollTop = scrollTop;
+
+      if (scrollUpdateWasRequested && this._outerRef != null) {
+        // TRICKY According to the spec, scrollLeft should be negative for RTL aligned elements.
+        // This is not the case for all browsers though (e.g. Chrome reports values as positive, measured relative to the left).
+        // So we need to determine which browser behavior we're dealing with, and mimic it.
+        const outerRef = ((this._outerRef: any): HTMLElement);
+        if (direction === 'rtl') {
+          switch (getRTLOffsetType()) {
+            case 'negative':
+              outerRef.scrollLeft = -scrollLeft;
+              break;
+            case 'positive-ascending':
+              outerRef.scrollLeft = scrollLeft;
+              break;
+            default:
+              const { clientWidth, scrollWidth } = outerRef;
+              outerRef.scrollLeft = scrollWidth - clientWidth - scrollLeft;
+              break;
+          }
+        } else {
+          outerRef.scrollLeft = Math.max(0, scrollLeft);
+        }
+
+        outerRef.scrollTop = Math.max(0, scrollTop);
       }
 
       this._callPropsCallbacks();
@@ -432,7 +478,7 @@ export default function createGridComponent({
           ref: innerRef,
           style: {
             height: estimatedTotalHeight,
-            pointerEvents: isScrolling ? 'none' : '',
+            pointerEvents: isScrolling ? 'none' : undefined,
             width: estimatedTotalWidth,
           },
         })
@@ -586,6 +632,7 @@ export default function createGridComponent({
     _getHorizontalRangeToRender(): [number, number, number, number] {
       const {
         columnCount,
+        overscanColumnCount,
         overscanColumnsCount,
         overscanCount,
         rowCount,
@@ -593,7 +640,7 @@ export default function createGridComponent({
       const { horizontalScrollDirection, isScrolling, scrollLeft } = this.state;
 
       const overscanCountResolved: number =
-        overscanColumnsCount || overscanCount || 1;
+        overscanColumnCount || overscanColumnsCount || overscanCount || 1;
 
       if (columnCount === 0 || rowCount === 0) {
         return [0, 0, 0, 0];
@@ -634,13 +681,14 @@ export default function createGridComponent({
       const {
         columnCount,
         overscanCount,
+        overscanRowCount,
         overscanRowsCount,
         rowCount,
       } = this.props;
       const { isScrolling, verticalScrollDirection, scrollTop } = this.state;
 
       const overscanCountResolved: number =
-        overscanRowsCount || overscanCount || 1;
+        overscanRowCount || overscanRowsCount || overscanCount || 1;
 
       if (columnCount === 0 || rowCount === 0) {
         return [0, 0, 0, 0];
@@ -679,9 +727,11 @@ export default function createGridComponent({
 
     _onScroll = (event: ScrollEvent): void => {
       const {
+        clientHeight,
         clientWidth,
         scrollLeft,
         scrollTop,
+        scrollHeight,
         scrollWidth,
       } = event.currentTarget;
       this.setState(prevState => {
@@ -697,24 +747,38 @@ export default function createGridComponent({
 
         const { direction } = this.props;
 
-        // HACK According to the spec, scrollLeft should be negative for RTL aligned elements.
-        // Chrome does not seem to adhere; its scrollLeft values are positive (measured relative to the left).
-        // See https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollLeft
+        // TRICKY According to the spec, scrollLeft should be negative for RTL aligned elements.
+        // This is not the case for all browsers though (e.g. Chrome reports values as positive, measured relative to the left).
+        // It's also easier for this component if we convert offsets to the same format as they would be in for ltr.
+        // So the simplest solution is to determine which browser behavior we're dealing with, and convert based on it.
         let calculatedScrollLeft = scrollLeft;
         if (direction === 'rtl') {
-          if (scrollLeft <= 0) {
-            calculatedScrollLeft = -scrollLeft;
-          } else {
-            calculatedScrollLeft = scrollWidth - clientWidth - scrollLeft;
+          switch (getRTLOffsetType()) {
+            case 'negative':
+              calculatedScrollLeft = -scrollLeft;
+              break;
+            case 'positive-descending':
+              calculatedScrollLeft = scrollWidth - clientWidth - scrollLeft;
+              break;
           }
         }
+
+        // Prevent Safari's elastic scrolling from causing visual shaking when scrolling past bounds.
+        calculatedScrollLeft = Math.max(
+          0,
+          Math.min(calculatedScrollLeft, scrollWidth - clientWidth)
+        );
+        const calculatedScrollTop = Math.max(
+          0,
+          Math.min(scrollTop, scrollHeight - clientHeight)
+        );
 
         return {
           isScrolling: true,
           horizontalScrollDirection:
             prevState.scrollLeft < scrollLeft ? 'forward' : 'backward',
           scrollLeft: calculatedScrollLeft,
-          scrollTop,
+          scrollTop: calculatedScrollTop,
           verticalScrollDirection:
             prevState.scrollTop < scrollTop ? 'forward' : 'backward',
           scrollUpdateWasRequested: false,
@@ -768,7 +832,9 @@ const validateSharedProps = (
     height,
     innerTagName,
     outerTagName,
+    overscanColumnsCount,
     overscanCount,
+    overscanRowsCount,
     width,
   }: Props<any>,
   { instance }: State
@@ -779,7 +845,23 @@ const validateSharedProps = (
         devWarningsOverscanCount.add(instance);
         console.warn(
           'The overscanCount prop has been deprecated. ' +
-            'Please use the overscanColumnsCount and overscanRowsCount props instead.'
+            'Please use the overscanColumnCount and overscanRowCount props instead.'
+        );
+      }
+    }
+
+    if (
+      typeof overscanColumnsCount === 'number' ||
+      typeof overscanRowsCount === 'number'
+    ) {
+      if (
+        devWarningsOverscanRowsColumnsCount &&
+        !devWarningsOverscanRowsColumnsCount.has(instance)
+      ) {
+        devWarningsOverscanRowsColumnsCount.add(instance);
+        console.warn(
+          'The overscanColumnsCount and overscanRowsCount props have been deprecated. ' +
+            'Please use the overscanColumnCount and overscanRowCount props instead.'
         );
       }
     }

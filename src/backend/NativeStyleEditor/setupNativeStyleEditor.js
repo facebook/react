@@ -1,16 +1,16 @@
 // @flow
 
 import Agent from 'src/backend/agent';
-import Bridge from 'src/bridge';
 import resolveBoxStyle from './resolveBoxStyle';
 
+import type { BackendBridge } from 'src/bridge';
 import type { RendererID } from '../types';
 import type { StyleAndLayout } from './types';
 
 export type ResolveNativeStyle = (stylesheetID: number) => ?Object;
 
 export default function setupNativeStyleEditor(
-  bridge: Bridge,
+  bridge: BackendBridge,
   agent: Agent,
   resolveNativeStyle: ResolveNativeStyle,
   validAttributes?: $ReadOnlyArray<string> | null
@@ -81,7 +81,7 @@ const componentIDToStyleOverrides: Map<number, Object> = new Map();
 
 function measureStyle(
   agent: Agent,
-  bridge: Bridge,
+  bridge: BackendBridge,
   resolveNativeStyle: ResolveNativeStyle,
   id: number,
   rendererID: RendererID

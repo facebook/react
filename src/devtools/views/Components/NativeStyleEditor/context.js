@@ -136,10 +136,12 @@ function NativeStyleContextController({ children }: Props) {
     const sendRequest = () => {
       timeoutID = null;
 
-      bridge.send('NativeStyleEditor_measure', {
-        id: selectedElementID,
-        rendererID,
-      });
+      if (rendererID !== null) {
+        bridge.send('NativeStyleEditor_measure', {
+          id: selectedElementID,
+          rendererID,
+        });
+      }
     };
 
     // Send the initial measurement request.

@@ -2,14 +2,14 @@
 
 import typeof ReactTestRenderer from 'react-test-renderer';
 import type { GetInspectedElementPath } from 'src/devtools/views/Components/InspectedElementContext';
-import type Bridge from 'src/bridge';
+import type { FrontendBridge } from 'src/bridge';
 import type Store from 'src/devtools/store';
 
 describe('InspectedElementContext', () => {
   let React;
   let ReactDOM;
   let TestRenderer: ReactTestRenderer;
-  let bridge: Bridge;
+  let bridge: FrontendBridge;
   let store: Store;
   let meta;
   let utils;

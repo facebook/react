@@ -1,6 +1,6 @@
 // @flow
 
-import type Bridge from 'src/bridge';
+import type { FrontendBridge } from 'src/bridge';
 import type Store from 'src/devtools/store';
 
 describe('Store component filters', () => {
@@ -8,7 +8,7 @@ describe('Store component filters', () => {
   let ReactDOM;
   let TestUtils;
   let Types;
-  let bridge: Bridge;
+  let bridge: FrontendBridge;
   let store: Store;
   let utils;
 

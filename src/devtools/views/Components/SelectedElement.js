@@ -140,12 +140,18 @@ export default function SelectedElement(_: Props) {
         });
       }
 
+      const rendererID = store.getRendererIDForElement(
+        nearestSuspenseElementID
+      );
+
       // Toggle suspended
-      bridge.send('overrideSuspense', {
-        id: nearestSuspenseElementID,
-        rendererID: store.getRendererIDForElement(nearestSuspenseElementID),
-        forceFallback: !isSuspended,
-      });
+      if (rendererID !== null) {
+        bridge.send('overrideSuspense', {
+          id: nearestSuspenseElementID,
+          rendererID,
+          forceFallback: !isSuspended,
+        });
+      }
     }
   }, [bridge, dispatch, element, isSuspended, modalDialogDispatch, store]);
 
@@ -280,15 +286,21 @@ function InspectedElementView({
   if (type === ElementTypeClass) {
     overrideContextFn = (path: Array<string | number>, value: any) => {
       const rendererID = store.getRendererIDForElement(id);
-      bridge.send('overrideContext', { id, path, rendererID, value });
+      if (rendererID !== null) {
+        bridge.send('overrideContext', { id, path, rendererID, value });
+      }
     };
     overridePropsFn = (path: Array<string | number>, value: any) => {
       const rendererID = store.getRendererIDForElement(id);
-      bridge.send('overrideProps', { id, path, rendererID, value });
+      if (rendererID !== null) {
+        bridge.send('overrideProps', { id, path, rendererID, value });
+      }
     };
     overrideStateFn = (path: Array<string | number>, value: any) => {
       const rendererID = store.getRendererIDForElement(id);
-      bridge.send('overrideState', { id, path, rendererID, value });
+      if (rendererID !== null) {
+        bridge.send('overrideState', { id, path, rendererID, value });
+      }
     };
   } else if (
     (type === ElementTypeFunction ||
@@ -298,7 +310,9 @@ function InspectedElementView({
   ) {
     overridePropsFn = (path: Array<string | number>, value: any) => {
       const rendererID = store.getRendererIDForElement(id);
-      bridge.send('overrideProps', { id, path, rendererID, value });
+      if (rendererID !== null) {
+        bridge.send('overrideProps', { id, path, rendererID, value });
+      }
     };
   } else if (type === ElementTypeSuspense && canToggleSuspense) {
     overrideSuspenseFn = (path: Array<string | number>, value: boolean) => {
@@ -306,7 +320,13 @@ function InspectedElementView({
         throw new Error('Unexpected path.');
       }
       const rendererID = store.getRendererIDForElement(id);
-      bridge.send('overrideSuspense', { id, rendererID, forceFallback: value });
+      if (rendererID !== null) {
+        bridge.send('overrideSuspense', {
+          id,
+          rendererID,
+          forceFallback: value,
+        });
+      }
     };
   }
 

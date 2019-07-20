@@ -11,6 +11,8 @@ type Rect = {
   width: number,
 };
 
+type Box = {| top: number, left: number, width: number, height: number |};
+
 // Note that the Overlay components are not affected by the active Theme,
 // because they highlight elements in the main Chrome window (outside of devtools).
 // The colors below were chosen to roughly match those used by Chrome devtools.
@@ -21,7 +23,7 @@ class OverlayRect {
   padding: HTMLElement;
   content: HTMLElement;
 
-  constructor(doc, container) {
+  constructor(doc: Document, container: HTMLElement) {
     this.node = doc.createElement('div');
     this.border = doc.createElement('div');
     this.padding = doc.createElement('div');
@@ -51,7 +53,7 @@ class OverlayRect {
     }
   }
 
-  update(box, dims) {
+  update(box: Rect, dims: any) {
     boxWrap(dims, 'margin', this.node);
     boxWrap(dims, 'border', this.border);
     boxWrap(dims, 'padding', this.padding);
@@ -85,7 +87,7 @@ class OverlayTip {
   nameSpan: HTMLElement;
   dimSpan: HTMLElement;
 
-  constructor(doc, container) {
+  constructor(doc: Document, container: HTMLElement) {
     this.tip = doc.createElement('div');
     assign(this.tip.style, {
       display: 'flex',
@@ -126,13 +128,13 @@ class OverlayTip {
     }
   }
 
-  updateText(name, width, height) {
+  updateText(name: string, width: number, height: number) {
     this.nameSpan.textContent = name;
     this.dimSpan.textContent =
       Math.round(width) + 'px × ' + Math.round(height) + 'px';
   }
 
-  updatePosition(dims, bounds) {
+  updatePosition(dims: Box, bounds: Box) {
     const tipRect = this.tip.getBoundingClientRect();
     const tipPos = findTipPos(dims, bounds, {
       width: tipRect.width,
@@ -247,6 +249,7 @@ export default class Overlay {
       this.tipBoundsWindow.document.documentElement,
       this.window
     );
+
     this.tip.updatePosition(
       {
         top: outerBox.top,

@@ -106,8 +106,9 @@ function OwnersListContextController({ children }: Props) {
   useEffect(() => {
     if (ownerID !== null) {
       const rendererID = store.getRendererIDForElement(ownerID);
-
-      bridge.send('getOwnersList', { id: ownerID, rendererID });
+      if (rendererID !== null) {
+        bridge.send('getOwnersList', { id: ownerID, rendererID });
+      }
     }
 
     return () => {};

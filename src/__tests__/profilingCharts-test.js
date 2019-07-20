@@ -29,7 +29,7 @@ describe('profiling charts', () => {
 
   describe('flamegraph chart', () => {
     it('should contain valid data', () => {
-      const Parent = ({ count }) => {
+      const Parent = (_: {||}) => {
         Scheduler.unstable_advanceTime(10);
         return (
           <React.Fragment>
@@ -105,7 +105,7 @@ describe('profiling charts', () => {
 
   describe('ranked chart', () => {
     it('should contain valid data', () => {
-      const Parent = ({ count }) => {
+      const Parent = (_: {||}) => {
         Scheduler.unstable_advanceTime(10);
         return (
           <React.Fragment>
@@ -177,7 +177,7 @@ describe('profiling charts', () => {
 
   describe('interactions', () => {
     it('should contain valid data', () => {
-      const Parent = ({ count }) => {
+      const Parent = (_: {||}) => {
         Scheduler.unstable_advanceTime(10);
         return (
           <React.Fragment>

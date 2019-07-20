@@ -192,7 +192,7 @@ export default function Tree(props: Props) {
     (id: number) => {
       const element = store.getElementByID(id);
       const rendererID = store.getRendererIDForElement(id);
-      if (element !== null) {
+      if (element !== null && rendererID !== null) {
         bridge.send('highlightNativeElement', {
           displayName: element.displayName,
           hideAfterTimeout: false,

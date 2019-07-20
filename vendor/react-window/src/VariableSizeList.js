@@ -227,7 +227,7 @@ const VariableSizeList = createListComponent({
       default:
         if (scrollOffset >= minOffset && scrollOffset <= maxOffset) {
           return scrollOffset;
-        } else if (scrollOffset - minOffset < maxOffset - scrollOffset) {
+        } else if (scrollOffset < minOffset) {
           return minOffset;
         } else {
           return maxOffset;

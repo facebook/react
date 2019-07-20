@@ -63,7 +63,7 @@
     "test:chrome": "node ./shells/browser/chrome/test",
     "test:firefox": "node ./shells/browser/firefox/test",
     "test:standalone": "cd packages/react-devtools && yarn start",
-    "typecheck": "flow check"
+    "typecheck": "flow check --show-all-errors"
   },
   "devEngines": {
     "node": "10.x || 11.x"
@@ -119,7 +119,7 @@
     "fbjs": "0.5.1",
     "fbjs-scripts": "0.7.0",
     "firefox-profile": "^1.0.2",
-    "flow-bin": "^0.97.0",
+    "flow-bin": "^0.103.0",
     "fs-extra": "^3.0.1",
     "gh-pages": "^1.0.0",
     "html2canvas": "^1.0.0-alpha.12",

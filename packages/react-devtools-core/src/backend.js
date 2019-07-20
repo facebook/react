@@ -8,6 +8,7 @@ import { __DEBUG__ } from 'src/constants';
 import setupNativeStyleEditor from 'src/backend/NativeStyleEditor/setupNativeStyleEditor';
 import { getDefaultComponentFilters } from 'src/utils';
 
+import type { BackendBridge } from 'src/bridge';
 import type { ComponentFilter } from 'src/types';
 import type { DevToolsHook } from 'src/backend/types';
 import type { ResolveNativeStyle } from 'src/backend/NativeStyleEditor/setupNativeStyleEditor';
@@ -64,7 +65,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
     return;
   }
 
-  let bridge: Bridge | null = null;
+  let bridge: BackendBridge | null = null;
 
   const messageListeners = [];
   const uri = 'ws://' + host + ':' + port;

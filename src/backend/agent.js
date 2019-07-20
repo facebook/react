@@ -2,7 +2,6 @@
 
 import EventEmitter from 'events';
 import throttle from 'lodash.throttle';
-import Bridge from 'src/bridge';
 import {
   SESSION_STORAGE_LAST_SELECTION_KEY,
   SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
@@ -17,6 +16,7 @@ import {
 import setupHighlighter from './views/Highlighter';
 import { patch as patchConsole, unpatch as unpatchConsole } from './console';
 
+import type { BackendBridge } from 'src/bridge';
 import type {
   InstanceAndStyle,
   NativeType,
@@ -81,14 +81,14 @@ export default class Agent extends EventEmitter<{|
   showNativeHighlight: [NativeType],
   shutdown: [],
 |}> {
-  _bridge: Bridge;
+  _bridge: BackendBridge;
   _isProfiling: boolean = false;
   _recordChangeDescriptions: boolean = false;
   _rendererInterfaces: { [key: RendererID]: RendererInterface } = {};
   _persistedSelection: PersistedSelection | null = null;
   _persistedSelectionMatch: PathMatch | null = null;
 
-  constructor(bridge: Bridge) {
+  constructor(bridge: BackendBridge) {
     super();
 
     if (
@@ -259,7 +259,7 @@ export default class Agent extends EventEmitter<{|
     dataURL: string,
     rootID: number,
   |}) => {
-    this._bridge.send('screenshotCaptured', { commitIndex, dataURL });
+    this._bridge.send('screenshotCaptured', { commitIndex, dataURL, rootID });
   };
 
   selectElement = ({ id, rendererID }: ElementAndRendererID) => {

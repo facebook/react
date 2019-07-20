@@ -15,9 +15,9 @@ describe('Bridge', () => {
     const bridge = new Bridge(wall);
 
     // Check that we're wired up correctly.
-    bridge.send('init');
+    bridge.send('reloadAppForProfiling');
     jest.runAllTimers();
-    expect(wall.send).toHaveBeenCalledWith('init', undefined, undefined);
+    expect(wall.send).toHaveBeenCalledWith('reloadAppForProfiling');
 
     // Should flush pending messages and then shut down.
     wall.send.mockClear();
@@ -25,9 +25,9 @@ describe('Bridge', () => {
     bridge.send('update', '2');
     bridge.shutdown();
     jest.runAllTimers();
-    expect(wall.send).toHaveBeenCalledWith('update', '1', undefined);
-    expect(wall.send).toHaveBeenCalledWith('update', '2', undefined);
-    expect(wall.send).toHaveBeenCalledWith('shutdown', undefined, undefined);
+    expect(wall.send).toHaveBeenCalledWith('update', '1');
+    expect(wall.send).toHaveBeenCalledWith('update', '2');
+    expect(wall.send).toHaveBeenCalledWith('shutdown');
 
     // Verify that the Bridge doesn't send messages after shutdown.
     spyOn(console, 'warn');

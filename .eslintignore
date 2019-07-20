@@ -4,6 +4,7 @@ shells/browser/chrome/build
 shells/browser/firefox/build
 shells/browser/shared/build
 shells/dev/dist
+packages/react-devtools-core/dist
 vendor
 *.js.snap
 

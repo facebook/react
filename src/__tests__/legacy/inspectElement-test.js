@@ -2,7 +2,7 @@
 
 import type { InspectedElementPayload } from 'src/backend/types';
 import type { DehydratedData } from 'src/devtools/views/Components/types';
-import type Bridge from 'src/bridge';
+import type { FrontendBridge } from 'src/bridge';
 import type Store from 'src/devtools/store';
 
 describe('InspectedElementContext', () => {
@@ -10,7 +10,7 @@ describe('InspectedElementContext', () => {
   let ReactDOM;
   let hydrate;
   let meta;
-  let bridge: Bridge;
+  let bridge: FrontendBridge;
   let store: Store;
 
   const act = (callback: Function) => {
