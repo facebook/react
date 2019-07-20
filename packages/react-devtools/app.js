@@ -5,7 +5,6 @@ const { join } = require('path');
 
 const argv = require('minimist')(process.argv.slice(2));
 const projectRoots = argv._;
-const defaultThemeName = argv.theme;
 
 let mainWindow = null;
 
@@ -34,14 +33,6 @@ app.on('ready', function() {
     // as the argument to DevTools.
     'window.devtools.setProjectRoots(' + JSON.stringify(projectRoots) + ')'
   );
-
-  if (argv.theme) {
-    mainWindow.webContents.executeJavaScript(
-      'window.devtools.setDefaultThemeName(' +
-        JSON.stringify(defaultThemeName) +
-        ')'
-    );
-  }
 
   // Emitted when the window is closed.
   mainWindow.on('closed', function() {
