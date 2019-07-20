@@ -233,7 +233,7 @@ function createMarkupForStyles(styles): string | null {
       }
     }
     if (styleValue != null) {
-      serialized += delimiter + processStyleName(styleName) +':';
+      serialized += delimiter + processStyleName(styleName) + ':';
       serialized += dangerousStyleValue(
         styleName,
         styleValue,
