@@ -209,10 +209,10 @@ function validateDangerousTag(tag) {
 
 const styleNameCache = {};
 const processStyleName = function(styleName) {
-  const isCustomProperty = styleName.indexOf('--') === 0;
   if (styleNameCache.hasOwnProperty(styleName)) {
     return styleNameCache[styleName];
   }
+  const isCustomProperty = styleName.indexOf('--') === 0;
   const result = isCustomProperty ? styleName : hyphenateStyleName(styleName);
   styleNameCache[styleName] = result;
   return result;
