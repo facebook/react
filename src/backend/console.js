@@ -82,8 +82,7 @@ export function patch(): void {
       const originalMethod = (originalConsoleMethods[method] =
         targetConsole[method]);
 
-      // $FlowFixMe property error|warn is not writable.
-      targetConsole[method] = (...args) => {
+      const overrideMethod = (...args) => {
         // If we are ever called with a string that already has a component stack, e.g. a React error/warning,
         // don't append a second stack.
         const alreadyHasComponentStack =
@@ -122,6 +121,11 @@ export function patch(): void {
 
         originalMethod(...args);
       };
+
+      overrideMethod.__REACT_DEVTOOLS_ORIGINAL_METHOD__ = originalMethod;
+
+      // $FlowFixMe property error|warn is not writable.
+      targetConsole[method] = overrideMethod;
     } catch (error) {}
   });
 }
