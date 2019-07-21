@@ -231,8 +231,8 @@ describe('ReactShallowRenderer with hooks', () => {
     );
   });
 
-  it('should not trigger effects', () => {
-    let effectsCalled = [];
+  it('should not trigger effects by default', () => {
+    const effectsCalled = [];
 
     function SomeComponent({defaultName}) {
       React.useEffect(() => {
@@ -250,6 +250,36 @@ describe('ReactShallowRenderer with hooks', () => {
     shallowRenderer.render(<SomeComponent />);
 
     expect(effectsCalled).toEqual([]);
+  });
+
+  describe('when callEffects option is used', () => {
+    it('should trigger effects after render', () => {
+      const happenings = [];
+
+      function SomeComponent({defaultName}) {
+        React.useEffect(() => {
+          happenings.push('call effect');
+        });
+
+        React.useLayoutEffect(() => {
+          happenings.push('call layout effect');
+        });
+
+        happenings.push('render');
+
+        return <div>Hello world</div>;
+      }
+
+      const shallowRenderer = createRenderer({callEffects: true});
+      shallowRenderer.render(<SomeComponent />);
+
+      // Note the layout effect is triggered first.
+      expect(happenings).toEqual([
+        'render',
+        'call layout effect',
+        'call effect',
+      ]);
+    });
   });
 
   it('should work with useRef', () => {

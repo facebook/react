@@ -175,12 +175,21 @@ function basicStateReducer<S>(state: S, action: BasicStateAction<S>): S {
   return typeof action === 'function' ? action(state) : action;
 }
 
+type ShallowRenderOptions = {
+  callEffects: boolean,
+};
+
+const isEffectHook = Symbol();
+
 class ReactShallowRenderer {
-  static createRenderer = function() {
-    return new ReactShallowRenderer();
+  static createRenderer = function(
+    options: ShallowRenderOptions = {callEffects: false},
+  ) {
+    return new ReactShallowRenderer(options);
   };
 
-  constructor() {
+  constructor(options: ShallowRenderOptions) {
+    this._options = options;
     this._reset();
   }
 
@@ -202,6 +211,7 @@ class ReactShallowRenderer {
     this._numberOfReRenders = 0;
   }
 
+  _options: ShallowRenderOptions;
   _context: null | Object;
   _newState: null | Object;
   _instance: any;
@@ -311,6 +321,54 @@ class ReactShallowRenderer {
       );
     };
 
+    const useGenericEffect = (
+      create: () => (() => void) | void,
+      inputs: Array<mixed> | void | null,
+      isLayoutEffect: boolean,
+    ) => {
+      this._validateCurrentlyRenderingComponent();
+      this._createWorkInProgressHook();
+
+      if (this._workInProgressHook !== null) {
+        if (this._workInProgressHook.memoizedState == null) {
+          this._workInProgressHook.memoizedState = {
+            isEffectHook,
+            isLayoutEffect,
+            create,
+            inputs,
+            cleanup: null,
+            run: true,
+          };
+        } else {
+          const {memoizedState} = this._workInProgressHook;
+          this._workInProgressHook.memoizedState = {
+            isEffectHook,
+            isLayoutEffect,
+            create,
+            inputs,
+            cleanup: memoizedState.cleanup,
+            run:
+              inputs == null ||
+              shouldRunEffectsBasedOnInputs(memoizedState.inputs, inputs),
+          };
+        }
+      }
+    };
+
+    const useEffect = (
+      create: () => (() => void) | void,
+      inputs: Array<mixed> | void | null,
+    ) => {
+      useGenericEffect(create, inputs, false);
+    };
+
+    const useLayoutEffect = (
+      create: () => (() => void) | void,
+      inputs: Array<mixed> | void | null,
+    ) => {
+      useGenericEffect(create, inputs, true);
+    };
+
     const useMemo = <T>(
       nextCreate: () => T,
       deps: Array<mixed> | void | null,
@@ -385,9 +443,9 @@ class ReactShallowRenderer {
         return readContext(context);
       },
       useDebugValue: noOp,
-      useEffect: noOp,
+      useEffect: this._options.callEffects ? useEffect : noOp,
       useImperativeHandle: noOp,
-      useLayoutEffect: noOp,
+      useLayoutEffect: this._options.callEffects ? useLayoutEffect : noOp,
       useMemo,
       useReducer,
       useRef,
@@ -630,6 +688,7 @@ class ReactShallowRenderer {
             ReactCurrentDispatcher.current = prevDispatcher;
           }
           this._finishHooks(element, context);
+          this._callEffectsIfDesired();
         }
       }
     }
@@ -688,6 +747,36 @@ class ReactShallowRenderer {
     this._rendered = this._instance.render();
     // Intentionally do not call componentDidMount()
     // because DOM refs are not available.
+  }
+
+  _callEffectsIfDesired() {
+    if (!this._options.callEffects) {
+      return;
+    }
+
+    this._callEffects(true);
+    this._callEffects(false);
+  }
+
+  _callEffects(callLayoutEffects: boolean) {
+    for (
+      let hook = this._firstWorkInProgressHook;
+      hook !== null;
+      hook = hook.next
+    ) {
+      const {memoizedState} = hook;
+      if (
+        memoizedState != null &&
+        memoizedState.isEffectHook === isEffectHook &&
+        memoizedState.isLayoutEffect === callLayoutEffects &&
+        memoizedState.run
+      ) {
+        if (memoizedState.cleanup) {
+          memoizedState.cleanup();
+        }
+        memoizedState.cleanup = memoizedState.create();
+      }
+    }
   }
 
   _updateClassComponent(
@@ -831,6 +920,17 @@ function getMaskedContext(contextTypes, unmaskedContext) {
     context[key] = unmaskedContext[key];
   }
   return context;
+}
+
+function shouldRunEffectsBasedOnInputs(
+  before: Array<mixed> | void | null,
+  after: Array<mixed>,
+) {
+  if (before == null || before.length !== after.length) {
+    return true;
+  }
+
+  return before.some((value, i) => after[i] !== value);
 }
 
 export default ReactShallowRenderer;
