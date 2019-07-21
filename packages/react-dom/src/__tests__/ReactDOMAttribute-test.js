@@ -126,5 +126,14 @@ describe('ReactDOM unknown attribute', () => {
 
       expect(el.firstChild.getAttribute('helloworld')).toBe('something');
     });
+
+    it('does not warn on camelCase unknown attributes with value of undefined', () => {
+      const el = document.createElement('div');
+
+      ReactDOM.render(<div helloWorld={undefined} />, el);
+
+      expect(el.firstChild.getAttribute('helloworld')).toBeNull();
+      expect(el.firstChild.getAttribute('helloWorld')).toBeNull();
+    });
   });
 });

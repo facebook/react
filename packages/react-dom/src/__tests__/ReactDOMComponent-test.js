@@ -2373,6 +2373,13 @@ describe('ReactDOMComponent', () => {
       expect(el.getAttribute('foobar')).toBe('true');
     });
 
+    it('allows cased custom attributes and does not warn when value is undefined', function() {
+      const el = ReactTestUtils.renderIntoDocument(<div fooBar={undefined} />);
+
+      expect(el.getAttribute('fooBar')).toBeNull();
+      expect(el.getAttribute('foobar')).toBeNull();
+    });
+
     it('warns on NaN attributes', function() {
       let el;
       expect(() => {
