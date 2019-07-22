@@ -2733,6 +2733,7 @@ describe('Profiler', () => {
         ).toMatchInteraction(highPriUpdateInteraction);
 
         if (__DEV__) {
+          expect(console.error).toHaveBeenCalledTimes(1);
           expect(console.error.calls.argsFor(0)[0]).toContain(
             'Warning: The following components suspended during a user-blocking update: ',
           );

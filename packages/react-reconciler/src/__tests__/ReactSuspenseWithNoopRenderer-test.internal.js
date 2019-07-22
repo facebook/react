@@ -517,6 +517,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     ]);
     expect(ReactNoop.getChildren()).toEqual([span('(empty)')]);
     if (__DEV__) {
+      expect(console.error).toHaveBeenCalledTimes(1);
       expect(console.error.calls.argsFor(0)[0]).toContain(
         'Warning: The following components suspended during a user-blocking update: ',
       );
@@ -668,6 +669,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Async'), span('Sync')]);
 
     if (__DEV__) {
+      expect(console.error).toHaveBeenCalledTimes(1);
       expect(console.error.calls.argsFor(0)[0]).toContain(
         'Warning: The following components suspended during a user-blocking update: ',
       );
@@ -700,6 +702,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Loading (outer)...')]);
 
     if (__DEV__) {
+      expect(console.error).toHaveBeenCalledTimes(1);
       expect(console.error.calls.argsFor(0)[0]).toContain(
         'Warning: The following components suspended during a user-blocking update: ',
       );
@@ -788,6 +791,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       'AsyncText suspended while rendering, but no fallback UI was specified.',
     );
     if (__DEV__) {
+      expect(console.error).toHaveBeenCalledTimes(2);
       expect(console.error.calls.argsFor(0)[0]).toContain(
         'Warning: The following components suspended during a user-blocking update: ',
       );

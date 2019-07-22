@@ -342,6 +342,7 @@ describe('ReactSuspense', () => {
     );
     expect(Scheduler).toHaveYielded(['Suspend! [Hi]', 'Suspend! [Hi]']);
     if (__DEV__) {
+      expect(console.error).toHaveBeenCalledTimes(2);
       expect(console.error.calls.argsFor(0)[0]).toContain(
         'Warning: The following components suspended during a user-blocking update: ',
       );
