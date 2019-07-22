@@ -782,10 +782,17 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   it('throws a helpful error when an update is suspends without a placeholder', () => {
+    spyOnDev(console, 'error');
     ReactNoop.render(<AsyncText ms={1000} text="Async" />);
     expect(Scheduler).toFlushAndThrow(
       'AsyncText suspended while rendering, but no fallback UI was specified.',
     );
+    if (__DEV__) {
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: The following components suspended during a user-blocking update: ',
+      );
+      expect(console.error.calls.argsFor(0)[1]).toContain('AsyncText');
+    }
   });
 
   it('a Suspense component correctly handles more than one suspended child', async () => {

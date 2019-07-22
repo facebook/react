@@ -2537,8 +2537,9 @@ export function checkForWrongSuspensePriorityInDEV(sourceFiber: Fiber) {
         // Add the component that triggered the suspense
         const current = workInProgressNode.alternate;
         if (current !== null) {
+          // TODO: warn component that triggers the high priority
+          // suspend is the HostRoot
           switch (workInProgressNode.tag) {
-            case HostRoot:
             case ClassComponent:
               // Loop through the component's update queue and see whether the component
               // has triggered any high priority updates
@@ -2552,11 +2553,10 @@ export function checkForWrongSuspensePriorityInDEV(sourceFiber: Fiber) {
                     priorityLevel === ImmediatePriority
                   ) {
                     if (componentsThatTriggeredHighPriSuspend === null) {
-                      componentsThatTriggeredHighPriSuspend = new Set();
-                    }
-                    // TODO: handle case where the component that triggers the high priority
-                    // suspend is in the HostRoot
-                    if (workInProgressNode.tag !== HostRoot) {
+                      componentsThatTriggeredHighPriSuspend = new Set([
+                        getComponentName(workInProgressNode.type),
+                      ]);
+                    } else {
                       componentsThatTriggeredHighPriSuspend.add(
                         getComponentName(workInProgressNode.type),
                       );
@@ -2622,10 +2622,7 @@ export function checkForWrongSuspensePriorityInDEV(sourceFiber: Fiber) {
 
 function flushSuspensePriorityWarningInDEV() {
   if (__DEV__) {
-    if (
-      componentsThatSuspendedAtHighPri !== null &&
-      componentsThatTriggeredHighPriSuspend !== null
-    ) {
+    if (componentsThatSuspendedAtHighPri !== null) {
       const componentNames = [];
       componentsThatSuspendedAtHighPri.forEach(name => {
         componentNames.push(name);
@@ -2633,17 +2630,24 @@ function flushSuspensePriorityWarningInDEV() {
       componentsThatSuspendedAtHighPri = null;
 
       const componentsThatTriggeredSuspendNames = [];
-      componentsThatTriggeredHighPriSuspend.forEach(name =>
-        componentsThatTriggeredSuspendNames.push(name),
-      );
+      if (componentsThatTriggeredHighPriSuspend !== null) {
+        componentsThatTriggeredHighPriSuspend.forEach(name =>
+          componentsThatTriggeredSuspendNames.push(name),
+        );
+      }
 
       componentsThatTriggeredHighPriSuspend = null;
 
+      const componentThatTriggeredSuspenseError =
+        componentsThatTriggeredSuspendNames.length > 0
+          ? '\n' +
+            'The components that triggered the update: ' +
+            componentsThatTriggeredSuspendNames.sort().join(', ')
+          : '';
       warningWithoutStack(
         false,
         'The following components suspended during a user-blocking update: %s' +
-          '\n' +
-          'The components that triggered the update: %s' +
+          '%s' +
           '\n\n' +
           'Updates triggered by user interactions (e.g. click events) are ' +
           'considered user-blocking by default. They should not suspend. ' +
@@ -2657,7 +2661,7 @@ function flushSuspensePriorityWarningInDEV() {
           'feedback, and another update to perform the actual change.',
         // TODO: Add link to React docs with more information, once it exists
         componentNames.sort().join(', '),
-        componentsThatTriggeredSuspendNames.sort().join(', '),
+        componentThatTriggeredSuspenseError,
       );
     }
   }
