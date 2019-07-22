@@ -776,20 +776,22 @@ const PressResponderImpl: ReactDOMEventResponder = {
         }
         const pressTarget = state.pressTarget;
 
-        if (
-          pressTarget !== null &&
-          !targetIsDocument(pressTarget) &&
-          (pointerType !== 'mouse' ||
-            !context.isTargetWithinNode(target, pressTarget))
-        ) {
-          // Calculate the responder region we use for deactivation, as the
-          // element dimensions may have changed since activation.
-          updateIsPressWithinResponderRegion(
-            touchEvent || nativeEvent,
-            context,
-            props,
-            state,
-          );
+        if (pressTarget !== null && !targetIsDocument(pressTarget)) {
+          if (
+            pointerType === 'mouse' &&
+            context.isTargetWithinNode(target, pressTarget)
+          ) {
+            state.isPressWithinResponderRegion = true;
+          } else {
+            // Calculate the responder region we use for deactivation, as the
+            // element dimensions may have changed since activation.
+            updateIsPressWithinResponderRegion(
+              touchEvent || nativeEvent,
+              context,
+              props,
+              state,
+            );
+          }
         }
 
         if (state.isPressWithinResponderRegion) {
@@ -888,19 +890,24 @@ const PressResponderImpl: ReactDOMEventResponder = {
             if (
               !isKeyboardEvent &&
               pressTarget !== null &&
-              !targetIsDocument(pressTarget) &&
-              (pointerType !== 'mouse' ||
-                !context.isTargetWithinNode(target, pressTarget))
+              !targetIsDocument(pressTarget)
             ) {
-              // If the event target isn't within the press target, check if we're still
-              // within the responder region. The region may have changed if the
-              // element's layout was modified after activation.
-              updateIsPressWithinResponderRegion(
-                touchEvent || nativeEvent,
-                context,
-                props,
-                state,
-              );
+              if (
+                pointerType === 'mouse' &&
+                context.isTargetWithinNode(target, pressTarget)
+              ) {
+                state.isPressWithinResponderRegion = true;
+              } else {
+                // If the event target isn't within the press target, check if we're still
+                // within the responder region. The region may have changed if the
+                // element's layout was modified after activation.
+                updateIsPressWithinResponderRegion(
+                  touchEvent || nativeEvent,
+                  context,
+                  props,
+                  state,
+                );
+              }
             }
             if (state.isPressWithinResponderRegion && button !== 1) {
               if (
