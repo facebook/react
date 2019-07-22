@@ -812,6 +812,32 @@ describe('Event responder: Press', () => {
       );
     });
 
+    it('is called if target rect is not right but the target is (for mouse events)', () => {
+      const buttonRef = React.createRef();
+      const divRef = React.createRef();
+      const element = (
+        <Press onPress={onPress}>
+          <div ref={divRef}>
+            <button ref={buttonRef} />
+          </div>
+        </Press>
+      );
+      ReactDOM.render(element, container);
+      divRef.current.getBoundingClientRect = () => ({
+        left: 0,
+        right: 0,
+        bottom: 0,
+        top: 0,
+      });
+      buttonRef.current.dispatchEvent(
+        createEvent('pointerdown', {pointerType: 'mouse'}),
+      );
+      buttonRef.current.dispatchEvent(
+        createEvent('pointerup', {pointerType: 'mouse'}),
+      );
+      expect(onPress).toBeCalled();
+    });
+
     // No PointerEvent fallbacks
     // TODO: jsdom missing APIs
     // it('is called after "touchend" event', () => {
