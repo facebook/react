@@ -2628,7 +2628,8 @@ describe('Profiler', () => {
       });
 
       it('handles high-pri renderers between suspended and resolved (async) trees', async () => {
-        // Set up an initial shell. We need to set this up before the test scenario
+        spyOnDev(console, 'error');
+        // Set up an initial shell. We need to set this up before the test sceanrio
         // because we want initial render to suspend on navigation to the initial state.
         let renderer = ReactTestRenderer.create(
           <React.Profiler id="app" onRender={() => {}}>
@@ -2730,6 +2731,14 @@ describe('Profiler', () => {
         expect(
           onInteractionScheduledWorkCompleted.mock.calls[1][0],
         ).toMatchInteraction(highPriUpdateInteraction);
+
+        if (__DEV__) {
+          expect(console.error).toHaveBeenCalledTimes(1);
+          expect(console.error.calls.argsFor(0)[0]).toContain(
+            'Warning: The following components suspended during a user-blocking update: ',
+          );
+          expect(console.error.calls.argsFor(0)[1]).toContain('AsyncText');
+        }
       });
     });
   });
