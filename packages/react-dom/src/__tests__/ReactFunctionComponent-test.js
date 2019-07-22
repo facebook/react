@@ -206,6 +206,31 @@ describe('ReactFunctionComponent', () => {
     ReactTestUtils.renderIntoDocument(<ParentUsingStringRef />);
   });
 
+  fit('should warn when given defaultProps', () => {
+    function FunctionalComponent(props) {
+      return null;
+    }
+
+    FunctionalComponent.defaultProps = {
+      testProp: true,
+    };
+
+    class Test extends React.Component {
+      render() {
+        return null;
+      }
+    }
+
+    Test.defaultProps = {
+      testProp: true,
+    };
+
+    expect(() => ReactTestUtils.renderIntoDocument(<Test />)).toWarnDev(
+      'Warning: defaultProps should only be used on Class Components. ' +
+        'For Functional Components, use Javascript default arguments instead.',
+    );
+  });
+
   it('should warn when given a function ref', () => {
     function Indirection(props) {
       return <div>{props.children}</div>;
