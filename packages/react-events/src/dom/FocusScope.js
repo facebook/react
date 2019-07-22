@@ -7,10 +7,11 @@
  * @flow
  */
 import type {
-  ReactDOMEventResponder,
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
 } from 'shared/ReactDOMTypes';
+
+import React from 'react';
 
 type FocusScopeProps = {
   autoFocus: Boolean,
@@ -44,8 +45,7 @@ function getFirstFocusableElement(
   }
 }
 
-const FocusScopeResponderImpl: ReactDOMEventResponder = {
-  displayName: 'FocusScope',
+const focusScopeResponderImpl = {
   targetEventTypes,
   rootEventTypes,
   getInitialState(): FocusScopeState {
@@ -161,14 +161,7 @@ const FocusScopeResponderImpl: ReactDOMEventResponder = {
   },
 };
 
-export function FocusScopeResponder(
-  props: FocusScopeProps,
-): {props: FocusScopeProps, responder: ReactDOMEventResponder} {
-  return {
-    props,
-    responder: FocusScopeResponderImpl,
-  };
-}
-
-FocusScopeResponder.props = {};
-FocusScopeResponder.responder = FocusScopeResponderImpl;
+export const FocusScopeResponder = React.unstable_createResponder(
+  'FocusSocpe',
+  focusScopeResponderImpl,
+);

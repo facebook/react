@@ -479,7 +479,7 @@ function validateResponderTargetEventTypes(
 ): boolean {
   const {targetEventTypes} = responder;
   // Validate the target event type exists on the responder
-  if (targetEventTypes !== undefined) {
+  if (targetEventTypes !== null) {
     return responderEventTypesContainType(targetEventTypes, eventType);
   }
   return false;
@@ -528,7 +528,7 @@ function traverseAndHandleEventResponderInstances(
             ) {
               const onEvent = responder.onEvent;
               visitedResponders.add(responder);
-              if (onEvent !== undefined) {
+              if (onEvent !== null) {
                 currentInstance = responderInstance;
                 responderEvent.responderTarget = ((target: any): ReactNativeEventTarget);
                 onEvent(responderEvent, eventResponderContext, props, state);
@@ -554,7 +554,7 @@ function traverseAndHandleEventResponderInstances(
       }
       const {props, responder, state, target} = responderInstance;
       const onRootEvent = responder.onRootEvent;
-      if (onRootEvent !== undefined) {
+      if (onRootEvent !== null) {
         currentInstance = responderInstance;
         responderEvent.responderTarget = ((target: any): ReactNativeEventTarget);
         onRootEvent(responderEvent, eventResponderContext, props, state);
@@ -612,7 +612,7 @@ function triggerOwnershipListeners(): void {
       currentEventQueue = [];
       const onOwnershipChange = ((responder: any): ReactNativeEventResponder)
         .onOwnershipChange;
-      if (onOwnershipChange !== undefined) {
+      if (onOwnershipChange !== null) {
         onOwnershipChange(eventResponderContext, props, state);
       }
     }
@@ -632,11 +632,11 @@ export function mountEventResponder(
   props: Object,
   state: Object,
 ) {
-  if (responder.onOwnershipChange !== undefined) {
+  if (responder.onOwnershipChange !== null) {
     ownershipChangeListeners.add(responderInstance);
   }
   const onMount = responder.onMount;
-  if (onMount !== undefined) {
+  if (onMount !== null) {
     currentEventQueuePriority = ContinuousEvent;
     currentInstance = responderInstance;
     currentEventQueue = [];
@@ -658,7 +658,7 @@ export function unmountEventResponder(
 ): void {
   const responder = ((responderInstance.responder: any): ReactNativeEventResponder);
   const onUnmount = responder.onUnmount;
-  if (onUnmount !== undefined) {
+  if (onUnmount !== null) {
     let {props, state} = responderInstance;
     currentEventQueue = [];
     currentEventQueuePriority = ContinuousEvent;
@@ -673,7 +673,7 @@ export function unmountEventResponder(
     }
   }
   releaseOwnershipForEventResponderInstance(responderInstance);
-  if (responder.onOwnershipChange !== undefined) {
+  if (responder.onOwnershipChange !== null) {
     ownershipChangeListeners.delete(responderInstance);
   }
   const rootEventTypesSet = responderInstance.rootEventTypes;

@@ -62,7 +62,7 @@ describe('FocusScope event responder', () => {
     const divRef = React.createRef();
 
     const SimpleFocusScope = () => (
-      <div responders={[FocusScopeResponder({autoFocus: true})]}>
+      <div responders={<FocusScopeResponder autoFocus={true} />}>
         <input ref={inputRef} />
         <button ref={buttonRef} />
         <div ref={divRef} tabIndex={0} />
@@ -90,7 +90,7 @@ describe('FocusScope event responder', () => {
     const button2Ref = React.createRef();
 
     const SimpleFocusScope = () => (
-      <div responders={[FocusScopeResponder({autoFocus: true, contain: true})]}>
+      <div responders={<FocusScopeResponder autoFocus={true} contain={true} />}>
         <input ref={inputRef} tabIndex={-1} />
         <button ref={buttonRef} id={1} />
         <button ref={button2Ref} id={2} />
@@ -121,10 +121,10 @@ describe('FocusScope event responder', () => {
     const button4Ref = React.createRef();
 
     const SimpleFocusScope = () => (
-      <div responders={[FocusScopeResponder]}>
+      <div responders={<FocusScopeResponder />}>
         <input ref={inputRef} tabIndex={-1} />
         <button ref={buttonRef} id={1} />
-        <div responders={[FocusScopeResponder]}>
+        <div responders={<FocusScopeResponder />}>
           <button ref={button2Ref} id={2} />
           <button ref={button3Ref} id={3} />
         </div>
@@ -157,10 +157,10 @@ describe('FocusScope event responder', () => {
     const button4Ref = React.createRef();
 
     const SimpleFocusScope = () => (
-      <div responders={[FocusScopeResponder]}>
+      <div responders={<FocusScopeResponder />}>
         <input ref={inputRef} tabIndex={-1} />
         <button ref={buttonRef} id={1} />
-        <div responders={[FocusScopeResponder({contain: true})]}>
+        <div responders={<FocusScopeResponder contain={true} />}>
           <button ref={button2Ref} id={2} />
           <button ref={button3Ref} id={3} />
         </div>
@@ -207,7 +207,7 @@ describe('FocusScope event responder', () => {
     }
 
     const SimpleFocusScope = () => (
-      <div responders={[FocusScopeResponder]}>
+      <div responders={<FocusScopeResponder />}>
         <button ref={buttonRef} id={1} />
         <button ref={button2Ref} id={2} />
         <React.Suspense fallback={<button ref={button3Ref} id={3} />}>

@@ -8,7 +8,6 @@
  */
 
 import type {
-  ReactDOMEventResponder,
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
   PointerType,
@@ -589,8 +588,7 @@ function targetIsDocument(target: null | Node): boolean {
   return target === null || target.nodeType === 9;
 }
 
-const PressResponderImpl: ReactDOMEventResponder = {
-  displayName: 'Press',
+const pressResponderImpl = {
   targetEventTypes,
   getInitialState(): PressState {
     return {
@@ -988,18 +986,11 @@ const PressResponderImpl: ReactDOMEventResponder = {
   },
 };
 
+export const PressResponder = React.unstable_createResponder(
+  'Press',
+  pressResponderImpl,
+);
+
 export function usePressListener(props: PressListenerProps): void {
   React.unstable_useListener(PressResponder, props);
 }
-
-export function PressResponder(
-  props: PressProps,
-): {props: PressProps, responder: ReactDOMEventResponder} {
-  return {
-    props,
-    responder: PressResponderImpl,
-  };
-}
-
-PressResponder.props = {};
-PressResponder.responder = PressResponderImpl;

@@ -30,6 +30,7 @@ import type {SuspenseContext} from './ReactFiberSuspenseContext';
 
 import {now} from './SchedulerWithReactIntegration';
 
+import {REACT_RESPONDER_TYPE} from 'shared/ReactSymbols';
 import {
   IndeterminateComponent,
   FunctionComponent,
@@ -133,6 +134,7 @@ import {Never} from './ReactFiberExpirationTime';
 import {resetChildFibers} from './ReactChildFiber';
 
 const emptyObject = {};
+const isArray = Array.isArray;
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -1238,7 +1240,7 @@ function mountEventResponder(
 ) {
   let state = emptyObject;
   const getInitialState = responder.getInitialState;
-  if (getInitialState !== undefined) {
+  if (getInitialState !== null) {
     state = getInitialState(props);
   }
   const responderInstance = createResponderInstance(
@@ -1259,8 +1261,49 @@ function mountEventResponder(
   respondersMap.set(responder, responderInstance);
 }
 
+function updateEventResponder(
+  responder: ReactEventResponder<any, any>,
+  props: Object,
+  fiber: Fiber,
+  visistedResponders: Set<ReactEventResponder<any, any>>,
+  respondersMap: Map<
+    ReactEventResponder<any, any>,
+    ReactEventResponderInstance<any, any>,
+  >,
+  instance: Instance,
+  rootContainerInstance: Container,
+): void {
+  invariant(
+    responder && responder.$$typeof === REACT_RESPONDER_TYPE,
+    'An invalid value was used as an event responder. Expect one or many event ' +
+      'responders created via React.unstable_createResponer().',
+  );
+  if (visistedResponders.has(responder)) {
+    // show warning
+    return;
+  }
+  visistedResponders.add(responder);
+  const responderInstance = respondersMap.get(responder);
+
+  if (responderInstance === undefined) {
+    // Mount
+    mountEventResponder(
+      responder,
+      props,
+      instance,
+      rootContainerInstance,
+      fiber,
+      respondersMap,
+    );
+  } else {
+    // Update
+    responderInstance.props = props;
+    responderInstance.fiber = fiber;
+  }
+}
+
 function updateEventResponders(
-  responders: ?Array<ReactEventResponderInstance<any, any>>,
+  responders: any,
   instance: Instance,
   rootContainerInstance: Container,
   fiber: Fiber,
@@ -1280,34 +1323,30 @@ function updateEventResponders(
     if (respondersMap === null) {
       respondersMap = new Map();
     }
-    for (let i = 0, length = responders.length; i < length; i++) {
-      const {responder, props} = responders[i];
-      invariant(
-        responder != null,
-        'An invalid event responder was provided to host component',
-      );
-      if (visistedResponders.has(responder)) {
-        // show warning
-        continue;
-      }
-      visistedResponders.add(responder);
-      const responderInstance = respondersMap.get(responder);
-
-      if (responderInstance === undefined) {
-        // Mount
-        mountEventResponder(
-          responder,
+    if (isArray(responders)) {
+      for (let i = 0, length = responders.length; i < length; i++) {
+        const {type, props} = responders[i];
+        updateEventResponder(
+          type,
           props,
+          fiber,
+          visistedResponders,
+          respondersMap,
           instance,
           rootContainerInstance,
-          fiber,
-          respondersMap,
         );
-      } else {
-        // Update
-        responderInstance.props = props;
-        responderInstance.fiber = fiber;
       }
+    } else {
+      const {type, props} = responders;
+      updateEventResponder(
+        type,
+        props,
+        fiber,
+        visistedResponders,
+        respondersMap,
+        instance,
+        rootContainerInstance,
+      );
     }
   }
   if (dependencies !== null) {

@@ -8,7 +8,6 @@
  */
 
 import type {
-  ReactDOMEventResponder,
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
 } from 'shared/ReactDOMTypes';
@@ -20,6 +19,13 @@ import {DiscreteEvent, UserBlockingEvent} from 'shared/ReactTypes';
 const targetEventTypes = ['pointerdown'];
 const rootEventTypes = ['pointerup', 'pointercancel', 'pointermove_active'];
 
+type DragListenerProps = {|
+  onDragStart: (e: DragEvent) => void,
+  onDragMove: (e: DragEvent) => void,
+  onDragEnd: (e: DragEvent) => void,
+  onDragChange: boolean => void,
+|};
+
 type DragState = {
   dragTarget: null | Element | Document,
   isPointerDown: boolean,
@@ -28,6 +34,7 @@ type DragState = {
   startY: number,
   x: number,
   y: number,
+  ownershipClaimed: boolean,
 };
 
 // In the case we don't have PointerEvents (Safari), we listen to touch events
@@ -84,8 +91,7 @@ function dispatchDragEvent(
   context.dispatchEvent(eventPropName, syntheticEvent, eventPriority);
 }
 
-const DragResponderImpl: ReactDOMEventResponder = {
-  displayName: 'Drag',
+const dragResponderImpl = {
   targetEventTypes,
   getInitialState(): DragState {
     return {
@@ -96,6 +102,7 @@ const DragResponderImpl: ReactDOMEventResponder = {
       startY: 0,
       x: 0,
       y: 0,
+      ownershipClaimed: false,
     };
   },
   onEvent(
@@ -111,9 +118,6 @@ const DragResponderImpl: ReactDOMEventResponder = {
       case 'mousedown':
       case 'pointerdown': {
         if (!state.isDragging) {
-          if (props.onShouldClaimOwnership) {
-            context.releaseOwnership();
-          }
           const obj =
             type === 'touchstart'
               ? (nativeEvent: any).changedTouches[0]
@@ -168,11 +172,11 @@ const DragResponderImpl: ReactDOMEventResponder = {
           if (!state.isDragging) {
             let shouldEnableDragging = true;
 
-            if (
-              props.onShouldClaimOwnership &&
-              props.onShouldClaimOwnership()
-            ) {
+            if (props.shouldClaimOwnership && props.shouldClaimOwnership()) {
               shouldEnableDragging = context.requestGlobalOwnership();
+              if (shouldEnableDragging) {
+                state.ownershipClaimed = true;
+              }
             }
             if (shouldEnableDragging) {
               state.isDragging = true;
@@ -206,7 +210,7 @@ const DragResponderImpl: ReactDOMEventResponder = {
       case 'mouseup':
       case 'pointerup': {
         if (state.isDragging) {
-          if (props.onShouldClaimOwnership) {
+          if (state.ownershipClaimed) {
             context.releaseOwnership();
           }
           dispatchDragEvent(
@@ -230,18 +234,11 @@ const DragResponderImpl: ReactDOMEventResponder = {
   },
 };
 
-export function useDragListener(props: Object): void {
+export const DragResponder = React.unstable_createResponder(
+  'Drag',
+  dragResponderImpl,
+);
+
+export function useDragListener(props: DragListenerProps): void {
   React.unstable_useListener(DragResponder, props);
 }
-
-export function DragResponder(
-  props: Object,
-): {props: Object, responder: ReactDOMEventResponder} {
-  return {
-    props,
-    responder: DragResponderImpl,
-  };
-}
-
-DragResponder.props = {};
-DragResponder.responder = DragResponderImpl;

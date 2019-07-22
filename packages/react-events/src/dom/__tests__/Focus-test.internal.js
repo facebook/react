@@ -77,14 +77,7 @@ describe('Focus event responder', () => {
           onFocus,
         });
         return (
-          <div
-            ref={ref}
-            responders={[
-              FocusResponder({
-                disabled: true,
-              }),
-            ]}
-          />
+          <div ref={ref} responders={<FocusResponder disabled={true} />} />
         );
       };
       ReactDOM.render(<Component />, container);
@@ -108,7 +101,7 @@ describe('Focus event responder', () => {
         useFocusListener({
           onBlur,
         });
-        return <div ref={ref} responders={[FocusResponder]} />;
+        return <div ref={ref} responders={<FocusResponder />} />;
       };
       ReactDOM.render(<Component />, container);
     });
@@ -132,7 +125,7 @@ describe('Focus event responder', () => {
           onFocus,
         });
         return (
-          <div ref={ref} responders={[FocusResponder]}>
+          <div ref={ref} responders={<FocusResponder />}>
             <a ref={innerRef} />
           </div>
         );
@@ -263,7 +256,7 @@ describe('Focus event responder', () => {
           onFocusChange,
         });
         return (
-          <div ref={ref} responders={[FocusResponder]}>
+          <div ref={ref} responders={<FocusResponder />}>
             <div ref={innerRef} />
           </div>
         );
@@ -300,7 +293,7 @@ describe('Focus event responder', () => {
           onFocusVisibleChange,
         });
         return (
-          <div ref={ref} responders={[FocusResponder]}>
+          <div ref={ref} responders={<FocusResponder />}>
             <div ref={innerRef} />
           </div>
         );
@@ -374,7 +367,7 @@ describe('Focus event responder', () => {
           onFocus: createEventHandler('inner: onFocus'),
           onFocusChange: createEventHandler('inner: onFocusChange'),
         });
-        return <div ref={innerRef} responders={[FocusResponder]} />;
+        return <div ref={innerRef} responders={<FocusResponder />} />;
       };
 
       const Outer = () => {
@@ -384,7 +377,7 @@ describe('Focus event responder', () => {
           onFocusChange: createEventHandler('outer: onFocusChange'),
         });
         return (
-          <div ref={outerRef} responders={[FocusResponder]}>
+          <div ref={outerRef} responders={<FocusResponder />}>
             <Inner />
           </div>
         );
@@ -410,7 +403,7 @@ describe('Focus event responder', () => {
   });
 
   it('expect displayName to show up for event component', () => {
-    expect(FocusResponder.responder.displayName).toBe('Focus');
+    expect(FocusResponder.displayName).toBe('Focus');
   });
 });
 
@@ -446,11 +439,7 @@ describe('FocusWithin event responder', () => {
         return (
           <div
             ref={ref}
-            responders={[
-              FocusWithinResponder({
-                disabled: true,
-              }),
-            ]}
+            responders={<FocusWithinResponder disabled={true} />}
           />
         );
       };
@@ -478,7 +467,7 @@ describe('FocusWithin event responder', () => {
           onFocusWithinChange,
         });
         return (
-          <div ref={ref} responders={[FocusWithinResponder]}>
+          <div ref={ref} responders={<FocusWithinResponder />}>
             <div ref={innerRef} />
             <div ref={innerRef2} />
           </div>
@@ -549,7 +538,7 @@ describe('FocusWithin event responder', () => {
           onFocusWithinVisibleChange,
         });
         return (
-          <div ref={ref} responders={[FocusWithinResponder]}>
+          <div ref={ref} responders={<FocusWithinResponder />}>
             <div ref={innerRef} />
             <div ref={innerRef2} />
           </div>
@@ -661,6 +650,6 @@ describe('FocusWithin event responder', () => {
   });
 
   it('expect displayName to show up for event component', () => {
-    expect(FocusWithinResponder.responder.displayName).toBe('FocusWithin');
+    expect(FocusWithinResponder.displayName).toBe('FocusWithin');
   });
 });

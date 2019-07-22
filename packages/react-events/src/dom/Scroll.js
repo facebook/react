@@ -8,7 +8,6 @@
  */
 
 import type {
-  ReactDOMEventResponder,
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
   PointerType,
@@ -131,8 +130,7 @@ function dispatchEvent(
   context.dispatchEvent(eventPropName, syntheticEvent, eventPriority);
 }
 
-const ScrollResponderImpl: ReactDOMEventResponder = {
-  displayName: 'Scroll',
+const scrollResponderImpl = {
   targetEventTypes,
   getInitialState() {
     return {
@@ -290,18 +288,11 @@ const ScrollResponderImpl: ReactDOMEventResponder = {
   },
 };
 
+export const ScrollResponder = React.unstable_createResponder(
+  'Scroll',
+  scrollResponderImpl,
+);
+
 export function useScrollListener(props: ScrollListenerProps): void {
   React.unstable_useListener(ScrollResponder, props);
 }
-
-export function ScrollResponder(
-  props: ScrollProps,
-): {props: ScrollProps, responder: ReactDOMEventResponder} {
-  return {
-    props,
-    responder: ScrollResponderImpl,
-  };
-}
-
-ScrollResponder.props = {};
-ScrollResponder.responder = ScrollResponderImpl;

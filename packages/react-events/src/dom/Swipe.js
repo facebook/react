@@ -8,7 +8,6 @@
  */
 
 import type {
-  ReactDOMEventResponder,
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
 } from 'shared/ReactDOMTypes';
@@ -86,10 +85,10 @@ type SwipeState = {
   swipeTarget: null | Element | Document,
   x: number,
   y: number,
+  ownershipClaimed: boolean,
 };
 
-const SwipeResponder: ReactDOMEventResponder = {
-  displayName: 'Scroll',
+const swipeResponderImpl = {
   targetEventTypes,
   getInitialState(): SwipeState {
     return {
@@ -102,6 +101,7 @@ const SwipeResponder: ReactDOMEventResponder = {
       swipeTarget: null,
       x: 0,
       y: 0,
+      ownershipClaimed: false,
     };
   },
   onEvent(
@@ -127,8 +127,11 @@ const SwipeResponder: ReactDOMEventResponder = {
 
           let shouldEnableSwiping = true;
 
-          if (props.onShouldClaimOwnership && props.onShouldClaimOwnership()) {
+          if (props.shouldClaimOwnership && props.shouldClaimOwnership()) {
             shouldEnableSwiping = context.requestGlobalOwnership();
+            if (shouldEnableSwiping) {
+              state.ownershipClaimed = true;
+            }
           }
           if (shouldEnableSwiping) {
             state.isSwiping = true;
@@ -215,7 +218,7 @@ const SwipeResponder: ReactDOMEventResponder = {
           if (state.x === state.startX && state.y === state.startY) {
             return;
           }
-          if (props.onShouldClaimOwnership) {
+          if (state.ownershipClaimed) {
             context.releaseOwnership();
           }
           const direction = state.direction;
@@ -260,8 +263,11 @@ const SwipeResponder: ReactDOMEventResponder = {
   },
 };
 
-export const Swipe = React.unstable_createEvent(SwipeResponder);
+export const SwipeResponder = React.unstable_createResponder(
+  'Swipe',
+  swipeResponderImpl,
+);
 
-export function useSwipe(props: Object): void {
-  React.unstable_useEvent(Swipe, props);
+export function useSwipeListener(props: Object): void {
+  React.unstable_useListener(SwipeResponder, props);
 }

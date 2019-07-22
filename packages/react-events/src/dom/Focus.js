@@ -8,7 +8,6 @@
  */
 
 import type {
-  ReactDOMEventResponder,
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
   PointerType,
@@ -241,8 +240,7 @@ function unmountFocusResponder(
   }
 }
 
-const FocusResponderImpl: ReactDOMEventResponder = {
-  displayName: 'Focus',
+const focusResponderImpl = {
   targetEventTypes,
   rootEventTypes,
   getInitialState(): FocusState {
@@ -321,21 +319,14 @@ const FocusResponderImpl: ReactDOMEventResponder = {
   },
 };
 
+export const FocusResponder = React.unstable_createResponder(
+  'Focus',
+  focusResponderImpl,
+);
+
 export function useFocusListener(props: FocusListenerProps): void {
   React.unstable_useListener(FocusResponder, props);
 }
-
-export function FocusResponder(
-  props: FocusProps,
-): {props: FocusProps, responder: ReactDOMEventResponder} {
-  return {
-    props,
-    responder: FocusResponderImpl,
-  };
-}
-
-FocusResponder.props = {};
-FocusResponder.responder = FocusResponderImpl;
 
 /**
  * FocusWithin Responder
@@ -372,8 +363,7 @@ function unmountFocusWithinResponder(
   }
 }
 
-const FocusWithinResponderImpl: ReactDOMEventResponder = {
-  displayName: 'FocusWithin',
+const focusWithinResponderImpl = {
   targetEventTypes,
   rootEventTypes,
   getInitialState(): FocusState {
@@ -464,18 +454,11 @@ const FocusWithinResponderImpl: ReactDOMEventResponder = {
   },
 };
 
+export const FocusWithinResponder = React.unstable_createResponder(
+  'FocusWithin',
+  focusWithinResponderImpl,
+);
+
 export function useFocusWithinListener(props: FocusWithinListenerProps): void {
   React.unstable_useListener(FocusWithinResponder, props);
 }
-
-export function FocusWithinResponder(
-  props: FocusWithinProps,
-): {props: FocusWithinProps, responder: ReactDOMEventResponder} {
-  return {
-    props,
-    responder: FocusWithinResponderImpl,
-  };
-}
-
-FocusWithinResponder.props = {};
-FocusWithinResponder.responder = FocusWithinResponderImpl;

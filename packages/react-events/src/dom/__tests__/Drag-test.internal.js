@@ -50,7 +50,7 @@ describe('Drag event responder', () => {
         onDragChange: handleOnDrag,
       });
       return (
-        <div ref={divRef} responders={[DragResponder]}>
+        <div ref={divRef} responders={<DragResponder />}>
           Drag me!
         </div>
       );
@@ -107,7 +107,63 @@ describe('Drag event responder', () => {
         onDragEnd: handleDragEnd,
       });
       return (
-        <div ref={divRef} responders={[DragResponder]}>
+        <div ref={divRef} responders={<DragResponder />}>
+          Drag me!
+        </div>
+      );
+    }
+
+    ReactDOM.render(<Component />, container);
+
+    const mouseOverEvent = document.createEvent('MouseEvents');
+    mouseOverEvent.initEvent('mousedown', true, true);
+    divRef.current.dispatchEvent(mouseOverEvent);
+
+    const mouseMoveEvent = document.createEvent('MouseEvents');
+    for (let index = 0; index <= 20; index++) {
+      mouseMoveEvent.initMouseEvent(
+        'mousemove',
+        true,
+        true,
+        window,
+        1,
+        index,
+        index,
+        50,
+        50,
+      );
+      divRef.current.dispatchEvent(mouseMoveEvent);
+    }
+    divRef.current.dispatchEvent(mouseMoveEvent);
+
+    const mouseUpEvent = document.createEvent('MouseEvents');
+    mouseUpEvent.initEvent('mouseup', true, true);
+    divRef.current.dispatchEvent(mouseUpEvent);
+
+    expect(events).toEqual(['dragstart', 'dragend']);
+  });
+
+  it('should support onDragStart and onDragEnd with ownership', () => {
+    let divRef = React.createRef();
+    let events = [];
+
+    function handleDragStart() {
+      events.push('dragstart');
+    }
+
+    function handleDragEnd() {
+      events.push('dragend');
+    }
+
+    function Component() {
+      useDragListener({
+        onDragStart: handleDragStart,
+        onDragEnd: handleDragEnd,
+      });
+      return (
+        <div
+          ref={divRef}
+          responders={<DragResponder shouldClaimOwnership={() => true} />}>
           Drag me!
         </div>
       );
@@ -159,7 +215,7 @@ describe('Drag event responder', () => {
         onDragMove: handleDragMove,
       });
       return (
-        <div ref={divRef} responders={[DragResponder]}>
+        <div ref={divRef} responders={<DragResponder />}>
           Drag me!
         </div>
       );

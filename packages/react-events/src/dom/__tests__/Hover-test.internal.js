@@ -76,7 +76,7 @@ describe('Hover event responder', () => {
           onHoverEnd: onHoverEnd,
         });
         return (
-          <div ref={ref} responders={[HoverResponder({disabled: true})]} />
+          <div ref={ref} responders={<HoverResponder disabled={true} />} />
         );
       };
       ReactDOM.render(<Component />, container);
@@ -100,7 +100,7 @@ describe('Hover event responder', () => {
         useHoverListener({
           onHoverStart: onHoverStart,
         });
-        return <div ref={ref} responders={[HoverResponder]} />;
+        return <div ref={ref} responders={<HoverResponder />} />;
       };
       ReactDOM.render(<Component />, container);
     });
@@ -177,7 +177,7 @@ describe('Hover event responder', () => {
           return (
             <div
               ref={ref}
-              responders={[HoverResponder({delayHoverStart: 2000})]}
+              responders={<HoverResponder delayHoverStart={2000} />}
             />
           );
         };
@@ -198,7 +198,7 @@ describe('Hover event responder', () => {
           return (
             <div
               ref={ref}
-              responders={[HoverResponder({delayHoverStart: 500})]}
+              responders={<HoverResponder delayHoverStart={500} />}
             />
           );
         };
@@ -222,7 +222,7 @@ describe('Hover event responder', () => {
           return (
             <div
               ref={ref}
-              responders={[HoverResponder({delayHoverStart: 0})]}
+              responders={<HoverResponder delayHoverStart={0} />}
             />
           );
         };
@@ -240,9 +240,9 @@ describe('Hover event responder', () => {
           return (
             <div
               ref={ref}
-              responders={[
-                HoverResponder({delayHoverStart: 500, delayHoverEnd: 100}),
-              ]}
+              responders={
+                <HoverResponder delayHoverStart={500} delayHoverEnd={100} />
+              }
             />
           );
         };
@@ -270,7 +270,7 @@ describe('Hover event responder', () => {
         useHoverListener({
           onHoverChange,
         });
-        return <div ref={ref} responders={[HoverResponder]} />;
+        return <div ref={ref} responders={<HoverResponder />} />;
       };
       ReactDOM.render(<Component />, container);
     });
@@ -309,7 +309,7 @@ describe('Hover event responder', () => {
           onHoverChange: setHover,
         });
         return (
-          <div ref={target} responders={[HoverResponder]}>
+          <div ref={target} responders={<HoverResponder />}>
             {isHover ? 'hovered' : 'not hovered'}
           </div>
         );
@@ -340,7 +340,7 @@ describe('Hover event responder', () => {
         useHoverListener({
           onHoverEnd,
         });
-        return <div ref={ref} responders={[HoverResponder]} />;
+        return <div ref={ref} responders={<HoverResponder />} />;
       };
       ReactDOM.render(<Component />, container);
     });
@@ -409,7 +409,7 @@ describe('Hover event responder', () => {
           return (
             <div
               ref={ref}
-              responders={[HoverResponder({delayHoverEnd: 2000})]}
+              responders={<HoverResponder delayHoverEnd={2000} />}
             />
           );
         };
@@ -429,7 +429,7 @@ describe('Hover event responder', () => {
             onHoverEnd,
           });
           return (
-            <div ref={ref} responders={[HoverResponder({delayHoverEnd: 0})]} />
+            <div ref={ref} responders={<HoverResponder delayHoverEnd={0} />} />
           );
         };
         ReactDOM.render(<Component />, container);
@@ -447,7 +447,7 @@ describe('Hover event responder', () => {
           return (
             <div
               ref={ref}
-              responders={[HoverResponder({delayHoverEnd: 500})]}
+              responders={<HoverResponder delayHoverEnd={500} />}
             />
           );
         };
@@ -471,7 +471,7 @@ describe('Hover event responder', () => {
           return (
             <div
               ref={ref}
-              responders={[HoverResponder({delayHoverEnd: 500})]}
+              responders={<HoverResponder delayHoverEnd={500} />}
             />
           );
         };
@@ -493,12 +493,9 @@ describe('Hover event responder', () => {
           return (
             <div
               ref={ref}
-              responders={[
-                HoverResponder({
-                  delayHoverStart: 500,
-                  delayHoverEnd: 100,
-                }),
-              ]}
+              responders={
+                <HoverResponder delayHoverStart={500} delayHoverEnd={100} />
+              }
             />
           );
         };
@@ -520,7 +517,7 @@ describe('Hover event responder', () => {
         useHoverListener({
           onHoverMove,
         });
-        return <div ref={ref} responders={[HoverResponder]} />;
+        return <div ref={ref} responders={<HoverResponder />} />;
       };
       ReactDOM.render(<Component />, container);
 
@@ -558,7 +555,7 @@ describe('Hover event responder', () => {
           onHoverEnd: createEventHandler('inner: onHoverEnd'),
           onHoverChange: createEventHandler('inner: onHoverChange'),
         });
-        return <div ref={innerRef} responders={[HoverResponder]} />;
+        return <div ref={innerRef} responders={<HoverResponder />} />;
       };
 
       const Outer = () => {
@@ -568,7 +565,7 @@ describe('Hover event responder', () => {
           onHoverChange: createEventHandler('outer: onHoverChange'),
         });
         return (
-          <div ref={outerRef} responders={[HoverResponder]}>
+          <div ref={outerRef} responders={<HoverResponder />}>
             <Inner />
           </div>
         );
@@ -605,7 +602,7 @@ describe('Hover event responder', () => {
   });
 
   it('expect displayName to show up for event component', () => {
-    expect(HoverResponder.responder.displayName).toBe('Hover');
+    expect(HoverResponder.displayName).toBe('Hover');
   });
 
   it('should correctly pass through event properties', () => {
@@ -634,7 +631,7 @@ describe('Hover event responder', () => {
         onHoverEnd: logEvent,
         onHoverMove: logEvent,
       });
-      return <div ref={ref} responders={[HoverResponder]} />;
+      return <div ref={ref} responders={<HoverResponder />} />;
     };
     ReactDOM.render(<Component />, container);
 

@@ -90,15 +90,22 @@ export type ReactEventResponderInstance<E, C> = {|
 |};
 
 export type ReactEventResponder<E, C> = {
+  $$typeof: Symbol | number,
   displayName: string,
-  targetEventTypes?: Array<string>,
-  rootEventTypes?: Array<string>,
-  getInitialState?: (props: Object) => Object,
-  onEvent?: (event: E, context: C, props: Object, state: Object) => void,
-  onRootEvent?: (event: E, context: C, props: Object, state: Object) => void,
-  onMount?: (context: C, props: Object, state: Object) => void,
-  onUnmount?: (context: C, props: Object, state: Object) => void,
-  onOwnershipChange?: (context: C, props: Object, state: Object) => void,
+  targetEventTypes: null | Array<string>,
+  rootEventTypes: null | Array<string>,
+  getInitialState: null | ((props: Object) => Object),
+  onEvent:
+    | null
+    | ((event: E, context: C, props: Object, state: Object) => void),
+  onRootEvent:
+    | null
+    | ((event: E, context: C, props: Object, state: Object) => void),
+  onMount: null | ((context: C, props: Object, state: Object) => void),
+  onUnmount: null | ((context: C, props: Object, state: Object) => void),
+  onOwnershipChange:
+    | null
+    | ((context: C, props: Object, state: Object) => void),
 };
 
 export type ReactEventComponent<E, C> = {|

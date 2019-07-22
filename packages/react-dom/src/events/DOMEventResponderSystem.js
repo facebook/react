@@ -110,54 +110,7 @@ const eventResponderContext: ReactDOMResponderContext = {
     eventPriority: EventPriority,
   ): void {
     validateResponderContext();
-    if (typeof eventValue === 'object' && eventValue !== null) {
-      const {target, type, timeStamp} = eventValue;
-
-      if (target == null || type == null || timeStamp == null) {
-        throw new Error(
-          'context.dispatchEvent: "target", "timeStamp", and "type" fields on event object are required.',
-        );
-      }
-      const showWarning = name => {
-        if (__DEV__) {
-          warning(
-            false,
-            '%s is not available on event objects created from event responder modules (React Flare). ' +
-              'Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.%s }`',
-            name,
-            name,
-          );
-        }
-      };
-      eventValue.preventDefault = () => {
-        if (__DEV__) {
-          showWarning('preventDefault()');
-        }
-      };
-      eventValue.stopPropagation = () => {
-        if (__DEV__) {
-          showWarning('stopPropagation()');
-        }
-      };
-      eventValue.isDefaultPrevented = () => {
-        if (__DEV__) {
-          showWarning('isDefaultPrevented()');
-        }
-      };
-      eventValue.isPropagationStopped = () => {
-        if (__DEV__) {
-          showWarning('isPropagationStopped()');
-        }
-      };
-      // $FlowFixMe: we don't need value, Flow thinks we do
-      Object.defineProperty(eventValue, 'nativeEvent', {
-        get() {
-          if (__DEV__) {
-            showWarning('nativeEvent');
-          }
-        },
-      });
-    }
+    validateEventValue(eventValue);
     // $FlowFixMe: Flow gets really confused with this line...
     if (eventPriority < currentEventQueuePriority) {
       currentEventQueuePriority = eventPriority;
@@ -359,6 +312,57 @@ const eventResponderContext: ReactDOMResponderContext = {
   enqueueStateRestore,
 };
 
+function validateEventValue(eventValue: any): void {
+  if (typeof eventValue === 'object' && eventValue !== null) {
+    const {target, type, timeStamp} = eventValue;
+
+    if (target == null || type == null || timeStamp == null) {
+      throw new Error(
+        'context.dispatchEvent: "target", "timeStamp", and "type" fields on event object are required.',
+      );
+    }
+    const showWarning = name => {
+      if (__DEV__) {
+        warning(
+          false,
+          '%s is not available on event objects created from event responder modules (React Flare). ' +
+            'Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.%s }`',
+          name,
+          name,
+        );
+      }
+    };
+    eventValue.preventDefault = () => {
+      if (__DEV__) {
+        showWarning('preventDefault()');
+      }
+    };
+    eventValue.stopPropagation = () => {
+      if (__DEV__) {
+        showWarning('stopPropagation()');
+      }
+    };
+    eventValue.isDefaultPrevented = () => {
+      if (__DEV__) {
+        showWarning('isDefaultPrevented()');
+      }
+    };
+    eventValue.isPropagationStopped = () => {
+      if (__DEV__) {
+        showWarning('isPropagationStopped()');
+      }
+    };
+    // $FlowFixMe: we don't need value, Flow thinks we do
+    Object.defineProperty(eventValue, 'nativeEvent', {
+      get() {
+        if (__DEV__) {
+          showWarning('nativeEvent');
+        }
+      },
+    });
+  }
+}
+
 function collectFocusableElements(
   node: Fiber,
   focusableElements: Array<HTMLElement>,
@@ -519,70 +523,73 @@ function createDOMResponderEvent(
   };
 }
 
-function processEvents(eventQueue: EventQueue): void {
-  for (let i = 0, length = eventQueue.length; i < length; i++) {
-    const {
-      value: eventValue,
-      prop: eventProp,
-      responder: eventResponder,
-      target,
-    } = eventQueue[i];
+function processEvent(
+  eventValue: any,
+  eventProp: string,
+  eventResponder: ReactDOMEventResponder,
+  target: Fiber,
+): any {
+  let node = target.return;
+  nodeTraversal: while (node !== null) {
+    switch (node.tag) {
+      case HostComponent: {
+        const dependencies = node.dependencies;
 
-    let node = target.return;
-    nodeTraversal: while (node !== null) {
-      switch (node.tag) {
-        case HostComponent: {
-          const dependencies = node.dependencies;
+        if (dependencies !== null) {
+          const respondersMap = dependencies.responders;
 
-          if (dependencies !== null) {
-            const respondersMap = dependencies.responders;
-
-            if (respondersMap !== null && respondersMap.has(eventResponder)) {
-              break nodeTraversal;
-            }
+          if (respondersMap !== null && respondersMap.has(eventResponder)) {
+            break nodeTraversal;
           }
-          break;
         }
-        case FunctionComponent:
-        case MemoComponent:
-        case ForwardRef: {
-          const dependencies = node.dependencies;
+        break;
+      }
+      case FunctionComponent:
+      case MemoComponent:
+      case ForwardRef: {
+        const dependencies = node.dependencies;
 
-          if (dependencies !== null) {
-            const listeners = dependencies.listeners;
+        if (dependencies !== null) {
+          const listeners = dependencies.listeners;
 
-            if (listeners !== null) {
-              for (
-                let s = 0, listenersLength = listeners.length;
-                s < listenersLength;
-                s++
+          if (listeners !== null) {
+            for (
+              let s = 0, listenersLength = listeners.length;
+              s < listenersLength;
+              s++
+            ) {
+              const listener = listeners[s];
+              const {responder, props} = listener;
+              const listenerFunc = props[eventProp];
+
+              if (
+                responder === eventResponder &&
+                typeof listenerFunc === 'function'
               ) {
-                const listener = listeners[s];
-                const {responder, props} = listener;
-                const listenerFunc = props[eventProp];
-
-                if (
-                  responder === eventResponder &&
-                  typeof listenerFunc === 'function'
-                ) {
-                  const type =
-                    typeof eventValue === 'object' && eventValue !== null
-                      ? eventValue.type
-                      : '';
-                  invokeGuardedCallbackAndCatchFirstError(
-                    type,
-                    listenerFunc,
-                    undefined,
-                    eventValue,
-                  );
-                }
+                const type =
+                  typeof eventValue === 'object' && eventValue !== null
+                    ? eventValue.type
+                    : '';
+                invokeGuardedCallbackAndCatchFirstError(
+                  type,
+                  listenerFunc,
+                  undefined,
+                  eventValue,
+                );
               }
             }
           }
         }
       }
-      node = node.return;
     }
+    node = node.return;
+  }
+}
+
+function processEvents(eventQueue: EventQueue): void {
+  for (let i = 0, length = eventQueue.length; i < length; i++) {
+    const {value, prop, responder, target} = eventQueue[i];
+    processEvent(value, prop, responder, target);
   }
 }
 
@@ -635,7 +642,7 @@ function validateResponderTargetEventTypes(
 ): boolean {
   const {targetEventTypes} = responder;
   // Validate the target event type exists on the responder
-  if (targetEventTypes !== undefined) {
+  if (targetEventTypes !== null) {
     return responderEventTypesContainType(targetEventTypes, eventType);
   }
   return false;
@@ -689,7 +696,7 @@ function traverseAndHandleEventResponderInstances(
             ) {
               const onEvent = responder.onEvent;
               visitedResponders.add(responder);
-              if (onEvent !== undefined) {
+              if (onEvent !== null) {
                 currentInstance = responderInstance;
                 responderEvent.responderTarget = ((target: any):
                   | Element
@@ -717,7 +724,7 @@ function traverseAndHandleEventResponderInstances(
       }
       const {props, responder, state, target} = responderInstance;
       const onRootEvent = responder.onRootEvent;
-      if (onRootEvent !== undefined) {
+      if (onRootEvent !== null) {
         currentInstance = responderInstance;
         responderEvent.responderTarget = ((target: any): Element | Document);
         onRootEvent(responderEvent, eventResponderContext, props, state);
@@ -740,7 +747,7 @@ function triggerOwnershipListeners(): void {
       currentEventQueue = [];
       const onOwnershipChange = ((responder: any): ReactDOMEventResponder)
         .onOwnershipChange;
-      if (onOwnershipChange !== undefined) {
+      if (onOwnershipChange !== null) {
         onOwnershipChange(eventResponderContext, props, state);
       }
     }
@@ -758,11 +765,11 @@ export function mountEventResponder(
   props: Object,
   state: Object,
 ) {
-  if (responder.onOwnershipChange !== undefined) {
+  if (responder.onOwnershipChange !== null) {
     ownershipChangeListeners.add(responderInstance);
   }
   const onMount = responder.onMount;
-  if (onMount !== undefined) {
+  if (onMount !== null) {
     currentEventQueuePriority = ContinuousEvent;
     currentInstance = responderInstance;
     currentEventQueue = [];
@@ -782,7 +789,7 @@ export function unmountEventResponder(
 ): void {
   const responder = ((responderInstance.responder: any): ReactDOMEventResponder);
   const onUnmount = responder.onUnmount;
-  if (onUnmount !== undefined) {
+  if (onUnmount !== null) {
     let {props, state} = responderInstance;
     currentEventQueue = [];
     currentEventQueuePriority = ContinuousEvent;
@@ -797,7 +804,7 @@ export function unmountEventResponder(
     }
   }
   releaseOwnershipForEventResponderInstance(responderInstance);
-  if (responder.onOwnershipChange !== undefined) {
+  if (responder.onOwnershipChange !== null) {
     ownershipChangeListeners.delete(responderInstance);
   }
   const rootEventTypesSet = responderInstance.rootEventTypes;

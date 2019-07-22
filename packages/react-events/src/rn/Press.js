@@ -15,17 +15,11 @@ import type {
   ReactFaricEventTouch,
   EventPriority,
 } from 'react-native-renderer/src/ReactNativeTypes';
-import type {ReactEventResponder} from 'shared/ReactTypes';
 import React from 'react';
 import {
   DiscreteEvent,
   UserBlockingEvent,
 } from 'react-native-renderer/src/ReactNativeTypes';
-
-type ReactNativeEventResponder = ReactEventResponder<
-  ReactNativeResponderEvent,
-  ReactNativeResponderContext,
->;
 
 type PressListenerProps = {|
   onLongPress: (e: PressEvent) => void,
@@ -469,8 +463,7 @@ function dispatchPressEndEvents(event, context, props, state): void {
   state.responderRegionOnDeactivation = null;
 }
 
-const PressResponderImpl: ReactNativeEventResponder = {
-  displayName: 'Press',
+const pressResponderImpl = {
   targetEventTypes,
   getInitialState(): PressState {
     return {
@@ -638,18 +631,11 @@ const PressResponderImpl: ReactNativeEventResponder = {
   },
 };
 
+export const PressResponder = React.unstable_createResponder(
+  'Press',
+  pressResponderImpl,
+);
+
 export function usePressListener(props: PressListenerProps): void {
   React.unstable_useListener(PressResponder, props);
 }
-
-export function PressResponder(
-  props: PressProps,
-): {props: PressProps, responder: ReactNativeEventResponder} {
-  return {
-    props,
-    responder: PressResponderImpl,
-  };
-}
-
-PressResponder.props = {};
-PressResponder.responder = PressResponderImpl;

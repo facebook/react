@@ -59,7 +59,7 @@ describe('Scroll event responder', () => {
           onScroll,
         });
         return (
-          <div ref={ref} responders={[ScrollResponder({disabled: true})]} />
+          <div ref={ref} responders={<ScrollResponder disabled={true} />} />
         );
       };
       ReactDOM.render(<Component />, container);
@@ -81,7 +81,7 @@ describe('Scroll event responder', () => {
         useScrollListener({
           onScroll,
         });
-        return <div ref={ref} responders={[ScrollResponder]} />;
+        return <div ref={ref} responders={<ScrollResponder />} />;
       };
       ReactDOM.render(<Component />, container);
     });
@@ -232,7 +232,7 @@ describe('Scroll event responder', () => {
         useScrollListener({
           onScrollDragStart,
         });
-        return <div ref={ref} responders={[ScrollResponder]} />;
+        return <div ref={ref} responders={<ScrollResponder />} />;
       };
       ReactDOM.render(<Component />, container);
     });
@@ -266,7 +266,7 @@ describe('Scroll event responder', () => {
         useScrollListener({
           onScrollDragEnd,
         });
-        return <div ref={ref} responders={[ScrollResponder]} />;
+        return <div ref={ref} responders={<ScrollResponder />} />;
       };
       ReactDOM.render(<Component />, container);
     });

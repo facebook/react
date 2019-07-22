@@ -27,8 +27,7 @@ function createEventResponder({
   onOwnershipChange,
   getInitialState,
 }) {
-  const Responder = {
-    displayName: 'TestEventComponent',
+  return React.unstable_createResponder('TestEventComponent', {
     targetEventTypes,
     rootEventTypes,
     onEvent,
@@ -37,16 +36,7 @@ function createEventResponder({
     onUnmount,
     onOwnershipChange,
     getInitialState,
-  };
-  function TestResponder(props) {
-    return {
-      props,
-      responder: Responder,
-    };
-  }
-  TestResponder.props = {};
-  TestResponder.responder = Responder;
-  return TestResponder;
+  });
 }
 
 const createEvent = (type, data) => {
@@ -109,7 +99,7 @@ describe('DOMEventResponderSystem', () => {
     });
 
     const Test = () => (
-      <button ref={buttonRef} responders={[TestResponder]}>
+      <button ref={buttonRef} responders={<TestResponder />}>
         Click me!
       </button>
     );
@@ -165,7 +155,7 @@ describe('DOMEventResponderSystem', () => {
     });
 
     const Test = () => (
-      <button ref={buttonRef} responders={[TestResponder]}>
+      <button ref={buttonRef} responders={<TestResponder />}>
         Click me!
       </button>
     );
@@ -205,7 +195,9 @@ describe('DOMEventResponderSystem', () => {
     });
 
     let Test = () => (
-      <button ref={buttonRef} responders={[TestResponder, TestResponder]}>
+      <button
+        ref={buttonRef}
+        responders={[<TestResponder />, <TestResponder />]}>
         Click me!
       </button>
     );
@@ -230,8 +222,8 @@ describe('DOMEventResponderSystem', () => {
     eventLog = [];
 
     Test = () => (
-      <div responders={[TestResponder]}>
-        <button ref={buttonRef} responders={[TestResponder]}>
+      <div responders={<TestResponder />}>
+        <button ref={buttonRef} responders={<TestResponder />}>
           Click me!
         </button>
       </div>
@@ -274,7 +266,9 @@ describe('DOMEventResponderSystem', () => {
     });
 
     let Test = () => (
-      <button ref={buttonRef} responders={[TestResponderA, TestResponderB]}>
+      <button
+        ref={buttonRef}
+        responders={[<TestResponderA />, <TestResponderB />]}>
         Click me!
       </button>
     );
@@ -290,8 +284,8 @@ describe('DOMEventResponderSystem', () => {
     eventLog = [];
 
     Test = () => (
-      <div responders={[TestResponderA]}>
-        <button ref={buttonRef} responders={[TestResponderB]}>
+      <div responders={<TestResponderA />}>
+        <button ref={buttonRef} responders={<TestResponderB />}>
           Click me!
         </button>
       </div>
@@ -318,8 +312,8 @@ describe('DOMEventResponderSystem', () => {
     });
 
     const Test = () => (
-      <div responders={[TestResponder({name: 'A'})]}>
-        <button ref={buttonRef} responders={[TestResponder({name: 'B'})]}>
+      <div responders={<TestResponder name="A" />}>
+        <button ref={buttonRef} responders={<TestResponder name="B" />}>
           Click me!
         </button>
       </div>
@@ -361,7 +355,7 @@ describe('DOMEventResponderSystem', () => {
       });
 
       return (
-        <button ref={buttonRef} responders={[TestResponder]}>
+        <button ref={buttonRef} responders={<TestResponder />}>
           Click me!
         </button>
       );
@@ -431,7 +425,7 @@ describe('DOMEventResponderSystem', () => {
       });
 
       return (
-        <button ref={buttonRef} responders={[TestResponder]}>
+        <button ref={buttonRef} responders={<TestResponder />}>
           Click me!
         </button>
       );
@@ -469,13 +463,13 @@ describe('DOMEventResponderSystem', () => {
     });
 
     ReactDOM.render(
-      <button responders={[TestResponder, TestResponder2]} />,
+      <button responders={[<TestResponder />, <TestResponder2 />]} />,
       container,
     );
     expect(onMountFired).toEqual(2);
 
     ReactDOM.render(
-      <button responders={[TestResponder2, TestResponder]} />,
+      <button responders={[<TestResponder2 />, <TestResponder />]} />,
       container,
     );
     expect(onMountFired).toEqual(2);
@@ -491,20 +485,24 @@ describe('DOMEventResponderSystem', () => {
       },
     });
 
-    ReactDOM.render(<button responders={[TestResponder]} />, container);
+    ReactDOM.render(<button responders={[<TestResponder />]} />, container);
     ReactDOM.render(null, container);
     expect(onUnmountFired).toEqual(1);
 
-    ReactDOM.render(<button responders={[TestResponder]} />, container);
+    ReactDOM.render(<button responders={[<TestResponder />]} />, container);
     ReactDOM.render(<button responders={null} />, container);
     expect(onUnmountFired).toEqual(2);
 
-    ReactDOM.render(<button responders={[TestResponder]} />, container);
+    ReactDOM.render(<button responders={[<TestResponder />]} />, container);
     ReactDOM.render(<button responders={[]} />, container);
     expect(onUnmountFired).toEqual(3);
 
-    ReactDOM.render(<button responders={[TestResponder]} />, container);
+    ReactDOM.render(<button responders={[<TestResponder />]} />, container);
     ReactDOM.render(<button />, container);
+    expect(onUnmountFired).toEqual(4);
+
+    ReactDOM.render(<button responders={[<TestResponder />]} />, container);
+    ReactDOM.render(<button responders={<TestResponder />} />, container);
     expect(onUnmountFired).toEqual(4);
   });
 
@@ -521,7 +519,7 @@ describe('DOMEventResponderSystem', () => {
       },
     });
 
-    const Test = () => <button responders={[TestResponder]} />;
+    const Test = () => <button responders={<TestResponder />} />;
 
     ReactDOM.render(<Test />, container);
     ReactDOM.render(null, container);
@@ -543,7 +541,9 @@ describe('DOMEventResponderSystem', () => {
       },
     });
 
-    const Test = () => <button ref={buttonRef} responders={[TestResponder]} />;
+    const Test = () => (
+      <button ref={buttonRef} responders={<TestResponder />} />
+    );
 
     ReactDOM.render(<Test />, container);
 
@@ -573,7 +573,9 @@ describe('DOMEventResponderSystem', () => {
       },
     });
 
-    const Test = () => <button responders={[TestResponder]}>Click me!</button>;
+    const Test = () => (
+      <button responders={<TestResponder />}>Click me!</button>
+    );
 
     ReactDOM.render(<Test />, container);
     expect(container.innerHTML).toBe('<button>Click me!</button>');
@@ -623,8 +625,8 @@ describe('DOMEventResponderSystem', () => {
     });
 
     const Test = () => (
-      <div responders={[TestResponderA]}>
-        <button ref={buttonRef} responders={[TestResponderB]}>
+      <div responders={<TestResponderA />}>
+        <button ref={buttonRef} responders={<TestResponderB />}>
           Click me!
         </button>
       </div>
@@ -682,8 +684,8 @@ describe('DOMEventResponderSystem', () => {
     });
 
     const Test = () => (
-      <div responders={[TestResponderA]}>
-        <button responders={[TestResponderB]}>Click me!</button>
+      <div responders={<TestResponderA />}>
+        <button responders={<TestResponderB />}>Click me!</button>
       </div>
     );
 
@@ -729,7 +731,7 @@ describe('DOMEventResponderSystem', () => {
         onClick: handler,
       });
 
-      return <button responders={[TestResponder]}>Click me!</button>;
+      return <button responders={<TestResponder />}>Click me!</button>;
     };
     expect(() => {
       handler = event => {
@@ -814,7 +816,7 @@ describe('DOMEventResponderSystem', () => {
         onFoo: e => eventLogs.push('hook'),
       });
 
-      return <button ref={buttonRef} responders={[TestResponder]} />;
+      return <button ref={buttonRef} responders={<TestResponder />} />;
     };
 
     ReactDOM.render(<Test />, container);
@@ -829,7 +831,7 @@ describe('DOMEventResponderSystem', () => {
         onFoo: e => eventLogs.push('hook'),
       });
 
-      return <button ref={buttonRef} responders={[TestResponder]} />;
+      return <button ref={buttonRef} responders={<TestResponder />} />;
     };
 
     ReactDOM.render(<Test2 />, container);

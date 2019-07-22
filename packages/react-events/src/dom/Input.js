@@ -8,7 +8,6 @@
  */
 
 import type {
-  ReactDOMEventResponder,
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
 } from 'shared/ReactDOMTypes';
@@ -164,8 +163,7 @@ function getValueFromNode(node: Element | Document): string {
   return value;
 }
 
-const InputResponderImpl: ReactDOMEventResponder = {
-  displayName: 'Input',
+const inputResponderImpl = {
   targetEventTypes,
   onEvent(
     event: ReactDOMResponderEvent,
@@ -203,18 +201,11 @@ const InputResponderImpl: ReactDOMEventResponder = {
   },
 };
 
+export const InputResponder = React.unstable_createResponder(
+  'Input',
+  inputResponderImpl,
+);
+
 export function useInputListener(props: InputListenerProps): void {
   React.unstable_useListener(InputResponder, props);
 }
-
-export function InputResponder(
-  props: InputResponderProps,
-): {props: InputResponderProps, responder: ReactDOMEventResponder} {
-  return {
-    props,
-    responder: InputResponderImpl,
-  };
-}
-
-InputResponder.props = {};
-InputResponder.responder = InputResponderImpl;

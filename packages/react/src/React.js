@@ -52,6 +52,7 @@ import {
 } from './ReactElementValidator';
 import ReactSharedInternals from './ReactSharedInternals';
 import createFundamental from 'shared/createFundamentalComponent';
+import createResponder from 'shared/createEventResponder';
 import {
   enableJSXTransformAPI,
   enableFlareAPI,
@@ -106,6 +107,7 @@ const React = {
 
 if (enableFlareAPI) {
   React.unstable_useListener = useListener;
+  React.unstable_createResponder = createResponder;
 }
 
 if (enableFundamentalAPI) {

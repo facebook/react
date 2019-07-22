@@ -830,10 +830,10 @@ export function mountResponderInstance(
     rootEventTypes,
     targetEventTypes,
   } = ((responder: any): ReactDOMEventResponder);
-  if (targetEventTypes !== undefined) {
+  if (targetEventTypes !== null) {
     listenToEventResponderEventTypes(targetEventTypes, documentBody);
   }
-  if (rootEventTypes !== undefined) {
+  if (rootEventTypes !== null) {
     addRootEventTypesForResponderInstance(responderInstance, rootEventTypes);
     listenToEventResponderEventTypes(rootEventTypes, documentBody);
   }

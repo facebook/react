@@ -95,7 +95,7 @@ describe('Event responder: Press', () => {
           onPressEnd,
         });
         return (
-          <div ref={ref} responders={[PressResponder({disabled: true})]} />
+          <div ref={ref} responders={<PressResponder disabled={true} />} />
         );
       };
       ReactDOM.render(<Component />, container);
@@ -120,7 +120,7 @@ describe('Event responder: Press', () => {
         usePressListener({
           onPressStart,
         });
-        return <div ref={ref} responders={[PressResponder]} />;
+        return <div ref={ref} responders={<PressResponder />} />;
       };
       ReactDOM.render(<Component />, container);
     });
@@ -269,7 +269,7 @@ describe('Event responder: Press', () => {
           return (
             <div
               ref={ref}
-              responders={[PressResponder({delayPressStart: 2000})]}
+              responders={<PressResponder delayPressStart={2000} />}
             />
           );
         };
@@ -290,7 +290,7 @@ describe('Event responder: Press', () => {
           return (
             <div
               ref={ref}
-              responders={[PressResponder({delayPressStart: 2000})]}
+              responders={<PressResponder delayPressStart={2000} />}
             />
           );
         };
@@ -325,7 +325,7 @@ describe('Event responder: Press', () => {
           return (
             <div
               ref={ref}
-              responders={[PressResponder({delayPressStart: 0})]}
+              responders={<PressResponder delayPressStart={0} />}
             />
           );
         };
@@ -343,7 +343,7 @@ describe('Event responder: Press', () => {
           return (
             <div
               ref={ref}
-              responders={[PressResponder({delayPressStart: 500})]}
+              responders={<PressResponder delayPressStart={500} />}
             />
           );
         };
@@ -370,7 +370,7 @@ describe('Event responder: Press', () => {
           return (
             <div
               ref={ref}
-              responders={[PressResponder({delayPressEnd: 2000})]}
+              responders={<PressResponder delayPressEnd={2000} />}
             />
           );
         };
@@ -394,7 +394,7 @@ describe('Event responder: Press', () => {
         usePressListener({
           onPressEnd,
         });
-        return <div ref={ref} responders={[PressResponder]} />;
+        return <div ref={ref} responders={<PressResponder />} />;
       };
       ReactDOM.render(<Component />, container);
     });
@@ -555,7 +555,7 @@ describe('Event responder: Press', () => {
           return (
             <div
               ref={ref}
-              responders={[PressResponder({delayPressEnd: 2000})]}
+              responders={<PressResponder delayPressEnd={2000} />}
             />
           );
         };
@@ -577,7 +577,7 @@ describe('Event responder: Press', () => {
           return (
             <div
               ref={ref}
-              responders={[PressResponder({delayPressEnd: 500})]}
+              responders={<PressResponder delayPressEnd={500} />}
             />
           );
         };
@@ -601,7 +601,7 @@ describe('Event responder: Press', () => {
           onPressEnd,
         });
         return (
-          <div ref={ref} responders={[PressResponder({delayPressEnd: 0})]} />
+          <div ref={ref} responders={<PressResponder delayPressEnd={0} />} />
         );
       };
       ReactDOM.render(<Component />, container);
@@ -622,7 +622,7 @@ describe('Event responder: Press', () => {
         usePressListener({
           onPressChange,
         });
-        return <div ref={ref} responders={[PressResponder]} />;
+        return <div ref={ref} responders={<PressResponder />} />;
       };
       ReactDOM.render(<Component />, container);
     });
@@ -653,7 +653,7 @@ describe('Event responder: Press', () => {
         return (
           <div
             ref={ref}
-            responders={[PressResponder({delayPressStart: 500})]}
+            responders={<PressResponder delayPressStart={500} />}
           />
         );
       };
@@ -675,7 +675,7 @@ describe('Event responder: Press', () => {
         return (
           <div
             ref={ref}
-            responders={[PressResponder({delayPressStart: 500})]}
+            responders={<PressResponder delayPressStart={500} />}
           />
         );
       };
@@ -708,7 +708,7 @@ describe('Event responder: Press', () => {
           onPressChange,
         });
         return (
-          <div ref={ref} responders={[PressResponder({delayPressEnd: 500})]} />
+          <div ref={ref} responders={<PressResponder delayPressEnd={500} />} />
         );
       };
       ReactDOM.render(<Component />, container);
@@ -761,7 +761,7 @@ describe('Event responder: Press', () => {
         usePressListener({
           onPress,
         });
-        return <div ref={ref} responders={[PressResponder]} />;
+        return <div ref={ref} responders={<PressResponder />} />;
       };
       ReactDOM.render(<Component />, container);
       ref.current.getBoundingClientRect = () => ({
@@ -808,7 +808,7 @@ describe('Event responder: Press', () => {
         usePressListener({
           onPress,
         });
-        return <div ref={ref} responders={[PressResponder]} />;
+        return <div ref={ref} responders={<PressResponder />} />;
       };
       ReactDOM.render(<Component />, container);
 
@@ -834,7 +834,7 @@ describe('Event responder: Press', () => {
         usePressListener({
           onPress,
         });
-        return <input ref={inputRef} responders={[PressResponder]} />;
+        return <input ref={inputRef} responders={<PressResponder />} />;
       };
       ReactDOM.render(<Component />, container);
       inputRef.current.dispatchEvent(
@@ -856,7 +856,7 @@ describe('Event responder: Press', () => {
           onPress,
         });
         return (
-          <div ref={ref} responders={[PressResponder({delayPressEnd: 500})]} />
+          <div ref={ref} responders={<PressResponder delayPressEnd={500} />} />
         );
       };
       ReactDOM.render(<Component />, container);
@@ -893,7 +893,7 @@ describe('Event responder: Press', () => {
           onPress,
         });
         return (
-          <div ref={divRef} responders={[PressResponder]}>
+          <div ref={divRef} responders={<PressResponder />}>
             <button ref={buttonRef} />
           </div>
         );
@@ -937,7 +937,7 @@ describe('Event responder: Press', () => {
         return (
           <div
             ref={ref}
-            responders={[PressResponder({enableLongPress: true})]}
+            responders={<PressResponder enableLongPress={true} />}
           />
         );
       };
@@ -1015,9 +1015,9 @@ describe('Event responder: Press', () => {
           return (
             <div
               ref={ref}
-              responders={[
-                PressResponder({delayLongPress: 2000, enableLongPress: true}),
-              ]}
+              responders={
+                <PressResponder delayLongPress={2000} enableLongPress={true} />
+              }
             />
           );
         };
@@ -1038,9 +1038,9 @@ describe('Event responder: Press', () => {
           return (
             <div
               ref={ref}
-              responders={[
-                PressResponder({delayLongPress: 0, enableLongPress: true}),
-              ]}
+              responders={
+                <PressResponder delayLongPress={0} enableLongPress={true} />
+              }
             />
           );
         };
@@ -1062,9 +1062,12 @@ describe('Event responder: Press', () => {
           return (
             <div
               ref={ref}
-              responders={[
-                PressResponder({delayPressStart, enableLongPress: true}),
-              ]}
+              responders={
+                <PressResponder
+                  delayPressStart={delayPressStart}
+                  enableLongPress={true}
+                />
+              }
             />
           );
         };
@@ -1092,7 +1095,7 @@ describe('Event responder: Press', () => {
         return (
           <div
             ref={ref}
-            responders={[PressResponder({enableLongPress: true})]}
+            responders={<PressResponder enableLongPress={true} />}
           />
         );
       };
@@ -1117,9 +1120,9 @@ describe('Event responder: Press', () => {
         return (
           <div
             ref={ref}
-            responders={[
-              PressResponder({delayPressEnd: 500, enableLongPress: true}),
-            ]}
+            responders={
+              <PressResponder delayPressEnd={500} enableLongPress={true} />
+            }
           />
         );
       };
@@ -1152,12 +1155,12 @@ describe('Event responder: Press', () => {
         return (
           <div
             ref={ref}
-            responders={[
-              PressResponder({
-                longPressShouldCancelPress: () => true,
-                enableLongPress: true,
-              }),
-            ]}
+            responders={
+              <PressResponder
+                longPressShouldCancelPress={() => true}
+                enableLongPress={true}
+              />
+            }
           />
         );
       };
@@ -1181,7 +1184,7 @@ describe('Event responder: Press', () => {
         usePressListener({
           onPressMove,
         });
-        return <div ref={ref} responders={[PressResponder]} />;
+        return <div ref={ref} responders={<PressResponder />} />;
       };
       ReactDOM.render(<Component />, container);
 
@@ -1214,7 +1217,7 @@ describe('Event responder: Press', () => {
         usePressListener({
           onPressMove,
         });
-        return <div ref={ref} responders={[PressResponder]} />;
+        return <div ref={ref} responders={<PressResponder />} />;
       };
       ReactDOM.render(<Component />, container);
 
@@ -1242,7 +1245,7 @@ describe('Event responder: Press', () => {
         usePressListener({
           onPressMove,
         });
-        return <div ref={ref} responders={[PressResponder]} />;
+        return <div ref={ref} responders={<PressResponder />} />;
       };
       ReactDOM.render(<Component />, container);
 
@@ -1322,7 +1325,7 @@ describe('Event responder: Press', () => {
             onPressStart: createEventHandler('onPressStart'),
             onPressEnd: createEventHandler('onPressEnd'),
           });
-          return <div ref={ref} responders={[PressResponder]} />;
+          return <div ref={ref} responders={<PressResponder />} />;
         };
         ReactDOM.render(<Component />, container);
 
@@ -1362,7 +1365,7 @@ describe('Event responder: Press', () => {
           });
           return (
             <div ref={outerRef}>
-              <div ref={innerRef} responders={[PressResponder]} />
+              <div ref={innerRef} responders={<PressResponder />} />
             </div>
           );
         };
@@ -1412,7 +1415,7 @@ describe('Event responder: Press', () => {
           return (
             <div
               ref={ref}
-              responders={[PressResponder({delayPressStart: 500})]}
+              responders={<PressResponder delayPressStart={500} />}
             />
           );
         };
@@ -1454,7 +1457,9 @@ describe('Event responder: Press', () => {
           return (
             <div
               ref={ref}
-              responders={[PressResponder({pressRetentionOffset})]}
+              responders={
+                <PressResponder pressRetentionOffset={pressRetentionOffset} />
+              }
             />
           );
         };
@@ -1492,7 +1497,7 @@ describe('Event responder: Press', () => {
             onPressStart: createEventHandler('onPressStart'),
             onPressEnd: createEventHandler('onPressEnd'),
           });
-          return <div ref={ref} responders={[PressResponder]} />;
+          return <div ref={ref} responders={<PressResponder />} />;
         };
         ReactDOM.render(<Component />, container);
 
@@ -1530,7 +1535,7 @@ describe('Event responder: Press', () => {
             onPressStart: createEventHandler('onPressStart'),
             onPressEnd: createEventHandler('onPressEnd'),
           });
-          return <div ref={ref} responders={[PressResponder]} />;
+          return <div ref={ref} responders={<PressResponder />} />;
         };
         ReactDOM.render(<Component />, container);
 
@@ -1581,7 +1586,7 @@ describe('Event responder: Press', () => {
             onPressStart: createEventHandler('onPressStart'),
             onPressEnd: createEventHandler('onPressEnd'),
           });
-          return <div ref={ref} responders={[PressResponder]} />;
+          return <div ref={ref} responders={<PressResponder />} />;
         };
         ReactDOM.render(<Component />, container);
 
@@ -1622,13 +1627,13 @@ describe('Event responder: Press', () => {
           return (
             <div
               ref={ref}
-              responders={[
-                PressResponder({
-                  delayPressStart: 500,
-                  delayPressEnd: 500,
-                  enableLongPress: true,
-                }),
-              ]}
+              responders={
+                <PressResponder
+                  delayPressStart={500}
+                  delayPressEnd={500}
+                  enableLongPress={true}
+                />
+              }
             />
           );
         };
@@ -1664,7 +1669,7 @@ describe('Event responder: Press', () => {
           onPressStart: createEventHandler('onPressStart'),
           onPressEnd: createEventHandler('onPressEnd'),
         });
-        return <div ref={ref} responders={[PressResponder]} />;
+        return <div ref={ref} responders={<PressResponder />} />;
       };
       ReactDOM.render(<Component />, container);
 
@@ -1718,7 +1723,7 @@ describe('Event responder: Press', () => {
           onPressStart: createEventHandler('onPressStart'),
           onPressEnd: createEventHandler('onPressEnd'),
         });
-        return <div ref={ref} responders={[PressResponder]} />;
+        return <div ref={ref} responders={<PressResponder />} />;
       };
       ReactDOM.render(<Component />, container);
 
@@ -1783,7 +1788,7 @@ describe('Event responder: Press', () => {
           onPressStart: createEventHandler('onPressStart'),
           onPressEnd: createEventHandler('onPressEnd'),
         });
-        return <div ref={ref} responders={[PressResponder]} />;
+        return <div ref={ref} responders={<PressResponder />} />;
       };
       ReactDOM.render(<Component />, container);
 
@@ -1906,7 +1911,7 @@ describe('Event responder: Press', () => {
             onPressStart: createEventHandler('onPressStart'),
             onPressEnd: createEventHandler('onPressEnd'),
           });
-          return <div ref={ref} responders={[PressResponder]} />;
+          return <div ref={ref} responders={<PressResponder />} />;
         };
         ReactDOM.render(<Component />, container);
 
@@ -1959,11 +1964,7 @@ describe('Event responder: Press', () => {
           return (
             <div
               ref={ref}
-              responders={[
-                PressResponder({
-                  delayPressStart: 500,
-                }),
-              ]}
+              responders={<PressResponder delayPressStart={500} />}
             />
           );
         };
@@ -2018,11 +2019,9 @@ describe('Event responder: Press', () => {
           return (
             <div
               ref={ref}
-              responders={[
-                PressResponder({
-                  pressRetentionOffset,
-                }),
-              ]}
+              responders={
+                <PressResponder pressRetentionOffset={pressRetentionOffset} />
+              }
             />
           );
         };
@@ -2071,7 +2070,7 @@ describe('Event responder: Press', () => {
             onPressStart: createEventHandler('onPressStart'),
             onPressEnd: createEventHandler('onPressEnd'),
           });
-          return <div ref={ref} responders={[PressResponder]} />;
+          return <div ref={ref} responders={<PressResponder />} />;
         };
         ReactDOM.render(<Component />, container);
 
@@ -2124,7 +2123,7 @@ describe('Event responder: Press', () => {
             onPressStart: createEventHandler('onPressStart'),
             onPressEnd: createEventHandler('onPressEnd'),
           });
-          return <div ref={ref} responders={[PressResponder]} />;
+          return <div ref={ref} responders={<PressResponder />} />;
         };
         ReactDOM.render(<Component />, container);
 
@@ -2190,7 +2189,7 @@ describe('Event responder: Press', () => {
             onPressStart: createEventHandler('onPressStart'),
             onPressEnd: createEventHandler('onPressEnd'),
           });
-          return <div ref={ref} responders={[PressResponder]} />;
+          return <div ref={ref} responders={<PressResponder />} />;
         };
         ReactDOM.render(<Component />, container);
 
@@ -2250,13 +2249,13 @@ describe('Event responder: Press', () => {
           return (
             <div
               ref={ref}
-              responders={[
-                PressResponder({
-                  delayPressStart: 500,
-                  delayPressEnd: 500,
-                  enableLongPress: true,
-                }),
-              ]}
+              responders={
+                <PressResponder
+                  delayPressStart={500}
+                  delayPressEnd={500}
+                  enableLongPress={true}
+                />
+              }
             />
           );
         };
@@ -2311,7 +2310,7 @@ describe('Event responder: Press', () => {
           onPressStart: createEventHandler('onPressStart'),
           onPressEnd: createEventHandler('onPressEnd'),
         });
-        return <div ref={ref} responders={[PressResponder]} />;
+        return <div ref={ref} responders={<PressResponder />} />;
       };
       ReactDOM.render(<Component />, container);
 
@@ -2386,13 +2385,13 @@ describe('Event responder: Press', () => {
         return (
           <div
             ref={ref}
-            responders={[
-              PressResponder({
-                delayPressStart: 250,
-                delayPressEnd: 250,
-                enableLongPress: true,
-              }),
-            ]}
+            responders={
+              <PressResponder
+                delayPressStart={250}
+                delayPressEnd={250}
+                enableLongPress={true}
+              />
+            }
           />
         );
       };
@@ -2469,7 +2468,7 @@ describe('Event responder: Press', () => {
         return (
           <div
             ref={ref}
-            responders={[PressResponder({stopPropagation: false})]}
+            responders={<PressResponder stopPropagation={false} />}
             onPointerDown={createEventHandler('pointerdown')}
             onPointerUp={createEventHandler('pointerup')}
             onKeyDown={createEventHandler('keydown')}
@@ -2487,7 +2486,7 @@ describe('Event responder: Press', () => {
           onPressEnd: createEventHandler('outer: onPressEnd'),
         });
         return (
-          <div responders={[PressResponder]}>
+          <div responders={<PressResponder />}>
             <Inner />
           </div>
         );
@@ -2525,7 +2524,7 @@ describe('Event responder: Press', () => {
           usePressListener({
             onPress: fn,
           });
-          return <div ref={ref} responders={[PressResponder]} />;
+          return <div ref={ref} responders={<PressResponder />} />;
         };
 
         const Outer = () => {
@@ -2533,7 +2532,7 @@ describe('Event responder: Press', () => {
             onPress: fn,
           });
           return (
-            <div responders={[PressResponder]}>
+            <div responders={<PressResponder />}>
               <Inner />
             </div>
           );
@@ -2565,7 +2564,7 @@ describe('Event responder: Press', () => {
           return (
             <div
               ref={ref}
-              responders={[PressResponder({enableLongPress: true})]}
+              responders={<PressResponder enableLongPress={true} />}
             />
           );
         };
@@ -2575,7 +2574,7 @@ describe('Event responder: Press', () => {
             onLongPress: fn,
           });
           return (
-            <div responders={[PressResponder({enableLongPress: true})]}>
+            <div responders={<PressResponder enableLongPress={true} />}>
               <Inner />
             </div>
           );
@@ -2598,7 +2597,7 @@ describe('Event responder: Press', () => {
             onPressStart: fn,
             onPressEnd: fn2,
           });
-          return <div ref={ref} responders={[PressResponder]} />;
+          return <div ref={ref} responders={<PressResponder />} />;
         };
 
         const Outer = () => {
@@ -2607,7 +2606,7 @@ describe('Event responder: Press', () => {
             onPressEnd: fn2,
           });
           return (
-            <div responders={[PressResponder]}>
+            <div responders={<PressResponder />}>
               <Inner />
             </div>
           );
@@ -2630,7 +2629,7 @@ describe('Event responder: Press', () => {
           usePressListener({
             onPressChange: fn,
           });
-          return <div ref={ref} responders={[PressResponder]} />;
+          return <div ref={ref} responders={<PressResponder />} />;
         };
 
         const Outer = () => {
@@ -2638,7 +2637,7 @@ describe('Event responder: Press', () => {
             onPressChange: fn,
           });
           return (
-            <div responders={[PressResponder]}>
+            <div responders={<PressResponder />}>
               <Inner />
             </div>
           );
@@ -2663,7 +2662,7 @@ describe('Event responder: Press', () => {
         usePressListener({
           onPress,
         });
-        return <a href="#" ref={ref} responders={[PressResponder]} />;
+        return <a href="#" ref={ref} responders={<PressResponder />} />;
       };
       ReactDOM.render(<Component />, container);
 
@@ -2692,7 +2691,7 @@ describe('Event responder: Press', () => {
         });
         return (
           <a href="#">
-            <button ref={buttonRef} responders={[PressResponder]} />
+            <button ref={buttonRef} responders={<PressResponder />} />
           </a>
         );
       };
@@ -2719,7 +2718,7 @@ describe('Event responder: Press', () => {
           onPress,
         });
         return (
-          <a href="#" responders={[PressResponder]}>
+          <a href="#" responders={<PressResponder />}>
             <div ref={ref} />
           </a>
         );
@@ -2749,7 +2748,7 @@ describe('Event responder: Press', () => {
         usePressListener({
           onPress,
         });
-        return <a href="#" ref={ref} responders={[PressResponder]} />;
+        return <a href="#" ref={ref} responders={<PressResponder />} />;
       };
       ReactDOM.render(<Component />, container);
 
@@ -2787,7 +2786,7 @@ describe('Event responder: Press', () => {
           <a
             href="#"
             ref={ref}
-            responders={[PressResponder({preventDefault: false})]}
+            responders={<PressResponder preventDefault={false} />}
           />
         );
       };
@@ -2823,7 +2822,7 @@ describe('Event responder: Press', () => {
           <a
             href="#"
             ref={ref}
-            responders={[PressResponder({enableLongPress: true})]}
+            responders={<PressResponder enableLongPress={true} />}
           />
         );
       };
@@ -2907,7 +2906,7 @@ describe('Event responder: Press', () => {
       usePressListener({
         onPressEnd,
       });
-      return <a href="#" ref={ref} responders={[PressResponder]} />;
+      return <a href="#" ref={ref} responders={<PressResponder />} />;
     };
     ReactDOM.render(<Component />, container);
 
@@ -2927,7 +2926,7 @@ describe('Event responder: Press', () => {
       });
       return (
         <div ref={containerRef}>
-          <a ref={ref} responders={[PressResponder]} />
+          <a ref={ref} responders={<PressResponder />} />
         </div>
       );
     };
@@ -2949,7 +2948,7 @@ describe('Event responder: Press', () => {
       });
       return (
         <div>
-          <a ref={ref} responders={[PressResponder]} />
+          <a ref={ref} responders={<PressResponder />} />
           <span ref={outsideRef} />
         </div>
       );
@@ -2962,14 +2961,14 @@ describe('Event responder: Press', () => {
   });
 
   it('expect displayName to show up for event component', () => {
-    expect(PressResponder.responder.displayName).toBe('Press');
+    expect(PressResponder.displayName).toBe('Press');
   });
 
   it('should not trigger an invariant in addRootEventTypes()', () => {
     const ref = React.createRef();
 
     const Component = () => {
-      return <button ref={ref} responders={[PressResponder]} />;
+      return <button ref={ref} responders={<PressResponder />} />;
     };
     ReactDOM.render(<Component />, container);
 
@@ -3012,7 +3011,7 @@ describe('Event responder: Press', () => {
       return (
         <button
           ref={ref}
-          responders={[PressResponder({enableLongPress: true})]}
+          responders={<PressResponder enableLongPress={true} />}
         />
       );
     };
@@ -3178,7 +3177,7 @@ describe('Event responder: Press', () => {
         <div>
           <button
             ref={ref}
-            responders={[PressResponder]}
+            responders={<PressResponder />}
             onClick={() => {
               updateCounter(count => count + 1);
             }}>
@@ -3245,7 +3244,7 @@ describe('Event responder: Press', () => {
         <div>
           <button
             ref={ref}
-            responders={[PressResponder]}
+            responders={<PressResponder />}
             onClick={() => {
               // This should flush synchronously
               ReactDOM.unstable_flushDiscreteUpdates();
@@ -3325,7 +3324,7 @@ describe('Event responder: Press', () => {
         return (
           <div>
             <button
-              responders={[PressResponder]}
+              responders={<PressResponder />}
               ref={button}
               onClick={() => updateClicksCount(clicksCount + 1)}>
               Presses: {pressesCount}, Clicks: {clicksCount}
@@ -3359,7 +3358,7 @@ describe('Event responder: Press', () => {
       const Component = () => {
         usePressListener({onContextMenu});
 
-        return <div ref={ref} responders={[PressResponder]} />;
+        return <div ref={ref} responders={<PressResponder />} />;
       };
       ReactDOM.render(<Component />, container);
 
@@ -3385,7 +3384,7 @@ describe('Event responder: Press', () => {
       const Component = () => {
         usePressListener({onContextMenu});
 
-        return <div ref={ref} responders={[PressResponder]} />;
+        return <div ref={ref} responders={<PressResponder />} />;
       };
       ReactDOM.render(<Component />, container);
 
@@ -3416,7 +3415,7 @@ describe('Event responder: Press', () => {
       const Component = () => {
         usePressListener({onContextMenu});
 
-        return <div ref={ref} responders={[PressResponder]} />;
+        return <div ref={ref} responders={<PressResponder />} />;
       };
       ReactDOM.render(<Component />, container);
 
@@ -3439,7 +3438,7 @@ describe('Event responder: Press', () => {
       const Component = () => {
         usePressListener({onContextMenu});
 
-        return <div ref={ref} responders={[PressResponder]} />;
+        return <div ref={ref} responders={<PressResponder />} />;
       };
       ReactDOM.render(<Component />, container);
 
@@ -3460,7 +3459,7 @@ describe('Event responder: Press', () => {
         return (
           <div
             ref={ref}
-            responders={[PressResponder({preventContextMenu: true})]}
+            responders={<PressResponder preventContextMenu={true} />}
           />
         );
       };
@@ -3483,7 +3482,7 @@ describe('Event responder: Press', () => {
 
     const Component = () => {
       return (
-        <div ref={ref} responders={[PressResponder({stopPropagation: true})]} />
+        <div ref={ref} responders={<PressResponder stopPropagation={true} />} />
       );
     };
 
@@ -3505,7 +3504,7 @@ describe('Event responder: Press', () => {
 
       return (
         <div>
-          <a href="#" ref={ref} responders={[PressResponder]} />
+          <a href="#" ref={ref} responders={<PressResponder />} />
         </div>
       );
     };

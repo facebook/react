@@ -77,7 +77,7 @@ describe('Input event responder', () => {
           onValueChange,
         });
         return (
-          <input ref={ref} responders={[InputResponder({disabled: true})]} />
+          <input ref={ref} responders={<InputResponder disabled={true} />} />
         );
       }
       ReactDOM.render(<Component />, container);
@@ -129,7 +129,7 @@ describe('Input event responder', () => {
             type="text"
             ref={ref}
             defaultValue="foo"
-            responders={[InputResponder]}
+            responders={<InputResponder />}
           />
         );
       }
@@ -169,7 +169,7 @@ describe('Input event responder', () => {
             type="checkbox"
             ref={ref}
             defaultChecked={true}
-            responders={[InputResponder]}
+            responders={<InputResponder />}
           />
         );
       }
@@ -212,7 +212,7 @@ describe('Input event responder', () => {
             type="checkbox"
             ref={ref}
             defaultChecked={false}
-            responders={[InputResponder]}
+            responders={<InputResponder />}
           />
         );
       }
@@ -250,7 +250,7 @@ describe('Input event responder', () => {
           onValueChange,
         });
         return (
-          <input type="checkbox" ref={ref} responders={[InputResponder]} />
+          <input type="checkbox" ref={ref} responders={<InputResponder />} />
         );
       }
       ReactDOM.render(<Component />, container);
@@ -297,7 +297,7 @@ describe('Input event responder', () => {
             type="text"
             defaultValue="foo"
             ref={ref}
-            responders={[InputResponder]}
+            responders={<InputResponder />}
           />
         );
       }
@@ -359,7 +359,7 @@ describe('Input event responder', () => {
             type="text"
             defaultValue="42"
             ref={ref}
-            responders={[InputResponder]}
+            responders={<InputResponder />}
           />
         );
       }
@@ -404,7 +404,7 @@ describe('Input event responder', () => {
             type="checkbox"
             defaultChecked={false}
             ref={ref}
-            responders={[InputResponder]}
+            responders={<InputResponder />}
           />
         );
       }
@@ -452,7 +452,7 @@ describe('Input event responder', () => {
           onChange,
           onValueChange,
         });
-        return <input type="radio" ref={ref} responders={[InputResponder]} />;
+        return <input type="radio" ref={ref} responders={<InputResponder />} />;
       }
       ReactDOM.render(<Component />, container);
 
@@ -498,7 +498,7 @@ describe('Input event responder', () => {
           onValueChange: onValueChange1,
         });
         return (
-          <input type="radio" name="group" responders={[InputResponder]} />
+          <input type="radio" name="group" responders={<InputResponder />} />
         );
       }
 
@@ -508,7 +508,7 @@ describe('Input event responder', () => {
           onValueChange: onValueChange2,
         });
         return (
-          <input type="radio" name="group" responders={[InputResponder]} />
+          <input type="radio" name="group" responders={<InputResponder />} />
         );
       }
 
@@ -581,7 +581,7 @@ describe('Input event responder', () => {
               type={type}
               name="group"
               ref={ref}
-              responders={[InputResponder]}
+              responders={<InputResponder />}
             />
           );
         }
@@ -609,7 +609,9 @@ describe('Input event responder', () => {
             onChange,
             onValueChange,
           });
-          return <input type={type} ref={ref} responders={[InputResponder]} />;
+          return (
+            <input type={type} ref={ref} responders={<InputResponder />} />
+          );
         }
         ReactDOM.render(<Component2 />, container);
         // Should be ignored (no change):
@@ -635,7 +637,9 @@ describe('Input event responder', () => {
             onChange,
             onValueChange,
           });
-          return <input type={type} ref={ref} responders={[InputResponder]} />;
+          return (
+            <input type={type} ref={ref} responders={<InputResponder />} />
+          );
         }
         ReactDOM.render(<Component3 />, container);
         // Should be ignored (no change):
@@ -675,7 +679,7 @@ describe('Input event responder', () => {
           onChange,
           onValueChange,
         });
-        return <input type="range" ref={ref} responders={[InputResponder]} />;
+        return <input type="range" ref={ref} responders={<InputResponder />} />;
       }
       ReactDOM.render(<Component />, container);
 
@@ -712,7 +716,7 @@ describe('Input event responder', () => {
           onChange,
           onValueChange,
         });
-        return <input type="range" ref={ref} responders={[InputResponder]} />;
+        return <input type="range" ref={ref} responders={<InputResponder />} />;
       }
       ReactDOM.render(<Component />, container);
 
@@ -753,12 +757,12 @@ describe('Input event responder', () => {
         const div = document.createElement('div');
         // Mount
         ReactDOM.render(
-          <input type="text" ref={ref} responders={[InputResponder]} />,
+          <input type="text" ref={ref} responders={<InputResponder />} />,
           div,
         );
         // Update
         ReactDOM.render(
-          <input type="text" ref={ref} responders={[InputResponder]} />,
+          <input type="text" ref={ref} responders={<InputResponder />} />,
           div,
         );
         // Change
@@ -788,7 +792,7 @@ describe('Input event responder', () => {
               type="text"
               ref={innerRef}
               value={controlledValue}
-              responders={[InputResponder]}
+              responders={<InputResponder />}
             />
           );
         }
@@ -848,7 +852,7 @@ describe('Input event responder', () => {
               type="checkbox"
               ref={innerRef}
               checked={controlledValue}
-              responders={[InputResponder]}
+              responders={<InputResponder />}
             />
           );
         }
@@ -923,7 +927,7 @@ describe('Input event responder', () => {
               type="text"
               ref={innerRef}
               value={controlledValue}
-              responders={[InputResponder]}
+              responders={<InputResponder />}
             />
           );
         }
@@ -983,7 +987,7 @@ describe('Input event responder', () => {
               type="text"
               ref={innerRef}
               value={controlledValue}
-              responders={[InputResponder, PressResponder]}
+              responders={[<InputResponder />, <PressResponder />]}
             />
           );
         }
@@ -1055,6 +1059,6 @@ describe('Input event responder', () => {
   });
 
   it('expect displayName to show up for event component', () => {
-    expect(InputResponder.responder.displayName).toBe('Input');
+    expect(InputResponder.displayName).toBe('Input');
   });
 });

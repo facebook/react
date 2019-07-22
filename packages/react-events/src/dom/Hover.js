@@ -8,7 +8,6 @@
  */
 
 import type {
-  ReactDOMEventResponder,
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
 } from 'shared/ReactDOMTypes';
@@ -244,8 +243,7 @@ function isEmulatedMouseEvent(event, state) {
   );
 }
 
-const HoverResponderImpl: ReactDOMEventResponder = {
-  displayName: 'Hover',
+const hoverResponderImpl = {
   targetEventTypes,
   getInitialState() {
     return {
@@ -355,18 +353,11 @@ const HoverResponderImpl: ReactDOMEventResponder = {
   },
 };
 
+export const HoverResponder = React.unstable_createResponder(
+  'Hover',
+  hoverResponderImpl,
+);
+
 export function useHoverListener(props: HoverListenerProps): void {
   React.unstable_useListener(HoverResponder, props);
 }
-
-export function HoverResponder(
-  props: HoverProps,
-): {props: HoverProps, responder: ReactDOMEventResponder} {
-  return {
-    props,
-    responder: HoverResponderImpl,
-  };
-}
-
-HoverResponder.props = {};
-HoverResponder.responder = HoverResponderImpl;
