@@ -887,14 +887,19 @@ describe('Event responder: Press', () => {
     it('is called if target rect is not right but the target is (for mouse events)', () => {
       const buttonRef = React.createRef();
       const divRef = React.createRef();
-      const element = (
-        <Press onPress={onPress}>
-          <div ref={divRef}>
+
+      const Component = () => {
+        usePressListener({
+          onPress,
+        });
+        return (
+          <div ref={divRef} responders={[PressResponder]}>
             <button ref={buttonRef} />
           </div>
-        </Press>
-      );
-      ReactDOM.render(element, container);
+        );
+      };
+      ReactDOM.render(<Component />, container);
+
       divRef.current.getBoundingClientRect = () => ({
         left: 0,
         right: 0,
