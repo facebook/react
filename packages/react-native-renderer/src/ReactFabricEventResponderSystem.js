@@ -49,9 +49,7 @@ const {
 } = Scheduler;
 
 type EventQueueItem = {|
-  responder: ReactNativeEventResponder,
-  target: Fiber,
-  prop: string,
+  listeners: Array<(val: any) => void>,
   value: any,
 |};
 type EventQueue = Array<EventQueueItem>;
@@ -105,54 +103,7 @@ const eventResponderContext: ReactNativeResponderContext = {
     eventPriority: EventPriority,
   ): void {
     validateResponderContext();
-    if (typeof eventValue === 'object' && eventValue !== null) {
-      const {target, type, timeStamp} = eventValue;
-
-      if (target == null || type == null || timeStamp == null) {
-        throw new Error(
-          'context.dispatchEvent: "target", "timeStamp", and "type" fields on event object are required.',
-        );
-      }
-      const showWarning = name => {
-        if (__DEV__) {
-          warning(
-            false,
-            '%s is not available on event objects created from event responder modules (React Flare). ' +
-              'Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.%s }`',
-            name,
-            name,
-          );
-        }
-      };
-      eventValue.preventDefault = () => {
-        if (__DEV__) {
-          showWarning('preventDefault()');
-        }
-      };
-      eventValue.stopPropagation = () => {
-        if (__DEV__) {
-          showWarning('stopPropagation()');
-        }
-      };
-      eventValue.isDefaultPrevented = () => {
-        if (__DEV__) {
-          showWarning('isDefaultPrevented()');
-        }
-      };
-      eventValue.isPropagationStopped = () => {
-        if (__DEV__) {
-          showWarning('isPropagationStopped()');
-        }
-      };
-      // $FlowFixMe: we don't need value, Flow thinks we do
-      Object.defineProperty(eventValue, 'nativeEvent', {
-        get() {
-          if (__DEV__) {
-            showWarning('nativeEvent');
-          }
-        },
-      });
-    }
+    validateEventValue(eventValue);
     // $FlowFixMe: Flow gets really confused with this line...
     if (eventPriority < currentEventQueuePriority) {
       currentEventQueuePriority = eventPriority;
@@ -160,9 +111,12 @@ const eventResponderContext: ReactNativeResponderContext = {
     const responderInstance = ((currentInstance: any): ReactNativeEventResponderInstance);
     const target = responderInstance.fiber;
     const responder = responderInstance.responder;
-    ((currentEventQueue: any): EventQueue).push(
-      createEventQueueItem(eventProp, eventValue, responder, target),
-    );
+    const listeners = collectListeners(eventProp, responder, target);
+    if (listeners.length !== 0) {
+      ((currentEventQueue: any): EventQueue).push(
+        createEventQueueItem(eventValue, listeners),
+      );
+    }
   },
   isTargetWithinNode(
     childTarget: ReactNativeEventTarget,
@@ -274,17 +228,64 @@ const eventResponderContext: ReactNativeResponderContext = {
 };
 
 function createEventQueueItem(
-  prop: string,
   value: any,
-  responder: ReactNativeEventResponder,
-  target: Fiber,
+  listeners: Array<(val: any) => void>,
 ): EventQueueItem {
   return {
-    prop,
     value,
-    responder,
-    target,
+    listeners,
   };
+}
+
+function validateEventValue(eventValue: any): void {
+  if (typeof eventValue === 'object' && eventValue !== null) {
+    const {target, type, timeStamp} = eventValue;
+
+    if (target == null || type == null || timeStamp == null) {
+      throw new Error(
+        'context.dispatchEvent: "target", "timeStamp", and "type" fields on event object are required.',
+      );
+    }
+    const showWarning = name => {
+      if (__DEV__) {
+        warning(
+          false,
+          '%s is not available on event objects created from event responder modules (React Flare). ' +
+            'Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.%s }`',
+          name,
+          name,
+        );
+      }
+    };
+    eventValue.preventDefault = () => {
+      if (__DEV__) {
+        showWarning('preventDefault()');
+      }
+    };
+    eventValue.stopPropagation = () => {
+      if (__DEV__) {
+        showWarning('stopPropagation()');
+      }
+    };
+    eventValue.isDefaultPrevented = () => {
+      if (__DEV__) {
+        showWarning('isDefaultPrevented()');
+      }
+    };
+    eventValue.isPropagationStopped = () => {
+      if (__DEV__) {
+        showWarning('isPropagationStopped()');
+      }
+    };
+    // $FlowFixMe: we don't need value, Flow thinks we do
+    Object.defineProperty(eventValue, 'nativeEvent', {
+      get() {
+        if (__DEV__) {
+          showWarning('nativeEvent');
+        }
+      },
+    });
+  }
 }
 
 function getFiberFromTarget(
@@ -392,69 +393,71 @@ function releaseOwnershipForEventResponderInstance(
 
 // TODO this function is almost an exact copy of the DOM version, we should
 // somehow share the logic
-function processEvents(eventQueue: EventQueue): void {
-  for (let i = 0, length = eventQueue.length; i < length; i++) {
-    const {
-      value: eventValue,
-      prop: eventProp,
-      responder: eventResponder,
-      target,
-    } = eventQueue[i];
+function collectListeners(
+  eventProp: string,
+  eventResponder: ReactNativeEventResponder,
+  target: Fiber,
+): Array<(any) => void> {
+  const eventListeners = [];
+  let node = target.return;
+  nodeTraversal: while (node !== null) {
+    switch (node.tag) {
+      case HostComponent: {
+        const dependencies = node.dependencies;
 
-    let node = target.return;
-    nodeTraversal: while (node !== null) {
-      switch (node.tag) {
-        case HostComponent: {
-          const dependencies = node.dependencies;
+        if (dependencies !== null) {
+          const respondersMap = dependencies.responders;
 
-          if (dependencies !== null) {
-            const respondersMap = dependencies.responders;
-
-            if (respondersMap !== null && respondersMap.has(eventResponder)) {
-              break nodeTraversal;
-            }
+          if (respondersMap !== null && respondersMap.has(eventResponder)) {
+            break nodeTraversal;
           }
-          break;
         }
-        case FunctionComponent:
-        case MemoComponent:
-        case ForwardRef: {
-          const dependencies = node.dependencies;
+        break;
+      }
+      case FunctionComponent:
+      case MemoComponent:
+      case ForwardRef: {
+        const dependencies = node.dependencies;
 
-          if (dependencies !== null) {
-            const listeners = dependencies.listeners;
+        if (dependencies !== null) {
+          const listeners = dependencies.listeners;
 
-            if (listeners !== null) {
-              for (
-                let s = 0, listenersLength = listeners.length;
-                s < listenersLength;
-                s++
+          if (listeners !== null) {
+            for (
+              let s = 0, listenersLength = listeners.length;
+              s < listenersLength;
+              s++
+            ) {
+              const listener = listeners[s];
+              const {responder, props} = listener;
+              const listenerFunc = props[eventProp];
+
+              if (
+                responder === eventResponder &&
+                typeof listenerFunc === 'function'
               ) {
-                const listener = listeners[s];
-                const {responder, props} = listener;
-                const listenerFunc = props[eventProp];
-
-                if (
-                  responder === eventResponder &&
-                  typeof listenerFunc === 'function'
-                ) {
-                  const type =
-                    typeof eventValue === 'object' && eventValue !== null
-                      ? eventValue.type
-                      : '';
-                  invokeGuardedCallbackAndCatchFirstError(
-                    type,
-                    listenerFunc,
-                    undefined,
-                    eventValue,
-                  );
-                }
+                eventListeners.push(listenerFunc);
               }
             }
           }
         }
       }
-      node = node.return;
+    }
+    node = node.return;
+  }
+  return eventListeners;
+}
+
+// TODO this function is almost an exact copy of the DOM version, we should
+// somehow share the logic
+function processEvents(eventQueue: EventQueue): void {
+  for (let i = 0, length = eventQueue.length; i < length; i++) {
+    const {value, listeners} = eventQueue[i];
+    for (let s = 0, length2 = listeners.length; s < length2; s++) {
+      const listener = listeners[s];
+      const type =
+        typeof value === 'object' && value !== null ? value.type : '';
+      invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, value);
     }
   }
 }

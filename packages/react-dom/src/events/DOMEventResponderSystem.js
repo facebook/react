@@ -67,9 +67,7 @@ export function setListenToResponderEventTypes(
 }
 
 type EventQueueItem = {|
-  responder: ReactDOMEventResponder,
-  target: Fiber,
-  prop: string,
+  listeners: Array<(val: any) => void>,
   value: any,
 |};
 type EventQueue = Array<EventQueueItem>;
@@ -118,9 +116,12 @@ const eventResponderContext: ReactDOMResponderContext = {
     const responderInstance = ((currentInstance: any): ReactDOMEventResponderInstance);
     const target = responderInstance.fiber;
     const responder = responderInstance.responder;
-    ((currentEventQueue: any): EventQueue).push(
-      createEventQueueItem(eventProp, eventValue, responder, target),
-    );
+    const listeners = collectListeners(eventProp, responder, target);
+    if (listeners.length !== 0) {
+      ((currentEventQueue: any): EventQueue).push(
+        createEventQueueItem(eventValue, listeners),
+      );
+    }
   },
   isTargetWithinResponder(target: Element | Document): boolean {
     validateResponderContext();
@@ -391,16 +392,12 @@ function collectFocusableElements(
 }
 
 function createEventQueueItem(
-  prop: string,
   value: any,
-  responder: ReactDOMEventResponder,
-  target: Fiber,
+  listeners: Array<(val: any) => void>,
 ): EventQueueItem {
   return {
-    prop,
     value,
-    responder,
-    target,
+    listeners,
   };
 }
 
@@ -523,12 +520,12 @@ function createDOMResponderEvent(
   };
 }
 
-function processEvent(
-  eventValue: any,
+function collectListeners(
   eventProp: string,
   eventResponder: ReactDOMEventResponder,
   target: Fiber,
-): any {
+): Array<(any) => void> {
+  const eventListeners = [];
   let node = target.return;
   nodeTraversal: while (node !== null) {
     switch (node.tag) {
@@ -566,16 +563,7 @@ function processEvent(
                 responder === eventResponder &&
                 typeof listenerFunc === 'function'
               ) {
-                const type =
-                  typeof eventValue === 'object' && eventValue !== null
-                    ? eventValue.type
-                    : '';
-                invokeGuardedCallbackAndCatchFirstError(
-                  type,
-                  listenerFunc,
-                  undefined,
-                  eventValue,
-                );
+                eventListeners.push(listenerFunc);
               }
             }
           }
@@ -584,12 +572,18 @@ function processEvent(
     }
     node = node.return;
   }
+  return eventListeners;
 }
 
 function processEvents(eventQueue: EventQueue): void {
   for (let i = 0, length = eventQueue.length; i < length; i++) {
-    const {value, prop, responder, target} = eventQueue[i];
-    processEvent(value, prop, responder, target);
+    const {value, listeners} = eventQueue[i];
+    for (let s = 0, length2 = listeners.length; s < length2; s++) {
+      const listener = listeners[s];
+      const type =
+        typeof value === 'object' && value !== null ? value.type : '';
+      invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, value);
+    }
   }
 }
 
