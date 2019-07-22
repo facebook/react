@@ -2599,6 +2599,7 @@ export function checkForWrongSuspensePriorityInDEV(sourceFiber: Fiber) {
                   ) {
                     break;
                   }
+                  update = update.next;
                 }
               }
               break;
