@@ -521,9 +521,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         'Warning: The following components suspended during a user-blocking update: ',
       );
       expect(console.error.calls.argsFor(0)[1]).toContain('AsyncText');
-      expect(console.error.calls.argsFor(0)[2]).toContain(
-        'Component was suspended when root was mounted or updated',
-      );
     }
   });
 
@@ -675,9 +672,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         'Warning: The following components suspended during a user-blocking update: ',
       );
       expect(console.error.calls.argsFor(0)[1]).toContain('AsyncText');
-      expect(console.error.calls.argsFor(0)[2]).toContain(
-        'Component was suspended when root was mounted or updated',
-      );
     }
   });
 
@@ -710,9 +704,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         'Warning: The following components suspended during a user-blocking update: ',
       );
       expect(console.error.calls.argsFor(0)[1]).toContain('AsyncText');
-      expect(console.error.calls.argsFor(0)[2]).toContain(
-        'Component was suspended when root was mounted or updated',
-      );
     }
   });
 
@@ -1675,7 +1666,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     }).toWarnDev(
       'The following components suspended during a user-blocking update: AsyncText' +
         '\n' +
-        'The components that called suspense are: App',
+        'The components that triggered the update: App',
       {withoutStack: true},
     );
   });
@@ -1709,7 +1700,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     }).toWarnDev(
       'The following components suspended during a user-blocking update: AsyncText' +
         '\n' +
-        'The components that called suspense are: App',
+        'The components that triggered the update: App',
       {withoutStack: true},
     );
   });
@@ -1751,9 +1742,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     // Timeout and commit the fallback
     expect(() => {
       Scheduler.unstable_flushAll();
-    }).toWarnDev('Component was suspended when root was mounted or updated', {
-      withoutStack: true,
-    });
+    }).toWarnDev(
+      'Warning: The following components suspended during a user-blocking update: A, C',
+      {withoutStack: true},
+    );
   });
 
   it('normal priority updates suspending do not warn for class components', async () => {

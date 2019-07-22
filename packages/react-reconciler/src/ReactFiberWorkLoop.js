@@ -2554,11 +2554,9 @@ export function checkForWrongSuspensePriorityInDEV(sourceFiber: Fiber) {
                     if (componentsThatTriggeredHighPriSuspend === null) {
                       componentsThatTriggeredHighPriSuspend = new Set();
                     }
-                    if (workInProgressNode.tag === HostRoot) {
-                      componentsThatTriggeredHighPriSuspend.add(
-                        workInProgressNode.tag,
-                      );
-                    } else {
+                    // TODO: handle case where the component that triggers the high priority
+                    // suspend is in the HostRoot
+                    if (workInProgressNode.tag !== HostRoot) {
                       componentsThatTriggeredHighPriSuspend.add(
                         getComponentName(workInProgressNode.type),
                       );
@@ -2639,21 +2637,13 @@ function flushSuspensePriorityWarningInDEV() {
         componentsThatTriggeredSuspendNames.push(name),
       );
 
-      const componentsThatTriggeredSuspendErrorMessage = componentsThatTriggeredHighPriSuspend.has(
-        HostRoot,
-      )
-        ? 'Component was suspended when root was mounted or updated'
-        : `The components that called suspense are: ${componentsThatTriggeredSuspendNames
-            .sort()
-            .join(', ')}`;
-
       componentsThatTriggeredHighPriSuspend = null;
 
       warningWithoutStack(
         false,
         'The following components suspended during a user-blocking update: %s' +
           '\n' +
-          '%s' +
+          'The components that triggered the update: %s' +
           '\n\n' +
           'Updates triggered by user interactions (e.g. click events) are ' +
           'considered user-blocking by default. They should not suspend. ' +
@@ -2667,7 +2657,7 @@ function flushSuspensePriorityWarningInDEV() {
           'feedback, and another update to perform the actual change.',
         // TODO: Add link to React docs with more information, once it exists
         componentNames.sort().join(', '),
-        componentsThatTriggeredSuspendErrorMessage,
+        componentsThatTriggeredSuspendNames.sort().join(', '),
       );
     }
   }
