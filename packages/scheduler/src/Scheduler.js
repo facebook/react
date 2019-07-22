@@ -144,14 +144,8 @@ function flushTask(task, currentTime) {
   // with the same priority and expiration as the just-finished callback.
   if (typeof continuationCallback === 'function') {
     var expirationTime = task.expirationTime;
-    var continuationTask = {
-      callback: continuationCallback,
-      priorityLevel: task.priorityLevel,
-      startTime: task.startTime,
-      expirationTime,
-      next: null,
-      previous: null,
-    };
+    var continuationTask = task;
+    continuationTask.callback = continuationCallback;
 
     // Insert the new callback into the list, sorted by its timeout. This is
     // almost the same as the code in `scheduleCallback`, except the callback
