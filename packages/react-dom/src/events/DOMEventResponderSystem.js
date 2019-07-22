@@ -234,10 +234,11 @@ const eventResponderContext: ReactDOMResponderContext = {
     validateResponderContext();
     const childFiber = getClosestInstanceFromNode(childTarget);
     const parentFiber = getClosestInstanceFromNode(parentTarget);
+    const parentAlternateFiber = parentFiber.alternate;
 
     let node = childFiber;
     while (node !== null) {
-      if (node === parentFiber) {
+      if (node === parentFiber || node === parentAlternateFiber) {
         return true;
       }
       node = node.return;
