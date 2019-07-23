@@ -461,7 +461,7 @@ export function injectIntoGlobalHook(globalObject: any): void {
             failedRoots.set(root, alternate.memoizedState.element);
           }
         } else if (!wasMounted && !isMounted) {
-          if (didError) {
+          if (didError && !failedRoots.has(root)) {
             // The root had an error during the initial mount.
             // We can't read its last element from the memoized state
             // because there was no previously committed alternate.
