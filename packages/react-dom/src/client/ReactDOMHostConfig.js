@@ -818,8 +818,8 @@ export function didNotFindHydratableSuspenseInstance(
 export function mountResponderInstance(
   responder: ReactDOMEventResponder,
   responderInstance: ReactDOMEventResponderInstance,
-  props: Object,
-  state: Object,
+  responderProps: Object,
+  responderState: Object,
   instance: Instance,
   rootContainerInstance: Container,
 ): ReactDOMEventResponderInstance {
@@ -837,7 +837,12 @@ export function mountResponderInstance(
     addRootEventTypesForResponderInstance(responderInstance, rootEventTypes);
     listenToEventResponderEventTypes(rootEventTypes, documentBody);
   }
-  mountEventResponder(responder, responderInstance, props, state);
+  mountEventResponder(
+    responder,
+    responderInstance,
+    responderProps,
+    responderState,
+  );
   return responderInstance;
 }
 

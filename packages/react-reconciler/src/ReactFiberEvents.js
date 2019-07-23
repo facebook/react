@@ -99,17 +99,17 @@ export function getSuspenseFiberFromTimedOutChild(fiber: Fiber): Fiber {
 
 export function createResponderInstance(
   responder: ReactEventResponder<any, any>,
-  props: Object,
-  state: Object,
+  responderProps: Object,
+  responderState: Object,
   target: Instance,
   fiber: Fiber,
 ): ReactEventResponderInstance<any, any> {
   return {
     fiber,
-    props,
+    props: responderProps,
     responder,
     rootEventTypes: null,
-    state,
+    state: responderState,
     target,
   };
 }

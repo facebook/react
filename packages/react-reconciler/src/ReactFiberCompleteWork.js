@@ -1229,7 +1229,7 @@ function completeWork(
 
 function mountEventResponder(
   responder: ReactEventResponder<any, any>,
-  props: Object,
+  responderProps: Object,
   instance: Instance,
   rootContainerInstance: Container,
   fiber: Fiber,
@@ -1238,23 +1238,23 @@ function mountEventResponder(
     ReactEventResponderInstance<any, any>,
   >,
 ) {
-  let state = emptyObject;
+  let responderState = emptyObject;
   const getInitialState = responder.getInitialState;
   if (getInitialState !== null) {
-    state = getInitialState(props);
+    responderState = getInitialState(responderProps);
   }
   const responderInstance = createResponderInstance(
     responder,
-    props,
-    state,
+    responderProps,
+    responderState,
     instance,
     fiber,
   );
   mountResponderInstance(
     responder,
     responderInstance,
-    props,
-    state,
+    responderProps,
+    responderState,
     instance,
     rootContainerInstance,
   );
