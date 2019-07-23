@@ -325,13 +325,15 @@ if (
       // rAFs are scheduled at the beginning of the preceding frame.
       let idleCallbackID;
       if (requestIdleCallbackBeforeFirstFrame) {
-        idleCallbackID = requestIdleCallback(() => {
-          if (requestTimerEventBeforeFirstFrame) {
-            clearTimeout(idleTimeoutID);
-          }
-          frameDeadline = getCurrentTime() + frameLength;
-          performWorkUntilDeadline();
-        });
+        idleCallbackID = requestIdleCallback(
+          function onIdleCallbackBeforeFirstFrame() {
+            if (requestTimerEventBeforeFirstFrame) {
+              clearTimeout(idleTimeoutID);
+            }
+            frameDeadline = getCurrentTime() + frameLength;
+            performWorkUntilDeadline();
+          },
+        );
       }
       // Alternate strategy to address the same problem. Scheduler a timer with
       // no delay. If this fires before the rAF, that likely indicates that
@@ -340,7 +342,7 @@ if (
       // idle periods.
       let idleTimeoutID;
       if (requestTimerEventBeforeFirstFrame) {
-        idleTimeoutID = setTimeout(() => {
+        idleTimeoutID = setTimeout(function onTimerEventBeforeFirstFrame() {
           if (requestIdleCallbackBeforeFirstFrame) {
             cancelIdleCallback(idleCallbackID);
           }
