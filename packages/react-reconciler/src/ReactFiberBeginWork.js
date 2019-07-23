@@ -320,6 +320,9 @@ function updateForwardRef(
     ) {
       // Only double-render components with Hooks
       if (workInProgress.memoizedState !== null) {
+        if (enableFlareAPI) {
+          prepareToReadListenerHooks(workInProgress);
+        }
         nextChildren = renderWithHooks(
           current,
           workInProgress,
@@ -643,6 +646,9 @@ function updateFunctionComponent(
     ) {
       // Only double-render components with Hooks
       if (workInProgress.memoizedState !== null) {
+        if (enableFlareAPI) {
+          prepareToReadListenerHooks(workInProgress);
+        }
         nextChildren = renderWithHooks(
           current,
           workInProgress,
