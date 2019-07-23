@@ -46,11 +46,7 @@ function createTouchEvent(type, id, data) {
 }
 
 const createKeyboardEvent = (type, data) => {
-  return new KeyboardEvent(type, {
-    bubbles: true,
-    cancelable: true,
-    ...data,
-  });
+  return createEvent(type, data);
 };
 
 function init() {
@@ -216,13 +212,20 @@ describe('Event responder: Press', () => {
     });
 
     it('is called once after "keydown" events for Spacebar', () => {
-      ref.current.dispatchEvent(createKeyboardEvent('keydown', {key: ' '}));
+      const preventDefault = jest.fn();
+      ref.current.dispatchEvent(
+        createKeyboardEvent('keydown', {key: ' ', preventDefault}),
+      );
+      expect(preventDefault).toBeCalled();
       ref.current.dispatchEvent(createKeyboardEvent('keypress', {key: ' '}));
       ref.current.dispatchEvent(createKeyboardEvent('keydown', {key: ' '}));
       ref.current.dispatchEvent(createKeyboardEvent('keypress', {key: ' '}));
       expect(onPressStart).toHaveBeenCalledTimes(1);
       expect(onPressStart).toHaveBeenCalledWith(
-        expect.objectContaining({pointerType: 'keyboard', type: 'pressstart'}),
+        expect.objectContaining({
+          pointerType: 'keyboard',
+          type: 'pressstart',
+        }),
       );
     });
 
@@ -411,7 +414,6 @@ describe('Event responder: Press', () => {
           target: ref.current,
         }),
       );
-      ref.current.dispatchEvent(createEvent('mousedown'));
       ref.current.dispatchEvent(
         createEvent('pointerup', {pointerType: 'touch'}),
       );
@@ -420,7 +422,9 @@ describe('Event responder: Press', () => {
           target: ref.current,
         }),
       );
+      ref.current.dispatchEvent(createEvent('mousedown'));
       ref.current.dispatchEvent(createEvent('mouseup'));
+      ref.current.dispatchEvent(createEvent('click'));
       expect(onPressEnd).toHaveBeenCalledTimes(1);
       expect(onPressEnd).toHaveBeenCalledWith(
         expect.objectContaining({pointerType: 'touch', type: 'pressend'}),
@@ -2419,7 +2423,7 @@ describe('Event responder: Press', () => {
   });
 
   describe('link components', () => {
-    it('prevents native behaviour by default', () => {
+    it('prevents native behaviour for pointer events by default', () => {
       const onPress = jest.fn();
       const preventDefault = jest.fn();
       const ref = React.createRef();
@@ -2438,6 +2442,26 @@ describe('Event responder: Press', () => {
         }),
       );
       ref.current.dispatchEvent(createEvent('click', {preventDefault}));
+      expect(preventDefault).toBeCalled();
+      expect(onPress).toHaveBeenCalledWith(
+        expect.objectContaining({defaultPrevented: true}),
+      );
+    });
+
+    it('prevents native behaviour for keyboard events by default', () => {
+      const onPress = jest.fn();
+      const preventDefault = jest.fn();
+      const ref = React.createRef();
+      const element = (
+        <Press onPress={onPress}>
+          <a href="#" ref={ref} />
+        </Press>
+      );
+      ReactDOM.render(element, container);
+
+      ref.current.dispatchEvent(createEvent('keydown', {key: 'Enter'}));
+      ref.current.dispatchEvent(createEvent('click', {preventDefault}));
+      ref.current.dispatchEvent(createEvent('keyup', {key: 'Enter'}));
       expect(preventDefault).toBeCalled();
       expect(onPress).toHaveBeenCalledWith(
         expect.objectContaining({defaultPrevented: true}),
@@ -2527,7 +2551,7 @@ describe('Event responder: Press', () => {
       });
     });
 
-    it('uses native behaviour if preventDefault is false', () => {
+    it('uses native behaviour for pointer events if preventDefault is false', () => {
       const onPress = jest.fn();
       const preventDefault = jest.fn();
       const ref = React.createRef();
@@ -2546,6 +2570,26 @@ describe('Event responder: Press', () => {
         }),
       );
       ref.current.dispatchEvent(createEvent('click', {preventDefault}));
+      expect(preventDefault).not.toBeCalled();
+      expect(onPress).toHaveBeenCalledWith(
+        expect.objectContaining({defaultPrevented: false}),
+      );
+    });
+
+    it('uses native behaviour for keyboard events if preventDefault is false', () => {
+      const onPress = jest.fn();
+      const preventDefault = jest.fn();
+      const ref = React.createRef();
+      const element = (
+        <Press onPress={onPress} preventDefault={false}>
+          <a href="#" ref={ref} />
+        </Press>
+      );
+      ReactDOM.render(element, container);
+
+      ref.current.dispatchEvent(createEvent('keydown', {key: 'Enter'}));
+      ref.current.dispatchEvent(createEvent('click', {preventDefault}));
+      ref.current.dispatchEvent(createEvent('keyup', {key: 'Enter'}));
       expect(preventDefault).not.toBeCalled();
       expect(onPress).toHaveBeenCalledWith(
         expect.objectContaining({defaultPrevented: false}),
