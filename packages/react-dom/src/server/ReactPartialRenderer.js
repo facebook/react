@@ -23,6 +23,7 @@ import {
   warnAboutDeprecatedLifecycles,
   enableSuspenseServerRenderer,
   enableFundamentalAPI,
+  enableFlareAPI,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -340,8 +341,12 @@ const RESERVED_PROPS = {
   dangerouslySetInnerHTML: null,
   suppressContentEditableWarning: null,
   suppressHydrationWarning: null,
-  responders: null,
 };
+
+if (enableFlareAPI) {
+  // $FlowFixMe: Flow doesn't like this, it's temp until we remove the flag anyway
+  RESERVED_PROPS.responders = null;
+}
 
 function createOpenTagMarkup(
   tagVerbatim: string,
