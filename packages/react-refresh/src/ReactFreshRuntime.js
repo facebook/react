@@ -65,6 +65,7 @@ let findHostInstancesForRefresh: null | FindHostInstancesForRefresh = null;
 let mountedRoots: Set<FiberRoot> = new Set();
 // If a root captures an error, we add its element to this Map so we can retry on edit.
 let failedRoots: Map<FiberRoot, ReactNodeList> = new Map();
+let didSomeRootFailOnMount = false;
 
 function computeFullKey(signature: Signature): string {
   if (signature.fullKey !== null) {
@@ -459,6 +460,19 @@ export function injectIntoGlobalHook(globalObject: any): void {
             // Remember what was rendered so we can restore it.
             failedRoots.set(root, alternate.memoizedState.element);
           }
+        } else if (!wasMounted && !isMounted) {
+          if (didError && !failedRoots.has(root)) {
+            // The root had an error during the initial mount.
+            // We can't read its last element from the memoized state
+            // because there was no previously committed alternate.
+            // Ideally, it would be nice if we had a way to extract
+            // the last attempted rendered element, but accessing the update queue
+            // would tie this package too closely to the reconciler version.
+            // So instead, we just set a flag.
+            // TODO: Maybe we could fix this as the same time as when we fix
+            // DevTools to not depend on `alternate.memoizedState.element`.
+            didSomeRootFailOnMount = true;
+          }
         }
       } else {
         // Mount a new root.
@@ -472,6 +486,10 @@ export function injectIntoGlobalHook(globalObject: any): void {
       'Unexpected call to React Refresh in a production environment.',
     );
   }
+}
+
+export function hasUnrecoverableErrors() {
+  return didSomeRootFailOnMount;
 }
 
 // Exposed for testing.
