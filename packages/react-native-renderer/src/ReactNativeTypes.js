@@ -230,7 +230,7 @@ export type PointerType =
   | 'touch'
   | 'trackpad';
 
-export opaque type EventPriority = 0 | 1 | 2;
+export type EventPriority = 0 | 1 | 2;
 
 export const DiscreteEvent: EventPriority = 0;
 export const UserBlockingEvent: EventPriority = 1;

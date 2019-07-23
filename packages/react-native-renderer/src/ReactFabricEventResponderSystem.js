@@ -104,7 +104,6 @@ const eventResponderContext: ReactNativeResponderContext = {
   ): void {
     validateResponderContext();
     validateEventValue(eventValue);
-    // $FlowFixMe: Flow gets really confused with this line...
     if (eventPriority < currentEventQueuePriority) {
       currentEventQueuePriority = eventPriority;
     }

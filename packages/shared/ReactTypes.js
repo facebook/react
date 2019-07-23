@@ -113,7 +113,7 @@ export type ReactEventComponent<E, C> = {|
   responder: ReactEventResponder<E, C>,
 |};
 
-export opaque type EventPriority = 0 | 1 | 2;
+export type EventPriority = 0 | 1 | 2;
 
 export const DiscreteEvent: EventPriority = 0;
 export const UserBlockingEvent: EventPriority = 1;
