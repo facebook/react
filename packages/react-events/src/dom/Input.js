@@ -8,7 +8,6 @@
  */
 
 import type {
-  ReactDOMEventResponder,
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
 } from 'shared/ReactDOMTypes';
@@ -18,11 +17,14 @@ import {DiscreteEvent} from 'shared/ReactTypes';
 
 type InputEventType = 'change' | 'beforechange' | 'valuechange';
 
-type InputResponderProps = {
-  disabled: boolean,
+type InputListenerProps = {|
   onBeforeChange: (e: InputEvent) => void,
   onChange: (e: InputEvent) => void,
   onValueChange: (value: string | boolean) => void,
+|};
+
+type InputResponderProps = {
+  disabled: boolean,
 };
 
 type InputEvent = {|
@@ -74,14 +76,14 @@ function createInputEvent(
 }
 
 function dispatchInputEvent(
+  eventPropName: string,
   event: ReactDOMResponderEvent,
   context: ReactDOMResponderContext,
   type: InputEventType,
-  listener: (e: any) => void,
   target: Element | Document,
 ): void {
   const syntheticEvent = createInputEvent(event, context, type, target);
-  context.dispatchEvent(syntheticEvent, listener, DiscreteEvent);
+  context.dispatchEvent(eventPropName, syntheticEvent, DiscreteEvent);
 }
 
 function getNodeName(elem: Element | Document): string {
@@ -112,17 +114,11 @@ function shouldUseChangeEvent(elem: Element | Document): boolean {
 }
 
 function dispatchChangeEvent(
-  event: ReactDOMResponderEvent,
   context: ReactDOMResponderContext,
-  type: InputEventType,
-  changeListener: (e: string | boolean) => void,
   target: Element | Document,
 ): void {
   const value = getValueFromNode(target);
-  const listener = () => {
-    changeListener(value);
-  };
-  dispatchInputEvent(event, context, type, listener, target);
+  context.dispatchEvent('onValueChange', value, DiscreteEvent);
 }
 
 function dispatchBothChangeEvents(
@@ -131,15 +127,9 @@ function dispatchBothChangeEvents(
   props: InputResponderProps,
   target: Document | Element,
 ): void {
-  const onChange = props.onChange;
   context.enqueueStateRestore(target);
-  if (onChange) {
-    dispatchInputEvent(event, context, 'change', onChange, target);
-  }
-  const onValueChange = props.onValueChange;
-  if (onValueChange) {
-    dispatchChangeEvent(event, context, 'valuechange', onValueChange, target);
-  }
+  dispatchInputEvent('onChange', event, context, 'change', target);
+  dispatchChangeEvent(context, target);
 }
 
 function updateValueIfChanged(elem: Element | Document): boolean {
@@ -173,8 +163,7 @@ function getValueFromNode(node: Element | Document): string {
   return value;
 }
 
-const InputResponder: ReactDOMEventResponder = {
-  displayName: 'Input',
+const inputResponderImpl = {
   targetEventTypes,
   onEvent(
     event: ReactDOMResponderEvent,
@@ -212,8 +201,11 @@ const InputResponder: ReactDOMEventResponder = {
   },
 };
 
-export const Input = React.unstable_createEvent(InputResponder);
+export const InputResponder = React.unstable_createResponder(
+  'Input',
+  inputResponderImpl,
+);
 
-export function useInput(props: InputResponderProps): void {
-  React.unstable_useEvent(Input, props);
+export function useInputListener(props: InputListenerProps): void {
+  React.unstable_useListener(InputResponder, props);
 }

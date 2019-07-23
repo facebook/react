@@ -80,26 +80,32 @@ export type RefObject = {|
   current: any,
 |};
 
-export type ReactEventComponentInstance<E, C> = {|
-  currentFiber: mixed,
-  isHook: boolean,
+export type ReactEventResponderInstance<E, C> = {|
+  fiber: Object,
   props: Object,
   responder: ReactEventResponder<E, C>,
   rootEventTypes: null | Set<string>,
-  rootInstance: null | mixed,
   state: Object,
+  target: mixed,
 |};
 
 export type ReactEventResponder<E, C> = {
+  $$typeof: Symbol | number,
   displayName: string,
-  targetEventTypes?: Array<string>,
-  rootEventTypes?: Array<string>,
-  getInitialState?: (props: Object) => Object,
-  onEvent?: (event: E, context: C, props: Object, state: Object) => void,
-  onRootEvent?: (event: E, context: C, props: Object, state: Object) => void,
-  onMount?: (context: C, props: Object, state: Object) => void,
-  onUnmount?: (context: C, props: Object, state: Object) => void,
-  onOwnershipChange?: (context: C, props: Object, state: Object) => void,
+  targetEventTypes: null | Array<string>,
+  rootEventTypes: null | Array<string>,
+  getInitialState: null | ((props: Object) => Object),
+  onEvent:
+    | null
+    | ((event: E, context: C, props: Object, state: Object) => void),
+  onRootEvent:
+    | null
+    | ((event: E, context: C, props: Object, state: Object) => void),
+  onMount: null | ((context: C, props: Object, state: Object) => void),
+  onUnmount: null | ((context: C, props: Object, state: Object) => void),
+  onOwnershipChange:
+    | null
+    | ((context: C, props: Object, state: Object) => void),
 };
 
 export type ReactEventComponent<E, C> = {|
@@ -107,7 +113,7 @@ export type ReactEventComponent<E, C> = {|
   responder: ReactEventResponder<E, C>,
 |};
 
-export opaque type EventPriority = 0 | 1 | 2;
+export type EventPriority = 0 | 1 | 2;
 
 export const DiscreteEvent: EventPriority = 0;
 export const UserBlockingEvent: EventPriority = 1;

@@ -24,14 +24,10 @@ import * as Scheduler from 'scheduler/unstable_mock';
 import {createPortal} from 'shared/ReactPortal';
 import expect from 'expect';
 import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
-import warning from 'shared/warning';
 import enqueueTask from 'shared/enqueueTask';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import {
-  warnAboutMissingMockScheduler,
-  enableFlareAPI,
-} from 'shared/ReactFeatureFlags';
+import {warnAboutMissingMockScheduler} from 'shared/ReactFeatureFlags';
 import {ConcurrentRoot, BatchedRoot, LegacyRoot} from 'shared/ReactRootTags';
 
 type Container = {
@@ -69,7 +65,6 @@ const {IsSomeRendererActing} = ReactSharedInternals;
 
 const NO_CONTEXT = {};
 const UPPERCASE_CONTEXT = {};
-const EVENT_COMPONENT_CONTEXT = {};
 const UPDATE_SIGNAL = {};
 if (__DEV__) {
   Object.freeze(NO_CONTEXT);
@@ -266,13 +261,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return NO_CONTEXT;
     },
 
-    getChildHostContextForEventComponent(parentHostContext: HostContext) {
-      if (__DEV__ && enableFlareAPI) {
-        return EVENT_COMPONENT_CONTEXT;
-      }
-      return parentHostContext;
-    },
-
     getPublicInstance(instance) {
       return instance;
     },
@@ -356,14 +344,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       hostContext: Object,
       internalInstanceHandle: Object,
     ): TextInstance {
-      if (__DEV__ && enableFlareAPI) {
-        warning(
-          hostContext !== EVENT_COMPONENT_CONTEXT,
-          'validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
-            'Wrap the child text "%s" in an element.',
-          text,
-        );
-      }
       if (hostContext === UPPERCASE_CONTEXT) {
         text = text.toUpperCase();
       }
@@ -396,15 +376,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     warnsIfNotActing: true,
     supportsHydration: false,
 
-    mountEventComponent(): void {
+    mountResponderInstance(): void {
       // NO-OP
     },
 
-    updateEventComponent(): void {
-      // NO-OP
-    },
-
-    unmountEventComponent(): void {
+    unmountResponderInstance(): void {
       // NO-OP
     },
 

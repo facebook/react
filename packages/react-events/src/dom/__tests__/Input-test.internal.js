@@ -12,8 +12,10 @@
 let React;
 let ReactFeatureFlags;
 let ReactDOM;
-let Input;
-let Press;
+let InputResponder;
+let useInputListener;
+let PressResponder;
+let usePressListener;
 let Scheduler;
 
 const setUntrackedChecked = Object.getOwnPropertyDescriptor(
@@ -39,8 +41,10 @@ const modulesInit = () => {
   React = require('react');
   ReactDOM = require('react-dom');
   Scheduler = require('scheduler');
-  Input = require('react-events/input').Input;
-  Press = require('react-events/press').Press;
+  InputResponder = require('react-events/input').InputResponder;
+  useInputListener = require('react-events/input').useInputListener;
+  PressResponder = require('react-events/press').PressResponder;
+  usePressListener = require('react-events/press').usePressListener;
 };
 
 describe('Input event responder', () => {
@@ -66,15 +70,17 @@ describe('Input event responder', () => {
       onChange = jest.fn();
       onValueChange = jest.fn();
       ref = React.createRef();
-      const element = (
-        <Input
-          disabled={true}
-          onChange={onChange}
-          onValueChange={onValueChange}>
-          <input ref={ref} />
-        </Input>
-      );
-      ReactDOM.render(element, container);
+
+      function Component() {
+        useInputListener({
+          onChange,
+          onValueChange,
+        });
+        return (
+          <input ref={ref} responders={<InputResponder disabled={true} />} />
+        );
+      }
+      ReactDOM.render(<Component />, container);
     });
 
     it('prevents custom events being dispatched', () => {
@@ -113,12 +119,22 @@ describe('Input event responder', () => {
         onValueChangeCalled++;
       }
 
-      ReactDOM.render(
-        <Input onChange={onChange} onValueChange={onValueChange}>
-          <input type="text" ref={ref} defaultValue="foo" />
-        </Input>,
-        container,
-      );
+      function Component() {
+        useInputListener({
+          onChange,
+          onValueChange,
+        });
+        return (
+          <input
+            type="text"
+            ref={ref}
+            defaultValue="foo"
+            responders={<InputResponder />}
+          />
+        );
+      }
+      ReactDOM.render(<Component />, container);
+
       ref.current.dispatchEvent(
         new Event('change', {bubbles: true, cancelable: true}),
       );
@@ -143,12 +159,21 @@ describe('Input event responder', () => {
         onValueChangeCalled++;
       }
 
-      ReactDOM.render(
-        <Input onChange={onChange} onValueChange={onValueChange}>
-          <input type="checkbox" ref={ref} defaultChecked={true} />
-        </Input>,
-        container,
-      );
+      function Component() {
+        useInputListener({
+          onChange,
+          onValueChange,
+        });
+        return (
+          <input
+            type="checkbox"
+            ref={ref}
+            defaultChecked={true}
+            responders={<InputResponder />}
+          />
+        );
+      }
+      ReactDOM.render(<Component />, container);
 
       // Secretly, set `checked` to false, so that dispatching the `click` will
       // make it `true` again. Thus, at the time of the event, React should not
@@ -177,12 +202,21 @@ describe('Input event responder', () => {
         onValueChangeCalled++;
       }
 
-      ReactDOM.render(
-        <Input onChange={onChange} onValueChange={onValueChange}>
-          <input type="checkbox" ref={ref} defaultChecked={false} />
-        </Input>,
-        container,
-      );
+      function Component() {
+        useInputListener({
+          onChange,
+          onValueChange,
+        });
+        return (
+          <input
+            type="checkbox"
+            ref={ref}
+            defaultChecked={false}
+            responders={<InputResponder />}
+          />
+        );
+      }
+      ReactDOM.render(<Component />, container);
 
       // Secretly, set `checked` to true, so that dispatching the `click` will
       // make it `false` again. Thus, at the time of the event, React should not
@@ -210,12 +244,16 @@ describe('Input event responder', () => {
         onValueChangeCalled++;
       }
 
-      ReactDOM.render(
-        <Input onChange={onChange} onValueChange={onValueChange}>
-          <input type="checkbox" ref={ref} />
-        </Input>,
-        container,
-      );
+      function Component() {
+        useInputListener({
+          onChange,
+          onValueChange,
+        });
+        return (
+          <input type="checkbox" ref={ref} responders={<InputResponder />} />
+        );
+      }
+      ReactDOM.render(<Component />, container);
 
       ref.current.dispatchEvent(
         new MouseEvent('click', {bubbles: true, cancelable: true}),
@@ -249,12 +287,21 @@ describe('Input event responder', () => {
         onValueChangeCalled++;
       }
 
-      ReactDOM.render(
-        <Input onChange={onChange} onValueChange={onValueChange}>
-          <input type="text" defaultValue="foo" ref={ref} />
-        </Input>,
-        container,
-      );
+      function Component() {
+        useInputListener({
+          onChange,
+          onValueChange,
+        });
+        return (
+          <input
+            type="text"
+            defaultValue="foo"
+            ref={ref}
+            responders={<InputResponder />}
+          />
+        );
+      }
+      ReactDOM.render(<Component />, container);
 
       // Set it programmatically.
       ref.current.value = 'bar';
@@ -302,12 +349,21 @@ describe('Input event responder', () => {
         onValueChangeCalled++;
       }
 
-      ReactDOM.render(
-        <Input onChange={onChange} onValueChange={onValueChange}>
-          <input type="text" defaultValue="42" ref={ref} />
-        </Input>,
-        container,
-      );
+      function Component() {
+        useInputListener({
+          onChange,
+          onValueChange,
+        });
+        return (
+          <input
+            type="text"
+            defaultValue="42"
+            ref={ref}
+            responders={<InputResponder />}
+          />
+        );
+      }
+      ReactDOM.render(<Component />, container);
 
       // When we set `value` as a property, React updates the "current" value
       // that it tracks internally. The "current" value is later used to determine
@@ -338,12 +394,21 @@ describe('Input event responder', () => {
         onValueChangeCalled++;
       }
 
-      ReactDOM.render(
-        <Input onChange={onChange} onValueChange={onValueChange}>
-          <input type="checkbox" defaultChecked={false} ref={ref} />
-        </Input>,
-        container,
-      );
+      function Component() {
+        useInputListener({
+          onChange,
+          onValueChange,
+        });
+        return (
+          <input
+            type="checkbox"
+            defaultChecked={false}
+            ref={ref}
+            responders={<InputResponder />}
+          />
+        );
+      }
+      ReactDOM.render(<Component />, container);
 
       // Set the value, updating the "current" value that React tracks to true.
       ref.current.checked = true;
@@ -382,12 +447,14 @@ describe('Input event responder', () => {
         onValueChangeCalled++;
       }
 
-      ReactDOM.render(
-        <Input onChange={onChange} onValueChange={onValueChange}>
-          <input type="radio" ref={ref} />
-        </Input>,
-        container,
-      );
+      function Component() {
+        useInputListener({
+          onChange,
+          onValueChange,
+        });
+        return <input type="radio" ref={ref} responders={<InputResponder />} />;
+      }
+      ReactDOM.render(<Component />, container);
 
       setUntrackedChecked.call(ref.current, true);
       ref.current.dispatchEvent(
@@ -425,17 +492,36 @@ describe('Input event responder', () => {
         onValueChangeCalled2++;
       }
 
-      ReactDOM.render(
-        <div ref={ref}>
-          <Input onChange={onChange1} onValueChange={onValueChange1}>
-            <input type="radio" name="group" />
-          </Input>
-          <Input onChange={onChange2} onValueChange={onValueChange2}>
-            <input type="radio" name="group" />
-          </Input>
-        </div>,
-        container,
-      );
+      function Radio1() {
+        useInputListener({
+          onChange: onChange1,
+          onValueChange: onValueChange1,
+        });
+        return (
+          <input type="radio" name="group" responders={<InputResponder />} />
+        );
+      }
+
+      function Radio2() {
+        useInputListener({
+          onChange: onChange2,
+          onValueChange: onValueChange2,
+        });
+        return (
+          <input type="radio" name="group" responders={<InputResponder />} />
+        );
+      }
+
+      function Component() {
+        return (
+          <div ref={ref}>
+            <Radio1 />
+            <Radio2 />
+          </div>
+        );
+      }
+      ReactDOM.render(<Component />, container);
+
       const option1 = ref.current.childNodes[0];
       const option2 = ref.current.childNodes[1];
 
@@ -485,12 +571,21 @@ describe('Input event responder', () => {
       ['text', 'number', 'range'].forEach(type => {
         onChangeCalled = 0;
         onValueChangeCalled = 0;
-        ReactDOM.render(
-          <Input onChange={onChange} onValueChange={onValueChange}>
-            <input type={type} name="group" ref={ref} />
-          </Input>,
-          container,
-        );
+        function Component() {
+          useInputListener({
+            onChange,
+            onValueChange,
+          });
+          return (
+            <input
+              type={type}
+              name="group"
+              ref={ref}
+              responders={<InputResponder />}
+            />
+          );
+        }
+        ReactDOM.render(<Component />, container);
         // Should be ignored (no change):
         ref.current.dispatchEvent(
           new Event('change', {bubbles: true, cancelable: true}),
@@ -509,12 +604,16 @@ describe('Input event responder', () => {
 
         onChangeCalled = 0;
         onValueChangeCalled = 0;
-        ReactDOM.render(
-          <Input onChange={onChange} onValueChange={onValueChange}>
-            <input type={type} ref={ref} />
-          </Input>,
-          container,
-        );
+        function Component2() {
+          useInputListener({
+            onChange,
+            onValueChange,
+          });
+          return (
+            <input type={type} ref={ref} responders={<InputResponder />} />
+          );
+        }
+        ReactDOM.render(<Component2 />, container);
         // Should be ignored (no change):
         ref.current.dispatchEvent(
           new Event('input', {bubbles: true, cancelable: true}),
@@ -533,12 +632,16 @@ describe('Input event responder', () => {
 
         onChangeCalled = 0;
         onValueChangeCalled = 0;
-        ReactDOM.render(
-          <Input onChange={onChange} onValueChange={onValueChange}>
-            <input type={type} ref={ref} />
-          </Input>,
-          container,
-        );
+        function Component3() {
+          useInputListener({
+            onChange,
+            onValueChange,
+          });
+          return (
+            <input type={type} ref={ref} responders={<InputResponder />} />
+          );
+        }
+        ReactDOM.render(<Component3 />, container);
         // Should be ignored (no change):
         ref.current.dispatchEvent(
           new Event('change', {bubbles: true, cancelable: true}),
@@ -571,12 +674,14 @@ describe('Input event responder', () => {
         onValueChangeCalled++;
       }
 
-      ReactDOM.render(
-        <Input onChange={onChange} onValueChange={onValueChange}>
-          <input type="range" ref={ref} />
-        </Input>,
-        container,
-      );
+      function Component() {
+        useInputListener({
+          onChange,
+          onValueChange,
+        });
+        return <input type="range" ref={ref} responders={<InputResponder />} />;
+      }
+      ReactDOM.render(<Component />, container);
 
       setUntrackedValue.call(ref.current, 10);
       ref.current.dispatchEvent(
@@ -606,12 +711,15 @@ describe('Input event responder', () => {
         onValueChangeCalled++;
       }
 
-      ReactDOM.render(
-        <Input onChange={onChange} onValueChange={onValueChange}>
-          <input type="range" ref={ref} />
-        </Input>,
-        container,
-      );
+      function Component() {
+        useInputListener({
+          onChange,
+          onValueChange,
+        });
+        return <input type="range" ref={ref} responders={<InputResponder />} />;
+      }
+      ReactDOM.render(<Component />, container);
+
       setUntrackedValue.call(ref.current, '40');
       ref.current.dispatchEvent(
         new Event('input', {bubbles: true, cancelable: true}),
@@ -649,16 +757,12 @@ describe('Input event responder', () => {
         const div = document.createElement('div');
         // Mount
         ReactDOM.render(
-          <Input>
-            <input type="text" ref={ref} />
-          </Input>,
+          <input type="text" ref={ref} responders={<InputResponder />} />,
           div,
         );
         // Update
         ReactDOM.render(
-          <Input>
-            <input type="text" ref={ref} />
-          </Input>,
+          <input type="text" ref={ref} responders={<InputResponder />} />,
           div,
         );
         // Change
@@ -679,6 +783,20 @@ describe('Input event responder', () => {
 
         let ops = [];
 
+        function Component({innerRef, onChange, controlledValue}) {
+          useInputListener({
+            onChange,
+          });
+          return (
+            <input
+              type="text"
+              ref={innerRef}
+              value={controlledValue}
+              responders={<InputResponder />}
+            />
+          );
+        }
+
         class ControlledInput extends React.Component {
           state = {value: 'initial'};
           onChange = event => this.setState({value: event.target.value});
@@ -687,13 +805,11 @@ describe('Input event responder', () => {
             const controlledValue =
               this.state.value === 'changed' ? 'changed [!]' : this.state.value;
             return (
-              <Input onChange={this.onChange}>
-                <input
-                  type="text"
-                  ref={el => (input = el)}
-                  value={controlledValue}
-                />
-              </Input>
+              <Component
+                onChange={this.onChange}
+                innerRef={el => (input = el)}
+                controlledValue={controlledValue}
+              />
             );
           }
         }
@@ -727,6 +843,20 @@ describe('Input event responder', () => {
 
         let ops = [];
 
+        function Component({innerRef, onChange, controlledValue}) {
+          useInputListener({
+            onChange,
+          });
+          return (
+            <input
+              type="checkbox"
+              ref={innerRef}
+              checked={controlledValue}
+              responders={<InputResponder />}
+            />
+          );
+        }
+
         class ControlledInput extends React.Component {
           state = {checked: false};
           onChange = event => {
@@ -738,13 +868,11 @@ describe('Input event responder', () => {
               ? !this.state.checked
               : this.state.checked;
             return (
-              <Input onChange={this.onChange}>
-                <input
-                  type="checkbox"
-                  ref={el => (input = el)}
-                  checked={controlledValue}
-                />
-              </Input>
+              <Component
+                controlledValue={controlledValue}
+                onChange={this.onChange}
+                innerRef={el => (input = el)}
+              />
             );
           }
         }
@@ -790,6 +918,20 @@ describe('Input event responder', () => {
 
         let ops = [];
 
+        function Component({innerRef, onChange, controlledValue}) {
+          useInputListener({
+            onChange,
+          });
+          return (
+            <textarea
+              type="text"
+              ref={innerRef}
+              value={controlledValue}
+              responders={<InputResponder />}
+            />
+          );
+        }
+
         class ControlledTextarea extends React.Component {
           state = {value: 'initial'};
           onChange = event => this.setState({value: event.target.value});
@@ -798,13 +940,11 @@ describe('Input event responder', () => {
             const controlledValue =
               this.state.value === 'changed' ? 'changed [!]' : this.state.value;
             return (
-              <Input onChange={this.onChange}>
-                <textarea
-                  type="text"
-                  ref={el => (textarea = el)}
-                  value={controlledValue}
-                />
-              </Input>
+              <Component
+                onChange={this.onChange}
+                innerRef={el => (textarea = el)}
+                controlledValue={controlledValue}
+              />
             );
           }
         }
@@ -838,6 +978,33 @@ describe('Input event responder', () => {
 
         let ops = [];
 
+        function Component({innerRef, onChange, controlledValue}) {
+          useInputListener({
+            onChange,
+          });
+          return (
+            <input
+              type="text"
+              ref={innerRef}
+              value={controlledValue}
+              responders={[<InputResponder />, <PressResponder />]}
+            />
+          );
+        }
+
+        function PressWrapper({innerRef, onPress, onChange, controlledValue}) {
+          usePressListener({
+            onPress,
+          });
+          return (
+            <Component
+              onChange={onChange}
+              innerRef={el => (input = el)}
+              controlledValue={controlledValue}
+            />
+          );
+        }
+
         class ControlledInput extends React.Component {
           state = {value: 'initial'};
           onChange = event => this.setState({value: event.target.value});
@@ -849,15 +1016,12 @@ describe('Input event responder', () => {
             const controlledValue =
               this.state.value === 'changed' ? 'changed [!]' : this.state.value;
             return (
-              <Press onPress={this.reset}>
-                <Input onChange={this.onChange}>
-                  <input
-                    type="text"
-                    ref={el => (input = el)}
-                    value={controlledValue}
-                  />
-                </Input>
-              </Press>
+              <PressWrapper
+                onPress={this.reset}
+                onChange={this.onChange}
+                innerRef={el => (input = el)}
+                controlledValue={controlledValue}
+              />
             );
           }
         }
@@ -895,6 +1059,6 @@ describe('Input event responder', () => {
   });
 
   it('expect displayName to show up for event component', () => {
-    expect(Input.responder.displayName).toBe('Input');
+    expect(InputResponder.displayName).toBe('Input');
   });
 });

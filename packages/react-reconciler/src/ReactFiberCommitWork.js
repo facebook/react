@@ -45,7 +45,6 @@ import {
   IncompleteClassComponent,
   MemoComponent,
   SimpleMemoComponent,
-  EventComponent,
   SuspenseListComponent,
   FundamentalComponent,
 } from 'shared/ReactWorkTags';
@@ -94,8 +93,7 @@ import {
   hideTextInstance,
   unhideInstance,
   unhideTextInstance,
-  unmountEventComponent,
-  mountEventComponent,
+  unmountResponderInstance,
   unmountFundamentalComponent,
   updateFundamentalComponent,
 } from './ReactFiberHostConfig';
@@ -596,12 +594,6 @@ function commitLifeCycles(
     case IncompleteClassComponent:
     case FundamentalComponent:
       return;
-    case EventComponent: {
-      if (enableFlareAPI) {
-        mountEventComponent(finishedWork.stateNode);
-      }
-      return;
-    }
     default: {
       invariant(
         false,
@@ -742,6 +734,25 @@ function commitUnmount(current: Fiber): void {
       return;
     }
     case HostComponent: {
+      if (enableFlareAPI) {
+        const dependencies = current.dependencies;
+
+        if (dependencies !== null) {
+          const respondersMap = dependencies.responders;
+          if (respondersMap !== null) {
+            const responderInstances = Array.from(respondersMap.values());
+            for (
+              let i = 0, length = responderInstances.length;
+              i < length;
+              i++
+            ) {
+              const responderInstance = responderInstances[i];
+              unmountResponderInstance(responderInstance);
+            }
+            dependencies.responders = null;
+          }
+        }
+      }
       safelyDetachRef(current);
       return;
     }
@@ -755,14 +766,6 @@ function commitUnmount(current: Fiber): void {
         emptyPortalContainer(current);
       }
       return;
-    }
-    case EventComponent: {
-      if (enableFlareAPI) {
-        const eventComponentInstance = current.stateNode;
-        unmountEventComponent(eventComponentInstance);
-        current.stateNode = null;
-      }
-      break;
     }
     case FundamentalComponent: {
       if (enableFundamentalAPI) {
@@ -853,8 +856,7 @@ function commitContainer(finishedWork: Fiber) {
     case ClassComponent:
     case HostComponent:
     case HostText:
-    case FundamentalComponent:
-    case EventComponent: {
+    case FundamentalComponent: {
       return;
     }
     case HostRoot:
@@ -1283,9 +1285,6 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       return;
     }
     case IncompleteClassComponent: {
-      return;
-    }
-    case EventComponent: {
       return;
     }
     case FundamentalComponent: {

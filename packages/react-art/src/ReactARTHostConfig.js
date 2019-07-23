@@ -10,7 +10,10 @@ import Mode from 'art/modes/current';
 import invariant from 'shared/invariant';
 
 import {TYPES, EVENT_TYPES, childrenAsString} from './ReactARTInternals';
-import type {ReactEventComponentInstance} from 'shared/ReactTypes';
+import type {
+  ReactEventResponder,
+  ReactEventResponderInstance,
+} from 'shared/ReactTypes';
 
 const pooledTransform = new Transform();
 
@@ -329,10 +332,6 @@ export function getChildHostContext() {
   return NO_CONTEXT;
 }
 
-export function getChildHostContextForEventComponent() {
-  return NO_CONTEXT;
-}
-
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;
 export const noTimeout = -1;
@@ -427,20 +426,19 @@ export function unhideTextInstance(textInstance, text): void {
   // Noop
 }
 
-export function mountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance<any, any>,
+export function mountResponderInstance(
+  responder: ReactEventResponder<any, any>,
+  responderInstance: ReactEventResponderInstance<any, any>,
+  props: Object,
+  state: Object,
+  instance: Object,
+  rootContainerInstance: Object,
 ) {
   throw new Error('Not yet implemented.');
 }
 
-export function updateEventComponent(
-  eventComponentInstance: ReactEventComponentInstance<any, any>,
-) {
-  throw new Error('Not yet implemented.');
-}
-
-export function unmountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance<any, any>,
+export function unmountResponderInstance(
+  responderInstance: ReactEventResponderInstance<any, any>,
 ): void {
   throw new Error('Not yet implemented.');
 }

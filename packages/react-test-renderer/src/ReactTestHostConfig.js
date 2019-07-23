@@ -10,7 +10,8 @@
 import warning from 'shared/warning';
 
 import type {
-  ReactEventComponentInstance,
+  ReactEventResponder,
+  ReactEventResponderInstance,
   ReactFundamentalComponentInstance,
 } from 'shared/ReactTypes';
 
@@ -121,15 +122,6 @@ export function getChildHostContext(
   type: string,
   rootContainerInstance: Container,
 ): HostContext {
-  return NO_CONTEXT;
-}
-
-export function getChildHostContextForEventComponent(
-  parentHostContext: HostContext,
-): HostContext {
-  if (__DEV__ && enableFlareAPI) {
-    return EVENT_COMPONENT_CONTEXT;
-  }
   return NO_CONTEXT;
 }
 
@@ -288,22 +280,21 @@ export function unhideTextInstance(
   textInstance.isHidden = false;
 }
 
-export function mountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance<any, any>,
-): void {
-  // noop
+export function mountResponderInstance(
+  responder: ReactEventResponder<any, any>,
+  responderInstance: ReactEventResponderInstance<any, any>,
+  props: Object,
+  state: Object,
+  instance: Instance,
+  rootContainerInstance: Container,
+) {
+  throw new Error('Not yet implemented.');
 }
 
-export function updateEventComponent(
-  eventComponentInstance: ReactEventComponentInstance<any, any>,
+export function unmountResponderInstance(
+  responderInstance: ReactEventResponderInstance<any, any>,
 ): void {
-  // noop
-}
-
-export function unmountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance<any, any>,
-): void {
-  // noop
+  throw new Error('Not yet implemented.');
 }
 
 export function getFundamentalComponentInstance(fundamentalInstance): Instance {

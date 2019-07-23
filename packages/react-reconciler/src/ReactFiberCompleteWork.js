@@ -9,6 +9,11 @@
 
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {
+  ReactEventResponder,
+  ReactEventResponderInstance,
+  ReactFundamentalComponentInstance,
+} from 'shared/ReactTypes';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {
   Instance,
@@ -18,10 +23,6 @@ import type {
   ChildSet,
 } from './ReactFiberHostConfig';
 import type {
-  ReactEventComponentInstance,
-  ReactFundamentalComponentInstance,
-} from 'shared/ReactTypes';
-import type {
   SuspenseState,
   SuspenseListRenderState,
 } from './ReactFiberSuspenseComponent';
@@ -29,6 +30,7 @@ import type {SuspenseContext} from './ReactFiberSuspenseContext';
 
 import {now} from './SchedulerWithReactIntegration';
 
+import {REACT_RESPONDER_TYPE} from 'shared/ReactSymbols';
 import {
   IndeterminateComponent,
   FunctionComponent,
@@ -50,7 +52,6 @@ import {
   SimpleMemoComponent,
   LazyComponent,
   IncompleteClassComponent,
-  EventComponent,
   FundamentalComponent,
 } from 'shared/ReactWorkTags';
 import {NoMode, BatchedMode} from './ReactTypeOfMode';
@@ -78,7 +79,8 @@ import {
   createContainerChildSet,
   appendChildToContainerChildSet,
   finalizeContainerChildren,
-  updateEventComponent,
+  mountResponderInstance,
+  unmountResponderInstance,
   getFundamentalComponentInstance,
   mountFundamentalComponent,
   cloneFundamentalInstance,
@@ -90,6 +92,8 @@ import {
   getHostContext,
   popHostContainer,
 } from './ReactFiberHostContext';
+import {NoWork} from './ReactFiberExpirationTime';
+import {createResponderInstance} from './ReactFiberEvents';
 import {
   suspenseStackCursor,
   InvisibleParentSuspenseContext,
@@ -125,10 +129,12 @@ import {
   renderDidSuspendDelayIfPossible,
   renderHasNotSuspendedYet,
 } from './ReactFiberWorkLoop';
-import {createEventComponentInstance} from './ReactFiberEvents';
 import {createFundamentalStateInstance} from './ReactFiberFundamental';
 import {Never} from './ReactFiberExpirationTime';
 import {resetChildFibers} from './ReactChildFiber';
+
+const emptyObject = {};
+const isArray = Array.isArray;
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -682,6 +688,20 @@ function completeWork(
           rootContainerInstance,
         );
 
+        if (enableFlareAPI) {
+          const prevResponders = current.memoizedProps.responders;
+          const nextResponders = newProps.responders;
+          const instance = workInProgress.stateNode;
+          if (prevResponders !== nextResponders) {
+            updateEventResponders(
+              nextResponders,
+              instance,
+              rootContainerInstance,
+              workInProgress,
+            );
+          }
+        }
+
         if (current.ref !== workInProgress.ref) {
           markRef(workInProgress);
         }
@@ -726,6 +746,18 @@ function completeWork(
           );
 
           appendAllChildren(instance, workInProgress, false, false);
+
+          if (enableFlareAPI) {
+            const responders = newProps.responders;
+            if (responders != null) {
+              updateEventResponders(
+                responders,
+                instance,
+                rootContainerInstance,
+                workInProgress,
+              );
+            }
+          }
 
           // Certain renderers require commit-time effects for initial mount.
           // (eg DOM renderer supports auto-focus for certain elements).
@@ -1133,42 +1165,6 @@ function completeWork(
       }
       break;
     }
-    case EventComponent: {
-      if (enableFlareAPI) {
-        popHostContext(workInProgress);
-        const rootContainerInstance = getRootHostContainer();
-        const responder = workInProgress.type.responder;
-        let eventComponentInstance: ReactEventComponentInstance<
-          any,
-          any,
-        > | null =
-          workInProgress.stateNode;
-
-        if (eventComponentInstance === null) {
-          let responderState = null;
-          const getInitialState = responder.getInitialState;
-          if (getInitialState !== undefined) {
-            responderState = getInitialState(newProps);
-          }
-          eventComponentInstance = workInProgress.stateNode = createEventComponentInstance(
-            workInProgress,
-            newProps,
-            responder,
-            rootContainerInstance,
-            responderState || {},
-            false,
-          );
-          markUpdate(workInProgress);
-        } else {
-          // Update the props on the event component state node
-          eventComponentInstance.props = newProps;
-          // Update the current fiber
-          eventComponentInstance.currentFiber = workInProgress;
-          updateEventComponent(eventComponentInstance);
-        }
-      }
-      break;
-    }
     case FundamentalComponent: {
       if (enableFundamentalAPI) {
         const fundamentalImpl = workInProgress.type.impl;
@@ -1229,6 +1225,147 @@ function completeWork(
   }
 
   return null;
+}
+
+function mountEventResponder(
+  responder: ReactEventResponder<any, any>,
+  responderProps: Object,
+  instance: Instance,
+  rootContainerInstance: Container,
+  fiber: Fiber,
+  respondersMap: Map<
+    ReactEventResponder<any, any>,
+    ReactEventResponderInstance<any, any>,
+  >,
+) {
+  let responderState = emptyObject;
+  const getInitialState = responder.getInitialState;
+  if (getInitialState !== null) {
+    responderState = getInitialState(responderProps);
+  }
+  const responderInstance = createResponderInstance(
+    responder,
+    responderProps,
+    responderState,
+    instance,
+    fiber,
+  );
+  mountResponderInstance(
+    responder,
+    responderInstance,
+    responderProps,
+    responderState,
+    instance,
+    rootContainerInstance,
+  );
+  respondersMap.set(responder, responderInstance);
+}
+
+function updateEventResponder(
+  responder: ReactEventResponder<any, any>,
+  props: Object,
+  fiber: Fiber,
+  visistedResponders: Set<ReactEventResponder<any, any>>,
+  respondersMap: Map<
+    ReactEventResponder<any, any>,
+    ReactEventResponderInstance<any, any>,
+  >,
+  instance: Instance,
+  rootContainerInstance: Container,
+): void {
+  invariant(
+    responder && responder.$$typeof === REACT_RESPONDER_TYPE,
+    'An invalid value was used as an event responder. Expect one or many event ' +
+      'responders created via React.unstable_createResponer().',
+  );
+  if (visistedResponders.has(responder)) {
+    // show warning
+    return;
+  }
+  visistedResponders.add(responder);
+  const responderInstance = respondersMap.get(responder);
+
+  if (responderInstance === undefined) {
+    // Mount
+    mountEventResponder(
+      responder,
+      props,
+      instance,
+      rootContainerInstance,
+      fiber,
+      respondersMap,
+    );
+  } else {
+    // Update
+    responderInstance.props = props;
+    responderInstance.fiber = fiber;
+  }
+}
+
+function updateEventResponders(
+  responders: any,
+  instance: Instance,
+  rootContainerInstance: Container,
+  fiber: Fiber,
+): void {
+  const visistedResponders = new Set();
+  let dependencies = fiber.dependencies;
+  if (responders != null) {
+    if (dependencies === null) {
+      dependencies = fiber.dependencies = {
+        expirationTime: NoWork,
+        firstContext: null,
+        listeners: null,
+        responders: new Map(),
+      };
+    }
+    let respondersMap = dependencies.responders;
+    if (respondersMap === null) {
+      respondersMap = new Map();
+    }
+    if (isArray(responders)) {
+      for (let i = 0, length = responders.length; i < length; i++) {
+        const {type, props} = responders[i];
+        updateEventResponder(
+          type,
+          props,
+          fiber,
+          visistedResponders,
+          respondersMap,
+          instance,
+          rootContainerInstance,
+        );
+      }
+    } else {
+      const {type, props} = responders;
+      updateEventResponder(
+        type,
+        props,
+        fiber,
+        visistedResponders,
+        respondersMap,
+        instance,
+        rootContainerInstance,
+      );
+    }
+  }
+  if (dependencies !== null) {
+    const respondersMap = dependencies.responders;
+    if (respondersMap !== null) {
+      // Unmount
+      const mountedResponders = Array.from(respondersMap.keys());
+      for (let i = 0, length = mountedResponders.length; i < length; i++) {
+        const mountedResponder = mountedResponders[i];
+        if (!visistedResponders.has(mountedResponder)) {
+          const responderInstance = ((respondersMap.get(
+            mountedResponder,
+          ): any): ReactEventResponderInstance<any, any>);
+          unmountResponderInstance(responderInstance);
+          respondersMap.delete(mountedResponder);
+        }
+      }
+    }
+  }
 }
 
 export {completeWork};

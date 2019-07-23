@@ -41,7 +41,6 @@ import {
   SimpleMemoComponent,
   LazyComponent,
   IncompleteClassComponent,
-  EventComponent,
   FundamentalComponent,
 } from 'shared/ReactWorkTags';
 import {
@@ -111,11 +110,7 @@ import {
 } from './ReactFiberHostConfig';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import {shouldSuspend} from './ReactFiberReconciler';
-import {
-  pushHostContext,
-  pushHostContainer,
-  pushHostContextForEventComponent,
-} from './ReactFiberHostContext';
+import {pushHostContext, pushHostContainer} from './ReactFiberHostContext';
 import {
   suspenseStackCursor,
   pushSuspenseContext,
@@ -177,7 +172,7 @@ import {
   requestCurrentTime,
   retryTimedOutBoundary,
 } from './ReactFiberWorkLoop';
-import {prepareToReadEventComponents} from './ReactFiberEvents';
+import {prepareToReadListenerHooks} from './ReactFiberEvents';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -304,7 +299,9 @@ function updateForwardRef(
   // The rest is a fork of updateFunctionComponent
   let nextChildren;
   prepareToReadContext(workInProgress, renderExpirationTime);
-  prepareToReadEventComponents(workInProgress);
+  if (enableFlareAPI) {
+    prepareToReadListenerHooks(workInProgress);
+  }
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
     setCurrentPhase('render');
@@ -323,6 +320,9 @@ function updateForwardRef(
     ) {
       // Only double-render components with Hooks
       if (workInProgress.memoizedState !== null) {
+        if (enableFlareAPI) {
+          prepareToReadListenerHooks(workInProgress);
+        }
         nextChildren = renderWithHooks(
           current,
           workInProgress,
@@ -625,7 +625,9 @@ function updateFunctionComponent(
 
   let nextChildren;
   prepareToReadContext(workInProgress, renderExpirationTime);
-  prepareToReadEventComponents(workInProgress);
+  if (enableFlareAPI) {
+    prepareToReadListenerHooks(workInProgress);
+  }
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
     setCurrentPhase('render');
@@ -644,6 +646,9 @@ function updateFunctionComponent(
     ) {
       // Only double-render components with Hooks
       if (workInProgress.memoizedState !== null) {
+        if (enableFlareAPI) {
+          prepareToReadListenerHooks(workInProgress);
+        }
         nextChildren = renderWithHooks(
           current,
           workInProgress,
@@ -1240,7 +1245,9 @@ function mountIndeterminateComponent(
   const context = getMaskedContext(workInProgress, unmaskedContext);
 
   prepareToReadContext(workInProgress, renderExpirationTime);
-  prepareToReadEventComponents(workInProgress);
+  if (enableFlareAPI) {
+    prepareToReadListenerHooks(workInProgress);
+  }
   let value;
 
   if (__DEV__) {
@@ -1363,6 +1370,9 @@ function mountIndeterminateComponent(
       ) {
         // Only double-render components with Hooks
         if (workInProgress.memoizedState !== null) {
+          if (enableFlareAPI) {
+            prepareToReadListenerHooks(workInProgress);
+          }
           value = renderWithHooks(
             null,
             workInProgress,
@@ -2479,20 +2489,6 @@ function updateContextConsumer(
   return workInProgress.child;
 }
 
-function updateEventComponent(current, workInProgress, renderExpirationTime) {
-  const nextProps = workInProgress.pendingProps;
-  const nextChildren = nextProps.children;
-
-  reconcileChildren(
-    current,
-    workInProgress,
-    nextChildren,
-    renderExpirationTime,
-  );
-  pushHostContextForEventComponent(workInProgress);
-  return workInProgress.child;
-}
-
 function updateFundamentalComponent(
   current,
   workInProgress,
@@ -2803,11 +2799,6 @@ function beginWork(
           pushSuspenseContext(workInProgress, suspenseStackCursor.current);
           break;
         }
-        case EventComponent:
-          if (enableFlareAPI) {
-            pushHostContextForEventComponent(workInProgress);
-          }
-          break;
       }
       return bailoutOnAlreadyFinishedWork(
         current,
@@ -2992,16 +2983,6 @@ function beginWork(
         workInProgress,
         renderExpirationTime,
       );
-    }
-    case EventComponent: {
-      if (enableFlareAPI) {
-        return updateEventComponent(
-          current,
-          workInProgress,
-          renderExpirationTime,
-        );
-      }
-      break;
     }
     case FundamentalComponent: {
       if (enableFundamentalAPI) {

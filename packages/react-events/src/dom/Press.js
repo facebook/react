@@ -8,31 +8,31 @@
  */
 
 import type {
-  ReactDOMEventResponder,
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
   PointerType,
 } from 'shared/ReactDOMTypes';
 import type {EventPriority} from 'shared/ReactTypes';
-import warning from 'shared/warning';
 
 import React from 'react';
 import {DiscreteEvent, UserBlockingEvent} from 'shared/ReactTypes';
 
-type PressProps = {
-  disabled: boolean,
-  delayLongPress: number,
-  delayPressEnd: number,
-  delayPressStart: number,
+type PressListenerProps = {|
   onContextMenu: (e: PressEvent) => void,
   onLongPress: (e: PressEvent) => void,
   onLongPressChange: boolean => void,
-  onLongPressShouldCancelPress: () => boolean,
   onPress: (e: PressEvent) => void,
   onPressChange: boolean => void,
   onPressEnd: (e: PressEvent) => void,
   onPressMove: (e: PressEvent) => void,
   onPressStart: (e: PressEvent) => void,
+|};
+
+type PressProps = {|
+  disabled: boolean,
+  delayLongPress: number,
+  delayPressEnd: number,
+  delayPressStart: number,
   pressRetentionOffset: {
     top: number,
     right: number,
@@ -42,7 +42,9 @@ type PressProps = {
   preventContextMenu: boolean,
   preventDefault: boolean,
   stopPropagation: boolean,
-};
+  enableLongPress: boolean,
+  longPressShouldCancelPress: () => boolean,
+|};
 
 type PressState = {
   activationPosition: null | $ReadOnly<{|
@@ -215,11 +217,11 @@ function createPressEvent(
 }
 
 function dispatchEvent(
+  eventPropName: string,
   event: ?ReactDOMResponderEvent,
   context: ReactDOMResponderContext,
   state: PressState,
   name: PressEventType,
-  listener: (e: Object) => void,
   eventPriority: EventPriority,
 ): void {
   const target = ((state.pressTarget: any): Element | Document);
@@ -237,40 +239,23 @@ function dispatchEvent(
     touchEvent,
     defaultPrevented,
   );
-  context.dispatchEvent(syntheticEvent, listener, eventPriority);
+  context.dispatchEvent(eventPropName, syntheticEvent, eventPriority);
 }
 
 function dispatchPressChangeEvent(
-  event: ?ReactDOMResponderEvent,
   context: ReactDOMResponderContext,
-  props: PressProps,
   state: PressState,
 ): void {
   const bool = state.isActivePressed;
-  const listener = () => {
-    props.onPressChange(bool);
-  };
-  dispatchEvent(event, context, state, 'presschange', listener, DiscreteEvent);
+  context.dispatchEvent('onPressChange', bool, DiscreteEvent);
 }
 
 function dispatchLongPressChangeEvent(
-  event: ?ReactDOMResponderEvent,
   context: ReactDOMResponderContext,
-  props: PressProps,
   state: PressState,
 ): void {
   const bool = state.isLongPressed;
-  const listener = () => {
-    props.onLongPressChange(bool);
-  };
-  dispatchEvent(
-    event,
-    context,
-    state,
-    'longpresschange',
-    listener,
-    DiscreteEvent,
-  );
+  context.dispatchEvent('onLongPressChange', bool, DiscreteEvent);
 }
 
 function activate(event: ReactDOMResponderEvent, context, props, state) {
@@ -282,18 +267,16 @@ function activate(event: ReactDOMResponderEvent, context, props, state) {
     state.activationPosition = {x, y};
   }
 
-  if (props.onPressStart) {
-    dispatchEvent(
-      event,
-      context,
-      state,
-      'pressstart',
-      props.onPressStart,
-      DiscreteEvent,
-    );
-  }
-  if (!wasActivePressed && props.onPressChange) {
-    dispatchPressChangeEvent(event, context, props, state);
+  dispatchEvent(
+    'onPressStart',
+    event,
+    context,
+    state,
+    'pressstart',
+    DiscreteEvent,
+  );
+  if (!wasActivePressed) {
+    dispatchPressChangeEvent(context, state);
   }
 }
 
@@ -302,21 +285,10 @@ function deactivate(event: ?ReactDOMResponderEvent, context, props, state) {
   state.isActivePressed = false;
   state.isLongPressed = false;
 
-  if (props.onPressEnd) {
-    dispatchEvent(
-      event,
-      context,
-      state,
-      'pressend',
-      props.onPressEnd,
-      DiscreteEvent,
-    );
-  }
-  if (props.onPressChange) {
-    dispatchPressChangeEvent(event, context, props, state);
-  }
-  if (wasLongPressed && props.onLongPressChange) {
-    dispatchLongPressChangeEvent(event, context, props, state);
+  dispatchEvent('onPressEnd', event, context, state, 'pressend', DiscreteEvent);
+  dispatchPressChangeEvent(context, state);
+  if (wasLongPressed && props.enableLongPress) {
+    dispatchLongPressChangeEvent(context, state);
   }
 }
 
@@ -337,10 +309,7 @@ function dispatchPressStartEvents(
     state.isActivePressStart = true;
     activate(event, context, props, state);
 
-    if (
-      (props.onLongPress || props.onLongPressChange) &&
-      !state.isLongPressed
-    ) {
+    if (!state.isLongPressed && props.enableLongPress) {
       const delayLongPress = calculateDelayMS(
         props.delayLongPress,
         10,
@@ -349,19 +318,15 @@ function dispatchPressStartEvents(
       state.longPressTimeout = context.setTimeout(() => {
         state.isLongPressed = true;
         state.longPressTimeout = null;
-        if (props.onLongPress) {
-          dispatchEvent(
-            event,
-            context,
-            state,
-            'longpress',
-            props.onLongPress,
-            DiscreteEvent,
-          );
-        }
-        if (props.onLongPressChange) {
-          dispatchLongPressChangeEvent(event, context, props, state);
-        }
+        dispatchEvent(
+          'onLongPress',
+          event,
+          context,
+          state,
+          'longpress',
+          DiscreteEvent,
+        );
+        dispatchLongPressChangeEvent(context, state);
       }, delayLongPress);
     }
   };
@@ -613,14 +578,7 @@ function handleStopPropagation(
   nativeEvent,
 ): void {
   const stopPropagation = props.stopPropagation;
-  if (stopPropagation !== undefined && context.isRespondingToHook()) {
-    if (__DEV__) {
-      warning(
-        false,
-        '"stopPropagation" prop cannot be passed to Press event hooks. This will result in a no-op.',
-      );
-    }
-  } else if (stopPropagation === true) {
+  if (stopPropagation === true) {
     nativeEvent.stopPropagation();
   }
 }
@@ -630,8 +588,7 @@ function targetIsDocument(target: null | Node): boolean {
   return target === null || target.nodeType === 9;
 }
 
-const PressResponder: ReactDOMEventResponder = {
-  displayName: 'Press',
+const pressResponderImpl = {
   targetEventTypes,
   getInitialState(): PressState {
     return {
@@ -766,14 +723,7 @@ const PressResponder: ReactDOMEventResponder = {
       case 'contextmenu': {
         const preventContextMenu = props.preventContextMenu;
 
-        if (preventContextMenu !== undefined && context.isRespondingToHook()) {
-          if (__DEV__) {
-            warning(
-              false,
-              '"preventContextMenu" prop cannot be passed to Press event hooks. This will result in a no-op.',
-            );
-          }
-        } else if (preventContextMenu === true) {
+        if (preventContextMenu === true) {
           // Skip dispatching of onContextMenu below
           nativeEvent.preventDefault();
         }
@@ -781,34 +731,21 @@ const PressResponder: ReactDOMEventResponder = {
         if (isPressed) {
           const preventDefault = props.preventDefault;
 
-          if (preventDefault !== undefined && context.isRespondingToHook()) {
-            if (__DEV__) {
-              warning(
-                false,
-                '"preventDefault" prop cannot be passed to Press event hooks. This will result in a no-op.',
-              );
-            }
-          } else if (
-            preventDefault !== false &&
-            !nativeEvent.defaultPrevented
-          ) {
+          if (preventDefault !== false && !nativeEvent.defaultPrevented) {
             // Skip dispatching of onContextMenu below
             nativeEvent.preventDefault();
             return;
           }
           dispatchCancel(event, context, props, state);
         }
-
-        if (props.onContextMenu) {
-          dispatchEvent(
-            event,
-            context,
-            state,
-            'contextmenu',
-            props.onContextMenu,
-            DiscreteEvent,
-          );
-        }
+        dispatchEvent(
+          'onContextMenu',
+          event,
+          context,
+          state,
+          'contextmenu',
+          DiscreteEvent,
+        );
         // Click won't occur, so we need to remove root events
         removeRootEventTypes(context, state);
         break;
@@ -878,16 +815,14 @@ const PressResponder: ReactDOMEventResponder = {
 
         if (state.isPressWithinResponderRegion) {
           if (isPressed) {
-            if (props.onPressMove) {
-              dispatchEvent(
-                event,
-                context,
-                state,
-                'pressmove',
-                props.onPressMove,
-                UserBlockingEvent,
-              );
-            }
+            dispatchEvent(
+              'onPressMove',
+              event,
+              context,
+              state,
+              'pressmove',
+              UserBlockingEvent,
+            );
             if (
               state.activationPosition != null &&
               state.longPressTimeout != null
@@ -942,8 +877,8 @@ const PressResponder: ReactDOMEventResponder = {
 
           // Determine whether to call preventDefault on subsequent native events.
           if (
-            context.isTargetWithinEventComponent(target) &&
-            context.isTargetWithinHostComponent(target, 'a', true)
+            context.isTargetWithinResponder(target) &&
+            context.isTargetWithinHostComponent(target, 'a')
           ) {
             const {
               altKey,
@@ -954,14 +889,7 @@ const PressResponder: ReactDOMEventResponder = {
             // Check "open in new window/tab" and "open context menu" key modifiers
             const preventDefault = props.preventDefault;
 
-            if (preventDefault !== undefined && context.isRespondingToHook()) {
-              if (__DEV__) {
-                warning(
-                  false,
-                  '"preventDefault" prop cannot be passed to Press event hooks. This will result in a no-op.',
-                );
-              }
-            } else if (
+            if (
               preventDefault !== false &&
               !shiftKey &&
               !metaKey &&
@@ -976,7 +904,7 @@ const PressResponder: ReactDOMEventResponder = {
           const pressTarget = state.pressTarget;
           dispatchPressEndEvents(event, context, props, state);
 
-          if (pressTarget !== null && props.onPress) {
+          if (pressTarget !== null) {
             if (
               !isKeyboardEvent &&
               pressTarget !== null &&
@@ -1003,16 +931,17 @@ const PressResponder: ReactDOMEventResponder = {
               if (
                 !(
                   wasLongPressed &&
-                  props.onLongPressShouldCancelPress &&
-                  props.onLongPressShouldCancelPress()
+                  props.enableLongPress &&
+                  props.longPressShouldCancelPress &&
+                  props.longPressShouldCancelPress()
                 )
               ) {
                 dispatchEvent(
+                  'onPress',
                   event,
                   context,
                   state,
                   'press',
-                  props.onPress,
                   DiscreteEvent,
                 );
               }
@@ -1077,8 +1006,11 @@ const PressResponder: ReactDOMEventResponder = {
   },
 };
 
-export const Press = React.unstable_createEvent(PressResponder);
+export const PressResponder = React.unstable_createResponder(
+  'Press',
+  pressResponderImpl,
+);
 
-export function usePress(props: PressProps): void {
-  React.unstable_useEvent(Press, props);
+export function usePressListener(props: PressListenerProps): void {
+  React.unstable_useListener(PressResponder, props);
 }

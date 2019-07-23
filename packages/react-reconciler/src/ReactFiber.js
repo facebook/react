@@ -12,7 +12,8 @@ import type {
   ReactFragment,
   ReactPortal,
   RefObject,
-  ReactEventComponent,
+  ReactEventResponder,
+  ReactEventResponderInstance,
   ReactFundamentalComponent,
 } from 'shared/ReactTypes';
 import type {RootTag} from 'shared/ReactRootTags';
@@ -23,13 +24,11 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {UpdateQueue} from './ReactUpdateQueue';
 import type {ContextDependency} from './ReactFiberNewContext';
 import type {HookType} from './ReactFiberHooks';
-import type {ReactEventComponentInstance} from 'shared/ReactTypes';
 
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {
   enableProfilerTimer,
-  enableFlareAPI,
   enableFundamentalAPI,
 } from 'shared/ReactFeatureFlags';
 import {NoEffect, Placement} from 'shared/ReactSideEffectTags';
@@ -53,7 +52,6 @@ import {
   MemoComponent,
   SimpleMemoComponent,
   LazyComponent,
-  EventComponent,
   FundamentalComponent,
 } from 'shared/ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
@@ -84,7 +82,6 @@ import {
   REACT_SUSPENSE_LIST_TYPE,
   REACT_MEMO_TYPE,
   REACT_LAZY_TYPE,
-  REACT_EVENT_COMPONENT_TYPE,
   REACT_FUNDAMENTAL_TYPE,
 } from 'shared/ReactSymbols';
 
@@ -110,7 +107,14 @@ if (__DEV__) {
 export type Dependencies = {
   expirationTime: ExpirationTime,
   firstContext: ContextDependency<mixed> | null,
-  events: Array<ReactEventComponentInstance<any, any>> | null,
+  listeners: Array<{
+    responder: ReactEventResponder<any, any>,
+    props: Object,
+  }> | null,
+  responders: Map<
+    ReactEventResponder<any, any>,
+    ReactEventResponderInstance<any, any>,
+  > | null,
 };
 
 // A Fiber is work on a Component that needs to be done or was done. There can
@@ -453,7 +457,8 @@ export function createWorkInProgress(
       : {
           expirationTime: currentDependencies.expirationTime,
           firstContext: currentDependencies.firstContext,
-          events: currentDependencies.events,
+          listeners: currentDependencies.listeners,
+          responders: currentDependencies.responders,
         };
 
   // These will be overridden during the parent's reconciliation
@@ -548,7 +553,8 @@ export function resetWorkInProgress(
         : {
             expirationTime: currentDependencies.expirationTime,
             firstContext: currentDependencies.firstContext,
-            events: currentDependencies.events,
+            listeners: currentDependencies.listeners,
+            responders: currentDependencies.responders,
           };
 
     if (enableProfilerTimer) {
@@ -659,17 +665,6 @@ export function createFiberFromTypeAndProps(
               fiberTag = LazyComponent;
               resolvedType = null;
               break getTag;
-            case REACT_EVENT_COMPONENT_TYPE:
-              if (enableFlareAPI) {
-                return createFiberFromEventComponent(
-                  type,
-                  pendingProps,
-                  mode,
-                  expirationTime,
-                  key,
-                );
-              }
-              break;
             case REACT_FUNDAMENTAL_TYPE:
               if (enableFundamentalAPI) {
                 return createFiberFromFundamental(
@@ -755,20 +750,6 @@ export function createFiberFromFragment(
   key: null | string,
 ): Fiber {
   const fiber = createFiber(Fragment, elements, key, mode);
-  fiber.expirationTime = expirationTime;
-  return fiber;
-}
-
-export function createFiberFromEventComponent(
-  eventComponent: ReactEventComponent<any, any, any>,
-  pendingProps: any,
-  mode: TypeOfMode,
-  expirationTime: ExpirationTime,
-  key: null | string,
-): Fiber {
-  const fiber = createFiber(EventComponent, pendingProps, key, mode);
-  fiber.elementType = eventComponent;
-  fiber.type = eventComponent;
   fiber.expirationTime = expirationTime;
   return fiber;
 }

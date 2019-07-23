@@ -381,7 +381,7 @@ class ReactShallowRenderer {
       useReducer,
       useRef,
       useState,
-      useEvent: noOp,
+      useListener: noOp,
     };
   }
 

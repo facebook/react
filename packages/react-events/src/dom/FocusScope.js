@@ -7,7 +7,6 @@
  * @flow
  */
 import type {
-  ReactDOMEventResponder,
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
 } from 'shared/ReactDOMTypes';
@@ -40,14 +39,13 @@ function getFirstFocusableElement(
   context: ReactDOMResponderContext,
   state: FocusScopeState,
 ): ?HTMLElement {
-  const elements = context.getFocusableElementsInScope();
+  const elements = context.getFocusableElementsInScope(false);
   if (elements.length > 0) {
     return elements[0];
   }
 }
 
-const FocusScopeResponder: ReactDOMEventResponder = {
-  displayName: 'FocusScope',
+const focusScopeResponderImpl = {
   targetEventTypes,
   rootEventTypes,
   getInitialState(): FocusScopeState {
@@ -68,14 +66,14 @@ const FocusScopeResponder: ReactDOMEventResponder = {
       const focusedElement = context.getActiveDocument().activeElement;
       if (
         focusedElement !== null &&
-        context.isTargetWithinEventComponent(focusedElement)
+        context.isTargetWithinResponder(focusedElement)
       ) {
         const {altkey, ctrlKey, metaKey, shiftKey} = (nativeEvent: any);
         // Skip if any of these keys are being pressed
         if (altkey || ctrlKey || metaKey) {
           return;
         }
-        const elements = context.getFocusableElementsInScope();
+        const elements = context.getFocusableElementsInScope(false);
         const position = elements.indexOf(focusedElement);
         const lastPosition = elements.length - 1;
         let nextElement = null;
@@ -86,7 +84,10 @@ const FocusScopeResponder: ReactDOMEventResponder = {
               nextElement = elements[lastPosition];
             } else {
               // Out of bounds
-              context.continueLocalPropagation();
+              // TODO remove this, this is hacky
+              const allElements = context.getFocusableElementsInScope(true);
+              const prevPosition = allElements.indexOf(focusedElement) - 1;
+              nextElement = allElements[prevPosition] || null;
               return;
             }
           } else {
@@ -98,8 +99,10 @@ const FocusScopeResponder: ReactDOMEventResponder = {
               nextElement = elements[0];
             } else {
               // Out of bounds
-              context.continueLocalPropagation();
-              return;
+              // TODO remove this, this is hacky
+              const allElements = context.getFocusableElementsInScope(true);
+              const nextPosition = allElements.indexOf(focusedElement) + 1;
+              nextElement = allElements[nextPosition] || null;
             }
           } else {
             nextElement = elements[position + 1];
@@ -123,7 +126,7 @@ const FocusScopeResponder: ReactDOMEventResponder = {
 
     // Handle global focus containment
     if (props.contain) {
-      if (!context.isTargetWithinEventComponent(target)) {
+      if (!context.isTargetWithinResponder(target)) {
         const currentFocusedNode = state.currentFocusedNode;
         if (currentFocusedNode !== null) {
           focusElement(currentFocusedNode);
@@ -158,4 +161,7 @@ const FocusScopeResponder: ReactDOMEventResponder = {
   },
 };
 
-export default React.unstable_createEvent(FocusScopeResponder);
+export const FocusScopeResponder = React.unstable_createResponder(
+  'FocusSocpe',
+  focusScopeResponderImpl,
+);
