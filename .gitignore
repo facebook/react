@@ -6,7 +6,9 @@
 /packages/react-devtools-core/dist
 /shells/dev/dist
 build
-node_modules
+/node_modules
+/packages/react-devtools-core/node_modules/
+/packages/react-devtools/node_modules/
 npm-debug.log
 yarn-error.log
 .DS_Store
