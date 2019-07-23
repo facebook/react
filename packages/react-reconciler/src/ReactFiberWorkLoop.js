@@ -795,7 +795,8 @@ function prepareFreshStack(root, expirationTime) {
 
   if (__DEV__) {
     ReactStrictModeWarnings.discardPendingWarnings();
-    componentsWithSuspendedDiscreteUpdates = null;
+    componentsThatSuspendedAtHighPri = null;
+    componentsThatTriggeredHighPriSuspend = null;
   }
 }
 
@@ -981,6 +982,8 @@ function renderRoot(
 
   // Set this to null to indicate there's no in-progress render.
   workInProgressRoot = null;
+
+  flushSuspensePriorityWarningInDEV();
 
   switch (workInProgressRootExitStatus) {
     case RootIncomplete: {
@@ -1491,7 +1494,6 @@ function commitRoot(root) {
 function commitRootImpl(root) {
   flushPassiveEffects();
   flushRenderPhaseStrictModeWarningsInDEV();
-  flushSuspensePriorityWarningInDEV();
 
   invariant(
     (executionContext & (RenderContext | CommitContext)) === NoContext,
@@ -2520,37 +2522,100 @@ function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
 
 export const warnIfNotCurrentlyActingUpdatesInDev = warnIfNotCurrentlyActingUpdatesInDEV;
 
-let componentsWithSuspendedDiscreteUpdates = null;
+let componentsThatSuspendedAtHighPri = null;
+let componentsThatTriggeredHighPriSuspend = null;
 export function checkForWrongSuspensePriorityInDEV(sourceFiber: Fiber) {
   if (__DEV__) {
+    const currentPriorityLevel = getCurrentPriorityLevel();
     if (
       (sourceFiber.mode & ConcurrentMode) !== NoEffect &&
-      // Check if we're currently rendering a discrete update. Ideally, all we
-      // would need to do is check the current priority level. But we currently
-      // have no rigorous way to distinguish work that was scheduled at user-
-      // blocking priority from work that expired a bit and was "upgraded" to
-      // a higher priority. That's because we don't schedule separate callbacks
-      // for every level, only the highest priority level per root. The priority
-      // of subsequent levels is inferred from the expiration time, but this is
-      // an imprecise heuristic.
-      //
-      // However, we do store the last discrete pending update per root. So we
-      // can reliably compare to that one. (If we broaden this warning to include
-      // high pri updates that aren't discrete, then this won't be sufficient.)
-      //
-      // My rationale is that it's better for this warning to have false
-      // negatives than false positives.
-      rootsWithPendingDiscreteUpdates !== null &&
-      workInProgressRoot !== null &&
-      renderExpirationTime ===
-        rootsWithPendingDiscreteUpdates.get(workInProgressRoot)
+      (currentPriorityLevel === UserBlockingPriority ||
+        currentPriorityLevel === ImmediatePriority)
     ) {
+      let workInProgressNode = sourceFiber;
+      while (workInProgressNode !== null) {
+        // Add the component that triggered the suspense
+        const current = workInProgressNode.alternate;
+        if (current !== null) {
+          // TODO: warn component that triggers the high priority
+          // suspend is the HostRoot
+          switch (workInProgressNode.tag) {
+            case ClassComponent:
+              // Loop through the component's update queue and see whether the component
+              // has triggered any high priority updates
+              const updateQueue = current.updateQueue;
+              if (updateQueue !== null) {
+                let update = updateQueue.firstUpdate;
+                while (update !== null) {
+                  const priorityLevel = update.priority;
+                  if (
+                    priorityLevel === UserBlockingPriority ||
+                    priorityLevel === ImmediatePriority
+                  ) {
+                    if (componentsThatTriggeredHighPriSuspend === null) {
+                      componentsThatTriggeredHighPriSuspend = new Set([
+                        getComponentName(workInProgressNode.type),
+                      ]);
+                    } else {
+                      componentsThatTriggeredHighPriSuspend.add(
+                        getComponentName(workInProgressNode.type),
+                      );
+                    }
+                    break;
+                  }
+                  update = update.next;
+                }
+              }
+              break;
+            case FunctionComponent:
+            case ForwardRef:
+            case SimpleMemoComponent:
+              if (
+                workInProgressNode.memoizedState !== null &&
+                workInProgressNode.memoizedState.baseUpdate !== null
+              ) {
+                let update = workInProgressNode.memoizedState.baseUpdate;
+                // Loop through the functional component's memoized state to see whether
+                // the component has triggered any high pri updates
+                while (update !== null) {
+                  const priority = update.priority;
+                  if (
+                    priority === UserBlockingPriority ||
+                    priority === ImmediatePriority
+                  ) {
+                    if (componentsThatTriggeredHighPriSuspend === null) {
+                      componentsThatTriggeredHighPriSuspend = new Set([
+                        getComponentName(workInProgressNode.type),
+                      ]);
+                    } else {
+                      componentsThatTriggeredHighPriSuspend.add(
+                        getComponentName(workInProgressNode.type),
+                      );
+                    }
+                    break;
+                  }
+                  if (
+                    update.next === workInProgressNode.memoizedState.baseUpdate
+                  ) {
+                    break;
+                  }
+                  update = update.next;
+                }
+              }
+              break;
+            default:
+              break;
+          }
+        }
+        workInProgressNode = workInProgressNode.return;
+      }
+
       // Add the component name to a set.
       const componentName = getComponentName(sourceFiber.type);
-      if (componentsWithSuspendedDiscreteUpdates === null) {
-        componentsWithSuspendedDiscreteUpdates = new Set([componentName]);
+      if (componentsThatSuspendedAtHighPri === null) {
+        componentsThatSuspendedAtHighPri = new Set([componentName]);
       } else {
-        componentsWithSuspendedDiscreteUpdates.add(componentName);
+        componentsThatSuspendedAtHighPri.add(componentName);
       }
     }
   }
@@ -2558,20 +2623,32 @@ export function checkForWrongSuspensePriorityInDEV(sourceFiber: Fiber) {
 
 function flushSuspensePriorityWarningInDEV() {
   if (__DEV__) {
-    if (componentsWithSuspendedDiscreteUpdates !== null) {
+    if (componentsThatSuspendedAtHighPri !== null) {
       const componentNames = [];
-      componentsWithSuspendedDiscreteUpdates.forEach(name => {
+      componentsThatSuspendedAtHighPri.forEach(name => {
         componentNames.push(name);
       });
-      componentsWithSuspendedDiscreteUpdates = null;
+      componentsThatSuspendedAtHighPri = null;
 
-      // TODO: A more helpful version of this message could include the names of
-      // the component that were updated, not the ones that suspended. To do
-      // that we'd need to track all the components that updated during this
-      // render, perhaps using the same mechanism as `markRenderEventTime`.
+      const componentsThatTriggeredSuspendNames = [];
+      if (componentsThatTriggeredHighPriSuspend !== null) {
+        componentsThatTriggeredHighPriSuspend.forEach(name =>
+          componentsThatTriggeredSuspendNames.push(name),
+        );
+      }
+
+      componentsThatTriggeredHighPriSuspend = null;
+
+      const componentThatTriggeredSuspenseError =
+        componentsThatTriggeredSuspendNames.length > 0
+          ? '\n' +
+            'The components that triggered the update: ' +
+            componentsThatTriggeredSuspendNames.sort().join(', ')
+          : '';
       warningWithoutStack(
         false,
         'The following components suspended during a user-blocking update: %s' +
+          '%s' +
           '\n\n' +
           'Updates triggered by user interactions (e.g. click events) are ' +
           'considered user-blocking by default. They should not suspend. ' +
@@ -2585,6 +2662,7 @@ function flushSuspensePriorityWarningInDEV() {
           'feedback, and another update to perform the actual change.',
         // TODO: Add link to React docs with more information, once it exists
         componentNames.sort().join(', '),
+        componentThatTriggeredSuspenseError,
       );
     }
   }

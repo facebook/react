@@ -642,14 +642,35 @@ const pressResponderImpl = {
           const isKeyboardEvent = pointerType === 'keyboard';
           const isMouseEvent = pointerType === 'mouse';
 
+          // Ignore emulated mouse events
+          if (type === 'mousedown' && state.ignoreEmulatedMouseEvents) {
+            return;
+          }
+
+          state.shouldPreventClick = false;
           if (isPointerEvent || isTouchEvent) {
             state.ignoreEmulatedMouseEvents = true;
-          } else if (type === 'mousedown' && state.ignoreEmulatedMouseEvents) {
-            // Ignore emulated mouse events
-            return;
           } else if (isKeyboardEvent) {
             // Ignore unrelated key events
-            if (!isValidKeyboardEvent(nativeEvent)) {
+            if (isValidKeyboardEvent(nativeEvent)) {
+              const {
+                altKey,
+                ctrlKey,
+                metaKey,
+                shiftKey,
+              } = (nativeEvent: MouseEvent);
+              if (nativeEvent.key === ' ') {
+                nativeEvent.preventDefault();
+              } else if (
+                props.preventDefault !== false &&
+                !shiftKey &&
+                !metaKey &&
+                !ctrlKey &&
+                !altKey
+              ) {
+                state.shouldPreventClick = true;
+              }
+            } else {
               return;
             }
           }
@@ -855,7 +876,6 @@ const pressResponderImpl = {
           }
 
           // Determine whether to call preventDefault on subsequent native events.
-          state.shouldPreventClick = false;
           if (
             context.isTargetWithinResponder(target) &&
             context.isTargetWithinHostComponent(target, 'a')

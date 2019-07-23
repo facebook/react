@@ -327,6 +327,7 @@ describe('ReactSuspense', () => {
   });
 
   it('throws if tree suspends and none of the Suspense ancestors have a fallback', () => {
+    spyOnDev(console, 'error');
     ReactTestRenderer.create(
       <Suspense>
         <AsyncText text="Hi" ms={1000} />
@@ -340,6 +341,13 @@ describe('ReactSuspense', () => {
       'AsyncText suspended while rendering, but no fallback UI was specified.',
     );
     expect(Scheduler).toHaveYielded(['Suspend! [Hi]', 'Suspend! [Hi]']);
+    if (__DEV__) {
+      expect(console.error).toHaveBeenCalledTimes(2);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: The following components suspended during a user-blocking update: ',
+      );
+      expect(console.error.calls.argsFor(0)[1]).toContain('AsyncText');
+    }
   });
 
   describe('outside concurrent mode', () => {
