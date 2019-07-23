@@ -2641,14 +2641,14 @@ function flushSuspensePriorityWarningInDEV() {
 
       const componentThatTriggeredSuspenseError =
         componentsThatTriggeredSuspendNames.length > 0
-          ? '\n' +
-            'The components that triggered the update: ' +
-            componentsThatTriggeredSuspendNames.sort().join(', ')
+          ? 'The components that triggered the update: ' +
+            componentsThatTriggeredSuspendNames.sort().join(', ') +
+            '\n\n'
           : '';
       warningWithoutStack(
         false,
-        'The following components suspended during a user-blocking update: %s' +
-          '%s' +
+        '%s' +
+          'The following components suspended during a user-blocking update: %s' +
           '\n\n' +
           'Updates triggered by user interactions (e.g. click events) are ' +
           'considered user-blocking by default. They should not suspend. ' +
@@ -2661,8 +2661,8 @@ function flushSuspensePriorityWarningInDEV() {
           'seprate updates: a user-blocking update to provide immediate ' +
           'feedback, and another update to perform the actual change.',
         // TODO: Add link to React docs with more information, once it exists
-        componentNames.sort().join(', '),
         componentThatTriggeredSuspenseError,
+        componentNames.sort().join(', '),
       );
     }
   }
