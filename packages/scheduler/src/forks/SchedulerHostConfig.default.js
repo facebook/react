@@ -229,9 +229,10 @@ if (
   channel.port1.onmessage = performWorkUntilDeadline;
 
   const onAnimationFrame = rAFTime => {
+    isRAFLoopRunning = false;
+
     if (scheduledHostCallback === null) {
       // No scheduled work. Exit.
-      isRAFLoopRunning = false;
       prevRAFTime = -1;
       prevRAFInterval = -1;
       return;
@@ -255,6 +256,7 @@ if (
     // waited until the end of the frame to post the callback, we risk the
     // browser skipping a frame and not firing the callback until the frame
     // after that.
+    isRAFLoopRunning = true;
     requestAnimationFrame(nextRAFTime => {
       clearTimeout(rAFTimeoutID);
       onAnimationFrame(nextRAFTime);
@@ -303,9 +305,8 @@ if (
   requestHostCallback = function(callback) {
     scheduledHostCallback = callback;
     if (!isRAFLoopRunning) {
-      isRAFLoopRunning = true;
-
       // Start a rAF loop.
+      isRAFLoopRunning = true;
       requestAnimationFrame(rAFTime => {
         if (requestIdleCallbackBeforeFirstFrame) {
           cancelIdleCallback(idleCallbackID);
