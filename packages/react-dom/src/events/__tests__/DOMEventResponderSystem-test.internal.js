@@ -12,6 +12,7 @@
 let React;
 let ReactFeatureFlags;
 let ReactDOM;
+let ReactTestRenderer;
 
 // FIXME: What should the public API be for setting an event's priority? Right
 // now it's an enum but is that what we want? Hard coding this for now.
@@ -78,6 +79,18 @@ describe('DOMEventResponderSystem', () => {
   afterEach(() => {
     document.body.removeChild(container);
     container = null;
+  });
+
+  it('can mount and render correctly with the ReactTestRenderer', () => {
+    jest.resetModules();
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    ReactFeatureFlags.enableFlareAPI = true;
+    ReactTestRenderer = require('react-test-renderer');
+    const TestResponder = createEventResponder({});
+    const renderer = ReactTestRenderer.create(
+      <div responders={<TestResponder />}>Hello world</div>,
+    );
+    expect(renderer).toMatchRenderedOutput(<div>Hello world</div>);
   });
 
   it('the event responders should fire on click event', () => {

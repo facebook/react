@@ -140,9 +140,19 @@ export function createInstance(
   hostContext: Object,
   internalInstanceHandle: Object,
 ): Instance {
+  let propsToUse = props;
+  if (enableFlareAPI) {
+    if (props.responders != null) {
+      // We want to remove the "responders" prop
+      // as we don't want it into the test renderer instance's
+      // props object.
+      const {responders, ...otherProps} = props; // eslint-disable-line
+      propsToUse = otherProps;
+    }
+  }
   return {
     type,
-    props,
+    props: propsToUse,
     isHidden: false,
     children: [],
     rootContainerInstance,
@@ -288,13 +298,13 @@ export function mountResponderInstance(
   instance: Instance,
   rootContainerInstance: Container,
 ) {
-  throw new Error('Not yet implemented.');
+  // noop
 }
 
 export function unmountResponderInstance(
   responderInstance: ReactEventResponderInstance<any, any>,
 ): void {
-  throw new Error('Not yet implemented.');
+  // noop
 }
 
 export function getFundamentalComponentInstance(fundamentalInstance): Instance {
