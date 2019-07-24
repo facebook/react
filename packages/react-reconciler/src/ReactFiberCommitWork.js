@@ -1330,7 +1330,9 @@ function commitSuspenseComponent(finishedWork: Fiber) {
         suspenseCallback(new Set(thenables));
       }
     } else if (__DEV__) {
-      warning(false, 'Unexpected type for suspenseCallback.');
+      if (suspenseCallback !== undefined) {
+        warning(false, 'Unexpected type for suspenseCallback.');
+      }
     }
   }
 }

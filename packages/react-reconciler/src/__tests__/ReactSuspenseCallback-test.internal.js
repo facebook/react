@@ -50,6 +50,30 @@ describe('ReactSuspense', () => {
     return {promise, resolveRef, PromiseComp};
   }
 
+  it('check type', () => {
+    const {PromiseComp} = createThenable();
+
+    const elementBadType = (
+      <React.Suspense suspenseCallback={1} fallback={'Waiting'}>
+        <PromiseComp />
+      </React.Suspense>
+    );
+
+    ReactNoop.render(elementBadType);
+    expect(() => Scheduler.unstable_flushAll()).toWarnDev([
+      'Warning: Unexpected type for suspenseCallback.',
+    ]);
+
+    const elementMissingCallback = (
+      <React.Suspense fallback={'Waiting'}>
+        <PromiseComp />
+      </React.Suspense>
+    );
+
+    ReactNoop.render(elementMissingCallback);
+    expect(() => Scheduler.unstable_flushAll()).toWarnDev([]);
+  });
+
   it('1 then 0 suspense callback', () => {
     const {promise, resolveRef, PromiseComp} = createThenable();
 
