@@ -119,6 +119,7 @@ import {
 } from './ReactFiberHydrationContext';
 import {
   enableSchedulerTracing,
+  enableSuspenseCallback,
   enableSuspenseServerRenderer,
   enableFlareAPI,
   enableFundamentalAPI,
@@ -915,6 +916,14 @@ function completeWork(
           // is currently timed out, too.
           workInProgress.effectTag |= Update;
         }
+      }
+      if (
+        enableSuspenseCallback &&
+        workInProgress.updateQueue !== null &&
+        workInProgress.memoizedProps.suspenseCallback != null
+      ) {
+        // Always notify the callback
+        workInProgress.effectTag |= Update;
       }
       break;
     }

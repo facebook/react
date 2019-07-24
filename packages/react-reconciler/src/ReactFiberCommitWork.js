@@ -30,6 +30,7 @@ import {
   enableSuspenseServerRenderer,
   enableFlareAPI,
   enableFundamentalAPI,
+  enableSuspenseCallback,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -1319,6 +1320,18 @@ function commitSuspenseComponent(finishedWork: Fiber) {
 
   if (supportsMutation && primaryChildParent !== null) {
     hideOrUnhideAllChildren(primaryChildParent, newDidTimeout);
+  }
+
+  if (enableSuspenseCallback && newState !== null) {
+    const suspenseCallback = finishedWork.memoizedProps.suspenseCallback;
+    if (typeof suspenseCallback === 'function') {
+      const thenables: Set<Thenable> | null = (finishedWork.updateQueue: any);
+      if (thenables !== null) {
+        suspenseCallback(new Set(thenables));
+      }
+    } else if (__DEV__) {
+      warning(false, 'Unexpected type for suspenseCallback.');
+    }
   }
 }
 

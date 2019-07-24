@@ -76,6 +76,8 @@ export const enableJSXTransformAPI = true;
 
 export const warnAboutMissingMockScheduler = true;
 
+export const enableSuspenseCallback = true;
+
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars
 type Check<_X, Y: _X, X: Y = _X> = null;

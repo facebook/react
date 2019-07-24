@@ -37,6 +37,7 @@ export const enableJSXTransformAPI = false;
 export const warnAboutMissingMockScheduler = true;
 export const revertPassiveEffectsChange = false;
 export const enableUserBlockingEvents = false;
+export const enableSuspenseCallback = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {
