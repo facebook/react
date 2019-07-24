@@ -13,7 +13,6 @@ import InspectedElementTree from './InspectedElementTree';
 import { InspectedElementContext } from './InspectedElementContext';
 import ViewElementSourceContext from './ViewElementSourceContext';
 import NativeStyleEditor from './NativeStyleEditor';
-import { NativeStyleContext } from './NativeStyleEditor/context';
 import Toggle from '../Toggle';
 import Badge from './Badge';
 import {
@@ -264,7 +263,6 @@ function InspectedElementView({
   const { ownerID } = useContext(TreeStateContext);
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
-  const { getStyleAndLayout } = useContext(NativeStyleContext);
 
   const inspectContextPath = useCallback(
     (path: Array<string | number>) => {
@@ -336,21 +334,12 @@ function InspectedElementView({
     };
   }
 
-  let filteredProps = props;
-  if (filteredProps !== null) {
-    const maybeStyleAndLayout = getStyleAndLayout(id);
-    // Hide props.style if we are showing the style editor UI.
-    if (maybeStyleAndLayout !== null && maybeStyleAndLayout.style !== null) {
-      delete filteredProps['style'];
-    }
-  }
-
   return (
     <div className={styles.InspectedElement}>
       <HocBadges element={element} />
       <InspectedElementTree
         label="props"
-        data={filteredProps}
+        data={props}
         inspectPath={inspectPropsPath}
         overrideValueFn={overridePropsFn}
         showWhenEmpty
