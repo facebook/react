@@ -85,7 +85,6 @@ function reload() {
     root.render(
       createElement(DevTools, {
         bridge: ((bridge: any): FrontendBridge),
-        isBrowserMode: false,
         showTabBar: true,
         store: ((store: any): Store),
         warnIfLegacyBackendDetected: true,
@@ -172,7 +171,10 @@ function initialize(socket: WebSocket) {
     socket.close();
   });
 
-  store = new Store(bridge, { supportsNativeInspection: false });
+  store = new Store(bridge, {
+    supportsNativeInspection: false,
+    supportsViewSource: projectRoots.length > 0,
+  });
 
   log('Connected');
   reload();

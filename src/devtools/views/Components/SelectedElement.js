@@ -30,11 +30,9 @@ import type { GetInspectedElementPath } from './InspectedElementContext';
 import type { Element, InspectedElement } from './types';
 import type { ElementType } from 'src/types';
 
-export type Props = {|
-  isBrowserMode?: boolean,
-|};
+export type Props = {||};
 
-export default function SelectedElement({ isBrowserMode }: Props) {
+export default function SelectedElement(_: Props) {
   const { inspectedElementID } = useContext(TreeStateContext);
   const dispatch = useContext(TreeDispatcherContext);
   const { isFileLocationRequired, viewElementSourceFunction } = useContext(
@@ -188,7 +186,7 @@ export default function SelectedElement({ isBrowserMode }: Props) {
             <ButtonIcon type="suspend" />
           </Toggle>
         )}
-        {isBrowserMode && (
+        {store.supportsNativeInspection && (
           <Button
             className={styles.IconButton}
             onClick={highlightElement}
@@ -204,14 +202,16 @@ export default function SelectedElement({ isBrowserMode }: Props) {
         >
           <ButtonIcon type="log-data" />
         </Button>
-        <Button
-          className={styles.IconButton}
-          disabled={!canViewSource}
-          onClick={viewSource}
-          title="View source for this element"
-        >
-          <ButtonIcon type="view-source" />
-        </Button>
+        {store.supportsViewSource && (
+          <Button
+            className={styles.IconButton}
+            disabled={!canViewSource}
+            onClick={viewSource}
+            title="View source for this element"
+          >
+            <ButtonIcon type="view-source" />
+          </Button>
+        )}
       </div>
 
       {inspectedElement === null && (
