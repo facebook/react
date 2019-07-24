@@ -817,10 +817,12 @@ Please update the following components: Parent`,
           '\n    in StrictMode (at **)' +
           '\n    in div (at **)' +
           '\n    in Root (at **)' +
+          '\n\nThe old API will be supported in all 16.x releases, but applications ' +
+          'using it should migrate to the new version.' +
           '\n\nPlease update the following components: ' +
           'FunctionalLegacyContextConsumer, LegacyContextConsumer, LegacyContextProvider' +
           '\n\nLearn more about this warning here:' +
-          '\nhttps://fb.me/react-strict-mode-warnings',
+          '\nhttps://fb.me/react-legacy-context',
       );
 
       // Dedupe
