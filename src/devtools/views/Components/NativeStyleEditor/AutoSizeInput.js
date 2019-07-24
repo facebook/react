@@ -68,8 +68,12 @@ export default function AutoSizeInput({
       return;
     }
 
+    // Adding an extra pixel avoids a slight horizontal scroll when changing text selection/cursor.
+    // Not sure why this is, but the old DevTools did a similar thing.
+    const targetWidth = Math.ceil(scrollWidth) + 1;
+
     if (inputRef.current !== null) {
-      inputRef.current.style.width = `${scrollWidth}px`;
+      inputRef.current.style.width = `${targetWidth}px`;
     }
   }, [value]);
 
