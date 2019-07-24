@@ -144,6 +144,7 @@
     "react-dom": "^0.0.0-424099da6",
     "react-dom-15": "npm:react-dom@^15",
     "react-is": "0.0.0-424099da6",
+    "react-native-web": "^0.11.5",
     "react-test-renderer": "^0.0.0-424099da6",
     "react-virtualized-auto-sizer": "^1.0.2",
     "request-promise": "^4.2.4",
