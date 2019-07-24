@@ -519,7 +519,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     if (__DEV__) {
       expect(console.error).toHaveBeenCalledTimes(1);
       expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: The following components suspended during a user-blocking update: ',
+        'Warning: %s\n\nThe fix is to split the update',
+      );
+      expect(console.error.calls.argsFor(0)[1]).toContain(
+        'A user-blocking update was suspended by:',
       );
       expect(console.error.calls.argsFor(0)[1]).toContain('AsyncText');
     }
@@ -671,7 +674,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     if (__DEV__) {
       expect(console.error).toHaveBeenCalledTimes(1);
       expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: The following components suspended during a user-blocking update: ',
+        'Warning: %s\n\nThe fix is to split the update',
+      );
+      expect(console.error.calls.argsFor(0)[1]).toContain(
+        'A user-blocking update was suspended by:',
       );
       expect(console.error.calls.argsFor(0)[1]).toContain('AsyncText');
     }
@@ -704,7 +710,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     if (__DEV__) {
       expect(console.error).toHaveBeenCalledTimes(1);
       expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: The following components suspended during a user-blocking update: ',
+        'Warning: %s\n\nThe fix is to split the update',
+      );
+      expect(console.error.calls.argsFor(0)[1]).toContain(
+        'A user-blocking update was suspended by:',
       );
       expect(console.error.calls.argsFor(0)[1]).toContain('AsyncText');
     }
@@ -793,7 +802,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     if (__DEV__) {
       expect(console.error).toHaveBeenCalledTimes(2);
       expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: The following components suspended during a user-blocking update: ',
+        'Warning: %s\n\nThe fix is to split the update',
+      );
+      expect(console.error.calls.argsFor(0)[1]).toContain(
+        'A user-blocking update was suspended by:',
       );
       expect(console.error.calls.argsFor(0)[1]).toContain('AsyncText');
     }
@@ -1631,8 +1643,9 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         'Loading...',
       ]);
     }).toWarnDev(
-      'The following components suspended during a user-blocking ' +
-        'update: AsyncText',
+      'Warning: A user-blocking update was suspended by:' +
+        '\n\n' +
+        '  AsyncText',
       {withoutStack: true},
     );
 
@@ -1675,9 +1688,13 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         );
       });
     }).toWarnDev(
-      'The following components suspended during a user-blocking update: AsyncText' +
-        '\n' +
-        'The components that triggered the update: App',
+      'Warning: The following components triggered a user-blocking update:' +
+        '\n\n' +
+        '  App' +
+        '\n\n' +
+        'that was then suspended by:' +
+        '\n\n' +
+        '  AsyncText',
       {withoutStack: true},
     );
   });
@@ -1709,9 +1726,13 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         );
       });
     }).toWarnDev(
-      'The following components suspended during a user-blocking update: AsyncText' +
-        '\n' +
-        'The components that triggered the update: App',
+      'Warning: The following components triggered a user-blocking update:' +
+        '\n\n' +
+        '  App' +
+        '\n\n' +
+        'that was then suspended by:' +
+        '\n\n' +
+        '  AsyncText',
       {withoutStack: true},
     );
   });
@@ -1754,7 +1775,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(() => {
       Scheduler.unstable_flushAll();
     }).toWarnDev(
-      'Warning: The following components suspended during a user-blocking update: A, C',
+      'Warning: A user-blocking update was suspended by:' + '\n\n' + '  A, C',
       {withoutStack: true},
     );
   });

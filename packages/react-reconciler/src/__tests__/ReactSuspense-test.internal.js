@@ -344,7 +344,10 @@ describe('ReactSuspense', () => {
     if (__DEV__) {
       expect(console.error).toHaveBeenCalledTimes(2);
       expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: The following components suspended during a user-blocking update: ',
+        'Warning: %s\n\nThe fix is to split the update',
+      );
+      expect(console.error.calls.argsFor(0)[1]).toContain(
+        'A user-blocking update was suspended by:',
       );
       expect(console.error.calls.argsFor(0)[1]).toContain('AsyncText');
     }

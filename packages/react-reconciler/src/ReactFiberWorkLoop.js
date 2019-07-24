@@ -2639,29 +2639,38 @@ function flushSuspensePriorityWarningInDEV() {
 
       componentsThatTriggeredHighPriSuspend = null;
 
-      const componentThatTriggeredSuspenseError =
-        componentsThatTriggeredSuspendNames.length > 0
-          ? '\n' +
-            'The components that triggered the update: ' +
-            componentsThatTriggeredSuspendNames.sort().join(', ')
-          : '';
+      const componentNamesString = componentNames.sort().join(', ');
+      let componentThatTriggeredSuspenseError = '';
+      if (componentsThatTriggeredSuspendNames.length > 0) {
+        componentThatTriggeredSuspenseError =
+          'The following components triggered a user-blocking update:' +
+          '\n\n' +
+          '  ' +
+          componentsThatTriggeredSuspendNames.sort().join(', ') +
+          '\n\n' +
+          'that was then suspended by:' +
+          '\n\n' +
+          '  ' +
+          componentNamesString;
+      } else {
+        componentThatTriggeredSuspenseError =
+          'A user-blocking update was suspended by:' +
+          '\n\n' +
+          '  ' +
+          componentNamesString;
+      }
+
       warningWithoutStack(
         false,
-        'The following components suspended during a user-blocking update: %s' +
-          '%s' +
+        '%s' +
           '\n\n' +
-          'Updates triggered by user interactions (e.g. click events) are ' +
-          'considered user-blocking by default. They should not suspend. ' +
-          'Updates that can afford to take a bit longer should be wrapped ' +
-          'with `Scheduler.next` (or an equivalent abstraction). This ' +
-          'typically includes any update that shows new content, like ' +
-          'a navigation.' +
+          'The fix is to split the update into multiple parts: a user-blocking ' +
+          'update to provide immediate feedback, and another update that ' +
+          'triggers the bulk of the changes.' +
           '\n\n' +
-          'Generally, you should split user interactions into at least two ' +
-          'seprate updates: a user-blocking update to provide immediate ' +
-          'feedback, and another update to perform the actual change.',
+          'Refer to the documentation for useSuspenseTransition to learn how ' +
+          'to implement this pattern.',
         // TODO: Add link to React docs with more information, once it exists
-        componentNames.sort().join(', '),
         componentThatTriggeredSuspenseError,
       );
     }
