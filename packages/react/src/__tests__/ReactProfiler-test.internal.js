@@ -126,9 +126,7 @@ describe('Profiler', () => {
           if (__DEV__ && enableProfilerTimer) {
             it('should warn if required params are missing', () => {
               expect(() => {
-                expect(() => {
-                  ReactTestRenderer.create(<React.Profiler />);
-                }).toThrow('onRender is not a function');
+                ReactTestRenderer.create(<React.Profiler />);
               }).toWarnDev(
                 'Profiler must specify an "id" string and "onRender" function as props',
                 {withoutStack: true},
