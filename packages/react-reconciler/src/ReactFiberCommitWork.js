@@ -567,25 +567,27 @@ function commitLifeCycles(
       if (enableProfilerTimer) {
         const onRender = finishedWork.memoizedProps.onRender;
 
-        if (enableSchedulerTracing) {
-          onRender(
-            finishedWork.memoizedProps.id,
-            current === null ? 'mount' : 'update',
-            finishedWork.actualDuration,
-            finishedWork.treeBaseDuration,
-            finishedWork.actualStartTime,
-            getCommitTime(),
-            finishedRoot.memoizedInteractions,
-          );
-        } else {
-          onRender(
-            finishedWork.memoizedProps.id,
-            current === null ? 'mount' : 'update',
-            finishedWork.actualDuration,
-            finishedWork.treeBaseDuration,
-            finishedWork.actualStartTime,
-            getCommitTime(),
-          );
+        if (typeof onRender === 'function') {
+          if (enableSchedulerTracing) {
+            onRender(
+              finishedWork.memoizedProps.id,
+              current === null ? 'mount' : 'update',
+              finishedWork.actualDuration,
+              finishedWork.treeBaseDuration,
+              finishedWork.actualStartTime,
+              getCommitTime(),
+              finishedRoot.memoizedInteractions,
+            );
+          } else {
+            onRender(
+              finishedWork.memoizedProps.id,
+              current === null ? 'mount' : 'update',
+              finishedWork.actualDuration,
+              finishedWork.treeBaseDuration,
+              finishedWork.actualStartTime,
+              getCommitTime(),
+            );
+          }
         }
       }
       return;
