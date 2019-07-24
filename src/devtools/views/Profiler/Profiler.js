@@ -92,8 +92,8 @@ function Profiler(_: {||}) {
               currentTab={selectedTabID}
               id="Profiler"
               selectTab={selectTab}
-              size="small"
               tabs={tabs}
+              type="profiler"
             />
             <RootSelector />
             <div className={styles.Spacer} />

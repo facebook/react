@@ -37,6 +37,7 @@ export type Props = {|
   bridge: FrontendBridge,
   browserTheme?: BrowserTheme,
   defaultTab?: TabID,
+  isBrowserMode?: boolean,
   showTabBar?: boolean,
   store: Store,
   warnIfLegacyBackendDetected?: boolean,
@@ -77,6 +78,7 @@ export default function DevTools({
   browserTheme = 'light',
   defaultTab = 'components',
   componentsPortalContainer,
+  isBrowserMode = true,
   overrideTab,
   profilerPortalContainer,
   settingsPortalContainer,
@@ -124,8 +126,8 @@ export default function DevTools({
                           currentTab={tab}
                           id="DevTools"
                           selectTab={setTab}
-                          size="large"
                           tabs={tabs}
+                          type="navigation"
                         />
                       </div>
                     )}
@@ -133,7 +135,10 @@ export default function DevTools({
                       className={styles.TabContent}
                       hidden={tab !== 'components'}
                     >
-                      <Components portalContainer={componentsPortalContainer} />
+                      <Components
+                        isBrowserMode={isBrowserMode}
+                        portalContainer={componentsPortalContainer}
+                      />
                     </div>
                     <div
                       className={styles.TabContent}

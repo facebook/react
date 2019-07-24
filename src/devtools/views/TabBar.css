@@ -31,11 +31,15 @@
   cursor: default;
 }
 
-.TabSizeLarge {
+.TabSizeNavigation {
   font-size: var(--font-size-sans-large);
   padding: 0.5rem 1rem;
 }
-.TabSizeSmall {
+.TabSizeProfiler {
+  font-size: var(--font-size-sans-normal);
+  padding: 0.25rem 0.5rem;
+}
+.TabSizeSettings {
   font-size: var(--font-size-sans-normal);
   padding: 0.25rem 0.5rem;
 }
@@ -46,8 +50,9 @@
   opacity: 0;
 }
 
-.IconSizeLarge,
-.IconSizeSmall {
+.IconSizeNavigation,
+.IconSizeProfiler,
+.IconSizeSettings {
   margin-right: 0.5rem;
   color: var(--color-button-active);
 }
@@ -56,36 +61,50 @@
   color: var(--color-dim);
 }
 
-.IconSizeLarge {
+.IconSizeNavigation {
   width: 1.5rem;
   height: 1.5rem;
 }
-
-.IconSizeSmall {
+.IconSizeProfiler {
+  width: 1rem;
+  height: 1rem;
+}
+.IconSizeSettings {
   width: 1rem;
   height: 1rem;
 }
 
-.TabLabelLarge,
-.TabLabelSmall {
-}
-
-@media screen and (max-width: 900px) {
-  .TabLabelSmall {
-    display: none;
-  }
-
-  .IconSizeSmall {
-    margin-right: 0;
-  }
+.TabLabelNavigation,
+.TabLabelProfiler,
+.TabLabelSettings {
 }
 
 @media screen and (max-width: 525px) {
-  .IconSizeLarge {
+  .IconSizeNavigation {
     margin-right: 0;
   }
 
-  .TabLabelLarge {
+  .TabLabelNavigation {
     display: none;
+  }
+}
+
+@media screen and (max-width: 900px) {
+  .TabLabelProfiler {
+    display: none;
+  }
+
+  .IconSizeProfiler {
+    margin-right: 0;
+  }
+}
+
+@media screen and (max-width: 400px) {
+  .TabLabelSettings {
+    display: none;
+  }
+
+  .IconSizeSettings {
+    margin-right: 0;
   }
 }

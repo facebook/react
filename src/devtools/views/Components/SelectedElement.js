@@ -30,9 +30,11 @@ import type { GetInspectedElementPath } from './InspectedElementContext';
 import type { Element, InspectedElement } from './types';
 import type { ElementType } from 'src/types';
 
-export type Props = {||};
+export type Props = {|
+  isBrowserMode?: boolean,
+|};
 
-export default function SelectedElement(_: Props) {
+export default function SelectedElement({ isBrowserMode }: Props) {
   const { inspectedElementID } = useContext(TreeStateContext);
   const dispatch = useContext(TreeDispatcherContext);
   const { isFileLocationRequired, viewElementSourceFunction } = useContext(
@@ -186,13 +188,15 @@ export default function SelectedElement(_: Props) {
             <ButtonIcon type="suspend" />
           </Toggle>
         )}
-        <Button
-          className={styles.IconButton}
-          onClick={highlightElement}
-          title="Inspect the matching DOM element"
-        >
-          <ButtonIcon type="view-dom" />
-        </Button>
+        {isBrowserMode && (
+          <Button
+            className={styles.IconButton}
+            onClick={highlightElement}
+            title="Inspect the matching DOM element"
+          >
+            <ButtonIcon type="view-dom" />
+          </Button>
+        )}
         <Button
           className={styles.IconButton}
           onClick={logElement}

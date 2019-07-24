@@ -308,6 +308,7 @@ function updateThemeVariables(
   updateStyleHelper(theme, 'color-color-scroll-thumb', documentElements);
   updateStyleHelper(theme, 'color-color-scroll-track', documentElements);
   updateStyleHelper(theme, 'color-search-match', documentElements);
+  updateStyleHelper(theme, 'color-shadow', documentElements);
   updateStyleHelper(theme, 'color-search-match-current', documentElements);
   updateStyleHelper(
     theme,

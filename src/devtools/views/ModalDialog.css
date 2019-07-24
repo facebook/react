@@ -18,6 +18,7 @@
   max-width: 100%;
   display: inline-block;
   background-color: var(--color-background);
+  box-shadow: 0 2px 4px var(--color-shadow);
   padding: 0.5rem;
   border: 1px solid var(--color-border);
   border-radius: 0.25rem;

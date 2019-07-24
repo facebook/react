@@ -100,8 +100,8 @@ function SettingsModalImpl(_: {||}) {
             currentTab={selectedTabID}
             id="Settings"
             selectTab={selectTab}
-            size="small"
             tabs={tabs}
+            type="settings"
           />
           <div className={styles.Spacer} />
           <Button onClick={dismissModal} title="Close settings dialog">

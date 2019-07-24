@@ -13,7 +13,7 @@ import { SettingsModalContextController } from 'src/devtools/views/Settings/Sett
 
 import styles from './Components.css';
 
-function Components(_: {||}) {
+function Components({ isBrowserMode }: {| isBrowserMode?: boolean |}) {
   // TODO Flex wrappers below should be user resizable.
   return (
     <SettingsModalContextController>
@@ -26,7 +26,7 @@ function Components(_: {||}) {
             <div className={styles.SelectedElementWrapper}>
               <NativeStyleContextController>
                 <Suspense fallback={<Loading />}>
-                  <SelectedElement />
+                  <SelectedElement isBrowserMode={isBrowserMode} />
                 </Suspense>
               </NativeStyleContextController>
             </div>

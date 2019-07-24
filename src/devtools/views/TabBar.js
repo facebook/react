@@ -22,8 +22,8 @@ export type Props = {|
   disabled?: boolean,
   id: string,
   selectTab: (tabID: any) => void,
-  size: 'large' | 'small',
   tabs: Array<TabInfo>,
+  type: 'navigation' | 'profiler' | 'settings',
 |};
 
 export default function TabBar({
@@ -31,8 +31,8 @@ export default function TabBar({
   disabled = false,
   id: groupName,
   selectTab,
-  size,
   tabs,
+  type,
 }: Props) {
   if (!tabs.some(tab => tab.id === currentTab)) {
     selectTab(tabs[0].id);
@@ -56,8 +56,28 @@ export default function TabBar({
     }
   }, []);
 
-  const tabClassName =
-    size === 'large' ? styles.TabSizeLarge : styles.TabSizeSmall;
+  let iconSizeClassName;
+  let tabLabelClassName;
+  let tabSizeClassName;
+  switch (type) {
+    case 'navigation':
+      iconSizeClassName = styles.IconSizeNavigation;
+      tabLabelClassName = styles.TabLabelNavigation;
+      tabSizeClassName = styles.TabSizeNavigation;
+      break;
+    case 'profiler':
+      iconSizeClassName = styles.IconSizeProfiler;
+      tabLabelClassName = styles.TabLabelProfiler;
+      tabSizeClassName = styles.TabSizeProfiler;
+      break;
+    case 'settings':
+      iconSizeClassName = styles.IconSizeSettings;
+      tabLabelClassName = styles.TabLabelSettings;
+      tabSizeClassName = styles.TabSizeSettings;
+      break;
+    default:
+      throw Error(`Unsupported type "${type}"`);
+  }
 
   return (
     <Fragment>
@@ -65,7 +85,7 @@ export default function TabBar({
         let button = (
           <label
             className={classNames(
-              tabClassName,
+              tabSizeClassName,
               disabled ? styles.TabDisabled : styles.Tab,
               !disabled && currentTab === id ? styles.TabCurrent : null
             )}
@@ -83,18 +103,12 @@ export default function TabBar({
               onChange={onChange}
             />
             <Icon
-              className={`${disabled ? styles.IconDisabled : ''} ${
-                size === 'large' ? styles.IconSizeLarge : styles.IconSizeSmall
-              }`}
+              className={`${
+                disabled ? styles.IconDisabled : ''
+              } ${iconSizeClassName}`}
               type={icon}
             />
-            <span
-              className={
-                size === 'large' ? styles.TabLabelLarge : styles.TabLabelSmall
-              }
-            >
-              {label}
-            </span>
+            <span className={tabLabelClassName}>{label}</span>
           </label>
         );
 

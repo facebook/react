@@ -1,5 +1,6 @@
 .Background {
   position: absolute;
+  z-index: 3;
   width: 100%;
   top: 0;
   bottom: 0;
@@ -18,6 +19,7 @@
   max-height: 100%;
   background-color: var(--color-background);
   border: 1px solid var(--color-border);
+  box-shadow: 0 2px 4px var(--color-shadow);
   border-radius: 0.25rem;
   overflow: auto;
   width: 400px;

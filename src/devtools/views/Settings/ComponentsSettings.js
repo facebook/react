@@ -61,7 +61,7 @@ export default function ComponentsSettings(_: {||}) {
 
   const updateCollapseNodesByDefault = useCallback(
     ({ currentTarget }) => {
-      store.collapseNodesByDefault = currentTarget.checked;
+      store.collapseNodesByDefault = !currentTarget.checked;
     },
     [store]
   );
@@ -240,10 +240,10 @@ export default function ComponentsSettings(_: {||}) {
       <label className={styles.Setting}>
         <input
           type="checkbox"
-          checked={collapseNodesByDefault}
+          checked={!collapseNodesByDefault}
           onChange={updateCollapseNodesByDefault}
         />{' '}
-        Collapse newly added components by default
+        Expand component tree by default
       </label>
 
       <div className={styles.Header}>Hide components where...</div>

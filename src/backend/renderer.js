@@ -135,6 +135,12 @@ type ReactTypeOfSideEffectType = {|
   Placement: number,
 |};
 
+// Some environments (e.g. React Native / Hermes) don't support the performace API yet.
+const getCurrentTime =
+  typeof performance === 'object' && typeof performance.now === 'function'
+    ? () => performance.now()
+    : () => Date.now();
+
 export function getInternalReactConstants(
   version: string
 ): {|
@@ -1645,7 +1651,7 @@ export function attach(
           currentCommitProfilingMetadata = {
             changeDescriptions: recordChangeDescriptions ? new Map() : null,
             durations: [],
-            commitTime: performance.now() - profilingStartTime,
+            commitTime: getCurrentTime() - profilingStartTime,
             interactions: Array.from(root.memoizedInteractions).map(
               (interaction: Interaction) => ({
                 ...interaction,
@@ -1689,7 +1695,7 @@ export function attach(
       currentCommitProfilingMetadata = {
         changeDescriptions: recordChangeDescriptions ? new Map() : null,
         durations: [],
-        commitTime: performance.now() - profilingStartTime,
+        commitTime: getCurrentTime() - profilingStartTime,
         interactions: Array.from(root.memoizedInteractions).map(
           (interaction: Interaction) => ({
             ...interaction,
@@ -2738,7 +2744,7 @@ export function attach(
     });
 
     isProfiling = true;
-    profilingStartTime = performance.now();
+    profilingStartTime = getCurrentTime();
     rootToCommitProfilingMetadataMap = new Map();
   }
 

@@ -7,6 +7,11 @@ import { hideOverlay, showOverlay } from './Highlighter';
 
 import type { BackendBridge } from 'src/bridge';
 
+// This plug-in provides in-page highlighting of the selected element.
+// It is used by the browser extension nad the standalone DevTools shell (when connected to a browser).
+// It is not currently the mechanism used to highlight React Native views.
+// That is done by the React Native Inspector component.
+
 export default function setupHighlighter(
   bridge: BackendBridge,
   agent: Agent
@@ -21,25 +26,31 @@ export default function setupHighlighter(
   bridge.addListener('stopInspectingNative', stopInspectingNative);
 
   function startInspectingNative() {
-    window.addEventListener('click', onClick, true);
-    window.addEventListener('mousedown', onMouseEvent, true);
-    window.addEventListener('mouseover', onMouseEvent, true);
-    window.addEventListener('mouseup', onMouseEvent, true);
-    window.addEventListener('pointerdown', onPointerDown, true);
-    window.addEventListener('pointerover', onPointerOver, true);
-    window.addEventListener('pointerup', onPointerUp, true);
+    // This plug-in may run in non-DOM environments (e.g. React Native).
+    if (window && typeof window.addEventListener === 'function') {
+      window.addEventListener('click', onClick, true);
+      window.addEventListener('mousedown', onMouseEvent, true);
+      window.addEventListener('mouseover', onMouseEvent, true);
+      window.addEventListener('mouseup', onMouseEvent, true);
+      window.addEventListener('pointerdown', onPointerDown, true);
+      window.addEventListener('pointerover', onPointerOver, true);
+      window.addEventListener('pointerup', onPointerUp, true);
+    }
   }
 
   function stopInspectingNative() {
     hideOverlay();
 
-    window.removeEventListener('click', onClick, true);
-    window.removeEventListener('mousedown', onMouseEvent, true);
-    window.removeEventListener('mouseover', onMouseEvent, true);
-    window.removeEventListener('mouseup', onMouseEvent, true);
-    window.removeEventListener('pointerdown', onPointerDown, true);
-    window.removeEventListener('pointerover', onPointerOver, true);
-    window.removeEventListener('pointerup', onPointerUp, true);
+    // This plug-in may run in non-DOM environments (e.g. React Native).
+    if (window && typeof window.removeEventListener === 'function') {
+      window.removeEventListener('click', onClick, true);
+      window.removeEventListener('mousedown', onMouseEvent, true);
+      window.removeEventListener('mouseover', onMouseEvent, true);
+      window.removeEventListener('mouseup', onMouseEvent, true);
+      window.removeEventListener('pointerdown', onPointerDown, true);
+      window.removeEventListener('pointerover', onPointerOver, true);
+      window.removeEventListener('pointerup', onPointerUp, true);
+    }
   }
 
   function clearNativeElementHighlight() {

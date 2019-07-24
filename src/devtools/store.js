@@ -136,10 +136,9 @@ export default class Store extends EventEmitter<{|
       debug('constructor', 'subscribing to Bridge');
     }
 
-    // Default this setting to true unless otherwise specified.
     this._collapseNodesByDefault =
-      localStorageGetItem(LOCAL_STORAGE_COLLAPSE_ROOTS_BY_DEFAULT_KEY) !==
-      'false';
+      localStorageGetItem(LOCAL_STORAGE_COLLAPSE_ROOTS_BY_DEFAULT_KEY) ===
+      'true';
 
     this._recordChangeDescriptions =
       localStorageGetItem(LOCAL_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY) ===
