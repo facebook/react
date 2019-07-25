@@ -305,8 +305,8 @@ export function jsxDEV(type, config, maybeKey, source, self) {
 // config: props + key + ref
 export function createElement(type, config, children) {
   let propName;
-  console.log(type, '\n\n', config, '\n\n', children);
-  console.log('a', type.prototype.isReactComponent());
+  // console.log(type, '\n\n', config, '\n\n', children);
+  // console.log('a', type);
   // Reserved names are extracted
   const props = {};
 

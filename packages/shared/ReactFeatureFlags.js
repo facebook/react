@@ -78,3 +78,8 @@ export const revertPassiveEffectsChange = false;
 // but without making them discrete. The flag exists in case it causes
 // starvation problems.
 export const enableUserBlockingEvents = false;
+
+// Simplifies how React.createElement works so we can eventually move
+// from React.createElement to React.jsx
+// https://github.com/reactjs/rfcs/blob/createlement-rfc/text/0000-create-element-changes.md
+export const warnAbouDefaultPropsOnFunctionComponents = false;

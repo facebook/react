@@ -63,6 +63,7 @@ import {
   enableSuspenseServerRenderer,
   enableFlareAPI,
   enableFundamentalAPI,
+  warnAbouDefaultPropsOnFunctionComponents,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import shallowEqual from 'shared/shallowEqual';
@@ -192,6 +193,7 @@ export let didWarnAboutReassigningProps;
 let didWarnAboutMaxDuration;
 let didWarnAboutRevealOrder;
 let didWarnAboutTailOptions;
+let didWarnAboutDefaultPropsOnFunctionComponent;
 
 if (__DEV__) {
   didWarnAboutBadClass = {};
@@ -203,6 +205,7 @@ if (__DEV__) {
   didWarnAboutMaxDuration = false;
   didWarnAboutRevealOrder = {};
   didWarnAboutTailOptions = {};
+  didWarnAboutDefaultPropsOnFunctionComponent = {};
 }
 
 export function reconcileChildren(
@@ -1411,6 +1414,24 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
           'Did you mean to use React.forwardRef()?%s',
         info,
       );
+    }
+  }
+
+  // console.log(warnAbouDefaultPropsOnFunctionComponents);
+  if (
+    warnAbouDefaultPropsOnFunctionComponents &&
+    Component.defaultProps !== undefined
+  ) {
+    const componentName = getComponentName(Component) || 'Unknown';
+
+    if (!didWarnAboutDefaultPropsOnFunctionComponent[componentName]) {
+      warningWithoutStack(
+        false,
+        '%s: Function components do not support defaultProps. ' +
+          'Use Javascript default arguments instead.',
+        componentName,
+      );
+      didWarnAboutDefaultPropsOnFunctionComponent[componentName] = true;
     }
   }
 

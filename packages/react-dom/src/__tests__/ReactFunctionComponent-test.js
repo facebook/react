@@ -13,6 +13,7 @@ let PropTypes;
 let React;
 let ReactDOM;
 let ReactTestUtils;
+let ReactFeatureFlags;
 
 function FunctionComponent(props) {
   return <div>{props.name}</div>;
@@ -25,6 +26,8 @@ describe('ReactFunctionComponent', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    ReactFeatureFlags.warnAbouDefaultPropsOnFunctionComponents = true;
   });
 
   it('should render stateless component', () => {
@@ -206,7 +209,7 @@ describe('ReactFunctionComponent', () => {
     ReactTestUtils.renderIntoDocument(<ParentUsingStringRef />);
   });
 
-  fit('should warn when given defaultProps', () => {
+  it('should warn when given defaultProps', () => {
     function FunctionalComponent(props) {
       return null;
     }
@@ -215,19 +218,12 @@ describe('ReactFunctionComponent', () => {
       testProp: true,
     };
 
-    class Test extends React.Component {
-      render() {
-        return null;
-      }
-    }
-
-    Test.defaultProps = {
-      testProp: true,
-    };
-
-    expect(() => ReactTestUtils.renderIntoDocument(<Test />)).toWarnDev(
-      'Warning: defaultProps should only be used on Class Components. ' +
-        'For Functional Components, use Javascript default arguments instead.',
+    expect(() =>
+      ReactTestUtils.renderIntoDocument(<FunctionalComponent />),
+    ).toWarnDev(
+      'Warning: FunctionalComponent: Function components do not support defaultProps. ' +
+        'Use Javascript default arguments instead.',
+      {withoutStack: true},
     );
   });
 
@@ -390,7 +386,11 @@ describe('ReactFunctionComponent', () => {
     );
   });
 
+  // TODO: deprecate default props support after we remove defaultProps
+  // from function components
   it('should support default props and prop types', () => {
+    ReactFeatureFlags.warnAbouDefaultPropsOnFunctionComponents = false;
+
     function Child(props) {
       return <div>{props.test}</div>;
     }
