@@ -156,8 +156,8 @@ const eventResponderContext: ReactNativeResponderContext = {
     validateResponderContext();
     for (let i = 0; i < rootEventTypes.length; i++) {
       const rootEventType = rootEventTypes[i];
-      const eventComponentInstance = ((currentInstance: any): ReactNativeEventResponderInstance);
-      registerRootEventType(rootEventType, eventComponentInstance);
+      const eventResponderInstance = ((currentInstance: any): ReactNativeEventResponderInstance);
+      registerRootEventType(rootEventType, eventResponderInstance);
     }
   },
   removeRootEventTypes(rootEventTypes: Array<string>): void {
@@ -165,7 +165,7 @@ const eventResponderContext: ReactNativeResponderContext = {
     for (let i = 0; i < rootEventTypes.length; i++) {
       const rootEventType = rootEventTypes[i];
 
-      let rootEventComponents = rootEventTypesToEventResponderInstances.get(
+      let rootEventResponders = rootEventTypesToEventResponderInstances.get(
         rootEventType,
       );
       let rootEventTypesSet = ((currentInstance: any): ReactNativeEventResponderInstance)
@@ -173,8 +173,8 @@ const eventResponderContext: ReactNativeResponderContext = {
       if (rootEventTypesSet !== null) {
         rootEventTypesSet.delete(rootEventType);
       }
-      if (rootEventComponents !== undefined) {
-        rootEventComponents.delete(
+      if (rootEventResponders !== undefined) {
+        rootEventResponders.delete(
           ((currentInstance: any): ReactNativeEventResponderInstance),
         );
       }
@@ -696,21 +696,21 @@ export function unmountEventResponder(
 
 function registerRootEventType(
   rootEventType: string,
-  eventComponentInstance: ReactNativeEventResponderInstance,
+  responderInstance: ReactNativeEventResponderInstance,
 ) {
-  let rootEventComponentInstances = rootEventTypesToEventResponderInstances.get(
+  let rootEventResponderInstances = rootEventTypesToEventResponderInstances.get(
     rootEventType,
   );
-  if (rootEventComponentInstances === undefined) {
-    rootEventComponentInstances = new Set();
+  if (rootEventResponderInstances === undefined) {
+    rootEventResponderInstances = new Set();
     rootEventTypesToEventResponderInstances.set(
       rootEventType,
-      rootEventComponentInstances,
+      rootEventResponderInstances,
     );
   }
-  let rootEventTypesSet = eventComponentInstance.rootEventTypes;
+  let rootEventTypesSet = responderInstance.rootEventTypes;
   if (rootEventTypesSet === null) {
-    rootEventTypesSet = eventComponentInstance.rootEventTypes = new Set();
+    rootEventTypesSet = responderInstance.rootEventTypes = new Set();
   }
   invariant(
     !rootEventTypesSet.has(rootEventType),
@@ -720,15 +720,15 @@ function registerRootEventType(
     rootEventType,
   );
   rootEventTypesSet.add(rootEventType);
-  rootEventComponentInstances.add(eventComponentInstance);
+  rootEventResponderInstances.add(responderInstance);
 }
 
 export function addRootEventTypesForResponderInstance(
-  eventComponentInstance: ReactNativeEventResponderInstance,
+  responderInstance: ReactNativeEventResponderInstance,
   rootEventTypes: Array<string>,
 ): void {
   for (let i = 0; i < rootEventTypes.length; i++) {
     const rootEventType = rootEventTypes[i];
-    registerRootEventType(rootEventType, eventComponentInstance);
+    registerRootEventType(rootEventType, responderInstance);
   }
 }
