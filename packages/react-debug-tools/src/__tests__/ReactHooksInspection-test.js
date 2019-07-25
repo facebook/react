@@ -332,4 +332,29 @@ describe('ReactHooksInspection', () => {
       ]);
     });
   });
+
+  it('should inspect a simple useListener hook', () => {
+    jest.resetModules();
+    const ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    ReactFeatureFlags.enableFlareAPI = true;
+    React = require('react');
+    ReactDebugTools = require('react-debug-tools');
+
+    const TestResponder = React.unstable_createResponder('TestResponder', {});
+
+    function Foo(props) {
+      React.unstable_useListener(TestResponder, {preventDefault: false});
+      return <div responders={<TestResponder />}>Hello world</div>;
+    }
+    let tree = ReactDebugTools.inspectHooks(Foo, {});
+    expect(tree).toEqual([
+      {
+        isStateEditable: false,
+        id: 0,
+        name: 'Listener',
+        value: {props: {preventDefault: false}, responder: TestResponder},
+        subHooks: [],
+      },
+    ]);
+  });
 });

@@ -7,7 +7,11 @@
  * @flow
  */
 
-import type {ReactContext, ReactProviderType} from 'shared/ReactTypes';
+import type {
+  ReactContext,
+  ReactProviderType,
+  ReactEventResponder,
+} from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {Hook} from 'react-reconciler/src/ReactFiberHooks';
 import type {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactFiberHooks';
@@ -20,6 +24,8 @@ import {
   ContextProvider,
   ForwardRef,
 } from 'shared/ReactWorkTags';
+
+const emptyObject = {};
 
 type CurrentDispatcherRef = typeof ReactSharedInternals.ReactCurrentDispatcher;
 
@@ -215,8 +221,16 @@ function useMemo<T>(
   return value;
 }
 
-function useListener() {
-  throw new Error('TODO: not yet implemented');
+function useListener(
+  responder: ReactEventResponder<any, any>,
+  hookProps: ?Object,
+): void {
+  const listenerProps = hookProps || emptyObject;
+  const value = {
+    responder,
+    props: listenerProps,
+  };
+  hookLog.push({primitive: 'Listener', stackError: new Error(), value});
 }
 
 const Dispatcher: DispatcherType = {
