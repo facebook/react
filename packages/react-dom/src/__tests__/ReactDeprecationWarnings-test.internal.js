@@ -38,8 +38,9 @@ describe('ReactDeprecationWarnings', () => {
     expect(() =>
       ReactTestUtils.renderIntoDocument(<FunctionalComponent />),
     ).toWarnDev(
-      'Warning: FunctionalComponent: Function components will not support defaultProps. ' +
-        'Use JavaScript default arguments instead.',
+      'Warning: FunctionalComponent: Support for defaultProps ' +
+        'will be removed from function components in a future major ' +
+        'release. Use JavaScript default parameters instead.',
       {withoutStack: true},
     );
   });

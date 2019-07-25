@@ -1436,8 +1436,8 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
     if (!didWarnAboutDefaultPropsOnFunctionComponent[componentName]) {
       warningWithoutStack(
         false,
-        '%s: Function components will not support defaultProps. ' +
-          'Use JavaScript default arguments instead.',
+        '%s: Support for defaultProps will be removed from function components ' +
+          'in a future major release. Use JavaScript default parameters instead.',
         componentName,
       );
       didWarnAboutDefaultPropsOnFunctionComponent[componentName] = true;
