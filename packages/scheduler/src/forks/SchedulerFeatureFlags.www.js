@@ -11,4 +11,5 @@ export const {
   enableSchedulerDebugging,
   requestIdleCallbackBeforeFirstFrame,
   requestTimerEventBeforeFirstFrame,
+  enableMessageLoopImplementation,
 } = require('SchedulerFeatureFlags');
