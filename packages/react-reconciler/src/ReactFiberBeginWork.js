@@ -1427,7 +1427,6 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
     }
   }
 
-  // console.log(warnAbouDefaultPropsOnFunctionComponents);
   if (
     warnAbouDefaultPropsOnFunctionComponents &&
     Component.defaultProps !== undefined
