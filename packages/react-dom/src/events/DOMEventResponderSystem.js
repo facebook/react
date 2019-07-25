@@ -192,7 +192,7 @@ const eventResponderContext: ReactDOMResponderContext = {
     validateResponderContext();
     for (let i = 0; i < rootEventTypes.length; i++) {
       const rootEventType = rootEventTypes[i];
-      let rootEventComponents = rootEventTypesToEventResponderInstances.get(
+      let rootEventResponders = rootEventTypesToEventResponderInstances.get(
         rootEventType,
       );
       let rootEventTypesSet = ((currentInstance: any): ReactDOMEventResponderInstance)
@@ -200,8 +200,8 @@ const eventResponderContext: ReactDOMResponderContext = {
       if (rootEventTypesSet !== null) {
         rootEventTypesSet.delete(rootEventType);
       }
-      if (rootEventComponents !== undefined) {
-        rootEventComponents.delete(
+      if (rootEventResponders !== undefined) {
+        rootEventResponders.delete(
           ((currentInstance: any): ReactDOMEventResponderInstance),
         );
       }

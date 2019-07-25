@@ -28,7 +28,7 @@ function createEventResponder({
   onOwnershipChange,
   getInitialState,
 }) {
-  return React.unstable_createResponder('TestEventComponent', {
+  return React.unstable_createResponder('TestEventResponder', {
     targetEventTypes,
     rootEventTypes,
     onEvent,
