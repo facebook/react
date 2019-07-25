@@ -62,7 +62,7 @@ import {
   enableSuspenseServerRenderer,
   enableFlareAPI,
   enableFundamentalAPI,
-  warnAbouDefaultPropsOnFunctionComponents,
+  warnAboutDefaultPropsOnFunctionComponents,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import shallowEqual from 'shared/shallowEqual';
@@ -1428,7 +1428,7 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
   }
 
   if (
-    warnAbouDefaultPropsOnFunctionComponents &&
+    warnAboutDefaultPropsOnFunctionComponents &&
     Component.defaultProps !== undefined
   ) {
     const componentName = getComponentName(Component) || 'Unknown';
@@ -1436,8 +1436,8 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
     if (!didWarnAboutDefaultPropsOnFunctionComponent[componentName]) {
       warningWithoutStack(
         false,
-        '%s: Function components do not support defaultProps. ' +
-          'Use Javascript default arguments instead.',
+        '%s: Function components will not support defaultProps. ' +
+          'Use JavaScript default arguments instead.',
         componentName,
       );
       didWarnAboutDefaultPropsOnFunctionComponent[componentName] = true;

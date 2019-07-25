@@ -87,4 +87,4 @@ export const enableSuspenseCallback = false;
 // Part of the simplification of React.createElement so we can eventually move
 // from React.createElement to React.jsx
 // https://github.com/reactjs/rfcs/blob/createlement-rfc/text/0000-create-element-changes.md
-export const warnAbouDefaultPropsOnFunctionComponents = false;
+export const warnAboutDefaultPropsOnFunctionComponents = false;

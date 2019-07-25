@@ -78,7 +78,7 @@ export const warnAboutMissingMockScheduler = true;
 
 export const enableSuspenseCallback = true;
 
-export const warnAbouDefaultPropsOnFunctionComponents = false;
+export const warnAboutDefaultPropsOnFunctionComponents = false;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars

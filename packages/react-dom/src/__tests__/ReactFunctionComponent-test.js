@@ -13,7 +13,6 @@ let PropTypes;
 let React;
 let ReactDOM;
 let ReactTestUtils;
-let ReactFeatureFlags;
 
 function FunctionComponent(props) {
   return <div>{props.name}</div>;
@@ -26,8 +25,6 @@ describe('ReactFunctionComponent', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.warnAbouDefaultPropsOnFunctionComponents = true;
   });
 
   it('should render stateless component', () => {
@@ -209,24 +206,6 @@ describe('ReactFunctionComponent', () => {
     ReactTestUtils.renderIntoDocument(<ParentUsingStringRef />);
   });
 
-  it('should warn when given defaultProps', () => {
-    function FunctionalComponent(props) {
-      return null;
-    }
-
-    FunctionalComponent.defaultProps = {
-      testProp: true,
-    };
-
-    expect(() =>
-      ReactTestUtils.renderIntoDocument(<FunctionalComponent />),
-    ).toWarnDev(
-      'Warning: FunctionalComponent: Function components do not support defaultProps. ' +
-        'Use Javascript default arguments instead.',
-      {withoutStack: true},
-    );
-  });
-
   it('should warn when given a function ref', () => {
     function Indirection(props) {
       return <div>{props.children}</div>;
@@ -386,11 +365,9 @@ describe('ReactFunctionComponent', () => {
     );
   });
 
-  // TODO: deprecate default props support after we remove defaultProps
+  // TODO: change this test after we deprecate default props support
   // from function components
   it('should support default props and prop types', () => {
-    ReactFeatureFlags.warnAbouDefaultPropsOnFunctionComponents = false;
-
     function Child(props) {
       return <div>{props.test}</div>;
     }
