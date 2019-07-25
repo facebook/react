@@ -10,7 +10,8 @@
 import warning from 'shared/warning';
 
 import type {
-  ReactEventComponentInstance,
+  ReactEventResponder,
+  ReactEventResponderInstance,
   ReactFundamentalComponentInstance,
 } from 'shared/ReactTypes';
 
@@ -124,15 +125,6 @@ export function getChildHostContext(
   return NO_CONTEXT;
 }
 
-export function getChildHostContextForEventComponent(
-  parentHostContext: HostContext,
-): HostContext {
-  if (__DEV__ && enableFlareAPI) {
-    return EVENT_COMPONENT_CONTEXT;
-  }
-  return NO_CONTEXT;
-}
-
 export function prepareForCommit(containerInfo: Container): void {
   // noop
 }
@@ -148,9 +140,19 @@ export function createInstance(
   hostContext: Object,
   internalInstanceHandle: Object,
 ): Instance {
+  let propsToUse = props;
+  if (enableFlareAPI) {
+    if (props.responders != null) {
+      // We want to remove the "responders" prop
+      // as we don't want it into the test renderer instance's
+      // props object.
+      const {responders, ...otherProps} = props; // eslint-disable-line
+      propsToUse = otherProps;
+    }
+  }
   return {
     type,
-    props,
+    props: propsToUse,
     isHidden: false,
     children: [],
     rootContainerInstance,
@@ -288,20 +290,19 @@ export function unhideTextInstance(
   textInstance.isHidden = false;
 }
 
-export function mountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance<any, any>,
-): void {
+export function mountResponderInstance(
+  responder: ReactEventResponder<any, any>,
+  responderInstance: ReactEventResponderInstance<any, any>,
+  props: Object,
+  state: Object,
+  instance: Instance,
+  rootContainerInstance: Container,
+) {
   // noop
 }
 
-export function updateEventComponent(
-  eventComponentInstance: ReactEventComponentInstance<any, any>,
-): void {
-  // noop
-}
-
-export function unmountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance<any, any>,
+export function unmountResponderInstance(
+  responderInstance: ReactEventResponderInstance<any, any>,
 ): void {
   // noop
 }

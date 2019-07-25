@@ -190,16 +190,16 @@ export type ReactFaricEvent = {
 };
 
 export type ReactNativeResponderEvent = {
-  currentTarget: null | ReactNativeEventTarget,
   nativeEvent: ReactFaricEvent,
+  responderTarget: null | ReactNativeEventTarget,
   target: null | ReactNativeEventTarget,
   type: string,
 };
 
 export type ReactNativeResponderContext = {
   dispatchEvent: (
-    eventObject: Object,
-    listener: (Object) => void,
+    eventProp: string,
+    eventValue: any,
     eventPriority: EventPriority,
   ) => void,
   isTargetWithinNode: (
@@ -230,7 +230,7 @@ export type PointerType =
   | 'touch'
   | 'trackpad';
 
-export opaque type EventPriority = 0 | 1 | 2;
+export type EventPriority = 0 | 1 | 2;
 
 export const DiscreteEvent: EventPriority = 0;
 export const UserBlockingEvent: EventPriority = 1;

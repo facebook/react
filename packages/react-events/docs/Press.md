@@ -110,7 +110,7 @@ the press point moves more than 10px `onLongPress` is cancelled.
 
 Called when the element changes long-press state.
 
-### onLongPressShouldCancelPress: () => boolean
+### longPressShouldCancelPress: () => boolean
 
 Determines whether calling `onPress` should be cancelled if `onLongPress` or
 `onLongPressChange` have already been called. Default is `false`.

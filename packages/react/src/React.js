@@ -39,7 +39,7 @@ import {
   useReducer,
   useRef,
   useState,
-  useEvent,
+  useListener,
 } from './ReactHooks';
 import {withSuspenseConfig} from './ReactBatchConfig';
 import {
@@ -51,8 +51,8 @@ import {
   jsxWithValidationDynamic,
 } from './ReactElementValidator';
 import ReactSharedInternals from './ReactSharedInternals';
-import createEvent from 'shared/createEventComponent';
 import createFundamental from 'shared/createFundamentalComponent';
+import createResponder from 'shared/createEventResponder';
 import {
   enableJSXTransformAPI,
   enableFlareAPI,
@@ -106,8 +106,8 @@ const React = {
 };
 
 if (enableFlareAPI) {
-  React.unstable_createEvent = createEvent;
-  React.unstable_useEvent = useEvent;
+  React.unstable_useListener = useListener;
+  React.unstable_createResponder = createResponder;
 }
 
 if (enableFundamentalAPI) {

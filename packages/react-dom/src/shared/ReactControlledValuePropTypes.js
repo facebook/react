@@ -36,7 +36,7 @@ if (__DEV__) {
         props.readOnly ||
         props.disabled ||
         props[propName] == null ||
-        enableFlareAPI
+        (enableFlareAPI && props.responders)
       ) {
         return null;
       }
@@ -53,7 +53,7 @@ if (__DEV__) {
         props.readOnly ||
         props.disabled ||
         props[propName] == null ||
-        enableFlareAPI
+        (enableFlareAPI && props.responders)
       ) {
         return null;
       }

@@ -8,7 +8,6 @@
  */
 
 import type {
-  ReactDOMEventResponder,
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
 } from 'shared/ReactDOMTypes';
@@ -20,6 +19,13 @@ import {DiscreteEvent, UserBlockingEvent} from 'shared/ReactTypes';
 const targetEventTypes = ['pointerdown'];
 const rootEventTypes = ['pointerup', 'pointercancel', 'pointermove_active'];
 
+type DragListenerProps = {|
+  onDragStart: (e: DragEvent) => void,
+  onDragMove: (e: DragEvent) => void,
+  onDragEnd: (e: DragEvent) => void,
+  onDragChange: boolean => void,
+|};
+
 type DragState = {
   dragTarget: null | Element | Document,
   isPointerDown: boolean,
@@ -28,6 +34,7 @@ type DragState = {
   startY: number,
   x: number,
   y: number,
+  ownershipClaimed: boolean,
 };
 
 // In the case we don't have PointerEvents (Safari), we listen to touch events
@@ -72,20 +79,19 @@ function createDragEvent(
 }
 
 function dispatchDragEvent(
+  eventPropName: string,
   context: ReactDOMResponderContext,
   name: DragEventType,
-  listener: DragEvent => void,
   state: DragState,
   eventPriority: EventPriority,
   eventData?: EventData,
 ): void {
   const target = ((state.dragTarget: any): Element | Document);
   const syntheticEvent = createDragEvent(context, name, target, eventData);
-  context.dispatchEvent(syntheticEvent, listener, eventPriority);
+  context.dispatchEvent(eventPropName, syntheticEvent, eventPriority);
 }
 
-const DragResponder: ReactDOMEventResponder = {
-  displayName: 'Drag',
+const dragResponderImpl = {
   targetEventTypes,
   getInitialState(): DragState {
     return {
@@ -96,6 +102,7 @@ const DragResponder: ReactDOMEventResponder = {
       startY: 0,
       x: 0,
       y: 0,
+      ownershipClaimed: false,
     };
   },
   onEvent(
@@ -111,9 +118,6 @@ const DragResponder: ReactDOMEventResponder = {
       case 'mousedown':
       case 'pointerdown': {
         if (!state.isDragging) {
-          if (props.onShouldClaimOwnership) {
-            context.releaseOwnership();
-          }
           const obj =
             type === 'touchstart'
               ? (nativeEvent: any).changedTouches[0]
@@ -125,16 +129,13 @@ const DragResponder: ReactDOMEventResponder = {
           state.dragTarget = target;
           state.isPointerDown = true;
 
-          if (props.onDragStart) {
-            dispatchDragEvent(
-              context,
-              'dragstart',
-              props.onDragStart,
-              state,
-              DiscreteEvent,
-            );
-          }
-
+          dispatchDragEvent(
+            'onDragStart',
+            context,
+            'dragstart',
+            state,
+            DiscreteEvent,
+          );
           context.addRootEventTypes(rootEventTypes);
         }
         break;
@@ -171,46 +172,33 @@ const DragResponder: ReactDOMEventResponder = {
           if (!state.isDragging) {
             let shouldEnableDragging = true;
 
-            if (
-              props.onShouldClaimOwnership &&
-              props.onShouldClaimOwnership()
-            ) {
+            if (props.shouldClaimOwnership && props.shouldClaimOwnership()) {
               shouldEnableDragging = context.requestGlobalOwnership();
+              if (shouldEnableDragging) {
+                state.ownershipClaimed = true;
+              }
             }
             if (shouldEnableDragging) {
               state.isDragging = true;
-              if (props.onDragChange) {
-                const dragChangeEventListener = () => {
-                  props.onDragChange(true);
-                };
-                dispatchDragEvent(
-                  context,
-                  'dragchange',
-                  dragChangeEventListener,
-                  state,
-                  UserBlockingEvent,
-                );
-              }
+              context.dispatchEvent('onDragChange', true, UserBlockingEvent);
             } else {
               state.dragTarget = null;
               state.isPointerDown = false;
               context.removeRootEventTypes(rootEventTypes);
             }
           } else {
-            if (props.onDragMove) {
-              const eventData = {
-                diffX: x - state.startX,
-                diffY: y - state.startY,
-              };
-              dispatchDragEvent(
-                context,
-                'dragmove',
-                props.onDragMove,
-                state,
-                UserBlockingEvent,
-                eventData,
-              );
-            }
+            const eventData = {
+              diffX: x - state.startX,
+              diffY: y - state.startY,
+            };
+            dispatchDragEvent(
+              'onDragMove',
+              context,
+              'dragmove',
+              state,
+              UserBlockingEvent,
+              eventData,
+            );
             (nativeEvent: any).preventDefault();
           }
         }
@@ -222,30 +210,17 @@ const DragResponder: ReactDOMEventResponder = {
       case 'mouseup':
       case 'pointerup': {
         if (state.isDragging) {
-          if (props.onShouldClaimOwnership) {
+          if (state.ownershipClaimed) {
             context.releaseOwnership();
           }
-          if (props.onDragEnd) {
-            dispatchDragEvent(
-              context,
-              'dragend',
-              props.onDragEnd,
-              state,
-              DiscreteEvent,
-            );
-          }
-          if (props.onDragChange) {
-            const dragChangeEventListener = () => {
-              props.onDragChange(false);
-            };
-            dispatchDragEvent(
-              context,
-              'dragchange',
-              dragChangeEventListener,
-              state,
-              UserBlockingEvent,
-            );
-          }
+          dispatchDragEvent(
+            'onDragEnd',
+            context,
+            'dragend',
+            state,
+            DiscreteEvent,
+          );
+          context.dispatchEvent('onDragChange', false, UserBlockingEvent);
           state.isDragging = false;
         }
         if (state.isPointerDown) {
@@ -259,8 +234,11 @@ const DragResponder: ReactDOMEventResponder = {
   },
 };
 
-export const Drag = React.unstable_createEvent(DragResponder);
+export const DragResponder = React.unstable_createResponder(
+  'Drag',
+  dragResponderImpl,
+);
 
-export function useDrag(props: Object): void {
-  React.unstable_useEvent(Drag, props);
+export function useDragListener(props: DragListenerProps): void {
+  React.unstable_useListener(DragResponder, props);
 }

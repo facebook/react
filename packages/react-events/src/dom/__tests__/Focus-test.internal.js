@@ -12,8 +12,10 @@
 let React;
 let ReactFeatureFlags;
 let ReactDOM;
-let Focus;
-let FocusWithin;
+let FocusResponder;
+let FocusWithinResponder;
+let useFocusListener;
+let useFocusWithinListener;
 
 const createEvent = (type, data) => {
   const event = document.createEvent('CustomEvent');
@@ -39,8 +41,10 @@ const modulesInit = () => {
   ReactFeatureFlags.enableFlareAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
-  Focus = require('react-events/focus').Focus;
-  FocusWithin = require('react-events/focus').FocusWithin;
+  FocusResponder = require('react-events/focus').FocusResponder;
+  FocusWithinResponder = require('react-events/focus').FocusWithinResponder;
+  useFocusListener = require('react-events/focus').useFocusListener;
+  useFocusWithinListener = require('react-events/focus').useFocusWithinListener;
 };
 
 describe('Focus event responder', () => {
@@ -67,12 +71,16 @@ describe('Focus event responder', () => {
       onBlur = jest.fn();
       onFocus = jest.fn();
       ref = React.createRef();
-      const element = (
-        <Focus disabled={true} onBlur={onBlur} onFocus={onFocus}>
-          <div ref={ref} />
-        </Focus>
-      );
-      ReactDOM.render(element, container);
+      const Component = () => {
+        useFocusListener({
+          onBlur,
+          onFocus,
+        });
+        return (
+          <div ref={ref} responders={<FocusResponder disabled={true} />} />
+        );
+      };
+      ReactDOM.render(<Component />, container);
     });
 
     it('prevents custom events being dispatched', () => {
@@ -89,12 +97,13 @@ describe('Focus event responder', () => {
     beforeEach(() => {
       onBlur = jest.fn();
       ref = React.createRef();
-      const element = (
-        <Focus onBlur={onBlur}>
-          <div ref={ref} />
-        </Focus>
-      );
-      ReactDOM.render(element, container);
+      const Component = () => {
+        useFocusListener({
+          onBlur,
+        });
+        return <div ref={ref} responders={<FocusResponder />} />;
+      };
+      ReactDOM.render(<Component />, container);
     });
 
     it('is called after "blur" event', () => {
@@ -111,14 +120,17 @@ describe('Focus event responder', () => {
       onFocus = jest.fn();
       ref = React.createRef();
       innerRef = React.createRef();
-      const element = (
-        <Focus onFocus={onFocus}>
-          <div ref={ref}>
+      const Component = () => {
+        useFocusListener({
+          onFocus,
+        });
+        return (
+          <div ref={ref} responders={<FocusResponder />}>
             <a ref={innerRef} />
           </div>
-        </Focus>
-      );
-      ReactDOM.render(element, container);
+        );
+      };
+      ReactDOM.render(<Component />, container);
     };
 
     beforeEach(componentInit);
@@ -239,14 +251,17 @@ describe('Focus event responder', () => {
       onFocusChange = jest.fn();
       ref = React.createRef();
       innerRef = React.createRef();
-      const element = (
-        <Focus onFocusChange={onFocusChange}>
-          <div ref={ref}>
+      const Component = () => {
+        useFocusListener({
+          onFocusChange,
+        });
+        return (
+          <div ref={ref} responders={<FocusResponder />}>
             <div ref={innerRef} />
           </div>
-        </Focus>
-      );
-      ReactDOM.render(element, container);
+        );
+      };
+      ReactDOM.render(<Component />, container);
     });
 
     it('is called after "blur" and "focus" events', () => {
@@ -273,14 +288,17 @@ describe('Focus event responder', () => {
       onFocusVisibleChange = jest.fn();
       ref = React.createRef();
       innerRef = React.createRef();
-      const element = (
-        <Focus onFocusVisibleChange={onFocusVisibleChange}>
-          <div ref={ref}>
+      const Component = () => {
+        useFocusListener({
+          onFocusVisibleChange,
+        });
+        return (
+          <div ref={ref} responders={<FocusResponder />}>
             <div ref={innerRef} />
           </div>
-        </Focus>
-      );
-      ReactDOM.render(element, container);
+        );
+      };
+      ReactDOM.render(<Component />, container);
     });
 
     it('is called after "focus" and "blur" if keyboard navigation is active', () => {
@@ -343,23 +361,29 @@ describe('Focus event responder', () => {
         events.push(msg);
       };
 
-      const element = (
-        <Focus
-          onBlur={createEventHandler('outer: onBlur')}
-          onFocus={createEventHandler('outer: onFocus')}
-          onFocusChange={createEventHandler('outer: onFocusChange')}>
-          <div ref={outerRef}>
-            <Focus
-              onBlur={createEventHandler('inner: onBlur')}
-              onFocus={createEventHandler('inner: onFocus')}
-              onFocusChange={createEventHandler('inner: onFocusChange')}>
-              <div ref={innerRef} />
-            </Focus>
-          </div>
-        </Focus>
-      );
+      const Inner = () => {
+        useFocusListener({
+          onBlur: createEventHandler('inner: onBlur'),
+          onFocus: createEventHandler('inner: onFocus'),
+          onFocusChange: createEventHandler('inner: onFocusChange'),
+        });
+        return <div ref={innerRef} responders={<FocusResponder />} />;
+      };
 
-      ReactDOM.render(element, container);
+      const Outer = () => {
+        useFocusListener({
+          onBlur: createEventHandler('outer: onBlur'),
+          onFocus: createEventHandler('outer: onFocus'),
+          onFocusChange: createEventHandler('outer: onFocusChange'),
+        });
+        return (
+          <div ref={outerRef} responders={<FocusResponder />}>
+            <Inner />
+          </div>
+        );
+      };
+
+      ReactDOM.render(<Outer />, container);
 
       outerRef.current.dispatchEvent(createEvent('focus'));
       outerRef.current.dispatchEvent(createEvent('blur'));
@@ -379,7 +403,7 @@ describe('Focus event responder', () => {
   });
 
   it('expect displayName to show up for event component', () => {
-    expect(Focus.responder.displayName).toBe('Focus');
+    expect(FocusResponder.displayName).toBe('Focus');
   });
 });
 
@@ -407,15 +431,19 @@ describe('FocusWithin event responder', () => {
       onFocusWithinChange = jest.fn();
       onFocusWithinVisibleChange = jest.fn();
       ref = React.createRef();
-      const element = (
-        <FocusWithin
-          disabled={true}
-          onFocusWithinChange={onFocusWithinChange}
-          onFocusWithinVisibleChange={onFocusWithinVisibleChange}>
-          <div ref={ref} />
-        </FocusWithin>
-      );
-      ReactDOM.render(element, container);
+      const Component = () => {
+        useFocusWithinListener({
+          onFocusWithinChange,
+          onFocusWithinVisibleChange,
+        });
+        return (
+          <div
+            ref={ref}
+            responders={<FocusWithinResponder disabled={true} />}
+          />
+        );
+      };
+      ReactDOM.render(<Component />, container);
     });
 
     it('prevents custom events being dispatched', () => {
@@ -434,15 +462,18 @@ describe('FocusWithin event responder', () => {
       ref = React.createRef();
       innerRef = React.createRef();
       innerRef2 = React.createRef();
-      const element = (
-        <FocusWithin onFocusWithinChange={onFocusWithinChange}>
-          <div ref={ref}>
+      const Component = () => {
+        useFocusWithinListener({
+          onFocusWithinChange,
+        });
+        return (
+          <div ref={ref} responders={<FocusWithinResponder />}>
             <div ref={innerRef} />
             <div ref={innerRef2} />
           </div>
-        </FocusWithin>
-      );
-      ReactDOM.render(element, container);
+        );
+      };
+      ReactDOM.render(<Component />, container);
     });
 
     it('is called after "blur" and "focus" events on focus target', () => {
@@ -502,15 +533,18 @@ describe('FocusWithin event responder', () => {
       ref = React.createRef();
       innerRef = React.createRef();
       innerRef2 = React.createRef();
-      const element = (
-        <FocusWithin onFocusWithinVisibleChange={onFocusWithinVisibleChange}>
-          <div ref={ref}>
+      const Component = () => {
+        useFocusWithinListener({
+          onFocusWithinVisibleChange,
+        });
+        return (
+          <div ref={ref} responders={<FocusWithinResponder />}>
             <div ref={innerRef} />
             <div ref={innerRef2} />
           </div>
-        </FocusWithin>
-      );
-      ReactDOM.render(element, container);
+        );
+      };
+      ReactDOM.render(<Component />, container);
     });
 
     it('is called after "focus" and "blur" on focus target if keyboard was used', () => {
@@ -616,6 +650,6 @@ describe('FocusWithin event responder', () => {
   });
 
   it('expect displayName to show up for event component', () => {
-    expect(FocusWithin.responder.displayName).toBe('FocusWithin');
+    expect(FocusWithinResponder.displayName).toBe('FocusWithin');
   });
 });

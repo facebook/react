@@ -79,7 +79,12 @@ export const revertPassiveEffectsChange = false;
 // starvation problems.
 export const enableUserBlockingEvents = false;
 
-// Simplifies how React.createElement works so we can eventually move
+// Add a callback property to suspense to notify which promises are currently
+// in the update queue. This allows reporting and tracing of what is causing
+// the user to see a loading state.
+export const enableSuspenseCallback = false;
+
+// Part of the simplification of React.createElement so we can eventually move
 // from React.createElement to React.jsx
 // https://github.com/reactjs/rfcs/blob/createlement-rfc/text/0000-create-element-changes.md
 export const warnAbouDefaultPropsOnFunctionComponents = false;

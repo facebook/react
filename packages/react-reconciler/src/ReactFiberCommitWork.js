@@ -30,6 +30,7 @@ import {
   enableSuspenseServerRenderer,
   enableFlareAPI,
   enableFundamentalAPI,
+  enableSuspenseCallback,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -45,7 +46,6 @@ import {
   IncompleteClassComponent,
   MemoComponent,
   SimpleMemoComponent,
-  EventComponent,
   SuspenseListComponent,
   FundamentalComponent,
 } from 'shared/ReactWorkTags';
@@ -94,8 +94,7 @@ import {
   hideTextInstance,
   unhideInstance,
   unhideTextInstance,
-  unmountEventComponent,
-  mountEventComponent,
+  unmountResponderInstance,
   unmountFundamentalComponent,
   updateFundamentalComponent,
 } from './ReactFiberHostConfig';
@@ -568,25 +567,27 @@ function commitLifeCycles(
       if (enableProfilerTimer) {
         const onRender = finishedWork.memoizedProps.onRender;
 
-        if (enableSchedulerTracing) {
-          onRender(
-            finishedWork.memoizedProps.id,
-            current === null ? 'mount' : 'update',
-            finishedWork.actualDuration,
-            finishedWork.treeBaseDuration,
-            finishedWork.actualStartTime,
-            getCommitTime(),
-            finishedRoot.memoizedInteractions,
-          );
-        } else {
-          onRender(
-            finishedWork.memoizedProps.id,
-            current === null ? 'mount' : 'update',
-            finishedWork.actualDuration,
-            finishedWork.treeBaseDuration,
-            finishedWork.actualStartTime,
-            getCommitTime(),
-          );
+        if (typeof onRender === 'function') {
+          if (enableSchedulerTracing) {
+            onRender(
+              finishedWork.memoizedProps.id,
+              current === null ? 'mount' : 'update',
+              finishedWork.actualDuration,
+              finishedWork.treeBaseDuration,
+              finishedWork.actualStartTime,
+              getCommitTime(),
+              finishedRoot.memoizedInteractions,
+            );
+          } else {
+            onRender(
+              finishedWork.memoizedProps.id,
+              current === null ? 'mount' : 'update',
+              finishedWork.actualDuration,
+              finishedWork.treeBaseDuration,
+              finishedWork.actualStartTime,
+              getCommitTime(),
+            );
+          }
         }
       }
       return;
@@ -596,12 +597,6 @@ function commitLifeCycles(
     case IncompleteClassComponent:
     case FundamentalComponent:
       return;
-    case EventComponent: {
-      if (enableFlareAPI) {
-        mountEventComponent(finishedWork.stateNode);
-      }
-      return;
-    }
     default: {
       invariant(
         false,
@@ -742,6 +737,25 @@ function commitUnmount(current: Fiber): void {
       return;
     }
     case HostComponent: {
+      if (enableFlareAPI) {
+        const dependencies = current.dependencies;
+
+        if (dependencies !== null) {
+          const respondersMap = dependencies.responders;
+          if (respondersMap !== null) {
+            const responderInstances = Array.from(respondersMap.values());
+            for (
+              let i = 0, length = responderInstances.length;
+              i < length;
+              i++
+            ) {
+              const responderInstance = responderInstances[i];
+              unmountResponderInstance(responderInstance);
+            }
+            dependencies.responders = null;
+          }
+        }
+      }
       safelyDetachRef(current);
       return;
     }
@@ -755,14 +769,6 @@ function commitUnmount(current: Fiber): void {
         emptyPortalContainer(current);
       }
       return;
-    }
-    case EventComponent: {
-      if (enableFlareAPI) {
-        const eventComponentInstance = current.stateNode;
-        unmountEventComponent(eventComponentInstance);
-        current.stateNode = null;
-      }
-      break;
     }
     case FundamentalComponent: {
       if (enableFundamentalAPI) {
@@ -853,8 +859,7 @@ function commitContainer(finishedWork: Fiber) {
     case ClassComponent:
     case HostComponent:
     case HostText:
-    case FundamentalComponent:
-    case EventComponent: {
+    case FundamentalComponent: {
       return;
     }
     case HostRoot:
@@ -1285,9 +1290,6 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
     case IncompleteClassComponent: {
       return;
     }
-    case EventComponent: {
-      return;
-    }
     case FundamentalComponent: {
       if (enableFundamentalAPI) {
         const fundamentalInstance = finishedWork.stateNode;
@@ -1320,6 +1322,20 @@ function commitSuspenseComponent(finishedWork: Fiber) {
 
   if (supportsMutation && primaryChildParent !== null) {
     hideOrUnhideAllChildren(primaryChildParent, newDidTimeout);
+  }
+
+  if (enableSuspenseCallback && newState !== null) {
+    const suspenseCallback = finishedWork.memoizedProps.suspenseCallback;
+    if (typeof suspenseCallback === 'function') {
+      const thenables: Set<Thenable> | null = (finishedWork.updateQueue: any);
+      if (thenables !== null) {
+        suspenseCallback(new Set(thenables));
+      }
+    } else if (__DEV__) {
+      if (suspenseCallback !== undefined) {
+        warning(false, 'Unexpected type for suspenseCallback.');
+      }
+    }
   }
 }
 

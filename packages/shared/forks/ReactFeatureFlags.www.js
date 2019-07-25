@@ -21,7 +21,6 @@ export const {
   warnAboutDeprecatedSetNativeProps,
   revertPassiveEffectsChange,
   enableUserBlockingEvents,
-  warnAbouDefaultPropsOnFunctionComponents,
 } = require('ReactFeatureFlags');
 
 // In www, we have experimental support for gathering data
@@ -76,6 +75,10 @@ export const enableFundamentalAPI = false;
 export const enableJSXTransformAPI = true;
 
 export const warnAboutMissingMockScheduler = true;
+
+export const enableSuspenseCallback = true;
+
+export const warnAbouDefaultPropsOnFunctionComponents = false;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars
