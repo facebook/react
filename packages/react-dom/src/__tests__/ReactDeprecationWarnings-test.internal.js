@@ -26,7 +26,7 @@ describe('ReactDeprecationWarnings', () => {
     ReactFeatureFlags.warnAboutDefaultPropsOnFunctionComponents = false;
   });
 
-  it('should warn when given defaultProps', () => {
+  ift('should warn when given defaultProps', () => {
     function FunctionalComponent(props) {
       return null;
     }

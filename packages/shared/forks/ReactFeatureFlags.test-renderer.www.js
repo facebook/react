@@ -34,6 +34,7 @@ export const warnAboutMissingMockScheduler = true;
 export const enableUserBlockingEvents = false;
 export const enableSuspenseCallback = true;
 export const warnAboutDefaultPropsOnFunctionComponents = false;
+export const warnAboutStringRefs = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {
