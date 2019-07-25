@@ -91,6 +91,27 @@ export type GetFiberIDForNative = (
 ) => number | null;
 export type FindNativeNodesForFiberID = (id: number) => ?Array<NativeType>;
 
+export type ReactProviderType<T> = {
+  $$typeof: Symbol | number,
+  _context: ReactContext<T>,
+};
+
+export type ReactContext<T> = {
+  $$typeof: Symbol | number,
+  Consumer: ReactContext<T>,
+  Provider: ReactProviderType<T>,
+
+  _calculateChangedBits: ((a: T, b: T) => number) | null,
+
+  _currentValue: T,
+  _currentValue2: T,
+  _threadCount: number,
+
+  // DEV only
+  _currentRenderer?: Object | null,
+  _currentRenderer2?: Object | null,
+};
+
 export type ReactRenderer = {
   findFiberByHostInstance: (hostInstance: NativeType) => ?Fiber,
   version: string,
@@ -332,3 +353,22 @@ export type HooksNode = {
   subHooks: Array<HooksNode>,
 };
 export type HooksTree = Array<HooksNode>;
+
+export type ReactEventResponder<E, C> = {
+  $$typeof: Symbol | number,
+  displayName: string,
+  targetEventTypes: null | Array<string>,
+  rootEventTypes: null | Array<string>,
+  getInitialState: null | ((props: Object) => Object),
+  onEvent:
+    | null
+    | ((event: E, context: C, props: Object, state: Object) => void),
+  onRootEvent:
+    | null
+    | ((event: E, context: C, props: Object, state: Object) => void),
+  onMount: null | ((context: C, props: Object, state: Object) => void),
+  onUnmount: null | ((context: C, props: Object, state: Object) => void),
+  onOwnershipChange:
+    | null
+    | ((context: C, props: Object, state: Object) => void),
+};
