@@ -32,16 +32,19 @@ export type ViewElementSource = (
   id: number,
   inspectedElement: InspectedElement
 ) => void;
+export type CanViewElementSource = (
+  inspectedElement: InspectedElement
+) => boolean;
 
 export type Props = {|
   bridge: FrontendBridge,
   browserTheme?: BrowserTheme,
+  canViewElementSourceFunction?: ?CanViewElementSource,
   defaultTab?: TabID,
   showTabBar?: boolean,
   store: Store,
   warnIfLegacyBackendDetected?: boolean,
   viewElementSourceFunction?: ?ViewElementSource,
-  viewElementSourceRequiresFileLocation?: boolean,
 
   // This property is used only by the web extension target.
   // The built-in tab UI is hidden in that case, in favor of the browser's own panel tabs.
@@ -75,6 +78,7 @@ const tabs = [componentsTab, profilerTab];
 export default function DevTools({
   bridge,
   browserTheme = 'light',
+  canViewElementSourceFunction = null,
   defaultTab = 'components',
   componentsPortalContainer,
   overrideTab,
@@ -83,8 +87,7 @@ export default function DevTools({
   showTabBar = false,
   store,
   warnIfLegacyBackendDetected = false,
-  viewElementSourceFunction,
-  viewElementSourceRequiresFileLocation = false,
+  viewElementSourceFunction = null,
 }: Props) {
   const [tab, setTab] = useState(defaultTab);
   if (overrideTab != null && overrideTab !== tab) {
@@ -93,10 +96,10 @@ export default function DevTools({
 
   const viewElementSource = useMemo(
     () => ({
-      isFileLocationRequired: viewElementSourceRequiresFileLocation,
-      viewElementSourceFunction: viewElementSourceFunction || null,
+      canViewElementSourceFunction,
+      viewElementSourceFunction,
     }),
-    [viewElementSourceFunction, viewElementSourceRequiresFileLocation]
+    [canViewElementSourceFunction, viewElementSourceFunction]
   );
 
   return (

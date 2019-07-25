@@ -102,31 +102,44 @@ function guessEditor(): Array<string> {
 
 let childProcess = null;
 
-export default function launchEditor(
+export function getValidFilePath(
   maybeRelativePath: string,
-  lineNumber: number,
   absoluteProjectRoots: Array<string>
-) {
+): string | null {
   // We use relative paths at Facebook with deterministic builds.
   // This is why our internal tooling calls React DevTools with absoluteProjectRoots.
   // If the filename is absolute then we don't need to care about this.
-  let filePath;
   if (isAbsolute(maybeRelativePath)) {
     if (existsSync(maybeRelativePath)) {
-      filePath = maybeRelativePath;
+      return maybeRelativePath;
     }
   } else {
     for (let i = 0; i < absoluteProjectRoots.length; i++) {
       const projectRoot = absoluteProjectRoots[i];
       const joinedPath = join(projectRoot, maybeRelativePath);
       if (existsSync(joinedPath)) {
-        filePath = joinedPath;
-        break;
+        return joinedPath;
       }
     }
   }
 
-  if (!filePath) {
+  return null;
+}
+
+export function doesFilePathExist(
+  maybeRelativePath: string,
+  absoluteProjectRoots: Array<string>
+): boolean {
+  return getValidFilePath(maybeRelativePath, absoluteProjectRoots) !== null;
+}
+
+export function launchEditor(
+  maybeRelativePath: string,
+  lineNumber: number,
+  absoluteProjectRoots: Array<string>
+) {
+  const filePath = getValidFilePath(maybeRelativePath, absoluteProjectRoots);
+  if (filePath === null) {
     return;
   }
 

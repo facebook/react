@@ -2,10 +2,13 @@
 
 import { createContext } from 'react';
 
-import type { ViewElementSource } from 'src/devtools/views/DevTools';
+import type {
+  CanViewElementSource,
+  ViewElementSource,
+} from 'src/devtools/views/DevTools';
 
 export type Context = {|
-  isFileLocationRequired: boolean,
+  canViewElementSourceFunction: CanViewElementSource | null,
   viewElementSourceFunction: ViewElementSource | null,
 |};
 

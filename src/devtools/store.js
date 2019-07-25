@@ -49,7 +49,6 @@ type Config = {|
   supportsNativeInspection?: boolean,
   supportsReloadAndProfile?: boolean,
   supportsProfiling?: boolean,
-  supportsViewSource?: boolean,
 |};
 
 export type Capabilities = {|
@@ -125,7 +124,6 @@ export default class Store extends EventEmitter<{|
   _supportsNativeInspection: boolean = false;
   _supportsProfiling: boolean = false;
   _supportsReloadAndProfile: boolean = false;
-  _supportsViewSource: boolean = true;
 
   // Total number of visible elements (within all roots).
   // Used for windowing purposes.
@@ -157,7 +155,6 @@ export default class Store extends EventEmitter<{|
         supportsNativeInspection,
         supportsProfiling,
         supportsReloadAndProfile,
-        supportsViewSource,
       } = config;
       if (supportsCaptureScreenshots) {
         this._supportsCaptureScreenshots = true;
@@ -165,7 +162,6 @@ export default class Store extends EventEmitter<{|
           localStorageGetItem(LOCAL_STORAGE_CAPTURE_SCREENSHOTS_KEY) === 'true';
       }
       this._supportsNativeInspection = supportsNativeInspection !== false;
-      this._supportsViewSource = supportsViewSource !== false;
       if (supportsProfiling) {
         this._supportsProfiling = true;
       }
@@ -363,10 +359,6 @@ export default class Store extends EventEmitter<{|
     // And if so, can the backend use the localStorage API?
     // Both of these are required for the reload-and-profile feature to work.
     return this._supportsReloadAndProfile && this._isBackendStorageAPISupported;
-  }
-
-  get supportsViewSource(): boolean {
-    return this._supportsViewSource;
   }
 
   containsElement(id: number): boolean {

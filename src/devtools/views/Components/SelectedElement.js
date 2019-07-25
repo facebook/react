@@ -34,9 +34,10 @@ export type Props = {||};
 export default function SelectedElement(_: Props) {
   const { inspectedElementID } = useContext(TreeStateContext);
   const dispatch = useContext(TreeDispatcherContext);
-  const { isFileLocationRequired, viewElementSourceFunction } = useContext(
-    ViewElementSourceContext
-  );
+  const {
+    canViewElementSourceFunction,
+    viewElementSourceFunction,
+  } = useContext(ViewElementSourceContext);
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
   const { dispatch: modalDialogDispatch } = useContext(ModalDialogContext);
@@ -90,11 +91,14 @@ export default function SelectedElement(_: Props) {
     }
   }, [inspectedElement, viewElementSourceFunction]);
 
+  // In some cases (e.g. FB internal usage) the standalone shell might not be able to view the source.
+  // To detect this case, we defer to an injected helper function (if present).
   const canViewSource =
-    inspectedElement &&
+    inspectedElement !== null &&
     inspectedElement.canViewSource &&
     viewElementSourceFunction !== null &&
-    (!isFileLocationRequired || inspectedElement.source !== null);
+    (canViewElementSourceFunction === null ||
+      canViewElementSourceFunction(inspectedElement));
 
   const isSuspended =
     element !== null &&
@@ -201,16 +205,14 @@ export default function SelectedElement(_: Props) {
         >
           <ButtonIcon type="log-data" />
         </Button>
-        {store.supportsViewSource && (
-          <Button
-            className={styles.IconButton}
-            disabled={!canViewSource}
-            onClick={viewSource}
-            title="View source for this element"
-          >
-            <ButtonIcon type="view-source" />
-          </Button>
-        )}
+        <Button
+          className={styles.IconButton}
+          disabled={!canViewSource}
+          onClick={viewSource}
+          title="View source for this element"
+        >
+          <ButtonIcon type="view-source" />
+        </Button>
       </div>
 
       {inspectedElement === null && (

@@ -14,7 +14,7 @@ import { Server } from 'ws';
 import { existsSync, readFileSync } from 'fs';
 import { installHook } from 'src/hook';
 import DevTools from 'src/devtools/views/DevTools';
-import launchEditor from './launchEditor';
+import { doesFilePathExist, launchEditor } from './editor';
 import { __DEBUG__ } from 'src/constants';
 
 import type { FrontendBridge } from 'src/bridge';
@@ -85,14 +85,29 @@ function reload() {
     root.render(
       createElement(DevTools, {
         bridge: ((bridge: any): FrontendBridge),
+        canViewElementSourceFunction,
         showTabBar: true,
         store: ((store: any): Store),
         warnIfLegacyBackendDetected: true,
         viewElementSourceFunction,
-        viewElementSourceRequiresFileLocation: true,
       })
     );
   }, 100);
+}
+
+function canViewElementSourceFunction(
+  inspectedElement: InspectedElement
+): boolean {
+  if (
+    inspectedElement.canViewSource === false ||
+    inspectedElement.source === null
+  ) {
+    return false;
+  }
+
+  const { source } = inspectedElement;
+
+  return doesFilePathExist(source.fileName, projectRoots);
 }
 
 function viewElementSourceFunction(
@@ -171,10 +186,7 @@ function initialize(socket: WebSocket) {
     socket.close();
   });
 
-  store = new Store(bridge, {
-    supportsNativeInspection: false,
-    supportsViewSource: projectRoots.length > 0,
-  });
+  store = new Store(bridge, { supportsNativeInspection: false });
 
   log('Connected');
   reload();
