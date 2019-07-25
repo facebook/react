@@ -10,6 +10,10 @@ export type Wall = {|
 // The values below are referenced by ComponentFilters (which are saved via localStorage).
 // Do not change them or it will break previously saved user customizations.
 // If new element types are added, use new numbers rather than re-ordering existing ones.
+//
+// Changing these types is also a backwards breaking change for the standalone shell,
+// since the frontend and backend must share the same values-
+// and the backend is embedded in certain environments (like React Native).
 export const ElementTypeClass = 1;
 export const ElementTypeContext = 2;
 export const ElementTypeFunction = 5;
@@ -24,7 +28,7 @@ export const ElementTypeSuspense = 12;
 // Different types of elements displayed in the Elements tree.
 // These types may be used to visually distinguish types,
 // or to enable/disable certain functionality.
-export type ElementType = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
+export type ElementType = 1 | 2 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 
 // WARNING
 // The values below are referenced by ComponentFilters (which are saved via localStorage).
