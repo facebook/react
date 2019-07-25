@@ -709,9 +709,6 @@ export function attach(
 
       type: type,
 
-      // New events system did not exist in legacy versions
-      events: null,
-
       // Inspectable properties.
       context,
       hooks: null,

@@ -8,8 +8,6 @@ import {
   ComponentFilterLocation,
   ElementTypeClass,
   ElementTypeContext,
-  ElementTypeEventComponent,
-  ElementTypeEventTarget,
   ElementTypeFunction,
   ElementTypeForwardRef,
   ElementTypeHostComponent,
@@ -109,8 +107,6 @@ type ReactTypeOfWorkType = {|
   CoroutineComponent: number,
   CoroutineHandlerPhase: number,
   DehydratedSuspenseComponent: number,
-  EventComponent: number,
-  EventTarget: number,
   ForwardRef: number,
   Fragment: number,
   FunctionComponent: number,
@@ -213,8 +209,6 @@ export function getInternalReactConstants(
       CoroutineComponent: -1, // Removed
       CoroutineHandlerPhase: -1, // Removed
       DehydratedSuspenseComponent: 18, // Behind a flag
-      EventComponent: 19, // Added in 16.9
-      EventTarget: 20, // Added in 16.9
       ForwardRef: 11,
       Fragment: 7,
       FunctionComponent: 0,
@@ -240,8 +234,6 @@ export function getInternalReactConstants(
       CoroutineComponent: -1, // Removed
       CoroutineHandlerPhase: -1, // Removed
       DehydratedSuspenseComponent: -1, // Doesn't exist yet
-      EventComponent: -1, // Doesn't exist yet
-      EventTarget: -1, // Doesn't exist yet
       ForwardRef: 13,
       Fragment: 9,
       FunctionComponent: 0,
@@ -267,8 +259,6 @@ export function getInternalReactConstants(
       CoroutineComponent: 7,
       CoroutineHandlerPhase: 8,
       DehydratedSuspenseComponent: -1, // Doesn't exist yet
-      EventComponent: -1, // Doesn't exist yet
-      EventTarget: -1, // Doesn't exist yet
       ForwardRef: 14,
       Fragment: 10,
       FunctionComponent: 1,
@@ -305,8 +295,6 @@ export function getInternalReactConstants(
     IncompleteClassComponent,
     FunctionComponent,
     IndeterminateComponent,
-    EventComponent,
-    EventTarget,
     ForwardRef,
     HostRoot,
     HostComponent,
@@ -318,8 +306,6 @@ export function getInternalReactConstants(
   } = ReactTypeOfWork;
 
   const {
-    EVENT_TARGET_TOUCH_HIT_NUMBER,
-    EVENT_TARGET_TOUCH_HIT_STRING,
     CONCURRENT_MODE_NUMBER,
     CONCURRENT_MODE_SYMBOL_STRING,
     DEPRECATED_ASYNC_MODE_SYMBOL_STRING,
@@ -358,16 +344,6 @@ export function getInternalReactConstants(
       case FunctionComponent:
       case IndeterminateComponent:
         return getDisplayName(resolvedType);
-      case EventComponent:
-        return type.responder.displayName || 'EventComponent';
-      case EventTarget:
-        switch (getTypeSymbol(elementType.type)) {
-          case EVENT_TARGET_TOUCH_HIT_NUMBER:
-          case EVENT_TARGET_TOUCH_HIT_STRING:
-            return 'TouchHitTarget';
-          default:
-            return elementType.displayName || 'EventTarget';
-        }
       case ForwardRef:
         return (
           resolvedType.displayName ||
@@ -461,8 +437,6 @@ export function attach(
     ClassComponent,
     ContextConsumer,
     DehydratedSuspenseComponent,
-    EventComponent,
-    EventTarget,
     Fragment,
     ForwardRef,
     HostRoot,
@@ -649,7 +623,6 @@ export function attach(
         // For now, ignore it, and only show it once it gets hydrated.
         // https://github.com/bvaughn/react-devtools-experimental/issues/197
         return true;
-      case EventComponent:
       case HostPortal:
       case HostText:
       case Fragment:
@@ -710,10 +683,6 @@ export function attach(
       case FunctionComponent:
       case IndeterminateComponent:
         return ElementTypeFunction;
-      case EventComponent:
-        return ElementTypeEventComponent;
-      case EventTarget:
-        return ElementTypeEventTarget;
       case ForwardRef:
         return ElementTypeForwardRef;
       case HostRoot:
@@ -2239,23 +2208,6 @@ export function attach(
     const isTimedOutSuspense =
       tag === SuspenseComponent && memoizedState !== null;
 
-    let events = null;
-    let node = fiber;
-    while (node !== null) {
-      if (node.tag === EventComponent) {
-        if (events === null) {
-          events = [];
-        }
-        const eventComponentInstance = node.stateNode;
-        const currentFiber = eventComponentInstance.currentFiber;
-        events.push({
-          props: eventComponentInstance.props,
-          displayName: getDisplayNameForFiber(currentFiber),
-        });
-      }
-      node = node.return;
-    }
-
     let hooks = null;
     if (usesHooks) {
       const originalConsoleMethods = {};
@@ -2311,7 +2263,6 @@ export function attach(
       // Inspectable properties.
       // TODO Review sanitization approach for the below inspectable values.
       context,
-      events,
       hooks,
       props: memoizedProps,
       state: usesHooks ? null : memoizedState,
@@ -2350,18 +2301,12 @@ export function attach(
 
   function createIsPathWhitelisted(
     key: string | null,
-    secondaryCategory: 'events' | 'hooks' | null
+    secondaryCategory: 'hooks' | null
   ) {
     // This function helps prevent previously-inspected paths from being dehydrated in updates.
     // This is important to avoid a bad user experience where expanded toggles collapse on update.
     return function isPathWhitelisted(path: Array<string | number>): boolean {
       switch (secondaryCategory) {
-        case 'events':
-          if (path.length <= 2) {
-            // Never dehydrate the "hooks" object at the top level (becaues it's always just an array).
-            return true;
-          }
-          break;
         case 'hooks':
           if (path.length === 1) {
             // Never dehydrate the "hooks" object at the top levels.
@@ -2407,9 +2352,7 @@ export function attach(
         mergeInspectedPaths(path);
 
         let secondaryCategory = null;
-        if (path[0] === 'events') {
-          secondaryCategory = 'events';
-        } else if (path[0] === 'hooks') {
+        if (path[0] === 'hooks') {
           secondaryCategory = 'hooks';
         }
 
@@ -2465,10 +2408,6 @@ export function attach(
       cleanedInspectedElement.context = cleanForBridge(
         cleanedInspectedElement.context,
         createIsPathWhitelisted('context', null)
-      );
-      cleanedInspectedElement.events = cleanForBridge(
-        cleanedInspectedElement.events,
-        createIsPathWhitelisted('events', 'events')
       );
       cleanedInspectedElement.hooks = cleanForBridge(
         cleanedInspectedElement.hooks,

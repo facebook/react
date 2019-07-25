@@ -8,7 +8,6 @@ Object {
   "id": 2,
   "owners": null,
   "context": {},
-  "events": null,
   "hooks": null,
   "props": {
     "a": 1,
@@ -27,7 +26,6 @@ Object {
   "id": 2,
   "owners": null,
   "context": {},
-  "events": null,
   "hooks": null,
   "props": {
     "nestedObject": {
@@ -47,7 +45,6 @@ Object {
   "id": 2,
   "owners": null,
   "context": {},
-  "events": null,
   "hooks": null,
   "props": {
     "nestedObject": {
@@ -71,7 +68,6 @@ Object {
   "id": 2,
   "owners": null,
   "context": {},
-  "events": null,
   "hooks": null,
   "props": {
     "nestedObject": {
@@ -99,7 +95,6 @@ Object {
   "id": 2,
   "owners": null,
   "context": {},
-  "events": null,
   "hooks": null,
   "props": {
     "nestedObject": {
@@ -129,7 +124,6 @@ Object {
   "id": 2,
   "owners": null,
   "context": {},
-  "events": null,
   "hooks": null,
   "props": {
     "html_element": {},
@@ -153,7 +147,6 @@ Object {
   "id": 2,
   "owners": null,
   "context": {},
-  "events": null,
   "hooks": null,
   "props": {
     "data": {
@@ -174,7 +167,6 @@ Object {
   "id": 2,
   "owners": null,
   "context": {},
-  "events": null,
   "hooks": null,
   "props": {
     "boolean_false": false,

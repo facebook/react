@@ -12,8 +12,6 @@ export type Wall = {|
 // If new element types are added, use new numbers rather than re-ordering existing ones.
 export const ElementTypeClass = 1;
 export const ElementTypeContext = 2;
-export const ElementTypeEventComponent = 3;
-export const ElementTypeEventTarget = 4;
 export const ElementTypeFunction = 5;
 export const ElementTypeForwardRef = 6;
 export const ElementTypeHostComponent = 7;

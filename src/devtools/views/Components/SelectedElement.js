@@ -6,7 +6,6 @@ import { BridgeContext, StoreContext } from '../context';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import HooksTree from './HooksTree';
-import EventsTree from './EventsTree';
 import { ModalDialogContext } from '../ModalDialog';
 import HocBadges from './HocBadges';
 import InspectedElementTree from './InspectedElementTree';
@@ -253,7 +252,6 @@ function InspectedElementView({
     canEditHooks,
     canToggleSuspense,
     context,
-    events,
     hooks,
     owners,
     props,
@@ -367,13 +365,6 @@ function InspectedElementView({
         inspectPath={inspectContextPath}
         overrideValueFn={overrideContextFn}
       />
-      {events !== null && events.length > 0 && (
-        <EventsTree
-          events={events}
-          getInspectedElementPath={getInspectedElementPath}
-          id={id}
-        />
-      )}
 
       <NativeStyleEditor />
 

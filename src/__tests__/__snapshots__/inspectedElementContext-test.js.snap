@@ -5,7 +5,6 @@ exports[`InspectedElementContext should include updates for nested values that w
   "id": 2,
   "owners": null,
   "context": null,
-  "events": null,
   "hooks": null,
   "props": {
     "nestedObject": {
@@ -22,7 +21,6 @@ exports[`InspectedElementContext should include updates for nested values that w
   "id": 2,
   "owners": null,
   "context": null,
-  "events": null,
   "hooks": null,
   "props": {
     "nestedObject": {
@@ -44,7 +42,6 @@ exports[`InspectedElementContext should include updates for nested values that w
   "id": 2,
   "owners": null,
   "context": null,
-  "events": null,
   "hooks": null,
   "props": {
     "nestedObject": {
@@ -72,7 +69,6 @@ exports[`InspectedElementContext should include updates for nested values that w
   "id": 2,
   "owners": null,
   "context": null,
-  "events": null,
   "hooks": null,
   "props": {
     "nestedObject": {
@@ -100,7 +96,6 @@ exports[`InspectedElementContext should inspect the currently selected element: 
   "id": 2,
   "owners": null,
   "context": null,
-  "events": null,
   "hooks": [
     {
       "id": 0,
@@ -123,7 +118,6 @@ exports[`InspectedElementContext should not dehydrate nested values until explic
   "id": 2,
   "owners": null,
   "context": null,
-  "events": null,
   "hooks": [
     {
       "id": 0,
@@ -149,7 +143,6 @@ exports[`InspectedElementContext should not dehydrate nested values until explic
   "id": 2,
   "owners": null,
   "context": null,
-  "events": null,
   "hooks": [
     {
       "id": 0,
@@ -179,7 +172,6 @@ exports[`InspectedElementContext should not dehydrate nested values until explic
   "id": 2,
   "owners": null,
   "context": null,
-  "events": null,
   "hooks": [
     {
       "id": 0,
@@ -213,7 +205,6 @@ exports[`InspectedElementContext should not dehydrate nested values until explic
   "id": 2,
   "owners": null,
   "context": null,
-  "events": null,
   "hooks": [
     {
       "id": 0,
@@ -249,7 +240,6 @@ exports[`InspectedElementContext should not dehydrate nested values until explic
   "id": 2,
   "owners": null,
   "context": null,
-  "events": null,
   "hooks": [
     {
       "id": 0,
@@ -287,7 +277,6 @@ exports[`InspectedElementContext should not dehydrate nested values until explic
   "id": 2,
   "owners": null,
   "context": null,
-  "events": null,
   "hooks": [
     {
       "id": 0,
@@ -327,7 +316,6 @@ exports[`InspectedElementContext should not re-render a function with hooks if i
   "id": 3,
   "owners": null,
   "context": null,
-  "events": null,
   "hooks": [
     {
       "id": 0,
@@ -350,7 +338,6 @@ exports[`InspectedElementContext should not re-render a function with hooks if i
   "id": 3,
   "owners": null,
   "context": null,
-  "events": null,
   "hooks": [
     {
       "id": 0,
@@ -373,7 +360,6 @@ exports[`InspectedElementContext should not tear if hydration is requested after
   "id": 2,
   "owners": null,
   "context": null,
-  "events": null,
   "hooks": null,
   "props": {
     "nestedObject": {
@@ -390,7 +376,6 @@ exports[`InspectedElementContext should not tear if hydration is requested after
   "id": 2,
   "owners": null,
   "context": null,
-  "events": null,
   "hooks": null,
   "props": {
     "nestedObject": {
@@ -412,7 +397,6 @@ exports[`InspectedElementContext should poll for updates for the currently selec
   "id": 2,
   "owners": null,
   "context": null,
-  "events": null,
   "hooks": null,
   "props": {
     "a": 1,
@@ -427,7 +411,6 @@ exports[`InspectedElementContext should poll for updates for the currently selec
   "id": 2,
   "owners": null,
   "context": null,
-  "events": null,
   "hooks": null,
   "props": {
     "a": 2,
@@ -442,7 +425,6 @@ exports[`InspectedElementContext should support complex data types: 1: Inspected
   "id": 2,
   "owners": null,
   "context": null,
-  "events": null,
   "hooks": null,
   "props": {
     "html_element": {},
@@ -462,7 +444,6 @@ exports[`InspectedElementContext should support custom objects with enumerable p
   "id": 2,
   "owners": null,
   "context": null,
-  "events": null,
   "hooks": null,
   "props": {
     "data": {
@@ -479,7 +460,6 @@ exports[`InspectedElementContext should support simple data types: 1: Initial in
   "id": 2,
   "owners": null,
   "context": null,
-  "events": null,
   "hooks": null,
   "props": {
     "boolean_false": false,

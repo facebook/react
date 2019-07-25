@@ -21,7 +21,6 @@ import {
   ComponentFilterLocation,
   ElementTypeClass,
   ElementTypeContext,
-  ElementTypeEventTarget,
   ElementTypeFunction,
   ElementTypeForwardRef,
   ElementTypeHostComponent,
@@ -328,7 +327,6 @@ export default function ComponentsSettings(_: {||}) {
                   >
                     <option value={ElementTypeClass}>class</option>
                     <option value={ElementTypeContext}>context</option>
-                    <option value={ElementTypeEventTarget}>event</option>
                     <option value={ElementTypeFunction}>function</option>
                     <option value={ElementTypeForwardRef}>forward ref</option>
                     <option value={ElementTypeHostComponent}>

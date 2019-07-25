@@ -155,7 +155,6 @@ function InspectedElementContextController({ children }: Props) {
             type,
             owners,
             context,
-            events,
             hooks,
             props,
             state,
@@ -187,7 +186,6 @@ function InspectedElementContextController({ children }: Props) {
                     };
                   }),
             context: hydrateHelper(context),
-            events: hydrateHelper(events),
             hooks: hydrateHelper(hooks),
             props: hydrateHelper(props),
             state: hydrateHelper(state),
