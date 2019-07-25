@@ -25,6 +25,7 @@ import {
   enableProfilerTimer,
   enableSchedulerTracing,
   revertPassiveEffectsChange,
+  warnAboutUnmockedScheduler,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
@@ -46,6 +47,9 @@ import {
   flushSyncCallbackQueue,
   scheduleSyncCallback,
 } from './SchedulerWithReactIntegration';
+
+// The scheduler is imported here *only* to detect whether it's been mocked
+import * as Scheduler from 'scheduler';
 
 import {__interactionsRef, __subscriberRef} from 'scheduler/tracing';
 
@@ -2521,6 +2525,41 @@ function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
 }
 
 export const warnIfNotCurrentlyActingUpdatesInDev = warnIfNotCurrentlyActingUpdatesInDEV;
+
+// In tests, we want to enforce a mocked scheduler.
+let didWarnAboutUnmockedScheduler = false;
+// TODO Before we release concurrent mode, revisit this and decide whether a mocked
+// scheduler is the actual recommendation. The alternative could be a testing build,
+// a new lib, or whatever; we dunno just yet. This message is for early adopters
+// to get their tests right.
+
+export function warnIfUnmockedScheduler(fiber: Fiber) {
+  if (__DEV__) {
+    if (didWarnAboutUnmockedScheduler === false) {
+      if (fiber.mode & BatchedMode || fiber.mode & ConcurrentMode) {
+        didWarnAboutUnmockedScheduler = true;
+        warningWithoutStack(
+          Scheduler.unstable_flushAllWithoutAsserting !== undefined,
+          'In Concurrent or Sync modes, the "scheduler" module needs to be mocked ' +
+            'to guarantee consistent behaviour across tests and browsers. ' +
+            'For example, with jest: \n' +
+            "jest.mock('scheduler', () => require('scheduler/unstable_mock'));\n\n" +
+            'For more info, visit https://fb.me/react-mock-scheduler',
+        );
+      } else if (warnAboutUnmockedScheduler === true) {
+        didWarnAboutUnmockedScheduler = true;
+        warningWithoutStack(
+          null,
+          'Starting from React v17, the "scheduler" module will need to be mocked ' +
+            'to guarantee consistent behaviour across tests and browsers. ' +
+            'For example, with jest: \n' +
+            "jest.mock('scheduler', () => require('scheduler/unstable_mock'));\n\n" +
+            'For more info, visit https://fb.me/react-mock-scheduler',
+        );
+      }
+    }
+  }
+}
 
 let componentsThatSuspendedAtHighPri = null;
 let componentsThatTriggeredHighPriSuspend = null;
