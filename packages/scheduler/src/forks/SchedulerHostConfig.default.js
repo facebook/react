@@ -229,22 +229,11 @@ if (
   channel.port1.onmessage = performWorkUntilDeadline;
 
   const onAnimationFrame = rAFTime => {
-    isRAFLoopRunning = false;
-
     if (scheduledHostCallback === null) {
       // No scheduled work. Exit.
       prevRAFTime = -1;
       prevRAFInterval = -1;
-      return;
-    }
-    if (rAFTime - prevRAFTime < 0.1) {
-      // Defensive coding. Received two rAFs in the same frame. Exit and wait
-      // for the next frame.
-      // TODO: This could be an indication that the frame rate is too high. We
-      // don't currently handle the case where the browser dynamically lowers
-      // the framerate, e.g. in low power situation (other than the rAF timeout,
-      // but that's designed for when the tab is backgrounded and doesn't
-      // optimize for maxiumum CPU utilization).
+      isRAFLoopRunning = false;
       return;
     }
 
@@ -261,6 +250,7 @@ if (
       clearTimeout(rAFTimeoutID);
       onAnimationFrame(nextRAFTime);
     });
+
     // requestAnimationFrame is throttled when the tab is backgrounded. We
     // don't want to stop working entirely. So we'll fallback to a timeout loop.
     // TODO: Need a better heuristic for backgrounded work.
@@ -271,7 +261,12 @@ if (
     };
     rAFTimeoutID = setTimeout(onTimeout, frameLength * 3);
 
-    if (prevRAFTime !== -1) {
+    if (
+      prevRAFTime !== -1 &&
+      // Make sure this rAF time is different from the previous one. This check
+      // could fail if two rAFs fire in the same frame.
+      rAFTime - prevRAFTime > 0.1
+    ) {
       const rAFInterval = rAFTime - prevRAFTime;
       if (!fpsLocked && prevRAFInterval !== -1) {
         // We've observed two consecutive frame intervals. We'll use this to
