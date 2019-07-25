@@ -57,13 +57,13 @@ describe('ReactProfiler DevTools integration', () => {
     const App = ({multiplier}) => {
       Scheduler.unstable_advanceTime(2);
       return (
-        <React.Profiler id="Profiler" onRender={onRender}>
+        <React.SubtreeProfiler id="SubtreeProfiler" onRender={onRender}>
           <AdvanceTime byAmount={3 * multiplier} shouldComponentUpdate={true} />
           <AdvanceTime
             byAmount={7 * multiplier}
             shouldComponentUpdate={false}
           />
-        </React.Profiler>
+        </React.SubtreeProfiler>
       );
     };
 
@@ -72,12 +72,12 @@ describe('ReactProfiler DevTools integration', () => {
 
     expect(hook.onCommitFiberRoot).toHaveBeenCalledTimes(1);
 
-    // Measure observable timing using the Profiler component.
-    // The time spent in App (above the Profiler) won't be included in the durations,
+    // Measure observable timing using the SubtreeProfiler component.
+    // The time spent in App (above the SubtreeProfiler) won't be included in the durations,
     // But needs to be accounted for in the offset times.
     expect(onRender).toHaveBeenCalledTimes(1);
     expect(onRender).toHaveBeenCalledWith(
-      'Profiler',
+      'SubtreeProfiler',
       'mount',
       10,
       10,
@@ -90,19 +90,19 @@ describe('ReactProfiler DevTools integration', () => {
     // Measure unobservable timing required by the DevTools profiler.
     // At this point, the base time should include both:
     // The time 2ms in the App component itself, and
-    // The 10ms spend in the Profiler sub-tree beneath.
+    // The 10ms spend in the SubtreeProfiler sub-tree beneath.
     expect(rendered.root.findByType(App)._currentFiber().treeBaseDuration).toBe(
       12,
     );
 
     rendered.update(<App multiplier={2} />);
 
-    // Measure observable timing using the Profiler component.
-    // The time spent in App (above the Profiler) won't be included in the durations,
+    // Measure observable timing using the SubtreeProfiler component.
+    // The time spent in App (above the SubtreeProfiler) won't be included in the durations,
     // But needs to be accounted for in the offset times.
     expect(onRender).toHaveBeenCalledTimes(1);
     expect(onRender).toHaveBeenCalledWith(
-      'Profiler',
+      'SubtreeProfiler',
       'update',
       6,
       13,

@@ -1609,7 +1609,7 @@ function commitRootImpl(root) {
     stopCommitSnapshotEffectsTimer();
 
     if (enableProfilerTimer) {
-      // Mark the current commit time to be shared by all Profilers in this
+      // Mark the current commit time to be shared by all SubtreeProfilers in this
       // batch. This enables them to be grouped later.
       recordCommitTime();
     }
@@ -2760,7 +2760,7 @@ function startWorkOnPendingInteractions(root, expirationTime) {
 
   // Store the current set of interactions on the FiberRoot for a few reasons:
   // We can re-use it in hot functions like renderRoot() without having to
-  // recalculate it. We will also use it in commitWork() to pass to any Profiler
+  // recalculate it. We will also use it in commitWork() to pass to any SubtreeProfiler
   // onRender() hooks. This also provides DevTools with a way to access it when
   // the onCommitRoot() hook is called.
   root.memoizedInteractions = interactions;

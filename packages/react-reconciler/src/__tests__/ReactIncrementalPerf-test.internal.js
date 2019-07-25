@@ -191,13 +191,13 @@ describe('ReactDebugFiberPerf', () => {
 
   it('does not include StrictMode or Profiler components in measurements', () => {
     ReactNoop.render(
-      <React.Profiler id="test" onRender={jest.fn()}>
+      <React.SubtreeProfiler id="test" onRender={jest.fn()}>
         <React.StrictMode>
           <Parent>
             <Child />
           </Parent>
         </React.StrictMode>
-      </React.Profiler>,
+      </React.SubtreeProfiler>,
     );
     addComment('Mount');
     expect(Scheduler).toFlushWithoutYielding();

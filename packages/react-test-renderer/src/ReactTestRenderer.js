@@ -33,7 +33,7 @@ import {
   ContextProvider,
   Mode,
   ForwardRef,
-  Profiler,
+  SubtreeProfiler,
   MemoComponent,
   SimpleMemoComponent,
   IncompleteClassComponent,
@@ -199,7 +199,7 @@ function toTree(node: ?Fiber) {
     case ContextProvider:
     case ContextConsumer:
     case Mode:
-    case Profiler:
+    case SubtreeProfiler:
     case ForwardRef:
     case MemoComponent:
     case IncompleteClassComponent:

@@ -23,8 +23,8 @@ export const REACT_FRAGMENT_TYPE = hasSymbol
 export const REACT_STRICT_MODE_TYPE = hasSymbol
   ? Symbol.for('react.strict_mode')
   : 0xeacc;
-export const REACT_PROFILER_TYPE = hasSymbol
-  ? Symbol.for('react.profiler')
+export const REACT_SUBTREE_PROFILER_TYPE = hasSymbol
+  ? Symbol.for('react.subtree_profiler')
   : 0xead2;
 export const REACT_PROVIDER_TYPE = hasSymbol
   ? Symbol.for('react.provider')

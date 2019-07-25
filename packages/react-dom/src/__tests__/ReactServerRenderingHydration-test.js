@@ -396,12 +396,12 @@ describe('ReactDOMServerHydration', () => {
     expect(ref.current.tagName).toBe('DIV');
   });
 
-  it('should be able to render and hydrate Profiler components', () => {
+  it('should be able to render and hydrate SubtreeProfiler components', () => {
     const callback = jest.fn();
     const markup = (
-      <React.Profiler id="profiler" onRender={callback}>
+      <React.SubtreeProfiler id="profiler" onRender={callback}>
         <div>Hi</div>
-      </React.Profiler>
+      </React.SubtreeProfiler>
     );
 
     const element = document.createElement('div');

@@ -40,7 +40,7 @@ import {
   HostComponent,
   HostText,
   HostPortal,
-  Profiler,
+  SubtreeProfiler,
   SuspenseComponent,
   DehydratedSuspenseComponent,
   IncompleteClassComponent,
@@ -563,7 +563,7 @@ function commitLifeCycles(
       // We have no life-cycles associated with portals.
       return;
     }
-    case Profiler: {
+    case SubtreeProfiler: {
       if (enableProfilerTimer) {
         const onRender = finishedWork.memoizedProps.onRender;
 
@@ -1199,7 +1199,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
         commitHookEffectList(UnmountMutation, MountMutation, finishedWork);
         return;
       }
-      case Profiler: {
+      case SubtreeProfiler: {
         return;
       }
       case SuspenseComponent: {
@@ -1275,7 +1275,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
     case HostRoot: {
       return;
     }
-    case Profiler: {
+    case SubtreeProfiler: {
       return;
     }
     case SuspenseComponent: {

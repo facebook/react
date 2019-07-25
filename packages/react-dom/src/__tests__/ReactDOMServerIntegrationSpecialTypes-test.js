@@ -74,11 +74,11 @@ describe('ReactDOMServerIntegration', () => {
     expect(div.textContent).toBe('Test');
   });
 
-  itRenders('a Profiler component and its children', async render => {
+  itRenders('a SubtreeProfiler component and its children', async render => {
     const element = await render(
-      <React.Profiler id="profiler" onRender={jest.fn()}>
+      <React.SubtreeProfiler id="profiler" onRender={jest.fn()}>
         <div>Test</div>
-      </React.Profiler>,
+      </React.SubtreeProfiler>,
     );
     const parent = element.parentNode;
     const div = parent.childNodes[0];

@@ -33,7 +33,7 @@ import {
   Mode,
   ContextProvider,
   ContextConsumer,
-  Profiler,
+  SubtreeProfiler,
   SuspenseComponent,
   SuspenseListComponent,
   DehydratedSuspenseComponent,
@@ -566,7 +566,7 @@ function updateMode(
   return workInProgress.child;
 }
 
-function updateProfiler(
+function updateSubtreeProfiler(
   current: Fiber | null,
   workInProgress: Fiber,
   renderExpirationTime: ExpirationTime,
@@ -2689,7 +2689,7 @@ function beginWork(
           pushProvider(workInProgress, newValue);
           break;
         }
-        case Profiler:
+        case SubtreeProfiler:
           if (enableProfilerTimer) {
             workInProgress.effectTag |= Update;
           }
@@ -2899,8 +2899,12 @@ function beginWork(
       return updateFragment(current, workInProgress, renderExpirationTime);
     case Mode:
       return updateMode(current, workInProgress, renderExpirationTime);
-    case Profiler:
-      return updateProfiler(current, workInProgress, renderExpirationTime);
+    case SubtreeProfiler:
+      return updateSubtreeProfiler(
+        current,
+        workInProgress,
+        renderExpirationTime,
+      );
     case ContextProvider:
       return updateContextProvider(
         current,

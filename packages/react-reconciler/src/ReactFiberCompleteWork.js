@@ -44,7 +44,7 @@ import {
   ForwardRef,
   Fragment,
   Mode,
-  Profiler,
+  SubtreeProfiler,
   SuspenseComponent,
   SuspenseListComponent,
   DehydratedSuspenseComponent,
@@ -931,7 +931,7 @@ function completeWork(
       break;
     case Mode:
       break;
-    case Profiler:
+    case SubtreeProfiler:
       break;
     case HostPortal:
       popHostContainer(workInProgress);

@@ -2147,9 +2147,9 @@ describe('ReactFresh', () => {
         const child = <Hello />;
         return function Wrapper() {
           return (
-            <React.Profiler onRender={() => {}} id="foo">
+            <React.SubtreeProfiler onRender={() => {}} id="foo">
               {child}
-            </React.Profiler>
+            </React.SubtreeProfiler>
           );
         };
       });

@@ -106,9 +106,9 @@ describe('ReactDOMTracing', () => {
           interaction = Array.from(SchedulerTracing.unstable_getCurrent())[0];
           TestUtils.act(() => {
             root.render(
-              <React.Profiler id="test" onRender={onRender}>
+              <React.SubtreeProfiler id="test" onRender={onRender}>
                 <App />
-              </React.Profiler>,
+              </React.SubtreeProfiler>,
             );
             expect(onInteractionTraced).toHaveBeenCalledTimes(1);
             expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
@@ -172,9 +172,9 @@ describe('ReactDOMTracing', () => {
 
           TestUtils.act(() => {
             root.render(
-              <React.Profiler id="test" onRender={onRender}>
+              <React.SubtreeProfiler id="test" onRender={onRender}>
                 <App />
-              </React.Profiler>,
+              </React.SubtreeProfiler>,
             );
             expect(onInteractionTraced).toHaveBeenCalledTimes(1);
             expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
@@ -250,9 +250,9 @@ describe('ReactDOMTracing', () => {
           interaction = Array.from(SchedulerTracing.unstable_getCurrent())[0];
           TestUtils.act(() => {
             root.render(
-              <React.Profiler id="test" onRender={onRender}>
+              <React.SubtreeProfiler id="test" onRender={onRender}>
                 <App />
-              </React.Profiler>,
+              </React.SubtreeProfiler>,
             );
             expect(onInteractionTraced).toHaveBeenCalledTimes(1);
             expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
@@ -339,9 +339,9 @@ describe('ReactDOMTracing', () => {
         // Schedule some idle work without any interactions.
         TestUtils.act(() => {
           root.render(
-            <React.Profiler id="test" onRender={onRender}>
+            <React.SubtreeProfiler id="test" onRender={onRender}>
               <App />
-            </React.Profiler>,
+            </React.SubtreeProfiler>,
           );
           expect(Scheduler).toFlushAndYieldThrough([
             'App',
@@ -442,9 +442,9 @@ describe('ReactDOMTracing', () => {
 
         TestUtils.act(() => {
           root.render(
-            <React.Profiler id="test" onRender={onRender}>
+            <React.SubtreeProfiler id="test" onRender={onRender}>
               <App />
-            </React.Profiler>,
+            </React.SubtreeProfiler>,
           );
           expect(Scheduler).toFlushAndYield([
             'App',

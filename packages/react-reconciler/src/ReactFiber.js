@@ -45,7 +45,7 @@ import {
   Mode,
   ContextProvider,
   ContextConsumer,
-  Profiler,
+  SubtreeProfiler,
   SuspenseComponent,
   SuspenseListComponent,
   FunctionComponent,
@@ -74,7 +74,7 @@ import {
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_STRICT_MODE_TYPE,
-  REACT_PROFILER_TYPE,
+  REACT_SUBTREE_PROFILER_TYPE,
   REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
   REACT_CONCURRENT_MODE_TYPE,
@@ -631,8 +631,13 @@ export function createFiberFromTypeAndProps(
         fiberTag = Mode;
         mode |= StrictMode;
         break;
-      case REACT_PROFILER_TYPE:
-        return createFiberFromProfiler(pendingProps, mode, expirationTime, key);
+      case REACT_SUBTREE_PROFILER_TYPE:
+        return createFiberFromSubtreeProfiler(
+          pendingProps,
+          mode,
+          expirationTime,
+          key,
+        );
       case REACT_SUSPENSE_TYPE:
         return createFiberFromSuspense(pendingProps, mode, expirationTime, key);
       case REACT_SUSPENSE_LIST_TYPE:
@@ -768,7 +773,7 @@ export function createFiberFromFundamental(
   return fiber;
 }
 
-function createFiberFromProfiler(
+function createFiberFromSubtreeProfiler(
   pendingProps: any,
   mode: TypeOfMode,
   expirationTime: ExpirationTime,
@@ -781,15 +786,20 @@ function createFiberFromProfiler(
     ) {
       warningWithoutStack(
         false,
-        'Profiler must specify an "id" string and "onRender" function as props',
+        'SubtreeProfiler must specify an "id" string and "onRender" function as props',
       );
     }
   }
 
-  const fiber = createFiber(Profiler, pendingProps, key, mode | ProfileMode);
-  // TODO: The Profiler fiber shouldn't have a type. It has a tag.
-  fiber.elementType = REACT_PROFILER_TYPE;
-  fiber.type = REACT_PROFILER_TYPE;
+  const fiber = createFiber(
+    SubtreeProfiler,
+    pendingProps,
+    key,
+    mode | ProfileMode,
+  );
+  // TODO: The SubtreeProfiler fiber shouldn't have a type. It has a tag.
+  fiber.elementType = REACT_SUBTREE_PROFILER_TYPE;
+  fiber.type = REACT_SUBTREE_PROFILER_TYPE;
   fiber.expirationTime = expirationTime;
 
   return fiber;

@@ -106,7 +106,7 @@ const mockDevToolsForTest = () => {
   }));
 };
 
-describe('Profiler', () => {
+describe('SubtreeProfiler', () => {
   describe('works in profiling and non-profiling bundles', () => {
     [true, false].forEach(enableSchedulerTracing => {
       [true, false].forEach(enableProfilerTimer => {
@@ -126,19 +126,19 @@ describe('Profiler', () => {
           if (__DEV__ && enableProfilerTimer) {
             it('should warn if required params are missing', () => {
               expect(() => {
-                ReactTestRenderer.create(<React.Profiler />);
+                ReactTestRenderer.create(<React.SubtreeProfiler />);
               }).toWarnDev(
-                'Profiler must specify an "id" string and "onRender" function as props',
+                'SubtreeProfiler must specify an "id" string and "onRender" function as props',
                 {withoutStack: true},
               );
             });
           }
 
-          it('should support an empty Profiler (with no children)', () => {
+          it('should support an empty SubtreeProfiler (with no children)', () => {
             // As root
             expect(
               ReactTestRenderer.create(
-                <React.Profiler id="label" onRender={jest.fn()} />,
+                <React.SubtreeProfiler id="label" onRender={jest.fn()} />,
               ).toJSON(),
             ).toMatchSnapshot();
 
@@ -146,7 +146,7 @@ describe('Profiler', () => {
             expect(
               ReactTestRenderer.create(
                 <div>
-                  <React.Profiler id="label" onRender={jest.fn()} />
+                  <React.SubtreeProfiler id="label" onRender={jest.fn()} />
                 </div>,
               ).toJSON(),
             ).toMatchSnapshot();
@@ -157,16 +157,16 @@ describe('Profiler', () => {
             const renderer = ReactTestRenderer.create(
               <div>
                 <span>outside span</span>
-                <React.Profiler id="label" onRender={jest.fn()}>
+                <React.SubtreeProfiler id="label" onRender={jest.fn()}>
                   <span>inside span</span>
                   <FunctionComponent label="function component" />
-                </React.Profiler>
+                </React.SubtreeProfiler>
               </div>,
             );
             expect(renderer.toJSON()).toMatchSnapshot();
           });
 
-          it('should support nested Profilers', () => {
+          it('should support nested SubtreeProfilers', () => {
             const FunctionComponent = ({label}) => <div>{label}</div>;
             class ClassComponent extends React.Component {
               render() {
@@ -174,13 +174,13 @@ describe('Profiler', () => {
               }
             }
             const renderer = ReactTestRenderer.create(
-              <React.Profiler id="outer" onRender={jest.fn()}>
+              <React.SubtreeProfiler id="outer" onRender={jest.fn()}>
                 <FunctionComponent label="outer function component" />
-                <React.Profiler id="inner" onRender={jest.fn()}>
+                <React.SubtreeProfiler id="inner" onRender={jest.fn()}>
                   <ClassComponent label="inner class component" />
                   <span>inner span</span>
-                </React.Profiler>
-              </React.Profiler>,
+                </React.SubtreeProfiler>
+              </React.SubtreeProfiler>,
             );
             expect(renderer.toJSON()).toMatchSnapshot();
           });
@@ -219,11 +219,11 @@ describe('Profiler', () => {
         expect(() =>
           ReactTestRenderer.create(
             <ClassComponent>
-              <React.Profiler id="do-not-throw" onRender={callback}>
-                <React.Profiler id="throw" onRender={callback}>
+              <React.SubtreeProfiler id="do-not-throw" onRender={callback}>
+                <React.SubtreeProfiler id="throw" onRender={callback}>
                   <div />
-                </React.Profiler>
-              </React.Profiler>
+                </React.SubtreeProfiler>
+              </React.SubtreeProfiler>
             </ClassComponent>,
           ),
         ).toThrow('expected');
@@ -240,10 +240,10 @@ describe('Profiler', () => {
         };
 
         ReactTestRenderer.create(
-          <React.Profiler id="test" onRender={callback}>
+          <React.SubtreeProfiler id="test" onRender={callback}>
             <Yield value="first" />
             <Yield value="last" />
-          </React.Profiler>,
+          </React.SubtreeProfiler>,
           {
             unstable_isConcurrent: true,
           },
@@ -256,7 +256,7 @@ describe('Profiler', () => {
         expect(callback).toHaveBeenCalledTimes(1);
       });
 
-      it('does not record times for components outside of Profiler tree', () => {
+      it('does not record times for components outside of SubtreeProfiler tree', () => {
         // Mock the Scheduler module so we can track how many times the current
         // time is read
         jest.mock('scheduler', obj => {
@@ -292,7 +292,7 @@ describe('Profiler', () => {
         // Should be called two times:
         // 2. To compute the update expiration time
         // 3. To record the commit time
-        // No additional calls from ProfilerTimer are expected.
+        // No additional calls from SubtreeProfilerTimer are expected.
         expect(Scheduler).toHaveYielded([
           'read current time',
           'read current time',
@@ -310,9 +310,9 @@ describe('Profiler', () => {
         Scheduler.unstable_advanceTime(5); // 0 -> 5
 
         const renderer = ReactTestRenderer.create(
-          <React.Profiler id="test" onRender={callback}>
+          <React.SubtreeProfiler id="test" onRender={callback}>
             <AdvanceTime />
-          </React.Profiler>,
+          </React.SubtreeProfiler>,
         );
 
         expect(callback).toHaveBeenCalledTimes(1);
@@ -333,9 +333,9 @@ describe('Profiler', () => {
         Scheduler.unstable_advanceTime(20); // 15 -> 35
 
         renderer.update(
-          <React.Profiler id="test" onRender={callback}>
+          <React.SubtreeProfiler id="test" onRender={callback}>
             <AdvanceTime />
-          </React.Profiler>,
+          </React.SubtreeProfiler>,
         );
 
         expect(callback).toHaveBeenCalledTimes(1);
@@ -356,9 +356,9 @@ describe('Profiler', () => {
         Scheduler.unstable_advanceTime(20); // 45 -> 65
 
         renderer.update(
-          <React.Profiler id="test" onRender={callback}>
+          <React.SubtreeProfiler id="test" onRender={callback}>
             <AdvanceTime byAmount={4} />
-          </React.Profiler>,
+          </React.SubtreeProfiler>,
         );
 
         expect(callback).toHaveBeenCalledTimes(1);
@@ -375,20 +375,20 @@ describe('Profiler', () => {
         expect(call[6]).toEqual(enableSchedulerTracing ? new Set() : undefined); // interaction events
       });
 
-      it('includes render times of nested Profilers in their parent times', () => {
+      it('includes render times of nested SubtreeProfilers in their parent times', () => {
         const callback = jest.fn();
 
         Scheduler.unstable_advanceTime(5); // 0 -> 5
 
         ReactTestRenderer.create(
           <React.Fragment>
-            <React.Profiler id="parent" onRender={callback}>
+            <React.SubtreeProfiler id="parent" onRender={callback}>
               <AdvanceTime byAmount={10}>
-                <React.Profiler id="child" onRender={callback}>
+                <React.SubtreeProfiler id="child" onRender={callback}>
                   <AdvanceTime byAmount={20} />
-                </React.Profiler>
+                </React.SubtreeProfiler>
               </AdvanceTime>
-            </React.Profiler>
+            </React.SubtreeProfiler>
           </React.Fragment>,
         );
 
@@ -410,19 +410,19 @@ describe('Profiler', () => {
         expect(parentCall[5]).toBe(35); // commit time
       });
 
-      it('traces sibling Profilers separately', () => {
+      it('traces sibling SubtreeProfilers separately', () => {
         const callback = jest.fn();
 
         Scheduler.unstable_advanceTime(5); // 0 -> 5
 
         ReactTestRenderer.create(
           <React.Fragment>
-            <React.Profiler id="first" onRender={callback}>
+            <React.SubtreeProfiler id="first" onRender={callback}>
               <AdvanceTime byAmount={20} />
-            </React.Profiler>
-            <React.Profiler id="second" onRender={callback}>
+            </React.SubtreeProfiler>
+            <React.SubtreeProfiler id="second" onRender={callback}>
               <AdvanceTime byAmount={5} />
-            </React.Profiler>
+            </React.SubtreeProfiler>
           </React.Fragment>,
         );
 
@@ -451,9 +451,9 @@ describe('Profiler', () => {
         ReactTestRenderer.create(
           <React.Fragment>
             <AdvanceTime byAmount={20} />
-            <React.Profiler id="test" onRender={callback}>
+            <React.SubtreeProfiler id="test" onRender={callback}>
               <AdvanceTime byAmount={5} />
-            </React.Profiler>
+            </React.SubtreeProfiler>
             <AdvanceTime byAmount={20} />
           </React.Fragment>,
         );
@@ -487,17 +487,17 @@ describe('Profiler', () => {
         }
 
         const renderer = ReactTestRenderer.create(
-          <React.Profiler id="outer" onRender={callback}>
+          <React.SubtreeProfiler id="outer" onRender={callback}>
             <Updater>
-              <React.Profiler id="middle" onRender={callback}>
+              <React.SubtreeProfiler id="middle" onRender={callback}>
                 <Pure>
-                  <React.Profiler id="inner" onRender={callback}>
+                  <React.SubtreeProfiler id="inner" onRender={callback}>
                     <div />
-                  </React.Profiler>
+                  </React.SubtreeProfiler>
                 </Pure>
-              </React.Profiler>
+              </React.SubtreeProfiler>
             </Updater>
-          </React.Profiler>,
+          </React.SubtreeProfiler>,
         );
 
         // All profile callbacks are called for initial render
@@ -524,11 +524,11 @@ describe('Profiler', () => {
         Scheduler.unstable_advanceTime(5); // 0 -> 5
 
         const renderer = ReactTestRenderer.create(
-          <React.Profiler id="test" onRender={callback}>
+          <React.SubtreeProfiler id="test" onRender={callback}>
             <AdvanceTime byAmount={10}>
               <AdvanceTime byAmount={13} shouldComponentUpdate={false} />
             </AdvanceTime>
-          </React.Profiler>,
+          </React.SubtreeProfiler>,
         );
 
         expect(callback).toHaveBeenCalledTimes(1);
@@ -536,11 +536,11 @@ describe('Profiler', () => {
         Scheduler.unstable_advanceTime(30); // 28 -> 58
 
         renderer.update(
-          <React.Profiler id="test" onRender={callback}>
+          <React.SubtreeProfiler id="test" onRender={callback}>
             <AdvanceTime byAmount={4}>
               <AdvanceTime byAmount={7} shouldComponentUpdate={false} />
             </AdvanceTime>
-          </React.Profiler>,
+          </React.SubtreeProfiler>,
         );
 
         expect(callback).toHaveBeenCalledTimes(2);
@@ -582,17 +582,17 @@ describe('Profiler', () => {
         Scheduler.unstable_advanceTime(5); // 0 -> 5
 
         const renderer = ReactTestRenderer.create(
-          <React.Profiler id="test" onRender={callback}>
+          <React.SubtreeProfiler id="test" onRender={callback}>
             <WithLifecycles />
-          </React.Profiler>,
+          </React.SubtreeProfiler>,
         );
 
         Scheduler.unstable_advanceTime(15); // 13 -> 28
 
         renderer.update(
-          <React.Profiler id="test" onRender={callback}>
+          <React.SubtreeProfiler id="test" onRender={callback}>
             <WithLifecycles />
-          </React.Profiler>,
+          </React.SubtreeProfiler>,
         );
 
         expect(callback).toHaveBeenCalledTimes(2);
@@ -626,10 +626,10 @@ describe('Profiler', () => {
 
           // Render partially, but run out of time before completing.
           ReactTestRenderer.create(
-            <React.Profiler id="test" onRender={callback}>
+            <React.SubtreeProfiler id="test" onRender={callback}>
               <Yield renderTime={2} />
               <Yield renderTime={3} />
-            </React.Profiler>,
+            </React.SubtreeProfiler>,
             {unstable_isConcurrent: true},
           );
           expect(Scheduler).toFlushAndYieldThrough(['Yield:2']);
@@ -661,13 +661,13 @@ describe('Profiler', () => {
           // Render partially, but don't finish.
           // This partial render should take 5ms of simulated time.
           ReactTestRenderer.create(
-            <React.Profiler id="outer" onRender={callback}>
+            <React.SubtreeProfiler id="outer" onRender={callback}>
               <Yield renderTime={5} />
               <Yield renderTime={10} />
-              <React.Profiler id="inner" onRender={callback}>
+              <React.SubtreeProfiler id="inner" onRender={callback}>
                 <Yield renderTime={17} />
-              </React.Profiler>
-            </React.Profiler>,
+              </React.SubtreeProfiler>
+            </React.SubtreeProfiler>,
             {unstable_isConcurrent: true},
           );
           expect(Scheduler).toFlushAndYieldThrough(['Yield:5']);
@@ -711,10 +711,10 @@ describe('Profiler', () => {
           // Render a partially update, but don't finish.
           // This partial render should take 10ms of simulated time.
           const renderer = ReactTestRenderer.create(
-            <React.Profiler id="test" onRender={callback}>
+            <React.SubtreeProfiler id="test" onRender={callback}>
               <Yield renderTime={10} />
               <Yield renderTime={20} />
-            </React.Profiler>,
+            </React.SubtreeProfiler>,
             {unstable_isConcurrent: true},
           );
           expect(Scheduler).toFlushAndYieldThrough(['Yield:10']);
@@ -727,9 +727,9 @@ describe('Profiler', () => {
           // The interrupted work simulates an additional 5ms of time.
           renderer.unstable_flushSync(() => {
             renderer.update(
-              <React.Profiler id="test" onRender={callback}>
+              <React.SubtreeProfiler id="test" onRender={callback}>
                 <Yield renderTime={5} />
-              </React.Profiler>,
+              </React.SubtreeProfiler>,
             );
           });
           expect(Scheduler).toHaveYielded(['Yield:5']);
@@ -762,10 +762,10 @@ describe('Profiler', () => {
           Scheduler.unstable_advanceTime(5); // 0 -> 5
 
           const renderer = ReactTestRenderer.create(
-            <React.Profiler id="test" onRender={callback}>
+            <React.SubtreeProfiler id="test" onRender={callback}>
               <Yield renderTime={6} />
               <Yield renderTime={15} />
-            </React.Profiler>,
+            </React.SubtreeProfiler>,
             {unstable_isConcurrent: true},
           );
 
@@ -786,11 +786,11 @@ describe('Profiler', () => {
           // Render a partially update, but don't finish.
           // This partial render should take 3ms of simulated time.
           renderer.update(
-            <React.Profiler id="test" onRender={callback}>
+            <React.SubtreeProfiler id="test" onRender={callback}>
               <Yield renderTime={3} />
               <Yield renderTime={5} />
               <Yield renderTime={9} />
-            </React.Profiler>,
+            </React.SubtreeProfiler>,
           );
           expect(Scheduler).toFlushAndYieldThrough(['Yield:3']);
           expect(callback).toHaveBeenCalledTimes(0);
@@ -809,9 +809,9 @@ describe('Profiler', () => {
           // The interrupted work simulates an additional 11ms of time.
           renderer.unstable_flushSync(() => {
             renderer.update(
-              <React.Profiler id="test" onRender={callback}>
+              <React.SubtreeProfiler id="test" onRender={callback}>
                 <Yield renderTime={11} />
-              </React.Profiler>,
+              </React.SubtreeProfiler>,
             );
           });
           expect(Scheduler).toHaveYielded(['Yield:11']);
@@ -868,10 +868,10 @@ describe('Profiler', () => {
           Scheduler.unstable_advanceTime(5); // 0 -> 5
 
           const renderer = ReactTestRenderer.create(
-            <React.Profiler id="test" onRender={callback}>
+            <React.SubtreeProfiler id="test" onRender={callback}>
               <FirstComponent />
               <SecondComponent />
-            </React.Profiler>,
+            </React.SubtreeProfiler>,
             {unstable_isConcurrent: true},
           );
 
@@ -981,12 +981,12 @@ describe('Profiler', () => {
                 Scheduler.unstable_advanceTime(5); // 0 -> 5
 
                 ReactTestRenderer.create(
-                  <React.Profiler id="test" onRender={callback}>
+                  <React.SubtreeProfiler id="test" onRender={callback}>
                     <ErrorBoundary>
                       <AdvanceTime byAmount={9} />
                       <ThrowsError />
                     </ErrorBoundary>
-                  </React.Profiler>,
+                  </React.SubtreeProfiler>,
                 );
 
                 expect(callback).toHaveBeenCalledTimes(2);
@@ -1060,12 +1060,12 @@ describe('Profiler', () => {
                 Scheduler.unstable_advanceTime(5); // 0 -> 5
 
                 ReactTestRenderer.create(
-                  <React.Profiler id="test" onRender={callback}>
+                  <React.SubtreeProfiler id="test" onRender={callback}>
                     <ErrorBoundary>
                       <AdvanceTime byAmount={5} />
                       <ThrowsError />
                     </ErrorBoundary>
-                  </React.Profiler>,
+                  </React.SubtreeProfiler>,
                 );
 
                 expect(callback).toHaveBeenCalledTimes(1);
@@ -1103,29 +1103,29 @@ describe('Profiler', () => {
                 // Simulate a renderer error during the "complete" phase.
                 // This mimics behavior like React Native's View/Text nesting validation.
                 ReactNoop.render(
-                  <React.Profiler id="profiler" onRender={jest.fn()}>
+                  <React.SubtreeProfiler id="profiler" onRender={jest.fn()}>
                     <errorInCompletePhase>hi</errorInCompletePhase>
-                  </React.Profiler>,
+                  </React.SubtreeProfiler>,
                 );
                 expect(Scheduler).toFlushAndThrow('Error in host config.');
 
                 // A similar case we've seen caused by an invariant in ReactDOM.
                 // It didn't reproduce without a host component inside.
                 ReactNoop.render(
-                  <React.Profiler id="profiler" onRender={jest.fn()}>
+                  <React.SubtreeProfiler id="profiler" onRender={jest.fn()}>
                     <errorInCompletePhase>
                       <span>hi</span>
                     </errorInCompletePhase>
-                  </React.Profiler>,
+                  </React.SubtreeProfiler>,
                 );
                 expect(Scheduler).toFlushAndThrow('Error in host config.');
 
                 // So long as the profiler timer's fiber stack is reset correctly,
                 // Subsequent renders should not error.
                 ReactNoop.render(
-                  <React.Profiler id="profiler" onRender={jest.fn()}>
+                  <React.SubtreeProfiler id="profiler" onRender={jest.fn()}>
                     <span>hi</span>
-                  </React.Profiler>,
+                  </React.SubtreeProfiler>,
                 );
                 expect(Scheduler).toFlushWithoutYielding();
               });
@@ -1140,9 +1140,9 @@ describe('Profiler', () => {
         Scheduler.unstable_advanceTime(5); // 0 -> 5
 
         const renderer = ReactTestRenderer.create(
-          <React.Profiler id="one" onRender={callback}>
+          <React.SubtreeProfiler id="one" onRender={callback}>
             <AdvanceTime byAmount={2} />
-          </React.Profiler>,
+          </React.SubtreeProfiler>,
         );
 
         expect(callback).toHaveBeenCalledTimes(1);
@@ -1150,9 +1150,9 @@ describe('Profiler', () => {
         Scheduler.unstable_advanceTime(20); // 7 -> 27
 
         renderer.update(
-          <React.Profiler id="two" onRender={callback}>
+          <React.SubtreeProfiler id="two" onRender={callback}>
             <AdvanceTime byAmount={1} />
-          </React.Profiler>,
+          </React.SubtreeProfiler>,
         );
 
         expect(callback).toHaveBeenCalledTimes(2);
@@ -1195,9 +1195,9 @@ describe('Profiler', () => {
         }
 
         ReactTestRenderer.create(
-          <React.Profiler id="test" onRender={callback}>
+          <React.SubtreeProfiler id="test" onRender={callback}>
             <ClassComponent />
-          </React.Profiler>,
+          </React.SubtreeProfiler>,
         );
 
         expect(callback).toHaveBeenCalledTimes(1);
@@ -1553,9 +1553,9 @@ describe('Profiler', () => {
         Scheduler.unstable_now(),
         () => {
           renderer = ReactTestRenderer.create(
-            <React.Profiler id="test-profiler" onRender={onRender}>
+            <React.SubtreeProfiler id="test-profiler" onRender={onRender}>
               <Example />
-            </React.Profiler>,
+            </React.SubtreeProfiler>,
             {
               unstable_isConcurrent: true,
             },
@@ -1725,9 +1725,9 @@ describe('Profiler', () => {
         Scheduler.unstable_now(),
         () => {
           renderer.update(
-            <React.Profiler id="test-profiler" onRender={onRender}>
+            <React.SubtreeProfiler id="test-profiler" onRender={onRender}>
               <Example />
-            </React.Profiler>,
+            </React.SubtreeProfiler>,
           );
         },
       );
@@ -1802,10 +1802,10 @@ describe('Profiler', () => {
       Scheduler.unstable_advanceTime(5);
 
       const renderer = ReactTestRenderer.create(
-        <React.Profiler id="test" onRender={onRender}>
+        <React.SubtreeProfiler id="test" onRender={onRender}>
           <FirstComponent />
           <SecondComponent />
-        </React.Profiler>,
+        </React.SubtreeProfiler>,
         {unstable_isConcurrent: true},
       );
 
@@ -1983,9 +1983,9 @@ describe('Profiler', () => {
         Scheduler.unstable_now(),
         () => {
           ReactTestRenderer.create(
-            <React.Profiler id="test" onRender={onRender}>
+            <React.SubtreeProfiler id="test" onRender={onRender}>
               <Example />
-            </React.Profiler>,
+            </React.SubtreeProfiler>,
             {unstable_isConcurrent: true},
           );
         },
@@ -2190,9 +2190,9 @@ describe('Profiler', () => {
         render() {
           parentInstance = this;
           return (
-            <React.Profiler id="test-profiler" onRender={onRender}>
+            <React.SubtreeProfiler id="test-profiler" onRender={onRender}>
               <Child count={this.state.count} />
-            </React.Profiler>
+            </React.SubtreeProfiler>
           );
         }
       }
@@ -2282,13 +2282,13 @@ describe('Profiler', () => {
           Scheduler.unstable_now(),
           () => {
             ReactNoop.render(
-              <React.Profiler id="test-profiler" onRender={onRender}>
+              <React.SubtreeProfiler id="test-profiler" onRender={onRender}>
                 <React.Suspense fallback={<Text text="Loading..." />}>
                   <AsyncText text="Async" ms={20000} />
                 </React.Suspense>
                 <Text text="Sync" />
                 <Monkey ref={monkey} />
-              </React.Profiler>,
+              </React.SubtreeProfiler>,
             );
           },
         );
@@ -2358,11 +2358,11 @@ describe('Profiler', () => {
           interaction.timestamp,
           () => {
             ReactTestRenderer.create(
-              <React.Profiler id="app" onRender={onRender}>
+              <React.SubtreeProfiler id="app" onRender={onRender}>
                 <React.Suspense fallback={<Text text="loading" />}>
                   <AsyncText text="loaded" ms={500} />
                 </React.Suspense>
-              </React.Profiler>,
+              </React.SubtreeProfiler>,
             );
           },
         );
@@ -2414,11 +2414,11 @@ describe('Profiler', () => {
           interaction.timestamp,
           () => {
             ReactTestRenderer.create(
-              <React.Profiler id="app" onRender={onRender}>
+              <React.SubtreeProfiler id="app" onRender={onRender}>
                 <React.Suspense fallback={<Text text="loading" />}>
                   <AsyncComponentWithCascadingWork text="loaded" ms={500} />
                 </React.Suspense>
-              </React.Profiler>,
+              </React.SubtreeProfiler>,
             );
           },
         );
@@ -2456,11 +2456,11 @@ describe('Profiler', () => {
           interaction.timestamp,
           () => {
             ReactTestRenderer.create(
-              <React.Profiler id="app" onRender={onRender}>
+              <React.SubtreeProfiler id="app" onRender={onRender}>
                 <React.Suspense fallback={<Text text="loading" />}>
                   <AsyncText text="loaded" ms={500} />
                 </React.Suspense>
-              </React.Profiler>,
+              </React.SubtreeProfiler>,
               {
                 unstable_isConcurrent: true,
               },
@@ -2501,11 +2501,11 @@ describe('Profiler', () => {
           interaction.timestamp,
           () => {
             ReactTestRenderer.create(
-              <React.Profiler id="app" onRender={onRender}>
+              <React.SubtreeProfiler id="app" onRender={onRender}>
                 <React.Suspense fallback={<Text text="loading" />}>
                   <AsyncText text="loaded" ms={100} />
                 </React.Suspense>
-              </React.Profiler>,
+              </React.SubtreeProfiler>,
               {unstable_isConcurrent: true},
             );
           },
@@ -2542,12 +2542,12 @@ describe('Profiler', () => {
           initialRenderInteraction.timestamp,
           () => {
             renderer = ReactTestRenderer.create(
-              <React.Profiler id="app" onRender={onRender}>
+              <React.SubtreeProfiler id="app" onRender={onRender}>
                 <React.Suspense fallback={<Text text="loading" />}>
                   <AsyncText text="loaded" ms={100} />
                 </React.Suspense>
                 <Text text="initial" />
-              </React.Profiler>,
+              </React.SubtreeProfiler>,
             );
           },
         );
@@ -2574,12 +2574,12 @@ describe('Profiler', () => {
             highPriUpdateInteraction.timestamp,
             () => {
               renderer.update(
-                <React.Profiler id="app" onRender={onRender}>
+                <React.SubtreeProfiler id="app" onRender={onRender}>
                   <React.Suspense fallback={<Text text="loading" />}>
                     <AsyncText text="loaded" ms={100} />
                   </React.Suspense>
                   <Text text="updated" />
-                </React.Profiler>,
+                </React.SubtreeProfiler>,
               );
             },
           );
@@ -2630,9 +2630,9 @@ describe('Profiler', () => {
         // Set up an initial shell. We need to set this up before the test sceanrio
         // because we want initial render to suspend on navigation to the initial state.
         let renderer = ReactTestRenderer.create(
-          <React.Profiler id="app" onRender={() => {}}>
+          <React.SubtreeProfiler id="app" onRender={() => {}}>
             <React.Suspense fallback={<Text text="loading" />} />
-          </React.Profiler>,
+          </React.SubtreeProfiler>,
           {unstable_isConcurrent: true},
         );
         expect(Scheduler).toFlushAndYield([]);
@@ -2649,12 +2649,12 @@ describe('Profiler', () => {
           initialRenderInteraction.timestamp,
           () => {
             renderer.update(
-              <React.Profiler id="app" onRender={onRender}>
+              <React.SubtreeProfiler id="app" onRender={onRender}>
                 <React.Suspense fallback={<Text text="loading" />}>
                   <AsyncText text="loaded" ms={100} />
                 </React.Suspense>
                 <Text text="initial" />
-              </React.Profiler>,
+              </React.SubtreeProfiler>,
             );
           },
         );
@@ -2684,12 +2684,12 @@ describe('Profiler', () => {
             highPriUpdateInteraction.timestamp,
             () => {
               renderer.update(
-                <React.Profiler id="app" onRender={onRender}>
+                <React.SubtreeProfiler id="app" onRender={onRender}>
                   <React.Suspense fallback={<Text text="loading" />}>
                     <AsyncText text="loaded" ms={100} />
                   </React.Suspense>
                   <Text text="updated" />
-                </React.Profiler>,
+                </React.SubtreeProfiler>,
               );
             },
           );

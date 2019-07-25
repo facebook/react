@@ -19,7 +19,7 @@ import {
   REACT_LAZY_TYPE,
   REACT_MEMO_TYPE,
   REACT_PORTAL_TYPE,
-  REACT_PROFILER_TYPE,
+  REACT_SUBTREE_PROFILER_TYPE,
   REACT_PROVIDER_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
@@ -38,7 +38,7 @@ export function typeOf(object: any) {
           case REACT_ASYNC_MODE_TYPE:
           case REACT_CONCURRENT_MODE_TYPE:
           case REACT_FRAGMENT_TYPE:
-          case REACT_PROFILER_TYPE:
+          case REACT_SUBTREE_PROFILER_TYPE:
           case REACT_STRICT_MODE_TYPE:
           case REACT_SUSPENSE_TYPE:
             return type;
@@ -75,7 +75,9 @@ export const Fragment = REACT_FRAGMENT_TYPE;
 export const Lazy = REACT_LAZY_TYPE;
 export const Memo = REACT_MEMO_TYPE;
 export const Portal = REACT_PORTAL_TYPE;
-export const Profiler = REACT_PROFILER_TYPE;
+// Legacy name (React.unstable_Profiler)
+export const Profiler = REACT_SUBTREE_PROFILER_TYPE;
+export const SubtreeProfiler = REACT_SUBTREE_PROFILER_TYPE;
 export const StrictMode = REACT_STRICT_MODE_TYPE;
 export const Suspense = REACT_SUSPENSE_TYPE;
 
@@ -129,8 +131,12 @@ export function isMemo(object: any) {
 export function isPortal(object: any) {
   return typeOf(object) === REACT_PORTAL_TYPE;
 }
+// Legacy name (React.unstable_Profiler)
 export function isProfiler(object: any) {
-  return typeOf(object) === REACT_PROFILER_TYPE;
+  return typeOf(object) === REACT_SUBTREE_PROFILER_TYPE;
+}
+export function isSubtreeProfiler(object: any) {
+  return typeOf(object) === REACT_SUBTREE_PROFILER_TYPE;
 }
 export function isStrictMode(object: any) {
   return typeOf(object) === REACT_STRICT_MODE_TYPE;

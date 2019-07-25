@@ -230,16 +230,16 @@ describe('ReactShallowRenderer', () => {
     ]);
   });
 
-  it('should handle Profiler', () => {
+  it('should handle SubtreeProfiler', () => {
     class SomeComponent extends React.Component {
       render() {
         return (
-          <React.Profiler id="test" onRender={jest.fn()}>
+          <React.SubtreeProfiler id="test" onRender={jest.fn()}>
             <div>
               <span className="child1" />
               <span className="child2" />
             </div>
-          </React.Profiler>
+          </React.SubtreeProfiler>
         );
       }
     }
@@ -247,7 +247,7 @@ describe('ReactShallowRenderer', () => {
     const shallowRenderer = createRenderer();
     const result = shallowRenderer.render(<SomeComponent />);
 
-    expect(result.type).toBe(React.Profiler);
+    expect(result.type).toBe(React.SubtreeProfiler);
     expect(result.props.children).toEqual(
       <div>
         <span className="child1" />

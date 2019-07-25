@@ -34,7 +34,7 @@ import {
   REACT_SUSPENSE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
   REACT_PORTAL_TYPE,
-  REACT_PROFILER_TYPE,
+  REACT_SUBTREE_PROFILER_TYPE,
   REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
   REACT_LAZY_TYPE,
@@ -973,7 +973,7 @@ class ReactDOMServerRenderer {
       switch (elementType) {
         case REACT_STRICT_MODE_TYPE:
         case REACT_CONCURRENT_MODE_TYPE:
-        case REACT_PROFILER_TYPE:
+        case REACT_SUBTREE_PROFILER_TYPE:
         case REACT_SUSPENSE_LIST_TYPE:
         case REACT_FRAGMENT_TYPE: {
           const nextChildren = toArray(

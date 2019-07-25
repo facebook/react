@@ -16,7 +16,7 @@ import {
   REACT_FRAGMENT_TYPE,
   REACT_PORTAL_TYPE,
   REACT_MEMO_TYPE,
-  REACT_PROFILER_TYPE,
+  REACT_SUBTREE_PROFILER_TYPE,
   REACT_PROVIDER_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
@@ -62,8 +62,8 @@ function getComponentName(type: mixed): string | null {
       return 'Fragment';
     case REACT_PORTAL_TYPE:
       return 'Portal';
-    case REACT_PROFILER_TYPE:
-      return `Profiler`;
+    case REACT_SUBTREE_PROFILER_TYPE:
+      return `SubtreeProfiler`;
     case REACT_STRICT_MODE_TYPE:
       return 'StrictMode';
     case REACT_SUSPENSE_TYPE:

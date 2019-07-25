@@ -8,7 +8,7 @@
  * @jest-environment node
  */
 
-let Profiler;
+let SubtreeProfiler;
 let React;
 let ReactNoop;
 let Scheduler;
@@ -31,7 +31,7 @@ describe('ReactSuspensePlaceholder', () => {
     Scheduler = require('scheduler');
     ReactCache = require('react-cache');
 
-    Profiler = React.Profiler;
+    SubtreeProfiler = React.SubtreeProfiler;
     Suspense = React.Suspense;
 
     TextResource = ReactCache.unstable_createResource(([text, ms = 0]) => {
@@ -292,12 +292,12 @@ describe('ReactSuspensePlaceholder', () => {
       App = ({shouldSuspend, text = 'Text', textRenderDuration = 5}) => {
         Scheduler.unstable_yieldValue('App');
         return (
-          <Profiler id="root" onRender={onRender}>
+          <SubtreeProfiler id="root" onRender={onRender}>
             <Suspense fallback={<Fallback />}>
               {shouldSuspend && <Suspending />}
               <Text fakeRenderDuration={textRenderDuration} text={text} />
             </Suspense>
-          </Profiler>
+          </SubtreeProfiler>
         );
       };
     });

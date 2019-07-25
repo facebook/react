@@ -162,12 +162,16 @@ describe('ReactIs', () => {
 
   it('should identify profile root', () => {
     expect(
-      ReactIs.typeOf(<React.Profiler id="foo" onRender={jest.fn()} />),
+      ReactIs.typeOf(<React.SubtreeProfiler id="foo" onRender={jest.fn()} />),
     ).toBe(ReactIs.Profiler);
     expect(
-      ReactIs.isProfiler(<React.Profiler id="foo" onRender={jest.fn()} />),
+      ReactIs.isProfiler(
+        <React.SubtreeProfiler id="foo" onRender={jest.fn()} />,
+      ),
     ).toBe(true);
-    expect(ReactIs.isProfiler({type: ReactIs.Profiler})).toBe(false);
-    expect(ReactIs.isProfiler(<div />)).toBe(false);
+    expect(ReactIs.isSubtreeProfiler({type: ReactIs.SubtreeProfiler})).toBe(
+      false,
+    );
+    expect(ReactIs.isSubtreeProfiler(<div />)).toBe(false);
   });
 });
