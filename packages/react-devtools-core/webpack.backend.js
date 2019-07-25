@@ -14,7 +14,7 @@ const GITHUB_URL = getGitHubURL();
 const DEVTOOLS_VERSION = getVersionString();
 
 module.exports = {
-  mode: 'development', // TODO TESTING __DEV__ ? 'development' : 'production',
+  mode: __DEV__ ? 'development' : 'production',
   devtool: __DEV__ ? 'cheap-module-eval-source-map' : false,
   entry: {
     backend: './src/backend.js',
