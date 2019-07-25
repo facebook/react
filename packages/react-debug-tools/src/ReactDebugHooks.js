@@ -226,8 +226,9 @@ function useListener(
   hookProps: ?Object,
 ): void {
   const listenerProps = hookProps || emptyObject;
+  // Don't put the actual event responder object in, just its displayName
   const value = {
-    responder,
+    responder: responder.displayName,
     props: listenerProps,
   };
   hookLog.push({primitive: 'Listener', stackError: new Error(), value});

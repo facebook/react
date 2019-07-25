@@ -352,7 +352,7 @@ describe('ReactHooksInspection', () => {
         isStateEditable: false,
         id: 0,
         name: 'Listener',
-        value: {props: {preventDefault: false}, responder: TestResponder},
+        value: {props: {preventDefault: false}, responder: 'TestResponder'},
         subHooks: [],
       },
     ]);
