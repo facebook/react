@@ -280,6 +280,81 @@ describe('ReactShallowRenderer with hooks', () => {
         'call effect',
       ]);
     });
+
+    it('should trigger effects and cleanup depending on inputs', () => {
+      let _setFriend;
+      const happenings = [];
+
+      function SomeComponent() {
+        const [friend, setFriend] = React.useState('Bons');
+        const [cat] = React.useState('Muskus');
+        _setFriend = setFriend;
+
+        React.useEffect(
+          () => {
+            happenings.push('call friend effect');
+            return () => {
+              happenings.push('cleanup friend effect');
+            };
+          },
+          [friend],
+        );
+
+        React.useEffect(() => {
+          happenings.push('call empty effect');
+          return () => {
+            happenings.push('cleanup empty effect');
+          };
+        });
+
+        React.useEffect(
+          () => {
+            happenings.push('call cat effect');
+            return () => {
+              happenings.push('cleanup cat effect');
+            };
+          },
+          [cat],
+        );
+
+        React.useEffect(
+          () => {
+            happenings.push('call both effect');
+            return () => {
+              happenings.push('cleanup both effect');
+            };
+          },
+          [friend, cat],
+        );
+
+        return (
+          <div>
+            Hello {friend} with {cat}
+          </div>
+        );
+      }
+
+      const shallowRenderer = createRenderer({callEffects: true});
+      shallowRenderer.render(<SomeComponent />);
+
+      expect(happenings).toEqual([
+        'call friend effect',
+        'call empty effect',
+        'call cat effect',
+        'call both effect',
+      ]);
+
+      happenings.splice(0);
+      _setFriend('Maryam');
+      expect(happenings).toEqual([
+        'cleanup friend effect',
+        'call friend effect',
+        'cleanup empty effect',
+        'call empty effect',
+        'cleanup both effect',
+        'call both effect',
+      ]);
+    });
   });
 
   it('should work with useRef', () => {

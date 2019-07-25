@@ -349,7 +349,7 @@ class ReactShallowRenderer {
             cleanup: memoizedState.cleanup,
             run:
               inputs == null ||
-              shouldRunEffectsBasedOnInputs(memoizedState.inputs, inputs),
+              !areHookInputsEqual(inputs, memoizedState.inputs),
           };
         }
       }
@@ -688,7 +688,10 @@ class ReactShallowRenderer {
             ReactCurrentDispatcher.current = prevDispatcher;
           }
           this._finishHooks(element, context);
-          this._callEffectsIfDesired();
+          if (this._options.callEffects) {
+            this._callEffects(true);
+            this._callEffects(false);
+          }
         }
       }
     }
@@ -747,15 +750,6 @@ class ReactShallowRenderer {
     this._rendered = this._instance.render();
     // Intentionally do not call componentDidMount()
     // because DOM refs are not available.
-  }
-
-  _callEffectsIfDesired() {
-    if (!this._options.callEffects) {
-      return;
-    }
-
-    this._callEffects(true);
-    this._callEffects(false);
   }
 
   _callEffects(callLayoutEffects: boolean) {
@@ -920,17 +914,6 @@ function getMaskedContext(contextTypes, unmaskedContext) {
     context[key] = unmaskedContext[key];
   }
   return context;
-}
-
-function shouldRunEffectsBasedOnInputs(
-  before: Array<mixed> | void | null,
-  after: Array<mixed>,
-) {
-  if (before == null || before.length !== after.length) {
-    return true;
-  }
-
-  return before.some((value, i) => after[i] !== value);
 }
 
 export default ReactShallowRenderer;
