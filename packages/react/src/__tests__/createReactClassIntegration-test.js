@@ -560,9 +560,9 @@ describe('create-react-class-integration', () => {
       );
     }).toLowPriorityWarnDev(
       [
-        'componentWillMount is deprecated',
-        'componentWillReceiveProps is deprecated',
-        'componentWillUpdate is deprecated',
+        'componentWillMount has been renamed',
+        'componentWillReceiveProps has been renamed',
+        'componentWillUpdate has been renamed',
       ],
       {withoutStack: true},
     );
@@ -604,9 +604,9 @@ describe('create-react-class-integration', () => {
       );
     }).toLowPriorityWarnDev(
       [
-        'componentWillMount is deprecated',
-        'componentWillReceiveProps is deprecated',
-        'componentWillUpdate is deprecated',
+        'componentWillMount has been renamed',
+        'componentWillReceiveProps has been renamed',
+        'componentWillUpdate has been renamed',
       ],
       {withoutStack: true},
     );
@@ -649,9 +649,9 @@ describe('create-react-class-integration', () => {
       ReactDOM.render(<Component foo="bar" />, div),
     ).toLowPriorityWarnDev(
       [
-        'componentWillMount is deprecated',
-        'componentWillReceiveProps is deprecated',
-        'componentWillUpdate is deprecated',
+        'componentWillMount has been renamed',
+        'componentWillReceiveProps has been renamed',
+        'componentWillUpdate has been renamed',
       ],
       {withoutStack: true},
     );

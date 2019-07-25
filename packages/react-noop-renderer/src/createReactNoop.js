@@ -24,14 +24,10 @@ import * as Scheduler from 'scheduler/unstable_mock';
 import {createPortal} from 'shared/ReactPortal';
 import expect from 'expect';
 import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
-import warning from 'shared/warning';
 import enqueueTask from 'shared/enqueueTask';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import {
-  warnAboutMissingMockScheduler,
-  enableFlareAPI,
-} from 'shared/ReactFeatureFlags';
+import {warnAboutMissingMockScheduler} from 'shared/ReactFeatureFlags';
 import {ConcurrentRoot, BatchedRoot, LegacyRoot} from 'shared/ReactRootTags';
 
 type Container = {
@@ -69,7 +65,6 @@ const {IsSomeRendererActing} = ReactSharedInternals;
 
 const NO_CONTEXT = {};
 const UPPERCASE_CONTEXT = {};
-const EVENT_COMPONENT_CONTEXT = {};
 const UPDATE_SIGNAL = {};
 if (__DEV__) {
   Object.freeze(NO_CONTEXT);
@@ -266,13 +261,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return NO_CONTEXT;
     },
 
-    getChildHostContextForEventComponent(parentHostContext: HostContext) {
-      if (__DEV__ && enableFlareAPI) {
-        return EVENT_COMPONENT_CONTEXT;
-      }
-      return parentHostContext;
-    },
-
     getPublicInstance(instance) {
       return instance;
     },
@@ -356,14 +344,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       hostContext: Object,
       internalInstanceHandle: Object,
     ): TextInstance {
-      if (__DEV__ && enableFlareAPI) {
-        warning(
-          hostContext !== EVENT_COMPONENT_CONTEXT,
-          'validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
-            'Wrap the child text "%s" in an element.',
-          text,
-        );
-      }
       if (hostContext === UPPERCASE_CONTEXT) {
         text = text.toUpperCase();
       }
@@ -396,16 +376,63 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     warnsIfNotActing: true,
     supportsHydration: false,
 
-    mountEventComponent(): void {
+    mountResponderInstance(): void {
       // NO-OP
     },
 
-    updateEventComponent(): void {
+    unmountResponderInstance(): void {
       // NO-OP
     },
 
-    unmountEventComponent(): void {
-      // NO-OP
+    getFundamentalComponentInstance(fundamentalInstance): Instance {
+      const {impl, props, state} = fundamentalInstance;
+      return impl.getInstance(null, props, state);
+    },
+
+    mountFundamentalComponent(fundamentalInstance): void {
+      const {impl, instance, props, state} = fundamentalInstance;
+      const onMount = impl.onUpdate;
+      if (onMount !== undefined) {
+        onMount(null, instance, props, state);
+      }
+    },
+
+    shouldUpdateFundamentalComponent(fundamentalInstance): boolean {
+      const {impl, instance, prevProps, props, state} = fundamentalInstance;
+      const shouldUpdate = impl.shouldUpdate;
+      if (shouldUpdate !== undefined) {
+        return shouldUpdate(null, instance, prevProps, props, state);
+      }
+      return true;
+    },
+
+    updateFundamentalComponent(fundamentalInstance): void {
+      const {impl, instance, prevProps, props, state} = fundamentalInstance;
+      const onUpdate = impl.onUpdate;
+      if (onUpdate !== undefined) {
+        onUpdate(null, instance, prevProps, props, state);
+      }
+    },
+
+    unmountFundamentalComponent(fundamentalInstance): void {
+      const {impl, instance, props, state} = fundamentalInstance;
+      const onUnmount = impl.onUnmount;
+      if (onUnmount !== undefined) {
+        onUnmount(null, instance, props, state);
+      }
+    },
+
+    cloneFundamentalInstance(fundamentalInstance): Instance {
+      const instance = fundamentalInstance.instance;
+      return {
+        children: [],
+        text: instance.text,
+        type: instance.type,
+        prop: instance.prop,
+        id: instance.id,
+        context: instance.context,
+        hidden: instance.hidden,
+      };
     },
   };
 
@@ -573,6 +600,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   // ReactTestUtilsAct.js, ReactTestRendererAct.js, createReactNoop.js
 
   let hasWarnedAboutMissingMockScheduler = false;
+  const isSchedulerMocked =
+    typeof Scheduler.unstable_flushAllWithoutAsserting === 'function';
   const flushWork =
     Scheduler.unstable_flushAllWithoutAsserting ||
     function() {
@@ -618,18 +647,17 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     let previousIsSomeRendererActing;
     let previousIsThisRendererActing;
     actingUpdatesScopeDepth++;
-    if (__DEV__) {
-      previousIsSomeRendererActing = IsSomeRendererActing.current;
-      previousIsThisRendererActing = IsThisRendererActing.current;
-      IsSomeRendererActing.current = true;
-      IsThisRendererActing.current = true;
-    }
+
+    previousIsSomeRendererActing = IsSomeRendererActing.current;
+    previousIsThisRendererActing = IsThisRendererActing.current;
+    IsSomeRendererActing.current = true;
+    IsThisRendererActing.current = true;
 
     function onDone() {
       actingUpdatesScopeDepth--;
+      IsSomeRendererActing.current = previousIsSomeRendererActing;
+      IsThisRendererActing.current = previousIsThisRendererActing;
       if (__DEV__) {
-        IsSomeRendererActing.current = previousIsSomeRendererActing;
-        IsThisRendererActing.current = previousIsThisRendererActing;
         if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
           // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
           warningWithoutStack(
@@ -684,7 +712,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           called = true;
           result.then(
             () => {
-              if (actingUpdatesScopeDepth > 1) {
+              if (
+                actingUpdatesScopeDepth > 1 ||
+                (isSchedulerMocked === true &&
+                  previousIsSomeRendererActing === true)
+              ) {
                 onDone();
                 resolve();
                 return;
@@ -719,7 +751,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
       // flush effects until none remain, and cleanup
       try {
-        if (actingUpdatesScopeDepth === 1) {
+        if (
+          actingUpdatesScopeDepth === 1 &&
+          (isSchedulerMocked === false ||
+            previousIsSomeRendererActing === false)
+        ) {
           // we're about to exit the act() scope,
           // now's the time to flush effects
           flushWork();

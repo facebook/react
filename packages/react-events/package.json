@@ -19,6 +19,7 @@
     "drag.js",
     "scroll.js",
     "focus-scope.js",
+    "input.js",
     "build-info.json",
     "cjs/",
     "umd/"

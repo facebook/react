@@ -126,9 +126,7 @@ describe('Profiler', () => {
           if (__DEV__ && enableProfilerTimer) {
             it('should warn if required params are missing', () => {
               expect(() => {
-                expect(() => {
-                  ReactTestRenderer.create(<React.Profiler />);
-                }).toThrow('onRender is not a function');
+                ReactTestRenderer.create(<React.Profiler />);
               }).toWarnDev(
                 'Profiler must specify an "id" string and "onRender" function as props',
                 {withoutStack: true},
@@ -2628,7 +2626,8 @@ describe('Profiler', () => {
       });
 
       it('handles high-pri renderers between suspended and resolved (async) trees', async () => {
-        // Set up an initial shell. We need to set this up before the test scenario
+        spyOnDev(console, 'error');
+        // Set up an initial shell. We need to set this up before the test sceanrio
         // because we want initial render to suspend on navigation to the initial state.
         let renderer = ReactTestRenderer.create(
           <React.Profiler id="app" onRender={() => {}}>
@@ -2730,6 +2729,17 @@ describe('Profiler', () => {
         expect(
           onInteractionScheduledWorkCompleted.mock.calls[1][0],
         ).toMatchInteraction(highPriUpdateInteraction);
+
+        if (__DEV__) {
+          expect(console.error).toHaveBeenCalledTimes(1);
+          expect(console.error.calls.argsFor(0)[0]).toContain(
+            'Warning: %s\n\nThe fix is to split the update',
+          );
+          expect(console.error.calls.argsFor(0)[1]).toContain(
+            'A user-blocking update was suspended by:',
+          );
+          expect(console.error.calls.argsFor(0)[1]).toContain('AsyncText');
+        }
       });
     });
   });

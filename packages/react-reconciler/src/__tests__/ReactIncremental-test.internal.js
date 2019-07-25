@@ -1914,6 +1914,8 @@ describe('ReactIncremental', () => {
       ]),
     ).toWarnDev(
       'Legacy context API has been detected within a strict-mode tree: \n\n' +
+        'The old API will be supported in all 16.x releases, but applications ' +
+        'using it should migrate to the new version.\n\n' +
         'Please update the following components: Intl, ShowBoth, ShowLocale',
       {withoutStack: true},
     );
@@ -1969,6 +1971,8 @@ describe('ReactIncremental', () => {
       ]),
     ).toWarnDev(
       'Legacy context API has been detected within a strict-mode tree: \n\n' +
+        'The old API will be supported in all 16.x releases, but applications ' +
+        'using it should migrate to the new version.\n\n' +
         'Please update the following components: Router, ShowRoute',
       {withoutStack: true},
     );
@@ -1998,6 +2002,8 @@ describe('ReactIncremental', () => {
     ReactNoop.render(<Recurse />);
     expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
       'Legacy context API has been detected within a strict-mode tree: \n\n' +
+        'The old API will be supported in all 16.x releases, but applications ' +
+        'using it should migrate to the new version.\n\n' +
         'Please update the following components: Recurse',
       {withoutStack: true},
     );
@@ -2041,6 +2047,8 @@ describe('ReactIncremental', () => {
           '`Recurse.prototype = React.Component.prototype`. ' +
           "Don't use an arrow function since it cannot be called with `new` by React.",
         'Legacy context API has been detected within a strict-mode tree: \n\n' +
+          'The old API will be supported in all 16.x releases, but applications ' +
+          'using it should migrate to the new version.\n\n' +
           'Please update the following components: Recurse',
       ],
       {withoutStack: true},
@@ -2107,6 +2115,8 @@ describe('ReactIncremental', () => {
       ]),
     ).toWarnDev(
       'Legacy context API has been detected within a strict-mode tree: \n\n' +
+        'The old API will be supported in all 16.x releases, but applications ' +
+        'using it should migrate to the new version.\n\n' +
         'Please update the following components: Intl, ShowLocale',
       {withoutStack: true},
     );
@@ -2186,6 +2196,8 @@ describe('ReactIncremental', () => {
     );
     expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
       'Legacy context API has been detected within a strict-mode tree: \n\n' +
+        'The old API will be supported in all 16.x releases, but applications ' +
+        'using it should migrate to the new version.\n\n' +
         'Please update the following components: Intl, ShowLocaleClass, ShowLocaleFn',
       {withoutStack: true},
     );
@@ -2278,6 +2290,8 @@ describe('ReactIncremental', () => {
     );
     expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
       'Legacy context API has been detected within a strict-mode tree: \n\n' +
+        'The old API will be supported in all 16.x releases, but applications ' +
+        'using it should migrate to the new version.\n\n' +
         'Please update the following components: Intl, ShowLocaleClass, ShowLocaleFn',
       {withoutStack: true},
     );
@@ -2347,6 +2361,8 @@ describe('ReactIncremental', () => {
     ReactNoop.render(<Root />);
     expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
       'Legacy context API has been detected within a strict-mode tree: \n\n' +
+        'The old API will be supported in all 16.x releases, but applications ' +
+        'using it should migrate to the new version.\n\n' +
         'Please update the following components: Child',
       {withoutStack: true},
     );
@@ -2397,6 +2413,8 @@ describe('ReactIncremental', () => {
     ReactNoop.render(<Root />);
     expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
       'Legacy context API has been detected within a strict-mode tree: \n\n' +
+        'The old API will be supported in all 16.x releases, but applications ' +
+        'using it should migrate to the new version.\n\n' +
         'Please update the following components: ContextProvider',
       {withoutStack: true},
     );
@@ -2446,9 +2464,10 @@ describe('ReactIncremental', () => {
     ReactNoop.render(<MyComponent />);
     expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
       [
-        'componentWillReceiveProps: Please update the following components ' +
-          'to use static getDerivedStateFromProps instead: MyComponent',
+        'Using UNSAFE_componentWillReceiveProps in strict mode is not recommended',
         'Legacy context API has been detected within a strict-mode tree: \n\n' +
+          'The old API will be supported in all 16.x releases, but applications ' +
+          'using it should migrate to the new version.\n\n' +
           'Please update the following components: MyComponent',
       ],
       {withoutStack: true},
@@ -2596,6 +2615,8 @@ describe('ReactIncremental', () => {
 
     expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
       'Legacy context API has been detected within a strict-mode tree: \n\n' +
+        'The old API will be supported in all 16.x releases, but applications ' +
+        'using it should migrate to the new version.\n\n' +
         'Please update the following components: Child, TopContextProvider',
       {withoutStack: true},
     );
@@ -2658,6 +2679,8 @@ describe('ReactIncremental', () => {
 
     expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
       'Legacy context API has been detected within a strict-mode tree: \n\n' +
+        'The old API will be supported in all 16.x releases, but applications ' +
+        'using it should migrate to the new version.\n\n' +
         'Please update the following components: Child, MiddleContextProvider, TopContextProvider',
       {withoutStack: true},
     );
@@ -2729,6 +2752,8 @@ describe('ReactIncremental', () => {
 
     expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
       'Legacy context API has been detected within a strict-mode tree: \n\n' +
+        'The old API will be supported in all 16.x releases, but applications ' +
+        'using it should migrate to the new version.\n\n' +
         'Please update the following components: Child, MiddleContextProvider, TopContextProvider',
       {withoutStack: true},
     );
@@ -2810,6 +2835,8 @@ describe('ReactIncremental', () => {
 
     expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
       'Legacy context API has been detected within a strict-mode tree: \n\n' +
+        'The old API will be supported in all 16.x releases, but applications ' +
+        'using it should migrate to the new version.\n\n' +
         'Please update the following components: Child, MiddleContextProvider, TopContextProvider',
       {withoutStack: true},
     );
@@ -2887,8 +2914,7 @@ describe('ReactIncremental', () => {
     expect(Scheduler).toFlushAndYield([]);
   });
 
-  // We don't currently use fibers as keys. Re-enable this test if we
-  // ever do again.
+  // We sometimes use Maps with Fibers as keys.
   it('does not break with a bad Map polyfill', () => {
     const realMapSet = Map.prototype.set;
 
@@ -2896,17 +2922,27 @@ describe('ReactIncremental', () => {
       function Thing() {
         throw new Error('No.');
       }
+      // This class uses legacy context, which triggers warnings,
+      // the procedures for which use a Map to store fibers.
       class Boundary extends React.Component {
         state = {didError: false};
         componentDidCatch() {
           this.setState({didError: true});
         }
+        static contextTypes = {
+          color: () => null,
+        };
         render() {
           return this.state.didError ? null : <Thing />;
         }
       }
       ReactNoop.render(<Boundary />);
-      expect(Scheduler).toFlushWithoutYielding();
+      expect(() => {
+        expect(Scheduler).toFlushWithoutYielding();
+      }).toWarnDev(
+        ['Legacy context API has been detected within a strict-mode tree'],
+        {withoutStack: true},
+      );
     }
 
     // First, verify that this code path normally receives Fibers as keys,
@@ -2952,6 +2988,7 @@ describe('ReactIncremental', () => {
     };
     React = require('react');
     ReactNoop = require('react-noop-renderer');
+    Scheduler = require('scheduler');
     try {
       triggerCodePathThatUsesFibersAsMapKeys();
     } finally {

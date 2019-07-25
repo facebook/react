@@ -56,6 +56,22 @@ var isPerformingWork = false;
 var isHostCallbackScheduled = false;
 var isHostTimeoutScheduled = false;
 
+function scheduler_flushTaskAtPriority_Immediate(callback, didTimeout) {
+  return callback(didTimeout);
+}
+function scheduler_flushTaskAtPriority_UserBlocking(callback, didTimeout) {
+  return callback(didTimeout);
+}
+function scheduler_flushTaskAtPriority_Normal(callback, didTimeout) {
+  return callback(didTimeout);
+}
+function scheduler_flushTaskAtPriority_Low(callback, didTimeout) {
+  return callback(didTimeout);
+}
+function scheduler_flushTaskAtPriority_Idle(callback, didTimeout) {
+  return callback(didTimeout);
+}
+
 function flushTask(task, currentTime) {
   // Remove the task from the list before calling the callback. That way the
   // list is in a consistent state even if the callback throws.
@@ -83,7 +99,40 @@ function flushTask(task, currentTime) {
   var continuationCallback;
   try {
     var didUserCallbackTimeout = task.expirationTime <= currentTime;
-    continuationCallback = callback(didUserCallbackTimeout);
+    // Add an extra function to the callstack. Profiling tools can use this
+    // to infer the priority of work that appears higher in the stack.
+    switch (currentPriorityLevel) {
+      case ImmediatePriority:
+        continuationCallback = scheduler_flushTaskAtPriority_Immediate(
+          callback,
+          didUserCallbackTimeout,
+        );
+        break;
+      case UserBlockingPriority:
+        continuationCallback = scheduler_flushTaskAtPriority_UserBlocking(
+          callback,
+          didUserCallbackTimeout,
+        );
+        break;
+      case NormalPriority:
+        continuationCallback = scheduler_flushTaskAtPriority_Normal(
+          callback,
+          didUserCallbackTimeout,
+        );
+        break;
+      case LowPriority:
+        continuationCallback = scheduler_flushTaskAtPriority_Low(
+          callback,
+          didUserCallbackTimeout,
+        );
+        break;
+      case IdlePriority:
+        continuationCallback = scheduler_flushTaskAtPriority_Idle(
+          callback,
+          didUserCallbackTimeout,
+        );
+        break;
+    }
   } catch (error) {
     throw error;
   } finally {
@@ -95,14 +144,8 @@ function flushTask(task, currentTime) {
   // with the same priority and expiration as the just-finished callback.
   if (typeof continuationCallback === 'function') {
     var expirationTime = task.expirationTime;
-    var continuationTask = {
-      callback: continuationCallback,
-      priorityLevel: task.priorityLevel,
-      startTime: task.startTime,
-      expirationTime,
-      next: null,
-      previous: null,
-    };
+    var continuationTask = task;
+    continuationTask.callback = continuationCallback;
 
     // Insert the new callback into the list, sorted by its timeout. This is
     // almost the same as the code in `scheduleCallback`, except the callback

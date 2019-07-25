@@ -9,7 +9,11 @@
 
 import warning from 'shared/warning';
 
-import type {ReactEventComponentInstance} from 'shared/ReactTypes';
+import type {
+  ReactEventResponder,
+  ReactEventResponderInstance,
+  ReactFundamentalComponentInstance,
+} from 'shared/ReactTypes';
 
 import {enableFlareAPI} from 'shared/ReactFeatureFlags';
 
@@ -121,15 +125,6 @@ export function getChildHostContext(
   return NO_CONTEXT;
 }
 
-export function getChildHostContextForEventComponent(
-  parentHostContext: HostContext,
-): HostContext {
-  if (__DEV__ && enableFlareAPI) {
-    return EVENT_COMPONENT_CONTEXT;
-  }
-  return NO_CONTEXT;
-}
-
 export function prepareForCommit(containerInfo: Container): void {
   // noop
 }
@@ -145,9 +140,19 @@ export function createInstance(
   hostContext: Object,
   internalInstanceHandle: Object,
 ): Instance {
+  let propsToUse = props;
+  if (enableFlareAPI) {
+    if (props.responders != null) {
+      // We want to remove the "responders" prop
+      // as we don't want it into the test renderer instance's
+      // props object.
+      const {responders, ...otherProps} = props; // eslint-disable-line
+      propsToUse = otherProps;
+    }
+  }
   return {
     type,
-    props,
+    props: propsToUse,
     isHidden: false,
     children: [],
     rootContainerInstance,
@@ -285,20 +290,65 @@ export function unhideTextInstance(
   textInstance.isHidden = false;
 }
 
-export function mountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance<any, any>,
+export function mountResponderInstance(
+  responder: ReactEventResponder<any, any>,
+  responderInstance: ReactEventResponderInstance<any, any>,
+  props: Object,
+  state: Object,
+  instance: Instance,
+  rootContainerInstance: Container,
+) {
+  // noop
+}
+
+export function unmountResponderInstance(
+  responderInstance: ReactEventResponderInstance<any, any>,
 ): void {
   // noop
 }
 
-export function updateEventComponent(
-  eventComponentInstance: ReactEventComponentInstance<any, any>,
-): void {
-  // noop
+export function getFundamentalComponentInstance(fundamentalInstance): Instance {
+  const {impl, props, state} = fundamentalInstance;
+  return impl.getInstance(null, props, state);
 }
 
-export function unmountEventComponent(
-  eventComponentInstance: ReactEventComponentInstance<any, any>,
+export function mountFundamentalComponent(
+  fundamentalInstance: ReactFundamentalComponentInstance<any, any>,
 ): void {
-  // noop
+  const {impl, instance, props, state} = fundamentalInstance;
+  const onMount = impl.onMount;
+  if (onMount !== undefined) {
+    onMount(null, instance, props, state);
+  }
+}
+
+export function shouldUpdateFundamentalComponent(
+  fundamentalInstance: ReactFundamentalComponentInstance<any, any>,
+): boolean {
+  const {impl, prevProps, props, state} = fundamentalInstance;
+  const shouldUpdate = impl.shouldUpdate;
+  if (shouldUpdate !== undefined) {
+    return shouldUpdate(null, prevProps, props, state);
+  }
+  return true;
+}
+
+export function updateFundamentalComponent(
+  fundamentalInstance: ReactFundamentalComponentInstance<any, any>,
+): void {
+  const {impl, instance, prevProps, props, state} = fundamentalInstance;
+  const onUpdate = impl.onUpdate;
+  if (onUpdate !== undefined) {
+    onUpdate(null, instance, prevProps, props, state);
+  }
+}
+
+export function unmountFundamentalComponent(
+  fundamentalInstance: ReactFundamentalComponentInstance<any, any>,
+): void {
+  const {impl, instance, props, state} = fundamentalInstance;
+  const onUnmount = impl.onUnmount;
+  if (onUnmount !== undefined) {
+    onUnmount(null, instance, props, state);
+  }
 }

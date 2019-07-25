@@ -9,6 +9,11 @@
 
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {
+  ReactEventResponder,
+  ReactEventResponderInstance,
+  ReactFundamentalComponentInstance,
+} from 'shared/ReactTypes';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {
   Instance,
@@ -17,7 +22,6 @@ import type {
   Container,
   ChildSet,
 } from './ReactFiberHostConfig';
-import type {ReactEventComponentInstance} from 'shared/ReactTypes';
 import type {
   SuspenseState,
   SuspenseListRenderState,
@@ -26,6 +30,7 @@ import type {SuspenseContext} from './ReactFiberSuspenseContext';
 
 import {now} from './SchedulerWithReactIntegration';
 
+import {REACT_RESPONDER_TYPE} from 'shared/ReactSymbols';
 import {
   IndeterminateComponent,
   FunctionComponent,
@@ -47,7 +52,7 @@ import {
   SimpleMemoComponent,
   LazyComponent,
   IncompleteClassComponent,
-  EventComponent,
+  FundamentalComponent,
 } from 'shared/ReactWorkTags';
 import {NoMode, BatchedMode} from './ReactTypeOfMode';
 import {
@@ -74,7 +79,12 @@ import {
   createContainerChildSet,
   appendChildToContainerChildSet,
   finalizeContainerChildren,
-  updateEventComponent,
+  mountResponderInstance,
+  unmountResponderInstance,
+  getFundamentalComponentInstance,
+  mountFundamentalComponent,
+  cloneFundamentalInstance,
+  shouldUpdateFundamentalComponent,
 } from './ReactFiberHostConfig';
 import {
   getRootHostContainer,
@@ -82,6 +92,8 @@ import {
   getHostContext,
   popHostContainer,
 } from './ReactFiberHostContext';
+import {NoWork} from './ReactFiberExpirationTime';
+import {createResponderInstance} from './ReactFiberEvents';
 import {
   suspenseStackCursor,
   InvisibleParentSuspenseContext,
@@ -92,7 +104,7 @@ import {
   ForceSuspenseFallback,
   setDefaultShallowSuspenseContext,
 } from './ReactFiberSuspenseContext';
-import {isShowingAnyFallbacks} from './ReactFiberSuspenseComponent';
+import {findFirstSuspended} from './ReactFiberSuspenseComponent';
 import {
   isContextProvider as isLegacyContextProvider,
   popContext as popLegacyContext,
@@ -107,8 +119,10 @@ import {
 } from './ReactFiberHydrationContext';
 import {
   enableSchedulerTracing,
+  enableSuspenseCallback,
   enableSuspenseServerRenderer,
   enableFlareAPI,
+  enableFundamentalAPI,
 } from 'shared/ReactFeatureFlags';
 import {
   markSpawnedWork,
@@ -116,14 +130,12 @@ import {
   renderDidSuspendDelayIfPossible,
   renderHasNotSuspendedYet,
 } from './ReactFiberWorkLoop';
-import {
-  getEventComponentHostChildrenCount,
-  createEventComponentInstance,
-} from './ReactFiberEvents';
-import getComponentName from 'shared/getComponentName';
-import warning from 'shared/warning';
+import {createFundamentalStateInstance} from './ReactFiberFundamental';
 import {Never} from './ReactFiberExpirationTime';
 import {resetChildFibers} from './ReactChildFiber';
+
+const emptyObject = {};
+const isArray = Array.isArray;
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -154,6 +166,8 @@ if (supportsMutation) {
     while (node !== null) {
       if (node.tag === HostComponent || node.tag === HostText) {
         appendInitialChild(parent, node.stateNode);
+      } else if (node.tag === FundamentalComponent) {
+        appendInitialChild(parent, node.stateNode.instance);
       } else if (node.tag === HostPortal) {
         // If we have a portal child, then we don't want to traverse
         // down its children. Instead, we'll get insertions from each child in
@@ -263,6 +277,15 @@ if (supportsMutation) {
           instance = cloneHiddenTextInstance(instance, text, node);
         }
         appendInitialChild(parent, instance);
+      } else if (enableFundamentalAPI && node.tag === FundamentalComponent) {
+        let instance = node.stateNode.instance;
+        if (needsVisibilityToggle && isHidden) {
+          // This child is inside a timed out tree. Hide it.
+          const props = node.memoizedProps;
+          const type = node.type;
+          instance = cloneHiddenInstance(instance, type, props, node);
+        }
+        appendInitialChild(parent, instance);
       } else if (node.tag === HostPortal) {
         // If we have a portal child, then we don't want to traverse
         // down its children. Instead, we'll get insertions from each child in
@@ -346,6 +369,15 @@ if (supportsMutation) {
           // This child is inside a timed out tree. Hide it.
           const text = node.memoizedProps;
           instance = cloneHiddenTextInstance(instance, text, node);
+        }
+        appendChildToContainerChildSet(containerChildSet, instance);
+      } else if (enableFundamentalAPI && node.tag === FundamentalComponent) {
+        let instance = node.stateNode.instance;
+        if (needsVisibilityToggle && isHidden) {
+          // This child is inside a timed out tree. Hide it.
+          const props = node.memoizedProps;
+          const type = node.type;
+          instance = cloneHiddenInstance(instance, type, props, node);
         }
         appendChildToContainerChildSet(containerChildSet, instance);
       } else if (node.tag === HostPortal) {
@@ -542,6 +574,32 @@ function cutOffTailIfNeeded(
   hasRenderedATailFallback: boolean,
 ) {
   switch (renderState.tailMode) {
+    case 'hidden': {
+      // Any insertions at the end of the tail list after this point
+      // should be invisible. If there are already mounted boundaries
+      // anything before them are not considered for collapsing.
+      // Therefore we need to go through the whole tail to find if
+      // there are any.
+      let tailNode = renderState.tail;
+      let lastTailNode = null;
+      while (tailNode !== null) {
+        if (tailNode.alternate !== null) {
+          lastTailNode = tailNode;
+        }
+        tailNode = tailNode.sibling;
+      }
+      // Next we're simply going to delete all insertions after the
+      // last rendered item.
+      if (lastTailNode === null) {
+        // All remaining items in the tail are insertions.
+        renderState.tail = null;
+      } else {
+        // Detach the insertion after the last node that was already
+        // inserted.
+        lastTailNode.sibling = null;
+      }
+      break;
+    }
     case 'collapsed': {
       // Any insertions at the end of the tail list after this point
       // should be invisible. If there are already mounted boundaries
@@ -575,89 +633,6 @@ function cutOffTailIfNeeded(
       break;
     }
   }
-}
-
-// Note this, might mutate the workInProgress passed in.
-function hasSuspendedChildrenAndNewContent(
-  workInProgress: Fiber,
-  firstChild: null | Fiber,
-): boolean {
-  // Traversal to see if any of the immediately nested Suspense boundaries
-  // are in their fallback states. I.e. something suspended in them.
-  // And if some of them have new content that wasn't already visible.
-  let hasSuspendedBoundaries = false;
-  let hasNewContent = false;
-
-  let node = firstChild;
-  while (node !== null) {
-    // TODO: Hidden subtrees should not be considered.
-    if (node.tag === SuspenseComponent) {
-      const state: SuspenseState | null = node.memoizedState;
-      const isShowingFallback = state !== null;
-      if (isShowingFallback) {
-        // Tag the parent fiber as having suspended boundaries.
-        if (!hasSuspendedBoundaries) {
-          workInProgress.effectTag |= DidCapture;
-        }
-
-        hasSuspendedBoundaries = true;
-
-        if (node.updateQueue !== null) {
-          // If this is a newly suspended tree, it might not get committed as
-          // part of the second pass. In that case nothing will subscribe to
-          // its thennables. Instead, we'll transfer its thennables to the
-          // SuspenseList so that it can retry if they resolve.
-          // There might be multiple of these in the list but since we're
-          // going to wait for all of them anyway, it doesn't really matter
-          // which ones gets to ping. In theory we could get clever and keep
-          // track of how many dependencies remain but it gets tricky because
-          // in the meantime, we can add/remove/change items and dependencies.
-          // We might bail out of the loop before finding any but that
-          // doesn't matter since that means that the other boundaries that
-          // we did find already has their listeners attached.
-          workInProgress.updateQueue = node.updateQueue;
-          workInProgress.effectTag |= Update;
-        }
-      } else {
-        const current = node.alternate;
-        const wasNotShowingContent =
-          current === null || current.memoizedState !== null;
-        if (wasNotShowingContent) {
-          hasNewContent = true;
-        }
-      }
-      if (hasSuspendedBoundaries && hasNewContent) {
-        return true;
-      }
-    } else {
-      // TODO: We can probably just use the information from the list and not
-      // drill into its children just like if it was a Suspense boundary.
-      if (node.tag === SuspenseListComponent && node.updateQueue !== null) {
-        // If there's a nested SuspenseList, we might have transferred
-        // the thennables set to it already so we must get it from there.
-        workInProgress.updateQueue = node.updateQueue;
-        workInProgress.effectTag |= Update;
-      }
-
-      if (node.child !== null) {
-        node.child.return = node;
-        node = node.child;
-        continue;
-      }
-    }
-    if (node === workInProgress) {
-      return false;
-    }
-    while (node.sibling === null) {
-      if (node.return === null || node.return === workInProgress) {
-        return false;
-      }
-      node = node.return;
-    }
-    node.sibling.return = node.return;
-    node = node.sibling;
-  }
-  return false;
 }
 
 function completeWork(
@@ -714,6 +689,20 @@ function completeWork(
           rootContainerInstance,
         );
 
+        if (enableFlareAPI) {
+          const prevResponders = current.memoizedProps.responders;
+          const nextResponders = newProps.responders;
+          const instance = workInProgress.stateNode;
+          if (prevResponders !== nextResponders) {
+            updateEventResponders(
+              nextResponders,
+              instance,
+              rootContainerInstance,
+              workInProgress,
+            );
+          }
+        }
+
         if (current.ref !== workInProgress.ref) {
           markRef(workInProgress);
         }
@@ -758,6 +747,18 @@ function completeWork(
           );
 
           appendAllChildren(instance, workInProgress, false, false);
+
+          if (enableFlareAPI) {
+            const responders = newProps.responders;
+            if (responders != null) {
+              updateEventResponders(
+                responders,
+                instance,
+                rootContainerInstance,
+                workInProgress,
+              );
+            }
+          }
 
           // Certain renderers require commit-time effects for initial mount.
           // (eg DOM renderer supports auto-focus for certain elements).
@@ -916,6 +917,14 @@ function completeWork(
           workInProgress.effectTag |= Update;
         }
       }
+      if (
+        enableSuspenseCallback &&
+        workInProgress.updateQueue !== null &&
+        workInProgress.memoizedProps.suspenseCallback != null
+      ) {
+        // Always notify the callback
+        workInProgress.effectTag |= Update;
+      }
       break;
     }
     case Fragment:
@@ -993,7 +1002,7 @@ function completeWork(
         if (!didSuspendAlready) {
           // This is the first pass. We need to figure out if anything is still
           // suspended in the rendered set.
-          const renderedChildren = workInProgress.child;
+
           // If new content unsuspended, but there's still some content that
           // didn't. Then we need to do a second pass that forces everything
           // to keep showing their fallbacks.
@@ -1001,47 +1010,93 @@ function completeWork(
           // We might be suspended if something in this render pass suspended, or
           // something in the previous committed pass suspended. Otherwise,
           // there's no chance so we can skip the expensive call to
-          // hasSuspendedChildrenAndNewContent.
+          // findFirstSuspended.
           let cannotBeSuspended =
             renderHasNotSuspendedYet() &&
             (current === null || (current.effectTag & DidCapture) === NoEffect);
-          let needsRerender =
-            !cannotBeSuspended &&
-            hasSuspendedChildrenAndNewContent(workInProgress, renderedChildren);
-          if (needsRerender) {
-            // Rerender the whole list, but this time, we'll force fallbacks
-            // to stay in place.
-            // Reset the effect list before doing the second pass since that's now invalid.
-            workInProgress.firstEffect = workInProgress.lastEffect = null;
-            // Reset the child fibers to their original state.
-            resetChildFibers(workInProgress, renderExpirationTime);
+          if (!cannotBeSuspended) {
+            let row = workInProgress.child;
+            while (row !== null) {
+              let suspended = findFirstSuspended(row);
+              if (suspended !== null) {
+                didSuspendAlready = true;
+                workInProgress.effectTag |= DidCapture;
+                cutOffTailIfNeeded(renderState, false);
 
-            // Set up the Suspense Context to force suspense and immediately
-            // rerender the children.
-            pushSuspenseContext(
-              workInProgress,
-              setShallowSuspenseContext(
-                suspenseStackCursor.current,
-                ForceSuspenseFallback,
-              ),
-            );
-            return workInProgress.child;
+                // If this is a newly suspended tree, it might not get committed as
+                // part of the second pass. In that case nothing will subscribe to
+                // its thennables. Instead, we'll transfer its thennables to the
+                // SuspenseList so that it can retry if they resolve.
+                // There might be multiple of these in the list but since we're
+                // going to wait for all of them anyway, it doesn't really matter
+                // which ones gets to ping. In theory we could get clever and keep
+                // track of how many dependencies remain but it gets tricky because
+                // in the meantime, we can add/remove/change items and dependencies.
+                // We might bail out of the loop before finding any but that
+                // doesn't matter since that means that the other boundaries that
+                // we did find already has their listeners attached.
+                let newThennables = suspended.updateQueue;
+                if (newThennables !== null) {
+                  workInProgress.updateQueue = newThennables;
+                  workInProgress.effectTag |= Update;
+                }
+
+                // Rerender the whole list, but this time, we'll force fallbacks
+                // to stay in place.
+                // Reset the effect list before doing the second pass since that's now invalid.
+                workInProgress.firstEffect = workInProgress.lastEffect = null;
+                // Reset the child fibers to their original state.
+                resetChildFibers(workInProgress, renderExpirationTime);
+
+                // Set up the Suspense Context to force suspense and immediately
+                // rerender the children.
+                pushSuspenseContext(
+                  workInProgress,
+                  setShallowSuspenseContext(
+                    suspenseStackCursor.current,
+                    ForceSuspenseFallback,
+                  ),
+                );
+                return workInProgress.child;
+              }
+              row = row.sibling;
+            }
           }
-          // hasSuspendedChildrenAndNewContent could've set didSuspendAlready
-          didSuspendAlready =
-            (workInProgress.effectTag & DidCapture) !== NoEffect;
-        }
-        if (didSuspendAlready) {
+        } else {
           cutOffTailIfNeeded(renderState, false);
         }
         // Next we're going to render the tail.
       } else {
         // Append the rendered row to the child list.
         if (!didSuspendAlready) {
-          if (isShowingAnyFallbacks(renderedTail)) {
+          let suspended = findFirstSuspended(renderedTail);
+          if (suspended !== null) {
             workInProgress.effectTag |= DidCapture;
             didSuspendAlready = true;
             cutOffTailIfNeeded(renderState, true);
+            // This might have been modified.
+            if (
+              renderState.tail === null &&
+              renderState.tailMode === 'hidden'
+            ) {
+              // We need to delete the row we just rendered.
+              // Ensure we transfer the update queue to the parent.
+              let newThennables = suspended.updateQueue;
+              if (newThennables !== null) {
+                workInProgress.updateQueue = newThennables;
+                workInProgress.effectTag |= Update;
+              }
+              // Reset the effect list to what it w as before we rendered this
+              // child. The nested children have already appended themselves.
+              let lastEffect = (workInProgress.lastEffect =
+                renderState.lastEffect);
+              // Remove any effects that were appended after this point.
+              if (lastEffect !== null) {
+                lastEffect.nextEffect = null;
+              }
+              // We're done.
+              return null;
+            }
           } else if (
             now() > renderState.tailExpiration &&
             renderExpirationTime > Never
@@ -1098,6 +1153,7 @@ function completeWork(
         let next = renderState.tail;
         renderState.rendering = next;
         renderState.tail = next.sibling;
+        renderState.lastEffect = workInProgress.lastEffect;
         next.sibling = null;
 
         // Restore the context.
@@ -1118,48 +1174,53 @@ function completeWork(
       }
       break;
     }
-    case EventComponent: {
-      if (enableFlareAPI) {
-        popHostContext(workInProgress);
-        const rootContainerInstance = getRootHostContainer();
-        const responder = workInProgress.type.responder;
-        let eventComponentInstance: ReactEventComponentInstance<
+    case FundamentalComponent: {
+      if (enableFundamentalAPI) {
+        const fundamentalImpl = workInProgress.type.impl;
+        let fundamentalInstance: ReactFundamentalComponentInstance<
           any,
           any,
         > | null =
           workInProgress.stateNode;
 
-        if (eventComponentInstance === null) {
-          let responderState = null;
-          if (__DEV__ && !responder.allowMultipleHostChildren) {
-            const hostChildrenCount = getEventComponentHostChildrenCount(
-              workInProgress,
-            );
-            warning(
-              (hostChildrenCount || 0) < 2,
-              'A "<%s>" event component cannot contain multiple host children.',
-              getComponentName(workInProgress.type),
-            );
-          }
-          const getInitialState = responder.getInitialState;
+        if (fundamentalInstance === null) {
+          const getInitialState = fundamentalImpl.getInitialState;
+          let fundamentalState;
           if (getInitialState !== undefined) {
-            responderState = getInitialState(newProps);
+            fundamentalState = getInitialState(newProps);
           }
-          eventComponentInstance = workInProgress.stateNode = createEventComponentInstance(
+          fundamentalInstance = workInProgress.stateNode = createFundamentalStateInstance(
             workInProgress,
             newProps,
-            responder,
-            rootContainerInstance,
-            responderState || {},
-            false,
+            fundamentalImpl,
+            fundamentalState || {},
           );
-          markUpdate(workInProgress);
+          const instance = ((getFundamentalComponentInstance(
+            fundamentalInstance,
+          ): any): Instance);
+          fundamentalInstance.instance = instance;
+          if (fundamentalImpl.reconcileChildren === false) {
+            return null;
+          }
+          appendAllChildren(instance, workInProgress, false, false);
+          mountFundamentalComponent(fundamentalInstance);
         } else {
-          // Update the props on the event component state node
-          eventComponentInstance.props = newProps;
-          // Update the current fiber
-          eventComponentInstance.currentFiber = workInProgress;
-          updateEventComponent(eventComponentInstance);
+          // We fire update in commit phase
+          const prevProps = fundamentalInstance.props;
+          fundamentalInstance.prevProps = prevProps;
+          fundamentalInstance.props = newProps;
+          fundamentalInstance.currentFiber = workInProgress;
+          if (supportsPersistence) {
+            const instance = cloneFundamentalInstance(fundamentalInstance);
+            fundamentalInstance.instance = instance;
+            appendAllChildren(instance, workInProgress, false, false);
+          }
+          const shouldUpdate = shouldUpdateFundamentalComponent(
+            fundamentalInstance,
+          );
+          if (shouldUpdate) {
+            markUpdate(workInProgress);
+          }
         }
       }
       break;
@@ -1173,6 +1234,147 @@ function completeWork(
   }
 
   return null;
+}
+
+function mountEventResponder(
+  responder: ReactEventResponder<any, any>,
+  responderProps: Object,
+  instance: Instance,
+  rootContainerInstance: Container,
+  fiber: Fiber,
+  respondersMap: Map<
+    ReactEventResponder<any, any>,
+    ReactEventResponderInstance<any, any>,
+  >,
+) {
+  let responderState = emptyObject;
+  const getInitialState = responder.getInitialState;
+  if (getInitialState !== null) {
+    responderState = getInitialState(responderProps);
+  }
+  const responderInstance = createResponderInstance(
+    responder,
+    responderProps,
+    responderState,
+    instance,
+    fiber,
+  );
+  mountResponderInstance(
+    responder,
+    responderInstance,
+    responderProps,
+    responderState,
+    instance,
+    rootContainerInstance,
+  );
+  respondersMap.set(responder, responderInstance);
+}
+
+function updateEventResponder(
+  responder: ReactEventResponder<any, any>,
+  props: Object,
+  fiber: Fiber,
+  visistedResponders: Set<ReactEventResponder<any, any>>,
+  respondersMap: Map<
+    ReactEventResponder<any, any>,
+    ReactEventResponderInstance<any, any>,
+  >,
+  instance: Instance,
+  rootContainerInstance: Container,
+): void {
+  invariant(
+    responder && responder.$$typeof === REACT_RESPONDER_TYPE,
+    'An invalid value was used as an event responder. Expect one or many event ' +
+      'responders created via React.unstable_createResponer().',
+  );
+  if (visistedResponders.has(responder)) {
+    // show warning
+    return;
+  }
+  visistedResponders.add(responder);
+  const responderInstance = respondersMap.get(responder);
+
+  if (responderInstance === undefined) {
+    // Mount
+    mountEventResponder(
+      responder,
+      props,
+      instance,
+      rootContainerInstance,
+      fiber,
+      respondersMap,
+    );
+  } else {
+    // Update
+    responderInstance.props = props;
+    responderInstance.fiber = fiber;
+  }
+}
+
+function updateEventResponders(
+  responders: any,
+  instance: Instance,
+  rootContainerInstance: Container,
+  fiber: Fiber,
+): void {
+  const visistedResponders = new Set();
+  let dependencies = fiber.dependencies;
+  if (responders != null) {
+    if (dependencies === null) {
+      dependencies = fiber.dependencies = {
+        expirationTime: NoWork,
+        firstContext: null,
+        listeners: null,
+        responders: new Map(),
+      };
+    }
+    let respondersMap = dependencies.responders;
+    if (respondersMap === null) {
+      respondersMap = new Map();
+    }
+    if (isArray(responders)) {
+      for (let i = 0, length = responders.length; i < length; i++) {
+        const {type, props} = responders[i];
+        updateEventResponder(
+          type,
+          props,
+          fiber,
+          visistedResponders,
+          respondersMap,
+          instance,
+          rootContainerInstance,
+        );
+      }
+    } else {
+      const {type, props} = responders;
+      updateEventResponder(
+        type,
+        props,
+        fiber,
+        visistedResponders,
+        respondersMap,
+        instance,
+        rootContainerInstance,
+      );
+    }
+  }
+  if (dependencies !== null) {
+    const respondersMap = dependencies.responders;
+    if (respondersMap !== null) {
+      // Unmount
+      const mountedResponders = Array.from(respondersMap.keys());
+      for (let i = 0, length = mountedResponders.length; i < length; i++) {
+        const mountedResponder = mountedResponders[i];
+        if (!visistedResponders.has(mountedResponder)) {
+          const responderInstance = ((respondersMap.get(
+            mountedResponder,
+          ): any): ReactEventResponderInstance<any, any>);
+          unmountResponderInstance(responderInstance);
+          respondersMap.delete(mountedResponder);
+        }
+      }
+    }
+  }
 }
 
 export {completeWork};

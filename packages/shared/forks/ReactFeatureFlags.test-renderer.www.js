@@ -20,17 +20,19 @@ export const debugRenderPhaseSideEffectsForStrictMode = false;
 export const enableUserTimingAPI = __DEV__;
 export const warnAboutDeprecatedLifecycles = true;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
-export const enableProfilerTimer = false;
-export const enableSchedulerTracing = false;
+export const enableProfilerTimer = __PROFILE__;
+export const enableSchedulerTracing = __PROFILE__;
 export const enableSuspenseServerRenderer = false;
 export const enableStableConcurrentModeAPIs = false;
 export const enableSchedulerDebugging = false;
 export const warnAboutDeprecatedSetNativeProps = false;
 export const disableJavaScriptURLs = false;
 export const enableFlareAPI = true;
+export const enableFundamentalAPI = false;
 export const enableJSXTransformAPI = true;
 export const warnAboutMissingMockScheduler = true;
 export const enableUserBlockingEvents = false;
+export const enableSuspenseCallback = true;
 
 // Only used in www builds.
 export function addUserTimingListener() {

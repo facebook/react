@@ -41,7 +41,7 @@ import {
   SimpleMemoComponent,
   LazyComponent,
   IncompleteClassComponent,
-  EventComponent,
+  FundamentalComponent,
 } from 'shared/ReactWorkTags';
 import {
   NoEffect,
@@ -61,13 +61,14 @@ import {
   enableSchedulerTracing,
   enableSuspenseServerRenderer,
   enableFlareAPI,
+  enableFundamentalAPI,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import shallowEqual from 'shared/shallowEqual';
 import getComponentName from 'shared/getComponentName';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {refineResolvedLazyComponent} from 'shared/ReactLazyComponent';
-import {REACT_LAZY_TYPE} from 'shared/ReactSymbols';
+import {REACT_LAZY_TYPE, getIteratorFn} from 'shared/ReactSymbols';
 import warning from 'shared/warning';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {
@@ -109,11 +110,7 @@ import {
 } from './ReactFiberHostConfig';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import {shouldSuspend} from './ReactFiberReconciler';
-import {
-  pushHostContext,
-  pushHostContainer,
-  pushHostContextForEventComponent,
-} from './ReactFiberHostContext';
+import {pushHostContext, pushHostContainer} from './ReactFiberHostContext';
 import {
   suspenseStackCursor,
   pushSuspenseContext,
@@ -125,7 +122,7 @@ import {
   addSubtreeSuspenseContext,
   setShallowSuspenseContext,
 } from './ReactFiberSuspenseContext';
-import {isShowingAnyFallbacks} from './ReactFiberSuspenseComponent';
+import {findFirstSuspended} from './ReactFiberSuspenseComponent';
 import {
   pushProvider,
   propagateContextChange,
@@ -175,7 +172,7 @@ import {
   requestCurrentTime,
   retryTimedOutBoundary,
 } from './ReactFiberWorkLoop';
-import {prepareToReadEventComponents} from './ReactFiberEvents';
+import {prepareToReadListenerHooks} from './ReactFiberEvents';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -302,7 +299,9 @@ function updateForwardRef(
   // The rest is a fork of updateFunctionComponent
   let nextChildren;
   prepareToReadContext(workInProgress, renderExpirationTime);
-  prepareToReadEventComponents(workInProgress);
+  if (enableFlareAPI) {
+    prepareToReadListenerHooks(workInProgress);
+  }
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
     setCurrentPhase('render');
@@ -321,6 +320,9 @@ function updateForwardRef(
     ) {
       // Only double-render components with Hooks
       if (workInProgress.memoizedState !== null) {
+        if (enableFlareAPI) {
+          prepareToReadListenerHooks(workInProgress);
+        }
         nextChildren = renderWithHooks(
           current,
           workInProgress,
@@ -623,7 +625,9 @@ function updateFunctionComponent(
 
   let nextChildren;
   prepareToReadContext(workInProgress, renderExpirationTime);
-  prepareToReadEventComponents(workInProgress);
+  if (enableFlareAPI) {
+    prepareToReadListenerHooks(workInProgress);
+  }
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
     setCurrentPhase('render');
@@ -642,6 +646,9 @@ function updateFunctionComponent(
     ) {
       // Only double-render components with Hooks
       if (workInProgress.memoizedState !== null) {
+        if (enableFlareAPI) {
+          prepareToReadListenerHooks(workInProgress);
+        }
         nextChildren = renderWithHooks(
           current,
           workInProgress,
@@ -1238,7 +1245,9 @@ function mountIndeterminateComponent(
   const context = getMaskedContext(workInProgress, unmaskedContext);
 
   prepareToReadContext(workInProgress, renderExpirationTime);
-  prepareToReadEventComponents(workInProgress);
+  if (enableFlareAPI) {
+    prepareToReadListenerHooks(workInProgress);
+  }
   let value;
 
   if (__DEV__) {
@@ -1361,6 +1370,9 @@ function mountIndeterminateComponent(
       ) {
         // Only double-render components with Hooks
         if (workInProgress.memoizedState !== null) {
+          if (enableFlareAPI) {
+            prepareToReadListenerHooks(workInProgress);
+          }
           value = renderWithHooks(
             null,
             workInProgress,
@@ -2000,7 +2012,7 @@ function findLastContentRow(firstChild: null | Fiber): null | Fiber {
   while (row !== null) {
     let currentRow = row.alternate;
     // New rows can't be content rows.
-    if (currentRow !== null && !isShowingAnyFallbacks(currentRow)) {
+    if (currentRow !== null && findFirstSuspended(currentRow) === null) {
       lastContentRow = row;
     }
     row = row.sibling;
@@ -2072,12 +2084,12 @@ function validateTailOptions(
 ) {
   if (__DEV__) {
     if (tailMode !== undefined && !didWarnAboutTailOptions[tailMode]) {
-      if (tailMode !== 'collapsed') {
+      if (tailMode !== 'collapsed' && tailMode !== 'hidden') {
         didWarnAboutTailOptions[tailMode] = true;
         warning(
           false,
           '"%s" is not a supported value for tail on <SuspenseList />. ' +
-            'Did you mean "collapsed"?',
+            'Did you mean "collapsed" or "hidden"?',
           tailMode,
         );
       } else if (revealOrder !== 'forwards' && revealOrder !== 'backwards') {
@@ -2089,6 +2101,72 @@ function validateTailOptions(
             'Did you mean to specify revealOrder="forwards"?',
           tailMode,
         );
+      }
+    }
+  }
+}
+
+function validateSuspenseListNestedChild(childSlot: mixed, index: number) {
+  if (__DEV__) {
+    let isArray = Array.isArray(childSlot);
+    let isIterable = !isArray && typeof getIteratorFn(childSlot) === 'function';
+    if (isArray || isIterable) {
+      let type = isArray ? 'array' : 'iterable';
+      warning(
+        false,
+        'A nested %s was passed to row #%s in <SuspenseList />. Wrap it in ' +
+          'an additional SuspenseList to configure its revealOrder: ' +
+          '<SuspenseList revealOrder=...> ... ' +
+          '<SuspenseList revealOrder=...>{%s}</SuspenseList> ... ' +
+          '</SuspenseList>',
+        type,
+        index,
+        type,
+      );
+      return false;
+    }
+  }
+  return true;
+}
+
+function validateSuspenseListChildren(
+  children: mixed,
+  revealOrder: SuspenseListRevealOrder,
+) {
+  if (__DEV__) {
+    if (
+      (revealOrder === 'forwards' || revealOrder === 'backwards') &&
+      (children !== undefined && children !== null && children !== false)
+    ) {
+      if (Array.isArray(children)) {
+        for (let i = 0; i < children.length; i++) {
+          if (!validateSuspenseListNestedChild(children[i], i)) {
+            return;
+          }
+        }
+      } else {
+        let iteratorFn = getIteratorFn(children);
+        if (typeof iteratorFn === 'function') {
+          const childrenIterator = iteratorFn.call(children);
+          if (childrenIterator) {
+            let step = childrenIterator.next();
+            let i = 0;
+            for (; !step.done; step = childrenIterator.next()) {
+              if (!validateSuspenseListNestedChild(step.value, i)) {
+                return;
+              }
+              i++;
+            }
+          }
+        } else {
+          warning(
+            false,
+            'A single row was passed to a <SuspenseList revealOrder="%s" />. ' +
+              'This is not useful since it needs multiple rows. ' +
+              'Did you mean to pass multiple children or an array?',
+            revealOrder,
+          );
+        }
       }
     }
   }
@@ -2142,6 +2220,7 @@ function updateSuspenseListComponent(
 
   validateRevealOrder(revealOrder);
   validateTailOptions(tailMode, revealOrder);
+  validateSuspenseListChildren(newChildren, revealOrder);
 
   reconcileChildren(current, workInProgress, newChildren, renderExpirationTime);
 
@@ -2175,10 +2254,10 @@ function updateSuspenseListComponent(
   pushSuspenseContext(workInProgress, suspenseContext);
 
   if ((workInProgress.mode & BatchedMode) === NoMode) {
-    workInProgress.memoizedState = null;
-  } else {
     // Outside of batched mode, SuspenseList doesn't work so we just
     // use make it a noop by treating it as the default revealOrder.
+    workInProgress.memoizedState = null;
+  } else {
     switch (revealOrder) {
       case 'forwards': {
         let lastContentRow = findLastContentRow(workInProgress.child);
@@ -2214,7 +2293,7 @@ function updateSuspenseListComponent(
         while (row !== null) {
           let currentRow = row.alternate;
           // New rows can't be content rows.
-          if (currentRow !== null && !isShowingAnyFallbacks(currentRow)) {
+          if (currentRow !== null && findFirstSuspended(currentRow) === null) {
             // This is the beginning of the main content.
             workInProgress.child = row;
             break;
@@ -2410,9 +2489,17 @@ function updateContextConsumer(
   return workInProgress.child;
 }
 
-function updateEventComponent(current, workInProgress, renderExpirationTime) {
+function updateFundamentalComponent(
+  current,
+  workInProgress,
+  renderExpirationTime,
+) {
+  const fundamentalImpl = workInProgress.type.impl;
+  if (fundamentalImpl.reconcileChildren === false) {
+    return null;
+  }
   const nextProps = workInProgress.pendingProps;
-  let nextChildren = nextProps.children;
+  const nextChildren = nextProps.children;
 
   reconcileChildren(
     current,
@@ -2420,7 +2507,6 @@ function updateEventComponent(current, workInProgress, renderExpirationTime) {
     nextChildren,
     renderExpirationTime,
   );
-  pushHostContextForEventComponent(workInProgress);
   return workInProgress.child;
 }
 
@@ -2713,11 +2799,6 @@ function beginWork(
           pushSuspenseContext(workInProgress, suspenseStackCursor.current);
           break;
         }
-        case EventComponent:
-          if (enableFlareAPI) {
-            pushHostContextForEventComponent(workInProgress);
-          }
-          break;
       }
       return bailoutOnAlreadyFinishedWork(
         current,
@@ -2903,9 +2984,9 @@ function beginWork(
         renderExpirationTime,
       );
     }
-    case EventComponent: {
-      if (enableFlareAPI) {
-        return updateEventComponent(
+    case FundamentalComponent: {
+      if (enableFundamentalAPI) {
+        return updateFundamentalComponent(
           current,
           workInProgress,
           renderExpirationTime,

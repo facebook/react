@@ -44,6 +44,8 @@ const {IsSomeRendererActing} = ReactSharedInternals;
 // ReactTestUtilsAct.js, ReactTestRendererAct.js, createReactNoop.js
 
 let hasWarnedAboutMissingMockScheduler = false;
+const isSchedulerMocked =
+  typeof Scheduler.unstable_flushAllWithoutAsserting === 'function';
 const flushWork =
   Scheduler.unstable_flushAllWithoutAsserting ||
   function() {
@@ -89,18 +91,17 @@ function act(callback: () => Thenable) {
   let previousIsSomeRendererActing;
   let previousIsThisRendererActing;
   actingUpdatesScopeDepth++;
-  if (__DEV__) {
-    previousIsSomeRendererActing = IsSomeRendererActing.current;
-    previousIsThisRendererActing = IsThisRendererActing.current;
-    IsSomeRendererActing.current = true;
-    IsThisRendererActing.current = true;
-  }
+
+  previousIsSomeRendererActing = IsSomeRendererActing.current;
+  previousIsThisRendererActing = IsThisRendererActing.current;
+  IsSomeRendererActing.current = true;
+  IsThisRendererActing.current = true;
 
   function onDone() {
     actingUpdatesScopeDepth--;
+    IsSomeRendererActing.current = previousIsSomeRendererActing;
+    IsThisRendererActing.current = previousIsThisRendererActing;
     if (__DEV__) {
-      IsSomeRendererActing.current = previousIsSomeRendererActing;
-      IsThisRendererActing.current = previousIsThisRendererActing;
       if (actingUpdatesScopeDepth > previousActingUpdatesScopeDepth) {
         // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
         warningWithoutStack(
@@ -155,7 +156,11 @@ function act(callback: () => Thenable) {
         called = true;
         result.then(
           () => {
-            if (actingUpdatesScopeDepth > 1) {
+            if (
+              actingUpdatesScopeDepth > 1 ||
+              (isSchedulerMocked === true &&
+                previousIsSomeRendererActing === true)
+            ) {
               onDone();
               resolve();
               return;
@@ -190,7 +195,10 @@ function act(callback: () => Thenable) {
 
     // flush effects until none remain, and cleanup
     try {
-      if (actingUpdatesScopeDepth === 1) {
+      if (
+        actingUpdatesScopeDepth === 1 &&
+        (isSchedulerMocked === false || previousIsSomeRendererActing === false)
+      ) {
         // we're about to exit the act() scope,
         // now's the time to flush effects
         flushWork();

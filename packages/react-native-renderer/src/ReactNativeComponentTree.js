@@ -7,20 +7,20 @@
 
 import invariant from 'shared/invariant';
 
-const instanceCache = {};
-const instanceProps = {};
+const instanceCache = new Map();
+const instanceProps = new Map();
 
 export function precacheFiberNode(hostInst, tag) {
-  instanceCache[tag] = hostInst;
+  instanceCache.set(tag, hostInst);
 }
 
 export function uncacheFiberNode(tag) {
-  delete instanceCache[tag];
-  delete instanceProps[tag];
+  instanceCache.delete(tag);
+  instanceProps.delete(tag);
 }
 
 function getInstanceFromTag(tag) {
-  return instanceCache[tag] || null;
+  return instanceCache.get(tag) || null;
 }
 
 function getTagFromInstance(inst) {
@@ -39,9 +39,9 @@ export {
 };
 
 export function getFiberCurrentPropsFromNode(stateNode) {
-  return instanceProps[stateNode._nativeTag] || null;
+  return instanceProps.get(stateNode._nativeTag) || null;
 }
 
 export function updateFiberProps(tag, props) {
-  instanceProps[tag] = props;
+  instanceProps.set(tag, props);
 }

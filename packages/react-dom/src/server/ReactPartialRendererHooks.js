@@ -470,5 +470,5 @@ export const Dispatcher: DispatcherType = {
   useEffect: noop,
   // Debugging effect
   useDebugValue: noop,
-  useEvent: noop,
+  useListener: noop,
 };
