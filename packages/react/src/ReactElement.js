@@ -301,12 +301,9 @@ export function jsxDEV(type, config, maybeKey, source, self) {
  * Create and return a new ReactElement of the given type.
  * See https://reactjs.org/docs/react-api.html#createelement
  */
-// type: component
-// config: props + key + ref
 export function createElement(type, config, children) {
   let propName;
-  // console.log(type, '\n\n', config, '\n\n', children);
-  // console.log('a', type);
+
   // Reserved names are extracted
   const props = {};
 
@@ -376,8 +373,6 @@ export function createElement(type, config, children) {
         defineRefPropWarningGetter(props, displayName);
       }
     }
-    // if (type.defaultProps && type.prototype.isReactComponent) {
-    // }
   }
   return ReactElement(
     type,
