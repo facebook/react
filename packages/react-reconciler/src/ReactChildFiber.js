@@ -120,30 +120,32 @@ function coerceRef(
       if (returnFiber.mode & StrictMode || warnAboutStringRefs) {
         const componentName = getComponentName(returnFiber.type) || 'Component';
         if (!didWarnAboutStringRefs[componentName]) {
-          let stringRefWarning;
           if (warnAboutStringRefs) {
-            stringRefWarning =
-              'Component "' +
-              componentName +
-              '" contains the string ref "' +
-              mixedRef +
-              '". Support for string refs will be removed in a future major release.';
+            warningWithoutStack(
+              false,
+              'Component "%s" contains the string ref "%s". Support for string refs ' +
+                'will be removed in a future major release. We recommend using ' +
+                'createRef() instead.' +
+                '\n%s' +
+                '\n\nLearn more about using refs safely here:' +
+                '\nhttps://fb.me/react-strict-mode-string-ref',
+              componentName,
+              mixedRef,
+              getStackByFiberInDevAndProd(returnFiber),
+            );
           } else {
-            stringRefWarning =
-              'A string ref, "' +
-              mixedRef +
-              '", has been found within a strict mode tree. String refs are a source of ' +
-              'potential bugs and should be avoided.';
+            warningWithoutStack(
+              false,
+              'A string ref, "%s", has been found within a strict mode tree. ' +
+                'String refs are a source of potential bugs and should be avoided. ' +
+                'We recommend using createRef() instead.' +
+                '\n%s' +
+                '\n\nLearn more about using refs safely here:' +
+                '\nhttps://fb.me/react-strict-mode-string-ref',
+              mixedRef,
+              getStackByFiberInDevAndProd(returnFiber),
+            );
           }
-          warningWithoutStack(
-            false,
-            '%s We recommend using createRef() instead.' +
-              '\n%s' +
-              '\n\nLearn more about using refs safely here:' +
-              '\nhttps://fb.me/react-strict-mode-string-ref',
-            stringRefWarning,
-            getStackByFiberInDevAndProd(returnFiber),
-          );
           didWarnAboutStringRefs[componentName] = true;
         }
       }
