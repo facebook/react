@@ -57,7 +57,11 @@ module.exports = {
           {
             loader: 'css-loader',
             options: {
-              sourceMap: true,
+              // WARNING It's important that we disable CSS source maps for production builds.
+              // This causes style-loader to insert styles via a <style> tag rather than URL.createObjectURL,
+              // which in turn avoids a nasty Electron/Chromium bug that breaks DevTools in Nuclide.
+              // (Calls to URL.createObjectURL seem to crash the webview process.)
+              sourceMap: __DEV__,
               modules: true,
               localIdentName: '[local]___[hash:base64:5]',
             },
