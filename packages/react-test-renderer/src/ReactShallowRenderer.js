@@ -336,7 +336,7 @@ class ReactShallowRenderer {
             isLayoutEffect,
             create,
             inputs,
-            cleanup: null,
+            destroy: null,
             run: true,
           };
         } else {
@@ -346,7 +346,7 @@ class ReactShallowRenderer {
             isLayoutEffect,
             create,
             inputs,
-            cleanup: memoizedState.cleanup,
+            destroy: memoizedState.destroy,
             run:
               inputs == null ||
               !areHookInputsEqual(inputs, memoizedState.inputs),
@@ -765,10 +765,10 @@ class ReactShallowRenderer {
         memoizedState.isLayoutEffect === callLayoutEffects &&
         memoizedState.run
       ) {
-        if (memoizedState.cleanup) {
-          memoizedState.cleanup();
+        if (memoizedState.destroy) {
+          memoizedState.destroy();
         }
-        memoizedState.cleanup = memoizedState.create();
+        memoizedState.destroy = memoizedState.create();
       }
     }
   }

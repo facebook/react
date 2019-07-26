@@ -258,11 +258,11 @@ describe('ReactShallowRenderer with hooks', () => {
 
       function SomeComponent({defaultName}) {
         React.useEffect(() => {
-          happenings.push('call effect');
+          happenings.push('create effect');
         });
 
         React.useLayoutEffect(() => {
-          happenings.push('call layout effect');
+          happenings.push('create layout effect');
         });
 
         happenings.push('render');
@@ -276,42 +276,42 @@ describe('ReactShallowRenderer with hooks', () => {
       // Note the layout effect is triggered first.
       expect(happenings).toEqual([
         'render',
-        'call layout effect',
-        'call effect',
+        'create layout effect',
+        'create effect',
       ]);
     });
 
-    it('should trigger effects and cleanup depending on inputs', () => {
+    it('should trigger effects and destroy depending on inputs', () => {
       let _setFriend;
       const happenings = [];
 
       function SomeComponent() {
         const [friend, setFriend] = React.useState('Bons');
-        const [cat] = React.useState('Muskus');
+        const cat = 'Muskus';
         _setFriend = setFriend;
 
         React.useEffect(
           () => {
-            happenings.push('call friend effect');
+            happenings.push('create friend effect');
             return () => {
-              happenings.push('cleanup friend effect');
+              happenings.push('destroy friend effect');
             };
           },
           [friend],
         );
 
         React.useEffect(() => {
-          happenings.push('call empty effect');
+          happenings.push('create empty effect');
           return () => {
-            happenings.push('cleanup empty effect');
+            happenings.push('destroy empty effect');
           };
         });
 
         React.useEffect(
           () => {
-            happenings.push('call cat effect');
+            happenings.push('create cat effect');
             return () => {
-              happenings.push('cleanup cat effect');
+              happenings.push('destroy cat effect');
             };
           },
           [cat],
@@ -319,9 +319,9 @@ describe('ReactShallowRenderer with hooks', () => {
 
         React.useEffect(
           () => {
-            happenings.push('call both effect');
+            happenings.push('create both effect');
             return () => {
-              happenings.push('cleanup both effect');
+              happenings.push('destroy both effect');
             };
           },
           [friend, cat],
@@ -338,21 +338,21 @@ describe('ReactShallowRenderer with hooks', () => {
       shallowRenderer.render(<SomeComponent />);
 
       expect(happenings).toEqual([
-        'call friend effect',
-        'call empty effect',
-        'call cat effect',
-        'call both effect',
+        'create friend effect',
+        'create empty effect',
+        'create cat effect',
+        'create both effect',
       ]);
 
       happenings.splice(0);
       _setFriend('Maryam');
       expect(happenings).toEqual([
-        'cleanup friend effect',
-        'call friend effect',
-        'cleanup empty effect',
-        'call empty effect',
-        'cleanup both effect',
-        'call both effect',
+        'destroy friend effect',
+        'create friend effect',
+        'destroy empty effect',
+        'create empty effect',
+        'destroy both effect',
+        'create both effect',
       ]);
     });
   });
