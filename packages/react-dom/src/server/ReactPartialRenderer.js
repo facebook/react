@@ -208,11 +208,11 @@ function validateDangerousTag(tag) {
 }
 
 const styleNameCache = {};
-const processStyleName = function(styleName, isCustomProperty) {
+const processStyleName = function(styleName) {
   if (styleNameCache.hasOwnProperty(styleName)) {
     return styleNameCache[styleName];
   }
-  const result = isCustomProperty ? styleName : hyphenateStyleName(styleName);
+  const result = hyphenateStyleName(styleName);
   styleNameCache[styleName] = result;
   return result;
 };
@@ -233,7 +233,9 @@ function createMarkupForStyles(styles): string | null {
     }
     if (styleValue != null) {
       serialized +=
-        delimiter + processStyleName(styleName, isCustomProperty) + ':';
+        delimiter +
+        (isCustomProperty ? styleName : processStyleName(styleName)) +
+        ':';
       serialized += dangerousStyleValue(
         styleName,
         styleValue,
