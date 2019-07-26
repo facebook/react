@@ -39,6 +39,7 @@ export const revertPassiveEffectsChange = false;
 export const enableUserBlockingEvents = false;
 export const enableSuspenseCallback = false;
 export const warnAboutDefaultPropsOnFunctionComponents = false;
+export const warnAboutStringRefs = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {
