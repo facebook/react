@@ -130,10 +130,12 @@ function runActTests(label, render, unmount) {
       container = document.createElement('div');
       document.body.appendChild(container);
     });
+
     afterEach(() => {
       unmount(container);
       document.body.removeChild(container);
     });
+
     describe('sync', () => {
       it('can use act to flush effects', () => {
         function App() {
@@ -240,13 +242,16 @@ function runActTests(label, render, unmount) {
           'An update to App inside a test was not wrapped in act(...).',
         ]);
       });
+
       describe('fake timers', () => {
         beforeEach(() => {
           jest.useFakeTimers();
         });
+
         afterEach(() => {
           jest.useRealTimers();
         });
+
         it('lets a ticker update', () => {
           function App() {
             let [toggle, setToggle] = React.useState(0);
@@ -268,6 +273,7 @@ function runActTests(label, render, unmount) {
 
           expect(container.innerHTML).toBe('1');
         });
+
         it('can use the async version to catch microtasks', async () => {
           function App() {
             let [toggle, setToggle] = React.useState(0);
@@ -289,6 +295,7 @@ function runActTests(label, render, unmount) {
 
           expect(container.innerHTML).toBe('1');
         });
+
         it('can handle cascading promises with fake timers', async () => {
           // this component triggers an effect, that waits a tick,
           // then sets state. repeats this 5 times.
@@ -314,6 +321,7 @@ function runActTests(label, render, unmount) {
           // all 5 ticks present and accounted for
           expect(container.innerHTML).toBe('5');
         });
+
         it('flushes immediate re-renders with act', () => {
           function App() {
             let [ctr, setCtr] = React.useState(0);
@@ -367,6 +375,7 @@ function runActTests(label, render, unmount) {
         );
       });
     });
+
     describe('asynchronous tests', () => {
       it('works with timeouts', async () => {
         function App() {
@@ -577,6 +586,7 @@ function runActTests(label, render, unmount) {
         });
       }
     });
+
     describe('error propagation', () => {
       it('propagates errors - sync', () => {
         let err;
