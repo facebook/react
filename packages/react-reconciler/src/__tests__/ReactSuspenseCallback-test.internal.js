@@ -238,4 +238,71 @@ describe('ReactSuspense', () => {
     expect(ops1).toEqual([]);
     expect(ops2).toEqual([]);
   });
+
+  if (__DEV__) {
+    it('regression test for #16215 that relies on implementation details', async () => {
+      // Regression test for https://github.com/facebook/react/pull/16215.
+      // The bug only happens if there's an error earlier in the commit phase.
+      // The first error is the one that gets thrown, so to observe the later
+      // error, I've mocked the ReactErrorUtils module.
+      //
+      // If this test starts failing because the implementation details change,
+      // you can probably just delete it. It's not worth the hassle.
+      jest.resetModules();
+
+      let errors = [];
+      let hasCaughtError = false;
+      jest.mock('shared/ReactErrorUtils', () => ({
+        invokeGuardedCallback(name, fn, context, ...args) {
+          try {
+            return fn.call(context, ...args);
+          } catch (error) {
+            hasCaughtError = true;
+            errors.push(error);
+          }
+        },
+        hasCaughtError() {
+          return hasCaughtError;
+        },
+        clearCaughtError() {
+          hasCaughtError = false;
+          return errors[errors.length - 1];
+        },
+      }));
+
+      ReactFeatureFlags = require('shared/ReactFeatureFlags');
+      ReactFeatureFlags.enableSuspenseCallback = true;
+
+      React = require('react');
+      ReactNoop = require('react-noop-renderer');
+      Scheduler = require('scheduler');
+
+      const {useEffect} = React;
+      const {PromiseComp} = createThenable();
+      function App() {
+        useEffect(() => {
+          Scheduler.unstable_yieldValue('Passive Effect');
+        });
+        return (
+          <React.Suspense
+            suspenseCallback={() => {
+              throw Error('Oops!');
+            }}
+            fallback="Loading...">
+            <PromiseComp />
+          </React.Suspense>
+        );
+      }
+      const root = ReactNoop.createRoot();
+      await ReactNoop.act(async () => {
+        root.render(<App />);
+        expect(Scheduler).toFlushAndThrow('Oops!');
+      });
+
+      // Should have only received a single error. Before the bug fix, there was
+      // also a second error related to the Suspense update queue.
+      expect(errors.length).toBe(1);
+      expect(errors[0].message).toEqual('Oops!');
+    });
+  }
 });
