@@ -116,20 +116,20 @@ function coerceRef(
   ) {
     if (__DEV__) {
       // TODO: Clean this up once we turn on the string ref warning for
-      // everyone, because strict mode case will no longer be relevant
+      // everyone, because the strict mode case will no longer be relevant
       if (returnFiber.mode & StrictMode || warnAboutStringRefs) {
         const componentName = getComponentName(returnFiber.type) || 'Component';
         if (!didWarnAboutStringRefs[componentName]) {
-          let deprecationWarning;
+          let stringRefWarning;
           if (warnAboutStringRefs) {
-            deprecationWarning =
+            stringRefWarning =
               'Component "' +
               componentName +
               '" contains the string ref "' +
               mixedRef +
               '". Support for string refs will be removed in a future major release.';
           } else {
-            deprecationWarning =
+            stringRefWarning =
               'A string ref, "' +
               mixedRef +
               '", has been found within a strict mode tree. String refs are a source of ' +
@@ -141,7 +141,7 @@ function coerceRef(
               '\n%s' +
               '\n\nLearn more about using refs safely here:' +
               '\nhttps://fb.me/react-strict-mode-string-ref',
-            deprecationWarning,
+            stringRefWarning,
             getStackByFiberInDevAndProd(returnFiber),
           );
           didWarnAboutStringRefs[componentName] = true;
