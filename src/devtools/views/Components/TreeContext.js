@@ -277,7 +277,6 @@ function reduceSearchState(store: Store, state: State, action: Action): State {
     selectedElementIndex,
   } = state;
 
-  const prevSearchIndex = searchIndex;
   const prevSearchText = searchText;
   const numPrevSearchResults = searchResults.length;
 
@@ -380,15 +379,11 @@ function reduceSearchState(store: Store, state: State, action: Action): State {
           store.roots.forEach(rootID => {
             recursivelySearchTree(store, rootID, regExp, searchResults);
           });
-
           if (searchResults.length > 0) {
-            if (prevSearchIndex === null) {
-              searchIndex = 0;
+            if (selectedElementID !== null) {
+              searchIndex = getNearestResult(searchResults, selectedElementID);
             } else {
-              searchIndex = Math.min(
-                ((prevSearchIndex: any): number),
-                searchResults.length - 1
-              );
+              searchIndex = 0;
             }
           }
         }
@@ -760,7 +755,6 @@ function TreeContextController({
     </TreeStateContext.Provider>
   );
 }
-
 function recursivelySearchTree(
   store: Store,
   elementID: number,
@@ -778,6 +772,17 @@ function recursivelySearchTree(
   children.forEach(childID =>
     recursivelySearchTree(store, childID, regExp, searchResults)
   );
+}
+
+function getNearestResult(
+  searchResults: Array<number>,
+  selectedElementID: number | null
+) {
+  const result = searchResults.findIndex(
+    value => value >= ((selectedElementID: any): number)
+  );
+
+  return result === -1 ? 0 : result;
 }
 
 export { TreeDispatcherContext, TreeStateContext, TreeContextController };
