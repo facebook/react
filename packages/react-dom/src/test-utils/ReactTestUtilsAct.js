@@ -63,7 +63,13 @@ const flushWork =
         hasWarnedAboutMissingMockScheduler = true;
       }
     }
-    while (flushPassiveEffects()) {}
+
+    let didFlushWork = false;
+    while (flushPassiveEffects()) {
+      didFlushWork = true;
+    }
+
+    return didFlushWork;
   };
 
 function flushWorkAndMicroTasks(onDone: (err: ?Error) => void) {

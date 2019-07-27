@@ -538,6 +538,21 @@ const bundles = [
     global: 'ReactEventsScroll',
     externals: ['react'],
   },
+
+  {
+    bundleTypes: [
+      UMD_DEV,
+      UMD_PROD,
+      NODE_DEV,
+      NODE_PROD,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+    ],
+    moduleType: NON_FIBER_RENDERER,
+    entry: 'react-events/keyboard',
+    global: 'ReactEventsKeyboard',
+    externals: ['react'],
+  },
 ];
 
 // Based on deep-freeze by substack (public domain)

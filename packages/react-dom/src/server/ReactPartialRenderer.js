@@ -231,7 +231,10 @@ function createMarkupForStyles(styles): string | null {
       }
     }
     if (styleValue != null) {
-      serialized += delimiter + processStyleName(styleName) + ':';
+      serialized +=
+        delimiter +
+        (isCustomProperty ? styleName : processStyleName(styleName)) +
+        ':';
       serialized += dangerousStyleValue(
         styleName,
         styleValue,
@@ -343,11 +346,6 @@ const RESERVED_PROPS = {
   suppressHydrationWarning: null,
 };
 
-if (enableFlareAPI) {
-  // $FlowFixMe: Flow doesn't like this, it's temp until we remove the flag anyway
-  RESERVED_PROPS.responders = null;
-}
-
 function createOpenTagMarkup(
   tagVerbatim: string,
   tagLowercase: string,
@@ -360,6 +358,9 @@ function createOpenTagMarkup(
 
   for (const propKey in props) {
     if (!hasOwnProperty.call(props, propKey)) {
+      continue;
+    }
+    if (enableFlareAPI && propKey === 'responders') {
       continue;
     }
     let propValue = props[propKey];

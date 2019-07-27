@@ -57,6 +57,15 @@ describe('CSSPropertyOperations', () => {
     expect(html).toContain('"-ms-transition:none;-moz-transition:none"');
   });
 
+  it('should not hyphenate custom CSS property', () => {
+    const styles = {
+      '--someColor': '#000000',
+    };
+    const div = <div style={styles} />;
+    const html = ReactDOMServer.renderToString(div);
+    expect(html).toContain('"--someColor:#000000"');
+  });
+
   it('should set style attribute when styles exist', () => {
     const styles = {
       backgroundColor: '#000',

@@ -13,8 +13,7 @@ export type ReactNode =
   | ReactText
   | ReactFragment
   | ReactProvider<any>
-  | ReactConsumer<any>
-  | ReactEventComponent<any, any>;
+  | ReactConsumer<any>;
 
 export type ReactEmpty = null | void | boolean;
 
@@ -107,11 +106,6 @@ export type ReactEventResponder<E, C> = {
     | null
     | ((context: C, props: Object, state: Object) => void),
 };
-
-export type ReactEventComponent<E, C> = {|
-  $$typeof: Symbol | number,
-  responder: ReactEventResponder<E, C>,
-|};
 
 export type EventPriority = 0 | 1 | 2;
 
