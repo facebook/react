@@ -709,9 +709,9 @@ describe('ReactComponentLifeCycle', () => {
       );
     }).toLowPriorityWarnDev(
       [
-        'componentWillMount is deprecated',
-        'componentWillReceiveProps is deprecated',
-        'componentWillUpdate is deprecated',
+        'componentWillMount has been renamed',
+        'componentWillReceiveProps has been renamed',
+        'componentWillUpdate has been renamed',
       ],
       {withoutStack: true},
     );
@@ -748,9 +748,9 @@ describe('ReactComponentLifeCycle', () => {
       );
     }).toLowPriorityWarnDev(
       [
-        'componentWillMount is deprecated',
-        'componentWillReceiveProps is deprecated',
-        'componentWillUpdate is deprecated',
+        'componentWillMount has been renamed',
+        'componentWillReceiveProps has been renamed',
+        'componentWillUpdate has been renamed',
       ],
       {withoutStack: true},
     );
@@ -815,7 +815,10 @@ describe('ReactComponentLifeCycle', () => {
         {withoutStack: true},
       );
     }).toLowPriorityWarnDev(
-      ['componentWillMount is deprecated', 'componentWillUpdate is deprecated'],
+      [
+        'componentWillMount has been renamed',
+        'componentWillUpdate has been renamed',
+      ],
       {withoutStack: true},
     );
 
@@ -863,7 +866,7 @@ describe('ReactComponentLifeCycle', () => {
           'https://fb.me/react-async-component-lifecycle-hooks',
         {withoutStack: true},
       );
-    }).toLowPriorityWarnDev(['componentWillMount is deprecated'], {
+    }).toLowPriorityWarnDev(['componentWillMount has been renamed'], {
       withoutStack: true,
     });
 
@@ -887,7 +890,7 @@ describe('ReactComponentLifeCycle', () => {
           'https://fb.me/react-async-component-lifecycle-hooks',
         {withoutStack: true},
       );
-    }).toLowPriorityWarnDev(['componentWillReceiveProps is deprecated'], {
+    }).toLowPriorityWarnDev(['componentWillReceiveProps has been renamed'], {
       withoutStack: true,
     });
   });
@@ -921,7 +924,10 @@ describe('ReactComponentLifeCycle', () => {
         {withoutStack: true},
       );
     }).toLowPriorityWarnDev(
-      ['componentWillMount is deprecated', 'componentWillUpdate is deprecated'],
+      [
+        'componentWillMount has been renamed',
+        'componentWillUpdate has been renamed',
+      ],
       {withoutStack: true},
     );
 
@@ -967,7 +973,7 @@ describe('ReactComponentLifeCycle', () => {
           'https://fb.me/react-async-component-lifecycle-hooks',
         {withoutStack: true},
       );
-    }).toLowPriorityWarnDev(['componentWillMount is deprecated'], {
+    }).toLowPriorityWarnDev(['componentWillMount has been renamed'], {
       withoutStack: true,
     });
 
@@ -990,7 +996,7 @@ describe('ReactComponentLifeCycle', () => {
           'https://fb.me/react-async-component-lifecycle-hooks',
         {withoutStack: true},
       );
-    }).toLowPriorityWarnDev(['componentWillReceiveProps is deprecated'], {
+    }).toLowPriorityWarnDev(['componentWillReceiveProps has been renamed'], {
       withoutStack: true,
     });
   });
@@ -1130,9 +1136,9 @@ describe('ReactComponentLifeCycle', () => {
       ReactDOM.render(<MyComponent foo="bar" />, div),
     ).toLowPriorityWarnDev(
       [
-        'componentWillMount is deprecated',
-        'componentWillReceiveProps is deprecated',
-        'componentWillUpdate is deprecated',
+        'componentWillMount has been renamed',
+        'componentWillReceiveProps has been renamed',
+        'componentWillUpdate has been renamed',
       ],
       {withoutStack: true},
     );
@@ -1403,22 +1409,32 @@ describe('ReactComponentLifeCycle', () => {
       ReactDOM.render(<MyComponent x={1} />, container),
     ).toLowPriorityWarnDev(
       [
-        'componentWillMount is deprecated and will be removed in the next major version. ' +
-          'Use componentDidMount instead. As a temporary workaround, ' +
-          'you can rename to UNSAFE_componentWillMount.' +
-          '\n\nPlease update the following components: MyComponent',
-        'componentWillReceiveProps is deprecated and will be removed in the next major version. ' +
-          'Use static getDerivedStateFromProps instead.' +
-          '\n\nPlease update the following components: MyComponent',
-        'componentWillUpdate is deprecated and will be removed in the next major version. ' +
-          'Use componentDidUpdate instead. As a temporary workaround, ' +
-          'you can rename to UNSAFE_componentWillUpdate.' +
-          '\n\nPlease update the following components: MyComponent',
+        /* eslint-disable max-len */
+        `Warning: componentWillMount has been renamed, and is not recommended for use. See https://fb.me/react-async-component-lifecycle-hooks for details.
+
+* Move code with side effects to componentDidMount, and set initial state in the constructor.
+* Rename componentWillMount to UNSAFE_componentWillMount to suppress this warning in non-strict mode. In React 17.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, you can run \`npx react-codemod rename-unsafe-lifecycles\` in your project source folder.
+
+Please update the following components: MyComponent`,
+        `Warning: componentWillReceiveProps has been renamed, and is not recommended for use. See https://fb.me/react-async-component-lifecycle-hooks for details.
+
+* Move data fetching code or side effects to componentDidUpdate.
+* If you're updating state whenever props change, refactor your code to use memoization techniques or move it to static getDerivedStateFromProps. Learn more at: https://fb.me/react-derived-state
+* Rename componentWillReceiveProps to UNSAFE_componentWillReceiveProps to suppress this warning in non-strict mode. In React 17.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, you can run \`npx react-codemod rename-unsafe-lifecycles\` in your project source folder.
+
+Please update the following components: MyComponent`,
+        `Warning: componentWillUpdate has been renamed, and is not recommended for use. See https://fb.me/react-async-component-lifecycle-hooks for details.
+
+* Move data fetching code or side effects to componentDidUpdate.
+* Rename componentWillUpdate to UNSAFE_componentWillUpdate to suppress this warning in non-strict mode. In React 17.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, you can run \`npx react-codemod rename-unsafe-lifecycles\` in your project source folder.
+
+Please update the following components: MyComponent`,
+        /* eslint-enable max-len */
       ],
       {withoutStack: true},
     );
 
-    // Dedupe check (update and instantiate new
+    // Dedupe check (update and instantiate new)
     ReactDOM.render(<MyComponent x={2} />, container);
     ReactDOM.render(<MyComponent key="new" x={1} />, container);
   });

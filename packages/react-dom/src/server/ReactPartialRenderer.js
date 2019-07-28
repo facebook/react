@@ -22,6 +22,7 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   warnAboutDeprecatedLifecycles,
   enableSuspenseServerRenderer,
+  enableFundamentalAPI,
   enableFlareAPI,
 } from 'shared/ReactFeatureFlags';
 
@@ -38,7 +39,7 @@ import {
   REACT_CONTEXT_TYPE,
   REACT_LAZY_TYPE,
   REACT_MEMO_TYPE,
-  REACT_EVENT_COMPONENT_TYPE,
+  REACT_FUNDAMENTAL_TYPE,
 } from 'shared/ReactSymbols';
 
 import {
@@ -230,7 +231,10 @@ function createMarkupForStyles(styles): string | null {
       }
     }
     if (styleValue != null) {
-      serialized += delimiter + processStyleName(styleName) + ':';
+      serialized +=
+        delimiter +
+        (isCustomProperty ? styleName : processStyleName(styleName)) +
+        ':';
       serialized += dangerousStyleValue(
         styleName,
         styleValue,
@@ -354,6 +358,9 @@ function createOpenTagMarkup(
 
   for (const propKey in props) {
     if (!hasOwnProperty.call(props, propKey)) {
+      continue;
+    }
+    if (enableFlareAPI && propKey === 'responders') {
       continue;
     }
     let propValue = props[propKey];
@@ -572,13 +579,12 @@ function resolve(
             if (!didWarnAboutDeprecatedWillMount[componentName]) {
               lowPriorityWarning(
                 false,
-                '%s: componentWillMount() is deprecated and will be ' +
-                  'removed in the next major version. Read about the motivations ' +
-                  'behind this change: ' +
-                  'https://fb.me/react-async-component-lifecycle-hooks' +
-                  '\n\n' +
-                  'As a temporary workaround, you can rename to ' +
-                  'UNSAFE_componentWillMount instead.',
+                // keep this warning in sync with ReactStrictModeWarning.js
+                'componentWillMount has been renamed, and is not recommended for use. ' +
+                  'See https://fb.me/react-async-component-lifecycle-hooks for details.\n\n' +
+                  '* Move code from componentWillMount to componentDidMount (preferred in most cases) ' +
+                  'or the constructor.\n' +
+                  '\nPlease update the following components: %s',
                 componentName,
               );
               didWarnAboutDeprecatedWillMount[componentName] = true;
@@ -1166,28 +1172,41 @@ class ReactDOMServerRenderer {
             this.stack.push(frame);
             return '';
           }
-          case REACT_EVENT_COMPONENT_TYPE: {
-            if (enableFlareAPI) {
-              const nextChildren = toArray(
-                ((nextChild: any): ReactElement).props.children,
+          // eslint-disable-next-line-no-fallthrough
+          case REACT_FUNDAMENTAL_TYPE: {
+            if (enableFundamentalAPI) {
+              const fundamentalImpl = elementType.impl;
+              const open = fundamentalImpl.getServerSideString(
+                null,
+                nextElement.props,
               );
+              const getServerSideStringClose =
+                fundamentalImpl.getServerSideStringClose;
+              const close =
+                getServerSideStringClose !== undefined
+                  ? getServerSideStringClose(null, nextElement.props)
+                  : '';
+              const nextChildren =
+                fundamentalImpl.reconcileChildren !== false
+                  ? toArray(((nextChild: any): ReactElement).props.children)
+                  : [];
               const frame: Frame = {
                 type: null,
                 domNamespace: parentNamespace,
                 children: nextChildren,
                 childIndex: 0,
                 context: context,
-                footer: '',
+                footer: close,
               };
               if (__DEV__) {
                 ((frame: any): FrameDev).debugElementStack = [];
               }
               this.stack.push(frame);
-              return '';
+              return open;
             }
             invariant(
               false,
-              'ReactDOMServer does not yet support the event API.',
+              'ReactDOMServer does not yet support the fundamental API.',
             );
           }
           // eslint-disable-next-line-no-fallthrough

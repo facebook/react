@@ -12,7 +12,8 @@
 let React;
 let ReactFeatureFlags;
 let ReactDOM;
-let Scroll;
+let ScrollResponder;
+let useScrollListener;
 
 const createEvent = (type, data) => {
   const event = document.createEvent('CustomEvent');
@@ -34,7 +35,8 @@ describe('Scroll event responder', () => {
     ReactFeatureFlags.enableFlareAPI = true;
     React = require('react');
     ReactDOM = require('react-dom');
-    Scroll = require('react-events/scroll').Scroll;
+    ScrollResponder = require('react-events/scroll').ScrollResponder;
+    useScrollListener = require('react-events/scroll').useScrollListener;
 
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -52,12 +54,15 @@ describe('Scroll event responder', () => {
     beforeEach(() => {
       onScroll = jest.fn();
       ref = React.createRef();
-      const element = (
-        <Scroll disabled={true} onScroll={onScroll}>
-          <div ref={ref} />
-        </Scroll>
-      );
-      ReactDOM.render(element, container);
+      const Component = () => {
+        useScrollListener({
+          onScroll,
+        });
+        return (
+          <div ref={ref} responders={<ScrollResponder disabled={true} />} />
+        );
+      };
+      ReactDOM.render(<Component />, container);
     });
 
     it('prevents custom events being dispatched', () => {
@@ -72,12 +77,13 @@ describe('Scroll event responder', () => {
     beforeEach(() => {
       onScroll = jest.fn();
       ref = React.createRef();
-      const element = (
-        <Scroll onScroll={onScroll}>
-          <div ref={ref} />
-        </Scroll>
-      );
-      ReactDOM.render(element, container);
+      const Component = () => {
+        useScrollListener({
+          onScroll,
+        });
+        return <div ref={ref} responders={<ScrollResponder />} />;
+      };
+      ReactDOM.render(<Component />, container);
     });
 
     describe('is called after "scroll" event', () => {
@@ -222,12 +228,13 @@ describe('Scroll event responder', () => {
     beforeEach(() => {
       onScrollDragStart = jest.fn();
       ref = React.createRef();
-      const element = (
-        <Scroll onScrollDragStart={onScrollDragStart}>
-          <div ref={ref} />
-        </Scroll>
-      );
-      ReactDOM.render(element, container);
+      const Component = () => {
+        useScrollListener({
+          onScrollDragStart,
+        });
+        return <div ref={ref} responders={<ScrollResponder />} />;
+      };
+      ReactDOM.render(<Component />, container);
     });
 
     it('works as expected with touch events', () => {
@@ -255,12 +262,13 @@ describe('Scroll event responder', () => {
     beforeEach(() => {
       onScrollDragEnd = jest.fn();
       ref = React.createRef();
-      const element = (
-        <Scroll onScrollDragEnd={onScrollDragEnd}>
-          <div ref={ref} />
-        </Scroll>
-      );
-      ReactDOM.render(element, container);
+      const Component = () => {
+        useScrollListener({
+          onScrollDragEnd,
+        });
+        return <div ref={ref} responders={<ScrollResponder />} />;
+      };
+      ReactDOM.render(<Component />, container);
     });
 
     it('works as expected with touch events', () => {

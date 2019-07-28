@@ -8,7 +8,6 @@
  */
 
 import type {
-  ReactDOMEventResponder,
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
   PointerType,
@@ -18,11 +17,14 @@ import type {EventPriority} from 'shared/ReactTypes';
 
 import React from 'react';
 
-type ScrollProps = {
-  disabled: boolean,
+type ScrollListenerProps = {
   onScroll: ScrollEvent => void,
   onScrollDragStart: ScrollEvent => void,
   onScrollDragEnd: ScrollEvent => void,
+};
+
+type ScrollProps = {
+  disabled: boolean,
 };
 
 type ScrollState = {
@@ -107,11 +109,11 @@ function createScrollEvent(
 }
 
 function dispatchEvent(
+  eventPropName: string,
   event: ?ReactDOMResponderEvent,
   context: ReactDOMResponderContext,
   state: ScrollState,
   name: ScrollEventType,
-  listener: (e: Object) => void,
   eventPriority: EventPriority,
 ): void {
   const target = ((state.scrollTarget: any): Element | Document);
@@ -125,11 +127,10 @@ function dispatchEvent(
     pointerType,
     direction,
   );
-  context.dispatchEvent(syntheticEvent, listener, eventPriority);
+  context.dispatchEvent(eventPropName, syntheticEvent, eventPriority);
 }
 
-const ScrollResponder: ReactDOMEventResponder = {
-  displayName: 'Scroll',
+const scrollResponderImpl = {
   targetEventTypes,
   getInitialState() {
     return {
@@ -201,27 +202,23 @@ const ScrollResponder: ReactDOMEventResponder = {
 
         if (state.isTouching && !state.isDragging) {
           state.isDragging = true;
-          if (props.onScrollDragStart) {
-            dispatchEvent(
-              event,
-              context,
-              state,
-              'scrolldragstart',
-              props.onScrollDragStart,
-              UserBlockingEvent,
-            );
-          }
-        }
-        if (props.onScroll) {
           dispatchEvent(
+            'onScrollDragStart',
             event,
             context,
             state,
-            'scroll',
-            props.onScroll,
+            'scrolldragstart',
             UserBlockingEvent,
           );
         }
+        dispatchEvent(
+          'onScroll',
+          event,
+          context,
+          state,
+          'scroll',
+          UserBlockingEvent,
+        );
         break;
       }
       case 'keyup': {
@@ -256,13 +253,13 @@ const ScrollResponder: ReactDOMEventResponder = {
       case 'touchcancel':
       case 'touchend': {
         if (state.isTouching) {
-          if (state.isDragging && props.onScrollDragEnd) {
+          if (state.isDragging) {
             dispatchEvent(
+              'onScrollDragEnd',
               event,
               context,
               state,
               'scrolldragend',
-              props.onScrollDragEnd,
               UserBlockingEvent,
             );
           }
@@ -291,8 +288,11 @@ const ScrollResponder: ReactDOMEventResponder = {
   },
 };
 
-export const Scroll = React.unstable_createEvent(ScrollResponder);
+export const ScrollResponder = React.unstable_createResponder(
+  'Scroll',
+  scrollResponderImpl,
+);
 
-export function useScroll(props: ScrollProps): void {
-  React.unstable_useEvent(Scroll, props);
+export function useScrollListener(props: ScrollListenerProps): void {
+  React.unstable_useListener(ScrollResponder, props);
 }

@@ -2712,8 +2712,28 @@ describe('ReactFresh', () => {
     }
   });
 
+  // TODO: we can make this recoverable in the future
+  // if we add a way to track the last attempted element.
+  it('records an unrecoverable error if a root fails on mount', () => {
+    if (__DEV__) {
+      expect(ReactFreshRuntime.hasUnrecoverableErrors()).toBe(false);
+      expect(() => {
+        render(() => {
+          function Hello() {
+            throw new Error('No');
+          }
+          $RefreshReg$(Hello, 'Hello');
+
+          return Hello;
+        });
+      }).toThrow('No');
+      expect(ReactFreshRuntime.hasUnrecoverableErrors()).toBe(true);
+    }
+  });
+
   it('remounts a failed root on update', () => {
     if (__DEV__) {
+      expect(ReactFreshRuntime.hasUnrecoverableErrors()).toBe(false);
       render(() => {
         function Hello() {
           return <h1>Hi</h1>;
@@ -2723,6 +2743,7 @@ describe('ReactFresh', () => {
         return Hello;
       });
       expect(container.innerHTML).toBe('<h1>Hi</h1>');
+      expect(ReactFreshRuntime.hasUnrecoverableErrors()).toBe(false);
 
       // Perform a hot update that fails.
       // This removes the root.
@@ -2735,6 +2756,7 @@ describe('ReactFresh', () => {
         });
       }).toThrow('No');
       expect(container.innerHTML).toBe('');
+      expect(ReactFreshRuntime.hasUnrecoverableErrors()).toBe(false);
 
       // A bad retry
       expect(() => {
@@ -2746,6 +2768,7 @@ describe('ReactFresh', () => {
         });
       }).toThrow('Not yet');
       expect(container.innerHTML).toBe('');
+      expect(ReactFreshRuntime.hasUnrecoverableErrors()).toBe(false);
 
       // Perform a hot update that fixes the error.
       patch(() => {
@@ -2756,6 +2779,7 @@ describe('ReactFresh', () => {
       });
       // This should remount the root.
       expect(container.innerHTML).toBe('<h1>Fixed!</h1>');
+      expect(ReactFreshRuntime.hasUnrecoverableErrors()).toBe(false);
 
       // Verify next hot reload doesn't remount anything.
       let helloNode = container.firstChild;
@@ -2767,6 +2791,7 @@ describe('ReactFresh', () => {
       });
       expect(container.firstChild).toBe(helloNode);
       expect(helloNode.textContent).toBe('Nice.');
+      expect(ReactFreshRuntime.hasUnrecoverableErrors()).toBe(false);
 
       // Break again.
       expect(() => {
@@ -2778,6 +2803,7 @@ describe('ReactFresh', () => {
         });
       }).toThrow('Oops');
       expect(container.innerHTML).toBe('');
+      expect(ReactFreshRuntime.hasUnrecoverableErrors()).toBe(false);
 
       // Perform a hot update that fixes the error.
       patch(() => {
@@ -2788,6 +2814,7 @@ describe('ReactFresh', () => {
       });
       // This should remount the root.
       expect(container.innerHTML).toBe('<h1>At last.</h1>');
+      expect(ReactFreshRuntime.hasUnrecoverableErrors()).toBe(false);
 
       // Check we don't attempt to reverse an intentional unmount.
       ReactDOM.unmountComponentAtNode(container);
@@ -2799,6 +2826,7 @@ describe('ReactFresh', () => {
         $RefreshReg$(Hello, 'Hello');
       });
       expect(container.innerHTML).toBe('');
+      expect(ReactFreshRuntime.hasUnrecoverableErrors()).toBe(false);
     }
   });
 

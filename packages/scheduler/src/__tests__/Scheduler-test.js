@@ -275,6 +275,19 @@ describe('Scheduler', () => {
     },
   );
 
+  it('cancelling a continuation', () => {
+    const task = scheduleCallback(NormalPriority, () => {
+      Scheduler.unstable_yieldValue('Yield');
+      return () => {
+        Scheduler.unstable_yieldValue('Continuation');
+      };
+    });
+
+    expect(Scheduler).toFlushAndYieldThrough(['Yield']);
+    cancelCallback(task);
+    expect(Scheduler).toFlushWithoutYielding();
+  });
+
   it('top-level immediate callbacks fire in a subsequent task', () => {
     scheduleCallback(ImmediatePriority, () =>
       Scheduler.unstable_yieldValue('A'),

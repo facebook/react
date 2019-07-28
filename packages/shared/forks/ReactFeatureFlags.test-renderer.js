@@ -15,10 +15,10 @@ import typeof * as PersistentFeatureFlagsType from './ReactFeatureFlags.persiste
 export const debugRenderPhaseSideEffects = false;
 export const debugRenderPhaseSideEffectsForStrictMode = false;
 export const enableUserTimingAPI = __DEV__;
-export const warnAboutDeprecatedLifecycles = false;
+export const warnAboutDeprecatedLifecycles = true;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
-export const enableProfilerTimer = false;
-export const enableSchedulerTracing = false;
+export const enableProfilerTimer = __PROFILE__;
+export const enableSchedulerTracing = __PROFILE__;
 export const enableSuspenseServerRenderer = false;
 export const disableJavaScriptURLs = false;
 export const disableInputAttributeSyncing = false;
@@ -27,10 +27,13 @@ export const warnAboutShorthandPropertyCollision = false;
 export const enableSchedulerDebugging = false;
 export const warnAboutDeprecatedSetNativeProps = false;
 export const enableFlareAPI = false;
+export const enableFundamentalAPI = false;
 export const enableJSXTransformAPI = false;
 export const warnAboutMissingMockScheduler = false;
 export const revertPassiveEffectsChange = false;
 export const enableUserBlockingEvents = false;
+export const enableSuspenseCallback = false;
+export const warnAboutDefaultPropsOnFunctionComponents = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {

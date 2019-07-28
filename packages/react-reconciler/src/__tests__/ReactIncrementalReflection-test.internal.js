@@ -76,8 +76,7 @@ describe('ReactIncrementalReflection', () => {
     expect(() =>
       expect(Scheduler).toFlushAndYield(['componentDidMount: true']),
     ).toWarnDev(
-      'componentWillMount: Please update the following components ' +
-        'to use componentDidMount instead: Component',
+      'Using UNSAFE_componentWillMount in strict mode is not recommended',
       {withoutStack: true},
     );
 
@@ -116,8 +115,7 @@ describe('ReactIncrementalReflection', () => {
 
     ReactNoop.render(<Foo mount={true} />);
     expect(() => expect(Scheduler).toFlushAndYield(['Component'])).toWarnDev(
-      'componentWillMount: Please update the following components ' +
-        'to use componentDidMount instead: Component',
+      'Using UNSAFE_componentWillMount in strict mode is not recommended',
       {withoutStack: true},
     );
 
@@ -222,10 +220,10 @@ describe('ReactIncrementalReflection', () => {
     expect(() =>
       expect(Scheduler).toFlushAndYield([['componentDidMount', span()]]),
     ).toWarnDev(
-      'componentWillMount: Please update the following components ' +
-        'to use componentDidMount instead: Component' +
-        '\n\ncomponentWillUpdate: Please update the following components ' +
-        'to use componentDidUpdate instead: Component',
+      [
+        'Using UNSAFE_componentWillMount in strict mode is not recommended',
+        'Using UNSAFE_componentWillUpdate in strict mode is not recommended',
+      ],
       {withoutStack: true},
     );
 

@@ -11,14 +11,14 @@ module.exports = {
   get BatchedBridge() {
     return require('./BatchedBridge.js');
   },
-  get ExceptionsManager() {
-    return require('./ExceptionsManager');
-  },
   get Platform() {
     return require('./Platform');
   },
   get RCTEventEmitter() {
     return require('./RCTEventEmitter');
+  },
+  get ReactFiberErrorDialog() {
+    return require('./ReactFiberErrorDialog');
   },
   get ReactNativeViewConfigRegistry() {
     return require('./ReactNativeViewConfigRegistry');
