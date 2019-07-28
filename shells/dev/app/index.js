@@ -8,6 +8,7 @@ import {
   unstable_createRoot as createRoot,
 } from 'react-dom';
 import DeeplyNestedComponents from './DeeplyNestedComponents';
+import Iframe from './Iframe';
 import EditableProps from './EditableProps';
 import ElementTypes from './ElementTypes';
 import Hydration from './Hydration';
@@ -46,6 +47,7 @@ function mountTestApp() {
   mountHelper(Toggle);
   mountHelper(SuspenseTree);
   mountHelper(DeeplyNestedComponents);
+  mountHelper(Iframe);
 }
 
 function unmountTestApp() {

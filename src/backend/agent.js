@@ -185,13 +185,15 @@ export default class Agent extends EventEmitter<{|
 
   getIDForNode(node: Object): number | null {
     for (let rendererID in this._rendererInterfaces) {
-      // A renderer will throw if it can't find a fiber for the specified node.
-      try {
-        const renderer = ((this._rendererInterfaces[
-          (rendererID: any)
-        ]: any): RendererInterface);
-        return renderer.getFiberIDForNative(node, true);
-      } catch (e) {}
+      const renderer = ((this._rendererInterfaces[
+        (rendererID: any)
+      ]: any): RendererInterface);
+
+      const id = renderer.getFiberIDForNative(node, true);
+
+      if (id !== null) {
+        return id;
+      }
     }
     return null;
   }

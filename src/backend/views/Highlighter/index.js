@@ -12,6 +12,8 @@ import type { BackendBridge } from 'src/bridge';
 // It is not currently the mechanism used to highlight React Native views.
 // That is done by the React Native Inspector component.
 
+let iframesListeningTo: Set<HTMLIFrameElement> = new Set();
+
 export default function setupHighlighter(
   bridge: BackendBridge,
   agent: Agent
@@ -26,6 +28,10 @@ export default function setupHighlighter(
   bridge.addListener('stopInspectingNative', stopInspectingNative);
 
   function startInspectingNative() {
+    registerListenersOnWindow(window);
+  }
+
+  function registerListenersOnWindow(window) {
     // This plug-in may run in non-DOM environments (e.g. React Native).
     if (window && typeof window.addEventListener === 'function') {
       window.addEventListener('click', onClick, true);
@@ -40,7 +46,18 @@ export default function setupHighlighter(
 
   function stopInspectingNative() {
     hideOverlay();
+    removeListenersOnWindow(window);
+    iframesListeningTo.forEach(function(frame) {
+      try {
+        removeListenersOnWindow(frame.contentWindow);
+      } catch (error) {
+        // This can error when the iframe is on a cross-origin.
+      }
+    });
+    iframesListeningTo = new Set();
+  }
 
+  function removeListenersOnWindow(window) {
     // This plug-in may run in non-DOM environments (e.g. React Native).
     if (window && typeof window.removeEventListener === 'function') {
       window.removeEventListener('click', onClick, true);
@@ -129,6 +146,19 @@ export default function setupHighlighter(
     event.stopPropagation();
 
     const target = ((event.target: any): HTMLElement);
+
+    if (target.tagName === 'IFRAME') {
+      const iframe: HTMLIFrameElement = (target: any);
+      try {
+        if (!iframesListeningTo.has(iframe)) {
+          const window = iframe.contentWindow;
+          registerListenersOnWindow(window);
+          iframesListeningTo.add(iframe);
+        }
+      } catch (error) {
+        // This can error when the iframe is on a cross-origin.
+      }
+    }
 
     // Don't pass the name explicitly.
     // It will be inferred from DOM tag and Fiber owner.
