@@ -189,10 +189,14 @@ export default class Agent extends EventEmitter<{|
         (rendererID: any)
       ]: any): RendererInterface);
 
-      const id = renderer.getFiberIDForNative(node, true);
-
-      if (id !== null) {
-        return id;
+      try {
+        const id = renderer.getFiberIDForNative(node, true);
+        if (id !== null) {
+          return id;
+        }
+      } catch (error) {
+        // Some old React versions might throw if they can't find a match.
+        // If so we should ignore it...
       }
     }
     return null;
