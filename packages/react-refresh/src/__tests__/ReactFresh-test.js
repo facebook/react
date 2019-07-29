@@ -2943,6 +2943,80 @@ describe('ReactFresh', () => {
     }
   });
 
+  it('updates refs when remounting', () => {
+    if (__DEV__) {
+      const testRef = React.createRef();
+      render(
+        () => {
+          class Hello extends React.Component {
+            getColor() {
+              return 'green';
+            }
+            render() {
+              return <p />;
+            }
+          }
+          $RefreshReg$(Hello, 'Hello');
+          return Hello;
+        },
+        {ref: testRef},
+      );
+      expect(testRef.current.getColor()).toBe('green');
+
+      patch(() => {
+        class Hello extends React.Component {
+          getColor() {
+            return 'orange';
+          }
+          render() {
+            return <p />;
+          }
+        }
+        $RefreshReg$(Hello, 'Hello');
+      });
+      expect(testRef.current.getColor()).toBe('orange');
+
+      patch(() => {
+        const Hello = React.forwardRef((props, ref) => {
+          React.useImperativeHandle(ref, () => ({
+            getColor() {
+              return 'pink';
+            },
+          }));
+          return <p />;
+        });
+        $RefreshReg$(Hello, 'Hello');
+      });
+      expect(testRef.current.getColor()).toBe('pink');
+
+      patch(() => {
+        const Hello = React.forwardRef((props, ref) => {
+          React.useImperativeHandle(ref, () => ({
+            getColor() {
+              return 'yellow';
+            },
+          }));
+          return <p />;
+        });
+        $RefreshReg$(Hello, 'Hello');
+      });
+      expect(testRef.current.getColor()).toBe('yellow');
+
+      patch(() => {
+        const Hello = React.forwardRef((props, ref) => {
+          React.useImperativeHandle(ref, () => ({
+            getColor() {
+              return 'yellow';
+            },
+          }));
+          return <p />;
+        });
+        $RefreshReg$(Hello, 'Hello');
+      });
+      expect(testRef.current.getColor()).toBe('yellow');
+    }
+  });
+
   it('remounts on conversion from class to function and back', () => {
     if (__DEV__) {
       let HelloV1 = render(() => {
