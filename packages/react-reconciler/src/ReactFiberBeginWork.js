@@ -2586,6 +2586,7 @@ function remountFiber(
     newWorkInProgress.index = oldWorkInProgress.index;
     newWorkInProgress.sibling = oldWorkInProgress.sibling;
     newWorkInProgress.return = oldWorkInProgress.return;
+    newWorkInProgress.ref = oldWorkInProgress.ref;
 
     // Replace the child/sibling pointers above it.
     if (oldWorkInProgress === returnFiber.child) {
