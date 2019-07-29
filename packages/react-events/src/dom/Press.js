@@ -19,8 +19,6 @@ import {DiscreteEvent, UserBlockingEvent} from 'shared/ReactTypes';
 
 type PressListenerProps = {|
   onContextMenu: (e: PressEvent) => void,
-  onLongPress: (e: PressEvent) => void,
-  onLongPressChange: boolean => void,
   onPress: (e: PressEvent) => void,
   onPressChange: boolean => void,
   onPressEnd: (e: PressEvent) => void,
@@ -30,7 +28,6 @@ type PressListenerProps = {|
 
 type PressProps = {|
   disabled: boolean,
-  delayLongPress: number,
   delayPressEnd: number,
   delayPressStart: number,
   pressRetentionOffset: {
@@ -42,8 +39,6 @@ type PressProps = {|
   preventContextMenu: boolean,
   preventDefault: boolean,
   stopPropagation: boolean,
-  enableLongPress: boolean,
-  longPressShouldCancelPress: () => boolean,
 |};
 
 type PressState = {
@@ -54,10 +49,8 @@ type PressState = {
   addedRootEvents: boolean,
   isActivePressed: boolean,
   isActivePressStart: boolean,
-  isLongPressed: boolean,
   isPressed: boolean,
   isPressWithinResponderRegion: boolean,
-  longPressTimeout: null | number,
   pointerType: PointerType,
   pressTarget: null | Element | Document,
   pressEndTimeout: null | number,
@@ -86,8 +79,6 @@ type PressEventType =
   | 'pressstart'
   | 'pressend'
   | 'presschange'
-  | 'longpress'
-  | 'longpresschange'
   | 'contextmenu';
 
 type PressEvent = {|
@@ -117,7 +108,6 @@ const isMac =
     : false;
 const DEFAULT_PRESS_END_DELAY_MS = 0;
 const DEFAULT_PRESS_START_DELAY_MS = 0;
-const DEFAULT_LONG_PRESS_DELAY_MS = 500;
 const DEFAULT_PRESS_RETENTION_OFFSET = {
   bottom: 20,
   top: 20,
@@ -250,14 +240,6 @@ function dispatchPressChangeEvent(
   context.dispatchEvent('onPressChange', bool, DiscreteEvent);
 }
 
-function dispatchLongPressChangeEvent(
-  context: ReactDOMResponderContext,
-  state: PressState,
-): void {
-  const bool = state.isLongPressed;
-  context.dispatchEvent('onLongPressChange', bool, DiscreteEvent);
-}
-
 function activate(event: ReactDOMResponderEvent, context, props, state) {
   const nativeEvent: any = event.nativeEvent;
   const {clientX: x, clientY: y} = state.touchEvent || nativeEvent;
@@ -281,15 +263,10 @@ function activate(event: ReactDOMResponderEvent, context, props, state) {
 }
 
 function deactivate(event: ?ReactDOMResponderEvent, context, props, state) {
-  const wasLongPressed = state.isLongPressed;
   state.isActivePressed = false;
-  state.isLongPressed = false;
 
   dispatchEvent('onPressEnd', event, context, state, 'pressend', DiscreteEvent);
   dispatchPressChangeEvent(context, state);
-  if (wasLongPressed && props.enableLongPress) {
-    dispatchLongPressChangeEvent(context, state);
-  }
 }
 
 function dispatchPressStartEvents(
@@ -308,27 +285,6 @@ function dispatchPressStartEvents(
   const dispatch = () => {
     state.isActivePressStart = true;
     activate(event, context, props, state);
-
-    if (!state.isLongPressed && props.enableLongPress) {
-      const delayLongPress = calculateDelayMS(
-        props.delayLongPress,
-        10,
-        DEFAULT_LONG_PRESS_DELAY_MS,
-      );
-      state.longPressTimeout = context.setTimeout(() => {
-        state.isLongPressed = true;
-        state.longPressTimeout = null;
-        dispatchEvent(
-          'onLongPress',
-          event,
-          context,
-          state,
-          'longpress',
-          DiscreteEvent,
-        );
-        dispatchLongPressChangeEvent(context, state);
-      }, delayLongPress);
-    }
   };
 
   if (!state.isActivePressStart) {
@@ -359,11 +315,6 @@ function dispatchPressEndEvents(
 
   state.isActivePressStart = false;
   state.isPressed = false;
-
-  if (state.longPressTimeout !== null) {
-    context.clearTimeout(state.longPressTimeout);
-    state.longPressTimeout = null;
-  }
 
   if (!wasActivePressStart && state.pressStartTimeout !== null) {
     context.clearTimeout(state.pressStartTimeout);
@@ -596,10 +547,8 @@ const pressResponderImpl = {
       addedRootEvents: false,
       isActivePressed: false,
       isActivePressStart: false,
-      isLongPressed: false,
       isPressed: false,
       isPressWithinResponderRegion: true,
-      longPressTimeout: null,
       pointerType: '',
       pressEndTimeout: null,
       pressStartTimeout: null,
@@ -823,19 +772,6 @@ const pressResponderImpl = {
               'pressmove',
               UserBlockingEvent,
             );
-            if (
-              state.activationPosition != null &&
-              state.longPressTimeout != null
-            ) {
-              const deltaX = state.activationPosition.x - nativeEvent.clientX;
-              const deltaY = state.activationPosition.y - nativeEvent.clientY;
-              if (
-                Math.hypot(deltaX, deltaY) > 10 &&
-                state.longPressTimeout != null
-              ) {
-                context.clearTimeout(state.longPressTimeout);
-              }
-            }
           } else {
             dispatchPressStartEvents(event, context, props, state);
           }
@@ -900,7 +836,6 @@ const pressResponderImpl = {
             }
           }
 
-          const wasLongPressed = state.isLongPressed;
           const pressTarget = state.pressTarget;
           dispatchPressEndEvents(event, context, props, state);
 
@@ -928,23 +863,14 @@ const pressResponderImpl = {
               }
             }
             if (state.isPressWithinResponderRegion && button !== 1) {
-              if (
-                !(
-                  wasLongPressed &&
-                  props.enableLongPress &&
-                  props.longPressShouldCancelPress &&
-                  props.longPressShouldCancelPress()
-                )
-              ) {
-                dispatchEvent(
-                  'onPress',
-                  event,
-                  context,
-                  state,
-                  'press',
-                  DiscreteEvent,
-                );
-              }
+              dispatchEvent(
+                'onPress',
+                event,
+                context,
+                state,
+                'press',
+                DiscreteEvent,
+              );
             }
           }
           state.touchEvent = null;

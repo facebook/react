@@ -3,9 +3,9 @@
 The `Press` module responds to press events on the element it wraps. Press
 events are dispatched for `mouse`, `pen`, `touch`, `trackpad`, and `keyboard`
 pointer types. Press events are only dispatched for keyboards when pressing the
-Enter or Spacebar keys. If neither `onPress` nor `onLongPress` are called, this
-signifies that the press ended outside of the element hit bounds (i.e., the user
-aborted the press).
+Enter or Spacebar keys. If `onPress` is not called, this signifies that the
+press ended outside of the element hit bounds (i.e., the user aborted the
+press).
 
 Press events do not propagate between `Press` event responders.
 
@@ -17,7 +17,6 @@ const Button = (props) => (
     <Press
       onPress={props.onPress}
       onPressChange={setPressed}
-      onLongPress={props.onLongPress}
     >
       <div
         {...props}
@@ -60,8 +59,6 @@ type PressEvent = {
     | 'pressend'
     | 'presschange'
     | 'pressmove'
-    | 'longpress'
-    | 'longpresschange'
     | 'contextmenu',
   x: number,
   y: number
@@ -76,10 +73,6 @@ type PressOffset = {
 ```
 
 ## Props
-
-### delayLongPress: number = 500ms
-
-The duration of a press before `onLongPress` and `onLongPressChange` are called.
 
 ### delayPressEnd: number
 
@@ -101,27 +94,10 @@ Disables all `Press` events.
 Called when the context menu is shown. When a press is active, the context menu
 will only be shown (and the press cancelled) if `preventDefault` is `false`.
 
-### onLongPress: (e: PressEvent) => void
-
-Called once the element has been pressed for the length of `delayLongPress`. If
-the press point moves more than 10px `onLongPress` is cancelled.
-
-### onLongPressChange: boolean => void
-
-Called when the element changes long-press state.
-
-### longPressShouldCancelPress: () => boolean
-
-Determines whether calling `onPress` should be cancelled if `onLongPress` or
-`onLongPressChange` have already been called. Default is `false`.
-
 ### onPress: (e: PressEvent) => void
 
-Called immediately after a press is released, unless either 1) the press is
-released outside the hit bounds of the element (accounting for
-`pressRetentionOffset`), or 2) the press was a long press,
-and `onLongPress` or `onLongPressChange` props are provided, and
-`onLongPressCancelsPress()` is `true`.
+Called immediately after a press is released, unless the press is released
+outside the hit bounds of the element (accounting for `pressRetentionOffset`.
 
 ### onPressChange: boolean => void
 
@@ -164,7 +140,6 @@ is still called.
 
 Whether to `preventDefault()` native events. Native behavior is prevented by
 default. If an anchor is the child of `Press`, internal and external navigation
-should be performed in `onPress`/`onLongPress`. To rely on native behavior
-instead, set `preventDefault` to `false`, but be aware that native behavior will
-take place immediately after interaction without respect for delays or long
-press.
+should be performed in `onPress`. To rely on native behavior instead, set
+`preventDefault` to `false`, but be aware that native behavior will take place
+immediately after interaction without respect for delays or long press.

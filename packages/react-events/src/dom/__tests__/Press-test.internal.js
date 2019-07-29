@@ -928,258 +928,6 @@ describe('Event responder: Press', () => {
     // });
   });
 
-  describe('onLongPress', () => {
-    let onLongPress, ref;
-
-    beforeEach(() => {
-      onLongPress = jest.fn();
-      ref = React.createRef();
-      const Component = () => {
-        usePressListener({
-          onLongPress,
-        });
-        return (
-          <div
-            ref={ref}
-            responders={<PressResponder enableLongPress={true} />}
-          />
-        );
-      };
-      ReactDOM.render(<Component />, container);
-    });
-
-    it('is called if "pointerdown" lasts default delay', () => {
-      ref.current.dispatchEvent(
-        createEvent('pointerdown', {pointerType: 'pen'}),
-      );
-      ref.current.dispatchEvent(
-        createTouchEvent('touchstart', 0, {
-          target: ref.current,
-        }),
-      );
-      jest.advanceTimersByTime(DEFAULT_LONG_PRESS_DELAY - 1);
-      expect(onLongPress).not.toBeCalled();
-      jest.advanceTimersByTime(1);
-      expect(onLongPress).toHaveBeenCalledTimes(1);
-      expect(onLongPress).toHaveBeenCalledWith(
-        expect.objectContaining({pointerType: 'pen', type: 'longpress'}),
-      );
-    });
-
-    it('is not called if "pointerup" is dispatched before delay', () => {
-      ref.current.dispatchEvent(createEvent('pointerdown'));
-      jest.advanceTimersByTime(DEFAULT_LONG_PRESS_DELAY - 1);
-      ref.current.dispatchEvent(createEvent('pointerup'));
-      jest.advanceTimersByTime(1);
-      expect(onLongPress).not.toBeCalled();
-    });
-
-    it('is called if valid "keydown" lasts default delay', () => {
-      ref.current.dispatchEvent(createKeyboardEvent('keydown', {key: 'Enter'}));
-      jest.advanceTimersByTime(DEFAULT_LONG_PRESS_DELAY - 1);
-      expect(onLongPress).not.toBeCalled();
-      jest.advanceTimersByTime(1);
-      expect(onLongPress).toHaveBeenCalledTimes(1);
-      expect(onLongPress).toHaveBeenCalledWith(
-        expect.objectContaining({pointerType: 'keyboard', type: 'longpress'}),
-      );
-    });
-
-    it('is not called if valid "keyup" is dispatched before delay', () => {
-      ref.current.dispatchEvent(createKeyboardEvent('keydown', {key: 'Enter'}));
-      jest.advanceTimersByTime(DEFAULT_LONG_PRESS_DELAY - 1);
-      ref.current.dispatchEvent(createKeyboardEvent('keyup', {key: 'Enter'}));
-      jest.advanceTimersByTime(1);
-      expect(onLongPress).not.toBeCalled();
-    });
-
-    it('is not called when a large enough move occurs before delay', () => {
-      ref.current.getBoundingClientRect = () => ({
-        top: 0,
-        left: 0,
-        bottom: 100,
-        right: 100,
-      });
-      ref.current.dispatchEvent(
-        createEvent('pointerdown', {clientX: 10, clientY: 10}),
-      );
-      ref.current.dispatchEvent(
-        createEvent('pointermove', {clientX: 50, clientY: 50}),
-      );
-      jest.runAllTimers();
-      expect(onLongPress).not.toBeCalled();
-    });
-
-    describe('delayLongPress', () => {
-      it('can be configured', () => {
-        const Component = () => {
-          usePressListener({
-            onLongPress,
-          });
-          return (
-            <div
-              ref={ref}
-              responders={
-                <PressResponder delayLongPress={2000} enableLongPress={true} />
-              }
-            />
-          );
-        };
-        ReactDOM.render(<Component />, container);
-
-        ref.current.dispatchEvent(createEvent('pointerdown'));
-        jest.advanceTimersByTime(1999);
-        expect(onLongPress).not.toBeCalled();
-        jest.advanceTimersByTime(1);
-        expect(onLongPress).toHaveBeenCalledTimes(1);
-      });
-
-      it('uses 10ms minimum delay length', () => {
-        const Component = () => {
-          usePressListener({
-            onLongPress,
-          });
-          return (
-            <div
-              ref={ref}
-              responders={
-                <PressResponder delayLongPress={0} enableLongPress={true} />
-              }
-            />
-          );
-        };
-        ReactDOM.render(<Component />, container);
-
-        ref.current.dispatchEvent(createEvent('pointerdown'));
-        jest.advanceTimersByTime(9);
-        expect(onLongPress).not.toBeCalled();
-        jest.advanceTimersByTime(1);
-        expect(onLongPress).toHaveBeenCalledTimes(1);
-      });
-
-      it('compounds with "delayPressStart"', () => {
-        const delayPressStart = 100;
-        const Component = () => {
-          usePressListener({
-            onLongPress,
-          });
-          return (
-            <div
-              ref={ref}
-              responders={
-                <PressResponder
-                  delayPressStart={delayPressStart}
-                  enableLongPress={true}
-                />
-              }
-            />
-          );
-        };
-        ReactDOM.render(<Component />, container);
-
-        ref.current.dispatchEvent(createEvent('pointerdown'));
-        jest.advanceTimersByTime(
-          delayPressStart + DEFAULT_LONG_PRESS_DELAY - 1,
-        );
-        expect(onLongPress).not.toBeCalled();
-        jest.advanceTimersByTime(1);
-        expect(onLongPress).toHaveBeenCalledTimes(1);
-      });
-    });
-  });
-
-  describe('onLongPressChange', () => {
-    it('is called when long press state changes', () => {
-      const onLongPressChange = jest.fn();
-      const ref = React.createRef();
-      const Component = () => {
-        usePressListener({
-          onLongPressChange,
-        });
-        return (
-          <div
-            ref={ref}
-            responders={<PressResponder enableLongPress={true} />}
-          />
-        );
-      };
-      ReactDOM.render(<Component />, container);
-
-      ref.current.dispatchEvent(createEvent('pointerdown'));
-      jest.advanceTimersByTime(DEFAULT_LONG_PRESS_DELAY);
-      expect(onLongPressChange).toHaveBeenCalledTimes(1);
-      expect(onLongPressChange).toHaveBeenCalledWith(true);
-      ref.current.dispatchEvent(createEvent('pointerup'));
-      expect(onLongPressChange).toHaveBeenCalledTimes(2);
-      expect(onLongPressChange).toHaveBeenCalledWith(false);
-    });
-
-    it('is called after delayed onPressEnd', () => {
-      const onLongPressChange = jest.fn();
-      const ref = React.createRef();
-      const Component = () => {
-        usePressListener({
-          onLongPressChange,
-        });
-        return (
-          <div
-            ref={ref}
-            responders={
-              <PressResponder delayPressEnd={500} enableLongPress={true} />
-            }
-          />
-        );
-      };
-      ReactDOM.render(<Component />, container);
-
-      ref.current.dispatchEvent(createEvent('pointerdown'));
-      jest.advanceTimersByTime(DEFAULT_LONG_PRESS_DELAY);
-      expect(onLongPressChange).toHaveBeenCalledTimes(1);
-      expect(onLongPressChange).toHaveBeenCalledWith(true);
-      ref.current.dispatchEvent(createEvent('pointerup'));
-      jest.advanceTimersByTime(499);
-      expect(onLongPressChange).toHaveBeenCalledTimes(1);
-      jest.advanceTimersByTime(1);
-      expect(onLongPressChange).toHaveBeenCalledTimes(2);
-      expect(onLongPressChange).toHaveBeenCalledWith(false);
-    });
-  });
-
-  describe('longPressShouldCancelPress', () => {
-    it('if true it cancels "onPress"', () => {
-      const onPress = jest.fn();
-      const onPressChange = jest.fn();
-      const ref = React.createRef();
-      const Component = () => {
-        usePressListener({
-          onLongPress: () => {},
-          onPressChange,
-          onPress,
-        });
-        return (
-          <div
-            ref={ref}
-            responders={
-              <PressResponder
-                longPressShouldCancelPress={() => true}
-                enableLongPress={true}
-              />
-            }
-          />
-        );
-      };
-      ReactDOM.render(<Component />, container);
-
-      // NOTE: onPressChange behavior should not be affected
-      ref.current.dispatchEvent(createEvent('pointerdown'));
-      expect(onPressChange).toHaveBeenCalledTimes(1);
-      jest.advanceTimersByTime(DEFAULT_LONG_PRESS_DELAY);
-      ref.current.dispatchEvent(createEvent('pointerup'));
-      expect(onPress).not.toBeCalled();
-      expect(onPressChange).toHaveBeenCalledTimes(2);
-    });
-  });
-
   describe('onPressMove', () => {
     it('is called after "pointermove"', () => {
       const onPressMove = jest.fn();
@@ -1621,7 +1369,6 @@ describe('Event responder: Press', () => {
 
         const Component = () => {
           usePressListener({
-            onLongPress: createEventHandler('onLongPress'),
             onPress: createEventHandler('onPress'),
             onPressChange: createEventHandler('onPressChange'),
             onPressMove: createEventHandler('onPressMove'),
@@ -1632,11 +1379,7 @@ describe('Event responder: Press', () => {
             <div
               ref={ref}
               responders={
-                <PressResponder
-                  delayPressStart={500}
-                  delayPressEnd={500}
-                  enableLongPress={true}
-                />
+                <PressResponder delayPressStart={500} delayPressEnd={500} />
               }
             />
           );
@@ -2243,7 +1986,6 @@ describe('Event responder: Press', () => {
 
         const Component = () => {
           usePressListener({
-            onLongPress: createEventHandler('onLongPress'),
             onPress: createEventHandler('onPress'),
             onPressChange: createEventHandler('onPressChange'),
             onPressMove: createEventHandler('onPressMove'),
@@ -2254,11 +1996,7 @@ describe('Event responder: Press', () => {
             <div
               ref={ref}
               responders={
-                <PressResponder
-                  delayPressStart={500}
-                  delayPressEnd={500}
-                  enableLongPress={true}
-                />
+                <PressResponder delayPressStart={500} delayPressEnd={500} />
               }
             />
           );
@@ -2378,8 +2116,6 @@ describe('Event responder: Press', () => {
 
       const Component = () => {
         usePressListener({
-          onLongPress: createEventHandler('onLongPress'),
-          onLongPressChange: createEventHandler('onLongPressChange'),
           onPress: createEventHandler('onPress'),
           onPressChange: createEventHandler('onPressChange'),
           onPressMove: createEventHandler('onPressMove'),
@@ -2390,11 +2126,7 @@ describe('Event responder: Press', () => {
           <div
             ref={ref}
             responders={
-              <PressResponder
-                delayPressStart={250}
-                delayPressEnd={250}
-                enableLongPress={true}
-              />
+              <PressResponder delayPressStart={250} delayPressEnd={250} />
             }
           />
         );
@@ -2443,12 +2175,9 @@ describe('Event responder: Press', () => {
       expect(events).toEqual([
         'onPressStart',
         'onPressChange',
-        'onLongPress',
-        'onLongPressChange',
         'onPress',
         'onPressEnd',
         'onPressChange',
-        'onLongPressChange',
       ]);
     });
   });
@@ -2554,40 +2283,6 @@ describe('Event responder: Press', () => {
         ref.current.dispatchEvent(
           createEvent('pointerup', {clientX: 10, clientY: 10}),
         );
-        expect(fn).toHaveBeenCalledTimes(1);
-      });
-
-      it('for onLongPress', () => {
-        const ref = React.createRef();
-        const fn = jest.fn();
-
-        const Inner = () => {
-          usePressListener({
-            onLongPress: fn,
-          });
-          return (
-            <div
-              ref={ref}
-              responders={<PressResponder enableLongPress={true} />}
-            />
-          );
-        };
-
-        const Outer = () => {
-          usePressListener({
-            onLongPress: fn,
-          });
-          return (
-            <div responders={<PressResponder enableLongPress={true} />}>
-              <Inner />
-            </div>
-          );
-        };
-        ReactDOM.render(<Outer />, container);
-
-        ref.current.dispatchEvent(createEvent('pointerdown'));
-        jest.advanceTimersByTime(DEFAULT_LONG_PRESS_DELAY);
-        ref.current.dispatchEvent(createEvent('pointerup'));
         expect(fn).toHaveBeenCalledTimes(1);
       });
 
@@ -2863,22 +2558,14 @@ describe('Event responder: Press', () => {
 
   describe('responder cancellation', () => {
     it('ends on "pointercancel", "touchcancel", "scroll", and "dragstart"', () => {
-      const onLongPress = jest.fn();
       const onPressEnd = jest.fn();
       const ref = React.createRef();
 
       const Component = () => {
         usePressListener({
-          onLongPress,
           onPressEnd,
         });
-        return (
-          <a
-            href="#"
-            ref={ref}
-            responders={<PressResponder enableLongPress={true} />}
-          />
-        );
+        return <a href="#" ref={ref} responders={<PressResponder />} />;
       };
       ReactDOM.render(<Component />, container);
 
@@ -2890,8 +2577,6 @@ describe('Event responder: Press', () => {
       );
       ref.current.dispatchEvent(createEvent('scroll'));
       expect(onPressEnd).toHaveBeenCalledTimes(1);
-      jest.runAllTimers();
-      expect(onLongPress).not.toBeCalled();
 
       onPressEnd.mockReset();
 
@@ -2903,9 +2588,6 @@ describe('Event responder: Press', () => {
       );
       ref.current.dispatchEvent(createEvent('scroll'));
       expect(onPressEnd).toHaveBeenCalledTimes(0);
-      jest.runAllTimers();
-
-      onLongPress.mockReset();
 
       // When pointer events are supported
       ref.current.dispatchEvent(
@@ -2919,10 +2601,7 @@ describe('Event responder: Press', () => {
         }),
       );
       expect(onPressEnd).toHaveBeenCalledTimes(1);
-      jest.runAllTimers();
-      expect(onLongPress).not.toBeCalled();
 
-      onLongPress.mockReset();
       onPressEnd.mockReset();
 
       // Touch fallback
@@ -2937,18 +2616,13 @@ describe('Event responder: Press', () => {
         }),
       );
       expect(onPressEnd).toHaveBeenCalledTimes(1);
-      jest.runAllTimers();
-      expect(onLongPress).not.toBeCalled();
 
-      onLongPress.mockReset();
       onPressEnd.mockReset();
 
       // Mouse fallback
       ref.current.dispatchEvent(createEvent('mousedown'));
       ref.current.dispatchEvent(createEvent('dragstart'));
       expect(onPressEnd).toHaveBeenCalledTimes(1);
-      jest.runAllTimers();
-      expect(onLongPress).not.toBeCalled();
     });
   });
 
@@ -3059,15 +2733,9 @@ describe('Event responder: Press', () => {
         onPressStart: logEvent,
         onPressEnd: logEvent,
         onPressMove: logEvent,
-        onLongPress: logEvent,
         onPress: logEvent,
       });
-      return (
-        <button
-          ref={ref}
-          responders={<PressResponder enableLongPress={true} />}
-        />
-      );
+      return <button ref={ref} responders={<PressResponder />} />;
     };
     ReactDOM.render(<Component />, container);
 
@@ -3139,18 +2807,6 @@ describe('Event responder: Press', () => {
       },
       {
         pointerType: 'mouse',
-        pageX: 15,
-        pageY: 16,
-        screenX: 20,
-        screenY: 21,
-        clientX: 30,
-        clientY: 31,
-        target: ref.current,
-        timeStamp: timeStamps[0] + DEFAULT_LONG_PRESS_DELAY,
-        type: 'longpress',
-      },
-      {
-        pointerType: 'mouse',
         pageX: 16,
         pageY: 17,
         screenX: 21,
@@ -3158,7 +2814,7 @@ describe('Event responder: Press', () => {
         clientX: 31,
         clientY: 32,
         target: ref.current,
-        timeStamp: timeStamps[2],
+        timeStamp: timeStamps[1],
         type: 'pressmove',
       },
       {
@@ -3170,7 +2826,7 @@ describe('Event responder: Press', () => {
         clientX: 32,
         clientY: 33,
         target: ref.current,
-        timeStamp: timeStamps[3],
+        timeStamp: timeStamps[2],
         type: 'pressend',
       },
       {
@@ -3194,7 +2850,7 @@ describe('Event responder: Press', () => {
         clientX: 33,
         clientY: 34,
         target: ref.current,
-        timeStamp: timeStamps[5],
+        timeStamp: timeStamps[4],
         type: 'pressstart',
       },
     ]);
