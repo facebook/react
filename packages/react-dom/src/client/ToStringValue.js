@@ -6,7 +6,6 @@
  *
  * @flow
  */
-import trustedTypesAwareToString from '../shared/trustedTypesAwareToString';
 
 export opaque type ToStringValue =
   | boolean
@@ -20,7 +19,7 @@ export opaque type ToStringValue =
 // around this limitation, we use an opaque type that can only be obtained by
 // passing the value through getToStringValue first.
 export function toString(value: ToStringValue): string {
-  return trustedTypesAwareToString(value);
+  return '' + (value: any);
 }
 
 export function getToStringValue(value: mixed): ToStringValue {
@@ -34,5 +33,42 @@ export function getToStringValue(value: mixed): ToStringValue {
     default:
       // function, symbol are assigned as empty strings
       return '';
+  }
+}
+
+/**
+ * Returns true only if Trusted Types are available in global object and the value
+ * is a trusted type.
+ */
+function isTrustedTypesValue(value: any): boolean {
+  // $FlowExpectedError - TrustedTypes are defined only in some browsers or with polyfill
+  if (typeof TrustedTypes === 'undefined') {
+    return false;
+  } else {
+    return (
+      TrustedTypes.isHTML(value) ||
+      TrustedTypes.isScript(value) ||
+      TrustedTypes.isScriptURL(value) ||
+      TrustedTypes.isURL(value)
+    );
+  }
+}
+
+/** Trusted value is a wrapper for "safe" values which can be assigned to DOM execution sinks. */
+export opaque type TrustedValue: {toString(): string} = {toString(): string};
+
+/**
+ * We allow passing objects with toString method as element attributes or in dangerouslySetInnerHTML
+ * and we do validations that the value is safe. Once we do validation we want to use the validated
+ * value instead of the object (because object.toString may return something else on next call).
+ *
+ * If application uses Trusted Types we don't stringify trusted values, but preserve them as objects.
+ */
+export function trustedTypesAwareToString(value: any): string | TrustedValue {
+  // fast-path string values as it's most frequent usage of the function
+  if (typeof value !== 'string' && isTrustedTypesValue(value)) {
+    return value;
+  } else {
+    return '' + value;
   }
 }

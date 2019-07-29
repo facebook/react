@@ -85,7 +85,7 @@ import possibleStandardNames from '../shared/possibleStandardNames';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
-import trustedTypesAwareToString from '../shared/trustedTypesAwareToString';
+import {trustedTypesAwareToString} from './ToStringValue';
 
 import {enableFlareAPI} from 'shared/ReactFeatureFlags';
 
@@ -416,8 +416,24 @@ export function createElement(
         type,
       );
     }
-
-    if (typeof props.is === 'string') {
+    if (type === 'script') {
+      // Create the script via .innerHTML so its "parser-inserted" flag is
+      // set to true and it does not execute
+      const div = ownerDocument.createElement('div');
+      if (__DEV__) {
+        warningWithoutStack(
+          false,
+          'Encountered script tag while rendering React component. ' +
+            'Scripts inside React components are parser inserted into document ' +
+            'and they are never executed. Furthemore rendering script nodes ' +
+            'inside components breaks when using Trusted Types.',
+        );
+      }
+      div.innerHTML = '<script><' + '/script>'; // eslint-disable-line
+      // This is guaranteed to yield a script element.
+      const firstChild = ((div.firstChild: any): HTMLScriptElement);
+      domElement = div.removeChild(firstChild);
+    } else if (typeof props.is === 'string') {
       // $FlowIssue `createElement` should be updated for Web Components
       domElement = ownerDocument.createElement(type, {is: props.is});
     } else {

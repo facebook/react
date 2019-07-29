@@ -136,6 +136,8 @@ describe('ReactEmptyComponent', () => {
   });
 
   it('should distinguish between a script placeholder and an actual script tag', () => {
+    const consoleSpy = spyOnDev(console, 'error');
+
     const instance1 = (
       <TogglingComponent firstComponent={null} secondComponent={'script'} />
     );
@@ -161,6 +163,14 @@ describe('ReactEmptyComponent', () => {
       expect.objectContaining({tagName: 'SCRIPT'}),
     );
     expect(log).toHaveBeenNthCalledWith(4, null);
+    if (__DEV__) {
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'Warning: Encountered script tag while rendering React component. ' +
+          'Scripts inside React components are parser inserted into document ' +
+          'and they are never executed. Furthemore rendering script nodes ' +
+          'inside components breaks when using Trusted Types.',
+      );
+    }
   });
 
   it(

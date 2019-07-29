@@ -16,8 +16,9 @@ import {
   OVERLOADED_BOOLEAN,
 } from '../shared/DOMProperty';
 import sanitizeURL from '../shared/sanitizeURL';
-import trustedTypesAwareToString from '../shared/trustedTypesAwareToString';
+import {trustedTypesAwareToString} from './ToStringValue';
 import {disableJavaScriptURLs} from 'shared/ReactFeatureFlags';
+import {setAttribute, setAttributeNS} from './setAttribute';
 
 import type {PropertyInfo} from '../shared/DOMProperty';
 
@@ -143,7 +144,7 @@ export function setValueForProperty(
       if (value === null) {
         node.removeAttribute(attributeName);
       } else {
-        node.setAttribute(attributeName, trustedTypesAwareToString(value));
+        setAttribute(node, attributeName, trustedTypesAwareToString(value));
       }
     }
     return;
@@ -177,13 +178,13 @@ export function setValueForProperty(
       // ('' + value) makes it output the correct toString()-value.
       attributeValue = trustedTypesAwareToString(value);
       if (propertyInfo.sanitizeURL) {
-        sanitizeURL('' + attributeValue);
+        sanitizeURL('' + attributeValue.toString());
       }
     }
     if (attributeNamespace) {
-      node.setAttributeNS(attributeNamespace, attributeName, attributeValue);
+      setAttributeNS(node, attributeNamespace, attributeName, attributeValue);
     } else {
-      node.setAttribute(attributeName, attributeValue);
+      setAttribute(node, attributeName, attributeValue);
     }
   }
 }

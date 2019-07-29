@@ -10,6 +10,7 @@
 import {Namespaces} from '../shared/DOMNamespaces';
 import createMicrosoftUnsafeLocalFunction from '../shared/createMicrosoftUnsafeLocalFunction';
 import warningWithoutStack from 'shared/warningWithoutStack';
+import type {TrustedValue} from './ToStringValue';
 
 // SVG temp container for IE lacking innerHTML
 let reusableSVGContainer;
@@ -23,17 +24,16 @@ let reusableSVGContainer;
  */
 const setInnerHTML = createMicrosoftUnsafeLocalFunction(function(
   node: Element,
-  html: string,
+  html: string | TrustedValue,
 ): void {
   // IE does not have innerHTML for SVG nodes, so instead we inject the
   // new markup in a temp node and then move the child nodes across into
   // the target node
-  if (node.namespaceURI === Namespaces.svg && !('innerHTML' in node)) {
-    reusableSVGContainer =
-      reusableSVGContainer || document.createElement('div');
+  if (node.namespaceURI === Namespaces.svg) {
     if (__DEV__) {
       warningWithoutStack(
-        typeof window.TrustedTypes === 'undefined',
+        // $FlowExpectedError - TrustedTypes are defined only in some browsers or with polyfill
+        typeof TrustedTypes === 'undefined',
         "Using 'dangerouslySetInnerHTML' in an svg element with " +
           'Trusted Types enabled in an Internet Explorer will cause ' +
           'the trusted value to be converted to string. Assigning string ' +
@@ -42,16 +42,20 @@ const setInnerHTML = createMicrosoftUnsafeLocalFunction(function(
           'on the enclosing div instead.',
       );
     }
-    reusableSVGContainer.innerHTML = '<svg>' + html + '</svg>';
-    const svgNode = reusableSVGContainer.firstChild;
-    while (node.firstChild) {
-      node.removeChild(node.firstChild);
-    }
-    while (svgNode.firstChild) {
-      node.appendChild(svgNode.firstChild);
+    if (!('innerHTML' in node)) {
+      reusableSVGContainer =
+        reusableSVGContainer || document.createElement('div');
+      reusableSVGContainer.innerHTML = '<svg>' + html.toString() + '</svg>';
+      const svgNode = reusableSVGContainer.firstChild;
+      while (node.firstChild) {
+        node.removeChild(node.firstChild);
+      }
+      while (svgNode.firstChild) {
+        node.appendChild(svgNode.firstChild);
+      }
     }
   } else {
-    node.innerHTML = html;
+    node.innerHTML = (html: any);
   }
 });
 
