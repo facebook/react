@@ -1,16 +1,18 @@
-import React from 'react';
+/** @flow */
+
+import React, { Fragment } from 'react';
 import ReactDOM from 'react-dom';
 
 export default function Iframe() {
   return (
-    <>
+    <Fragment>
       <h2>Iframe</h2>
       <div>
         <Frame>
           <Greeting />
         </Frame>
       </div>
-    </>
+    </Fragment>
   );
 }
 
@@ -45,7 +47,7 @@ function Frame(props) {
   }, []);
 
   return (
-    <>
+    <Fragment>
       <iframe title="Test Iframe" ref={ref} style={iframeStyle} />
       <iframe
         title="Secured Iframe"
@@ -54,7 +56,7 @@ function Frame(props) {
       />
 
       {element ? ReactDOM.createPortal(props.children, element) : null}
-    </>
+    </Fragment>
   );
 }
 
