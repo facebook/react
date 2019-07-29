@@ -74,6 +74,10 @@ export const warnAboutUnmockedScheduler = false;
 // Temporary flag to revert the fix in #15650
 export const revertPassiveEffectsChange = false;
 
+// For tests, we flush suspense fallbacks in an act scope;
+// *except* in some of our own tests, where we test incremental loading states.
+export const flushSuspenseFallbacksInTests = true;
+
 // Changes priority of some events like mousemove to user-blocking priority,
 // but without making them discrete. The flag exists in case it causes
 // starvation problems.
