@@ -488,7 +488,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   it('tries rendering a lower priority pending update even if a higher priority one suspends', async () => {
-    spyOnDev(console, 'error');
     function App(props) {
       if (props.hide) {
         return <Text text="(empty)" />;
@@ -516,16 +515,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       '(empty)',
     ]);
     expect(ReactNoop.getChildren()).toEqual([span('(empty)')]);
-    if (__DEV__) {
-      expect(console.error).toHaveBeenCalledTimes(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: %s\n\nThe fix is to split the update',
-      );
-      expect(console.error.calls.argsFor(0)[1]).toContain(
-        'A user-blocking update was suspended by:',
-      );
-      expect(console.error.calls.argsFor(0)[1]).toContain('AsyncText');
-    }
   });
 
   it('forces an expiration after an update times out', async () => {
@@ -674,10 +663,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     if (__DEV__) {
       expect(console.error).toHaveBeenCalledTimes(1);
       expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: %s\n\nThe fix is to split the update',
-      );
-      expect(console.error.calls.argsFor(0)[1]).toContain(
-        'A user-blocking update was suspended by:',
+        'Warning: A user-blocking update was suspended by:',
       );
       expect(console.error.calls.argsFor(0)[1]).toContain('AsyncText');
     }
@@ -710,10 +696,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     if (__DEV__) {
       expect(console.error).toHaveBeenCalledTimes(1);
       expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: %s\n\nThe fix is to split the update',
-      );
-      expect(console.error.calls.argsFor(0)[1]).toContain(
-        'A user-blocking update was suspended by:',
+        'Warning: A user-blocking update was suspended by:',
       );
       expect(console.error.calls.argsFor(0)[1]).toContain('AsyncText');
     }
@@ -794,21 +777,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   it('throws a helpful error when an update is suspends without a placeholder', () => {
-    spyOnDev(console, 'error');
     ReactNoop.render(<AsyncText ms={1000} text="Async" />);
     expect(Scheduler).toFlushAndThrow(
       'AsyncText suspended while rendering, but no fallback UI was specified.',
     );
-    if (__DEV__) {
-      expect(console.error).toHaveBeenCalledTimes(2);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: %s\n\nThe fix is to split the update',
-      );
-      expect(console.error.calls.argsFor(0)[1]).toContain(
-        'A user-blocking update was suspended by:',
-      );
-      expect(console.error.calls.argsFor(0)[1]).toContain('AsyncText');
-    }
   });
 
   it('a Suspense component correctly handles more than one suspended child', async () => {
@@ -1735,6 +1707,38 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         '  AsyncText',
       {withoutStack: true},
     );
+  });
+
+  it('', async () => {
+    let showB;
+    class App extends React.Component {
+      state = {showB: false};
+
+      render() {
+        showB = () => this.setState({showB: true});
+        return (
+          <Suspense fallback="Loading...">
+            {<AsyncText text="A" />}
+            {this.state.showB && <AsyncText text="B" />}
+          </Suspense>
+        );
+      }
+    }
+
+    await ReactNoop.act(async () => {
+      ReactNoop.render(<App />);
+    });
+
+    expect(Scheduler).toHaveYielded(['Suspend! [A]']);
+
+    ReactNoop.act(() => {
+      Scheduler.unstable_runWithPriority(
+        Scheduler.unstable_UserBlockingPriority,
+        () => showB(),
+      );
+    });
+
+    expect(Scheduler).toHaveYielded(['Suspend! [A]', 'Suspend! [B]']);
   });
 
   it('warns when suspending inside discrete update', async () => {

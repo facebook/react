@@ -983,8 +983,6 @@ function renderRoot(
   // Set this to null to indicate there's no in-progress render.
   workInProgressRoot = null;
 
-  flushSuspensePriorityWarningInDEV();
-
   switch (workInProgressRootExitStatus) {
     case RootIncomplete: {
       invariant(false, 'Should have a work-in-progress.');
@@ -1015,6 +1013,8 @@ function renderRoot(
       return commitRoot.bind(null, root);
     }
     case RootSuspended: {
+      flushSuspensePriorityWarningInDEV();
+
       // We have an acceptable loading state. We need to figure out if we should
       // immediately commit it or wait a bit.
 
@@ -1060,6 +1060,8 @@ function renderRoot(
       return commitRoot.bind(null, root);
     }
     case RootSuspendedWithDelay: {
+      flushSuspensePriorityWarningInDEV();
+
       if (!isSync) {
         // We're suspended in a state that should be avoided. We'll try to avoid committing
         // it for as long as the timeouts let us.
@@ -2640,39 +2642,44 @@ function flushSuspensePriorityWarningInDEV() {
       componentsThatTriggeredHighPriSuspend = null;
 
       const componentNamesString = componentNames.sort().join(', ');
-      let componentThatTriggeredSuspenseError = '';
       if (componentsThatTriggeredSuspendNames.length > 0) {
-        componentThatTriggeredSuspenseError =
+        warningWithoutStack(
+          false,
           'The following components triggered a user-blocking update:' +
-          '\n\n' +
-          '  ' +
-          componentsThatTriggeredSuspendNames.sort().join(', ') +
-          '\n\n' +
-          'that was then suspended by:' +
-          '\n\n' +
-          '  ' +
-          componentNamesString;
+            '\n\n' +
+            '  %s' +
+            '\n\n' +
+            'that was then suspended by:' +
+            '\n\n' +
+            '  %s' +
+            '\n\n' +
+            'The fix is to split the update into multiple parts: a user-blocking ' +
+            'update to provide immediate feedback, and another update that ' +
+            'triggers the bulk of the changes.' +
+            '\n\n' +
+            'Refer to the documentation for useSuspenseTransition to learn how ' +
+            'to implement this pattern.',
+          // TODO: Add link to React docs with more information, once it exists
+          componentsThatTriggeredSuspendNames.sort().join(', '),
+          componentNamesString,
+        );
       } else {
-        componentThatTriggeredSuspenseError =
+        warningWithoutStack(
+          false,
           'A user-blocking update was suspended by:' +
-          '\n\n' +
-          '  ' +
-          componentNamesString;
+            '\n\n' +
+            '  %s' +
+            '\n\n' +
+            'The fix is to split the update into multiple parts: a user-blocking ' +
+            'update to provide immediate feedback, and another update that ' +
+            'triggers the bulk of the changes.' +
+            '\n\n' +
+            'Refer to the documentation for useSuspenseTransition to learn how ' +
+            'to implement this pattern.',
+          // TODO: Add link to React docs with more information, once it exists
+          componentNamesString,
+        );
       }
-
-      warningWithoutStack(
-        false,
-        '%s' +
-          '\n\n' +
-          'The fix is to split the update into multiple parts: a user-blocking ' +
-          'update to provide immediate feedback, and another update that ' +
-          'triggers the bulk of the changes.' +
-          '\n\n' +
-          'Refer to the documentation for useSuspenseTransition to learn how ' +
-          'to implement this pattern.',
-        // TODO: Add link to React docs with more information, once it exists
-        componentThatTriggeredSuspenseError,
-      );
     }
   }
 }

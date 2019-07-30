@@ -2733,10 +2733,7 @@ describe('Profiler', () => {
         if (__DEV__) {
           expect(console.error).toHaveBeenCalledTimes(1);
           expect(console.error.calls.argsFor(0)[0]).toContain(
-            'Warning: %s\n\nThe fix is to split the update',
-          );
-          expect(console.error.calls.argsFor(0)[1]).toContain(
-            'A user-blocking update was suspended by:',
+            'Warning: A user-blocking update was suspended by:',
           );
           expect(console.error.calls.argsFor(0)[1]).toContain('AsyncText');
         }
