@@ -55,10 +55,12 @@ import {
   clearCaughtError,
 } from 'shared/ReactErrorUtils';
 import {
+  NoEffect,
   ContentReset,
   Placement,
   Snapshot,
   Update,
+  Passive,
 } from 'shared/ReactSideEffectTags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
@@ -383,8 +385,19 @@ function commitHookEffectList(
 }
 
 export function commitPassiveHookEffects(finishedWork: Fiber): void {
-  commitHookEffectList(UnmountPassive, NoHookEffect, finishedWork);
-  commitHookEffectList(NoHookEffect, MountPassive, finishedWork);
+  if ((finishedWork.effectTag & Passive) !== NoEffect) {
+    switch (finishedWork.tag) {
+      case FunctionComponent:
+      case ForwardRef:
+      case SimpleMemoComponent: {
+        commitHookEffectList(UnmountPassive, NoHookEffect, finishedWork);
+        commitHookEffectList(NoHookEffect, MountPassive, finishedWork);
+        break;
+      }
+      default:
+        break;
+    }
+  }
 }
 
 function commitLifeCycles(

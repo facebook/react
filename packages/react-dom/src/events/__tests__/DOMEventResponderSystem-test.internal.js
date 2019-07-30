@@ -12,6 +12,7 @@
 let React;
 let ReactFeatureFlags;
 let ReactDOM;
+let ReactDOMServer;
 let ReactTestRenderer;
 
 // FIXME: What should the public API be for setting an event's priority? Right
@@ -72,6 +73,7 @@ describe('DOMEventResponderSystem', () => {
     ReactFeatureFlags.enableFlareAPI = true;
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMServer = require('react-dom/server');
     container = document.createElement('div');
     document.body.appendChild(container);
   });
@@ -91,6 +93,14 @@ describe('DOMEventResponderSystem', () => {
       <div responders={<TestResponder />}>Hello world</div>,
     );
     expect(renderer).toMatchRenderedOutput(<div>Hello world</div>);
+  });
+
+  it('can render correctly with the ReactDOMServer', () => {
+    const TestResponder = createEventResponder({});
+    const output = ReactDOMServer.renderToString(
+      <div responders={<TestResponder />}>Hello world</div>,
+    );
+    expect(output).toBe(`<div data-reactroot="">Hello world</div>`);
   });
 
   it('the event responders should fire on click event', () => {

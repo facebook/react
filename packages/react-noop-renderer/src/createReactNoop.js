@@ -619,7 +619,13 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           hasWarnedAboutMissingMockScheduler = true;
         }
       }
-      while (flushPassiveEffects()) {}
+
+      let didFlushWork = false;
+      while (flushPassiveEffects()) {
+        didFlushWork = true;
+      }
+
+      return didFlushWork;
     };
 
   function flushWorkAndMicroTasks(onDone: (err: ?Error) => void) {

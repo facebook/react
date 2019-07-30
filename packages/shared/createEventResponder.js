@@ -8,6 +8,7 @@
 
 import type {ReactEventResponder} from 'shared/ReactTypes';
 import {REACT_RESPONDER_TYPE} from 'shared/ReactSymbols';
+import {hasBadMapPolyfill} from './hasBadMapPolyfill';
 
 export default function createEventResponder<E, C>(
   displayName: string,
@@ -35,7 +36,10 @@ export default function createEventResponder<E, C>(
     rootEventTypes: rootEventTypes || null,
     targetEventTypes: targetEventTypes || null,
   };
-  if (__DEV__) {
+  // We use responder as a Map key later on. When we have a bad
+  // polyfill, then we can't use it as a key as the polyfill tries
+  // to add a property to the object.
+  if (__DEV__ && !hasBadMapPolyfill) {
     Object.freeze(eventResponder);
   }
   return eventResponder;
