@@ -74,7 +74,7 @@ export const enableFundamentalAPI = false;
 
 export const enableJSXTransformAPI = true;
 
-export const warnAboutMissingMockScheduler = true;
+export const warnAboutUnmockedScheduler = true;
 
 export const enableSuspenseCallback = true;
 

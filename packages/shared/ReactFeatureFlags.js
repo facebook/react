@@ -70,7 +70,7 @@ export const enableJSXTransformAPI = false;
 
 // We will enforce mocking scheduler with scheduler/unstable_mock at some point. (v17?)
 // Till then, we warn about the missing mock, but still fallback to a sync mode compatible version
-export const warnAboutMissingMockScheduler = false;
+export const warnAboutUnmockedScheduler = false;
 // Temporary flag to revert the fix in #15650
 export const revertPassiveEffectsChange = false;
 
