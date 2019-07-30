@@ -40,6 +40,7 @@ import {
   shouldYield,
   requestPaint,
   now,
+  NoPriority,
   ImmediatePriority,
   UserBlockingPriority,
   NormalPriority,
@@ -237,6 +238,7 @@ let legacyErrorBoundariesThatAlreadyFailed: Set<mixed> | null = null;
 
 let rootDoesHavePassiveEffects: boolean = false;
 let rootWithPendingPassiveEffects: FiberRoot | null = null;
+let pendingPassiveEffectsRenderPriority: ReactPriorityLevel = NoPriority;
 let pendingPassiveEffectsExpirationTime: ExpirationTime = NoWork;
 
 let rootsWithPendingDiscreteUpdates: Map<
@@ -1494,12 +1496,15 @@ function resetChildExpirationTime(completedWork: Fiber) {
 }
 
 function commitRoot(root) {
-  runWithPriority(ImmediatePriority, commitRootImpl.bind(null, root));
+  const renderPriorityLevel = getCurrentPriorityLevel();
+  runWithPriority(
+    ImmediatePriority,
+    commitRootImpl.bind(null, root, renderPriorityLevel),
+  );
   // If there are passive effects, schedule a callback to flush them. This goes
   // outside commitRootImpl so that it inherits the priority of the render.
   if (rootWithPendingPassiveEffects !== null) {
-    const priorityLevel = getCurrentPriorityLevel();
-    scheduleCallback(priorityLevel, () => {
+    scheduleCallback(NormalPriority, () => {
       flushPassiveEffects();
       return null;
     });
@@ -1507,7 +1512,7 @@ function commitRoot(root) {
   return null;
 }
 
-function commitRootImpl(root) {
+function commitRootImpl(root, renderPriorityLevel) {
   flushPassiveEffects();
   flushRenderPhaseStrictModeWarningsInDEV();
 
@@ -1730,6 +1735,7 @@ function commitRootImpl(root) {
     rootDoesHavePassiveEffects = false;
     rootWithPendingPassiveEffects = root;
     pendingPassiveEffectsExpirationTime = expirationTime;
+    pendingPassiveEffectsRenderPriority = renderPriorityLevel;
   } else {
     // We are done with the effect chain at this point so let's clear the
     // nextEffect pointers to assist with GC. If we have passive effects, we'll
@@ -1937,9 +1943,19 @@ export function flushPassiveEffects() {
   }
   const root = rootWithPendingPassiveEffects;
   const expirationTime = pendingPassiveEffectsExpirationTime;
+  const renderPriorityLevel = pendingPassiveEffectsRenderPriority;
   rootWithPendingPassiveEffects = null;
   pendingPassiveEffectsExpirationTime = NoWork;
+  pendingPassiveEffectsRenderPriority = NoPriority;
+  const priorityLevel =
+    renderPriorityLevel > NormalPriority ? NormalPriority : renderPriorityLevel;
+  return runWithPriority(
+    priorityLevel,
+    flushPassiveEffectsImpl.bind(null, root, expirationTime),
+  );
+}
 
+function flushPassiveEffectsImpl(root, expirationTime) {
   let prevInteractions: Set<Interaction> | null = null;
   if (enableSchedulerTracing) {
     prevInteractions = __interactionsRef.current;
