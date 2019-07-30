@@ -32,22 +32,43 @@ describe('ReactTestUtils.act()', () => {
     concurrentRoot = ReactDOM.unstable_createRoot(dom);
     concurrentRoot.render(el);
   }
+
   function unmountConcurrent(_dom) {
     if (concurrentRoot !== null) {
       concurrentRoot.unmount();
       concurrentRoot = null;
     }
   }
-  runActTests('concurrent mode', renderConcurrent, unmountConcurrent);
+
+  function rerenderConcurrent(el) {
+    concurrentRoot.render(el);
+  }
+
+  runActTests(
+    'concurrent mode',
+    renderConcurrent,
+    unmountConcurrent,
+    rerenderConcurrent,
+  );
 
   // and then in sync mode
+
+  let syncDom = null;
   function renderSync(el, dom) {
+    syncDom = dom;
     ReactDOM.render(el, dom);
   }
+
   function unmountSync(dom) {
+    syncDom = null;
     ReactDOM.unmountComponentAtNode(dom);
   }
-  runActTests('legacy sync mode', renderSync, unmountSync);
+
+  function rerenderSync(el) {
+    ReactDOM.render(el, syncDom);
+  }
+
+  runActTests('legacy sync mode', renderSync, unmountSync, rerenderSync);
 
   // and then in batched mode
   let batchedRoot;
@@ -55,13 +76,19 @@ describe('ReactTestUtils.act()', () => {
     batchedRoot = ReactDOM.unstable_createSyncRoot(dom);
     batchedRoot.render(el);
   }
+
   function unmountBatched(dom) {
     if (batchedRoot !== null) {
       batchedRoot.unmount();
       batchedRoot = null;
     }
   }
-  runActTests('batched mode', renderBatched, unmountBatched);
+
+  function rerenderBatched(el) {
+    batchedRoot.render(el);
+  }
+
+  runActTests('batched mode', renderBatched, unmountBatched, rerenderBatched);
 
   describe('unacted effects', () => {
     function App() {
@@ -117,7 +144,7 @@ describe('ReactTestUtils.act()', () => {
   });
 });
 
-function runActTests(label, render, unmount) {
+function runActTests(label, render, unmount, rerender) {
   describe(label, () => {
     beforeEach(() => {
       jest.resetModules();
@@ -546,7 +573,7 @@ function runActTests(label, render, unmount) {
                 expect(interactions.size).toBe(1);
                 expectedInteraction = Array.from(interactions)[0];
 
-                render(<Component />, container);
+                rerender(<Component />);
               },
             );
           });
@@ -576,7 +603,7 @@ function runActTests(label, render, unmount) {
                 expect(interactions.size).toBe(1);
                 expectedInteraction = Array.from(interactions)[0];
 
-                render(<Component />, secondContainer);
+                rerender(<Component />);
               });
             },
           );
@@ -691,6 +718,71 @@ function runActTests(label, render, unmount) {
           });
           expect(Scheduler).toHaveYielded(['oh yes']);
         }
+      });
+    });
+
+    describe('suspense', () => {
+      it('triggers fallbacks if available', async () => {
+        let resolved = false;
+        let resolve;
+        const promise = new Promise(_resolve => {
+          resolve = _resolve;
+        });
+
+        function Suspends() {
+          if (resolved) {
+            return 'was suspended';
+          }
+          throw promise;
+        }
+
+        function App(props) {
+          return (
+            <React.Suspense
+              fallback={<span data-test-id="spinner">loading...</span>}>
+              {props.suspend ? <Suspends /> : 'content'}
+            </React.Suspense>
+          );
+        }
+
+        // render something so there's content
+        act(() => {
+          render(<App suspend={false} />, container);
+        });
+
+        // trigger a suspendy update
+        act(() => {
+          rerender(<App suspend={true} />);
+        });
+        expect(document.querySelector('[data-test-id=spinner]')).not.toBeNull();
+
+        // now render regular content again
+        act(() => {
+          rerender(<App suspend={false} />);
+        });
+        expect(document.querySelector('[data-test-id=spinner]')).toBeNull();
+
+        // trigger a suspendy update with a delay
+        React.unstable_withSuspenseConfig(
+          () => {
+            act(() => {
+              rerender(<App suspend={true} />);
+            });
+          },
+          {timeout: 5000},
+        );
+        // the spinner shows up regardless
+        expect(document.querySelector('[data-test-id=spinner]')).not.toBeNull();
+
+        // resolve the promise
+        await act(async () => {
+          resolved = true;
+          resolve();
+        });
+
+        // spinner gone, content showing
+        expect(document.querySelector('[data-test-id=spinner]')).toBeNull();
+        expect(container.textContent).toBe('was suspended');
       });
     });
   });
