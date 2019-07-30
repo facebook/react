@@ -166,6 +166,7 @@ function scheduleRootUpdate(
     update.callback = callback;
   }
 
+  // this appears to be the offending call
   if (revertPassiveEffectsChange) {
     flushPassiveEffects();
   }
