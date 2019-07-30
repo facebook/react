@@ -170,6 +170,34 @@ describe('ReactSchedulerIntegration', () => {
     });
   });
 
+  it('passive effects have render priority even if they are flushed early', async () => {
+    const {useEffect} = React;
+    function ReadPriority({step}) {
+      Scheduler.unstable_yieldValue(
+        `Render priority [step ${step}]: ${getCurrentPriorityAsString()}`,
+      );
+      useEffect(() => {
+        Scheduler.unstable_yieldValue(
+          `Effect priority [step ${step}]: ${getCurrentPriorityAsString()}`,
+        );
+      });
+      return null;
+    }
+    await ReactNoop.act(async () => {
+      ReactNoop.render(<ReadPriority step={1} />);
+      Scheduler.unstable_flushUntilNextPaint();
+      expect(Scheduler).toHaveYielded(['Render priority [step 1]: Normal']);
+      Scheduler.unstable_runWithPriority(UserBlockingPriority, () => {
+        ReactNoop.render(<ReadPriority step={2} />);
+      });
+    });
+    expect(Scheduler).toHaveYielded([
+      'Effect priority [step 1]: Normal',
+      'Render priority [step 2]: UserBlocking',
+      'Effect priority [step 2]: UserBlocking',
+    ]);
+  });
+
   it('after completing a level of work, infers priority of the next batch based on its expiration time', () => {
     function App({label}) {
       Scheduler.unstable_yieldValue(
@@ -213,7 +241,4 @@ describe('ReactSchedulerIntegration', () => {
     Scheduler.unstable_flushUntilNextPaint();
     expect(Scheduler).toHaveYielded(['A', 'B', 'C']);
   });
-
-  // TODO
-  it.skip('passive effects have render priority even if they are flushed early', () => {});
 });
