@@ -19,8 +19,6 @@ import {DiscreteEvent, UserBlockingEvent} from 'shared/ReactTypes';
 
 type PressListenerProps = {|
   onContextMenu: (e: PressEvent) => void,
-  onLongPress: (e: PressEvent) => void,
-  onLongPressChange: boolean => void,
   onPress: (e: PressEvent) => void,
   onPressChange: boolean => void,
   onPressEnd: (e: PressEvent) => void,
@@ -30,9 +28,6 @@ type PressListenerProps = {|
 
 type PressProps = {|
   disabled: boolean,
-  delayLongPress: number,
-  delayPressEnd: number,
-  delayPressStart: number,
   pressRetentionOffset: {
     top: number,
     right: number,
@@ -42,8 +37,6 @@ type PressProps = {|
   preventContextMenu: boolean,
   preventDefault: boolean,
   stopPropagation: boolean,
-  enableLongPress: boolean,
-  longPressShouldCancelPress: () => boolean,
 |};
 
 type PressState = {
@@ -54,13 +47,10 @@ type PressState = {
   addedRootEvents: boolean,
   isActivePressed: boolean,
   isActivePressStart: boolean,
-  isLongPressed: boolean,
   isPressed: boolean,
   isPressWithinResponderRegion: boolean,
-  longPressTimeout: null | number,
   pointerType: PointerType,
   pressTarget: null | Element | Document,
-  pressEndTimeout: null | number,
   pressStartTimeout: null | number,
   responderRegionOnActivation: null | $ReadOnly<{|
     bottom: number,
@@ -86,8 +76,6 @@ type PressEventType =
   | 'pressstart'
   | 'pressend'
   | 'presschange'
-  | 'longpress'
-  | 'longpresschange'
   | 'contextmenu';
 
 type PressEvent = {|
@@ -115,9 +103,6 @@ const isMac =
   typeof window !== 'undefined' && window.navigator != null
     ? /^Mac/.test(window.navigator.platform)
     : false;
-const DEFAULT_PRESS_END_DELAY_MS = 0;
-const DEFAULT_PRESS_START_DELAY_MS = 0;
-const DEFAULT_LONG_PRESS_DELAY_MS = 500;
 const DEFAULT_PRESS_RETENTION_OFFSET = {
   bottom: 20,
   top: 20,
@@ -250,48 +235,6 @@ function dispatchPressChangeEvent(
   context.dispatchEvent('onPressChange', bool, DiscreteEvent);
 }
 
-function dispatchLongPressChangeEvent(
-  context: ReactDOMResponderContext,
-  state: PressState,
-): void {
-  const bool = state.isLongPressed;
-  context.dispatchEvent('onLongPressChange', bool, DiscreteEvent);
-}
-
-function activate(event: ReactDOMResponderEvent, context, props, state) {
-  const nativeEvent: any = event.nativeEvent;
-  const {clientX: x, clientY: y} = state.touchEvent || nativeEvent;
-  const wasActivePressed = state.isActivePressed;
-  state.isActivePressed = true;
-  if (x !== undefined && y !== undefined) {
-    state.activationPosition = {x, y};
-  }
-
-  dispatchEvent(
-    'onPressStart',
-    event,
-    context,
-    state,
-    'pressstart',
-    DiscreteEvent,
-  );
-  if (!wasActivePressed) {
-    dispatchPressChangeEvent(context, state);
-  }
-}
-
-function deactivate(event: ?ReactDOMResponderEvent, context, props, state) {
-  const wasLongPressed = state.isLongPressed;
-  state.isActivePressed = false;
-  state.isLongPressed = false;
-
-  dispatchEvent('onPressEnd', event, context, state, 'pressend', DiscreteEvent);
-  dispatchPressChangeEvent(context, state);
-  if (wasLongPressed && props.enableLongPress) {
-    dispatchLongPressChangeEvent(context, state);
-  }
-}
-
 function dispatchPressStartEvents(
   event: ReactDOMResponderEvent,
   context: ReactDOMResponderContext,
@@ -300,50 +243,26 @@ function dispatchPressStartEvents(
 ): void {
   state.isPressed = true;
 
-  if (state.pressEndTimeout !== null) {
-    context.clearTimeout(state.pressEndTimeout);
-    state.pressEndTimeout = null;
-  }
-
-  const dispatch = () => {
-    state.isActivePressStart = true;
-    activate(event, context, props, state);
-
-    if (!state.isLongPressed && props.enableLongPress) {
-      const delayLongPress = calculateDelayMS(
-        props.delayLongPress,
-        10,
-        DEFAULT_LONG_PRESS_DELAY_MS,
-      );
-      state.longPressTimeout = context.setTimeout(() => {
-        state.isLongPressed = true;
-        state.longPressTimeout = null;
-        dispatchEvent(
-          'onLongPress',
-          event,
-          context,
-          state,
-          'longpress',
-          DiscreteEvent,
-        );
-        dispatchLongPressChangeEvent(context, state);
-      }, delayLongPress);
-    }
-  };
-
   if (!state.isActivePressStart) {
-    const delayPressStart = calculateDelayMS(
-      props.delayPressStart,
-      0,
-      DEFAULT_PRESS_START_DELAY_MS,
+    state.isActivePressStart = true;
+    const nativeEvent: any = event.nativeEvent;
+    const {clientX: x, clientY: y} = state.touchEvent || nativeEvent;
+    const wasActivePressed = state.isActivePressed;
+    state.isActivePressed = true;
+    if (x !== undefined && y !== undefined) {
+      state.activationPosition = {x, y};
+    }
+
+    dispatchEvent(
+      'onPressStart',
+      event,
+      context,
+      state,
+      'pressstart',
+      DiscreteEvent,
     );
-    if (delayPressStart > 0) {
-      state.pressStartTimeout = context.setTimeout(() => {
-        state.pressStartTimeout = null;
-        dispatch();
-      }, delayPressStart);
-    } else {
-      dispatch();
+    if (!wasActivePressed) {
+      dispatchPressChangeEvent(context, state);
     }
   }
 }
@@ -354,45 +273,20 @@ function dispatchPressEndEvents(
   props: PressProps,
   state: PressState,
 ): void {
-  const wasActivePressStart = state.isActivePressStart;
-  let activationWasForced = false;
-
   state.isActivePressStart = false;
   state.isPressed = false;
 
-  if (state.longPressTimeout !== null) {
-    context.clearTimeout(state.longPressTimeout);
-    state.longPressTimeout = null;
-  }
-
-  if (!wasActivePressStart && state.pressStartTimeout !== null) {
-    context.clearTimeout(state.pressStartTimeout);
-    state.pressStartTimeout = null;
-    // don't activate if a press has moved beyond the responder region
-    if (state.isPressWithinResponderRegion && event != null) {
-      // if we haven't yet activated (due to delays), activate now
-      activate(event, context, props, state);
-      activationWasForced = true;
-    }
-  }
-
   if (state.isActivePressed) {
-    const delayPressEnd = calculateDelayMS(
-      props.delayPressEnd,
-      // if activation and deactivation occur during the same event there's no
-      // time for visual user feedback therefore a small delay is added before
-      // deactivating.
-      activationWasForced ? 10 : 0,
-      DEFAULT_PRESS_END_DELAY_MS,
+    state.isActivePressed = false;
+    dispatchEvent(
+      'onPressEnd',
+      event,
+      context,
+      state,
+      'pressend',
+      DiscreteEvent,
     );
-    if (delayPressEnd > 0) {
-      state.pressEndTimeout = context.setTimeout(() => {
-        state.pressEndTimeout = null;
-        deactivate(event, context, props, state);
-      }, delayPressEnd);
-    } else {
-      deactivate(event, context, props, state);
-    }
+    dispatchPressChangeEvent(context, state);
   }
 
   state.responderRegionOnDeactivation = null;
@@ -427,11 +321,6 @@ function isValidKeyboardEvent(nativeEvent: Object): boolean {
       tagName !== 'TEXTAREA' &&
       isContentEditable !== true)
   );
-}
-
-function calculateDelayMS(delay: ?number, min = 0, fallback = 0) {
-  const maybeNumber = delay == null ? null : delay;
-  return Math.max(min, maybeNumber != null ? maybeNumber : fallback);
 }
 
 // TODO: account for touch hit slop
@@ -596,12 +485,9 @@ const pressResponderImpl = {
       addedRootEvents: false,
       isActivePressed: false,
       isActivePressStart: false,
-      isLongPressed: false,
       isPressed: false,
       isPressWithinResponderRegion: true,
-      longPressTimeout: null,
       pointerType: '',
-      pressEndTimeout: null,
       pressStartTimeout: null,
       pressTarget: null,
       responderRegionOnActivation: null,
@@ -823,19 +709,6 @@ const pressResponderImpl = {
               'pressmove',
               UserBlockingEvent,
             );
-            if (
-              state.activationPosition != null &&
-              state.longPressTimeout != null
-            ) {
-              const deltaX = state.activationPosition.x - nativeEvent.clientX;
-              const deltaY = state.activationPosition.y - nativeEvent.clientY;
-              if (
-                Math.hypot(deltaX, deltaY) > 10 &&
-                state.longPressTimeout != null
-              ) {
-                context.clearTimeout(state.longPressTimeout);
-              }
-            }
           } else {
             dispatchPressStartEvents(event, context, props, state);
           }
@@ -900,7 +773,6 @@ const pressResponderImpl = {
             }
           }
 
-          const wasLongPressed = state.isLongPressed;
           const pressTarget = state.pressTarget;
           dispatchPressEndEvents(event, context, props, state);
 
@@ -928,23 +800,14 @@ const pressResponderImpl = {
               }
             }
             if (state.isPressWithinResponderRegion && button !== 1) {
-              if (
-                !(
-                  wasLongPressed &&
-                  props.enableLongPress &&
-                  props.longPressShouldCancelPress &&
-                  props.longPressShouldCancelPress()
-                )
-              ) {
-                dispatchEvent(
-                  'onPress',
-                  event,
-                  context,
-                  state,
-                  'press',
-                  DiscreteEvent,
-                );
-              }
+              dispatchEvent(
+                'onPress',
+                event,
+                context,
+                state,
+                'press',
+                DiscreteEvent,
+              );
             }
           }
           state.touchEvent = null;

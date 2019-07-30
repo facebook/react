@@ -15,6 +15,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
+    ReactFeatureFlags.flushSuspenseFallbacksInTests = false;
     React = require('react');
     Fragment = React.Fragment;
     ReactNoop = require('react-noop-renderer');
