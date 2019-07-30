@@ -74,17 +74,6 @@ type PressOffset = {
 
 ## Props
 
-### delayPressEnd: number
-
-The duration of the delay between when the press ends and when `onPressEnd` is
-called.
-
-### delayPressStart: number
-
-The duration of a delay between when the press starts and when `onPressStart` is
-called. This delay is cut short (and `onPressStart` is called) if the press is
-released before the threshold is exceeded.
-
 ### disabled: boolean = false
 
 Disables all `Press` events.
@@ -107,21 +96,16 @@ Called when the element changes press state (i.e., after `onPressStart` and
 ### onPressEnd: (e: PressEvent) => void
 
 Called once the element is no longer pressed (because the press was released,
-cancelled, or moved beyond the hit bounds). If the press starts again before the
-`delayPressEnd` threshold is exceeded then the delay is reset to prevent
-`onPressEnd` being called during a press.
+cancelled, or moved beyond the hit bounds).
 
 ### onPressMove: (e: PressEvent) => void
 
-Called when a press moves within the hit bounds of the element. `onPressMove` is
-called immediately and doesn't wait for delayed `onPressStart`. Never called for
+Called when a press moves within the hit bounds of the element. Never called for
 keyboard-initiated press events.  
 
 ### onPressStart: (e: PressEvent) => void
 
-Called once the element is pressed down. If the press is released before the
-`delayPressStart` threshold is exceeded then the delay is cut short and
-`onPressStart` is called immediately.
+Called once the element is pressed down.
 
 ### pressRetentionOffset: PressOffset
 
@@ -142,4 +126,4 @@ Whether to `preventDefault()` native events. Native behavior is prevented by
 default. If an anchor is the child of `Press`, internal and external navigation
 should be performed in `onPress`. To rely on native behavior instead, set
 `preventDefault` to `false`, but be aware that native behavior will take place
-immediately after interaction without respect for delays or long press.
+immediately after interaction.

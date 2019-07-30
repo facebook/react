@@ -28,8 +28,6 @@ type PressListenerProps = {|
 
 type PressProps = {|
   disabled: boolean,
-  delayPressEnd: number,
-  delayPressStart: number,
   pressRetentionOffset: {
     top: number,
     right: number,
@@ -53,7 +51,6 @@ type PressState = {
   isPressWithinResponderRegion: boolean,
   pointerType: PointerType,
   pressTarget: null | Element | Document,
-  pressEndTimeout: null | number,
   pressStartTimeout: null | number,
   responderRegionOnActivation: null | $ReadOnly<{|
     bottom: number,
@@ -106,8 +103,6 @@ const isMac =
   typeof window !== 'undefined' && window.navigator != null
     ? /^Mac/.test(window.navigator.platform)
     : false;
-const DEFAULT_PRESS_END_DELAY_MS = 0;
-const DEFAULT_PRESS_START_DELAY_MS = 0;
 const DEFAULT_PRESS_RETENTION_OFFSET = {
   bottom: 20,
   top: 20,
@@ -240,35 +235,6 @@ function dispatchPressChangeEvent(
   context.dispatchEvent('onPressChange', bool, DiscreteEvent);
 }
 
-function activate(event: ReactDOMResponderEvent, context, props, state) {
-  const nativeEvent: any = event.nativeEvent;
-  const {clientX: x, clientY: y} = state.touchEvent || nativeEvent;
-  const wasActivePressed = state.isActivePressed;
-  state.isActivePressed = true;
-  if (x !== undefined && y !== undefined) {
-    state.activationPosition = {x, y};
-  }
-
-  dispatchEvent(
-    'onPressStart',
-    event,
-    context,
-    state,
-    'pressstart',
-    DiscreteEvent,
-  );
-  if (!wasActivePressed) {
-    dispatchPressChangeEvent(context, state);
-  }
-}
-
-function deactivate(event: ?ReactDOMResponderEvent, context, props, state) {
-  state.isActivePressed = false;
-
-  dispatchEvent('onPressEnd', event, context, state, 'pressend', DiscreteEvent);
-  dispatchPressChangeEvent(context, state);
-}
-
 function dispatchPressStartEvents(
   event: ReactDOMResponderEvent,
   context: ReactDOMResponderContext,
@@ -277,29 +243,26 @@ function dispatchPressStartEvents(
 ): void {
   state.isPressed = true;
 
-  if (state.pressEndTimeout !== null) {
-    context.clearTimeout(state.pressEndTimeout);
-    state.pressEndTimeout = null;
-  }
-
-  const dispatch = () => {
-    state.isActivePressStart = true;
-    activate(event, context, props, state);
-  };
-
   if (!state.isActivePressStart) {
-    const delayPressStart = calculateDelayMS(
-      props.delayPressStart,
-      0,
-      DEFAULT_PRESS_START_DELAY_MS,
+    state.isActivePressStart = true;
+    const nativeEvent: any = event.nativeEvent;
+    const {clientX: x, clientY: y} = state.touchEvent || nativeEvent;
+    const wasActivePressed = state.isActivePressed;
+    state.isActivePressed = true;
+    if (x !== undefined && y !== undefined) {
+      state.activationPosition = {x, y};
+    }
+
+    dispatchEvent(
+      'onPressStart',
+      event,
+      context,
+      state,
+      'pressstart',
+      DiscreteEvent,
     );
-    if (delayPressStart > 0) {
-      state.pressStartTimeout = context.setTimeout(() => {
-        state.pressStartTimeout = null;
-        dispatch();
-      }, delayPressStart);
-    } else {
-      dispatch();
+    if (!wasActivePressed) {
+      dispatchPressChangeEvent(context, state);
     }
   }
 }
@@ -310,40 +273,20 @@ function dispatchPressEndEvents(
   props: PressProps,
   state: PressState,
 ): void {
-  const wasActivePressStart = state.isActivePressStart;
-  let activationWasForced = false;
-
   state.isActivePressStart = false;
   state.isPressed = false;
 
-  if (!wasActivePressStart && state.pressStartTimeout !== null) {
-    context.clearTimeout(state.pressStartTimeout);
-    state.pressStartTimeout = null;
-    // don't activate if a press has moved beyond the responder region
-    if (state.isPressWithinResponderRegion && event != null) {
-      // if we haven't yet activated (due to delays), activate now
-      activate(event, context, props, state);
-      activationWasForced = true;
-    }
-  }
-
   if (state.isActivePressed) {
-    const delayPressEnd = calculateDelayMS(
-      props.delayPressEnd,
-      // if activation and deactivation occur during the same event there's no
-      // time for visual user feedback therefore a small delay is added before
-      // deactivating.
-      activationWasForced ? 10 : 0,
-      DEFAULT_PRESS_END_DELAY_MS,
+    state.isActivePressed = false;
+    dispatchEvent(
+      'onPressEnd',
+      event,
+      context,
+      state,
+      'pressend',
+      DiscreteEvent,
     );
-    if (delayPressEnd > 0) {
-      state.pressEndTimeout = context.setTimeout(() => {
-        state.pressEndTimeout = null;
-        deactivate(event, context, props, state);
-      }, delayPressEnd);
-    } else {
-      deactivate(event, context, props, state);
-    }
+    dispatchPressChangeEvent(context, state);
   }
 
   state.responderRegionOnDeactivation = null;
@@ -378,11 +321,6 @@ function isValidKeyboardEvent(nativeEvent: Object): boolean {
       tagName !== 'TEXTAREA' &&
       isContentEditable !== true)
   );
-}
-
-function calculateDelayMS(delay: ?number, min = 0, fallback = 0) {
-  const maybeNumber = delay == null ? null : delay;
-  return Math.max(min, maybeNumber != null ? maybeNumber : fallback);
 }
 
 // TODO: account for touch hit slop
@@ -550,7 +488,6 @@ const pressResponderImpl = {
       isPressed: false,
       isPressWithinResponderRegion: true,
       pointerType: '',
-      pressEndTimeout: null,
       pressStartTimeout: null,
       pressTarget: null,
       responderRegionOnActivation: null,
