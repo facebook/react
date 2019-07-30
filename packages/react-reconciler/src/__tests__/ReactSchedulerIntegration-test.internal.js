@@ -139,38 +139,53 @@ describe('ReactSchedulerIntegration', () => {
     ]);
   });
 
-  it('passive effects have the same priority as render', () => {
+  it('passive effects never have higher than normal priority', async () => {
     const {useEffect} = React;
-    function ReadPriority() {
+    function ReadPriority({step}) {
       Scheduler.unstable_yieldValue(
-        'Render priority: ' + getCurrentPriorityAsString(),
+        `Render priority: ${getCurrentPriorityAsString()}`,
       );
       useEffect(() => {
         Scheduler.unstable_yieldValue(
-          'Passive priority: ' + getCurrentPriorityAsString(),
+          `Effect priority: ${getCurrentPriorityAsString()}`,
         );
       });
       return null;
     }
-    ReactNoop.act(() => {
-      ReactNoop.render(<ReadPriority />);
-      expect(Scheduler).toFlushAndYield([
-        'Render priority: Normal',
-        'Passive priority: Normal',
-      ]);
 
-      runWithPriority(UserBlockingPriority, () => {
+    // High priority renders spawn effects at normal priority
+    await ReactNoop.act(async () => {
+      Scheduler.unstable_runWithPriority(ImmediatePriority, () => {
         ReactNoop.render(<ReadPriority />);
       });
-
-      expect(Scheduler).toFlushAndYield([
-        'Render priority: UserBlocking',
-        'Passive priority: UserBlocking',
-      ]);
     });
+    expect(Scheduler).toHaveYielded([
+      'Render priority: Immediate',
+      'Effect priority: Normal',
+    ]);
+    await ReactNoop.act(async () => {
+      Scheduler.unstable_runWithPriority(UserBlockingPriority, () => {
+        ReactNoop.render(<ReadPriority />);
+      });
+    });
+    expect(Scheduler).toHaveYielded([
+      'Render priority: UserBlocking',
+      'Effect priority: Normal',
+    ]);
+
+    // Renders lower than normal priority spawn effects at the same priority
+    await ReactNoop.act(async () => {
+      Scheduler.unstable_runWithPriority(IdlePriority, () => {
+        ReactNoop.render(<ReadPriority />);
+      });
+    });
+    expect(Scheduler).toHaveYielded([
+      'Render priority: Idle',
+      'Effect priority: Idle',
+    ]);
   });
 
-  it('passive effects have render priority even if they are flushed early', async () => {
+  it('passive effects have correct priority even if they are flushed early', async () => {
     const {useEffect} = React;
     function ReadPriority({step}) {
       Scheduler.unstable_yieldValue(
@@ -194,7 +209,7 @@ describe('ReactSchedulerIntegration', () => {
     expect(Scheduler).toHaveYielded([
       'Effect priority [step 1]: Normal',
       'Render priority [step 2]: UserBlocking',
-      'Effect priority [step 2]: UserBlocking',
+      'Effect priority [step 2]: Normal',
     ]);
   });
 

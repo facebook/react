@@ -1488,7 +1488,7 @@ function commitRoot(root) {
   // If there are passive effects, schedule a callback to flush them. This goes
   // outside commitRootImpl so that it inherits the priority of the render.
   if (rootWithPendingPassiveEffects !== null) {
-    scheduleCallback(renderPriorityLevel, () => {
+    scheduleCallback(NormalPriority, () => {
       flushPassiveEffects();
       return null;
     });
@@ -1927,9 +1927,12 @@ export function flushPassiveEffects() {
   }
   const root = rootWithPendingPassiveEffects;
   const expirationTime = pendingPassiveEffectsExpirationTime;
-  const priorityLevel = pendingPassiveEffectsRenderPriority;
+  const renderPriorityLevel = pendingPassiveEffectsRenderPriority;
   rootWithPendingPassiveEffects = null;
   pendingPassiveEffectsExpirationTime = NoWork;
+  pendingPassiveEffectsRenderPriority = NoPriority;
+  const priorityLevel =
+    renderPriorityLevel > NormalPriority ? NormalPriority : renderPriorityLevel;
   return runWithPriority(
     priorityLevel,
     flushPassiveEffectsImpl.bind(null, root, expirationTime),
