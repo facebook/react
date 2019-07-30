@@ -125,7 +125,7 @@ function coerceRef(
               false,
               'Component "%s" contains the string ref "%s". Support for string refs ' +
                 'will be removed in a future major release. We recommend using ' +
-                'createRef() instead.' +
+                'useRef() or createRef() instead.' +
                 '\n%s' +
                 '\n\nLearn more about using refs safely here:' +
                 '\nhttps://fb.me/react-strict-mode-string-ref',
@@ -138,7 +138,7 @@ function coerceRef(
               false,
               'A string ref, "%s", has been found within a strict mode tree. ' +
                 'String refs are a source of potential bugs and should be avoided. ' +
-                'We recommend using createRef() instead.' +
+                'We recommend using useRef() or createRef() instead.' +
                 '\n%s' +
                 '\n\nLearn more about using refs safely here:' +
                 '\nhttps://fb.me/react-strict-mode-string-ref',
