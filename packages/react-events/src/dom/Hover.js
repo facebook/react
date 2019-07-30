@@ -24,8 +24,6 @@ type HoverListenerProps = {|
 
 type HoverProps = {
   disabled: boolean,
-  delayHoverEnd: number,
-  delayHoverStart: number,
   preventDefault: boolean,
 };
 
@@ -54,9 +52,6 @@ type HoverEvent = {|
   x: null | number,
   y: null | number,
 |};
-
-const DEFAULT_HOVER_END_DELAY_MS = 0;
-const DEFAULT_HOVER_START_DELAY_MS = 0;
 
 const targetEventTypes = [
   'pointerover',
@@ -136,7 +131,7 @@ function dispatchHoverStartEvents(
     state.hoverEndTimeout = null;
   }
 
-  const activate = () => {
+  if (!state.isActiveHovered) {
     state.isActiveHovered = true;
     const syntheticEvent = createHoverEvent(
       event,
@@ -146,22 +141,6 @@ function dispatchHoverStartEvents(
     );
     context.dispatchEvent('onHoverStart', syntheticEvent, UserBlockingEvent);
     dispatchHoverChangeEvent(event, context, props, state);
-  };
-
-  if (!state.isActiveHovered) {
-    const delayHoverStart = calculateDelayMS(
-      props.delayHoverStart,
-      0,
-      DEFAULT_HOVER_START_DELAY_MS,
-    );
-    if (delayHoverStart > 0) {
-      state.hoverStartTimeout = context.setTimeout(() => {
-        state.hoverStartTimeout = null;
-        activate();
-      }, delayHoverStart);
-    } else {
-      activate();
-    }
   }
 }
 
@@ -188,7 +167,7 @@ function dispatchHoverEndEvents(
     state.hoverStartTimeout = null;
   }
 
-  const deactivate = () => {
+  if (state.isActiveHovered) {
     state.isActiveHovered = false;
 
     const syntheticEvent = createHoverEvent(
@@ -202,27 +181,7 @@ function dispatchHoverEndEvents(
     state.hoverTarget = null;
     state.ignoreEmulatedMouseEvents = false;
     state.isTouched = false;
-  };
-
-  if (state.isActiveHovered) {
-    const delayHoverEnd = calculateDelayMS(
-      props.delayHoverEnd,
-      0,
-      DEFAULT_HOVER_END_DELAY_MS,
-    );
-    if (delayHoverEnd > 0) {
-      state.hoverEndTimeout = context.setTimeout(() => {
-        deactivate();
-      }, delayHoverEnd);
-    } else {
-      deactivate();
-    }
   }
-}
-
-function calculateDelayMS(delay: ?number, min = 0, fallback = 0) {
-  const maybeNumber = delay == null ? null : delay;
-  return Math.max(min, maybeNumber != null ? maybeNumber : fallback);
 }
 
 function unmountResponder(
