@@ -693,7 +693,7 @@ Please update the following components: Parent`,
       }).toWarnDev(
         'Warning: A string ref, "somestring", has been found within a strict mode tree. ' +
           'String refs are a source of potential bugs and should be avoided. ' +
-          'We recommend using createRef() instead.\n\n' +
+          'We recommend using useRef() or createRef() instead.\n\n' +
           '    in StrictMode (at **)\n' +
           '    in OuterComponent (at **)\n\n' +
           'Learn more about using refs safely here:\n' +
@@ -735,7 +735,7 @@ Please update the following components: Parent`,
       }).toWarnDev(
         'Warning: A string ref, "somestring", has been found within a strict mode tree. ' +
           'String refs are a source of potential bugs and should be avoided. ' +
-          'We recommend using createRef() instead.\n\n' +
+          'We recommend using useRef() or createRef() instead.\n\n' +
           '    in InnerComponent (at **)\n' +
           '    in StrictMode (at **)\n' +
           '    in OuterComponent (at **)\n\n' +

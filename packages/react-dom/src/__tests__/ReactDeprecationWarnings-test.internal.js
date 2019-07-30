@@ -64,7 +64,7 @@ describe('ReactDeprecationWarnings', () => {
     expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
       'Warning: Component "Component" contains the string ref "refComponent". ' +
         'Support for string refs will be removed in a future major release. ' +
-        'We recommend using createRef() instead.' +
+        'We recommend using useRef() or createRef() instead.' +
         '\n\n' +
         '    in Component (at **)' +
         '\n\n' +
