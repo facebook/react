@@ -15,11 +15,9 @@
 ### General changes
 
 #### Improved performance
-One of the largest performance bottlenecks of the legacy DevTools extension was the amount of message it sent across its "bridge" (an abstraction around e.g. `postMessage`). The primary goal for the DevTools rewrite was to drastically reduce this traffic.
+The legacy DevTools extension used to add significant performance overhead, making it unusable for some larger React applications. That overhead has been effectively eliminated in version 4.
 
-The legacy DevTools also rendered the entire application tree in the form of a large DOM structure of nested nodes. A secondary goal of the rewrite was to avoid rendering unnecessary nodes by using a windowing library (specifically [react-window](https://github.com/bvaughn/react-window)).
-
-Learn more about these optimizations [here](https://github.com/bvaughn/react-devtools-experimental/blob/master/OVERVIEW.md).
+[Learn more](https://github.com/bvaughn/react-devtools-experimental/blob/master/OVERVIEW.md) about the performance optimizations that made this possible.
 
 #### Component stacks
 
@@ -38,6 +36,8 @@ It can be disabled in the general settings panel:
 Large component trees can sometimes be hard to navigate. DevTools now provides a way to filter components so that you can hide ones you're not interested in seeing.
 
 ![Component filter demo video](https://user-images.githubusercontent.com/29597/62229209-0bf9a880-b374-11e9-8f84-cebd6c1a016b.gif)
+
+Host nodes (e.g. HTML `<div>`, React Native `View`) are now hidden by default, but you can see them by disabling that filter.
 
 Filter preferences are remembered between sessions.
 
