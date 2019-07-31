@@ -43,12 +43,16 @@
   --color-expand-collapse-toggle: var(--color-component-name-inverted);
 }
 
-.AttributeName {
+.KeyName {
   color: var(--color-attribute-name);
 }
 
-.AttributeValue {
+.KeyValue {
   color: var(--color-attribute-value);
+  user-select: text;
+  max-width: 100px;
+  overflow-x: hidden;
+  text-overflow: ellipsis;
 }
 
 .Highlight {

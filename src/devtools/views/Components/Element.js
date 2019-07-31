@@ -1,16 +1,10 @@
 // @flow
 
-import React, {
-  Fragment,
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
-} from 'react';
+import React, { Fragment, useContext, useMemo, useState } from 'react';
 import Store from 'src/devtools/store';
 import Badge from './Badge';
 import ButtonIcon from '../ButtonIcon';
-import { createRegExp, truncateText } from '../utils';
+import { createRegExp } from '../utils';
 import { TreeDispatcherContext, TreeStateContext } from './TreeContext';
 import { StoreContext } from '../context';
 
@@ -43,34 +37,38 @@ export default function ElementView({ data, index, style }: Props) {
   const id = element === null ? null : element.id;
   const isSelected = selectedElementID === id;
 
-  const handleDoubleClick = useCallback(() => {
+  const handleDoubleClick = () => {
     if (id !== null) {
       dispatch({ type: 'SELECT_OWNER', payload: id });
     }
-  }, [dispatch, id]);
+  };
 
-  const handleMouseDown = useCallback(
-    ({ metaKey }) => {
-      if (id !== null) {
-        dispatch({
-          type: 'SELECT_ELEMENT_BY_ID',
-          payload: metaKey ? null : id,
-        });
-      }
-    },
-    [dispatch, id]
-  );
+  const handleMouseDown = ({ metaKey }) => {
+    if (id !== null) {
+      dispatch({
+        type: 'SELECT_ELEMENT_BY_ID',
+        payload: metaKey ? null : id,
+      });
+    }
+  };
 
-  const handleMouseEnter = useCallback(() => {
+  const handleMouseEnter = () => {
     setIsHovered(true);
     if (id !== null) {
       onElementMouseEnter(id);
     }
-  }, [id, onElementMouseEnter]);
+  };
 
-  const handleMouseLeave = useCallback(() => {
+  const handleMouseLeave = () => {
     setIsHovered(false);
-  }, []);
+  };
+
+  const handleKeyDoubleClick = event => {
+    // Double clicks on key value are used for text selection (if the text has been truncated).
+    // They should not enter the owners tree view.
+    event.stopPropagation();
+    event.preventDefault();
+  };
 
   // Handle elements that are removed from the tree while an async render is in progress.
   if (element == null) {
@@ -122,10 +120,15 @@ export default function ElementView({ data, index, style }: Props) {
         <DisplayName displayName={displayName} id={((id: any): number)} />
         {key && (
           <Fragment>
-            &nbsp;<span className={styles.AttributeName}>key</span>=
-            <span className={styles.AttributeValue} title={key}>
-              "{truncateText(`${key}`, 10)}"
+            &nbsp;<span className={styles.KeyName}>key</span>="
+            <span
+              className={styles.KeyValue}
+              title={key}
+              onDoubleClick={handleKeyDoubleClick}
+            >
+              {key}
             </span>
+            "
           </Fragment>
         )}
         <Badge
@@ -152,20 +155,17 @@ type ExpandCollapseToggleProps = {|
 function ExpandCollapseToggle({ element, store }: ExpandCollapseToggleProps) {
   const { children, id, isCollapsed } = element;
 
-  const toggleCollapsed = useCallback(
-    event => {
-      event.preventDefault();
-      event.stopPropagation();
+  const toggleCollapsed = event => {
+    event.preventDefault();
+    event.stopPropagation();
 
-      store.toggleIsCollapsed(id, !isCollapsed);
-    },
-    [id, isCollapsed, store]
-  );
+    store.toggleIsCollapsed(id, !isCollapsed);
+  };
 
-  const stopPropagation = useCallback(event => {
+  const stopPropagation = event => {
     // Prevent the row from selecting
     event.stopPropagation();
-  }, []);
+  };
 
   if (children.length === 0) {
     return <div className={styles.ExpandCollapseToggle} />;
