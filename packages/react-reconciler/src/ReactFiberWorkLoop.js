@@ -2576,11 +2576,14 @@ let didWarnAboutUnmockedScheduler = false;
 
 export function warnIfUnmockedScheduler(fiber: Fiber) {
   if (__DEV__) {
-    if (didWarnAboutUnmockedScheduler === false) {
+    if (
+      didWarnAboutUnmockedScheduler === false &&
+      Scheduler.unstable_flushAllWithoutAsserting === undefined
+    ) {
       if (fiber.mode & BatchedMode || fiber.mode & ConcurrentMode) {
         didWarnAboutUnmockedScheduler = true;
         warningWithoutStack(
-          Scheduler.unstable_flushAllWithoutAsserting !== undefined,
+          false,
           'In Concurrent or Sync modes, the "scheduler" module needs to be mocked ' +
             'to guarantee consistent behaviour across tests and browsers. ' +
             'For example, with jest: \n' +
@@ -2590,7 +2593,7 @@ export function warnIfUnmockedScheduler(fiber: Fiber) {
       } else if (warnAboutUnmockedScheduler === true) {
         didWarnAboutUnmockedScheduler = true;
         warningWithoutStack(
-          null,
+          false,
           'Starting from React v17, the "scheduler" module will need to be mocked ' +
             'to guarantee consistent behaviour across tests and browsers. ' +
             'For example, with jest: \n' +
