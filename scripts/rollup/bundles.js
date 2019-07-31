@@ -474,21 +474,6 @@ const bundles = [
       FB_WWW_PROD,
     ],
     moduleType: NON_FIBER_RENDERER,
-    entry: 'react-events/focus-scope',
-    global: 'ReactEventsFocusScope',
-    externals: ['react'],
-  },
-
-  {
-    bundleTypes: [
-      UMD_DEV,
-      UMD_PROD,
-      NODE_DEV,
-      NODE_PROD,
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-    ],
-    moduleType: NON_FIBER_RENDERER,
     entry: 'react-events/swipe',
     global: 'ReactEventsSwipe',
     externals: ['react'],

@@ -60,7 +60,6 @@ import {
   enableProfilerTimer,
   enableSchedulerTracing,
   enableSuspenseServerRenderer,
-  enableFlareAPI,
   enableFundamentalAPI,
   warnAboutDefaultPropsOnFunctionComponents,
 } from 'shared/ReactFeatureFlags';
@@ -173,7 +172,6 @@ import {
   requestCurrentTime,
   retryTimedOutBoundary,
 } from './ReactFiberWorkLoop';
-import {prepareToReadListenerHooks} from './ReactFiberEvents';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -302,9 +300,6 @@ function updateForwardRef(
   // The rest is a fork of updateFunctionComponent
   let nextChildren;
   prepareToReadContext(workInProgress, renderExpirationTime);
-  if (enableFlareAPI) {
-    prepareToReadListenerHooks(workInProgress);
-  }
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
     setCurrentPhase('render');
@@ -323,9 +318,6 @@ function updateForwardRef(
     ) {
       // Only double-render components with Hooks
       if (workInProgress.memoizedState !== null) {
-        if (enableFlareAPI) {
-          prepareToReadListenerHooks(workInProgress);
-        }
         nextChildren = renderWithHooks(
           current,
           workInProgress,
@@ -628,9 +620,6 @@ function updateFunctionComponent(
 
   let nextChildren;
   prepareToReadContext(workInProgress, renderExpirationTime);
-  if (enableFlareAPI) {
-    prepareToReadListenerHooks(workInProgress);
-  }
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
     setCurrentPhase('render');
@@ -649,9 +638,6 @@ function updateFunctionComponent(
     ) {
       // Only double-render components with Hooks
       if (workInProgress.memoizedState !== null) {
-        if (enableFlareAPI) {
-          prepareToReadListenerHooks(workInProgress);
-        }
         nextChildren = renderWithHooks(
           current,
           workInProgress,
@@ -1248,9 +1234,6 @@ function mountIndeterminateComponent(
   const context = getMaskedContext(workInProgress, unmaskedContext);
 
   prepareToReadContext(workInProgress, renderExpirationTime);
-  if (enableFlareAPI) {
-    prepareToReadListenerHooks(workInProgress);
-  }
   let value;
 
   if (__DEV__) {
@@ -1373,9 +1356,6 @@ function mountIndeterminateComponent(
       ) {
         // Only double-render components with Hooks
         if (workInProgress.memoizedState !== null) {
-          if (enableFlareAPI) {
-            prepareToReadListenerHooks(workInProgress);
-          }
           value = renderWithHooks(
             null,
             workInProgress,

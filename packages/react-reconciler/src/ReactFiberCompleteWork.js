@@ -13,6 +13,7 @@ import type {
   ReactEventResponder,
   ReactEventResponderInstance,
   ReactFundamentalComponentInstance,
+  ReactEventResponderListener,
 } from 'shared/ReactTypes';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {
@@ -133,6 +134,7 @@ import {
 import {createFundamentalStateInstance} from './ReactFiberFundamental';
 import {Never} from './ReactFiberExpirationTime';
 import {resetChildFibers} from './ReactChildFiber';
+import warning from 'shared/warning';
 
 const emptyObject = {};
 const isArray = Array.isArray;
@@ -690,12 +692,12 @@ function completeWork(
         );
 
         if (enableFlareAPI) {
-          const prevResponders = current.memoizedProps.responders;
-          const nextResponders = newProps.responders;
+          const prevListeners = current.memoizedProps.listeners;
+          const nextListeners = newProps.listeners;
           const instance = workInProgress.stateNode;
-          if (prevResponders !== nextResponders) {
-            updateEventResponders(
-              nextResponders,
+          if (prevListeners !== nextListeners) {
+            updateEventListeners(
+              nextListeners,
               instance,
               rootContainerInstance,
               workInProgress,
@@ -749,10 +751,10 @@ function completeWork(
           appendAllChildren(instance, workInProgress, false, false);
 
           if (enableFlareAPI) {
-            const responders = newProps.responders;
-            if (responders != null) {
-              updateEventResponders(
-                responders,
+            const listeners = newProps.listeners;
+            if (listeners != null) {
+              updateEventListeners(
+                listeners,
                 instance,
                 rootContainerInstance,
                 workInProgress,
@@ -1246,6 +1248,7 @@ function mountEventResponder(
     ReactEventResponder<any, any>,
     ReactEventResponderInstance<any, any>,
   >,
+  propagationRef: null | Object,
 ) {
   let responderState = emptyObject;
   const getInitialState = responder.getInitialState;
@@ -1258,6 +1261,7 @@ function mountEventResponder(
     responderState,
     instance,
     fiber,
+    propagationRef,
   );
   mountResponderInstance(
     responder,
@@ -1270,9 +1274,8 @@ function mountEventResponder(
   respondersMap.set(responder, responderInstance);
 }
 
-function updateEventResponder(
-  responder: ReactEventResponder<any, any>,
-  props: Object,
+function updateEventListener(
+  listener: ReactEventResponderListener<any, any>,
   fiber: Fiber,
   visistedResponders: Set<ReactEventResponder<any, any>>,
   respondersMap: Map<
@@ -1282,49 +1285,67 @@ function updateEventResponder(
   instance: Instance,
   rootContainerInstance: Container,
 ): void {
+  let responder;
+  let props;
+
+  if (listener) {
+    responder = listener.responder;
+    props = listener.props;
+  }
   invariant(
     responder && responder.$$typeof === REACT_RESPONDER_TYPE,
-    'An invalid value was used as an event responder. Expect one or many event ' +
-      'responders created via React.unstable_createResponer().',
+    'An invalid value was used as an event listener. Expect one or many event ' +
+      'listeners created via React.unstable_useResponer().',
   );
+  const listenerProps = ((props: any): Object);
   if (visistedResponders.has(responder)) {
     // show warning
+    if (__DEV__) {
+      warning(
+        false,
+        'Duplicate event responder "%s" found in event listeners. ' +
+          'Event listeners passed to elements cannot use the same event responder more than once.',
+        responder.displayName,
+      );
+    }
     return;
   }
   visistedResponders.add(responder);
   const responderInstance = respondersMap.get(responder);
+  const propagationRef = listenerProps.propagationRef || null;
 
   if (responderInstance === undefined) {
     // Mount
     mountEventResponder(
       responder,
-      props,
+      listenerProps,
       instance,
       rootContainerInstance,
       fiber,
       respondersMap,
+      propagationRef,
     );
   } else {
     // Update
-    responderInstance.props = props;
+    responderInstance.props = listenerProps;
     responderInstance.fiber = fiber;
+    responderInstance.propagationRef = propagationRef;
   }
 }
 
-function updateEventResponders(
-  responders: any,
+function updateEventListeners(
+  listeners: any,
   instance: Instance,
   rootContainerInstance: Container,
   fiber: Fiber,
 ): void {
   const visistedResponders = new Set();
   let dependencies = fiber.dependencies;
-  if (responders != null) {
+  if (listeners != null) {
     if (dependencies === null) {
       dependencies = fiber.dependencies = {
         expirationTime: NoWork,
         firstContext: null,
-        listeners: null,
         responders: new Map(),
       };
     }
@@ -1332,12 +1353,11 @@ function updateEventResponders(
     if (respondersMap === null) {
       respondersMap = new Map();
     }
-    if (isArray(responders)) {
-      for (let i = 0, length = responders.length; i < length; i++) {
-        const {type, props} = responders[i];
-        updateEventResponder(
-          type,
-          props,
+    if (isArray(listeners)) {
+      for (let i = 0, length = listeners.length; i < length; i++) {
+        const listener = listeners[i];
+        updateEventListener(
+          listener,
           fiber,
           visistedResponders,
           respondersMap,
@@ -1346,10 +1366,8 @@ function updateEventResponders(
         );
       }
     } else {
-      const {type, props} = responders;
-      updateEventResponder(
-        type,
-        props,
+      updateEventListener(
+        listeners,
         fiber,
         visistedResponders,
         respondersMap,

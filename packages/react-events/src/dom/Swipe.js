@@ -11,10 +11,22 @@ import type {
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
 } from 'shared/ReactDOMTypes';
-import type {EventPriority} from 'shared/ReactTypes';
+import type {
+  EventPriority,
+  ReactEventResponderListener,
+} from 'shared/ReactTypes';
 
 import React from 'react';
 import {UserBlockingEvent, DiscreteEvent} from 'shared/ReactTypes';
+
+type SwipeProps = {
+  disabled: boolean,
+  shouldClaimOwnership: () => boolean,
+  onSwipeMove: (e: SwipeEvent) => void,
+  onSwipeEnd: (e: SwipeEvent) => void,
+  onSwipeLeft: (e: SwipeEvent) => void,
+  onSwipeRight: (e: SwipeEvent) => void,
+};
 
 const targetEventTypes = ['pointerdown'];
 const rootEventTypes = ['pointerup', 'pointercancel', 'pointermove_active'];
@@ -46,6 +58,10 @@ type SwipeEvent = {|
   diffY?: number,
 |};
 
+function isFunction(obj): boolean {
+  return typeof obj === 'function';
+}
+
 function createSwipeEvent(
   context: ReactDOMResponderContext,
   type: SwipeEventType,
@@ -63,8 +79,8 @@ function createSwipeEvent(
 }
 
 function dispatchSwipeEvent(
-  eventPropName: string,
   context: ReactDOMResponderContext,
+  listener: SwipeEvent => void,
   name: SwipeEventType,
   state: SwipeState,
   eventPriority: EventPriority,
@@ -72,7 +88,7 @@ function dispatchSwipeEvent(
 ) {
   const target = ((state.swipeTarget: any): Element | Document);
   const syntheticEvent = createSwipeEvent(context, name, target, eventData);
-  context.dispatchEvent(eventPropName, syntheticEvent, eventPriority);
+  context.dispatchEvent(syntheticEvent, listener, eventPriority);
 }
 
 type SwipeState = {
@@ -107,7 +123,7 @@ const swipeResponderImpl = {
   onEvent(
     event: ReactDOMResponderEvent,
     context: ReactDOMResponderContext,
-    props: Object,
+    props: SwipeProps,
     state: SwipeState,
   ): void {
     const {target, type, nativeEvent} = event;
@@ -152,7 +168,7 @@ const swipeResponderImpl = {
   onRootEvent(
     event: ReactDOMResponderEvent,
     context: ReactDOMResponderContext,
-    props: Object,
+    props: SwipeProps,
     state: SwipeState,
   ): void {
     const {type, nativeEvent} = event;
@@ -197,14 +213,18 @@ const swipeResponderImpl = {
             diffX: x - state.startX,
             diffY: y - state.startY,
           };
-          dispatchSwipeEvent(
-            'onSwipeMove',
-            context,
-            'swipemove',
-            state,
-            UserBlockingEvent,
-            eventData,
-          );
+          const onSwipeMove = props.onSwipeMove;
+
+          if (isFunction(onSwipeMove)) {
+            dispatchSwipeEvent(
+              context,
+              onSwipeMove,
+              'swipemove',
+              state,
+              UserBlockingEvent,
+              eventData,
+            );
+          }
           (nativeEvent: any).preventDefault();
         }
         break;
@@ -224,28 +244,38 @@ const swipeResponderImpl = {
           const direction = state.direction;
           const lastDirection = state.lastDirection;
           if (direction !== lastDirection) {
-            if (props.onSwipeLeft && direction === 3) {
-              dispatchSwipeEvent(
-                'onSwipeLeft',
-                context,
-                'swipeleft',
-                state,
-                DiscreteEvent,
-              );
-            } else if (props.onSwipeRight && direction === 1) {
-              dispatchSwipeEvent(
-                'onSwipeRight',
-                context,
-                'swiperight',
-                state,
-                DiscreteEvent,
-              );
+            if (direction === 3) {
+              const onSwipeLeft = props.onSwipeLeft;
+
+              if (isFunction(onSwipeLeft)) {
+                dispatchSwipeEvent(
+                  context,
+                  onSwipeLeft,
+                  'swipeleft',
+                  state,
+                  DiscreteEvent,
+                );
+              }
+            } else if (direction === 1) {
+              const onSwipeRight = props.onSwipeRight;
+
+              if (isFunction(onSwipeRight)) {
+                dispatchSwipeEvent(
+                  context,
+                  onSwipeRight,
+                  'swiperight',
+                  state,
+                  DiscreteEvent,
+                );
+              }
             }
           }
-          if (props.onSwipeEnd) {
+          const onSwipeEnd = props.onSwipeEnd;
+
+          if (isFunction(onSwipeEnd)) {
             dispatchSwipeEvent(
-              'onSwipeEnd',
               context,
+              onSwipeEnd,
               'swipeend',
               state,
               DiscreteEvent,
@@ -268,6 +298,8 @@ export const SwipeResponder = React.unstable_createResponder(
   swipeResponderImpl,
 );
 
-export function useSwipeListener(props: Object): void {
-  React.unstable_useListener(SwipeResponder, props);
+export function useSwipeListener(
+  props: SwipeProps,
+): ReactEventResponderListener<any, any> {
+  return React.unstable_useListener(SwipeResponder, props);
 }

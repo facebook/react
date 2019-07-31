@@ -39,7 +39,7 @@ import {
   useReducer,
   useRef,
   useState,
-  useListener,
+  useResponder,
 } from './ReactHooks';
 import {withSuspenseConfig} from './ReactBatchConfig';
 import {
@@ -106,7 +106,7 @@ const React = {
 };
 
 if (enableFlareAPI) {
-  React.unstable_useListener = useListener;
+  React.unstable_useResponder = useResponder;
   React.unstable_createResponder = createResponder;
 }
 

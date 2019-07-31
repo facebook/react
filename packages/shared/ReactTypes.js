@@ -81,11 +81,17 @@ export type RefObject = {|
 
 export type ReactEventResponderInstance<E, C> = {|
   fiber: Object,
+  propagationRef: null | Object,
   props: Object,
   responder: ReactEventResponder<E, C>,
   rootEventTypes: null | Set<string>,
   state: Object,
   target: mixed,
+|};
+
+export type ReactEventResponderListener<E, C> = {|
+  props: Object,
+  responder: ReactEventResponder<E, C>,
 |};
 
 export type ReactEventResponder<E, C> = {

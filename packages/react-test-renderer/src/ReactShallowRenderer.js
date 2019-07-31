@@ -19,7 +19,10 @@ import warning from 'shared/warning';
 import is from 'shared/objectIs';
 
 import type {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactFiberHooks';
-import type {ReactContext} from 'shared/ReactTypes';
+import type {
+  ReactContext,
+  ReactEventResponderListener,
+} from 'shared/ReactTypes';
 import type {ReactElement} from 'shared/ReactElementType';
 
 type BasicStateAction<S> = (S => S) | S;
@@ -366,6 +369,14 @@ class ReactShallowRenderer {
       return fn;
     };
 
+    const useResponder = (
+      responder,
+      props,
+    ): ReactEventResponderListener<any, any> => ({
+      props: props,
+      responder,
+    });
+
     return {
       readContext,
       useCallback: (identity: any),
@@ -381,7 +392,7 @@ class ReactShallowRenderer {
       useReducer,
       useRef,
       useState,
-      useListener: noOp,
+      useResponder,
     };
   }
 

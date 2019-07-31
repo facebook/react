@@ -22,19 +22,21 @@ describe('ReactHooksInspection', () => {
     ReactDebugTools = require('react-debug-tools');
   });
 
-  it('should inspect a simple useListener hook', () => {
+  it('should inspect a simple useResponder hook', () => {
     const TestResponder = React.unstable_createResponder('TestResponder', {});
 
     function Foo(props) {
-      React.unstable_useListener(TestResponder, {preventDefault: false});
-      return <div responders={<TestResponder />}>Hello world</div>;
+      const listener = React.unstable_useResponder(TestResponder, {
+        preventDefault: false,
+      });
+      return <div listeners={listener}>Hello world</div>;
     }
     let tree = ReactDebugTools.inspectHooks(Foo, {});
     expect(tree).toEqual([
       {
         isStateEditable: false,
         id: 0,
-        name: 'Listener',
+        name: 'Responder',
         value: {props: {preventDefault: false}, responder: 'TestResponder'},
         subHooks: [],
       },
