@@ -9,7 +9,7 @@
 
 export default function getActiveElement(doc: ?Document): ?Element {
   doc = doc || (typeof document !== 'undefined' ? document : undefined);
-  if (typeof doc === 'undefined') {
+  if (doc == null) {
     return null;
   }
   try {
