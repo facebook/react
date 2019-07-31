@@ -40,6 +40,7 @@ import {
   shouldYield,
   requestPaint,
   now,
+  NoPriority,
   ImmediatePriority,
   UserBlockingPriority,
   NormalPriority,
@@ -237,6 +238,7 @@ let legacyErrorBoundariesThatAlreadyFailed: Set<mixed> | null = null;
 
 let rootDoesHavePassiveEffects: boolean = false;
 let rootWithPendingPassiveEffects: FiberRoot | null = null;
+let pendingPassiveEffectsRenderPriority: ReactPriorityLevel = NoPriority;
 let pendingPassiveEffectsExpirationTime: ExpirationTime = NoWork;
 
 let rootsWithPendingDiscreteUpdates: Map<
@@ -1032,7 +1034,11 @@ function renderRoot(
         hasNotProcessedNewUpdates &&
         !isSync &&
         // do not delay if we're inside an act() scope
-        !(flushSuspenseFallbacksInTests && IsThisRendererActing.current)
+        !(
+          __DEV__ &&
+          flushSuspenseFallbacksInTests &&
+          IsThisRendererActing.current
+        )
       ) {
         // If we have not processed any new updates during this pass, then this is
         // either a retry of an existing fallback state or a hidden tree.
@@ -1073,7 +1079,11 @@ function renderRoot(
       if (
         !isSync &&
         // do not delay if we're inside an act() scope
-        !(flushSuspenseFallbacksInTests && IsThisRendererActing.current)
+        !(
+          __DEV__ &&
+          flushSuspenseFallbacksInTests &&
+          IsThisRendererActing.current
+        )
       ) {
         // We're suspended in a state that should be avoided. We'll try to avoid committing
         // it for as long as the timeouts let us.
@@ -1146,7 +1156,11 @@ function renderRoot(
       if (
         !isSync &&
         // do not delay if we're inside an act() scope
-        !(flushSuspenseFallbacksInTests && IsThisRendererActing.current) &&
+        !(
+          __DEV__ &&
+          flushSuspenseFallbacksInTests &&
+          IsThisRendererActing.current
+        ) &&
         workInProgressRootLatestProcessedExpirationTime !== Sync &&
         workInProgressRootCanSuspendUsingConfig !== null
       ) {
@@ -1494,12 +1508,15 @@ function resetChildExpirationTime(completedWork: Fiber) {
 }
 
 function commitRoot(root) {
-  runWithPriority(ImmediatePriority, commitRootImpl.bind(null, root));
+  const renderPriorityLevel = getCurrentPriorityLevel();
+  runWithPriority(
+    ImmediatePriority,
+    commitRootImpl.bind(null, root, renderPriorityLevel),
+  );
   // If there are passive effects, schedule a callback to flush them. This goes
   // outside commitRootImpl so that it inherits the priority of the render.
   if (rootWithPendingPassiveEffects !== null) {
-    const priorityLevel = getCurrentPriorityLevel();
-    scheduleCallback(priorityLevel, () => {
+    scheduleCallback(NormalPriority, () => {
       flushPassiveEffects();
       return null;
     });
@@ -1507,7 +1524,7 @@ function commitRoot(root) {
   return null;
 }
 
-function commitRootImpl(root) {
+function commitRootImpl(root, renderPriorityLevel) {
   flushPassiveEffects();
   flushRenderPhaseStrictModeWarningsInDEV();
 
@@ -1730,6 +1747,7 @@ function commitRootImpl(root) {
     rootDoesHavePassiveEffects = false;
     rootWithPendingPassiveEffects = root;
     pendingPassiveEffectsExpirationTime = expirationTime;
+    pendingPassiveEffectsRenderPriority = renderPriorityLevel;
   } else {
     // We are done with the effect chain at this point so let's clear the
     // nextEffect pointers to assist with GC. If we have passive effects, we'll
@@ -1937,9 +1955,19 @@ export function flushPassiveEffects() {
   }
   const root = rootWithPendingPassiveEffects;
   const expirationTime = pendingPassiveEffectsExpirationTime;
+  const renderPriorityLevel = pendingPassiveEffectsRenderPriority;
   rootWithPendingPassiveEffects = null;
   pendingPassiveEffectsExpirationTime = NoWork;
+  pendingPassiveEffectsRenderPriority = NoPriority;
+  const priorityLevel =
+    renderPriorityLevel > NormalPriority ? NormalPriority : renderPriorityLevel;
+  return runWithPriority(
+    priorityLevel,
+    flushPassiveEffectsImpl.bind(null, root, expirationTime),
+  );
+}
 
+function flushPassiveEffectsImpl(root, expirationTime) {
   let prevInteractions: Set<Interaction> | null = null;
   if (enableSchedulerTracing) {
     prevInteractions = __interactionsRef.current;
@@ -2548,11 +2576,14 @@ let didWarnAboutUnmockedScheduler = false;
 
 export function warnIfUnmockedScheduler(fiber: Fiber) {
   if (__DEV__) {
-    if (didWarnAboutUnmockedScheduler === false) {
+    if (
+      didWarnAboutUnmockedScheduler === false &&
+      Scheduler.unstable_flushAllWithoutAsserting === undefined
+    ) {
       if (fiber.mode & BatchedMode || fiber.mode & ConcurrentMode) {
         didWarnAboutUnmockedScheduler = true;
         warningWithoutStack(
-          Scheduler.unstable_flushAllWithoutAsserting !== undefined,
+          false,
           'In Concurrent or Sync modes, the "scheduler" module needs to be mocked ' +
             'to guarantee consistent behaviour across tests and browsers. ' +
             'For example, with jest: \n' +
@@ -2562,7 +2593,7 @@ export function warnIfUnmockedScheduler(fiber: Fiber) {
       } else if (warnAboutUnmockedScheduler === true) {
         didWarnAboutUnmockedScheduler = true;
         warningWithoutStack(
-          null,
+          false,
           'Starting from React v17, the "scheduler" module will need to be mocked ' +
             'to guarantee consistent behaviour across tests and browsers. ' +
             'For example, with jest: \n' +
