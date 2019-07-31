@@ -68,11 +68,9 @@ export function createResponderInstance(
   responderState: Object,
   target: Instance,
   fiber: Fiber,
-  propagationRef: null | Object,
 ): ReactEventResponderInstance<any, any> {
   return {
     fiber,
-    propagationRef,
     props: responderProps,
     responder,
     rootEventTypes: null,

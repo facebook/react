@@ -593,7 +593,6 @@ function traverseAndHandleEventResponderInstances(
   // - Bubble target responder phase
   // - Root responder phase
 
-  const propagationRefs = new Set();
   const responderEvent = createDOMResponderEvent(
     topLevelType,
     nativeEvent,
@@ -612,21 +611,8 @@ function traverseAndHandleEventResponderInstances(
           const responderInstance = responderInstances[i];
 
           if (validateOwnership(responderInstance)) {
-            const {
-              propagationRef,
-              props,
-              responder,
-              state,
-              target,
-            } = responderInstance;
-            if (
-              (propagationRef === null ||
-                !propagationRefs.has(propagationRef)) &&
-              validateResponderTargetEventTypes(eventType, responder)
-            ) {
-              if (propagationRef !== null) {
-                propagationRefs.add(propagationRef);
-              }
+            const {props, responder, state, target} = responderInstance;
+            if (validateResponderTargetEventTypes(eventType, responder)) {
               const onEvent = responder.onEvent;
               if (onEvent !== null) {
                 currentInstance = responderInstance;

@@ -1248,7 +1248,6 @@ function mountEventResponder(
     ReactEventResponder<any, any>,
     ReactEventResponderInstance<any, any>,
   >,
-  propagationRef: null | Object,
 ) {
   let responderState = emptyObject;
   const getInitialState = responder.getInitialState;
@@ -1261,7 +1260,6 @@ function mountEventResponder(
     responderState,
     instance,
     fiber,
-    propagationRef,
   );
   mountResponderInstance(
     responder,
@@ -1312,7 +1310,6 @@ function updateEventListener(
   }
   visistedResponders.add(responder);
   const responderInstance = respondersMap.get(responder);
-  const propagationRef = listenerProps.propagationRef || null;
 
   if (responderInstance === undefined) {
     // Mount
@@ -1323,13 +1320,11 @@ function updateEventListener(
       rootContainerInstance,
       fiber,
       respondersMap,
-      propagationRef,
     );
   } else {
     // Update
     responderInstance.props = listenerProps;
     responderInstance.fiber = fiber;
-    responderInstance.propagationRef = propagationRef;
   }
 }
 
