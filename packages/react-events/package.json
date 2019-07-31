@@ -18,7 +18,6 @@
     "swipe.js",
     "drag.js",
     "scroll.js",
-    "focus-scope.js",
     "input.js",
     "keyboard.js",
     "build-info.json",
