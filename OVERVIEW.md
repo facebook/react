@@ -221,13 +221,19 @@ Instead DevTools lazily requests additional information about an element only wh
 
 Elements can update frequently, especially in response to things like scrolling events. Since props and state can be large, we avoid sending this information across the bridge every time the selected element is updated. Instead, the frontend polls the backend for updates about once a second. The backend tracks when the element was last "inspected" and sends a special no-op response if it has not re-rendered since then.
 
+### Deeply nested properties
+
+Even when dealing with a single component, serializing deeply nested properties can be expensive. Because of this, DevTools uses a technique referred to as "dehyration" to only send a shallow copy of the data on initial inspection. DevTools then fills in the missing data on demand as a user expands nested objects or arrays. Filled in paths are remembered (for the currently inspected element) so they are not "dehyrated" again as part of a polling update.
+
 ### Inspecting hooks
 
 Hooks present a unique challenge for the DevTools because of the concept of _custom_ hooks. (A custom hook is essentially any function that calls at least one of the built-in hooks. By convention custom hooks also have names that begin with "use".)
 
 So how does DevTools identify custom functions called from within third party components? It does this by temporarily overriding React's built-in hooks and shallow rendering the component in question. Whenever one of the (overridden) built-in hooks are called, it parses the call stack to spot potential custom hooks (functions between the component itself and the built-in hook). This approach enables it to build a tree structure describing all of the calls to both the built-in _and_ custom hooks, along with the values passed to those hooks. (If you're interested in learning more about this, [here is the source code](https://github.com/bvaughn/react-devtools-experimental/blob/master/src/backend/ReactDebugHooks.js).)
 
-> **Note**: DevTools obtains hooks info by re-rendering a component. Breakpoints and console logs will be invoked during this additional (shallow) render.
+> **Note**: DevTools obtains hooks info by re-rendering a component.
+> Breakpoints will be invoked during this additional (shallow) render,
+> but DevTools temporarily overrides `console` methods to suppress logging.
 
 ### Performance implications
 
@@ -243,18 +249,17 @@ The Profiler UI is a powerful tool for identifying and fixing performance proble
 * Minimizing bridge traffic.
 * Making expensive computations lazy.
 
-The majority of profiling information is stored on the backend. The backend push-notifies the frontend of when profiling starts or stops by sending a "_profilingStatus_" message. (The frontend also asks for the current status after mounting by sending a "_getProfilingStatus_" message.)
+The majority of profiling information is stored on the backend. The backend push-notifies the frontend of when profiling starts or stops by sending a "_profilingStatus_" message. The frontend also asks for the current status after mounting by sending a "_getProfilingStatus_" message. (This is done to support the reload-and-profile functionality.)
 
 When profiling begins, the frontend takes a snapshot/copy of each root. This snapshot includes the id, name, key, and child IDs for each node in the tree. (This information is already present on the frontend, so it does not require any additional bridge traffic.) While profiling is active, each time React commits– the frontend also stores a copy of the "_operations_" message (described above). Once profiling has finished, the frontend can use the original snapshot along with each of the stored "_operations_" messages to reconstruct the tree for each of the profiled commits.
 
-When profiling begins, the backend records the base durations of each fiber currently in the tree. While profiling is in progress, the backend also stores some information <sup>1</sup> about each commit:
+When profiling begins, the backend records the base durations of each fiber currently in the tree. While profiling is in progress, the backend also stores some information about each commit, including:
 * Commit time and duration
-* Which elements were rendered during that commit.
-* Which interactions (if any) were part of the commit.
+* Which elements were rendered during that commit
+* Which interactions (if any) were part of the commit
+* Which props and state changed (if enabled in profiler settings)
 
 This information will eventually be required by the frontend in order to render its profiling graphs, but it will not be sent across the bridge until profiling has completed (to minimize the performance impact of profiling).
-
-<sup>1</sup> In the future, the backend may also store additional metadata (e.g. which props/states changed between rendered for a given component).
 
 ### Combining profiling data
 
@@ -262,4 +267,4 @@ Once profiling is finished, the frontend requests profiling data from the backen
 
 ### Importing/exporting data
 
-Because all of the data is merged in the frontend after a profiling session is completed, it can be exported and imported (as JSON), enabling profiling sessions to be shared between users.
+Because all of the data is merged in the frontend after a profiling session is completed, it can be exported and imported (as a single JSON object), enabling profiling sessions to be shared between users.
