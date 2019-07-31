@@ -61,6 +61,12 @@ Double click a component to view the owners tree and click the "x" button to ret
 
 ![Demo showing "owners tree" feature](https://user-images.githubusercontent.com/29597/62229452-84f90000-b374-11e9-818a-61eec6be0bb4.gif)
 
+#### No more horizontal scrolling
+
+Deeply nested components used to require both vertical and horizontal scrolling to see, making it easy to "get lost" within large component trees. DevTools now dynamically adjusts nesting indentation to eliminate horizontal scrolling.
+
+![Video demonstration dynamic indentation to eliminate horizontal scrolling](https://user-images.githubusercontent.com/29597/62246661-f8ad0400-b398-11e9-885f-284f150a6d76.gif)
+
 #### Improved hooks support
 
 Hooks now have the same level of support as props and state: values can be edited, arrays and objects can be drilled into, etc.
@@ -87,7 +93,7 @@ DevTools lets you test these loading states with a new toggle:
 
 #### Reload and profile
 
-The profiler is a powerful tool for performing tuning React components. Legacy DevTools supported profiling, but only after it detected a profiling-capable version of React. Because of this there was no way to profile the initial _mount_ (one of the most performance sensitive parts) of an application.
+The profiler is a powerful tool for performance tuning React components. Legacy DevTools supported profiling, but only after it detected a profiling-capable version of React. Because of this there was no way to profile the initial _mount_ (one of the most performance sensitive parts) of an application.
 
 This feature is now supported with a "reload and profile" action:
 
