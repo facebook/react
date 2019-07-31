@@ -95,20 +95,21 @@ export function useLocalStorage<T>(
 
 export function useModalDismissSignal(
   modalRef: { current: HTMLDivElement | null },
-  dismissCallback: () => void
+  dismissCallback: () => void,
+  dismissOnClickOutside?: boolean = true
 ): void {
   useEffect(() => {
     if (modalRef.current === null) {
       return () => {};
     }
 
-    const handleKeyDown = ({ key }: any) => {
+    const handleDocumentKeyDown = ({ key }: any) => {
       if (key === 'Escape') {
         dismissCallback();
       }
     };
 
-    const handleClick = (event: any) => {
+    const handleDocumentClick = (event: any) => {
       // $FlowFixMe
       if (
         modalRef.current !== null &&
@@ -125,14 +126,16 @@ export function useModalDismissSignal(
     // Here we use portals to render individual tabs (e.g. Profiler),
     // and the root document might belong to a different window.
     const ownerDocument = modalRef.current.ownerDocument;
-    ownerDocument.addEventListener('keydown', handleKeyDown);
-    ownerDocument.addEventListener('click', handleClick);
+    ownerDocument.addEventListener('keydown', handleDocumentKeyDown);
+    if (dismissOnClickOutside) {
+      ownerDocument.addEventListener('click', handleDocumentClick);
+    }
 
     return () => {
-      ownerDocument.removeEventListener('keydown', handleKeyDown);
-      ownerDocument.removeEventListener('click', handleClick);
+      ownerDocument.removeEventListener('keydown', handleDocumentKeyDown);
+      ownerDocument.removeEventListener('click', handleDocumentClick);
     };
-  }, [modalRef, dismissCallback]);
+  }, [modalRef, dismissCallback, dismissOnClickOutside]);
 }
 
 // Copied from https://github.com/facebook/react/pull/15022

@@ -76,6 +76,7 @@ inject('dist/app.js', () => {
           bridge,
           browserTheme: 'light',
           showTabBar: true,
+          showWelcomeToTheNewDevToolsDialog: true,
           store,
           warnIfLegacyBackendDetected: true,
         })

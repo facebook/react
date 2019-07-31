@@ -155,6 +155,7 @@ function createPanelIfReactLoaded() {
               profilerPortalContainer,
               settingsPortalContainer,
               showTabBar: false,
+              showWelcomeToTheNewDevToolsDialog: true,
               store,
               viewElementSourceFunction,
             })

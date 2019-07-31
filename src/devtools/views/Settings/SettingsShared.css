@@ -134,3 +134,14 @@
   height: 0.375rem;
   background-color: var(--color-toggle-text);
 }
+
+.ReleaseNotes {
+  width: 100%;
+  background-color: var(--color-background-hover);
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+}
+
+.ReleaseNotesLink {
+  color: var(--color-button-active);
+}

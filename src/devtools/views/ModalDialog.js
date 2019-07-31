@@ -109,18 +109,35 @@ function ModalDialogImpl(_: {||}) {
       dispatch({ type: 'HIDE' });
     }
   }, [canBeDismissed, dispatch]);
-  const modalRef = useRef<HTMLDivElement | null>(null);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
 
-  useModalDismissSignal(modalRef, dismissModal);
+  // It's important to trap click events within the dialog,
+  // so the dismiss hook will use it for click hit detection.
+  // Because multiple tabs may be showing this ModalDialog,
+  // the normal `dialog.contains(target)` check would fail on a background tab.
+  useModalDismissSignal(dialogRef, dismissModal, false);
+
+  // Clicks on the dialog should not bubble.
+  // This way we can dismiss by listening to clicks on the background.
+  const handleDialogClick = (event: any) => {
+    event.stopPropagation();
+
+    // It is important that we don't also prevent default,
+    // or clicks within the dialog (e.g. on links) won't work.
+  };
 
   return (
-    <div className={styles.Background}>
-      <div className={styles.Dialog} ref={modalRef}>
+    <div className={styles.Background} onClick={dismissModal}>
+      <div
+        ref={dialogRef}
+        className={styles.Dialog}
+        onClick={handleDialogClick}
+      >
         {title !== null && <div className={styles.Title}>{title}</div>}
         {content}
         {canBeDismissed && (
           <div className={styles.Buttons}>
-            <Button autoFocus onClick={dismissModal}>
+            <Button autoFocus className={styles.Button} onClick={dismissModal}>
               Okay
             </Button>
           </div>

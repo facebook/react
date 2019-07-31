@@ -34,3 +34,7 @@
   text-align: right;
   margin-top: 0.5rem;
 }
+
+.Button {
+  font-size: var(--font-size-sans-large);
+}

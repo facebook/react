@@ -2,6 +2,7 @@
 
 import React, { useContext } from 'react';
 import { SettingsContext } from './SettingsContext';
+import { CHANGE_LOG_URL } from 'src/constants';
 
 import styles from './SettingsShared.css';
 
@@ -53,6 +54,18 @@ export default function GeneralSettings(_: {||}) {
           />{' '}
           Append component stacks to console warnings and errors.
         </label>
+      </div>
+
+      <div className={styles.ReleaseNotes}>
+        <a
+          className={styles.ReleaseNotesLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          href={CHANGE_LOG_URL}
+        >
+          View release notes
+        </a>{' '}
+        for DevTools version {process.env.DEVTOOLS_VERSION}
       </div>
     </div>
   );
