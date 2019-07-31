@@ -722,68 +722,74 @@ function runActTests(label, render, unmount, rerender) {
     });
 
     describe('suspense', () => {
-      it('triggers fallbacks if available', async () => {
-        let resolved = false;
-        let resolve;
-        const promise = new Promise(_resolve => {
-          resolve = _resolve;
-        });
+      if (__DEV__) {
+        it('triggers fallbacks if available', async () => {
+          let resolved = false;
+          let resolve;
+          const promise = new Promise(_resolve => {
+            resolve = _resolve;
+          });
 
-        function Suspends() {
-          if (resolved) {
-            return 'was suspended';
+          function Suspends() {
+            if (resolved) {
+              return 'was suspended';
+            }
+            throw promise;
           }
-          throw promise;
-        }
 
-        function App(props) {
-          return (
-            <React.Suspense
-              fallback={<span data-test-id="spinner">loading...</span>}>
-              {props.suspend ? <Suspends /> : 'content'}
-            </React.Suspense>
+          function App(props) {
+            return (
+              <React.Suspense
+                fallback={<span data-test-id="spinner">loading...</span>}>
+                {props.suspend ? <Suspends /> : 'content'}
+              </React.Suspense>
+            );
+          }
+
+          // render something so there's content
+          act(() => {
+            render(<App suspend={false} />, container);
+          });
+
+          // trigger a suspendy update
+          act(() => {
+            rerender(<App suspend={true} />);
+          });
+          expect(
+            document.querySelector('[data-test-id=spinner]'),
+          ).not.toBeNull();
+
+          // now render regular content again
+          act(() => {
+            rerender(<App suspend={false} />);
+          });
+          expect(document.querySelector('[data-test-id=spinner]')).toBeNull();
+
+          // trigger a suspendy update with a delay
+          React.unstable_withSuspenseConfig(
+            () => {
+              act(() => {
+                rerender(<App suspend={true} />);
+              });
+            },
+            {timeout: 5000},
           );
-        }
+          // the spinner shows up regardless
+          expect(
+            document.querySelector('[data-test-id=spinner]'),
+          ).not.toBeNull();
 
-        // render something so there's content
-        act(() => {
-          render(<App suspend={false} />, container);
+          // resolve the promise
+          await act(async () => {
+            resolved = true;
+            resolve();
+          });
+
+          // spinner gone, content showing
+          expect(document.querySelector('[data-test-id=spinner]')).toBeNull();
+          expect(container.textContent).toBe('was suspended');
         });
-
-        // trigger a suspendy update
-        act(() => {
-          rerender(<App suspend={true} />);
-        });
-        expect(document.querySelector('[data-test-id=spinner]')).not.toBeNull();
-
-        // now render regular content again
-        act(() => {
-          rerender(<App suspend={false} />);
-        });
-        expect(document.querySelector('[data-test-id=spinner]')).toBeNull();
-
-        // trigger a suspendy update with a delay
-        React.unstable_withSuspenseConfig(
-          () => {
-            act(() => {
-              rerender(<App suspend={true} />);
-            });
-          },
-          {timeout: 5000},
-        );
-        // the spinner shows up regardless
-        expect(document.querySelector('[data-test-id=spinner]')).not.toBeNull();
-
-        // resolve the promise
-        await act(async () => {
-          resolved = true;
-          resolve();
-        });
-
-        // spinner gone, content showing
-        expect(document.querySelector('[data-test-id=spinner]')).toBeNull();
-        expect(container.textContent).toBe('was suspended');
-      });
+      }
     });
   });
 }
