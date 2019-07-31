@@ -113,7 +113,6 @@ export default class Agent extends EventEmitter<{|
 
     this._bridge = bridge;
 
-    bridge.addListener('captureScreenshot', this.captureScreenshot);
     bridge.addListener('getProfilingData', this.getProfilingData);
     bridge.addListener('getProfilingStatus', this.getProfilingStatus);
     bridge.addListener('getOwnersList', this.getOwnersList);
@@ -125,7 +124,6 @@ export default class Agent extends EventEmitter<{|
     bridge.addListener('overrideState', this.overrideState);
     bridge.addListener('overrideSuspense', this.overrideSuspense);
     bridge.addListener('reloadAndProfile', this.reloadAndProfile);
-    bridge.addListener('screenshotCaptured', this.screenshotCaptured);
     bridge.addListener('selectElement', this.selectElement);
     bridge.addListener('startProfiling', this.startProfiling);
     bridge.addListener('stopProfiling', this.stopProfiling);
@@ -160,16 +158,6 @@ export default class Agent extends EventEmitter<{|
   get rendererInterfaces(): { [key: RendererID]: RendererInterface } {
     return this._rendererInterfaces;
   }
-
-  captureScreenshot = ({
-    commitIndex,
-    rootID,
-  }: {
-    commitIndex: number,
-    rootID: number,
-  }) => {
-    this._bridge.send('captureScreenshot', { commitIndex, rootID });
-  };
 
   getInstanceAndStyle({
     id,
@@ -254,18 +242,6 @@ export default class Agent extends EventEmitter<{|
     // In that case, the shell must also listen for this specific message to know when it needs to reload the app.
     // The agent can't do this in a way that is renderer agnostic.
     this._bridge.send('reloadAppForProfiling');
-  };
-
-  screenshotCaptured = ({
-    commitIndex,
-    dataURL,
-    rootID,
-  }: {|
-    commitIndex: number,
-    dataURL: string,
-    rootID: number,
-  |}) => {
-    this._bridge.send('screenshotCaptured', { commitIndex, dataURL, rootID });
   };
 
   selectElement = ({ id, rendererID }: ElementAndRendererID) => {

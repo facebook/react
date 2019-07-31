@@ -97,16 +97,6 @@ function createPanelIfReactLoaded() {
           localStorageSetItem(LOCAL_STORAGE_SUPPORTS_PROFILING_KEY, 'true');
           chrome.devtools.inspectedWindow.eval('window.location.reload();');
         });
-        bridge.addListener('captureScreenshot', ({ commitIndex, rootID }) => {
-          chrome.runtime.sendMessage(
-            {
-              captureScreenshot: true,
-              commitIndex,
-              rootID,
-            },
-            response => bridge.send('screenshotCaptured', response)
-          );
-        });
         bridge.addListener('syncSelectionToNativeElementsPanel', () => {
           setBrowserSelectionFromReact();
         });
@@ -126,7 +116,6 @@ function createPanelIfReactLoaded() {
 
         store = new Store(bridge, {
           isProfiling,
-          supportsCaptureScreenshots: true,
           supportsReloadAndProfile: true,
           supportsProfiling,
         });

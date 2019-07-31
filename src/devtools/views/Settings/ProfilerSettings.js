@@ -1,12 +1,6 @@
 // @flow
 
-import React, {
-  Fragment,
-  useCallback,
-  useContext,
-  useMemo,
-  useRef,
-} from 'react';
+import React, { useCallback, useContext, useMemo, useRef } from 'react';
 import { useSubscription } from '../hooks';
 import { StoreContext } from '../context';
 import { ProfilerContext } from 'src/devtools/views/Profiler/ProfilerContext';
@@ -23,20 +17,6 @@ export default function ProfilerSettings(_: {||}) {
   } = useContext(ProfilerContext);
   const store = useContext(StoreContext);
 
-  const captureScreenshotsSubscription = useMemo(
-    () => ({
-      getCurrentValue: () => store.captureScreenshots,
-      subscribe: (callback: Function) => {
-        store.addListener('captureScreenshots', callback);
-        return () => store.removeListener('captureScreenshots', callback);
-      },
-    }),
-    [store]
-  );
-  const captureScreenshots = useSubscription<boolean, Store>(
-    captureScreenshotsSubscription
-  );
-
   const recordChangeDescriptionsSubscription = useMemo(
     () => ({
       getCurrentValue: () => store.recordChangeDescriptions,
@@ -51,12 +31,6 @@ export default function ProfilerSettings(_: {||}) {
     recordChangeDescriptionsSubscription
   );
 
-  const updateCaptureScreenshotsWhileProfiling = useCallback(
-    ({ currentTarget }) => {
-      store.captureScreenshots = currentTarget.checked;
-    },
-    [store]
-  );
   const updateRecordChangeDescriptions = useCallback(
     ({ currentTarget }) => {
       store.recordChangeDescriptions = currentTarget.checked;
@@ -118,27 +92,6 @@ export default function ProfilerSettings(_: {||}) {
         />{' '}
         (ms)
       </div>
-
-      {store.supportsCaptureScreenshots && (
-        <Fragment>
-          <div className={styles.Setting}>
-            <label>
-              <input
-                type="checkbox"
-                checked={captureScreenshots}
-                onChange={updateCaptureScreenshotsWhileProfiling}
-              />{' '}
-              Capture screenshots while profiling
-            </label>
-          </div>
-          {captureScreenshots && (
-            <div className={styles.ScreenshotThrottling}>
-              Screenshots will be throttled in order to reduce the negative
-              impact on performance.
-            </div>
-          )}
-        </Fragment>
-      )}
     </div>
   );
 }

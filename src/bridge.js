@@ -63,7 +63,6 @@ type NativeStyleEditor_SetValueParams = {|
 |};
 
 type BackendEvents = {|
-  captureScreenshot: [{| commitIndex: number, rootID: number |}],
   inspectedElement: [InspectedElementPayload],
   isBackendStorageAPISupported: [boolean],
   operations: [Array<number>],
@@ -72,9 +71,6 @@ type BackendEvents = {|
   profilingData: [ProfilingDataBackend],
   profilingStatus: [boolean],
   reloadAppForProfiling: [],
-  screenshotCaptured: [
-    {| commitIndex: number, dataURL: string, rootID: number |},
-  ],
   selectFiber: [number],
   shutdown: [],
   stopInspectingNative: [boolean],
@@ -89,7 +85,6 @@ type BackendEvents = {|
 |};
 
 type FrontendEvents = {|
-  captureScreenshot: [{| commitIndex: number, rootID: number |}],
   clearNativeElementHighlight: [],
   getOwnersList: [ElementAndRendererID],
   getProfilingData: [{| rendererID: RendererID |}],

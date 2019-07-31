@@ -1,8 +1,6 @@
 // @flow
 
 import EventEmitter from 'events';
-import memoize from 'memoize-one';
-import throttle from 'lodash.throttle';
 import { prepareProfilingDataFrontendFromBackendAndStore } from './views/Profiler/utils';
 import ProfilingCache from './ProfilingCache';
 import Store from './store';
@@ -15,8 +13,6 @@ import type {
   ProfilingDataFrontend,
   SnapshotNode,
 } from './views/Profiler/types';
-
-const THROTTLE_CAPTURE_SCREENSHOT_DURATION = 500;
 
 export default class ProfilerStore extends EventEmitter<{|
   isProcessingData: [],
@@ -61,13 +57,6 @@ export default class ProfilerStore extends EventEmitter<{|
   // This map is only updated while profiling is in progress;
   // Upon completion, it is converted into the exportable ProfilingDataFrontend format.
   _inProgressOperationsByRootID: Map<number, Array<Array<number>>> = new Map();
-
-  // Map of root (id) to a Map of screenshots by commit ID.
-  // Stores screenshots for each commit (when profiling).
-  //
-  // This map is only updated while profiling is in progress;
-  // Upon completion, it is converted into the exportable ProfilingDataFrontend format.
-  _inProgressScreenshotsByRootID: Map<number, Map<number, string>> = new Map();
 
   // The backend is currently profiling.
   // When profiling is in progress, operations are stored so that we can later reconstruct past commit trees.
@@ -164,7 +153,6 @@ export default class ProfilerStore extends EventEmitter<{|
     this._initialRendererIDs.clear();
     this._initialSnapshotsByRootID.clear();
     this._inProgressOperationsByRootID.clear();
-    this._inProgressScreenshotsByRootID.clear();
     this._cache.invalidate();
 
     this.emit('profilingData');
@@ -176,7 +164,6 @@ export default class ProfilerStore extends EventEmitter<{|
     this._initialRendererIDs.clear();
     this._initialSnapshotsByRootID.clear();
     this._inProgressOperationsByRootID.clear();
-    this._inProgressScreenshotsByRootID.clear();
     this._rendererQueue.clear();
 
     // Invalidate suspense cache if profiling data is being (re-)recorded.
@@ -203,13 +190,6 @@ export default class ProfilerStore extends EventEmitter<{|
     // This ensures the frontend and backend are in sync wrt which commits were profiled.
     // We do this to avoid mismatches on e.g. CommitTreeBuilder that would cause errors.
   }
-
-  _captureScreenshot = throttle(
-    memoize((rootID: number, commitIndex: number) => {
-      this._bridge.send('captureScreenshot', { commitIndex, rootID });
-    }),
-    THROTTLE_CAPTURE_SCREENSHOT_DURATION
-  );
 
   _takeProfilingSnapshotRecursive = (
     elementID: number,
@@ -253,11 +233,6 @@ export default class ProfilerStore extends EventEmitter<{|
       if (!this._initialSnapshotsByRootID.has(rootID)) {
         this._initialSnapshotsByRootID.set(rootID, new Map());
       }
-
-      if (this._store.captureScreenshots) {
-        const commitIndex = profilingOperations.length - 1;
-        this._captureScreenshot(rootID, commitIndex);
-      }
     }
   };
 
@@ -282,7 +257,6 @@ export default class ProfilerStore extends EventEmitter<{|
       this._dataFrontend = prepareProfilingDataFrontendFromBackendAndStore(
         this._dataBackends,
         this._inProgressOperationsByRootID,
-        this._inProgressScreenshotsByRootID,
         this._initialSnapshotsByRootID
       );
 
@@ -306,7 +280,6 @@ export default class ProfilerStore extends EventEmitter<{|
       this._initialRendererIDs.clear();
       this._initialSnapshotsByRootID.clear();
       this._inProgressOperationsByRootID.clear();
-      this._inProgressScreenshotsByRootID.clear();
       this._rendererQueue.clear();
 
       // Record all renderer IDs initially too (in case of unmount)
@@ -353,27 +326,5 @@ export default class ProfilerStore extends EventEmitter<{|
         this.emit('isProcessingData');
       }
     }
-  };
-
-  onScreenshotCaptured = ({
-    commitIndex,
-    dataURL,
-    rootID,
-  }: {|
-    commitIndex: number,
-    dataURL: string,
-    rootID: number,
-  |}) => {
-    let screenshotsForRootByCommitIndex = this._inProgressScreenshotsByRootID.get(
-      rootID
-    );
-    if (!screenshotsForRootByCommitIndex) {
-      screenshotsForRootByCommitIndex = new Map();
-      this._inProgressScreenshotsByRootID.set(
-        rootID,
-        screenshotsForRootByCommitIndex
-      );
-    }
-    screenshotsForRootByCommitIndex.set(commitIndex, dataURL);
   };
 }

@@ -40,7 +40,6 @@ Object {
   },
   "interactionIDs": Array [],
   "priorityLevel": "Immediate",
-  "screenshot": null,
   "timestamp": 16,
 }
 `;
@@ -78,7 +77,6 @@ Object {
   },
   "interactionIDs": Array [],
   "priorityLevel": "Immediate",
-  "screenshot": null,
   "timestamp": 15,
 }
 `;
@@ -105,7 +103,6 @@ Object {
   },
   "interactionIDs": Array [],
   "priorityLevel": "Immediate",
-  "screenshot": null,
   "timestamp": 18,
 }
 `;
@@ -159,7 +156,6 @@ Object {
   },
   "interactionIDs": Array [],
   "priorityLevel": "Immediate",
-  "screenshot": null,
   "timestamp": 12,
 }
 `;
@@ -215,7 +211,6 @@ Object {
   },
   "interactionIDs": Array [],
   "priorityLevel": "Immediate",
-  "screenshot": null,
   "timestamp": 25,
 }
 `;
@@ -253,7 +248,6 @@ Object {
   },
   "interactionIDs": Array [],
   "priorityLevel": "Immediate",
-  "screenshot": null,
   "timestamp": 35,
 }
 `;
@@ -282,7 +276,6 @@ Object {
   },
   "interactionIDs": Array [],
   "priorityLevel": "Immediate",
-  "screenshot": null,
   "timestamp": 45,
 }
 `;
@@ -382,7 +375,6 @@ Object {
           ],
           "interactionIDs": Array [],
           "priorityLevel": "Immediate",
-          "screenshot": null,
           "timestamp": 12,
         },
         Object {
@@ -477,7 +469,6 @@ Object {
           ],
           "interactionIDs": Array [],
           "priorityLevel": "Immediate",
-          "screenshot": null,
           "timestamp": 25,
         },
         Object {
@@ -536,7 +527,6 @@ Object {
           ],
           "interactionIDs": Array [],
           "priorityLevel": "Immediate",
-          "screenshot": null,
           "timestamp": 35,
         },
         Object {
@@ -577,7 +567,6 @@ Object {
           ],
           "interactionIDs": Array [],
           "priorityLevel": "Immediate",
-          "screenshot": null,
           "timestamp": 45,
         },
       ],
@@ -841,7 +830,6 @@ Object {
           ],
           "interactionIDs": Array [],
           "priorityLevel": "Immediate",
-          "screenshot": null,
           "timestamp": 11,
         },
         Object {
@@ -918,7 +906,6 @@ Object {
           ],
           "interactionIDs": Array [],
           "priorityLevel": "Immediate",
-          "screenshot": null,
           "timestamp": 22,
         },
         Object {
@@ -1013,7 +1000,6 @@ Object {
           ],
           "interactionIDs": Array [],
           "priorityLevel": "Immediate",
-          "screenshot": null,
           "timestamp": 35,
         },
       ],
@@ -1213,7 +1199,6 @@ Object {
       },
       "interactionIDs": Array [],
       "priorityLevel": "Immediate",
-      "screenshot": null,
       "timestamp": 13,
     },
     Object {
@@ -1248,7 +1233,6 @@ Object {
       },
       "interactionIDs": Array [],
       "priorityLevel": "Immediate",
-      "screenshot": null,
       "timestamp": 34,
     },
     Object {
@@ -1274,7 +1258,6 @@ Object {
       },
       "interactionIDs": Array [],
       "priorityLevel": "Immediate",
-      "screenshot": null,
       "timestamp": 44,
     },
   ],
@@ -1443,7 +1426,6 @@ Object {
       },
       "interactionIDs": Array [],
       "priorityLevel": "Immediate",
-      "screenshot": null,
       "timestamp": 24,
     },
   ],
@@ -1526,7 +1508,6 @@ Object {
       "fiberSelfDurations": Map {},
       "interactionIDs": Array [],
       "priorityLevel": "Immediate",
-      "screenshot": null,
       "timestamp": 34,
     },
   ],
@@ -1688,7 +1669,6 @@ Object {
           ],
           "interactionIDs": Array [],
           "priorityLevel": "Immediate",
-          "screenshot": null,
           "timestamp": 13,
         },
         Object {
@@ -1747,7 +1727,6 @@ Object {
           ],
           "interactionIDs": Array [],
           "priorityLevel": "Immediate",
-          "screenshot": null,
           "timestamp": 34,
         },
         Object {
@@ -1788,7 +1767,6 @@ Object {
           ],
           "interactionIDs": Array [],
           "priorityLevel": "Immediate",
-          "screenshot": null,
           "timestamp": 44,
         },
       ],
@@ -2017,7 +1995,6 @@ Object {
           ],
           "interactionIDs": Array [],
           "priorityLevel": "Immediate",
-          "screenshot": null,
           "timestamp": 24,
         },
       ],
@@ -2097,7 +2074,6 @@ Object {
           "fiberSelfDurations": Array [],
           "interactionIDs": Array [],
           "priorityLevel": "Immediate",
-          "screenshot": null,
           "timestamp": 34,
         },
       ],
@@ -2249,7 +2225,6 @@ Object {
   },
   "interactionIDs": Array [],
   "priorityLevel": "Immediate",
-  "screenshot": null,
   "timestamp": 0,
 }
 `;
@@ -2320,7 +2295,6 @@ Object {
   },
   "interactionIDs": Array [],
   "priorityLevel": "Immediate",
-  "screenshot": null,
   "timestamp": 0,
 }
 `;
@@ -2387,7 +2361,6 @@ Object {
   },
   "interactionIDs": Array [],
   "priorityLevel": "Immediate",
-  "screenshot": null,
   "timestamp": 0,
 }
 `;
@@ -2455,7 +2428,6 @@ Object {
   },
   "interactionIDs": Array [],
   "priorityLevel": "Immediate",
-  "screenshot": null,
   "timestamp": 0,
 }
 `;
@@ -2522,7 +2494,6 @@ Object {
   },
   "interactionIDs": Array [],
   "priorityLevel": "Immediate",
-  "screenshot": null,
   "timestamp": 0,
 }
 `;
@@ -2648,7 +2619,6 @@ Object {
           ],
           "interactionIDs": Array [],
           "priorityLevel": "Immediate",
-          "screenshot": null,
           "timestamp": 0,
         },
         Object {
@@ -2767,7 +2737,6 @@ Object {
           ],
           "interactionIDs": Array [],
           "priorityLevel": "Immediate",
-          "screenshot": null,
           "timestamp": 0,
         },
         Object {
@@ -2888,7 +2857,6 @@ Object {
           ],
           "interactionIDs": Array [],
           "priorityLevel": "Immediate",
-          "screenshot": null,
           "timestamp": 0,
         },
         Object {
@@ -3010,7 +2978,6 @@ Object {
           ],
           "interactionIDs": Array [],
           "priorityLevel": "Immediate",
-          "screenshot": null,
           "timestamp": 0,
         },
         Object {
@@ -3131,7 +3098,6 @@ Object {
           ],
           "interactionIDs": Array [],
           "priorityLevel": "Immediate",
-          "screenshot": null,
           "timestamp": 0,
         },
       ],
@@ -3445,7 +3411,6 @@ Object {
             0,
           ],
           "priorityLevel": "Immediate",
-          "screenshot": null,
           "timestamp": 11,
         },
         Object {
@@ -3524,7 +3489,6 @@ Object {
             1,
           ],
           "priorityLevel": "Immediate",
-          "screenshot": null,
           "timestamp": 22,
         },
       ],

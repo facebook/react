@@ -1,6 +1,5 @@
 /** @flow */
 
-import html2canvas from 'html2canvas';
 import Agent from 'src/backend/agent';
 import Bridge from 'src/bridge';
 import { initBackend } from 'src/backend';
@@ -19,16 +18,6 @@ const bridge = new Bridge({
   send(event: string, payload: any, transferable?: Array<any>) {
     window.parent.postMessage({ event, payload }, '*', transferable);
   },
-});
-
-bridge.addListener('captureScreenshot', ({ commitIndex, rootID }) => {
-  html2canvas(document.body, { logging: false }).then(canvas => {
-    bridge.send('screenshotCaptured', {
-      commitIndex,
-      dataURL: canvas.toDataURL(),
-      rootID,
-    });
-  });
 });
 
 const agent = new Agent(bridge);

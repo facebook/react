@@ -1,6 +1,6 @@
 // @flow
 
-import React, { Fragment, useCallback, useContext, useState } from 'react';
+import React, { Fragment, useContext } from 'react';
 import { ProfilerContext } from './ProfilerContext';
 import { formatDuration, formatTime } from './utils';
 import { StoreContext } from '../context';
@@ -17,21 +17,7 @@ export default function SidebarCommitInfo(_: Props) {
     selectTab,
   } = useContext(ProfilerContext);
 
-  const { captureScreenshots, profilerStore } = useContext(StoreContext);
-
-  const [
-    isScreenshotModalVisible,
-    setIsScreenshotModalVisible,
-  ] = useState<boolean>(false);
-
-  const hideScreenshotModal = useCallback(
-    () => setIsScreenshotModalVisible(false),
-    []
-  );
-  const showScreenshotModal = useCallback(
-    () => setIsScreenshotModalVisible(true),
-    []
-  );
+  const { profilerStore } = useContext(StoreContext);
 
   if (rootID === null || selectedCommitIndex === null) {
     return <div className={styles.NothingSelected}>Nothing selected</div>;
@@ -42,7 +28,6 @@ export default function SidebarCommitInfo(_: Props) {
     duration,
     interactionIDs,
     priorityLevel,
-    screenshot,
     timestamp,
   } = profilerStore.getCommitData(rootID, selectedCommitIndex);
 
@@ -93,45 +78,8 @@ export default function SidebarCommitInfo(_: Props) {
               })}
             </div>
           </li>
-          {captureScreenshots && (
-            <li>
-              <label className={styles.Label}>Screenshot</label>:
-              {screenshot != null ? (
-                <img
-                  alt="Screenshot"
-                  className={styles.Screenshot}
-                  onClick={showScreenshotModal}
-                  src={screenshot}
-                />
-              ) : (
-                <div className={styles.NoScreenshot}>
-                  No screenshot available
-                </div>
-              )}
-            </li>
-          )}
-          {screenshot != null && isScreenshotModalVisible && (
-            <ScreenshotModal
-              hideScreenshotModal={hideScreenshotModal}
-              screenshot={screenshot}
-            />
-          )}
         </ul>
       </div>
     </Fragment>
-  );
-}
-
-function ScreenshotModal({
-  hideScreenshotModal,
-  screenshot,
-}: {|
-  hideScreenshotModal: Function,
-  screenshot: string,
-|}) {
-  return (
-    <div className={styles.Modal} onClick={hideScreenshotModal}>
-      <img alt="Screenshot" className={styles.ModalImage} src={screenshot} />
-    </div>
   );
 }

@@ -263,5 +263,3 @@ Once profiling is finished, the frontend requests profiling data from the backen
 ### Importing/exporting data
 
 Because all of the data is merged in the frontend after a profiling session is completed, it can be exported and imported (as JSON), enabling profiling sessions to be shared between users.
-
-At the moment, screenshots are not included in the exported data (to keep the export filesize small) but this could be changed in the future.

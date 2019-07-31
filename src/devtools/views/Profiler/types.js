@@ -60,9 +60,6 @@ export type CommitDataFrontend = {|
   // Priority level of the commit (if React provided this info)
   priorityLevel: string | null,
 
-  // Screenshot data for this commit (if available).
-  screenshot: string | null,
-
   // When did this commit occur (relative to the start of profiling)
   timestamp: number,
 |};
@@ -112,7 +109,6 @@ export type CommitDataExport = {|
   fiberSelfDurations: Array<[number, number]>,
   interactionIDs: Array<number>,
   priorityLevel: string | null,
-  screenshot: string | null,
   timestamp: number,
 |};
 

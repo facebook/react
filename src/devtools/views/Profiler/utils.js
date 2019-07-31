@@ -29,7 +29,6 @@ const commitGradient = [
 export function prepareProfilingDataFrontendFromBackendAndStore(
   dataBackends: Array<ProfilingDataBackend>,
   operationsByRootID: Map<number, Array<Array<number>>>,
-  screenshotsByRootID: Map<number, Map<number, string>>,
   snapshotsByRootID: Map<number, Map<number, SnapshotNode>>
 ): ProfilingDataFrontend {
   const dataForRoots: Map<number, ProfilingDataForRootFrontend> = new Map();
@@ -44,8 +43,6 @@ export function prepareProfilingDataFrontendFromBackendAndStore(
         interactions,
         rootID,
       }) => {
-        const screenshots = screenshotsByRootID.get(rootID) || null;
-
         const operations = operationsByRootID.get(rootID);
         if (operations == null) {
           throw Error(`Could not find profiling operations for root ${rootID}`);
@@ -69,8 +66,6 @@ export function prepareProfilingDataFrontendFromBackendAndStore(
             fiberSelfDurations: new Map(commitDataBackend.fiberSelfDurations),
             interactionIDs: commitDataBackend.interactionIDs,
             priorityLevel: commitDataBackend.priorityLevel,
-            screenshot:
-              (screenshots !== null && screenshots.get(commitIndex)) || null,
             timestamp: commitDataBackend.timestamp,
           })),
           displayName,
@@ -119,7 +114,6 @@ export function prepareProfilingDataFrontendFromExport(
             fiberSelfDurations,
             interactionIDs,
             priorityLevel,
-            screenshot,
             timestamp,
           }) => ({
             changeDescriptions:
@@ -129,7 +123,6 @@ export function prepareProfilingDataFrontendFromExport(
             fiberSelfDurations: new Map(fiberSelfDurations),
             interactionIDs,
             priorityLevel,
-            screenshot,
             timestamp,
           })
         ),
@@ -172,7 +165,6 @@ export function prepareProfilingDataExport(
             fiberSelfDurations,
             interactionIDs,
             priorityLevel,
-            screenshot,
             timestamp,
           }) => ({
             changeDescriptions:
@@ -184,7 +176,6 @@ export function prepareProfilingDataExport(
             fiberSelfDurations: Array.from(fiberSelfDurations.entries()),
             interactionIDs,
             priorityLevel,
-            screenshot,
             timestamp,
           })
         ),
