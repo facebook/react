@@ -1,14 +1,14 @@
 # Overview
 
 The React DevTools extension consists of multiple pieces:
-* The **frontend** portion is the extension you see (the Elements tree, the Profiler, etc.).
+* The **frontend** portion is the extension you see (the Components tree, the Profiler, etc.).
 * The **backend** portion is invisible. It runs in the same context as React itself. When React commits changes to e.g. the DOM, the backend is responsible for notifying the frontend by sending a message through the **bridge** (an abstraction around e.g. `postMessage`).
 
-One of the largest performance bottlenecks of the old React DevTools was the amount of bridge traffic. Each time React commits an update, the backend sends every fiber that changed across the bridge, resulting in a lot of (JSON) serialization. The primary goal for the DevTools rewrite was to reduce this traffic. Instead of sending everything across the bridge, **the backend should only send the minimum amount required to render the Elements tree**. The frontend can request more information (e.g. an element's props) on demand, only as needed.
+One of the largest performance bottlenecks of the old React DevTools was the amount of bridge traffic. Each time React commits an update, the backend sends every fiber that changed across the bridge, resulting in a lot of (JSON) serialization. The primary goal for the DevTools rewrite was to reduce this traffic. Instead of sending everything across the bridge, **the backend should only send the minimum amount required to render the Components tree**. The frontend can request more information (e.g. an element's props) on demand, only as needed.
 
 The old DevTools also rendered the entire application tree in the form of a large DOM structure of nested nodes. A secondary goal of the rewrite was to avoid rendering unnecessary nodes by using a windowing library (specifically [react-window](https://github.com/bvaughn/react-window)).
 
-## Elements panel
+## Components panel
 
 ### Serializing the tree
 
@@ -160,9 +160,9 @@ The frontend stores its information about the tree in a map of id to objects wit
 * depth: `number` <sup>1</sup>
 * weight: `number` <sup>2</sup>
 
-<sup>1</sup> The `depth` value determines how much padding/indentation to use for the element when rendering it in the Elements panel. (This preserves the appearance of a nested tree, even though the view is a flat list.)
+<sup>1</sup> The `depth` value determines how much padding/indentation to use for the element when rendering it in the Components panel. (This preserves the appearance of a nested tree, even though the view is a flat list.)
 
-<sup>2</sup> The `weight` of an element is the number of elements (including itself) below it in the tree. We cache this property so that we can quickly determine the total number of Elements as well as to find the Nth element within that set. (This enables us to use windowing.) This value needs to be adjusted each time elements are added or removed from the tree, but we amortize this over time to avoid any big performance hits when rendering the tree.
+<sup>2</sup> The `weight` of an element is the number of elements (including itself) below it in the tree. We cache this property so that we can quickly determine the total number of Components as well as to find the Nth element within that set. (This enables us to use windowing.) This value needs to be adjusted each time elements are added or removed from the tree, but we amortize this over time to avoid any big performance hits when rendering the tree.
 
 #### Finding the element at index N
 
