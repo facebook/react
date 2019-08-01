@@ -1711,39 +1711,43 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(Scheduler).toHaveYielded(['Suspend! [A]', 'Suspend! [B]']);
   });
 
-  it('Warns when component that triggered update is between Suspense boundary and component that suspended', async () => {
-    let _setShow;
-    function A() {
-      const [show, setShow] = React.useState(false);
-      _setShow = setShow;
-      return show && <AsyncText text="A" />;
-    }
-    function App() {
-      return (
-        <Suspense fallback="Loading...">
-          <A />
-        </Suspense>
-      );
-    }
-    await ReactNoop.act(async () => {
-      ReactNoop.render(<App />);
-    });
-
-    expect(() => {
-      ReactNoop.act(() => {
-        Scheduler.unstable_runWithPriority(
-          Scheduler.unstable_UserBlockingPriority,
-          () => _setShow(true),
+  it(
+    'Warns when component that triggered update is between Suspense boundary ' +
+      'and component that suspended',
+    async () => {
+      let _setShow;
+      function A() {
+        const [show, setShow] = React.useState(false);
+        _setShow = setShow;
+        return show && <AsyncText text="A" />;
+      }
+      function App() {
+        return (
+          <Suspense fallback="Loading...">
+            <A />
+          </Suspense>
         );
+      }
+      await ReactNoop.act(async () => {
+        ReactNoop.render(<App />);
       });
-    }).toWarnDev(
-      'Warning: The following components triggered a user-blocking update:' +
-        '\n\n' +
-        '  A' +
-        '\n\n',
-      {withoutStack: true},
-    );
-  });
+
+      expect(() => {
+        ReactNoop.act(() => {
+          Scheduler.unstable_runWithPriority(
+            Scheduler.unstable_UserBlockingPriority,
+            () => _setShow(true),
+          );
+        });
+      }).toWarnDev(
+        'Warning: The following components triggered a user-blocking update:' +
+          '\n\n' +
+          '  A' +
+          '\n\n',
+        {withoutStack: true},
+      );
+    },
+  );
 
   it('normal priority updates suspending do not warn for class components', async () => {
     let show;
