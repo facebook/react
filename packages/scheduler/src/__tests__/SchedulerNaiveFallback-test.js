@@ -15,7 +15,7 @@ let ImmediatePriority;
 let UserBlockingPriority;
 let NormalPriority;
 
-describe('SchedulerNoDOM', () => {
+describe('SchedulerNaiveFallback', () => {
   // If Scheduler runs in a non-DOM environment, it falls back to a naive
   // implementation using setTimeout. This only meant to be used for testing
   // purposes, like with jest's fake timer API.

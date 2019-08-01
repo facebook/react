@@ -5,12 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {
-  enableIsInputPending,
-  requestIdleCallbackBeforeFirstFrame as requestIdleCallbackBeforeFirstFrameFlag,
-  requestTimerEventBeforeFirstFrame,
-  enableMessageLoopImplementation,
-} from '../SchedulerFeatureFlags';
+import {enableIsInputPending} from '../SchedulerFeatureFlags';
 
 // The DOM Scheduler implementation is similar to requestIdleCallback. It
 // works by scheduling a requestAnimationFrame, storing the time for the start
@@ -86,11 +81,12 @@ if (
   const clearTimeout = window.clearTimeout;
   const requestAnimationFrame = window.requestAnimationFrame;
   const cancelAnimationFrame = window.cancelAnimationFrame;
-  const requestIdleCallback = window.requestIdleCallback;
 
   if (typeof console !== 'undefined') {
     // TODO: Remove fb.me link
     if (typeof requestAnimationFrame !== 'function') {
+      // We don't actually use requestAnimationFrame anymore but we warn anyway
+      // so we have the option to add it back later.
       console.error(
         "This browser doesn't support requestAnimationFrame. " +
           'Make sure that you load a ' +
@@ -106,38 +102,20 @@ if (
     }
   }
 
-  const requestIdleCallbackBeforeFirstFrame =
-    requestIdleCallbackBeforeFirstFrameFlag &&
-    typeof requestIdleCallback === 'function' &&
-    typeof cancelIdleCallback === 'function';
-
   getCurrentTime =
     typeof performance === 'object' && typeof performance.now === 'function'
       ? () => performance.now()
       : () => Date.now();
 
-  let isRAFLoopRunning = false;
   let isMessageLoopRunning = false;
   let scheduledHostCallback = null;
-  let rAFTimeoutID = -1;
   let taskTimeoutID = -1;
 
-  let frameLength = enableMessageLoopImplementation
-    ? // We won't attempt to align with the vsync. Instead we'll yield multiple
-      // times per frame, often enough to keep it responsive even at really
-      // high frame rates > 120.
-      5
-    : // Use a heuristic to measure the frame rate and yield at the end of the
-      // frame. We start out assuming that we run at 30fps but then the
-      // heuristic tracking will adjust this value to a faster fps if we get
-      // more frequent animation frames.
-      33.33;
-
-  let prevRAFTime = -1;
-  let prevRAFInterval = -1;
+  // We won't attempt to align with the vsync. Instead we'll yield multiple
+  // times per frame, often enough to keep it responsive even at really
+  // high frame rates > 120.
+  let frameLength = 5;
   let frameDeadline = 0;
-
-  let fpsLocked = false;
 
   // TODO: Make this configurable
   // TODO: Adjust this based on priority?
@@ -199,203 +177,54 @@ if (
     }
     if (fps > 0) {
       frameLength = Math.floor(1000 / fps);
-      fpsLocked = true;
     } else {
       // reset the framerate
-      frameLength = 33.33;
-      fpsLocked = false;
+      frameLength = 5;
     }
   };
 
   const performWorkUntilDeadline = () => {
-    if (enableMessageLoopImplementation) {
-      if (scheduledHostCallback !== null) {
-        const currentTime = getCurrentTime();
-        // Yield after `frameLength` ms, regardless of where we are in the vsync
-        // cycle. This means there's always time remaining at the beginning of
-        // the message event.
-        frameDeadline = currentTime + frameLength;
-        const hasTimeRemaining = true;
-        try {
-          const hasMoreWork = scheduledHostCallback(
-            hasTimeRemaining,
-            currentTime,
-          );
-          if (!hasMoreWork) {
-            isMessageLoopRunning = false;
-            scheduledHostCallback = null;
-          } else {
-            // If there's more work, schedule the next message event at the end
-            // of the preceding one.
-            port.postMessage(null);
-          }
-        } catch (error) {
-          // If a scheduler task throws, exit the current browser task so the
-          // error can be observed.
+    if (scheduledHostCallback !== null) {
+      const currentTime = getCurrentTime();
+      // Yield after `frameLength` ms, regardless of where we are in the vsync
+      // cycle. This means there's always time remaining at the beginning of
+      // the message event.
+      frameDeadline = currentTime + frameLength;
+      const hasTimeRemaining = true;
+      try {
+        const hasMoreWork = scheduledHostCallback(
+          hasTimeRemaining,
+          currentTime,
+        );
+        if (!hasMoreWork) {
+          isMessageLoopRunning = false;
+          scheduledHostCallback = null;
+        } else {
+          // If there's more work, schedule the next message event at the end
+          // of the preceding one.
           port.postMessage(null);
-          throw error;
         }
+      } catch (error) {
+        // If a scheduler task throws, exit the current browser task so the
+        // error can be observed.
+        port.postMessage(null);
+        throw error;
       }
-      // Yielding to the browser will give it a chance to paint, so we can
-      // reset this.
-      needsPaint = false;
-    } else {
-      if (scheduledHostCallback !== null) {
-        const currentTime = getCurrentTime();
-        const hasTimeRemaining = frameDeadline - currentTime > 0;
-        try {
-          const hasMoreWork = scheduledHostCallback(
-            hasTimeRemaining,
-            currentTime,
-          );
-          if (!hasMoreWork) {
-            scheduledHostCallback = null;
-          }
-        } catch (error) {
-          // If a scheduler task throws, exit the current browser task so the
-          // error can be observed, and post a new task as soon as possible
-          // so we can continue where we left off.
-          port.postMessage(null);
-          throw error;
-        }
-      }
-      // Yielding to the browser will give it a chance to paint, so we can
-      // reset this.
-      needsPaint = false;
     }
+    // Yielding to the browser will give it a chance to paint, so we can
+    // reset this.
+    needsPaint = false;
   };
 
   const channel = new MessageChannel();
   const port = channel.port2;
   channel.port1.onmessage = performWorkUntilDeadline;
 
-  const onAnimationFrame = rAFTime => {
-    if (scheduledHostCallback === null) {
-      // No scheduled work. Exit.
-      prevRAFTime = -1;
-      prevRAFInterval = -1;
-      isRAFLoopRunning = false;
-      return;
-    }
-
-    // Eagerly schedule the next animation callback at the beginning of the
-    // frame. If the scheduler queue is not empty at the end of the frame, it
-    // will continue flushing inside that callback. If the queue *is* empty,
-    // then it will exit immediately. Posting the callback at the start of the
-    // frame ensures it's fired within the earliest possible frame. If we
-    // waited until the end of the frame to post the callback, we risk the
-    // browser skipping a frame and not firing the callback until the frame
-    // after that.
-    isRAFLoopRunning = true;
-    requestAnimationFrame(nextRAFTime => {
-      clearTimeout(rAFTimeoutID);
-      onAnimationFrame(nextRAFTime);
-    });
-
-    // requestAnimationFrame is throttled when the tab is backgrounded. We
-    // don't want to stop working entirely. So we'll fallback to a timeout loop.
-    // TODO: Need a better heuristic for backgrounded work.
-    const onTimeout = () => {
-      frameDeadline = getCurrentTime() + frameLength / 2;
-      performWorkUntilDeadline();
-      rAFTimeoutID = setTimeout(onTimeout, frameLength * 3);
-    };
-    rAFTimeoutID = setTimeout(onTimeout, frameLength * 3);
-
-    if (
-      prevRAFTime !== -1 &&
-      // Make sure this rAF time is different from the previous one. This check
-      // could fail if two rAFs fire in the same frame.
-      rAFTime - prevRAFTime > 0.1
-    ) {
-      const rAFInterval = rAFTime - prevRAFTime;
-      if (!fpsLocked && prevRAFInterval !== -1) {
-        // We've observed two consecutive frame intervals. We'll use this to
-        // dynamically adjust the frame rate.
-        //
-        // If one frame goes long, then the next one can be short to catch up.
-        // If two frames are short in a row, then that's an indication that we
-        // actually have a higher frame rate than what we're currently
-        // optimizing. For example, if we're running on 120hz display or 90hz VR
-        // display. Take the max of the two in case one of them was an anomaly
-        // due to missed frame deadlines.
-        if (rAFInterval < frameLength && prevRAFInterval < frameLength) {
-          frameLength =
-            rAFInterval < prevRAFInterval ? prevRAFInterval : rAFInterval;
-          if (frameLength < 8.33) {
-            // Defensive coding. We don't support higher frame rates than 120hz.
-            // If the calculated frame length gets lower than 8, it is probably
-            // a bug.
-            frameLength = 8.33;
-          }
-        }
-      }
-      prevRAFInterval = rAFInterval;
-    }
-    prevRAFTime = rAFTime;
-    frameDeadline = rAFTime + frameLength;
-
-    // We use the postMessage trick to defer idle work until after the repaint.
-    port.postMessage(null);
-  };
-
   requestHostCallback = function(callback) {
     scheduledHostCallback = callback;
-    if (enableMessageLoopImplementation) {
-      if (!isMessageLoopRunning) {
-        isMessageLoopRunning = true;
-        port.postMessage(null);
-      }
-    } else {
-      if (!isRAFLoopRunning) {
-        // Start a rAF loop.
-        isRAFLoopRunning = true;
-        requestAnimationFrame(rAFTime => {
-          if (requestIdleCallbackBeforeFirstFrame) {
-            cancelIdleCallback(idleCallbackID);
-          }
-          if (requestTimerEventBeforeFirstFrame) {
-            clearTimeout(idleTimeoutID);
-          }
-          onAnimationFrame(rAFTime);
-        });
-
-        // If we just missed the last vsync, the next rAF might not happen for
-        // another frame. To claim as much idle time as possible, post a
-        // callback with `requestIdleCallback`, which should fire if there's
-        // idle time left in the frame.
-        //
-        // This should only be an issue for the first rAF in the loop;
-        // subsequent rAFs are scheduled at the beginning of the
-        // preceding frame.
-        let idleCallbackID;
-        if (requestIdleCallbackBeforeFirstFrame) {
-          idleCallbackID = requestIdleCallback(
-            function onIdleCallbackBeforeFirstFrame() {
-              if (requestTimerEventBeforeFirstFrame) {
-                clearTimeout(idleTimeoutID);
-              }
-              frameDeadline = getCurrentTime() + frameLength;
-              performWorkUntilDeadline();
-            },
-          );
-        }
-        // Alternate strategy to address the same problem. Scheduler a timer
-        // with no delay. If this fires before the rAF, that likely indicates
-        // that there's idle time before the next vsync. This isn't always the
-        // case, but we'll be aggressive and assume it is, as a trade off to
-        // prevent idle periods.
-        let idleTimeoutID;
-        if (requestTimerEventBeforeFirstFrame) {
-          idleTimeoutID = setTimeout(function onTimerEventBeforeFirstFrame() {
-            if (requestIdleCallbackBeforeFirstFrame) {
-              cancelIdleCallback(idleCallbackID);
-            }
-            frameDeadline = getCurrentTime() + frameLength;
-            performWorkUntilDeadline();
-          }, 0);
-        }
-      }
+    if (!isMessageLoopRunning) {
+      isMessageLoopRunning = true;
+      port.postMessage(null);
     }
   };
 
