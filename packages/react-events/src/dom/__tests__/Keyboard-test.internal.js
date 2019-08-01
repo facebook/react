@@ -12,8 +12,7 @@
 let React;
 let ReactFeatureFlags;
 let ReactDOM;
-let KeyboardResponder;
-let useKeyboardListener;
+let useKeyboardResponder;
 
 const createEvent = (type, data) => {
   const event = document.createEvent('CustomEvent');
@@ -35,8 +34,8 @@ describe('Keyboard event responder', () => {
     ReactFeatureFlags.enableFlareAPI = true;
     React = require('react');
     ReactDOM = require('react-dom');
-    KeyboardResponder = require('react-events/keyboard').KeyboardResponder;
-    useKeyboardListener = require('react-events/keyboard').useKeyboardListener;
+    useKeyboardResponder = require('react-events/keyboard')
+      .useKeyboardResponder;
 
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -56,13 +55,12 @@ describe('Keyboard event responder', () => {
       onKeyUp = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        useKeyboardListener({
+        const listener = useKeyboardResponder({
+          disabled: true,
           onKeyDown,
           onKeyUp,
         });
-        return (
-          <div ref={ref} responders={<KeyboardResponder disabled={true} />} />
-        );
+        return <div ref={ref} listeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
     });
@@ -81,10 +79,10 @@ describe('Keyboard event responder', () => {
       onKeyDown = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        useKeyboardListener({
+        const listener = useKeyboardResponder({
           onKeyDown,
         });
-        return <div ref={ref} responders={<KeyboardResponder />} />;
+        return <div ref={ref} listeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
     });
@@ -112,11 +110,11 @@ describe('Keyboard event responder', () => {
       onKeyUp = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        useKeyboardListener({
+        const listener = useKeyboardResponder({
           onKeyDown,
           onKeyUp,
         });
-        return <div ref={ref} responders={<KeyboardResponder />} />;
+        return <div ref={ref} listeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
     });

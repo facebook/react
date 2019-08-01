@@ -14,17 +14,15 @@ import type {
 
 import React from 'react';
 import {DiscreteEvent} from 'shared/ReactTypes';
+import type {ReactEventResponderListener} from 'shared/ReactTypes';
 
 type InputEventType = 'change' | 'beforechange' | 'valuechange';
 
-type InputListenerProps = {|
+type InputResponderProps = {
+  disabled: boolean,
   onBeforeChange: (e: InputEvent) => void,
   onChange: (e: InputEvent) => void,
   onValueChange: (value: string | boolean) => void,
-|};
-
-type InputResponderProps = {
-  disabled: boolean,
 };
 
 type InputEvent = {|
@@ -57,6 +55,10 @@ const supportedInputTypes = new Set([
   'week',
 ]);
 
+function isFunction(obj): boolean {
+  return typeof obj === 'function';
+}
+
 function createInputEvent(
   event: ReactDOMResponderEvent,
   context: ReactDOMResponderContext,
@@ -76,14 +78,14 @@ function createInputEvent(
 }
 
 function dispatchInputEvent(
-  eventPropName: string,
   event: ReactDOMResponderEvent,
+  listener: InputEvent => void,
   context: ReactDOMResponderContext,
   type: InputEventType,
   target: Element | Document,
 ): void {
   const syntheticEvent = createInputEvent(event, context, type, target);
-  context.dispatchEvent(eventPropName, syntheticEvent, DiscreteEvent);
+  context.dispatchEvent(syntheticEvent, listener, DiscreteEvent);
 }
 
 function getNodeName(elem: Element | Document): string {
@@ -115,10 +117,14 @@ function shouldUseChangeEvent(elem: Element | Document): boolean {
 
 function dispatchChangeEvent(
   context: ReactDOMResponderContext,
+  props: InputResponderProps,
   target: Element | Document,
 ): void {
-  const value = getValueFromNode(target);
-  context.dispatchEvent('onValueChange', value, DiscreteEvent);
+  const onValueChange = props.onValueChange;
+  if (isFunction(onValueChange)) {
+    const value = getValueFromNode(target);
+    context.dispatchEvent(value, onValueChange, DiscreteEvent);
+  }
 }
 
 function dispatchBothChangeEvents(
@@ -128,8 +134,11 @@ function dispatchBothChangeEvents(
   target: Document | Element,
 ): void {
   context.enqueueStateRestore(target);
-  dispatchInputEvent('onChange', event, context, 'change', target);
-  dispatchChangeEvent(context, target);
+  const onChange = props.onChange;
+  if (isFunction(onChange)) {
+    dispatchInputEvent(event, onChange, context, 'change', target);
+  }
+  dispatchChangeEvent(context, props, target);
 }
 
 function updateValueIfChanged(elem: Element | Document): boolean {
@@ -206,6 +215,8 @@ export const InputResponder = React.unstable_createResponder(
   inputResponderImpl,
 );
 
-export function useInputListener(props: InputListenerProps): void {
-  React.unstable_useListener(InputResponder, props);
+export function useInputResponder(
+  props: InputResponderProps,
+): ReactEventResponderListener<any, any> {
+  return React.unstable_useResponder(InputResponder, props);
 }

@@ -361,7 +361,7 @@ function createOpenTagMarkup(
     if (!hasOwnProperty.call(props, propKey)) {
       continue;
     }
-    if (enableFlareAPI && propKey === 'responders') {
+    if (enableFlareAPI && propKey === 'listeners') {
       continue;
     }
     let propValue = props[propKey];

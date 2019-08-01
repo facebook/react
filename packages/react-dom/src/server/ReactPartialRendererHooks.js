@@ -9,7 +9,10 @@
 
 import type {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactFiberHooks';
 import type {ThreadID} from './ReactThreadIDAllocator';
-import type {ReactContext} from 'shared/ReactTypes';
+import type {
+  ReactContext,
+  ReactEventResponderListener,
+} from 'shared/ReactTypes';
 
 import {validateContextBounds} from './ReactPartialRendererContext';
 
@@ -447,6 +450,13 @@ export function useCallback<T>(
   return callback;
 }
 
+function useResponder(responder, props): ReactEventResponderListener<any, any> {
+  return {
+    props,
+    responder,
+  };
+}
+
 function noop(): void {}
 
 export let currentThreadID: ThreadID = 0;
@@ -470,5 +480,5 @@ export const Dispatcher: DispatcherType = {
   useEffect: noop,
   // Debugging effect
   useDebugValue: noop,
-  useListener: noop,
+  useResponder,
 };

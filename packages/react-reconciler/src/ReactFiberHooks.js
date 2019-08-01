@@ -7,7 +7,11 @@
  * @flow
  */
 
-import type {ReactEventResponder, ReactContext} from 'shared/ReactTypes';
+import type {
+  ReactEventResponder,
+  ReactContext,
+  ReactEventResponderListener,
+} from 'shared/ReactTypes';
 import type {SideEffectTag} from 'shared/ReactSideEffectTags';
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
@@ -19,7 +23,7 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 import {NoWork} from './ReactFiberExpirationTime';
 import {readContext} from './ReactFiberNewContext';
-import {updateListenerHook} from './ReactFiberEvents';
+import {createResponderListener} from './ReactFiberEvents';
 import {
   Update as UpdateEffect,
   Passive as PassiveEffect,
@@ -85,7 +89,10 @@ export type Dispatcher = {
     deps: Array<mixed> | void | null,
   ): void,
   useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void,
-  useListener<E, C>(responder: ReactEventResponder<E, C>, props: Object): void,
+  useResponder<E, C>(
+    responder: ReactEventResponder<E, C>,
+    props: Object,
+  ): ReactEventResponderListener<E, C>,
 };
 
 type Update<S, A> = {
@@ -117,7 +124,7 @@ export type HookType =
   | 'useMemo'
   | 'useImperativeHandle'
   | 'useDebugValue'
-  | 'useListener';
+  | 'useResponder';
 
 let didWarnAboutMismatchedHooksForComponent;
 if (__DEV__) {
@@ -1262,7 +1269,7 @@ export const ContextOnlyDispatcher: Dispatcher = {
   useRef: throwInvalidHookError,
   useState: throwInvalidHookError,
   useDebugValue: throwInvalidHookError,
-  useListener: throwInvalidHookError,
+  useResponder: throwInvalidHookError,
 };
 
 const HooksDispatcherOnMount: Dispatcher = {
@@ -1278,7 +1285,7 @@ const HooksDispatcherOnMount: Dispatcher = {
   useRef: mountRef,
   useState: mountState,
   useDebugValue: mountDebugValue,
-  useListener: updateListenerHook,
+  useResponder: createResponderListener,
 };
 
 const HooksDispatcherOnUpdate: Dispatcher = {
@@ -1294,7 +1301,7 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   useRef: updateRef,
   useState: updateState,
   useDebugValue: updateDebugValue,
-  useListener: updateListenerHook,
+  useResponder: createResponderListener,
 };
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
@@ -1424,10 +1431,13 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountDebugValue(value, formatterFn);
     },
-    useListener<E, C>(responder: ReactEventResponder<E, C>, props) {
-      currentHookNameInDev = 'useListener';
+    useResponder<E, C>(
+      responder: ReactEventResponder<E, C>,
+      props,
+    ): ReactEventResponderListener<E, C> {
+      currentHookNameInDev = 'useResponder';
       mountHookTypesDev();
-      updateListenerHook(responder, props);
+      return createResponderListener(responder, props);
     },
   };
 
@@ -1526,10 +1536,13 @@ if (__DEV__) {
       updateHookTypesDev();
       return mountDebugValue(value, formatterFn);
     },
-    useListener<E, C>(responder: ReactEventResponder<E, C>, props) {
-      currentHookNameInDev = 'useListener';
+    useResponder<E, C>(
+      responder: ReactEventResponder<E, C>,
+      props,
+    ): ReactEventResponderListener<E, C> {
+      currentHookNameInDev = 'useResponder';
       updateHookTypesDev();
-      updateListenerHook(responder, props);
+      return createResponderListener(responder, props);
     },
   };
 
@@ -1628,10 +1641,13 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
     },
-    useListener<E, C>(responder: ReactEventResponder<E, C>, props) {
-      currentHookNameInDev = 'useListener';
+    useResponder<E, C>(
+      responder: ReactEventResponder<E, C>,
+      props,
+    ): ReactEventResponderListener<E, C> {
+      currentHookNameInDev = 'useResponder';
       updateHookTypesDev();
-      updateListenerHook(responder, props);
+      return createResponderListener(responder, props);
     },
   };
 
@@ -1741,11 +1757,14 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountDebugValue(value, formatterFn);
     },
-    useListener<E, C>(responder: ReactEventResponder<E, C>, props) {
-      currentHookNameInDev = 'useListener';
+    useResponder<E, C>(
+      responder: ReactEventResponder<E, C>,
+      props,
+    ): ReactEventResponderListener<E, C> {
+      currentHookNameInDev = 'useResponder';
       warnInvalidHookAccess();
       mountHookTypesDev();
-      updateListenerHook(responder, props);
+      return createResponderListener(responder, props);
     },
   };
 
@@ -1855,11 +1874,14 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
     },
-    useListener<E, C>(responder: ReactEventResponder<E, C>, props) {
-      currentHookNameInDev = 'useListener';
+    useResponder<E, C>(
+      responder: ReactEventResponder<E, C>,
+      props,
+    ): ReactEventResponderListener<E, C> {
+      currentHookNameInDev = 'useResponder';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      updateListenerHook(responder, props);
+      return createResponderListener(responder, props);
     },
   };
 }
