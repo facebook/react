@@ -134,13 +134,11 @@ function hasContextChanged(): boolean {
 }
 
 function isContextProvider(type: Function): boolean {
-  const childContextTypes = type.childContextTypes;
-  const hasChildContextTypes =
-    childContextTypes !== null && childContextTypes !== undefined;
   if (disableLegacyContext) {
     return false;
   } else {
-    return hasChildContextTypes;
+    const childContextTypes = type.childContextTypes;
+    return childContextTypes !== null && childContextTypes !== undefined;
   }
 }
 
@@ -154,7 +152,9 @@ function popContext(fiber: Fiber): void {
 }
 
 function popTopLevelContextObject(fiber: Fiber): void {
-  if (!disableLegacyContext) {
+  if (disableLegacyContext) {
+    return;
+  } else {
     pop(didPerformWorkStackCursor, fiber);
     pop(contextStackCursor, fiber);
   }
@@ -165,7 +165,9 @@ function pushTopLevelContextObject(
   context: Object,
   didChange: boolean,
 ): void {
-  if (!disableLegacyContext) {
+  if (disableLegacyContext) {
+    return;
+  } else {
     invariant(
       contextStackCursor.current === emptyContextObject,
       'Unexpected context found on stack. ' +
