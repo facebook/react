@@ -555,7 +555,7 @@ function constructClassInstance(
 ): any {
   let isLegacyContextConsumer = false;
   let unmaskedContext = emptyContextObject;
-  let context;
+  let context = emptyContextObject;
   const contextType = ctor.contextType;
 
   if (__DEV__) {
@@ -719,11 +719,6 @@ function constructClassInstance(
   // Cache unmasked context so we can avoid recreating masked context unless necessary.
   // ReactFiberContext usually updates this cache but can't for newly-created instances.
   if (isLegacyContextConsumer) {
-    invariant(
-      context !== undefined,
-      'Expected legacy context to always be present. ' +
-        'This is likely a bug in React. Please file an issue.',
-    );
     cacheContext(workInProgress, unmaskedContext, context);
   }
 
@@ -811,7 +806,9 @@ function mountClassInstance(
   const contextType = ctor.contextType;
   if (typeof contextType === 'object' && contextType !== null) {
     instance.context = readContext(contextType);
-  } else if (!disableLegacyContext) {
+  } else if (disableLegacyContext) {
+    instance.context = emptyContextObject;
+  } else {
     const unmaskedContext = getUnmaskedContext(workInProgress, ctor, true);
     instance.context = getMaskedContext(workInProgress, unmaskedContext);
   }
@@ -911,7 +908,7 @@ function resumeMountClassInstance(
 
   const oldContext = instance.context;
   const contextType = ctor.contextType;
-  let nextContext;
+  let nextContext = emptyContextObject;
   if (typeof contextType === 'object' && contextType !== null) {
     nextContext = readContext(contextType);
   } else if (!disableLegacyContext) {
@@ -1060,7 +1057,7 @@ function updateClassInstance(
 
   const oldContext = instance.context;
   const contextType = ctor.contextType;
-  let nextContext;
+  let nextContext = emptyContextObject;
   if (typeof contextType === 'object' && contextType !== null) {
     nextContext = readContext(contextType);
   } else if (!disableLegacyContext) {

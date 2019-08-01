@@ -431,7 +431,8 @@ function resolve(
 
   // Extra closure so queue and replace can be captured properly
   function processChild(element, Component) {
-    let publicContext = processContext(Component, context, threadID);
+    const isClass = shouldConstruct(Component);
+    const publicContext = processContext(Component, context, threadID, isClass);
 
     let queue = [];
     let replace = false;
@@ -459,7 +460,7 @@ function resolve(
     };
 
     let inst;
-    if (shouldConstruct(Component)) {
+    if (isClass) {
       inst = new Component(element.props, publicContext, updater);
 
       if (typeof Component.getDerivedStateFromProps === 'function') {

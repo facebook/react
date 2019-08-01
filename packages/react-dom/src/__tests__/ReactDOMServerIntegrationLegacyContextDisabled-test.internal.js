@@ -38,6 +38,19 @@ function initModules() {
 
 const {resetModules, itRenders} = ReactDOMServerIntegrationUtils(initModules);
 
+function formatValue(val) {
+  if (val === null) {
+    return 'null';
+  }
+  if (val === undefined) {
+    return 'undefined';
+  }
+  if (typeof val === 'string') {
+    return val;
+  }
+  return JSON.stringify(val);
+}
+
 describe('ReactDOMServerIntegrationLegacyContextDisabled', () => {
   beforeEach(() => {
     resetModules();
@@ -72,17 +85,17 @@ describe('ReactDOMServerIntegrationLegacyContextDisabled', () => {
         lifecycleContextLog.push(nextContext);
       }
       render() {
-        return typeof this.context;
+        return formatValue(this.context);
       }
     }
 
     function LegacyFnConsumer(props, context) {
-      return typeof context;
+      return formatValue(context);
     }
     LegacyFnConsumer.contextTypes = {foo() {}};
 
     function RegularFn(props, context) {
-      return typeof context;
+      return formatValue(context);
     }
 
     const e = await render(
@@ -95,7 +108,7 @@ describe('ReactDOMServerIntegrationLegacyContextDisabled', () => {
       </LegacyProvider>,
       3,
     );
-    expect(e.textContent).toBe('undefinedundefinedundefined');
+    expect(e.textContent).toBe('{}undefinedundefined');
     expect(lifecycleContextLog).toEqual([]);
   });
 
@@ -114,7 +127,7 @@ describe('ReactDOMServerIntegrationLegacyContextDisabled', () => {
 
     class RenderPropConsumer extends React.Component {
       render() {
-        return <Ctx.Consumer>{value => value}</Ctx.Consumer>;
+        return <Ctx.Consumer>{value => formatValue(value)}</Ctx.Consumer>;
       }
     }
 
@@ -132,12 +145,12 @@ describe('ReactDOMServerIntegrationLegacyContextDisabled', () => {
         lifecycleContextLog.push(nextContext);
       }
       render() {
-        return this.context;
+        return formatValue(this.context);
       }
     }
 
     function FnConsumer() {
-      return React.useContext(Ctx);
+      return formatValue(React.useContext(Ctx));
     }
 
     const e = await render(

@@ -23,6 +23,19 @@ describe('ReactLegacyContextDisabled', () => {
     ReactFeatureFlags.disableLegacyContext = true;
   });
 
+  function formatValue(val) {
+    if (val === null) {
+      return 'null';
+    }
+    if (val === undefined) {
+      return 'undefined';
+    }
+    if (typeof val === 'string') {
+      return val;
+    }
+    return JSON.stringify(val);
+  }
+
   it('warns for legacy context', () => {
     class LegacyProvider extends React.Component {
       static childContextTypes = {
@@ -52,17 +65,17 @@ describe('ReactLegacyContextDisabled', () => {
         lifecycleContextLog.push(nextContext);
       }
       render() {
-        return typeof this.context;
+        return formatValue(this.context);
       }
     }
 
     function LegacyFnConsumer(props, context) {
-      return typeof context;
+      return formatValue(context);
     }
     LegacyFnConsumer.contextTypes = {foo() {}};
 
     function RegularFn(props, context) {
-      return typeof context;
+      return formatValue(context);
     }
 
     const container = document.createElement('div');
@@ -88,7 +101,7 @@ describe('ReactLegacyContextDisabled', () => {
       ],
       {withoutStack: true},
     );
-    expect(container.textContent).toBe('undefinedundefinedundefined');
+    expect(container.textContent).toBe('{}undefinedundefined');
     expect(lifecycleContextLog).toEqual([]);
 
     // Test update path.
@@ -102,8 +115,8 @@ describe('ReactLegacyContextDisabled', () => {
       </LegacyProvider>,
       container,
     );
-    expect(container.textContent).toBe('undefinedundefinedundefined');
-    expect(lifecycleContextLog).toEqual([undefined, undefined, undefined]);
+    expect(container.textContent).toBe('{}undefinedundefined');
+    expect(lifecycleContextLog).toEqual([{}, {}, {}]);
     ReactDOM.unmountComponentAtNode(container);
   });
 
@@ -122,7 +135,7 @@ describe('ReactLegacyContextDisabled', () => {
 
     class RenderPropConsumer extends React.Component {
       render() {
-        return <Ctx.Consumer>{value => value}</Ctx.Consumer>;
+        return <Ctx.Consumer>{value => formatValue(value)}</Ctx.Consumer>;
       }
     }
 
@@ -140,12 +153,12 @@ describe('ReactLegacyContextDisabled', () => {
         lifecycleContextLog.push(nextContext);
       }
       render() {
-        return this.context;
+        return formatValue(this.context);
       }
     }
 
     function FnConsumer() {
-      return React.useContext(Ctx);
+      return formatValue(React.useContext(Ctx));
     }
 
     const container = document.createElement('div');
