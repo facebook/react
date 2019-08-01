@@ -10,6 +10,7 @@
 import type {ThreadID} from './ReactThreadIDAllocator';
 import type {ReactContext} from 'shared/ReactTypes';
 
+import {disableLegacyContext} from 'shared/ReactFeatureFlags';
 import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentName from 'shared/getComponentName';
@@ -121,12 +122,35 @@ export function processContext(
     validateContextBounds(contextType, threadID);
     return contextType[threadID];
   } else {
-    const maskedContext = maskContext(type, context);
-    if (__DEV__) {
-      if (type.contextTypes) {
-        checkContextTypes(type.contextTypes, maskedContext, 'context');
+    if (disableLegacyContext) {
+      if (__DEV__) {
+        if (type.contextTypes) {
+          if (type.prototype && type.prototype.isReactComponent) {
+            warningWithoutStack(
+              false,
+              '%s uses the legacy contextTypes API which is no longer supported. ' +
+                'Use React.createContext() with static contextType instead.',
+              getComponentName(type) || 'Unknown',
+            );
+          } else {
+            warningWithoutStack(
+              false,
+              '%s uses the legacy contextTypes API which is no longer supported. ' +
+                'Use React.createContext() with React.useContext() instead.',
+              getComponentName(type) || 'Unknown',
+            );
+          }
+        }
       }
+      return undefined;
+    } else {
+      const maskedContext = maskContext(type, context);
+      if (__DEV__) {
+        if (type.contextTypes) {
+          checkContextTypes(type.contextTypes, maskedContext, 'context');
+        }
+      }
+      return maskedContext;
     }
-    return maskedContext;
   }
 }
