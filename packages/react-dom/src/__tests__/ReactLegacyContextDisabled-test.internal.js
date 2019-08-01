@@ -36,10 +36,21 @@ describe('ReactLegacyContextDisabled', () => {
       }
     }
 
+    let lifecycleContextLog = [];
     class LegacyClsConsumer extends React.Component {
       static contextTypes = {
         foo() {},
       };
+      shouldComponentUpdate(nextProps, nextState, nextContext) {
+        lifecycleContextLog.push(nextContext);
+        return true;
+      }
+      UNSAFE_componentWillReceiveProps(nextProps, nextContext) {
+        lifecycleContextLog.push(nextContext);
+      }
+      UNSAFE_componentWillUpdate(nextProps, nextState, nextContext) {
+        lifecycleContextLog.push(nextContext);
+      }
       render() {
         return typeof this.context;
       }
@@ -78,6 +89,7 @@ describe('ReactLegacyContextDisabled', () => {
       {withoutStack: true},
     );
     expect(container.textContent).toBe('undefinedundefinedundefined');
+    expect(lifecycleContextLog).toEqual([]);
 
     // Test update path.
     ReactDOM.render(
@@ -91,6 +103,7 @@ describe('ReactLegacyContextDisabled', () => {
       container,
     );
     expect(container.textContent).toBe('undefinedundefinedundefined');
+    expect(lifecycleContextLog).toEqual([undefined, undefined, undefined]);
     ReactDOM.unmountComponentAtNode(container);
   });
 
@@ -113,8 +126,19 @@ describe('ReactLegacyContextDisabled', () => {
       }
     }
 
+    let lifecycleContextLog = [];
     class ContextTypeConsumer extends React.Component {
       static contextType = Ctx;
+      shouldComponentUpdate(nextProps, nextState, nextContext) {
+        lifecycleContextLog.push(nextContext);
+        return true;
+      }
+      UNSAFE_componentWillReceiveProps(nextProps, nextContext) {
+        lifecycleContextLog.push(nextContext);
+      }
+      UNSAFE_componentWillUpdate(nextProps, nextState, nextContext) {
+        lifecycleContextLog.push(nextContext);
+      }
       render() {
         return this.context;
       }
@@ -136,8 +160,23 @@ describe('ReactLegacyContextDisabled', () => {
       container,
     );
     expect(container.textContent).toBe('aaa');
+    expect(lifecycleContextLog).toEqual([]);
 
     // Test update path
+    ReactDOM.render(
+      <Provider value="a">
+        <span>
+          <RenderPropConsumer />
+          <ContextTypeConsumer />
+          <FnConsumer />
+        </span>
+      </Provider>,
+      container,
+    );
+    expect(container.textContent).toBe('aaa');
+    expect(lifecycleContextLog).toEqual(['a', 'a', 'a']);
+    lifecycleContextLog.length = 0;
+
     ReactDOM.render(
       <Provider value="b">
         <span>
@@ -149,6 +188,7 @@ describe('ReactLegacyContextDisabled', () => {
       container,
     );
     expect(container.textContent).toBe('bbb');
+    expect(lifecycleContextLog).toEqual(['b', 'b']); // sCU skipped due to changed context value.
     ReactDOM.unmountComponentAtNode(container);
   });
 });
