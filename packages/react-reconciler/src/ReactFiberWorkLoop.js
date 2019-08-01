@@ -25,6 +25,8 @@ import {
   enableProfilerTimer,
   enableSchedulerTracing,
   revertPassiveEffectsChange,
+  warnAboutUnmockedScheduler,
+  flushSuspenseFallbacksInTests,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
@@ -38,6 +40,7 @@ import {
   shouldYield,
   requestPaint,
   now,
+  NoPriority,
   ImmediatePriority,
   UserBlockingPriority,
   NormalPriority,
@@ -46,6 +49,9 @@ import {
   flushSyncCallbackQueue,
   scheduleSyncCallback,
 } from './SchedulerWithReactIntegration';
+
+// The scheduler is imported here *only* to detect whether it's been mocked
+import * as Scheduler from 'scheduler';
 
 import {__interactionsRef, __subscriberRef} from 'scheduler/tracing';
 
@@ -232,6 +238,7 @@ let legacyErrorBoundariesThatAlreadyFailed: Set<mixed> | null = null;
 
 let rootDoesHavePassiveEffects: boolean = false;
 let rootWithPendingPassiveEffects: FiberRoot | null = null;
+let pendingPassiveEffectsRenderPriority: ReactPriorityLevel = NoPriority;
 let pendingPassiveEffectsExpirationTime: ExpirationTime = NoWork;
 
 let rootsWithPendingDiscreteUpdates: Map<
@@ -989,7 +996,7 @@ function renderRoot(
     case RootIncomplete: {
       invariant(false, 'Should have a work-in-progress.');
     }
-    // Flow knows about invariant, so it compains if I add a break statement,
+    // Flow knows about invariant, so it complains if I add a break statement,
     // but eslint doesn't know about invariant, so it complains if I do.
     // eslint-disable-next-line no-fallthrough
     case RootErrored: {
@@ -1023,7 +1030,16 @@ function renderRoot(
       // possible.
       const hasNotProcessedNewUpdates =
         workInProgressRootLatestProcessedExpirationTime === Sync;
-      if (hasNotProcessedNewUpdates && !isSync) {
+      if (
+        hasNotProcessedNewUpdates &&
+        !isSync &&
+        // do not delay if we're inside an act() scope
+        !(
+          __DEV__ &&
+          flushSuspenseFallbacksInTests &&
+          IsThisRendererActing.current
+        )
+      ) {
         // If we have not processed any new updates during this pass, then this is
         // either a retry of an existing fallback state or a hidden tree.
         // Hidden trees shouldn't be batched with other work and after that's
@@ -1060,7 +1076,15 @@ function renderRoot(
       return commitRoot.bind(null, root);
     }
     case RootSuspendedWithDelay: {
-      if (!isSync) {
+      if (
+        !isSync &&
+        // do not delay if we're inside an act() scope
+        !(
+          __DEV__ &&
+          flushSuspenseFallbacksInTests &&
+          IsThisRendererActing.current
+        )
+      ) {
         // We're suspended in a state that should be avoided. We'll try to avoid committing
         // it for as long as the timeouts let us.
         if (workInProgressRootHasPendingPing) {
@@ -1131,6 +1155,12 @@ function renderRoot(
       // The work completed. Ready to commit.
       if (
         !isSync &&
+        // do not delay if we're inside an act() scope
+        !(
+          __DEV__ &&
+          flushSuspenseFallbacksInTests &&
+          IsThisRendererActing.current
+        ) &&
         workInProgressRootLatestProcessedExpirationTime !== Sync &&
         workInProgressRootCanSuspendUsingConfig !== null
       ) {
@@ -1478,12 +1508,15 @@ function resetChildExpirationTime(completedWork: Fiber) {
 }
 
 function commitRoot(root) {
-  runWithPriority(ImmediatePriority, commitRootImpl.bind(null, root));
+  const renderPriorityLevel = getCurrentPriorityLevel();
+  runWithPriority(
+    ImmediatePriority,
+    commitRootImpl.bind(null, root, renderPriorityLevel),
+  );
   // If there are passive effects, schedule a callback to flush them. This goes
   // outside commitRootImpl so that it inherits the priority of the render.
   if (rootWithPendingPassiveEffects !== null) {
-    const priorityLevel = getCurrentPriorityLevel();
-    scheduleCallback(priorityLevel, () => {
+    scheduleCallback(NormalPriority, () => {
       flushPassiveEffects();
       return null;
     });
@@ -1491,7 +1524,7 @@ function commitRoot(root) {
   return null;
 }
 
-function commitRootImpl(root) {
+function commitRootImpl(root, renderPriorityLevel) {
   flushPassiveEffects();
   flushRenderPhaseStrictModeWarningsInDEV();
 
@@ -1714,6 +1747,7 @@ function commitRootImpl(root) {
     rootDoesHavePassiveEffects = false;
     rootWithPendingPassiveEffects = root;
     pendingPassiveEffectsExpirationTime = expirationTime;
+    pendingPassiveEffectsRenderPriority = renderPriorityLevel;
   } else {
     // We are done with the effect chain at this point so let's clear the
     // nextEffect pointers to assist with GC. If we have passive effects, we'll
@@ -1921,9 +1955,19 @@ export function flushPassiveEffects() {
   }
   const root = rootWithPendingPassiveEffects;
   const expirationTime = pendingPassiveEffectsExpirationTime;
+  const renderPriorityLevel = pendingPassiveEffectsRenderPriority;
   rootWithPendingPassiveEffects = null;
   pendingPassiveEffectsExpirationTime = NoWork;
+  pendingPassiveEffectsRenderPriority = NoPriority;
+  const priorityLevel =
+    renderPriorityLevel > NormalPriority ? NormalPriority : renderPriorityLevel;
+  return runWithPriority(
+    priorityLevel,
+    flushPassiveEffectsImpl.bind(null, root, expirationTime),
+  );
+}
 
+function flushPassiveEffectsImpl(root, expirationTime) {
   let prevInteractions: Set<Interaction> | null = null;
   if (enableSchedulerTracing) {
     prevInteractions = __interactionsRef.current;
@@ -2435,6 +2479,7 @@ function warnAboutInvalidUpdatesOnClassComponentsInDEV(fiber) {
   }
 }
 
+// a 'shared' variable that changes when act() opens/closes in tests.
 export const IsThisRendererActing = {current: (false: boolean)};
 
 export function warnIfNotScopedWithMatchingAct(fiber: Fiber): void {
@@ -2521,6 +2566,44 @@ function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
 }
 
 export const warnIfNotCurrentlyActingUpdatesInDev = warnIfNotCurrentlyActingUpdatesInDEV;
+
+// In tests, we want to enforce a mocked scheduler.
+let didWarnAboutUnmockedScheduler = false;
+// TODO Before we release concurrent mode, revisit this and decide whether a mocked
+// scheduler is the actual recommendation. The alternative could be a testing build,
+// a new lib, or whatever; we dunno just yet. This message is for early adopters
+// to get their tests right.
+
+export function warnIfUnmockedScheduler(fiber: Fiber) {
+  if (__DEV__) {
+    if (
+      didWarnAboutUnmockedScheduler === false &&
+      Scheduler.unstable_flushAllWithoutAsserting === undefined
+    ) {
+      if (fiber.mode & BatchedMode || fiber.mode & ConcurrentMode) {
+        didWarnAboutUnmockedScheduler = true;
+        warningWithoutStack(
+          false,
+          'In Concurrent or Sync modes, the "scheduler" module needs to be mocked ' +
+            'to guarantee consistent behaviour across tests and browsers. ' +
+            'For example, with jest: \n' +
+            "jest.mock('scheduler', () => require('scheduler/unstable_mock'));\n\n" +
+            'For more info, visit https://fb.me/react-mock-scheduler',
+        );
+      } else if (warnAboutUnmockedScheduler === true) {
+        didWarnAboutUnmockedScheduler = true;
+        warningWithoutStack(
+          false,
+          'Starting from React v17, the "scheduler" module will need to be mocked ' +
+            'to guarantee consistent behaviour across tests and browsers. ' +
+            'For example, with jest: \n' +
+            "jest.mock('scheduler', () => require('scheduler/unstable_mock'));\n\n" +
+            'For more info, visit https://fb.me/react-mock-scheduler',
+        );
+      }
+    }
+  }
+}
 
 let componentsThatSuspendedAtHighPri = null;
 let componentsThatTriggeredHighPriSuspend = null;

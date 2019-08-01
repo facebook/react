@@ -27,7 +27,6 @@ import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import enqueueTask from 'shared/enqueueTask';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import warningWithoutStack from 'shared/warningWithoutStack';
-import {warnAboutMissingMockScheduler} from 'shared/ReactFeatureFlags';
 import {ConcurrentRoot, BatchedRoot, LegacyRoot} from 'shared/ReactRootTags';
 
 type Container = {
@@ -599,27 +598,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   // this act() implementation should be exactly the same in
   // ReactTestUtilsAct.js, ReactTestRendererAct.js, createReactNoop.js
 
-  let hasWarnedAboutMissingMockScheduler = false;
   const isSchedulerMocked =
     typeof Scheduler.unstable_flushAllWithoutAsserting === 'function';
   const flushWork =
     Scheduler.unstable_flushAllWithoutAsserting ||
     function() {
-      if (warnAboutMissingMockScheduler === true) {
-        if (hasWarnedAboutMissingMockScheduler === false) {
-          warningWithoutStack(
-            null,
-            'Starting from React v17, the "scheduler" module will need to be mocked ' +
-              'to guarantee consistent behaviour across tests and browsers. To fix this, add the following ' +
-              "to the top of your tests, or in your framework's global config file -\n\n" +
-              'As an example, for jest - \n' +
-              "jest.mock('scheduler', () => require.requireActual('scheduler/unstable_mock'));\n\n" +
-              'For more info, visit https://fb.me/react-mock-scheduler',
-          );
-          hasWarnedAboutMissingMockScheduler = true;
-        }
-      }
-
       let didFlushWork = false;
       while (flushPassiveEffects()) {
         didFlushWork = true;
