@@ -41,6 +41,14 @@ Host nodes (e.g. HTML `<div>`, React Native `View`) are now hidden by default, b
 
 Filter preferences are remembered between sessions.
 
+#### No more in-line props
+
+Components in the tree no longer show in-line props. This was done to [make DevTools faster](https://github.com/bvaughn/react-devtools-experimental/blob/master/OVERVIEW.md) and to make it easier to browse larger component trees.
+
+You can view a component's props, state, and hooks by selecting it:
+
+![Inspecting props](https://user-images.githubusercontent.com/29597/62303001-37da6400-b430-11e9-87fd-10a94df88efa.png)
+
 #### "Rendered by" list
 
 In React, an element's "owner" refers the thing that rendered it. Sometimes an element's parent is also its owner, but usually they're different. This distinction is important because props come from owners.
@@ -80,6 +88,18 @@ Legacy DevTools search filtered the components tree to show matching nodes as ro
 Search results are now shown inline similar to the browser's find-in-page search.
 
 ![Video demonstrating the search UX](https://user-images.githubusercontent.com/29597/62230923-c63edf00-b377-11e9-9f95-aa62ddc8f62c.gif)
+
+#### Higher order components
+
+[Higher order components](https://reactjs.org/docs/higher-order-components.html) (or HOCs) often provide a [custom `displayName`](https://reactjs.org/docs/higher-order-components.html#convention-wrap-the-display-name-for-easy-debugging) following a convention of `withHOC(InnerComponentName)` in order to make it easier to identify components in React warnings and in DevTools.
+
+The new Components tree formats these HOC names (along with several built-in utilities like `React.memo` and `React.forwardRef`) as a special badge to the right of the decorated component name.
+
+![Screenshot showing HOC badges](https://user-images.githubusercontent.com/29597/62302774-c4385700-b42f-11e9-9ef4-49c5f18d6276.png)
+
+Components decorated with multiple HOCs show the topmost badge and a count. Selecting the component shows all of the HOCs badges in the properties panel.
+
+![Screenshot showing a component with multiple HOC badges](https://user-images.githubusercontent.com/29597/62303729-7fadbb00-b431-11e9-8685-45f5ab52b30b.png)
 
 #### Suspense toggle
 
