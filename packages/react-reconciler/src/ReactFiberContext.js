@@ -67,11 +67,7 @@ function cacheContext(
   maskedContext: Object,
 ): void {
   if (disableLegacyContext) {
-    invariant(
-      false,
-      'The legacy contextTypes API is no longer supported. ' +
-        'Use React.createContext() with contextType instead.',
-    );
+    return;
   } else {
     const instance = workInProgress.stateNode;
     instance.__reactInternalMemoizedUnmaskedChildContext = unmaskedContext;
@@ -142,15 +138,7 @@ function isContextProvider(type: Function): boolean {
   const hasChildContextTypes =
     childContextTypes !== null && childContextTypes !== undefined;
   if (disableLegacyContext) {
-    if (hasChildContextTypes) {
-      invariant(
-        false,
-        'The legacy childContextTypes API is no longer supported. ' +
-          'Use React.createContext() instead.',
-      );
-    } else {
-      return false;
-    }
+    return false;
   } else {
     return hasChildContextTypes;
   }
@@ -158,11 +146,7 @@ function isContextProvider(type: Function): boolean {
 
 function popContext(fiber: Fiber): void {
   if (disableLegacyContext) {
-    invariant(
-      false,
-      'The legacy childContextTypes API is no longer supported. ' +
-        'Use React.createContext() instead.',
-    );
+    return;
   } else {
     pop(didPerformWorkStackCursor, fiber);
     pop(contextStackCursor, fiber);
@@ -199,11 +183,7 @@ function processChildContext(
   parentContext: Object,
 ): Object {
   if (disableLegacyContext) {
-    invariant(
-      false,
-      'The legacy childContextTypes API is no longer supported. ' +
-        'Use React.createContext() instead.',
-    );
+    return parentContext;
   } else {
     const instance = fiber.stateNode;
     const childContextTypes = type.childContextTypes;
@@ -269,11 +249,7 @@ function processChildContext(
 
 function pushContextProvider(workInProgress: Fiber): boolean {
   if (disableLegacyContext) {
-    invariant(
-      false,
-      'The legacy contextTypes API is no longer supported. ' +
-        'Use React.createContext() with contextType instead.',
-    );
+    return false;
   } else {
     const instance = workInProgress.stateNode;
     // We push the context as early as possible to ensure stack integrity.
@@ -303,11 +279,7 @@ function invalidateContextProvider(
   didChange: boolean,
 ): void {
   if (disableLegacyContext) {
-    invariant(
-      false,
-      'The legacy contextTypes API is no longer supported. ' +
-        'Use React.createContext() with contextType instead.',
-    );
+    return;
   } else {
     const instance = workInProgress.stateNode;
     invariant(

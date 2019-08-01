@@ -23,8 +23,8 @@ describe('ReactLegacyContextDisabled', () => {
     ReactFeatureFlags.disableLegacyContext = true;
   });
 
-  it('throws for a legacy context provider', () => {
-    class Provider extends React.Component {
+  it('warns for legacy context', () => {
+    class LegacyProvider extends React.Component {
       static childContextTypes = {
         foo() {},
       };
@@ -32,36 +32,66 @@ describe('ReactLegacyContextDisabled', () => {
         return {foo: 10};
       }
       render() {
-        return null;
+        return this.props.children;
       }
     }
 
-    const container = document.createElement('div');
-    expect(() => {
-      ReactDOM.render(<Provider />, container);
-    }).toThrow(
-      'The legacy childContextTypes API is no longer supported. ' +
-        'Use React.createContext() instead.',
-    );
-  });
-
-  it('throws for a legacy context consumer', () => {
-    class Consumer extends React.Component {
+    class LegacyClsConsumer extends React.Component {
       static contextTypes = {
         foo() {},
       };
       render() {
-        return null;
+        return typeof this.context;
       }
+    }
+
+    function LegacyFnConsumer(props, context) {
+      return typeof context;
+    }
+    LegacyFnConsumer.contextTypes = {foo() {}};
+
+    function RegularFn(props, context) {
+      return typeof context;
     }
 
     const container = document.createElement('div');
     expect(() => {
-      ReactDOM.render(<Consumer />, container);
-    }).toThrow(
-      'The legacy contextTypes API is no longer supported. ' +
-        'Use React.createContext() with contextType instead.',
+      ReactDOM.render(
+        <LegacyProvider>
+          <span>
+            <LegacyClsConsumer />
+            <LegacyFnConsumer />
+            <RegularFn />
+          </span>
+        </LegacyProvider>,
+        container,
+      );
+    }).toWarnDev(
+      [
+        'LegacyProvider uses the legacy childContextTypes API which is no longer supported. ' +
+          'Use React.createContext() instead.',
+        'LegacyClsConsumer uses the legacy contextTypes API which is no longer supported. ' +
+          'Use React.createContext() with static contextType instead.',
+        'LegacyFnConsumer uses the legacy contextTypes API which is no longer supported. ' +
+          'Use React.createContext() with React.useContext() instead.',
+      ],
+      {withoutStack: true},
     );
+    expect(container.textContent).toBe('undefinedundefinedundefined');
+
+    // Test update path.
+    ReactDOM.render(
+      <LegacyProvider>
+        <span>
+          <LegacyClsConsumer />
+          <LegacyFnConsumer />
+          <RegularFn />
+        </span>
+      </LegacyProvider>,
+      container,
+    );
+    expect(container.textContent).toBe('undefinedundefinedundefined');
+    ReactDOM.unmountComponentAtNode(container);
   });
 
   it('renders a tree with modern context', () => {
@@ -106,5 +136,19 @@ describe('ReactLegacyContextDisabled', () => {
       container,
     );
     expect(container.textContent).toBe('aaa');
+
+    // Test update path
+    ReactDOM.render(
+      <Provider value="b">
+        <span>
+          <RenderPropConsumer />
+          <ContextTypeConsumer />
+          <FnConsumer />
+        </span>
+      </Provider>,
+      container,
+    );
+    expect(container.textContent).toBe('bbb');
+    ReactDOM.unmountComponentAtNode(container);
   });
 });
