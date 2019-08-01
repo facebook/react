@@ -1711,7 +1711,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(Scheduler).toHaveYielded(['Suspend! [A]', 'Suspend! [B]']);
   });
 
-  it('Warns when component that triggered update is between Suspense boundary and component that threw', async () => {
+  it('Warns when component that triggered update is between Suspense boundary and component that suspended', async () => {
     let _setShow;
     function A() {
       const [show, setShow] = React.useState(false);
