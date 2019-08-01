@@ -12,6 +12,7 @@ import type {
   ReactDOMResponderContext,
   PointerType,
 } from 'shared/ReactDOMTypes';
+import type {ReactEventResponderListener} from 'shared/ReactTypes';
 
 import React from 'react';
 import {DiscreteEvent} from 'shared/ReactTypes';
@@ -34,26 +35,20 @@ type FocusState = {
   pointerType: PointerType,
 };
 
-type FocusListenerProps = {|
+type FocusProps = {
+  disabled: boolean,
   onBlur: (e: FocusEvent) => void,
   onFocus: (e: FocusEvent) => void,
   onFocusChange: boolean => void,
   onFocusVisibleChange: boolean => void,
-|};
-
-type FocusProps = {
-  disabled: boolean,
 };
 
 type FocusEventType = 'focus' | 'blur' | 'focuschange' | 'focusvisiblechange';
 
-type FocusWithinListenerProps = {|
-  onFocusWithinChange: boolean => void,
-  onFocusWithinVisibleChange: boolean => void,
-|};
-
 type FocusWithinProps = {
   disabled: boolean,
+  onFocusWithinChange: boolean => void,
+  onFocusWithinVisibleChange: boolean => void,
 };
 
 type FocusWithinEventType = 'focuswithinvisiblechange' | 'focuswithinchange';
@@ -89,6 +84,10 @@ if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
     'touchstart',
     'touchend',
   );
+}
+
+function isFunction(obj): boolean {
+  return typeof obj === 'function';
 }
 
 function createFocusEvent(
@@ -195,16 +194,19 @@ function dispatchFocusEvents(
 ) {
   const pointerType = state.pointerType;
   const target = ((state.focusTarget: any): Element | Document);
-  const syntheticEvent = createFocusEvent(
-    context,
-    'focus',
-    target,
-    pointerType,
-  );
-  context.dispatchEvent('onFocus', syntheticEvent, DiscreteEvent);
-  context.dispatchEvent('onFocusChange', true, DiscreteEvent);
+  const onFocus = props.onFocus;
+  if (isFunction(onFocus)) {
+    const syntheticEvent = createFocusEvent(
+      context,
+      'focus',
+      target,
+      pointerType,
+    );
+    context.dispatchEvent(syntheticEvent, onFocus, DiscreteEvent);
+  }
+  dispatchFocusChange(context, props, true);
   if (state.isFocusVisible) {
-    dispatchFocusVisibleChangeEvent(context, true);
+    dispatchFocusVisibleChangeEvent(context, props, true);
   }
 }
 
@@ -215,19 +217,42 @@ function dispatchBlurEvents(
 ) {
   const pointerType = state.pointerType;
   const target = ((state.focusTarget: any): Element | Document);
-  const syntheticEvent = createFocusEvent(context, 'blur', target, pointerType);
-  context.dispatchEvent('onBlur', syntheticEvent, DiscreteEvent);
-  context.dispatchEvent('onFocusChange', false, DiscreteEvent);
+  const onBlur = props.onBlur;
+  if (isFunction(onBlur)) {
+    const syntheticEvent = createFocusEvent(
+      context,
+      'blur',
+      target,
+      pointerType,
+    );
+    context.dispatchEvent(syntheticEvent, onBlur, DiscreteEvent);
+  }
+  dispatchFocusChange(context, props, false);
   if (state.isFocusVisible) {
-    dispatchFocusVisibleChangeEvent(context, false);
+    dispatchFocusVisibleChangeEvent(context, props, false);
+  }
+}
+
+function dispatchFocusChange(
+  context: ReactDOMResponderContext,
+  props: FocusProps,
+  value: boolean,
+): void {
+  const onFocusChange = props.onFocusChange;
+  if (isFunction(onFocusChange)) {
+    context.dispatchEvent(value, onFocusChange, DiscreteEvent);
   }
 }
 
 function dispatchFocusVisibleChangeEvent(
   context: ReactDOMResponderContext,
+  props: FocusProps,
   value: boolean,
 ) {
-  context.dispatchEvent('onFocusVisibleChange', value, DiscreteEvent);
+  const onFocusVisibleChange = props.onFocusVisibleChange;
+  if (isFunction(onFocusVisibleChange)) {
+    context.dispatchEvent(value, onFocusVisibleChange, DiscreteEvent);
+  }
 }
 
 function unmountFocusResponder(
@@ -299,7 +324,7 @@ const focusResponderImpl = {
     handleRootEvent(event, context, state, isFocusVisible => {
       if (state.isFocusVisible !== isFocusVisible) {
         state.isFocusVisible = isFocusVisible;
-        dispatchFocusVisibleChangeEvent(context, isFocusVisible);
+        dispatchFocusVisibleChangeEvent(context, props, isFocusVisible);
       }
     });
   },
@@ -324,8 +349,10 @@ export const FocusResponder = React.unstable_createResponder(
   focusResponderImpl,
 );
 
-export function useFocusListener(props: FocusListenerProps): void {
-  React.unstable_useListener(FocusResponder, props);
+export function useFocusResponder(
+  props: FocusProps,
+): ReactEventResponderListener<any, any> {
+  return React.unstable_useResponder(FocusResponder, props);
 }
 
 /**
@@ -338,7 +365,10 @@ function dispatchFocusWithinChangeEvent(
   state: FocusState,
   value: boolean,
 ) {
-  context.dispatchEvent('onFocusWithinChange', value, DiscreteEvent);
+  const onFocusWithinChange = props.onFocusWithinChange;
+  if (isFunction(onFocusWithinChange)) {
+    context.dispatchEvent(value, onFocusWithinChange, DiscreteEvent);
+  }
   if (state.isFocusVisible) {
     dispatchFocusWithinVisibleChangeEvent(context, props, state, value);
   }
@@ -350,7 +380,10 @@ function dispatchFocusWithinVisibleChangeEvent(
   state: FocusState,
   value: boolean,
 ) {
-  context.dispatchEvent('onFocusWithinVisibleChange', value, DiscreteEvent);
+  const onFocusWithinVisibleChange = props.onFocusWithinVisibleChange;
+  if (isFunction(onFocusWithinVisibleChange)) {
+    context.dispatchEvent(value, onFocusWithinVisibleChange, DiscreteEvent);
+  }
 }
 
 function unmountFocusWithinResponder(
@@ -459,6 +492,8 @@ export const FocusWithinResponder = React.unstable_createResponder(
   focusWithinResponderImpl,
 );
 
-export function useFocusWithinListener(props: FocusWithinListenerProps): void {
-  React.unstable_useListener(FocusWithinResponder, props);
+export function useFocusWithinResponder(
+  props: FocusWithinProps,
+): ReactEventResponderListener<any, any> {
+  return React.unstable_useResponder(FocusWithinResponder, props);
 }

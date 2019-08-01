@@ -107,10 +107,6 @@ if (__DEV__) {
 export type Dependencies = {
   expirationTime: ExpirationTime,
   firstContext: ContextDependency<mixed> | null,
-  listeners: Array<{
-    responder: ReactEventResponder<any, any>,
-    props: Object,
-  }> | null,
   responders: Map<
     ReactEventResponder<any, any>,
     ReactEventResponderInstance<any, any>,
@@ -457,7 +453,6 @@ export function createWorkInProgress(
       : {
           expirationTime: currentDependencies.expirationTime,
           firstContext: currentDependencies.firstContext,
-          listeners: currentDependencies.listeners,
           responders: currentDependencies.responders,
         };
 
@@ -553,7 +548,6 @@ export function resetWorkInProgress(
         : {
             expirationTime: currentDependencies.expirationTime,
             firstContext: currentDependencies.firstContext,
-            listeners: currentDependencies.listeners,
             responders: currentDependencies.responders,
           };
 
