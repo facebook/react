@@ -1645,20 +1645,15 @@ describe('Event responder: Press', () => {
       expect(events).toEqual([
         'inner: onPressStart',
         'inner: onPressChange',
-        'outer: onPressStart',
-        'outer: onPressChange',
         'pointerdown',
         'inner: onPressEnd',
         'inner: onPressChange',
         'inner: onPress',
-        'outer: onPressEnd',
-        'outer: onPressChange',
-        'outer: onPress',
         'pointerup',
       ]);
     });
 
-    describe('correctly get propagation stopped and bubble', () => {
+    describe('correctly not propagate', () => {
       it('for onPress', () => {
         const ref = React.createRef();
         const fn = jest.fn();
@@ -1693,7 +1688,7 @@ describe('Event responder: Press', () => {
         ref.current.dispatchEvent(
           createEvent('pointerup', {clientX: 10, clientY: 10}),
         );
-        expect(fn).toHaveBeenCalledTimes(2);
+        expect(fn).toHaveBeenCalledTimes(1);
       });
 
       it('for onPressStart/onPressEnd', () => {
@@ -1723,11 +1718,11 @@ describe('Event responder: Press', () => {
         ReactDOM.render(<Outer />, container);
 
         ref.current.dispatchEvent(createEvent('pointerdown'));
-        expect(fn).toHaveBeenCalledTimes(2);
+        expect(fn).toHaveBeenCalledTimes(1);
         expect(fn2).toHaveBeenCalledTimes(0);
         ref.current.dispatchEvent(createEvent('pointerup'));
-        expect(fn).toHaveBeenCalledTimes(2);
-        expect(fn2).toHaveBeenCalledTimes(2);
+        expect(fn).toHaveBeenCalledTimes(1);
+        expect(fn2).toHaveBeenCalledTimes(1);
       });
 
       it('for onPressChange', () => {
@@ -1754,9 +1749,9 @@ describe('Event responder: Press', () => {
         ReactDOM.render(<Outer />, container);
 
         ref.current.dispatchEvent(createEvent('pointerdown'));
-        expect(fn).toHaveBeenCalledTimes(2);
+        expect(fn).toHaveBeenCalledTimes(1);
         ref.current.dispatchEvent(createEvent('pointerup'));
-        expect(fn).toHaveBeenCalledTimes(4);
+        expect(fn).toHaveBeenCalledTimes(2);
       });
     });
   });

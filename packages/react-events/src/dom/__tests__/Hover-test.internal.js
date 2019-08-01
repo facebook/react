@@ -341,7 +341,7 @@ describe('Hover event responder', () => {
   });
 
   describe('nested Hover components', () => {
-    it('propagate events by default', () => {
+    it('not propagate by default', () => {
       const events = [];
       const innerRef = React.createRef();
       const outerRef = React.createRef();
@@ -391,10 +391,10 @@ describe('Hover event responder', () => {
         'outer: onHoverChange',
         'inner: onHoverStart',
         'inner: onHoverChange',
-        'outer: onHoverStart',
-        'outer: onHoverChange',
         'inner: onHoverEnd',
         'inner: onHoverChange',
+        'outer: onHoverStart',
+        'outer: onHoverChange',
         'outer: onHoverEnd',
         'outer: onHoverChange',
       ]);

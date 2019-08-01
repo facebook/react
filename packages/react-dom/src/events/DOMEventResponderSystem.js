@@ -593,6 +593,7 @@ function traverseAndHandleEventResponderInstances(
   // - Bubble target responder phase
   // - Root responder phase
 
+  const visitedResponders = new Set();
   const responderEvent = createDOMResponderEvent(
     topLevelType,
     nativeEvent,
@@ -612,7 +613,11 @@ function traverseAndHandleEventResponderInstances(
 
           if (validateOwnership(responderInstance)) {
             const {props, responder, state, target} = responderInstance;
-            if (validateResponderTargetEventTypes(eventType, responder)) {
+            if (
+              !visitedResponders.has(responder) &&
+              validateResponderTargetEventTypes(eventType, responder)
+            ) {
+              visitedResponders.add(responder);
               const onEvent = responder.onEvent;
               if (onEvent !== null) {
                 currentInstance = responderInstance;

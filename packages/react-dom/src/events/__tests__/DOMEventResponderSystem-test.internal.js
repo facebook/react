@@ -216,7 +216,7 @@ describe('DOMEventResponderSystem', () => {
     ]);
   });
 
-  it('nested event responders should fire multiple times', () => {
+  it('nested event responders should not fire multiple times', () => {
     let eventResponderFiredCount = 0;
     let eventLog = [];
     const buttonRef = React.createRef();
@@ -286,16 +286,10 @@ describe('DOMEventResponderSystem', () => {
     // Clicking the button should trigger the event responder onEvent()
     buttonElement = buttonRef.current;
     dispatchClickEvent(buttonElement);
-    expect(eventResponderFiredCount).toBe(3);
-    expect(eventLog.length).toBe(2);
+    expect(eventResponderFiredCount).toBe(2);
+    expect(eventLog.length).toBe(1);
 
     expect(eventLog).toEqual([
-      {
-        name: 'click',
-        passive: false,
-        passiveSupported: false,
-        phase: 'bubble',
-      },
       {
         name: 'click',
         passive: false,
@@ -395,7 +389,7 @@ describe('DOMEventResponderSystem', () => {
     let buttonElement = buttonRef.current;
     dispatchClickEvent(buttonElement);
 
-    expect(eventLog).toEqual(['B [bubble]', 'A [bubble]']);
+    expect(eventLog).toEqual(['B [bubble]']);
   });
 
   it('custom event dispatching for click -> magicClick works', () => {
