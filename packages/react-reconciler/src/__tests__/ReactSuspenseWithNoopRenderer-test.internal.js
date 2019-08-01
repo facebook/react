@@ -660,19 +660,9 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(Scheduler).toHaveYielded(['Promise resolved [Async]']);
     expect(Scheduler).toFlushAndYield(['Async']);
     expect(ReactNoop.getChildren()).toEqual([span('Async'), span('Sync')]);
-
-    if (__DEV__) {
-      expect(console.error).toHaveBeenCalledTimes(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: A user-blocking update was suspended by:',
-      );
-      expect(console.error.calls.argsFor(0)[1]).toContain('AsyncText');
-    }
   });
 
   it('suspending inside an expired expiration boundary will bubble to the next one', async () => {
-    spyOnDev(console, 'error');
-
     ReactNoop.flushSync(() =>
       ReactNoop.render(
         <Fragment>
@@ -693,14 +683,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     ]);
     // The tree commits synchronously
     expect(ReactNoop.getChildren()).toEqual([span('Loading (outer)...')]);
-
-    if (__DEV__) {
-      expect(console.error).toHaveBeenCalledTimes(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: A user-blocking update was suspended by:',
-      );
-      expect(console.error.calls.argsFor(0)[1]).toContain('AsyncText');
-    }
   });
 
   it('expires early by default', async () => {
@@ -1609,18 +1591,11 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     Scheduler.unstable_advanceTime(100);
     await advanceTimers(100);
 
-    expect(() => {
-      expect(Scheduler).toFlushAndYield([
-        // A suspends
-        'Suspend! [A]',
-        'Loading...',
-      ]);
-    }).toWarnDev(
-      'Warning: A user-blocking update was suspended by:' +
-        '\n\n' +
-        '  AsyncText',
-      {withoutStack: true},
-    );
+    expect(Scheduler).toFlushAndYield([
+      // A suspends
+      'Suspend! [A]',
+      'Loading...',
+    ]);
 
     // We're now suspended and we haven't shown anything yet.
     expect(ReactNoop.getChildren()).toEqual([]);
@@ -1664,10 +1639,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       'Warning: The following components triggered a user-blocking update:' +
         '\n\n' +
         '  App' +
-        '\n\n' +
-        'that was then suspended by:' +
-        '\n\n' +
-        '  AsyncText',
+        '\n\n',
       {withoutStack: true},
     );
   });
@@ -1702,15 +1674,12 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       'Warning: The following components triggered a user-blocking update:' +
         '\n\n' +
         '  App' +
-        '\n\n' +
-        'that was then suspended by:' +
-        '\n\n' +
-        '  AsyncText',
+        '\n\n',
       {withoutStack: true},
     );
   });
 
-  it('', async () => {
+  it('Does not warn when a component updates after the fallback is shown', async () => {
     let showB;
     class App extends React.Component {
       state = {showB: false};
@@ -1742,45 +1711,36 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(Scheduler).toHaveYielded(['Suspend! [A]', 'Suspend! [B]']);
   });
 
-  it('warns when suspending inside discrete update', async () => {
+  it('Warns when component that triggered update is between Suspense boundary and component that threw', async () => {
+    let _setShow;
     function A() {
-      Scheduler.unstable_yieldValue('A');
-      TextResource.read(['A', 1000]);
-      return 'A';
+      const [show, setShow] = React.useState(false);
+      _setShow = setShow;
+      return show && <AsyncText text="A" />;
     }
-
-    function B() {
-      return 'B';
-    }
-
-    function C() {
-      TextResource.read(['C', 1000]);
-      return 'C';
-    }
-
     function App() {
       return (
         <Suspense fallback="Loading...">
           <A />
-          <B />
-          <C />
-          <C />
-          <C />
-          <C />
         </Suspense>
       );
     }
+    await ReactNoop.act(async () => {
+      ReactNoop.render(<App />);
+    });
 
-    ReactNoop.discreteUpdates(() => ReactNoop.render(<App />));
-    expect(Scheduler).toFlushAndYieldThrough(['A']);
-
-    // Warning is not flushed until the commit phase
-
-    // Timeout and commit the fallback
     expect(() => {
-      Scheduler.unstable_flushAll();
+      ReactNoop.act(() => {
+        Scheduler.unstable_runWithPriority(
+          Scheduler.unstable_UserBlockingPriority,
+          () => _setShow(true),
+        );
+      });
     }).toWarnDev(
-      'Warning: A user-blocking update was suspended by:' + '\n\n' + '  A, C',
+      'Warning: The following components triggered a user-blocking update:' +
+        '\n\n' +
+        '  A' +
+        '\n\n',
       {withoutStack: true},
     );
   });

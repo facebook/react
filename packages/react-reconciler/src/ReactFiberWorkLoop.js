@@ -800,7 +800,6 @@ function prepareFreshStack(root, expirationTime) {
 
   if (__DEV__) {
     ReactStrictModeWarnings.discardPendingWarnings();
-    componentsThatSuspendedAtHighPri = null;
     componentsThatTriggeredHighPriSuspend = null;
   }
 }
@@ -2576,7 +2575,6 @@ export function warnIfUnmockedScheduler(fiber: Fiber) {
   }
 }
 
-let componentsThatSuspendedAtHighPri = null;
 let componentsThatTriggeredHighPriSuspend = null;
 export function checkForWrongSuspensePriorityInDEV(sourceFiber: Fiber) {
   if (__DEV__) {
@@ -2663,48 +2661,26 @@ export function checkForWrongSuspensePriorityInDEV(sourceFiber: Fiber) {
         }
         workInProgressNode = workInProgressNode.return;
       }
-
-      // Add the component name to a set.
-      const componentName = getComponentName(sourceFiber.type);
-      if (componentsThatSuspendedAtHighPri === null) {
-        componentsThatSuspendedAtHighPri = new Set([componentName]);
-      } else {
-        componentsThatSuspendedAtHighPri.add(componentName);
-      }
     }
   }
 }
 
 function flushSuspensePriorityWarningInDEV() {
   if (__DEV__) {
-    if (componentsThatSuspendedAtHighPri !== null) {
+    if (componentsThatTriggeredHighPriSuspend !== null) {
       const componentNames = [];
-      componentsThatSuspendedAtHighPri.forEach(name => {
-        componentNames.push(name);
-      });
-      componentsThatSuspendedAtHighPri = null;
-
-      const componentsThatTriggeredSuspendNames = [];
-      if (componentsThatTriggeredHighPriSuspend !== null) {
-        componentsThatTriggeredHighPriSuspend.forEach(name =>
-          componentsThatTriggeredSuspendNames.push(name),
-        );
-      }
-
+      componentsThatTriggeredHighPriSuspend.forEach(name =>
+        componentNames.push(name),
+      );
       componentsThatTriggeredHighPriSuspend = null;
 
-      const componentNamesString = componentNames.sort().join(', ');
-      if (componentsThatTriggeredSuspendNames.length > 0) {
+      if (componentNames.length > 0) {
         warningWithoutStack(
           false,
           'The following components triggered a user-blocking update:' +
             '\n\n' +
             '  %s' +
             '\n\n' +
-            'that was then suspended by:' +
-            '\n\n' +
-            '  %s' +
-            '\n\n' +
             'The fix is to split the update into multiple parts: a user-blocking ' +
             'update to provide immediate feedback, and another update that ' +
             'triggers the bulk of the changes.' +
@@ -2712,24 +2688,7 @@ function flushSuspensePriorityWarningInDEV() {
             'Refer to the documentation for useSuspenseTransition to learn how ' +
             'to implement this pattern.',
           // TODO: Add link to React docs with more information, once it exists
-          componentsThatTriggeredSuspendNames.sort().join(', '),
-          componentNamesString,
-        );
-      } else {
-        warningWithoutStack(
-          false,
-          'A user-blocking update was suspended by:' +
-            '\n\n' +
-            '  %s' +
-            '\n\n' +
-            'The fix is to split the update into multiple parts: a user-blocking ' +
-            'update to provide immediate feedback, and another update that ' +
-            'triggers the bulk of the changes.' +
-            '\n\n' +
-            'Refer to the documentation for useSuspenseTransition to learn how ' +
-            'to implement this pattern.',
-          // TODO: Add link to React docs with more information, once it exists
-          componentNamesString,
+          componentNames.sort().join(', '),
         );
       }
     }

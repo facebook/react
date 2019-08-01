@@ -327,7 +327,6 @@ describe('ReactSuspense', () => {
   });
 
   it('throws if tree suspends and none of the Suspense ancestors have a fallback', () => {
-    spyOnDev(console, 'error');
     ReactTestRenderer.create(
       <Suspense>
         <AsyncText text="Hi" ms={1000} />
