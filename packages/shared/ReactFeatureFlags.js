@@ -92,3 +92,5 @@ export const enableSuspenseCallback = false;
 // from React.createElement to React.jsx
 // https://github.com/reactjs/rfcs/blob/createlement-rfc/text/0000-create-element-changes.md
 export const warnAboutDefaultPropsOnFunctionComponents = false;
+
+export const disableLegacyContext = false;

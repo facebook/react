@@ -21,6 +21,7 @@ import describeComponentFrame from 'shared/describeComponentFrame';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   warnAboutDeprecatedLifecycles,
+  disableLegacyContext,
   enableSuspenseServerRenderer,
   enableFundamentalAPI,
   enableFlareAPI,
@@ -430,7 +431,8 @@ function resolve(
 
   // Extra closure so queue and replace can be captured properly
   function processChild(element, Component) {
-    let publicContext = processContext(Component, context, threadID);
+    const isClass = shouldConstruct(Component);
+    const publicContext = processContext(Component, context, threadID, isClass);
 
     let queue = [];
     let replace = false;
@@ -458,7 +460,7 @@ function resolve(
     };
 
     let inst;
-    if (shouldConstruct(Component)) {
+    if (isClass) {
       inst = new Component(element.props, publicContext, updater);
 
       if (typeof Component.getDerivedStateFromProps === 'function') {
@@ -650,29 +652,43 @@ function resolve(
     validateRenderResult(child, Component);
 
     let childContext;
-    if (typeof inst.getChildContext === 'function') {
-      let childContextTypes = Component.childContextTypes;
-      if (typeof childContextTypes === 'object') {
-        childContext = inst.getChildContext();
-        for (let contextKey in childContext) {
-          invariant(
-            contextKey in childContextTypes,
-            '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
+    if (disableLegacyContext) {
+      if (__DEV__) {
+        let childContextTypes = Component.childContextTypes;
+        if (childContextTypes !== undefined) {
+          warningWithoutStack(
+            false,
+            '%s uses the legacy childContextTypes API which is no longer supported. ' +
+              'Use React.createContext() instead.',
             getComponentName(Component) || 'Unknown',
-            contextKey,
           );
         }
-      } else {
-        warningWithoutStack(
-          false,
-          '%s.getChildContext(): childContextTypes must be defined in order to ' +
-            'use getChildContext().',
-          getComponentName(Component) || 'Unknown',
-        );
       }
-    }
-    if (childContext) {
-      context = Object.assign({}, context, childContext);
+    } else {
+      if (typeof inst.getChildContext === 'function') {
+        let childContextTypes = Component.childContextTypes;
+        if (typeof childContextTypes === 'object') {
+          childContext = inst.getChildContext();
+          for (let contextKey in childContext) {
+            invariant(
+              contextKey in childContextTypes,
+              '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
+              getComponentName(Component) || 'Unknown',
+              contextKey,
+            );
+          }
+        } else {
+          warningWithoutStack(
+            false,
+            '%s.getChildContext(): childContextTypes must be defined in order to ' +
+              'use getChildContext().',
+            getComponentName(Component) || 'Unknown',
+          );
+        }
+      }
+      if (childContext) {
+        context = Object.assign({}, context, childContext);
+      }
     }
   }
   return {child, context};

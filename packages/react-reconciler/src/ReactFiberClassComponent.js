@@ -15,6 +15,7 @@ import {Update, Snapshot} from 'shared/ReactSideEffectTags';
 import {
   debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode,
+  disableLegacyContext,
   warnAboutDeprecatedLifecycles,
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
@@ -361,26 +362,46 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
         'property to define contextType instead.',
       name,
     );
-    const noInstanceContextTypes = !instance.contextTypes;
-    warningWithoutStack(
-      noInstanceContextTypes,
-      'contextTypes was defined as an instance property on %s. Use a static ' +
-        'property to define contextTypes instead.',
-      name,
-    );
 
-    if (
-      ctor.contextType &&
-      ctor.contextTypes &&
-      !didWarnAboutContextTypeAndContextTypes.has(ctor)
-    ) {
-      didWarnAboutContextTypeAndContextTypes.add(ctor);
+    if (disableLegacyContext) {
+      if (ctor.childContextTypes) {
+        warningWithoutStack(
+          false,
+          '%s uses the legacy childContextTypes API which is no longer supported. ' +
+            'Use React.createContext() instead.',
+          name,
+        );
+      }
+      if (ctor.contextTypes) {
+        warningWithoutStack(
+          false,
+          '%s uses the legacy contextTypes API which is no longer supported. ' +
+            'Use React.createContext() with static contextType instead.',
+          name,
+        );
+      }
+    } else {
+      const noInstanceContextTypes = !instance.contextTypes;
       warningWithoutStack(
-        false,
-        '%s declares both contextTypes and contextType static properties. ' +
-          'The legacy contextTypes property will be ignored.',
+        noInstanceContextTypes,
+        'contextTypes was defined as an instance property on %s. Use a static ' +
+          'property to define contextTypes instead.',
         name,
       );
+
+      if (
+        ctor.contextType &&
+        ctor.contextTypes &&
+        !didWarnAboutContextTypeAndContextTypes.has(ctor)
+      ) {
+        didWarnAboutContextTypeAndContextTypes.add(ctor);
+        warningWithoutStack(
+          false,
+          '%s declares both contextTypes and contextType static properties. ' +
+            'The legacy contextTypes property will be ignored.',
+          name,
+        );
+      }
     }
 
     const noComponentShouldUpdate =
@@ -534,7 +555,7 @@ function constructClassInstance(
 ): any {
   let isLegacyContextConsumer = false;
   let unmaskedContext = emptyContextObject;
-  let context = null;
+  let context = emptyContextObject;
   const contextType = ctor.contextType;
 
   if (__DEV__) {
@@ -582,7 +603,7 @@ function constructClassInstance(
 
   if (typeof contextType === 'object' && contextType !== null) {
     context = readContext((contextType: any));
-  } else {
+  } else if (!disableLegacyContext) {
     unmaskedContext = getUnmaskedContext(workInProgress, ctor, true);
     const contextTypes = ctor.contextTypes;
     isLegacyContextConsumer =
@@ -785,6 +806,8 @@ function mountClassInstance(
   const contextType = ctor.contextType;
   if (typeof contextType === 'object' && contextType !== null) {
     instance.context = readContext(contextType);
+  } else if (disableLegacyContext) {
+    instance.context = emptyContextObject;
   } else {
     const unmaskedContext = getUnmaskedContext(workInProgress, ctor, true);
     instance.context = getMaskedContext(workInProgress, unmaskedContext);
@@ -885,10 +908,10 @@ function resumeMountClassInstance(
 
   const oldContext = instance.context;
   const contextType = ctor.contextType;
-  let nextContext;
+  let nextContext = emptyContextObject;
   if (typeof contextType === 'object' && contextType !== null) {
     nextContext = readContext(contextType);
-  } else {
+  } else if (!disableLegacyContext) {
     const nextLegacyUnmaskedContext = getUnmaskedContext(
       workInProgress,
       ctor,
@@ -1034,10 +1057,10 @@ function updateClassInstance(
 
   const oldContext = instance.context;
   const contextType = ctor.contextType;
-  let nextContext;
+  let nextContext = emptyContextObject;
   if (typeof contextType === 'object' && contextType !== null) {
     nextContext = readContext(contextType);
-  } else {
+  } else if (!disableLegacyContext) {
     const nextUnmaskedContext = getUnmaskedContext(workInProgress, ctor, true);
     nextContext = getMaskedContext(workInProgress, nextUnmaskedContext);
   }

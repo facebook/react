@@ -57,6 +57,7 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode,
+  disableLegacyContext,
   enableProfilerTimer,
   enableSchedulerTracing,
   enableSuspenseServerRenderer,
@@ -615,8 +616,11 @@ function updateFunctionComponent(
     }
   }
 
-  const unmaskedContext = getUnmaskedContext(workInProgress, Component, true);
-  const context = getMaskedContext(workInProgress, unmaskedContext);
+  let context;
+  if (!disableLegacyContext) {
+    const unmaskedContext = getUnmaskedContext(workInProgress, Component, true);
+    context = getMaskedContext(workInProgress, unmaskedContext);
+  }
 
   let nextChildren;
   prepareToReadContext(workInProgress, renderExpirationTime);
@@ -1230,8 +1234,15 @@ function mountIndeterminateComponent(
   }
 
   const props = workInProgress.pendingProps;
-  const unmaskedContext = getUnmaskedContext(workInProgress, Component, false);
-  const context = getMaskedContext(workInProgress, unmaskedContext);
+  let context;
+  if (!disableLegacyContext) {
+    const unmaskedContext = getUnmaskedContext(
+      workInProgress,
+      Component,
+      false,
+    );
+    context = getMaskedContext(workInProgress, unmaskedContext);
+  }
 
   prepareToReadContext(workInProgress, renderExpirationTime);
   let value;
@@ -1349,6 +1360,15 @@ function mountIndeterminateComponent(
     // Proceed under the assumption that this is a function component
     workInProgress.tag = FunctionComponent;
     if (__DEV__) {
+      if (disableLegacyContext && Component.contextTypes) {
+        warningWithoutStack(
+          false,
+          '%s uses the legacy contextTypes API which is no longer supported. ' +
+            'Use React.createContext() with React.useContext() instead.',
+          getComponentName(Component) || 'Unknown',
+        );
+      }
+
       if (
         debugRenderPhaseSideEffects ||
         (debugRenderPhaseSideEffectsForStrictMode &&

@@ -35,6 +35,7 @@ export const flushSuspenseFallbacksInTests = true;
 export const enableUserBlockingEvents = false;
 export const enableSuspenseCallback = false;
 export const warnAboutDefaultPropsOnFunctionComponents = false;
+export const disableLegacyContext = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {
