@@ -1826,4 +1826,50 @@ describe('ReactSuspenseList', () => {
       </Fragment>,
     );
   });
+
+  it('can do unrelated adjacent updates', async () => {
+    let updateAdjacent;
+    function Adjacent() {
+      let [text, setText] = React.useState('-');
+      updateAdjacent = setText;
+      return <Text text={text} />;
+    }
+
+    function Foo() {
+      return (
+        <div>
+          <SuspenseList revealOrder="forwards">
+            <Text text="A" />
+            <Text text="B" />
+          </SuspenseList>
+          <Adjacent />
+        </div>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+
+    expect(Scheduler).toFlushAndYield(['A', 'B', '-']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <div>
+        <span>A</span>
+        <span>B</span>
+        <span>-</span>
+      </div>,
+    );
+
+    // Update the row adjacent to the list
+    ReactNoop.act(() => updateAdjacent('C'));
+
+    expect(Scheduler).toHaveYielded(['C']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <div>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+      </div>,
+    );
+  });
 });

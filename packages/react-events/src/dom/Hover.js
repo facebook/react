@@ -11,20 +11,18 @@ import type {
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
 } from 'shared/ReactDOMTypes';
+import type {ReactEventResponderListener} from 'shared/ReactTypes';
 
 import React from 'react';
 import {UserBlockingEvent} from 'shared/ReactTypes';
 
-type HoverListenerProps = {|
+type HoverProps = {
+  disabled: boolean,
+  preventDefault: boolean,
   onHoverChange: boolean => void,
   onHoverEnd: (e: HoverEvent) => void,
   onHoverMove: (e: HoverEvent) => void,
   onHoverStart: (e: HoverEvent) => void,
-|};
-
-type HoverProps = {
-  disabled: boolean,
-  preventDefault: boolean,
 };
 
 type HoverState = {
@@ -63,6 +61,10 @@ const targetEventTypes = [
 // If PointerEvents is not supported (e.g., Safari), also listen to touch and mouse events.
 if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
   targetEventTypes.push('touchstart', 'mouseover', 'mousemove', 'mouseout');
+}
+
+function isFunction(obj): boolean {
+  return typeof obj === 'function';
 }
 
 function createHoverEvent(
@@ -104,8 +106,11 @@ function dispatchHoverChangeEvent(
   props: HoverProps,
   state: HoverState,
 ): void {
-  const bool = state.isActiveHovered;
-  context.dispatchEvent('onHoverChange', bool, UserBlockingEvent);
+  const onHoverChange = props.onHoverChange;
+  if (isFunction(onHoverChange)) {
+    const bool = state.isActiveHovered;
+    context.dispatchEvent(bool, onHoverChange, UserBlockingEvent);
+  }
 }
 
 function dispatchHoverStartEvents(
@@ -133,13 +138,16 @@ function dispatchHoverStartEvents(
 
   if (!state.isActiveHovered) {
     state.isActiveHovered = true;
-    const syntheticEvent = createHoverEvent(
-      event,
-      context,
-      'hoverstart',
-      ((target: any): Element | Document),
-    );
-    context.dispatchEvent('onHoverStart', syntheticEvent, UserBlockingEvent);
+    const onHoverStart = props.onHoverStart;
+    if (isFunction(onHoverStart)) {
+      const syntheticEvent = createHoverEvent(
+        event,
+        context,
+        'hoverstart',
+        ((target: any): Element | Document),
+      );
+      context.dispatchEvent(syntheticEvent, onHoverStart, UserBlockingEvent);
+    }
     dispatchHoverChangeEvent(event, context, props, state);
   }
 }
@@ -169,14 +177,16 @@ function dispatchHoverEndEvents(
 
   if (state.isActiveHovered) {
     state.isActiveHovered = false;
-
-    const syntheticEvent = createHoverEvent(
-      event,
-      context,
-      'hoverend',
-      ((target: any): Element | Document),
-    );
-    context.dispatchEvent('onHoverEnd', syntheticEvent, UserBlockingEvent);
+    const onHoverEnd = props.onHoverEnd;
+    if (isFunction(onHoverEnd)) {
+      const syntheticEvent = createHoverEvent(
+        event,
+        context,
+        'hoverend',
+        ((target: any): Element | Document),
+      );
+      context.dispatchEvent(syntheticEvent, onHoverEnd, UserBlockingEvent);
+    }
     dispatchHoverChangeEvent(event, context, props, state);
     state.hoverTarget = null;
     state.ignoreEmulatedMouseEvents = false;
@@ -262,7 +272,8 @@ const hoverResponderImpl = {
       case 'pointermove':
       case 'mousemove': {
         if (state.isHovered && !isEmulatedMouseEvent(event, state)) {
-          if (state.hoverTarget !== null) {
+          const onHoverMove = props.onHoverMove;
+          if (state.hoverTarget !== null && isFunction(onHoverMove)) {
             const syntheticEvent = createHoverEvent(
               event,
               context,
@@ -270,8 +281,8 @@ const hoverResponderImpl = {
               state.hoverTarget,
             );
             context.dispatchEvent(
-              'onHoverMove',
               syntheticEvent,
+              onHoverMove,
               UserBlockingEvent,
             );
           }
@@ -317,6 +328,8 @@ export const HoverResponder = React.unstable_createResponder(
   hoverResponderImpl,
 );
 
-export function useHoverListener(props: HoverListenerProps): void {
-  React.unstable_useListener(HoverResponder, props);
+export function useHoverResponder(
+  props: HoverProps,
+): ReactEventResponderListener<any, any> {
+  return React.unstable_useResponder(HoverResponder, props);
 }

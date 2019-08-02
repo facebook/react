@@ -11,6 +11,7 @@ import type {
   ReactContext,
   ReactProviderType,
   ReactEventResponder,
+  ReactEventResponderListener,
 } from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {Hook} from 'react-reconciler/src/ReactFiberHooks';
@@ -24,8 +25,6 @@ import {
   ContextProvider,
   ForwardRef,
 } from 'shared/ReactWorkTags';
-
-const emptyObject = {};
 
 type CurrentDispatcherRef = typeof ReactSharedInternals.ReactCurrentDispatcher;
 
@@ -221,17 +220,20 @@ function useMemo<T>(
   return value;
 }
 
-function useListener(
+function useResponder(
   responder: ReactEventResponder<any, any>,
-  hookProps: ?Object,
-): void {
-  const listenerProps = hookProps || emptyObject;
+  listenerProps: Object,
+): ReactEventResponderListener<any, any> {
   // Don't put the actual event responder object in, just its displayName
   const value = {
     responder: responder.displayName || 'EventResponder',
     props: listenerProps,
   };
-  hookLog.push({primitive: 'Listener', stackError: new Error(), value});
+  hookLog.push({primitive: 'Responder', stackError: new Error(), value});
+  return {
+    responder,
+    props: listenerProps,
+  };
 }
 
 const Dispatcher: DispatcherType = {
@@ -246,7 +248,7 @@ const Dispatcher: DispatcherType = {
   useReducer,
   useRef,
   useState,
-  useListener,
+  useResponder,
 };
 
 // Inspect

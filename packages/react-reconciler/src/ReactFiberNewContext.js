@@ -377,7 +377,6 @@ export function readContext<T>(
       currentlyRenderingFiber.dependencies = {
         expirationTime: NoWork,
         firstContext: contextItem,
-        listeners: null,
         responders: null,
       };
     } else {

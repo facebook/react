@@ -12,8 +12,7 @@
 let React;
 let ReactFeatureFlags;
 let ReactDOM;
-let DragResponder;
-let useDragListener;
+let useDragResponder;
 
 describe('Drag event responder', () => {
   let container;
@@ -24,8 +23,7 @@ describe('Drag event responder', () => {
     ReactFeatureFlags.enableFlareAPI = true;
     React = require('react');
     ReactDOM = require('react-dom');
-    DragResponder = require('react-events/drag').DragResponder;
-    useDragListener = require('react-events/drag').useDragListener;
+    useDragResponder = require('react-events/drag').useDragResponder;
 
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -46,11 +44,11 @@ describe('Drag event responder', () => {
     }
 
     function Component() {
-      useDragListener({
+      const listener = useDragResponder({
         onDragChange: handleOnDrag,
       });
       return (
-        <div ref={divRef} responders={<DragResponder />}>
+        <div ref={divRef} listeners={listener}>
           Drag me!
         </div>
       );
@@ -102,12 +100,12 @@ describe('Drag event responder', () => {
     }
 
     function Component() {
-      useDragListener({
+      const listener = useDragResponder({
         onDragStart: handleDragStart,
         onDragEnd: handleDragEnd,
       });
       return (
-        <div ref={divRef} responders={<DragResponder />}>
+        <div ref={divRef} listeners={listener}>
           Drag me!
         </div>
       );
@@ -156,14 +154,13 @@ describe('Drag event responder', () => {
     }
 
     function Component() {
-      useDragListener({
+      const listener = useDragResponder({
         onDragStart: handleDragStart,
         onDragEnd: handleDragEnd,
+        shouldClaimOwnership: () => true,
       });
       return (
-        <div
-          ref={divRef}
-          responders={<DragResponder shouldClaimOwnership={() => true} />}>
+        <div ref={divRef} listeners={listener}>
           Drag me!
         </div>
       );
@@ -211,11 +208,11 @@ describe('Drag event responder', () => {
     }
 
     function Component() {
-      useDragListener({
+      const listener = useDragResponder({
         onDragMove: handleDragMove,
       });
       return (
-        <div ref={divRef} responders={<DragResponder />}>
+        <div ref={divRef} listeners={listener}>
           Drag me!
         </div>
       );
