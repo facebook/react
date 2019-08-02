@@ -2677,9 +2677,7 @@ function flushSuspensePriorityWarningInDEV() {
       if (componentNames.length > 0) {
         warningWithoutStack(
           false,
-          'The following components triggered a user-blocking update:' +
-            '\n\n' +
-            '  %s' +
+          '%s triggered a user-blocking update that suspended.' +
             '\n\n' +
             'The fix is to split the update into multiple parts: a user-blocking ' +
             'update to provide immediate feedback, and another update that ' +

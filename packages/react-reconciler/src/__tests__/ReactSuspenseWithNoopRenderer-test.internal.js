@@ -1636,10 +1636,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         );
       });
     }).toWarnDev(
-      'Warning: The following components triggered a user-blocking update:' +
-        '\n\n' +
-        '  App' +
-        '\n\n',
+      'Warning: App triggered a user-blocking update that suspended.' + '\n\n',
       {withoutStack: true},
     );
   });
@@ -1671,15 +1668,12 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         );
       });
     }).toWarnDev(
-      'Warning: The following components triggered a user-blocking update:' +
-        '\n\n' +
-        '  App' +
-        '\n\n',
+      'Warning: App triggered a user-blocking update that suspended.' + '\n\n',
       {withoutStack: true},
     );
   });
 
-  it('Does not warn when a component updates after the fallback is shown', async () => {
+  it('does not warn about wrong Suspense priority if no new fallbacks are shown', async () => {
     let showB;
     class App extends React.Component {
       state = {showB: false};
@@ -1700,6 +1694,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     });
 
     expect(Scheduler).toHaveYielded(['Suspend! [A]']);
+    expect(ReactNoop).toMatchRenderedOutput('Loading...');
 
     ReactNoop.act(() => {
       Scheduler.unstable_runWithPriority(
@@ -1712,7 +1707,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   it(
-    'Warns when component that triggered update is between Suspense boundary ' +
+    'warns when component that triggered user-blocking update is between Suspense boundary ' +
       'and component that suspended',
     async () => {
       let _setShow;
@@ -1740,10 +1735,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
           );
         });
       }).toWarnDev(
-        'Warning: The following components triggered a user-blocking update:' +
-          '\n\n' +
-          '  A' +
-          '\n\n',
+        'Warning: A triggered a user-blocking update that suspended.' + '\n\n',
         {withoutStack: true},
       );
     },
