@@ -371,3 +371,8 @@ export type ReactEventResponder<E, C> = {
     | null
     | ((context: C, props: Object, state: Object) => void),
 };
+
+export type ReactEventResponderListener<E, C> = {|
+  props: Object,
+  responder: ReactEventResponder<E, C>,
+|};

@@ -8,7 +8,11 @@
 
 import ErrorStackParser from 'error-stack-parser';
 
-import type { ReactContext, ReactEventResponder } from './types';
+import type {
+  ReactContext,
+  ReactEventResponder,
+  ReactEventResponderListener,
+} from './types';
 
 type Fiber = any;
 type Hook = any;
@@ -29,8 +33,6 @@ type HookLogEntry = {
   stackError: Error,
   value: mixed,
 };
-
-const emptyObject = {};
 
 let hookLog: Array<HookLogEntry> = [];
 
@@ -216,19 +218,20 @@ function useMemo<T>(
   return value;
 }
 
-function useListener(
+function useResponder(
   responder: ReactEventResponder<any, any>,
-  hookProps: ?Object
-): void {
+  listenerProps: Object
+): ReactEventResponderListener<any, any> {
+  // Don't put the actual event responder object in, just its displayName
   const value = {
-    responder: responder.displayName || 'EventComponent',
-    props: hookProps || emptyObject,
+    responder: responder.displayName || 'EventResponder',
+    props: listenerProps,
   };
-  hookLog.push({
-    primitive: 'Listener',
-    stackError: new Error(),
-    value,
-  });
+  hookLog.push({ primitive: 'Responder', stackError: new Error(), value });
+  return {
+    responder,
+    props: listenerProps,
+  };
 }
 
 const Dispatcher = {
@@ -243,7 +246,7 @@ const Dispatcher = {
   useReducer,
   useRef,
   useState,
-  useListener,
+  useResponder,
 };
 
 // Inspect
