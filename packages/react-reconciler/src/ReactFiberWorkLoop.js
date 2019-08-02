@@ -1034,7 +1034,11 @@ function renderRoot(
         hasNotProcessedNewUpdates &&
         !isSync &&
         // do not delay if we're inside an act() scope
-        !(flushSuspenseFallbacksInTests && IsThisRendererActing.current)
+        !(
+          __DEV__ &&
+          flushSuspenseFallbacksInTests &&
+          IsThisRendererActing.current
+        )
       ) {
         // If we have not processed any new updates during this pass, then this is
         // either a retry of an existing fallback state or a hidden tree.
@@ -1075,7 +1079,11 @@ function renderRoot(
       if (
         !isSync &&
         // do not delay if we're inside an act() scope
-        !(flushSuspenseFallbacksInTests && IsThisRendererActing.current)
+        !(
+          __DEV__ &&
+          flushSuspenseFallbacksInTests &&
+          IsThisRendererActing.current
+        )
       ) {
         // We're suspended in a state that should be avoided. We'll try to avoid committing
         // it for as long as the timeouts let us.
@@ -1148,7 +1156,11 @@ function renderRoot(
       if (
         !isSync &&
         // do not delay if we're inside an act() scope
-        !(flushSuspenseFallbacksInTests && IsThisRendererActing.current) &&
+        !(
+          __DEV__ &&
+          flushSuspenseFallbacksInTests &&
+          IsThisRendererActing.current
+        ) &&
         workInProgressRootLatestProcessedExpirationTime !== Sync &&
         workInProgressRootCanSuspendUsingConfig !== null
       ) {
@@ -1640,7 +1652,12 @@ function commitRootImpl(root, renderPriorityLevel) {
     nextEffect = firstEffect;
     do {
       if (__DEV__) {
-        invokeGuardedCallback(null, commitMutationEffects, null);
+        invokeGuardedCallback(
+          null,
+          commitMutationEffects,
+          null,
+          renderPriorityLevel,
+        );
         if (hasCaughtError()) {
           invariant(nextEffect !== null, 'Should be working on an effect.');
           const error = clearCaughtError();
@@ -1649,7 +1666,7 @@ function commitRootImpl(root, renderPriorityLevel) {
         }
       } else {
         try {
-          commitMutationEffects();
+          commitMutationEffects(renderPriorityLevel);
         } catch (error) {
           invariant(nextEffect !== null, 'Should be working on an effect.');
           captureCommitPhaseError(nextEffect, error);
@@ -1838,7 +1855,7 @@ function commitBeforeMutationEffects() {
   }
 }
 
-function commitMutationEffects() {
+function commitMutationEffects(renderPriorityLevel) {
   // TODO: Should probably move the bulk of this function to commitWork.
   while (nextEffect !== null) {
     setCurrentDebugFiberInDEV(nextEffect);
@@ -1889,7 +1906,7 @@ function commitMutationEffects() {
         break;
       }
       case Deletion: {
-        commitDeletion(nextEffect);
+        commitDeletion(nextEffect, renderPriorityLevel);
         break;
       }
     }
@@ -2564,11 +2581,14 @@ let didWarnAboutUnmockedScheduler = false;
 
 export function warnIfUnmockedScheduler(fiber: Fiber) {
   if (__DEV__) {
-    if (didWarnAboutUnmockedScheduler === false) {
+    if (
+      didWarnAboutUnmockedScheduler === false &&
+      Scheduler.unstable_flushAllWithoutAsserting === undefined
+    ) {
       if (fiber.mode & BatchedMode || fiber.mode & ConcurrentMode) {
         didWarnAboutUnmockedScheduler = true;
         warningWithoutStack(
-          Scheduler.unstable_flushAllWithoutAsserting !== undefined,
+          false,
           'In Concurrent or Sync modes, the "scheduler" module needs to be mocked ' +
             'to guarantee consistent behaviour across tests and browsers. ' +
             'For example, with jest: \n' +
@@ -2578,7 +2598,7 @@ export function warnIfUnmockedScheduler(fiber: Fiber) {
       } else if (warnAboutUnmockedScheduler === true) {
         didWarnAboutUnmockedScheduler = true;
         warningWithoutStack(
-          null,
+          false,
           'Starting from React v17, the "scheduler" module will need to be mocked ' +
             'to guarantee consistent behaviour across tests and browsers. ' +
             'For example, with jest: \n' +

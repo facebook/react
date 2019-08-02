@@ -14,16 +14,14 @@ import type {
 
 import React from 'react';
 import {DiscreteEvent} from 'shared/ReactTypes';
+import type {ReactEventResponderListener} from 'shared/ReactTypes';
 
 type KeyboardEventType = 'keydown' | 'keyup';
 
-type KeyboardListenerProps = {|
+type KeyboardProps = {
+  disabled: boolean,
   onKeyDown: (e: KeyboardEvent) => void,
   onKeyUp: (e: KeyboardEvent) => void,
-|};
-
-type KeyboardResponderProps = {
-  disabled: boolean,
 };
 
 type KeyboardEvent = {|
@@ -105,6 +103,10 @@ const translateToKey = {
   '224': 'Meta',
 };
 
+function isFunction(obj): boolean {
+  return typeof obj === 'function';
+}
+
 function getEventKey(nativeEvent): string {
   const nativeKey = nativeEvent.key;
   if (nativeKey) {
@@ -154,14 +156,14 @@ function createKeyboardEvent(
 }
 
 function dispatchKeyboardEvent(
-  eventPropName: string,
   event: ReactDOMResponderEvent,
+  listener: KeyboardEvent => void,
   context: ReactDOMResponderContext,
   type: KeyboardEventType,
   target: Element | Document,
 ): void {
   const syntheticEvent = createKeyboardEvent(event, context, type, target);
-  context.dispatchEvent(eventPropName, syntheticEvent, DiscreteEvent);
+  context.dispatchEvent(syntheticEvent, listener, DiscreteEvent);
 }
 
 const keyboardResponderImpl = {
@@ -169,7 +171,7 @@ const keyboardResponderImpl = {
   onEvent(
     event: ReactDOMResponderEvent,
     context: ReactDOMResponderContext,
-    props: KeyboardResponderProps,
+    props: KeyboardProps,
   ): void {
     const {responderTarget, type} = event;
 
@@ -177,21 +179,27 @@ const keyboardResponderImpl = {
       return;
     }
     if (type === 'keydown') {
-      dispatchKeyboardEvent(
-        'onKeyDown',
-        event,
-        context,
-        'keydown',
-        ((responderTarget: any): Element | Document),
-      );
+      const onKeyDown = props.onKeyDown;
+      if (isFunction(onKeyDown)) {
+        dispatchKeyboardEvent(
+          event,
+          onKeyDown,
+          context,
+          'keydown',
+          ((responderTarget: any): Element | Document),
+        );
+      }
     } else if (type === 'keyup') {
-      dispatchKeyboardEvent(
-        'onKeyUp',
-        event,
-        context,
-        'keyup',
-        ((responderTarget: any): Element | Document),
-      );
+      const onKeyUp = props.onKeyUp;
+      if (isFunction(onKeyUp)) {
+        dispatchKeyboardEvent(
+          event,
+          onKeyUp,
+          context,
+          'keyup',
+          ((responderTarget: any): Element | Document),
+        );
+      }
     }
   },
 };
@@ -201,6 +209,8 @@ export const KeyboardResponder = React.unstable_createResponder(
   keyboardResponderImpl,
 );
 
-export function useKeyboardListener(props: KeyboardListenerProps): void {
-  React.unstable_useListener(KeyboardResponder, props);
+export function useKeyboardResponder(
+  props: KeyboardProps,
+): ReactEventResponderListener<any, any> {
+  return React.unstable_useResponder(KeyboardResponder, props);
 }

@@ -40,3 +40,17 @@ it('should warn in sync mode', () => {
     ReactDOM.render(<App />, document.createElement('div'));
   }).toWarnDev([]);
 });
+
+it('does not warn if Scheduler is mocked', () => {
+  jest.resetModules();
+  jest.mock('scheduler', () => require('scheduler/unstable_mock'));
+  React = require('react');
+  ReactDOM = require('react-dom');
+  ReactFeatureFlags = require('shared/ReactFeatureFlags');
+  ReactFeatureFlags.warnAboutUnmockedScheduler = true;
+
+  // This should not warn
+  expect(() => {
+    ReactDOM.render(<App />, document.createElement('div'));
+  }).toWarnDev([]);
+});

@@ -57,10 +57,10 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode,
+  disableLegacyContext,
   enableProfilerTimer,
   enableSchedulerTracing,
   enableSuspenseServerRenderer,
-  enableFlareAPI,
   enableFundamentalAPI,
   warnAboutDefaultPropsOnFunctionComponents,
 } from 'shared/ReactFeatureFlags';
@@ -173,7 +173,6 @@ import {
   requestCurrentTime,
   retryTimedOutBoundary,
 } from './ReactFiberWorkLoop';
-import {prepareToReadListenerHooks} from './ReactFiberEvents';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -302,9 +301,6 @@ function updateForwardRef(
   // The rest is a fork of updateFunctionComponent
   let nextChildren;
   prepareToReadContext(workInProgress, renderExpirationTime);
-  if (enableFlareAPI) {
-    prepareToReadListenerHooks(workInProgress);
-  }
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
     setCurrentPhase('render');
@@ -323,9 +319,6 @@ function updateForwardRef(
     ) {
       // Only double-render components with Hooks
       if (workInProgress.memoizedState !== null) {
-        if (enableFlareAPI) {
-          prepareToReadListenerHooks(workInProgress);
-        }
         nextChildren = renderWithHooks(
           current,
           workInProgress,
@@ -623,14 +616,14 @@ function updateFunctionComponent(
     }
   }
 
-  const unmaskedContext = getUnmaskedContext(workInProgress, Component, true);
-  const context = getMaskedContext(workInProgress, unmaskedContext);
+  let context;
+  if (!disableLegacyContext) {
+    const unmaskedContext = getUnmaskedContext(workInProgress, Component, true);
+    context = getMaskedContext(workInProgress, unmaskedContext);
+  }
 
   let nextChildren;
   prepareToReadContext(workInProgress, renderExpirationTime);
-  if (enableFlareAPI) {
-    prepareToReadListenerHooks(workInProgress);
-  }
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
     setCurrentPhase('render');
@@ -649,9 +642,6 @@ function updateFunctionComponent(
     ) {
       // Only double-render components with Hooks
       if (workInProgress.memoizedState !== null) {
-        if (enableFlareAPI) {
-          prepareToReadListenerHooks(workInProgress);
-        }
         nextChildren = renderWithHooks(
           current,
           workInProgress,
@@ -1244,13 +1234,17 @@ function mountIndeterminateComponent(
   }
 
   const props = workInProgress.pendingProps;
-  const unmaskedContext = getUnmaskedContext(workInProgress, Component, false);
-  const context = getMaskedContext(workInProgress, unmaskedContext);
+  let context;
+  if (!disableLegacyContext) {
+    const unmaskedContext = getUnmaskedContext(
+      workInProgress,
+      Component,
+      false,
+    );
+    context = getMaskedContext(workInProgress, unmaskedContext);
+  }
 
   prepareToReadContext(workInProgress, renderExpirationTime);
-  if (enableFlareAPI) {
-    prepareToReadListenerHooks(workInProgress);
-  }
   let value;
 
   if (__DEV__) {
@@ -1366,6 +1360,15 @@ function mountIndeterminateComponent(
     // Proceed under the assumption that this is a function component
     workInProgress.tag = FunctionComponent;
     if (__DEV__) {
+      if (disableLegacyContext && Component.contextTypes) {
+        warningWithoutStack(
+          false,
+          '%s uses the legacy contextTypes API which is no longer supported. ' +
+            'Use React.createContext() with React.useContext() instead.',
+          getComponentName(Component) || 'Unknown',
+        );
+      }
+
       if (
         debugRenderPhaseSideEffects ||
         (debugRenderPhaseSideEffectsForStrictMode &&
@@ -1373,9 +1376,6 @@ function mountIndeterminateComponent(
       ) {
         // Only double-render components with Hooks
         if (workInProgress.memoizedState !== null) {
-          if (enableFlareAPI) {
-            prepareToReadListenerHooks(workInProgress);
-          }
           value = renderWithHooks(
             null,
             workInProgress,
@@ -2782,29 +2782,26 @@ function beginWork(
           const didSuspendBefore =
             (current.effectTag & DidCapture) !== NoEffect;
 
-          const childExpirationTime = workInProgress.childExpirationTime;
-          if (childExpirationTime < renderExpirationTime) {
+          const hasChildWork =
+            workInProgress.childExpirationTime >= renderExpirationTime;
+
+          if (didSuspendBefore) {
+            if (hasChildWork) {
+              // If something was in fallback state last time, and we have all the
+              // same children then we're still in progressive loading state.
+              // Something might get unblocked by state updates or retries in the
+              // tree which will affect the tail. So we need to use the normal
+              // path to compute the correct tail.
+              return updateSuspenseListComponent(
+                current,
+                workInProgress,
+                renderExpirationTime,
+              );
+            }
             // If none of the children had any work, that means that none of
             // them got retried so they'll still be blocked in the same way
             // as before. We can fast bail out.
-            pushSuspenseContext(workInProgress, suspenseStackCursor.current);
-            if (didSuspendBefore) {
-              workInProgress.effectTag |= DidCapture;
-            }
-            return null;
-          }
-
-          if (didSuspendBefore) {
-            // If something was in fallback state last time, and we have all the
-            // same children then we're still in progressive loading state.
-            // Something might get unblocked by state updates or retries in the
-            // tree which will affect the tail. So we need to use the normal
-            // path to compute the correct tail.
-            return updateSuspenseListComponent(
-              current,
-              workInProgress,
-              renderExpirationTime,
-            );
+            workInProgress.effectTag |= DidCapture;
           }
 
           // If nothing suspended before and we're rendering the same children,
@@ -2818,7 +2815,15 @@ function beginWork(
             renderState.tail = null;
           }
           pushSuspenseContext(workInProgress, suspenseStackCursor.current);
-          break;
+
+          if (hasChildWork) {
+            break;
+          } else {
+            // If none of the children had any work, that means that none of
+            // them got retried so they'll still be blocked in the same way
+            // as before. We can fast bail out.
+            return null;
+          }
         }
       }
       return bailoutOnAlreadyFinishedWork(

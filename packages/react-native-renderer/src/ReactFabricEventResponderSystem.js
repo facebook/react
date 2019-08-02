@@ -7,12 +7,7 @@
  * @flow
  */
 
-import {
-  HostComponent,
-  FunctionComponent,
-  MemoComponent,
-  ForwardRef,
-} from 'shared/ReactWorkTags';
+import {HostComponent} from 'shared/ReactWorkTags';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import {
   batchedEventUpdates,
@@ -49,7 +44,7 @@ const {
 } = Scheduler;
 
 type EventQueueItem = {|
-  listeners: Array<(val: any) => void>,
+  listener: (val: any) => void,
   value: any,
 |};
 type EventQueue = Array<EventQueueItem>;
@@ -98,8 +93,8 @@ let currentTimerIDCounter = 0;
 
 const eventResponderContext: ReactNativeResponderContext = {
   dispatchEvent(
-    eventProp: string,
     eventValue: any,
+    eventListener: any => void,
     eventPriority: EventPriority,
   ): void {
     validateResponderContext();
@@ -107,15 +102,9 @@ const eventResponderContext: ReactNativeResponderContext = {
     if (eventPriority < currentEventQueuePriority) {
       currentEventQueuePriority = eventPriority;
     }
-    const responderInstance = ((currentInstance: any): ReactNativeEventResponderInstance);
-    const target = responderInstance.fiber;
-    const responder = responderInstance.responder;
-    const listeners = collectListeners(eventProp, responder, target);
-    if (listeners.length !== 0) {
-      ((currentEventQueue: any): EventQueue).push(
-        createEventQueueItem(eventValue, listeners),
-      );
-    }
+    ((currentEventQueue: any): EventQueue).push(
+      createEventQueueItem(eventValue, eventListener),
+    );
   },
   isTargetWithinNode(
     childTarget: ReactNativeEventTarget,
@@ -228,11 +217,11 @@ const eventResponderContext: ReactNativeResponderContext = {
 
 function createEventQueueItem(
   value: any,
-  listeners: Array<(val: any) => void>,
+  listener: (val: any) => void,
 ): EventQueueItem {
   return {
     value,
-    listeners,
+    listener,
   };
 }
 
@@ -392,72 +381,11 @@ function releaseOwnershipForEventResponderInstance(
 
 // TODO this function is almost an exact copy of the DOM version, we should
 // somehow share the logic
-function collectListeners(
-  eventProp: string,
-  eventResponder: ReactNativeEventResponder,
-  target: Fiber,
-): Array<(any) => void> {
-  const eventListeners = [];
-  let node = target.return;
-  nodeTraversal: while (node !== null) {
-    switch (node.tag) {
-      case HostComponent: {
-        const dependencies = node.dependencies;
-
-        if (dependencies !== null) {
-          const respondersMap = dependencies.responders;
-
-          if (respondersMap !== null && respondersMap.has(eventResponder)) {
-            break nodeTraversal;
-          }
-        }
-        break;
-      }
-      case FunctionComponent:
-      case MemoComponent:
-      case ForwardRef: {
-        const dependencies = node.dependencies;
-
-        if (dependencies !== null) {
-          const listeners = dependencies.listeners;
-
-          if (listeners !== null) {
-            for (
-              let s = 0, listenersLength = listeners.length;
-              s < listenersLength;
-              s++
-            ) {
-              const listener = listeners[s];
-              const {responder, props} = listener;
-              const listenerFunc = props[eventProp];
-
-              if (
-                responder === eventResponder &&
-                typeof listenerFunc === 'function'
-              ) {
-                eventListeners.push(listenerFunc);
-              }
-            }
-          }
-        }
-      }
-    }
-    node = node.return;
-  }
-  return eventListeners;
-}
-
-// TODO this function is almost an exact copy of the DOM version, we should
-// somehow share the logic
 function processEvents(eventQueue: EventQueue): void {
   for (let i = 0, length = eventQueue.length; i < length; i++) {
-    const {value, listeners} = eventQueue[i];
-    for (let s = 0, length2 = listeners.length; s < length2; s++) {
-      const listener = listeners[s];
-      const type =
-        typeof value === 'object' && value !== null ? value.type : '';
-      invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, value);
-    }
+    const {value, listener} = eventQueue[i];
+    const type = typeof value === 'object' && value !== null ? value.type : '';
+    invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, value);
   }
 }
 

@@ -12,19 +12,13 @@ import type {
   ReactDOMResponderContext,
   PointerType,
 } from 'shared/ReactDOMTypes';
-import type {EventPriority} from 'shared/ReactTypes';
+import type {
+  EventPriority,
+  ReactEventResponderListener,
+} from 'shared/ReactTypes';
 
 import React from 'react';
 import {DiscreteEvent, UserBlockingEvent} from 'shared/ReactTypes';
-
-type PressListenerProps = {|
-  onContextMenu: (e: PressEvent) => void,
-  onPress: (e: PressEvent) => void,
-  onPressChange: boolean => void,
-  onPressEnd: (e: PressEvent) => void,
-  onPressMove: (e: PressEvent) => void,
-  onPressStart: (e: PressEvent) => void,
-|};
 
 type PressProps = {|
   disabled: boolean,
@@ -37,6 +31,12 @@ type PressProps = {|
   preventContextMenu: boolean,
   preventDefault: boolean,
   stopPropagation: boolean,
+  onContextMenu: (e: PressEvent) => void,
+  onPress: (e: PressEvent) => void,
+  onPressChange: boolean => void,
+  onPressEnd: (e: PressEvent) => void,
+  onPressMove: (e: PressEvent) => void,
+  onPressStart: (e: PressEvent) => void,
 |};
 
 type PressState = {
@@ -51,7 +51,6 @@ type PressState = {
   isPressWithinResponderRegion: boolean,
   pointerType: PointerType,
   pressTarget: null | Element | Document,
-  pressStartTimeout: null | number,
   responderRegionOnActivation: null | $ReadOnly<{|
     bottom: number,
     left: number,
@@ -143,6 +142,10 @@ if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
   );
 }
 
+function isFunction(obj): boolean {
+  return typeof obj === 'function';
+}
+
 function createPressEvent(
   context: ReactDOMResponderContext,
   type: PressEventType,
@@ -202,8 +205,8 @@ function createPressEvent(
 }
 
 function dispatchEvent(
-  eventPropName: string,
   event: ?ReactDOMResponderEvent,
+  listener: any => void,
   context: ReactDOMResponderContext,
   state: PressState,
   name: PressEventType,
@@ -224,15 +227,19 @@ function dispatchEvent(
     touchEvent,
     defaultPrevented,
   );
-  context.dispatchEvent(eventPropName, syntheticEvent, eventPriority);
+  context.dispatchEvent(syntheticEvent, listener, eventPriority);
 }
 
 function dispatchPressChangeEvent(
   context: ReactDOMResponderContext,
+  props: PressProps,
   state: PressState,
 ): void {
-  const bool = state.isActivePressed;
-  context.dispatchEvent('onPressChange', bool, DiscreteEvent);
+  const onPressChange = props.onPressChange;
+  if (isFunction(onPressChange)) {
+    const bool = state.isActivePressed;
+    context.dispatchEvent(bool, onPressChange, DiscreteEvent);
+  }
 }
 
 function dispatchPressStartEvents(
@@ -252,17 +259,20 @@ function dispatchPressStartEvents(
     if (x !== undefined && y !== undefined) {
       state.activationPosition = {x, y};
     }
+    const onPressStart = props.onPressStart;
 
-    dispatchEvent(
-      'onPressStart',
-      event,
-      context,
-      state,
-      'pressstart',
-      DiscreteEvent,
-    );
+    if (isFunction(onPressStart)) {
+      dispatchEvent(
+        event,
+        onPressStart,
+        context,
+        state,
+        'pressstart',
+        DiscreteEvent,
+      );
+    }
     if (!wasActivePressed) {
-      dispatchPressChangeEvent(context, state);
+      dispatchPressChangeEvent(context, props, state);
     }
   }
 }
@@ -278,15 +288,19 @@ function dispatchPressEndEvents(
 
   if (state.isActivePressed) {
     state.isActivePressed = false;
-    dispatchEvent(
-      'onPressEnd',
-      event,
-      context,
-      state,
-      'pressend',
-      DiscreteEvent,
-    );
-    dispatchPressChangeEvent(context, state);
+    const onPressEnd = props.onPressEnd;
+
+    if (isFunction(onPressEnd)) {
+      dispatchEvent(
+        event,
+        onPressEnd,
+        context,
+        state,
+        'pressend',
+        DiscreteEvent,
+      );
+    }
+    dispatchPressChangeEvent(context, props, state);
   }
 
   state.responderRegionOnDeactivation = null;
@@ -299,10 +313,6 @@ function dispatchCancel(
   state: PressState,
 ): void {
   state.touchEvent = null;
-  if (state.pressStartTimeout !== null) {
-    context.clearTimeout(state.pressStartTimeout);
-    state.pressStartTimeout = null;
-  }
   if (state.isPressed) {
     state.ignoreEmulatedMouseEvents = false;
     dispatchPressEndEvents(event, context, props, state);
@@ -488,7 +498,6 @@ const pressResponderImpl = {
       isPressed: false,
       isPressWithinResponderRegion: true,
       pointerType: '',
-      pressStartTimeout: null,
       pressTarget: null,
       responderRegionOnActivation: null,
       responderRegionOnDeactivation: null,
@@ -624,14 +633,17 @@ const pressResponderImpl = {
           }
           dispatchCancel(event, context, props, state);
         }
-        dispatchEvent(
-          'onContextMenu',
-          event,
-          context,
-          state,
-          'contextmenu',
-          DiscreteEvent,
-        );
+        const onContextMenu = props.onContextMenu;
+        if (isFunction(onContextMenu)) {
+          dispatchEvent(
+            event,
+            onContextMenu,
+            context,
+            state,
+            'contextmenu',
+            DiscreteEvent,
+          );
+        }
         // Click won't occur, so we need to remove root events
         removeRootEventTypes(context, state);
         break;
@@ -701,14 +713,17 @@ const pressResponderImpl = {
 
         if (state.isPressWithinResponderRegion) {
           if (isPressed) {
-            dispatchEvent(
-              'onPressMove',
-              event,
-              context,
-              state,
-              'pressmove',
-              UserBlockingEvent,
-            );
+            const onPressMove = props.onPressMove;
+            if (isFunction(onPressMove)) {
+              dispatchEvent(
+                event,
+                onPressMove,
+                context,
+                state,
+                'pressmove',
+                UserBlockingEvent,
+              );
+            }
           } else {
             dispatchPressStartEvents(event, context, props, state);
           }
@@ -775,8 +790,9 @@ const pressResponderImpl = {
 
           const pressTarget = state.pressTarget;
           dispatchPressEndEvents(event, context, props, state);
+          const onPress = props.onPress;
 
-          if (pressTarget !== null) {
+          if (pressTarget !== null && isFunction(onPress)) {
             if (
               !isKeyboardEvent &&
               pressTarget !== null &&
@@ -801,8 +817,8 @@ const pressResponderImpl = {
             }
             if (state.isPressWithinResponderRegion && button !== 1) {
               dispatchEvent(
-                'onPress',
                 event,
+                onPress,
                 context,
                 state,
                 'press',
@@ -874,6 +890,8 @@ export const PressResponder = React.unstable_createResponder(
   pressResponderImpl,
 );
 
-export function usePressListener(props: PressListenerProps): void {
-  React.unstable_useListener(PressResponder, props);
+export function usePressResponder(
+  props: PressProps,
+): ReactEventResponderListener<any, any> {
+  return React.unstable_useResponder(PressResponder, props);
 }

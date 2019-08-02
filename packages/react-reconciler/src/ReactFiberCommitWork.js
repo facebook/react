@@ -22,6 +22,7 @@ import type {CapturedValue, CapturedError} from './ReactCapturedValue';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks';
 import type {Thenable} from './ReactFiberWorkLoop';
+import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
 
 import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
 import {
@@ -116,6 +117,7 @@ import {
   MountPassive,
 } from './ReactHookEffectTags';
 import {didWarnAboutReassigningProps} from './ReactFiberBeginWork';
+import {runWithPriority, NormalPriority} from './SchedulerWithReactIntegration';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {
@@ -716,7 +718,10 @@ function commitDetachRef(current: Fiber) {
 // User-originating errors (lifecycles and refs) should not interrupt
 // deletion, so don't let them throw. Host-originating errors should
 // interrupt deletion, so it's okay
-function commitUnmount(current: Fiber): void {
+function commitUnmount(
+  current: Fiber,
+  renderPriorityLevel: ReactPriorityLevel,
+): void {
   onCommitUnmount(current);
 
   switch (current.tag) {
@@ -729,14 +734,33 @@ function commitUnmount(current: Fiber): void {
         const lastEffect = updateQueue.lastEffect;
         if (lastEffect !== null) {
           const firstEffect = lastEffect.next;
-          let effect = firstEffect;
-          do {
-            const destroy = effect.destroy;
-            if (destroy !== undefined) {
-              safelyCallDestroy(current, destroy);
-            }
-            effect = effect.next;
-          } while (effect !== firstEffect);
+
+          // When the owner fiber is deleted, the destroy function of a passive
+          // effect hook is called during the synchronous commit phase. This is
+          // a concession to implementation complexity. Calling it in the
+          // passive effect phase (like they usually are, when dependencies
+          // change during an update) would require either traversing the
+          // children of the deleted fiber again, or including unmount effects
+          // as part of the fiber effect list.
+          //
+          // Because this is during the sync commit phase, we need to change
+          // the priority.
+          //
+          // TODO: Reconsider this implementation trade off.
+          const priorityLevel =
+            renderPriorityLevel > NormalPriority
+              ? NormalPriority
+              : renderPriorityLevel;
+          runWithPriority(priorityLevel, () => {
+            let effect = firstEffect;
+            do {
+              const destroy = effect.destroy;
+              if (destroy !== undefined) {
+                safelyCallDestroy(current, destroy);
+              }
+              effect = effect.next;
+            } while (effect !== firstEffect);
+          });
         }
       }
       break;
@@ -777,7 +801,7 @@ function commitUnmount(current: Fiber): void {
       // We are also not using this parent because
       // the portal will get pushed immediately.
       if (supportsMutation) {
-        unmountHostComponents(current);
+        unmountHostComponents(current, renderPriorityLevel);
       } else if (supportsPersistence) {
         emptyPortalContainer(current);
       }
@@ -795,7 +819,10 @@ function commitUnmount(current: Fiber): void {
   }
 }
 
-function commitNestedUnmounts(root: Fiber): void {
+function commitNestedUnmounts(
+  root: Fiber,
+  renderPriorityLevel: ReactPriorityLevel,
+): void {
   // While we're inside a removed host node we don't want to call
   // removeChild on the inner nodes because they're removed by the top
   // call anyway. We also want to call componentWillUnmount on all
@@ -803,7 +830,7 @@ function commitNestedUnmounts(root: Fiber): void {
   // we do an inner loop while we're still inside the host node.
   let node: Fiber = root;
   while (true) {
-    commitUnmount(node);
+    commitUnmount(node, renderPriorityLevel);
     // Visit children because they may contain more composite or host nodes.
     // Skip portals because commitUnmount() currently visits them recursively.
     if (
@@ -1054,7 +1081,7 @@ function commitPlacement(finishedWork: Fiber): void {
   }
 }
 
-function unmountHostComponents(current): void {
+function unmountHostComponents(current, renderPriorityLevel): void {
   // We only have the top Fiber that was deleted but we need to recurse down its
   // children to find all the terminal nodes.
   let node: Fiber = current;
@@ -1102,7 +1129,7 @@ function unmountHostComponents(current): void {
     }
 
     if (node.tag === HostComponent || node.tag === HostText) {
-      commitNestedUnmounts(node);
+      commitNestedUnmounts(node, renderPriorityLevel);
       // After all the children have unmounted, it is now safe to remove the
       // node from the tree.
       if (currentParentIsContainer) {
@@ -1119,7 +1146,7 @@ function unmountHostComponents(current): void {
       // Don't visit children because we already visited them.
     } else if (node.tag === FundamentalComponent) {
       const fundamentalNode = node.stateNode.instance;
-      commitNestedUnmounts(node);
+      commitNestedUnmounts(node, renderPriorityLevel);
       // After all the children have unmounted, it is now safe to remove the
       // node from the tree.
       if (currentParentIsContainer) {
@@ -1161,7 +1188,7 @@ function unmountHostComponents(current): void {
         continue;
       }
     } else {
-      commitUnmount(node);
+      commitUnmount(node, renderPriorityLevel);
       // Visit children because we may find more host components below.
       if (node.child !== null) {
         node.child.return = node;
@@ -1188,14 +1215,17 @@ function unmountHostComponents(current): void {
   }
 }
 
-function commitDeletion(current: Fiber): void {
+function commitDeletion(
+  current: Fiber,
+  renderPriorityLevel: ReactPriorityLevel,
+): void {
   if (supportsMutation) {
     // Recursively delete all host nodes from the parent.
     // Detach refs and call componentWillUnmount() on the whole subtree.
-    unmountHostComponents(current);
+    unmountHostComponents(current, renderPriorityLevel);
   } else {
     // Detach refs and call componentWillUnmount() on the whole subtree.
-    commitNestedUnmounts(current);
+    commitNestedUnmounts(current, renderPriorityLevel);
   }
   detachFiber(current);
 }

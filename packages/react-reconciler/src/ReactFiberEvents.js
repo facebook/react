@@ -7,63 +7,28 @@
  * @flow
  */
 
-import type {Fiber, Dependencies} from './ReactFiber';
+import type {Fiber} from './ReactFiber';
 import type {
   ReactEventResponder,
   ReactEventResponderInstance,
+  ReactEventResponderListener,
 } from 'shared/ReactTypes';
 import type {Instance} from './ReactFiberHostConfig';
 
-import {NoWork} from './ReactFiberExpirationTime';
-
 import {SuspenseComponent, Fragment} from 'shared/ReactWorkTags';
 
-let currentlyRenderingFiber: null | Fiber = null;
-let currentListenerHookIndex: number = 0;
-
-export function prepareToReadListenerHooks(workInProgress: Fiber): void {
-  currentlyRenderingFiber = workInProgress;
-  currentListenerHookIndex = 0;
-}
-
-function getListenerHooks(): Array<{
+export function createResponderListener(
   responder: ReactEventResponder<any, any>,
   props: Object,
-}> {
-  let listeners;
-  let dependencies: Dependencies | null = ((currentlyRenderingFiber: any): Fiber)
-    .dependencies;
-  if (dependencies === null) {
-    dependencies = ((currentlyRenderingFiber: any): Fiber).dependencies = {
-      expirationTime: NoWork,
-      firstContext: null,
-      listeners: [],
-      responders: null,
-    };
+): ReactEventResponderListener<any, any> {
+  const eventResponderListener = {
+    responder,
+    props,
+  };
+  if (__DEV__) {
+    Object.freeze(eventResponderListener);
   }
-  listeners = dependencies.listeners;
-  if (listeners === null) {
-    dependencies.listeners = listeners = [];
-  }
-  return listeners;
-}
-
-export function updateListenerHook(
-  responder: ReactEventResponder<any, any>,
-  props: Object,
-) {
-  const listeners = getListenerHooks();
-  if (listeners.length === currentListenerHookIndex) {
-    listeners.push({
-      responder,
-      props,
-    });
-    currentListenerHookIndex++;
-  } else {
-    const currentListenerHook = listeners[currentListenerHookIndex++];
-    currentListenerHook.responder = responder;
-    currentListenerHook.props = props;
-  }
+  return eventResponderListener;
 }
 
 export function isFiberSuspenseAndTimedOut(fiber: Fiber): boolean {

@@ -52,8 +52,8 @@ export type ReactDOMFundamentalComponentInstance = ReactFundamentalComponentInst
 
 export type ReactDOMResponderContext = {
   dispatchEvent: (
-    eventProp: string,
     eventValue: any,
+    listener: (any) => void,
     eventPriority: EventPriority,
   ) => void,
   isTargetWithinNode: (

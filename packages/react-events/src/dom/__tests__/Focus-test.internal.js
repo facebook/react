@@ -14,8 +14,8 @@ let ReactFeatureFlags;
 let ReactDOM;
 let FocusResponder;
 let FocusWithinResponder;
-let useFocusListener;
-let useFocusWithinListener;
+let useFocusResponder;
+let useFocusWithinResponder;
 
 const createEvent = (type, data) => {
   const event = document.createEvent('CustomEvent');
@@ -43,8 +43,9 @@ const modulesInit = () => {
   ReactDOM = require('react-dom');
   FocusResponder = require('react-events/focus').FocusResponder;
   FocusWithinResponder = require('react-events/focus').FocusWithinResponder;
-  useFocusListener = require('react-events/focus').useFocusListener;
-  useFocusWithinListener = require('react-events/focus').useFocusWithinListener;
+  useFocusResponder = require('react-events/focus').useFocusResponder;
+  useFocusWithinResponder = require('react-events/focus')
+    .useFocusWithinResponder;
 };
 
 describe('Focus event responder', () => {
@@ -72,13 +73,12 @@ describe('Focus event responder', () => {
       onFocus = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        useFocusListener({
+        const listener = useFocusResponder({
+          disabled: true,
           onBlur,
           onFocus,
         });
-        return (
-          <div ref={ref} responders={<FocusResponder disabled={true} />} />
-        );
+        return <div ref={ref} listeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
     });
@@ -98,10 +98,10 @@ describe('Focus event responder', () => {
       onBlur = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        useFocusListener({
+        const listener = useFocusResponder({
           onBlur,
         });
-        return <div ref={ref} responders={<FocusResponder />} />;
+        return <div ref={ref} listeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
     });
@@ -121,11 +121,11 @@ describe('Focus event responder', () => {
       ref = React.createRef();
       innerRef = React.createRef();
       const Component = () => {
-        useFocusListener({
+        const listener = useFocusResponder({
           onFocus,
         });
         return (
-          <div ref={ref} responders={<FocusResponder />}>
+          <div ref={ref} listeners={listener}>
             <a ref={innerRef} />
           </div>
         );
@@ -252,11 +252,11 @@ describe('Focus event responder', () => {
       ref = React.createRef();
       innerRef = React.createRef();
       const Component = () => {
-        useFocusListener({
+        const listener = useFocusResponder({
           onFocusChange,
         });
         return (
-          <div ref={ref} responders={<FocusResponder />}>
+          <div ref={ref} listeners={listener}>
             <div ref={innerRef} />
           </div>
         );
@@ -289,11 +289,11 @@ describe('Focus event responder', () => {
       ref = React.createRef();
       innerRef = React.createRef();
       const Component = () => {
-        useFocusListener({
+        const listener = useFocusResponder({
           onFocusVisibleChange,
         });
         return (
-          <div ref={ref} responders={<FocusResponder />}>
+          <div ref={ref} listeners={listener}>
             <div ref={innerRef} />
           </div>
         );
@@ -353,7 +353,7 @@ describe('Focus event responder', () => {
   });
 
   describe('nested Focus components', () => {
-    it('do not propagate events by default', () => {
+    it('propagates events in the correct order', () => {
       const events = [];
       const innerRef = React.createRef();
       const outerRef = React.createRef();
@@ -362,22 +362,22 @@ describe('Focus event responder', () => {
       };
 
       const Inner = () => {
-        useFocusListener({
+        const listener = useFocusResponder({
           onBlur: createEventHandler('inner: onBlur'),
           onFocus: createEventHandler('inner: onFocus'),
           onFocusChange: createEventHandler('inner: onFocusChange'),
         });
-        return <div ref={innerRef} responders={<FocusResponder />} />;
+        return <div ref={innerRef} listeners={listener} />;
       };
 
       const Outer = () => {
-        useFocusListener({
+        const listener = useFocusResponder({
           onBlur: createEventHandler('outer: onBlur'),
           onFocus: createEventHandler('outer: onFocus'),
           onFocusChange: createEventHandler('outer: onFocusChange'),
         });
         return (
-          <div ref={outerRef} responders={<FocusResponder />}>
+          <div ref={outerRef} listeners={listener}>
             <Inner />
           </div>
         );
@@ -432,16 +432,12 @@ describe('FocusWithin event responder', () => {
       onFocusWithinVisibleChange = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        useFocusWithinListener({
+        const listener = useFocusWithinResponder({
+          disabled: true,
           onFocusWithinChange,
           onFocusWithinVisibleChange,
         });
-        return (
-          <div
-            ref={ref}
-            responders={<FocusWithinResponder disabled={true} />}
-          />
-        );
+        return <div ref={ref} listeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
     });
@@ -463,11 +459,11 @@ describe('FocusWithin event responder', () => {
       innerRef = React.createRef();
       innerRef2 = React.createRef();
       const Component = () => {
-        useFocusWithinListener({
+        const listener = useFocusWithinResponder({
           onFocusWithinChange,
         });
         return (
-          <div ref={ref} responders={<FocusWithinResponder />}>
+          <div ref={ref} listeners={listener}>
             <div ref={innerRef} />
             <div ref={innerRef2} />
           </div>
@@ -534,11 +530,11 @@ describe('FocusWithin event responder', () => {
       innerRef = React.createRef();
       innerRef2 = React.createRef();
       const Component = () => {
-        useFocusWithinListener({
+        const listener = useFocusWithinResponder({
           onFocusWithinVisibleChange,
         });
         return (
-          <div ref={ref} responders={<FocusWithinResponder />}>
+          <div ref={ref} listeners={listener}>
             <div ref={innerRef} />
             <div ref={innerRef2} />
           </div>

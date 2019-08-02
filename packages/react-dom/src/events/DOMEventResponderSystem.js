@@ -12,12 +12,7 @@ import {
   PASSIVE_NOT_SUPPORTED,
 } from 'events/EventSystemFlags';
 import type {AnyNativeEvent} from 'events/PluginModuleType';
-import {
-  HostComponent,
-  FunctionComponent,
-  MemoComponent,
-  ForwardRef,
-} from 'shared/ReactWorkTags';
+import {HostComponent} from 'shared/ReactWorkTags';
 import type {EventPriority} from 'shared/ReactTypes';
 import type {
   ReactDOMEventResponder,
@@ -67,7 +62,7 @@ export function setListenToResponderEventTypes(
 }
 
 type EventQueueItem = {|
-  listeners: Array<(val: any) => void>,
+  listener: (val: any) => void,
   value: any,
 |};
 type EventQueue = Array<EventQueueItem>;
@@ -103,8 +98,8 @@ let currentDocument: null | Document = null;
 
 const eventResponderContext: ReactDOMResponderContext = {
   dispatchEvent(
-    eventProp: string,
     eventValue: any,
+    eventListener: any => void,
     eventPriority: EventPriority,
   ): void {
     validateResponderContext();
@@ -112,15 +107,9 @@ const eventResponderContext: ReactDOMResponderContext = {
     if (eventPriority < currentEventQueuePriority) {
       currentEventQueuePriority = eventPriority;
     }
-    const responderInstance = ((currentInstance: any): ReactDOMEventResponderInstance);
-    const target = responderInstance.fiber;
-    const responder = responderInstance.responder;
-    const listeners = collectListeners(eventProp, responder, target);
-    if (listeners.length !== 0) {
-      ((currentEventQueue: any): EventQueue).push(
-        createEventQueueItem(eventValue, listeners),
-      );
-    }
+    ((currentEventQueue: any): EventQueue).push(
+      createEventQueueItem(eventValue, eventListener),
+    );
   },
   isTargetWithinResponder(target: Element | Document): boolean {
     validateResponderContext();
@@ -392,11 +381,11 @@ function collectFocusableElements(
 
 function createEventQueueItem(
   value: any,
-  listeners: Array<(val: any) => void>,
+  listener: (val: any) => void,
 ): EventQueueItem {
   return {
     value,
-    listeners,
+    listener,
   };
 }
 
@@ -519,70 +508,11 @@ function createDOMResponderEvent(
   };
 }
 
-function collectListeners(
-  eventProp: string,
-  eventResponder: ReactDOMEventResponder,
-  target: Fiber,
-): Array<(any) => void> {
-  const eventListeners = [];
-  let node = target.return;
-  nodeTraversal: while (node !== null) {
-    switch (node.tag) {
-      case HostComponent: {
-        const dependencies = node.dependencies;
-
-        if (dependencies !== null) {
-          const respondersMap = dependencies.responders;
-
-          if (respondersMap !== null && respondersMap.has(eventResponder)) {
-            break nodeTraversal;
-          }
-        }
-        break;
-      }
-      case FunctionComponent:
-      case MemoComponent:
-      case ForwardRef: {
-        const dependencies = node.dependencies;
-
-        if (dependencies !== null) {
-          const listeners = dependencies.listeners;
-
-          if (listeners !== null) {
-            for (
-              let s = 0, listenersLength = listeners.length;
-              s < listenersLength;
-              s++
-            ) {
-              const listener = listeners[s];
-              const {responder, props} = listener;
-              const listenerFunc = props[eventProp];
-
-              if (
-                responder === eventResponder &&
-                typeof listenerFunc === 'function'
-              ) {
-                eventListeners.push(listenerFunc);
-              }
-            }
-          }
-        }
-      }
-    }
-    node = node.return;
-  }
-  return eventListeners;
-}
-
 function processEvents(eventQueue: EventQueue): void {
   for (let i = 0, length = eventQueue.length; i < length; i++) {
-    const {value, listeners} = eventQueue[i];
-    for (let s = 0, length2 = listeners.length; s < length2; s++) {
-      const listener = listeners[s];
-      const type =
-        typeof value === 'object' && value !== null ? value.type : '';
-      invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, value);
-    }
+    const {value, listener} = eventQueue[i];
+    const type = typeof value === 'object' && value !== null ? value.type : '';
+    invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, value);
   }
 }
 
@@ -663,6 +593,7 @@ function traverseAndHandleEventResponderInstances(
   // - Bubble target responder phase
   // - Root responder phase
 
+  const visitedResponders = new Set();
   const responderEvent = createDOMResponderEvent(
     topLevelType,
     nativeEvent,
@@ -670,7 +601,6 @@ function traverseAndHandleEventResponderInstances(
     isPassiveEvent,
     isPassiveSupported,
   );
-  const visitedResponders = new Set();
   let node = targetFiber;
   while (node !== null) {
     const {dependencies, tag} = node;
@@ -687,8 +617,8 @@ function traverseAndHandleEventResponderInstances(
               !visitedResponders.has(responder) &&
               validateResponderTargetEventTypes(eventType, responder)
             ) {
-              const onEvent = responder.onEvent;
               visitedResponders.add(responder);
+              const onEvent = responder.onEvent;
               if (onEvent !== null) {
                 currentInstance = responderInstance;
                 responderEvent.responderTarget = ((target: any):

@@ -93,3 +93,5 @@ export const enableSuspenseCallback = false;
 // https://github.com/reactjs/rfcs/blob/createlement-rfc/text/0000-create-element-changes.md
 export const warnAboutDefaultPropsOnFunctionComponents = false;
 export const warnAboutStringRefs = false;
+
+export const disableLegacyContext = false;
