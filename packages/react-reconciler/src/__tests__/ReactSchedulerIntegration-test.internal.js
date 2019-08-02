@@ -149,6 +149,11 @@ describe('ReactSchedulerIntegration', () => {
         Scheduler.unstable_yieldValue(
           `Effect priority: ${getCurrentPriorityAsString()}`,
         );
+        return () => {
+          Scheduler.unstable_yieldValue(
+            `Effect clean-up priority: ${getCurrentPriorityAsString()}`,
+          );
+        };
       });
       return null;
     }
@@ -170,6 +175,7 @@ describe('ReactSchedulerIntegration', () => {
     });
     expect(Scheduler).toHaveYielded([
       'Render priority: UserBlocking',
+      'Effect clean-up priority: Normal',
       'Effect priority: Normal',
     ]);
 
@@ -181,6 +187,7 @@ describe('ReactSchedulerIntegration', () => {
     });
     expect(Scheduler).toHaveYielded([
       'Render priority: Idle',
+      'Effect clean-up priority: Idle',
       'Effect priority: Idle',
     ]);
   });
@@ -211,6 +218,51 @@ describe('ReactSchedulerIntegration', () => {
       'Render priority [step 2]: UserBlocking',
       'Effect priority [step 2]: Normal',
     ]);
+  });
+
+  it('passive effect clean-up functions have correct priority even when component is deleted', async () => {
+    const {useEffect} = React;
+    function ReadPriority({step}) {
+      useEffect(() => {
+        return () => {
+          Scheduler.unstable_yieldValue(
+            `Effect clean-up priority: ${getCurrentPriorityAsString()}`,
+          );
+        };
+      });
+      return null;
+    }
+
+    await ReactNoop.act(async () => {
+      ReactNoop.render(<ReadPriority />);
+    });
+    await ReactNoop.act(async () => {
+      Scheduler.unstable_runWithPriority(ImmediatePriority, () => {
+        ReactNoop.render(null);
+      });
+    });
+    expect(Scheduler).toHaveYielded(['Effect clean-up priority: Normal']);
+
+    await ReactNoop.act(async () => {
+      ReactNoop.render(<ReadPriority />);
+    });
+    await ReactNoop.act(async () => {
+      Scheduler.unstable_runWithPriority(UserBlockingPriority, () => {
+        ReactNoop.render(null);
+      });
+    });
+    expect(Scheduler).toHaveYielded(['Effect clean-up priority: Normal']);
+
+    // Renders lower than normal priority spawn effects at the same priority
+    await ReactNoop.act(async () => {
+      ReactNoop.render(<ReadPriority />);
+    });
+    await ReactNoop.act(async () => {
+      Scheduler.unstable_runWithPriority(IdlePriority, () => {
+        ReactNoop.render(null);
+      });
+    });
+    expect(Scheduler).toHaveYielded(['Effect clean-up priority: Idle']);
   });
 
   it('after completing a level of work, infers priority of the next batch based on its expiration time', () => {
