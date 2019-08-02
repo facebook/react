@@ -83,40 +83,44 @@ export function patch(): void {
         targetConsole[method]);
 
       const overrideMethod = (...args) => {
-        // If we are ever called with a string that already has a component stack, e.g. a React error/warning,
-        // don't append a second stack.
-        const alreadyHasComponentStack =
-          args.length > 0 && FRAME_REGEX.exec(args[args.length - 1]);
+        try {
+          // If we are ever called with a string that already has a component stack, e.g. a React error/warning,
+          // don't append a second stack.
+          const alreadyHasComponentStack =
+            args.length > 0 && FRAME_REGEX.exec(args[args.length - 1]);
 
-        if (!alreadyHasComponentStack) {
-          // If there's a component stack for at least one of the injected renderers, append it.
-          // We don't handle the edge case of stacks for more than one (e.g. interleaved renderers?)
-          for (let {
-            getCurrentFiber,
-            getDisplayNameForFiber,
-          } of injectedRenderers.values()) {
-            let current: ?Fiber = getCurrentFiber();
-            let ownerStack: string = '';
-            while (current != null) {
-              const name = getDisplayNameForFiber(current);
-              const owner = current._debugOwner;
-              const ownerName =
-                owner != null ? getDisplayNameForFiber(owner) : null;
+          if (!alreadyHasComponentStack) {
+            // If there's a component stack for at least one of the injected renderers, append it.
+            // We don't handle the edge case of stacks for more than one (e.g. interleaved renderers?)
+            for (let {
+              getCurrentFiber,
+              getDisplayNameForFiber,
+            } of injectedRenderers.values()) {
+              let current: ?Fiber = getCurrentFiber();
+              let ownerStack: string = '';
+              while (current != null) {
+                const name = getDisplayNameForFiber(current);
+                const owner = current._debugOwner;
+                const ownerName =
+                  owner != null ? getDisplayNameForFiber(owner) : null;
 
-              ownerStack += describeComponentFrame(
-                name,
-                current._debugSource,
-                ownerName
-              );
+                ownerStack += describeComponentFrame(
+                  name,
+                  current._debugSource,
+                  ownerName
+                );
 
-              current = owner;
-            }
+                current = owner;
+              }
 
-            if (ownerStack !== '') {
-              args.push(ownerStack);
-              break;
+              if (ownerStack !== '') {
+                args.push(ownerStack);
+                break;
+              }
             }
           }
+        } catch (error) {
+          // Don't let a DevTools or React internal error interfere with logging.
         }
 
         originalMethod(...args);
