@@ -4,6 +4,7 @@
     "packages/*"
   ],
   "devDependencies": {
+    "@babel/plugin-syntax-jsx": "^7.2.0",
     "@mattiasbuelens/web-streams-polyfill": "0.1.0",
     "art": "^0.10.1",
     "babel-cli": "^6.6.5",
