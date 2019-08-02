@@ -28,7 +28,7 @@ import type { InspectedElement } from 'src/devtools/views/Components/types';
 import type { FrontendBridge } from 'src/bridge';
 
 export type BrowserTheme = 'dark' | 'light';
-export type TabID = 'components' | 'profiler' | 'settings';
+export type TabID = 'components' | 'profiler';
 export type ViewElementSource = (
   id: number,
   inspectedElement: InspectedElement
