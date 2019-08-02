@@ -2782,29 +2782,26 @@ function beginWork(
           const didSuspendBefore =
             (current.effectTag & DidCapture) !== NoEffect;
 
-          const childExpirationTime = workInProgress.childExpirationTime;
-          if (childExpirationTime < renderExpirationTime) {
+          const hasChildWork =
+            workInProgress.childExpirationTime >= renderExpirationTime;
+
+          if (didSuspendBefore) {
+            if (hasChildWork) {
+              // If something was in fallback state last time, and we have all the
+              // same children then we're still in progressive loading state.
+              // Something might get unblocked by state updates or retries in the
+              // tree which will affect the tail. So we need to use the normal
+              // path to compute the correct tail.
+              return updateSuspenseListComponent(
+                current,
+                workInProgress,
+                renderExpirationTime,
+              );
+            }
             // If none of the children had any work, that means that none of
             // them got retried so they'll still be blocked in the same way
             // as before. We can fast bail out.
-            pushSuspenseContext(workInProgress, suspenseStackCursor.current);
-            if (didSuspendBefore) {
-              workInProgress.effectTag |= DidCapture;
-            }
-            return null;
-          }
-
-          if (didSuspendBefore) {
-            // If something was in fallback state last time, and we have all the
-            // same children then we're still in progressive loading state.
-            // Something might get unblocked by state updates or retries in the
-            // tree which will affect the tail. So we need to use the normal
-            // path to compute the correct tail.
-            return updateSuspenseListComponent(
-              current,
-              workInProgress,
-              renderExpirationTime,
-            );
+            workInProgress.effectTag |= DidCapture;
           }
 
           // If nothing suspended before and we're rendering the same children,
@@ -2818,7 +2815,15 @@ function beginWork(
             renderState.tail = null;
           }
           pushSuspenseContext(workInProgress, suspenseStackCursor.current);
-          break;
+
+          if (hasChildWork) {
+            break;
+          } else {
+            // If none of the children had any work, that means that none of
+            // them got retried so they'll still be blocked in the same way
+            // as before. We can fast bail out.
+            return null;
+          }
         }
       }
       return bailoutOnAlreadyFinishedWork(
