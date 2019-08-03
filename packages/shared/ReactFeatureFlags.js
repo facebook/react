@@ -94,3 +94,5 @@ export const enableSuspenseCallback = false;
 export const warnAboutDefaultPropsOnFunctionComponents = false;
 
 export const disableLegacyContext = false;
+
+export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
