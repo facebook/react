@@ -27,6 +27,7 @@ import {
   revertPassiveEffectsChange,
   warnAboutUnmockedScheduler,
   flushSuspenseFallbacksInTests,
+  disableSchedulerTimeoutBasedOnReactExpirationTime,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
@@ -530,7 +531,10 @@ function scheduleCallbackForRoot(
       );
     } else {
       let options = null;
-      if (expirationTime !== Never) {
+      if (
+        !disableSchedulerTimeoutBasedOnReactExpirationTime &&
+        expirationTime !== Never
+      ) {
         let timeout = expirationTimeToMs(expirationTime) - now();
         options = {timeout};
       }
