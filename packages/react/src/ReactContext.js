@@ -20,16 +20,15 @@ export function createContext<T>(
 ): ReactContext<T> {
   if (calculateChangedBits === undefined) {
     calculateChangedBits = null;
-  } else {
-    if (__DEV__) {
-      warningWithoutStack(
-        calculateChangedBits === null ||
-          typeof calculateChangedBits === 'function',
-        'createContext: Expected the optional second argument to be a ' +
-          'function. Instead received: %s',
-        calculateChangedBits,
-      );
-    }
+  }
+  if (__DEV__) {
+    warningWithoutStack(
+      calculateChangedBits === null ||
+        typeof calculateChangedBits === 'function',
+      'createContext: Expected the optional second argument to be a ' +
+        'function. Instead received: %s',
+      calculateChangedBits,
+    );
   }
 
   const context: ReactContext<T> = {
