@@ -36,6 +36,7 @@ export const enableUserBlockingEvents = false;
 export const enableSuspenseCallback = false;
 export const warnAboutDefaultPropsOnFunctionComponents = false;
 export const disableLegacyContext = false;
+export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {
