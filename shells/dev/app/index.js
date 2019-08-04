@@ -19,8 +19,19 @@ import ReactNativeWeb from './ReactNativeWeb';
 import ToDoList from './ToDoList';
 import Toggle from './Toggle';
 import SuspenseTree from './SuspenseTree';
+import { ignoreErrors, ignoreWarnings } from './console';
 
 import './styles.css';
+
+// DevTools intentionally tests compatibility with certain legacy APIs.
+// Suppress their error messages in the local dev shell,
+// because they might mask other more serious error messages.
+ignoreErrors([
+  'Warning: Legacy context API',
+  'Warning: Unsafe lifecycle methods',
+  'Warning: %s is deprecated in StrictMode.', // findDOMNode
+]);
+ignoreWarnings(['Warning: componentWillReceiveProps is deprecated']);
 
 const roots = [];
 
