@@ -99,7 +99,6 @@ type FrontendEvents = {|
   overrideSuspense: [OverrideSuspense],
   profilingData: [ProfilingDataBackend],
   reloadAndProfile: [boolean],
-  selectElement: [ElementAndRendererID],
   selectFiber: [number],
   shutdown: [],
   startInspectingNative: [],

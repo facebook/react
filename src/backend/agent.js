@@ -124,7 +124,6 @@ export default class Agent extends EventEmitter<{|
     bridge.addListener('overrideState', this.overrideState);
     bridge.addListener('overrideSuspense', this.overrideSuspense);
     bridge.addListener('reloadAndProfile', this.reloadAndProfile);
-    bridge.addListener('selectElement', this.selectElement);
     bridge.addListener('startProfiling', this.startProfiling);
     bridge.addListener('stopProfiling', this.stopProfiling);
     bridge.addListener(
@@ -219,6 +218,24 @@ export default class Agent extends EventEmitter<{|
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
     } else {
       this._bridge.send('inspectedElement', renderer.inspectElement(id, path));
+
+      // When user selects an element, stop trying to restore the selection,
+      // and instead remember the current selection for the next reload.
+      if (
+        this._persistedSelectionMatch === null ||
+        this._persistedSelectionMatch.id !== id
+      ) {
+        this._persistedSelection = null;
+        this._persistedSelectionMatch = null;
+        renderer.setTrackedPath(null);
+        this._throttledPersistSelection(rendererID, id);
+      }
+
+      // TODO: If there was a way to change the selected DOM element
+      // in native Elements tab without forcing a switch to it, we'd do it here.
+      // For now, it doesn't seem like there is a way to do that:
+      // https://github.com/bvaughn/react-devtools-experimental/issues/102
+      // (Setting $0 doesn't work, and calling inspect() switches the tab.)
     }
   };
 
@@ -242,33 +259,6 @@ export default class Agent extends EventEmitter<{|
     // In that case, the shell must also listen for this specific message to know when it needs to reload the app.
     // The agent can't do this in a way that is renderer agnostic.
     this._bridge.send('reloadAppForProfiling');
-  };
-
-  selectElement = ({ id, rendererID }: ElementAndRendererID) => {
-    const renderer = this._rendererInterfaces[rendererID];
-    if (renderer == null) {
-      console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
-    } else {
-      renderer.selectElement(id);
-
-      // When user selects an element, stop trying to restore the selection,
-      // and instead remember the current selection for the next reload.
-      if (
-        this._persistedSelectionMatch === null ||
-        this._persistedSelectionMatch.id !== id
-      ) {
-        this._persistedSelection = null;
-        this._persistedSelectionMatch = null;
-        renderer.setTrackedPath(null);
-        this._throttledPersistSelection(rendererID, id);
-      }
-
-      // TODO: If there was a way to change the selected DOM element
-      // in native Elements tab without forcing a switch to it, we'd do it here.
-      // For now, it doesn't seem like there is a way to do that:
-      // https://github.com/bvaughn/react-devtools-experimental/issues/102
-      // (Setting $0 doesn't work, and calling inspect() switches the tab.)
-    }
   };
 
   overrideContext = ({ id, path, rendererID, value }: SetInParams) => {

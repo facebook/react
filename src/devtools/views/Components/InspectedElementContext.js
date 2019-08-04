@@ -241,11 +241,6 @@ function InspectedElementContextController({ children }: Props) {
     // We'll poll for an update in the response handler below.
     sendRequest();
 
-    // Update the $r variable.
-    if (rendererID !== null) {
-      bridge.send('selectElement', { id: selectedElementID, rendererID });
-    }
-
     const onInspectedElement = (data: InspectedElementPayload) => {
       // If this is the element we requested, wait a little bit and then ask for another update.
       if (data.id === selectedElementID) {

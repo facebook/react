@@ -1988,49 +1988,6 @@ export function attach(
   }
   // END copied code
 
-  function selectElement(id: number): void {
-    let fiber = idToFiberMap.get(id);
-    if (fiber == null) {
-      console.warn(`Could not find Fiber with id "${id}"`);
-      return;
-    }
-
-    const { elementType, memoizedProps, stateNode, tag, type } = fiber;
-
-    switch (tag) {
-      case ClassComponent:
-      case IncompleteClassComponent:
-      case IndeterminateComponent:
-        global.$r = stateNode;
-        break;
-      case FunctionComponent:
-        global.$r = {
-          props: memoizedProps,
-          type,
-        };
-        break;
-      case ForwardRef:
-        global.$r = {
-          props: memoizedProps,
-          type: type.render,
-        };
-        break;
-      case MemoComponent:
-      case SimpleMemoComponent:
-        global.$r = {
-          props: memoizedProps,
-          type:
-            elementType != null && elementType.type != null
-              ? elementType.type
-              : type,
-        };
-        break;
-      default:
-        global.$r = null;
-        break;
-    }
-  }
-
   function prepareViewElementSource(id: number): void {
     let fiber = idToFiberMap.get(id);
     if (fiber == null) {
@@ -2341,6 +2298,52 @@ export function attach(
     };
   }
 
+  function updateSelectedElement(inspectedElement: InspectedElement): void {
+    const { hooks, id, props } = inspectedElement;
+
+    let fiber = idToFiberMap.get(id);
+    if (fiber == null) {
+      console.warn(`Could not find Fiber with id "${id}"`);
+      return;
+    }
+
+    const { elementType, stateNode, tag, type } = fiber;
+
+    switch (tag) {
+      case ClassComponent:
+      case IncompleteClassComponent:
+      case IndeterminateComponent:
+        global.$r = stateNode;
+        break;
+      case FunctionComponent:
+        global.$r = {
+          hooks,
+          props,
+          type,
+        };
+        break;
+      case ForwardRef:
+        global.$r = {
+          props,
+          type: type.render,
+        };
+        break;
+      case MemoComponent:
+      case SimpleMemoComponent:
+        global.$r = {
+          props,
+          type:
+            elementType != null && elementType.type != null
+              ? elementType.type
+              : type,
+        };
+        break;
+      default:
+        global.$r = null;
+        break;
+    }
+  }
+
   function inspectElement(
     id: number,
     path?: Array<string | number>
@@ -2400,6 +2403,11 @@ export function attach(
       if (path != null) {
         mergeInspectedPaths(path);
       }
+
+      // Any time an inspected element has an update,
+      // we should update the selected $r value as wel.
+      // Do this before dehyration (cleanForBridge).
+      updateSelectedElement(mostRecentlyInspectedElement);
 
       // Clone before cleaning so that we preserve the full data.
       // This will enable us to send patches without re-inspecting if hydrated paths are requested.
@@ -2986,7 +2994,6 @@ export function attach(
     prepareViewElementSource,
     overrideSuspense,
     renderer,
-    selectElement,
     setInContext,
     setInHook,
     setInProps,

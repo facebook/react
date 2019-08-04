@@ -299,7 +299,6 @@ export type RendererInterface = {
   overrideSuspense: (id: number, forceFallback: boolean) => void,
   prepareViewElementSource: (id: number) => void,
   renderer: ReactRenderer | null,
-  selectElement: (id: number) => void,
   setInContext: (id: number, path: Array<string | number>, value: any) => void,
   setInHook: (
     id: number,

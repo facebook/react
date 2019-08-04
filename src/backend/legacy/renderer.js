@@ -609,6 +609,35 @@ export function attach(
     };
   }
 
+  function updateSelectedElement(id: number): void {
+    const internalInstance = idToInternalInstanceMap.get(id);
+    if (internalInstance == null) {
+      console.warn(`Could not find instance with id "${id}"`);
+      return;
+    }
+
+    switch (getElementType(internalInstance)) {
+      case ElementTypeClass:
+        global.$r = internalInstance._instance;
+        break;
+      case ElementTypeFunction:
+        const element = internalInstance._currentElement;
+        if (element == null) {
+          console.warn(`Could not find element with id "${id}"`);
+          return;
+        }
+
+        global.$r = {
+          props: element.props,
+          type: element.type,
+        };
+        break;
+      default:
+        global.$r = null;
+        break;
+    }
+  }
+
   function inspectElement(
     id: number,
     path?: Array<string | number>
@@ -629,6 +658,11 @@ export function attach(
     if (path != null) {
       mergeInspectedPaths(path);
     }
+
+    // Any time an inspected element has an update,
+    // we should update the selected $r value as wel.
+    // Do this before dehyration (cleanForBridge).
+    updateSelectedElement(id);
 
     inspectedElement.context = cleanForBridge(
       inspectedElement.context,
@@ -777,34 +811,6 @@ export function attach(
     global.$type = element.type;
   }
 
-  function selectElement(id: number): void {
-    const internalInstance = idToInternalInstanceMap.get(id);
-    if (internalInstance == null) {
-      console.warn(`Could not find instance with id "${id}"`);
-      return;
-    }
-
-    switch (getElementType(internalInstance)) {
-      case ElementTypeClass:
-        global.$r = internalInstance._instance;
-        break;
-      case ElementTypeFunction:
-        const element = internalInstance._currentElement;
-        if (element == null) {
-          console.warn(`Could not find element with id "${id}"`);
-          return;
-        }
-
-        global.$r = {
-          props: element.props,
-          type: element.type,
-        };
-        break;
-      default:
-        break;
-    }
-  }
-
   function setInProps(id: number, path: Array<string | number>, value: any) {
     const internalInstance = idToInternalInstanceMap.get(id);
     if (internalInstance != null) {
@@ -918,7 +924,6 @@ export function attach(
     overrideSuspense,
     prepareViewElementSource,
     renderer,
-    selectElement,
     setInContext,
     setInHook,
     setInProps,
