@@ -1253,8 +1253,9 @@ function mountIndeterminateComponent(
       typeof Component.prototype.render === 'function'
     ) {
       const componentName = getComponentName(Component) || 'Unknown';
-
       if (!didWarnAboutBadClass[componentName]) {
+        console.log('yoooooo');
+
         warningWithoutStack(
           false,
           "The <%s /> component appears to have a render method, but doesn't extend React.Component. " +
