@@ -270,6 +270,9 @@ describe('TreeListContext', () => {
       const Foo = () => null;
       const Bar = () => null;
       const Baz = () => null;
+      const Qux = () => null;
+
+      Qux.displayName = `withHOC(${Qux.name})`;
 
       utils.act(() =>
         ReactDOM.render(
@@ -277,6 +280,7 @@ describe('TreeListContext', () => {
             <Foo />
             <Bar />
             <Baz />
+            <Qux />
           </React.Fragment>,
           document.createElement('div')
         )
@@ -288,17 +292,25 @@ describe('TreeListContext', () => {
       utils.act(() => (renderer = TestRenderer.create(<Contexts />)));
       expect(state).toMatchSnapshot('1: initial state');
 
+      // NOTE: multi-match
       utils.act(() => dispatch({ type: 'SET_SEARCH_TEXT', payload: 'ba' }));
       utils.act(() => renderer.update(<Contexts />));
       expect(state).toMatchSnapshot('2: search for "ba"');
 
+      // NOTE: single match
       utils.act(() => dispatch({ type: 'SET_SEARCH_TEXT', payload: 'f' }));
       utils.act(() => renderer.update(<Contexts />));
       expect(state).toMatchSnapshot('3: search for "f"');
 
-      utils.act(() => dispatch({ type: 'SET_SEARCH_TEXT', payload: 'q' }));
+      // NOTE: no match
+      utils.act(() => dispatch({ type: 'SET_SEARCH_TEXT', payload: 'y' }));
       utils.act(() => renderer.update(<Contexts />));
-      expect(state).toMatchSnapshot('4: search for "q"');
+      expect(state).toMatchSnapshot('4: search for "y"');
+
+      // NOTE: HOC match
+      utils.act(() => dispatch({ type: 'SET_SEARCH_TEXT', payload: 'w' }));
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state).toMatchSnapshot('5: search for "w"');
     });
 
     it('should select the next and previous items within the search results', () => {

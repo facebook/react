@@ -773,14 +773,20 @@ function recursivelySearchTree(
   regExp: RegExp,
   searchResults: Array<number>
 ): void {
-  const { children, displayName } = ((store.getElementByID(
+  const { children, displayName, hocDisplayNames } = ((store.getElementByID(
     elementID
   ): any): Element);
-  if (displayName !== null) {
-    if (regExp.test(displayName)) {
-      searchResults.push(elementID);
-    }
+
+  if (displayName != null && regExp.test(displayName) === true) {
+    searchResults.push(elementID);
+  } else if (
+    hocDisplayNames != null &&
+    hocDisplayNames.length > 0 &&
+    hocDisplayNames.some(name => regExp.test(name)) === true
+  ) {
+    searchResults.push(elementID);
   }
+
   children.forEach(childID =>
     recursivelySearchTree(store, childID, regExp, searchResults)
   );

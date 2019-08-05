@@ -558,12 +558,13 @@ exports[`TreeListContext search state should find elements matching search text:
     <Foo>
     <Bar>
     <Baz>
+    <Qux> [withHOC]
 `;
 
 exports[`TreeListContext search state should find elements matching search text: 1: initial state 1`] = `
 Object {
   "inspectedElementID": null,
-  "numElements": 3,
+  "numElements": 4,
   "ownerFlatTree": null,
   "ownerID": null,
   "searchIndex": null,
@@ -577,7 +578,7 @@ Object {
 exports[`TreeListContext search state should find elements matching search text: 2: search for "ba" 1`] = `
 Object {
   "inspectedElementID": 3,
-  "numElements": 3,
+  "numElements": 4,
   "ownerFlatTree": null,
   "ownerID": null,
   "searchIndex": 0,
@@ -594,7 +595,7 @@ Object {
 exports[`TreeListContext search state should find elements matching search text: 3: search for "f" 1`] = `
 Object {
   "inspectedElementID": 2,
-  "numElements": 3,
+  "numElements": 4,
   "ownerFlatTree": null,
   "ownerID": null,
   "searchIndex": 0,
@@ -607,17 +608,33 @@ Object {
 }
 `;
 
-exports[`TreeListContext search state should find elements matching search text: 4: search for "q" 1`] = `
+exports[`TreeListContext search state should find elements matching search text: 4: search for "y" 1`] = `
 Object {
   "inspectedElementID": 2,
-  "numElements": 3,
+  "numElements": 4,
   "ownerFlatTree": null,
   "ownerID": null,
   "searchIndex": null,
   "searchResults": Array [],
-  "searchText": "q",
+  "searchText": "y",
   "selectedElementID": 2,
   "selectedElementIndex": 0,
+}
+`;
+
+exports[`TreeListContext search state should find elements matching search text: 5: search for "w" 1`] = `
+Object {
+  "inspectedElementID": 5,
+  "numElements": 4,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "searchIndex": 0,
+  "searchResults": Array [
+    5,
+  ],
+  "searchText": "w",
+  "selectedElementID": 5,
+  "selectedElementIndex": 3,
 }
 `;
 
