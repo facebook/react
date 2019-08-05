@@ -41,7 +41,6 @@ type Props = {|
   children: React$Node,
   componentsPortalContainer?: Element,
   profilerPortalContainer?: Element,
-  settingsPortalContainer?: Element,
 |};
 
 function SettingsContextController({
@@ -49,7 +48,6 @@ function SettingsContextController({
   children,
   componentsPortalContainer,
   profilerPortalContainer,
-  settingsPortalContainer,
 }: Props) {
   const bridge = useContext(BridgeContext);
 
@@ -82,18 +80,8 @@ function SettingsContextController({
           .documentElement: any): HTMLElement)
       );
     }
-    if (settingsPortalContainer != null) {
-      array.push(
-        ((settingsPortalContainer.ownerDocument
-          .documentElement: any): HTMLElement)
-      );
-    }
     return array;
-  }, [
-    componentsPortalContainer,
-    profilerPortalContainer,
-    settingsPortalContainer,
-  ]);
+  }, [componentsPortalContainer, profilerPortalContainer]);
 
   const computedStyle = getComputedStyle((document.body: any));
   const comfortableLineHeight = parseInt(

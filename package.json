@@ -34,6 +34,8 @@
   "scripts": {
     "build:core:backend": "cd ./packages/react-devtools-core && yarn build:backend",
     "build:core:standalone": "cd ./packages/react-devtools-core && yarn build:standalone",
+    "build:core": "cd ./packages/react-devtools-core && yarn build",
+    "build:inline": "cd ./packages/react-devtools-inline && yarn build",
     "build:demo": "cd ./shells/dev && cross-env NODE_ENV=development cross-env TARGET=remote webpack --config webpack.config.js",
     "build:extension": "cross-env NODE_ENV=production yarn run build:extension:chrome && yarn run build:extension:firefox",
     "build:extension:dev": "cross-env NODE_ENV=development yarn run build:extension:chrome && yarn run build:extension:firefox",

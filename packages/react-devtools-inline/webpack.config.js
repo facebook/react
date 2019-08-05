@@ -1,6 +1,6 @@
 const { resolve } = require('path');
 const { DefinePlugin } = require('webpack');
-const { getGitHubURL, getVersionString } = require('../utils');
+const { getGitHubURL, getVersionString } = require('../../shells/utils');
 
 const NODE_ENV = process.env.NODE_ENV;
 if (!NODE_ENV) {
@@ -8,40 +8,40 @@ if (!NODE_ENV) {
   process.exit(1);
 }
 
-const TARGET = process.env.TARGET;
-if (!TARGET) {
-  console.error('TARGET not set');
-  process.exit(1);
-}
-
-const __DEV__ = NODE_ENV === 'development';
-
-const root = resolve(__dirname, '../..');
+const __DEV__ = true; // NODE_ENV === 'development';
 
 const GITHUB_URL = getGitHubURL();
 const DEVTOOLS_VERSION = getVersionString();
 
-const config = {
+module.exports = {
   mode: __DEV__ ? 'development' : 'production',
   devtool: false,
   entry: {
-    app: './app/index.js',
-    devtools: './src/devtools.js',
+    backend: './src/backend.js',
+    frontend: './src/frontend.js',
+  },
+  output: {
+    path: __dirname + '/dist',
+    filename: '[name].js',
+    library: '[name]',
+    libraryTarget: 'commonjs2',
   },
   resolve: {
     alias: {
-      'react-devtools-inline': resolve(
-        root,
-        'packages/react-devtools-inline/src/'
-      ),
-      src: resolve(root, 'src'),
+      src: resolve(__dirname, '../../src'),
     },
+  },
+  externals: {
+    react: 'react',
+    'react-dom': 'react-dom',
+    scheduler: 'scheduler',
   },
   plugins: [
     new DefinePlugin({
       __DEV__: __DEV__,
-      'process.env.GITHUB_URL': `"${GITHUB_URL}"`,
       'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
+      'process.env.GITHUB_URL': `"${GITHUB_URL}"`,
+      'process.env.NODE_ENV': `"${NODE_ENV}"`,
     }),
   ],
   module: {
@@ -50,7 +50,7 @@ const config = {
         test: /\.js$/,
         loader: 'babel-loader',
         options: {
-          configFile: resolve(root, 'babel.config.js'),
+          configFile: resolve(__dirname, '../../babel.config.js'),
         },
       },
       {
@@ -72,20 +72,3 @@ const config = {
     ],
   },
 };
-
-if (TARGET === 'local') {
-  config.devServer = {
-    hot: true,
-    port: 8080,
-    clientLogLevel: 'warning',
-    publicPath: '/dist/',
-    stats: 'errors-only',
-  };
-} else {
-  config.output = {
-    path: resolve(__dirname, 'dist'),
-    filename: '[name].js',
-  };
-}
-
-module.exports = config;

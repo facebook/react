@@ -4,11 +4,13 @@
 /shells/browser/firefox/*.pem
 /shells/browser/shared/build
 /packages/react-devtools-core/dist
+/packages/react-devtools-inline/dist
 /shells/dev/dist
 build
 /node_modules
-/packages/react-devtools-core/node_modules/
-/packages/react-devtools/node_modules/
+/packages/react-devtools-core/node_modules
+/packages/react-devtools-inline/node_modules
+/packages/react-devtools/node_modules
 npm-debug.log
 yarn-error.log
 .DS_Store

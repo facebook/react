@@ -59,7 +59,6 @@ export type Props = {|
   // but individual tabs (e.g. Components, Profiling) can be rendered into portals within their browser panels.
   componentsPortalContainer?: Element,
   profilerPortalContainer?: Element,
-  settingsPortalContainer?: Element,
 |};
 
 const componentsTab = {
@@ -85,7 +84,6 @@ export default function DevTools({
   componentsPortalContainer,
   overrideTab,
   profilerPortalContainer,
-  settingsPortalContainer,
   showTabBar = false,
   showWelcomeToTheNewDevToolsDialog = false,
   store,
@@ -113,7 +111,6 @@ export default function DevTools({
             browserTheme={browserTheme}
             componentsPortalContainer={componentsPortalContainer}
             profilerPortalContainer={profilerPortalContainer}
-            settingsPortalContainer={settingsPortalContainer}
           >
             <ViewElementSourceContext.Provider value={viewElementSource}>
               <TreeContextController>

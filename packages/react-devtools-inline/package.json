@@ -1,0 +1,25 @@
+{
+  "name": "react-devtools-inline",
+  "version": "4.0.0-alpha.7",
+  "description": "Embed react-devtools within a website",
+  "license": "MIT",
+  "main": "./dist/backend.js",
+  "repository": {
+    "url": "https://github.com/bvaughn/react-devtools-experimental.git",
+    "type": "git"
+  },
+  "files": [
+    "dist",
+    "backend.js",
+    "frontend.js"
+  ],
+  "scripts": {
+    "build": "cross-env NODE_ENV=production webpack --config webpack.config.js",
+    "prepublish": "yarn run build",
+    "start": "cross-env NODE_ENV=development webpack --config webpack.config.js --watch"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "cross-env": "^3.1.4"
+  }
+}

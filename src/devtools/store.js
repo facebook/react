@@ -114,7 +114,7 @@ export default class Store extends EventEmitter<{|
 
   // These options may be initially set by a confiugraiton option when constructing the Store.
   // In the case of "supportsProfiling", the option may be updated based on the injected renderers.
-  _supportsNativeInspection: boolean = false;
+  _supportsNativeInspection: boolean = true;
   _supportsProfiling: boolean = false;
   _supportsReloadAndProfile: boolean = false;
 

@@ -63,7 +63,6 @@ function createPanelIfReactLoaded() {
 
       let componentsPortalContainer = null;
       let profilerPortalContainer = null;
-      let settingsPortalContainer = null;
 
       let cloneStyleTags = null;
       let mostRecentOverrideTab = null;
@@ -142,7 +141,6 @@ function createPanelIfReactLoaded() {
               componentsPortalContainer,
               overrideTab,
               profilerPortalContainer,
-              settingsPortalContainer,
               showTabBar: false,
               showWelcomeToTheNewDevToolsDialog: true,
               store,
