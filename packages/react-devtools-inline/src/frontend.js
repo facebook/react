@@ -16,7 +16,11 @@ import type { Props } from 'src/devtools/views/DevTools';
 export function initialize(
   contentWindow: window
 ): React$AbstractComponent<Props, mixed> {
-  const onMessage = ({ data, origin, source }) => {
+  const onMessage = ({ data, source }) => {
+    if (source === 'react-devtools-content-script') {
+      // Ignore messages from the DevTools browser extension.
+    }
+
     switch (data.type) {
       case MESSAGE_TYPE_GET_SAVED_PREFERENCES:
         // This is the only message we're listening for,

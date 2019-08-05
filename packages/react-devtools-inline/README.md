@@ -74,6 +74,8 @@ const { contentWindow } = iframe;
 initializeBackend(contentWindow);
 
 // React application can be injected into <iframe> at any time now...
+// Note that this would need to be done via <script> tag injection,
+// as setting the src of the <iframe> would load a new page (withou the injected backend).
 
 // Initialize DevTools UI to listen to the hook we just installed.
 // This returns a React component we can render anywhere in the parent window.
@@ -91,29 +93,33 @@ Sandboxed `iframe`s are also supported but require more complex initialization.
 
 **`iframe.html`**
 ```js
-import { activate, initialize } from 'react-devtools-inline/backend';
+import { activate, initialize } from "react-devtools-inline/backend";
 
 // The DevTooks hook needs to be installed before React is even required!
 // The safest way to do this is probably to install it in a separate script tag.
 initialize(window);
 
 // Wait for the frontend to let us know that it's ready.
-window.addEventListener('message', ({ data }) => {
+function onMessage({ data }) {
   switch (data.type) {
-    case 'activate':
+    case "activate-backend":
+      window.removeEventListener("message", onMessage);
+
       activate(window);
       break;
     default:
       break;
   }
-});
+}
+
+window.addEventListener("message", onMessage);
 ```
 
 **`main-window.html`**
 ```js
-import { initialize } from 'react-devtools-inline/frontend';
+import { initialize } from "react-devtools-inline/frontend";
 
-const iframe = document.getElementById('target');
+const iframe = document.getElementById("target");
 const { contentWindow } = iframe;
 
 // Initialize DevTools UI to listen to the iframe.
@@ -126,9 +132,9 @@ const DevTools = initialize(contentWindow);
 iframe.onload = () => {
   contentWindow.postMessage(
     {
-      type: 'activate',
+      type: "activate-backend"
     },
-    '*'
+    "*"
   );
 };
 ```
