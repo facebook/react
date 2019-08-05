@@ -1003,4 +1003,58 @@ describe('ReactDOMServerPartialHydration', () => {
     let div = container.getElementsByTagName('div')[0];
     expect(ref.current).toBe(div);
   });
+
+  it('can client render nested boundaries', async () => {
+    let suspend = false;
+    let promise = new Promise(() => {});
+    let ref = React.createRef();
+
+    function Child() {
+      if (suspend) {
+        throw promise;
+      } else {
+        return 'Hello';
+      }
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense
+            fallback={
+              <React.Fragment>
+                <Suspense fallback="Loading...">
+                  <Child />
+                </Suspense>
+                <span>Inner Sibling</span>
+              </React.Fragment>
+            }>
+            <Child />
+          </Suspense>
+          <span ref={ref}>Sibling</span>
+        </div>
+      );
+    }
+
+    suspend = true;
+    let html = ReactDOMServer.renderToString(<App />);
+
+    let container = document.createElement('div');
+    container.innerHTML = html + '<!--unrelated comment-->';
+
+    let span = container.getElementsByTagName('span')[1];
+
+    suspend = false;
+    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    root.render(<App />);
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+
+    expect(ref.current).toBe(span);
+    expect(span.parentNode).not.toBe(null);
+
+    // It leaves non-React comments alone.
+    expect(container.lastChild.nodeType).toBe(8);
+    expect(container.lastChild.data).toBe('unrelated comment');
+  });
 });
