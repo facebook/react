@@ -8,7 +8,7 @@ module.exports = {
     '@babel/plugin-proposal-class-properties',
     'syntax-trailing-function-commas',
     ['@babel/plugin-proposal-object-rest-spread', {useBuiltIns: true}],
-    '@babel/plugin-transform-template-literals',
+    ['@babel/plugin-transform-template-literals', {loose: true}],
     '@babel/plugin-transform-literals',
     '@babel/plugin-transform-arrow-functions',
     '@babel/plugin-transform-block-scoped-functions',
