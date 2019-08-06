@@ -12,7 +12,6 @@ module.exports = {
     '@babel/plugin-transform-literals',
     '@babel/plugin-transform-arrow-functions',
     '@babel/plugin-transform-block-scoped-functions',
-    ['@babel/plugin-transform-classes', {loose: true}],
     '@babel/plugin-transform-object-super',
     '@babel/plugin-transform-shorthand-properties',
     '@babel/plugin-transform-computed-properties',
