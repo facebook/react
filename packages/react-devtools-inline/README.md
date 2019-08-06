@@ -38,7 +38,7 @@ activate();
 ### `react-devtools-inline/frontend`
 
 * **`initialize(contentWindow)`** -
-Configures the DevTools interface to listen to the `window` the backend was injected into. This method returns a React component that can be rendered directly.
+Configures the DevTools interface to listen to the `window` the backend was injected into. This method returns a React component that can be rendered directly<sup>2</sup>.
 
 ```js
 import { initialize } from 'react-devtools-inline/frontend';
@@ -51,6 +51,8 @@ const contentWindow = iframe.contentWindow;
 // <DevTools {...props} />
 const DevTools = initialize(contentWindow);
 ```
+
+<sup>2</sup> Because the DevTools interface makes use of several new React APIs (e.g. suspense, concurrent mode) it should be rendered using either `ReactDOM.unstable_createRoot` or `ReactDOM.unstable_createSyncRoot`. It should not be rendered with `ReactDOM.render`.
 
 ## Examples
 
@@ -82,6 +84,8 @@ initializeBackend(contentWindow);
 const DevTools = initializeFrontend(contentWindow);
 
 // <DevTools /> interface can be rendered in the parent window at any time now...
+// Be sure to use either ReactDOM.unstable_createRoot()
+// or ReactDOM.unstable_createSyncRoot() to render this component.
 
 // Let the backend know the frontend is ready and listening.
 activateBackend(contentWindow);
@@ -124,6 +128,8 @@ const { contentWindow } = iframe;
 
 // Initialize DevTools UI to listen to the iframe.
 // This returns a React component we can render anywhere in the main window.
+// Be sure to use either ReactDOM.unstable_createRoot()
+// or ReactDOM.unstable_createSyncRoot() to render this component.
 const DevTools = initialize(contentWindow);
 
 // Let the backend know to initialize itself.
