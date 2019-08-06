@@ -72,7 +72,7 @@ const iframe = document.getElementById('target');
 const { contentWindow } = iframe;
 
 // Installs the global hook into the iframe.
-// This be called before React is loaded into that frame.
+// This must be called before React is loaded into that frame.
 initializeBackend(contentWindow);
 
 // React application can be injected into <iframe> at any time now...
