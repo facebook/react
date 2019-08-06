@@ -14,7 +14,7 @@ module.exports = function sizes(options) {
     generateBundle(outputOptions, bundle, isWrite) {
       Object.keys(bundle).forEach(id => {
         const chunk = bundle[id];
-        if (chunk && chunk.code) {
+        if (chunk) {
           const size = Buffer.byteLength(chunk.code);
           const gzipSize = gzip.sync(chunk.code);
           options.getSize(size, gzipSize);
