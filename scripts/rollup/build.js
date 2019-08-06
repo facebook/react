@@ -588,9 +588,7 @@ function handleRollupWarning(warning) {
     return;
   }
 
-  const ignoredRollupWarnings = ['CIRCULAR_DEPENDENCY'];
-
-  if (ignoredRollupWarnings.indexOf(warning.code) !== -1) {
+  if (warning.code === 'CIRCULAR_DEPENDENCY') {
     // Ignored
   } else if (typeof warning.code === 'string') {
     // This is a warning coming from Rollup itself.
