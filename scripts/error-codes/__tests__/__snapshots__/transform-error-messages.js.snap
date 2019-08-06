@@ -48,7 +48,7 @@ import invariant from 'shared/invariant';
 (function () {
   if (!condition) {
     if (__DEV__) {
-      throw _ReactError(Error(\\"Expected a component class, got \\".concat(Foo, \\".\\").concat(Bar)));
+      throw _ReactError(Error(\\"Expected a component class, got \\" + Foo + \\".\\" + Bar));
     } else {
       throw _ReactErrorProd(Error(18), Foo, Bar);
     }
@@ -64,7 +64,7 @@ import invariant from 'shared/invariant';
 (function () {
   if (!condition) {
     if (__DEV__) {
-      throw _ReactError(Error(\\"Expected \\".concat(foo, \\" target to be an array; got \\").concat(bar)));
+      throw _ReactError(Error(\\"Expected \\" + foo + \\" target to be an array; got \\" + bar));
     } else {
       throw _ReactErrorProd(Error(7), foo, bar);
     }
