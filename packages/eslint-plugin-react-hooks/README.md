@@ -6,7 +6,7 @@ It is a part of the [Hooks API](https://reactjs.org/docs/hooks-intro.html) for R
 
 ## Installation
 
-**Note: If you're using Create React App, please wait for a corresponding release of `react-scripts` that includes this rule instead of adding it directly.**
+**Note: If you're using Create React App, please update `react-scripts`: Version [3.0.0](https://github.com/facebook/create-react-app/releases/tag/v3.0.0) is the first to include this plugin.**
 
 Assuming you already have ESLint installed, run:
 
