@@ -30,10 +30,13 @@ export const disableJavaScriptURLs = false;
 export const enableFlareAPI = true;
 export const enableFundamentalAPI = false;
 export const enableJSXTransformAPI = true;
-export const warnAboutMissingMockScheduler = true;
+export const warnAboutUnmockedScheduler = true;
+export const flushSuspenseFallbacksInTests = true;
 export const enableUserBlockingEvents = false;
 export const enableSuspenseCallback = true;
 export const warnAboutDefaultPropsOnFunctionComponents = false;
+export const disableLegacyContext = false;
+export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {

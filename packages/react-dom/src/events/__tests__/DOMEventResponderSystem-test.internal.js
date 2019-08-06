@@ -87,19 +87,28 @@ describe('DOMEventResponderSystem', () => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableFlareAPI = true;
+    React = require('react');
     ReactTestRenderer = require('react-test-renderer');
     const TestResponder = createEventResponder({});
-    const renderer = ReactTestRenderer.create(
-      <div responders={<TestResponder />}>Hello world</div>,
-    );
+
+    function Test() {
+      const listener = React.unstable_useResponder(TestResponder, {});
+
+      return <div listeners={listener}>Hello world</div>;
+    }
+    const renderer = ReactTestRenderer.create(<Test />);
     expect(renderer).toMatchRenderedOutput(<div>Hello world</div>);
   });
 
   it('can render correctly with the ReactDOMServer', () => {
     const TestResponder = createEventResponder({});
-    const output = ReactDOMServer.renderToString(
-      <div responders={<TestResponder />}>Hello world</div>,
-    );
+
+    function Test() {
+      const listener = React.unstable_useResponder(TestResponder, {});
+
+      return <div listeners={listener}>Hello world</div>;
+    }
+    const output = ReactDOMServer.renderToString(<Test />);
     expect(output).toBe(`<div data-reactroot="">Hello world</div>`);
   });
 
@@ -121,11 +130,15 @@ describe('DOMEventResponderSystem', () => {
       },
     });
 
-    const Test = () => (
-      <button ref={buttonRef} responders={<TestResponder />}>
-        Click me!
-      </button>
-    );
+    function Test() {
+      const listener = React.unstable_useResponder(TestResponder, {});
+
+      return (
+        <button ref={buttonRef} listeners={listener}>
+          Click me!
+        </button>
+      );
+    }
 
     ReactDOM.render(<Test />, container);
     expect(container.innerHTML).toBe('<button>Click me!</button>');
@@ -177,11 +190,15 @@ describe('DOMEventResponderSystem', () => {
       },
     });
 
-    const Test = () => (
-      <button ref={buttonRef} responders={<TestResponder />}>
-        Click me!
-      </button>
-    );
+    function Test() {
+      const listener = React.unstable_useResponder(TestResponder, {});
+
+      return (
+        <button ref={buttonRef} listeners={listener}>
+          Click me!
+        </button>
+      );
+    }
 
     ReactDOM.render(<Test />, container);
 
@@ -217,15 +234,23 @@ describe('DOMEventResponderSystem', () => {
       },
     });
 
-    let Test = () => (
-      <button
-        ref={buttonRef}
-        responders={[<TestResponder />, <TestResponder />]}>
-        Click me!
-      </button>
-    );
+    function Test() {
+      const listener = React.unstable_useResponder(TestResponder, {});
+      const listener2 = React.unstable_useResponder(TestResponder, {});
 
-    ReactDOM.render(<Test />, container);
+      return (
+        <button ref={buttonRef} listeners={[listener, listener2]}>
+          Click me!
+        </button>
+      );
+    }
+
+    expect(() => {
+      ReactDOM.render(<Test />, container);
+    }).toWarnDev(
+      'Duplicate event responder "TestEventResponder" found in event listeners. ' +
+        'Event listeners passed to elements cannot use the same event responder more than once.',
+    );
 
     // Clicking the button should trigger the event responder onEvent()
     let buttonElement = buttonRef.current;
@@ -244,15 +269,19 @@ describe('DOMEventResponderSystem', () => {
 
     eventLog = [];
 
-    Test = () => (
-      <div responders={<TestResponder />}>
-        <button ref={buttonRef} responders={<TestResponder />}>
-          Click me!
-        </button>
-      </div>
-    );
+    function Test2() {
+      const listener = React.unstable_useResponder(TestResponder, {});
 
-    ReactDOM.render(<Test />, container);
+      return (
+        <div listeners={listener}>
+          <button ref={buttonRef} listeners={listener}>
+            Click me!
+          </button>
+        </div>
+      );
+    }
+
+    ReactDOM.render(<Test2 />, container);
 
     // Clicking the button should trigger the event responder onEvent()
     buttonElement = buttonRef.current;
@@ -288,13 +317,16 @@ describe('DOMEventResponderSystem', () => {
       },
     });
 
-    let Test = () => (
-      <button
-        ref={buttonRef}
-        responders={[<TestResponderA />, <TestResponderB />]}>
-        Click me!
-      </button>
-    );
+    function Test() {
+      const listener = React.unstable_useResponder(TestResponderA, {});
+      const listener2 = React.unstable_useResponder(TestResponderB, {});
+
+      return (
+        <button ref={buttonRef} listeners={[listener, listener2]}>
+          Click me!
+        </button>
+      );
+    }
 
     ReactDOM.render(<Test />, container);
 
@@ -306,15 +338,20 @@ describe('DOMEventResponderSystem', () => {
 
     eventLog = [];
 
-    Test = () => (
-      <div responders={<TestResponderA />}>
-        <button ref={buttonRef} responders={<TestResponderB />}>
-          Click me!
-        </button>
-      </div>
-    );
+    function Test2() {
+      const listener = React.unstable_useResponder(TestResponderA, {});
+      const listener2 = React.unstable_useResponder(TestResponderB, {});
 
-    ReactDOM.render(<Test />, container);
+      return (
+        <div listeners={listener}>
+          <button ref={buttonRef} listeners={listener2}>
+            Click me!
+          </button>
+        </div>
+      );
+    }
+
+    ReactDOM.render(<Test2 />, container);
 
     // Clicking the button should trigger the event responder onEvent()
     buttonElement = buttonRef.current;
@@ -323,7 +360,7 @@ describe('DOMEventResponderSystem', () => {
     expect(eventLog).toEqual(['B [bubble]', 'A [bubble]']);
   });
 
-  it('nested event responders should fire in the correct order', () => {
+  it('nested event responders should fire in the correct order #2', () => {
     let eventLog = [];
     const buttonRef = React.createRef();
 
@@ -334,13 +371,17 @@ describe('DOMEventResponderSystem', () => {
       },
     });
 
-    const Test = () => (
-      <div responders={<TestResponder name="A" />}>
-        <button ref={buttonRef} responders={<TestResponder name="B" />}>
-          Click me!
-        </button>
-      </div>
-    );
+    const Test = () => {
+      const listener = React.unstable_useResponder(TestResponder, {name: 'A'});
+      const listener2 = React.unstable_useResponder(TestResponder, {name: 'B'});
+      return (
+        <div listeners={listener}>
+          <button ref={buttonRef} listeners={listener2}>
+            Click me!
+          </button>
+        </div>
+      );
+    };
 
     ReactDOM.render(<Test />, container);
 
@@ -364,7 +405,11 @@ describe('DOMEventResponderSystem', () => {
           phase: 'bubble',
           timeStamp: context.getTimeStamp(),
         };
-        context.dispatchEvent('onMagicClick', syntheticEvent, DiscreteEvent);
+        context.dispatchEvent(
+          syntheticEvent,
+          props.onMagicClick,
+          DiscreteEvent,
+        );
       },
     });
 
@@ -373,12 +418,12 @@ describe('DOMEventResponderSystem', () => {
     }
 
     const Test = () => {
-      React.unstable_useListener(TestResponder, {
+      const listener = React.unstable_useResponder(TestResponder, {
         onMagicClick: handleMagicEvent,
       });
 
       return (
-        <button ref={buttonRef} responders={<TestResponder />}>
+        <button ref={buttonRef} listeners={listener}>
           Click me!
         </button>
       );
@@ -404,7 +449,7 @@ describe('DOMEventResponderSystem', () => {
         phase,
         timeStamp: context.getTimeStamp(),
       };
-      context.dispatchEvent('onPress', pressEvent, DiscreteEvent);
+      context.dispatchEvent(pressEvent, props.onPress, DiscreteEvent);
 
       context.setTimeout(() => {
         const longPressEvent = {
@@ -413,7 +458,7 @@ describe('DOMEventResponderSystem', () => {
           phase,
           timeStamp: context.getTimeStamp(),
         };
-        context.dispatchEvent('onLongPress', longPressEvent, DiscreteEvent);
+        context.dispatchEvent(longPressEvent, props.onLongPress, DiscreteEvent);
 
         const longPressChangeEvent = {
           target: event.target,
@@ -422,8 +467,8 @@ describe('DOMEventResponderSystem', () => {
           timeStamp: context.getTimeStamp(),
         };
         context.dispatchEvent(
-          'onLongPressChange',
           longPressChangeEvent,
+          props.onLongPressChange,
           DiscreteEvent,
         );
       }, 500);
@@ -441,14 +486,14 @@ describe('DOMEventResponderSystem', () => {
     }
 
     const Test = () => {
-      React.unstable_useListener(TestResponder, {
+      const listener = React.unstable_useResponder(TestResponder, {
         onPress: e => log('press ' + e.phase),
         onLongPress: e => log('longpress ' + e.phase),
         onLongPressChange: e => log('longpresschange ' + e.phase),
       });
 
       return (
-        <button ref={buttonRef} responders={<TestResponder />}>
+        <button ref={buttonRef} listeners={listener}>
           Click me!
         </button>
       );
@@ -485,16 +530,19 @@ describe('DOMEventResponderSystem', () => {
       },
     });
 
-    ReactDOM.render(
-      <button responders={[<TestResponder />, <TestResponder2 />]} />,
-      container,
-    );
+    function Test({toggle}) {
+      const listener = React.unstable_useResponder(TestResponder, {});
+      const listener2 = React.unstable_useResponder(TestResponder2, {});
+      if (toggle) {
+        return <button listeners={[listener2, listener]} />;
+      }
+      return <button listeners={[listener, listener2]} />;
+    }
+
+    ReactDOM.render(<Test />, container);
     expect(onMountFired).toEqual(2);
 
-    ReactDOM.render(
-      <button responders={[<TestResponder2 />, <TestResponder />]} />,
-      container,
-    );
+    ReactDOM.render(<Test toggle={true} />, container);
     expect(onMountFired).toEqual(2);
   });
 
@@ -508,24 +556,39 @@ describe('DOMEventResponderSystem', () => {
       },
     });
 
-    ReactDOM.render(<button responders={[<TestResponder />]} />, container);
+    function Test({test}) {
+      const listener = React.unstable_useResponder(TestResponder, {});
+      if (test === 0) {
+        return <button listeners={[listener]} />;
+      } else if (test === 1) {
+        return <button listeners={null} />;
+      } else if (test === 2) {
+        return <button listeners={[]} />;
+      } else if (test === 3) {
+        return <button />;
+      } else if (test === 4) {
+        return <button listeners={listener} />;
+      }
+    }
+
+    ReactDOM.render(<Test test={0} />, container);
     ReactDOM.render(null, container);
     expect(onUnmountFired).toEqual(1);
 
-    ReactDOM.render(<button responders={[<TestResponder />]} />, container);
-    ReactDOM.render(<button responders={null} />, container);
+    ReactDOM.render(<Test test={0} />, container);
+    ReactDOM.render(<Test test={1} />, container);
     expect(onUnmountFired).toEqual(2);
 
-    ReactDOM.render(<button responders={[<TestResponder />]} />, container);
-    ReactDOM.render(<button responders={[]} />, container);
+    ReactDOM.render(<Test test={0} />, container);
+    ReactDOM.render(<Test test={2} />, container);
     expect(onUnmountFired).toEqual(3);
 
-    ReactDOM.render(<button responders={[<TestResponder />]} />, container);
-    ReactDOM.render(<button />, container);
+    ReactDOM.render(<Test test={0} />, container);
+    ReactDOM.render(<Test test={3} />, container);
     expect(onUnmountFired).toEqual(4);
 
-    ReactDOM.render(<button responders={[<TestResponder />]} />, container);
-    ReactDOM.render(<button responders={<TestResponder />} />, container);
+    ReactDOM.render(<Test test={0} />, container);
+    ReactDOM.render(<Test test={4} />, container);
     expect(onUnmountFired).toEqual(4);
   });
 
@@ -542,7 +605,10 @@ describe('DOMEventResponderSystem', () => {
       },
     });
 
-    const Test = () => <button responders={<TestResponder />} />;
+    const Test = () => {
+      const listener = React.unstable_useResponder(TestResponder, {});
+      return <button listeners={listener} />;
+    };
 
     ReactDOM.render(<Test />, container);
     ReactDOM.render(null, container);
@@ -564,9 +630,10 @@ describe('DOMEventResponderSystem', () => {
       },
     });
 
-    const Test = () => (
-      <button ref={buttonRef} responders={<TestResponder />} />
-    );
+    const Test = () => {
+      const listener = React.unstable_useResponder(TestResponder, {});
+      return <button ref={buttonRef} listeners={listener} />;
+    };
 
     ReactDOM.render(<Test />, container);
 
@@ -596,9 +663,10 @@ describe('DOMEventResponderSystem', () => {
       },
     });
 
-    const Test = () => (
-      <button responders={<TestResponder />}>Click me!</button>
-    );
+    const Test = () => {
+      const listener = React.unstable_useResponder(TestResponder, {});
+      return <button listeners={listener}>Click me!</button>;
+    };
 
     ReactDOM.render(<Test />, container);
     expect(container.innerHTML).toBe('<button>Click me!</button>');
@@ -647,13 +715,18 @@ describe('DOMEventResponderSystem', () => {
       },
     });
 
-    const Test = () => (
-      <div responders={<TestResponderA />}>
-        <button ref={buttonRef} responders={<TestResponderB />}>
-          Click me!
-        </button>
-      </div>
-    );
+    const Test = () => {
+      const listener = React.unstable_useResponder(TestResponderA, {});
+      const listener2 = React.unstable_useResponder(TestResponderB, {});
+
+      return (
+        <div listeners={listener}>
+          <button ref={buttonRef} listeners={listener2}>
+            Click me!
+          </button>
+        </div>
+      );
+    };
 
     ReactDOM.render(<Test />, container);
 
@@ -706,11 +779,16 @@ describe('DOMEventResponderSystem', () => {
       },
     });
 
-    const Test = () => (
-      <div responders={<TestResponderA />}>
-        <button responders={<TestResponderB />}>Click me!</button>
-      </div>
-    );
+    const Test = () => {
+      const listener = React.unstable_useResponder(TestResponderA, {});
+      const listener2 = React.unstable_useResponder(TestResponderB, {});
+
+      return (
+        <div listeners={listener}>
+          <button listeners={listener2}>Click me!</button>
+        </div>
+      );
+    };
 
     ReactDOM.render(<Test />, container);
 
@@ -744,17 +822,17 @@ describe('DOMEventResponderSystem', () => {
           type: 'click',
           timeStamp: context.getTimeStamp(),
         };
-        context.dispatchEvent('onClick', syntheticEvent, DiscreteEvent);
+        context.dispatchEvent(syntheticEvent, props.onClick, DiscreteEvent);
       },
     });
 
     let handler;
     const Test = () => {
-      React.unstable_useListener(TestResponder, {
+      const listener = React.unstable_useResponder(TestResponder, {
         onClick: handler,
       });
 
-      return <button responders={<TestResponder />}>Click me!</button>;
+      return <button listeners={listener}>Click me!</button>;
     };
     expect(() => {
       handler = event => {
@@ -819,7 +897,7 @@ describe('DOMEventResponderSystem', () => {
     expect(container.innerHTML).toBe('<button>Click me!</button>');
   });
 
-  it('should work with event listener hooks', () => {
+  it('should work with event responder hooks', () => {
     const buttonRef = React.createRef();
     const eventLogs = [];
     const TestResponder = createEventResponder({
@@ -830,16 +908,16 @@ describe('DOMEventResponderSystem', () => {
           type: 'foo',
           timeStamp: context.getTimeStamp(),
         };
-        context.dispatchEvent('onFoo', fooEvent, DiscreteEvent);
+        context.dispatchEvent(fooEvent, props.onFoo, DiscreteEvent);
       },
     });
 
     const Test = () => {
-      React.unstable_useListener(TestResponder, {
+      const listener = React.unstable_useResponder(TestResponder, {
         onFoo: e => eventLogs.push('hook'),
       });
 
-      return <button ref={buttonRef} responders={<TestResponder />} />;
+      return <button ref={buttonRef} listeners={listener} />;
     };
 
     ReactDOM.render(<Test />, container);
@@ -850,11 +928,11 @@ describe('DOMEventResponderSystem', () => {
     eventLogs.length = 0;
 
     const Test2 = () => {
-      React.unstable_useListener(TestResponder, {
+      const listener = React.unstable_useResponder(TestResponder, {
         onFoo: e => eventLogs.push('hook'),
       });
 
-      return <button ref={buttonRef} responders={<TestResponder />} />;
+      return <button ref={buttonRef} listeners={listener} />;
     };
 
     ReactDOM.render(<Test2 />, container);

@@ -142,11 +142,11 @@ export function createInstance(
 ): Instance {
   let propsToUse = props;
   if (enableFlareAPI) {
-    if (props.responders != null) {
-      // We want to remove the "responders" prop
-      // as we don't want it into the test renderer instance's
-      // props object.
-      const {responders, ...otherProps} = props; // eslint-disable-line
+    if (props.listeners != null) {
+      // We want to remove the "listeners" prop
+      // as we don't want it in the test renderer's
+      // instance props.
+      const {listeners, ...otherProps} = props; // eslint-disable-line
       propsToUse = otherProps;
     }
   }

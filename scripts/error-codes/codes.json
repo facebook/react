@@ -337,5 +337,6 @@
   "336": "The \"%s\" event responder cannot be used via the \"useEvent\" hook.",
   "337": "An invalid event responder was provided to host component",
   "338": "ReactDOMServer does not yet support the fundamental API.",
-  "339": "An invalid value was used as an event responder. Expect one or many event responders created via React.unstable_createResponer()."
+  "339": "An invalid value was used as an event responder. Expect one or many event responders created via React.unstable_createResponer().",
+  "340": "An invalid value was used as an event listener. Expect one or many event listeners created via React.unstable_useResponer()."
 }

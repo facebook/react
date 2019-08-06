@@ -610,15 +610,14 @@ function getNextHydratable(node) {
     }
     if (enableSuspenseServerRenderer) {
       if (nodeType === COMMENT_NODE) {
-        break;
-      }
-      const nodeData = (node: any).data;
-      if (
-        nodeData === SUSPENSE_START_DATA ||
-        nodeData === SUSPENSE_FALLBACK_START_DATA ||
-        nodeData === SUSPENSE_PENDING_START_DATA
-      ) {
-        break;
+        const nodeData = (node: any).data;
+        if (
+          nodeData === SUSPENSE_START_DATA ||
+          nodeData === SUSPENSE_FALLBACK_START_DATA ||
+          nodeData === SUSPENSE_PENDING_START_DATA
+        ) {
+          break;
+        }
       }
     }
   }
@@ -691,7 +690,11 @@ export function getNextHydratableInstanceAfterSuspenseInstance(
         } else {
           depth--;
         }
-      } else if (data === SUSPENSE_START_DATA) {
+      } else if (
+        data === SUSPENSE_START_DATA ||
+        data === SUSPENSE_FALLBACK_START_DATA ||
+        data === SUSPENSE_PENDING_START_DATA
+      ) {
         depth++;
       }
     }

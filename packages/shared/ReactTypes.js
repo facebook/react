@@ -88,6 +88,11 @@ export type ReactEventResponderInstance<E, C> = {|
   target: mixed,
 |};
 
+export type ReactEventResponderListener<E, C> = {|
+  props: Object,
+  responder: ReactEventResponder<E, C>,
+|};
+
 export type ReactEventResponder<E, C> = {
   $$typeof: Symbol | number,
   displayName: string,
