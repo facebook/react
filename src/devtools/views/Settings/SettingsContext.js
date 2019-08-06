@@ -6,6 +6,7 @@ import React, {
   useEffect,
   useLayoutEffect,
   useMemo,
+  useState,
 } from 'react';
 import { LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY } from 'src/constants';
 import { useLocalStorage } from '../hooks';
@@ -35,6 +36,11 @@ const SettingsContext = createContext<Context>(((null: any): Context));
 SettingsContext.displayName = 'SettingsContext';
 
 type DocumentElements = Array<HTMLElement>;
+
+type CurrentLineHeights = {|
+  comfortableLineHeight: number,
+  compactLineHeight: number,
+|};
 
 type Props = {|
   browserTheme: BrowserTheme,
@@ -83,15 +89,24 @@ function SettingsContextController({
     return array;
   }, [componentsPortalContainer, profilerPortalContainer]);
 
-  const computedStyle = getComputedStyle((document.body: any));
-  const comfortableLineHeight = parseInt(
-    computedStyle.getPropertyValue('--comfortable-line-height-data'),
-    10
-  );
-  const compactLineHeight = parseInt(
-    computedStyle.getPropertyValue('--compact-line-height-data'),
-    10
-  );
+  const [
+    currentLineHeights,
+    setCurrentLineHeights,
+  ] = useState<CurrentLineHeights>(getCurrentLineHeights);
+
+  // In case the root styles have not yet been applied, wait a bit and then check again.
+  // This avoids a bad case of NaN line heights in lists/trees.
+  useEffect(() => {
+    if (Number.isNaN(currentLineHeights.compactLineHeight)) {
+      const intervalID = setInterval(() => {
+        const newLineHeights = getCurrentLineHeights();
+        if (!Number.isNaN(newLineHeights.compactLineHeight)) {
+          setCurrentLineHeights(newLineHeights);
+        }
+      }, 100);
+      return () => clearInterval(intervalID);
+    }
+  }, [currentLineHeights]);
 
   useLayoutEffect(() => {
     switch (displayDensity) {
@@ -136,12 +151,11 @@ function SettingsContextController({
       setAppendComponentStack,
       lineHeight:
         displayDensity === 'compact'
-          ? compactLineHeight
-          : comfortableLineHeight,
+          ? currentLineHeights.compactLineHeight
+          : currentLineHeights.comfortableLineHeight,
     }),
     [
-      comfortableLineHeight,
-      compactLineHeight,
+      currentLineHeights,
       displayDensity,
       setDisplayDensity,
       setTheme,
@@ -156,6 +170,20 @@ function SettingsContextController({
       {children}
     </SettingsContext.Provider>
   );
+}
+
+function getCurrentLineHeights(): CurrentLineHeights {
+  const computedStyle = getComputedStyle((document.body: any));
+  return {
+    comfortableLineHeight: parseInt(
+      computedStyle.getPropertyValue('--comfortable-line-height-data'),
+      10
+    ),
+    compactLineHeight: parseInt(
+      computedStyle.getPropertyValue('--compact-line-height-data'),
+      10
+    ),
+  };
 }
 
 function setStyleVariable(
