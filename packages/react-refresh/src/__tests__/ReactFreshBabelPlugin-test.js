@@ -26,30 +26,39 @@ function transform(input, options = {}) {
   );
 }
 
-const env = babel.getEnv();
+const oldEnv = babel.getEnv();
 describe('ReactFreshBabelPlugin', () => {
-  if (env !== 'development') {
-    it('throws error if babel environment is not development', () => {
-      let error;
-      try {
-        transform(`function Hello() {}`);
-      } catch (transformError) {
-        error = transformError;
-      }
-      expect(error).toEqual(
-        new Error(
-          '[BABEL] unknown: React Refresh Babel transform should only be enabled ' +
-            'in development environment. Instead, the environment is: "' +
-            env +
-            '". (While processing: "base$2")',
-        ),
-      );
-    });
-  } else {
-    it('registers top-level function declarations', () => {
-      // Hello and Bar should be registered, handleClick shouldn't.
-      expect(
-        transform(`
+  beforeEach(() => {
+    process.env.BABEL_ENV = 'development';
+  });
+
+  afterEach(() => {
+    process.env.BABEL_ENV = oldEnv;
+  });
+
+  it('thorw error if environment is not development', () => {
+    process.env.BABEL_ENV = 'production';
+
+    let error;
+    try {
+      transform(`function Hello() {}`);
+    } catch (transformError) {
+      error = transformError;
+    }
+    expect(error).toEqual(
+      new Error(
+        '[BABEL] unknown: React Refresh Babel transform should only be enabled ' +
+          'in development environment. Instead, the environment is: "' +
+          process.env.BABEL_ENV +
+          '". (While processing: "base$2")',
+      ),
+    );
+  });
+
+  it('registers top-level function declarations', () => {
+    // Hello and Bar should be registered, handleClick shouldn't.
+    expect(
+      transform(`
         function Hello() {
           function handleClick() {}
           return <h1 onClick={handleClick}>Hi</h1>;
@@ -59,12 +68,12 @@ describe('ReactFreshBabelPlugin', () => {
           return <Hello />;
         }
     `),
-      ).toMatchSnapshot();
-    });
+    ).toMatchSnapshot();
+  });
 
-    it('registers top-level exported function declarations', () => {
-      expect(
-        transform(`
+  it('registers top-level exported function declarations', () => {
+    expect(
+      transform(`
         export function Hello() {
           function handleClick() {}
           return <h1 onClick={handleClick}>Hi</h1>;
@@ -84,12 +93,12 @@ describe('ReactFreshBabelPlugin', () => {
         export function sum() {}
         export const Bad = 42;
     `),
-      ).toMatchSnapshot();
-    });
+    ).toMatchSnapshot();
+  });
 
-    it('registers top-level exported named arrow functions', () => {
-      expect(
-        transform(`
+  it('registers top-level exported named arrow functions', () => {
+    expect(
+      transform(`
         export const Hello = () => {
           function handleClick() {}
           return <h1 onClick={handleClick}>Hi</h1>;
@@ -103,37 +112,37 @@ describe('ReactFreshBabelPlugin', () => {
           return <Hello />;
         };
     `),
-      ).toMatchSnapshot();
-    });
+    ).toMatchSnapshot();
+  });
 
-    it('uses original function declaration if it get reassigned', () => {
-      // This should register the original version.
-      // TODO: in the future, we may *also* register the wrapped one.
-      expect(
-        transform(`
+  it('uses original function declaration if it get reassigned', () => {
+    // This should register the original version.
+    // TODO: in the future, we may *also* register the wrapped one.
+    expect(
+      transform(`
         function Hello() {
           return <h1>Hi</h1>;
         }
         Hello = connect(Hello);
     `),
-      ).toMatchSnapshot();
-    });
+    ).toMatchSnapshot();
+  });
 
-    it('only registers pascal case functions', () => {
-      // Should not get registered.
-      expect(
-        transform(`
+  it('only registers pascal case functions', () => {
+    // Should not get registered.
+    expect(
+      transform(`
         function hello() {
           return 2 * 2;
         }
     `),
-      ).toMatchSnapshot();
-    });
+    ).toMatchSnapshot();
+  });
 
-    it('registers top-level variable declarations with function expressions', () => {
-      // Hello and Bar should be registered; handleClick, sum, Baz, and Qux shouldn't.
-      expect(
-        transform(`
+  it('registers top-level variable declarations with function expressions', () => {
+    // Hello and Bar should be registered; handleClick, sum, Baz, and Qux shouldn't.
+    expect(
+      transform(`
         let Hello = function() {
           function handleClick() {}
           return <h1 onClick={handleClick}>Hi</h1>;
@@ -145,13 +154,13 @@ describe('ReactFreshBabelPlugin', () => {
         let Baz = 10;
         var Qux;
     `),
-      ).toMatchSnapshot();
-    });
+    ).toMatchSnapshot();
+  });
 
-    it('registers top-level variable declarations with arrow functions', () => {
-      // Hello, Bar, and Baz should be registered; handleClick and sum shouldn't.
-      expect(
-        transform(`
+  it('registers top-level variable declarations with arrow functions', () => {
+    // Hello, Bar, and Baz should be registered; handleClick and sum shouldn't.
+    expect(
+      transform(`
         let Hello = () => {
           const handleClick = () => {};
           return <h1 onClick={handleClick}>Hi</h1>;
@@ -162,15 +171,15 @@ describe('ReactFreshBabelPlugin', () => {
         var Baz = () => <div />;
         var sum = () => {};
     `),
-      ).toMatchSnapshot();
-    });
+    ).toMatchSnapshot();
+  });
 
-    it('ignores HOC definitions', () => {
-      // TODO: we might want to handle HOCs at usage site, however.
-      // TODO: it would be nice if we could always avoid registering
-      // a function that is known to return a function or other non-node.
-      expect(
-        transform(`
+  it('ignores HOC definitions', () => {
+    // TODO: we might want to handle HOCs at usage site, however.
+    // TODO: it would be nice if we could always avoid registering
+    // a function that is known to return a function or other non-node.
+    expect(
+      transform(`
         let connect = () => {
           function Comp() {
             const handleClick = () => {};
@@ -185,12 +194,12 @@ describe('ReactFreshBabelPlugin', () => {
           }
         };
     `),
-      ).toMatchSnapshot();
-    });
+    ).toMatchSnapshot();
+  });
 
-    it('ignores complex definitions', () => {
-      expect(
-        transform(`
+  it('ignores complex definitions', () => {
+    expect(
+      transform(`
         let A = foo ? () => {
           return <h1>Hi</h1>;
         } : null
@@ -204,20 +213,20 @@ describe('ReactFreshBabelPlugin', () => {
           return <h1>Hi</h1>;
         });
     `),
-      ).toMatchSnapshot();
-    });
+    ).toMatchSnapshot();
+  });
 
-    it('ignores unnamed function declarations', () => {
-      expect(
-        transform(`
+  it('ignores unnamed function declarations', () => {
+    expect(
+      transform(`
         export default function() {}
     `),
-      ).toMatchSnapshot();
-    });
+    ).toMatchSnapshot();
+  });
 
-    it('registers likely HOCs with inline functions', () => {
-      expect(
-        transform(`
+  it('registers likely HOCs with inline functions', () => {
+    expect(
+      transform(`
         const A = forwardRef(function() {
           return <h1>Foo</h1>;
         });
@@ -228,26 +237,26 @@ describe('ReactFreshBabelPlugin', () => {
           return <h1>Foo</h1>;
         }));
     `),
-      ).toMatchSnapshot();
-      expect(
-        transform(`
+    ).toMatchSnapshot();
+    expect(
+      transform(`
         export default React.memo(forwardRef(function (props, ref) {
           return <h1>Foo</h1>;
         }));
     `),
-      ).toMatchSnapshot();
-      expect(
-        transform(`
+    ).toMatchSnapshot();
+    expect(
+      transform(`
         export default React.memo(forwardRef(function Named(props, ref) {
           return <h1>Foo</h1>;
         }));
     `),
-      ).toMatchSnapshot();
-    });
+    ).toMatchSnapshot();
+  });
 
-    it('ignores higher-order functions that are not HOCs', () => {
-      expect(
-        transform(`
+  it('ignores higher-order functions that are not HOCs', () => {
+    expect(
+      transform(`
         const throttledAlert = throttle(function() {
           alert('Hi');
         });
@@ -256,16 +265,16 @@ describe('ReactFreshBabelPlugin', () => {
           const Foo = thing(() => {});
         }
     `),
-      ).toMatchSnapshot();
-    });
+    ).toMatchSnapshot();
+  });
 
-    it('registers identifiers used in JSX at definition site', () => {
-      // When in doubt, register variables that were used in JSX.
-      // Foo, Header, and B get registered.
-      // A doesn't get registered because it's not declared locally.
-      // Alias doesn't get registered because its definition is just an identifier.
-      expect(
-        transform(`
+  it('registers identifiers used in JSX at definition site', () => {
+    // When in doubt, register variables that were used in JSX.
+    // Foo, Header, and B get registered.
+    // A doesn't get registered because it's not declared locally.
+    // Alias doesn't get registered because its definition is just an identifier.
+    expect(
+      transform(`
         import A from './A';
         import Store from './Store';
 
@@ -289,16 +298,16 @@ describe('ReactFreshBabelPlugin', () => {
         const NotAComponent = wow(A);
         // We could avoid it but it also doesn't hurt.
     `),
-      ).toMatchSnapshot();
-    });
+    ).toMatchSnapshot();
+  });
 
-    it('registers identifiers used in React.createElement at definition site', () => {
-      // When in doubt, register variables that were used in JSX.
-      // Foo, Header, and B get registered.
-      // A doesn't get registered because it's not declared locally.
-      // Alias doesn't get registered because its definition is just an identifier.
-      expect(
-        transform(`
+  it('registers identifiers used in React.createElement at definition site', () => {
+    // When in doubt, register variables that were used in JSX.
+    // Foo, Header, and B get registered.
+    // A doesn't get registered because it's not declared locally.
+    // Alias doesn't get registered because its definition is just an identifier.
+    expect(
+      transform(`
         import A from './A';
         import Store from './Store';
 
@@ -329,12 +338,12 @@ describe('ReactFreshBabelPlugin', () => {
         const NotAComponent = wow(A);
         // We could avoid it but it also doesn't hurt.
     `),
-      ).toMatchSnapshot();
-    });
+    ).toMatchSnapshot();
+  });
 
-    it('registers capitalized identifiers in HOC calls', () => {
-      expect(
-        transform(`
+  it('registers capitalized identifiers in HOC calls', () => {
+    expect(
+      transform(`
         function Foo() {
           return <h1>Hi</h1>;
         }
@@ -343,29 +352,29 @@ describe('ReactFreshBabelPlugin', () => {
         export const A = hoc(Foo);
         const B = hoc(Foo);
     `),
-      ).toMatchSnapshot();
-    });
+    ).toMatchSnapshot();
+  });
 
-    it('generates signatures for function declarations calling hooks', () => {
-      expect(
-        transform(`
+  it('generates signatures for function declarations calling hooks', () => {
+    expect(
+      transform(`
         export default function App() {
           const [foo, setFoo] = useState(0);
           React.useEffect(() => {});
           return <h1>{foo}</h1>;
         }
     `),
-      ).toMatchSnapshot();
-    });
+    ).toMatchSnapshot();
+  });
 
-    it('generates signatures for function expressions calling hooks', () => {
-      // Unlike __register__, we want to sign all functions -- not just top level.
-      // This lets us support editing HOCs better.
-      // For function declarations, __signature__ is called on next line.
-      // For function expressions, it wraps the expression.
-      // In order for this to work, __signature__ returns its first argument.
-      expect(
-        transform(`
+  it('generates signatures for function expressions calling hooks', () => {
+    // Unlike __register__, we want to sign all functions -- not just top level.
+    // This lets us support editing HOCs better.
+    // For function declarations, __signature__ is called on next line.
+    // For function expressions, it wraps the expression.
+    // In order for this to work, __signature__ returns its first argument.
+    expect(
+      transform(`
         export const A = React.memo(React.forwardRef((props, ref) => {
           const [foo, setFoo] = useState(0);
           React.useEffect(() => {});
@@ -388,12 +397,12 @@ describe('ReactFreshBabelPlugin', () => {
 
         export let C = hoc();
     `),
-      ).toMatchSnapshot();
-    });
+    ).toMatchSnapshot();
+  });
 
-    it('includes custom hooks into the signatures', () => {
-      expect(
-        transform(`
+  it('includes custom hooks into the signatures', () => {
+    expect(
+      transform(`
         function useFancyState() {
           const [foo, setFoo] = React.useState(0);
           useFancyEffect();
@@ -409,15 +418,15 @@ describe('ReactFreshBabelPlugin', () => {
           return <h1>{bar}</h1>;
         }
     `),
-      ).toMatchSnapshot();
-    });
+    ).toMatchSnapshot();
+  });
 
-    it('includes custom hooks into the signatures when commonjs target is used', () => {
-      // this test is passing with Babel 6
-      // but would fail for Babel 7 _without_ custom hook node being cloned for signature
-      expect(
-        transform(
-          `
+  it('includes custom hooks into the signatures when commonjs target is used', () => {
+    // this test is passing with Babel 6
+    // but would fail for Babel 7 _without_ custom hook node being cloned for signature
+    expect(
+      transform(
+        `
         import {useFancyState} from './hooks';
         
         export default function App() {
@@ -425,16 +434,16 @@ describe('ReactFreshBabelPlugin', () => {
           return <h1>{bar}</h1>;
         }
     `,
-          {
-            plugins: ['transform-es2015-modules-commonjs'],
-          },
-        ),
-      ).toMatchSnapshot();
-    });
+        {
+          plugins: ['transform-es2015-modules-commonjs'],
+        },
+      ),
+    ).toMatchSnapshot();
+  });
 
-    it('generates valid signature for exotic ways to call Hooks', () => {
-      expect(
-        transform(`
+  it('generates valid signature for exotic ways to call Hooks', () => {
+    expect(
+      transform(`
         import FancyHook from 'fancy';
 
         export default function App() {
@@ -450,17 +459,17 @@ describe('ReactFreshBabelPlugin', () => {
           return <h1>{bar}{baz}</h1>;
         }
     `),
-      ).toMatchSnapshot();
-    });
+    ).toMatchSnapshot();
+  });
 
-    it('does not consider require-like methods to be HOCs', () => {
-      // None of these were declared in this file.
-      // It's bad to register them because that would trigger
-      // modules to execute in an environment with inline requires.
-      // So we expect the transform to skip all of them even though
-      // they are used in JSX.
-      expect(
-        transform(`
+  it('does not consider require-like methods to be HOCs', () => {
+    // None of these were declared in this file.
+    // It's bad to register them because that would trigger
+    // modules to execute in an environment with inline requires.
+    // So we expect the transform to skip all of them even though
+    // they are used in JSX.
+    expect(
+      transform(`
         const A = require('A');
         const B = foo ? require('X') : require('Y');
         const C = requireCond(gk, 'C');
@@ -477,7 +486,6 @@ describe('ReactFreshBabelPlugin', () => {
           );
         }
     `),
-      ).toMatchSnapshot();
-    });
-  }
+    ).toMatchSnapshot();
+  });
 });
