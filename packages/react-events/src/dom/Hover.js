@@ -10,6 +10,7 @@
 import type {
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
+  PointerType,
 } from 'shared/ReactDOMTypes';
 import type {ReactEventResponderListener} from 'shared/ReactTypes';
 
@@ -38,6 +39,7 @@ type HoverState = {
 type HoverEventType = 'hoverstart' | 'hoverend' | 'hoverchange' | 'hovermove';
 
 type HoverEvent = {|
+  pointerType: PointerType,
   target: Element | Document,
   type: HoverEventType,
   timeStamp: number,
@@ -51,17 +53,8 @@ type HoverEvent = {|
   y: null | number,
 |};
 
-const targetEventTypes = [
-  'pointerover',
-  'pointermove',
-  'pointerout',
-  'pointercancel',
-];
-
-// If PointerEvents is not supported (e.g., Safari), also listen to touch and mouse events.
-if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
-  targetEventTypes.push('touchstart', 'mouseover', 'mousemove', 'mouseout');
-}
+const hasPointerEvents =
+  typeof window !== 'undefined' && window.PointerEvent != null;
 
 function isFunction(obj): boolean {
   return typeof obj === 'function';
@@ -79,13 +72,16 @@ function createHoverEvent(
   let pageY = null;
   let screenX = null;
   let screenY = null;
+  let pointerType = '';
 
   if (event) {
     const nativeEvent = (event.nativeEvent: any);
+    pointerType = event.pointerType;
     ({clientX, clientY, pageX, pageY, screenX, screenY} = nativeEvent);
   }
 
   return {
+    pointerType,
     target,
     type,
     timeStamp: context.getTimeStamp(),
@@ -189,7 +185,6 @@ function dispatchHoverEndEvents(
     }
     dispatchHoverChangeEvent(event, context, props, state);
     state.hoverTarget = null;
-    state.ignoreEmulatedMouseEvents = false;
     state.isTouched = false;
   }
 }
@@ -213,7 +208,16 @@ function isEmulatedMouseEvent(event, state) {
 }
 
 const hoverResponderImpl = {
-  targetEventTypes,
+  targetEventTypes: hasPointerEvents
+    ? ['pointerover', 'pointermove', 'pointerout', 'pointercancel']
+    : [
+        'mouseover',
+        'mousemove',
+        'mouseout',
+        'touchstart',
+        'touchend',
+        'touchcancel',
+      ],
   getInitialState() {
     return {
       isActiveHovered: false,
@@ -254,18 +258,18 @@ const hoverResponderImpl = {
           // Prevent hover events for touch
           if (state.isTouched || pointerType === 'touch') {
             state.isTouched = true;
-            return;
+            state.ignoreEmulatedMouseEvents = true;
+            break;
           }
 
           // Prevent hover events for emulated events
           if (isEmulatedMouseEvent(event, state)) {
-            return;
+            break;
           }
           state.hoverTarget = event.responderTarget;
-          state.ignoreEmulatedMouseEvents = true;
           dispatchHoverStartEvents(event, context, props, state);
         }
-        return;
+        break;
       }
 
       // MOVE
@@ -286,8 +290,10 @@ const hoverResponderImpl = {
               UserBlockingEvent,
             );
           }
+        } else if (type === 'mousemove' && !state.isHovered) {
+          state.ignoreEmulatedMouseEvents = false;
         }
-        return;
+        break;
       }
 
       // END
@@ -298,12 +304,11 @@ const hoverResponderImpl = {
       case 'touchend': {
         if (state.isHovered) {
           dispatchHoverEndEvents(event, context, props, state);
-          state.ignoreEmulatedMouseEvents = false;
         }
         if (state.isTouched) {
           state.isTouched = false;
         }
-        return;
+        break;
       }
     }
   },

@@ -9,53 +9,22 @@
 
 'use strict';
 
+import {createEvent, platform, setPointerEvent} from '../test-utils';
+
 let React;
 let ReactFeatureFlags;
 let ReactDOM;
 let useContextMenuResponder;
 
-function createEvent(type, data) {
-  const event = document.createEvent('CustomEvent');
-  event.initCustomEvent(type, true, true);
-  if (data != null) {
-    Object.entries(data).forEach(([key, value]) => {
-      event[key] = value;
-    });
-  }
-  return event;
-}
-
-function init(hasPointerEvents) {
-  global.PointerEvents = hasPointerEvents ? function() {} : undefined;
+function initializeModules(hasPointerEvents) {
+  setPointerEvent(hasPointerEvents);
+  jest.resetModules();
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
   ReactFeatureFlags.enableFlareAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
   useContextMenuResponder = require('react-events/context-menu')
     .useContextMenuResponder;
-}
-
-const platformGetter = jest.spyOn(global.navigator, 'platform', 'get');
-function setPlatform(platform: 'mac' | 'windows') {
-  jest.resetModules();
-  switch (platform) {
-    case 'mac': {
-      platformGetter.mockReturnValue('MacIntel');
-      break;
-    }
-    case 'windows': {
-      platformGetter.mockReturnValue('Win32');
-      break;
-    }
-    default: {
-      break;
-    }
-  }
-  init();
-}
-
-function clearPlatform() {
-  platformGetter.mockClear();
 }
 
 function dispatchContextMenuEvents(ref, options) {
@@ -76,7 +45,7 @@ function dispatchContextMenuEvents(ref, options) {
       createEvent('pointerdown', {pointerType: 'mouse', button: 0}),
     );
     dispatchEvent(createEvent('mousedown', {button: 0}));
-    if (global.navigator.platform === 'MacIntel') {
+    if (platform.get() === 'mac') {
       dispatchEvent(
         createEvent('contextmenu', {button: 0, ctrlKey: true, preventDefault}),
       );
@@ -97,144 +66,143 @@ function dispatchContextMenuEvents(ref, options) {
 }
 
 const forcePointerEvents = true;
+const table = [[forcePointerEvents], [!forcePointerEvents]];
 
-describe.each([[forcePointerEvents], [!forcePointerEvents]])(
-  'ContextMenu responder',
-  hasPointerEvents => {
-    let container;
+describe.each(table)('ContextMenu responder', hasPointerEvents => {
+  let container;
 
+  beforeEach(() => {
+    initializeModules(hasPointerEvents);
+    container = document.createElement('div');
+    document.body.appendChild(container);
+  });
+
+  afterEach(() => {
+    ReactDOM.render(null, container);
+    document.body.removeChild(container);
+    container = null;
+  });
+
+  describe('all platforms', () => {
+    it('mouse right-click', () => {
+      const onContextMenu = jest.fn();
+      const preventDefault = jest.fn();
+      const ref = React.createRef();
+      const Component = () => {
+        const listener = useContextMenuResponder({onContextMenu});
+        return <div ref={ref} listeners={listener} />;
+      };
+      ReactDOM.render(<Component />, container);
+
+      dispatchContextMenuEvents(ref, {variant: 'mouse', preventDefault});
+      expect(preventDefault).toHaveBeenCalledTimes(1);
+      expect(onContextMenu).toHaveBeenCalledTimes(1);
+      expect(onContextMenu).toHaveBeenCalledWith(
+        expect.objectContaining({pointerType: 'mouse', type: 'contextmenu'}),
+      );
+    });
+
+    it('touch long-press', () => {
+      const onContextMenu = jest.fn();
+      const preventDefault = jest.fn();
+      const ref = React.createRef();
+      const Component = () => {
+        const listener = useContextMenuResponder({onContextMenu});
+        return <div ref={ref} listeners={listener} />;
+      };
+      ReactDOM.render(<Component />, container);
+
+      dispatchContextMenuEvents(ref, {variant: 'touch', preventDefault});
+      expect(preventDefault).toHaveBeenCalledTimes(1);
+      expect(onContextMenu).toHaveBeenCalledTimes(1);
+      expect(onContextMenu).toHaveBeenCalledWith(
+        expect.objectContaining({pointerType: 'touch', type: 'contextmenu'}),
+      );
+    });
+
+    it('"disabled" is true', () => {
+      const onContextMenu = jest.fn();
+      const ref = React.createRef();
+      const Component = () => {
+        const listener = useContextMenuResponder({
+          onContextMenu,
+          disabled: true,
+        });
+        return <div ref={ref} listeners={listener} />;
+      };
+      ReactDOM.render(<Component />, container);
+
+      dispatchContextMenuEvents(ref, 'mouse');
+      expect(onContextMenu).toHaveBeenCalledTimes(0);
+    });
+
+    it('"preventDefault" is false', () => {
+      const preventDefault = jest.fn();
+      const onContextMenu = jest.fn();
+      const ref = React.createRef();
+      const Component = () => {
+        const listener = useContextMenuResponder({
+          onContextMenu,
+          preventDefault: false,
+        });
+        return <div ref={ref} listeners={listener} />;
+      };
+      ReactDOM.render(<Component />, container);
+
+      dispatchContextMenuEvents(ref, {variant: 'mouse', preventDefault});
+      expect(preventDefault).toHaveBeenCalledTimes(0);
+      expect(onContextMenu).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('mac platform', () => {
     beforeEach(() => {
+      platform.set('mac');
       jest.resetModules();
-      init(hasPointerEvents);
-      container = document.createElement('div');
-      document.body.appendChild(container);
     });
 
     afterEach(() => {
-      ReactDOM.render(null, container);
-      document.body.removeChild(container);
-      container = null;
+      platform.clear();
     });
 
-    describe('all platforms', () => {
-      it('mouse right-click', () => {
-        const onContextMenu = jest.fn();
-        const preventDefault = jest.fn();
-        const ref = React.createRef();
-        const Component = () => {
-          const listener = useContextMenuResponder({onContextMenu});
-          return <div ref={ref} listeners={listener} />;
-        };
-        ReactDOM.render(<Component />, container);
+    it('mouse modified left-click', () => {
+      const onContextMenu = jest.fn();
+      const ref = React.createRef();
+      const Component = () => {
+        const listener = useContextMenuResponder({onContextMenu});
+        return <div ref={ref} listeners={listener} />;
+      };
+      ReactDOM.render(<Component />, container);
 
-        dispatchContextMenuEvents(ref, {variant: 'mouse', preventDefault});
-        expect(preventDefault).toHaveBeenCalledTimes(1);
-        expect(onContextMenu).toHaveBeenCalledTimes(1);
-        expect(onContextMenu).toHaveBeenCalledWith(
-          expect.objectContaining({pointerType: 'mouse', type: 'contextmenu'}),
-        );
-      });
+      dispatchContextMenuEvents(ref, {variant: 'modified'});
+      expect(onContextMenu).toHaveBeenCalledTimes(1);
+      expect(onContextMenu).toHaveBeenCalledWith(
+        expect.objectContaining({pointerType: 'mouse', type: 'contextmenu'}),
+      );
+    });
+  });
 
-      it('touch long-press', () => {
-        const onContextMenu = jest.fn();
-        const preventDefault = jest.fn();
-        const ref = React.createRef();
-        const Component = () => {
-          const listener = useContextMenuResponder({onContextMenu});
-          return <div ref={ref} listeners={listener} />;
-        };
-        ReactDOM.render(<Component />, container);
-
-        dispatchContextMenuEvents(ref, {variant: 'touch', preventDefault});
-        expect(preventDefault).toHaveBeenCalledTimes(1);
-        expect(onContextMenu).toHaveBeenCalledTimes(1);
-        expect(onContextMenu).toHaveBeenCalledWith(
-          expect.objectContaining({pointerType: 'touch', type: 'contextmenu'}),
-        );
-      });
-
-      it('"disabled" is true', () => {
-        const onContextMenu = jest.fn();
-        const ref = React.createRef();
-        const Component = () => {
-          const listener = useContextMenuResponder({
-            onContextMenu,
-            disabled: true,
-          });
-          return <div ref={ref} listeners={listener} />;
-        };
-        ReactDOM.render(<Component />, container);
-
-        dispatchContextMenuEvents(ref, 'mouse');
-        expect(onContextMenu).toHaveBeenCalledTimes(0);
-      });
-
-      it('"preventDefault" is false', () => {
-        const preventDefault = jest.fn();
-        const onContextMenu = jest.fn();
-        const ref = React.createRef();
-        const Component = () => {
-          const listener = useContextMenuResponder({
-            onContextMenu,
-            preventDefault: false,
-          });
-          return <div ref={ref} listeners={listener} />;
-        };
-        ReactDOM.render(<Component />, container);
-
-        dispatchContextMenuEvents(ref, {variant: 'mouse', preventDefault});
-        expect(preventDefault).toHaveBeenCalledTimes(0);
-        expect(onContextMenu).toHaveBeenCalledTimes(1);
-      });
+  describe('windows platform', () => {
+    beforeEach(() => {
+      platform.set('windows');
+      jest.resetModules();
     });
 
-    describe('mac platform', () => {
-      beforeEach(() => {
-        setPlatform('mac');
-      });
-
-      afterEach(() => {
-        clearPlatform();
-      });
-
-      it('mouse modified left-click', () => {
-        const onContextMenu = jest.fn();
-        const ref = React.createRef();
-        const Component = () => {
-          const listener = useContextMenuResponder({onContextMenu});
-          return <div ref={ref} listeners={listener} />;
-        };
-        ReactDOM.render(<Component />, container);
-
-        dispatchContextMenuEvents(ref, {variant: 'modified'});
-        expect(onContextMenu).toHaveBeenCalledTimes(1);
-        expect(onContextMenu).toHaveBeenCalledWith(
-          expect.objectContaining({pointerType: 'mouse', type: 'contextmenu'}),
-        );
-      });
+    afterEach(() => {
+      platform.clear();
     });
 
-    describe('windows platform', () => {
-      beforeEach(() => {
-        setPlatform('windows');
-      });
+    it('mouse modified left-click', () => {
+      const onContextMenu = jest.fn();
+      const ref = React.createRef();
+      const Component = () => {
+        const listener = useContextMenuResponder({onContextMenu});
+        return <div ref={ref} listeners={listener} />;
+      };
+      ReactDOM.render(<Component />, container);
 
-      afterEach(() => {
-        clearPlatform();
-      });
-
-      it('mouse modified left-click', () => {
-        const onContextMenu = jest.fn();
-        const ref = React.createRef();
-        const Component = () => {
-          const listener = useContextMenuResponder({onContextMenu});
-          return <div ref={ref} listeners={listener} />;
-        };
-        ReactDOM.render(<Component />, container);
-
-        dispatchContextMenuEvents(ref, {variant: 'modified'});
-        expect(onContextMenu).toHaveBeenCalledTimes(0);
-      });
+      dispatchContextMenuEvents(ref, {variant: 'modified'});
+      expect(onContextMenu).toHaveBeenCalledTimes(0);
     });
-  },
-);
+  });
+});
