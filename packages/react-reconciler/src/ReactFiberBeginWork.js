@@ -1253,6 +1253,7 @@ function mountIndeterminateComponent(
       typeof Component.prototype.render === 'function'
     ) {
       const componentName = getComponentName(Component) || 'Unknown';
+
       if (!didWarnAboutBadClass[componentName]) {
         warningWithoutStack(
           false,
