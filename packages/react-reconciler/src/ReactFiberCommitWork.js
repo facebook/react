@@ -1043,7 +1043,7 @@ function commitPlacement(finishedWork: Fiber): void {
   let node: Fiber = finishedWork;
   while (true) {
     const isHost = node.tag === HostComponent || node.tag === HostText;
-    if (isHost || node.tag === FundamentalComponent) {
+    if (isHost || (enableFundamentalAPI && node.tag === FundamentalComponent)) {
       const stateNode = isHost ? node.stateNode : node.stateNode.instance;
       if (before) {
         if (isContainer) {
@@ -1144,7 +1144,7 @@ function unmountHostComponents(current, renderPriorityLevel): void {
         );
       }
       // Don't visit children because we already visited them.
-    } else if (node.tag === FundamentalComponent) {
+    } else if (enableFundamentalAPI && node.tag === FundamentalComponent) {
       const fundamentalNode = node.stateNode.instance;
       commitNestedUnmounts(node, renderPriorityLevel);
       // After all the children have unmounted, it is now safe to remove the
