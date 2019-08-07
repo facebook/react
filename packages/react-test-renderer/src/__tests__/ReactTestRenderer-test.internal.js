@@ -1022,20 +1022,4 @@ describe('ReactTestRenderer', () => {
     expect(Scheduler).toFlushWithoutYielding();
     ReactTestRenderer.create(<App />);
   });
-
-  // we run this test here because we need a dom-less scope
-  it('warns and throws if you use TestUtils.act instead of TestRenderer.act in node', () => {
-    // we warn when you try to load 2 renderers in the same 'scope'
-    // so as suggested, we call resetModules() to carry on with the test
-    jest.resetModules();
-    const {act} = require('react-dom/test-utils');
-    expect(() => {
-      expect(() => act(() => {})).toThrow('document is not defined');
-    }).toWarnDev(
-      [
-        'It looks like you called ReactTestUtils.act(...) in a non-browser environment',
-      ],
-      {withoutStack: 1},
-    );
-  });
 });
