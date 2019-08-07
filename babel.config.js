@@ -3,7 +3,7 @@
 module.exports = {
   presets: ['@babel/preset-react', '@babel/preset-flow'],
   plugins: [
-    '@babel/plugin-proposal-class-properties',
+    ['@babel/plugin-proposal-class-properties', {loose: true}],
     'syntax-trailing-function-commas',
     [
       '@babel/plugin-proposal-object-rest-spread',
