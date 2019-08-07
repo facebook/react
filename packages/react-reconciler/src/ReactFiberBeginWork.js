@@ -148,6 +148,7 @@ import {
   reenterHydrationStateFromDehydratedSuspenseInstance,
   resetHydrationState,
   tryToClaimNextHydratableInstance,
+  warnIfHydrating,
 } from './ReactFiberHydrationContext';
 import {
   adoptClassInstance,
@@ -1910,12 +1911,18 @@ function updateDehydratedSuspenseComponent(
     }
     return null;
   }
+
   if ((workInProgress.effectTag & DidCapture) !== NoEffect) {
     // Something suspended. Leave the existing children in place.
     // TODO: In non-concurrent mode, should we commit the nodes we have hydrated so far?
     workInProgress.child = null;
     return null;
   }
+
+  // We should never be hydrating at this point because it is the first pass,
+  // but after we've already committed once.
+  warnIfHydrating();
+
   if (isSuspenseInstanceFallback(suspenseInstance)) {
     // This boundary is in a permanent fallback state. In this case, we'll never
     // get an update and we'll never be able to hydrate the final content. Let's just try the

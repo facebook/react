@@ -117,6 +117,7 @@ import {
   prepareToHydrateHostTextInstance,
   skipPastDehydratedSuspenseInstance,
   popHydrationState,
+  resetHydrationState,
 } from './ReactFiberHydrationContext';
 import {
   enableSchedulerTracing,
@@ -982,15 +983,22 @@ function completeWork(
             markSpawnedWork(Never);
           }
           skipPastDehydratedSuspenseInstance(workInProgress);
-        } else if ((workInProgress.effectTag & DidCapture) === NoEffect) {
-          // This boundary did not suspend so it's now hydrated.
-          // To handle any future suspense cases, we're going to now upgrade it
-          // to a Suspense component. We detach it from the existing current fiber.
-          current.alternate = null;
-          workInProgress.alternate = null;
-          workInProgress.tag = SuspenseComponent;
-          workInProgress.memoizedState = null;
-          workInProgress.stateNode = null;
+        } else {
+          // We should never have been in a hydration state if we didn't have a current.
+          // However, in some of those paths, we might have reentered a hydration state
+          // and then we might be inside a hydration state. In that case, we'll need to
+          // exit out of it.
+          resetHydrationState();
+          if ((workInProgress.effectTag & DidCapture) === NoEffect) {
+            // This boundary did not suspend so it's now hydrated.
+            // To handle any future suspense cases, we're going to now upgrade it
+            // to a Suspense component. We detach it from the existing current fiber.
+            current.alternate = null;
+            workInProgress.alternate = null;
+            workInProgress.tag = SuspenseComponent;
+            workInProgress.memoizedState = null;
+            workInProgress.stateNode = null;
+          }
         }
       }
       break;

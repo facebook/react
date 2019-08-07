@@ -25,6 +25,7 @@ import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
 
 import {popHostContainer, popHostContext} from './ReactFiberHostContext';
 import {popSuspenseContext} from './ReactFiberSuspenseContext';
+import {resetHydrationState} from './ReactFiberHydrationContext';
 import {
   isContextProvider as isLegacyContextProvider,
   popContext as popLegacyContext,
@@ -80,8 +81,12 @@ function unwindWork(
     }
     case DehydratedSuspenseComponent: {
       if (enableSuspenseServerRenderer) {
-        // TODO: popHydrationState
         popSuspenseContext(workInProgress);
+        if (workInProgress.alternate === null) {
+          // TODO: popHydrationState
+        } else {
+          resetHydrationState();
+        }
         const effectTag = workInProgress.effectTag;
         if (effectTag & ShouldCapture) {
           workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture;
@@ -134,7 +139,6 @@ function unwindInterruptedWork(interruptedWork: Fiber) {
       break;
     case DehydratedSuspenseComponent:
       if (enableSuspenseServerRenderer) {
-        // TODO: popHydrationState
         popSuspenseContext(interruptedWork);
       }
       break;
