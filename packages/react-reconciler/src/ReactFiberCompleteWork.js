@@ -739,6 +739,18 @@ function completeWork(
             // commit-phase we mark this as such.
             markUpdate(workInProgress);
           }
+          if (enableFlareAPI) {
+            const instance = workInProgress.stateNode;
+            const listeners = newProps.listeners;
+            if (listeners != null) {
+              updateEventListeners(
+                listeners,
+                instance,
+                rootContainerInstance,
+                workInProgress,
+              );
+            }
+          }
         } else {
           let instance = createInstance(
             type,

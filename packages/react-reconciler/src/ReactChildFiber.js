@@ -30,6 +30,7 @@ import {
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
 import warningWithoutStack from 'shared/warningWithoutStack';
+import {warnAboutStringRefs} from 'shared/ReactFeatureFlags';
 
 import {
   createWorkInProgress,
@@ -49,7 +50,7 @@ import {StrictMode} from './ReactTypeOfMode';
 
 let didWarnAboutMaps;
 let didWarnAboutGenerators;
-let didWarnAboutStringRefInStrictMode;
+let didWarnAboutStringRefs;
 let ownerHasKeyUseWarning;
 let ownerHasFunctionTypeWarning;
 let warnForMissingKey = (child: mixed) => {};
@@ -57,7 +58,7 @@ let warnForMissingKey = (child: mixed) => {};
 if (__DEV__) {
   didWarnAboutMaps = false;
   didWarnAboutGenerators = false;
-  didWarnAboutStringRefInStrictMode = {};
+  didWarnAboutStringRefs = {};
 
   /**
    * Warn if there's no key explicitly set on dynamic arrays of children or
@@ -114,21 +115,38 @@ function coerceRef(
     typeof mixedRef !== 'object'
   ) {
     if (__DEV__) {
-      if (returnFiber.mode & StrictMode) {
+      // TODO: Clean this up once we turn on the string ref warning for
+      // everyone, because the strict mode case will no longer be relevant
+      if (returnFiber.mode & StrictMode || warnAboutStringRefs) {
         const componentName = getComponentName(returnFiber.type) || 'Component';
-        if (!didWarnAboutStringRefInStrictMode[componentName]) {
-          warningWithoutStack(
-            false,
-            'A string ref, "%s", has been found within a strict mode tree. ' +
-              'String refs are a source of potential bugs and should be avoided. ' +
-              'We recommend using createRef() instead.' +
-              '\n%s' +
-              '\n\nLearn more about using refs safely here:' +
-              '\nhttps://fb.me/react-strict-mode-string-ref',
-            mixedRef,
-            getStackByFiberInDevAndProd(returnFiber),
-          );
-          didWarnAboutStringRefInStrictMode[componentName] = true;
+        if (!didWarnAboutStringRefs[componentName]) {
+          if (warnAboutStringRefs) {
+            warningWithoutStack(
+              false,
+              'Component "%s" contains the string ref "%s". Support for string refs ' +
+                'will be removed in a future major release. We recommend using ' +
+                'useRef() or createRef() instead.' +
+                '\n%s' +
+                '\n\nLearn more about using refs safely here:' +
+                '\nhttps://fb.me/react-strict-mode-string-ref',
+              componentName,
+              mixedRef,
+              getStackByFiberInDevAndProd(returnFiber),
+            );
+          } else {
+            warningWithoutStack(
+              false,
+              'A string ref, "%s", has been found within a strict mode tree. ' +
+                'String refs are a source of potential bugs and should be avoided. ' +
+                'We recommend using useRef() or createRef() instead.' +
+                '\n%s' +
+                '\n\nLearn more about using refs safely here:' +
+                '\nhttps://fb.me/react-strict-mode-string-ref',
+              mixedRef,
+              getStackByFiberInDevAndProd(returnFiber),
+            );
+          }
+          didWarnAboutStringRefs[componentName] = true;
         }
       }
     }
