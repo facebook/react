@@ -82,6 +82,8 @@ export const enableSuspenseCallback = true;
 
 export const warnAboutDefaultPropsOnFunctionComponents = false;
 
+export const warnAboutStringRefs = false;
+
 export const flushSuspenseFallbacksInTests = true;
 
 // Flow magic to verify the exports of this file match the original version.
