@@ -28,7 +28,7 @@ import type {PropertyInfo} from '../shared/DOMProperty';
  * Some properties have multiple equivalent values.
  */
 
-let stringifyWithPerformanceWarning = function(value) {
+let stringifyWithPerformanceWarning = function(value, attributeName) {
   const stringifyStart = performance.now();
   const attributeValue = '' + (value: any);
   const stringifyEnd = performance.now();
@@ -37,7 +37,7 @@ let stringifyWithPerformanceWarning = function(value) {
     stringifyEnd - stringifyStart <= 2,
     'Attribute `%s` took more than 2 ms to stringify.' +
       'Which can lead to performance issues.%s',
-    propertyInfo.attributeName,
+    attributeName,
     null,
   );
 
@@ -163,7 +163,7 @@ export function setValueForProperty(
       } else if (__DEV__) {
         node.setAttribute(
           attributeName,
-          stringifyWithPerformanceWarning(value),
+          stringifyWithPerformanceWarning(value, attributeName),
         );
       } else {
         node.setAttribute(attributeName, (value: any).toString());
@@ -194,7 +194,7 @@ export function setValueForProperty(
     if (type === BOOLEAN || (type === OVERLOADED_BOOLEAN && value === true)) {
       attributeValue = '';
     } else if (__DEV__) {
-      attributeValue = stringifyWithPerformanceWarning(value);
+      attributeValue = stringifyWithPerformanceWarning(value, attributeName);
     } else {
       // `setAttribute` with objects becomes only `[object]` in IE8/9,
       // ('' + value) makes it output the correct toString()-value.
