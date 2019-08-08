@@ -30,8 +30,6 @@ import type {PropertyInfo} from '../shared/DOMProperty';
 
 let stringifyWithPerformanceWarning;
 
-
-
 export function getValueForProperty(
   node: Element,
   name: string,
@@ -39,22 +37,21 @@ export function getValueForProperty(
   propertyInfo: PropertyInfo,
 ): mixed {
   if (__DEV__) {
-    
     stringifyWithPerformanceWarning = function(value) {
       const stringifyStart = performance.now;
-      const attributeValue = (''+ value);
+      const attributeValue = '' + value;
       const stringifyEnd = performance.now;
-    
+
       warning(
         stringifyEnd - stringifyStart <= 2,
         'The attribute `%s` took more than 2 milliseconds to stringify. This usually means you provided a large object ' +
-        'as the value for a DOM attribute, which can lead to performance issues.%s',
+          'as the value for a DOM attribute, which can lead to performance issues.%s',
         attributeName,
         getCurrentFiberStackAddendum(),
-       );
-    
-       return attributeValue;
-    }
+      );
+
+      return attributeValue;
+    };
     if (propertyInfo.mustUseProperty) {
       const {propertyName} = propertyInfo;
       return (node: any)[propertyName];
@@ -202,7 +199,7 @@ export function setValueForProperty(
     } else {
       // `setAttribute` with objects becomes only `[object]` in IE8/9,
       // ('' + value) makes it output the correct toString()-value.
-      attributeValue = (''+value);
+      attributeValue = '' + value;
       if (propertyInfo.sanitizeURL) {
         sanitizeURL(attributeValue);
       }
@@ -214,5 +211,3 @@ export function setValueForProperty(
     }
   }
 }
-
-

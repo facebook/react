@@ -167,12 +167,12 @@ describe('DOMPropertyOperations', () => {
       return originalToString.apply(this);
     };
 
-     const nthPrime = n => {
+    const nthPrime = n => {
       let sieve = [2];
       let current = 3;
       let prime;
 
-       while (sieve.length < n) {
+      while (sieve.length < n) {
         current += 2;
         if (current % 2 === 0) {
           continue;
@@ -194,7 +194,6 @@ describe('DOMPropertyOperations', () => {
       ReactDOM.render(<div data-foo={attributeValue} />, container),
     ).toWarnDev('Stringifying your attribute is causing perfomance issues');
   });
-
 
   describe('deleteValueForProperty', () => {
     it('should remove attributes for normal properties', () => {
