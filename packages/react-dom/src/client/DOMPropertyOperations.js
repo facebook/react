@@ -18,6 +18,8 @@ import {
 import sanitizeURL from '../shared/sanitizeURL';
 import {disableJavaScriptURLs} from 'shared/ReactFeatureFlags';
 
+import warning from 'fbjs/lib/warning';
+
 import type {PropertyInfo} from '../shared/DOMProperty';
 
 /**
@@ -25,6 +27,11 @@ import type {PropertyInfo} from '../shared/DOMProperty';
  * The "expected" argument is used as a hint of what the expected value is.
  * Some properties have multiple equivalent values.
  */
+
+let stringifyWithPerformanceWarning;
+
+
+
 export function getValueForProperty(
   node: Element,
   name: string,
@@ -32,6 +39,22 @@ export function getValueForProperty(
   propertyInfo: PropertyInfo,
 ): mixed {
   if (__DEV__) {
+    
+    stringifyWithPerformanceWarning = function(value) {
+      const stringifyStart = performance.now;
+      const attributeValue = (''+ value);
+      const stringifyEnd = performance.now;
+    
+      warning(
+        stringifyEnd - stringifyStart <= 2,
+        'The attribute `%s` took more than 2 milliseconds to stringify. This usually means you provided a large object ' +
+        'as the value for a DOM attribute, which can lead to performance issues.%s',
+        attributeName,
+        getCurrentFiberStackAddendum(),
+       );
+    
+       return attributeValue;
+    }
     if (propertyInfo.mustUseProperty) {
       const {propertyName} = propertyInfo;
       return (node: any)[propertyName];
@@ -141,8 +164,13 @@ export function setValueForProperty(
       const attributeName = name;
       if (value === null) {
         node.removeAttribute(attributeName);
+      } else if (__DEV__) {
+        node.setAttribute(
+          attributeName,
+          stringifyWithPerformanceWarning(value),
+        );
       } else {
-        node.setAttribute(attributeName, '' + (value: any));
+        node.setAttribute(attributeName, (value: any).toString());
       }
     }
     return;
@@ -169,10 +197,12 @@ export function setValueForProperty(
     let attributeValue;
     if (type === BOOLEAN || (type === OVERLOADED_BOOLEAN && value === true)) {
       attributeValue = '';
+    } else if (__DEV__) {
+      attributeValue = stringifyWithPerformanceWarning(value);
     } else {
       // `setAttribute` with objects becomes only `[object]` in IE8/9,
       // ('' + value) makes it output the correct toString()-value.
-      attributeValue = '' + (value: any);
+      attributeValue = (''+value);
       if (propertyInfo.sanitizeURL) {
         sanitizeURL(attributeValue);
       }
@@ -184,3 +214,5 @@ export function setValueForProperty(
     }
   }
 }
+
+

@@ -157,6 +157,45 @@ describe('DOMPropertyOperations', () => {
     });
   });
 
+  it('should warn if custom attributes take too long to stringify', () => {
+    const container = document.createElement('div');
+    const attributeValue = {foo: 'bar'};
+    attributeValue.toString = function() {
+      // finds 2000th prime to waste time
+      nthPrime(1225);
+      let originalToString = Object.prototype.toString;
+      return originalToString.apply(this);
+    };
+
+     const nthPrime = n => {
+      let sieve = [2];
+      let current = 3;
+      let prime;
+
+       while (sieve.length < n) {
+        current += 2;
+        if (current % 2 === 0) {
+          continue;
+        }
+        prime = true;
+        for (let j in sieve) {
+          if (current % sieve[j] === 0) {
+            prime = false;
+            break;
+          }
+        }
+        if (prime) {
+          sieve.push(current);
+        }
+      }
+      return current;
+    };
+    expect(() =>
+      ReactDOM.render(<div data-foo={attributeValue} />, container),
+    ).toWarnDev('Stringifying your attribute is causing perfomance issues');
+  });
+
+
   describe('deleteValueForProperty', () => {
     it('should remove attributes for normal properties', () => {
       const container = document.createElement('div');
