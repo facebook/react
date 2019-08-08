@@ -8,12 +8,16 @@
  */
 
 import type {Fiber} from './ReactFiber';
+import type {SuspenseInstance} from './ReactFiberHostConfig';
 import {SuspenseComponent, SuspenseListComponent} from 'shared/ReactWorkTags';
 import {NoEffect, DidCapture} from 'shared/ReactSideEffectTags';
 
-// TODO: This is now an empty object. Should we switch this to a boolean?
-// Alternatively we can make this use an effect tag similar to SuspenseList.
-export type SuspenseState = {||};
+export type SuspenseState = {|
+  // If this boundary is still dehydrated, we store the SuspenseInstance
+  // here to indicate that it is dehydrated (flag) and for quick access
+  // to check things like isSuspenseInstancePending.
+  dehydrated: null | SuspenseInstance,
+|};
 
 export type SuspenseListTailMode = 'collapsed' | 'hidden' | void;
 

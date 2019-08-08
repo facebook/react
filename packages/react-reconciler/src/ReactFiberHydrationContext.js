@@ -16,6 +16,7 @@ import type {
   Container,
   HostContext,
 } from './ReactFiberHostConfig';
+import type {SuspenseState} from './ReactFiberSuspenseComponent';
 
 import {
   HostComponent,
@@ -27,7 +28,10 @@ import {
 import {Deletion, Placement} from 'shared/ReactSideEffectTags';
 import invariant from 'shared/invariant';
 
-import {createFiberFromHostInstanceForDeletion} from './ReactFiber';
+import {
+  createFiberFromHostInstanceForDeletion,
+  createFiberFromDehydratedFragment,
+} from './ReactFiber';
 import {
   shouldSetTextContent,
   supportsHydration,
@@ -221,11 +225,23 @@ function tryHydrate(fiber, nextInstance) {
     }
     case SuspenseComponent: {
       if (enableSuspenseServerRenderer) {
-        const suspenseInstance = canHydrateSuspenseInstance(nextInstance);
+        const suspenseInstance: null | SuspenseInstance = canHydrateSuspenseInstance(
+          nextInstance,
+        );
         if (suspenseInstance !== null) {
-          // Downgrade the tag to a dehydrated component until we've hydrated it.
-          fiber.tag = DehydratedSuspenseComponent;
-          fiber.stateNode = (suspenseInstance: SuspenseInstance);
+          const suspenseState: SuspenseState = {
+            dehydrated: suspenseInstance,
+          };
+          fiber.memoizedState = suspenseState;
+          // Store the dehydrated fragment as a child fiber.
+          // This simplifies the code for getHostSibling and deleting nodes,
+          // since it doesn't have to consider all Suspense boundaries and
+          // check if they're dehydrated ones or not.
+          const dehydratedFragment = createFiberFromDehydratedFragment(
+            suspenseInstance,
+          );
+          dehydratedFragment.return = fiber;
+          fiber.child = dehydratedFragment;
           return true;
         }
       }

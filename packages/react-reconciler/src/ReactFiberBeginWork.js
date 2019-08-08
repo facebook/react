@@ -1475,8 +1475,9 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
   }
 }
 
-// TODO: This is now an empty object. Should we just make it a boolean?
-const SUSPENDED_MARKER: SuspenseState = ({}: any);
+const SUSPENDED_MARKER: SuspenseState = {
+  dehydrated: null,
+};
 
 function shouldRemainOnFallback(
   suspenseContext: SuspenseContext,
