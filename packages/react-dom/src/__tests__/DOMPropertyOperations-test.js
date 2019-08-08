@@ -157,13 +157,12 @@ describe('DOMPropertyOperations', () => {
     });
   });
 
-
   it('should warn if attributes take too long to stringify', () => {
     const container = document.createElement('div');
     const attributeValue = {foo: 'bar'};
     attributeValue.toString = function() {
       // for loop to waste time
-      for(let i=0;i<54321;i++){;}
+      for (let i = 0; i < 54321; i++) {}
       let originalToString = Object.prototype.toString;
       return originalToString.apply(this);
     };
@@ -172,7 +171,6 @@ describe('DOMPropertyOperations', () => {
       ReactDOM.render(<div data-foo={attributeValue} />, container),
     ).toWarnDev('Stringifying your attribute leads perfomance issues');
   });
-
 
   describe('deleteValueForProperty', () => {
     it('should remove attributes for normal properties', () => {
