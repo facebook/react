@@ -46,6 +46,8 @@ export function getValueForProperty(
         stringifyEnd - stringifyStart <= 2,
         'The attribute `%s` took more than 2 milliseconds to stringify. This usually means you provided a large object ' +
           'as the value for a DOM attribute, which can lead to performance issues.%s',
+          propertyInfo.attributeName,
+          null
       );
 
       return attributeValue;
