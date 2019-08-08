@@ -18,7 +18,7 @@ import {
 import sanitizeURL from '../shared/sanitizeURL';
 import {disableJavaScriptURLs} from 'shared/ReactFeatureFlags';
 
-import warning from 'fbjs/lib/warning';
+import warning from '../shared/warnValidStyle';
 
 import type {PropertyInfo} from '../shared/DOMProperty';
 
