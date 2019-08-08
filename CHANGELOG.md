@@ -6,6 +6,7 @@
   </summary>
 </details>
 
+## 16.9.0 (August 8, 2019)
 
 ### React
 
