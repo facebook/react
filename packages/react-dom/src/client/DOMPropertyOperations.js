@@ -38,9 +38,9 @@ export function getValueForProperty(
 ): mixed {
   if (__DEV__) {
     stringifyWithPerformanceWarning = function(value) {
-      const stringifyStart = performance.now;
+      const stringifyStart = performance.now();
       const attributeValue = '' + (value: any);
-      const stringifyEnd = performance.now;
+      const stringifyEnd = performance.now();
 
       warning(
         stringifyEnd - stringifyStart <= 2,
