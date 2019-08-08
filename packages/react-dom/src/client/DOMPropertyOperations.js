@@ -39,7 +39,7 @@ export function getValueForProperty(
   if (__DEV__) {
     stringifyWithPerformanceWarning = function(value) {
       const stringifyStart = performance.now;
-      const attributeValue = '' + value;
+      const attributeValue = '' + (value: any);
       const stringifyEnd = performance.now;
 
       warning(
@@ -199,7 +199,7 @@ export function setValueForProperty(
     } else {
       // `setAttribute` with objects becomes only `[object]` in IE8/9,
       // ('' + value) makes it output the correct toString()-value.
-      attributeValue = '' + value;
+      attributeValue = '' + (value: any);
       if (propertyInfo.sanitizeURL) {
         sanitizeURL(attributeValue);
       }
