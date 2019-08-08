@@ -28,7 +28,7 @@ export function pop(heap: Heap): Node | null {
   const first = heap[0];
   if (first !== undefined) {
     const last = heap.pop();
-    if (last !== undefined && last !== first) {
+    if (last !== first) {
       heap[0] = last;
       siftDown(heap, last, 0);
     }
@@ -39,8 +39,8 @@ export function pop(heap: Heap): Node | null {
 }
 
 function siftUp(heap, node, index) {
-  while (index > 0) {
-    const parentIndex = Math.floor((index + 1) / 2) - 1;
+  while (true) {
+    const parentIndex = Math.floor((index - 1) / 2);
     const parent = heap[parentIndex];
     if (parent !== undefined && compare(parent, node) > 0) {
       // The parent is larger. Swap positions.
