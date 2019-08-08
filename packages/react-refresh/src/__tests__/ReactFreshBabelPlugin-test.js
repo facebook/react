@@ -26,35 +26,7 @@ function transform(input, options = {}) {
   );
 }
 
-const oldEnv = babel.getEnv();
 describe('ReactFreshBabelPlugin', () => {
-  beforeEach(() => {
-    process.env.BABEL_ENV = 'development';
-  });
-
-  afterEach(() => {
-    process.env.BABEL_ENV = oldEnv;
-  });
-
-  it('thorw error if environment is not development', () => {
-    process.env.BABEL_ENV = 'production';
-
-    let error;
-    try {
-      transform(`function Hello() {}`);
-    } catch (transformError) {
-      error = transformError;
-    }
-    expect(error).toEqual(
-      new Error(
-        '[BABEL] unknown: React Refresh Babel transform should only be enabled ' +
-          'in development environment. Instead, the environment is: "' +
-          process.env.BABEL_ENV +
-          '". (While processing: "base$2")',
-      ),
-    );
-  });
-
   it('registers top-level function declarations', () => {
     // Hello and Bar should be registered, handleClick shouldn't.
     expect(
