@@ -34,7 +34,6 @@
     "@mattiasbuelens/web-streams-polyfill": "0.1.0",
     "art": "^0.10.1",
     "babel-eslint": "^10.0.0",
-    "babel-jest": "^24.8.0",
     "babel-plugin-syntax-trailing-function-commas": "^6.5.0",
     "babylon": "6.18.0",
     "chalk": "^1.1.3",
