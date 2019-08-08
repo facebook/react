@@ -331,12 +331,21 @@ const bundles = [
     externals: ['react', 'scheduler'],
   },
 
-  /******* createComponentWithSubscriptions (experimental) *******/
+  /******* createComponentWithSubscriptions *******/
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: ISOMORPHIC,
     entry: 'create-subscription',
     global: 'createSubscription',
+    externals: ['react'],
+  },
+
+  /******* Hook for managing subscriptions safely *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'use-subscription',
+    global: 'useSubscription',
     externals: ['react'],
   },
 
