@@ -18,7 +18,7 @@ import {
 import sanitizeURL from '../shared/sanitizeURL';
 import {disableJavaScriptURLs} from 'shared/ReactFeatureFlags';
 
-import warning from 'shared/warning';
+import warning from '../shared/warnValidStyle';
 
 import type {PropertyInfo} from '../shared/DOMProperty';
 
@@ -28,7 +28,21 @@ import type {PropertyInfo} from '../shared/DOMProperty';
  * Some properties have multiple equivalent values.
  */
 
-let stringifyWithPerformanceWarning;
+let stringifyWithPerformanceWarning = function(value) {
+  const stringifyStart = performance.now();
+  const attributeValue = '' + (value: any);
+  const stringifyEnd = performance.now();
+
+  warning(
+    stringifyEnd - stringifyStart <= 2,
+    'Attribute `%s` took more than 2 ms to stringify.' +
+      'Which can lead to performance issues.%s',
+    propertyInfo.attributeName,
+    null,
+  );
+
+  return attributeValue;
+};
 
 export function getValueForProperty(
   node: Element,
@@ -37,21 +51,6 @@ export function getValueForProperty(
   propertyInfo: PropertyInfo,
 ): mixed {
   if (__DEV__) {
-    stringifyWithPerformanceWarning = function(value) {
-      const stringifyStart = performance.now();
-      const attributeValue = '' + (value: any);
-      const stringifyEnd = performance.now();
-
-      warning(
-        stringifyEnd - stringifyStart <= 2,
-        'The attribute `%s` took more than 2 milliseconds to stringify. This usually means you provided a large object ' +
-          'as the value for a DOM attribute, which can lead to performance issues.%s',
-        propertyInfo.attributeName,
-        null,
-      );
-
-      return attributeValue;
-    };
     if (propertyInfo.mustUseProperty) {
       const {propertyName} = propertyInfo;
       return (node: any)[propertyName];
