@@ -18,7 +18,7 @@ import {
 import sanitizeURL from '../shared/sanitizeURL';
 import {disableJavaScriptURLs} from 'shared/ReactFeatureFlags';
 
-import warning from '../shared/warnValidStyle';
+import warning from 'shared/warning';
 
 import type {PropertyInfo} from '../shared/DOMProperty';
 
