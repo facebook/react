@@ -443,6 +443,7 @@ describe('create-react-class-integration', () => {
 
   it('warns if getDerivedStateFromProps is not static', () => {
     const Foo = createReactClass({
+      displayName: 'Foo',
       getDerivedStateFromProps() {
         return {};
       },
@@ -461,6 +462,7 @@ describe('create-react-class-integration', () => {
 
   it('warns if getDerivedStateFromError is not static', () => {
     const Foo = createReactClass({
+      displayName: 'Foo',
       getDerivedStateFromError() {
         return {};
       },
@@ -479,6 +481,7 @@ describe('create-react-class-integration', () => {
 
   it('warns if getSnapshotBeforeUpdate is static', () => {
     const Foo = createReactClass({
+      displayName: 'Foo',
       statics: {
         getSnapshotBeforeUpdate: function() {
           return null;
@@ -499,6 +502,7 @@ describe('create-react-class-integration', () => {
 
   it('should warn if state is not properly initialized before getDerivedStateFromProps', () => {
     const Component = createReactClass({
+      displayName: 'Component',
       statics: {
         getDerivedStateFromProps: function() {
           return null;
