@@ -9,7 +9,7 @@ const {join} = require('path');
 const {confirm, execRead} = require('../utils');
 const theme = require('../theme');
 
-const run = async ({cwd, dry, packages, skipPackages, tags}, otp) => {
+const run = async ({cwd, dry, packages, tags}, otp) => {
   clear();
 
   for (let i = 0; i < packages.length; i++) {

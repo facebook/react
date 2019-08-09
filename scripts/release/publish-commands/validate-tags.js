@@ -6,7 +6,7 @@ const {readJson} = require('fs-extra');
 const {join} = require('path');
 const theme = require('../theme');
 
-const run = async ({cwd, packages, skipPackages, tags}) => {
+const run = async ({cwd, packages, tags}) => {
   // Prevent a canary release from ever being published as @latest
   // All canaries share a version number, so it's okay to check any of them.
   const arbitraryPackageName = packages[0];
