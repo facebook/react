@@ -314,13 +314,6 @@ const hoverResponderImpl = {
   ) {
     unmountResponder(context, props, state);
   },
-  onOwnershipChange(
-    context: ReactDOMResponderContext,
-    props: HoverProps,
-    state: HoverState,
-  ) {
-    unmountResponder(context, props, state);
-  },
 };
 
 export const HoverResponder = React.unstable_createResponder(

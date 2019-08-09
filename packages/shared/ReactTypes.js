@@ -107,9 +107,6 @@ export type ReactEventResponder<E, C> = {
     | ((event: E, context: C, props: Object, state: Object) => void),
   onMount: null | ((context: C, props: Object, state: Object) => void),
   onUnmount: null | ((context: C, props: Object, state: Object) => void),
-  onOwnershipChange:
-    | null
-    | ((context: C, props: Object, state: Object) => void),
 };
 
 export type EventPriority = 0 | 1 | 2;

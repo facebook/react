@@ -335,13 +335,6 @@ const focusResponderImpl = {
   ) {
     unmountFocusResponder(context, props, state);
   },
-  onOwnershipChange(
-    context: ReactDOMResponderContext,
-    props: FocusProps,
-    state: FocusState,
-  ) {
-    unmountFocusResponder(context, props, state);
-  },
 };
 
 export const FocusResponder = React.unstable_createResponder(
@@ -472,13 +465,6 @@ const focusWithinResponderImpl = {
     });
   },
   onUnmount(
-    context: ReactDOMResponderContext,
-    props: FocusWithinProps,
-    state: FocusState,
-  ) {
-    unmountFocusWithinResponder(context, props, state);
-  },
-  onOwnershipChange(
     context: ReactDOMResponderContext,
     props: FocusWithinProps,
     state: FocusState,
