@@ -114,7 +114,6 @@ import {pushHostContext, pushHostContainer} from './ReactFiberHostContext';
 import {
   suspenseStackCursor,
   pushSuspenseContext,
-  popSuspenseContext,
   InvisibleParentSuspenseContext,
   ForceSuspenseFallback,
   hasSuspenseContext,
@@ -1862,37 +1861,21 @@ function retrySuspenseComponentWithoutHydrating(
   workInProgress: Fiber,
   renderExpirationTime: ExpirationTime,
 ) {
-  // Detach from the current dehydrated boundary.
-  current.alternate = null;
-  workInProgress.alternate = null;
-
-  // Insert a deletion in the effect list.
-  let returnFiber = workInProgress.return;
-  invariant(
-    returnFiber !== null,
-    'Suspense boundaries are never on the root. ' +
-      'This is probably a bug in React.',
-  );
-  const last = returnFiber.lastEffect;
-  if (last !== null) {
-    last.nextEffect = current;
-    returnFiber.lastEffect = current;
-  } else {
-    returnFiber.firstEffect = returnFiber.lastEffect = current;
-  }
-  current.nextEffect = null;
-  current.effectTag = Deletion;
-
-  popSuspenseContext(workInProgress);
-
-  // Upgrade this work in progress to a real Suspense component.
-  workInProgress.tag = SuspenseComponent;
-  workInProgress.stateNode = null;
+  // We're now not suspended nor dehydrated.
   workInProgress.memoizedState = null;
-  // This is now an insertion.
-  workInProgress.effectTag |= Placement;
-  // Retry as a real Suspense component.
-  return updateSuspenseComponent(null, workInProgress, renderExpirationTime);
+  // Retry with the full children.
+  const nextProps = workInProgress.pendingProps;
+  const nextChildren = nextProps.children;
+  // This will ensure that the children get Placement effects and
+  // that the old child gets a Deletion effect.
+  // We could also call forceUnmountCurrentAndReconcile.
+  reconcileChildren(
+    current,
+    workInProgress,
+    nextChildren,
+    renderExpirationTime,
+  );
+  return workInProgress.child;
 }
 
 function updateDehydratedSuspenseComponent(
