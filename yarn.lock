@@ -571,10 +571,32 @@
   dependencies:
     "@types/whatwg-streams" "^0.0.6"
 
+"@types/json-schema@^7.0.3":
+  version "7.0.3"
+  resolved "https://registry.yarnpkg.com/@types/json-schema/-/json-schema-7.0.3.tgz#bdfd69d61e464dcc81b25159c270d75a73c1a636"
+  integrity sha512-Il2DtDVRGDcqjDtE+rF8iqg1CArehSK84HZJCT7AMITlyXRBpuPhqGLDQMowraqqu1coEaimg4ZOqggt6L6L+A==
+
 "@types/whatwg-streams@^0.0.6":
   version "0.0.6"
   resolved "https://registry.yarnpkg.com/@types/whatwg-streams/-/whatwg-streams-0.0.6.tgz#5062c67efb695c886fe3dbb9618df35aac418503"
   integrity sha512-O4Hat94N1RUCObqAbVUtd6EcucseqBcpfbFXzy12CYF6BQVHWR+ztDA3YPjewCmdKHYZ5VA7TZ5hq2bMyqxiBw==
+
+"@typescript-eslint/experimental-utils@^1.13.0":
+  version "1.13.0"
+  resolved "https://registry.yarnpkg.com/@typescript-eslint/experimental-utils/-/experimental-utils-1.13.0.tgz#b08c60d780c0067de2fb44b04b432f540138301e"
+  integrity sha512-zmpS6SyqG4ZF64ffaJ6uah6tWWWgZ8m+c54XXgwFtUv0jNz8aJAVx8chMCvnk7yl6xwn8d+d96+tWp7fXzTuDg==
+  dependencies:
+    "@types/json-schema" "^7.0.3"
+    "@typescript-eslint/typescript-estree" "1.13.0"
+    eslint-scope "^4.0.0"
+
+"@typescript-eslint/typescript-estree@1.13.0":
+  version "1.13.0"
+  resolved "https://registry.yarnpkg.com/@typescript-eslint/typescript-estree/-/typescript-estree-1.13.0.tgz#8140f17d0f60c03619798f1d628b8434913dc32e"
+  integrity sha512-b5rCmd2e6DCC6tCTN9GSUAuxdYwCM/k/2wdjHGrIRGPSJotWMCe/dGpi66u42bhuh8q3QBzqM4TMA1GUUCJvdw==
+  dependencies:
+    lodash.unescape "4.0.1"
+    semver "5.5.0"
 
 abab@^1.0.4:
   version "1.0.4"
@@ -2104,10 +2126,12 @@ eslint-plugin-flowtype@^2.25.0:
   dependencies:
     lodash "^4.17.10"
 
-eslint-plugin-jest@^21.6.1:
-  version "21.27.2"
-  resolved "https://registry.yarnpkg.com/eslint-plugin-jest/-/eslint-plugin-jest-21.27.2.tgz#2a795b7c3b5e707df48a953d651042bd01d7b0a8"
-  integrity sha512-0E4OIgBJVlAmf1KfYFtZ3gYxgUzC5Eb3Jzmrc9ikI1OY+/cM8Kh72Ti7KfpeHNeD3HJNf9SmEfmvQLIz44Hrhw==
+eslint-plugin-jest@^22.15.0:
+  version "22.15.0"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-jest/-/eslint-plugin-jest-22.15.0.tgz#fe70bfff7eeb47ca0ab229588a867f82bb8592c5"
+  integrity sha512-hgnPbSqAIcLLS9ePb12hNHTRkXnkVaCfOwCt2pzQ8KpOKPWGA4HhLMaFN38NBa/0uvLfrZpcIRjT+6tMAfr58Q==
+  dependencies:
+    "@typescript-eslint/experimental-utils" "^1.13.0"
 
 eslint-plugin-no-for-of-loops@^1.0.0:
   version "1.0.1"
@@ -2137,6 +2161,14 @@ eslint-rule-composer@^0.3.0:
 eslint-scope@3.7.1:
   version "3.7.1"
   resolved "https://registry.yarnpkg.com/eslint-scope/-/eslint-scope-3.7.1.tgz#3d63c3edfda02e06e01a452ad88caacc7cdcb6e8"
+  dependencies:
+    esrecurse "^4.1.0"
+    estraverse "^4.1.1"
+
+eslint-scope@^4.0.0:
+  version "4.0.3"
+  resolved "https://registry.yarnpkg.com/eslint-scope/-/eslint-scope-4.0.3.tgz#ca03833310f6889a3264781aa82e63eb9cfe7848"
+  integrity sha512-p7VutNr1O/QrxysMo3E45FjYDTeXBy0iTltPFNSqKAIfjDSXC+4dj+qfyuD8bfAXrW/y6lW3O76VaYNPKfpKrg==
   dependencies:
     esrecurse "^4.1.0"
     estraverse "^4.1.1"
@@ -3939,6 +3971,11 @@ lodash.sortby@^4.7.0:
   version "4.7.0"
   resolved "https://registry.yarnpkg.com/lodash.sortby/-/lodash.sortby-4.7.0.tgz#edd14c824e2cc9c1e0b0a1b42bb5210516a42438"
 
+lodash.unescape@4.0.1:
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/lodash.unescape/-/lodash.unescape-4.0.1.tgz#bf2249886ce514cda112fae9218cdc065211fc9c"
+  integrity sha1-vyJJiGzlFM2hEvrpIYzcBlIR/Jw=
+
 lodash@^4.13.1, lodash@^4.17.10, lodash@^4.17.4, lodash@^4.2.0:
   version "4.17.10"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.10.tgz#1b7793cf7259ea38fb3661d4d38b3260af8ae4e7"
@@ -5106,7 +5143,7 @@ scheduler@^0.11.0:
     loose-envify "^1.1.0"
     object-assign "^4.1.1"
 
-"semver@2 || 3 || 4 || 5", semver@^5.1.0, semver@^5.3.0, semver@^5.4.1, semver@^5.5.0:
+"semver@2 || 3 || 4 || 5", semver@5.5.0, semver@^5.1.0, semver@^5.3.0, semver@^5.4.1, semver@^5.5.0:
   version "5.5.0"
   resolved "https://registry.yarnpkg.com/semver/-/semver-5.5.0.tgz#dc4bbc7a6ca9d916dee5d43516f0092b58f7b8ab"
 
