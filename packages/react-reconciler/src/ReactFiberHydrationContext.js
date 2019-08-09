@@ -86,12 +86,11 @@ function enterHydrationState(fiber: Fiber): boolean {
 
 function reenterHydrationStateFromDehydratedSuspenseInstance(
   fiber: Fiber,
+  suspenseInstance: SuspenseInstance,
 ): boolean {
   if (!supportsHydration) {
     return false;
   }
-
-  const suspenseInstance = fiber.stateNode;
   nextHydratableInstance = getNextHydratableSibling(suspenseInstance);
   popToNextHostParent(fiber);
   isHydrating = true;
