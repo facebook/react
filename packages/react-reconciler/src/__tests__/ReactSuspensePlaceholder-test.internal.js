@@ -134,11 +134,11 @@ describe('ReactSuspensePlaceholder', () => {
     expect(Scheduler).toFlushAndYield(['A', 'B', 'C']);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <React.Fragment>
+      <>
         <span hidden={true}>A</span>
         <span>B</span>
         <span>C</span>
-      </React.Fragment>,
+      </>,
     );
 
     // Update
@@ -149,12 +149,12 @@ describe('ReactSuspensePlaceholder', () => {
     jest.advanceTimersByTime(750);
     expect(Scheduler).toFlushAndYield([]);
     expect(ReactNoop).toMatchRenderedOutput(
-      <React.Fragment>
+      <>
         <span hidden={true}>A</span>
         <span hidden={true}>B</span>
         <span hidden={true}>C</span>
         Loading...
-      </React.Fragment>,
+      </>,
     );
 
     // Resolve the promise
@@ -165,11 +165,11 @@ describe('ReactSuspensePlaceholder', () => {
     // Render the final update. A should still be hidden, because it was
     // given a `hidden` prop.
     expect(ReactNoop).toMatchRenderedOutput(
-      <React.Fragment>
+      <>
         <span hidden={true}>A</span>
         <span>B2</span>
         <span>C</span>
-      </React.Fragment>,
+      </>,
     );
   });
 
@@ -436,10 +436,10 @@ describe('ReactSuspensePlaceholder', () => {
 
       it('properly accounts for base durations when a suspended times out in a concurrent tree', () => {
         ReactNoop.render(
-          <React.Fragment>
+          <>
             <App shouldSuspend={false} textRenderDuration={5} />
             <Suspense fallback={null} />
-          </React.Fragment>,
+          </>,
         );
 
         expect(Scheduler).toFlushAndYield(['App', 'Text']);
@@ -452,10 +452,10 @@ describe('ReactSuspensePlaceholder', () => {
         expect(onRender.mock.calls[0][3]).toBe(5);
 
         ReactNoop.render(
-          <React.Fragment>
+          <>
             <App shouldSuspend={true} textRenderDuration={5} />
             <Suspense fallback={null} />
-          </React.Fragment>,
+          </>,
         );
         expect(Scheduler).toFlushAndYield([
           'App',
@@ -484,12 +484,12 @@ describe('ReactSuspensePlaceholder', () => {
         // suspending in the case that we already timed out. To simulate the old
         // behavior, we add a different suspending boundary as a sibling.
         ReactNoop.render(
-          <React.Fragment>
+          <>
             <App shouldSuspend={true} text="New" textRenderDuration={6} />
             <Suspense fallback={null}>
               <AsyncText ms={100} text="Sibling" fakeRenderDuration={1} />
             </Suspense>
-          </React.Fragment>,
+          </>,
         );
         expect(Scheduler).toFlushAndYield([
           'App',
