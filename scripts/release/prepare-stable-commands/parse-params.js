@@ -3,7 +3,6 @@
 'use strict';
 
 const commandLineArgs = require('command-line-args');
-const {splitCommaParams} = require('../utils');
 
 const paramDefinitions = [
   {
@@ -12,13 +11,6 @@ const paramDefinitions = [
     description:
       'Skip NPM and use the build already present in "build/node_modules".',
     defaultValue: false,
-  },
-  {
-    name: 'skipPackages',
-    type: String,
-    multiple: true,
-    description: 'Packages to exclude from publishing',
-    defaultValue: [],
   },
   {
     name: 'skipTests',
@@ -35,9 +27,6 @@ const paramDefinitions = [
 
 module.exports = () => {
   const params = commandLineArgs(paramDefinitions);
-  const {skipPackages} = params;
-
-  splitCommaParams(skipPackages);
 
   return params;
 };

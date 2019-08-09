@@ -8,7 +8,7 @@ const {join} = require('path');
 const {confirm} = require('../utils');
 const theme = require('../theme');
 
-const run = async ({cwd, packages, skipPackages, tags}) => {
+const run = async ({cwd, packages, tags}) => {
   clear();
 
   if (tags.length === 1) {
@@ -23,14 +23,8 @@ const run = async ({cwd, packages, skipPackages, tags}) => {
     );
   }
 
-  // Cache all package JSONs for easy lookup below.
   for (let i = 0; i < packages.length; i++) {
     const packageName = packages[i];
-
-    if (skipPackages.includes(packageName)) {
-      continue;
-    }
-
     const packageJSONPath = join(
       cwd,
       'build/node_modules',

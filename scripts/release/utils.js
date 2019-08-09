@@ -32,20 +32,6 @@ const execRead = async (command, options) => {
   return stdout.trim();
 };
 
-const filterPackages = (packages, skipPackages) => {
-  skipPackages.forEach(packageName => {
-    const index = packages.indexOf(packageName);
-    if (index < 0) {
-      console.log(
-        theme`Invalid skip package {package ${packageName}} specified.`
-      );
-      process.exit(1);
-    } else {
-      packages.splice(index, 1);
-    }
-  });
-};
-
 const getArtifactsList = async buildID => {
   const buildMetadataURL = `https://circleci.com/api/v1.1/project/github/facebook/react/${buildID}?circle-token=${
     process.env.CIRCLE_CI_API_TOKEN
@@ -129,22 +115,6 @@ const getPublicPackages = () => {
 
     return false;
   });
-};
-
-const getReactVersion = async ({ skipPackages }) => {
-  if (!skipPackages.includes('react')) {
-    // If we are publishing React as part of this release, use the upcoming version number
-    const buildInfoPath = join(
-      nodeModulesPath,
-      arbitraryPackageName,
-      'build-info.json'
-    );
-    const {reactVersion} = await readJson(buildInfoPath);
-    return reactVersion;
-  } else {
-    // Otherwise pull the latest version number from NPM.
-    return execRead('npm info react@latest version')
-  }
 };
 
 const handleError = error => {
@@ -262,12 +232,10 @@ const updateVersionsForCanary = async (cwd, reactVersion, version) => {
 module.exports = {
   confirm,
   execRead,
-  filterPackages,
   getArtifactsList,
   getBuildInfo,
   getChecksumForCurrentRevision,
   getPublicPackages,
-  getReactVersion,
   handleError,
   logPromise,
   printDiff,

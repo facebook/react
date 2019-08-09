@@ -14,11 +14,6 @@ const run = async ({cwd, dry, packages, skipPackages, tags}, otp) => {
 
   for (let i = 0; i < packages.length; i++) {
     const packageName = packages[i];
-
-    if (skipPackages.includes(packageName)) {
-      continue;
-    }
-
     const packagePath = join(cwd, 'build/node_modules', packageName);
     const {version} = readJsonSync(join(packagePath, 'package.json'));
 

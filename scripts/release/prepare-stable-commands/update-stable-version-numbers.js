@@ -9,7 +9,7 @@ const {join, relative} = require('path');
 const {confirm, execRead, printDiff} = require('../utils');
 const theme = require('../theme');
 
-const run = async ({cwd, packages, skipPackages, version}, versionsMap) => {
+const run = async ({cwd, packages, version}, versionsMap) => {
   const nodeModulesPath = join(cwd, 'build/node_modules');
 
   // Cache all package JSONs for easy lookup below.
@@ -117,14 +117,7 @@ const run = async ({cwd, packages, skipPackages, version}, versionsMap) => {
   // A separate "React version" is used for the embedded renderer version to support DevTools,
   // since it needs to distinguish between different version ranges of React.
   // We need to replace it as well as the canary version number.
-  const arbitraryPackageName = packages.find(
-    name => !skipPackages.includes(name)
-  );
-  const buildInfoPath = join(
-    nodeModulesPath,
-    arbitraryPackageName,
-    'build-info.json'
-  );
+  const buildInfoPath = join(nodeModulesPath, 'react', 'build-info.json');
   const {reactVersion} = await readJson(buildInfoPath);
 
   if (!reactVersion) {

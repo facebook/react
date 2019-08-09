@@ -9,12 +9,10 @@ const {join} = require('path');
 const theme = require('../theme');
 const {execRead} = require('../utils');
 
-const run = async ({cwd, packages, skipPackages, tags}) => {
+const run = async ({cwd, packages, tags}) => {
   // All packages are built from a single source revision,
   // so it is safe to read build info from any one of them.
-  const arbitraryPackageName = packages.find(
-    name => !skipPackages.includes(name)
-  );
+  const arbitraryPackageName = packages[0];
   const {commit, environment, reactVersion} = readJsonSync(
     join(cwd, 'build', 'node_modules', arbitraryPackageName, 'build-info.json')
   );
@@ -48,7 +46,13 @@ const run = async ({cwd, packages, skipPackages, tags}) => {
         const packageName = packages[i];
         console.log(theme.path`• packages/%s/package.json`, packageName);
       }
-      console.log(theme.path`• packages/shared/ReactVersion.js`);
+      const status = await execRead(
+        'git diff packages/shared/ReactVersion.js',
+        {cwd}
+      );
+      if (status) {
+        console.log(theme.path`• packages/shared/ReactVersion.js`);
+      }
 
       console.log();
       if (environment === 'ci') {

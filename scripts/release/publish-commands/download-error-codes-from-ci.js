@@ -8,7 +8,7 @@ const {join} = require('path');
 const {getArtifactsList, logPromise} = require('../utils');
 const theme = require('../theme');
 
-const run = async ({cwd, packages, skipPackages, tags}) => {
+const run = async ({cwd, packages, tags}) => {
   if (!tags.includes('latest')) {
     // Don't update error-codes for alphas.
     return;
@@ -16,9 +16,7 @@ const run = async ({cwd, packages, skipPackages, tags}) => {
 
   // All packages are built from a single source revision,
   // so it is safe to read build info from any one of them.
-  const arbitraryPackageName = packages.find(
-    name => !skipPackages.includes(name)
-  );
+  const arbitraryPackageName = packages[0];
   const {buildNumber, environment} = readJsonSync(
     join(cwd, 'build', 'node_modules', arbitraryPackageName, 'build-info.json')
   );
