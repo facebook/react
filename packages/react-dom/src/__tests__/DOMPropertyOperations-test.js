@@ -162,12 +162,12 @@ describe('DOMPropertyOperations', () => {
     const attributeValue = {foo: 'bar'};
     attributeValue.toString = function() {
       // for loop to waste time
-      let n=0;
+      let n = 0;
       for (let i = 0; i < 1e6; i++) {
-        n = (n * i + 1) % 1e6
+        n = (n * i + 1) % 1e6;
       }
-      invariant(n === 577020, "…");
-      
+      invariant(n === 577020, '…');
+
       let originalToString = Object.prototype.toString;
       return originalToString.apply(this);
     };
