@@ -979,9 +979,6 @@ function completeWork(
             'A dehydrated suspense component was completed without a hydrated node. ' +
               'This is probably a bug in React.',
           );
-          if (enableSchedulerTracing) {
-            markSpawnedWork(Never);
-          }
           skipPastDehydratedSuspenseInstance(workInProgress);
         } else {
           // We should never have been in a hydration state if we didn't have a current.

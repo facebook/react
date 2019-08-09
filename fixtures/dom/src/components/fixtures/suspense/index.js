@@ -46,7 +46,7 @@ class SuspendyTreeChild extends React.Component {
 
   render() {
     return (
-      <React.Fragment>
+      <>
         <Suspense fallback={<div>(display: none)</div>}>
           <div>
             <AsyncStep text={`${this.state.step} + ${this.id}`} ms={500} />
@@ -54,7 +54,7 @@ class SuspendyTreeChild extends React.Component {
           </div>
         </Suspense>
         <button onClick={this.increment}>Hide</button>
-      </React.Fragment>
+      </>
     );
   }
 }
@@ -86,22 +86,22 @@ class SuspendyTree extends React.Component {
   };
   render() {
     return (
-      <React.Fragment>
+      <>
         <div ref={this.parentContainer}>
           <div ref={this.container} />
         </div>
         <div>
           {this.container.current !== null
             ? ReactDOM.createPortal(
-                <React.Fragment>
+                <>
                   <SuspendyTreeChild>{this.props.children}</SuspendyTreeChild>
                   <button onClick={this.removeAndRestore}>Remove</button>
-                </React.Fragment>,
+                </>,
                 this.container.current
               )
             : null}
         </div>
-      </React.Fragment>
+      </>
     );
   }
 }

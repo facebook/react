@@ -1596,10 +1596,10 @@ describe('ReactHooksWithNoopRenderer', () => {
           incrementBy,
         ]);
         return (
-          <React.Fragment>
+          <>
             <IncrementButton increment={increment} ref={button} />
             <Text text={'Count: ' + count} />
-          </React.Fragment>
+          </>
         );
       }
 

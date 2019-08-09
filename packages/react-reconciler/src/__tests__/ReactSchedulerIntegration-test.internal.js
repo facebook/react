@@ -97,11 +97,11 @@ describe('ReactSchedulerIntegration', () => {
 
     runWithPriority(UserBlockingPriority, () => {
       ReactNoop.render(
-        <React.Fragment>
+        <>
           <ReadPriority />
           <ReadPriority />
           <ReadPriority />
-        </React.Fragment>,
+        </>,
       );
     });
 

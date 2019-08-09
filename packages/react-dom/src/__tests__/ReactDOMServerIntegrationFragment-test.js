@@ -42,9 +42,9 @@ describe('ReactDOMServerIntegration', () => {
   describe('React.Fragment', () => {
     itRenders('a fragment with one child', async render => {
       let e = await render(
-        <React.Fragment>
+        <>
           <div>text1</div>
-        </React.Fragment>,
+        </>,
       );
       let parent = e.parentNode;
       expect(parent.childNodes[0].tagName).toBe('DIV');
@@ -56,19 +56,19 @@ describe('ReactDOMServerIntegration', () => {
       };
       let Footer = props => {
         return (
-          <React.Fragment>
+          <>
             <h2>footer</h2>
             <h3>about</h3>
-          </React.Fragment>
+          </>
         );
       };
       let e = await render(
-        <React.Fragment>
+        <>
           <div>text1</div>
           <span>text2</span>
           <Header />
           <Footer />
-        </React.Fragment>,
+        </>,
       );
       let parent = e.parentNode;
       expect(parent.childNodes[0].tagName).toBe('DIV');
@@ -80,21 +80,21 @@ describe('ReactDOMServerIntegration', () => {
 
     itRenders('a nested fragment', async render => {
       let e = await render(
-        <React.Fragment>
-          <React.Fragment>
+        <>
+          <>
             <div>text1</div>
-          </React.Fragment>
+          </>
           <span>text2</span>
-          <React.Fragment>
-            <React.Fragment>
-              <React.Fragment>
+          <>
+            <>
+              <>
                 {null}
                 <p />
-              </React.Fragment>
+              </>
               {false}
-            </React.Fragment>
-          </React.Fragment>
-        </React.Fragment>,
+            </>
+          </>
+        </>,
       );
       let parent = e.parentNode;
       expect(parent.childNodes[0].tagName).toBe('DIV');

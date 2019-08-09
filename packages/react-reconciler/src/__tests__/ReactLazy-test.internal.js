@@ -301,10 +301,10 @@ describe('ReactLazy', () => {
     function LazyImpl(props) {
       Scheduler.unstable_yieldValue('Lazy');
       return (
-        <React.Fragment>
+        <>
           <Text text={props.siblingText} />
           {props.children}
-        </React.Fragment>
+        </>
       );
     }
     LazyImpl.defaultProps = {siblingText: 'Sibling'};

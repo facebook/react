@@ -1903,12 +1903,20 @@ function updateDehydratedSuspenseComponent(
       // they should be.
       let serverDisplayTime = requestCurrentTime();
       // Schedule a normal pri update to render this content.
-      workInProgress.expirationTime = computeAsyncExpiration(serverDisplayTime);
+      let newExpirationTime = computeAsyncExpiration(serverDisplayTime);
+      if (enableSchedulerTracing) {
+        markSpawnedWork(newExpirationTime);
+      }
+      workInProgress.expirationTime = newExpirationTime;
     } else {
       // We'll continue hydrating the rest at offscreen priority since we'll already
       // be showing the right content coming from the server, it is no rush.
       workInProgress.expirationTime = Never;
+      if (enableSchedulerTracing) {
+        markSpawnedWork(Never);
+      }
     }
+
     return null;
   }
 
