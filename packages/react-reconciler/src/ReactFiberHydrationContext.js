@@ -23,7 +23,6 @@ import {
   HostText,
   HostRoot,
   SuspenseComponent,
-  DehydratedSuspenseComponent,
 } from 'shared/ReactWorkTags';
 import {Deletion, Placement} from 'shared/ReactSideEffectTags';
 import invariant from 'shared/invariant';
@@ -394,7 +393,7 @@ function popToNextHostParent(fiber: Fiber): void {
     parent !== null &&
     parent.tag !== HostComponent &&
     parent.tag !== HostRoot &&
-    parent.tag !== DehydratedSuspenseComponent
+    parent.tag !== SuspenseComponent
   ) {
     parent = parent.return;
   }
