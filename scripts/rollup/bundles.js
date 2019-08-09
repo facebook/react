@@ -393,7 +393,7 @@ const bundles = [
     externals: ['react', 'scheduler'],
   },
 
-  /******* createComponentWithSubscriptions (experimental) *******/
+  /******* createComponentWithSubscriptions *******/
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: ISOMORPHIC,
@@ -407,6 +407,15 @@ const bundles = [
           [require.resolve('@babel/plugin-transform-classes'), {loose: true}],
         ]),
       }),
+  },
+
+  /******* Hook for managing subscriptions safely *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'use-subscription',
+    global: 'useSubscription',
+    externals: ['react'],
   },
 
   /******* React Scheduler (experimental) *******/
