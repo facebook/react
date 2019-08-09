@@ -28,10 +28,8 @@ type PressProps = {|
     bottom: number,
     left: number,
   },
-  preventContextMenu: boolean,
   preventDefault: boolean,
   stopPropagation: boolean,
-  onContextMenu: (e: PressEvent) => void,
   onPress: (e: PressEvent) => void,
   onPressChange: boolean => void,
   onPressEnd: (e: PressEvent) => void,
@@ -74,8 +72,7 @@ type PressEventType =
   | 'pressmove'
   | 'pressstart'
   | 'pressend'
-  | 'presschange'
-  | 'contextmenu';
+  | 'presschange';
 
 type PressEvent = {|
   button: 'primary' | 'auxillary',
@@ -111,7 +108,6 @@ const DEFAULT_PRESS_RETENTION_OFFSET = {
 
 const targetEventTypes = [
   'keydown_active',
-  'contextmenu_active',
   // We need to preventDefault on pointerdown for mouse/pen events
   // that are in hit target area but not the element area.
   'pointerdown_active',
@@ -612,40 +608,6 @@ const pressResponderImpl = {
             nativeEvent.preventDefault();
           }
         }
-        break;
-      }
-
-      case 'contextmenu': {
-        const preventContextMenu = props.preventContextMenu;
-
-        if (preventContextMenu === true) {
-          // Skip dispatching of onContextMenu below
-          nativeEvent.preventDefault();
-        }
-
-        if (isPressed) {
-          const preventDefault = props.preventDefault;
-
-          if (preventDefault !== false && !nativeEvent.defaultPrevented) {
-            // Skip dispatching of onContextMenu below
-            nativeEvent.preventDefault();
-            return;
-          }
-          dispatchCancel(event, context, props, state);
-        }
-        const onContextMenu = props.onContextMenu;
-        if (isFunction(onContextMenu)) {
-          dispatchEvent(
-            event,
-            onContextMenu,
-            context,
-            state,
-            'contextmenu',
-            DiscreteEvent,
-          );
-        }
-        // Click won't occur, so we need to remove root events
-        removeRootEventTypes(context, state);
         break;
       }
 

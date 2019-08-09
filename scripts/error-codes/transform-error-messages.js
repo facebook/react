@@ -9,6 +9,7 @@
 const fs = require('fs');
 const evalToString = require('../shared/evalToString');
 const invertObject = require('./invertObject');
+const helperModuleImports = require('@babel/helper-module-imports');
 
 module.exports = function(babel) {
   const t = babel.types;
@@ -45,11 +46,12 @@ module.exports = function(babel) {
             .split('%s')
             .map(raw => t.templateElement({raw, cooked: String.raw({raw})}));
 
-          // Import ReactError
-          const reactErrorIdentfier = file.addImport(
+          const reactErrorIdentfier = helperModuleImports.addDefault(
+            path,
             'shared/ReactError',
-            'default',
-            'ReactError'
+            {
+              nameHint: 'ReactError',
+            }
           );
 
           // Outputs:
@@ -111,10 +113,10 @@ module.exports = function(babel) {
           prodErrorId = parseInt(prodErrorId, 10);
 
           // Import ReactErrorProd
-          const reactErrorProdIdentfier = file.addImport(
+          const reactErrorProdIdentfier = helperModuleImports.addDefault(
+            path,
             'shared/ReactErrorProd',
-            'default',
-            'ReactErrorProd'
+            {nameHint: 'ReactErrorProd'}
           );
 
           // Outputs:

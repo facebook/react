@@ -51,12 +51,22 @@ import {
   didNotFindHydratableSuspenseInstance,
 } from './ReactFiberHostConfig';
 import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
+import warning from 'shared/warning';
 
 // The deepest Fiber on the stack involved in a hydration context.
 // This may have been an insertion or a hydration.
 let hydrationParentFiber: null | Fiber = null;
 let nextHydratableInstance: null | HydratableInstance = null;
 let isHydrating: boolean = false;
+
+function warnIfHydrating() {
+  if (__DEV__) {
+    warning(
+      !isHydrating,
+      'We should not be hydrating here. This is a bug in React. Please file a bug.',
+    );
+  }
+}
 
 function enterHydrationState(fiber: Fiber): boolean {
   if (!supportsHydration) {
@@ -432,6 +442,7 @@ function resetHydrationState(): void {
 }
 
 export {
+  warnIfHydrating,
   enterHydrationState,
   reenterHydrationStateFromDehydratedSuspenseInstance,
   resetHydrationState,

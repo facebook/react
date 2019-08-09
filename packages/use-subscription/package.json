@@ -1,8 +1,7 @@
 {
-  "private": true,
   "name": "use-subscription",
   "description": "Reusable hooks",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/facebook/react.git",

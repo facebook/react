@@ -660,7 +660,6 @@ describe('ReactLazy', () => {
     // Mount
     await Promise.resolve();
     expect(() => {
-      expect(Scheduler);
       Scheduler.unstable_flushAll();
     }).toWarnDev([
       'Invalid prop `inner` of type `string` supplied to `Add`, expected `number`.',
