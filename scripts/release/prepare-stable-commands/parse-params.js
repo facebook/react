@@ -3,6 +3,7 @@
 'use strict';
 
 const commandLineArgs = require('command-line-args');
+const {splitCommaParams} = require('../utils');
 
 const paramDefinitions = [
   {
@@ -34,6 +35,8 @@ const paramDefinitions = [
 
 module.exports = () => {
   const params = commandLineArgs(paramDefinitions);
+
+  splitCommaParams(params.skipPackages);
 
   return params;
 };
