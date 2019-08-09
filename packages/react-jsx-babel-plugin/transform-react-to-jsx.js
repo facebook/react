@@ -2,19 +2,34 @@
 
 const t = require('@babel/types');
 const esutils = require('esutils');
-const jsx = require('@babel/plugin-syntax-jsx');
+// const jsx = '@babel/plugin-syntax-jsx';
 
 function helper(opts) {
-  console.log(jsx);
   const visitor = {};
+
+  visitor.JSXNamespacedName = function(path, state) {
+    const throwIfNamespace =
+      state.opts.throwIfNamespace === undefined
+        ? true
+        : !!state.opts.throwIfNamespace;
+    if (throwIfNamespace) {
+      throw path.buildCodeFrameError(
+        `Namespace tags are not supported by default. React's JSX doesn't support namespace tags. \
+You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
+      );
+    }
+  };
 
   visitor.JSXSpreadChild = function(path) {
     throw path.buildCodeFrameError(
-      'Spread children are not supported in React.'
+      'Spread children are not supported in React.',
     );
   };
 
   visitor.JSXElement = {
+    enter(path, state) {
+      // console.log(path, state);
+    },
     exit(path, file) {
       const callExpr = buildElementCall(path, file);
       if (callExpr) {
@@ -27,7 +42,7 @@ function helper(opts) {
     exit(path, file) {
       if (opts.compat) {
         throw path.buildCodeFrameError(
-          'Fragment tags are only supported in React 16 and up.'
+          'Fragment tags are only supported in React 16 and up.',
         );
       }
       const callExpr = buildFragmentCall(path, file);
@@ -36,7 +51,6 @@ function helper(opts) {
       }
     },
   };
-
   return visitor;
 
   function convertJSXIdentifier(node, parent) {
@@ -51,8 +65,14 @@ function helper(opts) {
     } else if (t.isJSXMemberExpression(node)) {
       return t.memberExpression(
         convertJSXIdentifier(node.object, node),
-        convertJSXIdentifier(node.property, node)
+        convertJSXIdentifier(node.property, node),
       );
+    } else if (t.isJSXNamespacedName(node)) {
+      /**
+       * If there is flag "throwIfNamespace"
+       * print XMLNamespace like string literal
+       */
+      return t.stringLiteral(`${node.namespace.name}:${node.name.name}`);
     }
 
     return node;
@@ -80,7 +100,7 @@ function helper(opts) {
 
     if (t.isJSXNamespacedName(node.name)) {
       node.name = t.stringLiteral(
-        node.name.namespace.name + ':' + node.name.name.name
+        node.name.namespace.name + ':' + node.name.name.name,
       );
     } else if (esutils.keyword.isIdentifierNameES6(node.name.name)) {
       node.name.type = 'Identifier';
@@ -104,7 +124,7 @@ function helper(opts) {
 
     const tagExpr = convertJSXIdentifier(
       openingPath.node.name,
-      openingPath.node
+      openingPath.node,
     );
     const args = [];
 
@@ -163,7 +183,7 @@ function helper(opts) {
     if (typeof useBuiltIns !== 'boolean') {
       throw new Error(
         'transform-react-jsx currently only accepts a boolean option for ' +
-          'useBuiltIns (defaults to false)'
+          'useBuiltIns (defaults to false)',
       );
     }
 
@@ -231,11 +251,7 @@ function helper(opts) {
   }
 }
 
-module.exports = function(babel, options) {
-  // const NEW_PRAGMA = options.development ? 'React.jsx' : 'React.jsxDEV';
-  const NEW_PRAGMA = 'React.jsx';
-  const OLD_PRAGMA = 'React.createElement';
-
+module.exports = function(babel) {
   const createIdentifierParser = id => () => {
     return id
       .split('.')
@@ -259,15 +275,38 @@ module.exports = function(babel, options) {
     },
   });
 
+  visitor.Program = {
+    enter(path, state) {
+      const pragma = state.opts.development ? 'React.jsxDEV' : 'React.jsx';
+      const pragmaFrag = 'React.Fragment';
+      state.set('jsxIdentifier', createIdentifierParser(pragma));
+      state.set('jsxFragIdentifier', createIdentifierParser(pragmaFrag));
+      state.set('usedFragment', false);
+      state.set('pragmaSet', true);
+      state.set('pragmaFragSet', true);
+    },
+    exit(path, state) {
+      if (
+        state.get('pragmaSet') &&
+        state.get('usedFragment') &&
+        !state.get('pragmaFragSet')
+      ) {
+        throw new Error(
+          'transform-react-jsx: pragma has been set but ' +
+            'pragmafrag has not been set',
+        );
+      }
+    },
+  };
+
   visitor.JSXAttribute = function(path) {
     if (t.isJSXElement(path.node.value)) {
-      path.node.value = t.v(path.node.value);
+      path.node.value = t.jsxExpressionContainer(path.node.value);
     }
   };
 
   return {
     name: 'transform-react-jsx',
-    inherits: jsx,
     visitor,
   };
 };
