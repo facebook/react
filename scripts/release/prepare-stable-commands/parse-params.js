@@ -13,6 +13,13 @@ const paramDefinitions = [
     defaultValue: false,
   },
   {
+    name: 'skipPackages',
+    type: String,
+    multiple: true,
+    description: 'Packages to exclude from publishing',
+    defaultValue: [],
+  },
+  {
     name: 'skipTests',
     type: Boolean,
     description: 'Skip automated fixture tests.',
