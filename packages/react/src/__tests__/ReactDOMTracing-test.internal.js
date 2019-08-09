@@ -325,10 +325,10 @@ describe('ReactDOMTracing', () => {
           });
 
           return (
-            <React.Fragment>
+            <>
               <WithHiddenWork />
               <Updater />
-            </React.Fragment>
+            </>
           );
         };
 
@@ -429,10 +429,10 @@ describe('ReactDOMTracing', () => {
           });
 
           return (
-            <React.Fragment>
+            <>
               <MaybeHiddenWork />
               <Updater />
-            </React.Fragment>
+            </>
           );
         };
 

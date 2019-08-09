@@ -171,8 +171,9 @@ describe('forwardRef', () => {
   });
 
   it('should not warn if the render function provided does not use any parameter', () => {
-    const arityOfZero = () => <div ref={arguments[1]} />;
-    React.forwardRef(arityOfZero);
+    React.forwardRef(function arityOfZero() {
+      return <div ref={arguments[1]} />;
+    });
   });
 
   it('should warn if the render function provided does not use the forwarded ref parameter', () => {

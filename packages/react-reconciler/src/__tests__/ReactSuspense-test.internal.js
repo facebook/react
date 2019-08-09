@@ -152,14 +152,14 @@ describe('ReactSuspense', () => {
   it('suspends siblings and later recovers each independently', () => {
     // Render two sibling Suspense components
     const root = ReactTestRenderer.create(
-      <React.Fragment>
+      <>
         <Suspense fallback={<Text text="Loading A..." />}>
           <AsyncText text="A" ms={5000} />
         </Suspense>
         <Suspense fallback={<Text text="Loading B..." />}>
           <AsyncText text="B" ms={6000} />
         </Suspense>
-      </React.Fragment>,
+      </>,
       {
         unstable_isConcurrent: true,
       },
@@ -219,10 +219,10 @@ describe('ReactSuspense', () => {
     }
 
     const root = ReactTestRenderer.create(
-      <React.Fragment>
+      <>
         <Suspense fallback={<Text text="Loading..." />} />
         <Text text="Initial" />
-      </React.Fragment>,
+      </>,
       {
         unstable_isConcurrent: true,
       },
@@ -232,13 +232,13 @@ describe('ReactSuspense', () => {
 
     // The update will suspend.
     root.update(
-      <React.Fragment>
+      <>
         <Suspense fallback={<Text text="Loading..." />}>
           <Async />
         </Suspense>
         <Text text="After Suspense" />
         <Text text="Sibling" />
-      </React.Fragment>,
+      </>,
     );
 
     // Yield past the Suspense boundary but don't complete the last sibling.
