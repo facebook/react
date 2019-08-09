@@ -178,11 +178,11 @@ describe('ReactDOMFiber', () => {
 
   it('renders an empty fragment', () => {
     const Div = () => <div />;
-    const EmptyFragment = () => <React.Fragment />;
+    const EmptyFragment = () => <></>;
     const NonEmptyFragment = () => (
-      <React.Fragment>
+      <>
         <Div />
-      </React.Fragment>
+      </>
     );
 
     ReactDOM.render(<EmptyFragment />, container);
@@ -475,10 +475,10 @@ describe('ReactDOMFiber', () => {
         return (
           <div>
             {this.state.show && (
-              <React.Fragment>
+              <>
                 {ReactDOM.createPortal(null, portalContainer)}
                 <div>child</div>
-              </React.Fragment>
+              </>
             )}
             <div>parent</div>
           </div>

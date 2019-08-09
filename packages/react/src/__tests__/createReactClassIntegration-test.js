@@ -559,7 +559,7 @@ describe('create-react-class-integration', () => {
           '  componentWillReceiveProps\n' +
           '  componentWillUpdate\n\n' +
           'The above lifecycles should be removed. Learn more about this warning here:\n' +
-          'https://fb.me/react-async-component-lifecycle-hooks',
+          'https://fb.me/react-unsafe-component-lifecycles',
         {withoutStack: true},
       );
     }).toLowPriorityWarnDev(
@@ -603,7 +603,7 @@ describe('create-react-class-integration', () => {
           '  componentWillReceiveProps\n' +
           '  componentWillUpdate\n\n' +
           'The above lifecycles should be removed. Learn more about this warning here:\n' +
-          'https://fb.me/react-async-component-lifecycle-hooks',
+          'https://fb.me/react-unsafe-component-lifecycles',
         {withoutStack: true},
       );
     }).toLowPriorityWarnDev(

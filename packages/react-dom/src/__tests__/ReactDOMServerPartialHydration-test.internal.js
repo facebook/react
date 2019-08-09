@@ -157,10 +157,10 @@ describe('ReactDOMServerPartialHydration', () => {
         throw promise;
       } else {
         return (
-          <React.Fragment>
+          <>
             <div>Middle</div>
             Some text
-          </React.Fragment>
+          </>
         );
       }
     }
@@ -1022,12 +1022,12 @@ describe('ReactDOMServerPartialHydration', () => {
         <div>
           <Suspense
             fallback={
-              <React.Fragment>
+              <>
                 <Suspense fallback="Loading...">
                   <Child />
                 </Suspense>
                 <span>Inner Sibling</span>
-              </React.Fragment>
+              </>
             }>
             <Child />
           </Suspense>
