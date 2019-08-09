@@ -6,7 +6,7 @@ const {readFileSync, writeFileSync} = require('fs');
 const {readJson, writeJson} = require('fs-extra');
 const {join} = require('path');
 
-const run = async ({cwd, packages, tags}) => {
+const run = async ({cwd, packages, skipPackages, tags}) => {
   if (!tags.includes('latest')) {
     // Don't update version numbers for alphas.
     return;
@@ -35,15 +35,18 @@ const run = async ({cwd, packages, tags}) => {
   }
 
   // Update the shared React version source file.
-  const sourceReactVersionPath = join(cwd, 'packages/shared/ReactVersion.js');
-  const {version} = await readJson(
-    join(nodeModulesPath, 'react', 'package.json')
-  );
-  const sourceReactVersion = readFileSync(
-    sourceReactVersionPath,
-    'utf8'
-  ).replace(/module\.exports = '[^']+';/, `module.exports = '${version}';`);
-  writeFileSync(sourceReactVersionPath, sourceReactVersion);
+  // (Unless this release does not include an update to React)
+  if (!skipPackages.includes('react')) {
+    const sourceReactVersionPath = join(cwd, 'packages/shared/ReactVersion.js');
+    const {version} = await readJson(
+      join(nodeModulesPath, 'react', 'package.json')
+    );
+    const sourceReactVersion = readFileSync(
+      sourceReactVersionPath,
+      'utf8'
+    ).replace(/module\.exports = '[^']+';/, `module.exports = '${version}';`);
+    writeFileSync(sourceReactVersionPath, sourceReactVersion);
+  }
 };
 
 module.exports = run;
