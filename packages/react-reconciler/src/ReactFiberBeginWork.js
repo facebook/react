@@ -92,6 +92,7 @@ import {processUpdateQueue} from './ReactUpdateQueue';
 import {
   NoWork,
   Never,
+  Sync,
   computeAsyncExpiration,
 } from './ReactFiberExpirationTime';
 import {
@@ -1708,17 +1709,29 @@ function updateSuspenseComponent(
             );
             primaryChildFragment.return = workInProgress;
 
-            // We will have dropped the effect list which contains the deletion.
-            // We need to reconcile to delete the current child.
-            reconcileChildFibers(
-              workInProgress,
-              current.child,
-              null,
-              renderExpirationTime,
-            );
             // This is always null since we never want the previous child
             // that we're not going to hydrate.
             primaryChildFragment.child = null;
+
+            if ((workInProgress.mode & BatchedMode) === NoMode) {
+              // Outside of batched mode, we commit the effects from the
+              // partially completed, timed-out tree, too.
+              let progressedChild = (primaryChildFragment.child =
+                workInProgress.child);
+              while (progressedChild !== null) {
+                progressedChild.return = primaryChildFragment;
+                progressedChild = progressedChild.sibling;
+              }
+            } else {
+              // We will have dropped the effect list which contains the deletion.
+              // We need to reconcile to delete the current child.
+              reconcileChildFibers(
+                workInProgress,
+                current.child,
+                null,
+                renderExpirationTime,
+              );
+            }
 
             // Because primaryChildFragment is a new fiber that we're inserting as the
             // parent of a new tree, we need to set its treeBaseDuration.
@@ -1956,7 +1969,19 @@ function mountDehydratedSuspenseComponent(
 ): null | Fiber {
   // During the first pass, we'll bail out and not drill into the children.
   // Instead, we'll leave the content in place and try to hydrate it later.
-  if (isSuspenseInstanceFallback(suspenseInstance)) {
+  if ((workInProgress.mode & BatchedMode) === NoMode) {
+    if (__DEV__) {
+      warning(
+        false,
+        'Cannot hydrate Suspense in legacy mode. Switch from ' +
+          'ReactDOM.hydrate(element, container) to ' +
+          'ReactDOM.unstable_createSyncRoot(container, { hydrate: true })' +
+          '.render(element) or remove the Suspense components from ' +
+          'the server rendered components.',
+      );
+    }
+    workInProgress.expirationTime = Sync;
+  } else if (isSuspenseInstanceFallback(suspenseInstance)) {
     // This is a client-only boundary. Since we won't get any content from the server
     // for this, we need to schedule that at a higher priority based on when it would
     // have timed out. In theory we could render it in this pass but it would have the
@@ -1995,6 +2020,14 @@ function updateDehydratedSuspenseComponent(
   // We should never be hydrating at this point because it is the first pass,
   // but after we've already committed once.
   warnIfHydrating();
+
+  if ((workInProgress.mode & BatchedMode) === NoMode) {
+    return retrySuspenseComponentWithoutHydrating(
+      current,
+      workInProgress,
+      renderExpirationTime,
+    );
+  }
 
   if (isSuspenseInstanceFallback(suspenseInstance)) {
     // This boundary is in a permanent fallback state. In this case, we'll never
