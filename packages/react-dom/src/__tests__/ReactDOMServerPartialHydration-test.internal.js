@@ -1003,4 +1003,97 @@ describe('ReactDOMServerPartialHydration', () => {
     let div = container.getElementsByTagName('div')[0];
     expect(ref.current).toBe(div);
   });
+
+  it('can client render nested boundaries', async () => {
+    let suspend = false;
+    let promise = new Promise(() => {});
+    let ref = React.createRef();
+
+    function Child() {
+      if (suspend) {
+        throw promise;
+      } else {
+        return 'Hello';
+      }
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense
+            fallback={
+              <React.Fragment>
+                <Suspense fallback="Loading...">
+                  <Child />
+                </Suspense>
+                <span>Inner Sibling</span>
+              </React.Fragment>
+            }>
+            <Child />
+          </Suspense>
+          <span ref={ref}>Sibling</span>
+        </div>
+      );
+    }
+
+    suspend = true;
+    let html = ReactDOMServer.renderToString(<App />);
+
+    let container = document.createElement('div');
+    container.innerHTML = html + '<!--unrelated comment-->';
+
+    let span = container.getElementsByTagName('span')[1];
+
+    suspend = false;
+    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    root.render(<App />);
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+
+    expect(ref.current).toBe(span);
+    expect(span.parentNode).not.toBe(null);
+
+    // It leaves non-React comments alone.
+    expect(container.lastChild.nodeType).toBe(8);
+    expect(container.lastChild.data).toBe('unrelated comment');
+  });
+
+  it('can hydrate TWO suspense boundaries', async () => {
+    let ref1 = React.createRef();
+    let ref2 = React.createRef();
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading 1...">
+            <span ref={ref1}>1</span>
+          </Suspense>
+          <Suspense fallback="Loading 2...">
+            <span ref={ref2}>2</span>
+          </Suspense>
+        </div>
+      );
+    }
+
+    // First we render the final HTML. With the streaming renderer
+    // this may have suspense points on the server but here we want
+    // to test the completed HTML. Don't suspend on the server.
+    let finalHTML = ReactDOMServer.renderToString(<App />);
+
+    let container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    let span1 = container.getElementsByTagName('span')[0];
+    let span2 = container.getElementsByTagName('span')[1];
+
+    // On the client we don't have all data yet but we want to start
+    // hydrating anyway.
+    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    root.render(<App />);
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+
+    expect(ref1.current).toBe(span1);
+    expect(ref2.current).toBe(span2);
+  });
 });

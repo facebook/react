@@ -7,7 +7,7 @@
 /* eslint-disable quotes */
 'use strict';
 
-let babel = require('babel-core');
+let babel = require('@babel/core');
 let wrapWarningWithEnvCheck = require('../wrap-warning-with-env-check');
 
 function transform(input) {

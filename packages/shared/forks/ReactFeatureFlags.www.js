@@ -21,6 +21,8 @@ export const {
   warnAboutDeprecatedSetNativeProps,
   revertPassiveEffectsChange,
   enableUserBlockingEvents,
+  disableLegacyContext,
+  disableSchedulerTimeoutBasedOnReactExpirationTime,
 } = require('ReactFeatureFlags');
 
 // In www, we have experimental support for gathering data
@@ -79,6 +81,8 @@ export const warnAboutUnmockedScheduler = true;
 export const enableSuspenseCallback = true;
 
 export const warnAboutDefaultPropsOnFunctionComponents = false;
+
+export const warnAboutStringRefs = false;
 
 export const flushSuspenseFallbacksInTests = true;
 
