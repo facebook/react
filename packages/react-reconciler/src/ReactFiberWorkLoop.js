@@ -76,7 +76,6 @@ import {
   HostRoot,
   ClassComponent,
   SuspenseComponent,
-  DehydratedSuspenseComponent,
   FunctionComponent,
   ForwardRef,
   MemoComponent,
@@ -2207,9 +2206,6 @@ export function resolveRetryThenable(boundaryFiber: Fiber, thenable: Thenable) {
     switch (boundaryFiber.tag) {
       case SuspenseComponent:
         retryCache = boundaryFiber.stateNode;
-        break;
-      case DehydratedSuspenseComponent:
-        retryCache = boundaryFiber.memoizedState;
         break;
       default:
         invariant(

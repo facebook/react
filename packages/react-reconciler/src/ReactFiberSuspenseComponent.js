@@ -46,6 +46,10 @@ export function shouldCaptureSuspense(
   // fallback. Otherwise, don't capture and bubble to the next boundary.
   const nextState: SuspenseState | null = workInProgress.memoizedState;
   if (nextState !== null) {
+    if (nextState.dehydrated !== null) {
+      // A dehydrated boundary always captures.
+      return true;
+    }
     return false;
   }
   const props = workInProgress.memoizedProps;

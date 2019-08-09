@@ -22,7 +22,6 @@ import {
   ClassComponent,
   HostRoot,
   SuspenseComponent,
-  DehydratedSuspenseComponent,
   IncompleteClassComponent,
 } from 'shared/ReactWorkTags';
 import {
@@ -32,10 +31,7 @@ import {
   ShouldCapture,
   LifecycleEffectMask,
 } from 'shared/ReactSideEffectTags';
-import {
-  enableSchedulerTracing,
-  enableSuspenseServerRenderer,
-} from 'shared/ReactFeatureFlags';
+import {enableSchedulerTracing} from 'shared/ReactFeatureFlags';
 import {NoMode, BatchedMode} from './ReactTypeOfMode';
 import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent';
 
@@ -61,15 +57,11 @@ import {
   markLegacyErrorBoundaryAsFailed,
   isAlreadyFailedLegacyErrorBoundary,
   pingSuspendedRoot,
-  resolveRetryThenable,
   checkForWrongSuspensePriorityInDEV,
 } from './ReactFiberWorkLoop';
 
-import invariant from 'shared/invariant';
-
 import {Sync} from './ReactFiberExpirationTime';
 
-const PossiblyWeakSet = typeof WeakSet === 'function' ? WeakSet : Set;
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 
 function createRootErrorUpdate(
@@ -323,36 +315,6 @@ function throwException(
         workInProgress.effectTag |= ShouldCapture;
         workInProgress.expirationTime = renderExpirationTime;
 
-        return;
-      } else if (
-        enableSuspenseServerRenderer &&
-        workInProgress.tag === DehydratedSuspenseComponent
-      ) {
-        attachPingListener(root, renderExpirationTime, thenable);
-
-        // Since we already have a current fiber, we can eagerly add a retry listener.
-        let retryCache = workInProgress.memoizedState;
-        if (retryCache === null) {
-          retryCache = workInProgress.memoizedState = new PossiblyWeakSet();
-          const current = workInProgress.alternate;
-          invariant(
-            current,
-            'A dehydrated suspense boundary must commit before trying to render. ' +
-              'This is probably a bug in React.',
-          );
-          current.memoizedState = retryCache;
-        }
-        // Memoize using the boundary fiber to prevent redundant listeners.
-        if (!retryCache.has(thenable)) {
-          retryCache.add(thenable);
-          let retry = resolveRetryThenable.bind(null, workInProgress, thenable);
-          if (enableSchedulerTracing) {
-            retry = Schedule_tracing_wrap(retry);
-          }
-          thenable.then(retry, retry);
-        }
-        workInProgress.effectTag |= ShouldCapture;
-        workInProgress.expirationTime = renderExpirationTime;
         return;
       }
       // This boundary already captured during this render. Continue to the next
