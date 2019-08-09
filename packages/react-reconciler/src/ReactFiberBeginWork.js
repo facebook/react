@@ -1512,9 +1512,10 @@ function updateSuspenseComponent(
 
   let nextState = null;
   let nextDidTimeout = false;
+  let didSuspend = (workInProgress.effectTag & DidCapture) !== NoEffect;
 
   if (
-    (workInProgress.effectTag & DidCapture) !== NoEffect ||
+    didSuspend ||
     shouldRemainOnFallback(suspenseContext, current, workInProgress)
   ) {
     // Something in this boundary's subtree already suspended. Switch to
@@ -1605,8 +1606,7 @@ function updateSuspenseComponent(
         if (suspenseState !== null) {
           const dehydrated = suspenseState.dehydrated;
           if (dehydrated !== null) {
-            return updateDehydratedSuspenseComponent(
-              null,
+            return mountDehydratedSuspenseComponent(
               workInProgress,
               dehydrated,
               renderExpirationTime,
@@ -1675,6 +1675,14 @@ function updateSuspenseComponent(
       if (enableSuspenseServerRenderer) {
         const dehydrated = prevState.dehydrated;
         if (dehydrated !== null) {
+          if (didSuspend) {
+            // Something suspended. Leave the existing child in place.
+            workInProgress.child = current.child;
+            // The dehydrated completion pass expects this flag to be there
+            // but the normal suspense pass doesn't.
+            workInProgress.effectTag |= DidCapture;
+            return null;
+          }
           return updateDehydratedSuspenseComponent(
             current,
             workInProgress,
@@ -1878,53 +1886,49 @@ function retrySuspenseComponentWithoutHydrating(
   return workInProgress.child;
 }
 
-function updateDehydratedSuspenseComponent(
-  current: Fiber | null,
+function mountDehydratedSuspenseComponent(
   workInProgress: Fiber,
   suspenseInstance: SuspenseInstance,
   renderExpirationTime: ExpirationTime,
-) {
-  if (current === null) {
-    // During the first pass, we'll bail out and not drill into the children.
-    // Instead, we'll leave the content in place and try to hydrate it later.
-    if (isSuspenseInstanceFallback(suspenseInstance)) {
-      // This is a client-only boundary. Since we won't get any content from the server
-      // for this, we need to schedule that at a higher priority based on when it would
-      // have timed out. In theory we could render it in this pass but it would have the
-      // wrong priority associated with it and will prevent hydration of parent path.
-      // Instead, we'll leave work left on it to render it in a separate commit.
+): null | Fiber {
+  // During the first pass, we'll bail out and not drill into the children.
+  // Instead, we'll leave the content in place and try to hydrate it later.
+  if (isSuspenseInstanceFallback(suspenseInstance)) {
+    // This is a client-only boundary. Since we won't get any content from the server
+    // for this, we need to schedule that at a higher priority based on when it would
+    // have timed out. In theory we could render it in this pass but it would have the
+    // wrong priority associated with it and will prevent hydration of parent path.
+    // Instead, we'll leave work left on it to render it in a separate commit.
 
-      // TODO This time should be the time at which the server rendered response that is
-      // a parent to this boundary was displayed. However, since we currently don't have
-      // a protocol to transfer that time, we'll just estimate it by using the current
-      // time. This will mean that Suspense timeouts are slightly shifted to later than
-      // they should be.
-      let serverDisplayTime = requestCurrentTime();
-      // Schedule a normal pri update to render this content.
-      let newExpirationTime = computeAsyncExpiration(serverDisplayTime);
-      if (enableSchedulerTracing) {
-        markSpawnedWork(newExpirationTime);
-      }
-      workInProgress.expirationTime = newExpirationTime;
-    } else {
-      // We'll continue hydrating the rest at offscreen priority since we'll already
-      // be showing the right content coming from the server, it is no rush.
-      workInProgress.expirationTime = Never;
-      if (enableSchedulerTracing) {
-        markSpawnedWork(Never);
-      }
+    // TODO This time should be the time at which the server rendered response that is
+    // a parent to this boundary was displayed. However, since we currently don't have
+    // a protocol to transfer that time, we'll just estimate it by using the current
+    // time. This will mean that Suspense timeouts are slightly shifted to later than
+    // they should be.
+    let serverDisplayTime = requestCurrentTime();
+    // Schedule a normal pri update to render this content.
+    let newExpirationTime = computeAsyncExpiration(serverDisplayTime);
+    if (enableSchedulerTracing) {
+      markSpawnedWork(newExpirationTime);
     }
-
-    return null;
+    workInProgress.expirationTime = newExpirationTime;
+  } else {
+    // We'll continue hydrating the rest at offscreen priority since we'll already
+    // be showing the right content coming from the server, it is no rush.
+    workInProgress.expirationTime = Never;
+    if (enableSchedulerTracing) {
+      markSpawnedWork(Never);
+    }
   }
+  return null;
+}
 
-  if ((workInProgress.effectTag & DidCapture) !== NoEffect) {
-    // Something suspended. Leave the existing child in place.
-    // TODO: In non-concurrent mode, should we commit the nodes we have hydrated so far?
-    workInProgress.child = current.child;
-    return null;
-  }
-
+function updateDehydratedSuspenseComponent(
+  current: Fiber,
+  workInProgress: Fiber,
+  suspenseInstance: SuspenseInstance,
+  renderExpirationTime: ExpirationTime,
+): null | Fiber {
   // We should never be hydrating at this point because it is the first pass,
   // but after we've already committed once.
   warnIfHydrating();
