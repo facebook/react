@@ -4,6 +4,7 @@
 
 const commandLineArgs = require('command-line-args');
 const commandLineUsage = require('command-line-usage');
+const {splitCommaParams} = require('../utils');
 
 const paramDefinitions = [
   {
@@ -18,12 +19,21 @@ const paramDefinitions = [
     multiple: true,
     description: 'NPM tags to point to the new release.',
   },
+  {
+    name: 'skipPackages',
+    type: String,
+    multiple: true,
+    description: 'Packages to exclude from publishing',
+    defaultValue: [],
+  },
 ];
 
 module.exports = () => {
   const params = commandLineArgs(paramDefinitions);
 
-  if (!params.tags || params.tags.length === 0) {
+  const {skipPackages, tags} = params;
+
+  if (!tags || tags.length === 0) {
     const usage = commandLineUsage([
       {
         content:
@@ -50,6 +60,9 @@ module.exports = () => {
     console.log(usage);
     process.exit(1);
   }
+
+  splitCommaParams(skipPackages);
+  splitCommaParams(tags);
 
   return params;
 };

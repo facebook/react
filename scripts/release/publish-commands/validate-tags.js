@@ -6,13 +6,17 @@ const {readJson} = require('fs-extra');
 const {join} = require('path');
 const theme = require('../theme');
 
-const run = async ({cwd, packages, tags}) => {
+const run = async ({cwd, packages, skipPackages, tags}) => {
+  const abitraryPackageName = packages.find(
+    packageName => !skipPackages.includes(packageName)
+  );
+
   // Prevent a canary release from ever being published as @latest
   const packageJSONPath = join(
     cwd,
     'build',
     'node_modules',
-    'react',
+    abitraryPackageName,
     'package.json'
   );
   const {version} = await readJson(packageJSONPath);

@@ -3,7 +3,7 @@
 'use strict';
 
 const {join} = require('path');
-const {getPublicPackages, handleError} = require('./utils');
+const {getPublicPackages, filterPackages, handleError} = require('./utils');
 
 const checkOutPackages = require('./prepare-stable-commands/check-out-packages');
 const confirmStableVersionNumbers = require('./prepare-stable-commands/confirm-stable-version-numbers');
@@ -20,6 +20,9 @@ const run = async () => {
     const params = parseParams();
     params.cwd = join(__dirname, '..', '..');
     params.packages = await getPublicPackages();
+
+    // Remove any skipped packages
+    filterPackages(params.packages, params.skipPackages);
 
     // Map of package name to upcoming stable version.
     // This Map is initially populated with guesses based on local versions.

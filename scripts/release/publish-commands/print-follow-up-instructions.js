@@ -9,16 +9,14 @@ const {join} = require('path');
 const theme = require('../theme');
 const {execRead} = require('../utils');
 
-const run = async ({cwd, packages, tags}) => {
+const run = async ({cwd, packages, skipPackages, tags}) => {
   // All packages are built from a single source revision,
-  // so it is safe to read the commit number from any one of them.
-  const {commit, environment} = readJsonSync(
-    `${cwd}/build/node_modules/react/build-info.json`
+  // so it is safe to read build info from any one of them.
+  const arbitraryPackageName = packages.find(
+    name => !skipPackages.includes(name)
   );
-
-  // Tags are named after the react version.
-  const {version} = readJsonSync(
-    `${cwd}/build/node_modules/react/package.json`
+  const {commit, environment, reactVersion} = readJsonSync(
+    join(cwd, 'build', 'node_modules', arbitraryPackageName, 'build-info.json')
   );
 
   const branch = await execRead('git branch | grep \\* | cut -d " " -f2', {
@@ -29,7 +27,7 @@ const run = async ({cwd, packages, tags}) => {
 
   if (tags.length === 1 && tags[0] === 'canary') {
     console.log(
-      theme`{header A canary release} {version ${version}} {header has been published!}`
+      theme`{header A canary release} {version ${reactVersion}} {header has been published!}`
     );
   } else {
     const nodeModulesPath = join(cwd, 'build/node_modules');
@@ -90,8 +88,8 @@ const run = async ({cwd, packages, tags}) => {
     );
     console.log(
       theme`  {command git tag -a v}{version %s} {command -m "v%s"} {version %s}`,
-      version,
-      version,
+      reactVersion,
+      reactVersion,
       commit
     );
     console.log(theme.command`  git push origin --tags`);
@@ -100,7 +98,7 @@ const run = async ({cwd, packages, tags}) => {
     console.log(theme.header`Lastly, please fill in the release on GitHub.`);
     console.log(
       theme.link`https://github.com/facebook/react/releases/tag/v%s`,
-      version
+      reactVersion
     );
     console.log(
       theme`\nThe GitHub release should also include links to the following artifacts:`
