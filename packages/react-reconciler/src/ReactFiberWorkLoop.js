@@ -2505,12 +2505,12 @@ export function warnIfNotScopedWithMatchingAct(fiber: Fiber): void {
           'Be sure to use the matching version of act() corresponding to your renderer:\n\n' +
           '// for react-dom:\n' +
           "import {act} from 'react-dom/test-utils';\n" +
-          '//...\n' +
+          '// ...\n' +
           'act(() => ...);\n\n' +
           '// for react-test-renderer:\n' +
           "import TestRenderer from 'react-test-renderer';\n" +
           'const {act} = TestRenderer;\n' +
-          '//...\n' +
+          '// ...\n' +
           'act(() => ...);' +
           '%s',
         getStackByFiberInDevAndProd(fiber),
