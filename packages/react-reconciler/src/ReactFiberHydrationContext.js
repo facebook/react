@@ -368,7 +368,9 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): boolean {
   return shouldUpdate;
 }
 
-function skipPastDehydratedSuspenseInstance(fiber: Fiber): void {
+function skipPastDehydratedSuspenseInstance(
+  fiber: Fiber,
+): null | HydratableInstance {
   if (!supportsHydration) {
     invariant(
       false,
@@ -376,15 +378,15 @@ function skipPastDehydratedSuspenseInstance(fiber: Fiber): void {
         'This error is likely caused by a bug in React. Please file an issue.',
     );
   }
-  let suspenseInstance = fiber.stateNode;
+  let suspenseState: null | SuspenseState = fiber.memoizedState;
+  let suspenseInstance: null | SuspenseInstance =
+    suspenseState !== null ? suspenseState.dehydrated : null;
   invariant(
     suspenseInstance,
     'Expected to have a hydrated suspense instance. ' +
       'This error is likely caused by a bug in React. Please file an issue.',
   );
-  nextHydratableInstance = getNextHydratableInstanceAfterSuspenseInstance(
-    suspenseInstance,
-  );
+  return getNextHydratableInstanceAfterSuspenseInstance(suspenseInstance);
 }
 
 function popToNextHostParent(fiber: Fiber): void {
@@ -439,9 +441,13 @@ function popHydrationState(fiber: Fiber): boolean {
   }
 
   popToNextHostParent(fiber);
-  nextHydratableInstance = hydrationParentFiber
-    ? getNextHydratableSibling(fiber.stateNode)
-    : null;
+  if (fiber.tag === SuspenseComponent) {
+    nextHydratableInstance = skipPastDehydratedSuspenseInstance(fiber);
+  } else {
+    nextHydratableInstance = hydrationParentFiber
+      ? getNextHydratableSibling(fiber.stateNode)
+      : null;
+  }
   return true;
 }
 
@@ -463,6 +469,5 @@ export {
   tryToClaimNextHydratableInstance,
   prepareToHydrateHostInstance,
   prepareToHydrateHostTextInstance,
-  skipPastDehydratedSuspenseInstance,
   popHydrationState,
 };

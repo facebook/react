@@ -114,7 +114,6 @@ import {popProvider} from './ReactFiberNewContext';
 import {
   prepareToHydrateHostInstance,
   prepareToHydrateHostTextInstance,
-  skipPastDehydratedSuspenseInstance,
   popHydrationState,
   resetHydrationState,
 } from './ReactFiberHydrationContext';
@@ -850,7 +849,6 @@ function completeWork(
             if (enableSchedulerTracing) {
               markSpawnedWork(Never);
             }
-            skipPastDehydratedSuspenseInstance(workInProgress);
             return null;
           } else {
             // We should never have been in a hydration state if we didn't have a current.
