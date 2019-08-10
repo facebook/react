@@ -1675,23 +1675,86 @@ function updateSuspenseComponent(
       if (enableSuspenseServerRenderer) {
         const dehydrated = prevState.dehydrated;
         if (dehydrated !== null) {
-          if (didSuspend) {
-            // Something suspended. Leave the existing child in place.
+          if (!didSuspend) {
+            return updateDehydratedSuspenseComponent(
+              current,
+              workInProgress,
+              dehydrated,
+              renderExpirationTime,
+            );
+          } else if (
+            (workInProgress.memoizedState: null | SuspenseState) !== null
+          ) {
+            // Something suspended and we should still be in dehydrated mode.
+            // Leave the existing child in place.
             workInProgress.child = current.child;
             // The dehydrated completion pass expects this flag to be there
             // but the normal suspense pass doesn't.
             workInProgress.effectTag |= DidCapture;
             return null;
+          } else {
+            // Suspended but we should no longer be in dehydrated mode.
+            // Therefore we now have to render the fallback. Wrap the children
+            // in a fragment fiber to keep them separate from the fallback
+            // children.
+            const nextFallbackChildren = nextProps.fallback;
+            const primaryChildFragment = createFiberFromFragment(
+              // It shouldn't matter what the pending props are because we aren't
+              // going to render this fragment.
+              null,
+              mode,
+              NoWork,
+              null,
+            );
+            primaryChildFragment.return = workInProgress;
+
+            // We will have dropped the effect list which contains the deletion.
+            // We need to reconcile to delete the current child.
+            reconcileChildFibers(
+              workInProgress,
+              current.child,
+              null,
+              renderExpirationTime,
+            );
+            // This is always null since we never want the previous child
+            // that we're not going to hydrate.
+            primaryChildFragment.child = null;
+
+            // Because primaryChildFragment is a new fiber that we're inserting as the
+            // parent of a new tree, we need to set its treeBaseDuration.
+            if (enableProfilerTimer && workInProgress.mode & ProfileMode) {
+              // treeBaseDuration is the sum of all the child tree base durations.
+              let treeBaseDuration = 0;
+              let hiddenChild = primaryChildFragment.child;
+              while (hiddenChild !== null) {
+                treeBaseDuration += hiddenChild.treeBaseDuration;
+                hiddenChild = hiddenChild.sibling;
+              }
+              primaryChildFragment.treeBaseDuration = treeBaseDuration;
+            }
+
+            // Create a fragment from the fallback children, too.
+            const fallbackChildFragment = createFiberFromFragment(
+              nextFallbackChildren,
+              mode,
+              renderExpirationTime,
+              null,
+            );
+            fallbackChildFragment.return = workInProgress;
+            primaryChildFragment.sibling = fallbackChildFragment;
+            fallbackChildFragment.effectTag |= Placement;
+            child = primaryChildFragment;
+            primaryChildFragment.childExpirationTime = NoWork;
+
+            workInProgress.memoizedState = nextState;
+            workInProgress.child = child;
+
+            // Skip the primary children, and continue working on the
+            // fallback children.
+            return fallbackChildFragment;
           }
-          return updateDehydratedSuspenseComponent(
-            current,
-            workInProgress,
-            dehydrated,
-            renderExpirationTime,
-          );
         }
       }
-
       // The current tree already timed out. That means each child set is
       // wrapped in a fragment fiber.
       const currentPrimaryChildFragment: Fiber = (current.child: any);
