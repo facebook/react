@@ -60,71 +60,13 @@ var isPerformingWork = false;
 var isHostCallbackScheduled = false;
 var isHostTimeoutScheduled = false;
 
-function scheduler_flushTaskAtPriority_Immediate(callback, didTimeout) {
-  return callback(didTimeout);
-}
-function scheduler_flushTaskAtPriority_UserBlocking(callback, didTimeout) {
-  return callback(didTimeout);
-}
-function scheduler_flushTaskAtPriority_Normal(callback, didTimeout) {
-  return callback(didTimeout);
-}
-function scheduler_flushTaskAtPriority_Low(callback, didTimeout) {
-  return callback(didTimeout);
-}
-function scheduler_flushTaskAtPriority_Idle(callback, didTimeout) {
-  return callback(didTimeout);
-}
-
 function flushTask(task, callback, currentTime) {
-  var previousPriorityLevel = currentPriorityLevel;
-  var previousTask = currentTask;
   currentPriorityLevel = task.priorityLevel;
-  currentTask = task;
-  try {
-    var didUserCallbackTimeout = task.expirationTime <= currentTime;
-    // Add an extra function to the callstack. Profiling tools can use this
-    // to infer the priority of work that appears higher in the stack.
-    var continuationCallback;
-    switch (currentPriorityLevel) {
-      case ImmediatePriority:
-        continuationCallback = scheduler_flushTaskAtPriority_Immediate(
-          callback,
-          didUserCallbackTimeout,
-        );
-        break;
-      case UserBlockingPriority:
-        continuationCallback = scheduler_flushTaskAtPriority_UserBlocking(
-          callback,
-          didUserCallbackTimeout,
-        );
-        break;
-      case NormalPriority:
-        continuationCallback = scheduler_flushTaskAtPriority_Normal(
-          callback,
-          didUserCallbackTimeout,
-        );
-        break;
-      case LowPriority:
-        continuationCallback = scheduler_flushTaskAtPriority_Low(
-          callback,
-          didUserCallbackTimeout,
-        );
-        break;
-      case IdlePriority:
-        continuationCallback = scheduler_flushTaskAtPriority_Idle(
-          callback,
-          didUserCallbackTimeout,
-        );
-        break;
-    }
-    return typeof continuationCallback === 'function'
-      ? continuationCallback
-      : null;
-  } finally {
-    currentPriorityLevel = previousPriorityLevel;
-    currentTask = previousTask;
-  }
+  var didUserCallbackTimeout = task.expirationTime <= currentTime;
+  var continuationCallback = callback(didUserCallbackTimeout);
+  return typeof continuationCallback === 'function'
+    ? continuationCallback
+    : null;
 }
 
 function advanceTimers(currentTime) {
@@ -174,26 +116,30 @@ function flushWork(hasTimeRemaining, initialTime) {
   }
 
   isPerformingWork = true;
+  const previousPriorityLevel = currentPriorityLevel;
   try {
     let currentTime = initialTime;
     advanceTimers(currentTime);
-    let task = peek(taskQueue);
-    while (task !== null && !(enableSchedulerDebugging && isSchedulerPaused)) {
+    currentTask = peek(taskQueue);
+    while (
+      currentTask !== null &&
+      !(enableSchedulerDebugging && isSchedulerPaused)
+    ) {
       if (
-        task.expirationTime > currentTime &&
+        currentTask.expirationTime > currentTime &&
         (!hasTimeRemaining || shouldYieldToHost())
       ) {
-        // This task hasn't expired, and we've reached the deadline.
+        // This currentTask hasn't expired, and we've reached the deadline.
         break;
       }
-      const callback = task.callback;
+      const callback = currentTask.callback;
       if (callback !== null) {
-        task.callback = null;
-        const continuation = flushTask(task, callback, currentTime);
+        currentTask.callback = null;
+        const continuation = flushTask(currentTask, callback, currentTime);
         if (continuation !== null) {
-          task.callback = continuation;
+          currentTask.callback = continuation;
         } else {
-          if (task === peek(taskQueue)) {
+          if (currentTask === peek(taskQueue)) {
             pop(taskQueue);
           }
         }
@@ -202,10 +148,10 @@ function flushWork(hasTimeRemaining, initialTime) {
       } else {
         pop(taskQueue);
       }
-      task = peek(taskQueue);
+      currentTask = peek(taskQueue);
     }
     // Return whether there's additional work
-    if (task !== null) {
+    if (currentTask !== null) {
       return true;
     } else {
       let firstTimer = peek(timerQueue);
@@ -215,6 +161,8 @@ function flushWork(hasTimeRemaining, initialTime) {
       return false;
     }
   } finally {
+    currentTask = null;
+    currentPriorityLevel = previousPriorityLevel;
     isPerformingWork = false;
   }
 }
