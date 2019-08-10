@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @flow
+ * @flow strict
  */
 
 type Heap = Array<Node>;
@@ -38,7 +38,8 @@ export function pop(heap: Heap): Node | null {
   }
 }
 
-function siftUp(heap, node, index) {
+function siftUp(heap, node, i) {
+  let index = i;
   while (true) {
     const parentIndex = Math.floor((index - 1) / 2);
     const parent = heap[parentIndex];
@@ -54,7 +55,8 @@ function siftUp(heap, node, index) {
   }
 }
 
-function siftDown(heap, node, index) {
+function siftDown(heap, node, i) {
+  let index = i;
   const length = heap.length;
   while (index < length) {
     const leftIndex = (index + 1) * 2 - 1;
