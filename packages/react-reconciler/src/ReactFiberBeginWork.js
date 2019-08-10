@@ -173,6 +173,7 @@ import {
   requestCurrentTime,
   retryDehydratedSuspenseBoundary,
   scheduleWork,
+  renderDidSuspendDelayIfPossible,
 } from './ReactFiberWorkLoop';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
@@ -2060,6 +2061,8 @@ function updateDehydratedSuspenseComponent(
     // since we now have higher priority work, but in case it doesn't, we need to prepare to
     // render something, if we time out. Even if that requires us to delete everything and
     // skip hydration.
+    // Delay having to do this as long as the suspense timeout allows us.
+    renderDidSuspendDelayIfPossible();
     return retrySuspenseComponentWithoutHydrating(
       current,
       workInProgress,
