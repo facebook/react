@@ -30,4 +30,9 @@ module.exports = {
     'no-undef': 'error',
     'no-shadow-restricted-names': 'error',
   },
+
+  // These plugins aren't used, but eslint complains if an eslint-ignore comment
+  // references unused plugins. An alternate approach could be to strip
+  // eslint-ignore comments as part of the build.
+  plugins: ['jest', 'no-for-of-loops', 'react', 'react-internal'],
 };

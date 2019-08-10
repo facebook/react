@@ -320,10 +320,10 @@ describe('ReactIncrementalErrorHandling', () => {
     function Parent() {
       Scheduler.unstable_yieldValue('Parent');
       return (
-        <React.Fragment>
+        <>
           <BadRender />
           <Sibling />
-        </React.Fragment>
+        </>
       );
     }
 

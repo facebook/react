@@ -23,7 +23,6 @@ const run = async ({cwd, packages, tags}) => {
     );
   }
 
-  // Cache all package JSONs for easy lookup below.
   for (let i = 0; i < packages.length; i++) {
     const packageName = packages[i];
     const packageJSONPath = join(

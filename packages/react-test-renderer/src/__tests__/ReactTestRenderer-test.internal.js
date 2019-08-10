@@ -544,9 +544,9 @@ describe('ReactTestRenderer', () => {
 
   it('toTree() handles nested Fragments', () => {
     const Foo = () => (
-      <React.Fragment>
-        <React.Fragment>foo</React.Fragment>
-      </React.Fragment>
+      <>
+        <>foo</>
+      </>
     );
     const renderer = ReactTestRenderer.create(<Foo />);
     const tree = renderer.toTree();
@@ -707,16 +707,16 @@ describe('ReactTestRenderer', () => {
 
   it('toTree() handles complicated tree of fragments', () => {
     const renderer = ReactTestRenderer.create(
-      <React.Fragment>
-        <React.Fragment>
+      <>
+        <>
           <div>One</div>
           <div>Two</div>
-          <React.Fragment>
+          <>
             <div>Three</div>
-          </React.Fragment>
-        </React.Fragment>
+          </>
+        </>
         <div>Four</div>
-      </React.Fragment>,
+      </>,
     );
 
     const tree = renderer.toTree();

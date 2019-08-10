@@ -1077,10 +1077,10 @@ describe('ReactHooks', () => {
 
     expect(() =>
       ReactTestRenderer.create(
-        <React.Fragment>
+        <>
           <Fn />
           <Cls />
-        </React.Fragment>,
+        </>,
       ),
     ).toWarnDev(['Context can only be read while React is rendering']);
   });
@@ -1753,10 +1753,10 @@ describe('ReactHooks', () => {
 
     expect(() =>
       ReactTestRenderer.create(
-        <React.Fragment>
+        <>
           <A />
           <B />
-        </React.Fragment>,
+        </>,
       ),
     ).toThrow('Hello');
   });
