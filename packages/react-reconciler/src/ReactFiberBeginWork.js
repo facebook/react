@@ -1511,9 +1511,8 @@ function updateSuspenseComponent(
 
   let suspenseContext: SuspenseContext = suspenseStackCursor.current;
 
-  let nextState = null;
   let nextDidTimeout = false;
-  let didSuspend = (workInProgress.effectTag & DidCapture) !== NoEffect;
+  const didSuspend = (workInProgress.effectTag & DidCapture) !== NoEffect;
 
   if (
     didSuspend ||
@@ -1521,7 +1520,6 @@ function updateSuspenseComponent(
   ) {
     // Something in this boundary's subtree already suspended. Switch to
     // rendering the fallback children.
-    nextState = SUSPENDED_MARKER;
     nextDidTimeout = true;
     workInProgress.effectTag &= ~DidCapture;
   } else {
@@ -1586,15 +1584,6 @@ function updateSuspenseComponent(
   // custom reconciliation logic to preserve the state of the primary
   // children. It's essentially a very basic form of re-parenting.
 
-  // `child` points to the child fiber. In the normal case, this is the first
-  // fiber of the primary children set. In the timed-out case, it's a
-  // a fragment fiber containing the primary children.
-  let child;
-  // `next` points to the next fiber React should render. In the normal case,
-  // it's the same as `child`: the first fiber of the primary children set.
-  // In the timed-out case, it's a fragment fiber containing the *fallback*
-  // children -- we skip over the primary children entirely.
-  let next;
   if (current === null) {
     if (enableSuspenseServerRenderer) {
       // If we're currently hydrating, try to hydrate this boundary.
@@ -1654,19 +1643,21 @@ function updateSuspenseComponent(
       );
       fallbackChildFragment.return = workInProgress;
       primaryChildFragment.sibling = fallbackChildFragment;
-      child = primaryChildFragment;
       // Skip the primary children, and continue working on the
       // fallback children.
-      next = fallbackChildFragment;
+      workInProgress.memoizedState = SUSPENDED_MARKER;
+      workInProgress.child = primaryChildFragment;
+      return fallbackChildFragment;
     } else {
       // Mount the primary children without an intermediate fragment fiber.
       const nextPrimaryChildren = nextProps.children;
-      child = next = mountChildFibers(
+      workInProgress.memoizedState = null;
+      return (workInProgress.child = mountChildFibers(
         workInProgress,
         null,
         nextPrimaryChildren,
         renderExpirationTime,
-      );
+      ));
     }
   } else {
     // This is an update. This branch is more complicated because we need to
@@ -1756,11 +1747,10 @@ function updateSuspenseComponent(
             fallbackChildFragment.return = workInProgress;
             primaryChildFragment.sibling = fallbackChildFragment;
             fallbackChildFragment.effectTag |= Placement;
-            child = primaryChildFragment;
             primaryChildFragment.childExpirationTime = NoWork;
 
-            workInProgress.memoizedState = nextState;
-            workInProgress.child = child;
+            workInProgress.memoizedState = SUSPENDED_MARKER;
+            workInProgress.child = primaryChildFragment;
 
             // Skip the primary children, and continue working on the
             // fallback children.
@@ -1823,11 +1813,12 @@ function updateSuspenseComponent(
         );
         fallbackChildFragment.return = workInProgress;
         primaryChildFragment.sibling = fallbackChildFragment;
-        child = primaryChildFragment;
         primaryChildFragment.childExpirationTime = NoWork;
         // Skip the primary children, and continue working on the
         // fallback children.
-        next = fallbackChildFragment;
+        workInProgress.memoizedState = SUSPENDED_MARKER;
+        workInProgress.child = primaryChildFragment;
+        return fallbackChildFragment;
       } else {
         // No longer suspended. Switch back to showing the primary children,
         // and remove the intermediate fragment fiber.
@@ -1847,7 +1838,8 @@ function updateSuspenseComponent(
         // the stateNode?
 
         // Continue rendering the children, like we normally do.
-        child = next = primaryChild;
+        workInProgress.memoizedState = null;
+        return (workInProgress.child = primaryChild);
       }
     } else {
       // The current tree has not already timed out. That means the primary
@@ -1915,29 +1907,26 @@ function updateSuspenseComponent(
         fallbackChildFragment.return = workInProgress;
         primaryChildFragment.sibling = fallbackChildFragment;
         fallbackChildFragment.effectTag |= Placement;
-        child = primaryChildFragment;
         primaryChildFragment.childExpirationTime = NoWork;
         // Skip the primary children, and continue working on the
         // fallback children.
-        next = fallbackChildFragment;
+        workInProgress.memoizedState = SUSPENDED_MARKER;
+        workInProgress.child = primaryChildFragment;
+        return fallbackChildFragment;
       } else {
         // Still haven't timed out.  Continue rendering the children, like we
         // normally do.
+        workInProgress.memoizedState = null;
         const nextPrimaryChildren = nextProps.children;
-        next = child = reconcileChildFibers(
+        return (workInProgress.child = reconcileChildFibers(
           workInProgress,
           currentPrimaryChild,
           nextPrimaryChildren,
           renderExpirationTime,
-        );
+        ));
       }
     }
-    workInProgress.stateNode = current.stateNode;
   }
-
-  workInProgress.memoizedState = nextState;
-  workInProgress.child = child;
-  return next;
 }
 
 function retrySuspenseComponentWithoutHydrating(
