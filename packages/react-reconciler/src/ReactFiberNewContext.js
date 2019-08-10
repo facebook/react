@@ -25,7 +25,7 @@ import MAX_SIGNED_31_BIT_INT from './maxSigned31BitInt';
 import {
   ContextProvider,
   ClassComponent,
-  DehydratedSuspenseComponent,
+  DehydratedFragment,
 } from 'shared/ReactWorkTags';
 
 import invariant from 'shared/invariant';
@@ -249,7 +249,7 @@ export function propagateContextChange(
       nextFiber = fiber.type === workInProgress.type ? null : fiber.child;
     } else if (
       enableSuspenseServerRenderer &&
-      fiber.tag === DehydratedSuspenseComponent
+      fiber.tag === DehydratedFragment
     ) {
       // If a dehydrated suspense bounudary is in this subtree, we don't know
       // if it will have any context consumers in it. The best we can do is

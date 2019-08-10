@@ -43,7 +43,7 @@ import {
   HostPortal,
   Profiler,
   SuspenseComponent,
-  DehydratedSuspenseComponent,
+  DehydratedFragment,
   IncompleteClassComponent,
   MemoComponent,
   SimpleMemoComponent,
@@ -967,7 +967,7 @@ function getHostSibling(fiber: Fiber): ?Instance {
     while (
       node.tag !== HostComponent &&
       node.tag !== HostText &&
-      node.tag !== DehydratedSuspenseComponent
+      node.tag !== DehydratedFragment
     ) {
       // If it is not host node and, we might have a host node inside it.
       // Try to search down until we find one.
@@ -1162,7 +1162,7 @@ function unmountHostComponents(current, renderPriorityLevel): void {
       }
     } else if (
       enableSuspenseServerRenderer &&
-      node.tag === DehydratedSuspenseComponent
+      node.tag === DehydratedFragment
     ) {
       // Delete the dehydrated suspense boundary and all of its content.
       if (currentParentIsContainer) {

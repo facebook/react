@@ -49,7 +49,7 @@ import {
   Profiler,
   SuspenseComponent,
   SuspenseListComponent,
-  DehydratedSuspenseComponent,
+  DehydratedFragment,
   FunctionComponent,
   MemoComponent,
   SimpleMemoComponent,
@@ -848,7 +848,7 @@ export function createFiberFromHostInstanceForDeletion(): Fiber {
 export function createFiberFromDehydratedFragment(
   dehydratedNode: SuspenseInstance,
 ): Fiber {
-  const fiber = createFiber(DehydratedSuspenseComponent, null, null, NoMode);
+  const fiber = createFiber(DehydratedFragment, null, null, NoMode);
   fiber.stateNode = dehydratedNode;
   return fiber;
 }
