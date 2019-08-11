@@ -471,6 +471,12 @@ describe('ReactDOMTextarea', () => {
     ReactDOM.render(stub, container);
     expect(() =>
       ReactDOM.render(<textarea defaultValue="uncontrolled" />, container),
+    ).toWarnDev(
+      'Warning: A component is changing a controlled textarea to be uncontrolled. ' +
+        'Textarea elements should not switch from controlled to uncontrolled (or vice versa). ' +
+        'Decide between using a controlled or uncontrolled textarea ' +
+        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
+        '    in textarea (at **)',
     );
   });
 
