@@ -288,8 +288,15 @@ describe('ReactDOMTextarea', () => {
 
     expect(node.value).toBe('kitten');
 
-    ReactDOM.render(<textarea defaultValue="gorilla" />, container);
-
+    expect(() =>
+      ReactDOM.render(<textarea defaultValue="gorilla" />, container),
+    ).toWarnDev(
+      'Warning: A component is changing a controlled textarea to be uncontrolled. ' +
+        'Textarea elements should not switch from controlled to uncontrolled (or vice versa). ' +
+        'Decide between using a controlled or uncontrolled textarea ' +
+        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
+        '    in textarea (at **)',
+    );
     expect(node.value).toEqual('kitten');
   });
 
@@ -310,7 +317,15 @@ describe('ReactDOMTextarea', () => {
 
     expect(node.value).toBe('puppies');
 
-    ReactDOM.render(<textarea defaultValue="gorilla" />, container);
+    expect(() =>
+      ReactDOM.render(<textarea defaultValue="gorilla" />, container),
+    ).toWarnDev(
+      'Warning: A component is changing a controlled textarea to be uncontrolled. ' +
+        'Textarea elements should not switch from controlled to uncontrolled (or vice versa). ' +
+        'Decide between using a controlled or uncontrolled textarea ' +
+        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
+        '    in textarea (at **)',
+    );
 
     expect(node.value).toEqual('puppies');
   });
@@ -400,7 +415,7 @@ describe('ReactDOMTextarea', () => {
     ReactTestUtils.renderIntoDocument(<textarea value={null} />);
   });
 
-  it('should warn if value and defaultValue are specified', () => {
+  it('should warn if value and defaultValue props are specified', () => {
     const InvalidComponent = () => (
       <textarea value="foo" defaultValue="bar" readOnly={true} />
     );
@@ -417,6 +432,90 @@ describe('ReactDOMTextarea', () => {
 
     // No additional warnings are expected
     ReactTestUtils.renderIntoDocument(<InvalidComponent />);
+  });
+
+  it('should warn if controlled textarea switches to uncontrolled (value is undefined)', () => {
+    const container = document.createElement('div');
+    const stub = (
+      <textarea value="controlled" onChange={emptyFunction} />
+    );
+    ReactDOM.render(stub, container);
+    expect(() => ReactDOM.render(<textarea />, container)).toWarnDev(
+      'Warning: A component is changing a controlled textarea to be uncontrolled. ' +
+        'Textarea elements should not switch from controlled to uncontrolled (or vice versa). ' +
+        'Decide between using a controlled or uncontrolled textarea ' +
+        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
+        '    in textarea (at **)',
+    );
+  });
+
+  it('should warn if controlled textarea switches to uncontrolled (value is null)', () => {
+    const container = document.createElement('div');
+    const stub = (
+      <textarea value="controlled" onChange={emptyFunction} />
+    );
+    ReactDOM.render(stub, container);
+    expect(() =>
+      ReactDOM.render(<textarea value={null} />, container),
+    ).toWarnDev([
+      '`value` prop on `textarea` should not be null. ' +
+        'Consider using an empty string to clear the component or `undefined` ' +
+        'for uncontrolled components.',
+      'Warning: A component is changing a controlled textarea to be uncontrolled. ' +
+        'Textarea elements should not switch from controlled to uncontrolled (or vice versa). ' +
+        'Decide between using a controlled or uncontrolled textarea ' +
+        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
+        '    in textarea (at **)'
+        ,
+    ]);
+  });
+
+  it('should warn if controlled textarea switches to uncontrolled with defaultValue', () => {
+    const container = document.createElement('div');
+    const stub = (
+      <textarea value="controlled" onChange={emptyFunction} />
+    );
+    ReactDOM.render(stub, container);
+    expect(() =>
+      ReactDOM.render(
+        <textarea defaultValue="uncontrolled" />,
+        container,
+      ),
+    );
+  });
+
+  it('should warn if uncontrolled textarea (value is undefined) switches to controlled', () => {
+    const container = document.createElement('div');
+    const stub = <textarea />;
+    ReactDOM.render(stub, container);
+    expect(() =>
+      ReactDOM.render(<textarea value="controlled" />, container),
+    ).toWarnDev(
+      'Warning: A component is changing an uncontrolled textarea to be controlled. ' +
+        'Textarea elements should not switch from uncontrolled to controlled (or vice versa). ' +
+        'Decide between using a controlled or uncontrolled textarea ' +
+        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
+        '    in textarea (at **)',
+    );
+  });
+
+  it('should warn if uncontrolled textarea (value is null) switches to controlled', () => {
+    const container = document.createElement('div');
+    const stub = <textarea value={null} />;
+    expect(() => ReactDOM.render(stub, container)).toWarnDev(
+      '`value` prop on `textarea` should not be null. ' +
+        'Consider using an empty string to clear the component or `undefined` ' +
+        'for uncontrolled components.',
+    );
+    expect(() =>
+      ReactDOM.render(<textarea value="controlled" />, container),
+    ).toWarnDev(
+      'Warning: A component is changing an uncontrolled textarea to be controlled. ' +
+        'Textarea elements should not switch from uncontrolled to controlled (or vice versa). ' +
+        'Decide between using a controlled or uncontrolled textarea ' +
+        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
+        '    in textarea (at **)',
+    );
   });
 
   it('should not warn about missing onChange in uncontrolled textareas', () => {

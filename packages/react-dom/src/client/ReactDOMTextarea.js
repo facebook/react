@@ -16,10 +16,13 @@ import {getToStringValue, toString} from './ToStringValue';
 import type {ToStringValue} from './ToStringValue';
 
 let didWarnValDefaultVal = false;
+let didWarnControlledToUncontrolled = false;
+let didWarnUncontrolledToControlled = false;
 
 type TextAreaWithWrapperState = HTMLTextAreaElement & {
   _wrapperState: {
     initialValue: ToStringValue,
+    controlled?: boolean,
   },
 };
 
@@ -122,11 +125,46 @@ export function initWrapperState(element: Element, props: Object) {
 
   node._wrapperState = {
     initialValue: getToStringValue(initialValue),
+    controlled: props.value != null,
   };
 }
 
 export function updateWrapper(element: Element, props: Object) {
   const node = ((element: any): TextAreaWithWrapperState);
+
+  if (__DEV__) {
+    const controlled = props.value != null;
+
+    if (
+      !node._wrapperState.controlled &&
+      controlled &&
+      !didWarnUncontrolledToControlled
+    ) {
+      warning(
+        false,
+        'A component is changing an uncontrolled textarea to be controlled. ' +
+          'Textarea elements should not switch from uncontrolled to controlled (or vice versa). ' +
+          'Decide between using a controlled or uncontrolled textarea ' +
+          'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
+      );
+      didWarnUncontrolledToControlled = true;
+    }
+    if (
+      node._wrapperState.controlled &&
+      !controlled &&
+      !didWarnControlledToUncontrolled
+    ) {
+      warning(
+        false,
+        'A component is changing a controlled textarea to be uncontrolled. ' +
+          'Textarea elements should not switch from controlled to uncontrolled (or vice versa). ' +
+          'Decide between using a controlled or uncontrolled textarea ' +
+          'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
+      );
+      didWarnControlledToUncontrolled = true;
+    }
+  }
+
   const value = getToStringValue(props.value);
   const defaultValue = getToStringValue(props.defaultValue);
   if (value != null) {
