@@ -2846,6 +2846,8 @@ function beginWork(
         workInProgress,
         renderExpirationTime,
       );
+    } else {
+      didReceiveUpdate = false;
     }
   } else {
     didReceiveUpdate = false;
