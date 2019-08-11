@@ -436,9 +436,7 @@ describe('ReactDOMTextarea', () => {
 
   it('should warn if controlled textarea switches to uncontrolled (value is undefined)', () => {
     const container = document.createElement('div');
-    const stub = (
-      <textarea value="controlled" onChange={emptyFunction} />
-    );
+    const stub = <textarea value="controlled" onChange={emptyFunction} />;
     ReactDOM.render(stub, container);
     expect(() => ReactDOM.render(<textarea />, container)).toWarnDev(
       'Warning: A component is changing a controlled textarea to be uncontrolled. ' +
@@ -451,9 +449,7 @@ describe('ReactDOMTextarea', () => {
 
   it('should warn if controlled textarea switches to uncontrolled (value is null)', () => {
     const container = document.createElement('div');
-    const stub = (
-      <textarea value="controlled" onChange={emptyFunction} />
-    );
+    const stub = <textarea value="controlled" onChange={emptyFunction} />;
     ReactDOM.render(stub, container);
     expect(() =>
       ReactDOM.render(<textarea value={null} />, container),
@@ -465,22 +461,16 @@ describe('ReactDOMTextarea', () => {
         'Textarea elements should not switch from controlled to uncontrolled (or vice versa). ' +
         'Decide between using a controlled or uncontrolled textarea ' +
         'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
-        '    in textarea (at **)'
-        ,
+        '    in textarea (at **)',
     ]);
   });
 
   it('should warn if controlled textarea switches to uncontrolled with defaultValue', () => {
     const container = document.createElement('div');
-    const stub = (
-      <textarea value="controlled" onChange={emptyFunction} />
-    );
+    const stub = <textarea value="controlled" onChange={emptyFunction} />;
     ReactDOM.render(stub, container);
     expect(() =>
-      ReactDOM.render(
-        <textarea defaultValue="uncontrolled" />,
-        container,
-      ),
+      ReactDOM.render(<textarea defaultValue="uncontrolled" />, container),
     );
   });
 
