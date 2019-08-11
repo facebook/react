@@ -15,6 +15,7 @@ let ReactDOMServer;
 let Scheduler;
 let ReactFeatureFlags;
 let Suspense;
+let SuspenseList;
 let act;
 
 describe('ReactDOMServerPartialHydration', () => {
@@ -30,6 +31,7 @@ describe('ReactDOMServerPartialHydration', () => {
     ReactDOMServer = require('react-dom/server');
     Scheduler = require('scheduler');
     Suspense = React.Suspense;
+    SuspenseList = React.unstable_SuspenseList;
   });
 
   it('hydrates a parent even if a child Suspense boundary is blocked', async () => {
@@ -1075,6 +1077,256 @@ describe('ReactDOMServerPartialHydration', () => {
 
     let div = container.getElementsByTagName('div')[0];
     expect(ref.current).toBe(div);
+  });
+
+  it('shows inserted items in a SuspenseList before content is hydrated', async () => {
+    let suspend = false;
+    let resolve;
+    let promise = new Promise(resolvePromise => (resolve = resolvePromise));
+    let ref = React.createRef();
+
+    function Child({children}) {
+      if (suspend) {
+        throw promise;
+      } else {
+        return children;
+      }
+    }
+
+    // These are hoisted to avoid them from rerendering.
+    const a = (
+      <Suspense fallback="Loading A">
+        <Child>
+          <span>A</span>
+        </Child>
+      </Suspense>
+    );
+    const b = (
+      <Suspense fallback="Loading B">
+        <Child>
+          <span ref={ref}>B</span>
+        </Child>
+      </Suspense>
+    );
+
+    function App({showMore}) {
+      return (
+        <SuspenseList revealOrder="forwards">
+          {a}
+          {b}
+          {showMore ? (
+            <Suspense fallback="Loading C">
+              <span>C</span>
+            </Suspense>
+          ) : null}
+        </SuspenseList>
+      );
+    }
+
+    suspend = false;
+    let html = ReactDOMServer.renderToString(<App showMore={false} />);
+
+    let container = document.createElement('div');
+    container.innerHTML = html;
+
+    let spanB = container.getElementsByTagName('span')[1];
+
+    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+
+    suspend = true;
+    act(() => {
+      root.render(<App showMore={false} />);
+    });
+
+    // We're not hydrated yet.
+    expect(ref.current).toBe(null);
+    expect(container.textContent).toBe('AB');
+
+    // Add more rows before we've hydrated the first two.
+    act(() => {
+      root.render(<App showMore={true} />);
+    });
+
+    // We're not hydrated yet.
+    expect(ref.current).toBe(null);
+
+    // Since the first two are already showing their final content
+    // we should be able to show the real content.
+    expect(container.textContent).toBe('ABC');
+
+    suspend = false;
+    await act(async () => {
+      await resolve();
+    });
+
+    expect(container.textContent).toBe('ABC');
+    // We've hydrated the same span.
+    expect(ref.current).toBe(spanB);
+  });
+
+  it('shows is able to hydrate boundaries even if others in a list are pending', async () => {
+    let suspend = false;
+    let resolve;
+    let promise = new Promise(resolvePromise => (resolve = resolvePromise));
+    let ref = React.createRef();
+
+    function Child({children}) {
+      if (suspend) {
+        throw promise;
+      } else {
+        return children;
+      }
+    }
+
+    let promise2 = new Promise(() => {});
+    function AlwaysSuspend() {
+      throw promise2;
+    }
+
+    // This is hoisted to avoid them from rerendering.
+    const a = (
+      <Suspense fallback="Loading A">
+        <Child>
+          <span ref={ref}>A</span>
+        </Child>
+      </Suspense>
+    );
+
+    function App({showMore}) {
+      return (
+        <SuspenseList revealOrder="together">
+          {a}
+          {showMore ? (
+            <Suspense fallback="Loading B">
+              <AlwaysSuspend />
+            </Suspense>
+          ) : null}
+        </SuspenseList>
+      );
+    }
+
+    suspend = false;
+    let html = ReactDOMServer.renderToString(<App showMore={false} />);
+
+    let container = document.createElement('div');
+    container.innerHTML = html;
+
+    let spanA = container.getElementsByTagName('span')[0];
+
+    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+
+    suspend = true;
+    act(() => {
+      root.render(<App showMore={false} />);
+    });
+
+    // We're not hydrated yet.
+    expect(ref.current).toBe(null);
+    expect(container.textContent).toBe('A');
+
+    await act(async () => {
+      // Add another row before we've hydrated the first one.
+      root.render(<App showMore={true} />);
+      // At the same time, we resolve the blocking promise.
+      suspend = false;
+      await resolve();
+    });
+
+    // We should have been able to hydrate the first row.
+    expect(ref.current).toBe(spanA);
+    // Even though we're still slowing B.
+    expect(container.textContent).toBe('ALoading B');
+  });
+
+  it('shows inserted items before pending in a SuspenseList as fallbacks', async () => {
+    let suspend = false;
+    let resolve;
+    let promise = new Promise(resolvePromise => (resolve = resolvePromise));
+    let ref = React.createRef();
+
+    function Child({children}) {
+      if (suspend) {
+        throw promise;
+      } else {
+        return children;
+      }
+    }
+
+    // These are hoisted to avoid them from rerendering.
+    const a = (
+      <Suspense fallback="Loading A">
+        <Child>
+          <span>A</span>
+        </Child>
+      </Suspense>
+    );
+    const b = (
+      <Suspense fallback="Loading B">
+        <Child>
+          <span ref={ref}>B</span>
+        </Child>
+      </Suspense>
+    );
+
+    function App({showMore}) {
+      return (
+        <SuspenseList revealOrder="forwards">
+          {a}
+          {b}
+          {showMore ? (
+            <Suspense fallback="Loading C">
+              <span>C</span>
+            </Suspense>
+          ) : null}
+        </SuspenseList>
+      );
+    }
+
+    suspend = false;
+    let html = ReactDOMServer.renderToString(<App showMore={false} />);
+
+    let container = document.createElement('div');
+    container.innerHTML = html;
+
+    let suspenseNode = container.firstChild;
+    expect(suspenseNode.nodeType).toBe(8);
+    // Put the suspense node in pending state.
+    suspenseNode.data = '$?';
+
+    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+
+    suspend = true;
+    act(() => {
+      root.render(<App showMore={false} />);
+    });
+
+    // We're not hydrated yet.
+    expect(ref.current).toBe(null);
+    expect(container.textContent).toBe('AB');
+
+    // Add more rows before we've hydrated the first two.
+    act(() => {
+      root.render(<App showMore={true} />);
+    });
+
+    // We're not hydrated yet.
+    expect(ref.current).toBe(null);
+
+    // Since the first two are already showing their final content
+    // we should be able to show the real content.
+    expect(container.textContent).toBe('ABLoading C');
+
+    suspend = false;
+    await act(async () => {
+      // Resolve the boundary to be in its resolved final state.
+      suspenseNode.data = '$';
+      if (suspenseNode._reactRetry) {
+        suspenseNode._reactRetry();
+      }
+      await resolve();
+    });
+
+    expect(container.textContent).toBe('ABC');
   });
 
   it('can client render nested boundaries', async () => {

@@ -11,6 +11,10 @@ import type {Fiber} from './ReactFiber';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import {SuspenseComponent, SuspenseListComponent} from 'shared/ReactWorkTags';
 import {NoEffect, DidCapture} from 'shared/ReactSideEffectTags';
+import {
+  isSuspenseInstancePending,
+  isSuspenseInstanceFallback,
+} from './ReactFiberHostConfig';
 
 // A null SuspenseState represents an unsuspended normal Suspense boundary.
 // A non-null SuspenseState means that it is blocked for one reason or another.
@@ -83,7 +87,14 @@ export function findFirstSuspended(row: Fiber): null | Fiber {
     if (node.tag === SuspenseComponent) {
       const state: SuspenseState | null = node.memoizedState;
       if (state !== null) {
-        return node;
+        const dehydrated: null | SuspenseInstance = state.dehydrated;
+        if (
+          dehydrated === null ||
+          isSuspenseInstancePending(dehydrated) ||
+          isSuspenseInstanceFallback(dehydrated)
+        ) {
+          return node;
+        }
       }
     } else if (
       node.tag === SuspenseListComponent &&
