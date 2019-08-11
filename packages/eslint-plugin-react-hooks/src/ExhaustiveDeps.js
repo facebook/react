@@ -397,8 +397,14 @@ export default {
             });
           }
 
-          // Ignore references to the function itself as it's not defined yet.
           const def = reference.resolved.defs[0];
+
+          // Ignore if def is undefined - e.g. `arguments` binding.
+          if (def === undefined) {
+            continue;
+          }
+
+          // Ignore references to the function itself as it's not defined yet.
           if (
             def != null &&
             def.node != null &&

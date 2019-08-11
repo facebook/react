@@ -1024,6 +1024,37 @@ const tests = {
         }
       `,
     },
+    // TODO: Write description - arguments in arrow functions
+    {
+      code: `
+        function Example() {
+          useEffect(function() {
+            arguments
+          }, [])
+        }
+      `,
+    },
+    {
+      code: `
+        function Example() {
+          useEffect(() => {
+            arguments
+          }, [])
+        }
+      `,
+    },
+    {
+      code: `
+        function Example() {
+          useEffect(() => {
+            const bar = () => {
+              arguments;
+            };
+            bar();
+          }, [])
+        }
+      `,
+    },
   ],
   invalid: [
     {
