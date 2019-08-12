@@ -9,7 +9,13 @@
 
 'use strict';
 
-import {createEvent, platform, setPointerEvent} from '../test-utils';
+import {
+  dispatchLongPressContextMenu,
+  dispatchRightClickContextMenu,
+  dispatchModifiedClickContextMenu,
+  platform,
+  setPointerEvent,
+} from '../test-utils';
 
 let React;
 let ReactFeatureFlags;
@@ -25,44 +31,6 @@ function initializeModules(hasPointerEvents) {
   ReactDOM = require('react-dom');
   useContextMenuResponder = require('react-events/context-menu')
     .useContextMenuResponder;
-}
-
-function dispatchContextMenuEvents(ref, options) {
-  const preventDefault = options.preventDefault || function() {};
-  const variant = (options.variant: 'mouse' | 'touch' | 'modified');
-  const dispatchEvent = arg => ref.current.dispatchEvent(arg);
-
-  if (variant === 'mouse') {
-    // right-click
-    dispatchEvent(
-      createEvent('pointerdown', {pointerType: 'mouse', button: 2}),
-    );
-    dispatchEvent(createEvent('mousedown', {button: 2}));
-    dispatchEvent(createEvent('contextmenu', {button: 2, preventDefault}));
-  } else if (variant === 'modified') {
-    // left-click + ctrl
-    dispatchEvent(
-      createEvent('pointerdown', {pointerType: 'mouse', button: 0}),
-    );
-    dispatchEvent(createEvent('mousedown', {button: 0}));
-    if (platform.get() === 'mac') {
-      dispatchEvent(
-        createEvent('contextmenu', {button: 0, ctrlKey: true, preventDefault}),
-      );
-    }
-  } else if (variant === 'touch') {
-    // long-press
-    dispatchEvent(
-      createEvent('pointerdown', {pointerType: 'touch', button: 0}),
-    );
-    dispatchEvent(
-      createEvent('touchstart', {
-        changedTouches: [],
-        targetTouches: [],
-      }),
-    );
-    dispatchEvent(createEvent('contextmenu', {button: 0, preventDefault}));
-  }
 }
 
 const forcePointerEvents = true;
@@ -94,7 +62,7 @@ describe.each(table)('ContextMenu responder', hasPointerEvents => {
       };
       ReactDOM.render(<Component />, container);
 
-      dispatchContextMenuEvents(ref, {variant: 'mouse', preventDefault});
+      dispatchRightClickContextMenu(ref.current, {preventDefault});
       expect(preventDefault).toHaveBeenCalledTimes(1);
       expect(onContextMenu).toHaveBeenCalledTimes(1);
       expect(onContextMenu).toHaveBeenCalledWith(
@@ -112,7 +80,7 @@ describe.each(table)('ContextMenu responder', hasPointerEvents => {
       };
       ReactDOM.render(<Component />, container);
 
-      dispatchContextMenuEvents(ref, {variant: 'touch', preventDefault});
+      dispatchLongPressContextMenu(ref.current, {preventDefault});
       expect(preventDefault).toHaveBeenCalledTimes(1);
       expect(onContextMenu).toHaveBeenCalledTimes(1);
       expect(onContextMenu).toHaveBeenCalledWith(
@@ -132,7 +100,7 @@ describe.each(table)('ContextMenu responder', hasPointerEvents => {
       };
       ReactDOM.render(<Component />, container);
 
-      dispatchContextMenuEvents(ref, 'mouse');
+      dispatchRightClickContextMenu(ref.current);
       expect(onContextMenu).toHaveBeenCalledTimes(0);
     });
 
@@ -149,7 +117,7 @@ describe.each(table)('ContextMenu responder', hasPointerEvents => {
       };
       ReactDOM.render(<Component />, container);
 
-      dispatchContextMenuEvents(ref, {variant: 'mouse', preventDefault});
+      dispatchRightClickContextMenu(ref.current, {preventDefault});
       expect(preventDefault).toHaveBeenCalledTimes(0);
       expect(onContextMenu).toHaveBeenCalledTimes(1);
     });
@@ -174,7 +142,7 @@ describe.each(table)('ContextMenu responder', hasPointerEvents => {
       };
       ReactDOM.render(<Component />, container);
 
-      dispatchContextMenuEvents(ref, {variant: 'modified'});
+      dispatchModifiedClickContextMenu(ref.current);
       expect(onContextMenu).toHaveBeenCalledTimes(1);
       expect(onContextMenu).toHaveBeenCalledWith(
         expect.objectContaining({pointerType: 'mouse', type: 'contextmenu'}),
@@ -201,7 +169,7 @@ describe.each(table)('ContextMenu responder', hasPointerEvents => {
       };
       ReactDOM.render(<Component />, container);
 
-      dispatchContextMenuEvents(ref, {variant: 'modified'});
+      dispatchModifiedClickContextMenu(ref.current);
       expect(onContextMenu).toHaveBeenCalledTimes(0);
     });
   });
