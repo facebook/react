@@ -24,7 +24,6 @@ import {
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   enableProfilerTimer,
   enableSchedulerTracing,
-  revertPassiveEffectsChange,
   warnAboutUnmockedScheduler,
   flushSuspenseFallbacksInTests,
   disableSchedulerTimeoutBasedOnReactExpirationTime,
@@ -621,11 +620,9 @@ export function flushDiscreteUpdates() {
     return;
   }
   flushPendingDiscreteUpdates();
-  if (!revertPassiveEffectsChange) {
-    // If the discrete updates scheduled passive effects, flush them now so that
-    // they fire before the next serial event.
-    flushPassiveEffects();
-  }
+  // If the discrete updates scheduled passive effects, flush them now so that
+  // they fire before the next serial event.
+  flushPassiveEffects();
 }
 
 function resolveLocksOnRoot(root: FiberRoot, expirationTime: ExpirationTime) {

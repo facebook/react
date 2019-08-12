@@ -55,7 +55,6 @@ import {
   scheduleWork,
   flushPassiveEffects,
 } from './ReactFiberWorkLoop';
-import {revertPassiveEffectsChange} from 'shared/ReactFeatureFlags';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 
 const fakeInternalInstance = {};
@@ -202,9 +201,6 @@ const classComponentUpdater = {
       update.callback = callback;
     }
 
-    if (revertPassiveEffectsChange) {
-      flushPassiveEffects();
-    }
     enqueueUpdate(fiber, update);
     scheduleWork(fiber, expirationTime);
   },
@@ -229,9 +225,6 @@ const classComponentUpdater = {
       update.callback = callback;
     }
 
-    if (revertPassiveEffectsChange) {
-      flushPassiveEffects();
-    }
     enqueueUpdate(fiber, update);
     scheduleWork(fiber, expirationTime);
   },
@@ -255,9 +248,6 @@ const classComponentUpdater = {
       update.callback = callback;
     }
 
-    if (revertPassiveEffectsChange) {
-      flushPassiveEffects();
-    }
     enqueueUpdate(fiber, update);
     scheduleWork(fiber, expirationTime);
   },
