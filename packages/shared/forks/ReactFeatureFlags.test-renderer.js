@@ -30,7 +30,6 @@ export const enableFlareAPI = false;
 export const enableFundamentalAPI = false;
 export const enableJSXTransformAPI = false;
 export const warnAboutUnmockedScheduler = false;
-export const revertPassiveEffectsChange = false;
 export const flushSuspenseFallbacksInTests = true;
 export const enableUserBlockingEvents = false;
 export const enableSuspenseCallback = false;
