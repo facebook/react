@@ -53,7 +53,6 @@ import {
   requestCurrentTime,
   computeExpirationForFiber,
   scheduleWork,
-  flushPassiveEffects,
 } from './ReactFiberWorkLoop';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 

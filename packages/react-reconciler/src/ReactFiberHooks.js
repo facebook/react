@@ -38,7 +38,6 @@ import {
 import {
   scheduleWork,
   computeExpirationForFiber,
-  flushPassiveEffects,
   requestCurrentTime,
   warnIfNotCurrentlyActingEffectsInDEV,
   warnIfNotCurrentlyActingUpdatesInDev,
