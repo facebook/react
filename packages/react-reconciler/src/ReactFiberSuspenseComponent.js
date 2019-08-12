@@ -12,6 +12,13 @@ import type {SuspenseInstance} from './ReactFiberHostConfig';
 import {SuspenseComponent, SuspenseListComponent} from 'shared/ReactWorkTags';
 import {NoEffect, DidCapture} from 'shared/ReactSideEffectTags';
 
+// A null SuspenseState represents an unsuspended normal Suspense boundary.
+// A non-null SuspenseState means that it is blocked for one reason or another.
+// - A non-null dehydrated field means it's blocked pending hydration.
+//   - A non-null dehydrated field can use isSuspenseInstancePending or
+//     isSuspenseInstanceFallback to query the reason for being dehydrated.
+// - A null dehydrated field means it's blocked by something suspending and
+//   we're currently showing a fallback instead.
 export type SuspenseState = {|
   // If this boundary is still dehydrated, we store the SuspenseInstance
   // here to indicate that it is dehydrated (flag) and for quick access
