@@ -90,6 +90,77 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(span);
   });
 
+  it('warns and replaces the boundary content in legacy mode', async () => {
+    let suspend = false;
+    let resolve;
+    let promise = new Promise(resolvePromise => (resolve = resolvePromise));
+    let ref = React.createRef();
+
+    function Child() {
+      if (suspend) {
+        throw promise;
+      } else {
+        return 'Hello';
+      }
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <span ref={ref}>
+              <Child />
+            </span>
+          </Suspense>
+        </div>
+      );
+    }
+
+    // Don't suspend on the server.
+    suspend = false;
+    let finalHTML = ReactDOMServer.renderToString(<App />);
+
+    let container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    let span = container.getElementsByTagName('span')[0];
+
+    // On the client we try to hydrate.
+    suspend = true;
+    expect(() => {
+      act(() => {
+        ReactDOM.hydrate(<App />, container);
+      });
+    }).toWarnDev(
+      'Warning: Cannot hydrate Suspense in legacy mode. Switch from ' +
+        'ReactDOM.hydrate(element, container) to ' +
+        'ReactDOM.unstable_createSyncRoot(container, { hydrate: true })' +
+        '.render(element) or remove the Suspense components from the server ' +
+        'rendered components.' +
+        '\n    in Suspense (at **)' +
+        '\n    in div (at **)' +
+        '\n    in App (at **)',
+    );
+
+    // We're now in loading state.
+    expect(container.textContent).toBe('Loading...');
+
+    let span2 = container.getElementsByTagName('span')[0];
+    // This is a new node.
+    expect(span).not.toBe(span2);
+    expect(ref.current).toBe(span2);
+
+    // Resolving the promise should render the final content.
+    suspend = false;
+    resolve();
+    await promise;
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+
+    // We should now have hydrated with a ref on the existing span.
+    expect(container.textContent).toBe('Hello');
+  });
+
   it('can insert siblings before the dehydrated boundary', () => {
     let suspend = false;
     let promise = new Promise(() => {});
@@ -135,7 +206,8 @@ describe('ReactDOMServerPartialHydration', () => {
     suspend = true;
 
     act(() => {
-      ReactDOM.hydrate(<App />, container);
+      let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+      root.render(<App />);
     });
 
     expect(container.firstChild.firstChild.tagName).not.toBe('DIV');
@@ -191,7 +263,8 @@ describe('ReactDOMServerPartialHydration', () => {
     // hydrating anyway.
     suspend = true;
     act(() => {
-      ReactDOM.hydrate(<App />, container);
+      let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+      root.render(<App />);
     });
 
     expect(container.firstChild.children[1].textContent).toBe('Middle');

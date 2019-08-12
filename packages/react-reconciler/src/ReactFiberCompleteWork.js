@@ -48,7 +48,6 @@ import {
   Profiler,
   SuspenseComponent,
   SuspenseListComponent,
-  DehydratedSuspenseComponent,
   MemoComponent,
   SimpleMemoComponent,
   LazyComponent,
@@ -115,7 +114,6 @@ import {popProvider} from './ReactFiberNewContext';
 import {
   prepareToHydrateHostInstance,
   prepareToHydrateHostTextInstance,
-  skipPastDehydratedSuspenseInstance,
   popHydrationState,
   resetHydrationState,
 } from './ReactFiberHydrationContext';
@@ -838,6 +836,38 @@ function completeWork(
     case SuspenseComponent: {
       popSuspenseContext(workInProgress);
       const nextState: null | SuspenseState = workInProgress.memoizedState;
+
+      if (enableSuspenseServerRenderer) {
+        if (nextState !== null && nextState.dehydrated !== null) {
+          if (current === null) {
+            let wasHydrated = popHydrationState(workInProgress);
+            invariant(
+              wasHydrated,
+              'A dehydrated suspense component was completed without a hydrated node. ' +
+                'This is probably a bug in React.',
+            );
+            if (enableSchedulerTracing) {
+              markSpawnedWork(Never);
+            }
+            return null;
+          } else {
+            // We should never have been in a hydration state if we didn't have a current.
+            // However, in some of those paths, we might have reentered a hydration state
+            // and then we might be inside a hydration state. In that case, we'll need to
+            // exit out of it.
+            resetHydrationState();
+            if ((workInProgress.effectTag & DidCapture) === NoEffect) {
+              // This boundary did not suspend so it's now hydrated and unsuspended.
+              workInProgress.memoizedState = null;
+            } else {
+              // Something suspended. Schedule an effect to attach retry listeners.
+              workInProgress.effectTag |= Update;
+            }
+            return null;
+          }
+        }
+      }
+
       if ((workInProgress.effectTag & DidCapture) !== NoEffect) {
         // Something suspended. Re-render with the fallback children.
         workInProgress.expirationTime = renderExpirationTime;
@@ -849,8 +879,8 @@ function completeWork(
       let prevDidTimeout = false;
       if (current === null) {
         // In cases where we didn't find a suitable hydration boundary we never
-        // downgraded this to a DehydratedSuspenseComponent, but we still need to
-        // pop the hydration state since we might be inside the insertion tree.
+        // put this in dehydrated mode, but we still need to pop the hydration
+        // state since we might be inside the insertion tree.
         popHydrationState(workInProgress);
       } else {
         const prevState: null | SuspenseState = current.memoizedState;
@@ -966,37 +996,6 @@ function completeWork(
       const Component = workInProgress.type;
       if (isLegacyContextProvider(Component)) {
         popLegacyContext(workInProgress);
-      }
-      break;
-    }
-    case DehydratedSuspenseComponent: {
-      if (enableSuspenseServerRenderer) {
-        popSuspenseContext(workInProgress);
-        if (current === null) {
-          let wasHydrated = popHydrationState(workInProgress);
-          invariant(
-            wasHydrated,
-            'A dehydrated suspense component was completed without a hydrated node. ' +
-              'This is probably a bug in React.',
-          );
-          skipPastDehydratedSuspenseInstance(workInProgress);
-        } else {
-          // We should never have been in a hydration state if we didn't have a current.
-          // However, in some of those paths, we might have reentered a hydration state
-          // and then we might be inside a hydration state. In that case, we'll need to
-          // exit out of it.
-          resetHydrationState();
-          if ((workInProgress.effectTag & DidCapture) === NoEffect) {
-            // This boundary did not suspend so it's now hydrated.
-            // To handle any future suspense cases, we're going to now upgrade it
-            // to a Suspense component. We detach it from the existing current fiber.
-            current.alternate = null;
-            workInProgress.alternate = null;
-            workInProgress.tag = SuspenseComponent;
-            workInProgress.memoizedState = null;
-            workInProgress.stateNode = null;
-          }
-        }
       }
       break;
     }

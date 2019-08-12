@@ -8,12 +8,23 @@
  */
 
 import type {Fiber} from './ReactFiber';
+import type {SuspenseInstance} from './ReactFiberHostConfig';
 import {SuspenseComponent, SuspenseListComponent} from 'shared/ReactWorkTags';
 import {NoEffect, DidCapture} from 'shared/ReactSideEffectTags';
 
-// TODO: This is now an empty object. Should we switch this to a boolean?
-// Alternatively we can make this use an effect tag similar to SuspenseList.
-export type SuspenseState = {||};
+// A null SuspenseState represents an unsuspended normal Suspense boundary.
+// A non-null SuspenseState means that it is blocked for one reason or another.
+// - A non-null dehydrated field means it's blocked pending hydration.
+//   - A non-null dehydrated field can use isSuspenseInstancePending or
+//     isSuspenseInstanceFallback to query the reason for being dehydrated.
+// - A null dehydrated field means it's blocked by something suspending and
+//   we're currently showing a fallback instead.
+export type SuspenseState = {|
+  // If this boundary is still dehydrated, we store the SuspenseInstance
+  // here to indicate that it is dehydrated (flag) and for quick access
+  // to check things like isSuspenseInstancePending.
+  dehydrated: null | SuspenseInstance,
+|};
 
 export type SuspenseListTailMode = 'collapsed' | 'hidden' | void;
 
@@ -42,6 +53,10 @@ export function shouldCaptureSuspense(
   // fallback. Otherwise, don't capture and bubble to the next boundary.
   const nextState: SuspenseState | null = workInProgress.memoizedState;
   if (nextState !== null) {
+    if (nextState.dehydrated !== null) {
+      // A dehydrated boundary always captures.
+      return true;
+    }
     return false;
   }
   const props = workInProgress.memoizedProps;
