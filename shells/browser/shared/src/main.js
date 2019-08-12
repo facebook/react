@@ -5,7 +5,11 @@ import { unstable_createRoot as createRoot, flushSync } from 'react-dom';
 import Bridge from 'src/bridge';
 import Store from 'src/devtools/store';
 import inject from './inject';
-import { createViewElementSource, getBrowserTheme } from './utils';
+import {
+  createViewElementSource,
+  getBrowserName,
+  getBrowserTheme,
+} from './utils';
 import { getSavedComponentFilters, getAppendComponentStack } from 'src/utils';
 import {
   localStorageGetItem,
@@ -115,7 +119,7 @@ function createPanelIfReactLoaded() {
 
         store = new Store(bridge, {
           isProfiling,
-          supportsReloadAndProfile: true,
+          supportsReloadAndProfile: getBrowserName() === 'Chrome',
           supportsProfiling,
         });
         store.profilerStore.profilingData = profilingData;

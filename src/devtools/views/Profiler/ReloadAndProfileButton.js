@@ -6,7 +6,6 @@ import ButtonIcon from '../ButtonIcon';
 import { BridgeContext, StoreContext } from '../context';
 import { useSubscription } from '../hooks';
 import Store from 'src/devtools/store';
-import { ProfilerContext } from './ProfilerContext';
 
 type SubscriptionData = {|
   recordChangeDescriptions: boolean,
@@ -16,8 +15,6 @@ type SubscriptionData = {|
 export default function ReloadAndProfileButton() {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
-
-  const { startProfiling } = useContext(ProfilerContext);
 
   const subscription = useMemo(
     () => ({
@@ -42,11 +39,14 @@ export default function ReloadAndProfileButton() {
   } = useSubscription<SubscriptionData, Store>(subscription);
 
   const reloadAndProfile = useCallback(() => {
-    bridge.send('reloadAndProfile', recordChangeDescriptions);
+    // TODO If we want to support reload-and-profile for e.g. React Native,
+    // we might need to also start profiling here before reloading the app (since DevTools itself isn't reloaded).
+    // We'd probably want to do this before reloading though, to avoid sending a message on a disconnected port in the browser.
+    // For now, let's just skip doing it entirely to avoid paying snapshot costs for data we don't need.
+    // startProfiling();
 
-    // In case the DevTools UI itself doesn't reload along with the app, also start profiling.
-    startProfiling();
-  }, [bridge, recordChangeDescriptions, startProfiling]);
+    bridge.send('reloadAndProfile', recordChangeDescriptions);
+  }, [bridge, recordChangeDescriptions]);
 
   if (!supportsReloadAndProfile) {
     return null;

@@ -32,7 +32,7 @@
   position: relative;
   flex: 1 1 auto;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
 }
