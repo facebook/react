@@ -139,6 +139,7 @@
     "opener": "^1.5.1",
     "prettier": "^1.16.4",
     "prop-types": "^15.6.2",
+    "raw-loader": "^3.1.0",
     "react": "^0.0.0-424099da6",
     "react-15": "npm:react@^15",
     "react-color": "^2.11.7",

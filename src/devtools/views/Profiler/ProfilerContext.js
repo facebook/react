@@ -33,8 +33,8 @@ export type Context = {|
   isProcessingData: boolean,
   isProfiling: boolean,
   profilingData: ProfilingDataFrontend | null,
-  startProfiling(value: boolean): void,
-  stopProfiling(value: boolean): void,
+  startProfiling(): void,
+  stopProfiling(): void,
   supportsProfiling: boolean,
 
   // Which root should profiling data be shown for?

@@ -104,6 +104,10 @@ export default function Tree(props: Props) {
         return;
       }
 
+      // TODO We should ignore arrow keys if the focus is outside of DevTools.
+      // Otherwise the inline (embedded) DevTools might change selection unexpectedly,
+      // e.g. when a text input or a select has focus.
+
       let element;
       switch (event.key) {
         case 'ArrowDown':

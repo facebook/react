@@ -1,11 +1,12 @@
 .SearchInput {
-  flex: 1;
+  flex: 1 1;
   display: flex;
   align-items: center;
 }
 
 .Input {
-  flex: 1;
+  flex: 1 1 100px;
+  width: 100px;
   font-size: var(--font-size-sans-large);
   outline: none;
   border: none;
@@ -24,6 +25,7 @@
 .IndexLabel {
   color: var(--color-dim);
   font-size: var(--font-size-sans-normal);
+  white-space: pre;
 }
 
 .LeftVRule,

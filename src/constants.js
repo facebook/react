@@ -1,7 +1,25 @@
 // @flow
 
+// $FlowFixMe Cannot resolve module
+import rawStyleString from '!!raw-loader!src/devtools/views/root.css'; // eslint-disable-line import/no-webpack-loader-syntax
+
 // Flip this flag to true to enable verbose console debug logging.
 export const __DEBUG__ = false;
+
+const extractVar = varName => {
+  const regExp = new RegExp(`${varName}: ([0-9]+)`);
+  const match = rawStyleString.match(regExp);
+  return parseInt(match[1], 10);
+};
+
+// TRICKY
+// Extracting during build time avoids a temporarily invalid state for the inline target.
+// Sometimes the inline target is rendered before root styles are applied,
+// which would result in e.g. NaN itemSize being passed to react-window list.
+export const COMFORTABLE_LINE_HEIGHT = extractVar(
+  'comfortable-line-height-data'
+);
+export const COMPACT_LINE_HEIGHT = extractVar('compact-line-height-data');
 
 export const TREE_OPERATION_ADD = 1;
 export const TREE_OPERATION_REMOVE = 2;

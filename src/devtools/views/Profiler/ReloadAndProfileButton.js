@@ -6,6 +6,7 @@ import ButtonIcon from '../ButtonIcon';
 import { BridgeContext, StoreContext } from '../context';
 import { useSubscription } from '../hooks';
 import Store from 'src/devtools/store';
+import { ProfilerContext } from './ProfilerContext';
 
 type SubscriptionData = {|
   recordChangeDescriptions: boolean,
@@ -15,6 +16,8 @@ type SubscriptionData = {|
 export default function ReloadAndProfileButton() {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
+
+  const { startProfiling } = useContext(ProfilerContext);
 
   const subscription = useMemo(
     () => ({
@@ -38,10 +41,12 @@ export default function ReloadAndProfileButton() {
     supportsReloadAndProfile,
   } = useSubscription<SubscriptionData, Store>(subscription);
 
-  const reloadAndProfile = useCallback(
-    () => bridge.send('reloadAndProfile', recordChangeDescriptions),
-    [bridge, recordChangeDescriptions]
-  );
+  const reloadAndProfile = useCallback(() => {
+    bridge.send('reloadAndProfile', recordChangeDescriptions);
+
+    // In case the DevTools UI itself doesn't reload along with the app, also start profiling.
+    startProfiling();
+  }, [bridge, recordChangeDescriptions, startProfiling]);
 
   if (!supportsReloadAndProfile) {
     return null;
