@@ -2138,6 +2138,66 @@ describe('ReactHooksWithNoopRenderer', () => {
     expect(ReactNoop).toMatchRenderedOutput('2');
   });
 
+  // Regression test. Covers a case where an internal state variable
+  // (`didReceiveUpdate`) is not reset properly.
+  it('state bail out edge case (#16359)', async () => {
+    let setCounterA;
+    let setCounterB;
+
+    function CounterA() {
+      const [counter, setCounter] = useState(0);
+      setCounterA = setCounter;
+      Scheduler.unstable_yieldValue('Render A: ' + counter);
+      useEffect(() => {
+        Scheduler.unstable_yieldValue('Commit A: ' + counter);
+      });
+      return counter;
+    }
+
+    function CounterB() {
+      const [counter, setCounter] = useState(0);
+      setCounterB = setCounter;
+      Scheduler.unstable_yieldValue('Render B: ' + counter);
+      useEffect(() => {
+        Scheduler.unstable_yieldValue('Commit B: ' + counter);
+      });
+      return counter;
+    }
+
+    const root = ReactNoop.createRoot(null);
+    await ReactNoop.act(async () => {
+      root.render(
+        <>
+          <CounterA />
+          <CounterB />
+        </>,
+      );
+    });
+    expect(Scheduler).toHaveYielded([
+      'Render A: 0',
+      'Render B: 0',
+      'Commit A: 0',
+      'Commit B: 0',
+    ]);
+
+    await ReactNoop.act(async () => {
+      setCounterA(1);
+
+      // In the same batch, update B twice. To trigger the condition we're
+      // testing, the first update is necessary to bypass the early
+      // bailout optimization.
+      setCounterB(1);
+      setCounterB(0);
+    });
+    expect(Scheduler).toHaveYielded([
+      'Render A: 1',
+      'Render B: 0',
+      'Commit A: 1',
+      // B should not fire an effect because the update bailed out
+      // 'Commit B: 0',
+    ]);
+  });
+
   it('should update latest rendered reducer when a preceding state receives a render phase update', () => {
     // Similar to previous test, except using a preceding render phase update
     // instead of new props.
