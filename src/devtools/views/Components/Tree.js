@@ -3,13 +3,12 @@
 import React, {
   Fragment,
   Suspense,
-  useState,
   useCallback,
   useContext,
   useEffect,
   useMemo,
-  useLayoutEffect,
   useRef,
+  useState,
 } from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import { FixedSizeList } from 'react-window';
@@ -54,8 +53,6 @@ export default function Tree(props: Props) {
   const [isNavigatingWithKeyboard, setIsNavigatingWithKeyboard] = useState(
     false
   );
-  // $FlowFixMe https://github.com/facebook/flow/issues/7341
-  const listRef = useRef<FixedSizeList<ItemData> | null>(null);
   const treeRef = useRef<HTMLDivElement | null>(null);
   const focusTargetRef = useRef<HTMLDivElement | null>(null);
 
@@ -65,15 +62,23 @@ export default function Tree(props: Props) {
 
   // Make sure a newly selected element is visible in the list.
   // This is helpful for things like the owners list and search.
-  useLayoutEffect(() => {
-    if (selectedElementIndex !== null && listRef.current != null) {
-      listRef.current.scrollToItem(selectedElementIndex, 'smart');
-      // Note this autoscroll only works for rows.
-      // There's another autoscroll inside the elements
-      // that ensures the component name is visible horizontally.
-      // It's too early to do it now because the row might not exist yet.
-    }
-  }, [listRef, selectedElementIndex]);
+  //
+  // TRICKY:
+  // It's important to use a callback ref for this, rather than a ref object and an effect.
+  // As an optimization, the AutoSizer component does not render children when their size would be 0.
+  // This means that in some cases (if the browser panel size is initially really small),
+  // the Tree component might render without rendering an inner List.
+  // In this case, the list ref would be null on mount (when the scroll effect runs),
+  // meaning the scroll action would be skipped (since ref updates don't re-run effects).
+  // Using a callback ref accounts for this case...
+  const listCallbackRef = useCallback(
+    list => {
+      if (list != null && selectedElementIndex !== null) {
+        list.scrollToItem(selectedElementIndex, 'smart');
+      }
+    },
+    [selectedElementIndex]
+  );
 
   // Picking an element in the inspector should put focus into the tree.
   // This ensures that keyboard navigation works right after picking a node.
@@ -322,7 +327,7 @@ export default function Tree(props: Props) {
                 itemData={itemData}
                 itemKey={itemKey}
                 itemSize={lineHeight}
-                ref={listRef}
+                ref={listCallbackRef}
                 width={width}
               >
                 {ElementView}
