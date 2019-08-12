@@ -1310,7 +1310,7 @@ function updateEventListener(
   invariant(
     responder && responder.$$typeof === REACT_RESPONDER_TYPE,
     'An invalid value was used as an event listener. Expect one or many event ' +
-      'listeners created via React.unstable_useResponer().',
+      'listeners created via React.unstable_useResponder().',
   );
   const listenerProps = ((props: any): Object);
   if (visistedResponders.has(responder)) {
