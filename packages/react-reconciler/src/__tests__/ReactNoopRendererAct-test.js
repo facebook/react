@@ -57,4 +57,19 @@ describe('ReactNoop.act()', () => {
     expect(Scheduler).toFlushWithoutYielding();
     expect(ReactNoop.getChildren()).toEqual([{text: '1', hidden: false}]);
   });
+
+  it('should yield the value returned from the async function', async () => {
+    const returnedValue = await ReactNoop.act(async () => {
+      return 4;
+    });
+    expect(returnedValue).toEqual(4);
+
+    const returnedUndefined = await ReactNoop.act(async () => {});
+    expect(returnedUndefined).toEqual(undefined);
+
+    const returnedPromiseValue = await ReactNoop.act(async () => {
+      return Promise.resolve('6');
+    });
+    expect(returnedPromiseValue).toEqual('6');
+  });
 });

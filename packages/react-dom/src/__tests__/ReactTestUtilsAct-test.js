@@ -533,6 +533,21 @@ function runActTests(label, render, unmount, rerender) {
         expect(Scheduler).toHaveYielded([0, 1, 2, 3, 4]);
         expect(container.innerHTML).toBe('5');
       });
+
+      it('should yield the value returned from the async function', async () => {
+        const returnedValue = await act(async () => {
+          return 4;
+        });
+        expect(returnedValue).toEqual(4);
+
+        const returnedUndefined = await act(async () => {});
+        expect(returnedUndefined).toEqual(undefined);
+
+        const returnedPromiseValue = await act(async () => {
+          return Promise.resolve('6');
+        });
+        expect(returnedPromiseValue).toEqual('6');
+      });
     });
 
     describe('interaction tracing', () => {

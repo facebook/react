@@ -83,6 +83,20 @@ describe('ReactTestRenderer.act()', () => {
       expect(root.toJSON()).toEqual(['1', '2', '3']);
     });
 
+    it('should yield the value returned from the async function', async () => {
+      const returnedValue = await ReactTestRenderer.act(async () => {
+        return 4;
+      });
+      expect(returnedValue).toEqual(4);
+
+      const returnedUndefined = await ReactTestRenderer.act(async () => {});
+      expect(returnedUndefined).toEqual(undefined);
+
+      const returnedPromiseValue = await ReactTestRenderer.act(async () => {
+        return Promise.resolve('6');
+      });
+      expect(returnedPromiseValue).toEqual('6');
+    });
     it('should not flush effects without also flushing microtasks', async () => {
       const {useEffect, useReducer} = React;
 

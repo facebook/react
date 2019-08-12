@@ -706,17 +706,17 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       // effects and  microtasks in a loop until flushPassiveEffects() === false,
       // and cleans up
       return {
-        then(resolve: () => void, reject: (?Error) => void) {
+        then(resolve: (?mixed) => void, reject: (?Error) => void) {
           called = true;
-          result.then(
-            () => {
+          return result.then(
+            resultValue => {
               if (
                 actingUpdatesScopeDepth > 1 ||
                 (isSchedulerMocked === true &&
                   previousIsSomeRendererActing === true)
               ) {
                 onDone();
-                resolve();
+                resolve(resultValue);
                 return;
               }
               // we're about to exit the act() scope,
@@ -726,7 +726,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
                 if (err) {
                   reject(err);
                 } else {
-                  resolve();
+                  resolve(resultValue);
                 }
               });
             },
