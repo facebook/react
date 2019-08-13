@@ -1,0 +1,54 @@
+.ToggleDisabled,
+.ToggleOn,
+.ToggleOff {
+  background: var(--color-button-background);
+  border: none;
+  border-radius: 0.25rem;
+  padding: 0;
+  flex: 0 0 auto;
+}
+
+.ToggleContent {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 0.25rem;
+  padding: 0.25rem;
+}
+
+.ToggleOff {
+  border: none;
+  background: var(--color-button-background);
+  color: var(--color-button);
+}
+.ToggleOff:hover {
+  color: var(--color-button-hover);
+}
+
+.ToggleOn,
+.ToggleOn:active {
+  color: var(--color-button-active);
+  outline: none;
+}
+
+.ToggleOn:focus,
+.ToggleOff:focus,
+.ToggleContent:focus {
+  outline: none;
+}
+
+.ToggleOn:focus > .ToggleContent,
+.ToggleOff:focus > .ToggleContent {
+  background: var(--color-button-background-focus);
+}
+
+.ToggleDisabled {
+  background: var(--color-button-background);
+  color: var(--color-button-disabled);
+  cursor: default;
+}
+
+.Input {
+  width: 0;
+  margin: 0;
+  opacity: 0;
+}

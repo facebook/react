@@ -1,0 +1,69 @@
+.HooksTreeView {
+  padding: 0.25rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.Hook {
+}
+
+.Children {
+  padding-left: 1rem;
+}
+
+.HeaderRow {
+  display: flex;
+  align-items: center;
+}
+
+.Header {
+  flex: 1 1;
+  font-family: var(--font-family-sans);
+}
+
+.NameValueRow {
+  display: flex;
+}
+
+.Name,
+.NameAnonymous {
+  flex: 0 0 auto;
+  user-select: none;
+}
+.Name {
+  color: var(--color-dim);
+}
+.NameAnonymous {
+  color: var(--color-dimmer);
+}
+
+.EditableName {
+  color: var(--color-attribute-name);
+  flex: 0 0 auto;
+  user-select: none;
+}
+.EditableName:after,
+.Name:after {
+  color: var(--color-text);
+  content: ': ';
+  margin-right: 0.5rem;
+}
+
+.Value {
+  color: var(--color-attribute-value);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.None {
+  color: var(--color-dimmer);
+  font-style: italic;
+}
+
+.TruncationIndicator {
+  color: var(--color-dimmer);
+}
+
+.ExpandCollapseToggleSpacer {
+  flex: 0 0 1rem;
+  width: 1rem;
+}

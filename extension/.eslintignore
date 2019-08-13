@@ -1,0 +1,13 @@
+node_modules
+
+shells/browser/chrome/build
+shells/browser/firefox/build
+shells/browser/shared/build
+shells/dev/dist
+packages/react-devtools-core/dist
+packages/react-devtools-inline/dist
+vendor
+*.js.snap
+
+package-lock.json
+yarn.lock
