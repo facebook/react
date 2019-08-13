@@ -77,7 +77,7 @@
     ],
     "**/*.js": "eslint --max-warnings 0"
   },
-  "dependencies": {
+  "devDependencies": {
     "@babel/core": "^7.1.6",
     "@babel/plugin-proposal-class-properties": "^7.1.0",
     "@babel/plugin-transform-flow-strip-types": "^7.1.6",
