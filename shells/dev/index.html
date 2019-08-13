@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf8">
+    <title>React DevTools</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      #target {
+        flex: 1;
+        border: none;
+      }
+      #devtools {
+        height: 400px;
+        max-height: 50%;
+        overflow: hidden;
+        z-index: 10000001;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial,
+          sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+      .optionsRow {
+        width: 100%;
+        display: flex;
+        padding: 0.25rem;
+        background: aliceblue;
+        border-bottom: 1px solid lightblue;
+      }
+      .optionsRowSpacer {
+        flex: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="optionsRow">
+      <button id="mountButton">Unmount test app</button>
+      <div class="optionsRowSpacer">&nbsp;</div>
+      <span>
+        <a href="https://react-devtools-experimental-chrome.now.sh/">Chrome extension</a>
+        <a href="https://react-devtools-experimental-firefox.now.sh/">Firefox extension</a>
+      </span>
+    </div>
+
+    <!-- React test app (shells/dev/app) is injected here -->
+    <!-- DevTools backend (shells/dev/src) is injected here -->
+    <!-- global "hook" is defined on the iframe's contentWindow -->
+    <iframe id="target"></iframe>
+
+    <!-- DevTools frontend UI (shells/dev/src) renders here -->
+    <div id="devtools"></div>
+
+    <!-- This script installs the hook, injects the backend, and renders the DevTools UI -->
+    <!-- In DEV mode, this file is served by the Webpack dev server -->
+    <!-- For production builds, it's built by Webpack and uploaded from the local file system -->
+    <script src="dist/devtools.js"></script>
+  </body>
+</html>

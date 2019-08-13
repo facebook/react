@@ -1,0 +1,45 @@
+.Components {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  background-color: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-family-sans);
+}
+
+.TreeWrapper {
+  flex: 0 0 65%;
+  overflow: auto;
+}
+
+.SelectedElementWrapper {
+  flex: 0 0 35%;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+@media screen and (max-width: 600px) {
+  .Components {
+    flex-direction: column;
+  }
+
+  .TreeWrapper {
+    flex: 0 0 50%;
+  }
+
+  .SelectedElementWrapper {
+    flex: 0 0 50%;
+  }
+}
+
+.Loading {
+  height: 100%;
+  padding-left: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-sans-large);
+  color: var(--color-dim);
+}
