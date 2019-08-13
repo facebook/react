@@ -112,6 +112,7 @@ import {
 } from './ReactFiberContext';
 import {popProvider} from './ReactFiberNewContext';
 import {
+  deleteSuspenseInstanceBoundary,
   prepareToHydrateHostInstance,
   prepareToHydrateHostTextInstance,
   popHydrationState,
@@ -858,6 +859,7 @@ function completeWork(
             resetHydrationState();
             if ((workInProgress.effectTag & DidCapture) === NoEffect) {
               // This boundary did not suspend so it's now hydrated and unsuspended.
+              deleteSuspenseInstanceBoundary(workInProgress);
               workInProgress.memoizedState = null;
             } else {
               // Something suspended. Schedule an effect to attach retry listeners.

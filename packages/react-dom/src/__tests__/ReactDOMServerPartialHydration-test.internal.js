@@ -1581,4 +1581,56 @@ describe('ReactDOMServerPartialHydration', () => {
     // patched up the tree, which might mean we haven't patched the className.
     expect(newSpan.className).toBe('hi');
   });
+
+  it('removes suspense boundary nodes after hydration', () => {
+    let suspend = false;
+    let promise = new Promise(() => {});
+
+    function Child() {
+      if (suspend) {
+        throw promise;
+      } else {
+        return <div>Middle</div>;
+      }
+    }
+
+    function App() {
+      return (
+        <div>
+          Before
+          <Suspense fallback="Loading...">
+            <Child />
+          </Suspense>
+          After
+        </div>
+      );
+    }
+
+    suspend = false;
+    let finalHTML = ReactDOMServer.renderToString(<App />);
+    let container = document.createElement('div');
+    container.innerHTML = finalHTML;
+    expect(container.firstChild.innerHTML).toBe(
+      'Before<!--$--><div>Middle</div><!--/$-->After',
+    );
+
+    // On the client we don't have all data yet but we want to start
+    // hydrating anyway.
+    suspend = true;
+    act(() => {
+      let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+      root.render(<App />);
+    });
+    expect(container.firstChild.innerHTML).toBe(
+      'Before<!--$--><div>Middle</div><!--/$-->After',
+    );
+
+    // In this state, we can still delete the boundary.
+    suspend = false;
+    act(() => {
+      let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+      root.render(<App />);
+    });
+    expect(container.firstChild.innerHTML).toBe('Before<div>Middle</div>After');
+  });
 });

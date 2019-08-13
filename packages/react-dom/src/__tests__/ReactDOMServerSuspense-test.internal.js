@@ -127,7 +127,7 @@ describe('ReactDOMServerSuspense', () => {
       root.render(example);
     });
 
-    const parent2 = element.parentNode;
+    const parent2 = parent;
     const divA2 = parent2.children[0];
     const divB2 = parent2.children[1];
     expect(divA).toBe(divA2);

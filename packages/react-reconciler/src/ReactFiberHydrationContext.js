@@ -42,6 +42,7 @@ import {
   hydrateInstance,
   hydrateTextInstance,
   getNextHydratableInstanceAfterSuspenseInstance,
+  getSuspenseInstanceEndBoundary,
   didNotMatchHydratedContainerTextInstance,
   didNotMatchHydratedTextInstance,
   didNotHydrateContainerInstance,
@@ -99,7 +100,7 @@ function reenterHydrationStateFromDehydratedSuspenseInstance(
 
 function deleteHydratableInstance(
   returnFiber: Fiber,
-  instance: HydratableInstance,
+  instance: HydratableInstance | SuspenseInstance,
 ) {
   if (__DEV__) {
     switch (returnFiber.tag) {
@@ -391,6 +392,31 @@ function skipPastDehydratedSuspenseInstance(
   return getNextHydratableInstanceAfterSuspenseInstance(suspenseInstance);
 }
 
+function deleteSuspenseInstanceBoundary(fiber: Fiber): void {
+  if (!supportsHydration) {
+    invariant(
+      false,
+      'Expected deleteSuspenseInstanceBoundary() to never be called. ' +
+        'This error is likely caused by a bug in React. Please file an issue.',
+    );
+  }
+  let suspenseState: null | SuspenseState = fiber.memoizedState;
+  let suspenseInstance: null | SuspenseInstance =
+    suspenseState !== null ? suspenseState.dehydrated : null;
+  if (suspenseInstance !== null) {
+    deleteHydratableInstance(fiber, suspenseInstance);
+    const suspenseInstanceEnd = getSuspenseInstanceEndBoundary(
+      suspenseInstance,
+    );
+    invariant(
+      suspenseInstanceEnd,
+      'Expected to find closing boundary for suspense instance. ' +
+        'This error is likely caused by a bug in React. Please file an issue.',
+    );
+    deleteHydratableInstance(fiber, suspenseInstanceEnd);
+  }
+}
+
 function popToNextHostParent(fiber: Fiber): void {
   let parent = fiber.return;
   while (
@@ -471,5 +497,6 @@ export {
   tryToClaimNextHydratableInstance,
   prepareToHydrateHostInstance,
   prepareToHydrateHostTextInstance,
+  deleteSuspenseInstanceBoundary,
   popHydrationState,
 };

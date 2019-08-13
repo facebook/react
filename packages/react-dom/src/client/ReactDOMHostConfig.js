@@ -673,9 +673,9 @@ export function hydrateTextInstance(
   return diffHydratedText(textInstance, text);
 }
 
-export function getNextHydratableInstanceAfterSuspenseInstance(
+export function getSuspenseInstanceEndBoundary(
   suspenseInstance: SuspenseInstance,
-): null | HydratableInstance {
+): null | SuspenseInstance {
   let node = suspenseInstance.nextSibling;
   // Skip past all nodes within this suspense boundary.
   // There might be nested nodes so we need to keep track of how
@@ -686,7 +686,8 @@ export function getNextHydratableInstanceAfterSuspenseInstance(
       let data = ((node: any).data: string);
       if (data === SUSPENSE_END_DATA) {
         if (depth === 0) {
-          return getNextHydratableSibling((node: any));
+          // This has now been refined to a suspense node.
+          return ((node: any): SuspenseInstance);
         } else {
           depth--;
         }
@@ -702,6 +703,16 @@ export function getNextHydratableInstanceAfterSuspenseInstance(
   }
   // TODO: Warn, we didn't find the end comment boundary.
   return null;
+}
+
+export function getNextHydratableInstanceAfterSuspenseInstance(
+  suspenseInstance: SuspenseInstance,
+): null | HydratableInstance {
+  const node = getSuspenseInstanceEndBoundary(suspenseInstance);
+  if (node === null) {
+    return null;
+  }
+  return getNextHydratableSibling(node);
 }
 
 export function didNotMatchHydratedContainerTextInstance(
