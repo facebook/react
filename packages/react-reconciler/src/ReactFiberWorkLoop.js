@@ -152,8 +152,6 @@ import {
 import {
   recordEffect,
   recordScheduleUpdate,
-  startRequestCallbackTimer,
-  stopRequestCallbackTimer,
   startWorkTimer,
   stopWorkTimer,
   stopFailedWorkTimer,
@@ -546,16 +544,6 @@ function scheduleCallbackForRoot(
         ),
         options,
       );
-      if (
-        enableUserTimingAPI &&
-        expirationTime !== Sync &&
-        (executionContext & (RenderContext | CommitContext)) === NoContext
-      ) {
-        // Scheduled an async callback, and we're not already working. Add an
-        // entry to the flamegraph that shows we're waiting for a callback
-        // to fire.
-        startRequestCallbackTimer();
-      }
     }
   }
 
@@ -816,11 +804,6 @@ function renderRoot(
     'Should not already be working.',
   );
 
-  if (enableUserTimingAPI && expirationTime !== Sync) {
-    const didExpire = isSync;
-    stopRequestCallbackTimer(didExpire);
-  }
-
   if (root.firstPendingTime < expirationTime) {
     // If there's no work left at this expiration time, exit immediately. This
     // happens when multiple callbacks are scheduled for a single root, but an
@@ -964,9 +947,6 @@ function renderRoot(
     if (workInProgress !== null) {
       // There's still work left over. Return a continuation.
       stopInterruptedWorkLoopTimer();
-      if (expirationTime !== Sync) {
-        startRequestCallbackTimer();
-      }
       return renderRoot.bind(null, root, expirationTime);
     }
   }
