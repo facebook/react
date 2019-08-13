@@ -2937,6 +2937,10 @@ function beginWork(
         renderExpirationTime,
       );
     } else {
+      // An update was scheduled on this fiber, but there are no new props
+      // nor legacy context. Set this to false. If an update queue or context
+      // consumer produces a changed value, it will set this to true. Otherwise,
+      // the component will assume the children have not changed and bail out.
       didReceiveUpdate = false;
     }
   } else {
