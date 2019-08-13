@@ -1,7 +1,7 @@
 // @flow
 
 import React, { Fragment, useContext } from 'react';
-import ProfilerStore from 'src/devtools/ProfilerStore';
+import ProfilerStore from 'react-devtools-shared/src/devtools/ProfilerStore';
 import { ProfilerContext } from './ProfilerContext';
 import { formatDuration, formatTime } from './utils';
 import { StoreContext } from '../context';

@@ -21,13 +21,13 @@ import {
   ElementTypeFunction,
   ElementTypeMemo,
   ElementTypeSuspense,
-} from 'src/types';
+} from 'react-devtools-shared/src/types';
 
 import styles from './SelectedElement.css';
 
 import type { GetInspectedElementPath } from './InspectedElementContext';
 import type { Element, InspectedElement } from './types';
-import type { ElementType } from 'src/types';
+import type { ElementType } from 'react-devtools-shared/src/types';
 
 export type Props = {||};
 

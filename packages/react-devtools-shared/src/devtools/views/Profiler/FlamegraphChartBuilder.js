@@ -1,8 +1,8 @@
 // @flow
 
-import { ElementTypeForwardRef, ElementTypeMemo } from 'src/types';
+import { ElementTypeForwardRef, ElementTypeMemo } from 'react-devtools-shared/src/types';
 import { formatDuration } from './utils';
-import ProfilerStore from 'src/devtools/ProfilerStore';
+import ProfilerStore from 'react-devtools-shared/src/devtools/ProfilerStore';
 
 import type { CommitTree } from './types';
 

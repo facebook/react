@@ -2,10 +2,10 @@
 
 import typeof ReactTestRenderer from 'react-test-renderer';
 
-import type { FrontendBridge } from 'src/bridge';
-import type Store from 'src/devtools/store';
-import type { ProfilingDataFrontend } from 'src/devtools/views/Profiler/types';
-import type { ElementType } from 'src/types';
+import type { FrontendBridge } from 'react-devtools-shared/src/bridge';
+import type Store from 'react-devtools-shared/src/devtools/store';
+import type { ProfilingDataFrontend } from 'react-devtools-shared/src/devtools/views/Profiler/types';
+import type { ElementType } from 'react-devtools-shared/src/types';
 
 export function act(callback: Function): void {
   const { act: actTestRenderer } = require('react-test-renderer');
@@ -75,7 +75,7 @@ export function createDisplayNameFilter(
   source: string,
   isEnabled: boolean = true
 ) {
-  const Types = require('src/types');
+  const Types = require('react-devtools-shared/src/types');
   let isValid = true;
   try {
     new RegExp(source);
@@ -91,7 +91,7 @@ export function createDisplayNameFilter(
 }
 
 export function createHOCFilter(isEnabled: boolean = true) {
-  const Types = require('src/types');
+  const Types = require('react-devtools-shared/src/types');
   return {
     type: Types.ComponentFilterHOC,
     isEnabled,
@@ -103,7 +103,7 @@ export function createElementTypeFilter(
   elementType: ElementType,
   isEnabled: boolean = true
 ) {
-  const Types = require('src/types');
+  const Types = require('react-devtools-shared/src/types');
   return {
     type: Types.ComponentFilterElementType,
     isEnabled,
@@ -115,7 +115,7 @@ export function createLocationFilter(
   source: string,
   isEnabled: boolean = true
 ) {
-  const Types = require('src/types');
+  const Types = require('react-devtools-shared/src/types');
   let isValid = true;
   try {
     new RegExp(source);
@@ -166,7 +166,7 @@ export function exportImportHelper(bridge: FrontendBridge, store: Store): void {
   const {
     prepareProfilingDataExport,
     prepareProfilingDataFrontendFromExport,
-  } = require('src/devtools/views/Profiler/utils');
+  } = require('react-devtools-shared/src/devtools/views/Profiler/utils');
 
   const { profilerStore } = store;
 

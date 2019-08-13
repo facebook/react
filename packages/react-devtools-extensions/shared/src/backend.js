@@ -20,10 +20,10 @@ function welcome(event) {
 window.addEventListener('message', welcome);
 
 function setup(hook) {
-  const Agent = require('src/backend/agent').default;
-  const Bridge = require('src/bridge').default;
-  const { initBackend } = require('src/backend');
-  const setupNativeStyleEditor = require('src/backend/NativeStyleEditor/setupNativeStyleEditor')
+  const Agent = require('react-devtools-shared/src/backend/agent').default;
+  const Bridge = require('react-devtools-shared/src/bridge').default;
+  const { initBackend } = require('react-devtools-shared/src/backend');
+  const setupNativeStyleEditor = require('react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor')
     .default;
 
   const bridge = new Bridge({

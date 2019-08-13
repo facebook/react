@@ -1,6 +1,6 @@
 const { resolve } = require('path');
 const { DefinePlugin } = require('webpack');
-const { getGitHubURL, getVersionString } = require('../../utils');
+const { getGitHubURL, getVersionString } = require('../utils');
 
 const NODE_ENV = process.env.NODE_ENV;
 if (!NODE_ENV) {
@@ -28,11 +28,6 @@ module.exports = {
     path: __dirname + '/build',
     filename: '[name].js',
   },
-  resolve: {
-    alias: {
-      src: resolve(__dirname, '../../../src'),
-    },
-  },
   plugins: [
     new DefinePlugin({
       __DEV__: false,
@@ -48,7 +43,7 @@ module.exports = {
         test: /\.js$/,
         loader: 'babel-loader',
         options: {
-          configFile: resolve(__dirname, '../../../babel.config.js'),
+          configFile: resolve(__dirname, '../babel.config.js'),
         },
       },
       {

@@ -1,7 +1,7 @@
 // @flow
 
-import type { FrontendBridge } from 'src/bridge';
-import type Store from 'src/devtools/store';
+import type { FrontendBridge } from 'react-devtools-shared/src/bridge';
+import type Store from 'react-devtools-shared/src/devtools/store';
 
 describe('Store component filters', () => {
   let React;
@@ -29,7 +29,7 @@ describe('Store component filters', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     TestUtils = require('react-dom/test-utils');
-    Types = require('src/types');
+    Types = require('react-devtools-shared/src/types');
     utils = require('./utils');
   });
 

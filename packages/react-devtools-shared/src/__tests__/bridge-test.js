@@ -4,7 +4,7 @@ describe('Bridge', () => {
   let Bridge;
 
   beforeEach(() => {
-    Bridge = require('src/bridge').default;
+    Bridge = require('react-devtools-shared/src/bridge').default;
   });
 
   it('should shutdown properly', () => {

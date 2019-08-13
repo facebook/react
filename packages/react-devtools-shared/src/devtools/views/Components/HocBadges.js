@@ -1,7 +1,7 @@
 // @flow
 
 import React from 'react';
-import { ElementTypeForwardRef, ElementTypeMemo } from 'src/types';
+import { ElementTypeForwardRef, ElementTypeMemo } from 'react-devtools-shared/src/types';
 import styles from './HocBadges.css';
 
 import type { Element } from './types';

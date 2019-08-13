@@ -4,24 +4,24 @@ import ProfilerStore from './ProfilerStore';
 import {
   getCommitTree,
   invalidateCommitTrees,
-} from 'src/devtools/views/Profiler/CommitTreeBuilder';
+} from 'react-devtools-shared/src/devtools/views/Profiler/CommitTreeBuilder';
 import {
   getChartData as getFlamegraphChartData,
   invalidateChartData as invalidateFlamegraphChartData,
-} from 'src/devtools/views/Profiler/FlamegraphChartBuilder';
+} from 'react-devtools-shared/src/devtools/views/Profiler/FlamegraphChartBuilder';
 import {
   getChartData as getInteractionsChartData,
   invalidateChartData as invalidateInteractionsChartData,
-} from 'src/devtools/views/Profiler/InteractionsChartBuilder';
+} from 'react-devtools-shared/src/devtools/views/Profiler/InteractionsChartBuilder';
 import {
   getChartData as getRankedChartData,
   invalidateChartData as invalidateRankedChartData,
-} from 'src/devtools/views/Profiler/RankedChartBuilder';
+} from 'react-devtools-shared/src/devtools/views/Profiler/RankedChartBuilder';
 
-import type { CommitTree } from 'src/devtools/views/Profiler/types';
-import type { ChartData as FlamegraphChartData } from 'src/devtools/views/Profiler/FlamegraphChartBuilder';
-import type { ChartData as InteractionsChartData } from 'src/devtools/views/Profiler/InteractionsChartBuilder';
-import type { ChartData as RankedChartData } from 'src/devtools/views/Profiler/RankedChartBuilder';
+import type { CommitTree } from 'react-devtools-shared/src/devtools/views/Profiler/types';
+import type { ChartData as FlamegraphChartData } from 'react-devtools-shared/src/devtools/views/Profiler/FlamegraphChartBuilder';
+import type { ChartData as InteractionsChartData } from 'react-devtools-shared/src/devtools/views/Profiler/InteractionsChartBuilder';
+import type { ChartData as RankedChartData } from 'react-devtools-shared/src/devtools/views/Profiler/RankedChartBuilder';
 
 export default class ProfilingCache {
   _fiberCommits: Map<number, Array<number>> = new Map();

@@ -12,7 +12,7 @@ import {
   registerRenderer as registerRendererWithConsole,
 } from './backend/console';
 
-import type { DevToolsHook } from 'src/backend/types';
+import type { DevToolsHook } from 'react-devtools-shared/src/backend/types';
 
 declare var window: any;
 

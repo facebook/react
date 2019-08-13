@@ -1,9 +1,9 @@
 // @flow
 
-import type { InspectedElementPayload } from 'src/backend/types';
-import type { DehydratedData } from 'src/devtools/views/Components/types';
-import type { FrontendBridge } from 'src/bridge';
-import type Store from 'src/devtools/store';
+import type { InspectedElementPayload } from 'react-devtools-shared/src/backend/types';
+import type { DehydratedData } from 'react-devtools-shared/src/devtools/views/Components/types';
+import type { FrontendBridge } from 'react-devtools-shared/src/bridge';
+import type Store from 'react-devtools-shared/src/devtools/store';
 
 describe('InspectedElementContext', () => {
   let React;
@@ -59,8 +59,8 @@ describe('InspectedElementContext', () => {
     bridge = global.bridge;
     store = global.store;
 
-    hydrate = require('src/hydration').hydrate;
-    meta = require('src/hydration').meta;
+    hydrate = require('react-devtools-shared/src/hydration').hydrate;
+    meta = require('react-devtools-shared/src/hydration').meta;
 
     // Redirect all React/ReactDOM requires to the v15 UMD.
     // We use the UMD because Jest doesn't enable us to mock deep imports (e.g. "react/lib/Something").

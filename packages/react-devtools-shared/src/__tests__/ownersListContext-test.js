@@ -1,9 +1,9 @@
 // @flow
 
 import typeof ReactTestRenderer from 'react-test-renderer';
-import type { Element } from 'src/devtools/views/Components/types';
-import type { FrontendBridge } from 'src/bridge';
-import type Store from 'src/devtools/store';
+import type { Element } from 'react-devtools-shared/src/devtools/views/Components/types';
+import type { FrontendBridge } from 'react-devtools-shared/src/bridge';
+import type Store from 'react-devtools-shared/src/devtools/store';
 
 describe('OwnersListContext', () => {
   let React;
@@ -31,13 +31,13 @@ describe('OwnersListContext', () => {
     ReactDOM = require('react-dom');
     TestRenderer = utils.requireTestRenderer();
 
-    BridgeContext = require('src/devtools/views/context').BridgeContext;
-    OwnersListContext = require('src/devtools/views/Components/OwnersListContext')
+    BridgeContext = require('react-devtools-shared/src/devtools/views/context').BridgeContext;
+    OwnersListContext = require('react-devtools-shared/src/devtools/views/Components/OwnersListContext')
       .OwnersListContext;
-    OwnersListContextController = require('src/devtools/views/Components/OwnersListContext')
+    OwnersListContextController = require('react-devtools-shared/src/devtools/views/Components/OwnersListContext')
       .OwnersListContextController;
-    StoreContext = require('src/devtools/views/context').StoreContext;
-    TreeContextController = require('src/devtools/views/Components/TreeContext')
+    StoreContext = require('react-devtools-shared/src/devtools/views/context').StoreContext;
+    TreeContextController = require('react-devtools-shared/src/devtools/views/Components/TreeContext')
       .TreeContextController;
   });
 

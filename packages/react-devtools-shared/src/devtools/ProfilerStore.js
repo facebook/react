@@ -5,8 +5,8 @@ import { prepareProfilingDataFrontendFromBackendAndStore } from './views/Profile
 import ProfilingCache from './ProfilingCache';
 import Store from './store';
 
-import type { FrontendBridge } from 'src/bridge';
-import type { ProfilingDataBackend } from 'src/backend/types';
+import type { FrontendBridge } from 'react-devtools-shared/src/bridge';
+import type { ProfilingDataBackend } from 'react-devtools-shared/src/backend/types';
 import type {
   CommitDataFrontend,
   ProfilingDataForRootFrontend,

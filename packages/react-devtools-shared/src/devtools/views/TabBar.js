@@ -1,6 +1,5 @@
 // @flow
 
-import classNames from 'classnames';
 import React, { Fragment, useCallback } from 'react';
 import Tooltip from '@reach/tooltip';
 import Icon from './Icon';
@@ -84,11 +83,11 @@ export default function TabBar({
       {tabs.map(({ icon, id, label, title }) => {
         let button = (
           <label
-            className={classNames(
+            className={[
               tabSizeClassName,
               disabled ? styles.TabDisabled : styles.Tab,
-              !disabled && currentTab === id ? styles.TabCurrent : null
-            )}
+              !disabled && currentTab === id ? styles.TabCurrent : ''
+            ].join(' ')}
             key={id}
             onKeyDown={handleKeyDown}
             onMouseDown={() => selectTab(id)}

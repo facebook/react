@@ -16,7 +16,7 @@ import {
   ElementTypeProfiler,
   ElementTypeRoot,
   ElementTypeSuspense,
-} from 'src/types';
+} from 'react-devtools-shared/src/types';
 import {
   getDisplayName,
   getDefaultComponentFilters,
@@ -24,8 +24,8 @@ import {
   getUID,
   setInObject,
   utfEncodeString,
-} from 'src/utils';
-import { sessionStorageGetItem } from 'src/storage';
+} from 'react-devtools-shared/src/utils';
+import { sessionStorageGetItem } from 'react-devtools-shared/src/storage';
 import { cleanForBridge, copyWithSet } from './utils';
 import {
   __DEBUG__,
@@ -58,8 +58,8 @@ import type {
   ReactRenderer,
   RendererInterface,
 } from './types';
-import type { Interaction } from 'src/devtools/views/Profiler/types';
-import type { ComponentFilter, ElementType } from 'src/types';
+import type { Interaction } from 'react-devtools-shared/src/devtools/views/Profiler/types';
+import type { ComponentFilter, ElementType } from 'react-devtools-shared/src/types';
 
 type getDisplayNameForFiberType = (fiber: Fiber) => string | null;
 type getTypeSymbolType = (type: any) => Symbol | number;

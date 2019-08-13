@@ -1,21 +1,21 @@
 /** @flow */
 
 import React, { forwardRef } from 'react';
-import Bridge from 'src/bridge';
-import Store from 'src/devtools/store';
-import DevTools from 'src/devtools/views/DevTools';
-import { getSavedComponentFilters, getAppendComponentStack } from 'src/utils';
+import Bridge from 'react-devtools-shared/src/bridge';
+import Store from 'react-devtools-shared/src/devtools/store';
+import DevTools from 'react-devtools-shared/src/devtools/views/DevTools';
+import { getSavedComponentFilters, getAppendComponentStack } from 'react-devtools-shared/src/utils';
 import {
   MESSAGE_TYPE_GET_SAVED_PREFERENCES,
   MESSAGE_TYPE_SAVED_PREFERENCES,
 } from './constants';
 
-import type { FrontendBridge } from 'src/bridge';
-import type { Props } from 'src/devtools/views/DevTools';
+import type { FrontendBridge } from 'react-devtools-shared/src/bridge';
+import type { Props } from 'react-devtools-shared/src/devtools/views/DevTools';
 
 export function initialize(
   contentWindow: window
-): React$AbstractComponent<Props, mixed> {
+): React.AbstractComponent<Props, mixed> {
   const onMessage = ({ data, source }) => {
     if (source === 'react-devtools-content-script') {
       // Ignore messages from the DevTools browser extension.

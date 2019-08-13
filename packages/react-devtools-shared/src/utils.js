@@ -7,7 +7,7 @@ import {
   TREE_OPERATION_REORDER_CHILDREN,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
 } from './constants';
-import { ElementTypeRoot } from 'src/types';
+import { ElementTypeRoot } from 'react-devtools-shared/src/types';
 import {
   LOCAL_STORAGE_FILTER_PREFERENCES_KEY,
   LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY,
@@ -18,7 +18,7 @@ import {
   ElementTypeForwardRef,
   ElementTypeFunction,
   ElementTypeMemo,
-} from 'src/types';
+} from 'react-devtools-shared/src/types';
 import { localStorageGetItem, localStorageSetItem } from './storage';
 
 import type { ComponentFilter, ElementType } from './types';
@@ -235,7 +235,7 @@ export function separateDisplayNameAndHOCs(
     case ElementTypeMemo:
       if (displayName.indexOf('(') >= 0) {
         const matches = displayName.match(/[^()]+/g);
-        if (matches !== null) {
+        if (matches != null) {
           displayName = matches.pop();
           hocDisplayNames = matches;
         }

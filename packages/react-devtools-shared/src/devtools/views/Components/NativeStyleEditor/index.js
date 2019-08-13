@@ -1,9 +1,9 @@
 // @flow
 
 import React, { Fragment, useContext, useMemo } from 'react';
-import Store from 'src/devtools/store';
-import { StoreContext } from 'src/devtools/views/context';
-import { useSubscription } from 'src/devtools/views/hooks';
+import Store from 'react-devtools-shared/src/devtools/store';
+import { StoreContext } from 'react-devtools-shared/src/devtools/views/context';
+import { useSubscription } from 'react-devtools-shared/src/devtools/views/hooks';
 import { NativeStyleContext } from './context';
 import LayoutViewer from './LayoutViewer';
 import StyleEditor from './StyleEditor';
@@ -26,7 +26,7 @@ export default function NativeStyleEditorWrapper(_: Props) {
     }),
     [store]
   );
-  const supportsNativeStyleEditor = useSubscription<boolean, Store>(
+  const supportsNativeStyleEditor = useSubscription<boolean>(
     subscription
   );
 

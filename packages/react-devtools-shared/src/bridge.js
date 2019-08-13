@@ -8,8 +8,8 @@ import type {
   OwnersList,
   ProfilingDataBackend,
   RendererID,
-} from 'src/backend/types';
-import type { StyleAndLayout as StyleAndLayoutPayload } from 'src/backend/NativeStyleEditor/types';
+} from 'react-devtools-shared/src/backend/types';
+import type { StyleAndLayout as StyleAndLayoutPayload } from 'react-devtools-shared/src/backend/NativeStyleEditor/types';
 
 const BATCH_DURATION = 100;
 
@@ -205,8 +205,10 @@ class Bridge<
     } while (this._messageQueue.length);
 
     // Make sure once again that there is no dangling timer.
-    clearTimeout(this._timeoutID);
-    this._timeoutID = null;
+    if (this._timeoutID !== null) {
+      clearTimeout(this._timeoutID);
+      this._timeoutID = null;
+    }
   }
 
   _flush = () => {
@@ -214,8 +216,10 @@ class Bridge<
     // so we do not bail out if the bridge marked as destroyed.
     // It is a private method that the bridge ensures is only called at the right times.
 
-    clearTimeout(this._timeoutID);
-    this._timeoutID = null;
+    if (this._timeoutID !== null) {
+      clearTimeout(this._timeoutID);
+      this._timeoutID = null;
+    }
 
     if (this._messageQueue.length) {
       for (let i = 0; i < this._messageQueue.length; i += 2) {

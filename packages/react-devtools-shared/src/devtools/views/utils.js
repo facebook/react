@@ -3,7 +3,7 @@
 import escapeStringRegExp from 'escape-string-regexp';
 import { meta } from '../../hydration';
 
-import type { HooksTree } from 'src/backend/types';
+import type { HooksTree } from 'react-devtools-shared/src/backend/types';
 
 export function createRegExp(string: string): RegExp {
   // Allow /regex/ syntax with optional last /

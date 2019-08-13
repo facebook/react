@@ -29,7 +29,7 @@ export default function InspectedElementTree({
 }: Props) {
   const isEmpty = data === null || Object.keys(data).length === 0;
 
-  const handleCopy = useCallback(() => copy(serializeDataForCopy(data)), [
+  const handleCopy = useCallback(() => copy(serializeDataForCopy(((data: any): Object))), [
     data,
   ]);
 

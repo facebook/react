@@ -12,11 +12,11 @@ import {
   sessionStorageGetItem,
   sessionStorageRemoveItem,
   sessionStorageSetItem,
-} from 'src/storage';
+} from 'react-devtools-shared/src/storage';
 import setupHighlighter from './views/Highlighter';
 import { patch as patchConsole, unpatch as unpatchConsole } from './console';
 
-import type { BackendBridge } from 'src/bridge';
+import type { BackendBridge } from 'react-devtools-shared/src/bridge';
 import type {
   InstanceAndStyle,
   NativeType,

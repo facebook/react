@@ -1,10 +1,10 @@
 // @flow
 
 import React, { Fragment } from 'react';
-import { ElementTypeMemo, ElementTypeForwardRef } from 'src/types';
+import { ElementTypeMemo, ElementTypeForwardRef } from 'react-devtools-shared/src/types';
 import styles from './Badge.css';
 
-import type { ElementType } from 'src/types';
+import type { ElementType } from 'react-devtools-shared/src/types';
 
 type Props = {|
   className?: string,

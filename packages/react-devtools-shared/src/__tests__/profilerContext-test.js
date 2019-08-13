@@ -1,10 +1,10 @@
 // @flow
 
 import typeof ReactTestRenderer from 'react-test-renderer';
-import type { FrontendBridge } from 'src/bridge';
-import type { Context } from 'src/devtools/views/Profiler/ProfilerContext';
-import type { DispatcherContext } from 'src/devtools/views/Components/TreeContext';
-import type Store from 'src/devtools/store';
+import type { FrontendBridge } from 'react-devtools-shared/src/bridge';
+import type { Context } from 'react-devtools-shared/src/devtools/views/Profiler/ProfilerContext';
+import type { DispatcherContext } from 'react-devtools-shared/src/devtools/views/Components/TreeContext';
+import type Store from 'react-devtools-shared/src/devtools/store';
 
 describe('ProfilerContext', () => {
   let React;
@@ -35,17 +35,17 @@ describe('ProfilerContext', () => {
     ReactDOM = require('react-dom');
     TestRenderer = utils.requireTestRenderer();
 
-    BridgeContext = require('src/devtools/views/context').BridgeContext;
-    ProfilerContext = require('src/devtools/views/Profiler/ProfilerContext')
+    BridgeContext = require('react-devtools-shared/src/devtools/views/context').BridgeContext;
+    ProfilerContext = require('react-devtools-shared/src/devtools/views/Profiler/ProfilerContext')
       .ProfilerContext;
-    ProfilerContextController = require('src/devtools/views/Profiler/ProfilerContext')
+    ProfilerContextController = require('react-devtools-shared/src/devtools/views/Profiler/ProfilerContext')
       .ProfilerContextController;
-    StoreContext = require('src/devtools/views/context').StoreContext;
-    TreeContextController = require('src/devtools/views/Components/TreeContext')
+    StoreContext = require('react-devtools-shared/src/devtools/views/context').StoreContext;
+    TreeContextController = require('react-devtools-shared/src/devtools/views/Components/TreeContext')
       .TreeContextController;
-    TreeDispatcherContext = require('src/devtools/views/Components/TreeContext')
+    TreeDispatcherContext = require('react-devtools-shared/src/devtools/views/Components/TreeContext')
       .TreeDispatcherContext;
-    TreeStateContext = require('src/devtools/views/Components/TreeContext')
+    TreeStateContext = require('react-devtools-shared/src/devtools/views/Components/TreeContext')
       .TreeStateContext;
   });
 

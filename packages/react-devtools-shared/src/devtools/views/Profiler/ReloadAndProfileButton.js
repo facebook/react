@@ -5,7 +5,7 @@ import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import { BridgeContext, StoreContext } from '../context';
 import { useSubscription } from '../hooks';
-import Store from 'src/devtools/store';
+import Store from 'react-devtools-shared/src/devtools/store';
 
 type SubscriptionData = {|
   recordChangeDescriptions: boolean,
@@ -36,7 +36,7 @@ export default function ReloadAndProfileButton() {
   const {
     recordChangeDescriptions,
     supportsReloadAndProfile,
-  } = useSubscription<SubscriptionData, Store>(subscription);
+  } = useSubscription<SubscriptionData>(subscription);
 
   const reloadAndProfile = useCallback(() => {
     // TODO If we want to support reload-and-profile for e.g. React Native,

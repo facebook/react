@@ -2,10 +2,10 @@
 
 import memoize from 'memoize-one';
 import throttle from 'lodash.throttle';
-import Agent from 'src/backend/agent';
+import Agent from 'react-devtools-shared/src/backend/agent';
 import { hideOverlay, showOverlay } from './Highlighter';
 
-import type { BackendBridge } from 'src/bridge';
+import type { BackendBridge } from 'react-devtools-shared/src/bridge';
 
 // This plug-in provides in-page highlighting of the selected element.
 // It is used by the browser extension nad the standalone DevTools shell (when connected to a browser).

@@ -4,7 +4,7 @@ describe('profiling utils', () => {
   let utils;
 
   beforeEach(() => {
-    utils = require('src/devtools/views/Profiler/utils');
+    utils = require('react-devtools-shared/src/devtools/views/Profiler/utils');
   });
 
   it('should throw if importing older/unsupported data', () => {

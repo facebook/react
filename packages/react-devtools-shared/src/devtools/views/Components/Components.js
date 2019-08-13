@@ -8,8 +8,8 @@ import { NativeStyleContextController } from './NativeStyleEditor/context';
 import { OwnersListContextController } from './OwnersListContext';
 import portaledContent from '../portaledContent';
 import { ModalDialog } from '../ModalDialog';
-import SettingsModal from 'src/devtools/views/Settings/SettingsModal';
-import { SettingsModalContextController } from 'src/devtools/views/Settings/SettingsModalContext';
+import SettingsModal from 'react-devtools-shared/src/devtools/views/Settings/SettingsModal';
+import { SettingsModalContextController } from 'react-devtools-shared/src/devtools/views/Settings/SettingsModalContext';
 
 import styles from './Components.css';
 

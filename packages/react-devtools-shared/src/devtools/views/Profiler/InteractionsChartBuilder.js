@@ -1,6 +1,6 @@
 // @flow
 
-import ProfilerStore from 'src/devtools/ProfilerStore';
+import ProfilerStore from 'react-devtools-shared/src/devtools/ProfilerStore';
 
 import type { Interaction } from './types';
 

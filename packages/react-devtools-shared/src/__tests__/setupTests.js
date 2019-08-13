@@ -1,6 +1,6 @@
 // @flow
 
-import type { BackendBridge, FrontendBridge } from 'src/bridge';
+import type { BackendBridge, FrontendBridge } from 'react-devtools-shared/src/bridge';
 
 const env = jasmine.getEnv();
 env.beforeEach(() => {
@@ -8,15 +8,15 @@ env.beforeEach(() => {
   // rather than imported at the head of the module.
   // That's because we reset modules between tests,
   // which disconnects the DevTool's cache from the current dispatcher ref.
-  const Agent = require('src/backend/agent').default;
-  const { initBackend } = require('src/backend');
-  const Bridge = require('src/bridge').default;
-  const Store = require('src/devtools/store').default;
-  const { installHook } = require('src/hook');
+  const Agent = require('react-devtools-shared/src/backend/agent').default;
+  const { initBackend } = require('react-devtools-shared/src/backend');
+  const Bridge = require('react-devtools-shared/src/bridge').default;
+  const Store = require('react-devtools-shared/src/devtools/store').default;
+  const { installHook } = require('react-devtools-shared/src/hook');
   const {
     getDefaultComponentFilters,
     saveComponentFilters,
-  } = require('src/utils');
+  } = require('react-devtools-shared/src/utils');
 
   // Fake timers let us flush Bridge operations between setup and assertions.
   jest.useFakeTimers();

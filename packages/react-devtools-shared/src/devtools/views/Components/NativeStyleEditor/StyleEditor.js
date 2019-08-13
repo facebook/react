@@ -3,7 +3,7 @@
 import React, { useContext, useMemo, useRef, useState } from 'react';
 import { unstable_batchedUpdates as batchedUpdates } from 'react-dom';
 import { copy } from 'clipboard-js';
-import { BridgeContext, StoreContext } from 'src/devtools/views/context';
+import { BridgeContext, StoreContext } from 'react-devtools-shared/src/devtools/views/context';
 import Button from '../../Button';
 import ButtonIcon from '../../ButtonIcon';
 import { serializeDataForCopy } from '../../utils';

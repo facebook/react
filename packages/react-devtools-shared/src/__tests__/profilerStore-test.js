@@ -1,6 +1,6 @@
 // @flow
 
-import type Store from 'src/devtools/store';
+import type Store from 'react-devtools-shared/src/devtools/store';
 
 describe('ProfilerStore', () => {
   let React;

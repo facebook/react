@@ -1,8 +1,8 @@
 // @flow
 
-import { PROFILER_EXPORT_VERSION } from 'src/constants';
+import { PROFILER_EXPORT_VERSION } from 'react-devtools-shared/src/constants';
 
-import type { ProfilingDataBackend } from 'src/backend/types';
+import type { ProfilingDataBackend } from 'react-devtools-shared/src/backend/types';
 import type {
   ProfilingDataExport,
   ProfilingDataForRootExport,

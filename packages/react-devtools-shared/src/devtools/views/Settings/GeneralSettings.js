@@ -2,7 +2,7 @@
 
 import React, { useContext } from 'react';
 import { SettingsContext } from './SettingsContext';
-import { CHANGE_LOG_URL } from 'src/constants';
+import { CHANGE_LOG_URL } from 'react-devtools-shared/src/constants';
 
 import styles from './SettingsShared.css';
 

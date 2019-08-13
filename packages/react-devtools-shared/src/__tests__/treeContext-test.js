@@ -1,12 +1,12 @@
 // @flow
 
 import typeof ReactTestRenderer from 'react-test-renderer';
-import type { FrontendBridge } from 'src/bridge';
-import type Store from 'src/devtools/store';
+import type { FrontendBridge } from 'react-devtools-shared/src/bridge';
+import type Store from 'react-devtools-shared/src/devtools/store';
 import type {
   DispatcherContext,
   StateContext,
-} from 'src/devtools/views/Components/TreeContext';
+} from 'react-devtools-shared/src/devtools/views/Components/TreeContext';
 
 describe('TreeListContext', () => {
   let React;
@@ -35,9 +35,9 @@ describe('TreeListContext', () => {
     ReactDOM = require('react-dom');
     TestRenderer = utils.requireTestRenderer();
 
-    BridgeContext = require('src/devtools/views/context').BridgeContext;
-    StoreContext = require('src/devtools/views/context').StoreContext;
-    TreeContext = require('src/devtools/views/Components/TreeContext');
+    BridgeContext = require('react-devtools-shared/src/devtools/views/context').BridgeContext;
+    StoreContext = require('react-devtools-shared/src/devtools/views/context').StoreContext;
+    TreeContext = require('react-devtools-shared/src/devtools/views/Components/TreeContext');
   });
 
   afterEach(() => {

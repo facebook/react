@@ -2,21 +2,21 @@
 
 import { createElement } from 'react';
 import { unstable_createRoot as createRoot, flushSync } from 'react-dom';
-import Bridge from 'src/bridge';
-import Store from 'src/devtools/store';
+import Bridge from 'react-devtools-shared/src/bridge';
+import Store from 'react-devtools-shared/src/devtools/store';
 import inject from './inject';
 import {
   createViewElementSource,
   getBrowserName,
   getBrowserTheme,
 } from './utils';
-import { getSavedComponentFilters, getAppendComponentStack } from 'src/utils';
+import { getSavedComponentFilters, getAppendComponentStack } from 'react-devtools-shared/src/utils';
 import {
   localStorageGetItem,
   localStorageRemoveItem,
   localStorageSetItem,
-} from 'src/storage';
-import DevTools from 'src/devtools/views/DevTools';
+} from 'react-devtools-shared/src/storage';
+import DevTools from 'react-devtools-shared/src/devtools/views/DevTools';
 
 const LOCAL_STORAGE_SUPPORTS_PROFILING_KEY =
   'React::DevTools::supportsProfiling';

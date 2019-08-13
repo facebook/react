@@ -1,7 +1,7 @@
 // @flow
 
 import React, { Fragment, useContext, useMemo, useState } from 'react';
-import Store from 'src/devtools/store';
+import Store from 'react-devtools-shared/src/devtools/store';
 import Badge from './Badge';
 import ButtonIcon from '../ButtonIcon';
 import { createRegExp } from '../utils';

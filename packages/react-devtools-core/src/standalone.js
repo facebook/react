@@ -7,18 +7,18 @@ import {
   // $FlowFixMe Flow does not yet know about createRoot()
   unstable_createRoot as createRoot,
 } from 'react-dom';
-import Bridge from 'src/bridge';
-import Store from 'src/devtools/store';
-import { getSavedComponentFilters, getAppendComponentStack } from 'src/utils';
+import Bridge from 'react-devtools-shared/src/bridge';
+import Store from 'react-devtools-shared/src/devtools/store';
+import { getSavedComponentFilters, getAppendComponentStack } from 'react-devtools-shared/src/utils';
 import { Server } from 'ws';
 import { existsSync, readFileSync } from 'fs';
-import { installHook } from 'src/hook';
-import DevTools from 'src/devtools/views/DevTools';
+import { installHook } from 'react-devtools-shared/src/hook';
+import DevTools from 'react-devtools-shared/src/devtools/views/DevTools';
 import { doesFilePathExist, launchEditor } from './editor';
-import { __DEBUG__ } from 'src/constants';
+import { __DEBUG__ } from 'react-devtools-shared/src/constants';
 
-import type { FrontendBridge } from 'src/bridge';
-import type { InspectedElement } from 'src/devtools/views/Components/types';
+import type { FrontendBridge } from 'react-devtools-shared/src/bridge';
+import type { InspectedElement } from 'react-devtools-shared/src/devtools/views/Components/types';
 
 installHook(window);
 

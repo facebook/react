@@ -1,9 +1,9 @@
 // @flow
 
 import typeof ReactTestRenderer from 'react-test-renderer';
-import type { GetInspectedElementPath } from 'src/devtools/views/Components/InspectedElementContext';
-import type { FrontendBridge } from 'src/bridge';
-import type Store from 'src/devtools/store';
+import type { GetInspectedElementPath } from 'react-devtools-shared/src/devtools/views/Components/InspectedElementContext';
+import type { FrontendBridge } from 'react-devtools-shared/src/bridge';
+import type Store from 'react-devtools-shared/src/devtools/store';
 
 describe('InspectedElementContext', () => {
   let React;
@@ -25,7 +25,7 @@ describe('InspectedElementContext', () => {
     utils = require('./utils');
     utils.beforeEachProfiling();
 
-    meta = require('src/hydration').meta;
+    meta = require('react-devtools-shared/src/hydration').meta;
 
     bridge = global.bridge;
     store = global.store;
@@ -36,13 +36,13 @@ describe('InspectedElementContext', () => {
     TestUtils = require('react-dom/test-utils');
     TestRenderer = utils.requireTestRenderer();
 
-    BridgeContext = require('src/devtools/views/context').BridgeContext;
-    InspectedElementContext = require('src/devtools/views/Components/InspectedElementContext')
+    BridgeContext = require('react-devtools-shared/src/devtools/views/context').BridgeContext;
+    InspectedElementContext = require('react-devtools-shared/src/devtools/views/Components/InspectedElementContext')
       .InspectedElementContext;
-    InspectedElementContextController = require('src/devtools/views/Components/InspectedElementContext')
+    InspectedElementContextController = require('react-devtools-shared/src/devtools/views/Components/InspectedElementContext')
       .InspectedElementContextController;
-    StoreContext = require('src/devtools/views/context').StoreContext;
-    TreeContextController = require('src/devtools/views/Components/TreeContext')
+    StoreContext = require('react-devtools-shared/src/devtools/views/context').StoreContext;
+    TreeContextController = require('react-devtools-shared/src/devtools/views/Components/TreeContext')
       .TreeContextController;
   });
 

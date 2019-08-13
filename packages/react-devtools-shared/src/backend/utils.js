@@ -2,7 +2,7 @@
 
 import { dehydrate } from '../hydration';
 
-import type { DehydratedData } from 'src/devtools/views/Components/types';
+import type { DehydratedData } from 'react-devtools-shared/src/devtools/views/Components/types';
 
 export function cleanForBridge(
   data: Object | null,

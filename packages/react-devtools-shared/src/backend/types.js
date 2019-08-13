@@ -1,8 +1,8 @@
 // @flow
 
-import type { ComponentFilter, ElementType } from 'src/types';
-import type { Interaction } from 'src/devtools/views/Profiler/types';
-import type { ResolveNativeStyle } from 'src/backend/NativeStyleEditor/setupNativeStyleEditor';
+import type { ComponentFilter, ElementType } from 'react-devtools-shared/src/types';
+import type { Interaction } from 'react-devtools-shared/src/devtools/views/Profiler/types';
+import type { ResolveNativeStyle } from 'react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor';
 
 type BundleType =
   | 0 // PROD

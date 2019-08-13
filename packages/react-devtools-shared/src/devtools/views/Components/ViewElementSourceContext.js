@@ -5,7 +5,7 @@ import { createContext } from 'react';
 import type {
   CanViewElementSource,
   ViewElementSource,
-} from 'src/devtools/views/DevTools';
+} from 'react-devtools-shared/src/devtools/views/DevTools';
 
 export type Context = {|
   canViewElementSourceFunction: CanViewElementSource | null,

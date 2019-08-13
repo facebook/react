@@ -14,7 +14,7 @@ import styles from './HooksTree.css';
 import { meta } from '../../../hydration';
 
 import type { InspectPath } from './SelectedElement';
-import type { HooksNode, HooksTree } from 'src/backend/types';
+import type { HooksNode, HooksTree } from 'react-devtools-shared/src/backend/types';
 
 type HooksTreeViewProps = {|
   canEditHooks: boolean,

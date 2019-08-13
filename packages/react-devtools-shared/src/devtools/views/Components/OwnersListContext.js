@@ -9,10 +9,10 @@ import React, {
 import { createResource } from '../../cache';
 import { BridgeContext, StoreContext } from '../context';
 import { TreeStateContext } from './TreeContext';
-import { separateDisplayNameAndHOCs } from 'src/utils';
+import { separateDisplayNameAndHOCs } from 'react-devtools-shared/src/utils';
 
-import type { OwnersList } from 'src/backend/types';
-import type { Element, Owner } from 'src/devtools/views/Components/types';
+import type { OwnersList } from 'react-devtools-shared/src/backend/types';
+import type { Element, Owner } from 'react-devtools-shared/src/devtools/views/Components/types';
 import type { Resource, Thenable } from '../../cache';
 
 type Context = (id: number) => Array<Owner> | null;

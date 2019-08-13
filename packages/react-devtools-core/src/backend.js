@@ -1,17 +1,17 @@
 // @flow
 
-import Agent from 'src/backend/agent';
-import Bridge from 'src/bridge';
-import { installHook } from 'src/hook';
-import { initBackend } from 'src/backend';
-import { __DEBUG__ } from 'src/constants';
-import setupNativeStyleEditor from 'src/backend/NativeStyleEditor/setupNativeStyleEditor';
-import { getDefaultComponentFilters } from 'src/utils';
+import Agent from 'react-devtools-shared/src/backend/agent';
+import Bridge from 'react-devtools-shared/src/bridge';
+import { installHook } from 'react-devtools-shared/src/hook';
+import { initBackend } from 'react-devtools-shared/src/backend';
+import { __DEBUG__ } from 'react-devtools-shared/src/constants';
+import setupNativeStyleEditor from 'react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor';
+import { getDefaultComponentFilters } from 'react-devtools-shared/src/utils';
 
-import type { BackendBridge } from 'src/bridge';
-import type { ComponentFilter } from 'src/types';
-import type { DevToolsHook } from 'src/backend/types';
-import type { ResolveNativeStyle } from 'src/backend/NativeStyleEditor/setupNativeStyleEditor';
+import type { BackendBridge } from 'react-devtools-shared/src/bridge';
+import type { ComponentFilter } from 'react-devtools-shared/src/types';
+import type { DevToolsHook } from 'react-devtools-shared/src/backend/types';
+import type { ResolveNativeStyle } from 'react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor';
 
 type ConnectOptions = {
   host?: string,

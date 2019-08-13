@@ -24,8 +24,8 @@ import styles from './DevTools.css';
 
 import './root.css';
 
-import type { InspectedElement } from 'src/devtools/views/Components/types';
-import type { FrontendBridge } from 'src/bridge';
+import type { InspectedElement } from 'react-devtools-shared/src/devtools/views/Components/types';
+import type { FrontendBridge } from 'react-devtools-shared/src/bridge';
 
 export type BrowserTheme = 'dark' | 'light';
 export type TabID = 'components' | 'profiler';
@@ -79,7 +79,7 @@ const tabs = [componentsTab, profilerTab];
 export default function DevTools({
   bridge,
   browserTheme = 'light',
-  canViewElementSourceFunction = null,
+  canViewElementSourceFunction,
   defaultTab = 'components',
   componentsPortalContainer,
   overrideTab,
@@ -88,7 +88,7 @@ export default function DevTools({
   showWelcomeToTheNewDevToolsDialog = false,
   store,
   warnIfLegacyBackendDetected = false,
-  viewElementSourceFunction = null,
+  viewElementSourceFunction,
 }: Props) {
   const [tab, setTab] = useState(defaultTab);
   if (overrideTab != null && overrideTab !== tab) {

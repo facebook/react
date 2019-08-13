@@ -11,7 +11,7 @@ import {
   COMFORTABLE_LINE_HEIGHT,
   COMPACT_LINE_HEIGHT,
   LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY,
-} from 'src/constants';
+} from 'react-devtools-shared/src/constants';
 import { useLocalStorage } from '../hooks';
 import { BridgeContext } from '../context';
 

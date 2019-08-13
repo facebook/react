@@ -16,9 +16,9 @@ import SnapshotSelector from './SnapshotSelector';
 import SidebarCommitInfo from './SidebarCommitInfo';
 import SidebarInteractions from './SidebarInteractions';
 import SidebarSelectedFiberInfo from './SidebarSelectedFiberInfo';
-import SettingsModal from 'src/devtools/views/Settings/SettingsModal';
-import SettingsModalContextToggle from 'src/devtools/views/Settings/SettingsModalContextToggle';
-import { SettingsModalContextController } from 'src/devtools/views/Settings/SettingsModalContext';
+import SettingsModal from 'react-devtools-shared/src/devtools/views/Settings/SettingsModal';
+import SettingsModalContextToggle from 'react-devtools-shared/src/devtools/views/Settings/SettingsModalContextToggle';
+import { SettingsModalContextController } from 'react-devtools-shared/src/devtools/views/Settings/SettingsModalContext';
 import portaledContent from '../portaledContent';
 
 import styles from './Profiler.css';

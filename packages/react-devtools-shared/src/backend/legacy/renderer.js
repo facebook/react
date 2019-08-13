@@ -6,10 +6,10 @@ import {
   ElementTypeRoot,
   ElementTypeHostComponent,
   ElementTypeOtherOrUnknown,
-} from 'src/types';
+} from 'react-devtools-shared/src/types';
 import { getUID, utfEncodeString, printOperationsArray } from '../../utils';
 import { cleanForBridge, copyWithSet } from '../utils';
-import { getDisplayName } from 'src/utils';
+import { getDisplayName } from 'react-devtools-shared/src/utils';
 import {
   __DEBUG__,
   TREE_OPERATION_ADD,
@@ -28,7 +28,7 @@ import type {
   PathMatch,
   RendererInterface,
 } from '../types';
-import type { ComponentFilter, ElementType } from 'src/types';
+import type { ComponentFilter, ElementType } from 'react-devtools-shared/src/types';
 import type { Owner, InspectedElement } from '../types';
 
 export type InternalInstance = Object;

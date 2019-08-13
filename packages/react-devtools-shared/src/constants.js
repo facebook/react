@@ -34,12 +34,10 @@ export const CHANGE_LOG_URL =
 // Sometimes the inline target is rendered before root styles are applied,
 // which would result in e.g. NaN itemSize being passed to react-window list.
 //
-// We can't use the Webpack loader syntax in the context of Jest though,
-// so tests need some reasonably meaningful fallback value.
-let COMFORTABLE_LINE_HEIGHT = 15;
-let COMPACT_LINE_HEIGHT = 10;
+let COMFORTABLE_LINE_HEIGHT;
+let COMPACT_LINE_HEIGHT;
 
-if (!__TEST__) {
+try {
   // $FlowFixMe
   const rawStyleString = require('!!raw-loader!src/devtools/views/root.css') // eslint-disable-line import/no-webpack-loader-syntax
     .default;
@@ -52,6 +50,11 @@ if (!__TEST__) {
 
   COMFORTABLE_LINE_HEIGHT = extractVar('comfortable-line-height-data');
   COMPACT_LINE_HEIGHT = extractVar('compact-line-height-data');
+} catch (error) {
+  // We can't use the Webpack loader syntax in the context of Jest,
+  // so tests need some reasonably meaningful fallback value.
+  COMFORTABLE_LINE_HEIGHT = 15;
+  COMPACT_LINE_HEIGHT = 10;
 }
 
 export { COMFORTABLE_LINE_HEIGHT, COMPACT_LINE_HEIGHT };

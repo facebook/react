@@ -6,17 +6,17 @@ import {
   TREE_OPERATION_REMOVE,
   TREE_OPERATION_REORDER_CHILDREN,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
-} from 'src/constants';
-import { utfDecodeString } from 'src/utils';
-import { ElementTypeRoot } from 'src/types';
-import ProfilerStore from 'src/devtools/ProfilerStore';
+} from 'react-devtools-shared/src/constants';
+import { utfDecodeString } from 'react-devtools-shared/src/utils';
+import { ElementTypeRoot } from 'react-devtools-shared/src/types';
+import ProfilerStore from 'react-devtools-shared/src/devtools/ProfilerStore';
 
-import type { ElementType } from 'src/types';
+import type { ElementType } from 'react-devtools-shared/src/types';
 import type {
   CommitTree,
   CommitTreeNode,
   ProfilingDataForRootFrontend,
-} from 'src/devtools/views/Profiler/types';
+} from 'react-devtools-shared/src/devtools/views/Profiler/types';
 
 const debug = (methodName, ...args) => {
   if (__DEBUG__) {

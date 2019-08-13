@@ -1,9 +1,9 @@
 // @flow
 
-import Agent from 'src/backend/agent';
+import Agent from 'react-devtools-shared/src/backend/agent';
 import resolveBoxStyle from './resolveBoxStyle';
 
-import type { BackendBridge } from 'src/bridge';
+import type { BackendBridge } from 'react-devtools-shared/src/bridge';
 import type { RendererID } from '../types';
 import type { StyleAndLayout } from './types';
 

@@ -76,7 +76,7 @@ export default function SelectedTreeHighlight(_: {||}) {
     }),
     [selectedElementID, store]
   );
-  const data = useSubscription<Data | null, Store>(subscription);
+  const data = useSubscription<Data | null>(subscription);
 
   if (ownerID !== null) {
     return null;

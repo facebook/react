@@ -2,7 +2,7 @@
 
 import throttle from 'lodash.throttle';
 import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
-import { localStorageGetItem, localStorageSetItem } from 'src/storage';
+import { localStorageGetItem, localStorageSetItem } from 'react-devtools-shared/src/storage';
 
 export function useIsOverflowing(
   containerRef: { current: HTMLDivElement | null },

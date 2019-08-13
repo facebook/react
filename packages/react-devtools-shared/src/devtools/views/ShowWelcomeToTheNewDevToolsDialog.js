@@ -5,7 +5,7 @@ import { unstable_batchedUpdates as batchedUpdates } from 'react-dom';
 import { useLocalStorage } from './hooks';
 import { ModalDialogContext } from './ModalDialog';
 import ReactLogo from './ReactLogo';
-import { CHANGE_LOG_URL } from 'src/constants';
+import { CHANGE_LOG_URL } from 'react-devtools-shared/src/constants';
 
 import styles from './ShowWelcomeToTheNewDevToolsDialog.css';
 

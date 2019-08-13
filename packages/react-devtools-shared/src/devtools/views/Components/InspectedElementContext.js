@@ -11,19 +11,19 @@ import React, {
 import { unstable_batchedUpdates as batchedUpdates } from 'react-dom';
 import { createResource } from '../../cache';
 import { BridgeContext, StoreContext } from '../context';
-import { hydrate, fillInPath } from 'src/hydration';
+import { hydrate, fillInPath } from 'react-devtools-shared/src/hydration';
 import { TreeStateContext } from './TreeContext';
-import { separateDisplayNameAndHOCs } from 'src/utils';
+import { separateDisplayNameAndHOCs } from 'react-devtools-shared/src/utils';
 
 import type {
   InspectedElement as InspectedElementBackend,
   InspectedElementPayload,
-} from 'src/backend/types';
+} from 'react-devtools-shared/src/backend/types';
 import type {
   DehydratedData,
   Element,
   InspectedElement as InspectedElementFrontend,
-} from 'src/devtools/views/Components/types';
+} from 'react-devtools-shared/src/devtools/views/Components/types';
 import type { Resource, Thenable } from '../../cache';
 
 export type GetInspectedElementPath = (

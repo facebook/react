@@ -121,7 +121,7 @@ function ProfilerContextController({ children }: Props) {
     isProfiling,
     profilingData,
     supportsProfiling,
-  } = useSubscription<StoreProfilingState, Store>(subscription);
+  } = useSubscription<StoreProfilingState>(subscription);
 
   const [prevProfilingData, setPrevProfilingData] = useState();
   const [rootID, setRootID] = useState<number | null>(null);

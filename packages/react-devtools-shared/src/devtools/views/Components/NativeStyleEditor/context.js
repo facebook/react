@@ -9,14 +9,14 @@ import React, {
   useState,
 } from 'react';
 import { unstable_batchedUpdates as batchedUpdates } from 'react-dom';
-import { createResource } from 'src/devtools/cache';
-import { BridgeContext, StoreContext } from 'src/devtools/views/context';
+import { createResource } from 'react-devtools-shared/src/devtools/cache';
+import { BridgeContext, StoreContext } from 'react-devtools-shared/src/devtools/views/context';
 import { TreeStateContext } from '../TreeContext';
 
-import type { StyleAndLayout as StyleAndLayoutBackend } from 'src/backend/NativeStyleEditor/types';
+import type { StyleAndLayout as StyleAndLayoutBackend } from 'react-devtools-shared/src/backend/NativeStyleEditor/types';
 import type { StyleAndLayout as StyleAndLayoutFrontend } from './types';
-import type { Element } from 'src/devtools/views/Components/types';
-import type { Resource, Thenable } from 'src/devtools/cache';
+import type { Element } from 'react-devtools-shared/src/devtools/views/Components/types';
+import type { Resource, Thenable } from 'react-devtools-shared/src/devtools/cache';
 
 export type GetStyleAndLayout = (id: number) => StyleAndLayoutFrontend | null;
 

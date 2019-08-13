@@ -10,7 +10,7 @@ import React, {
 } from 'react';
 import { useSubscription } from '../hooks';
 import { StoreContext } from '../context';
-import Store from 'src/devtools/store';
+import Store from 'react-devtools-shared/src/devtools/store';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import Toggle from '../Toggle';
@@ -28,7 +28,7 @@ import {
   ElementTypeOtherOrUnknown,
   ElementTypeProfiler,
   ElementTypeSuspense,
-} from 'src/types';
+} from 'react-devtools-shared/src/types';
 
 import styles from './SettingsShared.css';
 
@@ -39,7 +39,7 @@ import type {
   ElementType,
   ElementTypeComponentFilter,
   RegExpComponentFilter,
-} from 'src/types';
+} from 'react-devtools-shared/src/types';
 
 export default function ComponentsSettings(_: {||}) {
   const store = useContext(StoreContext);
@@ -54,7 +54,7 @@ export default function ComponentsSettings(_: {||}) {
     }),
     [store]
   );
-  const collapseNodesByDefault = useSubscription<boolean, Store>(
+  const collapseNodesByDefault = useSubscription<boolean>(
     collapseNodesByDefaultSubscription
   );
 

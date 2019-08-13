@@ -3,7 +3,7 @@
 import { createContext } from 'react';
 import Store from '../store';
 
-import type { FrontendBridge } from 'src/bridge';
+import type { FrontendBridge } from 'react-devtools-shared/src/bridge';
 
 export const BridgeContext = createContext<FrontendBridge>(
   ((null: any): FrontendBridge)

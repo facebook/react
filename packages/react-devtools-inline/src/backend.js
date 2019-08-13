@@ -1,10 +1,10 @@
 /** @flow */
 
-import Agent from 'src/backend/agent';
-import Bridge from 'src/bridge';
-import { initBackend } from 'src/backend';
-import { installHook } from 'src/hook';
-import setupNativeStyleEditor from 'src/backend/NativeStyleEditor/setupNativeStyleEditor';
+import Agent from 'react-devtools-shared/src/backend/agent';
+import Bridge from 'react-devtools-shared/src/bridge';
+import { initBackend } from 'react-devtools-shared/src/backend';
+import { installHook } from 'react-devtools-shared/src/hook';
+import setupNativeStyleEditor from 'react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor';
 import {
   MESSAGE_TYPE_GET_SAVED_PREFERENCES,
   MESSAGE_TYPE_SAVED_PREFERENCES,

@@ -6,7 +6,7 @@ import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import { StoreContext } from '../context';
 import { useSubscription } from '../hooks';
-import Store from 'src/devtools/store';
+import Store from 'react-devtools-shared/src/devtools/store';
 
 export default function SettingsModalContextToggle() {
   const { setIsModalShowing } = useContext(SettingsModalContext);
@@ -29,7 +29,7 @@ export default function SettingsModalContextToggle() {
     }),
     [profilerStore]
   );
-  const isProfiling = useSubscription<boolean, Store>(isProfilingSubscription);
+  const isProfiling = useSubscription<boolean>(isProfilingSubscription);
 
   return (
     <Button

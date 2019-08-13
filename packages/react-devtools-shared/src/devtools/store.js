@@ -18,12 +18,12 @@ import {
 } from '../utils';
 import { localStorageGetItem, localStorageSetItem } from '../storage';
 import { __DEBUG__ } from '../constants';
-import { printStore } from 'src/__tests__/storeSerializer';
+import { printStore } from '../__tests__/storeSerializer';
 import ProfilerStore from './ProfilerStore';
 
 import type { Element } from './views/Components/types';
 import type { ComponentFilter, ElementType } from '../types';
-import type { FrontendBridge } from 'src/bridge';
+import type { FrontendBridge } from 'react-devtools-shared/src/bridge';
 
 const debug = (methodName, ...args) => {
   if (__DEBUG__) {
