@@ -158,11 +158,13 @@ export function initWrapperState(element: Element, props: Object) {
     ) {
       warning(
         false,
-        'Select elements must be either controlled or uncontrolled ' +
+        '%s contains a select element with both value and defaultValue props. ' +
+          'Select elements must be either controlled or uncontrolled ' +
           '(specify either the value prop, or the defaultValue prop, but not ' +
           'both). Decide between using a controlled or uncontrolled select ' +
           'element and remove one of these props. More info: ' +
           'https://fb.me/react-controlled-components',
+        getCurrentFiberOwnerNameInDevOrNull() || 'A component',
       );
       didWarnValueDefaultValue = true;
     }

@@ -145,10 +145,11 @@ export function updateWrapper(element: Element, props: Object) {
     ) {
       warning(
         false,
-        'A component is changing an uncontrolled input of type %s to be controlled. ' +
+        '%s is changing an uncontrolled input of type %s to be controlled. ' +
           'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
           'Decide between using a controlled or uncontrolled input ' +
           'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
+        getCurrentFiberOwnerNameInDevOrNull() || 'A component',
         props.type,
       );
       didWarnUncontrolledToControlled = true;
@@ -160,10 +161,11 @@ export function updateWrapper(element: Element, props: Object) {
     ) {
       warning(
         false,
-        'A component is changing a controlled input of type %s to be uncontrolled. ' +
+        '%s is changing a controlled input of type %s to be uncontrolled. ' +
           'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
           'Decide between using a controlled or uncontrolled input ' +
           'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
+        getCurrentFiberOwnerNameInDevOrNull() || 'A component',
         props.type,
       );
       didWarnControlledToUncontrolled = true;

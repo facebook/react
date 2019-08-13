@@ -178,7 +178,7 @@ describe('ReactDOMComponentTree', () => {
     const component = <Controlled />;
     const instance = ReactDOM.render(component, container);
     expect(() => simulateInput(instance.a, finishValue)).toWarnDev(
-      'Warning: A component is changing an uncontrolled input of ' +
+      'Warning: Controlled is changing an uncontrolled input of ' +
         'type text to be controlled. Input elements should not ' +
         'switch from uncontrolled to controlled (or vice versa). ' +
         'Decide between using a controlled or uncontrolled input ' +

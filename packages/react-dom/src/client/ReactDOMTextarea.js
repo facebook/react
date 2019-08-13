@@ -142,10 +142,11 @@ export function updateWrapper(element: Element, props: Object) {
     ) {
       warning(
         false,
-        'A component is changing an uncontrolled textarea to be controlled. ' +
+        '%s is changing an uncontrolled textarea to be controlled. ' +
           'Textarea elements should not switch from uncontrolled to controlled (or vice versa). ' +
           'Decide between using a controlled or uncontrolled textarea ' +
           'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
+        getCurrentFiberOwnerNameInDevOrNull() || 'A component',
       );
       didWarnUncontrolledToControlled = true;
     }
@@ -156,10 +157,11 @@ export function updateWrapper(element: Element, props: Object) {
     ) {
       warning(
         false,
-        'A component is changing a controlled textarea to be uncontrolled. ' +
+        '%s is changing a controlled textarea to be uncontrolled. ' +
           'Textarea elements should not switch from controlled to uncontrolled (or vice versa). ' +
           'Decide between using a controlled or uncontrolled textarea ' +
           'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
+        getCurrentFiberOwnerNameInDevOrNull() || 'A component',
       );
       didWarnControlledToUncontrolled = true;
     }

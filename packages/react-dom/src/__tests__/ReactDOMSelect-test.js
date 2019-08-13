@@ -696,7 +696,8 @@ describe('ReactDOMSelect', () => {
         </select>,
       ),
     ).toWarnDev(
-      'Select elements must be either controlled or uncontrolled ' +
+      'A component contains a select element with both value and defaultValue props. ' +
+        'Select elements must be either controlled or uncontrolled ' +
         '(specify either the value prop, or the defaultValue prop, but not ' +
         'both). Decide between using a controlled or uncontrolled select ' +
         'element and remove one of these props. More info: ' +
