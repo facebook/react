@@ -125,10 +125,9 @@ function coerceRef(
               false,
               'Component "%s" contains the string ref "%s". Support for string refs ' +
                 'will be removed in a future major release. We recommend using ' +
-                'useRef() or createRef() instead.' +
-                '\n%s' +
-                '\n\nLearn more about using refs safely here:' +
-                '\nhttps://fb.me/react-strict-mode-string-ref',
+                'useRef() or createRef() instead. ' +
+                'Learn more about using refs safely here: ' +
+                'https://fb.me/react-strict-mode-string-ref%s',
               componentName,
               mixedRef,
               getStackByFiberInDevAndProd(returnFiber),
@@ -138,10 +137,9 @@ function coerceRef(
               false,
               'A string ref, "%s", has been found within a strict mode tree. ' +
                 'String refs are a source of potential bugs and should be avoided. ' +
-                'We recommend using useRef() or createRef() instead.' +
-                '\n%s' +
-                '\n\nLearn more about using refs safely here:' +
-                '\nhttps://fb.me/react-strict-mode-string-ref',
+                'We recommend using useRef() or createRef() instead. ' +
+                'Learn more about using refs safely here: ' +
+                'https://fb.me/react-strict-mode-string-ref%s',
               mixedRef,
               getStackByFiberInDevAndProd(returnFiber),
             );
