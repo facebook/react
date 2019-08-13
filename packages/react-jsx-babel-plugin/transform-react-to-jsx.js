@@ -27,11 +27,15 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
   };
 
   visitor.JSXElement = {
-    enter(path, state) {
-      // console.log(path, state);
-    },
+    enter(path, state) {},
     exit(path, file) {
-      const callExpr = buildElementCall(path, file);
+      let callExpr;
+      if (file.opts.useCreateElement || useCreateElement(path)) {
+        callExpr = buildElementCall(path, file);
+      } else {
+        callExpr = buildJSXElementCall(path, file);
+      }
+
       if (callExpr) {
         path.replaceWith(t.inherits(callExpr, path.node));
       }
@@ -45,6 +49,7 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
           'Fragment tags are only supported in React 16 and up.',
         );
       }
+
       const callExpr = buildFragmentCall(path, file);
       if (callExpr) {
         path.replaceWith(t.inherits(callExpr, path.node));
@@ -111,10 +116,70 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
     return t.inherits(t.objectProperty(node.name, value), node);
   }
 
-  //   // <div {...props} key="Hi" /> should use React.createElement
-  //   function isPropsSpreadFollowedByKey(node) {
+  function buildJSXElementCall(path, file) {
+    if (opts.filter && !opts.filter(path.node, file)) return;
 
-  //   }
+    const openingPath = path.get('openingElement');
+    openingPath.parent.children = t.react.buildChildren(openingPath.parent);
+
+    const tagExpr = convertJSXIdentifier(
+      openingPath.node.name,
+      openingPath.node,
+    );
+
+    const args = [];
+
+    let tagName;
+    if (t.isIdentifier(tagExpr)) {
+      tagName = tagExpr.name;
+    } else if (t.isLiteral(tagExpr)) {
+      tagName = tagExpr.value;
+    }
+
+    const state = {
+      tagExpr: tagExpr,
+      tagName: tagName,
+      args: args,
+    };
+
+    if (opts.pre) {
+      opts.pre(state, file);
+    }
+
+    let attribs = openingPath.node.attributes;
+    let keyValue;
+    for (let i = 0, attrLength = attribs.length; i < attrLength; i++) {
+      const attr = attribs[i];
+      if (t.isJSXAttribute(attr)) {
+        if (t.isJSXIdentifier(attr.name) && attr.name.name === 'key') {
+          keyValue = attr.value;
+        }
+      }
+    }
+
+    if (attribs.length || path.node.children.length) {
+      attribs = buildOpeningElementAttributes(
+        attribs,
+        file,
+        true,
+        path.node.children,
+      );
+    } else {
+      attribs = t.nullLiteral();
+    }
+
+    args.push(attribs);
+
+    if (keyValue !== undefined) {
+      args.push(keyValue);
+    }
+
+    if (opts.post) {
+      opts.post(state, file);
+    }
+
+    return state.call || t.callExpression(state.callee, args);
+  }
 
   function buildElementCall(path, file) {
     if (opts.filter && !opts.filter(path.node, file)) return;
@@ -158,7 +223,7 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
       opts.post(state, file);
     }
 
-    return state.call || t.callExpression(state.callee, args);
+    return state.call || t.callExpression(state.oldCallee, args);
   }
 
   function pushProps(_props, objs) {
@@ -175,7 +240,7 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
    * all prior attributes to an array for later processing.
    */
 
-  function buildOpeningElementAttributes(attribs, file) {
+  function buildOpeningElementAttributes(attribs, file, isReactJSX, children) {
     let _props = [];
     const objs = [];
 
@@ -193,7 +258,28 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
         _props = pushProps(_props, objs);
         objs.push(prop.argument);
       } else {
-        _props.push(convertAttribute(prop));
+        const attr = convertAttribute(prop);
+        // if we are using React.JSX, we don't want to pass 'key' as a prop
+        // so don't add it to the list
+        if (!isReactJSX || attr.key.name !== 'key') {
+          _props.push(attr);
+        }
+      }
+    }
+
+    // if we are using React.JSX, children is now a prop, so add it to the list
+
+    console.log(children);
+    if (isReactJSX && children && children.length > 0) {
+      if (children.length === 1) {
+        _props.push(t.objectProperty(t.identifier('children'), children[0]));
+      } else {
+        _props.push(
+          t.objectProperty(
+            t.identifier('children'),
+            t.arrayExpression(children),
+          ),
+        );
       }
     }
 
@@ -240,14 +326,53 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
     }
 
     // no attributes are allowed with <> syntax
-    args.push(t.nullLiteral(), ...path.node.children);
+    // React.createElement uses different syntax than React.jsx
+    // createElement passes in children as a separate argument,
+    // whereas jsx passes children in as a prop
+    if (file.opts.useCreateElement) {
+      args.push(t.nullLiteral(), ...path.node.children);
+    } else {
+      args.push(
+        t.objectExpression([
+          t.objectProperty(
+            t.identifier('children'),
+            t.arrayExpression(path.node.children),
+          ),
+        ]),
+      );
+    }
 
     if (opts.post) {
       opts.post(state, file);
     }
 
-    file.set('usedFragment', true);
-    return state.call || t.callExpression(state.callee, args);
+    return (
+      state.call ||
+      t.callExpression(
+        file.opts.useCreateElement ? state.oldCallee : state.callee,
+        args,
+      )
+    );
+  }
+
+  function useCreateElement(path) {
+    const openingPath = path.get('openingElement');
+    const attributes = openingPath.node.attributes;
+
+    let seenPropsSpread = false;
+    for (let i = 0, length = attributes.length; i < length; i++) {
+      const attr = attributes[i];
+      if (
+        seenPropsSpread &&
+        t.isJSXAttribute(attr) &&
+        attr.name.name === 'key'
+      ) {
+        return true;
+      } else if (t.isJSXSpreadAttribute(attr)) {
+        seenPropsSpread = true;
+      }
+    }
+    return false;
   }
 }
 
@@ -272,6 +397,7 @@ module.exports = function(babel) {
 
     post(state, pass) {
       state.callee = pass.get('jsxIdentifier')();
+      state.oldCallee = pass.get('oldJSXIdentifier')();
     },
   });
 
@@ -279,23 +405,12 @@ module.exports = function(babel) {
     enter(path, state) {
       const pragma = state.opts.development ? 'React.jsxDEV' : 'React.jsx';
       const pragmaFrag = 'React.Fragment';
+      state.set(
+        'oldJSXIdentifier',
+        createIdentifierParser('React.createElement'),
+      );
       state.set('jsxIdentifier', createIdentifierParser(pragma));
       state.set('jsxFragIdentifier', createIdentifierParser(pragmaFrag));
-      state.set('usedFragment', false);
-      state.set('pragmaSet', true);
-      state.set('pragmaFragSet', true);
-    },
-    exit(path, state) {
-      if (
-        state.get('pragmaSet') &&
-        state.get('usedFragment') &&
-        !state.get('pragmaFragSet')
-      ) {
-        throw new Error(
-          'transform-react-jsx: pragma has been set but ' +
-            'pragmafrag has not been set',
-        );
-      }
     },
   };
 

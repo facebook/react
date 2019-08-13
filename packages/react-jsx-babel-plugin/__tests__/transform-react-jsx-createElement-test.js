@@ -8,7 +8,6 @@
 'use strict';
 
 const babel = require('@babel/core');
-// const transformReactJSX = require('../transform-react-jsx');
 const codeFrame = require('@babel/code-frame');
 
 function transform(input, options) {
@@ -22,31 +21,13 @@ function transform(input, options) {
           method: 'coroutine',
           development: __DEV__,
           useBuiltIns: true,
+          useCreateElement: true,
           ...options,
         },
       ],
     ],
   }).code;
 }
-
-// function compare(input, output) {
-//   const compiled = transform(input);
-//   expect(compiled).toEqual(output);
-// }
-
-// const TEST_DIR = './packages/react-jsx-babel-plugin/__tests__/fixtures';
-// function makeTests() {
-//   fs.readdirSync(TEST_DIR).forEach(filename => {
-//     const testLoc = path.join(TEST_DIR, filename);
-//     const inputLoc = path.join(testLoc, 'input.js');
-//     const outputLoc = path.join(testLoc, 'output.js');
-//     const input = fs.readFileSync(inputLoc, 'utf8');
-//     const output = fs.readFileSync(outputLoc, 'utf8');
-//     it(filename, () => {
-//       compare(input, output);
-//     });
-//   });
-// }
 
 describe('transform react to jsx', () => {
   it('should properly handle comments adjacent to children', () => {
