@@ -22,6 +22,11 @@ module.exports = {
     // Node.js Server Rendering
     setImmediate: true,
     Buffer: true,
+
+    // Scheduler profiling
+    SharedArrayBuffer: true,
+    Int32Array: true,
+    ArrayBuffer: true,
   },
   parserOptions: {
     ecmaVersion: 5,

@@ -13,6 +13,7 @@
 'use strict';
 
 let Scheduler;
+let sharedProfilingArray;
 // let runWithPriority;
 let ImmediatePriority;
 let UserBlockingPriority;
@@ -44,6 +45,12 @@ function priorityLevelToString(priorityLevel) {
 }
 
 describe('Scheduler', () => {
+  if (!__DEV__) {
+    // The tests in this suite are dev only
+    it("empty test so Jest doesn't complain that there are no tests in this file", () => {});
+    return;
+  }
+
   beforeEach(() => {
     jest.resetModules();
     jest.mock('scheduler', () => require('scheduler/unstable_mock'));
@@ -51,7 +58,12 @@ describe('Scheduler', () => {
     performance = global.performance = createUserTimingPolyfill();
 
     require('scheduler/src/SchedulerFeatureFlags').enableUserTimingAPI = true;
+    require('scheduler/src/SchedulerFeatureFlags').enableSharedProfilingBuffer = true;
     Scheduler = require('scheduler');
+
+    sharedProfilingArray = new Int32Array(
+      Scheduler.unstable_sharedProfilingBuffer,
+    );
 
     // runWithPriority = Scheduler.unstable_runWithPriority;
     ImmediatePriority = Scheduler.unstable_ImmediatePriority;
@@ -68,6 +80,12 @@ describe('Scheduler', () => {
 
   afterEach(() => {
     performance.assertAllUserTimingsAreCleared();
+    if (sharedProfilingArray[2] !== 0) {
+      throw Error(
+        'Test exited, but the shared profiling buffer indicates that a task ' +
+          'is still running',
+      );
+    }
   });
 
   function createUserTimingPolyfill() {
@@ -248,10 +266,23 @@ describe('Scheduler', () => {
     };
   }
 
-  if (!__DEV__) {
-    // The tests in this suite are dev only
-    it("empty test so Jest doesn't complain that there are no tests in this file", () => {});
-    return;
+  const PRIORITY = 0;
+  const CURRENT_TASK_ID = 1;
+  const QUEUE_SIZE = 2;
+  function getProfilingInfo() {
+    const queueSize = sharedProfilingArray[QUEUE_SIZE];
+    if (queueSize === 0) {
+      return 'Empty Queue';
+    }
+    const priorityLevel = sharedProfilingArray[PRIORITY];
+    if (priorityLevel === 0) {
+      return 'Suspended, Queue Size: ' + queueSize;
+    }
+    return `Current Task: ${
+      sharedProfilingArray[QUEUE_SIZE]
+    }, Priority: ${priorityLevelToString(priorityLevel)}, Queue Size: ${
+      sharedProfilingArray[CURRENT_TASK_ID]
+    }`;
   }
 
   it('creates a basic flamegraph', () => {
@@ -260,9 +291,11 @@ describe('Scheduler', () => {
       NormalPriority,
       () => {
         Scheduler.unstable_advanceTime(300);
+        Scheduler.unstable_yieldValue(getProfilingInfo());
         scheduleCallback(
           UserBlockingPriority,
           () => {
+            Scheduler.unstable_yieldValue(getProfilingInfo());
             Scheduler.unstable_advanceTime(300);
           },
           {label: 'Bar'},
@@ -270,14 +303,24 @@ describe('Scheduler', () => {
         Scheduler.unstable_advanceTime(100);
         Scheduler.unstable_yieldValue('Yield');
         return () => {
+          Scheduler.unstable_yieldValue(getProfilingInfo());
           Scheduler.unstable_advanceTime(300);
         };
       },
       {label: 'Foo'},
     );
-    expect(Scheduler).toFlushAndYieldThrough(['Yield']);
+    expect(Scheduler).toFlushAndYieldThrough([
+      'Current Task: 1, Priority: Normal, Queue Size: 1',
+      'Yield',
+    ]);
     Scheduler.unstable_advanceTime(100);
-    expect(Scheduler).toFlushWithoutYielding();
+    expect(Scheduler).toFlushAndYield([
+      'Current Task: 2, Priority: User-blocking, Queue Size: 2',
+      'Current Task: 1, Priority: Normal, Queue Size: 1',
+    ]);
+
+    expect(getProfilingInfo()).toEqual('Empty Queue');
+
     expect(performance.printUserTimings()).toEqual(
       `
 !!! Main thread              │          ██
@@ -289,6 +332,7 @@ describe('Scheduler', () => {
 
   it('marks when a task is canceled', () => {
     const task = scheduleCallback(NormalPriority, () => {
+      Scheduler.unstable_yieldValue(getProfilingInfo());
       Scheduler.unstable_advanceTime(300);
       Scheduler.unstable_yieldValue('Yield');
       return () => {
@@ -297,7 +341,10 @@ describe('Scheduler', () => {
       };
     });
 
-    expect(Scheduler).toFlushAndYieldThrough(['Yield']);
+    expect(Scheduler).toFlushAndYieldThrough([
+      'Current Task: 1, Priority: Normal, Queue Size: 1',
+      'Yield',
+    ]);
     Scheduler.unstable_advanceTime(100);
 
     cancelCallback(task);

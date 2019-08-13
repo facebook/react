@@ -10,6 +10,7 @@
 
 import {
   enableSchedulerDebugging,
+  enableSharedProfilingBuffer,
   enableProfiling,
 } from './SchedulerFeatureFlags';
 import {
@@ -33,6 +34,7 @@ import {
   IdlePriority,
 } from './SchedulerPriorities';
 import {
+  sharedProfilingBuffer,
   markTaskRun,
   markTaskYield,
   markTaskCompleted,
@@ -83,6 +85,10 @@ function requestHostCallbackWithProfiling(cb) {
   }
 }
 
+// Expose a shared array buffer that contains profiling information.
+export const unstable_sharedProfilingBuffer =
+  enableProfiling && enableSharedProfilingBuffer ? sharedProfilingBuffer : null;
+
 const requestHostCallback = enableProfiling
   ? requestHostCallbackWithProfiling
   : requestHostCallbackWithoutProfiling;
@@ -96,7 +102,10 @@ function flushTask(task, callback, currentTime) {
     markTaskYield(task);
     return continuationCallback;
   } else {
-    markTaskCompleted(task);
+    if (enableProfiling) {
+      markTaskCompleted(task);
+      task.isQueued = false;
+    }
     return null;
   }
 }
@@ -113,7 +122,10 @@ function advanceTimers(currentTime) {
       pop(timerQueue);
       timer.sortIndex = timer.expirationTime;
       push(taskQueue, timer);
-      markTaskStart(timer);
+      if (enableProfiling) {
+        markTaskStart(timer);
+        timer.isQueued = true;
+      }
     } else {
       // Remaining timers are pending.
       return;
@@ -201,7 +213,10 @@ function flushWork(hasTimeRemaining, initialTime) {
     }
   } catch (error) {
     if (currentTask !== null) {
-      markTaskErrored(currentTask);
+      if (enableProfiling) {
+        markTaskErrored(currentTask);
+        currentTask.isQueued = false;
+      }
       if (currentTask === peek(taskQueue)) {
         pop(taskQueue);
       }
@@ -332,6 +347,7 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
   };
 
   if (enableProfiling) {
+    newTask.isQueued = false;
     if (typeof options === 'object' && options !== null) {
       newTask.label = label;
     }
@@ -355,7 +371,10 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
   } else {
     newTask.sortIndex = expirationTime;
     push(taskQueue, newTask);
-    markTaskStart(newTask);
+    if (enableProfiling) {
+      markTaskStart(newTask);
+      newTask.isQueued = true;
+    }
     // Schedule a host callback, if needed. If we're already performing work,
     // wait until the next time we yield.
     if (!isHostCallbackScheduled && !isPerformingWork) {
@@ -384,8 +403,9 @@ function unstable_getFirstCallbackNode() {
 }
 
 function unstable_cancelCallback(task) {
-  if (enableProfiling && task.callback !== null) {
+  if (enableProfiling && task.isQueued) {
     markTaskCanceled(task);
+    task.isQueued = false;
   }
   if (task !== null && task === peek(taskQueue)) {
     pop(taskQueue);

@@ -21,6 +21,11 @@ module.exports = {
     // Fabric. See https://github.com/facebook/react/pull/15490
     // for more information
     nativeFabricUIManager: true,
+
+    // Scheduler profiling
+    SharedArrayBuffer: true,
+    Int32Array: true,
+    ArrayBuffer: true,
   },
   parserOptions: {
     ecmaVersion: 5,
