@@ -31,6 +31,7 @@ import warningWithoutStack from 'shared/warningWithoutStack';
 import {
   enableProfilerTimer,
   enableFundamentalAPI,
+  enableUserTimingAPI,
 } from 'shared/ReactFeatureFlags';
 import {NoEffect, Placement} from 'shared/ReactSideEffectTags';
 import {ConcurrentRoot, BatchedRoot} from 'shared/ReactRootTags';
@@ -245,11 +246,7 @@ export type Fiber = {|
   _debugHookTypes?: Array<HookType> | null,
 |};
 
-let debugCounter;
-
-if (__DEV__) {
-  debugCounter = 1;
-}
+let debugCounter = 1;
 
 function FiberNode(
   tag: WorkTag,
@@ -319,11 +316,16 @@ function FiberNode(
     this.treeBaseDuration = 0;
   }
 
-  if (__DEV__) {
+  // This is normally DEV-only except www when it adds listeners.
+  // TODO: remove the User Timing integration in favor of Root Events.
+  if (enableUserTimingAPI) {
     this._debugID = debugCounter++;
+    this._debugIsCurrentlyTiming = false;
+  }
+
+  if (__DEV__) {
     this._debugSource = null;
     this._debugOwner = null;
-    this._debugIsCurrentlyTiming = false;
     this._debugNeedsRemount = false;
     this._debugHookTypes = null;
     if (!hasBadMapPolyfill && typeof Object.preventExtensions === 'function') {
