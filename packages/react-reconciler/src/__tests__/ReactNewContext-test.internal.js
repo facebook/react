@@ -1196,7 +1196,7 @@ describe('ReactNewContext', () => {
       expect(() => {
         expect(Scheduler).toFlushAndYield(['LegacyProvider', 'App', 'Child']);
       }).toWarnDev(
-        'Legacy context API has been detected within a strict-mode tree: \n\n' +
+        'Legacy context API has been detected within a strict-mode tree.\n\n' +
           'The old API will be supported in all 16.x releases, but applications ' +
           'using it should migrate to the new version.\n\n' +
           'Please update the following components: LegacyProvider',
