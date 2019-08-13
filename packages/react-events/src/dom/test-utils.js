@@ -95,6 +95,10 @@ function click(data) {
   return createEvent('click', data);
 }
 
+function contextmenu(data) {
+  return createEvent('contextmenu', data);
+}
+
 function dragstart(data) {
   return createEvent('dragstart', data);
 }
@@ -105,6 +109,14 @@ function focus(data) {
 
 function gotpointercapture(data) {
   return createEvent('gotpointercapture', data);
+}
+
+function keydown(data) {
+  return createKeyboardEvent('keydown', data);
+}
+
+function keyup(data) {
+  return createKeyboardEvent('keyup', data);
 }
 
 function lostpointercapture(data) {
@@ -191,8 +203,52 @@ function touchstart(data, id) {
  * Dispatch high-level event sequences
  */
 
-function dispatchPointerHoverEnter(ref, {relatedTarget, x, y} = {}) {
-  const dispatch = arg => ref.current.dispatchEvent(arg);
+function emptyFunction() {}
+
+function dispatchLongPressContextMenu(
+  target,
+  {preventDefault = emptyFunction} = {},
+) {
+  const dispatch = arg => target.dispatchEvent(arg);
+  const button = 0;
+  if (hasPointerEvent()) {
+    dispatch(pointerdown({button, pointerType: 'touch'}));
+  }
+  dispatch(touchstart());
+  dispatch(contextmenu({button, preventDefault}));
+}
+
+function dispatchRightClickContextMenu(
+  target,
+  {preventDefault = emptyFunction} = {},
+) {
+  const dispatch = arg => target.dispatchEvent(arg);
+  const button = 2;
+  if (hasPointerEvent()) {
+    dispatch(pointerdown({button, pointerType: 'mouse'}));
+  }
+  dispatch(mousedown({button}));
+  dispatch(contextmenu({button, preventDefault}));
+}
+
+function dispatchModifiedClickContextMenu(
+  target,
+  {preventDefault = emptyFunction} = {},
+) {
+  const dispatch = arg => target.dispatchEvent(arg);
+  const button = 0;
+  const ctrlKey = true;
+  if (hasPointerEvent()) {
+    dispatch(pointerdown({button, ctrlKey, pointerType: 'mouse'}));
+  }
+  dispatch(mousedown({button, ctrlKey}));
+  if (platform.get() === 'mac') {
+    dispatch(contextmenu({button, ctrlKey, preventDefault}));
+  }
+}
+
+function dispatchPointerHoverEnter(target, {relatedTarget, x, y} = {}) {
+  const dispatch = arg => target.dispatchEvent(arg);
   const button = -1;
   const pointerType = 'mouse';
   const event = {
@@ -211,8 +267,8 @@ function dispatchPointerHoverEnter(ref, {relatedTarget, x, y} = {}) {
   dispatch(mouseover(event));
 }
 
-function dispatchPointerHoverMove(ref, {from, to} = {}) {
-  const dispatch = arg => ref.current.dispatchEvent(arg);
+function dispatchPointerHoverMove(target, {from, to} = {}) {
+  const dispatch = arg => target.dispatchEvent(arg);
   const button = -1;
   const pointerId = 1;
   const pointerType = 'mouse';
@@ -233,8 +289,8 @@ function dispatchPointerHoverMove(ref, {from, to} = {}) {
   dispatchMove({x: to.x, y: to.y});
 }
 
-function dispatchPointerHoverExit(ref, {relatedTarget, x, y} = {}) {
-  const dispatch = arg => ref.current.dispatchEvent(arg);
+function dispatchPointerHoverExit(target, {relatedTarget, x, y} = {}) {
+  const dispatch = arg => target.dispatchEvent(arg);
   const button = -1;
   const pointerType = 'mouse';
   const event = {
@@ -253,51 +309,82 @@ function dispatchPointerHoverExit(ref, {relatedTarget, x, y} = {}) {
   dispatch(mouseleave(event));
 }
 
-function dispatchPointerCancel(ref, options) {
-  const dispatchEvent = arg => ref.current.dispatchEvent(arg);
+function dispatchPointerCancel(target, options) {
+  const dispatchEvent = arg => target.dispatchEvent(arg);
   dispatchEvent(pointercancel({pointerType: 'mouse'}));
   dispatchEvent(dragstart({pointerType: 'mouse'}));
 }
 
-function dispatchPointerPressDown(ref, {button = 0, pointerType = 'mouse'}) {
-  const dispatch = arg => ref.current.dispatchEvent(arg);
+function dispatchPointerPressDown(
+  target,
+  {button = 0, pointerType = 'mouse'} = {},
+) {
+  const dispatch = arg => target.dispatchEvent(arg);
   const pointerId = 1;
-  if (hasPointerEvent()) {
-    dispatch(pointerover({pointerId, pointerType, button}));
-    dispatch(pointerenter({pointerId, pointerType, button}));
-    dispatch(pointerdown({pointerId, pointerType, button}));
-  }
-  dispatch(touchstart(null, pointerId));
-  if (hasPointerEvent()) {
-    dispatch(gotpointercapture({pointerId, pointerType, button}));
+  if (pointerType !== 'mouse') {
+    if (hasPointerEvent()) {
+      dispatch(pointerover({button, pointerId, pointerType}));
+      dispatch(pointerenter({button, pointerId, pointerType}));
+      dispatch(pointerdown({button, pointerId, pointerType}));
+    }
+    dispatch(touchstart(null, pointerId));
+    if (hasPointerEvent()) {
+      dispatch(gotpointercapture({button, pointerId, pointerType}));
+    }
+  } else {
+    if (hasPointerEvent()) {
+      dispatch(pointerdown({button, pointerId, pointerType}));
+    }
+    dispatch(mousedown({button}));
+    if (document.activeElement !== target) {
+      dispatch(focus({button}));
+    }
   }
 }
 
-function dispatchPointerPressRelease(ref, {button = 0, pointerType = 'mouse'}) {
-  const dispatch = arg => ref.current.dispatchEvent(arg);
+function dispatchPointerPressRelease(
+  target,
+  {button = 0, pointerType = 'mouse'} = {},
+) {
+  const dispatch = arg => target.dispatchEvent(arg);
   const pointerId = 1;
-  if (hasPointerEvent()) {
-    dispatch(pointerup({pointerId, pointerType, button}));
-    dispatch(lostpointercapture({pointerId, pointerType, button}));
-    dispatch(pointerout({pointerId, pointerType, button}));
-    dispatch(pointerleave({pointerId, pointerType, button}));
+  if (pointerType !== 'mouse') {
+    if (hasPointerEvent()) {
+      dispatch(pointerup({button, pointerId, pointerType}));
+      dispatch(lostpointercapture({button, pointerId, pointerType}));
+      dispatch(pointerout({button, pointerId, pointerType}));
+      dispatch(pointerleave({button, pointerId, pointerType}));
+    }
+    dispatch(touchend(null, pointerId));
+    dispatch(mouseover({button}));
+    dispatch(mousemove({button}));
+    dispatch(mousedown({button}));
+    if (document.activeElement !== target) {
+      dispatch(focus({button}));
+    }
+    dispatch(mouseup({button}));
+    dispatch(click({button}));
+  } else {
+    if (hasPointerEvent()) {
+      dispatch(pointerup({button, pointerId, pointerType}));
+    }
+    dispatch(mouseup({button}));
+    dispatch(click({button}));
   }
-  dispatch(touchend(null, pointerId));
-  dispatch(mouseover({button}));
-  dispatch(mousemove({button}));
-  dispatch(mousedown({button}));
-  dispatch(focus({button}));
-  dispatch(mouseup({button}));
-  dispatch(click({button}));
 }
 
-function dispatchTouchTap(ref) {
-  dispatchPointerPressDown(ref, {pointerType: 'touch'});
-  dispatchPointerPressRelease(ref, {pointerType: 'touch'});
+function dispatchTouchTap(target) {
+  dispatchPointerPressDown(target, {pointerType: 'touch'});
+  dispatchPointerPressRelease(target, {pointerType: 'touch'});
 }
 
 module.exports = {
+  blur,
+  focus,
   createEvent,
+  dispatchLongPressContextMenu,
+  dispatchRightClickContextMenu,
+  dispatchModifiedClickContextMenu,
   dispatchPointerCancel,
   dispatchPointerHoverEnter,
   dispatchPointerHoverExit,
@@ -305,6 +392,8 @@ module.exports = {
   dispatchPointerPressDown,
   dispatchPointerPressRelease,
   dispatchTouchTap,
+  keydown,
+  keyup,
   platform,
   hasPointerEvent,
   setPointerEvent,

@@ -37,7 +37,7 @@ function initModules() {
   };
 }
 
-const {resetModules, serverRender, itRenders} = ReactDOMServerIntegrationUtils(
+const {resetModules, serverRender} = ReactDOMServerIntegrationUtils(
   initModules,
 );
 
@@ -102,8 +102,8 @@ describe('ReactDOMServerSuspense', () => {
     );
   });
 
-  itRenders('a SuspenseList component and its children', async render => {
-    const element = await render(
+  it('server renders a SuspenseList component and its children', async () => {
+    const example = (
       <React.unstable_SuspenseList>
         <React.Suspense fallback="Loading A">
           <div>A</div>
@@ -111,8 +111,9 @@ describe('ReactDOMServerSuspense', () => {
         <React.Suspense fallback="Loading B">
           <div>B</div>
         </React.Suspense>
-      </React.unstable_SuspenseList>,
+      </React.unstable_SuspenseList>
     );
+    const element = await serverRender(example);
     const parent = element.parentNode;
     const divA = parent.children[0];
     expect(divA.tagName).toBe('DIV');
@@ -120,5 +121,16 @@ describe('ReactDOMServerSuspense', () => {
     const divB = parent.children[1];
     expect(divB.tagName).toBe('DIV');
     expect(divB.textContent).toBe('B');
+
+    ReactTestUtils.act(() => {
+      const root = ReactDOM.unstable_createSyncRoot(parent, {hydrate: true});
+      root.render(example);
+    });
+
+    const parent2 = element.parentNode;
+    const divA2 = parent2.children[0];
+    const divB2 = parent2.children[1];
+    expect(divA).toBe(divA2);
+    expect(divB).toBe(divB2);
   });
 });

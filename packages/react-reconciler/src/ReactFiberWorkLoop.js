@@ -24,7 +24,6 @@ import {
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   enableProfilerTimer,
   enableSchedulerTracing,
-  revertPassiveEffectsChange,
   warnAboutUnmockedScheduler,
   flushSuspenseFallbacksInTests,
   disableSchedulerTimeoutBasedOnReactExpirationTime,
@@ -77,7 +76,6 @@ import {
   HostRoot,
   ClassComponent,
   SuspenseComponent,
-  DehydratedSuspenseComponent,
   FunctionComponent,
   ForwardRef,
   MemoComponent,
@@ -621,11 +619,9 @@ export function flushDiscreteUpdates() {
     return;
   }
   flushPendingDiscreteUpdates();
-  if (!revertPassiveEffectsChange) {
-    // If the discrete updates scheduled passive effects, flush them now so that
-    // they fire before the next serial event.
-    flushPassiveEffects();
-  }
+  // If the discrete updates scheduled passive effects, flush them now so that
+  // they fire before the next serial event.
+  flushPassiveEffects();
 }
 
 function resolveLocksOnRoot(root: FiberRoot, expirationTime: ExpirationTime) {
@@ -2210,9 +2206,6 @@ export function resolveRetryThenable(boundaryFiber: Fiber, thenable: Thenable) {
     switch (boundaryFiber.tag) {
       case SuspenseComponent:
         retryCache = boundaryFiber.stateNode;
-        break;
-      case DehydratedSuspenseComponent:
-        retryCache = boundaryFiber.memoizedState;
         break;
       default:
         invariant(

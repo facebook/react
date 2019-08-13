@@ -24,6 +24,7 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {UpdateQueue} from './ReactUpdateQueue';
 import type {ContextDependency} from './ReactFiberNewContext';
 import type {HookType} from './ReactFiberHooks';
+import type {SuspenseInstance} from './ReactFiberHostConfig';
 
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
@@ -48,6 +49,7 @@ import {
   Profiler,
   SuspenseComponent,
   SuspenseListComponent,
+  DehydratedFragment,
   FunctionComponent,
   MemoComponent,
   SimpleMemoComponent,
@@ -840,6 +842,14 @@ export function createFiberFromHostInstanceForDeletion(): Fiber {
   // TODO: These should not need a type.
   fiber.elementType = 'DELETED';
   fiber.type = 'DELETED';
+  return fiber;
+}
+
+export function createFiberFromDehydratedFragment(
+  dehydratedNode: SuspenseInstance,
+): Fiber {
+  const fiber = createFiber(DehydratedFragment, null, null, NoMode);
+  fiber.stateNode = dehydratedNode;
   return fiber;
 }
 
