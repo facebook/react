@@ -35,6 +35,25 @@ describe('transform react to jsx', () => {
       transform(`var x = <span propOne="one">Hi</span>`, {development: true})
     ).toMatchSnapshot();
   });
+  it('properly passes in source and self', () => {
+    expect(
+      transform(
+        `var x = (
+        <div 
+          __source={{ fileName: 'this/file.js', lineNumber: 10 }}
+          __self={this}
+        />
+      );
+      var y = (
+        <div 
+          __self={this}
+        />
+      );`,
+        {development: true}
+      )
+    ).toMatchSnapshot();
+  });
+
   it('properly handles keys', () => {
     expect(
       transform(`var x = (

@@ -98,10 +98,25 @@ exports[`transform react to jsx display name variable declaration 1`] = `
 
 exports[`transform react to jsx properly handles keys 1`] = `
 "var x = React.jsx(\\"div\\", {
-  children: [React.jsx(\\"div\\", Object.assign({}), \\"1\\"), React.jsx(\\"div\\", {
+  children: [React.jsx(\\"div\\", null, \\"1\\"), React.jsx(\\"div\\", {
     meow: \\"wolf\\"
-  }, \\"2\\"), React.jsx(\\"div\\", Object.assign({}), \\"3\\")]
+  }, \\"2\\"), React.jsx(\\"div\\", null, \\"3\\")]
 });"
+`;
+
+exports[`transform react to jsx properly passes in source and self 1`] = `
+"var x = React.jsxDEV(\\"div\\", null, undefined, {
+  fileName: 'this/file.js',
+  lineNumber: 10
+}, this);
+var y = React.jsxDEV(\\"div\\", null, undefined, undefined, this);"
+`;
+
+exports[`transform react to jsx properly passes in source and self 2`] = `
+"var x = React.jsxDEV(\\"div\\", null, undefined, {
+  fileName: 'this/file.js',
+  lineNumber: 10
+}, this);"
 `;
 
 exports[`transform react to jsx should allow constructor as prop 1`] = `
@@ -318,7 +333,7 @@ exports[`transform react to jsx uses jsxDEV instead of jsx in dev mode 1`] = `
 "var x = React.jsxDEV(\\"span\\", {
   propOne: \\"one\\",
   children: \\"Hi\\"
-});"
+}, undefined, undefined, undefined);"
 `;
 
 exports[`transform react to jsx wraps props in react spread for first spread attributes 1`] = `

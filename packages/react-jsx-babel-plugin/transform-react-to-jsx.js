@@ -126,7 +126,6 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
       openingPath.node.name,
       openingPath.node,
     );
-
     const args = [];
 
     let tagName;
@@ -146,14 +145,29 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
       opts.pre(state, file);
     }
 
-    let attribs = openingPath.node.attributes;
-    let keyValue;
-    for (let i = 0, attrLength = attribs.length; i < attrLength; i++) {
-      const attr = attribs[i];
-      if (t.isJSXAttribute(attr)) {
-        if (t.isJSXIdentifier(attr.name) && attr.name.name === 'key') {
-          keyValue = attr.value;
+    let attribs = [];
+    let key;
+    let source;
+    let self;
+
+    // for React.jsx, key, __source (dev), and __self (dev) is passed in as
+    //a separate argument rather than in the args object. We go through the
+    // props and filter out these three keywords so we can pass them in
+    // as separate arguments later
+    for (let i = 0, len = openingPath.node.attributes.length; i < len; i++) {
+      const attr = openingPath.node.attributes[i];
+      if (t.isJSXAttribute(attr) && t.isJSXIdentifier(attr.name)) {
+        if (attr.name.name === 'key') {
+          key = convertAttribute(attr).value;
+        } else if (attr.name.name === '__source') {
+          source = convertAttribute(attr).value;
+        } else if (attr.name.name === '__self') {
+          self = convertAttribute(attr).value;
+        } else {
+          attribs.push(attr);
         }
+      } else {
+        attribs.push(attr);
       }
     }
 
@@ -170,14 +184,22 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
 
     args.push(attribs);
 
-    if (keyValue !== undefined) {
-      args.push(keyValue);
+    // __source and __self are only used in development
+    if (!file.opts.development) {
+      if (key !== undefined) {
+        args.push(key);
+      }
+    } else {
+      args.push(
+        key === undefined ? t.identifier('undefined') : key,
+        source === undefined ? t.identifier('undefined') : source,
+        self === undefined ? t.identifier('undefined') : self,
+      );
     }
 
     if (opts.post) {
       opts.post(state, file);
     }
-
     return state.call || t.callExpression(state.callee, args);
   }
 
@@ -259,17 +281,12 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
         objs.push(prop.argument);
       } else {
         const attr = convertAttribute(prop);
-        // if we are using React.JSX, we don't want to pass 'key' as a prop
-        // so don't add it to the list
-        if (!isReactJSX || attr.key.name !== 'key') {
-          _props.push(attr);
-        }
+        _props.push(attr);
       }
     }
 
-    // if we are using React.JSX, children is now a prop, so add it to the list
-
-    console.log(children);
+    // In React.JSX, children is no longer a separate argument, but passed in
+    // through the argument object
     if (isReactJSX && children && children.length > 0) {
       if (children.length === 1) {
         _props.push(t.objectProperty(t.identifier('children'), children[0]));
@@ -282,7 +299,6 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
         );
       }
     }
-
     pushProps(_props, objs);
 
     if (objs.length === 1) {
@@ -403,14 +419,17 @@ module.exports = function(babel) {
 
   visitor.Program = {
     enter(path, state) {
-      const pragma = state.opts.development ? 'React.jsxDEV' : 'React.jsx';
-      const pragmaFrag = 'React.Fragment';
       state.set(
         'oldJSXIdentifier',
         createIdentifierParser('React.createElement'),
       );
-      state.set('jsxIdentifier', createIdentifierParser(pragma));
-      state.set('jsxFragIdentifier', createIdentifierParser(pragmaFrag));
+      state.set(
+        'jsxIdentifier',
+        createIdentifierParser(
+          state.opts.development ? 'React.jsxDEV' : 'React.jsx',
+        ),
+      );
+      state.set('jsxFragIdentifier', createIdentifierParser('React.Fragment'));
     },
   };
 
