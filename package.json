@@ -48,7 +48,7 @@
     "eslint": "^6.1.0",
     "eslint-config-fbjs": "^1.1.1",
     "eslint-plugin-flowtype": "^2.25.0",
-    "eslint-plugin-jest": "^21.6.1",
+    "eslint-plugin-jest": "^22.15.0",
     "eslint-plugin-no-for-of-loops": "^1.0.0",
     "eslint-plugin-babel": "^5.3.0",
     "eslint-plugin-react": "^6.7.1",
