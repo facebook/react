@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "name": "react-devtools-shell",
+  "version": "0.0.0",
+  "dependencies": {
+    "react-native-web": "^0.11.5"
+  }
+}

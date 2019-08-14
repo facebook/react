@@ -8,7 +8,7 @@ import {
   initialize as initializeBackend,
 } from 'react-devtools-inline/backend';
 import {initialize as initializeFrontend} from 'react-devtools-inline/frontend';
-import {initDevTools} from 'src/devtools';
+import {initDevTools} from 'react-devtools-shared/src/devtools';
 
 const iframe = ((document.getElementById('target'): any): HTMLIFrameElement);
 

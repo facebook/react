@@ -6,8 +6,11 @@ function wrapWithHoc(Component, index) {
   function HOC() {
     return <Component />;
   }
-  HOC.displayName = `withHoc${index}(${Component.displayName ||
-    Component.name})`;
+
+  // $FlowFixMe
+  const displayName = Component.displayName || Component.name;
+
+  HOC.displayName = `withHoc${index}(${displayName})`;
   return HOC;
 }
 
