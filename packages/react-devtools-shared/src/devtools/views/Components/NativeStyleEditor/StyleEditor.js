@@ -162,27 +162,27 @@ function Row({
   const [isAttributeValid, setIsAttributeValid] = useState(true);
   const [isValueValid, setIsValueValid] = useState(true);
 
-  const validateAndSetLocalAttribute = attribute => {
+  const validateAndSetLocalAttribute = newAttribute => {
     const isValid =
-      attribute === '' ||
+      newAttribute === '' ||
       validAttributes === null ||
-      validAttributes.indexOf(attribute) >= 0;
+      validAttributes.indexOf(newAttribute) >= 0;
 
     batchedUpdates(() => {
-      setLocalAttribute(attribute);
+      setLocalAttribute(newAttribute);
       setIsAttributeValid(isValid);
     });
   };
 
-  const validateAndSetLocalValue = value => {
+  const validateAndSetLocalValue = newValue => {
     let isValid = false;
     try {
-      JSON.parse(value);
+      JSON.parse(newValue);
       isValid = true;
     } catch (error) {}
 
     batchedUpdates(() => {
-      setLocalValue(value);
+      setLocalValue(newValue);
       setIsValueValid(isValid);
     });
   };

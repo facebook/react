@@ -122,11 +122,7 @@ function List({
     [filteredCommitIndices, width],
   );
   const maxDuration = useMemo(
-    () =>
-      commitDurations.reduce(
-        (maxDuration, duration) => Math.max(maxDuration, duration),
-        0,
-      ),
+    () => commitDurations.reduce((max, duration) => Math.max(max, duration), 0),
     [commitDurations],
   );
 

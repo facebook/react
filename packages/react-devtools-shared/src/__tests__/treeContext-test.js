@@ -98,7 +98,7 @@ describe('TreeListContext', () => {
         const index = ((state.selectedElementIndex: any): number);
         utils.act(() => dispatch({type: 'SELECT_NEXT_ELEMENT_IN_TREE'}));
         utils.act(() => renderer.update(<Contexts />));
-        expect(state).toMatchSnapshot(`3: select element after (${index})`);
+        expect(state).toMatchSnapshot(`3: select element after (${index})`);
       }
 
       while (

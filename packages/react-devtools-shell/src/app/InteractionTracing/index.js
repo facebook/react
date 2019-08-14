@@ -18,11 +18,11 @@ export default function InteractionTracing() {
           wrap(() => {
             setCount(count + 1);
           }),
-          count * 100
+          count * 100,
         );
       });
     },
-    [count]
+    [count],
   );
 
   const handleCascadingUpdate = useCallback(
@@ -35,11 +35,11 @@ export default function InteractionTracing() {
               setShouldCascade(true);
             });
           }),
-          count * 100
+          count * 100,
         );
       });
     },
-    [count]
+    [count],
   );
 
   const handleMultiple = useCallback(
@@ -50,12 +50,12 @@ export default function InteractionTracing() {
             wrap(() => {
               setCount(count + 1);
             }),
-            count * 100
+            count * 100,
           );
         });
       });
     },
-    [count]
+    [count],
   );
 
   useEffect(
@@ -65,11 +65,11 @@ export default function InteractionTracing() {
           wrap(() => {
             setShouldCascade(false);
           }),
-          count * 100
+          count * 100,
         );
       }
     },
-    [count, shouldCascade]
+    [count, shouldCascade],
   );
 
   return (

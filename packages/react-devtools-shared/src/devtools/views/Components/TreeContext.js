@@ -347,15 +347,15 @@ function reduceSearchState(store: Store, state: State, action: Action): State {
 
                 let foundMatch = false;
                 for (let index = 0; index < searchResults.length; index++) {
-                  const id = searchResults[index];
+                  const resultID = searchResults[index];
                   if (
                     newElementIndex <
-                    ((store.getIndexOfElementID(id): any): number)
+                    ((store.getIndexOfElementID(resultID): any): number)
                   ) {
                     foundMatch = true;
                     searchResults = searchResults
                       .slice(0, index)
-                      .concat(id)
+                      .concat(resultID)
                       .concat(searchResults.slice(index));
                     break;
                   }
@@ -807,8 +807,8 @@ function getNearestResultIndex(
   selectedElementIndex: number,
 ): number {
   const index = searchResults.findIndex(id => {
-    const index = store.getIndexOfElementID(id);
-    return index !== null && index >= selectedElementIndex;
+    const innerIndex = store.getIndexOfElementID(id);
+    return innerIndex !== null && innerIndex >= selectedElementIndex;
   });
 
   return index === -1 ? 0 : index;

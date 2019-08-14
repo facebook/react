@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+'use strict';
+
 const chalk = require('chalk');
 const build = require('../shared/build');
 

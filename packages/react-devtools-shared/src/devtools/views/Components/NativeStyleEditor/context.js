@@ -187,7 +187,6 @@ function NativeStyleContextController({children}: Props) {
   const value = useMemo(
     () => ({getStyleAndLayout}),
     // NativeStyle is used to invalidate the cache and schedule an update with React.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [currentStyleAndLayout, getStyleAndLayout],
   );
 

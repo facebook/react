@@ -6,7 +6,6 @@ import {SettingsContext} from '../Settings/SettingsContext';
 import TreeFocusedContext from './TreeFocusedContext';
 import {StoreContext} from '../context';
 import {useSubscription} from '../hooks';
-import Store from '../../store';
 
 import styles from './SelectedTreeHighlight.css';
 

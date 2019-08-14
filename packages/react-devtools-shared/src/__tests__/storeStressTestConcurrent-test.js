@@ -105,7 +105,7 @@ describe('StoreStressConcurrent', () => {
       [a, b, [c, <div key="0">{d}<span>{e}</span></div>], ''],
       [a, [[]], b, c, [d, [[]], e]],
       [[[a, b, c, d], e]],
-      [a, b, c, d, e]
+      [a, b, c, d, e],
     ];
 
     // 5. Test fresh mount for each case.
@@ -222,9 +222,9 @@ describe('StoreStressConcurrent', () => {
     // 2. Verify that we can update from every step to every other step and back.
     for (let i = 0; i < steps.length; i++) {
       for (let j = 0; j < steps.length; j++) {
-        let container = document.createElement('div');
+        container = document.createElement('div');
         // $FlowFixMe
-        let root = ReactDOM.unstable_createRoot(container);
+        root = ReactDOM.unstable_createRoot(container);
         act(() => root.render(<Root>{steps[i]}</Root>));
         expect(print(store)).toMatch(snapshots[i]);
         act(() => root.render(<Root>{steps[j]}</Root>));
@@ -239,9 +239,9 @@ describe('StoreStressConcurrent', () => {
     // 3. Same test as above, but this time we wrap children in a host component.
     for (let i = 0; i < steps.length; i++) {
       for (let j = 0; j < steps.length; j++) {
-        let container = document.createElement('div');
+        container = document.createElement('div');
         // $FlowFixMe
-        let root = ReactDOM.unstable_createRoot(container);
+        root = ReactDOM.unstable_createRoot(container);
         act(() =>
           root.render(
             <Root>
@@ -297,7 +297,7 @@ describe('StoreStressConcurrent', () => {
       [[a]],
       null,
       b,
-      a
+      a,
     ];
 
     const Never = () => {
@@ -584,7 +584,6 @@ describe('StoreStressConcurrent', () => {
         // Force fallback.
         expect(print(store)).toEqual(snapshots[i]);
         act(() => {
-          const suspenseID = store.getElementIDAtIndex(2);
           bridge.send('overrideSuspense', {
             id: suspenseID,
             rendererID: store.getRendererIDForElement(suspenseID),
@@ -686,7 +685,7 @@ describe('StoreStressConcurrent', () => {
       [[a]],
       null,
       b,
-      a
+      a,
     ];
 
     const Never = () => {
@@ -1015,7 +1014,6 @@ describe('StoreStressConcurrent', () => {
         // Force fallback.
         expect(print(store)).toEqual(snapshots[i]);
         act(() => {
-          const suspenseID = store.getElementIDAtIndex(2);
           bridge.send('overrideSuspense', {
             id: suspenseID,
             rendererID: store.getRendererIDForElement(suspenseID),

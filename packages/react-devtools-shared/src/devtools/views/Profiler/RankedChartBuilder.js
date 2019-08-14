@@ -39,9 +39,9 @@ export function getChartData({
   const {fiberActualDurations, fiberSelfDurations} = commitDatum;
   const {nodes} = commitTree;
 
-  const key = `${rootID}-${commitIndex}`;
-  if (cachedChartData.has(key)) {
-    return ((cachedChartData.get(key): any): ChartData);
+  const chartDataKey = `${rootID}-${commitIndex}`;
+  if (cachedChartData.has(chartDataKey)) {
+    return ((cachedChartData.get(chartDataKey): any): ChartData);
   }
 
   let maxSelfDuration = 0;
@@ -89,7 +89,7 @@ export function getChartData({
     nodes: chartNodes.sort((a, b) => b.value - a.value),
   };
 
-  cachedChartData.set(key, chartData);
+  cachedChartData.set(chartDataKey, chartData);
 
   return chartData;
 }

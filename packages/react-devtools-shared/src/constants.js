@@ -39,7 +39,7 @@ let COMPACT_LINE_HEIGHT;
 
 try {
   // $FlowFixMe
-  const rawStyleString = require('!!raw-loader!src/devtools/views/root.css') // eslint-disable-line import/no-webpack-loader-syntax
+  const rawStyleString = require('!!raw-loader!react-devtools-shared/src/devtools/views/root.css')
     .default;
 
   const extractVar = varName => {

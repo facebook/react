@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+'use strict';
+
 const archiver = require('archiver');
 const {execSync} = require('child_process');
 const {readFileSync, writeFileSync, createWriteStream} = require('fs');
@@ -28,7 +30,7 @@ const build = async (tempPath, manifestPath) => {
     '..',
     'node_modules',
     '.bin',
-    'webpack'
+    'webpack',
   );
   execSync(
     `${webpackPath} --config webpack.config.js --output-path ${binPath}`,
@@ -36,7 +38,7 @@ const build = async (tempPath, manifestPath) => {
       cwd: __dirname,
       env: process.env,
       stdio: 'inherit',
-    }
+    },
   );
   execSync(
     `${webpackPath} --config webpack.backend.js --output-path ${binPath}`,
@@ -44,7 +46,7 @@ const build = async (tempPath, manifestPath) => {
       cwd: __dirname,
       env: process.env,
       stdio: 'inherit',
-    }
+    },
   );
 
   // Make temp dir
@@ -56,7 +58,7 @@ const build = async (tempPath, manifestPath) => {
   await copy(binPath, join(zipPath, 'build'));
   await copy(manifestPath, copiedManifestPath);
   await Promise.all(
-    STATIC_FILES.map(file => copy(join(__dirname, file), join(zipPath, file)))
+    STATIC_FILES.map(file => copy(join(__dirname, file), join(zipPath, file))),
   );
 
   const commit = getGitCommit();

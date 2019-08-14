@@ -35,7 +35,7 @@ const ForwardRefComponent = forwardRef((props, ref) => (
 const LazyComponent = lazy(() =>
   Promise.resolve({
     default: FunctionComponent,
-  })
+  }),
 );
 
 export default function ElementTypes() {

@@ -1,3 +1,5 @@
+'use strict';
+
 type JestMockFn<TArguments: $ReadOnlyArray<*>, TReturn> = {
   (...args: TArguments): TReturn,
   /**

@@ -78,7 +78,7 @@ export function createDisplayNameFilter(
   const Types = require('react-devtools-shared/src/types');
   let isValid = true;
   try {
-    new RegExp(source);
+    new RegExp(source); // eslint-disable-line no-new
   } catch (error) {
     isValid = false;
   }
@@ -118,7 +118,7 @@ export function createLocationFilter(
   const Types = require('react-devtools-shared/src/types');
   let isValid = true;
   try {
-    new RegExp(source);
+    new RegExp(source); // eslint-disable-line no-new
   } catch (error) {
     isValid = false;
   }
@@ -136,8 +136,8 @@ export function getRendererID(): number {
   }
   const ids = Object.keys(global.agent._rendererInterfaces);
 
-  const id = ids.find(id => {
-    const rendererInterface = global.agent._rendererInterfaces[id];
+  const id = ids.find(innerID => {
+    const rendererInterface = global.agent._rendererInterfaces[innerID];
     return rendererInterface.renderer.rendererPackageName === 'react-dom';
   });
 
@@ -162,7 +162,6 @@ export function requireTestRenderer(): ReactTestRenderer {
 }
 
 export function exportImportHelper(bridge: FrontendBridge, store: Store): void {
-  const {act} = require('./utils');
   const {
     prepareProfilingDataExport,
     prepareProfilingDataFrontendFromExport,

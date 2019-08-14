@@ -1,5 +1,7 @@
 /* globals chrome */
 
+'use strict';
+
 document.addEventListener('DOMContentLoaded', function() {
   // Make links work
   const links = document.getElementsByTagName('a');

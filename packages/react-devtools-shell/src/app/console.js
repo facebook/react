@@ -2,7 +2,7 @@
 
 function ignoreStrings(
   methodName: string,
-  stringsToIgnore: Array<string>
+  stringsToIgnore: Array<string>,
 ): void {
   const originalMethod = console[methodName];
   console[methodName] = (...args) => {

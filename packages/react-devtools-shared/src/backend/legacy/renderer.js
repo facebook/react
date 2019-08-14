@@ -44,7 +44,7 @@ function getData(internalInstance: InternalInstance) {
   // != used deliberately here to catch undefined and null
   if (internalInstance._currentElement != null) {
     if (internalInstance._currentElement.key) {
-      key = String(internalInstance._currentElement.key);
+      key = '' + internalInstance._currentElement.key;
     }
 
     const elementType = internalInstance._currentElement.type;

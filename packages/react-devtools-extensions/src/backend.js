@@ -4,6 +4,8 @@
 
 /** @flow */
 
+'use strict';
+
 function welcome(event) {
   if (
     event.source !== window ||
@@ -51,7 +53,7 @@ function setup(hook) {
           payload: {event, payload},
         },
         '*',
-        transferable
+        transferable,
       );
     },
   });
@@ -66,12 +68,12 @@ function setup(hook) {
   initBackend(hook, agent, window);
 
   // Setup React Native style editor if a renderer like react-native-web has injected it.
-  if (!!hook.resolveRNStyle) {
+  if (hook.resolveRNStyle) {
     setupNativeStyleEditor(
       bridge,
       agent,
       hook.resolveRNStyle,
-      hook.nativeStyleEditorValidAttributes
+      hook.nativeStyleEditorValidAttributes,
     );
   }
 }

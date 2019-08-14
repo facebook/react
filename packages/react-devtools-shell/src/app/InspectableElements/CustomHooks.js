@@ -71,7 +71,7 @@ function FunctionWithHooks(props: any, ref: React$Ref<any>) {
     function onClick() {
       updateCount(count + 1);
     },
-    [count]
+    [count],
   );
 
   // Tests nested custom hooks
@@ -117,7 +117,7 @@ function useDebounce(value, delay) {
         clearTimeout(handler);
       };
     },
-    [value, delay] // Only re-call effect if value or delay changes
+    [value, delay], // Only re-call effect if value or delay changes
   );
 
   return debouncedValue;

@@ -92,6 +92,7 @@ export function patch(): void {
           if (!alreadyHasComponentStack) {
             // If there's a component stack for at least one of the injected renderers, append it.
             // We don't handle the edge case of stacks for more than one (e.g. interleaved renderers?)
+            // eslint-disable-next-line no-for-of-loops/no-for-of-loops
             for (let {
               getCurrentFiber,
               getDisplayNameForFiber,

@@ -139,7 +139,10 @@ function ModalDialogImpl(_: {||}) {
         {content}
         {canBeDismissed && (
           <div className={styles.Buttons}>
-            <Button autoFocus className={styles.Button} onClick={dismissModal}>
+            <Button
+              autoFocus={true}
+              className={styles.Button}
+              onClick={dismissModal}>
               Okay
             </Button>
           </div>

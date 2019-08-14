@@ -10,9 +10,9 @@ export default function RootSelector(_: {||}) {
 
   const options = [];
   if (profilingData !== null) {
-    profilingData.dataForRoots.forEach((dataForRoot, rootID) => {
+    profilingData.dataForRoots.forEach((dataForRoot, id) => {
       options.push(
-        <option key={rootID} value={rootID}>
+        <option key={id} value={id}>
           {dataForRoot.displayName}
         </option>,
       );

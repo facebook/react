@@ -36,7 +36,7 @@ export default function List(props: Props) {
         setNewItemText('');
       }
     },
-    [newItemText, items, uid]
+    [newItemText, items, uid],
   );
 
   const handleKeyPress = useCallback(
@@ -45,19 +45,19 @@ export default function List(props: Props) {
         handleClick();
       }
     },
-    [handleClick]
+    [handleClick],
   );
 
   const handleChange = useCallback(
     event => {
       setNewItemText(event.currentTarget.value);
     },
-    [setNewItemText]
+    [setNewItemText],
   );
 
   const removeItem = useCallback(
     itemToRemove => setItems(items.filter(item => item !== itemToRemove)),
-    [items]
+    [items],
   );
 
   const toggleItem = useCallback(
@@ -71,10 +71,10 @@ export default function List(props: Props) {
             ...itemToToggle,
             isComplete: !itemToToggle.isComplete,
           })
-          .concat(items.slice(index + 1))
+          .concat(items.slice(index + 1)),
       );
     },
-    [items]
+    [items],
   );
 
   return (

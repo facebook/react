@@ -102,17 +102,14 @@ function CommitFlamegraph({chartData, commitTree, height, width}: Props) {
 
   const selectedChartNode = useMemo(
     () => {
-      let chartNode = null;
       if (selectedFiberID !== null) {
-        const foundChartNode = chartData.rows[selectedChartNodeIndex].find(
-          chartNode => chartNode.id === selectedFiberID,
+        return (
+          chartData.rows[selectedChartNodeIndex].find(
+            chartNode => chartNode.id === selectedFiberID,
+          ) || null
         );
-
-        if (foundChartNode !== undefined) {
-          chartNode = foundChartNode;
-        }
       }
-      return chartNode;
+      return null;
     },
     [chartData, selectedFiberID, selectedChartNodeIndex],
   );

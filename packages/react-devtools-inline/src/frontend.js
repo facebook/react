@@ -19,7 +19,7 @@ import type {Props} from 'react-devtools-shared/src/devtools/views/DevTools';
 export function initialize(
   contentWindow: window,
 ): React.AbstractComponent<Props, mixed> {
-  const onMessage = ({data, source}) => {
+  const onGetSavedPreferencesMessage = ({data, source}) => {
     if (source === 'react-devtools-content-script') {
       // Ignore messages from the DevTools browser extension.
     }
@@ -28,7 +28,7 @@ export function initialize(
       case MESSAGE_TYPE_GET_SAVED_PREFERENCES:
         // This is the only message we're listening for,
         // so it's safe to cleanup after we've received it.
-        window.removeEventListener('message', onMessage);
+        window.removeEventListener('message', onGetSavedPreferencesMessage);
 
         // The renderer interface can't read saved preferences directly,
         // because they are stored in localStorage within the context of the extension.
@@ -47,7 +47,7 @@ export function initialize(
     }
   };
 
-  window.addEventListener('message', onMessage);
+  window.addEventListener('message', onGetSavedPreferencesMessage);
 
   const bridge: FrontendBridge = new Bridge({
     listen(fn) {

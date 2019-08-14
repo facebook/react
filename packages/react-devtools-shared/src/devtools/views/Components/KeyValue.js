@@ -154,18 +154,20 @@ export default function KeyValue({
     } else {
       const hasChildren = Object.entries(value).length > 0;
 
-      children = Object.entries(value).map<Element<any>>(([name, value]) => (
-        <KeyValue
-          key={name}
-          depth={depth + 1}
-          inspectPath={inspectPath}
-          hidden={hidden || !isOpen}
-          name={name}
-          overrideValueFn={overrideValueFn}
-          path={path.concat(name)}
-          value={value}
-        />
-      ));
+      children = Object.entries(value).map<Element<any>>(
+        ([innerName, innerValue]) => (
+          <KeyValue
+            key={innerName}
+            depth={depth + 1}
+            inspectPath={inspectPath}
+            hidden={hidden || !isOpen}
+            name={innerName}
+            overrideValueFn={overrideValueFn}
+            path={path.concat(innerName)}
+            value={innerValue}
+          />
+        ),
+      );
       children.unshift(
         <div
           key={`${depth}-root`}

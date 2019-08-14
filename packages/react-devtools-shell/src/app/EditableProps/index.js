@@ -36,7 +36,7 @@ function StatefulFunction({name}: StatefulFunctionProps) {
   const [data, dispatch] = useReducer(reducer, initialData);
   const handleUpdateReducerClick = useCallback(
     () => dispatch({type: 'swap'}),
-    []
+    [],
   );
 
   return (
@@ -111,7 +111,7 @@ const ForwardRef = forwardRef<{|name: string|}, HTMLUListElement>(
         </li>
       </ul>
     );
-  }
+  },
 );
 
 export default function EditableProps() {
@@ -154,7 +154,7 @@ function useDebounce(value, delay) {
         clearTimeout(handler);
       };
     },
-    [value, delay] // Only re-call effect if value or delay changes
+    [value, delay], // Only re-call effect if value or delay changes
   );
 
   return debouncedValue;

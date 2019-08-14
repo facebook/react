@@ -130,18 +130,18 @@ export default function OwnerStack() {
         return () => {};
       }
 
-      let elementsTotalWidth = 0;
+      let totalWidth = 0;
       for (let i = 0; i < owners.length; i++) {
         const element = elementsBarRef.current.children[i];
         const computedStyle = getComputedStyle(element);
 
-        elementsTotalWidth +=
+        totalWidth +=
           element.offsetWidth +
           parseInt(computedStyle.marginLeft, 10) +
           parseInt(computedStyle.marginRight, 10);
       }
 
-      setElementsTotalWidth(elementsTotalWidth);
+      setElementsTotalWidth(totalWidth);
     },
     [elementsBarRef, isOverflowing, owners.length],
   );
@@ -164,7 +164,7 @@ export default function OwnerStack() {
             {selectedOwner != null && (
               <ElementView
                 owner={selectedOwner}
-                isSelected
+                isSelected={true}
                 selectOwner={selectOwner}
               />
             )}
@@ -290,9 +290,6 @@ function BackToOwnerButton({
   }
 
   const owner = owners[selectedIndex - 1];
-  if (owner == null) {
-    debugger;
-  }
   const isInStore = store.containsElement(owner.id);
 
   return (

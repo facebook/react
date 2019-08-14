@@ -211,7 +211,10 @@ function HookView({canEditHooks, hook, id, inspectPath, path}: HookViewProps) {
     let overrideValueFn = null;
     // TODO Maybe read editable value from debug hook?
     if (canEditHooks && isStateEditable) {
-      overrideValueFn = (absolutePath: Array<string | number>, value: any) => {
+      overrideValueFn = (
+        absolutePath: Array<string | number>,
+        newValue: any,
+      ) => {
         const rendererID = store.getRendererIDForElement(id);
         if (rendererID !== null) {
           bridge.send('overrideHookState', {
@@ -223,7 +226,7 @@ function HookView({canEditHooks, hook, id, inspectPath, path}: HookViewProps) {
             // so it's important that we remove that part of the path before sending the update.
             path: absolutePath.slice(path.length + 1),
             rendererID,
-            value,
+            value: newValue,
           });
         }
       };

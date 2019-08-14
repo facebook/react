@@ -418,6 +418,7 @@ function updateIndentationSizeVar(
 
   let maxIndentationSize: number = indentationSizeRef.current;
 
+  // eslint-disable-next-line no-for-of-loops/no-for-of-loops
   for (let child of innerDiv.children) {
     const depth = parseInt(child.getAttribute('data-depth'), 10) || 0;
 

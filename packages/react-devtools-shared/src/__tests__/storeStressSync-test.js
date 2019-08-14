@@ -103,7 +103,7 @@ describe('StoreStress (Sync Mode)', () => {
       [a, b, [c, <div key="0">{d}<span>{e}</span></div>], ''],
       [a, [[]], b, c, [d, [[]], e]],
       [[[a, b, c, d], e]],
-      [a, b, c, d, e]
+      [a, b, c, d, e],
     ];
 
     // 5. Test fresh mount for each case.
@@ -214,7 +214,7 @@ describe('StoreStress (Sync Mode)', () => {
     // 2. Verify that we can update from every step to every other step and back.
     for (let i = 0; i < steps.length; i++) {
       for (let j = 0; j < steps.length; j++) {
-        let container = document.createElement('div');
+        container = document.createElement('div');
         act(() => ReactDOM.render(<Root>{steps[i]}</Root>, container));
         expect(print(store)).toMatch(snapshots[i]);
         act(() => ReactDOM.render(<Root>{steps[j]}</Root>, container));
@@ -229,7 +229,7 @@ describe('StoreStress (Sync Mode)', () => {
     // 3. Same test as above, but this time we wrap children in a host component.
     for (let i = 0; i < steps.length; i++) {
       for (let j = 0; j < steps.length; j++) {
-        let container = document.createElement('div');
+        container = document.createElement('div');
         act(() =>
           ReactDOM.render(
             <Root>
@@ -288,7 +288,7 @@ describe('StoreStress (Sync Mode)', () => {
       [[a]],
       null,
       b,
-      a
+      a,
     ];
 
     const Never = () => {
@@ -578,7 +578,6 @@ describe('StoreStress (Sync Mode)', () => {
         // Force fallback.
         expect(print(store)).toEqual(snapshots[i]);
         act(() => {
-          const suspenseID = store.getElementIDAtIndex(2);
           bridge.send('overrideSuspense', {
             id: suspenseID,
             rendererID: store.getRendererIDForElement(suspenseID),
@@ -682,7 +681,7 @@ describe('StoreStress (Sync Mode)', () => {
       [[a]],
       null,
       b,
-      a
+      a,
     ];
 
     const Never = () => {
@@ -1014,7 +1013,6 @@ describe('StoreStress (Sync Mode)', () => {
         // Force fallback.
         expect(print(store)).toEqual(snapshots[i]);
         act(() => {
-          const suspenseID = store.getElementIDAtIndex(2);
           bridge.send('overrideSuspense', {
             id: suspenseID,
             rendererID: store.getRendererIDForElement(suspenseID),

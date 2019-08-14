@@ -14,7 +14,6 @@ import {
   TreeStateContext,
 } from '../Components/TreeContext';
 import {StoreContext} from '../context';
-import Store from '../../store';
 
 import type {ProfilingDataFrontend} from './types';
 

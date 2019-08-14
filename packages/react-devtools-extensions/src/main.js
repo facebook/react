@@ -33,15 +33,15 @@ function syncSavedPreferences() {
   const componentFilters = getSavedComponentFilters();
   chrome.devtools.inspectedWindow.eval(
     `window.__REACT_DEVTOOLS_COMPONENT_FILTERS__ = ${JSON.stringify(
-      componentFilters
-    )};`
+      componentFilters,
+    )};`,
   );
 
   const appendComponentStack = getAppendComponentStack();
   chrome.devtools.inspectedWindow.eval(
     `window.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = ${JSON.stringify(
-      appendComponentStack
-    )};`
+      appendComponentStack,
+    )};`,
   );
 }
 
@@ -133,7 +133,7 @@ function createPanelIfReactLoaded() {
 
         const viewElementSourceFunction = createViewElementSource(
           bridge,
-          store
+          store,
         );
 
         root = createRoot(document.createElement('div'));
@@ -152,7 +152,7 @@ function createPanelIfReactLoaded() {
               showWelcomeToTheNewDevToolsDialog: true,
               store,
               viewElementSourceFunction,
-            })
+            }),
           );
         };
 
@@ -161,9 +161,11 @@ function createPanelIfReactLoaded() {
 
       cloneStyleTags = () => {
         const linkTags = [];
+        // eslint-disable-next-line no-for-of-loops/no-for-of-loops
         for (let linkTag of document.getElementsByTagName('link')) {
           if (linkTag.rel === 'stylesheet') {
             const newLinkTag = document.createElement('link');
+            // eslint-disable-next-line no-for-of-loops/no-for-of-loops
             for (let attribute of linkTag.attributes) {
               newLinkTag.setAttribute(attribute.nodeName, attribute.nodeValue);
             }
@@ -191,11 +193,11 @@ function createPanelIfReactLoaded() {
           '(window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 !== $0) ?' +
             '(inspect(window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0), true) :' +
             'false',
-          (didSelectionChange, error) => {
-            if (error) {
-              console.error(error);
+          (didSelectionChange, evalError) => {
+            if (evalError) {
+              console.error(evalError);
             }
-          }
+          },
         );
       }
 
@@ -206,14 +208,14 @@ function createPanelIfReactLoaded() {
           '(window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 !== $0) ?' +
             '(window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0 = $0, true) :' +
             'false',
-          (didSelectionChange, error) => {
-            if (error) {
-              console.error(error);
+          (didSelectionChange, evalError) => {
+            if (evalError) {
+              console.error(evalError);
             } else if (didSelectionChange) {
               // Remember to sync the selection next time we show Components tab.
               needsToSyncElementSelection = true;
             }
-          }
+          },
         );
       }
 
@@ -226,7 +228,7 @@ function createPanelIfReactLoaded() {
       let needsToSyncElementSelection = false;
 
       chrome.devtools.panels.create('⚛ Components', '', 'panel.html', panel => {
-        panel.onShown.addListener(panel => {
+        panel.onShown.addListener(() => {
           if (needsToSyncElementSelection) {
             needsToSyncElementSelection = false;
             bridge.send('syncSelectionFromNativeElementsPanel');
@@ -251,7 +253,7 @@ function createPanelIfReactLoaded() {
       });
 
       chrome.devtools.panels.create('⚛ Profiler', '', 'panel.html', panel => {
-        panel.onShown.addListener(panel => {
+        panel.onShown.addListener(() => {
           if (currentPanel === panel) {
             return;
           }
@@ -281,7 +283,7 @@ function createPanelIfReactLoaded() {
           bridge.shutdown();
 
           profilingData = store.profilerStore.profilingData;
-        }
+        },
       );
 
       // Re-initialize DevTools panel when a new page is loaded.
@@ -298,7 +300,7 @@ function createPanelIfReactLoaded() {
           });
         });
       });
-    }
+    },
   );
 }
 

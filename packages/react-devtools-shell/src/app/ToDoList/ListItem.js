@@ -16,14 +16,14 @@ function ListItem({item, removeItem, toggleItem}: Props) {
     () => {
       removeItem(item);
     },
-    [item, removeItem]
+    [item, removeItem],
   );
 
   const handleToggle = useCallback(
     () => {
       toggleItem(item);
     },
-    [item, toggleItem]
+    [item, toggleItem],
   );
 
   return (

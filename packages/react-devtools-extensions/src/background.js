@@ -1,5 +1,7 @@
 /* global chrome */
 
+'use strict';
+
 const ports = {};
 
 const IS_FIREFOX = navigator.userAgent.indexOf('Firefox') >= 0;
@@ -37,7 +39,7 @@ function installContentScript(tabId: number) {
   chrome.tabs.executeScript(
     tabId,
     {file: '/build/contentScript.js'},
-    function() {}
+    function() {},
   );
 }
 

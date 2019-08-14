@@ -22,5 +22,5 @@ Object.defineProperty(
     get() {
       return attach;
     },
-  }: Object)
+  }: Object),
 );

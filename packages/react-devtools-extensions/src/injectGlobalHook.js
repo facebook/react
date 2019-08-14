@@ -85,5 +85,5 @@ if (sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true') {
 // Inject a `__REACT_DEVTOOLS_GLOBAL_HOOK__` global so that React can detect that the
 // devtools are installed (and skip its suggestion to install the devtools).
 injectCode(
-  ';(' + installHook.toString() + '(window))' + saveNativeValues + detectReact
+  ';(' + installHook.toString() + '(window))' + saveNativeValues + detectReact,
 );

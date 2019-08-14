@@ -253,7 +253,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
       }
     } catch (e) {
       console.error(
-        '[React DevTools] Failed to parse JSON: ' + String(event.data),
+        '[React DevTools] Failed to parse JSON: ' + (event.data: any),
       );
       return;
     }

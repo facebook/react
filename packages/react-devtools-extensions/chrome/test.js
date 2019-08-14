@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
-const chromeLaunch = require('chrome-launch'); // eslint-disable-line import/no-extraneous-dependencies
+'use strict';
+
+const chromeLaunch = require('chrome-launch');
 const {resolve} = require('path');
 
 const EXTENSION_PATH = resolve('shells/browser/chrome/build/unpacked');

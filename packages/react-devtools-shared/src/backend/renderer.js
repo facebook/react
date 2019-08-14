@@ -657,6 +657,7 @@ export function attach(
     if (hideElementsWithDisplayNames.size > 0) {
       const displayName = getDisplayNameForFiber(fiber);
       if (displayName != null) {
+        // eslint-disable-next-line no-for-of-loops/no-for-of-loops
         for (let displayNameRegExp of hideElementsWithDisplayNames) {
           if (displayNameRegExp.test(displayName)) {
             return true;
@@ -667,6 +668,7 @@ export function attach(
 
     if (_debugSource != null && hideElementsWithPaths.size > 0) {
       const {fileName} = _debugSource;
+      // eslint-disable-next-line no-for-of-loops/no-for-of-loops
       for (let pathRegExp of hideElementsWithPaths) {
         if (pathRegExp.test(fileName)) {
           return true;
@@ -940,6 +942,7 @@ export function attach(
 
     const keys = new Set([...Object.keys(prev), ...Object.keys(next)]);
     const changedKeys = [];
+    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
     for (let key of keys) {
       if (prev[key] !== next[key]) {
         changedKeys.push(key);
@@ -1316,7 +1319,7 @@ export function attach(
     const id = getFiberID(getPrimaryFiber(fiber));
     const {actualDuration, treeBaseDuration} = fiber;
 
-    idToTreeBaseDurationMap.set(id, fiber.treeBaseDuration || 0);
+    idToTreeBaseDurationMap.set(id, treeBaseDuration || 0);
 
     if (isProfiling) {
       const {alternate} = fiber;
@@ -1327,12 +1330,12 @@ export function attach(
       ) {
         // Tree base duration updates are included in the operations typed array.
         // So we have to convert them from milliseconds to microseconds so we can send them as ints.
-        const treeBaseDuration = Math.floor(
-          (fiber.treeBaseDuration || 0) * 1000,
+        const convertedTreeBaseDuration = Math.floor(
+          (treeBaseDuration || 0) * 1000,
         );
         pushOperation(TREE_OPERATION_UPDATE_TREE_BASE_DURATION);
         pushOperation(id);
-        pushOperation(treeBaseDuration);
+        pushOperation(convertedTreeBaseDuration);
       }
 
       if (alternate == null || didFiberRender(alternate, fiber)) {

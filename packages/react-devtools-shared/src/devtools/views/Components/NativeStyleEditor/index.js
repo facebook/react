@@ -1,7 +1,6 @@
 // @flow
 
 import React, {Fragment, useContext, useMemo} from 'react';
-import Store from 'react-devtools-shared/src/devtools/store';
 import {StoreContext} from 'react-devtools-shared/src/devtools/views/context';
 import {useSubscription} from 'react-devtools-shared/src/devtools/views/hooks';
 import {NativeStyleContext} from './context';

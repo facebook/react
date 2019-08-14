@@ -77,7 +77,7 @@ function finishActivation(contentWindow: window) {
   initBackend(hook, agent, contentWindow);
 
   // Setup React Native style editor if a renderer like react-native-web has injected it.
-  if (!!hook.resolveRNStyle) {
+  if (hook.resolveRNStyle) {
     setupNativeStyleEditor(
       bridge,
       agent,

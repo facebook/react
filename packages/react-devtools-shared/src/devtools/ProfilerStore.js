@@ -43,7 +43,7 @@ export default class ProfilerStore extends EventEmitter<{|
 
   // Snapshot of the state of the main Store (including all roots) when profiling started.
   // Once profiling is finished, this snapshot can be used along with "operations" messages emitted during profiling,
-  // to reconstruct the state of each root for each commit.
+  // to reconstruct the state of each root for each commit.
   // It's okay to use a single root to store this information because node IDs are unique across all roots.
   //
   // This map is initialized when profiling starts and updated when a new root is added while profiling;
@@ -52,7 +52,7 @@ export default class ProfilerStore extends EventEmitter<{|
 
   // Map of root (id) to a list of tree mutation that occur during profiling.
   // Once profiling is finished, these mutations can be used, along with the initial tree snapshots,
-  // to reconstruct the state of each root for each commit.
+  // to reconstruct the state of each root for each commit.
   //
   // This map is only updated while profiling is in progress;
   // Upon completion, it is converted into the exportable ProfilingDataFrontend format.
@@ -283,6 +283,7 @@ export default class ProfilerStore extends EventEmitter<{|
       this._rendererQueue.clear();
 
       // Record all renderer IDs initially too (in case of unmount)
+      // eslint-disable-next-line no-for-of-loops/no-for-of-loops
       for (let rendererID of this._store.rootIDToRendererID.values()) {
         if (!this._initialRendererIDs.has(rendererID)) {
           this._initialRendererIDs.add(rendererID);

@@ -1,5 +1,7 @@
 // @flow
 
+'use strict';
+
 declare var chrome: {
   devtools: {
     network: {

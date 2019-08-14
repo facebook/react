@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+'use strict';
+
 const {exec} = require('child-process-promise');
 const {Finder} = require('firefox-profile');
 const {resolve} = require('path');

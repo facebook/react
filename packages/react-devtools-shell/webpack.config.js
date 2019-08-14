@@ -25,7 +25,7 @@ const config = {
   mode: __DEV__ ? 'development' : 'production',
   devtool: false,
   entry: {
-    app: './app/index.js',
+    app: './src/app/index.js',
     devtools: './src/devtools.js',
   },
   resolve: {

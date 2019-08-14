@@ -374,8 +374,7 @@ describe('ProfilingCache', () => {
     };
     const Async = () => {
       Scheduler.unstable_advanceTime(3);
-      const data = getData();
-      return data;
+      return getData();
     };
 
     utils.act(() => store.profilerStore.startProfiling());

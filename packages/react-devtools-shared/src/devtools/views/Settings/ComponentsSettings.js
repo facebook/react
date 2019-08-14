@@ -10,7 +10,6 @@ import React, {
 } from 'react';
 import {useSubscription} from '../hooks';
 import {StoreContext} from '../context';
-import Store from 'react-devtools-shared/src/devtools/store';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import Toggle from '../Toggle';
@@ -70,9 +69,9 @@ export default function ComponentsSettings(_: {||}) {
   >(() => [...store.componentFilters]);
 
   const addFilter = useCallback(() => {
-    setComponentFilters(componentFilters => {
+    setComponentFilters(prevComponentFilters => {
       return [
-        ...componentFilters,
+        ...prevComponentFilters,
         {
           type: ComponentFilterElementType,
           value: ElementTypeHostComponent,
@@ -84,9 +83,9 @@ export default function ComponentsSettings(_: {||}) {
 
   const changeFilterType = useCallback(
     (componentFilter: ComponentFilter, type: ComponentFilterType) => {
-      setComponentFilters(componentFilters => {
-        const cloned: Array<ComponentFilter> = [...componentFilters];
-        const index = componentFilters.indexOf(componentFilter);
+      setComponentFilters(prevComponentFilters => {
+        const cloned: Array<ComponentFilter> = [...prevComponentFilters];
+        const index = prevComponentFilters.indexOf(componentFilter);
         if (index >= 0) {
           if (type === ComponentFilterElementType) {
             cloned[index] = {
@@ -128,10 +127,10 @@ export default function ComponentsSettings(_: {||}) {
         throw Error('Invalid value for element type filter');
       }
 
-      setComponentFilters(componentFilters => {
-        const cloned: Array<ComponentFilter> = [...componentFilters];
+      setComponentFilters(prevComponentFilters => {
+        const cloned: Array<ComponentFilter> = [...prevComponentFilters];
         if (componentFilter.type === ComponentFilterElementType) {
-          const index = componentFilters.indexOf(componentFilter);
+          const index = prevComponentFilters.indexOf(componentFilter);
           if (index >= 0) {
             cloned[index] = {
               ...componentFilter,
@@ -151,17 +150,17 @@ export default function ComponentsSettings(_: {||}) {
         throw Error('Invalid value for element type filter');
       }
 
-      setComponentFilters(componentFilters => {
-        const cloned: Array<ComponentFilter> = [...componentFilters];
+      setComponentFilters(prevComponentFilters => {
+        const cloned: Array<ComponentFilter> = [...prevComponentFilters];
         if (
           componentFilter.type === ComponentFilterDisplayName ||
           componentFilter.type === ComponentFilterLocation
         ) {
-          const index = componentFilters.indexOf(componentFilter);
+          const index = prevComponentFilters.indexOf(componentFilter);
           if (index >= 0) {
             let isValid = true;
             try {
-              new RegExp(value);
+              new RegExp(value); // eslint-disable-line no-new
             } catch (error) {
               isValid = false;
             }
@@ -179,8 +178,8 @@ export default function ComponentsSettings(_: {||}) {
   );
 
   const removeFilter = useCallback((index: number) => {
-    setComponentFilters(componentFilters => {
-      const cloned: Array<ComponentFilter> = [...componentFilters];
+    setComponentFilters(prevComponentFilters => {
+      const cloned: Array<ComponentFilter> = [...prevComponentFilters];
       cloned.splice(index, 1);
       return cloned;
     });
@@ -188,9 +187,9 @@ export default function ComponentsSettings(_: {||}) {
 
   const toggleFilterIsEnabled = useCallback(
     (componentFilter: ComponentFilter, isEnabled: boolean) => {
-      setComponentFilters(componentFilters => {
-        const cloned: Array<ComponentFilter> = [...componentFilters];
-        const index = componentFilters.indexOf(componentFilter);
+      setComponentFilters(prevComponentFilters => {
+        const cloned: Array<ComponentFilter> = [...prevComponentFilters];
+        const index = prevComponentFilters.indexOf(componentFilter);
         if (index >= 0) {
           if (componentFilter.type === ComponentFilterElementType) {
             cloned[index] = {

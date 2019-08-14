@@ -155,6 +155,7 @@ function updateTree(
   };
 
   let i = 2;
+  let id: number = ((null: any): number);
 
   // Reassemble the string table.
   const stringTable = [
@@ -176,10 +177,10 @@ function updateTree(
 
     switch (operation) {
       case TREE_OPERATION_ADD:
-        const id = ((operations[i + 1]: any): number);
+        id = ((operations[i + 1]: any): number);
         const type = ((operations[i + 2]: any): ElementType);
 
-        i = i + 3;
+        i += 3;
 
         if (nodes.has(id)) {
           throw new Error(
@@ -248,11 +249,11 @@ function updateTree(
         break;
       case TREE_OPERATION_REMOVE: {
         const removeLength = ((operations[i + 1]: any): number);
-        i = i + 2;
+        i += 2;
 
         for (let removeIndex = 0; removeIndex < removeLength; removeIndex++) {
-          const id = ((operations[i]: any): number);
-          i = i + 1;
+          id = ((operations[i]: any): number);
+          i++;
 
           if (!nodes.has(id)) {
             throw new Error(
@@ -284,7 +285,7 @@ function updateTree(
         break;
       }
       case TREE_OPERATION_REORDER_CHILDREN: {
-        const id = ((operations[i + 1]: any): number);
+        id = ((operations[i + 1]: any): number);
         const numChildren = ((operations[i + 2]: any): number);
         const children = ((operations.slice(
           i + 3,
@@ -303,7 +304,7 @@ function updateTree(
         break;
       }
       case TREE_OPERATION_UPDATE_TREE_BASE_DURATION: {
-        const id = operations[i + 1];
+        id = operations[i + 1];
 
         const node = getClonedNode(id);
         node.treeBaseDuration = operations[i + 2] / 1000; // Convert microseconds back to milliseconds;
@@ -315,7 +316,7 @@ function updateTree(
           );
         }
 
-        i = i + 3;
+        i += 3;
         break;
       }
       default:

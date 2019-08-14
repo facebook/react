@@ -17,7 +17,9 @@ import type {DevToolsHook} from 'react-devtools-shared/src/backend/types';
 declare var window: any;
 
 export function installHook(target: any): DevToolsHook | null {
-  if (target.hasOwnProperty('__REACT_DEVTOOLS_GLOBAL_HOOK__')) return null;
+  if (target.hasOwnProperty('__REACT_DEVTOOLS_GLOBAL_HOOK__')) {
+    return null;
+  }
 
   function detectReactBuildType(renderer) {
     try {

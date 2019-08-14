@@ -5,7 +5,6 @@ import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import {BridgeContext, StoreContext} from '../context';
 import {useSubscription} from '../hooks';
-import Store from 'react-devtools-shared/src/devtools/store';
 
 type SubscriptionData = {|
   recordChangeDescriptions: boolean,

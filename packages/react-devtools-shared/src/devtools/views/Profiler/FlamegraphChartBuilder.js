@@ -47,9 +47,9 @@ export function getChartData({
   const {fiberActualDurations, fiberSelfDurations} = commitDatum;
   const {nodes} = commitTree;
 
-  const key = `${rootID}-${commitIndex}`;
-  if (cachedChartData.has(key)) {
-    return ((cachedChartData.get(key): any): ChartData);
+  const chartDataKey = `${rootID}-${commitIndex}`;
+  if (cachedChartData.has(chartDataKey)) {
+    return ((cachedChartData.get(chartDataKey): any): ChartData);
   }
 
   const idToDepthMap: Map<number, number> = new Map();
@@ -145,7 +145,7 @@ export function getChartData({
     }
 
     fiberActualDurations.forEach((duration, id) => {
-      const node = nodes.get(id);
+      let node = nodes.get(id);
       if (node != null) {
         let currentID = node.parentID;
         while (currentID !== 0) {
@@ -156,7 +156,7 @@ export function getChartData({
             renderPathNodes.add(currentID);
           }
 
-          const node = nodes.get(currentID);
+          node = nodes.get(currentID);
           currentID = node != null ? node.parentID : 0;
         }
       }
@@ -172,7 +172,7 @@ export function getChartData({
     rows,
   };
 
-  cachedChartData.set(key, chartData);
+  cachedChartData.set(chartDataKey, chartData);
 
   return chartData;
 }

@@ -8,7 +8,6 @@ import React, {
   useRef,
 } from 'react';
 import {SettingsModalContext} from './SettingsModalContext';
-import Store from 'react-devtools-shared/src/devtools/store';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import TabBar from '../TabBar';

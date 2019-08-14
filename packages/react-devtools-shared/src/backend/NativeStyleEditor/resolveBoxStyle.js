@@ -24,6 +24,7 @@ export default function resolveBoxStyle(
 
   const styleForAll = style[prefix];
   if (styleForAll != null) {
+    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
     for (const key of Object.keys(result)) {
       result[key] = styleForAll;
     }

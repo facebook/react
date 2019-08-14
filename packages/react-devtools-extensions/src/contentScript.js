@@ -1,5 +1,7 @@
 /* global chrome */
 
+'use strict';
+
 let backendDisconnected: boolean = false;
 let backendInitialized: boolean = false;
 
@@ -9,7 +11,7 @@ function sayHelloToBackend() {
       source: 'react-devtools-content-script',
       hello: true,
     },
-    '*'
+    '*',
   );
 }
 
@@ -19,7 +21,7 @@ function handleMessageFromDevtools(message) {
       source: 'react-devtools-content-script',
       payload: message,
     },
-    '*'
+    '*',
   );
 }
 
@@ -48,12 +50,12 @@ function handleDisconnect() {
         event: 'shutdown',
       },
     },
-    '*'
+    '*',
   );
 }
 
 // proxy from main page to devtools (via the background page)
-var port = chrome.runtime.connect({
+const port = chrome.runtime.connect({
   name: 'content-script',
 });
 port.onMessage.addListener(handleMessageFromDevtools);

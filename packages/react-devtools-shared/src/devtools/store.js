@@ -484,9 +484,9 @@ export default class Store extends EventEmitter<{|
         // (1) another node that's already in the tree, or (2) the root (owner)
         // at which point, our depth is just the depth of that node plus one.
         sortedIDs.forEach(id => {
-          const element = this._idToElement.get(id);
-          if (element != null) {
-            let parentID = element.parentID;
+          const innerElement = this._idToElement.get(id);
+          if (innerElement != null) {
+            let parentID = innerElement.parentID;
 
             let depth = 0;
             while (parentID > 0) {
@@ -506,7 +506,7 @@ export default class Store extends EventEmitter<{|
               throw Error('Invalid owners list');
             }
 
-            list.push({...element, depth});
+            list.push({...innerElement, depth});
           }
         });
       }
@@ -717,7 +717,7 @@ export default class Store extends EventEmitter<{|
           const id = ((operations[i + 1]: any): number);
           const type = ((operations[i + 2]: any): ElementType);
 
-          i = i + 3;
+          i += 3;
 
           if (this._idToElement.has(id)) {
             throw Error(
@@ -829,7 +829,7 @@ export default class Store extends EventEmitter<{|
         }
         case TREE_OPERATION_REMOVE: {
           const removeLength = ((operations[i + 1]: any): number);
-          i = i + 2;
+          i += 2;
 
           for (let removeIndex = 0; removeIndex < removeLength; removeIndex++) {
             const id = ((operations[i]: any): number);
@@ -840,7 +840,7 @@ export default class Store extends EventEmitter<{|
               );
             }
 
-            i = i + 1;
+            i += 1;
 
             const element = ((this._idToElement.get(id): any): Element);
             const {children, ownerID, parentID, weight} = element;
@@ -891,7 +891,7 @@ export default class Store extends EventEmitter<{|
         case TREE_OPERATION_REORDER_CHILDREN: {
           const id = ((operations[i + 1]: any): number);
           const numChildren = ((operations[i + 2]: any): number);
-          i = i + 3;
+          i += 3;
 
           if (!this._idToElement.has(id)) {
             throw Error(
@@ -920,7 +920,7 @@ export default class Store extends EventEmitter<{|
               }
             }
           }
-          i = i + numChildren;
+          i += numChildren;
 
           if (__DEBUG__) {
             debug('Re-order', `Node ${id} children ${children.join(',')}`);
@@ -931,7 +931,7 @@ export default class Store extends EventEmitter<{|
           // Base duration updates are only sent while profiling is in progress.
           // We can ignore them at this point.
           // The profiler UI uses them lazily in order to generate the tree.
-          i = i + 3;
+          i += 3;
           break;
         default:
           throw Error(`Unsupported Bridge operation ${operation}`);

@@ -20,7 +20,6 @@ import type {
   InspectedElementPayload,
 } from 'react-devtools-shared/src/backend/types';
 import type {
-  DehydratedData,
   Element,
   InspectedElement as InspectedElementFrontend,
 } from 'react-devtools-shared/src/devtools/views/Components/types';
@@ -280,7 +279,6 @@ function InspectedElementContextController({children}: Props) {
   const value = useMemo(
     () => ({getInspectedElement, getInspectedElementPath}),
     // InspectedElement is used to invalidate the cache and schedule an update with React.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [currentlyInspectedElement, getInspectedElement, getInspectedElementPath],
   );
 

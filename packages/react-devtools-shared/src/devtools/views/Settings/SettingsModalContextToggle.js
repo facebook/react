@@ -6,7 +6,6 @@ import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import {StoreContext} from '../context';
 import {useSubscription} from '../hooks';
-import Store from 'react-devtools-shared/src/devtools/store';
 
 export default function SettingsModalContextToggle() {
   const {setIsModalShowing} = useContext(SettingsModalContext);

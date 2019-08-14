@@ -143,7 +143,6 @@ export function createResource<Input, Key, Value>(
 
     read(input: Input): Value {
       // Prevent access outside of render.
-      // eslint-disable-next-line react-hooks/rules-of-hooks
       readContext(CacheContext);
 
       const key = hashInput(input);
@@ -169,7 +168,6 @@ export function createResource<Input, Key, Value>(
 
     preload(input: Input): void {
       // Prevent access outside of render.
-      // eslint-disable-next-line react-hooks/rules-of-hooks
       readContext(CacheContext);
 
       const key = hashInput(input);
