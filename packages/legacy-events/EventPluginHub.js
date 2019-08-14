@@ -16,6 +16,7 @@ import {
 import {getFiberCurrentPropsFromNode} from './EventPluginUtils';
 import accumulateInto from './accumulateInto';
 import {runEventsInBatch} from './EventBatching';
+import {Fragment} from 'shared/ReactWorkTags';
 
 import type {PluginModule} from './PluginModuleType';
 import type {ReactSyntheticEvent} from './ReactSyntheticEventType';
@@ -96,20 +97,27 @@ export const injection = {
  */
 export function getListener(inst: Fiber, registrationName: string) {
   let listener;
+  let props;
 
-  // TODO: shouldPreventMouseEvent is DOM-specific and definitely should not
-  // live here; needs to be moved to a better place soon
-  const stateNode = inst.stateNode;
-  if (!stateNode) {
-    // Work in progress (ex: onload events in incremental mode).
-    return null;
+  // different logic for fragments than regular DOM nodes, as fragments have not stateNode
+  if (inst.tag === Fragment) {
+    props = inst.memoizedProps;
+  } else {
+    const stateNode = inst.stateNode;
+    if (!stateNode) {
+      // Work in progress (ex: onload events in incremental mode).
+      return null;
+    }
+    props = getFiberCurrentPropsFromNode(stateNode);
   }
-  const props = getFiberCurrentPropsFromNode(stateNode);
+
   if (!props) {
     // Work in progress.
     return null;
   }
   listener = props[registrationName];
+  // TODO: shouldPreventMouseEvent is DOM-specific and definitely should not
+  // live here; needs to be moved to a better place soon
   if (shouldPreventMouseEvent(registrationName, inst.type, props)) {
     return null;
   }

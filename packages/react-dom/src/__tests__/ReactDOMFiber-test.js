@@ -912,6 +912,32 @@ describe('ReactDOMFiber', () => {
     }
   });
 
+  it('should bubble events from fragment to the parent', () => {
+    const ops = [];
+    let el = null;
+
+    ReactDOM.render(
+      <div key="root">
+        <React.Fragment
+          key="fragment"
+          onClick={() => ops.push('parent clicked')}>
+          <div
+            key="trap"
+            onClick={() => ops.push('child clicked')}
+            ref={n => (el = n)}>
+            TrapText
+          </div>
+          <div key="fake" />
+        </React.Fragment>
+      </div>,
+      container,
+    );
+
+    el.click();
+
+    expect(ops).toEqual(['child clicked', 'parent clicked']);
+  });
+
   it('should not onMouseLeave when staying in the portal', () => {
     const portalContainer = document.createElement('div');
     document.body.appendChild(portalContainer);

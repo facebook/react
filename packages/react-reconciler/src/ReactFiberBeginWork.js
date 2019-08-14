@@ -539,7 +539,7 @@ function updateFragment(
   workInProgress: Fiber,
   renderExpirationTime: ExpirationTime,
 ) {
-  const nextChildren = workInProgress.pendingProps;
+  const nextChildren = workInProgress.pendingProps.children;
   reconcileChildren(
     current,
     workInProgress,

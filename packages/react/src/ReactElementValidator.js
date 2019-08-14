@@ -248,7 +248,7 @@ function validateFragmentProps(fragment) {
   const keys = Object.keys(fragment.props);
   for (let i = 0; i < keys.length; i++) {
     const key = keys[i];
-    if (key !== 'children' && key !== 'key') {
+    if (key !== 'children' && key !== 'key' && !key.startsWith('on')) {
       warning(
         false,
         'Invalid prop `%s` supplied to `React.Fragment`. ' +
