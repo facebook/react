@@ -26,7 +26,9 @@ function getGitHubURL() {
 
 function getVersionString() {
   const packageVersion = JSON.parse(
-    readFileSync(resolve(__dirname, '../package.json')),
+    readFileSync(
+      resolve(__dirname, '..', 'react-devtools-core', './package.json'),
+    ),
   ).version;
 
   const commit = getGitCommit();

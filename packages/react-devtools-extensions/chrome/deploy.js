@@ -2,7 +2,7 @@
 
 'use strict';
 
-const deploy = require('../shared/deploy');
+const deploy = require('../deploy');
 
 const main = async () => await deploy('chrome');
 

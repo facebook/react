@@ -7,7 +7,7 @@ const {execSync} = require('child_process');
 const {existsSync} = require('fs');
 const {isAbsolute, join, relative} = require('path');
 const {argv} = require('yargs');
-const build = require('../shared/build');
+const build = require('../build');
 
 const main = async () => {
   const {crx, keyPath} = argv;

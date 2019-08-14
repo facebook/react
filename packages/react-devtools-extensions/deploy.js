@@ -7,7 +7,7 @@ const {readFileSync, writeFileSync} = require('fs');
 const {join} = require('path');
 
 const main = async buildId => {
-  const root = join(__dirname, '..', buildId);
+  const root = join(__dirname, buildId);
   const buildPath = join(root, 'build');
 
   execSync(`node ${join(root, './build')}`, {

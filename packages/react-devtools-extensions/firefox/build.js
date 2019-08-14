@@ -3,7 +3,7 @@
 'use strict';
 
 const chalk = require('chalk');
-const build = require('../shared/build');
+const build = require('../build');
 
 const main = async () => {
   await build('firefox');

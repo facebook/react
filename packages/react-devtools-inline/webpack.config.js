@@ -1,6 +1,9 @@
 const {resolve} = require('path');
 const {DefinePlugin} = require('webpack');
-const {getGitHubURL, getVersionString} = require('../../shells/utils');
+const {
+  getGitHubURL,
+  getVersionString,
+} = require('react-devtools-extensions/utils');
 
 const NODE_ENV = process.env.NODE_ENV;
 if (!NODE_ENV) {

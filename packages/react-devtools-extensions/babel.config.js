@@ -1,5 +1,5 @@
-const chromeManifest = require('./shells/browser/chrome/manifest.json');
-const firefoxManifest = require('./shells/browser/firefox/manifest.json');
+const chromeManifest = require('./chrome/manifest.json');
+const firefoxManifest = require('./firefox/manifest.json');
 
 const minChromeVersion = parseInt(chromeManifest.minimum_chrome_version, 10);
 const minFirefoxVersion = parseInt(

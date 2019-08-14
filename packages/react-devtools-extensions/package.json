@@ -2,5 +2,14 @@
 
   "name": "react-devtools-extensions",
   "version": "0.0.0",
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "babel-loader": "^8.0.4",
+    "css-loader": "^1.0.1",
+    "raw-loader": "^3.1.0",
+    "style-loader": "^0.23.1",
+    "webpack": "^4.26.0",
+    "webpack-cli": "^3.1.2",
+    "webpack-dev-server": "^3.3.1"
+  }
 }
