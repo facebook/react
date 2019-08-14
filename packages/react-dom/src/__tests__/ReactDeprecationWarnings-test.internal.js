@@ -64,12 +64,10 @@ describe('ReactDeprecationWarnings', () => {
     expect(() => expect(Scheduler).toFlushWithoutYielding()).toWarnDev(
       'Warning: Component "Component" contains the string ref "refComponent". ' +
         'Support for string refs will be removed in a future major release. ' +
-        'We recommend using useRef() or createRef() instead.' +
-        '\n\n' +
-        '    in Component (at **)' +
-        '\n\n' +
-        'Learn more about using refs safely here:\n' +
-        'https://fb.me/react-strict-mode-string-ref',
+        'We recommend using useRef() or createRef() instead. ' +
+        'Learn more about using refs safely here: ' +
+        'https://fb.me/react-strict-mode-string-ref' +
+        '\n    in Component (at **)',
     );
   });
 });

@@ -13,7 +13,7 @@ import {
   batchedEventUpdates,
   discreteUpdates,
   flushDiscreteUpdatesIfNeeded,
-} from 'events/ReactGenericBatching';
+} from 'legacy-events/ReactGenericBatching';
 import type {
   ReactEventResponder,
   ReactEventResponderInstance,

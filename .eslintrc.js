@@ -129,6 +129,8 @@ module.exports = {
       rules: {
         // https://github.com/jest-community/eslint-plugin-jest
         'jest/no-focused-tests': ERROR,
+        'jest/valid-expect': ERROR,
+        'jest/valid-expect-in-promise': ERROR,
       },
     },
     {
@@ -140,6 +142,8 @@ module.exports = {
   ],
 
   globals: {
+    SharedArrayBuffer: true,
+
     spyOnDev: true,
     spyOnDevAndProd: true,
     spyOnProd: true,

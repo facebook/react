@@ -1040,7 +1040,7 @@ describe('ReactDOMComponent', () => {
       if (typeof value !== 'undefined') {
         re += quoteRegexp(value) + '[\\\'"]';
       }
-      expect(new RegExp(re).test(actual)).toBe(true);
+      expect(actual).toMatch(new RegExp(re));
     }
 
     function genMarkup(props) {

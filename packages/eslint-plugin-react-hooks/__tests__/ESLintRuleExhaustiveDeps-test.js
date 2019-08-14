@@ -521,7 +521,6 @@ const tests = {
       // Valid because the ref is captured.
       code: `
         function useMyThing(myRef) {
-          const myRef = useRef();
           useEffect(() => {
             const handleMove = () => {};
             const node = myRef.current;
@@ -1021,6 +1020,28 @@ const tests = {
           const bar = useEffect(<T>(a: T): Hello => {
             prop();
           }, [prop]);
+        }
+      `,
+    },
+    // Ignore arguments keyword for arrow functions.
+    {
+      code: `
+        function Example() {
+          useEffect(() => {
+            arguments
+          }, [])
+        }
+      `,
+    },
+    {
+      code: `
+        function Example() {
+          useEffect(() => {
+            const bar = () => {
+              arguments;
+            };
+            bar();
+          }, [])
         }
       `,
     },
