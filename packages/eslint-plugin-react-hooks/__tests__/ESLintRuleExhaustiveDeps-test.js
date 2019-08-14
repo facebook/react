@@ -1023,6 +1023,28 @@ const tests = {
         }
       `,
     },
+    // Ignore arguments keyword for arrow functions.
+    {
+      code: `
+        function Example() {
+          useEffect(() => {
+            arguments
+          }, [])
+        }
+      `,
+    },
+    {
+      code: `
+        function Example() {
+          useEffect(() => {
+            const bar = () => {
+              arguments;
+            };
+            bar();
+          }, [])
+        }
+      `,
+    },
   ],
   invalid: [
     {
