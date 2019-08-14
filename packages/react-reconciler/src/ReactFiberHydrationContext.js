@@ -55,6 +55,7 @@ import {
 } from './ReactFiberHostConfig';
 import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
 import warning from 'shared/warning';
+import {Never} from './ReactFiberExpirationTime';
 
 // The deepest Fiber on the stack involved in a hydration context.
 // This may have been an insertion or a hydration.
@@ -229,6 +230,7 @@ function tryHydrate(fiber, nextInstance) {
         if (suspenseInstance !== null) {
           const suspenseState: SuspenseState = {
             dehydrated: suspenseInstance,
+            retryTime: Never,
           };
           fiber.memoizedState = suspenseState;
           // Store the dehydrated fragment as a child fiber.
