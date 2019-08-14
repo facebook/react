@@ -15,7 +15,7 @@ import {NoPriority} from './SchedulerPriorities';
 let runIdCounter: number = 0;
 let mainThreadIdCounter: number = 0;
 
-const profilingStateSize = 3;
+const profilingStateSize = 4;
 export const sharedProfilingBuffer =
   // $FlowFixMe Flow doesn't know about SharedArrayBuffer
   typeof SharedArrayBuffer === 'function'
@@ -29,7 +29,8 @@ const profilingState = enableProfiling
 
 const PRIORITY = 0;
 const CURRENT_TASK_ID = 1;
-const QUEUE_SIZE = 2;
+const CURRENT_RUN_ID = 2;
+const QUEUE_SIZE = 3;
 
 if (enableProfiling && profilingState !== null) {
   profilingState[PRIORITY] = NoPriority;
@@ -162,12 +163,13 @@ export function markTaskRun(
   time: number,
 ) {
   if (enableProfiling) {
+    runIdCounter++;
+
     if (profilingState !== null) {
       profilingState[PRIORITY] = task.priorityLevel;
       profilingState[CURRENT_TASK_ID] = task.id;
+      profilingState[CURRENT_RUN_ID] = runIdCounter;
     }
-
-    runIdCounter++;
 
     if (eventLog !== null) {
       logEvent([TaskRunEvent, time, task.id, runIdCounter]);
@@ -180,6 +182,7 @@ export function markTaskYield(task: {id: number}, time: number) {
     if (profilingState !== null) {
       profilingState[PRIORITY] = NoPriority;
       profilingState[CURRENT_TASK_ID] = 0;
+      profilingState[CURRENT_RUN_ID] = 0;
     }
 
     if (eventLog !== null) {

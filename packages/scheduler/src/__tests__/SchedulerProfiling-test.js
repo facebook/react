@@ -76,8 +76,13 @@ describe('Scheduler', () => {
     // shouldYield = Scheduler.unstable_shouldYield;
   });
 
+  const PRIORITY = 0;
+  const CURRENT_TASK_ID = 1;
+  const CURRENT_RUN_ID = 2;
+  const QUEUE_SIZE = 3;
+
   afterEach(() => {
-    if (sharedProfilingArray[2] !== 0) {
+    if (sharedProfilingArray[QUEUE_SIZE] !== 0) {
       throw Error(
         'Test exited, but the shared profiling buffer indicates that a task ' +
           'is still running',
@@ -241,9 +246,6 @@ describe('Scheduler', () => {
     return '\n' + result;
   }
 
-  const PRIORITY = 0;
-  const CURRENT_TASK_ID = 1;
-  const QUEUE_SIZE = 2;
   function getProfilingInfo() {
     const queueSize = sharedProfilingArray[QUEUE_SIZE];
     if (queueSize === 0) {
@@ -253,11 +255,12 @@ describe('Scheduler', () => {
     if (priorityLevel === 0) {
       return 'Suspended, Queue Size: ' + queueSize;
     }
-    return `Current Task: ${
-      sharedProfilingArray[QUEUE_SIZE]
-    }, Priority: ${priorityLevelToString(priorityLevel)}, Queue Size: ${
-      sharedProfilingArray[CURRENT_TASK_ID]
-    }`;
+    return (
+      `Task: ${sharedProfilingArray[CURRENT_TASK_ID]}, ` +
+      `Run: ${sharedProfilingArray[CURRENT_RUN_ID]}, ` +
+      `Priority: ${priorityLevelToString(priorityLevel)}, ` +
+      `Queue Size: ${sharedProfilingArray[QUEUE_SIZE]}`
+    );
   }
 
   it('creates a basic flamegraph', () => {
@@ -287,13 +290,13 @@ describe('Scheduler', () => {
       {label: 'Foo'},
     );
     expect(Scheduler).toFlushAndYieldThrough([
-      'Current Task: 1, Priority: Normal, Queue Size: 1',
+      'Task: 1, Run: 1, Priority: Normal, Queue Size: 1',
       'Yield',
     ]);
     Scheduler.unstable_advanceTime(100);
     expect(Scheduler).toFlushAndYield([
-      'Current Task: 2, Priority: User-blocking, Queue Size: 2',
-      'Current Task: 1, Priority: Normal, Queue Size: 1',
+      'Task: 2, Run: 2, Priority: User-blocking, Queue Size: 2',
+      'Task: 1, Run: 3, Priority: Normal, Queue Size: 1',
     ]);
 
     expect(getProfilingInfo()).toEqual('Empty Queue');
@@ -321,7 +324,7 @@ Task 1 [Normal]              │  ████████░░░░░░░�
     });
 
     expect(Scheduler).toFlushAndYieldThrough([
-      'Current Task: 1, Priority: Normal, Queue Size: 1',
+      'Task: 1, Run: 1, Priority: Normal, Queue Size: 1',
       'Yield',
     ]);
     Scheduler.unstable_advanceTime(100);
