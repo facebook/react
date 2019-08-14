@@ -399,7 +399,6 @@ export default {
 
           const def = reference.resolved.defs[0];
 
-          // Ignore if def is undefined - e.g. `arguments` binding.
           if (def == null) {
             continue;
           }
