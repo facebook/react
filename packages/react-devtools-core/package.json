@@ -11,6 +11,7 @@
   "files": [
     "dist",
     "backend.js",
+    "build-info.json",
     "standalone.js"
   ],
   "scripts": {

@@ -12,6 +12,7 @@
   },
   "files": [
     "bin.js",
+    "build-info.json",
     "app.html",
     "app.js",
     "index.js",
