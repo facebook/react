@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {HostComponent} from './ReactWorkTags';
+import {HostComponent, Fragment} from './ReactWorkTags';
 
 function getParent(inst) {
   do {
@@ -15,7 +15,7 @@ function getParent(inst) {
     // events to their parent. We could also go through parentNode on the
     // host node but that wouldn't work for React Native and doesn't let us
     // do the portal feature.
-  } while (inst && inst.tag !== HostComponent);
+  } while (inst && inst.tag !== HostComponent && inst.tag !== Fragment);
   if (inst) {
     return inst;
   }

@@ -7,6 +7,7 @@
 
 import {invokeGuardedCallbackAndCatchFirstError} from 'shared/ReactErrorUtils';
 import invariant from 'shared/invariant';
+import {Fragment} from 'shared/ReactWorkTags';
 import warningWithoutStack from 'shared/warningWithoutStack';
 
 export let getFiberCurrentPropsFromNode = null;
@@ -65,7 +66,8 @@ if (__DEV__) {
  */
 export function executeDispatch(event, listener, inst) {
   const type = event.type || 'unknown-event';
-  event.currentTarget = getNodeFromInstance(inst);
+  event.currentTarget =
+    inst.tag === Fragment ? null : getNodeFromInstance(inst);
   invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, event);
   event.currentTarget = null;
 }

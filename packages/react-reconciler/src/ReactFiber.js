@@ -611,12 +611,7 @@ export function createFiberFromTypeAndProps(
   } else {
     getTag: switch (type) {
       case REACT_FRAGMENT_TYPE:
-        return createFiberFromFragment(
-          pendingProps.children,
-          mode,
-          expirationTime,
-          key,
-        );
+        return createFiberFromFragment(pendingProps, mode, expirationTime, key);
       case REACT_CONCURRENT_MODE_TYPE:
         fiberTag = Mode;
         mode |= ConcurrentMode | BatchedMode | StrictMode;
