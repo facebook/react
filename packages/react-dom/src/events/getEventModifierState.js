@@ -12,7 +12,7 @@
  * @see http://www.w3.org/TR/DOM-Level-3-Events/#keys-Modifiers
  */
 
-import type {AnyNativeEvent} from 'events/PluginModuleType';
+import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
 
 const modifierKeyToProp = {
   Alt: 'altKey',

@@ -5,9 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type {TopLevelType} from 'events/TopLevelEventTypes';
+import type {TopLevelType} from 'legacy-events/TopLevelEventTypes';
 
-import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
+import {accumulateTwoPhaseDispatches} from 'legacy-events/EventPropagators';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 
 import {
