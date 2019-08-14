@@ -405,10 +405,7 @@ export default {
           }
 
           // Ignore references to the function itself as it's not defined yet.
-          if (
-            def.node != null &&
-            def.node.init === node.parent
-          ) {
+          if (def.node != null && def.node.init === node.parent) {
             continue;
           }
 
