@@ -12,5 +12,3 @@ export const requestIdleCallbackBeforeFirstFrame = false;
 export const requestTimerEventBeforeFirstFrame = false;
 export const enableMessageLoopImplementation = false;
 export const enableProfiling = __PROFILE__;
-export const enableUserTimingAPI = false;
-export const enableSharedProfilingBuffer = false;

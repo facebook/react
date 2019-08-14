@@ -8,32 +8,22 @@
  */
 
 import type {PriorityLevel} from './SchedulerPriorities';
-import {
-  enableProfiling,
-  enableUserTimingAPI as enableUserTimingAPIFeatureFlag,
-  enableSharedProfilingBuffer,
-} from './SchedulerFeatureFlags';
+import {enableProfiling} from './SchedulerFeatureFlags';
 
 import {NoPriority} from './SchedulerPriorities';
-
-const enableUserTimingAPI =
-  enableUserTimingAPIFeatureFlag &&
-  typeof performance !== 'undefined' &&
-  typeof performance.mark === 'function' &&
-  typeof performance.clearMarks === 'function';
 
 let runIdCounter: number = 0;
 let mainThreadIdCounter: number = 0;
 
-const length = 3;
-const size = Int32Array.BYTES_PER_ELEMENT * length;
+const profilingStateSize = 3;
 export const sharedProfilingBuffer =
   // $FlowFixMe Flow doesn't know about SharedArrayBuffer
   typeof SharedArrayBuffer === 'function'
-    ? new SharedArrayBuffer(size)
+    ? new SharedArrayBuffer(profilingStateSize * Int32Array.BYTES_PER_ELEMENT)
     : // $FlowFixMe Flow doesn't know about ArrayBuffer
-      new ArrayBuffer(size);
-const profilingInfo = enableSharedProfilingBuffer
+      new ArrayBuffer(profilingStateSize * Int32Array.BYTES_PER_ELEMENT);
+
+const profilingState = enableProfiling
   ? new Int32Array(sharedProfilingBuffer)
   : null;
 
@@ -41,145 +31,177 @@ const PRIORITY = 0;
 const CURRENT_TASK_ID = 1;
 const QUEUE_SIZE = 2;
 
-if (enableSharedProfilingBuffer && profilingInfo !== null) {
-  profilingInfo[PRIORITY] = NoPriority;
+if (enableProfiling && profilingState !== null) {
+  profilingState[PRIORITY] = NoPriority;
   // This is maintained with a counter, because the size of the priority queue
   // array might include canceled tasks.
-  profilingInfo[QUEUE_SIZE] = 0;
-  profilingInfo[CURRENT_TASK_ID] = 0;
+  profilingState[QUEUE_SIZE] = 0;
+  profilingState[CURRENT_TASK_ID] = 0;
 }
 
-export function markTaskStart(task: {id: number}) {
-  if (enableProfiling) {
-    if (enableSharedProfilingBuffer && profilingInfo !== null) {
-      profilingInfo[QUEUE_SIZE]++;
+const INITIAL_EVENT_LOG_SIZE = 1000;
+
+let eventLogSize = 0;
+let eventLogBuffer = null;
+let eventLog = null;
+let eventLogIndex = 0;
+
+const TaskStartEvent = 1;
+const TaskCompleteEvent = 2;
+const TaskErrorEvent = 3;
+const TaskCancelEvent = 4;
+const TaskRunEvent = 5;
+const TaskYieldEvent = 6;
+const SchedulerSuspendEvent = 7;
+const SchedulerResumeEvent = 8;
+
+function logEvent(entries) {
+  if (eventLog !== null) {
+    const offset = eventLogIndex;
+    eventLogIndex += entries.length;
+    if (eventLogIndex + 1 > eventLogSize) {
+      eventLogSize = eventLogIndex + 1;
+      const newEventLog = new Int32Array(
+        eventLogSize * Int32Array.BYTES_PER_ELEMENT,
+      );
+      newEventLog.set(eventLog);
+      eventLogBuffer = newEventLog.buffer;
+      eventLog = newEventLog;
     }
-    if (enableUserTimingAPI) {
-      // Use extra field to track if delayed task starts.
-      const taskStartMark = `SchedulerTask-${task.id}-Start`;
-      performance.mark(taskStartMark);
-      performance.clearMarks(taskStartMark);
+    eventLog.set(entries, offset);
+  }
+}
+
+export function startLoggingProfilingEvents(): void {
+  eventLogSize = INITIAL_EVENT_LOG_SIZE;
+  eventLogBuffer = new ArrayBuffer(eventLogSize * Int32Array.BYTES_PER_ELEMENT);
+  eventLog = new Int32Array(eventLogBuffer);
+  eventLogIndex = 0;
+}
+
+export function stopLoggingProfilingEvents(): ArrayBuffer | null {
+  const buffer = eventLogBuffer;
+  eventLogBuffer = eventLog = null;
+  return buffer;
+}
+
+export function markTaskStart(
+  task: {id: number, priorityLevel: PriorityLevel},
+  time: number,
+) {
+  if (enableProfiling) {
+    if (profilingState !== null) {
+      profilingState[QUEUE_SIZE]++;
+    }
+    if (eventLog !== null) {
+      logEvent([TaskStartEvent, time, task.id, task.priorityLevel]);
     }
   }
 }
 
-export function markTaskCompleted(task: {
-  id: number,
-  priorityLevel: PriorityLevel,
-  label?: string,
-}) {
+export function markTaskCompleted(
+  task: {
+    id: number,
+    priorityLevel: PriorityLevel,
+  },
+  time: number,
+) {
   if (enableProfiling) {
-    if (enableSharedProfilingBuffer && profilingInfo !== null) {
-      profilingInfo[PRIORITY] = NoPriority;
-      profilingInfo[CURRENT_TASK_ID] = 0;
-      profilingInfo[QUEUE_SIZE]--;
+    if (profilingState !== null) {
+      profilingState[PRIORITY] = NoPriority;
+      profilingState[CURRENT_TASK_ID] = 0;
+      profilingState[QUEUE_SIZE]--;
     }
-    if (enableUserTimingAPI) {
-      const info = JSON.stringify({
-        priorityLevel: task.priorityLevel,
-        label: task.label,
-        exitStatus: 'completed',
-      });
-      const taskEndMark = `SchedulerTask-${task.id}-End-${info}`;
-      performance.mark(taskEndMark);
-      performance.clearMarks(taskEndMark);
+
+    if (eventLog !== null) {
+      logEvent([TaskCompleteEvent, time, task.id]);
     }
   }
 }
 
-export function markTaskCanceled(task: {
-  id: number,
-  priorityLevel: PriorityLevel,
-  label?: string,
-}) {
+export function markTaskCanceled(
+  task: {
+    id: number,
+    priorityLevel: PriorityLevel,
+  },
+  time: number,
+) {
   if (enableProfiling) {
-    if (enableSharedProfilingBuffer && profilingInfo !== null) {
-      profilingInfo[QUEUE_SIZE]--;
+    if (profilingState !== null) {
+      profilingState[QUEUE_SIZE]--;
     }
-    if (enableUserTimingAPI) {
-      const info = JSON.stringify({
-        priorityLevel: task.priorityLevel,
-        label: task.label,
-        exitStatus: 'canceled',
-      });
-      const taskEndMark = `SchedulerTask-${task.id}-End-${info}`;
-      performance.mark(taskEndMark);
-      performance.clearMarks(taskEndMark);
+
+    if (eventLog !== null) {
+      logEvent([TaskCancelEvent, time, task.id]);
     }
   }
 }
 
-export function markTaskErrored(task: {
-  id: number,
-  priorityLevel: PriorityLevel,
-  label?: string,
-}) {
+export function markTaskErrored(
+  task: {
+    id: number,
+    priorityLevel: PriorityLevel,
+  },
+  time: number,
+) {
   if (enableProfiling) {
-    if (enableSharedProfilingBuffer && profilingInfo !== null) {
-      profilingInfo[PRIORITY] = NoPriority;
-      profilingInfo[CURRENT_TASK_ID] = 0;
-      profilingInfo[QUEUE_SIZE]--;
+    if (profilingState !== null) {
+      profilingState[PRIORITY] = NoPriority;
+      profilingState[CURRENT_TASK_ID] = 0;
+      profilingState[QUEUE_SIZE]--;
     }
-    if (enableUserTimingAPI) {
-      const info = JSON.stringify({
-        priorityLevel: task.priorityLevel,
-        label: task.label,
-        exitStatus: 'errored',
-      });
-      const taskEndMark = `SchedulerTask-${task.id}-End-${info}`;
-      performance.mark(taskEndMark);
-      performance.clearMarks(taskEndMark);
+
+    if (eventLog !== null) {
+      logEvent([TaskErrorEvent, time, task.id]);
     }
   }
 }
 
-export function markTaskRun(task: {id: number, priorityLevel: PriorityLevel}) {
+export function markTaskRun(
+  task: {id: number, priorityLevel: PriorityLevel},
+  time: number,
+) {
   if (enableProfiling) {
-    if (enableSharedProfilingBuffer && profilingInfo !== null) {
-      profilingInfo[PRIORITY] = task.priorityLevel;
-      profilingInfo[CURRENT_TASK_ID] = task.id;
+    if (profilingState !== null) {
+      profilingState[PRIORITY] = task.priorityLevel;
+      profilingState[CURRENT_TASK_ID] = task.id;
     }
-    if (enableUserTimingAPI) {
-      runIdCounter++;
-      const runMark = `SchedulerTask-${task.id}-Run-${runIdCounter}`;
-      performance.mark(runMark);
-      performance.clearMarks(runMark);
+
+    runIdCounter++;
+
+    if (eventLog !== null) {
+      logEvent([TaskRunEvent, time, task.id, runIdCounter]);
     }
   }
 }
 
-export function markTaskYield(task: {id: number}) {
+export function markTaskYield(task: {id: number}, time: number) {
   if (enableProfiling) {
-    if (enableSharedProfilingBuffer && profilingInfo !== null) {
-      profilingInfo[PRIORITY] = NoPriority;
-      profilingInfo[CURRENT_TASK_ID] = 0;
+    if (profilingState !== null) {
+      profilingState[PRIORITY] = NoPriority;
+      profilingState[CURRENT_TASK_ID] = 0;
     }
-    if (enableUserTimingAPI) {
-      const yieldMark = `SchedulerTask-${task.id}-Yield-${runIdCounter}`;
-      performance.mark(yieldMark);
-      performance.clearMarks(yieldMark);
+
+    if (eventLog !== null) {
+      logEvent([TaskYieldEvent, time, task.id, runIdCounter]);
     }
   }
 }
 
-export function markSchedulerSuspended() {
+export function markSchedulerSuspended(time: number) {
   if (enableProfiling) {
-    if (enableUserTimingAPI) {
-      mainThreadIdCounter++;
-      const suspendStartMark =
-        'SchedulerSuspended-Start-' + mainThreadIdCounter;
-      performance.mark(suspendStartMark);
-      performance.clearMarks(suspendStartMark);
+    mainThreadIdCounter++;
+
+    if (eventLog !== null) {
+      logEvent([SchedulerSuspendEvent, time, mainThreadIdCounter]);
     }
   }
 }
 
-export function markSchedulerUnsuspended() {
+export function markSchedulerUnsuspended(time: number) {
   if (enableProfiling) {
-    if (enableUserTimingAPI) {
-      const suspendedEndMark = 'SchedulerSuspended-End-' + mainThreadIdCounter;
-      performance.mark(suspendedEndMark);
-      performance.clearMarks(suspendedEndMark);
+    if (eventLog !== null) {
+      logEvent([SchedulerResumeEvent, time, mainThreadIdCounter]);
     }
   }
 }
