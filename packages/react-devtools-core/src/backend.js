@@ -189,34 +189,38 @@ export function connectToDevTools(options: ?ConnectOptions) {
         }
       };
 
-      Object.defineProperty(
-        hook,
-        'resolveRNStyle',
-        ({
-          enumerable: false,
-          get() {
-            return lazyResolveRNStyle;
-          },
-          set(value) {
-            lazyResolveRNStyle = value;
-            initAfterTick();
-          },
-        }: Object),
-      );
-      Object.defineProperty(
-        hook,
-        'nativeStyleEditorValidAttributes',
-        ({
-          enumerable: false,
-          get() {
-            return lazyNativeStyleEditorValidAttributes;
-          },
-          set(value) {
-            lazyNativeStyleEditorValidAttributes = value;
-            initAfterTick();
-          },
-        }: Object),
-      );
+      if (!hook.hasOwnProperty('resolveRNStyle')) {
+        Object.defineProperty(
+          hook,
+          'resolveRNStyle',
+          ({
+            enumerable: false,
+            get() {
+              return lazyResolveRNStyle;
+            },
+            set(value) {
+              lazyResolveRNStyle = value;
+              initAfterTick();
+            },
+          }: Object),
+        );
+      }
+      if (!hook.hasOwnProperty('nativeStyleEditorValidAttributes')) {
+        Object.defineProperty(
+          hook,
+          'nativeStyleEditorValidAttributes',
+          ({
+            enumerable: false,
+            get() {
+              return lazyNativeStyleEditorValidAttributes;
+            },
+            set(value) {
+              lazyNativeStyleEditorValidAttributes = value;
+              initAfterTick();
+            },
+          }: Object),
+        );
+      }
     }
   };
 

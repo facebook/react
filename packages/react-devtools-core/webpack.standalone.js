@@ -11,6 +11,8 @@ if (!NODE_ENV) {
   process.exit(1);
 }
 
+const builtModulesDir = resolve(__dirname, '..', '..', 'build', 'node_modules');
+
 const __DEV__ = NODE_ENV === 'development';
 
 const GITHUB_URL = getGitHubURL();
@@ -28,6 +30,15 @@ module.exports = {
     filename: '[name].js',
     library: '[name]',
     libraryTarget: 'commonjs2',
+  },
+  resolve: {
+    alias: {
+      react: resolve(builtModulesDir, 'react'),
+      'react-dom': resolve(builtModulesDir, 'react-dom'),
+      'react-debug-tools': resolve(builtModulesDir, 'react-debug-tools'),
+      'react-is': resolve(builtModulesDir, 'react-is'),
+      scheduler: resolve(builtModulesDir, 'scheduler'),
+    },
   },
   plugins: [
     new DefinePlugin({

@@ -92,7 +92,7 @@ By default DevTools listen to port `8097` on `localhost`. If you need to customi
 
 ## Developing
 
-* Run `yarn run backend:watch` and `yarn run standalone:watch` in `../react-devtools-core`
+* Run `yarn start:backend` and `yarn start:standalone` in `../react-devtools-core`
 * Run `yarn start` in this folder
 * Refresh the app after it has recompiled a change
 * For React Native, copy `react-devtools-core` to its `node_modules` to test your changes.
