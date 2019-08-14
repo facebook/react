@@ -400,13 +400,12 @@ export default {
           const def = reference.resolved.defs[0];
 
           // Ignore if def is undefined - e.g. `arguments` binding.
-          if (def === undefined) {
+          if (def == null) {
             continue;
           }
 
           // Ignore references to the function itself as it's not defined yet.
           if (
-            def != null &&
             def.node != null &&
             def.node.init === node.parent
           ) {

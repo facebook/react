@@ -1024,7 +1024,7 @@ const tests = {
         }
       `,
     },
-    // Ignore arguments  keyword for arrow functions.
+    // Ignore arguments keyword for arrow functions.
     {
       code: `
         function Example() {
