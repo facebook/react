@@ -32,7 +32,7 @@ const config = {
     alias: {
       'react-devtools-inline': resolve(
         root,
-        'packages/react-devtools-inline/src/'
+        'packages/react-devtools-inline/src/',
       ),
       src: resolve(root, 'src'),
     },

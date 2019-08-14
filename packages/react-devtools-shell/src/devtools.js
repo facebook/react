@@ -24,7 +24,7 @@ const container = ((document.getElementById('devtools'): any): HTMLElement);
 let isTestAppMounted = true;
 
 const mountButton = ((document.getElementById(
-  'mountButton'
+  'mountButton',
 ): any): HTMLButtonElement);
 mountButton.addEventListener('click', function() {
   if (isTestAppMounted) {
@@ -58,7 +58,7 @@ inject('dist/app.js', () => {
           showTabBar: true,
           showWelcomeToTheNewDevToolsDialog: true,
           warnIfLegacyBackendDetected: true,
-        })
+        }),
       );
     },
 
