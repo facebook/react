@@ -7,9 +7,9 @@
     "@reach/menu-button": "^0.1.17",
     "@reach/tooltip": "^0.2.2",
     "clipboard-js": "^0.3.6",
+    "events": "^3.0.0",
     "lodash.throttle": "^4.1.1",
     "memoize-one": "^3.1.1",
-    "node-events": "npm:events@^3.0.0",
     "react-virtualized-auto-sizer": "^1.0.2"
   }
 }

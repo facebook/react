@@ -1,6 +1,6 @@
 // @flow
 
-import EventEmitter from 'node-events';
+import EventEmitter from 'events';
 import {prepareProfilingDataFrontendFromBackendAndStore} from './views/Profiler/utils';
 import ProfilingCache from './ProfilingCache';
 import Store from './store';

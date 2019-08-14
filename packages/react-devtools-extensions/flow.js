@@ -1,6 +1,6 @@
 // @flow
 
-declare module 'node-events' {
+declare module 'events' {
   declare class EventEmitter<Events: Object> {
     addListener<Event: $Keys<Events>>(
       event: Event,

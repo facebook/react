@@ -1,6 +1,6 @@
 // @flow
 
-import EventEmitter from 'node-events';
+import EventEmitter from 'events';
 import {inspect} from 'util';
 import {
   TREE_OPERATION_ADD,
