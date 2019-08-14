@@ -7,9 +7,9 @@
  * @flow
  */
 
-import type {AnyNativeEvent} from 'events/PluginModuleType';
+import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
-import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
+import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 
 // Intentionally not named imports because Rollup would use dynamic dispatch for
 // CommonJS interop named imports.
@@ -19,8 +19,8 @@ import {
   batchedEventUpdates,
   discreteUpdates,
   flushDiscreteUpdatesIfNeeded,
-} from 'events/ReactGenericBatching';
-import {runExtractedPluginEventsInBatch} from 'events/EventPluginHub';
+} from 'legacy-events/ReactGenericBatching';
+import {runExtractedPluginEventsInBatch} from 'legacy-events/EventPluginHub';
 import {dispatchEventForResponderEventSystem} from '../events/DOMEventResponderSystem';
 import {isFiberMounted} from 'react-reconciler/reflection';
 import {HostRoot} from 'shared/ReactWorkTags';
@@ -31,7 +31,7 @@ import {
   IS_PASSIVE,
   IS_ACTIVE,
   PASSIVE_NOT_SUPPORTED,
-} from 'events/EventSystemFlags';
+} from 'legacy-events/EventSystemFlags';
 
 import {
   addEventBubbleListener,

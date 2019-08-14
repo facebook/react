@@ -7,8 +7,8 @@
  * @flow
  */
 
-import {registrationNameDependencies} from 'events/EventPluginRegistry';
-import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
+import {registrationNameDependencies} from 'legacy-events/EventPluginRegistry';
+import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 import {
   TOP_BLUR,
   TOP_CANCEL,
