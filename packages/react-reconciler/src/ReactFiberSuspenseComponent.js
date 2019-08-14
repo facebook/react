@@ -9,6 +9,7 @@
 
 import type {Fiber} from './ReactFiber';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
+import type {ExpirationTime} from './ReactFiberExpirationTime';
 import {SuspenseComponent, SuspenseListComponent} from 'shared/ReactWorkTags';
 import {NoEffect, DidCapture} from 'shared/ReactSideEffectTags';
 import {
@@ -28,6 +29,9 @@ export type SuspenseState = {|
   // here to indicate that it is dehydrated (flag) and for quick access
   // to check things like isSuspenseInstancePending.
   dehydrated: null | SuspenseInstance,
+  // Represents the earliest expiration time we should attempt to hydrate
+  // a dehydrated boundary at. Never is the default.
+  retryTime: ExpirationTime,
 |};
 
 export type SuspenseListTailMode = 'collapsed' | 'hidden' | void;
