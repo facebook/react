@@ -19,7 +19,6 @@ export const {
   disableInputAttributeSyncing,
   warnAboutShorthandPropertyCollision,
   warnAboutDeprecatedSetNativeProps,
-  revertPassiveEffectsChange,
   enableUserBlockingEvents,
   disableLegacyContext,
   disableSchedulerTimeoutBasedOnReactExpirationTime,
@@ -81,6 +80,8 @@ export const warnAboutUnmockedScheduler = true;
 export const enableSuspenseCallback = true;
 
 export const warnAboutDefaultPropsOnFunctionComponents = false;
+
+export const warnAboutStringRefs = false;
 
 export const flushSuspenseFallbacksInTests = true;
 

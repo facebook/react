@@ -30,11 +30,11 @@ export const enableFlareAPI = false;
 export const enableFundamentalAPI = false;
 export const enableJSXTransformAPI = false;
 export const warnAboutUnmockedScheduler = true;
-export const revertPassiveEffectsChange = false;
 export const flushSuspenseFallbacksInTests = true;
 export const enableUserBlockingEvents = false;
 export const enableSuspenseCallback = false;
 export const warnAboutDefaultPropsOnFunctionComponents = false;
+export const warnAboutStringRefs = false;
 export const disableLegacyContext = false;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 

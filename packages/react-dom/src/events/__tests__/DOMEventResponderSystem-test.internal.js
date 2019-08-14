@@ -112,6 +112,35 @@ describe('DOMEventResponderSystem', () => {
     expect(output).toBe(`<div data-reactroot="">Hello world</div>`);
   });
 
+  it('can render correctly with the ReactDOMServer hydration', () => {
+    const onEvent = jest.fn();
+    const TestResponder = createEventResponder({
+      targetEventTypes: ['click'],
+      onEvent,
+    });
+    const ref = React.createRef();
+
+    function Test() {
+      const listener = React.unstable_useResponder(TestResponder, {});
+
+      return (
+        <div>
+          <span listeners={listener} ref={ref}>
+            Hello world
+          </span>
+        </div>
+      );
+    }
+    const output = ReactDOMServer.renderToString(<Test />);
+    expect(output).toBe(
+      `<div data-reactroot=""><span>Hello world</span></div>`,
+    );
+    container.innerHTML = output;
+    ReactDOM.hydrate(<Test />, container);
+    dispatchClickEvent(ref.current);
+    expect(onEvent).toHaveBeenCalledTimes(1);
+  });
+
   it('the event responders should fire on click event', () => {
     let eventResponderFiredCount = 0;
     let eventLog = [];

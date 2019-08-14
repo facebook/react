@@ -12,9 +12,6 @@ import invariant from 'shared/invariant';
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as PersistentFeatureFlagsType from './ReactFeatureFlags.persistent';
 
-// Re-export dynamic flags from the www version.
-export const {revertPassiveEffectsChange} = require('ReactFeatureFlags');
-
 export const debugRenderPhaseSideEffects = false;
 export const debugRenderPhaseSideEffectsForStrictMode = false;
 export const enableUserTimingAPI = __DEV__;
@@ -35,6 +32,7 @@ export const flushSuspenseFallbacksInTests = true;
 export const enableUserBlockingEvents = false;
 export const enableSuspenseCallback = true;
 export const warnAboutDefaultPropsOnFunctionComponents = false;
+export const warnAboutStringRefs = false;
 export const disableLegacyContext = false;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 

@@ -16,6 +16,7 @@ import type {
 } from './SchedulerWithReactIntegration';
 import type {Interaction} from 'scheduler/src/Tracing';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
+import type {SuspenseState} from './ReactFiberSuspenseComponent';
 
 import {
   warnAboutDeprecatedLifecycles,
@@ -24,7 +25,6 @@ import {
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   enableProfilerTimer,
   enableSchedulerTracing,
-  revertPassiveEffectsChange,
   warnAboutUnmockedScheduler,
   flushSuspenseFallbacksInTests,
   disableSchedulerTimeoutBasedOnReactExpirationTime,
@@ -77,7 +77,6 @@ import {
   HostRoot,
   ClassComponent,
   SuspenseComponent,
-  DehydratedSuspenseComponent,
   FunctionComponent,
   ForwardRef,
   MemoComponent,
@@ -154,8 +153,6 @@ import {
 import {
   recordEffect,
   recordScheduleUpdate,
-  startRequestCallbackTimer,
-  stopRequestCallbackTimer,
   startWorkTimer,
   stopWorkTimer,
   stopFailedWorkTimer,
@@ -548,16 +545,6 @@ function scheduleCallbackForRoot(
         ),
         options,
       );
-      if (
-        enableUserTimingAPI &&
-        expirationTime !== Sync &&
-        (executionContext & (RenderContext | CommitContext)) === NoContext
-      ) {
-        // Scheduled an async callback, and we're not already working. Add an
-        // entry to the flamegraph that shows we're waiting for a callback
-        // to fire.
-        startRequestCallbackTimer();
-      }
     }
   }
 
@@ -621,11 +608,9 @@ export function flushDiscreteUpdates() {
     return;
   }
   flushPendingDiscreteUpdates();
-  if (!revertPassiveEffectsChange) {
-    // If the discrete updates scheduled passive effects, flush them now so that
-    // they fire before the next serial event.
-    flushPassiveEffects();
-  }
+  // If the discrete updates scheduled passive effects, flush them now so that
+  // they fire before the next serial event.
+  flushPassiveEffects();
 }
 
 function resolveLocksOnRoot(root: FiberRoot, expirationTime: ExpirationTime) {
@@ -820,11 +805,6 @@ function renderRoot(
     'Should not already be working.',
   );
 
-  if (enableUserTimingAPI && expirationTime !== Sync) {
-    const didExpire = isSync;
-    stopRequestCallbackTimer(didExpire);
-  }
-
   if (root.firstPendingTime < expirationTime) {
     // If there's no work left at this expiration time, exit immediately. This
     // happens when multiple callbacks are scheduled for a single root, but an
@@ -968,9 +948,6 @@ function renderRoot(
     if (workInProgress !== null) {
       // There's still work left over. Return a continuation.
       stopInterruptedWorkLoopTimer();
-      if (expirationTime !== Sync) {
-        startRequestCallbackTimer();
-      }
       return renderRoot.bind(null, root, expirationTime);
     }
   }
@@ -2184,18 +2161,23 @@ export function pingSuspendedRoot(
   scheduleCallbackForRoot(root, priorityLevel, suspendedTime);
 }
 
-export function retryTimedOutBoundary(boundaryFiber: Fiber) {
+function retryTimedOutBoundary(
+  boundaryFiber: Fiber,
+  retryTime: ExpirationTime,
+) {
   // The boundary fiber (a Suspense component or SuspenseList component)
   // previously was rendered in its fallback state. One of the promises that
   // suspended it has resolved, which means at least part of the tree was
   // likely unblocked. Try rendering again, at a new expiration time.
   const currentTime = requestCurrentTime();
-  const suspenseConfig = null; // Retries don't carry over the already committed update.
-  const retryTime = computeExpirationForFiber(
-    currentTime,
-    boundaryFiber,
-    suspenseConfig,
-  );
+  if (retryTime === Never) {
+    const suspenseConfig = null; // Retries don't carry over the already committed update.
+    retryTime = computeExpirationForFiber(
+      currentTime,
+      boundaryFiber,
+      suspenseConfig,
+    );
+  }
   // TODO: Special case idle priority?
   const priorityLevel = inferPriorityFromExpirationTime(currentTime, retryTime);
   const root = markUpdateTimeFromFiberToRoot(boundaryFiber, retryTime);
@@ -2204,15 +2186,26 @@ export function retryTimedOutBoundary(boundaryFiber: Fiber) {
   }
 }
 
+export function retryDehydratedSuspenseBoundary(boundaryFiber: Fiber) {
+  const suspenseState: null | SuspenseState = boundaryFiber.memoizedState;
+  let retryTime = Never;
+  if (suspenseState !== null) {
+    retryTime = suspenseState.retryTime;
+  }
+  retryTimedOutBoundary(boundaryFiber, retryTime);
+}
+
 export function resolveRetryThenable(boundaryFiber: Fiber, thenable: Thenable) {
+  let retryTime = Never; // Default
   let retryCache: WeakSet<Thenable> | Set<Thenable> | null;
   if (enableSuspenseServerRenderer) {
     switch (boundaryFiber.tag) {
       case SuspenseComponent:
         retryCache = boundaryFiber.stateNode;
-        break;
-      case DehydratedSuspenseComponent:
-        retryCache = boundaryFiber.memoizedState;
+        const suspenseState: null | SuspenseState = boundaryFiber.memoizedState;
+        if (suspenseState !== null) {
+          retryTime = suspenseState.retryTime;
+        }
         break;
       default:
         invariant(
@@ -2231,7 +2224,7 @@ export function resolveRetryThenable(boundaryFiber: Fiber, thenable: Thenable) {
     retryCache.delete(thenable);
   }
 
-  retryTimedOutBoundary(boundaryFiber);
+  retryTimedOutBoundary(boundaryFiber, retryTime);
 }
 
 // Computes the next Just Noticeable Difference (JND) boundary.
@@ -2505,12 +2498,12 @@ export function warnIfNotScopedWithMatchingAct(fiber: Fiber): void {
           'Be sure to use the matching version of act() corresponding to your renderer:\n\n' +
           '// for react-dom:\n' +
           "import {act} from 'react-dom/test-utils';\n" +
-          '//...\n' +
+          '// ...\n' +
           'act(() => ...);\n\n' +
           '// for react-test-renderer:\n' +
           "import TestRenderer from 'react-test-renderer';\n" +
           'const {act} = TestRenderer;\n' +
-          '//...\n' +
+          '// ...\n' +
           'act(() => ...);' +
           '%s',
         getStackByFiberInDevAndProd(fiber),

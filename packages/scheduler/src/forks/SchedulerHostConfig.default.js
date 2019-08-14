@@ -53,8 +53,9 @@ if (
       }
     }
   };
+  const initialTime = Date.now();
   getCurrentTime = function() {
-    return Date.now();
+    return Date.now() - initialTime;
   };
   requestHostCallback = function(cb) {
     if (_callback !== null) {
@@ -111,10 +112,15 @@ if (
     typeof requestIdleCallback === 'function' &&
     typeof cancelIdleCallback === 'function';
 
-  getCurrentTime =
-    typeof performance === 'object' && typeof performance.now === 'function'
-      ? () => performance.now()
-      : () => Date.now();
+  if (
+    typeof performance === 'object' &&
+    typeof performance.now === 'function'
+  ) {
+    getCurrentTime = () => performance.now();
+  } else {
+    const initialTime = Date.now();
+    getCurrentTime = () => Date.now() - initialTime;
+  }
 
   let isRAFLoopRunning = false;
   let isMessageLoopRunning = false;

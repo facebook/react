@@ -9,6 +9,7 @@
 
 import type {ThreadID} from './ReactThreadIDAllocator';
 import type {ReactElement} from 'shared/ReactElementType';
+import type {LazyComponent} from 'shared/ReactLazyComponent';
 import type {ReactProvider, ReactContext} from 'shared/ReactTypes';
 
 import React from 'react';
@@ -19,6 +20,12 @@ import warning from 'shared/warning';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
+import {
+  Resolved,
+  Rejected,
+  Pending,
+  initializeLazyComponentType,
+} from 'shared/ReactLazyComponent';
 import {
   warnAboutDeprecatedLifecycles,
   disableLegacyContext,
@@ -583,7 +590,7 @@ function resolve(
                 false,
                 // keep this warning in sync with ReactStrictModeWarning.js
                 'componentWillMount has been renamed, and is not recommended for use. ' +
-                  'See https://fb.me/react-async-component-lifecycle-hooks for details.\n\n' +
+                  'See https://fb.me/react-unsafe-component-lifecycles for details.\n\n' +
                   '* Move code from componentWillMount to componentDidMount (preferred in most cases) ' +
                   'or the constructor.\n' +
                   '\nPlease update the following components: %s',
@@ -1226,11 +1233,45 @@ class ReactDOMServerRenderer {
             );
           }
           // eslint-disable-next-line-no-fallthrough
-          case REACT_LAZY_TYPE:
-            invariant(
-              false,
-              'ReactDOMServer does not yet support lazy-loaded components.',
-            );
+          case REACT_LAZY_TYPE: {
+            const element: ReactElement = (nextChild: any);
+            const lazyComponent: LazyComponent<any> = (nextChild: any).type;
+            // Attempt to initialize lazy component regardless of whether the
+            // suspense server-side renderer is enabled so synchronously
+            // resolved constructors are supported.
+            initializeLazyComponentType(lazyComponent);
+            switch (lazyComponent._status) {
+              case Resolved: {
+                const nextChildren = [
+                  React.createElement(
+                    lazyComponent._result,
+                    Object.assign({ref: element.ref}, element.props),
+                  ),
+                ];
+                const frame: Frame = {
+                  type: null,
+                  domNamespace: parentNamespace,
+                  children: nextChildren,
+                  childIndex: 0,
+                  context: context,
+                  footer: '',
+                };
+                if (__DEV__) {
+                  ((frame: any): FrameDev).debugElementStack = [];
+                }
+                this.stack.push(frame);
+                return '';
+              }
+              case Rejected:
+                throw lazyComponent._result;
+              case Pending:
+              default:
+                invariant(
+                  false,
+                  'ReactDOMServer does not yet support lazy-loaded components.',
+                );
+            }
+          }
         }
       }
 

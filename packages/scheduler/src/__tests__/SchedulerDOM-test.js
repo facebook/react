@@ -59,11 +59,15 @@ describe('SchedulerDOM', () => {
     runPostMessageCallbacks(config);
   }
 
-  let frameSize = 33;
-  let startOfLatestFrame = 0;
-  let currentTime = 0;
+  let frameSize;
+  let startOfLatestFrame;
+  let currentTime;
 
   beforeEach(() => {
+    frameSize = 33;
+    startOfLatestFrame = 0;
+    currentTime = 0;
+
     delete global.performance;
     global.requestAnimationFrame = function(cb) {
       return rAFCallbacks.push(() => {

@@ -361,7 +361,7 @@ describe('ReactNewContext', () => {
         };
 
         ReactNoop.render(
-          <React.Fragment>
+          <>
             <BarContext.Provider value={{value: 'bar-updated'}}>
               <BarConsumer>
                 {({value}) => <Verify actual={value} expected="bar-updated" />}
@@ -382,7 +382,7 @@ describe('ReactNewContext', () => {
             <BarConsumer>
               {({value}) => <Verify actual={value} expected="bar-initial" />}
             </BarConsumer>
-          </React.Fragment>,
+          </>,
         );
         expect(Scheduler).toFlushWithoutYielding();
       });
@@ -559,7 +559,7 @@ describe('ReactNewContext', () => {
 
         function App(props) {
           return (
-            <React.Fragment>
+            <>
               <Context.Provider value="Does not unwind">
                 <ErrorBoundary>
                   <Context.Provider value="Unwinds after BadRender throws">
@@ -568,7 +568,7 @@ describe('ReactNewContext', () => {
                 </ErrorBoundary>
                 <Consumer />
               </Context.Provider>
-            </React.Fragment>
+            </>
           );
         }
 
@@ -706,10 +706,10 @@ describe('ReactNewContext', () => {
               {value => {
                 Scheduler.unstable_yieldValue('Foo');
                 return (
-                  <React.Fragment>
+                  <>
                     <span prop={'Foo: ' + value.foo} />
                     {props.children && props.children()}
-                  </React.Fragment>
+                  </>
                 );
               }}
             </Consumer>
@@ -722,10 +722,10 @@ describe('ReactNewContext', () => {
               {value => {
                 Scheduler.unstable_yieldValue('Bar');
                 return (
-                  <React.Fragment>
+                  <>
                     <span prop={'Bar: ' + value.bar} />
                     {props.children && props.children()}
-                  </React.Fragment>
+                  </>
                 );
               }}
             </Consumer>
@@ -866,10 +866,10 @@ describe('ReactNewContext', () => {
           render() {
             Scheduler.unstable_yieldValue('PureIndirection');
             return (
-              <React.Fragment>
+              <>
                 <ChildWithInlineRenderCallback />
                 <ChildWithCachedRenderCallback />
-              </React.Fragment>
+              </>
             );
           }
         }
@@ -1001,12 +1001,12 @@ describe('ReactNewContext', () => {
         class StaticContent extends React.PureComponent {
           render() {
             return (
-              <React.Fragment>
-                <React.Fragment>
+              <>
+                <>
                   <span prop="static 1" />
                   <span prop="static 2" />
-                </React.Fragment>
-              </React.Fragment>
+                </>
+              </>
             );
           }
         }
@@ -1196,7 +1196,7 @@ describe('ReactNewContext', () => {
       expect(() => {
         expect(Scheduler).toFlushAndYield(['LegacyProvider', 'App', 'Child']);
       }).toWarnDev(
-        'Legacy context API has been detected within a strict-mode tree: \n\n' +
+        'Legacy context API has been detected within a strict-mode tree.\n\n' +
           'The old API will be supported in all 16.x releases, but applications ' +
           'using it should migrate to the new version.\n\n' +
           'Please update the following components: LegacyProvider',
@@ -1622,7 +1622,6 @@ describe('ReactNewContext', () => {
   });
 
   describe('fuzz test', () => {
-    const Fragment = React.Fragment;
     const contextKeys = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
 
     const FLUSH_ALL = 'FLUSH_ALL';
@@ -1714,14 +1713,14 @@ describe('ReactNewContext', () => {
             return (
               <Context.Consumer key={i}>
                 {value => (
-                  <Fragment>
+                  <>
                     <span prop={`${randomKey}:${value}`} />
                     <ConsumerTree
                       rand={this.props.rand}
                       depth={this.props.depth + 1}
                       maxDepth={this.props.maxDepth}
                     />
-                  </Fragment>
+                  </>
                 )}
               </Context.Consumer>
             );
@@ -1837,13 +1836,13 @@ Context fuzz tester error! Copy and paste the following line into the test suite
 
     function Component() {
       return (
-        <React.Fragment>
+        <>
           <BarContext.Provider value={{value: 'bar-updated'}}>
             <BarConsumer>
               {({value}) => <div actual={value} expected="bar-updated" />}
             </BarConsumer>
           </BarContext.Provider>
-        </React.Fragment>
+        </>
       );
     }
 
@@ -1864,13 +1863,13 @@ Context fuzz tester error! Copy and paste the following line into the test suite
 
     function Component() {
       return (
-        <React.Fragment>
+        <>
           <BarContext.Provider value={{value: 'bar-updated'}}>
             <BarContext.Consumer>
               {({value}) => <div actual={value} expected="bar-updated" />}
             </BarContext.Consumer>
           </BarContext.Provider>
-        </React.Fragment>
+        </>
       );
     }
 
@@ -1884,13 +1883,13 @@ Context fuzz tester error! Copy and paste the following line into the test suite
 
     function Component() {
       return (
-        <React.Fragment>
+        <>
           <BarContext.Provider value={{value: 'bar-updated'}}>
             <BarConsumer.Consumer.Consumer>
               {({value}) => <div actual={value} expected="bar-updated" />}
             </BarConsumer.Consumer.Consumer>
           </BarContext.Provider>
-        </React.Fragment>
+        </>
       );
     }
 
@@ -1908,13 +1907,13 @@ Context fuzz tester error! Copy and paste the following line into the test suite
 
     function Component() {
       return (
-        <React.Fragment>
+        <>
           <BarContext.Consumer.Provider value={{value: 'bar-updated'}}>
             <BarContext.Consumer>
               {({value}) => <div actual={value} expected="bar-updated" />}
             </BarContext.Consumer>
           </BarContext.Consumer.Provider>
-        </React.Fragment>
+        </>
       );
     }
 

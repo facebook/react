@@ -1,6 +1,5 @@
 let React;
 let ReactFeatureFlags;
-let Fragment;
 let ReactNoop;
 let Scheduler;
 let Suspense;
@@ -13,7 +12,6 @@ describe('ReactSuspenseList', () => {
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     React = require('react');
-    Fragment = React.Fragment;
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
     Suspense = React.Suspense;
@@ -137,7 +135,7 @@ describe('ReactSuspenseList', () => {
     function Foo() {
       return (
         <SuspenseList revealOrder="backwards">
-          <Fragment>{[]}</Fragment>
+          <>{[]}</>
         </SuspenseList>
       );
     }
@@ -214,11 +212,11 @@ describe('ReactSuspenseList', () => {
     ]);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>A</span>
         <span>Loading B</span>
         <span>Loading C</span>
-      </Fragment>,
+      </>,
     );
 
     await C.resolve();
@@ -226,11 +224,11 @@ describe('ReactSuspenseList', () => {
     expect(Scheduler).toFlushAndYield(['C']);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>A</span>
         <span>Loading B</span>
         <span>C</span>
-      </Fragment>,
+      </>,
     );
 
     await B.resolve();
@@ -238,11 +236,11 @@ describe('ReactSuspenseList', () => {
     expect(Scheduler).toFlushAndYield(['B']);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>A</span>
         <span>B</span>
         <span>C</span>
-      </Fragment>,
+      </>,
     );
   });
 
@@ -280,11 +278,11 @@ describe('ReactSuspenseList', () => {
     ]);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>A</span>
         <span>Loading B</span>
         <span>Loading C</span>
-      </Fragment>,
+      </>,
     );
 
     await C.resolve();
@@ -292,11 +290,11 @@ describe('ReactSuspenseList', () => {
     expect(Scheduler).toFlushAndYield(['C']);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>A</span>
         <span>Loading B</span>
         <span>C</span>
-      </Fragment>,
+      </>,
     );
 
     await B.resolve();
@@ -304,11 +302,11 @@ describe('ReactSuspenseList', () => {
     expect(Scheduler).toFlushAndYield(['B']);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>A</span>
         <span>B</span>
         <span>C</span>
-      </Fragment>,
+      </>,
     );
   });
 
@@ -349,11 +347,11 @@ describe('ReactSuspenseList', () => {
     ]);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>Loading A</span>
         <span>Loading B</span>
         <span>Loading C</span>
-      </Fragment>,
+      </>,
     );
 
     await B.resolve();
@@ -361,11 +359,11 @@ describe('ReactSuspenseList', () => {
     expect(Scheduler).toFlushAndYield(['A', 'B', 'Suspend! [C]']);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>Loading A</span>
         <span>Loading B</span>
         <span>Loading C</span>
-      </Fragment>,
+      </>,
     );
 
     await C.resolve();
@@ -373,11 +371,11 @@ describe('ReactSuspenseList', () => {
     expect(Scheduler).toFlushAndYield(['A', 'B', 'C']);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>A</span>
         <span>B</span>
         <span>C</span>
-      </Fragment>,
+      </>,
     );
   });
 
@@ -422,7 +420,7 @@ describe('ReactSuspenseList', () => {
     ]);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <div>
           <span>Loading A</span>
           <span>Loading B</span>
@@ -430,7 +428,7 @@ describe('ReactSuspenseList', () => {
         <div>
           <span>Loading C</span>
         </div>
-      </Fragment>,
+      </>,
     );
 
     await B.resolve();
@@ -438,7 +436,7 @@ describe('ReactSuspenseList', () => {
     expect(Scheduler).toFlushAndYield(['A', 'B', 'Suspend! [C]']);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <div>
           <span>Loading A</span>
           <span>Loading B</span>
@@ -446,7 +444,7 @@ describe('ReactSuspenseList', () => {
         <div>
           <span>Loading C</span>
         </div>
-      </Fragment>,
+      </>,
     );
 
     await C.resolve();
@@ -454,7 +452,7 @@ describe('ReactSuspenseList', () => {
     expect(Scheduler).toFlushAndYield(['A', 'B', 'C']);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <div>
           <span>A</span>
           <span>B</span>
@@ -462,7 +460,7 @@ describe('ReactSuspenseList', () => {
         <div>
           <span>C</span>
         </div>
-      </Fragment>,
+      </>,
     );
   });
 
@@ -507,11 +505,11 @@ describe('ReactSuspenseList', () => {
     ]);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>Loading A</span>
         <span>Loading B</span>
         <span>Loading C</span>
-      </Fragment>,
+      </>,
     );
 
     await C.resolve();
@@ -519,11 +517,11 @@ describe('ReactSuspenseList', () => {
     expect(Scheduler).toFlushAndYield(['A', 'B', 'C']);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>A</span>
         <span>B</span>
         <span>C</span>
-      </Fragment>,
+      </>,
     );
   });
 
@@ -566,11 +564,11 @@ describe('ReactSuspenseList', () => {
     ]);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>Loading A</span>
         <span>Loading B</span>
         <span>Loading C</span>
-      </Fragment>,
+      </>,
     );
 
     await C.resolve();
@@ -578,11 +576,11 @@ describe('ReactSuspenseList', () => {
     expect(Scheduler).toFlushAndYield(['A', 'B', 'C']);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>A</span>
         <span>B</span>
         <span>C</span>
-      </Fragment>,
+      </>,
     );
   });
 
@@ -601,7 +599,7 @@ describe('ReactSuspenseList', () => {
               <A />
             </Suspense>
             {showMore ? (
-              <Fragment>
+              <>
                 <Suspense
                   unstable_avoidThisFallback={true}
                   fallback={<Text text="Loading B" />}>
@@ -612,7 +610,7 @@ describe('ReactSuspenseList', () => {
                   fallback={<Text text="Loading C" />}>
                   <C />
                 </Suspense>
-              </Fragment>
+              </>
             ) : null}
           </SuspenseList>
         </Suspense>
@@ -651,11 +649,11 @@ describe('ReactSuspenseList', () => {
 
     // A is already showing content so it doesn't turn into a fallback.
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>A</span>
         <span>Loading B</span>
         <span>Loading C</span>
-      </Fragment>,
+      </>,
     );
 
     await B.resolve();
@@ -664,11 +662,11 @@ describe('ReactSuspenseList', () => {
 
     // Even though we could now show B, we're still waiting on C.
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>A</span>
         <span>Loading B</span>
         <span>Loading C</span>
-      </Fragment>,
+      </>,
     );
 
     await C.resolve();
@@ -676,11 +674,11 @@ describe('ReactSuspenseList', () => {
     expect(Scheduler).toFlushAndYield(['B', 'C']);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>A</span>
         <span>B</span>
         <span>C</span>
-      </Fragment>,
+      </>,
     );
   });
 
@@ -717,11 +715,11 @@ describe('ReactSuspenseList', () => {
     ]);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>Loading A</span>
         <span>Loading B</span>
         <span>Loading C</span>
-      </Fragment>,
+      </>,
     );
 
     await A.resolve();
@@ -729,11 +727,11 @@ describe('ReactSuspenseList', () => {
     expect(Scheduler).toFlushAndYield(['A', 'Suspend! [B]']);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>A</span>
         <span>Loading B</span>
         <span>Loading C</span>
-      </Fragment>,
+      </>,
     );
 
     await B.resolve();
@@ -741,11 +739,11 @@ describe('ReactSuspenseList', () => {
     expect(Scheduler).toFlushAndYield(['B', 'C']);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>A</span>
         <span>B</span>
         <span>C</span>
-      </Fragment>,
+      </>,
     );
   });
 
@@ -782,11 +780,11 @@ describe('ReactSuspenseList', () => {
     ]);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>Loading A</span>
         <span>Loading B</span>
         <span>Loading C</span>
-      </Fragment>,
+      </>,
     );
 
     await C.resolve();
@@ -794,11 +792,11 @@ describe('ReactSuspenseList', () => {
     expect(Scheduler).toFlushAndYield(['C', 'Suspend! [B]']);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>Loading A</span>
         <span>Loading B</span>
         <span>C</span>
-      </Fragment>,
+      </>,
     );
 
     await B.resolve();
@@ -806,11 +804,11 @@ describe('ReactSuspenseList', () => {
     expect(Scheduler).toFlushAndYield(['B', 'A']);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>A</span>
         <span>B</span>
         <span>C</span>
-      </Fragment>,
+      </>,
     );
   });
 
@@ -842,10 +840,10 @@ describe('ReactSuspenseList', () => {
     expect(Scheduler).toFlushAndYield(['B', 'D']);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>B</span>
         <span>D</span>
-      </Fragment>,
+      </>,
     );
 
     // Insert items in the beginning, middle and end.
@@ -871,14 +869,14 @@ describe('ReactSuspenseList', () => {
     ]);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>Loading A</span>
         <span>B</span>
         <span>Loading C</span>
         <span>D</span>
         <span>Loading E</span>
         <span>Loading F</span>
-      </Fragment>,
+      </>,
     );
 
     await A.resolve();
@@ -888,14 +886,14 @@ describe('ReactSuspenseList', () => {
     // Even though we could show A, it is still in a fallback state because
     // C is not yet resolved. We need to resolve everything in the head first.
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>Loading A</span>
         <span>B</span>
         <span>Loading C</span>
         <span>D</span>
         <span>Loading E</span>
         <span>Loading F</span>
-      </Fragment>,
+      </>,
     );
 
     await C.resolve();
@@ -904,14 +902,14 @@ describe('ReactSuspenseList', () => {
 
     // We can now resolve the full head.
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>A</span>
         <span>B</span>
         <span>C</span>
         <span>D</span>
         <span>Loading E</span>
         <span>Loading F</span>
-      </Fragment>,
+      </>,
     );
 
     await E.resolve();
@@ -920,14 +918,14 @@ describe('ReactSuspenseList', () => {
 
     // In the tail we can resolve one-by-one.
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>A</span>
         <span>B</span>
         <span>C</span>
         <span>D</span>
         <span>E</span>
         <span>Loading F</span>
-      </Fragment>,
+      </>,
     );
 
     await F.resolve();
@@ -938,11 +936,11 @@ describe('ReactSuspenseList', () => {
     expect(Scheduler).toFlushAndYield(['D', 'E', 'F']);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>D</span>
         <span>E</span>
         <span>F</span>
-      </Fragment>,
+      </>,
     );
   });
 
@@ -992,14 +990,14 @@ describe('ReactSuspenseList', () => {
     );
     expect(Scheduler).toFlushAndYield(['F', 'E', 'D', 'C', 'B', 'A']);
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>A</span>
         <span>B</span>
         <span>C</span>
         <span>D</span>
         <span>E</span>
         <span>F</span>
-      </Fragment>,
+      </>,
     );
 
     // Update items in the beginning, middle and end to start suspending.
@@ -1037,7 +1035,7 @@ describe('ReactSuspenseList', () => {
     jest.advanceTimersByTime(500);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span hidden={true}>A</span>
         <span>Loading A</span>
         <span hidden={true}>B</span>
@@ -1048,7 +1046,7 @@ describe('ReactSuspenseList', () => {
         <span>E</span>
         <span hidden={true}>F</span>
         <span>Loading F</span>
-      </Fragment>,
+      </>,
     );
 
     await F.resolve();
@@ -1058,7 +1056,7 @@ describe('ReactSuspenseList', () => {
     // Even though we could show F, it is still in a fallback state because
     // E is not yet resolved. We need to resolve everything in the head first.
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span hidden={true}>A</span>
         <span>Loading A</span>
         <span hidden={true}>B</span>
@@ -1069,7 +1067,7 @@ describe('ReactSuspenseList', () => {
         <span>E</span>
         <span hidden={true}>F</span>
         <span>Loading F</span>
-      </Fragment>,
+      </>,
     );
 
     await D.resolve();
@@ -1078,7 +1076,7 @@ describe('ReactSuspenseList', () => {
 
     // We can now resolve the full head.
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span hidden={true}>A</span>
         <span>Loading A</span>
         <span hidden={true}>B</span>
@@ -1087,7 +1085,7 @@ describe('ReactSuspenseList', () => {
         <span>D</span>
         <span>E</span>
         <span>F</span>
-      </Fragment>,
+      </>,
     );
 
     await B.resolve();
@@ -1096,7 +1094,7 @@ describe('ReactSuspenseList', () => {
 
     // In the tail we can resolve one-by-one.
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span hidden={true}>A</span>
         <span>Loading A</span>
         <span>B</span>
@@ -1104,7 +1102,7 @@ describe('ReactSuspenseList', () => {
         <span>D</span>
         <span>E</span>
         <span>F</span>
-      </Fragment>,
+      </>,
     );
 
     await A.resolve();
@@ -1112,14 +1110,14 @@ describe('ReactSuspenseList', () => {
     expect(Scheduler).toFlushAndYield(['A']);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>A</span>
         <span>B</span>
         <span>C</span>
         <span>D</span>
         <span>E</span>
         <span>F</span>
-      </Fragment>,
+      </>,
     );
   });
 
@@ -1166,22 +1164,22 @@ describe('ReactSuspenseList', () => {
     ]);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>A</span>
         <span>B</span>
         <span>Loading C</span>
-      </Fragment>,
+      </>,
     );
 
     // Then we do a second pass to commit the last item.
     expect(Scheduler).toFlushAndYield([]);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>A</span>
         <span>B</span>
         <span>C</span>
-      </Fragment>,
+      </>,
     );
   });
 
@@ -1220,10 +1218,10 @@ describe('ReactSuspenseList', () => {
     jest.advanceTimersByTime(500);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>A</span>
         <span>Loading B</span>
-      </Fragment>,
+      </>,
     );
 
     await B.resolve();
@@ -1234,11 +1232,11 @@ describe('ReactSuspenseList', () => {
     jest.advanceTimersByTime(500);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>A</span>
         <span>B</span>
         <span>Loading C</span>
-      </Fragment>,
+      </>,
     );
 
     await C.resolve();
@@ -1246,11 +1244,11 @@ describe('ReactSuspenseList', () => {
     expect(Scheduler).toFlushAndYield(['C']);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>A</span>
         <span>B</span>
         <span>C</span>
-      </Fragment>,
+      </>,
     );
   });
 
@@ -1340,23 +1338,23 @@ describe('ReactSuspenseList', () => {
     ]);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>A</span>
         <span>B</span>
         <span>Loading C</span>
-      </Fragment>,
+      </>,
     );
 
     // Then we do a second pass to commit the last two items.
     expect(Scheduler).toFlushAndYield(['D']);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>A</span>
         <span>B</span>
         <span>C</span>
         <span>D</span>
-      </Fragment>,
+      </>,
     );
   });
 
@@ -1389,10 +1387,10 @@ describe('ReactSuspenseList', () => {
 
     // First render commits A and D.
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>A</span>
         <span>D</span>
-      </Fragment>,
+      </>,
     );
 
     // For the second render, we're going to insert items in the middle and end.
@@ -1418,13 +1416,13 @@ describe('ReactSuspenseList', () => {
 
     // B and C don't get collapsed, but F gets collapsed with E.
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>A</span>
         <span>Loading B</span>
         <span>Loading C</span>
         <span>D</span>
         <span>Loading E</span>
-      </Fragment>,
+      </>,
     );
 
     await B.resolve();
@@ -1437,13 +1435,13 @@ describe('ReactSuspenseList', () => {
     // Even though B is unsuspended, it's still in loading state because
     // it is blocked by C.
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>A</span>
         <span>Loading B</span>
         <span>Loading C</span>
         <span>D</span>
         <span>Loading E</span>
-      </Fragment>,
+      </>,
     );
 
     await C.resolve();
@@ -1460,14 +1458,14 @@ describe('ReactSuspenseList', () => {
     jest.advanceTimersByTime(500);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>A</span>
         <span>B</span>
         <span>C</span>
         <span>D</span>
         <span>E</span>
         <span>Loading F</span>
-      </Fragment>,
+      </>,
     );
 
     await F.resolve();
@@ -1477,14 +1475,14 @@ describe('ReactSuspenseList', () => {
     jest.advanceTimersByTime(500);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>A</span>
         <span>B</span>
         <span>C</span>
         <span>D</span>
         <span>E</span>
         <span>F</span>
-      </Fragment>,
+      </>,
     );
   });
 
@@ -1517,10 +1515,10 @@ describe('ReactSuspenseList', () => {
 
     // First render commits C and F.
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>C</span>
         <span>F</span>
-      </Fragment>,
+      </>,
     );
 
     // For the second render, we're going to insert items in the middle and end.
@@ -1546,13 +1544,13 @@ describe('ReactSuspenseList', () => {
 
     // D and E don't get collapsed, but A gets collapsed with B.
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>Loading B</span>
         <span>C</span>
         <span>Loading D</span>
         <span>Loading E</span>
         <span>F</span>
-      </Fragment>,
+      </>,
     );
 
     await D.resolve();
@@ -1565,13 +1563,13 @@ describe('ReactSuspenseList', () => {
     // Even though D is unsuspended, it's still in loading state because
     // it is blocked by E.
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>Loading B</span>
         <span>C</span>
         <span>Loading D</span>
         <span>Loading E</span>
         <span>F</span>
-      </Fragment>,
+      </>,
     );
 
     await C.resolve();
@@ -1593,14 +1591,14 @@ describe('ReactSuspenseList', () => {
     jest.advanceTimersByTime(500);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>Loading A</span>
         <span>B</span>
         <span>C</span>
         <span>D</span>
         <span>E</span>
         <span>F</span>
-      </Fragment>,
+      </>,
     );
 
     await A.resolve();
@@ -1610,14 +1608,14 @@ describe('ReactSuspenseList', () => {
     jest.advanceTimersByTime(500);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>A</span>
         <span>B</span>
         <span>C</span>
         <span>D</span>
         <span>E</span>
         <span>F</span>
-      </Fragment>,
+      </>,
     );
   });
 
@@ -1653,10 +1651,10 @@ describe('ReactSuspenseList', () => {
 
     // First render commits A and D.
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>A</span>
         <span>D</span>
-      </Fragment>,
+      </>,
     );
 
     // For the second render, we're going to insert items in the middle and end.
@@ -1690,14 +1688,14 @@ describe('ReactSuspenseList', () => {
     // Even though everything in the bottom of the list is suspended, we don't
     // collapse them because D was an update. Not an insertion.
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>A</span>
         <span>Loading B</span>
         <span>Loading C</span>
         <span hidden={true}>D</span>
         <span>Loading D</span>
         <span>Loading E</span>
-      </Fragment>,
+      </>,
     );
 
     await B.resolve();
@@ -1711,14 +1709,14 @@ describe('ReactSuspenseList', () => {
     // If D was still visible it wouldn't be part of the tail
     // and would be blocked on C like in the other test.
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>A</span>
         <span>B</span>
         <span>Loading C</span>
         <span hidden={true}>D</span>
         <span>Loading D</span>
         <span>Loading E</span>
-      </Fragment>,
+      </>,
     );
 
     await C.resolve();
@@ -1736,14 +1734,14 @@ describe('ReactSuspenseList', () => {
     jest.advanceTimersByTime(500);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>A</span>
         <span>B</span>
         <span>C</span>
         <span>D</span>
         <span>E</span>
         <span>Loading F</span>
-      </Fragment>,
+      </>,
     );
 
     await F.resolve();
@@ -1753,14 +1751,14 @@ describe('ReactSuspenseList', () => {
     jest.advanceTimersByTime(500);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>A</span>
         <span>B</span>
         <span>C</span>
         <span>D</span>
         <span>E</span>
         <span>F</span>
-      </Fragment>,
+      </>,
     );
   });
 
@@ -1808,10 +1806,10 @@ describe('ReactSuspenseList', () => {
     jest.advanceTimersByTime(500);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>A</span>
         <span>B</span>
-      </Fragment>,
+      </>,
     );
 
     await C.resolve();
@@ -1819,11 +1817,11 @@ describe('ReactSuspenseList', () => {
     expect(Scheduler).toFlushAndYield(['C']);
 
     expect(ReactNoop).toMatchRenderedOutput(
-      <Fragment>
+      <>
         <span>A</span>
         <span>B</span>
         <span>C</span>
-      </Fragment>,
+      </>,
     );
   });
 

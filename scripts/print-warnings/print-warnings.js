@@ -9,7 +9,7 @@
 const babylon = require('babylon');
 const fs = require('fs');
 const through = require('through2');
-const traverse = require('babel-traverse').default;
+const traverse = require('@babel/traverse').default;
 const gs = require('glob-stream');
 
 const evalToString = require('../shared/evalToString');

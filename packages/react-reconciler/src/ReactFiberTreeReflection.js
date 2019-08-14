@@ -24,6 +24,7 @@ import {
   FundamentalComponent,
 } from 'shared/ReactWorkTags';
 import {NoEffect, Placement} from 'shared/ReactSideEffectTags';
+import {enableFundamentalAPI} from 'shared/ReactFeatureFlags';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -281,7 +282,7 @@ export function findCurrentHostFiberWithNoPortals(parent: Fiber): Fiber | null {
     if (
       node.tag === HostComponent ||
       node.tag === HostText ||
-      node.tag === FundamentalComponent
+      (enableFundamentalAPI && node.tag === FundamentalComponent)
     ) {
       return node;
     } else if (node.child && node.tag !== HostPortal) {

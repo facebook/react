@@ -71,8 +71,6 @@ export const enableJSXTransformAPI = false;
 // We will enforce mocking scheduler with scheduler/unstable_mock at some point. (v17?)
 // Till then, we warn about the missing mock, but still fallback to a sync mode compatible version
 export const warnAboutUnmockedScheduler = false;
-// Temporary flag to revert the fix in #15650
-export const revertPassiveEffectsChange = false;
 
 // For tests, we flush suspense fallbacks in an act scope;
 // *except* in some of our own tests, where we test incremental loading states.
@@ -92,6 +90,7 @@ export const enableSuspenseCallback = false;
 // from React.createElement to React.jsx
 // https://github.com/reactjs/rfcs/blob/createlement-rfc/text/0000-create-element-changes.md
 export const warnAboutDefaultPropsOnFunctionComponents = false;
+export const warnAboutStringRefs = false;
 
 export const disableLegacyContext = false;
 

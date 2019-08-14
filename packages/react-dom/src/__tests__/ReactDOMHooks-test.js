@@ -82,10 +82,10 @@ describe('ReactDOMHooks', () => {
       });
 
       return (
-        <React.Fragment>
+        <>
           <input ref={inputRef} onInput={handleInput} />
           <label ref={labelRef}>{text}</label>
-        </React.Fragment>
+        </>
       );
     };
 
@@ -115,10 +115,10 @@ describe('ReactDOMHooks', () => {
       });
 
       return (
-        <React.Fragment>
+        <>
           <input ref={inputRef} onInput={handleInput} />
           <label ref={labelRef}>{text}</label>
-        </React.Fragment>
+        </>
       );
     };
 
