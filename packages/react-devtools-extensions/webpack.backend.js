@@ -30,7 +30,9 @@ module.exports = {
   resolve: {
     alias: {
       react: resolve(builtModulesDir, 'react'),
+      'react-debug-tools': resolve(builtModulesDir, 'react-debug-tools'),
       'react-dom': resolve(builtModulesDir, 'react-dom'),
+      'react-is': resolve(builtModulesDir, 'react-is'),
       scheduler: resolve(builtModulesDir, 'scheduler'),
     },
   },

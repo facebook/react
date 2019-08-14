@@ -31,7 +31,9 @@ module.exports = {
   },
   externals: {
     react: 'react',
+    'react-debug-tools': 'react-debug-tools',
     'react-dom': 'react-dom',
+    'react-is': 'react-is',
     scheduler: 'scheduler',
   },
   plugins: [

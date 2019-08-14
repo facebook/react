@@ -35,6 +35,8 @@ const config = {
     alias: {
       react: resolve(builtModulesDir, 'react'),
       'react-dom': resolve(builtModulesDir, 'react-dom'),
+      'react-debug-tools': resolve(builtModulesDir, 'react-debug-tools'),
+      'react-is': resolve(builtModulesDir, 'react-is'),
       scheduler: resolve(builtModulesDir, 'scheduler'),
     },
   },

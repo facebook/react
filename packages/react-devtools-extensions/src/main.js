@@ -227,47 +227,57 @@ function createPanelIfReactLoaded() {
       let currentPanel = null;
       let needsToSyncElementSelection = false;
 
-      chrome.devtools.panels.create('⚛ Components', '', 'panel.html', panel => {
-        panel.onShown.addListener(() => {
-          if (needsToSyncElementSelection) {
-            needsToSyncElementSelection = false;
-            bridge.send('syncSelectionFromNativeElementsPanel');
-          }
+      chrome.devtools.panels.create(
+        '⚛ Components',
+        '',
+        'panel.html',
+        extensionPanel => {
+          extensionPanel.onShown.addListener(panel => {
+            if (needsToSyncElementSelection) {
+              needsToSyncElementSelection = false;
+              bridge.send('syncSelectionFromNativeElementsPanel');
+            }
 
-          if (currentPanel === panel) {
-            return;
-          }
+            if (currentPanel === panel) {
+              return;
+            }
 
-          currentPanel = panel;
-          componentsPortalContainer = panel.container;
+            currentPanel = panel;
+            componentsPortalContainer = panel.container;
 
-          if (componentsPortalContainer != null) {
-            ensureInitialHTMLIsCleared(componentsPortalContainer);
-            render('components');
-            panel.injectStyles(cloneStyleTags);
-          }
-        });
-        panel.onHidden.addListener(() => {
-          // TODO: Stop highlighting and stuff.
-        });
-      });
+            if (componentsPortalContainer != null) {
+              ensureInitialHTMLIsCleared(componentsPortalContainer);
+              render('components');
+              panel.injectStyles(cloneStyleTags);
+            }
+          });
+          extensionPanel.onHidden.addListener(panel => {
+            // TODO: Stop highlighting and stuff.
+          });
+        },
+      );
 
-      chrome.devtools.panels.create('⚛ Profiler', '', 'panel.html', panel => {
-        panel.onShown.addListener(() => {
-          if (currentPanel === panel) {
-            return;
-          }
+      chrome.devtools.panels.create(
+        '⚛ Profiler',
+        '',
+        'panel.html',
+        extensionPanel => {
+          extensionPanel.onShown.addListener(panel => {
+            if (currentPanel === panel) {
+              return;
+            }
 
-          currentPanel = panel;
-          profilerPortalContainer = panel.container;
+            currentPanel = panel;
+            profilerPortalContainer = panel.container;
 
-          if (profilerPortalContainer != null) {
-            ensureInitialHTMLIsCleared(profilerPortalContainer);
-            render('profiler');
-            panel.injectStyles(cloneStyleTags);
-          }
-        });
-      });
+            if (profilerPortalContainer != null) {
+              ensureInitialHTMLIsCleared(profilerPortalContainer);
+              render('profiler');
+              panel.injectStyles(cloneStyleTags);
+            }
+          });
+        },
+      );
 
       chrome.devtools.network.onNavigated.removeListener(checkPageForReact);
 
