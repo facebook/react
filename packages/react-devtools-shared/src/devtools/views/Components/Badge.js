@@ -1,10 +1,13 @@
 // @flow
 
-import React, { Fragment } from 'react';
-import { ElementTypeMemo, ElementTypeForwardRef } from 'react-devtools-shared/src/types';
+import React, {Fragment} from 'react';
+import {
+  ElementTypeMemo,
+  ElementTypeForwardRef,
+} from 'react-devtools-shared/src/types';
 import styles from './Badge.css';
 
-import type { ElementType } from 'react-devtools-shared/src/types';
+import type {ElementType} from 'react-devtools-shared/src/types';
 
 type Props = {|
   className?: string,
@@ -12,7 +15,7 @@ type Props = {|
   type: ElementType,
 |};
 
-export default function Badge({ className, hocDisplayNames, type }: Props) {
+export default function Badge({className, hocDisplayNames, type}: Props) {
   let hocDisplayName = null;
   let totalBadgeCount = 0;
   let typeLabel = null;

@@ -26,7 +26,7 @@ describe('commit tree', () => {
   });
 
   it('should be able to rebuild the store tree for each commit', () => {
-    const Parent = ({ count }) => {
+    const Parent = ({count}) => {
       Scheduler.unstable_advanceTime(10);
       return new Array(count)
         .fill(true)
@@ -48,7 +48,7 @@ describe('commit tree', () => {
 
     let renderFinished = false;
 
-    function Validator({ commitIndex, rootID }) {
+    function Validator({commitIndex, rootID}) {
       const commitTree = store.profilerStore.profilingCache.getCommitTree({
         commitIndex,
         rootID,
@@ -65,7 +65,7 @@ describe('commit tree', () => {
 
       utils.act(() => {
         TestRenderer.create(
-          <Validator commitIndex={commitIndex} rootID={rootID} />
+          <Validator commitIndex={commitIndex} rootID={rootID} />,
         );
       });
 

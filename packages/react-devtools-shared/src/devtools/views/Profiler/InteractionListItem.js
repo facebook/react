@@ -1,12 +1,12 @@
 // @flow
 
-import React, { memo, useCallback } from 'react';
-import { areEqual } from 'react-window';
-import { getGradientColor } from './utils';
+import React, {memo, useCallback} from 'react';
+import {areEqual} from 'react-window';
+import {getGradientColor} from './utils';
 
 import styles from './InteractionListItem.css';
 
-import type { ItemData } from './Interactions';
+import type {ItemData} from './Interactions';
 
 type Props = {
   data: ItemData,
@@ -14,7 +14,7 @@ type Props = {
   style: Object,
 };
 
-function InteractionListItem({ data: itemData, index, style }: Props) {
+function InteractionListItem({data: itemData, index, style}: Props) {
   const {
     chartData,
     dataForRoot,
@@ -26,17 +26,20 @@ function InteractionListItem({ data: itemData, index, style }: Props) {
     selectTab,
   } = itemData;
 
-  const { commitData, interactionCommits } = dataForRoot;
-  const { interactions, lastInteractionTime, maxCommitDuration } = chartData;
+  const {commitData, interactionCommits} = dataForRoot;
+  const {interactions, lastInteractionTime, maxCommitDuration} = chartData;
 
   const interaction = interactions[index];
   if (interaction == null) {
     throw Error(`Could not find interaction #${index}`);
   }
 
-  const handleClick = useCallback(() => {
-    selectInteraction(interaction.id);
-  }, [interaction, selectInteraction]);
+  const handleClick = useCallback(
+    () => {
+      selectInteraction(interaction.id);
+    },
+    [interaction, selectInteraction],
+  );
 
   const commits = interactionCommits.get(interaction.id) || [];
 
@@ -56,13 +59,11 @@ function InteractionListItem({ data: itemData, index, style }: Props) {
           : styles.Interaction
       }
       onClick={handleClick}
-      style={style}
-    >
+      style={style}>
       <div
         className={styles.Name}
-        style={{ maxWidth: labelWidth }}
-        title={interaction.name}
-      >
+        style={{maxWidth: labelWidth}}
+        title={interaction.name}>
         {interaction.name}
       </div>
       <div
@@ -83,9 +84,9 @@ function InteractionListItem({ data: itemData, index, style }: Props) {
                 1,
                 Math.max(
                   0,
-                  commitData[commitIndex].duration / maxCommitDuration
-                )
-              ) || 0
+                  commitData[commitIndex].duration / maxCommitDuration,
+                ),
+              ) || 0,
             ),
             left: labelWidth + scaleX(commitData[commitIndex].timestamp, 0),
           }}

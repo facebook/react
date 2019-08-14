@@ -2,8 +2,8 @@
 
 import Agent from 'react-devtools-shared/src/backend/agent';
 import Bridge from 'react-devtools-shared/src/bridge';
-import { initBackend } from 'react-devtools-shared/src/backend';
-import { installHook } from 'react-devtools-shared/src/hook';
+import {initBackend} from 'react-devtools-shared/src/backend';
+import {installHook} from 'react-devtools-shared/src/hook';
 import setupNativeStyleEditor from 'react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor';
 import {
   MESSAGE_TYPE_GET_SAVED_PREFERENCES,
@@ -11,16 +11,16 @@ import {
 } from './constants';
 
 function startActivation(contentWindow: window) {
-  const { parent } = contentWindow;
+  const {parent} = contentWindow;
 
-  const onMessage = ({ data }) => {
+  const onMessage = ({data}) => {
     switch (data.type) {
       case MESSAGE_TYPE_SAVED_PREFERENCES:
         // This is the only message we're listening for,
         // so it's safe to cleanup after we've received it.
         contentWindow.removeEventListener('message', onMessage);
 
-        const { appendComponentStack, componentFilters } = data;
+        const {appendComponentStack, componentFilters} = data;
 
         contentWindow.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = appendComponentStack;
         contentWindow.__REACT_DEVTOOLS_COMPONENT_FILTERS__ = componentFilters;
@@ -49,11 +49,11 @@ function startActivation(contentWindow: window) {
   // because they are stored in localStorage within the context of the extension (on the frontend).
   // Instead it relies on the extension to pass preferences through.
   // Because we might be in a sandboxed iframe, we have to ask for them by way of postMessage().
-  parent.postMessage({ type: MESSAGE_TYPE_GET_SAVED_PREFERENCES }, '*');
+  parent.postMessage({type: MESSAGE_TYPE_GET_SAVED_PREFERENCES}, '*');
 }
 
 function finishActivation(contentWindow: window) {
-  const { parent } = contentWindow;
+  const {parent} = contentWindow;
 
   const bridge = new Bridge({
     listen(fn) {
@@ -66,7 +66,7 @@ function finishActivation(contentWindow: window) {
       };
     },
     send(event: string, payload: any, transferable?: Array<any>) {
-      parent.postMessage({ event, payload }, '*', transferable);
+      parent.postMessage({event, payload}, '*', transferable);
     },
   });
 
@@ -82,7 +82,7 @@ function finishActivation(contentWindow: window) {
       bridge,
       agent,
       hook.resolveRNStyle,
-      hook.nativeStyleEditorValidAttributes
+      hook.nativeStyleEditorValidAttributes,
     );
   }
 }

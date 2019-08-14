@@ -13,20 +13,20 @@ import React, {
   useState,
 } from 'react';
 
-const initialData = { foo: 'FOO', bar: 'BAR' };
+const initialData = {foo: 'FOO', bar: 'BAR'};
 
 function reducer(state, action) {
   switch (action.type) {
     case 'swap':
-      return { foo: state.bar, bar: state.foo };
+      return {foo: state.bar, bar: state.foo};
     default:
       throw new Error();
   }
 }
 
-type StatefulFunctionProps = {| name: string |};
+type StatefulFunctionProps = {|name: string|};
 
-function StatefulFunction({ name }: StatefulFunctionProps) {
+function StatefulFunction({name}: StatefulFunctionProps) {
   const [count, updateCount] = useState(0);
   const debouncedCount = useDebounce(count, 1000);
   const handleUpdateCountClick = useCallback(() => updateCount(count + 1), [
@@ -35,7 +35,7 @@ function StatefulFunction({ name }: StatefulFunctionProps) {
 
   const [data, dispatch] = useReducer(reducer, initialData);
   const handleUpdateReducerClick = useCallback(
-    () => dispatch({ type: 'swap' }),
+    () => dispatch({type: 'swap'}),
     []
   );
 
@@ -60,8 +60,8 @@ function StatefulFunction({ name }: StatefulFunctionProps) {
 const BoolContext = createContext(true);
 BoolContext.displayName = 'BoolContext';
 
-type Props = {| name: string, toggle: boolean |};
-type State = {| cities: Array<string>, state: string |};
+type Props = {|name: string, toggle: boolean|};
+type State = {|cities: Array<string>, state: string|};
 
 class StatefulClass extends Component<Props, State> {
   static contextType = BoolContext;
@@ -71,7 +71,7 @@ class StatefulClass extends Component<Props, State> {
     state: 'California',
   };
 
-  handleChange = ({ target }) =>
+  handleChange = ({target}) =>
     this.setState({
       state: target.value,
     });
@@ -94,8 +94,8 @@ class StatefulClass extends Component<Props, State> {
 const MemoizedStatefulClass = memo(StatefulClass);
 const MemoizedStatefulFunction = memo(StatefulFunction);
 
-const ForwardRef = forwardRef<{| name: string |}, HTMLUListElement>(
-  ({ name }, ref) => {
+const ForwardRef = forwardRef<{|name: string|}, HTMLUListElement>(
+  ({name}, ref) => {
     const [count, updateCount] = useState(0);
     const debouncedCount = useDebounce(count, 1000);
     const handleUpdateCountClick = useCallback(() => updateCount(count + 1), [

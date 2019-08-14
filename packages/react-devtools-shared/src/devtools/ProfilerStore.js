@@ -1,12 +1,12 @@
 // @flow
 
 import EventEmitter from 'node-events';
-import { prepareProfilingDataFrontendFromBackendAndStore } from './views/Profiler/utils';
+import {prepareProfilingDataFrontendFromBackendAndStore} from './views/Profiler/utils';
 import ProfilingCache from './ProfilingCache';
 import Store from './store';
 
-import type { FrontendBridge } from 'react-devtools-shared/src/bridge';
-import type { ProfilingDataBackend } from 'react-devtools-shared/src/backend/types';
+import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
+import type {ProfilingDataBackend} from 'react-devtools-shared/src/backend/types';
 import type {
   CommitDataFrontend,
   ProfilingDataForRootFrontend,
@@ -71,7 +71,7 @@ export default class ProfilerStore extends EventEmitter<{|
   constructor(
     bridge: FrontendBridge,
     store: Store,
-    defaultIsProfiling: boolean
+    defaultIsProfiling: boolean,
   ) {
     super();
 
@@ -103,7 +103,7 @@ export default class ProfilerStore extends EventEmitter<{|
     }
 
     throw Error(
-      `Could not find commit data for root "${rootID}" and commit ${commitIndex}`
+      `Could not find commit data for root "${rootID}" and commit ${commitIndex}`,
     );
   }
 
@@ -143,7 +143,7 @@ export default class ProfilerStore extends EventEmitter<{|
   set profilingData(value: ProfilingDataFrontend | null): void {
     if (this._isProfiling) {
       console.warn(
-        'Profiling data cannot be updated while profiling is in progress.'
+        'Profiling data cannot be updated while profiling is in progress.',
       );
       return;
     }
@@ -193,7 +193,7 @@ export default class ProfilerStore extends EventEmitter<{|
 
   _takeProfilingSnapshotRecursive = (
     elementID: number,
-    profilingSnapshots: Map<number, SnapshotNode>
+    profilingSnapshots: Map<number, SnapshotNode>,
   ) => {
     const element = this._store.getElementByID(elementID);
     if (element !== null) {
@@ -207,7 +207,7 @@ export default class ProfilerStore extends EventEmitter<{|
       profilingSnapshots.set(elementID, snapshotNode);
 
       element.children.forEach(childID =>
-        this._takeProfilingSnapshotRecursive(childID, profilingSnapshots)
+        this._takeProfilingSnapshotRecursive(childID, profilingSnapshots),
       );
     }
   };
@@ -242,11 +242,11 @@ export default class ProfilerStore extends EventEmitter<{|
       return;
     }
 
-    const { rendererID } = dataBackend;
+    const {rendererID} = dataBackend;
 
     if (!this._rendererQueue.has(rendererID)) {
       throw Error(
-        `Unexpected profiling data update from renderer "${rendererID}"`
+        `Unexpected profiling data update from renderer "${rendererID}"`,
       );
     }
 
@@ -257,7 +257,7 @@ export default class ProfilerStore extends EventEmitter<{|
       this._dataFrontend = prepareProfilingDataFrontendFromBackendAndStore(
         this._dataBackends,
         this._inProgressOperationsByRootID,
-        this._initialSnapshotsByRootID
+        this._initialSnapshotsByRootID,
       );
 
       this._dataBackends.splice(0);
@@ -319,7 +319,7 @@ export default class ProfilerStore extends EventEmitter<{|
           if (!this._rendererQueue.has(rendererID)) {
             this._rendererQueue.add(rendererID);
 
-            this._bridge.send('getProfilingData', { rendererID });
+            this._bridge.send('getProfilingData', {rendererID});
           }
         });
 

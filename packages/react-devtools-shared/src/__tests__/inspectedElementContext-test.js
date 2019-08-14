@@ -1,8 +1,8 @@
 // @flow
 
 import typeof ReactTestRenderer from 'react-test-renderer';
-import type { GetInspectedElementPath } from 'react-devtools-shared/src/devtools/views/Components/InspectedElementContext';
-import type { FrontendBridge } from 'react-devtools-shared/src/bridge';
+import type {GetInspectedElementPath} from 'react-devtools-shared/src/devtools/views/Components/InspectedElementContext';
+import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type Store from 'react-devtools-shared/src/devtools/store';
 
 describe('InspectedElementContext', () => {
@@ -36,12 +36,14 @@ describe('InspectedElementContext', () => {
     TestUtils = require('react-dom/test-utils');
     TestRenderer = utils.requireTestRenderer();
 
-    BridgeContext = require('react-devtools-shared/src/devtools/views/context').BridgeContext;
+    BridgeContext = require('react-devtools-shared/src/devtools/views/context')
+      .BridgeContext;
     InspectedElementContext = require('react-devtools-shared/src/devtools/views/Components/InspectedElementContext')
       .InspectedElementContext;
     InspectedElementContextController = require('react-devtools-shared/src/devtools/views/Components/InspectedElementContext')
       .InspectedElementContextController;
-    StoreContext = require('react-devtools-shared/src/devtools/views/context').StoreContext;
+    StoreContext = require('react-devtools-shared/src/devtools/views/context')
+      .StoreContext;
     TreeContextController = require('react-devtools-shared/src/devtools/views/Components/TreeContext')
       .TreeContextController;
   });
@@ -55,8 +57,7 @@ describe('InspectedElementContext', () => {
       <StoreContext.Provider value={store}>
         <TreeContextController
           defaultSelectedElementID={defaultSelectedElementID}
-          defaultSelectedElementIndex={defaultSelectedElementIndex}
-        >
+          defaultSelectedElementIndex={defaultSelectedElementIndex}>
           <InspectedElementContextController>
             {children}
           </InspectedElementContextController>
@@ -73,15 +74,15 @@ describe('InspectedElementContext', () => {
 
     const container = document.createElement('div');
     await utils.actAsync(() =>
-      ReactDOM.render(<Example a={1} b="abc" />, container)
+      ReactDOM.render(<Example a={1} b="abc" />, container),
     );
 
     const id = ((store.getElementIDAtIndex(0): any): number);
 
     let didFinish = false;
 
-    function Suspender({ target }) {
-      const { getInspectedElement } = React.useContext(InspectedElementContext);
+    function Suspender({target}) {
+      const {getInspectedElement} = React.useContext(InspectedElementContext);
       const inspectedElement = getInspectedElement(id);
       expect(inspectedElement).toMatchSnapshot(`1: Inspected element ${id}`);
       didFinish = true;
@@ -93,14 +94,13 @@ describe('InspectedElementContext', () => {
         TestRenderer.create(
           <Contexts
             defaultSelectedElementID={id}
-            defaultSelectedElementIndex={0}
-          >
+            defaultSelectedElementIndex={0}>
             <React.Suspense fallback={null}>
               <Suspender target={id} />
             </React.Suspense>
-          </Contexts>
+          </Contexts>,
         ),
-      false
+      false,
     );
     expect(didFinish).toBe(true);
 
@@ -113,15 +113,15 @@ describe('InspectedElementContext', () => {
     const container = document.createElement('div');
     await utils.actAsync(
       () => ReactDOM.render(<Example a={1} b="abc" />, container),
-      false
+      false,
     );
 
     const id = ((store.getElementIDAtIndex(0): any): number);
 
     let inspectedElement = null;
 
-    function Suspender({ target }) {
-      const { getInspectedElement } = React.useContext(InspectedElementContext);
+    function Suspender({target}) {
+      const {getInspectedElement} = React.useContext(InspectedElementContext);
       inspectedElement = getInspectedElement(id);
       return null;
     }
@@ -134,14 +134,14 @@ describe('InspectedElementContext', () => {
           <React.Suspense fallback={null}>
             <Suspender target={id} />
           </React.Suspense>
-        </Contexts>
+        </Contexts>,
       );
     }, false);
     expect(inspectedElement).toMatchSnapshot('1: initial render');
 
     await utils.actAsync(
       () => ReactDOM.render(<Example a={2} b="def" />, container),
-      false
+      false,
     );
 
     inspectedElement = null;
@@ -150,14 +150,13 @@ describe('InspectedElementContext', () => {
         renderer.update(
           <Contexts
             defaultSelectedElementID={id}
-            defaultSelectedElementIndex={0}
-          >
+            defaultSelectedElementIndex={0}>
             <React.Suspense fallback={null}>
               <Suspender target={id} />
             </React.Suspense>
-          </Contexts>
+          </Contexts>,
         ),
-      false
+      false,
     );
     expect(inspectedElement).toMatchSnapshot('2: updated state');
 
@@ -167,7 +166,7 @@ describe('InspectedElementContext', () => {
   it('should not re-render a function with hooks if it did not update since it was last inspected', async done => {
     let targetRenderCount = 0;
 
-    const Wrapper = ({ children }) => children;
+    const Wrapper = ({children}) => children;
     const Target = React.memo(props => {
       targetRenderCount++;
       React.useState(0);
@@ -180,16 +179,16 @@ describe('InspectedElementContext', () => {
         <Wrapper>
           <Target a={1} b="abc" />
         </Wrapper>,
-        container
-      )
+        container,
+      ),
     );
 
     const id = ((store.getElementIDAtIndex(1): any): number);
 
     let inspectedElement = null;
 
-    function Suspender({ target }) {
-      const { getInspectedElement } = React.useContext(InspectedElementContext);
+    function Suspender({target}) {
+      const {getInspectedElement} = React.useContext(InspectedElementContext);
       inspectedElement = getInspectedElement(target);
       return null;
     }
@@ -202,14 +201,13 @@ describe('InspectedElementContext', () => {
         (renderer = TestRenderer.create(
           <Contexts
             defaultSelectedElementID={id}
-            defaultSelectedElementIndex={1}
-          >
+            defaultSelectedElementIndex={1}>
             <React.Suspense fallback={null}>
               <Suspender target={id} />
             </React.Suspense>
-          </Contexts>
+          </Contexts>,
         )),
-      false
+      false,
     );
     expect(targetRenderCount).toBe(1);
     expect(inspectedElement).toMatchSnapshot('1: initial render');
@@ -223,14 +221,13 @@ describe('InspectedElementContext', () => {
         renderer.update(
           <Contexts
             defaultSelectedElementID={id}
-            defaultSelectedElementIndex={1}
-          >
+            defaultSelectedElementIndex={1}>
             <React.Suspense fallback={null}>
               <Suspender target={id} />
             </React.Suspense>
-          </Contexts>
+          </Contexts>,
         ),
-      false
+      false,
     );
     expect(targetRenderCount).toBe(0);
     expect(inspectedElement).toEqual(initialInspectedElement);
@@ -243,9 +240,9 @@ describe('InspectedElementContext', () => {
           <Wrapper>
             <Target a={2} b="def" />
           </Wrapper>,
-          container
+          container,
         ),
-      false
+      false,
     );
 
     // Target should have been rendered once (by ReactDOM) and once by DevTools for inspection.
@@ -275,7 +272,7 @@ describe('InspectedElementContext', () => {
 
     const container = document.createElement('div');
     await utils.actAsync(() =>
-      ReactDOM.render(<Target a={1} b="abc" />, container)
+      ReactDOM.render(<Target a={1} b="abc" />, container),
     );
 
     expect(targetRenderCount).toBe(1);
@@ -292,8 +289,8 @@ describe('InspectedElementContext', () => {
 
     let inspectedElement = null;
 
-    function Suspender({ target }) {
-      const { getInspectedElement } = React.useContext(InspectedElementContext);
+    function Suspender({target}) {
+      const {getInspectedElement} = React.useContext(InspectedElementContext);
       inspectedElement = getInspectedElement(target);
       return null;
     }
@@ -303,14 +300,13 @@ describe('InspectedElementContext', () => {
         TestRenderer.create(
           <Contexts
             defaultSelectedElementID={id}
-            defaultSelectedElementIndex={1}
-          >
+            defaultSelectedElementIndex={1}>
             <React.Suspense fallback={null}>
               <Suspender target={id} />
             </React.Suspense>
-          </Contexts>
+          </Contexts>,
         ),
-      false
+      false,
     );
 
     expect(inspectedElement).not.toBe(null);
@@ -342,15 +338,15 @@ describe('InspectedElementContext', () => {
           value_null={null}
           value_undefined={undefined}
         />,
-        container
-      )
+        container,
+      ),
     );
 
     const id = ((store.getElementIDAtIndex(0): any): number);
     let inspectedElement = null;
 
-    function Suspender({ target }) {
-      const { getInspectedElement } = React.useContext(InspectedElementContext);
+    function Suspender({target}) {
+      const {getInspectedElement} = React.useContext(InspectedElementContext);
       inspectedElement = getInspectedElement(id);
       return null;
     }
@@ -360,20 +356,19 @@ describe('InspectedElementContext', () => {
         TestRenderer.create(
           <Contexts
             defaultSelectedElementID={id}
-            defaultSelectedElementIndex={0}
-          >
+            defaultSelectedElementIndex={0}>
             <React.Suspense fallback={null}>
               <Suspender target={id} />
             </React.Suspense>
-          </Contexts>
+          </Contexts>,
         ),
-      false
+      false,
     );
 
     expect(inspectedElement).not.toBeNull();
     expect(inspectedElement).toMatchSnapshot('1: Initial inspection');
 
-    const { props } = (inspectedElement: any);
+    const {props} = (inspectedElement: any);
     expect(props.boolean_false).toBe(false);
     expect(props.boolean_true).toBe(true);
     expect(Number.isFinite(props.infinity)).toBe(false);
@@ -408,16 +403,16 @@ describe('InspectedElementContext', () => {
           typed_array={typedArray}
           date={new Date()}
         />,
-        container
-      )
+        container,
+      ),
     );
 
     const id = ((store.getElementIDAtIndex(0): any): number);
 
     let inspectedElement = null;
 
-    function Suspender({ target }) {
-      const { getInspectedElement } = React.useContext(InspectedElementContext);
+    function Suspender({target}) {
+      const {getInspectedElement} = React.useContext(InspectedElementContext);
       inspectedElement = getInspectedElement(id);
       return null;
     }
@@ -427,14 +422,13 @@ describe('InspectedElementContext', () => {
         TestRenderer.create(
           <Contexts
             defaultSelectedElementID={id}
-            defaultSelectedElementIndex={0}
-          >
+            defaultSelectedElementIndex={0}>
             <React.Suspense fallback={null}>
               <Suspender target={id} />
             </React.Suspense>
-          </Contexts>
+          </Contexts>,
         ),
-      false
+      false,
     );
 
     expect(inspectedElement).not.toBeNull();
@@ -488,7 +482,7 @@ describe('InspectedElementContext', () => {
 
     const descriptor = ((Object.getOwnPropertyDescriptor(
       CustomData.prototype,
-      'number'
+      'number',
     ): any): PropertyDescriptor<number>);
     descriptor.enumerable = true;
     Object.defineProperty(CustomData.prototype, 'number', descriptor);
@@ -497,15 +491,15 @@ describe('InspectedElementContext', () => {
 
     const container = document.createElement('div');
     await utils.actAsync(() =>
-      ReactDOM.render(<Example data={new CustomData()} />, container)
+      ReactDOM.render(<Example data={new CustomData()} />, container),
     );
 
     const id = ((store.getElementIDAtIndex(0): any): number);
 
     let didFinish = false;
 
-    function Suspender({ target }) {
-      const { getInspectedElement } = React.useContext(InspectedElementContext);
+    function Suspender({target}) {
+      const {getInspectedElement} = React.useContext(InspectedElementContext);
       const inspectedElement = getInspectedElement(id);
       expect(inspectedElement).toMatchSnapshot(`1: Inspected element ${id}`);
       didFinish = true;
@@ -517,14 +511,13 @@ describe('InspectedElementContext', () => {
         TestRenderer.create(
           <Contexts
             defaultSelectedElementID={id}
-            defaultSelectedElementIndex={0}
-          >
+            defaultSelectedElementIndex={0}>
             <React.Suspense fallback={null}>
               <Suspender target={id} />
             </React.Suspense>
-          </Contexts>
+          </Contexts>,
         ),
-      false
+      false,
     );
     expect(didFinish).toBe(true);
 
@@ -562,8 +555,8 @@ describe('InspectedElementContext', () => {
             },
           }}
         />,
-        container
-      )
+        container,
+      ),
     );
 
     const id = ((store.getElementIDAtIndex(0): any): number);
@@ -571,7 +564,7 @@ describe('InspectedElementContext', () => {
     let getInspectedElementPath: GetInspectedElementPath = ((null: any): GetInspectedElementPath);
     let inspectedElement = null;
 
-    function Suspender({ target }) {
+    function Suspender({target}) {
       const context = React.useContext(InspectedElementContext);
       getInspectedElementPath = context.getInspectedElementPath;
       inspectedElement = context.getInspectedElement(target);
@@ -583,14 +576,13 @@ describe('InspectedElementContext', () => {
         TestRenderer.create(
           <Contexts
             defaultSelectedElementID={id}
-            defaultSelectedElementIndex={0}
-          >
+            defaultSelectedElementIndex={0}>
             <React.Suspense fallback={null}>
               <Suspender target={id} />
             </React.Suspense>
-          </Contexts>
+          </Contexts>,
         ),
-      false
+      false,
     );
     expect(getInspectedElementPath).not.toBeNull();
     expect(inspectedElement).not.toBeNull();
@@ -615,7 +607,7 @@ describe('InspectedElementContext', () => {
     });
     expect(inspectedElement).not.toBeNull();
     expect(inspectedElement).toMatchSnapshot(
-      '3: Inspect props.nestedObject.a.b.c'
+      '3: Inspect props.nestedObject.a.b.c',
     );
 
     inspectedElement = null;
@@ -635,7 +627,7 @@ describe('InspectedElementContext', () => {
     });
     expect(inspectedElement).not.toBeNull();
     expect(inspectedElement).toMatchSnapshot(
-      '4: Inspect props.nestedObject.a.b.c.0.d'
+      '4: Inspect props.nestedObject.a.b.c.0.d',
     );
 
     inspectedElement = null;
@@ -657,7 +649,7 @@ describe('InspectedElementContext', () => {
     });
     expect(inspectedElement).not.toBeNull();
     expect(inspectedElement).toMatchSnapshot(
-      '6: Inspect hooks.0.value.foo.bar'
+      '6: Inspect hooks.0.value.foo.bar',
     );
 
     done();
@@ -688,8 +680,8 @@ describe('InspectedElementContext', () => {
             },
           }}
         />,
-        container
-      )
+        container,
+      ),
     );
 
     const id = ((store.getElementIDAtIndex(0): any): number);
@@ -697,7 +689,7 @@ describe('InspectedElementContext', () => {
     let getInspectedElementPath: GetInspectedElementPath = ((null: any): GetInspectedElementPath);
     let inspectedElement = null;
 
-    function Suspender({ target }) {
+    function Suspender({target}) {
       const context = React.useContext(InspectedElementContext);
       getInspectedElementPath = context.getInspectedElementPath;
       inspectedElement = context.getInspectedElement(id);
@@ -709,14 +701,13 @@ describe('InspectedElementContext', () => {
         TestRenderer.create(
           <Contexts
             defaultSelectedElementID={id}
-            defaultSelectedElementIndex={0}
-          >
+            defaultSelectedElementIndex={0}>
             <React.Suspense fallback={null}>
               <Suspender target={id} />
             </React.Suspense>
-          </Contexts>
+          </Contexts>,
         ),
-      false
+      false,
     );
     expect(getInspectedElementPath).not.toBeNull();
     expect(inspectedElement).not.toBeNull();
@@ -760,7 +751,7 @@ describe('InspectedElementContext', () => {
               },
             }}
           />,
-          container
+          container,
         );
       });
     });
@@ -792,8 +783,8 @@ describe('InspectedElementContext', () => {
             },
           }}
         />,
-        container
-      )
+        container,
+      ),
     );
 
     const id = ((store.getElementIDAtIndex(0): any): number);
@@ -801,7 +792,7 @@ describe('InspectedElementContext', () => {
     let getInspectedElementPath: GetInspectedElementPath = ((null: any): GetInspectedElementPath);
     let inspectedElement = null;
 
-    function Suspender({ target }) {
+    function Suspender({target}) {
       const context = React.useContext(InspectedElementContext);
       getInspectedElementPath = context.getInspectedElementPath;
       inspectedElement = context.getInspectedElement(id);
@@ -813,14 +804,13 @@ describe('InspectedElementContext', () => {
         TestRenderer.create(
           <Contexts
             defaultSelectedElementID={id}
-            defaultSelectedElementIndex={0}
-          >
+            defaultSelectedElementIndex={0}>
             <React.Suspense fallback={null}>
               <Suspender target={id} />
             </React.Suspense>
-          </Contexts>
+          </Contexts>,
         ),
-      false
+      false,
     );
     expect(getInspectedElementPath).not.toBeNull();
     expect(inspectedElement).not.toBeNull();
@@ -839,7 +829,7 @@ describe('InspectedElementContext', () => {
             },
           }}
         />,
-        container
+        container,
       );
     });
 

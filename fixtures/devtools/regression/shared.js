@@ -10,7 +10,7 @@ const minor =
   pieces[0] === '0' ? parseInt(pieces[2], 10) : parseInt(pieces[1], 10);
 
 // Convenience wrapper to organize API features in DevTools.
-function Feature({ children, label, version }) {
+function Feature({children, label, version}) {
   return (
     <div className="Feature">
       <div className="FeatureHeader">
@@ -60,10 +60,10 @@ switch (major) {
         }
       case 6:
         // memo
-        function LabelComponent({ label }) {
+        function LabelComponent({label}) {
           return <label>{label}</label>;
         }
-        const AnonymousMemoized = React.memo(({ label }) => (
+        const AnonymousMemoized = React.memo(({label}) => (
           <label>{label}</label>
         ));
         const Memoized = React.memo(LabelComponent);
@@ -91,8 +91,8 @@ switch (major) {
           getResourceKey
         );
         class Suspending extends React.Component {
-          state = { useSuspense: false };
-          useSuspense = () => this.setState({ useSuspense: true });
+          state = {useSuspense: false};
+          useSuspense = () => this.setState({useSuspense: true});
           render() {
             if (this.state.useSuspense) {
               const text = Resource.read(['loaded', 2000]);
@@ -141,9 +141,9 @@ switch (major) {
       case 4:
         // unstable_Profiler
         class ProfilerChild extends React.Component {
-          state = { count: 0 };
+          state = {count: 0};
           incrementCount = () =>
-            this.setState(prevState => ({ count: prevState.count + 1 }));
+            this.setState(prevState => ({count: prevState.count + 1}));
           render() {
             return (
               <div>
@@ -159,8 +159,7 @@ switch (major) {
           <Feature
             key="unstable_Profiler"
             label="unstable_Profiler"
-            version="16.4+"
-          >
+            version="16.4+">
             <Profiler id="count" onRender={onRender}>
               <div>
                 <ProfilerChild />
@@ -230,8 +229,7 @@ switch (major) {
           <Feature
             key="AsyncMode/ConcurrentMode"
             label="AsyncMode/ConcurrentMode"
-            version="16.3+"
-          >
+            version="16.3+">
             <ConcurrentMode>
               <div>
                 unstable_AsyncMode was added in 16.3, renamed to
@@ -271,13 +269,13 @@ function Even() {
 
 // Simple stateful app shared by all React versions
 class SimpleApp extends React.Component {
-  state = { count: 0 };
+  state = {count: 0};
   incrementCount = () => {
-    const updaterFn = prevState => ({ count: prevState.count + 1 });
+    const updaterFn = prevState => ({count: prevState.count + 1});
     trace('Updating count', performance.now(), () => this.setState(updaterFn));
   };
   render() {
-    const { count } = this.state;
+    const {count} = this.state;
     return (
       <div>
         {count % 2 === 0 ? (
@@ -299,7 +297,7 @@ apps.push(
 );
 
 // This component, with the version prop, helps organize DevTools at a glance.
-function TopLevelWrapperForDevTools({ version }) {
+function TopLevelWrapperForDevTools({version}) {
   let header = <h1>React {version}</h1>;
   if (version.includes('canary')) {
     const commitSha = version.match(/.+canary-(.+)/)[1];

@@ -18,7 +18,7 @@ type Props = {|
   type: IconType,
 |};
 
-export default function Icon({ className = '', type }: Props) {
+export default function Icon({className = '', type}: Props) {
   let pathData = null;
   switch (type) {
     case 'arrow':
@@ -56,8 +56,7 @@ export default function Icon({ className = '', type }: Props) {
       className={`${styles.Icon} ${className}`}
       width="24"
       height="24"
-      viewBox="0 0 24 24"
-    >
+      viewBox="0 0 24 24">
       <path d="M0 0h24v24H0z" fill="none" />
       <path fill="currentColor" d={pathData} />
     </svg>

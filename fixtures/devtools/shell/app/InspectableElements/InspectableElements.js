@@ -1,6 +1,6 @@
 // @flow
 
-import React, { Fragment } from 'react';
+import React, {Fragment} from 'react';
 import Contexts from './Contexts';
 import CustomHooks from './CustomHooks';
 import CustomObject from './CustomObject';

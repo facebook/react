@@ -1,20 +1,20 @@
 // @flow
 
-import { copy } from 'clipboard-js';
-import React, { useCallback, useContext, useState } from 'react';
-import { BridgeContext, StoreContext } from '../context';
+import {copy} from 'clipboard-js';
+import React, {useCallback, useContext, useState} from 'react';
+import {BridgeContext, StoreContext} from '../context';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import EditableValue from './EditableValue';
 import ExpandCollapseToggle from './ExpandCollapseToggle';
-import { InspectedElementContext } from './InspectedElementContext';
+import {InspectedElementContext} from './InspectedElementContext';
 import KeyValue from './KeyValue';
-import { serializeHooksForCopy } from '../utils';
+import {serializeHooksForCopy} from '../utils';
 import styles from './HooksTree.css';
-import { meta } from '../../../hydration';
+import {meta} from '../../../hydration';
 
-import type { InspectPath } from './SelectedElement';
-import type { HooksNode, HooksTree } from 'react-debug-tools/src/ReactDebugHooks';
+import type {InspectPath} from './SelectedElement';
+import type {HooksNode, HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
 
 type HooksTreeViewProps = {|
   canEditHooks: boolean,
@@ -22,13 +22,13 @@ type HooksTreeViewProps = {|
   id: number,
 |};
 
-export function HooksTreeView({ canEditHooks, hooks, id }: HooksTreeViewProps) {
-  const { getInspectedElementPath } = useContext(InspectedElementContext);
+export function HooksTreeView({canEditHooks, hooks, id}: HooksTreeViewProps) {
+  const {getInspectedElementPath} = useContext(InspectedElementContext);
   const inspectPath = useCallback(
     (path: Array<string | number>) => {
       getInspectedElementPath(id, ['hooks', ...path]);
     },
-    [getInspectedElementPath, id]
+    [getInspectedElementPath, id],
   );
   const handleCopy = useCallback(() => copy(serializeHooksForCopy(hooks)), [
     hooks,
@@ -93,14 +93,8 @@ type HookViewProps = {|
   path: Array<string | number>,
 |};
 
-function HookView({
-  canEditHooks,
-  hook,
-  id,
-  inspectPath,
-  path,
-}: HookViewProps) {
-  const { name, id: hookID, isStateEditable, subHooks, value } = hook;
+function HookView({canEditHooks, hook, id, inspectPath, path}: HookViewProps) {
+  const {name, id: hookID, isStateEditable, subHooks, value} = hook;
 
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
@@ -109,7 +103,7 @@ function HookView({
 
   const toggleIsOpen = useCallback(
     () => setIsOpen(prevIsOpen => !prevIsOpen),
-    []
+    [],
   );
 
   if (hook.hasOwnProperty(meta.inspected)) {
@@ -178,8 +172,7 @@ function HookView({
             <ExpandCollapseToggle isOpen={isOpen} setIsOpen={setIsOpen} />
             <span
               onClick={toggleIsOpen}
-              className={name !== '' ? styles.Name : styles.NameAnonymous}
-            >
+              className={name !== '' ? styles.Name : styles.NameAnonymous}>
               {name || 'Anonymous'}
             </span>
           </div>
@@ -202,8 +195,7 @@ function HookView({
             <ExpandCollapseToggle isOpen={isOpen} setIsOpen={setIsOpen} />
             <span
               onClick={toggleIsOpen}
-              className={name !== '' ? styles.Name : styles.NameAnonymous}
-            >
+              className={name !== '' ? styles.Name : styles.NameAnonymous}>
               {name || 'Anonymous'}
             </span>{' '}
             {/* $FlowFixMe */}
@@ -260,8 +252,7 @@ function HookView({
                 typeof overrideValueFn === 'function'
                   ? styles.EditableName
                   : styles.Name
-              }
-            >
+              }>
               {name}
             </span>
             {typeof overrideValueFn === 'function' ? (

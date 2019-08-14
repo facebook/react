@@ -1,6 +1,6 @@
 // @flow
 
-import React, { Fragment, useCallback, useState } from 'react';
+import React, {Fragment, useCallback, useState} from 'react';
 import ListItem from './ListItem';
 import styles from './List.css';
 
@@ -15,26 +15,29 @@ type Props = {||};
 export default function List(props: Props) {
   const [newItemText, setNewItemText] = useState<string>('');
   const [items, setItems] = useState<Array<Item>>([
-    { id: 1, isComplete: true, text: 'First' },
-    { id: 2, isComplete: true, text: 'Second' },
-    { id: 3, isComplete: false, text: 'Third' },
+    {id: 1, isComplete: true, text: 'First'},
+    {id: 2, isComplete: true, text: 'Second'},
+    {id: 3, isComplete: false, text: 'Third'},
   ]);
   const [uid, setUID] = useState<number>(4);
 
-  const handleClick = useCallback(() => {
-    if (newItemText !== '') {
-      setItems([
-        ...items,
-        {
-          id: uid,
-          isComplete: false,
-          text: newItemText,
-        },
-      ]);
-      setUID(uid + 1);
-      setNewItemText('');
-    }
-  }, [newItemText, items, uid]);
+  const handleClick = useCallback(
+    () => {
+      if (newItemText !== '') {
+        setItems([
+          ...items,
+          {
+            id: uid,
+            isComplete: false,
+            text: newItemText,
+          },
+        ]);
+        setUID(uid + 1);
+        setNewItemText('');
+      }
+    },
+    [newItemText, items, uid]
+  );
 
   const handleKeyPress = useCallback(
     event => {
@@ -88,8 +91,7 @@ export default function List(props: Props) {
       <button
         className={styles.IconButton}
         disabled={newItemText === ''}
-        onClick={handleClick}
-      >
+        onClick={handleClick}>
         <span role="img" aria-label="Add item">
           ➕
         </span>

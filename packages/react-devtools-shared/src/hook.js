@@ -12,7 +12,7 @@ import {
   registerRenderer as registerRendererWithConsole,
 } from './backend/console';
 
-import type { DevToolsHook } from 'react-devtools-shared/src/backend/types';
+import type {DevToolsHook} from 'react-devtools-shared/src/backend/types';
 
 declare var window: any;
 
@@ -44,7 +44,7 @@ export function installHook(target: any): DevToolsHook | null {
       if (renderer.Mount && renderer.Mount._renderNewRootComponent) {
         // React DOM Stack
         const renderRootCode = toString.call(
-          renderer.Mount._renderNewRootComponent
+          renderer.Mount._renderNewRootComponent,
         );
         // Filter out bad results (if that is even possible):
         if (renderRootCode.indexOf('function') !== 0) {
@@ -143,7 +143,7 @@ export function installHook(target: any): DevToolsHook | null {
             'React is running in production mode, but dead code ' +
               'elimination has not been applied. Read how to correctly ' +
               'configure React for production: ' +
-              'https://fb.me/react-perf-use-the-production-build'
+              'https://fb.me/react-perf-use-the-production-build',
           );
         });
       }
@@ -194,7 +194,7 @@ export function installHook(target: any): DevToolsHook | null {
       hook.rendererInterfaces.set(id, rendererInterface);
     }
 
-    hook.emit('renderer', { id, renderer, reactBuildType });
+    hook.emit('renderer', {id, renderer, reactBuildType});
 
     return id;
   }
@@ -305,7 +305,7 @@ export function installHook(target: any): DevToolsHook | null {
       get() {
         return hook;
       },
-    }: Object)
+    }: Object),
   );
 
   return hook;

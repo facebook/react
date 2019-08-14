@@ -1,6 +1,6 @@
 // @flow
 
-import React, { Fragment, useCallback, useRef, useState } from 'react';
+import React, {Fragment, useCallback, useRef, useState} from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import styles from './EditableValue.css';
@@ -29,7 +29,7 @@ export default function EditableValue({
   }
 
   const handleChange = useCallback(
-    ({ target }) => {
+    ({target}) => {
       if (dataType === 'boolean') {
         setEditableValue(target.checked);
         overrideValueFn(path, target.checked);
@@ -38,24 +38,27 @@ export default function EditableValue({
       }
       setHasPendingChanges(true);
     },
-    [dataType, overrideValueFn, path]
+    [dataType, overrideValueFn, path],
   );
 
-  const handleReset = useCallback(() => {
-    setEditableValue(value);
-    setHasPendingChanges(false);
+  const handleReset = useCallback(
+    () => {
+      setEditableValue(value);
+      setHasPendingChanges(false);
 
-    if (inputRef.current !== null) {
-      inputRef.current.focus();
-    }
-  }, [value]);
+      if (inputRef.current !== null) {
+        inputRef.current.focus();
+      }
+    },
+    [value],
+  );
 
   const handleKeyDown = useCallback(
     event => {
       // Prevent keydown events from e.g. change selected element in the tree
       event.stopPropagation();
 
-      const { key } = event;
+      const {key} = event;
 
       if (key === 'Enter') {
         if (dataType === 'number') {
@@ -75,7 +78,7 @@ export default function EditableValue({
         setHasPendingChanges(false);
       }
     },
-    [editableValue, dataType, overrideValueFn, path, value]
+    [editableValue, dataType, overrideValueFn, path, value],
   );
 
   // Render different input types based on the dataType
@@ -125,15 +128,15 @@ export default function EditableValue({
           value={inputValue}
         />
       )}
-      {hasPendingChanges && dataType !== 'boolean' && (
-        <Button
-          className={styles.ResetButton}
-          onClick={handleReset}
-          title="Reset value"
-        >
-          <ButtonIcon type="undo" />
-        </Button>
-      )}
+      {hasPendingChanges &&
+        dataType !== 'boolean' && (
+          <Button
+            className={styles.ResetButton}
+            onClick={handleReset}
+            title="Reset value">
+            <ButtonIcon type="undo" />
+          </Button>
+        )}
     </Fragment>
   );
 }

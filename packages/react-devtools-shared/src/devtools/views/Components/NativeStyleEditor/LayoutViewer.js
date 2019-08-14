@@ -3,15 +3,15 @@
 import React from 'react';
 import styles from './LayoutViewer.css';
 
-import type { Layout } from './types';
+import type {Layout} from './types';
 
 type Props = {|
   id: number,
   layout: Layout,
 |};
 
-export default function LayoutViewer({ id, layout }: Props) {
-  const { height, margin, padding, y, width, x } = layout;
+export default function LayoutViewer({id, layout}: Props) {
+  const {height, margin, padding, y, width, x} = layout;
 
   return (
     <div className={styles.LayoutViewer}>

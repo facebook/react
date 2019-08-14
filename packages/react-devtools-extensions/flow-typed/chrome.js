@@ -42,7 +42,7 @@ declare var chrome: {
   browserAction: {
     setIcon: (options: {
       tabId: number,
-      path: { [key: string]: string },
+      path: {[key: string]: string},
     }) => void,
     setPopup: (options: {
       tabId: number,

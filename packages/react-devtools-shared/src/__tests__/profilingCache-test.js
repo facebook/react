@@ -1,7 +1,7 @@
 // @flow
 
 import typeof ReactTestRenderer from 'react-test-renderer';
-import type { FrontendBridge } from 'react-devtools-shared/src/bridge';
+import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type Store from 'react-devtools-shared/src/devtools/store';
 
 describe('ProfilingCache', () => {
@@ -33,7 +33,7 @@ describe('ProfilingCache', () => {
   });
 
   it('should collect data for each root (including ones added or mounted after profiling started)', () => {
-    const Parent = ({ count }) => {
+    const Parent = ({count}) => {
       Scheduler.unstable_advanceTime(10);
       const children = new Array(count)
         .fill(true)
@@ -45,7 +45,7 @@ describe('ProfilingCache', () => {
         </React.Fragment>
       );
     };
-    const Child = ({ duration }) => {
+    const Child = ({duration}) => {
       Scheduler.unstable_advanceTime(duration);
       return null;
     };
@@ -67,13 +67,13 @@ describe('ProfilingCache', () => {
 
     let allProfilingDataForRoots = [];
 
-    function Validator({ previousProfilingDataForRoot, rootID }) {
+    function Validator({previousProfilingDataForRoot, rootID}) {
       const profilingDataForRoot = store.profilerStore.getDataForRoot(rootID);
       if (previousProfilingDataForRoot != null) {
         expect(profilingDataForRoot).toEqual(previousProfilingDataForRoot);
       } else {
         expect(profilingDataForRoot).toMatchSnapshot(
-          `Data for root ${profilingDataForRoot.displayName}`
+          `Data for root ${profilingDataForRoot.displayName}`,
         );
       }
       allProfilingDataForRoots.push(profilingDataForRoot);
@@ -94,8 +94,8 @@ describe('ProfilingCache', () => {
             <Validator
               previousProfilingDataForRoot={null}
               rootID={dataForRoot.rootID}
-            />
-          )
+            />,
+          ),
         );
       });
     }
@@ -110,14 +110,14 @@ describe('ProfilingCache', () => {
           <Validator
             previousProfilingDataForRoot={profilingDataForRoot}
             rootID={profilingDataForRoot.rootID}
-          />
-        )
+          />,
+        ),
       );
     });
   });
 
   it('should collect data for each commit', () => {
-    const Parent = ({ count }) => {
+    const Parent = ({count}) => {
       Scheduler.unstable_advanceTime(10);
       const children = new Array(count)
         .fill(true)
@@ -129,7 +129,7 @@ describe('ProfilingCache', () => {
         </React.Fragment>
       );
     };
-    const Child = ({ duration }) => {
+    const Child = ({duration}) => {
       Scheduler.unstable_advanceTime(duration);
       return null;
     };
@@ -146,14 +146,14 @@ describe('ProfilingCache', () => {
 
     const allCommitData = [];
 
-    function Validator({ commitIndex, previousCommitDetails, rootID }) {
+    function Validator({commitIndex, previousCommitDetails, rootID}) {
       const commitData = store.profilerStore.getCommitData(rootID, commitIndex);
       if (previousCommitDetails != null) {
         expect(commitData).toEqual(previousCommitDetails);
       } else {
         allCommitData.push(commitData);
         expect(commitData).toMatchSnapshot(
-          `CommitDetails commitIndex: ${commitIndex}`
+          `CommitDetails commitIndex: ${commitIndex}`,
         );
       }
       return null;
@@ -168,7 +168,7 @@ describe('ProfilingCache', () => {
             commitIndex={commitIndex}
             previousCommitDetails={null}
             rootID={rootID}
-          />
+          />,
         );
       });
     }
@@ -184,7 +184,7 @@ describe('ProfilingCache', () => {
             commitIndex={commitIndex}
             previousCommitDetails={allCommitData[commitIndex]}
             rootID={rootID}
-          />
+          />,
         );
       });
     }
@@ -197,12 +197,12 @@ describe('ProfilingCache', () => {
 
     class LegacyContextProvider extends React.Component<
       any,
-      {| count: number |}
+      {|count: number|},
     > {
       static childContextTypes = {
         count: PropTypes.number,
       };
-      state = { count: 0 };
+      state = {count: 0};
       getChildContext() {
         return this.state;
       }
@@ -219,7 +219,7 @@ describe('ProfilingCache', () => {
       }
     }
 
-    const FunctionComponentWithHooks = ({ count }) => {
+    const FunctionComponentWithHooks = ({count}) => {
       React.useMemo(() => count, [count]);
       return null;
     };
@@ -245,26 +245,26 @@ describe('ProfilingCache', () => {
     utils.act(() => store.profilerStore.startProfiling());
     utils.act(() => ReactDOM.render(<LegacyContextProvider />, container));
     expect(instance).not.toBeNull();
-    utils.act(() => (instance: any).setState({ count: 1 }));
+    utils.act(() => (instance: any).setState({count: 1}));
     utils.act(() =>
-      ReactDOM.render(<LegacyContextProvider foo={123} />, container)
+      ReactDOM.render(<LegacyContextProvider foo={123} />, container),
     );
     utils.act(() =>
-      ReactDOM.render(<LegacyContextProvider bar="abc" />, container)
+      ReactDOM.render(<LegacyContextProvider bar="abc" />, container),
     );
     utils.act(() => ReactDOM.render(<LegacyContextProvider />, container));
     utils.act(() => store.profilerStore.stopProfiling());
 
     const allCommitData = [];
 
-    function Validator({ commitIndex, previousCommitDetails, rootID }) {
+    function Validator({commitIndex, previousCommitDetails, rootID}) {
       const commitData = store.profilerStore.getCommitData(rootID, commitIndex);
       if (previousCommitDetails != null) {
         expect(commitData).toEqual(previousCommitDetails);
       } else {
         allCommitData.push(commitData);
         expect(commitData).toMatchSnapshot(
-          `CommitDetails commitIndex: ${commitIndex}`
+          `CommitDetails commitIndex: ${commitIndex}`,
         );
       }
       return null;
@@ -279,7 +279,7 @@ describe('ProfilingCache', () => {
             commitIndex={commitIndex}
             previousCommitDetails={null}
             rootID={rootID}
-          />
+          />,
         );
       });
     }
@@ -295,7 +295,7 @@ describe('ProfilingCache', () => {
             commitIndex={commitIndex}
             previousCommitDetails={allCommitData[commitIndex]}
             rootID={rootID}
-          />
+          />,
         );
       });
     }
@@ -324,16 +324,16 @@ describe('ProfilingCache', () => {
 
     utils.act(() => store.profilerStore.startProfiling());
     utils.act(() =>
-      ReactDOM.render(<Grandparent />, document.createElement('div'))
+      ReactDOM.render(<Grandparent />, document.createElement('div')),
     );
     utils.act(() => store.profilerStore.stopProfiling());
 
     let commitData = null;
 
-    function Validator({ commitIndex, rootID }) {
+    function Validator({commitIndex, rootID}) {
       commitData = store.profilerStore.getCommitData(rootID, commitIndex);
       expect(commitData).toMatchSnapshot(
-        `CommitDetails with filtered self durations`
+        `CommitDetails with filtered self durations`,
       );
       return null;
     }
@@ -380,17 +380,17 @@ describe('ProfilingCache', () => {
 
     utils.act(() => store.profilerStore.startProfiling());
     await utils.actAsync(() =>
-      ReactDOM.render(<Parent />, document.createElement('div'))
+      ReactDOM.render(<Parent />, document.createElement('div')),
     );
     utils.act(() => store.profilerStore.stopProfiling());
 
     const allCommitData = [];
 
-    function Validator({ commitIndex, rootID }) {
+    function Validator({commitIndex, rootID}) {
       const commitData = store.profilerStore.getCommitData(rootID, commitIndex);
       allCommitData.push(commitData);
       expect(commitData).toMatchSnapshot(
-        `CommitDetails with filtered self durations`
+        `CommitDetails with filtered self durations`,
       );
       return null;
     }
@@ -400,7 +400,7 @@ describe('ProfilingCache', () => {
     for (let commitIndex = 0; commitIndex < 2; commitIndex++) {
       utils.act(() => {
         TestRenderer.create(
-          <Validator commitIndex={commitIndex} rootID={rootID} />
+          <Validator commitIndex={commitIndex} rootID={rootID} />,
         );
       });
     }
@@ -411,7 +411,7 @@ describe('ProfilingCache', () => {
   });
 
   it('should collect data for each rendered fiber', () => {
-    const Parent = ({ count }) => {
+    const Parent = ({count}) => {
       Scheduler.unstable_advanceTime(10);
       const children = new Array(count)
         .fill(true)
@@ -423,7 +423,7 @@ describe('ProfilingCache', () => {
         </React.Fragment>
       );
     };
-    const Child = ({ duration }) => {
+    const Child = ({duration}) => {
       Scheduler.unstable_advanceTime(duration);
       return null;
     };
@@ -439,7 +439,7 @@ describe('ProfilingCache', () => {
 
     const allFiberCommits = [];
 
-    function Validator({ fiberID, previousFiberCommits, rootID }) {
+    function Validator({fiberID, previousFiberCommits, rootID}) {
       const fiberCommits = store.profilerStore.profilingCache.getFiberCommits({
         fiberID,
         rootID,
@@ -449,7 +449,7 @@ describe('ProfilingCache', () => {
       } else {
         allFiberCommits.push(fiberCommits);
         expect(fiberCommits).toMatchSnapshot(
-          `FiberCommits: element ${fiberID}`
+          `FiberCommits: element ${fiberID}`,
         );
       }
       return null;
@@ -468,7 +468,7 @@ describe('ProfilingCache', () => {
             fiberID={fiberID}
             previousFiberCommits={null}
             rootID={rootID}
-          />
+          />,
         );
       });
     }
@@ -488,14 +488,14 @@ describe('ProfilingCache', () => {
             fiberID={fiberID}
             previousFiberCommits={allFiberCommits[index]}
             rootID={rootID}
-          />
+          />,
         );
       });
     }
   });
 
   it('should report every traced interaction', () => {
-    const Parent = ({ count }) => {
+    const Parent = ({count}) => {
       Scheduler.unstable_advanceTime(10);
       const children = new Array(count)
         .fill(true)
@@ -507,7 +507,7 @@ describe('ProfilingCache', () => {
         </React.Fragment>
       );
     };
-    const Child = ({ duration }) => {
+    const Child = ({duration}) => {
       Scheduler.unstable_advanceTime(duration);
       return null;
     };
@@ -520,25 +520,25 @@ describe('ProfilingCache', () => {
       SchedulerTracing.unstable_trace(
         'mount: one child',
         Scheduler.unstable_now(),
-        () => ReactDOM.render(<Parent count={1} />, container)
-      )
+        () => ReactDOM.render(<Parent count={1} />, container),
+      ),
     );
     utils.act(() =>
       SchedulerTracing.unstable_trace(
         'update: two children',
         Scheduler.unstable_now(),
-        () => ReactDOM.render(<Parent count={2} />, container)
-      )
+        () => ReactDOM.render(<Parent count={2} />, container),
+      ),
     );
     utils.act(() => store.profilerStore.stopProfiling());
 
     let interactions = null;
 
-    function Validator({ previousInteractions, rootID }) {
+    function Validator({previousInteractions, rootID}) {
       interactions = store.profilerStore.profilingCache.getInteractionsChartData(
         {
           rootID,
-        }
+        },
       ).interactions;
       if (previousInteractions != null) {
         expect(interactions).toEqual(previousInteractions);
@@ -552,8 +552,8 @@ describe('ProfilingCache', () => {
 
     utils.act(() =>
       TestRenderer.create(
-        <Validator previousInteractions={null} rootID={rootID} />
-      )
+        <Validator previousInteractions={null} rootID={rootID} />,
+      ),
     );
 
     expect(interactions).not.toBeNull();
@@ -562,8 +562,8 @@ describe('ProfilingCache', () => {
 
     utils.act(() =>
       TestRenderer.create(
-        <Validator previousInteractions={interactions} rootID={rootID} />
-      )
+        <Validator previousInteractions={interactions} rootID={rootID} />,
+      ),
     );
   });
 });

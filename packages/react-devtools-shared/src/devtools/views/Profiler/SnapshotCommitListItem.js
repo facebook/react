@@ -1,12 +1,12 @@
 // @flow
 
-import React, { memo, useCallback } from 'react';
-import { areEqual } from 'react-window';
-import { getGradientColor, formatDuration, formatTime } from './utils';
+import React, {memo, useCallback} from 'react';
+import {areEqual} from 'react-window';
+import {getGradientColor, formatDuration, formatTime} from './utils';
 
 import styles from './SnapshotCommitListItem.css';
 
-import type { ItemData } from './SnapshotCommitList';
+import type {ItemData} from './SnapshotCommitList';
 
 type Props = {
   data: ItemData,
@@ -14,7 +14,7 @@ type Props = {
   style: Object,
 };
 
-function SnapshotCommitListItem({ data: itemData, index, style }: Props) {
+function SnapshotCommitListItem({data: itemData, index, style}: Props) {
   const {
     commitDurations,
     commitTimes,
@@ -56,9 +56,8 @@ function SnapshotCommitListItem({ data: itemData, index, style }: Props) {
           : undefined,
       }}
       title={`Duration ${formatDuration(commitDuration)}ms at ${formatTime(
-        commitTime
-      )}s`}
-    >
+        commitTime,
+      )}s`}>
       <div
         className={styles.Inner}
         style={{

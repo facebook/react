@@ -1,6 +1,6 @@
 // @flow
 
-import React, { Fragment } from 'react';
+import React, {Fragment} from 'react';
 
 function wrapWithHoc(Component, index) {
   function HOC() {

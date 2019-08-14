@@ -3,9 +3,9 @@
 import Agent from 'react-devtools-shared/src/backend/agent';
 import resolveBoxStyle from './resolveBoxStyle';
 
-import type { BackendBridge } from 'react-devtools-shared/src/bridge';
-import type { RendererID } from '../types';
-import type { StyleAndLayout } from './types';
+import type {BackendBridge} from 'react-devtools-shared/src/bridge';
+import type {RendererID} from '../types';
+import type {StyleAndLayout} from './types';
 
 export type ResolveNativeStyle = (stylesheetID: any) => ?Object;
 
@@ -13,13 +13,13 @@ export default function setupNativeStyleEditor(
   bridge: BackendBridge,
   agent: Agent,
   resolveNativeStyle: ResolveNativeStyle,
-  validAttributes?: $ReadOnlyArray<string> | null
+  validAttributes?: $ReadOnlyArray<string> | null,
 ) {
   bridge.addListener(
     'NativeStyleEditor_measure',
-    ({ id, rendererID }: {| id: number, rendererID: RendererID |}) => {
+    ({id, rendererID}: {|id: number, rendererID: RendererID|}) => {
       measureStyle(agent, bridge, resolveNativeStyle, id, rendererID);
-    }
+    },
   );
 
   bridge.addListener(
@@ -39,9 +39,9 @@ export default function setupNativeStyleEditor(
     |}) => {
       renameStyle(agent, id, rendererID, oldName, newName, value);
       setTimeout(() =>
-        measureStyle(agent, bridge, resolveNativeStyle, id, rendererID)
+        measureStyle(agent, bridge, resolveNativeStyle, id, rendererID),
       );
-    }
+    },
   );
 
   bridge.addListener(
@@ -59,9 +59,9 @@ export default function setupNativeStyleEditor(
     |}) => {
       setStyle(agent, id, rendererID, name, value);
       setTimeout(() =>
-        measureStyle(agent, bridge, resolveNativeStyle, id, rendererID)
+        measureStyle(agent, bridge, resolveNativeStyle, id, rendererID),
       );
-    }
+    },
   );
 
   bridge.send('isNativeStyleEditorSupported', {
@@ -84,9 +84,9 @@ function measureStyle(
   bridge: BackendBridge,
   resolveNativeStyle: ResolveNativeStyle,
   id: number,
-  rendererID: RendererID
+  rendererID: RendererID,
 ) {
-  const data = agent.getInstanceAndStyle({ id, rendererID });
+  const data = agent.getInstanceAndStyle({id, rendererID});
   if (!data || !data.style) {
     bridge.send(
       'NativeStyleEditor_styleAndLayout',
@@ -94,12 +94,12 @@ function measureStyle(
         id,
         layout: null,
         style: null,
-      }: StyleAndLayout)
+      }: StyleAndLayout),
     );
     return;
   }
 
-  const { instance, style } = data;
+  const {instance, style} = data;
 
   let resolvedStyle = resolveNativeStyle(style);
 
@@ -116,7 +116,7 @@ function measureStyle(
         id,
         layout: null,
         style: resolvedStyle || null,
-      }: StyleAndLayout)
+      }: StyleAndLayout),
     );
     return;
   }
@@ -132,12 +132,16 @@ function measureStyle(
           id,
           layout: null,
           style: resolvedStyle || null,
-        }: StyleAndLayout)
+        }: StyleAndLayout),
       );
       return;
     }
-    const margin = resolvedStyle != null && resolveBoxStyle('margin', resolvedStyle) || EMPTY_BOX_STYLE;
-    const padding = resolvedStyle != null && resolveBoxStyle('padding', resolvedStyle) || EMPTY_BOX_STYLE;
+    const margin =
+      (resolvedStyle != null && resolveBoxStyle('margin', resolvedStyle)) ||
+      EMPTY_BOX_STYLE;
+    const padding =
+      (resolvedStyle != null && resolveBoxStyle('padding', resolvedStyle)) ||
+      EMPTY_BOX_STYLE;
     bridge.send(
       'NativeStyleEditor_styleAndLayout',
       ({
@@ -153,7 +157,7 @@ function measureStyle(
           padding,
         },
         style: resolvedStyle || null,
-      }: StyleAndLayout)
+      }: StyleAndLayout),
     );
   });
 }
@@ -172,18 +176,18 @@ function renameStyle(
   rendererID: RendererID,
   oldName: string,
   newName: string,
-  value: string
+  value: string,
 ): void {
-  const data = agent.getInstanceAndStyle({ id, rendererID });
+  const data = agent.getInstanceAndStyle({id, rendererID});
   if (!data || !data.style) {
     return;
   }
 
-  const { instance, style } = data;
+  const {instance, style} = data;
 
   const newStyle = newName
-    ? { [oldName]: undefined, [newName]: value }
-    : { [oldName]: undefined };
+    ? {[oldName]: undefined, [newName]: value}
+    : {[oldName]: undefined};
 
   let customStyle;
 
@@ -198,7 +202,7 @@ function renameStyle(
       Object.assign(styleOverrides, newStyle);
     }
     // TODO Fabric does not support setNativeProps; chat with Sebastian or Eli
-    instance.setNativeProps({ style: newStyle });
+    instance.setNativeProps({style: newStyle});
   } else if (Array.isArray(style)) {
     const lastIndex = style.length - 1;
     if (
@@ -259,15 +263,15 @@ function setStyle(
   id: number,
   rendererID: RendererID,
   name: string,
-  value: string
+  value: string,
 ) {
-  const data = agent.getInstanceAndStyle({ id, rendererID });
+  const data = agent.getInstanceAndStyle({id, rendererID});
   if (!data || !data.style) {
     return;
   }
 
-  const { instance, style } = data;
-  const newStyle = { [name]: value };
+  const {instance, style} = data;
+  const newStyle = {[name]: value};
 
   // TODO It would be nice if the renderer interface abstracted this away somehow.
   if (instance !== null && typeof instance.setNativeProps === 'function') {
@@ -280,7 +284,7 @@ function setStyle(
       Object.assign(styleOverrides, newStyle);
     }
     // TODO Fabric does not support setNativeProps; chat with Sebastian or Eli
-    instance.setNativeProps({ style: newStyle });
+    instance.setNativeProps({style: newStyle});
   } else if (Array.isArray(style)) {
     const lastLength = style.length - 1;
     if (

@@ -1,8 +1,11 @@
 // @flow
 
-import type { ComponentFilter, ElementType } from 'react-devtools-shared/src/types';
-import type { Interaction } from 'react-devtools-shared/src/devtools/views/Profiler/types';
-import type { ResolveNativeStyle } from 'react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor';
+import type {
+  ComponentFilter,
+  ElementType,
+} from 'react-devtools-shared/src/types';
+import type {Interaction} from 'react-devtools-shared/src/devtools/views/Profiler/types';
+import type {ResolveNativeStyle} from 'react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor';
 
 type BundleType =
   | 0 // PROD
@@ -50,7 +53,7 @@ export type Fiber = {|
   sibling: Fiber | null,
   index: number,
 
-  ref: null | (((handle: mixed) => void) & { _stringRef: ?string }) | RefObject,
+  ref: null | (((handle: mixed) => void) & {_stringRef: ?string}) | RefObject,
 
   pendingProps: any, // This type will be more specific once we overload the tag.
   memoizedProps: any, // The props used to create the output.
@@ -87,7 +90,7 @@ type Dispatcher = any;
 
 export type GetFiberIDForNative = (
   component: NativeType,
-  findNearestUnfilteredAncestor?: boolean
+  findNearestUnfilteredAncestor?: boolean,
 ) => number | null;
 export type FindNativeNodesForFiberID = (id: number) => ?Array<NativeType>;
 
@@ -122,14 +125,14 @@ export type ReactRenderer = {
     fiber: Object,
     id: number,
     path: Array<string | number>,
-    value: any
+    value: any,
   ) => void,
 
   // 16.7+
   overrideProps?: ?(
     fiber: Object,
     path: Array<string | number>,
-    value: any
+    value: any,
   ) => void,
 
   // 16.9+
@@ -137,7 +140,7 @@ export type ReactRenderer = {
   setSuspenseHandler?: ?(shouldSuspend: (fiber: Object) => boolean) => void,
 
   // Only injected by React v16.8+ in order to support hooks inspection.
-  currentDispatcherRef?: {| current: null | Dispatcher |},
+  currentDispatcherRef?: {|current: null | Dispatcher|},
 
   // Only injected by React v16.9+ in DEV mode.
   // Enables DevTools to append owners-only component stack to error messages.
@@ -293,7 +296,7 @@ export type RendererInterface = {
   handleCommitFiberUnmount: (fiber: Object) => void,
   inspectElement: (
     id: number,
-    path?: Array<string | number>
+    path?: Array<string | number>,
   ) => InspectedElementPayload,
   logElementToConsole: (id: number) => void,
   overrideSuspense: (id: number, forceFallback: boolean) => void,
@@ -304,7 +307,7 @@ export type RendererInterface = {
     id: number,
     index: number,
     path: Array<string | number>,
-    value: any
+    value: any,
   ) => void,
   setInProps: (id: number, path: Array<string | number>, value: any) => void,
   setInState: (id: number, path: Array<string | number>, value: any) => void,
@@ -317,7 +320,7 @@ export type RendererInterface = {
 export type Handler = (data: any) => void;
 
 export type DevToolsHook = {
-  listeners: { [key: string]: Array<Handler> },
+  listeners: {[key: string]: Array<Handler>},
   rendererInterfaces: Map<RendererID, RendererInterface>,
   renderers: Map<RendererID, ReactRenderer>,
 
@@ -339,7 +342,7 @@ export type DevToolsHook = {
   onCommitFiberRoot: (
     rendererID: RendererID,
     fiber: Object,
-    commitPriority?: number
+    commitPriority?: number,
   ) => void,
 };
 

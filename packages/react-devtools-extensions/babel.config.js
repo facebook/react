@@ -4,7 +4,7 @@ const firefoxManifest = require('./shells/browser/firefox/manifest.json');
 const minChromeVersion = parseInt(chromeManifest.minimum_chrome_version, 10);
 const minFirefoxVersion = parseInt(
   firefoxManifest.applications.gecko.strict_min_version,
-  10
+  10,
 );
 validateVersion(minChromeVersion);
 validateVersion(minFirefoxVersion);
@@ -30,7 +30,7 @@ module.exports = api => {
   }
   const plugins = [
     ['@babel/plugin-transform-flow-strip-types'],
-    ['@babel/plugin-proposal-class-properties', { loose: false }],
+    ['@babel/plugin-proposal-class-properties', {loose: false}],
   ];
   if (process.env.NODE_ENV !== 'production') {
     plugins.push(['@babel/plugin-transform-react-jsx-source']);
@@ -38,7 +38,7 @@ module.exports = api => {
   return {
     plugins,
     presets: [
-      ['@babel/preset-env', { targets }],
+      ['@babel/preset-env', {targets}],
       '@babel/preset-react',
       '@babel/preset-flow',
     ],

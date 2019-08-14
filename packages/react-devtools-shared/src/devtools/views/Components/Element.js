@@ -1,15 +1,15 @@
 // @flow
 
-import React, { Fragment, useContext, useMemo, useState } from 'react';
+import React, {Fragment, useContext, useMemo, useState} from 'react';
 import Store from 'react-devtools-shared/src/devtools/store';
 import Badge from './Badge';
 import ButtonIcon from '../ButtonIcon';
-import { createRegExp } from '../utils';
-import { TreeDispatcherContext, TreeStateContext } from './TreeContext';
-import { StoreContext } from '../context';
+import {createRegExp} from '../utils';
+import {TreeDispatcherContext, TreeStateContext} from './TreeContext';
+import {StoreContext} from '../context';
 
-import type { ItemData } from './Tree';
-import type { Element } from './types';
+import type {ItemData} from './Tree';
+import type {Element} from './types';
 
 import styles from './Element.css';
 
@@ -19,10 +19,10 @@ type Props = {
   style: Object,
 };
 
-export default function ElementView({ data, index, style }: Props) {
+export default function ElementView({data, index, style}: Props) {
   const store = useContext(StoreContext);
-  const { ownerFlatTree, ownerID, selectedElementID } = useContext(
-    TreeStateContext
+  const {ownerFlatTree, ownerID, selectedElementID} = useContext(
+    TreeStateContext,
   );
   const dispatch = useContext(TreeDispatcherContext);
 
@@ -33,17 +33,17 @@ export default function ElementView({ data, index, style }: Props) {
 
   const [isHovered, setIsHovered] = useState(false);
 
-  const { isNavigatingWithKeyboard, onElementMouseEnter, treeFocused } = data;
+  const {isNavigatingWithKeyboard, onElementMouseEnter, treeFocused} = data;
   const id = element === null ? null : element.id;
   const isSelected = selectedElementID === id;
 
   const handleDoubleClick = () => {
     if (id !== null) {
-      dispatch({ type: 'SELECT_OWNER', payload: id });
+      dispatch({type: 'SELECT_OWNER', payload: id});
     }
   };
 
-  const handleMouseDown = ({ metaKey }) => {
+  const handleMouseDown = ({metaKey}) => {
     if (id !== null) {
       dispatch({
         type: 'SELECT_ELEMENT_BY_ID',
@@ -103,8 +103,7 @@ export default function ElementView({ data, index, style }: Props) {
       onMouseDown={handleMouseDown}
       onDoubleClick={handleDoubleClick}
       style={style}
-      data-depth={depth}
-    >
+      data-depth={depth}>
       {/* This wrapper is used by Tree for measurement purposes. */}
       <div
         className={styles.Wrapper}
@@ -112,8 +111,7 @@ export default function ElementView({ data, index, style }: Props) {
           // Left offset presents the appearance of a nested tree structure.
           // We must use padding rather than margin/left because of the selected background color.
           transform: `translateX(calc(${depth} * var(--indentation-size)))`,
-        }}
-      >
+        }}>
         {ownerID === null ? (
           <ExpandCollapseToggle element={element} store={store} />
         ) : null}
@@ -124,8 +122,7 @@ export default function ElementView({ data, index, style }: Props) {
             <span
               className={styles.KeyValue}
               title={key}
-              onDoubleClick={handleKeyDoubleClick}
-            >
+              onDoubleClick={handleKeyDoubleClick}>
               {key}
             </span>
             "
@@ -152,8 +149,8 @@ type ExpandCollapseToggleProps = {|
   store: Store,
 |};
 
-function ExpandCollapseToggle({ element, store }: ExpandCollapseToggleProps) {
-  const { children, id, isCollapsed } = element;
+function ExpandCollapseToggle({element, store}: ExpandCollapseToggleProps) {
+  const {children, id, isCollapsed} = element;
 
   const toggleCollapsed = event => {
     event.preventDefault();
@@ -176,8 +173,7 @@ function ExpandCollapseToggle({ element, store }: ExpandCollapseToggleProps) {
       className={styles.ExpandCollapseToggle}
       onMouseDown={stopPropagation}
       onClick={toggleCollapsed}
-      onDoubleClick={swallowDoubleClick}
-    >
+      onDoubleClick={swallowDoubleClick}>
       <ButtonIcon type={isCollapsed ? 'collapsed' : 'expanded'} />
     </div>
   );
@@ -188,13 +184,14 @@ type DisplayNameProps = {|
   id: number,
 |};
 
-function DisplayName({ displayName, id }: DisplayNameProps) {
-  const { searchIndex, searchResults, searchText } = useContext(
-    TreeStateContext
+function DisplayName({displayName, id}: DisplayNameProps) {
+  const {searchIndex, searchResults, searchText} = useContext(TreeStateContext);
+  const isSearchResult = useMemo(
+    () => {
+      return searchResults.includes(id);
+    },
+    [id, searchResults],
   );
-  const isSearchResult = useMemo(() => {
-    return searchResults.includes(id);
-  }, [id, searchResults]);
   const isCurrentResult =
     searchIndex !== null && id === searchResults[searchIndex];
 
@@ -218,10 +215,9 @@ function DisplayName({ displayName, id }: DisplayNameProps) {
   children.push(
     <mark
       key="middle"
-      className={isCurrentResult ? styles.CurrentHighlight : styles.Highlight}
-    >
+      className={isCurrentResult ? styles.CurrentHighlight : styles.Highlight}>
       {displayName.slice(startIndex, stopIndex)}
-    </mark>
+    </mark>,
   );
   if (stopIndex < displayName.length) {
     children.push(<span key="end">{displayName.slice(stopIndex)}</span>);

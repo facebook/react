@@ -9,17 +9,17 @@ import React, {
   useState,
 } from 'react';
 import Tooltip from '@reach/tooltip';
-import { Menu, MenuList, MenuButton, MenuItem } from '@reach/menu-button';
+import {Menu, MenuList, MenuButton, MenuItem} from '@reach/menu-button';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import Toggle from '../Toggle';
 import Badge from './Badge';
-import { OwnersListContext } from './OwnersListContext';
-import { TreeDispatcherContext, TreeStateContext } from './TreeContext';
-import { useIsOverflowing } from '../hooks';
-import { StoreContext } from '../context';
+import {OwnersListContext} from './OwnersListContext';
+import {TreeDispatcherContext, TreeStateContext} from './TreeContext';
+import {useIsOverflowing} from '../hooks';
+import {StoreContext} from '../context';
 
-import type { Owner } from './types';
+import type {Owner} from './types';
 
 import styles from './OwnersStack.css';
 
@@ -47,7 +47,7 @@ function dialogReducer(state, action) {
   switch (action.type) {
     case 'UPDATE_OWNER_ID':
       const selectedIndex = action.owners.findIndex(
-        owner => owner.id === action.ownerID
+        owner => owner.id === action.ownerID,
       );
       return {
         ownerID: action.ownerID,
@@ -66,7 +66,7 @@ function dialogReducer(state, action) {
 
 export default function OwnerStack() {
   const read = useContext(OwnersListContext);
-  const { ownerID } = useContext(TreeStateContext);
+  const {ownerID} = useContext(TreeStateContext);
   const treeDispatch = useContext(TreeDispatcherContext);
 
   const [state, dispatch] = useReducer<State, Action>(dialogReducer, {
@@ -93,7 +93,7 @@ export default function OwnerStack() {
     });
   }
 
-  const { owners, selectedIndex } = state;
+  const {owners, selectedIndex} = state;
 
   const selectOwner = useCallback<SelectOwner>(
     (owner: Owner | null) => {
@@ -103,16 +103,16 @@ export default function OwnerStack() {
           type: 'UPDATE_SELECTED_INDEX',
           selectedIndex: index >= 0 ? index : 0,
         });
-        treeDispatch({ type: 'SELECT_OWNER', payload: owner.id });
+        treeDispatch({type: 'SELECT_OWNER', payload: owner.id});
       } else {
         dispatch({
           type: 'UPDATE_SELECTED_INDEX',
           selectedIndex: 0,
         });
-        treeDispatch({ type: 'RESET_OWNER_STACK' });
+        treeDispatch({type: 'RESET_OWNER_STACK'});
       }
     },
-    [owners, treeDispatch]
+    [owners, treeDispatch],
   );
 
   const [elementsTotalWidth, setElementsTotalWidth] = useState(0);
@@ -121,27 +121,30 @@ export default function OwnerStack() {
 
   const selectedOwner = owners[selectedIndex];
 
-  useLayoutEffect(() => {
-    // If we're already overflowing, then we don't need to re-measure items.
-    // That's because once the owners stack is open, it can only get larger (by driling in).
-    // A totally new stack can only be reached by exiting this mode and re-entering it.
-    if (elementsBarRef.current === null || isOverflowing) {
-      return () => {};
-    }
+  useLayoutEffect(
+    () => {
+      // If we're already overflowing, then we don't need to re-measure items.
+      // That's because once the owners stack is open, it can only get larger (by driling in).
+      // A totally new stack can only be reached by exiting this mode and re-entering it.
+      if (elementsBarRef.current === null || isOverflowing) {
+        return () => {};
+      }
 
-    let elementsTotalWidth = 0;
-    for (let i = 0; i < owners.length; i++) {
-      const element = elementsBarRef.current.children[i];
-      const computedStyle = getComputedStyle(element);
+      let elementsTotalWidth = 0;
+      for (let i = 0; i < owners.length; i++) {
+        const element = elementsBarRef.current.children[i];
+        const computedStyle = getComputedStyle(element);
 
-      elementsTotalWidth +=
-        element.offsetWidth +
-        parseInt(computedStyle.marginLeft, 10) +
-        parseInt(computedStyle.marginRight, 10);
-    }
+        elementsTotalWidth +=
+          element.offsetWidth +
+          parseInt(computedStyle.marginLeft, 10) +
+          parseInt(computedStyle.marginRight, 10);
+      }
 
-    setElementsTotalWidth(elementsTotalWidth);
-  }, [elementsBarRef, isOverflowing, owners.length]);
+      setElementsTotalWidth(elementsTotalWidth);
+    },
+    [elementsBarRef, isOverflowing, owners.length],
+  );
 
   return (
     <div className={styles.OwnerStack}>
@@ -181,8 +184,7 @@ export default function OwnerStack() {
       <Button
         className={styles.IconButton}
         onClick={() => selectOwner(null)}
-        title="Back to tree view"
-      >
+        title="Back to tree view">
         <ButtonIcon type="close" />
       </Button>
     </div>
@@ -209,8 +211,7 @@ function ElementsDropdown({
       <MenuItem
         key={owner.id}
         className={`${styles.Component} ${isInStore ? '' : styles.NotInStore}`}
-        onSelect={() => (isInStore ? selectOwner(owner) : null)}
-      >
+        onSelect={() => (isInStore ? selectOwner(owner) : null)}>
         {owner.displayName}
 
         <Badge
@@ -218,7 +219,7 @@ function ElementsDropdown({
           hocDisplayNames={owner.hocDisplayNames}
           type={owner.type}
         />
-      </MenuItem>
+      </MenuItem>,
     );
   }
 
@@ -241,24 +242,26 @@ type ElementViewProps = {
   owner: Owner,
   selectOwner: SelectOwner,
 };
-function ElementView({ isSelected, owner, selectOwner }: ElementViewProps) {
+function ElementView({isSelected, owner, selectOwner}: ElementViewProps) {
   const store = useContext(StoreContext);
 
-  const { displayName, hocDisplayNames, type } = owner;
+  const {displayName, hocDisplayNames, type} = owner;
   const isInStore = store.containsElement(owner.id);
 
-  const handleChange = useCallback(() => {
-    if (isInStore) {
-      selectOwner(owner);
-    }
-  }, [isInStore, selectOwner, owner]);
+  const handleChange = useCallback(
+    () => {
+      if (isInStore) {
+        selectOwner(owner);
+      }
+    },
+    [isInStore, selectOwner, owner],
+  );
 
   return (
     <Toggle
       className={`${styles.Component} ${isInStore ? '' : styles.NotInStore}`}
       isChecked={isSelected}
-      onChange={handleChange}
-    >
+      onChange={handleChange}>
       {displayName}
 
       <Badge
@@ -296,8 +299,7 @@ function BackToOwnerButton({
     <Button
       className={isInStore ? undefined : styles.NotInStore}
       onClick={() => (isInStore ? selectOwner(owner) : null)}
-      title={`Up to ${owner.displayName || 'owner'}`}
-    >
+      title={`Up to ${owner.displayName || 'owner'}`}>
       <ButtonIcon type="previous" />
     </Button>
   );

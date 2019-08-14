@@ -1,8 +1,8 @@
 // @flow
 
-import React, { Fragment, useContext } from 'react';
-import { ModalDialog } from '../ModalDialog';
-import { ProfilerContext } from './ProfilerContext';
+import React, {Fragment, useContext} from 'react';
+import {ModalDialog} from '../ModalDialog';
+import {ProfilerContext} from './ProfilerContext';
 import TabBar from '../TabBar';
 import ClearProfilingDataButton from './ClearProfilingDataButton';
 import CommitFlamegraph from './CommitFlamegraph';
@@ -18,7 +18,7 @@ import SidebarInteractions from './SidebarInteractions';
 import SidebarSelectedFiberInfo from './SidebarSelectedFiberInfo';
 import SettingsModal from 'react-devtools-shared/src/devtools/views/Settings/SettingsModal';
 import SettingsModalContextToggle from 'react-devtools-shared/src/devtools/views/Settings/SettingsModalContextToggle';
-import { SettingsModalContextController } from 'react-devtools-shared/src/devtools/views/Settings/SettingsModalContext';
+import {SettingsModalContextController} from 'react-devtools-shared/src/devtools/views/Settings/SettingsModalContext';
 import portaledContent from '../portaledContent';
 
 import styles from './Profiler.css';
@@ -160,8 +160,7 @@ const ProfilingNotSupported = () => (
         className={styles.Link}
         href="https://fb.me/react-profiling"
         rel="noopener noreferrer"
-        target="_blank"
-      >
+        target="_blank">
         fb.me/react-profiling
       </a>
       .

@@ -23,6 +23,6 @@ export function print(inspectedElement, serialize, indent) {
       state: inspectedElement.state,
     },
     null,
-    2
+    2,
   );
 }

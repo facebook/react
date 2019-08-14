@@ -1,12 +1,12 @@
 // @flow
 
-import React, { Fragment, useCallback, useContext } from 'react';
-import { ProfilerContext } from './ProfilerContext';
+import React, {Fragment, useCallback, useContext} from 'react';
+import {ProfilerContext} from './ProfilerContext';
 
 import styles from './RootSelector.css';
 
 export default function RootSelector(_: {||}) {
-  const { profilingData, rootID, setRootID } = useContext(ProfilerContext);
+  const {profilingData, rootID, setRootID} = useContext(ProfilerContext);
 
   const options = [];
   if (profilingData !== null) {
@@ -14,16 +14,16 @@ export default function RootSelector(_: {||}) {
       options.push(
         <option key={rootID} value={rootID}>
           {dataForRoot.displayName}
-        </option>
+        </option>,
       );
     });
   }
 
   const handleChange = useCallback(
-    ({ currentTarget }) => {
+    ({currentTarget}) => {
       setRootID(parseInt(currentTarget.value, 10));
     },
-    [setRootID]
+    [setRootID],
   );
 
   if (profilingData === null || profilingData.dataForRoots.size <= 1) {

@@ -1,19 +1,19 @@
 // @flow
 
-import React, { useCallback, useContext, useMemo } from 'react';
+import React, {useCallback, useContext, useMemo} from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
-import { FixedSizeList } from 'react-window';
-import { ProfilerContext } from './ProfilerContext';
+import {FixedSizeList} from 'react-window';
+import {ProfilerContext} from './ProfilerContext';
 import NoCommitData from './NoCommitData';
 import CommitRankedListItem from './CommitRankedListItem';
-import { scale } from './utils';
-import { StoreContext } from '../context';
-import { SettingsContext } from '../Settings/SettingsContext';
+import {scale} from './utils';
+import {StoreContext} from '../context';
+import {SettingsContext} from '../Settings/SettingsContext';
 
 import styles from './CommitRanked.css';
 
-import type { ChartData } from './RankedChartBuilder';
-import type { CommitTree } from './types';
+import type {ChartData} from './RankedChartBuilder';
+import type {CommitTree} from './types';
 
 export type ItemData = {|
   chartData: ChartData,
@@ -25,18 +25,18 @@ export type ItemData = {|
 |};
 
 export default function CommitRankedAutoSizer(_: {||}) {
-  const { profilerStore } = useContext(StoreContext);
-  const { rootID, selectedCommitIndex, selectFiber } = useContext(
-    ProfilerContext
+  const {profilerStore} = useContext(StoreContext);
+  const {rootID, selectedCommitIndex, selectFiber} = useContext(
+    ProfilerContext,
   );
-  const { profilingCache } = profilerStore;
+  const {profilingCache} = profilerStore;
 
   const deselectCurrentFiber = useCallback(
     event => {
       event.stopPropagation();
       selectFiber(null, null);
     },
-    [selectFiber]
+    [selectFiber],
   );
 
   let commitTree: CommitTree | null = null;
@@ -58,7 +58,7 @@ export default function CommitRankedAutoSizer(_: {||}) {
     return (
       <div className={styles.Container} onClick={deselectCurrentFiber}>
         <AutoSizer>
-          {({ height, width }) => (
+          {({height, width}) => (
             <CommitRanked
               chartData={((chartData: any): ChartData)}
               commitTree={((commitTree: any): CommitTree)}
@@ -81,13 +81,13 @@ type Props = {|
   width: number,
 |};
 
-function CommitRanked({ chartData, commitTree, height, width }: Props) {
-  const { lineHeight } = useContext(SettingsContext);
-  const { selectedFiberID, selectFiber } = useContext(ProfilerContext);
+function CommitRanked({chartData, commitTree, height, width}: Props) {
+  const {lineHeight} = useContext(SettingsContext);
+  const {selectedFiberID, selectFiber} = useContext(ProfilerContext);
 
   const selectedFiberIndex = useMemo(
     () => getNodeIndex(chartData, selectedFiberID),
-    [chartData, selectedFiberID]
+    [chartData, selectedFiberID],
   );
 
   const itemData = useMemo<ItemData>(
@@ -99,7 +99,7 @@ function CommitRanked({ chartData, commitTree, height, width }: Props) {
       selectFiber,
       width,
     }),
-    [chartData, selectedFiberID, selectedFiberIndex, selectFiber, width]
+    [chartData, selectedFiberID, selectedFiberIndex, selectFiber, width],
   );
 
   return (
@@ -109,8 +109,7 @@ function CommitRanked({ chartData, commitTree, height, width }: Props) {
       itemCount={chartData.nodes.length}
       itemData={itemData}
       itemSize={lineHeight}
-      width={width}
-    >
+      width={width}>
       {CommitRankedListItem}
     </FixedSizeList>
   );
@@ -120,7 +119,7 @@ const getNodeIndex = (chartData: ChartData, id: number | null): number => {
   if (id === null) {
     return 0;
   }
-  const { nodes } = chartData;
+  const {nodes} = chartData;
   for (let index = 0; index < nodes.length; index++) {
     if (nodes[index].id === id) {
       return index;

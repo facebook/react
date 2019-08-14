@@ -2,7 +2,7 @@
 
 import ProfilerStore from 'react-devtools-shared/src/devtools/ProfilerStore';
 
-import type { Interaction } from './types';
+import type {Interaction} from './types';
 
 export type ChartData = {|
   interactions: Array<Interaction>,
@@ -28,7 +28,7 @@ export function getChartData({
     throw Error(`Could not find profiling data for root "${rootID}"`);
   }
 
-  const { commitData, interactions } = dataForRoot;
+  const {commitData, interactions} = dataForRoot;
 
   const lastInteractionTime =
     commitData.length > 0 ? commitData[commitData.length - 1].timestamp : 0;

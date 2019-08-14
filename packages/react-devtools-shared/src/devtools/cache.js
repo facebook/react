@@ -1,6 +1,6 @@
 // @flow
 
-import React, { createContext } from 'react';
+import React, {createContext} from 'react';
 
 // Cache implementation was forked from the React repo:
 // https://github.com/facebook/react/blob/master/packages/react-cache/src/ReactCache.js
@@ -58,7 +58,7 @@ function readContext(Context, observedBits) {
     throw new Error(
       'react-cache: read and preload may only be called from within a ' +
         "component's render. They are not supported in event handlers or " +
-        'lifecycle methods.'
+        'lifecycle methods.',
     );
   }
   return dispatcher.readContext(Context, observedBits);
@@ -72,12 +72,12 @@ type Config = {
 
 const entries: Map<
   Resource<any, any, any>,
-  Map<any, any> | WeakMap<any, any>
+  Map<any, any> | WeakMap<any, any>,
 > = new Map();
 const resourceConfigs: Map<Resource<any, any, any>, Config> = new Map();
 
 function getEntriesForResource(
-  resource: any
+  resource: any,
 ): Map<any, any> | WeakMap<any, any> {
   let entriesForResource = ((entries.get(resource): any): Map<any, any>);
   if (entriesForResource === undefined) {
@@ -93,7 +93,7 @@ function accessResult<Input, Key, Value>(
   resource: any,
   fetch: Input => Thenable<Value>,
   input: Input,
-  key: Key
+  key: Key,
 ): Result<Value> {
   const entriesForResource = getEntriesForResource(resource);
   const entry = entriesForResource.get(key);
@@ -113,7 +113,7 @@ function accessResult<Input, Key, Value>(
           rejectedResult.status = Rejected;
           rejectedResult.value = error;
         }
-      }
+      },
     );
     const newResult: PendingResult = {
       status: Pending,
@@ -129,7 +129,7 @@ function accessResult<Input, Key, Value>(
 export function createResource<Input, Key, Value>(
   fetch: Input => Thenable<Value>,
   hashInput: Input => Key,
-  config?: Config = {}
+  config?: Config = {},
 ): Resource<Input, Key, Value> {
   const resource = {
     clear(): void {

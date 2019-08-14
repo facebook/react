@@ -1,6 +1,6 @@
 // @flow
 
-import type { ElementType } from 'react-devtools-shared/src/types';
+import type {ElementType} from 'react-devtools-shared/src/types';
 
 export type CommitTreeNode = {|
   id: number,

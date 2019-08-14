@@ -7,16 +7,16 @@ import {
   ElementTypeHostComponent,
   ElementTypeOtherOrUnknown,
 } from 'react-devtools-shared/src/types';
-import { getUID, utfEncodeString, printOperationsArray } from '../../utils';
-import { cleanForBridge, copyWithSet } from '../utils';
-import { getDisplayName } from 'react-devtools-shared/src/utils';
+import {getUID, utfEncodeString, printOperationsArray} from '../../utils';
+import {cleanForBridge, copyWithSet} from '../utils';
+import {getDisplayName} from 'react-devtools-shared/src/utils';
 import {
   __DEBUG__,
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
   TREE_OPERATION_REORDER_CHILDREN,
 } from '../../constants';
-import { decorateMany, forceUpdate, restoreMany } from './utils';
+import {decorateMany, forceUpdate, restoreMany} from './utils';
 
 import type {
   DevToolsHook,
@@ -28,8 +28,11 @@ import type {
   PathMatch,
   RendererInterface,
 } from '../types';
-import type { ComponentFilter, ElementType } from 'react-devtools-shared/src/types';
-import type { Owner, InspectedElement } from '../types';
+import type {
+  ComponentFilter,
+  ElementType,
+} from 'react-devtools-shared/src/types';
+import type {Owner, InspectedElement} from '../types';
 
 export type InternalInstance = Object;
 type LegacyRenderer = Object;
@@ -112,16 +115,16 @@ export function attach(
   hook: DevToolsHook,
   rendererID: number,
   renderer: LegacyRenderer,
-  global: Object
+  global: Object,
 ): RendererInterface {
   const idToInternalInstanceMap: Map<number, InternalInstance> = new Map();
   const internalInstanceToIDMap: WeakMap<
     InternalInstance,
-    number
+    number,
   > = new WeakMap();
   const internalInstanceToRootIDMap: WeakMap<
     InternalInstance,
-    number
+    number,
   > = new WeakMap();
 
   let getInternalIDForNative: GetFiberIDForNative = ((null: any): GetFiberIDForNative);
@@ -130,7 +133,7 @@ export function attach(
   if (renderer.ComponentTree) {
     getInternalIDForNative = (node, findNearestUnfilteredAncestor) => {
       const internalInstance = renderer.ComponentTree.getClosestInstanceFromNode(
-        node
+        node,
       );
       return internalInstanceToIDMap.get(internalInstance) || null;
     };
@@ -203,7 +206,7 @@ export function attach(
         // Remember the root.
         internalInstanceToRootIDMap.set(
           internalInstance,
-          getID(hostContainerInfo._topLevelWrapper)
+          getID(hostContainerInfo._topLevelWrapper),
         );
 
         try {
@@ -337,7 +340,7 @@ export function attach(
   function recordMount(
     internalInstance: InternalInstance,
     id: number,
-    parentID: number
+    parentID: number,
   ) {
     const isRoot = parentID === 0;
 
@@ -346,7 +349,7 @@ export function attach(
         '%crecordMount()',
         'color: green; font-weight: bold;',
         id,
-        getData(internalInstance).displayName
+        getData(internalInstance).displayName,
       );
     }
 
@@ -363,7 +366,7 @@ export function attach(
       pushOperation(hasOwnerMetadata ? 1 : 0);
     } else {
       const type = getElementType(internalInstance);
-      const { displayName, key } = getData(internalInstance);
+      const {displayName, key} = getData(internalInstance);
 
       const ownerID =
         internalInstance._currentElement != null &&
@@ -386,7 +389,7 @@ export function attach(
   function recordReorder(
     internalInstance: InternalInstance,
     id: number,
-    nextChildren: Array<InternalInstance>
+    nextChildren: Array<InternalInstance>,
   ) {
     pushOperation(TREE_OPERATION_REORDER_CHILDREN);
     pushOperation(id);
@@ -405,7 +408,7 @@ export function attach(
   function crawlAndRecordInitialMounts(
     id: number,
     parentID: number,
-    rootID: number
+    rootID: number,
   ) {
     if (__DEBUG__) {
       console.group('crawlAndRecordInitialMounts() id:', id);
@@ -416,7 +419,7 @@ export function attach(
       internalInstanceToRootIDMap.set(internalInstance, rootID);
       recordMount(internalInstance, id, parentID);
       getChildren(internalInstance).forEach(child =>
-        crawlAndRecordInitialMounts(getID(child), id, rootID)
+        crawlAndRecordInitialMounts(getID(child), id, rootID),
       );
     }
 
@@ -469,7 +472,7 @@ export function attach(
         // [TREE_OPERATION_REMOVE, removedIDLength, ...ids]
         (numUnmountIDs > 0 ? 2 + numUnmountIDs : 0) +
         // Mount operations
-        pendingOperations.length
+        pendingOperations.length,
     );
 
     // Identify which renderer this update is coming from.
@@ -532,7 +535,7 @@ export function attach(
       if (!Number.isInteger(op)) {
         console.error(
           'pushOperation() was called but the value is not an integer.',
-          op
+          op,
         );
       }
     }
@@ -641,7 +644,7 @@ export function attach(
 
   function inspectElement(
     id: number,
-    path?: Array<string | number>
+    path?: Array<string | number>,
   ): InspectedElementPayload {
     if (currentlyInspectedElementID !== id) {
       currentlyInspectedElementID = id;
@@ -667,15 +670,15 @@ export function attach(
 
     inspectedElement.context = cleanForBridge(
       inspectedElement.context,
-      createIsPathWhitelisted('context')
+      createIsPathWhitelisted('context'),
     );
     inspectedElement.props = cleanForBridge(
       inspectedElement.props,
-      createIsPathWhitelisted('props')
+      createIsPathWhitelisted('props'),
     );
     inspectedElement.state = cleanForBridge(
       inspectedElement.state,
-      createIsPathWhitelisted('state')
+      createIsPathWhitelisted('state'),
     );
 
     return {
@@ -692,7 +695,7 @@ export function attach(
       return null;
     }
 
-    const { displayName } = getData(internalInstance);
+    const {displayName} = getData(internalInstance);
     const type = getElementType(internalInstance);
 
     let context = null;
@@ -773,7 +776,7 @@ export function attach(
       console.groupCollapsed(
         `[Click to expand] %c<${result.displayName || 'Component'} />`,
         // --dom-tag-name-color is the CSS variable Chrome styles HTML elements with in the console.
-        'color: var(--dom-tag-name-color); font-weight: normal;'
+        'color: var(--dom-tag-name-color); font-weight: normal;',
       );
     }
     if (result.props !== null) {
@@ -791,7 +794,7 @@ export function attach(
     }
     if (window.chrome || /firefox/i.test(navigator.userAgent)) {
       console.log(
-        'Right-click any value to save it as a global variable for further inspection.'
+        'Right-click any value to save it as a global variable for further inspection.',
       );
     }
     if (supportsGroup) {
@@ -854,7 +857,7 @@ export function attach(
     const parent = path.reduce(
       // $FlowFixMe
       (reduced, attr) => (reduced ? reduced[attr] : null),
-      obj
+      obj,
     );
     if (parent) {
       // $FlowFixMe

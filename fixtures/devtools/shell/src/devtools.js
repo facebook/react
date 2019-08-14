@@ -1,18 +1,18 @@
 /** @flow */
 
-import { createElement } from 'react';
+import {createElement} from 'react';
 // $FlowFixMe Flow does not yet know about createRoot()
-import { unstable_createRoot as createRoot } from 'react-dom';
+import {unstable_createRoot as createRoot} from 'react-dom';
 import {
   activate as activateBackend,
   initialize as initializeBackend,
 } from 'react-devtools-inline/backend';
-import { initialize as initializeFrontend } from 'react-devtools-inline/frontend';
-import { initDevTools } from 'src/devtools';
+import {initialize as initializeFrontend} from 'react-devtools-inline/frontend';
+import {initDevTools} from 'src/devtools';
 
 const iframe = ((document.getElementById('target'): any): HTMLIFrameElement);
 
-const { contentDocument, contentWindow } = iframe;
+const {contentDocument, contentWindow} = iframe;
 
 // Helps with positioning Overlay UI.
 contentWindow.__REACT_DEVTOOLS_TARGET_WINDOW__ = window;

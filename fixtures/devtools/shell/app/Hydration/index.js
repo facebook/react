@@ -1,6 +1,6 @@
 // @flow
 
-import React, { Fragment, useDebugValue, useState } from 'react';
+import React, {Fragment, useDebugValue, useState} from 'react';
 
 const div = document.createElement('div');
 const exmapleFunction = () => {};
@@ -110,7 +110,7 @@ export default function Hydration() {
   );
 }
 
-function DehydratableProps({ array, object }: any) {
+function DehydratableProps({array, object}: any) {
   return (
     <ul>
       <li>array: {JSON.stringify(array, null, 2)}</li>

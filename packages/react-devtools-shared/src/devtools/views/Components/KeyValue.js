@@ -1,14 +1,14 @@
 // @flow
 
-import React, { useEffect, useRef, useState } from 'react';
-import type { Element } from 'react';
+import React, {useEffect, useRef, useState} from 'react';
+import type {Element} from 'react';
 import EditableValue from './EditableValue';
 import ExpandCollapseToggle from './ExpandCollapseToggle';
-import { getMetaValueLabel } from '../utils';
-import { meta } from '../../../hydration';
+import {getMetaValueLabel} from '../utils';
+import {meta} from '../../../hydration';
 import styles from './KeyValue.css';
 
-import type { InspectPath } from './SelectedElement';
+import type {InspectPath} from './SelectedElement';
 
 type OverrideValueFn = (path: Array<string | number>, value: any) => void;
 
@@ -40,17 +40,20 @@ export default function KeyValue({
     value[meta.inspectable] &&
     value[meta.size] !== 0;
 
-  useEffect(() => {
-    if (
-      isInspectable &&
-      isOpen &&
-      !prevIsOpenRef.current &&
-      typeof inspectPath === 'function'
-    ) {
-      inspectPath(path);
-    }
-    prevIsOpenRef.current = isOpen;
-  }, [inspectPath, isInspectable, isOpen, path]);
+  useEffect(
+    () => {
+      if (
+        isInspectable &&
+        isOpen &&
+        !prevIsOpenRef.current &&
+        typeof inspectPath === 'function'
+      ) {
+        inspectPath(path);
+      }
+      prevIsOpenRef.current = isOpen;
+    },
+    [inspectPath, isInspectable, isOpen, path],
+  );
 
   const toggleIsOpen = () => setIsOpen(prevIsOpen => !prevIsOpen);
 
@@ -107,8 +110,7 @@ export default function KeyValue({
         )}
         <span
           className={styles.Name}
-          onClick={isInspectable ? toggleIsOpen : undefined}
-        >
+          onClick={isInspectable ? toggleIsOpen : undefined}>
           {name}
         </span>
         <span className={styles.Value}>{getMetaValueLabel(value)}</span>
@@ -135,8 +137,7 @@ export default function KeyValue({
           key={`${depth}-root`}
           className={styles.Item}
           hidden={hidden}
-          style={style}
-        >
+          style={style}>
           {hasChildren ? (
             <ExpandCollapseToggle isOpen={isOpen} setIsOpen={setIsOpen} />
           ) : (
@@ -144,12 +145,11 @@ export default function KeyValue({
           )}
           <span
             className={styles.Name}
-            onClick={hasChildren ? toggleIsOpen : undefined}
-          >
+            onClick={hasChildren ? toggleIsOpen : undefined}>
             {name}
           </span>
           <span>Array</span>
-        </div>
+        </div>,
       );
     } else {
       const hasChildren = Object.entries(value).length > 0;
@@ -171,8 +171,7 @@ export default function KeyValue({
           key={`${depth}-root`}
           className={styles.Item}
           hidden={hidden}
-          style={style}
-        >
+          style={style}>
           {hasChildren ? (
             <ExpandCollapseToggle isOpen={isOpen} setIsOpen={setIsOpen} />
           ) : (
@@ -180,12 +179,11 @@ export default function KeyValue({
           )}
           <span
             className={styles.Name}
-            onClick={hasChildren ? toggleIsOpen : undefined}
-          >
+            onClick={hasChildren ? toggleIsOpen : undefined}>
             {name}
           </span>
           <span>Object</span>
-        </div>
+        </div>,
       );
     }
   }

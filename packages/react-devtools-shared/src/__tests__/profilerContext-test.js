@@ -1,9 +1,9 @@
 // @flow
 
 import typeof ReactTestRenderer from 'react-test-renderer';
-import type { FrontendBridge } from 'react-devtools-shared/src/bridge';
-import type { Context } from 'react-devtools-shared/src/devtools/views/Profiler/ProfilerContext';
-import type { DispatcherContext } from 'react-devtools-shared/src/devtools/views/Components/TreeContext';
+import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
+import type {Context} from 'react-devtools-shared/src/devtools/views/Profiler/ProfilerContext';
+import type {DispatcherContext} from 'react-devtools-shared/src/devtools/views/Components/TreeContext';
 import type Store from 'react-devtools-shared/src/devtools/store';
 
 describe('ProfilerContext', () => {
@@ -35,12 +35,14 @@ describe('ProfilerContext', () => {
     ReactDOM = require('react-dom');
     TestRenderer = utils.requireTestRenderer();
 
-    BridgeContext = require('react-devtools-shared/src/devtools/views/context').BridgeContext;
+    BridgeContext = require('react-devtools-shared/src/devtools/views/context')
+      .BridgeContext;
     ProfilerContext = require('react-devtools-shared/src/devtools/views/Profiler/ProfilerContext')
       .ProfilerContext;
     ProfilerContextController = require('react-devtools-shared/src/devtools/views/Profiler/ProfilerContext')
       .ProfilerContextController;
-    StoreContext = require('react-devtools-shared/src/devtools/views/context').StoreContext;
+    StoreContext = require('react-devtools-shared/src/devtools/views/context')
+      .StoreContext;
     TreeContextController = require('react-devtools-shared/src/devtools/views/Components/TreeContext')
       .TreeContextController;
     TreeDispatcherContext = require('react-devtools-shared/src/devtools/views/Components/TreeContext')
@@ -58,8 +60,7 @@ describe('ProfilerContext', () => {
       <StoreContext.Provider value={store}>
         <TreeContextController
           defaultSelectedElementID={defaultSelectedElementID}
-          defaultSelectedElementIndex={defaultSelectedElementIndex}
-        >
+          defaultSelectedElementIndex={defaultSelectedElementIndex}>
           <ProfilerContextController>{children}</ProfilerContextController>
         </TreeContextController>
       </StoreContext.Provider>
@@ -79,7 +80,7 @@ describe('ProfilerContext', () => {
       TestRenderer.create(
         <Contexts>
           <ContextReader />
-        </Contexts>
+        </Contexts>,
       );
     });
 
@@ -105,7 +106,7 @@ describe('ProfilerContext', () => {
     const Example = () => null;
 
     utils.act(() =>
-      ReactDOM.render(<Example />, document.createElement('div'))
+      ReactDOM.render(<Example />, document.createElement('div')),
     );
 
     let context: Context = ((null: any): Context);
@@ -121,7 +122,7 @@ describe('ProfilerContext', () => {
       TestRenderer.create(
         <Contexts>
           <ContextReader />
-        </Contexts>
+        </Contexts>,
       );
     });
     expect(context).not.toBeNull();
@@ -167,16 +168,15 @@ describe('ProfilerContext', () => {
       TestRenderer.create(
         <Contexts
           defaultSelectedElementID={store.getElementIDAtIndex(3)}
-          defaultSelectedElementIndex={3}
-        >
+          defaultSelectedElementIndex={3}>
           <ContextReader />
-        </Contexts>
-      )
+        </Contexts>,
+      ),
     );
 
     expect(context).not.toBeNull();
     expect(context.rootID).toBe(
-      store.getRootIDForElement(((store.getElementIDAtIndex(3): any): number))
+      store.getRootIDForElement(((store.getElementIDAtIndex(3): any): number)),
     );
 
     done();
@@ -208,17 +208,16 @@ describe('ProfilerContext', () => {
       TestRenderer.create(
         <Contexts
           defaultSelectedElementID={store.getElementIDAtIndex(3)}
-          defaultSelectedElementIndex={3}
-        >
+          defaultSelectedElementIndex={3}>
           <ContextReader />
-        </Contexts>
-      )
+        </Contexts>,
+      ),
     );
 
     // Verify the default profiling root is the first one.
     expect(context).not.toBeNull();
     expect(context.rootID).toBe(
-      store.getRootIDForElement(((store.getElementIDAtIndex(0): any): number))
+      store.getRootIDForElement(((store.getElementIDAtIndex(0): any): number)),
     );
 
     done();
@@ -257,8 +256,8 @@ describe('ProfilerContext', () => {
       TestRenderer.create(
         <Contexts defaultSelectedElementID={id} defaultSelectedElementIndex={3}>
           <ContextReader />
-        </Contexts>
-      )
+        </Contexts>,
+      ),
     );
 
     expect(selectedElementID).toBe(id);
@@ -272,7 +271,7 @@ describe('ProfilerContext', () => {
     const otherID = ((store.getElementIDAtIndex(0): any): number);
 
     // Change the selected element within a the Components tab.
-    utils.act(() => dispatch({ type: 'SELECT_ELEMENT_AT_INDEX', payload: 0 }));
+    utils.act(() => dispatch({type: 'SELECT_ELEMENT_AT_INDEX', payload: 0}));
 
     // Verify that the initial Profiler root selection is maintained.
     expect(selectedElementID).toBe(otherID);
@@ -283,15 +282,15 @@ describe('ProfilerContext', () => {
   });
 
   it('should sync selected element in the Components tab too, provided the element is a match', async done => {
-    const GrandParent = ({ includeChild }) => (
+    const GrandParent = ({includeChild}) => (
       <Parent includeChild={includeChild} />
     );
-    const Parent = ({ includeChild }) => (includeChild ? <Child /> : null);
+    const Parent = ({includeChild}) => (includeChild ? <Child /> : null);
     const Child = () => null;
 
     const container = document.createElement('div');
     utils.act(() =>
-      ReactDOM.render(<GrandParent includeChild={true} />, container)
+      ReactDOM.render(<GrandParent includeChild={true} />, container),
     );
     expect(store).toMatchSnapshot('mounted');
 
@@ -301,10 +300,10 @@ describe('ProfilerContext', () => {
     // Profile and record updates.
     await utils.actAsync(() => store.profilerStore.startProfiling());
     await utils.actAsync(() =>
-      ReactDOM.render(<GrandParent includeChild={true} />, container)
+      ReactDOM.render(<GrandParent includeChild={true} />, container),
     );
     await utils.actAsync(() =>
-      ReactDOM.render(<GrandParent includeChild={false} />, container)
+      ReactDOM.render(<GrandParent includeChild={false} />, container),
     );
     await utils.actAsync(() => store.profilerStore.stopProfiling());
 
@@ -322,8 +321,8 @@ describe('ProfilerContext', () => {
       TestRenderer.create(
         <Contexts>
           <ContextReader />
-        </Contexts>
-      )
+        </Contexts>,
+      ),
     );
     expect(selectedElementID).toBeNull();
 
@@ -340,7 +339,7 @@ describe('ProfilerContext', () => {
     expect(selectedElementID).toBe(parentID);
 
     expect(console.warn).toHaveBeenCalledWith(
-      `No element found with id "${childID}"`
+      `No element found with id "${childID}"`,
     );
 
     done();

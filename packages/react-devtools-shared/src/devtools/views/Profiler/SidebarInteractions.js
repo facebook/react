@@ -1,10 +1,10 @@
 // @flow
 
-import React, { Fragment, useContext } from 'react';
-import { ProfilerContext } from './ProfilerContext';
-import { formatDuration, formatTime } from './utils';
-import { StoreContext } from '../context';
-import { getGradientColor } from './utils';
+import React, {Fragment, useContext} from 'react';
+import {ProfilerContext} from './ProfilerContext';
+import {formatDuration, formatTime} from './utils';
+import {StoreContext} from '../context';
+import {getGradientColor} from './utils';
 
 import styles from './SidebarInteractions.css';
 
@@ -18,24 +18,24 @@ export default function SidebarInteractions(_: Props) {
     selectTab,
   } = useContext(ProfilerContext);
 
-  const { profilerStore } = useContext(StoreContext);
-  const { profilingCache } = profilerStore;
+  const {profilerStore} = useContext(StoreContext);
+  const {profilingCache} = profilerStore;
 
   if (selectedInteractionID === null) {
     return <div className={styles.NothingSelected}>Nothing selected</div>;
   }
 
-  const { interactionCommits, interactions } = profilerStore.getDataForRoot(
-    ((rootID: any): number)
+  const {interactionCommits, interactions} = profilerStore.getDataForRoot(
+    ((rootID: any): number),
   );
   const interaction = interactions.get(selectedInteractionID);
   if (interaction == null) {
     throw Error(
-      `Could not find interaction by selected interaction id "${selectedInteractionID}"`
+      `Could not find interaction by selected interaction id "${selectedInteractionID}"`,
     );
   }
 
-  const { maxCommitDuration } = profilingCache.getInteractionsChartData({
+  const {maxCommitDuration} = profilingCache.getInteractionsChartData({
     rootID: ((rootID: any): number),
   });
 
@@ -48,22 +48,21 @@ export default function SidebarInteractions(_: Props) {
   const commitIndices = interactionCommits.get(selectedInteractionID);
   if (commitIndices != null) {
     commitIndices.forEach(commitIndex => {
-      const { duration, timestamp } = profilerStore.getCommitData(
+      const {duration, timestamp} = profilerStore.getCommitData(
         ((rootID: any): number),
-        commitIndex
+        commitIndex,
       );
 
       listItems.push(
         <li
           key={commitIndex}
           className={styles.ListItem}
-          onClick={() => viewCommit(commitIndex)}
-        >
+          onClick={() => viewCommit(commitIndex)}>
           <div
             className={styles.CommitBox}
             style={{
               backgroundColor: getGradientColor(
-                Math.min(1, Math.max(0, duration / maxCommitDuration)) || 0
+                Math.min(1, Math.max(0, duration / maxCommitDuration)) || 0,
               ),
             }}
           />
@@ -72,7 +71,7 @@ export default function SidebarInteractions(_: Props) {
             <br />
             duration: {formatDuration(duration)}ms
           </div>
-        </li>
+        </li>,
       );
     });
   }

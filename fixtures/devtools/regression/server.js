@@ -5,7 +5,7 @@ const http = require('http');
 const serveStatic = require('serve-static');
 
 // Serve fixtures folder
-const serve = serveStatic(__dirname, { index: 'index.html' });
+const serve = serveStatic(__dirname, {index: 'index.html'});
 
 // Create server
 const server = http.createServer(function onRequest(req, res) {

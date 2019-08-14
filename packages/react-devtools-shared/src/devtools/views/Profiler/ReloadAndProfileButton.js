@@ -1,10 +1,10 @@
 // @flow
 
-import React, { useCallback, useContext, useMemo } from 'react';
+import React, {useCallback, useContext, useMemo} from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
-import { BridgeContext, StoreContext } from '../context';
-import { useSubscription } from '../hooks';
+import {BridgeContext, StoreContext} from '../context';
+import {useSubscription} from '../hooks';
 import Store from 'react-devtools-shared/src/devtools/store';
 
 type SubscriptionData = {|
@@ -31,22 +31,24 @@ export default function ReloadAndProfileButton() {
         };
       },
     }),
-    [store]
+    [store],
   );
-  const {
-    recordChangeDescriptions,
-    supportsReloadAndProfile,
-  } = useSubscription<SubscriptionData>(subscription);
+  const {recordChangeDescriptions, supportsReloadAndProfile} = useSubscription<
+    SubscriptionData,
+  >(subscription);
 
-  const reloadAndProfile = useCallback(() => {
-    // TODO If we want to support reload-and-profile for e.g. React Native,
-    // we might need to also start profiling here before reloading the app (since DevTools itself isn't reloaded).
-    // We'd probably want to do this before reloading though, to avoid sending a message on a disconnected port in the browser.
-    // For now, let's just skip doing it entirely to avoid paying snapshot costs for data we don't need.
-    // startProfiling();
+  const reloadAndProfile = useCallback(
+    () => {
+      // TODO If we want to support reload-and-profile for e.g. React Native,
+      // we might need to also start profiling here before reloading the app (since DevTools itself isn't reloaded).
+      // We'd probably want to do this before reloading though, to avoid sending a message on a disconnected port in the browser.
+      // For now, let's just skip doing it entirely to avoid paying snapshot costs for data we don't need.
+      // startProfiling();
 
-    bridge.send('reloadAndProfile', recordChangeDescriptions);
-  }, [bridge, recordChangeDescriptions]);
+      bridge.send('reloadAndProfile', recordChangeDescriptions);
+    },
+    [bridge, recordChangeDescriptions],
+  );
 
   if (!supportsReloadAndProfile) {
     return null;
@@ -56,8 +58,7 @@ export default function ReloadAndProfileButton() {
     <Button
       disabled={!store.supportsProfiling}
       onClick={reloadAndProfile}
-      title="Reload and start profiling"
-    >
+      title="Reload and start profiling">
       <ButtonIcon type="reload" />
     </Button>
   );

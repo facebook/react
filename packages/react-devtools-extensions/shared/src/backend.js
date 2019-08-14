@@ -22,7 +22,7 @@ window.addEventListener('message', welcome);
 function setup(hook) {
   const Agent = require('react-devtools-shared/src/backend/agent').default;
   const Bridge = require('react-devtools-shared/src/bridge').default;
-  const { initBackend } = require('react-devtools-shared/src/backend');
+  const {initBackend} = require('react-devtools-shared/src/backend');
   const setupNativeStyleEditor = require('react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor')
     .default;
 
@@ -48,7 +48,7 @@ function setup(hook) {
       window.postMessage(
         {
           source: 'react-devtools-bridge',
-          payload: { event, payload },
+          payload: {event, payload},
         },
         '*',
         transferable

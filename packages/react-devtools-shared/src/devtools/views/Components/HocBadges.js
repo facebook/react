@@ -1,17 +1,20 @@
 // @flow
 
 import React from 'react';
-import { ElementTypeForwardRef, ElementTypeMemo } from 'react-devtools-shared/src/types';
+import {
+  ElementTypeForwardRef,
+  ElementTypeMemo,
+} from 'react-devtools-shared/src/types';
 import styles from './HocBadges.css';
 
-import type { Element } from './types';
+import type {Element} from './types';
 
 type Props = {|
   element: Element,
 |};
 
-export default function HocBadges({ element }: Props) {
-  const { hocDisplayNames, type } = ((element: any): Element);
+export default function HocBadges({element}: Props) {
+  const {hocDisplayNames, type} = ((element: any): Element);
 
   let typeBadge = null;
   if (type === ElementTypeMemo) {

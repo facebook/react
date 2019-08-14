@@ -17,7 +17,7 @@ const object = {
   null: null,
   undefined: undefined,
   array: ['a', 'b', 'c'],
-  object: { foo: 1, bar: 2, baz: 3 },
+  object: {foo: 1, bar: 2, baz: 3},
 };
 
 function useNestedInnerHook() {

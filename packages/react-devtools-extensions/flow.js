@@ -4,7 +4,7 @@ declare module 'node-events' {
   declare class EventEmitter<Events: Object> {
     addListener<Event: $Keys<Events>>(
       event: Event,
-      listener: (...$ElementType<Events, Event>) => any
+      listener: (...$ElementType<Events, Event>) => any,
     ): void;
     emit: <Event: $Keys<Events>>(
       event: Event,

@@ -7,16 +7,16 @@ import React, {
   useMemo,
   useState,
 } from 'react';
-import { unstable_batchedUpdates as batchedUpdates } from 'react-dom';
-import { useLocalStorage, useSubscription } from '../hooks';
+import {unstable_batchedUpdates as batchedUpdates} from 'react-dom';
+import {useLocalStorage, useSubscription} from '../hooks';
 import {
   TreeDispatcherContext,
   TreeStateContext,
 } from '../Components/TreeContext';
-import { StoreContext } from '../context';
+import {StoreContext} from '../context';
 import Store from '../../store';
 
-import type { ProfilingDataFrontend } from './types';
+import type {ProfilingDataFrontend} from './types';
 
 export type TabID = 'flame-chart' | 'ranked-chart' | 'interactions';
 
@@ -84,12 +84,12 @@ type Props = {|
   children: React$Node,
 |};
 
-function ProfilerContextController({ children }: Props) {
+function ProfilerContextController({children}: Props) {
   const store = useContext(StoreContext);
-  const { selectedElementID } = useContext(TreeStateContext);
+  const {selectedElementID} = useContext(TreeStateContext);
   const dispatch = useContext(TreeDispatcherContext);
 
-  const { profilerStore } = store;
+  const {profilerStore} = store;
 
   const subscription = useMemo(
     () => ({
@@ -113,7 +113,7 @@ function ProfilerContextController({ children }: Props) {
         };
       },
     }),
-    [profilerStore, store]
+    [profilerStore, store],
   );
   const {
     didRecordCommits,
@@ -153,29 +153,28 @@ function ProfilerContextController({ children }: Props) {
 
   const startProfiling = useCallback(
     () => store.profilerStore.startProfiling(),
-    [store]
+    [store],
   );
   const stopProfiling = useCallback(() => store.profilerStore.stopProfiling(), [
     store,
   ]);
 
-  const [
-    isCommitFilterEnabled,
-    setIsCommitFilterEnabled,
-  ] = useLocalStorage<boolean>('React::DevTools::isCommitFilterEnabled', false);
+  const [isCommitFilterEnabled, setIsCommitFilterEnabled] = useLocalStorage<
+    boolean,
+  >('React::DevTools::isCommitFilterEnabled', false);
   const [minCommitDuration, setMinCommitDuration] = useLocalStorage<number>(
     'minCommitDuration',
-    0
+    0,
   );
 
   const [selectedCommitIndex, selectCommitIndex] = useState<number | null>(
-    null
+    null,
   );
   const [selectedTabID, selectTab] = useState<TabID>('flame-chart');
   const [selectedFiberID, selectFiberID] = useState<number | null>(null);
   const [selectedFiberName, selectFiberName] = useState<string | null>(null);
   const [selectedInteractionID, selectInteraction] = useState<number | null>(
-    null
+    null,
   );
 
   const selectFiber = useCallback(
@@ -197,7 +196,7 @@ function ProfilerContextController({ children }: Props) {
         }
       }
     },
-    [dispatch, selectFiberID, selectFiberName, store]
+    [dispatch, selectFiberID, selectFiberName, store],
   );
 
   if (isProfiling) {
@@ -275,7 +274,7 @@ function ProfilerContextController({ children }: Props) {
 
       selectedInteractionID,
       selectInteraction,
-    ]
+    ],
   );
 
   return (
@@ -285,4 +284,4 @@ function ProfilerContextController({ children }: Props) {
   );
 }
 
-export { ProfilerContext, ProfilerContextController };
+export {ProfilerContext, ProfilerContextController};

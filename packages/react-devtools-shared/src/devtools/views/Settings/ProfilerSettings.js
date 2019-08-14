@@ -1,9 +1,9 @@
 // @flow
 
-import React, { useCallback, useContext, useMemo, useRef } from 'react';
-import { useSubscription } from '../hooks';
-import { StoreContext } from '../context';
-import { ProfilerContext } from 'react-devtools-shared/src/devtools/views/Profiler/ProfilerContext';
+import React, {useCallback, useContext, useMemo, useRef} from 'react';
+import {useSubscription} from '../hooks';
+import {StoreContext} from '../context';
+import {ProfilerContext} from 'react-devtools-shared/src/devtools/views/Profiler/ProfilerContext';
 import Store from 'react-devtools-shared/src/devtools/store';
 
 import styles from './SettingsShared.css';
@@ -25,26 +25,26 @@ export default function ProfilerSettings(_: {||}) {
         return () => store.removeListener('recordChangeDescriptions', callback);
       },
     }),
-    [store]
+    [store],
   );
   const recordChangeDescriptions = useSubscription<boolean>(
-    recordChangeDescriptionsSubscription
+    recordChangeDescriptionsSubscription,
   );
 
   const updateRecordChangeDescriptions = useCallback(
-    ({ currentTarget }) => {
+    ({currentTarget}) => {
       store.recordChangeDescriptions = currentTarget.checked;
     },
-    [store]
+    [store],
   );
   const updateMinCommitDuration = useCallback(
     (event: SyntheticEvent<HTMLInputElement>) => {
       const newValue = parseFloat(event.currentTarget.value);
       setMinCommitDuration(
-        Number.isNaN(newValue) || newValue <= 0 ? 0 : newValue
+        Number.isNaN(newValue) || newValue <= 0 ? 0 : newValue,
       );
     },
-    [setMinCommitDuration]
+    [setMinCommitDuration],
   );
   const updateIsCommitFilterEnabled = useCallback(
     (event: SyntheticEvent<HTMLInputElement>) => {
@@ -56,7 +56,7 @@ export default function ProfilerSettings(_: {||}) {
         }
       }
     },
-    [setIsCommitFilterEnabled]
+    [setIsCommitFilterEnabled],
   );
 
   const minCommitDurationInputRef = useRef<HTMLInputElement | null>(null);

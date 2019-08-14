@@ -1,6 +1,6 @@
 // @flow
 
-import React, { useCallback } from 'react';
+import React, {useCallback} from 'react';
 import Tooltip from '@reach/tooltip';
 
 import styles from './Toggle.css';
@@ -41,8 +41,7 @@ export default function Toggle({
     <button
       className={`${defaultClassName} ${className}`}
       disabled={isDisabled}
-      onClick={handleClick}
-    >
+      onClick={handleClick}>
       <span className={styles.ToggleContent} tabIndex={-1}>
         {children}
       </span>

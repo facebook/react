@@ -32,11 +32,11 @@ import {
   unstable_runWithPriority as runWithPriority,
   unstable_UserBlockingPriority as UserBlockingPriority,
 } from 'scheduler';
-import { createRegExp } from '../utils';
-import { BridgeContext, StoreContext } from '../context';
+import {createRegExp} from '../utils';
+import {BridgeContext, StoreContext} from '../context';
 import Store from '../../store';
 
-import type { Element } from './types';
+import type {Element} from './types';
 
 export type StateContext = {|
   // Tree
@@ -120,12 +120,12 @@ type Action =
 export type DispatcherContext = (action: Action) => void;
 
 const TreeStateContext = createContext<StateContext>(
-  ((null: any): StateContext)
+  ((null: any): StateContext),
 );
 TreeStateContext.displayName = 'TreeStateContext';
 
 const TreeDispatcherContext = createContext<DispatcherContext>(
-  ((null: any): DispatcherContext)
+  ((null: any): DispatcherContext),
 );
 TreeDispatcherContext.displayName = 'TreeDispatcherContext';
 
@@ -149,7 +149,7 @@ type State = {|
 |};
 
 function reduceTreeState(store: Store, state: State, action: Action): State {
-  let { numElements, ownerID, selectedElementIndex, selectedElementID } = state;
+  let {numElements, ownerID, selectedElementIndex, selectedElementID} = state;
 
   let lookupIDForIndex = true;
 
@@ -169,7 +169,7 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
           removedIDs.has(selectedElementID)
         ) {
           selectedElementID = ((removedIDs.get(
-            selectedElementID
+            selectedElementID,
           ): any): number);
         }
         if (selectedElementID === 0) {
@@ -180,7 +180,7 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
       case 'SELECT_CHILD_ELEMENT_IN_TREE':
         if (selectedElementIndex !== null) {
           const selectedElement = store.getElementAtIndex(
-            ((selectedElementIndex: any): number)
+            ((selectedElementIndex: any): number),
           );
           if (
             selectedElement !== null &&
@@ -222,11 +222,11 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
       case 'SELECT_PARENT_ELEMENT_IN_TREE':
         if (selectedElementIndex !== null) {
           const selectedElement = store.getElementAtIndex(
-            ((selectedElementIndex: any): number)
+            ((selectedElementIndex: any): number),
           );
           if (selectedElement !== null && selectedElement.parentID !== null) {
             const parentIndex = store.getIndexOfElementID(
-              selectedElement.parentID
+              selectedElement.parentID,
             );
             if (parentIndex !== null) {
               selectedElementIndex = parentIndex;
@@ -253,7 +253,7 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
       selectedElementID = null;
     } else {
       selectedElementID = store.getElementIDAtIndex(
-        ((selectedElementIndex: any): number)
+        ((selectedElementIndex: any): number),
       );
     }
   }
@@ -336,13 +336,13 @@ function reduceSearchState(store: Store, state: State, action: Action): State {
             // It's possible that multiple tree operations will fire before this action has run.
             // So it's important to check for elements that may have been added and then removed.
             if (element !== null) {
-              const { displayName } = element;
+              const {displayName} = element;
 
               // Add this item to the search results if it matches.
               const regExp = createRegExp(searchText);
               if (displayName !== null && regExp.test(displayName)) {
                 const newElementIndex = ((store.getIndexOfElementID(
-                  id
+                  id,
                 ): any): number);
 
                 let foundMatch = false;
@@ -386,7 +386,7 @@ function reduceSearchState(store: Store, state: State, action: Action): State {
                 searchIndex = getNearestResultIndex(
                   store,
                   searchResults,
-                  selectedElementIndex
+                  selectedElementIndex,
                 );
               } else {
                 searchIndex = 0;
@@ -394,7 +394,7 @@ function reduceSearchState(store: Store, state: State, action: Action): State {
             } else {
               searchIndex = Math.min(
                 ((prevSearchIndex: any): number),
-                searchResults.length - 1
+                searchResults.length - 1,
               );
             }
           }
@@ -421,7 +421,7 @@ function reduceSearchState(store: Store, state: State, action: Action): State {
   if (didRequestSearch && searchIndex !== null) {
     selectedElementID = ((searchResults[searchIndex]: any): number);
     selectedElementIndex = store.getIndexOfElementID(
-      ((selectedElementID: any): number)
+      ((selectedElementID: any): number),
     );
   }
 
@@ -463,7 +463,7 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
           if (selectedElementID !== null) {
             // Mutation might have caused the index of this ID to shift.
             selectedElementIndex = ownerFlatTree.findIndex(
-              element => element.id === selectedElementID
+              element => element.id === selectedElementID,
             );
           }
         }
@@ -499,7 +499,7 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
           selectedElementIndex = null;
         } else {
           selectedElementIndex = ownerFlatTree.findIndex(
-            element => element.id === payload
+            element => element.id === payload,
           );
 
           // If the selected element is outside of the current owners list,
@@ -588,9 +588,9 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
 function reduceSuspenseState(
   store: Store,
   state: State,
-  action: Action
+  action: Action,
 ): State {
-  const { type } = action;
+  const {type} = action;
   switch (type) {
     case 'UPDATE_INSPECTED_ELEMENT_ID':
       if (state.inspectedElementID !== state.selectedElementID) {
@@ -634,7 +634,7 @@ function TreeContextController({
   // so it's okay for the reducer to have an empty dependencies array.
   const reducer = useMemo(
     () => (state: State, action: Action): State => {
-      const { type } = action;
+      const {type} = action;
       switch (type) {
         case 'GO_TO_NEXT_SEARCH_RESULT':
         case 'GO_TO_PREVIOUS_SEARCH_RESULT':
@@ -672,7 +672,7 @@ function TreeContextController({
           throw new Error(`Unrecognized action "${type}"`);
       }
     },
-    [store]
+    [store],
   );
 
   const [state, dispatch] = useReducer(reducer, {
@@ -702,62 +702,71 @@ function TreeContextController({
       // In this case, the current (and "next") priorities would both be "normal",
       // and suspense would potentially block both updates.
       runWithPriority(UserBlockingPriority, () => dispatch(action));
-      next(() => dispatch({ type: 'UPDATE_INSPECTED_ELEMENT_ID' }));
+      next(() => dispatch({type: 'UPDATE_INSPECTED_ELEMENT_ID'}));
     },
-    [dispatch]
+    [dispatch],
   );
 
   // Listen for host element selections.
-  useEffect(() => {
-    const handleSelectFiber = (id: number) =>
-      dispatchWrapper({ type: 'SELECT_ELEMENT_BY_ID', payload: id });
-    bridge.addListener('selectFiber', handleSelectFiber);
-    return () => bridge.removeListener('selectFiber', handleSelectFiber);
-  }, [bridge, dispatchWrapper]);
+  useEffect(
+    () => {
+      const handleSelectFiber = (id: number) =>
+        dispatchWrapper({type: 'SELECT_ELEMENT_BY_ID', payload: id});
+      bridge.addListener('selectFiber', handleSelectFiber);
+      return () => bridge.removeListener('selectFiber', handleSelectFiber);
+    },
+    [bridge, dispatchWrapper],
+  );
 
   // If a newly-selected search result or inspection selection is inside of a collapsed subtree, auto expand it.
   // This needs to be a layout effect to avoid temporarily flashing an incorrect selection.
   const prevSelectedElementID = useRef<number | null>(null);
-  useLayoutEffect(() => {
-    if (state.selectedElementID !== prevSelectedElementID.current) {
-      prevSelectedElementID.current = state.selectedElementID;
+  useLayoutEffect(
+    () => {
+      if (state.selectedElementID !== prevSelectedElementID.current) {
+        prevSelectedElementID.current = state.selectedElementID;
 
-      if (state.selectedElementID !== null) {
-        let element = store.getElementByID(state.selectedElementID);
-        if (element !== null && element.parentID > 0) {
-          store.toggleIsCollapsed(element.parentID, false);
+        if (state.selectedElementID !== null) {
+          let element = store.getElementByID(state.selectedElementID);
+          if (element !== null && element.parentID > 0) {
+            store.toggleIsCollapsed(element.parentID, false);
+          }
         }
       }
-    }
-  }, [state.selectedElementID, store]);
+    },
+    [state.selectedElementID, store],
+  );
 
   // Mutations to the underlying tree may impact this context (e.g. search results, selection state).
-  useEffect(() => {
-    const handleStoreMutated = ([addedElementIDs, removedElementIDs]: [
-      Array<number>,
-      Map<number, number>,
-    ]) => {
-      dispatchWrapper({
-        type: 'HANDLE_STORE_MUTATION',
-        payload: [addedElementIDs, removedElementIDs],
-      });
-    };
+  useEffect(
+    () => {
+      const handleStoreMutated = ([addedElementIDs, removedElementIDs]: [
+        Array<number>,
+        Map<number, number>,
+      ]) => {
+        dispatchWrapper({
+          type: 'HANDLE_STORE_MUTATION',
+          payload: [addedElementIDs, removedElementIDs],
+        });
+      };
 
-    // Since this is a passive effect, the tree may have been mutated before our initial subscription.
-    if (store.revision !== initialRevision) {
-      // At the moment, we can treat this as a mutation.
-      // We don't know which Elements were newly added/removed, but that should be okay in this case.
-      // It would only impact the search state, which is unlikely to exist yet at this point.
-      dispatchWrapper({
-        type: 'HANDLE_STORE_MUTATION',
-        payload: [[], new Map()],
-      });
-    }
+      // Since this is a passive effect, the tree may have been mutated before our initial subscription.
+      if (store.revision !== initialRevision) {
+        // At the moment, we can treat this as a mutation.
+        // We don't know which Elements were newly added/removed, but that should be okay in this case.
+        // It would only impact the search state, which is unlikely to exist yet at this point.
+        dispatchWrapper({
+          type: 'HANDLE_STORE_MUTATION',
+          payload: [[], new Map()],
+        });
+      }
 
-    store.addListener('mutated', handleStoreMutated);
+      store.addListener('mutated', handleStoreMutated);
 
-    return () => store.removeListener('mutated', handleStoreMutated);
-  }, [dispatchWrapper, initialRevision, store]);
+      return () => store.removeListener('mutated', handleStoreMutated);
+    },
+    [dispatchWrapper, initialRevision, store],
+  );
 
   return (
     <TreeStateContext.Provider value={state}>
@@ -771,10 +780,10 @@ function recursivelySearchTree(
   store: Store,
   elementID: number,
   regExp: RegExp,
-  searchResults: Array<number>
+  searchResults: Array<number>,
 ): void {
-  const { children, displayName, hocDisplayNames } = ((store.getElementByID(
-    elementID
+  const {children, displayName, hocDisplayNames} = ((store.getElementByID(
+    elementID,
   ): any): Element);
 
   if (displayName != null && regExp.test(displayName) === true) {
@@ -788,14 +797,14 @@ function recursivelySearchTree(
   }
 
   children.forEach(childID =>
-    recursivelySearchTree(store, childID, regExp, searchResults)
+    recursivelySearchTree(store, childID, regExp, searchResults),
   );
 }
 
 function getNearestResultIndex(
   store: Store,
   searchResults: Array<number>,
-  selectedElementIndex: number
+  selectedElementIndex: number,
 ): number {
   const index = searchResults.findIndex(id => {
     const index = store.getIndexOfElementID(id);
@@ -805,4 +814,4 @@ function getNearestResultIndex(
   return index === -1 ? 0 : index;
 }
 
-export { TreeDispatcherContext, TreeStateContext, TreeContextController };
+export {TreeDispatcherContext, TreeStateContext, TreeContextController};

@@ -1,12 +1,12 @@
 // @flow
 
-import React, { Fragment, useCallback, useContext, useMemo } from 'react';
+import React, {Fragment, useCallback, useContext, useMemo} from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
-import { ProfilerContext } from './ProfilerContext';
+import {ProfilerContext} from './ProfilerContext';
 import SnapshotCommitList from './SnapshotCommitList';
-import { maxBarWidth } from './constants';
-import { StoreContext } from '../context';
+import {maxBarWidth} from './constants';
+import {StoreContext} from '../context';
 
 import styles from './SnapshotSelector.css';
 
@@ -21,8 +21,8 @@ export default function SnapshotSelector(_: Props) {
     selectCommitIndex,
   } = useContext(ProfilerContext);
 
-  const { profilerStore } = useContext(StoreContext);
-  const { commitData } = profilerStore.getDataForRoot(((rootID: any): number));
+  const {profilerStore} = useContext(StoreContext);
+  const {commitData} = profilerStore.getDataForRoot(((rootID: any): number));
 
   const commitDurations: Array<number> = [];
   const commitTimes: Array<number> = [];
@@ -42,22 +42,25 @@ export default function SnapshotSelector(_: Props) {
         }
         return reduced;
       }, []),
-    [commitData, isCommitFilterEnabled, minCommitDuration]
+    [commitData, isCommitFilterEnabled, minCommitDuration],
   );
 
   const numFilteredCommits = filteredCommitIndices.length;
 
   // Map the (unfiltered) selected commit index to an index within the filtered data.
-  const selectedFilteredCommitIndex = useMemo(() => {
-    if (selectedCommitIndex !== null) {
-      for (let i = 0; i < filteredCommitIndices.length; i++) {
-        if (filteredCommitIndices[i] === selectedCommitIndex) {
-          return i;
+  const selectedFilteredCommitIndex = useMemo(
+    () => {
+      if (selectedCommitIndex !== null) {
+        for (let i = 0; i < filteredCommitIndices.length; i++) {
+          if (filteredCommitIndices[i] === selectedCommitIndex) {
+            return i;
+          }
         }
       }
-    }
-    return null;
-  }, [filteredCommitIndices, selectedCommitIndex]);
+      return null;
+    },
+    [filteredCommitIndices, selectedCommitIndex],
+  );
 
   // TODO (profiling) This should be managed by the context controller (reducer).
   // It doesn't currently know about the filtered commits though (since it doesn't suspend).
@@ -77,26 +80,32 @@ export default function SnapshotSelector(_: Props) {
     label =
       `${selectedFilteredCommitIndex + 1}`.padStart(
         `${numFilteredCommits}`.length,
-        '0'
+        '0',
       ) +
       ' / ' +
       numFilteredCommits;
   }
 
-  const viewNextCommit = useCallback(() => {
-    const nextCommitIndex = Math.min(
-      ((selectedFilteredCommitIndex: any): number) + 1,
-      filteredCommitIndices.length - 1
-    );
-    selectCommitIndex(filteredCommitIndices[nextCommitIndex]);
-  }, [selectedFilteredCommitIndex, filteredCommitIndices, selectCommitIndex]);
-  const viewPrevCommit = useCallback(() => {
-    const nextCommitIndex = Math.max(
-      ((selectedFilteredCommitIndex: any): number) - 1,
-      0
-    );
-    selectCommitIndex(filteredCommitIndices[nextCommitIndex]);
-  }, [selectedFilteredCommitIndex, filteredCommitIndices, selectCommitIndex]);
+  const viewNextCommit = useCallback(
+    () => {
+      const nextCommitIndex = Math.min(
+        ((selectedFilteredCommitIndex: any): number) + 1,
+        filteredCommitIndices.length - 1,
+      );
+      selectCommitIndex(filteredCommitIndices[nextCommitIndex]);
+    },
+    [selectedFilteredCommitIndex, filteredCommitIndices, selectCommitIndex],
+  );
+  const viewPrevCommit = useCallback(
+    () => {
+      const nextCommitIndex = Math.max(
+        ((selectedFilteredCommitIndex: any): number) - 1,
+        0,
+      );
+      selectCommitIndex(filteredCommitIndices[nextCommitIndex]);
+    },
+    [selectedFilteredCommitIndex, filteredCommitIndices, selectCommitIndex],
+  );
 
   const handleKeyDown = useCallback(
     event => {
@@ -113,7 +122,7 @@ export default function SnapshotSelector(_: Props) {
           break;
       }
     },
-    [viewNextCommit, viewPrevCommit]
+    [viewNextCommit, viewPrevCommit],
   );
 
   if (commitData.length === 0) {
@@ -127,8 +136,7 @@ export default function SnapshotSelector(_: Props) {
         className={styles.Button}
         disabled={selectedFilteredCommitIndex === 0 || numFilteredCommits === 0}
         onClick={viewPrevCommit}
-        title="Select previous commit"
-      >
+        title="Select previous commit">
         <ButtonIcon type="previous" />
       </Button>
       <div
@@ -141,8 +149,7 @@ export default function SnapshotSelector(_: Props) {
               ? numFilteredCommits * maxBarWidth
               : undefined,
         }}
-        tabIndex={0}
-      >
+        tabIndex={0}>
         {numFilteredCommits > 0 && (
           <SnapshotCommitList
             commitDurations={commitDurations}
@@ -164,8 +171,7 @@ export default function SnapshotSelector(_: Props) {
           selectedFilteredCommitIndex >= numFilteredCommits - 1
         }
         onClick={viewNextCommit}
-        title="Select next commit"
-      >
+        title="Select next commit">
         <ButtonIcon type="next" />
       </Button>
     </Fragment>

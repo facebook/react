@@ -1,17 +1,17 @@
 // @flow
 
-import React, { useCallback, useContext, useMemo } from 'react';
-import { SettingsModalContext } from './SettingsModalContext';
+import React, {useCallback, useContext, useMemo} from 'react';
+import {SettingsModalContext} from './SettingsModalContext';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
-import { StoreContext } from '../context';
-import { useSubscription } from '../hooks';
+import {StoreContext} from '../context';
+import {useSubscription} from '../hooks';
 import Store from 'react-devtools-shared/src/devtools/store';
 
 export default function SettingsModalContextToggle() {
-  const { setIsModalShowing } = useContext(SettingsModalContext);
+  const {setIsModalShowing} = useContext(SettingsModalContext);
   const store = useContext(StoreContext);
-  const { profilerStore } = store;
+  const {profilerStore} = store;
 
   const showFilterModal = useCallback(() => setIsModalShowing(true), [
     setIsModalShowing,
@@ -27,7 +27,7 @@ export default function SettingsModalContextToggle() {
         return () => profilerStore.removeListener('isProfiling', callback);
       },
     }),
-    [profilerStore]
+    [profilerStore],
   );
   const isProfiling = useSubscription<boolean>(isProfilingSubscription);
 
@@ -35,8 +35,7 @@ export default function SettingsModalContextToggle() {
     <Button
       disabled={isProfiling}
       onClick={showFilterModal}
-      title="View settings"
-    >
+      title="View settings">
       <ButtonIcon type="settings" />
     </Button>
   );

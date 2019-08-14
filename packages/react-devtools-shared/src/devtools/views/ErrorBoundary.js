@@ -1,6 +1,6 @@
 // @flow
 
-import React, { Component } from 'react';
+import React, {Component} from 'react';
 import styles from './ErrorBoundary.css';
 
 type Props = {|
@@ -22,7 +22,7 @@ export default class ErrorBoundary extends Component<Props, State> {
     hasError: false,
   };
 
-  componentDidCatch(error: any, { componentStack }: any) {
+  componentDidCatch(error: any, {componentStack}: any) {
     const errorMessage =
       typeof error === 'object' && error.hasOwnProperty('message')
         ? error.message
@@ -45,8 +45,8 @@ export default class ErrorBoundary extends Component<Props, State> {
   }
 
   render() {
-    const { children } = this.props;
-    const { callStack, componentStack, errorMessage, hasError } = this.state;
+    const {children} = this.props;
+    const {callStack, componentStack, errorMessage, hasError} = this.state;
 
     let bugURL = process.env.GITHUB_URL;
     if (bugURL) {
@@ -66,7 +66,7 @@ export default class ErrorBoundary extends Component<Props, State> {
       }
 
       bugURL += `/issues/new?labels=${encodeURI(label)}&title=${encodeURI(
-        title
+        title,
       )}&body=${encodeURI(body)}`;
     }
 
@@ -81,8 +81,7 @@ export default class ErrorBoundary extends Component<Props, State> {
               href={bugURL}
               rel="noopener noreferrer"
               target="_blank"
-              title="Report bug"
-            >
+              title="Report bug">
               Report this issue
             </a>
           )}

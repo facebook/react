@@ -8,7 +8,7 @@ export function createViewElementSource(bridge: Bridge, store: Store) {
     if (rendererID != null) {
       // Ask the renderer interface to determine the component function,
       // and store it as a global variable on the window
-      bridge.send('viewElementSource', { id, rendererID });
+      bridge.send('viewElementSource', {id, rendererID});
 
       setTimeout(() => {
         // Ask Chrome to display the location of the component function,

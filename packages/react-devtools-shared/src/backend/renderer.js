@@ -1,6 +1,6 @@
 // @flow
 
-import { gte } from 'semver';
+import {gte} from 'semver';
 import {
   ComponentFilterDisplayName,
   ComponentFilterElementType,
@@ -25,8 +25,8 @@ import {
   setInObject,
   utfEncodeString,
 } from 'react-devtools-shared/src/utils';
-import { sessionStorageGetItem } from 'react-devtools-shared/src/storage';
-import { cleanForBridge, copyWithSet } from './utils';
+import {sessionStorageGetItem} from 'react-devtools-shared/src/storage';
+import {cleanForBridge, copyWithSet} from './utils';
 import {
   __DEBUG__,
   SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
@@ -36,7 +36,7 @@ import {
   TREE_OPERATION_REORDER_CHILDREN,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
 } from '../constants';
-import { inspectHooksOfFiber } from 'react-debug-tools';
+import {inspectHooksOfFiber} from 'react-debug-tools';
 import {
   patch as patchConsole,
   registerRenderer as registerRendererWithConsole,
@@ -58,8 +58,11 @@ import type {
   ReactRenderer,
   RendererInterface,
 } from './types';
-import type { Interaction } from 'react-devtools-shared/src/devtools/views/Profiler/types';
-import type { ComponentFilter, ElementType } from 'react-devtools-shared/src/types';
+import type {Interaction} from 'react-devtools-shared/src/devtools/views/Profiler/types';
+import type {
+  ComponentFilter,
+  ElementType,
+} from 'react-devtools-shared/src/types';
 
 type getDisplayNameForFiberType = (fiber: Fiber) => string | null;
 type getTypeSymbolType = (type: any) => Symbol | number;
@@ -138,7 +141,7 @@ const getCurrentTime =
     : () => Date.now();
 
 export function getInternalReactConstants(
-  version: string
+  version: string,
 ): {|
   getDisplayNameForFiber: getDisplayNameForFiberType,
   getTypeSymbol: getTypeSymbolType,
@@ -325,7 +328,7 @@ export function getInternalReactConstants(
 
   // NOTICE Keep in sync with shouldFilterFiber() and other get*ForFiber methods
   function getDisplayNameForFiber(fiber: Fiber): string | null {
-    const { elementType, type, tag } = fiber;
+    const {elementType, type, tag} = fiber;
 
     // This is to support lazy components with a Promise as the type.
     // see https://github.com/facebook/react/pull/13397
@@ -422,7 +425,7 @@ export function attach(
   hook: DevToolsHook,
   rendererID: number,
   renderer: ReactRenderer,
-  global: Object
+  global: Object,
 ): RendererInterface {
   const {
     getDisplayNameForFiber,
@@ -432,7 +435,7 @@ export function attach(
     ReactSymbols,
     ReactTypeOfSideEffect,
   } = getInternalReactConstants(renderer.version);
-  const { NoEffect, PerformedWork, Placement } = ReactTypeOfSideEffect;
+  const {NoEffect, PerformedWork, Placement} = ReactTypeOfSideEffect;
   const {
     FunctionComponent,
     ClassComponent,
@@ -515,7 +518,7 @@ export function attach(
         }`,
         'color: red; font-weight: bold;',
         'color: blue;',
-        'color: purple;'
+        'color: purple;',
       );
     }
   };
@@ -539,7 +542,7 @@ export function attach(
         case ComponentFilterDisplayName:
           if (componentFilter.isValid && componentFilter.value !== '') {
             hideElementsWithDisplayNames.add(
-              new RegExp(componentFilter.value, 'i')
+              new RegExp(componentFilter.value, 'i'),
             );
           }
           break;
@@ -556,7 +559,7 @@ export function attach(
           break;
         default:
           console.warn(
-            `Invalid component filter type "${componentFilter.type}"`
+            `Invalid component filter type "${componentFilter.type}"`,
           );
           break;
       }
@@ -614,7 +617,7 @@ export function attach(
 
   // NOTICE Keep in sync with get*ForFiber methods
   function shouldFilterFiber(fiber: Fiber): boolean {
-    const { _debugSource, tag, type } = fiber;
+    const {_debugSource, tag, type} = fiber;
 
     switch (tag) {
       case DehydratedSuspenseComponent:
@@ -663,7 +666,7 @@ export function attach(
     }
 
     if (_debugSource != null && hideElementsWithPaths.size > 0) {
-      const { fileName } = _debugSource;
+      const {fileName} = _debugSource;
       for (let pathRegExp of hideElementsWithPaths) {
         if (pathRegExp.test(fileName)) {
           return true;
@@ -675,7 +678,7 @@ export function attach(
   }
   // NOTICE Keep in sync with shouldFilterFiber() and other get*ForFiber methods
   function getElementTypeForFiber(fiber: Fiber): ElementType {
-    const { type, tag } = fiber;
+    const {type, tag} = fiber;
 
     switch (tag) {
       case ClassComponent:
@@ -735,7 +738,7 @@ export function attach(
     if (primaryFibers.has(fiber)) {
       return fiber;
     }
-    const { alternate } = fiber;
+    const {alternate} = fiber;
     if (alternate != null && primaryFibers.has(alternate)) {
       return alternate;
     }
@@ -771,7 +774,7 @@ export function attach(
 
   function getChangeDescription(
     prevFiber: Fiber | null,
-    nextFiber: Fiber
+    nextFiber: Fiber,
   ): ChangeDescription | null {
     switch (getElementTypeForFiber(nextFiber)) {
       case ElementTypeClass:
@@ -791,16 +794,16 @@ export function attach(
             context: getContextChangedKeys(nextFiber),
             didHooksChange: didHooksChange(
               prevFiber.memoizedState,
-              nextFiber.memoizedState
+              nextFiber.memoizedState,
             ),
             isFirstMount: false,
             props: getChangedKeys(
               prevFiber.memoizedProps,
-              nextFiber.memoizedProps
+              nextFiber.memoizedProps,
             ),
             state: getChangedKeys(
               prevFiber.memoizedState,
-              nextFiber.memoizedState
+              nextFiber.memoizedState,
             ),
           };
         }
@@ -984,7 +987,7 @@ export function attach(
       if (!Number.isInteger(op)) {
         console.error(
           'pushOperation() was called but the value is not an integer.',
-          op
+          op,
         );
       }
     }
@@ -1022,7 +1025,7 @@ export function attach(
         // [TREE_OPERATION_REMOVE, removedIDLength, ...ids]
         (numUnmountIDs > 0 ? 2 + numUnmountIDs : 0) +
         // Regular operations
-        pendingOperations.length
+        pendingOperations.length,
     );
 
     // Identify which renderer this update is coming from.
@@ -1134,10 +1137,10 @@ export function attach(
         }
       }
     } else {
-      const { key } = fiber;
+      const {key} = fiber;
       const displayName = getDisplayNameForFiber(fiber);
       const elementType = getElementTypeForFiber(fiber);
-      const { _debugOwner } = fiber;
+      const {_debugOwner} = fiber;
 
       const ownerID =
         _debugOwner != null ? getFiberID(getPrimaryFiber(_debugOwner)) : 0;
@@ -1217,7 +1220,7 @@ export function attach(
   function mountFiberRecursively(
     fiber: Fiber,
     parentFiber: Fiber | null,
-    traverseSiblings = false
+    traverseSiblings = false,
   ) {
     if (__DEBUG__) {
       debug('mountFiberRecursively()', fiber, parentFiber);
@@ -1226,7 +1229,7 @@ export function attach(
     // If we have the tree selection from previous reload, try to match this Fiber.
     // Also remember whether to do the same for siblings.
     const mightSiblingsBeOnTrackedPath = updateTrackedPathStateBeforeMount(
-      fiber
+      fiber,
     );
 
     const shouldIncludeInTree = !shouldFilterFiber(fiber);
@@ -1253,7 +1256,7 @@ export function attach(
         mountFiberRecursively(
           fallbackChild,
           shouldIncludeInTree ? fiber : parentFiber,
-          true
+          true,
         );
       }
     } else {
@@ -1261,7 +1264,7 @@ export function attach(
         mountFiberRecursively(
           fiber.child,
           shouldIncludeInTree ? fiber : parentFiber,
-          true
+          true,
         );
       }
     }
@@ -1311,12 +1314,12 @@ export function attach(
 
   function recordProfilingDurations(fiber: Fiber) {
     const id = getFiberID(getPrimaryFiber(fiber));
-    const { actualDuration, treeBaseDuration } = fiber;
+    const {actualDuration, treeBaseDuration} = fiber;
 
     idToTreeBaseDurationMap.set(id, fiber.treeBaseDuration || 0);
 
     if (isProfiling) {
-      const { alternate } = fiber;
+      const {alternate} = fiber;
 
       if (
         alternate == null ||
@@ -1325,7 +1328,7 @@ export function attach(
         // Tree base duration updates are included in the operations typed array.
         // So we have to convert them from milliseconds to microseconds so we can send them as ints.
         const treeBaseDuration = Math.floor(
-          (fiber.treeBaseDuration || 0) * 1000
+          (fiber.treeBaseDuration || 0) * 1000,
         );
         pushOperation(TREE_OPERATION_UPDATE_TREE_BASE_DURATION);
         pushOperation(id);
@@ -1355,7 +1358,7 @@ export function attach(
           metadata.durations.push(id, actualDuration, selfDuration);
           metadata.maxActualDuration = Math.max(
             metadata.maxActualDuration,
-            actualDuration
+            actualDuration,
           );
 
           if (recordChangeDescriptions) {
@@ -1402,7 +1405,7 @@ export function attach(
 
   function findReorderedChildrenRecursively(
     fiber: Fiber,
-    nextChildren: Array<number>
+    nextChildren: Array<number>,
   ) {
     if (!shouldFilterFiber(fiber)) {
       nextChildren.push(getFiberID(getPrimaryFiber(fiber)));
@@ -1419,7 +1422,7 @@ export function attach(
   function updateFiberRecursively(
     nextFiber: Fiber,
     prevFiber: Fiber,
-    parentFiber: Fiber | null
+    parentFiber: Fiber | null,
   ): boolean {
     if (__DEBUG__) {
       debug('updateFiberRecursively()', nextFiber, parentFiber);
@@ -1470,7 +1473,7 @@ export function attach(
         updateFiberRecursively(
           nextFallbackChildSet,
           prevFallbackChildSet,
-          nextFiber
+          nextFiber,
         )
       ) {
         shouldResetChildren = true;
@@ -1519,7 +1522,7 @@ export function attach(
               updateFiberRecursively(
                 nextChild,
                 prevChild,
-                shouldIncludeInTree ? nextFiber : parentFiber
+                shouldIncludeInTree ? nextFiber : parentFiber,
               )
             ) {
               // If a nested tree child order changed but it can't handle its own
@@ -1536,7 +1539,7 @@ export function attach(
           } else {
             mountFiberRecursively(
               nextChild,
-              shouldIncludeInTree ? nextFiber : parentFiber
+              shouldIncludeInTree ? nextFiber : parentFiber,
             );
             shouldResetChildren = true;
           }
@@ -1626,7 +1629,7 @@ export function attach(
               (interaction: Interaction) => ({
                 ...interaction,
                 timestamp: interaction.timestamp - profilingStartTime,
-              })
+              }),
             ),
             maxActualDuration: 0,
             priorityLevel: null,
@@ -1670,7 +1673,7 @@ export function attach(
           (interaction: Interaction) => ({
             ...interaction,
             timestamp: interaction.timestamp - profilingStartTime,
-          })
+          }),
         ),
         maxActualDuration: 0,
         priorityLevel:
@@ -1705,16 +1708,16 @@ export function attach(
 
     if (isProfiling) {
       const commitProfilingMetadata = ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).get(
-        currentRootID
+        currentRootID,
       );
       if (commitProfilingMetadata != null) {
         commitProfilingMetadata.push(
-          ((currentCommitProfilingMetadata: any): CommitProfilingData)
+          ((currentCommitProfilingMetadata: any): CommitProfilingData),
         );
       } else {
         ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).set(
           currentRootID,
-          [((currentCommitProfilingMetadata: any): CommitProfilingData)]
+          [((currentCommitProfilingMetadata: any): CommitProfilingData)],
         );
       }
     }
@@ -1786,7 +1789,7 @@ export function attach(
 
   function getFiberIDForNative(
     hostInstance,
-    findNearestUnfilteredAncestor = false
+    findNearestUnfilteredAncestor = false,
   ) {
     let fiber = renderer.findFiberByHostInstance(hostInstance);
     if (fiber != null) {
@@ -1962,7 +1965,7 @@ export function attach(
           if (!didFindChild) {
             throw Error(
               'Child was not found in either parent set. This indicates a bug ' +
-                'in React related to the return pointer. Please file an issue.'
+                'in React related to the return pointer. Please file an issue.',
             );
           }
         }
@@ -1971,7 +1974,7 @@ export function attach(
       if (a.alternate !== b) {
         throw Error(
           "Return fibers should always be each others' alternates. " +
-            'This error is likely caused by a bug in React. Please file an issue.'
+            'This error is likely caused by a bug in React. Please file an issue.',
         );
       }
     }
@@ -1996,7 +1999,7 @@ export function attach(
       return;
     }
 
-    const { elementType, tag, type } = fiber;
+    const {elementType, tag, type} = fiber;
 
     switch (tag) {
       case ClassComponent:
@@ -2027,7 +2030,7 @@ export function attach(
       return null;
     }
 
-    const { _debugOwner } = fiber;
+    const {_debugOwner} = fiber;
 
     const owners = [
       {
@@ -2065,7 +2068,7 @@ export function attach(
       style = fiber.memoizedProps.style;
     }
 
-    return { instance, style };
+    return {instance, style};
   }
 
   function inspectElementRaw(id: number): InspectedElement | null {
@@ -2146,7 +2149,7 @@ export function attach(
     if (context !== null) {
       // To simplify hydration and display logic for context, wrap in a value object.
       // Otherwise simple values (e.g. strings, booleans) become harder to handle.
-      context = { value: context };
+      context = {value: context};
     }
 
     let owners = null;
@@ -2182,7 +2185,7 @@ export function attach(
       try {
         hooks = inspectHooksOfFiber(
           fiber,
-          (renderer.currentDispatcherRef: any)
+          (renderer.currentDispatcherRef: any),
         );
       } finally {
         // Restore original console functionality.
@@ -2259,7 +2262,7 @@ export function attach(
 
   function createIsPathWhitelisted(
     key: string | null,
-    secondaryCategory: 'hooks' | null
+    secondaryCategory: 'hooks' | null,
   ) {
     // This function helps prevent previously-inspected paths from being dehydrated in updates.
     // This is important to avoid a bad user experience where expanded toggles collapse on update.
@@ -2300,7 +2303,7 @@ export function attach(
   }
 
   function updateSelectedElement(inspectedElement: InspectedElement): void {
-    const { hooks, id, props } = inspectedElement;
+    const {hooks, id, props} = inspectedElement;
 
     let fiber = idToFiberMap.get(id);
     if (fiber == null) {
@@ -2308,7 +2311,7 @@ export function attach(
       return;
     }
 
-    const { elementType, stateNode, tag, type } = fiber;
+    const {elementType, stateNode, tag, type} = fiber;
 
     switch (tag) {
       case ClassComponent:
@@ -2347,7 +2350,7 @@ export function attach(
 
   function inspectElement(
     id: number,
-    path?: Array<string | number>
+    path?: Array<string | number>,
   ): InspectedElementPayload {
     const isCurrent = isMostRecentlyInspectedElementCurrent(id);
 
@@ -2369,10 +2372,10 @@ export function attach(
           value: cleanForBridge(
             getInObject(
               ((mostRecentlyInspectedElement: any): InspectedElement),
-              path
+              path,
             ),
             createIsPathWhitelisted(null, secondaryCategory),
-            path
+            path,
           ),
         };
       } else {
@@ -2413,22 +2416,22 @@ export function attach(
       // Clone before cleaning so that we preserve the full data.
       // This will enable us to send patches without re-inspecting if hydrated paths are requested.
       // (Reducing how often we shallow-render is a better DX for function components that use hooks.)
-      const cleanedInspectedElement = { ...mostRecentlyInspectedElement };
+      const cleanedInspectedElement = {...mostRecentlyInspectedElement};
       cleanedInspectedElement.context = cleanForBridge(
         cleanedInspectedElement.context,
-        createIsPathWhitelisted('context', null)
+        createIsPathWhitelisted('context', null),
       );
       cleanedInspectedElement.hooks = cleanForBridge(
         cleanedInspectedElement.hooks,
-        createIsPathWhitelisted('hooks', 'hooks')
+        createIsPathWhitelisted('hooks', 'hooks'),
       );
       cleanedInspectedElement.props = cleanForBridge(
         cleanedInspectedElement.props,
-        createIsPathWhitelisted('props', null)
+        createIsPathWhitelisted('props', null),
       );
       cleanedInspectedElement.state = cleanForBridge(
         cleanedInspectedElement.state,
-        createIsPathWhitelisted('state', null)
+        createIsPathWhitelisted('state', null),
       );
 
       return {
@@ -2453,7 +2456,7 @@ export function attach(
       console.groupCollapsed(
         `[Click to expand] %c<${result.displayName || 'Component'} />`,
         // --dom-tag-name-color is the CSS variable Chrome styles HTML elements with in the console.
-        'color: var(--dom-tag-name-color); font-weight: normal;'
+        'color: var(--dom-tag-name-color); font-weight: normal;',
       );
     }
     if (result.props !== null) {
@@ -2474,7 +2477,7 @@ export function attach(
     }
     if (window.chrome || /firefox/i.test(navigator.userAgent)) {
       console.log(
-        'Right-click any value to save it as a global variable for further inspection.'
+        'Right-click any value to save it as a global variable for further inspection.',
       );
     }
     if (supportsGroup) {
@@ -2486,7 +2489,7 @@ export function attach(
     id: number,
     index: number,
     path: Array<string | number>,
-    value: any
+    value: any,
   ) {
     const fiber = findCurrentFiberUsingSlowPathById(id);
     if (fiber !== null) {
@@ -2566,7 +2569,7 @@ export function attach(
 
     if (rootToCommitProfilingMetadataMap === null) {
       throw Error(
-        'getProfilingData() called before any profiling data was recorded'
+        'getProfilingData() called before any profiling data was recorded',
       );
     }
 
@@ -2651,7 +2654,7 @@ export function attach(
           interactions: Array.from(allInteractions.entries()),
           rootID,
         });
-      }
+      },
     );
 
     return {
@@ -2680,7 +2683,7 @@ export function attach(
       const rootID = getFiberID(getPrimaryFiber(root.current));
       ((displayNamesByRootID: any): DisplayNamesByRootID).set(
         rootID,
-        getDisplayNameForRoot(root.current)
+        getDisplayNameForRoot(root.current),
       );
 
       if (shouldRecordChangeDescriptions) {
@@ -2707,7 +2710,7 @@ export function attach(
   ) {
     startProfiling(
       sessionStorageGetItem(SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY) ===
-        'true'
+        'true',
     );
   }
 
@@ -2730,7 +2733,7 @@ export function attach(
       typeof scheduleUpdate !== 'function'
     ) {
       throw new Error(
-        'Expected overrideSuspense() to not get called for earlier React versions.'
+        'Expected overrideSuspense() to not get called for earlier React versions.',
       );
     }
     if (forceFallback) {
@@ -2890,7 +2893,7 @@ export function attach(
   }
 
   function getPathFrame(fiber: Fiber): PathFrame {
-    const { key } = fiber;
+    const {key} = fiber;
     let displayName = getDisplayNameForFiber(fiber);
     const index = fiber.index;
     switch (fiber.tag) {

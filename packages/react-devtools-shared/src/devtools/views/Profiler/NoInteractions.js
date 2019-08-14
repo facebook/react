@@ -12,15 +12,14 @@ export default function NoInteractions({
   width: number,
 |}) {
   return (
-    <div className={styles.NoInteractions} style={{ height, width }}>
+    <div className={styles.NoInteractions} style={{height, width}}>
       <p className={styles.Header}>No interactions were recorded.</p>
       <p>
         <a
           className={styles.Link}
           href="http://fb.me/react-interaction-tracing"
           rel="noopener noreferrer"
-          target="_blank"
-        >
+          target="_blank">
           Learn more about the interaction tracing API here.
         </a>
       </p>

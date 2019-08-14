@@ -1,6 +1,6 @@
 // @flow
 
-import React, { Fragment, Suspense, useState } from 'react';
+import React, {Fragment, Suspense, useState} from 'react';
 
 function SuspenseTree() {
   return (
@@ -15,7 +15,7 @@ function SuspenseTree() {
   );
 }
 
-function PrimaryFallbackTest({ initialSuspend }) {
+function PrimaryFallbackTest({initialSuspend}) {
   const [suspend, setSuspend] = useState(initialSuspend);
   const fallbackStep = useTestSequence('fallback', Fallback1, Fallback2);
   const primaryStep = useTestSequence('primary', Primary1, Primary2);
@@ -101,8 +101,7 @@ function LoadLater() {
     <Suspense
       fallback={
         <Fallback1 onClick={() => setLoadChild(true)}>Click to load</Fallback1>
-      }
-    >
+      }>
       {loadChild ? (
         <Primary1 onClick={() => setLoadChild(false)}>
           Loaded! Click to suspend again.
@@ -118,19 +117,19 @@ function Never() {
   throw new Promise(resolve => {});
 }
 
-function Fallback1({ prop, ...rest }: any) {
+function Fallback1({prop, ...rest}: any) {
   return <span {...rest} />;
 }
 
-function Fallback2({ prop, ...rest }: any) {
+function Fallback2({prop, ...rest}: any) {
   return <span {...rest} />;
 }
 
-function Primary1({ prop, ...rest }: any) {
+function Primary1({prop, ...rest}: any) {
   return <span {...rest} />;
 }
 
-function Primary2({ prop, ...rest }: any) {
+function Primary2({prop, ...rest}: any) {
   return <span {...rest} />;
 }
 

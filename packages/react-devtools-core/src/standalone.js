@@ -1,6 +1,6 @@
 // @flow
 
-import { createElement } from 'react';
+import {createElement} from 'react';
 import {
   // $FlowFixMe Flow does not yet know about flushSync()
   flushSync,
@@ -9,16 +9,19 @@ import {
 } from 'react-dom';
 import Bridge from 'react-devtools-shared/src/bridge';
 import Store from 'react-devtools-shared/src/devtools/store';
-import { getSavedComponentFilters, getAppendComponentStack } from 'react-devtools-shared/src/utils';
-import { Server } from 'ws';
-import { existsSync, readFileSync } from 'fs';
-import { installHook } from 'react-devtools-shared/src/hook';
+import {
+  getSavedComponentFilters,
+  getAppendComponentStack,
+} from 'react-devtools-shared/src/utils';
+import {Server} from 'ws';
+import {existsSync, readFileSync} from 'fs';
+import {installHook} from 'react-devtools-shared/src/hook';
 import DevTools from 'react-devtools-shared/src/devtools/views/DevTools';
-import { doesFilePathExist, launchEditor } from './editor';
-import { __DEBUG__ } from 'react-devtools-shared/src/constants';
+import {doesFilePathExist, launchEditor} from './editor';
+import {__DEBUG__} from 'react-devtools-shared/src/constants';
 
-import type { FrontendBridge } from 'react-devtools-shared/src/bridge';
-import type { InspectedElement } from 'react-devtools-shared/src/devtools/views/Components/types';
+import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
+import type {InspectedElement} from 'react-devtools-shared/src/devtools/views/Components/types';
 
 installHook(window);
 
@@ -71,7 +74,7 @@ function debug(methodName: string, ...args) {
       `%c[core/standalone] %c${methodName}`,
       'color: teal; font-weight: bold;',
       'font-weight: bold;',
-      ...args
+      ...args,
     );
   }
 }
@@ -101,13 +104,13 @@ function reload() {
         store: ((store: any): Store),
         warnIfLegacyBackendDetected: true,
         viewElementSourceFunction,
-      })
+      }),
     );
   }, 100);
 }
 
 function canViewElementSourceFunction(
-  inspectedElement: InspectedElement
+  inspectedElement: InspectedElement,
 ): boolean {
   if (
     inspectedElement.canViewSource === false ||
@@ -116,16 +119,16 @@ function canViewElementSourceFunction(
     return false;
   }
 
-  const { source } = inspectedElement;
+  const {source} = inspectedElement;
 
   return doesFilePathExist(source.fileName, projectRoots);
 }
 
 function viewElementSourceFunction(
   id: number,
-  inspectedElement: InspectedElement
+  inspectedElement: InspectedElement,
 ): void {
-  const { source } = inspectedElement;
+  const {source} = inspectedElement;
   if (source !== null) {
     launchEditor(source.fileName, source.lineNumber, projectRoots);
   } else {
@@ -139,7 +142,7 @@ function onDisconnected() {
   node.innerHTML = nodeWaitingToConnectHTML;
 }
 
-function onError({ code, message }) {
+function onError({code, message}) {
   safeUnmount();
 
   if (code === 'EADDRINUSE') {
@@ -189,7 +192,7 @@ function initialize(socket: WebSocket) {
     },
     send(event: string, payload: any, transferable?: Array<any>) {
       if (socket.readyState === socket.OPEN) {
-        socket.send(JSON.stringify({ event, payload }));
+        socket.send(JSON.stringify({event, payload}));
       }
     },
   });
@@ -197,7 +200,7 @@ function initialize(socket: WebSocket) {
     socket.close();
   });
 
-  store = new Store(bridge, { supportsNativeInspection: false });
+  store = new Store(bridge, {supportsNativeInspection: false});
 
   log('Connected');
   reload();
@@ -225,14 +228,14 @@ function connectToSocket(socket: WebSocket) {
 
 function startServer(port?: number = 8097) {
   const httpServer = require('http').createServer();
-  const server = new Server({ server: httpServer });
+  const server = new Server({server: httpServer});
   let connected: WebSocket | null = null;
   server.on('connection', (socket: WebSocket) => {
     if (connected !== null) {
       connected.close();
       log.warn(
         'Only one connection allowed at a time.',
-        'Closing the previous connection'
+        'Closing the previous connection',
       );
     }
     connected = socket;
@@ -271,10 +274,10 @@ function startServer(port?: number = 8097) {
     // This will ensure that saved filters are shared across different web pages.
     const savedPreferencesString = `
       window.__REACT_DEVTOOLS_COMPONENT_FILTERS__ = ${JSON.stringify(
-        getSavedComponentFilters()
+        getSavedComponentFilters(),
       )};
       window.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = ${JSON.stringify(
-        getAppendComponentStack()
+        getAppendComponentStack(),
       )};`;
 
     response.end(
@@ -282,7 +285,7 @@ function startServer(port?: number = 8097) {
         '\n;' +
         backendFile.toString() +
         '\n;' +
-        'ReactDevToolsBackend.connectToDevTools();'
+        'ReactDevToolsBackend.connectToDevTools();',
     );
   });
 

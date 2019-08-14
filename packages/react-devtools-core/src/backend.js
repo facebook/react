@@ -2,16 +2,16 @@
 
 import Agent from 'react-devtools-shared/src/backend/agent';
 import Bridge from 'react-devtools-shared/src/bridge';
-import { installHook } from 'react-devtools-shared/src/hook';
-import { initBackend } from 'react-devtools-shared/src/backend';
-import { __DEBUG__ } from 'react-devtools-shared/src/constants';
+import {installHook} from 'react-devtools-shared/src/hook';
+import {initBackend} from 'react-devtools-shared/src/backend';
+import {__DEBUG__} from 'react-devtools-shared/src/constants';
 import setupNativeStyleEditor from 'react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor';
-import { getDefaultComponentFilters } from 'react-devtools-shared/src/utils';
+import {getDefaultComponentFilters} from 'react-devtools-shared/src/utils';
 
-import type { BackendBridge } from 'react-devtools-shared/src/bridge';
-import type { ComponentFilter } from 'react-devtools-shared/src/types';
-import type { DevToolsHook } from 'react-devtools-shared/src/backend/types';
-import type { ResolveNativeStyle } from 'react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor';
+import type {BackendBridge} from 'react-devtools-shared/src/bridge';
+import type {ComponentFilter} from 'react-devtools-shared/src/types';
+import type {DevToolsHook} from 'react-devtools-shared/src/backend/types';
+import type {ResolveNativeStyle} from 'react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor';
 
 type ConnectOptions = {
   host?: string,
@@ -26,7 +26,9 @@ installHook(window);
 
 const hook: DevToolsHook = window.__REACT_DEVTOOLS_GLOBAL_HOOK__;
 
-let savedComponentFilters: Array<ComponentFilter> = getDefaultComponentFilters();
+let savedComponentFilters: Array<
+  ComponentFilter,
+> = getDefaultComponentFilters();
 
 function debug(methodName: string, ...args) {
   if (__DEBUG__) {
@@ -34,7 +36,7 @@ function debug(methodName: string, ...args) {
       `%c[core/backend] %c${methodName}`,
       'color: teal; font-weight: bold;',
       'font-weight: bold;',
-      ...args
+      ...args,
     );
   }
 }
@@ -47,7 +49,8 @@ export function connectToDevTools(options: ?ConnectOptions) {
     websocket,
     resolveRNStyle = null,
     isAppActive = () => true,
-  } = options || {};
+  } =
+    options || {};
 
   let retryTimeoutID: TimeoutID | null = null;
 
@@ -94,12 +97,12 @@ export function connectToDevTools(options: ?ConnectOptions) {
             debug('wall.send()', event, payload);
           }
 
-          ws.send(JSON.stringify({ event, payload }));
+          ws.send(JSON.stringify({event, payload}));
         } else {
           if (__DEBUG__) {
             debug(
               'wall.send()',
-              'Shutting down bridge because of closed WebSocket connection'
+              'Shutting down bridge because of closed WebSocket connection',
             );
           }
 
@@ -113,18 +116,18 @@ export function connectToDevTools(options: ?ConnectOptions) {
     });
     bridge.addListener(
       'inspectElement',
-      ({ id, rendererID }: { id: number, rendererID: number }) => {
+      ({id, rendererID}: {id: number, rendererID: number}) => {
         const renderer = agent.rendererInterfaces[rendererID];
         if (renderer != null) {
           // Send event for RN to highlight.
           const nodes: ?Array<HTMLElement> = renderer.findNativeNodesForFiberID(
-            id
+            id,
           );
           if (nodes != null && nodes[0] != null) {
             agent.emit('showNativeHighlight', nodes[0]);
           }
         }
-      }
+      },
     );
     bridge.addListener(
       'updateComponentFilters',
@@ -133,7 +136,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
         // In that case, the renderer will already be using the updated values.
         // We'll lose these in between backend reloads but that can't be helped.
         savedComponentFilters = componentFilters;
-      }
+      },
     );
 
     // The renderer interface doesn't read saved component filters directly,
@@ -166,7 +169,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
         ((resolveRNStyle || hook.resolveRNStyle: any): ResolveNativeStyle),
         nativeStyleEditorValidAttributes ||
           hook.nativeStyleEditorValidAttributes ||
-          null
+          null,
       );
     } else {
       // Otherwise listen to detect if the environment later supports it.
@@ -181,7 +184,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
             bridge,
             agent,
             lazyResolveRNStyle,
-            lazyNativeStyleEditorValidAttributes
+            lazyNativeStyleEditorValidAttributes,
           );
         }
       };
@@ -198,7 +201,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
             lazyResolveRNStyle = value;
             initAfterTick();
           },
-        }: Object)
+        }: Object),
       );
       Object.defineProperty(
         hook,
@@ -212,7 +215,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
             lazyNativeStyleEditorValidAttributes = value;
             initAfterTick();
           },
-        }: Object)
+        }: Object),
       );
     }
   };
@@ -250,7 +253,7 @@ export function connectToDevTools(options: ?ConnectOptions) {
       }
     } catch (e) {
       console.error(
-        '[React DevTools] Failed to parse JSON: ' + String(event.data)
+        '[React DevTools] Failed to parse JSON: ' + String(event.data),
       );
       return;
     }

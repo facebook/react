@@ -36,7 +36,7 @@ type Props = {|
   type: IconType,
 |};
 
-export default function ButtonIcon({ className = '', type }: Props) {
+export default function ButtonIcon({className = '', type}: Props) {
   let pathData = null;
   switch (type) {
     case 'add':
@@ -128,8 +128,7 @@ export default function ButtonIcon({ className = '', type }: Props) {
       className={`${styles.ButtonIcon} ${className}`}
       width="24"
       height="24"
-      viewBox="0 0 24 24"
-    >
+      viewBox="0 0 24 24">
       <path d="M0 0h24v24H0z" fill="none" />
       <path fill="currentColor" d={pathData} />
     </svg>

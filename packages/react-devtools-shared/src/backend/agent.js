@@ -14,9 +14,9 @@ import {
   sessionStorageSetItem,
 } from 'react-devtools-shared/src/storage';
 import setupHighlighter from './views/Highlighter';
-import { patch as patchConsole, unpatch as unpatchConsole } from './console';
+import {patch as patchConsole, unpatch as unpatchConsole} from './console';
 
-import type { BackendBridge } from 'react-devtools-shared/src/bridge';
+import type {BackendBridge} from 'react-devtools-shared/src/bridge';
 import type {
   InstanceAndStyle,
   NativeType,
@@ -26,7 +26,7 @@ import type {
   RendererID,
   RendererInterface,
 } from './types';
-import type { ComponentFilter } from '../types';
+import type {ComponentFilter} from '../types';
 
 const debug = (methodName, ...args) => {
   if (__DEBUG__) {
@@ -34,7 +34,7 @@ const debug = (methodName, ...args) => {
       `%cAgent %c${methodName}`,
       'color: purple; font-weight: bold;',
       'font-weight: bold;',
-      ...args
+      ...args,
     );
   }
 };
@@ -84,7 +84,7 @@ export default class Agent extends EventEmitter<{|
   _bridge: BackendBridge;
   _isProfiling: boolean = false;
   _recordChangeDescriptions: boolean = false;
-  _rendererInterfaces: { [key: RendererID]: RendererInterface } = {};
+  _rendererInterfaces: {[key: RendererID]: RendererInterface} = {};
   _persistedSelection: PersistedSelection | null = null;
   _persistedSelectionMatch: PathMatch | null = null;
 
@@ -96,7 +96,7 @@ export default class Agent extends EventEmitter<{|
     ) {
       this._recordChangeDescriptions =
         sessionStorageGetItem(
-          SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY
+          SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
         ) === 'true';
       this._isProfiling = true;
 
@@ -105,7 +105,7 @@ export default class Agent extends EventEmitter<{|
     }
 
     const persistedSelectionString = sessionStorageGetItem(
-      SESSION_STORAGE_LAST_SELECTION_KEY
+      SESSION_STORAGE_LAST_SELECTION_KEY,
     );
     if (persistedSelectionString != null) {
       this._persistedSelection = JSON.parse(persistedSelectionString);
@@ -128,12 +128,12 @@ export default class Agent extends EventEmitter<{|
     bridge.addListener('stopProfiling', this.stopProfiling);
     bridge.addListener(
       'syncSelectionFromNativeElementsPanel',
-      this.syncSelectionFromNativeElementsPanel
+      this.syncSelectionFromNativeElementsPanel,
     );
     bridge.addListener('shutdown', this.shutdown);
     bridge.addListener(
       'updateAppendComponentStack',
-      this.updateAppendComponentStack
+      this.updateAppendComponentStack,
     );
     bridge.addListener('updateComponentFilters', this.updateComponentFilters);
     bridge.addListener('viewElementSource', this.viewElementSource);
@@ -154,7 +154,7 @@ export default class Agent extends EventEmitter<{|
     setupHighlighter(bridge, this);
   }
 
-  get rendererInterfaces(): { [key: RendererID]: RendererInterface } {
+  get rendererInterfaces(): {[key: RendererID]: RendererInterface} {
     return this._rendererInterfaces;
   }
 
@@ -189,7 +189,7 @@ export default class Agent extends EventEmitter<{|
     return null;
   }
 
-  getProfilingData = ({ rendererID }: {| rendererID: RendererID |}) => {
+  getProfilingData = ({rendererID}: {|rendererID: RendererID|}) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}"`);
@@ -202,17 +202,17 @@ export default class Agent extends EventEmitter<{|
     this._bridge.send('profilingStatus', this._isProfiling);
   };
 
-  getOwnersList = ({ id, rendererID }: ElementAndRendererID) => {
+  getOwnersList = ({id, rendererID}: ElementAndRendererID) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
     } else {
       const owners = renderer.getOwnersList(id);
-      this._bridge.send('ownersList', ({ id, owners }: OwnersList));
+      this._bridge.send('ownersList', ({id, owners}: OwnersList));
     }
   };
 
-  inspectElement = ({ id, path, rendererID }: InspectElementParams) => {
+  inspectElement = ({id, path, rendererID}: InspectElementParams) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
@@ -239,7 +239,7 @@ export default class Agent extends EventEmitter<{|
     }
   };
 
-  logElementToConsole = ({ id, rendererID }: ElementAndRendererID) => {
+  logElementToConsole = ({id, rendererID}: ElementAndRendererID) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
@@ -252,7 +252,7 @@ export default class Agent extends EventEmitter<{|
     sessionStorageSetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY, 'true');
     sessionStorageSetItem(
       SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
-      recordChangeDescriptions ? 'true' : 'false'
+      recordChangeDescriptions ? 'true' : 'false',
     );
 
     // This code path should only be hit if the shell has explicitly told the Store that it supports profiling.
@@ -261,7 +261,7 @@ export default class Agent extends EventEmitter<{|
     this._bridge.send('reloadAppForProfiling');
   };
 
-  overrideContext = ({ id, path, rendererID, value }: SetInParams) => {
+  overrideContext = ({id, path, rendererID, value}: SetInParams) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
@@ -285,7 +285,7 @@ export default class Agent extends EventEmitter<{|
     }
   };
 
-  overrideProps = ({ id, path, rendererID, value }: SetInParams) => {
+  overrideProps = ({id, path, rendererID, value}: SetInParams) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
@@ -294,7 +294,7 @@ export default class Agent extends EventEmitter<{|
     }
   };
 
-  overrideState = ({ id, path, rendererID, value }: SetInParams) => {
+  overrideState = ({id, path, rendererID, value}: SetInParams) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
@@ -325,7 +325,7 @@ export default class Agent extends EventEmitter<{|
 
   setRendererInterface(
     rendererID: RendererID,
-    rendererInterface: RendererInterface
+    rendererInterface: RendererInterface,
   ) {
     this._rendererInterfaces[rendererID] = rendererInterface;
 
@@ -400,7 +400,7 @@ export default class Agent extends EventEmitter<{|
     }
   };
 
-  viewElementSource = ({ id, rendererID }: ElementAndRendererID) => {
+  viewElementSource = ({id, rendererID}: ElementAndRendererID) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
@@ -476,7 +476,7 @@ export default class Agent extends EventEmitter<{|
     if (path !== null) {
       sessionStorageSetItem(
         SESSION_STORAGE_LAST_SELECTION_KEY,
-        JSON.stringify(({ rendererID, path }: PersistedSelection))
+        JSON.stringify(({rendererID, path}: PersistedSelection)),
       );
     } else {
       sessionStorageRemoveItem(SESSION_STORAGE_LAST_SELECTION_KEY);

@@ -1,9 +1,9 @@
 // @flow
 
-import React, { Fragment, useContext } from 'react';
-import { ProfilerContext } from './ProfilerContext';
-import { formatDuration, formatTime } from './utils';
-import { StoreContext } from '../context';
+import React, {Fragment, useContext} from 'react';
+import {ProfilerContext} from './ProfilerContext';
+import {formatDuration, formatTime} from './utils';
+import {StoreContext} from '../context';
 
 import styles from './SidebarCommitInfo.css';
 
@@ -17,13 +17,13 @@ export default function SidebarCommitInfo(_: Props) {
     selectTab,
   } = useContext(ProfilerContext);
 
-  const { profilerStore } = useContext(StoreContext);
+  const {profilerStore} = useContext(StoreContext);
 
   if (rootID === null || selectedCommitIndex === null) {
     return <div className={styles.NothingSelected}>Nothing selected</div>;
   }
 
-  const { interactions } = profilerStore.getDataForRoot(rootID);
+  const {interactions} = profilerStore.getDataForRoot(rootID);
   const {
     duration,
     interactionIDs,
@@ -70,8 +70,7 @@ export default function SidebarCommitInfo(_: Props) {
                   <button
                     key={interactionID}
                     className={styles.Interaction}
-                    onClick={() => viewInteraction(interactionID)}
-                  >
+                    onClick={() => viewInteraction(interactionID)}>
                     {interaction.name}
                   </button>
                 );

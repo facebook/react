@@ -1,13 +1,13 @@
 // @flow
 
-import React, { memo, useCallback, useContext } from 'react';
-import { areEqual } from 'react-window';
-import { minBarWidth } from './constants';
-import { getGradientColor } from './utils';
+import React, {memo, useCallback, useContext} from 'react';
+import {areEqual} from 'react-window';
+import {minBarWidth} from './constants';
+import {getGradientColor} from './utils';
 import ChartNode from './ChartNode';
-import { SettingsContext } from '../Settings/SettingsContext';
+import {SettingsContext} from '../Settings/SettingsContext';
 
-import type { ItemData } from './CommitRanked';
+import type {ItemData} from './CommitRanked';
 
 type Props = {
   data: ItemData,
@@ -15,19 +15,19 @@ type Props = {
   style: Object,
 };
 
-function CommitRankedListItem({ data, index, style }: Props) {
-  const { chartData, scaleX, selectedFiberIndex, selectFiber, width } = data;
+function CommitRankedListItem({data, index, style}: Props) {
+  const {chartData, scaleX, selectedFiberIndex, selectFiber, width} = data;
 
   const node = chartData.nodes[index];
 
-  const { lineHeight } = useContext(SettingsContext);
+  const {lineHeight} = useContext(SettingsContext);
 
   const handleClick = useCallback(
     event => {
       event.stopPropagation();
       selectFiber(node.id, node.name);
     },
-    [node, selectFiber]
+    [node, selectFiber],
   );
 
   // List items are absolutely positioned using the CSS "top" attribute.

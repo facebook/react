@@ -10,7 +10,7 @@ const BEFORE_SLASH_RE = /^(.*)[\\/]/;
 export default function describeComponentFrame(
   name: null | string,
   source: any,
-  ownerName: null | string
+  ownerName: null | string,
 ) {
   let sourceInfo = '';
   if (source) {

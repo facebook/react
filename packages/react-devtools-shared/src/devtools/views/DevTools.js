@@ -5,17 +5,17 @@
 import '@reach/menu-button/styles.css';
 import '@reach/tooltip/styles.css';
 
-import React, { useMemo, useState } from 'react';
+import React, {useMemo, useState} from 'react';
 import Store from '../store';
-import { BridgeContext, StoreContext } from './context';
+import {BridgeContext, StoreContext} from './context';
 import Components from './Components/Components';
 import Profiler from './Profiler/Profiler';
 import TabBar from './TabBar';
-import { SettingsContextController } from './Settings/SettingsContext';
-import { TreeContextController } from './Components/TreeContext';
+import {SettingsContextController} from './Settings/SettingsContext';
+import {TreeContextController} from './Components/TreeContext';
 import ViewElementSourceContext from './Components/ViewElementSourceContext';
-import { ProfilerContextController } from './Profiler/ProfilerContext';
-import { ModalDialogContextController } from './ModalDialog';
+import {ProfilerContextController} from './Profiler/ProfilerContext';
+import {ModalDialogContextController} from './ModalDialog';
 import ReactLogo from './ReactLogo';
 import WarnIfLegacyBackendDetected from './WarnIfLegacyBackendDetected';
 import ShowWelcomeToTheNewDevToolsDialog from './ShowWelcomeToTheNewDevToolsDialog';
@@ -24,17 +24,17 @@ import styles from './DevTools.css';
 
 import './root.css';
 
-import type { InspectedElement } from 'react-devtools-shared/src/devtools/views/Components/types';
-import type { FrontendBridge } from 'react-devtools-shared/src/bridge';
+import type {InspectedElement} from 'react-devtools-shared/src/devtools/views/Components/types';
+import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 
 export type BrowserTheme = 'dark' | 'light';
 export type TabID = 'components' | 'profiler';
 export type ViewElementSource = (
   id: number,
-  inspectedElement: InspectedElement
+  inspectedElement: InspectedElement,
 ) => void;
 export type CanViewElementSource = (
-  inspectedElement: InspectedElement
+  inspectedElement: InspectedElement,
 ) => boolean;
 
 export type Props = {|
@@ -100,7 +100,7 @@ export default function DevTools({
       canViewElementSourceFunction,
       viewElementSourceFunction,
     }),
-    [canViewElementSourceFunction, viewElementSourceFunction]
+    [canViewElementSourceFunction, viewElementSourceFunction],
   );
 
   return (
@@ -110,8 +110,7 @@ export default function DevTools({
           <SettingsContextController
             browserTheme={browserTheme}
             componentsPortalContainer={componentsPortalContainer}
-            profilerPortalContainer={profilerPortalContainer}
-          >
+            profilerPortalContainer={profilerPortalContainer}>
             <ViewElementSourceContext.Provider value={viewElementSource}>
               <TreeContextController>
                 <ProfilerContextController>
@@ -134,14 +133,12 @@ export default function DevTools({
                     )}
                     <div
                       className={styles.TabContent}
-                      hidden={tab !== 'components'}
-                    >
+                      hidden={tab !== 'components'}>
                       <Components portalContainer={componentsPortalContainer} />
                     </div>
                     <div
                       className={styles.TabContent}
-                      hidden={tab !== 'profiler'}
-                    >
+                      hidden={tab !== 'profiler'}>
                       <Profiler portalContainer={profilerPortalContainer} />
                     </div>
                   </div>

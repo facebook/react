@@ -43,7 +43,7 @@ describe('StoreStress (Sync Mode)', () => {
     const d = <D key="d" />;
     const e = <E key="e" />;
 
-    function Parent({ children }) {
+    function Parent({children}) {
       return children;
     }
 
@@ -195,7 +195,7 @@ describe('StoreStress (Sync Mode)', () => {
       [c, a],
     ];
 
-    const Root = ({ children }) => {
+    const Root = ({children}) => {
       return children;
     };
 
@@ -235,8 +235,8 @@ describe('StoreStress (Sync Mode)', () => {
             <Root>
               <div>{steps[i]}</div>
             </Root>,
-            container
-          )
+            container,
+          ),
         );
         expect(print(store)).toMatch(snapshots[i]);
         act(() =>
@@ -244,8 +244,8 @@ describe('StoreStress (Sync Mode)', () => {
             <Root>
               <div>{steps[j]}</div>
             </Root>,
-            container
-          )
+            container,
+          ),
         );
         expect(print(store)).toMatch(snapshots[j]);
         act(() =>
@@ -253,8 +253,8 @@ describe('StoreStress (Sync Mode)', () => {
             <Root>
               <div>{steps[i]}</div>
             </Root>,
-            container
-          )
+            container,
+          ),
         );
         expect(print(store)).toMatch(snapshots[i]);
         act(() => ReactDOM.unmountComponentAtNode(container));
@@ -295,7 +295,7 @@ describe('StoreStress (Sync Mode)', () => {
       throw new Promise(() => {});
     };
 
-    const Root = ({ children }) => {
+    const Root = ({children}) => {
       return children;
     };
 
@@ -311,8 +311,8 @@ describe('StoreStress (Sync Mode)', () => {
             <React.Suspense fallback={z}>{steps[i]}</React.Suspense>
             <Y />
           </Root>,
-          container
-        )
+          container,
+        ),
       );
       // We snapshot each step once so it doesn't regress.
       expect(store).toMatchSnapshot();
@@ -334,8 +334,8 @@ describe('StoreStress (Sync Mode)', () => {
             </React.Suspense>
             <Y />
           </Root>,
-          container
-        )
+          container,
+        ),
       );
       expect(print(store)).toEqual(snapshots[i]);
       act(() => ReactDOM.unmountComponentAtNode(container));
@@ -354,8 +354,8 @@ describe('StoreStress (Sync Mode)', () => {
               <React.Suspense fallback={z}>{steps[i]}</React.Suspense>
               <Y />
             </Root>,
-            container
-          )
+            container,
+          ),
         );
         expect(print(store)).toEqual(snapshots[i]);
         // Re-render with steps[j].
@@ -366,8 +366,8 @@ describe('StoreStress (Sync Mode)', () => {
               <React.Suspense fallback={z}>{steps[j]}</React.Suspense>
               <Y />
             </Root>,
-            container
-          )
+            container,
+          ),
         );
         // Verify the successful transition to steps[j].
         expect(print(store)).toEqual(snapshots[j]);
@@ -379,8 +379,8 @@ describe('StoreStress (Sync Mode)', () => {
               <React.Suspense fallback={z}>{steps[i]}</React.Suspense>
               <Y />
             </Root>,
-            container
-          )
+            container,
+          ),
         );
         expect(print(store)).toEqual(snapshots[i]);
         // Clean up after every iteration.
@@ -405,8 +405,8 @@ describe('StoreStress (Sync Mode)', () => {
               </React.Suspense>
               <Y />
             </Root>,
-            container
-          )
+            container,
+          ),
         );
         expect(print(store)).toEqual(snapshots[i]);
         // Re-render with steps[j].
@@ -421,8 +421,8 @@ describe('StoreStress (Sync Mode)', () => {
               </React.Suspense>
               <Y />
             </Root>,
-            container
-          )
+            container,
+          ),
         );
         // Verify the successful transition to steps[j].
         expect(print(store)).toEqual(snapshots[j]);
@@ -438,8 +438,8 @@ describe('StoreStress (Sync Mode)', () => {
               </React.Suspense>
               <Y />
             </Root>,
-            container
-          )
+            container,
+          ),
         );
         expect(print(store)).toEqual(snapshots[i]);
         // Clean up after every iteration.
@@ -460,8 +460,8 @@ describe('StoreStress (Sync Mode)', () => {
               <React.Suspense fallback={z}>{steps[i]}</React.Suspense>
               <Y />
             </Root>,
-            container
-          )
+            container,
+          ),
         );
         expect(print(store)).toEqual(snapshots[i]);
         // Re-render with steps[j].
@@ -476,8 +476,8 @@ describe('StoreStress (Sync Mode)', () => {
               </React.Suspense>
               <Y />
             </Root>,
-            container
-          )
+            container,
+          ),
         );
         // Verify the successful transition to steps[j].
         expect(print(store)).toEqual(snapshots[j]);
@@ -489,8 +489,8 @@ describe('StoreStress (Sync Mode)', () => {
               <React.Suspense fallback={z}>{steps[i]}</React.Suspense>
               <Y />
             </Root>,
-            container
-          )
+            container,
+          ),
         );
         expect(print(store)).toEqual(snapshots[i]);
         // Clean up after every iteration.
@@ -515,8 +515,8 @@ describe('StoreStress (Sync Mode)', () => {
               </React.Suspense>
               <Y />
             </Root>,
-            container
-          )
+            container,
+          ),
         );
         expect(print(store)).toEqual(snapshots[i]);
         // Re-render with steps[j].
@@ -527,8 +527,8 @@ describe('StoreStress (Sync Mode)', () => {
               <React.Suspense fallback={z}>{steps[j]}</React.Suspense>
               <Y />
             </Root>,
-            container
-          )
+            container,
+          ),
         );
         // Verify the successful transition to steps[j].
         expect(print(store)).toEqual(snapshots[j]);
@@ -544,8 +544,8 @@ describe('StoreStress (Sync Mode)', () => {
               </React.Suspense>
               <Y />
             </Root>,
-            container
-          )
+            container,
+          ),
         );
         expect(print(store)).toEqual(snapshots[i]);
         // Clean up after every iteration.
@@ -566,8 +566,8 @@ describe('StoreStress (Sync Mode)', () => {
               <React.Suspense fallback={steps[j]}>{steps[i]}</React.Suspense>
               <Y />
             </Root>,
-            container
-          )
+            container,
+          ),
         );
 
         // We get ID from the index in the tree above:
@@ -609,8 +609,8 @@ describe('StoreStress (Sync Mode)', () => {
               </React.Suspense>
               <Y />
             </Root>,
-            container
-          )
+            container,
+          ),
         );
         expect(print(store)).toEqual(snapshots[j]);
 
@@ -633,8 +633,8 @@ describe('StoreStress (Sync Mode)', () => {
               <React.Suspense fallback={steps[j]}>{steps[i]}</React.Suspense>
               <Y />
             </Root>,
-            container
-          )
+            container,
+          ),
         );
         // Fallback is still forced though.
         expect(print(store)).toEqual(snapshots[j]);
@@ -689,7 +689,7 @@ describe('StoreStress (Sync Mode)', () => {
       throw new Promise(() => {});
     };
 
-    const MaybeSuspend = ({ children, suspend }) => {
+    const MaybeSuspend = ({children, suspend}) => {
       if (suspend) {
         return (
           <div>
@@ -707,7 +707,7 @@ describe('StoreStress (Sync Mode)', () => {
       );
     };
 
-    const Root = ({ children }) => {
+    const Root = ({children}) => {
       return children;
     };
 
@@ -725,8 +725,8 @@ describe('StoreStress (Sync Mode)', () => {
             </React.Suspense>
             <Y />
           </Root>,
-          container
-        )
+          container,
+        ),
       );
       // We snapshot each step once so it doesn't regress.
       expect(store).toMatchSnapshot();
@@ -751,8 +751,8 @@ describe('StoreStress (Sync Mode)', () => {
             </React.Suspense>
             <Y />
           </Root>,
-          container
-        )
+          container,
+        ),
       );
       // We snapshot each step once so it doesn't regress.
       expect(store).toMatchSnapshot();
@@ -775,8 +775,8 @@ describe('StoreStress (Sync Mode)', () => {
               </React.Suspense>
               <Y />
             </Root>,
-            container
-          )
+            container,
+          ),
         );
         expect(print(store)).toEqual(snapshots[i]);
         // Re-render with steps[j].
@@ -789,8 +789,8 @@ describe('StoreStress (Sync Mode)', () => {
               </React.Suspense>
               <Y />
             </Root>,
-            container
-          )
+            container,
+          ),
         );
         // Verify the successful transition to steps[j].
         expect(print(store)).toEqual(snapshots[j]);
@@ -804,8 +804,8 @@ describe('StoreStress (Sync Mode)', () => {
               </React.Suspense>
               <Y />
             </Root>,
-            container
-          )
+            container,
+          ),
         );
         expect(print(store)).toEqual(snapshots[i]);
         // Clean up after every iteration.
@@ -833,8 +833,8 @@ describe('StoreStress (Sync Mode)', () => {
               </React.Suspense>
               <Y />
             </Root>,
-            container
-          )
+            container,
+          ),
         );
         expect(print(store)).toEqual(fallbackSnapshots[i]);
         // Re-render with steps[j].
@@ -852,8 +852,8 @@ describe('StoreStress (Sync Mode)', () => {
               </React.Suspense>
               <Y />
             </Root>,
-            container
-          )
+            container,
+          ),
         );
         // Verify the successful transition to steps[j].
         expect(print(store)).toEqual(fallbackSnapshots[j]);
@@ -872,8 +872,8 @@ describe('StoreStress (Sync Mode)', () => {
               </React.Suspense>
               <Y />
             </Root>,
-            container
-          )
+            container,
+          ),
         );
         expect(print(store)).toEqual(fallbackSnapshots[i]);
         // Clean up after every iteration.
@@ -896,8 +896,8 @@ describe('StoreStress (Sync Mode)', () => {
               </React.Suspense>
               <Y />
             </Root>,
-            container
-          )
+            container,
+          ),
         );
         expect(print(store)).toEqual(snapshots[i]);
         // Re-render with steps[j].
@@ -910,8 +910,8 @@ describe('StoreStress (Sync Mode)', () => {
               </React.Suspense>
               <Y />
             </Root>,
-            container
-          )
+            container,
+          ),
         );
         // Verify the successful transition to steps[j].
         expect(print(store)).toEqual(fallbackSnapshots[j]);
@@ -925,8 +925,8 @@ describe('StoreStress (Sync Mode)', () => {
               </React.Suspense>
               <Y />
             </Root>,
-            container
-          )
+            container,
+          ),
         );
         expect(print(store)).toEqual(snapshots[i]);
         // Clean up after every iteration.
@@ -949,8 +949,8 @@ describe('StoreStress (Sync Mode)', () => {
               </React.Suspense>
               <Y />
             </Root>,
-            container
-          )
+            container,
+          ),
         );
         expect(print(store)).toEqual(fallbackSnapshots[i]);
         // Re-render with steps[j].
@@ -963,8 +963,8 @@ describe('StoreStress (Sync Mode)', () => {
               </React.Suspense>
               <Y />
             </Root>,
-            container
-          )
+            container,
+          ),
         );
         // Verify the successful transition to steps[j].
         expect(print(store)).toEqual(snapshots[j]);
@@ -978,8 +978,8 @@ describe('StoreStress (Sync Mode)', () => {
               </React.Suspense>
               <Y />
             </Root>,
-            container
-          )
+            container,
+          ),
         );
         expect(print(store)).toEqual(fallbackSnapshots[i]);
         // Clean up after every iteration.
@@ -1002,8 +1002,8 @@ describe('StoreStress (Sync Mode)', () => {
               </React.Suspense>
               <Y />
             </Root>,
-            container
-          )
+            container,
+          ),
         );
 
         // We get ID from the index in the tree above:
@@ -1043,8 +1043,8 @@ describe('StoreStress (Sync Mode)', () => {
               </React.Suspense>
               <Y />
             </Root>,
-            container
-          )
+            container,
+          ),
         );
         expect(print(store)).toEqual(fallbackSnapshots[j]);
 
@@ -1069,8 +1069,8 @@ describe('StoreStress (Sync Mode)', () => {
               </React.Suspense>
               <Y />
             </Root>,
-            container
-          )
+            container,
+          ),
         );
         // Fallback is still forced though.
         expect(print(store)).toEqual(fallbackSnapshots[j]);

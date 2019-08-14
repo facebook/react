@@ -1,13 +1,13 @@
 // @flow
 
-import React, { Fragment, useCallback } from 'react';
+import React, {Fragment, useCallback} from 'react';
 import Tooltip from '@reach/tooltip';
 import Icon from './Icon';
 
 import styles from './TabBar.css';
 import tooltipStyles from './Tooltip.css';
 
-import type { IconType } from './Icon';
+import type {IconType} from './Icon';
 
 type TabInfo = {|
   icon: IconType,
@@ -38,8 +38,8 @@ export default function TabBar({
   }
 
   const onChange = useCallback(
-    ({ currentTarget }) => selectTab(currentTarget.value),
-    [selectTab]
+    ({currentTarget}) => selectTab(currentTarget.value),
+    [selectTab],
   );
 
   const handleKeyDown = useCallback(event => {
@@ -80,18 +80,17 @@ export default function TabBar({
 
   return (
     <Fragment>
-      {tabs.map(({ icon, id, label, title }) => {
+      {tabs.map(({icon, id, label, title}) => {
         let button = (
           <label
             className={[
               tabSizeClassName,
               disabled ? styles.TabDisabled : styles.Tab,
-              !disabled && currentTab === id ? styles.TabCurrent : ''
+              !disabled && currentTab === id ? styles.TabCurrent : '',
             ].join(' ')}
             key={id}
             onKeyDown={handleKeyDown}
-            onMouseDown={() => selectTab(id)}
-          >
+            onMouseDown={() => selectTab(id)}>
             <input
               type="radio"
               className={styles.Input}

@@ -36,7 +36,7 @@ function isNumeric(str: string): boolean {
 function installContentScript(tabId: number) {
   chrome.tabs.executeScript(
     tabId,
-    { file: '/build/contentScript.js' },
+    {file: '/build/contentScript.js'},
     function() {}
   );
 }

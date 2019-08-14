@@ -56,8 +56,7 @@ export default function ChartNode({
             opacity: isDimmed ? 0.75 : 1,
             display: width < minWidthToDisplay ? 'none' : 'block',
           }}
-          y={0}
-        >
+          y={0}>
           <div className={styles.Div} style={textStyle}>
             {label}
           </div>

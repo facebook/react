@@ -1,9 +1,9 @@
 // @flow
 
-import { existsSync } from 'fs';
-import { basename, join, isAbsolute } from 'path';
-import { execSync, spawn } from 'child_process';
-import { parse } from 'shell-quote';
+import {existsSync} from 'fs';
+import {basename, join, isAbsolute} from 'path';
+import {execSync, spawn} from 'child_process';
+import {parse} from 'shell-quote';
 
 function isTerminalEditor(editor: string): boolean {
   switch (editor) {
@@ -33,7 +33,7 @@ const COMMON_EDITORS = {
 function getArgumentsForLineNumber(
   editor: string,
   filePath: string,
-  lineNumber: number
+  lineNumber: number,
 ): Array<string> {
   switch (basename(editor)) {
     case 'vim':
@@ -104,7 +104,7 @@ let childProcess = null;
 
 export function getValidFilePath(
   maybeRelativePath: string,
-  absoluteProjectRoots: Array<string>
+  absoluteProjectRoots: Array<string>,
 ): string | null {
   // We use relative paths at Facebook with deterministic builds.
   // This is why our internal tooling calls React DevTools with absoluteProjectRoots.
@@ -128,7 +128,7 @@ export function getValidFilePath(
 
 export function doesFilePathExist(
   maybeRelativePath: string,
-  absoluteProjectRoots: Array<string>
+  absoluteProjectRoots: Array<string>,
 ): boolean {
   return getValidFilePath(maybeRelativePath, absoluteProjectRoots) !== null;
 }
@@ -136,7 +136,7 @@ export function doesFilePathExist(
 export function launchEditor(
   maybeRelativePath: string,
   lineNumber: number,
-  absoluteProjectRoots: Array<string>
+  absoluteProjectRoots: Array<string>,
 ) {
   const filePath = getValidFilePath(maybeRelativePath, absoluteProjectRoots);
   if (filePath === null) {
@@ -174,7 +174,7 @@ export function launchEditor(
       stdio: 'inherit',
     });
   } else {
-    childProcess = spawn(editor, args, { stdio: 'inherit' });
+    childProcess = spawn(editor, args, {stdio: 'inherit'});
   }
   childProcess.on('error', function() {});
   childProcess.on('exit', function(errorCode) {

@@ -2,14 +2,14 @@
 
 import typeof ReactTestRenderer from 'react-test-renderer';
 
-import type { FrontendBridge } from 'react-devtools-shared/src/bridge';
+import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type Store from 'react-devtools-shared/src/devtools/store';
-import type { ProfilingDataFrontend } from 'react-devtools-shared/src/devtools/views/Profiler/types';
-import type { ElementType } from 'react-devtools-shared/src/types';
+import type {ProfilingDataFrontend} from 'react-devtools-shared/src/devtools/views/Profiler/types';
+import type {ElementType} from 'react-devtools-shared/src/types';
 
 export function act(callback: Function): void {
-  const { act: actTestRenderer } = require('react-test-renderer');
-  const { act: actDOM } = require('react-dom/test-utils');
+  const {act: actTestRenderer} = require('react-test-renderer');
+  const {act: actDOM} = require('react-dom/test-utils');
 
   actDOM(() => {
     actTestRenderer(() => {
@@ -27,10 +27,10 @@ export function act(callback: Function): void {
 
 export async function actAsync(
   cb: () => *,
-  recursivelyFlush: boolean = true
+  recursivelyFlush: boolean = true,
 ): Promise<void> {
-  const { act: actTestRenderer } = require('react-test-renderer');
-  const { act: actDOM } = require('react-dom/test-utils');
+  const {act: actTestRenderer} = require('react-test-renderer');
+  const {act: actDOM} = require('react-dom/test-utils');
 
   // $FlowFixMe Flow doens't know about "await act()" yet
   await actDOM(async () => {
@@ -67,13 +67,13 @@ export function beforeEachProfiling(): void {
   jest
     .spyOn(performance, 'now')
     .mockImplementation(
-      jest.requireActual('scheduler/unstable_mock').unstable_now
+      jest.requireActual('scheduler/unstable_mock').unstable_now,
     );
 }
 
 export function createDisplayNameFilter(
   source: string,
-  isEnabled: boolean = true
+  isEnabled: boolean = true,
 ) {
   const Types = require('react-devtools-shared/src/types');
   let isValid = true;
@@ -101,7 +101,7 @@ export function createHOCFilter(isEnabled: boolean = true) {
 
 export function createElementTypeFilter(
   elementType: ElementType,
-  isEnabled: boolean = true
+  isEnabled: boolean = true,
 ) {
   const Types = require('react-devtools-shared/src/types');
   return {
@@ -113,7 +113,7 @@ export function createElementTypeFilter(
 
 export function createLocationFilter(
   source: string,
-  isEnabled: boolean = true
+  isEnabled: boolean = true,
 ) {
   const Types = require('react-devtools-shared/src/types');
   let isValid = true;
@@ -162,32 +162,32 @@ export function requireTestRenderer(): ReactTestRenderer {
 }
 
 export function exportImportHelper(bridge: FrontendBridge, store: Store): void {
-  const { act } = require('./utils');
+  const {act} = require('./utils');
   const {
     prepareProfilingDataExport,
     prepareProfilingDataFrontendFromExport,
   } = require('react-devtools-shared/src/devtools/views/Profiler/utils');
 
-  const { profilerStore } = store;
+  const {profilerStore} = store;
 
   expect(profilerStore.profilingData).not.toBeNull();
 
   const profilingDataFrontendInitial = ((profilerStore.profilingData: any): ProfilingDataFrontend);
 
   const profilingDataExport = prepareProfilingDataExport(
-    profilingDataFrontendInitial
+    profilingDataFrontendInitial,
   );
 
   // Simulate writing/reading to disk.
   const serializedProfilingDataExport = JSON.stringify(
     profilingDataExport,
     null,
-    2
+    2,
   );
   const parsedProfilingDataExport = JSON.parse(serializedProfilingDataExport);
 
   const profilingDataFrontend = prepareProfilingDataFrontendFromExport(
-    (parsedProfilingDataExport: any)
+    (parsedProfilingDataExport: any),
   );
 
   // Sanity check that profiling snapshots are serialized correctly.

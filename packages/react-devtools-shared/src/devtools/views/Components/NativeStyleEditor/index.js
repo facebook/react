@@ -1,13 +1,13 @@
 // @flow
 
-import React, { Fragment, useContext, useMemo } from 'react';
+import React, {Fragment, useContext, useMemo} from 'react';
 import Store from 'react-devtools-shared/src/devtools/store';
-import { StoreContext } from 'react-devtools-shared/src/devtools/views/context';
-import { useSubscription } from 'react-devtools-shared/src/devtools/views/hooks';
-import { NativeStyleContext } from './context';
+import {StoreContext} from 'react-devtools-shared/src/devtools/views/context';
+import {useSubscription} from 'react-devtools-shared/src/devtools/views/hooks';
+import {NativeStyleContext} from './context';
 import LayoutViewer from './LayoutViewer';
 import StyleEditor from './StyleEditor';
-import { TreeStateContext } from '../TreeContext';
+import {TreeStateContext} from '../TreeContext';
 
 type Props = {||};
 
@@ -24,11 +24,9 @@ export default function NativeStyleEditorWrapper(_: Props) {
         };
       },
     }),
-    [store]
+    [store],
   );
-  const supportsNativeStyleEditor = useSubscription<boolean>(
-    subscription
-  );
+  const supportsNativeStyleEditor = useSubscription<boolean>(subscription);
 
   if (!supportsNativeStyleEditor) {
     return null;
@@ -38,9 +36,9 @@ export default function NativeStyleEditorWrapper(_: Props) {
 }
 
 function NativeStyleEditor(_: Props) {
-  const { getStyleAndLayout } = useContext(NativeStyleContext);
+  const {getStyleAndLayout} = useContext(NativeStyleContext);
 
-  const { inspectedElementID } = useContext(TreeStateContext);
+  const {inspectedElementID} = useContext(TreeStateContext);
   if (inspectedElementID === null) {
     return null;
   }
@@ -50,7 +48,7 @@ function NativeStyleEditor(_: Props) {
     return null;
   }
 
-  const { layout, style } = maybeStyleAndLayout;
+  const {layout, style} = maybeStyleAndLayout;
 
   return (
     <Fragment>

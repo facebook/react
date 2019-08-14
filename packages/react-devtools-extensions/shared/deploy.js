@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-const { exec, execSync } = require('child_process');
-const { readFileSync, writeFileSync } = require('fs');
-const { join } = require('path');
+const {exec, execSync} = require('child_process');
+const {readFileSync, writeFileSync} = require('fs');
+const {join} = require('path');
 
 const main = async buildId => {
   const root = join(__dirname, '..', buildId);

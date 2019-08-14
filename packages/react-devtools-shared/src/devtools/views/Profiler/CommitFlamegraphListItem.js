@@ -1,13 +1,13 @@
 // @flow
 
-import React, { Fragment, memo, useCallback, useContext } from 'react';
-import { areEqual } from 'react-window';
-import { barWidthThreshold } from './constants';
-import { getGradientColor } from './utils';
+import React, {Fragment, memo, useCallback, useContext} from 'react';
+import {areEqual} from 'react-window';
+import {barWidthThreshold} from './constants';
+import {getGradientColor} from './utils';
 import ChartNode from './ChartNode';
-import { SettingsContext } from '../Settings/SettingsContext';
+import {SettingsContext} from '../Settings/SettingsContext';
 
-import type { ItemData } from './CommitFlamegraph';
+import type {ItemData} from './CommitFlamegraph';
 
 type Props = {
   data: ItemData,
@@ -15,7 +15,7 @@ type Props = {
   style: Object,
 };
 
-function CommitFlamegraphListItem({ data, index, style }: Props) {
+function CommitFlamegraphListItem({data, index, style}: Props) {
   const {
     chartData,
     scaleX,
@@ -24,15 +24,15 @@ function CommitFlamegraphListItem({ data, index, style }: Props) {
     selectFiber,
     width,
   } = data;
-  const { renderPathNodes, maxSelfDuration, rows } = chartData;
+  const {renderPathNodes, maxSelfDuration, rows} = chartData;
 
-  const { lineHeight } = useContext(SettingsContext);
+  const {lineHeight} = useContext(SettingsContext);
   const handleClick = useCallback(
     (event: SyntheticMouseEvent<*>, id: number, name: string) => {
       event.stopPropagation();
       selectFiber(id, name);
     },
-    [selectFiber]
+    [selectFiber],
   );
 
   // List items are absolutely positioned using the CSS "top" attribute.
@@ -45,7 +45,7 @@ function CommitFlamegraphListItem({ data, index, style }: Props) {
 
   let selectedNodeOffset = scaleX(
     selectedChartNode !== null ? selectedChartNode.offset : 0,
-    width
+    width,
   );
 
   return (
@@ -96,7 +96,7 @@ function CommitFlamegraphListItem({ data, index, style }: Props) {
             key={id}
             label={label}
             onClick={event => handleClick(event, id, name)}
-            textStyle={{ color: textColor }}
+            textStyle={{color: textColor}}
             width={nodeWidth}
             x={nodeOffset - selectedNodeOffset}
             y={top}

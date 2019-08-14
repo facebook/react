@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 
 const chalk = require('chalk');
-const { execSync } = require('child_process');
-const { existsSync } = require('fs');
-const { isAbsolute, join, relative } = require('path');
-const { argv } = require('yargs');
+const {execSync} = require('child_process');
+const {existsSync} = require('fs');
+const {isAbsolute, join, relative} = require('path');
+const {argv} = require('yargs');
 const build = require('../shared/build');
 
 const main = async () => {
-  const { crx, keyPath } = argv;
+  const {crx, keyPath} = argv;
 
   if (crx) {
     if (!keyPath || !existsSync(keyPath)) {

@@ -1,6 +1,9 @@
 // @flow
 
-import type { BackendBridge, FrontendBridge } from 'react-devtools-shared/src/bridge';
+import type {
+  BackendBridge,
+  FrontendBridge,
+} from 'react-devtools-shared/src/bridge';
 
 const env = jasmine.getEnv();
 env.beforeEach(() => {
@@ -9,10 +12,10 @@ env.beforeEach(() => {
   // That's because we reset modules between tests,
   // which disconnects the DevTool's cache from the current dispatcher ref.
   const Agent = require('react-devtools-shared/src/backend/agent').default;
-  const { initBackend } = require('react-devtools-shared/src/backend');
+  const {initBackend} = require('react-devtools-shared/src/backend');
   const Bridge = require('react-devtools-shared/src/bridge').default;
   const Store = require('react-devtools-shared/src/devtools/store').default;
-  const { installHook } = require('react-devtools-shared/src/hook');
+  const {installHook} = require('react-devtools-shared/src/hook');
   const {
     getDefaultComponentFilters,
     saveComponentFilters,
@@ -49,7 +52,7 @@ env.beforeEach(() => {
       };
     },
     send(event: string, payload: any, transferable?: Array<any>) {
-      bridgeListeners.forEach(callback => callback({ event, payload }));
+      bridgeListeners.forEach(callback => callback({event, payload}));
     },
   });
 

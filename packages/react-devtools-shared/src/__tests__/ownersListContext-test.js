@@ -1,8 +1,8 @@
 // @flow
 
 import typeof ReactTestRenderer from 'react-test-renderer';
-import type { Element } from 'react-devtools-shared/src/devtools/views/Components/types';
-import type { FrontendBridge } from 'react-devtools-shared/src/bridge';
+import type {Element} from 'react-devtools-shared/src/devtools/views/Components/types';
+import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type Store from 'react-devtools-shared/src/devtools/store';
 
 describe('OwnersListContext', () => {
@@ -31,17 +31,19 @@ describe('OwnersListContext', () => {
     ReactDOM = require('react-dom');
     TestRenderer = utils.requireTestRenderer();
 
-    BridgeContext = require('react-devtools-shared/src/devtools/views/context').BridgeContext;
+    BridgeContext = require('react-devtools-shared/src/devtools/views/context')
+      .BridgeContext;
     OwnersListContext = require('react-devtools-shared/src/devtools/views/Components/OwnersListContext')
       .OwnersListContext;
     OwnersListContextController = require('react-devtools-shared/src/devtools/views/Components/OwnersListContext')
       .OwnersListContextController;
-    StoreContext = require('react-devtools-shared/src/devtools/views/context').StoreContext;
+    StoreContext = require('react-devtools-shared/src/devtools/views/context')
+      .StoreContext;
     TreeContextController = require('react-devtools-shared/src/devtools/views/Components/TreeContext')
       .TreeContextController;
   });
 
-  const Contexts = ({ children, defaultOwnerID = null }) => (
+  const Contexts = ({children, defaultOwnerID = null}) => (
     <BridgeContext.Provider value={bridge}>
       <StoreContext.Provider value={store}>
         <TreeContextController defaultOwnerID={defaultOwnerID}>
@@ -64,7 +66,7 @@ describe('OwnersListContext', () => {
     const Child = () => null;
 
     utils.act(() =>
-      ReactDOM.render(<Grandparent />, document.createElement('div'))
+      ReactDOM.render(<Grandparent />, document.createElement('div')),
     );
 
     expect(store).toMatchSnapshot('mount');
@@ -74,11 +76,11 @@ describe('OwnersListContext', () => {
 
     let didFinish = false;
 
-    function Suspender({ owner }) {
+    function Suspender({owner}) {
       const read = React.useContext(OwnersListContext);
       const owners = read(owner.id);
       expect(owners).toMatchSnapshot(
-        `owners for "${(owner && owner.displayName) || ''}"`
+        `owners for "${(owner && owner.displayName) || ''}"`,
       );
       didFinish = true;
       return null;
@@ -90,8 +92,8 @@ describe('OwnersListContext', () => {
           <React.Suspense fallback={null}>
             <Suspender owner={parent} />
           </React.Suspense>
-        </Contexts>
-      )
+        </Contexts>,
+      ),
     );
     expect(didFinish).toBe(true);
 
@@ -102,8 +104,8 @@ describe('OwnersListContext', () => {
           <React.Suspense fallback={null}>
             <Suspender owner={firstChild} />
           </React.Suspense>
-        </Contexts>
-      )
+        </Contexts>,
+      ),
     );
     expect(didFinish).toBe(true);
 
@@ -125,7 +127,7 @@ describe('OwnersListContext', () => {
     const Child = () => null;
 
     utils.act(() =>
-      ReactDOM.render(<Grandparent />, document.createElement('div'))
+      ReactDOM.render(<Grandparent />, document.createElement('div')),
     );
 
     expect(store).toMatchSnapshot('mount');
@@ -134,11 +136,11 @@ describe('OwnersListContext', () => {
 
     let didFinish = false;
 
-    function Suspender({ owner }) {
+    function Suspender({owner}) {
       const read = React.useContext(OwnersListContext);
       const owners = read(owner.id);
       expect(owners).toMatchSnapshot(
-        `owners for "${(owner && owner.displayName) || ''}"`
+        `owners for "${(owner && owner.displayName) || ''}"`,
       );
       didFinish = true;
       return null;
@@ -150,8 +152,8 @@ describe('OwnersListContext', () => {
           <React.Suspense fallback={null}>
             <Suspender owner={firstChild} />
           </React.Suspense>
-        </Contexts>
-      )
+        </Contexts>,
+      ),
     );
     expect(didFinish).toBe(true);
 
@@ -165,7 +167,7 @@ describe('OwnersListContext', () => {
     const Parent = () => null;
 
     utils.act(() =>
-      ReactDOM.render(<Grandparent />, document.createElement('div'))
+      ReactDOM.render(<Grandparent />, document.createElement('div')),
     );
 
     expect(store).toMatchSnapshot('mount');
@@ -174,11 +176,11 @@ describe('OwnersListContext', () => {
 
     let didFinish = false;
 
-    function Suspender({ owner }) {
+    function Suspender({owner}) {
       const read = React.useContext(OwnersListContext);
       const owners = read(owner.id);
       expect(owners).toMatchSnapshot(
-        `owners for "${(owner && owner.displayName) || ''}"`
+        `owners for "${(owner && owner.displayName) || ''}"`,
       );
       didFinish = true;
       return null;
@@ -190,8 +192,8 @@ describe('OwnersListContext', () => {
           <React.Suspense fallback={null}>
             <Suspender owner={grandparent} />
           </React.Suspense>
-        </Contexts>
-      )
+        </Contexts>,
+      ),
     );
     expect(didFinish).toBe(true);
 

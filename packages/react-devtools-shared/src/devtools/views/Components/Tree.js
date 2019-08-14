@@ -11,10 +11,10 @@ import React, {
   useState,
 } from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
-import { FixedSizeList } from 'react-window';
-import { TreeDispatcherContext, TreeStateContext } from './TreeContext';
-import { SettingsContext } from '../Settings/SettingsContext';
-import { BridgeContext, StoreContext } from '../context';
+import {FixedSizeList} from 'react-window';
+import {TreeDispatcherContext, TreeStateContext} from './TreeContext';
+import {SettingsContext} from '../Settings/SettingsContext';
+import {BridgeContext, StoreContext} from '../context';
 import ElementView from './Element';
 import InspectHostNodesToggle from './InspectHostNodesToggle';
 import OwnersStack from './OwnersStack';
@@ -31,7 +31,7 @@ const DEFAULT_INDENTATION_SIZE = 12;
 export type ItemData = {|
   numElements: number,
   isNavigatingWithKeyboard: boolean,
-  lastScrolledIDRef: { current: number | null },
+  lastScrolledIDRef: {current: number | null},
   onElementMouseEnter: (id: number) => void,
   treeFocused: boolean,
 |};
@@ -51,14 +51,14 @@ export default function Tree(props: Props) {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
   const [isNavigatingWithKeyboard, setIsNavigatingWithKeyboard] = useState(
-    false
+    false,
   );
   const treeRef = useRef<HTMLDivElement | null>(null);
   const focusTargetRef = useRef<HTMLDivElement | null>(null);
 
   const [treeFocused, setTreeFocused] = useState<boolean>(false);
 
-  const { lineHeight } = useContext(SettingsContext);
+  const {lineHeight} = useContext(SettingsContext);
 
   // Make sure a newly selected element is visible in the list.
   // This is helpful for things like the owners list and search.
@@ -77,21 +77,27 @@ export default function Tree(props: Props) {
         list.scrollToItem(selectedElementIndex, 'smart');
       }
     },
-    [selectedElementIndex]
+    [selectedElementIndex],
   );
 
   // Picking an element in the inspector should put focus into the tree.
   // This ensures that keyboard navigation works right after picking a node.
-  useEffect(() => {
-    function handleStopInspectingNative(didSelectNode) {
-      if (didSelectNode && focusTargetRef.current !== null) {
-        focusTargetRef.current.focus();
+  useEffect(
+    () => {
+      function handleStopInspectingNative(didSelectNode) {
+        if (didSelectNode && focusTargetRef.current !== null) {
+          focusTargetRef.current.focus();
+        }
       }
-    }
-    bridge.addListener('stopInspectingNative', handleStopInspectingNative);
-    return () =>
-      bridge.removeListener('stopInspectingNative', handleStopInspectingNative);
-  }, [bridge]);
+      bridge.addListener('stopInspectingNative', handleStopInspectingNative);
+      return () =>
+        bridge.removeListener(
+          'stopInspectingNative',
+          handleStopInspectingNative,
+        );
+    },
+    [bridge],
+  );
 
   // This ref is passed down the context to elements.
   // It lets them avoid autoscrolling to the same item many times
@@ -99,87 +105,93 @@ export default function Tree(props: Props) {
   const lastScrolledIDRef = useRef<number | null>(null);
 
   // Navigate the tree with up/down arrow keys.
-  useEffect(() => {
-    if (treeRef.current === null) {
-      return () => {};
-    }
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if ((event: any).target.tagName === 'INPUT' || event.defaultPrevented) {
-        return;
+  useEffect(
+    () => {
+      if (treeRef.current === null) {
+        return () => {};
       }
 
-      // TODO We should ignore arrow keys if the focus is outside of DevTools.
-      // Otherwise the inline (embedded) DevTools might change selection unexpectedly,
-      // e.g. when a text input or a select has focus.
-
-      let element;
-      switch (event.key) {
-        case 'ArrowDown':
-          event.preventDefault();
-          dispatch({ type: 'SELECT_NEXT_ELEMENT_IN_TREE' });
-          break;
-        case 'ArrowLeft':
-          event.preventDefault();
-          element =
-            selectedElementID !== null
-              ? store.getElementByID(selectedElementID)
-              : null;
-          if (element !== null) {
-            if (element.children.length > 0 && !element.isCollapsed) {
-              store.toggleIsCollapsed(element.id, true);
-            } else {
-              dispatch({ type: 'SELECT_PARENT_ELEMENT_IN_TREE' });
-            }
-          }
-          break;
-        case 'ArrowRight':
-          event.preventDefault();
-          element =
-            selectedElementID !== null
-              ? store.getElementByID(selectedElementID)
-              : null;
-          if (element !== null) {
-            if (element.children.length > 0 && element.isCollapsed) {
-              store.toggleIsCollapsed(element.id, false);
-            } else {
-              dispatch({ type: 'SELECT_CHILD_ELEMENT_IN_TREE' });
-            }
-          }
-          break;
-        case 'ArrowUp':
-          event.preventDefault();
-          dispatch({ type: 'SELECT_PREVIOUS_ELEMENT_IN_TREE' });
-          break;
-        default:
+      const handleKeyDown = (event: KeyboardEvent) => {
+        if ((event: any).target.tagName === 'INPUT' || event.defaultPrevented) {
           return;
-      }
-      setIsNavigatingWithKeyboard(true);
-    };
+        }
 
-    // It's important to listen to the ownerDocument to support the browser extension.
-    // Here we use portals to render individual tabs (e.g. Profiler),
-    // and the root document might belong to a different window.
-    const ownerDocument = treeRef.current.ownerDocument;
-    ownerDocument.addEventListener('keydown', handleKeyDown);
+        // TODO We should ignore arrow keys if the focus is outside of DevTools.
+        // Otherwise the inline (embedded) DevTools might change selection unexpectedly,
+        // e.g. when a text input or a select has focus.
 
-    return () => {
-      ownerDocument.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [dispatch, selectedElementID, store]);
+        let element;
+        switch (event.key) {
+          case 'ArrowDown':
+            event.preventDefault();
+            dispatch({type: 'SELECT_NEXT_ELEMENT_IN_TREE'});
+            break;
+          case 'ArrowLeft':
+            event.preventDefault();
+            element =
+              selectedElementID !== null
+                ? store.getElementByID(selectedElementID)
+                : null;
+            if (element !== null) {
+              if (element.children.length > 0 && !element.isCollapsed) {
+                store.toggleIsCollapsed(element.id, true);
+              } else {
+                dispatch({type: 'SELECT_PARENT_ELEMENT_IN_TREE'});
+              }
+            }
+            break;
+          case 'ArrowRight':
+            event.preventDefault();
+            element =
+              selectedElementID !== null
+                ? store.getElementByID(selectedElementID)
+                : null;
+            if (element !== null) {
+              if (element.children.length > 0 && element.isCollapsed) {
+                store.toggleIsCollapsed(element.id, false);
+              } else {
+                dispatch({type: 'SELECT_CHILD_ELEMENT_IN_TREE'});
+              }
+            }
+            break;
+          case 'ArrowUp':
+            event.preventDefault();
+            dispatch({type: 'SELECT_PREVIOUS_ELEMENT_IN_TREE'});
+            break;
+          default:
+            return;
+        }
+        setIsNavigatingWithKeyboard(true);
+      };
+
+      // It's important to listen to the ownerDocument to support the browser extension.
+      // Here we use portals to render individual tabs (e.g. Profiler),
+      // and the root document might belong to a different window.
+      const ownerDocument = treeRef.current.ownerDocument;
+      ownerDocument.addEventListener('keydown', handleKeyDown);
+
+      return () => {
+        ownerDocument.removeEventListener('keydown', handleKeyDown);
+      };
+    },
+    [dispatch, selectedElementID, store],
+  );
 
   // Focus management.
   const handleBlur = useCallback(() => setTreeFocused(false), []);
-  const handleFocus = useCallback(() => {
-    setTreeFocused(true);
+  const handleFocus = useCallback(
+    () => {
+      setTreeFocused(true);
 
-    if (selectedElementIndex === null && numElements > 0) {
-      dispatch({
-        type: 'SELECT_ELEMENT_AT_INDEX',
-        payload: 0,
-      });
-    }
-  }, [dispatch, numElements, selectedElementIndex]);
+      if (selectedElementIndex === null && numElements > 0) {
+        dispatch({
+          type: 'SELECT_ELEMENT_AT_INDEX',
+          payload: 0,
+        });
+      }
+    },
+    [dispatch, numElements, selectedElementIndex],
+  );
 
   const handleKeyPress = useCallback(
     event => {
@@ -187,14 +199,14 @@ export default function Tree(props: Props) {
         case 'Enter':
         case ' ':
           if (selectedElementID !== null) {
-            dispatch({ type: 'SELECT_OWNER', payload: selectedElementID });
+            dispatch({type: 'SELECT_OWNER', payload: selectedElementID});
           }
           break;
         default:
           break;
       }
     },
-    [dispatch, selectedElementID]
+    [dispatch, selectedElementID],
   );
 
   const highlightNativeElement = useCallback(
@@ -212,37 +224,40 @@ export default function Tree(props: Props) {
         });
       }
     },
-    [store, bridge]
+    [store, bridge],
   );
 
   // If we switch the selected element while using the keyboard,
   // start highlighting it in the DOM instead of the last hovered node.
-  const searchRef = useRef({ searchIndex, searchResults });
-  useEffect(() => {
-    let didSelectNewSearchResult = false;
-    if (
-      searchRef.current.searchIndex !== searchIndex ||
-      searchRef.current.searchResults !== searchResults
-    ) {
-      searchRef.current.searchIndex = searchIndex;
-      searchRef.current.searchResults = searchResults;
-      didSelectNewSearchResult = true;
-    }
-    if (isNavigatingWithKeyboard || didSelectNewSearchResult) {
-      if (selectedElementID !== null) {
-        highlightNativeElement(selectedElementID);
-      } else {
-        bridge.send('clearNativeElementHighlight');
+  const searchRef = useRef({searchIndex, searchResults});
+  useEffect(
+    () => {
+      let didSelectNewSearchResult = false;
+      if (
+        searchRef.current.searchIndex !== searchIndex ||
+        searchRef.current.searchResults !== searchResults
+      ) {
+        searchRef.current.searchIndex = searchIndex;
+        searchRef.current.searchResults = searchResults;
+        didSelectNewSearchResult = true;
       }
-    }
-  }, [
-    bridge,
-    isNavigatingWithKeyboard,
-    highlightNativeElement,
-    searchIndex,
-    searchResults,
-    selectedElementID,
-  ]);
+      if (isNavigatingWithKeyboard || didSelectNewSearchResult) {
+        if (selectedElementID !== null) {
+          highlightNativeElement(selectedElementID);
+        } else {
+          bridge.send('clearNativeElementHighlight');
+        }
+      }
+    },
+    [
+      bridge,
+      isNavigatingWithKeyboard,
+      highlightNativeElement,
+      searchIndex,
+      searchResults,
+      selectedElementID,
+    ],
+  );
 
   // Highlight last hovered element.
   const handleElementMouseEnter = useCallback(
@@ -253,7 +268,7 @@ export default function Tree(props: Props) {
         highlightNativeElement(id);
       }
     },
-    [isNavigatingWithKeyboard, highlightNativeElement]
+    [isNavigatingWithKeyboard, highlightNativeElement],
   );
 
   const handleMouseMove = useCallback(() => {
@@ -262,9 +277,12 @@ export default function Tree(props: Props) {
     setIsNavigatingWithKeyboard(false);
   }, []);
 
-  const handleMouseLeave = useCallback(() => {
-    bridge.send('clearNativeElementHighlight');
-  }, [bridge]);
+  const handleMouseLeave = useCallback(
+    () => {
+      bridge.send('clearNativeElementHighlight');
+    },
+    [bridge],
+  );
 
   // Let react-window know to re-render any time the underlying tree data changes.
   // This includes the owner context, since it controls a filtered view of the tree.
@@ -282,12 +300,12 @@ export default function Tree(props: Props) {
       handleElementMouseEnter,
       lastScrolledIDRef,
       treeFocused,
-    ]
+    ],
   );
 
   const itemKey = useCallback(
     (index: number) => store.getElementIDAtIndex(index),
-    [store]
+    [store],
   );
 
   return (
@@ -314,10 +332,9 @@ export default function Tree(props: Props) {
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
           ref={focusTargetRef}
-          tabIndex={0}
-        >
+          tabIndex={0}>
           <AutoSizer>
-            {({ height, width }) => (
+            {({height, width}) => (
               // $FlowFixMe https://github.com/facebook/flow/issues/7341
               <FixedSizeList
                 className={styles.List}
@@ -328,8 +345,7 @@ export default function Tree(props: Props) {
                 itemKey={itemKey}
                 itemSize={lineHeight}
                 ref={listCallbackRef}
-                width={width}
-              >
+                width={width}>
                 {ElementView}
               </FixedSizeList>
             )}
@@ -383,8 +399,8 @@ export default function Tree(props: Props) {
 function updateIndentationSizeVar(
   innerDiv: HTMLDivElement,
   cachedChildWidths: WeakMap<HTMLElement, number>,
-  indentationSizeRef: {| current: number |},
-  prevListWidthRef: {| current: number |}
+  indentationSizeRef: {|current: number|},
+  prevListWidthRef: {|current: number|},
 ): void {
   const list = ((innerDiv.parentElement: any): HTMLDivElement);
   const listWidth = list.clientWidth;
@@ -411,7 +427,7 @@ function updateIndentationSizeVar(
     if (cachedChildWidth != null) {
       childWidth = cachedChildWidth;
     } else {
-      const { firstElementChild } = child;
+      const {firstElementChild} = child;
 
       // Skip over e.g. the guideline element
       if (firstElementChild != null) {
@@ -430,12 +446,12 @@ function updateIndentationSizeVar(
   list.style.setProperty('--indentation-size', `${maxIndentationSize}px`);
 }
 
-function InnerElementType({ children, style, ...rest }) {
-  const { ownerID } = useContext(TreeStateContext);
+function InnerElementType({children, style, ...rest}) {
+  const {ownerID} = useContext(TreeStateContext);
 
   const cachedChildWidths = useMemo<WeakMap<HTMLElement, number>>(
     () => new WeakMap(),
-    []
+    [],
   );
 
   // This ref tracks the current indentation size.
@@ -468,7 +484,7 @@ function InnerElementType({ children, style, ...rest }) {
         divRef.current,
         cachedChildWidths,
         indentationSizeRef,
-        prevListWidthRef
+        prevListWidthRef,
       );
     }
   });
@@ -482,8 +498,7 @@ function InnerElementType({ children, style, ...rest }) {
       className={styles.InnerElementType}
       ref={divRef}
       style={style}
-      {...rest}
-    >
+      {...rest}>
       <SelectedTreeHighlight />
       {children}
     </div>

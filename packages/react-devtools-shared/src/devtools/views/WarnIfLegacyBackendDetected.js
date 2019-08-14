@@ -1,67 +1,70 @@
 // @flow
 
-import React, { Fragment, useContext, useEffect } from 'react';
-import { BridgeContext } from './context';
-import { ModalDialogContext } from './ModalDialog';
+import React, {Fragment, useContext, useEffect} from 'react';
+import {BridgeContext} from './context';
+import {ModalDialogContext} from './ModalDialog';
 
 import styles from './WarnIfLegacyBackendDetected.css';
 
 export default function WarnIfLegacyBackendDetected(_: {||}) {
   const bridge = useContext(BridgeContext);
-  const { dispatch } = useContext(ModalDialogContext);
+  const {dispatch} = useContext(ModalDialogContext);
 
   // Detect pairing with legacy v3 backend.
   // We do this by listening to a message that it broadcasts but the v4 backend doesn't.
   // In this case the frontend should show upgrade instructions.
-  useEffect(() => {
-    // Wall.listen returns a cleanup function
-    let unlisten = bridge.wall.listen(message => {
-      switch (message.type) {
-        case 'call':
-        case 'event':
-        case 'many-events':
-          // Any of these types indicate the v3 backend.
-          dispatch({
-            canBeDismissed: false,
-            type: 'SHOW',
-            title: 'DevTools v4 is incompatible with this version of React',
-            content: <InvalidBackendDetected />,
-          });
+  useEffect(
+    () => {
+      // Wall.listen returns a cleanup function
+      let unlisten = bridge.wall.listen(message => {
+        switch (message.type) {
+          case 'call':
+          case 'event':
+          case 'many-events':
+            // Any of these types indicate the v3 backend.
+            dispatch({
+              canBeDismissed: false,
+              type: 'SHOW',
+              title: 'DevTools v4 is incompatible with this version of React',
+              content: <InvalidBackendDetected />,
+            });
 
-          // Once we've identified the backend version, it's safe to unsubscribe.
-          if (typeof unlisten === 'function') {
-            unlisten();
-            unlisten = null;
-          }
-          break;
-        default:
-          break;
-      }
+            // Once we've identified the backend version, it's safe to unsubscribe.
+            if (typeof unlisten === 'function') {
+              unlisten();
+              unlisten = null;
+            }
+            break;
+          default:
+            break;
+        }
 
-      switch (message.event) {
-        case 'isBackendStorageAPISupported':
-        case 'isNativeStyleEditorSupported':
-        case 'operations':
-        case 'overrideComponentFilters':
-          // Any of these is sufficient to indicate a v4 backend.
-          // Once we've identified the backend version, it's safe to unsubscribe.
-          if (typeof unlisten === 'function') {
-            unlisten();
-            unlisten = null;
-          }
-          break;
-        default:
-          break;
-      }
-    });
+        switch (message.event) {
+          case 'isBackendStorageAPISupported':
+          case 'isNativeStyleEditorSupported':
+          case 'operations':
+          case 'overrideComponentFilters':
+            // Any of these is sufficient to indicate a v4 backend.
+            // Once we've identified the backend version, it's safe to unsubscribe.
+            if (typeof unlisten === 'function') {
+              unlisten();
+              unlisten = null;
+            }
+            break;
+          default:
+            break;
+        }
+      });
 
-    return () => {
-      if (typeof unlisten === 'function') {
-        unlisten();
-        unlisten = null;
-      }
-    };
-  }, [bridge, dispatch]);
+      return () => {
+        if (typeof unlisten === 'function') {
+          unlisten();
+          unlisten = null;
+        }
+      };
+    },
+    [bridge, dispatch],
+  );
 
   return null;
 }

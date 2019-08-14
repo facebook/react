@@ -1,6 +1,6 @@
 /** @flow */
 
-import React, { Fragment } from 'react';
+import React, {Fragment} from 'react';
 import ReactDOM from 'react-dom';
 
 export default function Iframe() {
@@ -16,7 +16,7 @@ export default function Iframe() {
   );
 }
 
-const iframeStyle = { border: '2px solid #eee', height: 80 };
+const iframeStyle = {border: '2px solid #eee', height: 80};
 
 function Frame(props) {
   const [element, setElement] = React.useState(null);

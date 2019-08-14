@@ -9,7 +9,7 @@ import React, {
   useRef,
 } from 'react';
 import Button from './Button';
-import { useModalDismissSignal } from './hooks';
+import {useModalDismissSignal} from './hooks';
 
 import styles from './ModalDialog.css';
 
@@ -40,7 +40,7 @@ type ModalDialogContextType = {|
 |};
 
 const ModalDialogContext = createContext<ModalDialogContextType>(
-  ((null: any): ModalDialogContextType)
+  ((null: any): ModalDialogContextType),
 );
 ModalDialogContext.displayName = 'ModalDialogContext';
 
@@ -69,7 +69,7 @@ type Props = {|
   children: React$Node,
 |};
 
-function ModalDialogContextController({ children }: Props) {
+function ModalDialogContextController({children}: Props) {
   const [state, dispatch] = useReducer<State, Action>(dialogReducer, {
     canBeDismissed: true,
     content: null,
@@ -85,7 +85,7 @@ function ModalDialogContextController({ children }: Props) {
       title: state.title,
       dispatch,
     }),
-    [state, dispatch]
+    [state, dispatch],
   );
 
   return (
@@ -96,19 +96,22 @@ function ModalDialogContextController({ children }: Props) {
 }
 
 function ModalDialog(_: {||}) {
-  const { isVisible } = useContext(ModalDialogContext);
+  const {isVisible} = useContext(ModalDialogContext);
   return isVisible ? <ModalDialogImpl /> : null;
 }
 
 function ModalDialogImpl(_: {||}) {
-  const { canBeDismissed, content, dispatch, title } = useContext(
-    ModalDialogContext
+  const {canBeDismissed, content, dispatch, title} = useContext(
+    ModalDialogContext,
   );
-  const dismissModal = useCallback(() => {
-    if (canBeDismissed) {
-      dispatch({ type: 'HIDE' });
-    }
-  }, [canBeDismissed, dispatch]);
+  const dismissModal = useCallback(
+    () => {
+      if (canBeDismissed) {
+        dispatch({type: 'HIDE'});
+      }
+    },
+    [canBeDismissed, dispatch],
+  );
   const dialogRef = useRef<HTMLDivElement | null>(null);
 
   // It's important to trap click events within the dialog,
@@ -131,8 +134,7 @@ function ModalDialogImpl(_: {||}) {
       <div
         ref={dialogRef}
         className={styles.Dialog}
-        onClick={handleDialogClick}
-      >
+        onClick={handleDialogClick}>
         {title !== null && <div className={styles.Title}>{title}</div>}
         {content}
         {canBeDismissed && (
@@ -147,4 +149,4 @@ function ModalDialogImpl(_: {||}) {
   );
 }
 
-export { ModalDialog, ModalDialogContext, ModalDialogContextController };
+export {ModalDialog, ModalDialogContext, ModalDialogContextController};

@@ -1,10 +1,13 @@
 // @flow
 
-import { ElementTypeForwardRef, ElementTypeMemo } from 'react-devtools-shared/src/types';
-import { formatDuration } from './utils';
+import {
+  ElementTypeForwardRef,
+  ElementTypeMemo,
+} from 'react-devtools-shared/src/types';
+import {formatDuration} from './utils';
 import ProfilerStore from 'react-devtools-shared/src/devtools/ProfilerStore';
 
-import type { CommitTree } from './types';
+import type {CommitTree} from './types';
 
 export type ChartNode = {|
   id: number,
@@ -33,8 +36,8 @@ export function getChartData({
 |}): ChartData {
   const commitDatum = profilerStore.getCommitData(rootID, commitIndex);
 
-  const { fiberActualDurations, fiberSelfDurations } = commitDatum;
-  const { nodes } = commitTree;
+  const {fiberActualDurations, fiberSelfDurations} = commitDatum;
+  const {nodes} = commitTree;
 
   const key = `${rootID}-${commitIndex}`;
   if (cachedChartData.has(key)) {
@@ -51,7 +54,7 @@ export function getChartData({
       throw Error(`Could not find node with id "${id}" in commit tree`);
     }
 
-    const { displayName, key, parentID, type } = node;
+    const {displayName, key, parentID, type} = node;
 
     // Don't show the root node in this chart.
     if (parentID === 0) {
@@ -71,7 +74,7 @@ export function getChartData({
     }
 
     const label = `${name}${maybeBadge}${maybeKey} (${formatDuration(
-      selfDuration
+      selfDuration,
     )}ms)`;
     chartNodes.push({
       id,

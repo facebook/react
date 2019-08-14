@@ -61,7 +61,7 @@ describe('console', () => {
   });
 
   it('should only patch the console once', () => {
-    const { error, warn } = fakeConsole;
+    const {error, warn} = fakeConsole;
 
     patchConsole();
 
@@ -109,7 +109,7 @@ describe('console', () => {
     expect(mockWarn).toHaveBeenCalledTimes(1);
     expect(mockWarn.mock.calls[0]).toHaveLength(1);
     expect(mockWarn.mock.calls[0][0]).toBe(
-      'warn\n    in Child (at fake.js:123)'
+      'warn\n    in Child (at fake.js:123)',
     );
     expect(mockError).toHaveBeenCalledTimes(1);
     expect(mockError.mock.calls[0]).toHaveLength(2);
@@ -118,7 +118,7 @@ describe('console', () => {
   });
 
   it('should append component stacks to errors and warnings logged during render', () => {
-    const Intermediate = ({ children }) => children;
+    const Intermediate = ({children}) => children;
     const Parent = () => (
       <Intermediate>
         <Child />
@@ -140,18 +140,18 @@ describe('console', () => {
     expect(mockWarn.mock.calls[0]).toHaveLength(2);
     expect(mockWarn.mock.calls[0][0]).toBe('warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[0][1])).toEqual(
-      '\n    in Child (at **)\n    in Parent (at **)'
+      '\n    in Child (at **)\n    in Parent (at **)',
     );
     expect(mockError).toHaveBeenCalledTimes(1);
     expect(mockError.mock.calls[0]).toHaveLength(2);
     expect(mockError.mock.calls[0][0]).toBe('error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[0][1])).toBe(
-      '\n    in Child (at **)\n    in Parent (at **)'
+      '\n    in Child (at **)\n    in Parent (at **)',
     );
   });
 
   it('should append component stacks to errors and warnings logged from effects', () => {
-    const Intermediate = ({ children }) => children;
+    const Intermediate = ({children}) => children;
     const Parent = () => (
       <Intermediate>
         <Child />
@@ -182,28 +182,28 @@ describe('console', () => {
     expect(mockWarn.mock.calls[0]).toHaveLength(2);
     expect(mockWarn.mock.calls[0][0]).toBe('active warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[0][1])).toEqual(
-      '\n    in Child (at **)\n    in Parent (at **)'
+      '\n    in Child (at **)\n    in Parent (at **)',
     );
     expect(mockWarn.mock.calls[1]).toHaveLength(2);
     expect(mockWarn.mock.calls[1][0]).toBe('passive warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[1][1])).toEqual(
-      '\n    in Child (at **)\n    in Parent (at **)'
+      '\n    in Child (at **)\n    in Parent (at **)',
     );
     expect(mockError).toHaveBeenCalledTimes(2);
     expect(mockError.mock.calls[0]).toHaveLength(2);
     expect(mockError.mock.calls[0][0]).toBe('active error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[0][1])).toBe(
-      '\n    in Child (at **)\n    in Parent (at **)'
+      '\n    in Child (at **)\n    in Parent (at **)',
     );
     expect(mockError.mock.calls[1]).toHaveLength(2);
     expect(mockError.mock.calls[1][0]).toBe('passive error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[1][1])).toBe(
-      '\n    in Child (at **)\n    in Parent (at **)'
+      '\n    in Child (at **)\n    in Parent (at **)',
     );
   });
 
   it('should append component stacks to errors and warnings logged from commit hooks', () => {
-    const Intermediate = ({ children }) => children;
+    const Intermediate = ({children}) => children;
     const Parent = () => (
       <Intermediate>
         <Child />
@@ -238,28 +238,28 @@ describe('console', () => {
     expect(mockWarn.mock.calls[0]).toHaveLength(2);
     expect(mockWarn.mock.calls[0][0]).toBe('didMount warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[0][1])).toEqual(
-      '\n    in Child (at **)\n    in Parent (at **)'
+      '\n    in Child (at **)\n    in Parent (at **)',
     );
     expect(mockWarn.mock.calls[1]).toHaveLength(2);
     expect(mockWarn.mock.calls[1][0]).toBe('didUpdate warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[1][1])).toEqual(
-      '\n    in Child (at **)\n    in Parent (at **)'
+      '\n    in Child (at **)\n    in Parent (at **)',
     );
     expect(mockError).toHaveBeenCalledTimes(2);
     expect(mockError.mock.calls[0]).toHaveLength(2);
     expect(mockError.mock.calls[0][0]).toBe('didMount error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[0][1])).toBe(
-      '\n    in Child (at **)\n    in Parent (at **)'
+      '\n    in Child (at **)\n    in Parent (at **)',
     );
     expect(mockError.mock.calls[1]).toHaveLength(2);
     expect(mockError.mock.calls[1][0]).toBe('didUpdate error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[1][1])).toBe(
-      '\n    in Child (at **)\n    in Parent (at **)'
+      '\n    in Child (at **)\n    in Parent (at **)',
     );
   });
 
   it('should append component stacks to errors and warnings logged from gDSFP', () => {
-    const Intermediate = ({ children }) => children;
+    const Intermediate = ({children}) => children;
     const Parent = () => (
       <Intermediate>
         <Child />
@@ -287,13 +287,13 @@ describe('console', () => {
     expect(mockWarn.mock.calls[0]).toHaveLength(2);
     expect(mockWarn.mock.calls[0][0]).toBe('warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[0][1])).toEqual(
-      '\n    in Child (at **)\n    in Parent (at **)'
+      '\n    in Child (at **)\n    in Parent (at **)',
     );
     expect(mockError).toHaveBeenCalledTimes(1);
     expect(mockError.mock.calls[0]).toHaveLength(2);
     expect(mockError.mock.calls[0][0]).toBe('error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[0][1])).toBe(
-      '\n    in Child (at **)\n    in Parent (at **)'
+      '\n    in Child (at **)\n    in Parent (at **)',
     );
   });
 
@@ -321,13 +321,13 @@ describe('console', () => {
     expect(mockWarn.mock.calls[1]).toHaveLength(2);
     expect(mockWarn.mock.calls[1][0]).toBe('warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[1][1])).toEqual(
-      '\n    in Child (at **)'
+      '\n    in Child (at **)',
     );
     expect(mockError).toHaveBeenCalledTimes(2);
     expect(mockError.mock.calls[1]).toHaveLength(2);
     expect(mockError.mock.calls[1][0]).toBe('error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[1][1])).toBe(
-      '\n    in Child (at **)'
+      '\n    in Child (at **)',
     );
   });
 });

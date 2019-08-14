@@ -1,8 +1,8 @@
 // @flow
 
-import React, { useContext } from 'react';
-import { SettingsContext } from './SettingsContext';
-import { CHANGE_LOG_URL } from 'react-devtools-shared/src/constants';
+import React, {useContext} from 'react';
+import {SettingsContext} from './SettingsContext';
+import {CHANGE_LOG_URL} from 'react-devtools-shared/src/constants';
 
 import styles from './SettingsShared.css';
 
@@ -16,10 +16,10 @@ export default function GeneralSettings(_: {||}) {
     setAppendComponentStack,
   } = useContext(SettingsContext);
 
-  const updateDisplayDensity = ({ currentTarget }) =>
+  const updateDisplayDensity = ({currentTarget}) =>
     setDisplayDensity(currentTarget.value);
-  const updateTheme = ({ currentTarget }) => setTheme(currentTarget.value);
-  const updateappendComponentStack = ({ currentTarget }) =>
+  const updateTheme = ({currentTarget}) => setTheme(currentTarget.value);
+  const updateappendComponentStack = ({currentTarget}) =>
     setAppendComponentStack(currentTarget.checked);
 
   return (
@@ -38,8 +38,7 @@ export default function GeneralSettings(_: {||}) {
         <select
           className={styles.Select}
           value={displayDensity}
-          onChange={updateDisplayDensity}
-        >
+          onChange={updateDisplayDensity}>
           <option value="compact">Compact</option>
           <option value="comfortable">Comfortable</option>
         </select>
@@ -61,8 +60,7 @@ export default function GeneralSettings(_: {||}) {
           className={styles.ReleaseNotesLink}
           target="_blank"
           rel="noopener noreferrer"
-          href={CHANGE_LOG_URL}
-        >
+          href={CHANGE_LOG_URL}>
           View release notes
         </a>{' '}
         for DevTools version {process.env.DEVTOOLS_VERSION}

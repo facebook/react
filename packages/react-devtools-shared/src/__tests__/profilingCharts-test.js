@@ -41,7 +41,7 @@ describe('profiling charts', () => {
       };
 
       // Memoize children to verify that chart doesn't include in the update.
-      const Child = React.memo(function Child({ duration }) {
+      const Child = React.memo(function Child({duration}) {
         Scheduler.unstable_advanceTime(duration);
         return null;
       });
@@ -51,21 +51,21 @@ describe('profiling charts', () => {
       utils.act(() => store.profilerStore.startProfiling());
       utils.act(() =>
         SchedulerTracing.unstable_trace('mount', Scheduler.unstable_now(), () =>
-          ReactDOM.render(<Parent />, container)
-        )
+          ReactDOM.render(<Parent />, container),
+        ),
       );
       utils.act(() =>
         SchedulerTracing.unstable_trace(
           'update',
           Scheduler.unstable_now(),
-          () => ReactDOM.render(<Parent />, container)
-        )
+          () => ReactDOM.render(<Parent />, container),
+        ),
       );
       utils.act(() => store.profilerStore.stopProfiling());
 
       let renderFinished = false;
 
-      function Validator({ commitIndex, rootID }) {
+      function Validator({commitIndex, rootID}) {
         const commitTree = store.profilerStore.profilingCache.getCommitTree({
           commitIndex,
           rootID,
@@ -75,11 +75,11 @@ describe('profiling charts', () => {
             commitIndex,
             commitTree,
             rootID,
-          }
+          },
         );
         expect(commitTree).toMatchSnapshot(`${commitIndex}: CommitTree`);
         expect(chartData).toMatchSnapshot(
-          `${commitIndex}: FlamegraphChartData`
+          `${commitIndex}: FlamegraphChartData`,
         );
         renderFinished = true;
         return null;
@@ -92,7 +92,7 @@ describe('profiling charts', () => {
 
         utils.act(() => {
           TestRenderer.create(
-            <Validator commitIndex={commitIndex} rootID={rootID} />
+            <Validator commitIndex={commitIndex} rootID={rootID} />,
           );
         });
 
@@ -117,7 +117,7 @@ describe('profiling charts', () => {
       };
 
       // Memoize children to verify that chart doesn't include in the update.
-      const Child = React.memo(function Child({ duration }) {
+      const Child = React.memo(function Child({duration}) {
         Scheduler.unstable_advanceTime(duration);
         return null;
       });
@@ -127,21 +127,21 @@ describe('profiling charts', () => {
       utils.act(() => store.profilerStore.startProfiling());
       utils.act(() =>
         SchedulerTracing.unstable_trace('mount', Scheduler.unstable_now(), () =>
-          ReactDOM.render(<Parent />, container)
-        )
+          ReactDOM.render(<Parent />, container),
+        ),
       );
       utils.act(() =>
         SchedulerTracing.unstable_trace(
           'update',
           Scheduler.unstable_now(),
-          () => ReactDOM.render(<Parent />, container)
-        )
+          () => ReactDOM.render(<Parent />, container),
+        ),
       );
       utils.act(() => store.profilerStore.stopProfiling());
 
       let renderFinished = false;
 
-      function Validator({ commitIndex, rootID }) {
+      function Validator({commitIndex, rootID}) {
         const commitTree = store.profilerStore.profilingCache.getCommitTree({
           commitIndex,
           rootID,
@@ -151,7 +151,7 @@ describe('profiling charts', () => {
             commitIndex,
             commitTree,
             rootID,
-          }
+          },
         );
         expect(commitTree).toMatchSnapshot(`${commitIndex}: CommitTree`);
         expect(chartData).toMatchSnapshot(`${commitIndex}: RankedChartData`);
@@ -166,7 +166,7 @@ describe('profiling charts', () => {
 
         utils.act(() => {
           TestRenderer.create(
-            <Validator commitIndex={commitIndex} rootID={rootID} />
+            <Validator commitIndex={commitIndex} rootID={rootID} />,
           );
         });
 
@@ -189,7 +189,7 @@ describe('profiling charts', () => {
       };
 
       // Memoize children to verify that chart doesn't include in the update.
-      const Child = React.memo(function Child({ duration }) {
+      const Child = React.memo(function Child({duration}) {
         Scheduler.unstable_advanceTime(duration);
         return null;
       });
@@ -199,25 +199,25 @@ describe('profiling charts', () => {
       utils.act(() => store.profilerStore.startProfiling());
       utils.act(() =>
         SchedulerTracing.unstable_trace('mount', Scheduler.unstable_now(), () =>
-          ReactDOM.render(<Parent />, container)
-        )
+          ReactDOM.render(<Parent />, container),
+        ),
       );
       utils.act(() =>
         SchedulerTracing.unstable_trace(
           'update',
           Scheduler.unstable_now(),
-          () => ReactDOM.render(<Parent />, container)
-        )
+          () => ReactDOM.render(<Parent />, container),
+        ),
       );
       utils.act(() => store.profilerStore.stopProfiling());
 
       let renderFinished = false;
 
-      function Validator({ commitIndex, rootID }) {
+      function Validator({commitIndex, rootID}) {
         const chartData = store.profilerStore.profilingCache.getInteractionsChartData(
           {
             rootID,
-          }
+          },
         );
         expect(chartData).toMatchSnapshot('Interactions');
         renderFinished = true;
@@ -231,7 +231,7 @@ describe('profiling charts', () => {
 
         utils.act(() => {
           TestRenderer.create(
-            <Validator commitIndex={commitIndex} rootID={rootID} />
+            <Validator commitIndex={commitIndex} rootID={rootID} />,
           );
         });
 

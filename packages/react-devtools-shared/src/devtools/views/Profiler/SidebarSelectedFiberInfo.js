@@ -1,10 +1,10 @@
 // @flow
 
-import React, { Fragment, useContext } from 'react';
+import React, {Fragment, useContext} from 'react';
 import ProfilerStore from 'react-devtools-shared/src/devtools/ProfilerStore';
-import { ProfilerContext } from './ProfilerContext';
-import { formatDuration, formatTime } from './utils';
-import { StoreContext } from '../context';
+import {ProfilerContext} from './ProfilerContext';
+import {formatDuration, formatTime} from './utils';
+import {StoreContext} from '../context';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 
@@ -13,7 +13,7 @@ import styles from './SidebarSelectedFiberInfo.css';
 export type Props = {||};
 
 export default function SidebarSelectedFiberInfo(_: Props) {
-  const { profilerStore } = useContext(StoreContext);
+  const {profilerStore} = useContext(StoreContext);
   const {
     rootID,
     selectCommitIndex,
@@ -22,7 +22,7 @@ export default function SidebarSelectedFiberInfo(_: Props) {
     selectedFiberName,
     selectFiber,
   } = useContext(ProfilerContext);
-  const { profilingCache } = profilerStore;
+  const {profilingCache} = profilerStore;
 
   const commitIndices = profilingCache.getFiberCommits({
     fiberID: ((selectedFiberID: any): number),
@@ -33,9 +33,9 @@ export default function SidebarSelectedFiberInfo(_: Props) {
   for (let i = 0; i < commitIndices.length; i++) {
     const commitIndex = commitIndices[i];
 
-    const { duration, timestamp } = profilerStore.getCommitData(
+    const {duration, timestamp} = profilerStore.getCommitData(
       ((rootID: any): number),
-      commitIndex
+      commitIndex,
     );
 
     listItems.push(
@@ -46,10 +46,9 @@ export default function SidebarSelectedFiberInfo(_: Props) {
             ? styles.CurrentCommit
             : styles.Commit
         }
-        onClick={() => selectCommitIndex(commitIndex)}
-      >
+        onClick={() => selectCommitIndex(commitIndex)}>
         {formatTime(timestamp)}s for {formatDuration(duration)}ms
-      </button>
+      </button>,
     );
   }
 
@@ -63,8 +62,7 @@ export default function SidebarSelectedFiberInfo(_: Props) {
         <Button
           className={styles.IconButton}
           onClick={() => selectFiber(null, null)}
-          title="Back to commit view"
-        >
+          title="Back to commit view">
           <ButtonIcon type="close" />
         </Button>
       </div>
@@ -101,9 +99,9 @@ function WhatChanged({
   profilerStore,
   rootID,
 }: WhatChangedProps) {
-  const { changeDescriptions } = profilerStore.getCommitData(
+  const {changeDescriptions} = profilerStore.getCommitData(
     ((rootID: any): number),
-    commitIndex
+    commitIndex,
   );
   if (changeDescriptions === null) {
     return null;
@@ -131,7 +129,7 @@ function WhatChanged({
     changes.push(
       <div key="context" className={styles.WhatChangedItem}>
         • Context changed
-      </div>
+      </div>,
     );
   } else if (
     typeof changeDescription.context === 'object' &&
@@ -146,7 +144,7 @@ function WhatChanged({
             {key}
           </span>
         ))}
-      </div>
+      </div>,
     );
   }
 
@@ -154,7 +152,7 @@ function WhatChanged({
     changes.push(
       <div key="hooks" className={styles.WhatChangedItem}>
         • Hooks changed
-      </div>
+      </div>,
     );
   }
 
@@ -170,7 +168,7 @@ function WhatChanged({
             {key}
           </span>
         ))}
-      </div>
+      </div>,
     );
   }
 
@@ -186,7 +184,7 @@ function WhatChanged({
             {key}
           </span>
         ))}
-      </div>
+      </div>,
     );
   }
 
@@ -194,7 +192,7 @@ function WhatChanged({
     changes.push(
       <div key="nothing" className={styles.WhatChangedItem}>
         The parent component rendered.
-      </div>
+      </div>,
     );
   }
 

@@ -1,6 +1,6 @@
 // @flow
 
-import type { FrontendBridge } from 'react-devtools-shared/src/bridge';
+import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type Store from 'react-devtools-shared/src/devtools/store';
 
 describe('Store component filters', () => {
@@ -36,12 +36,12 @@ describe('Store component filters', () => {
   it('should throw if filters are updated while profiling', () => {
     act(() => store.profilerStore.startProfiling());
     expect(() => (store.componentFilters = [])).toThrow(
-      'Cannot modify filter preferences while profiling'
+      'Cannot modify filter preferences while profiling',
     );
   });
 
   it('should support filtering by element type', () => {
-    class Root extends React.Component<{| children: React$Node |}> {
+    class Root extends React.Component<{|children: React$Node|}> {
       render() {
         return <div>{this.props.children}</div>;
       }
@@ -53,8 +53,8 @@ describe('Store component filters', () => {
         <Root>
           <Component />
         </Root>,
-        document.createElement('div')
-      )
+        document.createElement('div'),
+      ),
     );
     expect(store).toMatchSnapshot('1: mount');
 
@@ -62,7 +62,7 @@ describe('Store component filters', () => {
       () =>
         (store.componentFilters = [
           utils.createElementTypeFilter(Types.ElementTypeHostComponent),
-        ])
+        ]),
     );
 
     expect(store).toMatchSnapshot('2: hide host components');
@@ -71,7 +71,7 @@ describe('Store component filters', () => {
       () =>
         (store.componentFilters = [
           utils.createElementTypeFilter(Types.ElementTypeClass),
-        ])
+        ]),
     );
 
     expect(store).toMatchSnapshot('3: hide class components');
@@ -81,7 +81,7 @@ describe('Store component filters', () => {
         (store.componentFilters = [
           utils.createElementTypeFilter(Types.ElementTypeClass),
           utils.createElementTypeFilter(Types.ElementTypeFunction),
-        ])
+        ]),
     );
 
     expect(store).toMatchSnapshot('4: hide class and function components');
@@ -91,7 +91,7 @@ describe('Store component filters', () => {
         (store.componentFilters = [
           utils.createElementTypeFilter(Types.ElementTypeClass, false),
           utils.createElementTypeFilter(Types.ElementTypeFunction, false),
-        ])
+        ]),
     );
 
     expect(store).toMatchSnapshot('5: disable all filters');
@@ -107,14 +107,14 @@ describe('Store component filters', () => {
       () =>
         (store.componentFilters = [
           utils.createElementTypeFilter(Types.ElementTypeRoot),
-        ])
+        ]),
     );
 
     expect(store).toMatchSnapshot('2: add invalid filter');
   });
 
   it('should filter by display name', () => {
-    const Text = ({ label }) => label;
+    const Text = ({label}) => label;
     const Foo = () => <Text label="foo" />;
     const Bar = () => <Text label="bar" />;
     const Baz = () => <Text label="baz" />;
@@ -126,13 +126,13 @@ describe('Store component filters', () => {
           <Bar />
           <Baz />
         </React.Fragment>,
-        document.createElement('div')
-      )
+        document.createElement('div'),
+      ),
     );
     expect(store).toMatchSnapshot('1: mount');
 
     act(
-      () => (store.componentFilters = [utils.createDisplayNameFilter('Foo')])
+      () => (store.componentFilters = [utils.createDisplayNameFilter('Foo')]),
     );
     expect(store).toMatchSnapshot('2: filter "Foo"');
 
@@ -140,7 +140,7 @@ describe('Store component filters', () => {
     expect(store).toMatchSnapshot('3: filter "Ba"');
 
     act(
-      () => (store.componentFilters = [utils.createDisplayNameFilter('B.z')])
+      () => (store.componentFilters = [utils.createDisplayNameFilter('B.z')]),
     );
     expect(store).toMatchSnapshot('4: filter "B.z"');
   });
@@ -155,18 +155,18 @@ describe('Store component filters', () => {
       () =>
         (store.componentFilters = [
           utils.createLocationFilter(__filename.replace(__dirname, '')),
-        ])
+        ]),
     );
 
     expect(store).toMatchSnapshot(
-      '2: hide all components declared within this test filed'
+      '2: hide all components declared within this test filed',
     );
 
     act(
       () =>
         (store.componentFilters = [
           utils.createLocationFilter('this:is:a:made:up:path'),
-        ])
+        ]),
     );
 
     expect(store).toMatchSnapshot('3: hide components in a made up fake path');
@@ -203,21 +203,21 @@ describe('Store component filters', () => {
         (store.componentFilters = [
           utils.createHOCFilter(false),
           utils.createHOCFilter(true),
-        ])
+        ]),
     );
     act(
       () =>
         (store.componentFilters = [
           utils.createHOCFilter(true),
           utils.createLocationFilter('abc', false),
-        ])
+        ]),
     );
     act(
       () =>
         (store.componentFilters = [
           utils.createHOCFilter(true),
           utils.createElementTypeFilter(Types.ElementTypeHostComponent, false),
-        ])
+        ]),
     );
   });
 });

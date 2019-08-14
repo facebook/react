@@ -1,9 +1,9 @@
 // @flow
 
 import escapeStringRegExp from 'escape-string-regexp';
-import { meta } from '../../hydration';
+import {meta} from '../../hydration';
 
-import type { HooksTree } from 'react-debug-tools/src/ReactDebugHooks';
+import type {HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
 
 export function createRegExp(string: string): RegExp {
   // Allow /regex/ syntax with optional last /
@@ -65,7 +65,7 @@ export function createRegExp(string: string): RegExp {
       '|' +
       firstChar.toUpperCase() +
       ')' +
-      restRegex
+      restRegex,
   );
 }
 
@@ -157,7 +157,7 @@ export function serializeHooksForCopy(hooks: HooksTree | null): string {
 let downloadUrl = null;
 
 export function downloadFile(filename: string, text: string): void {
-  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const blob = new Blob([text], {type: 'text/plain;charset=utf-8'});
 
   if (downloadUrl !== null) {
     URL.revokeObjectURL(downloadUrl);
@@ -177,7 +177,7 @@ export function downloadFile(filename: string, text: string): void {
 }
 
 export function truncateText(text: string, maxLength: number): string {
-  const { length } = text;
+  const {length} = text;
   if (length > maxLength) {
     return (
       text.substr(0, Math.floor(maxLength / 2)) +

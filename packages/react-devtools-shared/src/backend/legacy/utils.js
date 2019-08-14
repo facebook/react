@@ -1,6 +1,6 @@
 // @flow
 
-import type { InternalInstance } from './renderer';
+import type {InternalInstance} from './renderer';
 
 export function decorate(object: Object, attr: string, fn: Function): Function {
   const old = object[attr];
@@ -12,7 +12,7 @@ export function decorate(object: Object, attr: string, fn: Function): Function {
 
 export function decorateMany(
   source: Object,
-  fns: { [attr: string]: Function }
+  fns: {[attr: string]: Function},
 ): Object {
   const olds = {};
   for (const name in fns) {

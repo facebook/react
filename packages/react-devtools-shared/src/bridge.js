@@ -2,18 +2,18 @@
 
 import EventEmitter from 'node-events';
 
-import type { ComponentFilter, Wall } from './types';
+import type {ComponentFilter, Wall} from './types';
 import type {
   InspectedElementPayload,
   OwnersList,
   ProfilingDataBackend,
   RendererID,
 } from 'react-devtools-shared/src/backend/types';
-import type { StyleAndLayout as StyleAndLayoutPayload } from 'react-devtools-shared/src/backend/NativeStyleEditor/types';
+import type {StyleAndLayout as StyleAndLayoutPayload} from 'react-devtools-shared/src/backend/NativeStyleEditor/types';
 
 const BATCH_DURATION = 100;
 
-type ElementAndRendererID = {| id: number, rendererID: RendererID |};
+type ElementAndRendererID = {|id: number, rendererID: RendererID|};
 
 type Message = {|
   event: string,
@@ -79,7 +79,7 @@ type BackendEvents = {|
 
   // React Native style editor plug-in.
   isNativeStyleEditorSupported: [
-    {| isSupported: boolean, validAttributes: ?$ReadOnlyArray<string> |},
+    {|isSupported: boolean, validAttributes: ?$ReadOnlyArray<string>|},
   ],
   NativeStyleEditor_styleAndLayout: [StyleAndLayoutPayload],
 |};
@@ -87,7 +87,7 @@ type BackendEvents = {|
 type FrontendEvents = {|
   clearNativeElementHighlight: [],
   getOwnersList: [ElementAndRendererID],
-  getProfilingData: [{| rendererID: RendererID |}],
+  getProfilingData: [{|rendererID: RendererID|}],
   getProfilingStatus: [],
   highlightNativeElement: [HighlightElementInDOM],
   inspectElement: [InspectElementParams],
@@ -117,7 +117,7 @@ type FrontendEvents = {|
 
 class Bridge<
   OutgoingEvents: Object,
-  IncomingEvents: Object
+  IncomingEvents: Object,
 > extends EventEmitter<{|
   ...IncomingEvents,
   ...OutgoingEvents,
@@ -151,7 +151,7 @@ class Bridge<
   ) {
     if (this._isShutdown) {
       console.warn(
-        `Cannot send message "${event}" through a Bridge that has been shutdown.`
+        `Cannot send message "${event}" through a Bridge that has been shutdown.`,
       );
       return;
     }

@@ -1,9 +1,9 @@
 // @flow
 
-import React, { useContext } from 'react';
+import React, {useContext} from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
-import { ProfilerContext } from './ProfilerContext';
+import {ProfilerContext} from './ProfilerContext';
 
 import styles from './RecordToggle.css';
 
@@ -11,9 +11,9 @@ export type Props = {|
   disabled?: boolean,
 |};
 
-export default function RecordToggle({ disabled }: Props) {
-  const { isProfiling, startProfiling, stopProfiling } = useContext(
-    ProfilerContext
+export default function RecordToggle({disabled}: Props) {
+  const {isProfiling, startProfiling, stopProfiling} = useContext(
+    ProfilerContext,
   );
 
   let className = styles.InactiveRecordToggle;
@@ -28,8 +28,7 @@ export default function RecordToggle({ disabled }: Props) {
       className={className}
       disabled={disabled}
       onClick={isProfiling ? stopProfiling : startProfiling}
-      title={isProfiling ? 'Stop profiling' : 'Start profiling'}
-    >
+      title={isProfiling ? 'Stop profiling' : 'Start profiling'}>
       <ButtonIcon type="record" />
     </Button>
   );

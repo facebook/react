@@ -1,16 +1,10 @@
 // @flow
 
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
-import { FixedSizeList } from 'react-window';
+import {FixedSizeList} from 'react-window';
 import SnapshotCommitListItem from './SnapshotCommitListItem';
-import { minBarWidth } from './constants';
+import {minBarWidth} from './constants';
 
 import styles from './SnapshotCommitList.css';
 
@@ -44,7 +38,7 @@ export default function SnapshotCommitList({
 }: Props) {
   return (
     <AutoSizer>
-      {({ height, width }) => (
+      {({height, width}) => (
         <List
           commitDurations={commitDurations}
           commitTimes={commitTimes}
@@ -86,14 +80,17 @@ function List({
   const prevCommitIndexRef = useRef<number | null>(null);
 
   // Make sure a newly selected snapshot is fully visible within the list.
-  useEffect(() => {
-    if (selectedFilteredCommitIndex !== prevCommitIndexRef.current) {
-      prevCommitIndexRef.current = selectedFilteredCommitIndex;
-      if (selectedFilteredCommitIndex !== null && listRef.current !== null) {
-        listRef.current.scrollToItem(selectedFilteredCommitIndex);
+  useEffect(
+    () => {
+      if (selectedFilteredCommitIndex !== prevCommitIndexRef.current) {
+        prevCommitIndexRef.current = selectedFilteredCommitIndex;
+        if (selectedFilteredCommitIndex !== null && listRef.current !== null) {
+          listRef.current.scrollToItem(selectedFilteredCommitIndex);
+        }
       }
-    }
-  }, [listRef, selectedFilteredCommitIndex]);
+    },
+    [listRef, selectedFilteredCommitIndex],
+  );
 
   // When the mouse is down, dragging over a commit should auto-select it.
   // This provides a nice way for users to swipe across a range of commits to compare them.
@@ -104,30 +101,33 @@ function List({
   const handleMouseUp = useCallback(() => {
     setIsMouseDown(false);
   }, []);
-  useEffect(() => {
-    if (divRef.current === null) {
-      return () => {};
-    }
+  useEffect(
+    () => {
+      if (divRef.current === null) {
+        return () => {};
+      }
 
-    // It's important to listen to the ownerDocument to support the browser extension.
-    // Here we use portals to render individual tabs (e.g. Profiler),
-    // and the root document might belong to a different window.
-    const ownerDocument = divRef.current.ownerDocument;
-    ownerDocument.addEventListener('mouseup', handleMouseUp);
-    return () => ownerDocument.removeEventListener('mouseup', handleMouseUp);
-  }, [divRef, handleMouseUp]);
+      // It's important to listen to the ownerDocument to support the browser extension.
+      // Here we use portals to render individual tabs (e.g. Profiler),
+      // and the root document might belong to a different window.
+      const ownerDocument = divRef.current.ownerDocument;
+      ownerDocument.addEventListener('mouseup', handleMouseUp);
+      return () => ownerDocument.removeEventListener('mouseup', handleMouseUp);
+    },
+    [divRef, handleMouseUp],
+  );
 
   const itemSize = useMemo(
     () => Math.max(minBarWidth, width / filteredCommitIndices.length),
-    [filteredCommitIndices, width]
+    [filteredCommitIndices, width],
   );
   const maxDuration = useMemo(
     () =>
       commitDurations.reduce(
         (maxDuration, duration) => Math.max(maxDuration, duration),
-        0
+        0,
       ),
-    [commitDurations]
+    [commitDurations],
   );
 
   // Pass required contextual data down to the ListItem renderer.
@@ -151,7 +151,7 @@ function List({
       selectedCommitIndex,
       selectedFilteredCommitIndex,
       selectCommitIndex,
-    ]
+    ],
   );
 
   return (
@@ -159,8 +159,7 @@ function List({
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
       ref={divRef}
-      style={{ height, width }}
-    >
+      style={{height, width}}>
       <FixedSizeList
         className={styles.List}
         layout="horizontal"
@@ -169,8 +168,7 @@ function List({
         itemData={itemData}
         itemSize={itemSize}
         ref={(listRef: any) /* Flow bug? */}
-        width={width}
-      >
+        width={width}>
         {SnapshotCommitListItem}
       </FixedSizeList>
     </div>

@@ -19,7 +19,7 @@ type JestMockFn<TArguments: $ReadOnlyArray<*>, TReturn> = {
      * An array that contains all the object results that have been
      * returned by this mock function call
      */
-    results: Array<{ isThrow: boolean, value: TReturn }>,
+    results: Array<{isThrow: boolean, value: TReturn}>,
   },
   /**
    * Resets all information stored in the mockFn.mock.calls and
@@ -204,7 +204,7 @@ type EnzymeMatchersType = {
   toIncludeText(text: string): void,
   toMatchElement(
     element: React$Element<any>,
-    options?: {| ignoreProps?: boolean, verbose?: boolean |}
+    options?: {|ignoreProps?: boolean, verbose?: boolean|}
   ): void,
   toMatchSelector(selector: string): void,
   // 7.x
@@ -222,11 +222,11 @@ type DomTestingLibraryType = {
   toHaveAttribute(name: string, expectedValue?: string): void,
   toHaveClass(...classNames: string[]): void,
   toHaveFocus(): void,
-  toHaveFormValues(expectedValues: { [name: string]: any }): void,
+  toHaveFormValues(expectedValues: {[name: string]: any}): void,
   toHaveStyle(css: string): void,
   toHaveTextContent(
     content: string | RegExp,
-    options?: { normalizeWhitespace: boolean }
+    options?: {normalizeWhitespace: boolean}
   ): void,
   toBeInTheDOM(): void,
 };
@@ -243,7 +243,7 @@ type JestJQueryMatchersType = {
   toHaveText(text: string | RegExp): void,
   toHaveData(key: string, val?: any): void,
   toHaveValue(val: any): void,
-  toHaveCss(css: { [key: string]: any }): void,
+  toHaveCss(css: {[key: string]: any}): void,
   toBeChecked(): void,
   toBeDisabled(): void,
   toBeEmpty(): void,
@@ -1079,11 +1079,11 @@ declare var xit: typeof it;
 declare var xtest: typeof it;
 
 type JestPrettyFormatColors = {
-  comment: { close: string, open: string },
-  content: { close: string, open: string },
-  prop: { close: string, open: string },
-  tag: { close: string, open: string },
-  value: { close: string, open: string },
+  comment: {close: string, open: string},
+  content: {close: string, open: string},
+  prop: {close: string, open: string},
+  tag: {close: string, open: string},
+  value: {close: string, open: string},
 };
 
 type JestPrettyFormatIndent = string => string;
@@ -1141,7 +1141,7 @@ declare var expect: {
     JestExtendedMatchersType,
 
   /** Add additional Jasmine matchers to Jest's roster */
-  extend(matchers: { [name: string]: JestMatcher }): void,
+  extend(matchers: {[name: string]: JestMatcher}): void,
   /** Add a module that formats application-specific data structures. */
   addSnapshotSerializer(pluginModule: JestPrettyFormatPlugin): void,
   assertions(expectedAssertions: number): void,
@@ -1182,7 +1182,7 @@ declare var jasmine: {
   createSpyObj(
     baseName: string,
     methodNames: Array<string>
-  ): { [methodName: string]: JestSpyType },
+  ): {[methodName: string]: JestSpyType},
   objectContaining(value: Object): Object,
   stringMatching(value: string): string,
 };

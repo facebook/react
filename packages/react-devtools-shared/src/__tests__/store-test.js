@@ -24,7 +24,7 @@ describe('Store', () => {
     const Component = () => <div>Hi</div>;
 
     act(() =>
-      ReactDOM.render(<Component count={4} />, document.createElement('div'))
+      ReactDOM.render(<Component count={4} />, document.createElement('div')),
     );
     expect(store).toMatchSnapshot('1: mount');
 
@@ -33,12 +33,12 @@ describe('Store', () => {
     const rootID = store.roots[0];
 
     expect(() => store.toggleIsCollapsed(rootID, true)).toThrow(
-      'Root nodes cannot be collapsed'
+      'Root nodes cannot be collapsed',
     );
   });
 
   it('should properly handle a root with no visible nodes', () => {
-    const Root = ({ children }) => children;
+    const Root = ({children}) => children;
 
     const container = document.createElement('div');
 
@@ -55,13 +55,13 @@ describe('Store', () => {
     });
 
     it('should support mount and update operations', () => {
-      const Grandparent = ({ count }) => (
+      const Grandparent = ({count}) => (
         <React.Fragment>
           <Parent count={count} />
           <Parent count={count} />
         </React.Fragment>
       );
-      const Parent = ({ count }) =>
+      const Parent = ({count}) =>
         new Array(count).fill(true).map((_, index) => <Child key={index} />);
       const Child = () => <div>Hi!</div>;
 
@@ -78,7 +78,7 @@ describe('Store', () => {
     });
 
     it('should support mount and update operations for multiple roots', () => {
-      const Parent = ({ count }) =>
+      const Parent = ({count}) =>
         new Array(count).fill(true).map((_, index) => <Child key={index} />);
       const Child = () => <div>Hi!</div>;
 
@@ -123,8 +123,8 @@ describe('Store', () => {
       act(() =>
         ReactDOM.render(
           <Grandparent count={4} />,
-          document.createElement('div')
-        )
+          document.createElement('div'),
+        ),
       );
       expect(store).toMatchSnapshot('1: mount');
     });
@@ -137,7 +137,7 @@ describe('Store', () => {
       const Component = () => {
         return <div>Hello</div>;
       };
-      const Wrapper = ({ shouldSuspense }) => (
+      const Wrapper = ({shouldSuspense}) => (
         <React.Fragment>
           <Component key="Outside" />
           <React.Suspense fallback={<Loading />}>
@@ -207,8 +207,8 @@ describe('Store', () => {
             suspendFirst={false}
             suspendSecond={false}
           />,
-          container
-        )
+          container,
+        ),
       );
       expect(store).toMatchSnapshot('1: third child is suspended');
       act(() =>
@@ -218,8 +218,8 @@ describe('Store', () => {
             suspendFirst={true}
             suspendSecond={false}
           />,
-          container
-        )
+          container,
+        ),
       );
       expect(store).toMatchSnapshot('2: first and third child are suspended');
       act(() =>
@@ -229,8 +229,8 @@ describe('Store', () => {
             suspendFirst={false}
             suspendSecond={true}
           />,
-          container
-        )
+          container,
+        ),
       );
       expect(store).toMatchSnapshot('3: second and third child are suspended');
       act(() =>
@@ -240,8 +240,8 @@ describe('Store', () => {
             suspendFirst={true}
             suspendSecond={false}
           />,
-          container
-        )
+          container,
+        ),
       );
       expect(store).toMatchSnapshot('4: first and third child are suspended');
       act(() =>
@@ -251,8 +251,8 @@ describe('Store', () => {
             suspendFirst={true}
             suspendSecond={false}
           />,
-          container
-        )
+          container,
+        ),
       );
       expect(store).toMatchSnapshot('5: parent is suspended');
       act(() =>
@@ -262,8 +262,8 @@ describe('Store', () => {
             suspendFirst={true}
             suspendSecond={true}
           />,
-          container
-        )
+          container,
+        ),
       );
       expect(store).toMatchSnapshot('6: all children are suspended');
       act(() =>
@@ -273,8 +273,8 @@ describe('Store', () => {
             suspendFirst={false}
             suspendSecond={false}
           />,
-          container
-        )
+          container,
+        ),
       );
       expect(store).toMatchSnapshot('7: only third child is suspended');
 
@@ -284,7 +284,7 @@ describe('Store', () => {
           id: store.getElementIDAtIndex(4),
           rendererID,
           forceFallback: true,
-        })
+        }),
       );
       expect(store).toMatchSnapshot('8: first and third child are suspended');
       act(() =>
@@ -292,7 +292,7 @@ describe('Store', () => {
           id: store.getElementIDAtIndex(2),
           rendererID,
           forceFallback: true,
-        })
+        }),
       );
       expect(store).toMatchSnapshot('9: parent is suspended');
       act(() =>
@@ -302,8 +302,8 @@ describe('Store', () => {
             suspendFirst={true}
             suspendSecond={true}
           />,
-          container
-        )
+          container,
+        ),
       );
       expect(store).toMatchSnapshot('10: parent is suspended');
       act(() =>
@@ -311,7 +311,7 @@ describe('Store', () => {
           id: store.getElementIDAtIndex(2),
           rendererID,
           forceFallback: false,
-        })
+        }),
       );
       expect(store).toMatchSnapshot('11: all children are suspended');
       act(() =>
@@ -319,7 +319,7 @@ describe('Store', () => {
           id: store.getElementIDAtIndex(4),
           rendererID,
           forceFallback: false,
-        })
+        }),
       );
       expect(store).toMatchSnapshot('12: all children are suspended');
       act(() =>
@@ -329,28 +329,28 @@ describe('Store', () => {
             suspendFirst={false}
             suspendSecond={false}
           />,
-          container
-        )
+          container,
+        ),
       );
       expect(store).toMatchSnapshot('13: third child is suspended');
     });
 
     it('should support collapsing parts of the tree', () => {
-      const Grandparent = ({ count }) => (
+      const Grandparent = ({count}) => (
         <React.Fragment>
           <Parent count={count} />
           <Parent count={count} />
         </React.Fragment>
       );
-      const Parent = ({ count }) =>
+      const Parent = ({count}) =>
         new Array(count).fill(true).map((_, index) => <Child key={index} />);
       const Child = () => <div>Hi!</div>;
 
       act(() =>
         ReactDOM.render(
           <Grandparent count={2} />,
-          document.createElement('div')
-        )
+          document.createElement('div'),
+        ),
       );
       expect(store).toMatchSnapshot('1: mount');
 
@@ -375,7 +375,7 @@ describe('Store', () => {
     });
 
     it('should support reordering of children', () => {
-      const Root = ({ children }) => children;
+      const Root = ({children}) => children;
       const Component = () => null;
 
       const Foo = () => [<Component key="0" />];
@@ -405,7 +405,7 @@ describe('Store', () => {
     });
 
     it('should support mount and update operations', () => {
-      const Parent = ({ count }) =>
+      const Parent = ({count}) =>
         new Array(count).fill(true).map((_, index) => <Child key={index} />);
       const Child = () => <div>Hi!</div>;
 
@@ -417,8 +417,8 @@ describe('Store', () => {
             <Parent count={1} />
             <Parent count={3} />
           </React.Fragment>,
-          container
-        )
+          container,
+        ),
       );
       expect(store).toMatchSnapshot('1: mount');
 
@@ -428,8 +428,8 @@ describe('Store', () => {
             <Parent count={2} />
             <Parent count={1} />
           </React.Fragment>,
-          container
-        )
+          container,
+        ),
       );
       expect(store).toMatchSnapshot('2: update');
 
@@ -438,7 +438,7 @@ describe('Store', () => {
     });
 
     it('should support mount and update operations for multiple roots', () => {
-      const Parent = ({ count }) =>
+      const Parent = ({count}) =>
         new Array(count).fill(true).map((_, index) => <Child key={index} />);
       const Child = () => <div>Hi!</div>;
 
@@ -483,8 +483,8 @@ describe('Store', () => {
       act(() =>
         ReactDOM.render(
           <Grandparent count={4} />,
-          document.createElement('div')
-        )
+          document.createElement('div'),
+        ),
       );
       expect(store).toMatchSnapshot('1: mount');
 
@@ -503,7 +503,7 @@ describe('Store', () => {
       const Component = () => {
         return <div>Hello</div>;
       };
-      const Wrapper = ({ shouldSuspense }) => (
+      const Wrapper = ({shouldSuspense}) => (
         <React.Fragment>
           <Component key="Outside" />
           <React.Suspense fallback={<Loading />}>
@@ -532,21 +532,21 @@ describe('Store', () => {
     });
 
     it('should support expanding parts of the tree', () => {
-      const Grandparent = ({ count }) => (
+      const Grandparent = ({count}) => (
         <React.Fragment>
           <Parent count={count} />
           <Parent count={count} />
         </React.Fragment>
       );
-      const Parent = ({ count }) =>
+      const Parent = ({count}) =>
         new Array(count).fill(true).map((_, index) => <Child key={index} />);
       const Child = () => <div>Hi!</div>;
 
       act(() =>
         ReactDOM.render(
           <Grandparent count={2} />,
-          document.createElement('div')
-        )
+          document.createElement('div'),
+        ),
       );
       expect(store).toMatchSnapshot('1: mount');
 
@@ -575,10 +575,10 @@ describe('Store', () => {
     });
 
     it('should support expanding deep parts of the tree', () => {
-      const Wrapper = ({ forwardedRef }) => (
+      const Wrapper = ({forwardedRef}) => (
         <Nested depth={3} forwardedRef={forwardedRef} />
       );
-      const Nested = ({ depth, forwardedRef }) =>
+      const Nested = ({depth, forwardedRef}) =>
         depth > 0 ? (
           <Nested depth={depth - 1} forwardedRef={forwardedRef} />
         ) : (
@@ -590,8 +590,8 @@ describe('Store', () => {
       act(() =>
         ReactDOM.render(
           <Wrapper forwardedRef={ref} />,
-          document.createElement('div')
-        )
+          document.createElement('div'),
+        ),
       );
       expect(store).toMatchSnapshot('1: mount');
 
@@ -618,7 +618,7 @@ describe('Store', () => {
     });
 
     it('should support reordering of children', () => {
-      const Root = ({ children }) => children;
+      const Root = ({children}) => children;
       const Component = () => null;
 
       const Foo = () => [<Component key="0" />];
@@ -661,7 +661,7 @@ describe('Store', () => {
       const Child = () => null;
 
       act(() =>
-        ReactDOM.render(<SuspenseTree />, document.createElement('div'))
+        ReactDOM.render(<SuspenseTree />, document.createElement('div')),
       );
       expect(store).toMatchSnapshot('1: mount');
 
@@ -677,7 +677,7 @@ describe('Store', () => {
           id: suspenseID,
           rendererID,
           forceFallback: true,
-        })
+        }),
       );
       expect(store).toMatchSnapshot('3: toggle fallback on');
 
@@ -686,7 +686,7 @@ describe('Store', () => {
           id: suspenseID,
           rendererID,
           forceFallback: false,
-        })
+        }),
       );
       expect(store).toMatchSnapshot('4: toggle fallback on');
     });
@@ -708,7 +708,7 @@ describe('Store', () => {
       const Child = () => null;
 
       act(() =>
-        ReactDOM.render(<Grandparent />, document.createElement('div'))
+        ReactDOM.render(<Grandparent />, document.createElement('div')),
       );
 
       for (let i = 0; i < store.numElements; i++) {
@@ -742,8 +742,8 @@ describe('Store', () => {
             <Grandparent />
             <Grandparent />
           </React.Fragment>,
-          document.createElement('div')
-        )
+          document.createElement('div'),
+        ),
       );
 
       for (let i = 0; i < store.numElements; i++) {
@@ -762,14 +762,14 @@ describe('Store', () => {
             <Grandparent />
             <Grandparent />
           </React.Fragment>,
-          document.createElement('div')
+          document.createElement('div'),
         );
         ReactDOM.render(
           <React.Fragment>
             <Grandparent />
             <Grandparent />
           </React.Fragment>,
-          document.createElement('div')
+          document.createElement('div'),
         );
       });
 

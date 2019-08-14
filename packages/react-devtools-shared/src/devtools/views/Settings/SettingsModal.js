@@ -7,12 +7,12 @@ import React, {
   useMemo,
   useRef,
 } from 'react';
-import { SettingsModalContext } from './SettingsModalContext';
+import {SettingsModalContext} from './SettingsModalContext';
 import Store from 'react-devtools-shared/src/devtools/store';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import TabBar from '../TabBar';
-import { StoreContext } from '../context';
+import {StoreContext} from '../context';
 import {
   useLocalStorage,
   useModalDismissSignal,
@@ -27,11 +27,9 @@ import styles from './SettingsModal.css';
 type TabID = 'general' | 'components' | 'profiler';
 
 export default function SettingsModal(_: {||}) {
-  const { isModalShowing, setIsModalShowing } = useContext(
-    SettingsModalContext
-  );
+  const {isModalShowing, setIsModalShowing} = useContext(SettingsModalContext);
   const store = useContext(StoreContext);
-  const { profilerStore } = store;
+  const {profilerStore} = store;
 
   // Updating preferences while profiling is in progress could break things (e.g. filtering)
   // Explicitly disallow it for now.
@@ -43,7 +41,7 @@ export default function SettingsModal(_: {||}) {
         return () => profilerStore.removeListener('isProfiling', callback);
       },
     }),
-    [profilerStore]
+    [profilerStore],
   );
   const isProfiling = useSubscription<boolean>(isProfilingSubscription);
   if (isProfiling && isModalShowing) {
@@ -58,24 +56,27 @@ export default function SettingsModal(_: {||}) {
 }
 
 function SettingsModalImpl(_: {||}) {
-  const { setIsModalShowing } = useContext(SettingsModalContext);
+  const {setIsModalShowing} = useContext(SettingsModalContext);
   const dismissModal = useCallback(() => setIsModalShowing(false), [
     setIsModalShowing,
   ]);
 
   const [selectedTabID, selectTab] = useLocalStorage<TabID>(
     'React::DevTools::selectedSettingsTabID',
-    'general'
+    'general',
   );
 
   const modalRef = useRef<HTMLDivElement | null>(null);
   useModalDismissSignal(modalRef, dismissModal);
 
-  useEffect(() => {
-    if (modalRef.current !== null) {
-      modalRef.current.focus();
-    }
-  }, [modalRef]);
+  useEffect(
+    () => {
+      if (modalRef.current !== null) {
+        modalRef.current.focus();
+      }
+    },
+    [modalRef],
+  );
 
   let view = null;
   switch (selectedTabID) {

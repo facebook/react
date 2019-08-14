@@ -7,11 +7,11 @@ import {
   TREE_OPERATION_REORDER_CHILDREN,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
 } from 'react-devtools-shared/src/constants';
-import { utfDecodeString } from 'react-devtools-shared/src/utils';
-import { ElementTypeRoot } from 'react-devtools-shared/src/types';
+import {utfDecodeString} from 'react-devtools-shared/src/utils';
+import {ElementTypeRoot} from 'react-devtools-shared/src/types';
 import ProfilerStore from 'react-devtools-shared/src/devtools/ProfilerStore';
 
-import type { ElementType } from 'react-devtools-shared/src/types';
+import type {ElementType} from 'react-devtools-shared/src/types';
 import type {
   CommitTree,
   CommitTreeNode,
@@ -24,7 +24,7 @@ const debug = (methodName, ...args) => {
       `%cCommitTreeBuilder %c${methodName}`,
       'color: pink; font-weight: bold;',
       'font-weight: bold;',
-      ...args
+      ...args,
     );
   }
 };
@@ -44,15 +44,15 @@ export function getCommitTree({
     rootToCommitTreeMap.set(rootID, []);
   }
 
-  const commitTrees = ((rootToCommitTreeMap.get(
-    rootID
-  ): any): Array<CommitTree>);
+  const commitTrees = ((rootToCommitTreeMap.get(rootID): any): Array<
+    CommitTree,
+  >);
 
   if (commitIndex < commitTrees.length) {
     return commitTrees[commitIndex];
   }
 
-  const { profilingData } = profilerStore;
+  const {profilingData} = profilerStore;
   if (profilingData === null) {
     throw Error(`No profiling data available`);
   }
@@ -62,7 +62,7 @@ export function getCommitTree({
     throw Error(`Could not find profiling data for root "${rootID}"`);
   }
 
-  const { operations } = dataForRoot;
+  const {operations} = dataForRoot;
 
   // Commits are generated sequentially and cached.
   // If this is the very first commit, start with the cached snapshot and apply the first mutation.
@@ -75,7 +75,7 @@ export function getCommitTree({
 
     // Mutate the tree
     if (operations != null && commitIndex < operations.length) {
-      const commitTree = updateTree({ nodes, rootID }, operations[commitIndex]);
+      const commitTree = updateTree({nodes, rootID}, operations[commitIndex]);
 
       if (__DEBUG__) {
         __printTree(commitTree);
@@ -94,7 +94,7 @@ export function getCommitTree({
     if (operations != null && commitIndex < operations.length) {
       const commitTree = updateTree(
         previousCommitTree,
-        operations[commitIndex]
+        operations[commitIndex],
       );
 
       if (__DEBUG__) {
@@ -107,7 +107,7 @@ export function getCommitTree({
   }
 
   throw Error(
-    `getCommitTree(): Unable to reconstruct tree for root "${rootID}" and commit ${commitIndex}`
+    `getCommitTree(): Unable to reconstruct tree for root "${rootID}" and commit ${commitIndex}`,
   );
 }
 
@@ -115,7 +115,7 @@ function recursivelyInitializeTree(
   id: number,
   parentID: number,
   nodes: Map<number, CommitTreeNode>,
-  dataForRoot: ProfilingDataForRootFrontend
+  dataForRoot: ProfilingDataForRootFrontend,
 ): void {
   const node = dataForRoot.snapshots.get(id);
   if (node != null) {
@@ -126,20 +126,20 @@ function recursivelyInitializeTree(
       key: node.key,
       parentID,
       treeBaseDuration: ((dataForRoot.initialTreeBaseDurations.get(
-        id
+        id,
       ): any): number),
       type: node.type,
     });
 
     node.children.forEach(childID =>
-      recursivelyInitializeTree(childID, id, nodes, dataForRoot)
+      recursivelyInitializeTree(childID, id, nodes, dataForRoot),
     );
   }
 }
 
 function updateTree(
   commitTree: CommitTree,
-  operations: Array<number>
+  operations: Array<number>,
 ): CommitTree {
   // Clone the original tree so edits don't affect it.
   const nodes = new Map(commitTree.nodes);
@@ -148,7 +148,7 @@ function updateTree(
   const getClonedNode = (id: number): CommitTreeNode => {
     const clonedNode = ((Object.assign(
       {},
-      nodes.get(id)
+      nodes.get(id),
     ): any): CommitTreeNode);
     nodes.set(id, clonedNode);
     return clonedNode;
@@ -165,7 +165,7 @@ function updateTree(
   while (i < stringTableEnd) {
     const nextLength = operations[i++];
     const nextString = utfDecodeString(
-      (operations.slice(i, i + nextLength): any)
+      (operations.slice(i, i + nextLength): any),
     );
     stringTable.push(nextString);
     i += nextLength;
@@ -185,7 +185,7 @@ function updateTree(
           throw new Error(
             'Commit tree already contains fiber ' +
               id +
-              '. This is a bug in React DevTools.'
+              '. This is a bug in React DevTools.',
           );
         }
 
@@ -225,7 +225,7 @@ function updateTree(
           if (__DEBUG__) {
             debug(
               'Add',
-              `fiber ${id} (${displayName || 'null'}) as child of ${parentID}`
+              `fiber ${id} (${displayName || 'null'}) as child of ${parentID}`,
             );
           }
 
@@ -258,7 +258,7 @@ function updateTree(
             throw new Error(
               'Commit tree does not contain fiber ' +
                 id +
-                '. This is a bug in React DevTools.'
+                '. This is a bug in React DevTools.',
             );
           }
 
@@ -277,7 +277,7 @@ function updateTree(
             }
 
             parentNode.children = parentNode.children.filter(
-              childID => childID !== id
+              childID => childID !== id,
             );
           }
         }
@@ -288,7 +288,7 @@ function updateTree(
         const numChildren = ((operations[i + 2]: any): number);
         const children = ((operations.slice(
           i + 3,
-          i + 3 + numChildren
+          i + 3 + numChildren,
         ): any): Array<number>);
 
         i = i + 3 + numChildren;
@@ -311,7 +311,7 @@ function updateTree(
         if (__DEBUG__) {
           debug(
             'Update',
-            `fiber ${id} treeBaseDuration to ${node.treeBaseDuration}`
+            `fiber ${id} treeBaseDuration to ${node.treeBaseDuration}`,
           );
         }
 
@@ -336,7 +336,7 @@ export function invalidateCommitTrees(): void {
 // DEBUG
 const __printTree = (commitTree: CommitTree) => {
   if (__DEBUG__) {
-    const { nodes, rootID } = commitTree;
+    const {nodes, rootID} = commitTree;
     console.group('__printTree()');
     const queue = [rootID, 0];
     while (queue.length > 0) {
@@ -351,7 +351,7 @@ const __printTree = (commitTree: CommitTree) => {
       console.log(
         `${'•'.repeat(depth)}${node.id}:${node.displayName || ''} ${
           node.key ? `key:"${node.key}"` : ''
-        } (${node.treeBaseDuration})`
+        } (${node.treeBaseDuration})`,
       );
 
       node.children.forEach(childID => {

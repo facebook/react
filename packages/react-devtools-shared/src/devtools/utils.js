@@ -1,6 +1,6 @@
 // @flow
 
-import type { Element } from './views/Components/types';
+import type {Element} from './views/Components/types';
 import type Store from './store';
 
 export function printElement(element: Element, includeWeight: boolean = false) {
@@ -28,7 +28,10 @@ export function printElement(element: Element, includeWeight: boolean = false) {
     'null'}${key}>${hocs}${suffix}`;
 }
 
-export function printOwnersList(elements: Array<Element>, includeWeight: boolean = false) {
+export function printOwnersList(
+  elements: Array<Element>,
+  includeWeight: boolean = false,
+) {
   return elements
     .map(element => printElement(element, includeWeight))
     .join('\n');
@@ -40,7 +43,7 @@ export function printStore(store: Store, includeWeight: boolean = false) {
   let rootWeight = 0;
 
   store.roots.forEach(rootID => {
-    const { weight } = ((store.getElementByID(rootID): any): Element);
+    const {weight} = ((store.getElementByID(rootID): any): Element);
 
     snapshotLines.push('[root]' + (includeWeight ? ` (${weight})` : ''));
 
@@ -62,7 +65,7 @@ export function printStore(store: Store, includeWeight: boolean = false) {
     throw Error(
       `Inconsistent Store state. Individual root weights (${rootWeight}) do not match total weight (${
         store.numElements
-      })`
+      })`,
     );
   }
 

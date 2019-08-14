@@ -7,31 +7,31 @@ import {
   TREE_OPERATION_REORDER_CHILDREN,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
 } from './constants';
-import { ElementTypeRoot } from 'react-devtools-shared/src/types';
+import {ElementTypeRoot} from 'react-devtools-shared/src/types';
 import {
   LOCAL_STORAGE_FILTER_PREFERENCES_KEY,
   LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY,
 } from './constants';
-import { ComponentFilterElementType, ElementTypeHostComponent } from './types';
+import {ComponentFilterElementType, ElementTypeHostComponent} from './types';
 import {
   ElementTypeClass,
   ElementTypeForwardRef,
   ElementTypeFunction,
   ElementTypeMemo,
 } from 'react-devtools-shared/src/types';
-import { localStorageGetItem, localStorageSetItem } from './storage';
+import {localStorageGetItem, localStorageSetItem} from './storage';
 
-import type { ComponentFilter, ElementType } from './types';
+import type {ComponentFilter, ElementType} from './types';
 
 const cachedDisplayNames: WeakMap<Function, string> = new WeakMap();
 
 // On large trees, encoding takes significant time.
 // Try to reuse the already encoded strings.
-let encodedStringCache = new LRU({ max: 1000 });
+let encodedStringCache = new LRU({max: 1000});
 
 export function getDisplayName(
   type: Function,
-  fallbackName: string = 'Anonymous'
+  fallbackName: string = 'Anonymous',
 ): string {
   const nameFromCache = cachedDisplayNames.get(type);
   if (nameFromCache != null) {
@@ -97,7 +97,7 @@ export function printOperationsArray(operations: Array<number>) {
   while (i < stringTableEnd) {
     const nextLength = operations[i++];
     const nextString = utfDecodeString(
-      (operations.slice(i, i + nextLength): any)
+      (operations.slice(i, i + nextLength): any),
     );
     stringTable.push(nextString);
     i += nextLength;
@@ -131,7 +131,7 @@ export function printOperationsArray(operations: Array<number>) {
           i++; // key
 
           logs.push(
-            `Add node ${id} (${displayName || 'null'}) as child of ${parentID}`
+            `Add node ${id} (${displayName || 'null'}) as child of ${parentID}`,
           );
         }
         break;
@@ -193,11 +193,11 @@ export function getSavedComponentFilters(): Array<ComponentFilter> {
 }
 
 export function saveComponentFilters(
-  componentFilters: Array<ComponentFilter>
+  componentFilters: Array<ComponentFilter>,
 ): void {
   localStorageSetItem(
     LOCAL_STORAGE_FILTER_PREFERENCES_KEY,
-    JSON.stringify(componentFilters)
+    JSON.stringify(componentFilters),
   );
 }
 
@@ -214,13 +214,13 @@ export function getAppendComponentStack(): boolean {
 export function setAppendComponentStack(value: boolean): void {
   localStorageSetItem(
     LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY,
-    JSON.stringify(value)
+    JSON.stringify(value),
   );
 }
 
 export function separateDisplayNameAndHOCs(
   displayName: string | null,
-  type: ElementType
+  type: ElementType,
 ): [string | null, Array<string> | null] {
   if (displayName === null) {
     return [null, null];
@@ -279,7 +279,7 @@ export function getInObject(object: Object, path: Array<string | number>): any {
 export function setInObject(
   object: Object,
   path: Array<string | number>,
-  value: any
+  value: any,
 ) {
   const length = path.length;
   const last = path[length - 1];

@@ -1,16 +1,19 @@
 // @flow
 
-import React, { useContext, useMemo, useRef, useState } from 'react';
-import { unstable_batchedUpdates as batchedUpdates } from 'react-dom';
-import { copy } from 'clipboard-js';
-import { BridgeContext, StoreContext } from 'react-devtools-shared/src/devtools/views/context';
+import React, {useContext, useMemo, useRef, useState} from 'react';
+import {unstable_batchedUpdates as batchedUpdates} from 'react-dom';
+import {copy} from 'clipboard-js';
+import {
+  BridgeContext,
+  StoreContext,
+} from 'react-devtools-shared/src/devtools/views/context';
 import Button from '../../Button';
 import ButtonIcon from '../../ButtonIcon';
-import { serializeDataForCopy } from '../../utils';
+import {serializeDataForCopy} from '../../utils';
 import AutoSizeInput from './AutoSizeInput';
 import styles from './StyleEditor.css';
 
-import type { Style } from './types';
+import type {Style} from './types';
 
 type Props = {|
   id: number,
@@ -20,7 +23,7 @@ type Props = {|
 type ChangeAttributeFn = (oldName: string, newName: string, value: any) => void;
 type ChangeValueFn = (name: string, value: any) => void;
 
-export default function StyleEditor({ id, style }: Props) {
+export default function StyleEditor({id, style}: Props) {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 
@@ -90,11 +93,7 @@ type NewRowProps = {|
   validAttributes: $ReadOnlyArray<string> | null,
 |};
 
-function NewRow({
-  changeAttribute,
-  changeValue,
-  validAttributes,
-}: NewRowProps) {
+function NewRow({changeAttribute, changeValue, validAttributes}: NewRowProps) {
   const [key, setKey] = useState<number>(0);
   const reset = () => setKey(key + 1);
 
@@ -103,7 +102,7 @@ function NewRow({
   const changeAttributeWrapper = (
     oldAttribute: string,
     newAttribute: string,
-    value: any
+    value: any,
   ) => {
     // Ignore attribute changes until a value has been specified
     newAttributeRef.current = newAttribute;

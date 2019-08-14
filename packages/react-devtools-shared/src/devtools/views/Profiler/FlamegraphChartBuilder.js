@@ -1,10 +1,13 @@
 // @flow
 
-import { ElementTypeForwardRef, ElementTypeMemo } from 'react-devtools-shared/src/types';
-import { formatDuration } from './utils';
+import {
+  ElementTypeForwardRef,
+  ElementTypeMemo,
+} from 'react-devtools-shared/src/types';
+import {formatDuration} from './utils';
 import ProfilerStore from 'react-devtools-shared/src/devtools/ProfilerStore';
 
-import type { CommitTree } from './types';
+import type {CommitTree} from './types';
 
 export type ChartNode = {|
   actualDuration: number,
@@ -41,8 +44,8 @@ export function getChartData({
 |}): ChartData {
   const commitDatum = profilerStore.getCommitData(rootID, commitIndex);
 
-  const { fiberActualDurations, fiberSelfDurations } = commitDatum;
-  const { nodes } = commitTree;
+  const {fiberActualDurations, fiberSelfDurations} = commitDatum;
+  const {nodes} = commitTree;
 
   const key = `${rootID}-${commitIndex}`;
   if (cachedChartData.has(key)) {
@@ -65,7 +68,7 @@ export function getChartData({
       throw Error(`Could not find node with id "${id}" in commit tree`);
     }
 
-    const { children, displayName, key, treeBaseDuration, type } = node;
+    const {children, displayName, key, treeBaseDuration, type} = node;
 
     const actualDuration = fiberActualDurations.get(id) || 0;
     const selfDuration = fiberSelfDurations.get(id) || 0;
@@ -84,7 +87,7 @@ export function getChartData({
     let label = `${name}${maybeBadge}${maybeKey}`;
     if (didRender) {
       label += ` (${formatDuration(selfDuration)}ms of ${formatDuration(
-        actualDuration
+        actualDuration,
       )}ms)`;
     }
 
@@ -125,7 +128,7 @@ export function getChartData({
     const root = nodes.get(rootID);
     if (root == null) {
       throw Error(
-        `Could not find root node with id "${rootID}" in commit tree`
+        `Could not find root node with id "${rootID}" in commit tree`,
       );
     }
 

@@ -1,9 +1,9 @@
 // @flow
 
-import { getInternalReactConstants } from './renderer';
+import {getInternalReactConstants} from './renderer';
 import describeComponentFrame from './describeComponentFrame';
 
-import type { Fiber, ReactRenderer } from './types';
+import type {Fiber, ReactRenderer} from './types';
 
 const APPEND_STACK_TO_METHODS = ['error', 'trace', 'warn'];
 
@@ -14,7 +14,7 @@ const injectedRenderers: Map<
   {|
     getCurrentFiber: () => Fiber | null,
     getDisplayNameForFiber: (fiber: Fiber) => string | null,
-  |}
+  |},
 > = new Map();
 
 let targetConsole: Object = console;
@@ -27,7 +27,7 @@ let unpatchFn: null | (() => void) = null;
 
 // Enables e.g. Jest tests to inject a mock console object.
 export function dangerous_setTargetConsoleForTesting(
-  targetConsoleForTesting: Object
+  targetConsoleForTesting: Object,
 ): void {
   targetConsole = targetConsoleForTesting;
 
@@ -41,7 +41,7 @@ export function dangerous_setTargetConsoleForTesting(
 // These internals will be used if the console is patched.
 // Injecting them separately allows the console to easily be patched or unpacted later (at runtime).
 export function registerRenderer(renderer: ReactRenderer): void {
-  const { getCurrentFiber, findFiberByHostInstance, version } = renderer;
+  const {getCurrentFiber, findFiberByHostInstance, version} = renderer;
 
   // Ignore React v15 and older because they don't expose a component stack anyway.
   if (typeof findFiberByHostInstance !== 'function') {
@@ -49,7 +49,7 @@ export function registerRenderer(renderer: ReactRenderer): void {
   }
 
   if (typeof getCurrentFiber === 'function') {
-    const { getDisplayNameForFiber } = getInternalReactConstants(version);
+    const {getDisplayNameForFiber} = getInternalReactConstants(version);
 
     injectedRenderers.set(renderer, {
       getCurrentFiber,
@@ -107,7 +107,7 @@ export function patch(): void {
                 ownerStack += describeComponentFrame(
                   name,
                   current._debugSource,
-                  ownerName
+                  ownerName,
                 );
 
                 current = owner;

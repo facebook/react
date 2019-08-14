@@ -1,11 +1,11 @@
 // @flow
 
-import React, { useContext, useMemo } from 'react';
-import { TreeStateContext } from './TreeContext';
-import { SettingsContext } from '../Settings/SettingsContext';
+import React, {useContext, useMemo} from 'react';
+import {TreeStateContext} from './TreeContext';
+import {SettingsContext} from '../Settings/SettingsContext';
 import TreeFocusedContext from './TreeFocusedContext';
-import { StoreContext } from '../context';
-import { useSubscription } from '../hooks';
+import {StoreContext} from '../context';
+import {useSubscription} from '../hooks';
 import Store from '../../store';
 
 import styles from './SelectedTreeHighlight.css';
@@ -16,10 +16,10 @@ type Data = {|
 |};
 
 export default function SelectedTreeHighlight(_: {||}) {
-  const { lineHeight } = useContext(SettingsContext);
+  const {lineHeight} = useContext(SettingsContext);
   const store = useContext(StoreContext);
   const treeFocused = useContext(TreeFocusedContext);
-  const { ownerID, selectedElementID } = useContext(TreeStateContext);
+  const {ownerID, selectedElementID} = useContext(TreeStateContext);
 
   const subscription = useMemo(
     () => ({
@@ -74,7 +74,7 @@ export default function SelectedTreeHighlight(_: {||}) {
         };
       },
     }),
-    [selectedElementID, store]
+    [selectedElementID, store],
   );
   const data = useSubscription<Data | null>(subscription);
 
@@ -86,7 +86,7 @@ export default function SelectedTreeHighlight(_: {||}) {
     return null;
   }
 
-  const { startIndex, stopIndex } = data;
+  const {startIndex, stopIndex} = data;
 
   return (
     <div

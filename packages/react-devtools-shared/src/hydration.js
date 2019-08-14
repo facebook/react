@@ -16,7 +16,7 @@ import {
   StrictMode,
   Suspense,
 } from 'react-is';
-import { getDisplayName, getInObject, setInObject } from './utils';
+import {getDisplayName, getInObject, setInObject} from './utils';
 
 export const meta = {
   inspectable: Symbol('inspectable'),
@@ -126,7 +126,7 @@ function createDehydrated(
   inspectable: boolean,
   data: Object,
   cleaned: Array<Array<string | number>>,
-  path: Array<string | number>
+  path: Array<string | number>,
 ): Dehydrated {
   cleaned.push(path);
 
@@ -175,8 +175,12 @@ export function dehydrate(
   cleaned: Array<Array<string | number>>,
   path: Array<string | number>,
   isPathWhitelisted: (path: Array<string | number>) => boolean,
-  level?: number = 0
-): string | Dehydrated | Array<Dehydrated> | { [key: string]: string | Dehydrated } {
+  level?: number = 0,
+):
+  | string
+  | Dehydrated
+  | Array<Dehydrated>
+  | {[key: string]: string | Dehydrated} {
   const type = getDataType(data);
 
   switch (type) {
@@ -239,8 +243,8 @@ export function dehydrate(
           cleaned,
           path.concat([i]),
           isPathWhitelisted,
-          arrayPathCheck ? 1 : level + 1
-        )
+          arrayPathCheck ? 1 : level + 1,
+        ),
       );
 
     case 'typed_array':
@@ -267,7 +271,7 @@ export function dehydrate(
             cleaned,
             path.concat([name]),
             isPathWhitelisted,
-            objectPathCheck ? 1 : level + 1
+            objectPathCheck ? 1 : level + 1,
           );
         }
         return object;
@@ -291,7 +295,7 @@ export function dehydrate(
 export function fillInPath(
   object: Object,
   path: Array<string | number>,
-  value: any
+  value: any,
 ) {
   const target = getInObject(object, path);
   if (target != null) {
@@ -307,7 +311,7 @@ export function fillInPath(
 
 export function hydrate(
   object: Object,
-  cleaned: Array<Array<string | number>>
+  cleaned: Array<Array<string | number>>,
 ): Object {
   cleaned.forEach((path: Array<string | number>) => {
     const length = path.length;
@@ -327,7 +331,7 @@ export function hydrate(
       parent[last] = undefined;
     } else {
       // Replace the string keys with Symbols so they're non-enumerable.
-      const replaced: { [key: Symbol]: boolean | string } = {};
+      const replaced: {[key: Symbol]: boolean | string} = {};
       replaced[meta.inspectable] = !!value.inspectable;
       replaced[meta.inspected] = false;
       replaced[meta.name] = value.name;
@@ -342,7 +346,7 @@ export function hydrate(
 }
 
 export function getDisplayNameForReactElement(
-  element: React$Element<any>
+  element: React$Element<any>,
 ): string | null {
   const elementType = typeOf(element);
   switch (elementType) {
@@ -370,7 +374,7 @@ export function getDisplayNameForReactElement(
     case Suspense:
       return 'Suspense';
     default:
-      const { type } = element;
+      const {type} = element;
       if (typeof type === 'string') {
         return type;
       } else if (type != null) {

@@ -8,7 +8,7 @@ type ReactComponentInstance = React$Component<any>;
 
 type ReactTestRendererJSON = {
   type: string,
-  props: { [propName: string]: any },
+  props: {[propName: string]: any},
   children: null | ReactTestRendererJSON[],
 };
 
@@ -21,25 +21,25 @@ type ReactTestRendererTree = ReactTestRendererJSON & {
 type ReactTestInstance = {
   instance: ?ReactComponentInstance,
   type: string,
-  props: { [propName: string]: any },
+  props: {[propName: string]: any},
   parent: null | ReactTestInstance,
   children: Array<ReactTestInstance | string>,
 
   find(predicate: (node: ReactTestInstance) => boolean): ReactTestInstance,
   findByType(type: React$ElementType): ReactTestInstance,
-  findByProps(props: { [propName: string]: any }): ReactTestInstance,
+  findByProps(props: {[propName: string]: any}): ReactTestInstance,
 
   findAll(
     predicate: (node: ReactTestInstance) => boolean,
-    options?: { deep: boolean }
+    options?: {deep: boolean}
   ): ReactTestInstance[],
   findAllByType(
     type: React$ElementType,
-    options?: { deep: boolean }
+    options?: {deep: boolean}
   ): ReactTestInstance[],
   findAllByProps(
-    props: { [propName: string]: any },
-    options?: { deep: boolean }
+    props: {[propName: string]: any},
+    options?: {deep: boolean}
   ): ReactTestInstance[],
 };
 

@@ -1,14 +1,14 @@
 // @flow
 
-import { copy } from 'clipboard-js';
-import React, { useCallback } from 'react';
+import {copy} from 'clipboard-js';
+import React, {useCallback} from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import KeyValue from './KeyValue';
-import { serializeDataForCopy } from '../utils';
+import {serializeDataForCopy} from '../utils';
 import styles from './InspectedElementTree.css';
 
-import type { InspectPath } from './SelectedElement';
+import type {InspectPath} from './SelectedElement';
 
 type OverrideValueFn = (path: Array<string | number>, value: any) => void;
 
@@ -29,9 +29,10 @@ export default function InspectedElementTree({
 }: Props) {
   const isEmpty = data === null || Object.keys(data).length === 0;
 
-  const handleCopy = useCallback(() => copy(serializeDataForCopy(((data: any): Object))), [
-    data,
-  ]);
+  const handleCopy = useCallback(
+    () => copy(serializeDataForCopy(((data: any): Object))),
+    [data],
+  );
 
   if (isEmpty && !showWhenEmpty) {
     return null;

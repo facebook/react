@@ -8,15 +8,21 @@ import React, {
   useMemo,
   useState,
 } from 'react';
-import { unstable_batchedUpdates as batchedUpdates } from 'react-dom';
-import { createResource } from 'react-devtools-shared/src/devtools/cache';
-import { BridgeContext, StoreContext } from 'react-devtools-shared/src/devtools/views/context';
-import { TreeStateContext } from '../TreeContext';
+import {unstable_batchedUpdates as batchedUpdates} from 'react-dom';
+import {createResource} from 'react-devtools-shared/src/devtools/cache';
+import {
+  BridgeContext,
+  StoreContext,
+} from 'react-devtools-shared/src/devtools/views/context';
+import {TreeStateContext} from '../TreeContext';
 
-import type { StyleAndLayout as StyleAndLayoutBackend } from 'react-devtools-shared/src/backend/NativeStyleEditor/types';
-import type { StyleAndLayout as StyleAndLayoutFrontend } from './types';
-import type { Element } from 'react-devtools-shared/src/devtools/views/Components/types';
-import type { Resource, Thenable } from 'react-devtools-shared/src/devtools/cache';
+import type {StyleAndLayout as StyleAndLayoutBackend} from 'react-devtools-shared/src/backend/NativeStyleEditor/types';
+import type {StyleAndLayout as StyleAndLayoutFrontend} from './types';
+import type {Element} from 'react-devtools-shared/src/devtools/views/Components/types';
+import type {
+  Resource,
+  Thenable,
+} from 'react-devtools-shared/src/devtools/cache';
 
 export type GetStyleAndLayout = (id: number) => StyleAndLayoutFrontend | null;
 
@@ -37,7 +43,7 @@ const inProgressRequests: WeakMap<Element, InProgressRequest> = new WeakMap();
 const resource: Resource<
   Element,
   Element,
-  StyleAndLayoutFrontend
+  StyleAndLayoutFrontend,
 > = createResource(
   (element: Element) => {
     let request = inProgressRequests.get(element);
@@ -50,19 +56,19 @@ const resource: Resource<
       resolveFn = resolve;
     });
 
-    inProgressRequests.set(element, { promise, resolveFn });
+    inProgressRequests.set(element, {promise, resolveFn});
 
     return promise;
   },
   (element: Element) => element,
-  { useWeakMap: true }
+  {useWeakMap: true},
 );
 
 type Props = {|
   children: React$Node,
 |};
 
-function NativeStyleContextController({ children }: Props) {
+function NativeStyleContextController({children}: Props) {
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 
@@ -75,13 +81,13 @@ function NativeStyleContextController({ children }: Props) {
         return null;
       }
     },
-    [store]
+    [store],
   );
 
   // It's very important that this context consumes selectedElementID and not NativeStyleID.
   // Otherwise the effect that sends the "inspect" message across the bridge-
   // would itself be blocked by the same render that suspends (waiting for the data).
-  const { selectedElementID } = useContext(TreeStateContext);
+  const {selectedElementID} = useContext(TreeStateContext);
 
   const [
     currentStyleAndLayout,
@@ -89,94 +95,100 @@ function NativeStyleContextController({ children }: Props) {
   ] = useState<StyleAndLayoutFrontend | null>(null);
 
   // This effect handler invalidates the suspense cache and schedules rendering updates with React.
-  useEffect(() => {
-    const onStyleAndLayout = ({ id, layout, style }: StyleAndLayoutBackend) => {
-      let element = store.getElementByID(id);
-      if (element !== null) {
-        const styleAndLayout: StyleAndLayoutFrontend = {
-          layout,
-          style,
-        };
-        const request = inProgressRequests.get(element);
-        if (request != null) {
-          inProgressRequests.delete(element);
-          batchedUpdates(() => {
-            request.resolveFn(styleAndLayout);
-            setCurrentStyleAndLayout(styleAndLayout);
-          });
-        } else {
-          resource.write(element, styleAndLayout);
+  useEffect(
+    () => {
+      const onStyleAndLayout = ({id, layout, style}: StyleAndLayoutBackend) => {
+        let element = store.getElementByID(id);
+        if (element !== null) {
+          const styleAndLayout: StyleAndLayoutFrontend = {
+            layout,
+            style,
+          };
+          const request = inProgressRequests.get(element);
+          if (request != null) {
+            inProgressRequests.delete(element);
+            batchedUpdates(() => {
+              request.resolveFn(styleAndLayout);
+              setCurrentStyleAndLayout(styleAndLayout);
+            });
+          } else {
+            resource.write(element, styleAndLayout);
 
-          // Schedule update with React if the curently-selected element has been invalidated.
-          if (id === selectedElementID) {
-            setCurrentStyleAndLayout(styleAndLayout);
+            // Schedule update with React if the curently-selected element has been invalidated.
+            if (id === selectedElementID) {
+              setCurrentStyleAndLayout(styleAndLayout);
+            }
           }
         }
-      }
-    };
+      };
 
-    bridge.addListener('NativeStyleEditor_styleAndLayout', onStyleAndLayout);
-    return () =>
-      bridge.removeListener(
-        'NativeStyleEditor_styleAndLayout',
-        onStyleAndLayout
-      );
-  }, [bridge, currentStyleAndLayout, selectedElementID, store]);
+      bridge.addListener('NativeStyleEditor_styleAndLayout', onStyleAndLayout);
+      return () =>
+        bridge.removeListener(
+          'NativeStyleEditor_styleAndLayout',
+          onStyleAndLayout,
+        );
+    },
+    [bridge, currentStyleAndLayout, selectedElementID, store],
+  );
 
   // This effect handler polls for updates on the currently selected element.
-  useEffect(() => {
-    if (selectedElementID === null) {
-      return () => {};
-    }
-
-    const rendererID = store.getRendererIDForElement(selectedElementID);
-
-    let timeoutID: TimeoutID | null = null;
-
-    const sendRequest = () => {
-      timeoutID = null;
-
-      if (rendererID !== null) {
-        bridge.send('NativeStyleEditor_measure', {
-          id: selectedElementID,
-          rendererID,
-        });
+  useEffect(
+    () => {
+      if (selectedElementID === null) {
+        return () => {};
       }
-    };
 
-    // Send the initial measurement request.
-    // We'll poll for an update in the response handler below.
-    sendRequest();
+      const rendererID = store.getRendererIDForElement(selectedElementID);
 
-    const onStyleAndLayout = ({ id }: StyleAndLayoutBackend) => {
-      // If this is the element we requested, wait a little bit and then ask for another update.
-      if (id === selectedElementID) {
+      let timeoutID: TimeoutID | null = null;
+
+      const sendRequest = () => {
+        timeoutID = null;
+
+        if (rendererID !== null) {
+          bridge.send('NativeStyleEditor_measure', {
+            id: selectedElementID,
+            rendererID,
+          });
+        }
+      };
+
+      // Send the initial measurement request.
+      // We'll poll for an update in the response handler below.
+      sendRequest();
+
+      const onStyleAndLayout = ({id}: StyleAndLayoutBackend) => {
+        // If this is the element we requested, wait a little bit and then ask for another update.
+        if (id === selectedElementID) {
+          if (timeoutID !== null) {
+            clearTimeout(timeoutID);
+          }
+          timeoutID = setTimeout(sendRequest, 1000);
+        }
+      };
+
+      bridge.addListener('NativeStyleEditor_styleAndLayout', onStyleAndLayout);
+
+      return () => {
+        bridge.removeListener(
+          'NativeStyleEditor_styleAndLayout',
+          onStyleAndLayout,
+        );
+
         if (timeoutID !== null) {
           clearTimeout(timeoutID);
         }
-        timeoutID = setTimeout(sendRequest, 1000);
-      }
-    };
-
-    bridge.addListener('NativeStyleEditor_styleAndLayout', onStyleAndLayout);
-
-    return () => {
-      bridge.removeListener(
-        'NativeStyleEditor_styleAndLayout',
-        onStyleAndLayout
-      );
-
-      if (timeoutID !== null) {
-        clearTimeout(timeoutID);
-      }
-    };
-  }, [bridge, selectedElementID, store]);
+      };
+    },
+    [bridge, selectedElementID, store],
+  );
 
   const value = useMemo(
-    () => ({ getStyleAndLayout }),
+    () => ({getStyleAndLayout}),
     // NativeStyle is used to invalidate the cache and schedule an update with React.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [currentStyleAndLayout, getStyleAndLayout]
+    [currentStyleAndLayout, getStyleAndLayout],
   );
 
   return (
@@ -186,4 +198,4 @@ function NativeStyleContextController({ children }: Props) {
   );
 }
 
-export { NativeStyleContext, NativeStyleContextController };
+export {NativeStyleContext, NativeStyleContextController};

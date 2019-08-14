@@ -18,7 +18,7 @@ describe('Store (legacy)', () => {
     // We use the UMD because Jest doesn't enable us to mock deep imports (e.g. "react/lib/Something").
     jest.mock('react', () => jest.requireActual('react-15/dist/react.js'));
     jest.mock('react-dom', () =>
-      jest.requireActual('react-dom-15/dist/react-dom.js')
+      jest.requireActual('react-dom-15/dist/react-dom.js'),
     );
 
     React = require('react');
@@ -29,7 +29,7 @@ describe('Store (legacy)', () => {
     const Component = () => <div>Hi</div>;
 
     act(() =>
-      ReactDOM.render(<Component count={4} />, document.createElement('div'))
+      ReactDOM.render(<Component count={4} />, document.createElement('div')),
     );
     expect(store).toMatchSnapshot('1: mount');
 
@@ -38,7 +38,7 @@ describe('Store (legacy)', () => {
     const rootID = store.roots[0];
 
     expect(() => store.toggleIsCollapsed(rootID, true)).toThrow(
-      'Root nodes cannot be collapsed'
+      'Root nodes cannot be collapsed',
     );
   });
 
@@ -48,17 +48,15 @@ describe('Store (legacy)', () => {
     });
 
     it('should support mount and update operations', () => {
-      const Grandparent = ({ count }) => (
+      const Grandparent = ({count}) => (
         <div>
           <Parent count={count} />
           <Parent count={count} />
         </div>
       );
-      const Parent = ({ count }) => (
+      const Parent = ({count}) => (
         <div>
-          {new Array(count).fill(true).map((_, index) => (
-            <Child key={index} />
-          ))}
+          {new Array(count).fill(true).map((_, index) => <Child key={index} />)}
         </div>
       );
       const Child = () => <div>Hi!</div>;
@@ -76,11 +74,9 @@ describe('Store (legacy)', () => {
     });
 
     it('should support mount and update operations for multiple roots', () => {
-      const Parent = ({ count }) => (
+      const Parent = ({count}) => (
         <div>
-          {new Array(count).fill(true).map((_, index) => (
-            <Child key={index} />
-          ))}
+          {new Array(count).fill(true).map((_, index) => <Child key={index} />)}
         </div>
       );
       const Child = () => <div>Hi!</div>;
@@ -108,7 +104,7 @@ describe('Store (legacy)', () => {
     });
 
     it('should not filter DOM nodes from the store tree', () => {
-      const Grandparent = ({ flip }) => (
+      const Grandparent = ({flip}) => (
         <div>
           <div>
             <Parent flip={flip} />
@@ -117,7 +113,7 @@ describe('Store (legacy)', () => {
           <Nothing />
         </div>
       );
-      const Parent = ({ flip }) => (
+      const Parent = ({flip}) => (
         <div>
           {flip ? 'foo' : null}
           <Child />
@@ -130,12 +126,12 @@ describe('Store (legacy)', () => {
 
       const container = document.createElement('div');
       act(() =>
-        ReactDOM.render(<Grandparent count={4} flip={false} />, container)
+        ReactDOM.render(<Grandparent count={4} flip={false} />, container),
       );
       expect(store).toMatchSnapshot('1: mount');
 
       act(() =>
-        ReactDOM.render(<Grandparent count={4} flip={true} />, container)
+        ReactDOM.render(<Grandparent count={4} flip={true} />, container),
       );
       expect(store).toMatchSnapshot('2: update');
 
@@ -144,17 +140,15 @@ describe('Store (legacy)', () => {
     });
 
     it('should support collapsing parts of the tree', () => {
-      const Grandparent = ({ count }) => (
+      const Grandparent = ({count}) => (
         <div>
           <Parent count={count} />
           <Parent count={count} />
         </div>
       );
-      const Parent = ({ count }) => (
+      const Parent = ({count}) => (
         <div>
-          {new Array(count).fill(true).map((_, index) => (
-            <Child key={index} />
-          ))}
+          {new Array(count).fill(true).map((_, index) => <Child key={index} />)}
         </div>
       );
       const Child = () => <div>Hi!</div>;
@@ -162,8 +156,8 @@ describe('Store (legacy)', () => {
       act(() =>
         ReactDOM.render(
           <Grandparent count={2} />,
-          document.createElement('div')
-        )
+          document.createElement('div'),
+        ),
       );
       expect(store).toMatchSnapshot('1: mount');
 
@@ -188,7 +182,7 @@ describe('Store (legacy)', () => {
     });
 
     it('should support adding and removing children', () => {
-      const Root = ({ children }) => <div>{children}</div>;
+      const Root = ({children}) => <div>{children}</div>;
       const Component = () => <div />;
 
       const container = document.createElement('div');
@@ -198,8 +192,8 @@ describe('Store (legacy)', () => {
           <Root>
             <Component key="a" />
           </Root>,
-          container
-        )
+          container,
+        ),
       );
       expect(store).toMatchSnapshot('1: mount');
 
@@ -209,8 +203,8 @@ describe('Store (legacy)', () => {
             <Component key="a" />
             <Component key="b" />
           </Root>,
-          container
-        )
+          container,
+        ),
       );
       expect(store).toMatchSnapshot('2: add child');
 
@@ -219,14 +213,14 @@ describe('Store (legacy)', () => {
           <Root>
             <Component key="b" />
           </Root>,
-          container
-        )
+          container,
+        ),
       );
       expect(store).toMatchSnapshot('3: remove child');
     });
 
     it('should support reordering of children', () => {
-      const Root = ({ children }) => <div>{children}</div>;
+      const Root = ({children}) => <div>{children}</div>;
       const Component = () => <div />;
 
       const Foo = () => <div>{[<Component key="0" />]}</div>;
@@ -258,11 +252,9 @@ describe('Store (legacy)', () => {
     });
 
     it('should support mount and update operations', () => {
-      const Parent = ({ count }) => (
+      const Parent = ({count}) => (
         <div>
-          {new Array(count).fill(true).map((_, index) => (
-            <Child key={index} />
-          ))}
+          {new Array(count).fill(true).map((_, index) => <Child key={index} />)}
         </div>
       );
       const Child = () => <div>Hi!</div>;
@@ -275,8 +267,8 @@ describe('Store (legacy)', () => {
             <Parent count={1} />
             <Parent count={3} />
           </div>,
-          container
-        )
+          container,
+        ),
       );
       expect(store).toMatchSnapshot('1: mount');
 
@@ -286,8 +278,8 @@ describe('Store (legacy)', () => {
             <Parent count={2} />
             <Parent count={1} />
           </div>,
-          container
-        )
+          container,
+        ),
       );
       expect(store).toMatchSnapshot('2: update');
 
@@ -296,11 +288,9 @@ describe('Store (legacy)', () => {
     });
 
     it('should support mount and update operations for multiple roots', () => {
-      const Parent = ({ count }) => (
+      const Parent = ({count}) => (
         <div>
-          {new Array(count).fill(true).map((_, index) => (
-            <Child key={index} />
-          ))}
+          {new Array(count).fill(true).map((_, index) => <Child key={index} />)}
         </div>
       );
       const Child = () => <div>Hi!</div>;
@@ -328,7 +318,7 @@ describe('Store (legacy)', () => {
     });
 
     it('should not filter DOM nodes from the store tree', () => {
-      const Grandparent = ({ flip }) => (
+      const Grandparent = ({flip}) => (
         <div>
           <div>
             <Parent flip={flip} />
@@ -337,7 +327,7 @@ describe('Store (legacy)', () => {
           <Nothing />
         </div>
       );
-      const Parent = ({ flip }) => (
+      const Parent = ({flip}) => (
         <div>
           {flip ? 'foo' : null}
           <Child />
@@ -350,7 +340,7 @@ describe('Store (legacy)', () => {
 
       const container = document.createElement('div');
       act(() =>
-        ReactDOM.render(<Grandparent count={4} flip={false} />, container)
+        ReactDOM.render(<Grandparent count={4} flip={false} />, container),
       );
       expect(store).toMatchSnapshot('1: mount');
 
@@ -361,7 +351,7 @@ describe('Store (legacy)', () => {
       expect(store).toMatchSnapshot('3: expand div');
 
       act(() =>
-        ReactDOM.render(<Grandparent count={4} flip={true} />, container)
+        ReactDOM.render(<Grandparent count={4} flip={true} />, container),
       );
       expect(store).toMatchSnapshot('4: final update');
 
@@ -370,17 +360,15 @@ describe('Store (legacy)', () => {
     });
 
     it('should support expanding parts of the tree', () => {
-      const Grandparent = ({ count }) => (
+      const Grandparent = ({count}) => (
         <div>
           <Parent count={count} />
           <Parent count={count} />
         </div>
       );
-      const Parent = ({ count }) => (
+      const Parent = ({count}) => (
         <div>
-          {new Array(count).fill(true).map((_, index) => (
-            <Child key={index} />
-          ))}
+          {new Array(count).fill(true).map((_, index) => <Child key={index} />)}
         </div>
       );
       const Child = () => <div>Hi!</div>;
@@ -388,8 +376,8 @@ describe('Store (legacy)', () => {
       act(() =>
         ReactDOM.render(
           <Grandparent count={2} />,
-          document.createElement('div')
-        )
+          document.createElement('div'),
+        ),
       );
       expect(store).toMatchSnapshot('1: mount');
 
@@ -422,10 +410,10 @@ describe('Store (legacy)', () => {
     });
 
     it('should support expanding deep parts of the tree', () => {
-      const Wrapper = ({ forwardedRef }) => (
+      const Wrapper = ({forwardedRef}) => (
         <Nested depth={3} forwardedRef={forwardedRef} />
       );
-      const Nested = ({ depth, forwardedRef }) =>
+      const Nested = ({depth, forwardedRef}) =>
         depth > 0 ? (
           <Nested depth={depth - 1} forwardedRef={forwardedRef} />
         ) : (
@@ -440,8 +428,8 @@ describe('Store (legacy)', () => {
       act(() =>
         ReactDOM.render(
           <Wrapper forwardedRef={refSetter} />,
-          document.createElement('div')
-        )
+          document.createElement('div'),
+        ),
       );
       expect(store).toMatchSnapshot('1: mount');
 
@@ -468,7 +456,7 @@ describe('Store (legacy)', () => {
     });
 
     it('should support reordering of children', () => {
-      const Root = ({ children }) => <div>{children}</div>;
+      const Root = ({children}) => <div>{children}</div>;
       const Component = () => <div />;
 
       const Foo = () => <div>{[<Component key="0" />]}</div>;

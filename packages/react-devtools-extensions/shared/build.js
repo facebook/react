@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
 const archiver = require('archiver');
-const { execSync } = require('child_process');
-const { readFileSync, writeFileSync, createWriteStream } = require('fs');
-const { copy, ensureDir, move, remove } = require('fs-extra');
-const { join } = require('path');
-const { getGitCommit } = require('../../utils');
+const {execSync} = require('child_process');
+const {readFileSync, writeFileSync, createWriteStream} = require('fs');
+const {copy, ensureDir, move, remove} = require('fs-extra');
+const {join} = require('path');
+const {getGitCommit} = require('../../utils');
 
 // These files are copied along with Webpack-bundled files
 // to produce the final web extension
@@ -72,7 +72,7 @@ const build = async (tempPath, manifestPath) => {
   writeFileSync(copiedManifestPath, JSON.stringify(manifest, null, 2));
 
   // Pack the extension
-  const archive = archiver('zip', { zlib: { level: 9 } });
+  const archive = archiver('zip', {zlib: {level: 9}});
   const zipStream = createWriteStream(join(tempPath, 'ReactDevTools.zip'));
   await new Promise((resolve, reject) => {
     archive

@@ -1,7 +1,7 @@
 // @flow
 
-const { app, BrowserWindow } = require('electron'); // Module to create native browser window.
-const { join } = require('path');
+const {app, BrowserWindow} = require('electron'); // Module to create native browser window.
+const {join} = require('path');
 
 const argv = require('minimist')(process.argv.slice(2));
 const projectRoots = argv._;
@@ -31,7 +31,7 @@ app.on('ready', function() {
     // We use this so that RN can keep relative JSX __source filenames
     // but "click to open in editor" still works. js1 passes project roots
     // as the argument to DevTools.
-    'window.devtools.setProjectRoots(' + JSON.stringify(projectRoots) + ')'
+    'window.devtools.setProjectRoots(' + JSON.stringify(projectRoots) + ')',
   );
 
   // Emitted when the window is closed.

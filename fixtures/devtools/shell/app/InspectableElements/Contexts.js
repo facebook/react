@@ -1,6 +1,6 @@
 // @flow
 
-import React, { createContext, Component, Fragment, useContext } from 'react';
+import React, {createContext, Component, Fragment, useContext} from 'react';
 import PropTypes from 'prop-types';
 
 function someNamedFunction() {}
@@ -10,7 +10,7 @@ const contextData = {
   bool: true,
   func: someNamedFunction,
   number: 123,
-  object: { outer: { inner: {} } },
+  object: {outer: {inner: {}}},
   string: 'abc',
   symbol: Symbol.for('symbol'),
   null: null,

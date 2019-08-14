@@ -11,7 +11,7 @@ type Rect = {
   width: number,
 };
 
-type Box = {| top: number, left: number, width: number, height: number |};
+type Box = {|top: number, left: number, width: number, height: number|};
 
 // Note that the Overlay components are not affected by the active Theme,
 // because they highlight elements in the main Chrome window (outside of devtools).
@@ -211,11 +211,11 @@ export default class Overlay {
       outerBox.top = Math.min(outerBox.top, box.top - dims.marginTop);
       outerBox.right = Math.max(
         outerBox.right,
-        box.left + box.width + dims.marginRight
+        box.left + box.width + dims.marginRight,
       );
       outerBox.bottom = Math.max(
         outerBox.bottom,
-        box.top + box.height + dims.marginBottom
+        box.top + box.height + dims.marginBottom,
       );
       outerBox.left = Math.min(outerBox.left, box.left - dims.marginLeft);
 
@@ -234,11 +234,11 @@ export default class Overlay {
     this.tip.updateText(
       name,
       outerBox.right - outerBox.left,
-      outerBox.bottom - outerBox.top
+      outerBox.bottom - outerBox.top,
     );
     const tipBounds = getNestedBoundingClientRect(
       this.tipBoundsWindow.document.documentElement,
-      this.window
+      this.window,
     );
 
     this.tip.updatePosition(
@@ -253,7 +253,7 @@ export default class Overlay {
         left: tipBounds.left + this.tipBoundsWindow.scrollX,
         height: this.tipBoundsWindow.innerHeight,
         width: this.tipBoundsWindow.innerWidth,
-      }
+      },
     );
   }
 }
@@ -280,7 +280,7 @@ function getFiber(node) {
     return (node: any)[lastFoundInternalKey];
   }
   let internalKey = Object.keys(node).find(
-    key => key.indexOf('__reactInternalInstance') === 0
+    key => key.indexOf('__reactInternalInstance') === 0,
   );
   if (internalKey) {
     lastFoundInternalKey = internalKey;
@@ -322,7 +322,7 @@ function findTipPos(dims, bounds, tipSize) {
   top += 'px';
   left += 'px';
   return {
-    style: { top, left },
+    style: {top, left},
   };
 }
 
@@ -407,7 +407,7 @@ function mergeRectOffsets(rects: Array<Rect>): Rect {
 // taking into account any offsets caused by intermediate iframes.
 function getNestedBoundingClientRect(
   node: HTMLElement,
-  boundaryWindow: typeof window
+  boundaryWindow: typeof window,
 ): Rect {
   const ownerIframe = getOwnerIframe(node);
   if (ownerIframe && ownerIframe !== boundaryWindow) {

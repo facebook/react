@@ -19,7 +19,7 @@ export function hideOverlay() {
 export function showOverlay(
   elements: Array<HTMLElement> | null,
   componentName: string | null,
-  hideAfterTimeout: boolean
+  hideAfterTimeout: boolean,
 ) {
   // TODO (npm-packages) Detect RN and support it somehow
   if (window.document == null) {

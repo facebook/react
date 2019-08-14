@@ -21,7 +21,7 @@ describe('ProfilerStore', () => {
   });
 
   it('should not remove profiling data when roots are unmounted', async () => {
-    const Parent = ({ count }) =>
+    const Parent = ({count}) =>
       new Array(count)
         .fill(true)
         .map((_, index) => <Child key={index} duration={index} />);
@@ -66,7 +66,7 @@ describe('ProfilerStore', () => {
     expect(store.profilerStore.profilingData).not.toBe(fauxProfilingData);
     expect(console.warn).toHaveBeenCalledTimes(1);
     expect(console.warn).toHaveBeenCalledWith(
-      'Profiling data cannot be updated while profiling is in progress.'
+      'Profiling data cannot be updated while profiling is in progress.',
     );
     utils.act(() => store.profilerStore.stopProfiling());
     store.profilerStore.profilingData = fauxProfilingData;

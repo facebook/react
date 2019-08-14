@@ -2,15 +2,15 @@
 
 import Agent from './agent';
 
-import { attach } from './renderer';
-import { attach as attachLegacy } from './legacy/renderer';
+import {attach} from './renderer';
+import {attach as attachLegacy} from './legacy/renderer';
 
-import type { DevToolsHook, ReactRenderer, RendererInterface } from './types';
+import type {DevToolsHook, ReactRenderer, RendererInterface} from './types';
 
 export function initBackend(
   hook: DevToolsHook,
   agent: Agent,
-  global: Object
+  global: Object,
 ): () => void {
   const subs = [
     hook.sub(
@@ -29,7 +29,7 @@ export function initBackend(
         // Now that the Store and the renderer interface are connected,
         // it's time to flush the pending operation codes to the frontend.
         rendererInterface.flushInitialOperations();
-      }
+      },
     ),
 
     hook.sub('operations', agent.onHookOperations),
@@ -69,10 +69,10 @@ export function initBackend(
   subs.push(
     hook.sub(
       'renderer',
-      ({ id, renderer }: { id: number, renderer: ReactRenderer }) => {
+      ({id, renderer}: {id: number, renderer: ReactRenderer}) => {
         attachRenderer(id, renderer);
-      }
-    )
+      },
+    ),
   );
 
   hook.emit('react-devtools', agent);

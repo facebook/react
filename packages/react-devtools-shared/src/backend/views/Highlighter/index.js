@@ -3,9 +3,9 @@
 import memoize from 'memoize-one';
 import throttle from 'lodash.throttle';
 import Agent from 'react-devtools-shared/src/backend/agent';
-import { hideOverlay, showOverlay } from './Highlighter';
+import {hideOverlay, showOverlay} from './Highlighter';
 
-import type { BackendBridge } from 'react-devtools-shared/src/bridge';
+import type {BackendBridge} from 'react-devtools-shared/src/bridge';
 
 // This plug-in provides in-page highlighting of the selected element.
 // It is used by the browser extension nad the standalone DevTools shell (when connected to a browser).
@@ -16,11 +16,11 @@ let iframesListeningTo: Set<HTMLIFrameElement> = new Set();
 
 export default function setupHighlighter(
   bridge: BackendBridge,
-  agent: Agent
+  agent: Agent,
 ): void {
   bridge.addListener(
     'clearNativeElementHighlight',
-    clearNativeElementHighlight
+    clearNativeElementHighlight,
   );
   bridge.addListener('highlightNativeElement', highlightNativeElement);
   bridge.addListener('shutdown', stopInspectingNative);
@@ -96,9 +96,9 @@ export default function setupHighlighter(
 
     let nodes: ?Array<HTMLElement> = null;
     if (renderer !== null) {
-      nodes = ((renderer.findNativeNodesForFiberID(
-        id
-      ): any): ?Array<HTMLElement>);
+      nodes = ((renderer.findNativeNodesForFiberID(id): any): ?Array<
+        HTMLElement,
+      >);
     }
 
     if (nodes != null && nodes[0] != null) {
@@ -107,7 +107,7 @@ export default function setupHighlighter(
         // If the node isn't visible show it before highlighting it.
         // We may want to reconsider this; it might be a little disruptive.
         // $FlowFixMe Flow only knows about 'start' | 'end'
-        node.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        node.scrollIntoView({block: 'nearest', inline: 'nearest'});
       }
 
       showOverlay(nodes, displayName, hideAfterTimeout);
@@ -183,6 +183,6 @@ export default function setupHighlighter(
     200,
     // Don't change the selection in the very first 200ms
     // because those are usually unintentional as you lift the cursor.
-    { leading: false }
+    {leading: false},
   );
 }

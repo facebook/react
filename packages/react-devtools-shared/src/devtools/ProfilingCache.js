@@ -18,10 +18,10 @@ import {
   invalidateChartData as invalidateRankedChartData,
 } from 'react-devtools-shared/src/devtools/views/Profiler/RankedChartBuilder';
 
-import type { CommitTree } from 'react-devtools-shared/src/devtools/views/Profiler/types';
-import type { ChartData as FlamegraphChartData } from 'react-devtools-shared/src/devtools/views/Profiler/FlamegraphChartBuilder';
-import type { ChartData as InteractionsChartData } from 'react-devtools-shared/src/devtools/views/Profiler/InteractionsChartBuilder';
-import type { ChartData as RankedChartData } from 'react-devtools-shared/src/devtools/views/Profiler/RankedChartBuilder';
+import type {CommitTree} from 'react-devtools-shared/src/devtools/views/Profiler/types';
+import type {ChartData as FlamegraphChartData} from 'react-devtools-shared/src/devtools/views/Profiler/FlamegraphChartBuilder';
+import type {ChartData as InteractionsChartData} from 'react-devtools-shared/src/devtools/views/Profiler/InteractionsChartBuilder';
+import type {ChartData as RankedChartData} from 'react-devtools-shared/src/devtools/views/Profiler/RankedChartBuilder';
 
 export default class ProfilingCache {
   _fiberCommits: Map<number, Array<number>> = new Map();

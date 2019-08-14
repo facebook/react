@@ -1,14 +1,14 @@
 // @flow
 
 import EventEmitter from 'node-events';
-import { inspect } from 'util';
+import {inspect} from 'util';
 import {
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
   TREE_OPERATION_REORDER_CHILDREN,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
 } from '../constants';
-import { ElementTypeRoot } from '../types';
+import {ElementTypeRoot} from '../types';
 import {
   getSavedComponentFilters,
   saveComponentFilters,
@@ -16,14 +16,14 @@ import {
   shallowDiffers,
   utfDecodeString,
 } from '../utils';
-import { localStorageGetItem, localStorageSetItem } from '../storage';
-import { __DEBUG__ } from '../constants';
-import { printStore } from './utils';
+import {localStorageGetItem, localStorageSetItem} from '../storage';
+import {__DEBUG__} from '../constants';
+import {printStore} from './utils';
 import ProfilerStore from './ProfilerStore';
 
-import type { Element } from './views/Components/types';
-import type { ComponentFilter, ElementType } from '../types';
-import type { FrontendBridge } from 'react-devtools-shared/src/bridge';
+import type {Element} from './views/Components/types';
+import type {ComponentFilter, ElementType} from '../types';
+import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 
 const debug = (methodName, ...args) => {
   if (__DEBUG__) {
@@ -31,7 +31,7 @@ const debug = (methodName, ...args) => {
       `%cStore %c${methodName}`,
       'color: green; font-weight: bold;',
       'font-weight: bold;',
-      ...args
+      ...args,
     );
   }
 };
@@ -161,16 +161,16 @@ export default class Store extends EventEmitter<{|
     bridge.addListener('operations', this.onBridgeOperations);
     bridge.addListener(
       'overrideComponentFilters',
-      this.onBridgeOverrideComponentFilters
+      this.onBridgeOverrideComponentFilters,
     );
     bridge.addListener('shutdown', this.onBridgeShutdown);
     bridge.addListener(
       'isBackendStorageAPISupported',
-      this.onBridgeStorageSupported
+      this.onBridgeStorageSupported,
     );
     bridge.addListener(
       'isNativeStyleEditorSupported',
-      this.onBridgeNativeStyleEditorSupported
+      this.onBridgeNativeStyleEditorSupported,
     );
 
     this._profilerStore = new ProfilerStore(bridge, this, isProfiling);
@@ -187,11 +187,11 @@ export default class Store extends EventEmitter<{|
     // These maps should always be the same size as the number of roots
     this.assertMapSizeMatchesRootCount(
       this._rootIDToCapabilities,
-      '_rootIDToCapabilities'
+      '_rootIDToCapabilities',
     );
     this.assertMapSizeMatchesRootCount(
       this._rootIDToRendererID,
-      '_rootIDToRendererID'
+      '_rootIDToRendererID',
     );
   }
 
@@ -204,7 +204,7 @@ export default class Store extends EventEmitter<{|
           map.size
         } items\n\n${inspect(map, {
           depth: 20,
-        })}`
+        })}`,
       );
     }
   }
@@ -217,7 +217,7 @@ export default class Store extends EventEmitter<{|
 
     localStorageSetItem(
       LOCAL_STORAGE_COLLAPSE_ROOTS_BY_DEFAULT_KEY,
-      value ? 'true' : 'false'
+      value ? 'true' : 'false',
     );
 
     this.emit('collapseNodesByDefault');
@@ -236,10 +236,10 @@ export default class Store extends EventEmitter<{|
     // Filter updates are expensive to apply (since they impact the entire tree).
     // Let's determine if they've changed and avoid doing this work if they haven't.
     const prevEnabledComponentFilters = this._componentFilters.filter(
-      filter => filter.isEnabled
+      filter => filter.isEnabled,
     );
     const nextEnabledComponentFilters = value.filter(
-      filter => filter.isEnabled
+      filter => filter.isEnabled,
     );
     let haveEnabledFiltersChanged =
       prevEnabledComponentFilters.length !== nextEnabledComponentFilters.length;
@@ -293,7 +293,7 @@ export default class Store extends EventEmitter<{|
 
     localStorageSetItem(
       LOCAL_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
-      value ? 'true' : 'false'
+      value ? 'true' : 'false',
     );
 
     this.emit('recordChangeDescriptions');
@@ -339,7 +339,7 @@ export default class Store extends EventEmitter<{|
       console.warn(
         `Invalid index ${index} specified; store contains ${
           this.numElements
-        } items.`
+        } items.`,
       );
 
       return null;
@@ -417,7 +417,7 @@ export default class Store extends EventEmitter<{|
     while (true) {
       const current = ((this._idToElement.get(currentID): any): Element);
 
-      const { children } = current;
+      const {children} = current;
       for (let i = 0; i < children.length; i++) {
         const childID = children[i];
         if (childID === previousID) {
@@ -474,7 +474,7 @@ export default class Store extends EventEmitter<{|
         const sortedIDs = Array.from(unsortedIDs).sort(
           (idA, idB) =>
             ((this.getIndexOfElementID(idA): any): number) -
-            ((this.getIndexOfElementID(idB): any): number)
+            ((this.getIndexOfElementID(idB): any): number),
         );
 
         // Next we need to determine the appropriate depth for each element in the list.
@@ -506,7 +506,7 @@ export default class Store extends EventEmitter<{|
               throw Error('Invalid owners list');
             }
 
-            list.push({ ...element, depth });
+            list.push({...element, depth});
           }
         });
       }
@@ -573,7 +573,7 @@ export default class Store extends EventEmitter<{|
           const weightDelta = 1 - element.weight;
 
           let parentElement = ((this._idToElement.get(
-            element.parentID
+            element.parentID,
           ): any): Element);
           while (parentElement != null) {
             // We don't need to break on a collapsed parent in the same way as the expand case below.
@@ -599,7 +599,7 @@ export default class Store extends EventEmitter<{|
             const weightDelta = newWeight - oldWeight;
 
             let parentElement = ((this._idToElement.get(
-              currentElement.parentID
+              currentElement.parentID,
             ): any): Element);
             while (parentElement != null) {
               parentElement.weight += weightDelta;
@@ -624,7 +624,7 @@ export default class Store extends EventEmitter<{|
       if (didMutate) {
         let weightAcrossRoots = 0;
         this._roots.forEach(rootID => {
-          const { weight } = ((this.getElementByID(rootID): any): Element);
+          const {weight} = ((this.getElementByID(rootID): any): Element);
           weightAcrossRoots += weight;
         });
         this._weightAcrossRoots = weightAcrossRoots;
@@ -639,7 +639,7 @@ export default class Store extends EventEmitter<{|
 
   _adjustParentTreeWeight = (
     parentElement: Element | null,
-    weightDelta: number
+    weightDelta: number,
   ) => {
     let isInsideCollapsedSubTree = false;
 
@@ -654,7 +654,7 @@ export default class Store extends EventEmitter<{|
       }
 
       parentElement = ((this._idToElement.get(
-        parentElement.parentID
+        parentElement.parentID,
       ): any): Element);
     }
 
@@ -704,7 +704,7 @@ export default class Store extends EventEmitter<{|
     while (i < stringTableEnd) {
       const nextLength = operations[i++];
       const nextString = utfDecodeString(
-        (operations.slice(i, i + nextLength): any)
+        (operations.slice(i, i + nextLength): any),
       );
       stringTable.push(nextString);
       i += nextLength;
@@ -721,7 +721,7 @@ export default class Store extends EventEmitter<{|
 
           if (this._idToElement.has(id)) {
             throw Error(
-              `Cannot add node ${id} because a node with that id is already in the Store.`
+              `Cannot add node ${id} because a node with that id is already in the Store.`,
             );
           }
 
@@ -778,18 +778,18 @@ export default class Store extends EventEmitter<{|
             if (__DEBUG__) {
               debug(
                 'Add',
-                `node ${id} (${displayName || 'null'}) as child of ${parentID}`
+                `node ${id} (${displayName || 'null'}) as child of ${parentID}`,
               );
             }
 
             if (!this._idToElement.has(parentID)) {
               throw Error(
-                `Cannot add child ${id} to parent ${parentID} because parent node was not found in the Store.`
+                `Cannot add child ${id} to parent ${parentID} because parent node was not found in the Store.`,
               );
             }
 
             const parentElement = ((this._idToElement.get(
-              parentID
+              parentID,
             ): any): Element);
             parentElement.children.push(id);
 
@@ -836,14 +836,14 @@ export default class Store extends EventEmitter<{|
 
             if (!this._idToElement.has(id)) {
               throw Error(
-                `Cannot remove node ${id} because no matching node was found in the Store.`
+                `Cannot remove node ${id} because no matching node was found in the Store.`,
               );
             }
 
             i = i + 1;
 
             const element = ((this._idToElement.get(id): any): Element);
-            const { children, ownerID, parentID, weight } = element;
+            const {children, ownerID, parentID, weight} = element;
             if (children.length > 0) {
               throw new Error(`Node ${id} was removed before its children.`);
             }
@@ -868,7 +868,7 @@ export default class Store extends EventEmitter<{|
               parentElement = ((this._idToElement.get(parentID): any): Element);
               if (parentElement === undefined) {
                 throw Error(
-                  `Cannot remove node ${id} from parent ${parentID} because no matching node was found in the Store.`
+                  `Cannot remove node ${id} from parent ${parentID} because no matching node was found in the Store.`,
                 );
               }
               const index = parentElement.children.indexOf(id);
@@ -895,7 +895,7 @@ export default class Store extends EventEmitter<{|
 
           if (!this._idToElement.has(id)) {
             throw Error(
-              `Cannot reorder children for node ${id} because no matching node was found in the Store.`
+              `Cannot reorder children for node ${id} because no matching node was found in the Store.`,
             );
           }
 
@@ -903,7 +903,7 @@ export default class Store extends EventEmitter<{|
           const children = element.children;
           if (children.length !== numChildren) {
             throw Error(
-              `Children cannot be added or removed during a reorder operation.`
+              `Children cannot be added or removed during a reorder operation.`,
             );
           }
 
@@ -915,7 +915,7 @@ export default class Store extends EventEmitter<{|
               const childElement = this._idToElement.get(childID);
               if (childElement == null || childElement.parentID !== id) {
                 console.error(
-                  `Children cannot be added or removed during a reorder operation.`
+                  `Children cannot be added or removed during a reorder operation.`,
                 );
               }
             }
@@ -946,14 +946,14 @@ export default class Store extends EventEmitter<{|
       this._hasOwnerMetadata = false;
       this._supportsProfiling = false;
       this._rootIDToCapabilities.forEach(
-        ({ hasOwnerMetadata, supportsProfiling }) => {
+        ({hasOwnerMetadata, supportsProfiling}) => {
           if (hasOwnerMetadata) {
             this._hasOwnerMetadata = true;
           }
           if (supportsProfiling) {
             this._supportsProfiling = true;
           }
-        }
+        },
       );
 
       this.emit('roots');
@@ -977,7 +977,7 @@ export default class Store extends EventEmitter<{|
   // This action should also override the saved filters too,
   // else reloading the frontend without reloading the backend would leave things out of sync.
   onBridgeOverrideComponentFilters = (
-    componentFilters: Array<ComponentFilter>
+    componentFilters: Array<ComponentFilter>,
   ) => {
     this._componentFilters = componentFilters;
 
@@ -993,7 +993,7 @@ export default class Store extends EventEmitter<{|
     this._bridge.removeListener('shutdown', this.onBridgeShutdown);
     this._bridge.removeListener(
       'isBackendStorageAPISupported',
-      this.onBridgeStorageSupported
+      this.onBridgeStorageSupported,
     );
   };
 

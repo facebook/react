@@ -1,8 +1,8 @@
 // @flow
 
-import type { InspectedElementPayload } from 'react-devtools-shared/src/backend/types';
-import type { DehydratedData } from 'react-devtools-shared/src/devtools/views/Components/types';
-import type { FrontendBridge } from 'react-devtools-shared/src/bridge';
+import type {InspectedElementPayload} from 'react-devtools-shared/src/backend/types';
+import type {DehydratedData} from 'react-devtools-shared/src/devtools/views/Components/types';
+import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type Store from 'react-devtools-shared/src/devtools/store';
 
 describe('InspectedElementContext', () => {
@@ -20,7 +20,7 @@ describe('InspectedElementContext', () => {
   };
 
   function dehydrateHelper(
-    dehydratedData: DehydratedData | null
+    dehydratedData: DehydratedData | null,
   ): Object | null {
     if (dehydratedData !== null) {
       return hydrate(dehydratedData.data, dehydratedData.cleaned);
@@ -31,7 +31,7 @@ describe('InspectedElementContext', () => {
 
   async function read(
     id: number,
-    path?: Array<string | number>
+    path?: Array<string | number>,
   ): Promise<Object> {
     return new Promise((resolve, reject) => {
       const rendererID = ((store.getRendererIDForElement(id): any): number);
@@ -49,7 +49,7 @@ describe('InspectedElementContext', () => {
       };
 
       bridge.addListener('inspectedElement', onInspectedElement);
-      bridge.send('inspectElement', { id, path, rendererID });
+      bridge.send('inspectElement', {id, path, rendererID});
 
       jest.runOnlyPendingTimers();
     });
@@ -66,7 +66,7 @@ describe('InspectedElementContext', () => {
     // We use the UMD because Jest doesn't enable us to mock deep imports (e.g. "react/lib/Something").
     jest.mock('react', () => jest.requireActual('react-15/dist/react.js'));
     jest.mock('react-dom', () =>
-      jest.requireActual('react-dom-15/dist/react-dom.js')
+      jest.requireActual('react-dom-15/dist/react-dom.js'),
     );
 
     React = require('react');
@@ -77,7 +77,7 @@ describe('InspectedElementContext', () => {
     const Example = () => null;
 
     act(() =>
-      ReactDOM.render(<Example a={1} b="abc" />, document.createElement('div'))
+      ReactDOM.render(<Example a={1} b="abc" />, document.createElement('div')),
     );
 
     const id = ((store.getElementIDAtIndex(0): any): number);
@@ -106,8 +106,8 @@ describe('InspectedElementContext', () => {
           value_null={null}
           value_undefined={undefined}
         />,
-        document.createElement('div')
-      )
+        document.createElement('div'),
+      ),
     );
 
     const id = ((store.getElementIDAtIndex(0): any): number);
@@ -115,7 +115,7 @@ describe('InspectedElementContext', () => {
 
     expect(inspectedElement).toMatchSnapshot('1: Initial inspection');
 
-    const { props } = inspectedElement.value;
+    const {props} = inspectedElement.value;
     expect(props.boolean_false).toBe(false);
     expect(props.boolean_true).toBe(true);
     expect(Number.isFinite(props.infinity)).toBe(false);
@@ -149,8 +149,8 @@ describe('InspectedElementContext', () => {
           typed_array={typedArray}
           date={new Date()}
         />,
-        document.createElement('div')
-      )
+        document.createElement('div'),
+      ),
     );
 
     const id = ((store.getElementIDAtIndex(0): any): number);
@@ -206,18 +206,18 @@ describe('InspectedElementContext', () => {
 
     const descriptor = ((Object.getOwnPropertyDescriptor(
       CustomData.prototype,
-      'number'
+      'number',
     ): any): PropertyDescriptor<number>);
     descriptor.enumerable = true;
     Object.defineProperty(CustomData.prototype, 'number', descriptor);
 
-    const Example = ({ data }) => null;
+    const Example = ({data}) => null;
 
     act(() =>
       ReactDOM.render(
         <Example data={new CustomData()} />,
-        document.createElement('div')
-      )
+        document.createElement('div'),
+      ),
     );
 
     const id = ((store.getElementIDAtIndex(0): any): number);
@@ -248,8 +248,8 @@ describe('InspectedElementContext', () => {
             },
           }}
         />,
-        document.createElement('div')
-      )
+        document.createElement('div'),
+      ),
     );
 
     const id = ((store.getElementIDAtIndex(0): any): number);
@@ -262,7 +262,7 @@ describe('InspectedElementContext', () => {
 
     inspectedElement = await read(id, ['props', 'nestedObject', 'a', 'b', 'c']);
     expect(inspectedElement).toMatchSnapshot(
-      '3: Inspect props.nestedObject.a.b.c'
+      '3: Inspect props.nestedObject.a.b.c',
     );
 
     inspectedElement = await read(id, [
@@ -275,7 +275,7 @@ describe('InspectedElementContext', () => {
       'd',
     ]);
     expect(inspectedElement).toMatchSnapshot(
-      '4: Inspect props.nestedObject.a.b.c.0.d'
+      '4: Inspect props.nestedObject.a.b.c.0.d',
     );
 
     done();

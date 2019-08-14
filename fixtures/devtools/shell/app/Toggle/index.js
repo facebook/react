@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 
 export default function Toggle() {
   const [show, setShow] = useState(false);
@@ -16,6 +16,6 @@ export default function Toggle() {
   );
 }
 
-function Greeting({ children }) {
+function Greeting({children}) {
   return <p>{children}</p>;
 }

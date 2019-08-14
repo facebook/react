@@ -1,6 +1,6 @@
 // @flow
 
-import { createContext } from 'react';
+import {createContext} from 'react';
 
 import type {
   CanViewElementSource,

@@ -8,8 +8,8 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { useSubscription } from '../hooks';
-import { StoreContext } from '../context';
+import {useSubscription} from '../hooks';
+import {StoreContext} from '../context';
 import Store from 'react-devtools-shared/src/devtools/store';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
@@ -52,21 +52,21 @@ export default function ComponentsSettings(_: {||}) {
         return () => store.removeListener('collapseNodesByDefault', callback);
       },
     }),
-    [store]
+    [store],
   );
   const collapseNodesByDefault = useSubscription<boolean>(
-    collapseNodesByDefaultSubscription
+    collapseNodesByDefaultSubscription,
   );
 
   const updateCollapseNodesByDefault = useCallback(
-    ({ currentTarget }) => {
+    ({currentTarget}) => {
       store.collapseNodesByDefault = !currentTarget.checked;
     },
-    [store]
+    [store],
   );
 
   const [componentFilters, setComponentFilters] = useState<
-    Array<ComponentFilter>
+    Array<ComponentFilter>,
   >(() => [...store.componentFilters]);
 
   const addFilter = useCallback(() => {
@@ -119,7 +119,7 @@ export default function ComponentsSettings(_: {||}) {
         return cloned;
       });
     },
-    []
+    [],
   );
 
   const updateFilterValueElementType = useCallback(
@@ -142,7 +142,7 @@ export default function ComponentsSettings(_: {||}) {
         return cloned;
       });
     },
-    []
+    [],
   );
 
   const updateFilterValueRegExp = useCallback(
@@ -175,7 +175,7 @@ export default function ComponentsSettings(_: {||}) {
         return cloned;
       });
     },
-    []
+    [],
   );
 
   const removeFilter = useCallback((index: number) => {
@@ -215,7 +215,7 @@ export default function ComponentsSettings(_: {||}) {
         return cloned;
       });
     },
-    []
+    [],
   );
 
   // Filter updates are expensive to apply (since they impact the entire tree).
@@ -223,15 +223,18 @@ export default function ComponentsSettings(_: {||}) {
   // The Store will avoid doing any expensive work unless they've changed.
   // We just want to batch the work in the event that they do change.
   const componentFiltersRef = useRef<Array<ComponentFilter>>(componentFilters);
-  useEffect(() => {
-    componentFiltersRef.current = componentFilters;
-    return () => {};
-  }, [componentFilters]);
+  useEffect(
+    () => {
+      componentFiltersRef.current = componentFilters;
+      return () => {};
+    },
+    [componentFilters],
+  );
   useEffect(
     () => () => {
       store.componentFilters = [...componentFiltersRef.current];
     },
-    [store]
+    [store],
   );
 
   return (
@@ -273,10 +276,9 @@ export default function ComponentsSettings(_: {||}) {
                     componentFilter.isValid === false
                       ? 'Filter invalid'
                       : componentFilter.isEnabled
-                      ? 'Filter enabled'
-                      : 'Filter disabled'
-                  }
-                >
+                        ? 'Filter enabled'
+                        : 'Filter disabled'
+                  }>
                   <ToggleIcon
                     isEnabled={componentFilter.isEnabled}
                     isValid={
@@ -290,16 +292,15 @@ export default function ComponentsSettings(_: {||}) {
                 <select
                   className={styles.Select}
                   value={componentFilter.type}
-                  onChange={({ currentTarget }) =>
+                  onChange={({currentTarget}) =>
                     changeFilterType(
                       componentFilter,
                       ((parseInt(
                         currentTarget.value,
-                        10
-                      ): any): ComponentFilterType)
+                        10,
+                      ): any): ComponentFilterType),
                     )
-                  }
-                >
+                  }>
                   <option value={ComponentFilterLocation}>location</option>
                   <option value={ComponentFilterDisplayName}>name</option>
                   <option value={ComponentFilterElementType}>type</option>
@@ -318,13 +319,12 @@ export default function ComponentsSettings(_: {||}) {
                   <select
                     className={styles.Select}
                     value={componentFilter.value}
-                    onChange={({ currentTarget }) =>
+                    onChange={({currentTarget}) =>
                       updateFilterValueElementType(
                         componentFilter,
-                        ((parseInt(currentTarget.value, 10): any): ElementType)
+                        ((parseInt(currentTarget.value, 10): any): ElementType),
                       )
-                    }
-                  >
+                    }>
                     <option value={ElementTypeClass}>class</option>
                     <option value={ElementTypeContext}>context</option>
                     <option value={ElementTypeFunction}>function</option>
@@ -344,10 +344,10 @@ export default function ComponentsSettings(_: {||}) {
                     className={styles.Input}
                     type="text"
                     placeholder="Regular expression"
-                    onChange={({ currentTarget }) =>
+                    onChange={({currentTarget}) =>
                       updateFilterValueRegExp(
                         componentFilter,
-                        currentTarget.value
+                        currentTarget.value,
                       )
                     }
                     value={componentFilter.value}
@@ -357,8 +357,7 @@ export default function ComponentsSettings(_: {||}) {
               <td className={styles.TableCell}>
                 <Button
                   onClick={() => removeFilter(index)}
-                  title="Delete filter"
-                >
+                  title="Delete filter">
                   <ButtonIcon type="delete" />
                 </Button>
               </td>
@@ -379,7 +378,7 @@ type ToggleIconProps = {|
   isEnabled: boolean,
   isValid: boolean,
 |};
-function ToggleIcon({ isEnabled, isValid }: ToggleIconProps) {
+function ToggleIcon({isEnabled, isValid}: ToggleIconProps) {
   let className;
   if (isValid) {
     className = isEnabled ? styles.ToggleOn : styles.ToggleOff;

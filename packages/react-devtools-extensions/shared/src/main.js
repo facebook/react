@@ -1,7 +1,7 @@
 /* global chrome */
 
-import { createElement } from 'react';
-import { unstable_createRoot as createRoot, flushSync } from 'react-dom';
+import {createElement} from 'react';
+import {unstable_createRoot as createRoot, flushSync} from 'react-dom';
 import Bridge from 'react-devtools-shared/src/bridge';
 import Store from 'react-devtools-shared/src/devtools/store';
 import inject from './inject';
@@ -10,7 +10,10 @@ import {
   getBrowserName,
   getBrowserTheme,
 } from './utils';
-import { getSavedComponentFilters, getAppendComponentStack } from 'react-devtools-shared/src/utils';
+import {
+  getSavedComponentFilters,
+  getAppendComponentStack,
+} from 'react-devtools-shared/src/utils';
 import {
   localStorageGetItem,
   localStorageRemoveItem,
@@ -93,7 +96,7 @@ function createPanelIfReactLoaded() {
             };
           },
           send(event: string, payload: any, transferable?: Array<any>) {
-            port.postMessage({ event, payload }, transferable);
+            port.postMessage({event, payload}, transferable);
           },
         });
         bridge.addListener('reloadAppForProfiling', () => {

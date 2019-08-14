@@ -2,7 +2,7 @@
 
 // This test harness mounts each test app as a separate root to test multi-root applications.
 
-import { createElement } from 'react';
+import {createElement} from 'react';
 import {
   // $FlowFixMe Flow does not yet know about createRoot()
   unstable_createRoot as createRoot,
@@ -19,7 +19,7 @@ import ReactNativeWeb from './ReactNativeWeb';
 import ToDoList from './ToDoList';
 import Toggle from './Toggle';
 import SuspenseTree from './SuspenseTree';
-import { ignoreErrors, ignoreWarnings } from './console';
+import {ignoreErrors, ignoreWarnings} from './console';
 
 import './styles.css';
 

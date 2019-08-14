@@ -1,7 +1,7 @@
 // @flow
 
-import type { Dehydrated } from 'react-devtools-shared/src/hydration';
-import type { ElementType } from 'react-devtools-shared/src/types';
+import type {Dehydrated} from 'react-devtools-shared/src/hydration';
+import type {ElementType} from 'react-devtools-shared/src/types';
 
 // Each element on the frontend corresponds to a Fiber on the backend.
 // Some of its information (e.g. id, type, displayName) come from the backend.
@@ -84,5 +84,9 @@ export type InspectedElement = {|
 
 export type DehydratedData = {|
   cleaned: Array<Array<string | number>>,
-  data: string | Dehydrated | Array<Dehydrated> | { [key: string]: string | Dehydrated },
+  data:
+    | string
+    | Dehydrated
+    | Array<Dehydrated>
+    | {[key: string]: string | Dehydrated},
 |};

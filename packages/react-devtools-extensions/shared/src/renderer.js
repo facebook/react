@@ -8,7 +8,7 @@
  * @flow
  */
 
-import { attach } from 'react-devtools-shared/src/backend/renderer';
+import {attach} from 'react-devtools-shared/src/backend/renderer';
 
 Object.defineProperty(
   window,

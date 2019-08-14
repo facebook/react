@@ -1,8 +1,8 @@
 // @flow
 
-import { PROFILER_EXPORT_VERSION } from 'react-devtools-shared/src/constants';
+import {PROFILER_EXPORT_VERSION} from 'react-devtools-shared/src/constants';
 
-import type { ProfilingDataBackend } from 'react-devtools-shared/src/backend/types';
+import type {ProfilingDataBackend} from 'react-devtools-shared/src/backend/types';
 import type {
   ProfilingDataExport,
   ProfilingDataForRootExport,
@@ -29,7 +29,7 @@ const commitGradient = [
 export function prepareProfilingDataFrontendFromBackendAndStore(
   dataBackends: Array<ProfilingDataBackend>,
   operationsByRootID: Map<number, Array<Array<number>>>,
-  snapshotsByRootID: Map<number, Map<number, SnapshotNode>>
+  snapshotsByRootID: Map<number, Map<number, SnapshotNode>>,
 ): ProfilingDataFrontend {
   const dataForRoots: Map<number, ProfilingDataForRootFrontend> = new Map();
 
@@ -61,7 +61,7 @@ export function prepareProfilingDataFrontendFromBackendAndStore(
                 : null,
             duration: commitDataBackend.duration,
             fiberActualDurations: new Map(
-              commitDataBackend.fiberActualDurations
+              commitDataBackend.fiberActualDurations,
             ),
             fiberSelfDurations: new Map(commitDataBackend.fiberSelfDurations),
             interactionIDs: commitDataBackend.interactionIDs,
@@ -76,18 +76,18 @@ export function prepareProfilingDataFrontendFromBackendAndStore(
           rootID,
           snapshots,
         });
-      }
+      },
     );
   });
 
-  return { dataForRoots };
+  return {dataForRoots};
 }
 
 // Converts a Profiling data export into the format required by the Store.
 export function prepareProfilingDataFrontendFromExport(
-  profilingDataExport: ProfilingDataExport
+  profilingDataExport: ProfilingDataExport,
 ): ProfilingDataFrontend {
-  const { version } = profilingDataExport;
+  const {version} = profilingDataExport;
 
   if (version !== PROFILER_EXPORT_VERSION) {
     throw Error(`Unsupported profiler export version "${version}"`);
@@ -124,7 +124,7 @@ export function prepareProfilingDataFrontendFromExport(
             interactionIDs,
             priorityLevel,
             timestamp,
-          })
+          }),
         ),
         displayName,
         initialTreeBaseDurations: new Map(initialTreeBaseDurations),
@@ -134,15 +134,15 @@ export function prepareProfilingDataFrontendFromExport(
         rootID,
         snapshots: new Map(snapshots),
       });
-    }
+    },
   );
 
-  return { dataForRoots };
+  return {dataForRoots};
 }
 
 // Converts a Store Profiling data into a format that can be safely (JSON) serialized for export.
 export function prepareProfilingDataExport(
-  profilingDataFrontend: ProfilingDataFrontend
+  profilingDataFrontend: ProfilingDataFrontend,
 ): ProfilingDataExport {
   const dataForRoots: Array<ProfilingDataForRootExport> = [];
   profilingDataFrontend.dataForRoots.forEach(
@@ -177,11 +177,11 @@ export function prepareProfilingDataExport(
             interactionIDs,
             priorityLevel,
             timestamp,
-          })
+          }),
         ),
         displayName,
         initialTreeBaseDurations: Array.from(
-          initialTreeBaseDurations.entries()
+          initialTreeBaseDurations.entries(),
         ),
         interactionCommits: Array.from(interactionCommits.entries()),
         interactions: Array.from(interactions.entries()),
@@ -189,7 +189,7 @@ export function prepareProfilingDataExport(
         rootID,
         snapshots: Array.from(snapshots.entries()),
       });
-    }
+    },
   );
 
   return {
@@ -222,7 +222,7 @@ export const scale = (
   minValue: number,
   maxValue: number,
   minRange: number,
-  maxRange: number
+  maxRange: number,
 ) => (value: number, fallbackValue: number) =>
   maxValue - minValue === 0
     ? fallbackValue

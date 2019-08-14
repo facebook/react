@@ -1,22 +1,25 @@
 /** @flow */
 
-import React, { forwardRef } from 'react';
+import React, {forwardRef} from 'react';
 import Bridge from 'react-devtools-shared/src/bridge';
 import Store from 'react-devtools-shared/src/devtools/store';
 import DevTools from 'react-devtools-shared/src/devtools/views/DevTools';
-import { getSavedComponentFilters, getAppendComponentStack } from 'react-devtools-shared/src/utils';
+import {
+  getSavedComponentFilters,
+  getAppendComponentStack,
+} from 'react-devtools-shared/src/utils';
 import {
   MESSAGE_TYPE_GET_SAVED_PREFERENCES,
   MESSAGE_TYPE_SAVED_PREFERENCES,
 } from './constants';
 
-import type { FrontendBridge } from 'react-devtools-shared/src/bridge';
-import type { Props } from 'react-devtools-shared/src/devtools/views/DevTools';
+import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
+import type {Props} from 'react-devtools-shared/src/devtools/views/DevTools';
 
 export function initialize(
-  contentWindow: window
+  contentWindow: window,
 ): React.AbstractComponent<Props, mixed> {
-  const onMessage = ({ data, source }) => {
+  const onMessage = ({data, source}) => {
     if (source === 'react-devtools-content-script') {
       // Ignore messages from the DevTools browser extension.
     }
@@ -36,7 +39,7 @@ export function initialize(
             appendComponentStack: getAppendComponentStack(),
             componentFilters: getSavedComponentFilters(),
           },
-          '*'
+          '*',
         );
         break;
       default:
@@ -48,7 +51,7 @@ export function initialize(
 
   const bridge: FrontendBridge = new Bridge({
     listen(fn) {
-      const onMessage = ({ data }) => {
+      const onMessage = ({data}) => {
         fn(data);
       };
       window.addEventListener('message', onMessage);
@@ -57,7 +60,7 @@ export function initialize(
       };
     },
     send(event: string, payload: any, transferable?: Array<any>) {
-      contentWindow.postMessage({ event, payload }, '*', transferable);
+      contentWindow.postMessage({event, payload}, '*', transferable);
     },
   });
 

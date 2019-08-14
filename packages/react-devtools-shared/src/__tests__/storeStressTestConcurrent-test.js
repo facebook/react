@@ -43,7 +43,7 @@ describe('StoreStressConcurrent', () => {
     const d = <D key="d" />;
     const e = <E key="e" />;
 
-    function Parent({ children }) {
+    function Parent({children}) {
       return children;
     }
 
@@ -201,7 +201,7 @@ describe('StoreStressConcurrent', () => {
       [c, a],
     ];
 
-    const Root = ({ children }) => {
+    const Root = ({children}) => {
       return children;
     };
 
@@ -246,24 +246,24 @@ describe('StoreStressConcurrent', () => {
           root.render(
             <Root>
               <div>{steps[i]}</div>
-            </Root>
-          )
+            </Root>,
+          ),
         );
         expect(print(store)).toMatch(snapshots[i]);
         act(() =>
           root.render(
             <Root>
               <div>{steps[j]}</div>
-            </Root>
-          )
+            </Root>,
+          ),
         );
         expect(print(store)).toMatch(snapshots[j]);
         act(() =>
           root.render(
             <Root>
               <div>{steps[i]}</div>
-            </Root>
-          )
+            </Root>,
+          ),
         );
         expect(print(store)).toMatch(snapshots[i]);
         act(() => root.unmount());
@@ -304,7 +304,7 @@ describe('StoreStressConcurrent', () => {
       throw new Promise(() => {});
     };
 
-    const Root = ({ children }) => {
+    const Root = ({children}) => {
       return children;
     };
 
@@ -321,8 +321,8 @@ describe('StoreStressConcurrent', () => {
             <X />
             <React.Suspense fallback={z}>{steps[i]}</React.Suspense>
             <Y />
-          </Root>
-        )
+          </Root>,
+        ),
       );
       // We snapshot each step once so it doesn't regress.
       expect(store).toMatchSnapshot();
@@ -343,8 +343,8 @@ describe('StoreStressConcurrent', () => {
               <Z />
             </React.Suspense>
             <Y />
-          </Root>
-        )
+          </Root>,
+        ),
       );
       expect(print(store)).toEqual(snapshots[i]);
       act(() => root.unmount());
@@ -364,8 +364,8 @@ describe('StoreStressConcurrent', () => {
               <X />
               <React.Suspense fallback={z}>{steps[i]}</React.Suspense>
               <Y />
-            </Root>
-          )
+            </Root>,
+          ),
         );
         expect(print(store)).toEqual(snapshots[i]);
         // Re-render with steps[j].
@@ -375,8 +375,8 @@ describe('StoreStressConcurrent', () => {
               <X />
               <React.Suspense fallback={z}>{steps[j]}</React.Suspense>
               <Y />
-            </Root>
-          )
+            </Root>,
+          ),
         );
         // Verify the successful transition to steps[j].
         expect(print(store)).toEqual(snapshots[j]);
@@ -387,8 +387,8 @@ describe('StoreStressConcurrent', () => {
               <X />
               <React.Suspense fallback={z}>{steps[i]}</React.Suspense>
               <Y />
-            </Root>
-          )
+            </Root>,
+          ),
         );
         expect(print(store)).toEqual(snapshots[i]);
         // Clean up after every iteration.
@@ -414,8 +414,8 @@ describe('StoreStressConcurrent', () => {
                 <Z />
               </React.Suspense>
               <Y />
-            </Root>
-          )
+            </Root>,
+          ),
         );
         expect(print(store)).toEqual(snapshots[i]);
         // Re-render with steps[j].
@@ -429,8 +429,8 @@ describe('StoreStressConcurrent', () => {
                 <Z />
               </React.Suspense>
               <Y />
-            </Root>
-          )
+            </Root>,
+          ),
         );
         // Verify the successful transition to steps[j].
         expect(print(store)).toEqual(snapshots[j]);
@@ -445,8 +445,8 @@ describe('StoreStressConcurrent', () => {
                 <Z />
               </React.Suspense>
               <Y />
-            </Root>
-          )
+            </Root>,
+          ),
         );
         expect(print(store)).toEqual(snapshots[i]);
         // Clean up after every iteration.
@@ -468,8 +468,8 @@ describe('StoreStressConcurrent', () => {
               <X />
               <React.Suspense fallback={z}>{steps[i]}</React.Suspense>
               <Y />
-            </Root>
-          )
+            </Root>,
+          ),
         );
         expect(print(store)).toEqual(snapshots[i]);
         // Re-render with steps[j].
@@ -483,8 +483,8 @@ describe('StoreStressConcurrent', () => {
                 <Z />
               </React.Suspense>
               <Y />
-            </Root>
-          )
+            </Root>,
+          ),
         );
         // Verify the successful transition to steps[j].
         expect(print(store)).toEqual(snapshots[j]);
@@ -495,8 +495,8 @@ describe('StoreStressConcurrent', () => {
               <X />
               <React.Suspense fallback={z}>{steps[i]}</React.Suspense>
               <Y />
-            </Root>
-          )
+            </Root>,
+          ),
         );
         expect(print(store)).toEqual(snapshots[i]);
         // Clean up after every iteration.
@@ -522,8 +522,8 @@ describe('StoreStressConcurrent', () => {
                 <Z />
               </React.Suspense>
               <Y />
-            </Root>
-          )
+            </Root>,
+          ),
         );
         expect(print(store)).toEqual(snapshots[i]);
         // Re-render with steps[j].
@@ -533,8 +533,8 @@ describe('StoreStressConcurrent', () => {
               <X />
               <React.Suspense fallback={z}>{steps[j]}</React.Suspense>
               <Y />
-            </Root>
-          )
+            </Root>,
+          ),
         );
         // Verify the successful transition to steps[j].
         expect(print(store)).toEqual(snapshots[j]);
@@ -549,8 +549,8 @@ describe('StoreStressConcurrent', () => {
                 <Z />
               </React.Suspense>
               <Y />
-            </Root>
-          )
+            </Root>,
+          ),
         );
         expect(print(store)).toEqual(snapshots[i]);
         // Clean up after every iteration.
@@ -572,8 +572,8 @@ describe('StoreStressConcurrent', () => {
               <X />
               <React.Suspense fallback={steps[j]}>{steps[i]}</React.Suspense>
               <Y />
-            </Root>
-          )
+            </Root>,
+          ),
         );
 
         // We get ID from the index in the tree above:
@@ -614,8 +614,8 @@ describe('StoreStressConcurrent', () => {
                 <Z />
               </React.Suspense>
               <Y />
-            </Root>
-          )
+            </Root>,
+          ),
         );
         expect(print(store)).toEqual(snapshots[j]);
 
@@ -637,8 +637,8 @@ describe('StoreStressConcurrent', () => {
               <X />
               <React.Suspense fallback={steps[j]}>{steps[i]}</React.Suspense>
               <Y />
-            </Root>
-          )
+            </Root>,
+          ),
         );
         // Fallback is still forced though.
         expect(print(store)).toEqual(snapshots[j]);
@@ -693,7 +693,7 @@ describe('StoreStressConcurrent', () => {
       throw new Promise(() => {});
     };
 
-    const MaybeSuspend = ({ children, suspend }) => {
+    const MaybeSuspend = ({children, suspend}) => {
       if (suspend) {
         return (
           <div>
@@ -711,7 +711,7 @@ describe('StoreStressConcurrent', () => {
       );
     };
 
-    const Root = ({ children }) => {
+    const Root = ({children}) => {
       return children;
     };
 
@@ -730,8 +730,8 @@ describe('StoreStressConcurrent', () => {
               <MaybeSuspend suspend={false}>{steps[i]}</MaybeSuspend>
             </React.Suspense>
             <Y />
-          </Root>
-        )
+          </Root>,
+        ),
       );
       // We snapshot each step once so it doesn't regress.
       expect(store).toMatchSnapshot();
@@ -755,8 +755,8 @@ describe('StoreStressConcurrent', () => {
               <Z />
             </React.Suspense>
             <Y />
-          </Root>
-        )
+          </Root>,
+        ),
       );
       // We snapshot each step once so it doesn't regress.
       expect(store).toMatchSnapshot();
@@ -780,8 +780,8 @@ describe('StoreStressConcurrent', () => {
                 <MaybeSuspend suspend={false}>{steps[i]}</MaybeSuspend>
               </React.Suspense>
               <Y />
-            </Root>
-          )
+            </Root>,
+          ),
         );
         expect(print(store)).toEqual(snapshots[i]);
         // Re-render with steps[j].
@@ -793,8 +793,8 @@ describe('StoreStressConcurrent', () => {
                 <MaybeSuspend suspend={false}>{steps[j]}</MaybeSuspend>
               </React.Suspense>
               <Y />
-            </Root>
-          )
+            </Root>,
+          ),
         );
         // Verify the successful transition to steps[j].
         expect(print(store)).toEqual(snapshots[j]);
@@ -807,8 +807,8 @@ describe('StoreStressConcurrent', () => {
                 <MaybeSuspend suspend={false}>{steps[i]}</MaybeSuspend>
               </React.Suspense>
               <Y />
-            </Root>
-          )
+            </Root>,
+          ),
         );
         expect(print(store)).toEqual(snapshots[i]);
         // Clean up after every iteration.
@@ -837,8 +837,8 @@ describe('StoreStressConcurrent', () => {
                 <Z />
               </React.Suspense>
               <Y />
-            </Root>
-          )
+            </Root>,
+          ),
         );
         expect(print(store)).toEqual(fallbackSnapshots[i]);
         // Re-render with steps[j].
@@ -855,8 +855,8 @@ describe('StoreStressConcurrent', () => {
                 <Z />
               </React.Suspense>
               <Y />
-            </Root>
-          )
+            </Root>,
+          ),
         );
         // Verify the successful transition to steps[j].
         expect(print(store)).toEqual(fallbackSnapshots[j]);
@@ -874,8 +874,8 @@ describe('StoreStressConcurrent', () => {
                 <Z />
               </React.Suspense>
               <Y />
-            </Root>
-          )
+            </Root>,
+          ),
         );
         expect(print(store)).toEqual(fallbackSnapshots[i]);
         // Clean up after every iteration.
@@ -899,8 +899,8 @@ describe('StoreStressConcurrent', () => {
                 <MaybeSuspend suspend={false}>{steps[i]}</MaybeSuspend>
               </React.Suspense>
               <Y />
-            </Root>
-          )
+            </Root>,
+          ),
         );
         expect(print(store)).toEqual(snapshots[i]);
         // Re-render with steps[j].
@@ -912,8 +912,8 @@ describe('StoreStressConcurrent', () => {
                 <MaybeSuspend suspend={true}>{steps[i]}</MaybeSuspend>
               </React.Suspense>
               <Y />
-            </Root>
-          )
+            </Root>,
+          ),
         );
         // Verify the successful transition to steps[j].
         expect(print(store)).toEqual(fallbackSnapshots[j]);
@@ -926,8 +926,8 @@ describe('StoreStressConcurrent', () => {
                 <MaybeSuspend suspend={false}>{steps[i]}</MaybeSuspend>
               </React.Suspense>
               <Y />
-            </Root>
-          )
+            </Root>,
+          ),
         );
         expect(print(store)).toEqual(snapshots[i]);
         // Clean up after every iteration.
@@ -951,8 +951,8 @@ describe('StoreStressConcurrent', () => {
                 <MaybeSuspend suspend={true}>{steps[j]}</MaybeSuspend>
               </React.Suspense>
               <Y />
-            </Root>
-          )
+            </Root>,
+          ),
         );
         expect(print(store)).toEqual(fallbackSnapshots[i]);
         // Re-render with steps[j].
@@ -964,8 +964,8 @@ describe('StoreStressConcurrent', () => {
                 <MaybeSuspend suspend={false}>{steps[j]}</MaybeSuspend>
               </React.Suspense>
               <Y />
-            </Root>
-          )
+            </Root>,
+          ),
         );
         // Verify the successful transition to steps[j].
         expect(print(store)).toEqual(snapshots[j]);
@@ -978,8 +978,8 @@ describe('StoreStressConcurrent', () => {
                 <MaybeSuspend suspend={true}>{steps[j]}</MaybeSuspend>
               </React.Suspense>
               <Y />
-            </Root>
-          )
+            </Root>,
+          ),
         );
         expect(print(store)).toEqual(fallbackSnapshots[i]);
         // Clean up after every iteration.
@@ -1003,8 +1003,8 @@ describe('StoreStressConcurrent', () => {
                 <MaybeSuspend suspend={false}>{steps[i]}</MaybeSuspend>
               </React.Suspense>
               <Y />
-            </Root>
-          )
+            </Root>,
+          ),
         );
 
         // We get ID from the index in the tree above:
@@ -1043,8 +1043,8 @@ describe('StoreStressConcurrent', () => {
                 <MaybeSuspend suspend={true}>{steps[i]}</MaybeSuspend>
               </React.Suspense>
               <Y />
-            </Root>
-          )
+            </Root>,
+          ),
         );
         expect(print(store)).toEqual(fallbackSnapshots[j]);
 
@@ -1068,8 +1068,8 @@ describe('StoreStressConcurrent', () => {
                 <MaybeSuspend suspend={false}>{steps[i]}</MaybeSuspend>
               </React.Suspense>
               <Y />
-            </Root>
-          )
+            </Root>,
+          ),
         );
         // Fallback is still forced though.
         expect(print(store)).toEqual(fallbackSnapshots[j]);
