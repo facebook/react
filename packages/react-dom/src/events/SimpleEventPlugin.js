@@ -11,21 +11,21 @@ import type {EventPriority} from 'shared/ReactTypes';
 import type {
   TopLevelType,
   DOMTopLevelEventType,
-} from 'events/TopLevelEventTypes';
+} from 'legacy-events/TopLevelEventTypes';
 import type {
   DispatchConfig,
   ReactSyntheticEvent,
-} from 'events/ReactSyntheticEventType';
+} from 'legacy-events/ReactSyntheticEventType';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
-import type {EventTypes, PluginModule} from 'events/PluginModuleType';
+import type {EventTypes, PluginModule} from 'legacy-events/PluginModuleType';
 
 import {
   DiscreteEvent,
   UserBlockingEvent,
   ContinuousEvent,
 } from 'shared/ReactTypes';
-import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
-import SyntheticEvent from 'events/SyntheticEvent';
+import {accumulateTwoPhaseDispatches} from 'legacy-events/EventPropagators';
+import SyntheticEvent from 'legacy-events/SyntheticEvent';
 
 import * as DOMTopLevelEventTypes from './DOMTopLevelEventTypes';
 import warningWithoutStack from 'shared/warningWithoutStack';

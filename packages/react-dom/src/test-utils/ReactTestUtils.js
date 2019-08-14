@@ -15,12 +15,12 @@ import {
   HostComponent,
   HostText,
 } from 'shared/ReactWorkTags';
-import SyntheticEvent from 'events/SyntheticEvent';
+import SyntheticEvent from 'legacy-events/SyntheticEvent';
 import invariant from 'shared/invariant';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
 import {ELEMENT_NODE} from '../shared/HTMLNodeType';
 import * as DOMTopLevelEventTypes from '../events/DOMTopLevelEventTypes';
-import {PLUGIN_EVENT_SYSTEM} from 'events/EventSystemFlags';
+import {PLUGIN_EVENT_SYSTEM} from 'legacy-events/EventSystemFlags';
 import act from './ReactTestUtilsAct';
 
 const {findDOMNode} = ReactDOM;

@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {accumulateEnterLeaveDispatches} from 'events/EventPropagators';
+import {accumulateEnterLeaveDispatches} from 'legacy-events/EventPropagators';
 
 import {
   TOP_MOUSE_OUT,
