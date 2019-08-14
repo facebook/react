@@ -554,6 +554,34 @@ describe('ReactDOMServer', () => {
         ),
       ).not.toThrow();
     });
+
+    it('renders synchronously resolved lazy component', () => {
+      const LazyFoo = React.lazy(() => ({
+        then(resolve) {
+          resolve({
+            default: function Foo({id}) {
+              return <div id={id}>lazy</div>;
+            },
+          });
+        },
+      }));
+
+      expect(ReactDOMServer.renderToString(<LazyFoo id="foo" />)).toEqual(
+        '<div id="foo">lazy</div>',
+      );
+    });
+
+    it('throws error from synchronously rejected lazy component', () => {
+      const LazyFoo = React.lazy(() => ({
+        then(resolve, reject) {
+          reject(new Error('Bad lazy'));
+        },
+      }));
+
+      expect(() => ReactDOMServer.renderToString(<LazyFoo />)).toThrow(
+        'Bad lazy',
+      );
+    });
   });
 
   describe('renderToNodeStream', () => {
