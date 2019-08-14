@@ -31,7 +31,8 @@ module.exports = {
   },
   externals: {
     react: 'react',
-    'react-debug-tools': 'react-debug-tools',
+    // TODO: Once this package is published, remove the external
+    // 'react-debug-tools': 'react-debug-tools',
     'react-dom': 'react-dom',
     'react-is': 'react-is',
     scheduler: 'scheduler',
