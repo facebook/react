@@ -8,6 +8,7 @@
     "clipboard-js": "^0.3.6",
     "lodash.throttle": "^4.1.1",
     "memoize-one": "^3.1.1",
+    "node-events": "npm:events@^3.0.0",
     "react-virtualized-auto-sizer": "^1.0.2"
   }
 }

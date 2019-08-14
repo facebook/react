@@ -300,7 +300,9 @@ function startServer(port?: number = 8097) {
     close: function() {
       connected = null;
       onDisconnected();
-      clearTimeout(startServerTimeoutID);
+      if (startServerTimeoutID !== null) {
+        clearTimeout(startServerTimeoutID);
+      }
       server.close();
       httpServer.close();
     },

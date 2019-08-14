@@ -27,7 +27,7 @@ export const meta = {
   type: Symbol('type'),
 };
 
-type Dehydrated = {|
+export type Dehydrated = {|
   inspectable: boolean,
   name: string | null,
   readonly?: boolean,
@@ -176,7 +176,7 @@ export function dehydrate(
   path: Array<string | number>,
   isPathWhitelisted: (path: Array<string | number>) => boolean,
   level?: number = 0
-): string | Dehydrated | { [key: string]: string | Dehydrated } {
+): string | Dehydrated | Array<Dehydrated> | { [key: string]: string | Dehydrated } {
   const type = getDataType(data);
 
   switch (type) {

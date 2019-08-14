@@ -1,6 +1,6 @@
 // @flow
 
-const { printOwnersList } = require('./storeSerializer');
+const { printOwnersList } = require('../devtools/utils');
 
 describe('Store owners list', () => {
   let React;

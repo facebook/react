@@ -1,6 +1,6 @@
 // @flow
 
-import EventEmitter from 'events';
+import EventEmitter from 'node-events';
 
 import type { ComponentFilter, Wall } from './types';
 import type {

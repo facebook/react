@@ -343,15 +343,6 @@ export type DevToolsHook = {
   ) => void,
 };
 
-export type HooksNode = {
-  id: number,
-  isStateEditable: boolean,
-  name: string,
-  value: mixed,
-  subHooks: Array<HooksNode>,
-};
-export type HooksTree = Array<HooksNode>;
-
 export type ReactEventResponder<E, C> = {
   $$typeof: Symbol | number,
   displayName: string,

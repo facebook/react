@@ -407,17 +407,18 @@ export function attach(
     parentID: number,
     rootID: number
   ) {
-    const internalInstance = idToInternalInstanceMap.get(id);
-
     if (__DEBUG__) {
       console.group('crawlAndRecordInitialMounts() id:', id);
     }
 
-    internalInstanceToRootIDMap.set(internalInstance, rootID);
-    recordMount(internalInstance, id, parentID);
-    getChildren(internalInstance).forEach(child =>
-      crawlAndRecordInitialMounts(getID(child), id, rootID)
-    );
+    const internalInstance = idToInternalInstanceMap.get(id);
+    if (internalInstance != null) {
+      internalInstanceToRootIDMap.set(internalInstance, rootID);
+      recordMount(internalInstance, id, parentID);
+      getChildren(internalInstance).forEach(child =>
+        crawlAndRecordInitialMounts(getID(child), id, rootID)
+      );
+    }
 
     if (__DEBUG__) {
       console.groupEnd();
@@ -686,7 +687,12 @@ export function attach(
 
   function inspectElementRaw(id: number): InspectedElement | null {
     const internalInstance = idToInternalInstanceMap.get(id);
-    const displayName = getData(internalInstance).displayName;
+
+    if (internalInstance == null) {
+      return null;
+    }
+
+    const { displayName } = getData(internalInstance);
     const type = getElementType(internalInstance);
 
     let context = null;
@@ -695,33 +701,31 @@ export function attach(
     let state = null;
     let source = null;
 
-    if (internalInstance != null) {
-      const element = internalInstance._currentElement;
-      if (element !== null) {
-        props = element.props;
-        source = element._source != null ? element._source : null;
+    const element = internalInstance._currentElement;
+    if (element !== null) {
+      props = element.props;
+      source = element._source != null ? element._source : null;
 
-        let owner = element._owner;
-        if (owner) {
-          owners = [];
-          while (owner != null) {
-            owners.push({
-              displayName: getData(owner).displayName || 'Unknown',
-              id: getID(owner),
-              type: getElementType(owner),
-            });
-            if (owner._currentElement) {
-              owner = owner._currentElement._owner;
-            }
+      let owner = element._owner;
+      if (owner) {
+        owners = [];
+        while (owner != null) {
+          owners.push({
+            displayName: getData(owner).displayName || 'Unknown',
+            id: getID(owner),
+            type: getElementType(owner),
+          });
+          if (owner._currentElement) {
+            owner = owner._currentElement._owner;
           }
         }
       }
+    }
 
-      const publicInstance = internalInstance._instance;
-      if (publicInstance != null) {
-        context = publicInstance.context || null;
-        state = publicInstance.state || null;
-      }
+    const publicInstance = internalInstance._instance;
+    if (publicInstance != null) {
+      context = publicInstance.context || null;
+      state = publicInstance.state || null;
     }
 
     return {

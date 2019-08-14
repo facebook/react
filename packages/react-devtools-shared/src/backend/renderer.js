@@ -36,7 +36,7 @@ import {
   TREE_OPERATION_REORDER_CHILDREN,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
 } from '../constants';
-import { inspectHooksOfFiber } from './ReactDebugHooks';
+import { inspectHooksOfFiber } from 'react-debug-tools';
 import {
   patch as patchConsole,
   registerRenderer as registerRendererWithConsole,
@@ -285,6 +285,7 @@ export function getInternalReactConstants(
     const symbolOrNumber =
       typeof type === 'object' && type !== null ? type.$$typeof : type;
 
+    // $FlowFixMe Flow doesn't know about typeof "symbol"
     return typeof symbolOrNumber === 'symbol'
       ? symbolOrNumber.toString()
       : symbolOrNumber;
@@ -2746,7 +2747,9 @@ export function attach(
       }
     }
     const fiber = idToFiberMap.get(id);
-    scheduleUpdate(fiber);
+    if (fiber != null) {
+      scheduleUpdate(fiber);
+    }
   }
 
   // Remember if we're trying to restore the selection after reload.

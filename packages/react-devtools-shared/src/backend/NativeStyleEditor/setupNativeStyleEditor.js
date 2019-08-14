@@ -7,7 +7,7 @@ import type { BackendBridge } from 'react-devtools-shared/src/bridge';
 import type { RendererID } from '../types';
 import type { StyleAndLayout } from './types';
 
-export type ResolveNativeStyle = (stylesheetID: number) => ?Object;
+export type ResolveNativeStyle = (stylesheetID: any) => ?Object;
 
 export default function setupNativeStyleEditor(
   bridge: BackendBridge,
@@ -136,9 +136,8 @@ function measureStyle(
       );
       return;
     }
-    const margin = resolveBoxStyle('margin', resolvedStyle) || EMPTY_BOX_STYLE;
-    const padding =
-      resolveBoxStyle('padding', resolvedStyle) || EMPTY_BOX_STYLE;
+    const margin = resolvedStyle != null && resolveBoxStyle('margin', resolvedStyle) || EMPTY_BOX_STYLE;
+    const padding = resolvedStyle != null && resolveBoxStyle('padding', resolvedStyle) || EMPTY_BOX_STYLE;
     bridge.send(
       'NativeStyleEditor_styleAndLayout',
       ({

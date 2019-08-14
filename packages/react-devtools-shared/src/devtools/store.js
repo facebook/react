@@ -1,6 +1,6 @@
 // @flow
 
-import EventEmitter from 'events';
+import EventEmitter from 'node-events';
 import { inspect } from 'util';
 import {
   TREE_OPERATION_ADD,
@@ -18,7 +18,7 @@ import {
 } from '../utils';
 import { localStorageGetItem, localStorageSetItem } from '../storage';
 import { __DEBUG__ } from '../constants';
-import { printStore } from '../__tests__/storeSerializer';
+import { printStore } from './utils';
 import ProfilerStore from './ProfilerStore';
 
 import type { Element } from './views/Components/types';
