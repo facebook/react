@@ -406,7 +406,8 @@ if (
   };
 
   cancelHostCallback = function() {
-    scheduledHostCallback = null;
+    // TODO: Uncomment when we know why this breaks www.
+    // scheduledHostCallback = null;
   };
 
   requestHostTimeout = function(callback, ms) {
