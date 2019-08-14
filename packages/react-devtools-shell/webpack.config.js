@@ -17,9 +17,9 @@ if (!TARGET) {
   process.exit(1);
 }
 
-const __DEV__ = NODE_ENV === 'development';
+const builtModulesDir = resolve(__dirname, '..', '..', 'build', 'node_modules');
 
-const root = resolve(__dirname, '../..');
+const __DEV__ = NODE_ENV === 'development';
 
 const GITHUB_URL = getGitHubURL();
 const DEVTOOLS_VERSION = getVersionString();
@@ -33,11 +33,9 @@ const config = {
   },
   resolve: {
     alias: {
-      'react-devtools-inline': resolve(
-        root,
-        'packages/react-devtools-inline/src/',
-      ),
-      src: resolve(root, 'src'),
+      react: resolve(builtModulesDir, 'react'),
+      'react-dom': resolve(builtModulesDir, 'react-dom'),
+      scheduler: resolve(builtModulesDir, 'scheduler'),
     },
   },
   plugins: [
@@ -54,7 +52,12 @@ const config = {
         test: /\.js$/,
         loader: 'babel-loader',
         options: {
-          configFile: resolve(root, 'babel.config.js'),
+          configFile: resolve(
+            __dirname,
+            '..',
+            'react-devtools-shared',
+            'babel.config.js',
+          ),
         },
       },
       {

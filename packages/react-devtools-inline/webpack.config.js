@@ -29,11 +29,6 @@ module.exports = {
     library: '[name]',
     libraryTarget: 'commonjs2',
   },
-  resolve: {
-    alias: {
-      src: resolve(__dirname, '../../src'),
-    },
-  },
   externals: {
     react: 'react',
     'react-dom': 'react-dom',
@@ -54,7 +49,12 @@ module.exports = {
         test: /\.js$/,
         loader: 'babel-loader',
         options: {
-          configFile: resolve(__dirname, '../../babel.config.js'),
+          configFile: resolve(
+            __dirname,
+            '..',
+            'react-devtools-shared',
+            'babel.config.js',
+          ),
         },
       },
       {

@@ -1,0 +1,1 @@
+Harness for testing local changes to the `react-devtools-inline` and `react-devtools-shared` packages.

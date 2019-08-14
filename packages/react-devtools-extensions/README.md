@@ -12,6 +12,6 @@ You can also build and install from source:
 ```sh
 yarn install
 
-yarn build:extension:chrome # builds at "packages/react-devtools-extensions/chrome/build"
-yarn build:extension:firefox # builds at "packages/react-devtools-extensions/firefox/build"
+yarn build:chrome # builds at "packages/react-devtools-extensions/chrome/build"
+yarn build:firefox # builds at "packages/react-devtools-extensions/firefox/build"
 ```

@@ -97,8 +97,8 @@ export default function DevTools({
 
   const viewElementSource = useMemo(
     () => ({
-      canViewElementSourceFunction,
-      viewElementSourceFunction,
+      canViewElementSourceFunction: canViewElementSourceFunction || null,
+      viewElementSourceFunction: viewElementSourceFunction || null,
     }),
     [canViewElementSourceFunction, viewElementSourceFunction],
   );

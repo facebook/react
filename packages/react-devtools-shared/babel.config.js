@@ -1,5 +1,5 @@
-const chromeManifest = require('./chrome/manifest.json');
-const firefoxManifest = require('./firefox/manifest.json');
+const chromeManifest = require('../react-devtools-extensions/chrome/manifest.json');
+const firefoxManifest = require('../react-devtools-extensions/firefox/manifest.json');
 
 const minChromeVersion = parseInt(chromeManifest.minimum_chrome_version, 10);
 const minFirefoxVersion = parseInt(
@@ -26,7 +26,7 @@ module.exports = api => {
     targets.firefox = minFirefoxVersion.toString();
 
     // This targets RN/Hermes.
-    targets.IE = '11';
+    targets.ie = '11';
   }
   const plugins = [
     ['@babel/plugin-transform-flow-strip-types'],

@@ -97,7 +97,7 @@ const postProcess = async (tempPath, destinationPath) => {
 };
 
 const main = async buildId => {
-  const root = join(__dirname, '..', buildId);
+  const root = join(__dirname, buildId);
   const manifestPath = join(root, 'manifest.json');
   const destinationPath = join(root, 'build');
 

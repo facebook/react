@@ -30,11 +30,6 @@ module.exports = {
     library: 'ReactDevToolsBackend',
     libraryTarget: 'umd',
   },
-  resolve: {
-    alias: {
-      src: resolve(__dirname, '../../src'),
-    },
-  },
   plugins: [
     new DefinePlugin({
       __DEV__: true,
@@ -49,7 +44,12 @@ module.exports = {
         test: /\.js$/,
         loader: 'babel-loader',
         options: {
-          configFile: resolve(__dirname, '../../babel.config.js'),
+          configFile: resolve(
+            __dirname,
+            '..',
+            'react-devtools-shared',
+            'babel.config.js',
+          ),
         },
       },
     ],

@@ -10,6 +10,8 @@ if (!NODE_ENV) {
   process.exit(1);
 }
 
+const builtModulesDir = resolve(__dirname, '..', '..', 'build', 'node_modules');
+
 const __DEV__ = NODE_ENV === 'development';
 
 const GITHUB_URL = getGitHubURL();
@@ -27,7 +29,9 @@ module.exports = {
   },
   resolve: {
     alias: {
-      src: resolve(__dirname, '../../../src'),
+      react: resolve(builtModulesDir, 'react'),
+      'react-dom': resolve(builtModulesDir, 'react-dom'),
+      scheduler: resolve(builtModulesDir, 'scheduler'),
     },
   },
   plugins: [
@@ -44,7 +48,12 @@ module.exports = {
         test: /\.js$/,
         loader: 'babel-loader',
         options: {
-          configFile: resolve(__dirname, '../../../babel.config.js'),
+          configFile: resolve(
+            __dirname,
+            '..',
+            'react-devtools-shared',
+            'babel.config.js',
+          ),
         },
       },
     ],
