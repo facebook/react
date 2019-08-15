@@ -213,7 +213,8 @@ describe.each(table)('Hover responder', hasPointerEvents => {
 
       const target = ref.current;
       dispatchPointerHoverEnter(target);
-      dispatchPointerHoverMove(target, {from: {x: 0, y: 0}, to: {x: 1, y: 1}});
+      dispatchPointerHoverMove(target, {x: 0, y: 0});
+      dispatchPointerHoverMove(target, {x: 1, y: 1});
       expect(onHoverMove).toHaveBeenCalledTimes(2);
       expect(onHoverMove).toHaveBeenCalledWith(
         expect.objectContaining({type: 'hovermove'}),
@@ -317,10 +318,8 @@ describe.each(table)('Hover responder', hasPointerEvents => {
     const target = ref.current;
 
     dispatchPointerHoverEnter(target, {x: 10, y: 10});
-    dispatchPointerHoverMove(target, {
-      from: {x: 10, y: 10},
-      to: {x: 20, y: 20},
-    });
+    dispatchPointerHoverMove(target, {x: 10, y: 10});
+    dispatchPointerHoverMove(target, {x: 20, y: 20});
     dispatchPointerHoverExit(target, {x: 20, y: 20});
 
     expect(eventLog).toEqual([
