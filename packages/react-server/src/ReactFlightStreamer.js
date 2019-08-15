@@ -8,7 +8,6 @@
  */
 
 import type {Destination} from './ReactServerHostConfig';
-import type {ReactNodeList} from 'shared/ReactTypes';
 
 import {
   scheduleWork,
@@ -17,36 +16,96 @@ import {
   completeWriting,
   flushBuffered,
   close,
+  convertStringToBuffer,
 } from './ReactServerHostConfig';
-import {formatChunk} from './ReactServerFormatConfig';
+import {formatChunkAsString} from './ReactServerFormatConfig';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
+
+export type ReactModel =
+  | React$Element<any>
+  | string
+  | boolean
+  | number
+  | null
+  | Iterable<ReactModel>
+  | ReactModelObject;
+
+type ReactJSONValue =
+  | string
+  | boolean
+  | number
+  | null
+  | Array<ReactModel>
+  | ReactModelObject;
+
+type ReactModelObject = {
+  +[key: string]: ReactModel,
+};
 
 type OpaqueRequest = {
   destination: Destination,
-  children: ReactNodeList,
+  model: ReactModel,
   completedChunks: Array<Uint8Array>,
   flowing: boolean,
 };
 
 export function createRequest(
-  children: ReactNodeList,
+  model: ReactModel,
   destination: Destination,
 ): OpaqueRequest {
-  return {destination, children, completedChunks: [], flowing: false};
+  return {destination, model, completedChunks: [], flowing: false};
+}
+
+function resolveChildToHostFormat(child: ReactJSONValue): string {
+  if (typeof child === 'string') {
+    return child;
+  } else if (typeof child === 'number') {
+    return '' + child;
+  } else if (typeof child === 'boolean' || child === null) {
+    // Booleans are like null when they're React children.
+    return '';
+  } else if (Array.isArray(child)) {
+    return (child: Array<ReactModel>)
+      .map(c => resolveChildToHostFormat(resolveModelToJSON('', c)))
+      .join('');
+  } else {
+    throw new Error('Object models are not valid as children of host nodes.');
+  }
+}
+
+function resolveElementToHostFormat(type: string, props: Object): string {
+  let child = resolveModelToJSON('', props.children);
+  let childString = resolveChildToHostFormat(child);
+  return formatChunkAsString(
+    type,
+    Object.assign({}, props, {children: childString}),
+  );
+}
+
+function resolveModelToJSON(key: string, value: ReactModel): ReactJSONValue {
+  while (value && value.$$typeof === REACT_ELEMENT_TYPE) {
+    let element: React$Element<any> = (value: any);
+    let type = element.type;
+    let props = element.props;
+    if (typeof type === 'function') {
+      // This is a nested view model.
+      value = type(props);
+      continue;
+    } else if (typeof type === 'string') {
+      // This is a host element. E.g. HTML.
+      return resolveElementToHostFormat(type, props);
+    } else {
+      throw new Error('Unsupported type.');
+    }
+  }
+  return value;
 }
 
 function performWork(request: OpaqueRequest): void {
-  let element = (request.children: any);
-  request.children = null;
-  if (element && element.$$typeof !== REACT_ELEMENT_TYPE) {
-    return;
-  }
-  let type = element.type;
-  let props = element.props;
-  if (typeof type !== 'string') {
-    return;
-  }
-  request.completedChunks.push(formatChunk(type, props));
+  let rootModel = request.model;
+  request.model = null;
+  let json = JSON.stringify(rootModel, resolveModelToJSON);
+  request.completedChunks.push(convertStringToBuffer(json));
   if (request.flowing) {
     flushCompletedChunks(request);
   }

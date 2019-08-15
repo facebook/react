@@ -21,8 +21,18 @@ describe('ReactFlight', () => {
     ReactNoopFlight = require('react-noop-renderer/flight');
   });
 
-  it('can call render', () => {
-    let result = ReactNoopFlight.render(<div>hello world</div>);
-    expect(result).toEqual([{type: 'div', props: {children: 'hello world'}}]);
+  it('can resolve a model', () => {
+    function Bar({text}) {
+      return text.toUpperCase();
+    }
+    function Foo() {
+      return {
+        bar: [<Bar text="a" />, <Bar text="b" />],
+      };
+    }
+    let result = ReactNoopFlight.render({
+      foo: <Foo />,
+    });
+    expect(result).toEqual([{foo: {bar: ['A', 'B']}}]);
   });
 });

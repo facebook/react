@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactNodeList} from 'shared/ReactTypes';
+import type {ReactModel} from 'react-server/flight.inline-typed';
 import type {Writable} from 'stream';
 
 import {
@@ -20,11 +20,8 @@ function createDrainHandler(destination, request) {
   return () => startFlowing(request, 0);
 }
 
-function pipeToNodeWritable(
-  children: ReactNodeList,
-  destination: Writable,
-): void {
-  let request = createRequest(children, destination);
+function pipeToNodeWritable(model: ReactModel, destination: Writable): void {
+  let request = createRequest(model, destination);
   destination.on('drain', createDrainHandler(destination, request));
   startWork(request);
 }

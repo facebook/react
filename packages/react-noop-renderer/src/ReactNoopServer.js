@@ -32,6 +32,9 @@ const ReactNoopServer = ReactFizzStreamer({
   convertStringToBuffer(content: string): Uint8Array {
     return Buffer.from(content, 'utf8');
   },
+  formatChunkAsString(type: string, props: Object): string {
+    return JSON.stringify({type, props});
+  },
   formatChunk(type: string, props: Object): Uint8Array {
     return Buffer.from(JSON.stringify({type, props}), 'utf8');
   },

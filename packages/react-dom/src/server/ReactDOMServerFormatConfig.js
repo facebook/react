@@ -9,11 +9,15 @@
 
 import {convertStringToBuffer} from 'react-server/src/ReactServerHostConfig';
 
-export function formatChunk(type: string, props: Object): Uint8Array {
+export function formatChunkAsString(type: string, props: Object): string {
   let str = '<' + type + '>';
   if (typeof props.children === 'string') {
     str += props.children;
   }
   str += '</' + type + '>';
-  return convertStringToBuffer(str);
+  return str;
+}
+
+export function formatChunk(type: string, props: Object): Uint8Array {
+  return convertStringToBuffer(formatChunkAsString(type, props));
 }

@@ -35,9 +35,27 @@ describe('ReactFlightDOM', () => {
     }
   }
 
-  it('should call renderToReadableStream', async () => {
-    let stream = ReactFlightDOM.renderToReadableStream(<div>hello world</div>);
-    let result = await readResult(stream);
-    expect(result).toBe('<div>hello world</div>');
+  it('should resolve HTML', async () => {
+    function Text({children}) {
+      return <span>{children}</span>;
+    }
+    function HTML() {
+      return (
+        <div>
+          <Text>hello</Text>
+          <Text>world</Text>
+        </div>
+      );
+    }
+
+    let model = {
+      html: <HTML />,
+    };
+    let stream = ReactFlightDOM.renderToReadableStream(model);
+    jest.runAllTimers();
+    let result = JSON.parse(await readResult(stream));
+    expect(result).toEqual({
+      html: '<div><span>hello</span><span>world</span></div>',
+    });
   });
 });

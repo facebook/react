@@ -30,10 +30,28 @@ describe('ReactFlightDOM', () => {
     return writable;
   }
 
-  it('should call pipeToNodeWritable', () => {
+  it('should resolve HTML', () => {
+    function Text({children}) {
+      return <span>{children}</span>;
+    }
+    function HTML() {
+      return (
+        <div>
+          <Text>hello</Text>
+          <Text>world</Text>
+        </div>
+      );
+    }
+
     let writable = getTestWritable();
-    ReactFlightDOM.pipeToNodeWritable(<div>hello world</div>, writable);
+    let model = {
+      html: <HTML />,
+    };
+    ReactFlightDOM.pipeToNodeWritable(model, writable);
     jest.runAllTimers();
-    expect(writable.result).toBe('<div>hello world</div>');
+    let result = JSON.parse(writable.result);
+    expect(result).toEqual({
+      html: '<div><span>hello</span><span>world</span></div>',
+    });
   });
 });
