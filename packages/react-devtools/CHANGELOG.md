@@ -41,9 +41,9 @@ Host nodes (e.g. HTML `<div>`, React Native `View`) are now hidden by default, b
 
 Filter preferences are remembered between sessions.
 
-#### No more in-line props
+#### No more inline props
 
-Components in the tree no longer show in-line props. This was done to [make DevTools faster](https://github.com/facebook/react/blob/master/packages/react-devtools/OVERVIEW.md) and to make it easier to browse larger component trees.
+Components in the tree no longer show inline props. This was done to [make DevTools faster](https://github.com/facebook/react/blob/master/packages/react-devtools/OVERVIEW.md) and to make it easier to browse larger component trees.
 
 You can view a component's props, state, and hooks by selecting it:
 
@@ -100,6 +100,12 @@ The new Components tree formats these HOC names (along with several built-in uti
 Components decorated with multiple HOCs show the topmost badge and a count. Selecting the component shows all of the HOCs badges in the properties panel.
 
 ![Screenshot showing a component with multiple HOC badges](https://user-images.githubusercontent.com/29597/62303729-7fadbb00-b431-11e9-8685-45f5ab52b30b.png)
+
+#### Restoring selection between reloads
+
+DevTools now attempts to restore the previously selected element when you reload the page.
+
+![Video demonstrating selection persistence](https://user-images.githubusercontent.com/810438/63130054-2c02ac00-bfb1-11e9-92fa-382e9e433638.gif)
 
 #### Suspense toggle
 
