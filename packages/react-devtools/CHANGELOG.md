@@ -17,7 +17,7 @@
 #### Improved performance
 The legacy DevTools extension used to add significant performance overhead, making it unusable for some larger React applications. That overhead has been effectively eliminated in version 4.
 
-[Learn more](https://github.com/bvaughn/react-devtools-experimental/blob/master/OVERVIEW.md) about the performance optimizations that made this possible.
+[Learn more](https://github.com/facebook/react/blob/master/packages/react-devtools/OVERVIEW.md) about the performance optimizations that made this possible.
 
 #### Component stacks
 
@@ -43,7 +43,7 @@ Filter preferences are remembered between sessions.
 
 #### No more in-line props
 
-Components in the tree no longer show in-line props. This was done to [make DevTools faster](https://github.com/bvaughn/react-devtools-experimental/blob/master/OVERVIEW.md) and to make it easier to browse larger component trees.
+Components in the tree no longer show in-line props. This was done to [make DevTools faster](https://github.com/facebook/react/blob/master/packages/react-devtools/OVERVIEW.md) and to make it easier to browse larger component trees.
 
 You can view a component's props, state, and hooks by selecting it:
 
