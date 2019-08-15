@@ -21,7 +21,7 @@ The frontend and backend can be initialized in any order, but **the backend must
 ### `react-devtools-inline/backend`
 
 * **`initialize(contentWindow)`** -
-Installs the global hook on the window. This hook is how React and DevTools communicate. **This method must be called before React is loaded.** (This means before any `import` or `require` statements!)
+Installs the global hook on the window. This hook is how React and DevTools communicate. **This method must be called before React is loaded.** (This means before any `import` or `require` statements!)
 * **`activate(contentWindow)`** -
 Lets the backend know when the frontend is ready. It should not be called until after the frontend has been initialized, else the frontend might miss important tree-initialization events.
 
