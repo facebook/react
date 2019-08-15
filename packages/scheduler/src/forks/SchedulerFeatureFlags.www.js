@@ -9,9 +9,9 @@
 export const {
   enableIsInputPending,
   enableSchedulerDebugging,
-  requestIdleCallbackBeforeFirstFrame,
-  requestTimerEventBeforeFirstFrame,
-  enableMessageLoopImplementation,
 } = require('SchedulerFeatureFlags');
 
 export const enableProfiling = __PROFILE__;
+export const requestIdleCallbackBeforeFirstFrame = false;
+export const requestTimerEventBeforeFirstFrame = false;
+export const enableMessageLoopImplementation = true;
