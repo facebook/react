@@ -5,7 +5,7 @@
   "license": "MIT",
   "main": "./dist/backend.js",
   "repository": {
-    "url": "https://github.com/bvaughn/react-devtools-experimental.git",
+    "url": "https://github.com/facebook/react.git",
     "type": "git"
   },
   "files": [

@@ -4,7 +4,7 @@
   "description": "Use react-devtools outside of the browser",
   "license": "MIT",
   "repository": {
-    "url": "https://github.com/bvaughn/react-devtools-experimental.git",
+    "url": "https://github.com/facebook/react.git",
     "type": "git"
   },
   "bin": {

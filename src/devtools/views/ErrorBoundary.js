@@ -51,7 +51,7 @@ export default class ErrorBoundary extends Component<Props, State> {
     let bugURL = process.env.GITHUB_URL;
     if (bugURL) {
       const title = `Error: "${errorMessage || ''}"`;
-      const label = '😭 bug';
+      const label = 'Component: Developer Tools';
 
       let body = '<!-- please provide repro information here -->\n';
       body += '\n---------------------------------------------';
