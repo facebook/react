@@ -362,6 +362,15 @@ describe('SchedulerBrowser', () => {
     const enableMessageLoopImplementation = true;
     beforeAndAfterHooks(enableMessageLoopImplementation);
 
+    it('task that finishes before deadline', () => {
+      scheduleCallback(NormalPriority, () => {
+        runtime.log('Task');
+      });
+      runtime.assertLog(['Post Message']);
+      runtime.fireMessageEvent();
+      runtime.assertLog(['Message Event', 'Task']);
+    });
+
     it('task with continutation', () => {
       scheduleCallback(NormalPriority, () => {
         runtime.log('Task');
@@ -387,7 +396,48 @@ describe('SchedulerBrowser', () => {
       runtime.assertLog(['Message Event', 'Continuation']);
     });
 
-    it('task that throws', () => {
+    it('multiple tasks', () => {
+      scheduleCallback(NormalPriority, () => {
+        runtime.log('A');
+      });
+      scheduleCallback(NormalPriority, () => {
+        runtime.log('B');
+      });
+      runtime.assertLog(['Post Message']);
+      runtime.fireMessageEvent();
+      runtime.assertLog(['Message Event', 'A', 'B']);
+    });
+
+    it('multiple tasks with a yield in between', () => {
+      scheduleCallback(NormalPriority, () => {
+        runtime.log('A');
+        runtime.advanceTime(4999);
+      });
+      scheduleCallback(NormalPriority, () => {
+        runtime.log('B');
+      });
+      runtime.assertLog(['Post Message']);
+      runtime.fireMessageEvent();
+      runtime.assertLog([
+        'Message Event',
+        'A',
+        // Ran out of time. Post a continuation event.
+        'Post Message',
+      ]);
+      runtime.fireMessageEvent();
+      runtime.assertLog(['Message Event', 'B']);
+    });
+
+    it('cancels tasks', () => {
+      const task = scheduleCallback(NormalPriority, () => {
+        runtime.log('Task');
+      });
+      runtime.assertLog(['Post Message']);
+      cancelCallback(task);
+      runtime.assertLog([]);
+    });
+
+    it('throws when a task errors then continues in a new event', () => {
       scheduleCallback(NormalPriority, () => {
         runtime.log('Oops!');
         throw Error('Oops!');
