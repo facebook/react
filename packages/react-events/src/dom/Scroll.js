@@ -62,14 +62,16 @@ type ScrollEvent = {|
   y: null | number,
 |};
 
-const targetEventTypes = [
-  'scroll',
-  'pointerdown',
-  'touchstart',
-  'keyup',
-  'wheel',
-];
-const rootEventTypes = ['touchcancel', 'touchend'];
+const hasPointerEvents =
+  typeof window !== 'undefined' && window.PointerEvent !== undefined;
+
+const targetEventTypes = hasPointerEvents
+  ? ['scroll', 'pointerdown', 'keyup', 'wheel']
+  : ['scroll', 'mousedown', 'touchstart', 'keyup', 'wheel'];
+
+const rootEventTypes = hasPointerEvents
+  ? ['pointercancel', 'pointerup']
+  : ['touchcancel', 'touchend'];
 
 function isFunction(obj): boolean {
   return typeof obj === 'function';
@@ -237,17 +239,23 @@ const scrollResponderImpl = {
         state.pointerType = pointerType;
         break;
       }
+      case 'mousedown':
       case 'wheel': {
         state.pointerType = 'mouse';
         break;
       }
       case 'pointerdown': {
         state.pointerType = pointerType;
+        if (pointerType === 'touch' && !state.isTouching) {
+          state.isTouching = true;
+          context.addRootEventTypes(rootEventTypes);
+        }
         break;
       }
       case 'touchstart': {
         if (!state.isTouching) {
           state.isTouching = true;
+          state.pointerType = 'touch';
           context.addRootEventTypes(rootEventTypes);
         }
       }
@@ -262,6 +270,8 @@ const scrollResponderImpl = {
     const {type} = event;
 
     switch (type) {
+      case 'pointercancel':
+      case 'pointerup':
       case 'touchcancel':
       case 'touchend': {
         if (state.isTouching) {
