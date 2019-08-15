@@ -15,7 +15,7 @@
  * Change environment support for PointerEvent.
  */
 
-function hasPointerEvent(bool) {
+function hasPointerEvent() {
   return global != null && global.PointerEvent != null;
 }
 
@@ -57,23 +57,38 @@ const platform = {
  * Mock native events
  */
 
-function createEvent(type, data) {
+function createEvent(type, data = {}) {
   const event = document.createEvent('CustomEvent');
   event.initCustomEvent(type, true, true);
+  event.clientX = data.x || 0;
+  event.clientY = data.y || 0;
+  event.x = data.x || 0;
+  event.y = data.y || 0;
   if (data != null) {
-    Object.entries(data).forEach(([key, value]) => {
-      event[key] = value;
+    Object.keys(data).forEach(key => {
+      const value = data[key];
+      Object.defineProperty(event, key, {value});
     });
   }
   return event;
 }
 
-function createTouchEvent(type, data, id) {
+function createTouchEvent(type, data = {}, id) {
   return createEvent(type, {
     changedTouches: [
       {
-        ...data,
         identifier: id,
+        clientX: data.x || 0,
+        clientY: data.y || 0,
+        ...data,
+      },
+    ],
+    targetTouches: [
+      {
+        identifier: id,
+        clientX: 0 || data.x,
+        clientY: 0 || data.y,
+        ...data,
       },
     ],
   });
@@ -112,15 +127,43 @@ function gotpointercapture(data) {
 }
 
 function keydown(data) {
-  return createKeyboardEvent('keydown', data);
+  return createEvent('keydown', data);
 }
 
 function keyup(data) {
-  return createKeyboardEvent('keyup', data);
+  return createEvent('keyup', data);
 }
 
 function lostpointercapture(data) {
   return createEvent('lostpointercapture', data);
+}
+
+function mousedown(data) {
+  return createEvent('mousedown', data);
+}
+
+function mouseenter(data) {
+  return createEvent('mouseenter', data);
+}
+
+function mouseleave(data) {
+  return createEvent('mouseleave', data);
+}
+
+function mousemove(data) {
+  return createEvent('mousemove', data);
+}
+
+function mouseout(data) {
+  return createEvent('mouseout', data);
+}
+
+function mouseover(data) {
+  return createEvent('mouseover', data);
+}
+
+function mouseup(data) {
+  return createEvent('mouseup', data);
 }
 
 function pointercancel(data) {
@@ -155,32 +198,8 @@ function pointerup(data) {
   return createEvent('pointerup', data);
 }
 
-function mousedown(data) {
-  return createEvent('mousedown', data);
-}
-
-function mouseenter(data) {
-  return createEvent('mouseenter', data);
-}
-
-function mouseleave(data) {
-  return createEvent('mouseleave', data);
-}
-
-function mousemove(data) {
-  return createEvent('mousemove', data);
-}
-
-function mouseout(data) {
-  return createEvent('mouseout', data);
-}
-
-function mouseover(data) {
-  return createEvent('mouseover', data);
-}
-
-function mouseup(data) {
-  return createEvent('mouseup', data);
+function scroll(data) {
+  return createEvent('scroll', data);
 }
 
 function touchcancel(data, id) {
@@ -264,15 +283,15 @@ function dispatchPointerHoverEnter(target, {relatedTarget, x, y} = {}) {
     dispatch(pointerenter({pointerType, ...event}));
   }
   dispatch(mouseover(event));
-  dispatch(mouseover(event));
+  dispatch(mouseenter(event));
 }
 
-function dispatchPointerHoverMove(target, {from, to} = {}) {
+function dispatchPointerHoverMove(target, {x, y} = {}) {
   const dispatch = arg => target.dispatchEvent(arg);
   const button = -1;
   const pointerId = 1;
   const pointerType = 'mouse';
-  function dispatchMove({x, y}) {
+  function dispatchMove() {
     const event = {
       button,
       clientX: x,
@@ -285,8 +304,7 @@ function dispatchPointerHoverMove(target, {from, to} = {}) {
     }
     dispatch(mousemove(event));
   }
-  dispatchMove({x: from.x, y: from.y});
-  dispatchMove({x: to.x, y: to.y});
+  dispatchMove();
 }
 
 function dispatchPointerHoverExit(target, {relatedTarget, x, y} = {}) {
@@ -309,77 +327,135 @@ function dispatchPointerHoverExit(target, {relatedTarget, x, y} = {}) {
   dispatch(mouseleave(event));
 }
 
-function dispatchPointerCancel(target, options) {
+function dispatchPointerCancel(target, {pointerType = 'mouse', ...rest} = {}) {
   const dispatchEvent = arg => target.dispatchEvent(arg);
-  dispatchEvent(pointercancel({pointerType: 'mouse'}));
-  dispatchEvent(dragstart({pointerType: 'mouse'}));
-}
-
-function dispatchPointerPressDown(
-  target,
-  {button = 0, pointerType = 'mouse'} = {},
-) {
-  const dispatch = arg => target.dispatchEvent(arg);
-  const pointerId = 1;
-  if (pointerType !== 'mouse') {
-    if (hasPointerEvent()) {
-      dispatch(pointerover({button, pointerId, pointerType}));
-      dispatch(pointerenter({button, pointerId, pointerType}));
-      dispatch(pointerdown({button, pointerId, pointerType}));
-    }
-    dispatch(touchstart(null, pointerId));
-    if (hasPointerEvent()) {
-      dispatch(gotpointercapture({button, pointerId, pointerType}));
-    }
+  if (hasPointerEvent()) {
+    dispatchEvent(pointercancel({pointerType, ...rest}));
   } else {
-    if (hasPointerEvent()) {
-      dispatch(pointerdown({button, pointerId, pointerType}));
-    }
-    dispatch(mousedown({button}));
-    if (document.activeElement !== target) {
-      dispatch(focus({button}));
+    if (pointerType === 'mouse') {
+      dispatchEvent(dragstart({...rest}));
+    } else {
+      dispatchEvent(touchcancel({...rest}));
     }
   }
 }
 
-function dispatchPointerPressRelease(
+function dispatchPointerDown(
   target,
-  {button = 0, pointerType = 'mouse'} = {},
+  {button = 0, pointerType = 'mouse', ...rest} = {},
 ) {
   const dispatch = arg => target.dispatchEvent(arg);
   const pointerId = 1;
-  if (pointerType !== 'mouse') {
+  const pointerEvent = {button, pointerId, pointerType, ...rest};
+  const mouseEvent = {button, ...rest};
+  const touch = {...rest};
+
+  if (pointerType === 'mouse') {
     if (hasPointerEvent()) {
-      dispatch(pointerup({button, pointerId, pointerType}));
-      dispatch(lostpointercapture({button, pointerId, pointerType}));
-      dispatch(pointerout({button, pointerId, pointerType}));
-      dispatch(pointerleave({button, pointerId, pointerType}));
+      dispatch(pointerover(pointerEvent));
+      dispatch(pointerenter(pointerEvent));
     }
-    dispatch(touchend(null, pointerId));
-    dispatch(mouseover({button}));
-    dispatch(mousemove({button}));
-    dispatch(mousedown({button}));
+    dispatch(mouseover(mouseEvent));
+    dispatch(mouseenter(mouseEvent));
+    if (hasPointerEvent()) {
+      dispatch(pointerdown(pointerEvent));
+    }
+    dispatch(mousedown(mouseEvent));
     if (document.activeElement !== target) {
-      dispatch(focus({button}));
+      dispatch(focus());
     }
-    dispatch(mouseup({button}));
-    dispatch(click({button}));
   } else {
     if (hasPointerEvent()) {
-      dispatch(pointerup({button, pointerId, pointerType}));
+      dispatch(pointerover(pointerEvent));
+      dispatch(pointerenter(pointerEvent));
+      dispatch(pointerdown(pointerEvent));
     }
-    dispatch(mouseup({button}));
-    dispatch(click({button}));
+    dispatch(touchstart(touch, pointerId));
+    if (hasPointerEvent()) {
+      dispatch(gotpointercapture(pointerEvent));
+    }
+  }
+}
+
+function dispatchPointerUp(
+  target,
+  {button = 0, pointerType = 'mouse', ...rest} = {},
+) {
+  const dispatch = arg => target.dispatchEvent(arg);
+  const pointerId = 1;
+  const pointerEvent = {button, pointerId, pointerType, ...rest};
+  const mouseEvent = {button, ...rest};
+  const touch = {...rest};
+
+  if (pointerType === 'mouse') {
+    if (hasPointerEvent()) {
+      dispatch(pointerup(pointerEvent));
+    }
+    dispatch(mouseup(mouseEvent));
+    dispatch(click(mouseEvent));
+  } else {
+    if (hasPointerEvent()) {
+      dispatch(pointerup(pointerEvent));
+      dispatch(lostpointercapture(pointerEvent));
+      dispatch(pointerout(pointerEvent));
+      dispatch(pointerleave(pointerEvent));
+    }
+    dispatch(touchend(touch, pointerId));
+    dispatch(mouseover(mouseEvent));
+    dispatch(mousemove(mouseEvent));
+    dispatch(mousedown(mouseEvent));
+    if (document.activeElement !== target) {
+      dispatch(focus());
+    }
+    dispatch(mouseup(mouseEvent));
+    dispatch(click(mouseEvent));
+  }
+}
+
+function dispatchPointerMove(
+  target,
+  {button = 0, pointerType = 'mouse', ...rest} = {},
+) {
+  const dispatch = arg => target.dispatchEvent(arg);
+  const pointerId = 1;
+  const pointerEvent = {
+    button,
+    pointerId,
+    pointerType,
+    ...rest,
+  };
+  const mouseEvent = {
+    button,
+    ...rest,
+  };
+  const touch = {
+    ...rest,
+  };
+
+  if (hasPointerEvent()) {
+    dispatch(pointermove(pointerEvent));
+  }
+  if (pointerType === 'mouse') {
+    dispatch(mousemove(mouseEvent));
+  }
+  if (pointerType === 'touch') {
+    dispatch(touchmove(touch, pointerId));
   }
 }
 
 function dispatchTouchTap(target) {
-  dispatchPointerPressDown(target, {pointerType: 'touch'});
-  dispatchPointerPressRelease(target, {pointerType: 'touch'});
+  dispatchPointerDown(target, {pointerType: 'touch'});
+  dispatchPointerUp(target, {pointerType: 'touch'});
+}
+
+function dispatchMouseTap(target) {
+  dispatchPointerDown(target, {pointerType: 'mouse'});
+  dispatchPointerUp(target, {pointerType: 'mouse'});
 }
 
 module.exports = {
   blur,
+  click,
   focus,
   createEvent,
   dispatchLongPressContextMenu,
@@ -389,11 +465,16 @@ module.exports = {
   dispatchPointerHoverEnter,
   dispatchPointerHoverExit,
   dispatchPointerHoverMove,
-  dispatchPointerPressDown,
-  dispatchPointerPressRelease,
+  dispatchPointerMove,
+  dispatchPointerDown,
+  dispatchPointerUp,
   dispatchTouchTap,
+  dispatchMouseTap,
   keydown,
   keyup,
+  scroll,
+  pointerdown,
+  pointerup,
   platform,
   hasPointerEvent,
   setPointerEvent,

@@ -15,8 +15,8 @@ import {
   keydown,
   setPointerEvent,
   platform,
-  dispatchPointerPressDown,
-  dispatchPointerPressRelease,
+  dispatchPointerDown,
+  dispatchPointerUp,
 } from '../test-utils';
 
 let React;
@@ -138,8 +138,8 @@ describe.each(table)('Focus responder', hasPointerEvents => {
 
     it('is called with the correct pointerType: mouse', () => {
       const target = ref.current;
-      dispatchPointerPressDown(target, {pointerType: 'mouse'});
-      dispatchPointerPressRelease(target, {pointerType: 'mouse'});
+      dispatchPointerDown(target, {pointerType: 'mouse'});
+      dispatchPointerUp(target, {pointerType: 'mouse'});
       expect(onFocus).toHaveBeenCalledTimes(1);
       expect(onFocus).toHaveBeenCalledWith(
         expect.objectContaining({pointerType: 'mouse'}),
@@ -148,8 +148,8 @@ describe.each(table)('Focus responder', hasPointerEvents => {
 
     it('is called with the correct pointerType: touch', () => {
       const target = ref.current;
-      dispatchPointerPressDown(target, {pointerType: 'touch'});
-      dispatchPointerPressRelease(target, {pointerType: 'touch'});
+      dispatchPointerDown(target, {pointerType: 'touch'});
+      dispatchPointerUp(target, {pointerType: 'touch'});
       expect(onFocus).toHaveBeenCalledTimes(1);
       expect(onFocus).toHaveBeenCalledWith(
         expect.objectContaining({pointerType: 'touch'}),
@@ -159,8 +159,8 @@ describe.each(table)('Focus responder', hasPointerEvents => {
     if (hasPointerEvents) {
       it('is called with the correct pointerType: pen', () => {
         const target = ref.current;
-        dispatchPointerPressDown(target, {pointerType: 'pen'});
-        dispatchPointerPressRelease(target, {pointerType: 'pen'});
+        dispatchPointerDown(target, {pointerType: 'pen'});
+        dispatchPointerUp(target, {pointerType: 'pen'});
         expect(onFocus).toHaveBeenCalledTimes(1);
         expect(onFocus).toHaveBeenCalledWith(
           expect.objectContaining({pointerType: 'pen'}),
@@ -278,7 +278,7 @@ describe.each(table)('Focus responder', hasPointerEvents => {
       expect(onFocusVisibleChange).toHaveBeenCalledTimes(1);
       expect(onFocusVisibleChange).toHaveBeenCalledWith(true);
       // then use pointer on the target, focus should no longer be visible
-      dispatchPointerPressDown(target);
+      dispatchPointerDown(target);
       expect(onFocusVisibleChange).toHaveBeenCalledTimes(2);
       expect(onFocusVisibleChange).toHaveBeenCalledWith(false);
       // onFocusVisibleChange should not be called again
@@ -288,9 +288,9 @@ describe.each(table)('Focus responder', hasPointerEvents => {
 
     it('is not called after "focus" and "blur" events without keyboard', () => {
       const target = ref.current;
-      dispatchPointerPressDown(target);
-      dispatchPointerPressRelease(target);
-      dispatchPointerPressDown(container);
+      dispatchPointerDown(target);
+      dispatchPointerUp(target);
+      dispatchPointerDown(container);
       target.dispatchEvent(blur({relatedTarget: container}));
       expect(onFocusVisibleChange).toHaveBeenCalledTimes(0);
     });

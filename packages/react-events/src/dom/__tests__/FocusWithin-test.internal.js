@@ -14,8 +14,8 @@ import {
   focus,
   keydown,
   setPointerEvent,
-  dispatchPointerPressDown,
-  dispatchPointerPressRelease,
+  dispatchPointerDown,
+  dispatchPointerUp,
 } from '../test-utils';
 
 let React;
@@ -203,7 +203,7 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
       expect(onFocusWithinVisibleChange).toHaveBeenCalledTimes(1);
       expect(onFocusWithinVisibleChange).toHaveBeenCalledWith(true);
       // then use pointer on the next target, focus should no longer be visible
-      dispatchPointerPressDown(innerTarget2);
+      dispatchPointerDown(innerTarget2);
       innerTarget1.dispatchEvent(blur({relatedTarget: innerTarget2}));
       innerTarget2.dispatchEvent(focus());
       expect(onFocusWithinVisibleChange).toHaveBeenCalledTimes(2);
@@ -215,7 +215,7 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
       expect(onFocusWithinVisibleChange).toHaveBeenCalledTimes(3);
       expect(onFocusWithinVisibleChange).toHaveBeenCalledWith(true);
       // then use pointer on the target, focus should no longer be visible
-      dispatchPointerPressDown(innerTarget1);
+      dispatchPointerDown(innerTarget1);
       expect(onFocusWithinVisibleChange).toHaveBeenCalledTimes(4);
       expect(onFocusWithinVisibleChange).toHaveBeenCalledWith(false);
       // onFocusVisibleChange should not be called again
@@ -225,8 +225,8 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
 
     it('is not called after "focus" and "blur" events without keyboard', () => {
       const innerTarget = innerRef.current;
-      dispatchPointerPressDown(innerTarget);
-      dispatchPointerPressRelease(innerTarget);
+      dispatchPointerDown(innerTarget);
+      dispatchPointerUp(innerTarget);
       innerTarget.dispatchEvent(blur({relatedTarget: container}));
       expect(onFocusWithinVisibleChange).toHaveBeenCalledTimes(0);
     });
