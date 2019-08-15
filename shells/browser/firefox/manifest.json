@@ -45,9 +45,6 @@
   },
 
   "permissions": [
-    "<all_urls>",
-    "activeTab",
-    "tabs",
     "webNavigation",
     "file:///*",
     "http://*/*",
