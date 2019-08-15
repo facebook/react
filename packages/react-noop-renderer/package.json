@@ -15,7 +15,7 @@
     "prop-types": "^15.6.2",
     "regenerator-runtime": "^0.11.0",
     "react-reconciler": "*",
-    "react-stream": "*"
+    "react-server": "*"
   },
   "peerDependencies": {
     "react": "^16.0.0"

@@ -170,6 +170,22 @@ const bundles = [
     externals: ['react'],
   },
 
+  /******* React DOM Flight Server *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    moduleType: RENDERER,
+    entry: 'react-dom/unstable-flight.browser',
+    global: 'ReactFlightDOM',
+    externals: ['react'],
+  },
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
+    moduleType: RENDERER,
+    entry: 'react-dom/unstable-flight.node',
+    global: 'ReactFlightDOM',
+    externals: ['react'],
+  },
+
   /******* React ART *******/
   {
     bundleTypes: [
@@ -308,6 +324,15 @@ const bundles = [
     externals: ['react', 'scheduler', 'expect'],
   },
 
+  /******* React Noop Server Renderer (used for tests) *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
+    entry: 'react-noop-renderer/flight',
+    global: 'ReactNoopRendererFlight',
+    externals: ['react', 'scheduler', 'expect'],
+  },
+
   /******* React Reconciler *******/
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
@@ -326,12 +351,21 @@ const bundles = [
     externals: ['react'],
   },
 
-  /******* React Stream *******/
+  /******* React Server *******/
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RECONCILER,
-    entry: 'react-stream',
-    global: 'ReactStream',
+    entry: 'react-server',
+    global: 'ReactServer',
+    externals: ['react'],
+  },
+
+  /******* React Flight Server *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RECONCILER,
+    entry: 'react-server/flight',
+    global: 'ReactFlight',
     externals: ['react'],
   },
 

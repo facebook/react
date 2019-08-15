@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {convertStringToBuffer} from 'react-stream/src/ReactFizzHostConfig';
+import {convertStringToBuffer} from 'react-server/src/ReactServerHostConfig';
 
 export function formatChunk(type: string, props: Object): Uint8Array {
   let str = '<' + type + '>';

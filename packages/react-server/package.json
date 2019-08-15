@@ -1,5 +1,5 @@
 {
-  "name": "react-stream",
+  "name": "react-server",
   "description": "React package for creating custom streaming server renderers.",
   "version": "0.1.0",
   "private": true,
@@ -19,7 +19,7 @@
   "repository": {
     "type" : "git",
     "url" : "https://github.com/facebook/react.git",
-    "directory": "packages/react-stream"
+    "directory": "packages/react-server"
   },
   "engines": {
     "node": ">=0.10.0"

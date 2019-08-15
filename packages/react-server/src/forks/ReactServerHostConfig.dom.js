@@ -7,4 +7,4 @@
  * @flow
  */
 
-export * from '../ReactFizzHostConfigBrowser';
+export * from '../ReactServerHostConfigNode';

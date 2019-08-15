@@ -13,7 +13,7 @@ import {
   createRequest,
   startWork,
   startFlowing,
-} from 'react-server/inline.dom-browser';
+} from 'react-server/flight.inline.dom-browser';
 
 function renderToReadableStream(children: ReactNodeList): ReadableStream {
   let request;

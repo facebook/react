@@ -13,7 +13,7 @@
 // imported directly in code. Instead, our Flow configuration uses this entry
 // point for the currently checked renderer (the one you passed to `yarn flow`).
 //
-// For example, if you run `yarn flow dom`, `react-stream/inline.dom` points
+// For example, if you run `yarn flow dom`, `react-server/inline.dom` points
 // to this module (and thus will be considered Flow-typed). But other renderers
 // (e.g. `react-test-renderer`) will see stream as untyped during the check.
 //

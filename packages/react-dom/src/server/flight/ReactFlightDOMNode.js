@@ -10,7 +10,11 @@
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {Writable} from 'stream';
 
-import {createRequest, startWork, startFlowing} from 'react-server/inline.dom';
+import {
+  createRequest,
+  startWork,
+  startFlowing,
+} from 'react-server/flight.inline.dom';
 
 function createDrainHandler(destination, request) {
   return () => startFlowing(request, 0);
