@@ -15,6 +15,7 @@
 let Scheduler;
 let runtime;
 let performance;
+let cancelCallback;
 let scheduleCallback;
 let NormalPriority;
 
@@ -52,6 +53,7 @@ describe('SchedulerBrowser', () => {
       performance = window.performance;
       require('scheduler/src/SchedulerFeatureFlags').enableMessageLoopImplementation = enableMessageLoopImplementation;
       Scheduler = require('scheduler');
+      cancelCallback = Scheduler.unstable_cancelCallback;
       scheduleCallback = Scheduler.unstable_scheduleCallback;
       NormalPriority = Scheduler.unstable_NormalPriority;
     });
@@ -410,6 +412,25 @@ describe('SchedulerBrowser', () => {
       runtime.assertLog(['Post Message']);
       runtime.fireMessageEvent();
       runtime.assertLog(['Message Event', 'A']);
+
+      scheduleCallback(NormalPriority, () => {
+        runtime.log('B');
+      });
+      runtime.assertLog(['Post Message']);
+      runtime.fireMessageEvent();
+      runtime.assertLog(['Message Event', 'B']);
+    });
+
+    it('schedule new task after a cancellation', () => {
+      let handle = scheduleCallback(NormalPriority, () => {
+        runtime.log('A');
+      });
+
+      runtime.assertLog(['Post Message']);
+      cancelCallback(handle);
+
+      runtime.fireMessageEvent();
+      runtime.assertLog(['Message Event']);
 
       scheduleCallback(NormalPriority, () => {
         runtime.log('B');
