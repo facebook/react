@@ -39,7 +39,6 @@ module.exports = {
   plugins: [
     new DefinePlugin({
       __DEV__: true,
-      __TEST__: false,
       'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
       'process.env.GITHUB_URL': `"${GITHUB_URL}"`,
     }),
