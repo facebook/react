@@ -40,7 +40,8 @@ export async function actAsync(
   });
 
   if (recursivelyFlush) {
-    while (jest.getTimerCount() > 0) {
+    // TODO (Jest v24)  Replace with jest.getTimerCount() after we upgrade Jest
+    while (global.mockGetTimersCount() > 0) {
       // $FlowFixMe Flow doens't know about "await act()" yet
       await actDOM(async () => {
         await actTestRenderer(async () => {

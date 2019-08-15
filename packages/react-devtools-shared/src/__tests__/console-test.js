@@ -13,22 +13,9 @@ describe('console', () => {
   let unpatchConsole;
 
   beforeEach(() => {
-    const Console = require('../backend/console');
+    const Console = require('react-devtools-shared/src/backend/console');
     patchConsole = Console.patch;
     unpatchConsole = Console.unpatch;
-
-    const inject = global.__REACT_DEVTOOLS_GLOBAL_HOOK__.inject;
-    global.__REACT_DEVTOOLS_GLOBAL_HOOK__.inject = internals => {
-      inject(internals);
-
-      Console.registerRenderer(internals);
-    };
-
-    React = require('react');
-    ReactDOM = require('react-dom');
-
-    const utils = require('./utils');
-    act = utils.act;
 
     // Patch a fake console so we can verify with tests below.
     // Patching the real console is too complicated,
@@ -46,7 +33,22 @@ describe('console', () => {
 
     Console.dangerous_setTargetConsoleForTesting(fakeConsole);
 
+    // Note the Console module only patches once,
+    // so it's important to patch the test console before injection.
     patchConsole();
+
+    const inject = global.__REACT_DEVTOOLS_GLOBAL_HOOK__.inject;
+    global.__REACT_DEVTOOLS_GLOBAL_HOOK__.inject = internals => {
+      inject(internals);
+
+      Console.registerRenderer(internals);
+    };
+
+    React = require('react');
+    ReactDOM = require('react-dom');
+
+    const utils = require('./utils');
+    act = utils.act;
   });
 
   function normalizeCodeLocInfo(str) {

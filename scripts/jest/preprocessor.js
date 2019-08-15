@@ -43,7 +43,10 @@ const babelOptions = {
 
     // This optimization is important for extremely performance-sensitive (e.g. React source).
     // It's okay to disable it for tests.
-    [require.resolve('@babel/plugin-transform-block-scoping'), {throwIfClosureRequired: false}],
+    [
+      require.resolve('@babel/plugin-transform-block-scoping'),
+      {throwIfClosureRequired: false},
+    ],
   ],
   retainLines: true,
 };
