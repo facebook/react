@@ -40,6 +40,10 @@ const babelOptions = {
     require.resolve('@babel/plugin-transform-react-jsx-source'),
 
     require.resolve('../babel/transform-prevent-infinite-loops'),
+
+    // This optimization is important for extremely performance-sensitive (e.g. React source).
+    // It's okay to disable it for tests.
+    [require.resolve('@babel/plugin-transform-block-scoping'), {throwIfClosureRequired: false}],
   ],
   retainLines: true,
 };
