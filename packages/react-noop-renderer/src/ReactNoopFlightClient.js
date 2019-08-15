@@ -14,13 +14,13 @@
  * environment.
  */
 
-import type {ReactModel} from 'react-server/flight.inline-typed';
+import type {ReactModel} from 'react-flight/inline-typed';
 
-import ReactFlightStreamer from 'react-server/flight';
+import ReactFlightClient from 'react-flight';
 
 type Destination = Array<string>;
 
-const ReactNoopFlightServer = ReactFlightStreamer({
+const ReactNoopFlightClient = ReactFlightClient({
   scheduleWork(callback: () => void) {
     callback();
   },
@@ -44,8 +44,8 @@ const ReactNoopFlightServer = ReactFlightStreamer({
 
 function render(model: ReactModel): Destination {
   let destination: Destination = [];
-  let request = ReactNoopFlightServer.createRequest(model, destination);
-  ReactNoopFlightServer.startWork(request);
+  let request = ReactNoopFlightClient.createRequest(model, destination);
+  ReactNoopFlightClient.startWork(request);
   return destination;
 }
 

@@ -12,7 +12,8 @@ module.exports = [
     entryPoints: [
       'react-dom',
       'react-dom/unstable-fizz.node',
-      'react-dom/unstable-flight.node',
+      'react-dom/unstable-flight-server.node',
+      'react-dom/unstable-flight-client',
     ],
     isFlowTyped: true,
     isServerSupported: true,
@@ -21,7 +22,8 @@ module.exports = [
     shortName: 'dom-browser',
     entryPoints: [
       'react-dom/unstable-fizz.browser',
-      'react-dom/unstable-flight.browser',
+      'react-dom/unstable-flight-server.browser',
+      'react-dom/unstable-flight-client',
     ],
     isFlowTyped: true,
     isServerSupported: true,
@@ -55,6 +57,7 @@ module.exports = [
     entryPoints: [
       'react-reconciler',
       'react-reconciler/persistent',
+      'react-flight',
       'react-server',
       'react-server/flight',
     ],

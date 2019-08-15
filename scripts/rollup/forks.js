@@ -367,6 +367,36 @@ const forks = Object.freeze({
     );
   },
 
+  'react-flight/src/ReactFlightClientHostConfig': (
+    bundleType,
+    entry,
+    dependencies,
+    moduleType
+  ) => {
+    if (dependencies.indexOf('react-flight') !== -1) {
+      return null;
+    }
+    if (moduleType !== RENDERER && moduleType !== RECONCILER) {
+      return null;
+    }
+    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+    for (let rendererInfo of inlinedHostConfigs) {
+      if (rendererInfo.entryPoints.indexOf(entry) !== -1) {
+        if (!rendererInfo.isServerSupported) {
+          return null;
+        }
+        return `react-flight/src/forks/ReactFlightClientHostConfig.${
+          rendererInfo.shortName
+        }.js`;
+      }
+    }
+    throw new Error(
+      'Expected ReactFlightClientHostConfig to always be replaced with a shim, but ' +
+        `found no mention of "${entry}" entry point in ./scripts/shared/inlinedHostConfigs.js. ` +
+        'Did you mean to add it there to associate it with a specific renderer?'
+    );
+  },
+
   // We wrap top-level listeners into guards on www.
   'react-dom/src/events/EventListener': (bundleType, entry) => {
     switch (bundleType) {

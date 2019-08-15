@@ -175,14 +175,30 @@ const bundles = [
     bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
     moduleType: RENDERER,
     entry: 'react-dom/unstable-flight-server.browser',
-    global: 'ReactFlightServerDOM',
+    global: 'ReactFlightDOMServer',
     externals: ['react'],
   },
   {
     bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
     moduleType: RENDERER,
     entry: 'react-dom/unstable-flight-server.node',
-    global: 'ReactFlightServerDOM',
+    global: 'ReactFlightDOMServer',
+    externals: ['react'],
+  },
+
+  /******* React DOM Flight Client *******/
+  {
+    bundleTypes: [
+      NODE_DEV,
+      NODE_PROD,
+      UMD_DEV,
+      UMD_PROD,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+    ],
+    moduleType: RENDERER,
+    entry: 'react-dom/unstable-flight-client',
+    global: 'ReactFlightDOMClient',
     externals: ['react'],
   },
 
@@ -324,12 +340,21 @@ const bundles = [
     externals: ['react', 'scheduler', 'expect'],
   },
 
-  /******* React Noop Server Renderer (used for tests) *******/
+  /******* React Noop Flight Server (used for tests) *******/
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
     entry: 'react-noop-renderer/flight-server',
-    global: 'ReactNoopRendererFlight',
+    global: 'ReactNoopFlightServer',
+    externals: ['react', 'scheduler', 'expect'],
+  },
+
+  /******* React Noop Flight Client (used for tests) *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
+    entry: 'react-noop-renderer/flight-client',
+    global: 'ReactNoopFlightClient',
     externals: ['react', 'scheduler', 'expect'],
   },
 
@@ -365,7 +390,16 @@ const bundles = [
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RECONCILER,
     entry: 'react-server/flight',
-    global: 'ReactFlight',
+    global: 'ReactFlightServer',
+    externals: ['react'],
+  },
+
+  /******* React Flight Client *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RECONCILER,
+    entry: 'react-flight',
+    global: 'ReactFlightClient',
     externals: ['react'],
   },
 

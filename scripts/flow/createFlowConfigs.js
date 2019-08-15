@@ -33,6 +33,8 @@ module.name_mapper='react-server/inline.${renderer}$$' -> 'react-server/inline-t
 module.name_mapper='react-server/flight.inline.${renderer}$$' -> 'react-server/flight.inline-typed'
 module.name_mapper='ReactServerHostConfig$$' -> 'forks/ReactServerHostConfig.${serverRenderer}'
 module.name_mapper='ReactServerFormatConfig$$' -> 'forks/ReactServerFormatConfig.${serverRenderer}'
+module.name_mapper='react-flight/inline.${renderer}$$' -> 'react-flight/inline-typed'
+module.name_mapper='ReactFlightClientHostConfig$$' -> 'forks/ReactFlightClientHostConfig.${serverRenderer}'
     `.trim(),
     )
     .replace(

@@ -1,6 +1,6 @@
 {
-  "name": "react-server",
-  "description": "React package for creating custom streaming server renderers.",
+  "name": "react-flight",
+  "description": "React package for consuming streaming models.",
   "version": "0.1.0",
   "private": true,
   "keywords": [
@@ -13,14 +13,13 @@
     "LICENSE",
     "README.md",
     "index.js",
-    "flight.js",
     "cjs/"
   ],
   "main": "index.js",
   "repository": {
     "type" : "git",
     "url" : "https://github.com/facebook/react.git",
-    "directory": "packages/react-server"
+    "directory": "packages/react-flight"
   },
   "engines": {
     "node": ">=0.10.0"

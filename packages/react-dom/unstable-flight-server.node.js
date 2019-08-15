@@ -9,8 +9,8 @@
 
 'use strict';
 
-const ReactFlightServerDOMNode = require('./src/server/flight/ReactFlightServerDOMNode');
+const ReactFlightDOMServerNode = require('./src/server/flight/ReactFlightDOMServerNode');
 
 // TODO: decide on the top-level export form.
 // This is hacky but makes it work with both Rollup and Jest
-module.exports = ReactFlightServerDOMNode.default || ReactFlightServerDOMNode;
+module.exports = ReactFlightDOMServerNode.default || ReactFlightDOMServerNode;
