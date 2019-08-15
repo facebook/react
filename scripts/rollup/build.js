@@ -512,6 +512,9 @@ async function createBundle(bundle, bundleType) {
     ),
     output: {
       externalLiveBindings: false,
+      freeze: false,
+      interop: false,
+      esModule: false,
     },
   };
   const [mainOutputPath, ...otherOutputPaths] = Packaging.getBundleOutputPaths(
