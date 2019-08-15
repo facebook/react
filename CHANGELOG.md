@@ -10,7 +10,7 @@
   <!-- Upcoming changes go here
 </details> -->
 
-## 4.0.0 (release date TBD)
+## 4.0.0 (August 15, 2019)
 
 ### General changes
 
