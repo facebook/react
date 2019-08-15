@@ -1,3 +1,3 @@
 'use strict';
 
-module.exports = require('./unstable-flight.node');
+module.exports = require('./unstable-flight-server.node');

@@ -12,13 +12,13 @@
 
 let Stream;
 let React;
-let ReactFlightDOM;
+let ReactFlightServerDOM;
 
 describe('ReactFlightDOM', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactFlightDOM = require('react-dom/unstable-flight');
+    ReactFlightServerDOM = require('react-dom/unstable-flight-server');
     Stream = require('stream');
   });
 
@@ -47,7 +47,7 @@ describe('ReactFlightDOM', () => {
     let model = {
       html: <HTML />,
     };
-    ReactFlightDOM.pipeToNodeWritable(model, writable);
+    ReactFlightServerDOM.pipeToNodeWritable(model, writable);
     jest.runAllTimers();
     let result = JSON.parse(writable.result);
     expect(result).toEqual({

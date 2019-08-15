@@ -174,15 +174,15 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
     moduleType: RENDERER,
-    entry: 'react-dom/unstable-flight.browser',
-    global: 'ReactFlightDOM',
+    entry: 'react-dom/unstable-flight-server.browser',
+    global: 'ReactFlightServerDOM',
     externals: ['react'],
   },
   {
     bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
     moduleType: RENDERER,
-    entry: 'react-dom/unstable-flight.node',
-    global: 'ReactFlightDOM',
+    entry: 'react-dom/unstable-flight-server.node',
+    global: 'ReactFlightServerDOM',
     externals: ['react'],
   },
 
@@ -328,7 +328,7 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
-    entry: 'react-noop-renderer/flight',
+    entry: 'react-noop-renderer/flight-server',
     global: 'ReactNoopRendererFlight',
     externals: ['react', 'scheduler', 'expect'],
   },

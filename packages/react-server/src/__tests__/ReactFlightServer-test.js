@@ -13,12 +13,12 @@
 let React;
 let ReactNoopFlight;
 
-describe('ReactFlight', () => {
+describe('ReactFlightServer', () => {
   beforeEach(() => {
     jest.resetModules();
 
     React = require('react');
-    ReactNoopFlight = require('react-noop-renderer/flight');
+    ReactNoopFlight = require('react-noop-renderer/flight-server');
   });
 
   it('can resolve a model', () => {

@@ -14,13 +14,13 @@ global.ReadableStream = require('@mattiasbuelens/web-streams-polyfill/ponyfill/e
 global.TextEncoder = require('util').TextEncoder;
 
 let React;
-let ReactFlightDOM;
+let ReactFlightServerDOM;
 
 describe('ReactFlightDOM', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactFlightDOM = require('react-dom/unstable-flight.browser');
+    ReactFlightServerDOM = require('react-dom/unstable-flight-server.browser');
   });
 
   async function readResult(stream) {
@@ -51,7 +51,7 @@ describe('ReactFlightDOM', () => {
     let model = {
       html: <HTML />,
     };
-    let stream = ReactFlightDOM.renderToReadableStream(model);
+    let stream = ReactFlightServerDOM.renderToReadableStream(model);
     jest.runAllTimers();
     let result = JSON.parse(await readResult(stream));
     expect(result).toEqual({

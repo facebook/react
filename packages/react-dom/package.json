@@ -39,9 +39,9 @@
     "unstable-fizz.js",
     "unstable-fizz.browser.js",
     "unstable-fizz.node.js",
-    "unstable-flight.js",
-    "unstable-flight.browser.js",
-    "unstable-flight.node.js",
+    "unstable-flight-server.js",
+    "unstable-flight-server.browser.js",
+    "unstable-flight-server.node.js",
     "unstable-native-dependencies.js",
     "cjs/",
     "umd/"
@@ -49,7 +49,7 @@
   "browser": {
     "./server.js": "./server.browser.js",
     "./unstable-fizz.js": "./unstable-fizz.browser.js",
-    "./unstable-flight.js": "./unstable-flight.browser.js"
+    "./unstable-flight-server.js": "./unstable-flight-server.browser.js"
   },
   "browserify": {
     "transform": [

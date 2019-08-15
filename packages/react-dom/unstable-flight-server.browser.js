@@ -9,8 +9,9 @@
 
 'use strict';
 
-const ReactFlightDOMNode = require('./src/server/flight/ReactFlightDOMNode');
+const ReactFlightServerDOMBrowser = require('./src/server/flight/ReactFlightServerDOMBrowser');
 
 // TODO: decide on the top-level export form.
 // This is hacky but makes it work with both Rollup and Jest
-module.exports = ReactFlightDOMNode.default || ReactFlightDOMNode;
+module.exports =
+  ReactFlightServerDOMBrowser.default || ReactFlightServerDOMBrowser;
