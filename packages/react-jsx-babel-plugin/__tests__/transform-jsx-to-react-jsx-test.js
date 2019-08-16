@@ -12,16 +12,23 @@ const codeFrame = require('@babel/code-frame');
 
 function transform(input, options) {
   return babel.transform(input, {
+    configFile: false,
     plugins: [
+      '@babel/plugin-syntax-jsx',
+      '@babel/plugin-transform-arrow-functions',
+      ...(options && options.development
+        ? [
+            '@babel/plugin-transform-react-jsx-source',
+            '@babel/plugin-transform-react-jsx-self',
+          ]
+        : []),
       [
-        './packages/react-jsx-babel-plugin/transform-react-to-jsx',
-        // '@babel/plugin-transform-react-jsx',
+        './packages/react-jsx-babel-plugin/transform-jsx-to-react-jsx',
         {
           module: 'bluebird',
           method: 'coroutine',
-          development: __DEV__,
           useBuiltIns: true,
-          useCreateElement: true,
+          useCreateElement: false,
           ...options,
         },
       ],
@@ -30,6 +37,88 @@ function transform(input, options) {
 }
 
 describe('transform react to jsx', () => {
+  it(' fragments', () => {
+    expect(transform(`var x = <><div /></>`)).toMatchSnapshot();
+  });
+  it('fragments to set keys', () => {
+    expect(
+      transform(`var x = <React.Fragment key={'foo'} ></React.Fragment>`)
+    ).toMatchSnapshot();
+  });
+  it('fragments in dev mode', () => {
+    expect(
+      transform(`var x = <><div /></>`, {
+        development: true,
+      })
+    ).toMatchSnapshot();
+  });
+  it('nonStatic children', () => {
+    expect(
+      transform(
+        `var x = (
+        <div>
+          {[<span key={'0'} />, <span key={'1'} />]}
+        </div>
+      );
+      `,
+        {
+          development: true,
+        }
+      )
+    ).toMatchSnapshot();
+  });
+  it('static children', () => {
+    expect(
+      transform(
+        `var x = (
+        <div>
+          <span />
+          {[<span key={'0'} />, <span key={'1'} />]}
+        </div>
+      );
+      `,
+        {
+          development: true,
+        }
+      )
+    ).toMatchSnapshot();
+  });
+  it('uses jsxDEV instead of jsx in dev mode', () => {
+    expect(
+      transform(`var x = <span propOne="one">Hi</span>`, {development: true})
+    ).toMatchSnapshot();
+  });
+  it('properly passes in source and self', () => {
+    expect(
+      transform(`var x = <div />;`, {development: true})
+    ).toMatchSnapshot();
+  });
+
+  it('properly handles keys', () => {
+    expect(
+      transform(`var x = (
+        <div>
+          <div key="1" />
+          <div key="2" meow="wolf" />
+          <div key="3" />
+        </div>
+      );`)
+    ).toMatchSnapshot();
+  });
+  it('uses createElement when the key comes after a spread', () => {
+    expect(
+      transform(`var x = (
+        <div {...props} key="1" foo="bar" />
+      );`)
+    ).toMatchSnapshot();
+  });
+  it('uses jsx when the key comes before a spread', () => {
+    expect(
+      transform(`var x = (
+        <div key="1" {...props} foo="bar" />
+      );`)
+    ).toMatchSnapshot();
+  });
   it('should properly handle comments adjacent to children', () => {
     expect(
       transform(`

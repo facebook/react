@@ -12,6 +12,7 @@ import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import ReactCurrentOwner from './ReactCurrentOwner';
 
 const hasOwnProperty = Object.prototype.hasOwnProperty;
+const freeze = Object.freeze;
 
 const RESERVED_PROPS = {
   key: true,
@@ -155,9 +156,9 @@ const ReactElement = function(type, key, ref, self, source, owner, props) {
       writable: false,
       value: source,
     });
-    if (Object.freeze) {
-      Object.freeze(element.props);
-      Object.freeze(element);
+    if (freeze) {
+      freeze(element.props);
+      freeze(element);
     }
   }
 
@@ -179,6 +180,16 @@ export function jsx(type, config, maybeKey) {
   let key = null;
   let ref = null;
 
+  // Currently, key can be spread in as a prop. This causes a potential
+  // issue if key is also explicitly declared (ie. <div {...props} key="Hi" />
+  // or <div key="Hi" {...props} /> ). We want to deprecate key spread,
+  // but as an intermediary step, we will use jsxDEV for everything except
+  // <div {...props} key="Hi" />, because we aren't currently able to tell if
+  // key is explicitly declared to be undefined or not.
+  if (maybeKey !== undefined) {
+    key = '' + maybeKey;
+  }
+
   if (hasValidRef(config)) {
     ref = config.ref;
   }
@@ -195,12 +206,6 @@ export function jsx(type, config, maybeKey) {
     ) {
       props[propName] = config[propName];
     }
-  }
-
-  // intentionally not checking if key was set above
-  // this key is higher priority as it's static
-  if (maybeKey !== undefined) {
-    key = '' + maybeKey;
   }
 
   // Resolve default props
@@ -239,6 +244,16 @@ export function jsxDEV(type, config, maybeKey, source, self) {
   let key = null;
   let ref = null;
 
+  // Currently, key can be spread in as a prop. This causes a potential
+  // issue if key is also explicitly declared (ie. <div {...props} key="Hi" />
+  // or <div key="Hi" {...props} /> ). We want to deprecate key spread,
+  // but as an intermediary step, we will use jsxDEV for everything except
+  // <div {...props} key="Hi" />, because we aren't currently able to tell if
+  // key is explicitly declared to be undefined or not.
+  if (maybeKey !== undefined) {
+    key = '' + maybeKey;
+  }
+
   if (hasValidRef(config)) {
     ref = config.ref;
   }
@@ -257,12 +272,6 @@ export function jsxDEV(type, config, maybeKey, source, self) {
     }
   }
 
-  // intentionally not checking if key was set above
-  // this key is higher priority as it's static
-  if (maybeKey !== undefined) {
-    key = '' + maybeKey;
-  }
-
   // Resolve default props
   if (type && type.defaultProps) {
     const defaultProps = type.defaultProps;
@@ -271,6 +280,10 @@ export function jsxDEV(type, config, maybeKey, source, self) {
         props[propName] = defaultProps[propName];
       }
     }
+  }
+
+  if (freeze && Array.isArray(props.children)) {
+    freeze(props.children);
   }
 
   if (key || ref) {
@@ -344,8 +357,8 @@ export function createElement(type, config, children) {
       childArray[i] = arguments[i + 2];
     }
     if (__DEV__) {
-      if (Object.freeze) {
-        Object.freeze(childArray);
+      if (freeze) {
+        freeze(childArray);
       }
     }
     props.children = childArray;

@@ -2,7 +2,6 @@
 
 const t = require('@babel/types');
 const esutils = require('esutils');
-// const jsx = '@babel/plugin-syntax-jsx';
 
 function helper(opts) {
   const visitor = {};
@@ -31,7 +30,7 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
     exit(path, file) {
       let callExpr;
       if (file.opts.useCreateElement || useCreateElement(path)) {
-        callExpr = buildElementCall(path, file);
+        callExpr = buildCreateElementCall(path, file);
       } else {
         callExpr = buildJSXElementCall(path, file);
       }
@@ -56,6 +55,7 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
       }
     },
   };
+
   return visitor;
 
   function convertJSXIdentifier(node, parent) {
@@ -89,6 +89,15 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
     } else {
       return node;
     }
+  }
+
+  function isStaticChildren(children) {
+    return !(
+      children.length === 1 &&
+      (t.isArrayExpression(children[0]) ||
+        t.isIdentifier(children[0]) ||
+        t.isMemberExpression(children[0]))
+    );
   }
 
   function convertAttribute(node) {
@@ -172,14 +181,13 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
     }
 
     if (attribs.length || path.node.children.length) {
-      attribs = buildOpeningElementAttributes(
+      attribs = buildJSXOpeningElementAttributes(
         attribs,
         file,
-        true,
         path.node.children,
       );
     } else {
-      attribs = t.nullLiteral();
+      attribs = t.objectExpression([]);
     }
 
     args.push(attribs);
@@ -192,6 +200,7 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
     } else {
       args.push(
         key === undefined ? t.identifier('undefined') : key,
+        t.booleanLiteral(isStaticChildren(path.node.children)),
         source === undefined ? t.identifier('undefined') : source,
         self === undefined ? t.identifier('undefined') : self,
       );
@@ -203,7 +212,85 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
     return state.call || t.callExpression(state.callee, args);
   }
 
-  function buildElementCall(path, file) {
+  /**
+   * The logic for this is quite terse. It's because we need to
+   * support spread elements. We loop over all attributes,
+   * breaking on spreads, we then push a new object containing
+   * all prior attributes to an array for later processing.
+   */
+  function buildJSXOpeningElementAttributes(attribs, file, children) {
+    let _props = [];
+    const objs = [];
+
+    const useBuiltIns = file.opts.useBuiltIns || false;
+    if (typeof useBuiltIns !== 'boolean') {
+      throw new Error(
+        'transform-react-jsx currently only accepts a boolean option for ' +
+          'useBuiltIns (defaults to false)',
+      );
+    }
+
+    while (attribs.length) {
+      const prop = attribs.shift();
+      if (t.isJSXSpreadAttribute(prop)) {
+        _props = pushProps(_props, objs);
+        objs.push(prop.argument);
+      } else {
+        const attr = convertAttribute(prop);
+        _props.push(attr);
+      }
+    }
+
+    // In React.JSX, children is no longer a separate argument, but passed in
+    // through the argument object
+    if (children && children.length > 0) {
+      if (children.length === 1) {
+        _props.push(t.objectProperty(t.identifier('children'), children[0]));
+      } else {
+        _props.push(
+          t.objectProperty(
+            t.identifier('children'),
+            t.arrayExpression(children),
+          ),
+        );
+      }
+    }
+    pushProps(_props, objs);
+
+    if (objs.length === 1) {
+      // only one object
+      if (!t.isObjectExpression(objs[0])) {
+        // this could be null, and jsx expects props to be non-null
+        const expressionHelper = useBuiltIns
+          ? t.memberExpression(t.identifier('Object'), t.identifier('assign'))
+          : file.addHelper('extends');
+
+        // spread it
+        attribs = t.callExpression(expressionHelper, [
+          t.objectExpression([]),
+          ...objs,
+        ]);
+      } else {
+        attribs = objs[0];
+      }
+    } else {
+      // looks like we have multiple objects
+      if (!t.isObjectExpression(objs[0])) {
+        objs.unshift(t.objectExpression([]));
+      }
+
+      const expressionHelper = useBuiltIns
+        ? t.memberExpression(t.identifier('Object'), t.identifier('assign'))
+        : file.addHelper('extends');
+
+      // spread it
+      attribs = t.callExpression(expressionHelper, objs);
+    }
+
+    return attribs;
+  }
+
+  function buildCreateElementCall(path, file) {
     if (opts.filter && !opts.filter(path.node, file)) return;
 
     const openingPath = path.get('openingElement');
@@ -261,8 +348,7 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
    * breaking on spreads, we then push a new object containing
    * all prior attributes to an array for later processing.
    */
-
-  function buildOpeningElementAttributes(attribs, file, isReactJSX, children) {
+  function buildOpeningElementAttributes(attribs, file) {
     let _props = [];
     const objs = [];
 
@@ -285,20 +371,6 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
       }
     }
 
-    // In React.JSX, children is no longer a separate argument, but passed in
-    // through the argument object
-    if (isReactJSX && children && children.length > 0) {
-      if (children.length === 1) {
-        _props.push(t.objectProperty(t.identifier('children'), children[0]));
-      } else {
-        _props.push(
-          t.objectProperty(
-            t.identifier('children'),
-            t.arrayExpression(children),
-          ),
-        );
-      }
-    }
     pushProps(_props, objs);
 
     if (objs.length === 1) {
@@ -341,23 +413,29 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
       opts.pre(state, file);
     }
 
-    // no attributes are allowed with <> syntax
-    // React.createElement uses different syntax than React.jsx
-    // createElement passes in children as a separate argument,
-    // whereas jsx passes children in as a prop
     if (file.opts.useCreateElement) {
       args.push(t.nullLiteral(), ...path.node.children);
     } else {
+      let childrenNode;
+      if (path.node.children.length === 0) {
+        childrenNode = t.nullLiteral();
+      } else if (path.node.children.length === 1) {
+        childrenNode = path.node.children[0];
+      } else {
+        childrenNode = t.arrayExpression(path.node.children);
+      }
       args.push(
         t.objectExpression([
-          t.objectProperty(
-            t.identifier('children'),
-            t.arrayExpression(path.node.children),
-          ),
+          t.objectProperty(t.identifier('children'), childrenNode),
         ]),
       );
+      if (file.opts.development) {
+        args.push(
+          t.identifier('undefined'),
+          t.booleanLiteral(isStaticChildren(path.node.children)),
+        );
+      }
     }
-
     if (opts.post) {
       opts.post(state, file);
     }

@@ -1,5 +1,11 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`transform react to jsx  fragments 1`] = `
+"var x = React.jsx(React.Fragment, {
+  children: React.jsx(\\"div\\", {})
+});"
+`;
+
 exports[`transform react to jsx adds appropriate new lines when using spread attribute 1`] = `
 "React.jsx(Component, Object.assign({}, props, {
   sound: \\"moo\\"
@@ -11,7 +17,7 @@ exports[`transform react to jsx arrow functions 1`] = `
   var _this = this;
 
   return function () {
-    return React.jsx(_this, null);
+    return React.jsx(_this, {});
   };
 };
 
@@ -19,7 +25,7 @@ var bar = function () {
   var _this2 = this;
 
   return function () {
-    return React.jsx(_this2.foo, null);
+    return React.jsx(_this2.foo, {});
   };
 };"
 `;
@@ -96,26 +102,47 @@ exports[`transform react to jsx display name variable declaration 1`] = `
 });"
 `;
 
+exports[`transform react to jsx fragments in dev mode 1`] = `
+"var _jsxFileName = \\"\\";
+var x = React.jsxDEV(React.Fragment, {
+  children: React.jsxDEV(\\"div\\", {}, undefined, true, {
+    fileName: _jsxFileName,
+    lineNumber: 1
+  }, this)
+}, undefined, true);"
+`;
+
+exports[`transform react to jsx fragments to set keys 1`] = `"var x = React.jsx(React.Fragment, {}, 'foo');"`;
+
+exports[`transform react to jsx nonStatic children 1`] = `
+"var _jsxFileName = \\"\\";
+var x = React.jsxDEV(\\"div\\", {
+  children: [React.jsxDEV(\\"span\\", {}, '0', true, {
+    fileName: _jsxFileName,
+    lineNumber: 3
+  }, this), React.jsxDEV(\\"span\\", {}, '1', true, {
+    fileName: _jsxFileName,
+    lineNumber: 3
+  }, this)]
+}, undefined, false, {
+  fileName: _jsxFileName,
+  lineNumber: 2
+}, this);"
+`;
+
 exports[`transform react to jsx properly handles keys 1`] = `
 "var x = React.jsx(\\"div\\", {
-  children: [React.jsx(\\"div\\", null, \\"1\\"), React.jsx(\\"div\\", {
+  children: [React.jsx(\\"div\\", {}, \\"1\\"), React.jsx(\\"div\\", {
     meow: \\"wolf\\"
-  }, \\"2\\"), React.jsx(\\"div\\", null, \\"3\\")]
+  }, \\"2\\"), React.jsx(\\"div\\", {}, \\"3\\")]
 });"
 `;
 
 exports[`transform react to jsx properly passes in source and self 1`] = `
-"var x = React.jsxDEV(\\"div\\", null, undefined, {
-  fileName: 'this/file.js',
-  lineNumber: 10
-}, this);
-var y = React.jsxDEV(\\"div\\", null, undefined, undefined, this);"
-`;
-
-exports[`transform react to jsx properly passes in source and self 2`] = `
-"var x = React.jsxDEV(\\"div\\", null, undefined, {
-  fileName: 'this/file.js',
-  lineNumber: 10
+"var _jsxFileName = \\"\\";
+var x = React.jsxDEV(\\"div\\", {}, undefined, true, {
+  fileName: _jsxFileName,
+  lineNumber: 1
 }, this);"
 `;
 
@@ -125,15 +152,15 @@ exports[`transform react to jsx should allow constructor as prop 1`] = `
 });"
 `;
 
-exports[`transform react to jsx should allow deeper js namespacing 1`] = `"React.jsx(Namespace.DeepNamespace.Component, null);"`;
+exports[`transform react to jsx should allow deeper js namespacing 1`] = `"React.jsx(Namespace.DeepNamespace.Component, {});"`;
 
 exports[`transform react to jsx should allow elements as attributes 1`] = `
 "React.jsx(\\"div\\", {
-  attr: React.jsx(\\"div\\", null)
+  attr: React.jsx(\\"div\\", {})
 });"
 `;
 
-exports[`transform react to jsx should allow js namespacing 1`] = `"React.jsx(Namespace.Component, null);"`;
+exports[`transform react to jsx should allow js namespacing 1`] = `"React.jsx(Namespace.Component, {});"`;
 
 exports[`transform react to jsx should allow nested fragments 1`] = `
 "React.jsx(\\"div\\", {
@@ -157,7 +184,7 @@ exports[`transform react to jsx should allow nested fragments 1`] = `
 
 exports[`transform react to jsx should avoid wrapping in extra parens if not needed 1`] = `
 "var x = React.jsx(\\"div\\", {
-  children: React.jsx(Component, null)
+  children: React.jsx(Component, {})
 });
 var x = React.jsx(\\"div\\", {
   children: props.children
@@ -166,11 +193,11 @@ var x = React.jsx(Composite, {
   children: props.children
 });
 var x = React.jsx(Composite, {
-  children: React.jsx(Composite2, null)
+  children: React.jsx(Composite2, {})
 });"
 `;
 
-exports[`transform react to jsx should convert simple tags 1`] = `"var x = React.jsx(\\"div\\", null);"`;
+exports[`transform react to jsx should convert simple tags 1`] = `"var x = React.jsx(\\"div\\", {});"`;
 
 exports[`transform react to jsx should convert simple text 1`] = `
 "var x = React.jsx(\\"div\\", {
@@ -244,10 +271,10 @@ exports[`transform react to jsx should handle has own property correctly 1`] = `
 exports[`transform react to jsx should have correct comma in nested children 1`] = `
 "var x = React.jsx(\\"div\\", {
   children: [React.jsx(\\"div\\", {
-    children: React.jsx(\\"br\\", null)
+    children: React.jsx(\\"br\\", {})
   }), React.jsx(Component, {
-    children: [foo, React.jsx(\\"br\\", null), bar]
-  }), React.jsx(\\"br\\", null)]
+    children: [foo, React.jsx(\\"br\\", {}), bar]
+  }), React.jsx(\\"br\\", {})]
 });"
 `;
 
@@ -285,7 +312,7 @@ exports[`transform react to jsx should not strip tags with a single child of nbs
 
 exports[`transform react to jsx should properly handle comments adjacent to children 1`] = `
 "var x = React.jsx(\\"div\\", {
-  children: [React.jsx(\\"span\\", null), React.jsx(\\"br\\", null)]
+  children: [React.jsx(\\"span\\", {}), React.jsx(\\"br\\", {})]
 });"
 `;
 
@@ -314,7 +341,26 @@ exports[`transform react to jsx should support xml namespaces if flag 1`] = `
 });"
 `;
 
-exports[`transform react to jsx should transform known hyphenated tags 1`] = `"React.jsx(\\"font-face\\", null);"`;
+exports[`transform react to jsx should transform known hyphenated tags 1`] = `"React.jsx(\\"font-face\\", {});"`;
+
+exports[`transform react to jsx static children 1`] = `
+"var _jsxFileName = \\"\\";
+var x = React.jsxDEV(\\"div\\", {
+  children: [React.jsxDEV(\\"span\\", {}, undefined, true, {
+    fileName: _jsxFileName,
+    lineNumber: 3
+  }, this), [React.jsxDEV(\\"span\\", {}, '0', true, {
+    fileName: _jsxFileName,
+    lineNumber: 4
+  }, this), React.jsxDEV(\\"span\\", {}, '1', true, {
+    fileName: _jsxFileName,
+    lineNumber: 4
+  }, this)]]
+}, undefined, true, {
+  fileName: _jsxFileName,
+  lineNumber: 2
+}, this);"
+`;
 
 exports[`transform react to jsx uses createElement when the key comes after a spread 1`] = `
 "var x = React.createElement(\\"div\\", Object.assign({}, props, {
@@ -330,10 +376,14 @@ exports[`transform react to jsx uses jsx when the key comes before a spread 1`] 
 `;
 
 exports[`transform react to jsx uses jsxDEV instead of jsx in dev mode 1`] = `
-"var x = React.jsxDEV(\\"span\\", {
+"var _jsxFileName = \\"\\";
+var x = React.jsxDEV(\\"span\\", {
   propOne: \\"one\\",
   children: \\"Hi\\"
-}, undefined, undefined, undefined);"
+}, undefined, true, {
+  fileName: _jsxFileName,
+  lineNumber: 1
+}, this);"
 `;
 
 exports[`transform react to jsx wraps props in react spread for first spread attributes 1`] = `
