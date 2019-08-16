@@ -46,7 +46,7 @@ const babelOptions = {
       pathToBabelReactJSXTransform,
       {
         development: process.env.NODE_ENV === 'development',
-        useCreateElement: false,
+        useCreateElement: true,
       },
     ],
 

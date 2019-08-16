@@ -315,7 +315,7 @@ export function jsxWithValidation(
 
     warning(
       false,
-      'React.createElement: type is invalid -- expected a string (for ' +
+      'React.jsx: type is invalid -- expected a string (for ' +
         'built-in components) or a class/function (for composite ' +
         'components) but got: %s.%s',
       typeString,
