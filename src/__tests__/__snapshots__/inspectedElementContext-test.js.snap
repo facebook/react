@@ -91,6 +91,28 @@ exports[`InspectedElementContext should include updates for nested values that w
 }
 `;
 
+exports[`InspectedElementContext should inspect hooks for components that only use context: 1: Inspected element 2 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "hooks": [
+    {
+      "id": null,
+      "isStateEditable": false,
+      "name": "Context",
+      "value": true,
+      "subHooks": []
+    }
+  ],
+  "props": {
+    "a": 1,
+    "b": "abc"
+  },
+  "state": null
+}
+`;
+
 exports[`InspectedElementContext should inspect the currently selected element: 1: Inspected element 2 1`] = `
 {
   "id": 2,

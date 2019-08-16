@@ -18,6 +18,7 @@ export type Source = {|
   fileName: string,
   lineNumber: number,
 |};
+
 export type HookType =
   | 'useState'
   | 'useReducer'
@@ -37,6 +38,9 @@ export type Fiber = {|
   tag: WorkTag,
 
   key: null | string,
+
+  // Dependencies (contexts, events) for this fiber, if it has any
+  dependencies: mixed | null,
 
   elementType: any,
 

@@ -856,4 +856,47 @@ describe('InspectedElementContext', () => {
 
     done();
   });
+
+  it('should inspect hooks for components that only use context', async done => {
+    const Context = React.createContext(true);
+    const Example = () => {
+      const value = React.useContext(Context);
+      return value;
+    };
+
+    const container = document.createElement('div');
+    await utils.actAsync(() =>
+      ReactDOM.render(<Example a={1} b="abc" />, container)
+    );
+
+    const id = ((store.getElementIDAtIndex(0): any): number);
+
+    let didFinish = false;
+
+    function Suspender({ target }) {
+      const { getInspectedElement } = React.useContext(InspectedElementContext);
+      const inspectedElement = getInspectedElement(id);
+      expect(inspectedElement).toMatchSnapshot(`1: Inspected element ${id}`);
+      didFinish = true;
+      return null;
+    }
+
+    await utils.actAsync(
+      () =>
+        TestRenderer.create(
+          <Contexts
+            defaultSelectedElementID={id}
+            defaultSelectedElementIndex={0}
+          >
+            <React.Suspense fallback={null}>
+              <Suspender target={id} />
+            </React.Suspense>
+          </Contexts>
+        ),
+      false
+    );
+    expect(didFinish).toBe(true);
+
+    done();
+  });
 });

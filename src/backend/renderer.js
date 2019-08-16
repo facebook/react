@@ -2082,6 +2082,7 @@ export function attach(
     const {
       _debugOwner,
       _debugSource,
+      dependencies,
       stateNode,
       memoizedProps,
       memoizedState,
@@ -2093,7 +2094,7 @@ export function attach(
       (tag === FunctionComponent ||
         tag === SimpleMemoComponent ||
         tag === ForwardRef) &&
-      !!memoizedState;
+      (!!memoizedState || !!dependencies);
 
     const typeSymbol = getTypeSymbol(type);
 
