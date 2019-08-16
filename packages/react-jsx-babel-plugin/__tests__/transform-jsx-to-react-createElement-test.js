@@ -279,6 +279,7 @@ describe('transform react to jsx', () => {
     ).toMatchSnapshot();
   });
   it('should escape xhtml jsxtext', () => {
+    /* eslint-disable no-irregular-whitespace */
     expect(
       transform(`
         <div>wow</div>;
@@ -295,6 +296,7 @@ describe('transform react to jsx', () => {
         <div>w &lt; w</div>;
       `)
     ).toMatchSnapshot();
+    /*eslint-enable */
   });
   it('should handle attributed elements', () => {
     expect(

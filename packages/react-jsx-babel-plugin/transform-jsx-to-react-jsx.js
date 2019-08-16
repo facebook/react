@@ -149,7 +149,9 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
   // Production: React.jsx(type, arguments, key)
   // Development: React.jsxDEV(type, arguments, key, isStaticChildren, source, self)
   function buildJSXElementCall(path, file) {
-    if (opts.filter && !opts.filter(path.node, file)) return;
+    if (opts.filter && !opts.filter(path.node, file)) {
+      return;
+    }
 
     const openingPath = path.get('openingElement');
     openingPath.parent.children = t.react.buildChildren(openingPath.parent);
@@ -313,7 +315,9 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
   // Production: React.jsx(type, arguments)
   // Development: React.jsxDEV(type, { children})
   function buildJSXFragmentCall(path, file) {
-    if (opts.filter && !opts.filter(path.node, file)) return;
+    if (opts.filter && !opts.filter(path.node, file)) {
+      return;
+    }
 
     const openingPath = path.get('openingElement');
     openingPath.parent.children = t.react.buildChildren(openingPath.parent);
@@ -367,7 +371,9 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
   // Production: React.createElement(type, arguments, children)
   // Development: React.createElement(type, arguments, children, source, self)
   function buildCreateElementCall(path, file) {
-    if (opts.filter && !opts.filter(path.node, file)) return;
+    if (opts.filter && !opts.filter(path.node, file)) {
+      return;
+    }
 
     const openingPath = path.get('openingElement');
     openingPath.parent.children = t.react.buildChildren(openingPath.parent);
@@ -412,7 +418,9 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
   }
 
   function pushProps(_props, objs) {
-    if (!_props.length) return _props;
+    if (!_props.length) {
+      return _props;
+    }
 
     objs.push(t.objectExpression(_props));
     return [];
@@ -470,7 +478,9 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
   }
 
   function buildCreateElementFragmentCall(path, file) {
-    if (opts.filter && !opts.filter(path.node, file)) return;
+    if (opts.filter && !opts.filter(path.node, file)) {
+      return;
+    }
 
     const openingPath = path.get('openingElement');
     openingPath.parent.children = t.react.buildChildren(openingPath.parent);
