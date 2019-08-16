@@ -148,7 +148,10 @@ export default function KeyValue({
           >
             {name}
           </span>
-          <span>Array</span>
+          <span>
+            Array{' '}
+            {hasChildren ? '' : <span className={styles.Empty}>(empty)</span>}
+          </span>
         </div>
       );
     } else {
@@ -184,7 +187,10 @@ export default function KeyValue({
           >
             {name}
           </span>
-          <span>Object</span>
+          <span>
+            Object{' '}
+            {hasChildren ? '' : <span className={styles.Empty}>(empty)</span>}
+          </span>
         </div>
       );
     }
