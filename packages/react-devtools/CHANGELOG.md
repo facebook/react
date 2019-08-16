@@ -10,6 +10,10 @@
   <!-- Upcoming changes go here
 </details> -->
 
+## 4.0.2 (August 15, 2019)
+
+* Fixed unnecessary and erroneously requested permissions in the 4.0.0 and 4.0.1 releases.
+
 ## 4.0.0 (August 15, 2019)
 
 ### General changes
