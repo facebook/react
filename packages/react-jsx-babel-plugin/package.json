@@ -1,0 +1,8 @@
+{
+  "name": "react-jsx-babel-plugin",
+  "version": "1.0.0",
+  "description": "@babel/plugin-transform-react-jsx",
+  "main": "transform-jsx-to-react-jsx.js",
+  "repository": "https://github.com/facebook/react.git",
+  "license": "MIT"
+}
