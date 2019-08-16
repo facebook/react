@@ -106,7 +106,7 @@ export default function DevTools({
   useEffect(() => {
     return () => {
       try {
-        bridge.shutdown()
+        bridge.shutdown();
       } catch (error) {
         // Attempting to use a disconnected port.
       }

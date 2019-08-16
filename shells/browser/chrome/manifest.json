@@ -40,11 +40,7 @@
     "persistent": false
   },
 
-  "permissions": [
-    "file:///*",
-    "http://*/*",
-    "https://*/*"
-  ],
+  "permissions": ["file:///*", "http://*/*", "https://*/*"],
 
   "content_scripts": [
     {
