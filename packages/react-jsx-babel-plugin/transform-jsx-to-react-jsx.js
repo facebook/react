@@ -397,7 +397,7 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
 
     let attribs = openingPath.node.attributes;
     if (attribs.length) {
-      attribs = buildOpeningElementAttributes(attribs, file);
+      attribs = buildCreateElementOpeningElementAttributes(attribs, file);
     } else {
       attribs = t.nullLiteral();
     }
@@ -424,7 +424,7 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
    * breaking on spreads, we then push a new object containing
    * all prior attributes to an array for later processing.
    */
-  function buildOpeningElementAttributes(attribs, file) {
+  function buildCreateElementOpeningElementAttributes(attribs, file) {
     let _props = [];
     const objs = [];
 

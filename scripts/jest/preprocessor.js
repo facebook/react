@@ -22,9 +22,6 @@ const pathToBabelPluginWrapWarning = require.resolve(
 const pathToBabelPluginAsyncToGenerator = require.resolve(
   '@babel/plugin-transform-async-to-generator'
 );
-const pathToBabelReactJSXTransform = require.resolve(
-  '../../packages/react-jsx-babel-plugin/transform-jsx-to-react-jsx'
-);
 const pathToBabelrc = path.join(__dirname, '..', '..', 'babel.config.js');
 const pathToErrorCodes = require.resolve('../error-codes/codes.json');
 
