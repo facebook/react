@@ -53,7 +53,7 @@ export default class ErrorBoundary extends Component<Props, State> {
       const title = `Error: "${errorMessage || ''}"`;
       const label = 'Component: Developer Tools';
 
-      let body = '<!-- please provide repro information here -->\n';
+      let body = 'PLEASE INCLUDE REPRO INSTRUCTIONS AND EXAMPLE CODE\n';
       body += '\n---------------------------------------------';
       body += '\nPlease do not remove the text below this line';
       body += '\n---------------------------------------------';
