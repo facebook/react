@@ -10,8 +10,8 @@ import {
   type EventSystemFlags,
   IS_PASSIVE,
   PASSIVE_NOT_SUPPORTED,
-} from 'events/EventSystemFlags';
-import type {AnyNativeEvent} from 'events/PluginModuleType';
+} from 'legacy-events/EventSystemFlags';
+import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
 import {HostComponent} from 'shared/ReactWorkTags';
 import type {EventPriority} from 'shared/ReactTypes';
 import type {
@@ -20,13 +20,13 @@ import type {
   ReactDOMResponderContext,
   ReactDOMResponderEvent,
 } from 'shared/ReactDOMTypes';
-import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
+import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 import {
   batchedEventUpdates,
   discreteUpdates,
   flushDiscreteUpdatesIfNeeded,
-} from 'events/ReactGenericBatching';
-import {enqueueStateRestore} from 'events/ReactControlledComponent';
+} from 'legacy-events/ReactGenericBatching';
+import {enqueueStateRestore} from 'legacy-events/ReactControlledComponent';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import warning from 'shared/warning';
 import {enableFlareAPI} from 'shared/ReactFeatureFlags';

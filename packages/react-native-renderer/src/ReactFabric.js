@@ -26,7 +26,7 @@ import {
 } from 'react-reconciler/inline.fabric';
 
 import {createPortal} from 'shared/ReactPortal';
-import {setBatchingImplementation} from 'events/ReactGenericBatching';
+import {setBatchingImplementation} from 'legacy-events/ReactGenericBatching';
 import ReactVersion from 'shared/ReactVersion';
 
 import NativeMethodsMixin from './NativeMethodsMixin';

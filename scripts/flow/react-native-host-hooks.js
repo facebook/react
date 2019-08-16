@@ -16,7 +16,7 @@ import type {
   ReactNativeBaseComponentViewConfig,
   ViewConfigGetter,
 } from 'react-native-renderer/src/ReactNativeTypes';
-import type {RNTopLevelEventType} from 'events/TopLevelEventTypes';
+import type {RNTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 import type {CapturedError} from 'react-reconciler/src/ReactCapturedValue';
 
 declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface' {

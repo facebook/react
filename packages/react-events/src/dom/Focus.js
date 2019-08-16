@@ -33,6 +33,7 @@ type FocusState = {
   isFocused: boolean,
   isFocusVisible: boolean,
   pointerType: PointerType,
+  isEmulatingMouseEvents: boolean,
 };
 
 type FocusProps = {
@@ -66,25 +67,12 @@ const isMac =
 
 const targetEventTypes = ['focus', 'blur'];
 
-const rootEventTypes = [
-  'keydown',
-  'keyup',
-  'pointermove',
-  'pointerdown',
-  'pointerup',
-];
+const hasPointerEvents =
+  typeof window !== 'undefined' && window.PointerEvent != null;
 
-// If PointerEvents is not supported (e.g., Safari), also listen to touch and mouse events.
-if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
-  rootEventTypes.push(
-    'mousemove',
-    'mousedown',
-    'mouseup',
-    'touchmove',
-    'touchstart',
-    'touchend',
-  );
-}
+const rootEventTypes = hasPointerEvents
+  ? ['keydown', 'keyup', 'pointermove', 'pointerdown', 'pointerup']
+  : ['keydown', 'keyup', 'mousedown', 'touchmove', 'touchstart', 'touchend'];
 
 function isFunction(obj): boolean {
   return typeof obj === 'function';
@@ -110,13 +98,7 @@ function handleRootPointerEvent(
   state: FocusState,
   callback: boolean => void,
 ): void {
-  const {type, target} = event;
-  // Ignore a Safari quirks where 'mousemove' is dispatched on the 'html'
-  // element when the window blurs.
-  if (type === 'mousemove' && target.nodeName === 'HTML') {
-    return;
-  }
-
+  const {type} = event;
   isGlobalFocusVisible = false;
 
   // Focus should stop being visible if a pointer is used on the element
@@ -124,7 +106,7 @@ function handleRootPointerEvent(
   const focusTarget = state.focusTarget;
   if (
     focusTarget !== null &&
-    context.isTargetWithinNode(event.target, focusTarget) &&
+    context.isTargetWithinResponderScope(focusTarget) &&
     (type === 'mousedown' || type === 'touchstart' || type === 'pointerdown')
   ) {
     callback(false);
@@ -140,13 +122,6 @@ function handleRootEvent(
   const {type} = event;
 
   switch (type) {
-    case 'mousemove':
-    case 'mousedown':
-    case 'mouseup': {
-      state.pointerType = 'mouse';
-      handleRootPointerEvent(event, context, state, callback);
-      break;
-    }
     case 'pointermove':
     case 'pointerdown':
     case 'pointerup': {
@@ -156,27 +131,45 @@ function handleRootEvent(
       handleRootPointerEvent(event, context, state, callback);
       break;
     }
-    case 'touchmove':
-    case 'touchstart':
-    case 'touchend': {
-      state.pointerType = 'touch';
-      handleRootPointerEvent(event, context, state, callback);
-      break;
-    }
 
     case 'keydown':
     case 'keyup': {
       const nativeEvent = event.nativeEvent;
-      if (
-        nativeEvent.key === 'Tab' &&
-        !(
-          nativeEvent.metaKey ||
-          (!isMac && nativeEvent.altKey) ||
-          nativeEvent.ctrlKey
-        )
-      ) {
+      const focusTarget = state.focusTarget;
+      const {key, metaKey, altKey, ctrlKey} = (nativeEvent: any);
+      const validKey =
+        key === 'Enter' ||
+        key === ' ' ||
+        (key === 'Tab' && !(metaKey || (!isMac && altKey) || ctrlKey));
+
+      if (validKey) {
         state.pointerType = 'keyboard';
         isGlobalFocusVisible = true;
+        if (
+          focusTarget !== null &&
+          context.isTargetWithinResponderScope(focusTarget)
+        ) {
+          callback(true);
+        }
+      }
+      break;
+    }
+
+    // fallbacks for no PointerEvent support
+    case 'touchmove':
+    case 'touchstart':
+    case 'touchend': {
+      state.pointerType = 'touch';
+      state.isEmulatingMouseEvents = true;
+      handleRootPointerEvent(event, context, state, callback);
+      break;
+    }
+    case 'mousedown': {
+      if (!state.isEmulatingMouseEvents) {
+        state.pointerType = 'mouse';
+        handleRootPointerEvent(event, context, state, callback);
+      } else {
+        state.isEmulatingMouseEvents = false;
       }
       break;
     }
@@ -271,6 +264,7 @@ const focusResponderImpl = {
   getInitialState(): FocusState {
     return {
       focusTarget: null,
+      isEmulatingMouseEvents: false,
       isFocused: false,
       isFocusVisible: false,
       pointerType: '',
@@ -303,6 +297,7 @@ const focusResponderImpl = {
           state.isFocusVisible = isGlobalFocusVisible;
           dispatchFocusEvents(context, props, state);
         }
+        state.isEmulatingMouseEvents = false;
         break;
       }
       case 'blur': {
@@ -311,6 +306,17 @@ const focusResponderImpl = {
           state.isFocusVisible = isGlobalFocusVisible;
           state.isFocused = false;
         }
+        // This covers situations where focus is lost to another document in
+        // the same window (e.g., iframes). Any action that restores focus to
+        // the document (e.g., touch or click) first causes 'focus' to be
+        // dispatched, which means the 'pointerType' we provide is stale
+        // (it reflects the *previous* pointer). We cannot determine the
+        // 'pointerType' in this case, so a blur with no
+        // relatedTarget is used as a signal to reset the 'pointerType'.
+        if (event.nativeEvent.relatedTarget == null) {
+          state.pointerType = '';
+        }
+        state.isEmulatingMouseEvents = false;
         break;
       }
     }
@@ -322,7 +328,7 @@ const focusResponderImpl = {
     state: FocusState,
   ): void {
     handleRootEvent(event, context, state, isFocusVisible => {
-      if (state.isFocusVisible !== isFocusVisible) {
+      if (state.isFocused && state.isFocusVisible !== isFocusVisible) {
         state.isFocusVisible = isFocusVisible;
         dispatchFocusVisibleChangeEvent(context, props, isFocusVisible);
       }
@@ -402,6 +408,7 @@ const focusWithinResponderImpl = {
   getInitialState(): FocusState {
     return {
       focusTarget: null,
+      isEmulatingMouseEvents: false,
       isFocused: false,
       isFocusVisible: false,
       pointerType: '',
@@ -460,7 +467,7 @@ const focusWithinResponderImpl = {
     state: FocusState,
   ): void {
     handleRootEvent(event, context, state, isFocusVisible => {
-      if (state.isFocusVisible !== isFocusVisible) {
+      if (state.isFocused && state.isFocusVisible !== isFocusVisible) {
         state.isFocusVisible = isFocusVisible;
         dispatchFocusWithinVisibleChangeEvent(
           context,

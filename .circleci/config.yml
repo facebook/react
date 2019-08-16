@@ -94,16 +94,6 @@ jobs:
       - *run_yarn
       - run: yarn test-prod --maxWorkers=2
 
-  test_coverage:
-    docker: *docker
-    environment: *environment
-
-    steps:
-      - checkout
-      - *restore_yarn_cache
-      - *run_yarn
-      - run: ./scripts/circleci/test_coverage.sh
-
   build:
     docker: *docker
     environment: *environment
@@ -255,8 +245,5 @@ workflows:
     jobs:
       - setup
       - test_fuzz:
-          requires:
-            - setup
-      - test_coverage:
           requires:
             - setup

@@ -14,29 +14,22 @@ let ReactFeatureFlags;
 let ReactDOM;
 let useKeyboardResponder;
 
-const createEvent = (type, data) => {
-  const event = document.createEvent('CustomEvent');
-  event.initCustomEvent(type, true, true);
-  if (data != null) {
-    Object.entries(data).forEach(([key, value]) => {
-      event[key] = value;
-    });
-  }
-  return event;
-};
+import {keydown, keyup} from '../test-utils';
+
+function initializeModules(hasPointerEvents) {
+  jest.resetModules();
+  ReactFeatureFlags = require('shared/ReactFeatureFlags');
+  ReactFeatureFlags.enableFlareAPI = true;
+  React = require('react');
+  ReactDOM = require('react-dom');
+  useKeyboardResponder = require('react-events/keyboard').useKeyboardResponder;
+}
 
 describe('Keyboard event responder', () => {
   let container;
 
   beforeEach(() => {
-    jest.resetModules();
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableFlareAPI = true;
-    React = require('react');
-    ReactDOM = require('react-dom');
-    useKeyboardResponder = require('react-events/keyboard')
-      .useKeyboardResponder;
-
+    initializeModules();
     container = document.createElement('div');
     document.body.appendChild(container);
   });
@@ -66,7 +59,9 @@ describe('Keyboard event responder', () => {
     });
 
     it('prevents custom events being dispatched', () => {
-      ref.current.dispatchEvent(createEvent('scroll'));
+      const target = ref.current;
+      target.dispatchEvent(keydown());
+      target.dispatchEvent(keyup());
       expect(onKeyDown).not.toBeCalled();
       expect(onKeyUp).not.toBeCalled();
     });
@@ -88,13 +83,7 @@ describe('Keyboard event responder', () => {
     });
 
     it('is called after "keydown" event', () => {
-      ref.current.dispatchEvent(
-        new KeyboardEvent('keydown', {
-          bubbles: true,
-          cancelable: true,
-          key: 'Q',
-        }),
-      );
+      ref.current.dispatchEvent(keydown({key: 'Q'}));
       expect(onKeyDown).toHaveBeenCalledTimes(1);
       expect(onKeyDown).toHaveBeenCalledWith(
         expect.objectContaining({key: 'Q', type: 'keydown'}),
@@ -120,20 +109,9 @@ describe('Keyboard event responder', () => {
     });
 
     it('is called after "keydown" event', () => {
-      ref.current.dispatchEvent(
-        new KeyboardEvent('keydown', {
-          bubbles: true,
-          cancelable: true,
-          key: 'Q',
-        }),
-      );
-      ref.current.dispatchEvent(
-        new KeyboardEvent('keyup', {
-          bubbles: true,
-          cancelable: true,
-          key: 'Q',
-        }),
-      );
+      const target = ref.current;
+      target.dispatchEvent(keydown({key: 'Q'}));
+      target.dispatchEvent(keyup({key: 'Q'}));
       expect(onKeyDown).toHaveBeenCalledTimes(1);
       expect(onKeyDown).toHaveBeenCalledWith(
         expect.objectContaining({key: 'Q', type: 'keydown'}),
