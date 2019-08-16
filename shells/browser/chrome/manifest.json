@@ -41,7 +41,6 @@
   },
 
   "permissions": [
-    "webNavigation",
     "file:///*",
     "http://*/*",
     "https://*/*"
