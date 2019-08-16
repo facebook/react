@@ -26,7 +26,6 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
   };
 
   visitor.JSXElement = {
-    enter(path, state) {},
     exit(path, file) {
       let callExpr;
       if (file.opts.useCreateElement || useCreateElement(path)) {
@@ -48,8 +47,13 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
           'Fragment tags are only supported in React 16 and up.',
         );
       }
+      let callExpr;
+      if (file.opts.useCreateElement) {
+        callExpr = buildCreateElementFragmentCall(path, file);
+      } else {
+        callExpr = buildJSXFragmentCall(path, file);
+      }
 
-      const callExpr = buildFragmentCall(path, file);
       if (callExpr) {
         path.replaceWith(t.inherits(callExpr, path.node));
       }
@@ -91,15 +95,6 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
     }
   }
 
-  function isStaticChildren(children) {
-    return !(
-      children.length === 1 &&
-      (t.isArrayExpression(children[0]) ||
-        t.isIdentifier(children[0]) ||
-        t.isMemberExpression(children[0]))
-    );
-  }
-
   function convertAttribute(node) {
     const value = convertAttributeValue(node.value || t.booleanLiteral(true));
 
@@ -125,6 +120,34 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
     return t.inherits(t.objectProperty(node.name, value), node);
   }
 
+  // We want to use React.createElement, even in the case of
+  // jsx, for <div {...props} key={key} /> to distinguish it
+  // from <div key={key} {...props} />. This is an intermediary
+  // step while we deprecate key spread from props. Afterwards,
+  // we will remove createElement entirely
+  function useCreateElement(path) {
+    const openingPath = path.get('openingElement');
+    const attributes = openingPath.node.attributes;
+
+    let seenPropsSpread = false;
+    for (let i = 0, length = attributes.length; i < length; i++) {
+      const attr = attributes[i];
+      if (
+        seenPropsSpread &&
+        t.isJSXAttribute(attr) &&
+        attr.name.name === 'key'
+      ) {
+        return true;
+      } else if (t.isJSXSpreadAttribute(attr)) {
+        seenPropsSpread = true;
+      }
+    }
+    return false;
+  }
+
+  // Builds JSX into:
+  // Production: React.jsx(type, arguments, key)
+  // Development: React.jsxDEV(type, arguments, key, isStaticChildren, source, self)
   function buildJSXElementCall(path, file) {
     if (opts.filter && !opts.filter(path.node, file)) return;
 
@@ -187,20 +210,21 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
         path.node.children,
       );
     } else {
+      // attributes should never be null
       attribs = t.objectExpression([]);
     }
 
     args.push(attribs);
 
-    // __source and __self are only used in development
     if (!file.opts.development) {
       if (key !== undefined) {
         args.push(key);
       }
     } else {
+      // isStaticChildren, __source, and __self are only used in development
       args.push(
         key === undefined ? t.identifier('undefined') : key,
-        t.booleanLiteral(isStaticChildren(path.node.children)),
+        t.booleanLiteral(path.node.children.length !== 1),
         source === undefined ? t.identifier('undefined') : source,
         self === undefined ? t.identifier('undefined') : self,
       );
@@ -212,12 +236,6 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
     return state.call || t.callExpression(state.callee, args);
   }
 
-  /**
-   * The logic for this is quite terse. It's because we need to
-   * support spread elements. We loop over all attributes,
-   * breaking on spreads, we then push a new object containing
-   * all prior attributes to an array for later processing.
-   */
   function buildJSXOpeningElementAttributes(attribs, file, children) {
     let _props = [];
     const objs = [];
@@ -236,8 +254,7 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
         _props = pushProps(_props, objs);
         objs.push(prop.argument);
       } else {
-        const attr = convertAttribute(prop);
-        _props.push(attr);
+        _props.push(convertAttribute(prop));
       }
     }
 
@@ -255,6 +272,7 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
         );
       }
     }
+
     pushProps(_props, objs);
 
     if (objs.length === 1) {
@@ -265,10 +283,9 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
           ? t.memberExpression(t.identifier('Object'), t.identifier('assign'))
           : file.addHelper('extends');
 
-        // spread it
         attribs = t.callExpression(expressionHelper, [
           t.objectExpression([]),
-          ...objs,
+          objs[0],
         ]);
       } else {
         attribs = objs[0];
@@ -290,6 +307,69 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
     return attribs;
   }
 
+  // Builds JSX Fragment <></> into
+  // Production: React.jsx(type, arguments)
+  // Development: React.jsxDEV(type, { children})
+  function buildJSXFragmentCall(path, file) {
+    if (opts.filter && !opts.filter(path.node, file)) return;
+
+    const openingPath = path.get('openingElement');
+    openingPath.parent.children = t.react.buildChildren(openingPath.parent);
+
+    const args = [];
+    const tagName = null;
+    const tagExpr = file.get('jsxFragIdentifier')();
+
+    const state = {
+      tagExpr: tagExpr,
+      tagName: tagName,
+      args: args,
+    };
+
+    if (opts.pre) {
+      opts.pre(state, file);
+    }
+
+    let childrenNode;
+    if (path.node.children.length > 0) {
+      if (path.node.children.length === 1) {
+        childrenNode = path.node.children[0];
+      } else {
+        childrenNode = t.arrayExpression(path.node.children);
+      }
+    }
+
+    args.push(
+      t.objectExpression(
+        childrenNode !== undefined
+          ? [t.objectProperty(t.identifier('children'), childrenNode)]
+          : [],
+      ),
+    );
+
+    if (file.opts.development) {
+      args.push(
+        t.identifier('undefined'),
+        t.booleanLiteral(path.node.children.length !== 1),
+      );
+    }
+
+    if (opts.post) {
+      opts.post(state, file);
+    }
+
+    return (
+      state.call ||
+      t.callExpression(
+        file.opts.useCreateElement ? state.oldCallee : state.callee,
+        args,
+      )
+    );
+  }
+
+  // Builds JSX into:
+  // Production: React.createElement(type, arguments, children)
+  // Development: React.createElement(type, arguments, children, source, self)
   function buildCreateElementCall(path, file) {
     if (opts.filter && !opts.filter(path.node, file)) return;
 
@@ -393,7 +473,7 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
     return attribs;
   }
 
-  function buildFragmentCall(path, file) {
+  function buildCreateElementFragmentCall(path, file) {
     if (opts.filter && !opts.filter(path.node, file)) return;
 
     const openingPath = path.get('openingElement');
@@ -413,29 +493,8 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
       opts.pre(state, file);
     }
 
-    if (file.opts.useCreateElement) {
-      args.push(t.nullLiteral(), ...path.node.children);
-    } else {
-      let childrenNode;
-      if (path.node.children.length === 0) {
-        childrenNode = t.nullLiteral();
-      } else if (path.node.children.length === 1) {
-        childrenNode = path.node.children[0];
-      } else {
-        childrenNode = t.arrayExpression(path.node.children);
-      }
-      args.push(
-        t.objectExpression([
-          t.objectProperty(t.identifier('children'), childrenNode),
-        ]),
-      );
-      if (file.opts.development) {
-        args.push(
-          t.identifier('undefined'),
-          t.booleanLiteral(isStaticChildren(path.node.children)),
-        );
-      }
-    }
+    args.push(t.nullLiteral(), ...path.node.children);
+
     if (opts.post) {
       opts.post(state, file);
     }
@@ -447,26 +506,6 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
         args,
       )
     );
-  }
-
-  function useCreateElement(path) {
-    const openingPath = path.get('openingElement');
-    const attributes = openingPath.node.attributes;
-
-    let seenPropsSpread = false;
-    for (let i = 0, length = attributes.length; i < length; i++) {
-      const attr = attributes[i];
-      if (
-        seenPropsSpread &&
-        t.isJSXAttribute(attr) &&
-        attr.name.name === 'key'
-      ) {
-        return true;
-      } else if (t.isJSXSpreadAttribute(attr)) {
-        seenPropsSpread = true;
-      }
-    }
-    return false;
   }
 }
 

@@ -1,5 +1,23 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`transform react to jsx React.Fragment to set keys and source 1`] = `
+"var _jsxFileName = \\"\\";
+var x = React.createElement(React.Fragment, {
+  key: \\"foo\\",
+  __source: {
+    fileName: _jsxFileName,
+    lineNumber: 1
+  },
+  __self: this
+}, React.createElement(\\"div\\", {
+  __source: {
+    fileName: _jsxFileName,
+    lineNumber: 1
+  },
+  __self: this
+}));"
+`;
+
 exports[`transform react to jsx adds appropriate new lines when using spread attribute 1`] = `
 "React.createElement(Component, Object.assign({}, props, {
   sound: \\"moo\\"
@@ -88,6 +106,19 @@ exports[`transform react to jsx display name variable declaration 1`] = `
     return null;
   }
 });"
+`;
+
+exports[`transform react to jsx fragment with no children 1`] = `"var x = React.createElement(React.Fragment, null);"`;
+
+exports[`transform react to jsx normal fragments not to set key and source 1`] = `
+"var _jsxFileName = \\"\\";
+var x = React.createElement(React.Fragment, null, React.createElement(\\"div\\", {
+  __source: {
+    fileName: _jsxFileName,
+    lineNumber: 1
+  },
+  __self: this
+}));"
 `;
 
 exports[`transform react to jsx should allow constructor as prop 1`] = `

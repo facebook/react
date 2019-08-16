@@ -42,14 +42,6 @@ const babelOptions = {
     // TODO: I have not verified that this actually works.
     require.resolve('@babel/plugin-transform-react-jsx-source'),
 
-    [
-      pathToBabelReactJSXTransform,
-      {
-        development: process.env.NODE_ENV === 'development',
-        useCreateElement: true,
-      },
-    ],
-
     require.resolve('../babel/transform-prevent-infinite-loops'),
   ],
   retainLines: true,

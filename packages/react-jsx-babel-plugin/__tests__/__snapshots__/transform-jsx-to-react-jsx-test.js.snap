@@ -1,9 +1,11 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`transform react to jsx  fragments 1`] = `
-"var x = React.jsx(React.Fragment, {
-  children: React.jsx(\\"div\\", {})
-});"
+exports[`transform react to jsx React.fragment to set keys and source 1`] = `
+"var _jsxFileName = \\"\\";
+var x = React.jsxDEV(React.Fragment, {}, \\"foo\\", true, {
+  fileName: _jsxFileName,
+  lineNumber: 1
+}, this);"
 `;
 
 exports[`transform react to jsx adds appropriate new lines when using spread attribute 1`] = `
@@ -102,17 +104,25 @@ exports[`transform react to jsx display name variable declaration 1`] = `
 });"
 `;
 
-exports[`transform react to jsx fragments in dev mode 1`] = `
+exports[`transform react to jsx fragment with no children 1`] = `"var x = React.jsx(React.Fragment, {});"`;
+
+exports[`transform react to jsx fragments 1`] = `
+"var x = React.jsx(React.Fragment, {
+  children: React.jsx(\\"div\\", {})
+});"
+`;
+
+exports[`transform react to jsx fragments in dev mode (no key and source) 1`] = `
 "var _jsxFileName = \\"\\";
 var x = React.jsxDEV(React.Fragment, {
   children: React.jsxDEV(\\"div\\", {}, undefined, true, {
     fileName: _jsxFileName,
     lineNumber: 1
   }, this)
-}, undefined, true);"
+}, undefined, false);"
 `;
 
-exports[`transform react to jsx fragments to set keys 1`] = `"var x = React.jsx(React.Fragment, {}, 'foo');"`;
+exports[`transform react to jsx fragments to set keys 1`] = `"var x = React.jsx(React.Fragment, {}, \\"foo\\");"`;
 
 exports[`transform react to jsx nonStatic children 1`] = `
 "var _jsxFileName = \\"\\";
@@ -380,7 +390,7 @@ exports[`transform react to jsx uses jsxDEV instead of jsx in dev mode 1`] = `
 var x = React.jsxDEV(\\"span\\", {
   propOne: \\"one\\",
   children: \\"Hi\\"
-}, undefined, true, {
+}, undefined, false, {
   fileName: _jsxFileName,
   lineNumber: 1
 }, this);"

@@ -16,11 +16,15 @@ function transform(input, options) {
     plugins: [
       '@babel/plugin-syntax-jsx',
       '@babel/plugin-transform-arrow-functions',
+      ...(options && options.development
+        ? [
+            '@babel/plugin-transform-react-jsx-source',
+            '@babel/plugin-transform-react-jsx-self',
+          ]
+        : []),
       [
         './packages/react-jsx-babel-plugin/transform-jsx-to-react-jsx',
         {
-          module: 'bluebird',
-          method: 'coroutine',
           development: __DEV__,
           useBuiltIns: true,
           useCreateElement: true,
@@ -32,6 +36,23 @@ function transform(input, options) {
 }
 
 describe('transform react to jsx', () => {
+  it('fragment with no children', () => {
+    expect(transform(`var x = <></>`)).toMatchSnapshot();
+  });
+  it('React.Fragment to set keys and source', () => {
+    expect(
+      transform(`var x = <React.Fragment key='foo'><div /></React.Fragment>`, {
+        development: true,
+      })
+    ).toMatchSnapshot();
+  });
+  it('normal fragments not to set key and source', () => {
+    expect(
+      transform(`var x = <><div /></>`, {
+        development: true,
+      })
+    ).toMatchSnapshot();
+  });
   it('should properly handle comments adjacent to children', () => {
     expect(
       transform(`

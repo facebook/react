@@ -25,8 +25,6 @@ function transform(input, options) {
       [
         './packages/react-jsx-babel-plugin/transform-jsx-to-react-jsx',
         {
-          module: 'bluebird',
-          method: 'coroutine',
           useBuiltIns: true,
           useCreateElement: false,
           ...options,
@@ -37,15 +35,25 @@ function transform(input, options) {
 }
 
 describe('transform react to jsx', () => {
-  it(' fragments', () => {
+  it('fragment with no children', () => {
+    expect(transform(`var x = <></>`)).toMatchSnapshot();
+  });
+  it('fragments', () => {
     expect(transform(`var x = <><div /></>`)).toMatchSnapshot();
   });
   it('fragments to set keys', () => {
     expect(
-      transform(`var x = <React.Fragment key={'foo'} ></React.Fragment>`)
+      transform(`var x = <React.Fragment key="foo"></React.Fragment>`)
     ).toMatchSnapshot();
   });
-  it('fragments in dev mode', () => {
+  it('React.fragment to set keys and source', () => {
+    expect(
+      transform(`var x = <React.Fragment key='foo'></React.Fragment>`, {
+        development: true,
+      })
+    ).toMatchSnapshot();
+  });
+  it('fragments in dev mode (no key and source)', () => {
     expect(
       transform(`var x = <><div /></>`, {
         development: true,
