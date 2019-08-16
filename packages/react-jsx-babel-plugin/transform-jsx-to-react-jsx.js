@@ -236,6 +236,8 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
     return state.call || t.callExpression(state.callee, args);
   }
 
+  // Builds props for React.jsx. This function adds children into the props
+  // and ensures that props is always an object
   function buildJSXOpeningElementAttributes(attribs, file, children) {
     let _props = [];
     const objs = [];
@@ -358,13 +360,7 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
       opts.post(state, file);
     }
 
-    return (
-      state.call ||
-      t.callExpression(
-        file.opts.useCreateElement ? state.oldCallee : state.callee,
-        args,
-      )
-    );
+    return state.call || t.callExpression(state.callee, args);
   }
 
   // Builds JSX into:
@@ -493,19 +489,14 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
       opts.pre(state, file);
     }
 
+    // no attributes are allowed with <> syntax
     args.push(t.nullLiteral(), ...path.node.children);
 
     if (opts.post) {
       opts.post(state, file);
     }
 
-    return (
-      state.call ||
-      t.callExpression(
-        file.opts.useCreateElement ? state.oldCallee : state.callee,
-        args,
-      )
-    );
+    return state.call || t.callExpression(state.oldCallee, args);
   }
 }
 

@@ -338,6 +338,11 @@ exports[`transform react to jsx should properly handle comments between props 1`
 });"
 `;
 
+exports[`transform react to jsx should properly handle potentially null variables 1`] = `
+"var foo = null;
+var x = React.jsx(\\"div\\", Object.assign({}, foo));"
+`;
+
 exports[`transform react to jsx should quote jsx attributes 1`] = `
 "React.jsx(\\"button\\", {
   \\"data-value\\": \\"a value\\",

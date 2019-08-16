@@ -101,7 +101,14 @@ describe('transform react to jsx', () => {
       transform(`var x = <div />;`, {development: true})
     ).toMatchSnapshot();
   });
-
+  it('should properly handle potentially null variables', () => {
+    expect(
+      transform(`
+        var foo = null;
+        var x = <div {...foo} />;
+      `)
+    ).toMatchSnapshot();
+  });
   it('properly handles keys', () => {
     expect(
       transform(`var x = (
