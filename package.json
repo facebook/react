@@ -1,5 +1,5 @@
 {
-  "version": "4.0.2",
+  "version": "4.0.3",
   "repository": "bvaughn/react-devtools-experimental",
   "license": "MIT",
   "private": true,
@@ -135,7 +135,7 @@
     "memoize-one": "^3.1.1",
     "node-libs-browser": "0.5.3",
     "nullthrows": "^1.0.0",
-    "object-assign": "4.0.2",
+    "object-assign": "4.0.3",
     "opener": "^1.5.1",
     "prettier": "^1.16.4",
     "prop-types": "^15.6.2",
