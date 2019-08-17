@@ -10,9 +10,21 @@
   <!-- Upcoming changes go here
 </details> -->
 
-## 4.0.2 (August 15, 2019)
+## 4.0.3 (August 17, 2019)
+#### Bug fixes
+* ES6 `Map` and `Set`, typed arrays, and other unnserializable types (e.g. Immutable JS) can now be inspected.
+* Empty objects and arrays now display an "(empty)" label to the right to be reduce confusion.
+* Components that use only the `useContext` hook now properly display hooks values in side panel.
+* Style editor now supports single quotes around string values (e.g. both `"red"` and `'red'`).
+* Fixed edge case bug that prevented profiling when both React v16 and v15 were present on a page.
 
-* Fixed unnecessary and erroneously requested permissions in the 4.0.0 and 4.0.1 releases.
+## 4.0.2 (August 15, 2019)
+#### Permissions cleanup
+* Removed unnecessary `webNavigation ` permission from Chrome and Firefox extensions.
+
+## 4.0.1 (August 15, 2019)
+#### Permissions cleanup
+* Removed unnecessary `<all_urls>`, `background`, and `tabs` permissions from Chrome and Firefox extensions.
 
 ## 4.0.0 (August 15, 2019)
 
