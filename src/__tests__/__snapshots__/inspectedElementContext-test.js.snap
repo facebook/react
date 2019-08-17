@@ -1,5 +1,41 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`InspectedElementContext should dehydrate complex nested values when requested: 1: Initially inspect element 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "hooks": null,
+  "props": {
+    "set_of_sets": {
+      "0": {},
+      "1": {}
+    }
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should dehydrate complex nested values when requested: 2: Inspect props.set_of_sets.0 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "hooks": null,
+  "props": {
+    "set_of_sets": {
+      "0": {
+        "0": 1,
+        "1": 2,
+        "2": 3
+      },
+      "1": {}
+    }
+  },
+  "state": null
+}
+`;
+
 exports[`InspectedElementContext should include updates for nested values that were previously hydrated: 1: Initially inspect element 1`] = `
 {
   "id": 2,
@@ -449,13 +485,38 @@ exports[`InspectedElementContext should support complex data types: 1: Inspected
   "context": null,
   "hooks": null,
   "props": {
-    "html_element": {},
-    "fn": {},
-    "symbol": {},
-    "react_element": {},
     "array_buffer": {},
-    "typed_array": {},
-    "date": {}
+    "date": {},
+    "fn": {},
+    "html_element": {},
+    "immutable": {
+      "0": {},
+      "1": {},
+      "2": {}
+    },
+    "map": {
+      "0": {},
+      "1": {}
+    },
+    "map_of_maps": {
+      "0": {},
+      "1": {}
+    },
+    "react_element": {},
+    "set": {
+      "0": "abc",
+      "1": 123
+    },
+    "set_of_sets": {
+      "0": {},
+      "1": {}
+    },
+    "symbol": {},
+    "typed_array": {
+      "0": 100,
+      "1": -100,
+      "2": 0
+    }
   },
   "state": null
 }

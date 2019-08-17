@@ -1,10 +1,10 @@
 // @flow
 
 import React, { Fragment } from 'react';
+import UnserializableProps from './UnserializableProps';
 import Contexts from './Contexts';
 import CustomHooks from './CustomHooks';
 import CustomObject from './CustomObject';
-import MapAndSet from './MapAndSet';
 import NestedProps from './NestedProps';
 import SimpleValues from './SimpleValues';
 
@@ -15,7 +15,7 @@ export default function InspectableElements() {
     <Fragment>
       <h1>Inspectable elements</h1>
       <SimpleValues />
-      <MapAndSet />
+      <UnserializableProps />
       <NestedProps />
       <Contexts />
       <CustomHooks />

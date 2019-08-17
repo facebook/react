@@ -16,6 +16,7 @@ type KeyValueProps = {|
   depth: number,
   hidden?: boolean,
   inspectPath?: InspectPath,
+  isReadOnly?: boolean,
   name: string,
   overrideValueFn?: ?OverrideValueFn,
   path: Array<any>,
@@ -25,6 +26,7 @@ type KeyValueProps = {|
 export default function KeyValue({
   depth,
   inspectPath,
+  isReadOnly,
   hidden,
   name,
   overrideValueFn,
@@ -78,17 +80,18 @@ export default function KeyValue({
       displayValue = 'undefined';
     }
 
-    const nameClassName =
-      typeof overrideValueFn === 'function' ? styles.EditableName : styles.Name;
+    const isEditable = typeof overrideValueFn === 'function' && !isReadOnly;
 
     children = (
       <div key="root" className={styles.Item} hidden={hidden} style={style}>
         <div className={styles.ExpandCollapseToggleSpacer} />
-        <span className={nameClassName}>{name}</span>
-        {typeof overrideValueFn === 'function' ? (
+        <span className={isEditable ? styles.EditableName : styles.Name}>
+          {name}
+        </span>
+        {isEditable ? (
           <EditableValue
             dataType={dataType}
-            overrideValueFn={overrideValueFn}
+            overrideValueFn={((overrideValueFn: any): OverrideValueFn)}
             path={path}
             value={value}
           />
@@ -97,7 +100,10 @@ export default function KeyValue({
         )}
       </div>
     );
-  } else if (value.hasOwnProperty(meta.type)) {
+  } else if (
+    value.hasOwnProperty(meta.type) &&
+    !value.hasOwnProperty(meta.unserializable)
+  ) {
     children = (
       <div key="root" className={styles.Item} hidden={hidden} style={style}>
         {isInspectable ? (
@@ -123,6 +129,7 @@ export default function KeyValue({
           key={index}
           depth={depth + 1}
           inspectPath={inspectPath}
+          isReadOnly={isReadOnly}
           hidden={hidden || !isOpen}
           name={index}
           overrideValueFn={overrideValueFn}
@@ -156,12 +163,17 @@ export default function KeyValue({
       );
     } else {
       const hasChildren = Object.entries(value).length > 0;
+      const displayName = value.hasOwnProperty(meta.unserializable)
+        ? getMetaValueLabel(value)
+        : 'Object';
 
+      let areChildrenReadOnly = isReadOnly || !!value[meta.readonly];
       children = Object.entries(value).map<Element<any>>(([name, value]) => (
         <KeyValue
           key={name}
           depth={depth + 1}
           inspectPath={inspectPath}
+          isReadOnly={areChildrenReadOnly}
           hidden={hidden || !isOpen}
           name={name}
           overrideValueFn={overrideValueFn}
@@ -188,7 +200,7 @@ export default function KeyValue({
             {name}
           </span>
           <span>
-            Object{' '}
+            {`${displayName || ''} `}
             {hasChildren ? '' : <span className={styles.Empty}>(empty)</span>}
           </span>
         </div>

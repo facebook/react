@@ -83,5 +83,6 @@ export type InspectedElement = {|
 
 export type DehydratedData = {|
   cleaned: Array<Array<string | number>>,
+  unserializable: Array<Array<string | number>>,
   data: Object,
 |};
