@@ -20,6 +20,7 @@ import {FundamentalComponent} from 'shared/ReactWorkTags';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
+import type {SuspenseHydrationCallbacks} from './ReactFiberSuspenseComponent';
 
 import {
   findCurrentHostFiber,
@@ -294,8 +295,9 @@ export function createContainer(
   containerInfo: Container,
   tag: RootTag,
   hydrate: boolean,
+  hydrationCallbacks: null | SuspenseHydrationCallbacks,
 ): OpaqueRoot {
-  return createFiberRoot(containerInfo, tag, hydrate);
+  return createFiberRoot(containerInfo, tag, hydrate, hydrationCallbacks);
 }
 
 export function updateContainer(
