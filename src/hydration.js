@@ -362,8 +362,18 @@ export function fillInPath(
     }
   }
 
-  if (value !== null && data.unserializable.includes(path)) {
-    upgradeUnserializable(value, value);
+  if (value !== null && data.unserializable.length > 0) {
+    const unserializablePath = data.unserializable[0];
+    let isMatch = unserializablePath.length === path.length;
+    for (let i = 0; i < path.length; i++) {
+      if (path[i] !== unserializablePath[i]) {
+        isMatch = false;
+        break;
+      }
+    }
+    if (isMatch) {
+      upgradeUnserializable(value, value);
+    }
   }
 
   setInObject(object, path, value);
