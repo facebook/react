@@ -1,14 +1,16 @@
 # React DevTools changelog
 
-<!-- ## [Unreleased]
 <details>
   <summary>
     Changes that have landed in master but are not yet released.
     Click to see more.
   </summary>
   
-  <!-- Upcoming changes go here
-</details> -->
+  <!-- Upcoming changes go here -->
+
+#### Bug fixes
+* Standalone DevTools properly serves backend script over localhost:8097
+</details>
 
 ## 4.0.3 (August 17, 2019)
 #### Bug fixes
