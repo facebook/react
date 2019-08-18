@@ -11,6 +11,7 @@ import Bridge from 'src/bridge';
 import Store from 'src/devtools/store';
 import { getSavedComponentFilters, getAppendComponentStack } from 'src/utils';
 import { Server } from 'ws';
+import { join } from 'path';
 import { existsSync, readFileSync } from 'fs';
 import { installHook } from 'src/hook';
 import DevTools from 'src/devtools/views/DevTools';
@@ -258,9 +259,10 @@ function startServer(port?: number = 8097) {
   httpServer.on('request', (request, response) => {
     // NPM installs should read from node_modules,
     // But local dev mode needs to use a relative path.
-    const basePath = existsSync('./node_modules/react-devtools-core')
-      ? 'node_modules/react-devtools-core'
-      : '../react-devtools-core';
+    let basePath = join(__dirname, 'node_modules/react-devtools-core');
+    if (!existsSync(basePath)) {
+      basePath = '../react-devtools-core';
+    }
 
     // Serve a file that immediately sets up the connection.
     const backendFile = readFileSync(`${basePath}/dist/backend.js`);
