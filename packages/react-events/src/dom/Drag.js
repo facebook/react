@@ -39,7 +39,6 @@ type DragState = {|
   startY: number,
   x: number,
   y: number,
-  ownershipClaimed: boolean,
 |};
 
 // In the case we don't have PointerEvents (Safari), we listen to touch events
@@ -111,7 +110,6 @@ const dragResponderImpl = {
       startY: 0,
       x: 0,
       y: 0,
-      ownershipClaimed: false,
     };
   },
   onEvent(
@@ -182,24 +180,10 @@ const dragResponderImpl = {
             return;
           }
           if (!state.isDragging) {
-            let shouldEnableDragging = true;
-
-            if (props.shouldClaimOwnership && props.shouldClaimOwnership()) {
-              shouldEnableDragging = context.requestGlobalOwnership();
-              if (shouldEnableDragging) {
-                state.ownershipClaimed = true;
-              }
-            }
-            if (shouldEnableDragging) {
-              state.isDragging = true;
-              const onDragChange = props.onDragChange;
-              if (isFunction(onDragChange)) {
-                context.dispatchEvent(true, onDragChange, UserBlockingEvent);
-              }
-            } else {
-              state.dragTarget = null;
-              state.isPointerDown = false;
-              context.removeRootEventTypes(rootEventTypes);
+            state.isDragging = true;
+            const onDragChange = props.onDragChange;
+            if (isFunction(onDragChange)) {
+              context.dispatchEvent(true, onDragChange, UserBlockingEvent);
             }
           } else {
             const onDragMove = props.onDragMove;
@@ -228,9 +212,6 @@ const dragResponderImpl = {
       case 'mouseup':
       case 'pointerup': {
         if (state.isDragging) {
-          if (state.ownershipClaimed) {
-            context.releaseOwnership();
-          }
           const onDragEnd = props.onDragEnd;
           if (isFunction(onDragEnd)) {
             dispatchDragEvent(

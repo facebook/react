@@ -7,10 +7,12 @@
   </summary>
   
   <!-- Upcoming changes go here -->
-
-#### Bug fixes
-* Standalone DevTools properly serves backend script over localhost:8097
 </details>
+
+## 4.0.5 (August 19, 2019)
+#### Bug fixes
+* Props, state, and context values are alpha sorted.
+* Standalone DevTools properly serves backend script over localhost:8097
 
 ## 4.0.4 (August 18, 2019)
 #### Bug fixes

@@ -9,13 +9,7 @@
 
 'use strict';
 
-import {
-  dispatchLongPressContextMenu,
-  dispatchRightClickContextMenu,
-  dispatchModifiedClickContextMenu,
-  platform,
-  setPointerEvent,
-} from '../test-utils';
+import {createEventTarget, platform, setPointerEvent} from '../testing-library';
 
 let React;
 let ReactFeatureFlags;
@@ -62,7 +56,8 @@ describe.each(table)('ContextMenu responder', hasPointerEvents => {
       };
       ReactDOM.render(<Component />, container);
 
-      dispatchRightClickContextMenu(ref.current, {preventDefault});
+      const target = createEventTarget(ref.current);
+      target.contextmenu({preventDefault});
       expect(preventDefault).toHaveBeenCalledTimes(1);
       expect(onContextMenu).toHaveBeenCalledTimes(1);
       expect(onContextMenu).toHaveBeenCalledWith(
@@ -80,7 +75,8 @@ describe.each(table)('ContextMenu responder', hasPointerEvents => {
       };
       ReactDOM.render(<Component />, container);
 
-      dispatchLongPressContextMenu(ref.current, {preventDefault});
+      const target = createEventTarget(ref.current);
+      target.contextmenu({preventDefault}, {pointerType: 'touch'});
       expect(preventDefault).toHaveBeenCalledTimes(1);
       expect(onContextMenu).toHaveBeenCalledTimes(1);
       expect(onContextMenu).toHaveBeenCalledWith(
@@ -100,7 +96,8 @@ describe.each(table)('ContextMenu responder', hasPointerEvents => {
       };
       ReactDOM.render(<Component />, container);
 
-      dispatchRightClickContextMenu(ref.current);
+      const target = createEventTarget(ref.current);
+      target.contextmenu();
       expect(onContextMenu).toHaveBeenCalledTimes(0);
     });
 
@@ -117,7 +114,8 @@ describe.each(table)('ContextMenu responder', hasPointerEvents => {
       };
       ReactDOM.render(<Component />, container);
 
-      dispatchRightClickContextMenu(ref.current, {preventDefault});
+      const target = createEventTarget(ref.current);
+      target.contextmenu({preventDefault});
       expect(preventDefault).toHaveBeenCalledTimes(0);
       expect(onContextMenu).toHaveBeenCalledTimes(1);
     });
@@ -142,7 +140,8 @@ describe.each(table)('ContextMenu responder', hasPointerEvents => {
       };
       ReactDOM.render(<Component />, container);
 
-      dispatchModifiedClickContextMenu(ref.current);
+      const target = createEventTarget(ref.current);
+      target.contextmenu({}, {modified: true});
       expect(onContextMenu).toHaveBeenCalledTimes(1);
       expect(onContextMenu).toHaveBeenCalledWith(
         expect.objectContaining({pointerType: 'mouse', type: 'contextmenu'}),
@@ -169,7 +168,8 @@ describe.each(table)('ContextMenu responder', hasPointerEvents => {
       };
       ReactDOM.render(<Component />, container);
 
-      dispatchModifiedClickContextMenu(ref.current);
+      const target = createEventTarget(ref.current);
+      target.contextmenu({}, {modified: true});
       expect(onContextMenu).toHaveBeenCalledTimes(0);
     });
   });

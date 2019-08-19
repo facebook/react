@@ -14,7 +14,7 @@ let ReactFeatureFlags;
 let ReactDOM;
 let useKeyboardResponder;
 
-import {keydown, keyup} from '../test-utils';
+import {createEventTarget} from '../testing-library';
 
 function initializeModules(hasPointerEvents) {
   jest.resetModules();
@@ -59,9 +59,9 @@ describe('Keyboard event responder', () => {
     });
 
     it('prevents custom events being dispatched', () => {
-      const target = ref.current;
-      target.dispatchEvent(keydown());
-      target.dispatchEvent(keyup());
+      const target = createEventTarget(ref.current);
+      target.keydown();
+      target.keyup();
       expect(onKeyDown).not.toBeCalled();
       expect(onKeyUp).not.toBeCalled();
     });
@@ -83,7 +83,8 @@ describe('Keyboard event responder', () => {
     });
 
     it('is called after "keydown" event', () => {
-      ref.current.dispatchEvent(keydown({key: 'Q'}));
+      const target = createEventTarget(ref.current);
+      target.keydown({key: 'Q'});
       expect(onKeyDown).toHaveBeenCalledTimes(1);
       expect(onKeyDown).toHaveBeenCalledWith(
         expect.objectContaining({key: 'Q', type: 'keydown'}),
@@ -109,9 +110,9 @@ describe('Keyboard event responder', () => {
     });
 
     it('is called after "keydown" event', () => {
-      const target = ref.current;
-      target.dispatchEvent(keydown({key: 'Q'}));
-      target.dispatchEvent(keyup({key: 'Q'}));
+      const target = createEventTarget(ref.current);
+      target.keydown({key: 'Q'});
+      target.keyup({key: 'Q'});
       expect(onKeyDown).toHaveBeenCalledTimes(1);
       expect(onKeyDown).toHaveBeenCalledWith(
         expect.objectContaining({key: 'Q', type: 'keydown'}),
