@@ -37,9 +37,11 @@ function initModules() {
   };
 }
 
-const {resetModules, serverRender} = ReactDOMServerIntegrationUtils(
-  initModules,
-);
+const {
+  itThrowsWhenRendering,
+  resetModules,
+  serverRender,
+} = ReactDOMServerIntegrationUtils(initModules);
 
 describe('ReactDOMServerSuspense', () => {
   beforeEach(() => {
@@ -133,4 +135,32 @@ describe('ReactDOMServerSuspense', () => {
     expect(divA).toBe(divA2);
     expect(divB).toBe(divB2);
   });
+
+  itThrowsWhenRendering(
+    'a suspending component outside a Suspense node',
+    async render => {
+      await render(
+        <div>
+          <React.Suspense />
+          <AsyncText text="Children" />
+          <React.Suspense />
+        </div>,
+        1,
+      );
+    },
+    'Add a <Suspense fallback=...> component higher in the tree',
+  );
+
+  itThrowsWhenRendering(
+    'a suspending component without a Suspense above',
+    async render => {
+      await render(
+        <div>
+          <AsyncText text="Children" />
+        </div>,
+        1,
+      );
+    },
+    'Add a <Suspense fallback=...> component higher in the tree',
+  );
 });
