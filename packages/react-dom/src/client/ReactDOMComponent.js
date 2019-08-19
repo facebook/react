@@ -264,6 +264,14 @@ if (__DEV__) {
   };
 }
 
+function enableFlareAPIIsSet(propKey) {
+  return (
+    (enableFlareAPI && propKey === LISTENERS) ||
+    propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
+    propKey === SUPPRESS_HYDRATION_WARNING
+  );
+}
+
 function ensureListeningTo(
   rootContainerElement: Element | Node,
   registrationName: string,
@@ -340,11 +348,7 @@ function setInitialDOMProperties(
       } else if (typeof nextProp === 'number') {
         setTextContent(domElement, '' + nextProp);
       }
-    } else if (
-      (enableFlareAPI && propKey === LISTENERS) ||
-      propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
-      propKey === SUPPRESS_HYDRATION_WARNING
-    ) {
+    } else if (enableFlareAPIIsSet(propKey)) {
       // Noop
     } else if (propKey === AUTOFOCUS) {
       // We polyfill it separately on the client during commit.
@@ -697,11 +701,7 @@ export function diffProperties(
       }
     } else if (propKey === DANGEROUSLY_SET_INNER_HTML || propKey === CHILDREN) {
       // Noop. This is handled by the clear text mechanism.
-    } else if (
-      (enableFlareAPI && propKey === LISTENERS) ||
-      propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
-      propKey === SUPPRESS_HYDRATION_WARNING
-    ) {
+    } else if (enableFlareAPI(propKey)) {
       // Noop
     } else if (propKey === AUTOFOCUS) {
       // Noop. It doesn't work on updates anyway.
@@ -789,11 +789,7 @@ export function diffProperties(
       ) {
         (updatePayload = updatePayload || []).push(propKey, '' + nextProp);
       }
-    } else if (
-      (enableFlareAPI && propKey === LISTENERS) ||
-      propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
-      propKey === SUPPRESS_HYDRATION_WARNING
-    ) {
+    } else if (enableFlareAPIIsSet(propKey)) {
       // Noop
     } else if (registrationNameModules.hasOwnProperty(propKey)) {
       if (nextProp != null) {
@@ -1045,14 +1041,10 @@ export function diffHydratedProperties(
       if (suppressHydrationWarning) {
         // Don't bother comparing. We're ignoring all these warnings.
       } else if (
-        (enableFlareAPI && propKey === LISTENERS) ||
-        propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
-        propKey === SUPPRESS_HYDRATION_WARNING ||
+        enableFlareAPIIsSet(propKey) ||
         // Controlled attributes are not validated
         // TODO: Only ignore them on controlled tags.
-        propKey === 'value' ||
-        propKey === 'checked' ||
-        propKey === 'selected'
+        ['value', 'checked', 'selected'].includes(propKey)
       ) {
         // Noop
       } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
