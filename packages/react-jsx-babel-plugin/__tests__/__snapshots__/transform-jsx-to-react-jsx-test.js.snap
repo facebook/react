@@ -46,64 +46,6 @@ exports[`transform react to jsx concatenates adjacent string literals 1`] = `
 });"
 `;
 
-exports[`transform react to jsx display name assignment expression 1`] = `
-"var Component;
-Component = React.createClass({
-  render: function render() {
-    return null;
-  }
-});"
-`;
-
-exports[`transform react to jsx display name export default 1`] = `
-"export default React.createClass({
-  render: function render() {
-    return null;
-  }
-});"
-`;
-
-exports[`transform react to jsx display name if missing 1`] = `
-"var Whateva = React.createClass({
-  displayName: \\"Whatever\\",
-  render: function render() {
-    return null;
-  }
-});
-var Bar = React.createClass({
-  \\"displayName\\": \\"Ba\\",
-  render: function render() {
-    return null;
-  }
-});"
-`;
-
-exports[`transform react to jsx display name object declaration 1`] = `
-"exports = {
-  Component: React.createClass({
-    render: function render() {
-      return null;
-    }
-  })
-};"
-`;
-
-exports[`transform react to jsx display name property assignment 1`] = `
-"exports.Component = React.createClass({
-  render: function render() {
-    return null;
-  }
-});"
-`;
-
-exports[`transform react to jsx display name variable declaration 1`] = `
-"var Component = React.createClass({
-  render: function render() {
-    return null;
-  }
-});"
-`;
-
 exports[`transform react to jsx fragment with no children 1`] = `"var x = React.jsx(React.Fragment, {});"`;
 
 exports[`transform react to jsx fragments 1`] = `
@@ -375,6 +317,14 @@ var x = React.jsxDEV(\\"div\\", {
   fileName: _jsxFileName,
   lineNumber: 2
 }, this);"
+`;
+
+exports[`transform react to jsx useBuiltIns false uses extend instead of Object.assign 1`] = `
+"function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
+
+React.jsx(Component, _extends({
+  y: 2
+}, x));"
 `;
 
 exports[`transform react to jsx uses createElement when the key comes after a spread 1`] = `

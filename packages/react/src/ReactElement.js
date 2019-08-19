@@ -12,7 +12,6 @@ import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import ReactCurrentOwner from './ReactCurrentOwner';
 
 const hasOwnProperty = Object.prototype.hasOwnProperty;
-const freeze = Object.freeze;
 
 const RESERVED_PROPS = {
   key: true,
@@ -156,9 +155,9 @@ const ReactElement = function(type, key, ref, self, source, owner, props) {
       writable: false,
       value: source,
     });
-    if (freeze) {
-      freeze(element.props);
-      freeze(element);
+    if (Object.freeze) {
+      Object.freeze(element.props);
+      Object.freeze(element);
     }
   }
 
@@ -190,12 +189,12 @@ export function jsx(type, config, maybeKey) {
     key = '' + maybeKey;
   }
 
-  if (hasValidRef(config)) {
-    ref = config.ref;
-  }
-
   if (hasValidKey(config)) {
     key = '' + config.key;
+  }
+
+  if (hasValidRef(config)) {
+    ref = config.ref;
   }
 
   // Remaining properties are added to a new props object
@@ -254,12 +253,12 @@ export function jsxDEV(type, config, maybeKey, source, self) {
     key = '' + maybeKey;
   }
 
-  if (hasValidRef(config)) {
-    ref = config.ref;
-  }
-
   if (hasValidKey(config)) {
     key = '' + config.key;
+  }
+
+  if (hasValidRef(config)) {
+    ref = config.ref;
   }
 
   // Remaining properties are added to a new props object
@@ -282,8 +281,8 @@ export function jsxDEV(type, config, maybeKey, source, self) {
     }
   }
 
-  if (freeze && Array.isArray(props.children)) {
-    freeze(props.children);
+  if (Object.freeze && Array.isArray(props.children)) {
+    Object.freeze(props.children);
   }
 
   if (key || ref) {
@@ -357,8 +356,8 @@ export function createElement(type, config, children) {
       childArray[i] = arguments[i + 2];
     }
     if (__DEV__) {
-      if (freeze) {
-        freeze(childArray);
+      if (Object.freeze) {
+        Object.freeze(childArray);
       }
     }
     props.children = childArray;

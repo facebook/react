@@ -185,7 +185,7 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
     let self;
 
     // for React.jsx, key, __source (dev), and __self (dev) is passed in as
-    //a separate argument rather than in the args object. We go through the
+    // a separate argument rather than in the args object. We go through the
     // props and filter out these three keywords so we can pass them in
     // as separate arguments later
     for (let i = 0, len = openingPath.node.attributes.length; i < len; i++) {

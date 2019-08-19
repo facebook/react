@@ -194,83 +194,6 @@ describe('transform react to jsx', () => {
       `)
     ).toMatchSnapshot();
   });
-  it('display name assignment expression', () => {
-    expect(
-      transform(`
-        var Component;
-        Component = React.createClass({
-          render: function render() {
-          return null;
-          }
-        });
-      `)
-    ).toMatchSnapshot();
-  });
-  it('display name export default', () => {
-    expect(
-      transform(`
-        export default React.createClass({
-          render: function render() {
-            return null;
-          }
-        });
-      `)
-    ).toMatchSnapshot();
-  });
-  it('display name if missing', () => {
-    expect(
-      transform(`
-        var Whateva = React.createClass({
-          displayName: "Whatever",
-          render: function render() {
-            return null;
-          }
-        });
-
-        var Bar = React.createClass({
-          "displayName": "Ba",
-          render: function render() {
-            return null;
-          }
-        });
-      `)
-    ).toMatchSnapshot();
-  });
-  it('display name object declaration', () => {
-    expect(
-      transform(`
-        exports = {
-          Component: React.createClass({
-            render: function render() {
-              return null;
-            }
-          })
-        };
-      `)
-    ).toMatchSnapshot();
-  });
-  it('display name property assignment', () => {
-    expect(
-      transform(`
-        exports.Component = React.createClass({
-          render: function render() {
-          return null;
-          }
-        });
-      `)
-    ).toMatchSnapshot();
-  });
-  it('display name variable declaration', () => {
-    expect(
-      transform(`
-        var Component = React.createClass({
-          render: function render() {
-            return null;
-          }
-        });
-      `)
-    ).toMatchSnapshot();
-  });
   it('should allow constructor as prop', () => {
     expect(transform(`<Component constructor="foo" />;`)).toMatchSnapshot();
   });
@@ -504,5 +427,10 @@ describe('transform react to jsx', () => {
   });
   it('wraps props in react spread for middle spread attributes', () => {
     expect(transform(`<Component y={2} { ... x } z />`)).toMatchSnapshot();
+  });
+  it('useBuiltIns false uses extend instead of Object.assign', () => {
+    expect(
+      transform(`<Component y={2} {...x} />`, {useBuiltIns: false})
+    ).toMatchSnapshot();
   });
 });
