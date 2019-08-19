@@ -520,6 +520,7 @@ const pressResponderImpl = {
     const isPressed = state.isPressed;
 
     handleStopPropagation(props, context, nativeEvent);
+
     switch (type) {
       // START
       case 'pointerdown':
@@ -632,6 +633,7 @@ const pressResponderImpl = {
     const previousPointerType = state.pointerType;
 
     handleStopPropagation(props, context, nativeEvent);
+
     switch (type) {
       // MOVE
       case 'pointermove':

@@ -9,33 +9,31 @@
 
 'use strict';
 
+import {createEventTarget, setPointerEvent} from '../testing-library';
+
 let React;
 let ReactFeatureFlags;
 let ReactDOM;
 let useScrollResponder;
 
-const createEvent = (type, data) => {
-  const event = document.createEvent('CustomEvent');
-  event.initCustomEvent(type, true, true);
-  if (data != null) {
-    Object.entries(data).forEach(([key, value]) => {
-      event[key] = value;
-    });
-  }
-  return event;
+const forcePointerEvents = true;
+const table = [[forcePointerEvents], [!forcePointerEvents]];
+
+const initializeModules = hasPointerEvents => {
+  setPointerEvent(hasPointerEvents);
+  jest.resetModules();
+  ReactFeatureFlags = require('shared/ReactFeatureFlags');
+  ReactFeatureFlags.enableFlareAPI = true;
+  React = require('react');
+  ReactDOM = require('react-dom');
+  useScrollResponder = require('react-events/scroll').useScrollResponder;
 };
 
-describe('Scroll event responder', () => {
+describe.each(table)('Scroll responder', hasPointerEvents => {
   let container;
 
   beforeEach(() => {
-    jest.resetModules();
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableFlareAPI = true;
-    React = require('react');
-    ReactDOM = require('react-dom');
-    useScrollResponder = require('react-events/scroll').useScrollResponder;
-
+    initializeModules(hasPointerEvents);
     container = document.createElement('div');
     document.body.appendChild(container);
   });
@@ -63,7 +61,8 @@ describe('Scroll event responder', () => {
     });
 
     it('prevents custom events being dispatched', () => {
-      ref.current.dispatchEvent(createEvent('scroll'));
+      const target = createEventTarget(ref.current);
+      target.scroll();
       expect(onScroll).not.toBeCalled();
     });
   });
@@ -84,129 +83,49 @@ describe('Scroll event responder', () => {
     });
 
     describe('is called after "scroll" event', () => {
-      it('with a mouse pointerType', () => {
-        ref.current.dispatchEvent(
-          createEvent('pointerdown', {
-            pointerType: 'mouse',
-          }),
-        );
-        ref.current.dispatchEvent(createEvent('scroll'));
+      const pointerTypesTable = hasPointerEvents
+        ? [['mouse'], ['touch'], ['pen']]
+        : [['mouse'], ['touch']];
+      it.each(pointerTypesTable)('with pointerType: %s', pointerType => {
+        const node = ref.current;
+        const target = createEventTarget(node);
+        target.pointerdown({pointerType});
+        target.scroll();
         expect(onScroll).toHaveBeenCalledTimes(1);
         expect(onScroll).toHaveBeenCalledWith(
           expect.objectContaining({
-            pointerType: 'mouse',
+            pointerType,
             type: 'scroll',
             direction: '',
           }),
         );
         onScroll.mockReset();
-        ref.current.scrollTop = -1;
-        ref.current.dispatchEvent(createEvent('scroll'));
+        node.scrollTop = -1;
+        target.scroll();
         expect(onScroll).toHaveBeenCalledWith(
           expect.objectContaining({
-            pointerType: 'mouse',
+            pointerType,
             type: 'scroll',
             direction: 'up',
           }),
         );
         onScroll.mockReset();
-        ref.current.scrollTop = 1;
-        ref.current.dispatchEvent(createEvent('scroll'));
+        node.scrollTop = 1;
+        target.scroll();
         expect(onScroll).toHaveBeenCalledWith(
           expect.objectContaining({
-            pointerType: 'mouse',
+            pointerType,
             type: 'scroll',
             direction: 'down',
           }),
         );
       });
 
-      it('with a touch pointerType', () => {
-        ref.current.dispatchEvent(
-          createEvent('pointerdown', {
-            pointerType: 'touch',
-          }),
-        );
-        ref.current.dispatchEvent(createEvent('scroll'));
-        expect(onScroll).toHaveBeenCalledTimes(1);
-        expect(onScroll).toHaveBeenCalledWith(
-          expect.objectContaining({
-            pointerType: 'touch',
-            type: 'scroll',
-            direction: '',
-          }),
-        );
-        onScroll.mockReset();
-        ref.current.scrollTop = -1;
-        ref.current.dispatchEvent(createEvent('scroll'));
-        expect(onScroll).toHaveBeenCalledWith(
-          expect.objectContaining({
-            pointerType: 'touch',
-            type: 'scroll',
-            direction: 'up',
-          }),
-        );
-        onScroll.mockReset();
-        ref.current.scrollTop = 1;
-        ref.current.dispatchEvent(createEvent('scroll'));
-        expect(onScroll).toHaveBeenCalledWith(
-          expect.objectContaining({
-            pointerType: 'touch',
-            type: 'scroll',
-            direction: 'down',
-          }),
-        );
-      });
-
-      it('with a pen pointerType', () => {
-        ref.current.dispatchEvent(
-          createEvent('pointerdown', {
-            pointerType: 'pen',
-          }),
-        );
-        ref.current.dispatchEvent(createEvent('scroll'));
-        expect(onScroll).toHaveBeenCalledTimes(1);
-        expect(onScroll).toHaveBeenCalledWith(
-          expect.objectContaining({
-            pointerType: 'pen',
-            type: 'scroll',
-            direction: '',
-          }),
-        );
-        onScroll.mockReset();
-        ref.current.scrollTop = -1;
-        ref.current.dispatchEvent(createEvent('scroll'));
-        expect(onScroll).toHaveBeenCalledWith(
-          expect.objectContaining({
-            pointerType: 'pen',
-            type: 'scroll',
-            direction: 'up',
-          }),
-        );
-        onScroll.mockReset();
-        ref.current.scrollTop = 1;
-        ref.current.dispatchEvent(createEvent('scroll'));
-        expect(onScroll).toHaveBeenCalledWith(
-          expect.objectContaining({
-            pointerType: 'pen',
-            type: 'scroll',
-            direction: 'down',
-          }),
-        );
-      });
-
-      it('with a keyboard pointerType', () => {
-        ref.current.dispatchEvent(
-          createEvent('keydown', {
-            key: 'A',
-          }),
-        );
-        ref.current.dispatchEvent(
-          createEvent('keyup', {
-            key: 'A',
-          }),
-        );
-        ref.current.dispatchEvent(createEvent('scroll'));
+      it('with pointerType: keyboard', () => {
+        const target = createEventTarget(ref.current);
+        target.keydown({key: 'A'});
+        target.keyup({key: 'A'});
+        target.scroll();
         expect(onScroll).toHaveBeenCalledTimes(1);
         expect(onScroll).toHaveBeenCalledWith(
           expect.objectContaining({
@@ -235,13 +154,9 @@ describe('Scroll event responder', () => {
     });
 
     it('works as expected with touch events', () => {
-      ref.current.dispatchEvent(
-        createEvent('pointerdown', {
-          pointerType: 'touch',
-        }),
-      );
-      ref.current.dispatchEvent(createEvent('touchstart'));
-      ref.current.dispatchEvent(createEvent('scroll'));
+      const target = createEventTarget(ref.current);
+      target.pointerdown({pointerType: 'touch'});
+      target.scroll();
       expect(onScrollDragStart).toHaveBeenCalledTimes(1);
       expect(onScrollDragStart).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -269,14 +184,10 @@ describe('Scroll event responder', () => {
     });
 
     it('works as expected with touch events', () => {
-      ref.current.dispatchEvent(
-        createEvent('pointerdown', {
-          pointerType: 'touch',
-        }),
-      );
-      ref.current.dispatchEvent(createEvent('touchstart'));
-      ref.current.dispatchEvent(createEvent('scroll'));
-      ref.current.dispatchEvent(createEvent('touchend'));
+      const target = createEventTarget(ref.current);
+      target.pointerdown({pointerType: 'touch'});
+      target.scroll();
+      target.pointerup({pointerType: 'touch'});
       expect(onScrollDragEnd).toHaveBeenCalledTimes(1);
       expect(onScrollDragEnd).toHaveBeenCalledWith(
         expect.objectContaining({

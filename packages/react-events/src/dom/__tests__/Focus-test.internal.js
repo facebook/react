@@ -9,15 +9,7 @@
 
 'use strict';
 
-import {
-  blur,
-  focus,
-  keydown,
-  setPointerEvent,
-  platform,
-  dispatchPointerDown,
-  dispatchPointerUp,
-} from '../test-utils';
+import {createEventTarget, setPointerEvent, platform} from '../testing-library';
 
 let React;
 let ReactFeatureFlags;
@@ -73,9 +65,9 @@ describe.each(table)('Focus responder', hasPointerEvents => {
     });
 
     it('does not call callbacks', () => {
-      const dispatch = arg => ref.current.dispatchEvent(arg);
-      dispatch(focus());
-      dispatch(blur());
+      const target = createEventTarget(ref.current);
+      target.focus();
+      target.blur();
       expect(onFocus).not.toBeCalled();
       expect(onBlur).not.toBeCalled();
     });
@@ -97,9 +89,9 @@ describe.each(table)('Focus responder', hasPointerEvents => {
     });
 
     it('is called after "blur" event', () => {
-      const dispatch = arg => ref.current.dispatchEvent(arg);
-      dispatch(focus());
-      dispatch(blur());
+      const target = createEventTarget(ref.current);
+      target.focus();
+      target.blur();
       expect(onBlur).toHaveBeenCalledTimes(1);
     });
   });
@@ -127,19 +119,21 @@ describe.each(table)('Focus responder', hasPointerEvents => {
     beforeEach(componentInit);
 
     it('is called after "focus" event', () => {
-      ref.current.dispatchEvent(focus());
+      const target = createEventTarget(ref.current);
+      target.focus();
       expect(onFocus).toHaveBeenCalledTimes(1);
     });
 
     it('is not called if descendants of target receive focus', () => {
-      innerRef.current.dispatchEvent(focus());
+      const target = createEventTarget(innerRef.current);
+      target.focus();
       expect(onFocus).not.toBeCalled();
     });
 
     it('is called with the correct pointerType: mouse', () => {
-      const target = ref.current;
-      dispatchPointerDown(target, {pointerType: 'mouse'});
-      dispatchPointerUp(target, {pointerType: 'mouse'});
+      const target = createEventTarget(ref.current);
+      target.pointerdown();
+      target.pointerup();
       expect(onFocus).toHaveBeenCalledTimes(1);
       expect(onFocus).toHaveBeenCalledWith(
         expect.objectContaining({pointerType: 'mouse'}),
@@ -147,9 +141,10 @@ describe.each(table)('Focus responder', hasPointerEvents => {
     });
 
     it('is called with the correct pointerType: touch', () => {
-      const target = ref.current;
-      dispatchPointerDown(target, {pointerType: 'touch'});
-      dispatchPointerUp(target, {pointerType: 'touch'});
+      const target = createEventTarget(ref.current);
+      const pointerType = 'touch';
+      target.pointerdown({pointerType});
+      target.pointerup({pointerType});
       expect(onFocus).toHaveBeenCalledTimes(1);
       expect(onFocus).toHaveBeenCalledWith(
         expect.objectContaining({pointerType: 'touch'}),
@@ -158,9 +153,10 @@ describe.each(table)('Focus responder', hasPointerEvents => {
 
     if (hasPointerEvents) {
       it('is called with the correct pointerType: pen', () => {
-        const target = ref.current;
-        dispatchPointerDown(target, {pointerType: 'pen'});
-        dispatchPointerUp(target, {pointerType: 'pen'});
+        const target = createEventTarget(ref.current);
+        const pointerType = 'pen';
+        target.pointerdown({pointerType});
+        target.pointerup({pointerType});
         expect(onFocus).toHaveBeenCalledTimes(1);
         expect(onFocus).toHaveBeenCalledWith(
           expect.objectContaining({pointerType: 'pen'}),
@@ -169,10 +165,9 @@ describe.each(table)('Focus responder', hasPointerEvents => {
     }
 
     it('is called with the correct pointerType using a keyboard', () => {
-      const target = ref.current;
-      // Keyboard tab
-      target.dispatchEvent(keydown({key: 'Tab'}));
-      target.dispatchEvent(focus());
+      const target = createEventTarget(ref.current);
+      target.keydown({key: 'Tab'});
+      target.focus();
       expect(onFocus).toHaveBeenCalledTimes(1);
       expect(onFocus).toHaveBeenCalledWith(
         expect.objectContaining({pointerType: 'keyboard'}),
@@ -184,10 +179,11 @@ describe.each(table)('Focus responder', hasPointerEvents => {
       jest.resetModules();
       initializeModules();
       componentInit();
-      const target = ref.current;
 
-      target.dispatchEvent(keydown({key: 'Tab', altKey: true}));
-      target.dispatchEvent(focus());
+      const target = createEventTarget(ref.current);
+      target.keydown({key: 'Tab', altKey: true});
+      target.focus();
+
       expect(onFocus).toHaveBeenCalledTimes(1);
       expect(onFocus).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -220,20 +216,20 @@ describe.each(table)('Focus responder', hasPointerEvents => {
     });
 
     it('is called after "blur" and "focus" events', () => {
-      const target = ref.current;
-      target.dispatchEvent(focus());
+      const target = createEventTarget(ref.current);
+      target.focus();
       expect(onFocusChange).toHaveBeenCalledTimes(1);
       expect(onFocusChange).toHaveBeenCalledWith(true);
-      target.dispatchEvent(blur());
+      target.blur();
       expect(onFocusChange).toHaveBeenCalledTimes(2);
       expect(onFocusChange).toHaveBeenCalledWith(false);
     });
 
     it('is not called after "blur" and "focus" events on descendants', () => {
-      const target = innerRef.current;
-      target.dispatchEvent(focus());
+      const target = createEventTarget(innerRef.current);
+      target.focus();
       expect(onFocusChange).toHaveBeenCalledTimes(0);
-      target.dispatchEvent(blur());
+      target.blur();
       expect(onFocusChange).toHaveBeenCalledTimes(0);
     });
   });
@@ -259,48 +255,52 @@ describe.each(table)('Focus responder', hasPointerEvents => {
     });
 
     it('is called after "focus" and "blur" if keyboard navigation is active', () => {
-      const target = ref.current;
+      const target = createEventTarget(ref.current);
+      const containerTarget = createEventTarget(container);
       // use keyboard first
-      container.dispatchEvent(keydown({key: 'Tab'}));
-      target.dispatchEvent(focus());
+      containerTarget.keydown({key: 'Tab'});
+      target.focus();
       expect(onFocusVisibleChange).toHaveBeenCalledTimes(1);
       expect(onFocusVisibleChange).toHaveBeenCalledWith(true);
-      target.dispatchEvent(blur({relatedTarget: container}));
+      target.blur({relatedTarget: container});
       expect(onFocusVisibleChange).toHaveBeenCalledTimes(2);
       expect(onFocusVisibleChange).toHaveBeenCalledWith(false);
     });
 
     it('is called if non-keyboard event is dispatched on target previously focused with keyboard', () => {
-      const target = ref.current;
+      const target = createEventTarget(ref.current);
+      const containerTarget = createEventTarget(container);
       // use keyboard first
-      container.dispatchEvent(keydown({key: 'Tab'}));
-      target.dispatchEvent(focus());
+      containerTarget.keydown({key: 'Tab'});
+      target.focus();
       expect(onFocusVisibleChange).toHaveBeenCalledTimes(1);
       expect(onFocusVisibleChange).toHaveBeenCalledWith(true);
       // then use pointer on the target, focus should no longer be visible
-      dispatchPointerDown(target);
+      target.pointerdown();
       expect(onFocusVisibleChange).toHaveBeenCalledTimes(2);
       expect(onFocusVisibleChange).toHaveBeenCalledWith(false);
       // onFocusVisibleChange should not be called again
-      target.dispatchEvent(blur({relatedTarget: container}));
+      target.blur({relatedTarget: container});
       expect(onFocusVisibleChange).toHaveBeenCalledTimes(2);
     });
 
     it('is not called after "focus" and "blur" events without keyboard', () => {
-      const target = ref.current;
-      dispatchPointerDown(target);
-      dispatchPointerUp(target);
-      dispatchPointerDown(container);
-      target.dispatchEvent(blur({relatedTarget: container}));
+      const target = createEventTarget(ref.current);
+      const containerTarget = createEventTarget(container);
+      target.pointerdown();
+      target.pointerup();
+      containerTarget.pointerdown();
+      target.blur({relatedTarget: container});
       expect(onFocusVisibleChange).toHaveBeenCalledTimes(0);
     });
 
     it('is not called after "blur" and "focus" events on descendants', () => {
-      const target = innerRef.current;
-      container.dispatchEvent(keydown({key: 'Tab'}));
-      target.dispatchEvent(focus());
+      const innerTarget = createEventTarget(innerRef.current);
+      const containerTarget = createEventTarget(container);
+      containerTarget.keydown({key: 'Tab'});
+      innerTarget.focus();
       expect(onFocusVisibleChange).toHaveBeenCalledTimes(0);
-      target.dispatchEvent(blur({relatedTarget: container}));
+      innerTarget.blur({relatedTarget: container});
       expect(onFocusVisibleChange).toHaveBeenCalledTimes(0);
     });
   });
@@ -338,10 +338,13 @@ describe.each(table)('Focus responder', hasPointerEvents => {
 
       ReactDOM.render(<Outer />, container);
 
-      outerRef.current.dispatchEvent(focus());
-      outerRef.current.dispatchEvent(blur());
-      innerRef.current.dispatchEvent(focus());
-      innerRef.current.dispatchEvent(blur());
+      const innerTarget = createEventTarget(innerRef.current);
+      const outerTarget = createEventTarget(outerRef.current);
+
+      outerTarget.focus();
+      outerTarget.blur();
+      innerTarget.focus();
+      innerTarget.blur();
       expect(events).toEqual([
         'outer: onFocus',
         'outer: onFocusChange',
