@@ -26,7 +26,6 @@ import {
   enableProfilerTimer,
   enableSchedulerTracing,
   warnAboutUnmockedScheduler,
-  flushSuspenseFallbacksInTests,
   disableSchedulerTimeoutBasedOnReactExpirationTime,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -1010,16 +1009,7 @@ function renderRoot(
       // possible.
       const hasNotProcessedNewUpdates =
         workInProgressRootLatestProcessedExpirationTime === Sync;
-      if (
-        hasNotProcessedNewUpdates &&
-        !isSync &&
-        // do not delay if we're inside an act() scope
-        !(
-          __DEV__ &&
-          flushSuspenseFallbacksInTests &&
-          IsThisRendererActing.current
-        )
-      ) {
+      if (hasNotProcessedNewUpdates && !isSync) {
         // If we have not processed any new updates during this pass, then this is
         // either a retry of an existing fallback state or a hidden tree.
         // Hidden trees shouldn't be batched with other work and after that's
@@ -1058,15 +1048,7 @@ function renderRoot(
     case RootSuspendedWithDelay: {
       flushSuspensePriorityWarningInDEV();
 
-      if (
-        !isSync &&
-        // do not delay if we're inside an act() scope
-        !(
-          __DEV__ &&
-          flushSuspenseFallbacksInTests &&
-          IsThisRendererActing.current
-        )
-      ) {
+      if (!isSync) {
         // We're suspended in a state that should be avoided. We'll try to avoid committing
         // it for as long as the timeouts let us.
         if (workInProgressRootHasPendingPing) {
@@ -1137,12 +1119,6 @@ function renderRoot(
       // The work completed. Ready to commit.
       if (
         !isSync &&
-        // do not delay if we're inside an act() scope
-        !(
-          __DEV__ &&
-          flushSuspenseFallbacksInTests &&
-          IsThisRendererActing.current
-        ) &&
         workInProgressRootLatestProcessedExpirationTime !== Sync &&
         workInProgressRootCanSuspendUsingConfig !== null
       ) {

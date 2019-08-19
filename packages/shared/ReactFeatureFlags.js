@@ -72,10 +72,6 @@ export const enableJSXTransformAPI = false;
 // Till then, we warn about the missing mock, but still fallback to a sync mode compatible version
 export const warnAboutUnmockedScheduler = false;
 
-// For tests, we flush suspense fallbacks in an act scope;
-// *except* in some of our own tests, where we test incremental loading states.
-export const flushSuspenseFallbacksInTests = true;
-
 // Changes priority of some events like mousemove to user-blocking priority,
 // but without making them discrete. The flag exists in case it causes
 // starvation problems.
