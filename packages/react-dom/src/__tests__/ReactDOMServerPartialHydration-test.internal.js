@@ -1729,4 +1729,91 @@ describe('ReactDOMServerPartialHydration', () => {
     // patched up the tree, which might mean we haven't patched the className.
     expect(newSpan.className).toBe('hi');
   });
+
+  it('does not invoke an event on a hydrated node until it commits', async () => {
+    let suspend = false;
+    let resolve;
+    let promise = new Promise(resolvePromise => (resolve = resolvePromise));
+
+    function Sibling({text}) {
+      if (suspend) {
+        throw promise;
+      } else {
+        return 'Hello';
+      }
+    }
+
+    let clicks = 0;
+
+    function Button() {
+      let [clicked, setClicked] = React.useState(false);
+      if (clicked) {
+        return null;
+      }
+      return (
+        <a
+          onClick={() => {
+            setClicked(true);
+            clicks++;
+          }}>
+          Click me
+        </a>
+      );
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <Button />
+            <Sibling />
+          </Suspense>
+        </div>
+      );
+    }
+
+    suspend = false;
+    let finalHTML = ReactDOMServer.renderToString(<App />);
+    let container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    // We need this to be in the document since we'll dispatch events on it.
+    document.body.appendChild(container);
+
+    let a = container.getElementsByTagName('a')[0];
+
+    // On the client we don't have all data yet but we want to start
+    // hydrating anyway.
+    suspend = true;
+    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    root.render(<App />);
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+
+    expect(container.textContent).toBe('Click meHello');
+
+    // We're now partially hydrated.
+    a.click();
+    expect(clicks).toBe(0);
+
+    // Resolving the promise so that rendering can complete.
+    suspend = false;
+    resolve();
+    await promise;
+
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+
+    // TODO: With selective hydration the event should've been replayed
+    // but for now we'll have to issue it again.
+    act(() => {
+      a.click();
+    });
+
+    expect(clicks).toBe(1);
+
+    expect(container.textContent).toBe('Hello');
+
+    document.body.removeChild(container);
+  });
 });
