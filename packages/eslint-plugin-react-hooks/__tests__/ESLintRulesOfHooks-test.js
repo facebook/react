@@ -19,8 +19,17 @@ ESLintTester.setDefaultConfig({
   },
 });
 
-const eslintTester = new ESLintTester();
-eslintTester.run('react-hooks', ReactHooksESLintRule, {
+// ***************************************************
+// For easier local testing, you can add to any case:
+// {
+//   skip: true,
+//   --or--
+//   only: true,
+//   ...
+// }
+// ***************************************************
+
+const tests = {
   valid: [
     `
       // Valid because components can use hooks.
@@ -670,7 +679,7 @@ eslintTester.run('react-hooks', ReactHooksESLintRule, {
       ],
     },
   ],
-});
+};
 
 function conditionalError(hook, hasPreviousFinalizer = false) {
   return {
@@ -708,3 +717,33 @@ function genericError(hook) {
       'Hook function.',
   };
 }
+
+// For easier local testing
+if (!process.env.CI) {
+  let only = [];
+  let skipped = [];
+  [...tests.valid, ...tests.invalid].forEach(t => {
+    if (t.skip) {
+      delete t.skip;
+      skipped.push(t);
+    }
+    if (t.only) {
+      delete t.only;
+      only.push(t);
+    }
+  });
+  const predicate = t => {
+    if (only.length > 0) {
+      return only.indexOf(t) !== -1;
+    }
+    if (skipped.length > 0) {
+      return skipped.indexOf(t) === -1;
+    }
+    return true;
+  };
+  tests.valid = tests.valid.filter(predicate);
+  tests.invalid = tests.invalid.filter(predicate);
+}
+
+const eslintTester = new ESLintTester();
+eslintTester.run('react-hooks', ReactHooksESLintRule, tests);
