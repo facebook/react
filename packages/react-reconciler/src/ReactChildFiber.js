@@ -517,7 +517,6 @@ function ChildReconciler(shouldTrackSideEffects) {
           return created;
         }
         case REACT_FRAGMENT_TYPE: {
-          console.log('fargment child creating');
           const created = createFiberFromFragment(
             newChild,
             returnFiber.mode,
