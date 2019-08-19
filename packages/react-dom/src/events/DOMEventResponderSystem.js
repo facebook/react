@@ -481,7 +481,7 @@ function createDOMResponderEvent(
   passive: boolean,
   passiveSupported: boolean,
 ): ReactDOMResponderEvent {
-  const {pointerType} = (nativeEvent: any);
+  const {buttons, pointerType} = (nativeEvent: any);
   let eventPointerType = '';
   let pointerId = null;
 
@@ -490,7 +490,7 @@ function createDOMResponderEvent(
     pointerId = (nativeEvent: any).pointerId;
   } else if (nativeEvent.key !== undefined) {
     eventPointerType = 'keyboard';
-  } else if (nativeEvent.button !== undefined) {
+  } else if (buttons !== undefined) {
     eventPointerType = 'mouse';
   } else if ((nativeEvent: any).changedTouches !== undefined) {
     eventPointerType = 'touch';
