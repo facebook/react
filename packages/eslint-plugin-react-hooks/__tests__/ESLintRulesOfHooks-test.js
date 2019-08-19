@@ -232,21 +232,20 @@ const tests = {
       (class {i() { useState(); }});
     `,
     `
-      // Currently valid although we *could* consider these invalid.
-      // It doesn't make a lot of difference because it would crash early.
+      // Valid because they're not matching use[A-Z].
+      fooState();
       use();
       _use();
-      useState();
       _useState();
-      use42();
-      useHook();
       use_hook();
-      React.useState();
     `,
     `
-      // Regression test for the popular "history" library
-      const {createHistory, useBasename} = require('history-2.1.2');
-      const browserHistory = useBasename(createHistory)({
+      // This is grey area.
+      // Currently it's valid (although React.useCallback would fail here).
+      // We could also get stricter and disallow it, just like we did
+      // with non-namespace use*() top-level calls.
+      const History = require('history-2.1.2');
+      const browserHistory = History.useBasename(History.createHistory)({
         basename: '/',
       });
     `,
@@ -678,6 +677,43 @@ const tests = {
         conditionalError('useState'),
       ],
     },
+    {
+      code: `
+        // Invalid because it's dangerous.
+        // Normally, this would crash, but not if you use inline requires.
+        // This *must* be invalid.
+        // It's expected to have some false positives, but arguably
+        // they are confusing anyway due to the use*() convention
+        // already being associated with Hooks.
+        useState();
+        if (foo) {
+          const foo = React.useCallback(() => {});
+        }
+        useCustomHook();
+      `,
+      errors: [
+        topLevelError('useState'),
+        topLevelError('React.useCallback'),
+        topLevelError('useCustomHook'),
+      ],
+    },
+    {
+      code: `
+        // Technically this is a false positive.
+        // We *could* make it valid (and it used to be).
+        //
+        // However, top-level Hook-like calls can be very dangerous
+        // in environments with inline requires because they can mask
+        // the runtime error by accident.
+        // So we prefer to disallow it despite the false positive.
+
+        const {createHistory, useBasename} = require('history-2.1.2');
+        const browserHistory = useBasename(createHistory)({
+          basename: '/',
+        });
+      `,
+      errors: [topLevelError('useBasename')],
+    },
   ],
 };
 
@@ -713,6 +749,15 @@ function genericError(hook) {
   return {
     message:
       `React Hook "${hook}" cannot be called inside a callback. React Hooks ` +
+      'must be called in a React function component or a custom React ' +
+      'Hook function.',
+  };
+}
+
+function topLevelError(hook) {
+  return {
+    message:
+      `React Hook "${hook}" cannot be called at the top level. React Hooks ` +
       'must be called in a React function component or a custom React ' +
       'Hook function.',
   };
