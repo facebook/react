@@ -679,6 +679,24 @@ const tests = {
     },
     {
       code: `
+        // Invalid because it's dangerous and might not warn otherwise.
+        // This *must* be invalid.
+        function useHook({ bar }) {
+          let foo1 = bar && useState();
+          let foo2 = bar || useState();
+          let foo3 = bar ?? useState();
+        }
+      `,
+      errors: [
+        conditionalError('useState'),
+        conditionalError('useState'),
+        // TODO: ideally this *should* warn, but ESLint
+        // doesn't plan full support for ?? until it advances.
+        // conditionalError('useState'),
+      ],
+    },
+    {
+      code: `
         // Invalid because it's dangerous.
         // Normally, this would crash, but not if you use inline requires.
         // This *must* be invalid.
