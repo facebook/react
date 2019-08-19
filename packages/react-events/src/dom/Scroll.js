@@ -303,13 +303,6 @@ const scrollResponderImpl = {
   ) {
     // TODO
   },
-  onOwnershipChange(
-    context: ReactDOMResponderContext,
-    props: ScrollProps,
-    state: ScrollState,
-  ) {
-    // TODO
-  },
 };
 
 export const ScrollResponder = React.unstable_createResponder(

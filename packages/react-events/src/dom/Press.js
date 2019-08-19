@@ -841,13 +841,6 @@ const pressResponderImpl = {
   ) {
     unmountResponder(context, props, state);
   },
-  onOwnershipChange(
-    context: ReactDOMResponderContext,
-    props: PressProps,
-    state: PressState,
-  ) {
-    unmountResponder(context, props, state);
-  },
 };
 
 export const PressResponder = React.unstable_createResponder(

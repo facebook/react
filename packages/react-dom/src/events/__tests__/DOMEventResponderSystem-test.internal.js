@@ -26,7 +26,6 @@ function createEventResponder({
   targetEventTypes,
   onMount,
   onUnmount,
-  onOwnershipChange,
   getInitialState,
 }) {
   return React.unstable_createResponder('TestEventResponder', {
@@ -36,7 +35,6 @@ function createEventResponder({
     onRootEvent,
     onMount,
     onUnmount,
-    onOwnershipChange,
     getInitialState,
   });
 }
@@ -642,37 +640,6 @@ describe('DOMEventResponderSystem', () => {
     ReactDOM.render(<Test />, container);
     ReactDOM.render(null, container);
     expect(counter).toEqual(5);
-  });
-
-  it('the event responder onOwnershipChange() function should fire', () => {
-    let onOwnershipChangeFired = 0;
-    let ownershipGained = false;
-    const buttonRef = React.createRef();
-
-    const TestResponder = createEventResponder({
-      targetEventTypes: ['click'],
-      onEvent: (event, context, props, state) => {
-        ownershipGained = context.requestGlobalOwnership();
-      },
-      onOwnershipChange: () => {
-        onOwnershipChangeFired++;
-      },
-    });
-
-    const Test = () => {
-      const listener = React.unstable_useResponder(TestResponder, {});
-      return <button ref={buttonRef} listeners={listener} />;
-    };
-
-    ReactDOM.render(<Test />, container);
-
-    // Clicking the button should trigger the event responder onEvent()
-    let buttonElement = buttonRef.current;
-    dispatchClickEvent(buttonElement);
-    jest.runAllTimers();
-
-    expect(ownershipGained).toEqual(true);
-    expect(onOwnershipChangeFired).toEqual(1);
   });
 
   it('the event responder root listeners should fire on a root click event', () => {

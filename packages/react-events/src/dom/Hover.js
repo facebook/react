@@ -260,7 +260,6 @@ const hoverResponderImpl = {
     }
   },
   onUnmount: unmountResponder,
-  onOwnershipChange: unmountResponder,
 };
 
 const hoverResponderFallbackImpl = {
@@ -335,7 +334,6 @@ const hoverResponderFallbackImpl = {
     }
   },
   onUnmount: unmountResponder,
-  onOwnershipChange: unmountResponder,
 };
 
 export const HoverResponder = React.unstable_createResponder(
