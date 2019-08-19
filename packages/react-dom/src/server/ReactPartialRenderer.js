@@ -883,7 +883,8 @@ class ReactDOMServerRenderer {
               const fallbackFrame = frame.fallbackFrame;
               invariant(
                 fallbackFrame,
-                'suspense fallback not found, something is broken',
+                'ReactDOMServer did not find an internal fallback frame for Suspense. ' +
+                  'This is a bug in React. Please file an issue.',
               );
               this.stack.push(fallbackFrame);
               out[this.suspenseDepth] += '<!--$!-->';
