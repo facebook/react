@@ -14,7 +14,7 @@ import {
   discreteUpdates,
   flushDiscreteUpdatesIfNeeded,
   executeUserEventHandler,
-} from 'events/ReactGenericBatching';
+} from 'legacy-events/ReactGenericBatching';
 import type {
   ReactEventResponder,
   ReactEventResponderInstance,

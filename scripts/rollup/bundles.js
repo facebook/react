@@ -136,7 +136,6 @@ const bundles = [
     externals: ['react'],
     babel: opts =>
       Object.assign({}, opts, {
-        // Include JSX
         plugins: opts.plugins.concat([
           [require.resolve('@babel/plugin-transform-classes'), {loose: true}],
         ]),
@@ -149,7 +148,6 @@ const bundles = [
     externals: ['react', 'stream'],
     babel: opts =>
       Object.assign({}, opts, {
-        // Include JSX
         plugins: opts.plugins.concat([
           [require.resolve('@babel/plugin-transform-classes'), {loose: true}],
         ]),
@@ -208,7 +206,6 @@ const bundles = [
     externals: ['react-native'],
     babel: opts =>
       Object.assign({}, opts, {
-        // Include JSX
         plugins: opts.plugins.concat([
           [require.resolve('@babel/plugin-transform-classes'), {loose: true}],
         ]),
@@ -222,7 +219,6 @@ const bundles = [
     externals: ['react-native'],
     babel: opts =>
       Object.assign({}, opts, {
-        // Include JSX
         plugins: opts.plugins.concat([
           [require.resolve('@babel/plugin-transform-classes'), {loose: true}],
         ]),
@@ -238,7 +234,6 @@ const bundles = [
     externals: ['react-native'],
     babel: opts =>
       Object.assign({}, opts, {
-        // Include JSX
         plugins: opts.plugins.concat([
           [require.resolve('@babel/plugin-transform-classes'), {loose: true}],
         ]),
@@ -252,7 +247,6 @@ const bundles = [
     externals: ['react-native'],
     babel: opts =>
       Object.assign({}, opts, {
-        // Include JSX
         plugins: opts.plugins.concat([
           [require.resolve('@babel/plugin-transform-classes'), {loose: true}],
         ]),
@@ -268,7 +262,6 @@ const bundles = [
     externals: ['react', 'scheduler', 'scheduler/unstable_mock'],
     babel: opts =>
       Object.assign({}, opts, {
-        // Include JSX
         plugins: opts.plugins.concat([
           [require.resolve('@babel/plugin-transform-classes'), {loose: true}],
         ]),
@@ -282,7 +275,6 @@ const bundles = [
     externals: ['react', 'scheduler', 'scheduler/unstable_mock'],
     babel: opts =>
       Object.assign({}, opts, {
-        // Include JSX
         plugins: opts.plugins.concat([
           [require.resolve('@babel/plugin-transform-classes'), {loose: true}],
         ]),
@@ -402,7 +394,6 @@ const bundles = [
     externals: ['react'],
     babel: opts =>
       Object.assign({}, opts, {
-        // Include JSX
         plugins: opts.plugins.concat([
           [require.resolve('@babel/plugin-transform-classes'), {loose: true}],
         ]),

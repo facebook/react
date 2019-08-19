@@ -403,8 +403,8 @@ describe('ResponderEventPlugin', () => {
     jest.resetModules();
 
     const ReactDOMUnstableNativeDependencies = require('react-dom/unstable-native-dependencies');
-    EventBatching = require('events/EventBatching');
-    EventPluginUtils = require('events/EventPluginUtils');
+    EventBatching = require('legacy-events/EventBatching');
+    EventPluginUtils = require('legacy-events/EventPluginUtils');
     ResponderEventPlugin =
       ReactDOMUnstableNativeDependencies.ResponderEventPlugin;
 

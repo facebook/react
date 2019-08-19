@@ -693,11 +693,11 @@ Please update the following components: Parent`,
       }).toWarnDev(
         'Warning: A string ref, "somestring", has been found within a strict mode tree. ' +
           'String refs are a source of potential bugs and should be avoided. ' +
-          'We recommend using useRef() or createRef() instead.\n\n' +
+          'We recommend using useRef() or createRef() instead. ' +
+          'Learn more about using refs safely here: ' +
+          'https://fb.me/react-strict-mode-string-ref\n' +
           '    in StrictMode (at **)\n' +
-          '    in OuterComponent (at **)\n\n' +
-          'Learn more about using refs safely here:\n' +
-          'https://fb.me/react-strict-mode-string-ref',
+          '    in OuterComponent (at **)',
       );
 
       // Dedup
@@ -735,12 +735,12 @@ Please update the following components: Parent`,
       }).toWarnDev(
         'Warning: A string ref, "somestring", has been found within a strict mode tree. ' +
           'String refs are a source of potential bugs and should be avoided. ' +
-          'We recommend using useRef() or createRef() instead.\n\n' +
+          'We recommend using useRef() or createRef() instead. ' +
+          'Learn more about using refs safely here: ' +
+          'https://fb.me/react-strict-mode-string-ref\n' +
           '    in InnerComponent (at **)\n' +
           '    in StrictMode (at **)\n' +
-          '    in OuterComponent (at **)\n\n' +
-          'Learn more about using refs safely here:\n' +
-          'https://fb.me/react-strict-mode-string-ref',
+          '    in OuterComponent (at **)',
       );
 
       // Dedup
@@ -813,16 +813,16 @@ Please update the following components: Parent`,
       expect(() => {
         rendered = ReactTestRenderer.create(<Root />);
       }).toWarnDev(
-        'Warning: Legacy context API has been detected within a strict-mode tree: ' +
-          '\n    in StrictMode (at **)' +
-          '\n    in div (at **)' +
-          '\n    in Root (at **)' +
+        'Warning: Legacy context API has been detected within a strict-mode tree.' +
           '\n\nThe old API will be supported in all 16.x releases, but applications ' +
           'using it should migrate to the new version.' +
           '\n\nPlease update the following components: ' +
           'FunctionalLegacyContextConsumer, LegacyContextConsumer, LegacyContextProvider' +
-          '\n\nLearn more about this warning here:' +
-          '\nhttps://fb.me/react-legacy-context',
+          '\n\nLearn more about this warning here: ' +
+          'https://fb.me/react-legacy-context' +
+          '\n    in StrictMode (at **)' +
+          '\n    in div (at **)' +
+          '\n    in Root (at **)',
       );
 
       // Dedupe

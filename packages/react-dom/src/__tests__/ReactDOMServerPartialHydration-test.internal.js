@@ -15,6 +15,7 @@ let ReactDOMServer;
 let Scheduler;
 let ReactFeatureFlags;
 let Suspense;
+let SuspenseList;
 let act;
 
 describe('ReactDOMServerPartialHydration', () => {
@@ -30,6 +31,7 @@ describe('ReactDOMServerPartialHydration', () => {
     ReactDOMServer = require('react-dom/server');
     Scheduler = require('scheduler');
     Suspense = React.Suspense;
+    SuspenseList = React.unstable_SuspenseList;
   });
 
   it('hydrates a parent even if a child Suspense boundary is blocked', async () => {
@@ -90,6 +92,77 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(span);
   });
 
+  it('warns and replaces the boundary content in legacy mode', async () => {
+    let suspend = false;
+    let resolve;
+    let promise = new Promise(resolvePromise => (resolve = resolvePromise));
+    let ref = React.createRef();
+
+    function Child() {
+      if (suspend) {
+        throw promise;
+      } else {
+        return 'Hello';
+      }
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <span ref={ref}>
+              <Child />
+            </span>
+          </Suspense>
+        </div>
+      );
+    }
+
+    // Don't suspend on the server.
+    suspend = false;
+    let finalHTML = ReactDOMServer.renderToString(<App />);
+
+    let container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    let span = container.getElementsByTagName('span')[0];
+
+    // On the client we try to hydrate.
+    suspend = true;
+    expect(() => {
+      act(() => {
+        ReactDOM.hydrate(<App />, container);
+      });
+    }).toWarnDev(
+      'Warning: Cannot hydrate Suspense in legacy mode. Switch from ' +
+        'ReactDOM.hydrate(element, container) to ' +
+        'ReactDOM.unstable_createSyncRoot(container, { hydrate: true })' +
+        '.render(element) or remove the Suspense components from the server ' +
+        'rendered components.' +
+        '\n    in Suspense (at **)' +
+        '\n    in div (at **)' +
+        '\n    in App (at **)',
+    );
+
+    // We're now in loading state.
+    expect(container.textContent).toBe('Loading...');
+
+    let span2 = container.getElementsByTagName('span')[0];
+    // This is a new node.
+    expect(span).not.toBe(span2);
+    expect(ref.current).toBe(span2);
+
+    // Resolving the promise should render the final content.
+    suspend = false;
+    resolve();
+    await promise;
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+
+    // We should now have hydrated with a ref on the existing span.
+    expect(container.textContent).toBe('Hello');
+  });
+
   it('can insert siblings before the dehydrated boundary', () => {
     let suspend = false;
     let promise = new Promise(() => {});
@@ -135,7 +208,8 @@ describe('ReactDOMServerPartialHydration', () => {
     suspend = true;
 
     act(() => {
-      ReactDOM.hydrate(<App />, container);
+      let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+      root.render(<App />);
     });
 
     expect(container.firstChild.firstChild.tagName).not.toBe('DIV');
@@ -191,7 +265,8 @@ describe('ReactDOMServerPartialHydration', () => {
     // hydrating anyway.
     suspend = true;
     act(() => {
-      ReactDOM.hydrate(<App />, container);
+      let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+      root.render(<App />);
     });
 
     expect(container.firstChild.children[1].textContent).toBe('Middle');
@@ -202,7 +277,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.firstChild.children[1].textContent).toBe('After');
   });
 
-  it('regenerates the content if props have changed before hydration completes', async () => {
+  it('blocks updates to hydrate the content first if props have changed', async () => {
     let suspend = false;
     let resolve;
     let promise = new Promise(resolvePromise => (resolve = resolvePromise));
@@ -256,14 +331,14 @@ describe('ReactDOMServerPartialHydration', () => {
     resolve();
     await promise;
 
-    // Flushing both of these in the same batch won't be able to hydrate so we'll
-    // probably throw away the existing subtree.
+    // This should first complete the hydration and then flush the update onto the hydrated state.
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
-    // Pick up the new span. In an ideal implementation this might be the same span
-    // but patched up. At the time of writing, this will be a new span though.
-    span = container.getElementsByTagName('span')[0];
+    // The new span should be the same since we should have successfully hydrated
+    // before changing it.
+    let newSpan = container.getElementsByTagName('span')[0];
+    expect(span).toBe(newSpan);
 
     // We should now have fully rendered with a ref on the new span.
     expect(ref.current).toBe(span);
@@ -487,7 +562,87 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('Hi Hi');
   });
 
-  it('regenerates the content if context has changed before hydration completes', async () => {
+  it('hydrates first if props changed but we are able to resolve within a timeout', async () => {
+    let suspend = false;
+    let resolve;
+    let promise = new Promise(resolvePromise => (resolve = resolvePromise));
+    let ref = React.createRef();
+
+    function Child({text}) {
+      if (suspend) {
+        throw promise;
+      } else {
+        return text;
+      }
+    }
+
+    function App({text, className}) {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <span ref={ref} className={className}>
+              <Child text={text} />
+            </span>
+          </Suspense>
+        </div>
+      );
+    }
+
+    suspend = false;
+    let finalHTML = ReactDOMServer.renderToString(
+      <App text="Hello" className="hello" />,
+    );
+    let container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    let span = container.getElementsByTagName('span')[0];
+
+    // On the client we don't have all data yet but we want to start
+    // hydrating anyway.
+    suspend = true;
+    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    root.render(<App text="Hello" className="hello" />);
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+
+    expect(ref.current).toBe(null);
+    expect(container.textContent).toBe('Hello');
+
+    // Render an update with a long timeout.
+    React.unstable_withSuspenseConfig(
+      () => root.render(<App text="Hi" className="hi" />),
+      {timeoutMs: 5000},
+    );
+
+    // This shouldn't force the fallback yet.
+    Scheduler.unstable_flushAll();
+
+    expect(ref.current).toBe(null);
+    expect(container.textContent).toBe('Hello');
+
+    // Resolving the promise so that rendering can complete.
+    suspend = false;
+    resolve();
+    await promise;
+
+    // This should first complete the hydration and then flush the update onto the hydrated state.
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+
+    // The new span should be the same since we should have successfully hydrated
+    // before changing it.
+    let newSpan = container.getElementsByTagName('span')[0];
+    expect(span).toBe(newSpan);
+
+    // We should now have fully rendered with a ref on the new span.
+    expect(ref.current).toBe(span);
+    expect(container.textContent).toBe('Hi');
+    // If we ended up hydrating the existing content, we won't have properly
+    // patched up the tree, which might mean we haven't patched the className.
+    expect(span.className).toBe('hi');
+  });
+
+  it('blocks the update to hydrate first if context has changed', async () => {
     let suspend = false;
     let resolve;
     let promise = new Promise(resolvePromise => (resolve = resolvePromise));
@@ -555,14 +710,13 @@ describe('ReactDOMServerPartialHydration', () => {
     resolve();
     await promise;
 
-    // Flushing both of these in the same batch won't be able to hydrate so we'll
-    // probably throw away the existing subtree.
+    // This should first complete the hydration and then flush the update onto the hydrated state.
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
-    // Pick up the new span. In an ideal implementation this might be the same span
-    // but patched up. At the time of writing, this will be a new span though.
-    span = container.getElementsByTagName('span')[0];
+    // Since this should have been hydrated, this should still be the same span.
+    let newSpan = container.getElementsByTagName('span')[0];
+    expect(newSpan).toBe(span);
 
     // We should now have fully rendered with a ref on the new span.
     expect(ref.current).toBe(span);
@@ -1004,6 +1158,256 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(div);
   });
 
+  it('shows inserted items in a SuspenseList before content is hydrated', async () => {
+    let suspend = false;
+    let resolve;
+    let promise = new Promise(resolvePromise => (resolve = resolvePromise));
+    let ref = React.createRef();
+
+    function Child({children}) {
+      if (suspend) {
+        throw promise;
+      } else {
+        return children;
+      }
+    }
+
+    // These are hoisted to avoid them from rerendering.
+    const a = (
+      <Suspense fallback="Loading A">
+        <Child>
+          <span>A</span>
+        </Child>
+      </Suspense>
+    );
+    const b = (
+      <Suspense fallback="Loading B">
+        <Child>
+          <span ref={ref}>B</span>
+        </Child>
+      </Suspense>
+    );
+
+    function App({showMore}) {
+      return (
+        <SuspenseList revealOrder="forwards">
+          {a}
+          {b}
+          {showMore ? (
+            <Suspense fallback="Loading C">
+              <span>C</span>
+            </Suspense>
+          ) : null}
+        </SuspenseList>
+      );
+    }
+
+    suspend = false;
+    let html = ReactDOMServer.renderToString(<App showMore={false} />);
+
+    let container = document.createElement('div');
+    container.innerHTML = html;
+
+    let spanB = container.getElementsByTagName('span')[1];
+
+    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+
+    suspend = true;
+    act(() => {
+      root.render(<App showMore={false} />);
+    });
+
+    // We're not hydrated yet.
+    expect(ref.current).toBe(null);
+    expect(container.textContent).toBe('AB');
+
+    // Add more rows before we've hydrated the first two.
+    act(() => {
+      root.render(<App showMore={true} />);
+    });
+
+    // We're not hydrated yet.
+    expect(ref.current).toBe(null);
+
+    // Since the first two are already showing their final content
+    // we should be able to show the real content.
+    expect(container.textContent).toBe('ABC');
+
+    suspend = false;
+    await act(async () => {
+      await resolve();
+    });
+
+    expect(container.textContent).toBe('ABC');
+    // We've hydrated the same span.
+    expect(ref.current).toBe(spanB);
+  });
+
+  it('shows is able to hydrate boundaries even if others in a list are pending', async () => {
+    let suspend = false;
+    let resolve;
+    let promise = new Promise(resolvePromise => (resolve = resolvePromise));
+    let ref = React.createRef();
+
+    function Child({children}) {
+      if (suspend) {
+        throw promise;
+      } else {
+        return children;
+      }
+    }
+
+    let promise2 = new Promise(() => {});
+    function AlwaysSuspend() {
+      throw promise2;
+    }
+
+    // This is hoisted to avoid them from rerendering.
+    const a = (
+      <Suspense fallback="Loading A">
+        <Child>
+          <span ref={ref}>A</span>
+        </Child>
+      </Suspense>
+    );
+
+    function App({showMore}) {
+      return (
+        <SuspenseList revealOrder="together">
+          {a}
+          {showMore ? (
+            <Suspense fallback="Loading B">
+              <AlwaysSuspend />
+            </Suspense>
+          ) : null}
+        </SuspenseList>
+      );
+    }
+
+    suspend = false;
+    let html = ReactDOMServer.renderToString(<App showMore={false} />);
+
+    let container = document.createElement('div');
+    container.innerHTML = html;
+
+    let spanA = container.getElementsByTagName('span')[0];
+
+    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+
+    suspend = true;
+    act(() => {
+      root.render(<App showMore={false} />);
+    });
+
+    // We're not hydrated yet.
+    expect(ref.current).toBe(null);
+    expect(container.textContent).toBe('A');
+
+    await act(async () => {
+      // Add another row before we've hydrated the first one.
+      root.render(<App showMore={true} />);
+      // At the same time, we resolve the blocking promise.
+      suspend = false;
+      await resolve();
+    });
+
+    // We should have been able to hydrate the first row.
+    expect(ref.current).toBe(spanA);
+    // Even though we're still slowing B.
+    expect(container.textContent).toBe('ALoading B');
+  });
+
+  it('shows inserted items before pending in a SuspenseList as fallbacks', async () => {
+    let suspend = false;
+    let resolve;
+    let promise = new Promise(resolvePromise => (resolve = resolvePromise));
+    let ref = React.createRef();
+
+    function Child({children}) {
+      if (suspend) {
+        throw promise;
+      } else {
+        return children;
+      }
+    }
+
+    // These are hoisted to avoid them from rerendering.
+    const a = (
+      <Suspense fallback="Loading A">
+        <Child>
+          <span>A</span>
+        </Child>
+      </Suspense>
+    );
+    const b = (
+      <Suspense fallback="Loading B">
+        <Child>
+          <span ref={ref}>B</span>
+        </Child>
+      </Suspense>
+    );
+
+    function App({showMore}) {
+      return (
+        <SuspenseList revealOrder="forwards">
+          {a}
+          {b}
+          {showMore ? (
+            <Suspense fallback="Loading C">
+              <span>C</span>
+            </Suspense>
+          ) : null}
+        </SuspenseList>
+      );
+    }
+
+    suspend = false;
+    let html = ReactDOMServer.renderToString(<App showMore={false} />);
+
+    let container = document.createElement('div');
+    container.innerHTML = html;
+
+    let suspenseNode = container.firstChild;
+    expect(suspenseNode.nodeType).toBe(8);
+    // Put the suspense node in pending state.
+    suspenseNode.data = '$?';
+
+    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+
+    suspend = true;
+    act(() => {
+      root.render(<App showMore={false} />);
+    });
+
+    // We're not hydrated yet.
+    expect(ref.current).toBe(null);
+    expect(container.textContent).toBe('AB');
+
+    // Add more rows before we've hydrated the first two.
+    act(() => {
+      root.render(<App showMore={true} />);
+    });
+
+    // We're not hydrated yet.
+    expect(ref.current).toBe(null);
+
+    // Since the first two are already showing their final content
+    // we should be able to show the real content.
+    expect(container.textContent).toBe('ABLoading C');
+
+    suspend = false;
+    await act(async () => {
+      // Resolve the boundary to be in its resolved final state.
+      suspenseNode.data = '$';
+      if (suspenseNode._reactRetry) {
+        suspenseNode._reactRetry();
+      }
+      await resolve();
+    });
+
+    expect(container.textContent).toBe('ABC');
+  });
+
   it('can client render nested boundaries', async () => {
     let suspend = false;
     let promise = new Promise(() => {});
@@ -1095,5 +1499,86 @@ describe('ReactDOMServerPartialHydration', () => {
 
     expect(ref1.current).toBe(span1);
     expect(ref2.current).toBe(span2);
+  });
+
+  it('regenerates if it cannot hydrate before changes to props/context expire', async () => {
+    let suspend = false;
+    let promise = new Promise(resolvePromise => {});
+    let ref = React.createRef();
+    let ClassName = React.createContext(null);
+
+    function Child({text}) {
+      let className = React.useContext(ClassName);
+      if (suspend && className !== 'hi' && text !== 'Hi') {
+        // Never suspends on the newer data.
+        throw promise;
+      } else {
+        return (
+          <span ref={ref} className={className}>
+            {text}
+          </span>
+        );
+      }
+    }
+
+    function App({text, className}) {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <Child text={text} />
+          </Suspense>
+        </div>
+      );
+    }
+
+    suspend = false;
+    let finalHTML = ReactDOMServer.renderToString(
+      <ClassName.Provider value={'hello'}>
+        <App text="Hello" />
+      </ClassName.Provider>,
+    );
+    let container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    let span = container.getElementsByTagName('span')[0];
+
+    // On the client we don't have all data yet but we want to start
+    // hydrating anyway.
+    suspend = true;
+    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    root.render(
+      <ClassName.Provider value={'hello'}>
+        <App text="Hello" />
+      </ClassName.Provider>,
+    );
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+
+    expect(ref.current).toBe(null);
+    expect(span.textContent).toBe('Hello');
+
+    // Render an update, which will be higher or the same priority as pinging the hydration.
+    // The new update doesn't suspend.
+    root.render(
+      <ClassName.Provider value={'hi'}>
+        <App text="Hi" />
+      </ClassName.Provider>,
+    );
+
+    // Since we're still suspended on the original data, we can't hydrate.
+    // This will force all expiration times to flush.
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+
+    // This will now be a new span because we weren't able to hydrate before
+    let newSpan = container.getElementsByTagName('span')[0];
+    expect(newSpan).not.toBe(span);
+
+    // We should now have fully rendered with a ref on the new span.
+    expect(ref.current).toBe(newSpan);
+    expect(newSpan.textContent).toBe('Hi');
+    // If we ended up hydrating the existing content, we won't have properly
+    // patched up the tree, which might mean we haven't patched the className.
+    expect(newSpan.className).toBe('hi');
   });
 });
