@@ -28,16 +28,20 @@ if (__DEV__) {
     submit: true,
   };
 
+  function propsAreConfigured(props, propName) {
+    return (
+      hasReadOnlyValue[props.type] ||
+      props.onChange ||
+      props.readOnly ||
+      props.disabled ||
+      props[propName] == null ||
+      (enableFlareAPI && props.listeners)
+    );
+  }
+
   const propTypes = {
     value: function(props, propName, componentName) {
-      if (
-        hasReadOnlyValue[props.type] ||
-        props.onChange ||
-        props.readOnly ||
-        props.disabled ||
-        props[propName] == null ||
-        (enableFlareAPI && props.listeners)
-      ) {
+      if (propsAreConfigured(props, propName)) {
         return null;
       }
       return new Error(
@@ -48,13 +52,7 @@ if (__DEV__) {
       );
     },
     checked: function(props, propName, componentName) {
-      if (
-        props.onChange ||
-        props.readOnly ||
-        props.disabled ||
-        props[propName] == null ||
-        (enableFlareAPI && props.listeners)
-      ) {
+      if (propsAreConfigured(props, propName)) {
         return null;
       }
       return new Error(
