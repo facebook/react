@@ -5,6 +5,21 @@ import { meta } from '../../hydration';
 
 import type { HooksTree } from 'src/backend/types';
 
+export function alphaSortEntries(
+  entryA: [string, mixed],
+  entryB: [string, mixed]
+): number {
+  const a = entryA[0];
+  const b = entryB[0];
+  if ('' + +a === a) {
+    if ('' + +b !== b) {
+      return -1;
+    }
+    return +a < +b ? -1 : 1;
+  }
+  return a < b ? -1 : 1;
+}
+
 export function createRegExp(string: string): RegExp {
   // Allow /regex/ syntax with optional last /
   if (string[0] === '/') {

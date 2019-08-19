@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import type { Element } from 'react';
 import EditableValue from './EditableValue';
 import ExpandCollapseToggle from './ExpandCollapseToggle';
-import { getMetaValueLabel } from '../utils';
+import { alphaSortEntries, getMetaValueLabel } from '../utils';
 import { meta } from '../../../hydration';
 import styles from './KeyValue.css';
 
@@ -13,6 +13,7 @@ import type { InspectPath } from './SelectedElement';
 type OverrideValueFn = (path: Array<string | number>, value: any) => void;
 
 type KeyValueProps = {|
+  alphaSort: boolean,
   depth: number,
   hidden?: boolean,
   inspectPath?: InspectPath,
@@ -24,6 +25,7 @@ type KeyValueProps = {|
 |};
 
 export default function KeyValue({
+  alphaSort,
   depth,
   inspectPath,
   isReadOnly,
@@ -127,6 +129,7 @@ export default function KeyValue({
       children = value.map((innerValue, index) => (
         <KeyValue
           key={index}
+          alphaSort={alphaSort}
           depth={depth + 1}
           inspectPath={inspectPath}
           isReadOnly={isReadOnly}
@@ -162,15 +165,24 @@ export default function KeyValue({
         </div>
       );
     } else {
-      const hasChildren = Object.entries(value).length > 0;
+      // TRICKY
+      // It's important to use Object.entries() rather than Object.keys()
+      // because of the hidden meta Symbols used for hydration and unserializable values.
+      const entries = Object.entries(value);
+      if (alphaSort) {
+        entries.sort(alphaSortEntries);
+      }
+
+      const hasChildren = entries.length > 0;
       const displayName = value.hasOwnProperty(meta.unserializable)
         ? getMetaValueLabel(value)
         : 'Object';
 
       let areChildrenReadOnly = isReadOnly || !!value[meta.readonly];
-      children = Object.entries(value).map<Element<any>>(([name, value]) => (
+      children = entries.map<Element<any>>(([name, value]) => (
         <KeyValue
           key={name}
+          alphaSort={alphaSort}
           depth={depth + 1}
           inspectPath={inspectPath}
           isReadOnly={areChildrenReadOnly}
