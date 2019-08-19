@@ -163,4 +163,58 @@ describe('ReactDOMServerSuspense', () => {
     },
     'Add a <Suspense fallback=...> component higher in the tree',
   );
+
+  it('does not get confused by throwing null', () => {
+    function Bad() {
+      // eslint-disable-next-line no-throw-literal
+      throw null;
+    }
+
+    let didError;
+    let error;
+    try {
+      ReactDOMServer.renderToString(<Bad />);
+    } catch (err) {
+      didError = true;
+      error = err;
+    }
+    expect(didError).toBe(true);
+    expect(error).toBe(null);
+  });
+
+  it('does not get confused by throwing undefined', () => {
+    function Bad() {
+      // eslint-disable-next-line no-throw-literal
+      throw undefined;
+    }
+
+    let didError;
+    let error;
+    try {
+      ReactDOMServer.renderToString(<Bad />);
+    } catch (err) {
+      didError = true;
+      error = err;
+    }
+    expect(didError).toBe(true);
+    expect(error).toBe(undefined);
+  });
+
+  it('does not get confused by throwing a primitive', () => {
+    function Bad() {
+      // eslint-disable-next-line no-throw-literal
+      throw 'foo';
+    }
+
+    let didError;
+    let error;
+    try {
+      ReactDOMServer.renderToString(<Bad />);
+    } catch (err) {
+      didError = true;
+      error = err;
+    }
+    expect(didError).toBe(true);
+    expect(error).toBe('foo');
+  });
 });

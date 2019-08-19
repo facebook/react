@@ -909,16 +909,20 @@ class ReactDOMServerRenderer {
         try {
           outBuffer += this.render(child, frame.context, frame.domNamespace);
         } catch (err) {
-          if (enableSuspenseServerRenderer && typeof err.then === 'function') {
-            invariant(
-              this.suspenseDepth > 0,
-              // TODO: include component name. This is a bit tricky with current factoring.
-              'A React component suspended while rendering, but no fallback UI was specified.\n' +
-                '\n' +
-                'Add a <Suspense fallback=...> component higher in the tree to ' +
-                'provide a loading indicator or placeholder to display.',
-            );
-            suspended = true;
+          if (err != null && typeof err.then === 'function') {
+            if (enableSuspenseServerRenderer) {
+              invariant(
+                this.suspenseDepth > 0,
+                // TODO: include component name. This is a bit tricky with current factoring.
+                'A React component suspended while rendering, but no fallback UI was specified.\n' +
+                  '\n' +
+                  'Add a <Suspense fallback=...> component higher in the tree to ' +
+                  'provide a loading indicator or placeholder to display.',
+              );
+              suspended = true;
+            } else {
+              invariant(false, 'ReactDOMServer does not yet support Suspense.');
+            }
           } else {
             throw err;
           }
