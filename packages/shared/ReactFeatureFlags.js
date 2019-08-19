@@ -84,6 +84,8 @@ export const enableUserBlockingEvents = false;
 // Add a callback property to suspense to notify which promises are currently
 // in the update queue. This allows reporting and tracing of what is causing
 // the user to see a loading state.
+// Also allows hydration callbacks to fire when a dehydrated boundary gets
+// hydrated or deleted.
 export const enableSuspenseCallback = false;
 
 // Part of the simplification of React.createElement so we can eventually move

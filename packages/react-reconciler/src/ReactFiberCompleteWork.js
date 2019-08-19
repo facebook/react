@@ -859,6 +859,10 @@ function completeWork(
             if ((workInProgress.effectTag & DidCapture) === NoEffect) {
               // This boundary did not suspend so it's now hydrated and unsuspended.
               workInProgress.memoizedState = null;
+              if (enableSuspenseCallback) {
+                // Notify the callback.
+                workInProgress.effectTag |= Update;
+              }
             } else {
               // Something suspended. Schedule an effect to attach retry listeners.
               workInProgress.effectTag |= Update;
