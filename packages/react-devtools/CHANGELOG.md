@@ -21,7 +21,7 @@
 ## 4.0.3 (August 17, 2019)
 #### Bug fixes
 * ES6 `Map` and `Set`, typed arrays, and other unnserializable types (e.g. Immutable JS) can now be inspected.
-* Empty objects and arrays now display an "(empty)" label to the right to be reduce confusion.
+* Empty objects and arrays now display an "(empty)" label to the right to reduce confusion.
 * Components that use only the `useContext` hook now properly display hooks values in side panel.
 * Style editor now supports single quotes around string values (e.g. both `"red"` and `'red'`).
 * Fixed edge case bug that prevented profiling when both React v16 and v15 were present on a page.
@@ -75,7 +75,7 @@ You can view a component's props, state, and hooks by selecting it:
 
 #### "Rendered by" list
 
-In React, an element's "owner" refers the thing that rendered it. Sometimes an element's parent is also its owner, but usually they're different. This distinction is important because props come from owners.
+In React, an element's "owner" refers to the thing that rendered it. Sometimes an element's parent is also its owner, but usually they're different. This distinction is important because props come from owners.
 
 ![Example code](https://user-images.githubusercontent.com/29597/62229551-bbcf1600-b374-11e9-8411-8ff411f4f847.png)
 
