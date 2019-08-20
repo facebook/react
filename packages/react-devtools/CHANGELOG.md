@@ -1,23 +1,47 @@
 # React DevTools changelog
 
-<!-- ## [Unreleased]
 <details>
   <summary>
     Changes that have landed in master but are not yet released.
     Click to see more.
   </summary>
   
-  <!-- Upcoming changes go here
-</details> -->
+  <!-- Upcoming changes go here -->
+</details>
 
-## 4.0.0 (release date TBD)
+## 4.0.5 (August 19, 2019)
+#### Bug fixes
+* Props, state, and context values are alpha sorted.
+* Standalone DevTools properly serves backend script over localhost:8097
+
+## 4.0.4 (August 18, 2019)
+#### Bug fixes
+* Bugfix for potential error if a min-duration commit filter is applied after selecting a fiber in the Profiler UI.
+
+## 4.0.3 (August 17, 2019)
+#### Bug fixes
+* ES6 `Map` and `Set`, typed arrays, and other unserializable types (e.g. Immutable JS) can now be inspected.
+* Empty objects and arrays now display an "(empty)" label to the right to reduce confusion.
+* Components that use only the `useContext` hook now properly display hooks values in side panel.
+* Style editor now supports single quotes around string values (e.g. both `"red"` and `'red'`).
+* Fixed edge case bug that prevented profiling when both React v16 and v15 were present on a page.
+
+## 4.0.2 (August 15, 2019)
+#### Permissions cleanup
+* Removed unnecessary `webNavigation ` permission from Chrome and Firefox extensions.
+
+## 4.0.1 (August 15, 2019)
+#### Permissions cleanup
+* Removed unnecessary `<all_urls>`, `background`, and `tabs` permissions from Chrome and Firefox extensions.
+
+## 4.0.0 (August 15, 2019)
 
 ### General changes
 
 #### Improved performance
 The legacy DevTools extension used to add significant performance overhead, making it unusable for some larger React applications. That overhead has been effectively eliminated in version 4.
 
-[Learn more](https://github.com/bvaughn/react-devtools-experimental/blob/master/OVERVIEW.md) about the performance optimizations that made this possible.
+[Learn more](https://github.com/facebook/react/blob/master/packages/react-devtools/OVERVIEW.md) about the performance optimizations that made this possible.
 
 #### Component stacks
 
@@ -41,9 +65,9 @@ Host nodes (e.g. HTML `<div>`, React Native `View`) are now hidden by default, b
 
 Filter preferences are remembered between sessions.
 
-#### No more in-line props
+#### No more inline props
 
-Components in the tree no longer show in-line props. This was done to [make DevTools faster](https://github.com/bvaughn/react-devtools-experimental/blob/master/OVERVIEW.md) and to make it easier to browse larger component trees.
+Components in the tree no longer show inline props. This was done to [make DevTools faster](https://github.com/facebook/react/blob/master/packages/react-devtools/OVERVIEW.md) and to make it easier to browse larger component trees.
 
 You can view a component's props, state, and hooks by selecting it:
 
@@ -51,7 +75,7 @@ You can view a component's props, state, and hooks by selecting it:
 
 #### "Rendered by" list
 
-In React, an element's "owner" refers the thing that rendered it. Sometimes an element's parent is also its owner, but usually they're different. This distinction is important because props come from owners.
+In React, an element's "owner" refers to the thing that rendered it. Sometimes an element's parent is also its owner, but usually they're different. This distinction is important because props come from owners.
 
 ![Example code](https://user-images.githubusercontent.com/29597/62229551-bbcf1600-b374-11e9-8411-8ff411f4f847.png)
 
@@ -100,6 +124,12 @@ The new Components tree formats these HOC names (along with several built-in uti
 Components decorated with multiple HOCs show the topmost badge and a count. Selecting the component shows all of the HOCs badges in the properties panel.
 
 ![Screenshot showing a component with multiple HOC badges](https://user-images.githubusercontent.com/29597/62303729-7fadbb00-b431-11e9-8685-45f5ab52b30b.png)
+
+#### Restoring selection between reloads
+
+DevTools now attempts to restore the previously selected element when you reload the page.
+
+![Video demonstrating selection persistence](https://user-images.githubusercontent.com/810438/63130054-2c02ac00-bfb1-11e9-92fa-382e9e433638.gif)
 
 #### Suspense toggle
 

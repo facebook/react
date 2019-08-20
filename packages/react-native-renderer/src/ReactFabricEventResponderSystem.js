@@ -13,6 +13,7 @@ import {
   batchedEventUpdates,
   discreteUpdates,
   flushDiscreteUpdatesIfNeeded,
+  executeUserEventHandler,
 } from 'legacy-events/ReactGenericBatching';
 import type {
   ReactEventResponder,
@@ -30,7 +31,6 @@ import {
   UserBlockingEvent,
   DiscreteEvent,
 } from './ReactNativeTypes';
-import {invokeGuardedCallbackAndCatchFirstError} from 'shared/ReactErrorUtils';
 import {enableUserBlockingEvents} from 'shared/ReactFeatureFlags';
 import warning from 'shared/warning';
 import invariant from 'shared/invariant';
@@ -42,12 +42,6 @@ const {
   unstable_UserBlockingPriority: UserBlockingPriority,
   unstable_runWithPriority: runWithPriority,
 } = Scheduler;
-
-type EventQueueItem = {|
-  listener: (val: any) => void,
-  value: any,
-|};
-type EventQueue = Array<EventQueueItem>;
 
 type ResponderTimeout = {|
   id: TimeoutID,
@@ -78,17 +72,10 @@ const rootEventTypesToEventResponderInstances: Map<
   string,
   Set<ReactNativeEventResponderInstance>,
 > = new Map();
-const ownershipChangeListeners: Set<
-  ReactNativeEventResponderInstance,
-> = new Set();
-
-let globalOwner = null;
 
 let currentTimeStamp = 0;
 let currentTimers = new Map();
 let currentInstance: null | ReactNativeEventResponderInstance = null;
-let currentEventQueue: null | EventQueue = null;
-let currentEventQueuePriority: EventPriority = ContinuousEvent;
 let currentTimerIDCounter = 0;
 
 const eventResponderContext: ReactNativeResponderContext = {
@@ -99,12 +86,29 @@ const eventResponderContext: ReactNativeResponderContext = {
   ): void {
     validateResponderContext();
     validateEventValue(eventValue);
-    if (eventPriority < currentEventQueuePriority) {
-      currentEventQueuePriority = eventPriority;
+    switch (eventPriority) {
+      case DiscreteEvent: {
+        flushDiscreteUpdatesIfNeeded(currentTimeStamp);
+        discreteUpdates(() =>
+          executeUserEventHandler(eventListener, eventValue),
+        );
+        break;
+      }
+      case UserBlockingEvent: {
+        if (enableUserBlockingEvents) {
+          runWithPriority(UserBlockingPriority, () =>
+            executeUserEventHandler(eventListener, eventValue),
+          );
+        } else {
+          executeUserEventHandler(eventListener, eventValue);
+        }
+        break;
+      }
+      case ContinuousEvent: {
+        executeUserEventHandler(eventListener, eventValue);
+        break;
+      }
     }
-    ((currentEventQueue: any): EventQueue).push(
-      createEventQueueItem(eventValue, eventListener),
-    );
   },
   isTargetWithinNode(
     childTarget: ReactNativeEventTarget,
@@ -215,16 +219,6 @@ const eventResponderContext: ReactNativeResponderContext = {
   },
 };
 
-function createEventQueueItem(
-  value: any,
-  listener: (val: any) => void,
-): EventQueueItem {
-  return {
-    value,
-    listener,
-  };
-}
-
 function validateEventValue(eventValue: any): void {
   if (typeof eventValue === 'object' && eventValue !== null) {
     const {target, type, timeStamp} = eventValue;
@@ -290,24 +284,22 @@ function processTimers(
   delay: number,
 ): void {
   const timersArr = Array.from(timers.values());
-  currentEventQueuePriority = ContinuousEvent;
   try {
-    for (let i = 0; i < timersArr.length; i++) {
-      const {instance, func, id, timeStamp} = timersArr[i];
-      currentInstance = instance;
-      currentEventQueue = [];
-      currentTimeStamp = timeStamp + delay;
-      try {
-        func();
-      } finally {
-        activeTimeouts.delete(id);
+    batchedEventUpdates(() => {
+      for (let i = 0; i < timersArr.length; i++) {
+        const {instance, func, id, timeStamp} = timersArr[i];
+        currentInstance = instance;
+        currentTimeStamp = timeStamp + delay;
+        try {
+          func();
+        } finally {
+          activeTimeouts.delete(id);
+        }
       }
-    }
-    processEventQueue();
+    });
   } finally {
     currentTimers = null;
     currentInstance = null;
-    currentEventQueue = null;
     currentTimeStamp = 0;
   }
 }
@@ -327,66 +319,10 @@ function createFabricResponderEvent(
 
 function validateResponderContext(): void {
   invariant(
-    currentEventQueue && currentInstance,
+    currentInstance,
     'An event responder context was used outside of an event cycle. ' +
       'Use context.setTimeout() to use asynchronous responder context outside of event cycle .',
   );
-}
-
-// TODO this function is almost an exact copy of the DOM version, we should
-// somehow share the logic
-function processEventQueue(): void {
-  const eventQueue = ((currentEventQueue: any): EventQueue);
-  if (eventQueue.length === 0) {
-    return;
-  }
-  switch (currentEventQueuePriority) {
-    case DiscreteEvent: {
-      flushDiscreteUpdatesIfNeeded(currentTimeStamp);
-      discreteUpdates(() => {
-        batchedEventUpdates(processEvents, eventQueue);
-      });
-      break;
-    }
-    case UserBlockingEvent: {
-      if (enableUserBlockingEvents) {
-        runWithPriority(
-          UserBlockingPriority,
-          batchedEventUpdates.bind(null, processEvents, eventQueue),
-        );
-      } else {
-        batchedEventUpdates(processEvents, eventQueue);
-      }
-      break;
-    }
-    case ContinuousEvent: {
-      batchedEventUpdates(processEvents, eventQueue);
-      break;
-    }
-  }
-}
-
-// TODO this function is almost an exact copy of the DOM version, we should
-// somehow share the logic
-function releaseOwnershipForEventResponderInstance(
-  eventResponderInstance: ReactNativeEventResponderInstance,
-): boolean {
-  if (globalOwner === eventResponderInstance) {
-    globalOwner = null;
-    triggerOwnershipListeners();
-    return true;
-  }
-  return false;
-}
-
-// TODO this function is almost an exact copy of the DOM version, we should
-// somehow share the logic
-function processEvents(eventQueue: EventQueue): void {
-  for (let i = 0, length = eventQueue.length; i < length; i++) {
-    const {value, listener} = eventQueue[i];
-    const type = typeof value === 'object' && value !== null ? value.type : '';
-    invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, value);
-  }
 }
 
 // TODO this function is almost an exact copy of the DOM version, we should
@@ -413,12 +349,6 @@ function validateResponderTargetEventTypes(
     return responderEventTypesContainType(targetEventTypes, eventType);
   }
   return false;
-}
-
-function validateOwnership(
-  responderInstance: ReactNativeEventResponderInstance,
-): boolean {
-  return globalOwner === null || globalOwner === responderInstance;
 }
 
 // TODO this function is almost an exact copy of the DOM version, we should
@@ -449,20 +379,17 @@ function traverseAndHandleEventResponderInstances(
         const responderInstances = Array.from(respondersMap.values());
         for (let i = 0, length = responderInstances.length; i < length; i++) {
           const responderInstance = responderInstances[i];
-
-          if (validateOwnership(responderInstance)) {
-            const {props, responder, state, target} = responderInstance;
-            if (
-              !visitedResponders.has(responder) &&
-              validateResponderTargetEventTypes(eventType, responder)
-            ) {
-              const onEvent = responder.onEvent;
-              visitedResponders.add(responder);
-              if (onEvent !== null) {
-                currentInstance = responderInstance;
-                responderEvent.responderTarget = ((target: any): ReactNativeEventTarget);
-                onEvent(responderEvent, eventResponderContext, props, state);
-              }
+          const {props, responder, state, target} = responderInstance;
+          if (
+            !visitedResponders.has(responder) &&
+            validateResponderTargetEventTypes(eventType, responder)
+          ) {
+            const onEvent = responder.onEvent;
+            visitedResponders.add(responder);
+            if (onEvent !== null) {
+              currentInstance = responderInstance;
+              responderEvent.responderTarget = ((target: any): ReactNativeEventTarget);
+              onEvent(responderEvent, eventResponderContext, props, state);
             }
           }
         }
@@ -479,9 +406,6 @@ function traverseAndHandleEventResponderInstances(
 
     for (let i = 0; i < responderInstances.length; i++) {
       const responderInstance = responderInstances[i];
-      if (!validateOwnership(responderInstance)) {
-        continue;
-      }
       const {props, responder, state, target} = responderInstance;
       const onRootEvent = responder.onRootEvent;
       if (onRootEvent !== null) {
@@ -500,57 +424,24 @@ export function dispatchEventForResponderEventSystem(
   targetFiber: null | Fiber,
   nativeEvent: ReactFaricEvent,
 ): void {
-  const previousEventQueue = currentEventQueue;
   const previousInstance = currentInstance;
   const previousTimers = currentTimers;
   const previousTimeStamp = currentTimeStamp;
-  const previousEventQueuePriority = currentEventQueuePriority;
   currentTimers = null;
-  currentEventQueue = [];
-  currentEventQueuePriority = ContinuousEvent;
   // We might want to control timeStamp another way here
   currentTimeStamp = Date.now();
   try {
-    traverseAndHandleEventResponderInstances(
-      topLevelType,
-      targetFiber,
-      nativeEvent,
-    );
-    processEventQueue();
+    batchedEventUpdates(() => {
+      traverseAndHandleEventResponderInstances(
+        topLevelType,
+        targetFiber,
+        nativeEvent,
+      );
+    });
   } finally {
     currentTimers = previousTimers;
     currentInstance = previousInstance;
-    currentEventQueue = previousEventQueue;
     currentTimeStamp = previousTimeStamp;
-    currentEventQueuePriority = previousEventQueuePriority;
-  }
-}
-
-// TODO this function is almost an exact copy of the DOM version, we should
-// somehow share the logic
-function triggerOwnershipListeners(): void {
-  const listeningInstances = Array.from(ownershipChangeListeners);
-  const previousInstance = currentInstance;
-  const previousEventQueuePriority = currentEventQueuePriority;
-  const previousEventQueue = currentEventQueue;
-  try {
-    for (let i = 0; i < listeningInstances.length; i++) {
-      const instance = listeningInstances[i];
-      const {props, responder, state} = instance;
-      currentInstance = instance;
-      currentEventQueuePriority = ContinuousEvent;
-      currentEventQueue = [];
-      const onOwnershipChange = ((responder: any): ReactNativeEventResponder)
-        .onOwnershipChange;
-      if (onOwnershipChange !== null) {
-        onOwnershipChange(eventResponderContext, props, state);
-      }
-    }
-    processEventQueue();
-  } finally {
-    currentInstance = previousInstance;
-    currentEventQueue = previousEventQueue;
-    currentEventQueuePriority = previousEventQueuePriority;
   }
 }
 
@@ -562,19 +453,14 @@ export function mountEventResponder(
   props: Object,
   state: Object,
 ) {
-  if (responder.onOwnershipChange !== null) {
-    ownershipChangeListeners.add(responderInstance);
-  }
   const onMount = responder.onMount;
   if (onMount !== null) {
-    currentEventQueuePriority = ContinuousEvent;
     currentInstance = responderInstance;
-    currentEventQueue = [];
     try {
-      onMount(eventResponderContext, props, state);
-      processEventQueue();
+      batchedEventUpdates(() => {
+        onMount(eventResponderContext, props, state);
+      });
     } finally {
-      currentEventQueue = null;
       currentInstance = null;
       currentTimers = null;
     }
@@ -590,21 +476,15 @@ export function unmountEventResponder(
   const onUnmount = responder.onUnmount;
   if (onUnmount !== null) {
     let {props, state} = responderInstance;
-    currentEventQueue = [];
-    currentEventQueuePriority = ContinuousEvent;
     currentInstance = responderInstance;
     try {
-      onUnmount(eventResponderContext, props, state);
-      processEventQueue();
+      batchedEventUpdates(() => {
+        onUnmount(eventResponderContext, props, state);
+      });
     } finally {
-      currentEventQueue = null;
       currentInstance = null;
       currentTimers = null;
     }
-  }
-  releaseOwnershipForEventResponderInstance(responderInstance);
-  if (responder.onOwnershipChange !== null) {
-    ownershipChangeListeners.delete(responderInstance);
   }
   const rootEventTypesSet = responderInstance.rootEventTypes;
   if (rootEventTypesSet !== null) {

@@ -37,9 +37,11 @@ function initModules() {
   };
 }
 
-const {resetModules, serverRender} = ReactDOMServerIntegrationUtils(
-  initModules,
-);
+const {
+  itThrowsWhenRendering,
+  resetModules,
+  serverRender,
+} = ReactDOMServerIntegrationUtils(initModules);
 
 describe('ReactDOMServerSuspense', () => {
   beforeEach(() => {
@@ -132,5 +134,87 @@ describe('ReactDOMServerSuspense', () => {
     const divB2 = parent2.children[1];
     expect(divA).toBe(divA2);
     expect(divB).toBe(divB2);
+  });
+
+  itThrowsWhenRendering(
+    'a suspending component outside a Suspense node',
+    async render => {
+      await render(
+        <div>
+          <React.Suspense />
+          <AsyncText text="Children" />
+          <React.Suspense />
+        </div>,
+        1,
+      );
+    },
+    'Add a <Suspense fallback=...> component higher in the tree',
+  );
+
+  itThrowsWhenRendering(
+    'a suspending component without a Suspense above',
+    async render => {
+      await render(
+        <div>
+          <AsyncText text="Children" />
+        </div>,
+        1,
+      );
+    },
+    'Add a <Suspense fallback=...> component higher in the tree',
+  );
+
+  it('does not get confused by throwing null', () => {
+    function Bad() {
+      // eslint-disable-next-line no-throw-literal
+      throw null;
+    }
+
+    let didError;
+    let error;
+    try {
+      ReactDOMServer.renderToString(<Bad />);
+    } catch (err) {
+      didError = true;
+      error = err;
+    }
+    expect(didError).toBe(true);
+    expect(error).toBe(null);
+  });
+
+  it('does not get confused by throwing undefined', () => {
+    function Bad() {
+      // eslint-disable-next-line no-throw-literal
+      throw undefined;
+    }
+
+    let didError;
+    let error;
+    try {
+      ReactDOMServer.renderToString(<Bad />);
+    } catch (err) {
+      didError = true;
+      error = err;
+    }
+    expect(didError).toBe(true);
+    expect(error).toBe(undefined);
+  });
+
+  it('does not get confused by throwing a primitive', () => {
+    function Bad() {
+      // eslint-disable-next-line no-throw-literal
+      throw 'foo';
+    }
+
+    let didError;
+    let error;
+    try {
+      ReactDOMServer.renderToString(<Bad />);
+    } catch (err) {
+      didError = true;
+      error = err;
+    }
+    expect(didError).toBe(true);
+    expect(error).toBe('foo');
   });
 });

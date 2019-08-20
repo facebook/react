@@ -95,10 +95,14 @@ type PressEvent = {|
   shiftKey: boolean,
 |};
 
+const hasPointerEvents =
+  typeof window !== 'undefined' && window.PointerEvent !== undefined;
+
 const isMac =
   typeof window !== 'undefined' && window.navigator != null
     ? /^Mac/.test(window.navigator.platform)
     : false;
+
 const DEFAULT_PRESS_RETENTION_OFFSET = {
   bottom: 20,
   top: 20,
@@ -106,37 +110,32 @@ const DEFAULT_PRESS_RETENTION_OFFSET = {
   right: 20,
 };
 
-const targetEventTypes = [
-  'keydown_active',
-  // We need to preventDefault on pointerdown for mouse/pen events
-  // that are in hit target area but not the element area.
-  'pointerdown_active',
-  'click_active',
-];
-const rootEventTypes = [
-  'click',
-  'keyup',
-  'pointerup',
-  'pointermove',
-  'scroll',
-  'pointercancel',
-  // We listen to this here so stopPropagation can
-  // block other mouseup events used internally
-  'mouseup_active',
-  'touchend',
-];
+const targetEventTypes = hasPointerEvents
+  ? [
+      'keydown_active',
+      // We need to preventDefault on pointerdown for mouse/pen events
+      // that are in hit target area but not the element area.
+      'pointerdown_active',
+      'click_active',
+    ]
+  : ['keydown_active', 'touchstart', 'mousedown', 'click_active'];
 
-// If PointerEvents is not supported (e.g., Safari), also listen to touch and mouse events.
-if (typeof window !== 'undefined' && window.PointerEvent === undefined) {
-  targetEventTypes.push('touchstart', 'mousedown');
-  rootEventTypes.push(
-    'mousemove',
-    'touchmove',
-    'touchcancel',
-    // Used as a 'cancel' signal for mouse interactions
-    'dragstart',
-  );
-}
+const rootEventTypes = hasPointerEvents
+  ? ['pointerup', 'pointermove', 'pointercancel', 'click', 'keyup', 'scroll']
+  : [
+      'click',
+      'keyup',
+      'scroll',
+      'mousemove',
+      'touchmove',
+      'touchcancel',
+      // Used as a 'cancel' signal for mouse interactions
+      'dragstart',
+      // We listen to this here so stopPropagation can
+      // block other mouseup events used internally
+      'mouseup_active',
+      'touchend',
+    ];
 
 function isFunction(obj): boolean {
   return typeof obj === 'function';
@@ -521,6 +520,7 @@ const pressResponderImpl = {
     const isPressed = state.isPressed;
 
     handleStopPropagation(props, context, nativeEvent);
+
     switch (type) {
       // START
       case 'pointerdown':
@@ -539,7 +539,7 @@ const pressResponderImpl = {
           }
 
           state.shouldPreventClick = false;
-          if (isPointerEvent || isTouchEvent) {
+          if (isTouchEvent) {
             state.ignoreEmulatedMouseEvents = true;
           } else if (isKeyboardEvent) {
             // Ignore unrelated key events
@@ -633,6 +633,7 @@ const pressResponderImpl = {
     const previousPointerType = state.pointerType;
 
     handleStopPropagation(props, context, nativeEvent);
+
     switch (type) {
       // MOVE
       case 'pointermove':
@@ -676,6 +677,7 @@ const pressResponderImpl = {
         if (state.isPressWithinResponderRegion) {
           if (isPressed) {
             const onPressMove = props.onPressMove;
+
             if (isFunction(onPressMove)) {
               dispatchEvent(
                 event,
@@ -777,6 +779,7 @@ const pressResponderImpl = {
                 );
               }
             }
+
             if (state.isPressWithinResponderRegion && button !== 1) {
               dispatchEvent(
                 event,
@@ -832,13 +835,6 @@ const pressResponderImpl = {
     }
   },
   onUnmount(
-    context: ReactDOMResponderContext,
-    props: PressProps,
-    state: PressState,
-  ) {
-    unmountResponder(context, props, state);
-  },
-  onOwnershipChange(
     context: ReactDOMResponderContext,
     props: PressProps,
     state: PressState,
