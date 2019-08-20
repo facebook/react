@@ -20,4 +20,4 @@ yarn build:extension:firefox # builds at "shells/browser/firefox/build"
 
 # Support
 
-As this extension is in a beta period, it is not officially supported. However if you find a bug, we'd appreciate you reporting it as a [GitHub issue](https://github.com/bvaughn/react-devtools-experimental/issues/new) with repro instructions.
+As this extension is in a beta period, it is not officially supported. However if you find a bug, we'd appreciate you reporting it as a [GitHub issue](https://github.com/facebook/react/issues/new?labels=Component:%20Developer%20Tools) with repro instructions.

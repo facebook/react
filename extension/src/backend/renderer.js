@@ -1614,7 +1614,9 @@ export function attach(
         currentRootID = getFiberID(getPrimaryFiber(root.current));
         setRootPseudoKey(currentRootID, root.current);
 
-        if (isProfiling) {
+        // Checking root.memoizedInteractions handles multi-renderer edge-case-
+        // where some v16 renderers support profiling and others don't.
+        if (isProfiling && root.memoizedInteractions != null) {
           // If profiling is active, store commit time and duration, and the current interactions.
           // The frontend may request this information after profiling has stopped.
           currentCommitProfilingMetadata = {
@@ -1658,7 +1660,11 @@ export function attach(
       mightBeOnTrackedPath = true;
     }
 
-    if (isProfiling) {
+    // Checking root.memoizedInteractions handles multi-renderer edge-case-
+    // where some v16 renderers support profiling and others don't.
+    const isProfilingSupported = root.memoizedInteractions != null;
+
+    if (isProfiling && isProfilingSupported) {
       // If profiling is active, store commit time and duration, and the current interactions.
       // The frontend may request this information after profiling has stopped.
       currentCommitProfilingMetadata = {
@@ -1702,7 +1708,7 @@ export function attach(
       mountFiberRecursively(current, null);
     }
 
-    if (isProfiling) {
+    if (isProfiling && isProfilingSupported) {
       const commitProfilingMetadata = ((rootToCommitProfilingMetadataMap: any): CommitProfilingMetadataMap).get(
         currentRootID
       );
@@ -2076,6 +2082,7 @@ export function attach(
     const {
       _debugOwner,
       _debugSource,
+      dependencies,
       stateNode,
       memoizedProps,
       memoizedState,
@@ -2087,7 +2094,7 @@ export function attach(
       (tag === FunctionComponent ||
         tag === SimpleMemoComponent ||
         tag === ForwardRef) &&
-      !!memoizedState;
+      (!!memoizedState || !!dependencies);
 
     const typeSymbol = getTypeSymbol(type);
 

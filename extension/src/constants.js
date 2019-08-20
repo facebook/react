@@ -26,7 +26,7 @@ export const LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY =
 export const PROFILER_EXPORT_VERSION = 4;
 
 export const CHANGE_LOG_URL =
-  'https://github.com/bvaughn/react-devtools-experimental/blob/master/CHANGELOG.md';
+  'https://github.com/facebook/react/blob/master/packages/react-devtools/CHANGELOG.md';
 
 // HACK
 //

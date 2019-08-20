@@ -8979,6 +8979,7 @@ oauth-sign@~0.9.0:
 object-assign@4.0.1:
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/object-assign/-/object-assign-4.0.1.tgz#99504456c3598b5cad4fc59c26e8a9bb107fe0bd"
+  integrity sha1-mVBEVsNZi1ytT8WcJuipuxB/4L0=
 
 object-assign@^3.0.0:
   version "3.0.0"

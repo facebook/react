@@ -164,6 +164,7 @@ function HookView({
     ) : (
       <KeyValue
         depth={1}
+        alphaSort={false}
         inspectPath={inspectPath}
         name="subHooks"
         path={path.concat(['subHooks'])}
@@ -186,6 +187,7 @@ function HookView({
           <div className={styles.Children} hidden={!isOpen}>
             <KeyValue
               depth={1}
+              alphaSort={false}
               inspectPath={inspectPath}
               name="DebugValue"
               path={path.concat(['value'])}
@@ -242,6 +244,7 @@ function HookView({
         <div className={styles.Hook}>
           <KeyValue
             depth={1}
+            alphaSort={false}
             inspectPath={inspectPath}
             name={name}
             overrideValueFn={overrideValueFn}

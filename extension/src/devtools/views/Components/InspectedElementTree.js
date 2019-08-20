@@ -5,7 +5,7 @@ import React, { useCallback } from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import KeyValue from './KeyValue';
-import { serializeDataForCopy } from '../utils';
+import { alphaSortEntries, serializeDataForCopy } from '../utils';
 import styles from './InspectedElementTree.css';
 
 import type { InspectPath } from './SelectedElement';
@@ -27,7 +27,12 @@ export default function InspectedElementTree({
   overrideValueFn,
   showWhenEmpty = false,
 }: Props) {
-  const isEmpty = data === null || Object.keys(data).length === 0;
+  const entries = data != null ? Object.entries(data) : null;
+  if (entries !== null) {
+    entries.sort(alphaSortEntries);
+  }
+
+  const isEmpty = entries === null || entries.length === 0;
 
   const handleCopy = useCallback(() => copy(serializeDataForCopy(data)), [
     data,
@@ -48,15 +53,16 @@ export default function InspectedElementTree({
         </div>
         {isEmpty && <div className={styles.Empty}>None</div>}
         {!isEmpty &&
-          Object.keys((data: any)).map(name => (
+          (entries: any).map(([name, value]) => (
             <KeyValue
               key={name}
+              alphaSort={true}
               depth={1}
               inspectPath={inspectPath}
               name={name}
               overrideValueFn={overrideValueFn}
               path={[name]}
-              value={(data: any)[name]}
+              value={value}
             />
           ))}
       </div>

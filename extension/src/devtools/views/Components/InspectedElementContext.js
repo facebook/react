@@ -134,7 +134,7 @@ function InspectedElementContextController({ children }: Props) {
               const value = hydrateHelper(data.value, data.path);
               const inspectedElement = { ...currentlyInspectedElement };
 
-              fillInPath(inspectedElement, data.path, value);
+              fillInPath(inspectedElement, data.value, data.path, value);
 
               resource.write(element, inspectedElement);
 
@@ -289,7 +289,7 @@ function hydrateHelper(
   path?: Array<string | number>
 ): Object | null {
   if (dehydratedData !== null) {
-    let { cleaned, data } = dehydratedData;
+    let { cleaned, data, unserializable } = dehydratedData;
 
     if (path) {
       const { length } = path;
@@ -297,10 +297,13 @@ function hydrateHelper(
         // Hydration helper requires full paths, but inspection dehydrates with relative paths.
         // In that event it's important that we adjust the "cleaned" paths to match.
         cleaned = cleaned.map(cleanedPath => cleanedPath.slice(length));
+        unserializable = unserializable.map(unserializablePath =>
+          unserializablePath.slice(length)
+        );
       }
     }
 
-    return hydrate(data, cleaned);
+    return hydrate(data, cleaned, unserializable);
   } else {
     return null;
   }

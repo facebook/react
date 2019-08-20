@@ -60,14 +60,13 @@ const build = async (tempPath, manifestPath) => {
   );
 
   const commit = getGitCommit();
-  const versionDateString = `${commit} (${new Date().toLocaleDateString()})`;
-
+  const dateString = new Date().toLocaleDateString();
   const manifest = JSON.parse(readFileSync(copiedManifestPath).toString());
+  const versionDateString = `${manifest.version} (${dateString})`;
   if (manifest.version_name) {
     manifest.version_name = versionDateString;
-  } else {
-    manifest.description += `\n\nCreated from revision ${versionDateString}`;
   }
+  manifest.description += `\n\nCreated from revision ${commit} on ${dateString}.`;
 
   writeFileSync(copiedManifestPath, JSON.stringify(manifest, null, 2));
 

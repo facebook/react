@@ -9,7 +9,12 @@ function getGitCommit() {
 }
 
 function getGitHubURL() {
-  // TODO potentially replace this with an fb.me URL (assuming it can forward the query params)
+  // HACK We are in the middle of migrating;
+  // For now, forcefully direct people to the new repository-
+  // even though we may be deploying from the old repo.
+  return 'https://github.com/facebook/react';
+
+  /* TODO potentially replace this with an fb.me URL (assuming it can forward the query params)
   const url = execSync('git remote get-url origin')
     .toString()
     .trim();
@@ -22,6 +27,7 @@ function getGitHubURL() {
       .replace('git@', 'https://')
       .replace('.git', '');
   }
+  */
 }
 
 function getVersionString() {

@@ -18,6 +18,8 @@ import {
 } from 'react-is';
 import { getDisplayName, getInObject, setInObject } from './utils';
 
+import type { DehydratedData } from 'src/devtools/views/Components/types';
+
 export const meta = {
   inspectable: Symbol('inspectable'),
   inspected: Symbol('inspected'),
@@ -25,6 +27,7 @@ export const meta = {
   readonly: Symbol('readonly'),
   size: Symbol('size'),
   type: Symbol('type'),
+  unserializable: Symbol('unserializable'),
 };
 
 type Dehydrated = {|
@@ -34,6 +37,18 @@ type Dehydrated = {|
   size?: number,
   type: string,
 |};
+
+// Typed arrays and other complex iteratable objects (e.g. Map, Set, ImmutableJS) need special handling.
+// These objects can't be serialized without losing type information,
+// so a "Unserializable" type wrapper is used (with meta-data keys) to send nested values-
+// while preserving the original type and name.
+type Unserializable = {
+  name: string | null,
+  readonly?: boolean,
+  size?: number,
+  type: string,
+  unserializable: boolean,
+};
 
 // This threshold determines the depth at which the bridge "dehydrates" nested data.
 // Dehydration means that we don't serialize the data for e.g. postMessage or stringify,
@@ -173,11 +188,18 @@ function createDehydrated(
 export function dehydrate(
   data: Object,
   cleaned: Array<Array<string | number>>,
+  unserializable: Array<Array<string | number>>,
   path: Array<string | number>,
   isPathWhitelisted: (path: Array<string | number>) => boolean,
   level?: number = 0
-): string | Dehydrated | { [key: string]: string | Dehydrated } {
+):
+  | string
+  | Dehydrated
+  | Unserializable
+  | { [key: string]: string | Dehydrated | Unserializable } {
   const type = getDataType(data);
+
+  let isPathWhitelistedCheck;
 
   switch (type) {
     case 'html_element':
@@ -229,23 +251,56 @@ export function dehydrate(
       };
 
     case 'array':
-      const arrayPathCheck = isPathWhitelisted(path);
-      if (level >= LEVEL_THRESHOLD && !arrayPathCheck) {
+      isPathWhitelistedCheck = isPathWhitelisted(path);
+      if (level >= LEVEL_THRESHOLD && !isPathWhitelistedCheck) {
         return createDehydrated(type, true, data, cleaned, path);
       }
       return data.map((item, i) =>
         dehydrate(
           item,
           cleaned,
+          unserializable,
           path.concat([i]),
           isPathWhitelisted,
-          arrayPathCheck ? 1 : level + 1
+          isPathWhitelistedCheck ? 1 : level + 1
         )
       );
 
     case 'typed_array':
     case 'iterator':
-      return createDehydrated(type, false, data, cleaned, path);
+      isPathWhitelistedCheck = isPathWhitelisted(path);
+      if (level >= LEVEL_THRESHOLD && !isPathWhitelistedCheck) {
+        return createDehydrated(type, true, data, cleaned, path);
+      } else {
+        const unserializableValue: Unserializable = {
+          unserializable: true,
+          type: type,
+          readonly: true,
+          size: type === 'typed_array' ? data.length : undefined,
+          name:
+            !data.constructor || data.constructor.name === 'Object'
+              ? ''
+              : data.constructor.name,
+        };
+
+        if (typeof data[Symbol.iterator]) {
+          [...data].forEach(
+            (item, i) =>
+              (unserializableValue[i] = dehydrate(
+                item,
+                cleaned,
+                unserializable,
+                path.concat([i]),
+                isPathWhitelisted,
+                isPathWhitelistedCheck ? 1 : level + 1
+              ))
+          );
+        }
+
+        unserializable.push(path);
+
+        return unserializableValue;
+      }
 
     case 'date':
       cleaned.push(path);
@@ -256,8 +311,8 @@ export function dehydrate(
       };
 
     case 'object':
-      const objectPathCheck = isPathWhitelisted(path);
-      if (level >= LEVEL_THRESHOLD && !objectPathCheck) {
+      isPathWhitelistedCheck = isPathWhitelisted(path);
+      if (level >= LEVEL_THRESHOLD && !isPathWhitelistedCheck) {
         return createDehydrated(type, true, data, cleaned, path);
       } else {
         const object = {};
@@ -265,9 +320,10 @@ export function dehydrate(
           object[name] = dehydrate(
             data[name],
             cleaned,
+            unserializable,
             path.concat([name]),
             isPathWhitelisted,
-            objectPathCheck ? 1 : level + 1
+            isPathWhitelistedCheck ? 1 : level + 1
           );
         }
         return object;
@@ -290,24 +346,43 @@ export function dehydrate(
 
 export function fillInPath(
   object: Object,
+  data: DehydratedData,
   path: Array<string | number>,
   value: any
 ) {
   const target = getInObject(object, path);
   if (target != null) {
-    delete target[meta.inspectable];
-    delete target[meta.inspected];
-    delete target[meta.name];
-    delete target[meta.readonly];
-    delete target[meta.size];
-    delete target[meta.type];
+    if (!target[meta.unserializable]) {
+      delete target[meta.inspectable];
+      delete target[meta.inspected];
+      delete target[meta.name];
+      delete target[meta.readonly];
+      delete target[meta.size];
+      delete target[meta.type];
+    }
   }
+
+  if (value !== null && data.unserializable.length > 0) {
+    const unserializablePath = data.unserializable[0];
+    let isMatch = unserializablePath.length === path.length;
+    for (let i = 0; i < path.length; i++) {
+      if (path[i] !== unserializablePath[i]) {
+        isMatch = false;
+        break;
+      }
+    }
+    if (isMatch) {
+      upgradeUnserializable(value, value);
+    }
+  }
+
   setInObject(object, path, value);
 }
 
 export function hydrate(
   object: Object,
-  cleaned: Array<Array<string | number>>
+  cleaned: Array<Array<string | number>>,
+  unserializable: Array<Array<string | number>>
 ): Object {
   cleaned.forEach((path: Array<string | number>) => {
     const length = path.length;
@@ -338,7 +413,67 @@ export function hydrate(
       parent[last] = replaced;
     }
   });
+  unserializable.forEach((path: Array<string | number>) => {
+    const length = path.length;
+    const last = path[length - 1];
+    const parent = getInObject(object, path.slice(0, length - 1));
+    if (!parent || !parent.hasOwnProperty(last)) {
+      return;
+    }
+
+    const node = parent[last];
+
+    const replacement = {
+      ...node,
+    };
+
+    upgradeUnserializable(replacement, node);
+
+    parent[last] = replacement;
+  });
   return object;
+}
+
+function upgradeUnserializable(destination: Object, source: Object) {
+  Object.defineProperties(destination, {
+    [meta.inspected]: {
+      configurable: true,
+      enumerable: false,
+      value: !!source.inspected,
+    },
+    [meta.name]: {
+      configurable: true,
+      enumerable: false,
+      value: source.name,
+    },
+    [meta.size]: {
+      configurable: true,
+      enumerable: false,
+      value: source.size,
+    },
+    [meta.readonly]: {
+      configurable: true,
+      enumerable: false,
+      value: !!source.readonly,
+    },
+    [meta.type]: {
+      configurable: true,
+      enumerable: false,
+      value: source.type,
+    },
+    [meta.unserializable]: {
+      configurable: true,
+      enumerable: false,
+      value: !!source.unserializable,
+    },
+  });
+
+  delete destination.inspected;
+  delete destination.name;
+  delete destination.size;
+  delete destination.readonly;
+  delete destination.type;
+  delete destination.unserializable;
 }
 
 export function getDisplayNameForReactElement(

@@ -46,6 +46,8 @@ export default function ObjectProps() {
           },
         },
       }}
+      emptyArray={[]}
+      emptyObject={{}}
     />
   );
 }

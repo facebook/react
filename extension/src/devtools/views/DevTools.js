@@ -5,7 +5,7 @@
 import '@reach/menu-button/styles.css';
 import '@reach/tooltip/styles.css';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Store from '../store';
 import { BridgeContext, StoreContext } from './context';
 import Components from './Components/Components';
@@ -102,6 +102,16 @@ export default function DevTools({
     }),
     [canViewElementSourceFunction, viewElementSourceFunction]
   );
+
+  useEffect(() => {
+    return () => {
+      try {
+        bridge.shutdown();
+      } catch (error) {
+        // Attempting to use a disconnected port.
+      }
+    };
+  }, [bridge]);
 
   return (
     <BridgeContext.Provider value={bridge}>
