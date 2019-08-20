@@ -16,7 +16,7 @@
 
 ## 4.0.4 (August 18, 2019)
 #### Bug fixes
-* Bugfox for potential error if a min-duration commit filter is applied after selecting a fiber in the Profiler UI.
+* Bugfix for potential error if a min-duration commit filter is applied after selecting a fiber in the Profiler UI.
 
 ## 4.0.3 (August 17, 2019)
 #### Bug fixes
