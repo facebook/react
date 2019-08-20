@@ -23,7 +23,7 @@ function transform(input, options) {
           ]
         : []),
       [
-        './packages/react-jsx-babel-plugin/transform-jsx-to-react-jsx',
+        './packages/react-jsx-babel-plugin/src/TransformJSXToReactBabelPlugin',
         {
           development: __DEV__,
           useBuiltIns: true,

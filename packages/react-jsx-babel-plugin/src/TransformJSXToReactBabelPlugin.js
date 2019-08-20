@@ -1,9 +1,10 @@
 'use strict';
 
-const t = require('@babel/types');
 const esutils = require('esutils');
 
-function helper(opts) {
+function helper(babel, opts) {
+  const {types: t} = babel;
+
   const visitor = {};
 
   visitor.JSXNamespacedName = function(path, state) {
@@ -235,7 +236,13 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
     if (opts.post) {
       opts.post(state, file);
     }
-    return state.call || t.callExpression(state.callee, args);
+    return (
+      state.call ||
+      t.callExpression(
+        path.node.children.length === 1 ? state.staticCallee : state.callee,
+        args,
+      )
+    );
   }
 
   // Builds props for React.jsx. This function adds children into the props
@@ -364,7 +371,13 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
       opts.post(state, file);
     }
 
-    return state.call || t.callExpression(state.callee, args);
+    return (
+      state.call ||
+      t.callExpression(
+        path.node.children.length === 1 ? state.staticCallee : state.callee,
+        args,
+      )
+    );
   }
 
   // Builds JSX into:
@@ -511,6 +524,8 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
 }
 
 module.exports = function(babel) {
+  const {types: t} = babel;
+
   const createIdentifierParser = id => () => {
     return id
       .split('.')
@@ -518,7 +533,7 @@ module.exports = function(babel) {
       .reduce((object, property) => t.memberExpression(object, property));
   };
 
-  const visitor = helper({
+  const visitor = helper(babel, {
     pre(state) {
       const tagName = state.tagName;
       const args = state.args;
@@ -531,6 +546,7 @@ module.exports = function(babel) {
 
     post(state, pass) {
       state.callee = pass.get('jsxIdentifier')();
+      state.staticCallee = pass.get('jsxStaticIdentifier')();
       state.oldCallee = pass.get('oldJSXIdentifier')();
     },
   });
@@ -545,6 +561,12 @@ module.exports = function(babel) {
         'jsxIdentifier',
         createIdentifierParser(
           state.opts.development ? 'React.jsxDEV' : 'React.jsx',
+        ),
+      );
+      state.set(
+        'jsxStaticIdentifier',
+        createIdentifierParser(
+          state.opts.development ? 'React.jsxDEV' : 'React.jsxs',
         ),
       );
       state.set('jsxFragIdentifier', createIdentifierParser('React.Fragment'));
