@@ -21,6 +21,7 @@
 [libs]
 ../../../node_modules/fbjs/flow/lib/dev.js
 ../environment.js
+../react-devtools.js
 ../react-native-host-hooks.js
 
 [lints]
