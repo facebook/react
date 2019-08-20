@@ -10,11 +10,20 @@ export function cleanForBridge(
   path?: Array<string | number> = [],
 ): DehydratedData | null {
   if (data !== null) {
-    const cleaned = [];
+    const cleanedPaths = [];
+    const unserializablePaths = [];
+    const cleanedData = dehydrate(
+      data,
+      cleanedPaths,
+      unserializablePaths,
+      path,
+      isPathWhitelisted,
+    );
 
     return {
-      data: dehydrate(data, cleaned, path, isPathWhitelisted),
-      cleaned,
+      data: cleanedData,
+      cleaned: cleanedPaths,
+      unserializable: unserializablePaths,
     };
   } else {
     return null;

@@ -126,28 +126,32 @@ function ProfilerContextController({children}: Props) {
   const [rootID, setRootID] = useState<number | null>(null);
 
   if (prevProfilingData !== profilingData) {
-    setPrevProfilingData(profilingData);
+    batchedUpdates(() => {
+      setPrevProfilingData(profilingData);
 
-    const dataForRoots =
-      profilingData !== null ? profilingData.dataForRoots : null;
-    if (dataForRoots != null) {
-      const firstRootID = dataForRoots.keys().next().value || null;
+      const dataForRoots =
+        profilingData !== null ? profilingData.dataForRoots : null;
+      if (dataForRoots != null) {
+        const firstRootID = dataForRoots.keys().next().value || null;
 
-      if (rootID === null || !dataForRoots.has(rootID)) {
-        let selectedElementRootID = null;
-        if (selectedElementID !== null) {
-          selectedElementRootID = store.getRootIDForElement(selectedElementID);
-        }
-        if (
-          selectedElementRootID !== null &&
-          dataForRoots.has(selectedElementRootID)
-        ) {
-          setRootID(selectedElementRootID);
-        } else {
-          setRootID(firstRootID);
+        if (rootID === null || !dataForRoots.has(rootID)) {
+          let selectedElementRootID = null;
+          if (selectedElementID !== null) {
+            selectedElementRootID = store.getRootIDForElement(
+              selectedElementID,
+            );
+          }
+          if (
+            selectedElementRootID !== null &&
+            dataForRoots.has(selectedElementRootID)
+          ) {
+            setRootID(selectedElementRootID);
+          } else {
+            setRootID(firstRootID);
+          }
         }
       }
-    }
+    });
   }
 
   const startProfiling = useCallback(

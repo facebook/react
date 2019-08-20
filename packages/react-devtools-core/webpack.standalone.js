@@ -40,6 +40,12 @@ module.exports = {
       scheduler: resolve(builtModulesDir, 'scheduler'),
     },
   },
+  node: {
+    // Don't replace __dirname!
+    // This would break the standalone DevTools ability to load the backend.
+    // see https://github.com/facebook/react-devtools/issues/1269
+    __dirname: false,
+  },
   plugins: [
     new DefinePlugin({
       __DEV__: false,

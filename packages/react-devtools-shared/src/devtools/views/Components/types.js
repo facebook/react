@@ -89,4 +89,5 @@ export type DehydratedData = {|
     | Dehydrated
     | Array<Dehydrated>
     | {[key: string]: string | Dehydrated},
+  unserializable: Array<Array<string | number>>,
 |};

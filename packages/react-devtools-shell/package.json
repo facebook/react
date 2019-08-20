@@ -8,6 +8,7 @@
     "start": "cross-env NODE_ENV=development cross-env TARGET=local webpack-dev-server --open"
   },
   "dependencies": {
+    "immutable": "^4.0.0-rc.12",
     "react-native-web": "^0.11.5"
   },
   "devDependencies": {

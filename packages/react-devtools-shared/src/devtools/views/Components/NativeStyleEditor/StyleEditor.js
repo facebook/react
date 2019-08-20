@@ -177,7 +177,7 @@ function Row({
   const validateAndSetLocalValue = newValue => {
     let isValid = false;
     try {
-      JSON.parse(newValue);
+      JSON.parse(sanitizeForParse(value));
       isValid = true;
     } catch (error) {}
 
@@ -197,7 +197,7 @@ function Row({
 
   const submitValueChange = () => {
     if (isValueValid) {
-      const parsedLocalValue = JSON.parse(localValue);
+      const parsedLocalValue = JSON.parse(sanitizeForParse(localValue));
       if (value !== parsedLocalValue) {
         changeValue(attribute, parsedLocalValue);
       }
@@ -280,4 +280,17 @@ function Field({
       value={value}
     />
   );
+}
+
+// We use JSON.parse to parse string values
+// e.g. 'foo' is not valid JSON but it is a valid string
+// so this method replaces e.g. 'foo' with "foo"
+function sanitizeForParse(value: any) {
+  if (typeof value === 'string') {
+    if (value.charAt(0) === "'" && value.charAt(value.length - 1) === "'") {
+      return '"' + value.substr(1, value.length - 2) + '"';
+    }
+  }
+
+  return value;
 }

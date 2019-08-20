@@ -14,7 +14,8 @@ import {
   getAppendComponentStack,
 } from 'react-devtools-shared/src/utils';
 import {Server} from 'ws';
-import {existsSync, readFileSync} from 'fs';
+import {join} from 'path';
+import {readFileSync} from 'fs';
 import {installHook} from 'react-devtools-shared/src/hook';
 import DevTools from 'react-devtools-shared/src/devtools/views/DevTools';
 import {doesFilePathExist, launchEditor} from './editor';
@@ -259,14 +260,8 @@ function startServer(port?: number = 8097) {
   });
 
   httpServer.on('request', (request, response) => {
-    // NPM installs should read from node_modules,
-    // But local dev mode needs to use a relative path.
-    const basePath = existsSync('./node_modules/react-devtools-core')
-      ? 'node_modules/react-devtools-core'
-      : '../react-devtools-core';
-
     // Serve a file that immediately sets up the connection.
-    const backendFile = readFileSync(`${basePath}/dist/backend.js`);
+    const backendFile = readFileSync(join(__dirname, 'backend.js'));
 
     // The renderer interface doesn't read saved component filters directly,
     // because they are generally stored in localStorage within the context of the extension.

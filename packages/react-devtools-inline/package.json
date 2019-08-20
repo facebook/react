@@ -1,12 +1,13 @@
 {
   "name": "react-devtools-inline",
-  "version": "4.0.0-alpha.9",
+  "version": "4.0.5",
   "description": "Embed react-devtools within a website",
   "license": "MIT",
   "main": "./dist/backend.js",
   "repository": {
-    "url": "https://github.com/bvaughn/react-devtools-experimental.git",
-    "type": "git"
+    "type": "git",
+    "url": "https://github.com/facebook/react.git",
+    "directory": "packages/react-devtools-inline"
   },
   "files": [
     "dist",

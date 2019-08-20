@@ -4,7 +4,7 @@ import React, {useEffect, useRef, useState} from 'react';
 import type {Element} from 'react';
 import EditableValue from './EditableValue';
 import ExpandCollapseToggle from './ExpandCollapseToggle';
-import {getMetaValueLabel} from '../utils';
+import {alphaSortEntries, getMetaValueLabel} from '../utils';
 import {meta} from '../../../hydration';
 import styles from './KeyValue.css';
 
@@ -13,9 +13,11 @@ import type {InspectPath} from './SelectedElement';
 type OverrideValueFn = (path: Array<string | number>, value: any) => void;
 
 type KeyValueProps = {|
+  alphaSort: boolean,
   depth: number,
   hidden?: boolean,
   inspectPath?: InspectPath,
+  isReadOnly?: boolean,
   name: string,
   overrideValueFn?: ?OverrideValueFn,
   path: Array<any>,
@@ -23,8 +25,10 @@ type KeyValueProps = {|
 |};
 
 export default function KeyValue({
+  alphaSort,
   depth,
   inspectPath,
+  isReadOnly,
   hidden,
   name,
   overrideValueFn,
@@ -81,17 +85,18 @@ export default function KeyValue({
       displayValue = 'undefined';
     }
 
-    const nameClassName =
-      typeof overrideValueFn === 'function' ? styles.EditableName : styles.Name;
+    const isEditable = typeof overrideValueFn === 'function' && !isReadOnly;
 
     children = (
       <div key="root" className={styles.Item} hidden={hidden} style={style}>
         <div className={styles.ExpandCollapseToggleSpacer} />
-        <span className={nameClassName}>{name}</span>
-        {typeof overrideValueFn === 'function' ? (
+        <span className={isEditable ? styles.EditableName : styles.Name}>
+          {name}
+        </span>
+        {isEditable ? (
           <EditableValue
             dataType={dataType}
-            overrideValueFn={overrideValueFn}
+            overrideValueFn={((overrideValueFn: any): OverrideValueFn)}
             path={path}
             value={value}
           />
@@ -100,7 +105,10 @@ export default function KeyValue({
         )}
       </div>
     );
-  } else if (value.hasOwnProperty(meta.type)) {
+  } else if (
+    value.hasOwnProperty(meta.type) &&
+    !value.hasOwnProperty(meta.unserializable)
+  ) {
     children = (
       <div key="root" className={styles.Item} hidden={hidden} style={style}>
         {isInspectable ? (
@@ -123,8 +131,10 @@ export default function KeyValue({
       children = value.map((innerValue, index) => (
         <KeyValue
           key={index}
+          alphaSort={alphaSort}
           depth={depth + 1}
           inspectPath={inspectPath}
+          isReadOnly={isReadOnly}
           hidden={hidden || !isOpen}
           name={index}
           overrideValueFn={overrideValueFn}
@@ -148,26 +158,41 @@ export default function KeyValue({
             onClick={hasChildren ? toggleIsOpen : undefined}>
             {name}
           </span>
-          <span>Array</span>
+          <span>
+            Array{' '}
+            {hasChildren ? '' : <span className={styles.Empty}>(empty)</span>}
+          </span>
         </div>,
       );
     } else {
-      const hasChildren = Object.entries(value).length > 0;
+      // TRICKY
+      // It's important to use Object.entries() rather than Object.keys()
+      // because of the hidden meta Symbols used for hydration and unserializable values.
+      const entries = Object.entries(value);
+      if (alphaSort) {
+        entries.sort(alphaSortEntries);
+      }
 
-      children = Object.entries(value).map<Element<any>>(
-        ([innerName, innerValue]) => (
-          <KeyValue
-            key={innerName}
-            depth={depth + 1}
-            inspectPath={inspectPath}
-            hidden={hidden || !isOpen}
-            name={innerName}
-            overrideValueFn={overrideValueFn}
-            path={path.concat(innerName)}
-            value={innerValue}
-          />
-        ),
-      );
+      const hasChildren = entries.length > 0;
+      const displayName = value.hasOwnProperty(meta.unserializable)
+        ? getMetaValueLabel(value)
+        : 'Object';
+
+      let areChildrenReadOnly = isReadOnly || !!value[meta.readonly];
+      children = entries.map<Element<any>>(([key, keyValue]) => (
+        <KeyValue
+          key={key}
+          alphaSort={alphaSort}
+          depth={depth + 1}
+          inspectPath={inspectPath}
+          isReadOnly={areChildrenReadOnly}
+          hidden={hidden || !isOpen}
+          name={key}
+          overrideValueFn={overrideValueFn}
+          path={path.concat(key)}
+          value={keyValue}
+        />
+      ));
       children.unshift(
         <div
           key={`${depth}-root`}
@@ -184,7 +209,10 @@ export default function KeyValue({
             onClick={hasChildren ? toggleIsOpen : undefined}>
             {name}
           </span>
-          <span>Object</span>
+          <span>
+            {`${displayName || ''} `}
+            {hasChildren ? '' : <span className={styles.Empty}>(empty)</span>}
+          </span>
         </div>,
       );
     }

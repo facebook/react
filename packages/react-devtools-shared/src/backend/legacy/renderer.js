@@ -882,10 +882,10 @@ export function attach(
     throw new Error('setInHook not supported by this renderer');
   };
   const startProfiling = () => {
-    throw new Error('startProfiling not supported by this renderer');
+    // Do not throw, since this would break a multi-root scenario where v15 and v16 were both present.
   };
   const stopProfiling = () => {
-    throw new Error('stopProfiling not supported by this renderer');
+    // Do not throw, since this would break a multi-root scenario where v15 and v16 were both present.
   };
 
   function getBestMatchForTrackedPath(): PathMatch | null {

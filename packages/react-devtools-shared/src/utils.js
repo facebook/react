@@ -266,13 +266,17 @@ export function shallowDiffers(prev: Object, next: Object): boolean {
 
 export function getInObject(object: Object, path: Array<string | number>): any {
   return path.reduce((reduced: Object, attr: string | number): any => {
-    if (typeof reduced === 'object' && reduced !== null) {
-      return reduced[attr];
-    } else if (Array.isArray(reduced)) {
-      return reduced[attr];
-    } else {
-      return null;
+    if (reduced) {
+      if (hasOwnProperty.call(reduced, attr)) {
+        return reduced[attr];
+      }
+      if (typeof reduced[Symbol.iterator] === 'function') {
+        // Convert iterable to array and return array[index]
+        return [...reduced][attr];
+      }
     }
+
+    return null;
   }, object);
 }
 

@@ -23,7 +23,11 @@ describe('InspectedElementContext', () => {
     dehydratedData: DehydratedData | null,
   ): Object | null {
     if (dehydratedData !== null) {
-      return hydrate(dehydratedData.data, dehydratedData.cleaned);
+      return hydrate(
+        dehydratedData.data,
+        dehydratedData.cleaned,
+        dehydratedData.unserializable,
+      );
     } else {
       return null;
     }
@@ -132,22 +136,41 @@ describe('InspectedElementContext', () => {
   });
 
   it('should support complex data types', async done => {
+    const Immutable = require('immutable');
+
     const Example = () => null;
 
     const div = document.createElement('div');
-    const exmapleFunction = () => {};
-    const typedArray = new Uint8Array(3);
+    const exampleFunction = () => {};
+    const setShallow = new Set(['abc', 123]);
+    const mapShallow = new Map([['name', 'Brian'], ['food', 'sushi']]);
+    const setOfSets = new Set([new Set(['a', 'b', 'c']), new Set([1, 2, 3])]);
+    const mapOfMaps = new Map([['first', mapShallow], ['second', mapShallow]]);
+    const typedArray = Int8Array.from([100, -100, 0]);
+    const immutableMap = Immutable.fromJS({
+      a: [{hello: 'there'}, 'fixed', true],
+      b: 123,
+      c: {
+        '1': 'xyz',
+        xyz: 1,
+      },
+    });
 
     act(() =>
       ReactDOM.render(
         <Example
-          html_element={div}
-          fn={exmapleFunction}
-          symbol={Symbol('symbol')}
-          react_element={<span />}
           array_buffer={typedArray.buffer}
-          typed_array={typedArray}
           date={new Date()}
+          fn={exampleFunction}
+          html_element={div}
+          immutable={immutableMap}
+          map={mapShallow}
+          map_of_maps={mapOfMaps}
+          react_element={<span />}
+          set={setShallow}
+          set_of_sets={setOfSets}
+          symbol={Symbol('symbol')}
+          typed_array={typedArray}
         />,
         document.createElement('div'),
       ),
@@ -159,36 +182,76 @@ describe('InspectedElementContext', () => {
     expect(inspectedElement).toMatchSnapshot('1: Initial inspection');
 
     const {
-      html_element,
-      fn,
-      symbol,
-      react_element,
       array_buffer,
-      typed_array,
       date,
+      fn,
+      html_element,
+      immutable,
+      map,
+      map_of_maps,
+      react_element,
+      set,
+      set_of_sets,
+      symbol,
+      typed_array,
     } = inspectedElement.value.props;
-    expect(html_element[meta.inspectable]).toBe(false);
-    expect(html_element[meta.name]).toBe('DIV');
-    expect(html_element[meta.type]).toBe('html_element');
-    expect(fn[meta.inspectable]).toBe(false);
-    expect(fn[meta.name]).toBe('exmapleFunction');
-    expect(fn[meta.type]).toBe('function');
-    expect(symbol[meta.inspectable]).toBe(false);
-    expect(symbol[meta.name]).toBe('Symbol(symbol)');
-    expect(symbol[meta.type]).toBe('symbol');
-    expect(react_element[meta.inspectable]).toBe(false);
-    expect(react_element[meta.name]).toBe('span');
-    expect(react_element[meta.type]).toBe('react_element');
+
     expect(array_buffer[meta.size]).toBe(3);
     expect(array_buffer[meta.inspectable]).toBe(false);
     expect(array_buffer[meta.name]).toBe('ArrayBuffer');
     expect(array_buffer[meta.type]).toBe('array_buffer');
-    expect(typed_array[meta.size]).toBe(3);
-    expect(typed_array[meta.inspectable]).toBe(false);
-    expect(typed_array[meta.name]).toBe('Uint8Array');
-    expect(typed_array[meta.type]).toBe('typed_array');
+
     expect(date[meta.inspectable]).toBe(false);
     expect(date[meta.type]).toBe('date');
+
+    expect(fn[meta.inspectable]).toBe(false);
+    expect(fn[meta.name]).toBe('exampleFunction');
+    expect(fn[meta.type]).toBe('function');
+
+    expect(html_element[meta.inspectable]).toBe(false);
+    expect(html_element[meta.name]).toBe('DIV');
+    expect(html_element[meta.type]).toBe('html_element');
+
+    expect(immutable[meta.inspectable]).toBeUndefined(); // Complex type
+    expect(immutable[meta.name]).toBe('Map');
+    expect(immutable[meta.type]).toBe('iterator');
+
+    expect(map[meta.inspectable]).toBeUndefined(); // Complex type
+    expect(map[meta.name]).toBe('Map');
+    expect(map[meta.type]).toBe('iterator');
+    expect(map[0][meta.type]).toBe('array');
+
+    expect(map_of_maps[meta.inspectable]).toBeUndefined(); // Complex type
+    expect(map_of_maps[meta.name]).toBe('Map');
+    expect(map_of_maps[meta.type]).toBe('iterator');
+    expect(map_of_maps[0][meta.type]).toBe('array');
+
+    expect(react_element[meta.inspectable]).toBe(false);
+    expect(react_element[meta.name]).toBe('span');
+    expect(react_element[meta.type]).toBe('react_element');
+
+    expect(set[meta.inspectable]).toBeUndefined(); // Complex type
+    expect(set[meta.name]).toBe('Set');
+    expect(set[meta.type]).toBe('iterator');
+    expect(set[0]).toBe('abc');
+    expect(set[1]).toBe(123);
+
+    expect(set_of_sets[meta.inspectable]).toBeUndefined(); // Complex type
+    expect(set_of_sets[meta.name]).toBe('Set');
+    expect(set_of_sets[meta.type]).toBe('iterator');
+    expect(set_of_sets['0'][meta.inspectable]).toBe(true);
+
+    expect(symbol[meta.inspectable]).toBe(false);
+    expect(symbol[meta.name]).toBe('Symbol(symbol)');
+    expect(symbol[meta.type]).toBe('symbol');
+
+    expect(typed_array[meta.inspectable]).toBeUndefined(); // Complex type
+    expect(typed_array[meta.size]).toBe(3);
+    expect(typed_array[meta.name]).toBe('Int8Array');
+    expect(typed_array[meta.type]).toBe('typed_array');
+    expect(typed_array[0]).toBe(100);
+    expect(typed_array[1]).toBe(-100);
+    expect(typed_array[2]).toBe(0);
 
     done();
   });

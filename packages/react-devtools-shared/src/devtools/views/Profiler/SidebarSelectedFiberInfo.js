@@ -88,7 +88,7 @@ export default function SidebarSelectedFiberInfo(_: Props) {
 }
 
 type WhatChangedProps = {|
-  commitIndex: number,
+  commitIndex: number | null,
   fiberID: number,
   profilerStore: ProfilerStore,
   rootID: number,
@@ -100,6 +100,14 @@ function WhatChanged({
   profilerStore,
   rootID,
 }: WhatChangedProps) {
+  // TRICKY
+  // Handle edge case where no commit is selected because of a min-duration filter update.
+  // If the commit index is null, suspending for data below would throw an error.
+  // TODO (ProfilerContext) This check should not be necessary.
+  if (commitIndex === null) {
+    return null;
+  }
+
   const {changeDescriptions} = profilerStore.getCommitData(
     ((rootID: any): number),
     commitIndex,

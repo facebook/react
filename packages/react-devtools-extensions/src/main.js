@@ -120,6 +120,10 @@ function createPanelIfReactLoaded() {
           localStorageRemoveItem(LOCAL_STORAGE_SUPPORTS_PROFILING_KEY);
         }
 
+        if (store !== null) {
+          profilingData = store.profilerStore.profilingData;
+        }
+
         store = new Store(bridge, {
           isProfiling,
           supportsReloadAndProfile: getBrowserName() === 'Chrome',
@@ -280,21 +284,6 @@ function createPanelIfReactLoaded() {
       );
 
       chrome.devtools.network.onNavigated.removeListener(checkPageForReact);
-
-      // Shutdown bridge before a new page is loaded.
-      chrome.webNavigation.onBeforeNavigate.addListener(
-        function onBeforeNavigate(details) {
-          // Ignore navigation events from other tabs (or from within frames).
-          if (details.tabId !== tabId || details.frameId !== 0) {
-            return;
-          }
-
-          // `bridge.shutdown()` will remove all listeners we added, so we don't have to.
-          bridge.shutdown();
-
-          profilingData = store.profilerStore.profilingData;
-        },
-      );
 
       // Re-initialize DevTools panel when a new page is loaded.
       chrome.devtools.network.onNavigated.addListener(function onNavigated() {

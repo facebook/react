@@ -126,13 +126,38 @@ Object {
   "context": {},
   "hooks": null,
   "props": {
-    "html_element": {},
-    "fn": {},
-    "symbol": {},
-    "react_element": {},
     "array_buffer": {},
-    "typed_array": {},
-    "date": {}
+    "date": {},
+    "fn": {},
+    "html_element": {},
+    "immutable": {
+      "0": {},
+      "1": {},
+      "2": {}
+    },
+    "map": {
+      "0": {},
+      "1": {}
+    },
+    "map_of_maps": {
+      "0": {},
+      "1": {}
+    },
+    "react_element": {},
+    "set": {
+      "0": "abc",
+      "1": 123
+    },
+    "set_of_sets": {
+      "0": {},
+      "1": {}
+    },
+    "symbol": {},
+    "typed_array": {
+      "0": 100,
+      "1": -100,
+      "2": 0
+    }
   },
   "state": null
 },

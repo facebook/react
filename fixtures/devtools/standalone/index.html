@@ -9,6 +9,7 @@
 
     <script src="https://unpkg.com/react@16/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/immutable@4.0.0-rc.12/dist/immutable.js"></script>
 
     <!-- Don't use this in production: -->
     <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
@@ -255,6 +256,33 @@
         );
       }
 
+      const set = new Set(['abc', 123]);
+      const map = new Map([['name', 'Brian'], ['food', 'sushi']]);
+      const setOfSets = new Set([new Set(['a', 'b', 'c']), new Set([1, 2, 3])]);
+      const mapOfMaps = new Map([['first', map], ['second', map]]);
+      const typedArray = Int8Array.from([100, -100, 0]);
+      const immutable = Immutable.fromJS({
+        a: [{ hello: 'there' }, 'fixed', true],
+        b: 123,
+        c: {
+          '1': 'xyz',
+          xyz: 1,
+        },
+      });
+
+      function UnserializableProps() {
+        return (
+          <ChildComponent
+            map={map}
+            set={set}
+            mapOfMaps={mapOfMaps}
+            setOfSets={setOfSets}
+            typedArray={typedArray}
+            immutable={immutable}
+          />
+        );
+      }
+
       function ChildComponent(props: any) {
         return null;
       }
@@ -264,6 +292,7 @@
           <Fragment>
             <SimpleValues />
             <ObjectProps />
+            <UnserializableProps />
             <CustomObject />
           </Fragment>
         );

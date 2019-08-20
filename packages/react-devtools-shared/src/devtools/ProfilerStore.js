@@ -62,6 +62,9 @@ export default class ProfilerStore extends EventEmitter<{|
   // When profiling is in progress, operations are stored so that we can later reconstruct past commit trees.
   _isProfiling: boolean = false;
 
+  // Tracks whether a specific renderer logged any profiling data during the most recent session.
+  _rendererIDsThatReportedProfilingData: Set<number> = new Set();
+
   // After profiling, data is requested from each attached renderer using this queue.
   // So long as this queue is not empty, the store is retrieving and processing profiling data from the backend.
   _rendererQueue: Set<number> = new Set();
@@ -233,6 +236,8 @@ export default class ProfilerStore extends EventEmitter<{|
       if (!this._initialSnapshotsByRootID.has(rootID)) {
         this._initialSnapshotsByRootID.set(rootID, new Map());
       }
+
+      this._rendererIDsThatReportedProfilingData.add(rendererID);
     }
   };
 
@@ -280,6 +285,7 @@ export default class ProfilerStore extends EventEmitter<{|
       this._initialRendererIDs.clear();
       this._initialSnapshotsByRootID.clear();
       this._inProgressOperationsByRootID.clear();
+      this._rendererIDsThatReportedProfilingData.clear();
       this._rendererQueue.clear();
 
       // Record all renderer IDs initially too (in case of unmount)
@@ -316,7 +322,10 @@ export default class ProfilerStore extends EventEmitter<{|
         this._dataBackends.splice(0);
         this._rendererQueue.clear();
 
-        this._initialRendererIDs.forEach(rendererID => {
+        // Only request data from renderers that actually logged it.
+        // This avoids unnecessary bridge requests and also avoids edge case mixed renderer bugs.
+        // (e.g. when v15 and v16 are both present)
+        this._rendererIDsThatReportedProfilingData.forEach(rendererID => {
           if (!this._rendererQueue.has(rendererID)) {
             this._rendererQueue.add(rendererID);
 

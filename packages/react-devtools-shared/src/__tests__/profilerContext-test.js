@@ -136,7 +136,7 @@ describe('ProfilerContext', () => {
     expect(context.didRecordCommits).toBe(false);
     expect(context.isProcessingData).toBe(false);
     expect(context.isProfiling).toBe(false);
-    expect(context.profilingData).not.toBe(null);
+    expect(context.profilingData).toBe(null);
 
     done();
   });

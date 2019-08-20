@@ -28,6 +28,7 @@ function Profiler(_: {||}) {
     didRecordCommits,
     isProcessingData,
     isProfiling,
+    selectedCommitIndex,
     selectedFiberID,
     selectedTabID,
     selectTab,
@@ -67,10 +68,18 @@ function Profiler(_: {||}) {
         break;
       case 'flame-chart':
       case 'ranked-chart':
-        if (selectedFiberID !== null) {
-          sidebar = <SidebarSelectedFiberInfo />;
-        } else {
-          sidebar = <SidebarCommitInfo />;
+        // TRICKY
+        // Handle edge case where no commit is selected because of a min-duration filter update.
+        // In that case, the selected commit index would be null.
+        // We could still show a sidebar for the previously selected fiber,
+        // but it would be an odd user experience.
+        // TODO (ProfilerContext) This check should not be necessary.
+        if (selectedCommitIndex !== null) {
+          if (selectedFiberID !== null) {
+            sidebar = <SidebarSelectedFiberInfo />;
+          } else {
+            sidebar = <SidebarCommitInfo />;
+          }
         }
         break;
       default:
