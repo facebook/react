@@ -455,14 +455,6 @@ const bundles = [
     global: 'ESLintPluginReactHooks',
     externals: [],
   },
-  /******** JSX to React.JSX Babel Plugin ********/
-  {
-    bundleTypes: [NODE_DEV, NODE_PROD],
-    moduleType: ISOMORPHIC,
-    entry: 'react-jsx-babel-plugin',
-    global: 'TransformJSXToReactBabelPlugin',
-    externals: [],
-  },
 
   /******* React Fresh *******/
   {
