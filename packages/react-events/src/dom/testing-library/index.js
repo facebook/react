@@ -72,7 +72,7 @@ const createEventTarget = node => ({
   pointerenter(payload) {
     domEventSequences.pointerenter(node, payload);
   },
-  // node dispatches exit & out events
+  // node dispatches leave & out events
   pointerexit(payload) {
     domEventSequences.pointerexit(node, payload);
   },

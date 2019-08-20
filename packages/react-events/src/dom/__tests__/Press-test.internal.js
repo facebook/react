@@ -41,7 +41,6 @@ function removePressMoveStrings(eventString) {
 
 const forcePointerEvents = true;
 const environmentTable = [[forcePointerEvents], [!forcePointerEvents]];
-
 const pointerTypesTable = [['mouse'], ['touch']];
 
 describe.each(environmentTable)('Press responder', hasPointerEvents => {
@@ -503,14 +502,13 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
     });
 
     const rectMock = {width: 100, height: 100, x: 50, y: 50};
-    const pressRectOffset = 20;
     const coordinatesInside = {
-      x: rectMock.x - pressRectOffset,
-      y: rectMock.y - pressRectOffset,
+      x: rectMock.x,
+      y: rectMock.y,
     };
     const coordinatesOutside = {
-      x: rectMock.x - pressRectOffset - 1,
-      y: rectMock.y - pressRectOffset - 1,
+      x: rectMock.x - 1,
+      y: rectMock.y - 1,
     };
 
     describe('within bounds of hit rect', () => {
@@ -556,90 +554,6 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
         expect(events.filter(removePressMoveStrings)).toEqual([
           'onPressStart',
           'onPressChange',
-          'onPressEnd',
-          'onPressChange',
-          'onPressStart',
-          'onPressChange',
-          'onPressEnd',
-          'onPressChange',
-          'onPress',
-        ]);
-      });
-
-      it('press retention offset can be configured', () => {
-        let localEvents = [];
-        const localRef = React.createRef();
-        const createEventHandler = msg => () => {
-          localEvents.push(msg);
-        };
-        const pressRetentionOffset = {top: 40, bottom: 40, left: 40, right: 40};
-
-        const Component = () => {
-          const listener = usePressResponder({
-            onPress: createEventHandler('onPress'),
-            onPressChange: createEventHandler('onPressChange'),
-            onPressMove: createEventHandler('onPressMove'),
-            onPressStart: createEventHandler('onPressStart'),
-            onPressEnd: createEventHandler('onPressEnd'),
-            pressRetentionOffset,
-          });
-          return <div ref={localRef} listeners={listener} />;
-        };
-        ReactDOM.render(<Component />, container);
-
-        const target = createEventTarget(localRef.current);
-        target.setBoundingClientRect(rectMock);
-        target.pointerdown({pointerType});
-        target.pointermove({
-          pointerType,
-          x: rectMock.x,
-          y: rectMock.y,
-        });
-        target.pointerup({pointerType, ...coordinatesInside});
-        expect(localEvents).toEqual([
-          'onPressStart',
-          'onPressChange',
-          'onPressMove',
-          'onPressEnd',
-          'onPressChange',
-          'onPress',
-        ]);
-      });
-
-      it('responder region accounts for decrease in element dimensions', () => {
-        const target = createEventTarget(ref.current);
-        target.setBoundingClientRect(rectMock);
-        target.pointerdown({pointerType});
-        // emulate smaller dimensions change on activation
-        target.setBoundingClientRect({width: 80, height: 80, y: 60, x: 60});
-        const coordinates = {x: rectMock.x, y: rectMock.y};
-        // move to an area within the pre-activation region
-        target.pointermove({pointerType, ...coordinates});
-        target.pointerup({pointerType, ...coordinates});
-        expect(events).toEqual([
-          'onPressStart',
-          'onPressChange',
-          'onPressMove',
-          'onPressEnd',
-          'onPressChange',
-          'onPress',
-        ]);
-      });
-
-      it('responder region accounts for increase in element dimensions', () => {
-        const target = createEventTarget(ref.current);
-        target.setBoundingClientRect(rectMock);
-        target.pointerdown({pointerType});
-        // emulate larger dimensions change on activation
-        target.setBoundingClientRect({width: 200, height: 200, y: 0, x: 0});
-        const coordinates = {x: rectMock.x - 50, y: rectMock.y - 50};
-        // move to an area within the post-activation region
-        target.pointermove({pointerType, ...coordinates});
-        target.pointerup({pointerType, ...coordinates});
-        expect(events).toEqual([
-          'onPressStart',
-          'onPressChange',
-          'onPressMove',
           'onPressEnd',
           'onPressChange',
           'onPress',
@@ -698,10 +612,8 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
         'onPressStart',
         'onPressChange',
         'onPressMove',
-        'onPressEnd',
-        'onPressChange',
-        'onPressStart',
-        'onPressChange',
+        'onPressMove',
+        'onPressMove',
         'onPressEnd',
         'onPressChange',
         'onPress',
