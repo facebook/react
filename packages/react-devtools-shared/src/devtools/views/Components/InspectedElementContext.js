@@ -135,7 +135,7 @@ function InspectedElementContextController({children}: Props) {
                 const value = hydrateHelper(data.value, data.path);
                 const inspectedElement = {...currentlyInspectedElement};
 
-                fillInPath(inspectedElement, data.path, value);
+                fillInPath(inspectedElement, data.value, data.path, value);
 
                 resource.write(element, inspectedElement);
 

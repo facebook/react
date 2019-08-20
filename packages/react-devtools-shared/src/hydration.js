@@ -42,7 +42,7 @@ export type Dehydrated = {|
 // These objects can't be serialized without losing type information,
 // so a "Unserializable" type wrapper is used (with meta-data keys) to send nested values-
 // while preserving the original type and name.
-type Unserializable = {
+export type Unserializable = {
   name: string | null,
   readonly?: boolean,
   size?: number,
@@ -196,6 +196,8 @@ export function dehydrate(
   | string
   | Dehydrated
   | Unserializable
+  | Array<Dehydrated>
+  | Array<Unserializable>
   | {[key: string]: string | Dehydrated | Unserializable} {
   const type = getDataType(data);
 
@@ -380,7 +382,7 @@ export function fillInPath(
 }
 
 export function hydrate(
-  object: Object,
+  object: any,
   cleaned: Array<Array<string | number>>,
   unserializable: Array<Array<string | number>>,
 ): Object {

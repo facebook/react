@@ -1,6 +1,9 @@
 // @flow
 
-import type {Dehydrated} from 'react-devtools-shared/src/hydration';
+import type {
+  Dehydrated,
+  Unserializable,
+} from 'react-devtools-shared/src/hydration';
 import type {ElementType} from 'react-devtools-shared/src/types';
 
 // Each element on the frontend corresponds to a Fiber on the backend.
@@ -87,7 +90,9 @@ export type DehydratedData = {|
   data:
     | string
     | Dehydrated
+    | Unserializable
     | Array<Dehydrated>
-    | {[key: string]: string | Dehydrated},
+    | Array<Unserializable>
+    | {[key: string]: string | Dehydrated | Unserializable},
   unserializable: Array<Array<string | number>>,
 |};
