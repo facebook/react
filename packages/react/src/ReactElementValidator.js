@@ -336,6 +336,7 @@ export function jsxWithValidation(
   // We don't want exception behavior to differ between dev and prod.
   // (Rendering will throw with a helpful message and as soon as the type is
   // fixed, the key warnings will appear.)
+
   if (validType) {
     const children = props.children;
     if (children !== undefined) {
@@ -345,7 +346,12 @@ export function jsxWithValidation(
             validateChildKeys(children[i], type);
           }
         } else {
-          validateChildKeys(children, type);
+          warning(
+            false,
+            'React.jsx: Static children should always be an array. ' +
+              'You are likely explicitly calling React.jsxs or React.jsxDEV. ' +
+              'Use the babel transform instead.',
+          );
         }
       } else {
         validateChildKeys(children, type);

@@ -227,7 +227,7 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
       // isStaticChildren, __source, and __self are only used in development
       args.push(
         key === undefined ? t.identifier('undefined') : key,
-        t.booleanLiteral(path.node.children.length !== 1),
+        t.booleanLiteral(path.node.children.length > 1),
         source === undefined ? t.identifier('undefined') : source,
         self === undefined ? t.identifier('undefined') : self,
       );
@@ -239,7 +239,7 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
     return (
       state.call ||
       t.callExpression(
-        path.node.children.length === 1 ? state.staticCallee : state.callee,
+        path.node.children.length > 1 ? state.staticCallee : state.callee,
         args,
       )
     );
@@ -363,7 +363,7 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
     if (file.opts.development) {
       args.push(
         t.identifier('undefined'),
-        t.booleanLiteral(path.node.children.length !== 1),
+        t.booleanLiteral(path.node.children.length > 1),
       );
     }
 
@@ -374,7 +374,7 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
     return (
       state.call ||
       t.callExpression(
-        path.node.children.length === 1 ? state.staticCallee : state.callee,
+        path.node.children.length > 1 ? state.staticCallee : state.callee,
         args,
       )
     );
