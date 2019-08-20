@@ -1638,6 +1638,7 @@ function commitRootImpl(root, renderPriorityLevel) {
           null,
           commitMutationEffects,
           null,
+          root,
           renderPriorityLevel,
         );
         if (hasCaughtError()) {
@@ -1648,7 +1649,7 @@ function commitRootImpl(root, renderPriorityLevel) {
         }
       } else {
         try {
-          commitMutationEffects(renderPriorityLevel);
+          commitMutationEffects(root, renderPriorityLevel);
         } catch (error) {
           invariant(nextEffect !== null, 'Should be working on an effect.');
           captureCommitPhaseError(nextEffect, error);
@@ -1837,7 +1838,7 @@ function commitBeforeMutationEffects() {
   }
 }
 
-function commitMutationEffects(renderPriorityLevel) {
+function commitMutationEffects(root: FiberRoot, renderPriorityLevel) {
   // TODO: Should probably move the bulk of this function to commitWork.
   while (nextEffect !== null) {
     setCurrentDebugFiberInDEV(nextEffect);
@@ -1888,7 +1889,7 @@ function commitMutationEffects(renderPriorityLevel) {
         break;
       }
       case Deletion: {
-        commitDeletion(nextEffect, renderPriorityLevel);
+        commitDeletion(root, nextEffect, renderPriorityLevel);
         break;
       }
     }

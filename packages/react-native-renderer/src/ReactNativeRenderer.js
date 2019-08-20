@@ -141,7 +141,7 @@ const ReactNativeRenderer: ReactNativeType = {
     if (!root) {
       // TODO (bvaughn): If we decide to keep the wrapper component,
       // We could create a wrapper for containerTag as well to reduce special casing.
-      root = createContainer(containerTag, LegacyRoot, false);
+      root = createContainer(containerTag, LegacyRoot, false, null);
       roots.set(containerTag, root);
     }
     updateContainer(element, root, null, callback);
