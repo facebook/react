@@ -235,6 +235,8 @@ if (
           port.postMessage(null);
           throw error;
         }
+      } else {
+        isMessageLoopRunning = false;
       }
       // Yielding to the browser will give it a chance to paint, so we can
       // reset this.

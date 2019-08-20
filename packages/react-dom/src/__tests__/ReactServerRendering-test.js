@@ -705,6 +705,70 @@ describe('ReactDOMServer', () => {
     }).toThrow('ReactDOMServer does not yet support lazy-loaded components.');
   });
 
+  it('throws when suspending on the server', () => {
+    function AsyncFoo() {
+      throw new Promise(() => {});
+    }
+
+    expect(() => {
+      ReactDOMServer.renderToString(<AsyncFoo />);
+    }).toThrow('ReactDOMServer does not yet support Suspense.');
+  });
+
+  it('does not get confused by throwing null', () => {
+    function Bad() {
+      // eslint-disable-next-line no-throw-literal
+      throw null;
+    }
+
+    let didError;
+    let error;
+    try {
+      ReactDOMServer.renderToString(<Bad />);
+    } catch (err) {
+      didError = true;
+      error = err;
+    }
+    expect(didError).toBe(true);
+    expect(error).toBe(null);
+  });
+
+  it('does not get confused by throwing undefined', () => {
+    function Bad() {
+      // eslint-disable-next-line no-throw-literal
+      throw undefined;
+    }
+
+    let didError;
+    let error;
+    try {
+      ReactDOMServer.renderToString(<Bad />);
+    } catch (err) {
+      didError = true;
+      error = err;
+    }
+    expect(didError).toBe(true);
+    expect(error).toBe(undefined);
+  });
+
+  it('does not get confused by throwing a primitive', () => {
+    function Bad() {
+      // eslint-disable-next-line no-throw-literal
+      throw 'foo';
+    }
+
+    let didError;
+    let error;
+    try {
+      ReactDOMServer.renderToString(<Bad />);
+    } catch (err) {
+      didError = true;
+      error = err;
+    }
+    expect(didError).toBe(true);
+    expect(error).toBe('foo');
+  });
+
   it('should throw (in dev) when children are mutated during render', () => {
     function Wrapper(props) {
       props.children[1] = <p key={1} />; // Mutation is illegal

@@ -24,6 +24,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableSuspenseServerRenderer = true;
+    ReactFeatureFlags.enableSuspenseCallback = true;
 
     React = require('react');
     ReactDOM = require('react-dom');
@@ -90,6 +91,153 @@ describe('ReactDOMServerPartialHydration', () => {
 
     // We should now have hydrated with a ref on the existing span.
     expect(ref.current).toBe(span);
+  });
+
+  it('calls the hydration callbacks after hydration or deletion', async () => {
+    let suspend = false;
+    let resolve;
+    let promise = new Promise(resolvePromise => (resolve = resolvePromise));
+    function Child() {
+      if (suspend) {
+        throw promise;
+      } else {
+        return 'Hello';
+      }
+    }
+
+    let suspend2 = false;
+    let promise2 = new Promise(() => {});
+    function Child2() {
+      if (suspend2) {
+        throw promise2;
+      } else {
+        return 'World';
+      }
+    }
+
+    function App({value}) {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <Child />
+          </Suspense>
+          <Suspense fallback="Loading...">
+            <Child2 value={value} />
+          </Suspense>
+        </div>
+      );
+    }
+
+    // First we render the final HTML. With the streaming renderer
+    // this may have suspense points on the server but here we want
+    // to test the completed HTML. Don't suspend on the server.
+    suspend = false;
+    suspend2 = false;
+    let finalHTML = ReactDOMServer.renderToString(<App />);
+
+    let container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    let hydrated = [];
+    let deleted = [];
+
+    // On the client we don't have all data yet but we want to start
+    // hydrating anyway.
+    suspend = true;
+    suspend2 = true;
+    let root = ReactDOM.unstable_createRoot(container, {
+      hydrate: true,
+      hydrationOptions: {
+        onHydrated(node) {
+          hydrated.push(node);
+        },
+        onDeleted(node) {
+          deleted.push(node);
+        },
+      },
+    });
+    act(() => {
+      root.render(<App />);
+    });
+
+    expect(hydrated.length).toBe(0);
+    expect(deleted.length).toBe(0);
+
+    await act(async () => {
+      // Resolving the promise should continue hydration
+      suspend = false;
+      resolve();
+      await promise;
+    });
+
+    expect(hydrated.length).toBe(1);
+    expect(deleted.length).toBe(0);
+
+    // Performing an update should force it to delete the boundary
+    root.render(<App value={true} />);
+
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+
+    expect(hydrated.length).toBe(1);
+    expect(deleted.length).toBe(1);
+  });
+
+  it('calls the onDeleted hydration callback if the parent gets deleted', async () => {
+    let suspend = false;
+    let promise = new Promise(() => {});
+    function Child() {
+      if (suspend) {
+        throw promise;
+      } else {
+        return 'Hello';
+      }
+    }
+
+    function App({deleted}) {
+      if (deleted) {
+        return null;
+      }
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <Child />
+          </Suspense>
+        </div>
+      );
+    }
+
+    suspend = false;
+    let finalHTML = ReactDOMServer.renderToString(<App />);
+
+    let container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    let deleted = [];
+
+    // On the client we don't have all data yet but we want to start
+    // hydrating anyway.
+    suspend = true;
+    let root = ReactDOM.unstable_createRoot(container, {
+      hydrate: true,
+      hydrationOptions: {
+        onDeleted(node) {
+          deleted.push(node);
+        },
+      },
+    });
+    act(() => {
+      root.render(<App />);
+    });
+
+    expect(deleted.length).toBe(0);
+
+    act(() => {
+      root.render(<App deleted={true} />);
+    });
+
+    // The callback should have been invoked.
+    expect(deleted.length).toBe(1);
   });
 
   it('warns and replaces the boundary content in legacy mode', async () => {

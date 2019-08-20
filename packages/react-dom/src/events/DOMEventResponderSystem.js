@@ -25,12 +25,12 @@ import {
   batchedEventUpdates,
   discreteUpdates,
   flushDiscreteUpdatesIfNeeded,
+  executeUserEventHandler,
 } from 'legacy-events/ReactGenericBatching';
 import {enqueueStateRestore} from 'legacy-events/ReactControlledComponent';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import warning from 'shared/warning';
 import {enableFlareAPI} from 'shared/ReactFeatureFlags';
-import {invokeGuardedCallbackAndCatchFirstError} from 'shared/ReactErrorUtils';
 import invariant from 'shared/invariant';
 import {
   isFiberSuspenseAndTimedOut,
@@ -61,12 +61,6 @@ export function setListenToResponderEventTypes(
   listenToResponderEventTypesImpl = _listenToResponderEventTypesImpl;
 }
 
-type EventQueueItem = {|
-  listener: (val: any) => void,
-  value: any,
-|};
-type EventQueue = Array<EventQueueItem>;
-
 type ResponderTimeout = {|
   id: TimeoutID,
   timers: Map<number, ResponderTimer>,
@@ -84,15 +78,10 @@ const rootEventTypesToEventResponderInstances: Map<
   DOMTopLevelEventType | string,
   Set<ReactDOMEventResponderInstance>,
 > = new Map();
-const ownershipChangeListeners: Set<ReactDOMEventResponderInstance> = new Set();
-
-let globalOwner = null;
 
 let currentTimeStamp = 0;
 let currentTimers = new Map();
 let currentInstance: null | ReactDOMEventResponderInstance = null;
-let currentEventQueue: null | EventQueue = null;
-let currentEventQueuePriority: EventPriority = ContinuousEvent;
 let currentTimerIDCounter = 0;
 let currentDocument: null | Document = null;
 
@@ -104,12 +93,29 @@ const eventResponderContext: ReactDOMResponderContext = {
   ): void {
     validateResponderContext();
     validateEventValue(eventValue);
-    if (eventPriority < currentEventQueuePriority) {
-      currentEventQueuePriority = eventPriority;
+    switch (eventPriority) {
+      case DiscreteEvent: {
+        flushDiscreteUpdatesIfNeeded(currentTimeStamp);
+        discreteUpdates(() =>
+          executeUserEventHandler(eventListener, eventValue),
+        );
+        break;
+      }
+      case UserBlockingEvent: {
+        if (enableUserBlockingEvents) {
+          runWithPriority(UserBlockingPriority, () =>
+            executeUserEventHandler(eventListener, eventValue),
+          );
+        } else {
+          executeUserEventHandler(eventListener, eventValue);
+        }
+        break;
+      }
+      case ContinuousEvent: {
+        executeUserEventHandler(eventListener, eventValue);
+        break;
+      }
     }
-    ((currentEventQueue: any): EventQueue).push(
-      createEventQueueItem(eventValue, eventListener),
-    );
   },
   isTargetWithinResponder(target: Element | Document): boolean {
     validateResponderContext();
@@ -195,25 +201,6 @@ const eventResponderContext: ReactDOMResponderContext = {
         );
       }
     }
-  },
-  hasOwnership(): boolean {
-    validateResponderContext();
-    return globalOwner === currentInstance;
-  },
-  requestGlobalOwnership(): boolean {
-    validateResponderContext();
-    if (globalOwner !== null) {
-      return false;
-    }
-    globalOwner = currentInstance;
-    triggerOwnershipListeners();
-    return true;
-  },
-  releaseOwnership(): boolean {
-    validateResponderContext();
-    return releaseOwnershipForEventResponderInstance(
-      ((currentInstance: any): ReactDOMEventResponderInstance),
-    );
   },
   setTimeout(func: () => void, delay): number {
     validateResponderContext();
@@ -379,16 +366,6 @@ function collectFocusableElements(
   }
 }
 
-function createEventQueueItem(
-  value: any,
-  listener: (val: any) => void,
-): EventQueueItem {
-  return {
-    value,
-    listener,
-  };
-}
-
 function doesFiberHaveResponder(
   fiber: Fiber,
   responder: ReactDOMEventResponder,
@@ -407,17 +384,6 @@ function doesFiberHaveResponder(
 
 function getActiveDocument(): Document {
   return ((currentDocument: any): Document);
-}
-
-function releaseOwnershipForEventResponderInstance(
-  eventResponderInstance: ReactDOMEventResponderInstance,
-): boolean {
-  if (globalOwner === eventResponderInstance) {
-    globalOwner = null;
-    triggerOwnershipListeners();
-    return true;
-  }
-  return false;
 }
 
 function isFiberHostComponentFocusable(fiber: Fiber): boolean {
@@ -452,24 +418,22 @@ function processTimers(
   delay: number,
 ): void {
   const timersArr = Array.from(timers.values());
-  currentEventQueuePriority = ContinuousEvent;
   try {
-    for (let i = 0; i < timersArr.length; i++) {
-      const {instance, func, id, timeStamp} = timersArr[i];
-      currentInstance = instance;
-      currentEventQueue = [];
-      currentTimeStamp = timeStamp + delay;
-      try {
-        func();
-      } finally {
-        activeTimeouts.delete(id);
+    batchedEventUpdates(() => {
+      for (let i = 0; i < timersArr.length; i++) {
+        const {instance, func, id, timeStamp} = timersArr[i];
+        currentInstance = instance;
+        currentTimeStamp = timeStamp + delay;
+        try {
+          func();
+        } finally {
+          activeTimeouts.delete(id);
+        }
       }
-    }
-    processEventQueue();
+    });
   } finally {
     currentTimers = null;
     currentInstance = null;
-    currentEventQueue = null;
     currentTimeStamp = 0;
   }
 }
@@ -508,45 +472,6 @@ function createDOMResponderEvent(
   };
 }
 
-function processEvents(eventQueue: EventQueue): void {
-  for (let i = 0, length = eventQueue.length; i < length; i++) {
-    const {value, listener} = eventQueue[i];
-    const type = typeof value === 'object' && value !== null ? value.type : '';
-    invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, value);
-  }
-}
-
-function processEventQueue(): void {
-  const eventQueue = ((currentEventQueue: any): EventQueue);
-  if (eventQueue.length === 0) {
-    return;
-  }
-  switch (currentEventQueuePriority) {
-    case DiscreteEvent: {
-      flushDiscreteUpdatesIfNeeded(currentTimeStamp);
-      discreteUpdates(() => {
-        batchedEventUpdates(processEvents, eventQueue);
-      });
-      break;
-    }
-    case UserBlockingEvent: {
-      if (enableUserBlockingEvents) {
-        runWithPriority(
-          UserBlockingPriority,
-          batchedEventUpdates.bind(null, processEvents, eventQueue),
-        );
-      } else {
-        batchedEventUpdates(processEvents, eventQueue);
-      }
-      break;
-    }
-    case ContinuousEvent: {
-      batchedEventUpdates(processEvents, eventQueue);
-      break;
-    }
-  }
-}
-
 function responderEventTypesContainType(
   eventTypes: Array<string>,
   type: string,
@@ -569,12 +494,6 @@ function validateResponderTargetEventTypes(
     return responderEventTypesContainType(targetEventTypes, eventType);
   }
   return false;
-}
-
-function validateOwnership(
-  responderInstance: ReactDOMEventResponderInstance,
-): boolean {
-  return globalOwner === null || globalOwner === responderInstance;
 }
 
 function traverseAndHandleEventResponderInstances(
@@ -610,22 +529,19 @@ function traverseAndHandleEventResponderInstances(
         const responderInstances = Array.from(respondersMap.values());
         for (let i = 0, length = responderInstances.length; i < length; i++) {
           const responderInstance = responderInstances[i];
-
-          if (validateOwnership(responderInstance)) {
-            const {props, responder, state, target} = responderInstance;
-            if (
-              !visitedResponders.has(responder) &&
-              validateResponderTargetEventTypes(eventType, responder)
-            ) {
-              visitedResponders.add(responder);
-              const onEvent = responder.onEvent;
-              if (onEvent !== null) {
-                currentInstance = responderInstance;
-                responderEvent.responderTarget = ((target: any):
-                  | Element
-                  | Document);
-                onEvent(responderEvent, eventResponderContext, props, state);
-              }
+          const {props, responder, state, target} = responderInstance;
+          if (
+            !visitedResponders.has(responder) &&
+            validateResponderTargetEventTypes(eventType, responder)
+          ) {
+            visitedResponders.add(responder);
+            const onEvent = responder.onEvent;
+            if (onEvent !== null) {
+              currentInstance = responderInstance;
+              responderEvent.responderTarget = ((target: any):
+                | Element
+                | Document);
+              onEvent(responderEvent, eventResponderContext, props, state);
             }
           }
         }
@@ -642,9 +558,6 @@ function traverseAndHandleEventResponderInstances(
 
     for (let i = 0; i < responderInstances.length; i++) {
       const responderInstance = responderInstances[i];
-      if (!validateOwnership(responderInstance)) {
-        continue;
-      }
       const {props, responder, state, target} = responderInstance;
       const onRootEvent = responder.onRootEvent;
       if (onRootEvent !== null) {
@@ -656,51 +569,20 @@ function traverseAndHandleEventResponderInstances(
   }
 }
 
-function triggerOwnershipListeners(): void {
-  const listeningInstances = Array.from(ownershipChangeListeners);
-  const previousInstance = currentInstance;
-  const previousEventQueuePriority = currentEventQueuePriority;
-  const previousEventQueue = currentEventQueue;
-  try {
-    for (let i = 0; i < listeningInstances.length; i++) {
-      const instance = listeningInstances[i];
-      const {props, responder, state} = instance;
-      currentInstance = instance;
-      currentEventQueuePriority = ContinuousEvent;
-      currentEventQueue = [];
-      const onOwnershipChange = ((responder: any): ReactDOMEventResponder)
-        .onOwnershipChange;
-      if (onOwnershipChange !== null) {
-        onOwnershipChange(eventResponderContext, props, state);
-      }
-    }
-    processEventQueue();
-  } finally {
-    currentInstance = previousInstance;
-    currentEventQueue = previousEventQueue;
-    currentEventQueuePriority = previousEventQueuePriority;
-  }
-}
-
 export function mountEventResponder(
   responder: ReactDOMEventResponder,
   responderInstance: ReactDOMEventResponderInstance,
   props: Object,
   state: Object,
 ) {
-  if (responder.onOwnershipChange !== null) {
-    ownershipChangeListeners.add(responderInstance);
-  }
   const onMount = responder.onMount;
   if (onMount !== null) {
-    currentEventQueuePriority = ContinuousEvent;
     currentInstance = responderInstance;
-    currentEventQueue = [];
     try {
-      onMount(eventResponderContext, props, state);
-      processEventQueue();
+      batchedEventUpdates(() => {
+        onMount(eventResponderContext, props, state);
+      });
     } finally {
-      currentEventQueue = null;
       currentInstance = null;
       currentTimers = null;
     }
@@ -714,21 +596,15 @@ export function unmountEventResponder(
   const onUnmount = responder.onUnmount;
   if (onUnmount !== null) {
     let {props, state} = responderInstance;
-    currentEventQueue = [];
-    currentEventQueuePriority = ContinuousEvent;
     currentInstance = responderInstance;
     try {
-      onUnmount(eventResponderContext, props, state);
-      processEventQueue();
+      batchedEventUpdates(() => {
+        onUnmount(eventResponderContext, props, state);
+      });
     } finally {
-      currentEventQueue = null;
       currentInstance = null;
       currentTimers = null;
     }
-  }
-  releaseOwnershipForEventResponderInstance(responderInstance);
-  if (responder.onOwnershipChange !== null) {
-    ownershipChangeListeners.delete(responderInstance);
   }
   const rootEventTypesSet = responderInstance.rootEventTypes;
   if (rootEventTypesSet !== null) {
@@ -762,15 +638,11 @@ export function dispatchEventForResponderEventSystem(
   eventSystemFlags: EventSystemFlags,
 ): void {
   if (enableFlareAPI) {
-    const previousEventQueue = currentEventQueue;
     const previousInstance = currentInstance;
     const previousTimers = currentTimers;
     const previousTimeStamp = currentTimeStamp;
     const previousDocument = currentDocument;
-    const previousEventQueuePriority = currentEventQueuePriority;
     currentTimers = null;
-    currentEventQueue = [];
-    currentEventQueuePriority = ContinuousEvent;
     // nodeType 9 is DOCUMENT_NODE
     currentDocument =
       (nativeEventTarget: any).nodeType === 9
@@ -779,21 +651,20 @@ export function dispatchEventForResponderEventSystem(
     // We might want to control timeStamp another way here
     currentTimeStamp = (nativeEvent: any).timeStamp;
     try {
-      traverseAndHandleEventResponderInstances(
-        topLevelType,
-        targetFiber,
-        nativeEvent,
-        nativeEventTarget,
-        eventSystemFlags,
-      );
-      processEventQueue();
+      batchedEventUpdates(() => {
+        traverseAndHandleEventResponderInstances(
+          topLevelType,
+          targetFiber,
+          nativeEvent,
+          nativeEventTarget,
+          eventSystemFlags,
+        );
+      });
     } finally {
       currentTimers = previousTimers;
       currentInstance = previousInstance;
-      currentEventQueue = previousEventQueue;
       currentTimeStamp = previousTimeStamp;
       currentDocument = previousDocument;
-      currentEventQueuePriority = previousEventQueuePriority;
     }
   }
 }
