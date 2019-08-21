@@ -328,20 +328,31 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
 
   var expirationTime = startTime + timeout;
 
-  var newTask = {
-    id: ++taskIdCounter,
-    callback,
-    priorityLevel,
-    startTime,
-    expirationTime,
-    sortIndex: -1,
-  };
-
+  var newTask;
   if (enableProfiling) {
-    newTask.isQueued = false;
-    // if (typeof options === 'object' && options !== null) {
-    //   newTask.label = label;
-    // }
+    newTask = {
+      // __PROFILER__ only
+      isQueued: false,
+      // label: label
+
+      // !!! Keep these in sync with below branch !!!
+      id: ++taskIdCounter,
+      callback,
+      priorityLevel,
+      startTime,
+      expirationTime,
+      sortIndex: -1,
+    };
+  } else {
+    newTask = {
+      // !!! Keep these in sync with above branch !!!
+      id: ++taskIdCounter,
+      callback,
+      priorityLevel,
+      startTime,
+      expirationTime,
+      sortIndex: -1,
+    };
   }
 
   if (startTime > currentTime) {
