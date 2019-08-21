@@ -21,6 +21,8 @@ import DevTools from 'src/devtools/views/DevTools';
 const LOCAL_STORAGE_SUPPORTS_PROFILING_KEY =
   'React::DevTools::supportsProfiling';
 
+const isChrome = getBrowserName() === 'Chrome';
+
 let panelCreated = false;
 
 // The renderer interface can't read saved component filters directly,
@@ -123,7 +125,7 @@ function createPanelIfReactLoaded() {
 
         store = new Store(bridge, {
           isProfiling,
-          supportsReloadAndProfile: getBrowserName() === 'Chrome',
+          supportsReloadAndProfile: isChrome,
           supportsProfiling,
         });
         store.profilerStore.profilingData = profilingData;
@@ -226,47 +228,57 @@ function createPanelIfReactLoaded() {
       let currentPanel = null;
       let needsToSyncElementSelection = false;
 
-      chrome.devtools.panels.create('⚛ Components', '', 'panel.html', panel => {
-        panel.onShown.addListener(panel => {
-          if (needsToSyncElementSelection) {
-            needsToSyncElementSelection = false;
-            bridge.send('syncSelectionFromNativeElementsPanel');
-          }
+      chrome.devtools.panels.create(
+        isChrome ? '⚛ Components' : 'Components',
+        '',
+        'panel.html',
+        panel => {
+          panel.onShown.addListener(panel => {
+            if (needsToSyncElementSelection) {
+              needsToSyncElementSelection = false;
+              bridge.send('syncSelectionFromNativeElementsPanel');
+            }
 
-          if (currentPanel === panel) {
-            return;
-          }
+            if (currentPanel === panel) {
+              return;
+            }
 
-          currentPanel = panel;
-          componentsPortalContainer = panel.container;
+            currentPanel = panel;
+            componentsPortalContainer = panel.container;
 
-          if (componentsPortalContainer != null) {
-            ensureInitialHTMLIsCleared(componentsPortalContainer);
-            render('components');
-            panel.injectStyles(cloneStyleTags);
-          }
-        });
-        panel.onHidden.addListener(() => {
-          // TODO: Stop highlighting and stuff.
-        });
-      });
+            if (componentsPortalContainer != null) {
+              ensureInitialHTMLIsCleared(componentsPortalContainer);
+              render('components');
+              panel.injectStyles(cloneStyleTags);
+            }
+          });
+          panel.onHidden.addListener(() => {
+            // TODO: Stop highlighting and stuff.
+          });
+        }
+      );
 
-      chrome.devtools.panels.create('⚛ Profiler', '', 'panel.html', panel => {
-        panel.onShown.addListener(panel => {
-          if (currentPanel === panel) {
-            return;
-          }
+      chrome.devtools.panels.create(
+        isChrome ? '⚛ Profiler' : 'Profiler',
+        '',
+        'panel.html',
+        panel => {
+          panel.onShown.addListener(panel => {
+            if (currentPanel === panel) {
+              return;
+            }
 
-          currentPanel = panel;
-          profilerPortalContainer = panel.container;
+            currentPanel = panel;
+            profilerPortalContainer = panel.container;
 
-          if (profilerPortalContainer != null) {
-            ensureInitialHTMLIsCleared(profilerPortalContainer);
-            render('profiler');
-            panel.injectStyles(cloneStyleTags);
-          }
-        });
-      });
+            if (profilerPortalContainer != null) {
+              ensureInitialHTMLIsCleared(profilerPortalContainer);
+              render('profiler');
+              panel.injectStyles(cloneStyleTags);
+            }
+          });
+        }
+      );
 
       chrome.devtools.network.onNavigated.removeListener(checkPageForReact);
 
