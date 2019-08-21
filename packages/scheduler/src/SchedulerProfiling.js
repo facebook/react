@@ -16,16 +16,20 @@ let runIdCounter: number = 0;
 let mainThreadIdCounter: number = 0;
 
 const profilingStateSize = 4;
-export const sharedProfilingBuffer =
-  // $FlowFixMe Flow doesn't know about SharedArrayBuffer
-  typeof SharedArrayBuffer === 'function'
+export const sharedProfilingBuffer = enableProfiling
+  ? // $FlowFixMe Flow doesn't know about SharedArrayBuffer
+    typeof SharedArrayBuffer === 'function'
     ? new SharedArrayBuffer(profilingStateSize * Int32Array.BYTES_PER_ELEMENT)
     : // $FlowFixMe Flow doesn't know about ArrayBuffer
-      new ArrayBuffer(profilingStateSize * Int32Array.BYTES_PER_ELEMENT);
-
-const profilingState = enableProfiling
-  ? new Int32Array(sharedProfilingBuffer)
+      typeof ArrayBuffer === 'function'
+      ? new ArrayBuffer(profilingStateSize * Int32Array.BYTES_PER_ELEMENT)
+      : null // Don't crash the init path on IE9
   : null;
+
+const profilingState =
+  enableProfiling && sharedProfilingBuffer !== null
+    ? new Int32Array(sharedProfilingBuffer)
+    : null;
 
 const PRIORITY = 0;
 const CURRENT_TASK_ID = 1;
