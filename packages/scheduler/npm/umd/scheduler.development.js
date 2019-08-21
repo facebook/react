@@ -110,6 +110,20 @@
     );
   }
 
+  function unstable_startLoggingProfilingEvents() {
+    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Scheduler.unstable_startLoggingProfilingEvents.apply(
+      this,
+      arguments
+    );
+  }
+
+  function unstable_stopLoggingProfilingEvents() {
+    return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Scheduler.unstable_stopLoggingProfilingEvents.apply(
+      this,
+      arguments
+    );
+  }
+
   return Object.freeze({
     unstable_now: unstable_now,
     unstable_scheduleCallback: unstable_scheduleCallback,
@@ -124,6 +138,8 @@
     unstable_pauseExecution: unstable_pauseExecution,
     unstable_getFirstCallbackNode: unstable_getFirstCallbackNode,
     unstable_forceFrameRate: unstable_forceFrameRate,
+    unstable_startLoggingProfilingEvents: unstable_startLoggingProfilingEvents,
+    unstable_stopLoggingProfilingEvents: unstable_stopLoggingProfilingEvents,
     get unstable_IdlePriority() {
       return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
         .Scheduler.unstable_IdlePriority;
@@ -143,6 +159,10 @@
     get unstable_UserBlockingPriority() {
       return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
         .Scheduler.unstable_UserBlockingPriority;
+    },
+    get unstable_sharedProfilingBuffer() {
+      return global.React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+        .Scheduler.unstable_getFirstCallbackNode;
     },
   });
 });
