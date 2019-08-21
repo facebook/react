@@ -41,6 +41,10 @@
 * Warn in Strict Mode if effects are scheduled outside an `act()` call. ([@threepointone](https://github.com/threepointone) in [#15763](https://github.com/facebook/react/pull/15763) and [#16041](https://github.com/facebook/react/pull/16041))
 * Warn when using `act` from the wrong renderer. ([@threepointone](https://github.com/threepointone) in [#15756](https://github.com/facebook/react/pull/15756))
 
+### ESLint Plugin: React Hooks
+
+* Report Hook calls at the top level as a violation. ([gaearon](https://github.com/gaearon) in [#16455](https://github.com/facebook/react/pull/16455))
+
 ## 16.8.6 (March 27, 2019)
 
 ### React DOM
