@@ -370,6 +370,52 @@ Task 1 [Normal]              │██████🡐 errored
     );
   });
 
+  it('marks when multiple tasks are canceled', () => {
+    Scheduler.unstable_startLoggingProfilingEvents();
+
+    const task1 = scheduleCallback(NormalPriority, () => {
+      Scheduler.unstable_yieldValue(getProfilingInfo());
+      Scheduler.unstable_advanceTime(300);
+      Scheduler.unstable_yieldValue('Yield');
+      return () => {
+        Scheduler.unstable_yieldValue('Continuation');
+        Scheduler.unstable_advanceTime(200);
+      };
+    });
+    const task2 = scheduleCallback(NormalPriority, () => {
+      Scheduler.unstable_yieldValue(getProfilingInfo());
+      Scheduler.unstable_advanceTime(300);
+      Scheduler.unstable_yieldValue('Yield');
+      return () => {
+        Scheduler.unstable_yieldValue('Continuation');
+        Scheduler.unstable_advanceTime(200);
+      };
+    });
+
+    expect(Scheduler).toFlushAndYieldThrough([
+      'Task: 1, Run: 1, Priority: Normal, Queue Size: 2',
+      'Yield',
+    ]);
+    Scheduler.unstable_advanceTime(100);
+
+    cancelCallback(task1);
+    cancelCallback(task2);
+
+    // Advance more time. This should not affect the size of the main
+    // thread row, since the Scheduler queue is empty.
+    Scheduler.unstable_advanceTime(1000);
+    expect(Scheduler).toFlushWithoutYielding();
+
+    // The main thread row should end when the callback is cancelled.
+    expect(stopProfilingAndPrintFlamegraph()).toEqual(
+      `
+!!! Main thread              │      ██
+Task 1 [Normal]              │██████░░🡐 canceled
+Task 2 [Normal]              │░░░░░░░░🡐 canceled
+`,
+    );
+  });
+
   it('handles cancelling a task that already finished', () => {
     Scheduler.unstable_startLoggingProfilingEvents();
 
