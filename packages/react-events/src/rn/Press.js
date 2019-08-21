@@ -15,38 +15,26 @@ import type {
   ReactFaricEventTouch,
   EventPriority,
 } from 'react-native-renderer/src/ReactNativeTypes';
-import type {ReactEventResponder} from 'shared/ReactTypes';
 import React from 'react';
 import {
   DiscreteEvent,
   UserBlockingEvent,
 } from 'react-native-renderer/src/ReactNativeTypes';
-
-type ReactNativeEventResponder = ReactEventResponder<
-  ReactNativeResponderEvent,
-  ReactNativeResponderContext,
->;
+import type {ReactEventResponderListener} from 'shared/ReactTypes';
 
 type PressProps = {
   disabled: boolean,
-  delayLongPress: number,
-  delayPressEnd: number,
-  delayPressStart: number,
-  onContextMenu: (e: PressEvent) => void,
-  onLongPress: (e: PressEvent) => void,
-  onLongPressChange: boolean => void,
-  onLongPressShouldCancelPress: () => boolean,
-  onPress: (e: PressEvent) => void,
-  onPressChange: boolean => void,
-  onPressEnd: (e: PressEvent) => void,
-  onPressMove: (e: PressEvent) => void,
-  onPressStart: (e: PressEvent) => void,
   pressRetentionOffset: {
     top: number,
     right: number,
     bottom: number,
     left: number,
   },
+  onPress: (e: PressEvent) => void,
+  onPressChange: boolean => void,
+  onPressEnd: (e: PressEvent) => void,
+  onPressMove: (e: PressEvent) => void,
+  onPressStart: (e: PressEvent) => void,
 };
 
 type PressEvent = {|
@@ -71,14 +59,10 @@ type PressState = {
   addedRootEvents: boolean,
   isActivePressed: boolean,
   isActivePressStart: boolean,
-  isLongPressed: boolean,
   isPressed: boolean,
   isPressWithinResponderRegion: boolean,
-  longPressTimeout: null | number,
   pointerType: PointerType,
   pressTarget: null | ReactNativeEventTarget,
-  pressEndTimeout: null | number,
-  pressStartTimeout: null | number,
   responderRegionOnActivation: null | $ReadOnly<{|
     bottom: number,
     left: number,
@@ -100,13 +84,8 @@ type PressEventType =
   | 'pressmove'
   | 'pressstart'
   | 'pressend'
-  | 'presschange'
-  | 'longpress'
-  | 'longpresschange';
+  | 'presschange';
 
-const DEFAULT_PRESS_END_DELAY_MS = 0;
-const DEFAULT_PRESS_START_DELAY_MS = 0;
-const DEFAULT_LONG_PRESS_DELAY_MS = 500;
 const DEFAULT_PRESS_RETENTION_OFFSET = {
   bottom: 20,
   top: 20,
@@ -117,9 +96,8 @@ const DEFAULT_PRESS_RETENTION_OFFSET = {
 const targetEventTypes = ['topTouchStart'];
 const rootEventTypes = ['topTouchMove', 'topTouchEnd', 'topTouchCancel'];
 
-function calculateDelayMS(delay: ?number, min = 0, fallback = 0) {
-  const maybeNumber = delay == null ? null : delay;
-  return Math.max(min, maybeNumber != null ? maybeNumber : fallback);
+function isFunction(obj): boolean {
+  return typeof obj === 'function';
 }
 
 function createPressEvent(
@@ -167,10 +145,10 @@ function createPressEvent(
 
 function dispatchEvent(
   event: ?ReactNativeResponderEvent,
+  listener: any => void,
   context: ReactNativeResponderContext,
   state: PressState,
   name: PressEventType,
-  listener: (e: Object) => void,
   eventPriority: EventPriority,
 ): void {
   const target = ((state.pressTarget: any): ReactNativeEventTarget);
@@ -270,72 +248,15 @@ function calculateResponderRegion(
   });
 }
 
-function dispatchPressChangeEvent(event, context, props, state): void {
-  const bool = state.isActivePressed;
-  const listener = () => {
-    props.onPressChange(bool);
-  };
-  dispatchEvent(event, context, state, 'presschange', listener, DiscreteEvent);
-}
-
-function dispatchLongPressChangeEvent(event, context, props, state): void {
-  const bool = state.isLongPressed;
-  const listener = () => {
-    props.onLongPressChange(bool);
-  };
-  dispatchEvent(
-    event,
-    context,
-    state,
-    'longpresschange',
-    listener,
-    DiscreteEvent,
-  );
-}
-
-function activate(event: ReactNativeResponderEvent, context, props, state) {
-  const {pageX: x, pageY: y} = ((state.touchEvent: any): ReactFaricEventTouch);
-  const wasActivePressed = state.isActivePressed;
-  state.isActivePressed = true;
-  if (x !== null && y !== null) {
-    state.activationPosition = {x, y};
-  }
-
-  if (props.onPressStart) {
-    dispatchEvent(
-      event,
-      context,
-      state,
-      'pressstart',
-      props.onPressStart,
-      DiscreteEvent,
-    );
-  }
-  if (!wasActivePressed && props.onPressChange) {
-    dispatchPressChangeEvent(event, context, props, state);
-  }
-}
-
-function deactivate(event, context, props, state) {
-  const wasLongPressed = state.isLongPressed;
-  state.isActivePressed = false;
-  state.isLongPressed = false;
-
-  if (props.onPressEnd) {
-    dispatchEvent(
-      event,
-      context,
-      state,
-      'pressend',
-      props.onPressEnd,
-      DiscreteEvent,
-    );
-  }
-  if (props.onPressChange) {
-    dispatchPressChangeEvent(event, context, props, state);
-  }
-  if (wasLongPressed && props.onLongPressChange) {
-    dispatchLongPressChangeEvent(event, context, props, state);
+function dispatchPressChangeEvent(
+  context: ReactNativeResponderContext,
+  props: PressProps,
+  state: PressState,
+): void {
+  const onPressChange = props.onPressChange;
+  if (isFunction(onPressChange)) {
+    const bool = state.isActivePressed;
+    context.dispatchEvent(bool, onPressChange, DiscreteEvent);
   }
 }
 
@@ -396,111 +317,73 @@ function updateIsPressWithinResponderRegion(
   cb();
 }
 
-function dispatchPressStartEvents(event, context, props, state) {
+function dispatchPressStartEvents(
+  event: ReactNativeResponderEvent,
+  context: ReactNativeResponderContext,
+  props: PressProps,
+  state: PressState,
+): void {
   state.isPressed = true;
 
-  if (state.pressEndTimeout !== null) {
-    context.clearTimeout(state.pressEndTimeout);
-    state.pressEndTimeout = null;
-  }
-
-  const dispatch = () => {
-    state.isActivePressStart = true;
-    activate(event, context, props, state);
-
-    if (
-      (props.onLongPress || props.onLongPressChange) &&
-      !state.isLongPressed
-    ) {
-      const delayLongPress = calculateDelayMS(
-        props.delayLongPress,
-        10,
-        DEFAULT_LONG_PRESS_DELAY_MS,
-      );
-      state.longPressTimeout = context.setTimeout(() => {
-        state.isLongPressed = true;
-        state.longPressTimeout = null;
-        if (props.onLongPress) {
-          dispatchEvent(
-            event,
-            context,
-            state,
-            'longpress',
-            props.onLongPress,
-            DiscreteEvent,
-          );
-        }
-        if (props.onLongPressChange) {
-          dispatchLongPressChangeEvent(event, context, props, state);
-        }
-      }, delayLongPress);
-    }
-  };
-
   if (!state.isActivePressStart) {
-    const delayPressStart = calculateDelayMS(
-      props.delayPressStart,
-      0,
-      DEFAULT_PRESS_START_DELAY_MS,
-    );
-    if (delayPressStart > 0) {
-      state.pressStartTimeout = context.setTimeout(() => {
-        state.pressStartTimeout = null;
-        dispatch();
-      }, delayPressStart);
-    } else {
-      dispatch();
+    state.isActivePressStart = true;
+    const {
+      pageX: x,
+      pageY: y,
+    } = ((state.touchEvent: any): ReactFaricEventTouch);
+    const wasActivePressed = state.isActivePressed;
+    state.isActivePressed = true;
+    if (x !== undefined && y !== undefined) {
+      state.activationPosition = {x, y};
+    }
+    const onPressStart = props.onPressStart;
+
+    if (isFunction(onPressStart)) {
+      dispatchEvent(
+        event,
+        onPressStart,
+        context,
+        state,
+        'pressstart',
+        DiscreteEvent,
+      );
+    }
+    if (!wasActivePressed) {
+      dispatchPressChangeEvent(context, props, state);
     }
   }
 }
 
-function dispatchPressEndEvents(event, context, props, state): void {
-  const wasActivePressStart = state.isActivePressStart;
-  let activationWasForced = false;
-
+function dispatchPressEndEvents(
+  event: ?ReactNativeResponderEvent,
+  context: ReactNativeResponderContext,
+  props: PressProps,
+  state: PressState,
+): void {
   state.isActivePressStart = false;
   state.isPressed = false;
 
-  if (state.longPressTimeout !== null) {
-    context.clearTimeout(state.longPressTimeout);
-    state.longPressTimeout = null;
-  }
-
-  if (!wasActivePressStart && state.pressStartTimeout !== null) {
-    context.clearTimeout(state.pressStartTimeout);
-    state.pressStartTimeout = null;
-    // don't activate if a press has moved beyond the responder region
-    if (state.isPressWithinResponderRegion && event != null) {
-      // if we haven't yet activated (due to delays), activate now
-      activate(event, context, props, state);
-      activationWasForced = true;
-    }
-  }
-
   if (state.isActivePressed) {
-    const delayPressEnd = calculateDelayMS(
-      props.delayPressEnd,
-      // if activation and deactivation occur during the same event there's no
-      // time for visual user feedback therefore a small delay is added before
-      // deactivating.
-      activationWasForced ? 10 : 0,
-      DEFAULT_PRESS_END_DELAY_MS,
-    );
-    if (delayPressEnd > 0) {
-      state.pressEndTimeout = context.setTimeout(() => {
-        state.pressEndTimeout = null;
-        deactivate(event, context, props, state);
-      }, delayPressEnd);
-    } else {
-      deactivate(event, context, props, state);
+    state.isActivePressed = false;
+    const onPressEnd = props.onPressEnd;
+
+    if (isFunction(onPressEnd)) {
+      dispatchEvent(
+        event,
+        onPressEnd,
+        context,
+        state,
+        'pressend',
+        DiscreteEvent,
+      );
     }
+    dispatchPressChangeEvent(context, props, state);
   }
 
   state.responderRegionOnDeactivation = null;
 }
 
-const PressResponder: ReactNativeEventResponder = {
-  displayName: 'Press',
+const pressResponderImpl = {
   targetEventTypes,
   getInitialState(): PressState {
     return {
@@ -509,13 +392,9 @@ const PressResponder: ReactNativeEventResponder = {
       addedRootEvents: false,
       isActivePressed: false,
       isActivePressStart: false,
-      isLongPressed: false,
       isPressed: false,
       isPressWithinResponderRegion: false,
-      longPressTimeout: null,
       pointerType: '',
-      pressEndTimeout: null,
-      pressStartTimeout: null,
       pressTarget: null,
       responderRegionOnActivation: null,
       responderRegionOnDeactivation: null,
@@ -533,8 +412,7 @@ const PressResponder: ReactNativeEventResponder = {
     if (type === 'topTouchStart') {
       if (!state.isPressed) {
         state.pointerType = 'touch';
-        const pressTarget = (state.pressTarget = event.currentTarget);
-
+        const pressTarget = (state.pressTarget = event.responderTarget);
         const touchEvent = getTouchFromPressEvent(nativeEvent);
         if (touchEvent === null) {
           return;
@@ -583,28 +461,16 @@ const PressResponder: ReactNativeEventResponder = {
           () => {
             if (state.isPressWithinResponderRegion) {
               if (state.isPressed) {
-                if (props.onPressMove) {
+                const onPressMove = props.onPressMove;
+                if (isFunction(onPressMove)) {
                   dispatchEvent(
                     event,
+                    onPressMove,
                     context,
                     state,
                     'pressmove',
-                    props.onPressMove,
                     UserBlockingEvent,
                   );
-                }
-                if (
-                  state.activationPosition != null &&
-                  state.longPressTimeout != null
-                ) {
-                  const deltaX = state.activationPosition.x - touchEvent.pageX;
-                  const deltaY = state.activationPosition.y - touchEvent.pageY;
-                  if (
-                    Math.hypot(deltaX, deltaY) > 10 &&
-                    state.longPressTimeout != null
-                  ) {
-                    context.clearTimeout(state.longPressTimeout);
-                  }
                 }
               } else {
                 dispatchPressStartEvents(event, context, props, state);
@@ -623,10 +489,10 @@ const PressResponder: ReactNativeEventResponder = {
             return;
           }
           state.touchEvent = touchEvent;
-          const wasLongPressed = state.isLongPressed;
           dispatchPressEndEvents(event, context, props, state);
+          const onPress = props.onPress;
 
-          if (state.pressTarget !== null && props.onPress) {
+          if (state.pressTarget !== null && isFunction(onPress)) {
             // If the event target isn't within the press target, check if we're still
             // within the responder region. The region may have changed if the
             // element's layout was modified after activation.
@@ -638,22 +504,14 @@ const PressResponder: ReactNativeEventResponder = {
               state,
               () => {
                 if (state.isPressWithinResponderRegion) {
-                  if (
-                    !(
-                      wasLongPressed &&
-                      props.onLongPressShouldCancelPress &&
-                      props.onLongPressShouldCancelPress()
-                    )
-                  ) {
-                    dispatchEvent(
-                      event,
-                      context,
-                      state,
-                      'press',
-                      props.onPress,
-                      DiscreteEvent,
-                    );
-                  }
+                  dispatchEvent(
+                    event,
+                    onPress,
+                    context,
+                    state,
+                    'press',
+                    DiscreteEvent,
+                  );
                 }
               },
             );
@@ -670,8 +528,13 @@ const PressResponder: ReactNativeEventResponder = {
   },
 };
 
-export const Press = React.unstable_createEvent(PressResponder);
+export const PressResponder = React.unstable_createResponder(
+  'Press',
+  pressResponderImpl,
+);
 
-export function usePress(props: PressProps): void {
-  React.unstable_useEvent(Press, props);
+export function usePressResponder(
+  props: PressProps,
+): ReactEventResponderListener<any, any> {
+  return React.unstable_useResponder(PressResponder, props);
 }

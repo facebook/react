@@ -22,11 +22,8 @@ import {
   REACT_SUSPENSE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
   REACT_LAZY_TYPE,
-  REACT_EVENT_COMPONENT_TYPE,
 } from 'shared/ReactSymbols';
 import {refineResolvedLazyComponent} from 'shared/ReactLazyComponent';
-
-import {enableFlareAPI} from './ReactFeatureFlags';
 
 function getWrappedName(
   outerType: mixed,
@@ -89,12 +86,6 @@ function getComponentName(type: mixed): string | null {
         const resolvedThenable = refineResolvedLazyComponent(thenable);
         if (resolvedThenable) {
           return getComponentName(resolvedThenable);
-        }
-        break;
-      }
-      case REACT_EVENT_COMPONENT_TYPE: {
-        if (enableFlareAPI) {
-          return (type: any).responder.displayName;
         }
         break;
       }

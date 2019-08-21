@@ -119,9 +119,37 @@
         <div id="test-9"></div>
       </div>
     </li>
+    <li>
+      <p>Runs scheduled JS work for 99% of the frame time when nothing else is using the thread.</p>
+      <p><b>NOTE:</b> Try this test both when nothing else is running and when something is using the compositor thread in another visible tab with video or <a href="https://www.shadertoy.com/view/MtffDX">WebGL content</a> (Shift+Click).</p>
+      <button onClick="runTestTen()">Run Test 10</button>
+      <div><b>Expected:</b></div>
+      <div id="test-10-expected">
+      </div>
+      <div> -------------------------------------------------</div>
+      <div> If you see the same above and below it's correct.
+        <div> -------------------------------------------------</div>
+        <div><b>Actual:</b></div>
+        <div id="test-10"></div>
+      </div>
+    </li>
+    <li>
+      <p>Runs scheduled JS work more than 95% of the frame time when inserting DOM nodes.</p>
+      <p><b>NOTE:</b> Try this test both when nothing else is running and when something is using the compositor thread in another visible tab with video or <a href="https://www.shadertoy.com/view/MtffDX">WebGL content</a> (Shift+Click).</p>
+      <button onClick="runTestEleven()">Run Test 11</button>
+      <div><b>Expected:</b></div>
+      <div id="test-11-expected">
+      </div>
+      <div> -------------------------------------------------</div>
+      <div> If you see the same above and below it's correct.
+        <div> -------------------------------------------------</div>
+        <div><b>Actual:</b></div>
+        <div id="test-11"></div>
+      </div>
+    </li>
   </ol>
-  <script src="../../build/node_modules/react/umd/react.development.js"></script>
-  <script src="../../build/node_modules/scheduler/umd/scheduler.development.js"></script>
+  <script src="../../build/node_modules/react/umd/react.production.min.js"></script>
+  <script src="../../build/node_modules/scheduler/umd/scheduler.production.min.js"></script>
   <script src="https://unpkg.com/babel-standalone@6/babel.js"></script>
   <script type="text/babel">
 const {
@@ -266,6 +294,16 @@ const expectedResults = [
     'Using new frame time!',
     'Using new frame time!',
     'Finished!',
+  ],
+  // test 10
+  [
+    'Running work for 10 seconds...',
+    'Ran scheduled work for >99% of the time.',
+  ],
+  // test 11
+  [
+    'Running work for 10 seconds...',
+    'Ran scheduled work for >95% of the time.',
   ],
 ];
 function runTestOne() {
@@ -635,6 +673,57 @@ function runTestNine() {
     scheduleCallback(NormalPriority, forceFrameFinish);
     scheduleCallback(NormalPriority, () => {toSchedule(true);});
   });
+}
+
+function runTestTen() {
+  clearTestResult(10);
+  updateTestResult(10, `Running work for 10 seconds...`);
+  var testStartTime = now();
+  var accumulatedWork = 0
+  function loop() {
+    var startTime = now();
+    while (!shouldYield()) {}
+    var endTime = now();
+    accumulatedWork += endTime - startTime;
+    var runTime = endTime - testStartTime;
+    if (runTime > 10000) {
+      updateTestResult(10, `Ran scheduled work for ${(100 * accumulatedWork / runTime).toFixed(2)}% of the time.`);
+      displayTestResult(10);
+      return;
+    }
+    scheduleCallback(NormalPriority, loop);
+  }
+  scheduleCallback(NormalPriority, loop);
+}
+
+function runTestEleven() {
+  clearTestResult(11);
+  updateTestResult(11, `Running work for 10 seconds...`);
+  var testStartTime = now();
+  var lastInsertion = 0;
+  var accumulatedWork = 0
+  function loop() {
+    var startTime = now();
+    var timeSinceLastDOMInteraction = startTime - lastInsertion;
+    if (timeSinceLastDOMInteraction > 15) {
+      lastInsertion = startTime;
+      var node = document.createElement('div');
+      node.textContent = startTime;
+      document.body.appendChild(node);
+      document.body.clientHeight; // force layout
+    }
+    while (!shouldYield()) {}
+    var endTime = now();
+    accumulatedWork += endTime - startTime;
+    var runTime = endTime - testStartTime;
+    if (runTime > 10000) {
+      updateTestResult(11, `Ran scheduled work for ${(100 * accumulatedWork / runTime).toFixed(2)}% of the time.`);
+      displayTestResult(11);
+      return;
+    }
+    scheduleCallback(NormalPriority, loop);
+  }
+  scheduleCallback(NormalPriority, loop);
 }
 
     </script type="text/babel">

@@ -7,7 +7,12 @@
  * @flow
  */
 
-import type {ReactContext, ReactProviderType} from 'shared/ReactTypes';
+import type {
+  ReactContext,
+  ReactProviderType,
+  ReactEventResponder,
+  ReactEventResponderListener,
+} from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {Hook} from 'react-reconciler/src/ReactFiberHooks';
 import type {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactFiberHooks';
@@ -215,8 +220,20 @@ function useMemo<T>(
   return value;
 }
 
-function useEvent() {
-  throw new Error('TODO: not yet implemented');
+function useResponder(
+  responder: ReactEventResponder<any, any>,
+  listenerProps: Object,
+): ReactEventResponderListener<any, any> {
+  // Don't put the actual event responder object in, just its displayName
+  const value = {
+    responder: responder.displayName || 'EventResponder',
+    props: listenerProps,
+  };
+  hookLog.push({primitive: 'Responder', stackError: new Error(), value});
+  return {
+    responder,
+    props: listenerProps,
+  };
 }
 
 const Dispatcher: DispatcherType = {
@@ -231,7 +248,7 @@ const Dispatcher: DispatcherType = {
   useReducer,
   useRef,
   useState,
-  useEvent,
+  useResponder,
 };
 
 // Inspect

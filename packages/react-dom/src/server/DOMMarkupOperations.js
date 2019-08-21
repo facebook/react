@@ -6,7 +6,7 @@
  *
  * @flow
  */
-import type {TrustedTypes} from './trustedTypes';
+import type {TrustedTypePolicyFactory} from './trustedTypes';
 
 import {
   ID_ATTRIBUTE_NAME,
@@ -45,14 +45,14 @@ export function createMarkupForRoot(): string {
  * @param {string} name property name
  * @param {*} value property value
  * @param {string} tagLowercase lowercase tag name of the target element
- * @param {TrustedTypes} trustedTypes Trusted Types implementation, which if provided enforces trusted types on server
+ * @param {TrustedTypePolicyFactory} trustedTypes Trusted Types implementation, which if provided enforces trusted types on server
  * @return {?string} Markup string, or null if the property was invalid.
  */
 export function createMarkupForProperty(
   name: string,
   value: mixed,
   tagLowercase: string,
-  trustedTypes: ?TrustedTypes,
+  trustedTypes: ?TrustedTypePolicyFactory,
 ): string {
   const propertyInfo = getPropertyInfo(name);
   if (name !== 'style' && shouldIgnoreAttribute(name, propertyInfo, false)) {

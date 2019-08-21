@@ -8,4 +8,4 @@
  */
 
 // TODO: create a flow typed for trusted types
-export type TrustedTypes = any;
+export type TrustedTypePolicyFactory = any;

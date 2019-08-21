@@ -11,6 +11,8 @@ import {
 } from './ReactControlledComponent';
 import {enableFlareAPI} from 'shared/ReactFeatureFlags';
 
+import {invokeGuardedCallbackAndCatchFirstError} from 'shared/ReactErrorUtils';
+
 // Used as a way to call batchedUpdates when we don't have a reference to
 // the renderer. Such as when we're dispatching events or if third party
 // libraries need to call batchedUpdates. Eventually, this API will go away when
@@ -28,6 +30,7 @@ let flushDiscreteUpdatesImpl = function() {};
 let batchedEventUpdatesImpl = batchedUpdatesImpl;
 
 let isInsideEventHandler = false;
+let isBatchingEventUpdates = false;
 
 function finishEventHandler() {
   // Here we wait until all updates have propagated, which is important
@@ -59,18 +62,29 @@ export function batchedUpdates(fn, bookkeeping) {
   }
 }
 
-export function batchedEventUpdates(fn, bookkeeping) {
-  if (isInsideEventHandler) {
+export function batchedEventUpdates(fn, a, b) {
+  if (isBatchingEventUpdates) {
     // If we are currently inside another batch, we need to wait until it
     // fully completes before restoring state.
-    return fn(bookkeeping);
+    return fn(a, b);
   }
-  isInsideEventHandler = true;
+  isBatchingEventUpdates = true;
   try {
-    return batchedEventUpdatesImpl(fn, bookkeeping);
+    return batchedEventUpdatesImpl(fn, a, b);
   } finally {
-    isInsideEventHandler = false;
+    isBatchingEventUpdates = false;
     finishEventHandler();
+  }
+}
+
+export function executeUserEventHandler(fn: any => void, value: any) {
+  const previouslyInEventHandler = isInsideEventHandler;
+  try {
+    isInsideEventHandler = true;
+    const type = typeof value === 'object' && value !== null ? value.type : '';
+    invokeGuardedCallbackAndCatchFirstError(type, fn, undefined, value);
+  } finally {
+    isInsideEventHandler = previouslyInEventHandler;
   }
 }
 

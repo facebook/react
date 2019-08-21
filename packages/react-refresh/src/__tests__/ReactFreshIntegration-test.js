@@ -16,7 +16,7 @@ let ReactDOM;
 let ReactFreshRuntime;
 let act;
 
-let babel = require('babel-core');
+let babel = require('@babel/core');
 let freshPlugin = require('react-refresh/babel');
 
 describe('ReactFreshIntegration', () => {
@@ -58,11 +58,11 @@ describe('ReactFreshIntegration', () => {
     function execute(source) {
       const compiled = babel.transform(source, {
         babelrc: false,
-        presets: ['react'],
+        presets: ['@babel/react'],
         plugins: [
           freshPlugin,
-          'transform-es2015-modules-commonjs',
-          compileDestructuring && 'transform-es2015-destructuring',
+          '@babel/plugin-transform-modules-commonjs',
+          compileDestructuring && '@babel/plugin-transform-destructuring',
         ].filter(Boolean),
       }).code;
       exportsObj = {};

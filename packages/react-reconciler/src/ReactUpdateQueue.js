@@ -87,6 +87,7 @@
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
+import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
 
 import {NoWork} from './ReactFiberExpirationTime';
 import {
@@ -106,6 +107,7 @@ import {markRenderEventTimeAndConfig} from './ReactFiberWorkLoop';
 
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
+import {getCurrentPriorityLevel} from './SchedulerWithReactIntegration';
 
 export type Update<State> = {
   expirationTime: ExpirationTime,
@@ -117,6 +119,9 @@ export type Update<State> = {
 
   next: Update<State> | null,
   nextEffect: Update<State> | null,
+
+  //DEV only
+  priority?: ReactPriorityLevel,
 };
 
 export type UpdateQueue<State> = {
@@ -197,7 +202,7 @@ export function createUpdate(
   expirationTime: ExpirationTime,
   suspenseConfig: null | SuspenseConfig,
 ): Update<*> {
-  return {
+  let update: Update<*> = {
     expirationTime,
     suspenseConfig,
 
@@ -208,6 +213,10 @@ export function createUpdate(
     next: null,
     nextEffect: null,
   };
+  if (__DEV__) {
+    update.priority = getCurrentPriorityLevel();
+  }
+  return update;
 }
 
 function appendUpdateToQueue<State>(

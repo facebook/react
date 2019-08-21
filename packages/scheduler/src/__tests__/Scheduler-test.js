@@ -275,6 +275,19 @@ describe('Scheduler', () => {
     },
   );
 
+  it('cancelling a continuation', () => {
+    const task = scheduleCallback(NormalPriority, () => {
+      Scheduler.unstable_yieldValue('Yield');
+      return () => {
+        Scheduler.unstable_yieldValue('Continuation');
+      };
+    });
+
+    expect(Scheduler).toFlushAndYieldThrough(['Yield']);
+    cancelCallback(task);
+    expect(Scheduler).toFlushWithoutYielding();
+  });
+
   it('top-level immediate callbacks fire in a subsequent task', () => {
     scheduleCallback(ImmediatePriority, () =>
       Scheduler.unstable_yieldValue('A'),
@@ -421,7 +434,9 @@ describe('Scheduler', () => {
   if (__DEV__) {
     // Function names are minified in prod, though you could still infer the
     // priority if you have sourcemaps.
-    it('adds extra function to the JS stack whose name includes the priority level', () => {
+    // TODO: Feature temporarily disabled while we investigate a bug in one of
+    // our minifiers.
+    it.skip('adds extra function to the JS stack whose name includes the priority level', () => {
       function inferPriorityFromCallstack() {
         try {
           throw Error();

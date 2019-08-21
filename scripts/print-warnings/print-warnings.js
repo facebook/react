@@ -9,7 +9,7 @@
 const babylon = require('babylon');
 const fs = require('fs');
 const through = require('through2');
-const traverse = require('babel-traverse').default;
+const traverse = require('@babel/traverse').default;
 const gs = require('glob-stream');
 
 const evalToString = require('../shared/evalToString');
@@ -38,7 +38,14 @@ function transform(file, enc, cb) {
       return;
     }
 
-    const ast = babylon.parse(source, babylonOptions);
+    let ast;
+    try {
+      ast = babylon.parse(source, babylonOptions);
+    } catch (error) {
+      console.error('Failed to parse source file:', file.path);
+      throw error;
+    }
+
     traverse(ast, {
       CallExpression: {
         exit: function(astPath) {

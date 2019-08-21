@@ -2,11 +2,11 @@
 
 React hook that safely manages subscriptions in concurrent mode.
 
+This utility can be used for subscriptions to a single value that are typically only read in one place and may update frequently (e.g. a component that subscribes to a geolocation API to show a dot on a map).
+
 ## When should you NOT use this?
 
-This utility should be used for subscriptions to a single value that are typically only read in one place and may update frequently (e.g. a component that subscribes to a geolocation API to show a dot on a map).
-
-Other cases have **better long-term solutions**:
+Most other cases have **better long-term solutions**:
 * Redux/Flux stores should use the [context API](https://reactjs.org/docs/context.html) instead.
 * I/O subscriptions (e.g. notifications) that update infrequently should use a mechanism like [`react-cache`](https://github.com/facebook/react/blob/master/packages/react-cache/README.md) instead.
 * Complex libraries like Relay/Apollo should manage subscriptions manually with the same techniques which this library uses under the hood (as referenced [here](https://gist.github.com/bvaughn/d569177d70b50b58bff69c3c4a5353f3)) in a way that is most optimized for their library usage.

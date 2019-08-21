@@ -7,92 +7,28 @@
  * @flow
  */
 
-import type {Fiber, Dependencies} from './ReactFiber';
+import type {Fiber} from './ReactFiber';
 import type {
-  ReactEventComponent,
   ReactEventResponder,
-  ReactEventComponentInstance,
+  ReactEventResponderInstance,
+  ReactEventResponderListener,
 } from 'shared/ReactTypes';
+import type {Instance} from './ReactFiberHostConfig';
 
-import {
-  HostComponent,
-  HostText,
-  HostPortal,
-  SuspenseComponent,
-  Fragment,
-} from 'shared/ReactWorkTags';
-import {NoWork} from './ReactFiberExpirationTime';
+import {SuspenseComponent, Fragment} from 'shared/ReactWorkTags';
 
-let currentlyRenderingFiber: null | Fiber = null;
-let currentEventComponentInstanceIndex: number = 0;
-
-export function prepareToReadEventComponents(workInProgress: Fiber): void {
-  currentlyRenderingFiber = workInProgress;
-  currentEventComponentInstanceIndex = 0;
-}
-
-export function updateEventComponentInstance<E, C>(
-  eventComponent: ReactEventComponent<E, C>,
+export function createResponderListener(
+  responder: ReactEventResponder<any, any>,
   props: Object,
-): void {
-  const responder = eventComponent.responder;
-  let events;
-  let dependencies: Dependencies | null = ((currentlyRenderingFiber: any): Fiber)
-    .dependencies;
-  if (dependencies === null) {
-    events = [];
-    dependencies = ((currentlyRenderingFiber: any): Fiber).dependencies = {
-      expirationTime: NoWork,
-      firstContext: null,
-      events,
-    };
-  } else {
-    events = dependencies.events;
-    if (events === null) {
-      dependencies.events = events = [];
-    }
-  }
-  if (currentEventComponentInstanceIndex === events.length) {
-    let responderState = null;
-    const getInitialState = responder.getInitialState;
-    if (getInitialState !== undefined) {
-      responderState = getInitialState(props);
-    }
-    const eventComponentInstance = createEventComponentInstance(
-      ((currentlyRenderingFiber: any): Fiber),
-      props,
-      responder,
-      null,
-      responderState || {},
-      true,
-    );
-    events.push(eventComponentInstance);
-    currentEventComponentInstanceIndex++;
-  } else {
-    const eventComponentInstance = events[currentEventComponentInstanceIndex++];
-    eventComponentInstance.responder = responder;
-    eventComponentInstance.props = props;
-    eventComponentInstance.currentFiber = ((currentlyRenderingFiber: any): Fiber);
-  }
-}
-
-export function createEventComponentInstance<E, C>(
-  currentFiber: Fiber,
-  props: Object,
-  responder: ReactEventResponder<E, C>,
-  rootInstance: mixed,
-  state: Object,
-  isHook: boolean,
-): ReactEventComponentInstance<E, C> {
-  return {
-    currentFiber,
-    isHook,
-    props,
+): ReactEventResponderListener<any, any> {
+  const eventResponderListener = {
     responder,
-    rootEventTypes: null,
-    rootInstance,
-    state,
+    props,
   };
+  if (__DEV__) {
+    Object.freeze(eventResponderListener);
+  }
+  return eventResponderListener;
 }
 
 export function isFiberSuspenseAndTimedOut(fiber: Fiber): boolean {
@@ -126,39 +62,19 @@ export function getSuspenseFiberFromTimedOutChild(fiber: Fiber): Fiber {
   return ((((fiber.return: any): Fiber).return: any): Fiber);
 }
 
-export function getEventComponentHostChildrenCount(
-  eventComponentFiber: Fiber,
-): ?number {
-  if (__DEV__) {
-    let hostChildrenCount = 0;
-    const getHostChildrenCount = node => {
-      if (isFiberSuspenseAndTimedOut(node)) {
-        const fallbackChild = getSuspenseFallbackChild(node);
-        if (fallbackChild !== null) {
-          getHostChildrenCount(fallbackChild);
-        }
-      } else if (
-        node.tag === HostComponent ||
-        node.tag === HostText ||
-        node.tag === HostPortal
-      ) {
-        hostChildrenCount++;
-      } else {
-        const child = node.child;
-        if (child !== null) {
-          getHostChildrenCount(child);
-        }
-      }
-      const sibling = node.sibling;
-      if (sibling !== null) {
-        getHostChildrenCount(sibling);
-      }
-    };
-
-    if (eventComponentFiber.child !== null) {
-      getHostChildrenCount(eventComponentFiber.child);
-    }
-
-    return hostChildrenCount;
-  }
+export function createResponderInstance(
+  responder: ReactEventResponder<any, any>,
+  responderProps: Object,
+  responderState: Object,
+  target: Instance,
+  fiber: Fiber,
+): ReactEventResponderInstance<any, any> {
+  return {
+    fiber,
+    props: responderProps,
+    responder,
+    rootEventTypes: null,
+    state: responderState,
+    target,
+  };
 }

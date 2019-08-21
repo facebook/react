@@ -35,7 +35,10 @@ export function createDangerousStringForStyles(styles) {
       const styleValue = styles[styleName];
       if (styleValue != null) {
         const isCustomProperty = styleName.indexOf('--') === 0;
-        serialized += delimiter + hyphenateStyleName(styleName) + ':';
+        serialized +=
+          delimiter +
+          (isCustomProperty ? styleName : hyphenateStyleName(styleName)) +
+          ':';
         serialized += dangerousStyleValue(
           styleName,
           styleValue,

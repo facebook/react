@@ -53,11 +53,11 @@ describe('ReactBatchedMode', () => {
     const root = ReactNoop.createSyncRoot();
 
     root.render(
-      <React.Fragment>
+      <>
         <Text text="A" />
         <Text text="B" />
         <Text text="C" />
-      </React.Fragment>,
+      </>,
     );
 
     // Nothing should have rendered yet
@@ -112,11 +112,11 @@ describe('ReactBatchedMode', () => {
     expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
     expect(Scheduler).toFlushExpired(['A', 'B', 'C']);
     expect(root).toMatchRenderedOutput(
-      <React.Fragment>
+      <>
         <span>A</span>
         <span>B</span>
         <span>C</span>
-      </React.Fragment>,
+      </>,
     );
   });
 
@@ -133,10 +133,10 @@ describe('ReactBatchedMode', () => {
     const foo1 = React.createRef(null);
     const foo2 = React.createRef(null);
     root.render(
-      <React.Fragment>
+      <>
         <Foo label="A" ref={foo1} />
         <Foo label="B" ref={foo2} />
-      </React.Fragment>,
+      </>,
     );
 
     // Mount

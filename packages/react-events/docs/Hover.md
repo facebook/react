@@ -37,16 +37,6 @@ type HoverEvent = {
 
 ## Props
 
-### delayHoverEnd: number
-
-The duration of the delay between when hover ends and when `onHoverEnd` is
-called.
-
-### delayHoverStart: number
-
-The duration of the delay between when hover starts and when `onHoverStart` is
-called.
-
 ### disabled: boolean
 
 Disables all `Hover` events.
@@ -58,19 +48,15 @@ Called when the element changes hover state (i.e., after `onHoverStart` and
 
 ### onHoverEnd: (e: HoverEvent) => void
 
-Called once the element is no longer hovered. It will be cancelled if the
-pointer leaves the element before the `delayHoverStart` threshold is exceeded.
+Called once the element is no longer hovered.
 
 ### onHoverMove: (e: HoverEvent) => void
 
-Called when the pointer moves within the hit bounds of the element. `onHoverMove` is
-called immediately and doesn't wait for delayed `onHoverStart`.
+Called when the pointer moves within the hit bounds of the element.
 
 ### onHoverStart: (e: HoverEvent) => void
 
-Called once the element is hovered. It will not be called if the pointer leaves
-the element before the `delayHoverStart` threshold is exceeded. And it will not
-be called more than once before `onHoverEnd` is called.
+Called once the element is hovered.
 
 ### preventDefault: boolean = true
 
