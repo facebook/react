@@ -22,9 +22,8 @@ import {
   HostPortal,
   HostText,
   FundamentalComponent,
-  SuspenseComponent,
 } from 'shared/ReactWorkTags';
-import {NoEffect, Placement} from 'shared/ReactSideEffectTags';
+import {NoEffect, Placement, Hydrating} from 'shared/ReactSideEffectTags';
 import {enableFundamentalAPI} from 'shared/ReactFeatureFlags';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
@@ -43,7 +42,7 @@ function isFiberMountedImpl(fiber: Fiber): MountState {
     let nextNode = node;
     do {
       node = nextNode;
-      if ((node.effectTag & Placement) !== NoEffect) {
+      if ((node.effectTag & (Placement | Hydrating)) !== NoEffect) {
         return MOUNTING;
       }
       nextNode = node.return;

@@ -46,6 +46,7 @@ import {
   NoEffect,
   PerformedWork,
   Placement,
+  Hydrating,
   ContentReset,
   DidCapture,
   Update,
@@ -2095,12 +2096,24 @@ function updateDehydratedSuspenseComponent(
     );
     const nextProps = workInProgress.pendingProps;
     const nextChildren = nextProps.children;
-    workInProgress.child = mountChildFibers(
+    const child = mountChildFibers(
       workInProgress,
       null,
       nextChildren,
       renderExpirationTime,
     );
+    let node = child;
+    while (node) {
+      // Mark each child as hydrating. This is a fast path to know whether this
+      // tree is part of a hydrating tree. This is used to determine if a child
+      // node has fully mounted yet, and for scheduling event replaying.
+      // Conceptually this is similar to Placement in that a new subtree is
+      // inserted into the React tree here. It just happens to not need DOM
+      // mutations because it already exists.
+      node.effectTag |= Hydrating;
+      node = node.sibling;
+    }
+    workInProgress.child = child;
     return workInProgress.child;
   }
 }
