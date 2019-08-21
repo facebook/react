@@ -15,7 +15,7 @@ let React;
 let ReactFeatureFlags;
 let ReactDOM;
 let FocusResponder;
-let useFocusResponder;
+let useFocus;
 
 function initializeModules(hasPointerEvents) {
   setPointerEvent(hasPointerEvents);
@@ -25,7 +25,7 @@ function initializeModules(hasPointerEvents) {
   React = require('react');
   ReactDOM = require('react-dom');
   FocusResponder = require('react-events/focus').FocusResponder;
-  useFocusResponder = require('react-events/focus').useFocusResponder;
+  useFocus = require('react-events/focus').useFocus;
 }
 
 const forcePointerEvents = true;
@@ -54,7 +54,7 @@ describe.each(table)('Focus responder', hasPointerEvents => {
       onFocus = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        const listener = useFocusResponder({
+        const listener = useFocus({
           disabled: true,
           onBlur,
           onFocus,
@@ -80,7 +80,7 @@ describe.each(table)('Focus responder', hasPointerEvents => {
       onBlur = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        const listener = useFocusResponder({
+        const listener = useFocus({
           onBlur,
         });
         return <div ref={ref} listeners={listener} />;
@@ -104,7 +104,7 @@ describe.each(table)('Focus responder', hasPointerEvents => {
       ref = React.createRef();
       innerRef = React.createRef();
       const Component = () => {
-        const listener = useFocusResponder({
+        const listener = useFocus({
           onFocus,
         });
         return (
@@ -203,7 +203,7 @@ describe.each(table)('Focus responder', hasPointerEvents => {
       ref = React.createRef();
       innerRef = React.createRef();
       const Component = () => {
-        const listener = useFocusResponder({
+        const listener = useFocus({
           onFocusChange,
         });
         return (
@@ -242,7 +242,7 @@ describe.each(table)('Focus responder', hasPointerEvents => {
       ref = React.createRef();
       innerRef = React.createRef();
       const Component = () => {
-        const listener = useFocusResponder({
+        const listener = useFocus({
           onFocusVisibleChange,
         });
         return (
@@ -315,7 +315,7 @@ describe.each(table)('Focus responder', hasPointerEvents => {
       };
 
       const Inner = () => {
-        const listener = useFocusResponder({
+        const listener = useFocus({
           onBlur: createEventHandler('inner: onBlur'),
           onFocus: createEventHandler('inner: onFocus'),
           onFocusChange: createEventHandler('inner: onFocusChange'),
@@ -324,7 +324,7 @@ describe.each(table)('Focus responder', hasPointerEvents => {
       };
 
       const Outer = () => {
-        const listener = useFocusResponder({
+        const listener = useFocus({
           onBlur: createEventHandler('outer: onBlur'),
           onFocus: createEventHandler('outer: onFocus'),
           onFocusChange: createEventHandler('outer: onFocusChange'),

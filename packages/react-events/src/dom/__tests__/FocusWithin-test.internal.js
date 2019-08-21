@@ -15,7 +15,7 @@ let React;
 let ReactFeatureFlags;
 let ReactDOM;
 let FocusWithinResponder;
-let useFocusWithinResponder;
+let useFocusWithin;
 
 const initializeModules = hasPointerEvents => {
   setPointerEvent(hasPointerEvents);
@@ -25,8 +25,7 @@ const initializeModules = hasPointerEvents => {
   React = require('react');
   ReactDOM = require('react-dom');
   FocusWithinResponder = require('react-events/focus').FocusWithinResponder;
-  useFocusWithinResponder = require('react-events/focus')
-    .useFocusWithinResponder;
+  useFocusWithin = require('react-events/focus').useFocusWithin;
 };
 
 const forcePointerEvents = true;
@@ -55,7 +54,7 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
       onFocusWithinVisibleChange = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        const listener = useFocusWithinResponder({
+        const listener = useFocusWithin({
           disabled: true,
           onFocusWithinChange,
           onFocusWithinVisibleChange,
@@ -83,7 +82,7 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
       innerRef = React.createRef();
       innerRef2 = React.createRef();
       const Component = () => {
-        const listener = useFocusWithinResponder({
+        const listener = useFocusWithin({
           onFocusWithinChange,
         });
         return (
@@ -151,7 +150,7 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
       innerRef = React.createRef();
       innerRef2 = React.createRef();
       const Component = () => {
-        const listener = useFocusWithinResponder({
+        const listener = useFocusWithin({
           onFocusWithinVisibleChange,
         });
         return (

@@ -1,33 +1,34 @@
 # Press
 
-The `Press` module responds to press events on the element it wraps. Press
+The `usePress` hook responds to press events on the element it wraps. Press
 events are dispatched for `mouse`, `pen`, `touch`, `trackpad`, and `keyboard`
 pointer types. Press events are only dispatched for keyboards when pressing the
 Enter or Spacebar keys. If `onPress` is not called, this signifies that the
 press ended outside of the element hit bounds (i.e., the user aborted the
 press).
 
-Press events do not propagate between `Press` event responders.
+Press events do not propagate between `usePress` event responders.
 
 ```js
 // Example
 const Button = (props) => (
-  const [ pressed, setPressed ] = useState(false);
+  const [ isPressed, setPressed ] = useState(false);
+  const press = usePress({
+    onPress={props.onPress}
+    onPressChange={setPressed}
+  });
+
   return (
-    <Press
-      onPress={props.onPress}
-      onPressChange={setPressed}
-    >
-      <div
-        {...props}
-        role="button"
-        tabIndex={0}
-        style={
-          ...buttonStyles,
-          ...(pressed && pressedStyles)
-        }}
-      />
-    </Press>
+    <div
+      {...props}
+      listeners={press}
+      role="button"
+      tabIndex={0}
+      style={
+        ...buttonStyles,
+        ...(isPressed && pressedStyles)
+      }}
+    />
   );
 );
 ```
@@ -37,6 +38,7 @@ const Button = (props) => (
 ```js
 type PressEvent = {
   altKey: boolean,
+  buttons: 0 | 1 | 4,
   ctrlKey: boolean,
   defaultPrevented: boolean,
   metaKey: boolean,
@@ -76,7 +78,7 @@ type PressOffset = {
 
 ### disabled: boolean = false
 
-Disables all `Press` events.
+Disables the responder.
 
 ### onPress: (e: PressEvent) => void
 

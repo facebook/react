@@ -341,7 +341,7 @@ export const HoverResponder = React.unstable_createResponder(
   hasPointerEvents ? hoverResponderImpl : hoverResponderFallbackImpl,
 );
 
-export function useHoverResponder(
+export function useHover(
   props: HoverProps,
 ): ReactEventResponderListener<any, any> {
   return React.unstable_useResponder(HoverResponder, props);
