@@ -10,7 +10,7 @@
 'use strict';
 
 import * as domEvents from './domEvents';
-import {hasPointerEvent, platform} from './domEnvironment';
+import {buttonsType, hasPointerEvent, platform} from './domEnvironment';
 
 function emptyFunction() {}
 
@@ -29,30 +29,33 @@ export function contextmenu(
 ) {
   const dispatch = arg => target.dispatchEvent(arg);
   if (pointerType === 'touch') {
-    const button = 0;
     if (hasPointerEvent()) {
-      dispatch(domEvents.pointerdown({button, pointerType}));
+      dispatch(
+        domEvents.pointerdown({buttons: buttonsType.primary, pointerType}),
+      );
     }
     dispatch(domEvents.touchstart());
-    dispatch(domEvents.contextmenu({button, preventDefault}));
+    dispatch(
+      domEvents.contextmenu({buttons: buttonsType.none, preventDefault}),
+    );
   } else if (pointerType === 'mouse') {
     if (modified === true) {
-      const button = 0;
+      const buttons = buttonsType.primary;
       const ctrlKey = true;
       if (hasPointerEvent()) {
-        dispatch(domEvents.pointerdown({button, ctrlKey, pointerType}));
+        dispatch(domEvents.pointerdown({buttons, ctrlKey, pointerType}));
       }
-      dispatch(domEvents.mousedown({button, ctrlKey}));
+      dispatch(domEvents.mousedown({buttons, ctrlKey}));
       if (platform.get() === 'mac') {
-        dispatch(domEvents.contextmenu({button, ctrlKey, preventDefault}));
+        dispatch(domEvents.contextmenu({buttons, ctrlKey, preventDefault}));
       }
     } else {
-      const button = 2;
+      const buttons = buttonsType.secondary;
       if (hasPointerEvent()) {
-        dispatch(domEvents.pointerdown({button, pointerType}));
+        dispatch(domEvents.pointerdown({buttons, pointerType}));
       }
-      dispatch(domEvents.mousedown({button}));
-      dispatch(domEvents.contextmenu({button, preventDefault}));
+      dispatch(domEvents.mousedown({buttons}));
+      dispatch(domEvents.contextmenu({buttons, preventDefault}));
     }
   }
 }
@@ -74,7 +77,7 @@ export function pointercancel(target, payload) {
 export function pointerdown(target, defaultPayload) {
   const dispatch = arg => target.dispatchEvent(arg);
   const pointerType = getPointerType(defaultPayload);
-  const payload = {button: 0, buttons: 2, ...defaultPayload};
+  const payload = {buttons: buttonsType.primary, ...defaultPayload};
 
   if (pointerType === 'mouse') {
     if (hasPointerEvent()) {
@@ -147,7 +150,7 @@ export function pointermove(target, payload) {
 export function pointerup(target, defaultPayload) {
   const dispatch = arg => target.dispatchEvent(arg);
   const pointerType = getPointerType(defaultPayload);
-  const payload = {button: 0, buttons: 2, ...defaultPayload};
+  const payload = {buttons: buttonsType.none, ...defaultPayload};
 
   if (pointerType === 'mouse') {
     if (hasPointerEvent()) {

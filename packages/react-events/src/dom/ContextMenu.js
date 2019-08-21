@@ -28,20 +28,19 @@ type ContextMenuState = {
 };
 
 type ContextMenuEvent = {|
-  target: Element | Document,
-  type: 'contextmenu',
-  pointerType: PointerType,
-  timeStamp: number,
-  clientX: null | number,
-  clientY: null | number,
-  pageX: null | number,
-  pageY: null | number,
-  x: null | number,
-  y: null | number,
   altKey: boolean,
+  buttons: 0 | 1 | 2,
   ctrlKey: boolean,
   metaKey: boolean,
+  pageX: null | number,
+  pageY: null | number,
+  pointerType: PointerType,
   shiftKey: boolean,
+  target: Element | Document,
+  timeStamp: number,
+  type: 'contextmenu',
+  x: null | number,
+  y: null | number,
 |};
 
 const hasPointerEvents =
@@ -60,13 +59,13 @@ function dispatchContextMenuEvent(
 
   const gestureState = {
     altKey: nativeEvent.altKey,
-    button: nativeEvent.button === 0 ? 'primary' : 'auxillary',
-    ctrlKey: nativeEvent.altKey,
-    metaKey: nativeEvent.altKey,
-    pageX: nativeEvent.altKey,
-    pageY: nativeEvent.altKey,
+    buttons: nativeEvent.buttons != null ? nativeEvent.buttons : 0,
+    ctrlKey: nativeEvent.ctrlKey,
+    metaKey: nativeEvent.metaKey,
+    pageX: nativeEvent.pageX,
+    pageY: nativeEvent.pageY,
     pointerType,
-    shiftKey: nativeEvent.altKey,
+    shiftKey: nativeEvent.shiftKey,
     target,
     timeStamp,
     type: 'contextmenu',

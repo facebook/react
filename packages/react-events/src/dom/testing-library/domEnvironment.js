@@ -8,6 +8,7 @@
  */
 
 'use strict';
+
 /**
  * Change environment support for PointerEvent.
  */
@@ -48,4 +49,27 @@ export const platform = {
       }
     }
   },
+};
+
+/**
+ * Buttons bitmask
+ */
+
+export const buttonsType = {
+  none: 0,
+  // left-mouse
+  // touch contact
+  // pen contact
+  primary: 1,
+  // right-mouse
+  // pen barrel button
+  secondary: 2,
+  // middle mouse
+  middle: 4,
+  // back mouse
+  back: 8,
+  // forward mouse
+  forward: 16,
+  // pen eraser
+  eraser: 32,
 };

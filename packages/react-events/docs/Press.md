@@ -78,11 +78,6 @@ type PressOffset = {
 
 Disables all `Press` events.
 
-### onContextMenu: (e: PressEvent) => void
-
-Called when the context menu is shown. When a press is active, the context menu
-will only be shown (and the press cancelled) if `preventDefault` is `false`.
-
 ### onPress: (e: PressEvent) => void
 
 Called immediately after a press is released, unless the press is released
@@ -114,11 +109,6 @@ element before it is deactivated. Once deactivated, the pointer (still held
 down) can be moved back within the bounds of the element to reactivate it.
 Ensure you pass in a constant to reduce memory allocations. Default is `20` for
 each offset.
-
-### preventContextMenu: boolean = false
-
-Prevents the native context menu from being shown, but `onContextMenu`
-is still called.
 
 ### preventDefault: boolean = true
 

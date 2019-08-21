@@ -9,7 +9,11 @@
 
 'use strict';
 
-import {createEventTarget, setPointerEvent} from '../testing-library';
+import {
+  buttonsType,
+  createEventTarget,
+  setPointerEvent,
+} from '../testing-library';
 
 let React;
 let ReactFeatureFlags;
@@ -114,36 +118,36 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       },
     );
 
-    it('is called after auxillary-button pointer down', () => {
+    it('is called after middle-button pointer down', () => {
       const target = createEventTarget(ref.current);
-      target.pointerdown({button: 1, pointerType: 'mouse'});
+      target.pointerdown({buttons: buttonsType.middle, pointerType: 'mouse'});
       expect(onPressStart).toHaveBeenCalledTimes(1);
       expect(onPressStart).toHaveBeenCalledWith(
         expect.objectContaining({
-          button: 'auxillary',
+          buttons: buttonsType.middle,
           pointerType: 'mouse',
           type: 'pressstart',
         }),
       );
     });
 
-    it('is not called after pointer move following auxillary-button press', () => {
+    it('is not called after pointer move following middle-button press', () => {
       const node = ref.current;
       const target = createEventTarget(node);
       target.setBoundingClientRect({x: 0, y: 0, width: 100, height: 100});
-      target.pointerdown({button: 1, pointerType: 'mouse'});
-      target.pointerup({button: 1, pointerType: 'mouse'});
+      target.pointerdown({buttons: buttonsType.middle, pointerType: 'mouse'});
+      target.pointerup({buttons: buttonsType.middle, pointerType: 'mouse'});
       target.pointerhover({x: 110, y: 110});
       target.pointerhover({x: 50, y: 50});
       expect(onPressStart).toHaveBeenCalledTimes(1);
     });
 
-    it('ignores any events not caused by primary/auxillary-click or touch/pen contact', () => {
+    it('ignores any events not caused by primary/middle-click or touch/pen contact', () => {
       const target = createEventTarget(ref.current);
-      target.pointerdown({button: 2});
-      target.pointerup({button: 2});
-      target.pointerdown({button: 5});
-      target.pointerup({button: 5});
+      target.pointerdown({buttons: buttonsType.secondary});
+      target.pointerup({buttons: buttonsType.secondary});
+      target.pointerdown({buttons: buttonsType.eraser});
+      target.pointerup({buttons: buttonsType.eraser});
       expect(onPressStart).toHaveBeenCalledTimes(0);
     });
 
@@ -209,14 +213,14 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       },
     );
 
-    it('is called after auxillary-button pointer up', () => {
+    it('is called after middle-button pointer up', () => {
       const target = createEventTarget(ref.current);
-      target.pointerdown({button: 1, pointerType: 'mouse'});
-      target.pointerup({button: 1, pointerType: 'mouse'});
+      target.pointerdown({buttons: buttonsType.middle, pointerType: 'mouse'});
+      target.pointerup({buttons: buttonsType.middle, pointerType: 'mouse'});
       expect(onPressEnd).toHaveBeenCalledTimes(1);
       expect(onPressEnd).toHaveBeenCalledWith(
         expect.objectContaining({
-          button: 'auxillary',
+          buttons: buttonsType.middle,
           pointerType: 'mouse',
           type: 'pressend',
         }),
@@ -350,10 +354,10 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       },
     );
 
-    it('is not called after auxillary-button press', () => {
+    it('is not called after middle-button press', () => {
       const target = createEventTarget(ref.current);
-      target.pointerdown({button: 1, pointerType: 'mouse'});
-      target.pointerup({button: 1, pointerType: 'mouse'});
+      target.pointerdown({buttons: buttonsType.middle, pointerType: 'mouse'});
+      target.pointerup({buttons: buttonsType.middle, pointerType: 'mouse'});
       expect(onPress).not.toHaveBeenCalled();
     });
 
@@ -460,7 +464,12 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       const target = createEventTarget(ref.current);
       target.setBoundingClientRect({x: 0, y: 0, width: 100, height: 100});
       target.keydown({key: 'Enter'});
-      target.pointermove({button: -1, pointerType: 'mouse', x: 10, y: 10});
+      target.pointermove({
+        buttons: buttonsType.none,
+        pointerType: 'mouse',
+        x: 10,
+        y: 10,
+      });
       expect(onPressMove).not.toBeCalled();
     });
   });
