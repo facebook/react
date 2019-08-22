@@ -24,7 +24,6 @@ module.exports = {
     define: true,
     require: true,
     global: true,
-    globalThis: true,
   },
   parserOptions: {
     ecmaVersion: 5,
