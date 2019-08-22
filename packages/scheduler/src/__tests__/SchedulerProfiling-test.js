@@ -107,6 +107,7 @@ describe('Scheduler', () => {
     const tasks = new Map();
     const mainThreadRuns = [];
 
+    let isSuspended = true;
     let i = 0;
     processLog: while (i < eventLog.length) {
       const instruction = eventLog[i];
@@ -132,6 +133,9 @@ describe('Scheduler', () => {
           break;
         }
         case TaskCompleteEvent: {
+          if (isSuspended) {
+            throw Error('Task cannot Complete outside the work loop.');
+          }
           const taskId = eventLog[i + 2];
           const task = tasks.get(taskId);
           if (task === undefined) {
@@ -143,6 +147,9 @@ describe('Scheduler', () => {
           break;
         }
         case TaskErrorEvent: {
+          if (isSuspended) {
+            throw Error('Task cannot Error outside the work loop.');
+          }
           const taskId = eventLog[i + 2];
           const task = tasks.get(taskId);
           if (task === undefined) {
@@ -166,6 +173,9 @@ describe('Scheduler', () => {
         }
         case TaskRunEvent:
         case TaskYieldEvent: {
+          if (isSuspended) {
+            throw Error('Task cannot Run or Yield outside the work loop.');
+          }
           const taskId = eventLog[i + 2];
           const task = tasks.get(taskId);
           if (task === undefined) {
@@ -175,8 +185,20 @@ describe('Scheduler', () => {
           i += 4;
           break;
         }
-        case SchedulerSuspendEvent:
+        case SchedulerSuspendEvent: {
+          if (isSuspended) {
+            throw Error('Scheduler cannot Suspend outside the work loop.');
+          }
+          isSuspended = true;
+          mainThreadRuns.push(time);
+          i += 3;
+          break;
+        }
         case SchedulerResumeEvent: {
+          if (!isSuspended) {
+            throw Error('Scheduler cannot Resume inside the work loop.');
+          }
+          isSuspended = false;
           mainThreadRuns.push(time);
           i += 3;
           break;
