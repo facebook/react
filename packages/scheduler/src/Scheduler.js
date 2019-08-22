@@ -201,14 +201,11 @@ function flushWork(hasTimeRemaining, initialTime) {
       return false;
     }
   } catch (error) {
-    if (currentTask !== null) {
-      if (enableProfiling) {
+    if (enableProfiling) {
+      if (currentTask !== null) {
         const currentTime = getCurrentTime();
         markTaskErrored(currentTask, currentTime);
         currentTask.isQueued = false;
-      }
-      if (currentTask === peek(taskQueue)) {
-        pop(taskQueue);
       }
     }
     throw error;
@@ -415,21 +412,11 @@ function unstable_cancelCallback(task) {
     markTaskCanceled(task, currentTime);
     task.isQueued = false;
   }
-  if (task !== null && task === peek(taskQueue)) {
-    pop(taskQueue);
-    if (enableProfiling && !isPerformingWork && taskQueue.length === 0) {
-      // The queue is now empty.
-      const currentTime = getCurrentTime();
-      markSchedulerUnsuspended(currentTime);
-      isHostCallbackScheduled = false;
-      cancelHostCallback();
-    }
-  } else {
-    // Null out the callback to indicate the task has been canceled. (Can't
-    // remove from the queue because you can't remove arbitrary nodes from an
-    // array based heap, only the first one.)
-    task.callback = null;
-  }
+
+  // Null out the callback to indicate the task has been canceled. (Can't
+  // remove from the queue because you can't remove arbitrary nodes from an
+  // array based heap, only the first one.)
+  task.callback = null;
 }
 
 function unstable_getCurrentPriorityLevel() {
