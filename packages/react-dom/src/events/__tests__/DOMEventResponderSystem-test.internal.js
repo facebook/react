@@ -813,8 +813,8 @@ describe('DOMEventResponderSystem', () => {
 
   it('the event responder system should warn on accessing invalid properties', () => {
     const TestResponder = createEventResponder({
-      rootEventTypes: ['click'],
-      onRootEvent: (event, context, props) => {
+      targetEventTypes: ['click'],
+      onEvent: (event, context, props) => {
         const syntheticEvent = {
           target: event.target,
           type: 'click',
@@ -825,19 +825,24 @@ describe('DOMEventResponderSystem', () => {
     });
 
     let handler;
+    let buttonRef = React.createRef();
     const Test = () => {
       const listener = React.unstable_useResponder(TestResponder, {
         onClick: handler,
       });
 
-      return <button listeners={listener}>Click me!</button>;
+      return (
+        <button listeners={listener} ref={buttonRef}>
+          Click me!
+        </button>
+      );
     };
     expect(() => {
       handler = event => {
         event.preventDefault();
       };
       ReactDOM.render(<Test />, container);
-      dispatchClickEvent(document.body);
+      dispatchClickEvent(buttonRef.current);
     }).toWarnDev(
       'Warning: preventDefault() is not available on event objects created from event responder modules ' +
         '(React Flare).' +
@@ -849,7 +854,7 @@ describe('DOMEventResponderSystem', () => {
         event.stopPropagation();
       };
       ReactDOM.render(<Test />, container);
-      dispatchClickEvent(document.body);
+      dispatchClickEvent(buttonRef.current);
     }).toWarnDev(
       'Warning: stopPropagation() is not available on event objects created from event responder modules ' +
         '(React Flare).' +
@@ -861,7 +866,7 @@ describe('DOMEventResponderSystem', () => {
         event.isDefaultPrevented();
       };
       ReactDOM.render(<Test />, container);
-      dispatchClickEvent(document.body);
+      dispatchClickEvent(buttonRef.current);
     }).toWarnDev(
       'Warning: isDefaultPrevented() is not available on event objects created from event responder modules ' +
         '(React Flare).' +
@@ -873,7 +878,7 @@ describe('DOMEventResponderSystem', () => {
         event.isPropagationStopped();
       };
       ReactDOM.render(<Test />, container);
-      dispatchClickEvent(document.body);
+      dispatchClickEvent(buttonRef.current);
     }).toWarnDev(
       'Warning: isPropagationStopped() is not available on event objects created from event responder modules ' +
         '(React Flare).' +
@@ -885,7 +890,7 @@ describe('DOMEventResponderSystem', () => {
         return event.nativeEvent;
       };
       ReactDOM.render(<Test />, container);
-      dispatchClickEvent(document.body);
+      dispatchClickEvent(buttonRef.current);
     }).toWarnDev(
       'Warning: nativeEvent is not available on event objects created from event responder modules ' +
         '(React Flare).' +
