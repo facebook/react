@@ -437,15 +437,10 @@ export {
   forceFrameRate as unstable_forceFrameRate,
 };
 
-export const unstable_startLoggingProfilingEvents = enableProfiling
-  ? startLoggingProfilingEvents
-  : null;
-
-export const unstable_stopLoggingProfilingEvents = enableProfiling
-  ? stopLoggingProfilingEvents
-  : null;
-
-// Expose a shared array buffer that contains profiling information.
-export const unstable_sharedProfilingBuffer = enableProfiling
-  ? sharedProfilingBuffer
+export const unstable_Profiling = enableProfiling
+  ? {
+      startLoggingProfilingEvents,
+      stopLoggingProfilingEvents,
+      sharedProfilingBuffer,
+    }
   : null;

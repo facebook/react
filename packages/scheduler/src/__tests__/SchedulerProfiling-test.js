@@ -48,8 +48,7 @@ describe('Scheduler', () => {
     // The tests in this suite only apply when profiling is on
     it('profiling APIs are not available', () => {
       Scheduler = require('scheduler');
-      expect(Scheduler.unstable_stopLoggingProfilingEvents).toBe(null);
-      expect(Scheduler.unstable_sharedProfilingBuffer).toBe(null);
+      expect(Scheduler.unstable_Profiling).toBe(null);
     });
     return;
   }
@@ -60,7 +59,7 @@ describe('Scheduler', () => {
     Scheduler = require('scheduler');
 
     sharedProfilingArray = new Int32Array(
-      Scheduler.unstable_sharedProfilingBuffer,
+      Scheduler.unstable_Profiling.sharedProfilingBuffer,
     );
 
     // runWithPriority = Scheduler.unstable_runWithPriority;
@@ -101,7 +100,7 @@ describe('Scheduler', () => {
 
   function stopProfilingAndPrintFlamegraph() {
     const eventLog = new Int32Array(
-      Scheduler.unstable_stopLoggingProfilingEvents(),
+      Scheduler.unstable_Profiling.stopLoggingProfilingEvents(),
     );
 
     const tasks = new Map();
@@ -286,7 +285,7 @@ describe('Scheduler', () => {
   }
 
   it('creates a basic flamegraph', () => {
-    Scheduler.unstable_startLoggingProfilingEvents();
+    Scheduler.unstable_Profiling.startLoggingProfilingEvents();
 
     Scheduler.unstable_advanceTime(100);
     scheduleCallback(
@@ -333,7 +332,7 @@ Task 1 [Normal]              │  ████████░░░░░░░�
   });
 
   it('marks when a task is canceled', () => {
-    Scheduler.unstable_startLoggingProfilingEvents();
+    Scheduler.unstable_Profiling.startLoggingProfilingEvents();
 
     const task = scheduleCallback(NormalPriority, () => {
       Scheduler.unstable_yieldValue(getProfilingInfo());
@@ -364,7 +363,7 @@ Task 1 [Normal]              │██████░░🡐 canceled
   });
 
   it('marks when a task errors', () => {
-    Scheduler.unstable_startLoggingProfilingEvents();
+    Scheduler.unstable_Profiling.startLoggingProfilingEvents();
 
     scheduleCallback(NormalPriority, () => {
       Scheduler.unstable_advanceTime(300);
@@ -385,7 +384,7 @@ Task 1 [Normal]              │██████🡐 errored
   });
 
   it('marks when multiple tasks are canceled', () => {
-    Scheduler.unstable_startLoggingProfilingEvents();
+    Scheduler.unstable_Profiling.startLoggingProfilingEvents();
 
     const task1 = scheduleCallback(NormalPriority, () => {
       Scheduler.unstable_yieldValue(getProfilingInfo());
@@ -431,7 +430,7 @@ Task 2 [Normal]              │░░░░░░░░🡐 canceled
   });
 
   it('handles cancelling a task that already finished', () => {
-    Scheduler.unstable_startLoggingProfilingEvents();
+    Scheduler.unstable_Profiling.startLoggingProfilingEvents();
 
     const task = scheduleCallback(NormalPriority, () => {
       Scheduler.unstable_yieldValue('A');
@@ -448,7 +447,7 @@ Task 1 [Normal]              │████████████████
   });
 
   it('handles cancelling a task multiple times', () => {
-    Scheduler.unstable_startLoggingProfilingEvents();
+    Scheduler.unstable_Profiling.startLoggingProfilingEvents();
 
     scheduleCallback(
       NormalPriority,
@@ -482,7 +481,7 @@ Task 2 [Normal]              │    ░░░░░░░░🡐 canceled
   });
 
   it('handles cancelling a delayed task', () => {
-    Scheduler.unstable_startLoggingProfilingEvents();
+    Scheduler.unstable_Profiling.startLoggingProfilingEvents();
     const task = scheduleCallback(
       NormalPriority,
       () => Scheduler.unstable_yieldValue('A'),
