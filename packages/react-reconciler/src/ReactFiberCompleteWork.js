@@ -56,7 +56,6 @@ import {
 } from 'shared/ReactWorkTags';
 import {NoMode, BatchedMode} from './ReactTypeOfMode';
 import {
-  Placement,
   Ref,
   Update,
   NoEffect,
@@ -670,9 +669,6 @@ function completeWork(
         // If we hydrated, pop so that we can delete any remaining children
         // that weren't hydrated.
         popHydrationState(workInProgress);
-        // This resets the hacky state to fix isMounted before committing.
-        // TODO: Delete this when we delete isMounted and findDOMNode.
-        workInProgress.effectTag &= ~Placement;
       }
       updateHostContainer(workInProgress);
       break;
@@ -859,14 +855,13 @@ function completeWork(
             if ((workInProgress.effectTag & DidCapture) === NoEffect) {
               // This boundary did not suspend so it's now hydrated and unsuspended.
               workInProgress.memoizedState = null;
-              if (enableSuspenseCallback) {
-                // Notify the callback.
-                workInProgress.effectTag |= Update;
-              }
-            } else {
-              // Something suspended. Schedule an effect to attach retry listeners.
-              workInProgress.effectTag |= Update;
             }
+            // If nothing suspended, we need to schedule an effect to mark this boundary
+            // as having hydrated so events know that they're free be invoked.
+            // It's also a signal to replay events and the suspense callback.
+            // If something suspended, schedule an effect to attach retry listeners.
+            // So we might as well always mark this.
+            workInProgress.effectTag |= Update;
             return null;
           }
         }
