@@ -136,7 +136,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       const target = createEventTarget(node);
       target.setBoundingClientRect({x: 0, y: 0, width: 100, height: 100});
       target.pointerdown({buttons: buttonsType.middle, pointerType: 'mouse'});
-      target.pointerup({buttons: buttonsType.middle, pointerType: 'mouse'});
+      target.pointerup({pointerType: 'mouse'});
       target.pointerhover({x: 110, y: 110});
       target.pointerhover({x: 50, y: 50});
       expect(onPressStart).toHaveBeenCalledTimes(1);
@@ -216,7 +216,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
     it('is called after middle-button pointer up', () => {
       const target = createEventTarget(ref.current);
       target.pointerdown({buttons: buttonsType.middle, pointerType: 'mouse'});
-      target.pointerup({buttons: buttonsType.middle, pointerType: 'mouse'});
+      target.pointerup({pointerType: 'mouse'});
       expect(onPressEnd).toHaveBeenCalledTimes(1);
       expect(onPressEnd).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -357,7 +357,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
     it('is not called after middle-button press', () => {
       const target = createEventTarget(ref.current);
       target.pointerdown({buttons: buttonsType.middle, pointerType: 'mouse'});
-      target.pointerup({buttons: buttonsType.middle, pointerType: 'mouse'});
+      target.pointerup({pointerType: 'mouse'});
       expect(onPress).not.toHaveBeenCalled();
     });
 
