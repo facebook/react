@@ -13,9 +13,8 @@ import {
   enableProfiling,
 } from './SchedulerFeatureFlags';
 import {
-  requestHostCallback as requestHostCallbackWithoutProfiling,
+  requestHostCallback,
   requestHostTimeout,
-  cancelHostCallback,
   cancelHostTimeout,
   shouldYieldToHost,
   getCurrentTime,
@@ -79,17 +78,6 @@ var isPerformingWork = false;
 var isHostCallbackScheduled = false;
 var isHostTimeoutScheduled = false;
 
-function requestHostCallbackWithProfiling(cb, time) {
-  if (enableProfiling) {
-    markSchedulerSuspended(time);
-    requestHostCallbackWithoutProfiling(cb);
-  }
-}
-
-const requestHostCallback = enableProfiling
-  ? requestHostCallbackWithProfiling
-  : requestHostCallbackWithoutProfiling;
-
 function advanceTimers(currentTime) {
   // Check for tasks that are no longer delayed and add them to the queue.
   let timer = peek(timerQueue);
@@ -121,7 +109,7 @@ function handleTimeout(currentTime) {
   if (!isHostCallbackScheduled) {
     if (peek(taskQueue) !== null) {
       isHostCallbackScheduled = true;
-      requestHostCallback(flushWork, currentTime);
+      requestHostCallback(flushWork);
     } else {
       const firstTimer = peek(timerQueue);
       if (firstTimer !== null) {
@@ -132,7 +120,7 @@ function handleTimeout(currentTime) {
 }
 
 function flushWork(hasTimeRemaining, initialTime) {
-  if (isHostCallbackScheduled) {
+  if (enableProfiling) {
     markSchedulerUnsuspended(initialTime);
   }
 
@@ -190,8 +178,6 @@ function flushWork(hasTimeRemaining, initialTime) {
     }
     // Return whether there's additional work
     if (currentTask !== null) {
-      markSchedulerSuspended(currentTime);
-      isHostCallbackScheduled = true;
       return true;
     } else {
       let firstTimer = peek(timerQueue);
@@ -213,6 +199,10 @@ function flushWork(hasTimeRemaining, initialTime) {
     currentTask = null;
     currentPriorityLevel = previousPriorityLevel;
     isPerformingWork = false;
+    if (enableProfiling) {
+      const currentTime = getCurrentTime();
+      markSchedulerSuspended(currentTime);
+    }
   }
 }
 
@@ -378,7 +368,7 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
     // wait until the next time we yield.
     if (!isHostCallbackScheduled && !isPerformingWork) {
       isHostCallbackScheduled = true;
-      requestHostCallback(flushWork, currentTime);
+      requestHostCallback(flushWork);
     }
   }
 
@@ -393,12 +383,7 @@ function unstable_continueExecution() {
   isSchedulerPaused = false;
   if (!isHostCallbackScheduled && !isPerformingWork) {
     isHostCallbackScheduled = true;
-    if (enableProfiling) {
-      const currentTime = getCurrentTime();
-      requestHostCallbackWithProfiling(flushWork, currentTime);
-    } else {
-      requestHostCallback(flushWork);
-    }
+    requestHostCallback(flushWork);
   }
 }
 
@@ -407,10 +392,12 @@ function unstable_getFirstCallbackNode() {
 }
 
 function unstable_cancelCallback(task) {
-  if (enableProfiling && task.isQueued) {
-    const currentTime = getCurrentTime();
-    markTaskCanceled(task, currentTime);
-    task.isQueued = false;
+  if (enableProfiling) {
+    if (task.isQueued) {
+      const currentTime = getCurrentTime();
+      markTaskCanceled(task, currentTime);
+      task.isQueued = false;
+    }
   }
 
   // Null out the callback to indicate the task has been canceled. (Can't

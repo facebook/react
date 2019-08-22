@@ -217,10 +217,10 @@ describe('Scheduler', () => {
 
     const mainThreadLabelColumn = '!!! Main thread              ';
     let mainThreadTimelineColumn = '';
-    let isMainThreadBusy = false;
+    let isMainThreadBusy = true;
     for (const time of mainThreadRuns) {
       const index = time / msPerChar;
-      mainThreadTimelineColumn += (isMainThreadBusy ? '█' : ' ').repeat(
+      mainThreadTimelineColumn += (isMainThreadBusy ? '█' : '░').repeat(
         index - mainThreadTimelineColumn.length,
       );
       isMainThreadBusy = !isMainThreadBusy;
@@ -325,7 +325,7 @@ describe('Scheduler', () => {
 
     expect(stopProfilingAndPrintFlamegraph()).toEqual(
       `
-!!! Main thread              │          ██
+!!! Main thread              │██░░░░░░░░██░░░░░░░░░░░░
 Task 2 [User-blocking]       │        ░░░░██████
 Task 1 [Normal]              │  ████████░░░░░░░░██████
 `,
@@ -353,15 +353,11 @@ Task 1 [Normal]              │  ████████░░░░░░░�
 
     cancelCallback(task);
 
-    // Advance more time. This should not affect the size of the main
-    // thread row, since the Scheduler queue is empty.
     Scheduler.unstable_advanceTime(1000);
     expect(Scheduler).toFlushWithoutYielding();
-
-    // The main thread row should end when the callback is cancelled.
     expect(stopProfilingAndPrintFlamegraph()).toEqual(
       `
-!!! Main thread              │      ██
+!!! Main thread              │░░░░░░██████████████████████
 Task 1 [Normal]              │██████░░🡐 canceled
 `,
     );
@@ -378,15 +374,11 @@ Task 1 [Normal]              │██████░░🡐 canceled
     expect(Scheduler).toFlushAndThrow('Oops');
     Scheduler.unstable_advanceTime(100);
 
-    // Advance more time. This should not affect the size of the main
-    // thread row, since the Scheduler queue is empty.
     Scheduler.unstable_advanceTime(1000);
     expect(Scheduler).toFlushWithoutYielding();
-
-    // The main thread row should end when the callback is cancelled.
     expect(stopProfilingAndPrintFlamegraph()).toEqual(
       `
-!!! Main thread              │
+!!! Main thread              │░░░░░░██████████████████████
 Task 1 [Normal]              │██████🡐 errored
 `,
     );
@@ -431,7 +423,7 @@ Task 1 [Normal]              │██████🡐 errored
     // The main thread row should end when the callback is cancelled.
     expect(stopProfilingAndPrintFlamegraph()).toEqual(
       `
-!!! Main thread              │      ██
+!!! Main thread              │░░░░░░██████████████████████
 Task 1 [Normal]              │██████░░🡐 canceled
 Task 2 [Normal]              │░░░░░░░░🡐 canceled
 `,
@@ -449,7 +441,7 @@ Task 2 [Normal]              │░░░░░░░░🡐 canceled
     cancelCallback(task);
     expect(stopProfilingAndPrintFlamegraph()).toEqual(
       `
-!!! Main thread              │
+!!! Main thread              │░░░░░░░░░░░░░░░░░░░░
 Task 1 [Normal]              │████████████████████
 `,
     );
@@ -482,7 +474,7 @@ Task 1 [Normal]              │████████████████
     expect(Scheduler).toFlushAndYield(['A']);
     expect(stopProfilingAndPrintFlamegraph()).toEqual(
       `
-!!! Main thread              │████████████
+!!! Main thread              │████████████░░░░░░░░░░░░░░░░░░░░
 Task 1 [Normal]              │░░░░░░░░░░░░████████████████████
 Task 2 [Normal]              │    ░░░░░░░░🡐 canceled
 `,
