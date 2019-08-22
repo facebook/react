@@ -39,7 +39,7 @@ export function expirationTimeToMs(expirationTime: ExpirationTime): number {
 }
 
 function ceiling(num: number, precision: number): number {
-  return (((num / precision) | 0) + 1) * precision;
+  return (Math.ceil(num / precision) * precision);
 }
 
 function computeExpirationBucket(
