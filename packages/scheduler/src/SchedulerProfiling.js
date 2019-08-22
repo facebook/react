@@ -29,14 +29,14 @@ export const sharedProfilingBuffer = enableProfiling
 const profilingState =
   enableProfiling && sharedProfilingBuffer !== null
     ? new Int32Array(sharedProfilingBuffer)
-    : null;
+    : []; // We can't read this but it helps save bytes for null checks
 
 const PRIORITY = 0;
 const CURRENT_TASK_ID = 1;
 const CURRENT_RUN_ID = 2;
 const QUEUE_SIZE = 3;
 
-if (enableProfiling && profilingState !== null) {
+if (enableProfiling) {
   profilingState[PRIORITY] = NoPriority;
   // This is maintained with a counter, because the size of the priority queue
   // array might include canceled tasks.
@@ -95,9 +95,8 @@ export function markTaskStart(
   time: number,
 ) {
   if (enableProfiling) {
-    if (profilingState !== null) {
-      profilingState[QUEUE_SIZE]++;
-    }
+    profilingState[QUEUE_SIZE]++;
+
     if (eventLog !== null) {
       logEvent([TaskStartEvent, time, task.id, task.priorityLevel]);
     }
@@ -112,11 +111,9 @@ export function markTaskCompleted(
   time: number,
 ) {
   if (enableProfiling) {
-    if (profilingState !== null) {
-      profilingState[PRIORITY] = NoPriority;
-      profilingState[CURRENT_TASK_ID] = 0;
-      profilingState[QUEUE_SIZE]--;
-    }
+    profilingState[PRIORITY] = NoPriority;
+    profilingState[CURRENT_TASK_ID] = 0;
+    profilingState[QUEUE_SIZE]--;
 
     if (eventLog !== null) {
       logEvent([TaskCompleteEvent, time, task.id]);
@@ -132,9 +129,7 @@ export function markTaskCanceled(
   time: number,
 ) {
   if (enableProfiling) {
-    if (profilingState !== null) {
-      profilingState[QUEUE_SIZE]--;
-    }
+    profilingState[QUEUE_SIZE]--;
 
     if (eventLog !== null) {
       logEvent([TaskCancelEvent, time, task.id]);
@@ -150,11 +145,9 @@ export function markTaskErrored(
   time: number,
 ) {
   if (enableProfiling) {
-    if (profilingState !== null) {
-      profilingState[PRIORITY] = NoPriority;
-      profilingState[CURRENT_TASK_ID] = 0;
-      profilingState[QUEUE_SIZE]--;
-    }
+    profilingState[PRIORITY] = NoPriority;
+    profilingState[CURRENT_TASK_ID] = 0;
+    profilingState[QUEUE_SIZE]--;
 
     if (eventLog !== null) {
       logEvent([TaskErrorEvent, time, task.id]);
@@ -169,11 +162,9 @@ export function markTaskRun(
   if (enableProfiling) {
     runIdCounter++;
 
-    if (profilingState !== null) {
-      profilingState[PRIORITY] = task.priorityLevel;
-      profilingState[CURRENT_TASK_ID] = task.id;
-      profilingState[CURRENT_RUN_ID] = runIdCounter;
-    }
+    profilingState[PRIORITY] = task.priorityLevel;
+    profilingState[CURRENT_TASK_ID] = task.id;
+    profilingState[CURRENT_RUN_ID] = runIdCounter;
 
     if (eventLog !== null) {
       logEvent([TaskRunEvent, time, task.id, runIdCounter]);
@@ -183,11 +174,9 @@ export function markTaskRun(
 
 export function markTaskYield(task: {id: number}, time: number) {
   if (enableProfiling) {
-    if (profilingState !== null) {
-      profilingState[PRIORITY] = NoPriority;
-      profilingState[CURRENT_TASK_ID] = 0;
-      profilingState[CURRENT_RUN_ID] = 0;
-    }
+    profilingState[PRIORITY] = NoPriority;
+    profilingState[CURRENT_TASK_ID] = 0;
+    profilingState[CURRENT_RUN_ID] = 0;
 
     if (eventLog !== null) {
       logEvent([TaskYieldEvent, time, task.id, runIdCounter]);
