@@ -14,6 +14,7 @@ let ReactFeatureFlags;
 let ReactDOM;
 let ReactDOMServer;
 let ReactTestRenderer;
+let Scheduler;
 
 // FIXME: What should the public API be for setting an event's priority? Right
 // now it's an enum but is that what we want? Hard coding this for now.
@@ -72,6 +73,7 @@ describe('DOMEventResponderSystem', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
+    Scheduler = require('scheduler');
     container = document.createElement('div');
     document.body.appendChild(container);
   });
@@ -933,5 +935,58 @@ describe('DOMEventResponderSystem', () => {
 
     ReactDOM.render(<Test2 />, container);
     buttonRef.current.dispatchEvent(createEvent('foobar'));
+  });
+
+  it('should work with concurrent mode updates', async () => {
+    const log = [];
+    const TestResponder = createEventResponder({
+      targetEventTypes: ['click'],
+      onEvent(event, context, props) {
+        log.push(props);
+      },
+    });
+    const ref = React.createRef();
+
+    function Test({counter}) {
+      const listener = React.unstable_useResponder(TestResponder, {counter});
+
+      return (
+        <button listeners={listener} ref={ref}>
+          Press me
+        </button>
+      );
+    }
+
+    let root = ReactDOM.unstable_createRoot(container);
+    let batch = root.createBatch();
+    batch.render(<Test counter={0} />);
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+    batch.commit();
+
+    // Click the button
+    dispatchClickEvent(ref.current);
+    expect(log).toEqual([{counter: 0}]);
+
+    // Clear log
+    log.length = 0;
+
+    // Increase counter
+    batch = root.createBatch();
+    batch.render(<Test counter={1} />);
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+
+    // Click the button again
+    dispatchClickEvent(ref.current);
+    expect(log).toEqual([{counter: 0}]);
+
+    // Clear log
+    log.length = 0;
+
+    // Commit
+    batch.commit();
+    dispatchClickEvent(ref.current);
+    expect(log).toEqual([{counter: 1}]);
   });
 });
