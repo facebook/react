@@ -19,7 +19,7 @@ import {
 let React;
 let ReactFeatureFlags;
 let ReactDOM;
-let useContextMenuResponder;
+let useContextMenu;
 
 function initializeModules(hasPointerEvents) {
   setPointerEvent(hasPointerEvents);
@@ -28,8 +28,7 @@ function initializeModules(hasPointerEvents) {
   ReactFeatureFlags.enableFlareAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
-  useContextMenuResponder = require('react-events/context-menu')
-    .useContextMenuResponder;
+  useContextMenu = require('react-events/context-menu').useContextMenu;
 }
 
 const forcePointerEvents = true;
@@ -56,7 +55,7 @@ describe.each(table)('ContextMenu responder', hasPointerEvents => {
       const preventDefault = jest.fn();
       const ref = React.createRef();
       const Component = () => {
-        const listener = useContextMenuResponder({onContextMenu});
+        const listener = useContextMenu({onContextMenu});
         return <div ref={ref} listeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
@@ -79,7 +78,7 @@ describe.each(table)('ContextMenu responder', hasPointerEvents => {
       const preventDefault = jest.fn();
       const ref = React.createRef();
       const Component = () => {
-        const listener = useContextMenuResponder({onContextMenu});
+        const listener = useContextMenu({onContextMenu});
         return <div ref={ref} listeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
@@ -101,7 +100,7 @@ describe.each(table)('ContextMenu responder', hasPointerEvents => {
       const onContextMenu = jest.fn();
       const ref = React.createRef();
       const Component = () => {
-        const listener = useContextMenuResponder({
+        const listener = useContextMenu({
           onContextMenu,
           disabled: true,
         });
@@ -119,7 +118,7 @@ describe.each(table)('ContextMenu responder', hasPointerEvents => {
       const onContextMenu = jest.fn();
       const ref = React.createRef();
       const Component = () => {
-        const listener = useContextMenuResponder({
+        const listener = useContextMenu({
           onContextMenu,
           preventDefault: false,
         });
@@ -148,7 +147,7 @@ describe.each(table)('ContextMenu responder', hasPointerEvents => {
       const onContextMenu = jest.fn();
       const ref = React.createRef();
       const Component = () => {
-        const listener = useContextMenuResponder({onContextMenu});
+        const listener = useContextMenu({onContextMenu});
         return <div ref={ref} listeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
@@ -180,7 +179,7 @@ describe.each(table)('ContextMenu responder', hasPointerEvents => {
       const onContextMenu = jest.fn();
       const ref = React.createRef();
       const Component = () => {
-        const listener = useContextMenuResponder({onContextMenu});
+        const listener = useContextMenu({onContextMenu});
         return <div ref={ref} listeners={listener} />;
       };
       ReactDOM.render(<Component />, container);

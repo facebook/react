@@ -1,48 +1,39 @@
 # FocusWithin
 
-The `FocusWithin` module responds to focus and blur events on its child. Focus events
+The `useFocusWithin` hooks responds to focus and blur events on its child. Focus events
 are dispatched for all input types, with the exception of `onFocusVisibleChange`
 which is only dispatched when focusing with a keyboard.
 
-Focus events do not propagate between `FocusWithin` event responders.
+Focus events do not propagate between `useFocusWithin` event responders.
 
 ```js
 // Example
 const Button = (props) => {
-  const [ focusWithin, updateFocusWithin ] = useState(false);
-  const [ focusWithinVisible, updateFocusWithinVisible ] = useState(false);
+  const [ isFocusWithin, updateFocusWithin ] = useState(false);
+  const [ isFocusWithinVisible, updateFocusWithinVisible ] = useState(false);
+  const focusWithin = useFocusWithin({
+    onFocusWithinChange={updateFocusWithin}
+    onFocusWithinVisibleChange={updateFocusWithinVisible}
+  });
 
   return (
-    <FocusWithin
-      onFocusWithinChange={updateFocusWithin}
-      onFocusWithinVisibleChange={updateFocusWithinVisible}
+    <button
+      children={props.children}
+      listeners={focusWithin}
+      style={{
+        ...(isFocusWithin && focusWithinStyles),
+        ...(isFocusWithinVisible && focusWithinVisibleStyles)
+      }}
     >
-      <button
-        children={props.children}
-        style={{
-          ...(focusWithin && focusWithinStyles),
-          ...(focusWithinVisible && focusWithinVisibleStyles)
-        }}
-      >
-    </FocusWithin>
   );
 };
-```
-
-## Types
-
-```js
-type FocusEvent = {
-  target: Element,
-  type: 'focuswithinchange' | 'focuswithinvisiblechange'
-}
 ```
 
 ## Props
 
 ### disabled: boolean = false
 
-Disables all `FocusWithin` events.
+Disables the responder.
 
 ### onFocusWithinChange: boolean => void
 

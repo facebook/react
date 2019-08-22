@@ -209,7 +209,7 @@ export const KeyboardResponder = React.unstable_createResponder(
   keyboardResponderImpl,
 );
 
-export function useKeyboardResponder(
+export function useKeyboard(
   props: KeyboardProps,
 ): ReactEventResponderListener<any, any> {
   return React.unstable_useResponder(KeyboardResponder, props);
