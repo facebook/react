@@ -64,7 +64,7 @@ var taskQueue = [];
 var timerQueue = [];
 
 // Incrementing id counter. Used to maintain insertion order.
-var taskIdCounter = 0;
+var taskIdCounter = 1;
 
 // Pausing the scheduler is useful for debugging.
 var isSchedulerPaused = false;
@@ -316,7 +316,7 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
   var expirationTime = startTime + timeout;
 
   var newTask = {
-    id: ++taskIdCounter,
+    id: taskIdCounter++,
     callback,
     priorityLevel,
     startTime,
