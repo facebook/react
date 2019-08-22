@@ -297,8 +297,6 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
 
   var startTime;
   var timeout;
-  // TODO: Expose the current label when profiling, somehow
-  // var label;
   if (typeof options === 'object' && options !== null) {
     var delay = options.delay;
     if (typeof delay === 'number' && delay > 0) {
@@ -310,12 +308,6 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
       typeof options.timeout === 'number'
         ? options.timeout
         : timeoutForPriorityLevel(priorityLevel);
-    // if (enableProfiling) {
-    //   var _label = options.label;
-    //   if (typeof _label === 'string') {
-    //     label = _label;
-    //   }
-    // }
   } else {
     timeout = timeoutForPriorityLevel(priorityLevel);
     startTime = currentTime;
@@ -331,12 +323,8 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
     expirationTime,
     sortIndex: -1,
   };
-
   if (enableProfiling) {
     newTask.isQueued = false;
-    // if (typeof options === 'object' && options !== null) {
-    //   newTask.label = label;
-    // }
   }
 
   if (startTime > currentTime) {
