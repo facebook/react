@@ -135,66 +135,21 @@ function flushWork(hasTimeRemaining, initialTime) {
   isPerformingWork = true;
   const previousPriorityLevel = currentPriorityLevel;
   try {
-    let currentTime = initialTime;
-    advanceTimers(currentTime);
-    currentTask = peek(taskQueue);
-    while (
-      currentTask !== null &&
-      !(enableSchedulerDebugging && isSchedulerPaused)
-    ) {
-      if (
-        currentTask.expirationTime > currentTime &&
-        (!hasTimeRemaining || shouldYieldToHost())
-      ) {
-        // This currentTask hasn't expired, and we've reached the deadline.
-        break;
-      }
-      const callback = currentTask.callback;
-      if (callback !== null) {
-        currentTask.callback = null;
-        currentPriorityLevel = currentTask.priorityLevel;
-        const didUserCallbackTimeout =
-          currentTask.expirationTime <= currentTime;
-        markTaskRun(currentTask, currentTime);
-        const continuationCallback = callback(didUserCallbackTimeout);
-        currentTime = getCurrentTime();
-        if (typeof continuationCallback === 'function') {
-          currentTask.callback = continuationCallback;
-          markTaskYield(currentTask, currentTime);
-        } else {
-          if (enableProfiling) {
-            markTaskCompleted(currentTask, currentTime);
-            currentTask.isQueued = false;
-          }
-          if (currentTask === peek(taskQueue)) {
-            pop(taskQueue);
-          }
-        }
-        advanceTimers(currentTime);
-      } else {
-        pop(taskQueue);
-      }
-      currentTask = peek(taskQueue);
-    }
-    // Return whether there's additional work
-    if (currentTask !== null) {
-      return true;
-    } else {
-      let firstTimer = peek(timerQueue);
-      if (firstTimer !== null) {
-        requestHostTimeout(handleTimeout, firstTimer.startTime - currentTime);
-      }
-      return false;
-    }
-  } catch (error) {
     if (enableProfiling) {
-      if (currentTask !== null) {
-        const currentTime = getCurrentTime();
-        markTaskErrored(currentTask, currentTime);
-        currentTask.isQueued = false;
+      try {
+        return workLoop(hasTimeRemaining, initialTime);
+      } catch (error) {
+        if (currentTask !== null) {
+          const currentTime = getCurrentTime();
+          markTaskErrored(currentTask, currentTime);
+          currentTask.isQueued = false;
+        }
+        throw error;
       }
+    } else {
+      // No catch in prod codepath.
+      return workLoop(hasTimeRemaining, initialTime);
     }
-    throw error;
   } finally {
     currentTask = null;
     currentPriorityLevel = previousPriorityLevel;
@@ -203,6 +158,59 @@ function flushWork(hasTimeRemaining, initialTime) {
       const currentTime = getCurrentTime();
       markSchedulerSuspended(currentTime);
     }
+  }
+}
+
+function workLoop(hasTimeRemaining, initialTime) {
+  let currentTime = initialTime;
+  advanceTimers(currentTime);
+  currentTask = peek(taskQueue);
+  while (
+    currentTask !== null &&
+    !(enableSchedulerDebugging && isSchedulerPaused)
+  ) {
+    if (
+      currentTask.expirationTime > currentTime &&
+      (!hasTimeRemaining || shouldYieldToHost())
+    ) {
+      // This currentTask hasn't expired, and we've reached the deadline.
+      break;
+    }
+    const callback = currentTask.callback;
+    if (callback !== null) {
+      currentTask.callback = null;
+      currentPriorityLevel = currentTask.priorityLevel;
+      const didUserCallbackTimeout = currentTask.expirationTime <= currentTime;
+      markTaskRun(currentTask, currentTime);
+      const continuationCallback = callback(didUserCallbackTimeout);
+      currentTime = getCurrentTime();
+      if (typeof continuationCallback === 'function') {
+        currentTask.callback = continuationCallback;
+        markTaskYield(currentTask, currentTime);
+      } else {
+        if (enableProfiling) {
+          markTaskCompleted(currentTask, currentTime);
+          currentTask.isQueued = false;
+        }
+        if (currentTask === peek(taskQueue)) {
+          pop(taskQueue);
+        }
+      }
+      advanceTimers(currentTime);
+    } else {
+      pop(taskQueue);
+    }
+    currentTask = peek(taskQueue);
+  }
+  // Return whether there's additional work
+  if (currentTask !== null) {
+    return true;
+  } else {
+    let firstTimer = peek(timerQueue);
+    if (firstTimer !== null) {
+      requestHostTimeout(handleTimeout, firstTimer.startTime - currentTime);
+    }
+    return false;
   }
 }
 
