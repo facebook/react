@@ -449,7 +449,6 @@ export function mountResponderInstance(
   props: Object,
   state: Object,
   instance: Instance,
-  rootContainerInstance: Container,
 ) {
   if (enableFlareAPI) {
     const {rootEventTypes} = responder;

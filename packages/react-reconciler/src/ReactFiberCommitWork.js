@@ -118,6 +118,7 @@ import {
 } from './ReactHookEffectTags';
 import {didWarnAboutReassigningProps} from './ReactFiberBeginWork';
 import {runWithPriority, NormalPriority} from './SchedulerWithReactIntegration';
+import {updateEventListeners} from './ReactFiberEvents';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {
@@ -1330,6 +1331,13 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
             newProps,
             finishedWork,
           );
+        }
+        if (enableFlareAPI) {
+          const prevListeners = oldProps.listeners;
+          const nextListeners = newProps.listeners;
+          if (prevListeners !== nextListeners) {
+            updateEventListeners(nextListeners, instance, finishedWork);
+          }
         }
       }
       return;

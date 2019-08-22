@@ -14,6 +14,7 @@ let ReactFeatureFlags;
 let ReactDOM;
 let ReactDOMServer;
 let ReactTestRenderer;
+let Scheduler;
 
 // FIXME: What should the public API be for setting an event's priority? Right
 // now it's an enum but is that what we want? Hard coding this for now.
@@ -72,6 +73,7 @@ describe('DOMEventResponderSystem', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
+    Scheduler = require('scheduler');
     container = document.createElement('div');
     document.body.appendChild(container);
   });
@@ -811,8 +813,8 @@ describe('DOMEventResponderSystem', () => {
 
   it('the event responder system should warn on accessing invalid properties', () => {
     const TestResponder = createEventResponder({
-      rootEventTypes: ['click'],
-      onRootEvent: (event, context, props) => {
+      targetEventTypes: ['click'],
+      onEvent: (event, context, props) => {
         const syntheticEvent = {
           target: event.target,
           type: 'click',
@@ -823,19 +825,24 @@ describe('DOMEventResponderSystem', () => {
     });
 
     let handler;
+    let buttonRef = React.createRef();
     const Test = () => {
       const listener = React.unstable_useResponder(TestResponder, {
         onClick: handler,
       });
 
-      return <button listeners={listener}>Click me!</button>;
+      return (
+        <button listeners={listener} ref={buttonRef}>
+          Click me!
+        </button>
+      );
     };
     expect(() => {
       handler = event => {
         event.preventDefault();
       };
       ReactDOM.render(<Test />, container);
-      dispatchClickEvent(document.body);
+      dispatchClickEvent(buttonRef.current);
     }).toWarnDev(
       'Warning: preventDefault() is not available on event objects created from event responder modules ' +
         '(React Flare).' +
@@ -847,7 +854,7 @@ describe('DOMEventResponderSystem', () => {
         event.stopPropagation();
       };
       ReactDOM.render(<Test />, container);
-      dispatchClickEvent(document.body);
+      dispatchClickEvent(buttonRef.current);
     }).toWarnDev(
       'Warning: stopPropagation() is not available on event objects created from event responder modules ' +
         '(React Flare).' +
@@ -859,7 +866,7 @@ describe('DOMEventResponderSystem', () => {
         event.isDefaultPrevented();
       };
       ReactDOM.render(<Test />, container);
-      dispatchClickEvent(document.body);
+      dispatchClickEvent(buttonRef.current);
     }).toWarnDev(
       'Warning: isDefaultPrevented() is not available on event objects created from event responder modules ' +
         '(React Flare).' +
@@ -871,7 +878,7 @@ describe('DOMEventResponderSystem', () => {
         event.isPropagationStopped();
       };
       ReactDOM.render(<Test />, container);
-      dispatchClickEvent(document.body);
+      dispatchClickEvent(buttonRef.current);
     }).toWarnDev(
       'Warning: isPropagationStopped() is not available on event objects created from event responder modules ' +
         '(React Flare).' +
@@ -883,7 +890,7 @@ describe('DOMEventResponderSystem', () => {
         return event.nativeEvent;
       };
       ReactDOM.render(<Test />, container);
-      dispatchClickEvent(document.body);
+      dispatchClickEvent(buttonRef.current);
     }).toWarnDev(
       'Warning: nativeEvent is not available on event objects created from event responder modules ' +
         '(React Flare).' +
@@ -933,5 +940,58 @@ describe('DOMEventResponderSystem', () => {
 
     ReactDOM.render(<Test2 />, container);
     buttonRef.current.dispatchEvent(createEvent('foobar'));
+  });
+
+  it('should work with concurrent mode updates', async () => {
+    const log = [];
+    const TestResponder = createEventResponder({
+      targetEventTypes: ['click'],
+      onEvent(event, context, props) {
+        log.push(props);
+      },
+    });
+    const ref = React.createRef();
+
+    function Test({counter}) {
+      const listener = React.unstable_useResponder(TestResponder, {counter});
+
+      return (
+        <button listeners={listener} ref={ref}>
+          Press me
+        </button>
+      );
+    }
+
+    let root = ReactDOM.unstable_createRoot(container);
+    let batch = root.createBatch();
+    batch.render(<Test counter={0} />);
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+    batch.commit();
+
+    // Click the button
+    dispatchClickEvent(ref.current);
+    expect(log).toEqual([{counter: 0}]);
+
+    // Clear log
+    log.length = 0;
+
+    // Increase counter
+    batch = root.createBatch();
+    batch.render(<Test counter={1} />);
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+
+    // Click the button again
+    dispatchClickEvent(ref.current);
+    expect(log).toEqual([{counter: 0}]);
+
+    // Clear log
+    log.length = 0;
+
+    // Commit
+    batch.commit();
+    dispatchClickEvent(ref.current);
+    expect(log).toEqual([{counter: 1}]);
   });
 });
