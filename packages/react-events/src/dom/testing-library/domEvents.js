@@ -329,8 +329,8 @@ export function pointerover(payload) {
 
 export function pointerup(payload) {
   return createPointerEvent('pointerup', {
-    buttons: buttonsType.none,
     ...payload,
+    buttons: buttonsType.none,
   });
 }
 
@@ -367,8 +367,8 @@ export function mouseover(payload) {
 
 export function mouseup(payload) {
   return createMouseEvent('mouseup', {
-    buttons: buttonsType.none,
     ...payload,
+    buttons: buttonsType.none,
   });
 }
 
