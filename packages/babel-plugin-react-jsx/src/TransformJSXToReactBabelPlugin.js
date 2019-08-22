@@ -1,3 +1,33 @@
+// MIT License
+
+// Copyright (c) 2014-present Sebastian McKenzie and other contributors
+
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to
+// permit persons to whom the Software is furnished to do so, subject to
+// the following conditions:
+
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+// WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+// © 2019 GitHub, Inc.
+
+/**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
 'use strict';
 
 const esutils = require('esutils');
@@ -29,7 +59,7 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
   visitor.JSXElement = {
     exit(path, file) {
       let callExpr;
-      if (file.opts.useCreateElement || useCreateElement(path)) {
+      if (file.opts.useCreateElement || shouldUseCreateElement(path)) {
         callExpr = buildCreateElementCall(path, file);
       } else {
         callExpr = buildJSXElementCall(path, file);
@@ -126,12 +156,12 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
   // from <div key={key} {...props} />. This is an intermediary
   // step while we deprecate key spread from props. Afterwards,
   // we will remove createElement entirely
-  function useCreateElement(path) {
+  function shouldUseCreateElement(path) {
     const openingPath = path.get('openingElement');
     const attributes = openingPath.node.attributes;
 
     let seenPropsSpread = false;
-    for (let i = 0, length = attributes.length; i < length; i++) {
+    for (let i = 0; i < attributes.length; i++) {
       const attr = attributes[i];
       if (
         seenPropsSpread &&
@@ -189,7 +219,7 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
     // a separate argument rather than in the args object. We go through the
     // props and filter out these three keywords so we can pass them in
     // as separate arguments later
-    for (let i = 0, len = openingPath.node.attributes.length; i < len; i++) {
+    for (let i = 0; i < openingPath.node.attributes.length; i++) {
       const attr = openingPath.node.attributes[i];
       if (t.isJSXAttribute(attr) && t.isJSXIdentifier(attr.name)) {
         if (attr.name.name === 'key') {

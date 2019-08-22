@@ -1,16 +1,12 @@
 {
-  "name": "react-jsx-babel-plugin",
-  "version": "1.0.0",
+  "name": "babel-plugin-react-jsx",
+  "version": "0.1.0",
+  "private": true,
   "description": "@babel/plugin-transform-react-jsx",
   "main": "index.js",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/facebook/react.git",
-    "directory": "packages/react-jsx-babel-plugin"
-  },
-  "license": "MIT",
   "dependencies": {
     "esutils": "^2.0.0"
+    
   },
   "files": [
     "README.md",
