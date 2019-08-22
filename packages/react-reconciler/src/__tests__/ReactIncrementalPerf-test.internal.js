@@ -136,6 +136,7 @@ describe('ReactDebugFiberPerf', () => {
     require('shared/ReactFeatureFlags').enableProfilerTimer = false;
     require('shared/ReactFeatureFlags').replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     require('shared/ReactFeatureFlags').debugRenderPhaseSideEffectsForStrictMode = false;
+    require('scheduler/src/SchedulerFeatureFlags').enableProfiling = false;
 
     // Import after the polyfill is set up:
     React = require('react');

@@ -13,3 +13,5 @@ export const {
   requestTimerEventBeforeFirstFrame,
   enableMessageLoopImplementation,
 } = require('SchedulerFeatureFlags');
+
+export const enableProfiling = __PROFILE__;
