@@ -9,7 +9,12 @@
 
 'use strict';
 
-import {createEventTarget, platform, setPointerEvent} from '../testing-library';
+import {
+  buttonsType,
+  createEventTarget,
+  platform,
+  setPointerEvent,
+} from '../testing-library';
 
 let React;
 let ReactFeatureFlags;
@@ -61,7 +66,11 @@ describe.each(table)('ContextMenu responder', hasPointerEvents => {
       expect(preventDefault).toHaveBeenCalledTimes(1);
       expect(onContextMenu).toHaveBeenCalledTimes(1);
       expect(onContextMenu).toHaveBeenCalledWith(
-        expect.objectContaining({pointerType: 'mouse', type: 'contextmenu'}),
+        expect.objectContaining({
+          buttons: buttonsType.secondary,
+          pointerType: 'mouse',
+          type: 'contextmenu',
+        }),
       );
     });
 
@@ -80,7 +89,11 @@ describe.each(table)('ContextMenu responder', hasPointerEvents => {
       expect(preventDefault).toHaveBeenCalledTimes(1);
       expect(onContextMenu).toHaveBeenCalledTimes(1);
       expect(onContextMenu).toHaveBeenCalledWith(
-        expect.objectContaining({pointerType: 'touch', type: 'contextmenu'}),
+        expect.objectContaining({
+          buttons: buttonsType.none,
+          pointerType: 'touch',
+          type: 'contextmenu',
+        }),
       );
     });
 
@@ -144,7 +157,11 @@ describe.each(table)('ContextMenu responder', hasPointerEvents => {
       target.contextmenu({}, {modified: true});
       expect(onContextMenu).toHaveBeenCalledTimes(1);
       expect(onContextMenu).toHaveBeenCalledWith(
-        expect.objectContaining({pointerType: 'mouse', type: 'contextmenu'}),
+        expect.objectContaining({
+          buttons: buttonsType.primary,
+          pointerType: 'mouse',
+          type: 'contextmenu',
+        }),
       );
     });
   });

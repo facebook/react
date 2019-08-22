@@ -75,24 +75,24 @@ type PressEventType =
   | 'presschange';
 
 type PressEvent = {|
-  button: 'primary' | 'auxillary',
-  defaultPrevented: boolean,
-  target: Element | Document,
-  type: PressEventType,
-  pointerType: PointerType,
-  timeStamp: number,
+  altKey: boolean,
+  buttons: 0 | 1 | 4,
   clientX: null | number,
   clientY: null | number,
+  ctrlKey: boolean,
+  defaultPrevented: boolean,
+  metaKey: boolean,
   pageX: null | number,
   pageY: null | number,
+  pointerType: PointerType,
   screenX: null | number,
   screenY: null | number,
+  shiftKey: boolean,
+  target: Element | Document,
+  timeStamp: number,
+  type: PressEventType,
   x: null | number,
   y: null | number,
-  altKey: boolean,
-  ctrlKey: boolean,
-  metaKey: boolean,
-  shiftKey: boolean,
 |};
 
 const hasPointerEvents =
@@ -151,7 +151,7 @@ function createPressEvent(
   defaultPrevented: boolean,
 ): PressEvent {
   const timeStamp = context.getTimeStamp();
-  let button = 'primary';
+  let buttons = 1;
   let clientX = null;
   let clientY = null;
   let pageX = null;
@@ -171,31 +171,36 @@ function createPressEvent(
     let eventObject;
     eventObject = (touchEvent: any) || (nativeEvent: any);
     if (eventObject) {
-      ({clientX, clientY, pageX, pageY, screenX, screenY} = eventObject);
-    }
-    if (nativeEvent.button === 1) {
-      button = 'auxillary';
+      ({
+        buttons,
+        clientX,
+        clientY,
+        pageX,
+        pageY,
+        screenX,
+        screenY,
+      } = eventObject);
     }
   }
   return {
-    button,
-    defaultPrevented,
-    target,
-    type,
-    pointerType,
-    timeStamp,
+    altKey,
+    buttons,
     clientX,
     clientY,
+    ctrlKey,
+    defaultPrevented,
+    metaKey,
     pageX,
     pageY,
+    pointerType,
     screenX,
     screenY,
+    shiftKey,
+    target,
+    timeStamp,
+    type,
     x: clientX,
     y: clientY,
-    altKey,
-    ctrlKey,
-    metaKey,
-    shiftKey,
   };
 }
 
@@ -581,11 +586,12 @@ const pressResponderImpl = {
             state.activePointerId = touchEvent.identifier;
           }
 
-          // Ignore any device buttons except primary/auxillary and touch/pen contact.
+          // Ignore any device buttons except primary/secondary and touch/pen contact.
           // Additionally we ignore primary-button + ctrl-key with Macs as that
           // acts like right-click and opens the contextmenu.
           if (
-            nativeEvent.button > 1 ||
+            nativeEvent.buttons === 2 ||
+            nativeEvent.buttons > 4 ||
             (isMac && isMouseEvent && nativeEvent.ctrlKey)
           ) {
             return;
@@ -703,7 +709,7 @@ const pressResponderImpl = {
       case 'mouseup':
       case 'touchend': {
         if (isPressed) {
-          const button = nativeEvent.button;
+          const buttons = nativeEvent.buttons;
           let isKeyboardEvent = false;
           let touchEvent;
           if (type === 'pointerup' && activePointerId !== pointerId) {
@@ -722,7 +728,7 @@ const pressResponderImpl = {
             }
             isKeyboardEvent = true;
             removeRootEventTypes(context, state);
-          } else if (button === 1) {
+          } else if (buttons === 4) {
             // Remove the root events here as no 'click' event is dispatched when this 'button' is pressed.
             removeRootEventTypes(context, state);
           }
@@ -780,7 +786,7 @@ const pressResponderImpl = {
               }
             }
 
-            if (state.isPressWithinResponderRegion && button !== 1) {
+            if (state.isPressWithinResponderRegion && buttons !== 4) {
               dispatchEvent(
                 event,
                 onPress,

@@ -37,16 +37,16 @@ type HoverState = {
 type HoverEventType = 'hoverstart' | 'hoverend' | 'hoverchange' | 'hovermove';
 
 type HoverEvent = {|
-  pointerType: PointerType,
-  target: Element | Document,
-  type: HoverEventType,
-  timeStamp: number,
   clientX: null | number,
   clientY: null | number,
   pageX: null | number,
   pageY: null | number,
+  pointerType: PointerType,
   screenX: null | number,
   screenY: null | number,
+  target: Element | Document,
+  timeStamp: number,
+  type: HoverEventType,
   x: null | number,
   y: null | number,
 |};
