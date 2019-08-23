@@ -1314,7 +1314,7 @@ function completeUnitOfWork(unitOfWork: Fiber): Fiber | null {
       } else {
         startProfilerTimer(workInProgress);
         next = completeWork(current, workInProgress, renderExpirationTime);
-        // Update render duration assuming we didn't error.
+        // Update render duration assuming we didn't receive an error.
         stopProfilerTimerIfRunningAndRecordDelta(workInProgress, false);
       }
       stopWorkTimer(workInProgress);
