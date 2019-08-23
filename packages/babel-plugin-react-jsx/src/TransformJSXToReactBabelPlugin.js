@@ -319,7 +319,9 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
     if (objs.length === 1) {
       // only one object
       if (!t.isObjectExpression(objs[0])) {
-        // this could be null, and jsx expects props to be non-null
+        // if the prop object isn't an object, use Object.assign or _extends
+        // to ensure that the prop will always be an object (as opposed to a variable
+        // that could be null at some point)
         const expressionHelper = useBuiltIns
           ? t.memberExpression(t.identifier('Object'), t.identifier('assign'))
           : file.addHelper('extends');
