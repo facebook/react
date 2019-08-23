@@ -281,8 +281,8 @@ export const SwipeResponder = React.unstable_createResponder(
   swipeResponderImpl,
 );
 
-export function useSwipeListener(
+export function useSwipe(
   props: SwipeProps,
 ): ReactEventResponderListener<any, any> {
-  return React.unstable_useListener(SwipeResponder, props);
+  return React.unstable_useResponder(SwipeResponder, props);
 }

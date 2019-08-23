@@ -310,7 +310,7 @@ export const ScrollResponder = React.unstable_createResponder(
   scrollResponderImpl,
 );
 
-export function useScrollResponder(
+export function useScroll(
   props: ScrollProps,
 ): ReactEventResponderListener<any, any> {
   return React.unstable_useResponder(ScrollResponder, props);

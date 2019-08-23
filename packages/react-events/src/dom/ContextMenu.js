@@ -120,7 +120,7 @@ export const ContextMenuResponder = React.unstable_createResponder(
   contextMenuImpl,
 );
 
-export function useContextMenuResponder(
+export function useContextMenu(
   props: ContextMenuProps,
 ): ReactEventResponderListener<any, any> {
   return React.unstable_useResponder(ContextMenuResponder, props);

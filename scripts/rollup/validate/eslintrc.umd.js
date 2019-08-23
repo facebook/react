@@ -23,8 +23,13 @@ module.exports = {
     module: true,
     define: true,
     require: true,
-    global: true,
     globalThis: true,
+    global: true,
+
+    // Scheduler profiling
+    SharedArrayBuffer: true,
+    Int32Array: true,
+    ArrayBuffer: true,
   },
   parserOptions: {
     ecmaVersion: 5,

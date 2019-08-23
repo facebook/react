@@ -1,26 +1,29 @@
 # Hover
 
-The `Hover` module responds to hover events on the element it wraps. Hover
+The `useHover` hook responds to hover events on the element it wraps. Hover
 events are only dispatched for `mouse` and `pen` pointer types. Hover begins
 when the pointer enters the element's bounds and ends when the pointer leaves.
 
-Hover events do not propagate between `Hover` event responders.
+Hover events do not propagate between `useHover` event responders.
 
 ```js
 // Example
 const Link = (props) => (
-  const [ hovered, setHovered ] = useState(false);
+  const [ isHovered, setHovered ] = useState(false);
+  const hover = useHover({
+    onHoverChange: setHovered
+  });
+
   return (
-    <Hover onHoverChange={setHovered}>
-      <a
-        {...props}
-        href={props.href}
-        style={{
-          ...props.style,
-          textDecoration: hovered ? 'underline': 'none'
-        }}
-      />
-    </Hover>
+    <a
+      {...props}
+      href={props.href}
+      listeners={hover}
+      style={{
+        ...props.style,
+        textDecoration: isHovered ? 'underline': 'none'
+      }}
+    />
   );
 );
 ```
@@ -28,18 +31,27 @@ const Link = (props) => (
 ## Types
 
 ```js
-type HoverEvent = {
-  pointerType: 'mouse' | 'pen',
+type HoverEventType = 'hoverstart' | 'hoverend' | 'hoverchange' | 'hovermove';
+
+type HoverEvent = {|
+  clientX: number,
+  clientY: number,
+  pageX: number,
+  pageY: number,
+  pointerType: PointerType,
   target: Element,
-  type: 'hoverstart' | 'hoverend' | 'hovermove' | 'hoverchange'
-}
+  timeStamp: number,
+  type: HoverEventType,
+  x: number,
+  y: number,
+|};
 ```
 
 ## Props
 
 ### disabled: boolean
 
-Disables all `Hover` events.
+Disables the responder.
 
 ### onHoverChange: boolean => void
 

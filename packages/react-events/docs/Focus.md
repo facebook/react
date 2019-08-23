@@ -1,29 +1,29 @@
 # Focus
 
-The `Focus` module responds to focus and blur events on its child. Focus events
+The `useFocus` hook responds to focus and blur events on its child. Focus events
 are dispatched for all input types, with the exception of `onFocusVisibleChange`
 which is only dispatched when focusing with a keyboard.
 
-Focus events do not propagate between `Focus` event responders.
+Focus events do not propagate between `useFocus` event responders.
 
 ```js
 // Example
 const Button = (props) => {
-  const [ focusVisible, setFocusVisible ] = useState(false);
+  const [ isFocusVisible, setFocusVisible ] = useState(false);
+  const focus = useFocus({
+    onBlur={props.onBlur}
+    onFocus={props.onFocus}
+    onFocusVisibleChange={setFocusVisible}
+  });
 
   return (
-    <Focus
-      onBlur={props.onBlur}
-      onFocus={props.onFocus}
-      onFocusVisibleChange={setFocusVisible}
+    <button
+      children={props.children}
+      listeners={focus}
+      style={{
+        ...(isFocusVisible && focusVisibleStyles)
+      }}
     >
-      <button
-        children={props.children}
-        style={{
-          ...(focusVisible && focusVisibleStyles)
-        }}
-      >
-    </Focus>
   );
 };
 ```
@@ -33,6 +33,8 @@ const Button = (props) => {
 ```js
 type FocusEvent = {
   target: Element,
+  pointerType: 'mouse' | 'touch' | 'pen' | 'keyboard',
+  timeStamp: number,
   type: 'blur' | 'focus' | 'focuschange' | 'focusvisiblechange'
 }
 ```
@@ -41,7 +43,7 @@ type FocusEvent = {
 
 ### disabled: boolean = false
 
-Disables all `Focus` events.
+Disables the responder.
 
 ### onBlur: (e: FocusEvent) => void
 
