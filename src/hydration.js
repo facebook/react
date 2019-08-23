@@ -1,5 +1,6 @@
 // @flow
 
+import Symbol from 'es6-symbol';
 import {
   isElement,
   typeOf,

@@ -23,6 +23,7 @@
     "start:standalone": "cross-env NODE_ENV=development webpack --config webpack.standalone.js --watch"
   },
   "dependencies": {
+    "es6-symbol": "^3",
     "shell-quote": "^1.6.1",
     "ws": "^7"
   },

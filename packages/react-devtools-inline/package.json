@@ -19,7 +19,9 @@
     "prepublish": "yarn run build",
     "start": "cross-env NODE_ENV=development webpack --config webpack.config.js --watch"
   },
-  "dependencies": {},
+  "dependencies": {
+    "es6-symbol": "^3"
+  },
   "devDependencies": {
     "cross-env": "^3.1.4"
   }
