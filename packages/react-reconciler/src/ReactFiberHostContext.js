@@ -13,11 +13,7 @@ import type {Container, HostContext} from './ReactFiberHostConfig';
 
 import invariant from 'shared/invariant';
 
-import {
-  getChildHostContext,
-  getRootHostContext,
-  getChildHostContextForEventComponent,
-} from './ReactFiberHostConfig';
+import {getChildHostContext, getRootHostContext} from './ReactFiberHostConfig';
 import {createCursor, push, pop} from './ReactFiberStack';
 
 declare class NoContextT {}
@@ -96,21 +92,6 @@ function pushHostContext(fiber: Fiber): void {
   push(contextStackCursor, nextContext, fiber);
 }
 
-function pushHostContextForEventComponent(fiber: Fiber): void {
-  const context: HostContext = requiredContext(contextStackCursor.current);
-  const nextContext = getChildHostContextForEventComponent(context);
-
-  // Don't push this Fiber's context unless it's unique.
-  if (context === nextContext) {
-    return;
-  }
-
-  // Track the context and the Fiber that provided it.
-  // This enables us to pop only Fibers that provide unique contexts.
-  push(contextFiberStackCursor, fiber, fiber);
-  push(contextStackCursor, nextContext, fiber);
-}
-
 function popHostContext(fiber: Fiber): void {
   // Do not pop unless this Fiber provided the current context.
   // pushHostContext() only pushes Fibers that provide unique contexts.
@@ -129,5 +110,4 @@ export {
   popHostContext,
   pushHostContainer,
   pushHostContext,
-  pushHostContextForEventComponent,
 };

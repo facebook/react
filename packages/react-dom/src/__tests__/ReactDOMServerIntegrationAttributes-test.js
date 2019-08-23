@@ -401,6 +401,11 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.style.Foo).toBe('5');
       });
 
+      itRenders('camel cased custom properties', async render => {
+        const e = await render(<div style={{'--someColor': '#000000'}} />);
+        expect(e.style.SomeColor).toBe('#000000');
+      });
+
       itRenders('no undefined styles', async render => {
         const e = await render(
           <div style={{color: undefined, width: '30px'}} />,

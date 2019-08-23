@@ -10,6 +10,7 @@
 import type {ThreadID} from './ReactThreadIDAllocator';
 import type {ReactContext} from 'shared/ReactTypes';
 
+import {disableLegacyContext} from 'shared/ReactFeatureFlags';
 import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentName from 'shared/getComponentName';
@@ -73,60 +74,100 @@ export function processContext(
   type: Function,
   context: Object,
   threadID: ThreadID,
+  isClass: boolean,
 ) {
-  const contextType = type.contextType;
-  if (__DEV__) {
-    if ('contextType' in (type: any)) {
-      let isValid =
-        // Allow null for conditional declaration
-        contextType === null ||
-        (contextType !== undefined &&
-          contextType.$$typeof === REACT_CONTEXT_TYPE &&
-          contextType._context === undefined); // Not a <Context.Consumer>
-
-      if (!isValid && !didWarnAboutInvalidateContextType.has(type)) {
-        didWarnAboutInvalidateContextType.add(type);
-
-        let addendum = '';
-        if (contextType === undefined) {
-          addendum =
-            ' However, it is set to undefined. ' +
-            'This can be caused by a typo or by mixing up named and default imports. ' +
-            'This can also happen due to a circular dependency, so ' +
-            'try moving the createContext() call to a separate file.';
-        } else if (typeof contextType !== 'object') {
-          addendum = ' However, it is set to a ' + typeof contextType + '.';
-        } else if (contextType.$$typeof === REACT_PROVIDER_TYPE) {
-          addendum = ' Did you accidentally pass the Context.Provider instead?';
-        } else if (contextType._context !== undefined) {
-          // <Context.Consumer>
-          addendum = ' Did you accidentally pass the Context.Consumer instead?';
-        } else {
-          addendum =
-            ' However, it is set to an object with keys {' +
-            Object.keys(contextType).join(', ') +
-            '}.';
-        }
-        warningWithoutStack(
-          false,
-          '%s defines an invalid contextType. ' +
-            'contextType should point to the Context object returned by React.createContext().%s',
-          getComponentName(type) || 'Component',
-          addendum,
-        );
-      }
-    }
-  }
-  if (typeof contextType === 'object' && contextType !== null) {
-    validateContextBounds(contextType, threadID);
-    return contextType[threadID];
-  } else {
-    const maskedContext = maskContext(type, context);
+  if (isClass) {
+    const contextType = type.contextType;
     if (__DEV__) {
-      if (type.contextTypes) {
-        checkContextTypes(type.contextTypes, maskedContext, 'context');
+      if ('contextType' in (type: any)) {
+        let isValid =
+          // Allow null for conditional declaration
+          contextType === null ||
+          (contextType !== undefined &&
+            contextType.$$typeof === REACT_CONTEXT_TYPE &&
+            contextType._context === undefined); // Not a <Context.Consumer>
+
+        if (!isValid && !didWarnAboutInvalidateContextType.has(type)) {
+          didWarnAboutInvalidateContextType.add(type);
+
+          let addendum = '';
+          if (contextType === undefined) {
+            addendum =
+              ' However, it is set to undefined. ' +
+              'This can be caused by a typo or by mixing up named and default imports. ' +
+              'This can also happen due to a circular dependency, so ' +
+              'try moving the createContext() call to a separate file.';
+          } else if (typeof contextType !== 'object') {
+            addendum = ' However, it is set to a ' + typeof contextType + '.';
+          } else if (contextType.$$typeof === REACT_PROVIDER_TYPE) {
+            addendum =
+              ' Did you accidentally pass the Context.Provider instead?';
+          } else if (contextType._context !== undefined) {
+            // <Context.Consumer>
+            addendum =
+              ' Did you accidentally pass the Context.Consumer instead?';
+          } else {
+            addendum =
+              ' However, it is set to an object with keys {' +
+              Object.keys(contextType).join(', ') +
+              '}.';
+          }
+          warningWithoutStack(
+            false,
+            '%s defines an invalid contextType. ' +
+              'contextType should point to the Context object returned by React.createContext().%s',
+            getComponentName(type) || 'Component',
+            addendum,
+          );
+        }
       }
     }
-    return maskedContext;
+    if (typeof contextType === 'object' && contextType !== null) {
+      validateContextBounds(contextType, threadID);
+      return contextType[threadID];
+    }
+    if (disableLegacyContext) {
+      if (__DEV__) {
+        if (type.contextTypes) {
+          warningWithoutStack(
+            false,
+            '%s uses the legacy contextTypes API which is no longer supported. ' +
+              'Use React.createContext() with static contextType instead.',
+            getComponentName(type) || 'Unknown',
+          );
+        }
+      }
+      return emptyObject;
+    } else {
+      const maskedContext = maskContext(type, context);
+      if (__DEV__) {
+        if (type.contextTypes) {
+          checkContextTypes(type.contextTypes, maskedContext, 'context');
+        }
+      }
+      return maskedContext;
+    }
+  } else {
+    if (disableLegacyContext) {
+      if (__DEV__) {
+        if (type.contextTypes) {
+          warningWithoutStack(
+            false,
+            '%s uses the legacy contextTypes API which is no longer supported. ' +
+              'Use React.createContext() with React.useContext() instead.',
+            getComponentName(type) || 'Unknown',
+          );
+        }
+      }
+      return undefined;
+    } else {
+      const maskedContext = maskContext(type, context);
+      if (__DEV__) {
+        if (type.contextTypes) {
+          checkContextTypes(type.contextTypes, maskedContext, 'context');
+        }
+      }
+      return maskedContext;
+    }
   }
 }

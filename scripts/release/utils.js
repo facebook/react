@@ -157,6 +157,17 @@ const printDiff = (path, beforeContents, afterContents) => {
   return patch;
 };
 
+// Convert an array param (expected format "--foo bar baz")
+// to also accept comma input (e.g. "--foo bar,baz")
+const splitCommaParams = array => {
+  for (let i = array.length - 1; i >= 0; i--) {
+    const param = array[i];
+    if (param.includes(',')) {
+      array.splice(i, 1, ...param.split(','));
+    }
+  }
+};
+
 // This method is used by both local Node release scripts and Circle CI bash scripts.
 // It updates version numbers in package JSONs (both the version field and dependencies),
 // As well as the embedded renderer version in "packages/shared/ReactVersion".
@@ -228,6 +239,7 @@ module.exports = {
   handleError,
   logPromise,
   printDiff,
+  splitCommaParams,
   theme,
   updateVersionsForCanary,
 };

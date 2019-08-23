@@ -7,20 +7,17 @@
  * @flow
  */
 
-import {
-  EventComponent,
-  HostComponent,
-  FunctionComponent,
-} from 'shared/ReactWorkTags';
+import {HostComponent} from 'shared/ReactWorkTags';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import {
   batchedEventUpdates,
   discreteUpdates,
   flushDiscreteUpdatesIfNeeded,
-} from 'events/ReactGenericBatching';
+  executeUserEventHandler,
+} from 'legacy-events/ReactGenericBatching';
 import type {
   ReactEventResponder,
-  ReactEventComponentInstance,
+  ReactEventResponderInstance,
 } from 'shared/ReactTypes';
 import type {
   ReactNativeResponderContext,
@@ -34,7 +31,6 @@ import {
   UserBlockingEvent,
   DiscreteEvent,
 } from './ReactNativeTypes';
-import {invokeGuardedCallbackAndCatchFirstError} from 'shared/ReactErrorUtils';
 import {enableUserBlockingEvents} from 'shared/ReactFeatureFlags';
 import warning from 'shared/warning';
 import invariant from 'shared/invariant';
@@ -47,37 +43,24 @@ const {
   unstable_runWithPriority: runWithPriority,
 } = Scheduler;
 
-type EventObjectType = $Shape<PartialEventObject>;
-
-type PartialEventObject = {
-  target: ReactNativeEventTarget,
-  type: string,
-};
-
 type ResponderTimeout = {|
   id: TimeoutID,
   timers: Map<number, ResponderTimer>,
 |};
 
 type ResponderTimer = {|
-  isHook: boolean,
-  instance: ReactNativeEventComponentInstance,
+  instance: ReactNativeEventResponderInstance,
   func: () => void,
   id: number,
   timeStamp: number,
 |};
-
-type EventQueue = {
-  events: Array<EventObjectType>,
-  eventPriority: EventPriority,
-};
 
 type ReactNativeEventResponder = ReactEventResponder<
   ReactNativeResponderEvent,
   ReactNativeResponderContext,
 >;
 
-type ReactNativeEventComponentInstance = ReactEventComponentInstance<
+type ReactNativeEventResponderInstance = ReactEventResponderInstance<
   ReactNativeResponderEvent,
   ReactNativeResponderContext,
 >;
@@ -85,92 +68,47 @@ type ReactNativeEventComponentInstance = ReactEventComponentInstance<
 const {measureInWindow} = nativeFabricUIManager;
 
 const activeTimeouts: Map<number, ResponderTimeout> = new Map();
-const rootEventTypesToEventComponentInstances: Map<
+const rootEventTypesToEventResponderInstances: Map<
   string,
-  Set<ReactNativeEventComponentInstance>,
+  Set<ReactNativeEventResponderInstance>,
 > = new Map();
-const ownershipChangeListeners: Set<
-  ReactNativeEventComponentInstance,
-> = new Set();
-const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
-const eventListeners:
-  | WeakMap
-  | Map<
-      $Shape<PartialEventObject>,
-      ($Shape<PartialEventObject>) => void,
-    > = new PossiblyWeakMap();
-
-let globalOwner = null;
-let continueLocalPropagation = false;
 
 let currentTimeStamp = 0;
 let currentTimers = new Map();
-let currentInstance: null | ReactNativeEventComponentInstance = null;
-let currentEventQueue: null | EventQueue = null;
+let currentInstance: null | ReactNativeEventResponderInstance = null;
 let currentTimerIDCounter = 0;
-let currentlyInHook = false;
 
 const eventResponderContext: ReactNativeResponderContext = {
   dispatchEvent(
-    possibleEventObject: Object,
-    listener: ($Shape<PartialEventObject>) => void,
+    eventValue: any,
+    eventListener: any => void,
     eventPriority: EventPriority,
   ): void {
     validateResponderContext();
-    const {target, type, timeStamp} = possibleEventObject;
-
-    if (target == null || type == null || timeStamp == null) {
-      throw new Error(
-        'context.dispatchEvent: "target", "timeStamp", and "type" fields on event object are required.',
-      );
-    }
-    const showWarning = name => {
-      if (__DEV__) {
-        warning(
-          false,
-          '%s is not available on event objects created from event responder modules (React Flare). ' +
-            'Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.%s }`',
-          name,
-          name,
+    validateEventValue(eventValue);
+    switch (eventPriority) {
+      case DiscreteEvent: {
+        flushDiscreteUpdatesIfNeeded(currentTimeStamp);
+        discreteUpdates(() =>
+          executeUserEventHandler(eventListener, eventValue),
         );
+        break;
       }
-    };
-    possibleEventObject.preventDefault = () => {
-      if (__DEV__) {
-        showWarning('preventDefault()');
-      }
-    };
-    possibleEventObject.stopPropagation = () => {
-      if (__DEV__) {
-        showWarning('stopPropagation()');
-      }
-    };
-    possibleEventObject.isDefaultPrevented = () => {
-      if (__DEV__) {
-        showWarning('isDefaultPrevented()');
-      }
-    };
-    possibleEventObject.isPropagationStopped = () => {
-      if (__DEV__) {
-        showWarning('isPropagationStopped()');
-      }
-    };
-    // $FlowFixMe: we don't need value, Flow thinks we do
-    Object.defineProperty(possibleEventObject, 'nativeEvent', {
-      get() {
-        if (__DEV__) {
-          showWarning('nativeEvent');
+      case UserBlockingEvent: {
+        if (enableUserBlockingEvents) {
+          runWithPriority(UserBlockingPriority, () =>
+            executeUserEventHandler(eventListener, eventValue),
+          );
+        } else {
+          executeUserEventHandler(eventListener, eventValue);
         }
-      },
-    });
-
-    const eventObject = ((possibleEventObject: any): $Shape<
-      PartialEventObject,
-    >);
-    const eventQueue = ((currentEventQueue: any): EventQueue);
-    eventQueue.eventPriority = eventPriority;
-    eventListeners.set(eventObject, listener);
-    eventQueue.events.push(eventObject);
+        break;
+      }
+      case ContinuousEvent: {
+        executeUserEventHandler(eventListener, eventValue);
+        break;
+      }
+    }
   },
   isTargetWithinNode(
     childTarget: ReactNativeEventTarget,
@@ -211,8 +149,8 @@ const eventResponderContext: ReactNativeResponderContext = {
     validateResponderContext();
     for (let i = 0; i < rootEventTypes.length; i++) {
       const rootEventType = rootEventTypes[i];
-      const eventComponentInstance = ((currentInstance: any): ReactNativeEventComponentInstance);
-      registerRootEventType(rootEventType, eventComponentInstance);
+      const eventResponderInstance = ((currentInstance: any): ReactNativeEventResponderInstance);
+      registerRootEventType(rootEventType, eventResponderInstance);
     }
   },
   removeRootEventTypes(rootEventTypes: Array<string>): void {
@@ -220,17 +158,17 @@ const eventResponderContext: ReactNativeResponderContext = {
     for (let i = 0; i < rootEventTypes.length; i++) {
       const rootEventType = rootEventTypes[i];
 
-      let rootEventComponents = rootEventTypesToEventComponentInstances.get(
+      let rootEventResponders = rootEventTypesToEventResponderInstances.get(
         rootEventType,
       );
-      let rootEventTypesSet = ((currentInstance: any): ReactNativeEventComponentInstance)
+      let rootEventTypesSet = ((currentInstance: any): ReactNativeEventResponderInstance)
         .rootEventTypes;
       if (rootEventTypesSet !== null) {
         rootEventTypesSet.delete(rootEventType);
       }
-      if (rootEventComponents !== undefined) {
-        rootEventComponents.delete(
-          ((currentInstance: any): ReactNativeEventComponentInstance),
+      if (rootEventResponders !== undefined) {
+        rootEventResponders.delete(
+          ((currentInstance: any): ReactNativeEventResponderInstance),
         );
       }
     }
@@ -255,8 +193,7 @@ const eventResponderContext: ReactNativeResponderContext = {
       currentTimers.set(delay, timeout);
     }
     timeout.timers.set(timerId, {
-      isHook: currentlyInHook,
-      instance: ((currentInstance: any): ReactNativeEventComponentInstance),
+      instance: ((currentInstance: any): ReactNativeEventResponderInstance),
       func,
       id: timerId,
       timeStamp: currentTimeStamp,
@@ -282,6 +219,57 @@ const eventResponderContext: ReactNativeResponderContext = {
   },
 };
 
+function validateEventValue(eventValue: any): void {
+  if (typeof eventValue === 'object' && eventValue !== null) {
+    const {target, type, timeStamp} = eventValue;
+
+    if (target == null || type == null || timeStamp == null) {
+      throw new Error(
+        'context.dispatchEvent: "target", "timeStamp", and "type" fields on event object are required.',
+      );
+    }
+    const showWarning = name => {
+      if (__DEV__) {
+        warning(
+          false,
+          '%s is not available on event objects created from event responder modules (React Flare). ' +
+            'Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.%s }`',
+          name,
+          name,
+        );
+      }
+    };
+    eventValue.preventDefault = () => {
+      if (__DEV__) {
+        showWarning('preventDefault()');
+      }
+    };
+    eventValue.stopPropagation = () => {
+      if (__DEV__) {
+        showWarning('stopPropagation()');
+      }
+    };
+    eventValue.isDefaultPrevented = () => {
+      if (__DEV__) {
+        showWarning('isDefaultPrevented()');
+      }
+    };
+    eventValue.isPropagationStopped = () => {
+      if (__DEV__) {
+        showWarning('isPropagationStopped()');
+      }
+    };
+    // $FlowFixMe: we don't need value, Flow thinks we do
+    Object.defineProperty(eventValue, 'nativeEvent', {
+      get() {
+        if (__DEV__) {
+          showWarning('nativeEvent');
+        }
+      },
+    });
+  }
+}
+
 function getFiberFromTarget(
   target: null | ReactNativeEventTarget,
 ): Fiber | null {
@@ -296,24 +284,22 @@ function processTimers(
   delay: number,
 ): void {
   const timersArr = Array.from(timers.values());
-  currentEventQueue = createEventQueue();
   try {
-    for (let i = 0; i < timersArr.length; i++) {
-      const {isHook, instance, func, id, timeStamp} = timersArr[i];
-      currentInstance = instance;
-      currentTimeStamp = timeStamp + delay;
-      currentlyInHook = isHook;
-      try {
-        func();
-      } finally {
-        activeTimeouts.delete(id);
+    batchedEventUpdates(() => {
+      for (let i = 0; i < timersArr.length; i++) {
+        const {instance, func, id, timeStamp} = timersArr[i];
+        currentInstance = instance;
+        currentTimeStamp = timeStamp + delay;
+        try {
+          func();
+        } finally {
+          activeTimeouts.delete(id);
+        }
       }
-    }
-    processEventQueue();
+    });
   } finally {
     currentTimers = null;
     currentInstance = null;
-    currentEventQueue = null;
     currentTimeStamp = 0;
   }
 }
@@ -324,8 +310,8 @@ function createFabricResponderEvent(
   target: null | ReactNativeEventTarget,
 ): ReactNativeResponderEvent {
   return {
-    currentTarget: target,
     nativeEvent,
+    responderTarget: target,
     target,
     type: topLevelType,
   };
@@ -333,111 +319,10 @@ function createFabricResponderEvent(
 
 function validateResponderContext(): void {
   invariant(
-    currentEventQueue && currentInstance,
+    currentInstance,
     'An event responder context was used outside of an event cycle. ' +
       'Use context.setTimeout() to use asynchronous responder context outside of event cycle .',
   );
-}
-
-// TODO this function is almost an exact copy of the DOM version, we should
-// somehow share the logic
-function createEventQueue(): EventQueue {
-  return {
-    events: [],
-    eventPriority: ContinuousEvent,
-  };
-}
-
-// TODO this function is almost an exact copy of the DOM version, we should
-// somehow share the logic
-function processEventQueue(): void {
-  const {events, eventPriority} = ((currentEventQueue: any): EventQueue);
-
-  if (events.length === 0) {
-    return;
-  }
-
-  switch (eventPriority) {
-    case DiscreteEvent: {
-      flushDiscreteUpdatesIfNeeded(currentTimeStamp);
-      discreteUpdates(() => {
-        batchedEventUpdates(processEvents, events);
-      });
-      break;
-    }
-    case UserBlockingEvent: {
-      if (enableUserBlockingEvents) {
-        runWithPriority(
-          UserBlockingPriority,
-          batchedEventUpdates.bind(null, processEvents, events),
-        );
-      } else {
-        batchedEventUpdates(processEvents, events);
-      }
-      break;
-    }
-    case ContinuousEvent: {
-      batchedEventUpdates(processEvents, events);
-      break;
-    }
-  }
-}
-
-// TODO this function is almost an exact copy of the DOM version, we should
-// somehow share the logic
-function triggerOwnershipListeners(): void {
-  const listeningInstances = Array.from(ownershipChangeListeners);
-  const previousInstance = currentInstance;
-  const previouslyInHook = currentlyInHook;
-  currentEventQueue = createEventQueue();
-  try {
-    for (let i = 0; i < listeningInstances.length; i++) {
-      const instance = listeningInstances[i];
-      const {isHook, props, responder, state} = instance;
-      currentInstance = instance;
-      currentlyInHook = isHook;
-      const onOwnershipChange = ((responder: any): ReactNativeEventResponder)
-        .onOwnershipChange;
-      if (onOwnershipChange !== undefined) {
-        onOwnershipChange(eventResponderContext, props, state);
-      }
-    }
-    processEventQueue();
-  } finally {
-    currentInstance = previousInstance;
-    currentlyInHook = previouslyInHook;
-  }
-}
-
-// TODO this function is almost an exact copy of the DOM version, we should
-// somehow share the logic
-function releaseOwnershipForEventComponentInstance(
-  eventComponentInstance: ReactNativeEventComponentInstance,
-): boolean {
-  if (globalOwner === eventComponentInstance) {
-    globalOwner = null;
-    triggerOwnershipListeners();
-    return true;
-  }
-  return false;
-}
-
-// TODO this function is almost an exact copy of the DOM version, we should
-// somehow share the logic
-function processEvent(event: $Shape<PartialEventObject>): void {
-  const type = event.type;
-  const listener = ((eventListeners.get(event): any): (
-    $Shape<PartialEventObject>,
-  ) => void);
-  invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, event);
-}
-
-// TODO this function is almost an exact copy of the DOM version, we should
-// somehow share the logic
-function processEvents(events: Array<EventObjectType>): void {
-  for (let i = 0, length = events.length; i < length; i++) {
-    processEvent(events[i]);
-  }
 }
 
 // TODO this function is almost an exact copy of the DOM version, we should
@@ -454,172 +339,78 @@ function responderEventTypesContainType(
   return false;
 }
 
-// TODO this function is almost an exact copy of the DOM version, we should
-// somehow share the logic
-function shouldSkipEventComponent(
-  eventResponderInstance: ReactNativeEventComponentInstance,
+function validateResponderTargetEventTypes(
+  eventType: string,
   responder: ReactNativeEventResponder,
-  propagatedEventResponders: null | Set<ReactNativeEventResponder>,
-  isHook: boolean,
 ): boolean {
-  if (propagatedEventResponders !== null && !isHook) {
-    if (propagatedEventResponders.has(responder)) {
-      return true;
-    }
-    propagatedEventResponders.add(responder);
-  }
-  if (globalOwner && globalOwner !== eventResponderInstance) {
-    return true;
+  const {targetEventTypes} = responder;
+  // Validate the target event type exists on the responder
+  if (targetEventTypes !== null) {
+    return responderEventTypesContainType(targetEventTypes, eventType);
   }
   return false;
-}
-
-function checkForLocalPropagationContinuation(
-  responder: ReactNativeEventResponder,
-  propagatedEventResponders: Set<ReactNativeEventResponder>,
-): void {
-  if (continueLocalPropagation === true) {
-    propagatedEventResponders.delete(responder);
-    continueLocalPropagation = false;
-  }
-}
-
-// TODO this function is almost an exact copy of the DOM version, we should
-// somehow share the logic
-function handleTargetEventResponderInstance(
-  topLevelType: string,
-  responderEvent: ReactNativeResponderEvent,
-  eventComponentInstance: ReactNativeEventComponentInstance,
-  hookComponentResponderValidation: null | Set<ReactNativeEventResponder>,
-  propagatedEventResponders: null | Set<ReactNativeEventResponder>,
-): void {
-  const responder = eventComponentInstance.responder;
-  const targetEventTypes = responder.targetEventTypes;
-  // Validate the target event type exists on the responder
-  if (targetEventTypes !== undefined) {
-    if (responderEventTypesContainType(targetEventTypes, topLevelType)) {
-      if (hookComponentResponderValidation !== null) {
-        hookComponentResponderValidation.add(responder);
-      }
-      const {isHook, props, state} = eventComponentInstance;
-      const eventListener = responder.onEvent;
-      if (eventListener !== undefined) {
-        if (
-          shouldSkipEventComponent(
-            eventComponentInstance,
-            ((responder: any): ReactNativeEventResponder),
-            propagatedEventResponders,
-            isHook,
-          )
-        ) {
-          return;
-        }
-        currentInstance = eventComponentInstance;
-        currentlyInHook = isHook;
-        eventListener(responderEvent, eventResponderContext, props, state);
-        if (!isHook) {
-          checkForLocalPropagationContinuation(
-            responder,
-            ((propagatedEventResponders: any): Set<ReactNativeEventResponder>),
-          );
-        }
-      }
-    }
-  }
 }
 
 // TODO this function is almost an exact copy of the DOM version, we should
 // somehow share the logic
 function traverseAndHandleEventResponderInstances(
-  topLevelType: string,
+  eventType: string,
   targetFiber: null | Fiber,
   nativeEvent: ReactFaricEvent,
 ): void {
   // Trigger event responders in this order:
-  // - Bubble target phase
-  // - Root phase
+  // - Bubble target responder phase
+  // - Root responder phase
 
   const responderEvent = createFabricResponderEvent(
-    topLevelType,
+    eventType,
     nativeEvent,
     targetFiber !== null
       ? ((targetFiber.stateNode: any): ReactNativeEventTarget)
       : null,
   );
-  const propagatedEventResponders: Set<ReactNativeEventResponder> = new Set();
-
-  // We use this to know if we should check add hooks. If there are
-  // no event targets, then we don't add the hook forms.
-  const hookComponentResponderValidation = new Set();
-
-  // Bubbled event phases have the notion of local propagation.
-  // This means that the propgation chain can be stopped part of the the way
-  // through processing event component instances.
+  const visitedResponders = new Set();
   let node = targetFiber;
   while (node !== null) {
-    const {dependencies, stateNode, tag} = node;
-    if (tag === HostComponent) {
-      responderEvent.currentTarget = stateNode;
-    } else if (tag === EventComponent) {
-      const eventComponentInstance = stateNode;
-      // Switch to the current fiber tree
-      node = eventComponentInstance.currentFiber;
-      handleTargetEventResponderInstance(
-        topLevelType,
-        responderEvent,
-        eventComponentInstance,
-        hookComponentResponderValidation,
-        propagatedEventResponders,
-      );
-    } else if (tag === FunctionComponent && dependencies !== null) {
-      const events = dependencies.events;
-      if (events !== null) {
-        for (let i = 0; i < events.length; i++) {
-          const eventComponentInstance = events[i];
+    const {dependencies, tag} = node;
+    if (tag === HostComponent && dependencies !== null) {
+      const respondersMap = dependencies.responders;
+      if (respondersMap !== null) {
+        const responderInstances = Array.from(respondersMap.values());
+        for (let i = 0, length = responderInstances.length; i < length; i++) {
+          const responderInstance = responderInstances[i];
+          const {props, responder, state, target} = responderInstance;
           if (
-            hookComponentResponderValidation.has(
-              eventComponentInstance.responder,
-            )
+            !visitedResponders.has(responder) &&
+            validateResponderTargetEventTypes(eventType, responder)
           ) {
-            handleTargetEventResponderInstance(
-              topLevelType,
-              responderEvent,
-              eventComponentInstance,
-              null,
-              null,
-            );
+            const onEvent = responder.onEvent;
+            visitedResponders.add(responder);
+            if (onEvent !== null) {
+              currentInstance = responderInstance;
+              responderEvent.responderTarget = ((target: any): ReactNativeEventTarget);
+              onEvent(responderEvent, eventResponderContext, props, state);
+            }
           }
         }
       }
     }
     node = node.return;
   }
-  // Reset currentTarget to be null
-  responderEvent.currentTarget = null;
   // Root phase
-  const rootEventInstances = rootEventTypesToEventComponentInstances.get(
-    topLevelType,
+  const rootEventResponderInstances = rootEventTypesToEventResponderInstances.get(
+    eventType,
   );
-  if (rootEventInstances !== undefined) {
-    const rootEventComponentInstances = Array.from(rootEventInstances);
+  if (rootEventResponderInstances !== undefined) {
+    const responderInstances = Array.from(rootEventResponderInstances);
 
-    for (let i = 0; i < rootEventComponentInstances.length; i++) {
-      const rootEventComponentInstance = rootEventComponentInstances[i];
-      const {isHook, props, responder, state} = rootEventComponentInstance;
+    for (let i = 0; i < responderInstances.length; i++) {
+      const responderInstance = responderInstances[i];
+      const {props, responder, state, target} = responderInstance;
       const onRootEvent = responder.onRootEvent;
-      if (onRootEvent !== undefined) {
-        if (
-          shouldSkipEventComponent(
-            rootEventComponentInstance,
-            responder,
-            null,
-            isHook,
-          )
-        ) {
-          continue;
-        }
-        currentInstance = rootEventComponentInstance;
-        currentlyInHook = isHook;
+      if (onRootEvent !== null) {
+        currentInstance = responderInstance;
+        responderEvent.responderTarget = ((target: any): ReactNativeEventTarget);
         onRootEvent(responderEvent, eventResponderContext, props, state);
       }
     }
@@ -633,51 +424,43 @@ export function dispatchEventForResponderEventSystem(
   targetFiber: null | Fiber,
   nativeEvent: ReactFaricEvent,
 ): void {
-  const previousEventQueue = currentEventQueue;
   const previousInstance = currentInstance;
   const previousTimers = currentTimers;
   const previousTimeStamp = currentTimeStamp;
-  const previouslyInHook = currentlyInHook;
   currentTimers = null;
-  currentEventQueue = createEventQueue();
   // We might want to control timeStamp another way here
   currentTimeStamp = Date.now();
   try {
-    traverseAndHandleEventResponderInstances(
-      topLevelType,
-      targetFiber,
-      nativeEvent,
-    );
-    processEventQueue();
+    batchedEventUpdates(() => {
+      traverseAndHandleEventResponderInstances(
+        topLevelType,
+        targetFiber,
+        nativeEvent,
+      );
+    });
   } finally {
     currentTimers = previousTimers;
     currentInstance = previousInstance;
-    currentEventQueue = previousEventQueue;
     currentTimeStamp = previousTimeStamp;
-    currentlyInHook = previouslyInHook;
   }
 }
 
 // TODO this function is almost an exact copy of the DOM version, we should
 // somehow share the logic
 export function mountEventResponder(
-  eventComponentInstance: ReactNativeEventComponentInstance,
+  responder: ReactNativeEventResponder,
+  responderInstance: ReactNativeEventResponderInstance,
+  props: Object,
+  state: Object,
 ) {
-  const responder = ((eventComponentInstance.responder: any): ReactNativeEventResponder);
-  if (responder.onOwnershipChange !== undefined) {
-    ownershipChangeListeners.add(eventComponentInstance);
-  }
   const onMount = responder.onMount;
-  if (onMount !== undefined) {
-    let {isHook, props, state} = eventComponentInstance;
-    currentEventQueue = createEventQueue();
-    currentInstance = eventComponentInstance;
-    currentlyInHook = isHook;
+  if (onMount !== null) {
+    currentInstance = responderInstance;
     try {
-      onMount(eventResponderContext, props, state);
-      processEventQueue();
+      batchedEventUpdates(() => {
+        onMount(eventResponderContext, props, state);
+      });
     } finally {
-      currentEventQueue = null;
       currentInstance = null;
       currentTimers = null;
     }
@@ -687,45 +470,33 @@ export function mountEventResponder(
 // TODO this function is almost an exact copy of the DOM version, we should
 // somehow share the logic
 export function unmountEventResponder(
-  eventComponentInstance: ReactNativeEventComponentInstance,
+  responderInstance: ReactNativeEventResponderInstance,
 ): void {
-  const responder = ((eventComponentInstance.responder: any): ReactNativeEventResponder);
+  const responder = ((responderInstance.responder: any): ReactNativeEventResponder);
   const onUnmount = responder.onUnmount;
-  if (onUnmount !== undefined) {
-    let {isHook, props, state} = eventComponentInstance;
-    currentEventQueue = createEventQueue();
-    currentInstance = eventComponentInstance;
-    currentlyInHook = isHook;
+  if (onUnmount !== null) {
+    let {props, state} = responderInstance;
+    currentInstance = responderInstance;
     try {
-      onUnmount(eventResponderContext, props, state);
-      processEventQueue();
+      batchedEventUpdates(() => {
+        onUnmount(eventResponderContext, props, state);
+      });
     } finally {
-      currentEventQueue = null;
       currentInstance = null;
       currentTimers = null;
     }
   }
-  try {
-    currentEventQueue = createEventQueue();
-    releaseOwnershipForEventComponentInstance(eventComponentInstance);
-    processEventQueue();
-  } finally {
-    currentEventQueue = null;
-  }
-  if (responder.onOwnershipChange !== undefined) {
-    ownershipChangeListeners.delete(eventComponentInstance);
-  }
-  const rootEventTypesSet = eventComponentInstance.rootEventTypes;
+  const rootEventTypesSet = responderInstance.rootEventTypes;
   if (rootEventTypesSet !== null) {
     const rootEventTypes = Array.from(rootEventTypesSet);
 
     for (let i = 0; i < rootEventTypes.length; i++) {
       const topLevelEventType = rootEventTypes[i];
-      let rootEventComponentInstances = rootEventTypesToEventComponentInstances.get(
+      let rootEventResponderInstances = rootEventTypesToEventResponderInstances.get(
         topLevelEventType,
       );
-      if (rootEventComponentInstances !== undefined) {
-        rootEventComponentInstances.delete(eventComponentInstance);
+      if (rootEventResponderInstances !== undefined) {
+        rootEventResponderInstances.delete(responderInstance);
       }
     }
   }
@@ -733,21 +504,21 @@ export function unmountEventResponder(
 
 function registerRootEventType(
   rootEventType: string,
-  eventComponentInstance: ReactNativeEventComponentInstance,
+  responderInstance: ReactNativeEventResponderInstance,
 ) {
-  let rootEventComponentInstances = rootEventTypesToEventComponentInstances.get(
+  let rootEventResponderInstances = rootEventTypesToEventResponderInstances.get(
     rootEventType,
   );
-  if (rootEventComponentInstances === undefined) {
-    rootEventComponentInstances = new Set();
-    rootEventTypesToEventComponentInstances.set(
+  if (rootEventResponderInstances === undefined) {
+    rootEventResponderInstances = new Set();
+    rootEventTypesToEventResponderInstances.set(
       rootEventType,
-      rootEventComponentInstances,
+      rootEventResponderInstances,
     );
   }
-  let rootEventTypesSet = eventComponentInstance.rootEventTypes;
+  let rootEventTypesSet = responderInstance.rootEventTypes;
   if (rootEventTypesSet === null) {
-    rootEventTypesSet = eventComponentInstance.rootEventTypes = new Set();
+    rootEventTypesSet = responderInstance.rootEventTypes = new Set();
   }
   invariant(
     !rootEventTypesSet.has(rootEventType),
@@ -757,15 +528,15 @@ function registerRootEventType(
     rootEventType,
   );
   rootEventTypesSet.add(rootEventType);
-  rootEventComponentInstances.add(eventComponentInstance);
+  rootEventResponderInstances.add(responderInstance);
 }
 
-export function addRootEventTypesForComponentInstance(
-  eventComponentInstance: ReactNativeEventComponentInstance,
+export function addRootEventTypesForResponderInstance(
+  responderInstance: ReactNativeEventResponderInstance,
   rootEventTypes: Array<string>,
 ): void {
   for (let i = 0; i < rootEventTypes.length; i++) {
     const rootEventType = rootEventTypes[i];
-    registerRootEventType(rootEventType, eventComponentInstance);
+    registerRootEventType(rootEventType, responderInstance);
   }
 }

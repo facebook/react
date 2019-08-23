@@ -370,10 +370,6 @@ function getPlugins(
           // Don't let it create global variables in the browser.
           // https://github.com/facebook/react/issues/10909
           assume_function_wrapper: !isUMDBundle,
-          // Works because `google-closure-compiler-js` is forked in Yarn lockfile.
-          // We can remove this if GCC merges my PR:
-          // https://github.com/google/closure-compiler/pull/2707
-          // and then the compiled version is released via `google-closure-compiler-js`.
           renaming: !shouldStayReadable,
         })
       ),

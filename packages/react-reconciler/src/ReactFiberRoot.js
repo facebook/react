@@ -13,11 +13,15 @@ import type {RootTag} from 'shared/ReactRootTags';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
 import type {Thenable} from './ReactFiberWorkLoop';
 import type {Interaction} from 'scheduler/src/Tracing';
+import type {SuspenseHydrationCallbacks} from './ReactFiberSuspenseComponent';
 
 import {noTimeout} from './ReactFiberHostConfig';
 import {createHostRootFiber} from './ReactFiber';
 import {NoWork} from './ReactFiberExpirationTime';
-import {enableSchedulerTracing} from 'shared/ReactFeatureFlags';
+import {
+  enableSchedulerTracing,
+  enableSuspenseCallback,
+} from 'shared/ReactFeatureFlags';
 import {unstable_getThreadID} from 'scheduler/tracing';
 
 // TODO: This should be lifted into the renderer.
@@ -83,6 +87,11 @@ type ProfilingOnlyFiberRootProperties = {|
   pendingInteractionMap: PendingInteractionMap,
 |};
 
+// The follow fields are only used by enableSuspenseCallback for hydration.
+type SuspenseCallbackOnlyFiberRootProperties = {|
+  hydrationCallbacks: null | SuspenseHydrationCallbacks,
+|};
+
 // Exported FiberRoot type includes all properties,
 // To avoid requiring potentially error-prone :any casts throughout the project.
 // Profiling properties are only safe to access in profiling builds (when enableSchedulerTracing is true).
@@ -91,6 +100,7 @@ type ProfilingOnlyFiberRootProperties = {|
 export type FiberRoot = {
   ...BaseFiberRootProperties,
   ...ProfilingOnlyFiberRootProperties,
+  ...SuspenseCallbackOnlyFiberRootProperties,
 };
 
 function FiberRootNode(containerInfo, tag, hydrate) {
@@ -117,14 +127,21 @@ function FiberRootNode(containerInfo, tag, hydrate) {
     this.memoizedInteractions = new Set();
     this.pendingInteractionMap = new Map();
   }
+  if (enableSuspenseCallback) {
+    this.hydrationCallbacks = null;
+  }
 }
 
 export function createFiberRoot(
   containerInfo: any,
   tag: RootTag,
   hydrate: boolean,
+  hydrationCallbacks: null | SuspenseHydrationCallbacks,
 ): FiberRoot {
   const root: FiberRoot = (new FiberRootNode(containerInfo, tag, hydrate): any);
+  if (enableSuspenseCallback) {
+    root.hydrationCallbacks = hydrationCallbacks;
+  }
 
   // Cyclic construction. This cheats the type system right now because
   // stateNode is any.

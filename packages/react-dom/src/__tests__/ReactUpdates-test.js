@@ -1631,6 +1631,7 @@ describe('ReactUpdates', () => {
             ReactDOM.render(<App />, container);
             while (error === null) {
               Scheduler.unstable_flushNumberOfYields(1);
+              Scheduler.unstable_clearYields();
             }
             expect(error).toContain('Warning: Maximum update depth exceeded.');
             expect(stack).toContain('in NonTerminating');
@@ -1653,9 +1654,9 @@ describe('ReactUpdates', () => {
         React.useEffect(() => {
           if (step < LIMIT) {
             setStep(x => x + 1);
-            Scheduler.unstable_yieldValue(step);
           }
         });
+        Scheduler.unstable_yieldValue(step);
         return step;
       }
 
@@ -1663,24 +1664,11 @@ describe('ReactUpdates', () => {
       act(() => {
         ReactDOM.render(<Terminating />, container);
       });
-
-      // Verify we can flush them asynchronously without warning
-      for (let i = 0; i < LIMIT * 2; i++) {
-        Scheduler.unstable_flushNumberOfYields(1);
-      }
       expect(container.textContent).toBe('50');
-
-      // Verify restarting from 0 doesn't cross the limit
       act(() => {
         _setStep(0);
-        // flush once to update the dom
-        Scheduler.unstable_flushNumberOfYields(1);
-        expect(container.textContent).toBe('0');
-        for (let i = 0; i < LIMIT * 2; i++) {
-          Scheduler.unstable_flushNumberOfYields(1);
-        }
-        expect(container.textContent).toBe('50');
       });
+      expect(container.textContent).toBe('50');
     });
 
     it('can have many updates inside useEffect without triggering a warning', () => {

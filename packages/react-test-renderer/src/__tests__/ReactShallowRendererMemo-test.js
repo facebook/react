@@ -436,22 +436,22 @@ describe('ReactShallowRendererMemo', () => {
     class Fragment extends React.Component {
       render() {
         return (
-          <React.Fragment>
+          <>
             <div />
             <span />
             <SomeComponent />
-          </React.Fragment>
+          </>
         );
       }
     }
     const shallowRenderer = createRenderer();
     const result = shallowRenderer.render(<Fragment />);
     expect(result).toEqual(
-      <React.Fragment>
+      <>
         <div />
         <span />
         <SomeComponent />
-      </React.Fragment>,
+      </>,
     );
   });
 

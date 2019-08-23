@@ -68,7 +68,7 @@ beforeEach(() => {
     .RCTEventEmitter;
   React = require('react');
   ReactNative = require('react-native-renderer');
-  ResponderEventPlugin = require('events/ResponderEventPlugin').default;
+  ResponderEventPlugin = require('legacy-events/ResponderEventPlugin').default;
   UIManager = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
     .UIManager;
   createReactNativeComponentClass = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')

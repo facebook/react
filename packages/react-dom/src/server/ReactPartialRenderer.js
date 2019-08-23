@@ -9,6 +9,7 @@
 
 import type {ThreadID} from './ReactThreadIDAllocator';
 import type {ReactElement} from 'shared/ReactElementType';
+import type {LazyComponent} from 'shared/ReactLazyComponent';
 import type {ReactProvider, ReactContext} from 'shared/ReactTypes';
 
 import React from 'react';
@@ -20,8 +21,16 @@ import warningWithoutStack from 'shared/warningWithoutStack';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
+  Resolved,
+  Rejected,
+  Pending,
+  initializeLazyComponentType,
+} from 'shared/ReactLazyComponent';
+import {
   warnAboutDeprecatedLifecycles,
+  disableLegacyContext,
   enableSuspenseServerRenderer,
+  enableFundamentalAPI,
   enableFlareAPI,
 } from 'shared/ReactFeatureFlags';
 
@@ -38,7 +47,7 @@ import {
   REACT_CONTEXT_TYPE,
   REACT_LAZY_TYPE,
   REACT_MEMO_TYPE,
-  REACT_EVENT_COMPONENT_TYPE,
+  REACT_FUNDAMENTAL_TYPE,
 } from 'shared/ReactSymbols';
 
 import {
@@ -230,7 +239,10 @@ function createMarkupForStyles(styles): string | null {
       }
     }
     if (styleValue != null) {
-      serialized += delimiter + processStyleName(styleName) + ':';
+      serialized +=
+        delimiter +
+        (isCustomProperty ? styleName : processStyleName(styleName)) +
+        ':';
       serialized += dangerousStyleValue(
         styleName,
         styleValue,
@@ -356,6 +368,9 @@ function createOpenTagMarkup(
     if (!hasOwnProperty.call(props, propKey)) {
       continue;
     }
+    if (enableFlareAPI && propKey === 'listeners') {
+      continue;
+    }
     let propValue = props[propKey];
     if (propValue == null) {
       continue;
@@ -423,7 +438,8 @@ function resolve(
 
   // Extra closure so queue and replace can be captured properly
   function processChild(element, Component) {
-    let publicContext = processContext(Component, context, threadID);
+    const isClass = shouldConstruct(Component);
+    const publicContext = processContext(Component, context, threadID, isClass);
 
     let queue = [];
     let replace = false;
@@ -451,7 +467,7 @@ function resolve(
     };
 
     let inst;
-    if (shouldConstruct(Component)) {
+    if (isClass) {
       inst = new Component(element.props, publicContext, updater);
 
       if (typeof Component.getDerivedStateFromProps === 'function') {
@@ -574,7 +590,7 @@ function resolve(
                 false,
                 // keep this warning in sync with ReactStrictModeWarning.js
                 'componentWillMount has been renamed, and is not recommended for use. ' +
-                  'See https://fb.me/react-async-component-lifecycle-hooks for details.\n\n' +
+                  'See https://fb.me/react-unsafe-component-lifecycles for details.\n\n' +
                   '* Move code from componentWillMount to componentDidMount (preferred in most cases) ' +
                   'or the constructor.\n' +
                   '\nPlease update the following components: %s',
@@ -643,29 +659,43 @@ function resolve(
     validateRenderResult(child, Component);
 
     let childContext;
-    if (typeof inst.getChildContext === 'function') {
-      let childContextTypes = Component.childContextTypes;
-      if (typeof childContextTypes === 'object') {
-        childContext = inst.getChildContext();
-        for (let contextKey in childContext) {
-          invariant(
-            contextKey in childContextTypes,
-            '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
+    if (disableLegacyContext) {
+      if (__DEV__) {
+        let childContextTypes = Component.childContextTypes;
+        if (childContextTypes !== undefined) {
+          warningWithoutStack(
+            false,
+            '%s uses the legacy childContextTypes API which is no longer supported. ' +
+              'Use React.createContext() instead.',
             getComponentName(Component) || 'Unknown',
-            contextKey,
           );
         }
-      } else {
-        warningWithoutStack(
-          false,
-          '%s.getChildContext(): childContextTypes must be defined in order to ' +
-            'use getChildContext().',
-          getComponentName(Component) || 'Unknown',
-        );
       }
-    }
-    if (childContext) {
-      context = Object.assign({}, context, childContext);
+    } else {
+      if (typeof inst.getChildContext === 'function') {
+        let childContextTypes = Component.childContextTypes;
+        if (typeof childContextTypes === 'object') {
+          childContext = inst.getChildContext();
+          for (let contextKey in childContext) {
+            invariant(
+              contextKey in childContextTypes,
+              '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
+              getComponentName(Component) || 'Unknown',
+              contextKey,
+            );
+          }
+        } else {
+          warningWithoutStack(
+            false,
+            '%s.getChildContext(): childContextTypes must be defined in order to ' +
+              'use getChildContext().',
+            getComponentName(Component) || 'Unknown',
+          );
+        }
+      }
+      if (childContext) {
+        context = Object.assign({}, context, childContext);
+      }
     }
   }
   return {child, context};
@@ -853,7 +883,8 @@ class ReactDOMServerRenderer {
               const fallbackFrame = frame.fallbackFrame;
               invariant(
                 fallbackFrame,
-                'suspense fallback not found, something is broken',
+                'ReactDOMServer did not find an internal fallback frame for Suspense. ' +
+                  'This is a bug in React. Please file an issue.',
               );
               this.stack.push(fallbackFrame);
               out[this.suspenseDepth] += '<!--$!-->';
@@ -879,8 +910,20 @@ class ReactDOMServerRenderer {
         try {
           outBuffer += this.render(child, frame.context, frame.domNamespace);
         } catch (err) {
-          if (enableSuspenseServerRenderer && typeof err.then === 'function') {
-            suspended = true;
+          if (err != null && typeof err.then === 'function') {
+            if (enableSuspenseServerRenderer) {
+              invariant(
+                this.suspenseDepth > 0,
+                // TODO: include component name. This is a bit tricky with current factoring.
+                'A React component suspended while rendering, but no fallback UI was specified.\n' +
+                  '\n' +
+                  'Add a <Suspense fallback=...> component higher in the tree to ' +
+                  'provide a loading indicator or placeholder to display.',
+              );
+              suspended = true;
+            } else {
+              invariant(false, 'ReactDOMServer does not yet support Suspense.');
+            }
           } else {
             throw err;
           }
@@ -1165,36 +1208,83 @@ class ReactDOMServerRenderer {
             this.stack.push(frame);
             return '';
           }
-          case REACT_EVENT_COMPONENT_TYPE: {
-            if (enableFlareAPI) {
-              const nextChildren = toArray(
-                ((nextChild: any): ReactElement).props.children,
+          // eslint-disable-next-line-no-fallthrough
+          case REACT_FUNDAMENTAL_TYPE: {
+            if (enableFundamentalAPI) {
+              const fundamentalImpl = elementType.impl;
+              const open = fundamentalImpl.getServerSideString(
+                null,
+                nextElement.props,
               );
+              const getServerSideStringClose =
+                fundamentalImpl.getServerSideStringClose;
+              const close =
+                getServerSideStringClose !== undefined
+                  ? getServerSideStringClose(null, nextElement.props)
+                  : '';
+              const nextChildren =
+                fundamentalImpl.reconcileChildren !== false
+                  ? toArray(((nextChild: any): ReactElement).props.children)
+                  : [];
               const frame: Frame = {
                 type: null,
                 domNamespace: parentNamespace,
                 children: nextChildren,
                 childIndex: 0,
                 context: context,
-                footer: '',
+                footer: close,
               };
               if (__DEV__) {
                 ((frame: any): FrameDev).debugElementStack = [];
               }
               this.stack.push(frame);
-              return '';
+              return open;
             }
             invariant(
               false,
-              'ReactDOMServer does not yet support the event API.',
+              'ReactDOMServer does not yet support the fundamental API.',
             );
           }
           // eslint-disable-next-line-no-fallthrough
-          case REACT_LAZY_TYPE:
-            invariant(
-              false,
-              'ReactDOMServer does not yet support lazy-loaded components.',
-            );
+          case REACT_LAZY_TYPE: {
+            const element: ReactElement = (nextChild: any);
+            const lazyComponent: LazyComponent<any> = (nextChild: any).type;
+            // Attempt to initialize lazy component regardless of whether the
+            // suspense server-side renderer is enabled so synchronously
+            // resolved constructors are supported.
+            initializeLazyComponentType(lazyComponent);
+            switch (lazyComponent._status) {
+              case Resolved: {
+                const nextChildren = [
+                  React.createElement(
+                    lazyComponent._result,
+                    Object.assign({ref: element.ref}, element.props),
+                  ),
+                ];
+                const frame: Frame = {
+                  type: null,
+                  domNamespace: parentNamespace,
+                  children: nextChildren,
+                  childIndex: 0,
+                  context: context,
+                  footer: '',
+                };
+                if (__DEV__) {
+                  ((frame: any): FrameDev).debugElementStack = [];
+                }
+                this.stack.push(frame);
+                return '';
+              }
+              case Rejected:
+                throw lazyComponent._result;
+              case Pending:
+              default:
+                invariant(
+                  false,
+                  'ReactDOMServer does not yet support lazy-loaded components.',
+                );
+            }
+          }
         }
       }
 

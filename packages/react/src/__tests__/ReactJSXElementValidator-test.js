@@ -391,21 +391,21 @@ describe('ReactJSXElementValidator', () => {
 
   it('does not warn for fragments of multiple elements without keys', () => {
     ReactTestUtils.renderIntoDocument(
-      <React.Fragment>
+      <>
         <span>1</span>
         <span>2</span>
-      </React.Fragment>,
+      </>,
     );
   });
 
   it('warns for fragments of multiple elements with same key', () => {
     expect(() =>
       ReactTestUtils.renderIntoDocument(
-        <React.Fragment>
+        <>
           <span key="a">1</span>
           <span key="a">2</span>
           <span key="b">3</span>
-        </React.Fragment>,
+        </>,
       ),
     ).toWarnDev('Encountered two children with the same key, `a`.', {
       withoutStack: true,

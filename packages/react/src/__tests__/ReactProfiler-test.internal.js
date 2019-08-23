@@ -126,9 +126,7 @@ describe('Profiler', () => {
           if (__DEV__ && enableProfilerTimer) {
             it('should warn if required params are missing', () => {
               expect(() => {
-                expect(() => {
-                  ReactTestRenderer.create(<React.Profiler />);
-                }).toThrow('onRender is not a function');
+                ReactTestRenderer.create(<React.Profiler />);
               }).toWarnDev(
                 'Profiler must specify an "id" string and "onRender" function as props',
                 {withoutStack: true},
@@ -383,7 +381,7 @@ describe('Profiler', () => {
         Scheduler.unstable_advanceTime(5); // 0 -> 5
 
         ReactTestRenderer.create(
-          <React.Fragment>
+          <>
             <React.Profiler id="parent" onRender={callback}>
               <AdvanceTime byAmount={10}>
                 <React.Profiler id="child" onRender={callback}>
@@ -391,7 +389,7 @@ describe('Profiler', () => {
                 </React.Profiler>
               </AdvanceTime>
             </React.Profiler>
-          </React.Fragment>,
+          </>,
         );
 
         expect(callback).toHaveBeenCalledTimes(2);
@@ -418,14 +416,14 @@ describe('Profiler', () => {
         Scheduler.unstable_advanceTime(5); // 0 -> 5
 
         ReactTestRenderer.create(
-          <React.Fragment>
+          <>
             <React.Profiler id="first" onRender={callback}>
               <AdvanceTime byAmount={20} />
             </React.Profiler>
             <React.Profiler id="second" onRender={callback}>
               <AdvanceTime byAmount={5} />
             </React.Profiler>
-          </React.Fragment>,
+          </>,
         );
 
         expect(callback).toHaveBeenCalledTimes(2);
@@ -451,13 +449,13 @@ describe('Profiler', () => {
         Scheduler.unstable_advanceTime(5); // 0 -> 5
 
         ReactTestRenderer.create(
-          <React.Fragment>
+          <>
             <AdvanceTime byAmount={20} />
             <React.Profiler id="test" onRender={callback}>
               <AdvanceTime byAmount={5} />
             </React.Profiler>
             <AdvanceTime byAmount={20} />
-          </React.Fragment>,
+          </>,
         );
 
         expect(callback).toHaveBeenCalledTimes(1);
@@ -1227,10 +1225,10 @@ describe('Profiler', () => {
       render() {
         const {duration, id} = this.props;
         return (
-          <React.Fragment>
+          <>
             <Child duration={duration} id={id} />
             <Child duration={duration} id={id} />
-          </React.Fragment>
+          </>
         );
       }
     }
@@ -1531,11 +1529,11 @@ describe('Profiler', () => {
         render() {
           instance = this;
           return (
-            <React.Fragment>
+            <>
               <Yield value="first" />
               {this.state.count}
               <Yield value="last" />
-            </React.Fragment>
+            </>
           );
         }
       }
@@ -2628,7 +2626,7 @@ describe('Profiler', () => {
       });
 
       it('handles high-pri renderers between suspended and resolved (async) trees', async () => {
-        // Set up an initial shell. We need to set this up before the test scenario
+        // Set up an initial shell. We need to set this up before the test sceanrio
         // because we want initial render to suspend on navigation to the initial state.
         let renderer = ReactTestRenderer.create(
           <React.Profiler id="app" onRender={() => {}}>

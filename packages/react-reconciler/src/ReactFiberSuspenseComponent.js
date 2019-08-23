@@ -8,12 +8,36 @@
  */
 
 import type {Fiber} from './ReactFiber';
+import type {SuspenseInstance} from './ReactFiberHostConfig';
+import type {ExpirationTime} from './ReactFiberExpirationTime';
 import {SuspenseComponent, SuspenseListComponent} from 'shared/ReactWorkTags';
 import {NoEffect, DidCapture} from 'shared/ReactSideEffectTags';
+import {
+  isSuspenseInstancePending,
+  isSuspenseInstanceFallback,
+} from './ReactFiberHostConfig';
 
-// TODO: This is now an empty object. Should we switch this to a boolean?
-// Alternatively we can make this use an effect tag similar to SuspenseList.
-export type SuspenseState = {||};
+export type SuspenseHydrationCallbacks = {
+  onHydrated?: (suspenseInstance: SuspenseInstance) => void,
+  onDeleted?: (suspenseInstance: SuspenseInstance) => void,
+};
+
+// A null SuspenseState represents an unsuspended normal Suspense boundary.
+// A non-null SuspenseState means that it is blocked for one reason or another.
+// - A non-null dehydrated field means it's blocked pending hydration.
+//   - A non-null dehydrated field can use isSuspenseInstancePending or
+//     isSuspenseInstanceFallback to query the reason for being dehydrated.
+// - A null dehydrated field means it's blocked by something suspending and
+//   we're currently showing a fallback instead.
+export type SuspenseState = {|
+  // If this boundary is still dehydrated, we store the SuspenseInstance
+  // here to indicate that it is dehydrated (flag) and for quick access
+  // to check things like isSuspenseInstancePending.
+  dehydrated: null | SuspenseInstance,
+  // Represents the earliest expiration time we should attempt to hydrate
+  // a dehydrated boundary at. Never is the default.
+  retryTime: ExpirationTime,
+|};
 
 export type SuspenseListTailMode = 'collapsed' | 'hidden' | void;
 
@@ -42,6 +66,10 @@ export function shouldCaptureSuspense(
   // fallback. Otherwise, don't capture and bubble to the next boundary.
   const nextState: SuspenseState | null = workInProgress.memoizedState;
   if (nextState !== null) {
+    if (nextState.dehydrated !== null) {
+      // A dehydrated boundary always captures.
+      return true;
+    }
     return false;
   }
   const props = workInProgress.memoizedProps;
@@ -68,7 +96,14 @@ export function findFirstSuspended(row: Fiber): null | Fiber {
     if (node.tag === SuspenseComponent) {
       const state: SuspenseState | null = node.memoizedState;
       if (state !== null) {
-        return node;
+        const dehydrated: null | SuspenseInstance = state.dehydrated;
+        if (
+          dehydrated === null ||
+          isSuspenseInstancePending(dehydrated) ||
+          isSuspenseInstanceFallback(dehydrated)
+        ) {
+          return node;
+        }
       }
     } else if (
       node.tag === SuspenseListComponent &&

@@ -12,7 +12,8 @@
 let React;
 let ReactFeatureFlags;
 let ReactDOM;
-let Drag;
+let useDrag;
+
 describe('Drag event responder', () => {
   let container;
 
@@ -22,7 +23,7 @@ describe('Drag event responder', () => {
     ReactFeatureFlags.enableFlareAPI = true;
     React = require('react');
     ReactDOM = require('react-dom');
-    Drag = require('react-events/drag').Drag;
+    useDrag = require('react-events/drag').useDrag;
 
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -43,10 +44,13 @@ describe('Drag event responder', () => {
     }
 
     function Component() {
+      const listener = useDrag({
+        onDragChange: handleOnDrag,
+      });
       return (
-        <Drag onDragChange={handleOnDrag}>
-          <div ref={divRef}>Drag me!</div>
-        </Drag>
+        <div ref={divRef} listeners={listener}>
+          Drag me!
+        </div>
       );
     }
 
@@ -96,10 +100,14 @@ describe('Drag event responder', () => {
     }
 
     function Component() {
+      const listener = useDrag({
+        onDragStart: handleDragStart,
+        onDragEnd: handleDragEnd,
+      });
       return (
-        <Drag onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-          <div ref={divRef}>Drag me!</div>
-        </Drag>
+        <div ref={divRef} listeners={listener}>
+          Drag me!
+        </div>
       );
     }
 
@@ -145,10 +153,13 @@ describe('Drag event responder', () => {
     }
 
     function Component() {
+      const listener = useDrag({
+        onDragMove: handleDragMove,
+      });
       return (
-        <Drag onDragMove={handleDragMove}>
-          <div ref={divRef}>Drag me!</div>
-        </Drag>
+        <div ref={divRef} listeners={listener}>
+          Drag me!
+        </div>
       );
     }
 

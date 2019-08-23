@@ -13,8 +13,7 @@ export type ReactNode =
   | ReactText
   | ReactFragment
   | ReactProvider<any>
-  | ReactConsumer<any>
-  | ReactEventComponent<any, any>;
+  | ReactConsumer<any>;
 
 export type ReactEmpty = null | void | boolean;
 
@@ -80,35 +79,83 @@ export type RefObject = {|
   current: any,
 |};
 
-export type ReactEventComponentInstance<E, C> = {|
-  currentFiber: mixed,
-  isHook: boolean,
+export type ReactEventResponderInstance<E, C> = {|
+  fiber: Object,
   props: Object,
   responder: ReactEventResponder<E, C>,
   rootEventTypes: null | Set<string>,
-  rootInstance: null | mixed,
   state: Object,
+  target: mixed,
 |};
 
-export type ReactEventResponder<E, C> = {
-  displayName: string,
-  targetEventTypes?: Array<string>,
-  rootEventTypes?: Array<string>,
-  getInitialState?: (props: Object) => Object,
-  onEvent?: (event: E, context: C, props: Object, state: Object) => void,
-  onRootEvent?: (event: E, context: C, props: Object, state: Object) => void,
-  onMount?: (context: C, props: Object, state: Object) => void,
-  onUnmount?: (context: C, props: Object, state: Object) => void,
-  onOwnershipChange?: (context: C, props: Object, state: Object) => void,
-};
-
-export type ReactEventComponent<E, C> = {|
-  $$typeof: Symbol | number,
+export type ReactEventResponderListener<E, C> = {|
+  props: Object,
   responder: ReactEventResponder<E, C>,
 |};
 
-export opaque type EventPriority = 0 | 1 | 2;
+export type ReactEventResponder<E, C> = {
+  $$typeof: Symbol | number,
+  displayName: string,
+  targetEventTypes: null | Array<string>,
+  rootEventTypes: null | Array<string>,
+  getInitialState: null | ((props: Object) => Object),
+  onEvent:
+    | null
+    | ((event: E, context: C, props: Object, state: Object) => void),
+  onRootEvent:
+    | null
+    | ((event: E, context: C, props: Object, state: Object) => void),
+  onMount: null | ((context: C, props: Object, state: Object) => void),
+  onUnmount: null | ((context: C, props: Object, state: Object) => void),
+};
+
+export type EventPriority = 0 | 1 | 2;
 
 export const DiscreteEvent: EventPriority = 0;
 export const UserBlockingEvent: EventPriority = 1;
 export const ContinuousEvent: EventPriority = 2;
+
+export type ReactFundamentalComponentInstance<C, H> = {|
+  currentFiber: mixed,
+  instance: mixed,
+  prevProps: null | Object,
+  props: Object,
+  impl: ReactFundamentalImpl<C, H>,
+  state: Object,
+|};
+
+export type ReactFundamentalImpl<C, H> = {
+  displayName: string,
+  reconcileChildren: boolean,
+  getInitialState?: (props: Object) => Object,
+  getInstance: (context: C, props: Object, state: Object) => H,
+  getServerSideString?: (context: C, props: Object) => string,
+  getServerSideStringClose?: (context: C, props: Object) => string,
+  onMount: (context: C, instance: mixed, props: Object, state: Object) => void,
+  shouldUpdate?: (
+    context: C,
+    prevProps: null | Object,
+    nextProps: Object,
+    state: Object,
+  ) => boolean,
+  onUpdate?: (
+    context: C,
+    instance: mixed,
+    prevProps: null | Object,
+    nextProps: Object,
+    state: Object,
+  ) => void,
+  onUnmount?: (
+    context: C,
+    instance: mixed,
+    props: Object,
+    state: Object,
+  ) => void,
+  onHydrate?: (context: C, props: Object, state: Object) => boolean,
+  onFocus?: (context: C, props: Object, state: Object) => boolean,
+};
+
+export type ReactFundamentalComponent<C, H> = {|
+  $$typeof: Symbol | number,
+  impl: ReactFundamentalImpl<C, H>,
+|};

@@ -8,8 +8,9 @@
  */
 
 import type {
+  ReactFundamentalComponentInstance,
   ReactEventResponder,
-  ReactEventComponentInstance,
+  ReactEventResponderInstance,
   EventPriority,
 } from 'shared/ReactTypes';
 
@@ -39,41 +40,40 @@ export type ReactDOMEventResponder = ReactEventResponder<
   ReactDOMResponderContext,
 >;
 
-export type ReactDOMEventComponentInstance = ReactEventComponentInstance<
+export type ReactDOMEventResponderInstance = ReactEventResponderInstance<
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
 >;
 
+export type ReactDOMFundamentalComponentInstance = ReactFundamentalComponentInstance<
+  any,
+  any,
+>;
+
 export type ReactDOMResponderContext = {
   dispatchEvent: (
-    eventObject: Object,
-    listener: (Object) => void,
+    eventValue: any,
+    listener: (any) => void,
     eventPriority: EventPriority,
   ) => void,
   isTargetWithinNode: (
     childTarget: Element | Document,
     parentTarget: Element | Document,
   ) => boolean,
-  isTargetWithinEventComponent: (Element | Document) => boolean,
-  isTargetWithinEventResponderScope: (Element | Document) => boolean,
+  isTargetWithinResponder: (Element | Document) => boolean,
+  isTargetWithinResponderScope: (Element | Document) => boolean,
   addRootEventTypes: (rootEventTypes: Array<string>) => void,
   removeRootEventTypes: (rootEventTypes: Array<string>) => void,
-  hasOwnership: () => boolean,
-  requestGlobalOwnership: () => boolean,
-  releaseOwnership: () => boolean,
   setTimeout: (func: () => void, timeout: number) => number,
   clearTimeout: (timerId: number) => void,
-  getFocusableElementsInScope(): Array<HTMLElement>,
+  getFocusableElementsInScope(deep: boolean): Array<HTMLElement>,
   getActiveDocument(): Document,
   objectAssign: Function,
   getTimeStamp: () => number,
   isTargetWithinHostComponent: (
     target: Element | Document,
     elementType: string,
-    deep: boolean,
   ) => boolean,
-  continueLocalPropagation(): void,
-  isRespondingToHook(): boolean,
   // Used for controller components
   enqueueStateRestore(Element | Document): void,
 };

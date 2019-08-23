@@ -7,9 +7,14 @@
  * @flow
  */
 
-import type {ReactEventComponent, ReactContext} from 'shared/ReactTypes';
+import type {
+  ReactContext,
+  ReactEventResponder,
+  ReactEventResponderListener,
+} from 'shared/ReactTypes';
 import invariant from 'shared/invariant';
 import warning from 'shared/warning';
+import {REACT_RESPONDER_TYPE} from 'shared/ReactSymbols';
 
 import ReactCurrentDispatcher from './ReactCurrentDispatcher';
 
@@ -138,10 +143,20 @@ export function useDebugValue(value: any, formatterFn: ?(value: any) => any) {
 
 export const emptyObject = {};
 
-export function useEvent<E, C>(
-  eventComponent: ReactEventComponent<E, C>,
-  props: null | Object,
-) {
+export function useResponder(
+  responder: ReactEventResponder<any, any>,
+  listenerProps: ?Object,
+): ?ReactEventResponderListener<any, any> {
   const dispatcher = resolveDispatcher();
-  return dispatcher.useEvent(eventComponent, props || emptyObject);
+  if (__DEV__) {
+    if (responder == null || responder.$$typeof !== REACT_RESPONDER_TYPE) {
+      warning(
+        false,
+        'useResponder: invalid first argument. Expected an event responder, but instead got %s',
+        responder,
+      );
+      return;
+    }
+  }
+  return dispatcher.useResponder(responder, listenerProps || emptyObject);
 }

@@ -12,25 +12,29 @@ import invariant from 'shared/invariant';
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as PersistentFeatureFlagsType from './ReactFeatureFlags.persistent';
 
-// Re-export dynamic flags from the www version.
-export const {revertPassiveEffectsChange} = require('ReactFeatureFlags');
-
 export const debugRenderPhaseSideEffects = false;
 export const debugRenderPhaseSideEffectsForStrictMode = false;
 export const enableUserTimingAPI = __DEV__;
 export const warnAboutDeprecatedLifecycles = true;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
-export const enableProfilerTimer = false;
-export const enableSchedulerTracing = false;
+export const enableProfilerTimer = __PROFILE__;
+export const enableSchedulerTracing = __PROFILE__;
 export const enableSuspenseServerRenderer = false;
 export const enableStableConcurrentModeAPIs = false;
 export const enableSchedulerDebugging = false;
 export const warnAboutDeprecatedSetNativeProps = false;
 export const disableJavaScriptURLs = false;
 export const enableFlareAPI = true;
+export const enableFundamentalAPI = false;
 export const enableJSXTransformAPI = true;
-export const warnAboutMissingMockScheduler = true;
+export const warnAboutUnmockedScheduler = true;
+export const flushSuspenseFallbacksInTests = true;
 export const enableUserBlockingEvents = false;
+export const enableSuspenseCallback = true;
+export const warnAboutDefaultPropsOnFunctionComponents = false;
+export const warnAboutStringRefs = false;
+export const disableLegacyContext = false;
+export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {

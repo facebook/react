@@ -7,7 +7,7 @@
 /* eslint-disable quotes */
 'use strict';
 
-let babel = require('babel-core');
+let babel = require('@babel/core');
 let devExpressionWithCodes = require('../transform-error-messages');
 
 function transform(input, options = {}) {
@@ -32,16 +32,6 @@ describe('error transform', () => {
     expect(
       transform(`
 import invariant from 'shared/invariant';
-invariant(condition, 'Do not override existing functions.');
-`)
-    ).toMatchSnapshot();
-  });
-
-  it('should only add `ReactError` and `ReactErrorProd` once each', () => {
-    expect(
-      transform(`
-import invariant from 'shared/invariant';
-invariant(condition, 'Do not override existing functions.');
 invariant(condition, 'Do not override existing functions.');
 `)
     ).toMatchSnapshot();
