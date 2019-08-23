@@ -5,12 +5,15 @@ describe('when Trusted Types are available in global object', () => {
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
-    window.TrustedTypes = {
+    window.trustedTypes = {
       isHTML: () => true,
       isScript: () => false,
       isScriptURL: () => false,
-      isURL: () => false,
     };
+  });
+
+  afterEach(() => {
+    delete window.trustedTypes;
   });
 
   it('should not stringify trusted values', () => {
@@ -23,7 +26,7 @@ describe('when Trusted Types are available in global object', () => {
       }
     }
 
-    const isHTMLSpy = jest.spyOn(window.TrustedTypes, ['isHTML']);
+    const isHTMLSpy = jest.spyOn(window.trustedTypes, ['isHTML']);
     const instace = ReactDOM.render(<Component />, container);
     instace.setState({inner: trustedObject});
 

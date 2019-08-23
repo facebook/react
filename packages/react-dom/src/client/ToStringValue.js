@@ -37,20 +37,28 @@ export function getToStringValue(value: mixed): ToStringValue {
 }
 
 /**
- * Returns true only if Trusted Types are available in global object and the value
- * is a trusted type.
+ * Returns true only if Trusted Types are available in global object and the value is a trusted type.
+ *
+ * Trusted Types undergo a change where window.TrustedTypes was renamed to window.trustedTypes
+ * (https://github.com/WICG/trusted-types/pull/205).
  */
 function isTrustedTypesValue(value: any): boolean {
   // $FlowExpectedError - TrustedTypes are defined only in some browsers or with polyfill
-  if (typeof TrustedTypes === 'undefined') {
-    return false;
-  } else {
+  if (typeof TrustedTypes !== 'undefined') {
     return (
       TrustedTypes.isHTML(value) ||
       TrustedTypes.isScript(value) ||
-      TrustedTypes.isScriptURL(value) ||
-      TrustedTypes.isURL(value)
+      TrustedTypes.isScriptURL(value)
     );
+    // $FlowExpectedError - trustedTypes are defined only in some browsers or with polyfill
+  } else if (typeof trustedTypes !== 'undefined') {
+    return (
+      trustedTypes.isHTML(value) ||
+      trustedTypes.isScript(value) ||
+      trustedTypes.isScriptURL(value)
+    );
+  } else {
+    return false;
   }
 }
 

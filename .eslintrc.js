@@ -150,5 +150,6 @@ module.exports = {
     __PROFILE__: true,
     __UMD__: true,
     TrustedTypes: true,
+    trustedTypes: true,
   },
 };

@@ -32,8 +32,12 @@ const setInnerHTML = createMicrosoftUnsafeLocalFunction(function(
   if (node.namespaceURI === Namespaces.svg) {
     if (__DEV__) {
       warningWithoutStack(
+        // Trusted Types undergo a change where window.TrustedTypes was renamed to window.trustedTypes
+        // (https://github.com/WICG/trusted-types/pull/205).
         // $FlowExpectedError - TrustedTypes are defined only in some browsers or with polyfill
-        typeof TrustedTypes === 'undefined',
+        typeof TrustedTypes === 'undefined' &&
+          // $FlowExpectedError - trustedTypes are defined only in some browsers or with polyfill
+          typeof trustedTypes === 'undefined',
         "Using 'dangerouslySetInnerHTML' in an svg element with " +
           'Trusted Types enabled in an Internet Explorer will cause ' +
           'the trusted value to be converted to string. Assigning string ' +

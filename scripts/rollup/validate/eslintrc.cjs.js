@@ -23,6 +23,7 @@ module.exports = {
     Buffer: true,
     // Trusted Types
     TrustedTypes: true,
+    trustedTypes: true,
 
     // Scheduler profiling
     SharedArrayBuffer: true,
