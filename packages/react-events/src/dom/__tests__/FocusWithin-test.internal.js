@@ -9,48 +9,33 @@
 
 'use strict';
 
+import {createEventTarget, setPointerEvent} from '../testing-library';
+
 let React;
 let ReactFeatureFlags;
 let ReactDOM;
 let FocusWithinResponder;
-let useFocusWithinResponder;
+let useFocusWithin;
 
-const createEvent = (type, data) => {
-  const event = document.createEvent('CustomEvent');
-  event.initCustomEvent(type, true, true);
-  if (data != null) {
-    Object.entries(data).forEach(([key, value]) => {
-      event[key] = value;
-    });
-  }
-  return event;
-};
-
-const createKeyboardEvent = (type, data) => {
-  return new KeyboardEvent(type, {
-    bubbles: true,
-    cancelable: true,
-    ...data,
-  });
-};
-
-const modulesInit = () => {
+const initializeModules = hasPointerEvents => {
+  setPointerEvent(hasPointerEvents);
+  jest.resetModules();
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
   ReactFeatureFlags.enableFlareAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
   FocusWithinResponder = require('react-events/focus').FocusWithinResponder;
-  useFocusWithinResponder = require('react-events/focus')
-    .useFocusWithinResponder;
+  useFocusWithin = require('react-events/focus').useFocusWithin;
 };
 
-describe('FocusWithin event responder', () => {
+const forcePointerEvents = true;
+const table = [[forcePointerEvents], [!forcePointerEvents]];
+
+describe.each(table)('FocusWithin responder', hasPointerEvents => {
   let container;
 
   beforeEach(() => {
-    jest.resetModules();
-    modulesInit();
-
+    initializeModules();
     container = document.createElement('div');
     document.body.appendChild(container);
   });
@@ -69,7 +54,7 @@ describe('FocusWithin event responder', () => {
       onFocusWithinVisibleChange = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        const listener = useFocusWithinResponder({
+        const listener = useFocusWithin({
           disabled: true,
           onFocusWithinChange,
           onFocusWithinVisibleChange,
@@ -80,8 +65,9 @@ describe('FocusWithin event responder', () => {
     });
 
     it('prevents custom events being dispatched', () => {
-      ref.current.dispatchEvent(createEvent('focus'));
-      ref.current.dispatchEvent(createEvent('blur'));
+      const target = createEventTarget(ref.current);
+      target.focus();
+      target.blur();
       expect(onFocusWithinChange).not.toBeCalled();
       expect(onFocusWithinVisibleChange).not.toBeCalled();
     });
@@ -96,7 +82,7 @@ describe('FocusWithin event responder', () => {
       innerRef = React.createRef();
       innerRef2 = React.createRef();
       const Component = () => {
-        const listener = useFocusWithinResponder({
+        const listener = useFocusWithin({
           onFocusWithinChange,
         });
         return (
@@ -110,49 +96,46 @@ describe('FocusWithin event responder', () => {
     });
 
     it('is called after "blur" and "focus" events on focus target', () => {
-      ref.current.dispatchEvent(createEvent('focus'));
+      const target = createEventTarget(ref.current);
+      target.focus();
       expect(onFocusWithinChange).toHaveBeenCalledTimes(1);
       expect(onFocusWithinChange).toHaveBeenCalledWith(true);
-      ref.current.dispatchEvent(
-        createEvent('blur', {relatedTarget: container}),
-      );
+      target.blur({relatedTarget: container});
       expect(onFocusWithinChange).toHaveBeenCalledTimes(2);
       expect(onFocusWithinChange).toHaveBeenCalledWith(false);
     });
 
     it('is called after "blur" and "focus" events on descendants', () => {
-      innerRef.current.dispatchEvent(createEvent('focus'));
+      const target = createEventTarget(innerRef.current);
+      target.focus();
       expect(onFocusWithinChange).toHaveBeenCalledTimes(1);
       expect(onFocusWithinChange).toHaveBeenCalledWith(true);
-      innerRef.current.dispatchEvent(
-        createEvent('blur', {relatedTarget: container}),
-      );
+      target.blur({relatedTarget: container});
       expect(onFocusWithinChange).toHaveBeenCalledTimes(2);
       expect(onFocusWithinChange).toHaveBeenCalledWith(false);
     });
 
     it('is only called once when focus moves within and outside the subtree', () => {
+      const node = ref.current;
+      const innerNode1 = innerRef.current;
+      const innerNode2 = innerRef.current;
+      const target = createEventTarget(node);
+      const innerTarget1 = createEventTarget(innerNode1);
+      const innerTarget2 = createEventTarget(innerNode2);
+
       // focus shifts into subtree
-      innerRef.current.dispatchEvent(createEvent('focus'));
+      innerTarget1.focus();
       expect(onFocusWithinChange).toHaveBeenCalledTimes(1);
       expect(onFocusWithinChange).toHaveBeenCalledWith(true);
       // focus moves around subtree
-      innerRef.current.dispatchEvent(
-        createEvent('blur', {relatedTarget: innerRef2.current}),
-      );
-      innerRef2.current.dispatchEvent(createEvent('focus'));
-      innerRef2.current.dispatchEvent(
-        createEvent('blur', {relatedTarget: ref.current}),
-      );
-      ref.current.dispatchEvent(createEvent('focus'));
-      ref.current.dispatchEvent(
-        createEvent('blur', {relatedTarget: innerRef.current}),
-      );
+      innerTarget1.blur({relatedTarget: innerNode2});
+      innerTarget2.focus();
+      innerTarget2.blur({relatedTarget: node});
+      target.focus();
+      target.blur({relatedTarget: innerNode1});
       expect(onFocusWithinChange).toHaveBeenCalledTimes(1);
       // focus shifts outside subtree
-      innerRef.current.dispatchEvent(
-        createEvent('blur', {relatedTarget: container}),
-      );
+      innerTarget1.blur({relatedTarget: container});
       expect(onFocusWithinChange).toHaveBeenCalledTimes(2);
       expect(onFocusWithinChange).toHaveBeenCalledWith(false);
     });
@@ -167,7 +150,7 @@ describe('FocusWithin event responder', () => {
       innerRef = React.createRef();
       innerRef2 = React.createRef();
       const Component = () => {
-        const listener = useFocusWithinResponder({
+        const listener = useFocusWithin({
           onFocusWithinVisibleChange,
         });
         return (
@@ -181,102 +164,96 @@ describe('FocusWithin event responder', () => {
     });
 
     it('is called after "focus" and "blur" on focus target if keyboard was used', () => {
+      const target = createEventTarget(ref.current);
+      const containerTarget = createEventTarget(container);
       // use keyboard first
-      container.dispatchEvent(createKeyboardEvent('keydown', {key: 'Tab'}));
-      ref.current.dispatchEvent(createEvent('focus'));
+      containerTarget.keydown({key: 'Tab'});
+      target.focus();
       expect(onFocusWithinVisibleChange).toHaveBeenCalledTimes(1);
       expect(onFocusWithinVisibleChange).toHaveBeenCalledWith(true);
-      ref.current.dispatchEvent(
-        createEvent('blur', {relatedTarget: container}),
-      );
+      target.blur({relatedTarget: container});
       expect(onFocusWithinVisibleChange).toHaveBeenCalledTimes(2);
       expect(onFocusWithinVisibleChange).toHaveBeenCalledWith(false);
     });
 
     it('is called after "focus" and "blur" on descendants if keyboard was used', () => {
+      const innerTarget = createEventTarget(innerRef.current);
+      const containerTarget = createEventTarget(container);
       // use keyboard first
-      container.dispatchEvent(createKeyboardEvent('keydown', {key: 'Tab'}));
-      innerRef.current.dispatchEvent(createEvent('focus'));
+      containerTarget.keydown({key: 'Tab'});
+      innerTarget.focus();
       expect(onFocusWithinVisibleChange).toHaveBeenCalledTimes(1);
       expect(onFocusWithinVisibleChange).toHaveBeenCalledWith(true);
-      innerRef.current.dispatchEvent(
-        createEvent('blur', {relatedTarget: container}),
-      );
+      innerTarget.blur({relatedTarget: container});
       expect(onFocusWithinVisibleChange).toHaveBeenCalledTimes(2);
       expect(onFocusWithinVisibleChange).toHaveBeenCalledWith(false);
     });
 
     it('is called if non-keyboard event is dispatched on target previously focused with keyboard', () => {
+      const node = ref.current;
+      const innerNode1 = innerRef.current;
+      const innerNode2 = innerRef2.current;
+
+      const target = createEventTarget(node);
+      const innerTarget1 = createEventTarget(innerNode1);
+      const innerTarget2 = createEventTarget(innerNode2);
       // use keyboard first
-      ref.current.dispatchEvent(createEvent('focus'));
-      ref.current.dispatchEvent(createKeyboardEvent('keydown', {key: 'Tab'}));
-      ref.current.dispatchEvent(
-        createEvent('blur', {relatedTarget: innerRef.current}),
-      );
-      innerRef.current.dispatchEvent(createEvent('focus'));
+      target.focus();
+      target.keydown({key: 'Tab'});
+      target.blur({relatedTarget: innerNode1});
+      innerTarget1.focus();
       expect(onFocusWithinVisibleChange).toHaveBeenCalledTimes(1);
       expect(onFocusWithinVisibleChange).toHaveBeenCalledWith(true);
       // then use pointer on the next target, focus should no longer be visible
-      innerRef2.current.dispatchEvent(createEvent('pointerdown'));
-      innerRef.current.dispatchEvent(
-        createEvent('blur', {relatedTarget: innerRef2.current}),
-      );
-      innerRef2.current.dispatchEvent(createEvent('focus'));
+      innerTarget2.pointerdown();
+      innerTarget1.blur({relatedTarget: innerNode2});
+      innerTarget2.focus();
       expect(onFocusWithinVisibleChange).toHaveBeenCalledTimes(2);
       expect(onFocusWithinVisibleChange).toHaveBeenCalledWith(false);
       // then use keyboard again
-      innerRef2.current.dispatchEvent(
-        createKeyboardEvent('keydown', {key: 'Tab', shiftKey: true}),
-      );
-      innerRef2.current.dispatchEvent(
-        createEvent('blur', {relatedTarget: innerRef.current}),
-      );
-      innerRef.current.dispatchEvent(createEvent('focus'));
+      innerTarget2.keydown({key: 'Tab', shiftKey: true});
+      innerTarget2.blur({relatedTarget: innerNode1});
+      innerTarget1.focus();
       expect(onFocusWithinVisibleChange).toHaveBeenCalledTimes(3);
       expect(onFocusWithinVisibleChange).toHaveBeenCalledWith(true);
       // then use pointer on the target, focus should no longer be visible
-      innerRef.current.dispatchEvent(createEvent('pointerdown'));
+      innerTarget1.pointerdown();
       expect(onFocusWithinVisibleChange).toHaveBeenCalledTimes(4);
       expect(onFocusWithinVisibleChange).toHaveBeenCalledWith(false);
       // onFocusVisibleChange should not be called again
-      innerRef.current.dispatchEvent(
-        createEvent('blur', {relatedTarget: container}),
-      );
+      innerTarget1.blur({relatedTarget: container});
       expect(onFocusWithinVisibleChange).toHaveBeenCalledTimes(4);
     });
 
     it('is not called after "focus" and "blur" events without keyboard', () => {
-      innerRef.current.dispatchEvent(createEvent('pointerdown'));
-      innerRef.current.dispatchEvent(createEvent('focus'));
-      container.dispatchEvent(createEvent('pointerdown'));
-      innerRef.current.dispatchEvent(
-        createEvent('blur', {relatedTarget: container}),
-      );
+      const innerTarget = createEventTarget(innerRef.current);
+      innerTarget.pointerdown();
+      innerTarget.pointerup();
+      innerTarget.blur({relatedTarget: container});
       expect(onFocusWithinVisibleChange).toHaveBeenCalledTimes(0);
     });
 
     it('is only called once when focus moves within and outside the subtree', () => {
+      const node = ref.current;
+      const innerNode1 = innerRef.current;
+      const innerNode2 = innerRef2.current;
+      const target = createEventTarget(node);
+      const innerTarget1 = createEventTarget(innerNode1);
+      const innerTarget2 = createEventTarget(innerNode2);
+
       // focus shifts into subtree
-      innerRef.current.dispatchEvent(createEvent('focus'));
+      innerTarget1.focus();
       expect(onFocusWithinVisibleChange).toHaveBeenCalledTimes(1);
       expect(onFocusWithinVisibleChange).toHaveBeenCalledWith(true);
       // focus moves around subtree
-      innerRef.current.dispatchEvent(
-        createEvent('blur', {relatedTarget: innerRef2.current}),
-      );
-      innerRef2.current.dispatchEvent(createEvent('focus'));
-      innerRef2.current.dispatchEvent(
-        createEvent('blur', {relatedTarget: ref.current}),
-      );
-      ref.current.dispatchEvent(createEvent('focus'));
-      ref.current.dispatchEvent(
-        createEvent('blur', {relatedTarget: innerRef.current}),
-      );
+      innerTarget1.blur({relatedTarget: innerNode2});
+      innerTarget2.focus();
+      innerTarget2.blur({relatedTarget: node});
+      target.focus();
+      target.blur({relatedTarget: innerNode1});
       expect(onFocusWithinVisibleChange).toHaveBeenCalledTimes(1);
       // focus shifts outside subtree
-      innerRef.current.dispatchEvent(
-        createEvent('blur', {relatedTarget: container}),
-      );
+      innerTarget1.blur({relatedTarget: container});
       expect(onFocusWithinVisibleChange).toHaveBeenCalledTimes(2);
       expect(onFocusWithinVisibleChange).toHaveBeenCalledWith(false);
     });

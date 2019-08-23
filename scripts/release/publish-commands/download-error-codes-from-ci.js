@@ -4,10 +4,11 @@
 
 const {exec} = require('child-process-promise');
 const {readJsonSync} = require('fs-extra');
+const {join} = require('path');
 const {getArtifactsList, logPromise} = require('../utils');
 const theme = require('../theme');
 
-const run = async ({cwd, tags}) => {
+const run = async ({cwd, packages, tags}) => {
   if (!tags.includes('latest')) {
     // Don't update error-codes for alphas.
     return;
@@ -15,8 +16,9 @@ const run = async ({cwd, tags}) => {
 
   // All packages are built from a single source revision,
   // so it is safe to read build info from any one of them.
+  const arbitraryPackageName = packages[0];
   const {buildNumber, environment} = readJsonSync(
-    `${cwd}/build/node_modules/react/build-info.json`
+    join(cwd, 'build', 'node_modules', arbitraryPackageName, 'build-info.json')
   );
 
   // If this release was created on Circle CI, grab the updated error codes from there.

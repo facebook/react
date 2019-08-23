@@ -1818,9 +1818,9 @@ describe('ReactFresh', () => {
             <span />
           </HelloV1>,
           <HelloV1>
-            <React.Fragment>
+            <>
               <HelloV1 />
-            </React.Fragment>
+            </>
           </HelloV1>,
         </div>,
         <HelloV1>
@@ -2111,9 +2111,9 @@ describe('ReactFresh', () => {
     if (__DEV__) {
       testRemountingWithWrapper(Hello => {
         const child = (
-          <React.Fragment>
+          <>
             <Hello />
-          </React.Fragment>
+          </>
         );
         return function Wrapper() {
           return child;
@@ -2126,13 +2126,13 @@ describe('ReactFresh', () => {
     if (__DEV__) {
       testRemountingWithWrapper(Hello => {
         const child = (
-          <React.Fragment>
-            <React.Fragment>
+          <>
+            <>
               <React.Fragment />
-            </React.Fragment>
+            </>
             <Hello />
             <React.Fragment />
-          </React.Fragment>
+          </>
         );
         return function Wrapper() {
           return child;
@@ -2471,13 +2471,13 @@ describe('ReactFresh', () => {
 
         function App() {
           return (
-            <React.Fragment>
+            <>
               <p>A</p>
               <Boundary>
                 <Hello />
               </Boundary>
               <p>B</p>
-            </React.Fragment>
+            </>
           );
         }
 
@@ -2549,13 +2549,13 @@ describe('ReactFresh', () => {
 
         function App() {
           return (
-            <React.Fragment>
+            <>
               <p>A</p>
               <Boundary>
                 <Hello />
               </Boundary>
               <p>B</p>
-            </React.Fragment>
+            </>
           );
         }
 
@@ -2630,13 +2630,13 @@ describe('ReactFresh', () => {
 
         function App() {
           return (
-            <React.Fragment>
+            <>
               <p>A</p>
               <Boundary>
                 <Hello />
               </Boundary>
               <p>B</p>
-            </React.Fragment>
+            </>
           );
         }
 
@@ -3183,14 +3183,14 @@ describe('ReactFresh', () => {
 
         function Frag() {
           return (
-            <React.Fragment>
+            <>
               <div className="Frag">
                 <div />
               </div>
               <div className="Frag">
                 <div />
               </div>
-            </React.Fragment>
+            </>
           );
         }
         $RefreshReg$(Frag, 'Frag');

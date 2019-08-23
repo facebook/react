@@ -19,7 +19,6 @@ export const {
   disableInputAttributeSyncing,
   warnAboutShorthandPropertyCollision,
   warnAboutDeprecatedSetNativeProps,
-  revertPassiveEffectsChange,
   enableUserBlockingEvents,
   disableLegacyContext,
   disableSchedulerTimeoutBasedOnReactExpirationTime,

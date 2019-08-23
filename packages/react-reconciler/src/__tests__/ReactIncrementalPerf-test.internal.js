@@ -89,6 +89,15 @@ describe('ReactDebugFiberPerf', () => {
       // We don't use the overload with three arguments.
       measure(label, markName) {
         if (markName !== activeMeasure.markName) {
+          // Fail the test.
+          console.error(
+            'Unexpected measure() call: "%s". Active mark is "%s".',
+            markName,
+            activeMeasure.markName,
+          );
+          // This exception will be caught and ignored
+          // because in the real implementation, we don't want
+          // to spam the console due to a React bug.
           throw new Error('Unexpected measure() call.');
         }
         // Step one level up
@@ -127,6 +136,7 @@ describe('ReactDebugFiberPerf', () => {
     require('shared/ReactFeatureFlags').enableProfilerTimer = false;
     require('shared/ReactFeatureFlags').replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     require('shared/ReactFeatureFlags').debugRenderPhaseSideEffectsForStrictMode = false;
+    require('scheduler/src/SchedulerFeatureFlags').enableProfiling = false;
 
     // Import after the polyfill is set up:
     React = require('react');

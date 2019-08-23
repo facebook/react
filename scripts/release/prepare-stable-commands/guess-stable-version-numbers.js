@@ -5,7 +5,7 @@
 const semver = require('semver');
 const {execRead, logPromise} = require('../utils');
 
-const run = async ({cwd, packages}, versionsMap) => {
+const run = async ({cwd, packages, skipPackages}, versionsMap) => {
   const branch = await execRead('git branch | grep \\* | cut -d " " -f2', {
     cwd,
   });
@@ -17,16 +17,21 @@ const run = async ({cwd, packages}, versionsMap) => {
       // In case local package JSONs are outdated,
       // guess the next version based on the latest NPM release.
       const version = await execRead(`npm show ${packageName} version`);
-      const {major, minor, patch} = semver(version);
 
-      // Guess the next version by incrementing patch.
-      // The script will confirm this later.
-      // By default, new releases from masters should increment the minor version number,
-      // and patch releases should be done from branches.
-      if (branch === 'master') {
-        versionsMap.set(packageName, `${major}.${minor + 1}.0`);
+      if (skipPackages.includes(packageName)) {
+        versionsMap.set(packageName, version);
       } else {
-        versionsMap.set(packageName, `${major}.${minor}.${patch + 1}`);
+        const {major, minor, patch} = semver(version);
+
+        // Guess the next version by incrementing patch.
+        // The script will confirm this later.
+        // By default, new releases from masters should increment the minor version number,
+        // and patch releases should be done from branches.
+        if (branch === 'master') {
+          versionsMap.set(packageName, `${major}.${minor + 1}.0`);
+        } else {
+          versionsMap.set(packageName, `${major}.${minor}.${patch + 1}`);
+        }
       }
     } catch (error) {
       // If the package has not yet been published,

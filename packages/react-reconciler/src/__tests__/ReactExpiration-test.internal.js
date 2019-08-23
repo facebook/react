@@ -207,12 +207,12 @@ describe('ReactExpiration', () => {
 
     function App() {
       return (
-        <React.Fragment>
+        <>
           <Connected label="A" />
           <Connected label="B" />
           <Connected label="C" />
           <Connected label="D" />
-        </React.Fragment>
+        </>
       );
     }
 

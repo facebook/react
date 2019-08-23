@@ -13,7 +13,7 @@ let accumulate;
 
 describe('accumulate', () => {
   beforeEach(() => {
-    accumulate = require('events/accumulate').default;
+    accumulate = require('legacy-events/accumulate').default;
   });
 
   it('throws if the second item is null', () => {

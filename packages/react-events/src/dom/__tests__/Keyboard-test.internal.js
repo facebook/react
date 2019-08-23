@@ -12,31 +12,24 @@
 let React;
 let ReactFeatureFlags;
 let ReactDOM;
-let useKeyboardResponder;
+let useKeyboard;
 
-const createEvent = (type, data) => {
-  const event = document.createEvent('CustomEvent');
-  event.initCustomEvent(type, true, true);
-  if (data != null) {
-    Object.entries(data).forEach(([key, value]) => {
-      event[key] = value;
-    });
-  }
-  return event;
-};
+import {createEventTarget} from '../testing-library';
+
+function initializeModules(hasPointerEvents) {
+  jest.resetModules();
+  ReactFeatureFlags = require('shared/ReactFeatureFlags');
+  ReactFeatureFlags.enableFlareAPI = true;
+  React = require('react');
+  ReactDOM = require('react-dom');
+  useKeyboard = require('react-events/keyboard').useKeyboard;
+}
 
 describe('Keyboard event responder', () => {
   let container;
 
   beforeEach(() => {
-    jest.resetModules();
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableFlareAPI = true;
-    React = require('react');
-    ReactDOM = require('react-dom');
-    useKeyboardResponder = require('react-events/keyboard')
-      .useKeyboardResponder;
-
+    initializeModules();
     container = document.createElement('div');
     document.body.appendChild(container);
   });
@@ -55,7 +48,7 @@ describe('Keyboard event responder', () => {
       onKeyUp = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        const listener = useKeyboardResponder({
+        const listener = useKeyboard({
           disabled: true,
           onKeyDown,
           onKeyUp,
@@ -66,7 +59,9 @@ describe('Keyboard event responder', () => {
     });
 
     it('prevents custom events being dispatched', () => {
-      ref.current.dispatchEvent(createEvent('scroll'));
+      const target = createEventTarget(ref.current);
+      target.keydown();
+      target.keyup();
       expect(onKeyDown).not.toBeCalled();
       expect(onKeyUp).not.toBeCalled();
     });
@@ -79,7 +74,7 @@ describe('Keyboard event responder', () => {
       onKeyDown = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        const listener = useKeyboardResponder({
+        const listener = useKeyboard({
           onKeyDown,
         });
         return <div ref={ref} listeners={listener} />;
@@ -88,13 +83,8 @@ describe('Keyboard event responder', () => {
     });
 
     it('is called after "keydown" event', () => {
-      ref.current.dispatchEvent(
-        new KeyboardEvent('keydown', {
-          bubbles: true,
-          cancelable: true,
-          key: 'Q',
-        }),
-      );
+      const target = createEventTarget(ref.current);
+      target.keydown({key: 'Q'});
       expect(onKeyDown).toHaveBeenCalledTimes(1);
       expect(onKeyDown).toHaveBeenCalledWith(
         expect.objectContaining({key: 'Q', type: 'keydown'}),
@@ -110,7 +100,7 @@ describe('Keyboard event responder', () => {
       onKeyUp = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        const listener = useKeyboardResponder({
+        const listener = useKeyboard({
           onKeyDown,
           onKeyUp,
         });
@@ -120,20 +110,9 @@ describe('Keyboard event responder', () => {
     });
 
     it('is called after "keydown" event', () => {
-      ref.current.dispatchEvent(
-        new KeyboardEvent('keydown', {
-          bubbles: true,
-          cancelable: true,
-          key: 'Q',
-        }),
-      );
-      ref.current.dispatchEvent(
-        new KeyboardEvent('keyup', {
-          bubbles: true,
-          cancelable: true,
-          key: 'Q',
-        }),
-      );
+      const target = createEventTarget(ref.current);
+      target.keydown({key: 'Q'});
+      target.keyup({key: 'Q'});
       expect(onKeyDown).toHaveBeenCalledTimes(1);
       expect(onKeyDown).toHaveBeenCalledWith(
         expect.objectContaining({key: 'Q', type: 'keydown'}),

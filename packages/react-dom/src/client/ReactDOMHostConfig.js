@@ -824,10 +824,9 @@ export function mountResponderInstance(
   responderProps: Object,
   responderState: Object,
   instance: Instance,
-  rootContainerInstance: Container,
 ): ReactDOMEventResponderInstance {
   // Listen to events
-  const doc = rootContainerInstance.ownerDocument;
+  const doc = instance.ownerDocument;
   const documentBody = doc.body || doc;
   const {
     rootEventTypes,

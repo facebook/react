@@ -581,11 +581,11 @@ describe('ReactDOMFiberAsync', () => {
       }
 
       root.render(
-        <React.Fragment>
+        <>
           <Text text="A" />
           <Text text="B" />
           <Text text="C" />
-        </React.Fragment>,
+        </>,
       );
 
       // Nothing should have rendered yet

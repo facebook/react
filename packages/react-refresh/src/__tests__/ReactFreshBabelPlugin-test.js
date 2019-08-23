@@ -7,7 +7,7 @@
 
 'use strict';
 
-let babel = require('babel-core');
+let babel = require('@babel/core');
 let {wrap} = require('jest-snapshot-serializer-raw');
 let freshPlugin = require('react-refresh/babel');
 
@@ -15,9 +15,10 @@ function transform(input, options = {}) {
   return wrap(
     babel.transform(input, {
       babelrc: false,
+      configFile: false,
       plugins: [
-        'syntax-jsx',
-        'syntax-dynamic-import',
+        '@babel/syntax-jsx',
+        '@babel/syntax-dynamic-import',
         freshPlugin,
         ...(options.plugins || []),
       ],
