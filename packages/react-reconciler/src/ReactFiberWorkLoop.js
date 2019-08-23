@@ -2677,7 +2677,7 @@ export function checkForWrongSuspensePriorityInDEV(sourceFiber: Fiber) {
               ) {
                 let update = workInProgressNode.memoizedState.baseUpdate;
                 // Loop through the functional component's memoized state to see whether
-                // the component has triggered any high pri updates
+                // the component has triggered any high priority updates
                 while (update !== null) {
                   const priority = update.priority;
                   if (
