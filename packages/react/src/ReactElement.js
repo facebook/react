@@ -22,6 +22,8 @@ const RESERVED_PROPS = {
 
 let specialPropKeyWarningShown, specialPropRefWarningShown;
 
+let createElementDecorators, createElementDecorated;
+
 function hasValidRef(config) {
   if (__DEV__) {
     if (hasOwnProperty.call(config, 'ref')) {
@@ -302,6 +304,51 @@ export function jsxDEV(type, config, maybeKey, source, self) {
  * See https://reactjs.org/docs/react-api.html#createelement
  */
 export function createElement(type, config, children) {
+  return createElementDecorated
+    ? createElementDecorated.apply(this, arguments)
+    : reallyCreateElement.apply(this, arguments);
+}
+
+function decorateCreateElement(decorator) {
+  const prev = createElementDecorated || reallyCreateElement;
+  createElementDecorated = decorator(prev);
+}
+
+export function addCreateElementDecorator(decorator) {
+  if (!createElementDecorators) {
+    createElementDecorators = [];
+  }
+
+  createElementDecorators.push(decorator);
+
+  decorateCreateElement(decorator);
+}
+
+export function removeCreateElementDecorator(decorator) {
+  if (!createElementDecorators) {
+    return;
+  }
+
+  const index = createElementDecorators.lastIndexOf(decorator);
+
+  if (index >= 0) {
+    createElementDecorators.splice(index, 1);
+  } else {
+    return;
+  }
+
+  createElementDecorated = undefined;
+
+  if (createElementDecorators.length > 0) {
+    for (let i = 0; i < createElementDecorators.length; i++) {
+      decorateCreateElement(createElementDecorators[i]);
+    }
+  } else {
+    createElementDecorators = undefined;
+  }
+}
+
+function reallyCreateElement(type, config, children) {
   let propName;
 
   // Reserved names are extracted

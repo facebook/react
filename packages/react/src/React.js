@@ -23,6 +23,8 @@ import {
   cloneElement,
   isValidElement,
   jsx,
+  addCreateElementDecorator,
+  removeCreateElementDecorator,
 } from './ReactElement';
 import {createContext} from './ReactContext';
 import {lazy} from './ReactLazy';
@@ -97,6 +99,13 @@ const React = {
   cloneElement: __DEV__ ? cloneElementWithValidation : cloneElement,
   createFactory: __DEV__ ? createFactoryWithValidation : createFactory,
   isValidElement: isValidElement,
+
+  Decorators: {
+    createElement: {
+      add: addCreateElementDecorator,
+      remove: removeCreateElementDecorator,
+    },
+  },
 
   version: ReactVersion,
 
