@@ -9,6 +9,11 @@
   <!-- Upcoming changes go here -->
 </details>
 
+## 4.0.6 (August 26, 2019)
+#### Bug fixes
+* Remove ⚛️ emoji prefix from Firefox extension tab labels
+* Standalone polyfills `Symbol` usage
+
 ## 4.0.5 (August 19, 2019)
 #### Bug fixes
 * Props, state, and context values are alpha sorted.
