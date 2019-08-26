@@ -2074,7 +2074,10 @@ export function attach(
     let fiber = findCurrentFiberUsingSlowPathById(id);
     if (fiber !== null) {
       instance = fiber.stateNode;
-      style = fiber.memoizedProps.style;
+
+      if (fiber.memoizedProps !== null) {
+        style = fiber.memoizedProps.style;
+      }
     }
 
     return {instance, style};

@@ -24,6 +24,8 @@ import DevTools from 'react-devtools-shared/src/devtools/views/DevTools';
 const LOCAL_STORAGE_SUPPORTS_PROFILING_KEY =
   'React::DevTools::supportsProfiling';
 
+const isChrome = getBrowserName() === 'Chrome';
+
 let panelCreated = false;
 
 // The renderer interface can't read saved component filters directly,
@@ -126,7 +128,7 @@ function createPanelIfReactLoaded() {
 
         store = new Store(bridge, {
           isProfiling,
-          supportsReloadAndProfile: getBrowserName() === 'Chrome',
+          supportsReloadAndProfile: isChrome,
           supportsProfiling,
         });
         store.profilerStore.profilingData = profilingData;
@@ -232,7 +234,7 @@ function createPanelIfReactLoaded() {
       let needsToSyncElementSelection = false;
 
       chrome.devtools.panels.create(
-        '⚛ Components',
+        isChrome ? '⚛ Components' : 'Components',
         '',
         'panel.html',
         extensionPanel => {
@@ -262,7 +264,7 @@ function createPanelIfReactLoaded() {
       );
 
       chrome.devtools.panels.create(
-        '⚛ Profiler',
+        isChrome ? '⚛ Profiler' : 'Profiler',
         '',
         'panel.html',
         extensionPanel => {

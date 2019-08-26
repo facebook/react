@@ -1,6 +1,6 @@
 {
   "name": "react-devtools-core",
-  "version": "4.0.5",
+  "version": "4.0.6",
   "description": "Use react-devtools outside of the browser",
   "license": "MIT",
   "main": "./dist/backend.js",
@@ -24,6 +24,7 @@
     "start:standalone": "cross-env NODE_ENV=development webpack --config webpack.standalone.js --watch"
   },
   "dependencies": {
+    "es6-symbol": "^3",
     "shell-quote": "^1.6.1",
     "ws": "^7"
   },
