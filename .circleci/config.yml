@@ -84,6 +84,16 @@ jobs:
       - *run_yarn
       - run: yarn test-persistent --maxWorkers=2
 
+  test_source_devtools:
+    docker: *docker
+    environment: *environment
+
+    steps:
+      - checkout
+      - *restore_yarn_cache
+      - *run_yarn
+      - run: yarn test-devtools --maxWorkers=2
+
   test_source_prod:
     docker: *docker
     environment: *environment

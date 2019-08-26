@@ -4,7 +4,6 @@ const baseConfig = require('./config.base');
 
 module.exports = Object.assign({}, baseConfig, {
   testRegex: 'packages/react-devtools-shared/src/__tests__/[^]+.test.js$',
-  modulePathIgnorePatterns: [],
   snapshotSerializers: [
     require.resolve(
       '../../packages/react-devtools-shared/src/__tests__/inspectedElementSerializer.js'
