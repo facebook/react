@@ -18,11 +18,13 @@ export function act(callback: Function): void {
   });
 
   // Flush Bridge operations
-  actDOM(() => {
-    actTestRenderer(() => {
-      jest.runAllTimers();
+  while (global.mockGetTimersCount() > 0) {
+    actDOM(() => {
+      actTestRenderer(() => {
+        jest.runAllTimers();
+      });
     });
-  });
+  }
 }
 
 export async function actAsync(
