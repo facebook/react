@@ -1091,6 +1091,48 @@ Object {
 }
 `;
 
+exports[`TreeListContext tree state should select the next and previous elements in the tree: 3: select element after (0) 1`] = `
+Object {
+  "inspectedElementID": 3,
+  "numElements": 4,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": 3,
+  "selectedElementIndex": 1,
+}
+`;
+
+exports[`TreeListContext tree state should select the next and previous elements in the tree: 3: select element after (1) 1`] = `
+Object {
+  "inspectedElementID": 4,
+  "numElements": 4,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": 4,
+  "selectedElementIndex": 2,
+}
+`;
+
+exports[`TreeListContext tree state should select the next and previous elements in the tree: 3: select element after (2) 1`] = `
+Object {
+  "inspectedElementID": 5,
+  "numElements": 4,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": 5,
+  "selectedElementIndex": 3,
+}
+`;
+
 exports[`TreeListContext tree state should select the next and previous elements in the tree: 3: select element after (0) 1`] = `
 Object {
   "inspectedElementID": 3,
