@@ -11,7 +11,12 @@
 
 import * as domEvents from './domEvents';
 import * as domEventSequences from './domEventSequences';
-import {hasPointerEvent, setPointerEvent, platform} from './domEnvironment';
+import {
+  buttonsType,
+  hasPointerEvent,
+  setPointerEvent,
+  platform,
+} from './domEnvironment';
 
 const createEventTarget = node => ({
   node,
@@ -101,4 +106,10 @@ const createEventTarget = node => ({
   },
 });
 
-export {createEventTarget, platform, hasPointerEvent, setPointerEvent};
+export {
+  buttonsType,
+  createEventTarget,
+  platform,
+  hasPointerEvent,
+  setPointerEvent,
+};

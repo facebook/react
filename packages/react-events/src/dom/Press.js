@@ -43,6 +43,7 @@ type PressState = {
     y: number,
   |}>,
   addedRootEvents: boolean,
+  buttons: 0 | 1 | 4,
   isActivePressed: boolean,
   isActivePressStart: boolean,
   isPressed: boolean,
@@ -75,24 +76,24 @@ type PressEventType =
   | 'presschange';
 
 type PressEvent = {|
-  button: 'primary' | 'auxillary',
-  defaultPrevented: boolean,
-  target: Element | Document,
-  type: PressEventType,
-  pointerType: PointerType,
-  timeStamp: number,
+  altKey: boolean,
+  buttons: 0 | 1 | 4,
   clientX: null | number,
   clientY: null | number,
+  ctrlKey: boolean,
+  defaultPrevented: boolean,
+  metaKey: boolean,
   pageX: null | number,
   pageY: null | number,
+  pointerType: PointerType,
   screenX: null | number,
   screenY: null | number,
+  shiftKey: boolean,
+  target: Element | Document,
+  timeStamp: number,
+  type: PressEventType,
   x: null | number,
   y: null | number,
-  altKey: boolean,
-  ctrlKey: boolean,
-  metaKey: boolean,
-  shiftKey: boolean,
 |};
 
 const hasPointerEvents =
@@ -149,9 +150,9 @@ function createPressEvent(
   event: ?ReactDOMResponderEvent,
   touchEvent: null | Touch,
   defaultPrevented: boolean,
+  state: PressState,
 ): PressEvent {
   const timeStamp = context.getTimeStamp();
-  let button = 'primary';
   let clientX = null;
   let clientY = null;
   let pageX = null;
@@ -173,29 +174,26 @@ function createPressEvent(
     if (eventObject) {
       ({clientX, clientY, pageX, pageY, screenX, screenY} = eventObject);
     }
-    if (nativeEvent.button === 1) {
-      button = 'auxillary';
-    }
   }
   return {
-    button,
-    defaultPrevented,
-    target,
-    type,
-    pointerType,
-    timeStamp,
+    altKey,
+    buttons: state.buttons,
     clientX,
     clientY,
+    ctrlKey,
+    defaultPrevented,
+    metaKey,
     pageX,
     pageY,
+    pointerType,
     screenX,
     screenY,
+    shiftKey,
+    target,
+    timeStamp,
+    type,
     x: clientX,
     y: clientY,
-    altKey,
-    ctrlKey,
-    metaKey,
-    shiftKey,
   };
 }
 
@@ -221,6 +219,7 @@ function dispatchEvent(
     event,
     touchEvent,
     defaultPrevented,
+    state,
   );
   context.dispatchEvent(syntheticEvent, listener, eventPriority);
 }
@@ -488,6 +487,7 @@ const pressResponderImpl = {
     return {
       activationPosition: null,
       addedRootEvents: false,
+      buttons: 0,
       isActivePressed: false,
       isActivePressStart: false,
       isPressed: false,
@@ -581,11 +581,12 @@ const pressResponderImpl = {
             state.activePointerId = touchEvent.identifier;
           }
 
-          // Ignore any device buttons except primary/auxillary and touch/pen contact.
+          // Ignore any device buttons except primary/middle and touch/pen contact.
           // Additionally we ignore primary-button + ctrl-key with Macs as that
           // acts like right-click and opens the contextmenu.
           if (
-            nativeEvent.button > 1 ||
+            nativeEvent.buttons === 2 ||
+            nativeEvent.buttons > 4 ||
             (isMac && isMouseEvent && nativeEvent.ctrlKey)
           ) {
             return;
@@ -600,6 +601,7 @@ const pressResponderImpl = {
           }
           state.responderRegionOnDeactivation = null;
           state.isPressWithinResponderRegion = true;
+          state.buttons = nativeEvent.buttons;
           dispatchPressStartEvents(event, context, props, state);
           addRootEventTypes(context, state);
         } else {
@@ -703,7 +705,7 @@ const pressResponderImpl = {
       case 'mouseup':
       case 'touchend': {
         if (isPressed) {
-          const button = nativeEvent.button;
+          const buttons = state.buttons;
           let isKeyboardEvent = false;
           let touchEvent;
           if (type === 'pointerup' && activePointerId !== pointerId) {
@@ -722,7 +724,7 @@ const pressResponderImpl = {
             }
             isKeyboardEvent = true;
             removeRootEventTypes(context, state);
-          } else if (button === 1) {
+          } else if (buttons === 4) {
             // Remove the root events here as no 'click' event is dispatched when this 'button' is pressed.
             removeRootEventTypes(context, state);
           }
@@ -780,7 +782,7 @@ const pressResponderImpl = {
               }
             }
 
-            if (state.isPressWithinResponderRegion && button !== 1) {
+            if (state.isPressWithinResponderRegion && buttons !== 4) {
               dispatchEvent(
                 event,
                 onPress,
@@ -848,7 +850,7 @@ export const PressResponder = React.unstable_createResponder(
   pressResponderImpl,
 );
 
-export function usePressResponder(
+export function usePress(
   props: PressProps,
 ): ReactEventResponderListener<any, any> {
   return React.unstable_useResponder(PressResponder, props);

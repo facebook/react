@@ -23,7 +23,7 @@ import {
   HostText,
   FundamentalComponent,
 } from 'shared/ReactWorkTags';
-import {NoEffect, Placement} from 'shared/ReactSideEffectTags';
+import {NoEffect, Placement, Hydrating} from 'shared/ReactSideEffectTags';
 import {enableFundamentalAPI} from 'shared/ReactFeatureFlags';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
@@ -32,20 +32,21 @@ const MOUNTING = 1;
 const MOUNTED = 2;
 const UNMOUNTED = 3;
 
-function isFiberMountedImpl(fiber: Fiber): number {
+type MountState = 1 | 2 | 3;
+
+function isFiberMountedImpl(fiber: Fiber): MountState {
   let node = fiber;
   if (!fiber.alternate) {
     // If there is no alternate, this might be a new tree that isn't inserted
     // yet. If it is, then it will have a pending insertion effect on it.
-    if ((node.effectTag & Placement) !== NoEffect) {
-      return MOUNTING;
-    }
-    while (node.return) {
-      node = node.return;
-      if ((node.effectTag & Placement) !== NoEffect) {
+    let nextNode = node;
+    do {
+      node = nextNode;
+      if ((node.effectTag & (Placement | Hydrating)) !== NoEffect) {
         return MOUNTING;
       }
-    }
+      nextNode = node.return;
+    } while (nextNode);
   } else {
     while (node.return) {
       node = node.return;

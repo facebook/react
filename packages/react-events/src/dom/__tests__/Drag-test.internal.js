@@ -12,7 +12,7 @@
 let React;
 let ReactFeatureFlags;
 let ReactDOM;
-let useDragResponder;
+let useDrag;
 
 describe('Drag event responder', () => {
   let container;
@@ -23,7 +23,7 @@ describe('Drag event responder', () => {
     ReactFeatureFlags.enableFlareAPI = true;
     React = require('react');
     ReactDOM = require('react-dom');
-    useDragResponder = require('react-events/drag').useDragResponder;
+    useDrag = require('react-events/drag').useDrag;
 
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -44,7 +44,7 @@ describe('Drag event responder', () => {
     }
 
     function Component() {
-      const listener = useDragResponder({
+      const listener = useDrag({
         onDragChange: handleOnDrag,
       });
       return (
@@ -100,7 +100,7 @@ describe('Drag event responder', () => {
     }
 
     function Component() {
-      const listener = useDragResponder({
+      const listener = useDrag({
         onDragStart: handleDragStart,
         onDragEnd: handleDragEnd,
       });
@@ -153,7 +153,7 @@ describe('Drag event responder', () => {
     }
 
     function Component() {
-      const listener = useDragResponder({
+      const listener = useDrag({
         onDragMove: handleDragMove,
       });
       return (

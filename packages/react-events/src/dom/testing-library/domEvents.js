@@ -9,6 +9,8 @@
 
 'use strict';
 
+import {buttonsType} from './domEnvironment';
+
 /**
  * Native event object mocks for higher-level events.
  *
@@ -23,6 +25,9 @@
  *
  * 3. PointerEvent and TouchEvent fields are normalized (e.g., 'rotationAngle' -> 'twist')
  */
+
+const defaultPointerSize = 23;
+const defaultBrowserChromeSize = 50;
 
 function emptyFunction() {}
 
@@ -57,8 +62,7 @@ function createPointerEvent(
   type,
   {
     altKey = false,
-    button = -1,
-    buttons = 0,
+    buttons = buttonsType.none,
     ctrlKey = false,
     height,
     metaKey = false,
@@ -86,7 +90,6 @@ function createPointerEvent(
 
   return createEvent(type, {
     altKey,
-    button,
     buttons,
     clientX: x,
     clientY: y,
@@ -94,7 +97,12 @@ function createPointerEvent(
     getModifierState(keyArg) {
       createGetModifierState(keyArg, modifierState);
     },
-    height: pointerType === 'mouse' ? 1 : height != null ? height : 11.5,
+    height:
+      pointerType === 'mouse'
+        ? 1
+        : height != null
+          ? height
+          : defaultPointerSize,
     metaKey,
     movementX,
     movementY,
@@ -107,13 +115,14 @@ function createPointerEvent(
     pressure,
     preventDefault,
     screenX: x,
-    screenY: y + 50, // arbitrary value to emulate browser chrome, etc
+    screenY: y + defaultBrowserChromeSize,
     shiftKey,
     tangentialPressure,
     tiltX,
     tiltY,
     twist,
-    width: pointerType === 'mouse' ? 1 : width != null ? width : 11.5,
+    width:
+      pointerType === 'mouse' ? 1 : width != null ? width : defaultPointerSize,
   });
 }
 
@@ -147,8 +156,7 @@ function createMouseEvent(
   type,
   {
     altKey = false,
-    button = -1,
-    buttons = 0,
+    buttons = buttonsType.none,
     ctrlKey = false,
     metaKey = false,
     movementX = 0,
@@ -167,7 +175,6 @@ function createMouseEvent(
 
   return createEvent(type, {
     altKey,
-    button,
     buttons,
     clientX: x,
     clientY: y,
@@ -184,7 +191,7 @@ function createMouseEvent(
     pageY: pageY || y,
     preventDefault,
     screenX: x,
-    screenY: y + 50, // arbitrary value to emulate browser chrome, etc
+    screenY: y + defaultBrowserChromeSize,
     shiftKey,
   });
 }
@@ -194,7 +201,7 @@ function createTouchEvent(
   {
     altKey = false,
     ctrlKey = false,
-    height = 11.5,
+    height = defaultPointerSize,
     metaKey = false,
     pageX,
     pageY,
@@ -202,7 +209,7 @@ function createTouchEvent(
     preventDefault = emptyFunction,
     shiftKey = false,
     twist = 0,
-    width = 11.5,
+    width = defaultPointerSize,
     x = 0,
     y = 0,
   } = {},
@@ -214,12 +221,14 @@ function createTouchEvent(
     identifier: pointerId,
     pageX: pageX || x,
     pageY: pageY || y,
-    radiusX: width,
-    radiusY: height,
+    radiusX: width / 2,
+    radiusY: height / 2,
     rotationAngle: twist,
     screenX: x,
-    screenY: y + 50, // arbitrary value to emulate browser chrome, etc
+    screenY: y + defaultBrowserChromeSize,
   };
+
+  const activeTouch = type !== 'touchend' ? [touch] : null;
 
   return createEvent(type, {
     altKey,
@@ -228,8 +237,8 @@ function createTouchEvent(
     metaKey,
     preventDefault,
     shiftKey,
-    targetTouches: type !== 'touchend' ? [touch] : null,
-    touches: [touch],
+    targetTouches: activeTouch,
+    touches: activeTouch,
   });
 }
 
@@ -290,7 +299,12 @@ export function pointercancel(payload) {
 }
 
 export function pointerdown(payload) {
-  return createPointerEvent('pointerdown', {button: 0, buttons: 2, ...payload});
+  const isTouch = payload != null && payload.pointerType === 'mouse';
+  return createPointerEvent('pointerdown', {
+    buttons: buttonsType.primary,
+    pressure: isTouch ? 1 : 0.5,
+    ...payload,
+  });
 }
 
 export function pointerenter(payload) {
@@ -314,7 +328,10 @@ export function pointerover(payload) {
 }
 
 export function pointerup(payload) {
-  return createPointerEvent('pointerup', {button: 0, buttons: 2, ...payload});
+  return createPointerEvent('pointerup', {
+    ...payload,
+    buttons: buttonsType.none,
+  });
 }
 
 /**
@@ -322,7 +339,10 @@ export function pointerup(payload) {
  */
 
 export function mousedown(payload) {
-  return createMouseEvent('mousedown', {button: 0, buttons: 2, ...payload});
+  return createMouseEvent('mousedown', {
+    buttons: buttonsType.primary,
+    ...payload,
+  });
 }
 
 export function mouseenter(payload) {
@@ -346,7 +366,10 @@ export function mouseover(payload) {
 }
 
 export function mouseup(payload) {
-  return createMouseEvent('mouseup', {button: 0, buttons: 2, ...payload});
+  return createMouseEvent('mouseup', {
+    ...payload,
+    buttons: buttonsType.none,
+  });
 }
 
 /**

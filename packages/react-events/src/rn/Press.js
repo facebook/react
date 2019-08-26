@@ -533,7 +533,7 @@ export const PressResponder = React.unstable_createResponder(
   pressResponderImpl,
 );
 
-export function usePressResponder(
+export function usePress(
   props: PressProps,
 ): ReactEventResponderListener<any, any> {
   return React.unstable_useResponder(PressResponder, props);

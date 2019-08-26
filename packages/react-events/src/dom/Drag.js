@@ -244,7 +244,7 @@ export const DragResponder = React.unstable_createResponder(
   dragResponderImpl,
 );
 
-export function useDragResponder(
+export function useDrag(
   props: DragProps,
 ): ReactEventResponderListener<any, any> {
   return React.unstable_useResponder(DragResponder, props);

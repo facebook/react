@@ -15,7 +15,7 @@ let React;
 let ReactFeatureFlags;
 let ReactDOM;
 let HoverResponder;
-let useHoverResponder;
+let useHover;
 
 function initializeModules(hasPointerEvents) {
   jest.resetModules();
@@ -26,7 +26,7 @@ function initializeModules(hasPointerEvents) {
   React = require('react');
   ReactDOM = require('react-dom');
   HoverResponder = require('react-events/hover').HoverResponder;
-  useHoverResponder = require('react-events/hover').useHoverResponder;
+  useHover = require('react-events/hover').useHover;
 }
 
 const forcePointerEvents = true;
@@ -57,7 +57,7 @@ describe.each(table)('Hover responder', hasPointerEvents => {
       onHoverEnd = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        const listener = useHoverResponder({
+        const listener = useHover({
           disabled: true,
           onHoverChange,
           onHoverStart,
@@ -87,7 +87,7 @@ describe.each(table)('Hover responder', hasPointerEvents => {
       onHoverStart = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        const listener = useHoverResponder({
+        const listener = useHover({
           onHoverStart: onHoverStart,
         });
         return <div ref={ref} listeners={listener} />;
@@ -124,7 +124,7 @@ describe.each(table)('Hover responder', hasPointerEvents => {
       onHoverChange = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        const listener = useHoverResponder({
+        const listener = useHover({
           onHoverChange,
         });
         return <div ref={ref} listeners={listener} />;
@@ -157,7 +157,7 @@ describe.each(table)('Hover responder', hasPointerEvents => {
       onHoverEnd = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        const listener = useHoverResponder({
+        const listener = useHover({
           onHoverEnd,
         });
         return <div ref={ref} listeners={listener} />;
@@ -201,7 +201,7 @@ describe.each(table)('Hover responder', hasPointerEvents => {
       const onHoverMove = jest.fn();
       const ref = React.createRef();
       const Component = () => {
-        const listener = useHoverResponder({
+        const listener = useHover({
           onHoverMove,
         });
         return <div ref={ref} listeners={listener} />;
@@ -229,7 +229,7 @@ describe.each(table)('Hover responder', hasPointerEvents => {
       };
 
       const Inner = () => {
-        const listener = useHoverResponder({
+        const listener = useHover({
           onHoverStart: createEventHandler('inner: onHoverStart'),
           onHoverEnd: createEventHandler('inner: onHoverEnd'),
           onHoverChange: createEventHandler('inner: onHoverChange'),
@@ -238,7 +238,7 @@ describe.each(table)('Hover responder', hasPointerEvents => {
       };
 
       const Outer = () => {
-        const listener = useHoverResponder({
+        const listener = useHover({
           onHoverStart: createEventHandler('outer: onHoverStart'),
           onHoverEnd: createEventHandler('outer: onHoverEnd'),
           onHoverChange: createEventHandler('outer: onHoverChange'),
@@ -305,7 +305,7 @@ describe.each(table)('Hover responder', hasPointerEvents => {
       eventLog.push(propertiesWeCareAbout);
     };
     const Component = () => {
-      const listener = useHoverResponder({
+      const listener = useHover({
         onHoverStart: logEvent,
         onHoverEnd: logEvent,
         onHoverMove: logEvent,

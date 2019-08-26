@@ -12,7 +12,7 @@ import {
   PASSIVE_NOT_SUPPORTED,
 } from 'legacy-events/EventSystemFlags';
 import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
-import {HostComponent} from 'shared/ReactWorkTags';
+import {HostComponent, SuspenseComponent} from 'shared/ReactWorkTags';
 import type {EventPriority} from 'shared/ReactTypes';
 import type {
   ReactDOMEventResponder,
@@ -32,10 +32,6 @@ import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import warning from 'shared/warning';
 import {enableFlareAPI} from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
-import {
-  isFiberSuspenseAndTimedOut,
-  getSuspenseFallbackChild,
-} from 'react-reconciler/src/ReactFiberEvents';
 
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 import {
@@ -445,7 +441,7 @@ function createDOMResponderEvent(
   passive: boolean,
   passiveSupported: boolean,
 ): ReactDOMResponderEvent {
-  const {pointerType} = (nativeEvent: any);
+  const {buttons, pointerType} = (nativeEvent: any);
   let eventPointerType = '';
   let pointerId = null;
 
@@ -454,7 +450,7 @@ function createDOMResponderEvent(
     pointerId = (nativeEvent: any).pointerId;
   } else if (nativeEvent.key !== undefined) {
     eventPointerType = 'keyboard';
-  } else if (nativeEvent.button !== undefined) {
+  } else if (buttons !== undefined) {
     eventPointerType = 'mouse';
   } else if ((nativeEvent: any).changedTouches !== undefined) {
     eventPointerType = 'touch';
@@ -628,6 +624,14 @@ function validateResponderContext(): void {
     'An event responder context was used outside of an event cycle. ' +
       'Use context.setTimeout() to use asynchronous responder context outside of event cycle .',
   );
+}
+
+function isFiberSuspenseAndTimedOut(fiber: Fiber): boolean {
+  return fiber.tag === SuspenseComponent && fiber.memoizedState !== null;
+}
+
+function getSuspenseFallbackChild(fiber: Fiber): Fiber | null {
+  return ((((fiber.child: any): Fiber).sibling: any): Fiber).child;
 }
 
 export function dispatchEventForResponderEventSystem(

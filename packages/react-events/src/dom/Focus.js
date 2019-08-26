@@ -348,7 +348,7 @@ export const FocusResponder = React.unstable_createResponder(
   focusResponderImpl,
 );
 
-export function useFocusResponder(
+export function useFocus(
   props: FocusProps,
 ): ReactEventResponderListener<any, any> {
   return React.unstable_useResponder(FocusResponder, props);
@@ -485,7 +485,7 @@ export const FocusWithinResponder = React.unstable_createResponder(
   focusWithinResponderImpl,
 );
 
-export function useFocusWithinResponder(
+export function useFocusWithin(
   props: FocusWithinProps,
 ): ReactEventResponderListener<any, any> {
   return React.unstable_useResponder(FocusWithinResponder, props);

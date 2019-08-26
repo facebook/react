@@ -12,7 +12,7 @@
 let React;
 let ReactFeatureFlags;
 let ReactDOM;
-let useKeyboardResponder;
+let useKeyboard;
 
 import {createEventTarget} from '../testing-library';
 
@@ -22,7 +22,7 @@ function initializeModules(hasPointerEvents) {
   ReactFeatureFlags.enableFlareAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
-  useKeyboardResponder = require('react-events/keyboard').useKeyboardResponder;
+  useKeyboard = require('react-events/keyboard').useKeyboard;
 }
 
 describe('Keyboard event responder', () => {
@@ -48,7 +48,7 @@ describe('Keyboard event responder', () => {
       onKeyUp = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        const listener = useKeyboardResponder({
+        const listener = useKeyboard({
           disabled: true,
           onKeyDown,
           onKeyUp,
@@ -74,7 +74,7 @@ describe('Keyboard event responder', () => {
       onKeyDown = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        const listener = useKeyboardResponder({
+        const listener = useKeyboard({
           onKeyDown,
         });
         return <div ref={ref} listeners={listener} />;
@@ -100,7 +100,7 @@ describe('Keyboard event responder', () => {
       onKeyUp = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        const listener = useKeyboardResponder({
+        const listener = useKeyboard({
           onKeyDown,
           onKeyUp,
         });

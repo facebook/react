@@ -14,7 +14,7 @@ import {createEventTarget, setPointerEvent} from '../testing-library';
 let React;
 let ReactFeatureFlags;
 let ReactDOM;
-let useScrollResponder;
+let useScroll;
 
 const forcePointerEvents = true;
 const table = [[forcePointerEvents], [!forcePointerEvents]];
@@ -26,7 +26,7 @@ const initializeModules = hasPointerEvents => {
   ReactFeatureFlags.enableFlareAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
-  useScrollResponder = require('react-events/scroll').useScrollResponder;
+  useScroll = require('react-events/scroll').useScroll;
 };
 
 describe.each(table)('Scroll responder', hasPointerEvents => {
@@ -51,7 +51,7 @@ describe.each(table)('Scroll responder', hasPointerEvents => {
       onScroll = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        const listener = useScrollResponder({
+        const listener = useScroll({
           disabled: true,
           onScroll,
         });
@@ -74,7 +74,7 @@ describe.each(table)('Scroll responder', hasPointerEvents => {
       onScroll = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        const listener = useScrollResponder({
+        const listener = useScroll({
           onScroll,
         });
         return <div ref={ref} listeners={listener} />;
@@ -145,7 +145,7 @@ describe.each(table)('Scroll responder', hasPointerEvents => {
       onScrollDragStart = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        const listener = useScrollResponder({
+        const listener = useScroll({
           onScrollDragStart,
         });
         return <div ref={ref} listeners={listener} />;
@@ -175,7 +175,7 @@ describe.each(table)('Scroll responder', hasPointerEvents => {
       onScrollDragEnd = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        const listener = useScrollResponder({
+        const listener = useScroll({
           onScrollDragEnd,
         });
         return <div ref={ref} listeners={listener} />;

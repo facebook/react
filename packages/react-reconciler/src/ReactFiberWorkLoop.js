@@ -96,6 +96,8 @@ import {
   Passive,
   Incomplete,
   HostEffectMask,
+  Hydrating,
+  HydratingAndUpdate,
 } from 'shared/ReactSideEffectTags';
 import {
   NoWork,
@@ -1860,7 +1862,8 @@ function commitMutationEffects(root: FiberRoot, renderPriorityLevel) {
     // updates, and deletions. To avoid needing to add a case for every possible
     // bitmap value, we remove the secondary effects from the effect tag and
     // switch on that value.
-    let primaryEffectTag = effectTag & (Placement | Update | Deletion);
+    let primaryEffectTag =
+      effectTag & (Placement | Update | Deletion | Hydrating);
     switch (primaryEffectTag) {
       case Placement: {
         commitPlacement(nextEffect);
@@ -1877,6 +1880,18 @@ function commitMutationEffects(root: FiberRoot, renderPriorityLevel) {
         // Clear the "placement" from effect tag so that we know that this is
         // inserted, before any life-cycles like componentDidMount gets called.
         nextEffect.effectTag &= ~Placement;
+
+        // Update
+        const current = nextEffect.alternate;
+        commitWork(current, nextEffect);
+        break;
+      }
+      case Hydrating: {
+        nextEffect.effectTag &= ~Hydrating;
+        break;
+      }
+      case HydratingAndUpdate: {
+        nextEffect.effectTag &= ~Hydrating;
 
         // Update
         const current = nextEffect.alternate;

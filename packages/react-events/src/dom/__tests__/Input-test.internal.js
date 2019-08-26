@@ -13,8 +13,8 @@ let React;
 let ReactFeatureFlags;
 let ReactDOM;
 let InputResponder;
-let useInputResponder;
-let usePressResponder;
+let useInput;
+let usePress;
 let Scheduler;
 
 const setUntrackedChecked = Object.getOwnPropertyDescriptor(
@@ -41,8 +41,8 @@ const modulesInit = () => {
   ReactDOM = require('react-dom');
   Scheduler = require('scheduler');
   InputResponder = require('react-events/input').InputResponder;
-  useInputResponder = require('react-events/input').useInputResponder;
-  usePressResponder = require('react-events/press').usePressResponder;
+  useInput = require('react-events/input').useInput;
+  usePress = require('react-events/press').usePress;
 };
 
 describe('Input event responder', () => {
@@ -70,7 +70,7 @@ describe('Input event responder', () => {
       ref = React.createRef();
 
       function Component() {
-        const listener = useInputResponder({
+        const listener = useInput({
           disabled: true,
           onChange,
           onValueChange,
@@ -117,7 +117,7 @@ describe('Input event responder', () => {
       }
 
       function Component() {
-        const listener = useInputResponder({
+        const listener = useInput({
           onChange,
           onValueChange,
         });
@@ -157,7 +157,7 @@ describe('Input event responder', () => {
       }
 
       function Component() {
-        const listener = useInputResponder({
+        const listener = useInput({
           onChange,
           onValueChange,
         });
@@ -200,7 +200,7 @@ describe('Input event responder', () => {
       }
 
       function Component() {
-        const listener = useInputResponder({
+        const listener = useInput({
           onChange,
           onValueChange,
         });
@@ -242,7 +242,7 @@ describe('Input event responder', () => {
       }
 
       function Component() {
-        const listener = useInputResponder({
+        const listener = useInput({
           onChange,
           onValueChange,
         });
@@ -283,7 +283,7 @@ describe('Input event responder', () => {
       }
 
       function Component() {
-        const listener = useInputResponder({
+        const listener = useInput({
           onChange,
           onValueChange,
         });
@@ -345,7 +345,7 @@ describe('Input event responder', () => {
       }
 
       function Component() {
-        const listener = useInputResponder({
+        const listener = useInput({
           onChange,
           onValueChange,
         });
@@ -385,7 +385,7 @@ describe('Input event responder', () => {
       }
 
       function Component() {
-        const listener = useInputResponder({
+        const listener = useInput({
           onChange,
           onValueChange,
         });
@@ -438,7 +438,7 @@ describe('Input event responder', () => {
       }
 
       function Component() {
-        const listener = useInputResponder({
+        const listener = useInput({
           onChange,
           onValueChange,
         });
@@ -483,7 +483,7 @@ describe('Input event responder', () => {
       }
 
       function Radio1() {
-        const listener = useInputResponder({
+        const listener = useInput({
           onChange: onChange1,
           onValueChange: onValueChange1,
         });
@@ -491,7 +491,7 @@ describe('Input event responder', () => {
       }
 
       function Radio2() {
-        const listener = useInputResponder({
+        const listener = useInput({
           onChange: onChange2,
           onValueChange: onValueChange2,
         });
@@ -558,7 +558,7 @@ describe('Input event responder', () => {
         onChangeCalled = 0;
         onValueChangeCalled = 0;
         function Component() {
-          const listener = useInputResponder({
+          const listener = useInput({
             onChange,
             onValueChange,
           });
@@ -586,7 +586,7 @@ describe('Input event responder', () => {
         onChangeCalled = 0;
         onValueChangeCalled = 0;
         function Component2() {
-          const listener = useInputResponder({
+          const listener = useInput({
             onChange,
             onValueChange,
           });
@@ -612,7 +612,7 @@ describe('Input event responder', () => {
         onChangeCalled = 0;
         onValueChangeCalled = 0;
         function Component3() {
-          const listener = useInputResponder({
+          const listener = useInput({
             onChange,
             onValueChange,
           });
@@ -652,7 +652,7 @@ describe('Input event responder', () => {
       }
 
       function Component() {
-        const listener = useInputResponder({
+        const listener = useInput({
           onChange,
           onValueChange,
         });
@@ -689,7 +689,7 @@ describe('Input event responder', () => {
       }
 
       function Component() {
-        const listener = useInputResponder({
+        const listener = useInput({
           onChange,
           onValueChange,
         });
@@ -761,7 +761,7 @@ describe('Input event responder', () => {
         let ops = [];
 
         function Component({innerRef, onChange, controlledValue}) {
-          const listener = useInputResponder({
+          const listener = useInput({
             onChange,
           });
           return (
@@ -821,7 +821,7 @@ describe('Input event responder', () => {
         let ops = [];
 
         function Component({innerRef, onChange, controlledValue}) {
-          const listener = useInputResponder({
+          const listener = useInput({
             onChange,
           });
           return (
@@ -896,7 +896,7 @@ describe('Input event responder', () => {
         let ops = [];
 
         function Component({innerRef, onChange, controlledValue}) {
-          const listener = useInputResponder({
+          const listener = useInput({
             onChange,
           });
           return (
@@ -961,7 +961,7 @@ describe('Input event responder', () => {
           controlledValue,
           pressListener,
         }) {
-          const inputListener = useInputResponder({
+          const inputListener = useInput({
             onChange,
           });
           return (
@@ -975,7 +975,7 @@ describe('Input event responder', () => {
         }
 
         function PressWrapper({innerRef, onPress, onChange, controlledValue}) {
-          const pressListener = usePressResponder({
+          const pressListener = usePress({
             onPress,
           });
           return (

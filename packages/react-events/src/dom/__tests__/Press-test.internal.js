@@ -9,13 +9,17 @@
 
 'use strict';
 
-import {createEventTarget, setPointerEvent} from '../testing-library';
+import {
+  buttonsType,
+  createEventTarget,
+  setPointerEvent,
+} from '../testing-library';
 
 let React;
 let ReactFeatureFlags;
 let ReactDOM;
 let PressResponder;
-let usePressResponder;
+let usePress;
 
 function initializeModules(hasPointerEvents) {
   jest.resetModules();
@@ -25,7 +29,7 @@ function initializeModules(hasPointerEvents) {
   React = require('react');
   ReactDOM = require('react-dom');
   PressResponder = require('react-events/press').PressResponder;
-  usePressResponder = require('react-events/press').usePressResponder;
+  usePress = require('react-events/press').usePress;
 }
 
 function removePressMoveStrings(eventString) {
@@ -64,7 +68,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       onPressEnd = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        const listener = usePressResponder({
+        const listener = usePress({
           disabled: true,
           onPressStart,
           onPress,
@@ -93,7 +97,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       onPressStart = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        const listener = usePressResponder({
+        const listener = usePress({
           onPressStart,
         });
         return <div ref={ref} listeners={listener} />;
@@ -114,36 +118,36 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       },
     );
 
-    it('is called after auxillary-button pointer down', () => {
+    it('is called after middle-button pointer down', () => {
       const target = createEventTarget(ref.current);
-      target.pointerdown({button: 1, pointerType: 'mouse'});
+      target.pointerdown({buttons: buttonsType.middle, pointerType: 'mouse'});
       expect(onPressStart).toHaveBeenCalledTimes(1);
       expect(onPressStart).toHaveBeenCalledWith(
         expect.objectContaining({
-          button: 'auxillary',
+          buttons: buttonsType.middle,
           pointerType: 'mouse',
           type: 'pressstart',
         }),
       );
     });
 
-    it('is not called after pointer move following auxillary-button press', () => {
+    it('is not called after pointer move following middle-button press', () => {
       const node = ref.current;
       const target = createEventTarget(node);
       target.setBoundingClientRect({x: 0, y: 0, width: 100, height: 100});
-      target.pointerdown({button: 1, pointerType: 'mouse'});
-      target.pointerup({button: 1, pointerType: 'mouse'});
+      target.pointerdown({buttons: buttonsType.middle, pointerType: 'mouse'});
+      target.pointerup({pointerType: 'mouse'});
       target.pointerhover({x: 110, y: 110});
       target.pointerhover({x: 50, y: 50});
       expect(onPressStart).toHaveBeenCalledTimes(1);
     });
 
-    it('ignores any events not caused by primary/auxillary-click or touch/pen contact', () => {
+    it('ignores any events not caused by primary/middle-click or touch/pen contact', () => {
       const target = createEventTarget(ref.current);
-      target.pointerdown({button: 2});
-      target.pointerup({button: 2});
-      target.pointerdown({button: 5});
-      target.pointerup({button: 5});
+      target.pointerdown({buttons: buttonsType.secondary});
+      target.pointerup({buttons: buttonsType.secondary});
+      target.pointerdown({buttons: buttonsType.eraser});
+      target.pointerup({buttons: buttonsType.eraser});
       expect(onPressStart).toHaveBeenCalledTimes(0);
     });
 
@@ -187,7 +191,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       onPressEnd = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        const listener = usePressResponder({
+        const listener = usePress({
           onPressEnd,
         });
         return <div ref={ref} listeners={listener} />;
@@ -209,14 +213,14 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       },
     );
 
-    it('is called after auxillary-button pointer up', () => {
+    it('is called after middle-button pointer up', () => {
       const target = createEventTarget(ref.current);
-      target.pointerdown({button: 1, pointerType: 'mouse'});
-      target.pointerup({button: 1, pointerType: 'mouse'});
+      target.pointerdown({buttons: buttonsType.middle, pointerType: 'mouse'});
+      target.pointerup({pointerType: 'mouse'});
       expect(onPressEnd).toHaveBeenCalledTimes(1);
       expect(onPressEnd).toHaveBeenCalledWith(
         expect.objectContaining({
-          button: 'auxillary',
+          buttons: buttonsType.middle,
           pointerType: 'mouse',
           type: 'pressend',
         }),
@@ -282,7 +286,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       onPressChange = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        const listener = usePressResponder({
+        const listener = usePress({
           onPressChange,
         });
         return <div ref={ref} listeners={listener} />;
@@ -322,7 +326,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       onPress = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        const listener = usePressResponder({
+        const listener = usePress({
           onPress,
         });
         return <div ref={ref} listeners={listener} />;
@@ -350,10 +354,10 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       },
     );
 
-    it('is not called after auxillary-button press', () => {
+    it('is not called after middle-button press', () => {
       const target = createEventTarget(ref.current);
-      target.pointerdown({button: 1, pointerType: 'mouse'});
-      target.pointerup({button: 1, pointerType: 'mouse'});
+      target.pointerdown({buttons: buttonsType.middle, pointerType: 'mouse'});
+      target.pointerup({pointerType: 'mouse'});
       expect(onPress).not.toHaveBeenCalled();
     });
 
@@ -370,7 +374,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
     it('is not called after invalid "keyup" event', () => {
       const inputRef = React.createRef();
       const Component = () => {
-        const listener = usePressResponder({onPress});
+        const listener = usePress({onPress});
         return <input ref={inputRef} listeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
@@ -400,7 +404,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       const divRef = React.createRef();
 
       const Component = () => {
-        const listener = usePressResponder({onPress});
+        const listener = usePress({onPress});
         return (
           <div ref={divRef} listeners={listener}>
             <button ref={buttonRef} />
@@ -425,7 +429,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       onPressMove = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        const listener = usePressResponder({
+        const listener = usePress({
           onPressMove,
         });
         return <div ref={ref} listeners={listener} />;
@@ -460,7 +464,12 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       const target = createEventTarget(ref.current);
       target.setBoundingClientRect({x: 0, y: 0, width: 100, height: 100});
       target.keydown({key: 'Enter'});
-      target.pointermove({button: -1, pointerType: 'mouse', x: 10, y: 10});
+      target.pointermove({
+        buttons: buttonsType.none,
+        pointerType: 'mouse',
+        x: 10,
+        y: 10,
+      });
       expect(onPressMove).not.toBeCalled();
     });
   });
@@ -476,7 +485,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
         events.push(msg);
       };
       const Component = () => {
-        const listener = usePressResponder({
+        const listener = usePress({
           onPress: createEventHandler('onPress'),
           onPressChange: createEventHandler('onPressChange'),
           onPressMove: createEventHandler('onPressMove'),
@@ -566,7 +575,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
         const pressRetentionOffset = {top: 40, bottom: 40, left: 40, right: 40};
 
         const Component = () => {
-          const listener = usePressResponder({
+          const listener = usePress({
             onPress: createEventHandler('onPress'),
             onPressChange: createEventHandler('onPressChange'),
             onPressMove: createEventHandler('onPressMove'),
@@ -710,7 +719,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
         };
 
         const Inner = () => {
-          const listener = usePressResponder({
+          const listener = usePress({
             onPress: createEventHandler('inner: onPress'),
             onPressChange: createEventHandler('inner: onPressChange'),
             onPressMove: createEventHandler('inner: onPressMove'),
@@ -731,7 +740,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
         };
 
         const Outer = () => {
-          const listener = usePressResponder({
+          const listener = usePress({
             onPress: createEventHandler('outer: onPress'),
             onPressChange: createEventHandler('outer: onPressChange'),
             onPressMove: createEventHandler('outer: onPressMove'),
@@ -768,12 +777,12 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
         const onPress = jest.fn();
 
         const Inner = () => {
-          const listener = usePressResponder({onPress});
+          const listener = usePress({onPress});
           return <div ref={ref} listeners={listener} />;
         };
 
         const Outer = () => {
-          const listener = usePressResponder({onPress});
+          const listener = usePress({onPress});
           return (
             <div listeners={listener}>
               <Inner />
@@ -795,12 +804,12 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
         const onPressEnd = jest.fn();
 
         const Inner = () => {
-          const listener = usePressResponder({onPressStart, onPressEnd});
+          const listener = usePress({onPressStart, onPressEnd});
           return <div ref={ref} listeners={listener} />;
         };
 
         const Outer = () => {
-          const listener = usePressResponder({onPressStart, onPressEnd});
+          const listener = usePress({onPressStart, onPressEnd});
           return (
             <div listeners={listener}>
               <Inner />
@@ -823,12 +832,12 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
         const onPressChange = jest.fn();
 
         const Inner = () => {
-          const listener = usePressResponder({onPressChange});
+          const listener = usePress({onPressChange});
           return <div ref={ref} listeners={listener} />;
         };
 
         const Outer = () => {
-          const listener = usePressResponder({onPressChange});
+          const listener = usePress({onPressChange});
           return (
             <div listeners={listener}>
               <Inner />
@@ -853,7 +862,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       const ref = React.createRef();
 
       const Component = () => {
-        const listener = usePressResponder({onPress});
+        const listener = usePress({onPress});
         return <a href="#" ref={ref} listeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
@@ -873,7 +882,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       const ref = React.createRef();
 
       const Component = () => {
-        const listener = usePressResponder({onPress});
+        const listener = usePress({onPress});
         return <a href="#" ref={ref} listeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
@@ -894,7 +903,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       const buttonRef = React.createRef();
 
       const Component = () => {
-        const listener = usePressResponder({onPress});
+        const listener = usePress({onPress});
         return (
           <a href="#">
             <button ref={buttonRef} listeners={listener} />
@@ -915,7 +924,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       const ref = React.createRef();
 
       const Component = () => {
-        const listener = usePressResponder({onPress});
+        const listener = usePress({onPress});
         return (
           <a href="#" listeners={listener}>
             <div ref={ref} />
@@ -939,7 +948,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       const ref = React.createRef();
 
       const Component = () => {
-        const listener = usePressResponder({onPress});
+        const listener = usePress({onPress});
         return <a href="#" ref={ref} listeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
@@ -961,7 +970,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       const ref = React.createRef();
 
       const Component = () => {
-        const listener = usePressResponder({onPress, preventDefault: false});
+        const listener = usePress({onPress, preventDefault: false});
         return <a href="#" ref={ref} listeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
@@ -981,7 +990,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       const ref = React.createRef();
 
       const Component = () => {
-        const listener = usePressResponder({onPress, preventDefault: false});
+        const listener = usePress({onPress, preventDefault: false});
         return <a href="#" ref={ref} listeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
@@ -1003,7 +1012,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       const ref = React.createRef();
 
       const Component = () => {
-        const listener = usePressResponder({onPressEnd});
+        const listener = usePress({onPressEnd});
         return <a href="#" ref={ref} listeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
@@ -1020,7 +1029,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
     const ref = React.createRef();
 
     const Component = () => {
-      const listener = usePressResponder({onPressEnd});
+      const listener = usePress({onPressEnd});
       return <a href="#" ref={ref} listeners={listener} />;
     };
     ReactDOM.render(<Component />, container);
@@ -1038,7 +1047,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
     const containerRef = React.createRef();
 
     const Component = () => {
-      const listener = usePressResponder({onPressEnd});
+      const listener = usePress({onPressEnd});
       return (
         <div ref={containerRef}>
           <a ref={ref} listeners={listener} />
@@ -1060,7 +1069,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
     const outsideRef = React.createRef();
 
     const Component = () => {
-      const listener = usePressResponder({onPressEnd});
+      const listener = usePress({onPressEnd});
       return (
         <div>
           <a ref={ref} listeners={listener} />
@@ -1085,7 +1094,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
     const ref = React.createRef();
 
     const Component = () => {
-      const listener = usePressResponder();
+      const listener = usePress();
       return <button ref={ref} listeners={listener} />;
     };
     ReactDOM.render(<Component />, container);
@@ -1119,7 +1128,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
     };
 
     const Component = () => {
-      const listener = usePressResponder({
+      const listener = usePress({
         onPressStart: logEvent,
         onPressEnd: logEvent,
         onPressMove: logEvent,
@@ -1239,7 +1248,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
           updateCounter(count => count + 1);
         }
 
-        const listener = usePressResponder({
+        const listener = usePress({
           onPress: handlePress,
         });
 
@@ -1307,7 +1316,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
           updateCounter(count => count + 1);
         }
 
-        const listener = usePressResponder({
+        const listener = usePress({
           onPress: handlePress,
         });
 
@@ -1389,7 +1398,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
             updatePressesCount(pressesCount + 1);
           }
 
-          const listener = usePressResponder({
+          const listener = usePress({
             onPress: handlePress,
           });
 
@@ -1430,7 +1439,7 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       const pointerDownEvent = jest.fn();
 
       const Component = () => {
-        const listener = usePressResponder({stopPropagation: true});
+        const listener = usePress({stopPropagation: true});
         return <div ref={ref} listeners={listener} />;
       };
 

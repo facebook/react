@@ -432,8 +432,7 @@ export default {
                 'React Hook function.';
               context.report({node: hook, message});
             } else if (codePathNode.type === 'Program') {
-              // We could warn here but there are false positives related
-              // configuring libraries like `history`.
+              // These are dangerous if you have inline requires enabled.
               const message =
                 `React Hook "${context.getSource(hook)}" cannot be called ` +
                 'at the top level. React Hooks must be called in a ' +
