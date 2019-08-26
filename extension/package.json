@@ -1,5 +1,5 @@
 {
-  "version": "4.0.5",
+  "version": "4.0.6",
   "repository": "bvaughn/react-devtools-experimental",
   "license": "MIT",
   "private": true,
@@ -101,7 +101,7 @@
     "crx": "^5.0.0",
     "css-loader": "^1.0.1",
     "error-stack-parser": "^2.0.2",
-    "es6-symbol": "3.0.2",
+    "es6-symbol": "^3",
     "escape-string-regexp": "^1.0.5",
     "eslint": "^4.19.1",
     "eslint-config-prettier": "^2.9.0",
