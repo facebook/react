@@ -184,7 +184,7 @@ function Row({
   const validateAndSetLocalValue = newValue => {
     let isValid = false;
     try {
-      JSON.parse(sanitizeForParse(value));
+      JSON.parse(sanitizeForParse(newValue));
       isValid = true;
     } catch (error) {}
 
@@ -203,7 +203,7 @@ function Row({
   };
 
   const submitValueChange = () => {
-    if (isValueValid) {
+    if (isAttributeValid && isValueValid) {
       const parsedLocalValue = JSON.parse(sanitizeForParse(localValue));
       if (value !== parsedLocalValue) {
         changeValue(attribute, parsedLocalValue);
@@ -212,8 +212,10 @@ function Row({
   };
 
   const submitAttributeChange = () => {
-    if (isAttributeValid && attribute !== localAttribute) {
-      changeAttribute(attribute, localAttribute, value);
+    if (isAttributeValid && isValueValid) {
+      if (attribute !== localAttribute) {
+        changeAttribute(attribute, localAttribute, value);
+      }
     }
   };
 
