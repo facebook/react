@@ -109,10 +109,35 @@ const createEventTarget = node => ({
   },
 });
 
+function describeWithPointerEvent(message, describeFn) {
+  const pointerEvent = 'PointerEvent';
+  const fallback = 'MouseEvent/TouchEvent';
+  describe.each`
+    value    | name
+    ${true}  | ${pointerEvent}
+    ${false} | ${fallback}
+  `(`${message}: $name`, entry => {
+    const hasPointerEvents = entry.value;
+    setPointerEvent(hasPointerEvents);
+    describeFn(hasPointerEvents);
+  });
+}
+
+function testWithPointerType(message, testFn) {
+  const table = hasPointerEvent()
+    ? ['mouse', 'touch', 'pen']
+    : ['mouse', 'touch'];
+  test.each(table)(`${message}: %s`, pointerType => {
+    testFn(pointerType);
+  });
+}
+
 export {
   buttonsType,
   createEventTarget,
+  describeWithPointerEvent,
   platform,
   hasPointerEvent,
   setPointerEvent,
+  testWithPointerType,
 };

@@ -13,12 +13,17 @@
  * Change environment support for PointerEvent.
  */
 
+const emptyFunction = function() {};
+
 export function hasPointerEvent() {
   return global != null && global.PointerEvent != null;
 }
 
 export function setPointerEvent(bool) {
-  global.PointerEvent = bool ? function() {} : undefined;
+  const mock = bool ? emptyFunction : undefined;
+  global.PointerEvent = mock;
+  global.HTMLElement.prototype.setPointerCapture = mock;
+  global.HTMLElement.prototype.releasePointerCapture = mock;
 }
 
 /**

@@ -64,6 +64,7 @@ function createPointerEvent(
     altKey = false,
     buttons = buttonsType.none,
     ctrlKey = false,
+    detail = 1,
     height,
     metaKey = false,
     movementX = 0,
@@ -76,6 +77,8 @@ function createPointerEvent(
     pressure = 0,
     preventDefault = emptyFunction,
     pointerType = 'mouse',
+    screenX,
+    screenY,
     shiftKey = false,
     tangentialPressure = 0,
     tiltX = 0,
@@ -87,6 +90,7 @@ function createPointerEvent(
   } = {},
 ) {
   const modifierState = {altKey, ctrlKey, metaKey, shiftKey};
+  const isMouse = pointerType === 'mouse';
 
   return createEvent(type, {
     altKey,
@@ -94,15 +98,11 @@ function createPointerEvent(
     clientX: x,
     clientY: y,
     ctrlKey,
+    detail,
     getModifierState(keyArg) {
       createGetModifierState(keyArg, modifierState);
     },
-    height:
-      pointerType === 'mouse'
-        ? 1
-        : height != null
-          ? height
-          : defaultPointerSize,
+    height: isMouse ? 1 : height != null ? height : defaultPointerSize,
     metaKey,
     movementX,
     movementY,
@@ -114,15 +114,16 @@ function createPointerEvent(
     pointerType,
     pressure,
     preventDefault,
-    screenX: x,
-    screenY: y + defaultBrowserChromeSize,
+    releasePointerCapture: emptyFunction,
+    screenX: screenX === 0 ? screenX : x,
+    screenY: screenY === 0 ? screenY : y + defaultBrowserChromeSize,
+    setPointerCapture: emptyFunction,
     shiftKey,
     tangentialPressure,
     tiltX,
     tiltY,
     twist,
-    width:
-      pointerType === 'mouse' ? 1 : width != null ? width : defaultPointerSize,
+    width: isMouse ? 1 : width != null ? width : defaultPointerSize,
   });
 }
 
@@ -158,6 +159,7 @@ function createMouseEvent(
     altKey = false,
     buttons = buttonsType.none,
     ctrlKey = false,
+    detail = 1,
     metaKey = false,
     movementX = 0,
     movementY = 0,
@@ -166,81 +168,107 @@ function createMouseEvent(
     pageX,
     pageY,
     preventDefault = emptyFunction,
+    screenX,
+    screenY,
     shiftKey = false,
     x = 0,
     y = 0,
   } = {},
-  virtual = false,
 ) {
   const modifierState = {altKey, ctrlKey, metaKey, shiftKey};
 
   return createEvent(type, {
     altKey,
     buttons,
-    clientX: virtual ? 0 : x,
-    clientY: virtual ? 0 : y,
+    clientX: x,
+    clientY: y,
     ctrlKey,
-    detail: virtual ? 0 : 1,
+    detail,
     getModifierState(keyArg) {
       createGetModifierState(keyArg, modifierState);
     },
     metaKey,
-    movementX: virtual ? 0 : movementX,
-    movementY: virtual ? 0 : movementY,
-    offsetX: virtual ? 0 : offsetX,
-    offsetY: virtual ? 0 : offsetY,
-    pageX: virtual ? 0 : pageX || x,
-    pageY: virtual ? 0 : pageY || y,
+    movementX,
+    movementY,
+    offsetX,
+    offsetY,
+    pageX: pageX || x,
+    pageY: pageY || y,
     preventDefault,
-    screenX: virtual ? 0 : x,
-    screenY: virtual ? 0 : y + defaultBrowserChromeSize,
+    screenX: screenX === 0 ? screenX : x,
+    screenY: screenY === 0 ? screenY : y + defaultBrowserChromeSize,
     shiftKey,
   });
 }
 
-function createTouchEvent(
-  type,
-  {
-    altKey = false,
-    ctrlKey = false,
-    height = defaultPointerSize,
-    metaKey = false,
-    pageX,
-    pageY,
-    pointerId = 1,
-    preventDefault = emptyFunction,
-    shiftKey = false,
-    twist = 0,
-    width = defaultPointerSize,
-    x = 0,
-    y = 0,
-  } = {},
-) {
-  const touch = {
-    clientX: x,
-    clientY: y,
-    force: 1,
-    identifier: pointerId,
-    pageX: pageX || x,
-    pageY: pageY || y,
-    radiusX: width / 2,
-    radiusY: height / 2,
-    rotationAngle: twist,
-    screenX: x,
-    screenY: y + defaultBrowserChromeSize,
-  };
+function createTouchEvent(type, payload) {
+  const touchesPayload = Array.isArray(payload) ? payload : [payload];
+  const firstTouch = touchesPayload[0];
+  let altKey = false;
+  let ctrlKey = false;
+  let metaKey = false;
+  let preventDefault = emptyFunction;
+  let shiftKey = false;
+  if (firstTouch != null) {
+    if (firstTouch.altKey != null) {
+      altKey = firstTouch.altKey;
+    }
+    if (firstTouch.ctrlKey != null) {
+      ctrlKey = firstTouch.ctrlKey;
+    }
+    if (firstTouch.metaKey != null) {
+      metaKey = firstTouch.metaKey;
+    }
+    if (firstTouch.preventDefault != null) {
+      preventDefault = firstTouch.preventDefault;
+    }
+    if (firstTouch.shiftKey != null) {
+      shiftKey = firstTouch.shiftKey;
+    }
+  }
 
-  const activeTouch = type !== 'touchend' ? [touch] : null;
+  const touches = touchesPayload.map(
+    ({
+      height = defaultPointerSize,
+      pageX,
+      pageY,
+      pointerId = 1,
+      twist = 0,
+      width = defaultPointerSize,
+      x = 0,
+      y = 0,
+    } = {}) => {
+      return {
+        clientX: x,
+        clientY: y,
+        force: 1,
+        identifier: pointerId,
+        pageX: pageX || x,
+        pageY: pageY || y,
+        radiusX: width / 2,
+        radiusY: height / 2,
+        rotationAngle: twist,
+        screenX: x,
+        screenY: y + defaultBrowserChromeSize,
+      };
+    },
+  );
+
+  const activeTouches = type !== 'touchend' ? touches : null;
 
   return createEvent(type, {
     altKey,
-    changedTouches: [touch],
+    changedTouches: touches,
     ctrlKey,
+    detail: 0,
     metaKey,
     preventDefault,
     shiftKey,
-    targetTouches: activeTouch,
-    touches: activeTouch,
+    sourceCapabilities: {
+      firesTouchEvents: true,
+    },
+    targetTouches: activeTouches,
+    touches: activeTouches,
   });
 }
 
@@ -253,11 +281,24 @@ export function blur({relatedTarget} = {}) {
 }
 
 export function click(payload) {
-  return createMouseEvent('click', payload, false);
+  return createMouseEvent('click', payload);
 }
 
 export function virtualclick(payload) {
-  return createMouseEvent('click', payload, true);
+  return createMouseEvent('click', {
+    ...payload,
+    buttons: 0,
+    detail: 0,
+    height: 1,
+    pageX: 0,
+    pageY: 0,
+    pressure: 0,
+    screenX: 0,
+    screenY: 0,
+    width: 1,
+    x: 0,
+    y: 0,
+  });
 }
 
 export function contextmenu(payload) {
@@ -301,11 +342,24 @@ export function lostpointercapture(payload) {
 }
 
 export function pointercancel(payload) {
-  return createPointerEvent('pointercancel', payload);
+  return createPointerEvent('pointercancel', {
+    ...payload,
+    buttons: 0,
+    detail: 0,
+    height: 1,
+    pageX: 0,
+    pageY: 0,
+    pressure: 0,
+    screenX: 0,
+    screenY: 0,
+    width: 1,
+    x: 0,
+    y: 0,
+  });
 }
 
 export function pointerdown(payload) {
-  const isTouch = payload != null && payload.pointerType === 'mouse';
+  const isTouch = payload != null && payload.pointerType === 'touch';
   return createPointerEvent('pointerdown', {
     buttons: buttonsType.primary,
     pressure: isTouch ? 1 : 0.5,
@@ -337,6 +391,7 @@ export function pointerup(payload) {
   return createPointerEvent('pointerup', {
     ...payload,
     buttons: buttonsType.none,
+    pressure: 0,
   });
 }
 
