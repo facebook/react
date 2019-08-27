@@ -39,10 +39,14 @@ import {
   addEventCaptureListenerWithPassiveFlag,
 } from './EventListener';
 import getEventTarget from './getEventTarget';
-import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
+import {
+  getClosestInstanceFromNode,
+  getInstanceFromNode,
+} from '../client/ReactDOMComponentTree';
 import SimpleEventPlugin from './SimpleEventPlugin';
 import {getRawEventName} from './DOMTopLevelEventTypes';
 import {passiveBrowserEventsSupported} from './checkPassiveEvents';
+import {getParentSuspenseInstance} from '../client/ReactDOMHostConfig';
 
 import {
   enableFlareAPI,
@@ -309,13 +313,54 @@ export function dispatchEvent(
     return;
   }
   const nativeEventTarget = getEventTarget(nativeEvent);
-  let targetInst = getClosestInstanceFromNode(nativeEventTarget);
 
-  if (
-    targetInst !== null &&
-    typeof targetInst.tag === 'number' &&
-    !isFiberMounted(targetInst)
-  ) {
+  // This is effectively an inlined version of getClosestInstanceFromNode with
+  // some special semantics for dehydrated Suspense boundaries.
+  let targetInst = getInstanceFromNode(nativeEventTarget);
+  if (targetInst === null) {
+    // If the direct event target isn't a React owned DOM node, we need to look
+    // to see if one of its parents is a React owned DOM node.
+    let targetNode = nativeEventTarget;
+    let parentNode = targetNode.parentNode;
+    while (parentNode) {
+      targetInst = getInstanceFromNode(parentNode);
+      if (targetInst !== null) {
+        // Since this wasn't the direct target of the event, we might have
+        // stepped past dehydrated DOM nodes to get here. However they could
+        // also have been non-React nodes. We need to answer which one.
+
+        // If we the instance doesn't have any children, then there can't be
+        // a nested suspense boundary within it. So we can use this as a fast
+        // bailout. Most of the time, when people add non-React children to
+        // the tree, it is using a ref to a child-less DOM node.
+        // We only need to check one of the fibers because if it has ever
+        // gone from having children to deleting them or vice versa it would
+        // have deleted the dehydrated boundary nested inside already.
+        if (targetInst.child !== null) {
+          // Next we need to figure out if the node that skipped past is
+          // nested within a dehydrated boundary and if so, which one.
+          let suspenseInstance = getParentSuspenseInstance(targetNode);
+          if (suspenseInstance !== null) {
+            // We found a suspense instance. That means that we haven't
+            // hydrated it yet. Even though we leave the comments in the
+            // DOM after hydrating, and there are boundaries in the DOM
+            // that could already be hydrated, we wouldn't have found them
+            // through this pass since if the target is hydrated it would
+            // have had an internalInstanceKey on it.
+            // We're going to proceed as if there was no target yet.
+            // TODO: This is a good opportunity to schedule a replay of
+            // the event instead once this boundary has been hydrated.
+            targetInst = null;
+          }
+        }
+        break;
+      }
+      targetNode = parentNode;
+      parentNode = targetNode.parent;
+    }
+  }
+
+  if (targetInst !== null && !isFiberMounted(targetInst)) {
     // If we get an event (ex: img onload) before committing that
     // component's mount, ignore it for now (that is, treat it as if it was an
     // event on a non-React tree). We might also consider queueing events and

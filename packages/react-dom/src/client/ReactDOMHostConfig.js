@@ -704,6 +704,39 @@ export function getNextHydratableInstanceAfterSuspenseInstance(
   return null;
 }
 
+// Returns the SuspenseInstance if this node is a direct child of a
+// SuspenseInstance. I.e. if its previous sibling is a Comment with
+// SUSPENSE_x_START_DATA. Otherwise, null.
+export function getParentSuspenseInstance(
+  targetInstance: Instance,
+): null | SuspenseInstance {
+  let node = targetInstance.previousSibling;
+  // Skip past all nodes within this suspense boundary.
+  // There might be nested nodes so we need to keep track of how
+  // deep we are and only break out when we're back on top.
+  let depth = 0;
+  while (node) {
+    if (node.nodeType === COMMENT_NODE) {
+      let data = ((node: any).data: string);
+      if (
+        data === SUSPENSE_START_DATA ||
+        data === SUSPENSE_FALLBACK_START_DATA ||
+        data === SUSPENSE_PENDING_START_DATA
+      ) {
+        if (depth === 0) {
+          return ((node: any): SuspenseInstance);
+        } else {
+          depth--;
+        }
+      } else if (data === SUSPENSE_END_DATA) {
+        depth++;
+      }
+    }
+    node = node.previousSibling;
+  }
+  return null;
+}
+
 export function didNotMatchHydratedContainerTextInstance(
   parentContainer: Container,
   textInstance: TextInstance,

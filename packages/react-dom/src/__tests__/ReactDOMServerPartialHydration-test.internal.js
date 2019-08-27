@@ -1895,4 +1895,84 @@ describe('ReactDOMServerPartialHydration', () => {
 
     document.body.removeChild(container);
   });
+
+  it('does not invoke the parent of dehydrated boundary event', async () => {
+    let suspend = false;
+    let resolve;
+    let promise = new Promise(resolvePromise => (resolve = resolvePromise));
+
+    let clicksOnParent = 0;
+    let clicksOnChild = 0;
+
+    function Child({text}) {
+      if (suspend) {
+        throw promise;
+      } else {
+        return (
+          <span
+            onClick={e => {
+              // The stopPropagation is showing an example why invoking
+              // the event on only a parent might not be correct.
+              e.stopPropagation();
+              clicksOnChild++;
+            }}>
+            Hello
+          </span>
+        );
+      }
+    }
+
+    function App() {
+      return (
+        <div onClick={() => clicksOnParent++}>
+          <Suspense fallback="Loading...">
+            <Child />
+          </Suspense>
+        </div>
+      );
+    }
+
+    suspend = false;
+    let finalHTML = ReactDOMServer.renderToString(<App />);
+    let container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    // We need this to be in the document since we'll dispatch events on it.
+    document.body.appendChild(container);
+
+    let span = container.getElementsByTagName('span')[0];
+
+    // On the client we don't have all data yet but we want to start
+    // hydrating anyway.
+    suspend = true;
+    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    root.render(<App />);
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+
+    // We're now partially hydrated.
+    span.click();
+    expect(clicksOnChild).toBe(0);
+    expect(clicksOnParent).toBe(0);
+
+    // Resolving the promise so that rendering can complete.
+    suspend = false;
+    resolve();
+    await promise;
+
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+
+    // TODO: With selective hydration the event should've been replayed
+    // but for now we'll have to issue it again.
+    act(() => {
+      span.click();
+    });
+
+    expect(clicksOnChild).toBe(1);
+    // This will be zero due to the stopPropagation.
+    expect(clicksOnParent).toBe(0);
+
+    document.body.removeChild(container);
+  });
 });
