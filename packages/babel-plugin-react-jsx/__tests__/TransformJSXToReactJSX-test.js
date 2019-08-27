@@ -15,6 +15,7 @@ function transform(input, options) {
   return wrap(
     babel.transform(input, {
       configFile: false,
+      sourceType: 'module',
       plugins: [
         '@babel/plugin-syntax-jsx',
         '@babel/plugin-transform-arrow-functions',
@@ -30,8 +31,10 @@ function transform(input, options) {
             useBuiltIns: true,
             useCreateElement: false,
             ...options,
+            autoImport: 'namespace', // none | default | namedExports / namespace
           },
         ],
+        // '@babel/transform-modules-commonjs',
       ],
     }).code
   );
@@ -68,17 +71,27 @@ describe('transform react to jsx', () => {
     ).toMatchSnapshot();
   });
 
-  it('nonStatic children', () => {
+  fit('nonStatic children', () => {
     expect(
       transform(
-        `var x = (
+        `      
+        import {_jsx} from 'foo';
+        const _$React1 = 1;
+        createElement.foo = _jsx();
+        var x = (
+          <div>
+          <div>
+            <div />
+            <div />
+          </div>
         <div>
           {[<span key={'0'} />, <span key={'1'} />]}
+        </div>
         </div>
       );
       `,
         {
-          development: true,
+          development: false,
         }
       )
     ).toMatchSnapshot();
