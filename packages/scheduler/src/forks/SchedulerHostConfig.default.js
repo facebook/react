@@ -137,7 +137,7 @@ if (
       // frame. We start out assuming that we run at 30fps but then the
       // heuristic tracking will adjust this value to a faster fps if we get
       // more frequent animation frames.
-      33.33;
+      33.33; //1000ms/30
 
   let prevRAFTime = -1;
   let prevRAFInterval = -1;
@@ -213,6 +213,7 @@ if (
     }
   };
 
+  //postMessage callback 在每一帧repaint之后执行，frameDeadline在RAF计算出来
   const performWorkUntilDeadline = () => {
     if (enableMessageLoopImplementation) {
       if (scheduledHostCallback !== null) {
@@ -252,6 +253,7 @@ if (
         const currentTime = getCurrentTime();
         const hasTimeRemaining = frameDeadline - currentTime > 0;
         try {
+          //flush Work
           const hasMoreWork = scheduledHostCallback(
             hasTimeRemaining,
             currentTime,
@@ -316,7 +318,7 @@ if (
       // could fail if two rAFs fire in the same frame.
       rAFTime - prevRAFTime > 0.1
     ) {
-      const rAFInterval = rAFTime - prevRAFTime;
+      const rAFInterval = rAFTime - prevRAFTime; //上一帧到这一帧的时间
       if (!fpsLocked && prevRAFInterval !== -1) {
         // We've observed two consecutive frame intervals. We'll use this to
         // dynamically adjust the frame rate.
@@ -327,9 +329,12 @@ if (
         // optimizing. For example, if we're running on 120hz display or 90hz VR
         // display. Take the max of the two in case one of them was an anomaly
         // due to missed frame deadlines.
+        //连续两帧fps上升
         if (rAFInterval < frameLength && prevRAFInterval < frameLength) {
+          //去两帧之间较大的间隔
           frameLength =
             rAFInterval < prevRAFInterval ? prevRAFInterval : rAFInterval;
+          //fps不高于120
           if (frameLength < 8.33) {
             // Defensive coding. We don't support higher frame rates than 120hz.
             // If the calculated frame length gets lower than 8, it is probably
@@ -341,6 +346,7 @@ if (
       prevRAFInterval = rAFInterval;
     }
     prevRAFTime = rAFTime;
+    //raf callback执行在每一帧paint layout之前,计算这一帧的截至时间
     frameDeadline = rAFTime + frameLength;
 
     // We use the postMessage trick to defer idle work until after the repaint.

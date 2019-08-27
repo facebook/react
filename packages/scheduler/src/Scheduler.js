@@ -164,12 +164,22 @@ function flushWork(hasTimeRemaining, initialTime) {
 function workLoop(hasTimeRemaining, initialTime) {
   let currentTime = initialTime;
   advanceTimers(currentTime);
+  //peak the highest priority task;
   currentTask = peek(taskQueue);
+  //work until frameDeadline(`shouldYieldToHost()`) or the expired task done;
   while (
     currentTask !== null &&
     !(enableSchedulerDebugging && isSchedulerPaused)
   ) {
     if (
+      //concurernt Root：
+      //如果这一帧没有剩余时间或者workLoop过程中把剩余时间消耗完 ,并且currentTask还没过期;
+      //则打断workloop，在下一帧继续执行;
+
+      //如果当前任务已经过期，无论如何都要先执行玩已经过期的任务;
+      //Legacy Root：
+      //expirationTime永远小于currentTime
+      //除非unstable_scheduleCallback的时候workLoop正在执行，这一帧没有剩余时间或者workLoop过程中把剩余时间消耗完
       currentTask.expirationTime > currentTime &&
       (!hasTimeRemaining || shouldYieldToHost())
     ) {
@@ -344,6 +354,7 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
     }
   } else {
     newTask.sortIndex = expirationTime;
+    //push in minHeap,the root of the heap always is the minimum sortIndex
     push(taskQueue, newTask);
     if (enableProfiling) {
       markTaskStart(newTask, currentTime);

@@ -47,6 +47,7 @@ function computeExpirationBucket(
   expirationInMs,
   bucketSizeMs,
 ): ExpirationTime {
+  //currentTime is expirationTime,don't need divided by UNIT_SIZE;
   return (
     MAGIC_NUMBER_OFFSET -
     ceiling(

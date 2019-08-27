@@ -694,22 +694,7 @@ function updateClassComponent(
   nextProps,
   renderExpirationTime: ExpirationTime,
 ) {
-  if (__DEV__) {
-    if (workInProgress.type !== workInProgress.elementType) {
-      // Lazy component props can't be validated in createElement
-      // because they're only guaranteed to be resolved here.
-      const innerPropTypes = Component.propTypes;
-      if (innerPropTypes) {
-        checkPropTypes(
-          innerPropTypes,
-          nextProps, // Resolved props
-          'prop',
-          getComponentName(Component),
-          getCurrentFiberStackInDev,
-        );
-      }
-    }
-  }
+
 
   // Push context providers early to prevent context stack mismatches.
   // During mounting we don't know the child context yet as the instance doesn't exist.
@@ -2778,23 +2763,23 @@ function beginWork(
 ): Fiber | null {
   const updateExpirationTime = workInProgress.expirationTime;
 
-  if (__DEV__) {
-    if (workInProgress._debugNeedsRemount && current !== null) {
-      // This will restart the begin phase with a new fiber.
-      return remountFiber(
-        current,
-        workInProgress,
-        createFiberFromTypeAndProps(
-          workInProgress.type,
-          workInProgress.key,
-          workInProgress.pendingProps,
-          workInProgress._debugOwner || null,
-          workInProgress.mode,
-          workInProgress.expirationTime,
-        ),
-      );
-    }
-  }
+  // if (__DEV__) {
+  //   if (workInProgress._debugNeedsRemount && current !== null) {
+  //     // This will restart the begin phase with a new fiber.
+  //     return remountFiber(
+  //       current,
+  //       workInProgress,
+  //       createFiberFromTypeAndProps(
+  //         workInProgress.type,
+  //         workInProgress.key,
+  //         workInProgress.pendingProps,
+  //         workInProgress._debugOwner || null,
+  //         workInProgress.mode,
+  //         workInProgress.expirationTime,
+  //       ),
+  //     );
+  //   }
+  // }
 
   if (current !== null) {
     const oldProps = current.memoizedProps;

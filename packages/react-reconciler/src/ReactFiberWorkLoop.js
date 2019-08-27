@@ -293,11 +293,13 @@ export function computeExpirationForFiber(
   suspenseConfig: null | SuspenseConfig,
 ): ExpirationTime {
   const mode = fiber.mode;
+  //不存在batchedmode
   if ((mode & BatchedMode) === NoMode) {
     return Sync;
   }
 
   const priorityLevel = getCurrentPriorityLevel();
+  //不存在batchedmode或者concurrentmode
   if ((mode & ConcurrentMode) === NoMode) {
     return priorityLevel === ImmediatePriority ? Sync : Batched;
   }
@@ -315,6 +317,7 @@ export function computeExpirationForFiber(
       suspenseConfig.timeoutMs | 0 || LOW_PRIORITY_EXPIRATION,
     );
   } else {
+    //Fiber is  concurrent mode ,compute expirationtime with priority.
     // Compute an expiration time based on the Scheduler priority.
     switch (priorityLevel) {
       case ImmediatePriority:
