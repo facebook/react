@@ -119,5 +119,50 @@ describe('ReactScope', () => {
       expect(refB.current.getParent()).toBe(null);
       expect(refA.current.getParent()).toBe(null);
     });
+
+    it('getChildren() works as intended', () => {
+      const TestScope = React.unstable_createScope((type, props) => true);
+      const TestScope2 = React.unstable_createScope((type, props) => true);
+      const refA = React.createRef();
+      const refB = React.createRef();
+      const refC = React.createRef();
+      const refD = React.createRef();
+      const spanA = React.createRef();
+      const spanB = React.createRef();
+      const divA = React.createRef();
+      const divB = React.createRef();
+
+      function Test() {
+        return (
+          <div>
+            <TestScope ref={refA}>
+              <span ref={spanA}>
+                <TestScope2 ref={refB}>
+                  <div ref={divA}>
+                    <TestScope ref={refC}>
+                      <span ref={spanB}>
+                        <TestScope2 ref={refD}>
+                          <div ref={divB}>>Hello world</div>
+                        </TestScope2>
+                      </span>
+                    </TestScope>
+                  </div>
+                </TestScope2>
+              </span>
+            </TestScope>
+          </div>
+        );
+      }
+
+      ReactDOM.render(<Test />, container);
+      const dChildren = refD.current.getChildren();
+      expect(dChildren).toBe(null);
+      const cChildren = refC.current.getChildren();
+      expect(cChildren).toBe(null);
+      const bChildren = refB.current.getChildren();
+      expect(bChildren).toEqual([refD.current]);
+      const aChildren = refA.current.getChildren();
+      expect(aChildren).toEqual([refC.current]);
+    });
   });
 });

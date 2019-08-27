@@ -28,7 +28,7 @@ function getSuspenseFallbackChild(fiber: Fiber): Fiber | null {
   return ((((fiber.child: any): Fiber).sibling: any): Fiber).child;
 }
 
-function collectScopeNodes(
+function collectScopedNodes(
   node: Fiber,
   fn: (type: string | Object, props: Object) => boolean,
   scopedNodes: Array<any>,
@@ -45,18 +45,49 @@ function collectScopeNodes(
     child = getSuspenseFallbackChild(node);
   }
   if (child !== null) {
-    collectScopeNodesFromChildren(child, fn, scopedNodes);
+    collectScopedNodesFromChildren(child, fn, scopedNodes);
   }
 }
 
-function collectScopeNodesFromChildren(
+function collectScopedNodesFromChildren(
   startingChild: Fiber,
   fn: (type: string | Object, props: Object) => boolean,
   scopedNodes: Array<any>,
 ): void {
   let child = startingChild;
   while (child !== null) {
-    collectScopeNodes(child, fn, scopedNodes);
+    collectScopedNodes(child, fn, scopedNodes);
+    child = child.sibling;
+  }
+}
+
+function collectNearestScopeMethods(
+  node: Fiber,
+  scope: ReactScope,
+  childrenScopes: Array<ReactScopeMethods>,
+): void {
+  if (node.tag === ScopeComponent && node.type === scope) {
+    childrenScopes.push(node.stateNode.methods);
+  } else {
+    let child = node.child;
+
+    if (isFiberSuspenseAndTimedOut(node)) {
+      child = getSuspenseFallbackChild(node);
+    }
+    if (child !== null) {
+      collectNearestChildScopeMethods(child, scope, childrenScopes);
+    }
+  }
+}
+
+function collectNearestChildScopeMethods(
+  startingChild: Fiber,
+  scope: ReactScope,
+  childrenScopes: Array<ReactScopeMethods>,
+): void {
+  let child = startingChild;
+  while (child !== null) {
+    collectNearestScopeMethods(child, scope, childrenScopes);
     child = child.sibling;
   }
 }
@@ -68,7 +99,13 @@ export function createScopeMethods(
   const fn = scope.fn;
   return {
     getChildren(): null | Array<ReactScopeMethods> {
-      return null;
+      const currentFiber = ((instance.fiber: any): Fiber);
+      const child = currentFiber.child;
+      const childrenScopes = [];
+      if (child !== null) {
+        collectNearestChildScopeMethods(child, scope, childrenScopes);
+      }
+      return childrenScopes.length === 0 ? null : childrenScopes;
     },
     getParent(): null | ReactScopeMethods {
       let node = ((instance.fiber: any): Fiber).return;
@@ -85,7 +122,7 @@ export function createScopeMethods(
       const child = currentFiber.child;
       const scopedNodes = [];
       if (child !== null) {
-        collectScopeNodesFromChildren(child, fn, scopedNodes);
+        collectScopedNodesFromChildren(child, fn, scopedNodes);
       }
       return scopedNodes.length === 0 ? null : scopedNodes;
     },
