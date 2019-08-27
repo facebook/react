@@ -483,7 +483,9 @@ function isScreenReaderVirtualClick(nativeEvent): boolean {
   return (
     nativeEvent.detail === 0 &&
     nativeEvent.screenX === 0 &&
-    nativeEvent.screenY === 0
+    nativeEvent.screenY === 0 &&
+    nativeEvent.clientX === 0 &&
+    nativeEvent.clientY === 0
   );
 }
 
