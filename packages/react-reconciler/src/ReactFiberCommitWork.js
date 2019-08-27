@@ -691,11 +691,12 @@ function commitAttachRef(finishedWork: Fiber) {
       case HostComponent:
         instanceToUse = getPublicInstance(instance);
         break;
-      case ScopeComponent:
-        instanceToUse = instance.methods;
-        break;
       default:
         instanceToUse = instance;
+    }
+    // Moved outside to ensure DCE works with this flag
+    if (enableScopeAPI && finishedWork.tag === ScopeComponent) {
+      instanceToUse = instance.methods;
     }
     if (typeof ref === 'function') {
       ref(instanceToUse);
