@@ -170,65 +170,30 @@ function createMouseEvent(
     x = 0,
     y = 0,
   } = {},
+  virtual = false,
 ) {
   const modifierState = {altKey, ctrlKey, metaKey, shiftKey};
 
   return createEvent(type, {
     altKey,
     buttons,
-    clientX: x,
-    clientY: y,
+    clientX: virtual ? 0 : x,
+    clientY: virtual ? 0 : y,
     ctrlKey,
+    detail: virtual ? 0 : 1,
     getModifierState(keyArg) {
       createGetModifierState(keyArg, modifierState);
     },
     metaKey,
-    movementX,
-    movementY,
-    offsetX,
-    offsetY,
-    pageX: pageX || x,
-    pageY: pageY || y,
+    movementX: virtual ? 0 : movementX,
+    movementY: virtual ? 0 : movementY,
+    offsetX: virtual ? 0 : offsetX,
+    offsetY: virtual ? 0 : offsetY,
+    pageX: virtual ? 0 : pageX || x,
+    pageY: virtual ? 0 : pageY || y,
     preventDefault,
-    screenX: x,
-    screenY: y + defaultBrowserChromeSize,
-    shiftKey,
-  });
-}
-
-function createScreenReaderMouseEvent(
-  type,
-  {
-    altKey = false,
-    buttons = buttonsType.none,
-    ctrlKey = false,
-    metaKey = false,
-    preventDefault = emptyFunction,
-    shiftKey = false,
-  } = {},
-) {
-  const modifierState = {altKey, ctrlKey, metaKey, shiftKey};
-
-  return createEvent(type, {
-    altKey,
-    buttons,
-    clientX: 0,
-    clientY: 0,
-    ctrlKey,
-    detail: 0,
-    getModifierState(keyArg) {
-      createGetModifierState(keyArg, modifierState);
-    },
-    metaKey,
-    movementX: 0,
-    movementY: 0,
-    offsetX: 0,
-    offsetY: 0,
-    pageX: 0,
-    pageY: 0,
-    preventDefault,
-    screenX: 0,
-    screenY: 0,
+    screenX: virtual ? 0 : x,
+    screenY: virtual ? 0 : y + defaultBrowserChromeSize,
     shiftKey,
   });
 }
@@ -288,11 +253,11 @@ export function blur({relatedTarget} = {}) {
 }
 
 export function click(payload) {
-  return createMouseEvent('click', payload);
+  return createMouseEvent('click', payload, false);
 }
 
-export function screenReaderClick(payload) {
-  return createScreenReaderMouseEvent('click', payload);
+export function virtualclick(payload) {
+  return createMouseEvent('click', payload, true);
 }
 
 export function contextmenu(payload) {
