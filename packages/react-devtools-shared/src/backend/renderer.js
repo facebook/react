@@ -42,11 +42,11 @@ import {
   registerRenderer as registerRendererWithConsole,
 } from './console';
 
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {
   ChangeDescription,
   CommitDataBackend,
   DevToolsHook,
-  Fiber,
   InspectedElement,
   InspectedElementPayload,
   InstanceAndStyle,

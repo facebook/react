@@ -1,5 +1,6 @@
 // @flow
 
+import type {Source} from 'shared/ReactElementType';
 import type {
   Dehydrated,
   Unserializable,
@@ -46,11 +47,6 @@ export type Owner = {|
 export type OwnersList = {|
   id: number,
   owners: Array<Owner> | null,
-|};
-
-export type Source = {|
-  fileName: string,
-  lineNumber: number,
 |};
 
 export type InspectedElement = {|

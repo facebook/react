@@ -1,5 +1,8 @@
 // @flow
 
+import type {ReactContext} from 'shared/ReactTypes';
+import type {Source} from 'shared/ReactElementType';
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {
   ComponentFilter,
   ElementType,
@@ -14,69 +17,6 @@ type BundleType =
 export type WorkTag = number;
 export type SideEffectTag = number;
 export type ExpirationTime = number;
-export type RefObject = {|
-  current: any,
-|};
-export type Source = {|
-  fileName: string,
-  lineNumber: number,
-|};
-
-export type HookType =
-  | 'useState'
-  | 'useReducer'
-  | 'useContext'
-  | 'useRef'
-  | 'useEffect'
-  | 'useLayoutEffect'
-  | 'useCallback'
-  | 'useMemo'
-  | 'useImperativeHandle'
-  | 'useDebugValue';
-
-// The Fiber type is copied from React and should be kept in sync:
-// https://github.com/facebook/react/blob/master/packages/react-reconciler/src/ReactFiber.js
-// The properties we don't use in DevTools are omitted.
-export type Fiber = {|
-  tag: WorkTag,
-
-  key: null | string,
-
-  // Dependencies (contexts, events) for this fiber, if it has any
-  dependencies: mixed | null,
-
-  elementType: any,
-
-  type: any,
-
-  stateNode: any,
-
-  return: Fiber | null,
-
-  child: Fiber | null,
-  sibling: Fiber | null,
-  index: number,
-
-  ref: null | (((handle: mixed) => void) & {_stringRef: ?string}) | RefObject,
-
-  pendingProps: any, // This type will be more specific once we overload the tag.
-  memoizedProps: any, // The props used to create the output.
-
-  memoizedState: any,
-
-  effectTag: SideEffectTag,
-
-  alternate: Fiber | null,
-
-  actualDuration?: number,
-
-  actualStartTime?: number,
-
-  treeBaseDuration?: number,
-
-  _debugSource?: Source | null,
-  _debugOwner?: Fiber | null,
-|};
 
 // TODO: If it's useful for the frontend to know which types of data an Element has
 // (e.g. props, state, context, hooks) then we could add a bitmask field for this
@@ -101,22 +41,6 @@ export type FindNativeNodesForFiberID = (id: number) => ?Array<NativeType>;
 export type ReactProviderType<T> = {
   $$typeof: Symbol | number,
   _context: ReactContext<T>,
-};
-
-export type ReactContext<T> = {
-  $$typeof: Symbol | number,
-  Consumer: ReactContext<T>,
-  Provider: ReactProviderType<T>,
-
-  _calculateChangedBits: ((a: T, b: T) => number) | null,
-
-  _currentValue: T,
-  _currentValue2: T,
-  _threadCount: number,
-
-  // DEV only
-  _currentRenderer?: Object | null,
-  _currentRenderer2?: Object | null,
 };
 
 export type ReactRenderer = {
@@ -349,27 +273,3 @@ export type DevToolsHook = {
     commitPriority?: number,
   ) => void,
 };
-
-export type ReactEventResponder<E, C> = {
-  $$typeof: Symbol | number,
-  displayName: string,
-  targetEventTypes: null | Array<string>,
-  rootEventTypes: null | Array<string>,
-  getInitialState: null | ((props: Object) => Object),
-  onEvent:
-    | null
-    | ((event: E, context: C, props: Object, state: Object) => void),
-  onRootEvent:
-    | null
-    | ((event: E, context: C, props: Object, state: Object) => void),
-  onMount: null | ((context: C, props: Object, state: Object) => void),
-  onUnmount: null | ((context: C, props: Object, state: Object) => void),
-  onOwnershipChange:
-    | null
-    | ((context: C, props: Object, state: Object) => void),
-};
-
-export type ReactEventResponderListener<E, C> = {|
-  props: Object,
-  responder: ReactEventResponder<E, C>,
-|};
