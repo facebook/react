@@ -281,10 +281,6 @@ export function jsxDEV(type, config, maybeKey, source, self) {
     }
   }
 
-  if (Object.freeze && Array.isArray(props.children)) {
-    Object.freeze(props.children);
-  }
-
   if (key || ref) {
     const displayName =
       typeof type === 'function'

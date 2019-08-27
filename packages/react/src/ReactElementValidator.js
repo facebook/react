@@ -345,6 +345,10 @@ export function jsxWithValidation(
           for (let i = 0; i < children.length; i++) {
             validateChildKeys(children[i], type);
           }
+
+          if (Object.freeze) {
+            Object.freeze(children);
+          }
         } else {
           warning(
             false,
