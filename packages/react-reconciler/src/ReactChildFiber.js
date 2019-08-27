@@ -307,7 +307,10 @@ function ChildReconciler(shouldTrackSideEffects) {
 
     let existingChild = currentFirstChild;
     while (existingChild !== null) {
-      if (existingChild.key !== null) {
+      if (
+        existingChild.key !== null &&
+        !existingChildren.has(existingChild.key)
+      ) {
         existingChildren.set(existingChild.key, existingChild);
       } else {
         existingChildren.set(existingChild.index, existingChild);
