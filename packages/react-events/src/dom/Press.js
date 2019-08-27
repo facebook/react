@@ -476,6 +476,19 @@ function handleStopPropagation(
   }
 }
 
+// After some investigation work, screen reader virtual
+// clicks (NVDA, Jaws, VoiceOver) do not have co-ords associated with the click
+// event and "detail" is always 0 (where normal clicks are > 0)
+function isScreenReaderVirtualClick(nativeEvent): boolean {
+  return (
+    nativeEvent.detail === 0 &&
+    nativeEvent.screenX === 0 &&
+    nativeEvent.screenY === 0 &&
+    nativeEvent.clientX === 0 &&
+    nativeEvent.clientY === 0
+  );
+}
+
 function targetIsDocument(target: null | Node): boolean {
   // When target is null, it is the root
   return target === null || target.nodeType === 9;
@@ -616,6 +629,13 @@ const pressResponderImpl = {
       case 'click': {
         if (state.shouldPreventClick) {
           nativeEvent.preventDefault();
+        }
+        const onPress = props.onPress;
+
+        if (isFunction(onPress) && isScreenReaderVirtualClick(nativeEvent)) {
+          state.pointerType = 'keyboard';
+          state.pressTarget = event.responderTarget;
+          dispatchEvent(event, onPress, context, state, 'press', DiscreteEvent);
         }
         break;
       }

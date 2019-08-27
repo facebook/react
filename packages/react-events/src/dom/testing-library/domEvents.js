@@ -170,28 +170,30 @@ function createMouseEvent(
     x = 0,
     y = 0,
   } = {},
+  virtual = false,
 ) {
   const modifierState = {altKey, ctrlKey, metaKey, shiftKey};
 
   return createEvent(type, {
     altKey,
     buttons,
-    clientX: x,
-    clientY: y,
+    clientX: virtual ? 0 : x,
+    clientY: virtual ? 0 : y,
     ctrlKey,
+    detail: virtual ? 0 : 1,
     getModifierState(keyArg) {
       createGetModifierState(keyArg, modifierState);
     },
     metaKey,
-    movementX,
-    movementY,
-    offsetX,
-    offsetY,
-    pageX: pageX || x,
-    pageY: pageY || y,
+    movementX: virtual ? 0 : movementX,
+    movementY: virtual ? 0 : movementY,
+    offsetX: virtual ? 0 : offsetX,
+    offsetY: virtual ? 0 : offsetY,
+    pageX: virtual ? 0 : pageX || x,
+    pageY: virtual ? 0 : pageY || y,
     preventDefault,
-    screenX: x,
-    screenY: y + defaultBrowserChromeSize,
+    screenX: virtual ? 0 : x,
+    screenY: virtual ? 0 : y + defaultBrowserChromeSize,
     shiftKey,
   });
 }
@@ -251,7 +253,11 @@ export function blur({relatedTarget} = {}) {
 }
 
 export function click(payload) {
-  return createMouseEvent('click', payload);
+  return createMouseEvent('click', payload, false);
+}
+
+export function virtualclick(payload) {
+  return createMouseEvent('click', payload, true);
 }
 
 export function contextmenu(payload) {
