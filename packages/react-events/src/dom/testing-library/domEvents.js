@@ -297,6 +297,28 @@ export function click(payload) {
   return createMouseEvent('click', payload);
 }
 
+export function contextmenu(payload) {
+  return createMouseEvent('contextmenu', {
+    ...payload,
+    detail: 0,
+  });
+}
+
+export function dragstart(payload) {
+  return createMouseEvent('dragstart', {
+    ...payload,
+    detail: 0,
+  });
+}
+
+export function focus({relatedTarget} = {}) {
+  return createEvent('focus', {relatedTarget});
+}
+
+export function scroll() {
+  return createEvent('scroll');
+}
+
 export function virtualclick(payload) {
   return createMouseEvent('click', {
     ...payload,
@@ -312,22 +334,6 @@ export function virtualclick(payload) {
     x: 0,
     y: 0,
   });
-}
-
-export function contextmenu(payload) {
-  return createMouseEvent('contextmenu', payload);
-}
-
-export function dragstart(payload) {
-  return createMouseEvent('dragstart', payload);
-}
-
-export function focus({relatedTarget} = {}) {
-  return createEvent('focus', {relatedTarget});
-}
-
-export function scroll() {
-  return createEvent('scroll');
 }
 
 /**

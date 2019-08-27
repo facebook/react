@@ -380,6 +380,7 @@ function processTimers(
 
 function createDOMResponderEvent(
   topLevelType: string,
+  responderTarget: Element,
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: Element | Document,
   passive: boolean,
