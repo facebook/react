@@ -32,6 +32,7 @@ import {
   enableFlareAPI,
   enableFundamentalAPI,
   enableSuspenseCallback,
+  enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -49,6 +50,7 @@ import {
   SimpleMemoComponent,
   SuspenseListComponent,
   FundamentalComponent,
+  ScopeComponent,
 } from 'shared/ReactWorkTags';
 import {
   invokeGuardedCallback,
@@ -617,6 +619,7 @@ function commitLifeCycles(
     case SuspenseListComponent:
     case IncompleteClassComponent:
     case FundamentalComponent:
+    case ScopeComponent:
       return;
     default: {
       invariant(
@@ -687,6 +690,9 @@ function commitAttachRef(finishedWork: Fiber) {
     switch (finishedWork.tag) {
       case HostComponent:
         instanceToUse = getPublicInstance(instance);
+        break;
+      case ScopeComponent:
+        instanceToUse = instance.methods;
         break;
       default:
         instanceToUse = instance;
@@ -1380,6 +1386,13 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       if (enableFundamentalAPI) {
         const fundamentalInstance = finishedWork.stateNode;
         updateFundamentalComponent(fundamentalInstance);
+      }
+      return;
+    }
+    case ScopeComponent: {
+      if (enableScopeAPI) {
+        const scopeInstance = finishedWork.stateNode;
+        scopeInstance.fiber = finishedWork;
       }
       return;
     }

@@ -66,7 +66,6 @@ export type ReactDOMResponderContext = {
   removeRootEventTypes: (rootEventTypes: Array<string>) => void,
   setTimeout: (func: () => void, timeout: number) => number,
   clearTimeout: (timerId: number) => void,
-  getFocusableElementsInScope(deep: boolean): Array<HTMLElement>,
   getActiveDocument(): Document,
   objectAssign: Function,
   getTimeStamp: () => number,
