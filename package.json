@@ -4,6 +4,7 @@
     "packages/*"
   ],
   "devDependencies": {
+    "@babel/plugin-syntax-jsx": "^7.2.0",
     "@babel/cli": "^7.0.0",
     "@babel/code-frame": "^7.0.0",
     "@babel/core": "^7.0.0",
