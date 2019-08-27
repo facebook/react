@@ -27,9 +27,17 @@ env.beforeEach(() => {
   const originalConsoleError = console.error;
   // $FlowFixMe
   console.error = (...args) => {
-    if (args[0] === 'Warning: React DevTools encountered an error: %s') {
+    const firstArg = args[0];
+    if (firstArg === 'Warning: React DevTools encountered an error: %s') {
       // Rethrow errors from React.
       throw args[1];
+    } else if (
+      typeof firstArg === 'string' &&
+      firstArg.startsWith("Warning: It looks like you're using the wrong act()")
+    ) {
+      // DevTools intentionally wraps updates with acts from both DOM and test-renderer,
+      // since test updates are expected to impact both renderers.
+      return;
     }
     originalConsoleError.apply(console, args);
   };
