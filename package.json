@@ -109,6 +109,7 @@
     "test-build": "cross-env NODE_ENV=development jest --config ./scripts/jest/config.build.js",
     "test-build-prod": "cross-env NODE_ENV=production jest --config ./scripts/jest/config.build.js",
     "test-build-devtools": "cross-env NODE_ENV=development jest --config ./scripts/jest/config.build-devtools.js",
+    "debug-test-build-devtools": "cross-env NODE_ENV=development node --inspect-brk node_modules/.bin/jest --config ./scripts/jest/config.build-devtools.js",
     "test-dom-fixture": "cd fixtures/dom && yarn && yarn prestart && yarn test",
     "flow": "node ./scripts/tasks/flow.js",
     "flow-ci": "node ./scripts/tasks/flow-ci.js",

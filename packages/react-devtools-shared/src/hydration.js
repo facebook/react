@@ -287,7 +287,11 @@ export function dehydrate(
         };
 
         if (typeof data[Symbol.iterator]) {
-          [...data].forEach(
+          // TRICKY
+          // Don't use [...spread] syntax for this purpose.
+          // This project uses @babel/plugin-transform-spread in "loose" mode which only works with Array values.
+          // Other types (e.g. typed arrays, Sets) will not spread correctly.
+          Array.from(data).forEach(
             (item, i) =>
               (unserializableValue[i] = dehydrate(
                 item,
