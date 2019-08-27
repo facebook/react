@@ -241,6 +241,9 @@ workflows:
       - test_build_prod:
           requires:
             - build
+      - test_build_devtools:
+          requires:
+            - build
       - test_dom_fixtures:
           requires:
             - build
