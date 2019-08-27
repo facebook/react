@@ -44,6 +44,9 @@ const createEventTarget = node => ({
   keyup(payload) {
     node.dispatchEvent(domEvents.keyup(payload));
   },
+  screenReaderClick(payload) {
+    node.dispatchEvent(domEvents.screenReaderClick(payload));
+  },
   scroll(payload) {
     node.dispatchEvent(domEvents.scroll(payload));
   },

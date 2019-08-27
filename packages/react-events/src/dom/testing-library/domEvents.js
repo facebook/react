@@ -196,6 +196,43 @@ function createMouseEvent(
   });
 }
 
+function createScreenReaderMouseEvent(
+  type,
+  {
+    altKey = false,
+    buttons = buttonsType.none,
+    ctrlKey = false,
+    metaKey = false,
+    preventDefault = emptyFunction,
+    shiftKey = false,
+  } = {},
+) {
+  const modifierState = {altKey, ctrlKey, metaKey, shiftKey};
+
+  return createEvent(type, {
+    altKey,
+    buttons,
+    clientX: 0,
+    clientY: 0,
+    ctrlKey,
+    detail: 0,
+    getModifierState(keyArg) {
+      createGetModifierState(keyArg, modifierState);
+    },
+    metaKey,
+    movementX: 0,
+    movementY: 0,
+    offsetX: 0,
+    offsetY: 0,
+    pageX: 0,
+    pageY: 0,
+    preventDefault,
+    screenX: 0,
+    screenY: 0,
+    shiftKey,
+  });
+}
+
 function createTouchEvent(
   type,
   {
@@ -252,6 +289,10 @@ export function blur({relatedTarget} = {}) {
 
 export function click(payload) {
   return createMouseEvent('click', payload);
+}
+
+export function screenReaderClick(payload) {
+  return createScreenReaderMouseEvent('click', payload);
 }
 
 export function contextmenu(payload) {
