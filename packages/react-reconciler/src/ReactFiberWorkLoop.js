@@ -96,6 +96,8 @@ import {
   Passive,
   Incomplete,
   HostEffectMask,
+  Hydrating,
+  HydratingAndUpdate,
 } from 'shared/ReactSideEffectTags';
 import {
   NoWork,
@@ -1638,6 +1640,7 @@ function commitRootImpl(root, renderPriorityLevel) {
           null,
           commitMutationEffects,
           null,
+          root,
           renderPriorityLevel,
         );
         if (hasCaughtError()) {
@@ -1648,7 +1651,7 @@ function commitRootImpl(root, renderPriorityLevel) {
         }
       } else {
         try {
-          commitMutationEffects(renderPriorityLevel);
+          commitMutationEffects(root, renderPriorityLevel);
         } catch (error) {
           invariant(nextEffect !== null, 'Should be working on an effect.');
           captureCommitPhaseError(nextEffect, error);
@@ -1837,7 +1840,7 @@ function commitBeforeMutationEffects() {
   }
 }
 
-function commitMutationEffects(renderPriorityLevel) {
+function commitMutationEffects(root: FiberRoot, renderPriorityLevel) {
   // TODO: Should probably move the bulk of this function to commitWork.
   while (nextEffect !== null) {
     setCurrentDebugFiberInDEV(nextEffect);
@@ -1859,7 +1862,8 @@ function commitMutationEffects(renderPriorityLevel) {
     // updates, and deletions. To avoid needing to add a case for every possible
     // bitmap value, we remove the secondary effects from the effect tag and
     // switch on that value.
-    let primaryEffectTag = effectTag & (Placement | Update | Deletion);
+    let primaryEffectTag =
+      effectTag & (Placement | Update | Deletion | Hydrating);
     switch (primaryEffectTag) {
       case Placement: {
         commitPlacement(nextEffect);
@@ -1882,13 +1886,25 @@ function commitMutationEffects(renderPriorityLevel) {
         commitWork(current, nextEffect);
         break;
       }
+      case Hydrating: {
+        nextEffect.effectTag &= ~Hydrating;
+        break;
+      }
+      case HydratingAndUpdate: {
+        nextEffect.effectTag &= ~Hydrating;
+
+        // Update
+        const current = nextEffect.alternate;
+        commitWork(current, nextEffect);
+        break;
+      }
       case Update: {
         const current = nextEffect.alternate;
         commitWork(current, nextEffect);
         break;
       }
       case Deletion: {
-        commitDeletion(nextEffect, renderPriorityLevel);
+        commitDeletion(root, nextEffect, renderPriorityLevel);
         break;
       }
     }

@@ -296,7 +296,6 @@ export function mountResponderInstance(
   props: Object,
   state: Object,
   instance: Instance,
-  rootContainerInstance: Container,
 ) {
   // noop
 }

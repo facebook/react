@@ -7,7 +7,6 @@
   "dependencies": {
     "@babel/helper-module-imports": "^7.0.0",
     "esutils": "^2.0.0"
-    
   },
   "files": [
     "README.md",

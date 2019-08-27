@@ -341,13 +341,6 @@ const focusResponderImpl = {
   ) {
     unmountFocusResponder(context, props, state);
   },
-  onOwnershipChange(
-    context: ReactDOMResponderContext,
-    props: FocusProps,
-    state: FocusState,
-  ) {
-    unmountFocusResponder(context, props, state);
-  },
 };
 
 export const FocusResponder = React.unstable_createResponder(
@@ -355,7 +348,7 @@ export const FocusResponder = React.unstable_createResponder(
   focusResponderImpl,
 );
 
-export function useFocusResponder(
+export function useFocus(
   props: FocusProps,
 ): ReactEventResponderListener<any, any> {
   return React.unstable_useResponder(FocusResponder, props);
@@ -485,13 +478,6 @@ const focusWithinResponderImpl = {
   ) {
     unmountFocusWithinResponder(context, props, state);
   },
-  onOwnershipChange(
-    context: ReactDOMResponderContext,
-    props: FocusWithinProps,
-    state: FocusState,
-  ) {
-    unmountFocusWithinResponder(context, props, state);
-  },
 };
 
 export const FocusWithinResponder = React.unstable_createResponder(
@@ -499,7 +485,7 @@ export const FocusWithinResponder = React.unstable_createResponder(
   focusWithinResponderImpl,
 );
 
-export function useFocusWithinResponder(
+export function useFocusWithin(
   props: FocusWithinProps,
 ): ReactEventResponderListener<any, any> {
   return React.unstable_useResponder(FocusWithinResponder, props);

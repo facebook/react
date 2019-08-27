@@ -215,7 +215,7 @@ export const InputResponder = React.unstable_createResponder(
   inputResponderImpl,
 );
 
-export function useInputResponder(
+export function useInput(
   props: InputResponderProps,
 ): ReactEventResponderListener<any, any> {
   return React.unstable_useResponder(InputResponder, props);

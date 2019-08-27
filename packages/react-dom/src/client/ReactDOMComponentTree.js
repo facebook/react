@@ -23,26 +23,29 @@ export function precacheFiberNode(hostInst, node) {
  * ReactDOMTextComponent instance ancestor.
  */
 export function getClosestInstanceFromNode(node) {
-  if (node[internalInstanceKey]) {
-    return node[internalInstanceKey];
+  let inst = node[internalInstanceKey];
+  if (inst) {
+    return inst;
   }
 
-  while (!node[internalInstanceKey]) {
-    if (node.parentNode) {
-      node = node.parentNode;
+  do {
+    node = node.parentNode;
+    if (node) {
+      inst = node[internalInstanceKey];
     } else {
       // Top of the tree. This node must not be part of a React tree (or is
       // unmounted, potentially).
       return null;
     }
-  }
+  } while (!inst);
 
-  let inst = node[internalInstanceKey];
-  if (inst.tag === HostComponent || inst.tag === HostText) {
-    // In Fiber, this will always be the deepest root.
-    return inst;
+  let tag = inst.tag;
+  switch (tag) {
+    case HostComponent:
+    case HostText:
+      // In Fiber, this will always be the deepest root.
+      return inst;
   }
-
   return null;
 }
 

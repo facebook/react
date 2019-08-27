@@ -118,6 +118,7 @@ import {
 } from './ReactHookEffectTags';
 import {didWarnAboutReassigningProps} from './ReactFiberBeginWork';
 import {runWithPriority, NormalPriority} from './SchedulerWithReactIntegration';
+import {updateEventListeners} from './ReactFiberEvents';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {
@@ -607,7 +608,12 @@ function commitLifeCycles(
       }
       return;
     }
-    case SuspenseComponent:
+    case SuspenseComponent: {
+      if (enableSuspenseCallback) {
+        commitSuspenseHydrationCallbacks(finishedRoot, finishedWork);
+      }
+      return;
+    }
     case SuspenseListComponent:
     case IncompleteClassComponent:
     case FundamentalComponent:
@@ -644,7 +650,8 @@ function hideOrUnhideAllChildren(finishedWork, isHidden) {
         }
       } else if (
         node.tag === SuspenseComponent &&
-        node.memoizedState !== null
+        node.memoizedState !== null &&
+        node.memoizedState.dehydrated === null
       ) {
         // Found a nested Suspense component that timed out. Skip over the
         // primary child fragment, which should remain hidden.
@@ -719,6 +726,7 @@ function commitDetachRef(current: Fiber) {
 // deletion, so don't let them throw. Host-originating errors should
 // interrupt deletion, so it's okay
 function commitUnmount(
+  finishedRoot: FiberRoot,
   current: Fiber,
   renderPriorityLevel: ReactPriorityLevel,
 ): void {
@@ -801,7 +809,7 @@ function commitUnmount(
       // We are also not using this parent because
       // the portal will get pushed immediately.
       if (supportsMutation) {
-        unmountHostComponents(current, renderPriorityLevel);
+        unmountHostComponents(finishedRoot, current, renderPriorityLevel);
       } else if (supportsPersistence) {
         emptyPortalContainer(current);
       }
@@ -815,11 +823,24 @@ function commitUnmount(
           current.stateNode = null;
         }
       }
+      return;
+    }
+    case DehydratedFragment: {
+      if (enableSuspenseCallback) {
+        const hydrationCallbacks = finishedRoot.hydrationCallbacks;
+        if (hydrationCallbacks !== null) {
+          const onDeleted = hydrationCallbacks.onDeleted;
+          if (onDeleted) {
+            onDeleted((current.stateNode: SuspenseInstance));
+          }
+        }
+      }
     }
   }
 }
 
 function commitNestedUnmounts(
+  finishedRoot: FiberRoot,
   root: Fiber,
   renderPriorityLevel: ReactPriorityLevel,
 ): void {
@@ -830,7 +851,7 @@ function commitNestedUnmounts(
   // we do an inner loop while we're still inside the host node.
   let node: Fiber = root;
   while (true) {
-    commitUnmount(node, renderPriorityLevel);
+    commitUnmount(finishedRoot, node, renderPriorityLevel);
     // Visit children because they may contain more composite or host nodes.
     // Skip portals because commitUnmount() currently visits them recursively.
     if (
@@ -1081,7 +1102,11 @@ function commitPlacement(finishedWork: Fiber): void {
   }
 }
 
-function unmountHostComponents(current, renderPriorityLevel): void {
+function unmountHostComponents(
+  finishedRoot,
+  current,
+  renderPriorityLevel,
+): void {
   // We only have the top Fiber that was deleted but we need to recurse down its
   // children to find all the terminal nodes.
   let node: Fiber = current;
@@ -1129,7 +1154,7 @@ function unmountHostComponents(current, renderPriorityLevel): void {
     }
 
     if (node.tag === HostComponent || node.tag === HostText) {
-      commitNestedUnmounts(node, renderPriorityLevel);
+      commitNestedUnmounts(finishedRoot, node, renderPriorityLevel);
       // After all the children have unmounted, it is now safe to remove the
       // node from the tree.
       if (currentParentIsContainer) {
@@ -1146,7 +1171,7 @@ function unmountHostComponents(current, renderPriorityLevel): void {
       // Don't visit children because we already visited them.
     } else if (enableFundamentalAPI && node.tag === FundamentalComponent) {
       const fundamentalNode = node.stateNode.instance;
-      commitNestedUnmounts(node, renderPriorityLevel);
+      commitNestedUnmounts(finishedRoot, node, renderPriorityLevel);
       // After all the children have unmounted, it is now safe to remove the
       // node from the tree.
       if (currentParentIsContainer) {
@@ -1164,6 +1189,16 @@ function unmountHostComponents(current, renderPriorityLevel): void {
       enableSuspenseServerRenderer &&
       node.tag === DehydratedFragment
     ) {
+      if (enableSuspenseCallback) {
+        const hydrationCallbacks = finishedRoot.hydrationCallbacks;
+        if (hydrationCallbacks !== null) {
+          const onDeleted = hydrationCallbacks.onDeleted;
+          if (onDeleted) {
+            onDeleted((node.stateNode: SuspenseInstance));
+          }
+        }
+      }
+
       // Delete the dehydrated suspense boundary and all of its content.
       if (currentParentIsContainer) {
         clearSuspenseBoundaryFromContainer(
@@ -1188,7 +1223,7 @@ function unmountHostComponents(current, renderPriorityLevel): void {
         continue;
       }
     } else {
-      commitUnmount(node, renderPriorityLevel);
+      commitUnmount(finishedRoot, node, renderPriorityLevel);
       // Visit children because we may find more host components below.
       if (node.child !== null) {
         node.child.return = node;
@@ -1216,16 +1251,17 @@ function unmountHostComponents(current, renderPriorityLevel): void {
 }
 
 function commitDeletion(
+  finishedRoot: FiberRoot,
   current: Fiber,
   renderPriorityLevel: ReactPriorityLevel,
 ): void {
   if (supportsMutation) {
     // Recursively delete all host nodes from the parent.
     // Detach refs and call componentWillUnmount() on the whole subtree.
-    unmountHostComponents(current, renderPriorityLevel);
+    unmountHostComponents(finishedRoot, current, renderPriorityLevel);
   } else {
     // Detach refs and call componentWillUnmount() on the whole subtree.
-    commitNestedUnmounts(current, renderPriorityLevel);
+    commitNestedUnmounts(finishedRoot, current, renderPriorityLevel);
   }
   detachFiber(current);
 }
@@ -1295,6 +1331,13 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
             newProps,
             finishedWork,
           );
+        }
+        if (enableFlareAPI) {
+          const prevListeners = oldProps.listeners;
+          const nextListeners = newProps.listeners;
+          if (prevListeners !== nextListeners) {
+            updateEventListeners(nextListeners, instance, finishedWork);
+          }
         }
       }
       return;
@@ -1377,6 +1420,30 @@ function commitSuspenseComponent(finishedWork: Fiber) {
     } else if (__DEV__) {
       if (suspenseCallback !== undefined) {
         warning(false, 'Unexpected type for suspenseCallback.');
+      }
+    }
+  }
+}
+
+function commitSuspenseHydrationCallbacks(
+  finishedRoot: FiberRoot,
+  finishedWork: Fiber,
+) {
+  if (enableSuspenseCallback) {
+    const hydrationCallbacks = finishedRoot.hydrationCallbacks;
+    if (hydrationCallbacks !== null) {
+      const onHydrated = hydrationCallbacks.onHydrated;
+      if (onHydrated) {
+        const newState: SuspenseState | null = finishedWork.memoizedState;
+        if (newState === null) {
+          const current = finishedWork.alternate;
+          if (current !== null) {
+            const prevState: SuspenseState | null = current.memoizedState;
+            if (prevState !== null && prevState.dehydrated !== null) {
+              onHydrated(prevState.dehydrated);
+            }
+          }
+        }
       }
     }
   }

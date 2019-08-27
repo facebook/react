@@ -33,7 +33,6 @@ function transform(input, options) {
             ...options,
           },
         ],
-        '@babel/plugin-transform-modules-commonjs',
       ],
     }).code
   );
