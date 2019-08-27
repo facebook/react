@@ -420,6 +420,18 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
       innerTarget.pointerup({pointerType: 'mouse'});
       expect(onPress).toBeCalled();
     });
+
+    it('is called once after virtual screen reader "click" event', () => {
+      const target = createEventTarget(ref.current);
+      target.virtualclick();
+      expect(onPress).toHaveBeenCalledTimes(1);
+      expect(onPress).toHaveBeenCalledWith(
+        expect.objectContaining({
+          pointerType: 'keyboard',
+          type: 'press',
+        }),
+      );
+    });
   });
 
   describe('onPressMove', () => {
