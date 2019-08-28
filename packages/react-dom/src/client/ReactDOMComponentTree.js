@@ -8,6 +8,8 @@
 import {HostComponent, HostText} from 'shared/ReactWorkTags';
 import invariant from 'shared/invariant';
 
+import {getParentSuspenseInstance} from './ReactDOMHostConfig';
+
 const randomKey = Math.random()
   .toString(36)
   .slice(2);
@@ -22,29 +24,56 @@ export function precacheFiberNode(hostInst, node) {
  * Given a DOM node, return the closest ReactDOMComponent or
  * ReactDOMTextComponent instance ancestor.
  */
-export function getClosestInstanceFromNode(node) {
-  let inst = node[internalInstanceKey];
-  if (inst) {
-    return inst;
+export function getClosestInstanceFromNode(targetNode) {
+  let targetInst = targetNode[internalInstanceKey];
+  if (targetInst) {
+    return targetInst;
   }
+  // If the direct event target isn't a React owned DOM node, we need to look
+  // to see if one of its parents is a React owned DOM node.
+  let parentNode = targetNode.parentNode;
+  while (parentNode) {
+    targetInst = parentNode[internalInstanceKey];
+    if (targetInst) {
+      // Since this wasn't the direct target of the event, we might have
+      // stepped past dehydrated DOM nodes to get here. However they could
+      // also have been non-React nodes. We need to answer which one.
 
-  do {
-    node = node.parentNode;
-    if (node) {
-      inst = node[internalInstanceKey];
-    } else {
-      // Top of the tree. This node must not be part of a React tree (or is
-      // unmounted, potentially).
-      return null;
+      // If we the instance doesn't have any children, then there can't be
+      // a nested suspense boundary within it. So we can use this as a fast
+      // bailout. Most of the time, when people add non-React children to
+      // the tree, it is using a ref to a child-less DOM node.
+      // We only need to check one of the fibers because if it has ever
+      // gone from having children to deleting them or vice versa it would
+      // have deleted the dehydrated boundary nested inside already.
+      if (targetInst.child !== null) {
+        // Next we need to figure out if the node that skipped past is
+        // nested within a dehydrated boundary and if so, which one.
+        let suspenseInstance = getParentSuspenseInstance(targetNode);
+        if (suspenseInstance !== null) {
+          // We found a suspense instance. That means that we haven't
+          // hydrated it yet. Even though we leave the comments in the
+          // DOM after hydrating, and there are boundaries in the DOM
+          // that could already be hydrated, we wouldn't have found them
+          // through this pass since if the target is hydrated it would
+          // have had an internalInstanceKey on it.
+          // Let's get the fiber associated with the SuspenseComponent
+          // as the deepest instance.
+          let targetSuspenseInst = suspenseInstance[internalInstanceKey];
+          if (targetSuspenseInst) {
+            return targetSuspenseInst;
+          }
+          // If we don't find a Fiber on the comment, it might be because
+          // we haven't gotten to hydrate it yet. That should mean that
+          // the parent component also hasn't hydrated yet but we can
+          // just return that since it will bail out on the isMounted
+          // check.
+        }
+      }
+      return targetInst;
     }
-  } while (!inst);
-
-  let tag = inst.tag;
-  switch (tag) {
-    case HostComponent:
-    case HostText:
-      // In Fiber, this will always be the deepest root.
-      return inst;
+    targetNode = parentNode;
+    parentNode = targetNode.parentNode;
   }
   return null;
 }

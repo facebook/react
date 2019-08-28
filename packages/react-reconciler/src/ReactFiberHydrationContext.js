@@ -41,6 +41,7 @@ import {
   getFirstHydratableChild,
   hydrateInstance,
   hydrateTextInstance,
+  hydrateSuspenseInstance,
   getNextHydratableInstanceAfterSuspenseInstance,
   didNotMatchHydratedContainerTextInstance,
   didNotMatchHydratedTextInstance,
@@ -370,6 +371,26 @@ function prepareToHydrateHostTextInstance(fiber: Fiber): boolean {
   return shouldUpdate;
 }
 
+function prepareToHydrateHostSuspenseInstance(fiber: Fiber): void {
+  if (!supportsHydration) {
+    invariant(
+      false,
+      'Expected prepareToHydrateHostSuspenseInstance() to never be called. ' +
+        'This error is likely caused by a bug in React. Please file an issue.',
+    );
+  }
+
+  let suspenseState: null | SuspenseState = fiber.memoizedState;
+  let suspenseInstance: null | SuspenseInstance =
+    suspenseState !== null ? suspenseState.dehydrated : null;
+  invariant(
+    suspenseInstance,
+    'Expected to have a hydrated suspense instance. ' +
+      'This error is likely caused by a bug in React. Please file an issue.',
+  );
+  hydrateSuspenseInstance(suspenseInstance, fiber);
+}
+
 function skipPastDehydratedSuspenseInstance(
   fiber: Fiber,
 ): null | HydratableInstance {
@@ -471,5 +492,6 @@ export {
   tryToClaimNextHydratableInstance,
   prepareToHydrateHostInstance,
   prepareToHydrateHostTextInstance,
+  prepareToHydrateHostSuspenseInstance,
   popHydrationState,
 };

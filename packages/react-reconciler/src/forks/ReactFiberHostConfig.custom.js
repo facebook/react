@@ -126,6 +126,7 @@ export const getNextHydratableSibling = $$$hostConfig.getNextHydratableSibling;
 export const getFirstHydratableChild = $$$hostConfig.getFirstHydratableChild;
 export const hydrateInstance = $$$hostConfig.hydrateInstance;
 export const hydrateTextInstance = $$$hostConfig.hydrateTextInstance;
+export const hydrateSuspenseInstance = $$$hostConfig.hydrateSuspenseInstance;
 export const getNextHydratableInstanceAfterSuspenseInstance =
   $$$hostConfig.getNextHydratableInstanceAfterSuspenseInstance;
 export const clearSuspenseBoundary = $$$hostConfig.clearSuspenseBoundary;

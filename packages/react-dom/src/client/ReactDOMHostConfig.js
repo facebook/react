@@ -673,6 +673,13 @@ export function hydrateTextInstance(
   return diffHydratedText(textInstance, text);
 }
 
+export function hydrateSuspenseInstance(
+  suspenseInstance: SuspenseInstance,
+  internalInstanceHandle: Object,
+) {
+  precacheFiberNode(internalInstanceHandle, suspenseInstance);
+}
+
 export function getNextHydratableInstanceAfterSuspenseInstance(
   suspenseInstance: SuspenseInstance,
 ): null | HydratableInstance {
