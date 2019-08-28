@@ -82,7 +82,6 @@ function transform(file, enc, cb) {
 gs([
   'packages/**/*.js',
   '!packages/shared/warning.js',
-  '!packages/react-devtools*/**/*.js',
   '!**/__tests__/**/*.js',
   '!**/__mocks__/**/*.js',
 ]).pipe(

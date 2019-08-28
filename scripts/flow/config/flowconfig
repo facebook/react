@@ -5,7 +5,6 @@
 .*/rollup/shims/facebook-www/.*
 .*/rollup/shims/react-native/.*
 
-.*/node_modules/@snyk/.*
 .*/node_modules/y18n/.*
 .*/node_modules/chrome-devtools-frontend/.*
 .*/node_modules/devtools-timeline-model/.*
@@ -21,7 +20,6 @@
 [libs]
 ../../../node_modules/fbjs/flow/lib/dev.js
 ../environment.js
-../react-devtools.js
 ../react-native-host-hooks.js
 
 [lints]

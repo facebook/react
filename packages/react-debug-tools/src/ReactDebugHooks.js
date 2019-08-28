@@ -253,14 +253,14 @@ const Dispatcher: DispatcherType = {
 
 // Inspect
 
-export type HooksNode = {
+type HooksNode = {
   id: number | null,
   isStateEditable: boolean,
   name: string,
   value: mixed,
   subHooks: Array<HooksNode>,
 };
-export type HooksTree = Array<HooksNode>;
+type HooksTree = Array<HooksNode>;
 
 // Don't assume
 //

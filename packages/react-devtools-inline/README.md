@@ -21,32 +21,24 @@ The frontend and backend can be initialized in any order, but **the backend must
 ### `react-devtools-inline/backend`
 
 * **`initialize(contentWindow)`** -
-Installs the global hook on the window. This hook is how React and DevTools communicate. **This method must be called before React is loaded.**<sup>2</sup>
+Installs the global hook on the window. This hook is how React and DevTools communicate. **This method must be called before React is loaded.** (This means before any `import` or `require` statements!)
 * **`activate(contentWindow)`** -
 Lets the backend know when the frontend is ready. It should not be called until after the frontend has been initialized, else the frontend might miss important tree-initialization events.
 
 ```js
 import { activate, initialize } from 'react-devtools-inline/backend';
 
-// This should be the iframe the React application is running in.
-const iframe = document.getElementById(frameID);
-const contentWindow = iframe.contentWindow;
-
 // Call this before importing React (or any other packages that might import React).
-initialize(contentWindow);
-
-// Initialize the frontend...
+initialize();
 
 // Call this only once the frontend has been initialized.
-activate(contentWindow);
+activate();
 ```
-
-<sup>2</sup> The backend must be initialized before React is loaded. (This means before any `import` or `require` statements or `<script>` tags that include React.)
 
 ### `react-devtools-inline/frontend`
 
 * **`initialize(contentWindow)`** -
-Configures the DevTools interface to listen to the `window` the backend was injected into. This method returns a React component that can be rendered directly<sup>3</sup>.
+Configures the DevTools interface to listen to the `window` the backend was injected into. This method returns a React component that can be rendered directly<sup>2</sup>.
 
 ```js
 import { initialize } from 'react-devtools-inline/frontend';
@@ -60,7 +52,7 @@ const contentWindow = iframe.contentWindow;
 const DevTools = initialize(contentWindow);
 ```
 
-<sup>3</sup> Because the DevTools interface makes use of several new React APIs (e.g. suspense, concurrent mode) it should be rendered using either `ReactDOM.unstable_createRoot` or `ReactDOM.unstable_createSyncRoot`. **It should not be rendered with `ReactDOM.render`.**
+<sup>2</sup> Because the DevTools interface makes use of several new React APIs (e.g. suspense, concurrent mode) it should be rendered using either `ReactDOM.unstable_createRoot` or `ReactDOM.unstable_createSyncRoot`. It should not be rendered with `ReactDOM.render`.
 
 ## Examples
 
@@ -151,11 +143,4 @@ iframe.onload = () => {
     "*"
   );
 };
-```
-
-## Development
-
-Watch for changes made to the source code and rebuild:
-```sh
-yarn start
 ```
