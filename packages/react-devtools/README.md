@@ -4,7 +4,7 @@ React DevTools is available as a built-in extension for Chrome and Firefox brows
 
 It works both with React DOM and React Native.
 
-<img src="http://i.imgur.com/IXeHiZD.png" width="600" alt="Screenshot of React DevTools running with React Native">
+![React DevTools screenshot](https://user-images.githubusercontent.com/29597/63811956-bdd9b580-c8dd-11e9-8962-c568e475c425.png)
 
 ## Installation
 Install the `react-devtools` package. Because this is a development tool, a global install is often the most convenient:
@@ -47,7 +47,8 @@ You can open the [in-app developer menu](https://facebook.github.io/react-native
 
 However, when `react-devtools` is running, Inspector will enter a special collapsed mode, and instead use the DevTools as primary UI. In this mode, clicking on something in the simulator will bring up the relevant components in the DevTools:
 
-![React DevTools Inspector Integration](http://i.imgur.com/wVgV9RP.gif)
+![React DevTools Inspector Integration](https://user-images.githubusercontent.com/29597/63811958-be724c00-c8dd-11e9-8587-37357334a0e1.gif)
+
 
 You can choose "Hide Inspector" in the same menu to exit this mode.
 
@@ -61,7 +62,7 @@ Make sure that the dropdown in the top left corner of the Chrome console says `d
 
 Then select a React component in React DevTools. There is a search box at the top that helps you find one by name. As soon as you select it, it will be available as `$r` in the Chrome console, letting you inspect its props, state, and instance properties.
 
-![React DevTools Chrome Console Integration](http://i.imgur.com/Cpvhs8i.gif)
+![React DevTools Chrome Console Integration](https://user-images.githubusercontent.com/29597/63811957-be724c00-c8dd-11e9-9d1d-8eba440ef948.gif)
 
 
 ## Usage with React DOM
@@ -90,7 +91,7 @@ This will ensure the developer tools are connected. **Don’t forget to remove i
 
 By default DevTools listen to port `8097` on `localhost`. If you need to customize host, port, or other settings, see the `react-devtools-core` package instead.
 
-## Developing
+## Development
 
 * Run `yarn start:backend` and `yarn start:standalone` in `../react-devtools-core`
 * Run `yarn start` in this folder
