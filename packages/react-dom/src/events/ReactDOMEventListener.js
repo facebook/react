@@ -23,7 +23,12 @@ import {
 import {runExtractedPluginEventsInBatch} from 'legacy-events/EventPluginHub';
 import {dispatchEventForResponderEventSystem} from '../events/DOMEventResponderSystem';
 import {isFiberMounted} from 'react-reconciler/reflection';
-import {HostRoot, SuspenseComponent} from 'shared/ReactWorkTags';
+import {
+  HostRoot,
+  SuspenseComponent,
+  HostComponent,
+  HostText,
+} from 'shared/ReactWorkTags';
 import {
   type EventSystemFlags,
   PLUGIN_EVENT_SYSTEM,
@@ -77,6 +82,9 @@ type BookKeepingInstance = {
  * other). If React trees are not nested, returns null.
  */
 function findRootContainerNode(inst) {
+  if (inst.tag === HostRoot) {
+    return inst.stateNode.containerInfo;
+  }
   // TODO: It may be a good idea to cache this to prevent unnecessary DOM
   // traversal, but caching is difficult to do correctly without using a
   // mutation observer to listen for all DOM changes.
@@ -141,7 +149,9 @@ function handleTopLevel(bookKeeping: BookKeepingInstance) {
     if (!root) {
       break;
     }
-    bookKeeping.ancestors.push(ancestor);
+    if (ancestor.tag === HostComponent || ancestor.tag === HostText) {
+      bookKeeping.ancestors.push(ancestor);
+    }
     ancestor = getClosestInstanceFromNode(root);
   } while (ancestor);
 
@@ -316,6 +326,13 @@ export function dispatchEvent(
       if (targetInst.tag === SuspenseComponent) {
         // TODO: This is a good opportunity to schedule a replay of
         // the event instead once this boundary has been hydrated.
+        // For now we're going to just ignore this event as if it's
+        // not mounted.
+        targetInst = null;
+      } else if (targetInst.tag === HostRoot) {
+        // We have not yet mounted/hydrated the first children.
+        // TODO: This is a good opportunity to schedule a replay of
+        // the event instead once this root has been hydrated.
         // For now we're going to just ignore this event as if it's
         // not mounted.
         targetInst = null;

@@ -15,9 +15,14 @@ const randomKey = Math.random()
   .slice(2);
 const internalInstanceKey = '__reactInternalInstance$' + randomKey;
 const internalEventHandlersKey = '__reactEventHandlers$' + randomKey;
+const internalContainerInstanceKey = '__reactContainere$' + randomKey;
 
 export function precacheFiberNode(hostInst, node) {
   node[internalInstanceKey] = hostInst;
+}
+
+export function markContainerAsRoot(hostRoot, node) {
+  node[internalContainerInstanceKey] = hostRoot;
 }
 
 /**
@@ -70,6 +75,13 @@ export function getClosestInstanceFromNode(targetNode) {
           // check.
         }
       }
+      return targetInst;
+    }
+    // Next we'll check if this is a container root that could include
+    // React nodes in the future.
+    targetInst = parentNode[internalContainerInstanceKey];
+    if (targetInst) {
+      // If so, we return the HostRoot Fiber.
       return targetInst;
     }
     targetNode = parentNode;
