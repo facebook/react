@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>React Developer Tools</title>
+    <meta charset="utf8" />
+    <style>
+      html {
+        display: flex;
+        font-family: sans-serif;
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        flex: 1;
+        display: flex;
+      }
+      #container {
+        display: flex;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: white;
+      }
+      #logs {
+        position: fixed;
+        top: 0;
+        left: 0;
+        white-space: pre;
+      }
+      #waiting {
+        flex-direction: column;
+        text-align: center;
+        font-family: sans-serif;
+        color: #aaa;
+        flex: 1;
+        overflow: auto;
+      }
+      #waiting h2 {
+        padding: 30px;
+      }
+      #waiting p {
+        padding: 0;
+        margin: 0;
+      }
+      .input {
+        display: inline-block;
+        max-width: 100%;
+        font-weight: 100;
+        border: 1px solid #aaa;
+        padding: 0.125rem 0.25rem;
+        margin: 0.125rem;
+        color: #666;
+      }
+      #loading-status {
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container">
+      <div id="waiting" style="-webkit-user-select: none; -webkit-app-region: drag;">
+        <h2>Waiting for React to connect…</h2>
+        <div>
+          <h4>React Native</h4>
+          <div>The active app will automatically connect in a few seconds.</div>
+          <br />
+          <h4>React DOM</h4>
+          <div>
+            Add <span class="input" contenteditable="true" id="localhost"></span><br />
+            or <span class="input" contenteditable="true" id="byip"></span>
+          </div>
+          <div>
+            to the top of the page you want to debug,
+            <br />
+            <b>before</b> importing React DOM.
+          </div>
+        </div>
+        <br />
+        <br />
+        <div id="loading-status">Starting the server…</div>
+      </div>
+    </div>
+    <script>
+      const port = process.env.PORT || 8097;
+      const localIp = require("ip").address();
+      const $ = document.querySelector.bind(document);
+
+      function selectAll(event) {
+        const element = event.target;
+        if (window.getSelection) {
+          const selection = window.getSelection();        
+          const range = document.createRange();
+          range.selectNodeContents(element);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+      }
+
+      const $localhost = $("#localhost");
+      $localhost.innerText = `<script src="http://localhost:${port}"></` + 'script>';
+      $localhost.addEventListener('click', selectAll);
+      $localhost.addEventListener('focus', selectAll);
+
+      const $byIp = $("#byip");
+      $byIp.innerText = `<script src="http://${localIp}:${port}"></` + 'script>';
+      $byIp.addEventListener('click', selectAll);
+      $byIp.addEventListener('focus', selectAll);
+
+      let devtools;
+      try {
+        devtools = require("react-devtools-core/standalone").default;
+      } catch (err) {
+        alert(
+          err.toString() +
+            "\n\nDid you run `yarn` and `yarn run build` in packages/react-devtools-core?"
+        );
+      }
+      window.devtools = devtools;
+      window.server = devtools
+        .setContentDOMNode(document.getElementById("container"))
+        .setStatusListener(function(status) {
+          document.getElementById("loading-status").innerText = status;
+        })
+        .startServer(port);
+    </script>
+  </body>
+</html>
