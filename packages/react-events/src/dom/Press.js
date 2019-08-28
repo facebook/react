@@ -639,7 +639,6 @@ const pressResponderImpl = {
 
           if (preventDefault !== false) {
             nativeEvent.preventDefault();
-            state.shouldPreventClick = true;
           }
           dispatchEvent(event, onPress, context, state, 'press', DiscreteEvent);
         }
