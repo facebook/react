@@ -635,6 +635,12 @@ const pressResponderImpl = {
         if (isFunction(onPress) && isScreenReaderVirtualClick(nativeEvent)) {
           state.pointerType = 'keyboard';
           state.pressTarget = event.responderTarget;
+          const preventDefault = props.preventDefault;
+
+          if (preventDefault !== false) {
+            nativeEvent.preventDefault();
+            state.shouldPreventClick = true;
+          }
           dispatchEvent(event, onPress, context, state, 'press', DiscreteEvent);
         }
         break;
