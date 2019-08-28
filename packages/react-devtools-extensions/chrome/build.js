@@ -29,9 +29,22 @@ const main = async () => {
       safeKeyPath = join(relative(cwd, process.cwd()), keyPath);
     }
 
-    execSync(`crx pack ./unpacked -o ReactDevTools.crx -p ${safeKeyPath}`, {
-      cwd,
-    });
+    const crxPath = join(
+      __dirname,
+      '..',
+      '..',
+      '..',
+      'node_modules',
+      '.bin',
+      'crx'
+    );
+
+    execSync(
+      `${crxPath} pack ./unpacked -o ReactDevTools.crx -p ${safeKeyPath}`,
+      {
+        cwd,
+      }
+    );
   }
 
   console.log(chalk.green('\nThe Chrome extension has been built!'));

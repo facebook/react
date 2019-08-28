@@ -1715,7 +1715,7 @@ archiver-utils@^2.1.0:
     normalize-path "^3.0.0"
     readable-stream "^2.0.0"
 
-archiver@^3.0.0:
+archiver@^3.0.0, archiver@^3.0.3:
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/archiver/-/archiver-3.1.1.tgz#9db7819d4daf60aec10fe86b16cb9258ced66ea0"
   integrity sha512-5Hxxcig7gw5Jod/8Gq0OneVgLYET+oNHcxgWItq4TbhOzRLKNAFUb9edAftiMKXvXfCB0vbGrJdZDNq0dWMsxg==
@@ -1902,6 +1902,13 @@ asn1.js@^4.0.0:
     bn.js "^4.0.0"
     inherits "^2.0.1"
     minimalistic-assert "^1.0.0"
+
+asn1@^0.2.4:
+  version "0.2.4"
+  resolved "https://registry.yarnpkg.com/asn1/-/asn1-0.2.4.tgz#8d2475dfab553bb33e77b54e59e880bb8ce23136"
+  integrity sha512-jxwzQpLQjSmWXgwaCZE9Nz+glAG01yF1QnWgbhGwHI5A6FRIEY6IVqtHhIepHqI7/kyEyQEagBC5mBEFlIYvdg==
+  dependencies:
+    safer-buffer "~2.1.0"
 
 asn1@~0.2.3:
   version "0.2.3"
@@ -3686,6 +3693,16 @@ crx-parser@0.1.2:
   version "0.1.2"
   resolved "https://registry.yarnpkg.com/crx-parser/-/crx-parser-0.1.2.tgz#7eeeed9eddc95e22c189382e34624044a89a5a6d"
   integrity sha1-fu7tnt3JXiLBiTguNGJARKiaWm0=
+
+crx@^5.0.0:
+  version "5.0.1"
+  resolved "https://registry.yarnpkg.com/crx/-/crx-5.0.1.tgz#33f7a81375acfab1aa3a8291424223434dc0978b"
+  integrity sha512-n/PzBx/fR1+xZCiJBats9y5zw/a+YBcoJ0ABnUaY56xb1RpXuFhsiCMpNY6WjVtylLzhUUXSWsbitesVg7v2vg==
+  dependencies:
+    archiver "^3.0.3"
+    commander "^2.20.0"
+    node-rsa "^1.0.5"
+    pbf "^3.2.0"
 
 cryptiles@2.x.x:
   version "2.0.5"
@@ -6403,7 +6420,7 @@ icss-utils@^2.1.0:
   dependencies:
     postcss "^6.0.1"
 
-ieee754@^1.1.4:
+ieee754@^1.1.12, ieee754@^1.1.4:
   version "1.1.13"
   resolved "https://registry.yarnpkg.com/ieee754/-/ieee754-1.1.13.tgz#ec168558e95aa181fd87d37f55c32bbcb6708b84"
   integrity sha512-4vf7I2LYV/HaWerSo3XmlMkp5eZ83i+/CDluXi/IGTs/O1sejBNhTtnxzmRZfvOUqj7lZjqHkeTvpgSFDlWZTg==
@@ -8763,6 +8780,13 @@ node-releases@^1.1.25:
   dependencies:
     semver "^5.3.0"
 
+node-rsa@^1.0.5:
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/node-rsa/-/node-rsa-1.0.5.tgz#854dc1b275729d69bc25883f83ca80705db9262e"
+  integrity sha512-9o51yfV167CtQANnuAf+5owNs7aIMsAKVLhNaKuRxihsUUnfoBMN5OTVOK/2mHSOWaWq9zZBiRM3bHORbTZqrg==
+  dependencies:
+    asn1 "^0.2.4"
+
 node-version@^1.0.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/node-version/-/node-version-1.2.0.tgz#34fde3ffa8e1149bd323983479dda620e1b5060d"
@@ -9442,6 +9466,14 @@ path-type@^3.0.0:
   dependencies:
     pify "^3.0.0"
 
+pbf@^3.2.0:
+  version "3.2.0"
+  resolved "https://registry.yarnpkg.com/pbf/-/pbf-3.2.0.tgz#e76f9f5114e395c25077ad6fe463b3507d6877fc"
+  integrity sha512-98Eh7rsJNJF/Im6XYMLaOW3cLnNyedlOd6hu3iWMD5I7FZGgpw8yN3vQBrmLbLodu7G784Irb9Qsv2yFrxSAGw==
+  dependencies:
+    ieee754 "^1.1.12"
+    resolve-protobuf-schema "^2.1.0"
+
 pbkdf2-compat@2.0.1:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/pbkdf2-compat/-/pbkdf2-compat-2.0.1.tgz#b6e0c8fa99494d94e0511575802a59a5c142f288"
@@ -9746,6 +9778,11 @@ prop-types@^15.6.2:
   dependencies:
     loose-envify "^1.3.1"
     object-assign "^4.1.1"
+
+protocol-buffers-schema@^3.3.1:
+  version "3.3.2"
+  resolved "https://registry.yarnpkg.com/protocol-buffers-schema/-/protocol-buffers-schema-3.3.2.tgz#00434f608b4e8df54c59e070efeefc37fb4bb859"
+  integrity sha512-Xdayp8sB/mU+sUV4G7ws8xtYMGdQnxbeIfLjyO9TZZRJdztBGhlmbI5x1qcY4TG5hBkIKGnc28i7nXxaugu88w==
 
 protocols@^1.1.0, protocols@^1.4.0:
   version "1.4.7"
@@ -10463,6 +10500,13 @@ resolve-from@^4.0.0:
   resolved "https://registry.yarnpkg.com/resolve-from/-/resolve-from-4.0.0.tgz#4abcd852ad32dd7baabfe9b40e00a36db5f392e6"
   integrity sha512-pb/MYmXstAkysRFx8piNI1tGFNQIFA3vkE3Gq4EuA1dF6gHp/+vgZqsCGJapvy8N3Q+4o7FwvquPJcnZ7RYy4g==
 
+resolve-protobuf-schema@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/resolve-protobuf-schema/-/resolve-protobuf-schema-2.1.0.tgz#9ca9a9e69cf192bbdaf1006ec1973948aa4a3758"
+  integrity sha512-kI5ffTiZWmJaS/huM8wZfEMer1eRd7oJQhDuxeCLe3t7N7mX3z94CN0xPxBQxFYQTSNz9T0i+v6inKqSdK8xrQ==
+  dependencies:
+    protocol-buffers-schema "^3.3.1"
+
 resolve-url@^0.2.1:
   version "0.2.1"
   resolved "https://registry.yarnpkg.com/resolve-url/-/resolve-url-0.2.1.tgz#2c637fe77c893afd2a663fe21aa9080068e2052a"
@@ -10694,7 +10738,7 @@ safe-regex@^1.1.0:
   dependencies:
     ret "~0.1.10"
 
-"safer-buffer@>= 2.1.2 < 3":
+"safer-buffer@>= 2.1.2 < 3", safer-buffer@~2.1.0:
   version "2.1.2"
   resolved "https://registry.yarnpkg.com/safer-buffer/-/safer-buffer-2.1.2.tgz#44fa161b0187b9549dd84bb91802f9bd8385cd6a"
 
