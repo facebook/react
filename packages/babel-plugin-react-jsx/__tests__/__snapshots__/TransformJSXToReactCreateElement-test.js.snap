@@ -1,0 +1,213 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`transform react to jsx React.Fragment to set keys and source 1`] = `
+var _jsxFileName = "";
+var x = React.createElement(React.Fragment, {
+  key: "foo",
+  __source: {
+    fileName: _jsxFileName,
+    lineNumber: 1
+  },
+  __self: this
+}, React.createElement("div", {
+  __source: {
+    fileName: _jsxFileName,
+    lineNumber: 1
+  },
+  __self: this
+}));
+`;
+
+exports[`transform react to jsx adds appropriate new lines when using spread attribute 1`] = `
+React.createElement(Component, Object.assign({}, props, {
+  sound: "moo"
+}));
+`;
+
+exports[`transform react to jsx arrow functions 1`] = `
+var foo = function () {
+  var _this = this;
+
+  return function () {
+    return React.createElement(_this, null);
+  };
+};
+
+var bar = function () {
+  var _this2 = this;
+
+  return function () {
+    return React.createElement(_this2.foo, null);
+  };
+};
+`;
+
+exports[`transform react to jsx assignment 1`] = `
+var div = React.createElement(Component, Object.assign({}, props, {
+  foo: "bar"
+}));
+`;
+
+exports[`transform react to jsx concatenates adjacent string literals 1`] = `var x = React.createElement("div", null, "foo", "bar", "baz", React.createElement("div", null, "buz bang"), "qux", null, "quack");`;
+
+exports[`transform react to jsx fragment with no children 1`] = `var x = React.createElement(React.Fragment, null);`;
+
+exports[`transform react to jsx normal fragments not to set key and source 1`] = `
+var _jsxFileName = "";
+var x = React.createElement(React.Fragment, null, React.createElement("div", {
+  __source: {
+    fileName: _jsxFileName,
+    lineNumber: 1
+  },
+  __self: this
+}));
+`;
+
+exports[`transform react to jsx should allow constructor as prop 1`] = `
+React.createElement(Component, {
+  constructor: "foo"
+});
+`;
+
+exports[`transform react to jsx should allow deeper js namespacing 1`] = `React.createElement(Namespace.DeepNamespace.Component, null);`;
+
+exports[`transform react to jsx should allow elements as attributes 1`] = `
+React.createElement("div", {
+  attr: React.createElement("div", null)
+});
+`;
+
+exports[`transform react to jsx should allow js namespacing 1`] = `React.createElement(Namespace.Component, null);`;
+
+exports[`transform react to jsx should allow nested fragments 1`] = `React.createElement("div", null, React.createElement(React.Fragment, null, React.createElement(React.Fragment, null, React.createElement("span", null, "Hello"), React.createElement("span", null, "world")), React.createElement(React.Fragment, null, React.createElement("span", null, "Goodbye"), React.createElement("span", null, "world"))));`;
+
+exports[`transform react to jsx should avoid wrapping in extra parens if not needed 1`] = `
+var x = React.createElement("div", null, React.createElement(Component, null));
+var x = React.createElement("div", null, props.children);
+var x = React.createElement(Composite, null, props.children);
+var x = React.createElement(Composite, null, React.createElement(Composite2, null));
+`;
+
+exports[`transform react to jsx should convert simple tags 1`] = `var x = React.createElement("div", null);`;
+
+exports[`transform react to jsx should convert simple text 1`] = `var x = React.createElement("div", null, "text");`;
+
+exports[`transform react to jsx should escape xhtml jsxattribute 1`] = `
+React.createElement("div", {
+  id: "w\\xF4w"
+});
+React.createElement("div", {
+  id: "w"
+});
+React.createElement("div", {
+  id: "w < w"
+});
+`;
+
+exports[`transform react to jsx should escape xhtml jsxtext 1`] = `
+React.createElement("div", null, "wow");
+React.createElement("div", null, "w\\xF4w");
+React.createElement("div", null, "w & w");
+React.createElement("div", null, "w & w");
+React.createElement("div", null, "w \\xA0 w");
+React.createElement("div", null, "this should not parse as unicode: \\xA0");
+React.createElement("div", null, "this should parse as nbsp: \\xA0 ");
+React.createElement("div", null, "this should parse as unicode: ", '  ');
+React.createElement("div", null, "w < w");
+`;
+
+exports[`transform react to jsx should handle attributed elements 1`] = `
+var HelloMessage = React.createClass({
+  render: function () {
+    return React.createElement("div", null, "Hello ", this.props.name);
+  }
+});
+React.render(React.createElement(HelloMessage, {
+  name: React.createElement("span", null, "Sebastian")
+}), mountNode);
+`;
+
+exports[`transform react to jsx should handle has own property correctly 1`] = `React.createElement("hasOwnProperty", null, "testing");`;
+
+exports[`transform react to jsx should have correct comma in nested children 1`] = `var x = React.createElement("div", null, React.createElement("div", null, React.createElement("br", null)), React.createElement(Component, null, foo, React.createElement("br", null), bar), React.createElement("br", null));`;
+
+exports[`transform react to jsx should insert commas after expressions before whitespace 1`] = `
+var x = React.createElement("div", {
+  attr1: "foo" + "bar",
+  attr2: "foo" + "bar" + "baz" + "bug",
+  attr3: "foo" + "bar" + "baz" + "bug",
+  attr4: "baz"
+});
+`;
+
+exports[`transform react to jsx should not add quotes to identifier names 1`] = `
+var e = React.createElement(F, {
+  aaa: true,
+  new: true,
+  const: true,
+  var: true,
+  default: true,
+  "foo-bar": true
+});
+`;
+
+exports[`transform react to jsx should not strip nbsp even couple with other whitespace 1`] = `React.createElement("div", null, "\\xA0 ");`;
+
+exports[`transform react to jsx should not strip tags with a single child of nbsp 1`] = `React.createElement("div", null, "\\xA0");`;
+
+exports[`transform react to jsx should properly handle comments adjacent to children 1`] = `var x = React.createElement("div", null, React.createElement("span", null), React.createElement("br", null));`;
+
+exports[`transform react to jsx should properly handle comments between props 1`] = `
+var x = React.createElement("div", {
+  /* a multi-line
+    comment */
+  attr1: "foo"
+}, React.createElement("span", {
+  // a double-slash comment
+  attr2: "bar"
+}));
+`;
+
+exports[`transform react to jsx should quote jsx attributes 1`] = `
+React.createElement("button", {
+  "data-value": "a value"
+}, "Button");
+`;
+
+exports[`transform react to jsx should support xml namespaces if flag 1`] = `
+React.createElement("f:image", {
+  "n:attr": true
+});
+`;
+
+exports[`transform react to jsx should transform known hyphenated tags 1`] = `React.createElement("font-face", null);`;
+
+exports[`transform react to jsx useBuiltIns false uses extend instead of Object.assign 1`] = `
+function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
+
+React.createElement(Component, _extends({
+  y: 2
+}, x));
+`;
+
+exports[`transform react to jsx wraps props in react spread for first spread attributes 1`] = `
+React.createElement(Component, Object.assign({}, x, {
+  y: 2,
+  z: true
+}));
+`;
+
+exports[`transform react to jsx wraps props in react spread for last spread attributes 1`] = `
+React.createElement(Component, Object.assign({
+  y: 2,
+  z: true
+}, x));
+`;
+
+exports[`transform react to jsx wraps props in react spread for middle spread attributes 1`] = `
+React.createElement(Component, Object.assign({
+  y: 2
+}, x, {
+  z: true
+}));
+`;

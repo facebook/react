@@ -10,6 +10,6 @@ provide a better debugging support in production. Check out the blog post
 - [`extract-errors.js`](https://github.com/facebook/react/blob/master/scripts/error-codes/extract-errors.js)
   is an node script that traverses our codebase and updates `codes.json`. You
   can test it by running `yarn extract-errors`.
-- [`transform-error-messages`](https://github.com/facebook/react/blob/master/scripts/error-codes/transform-error-messages)
+- [`transform-error-messages`](https://github.com/facebook/react/blob/master/scripts/error-codes/transform-error-messages.js)
   is a Babel pass that rewrites error messages to IDs for a production
   (minified) build.

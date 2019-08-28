@@ -43,6 +43,8 @@ if (__DEV__) {
   propTypesMisspellWarningShown = false;
 }
 
+const hasOwnProperty = Object.prototype.hasOwnProperty;
+
 function getDeclarationErrorAddendum() {
   if (ReactCurrentOwner.current) {
     const name = getComponentName(ReactCurrentOwner.current.type);
@@ -334,12 +336,26 @@ export function jsxWithValidation(
   // We don't want exception behavior to differ between dev and prod.
   // (Rendering will throw with a helpful message and as soon as the type is
   // fixed, the key warnings will appear.)
+
   if (validType) {
     const children = props.children;
     if (children !== undefined) {
       if (isStaticChildren) {
-        for (let i = 0; i < children.length; i++) {
-          validateChildKeys(children[i], type);
+        if (Array.isArray(children)) {
+          for (let i = 0; i < children.length; i++) {
+            validateChildKeys(children[i], type);
+          }
+
+          if (Object.freeze) {
+            Object.freeze(children);
+          }
+        } else {
+          warning(
+            false,
+            'React.jsx: Static children should always be an array. ' +
+              'You are likely explicitly calling React.jsxs or React.jsxDEV. ' +
+              'Use the Babel transform instead.',
+          );
         }
       } else {
         validateChildKeys(children, type);
@@ -347,7 +363,7 @@ export function jsxWithValidation(
     }
   }
 
-  if (props.key !== undefined) {
+  if (hasOwnProperty.call(props, 'key')) {
     warning(
       false,
       'React.jsx: Spreading a key to JSX is a deprecated pattern. ' +

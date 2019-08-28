@@ -158,6 +158,16 @@ jobs:
       - *run_yarn
       - run: yarn test-build --maxWorkers=2
 
+  test_build_devtools:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - attach_workspace: *attach_workspace
+      - *restore_yarn_cache
+      - *run_yarn
+      - run: yarn test-build-devtools --maxWorkers=2
+
   test_dom_fixtures:
     docker: *docker
     environment: *environment
@@ -229,6 +239,9 @@ workflows:
           requires:
             - build
       - test_build_prod:
+          requires:
+            - build
+      - test_build_devtools:
           requires:
             - build
       - test_dom_fixtures:
