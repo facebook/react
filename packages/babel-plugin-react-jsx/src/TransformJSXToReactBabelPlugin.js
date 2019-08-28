@@ -25,6 +25,8 @@
 
 const esutils = require('esutils');
 const helperModuleImports = require('@babel/helper-module-imports');
+const isModule = helperModuleImports.isModule;
+const addNamespace = helperModuleImports.addNamespace;
 
 function helper(babel, opts) {
   const {types: t} = babel;
@@ -87,6 +89,31 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
 
   return visitor;
 
+  // We want to use React.createElement, even in the case of
+  // jsx, for <div {...props} key={key} /> to distinguish it
+  // from <div key={key} {...props} />. This is an intermediary
+  // step while we deprecate key spread from props. Afterwards,
+  // we will remove createElement entirely
+  function shouldUseCreateElement(path) {
+    const openingPath = path.get('openingElement');
+    const attributes = openingPath.node.attributes;
+
+    let seenPropsSpread = false;
+    for (let i = 0; i < attributes.length; i++) {
+      const attr = attributes[i];
+      if (
+        seenPropsSpread &&
+        t.isJSXAttribute(attr) &&
+        attr.name.name === 'key'
+      ) {
+        return true;
+      } else if (t.isJSXSpreadAttribute(attr)) {
+        seenPropsSpread = true;
+      }
+    }
+    return false;
+  }
+
   function convertJSXIdentifier(node, parent) {
     if (t.isJSXIdentifier(node)) {
       if (node.name === 'this' && t.isReferenced(node, parent)) {
@@ -143,31 +170,6 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
     }
 
     return t.inherits(t.objectProperty(node.name, value), node);
-  }
-
-  // We want to use React.createElement, even in the case of
-  // jsx, for <div {...props} key={key} /> to distinguish it
-  // from <div key={key} {...props} />. This is an intermediary
-  // step while we deprecate key spread from props. Afterwards,
-  // we will remove createElement entirely
-  function shouldUseCreateElement(path) {
-    const openingPath = path.get('openingElement');
-    const attributes = openingPath.node.attributes;
-
-    let seenPropsSpread = false;
-    for (let i = 0; i < attributes.length; i++) {
-      const attr = attributes[i];
-      if (
-        seenPropsSpread &&
-        t.isJSXAttribute(attr) &&
-        attr.name.name === 'key'
-      ) {
-        return true;
-      } else if (t.isJSXSpreadAttribute(attr)) {
-        seenPropsSpread = true;
-      }
-    }
-    return false;
   }
 
   // Builds JSX into:
@@ -550,14 +552,9 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
   }
 }
 
-function addAutoImports(babel, onAutoImportsAdded) {
-  const {types: t} = babel;
-
-  const imports = {};
-
+function addAutoImports({types: t}, imports) {
   const visitor = {
     JSXElement(path, state) {
-      console.log(state);
       if (shouldUseCreateElement(path)) {
         buildAutoImport(path, state, 'createElement');
       } else if (path.node.children.length > 1) {
@@ -568,56 +565,35 @@ function addAutoImports(babel, onAutoImportsAdded) {
     },
 
     JSXFragment(path, state) {
-      console.log(state);
       if (!state.opts.useCreateElement) {
         buildAutoImport(path, state, 'Fragment');
       }
     },
-
-    Program: {
-      exit(path, file) {
-        onAutoImportsAdded(imports);
-      },
-    },
   };
 
   const buildAutoImport = (path, state, importName) => {
+    const source = state.opts.importSource || 'react';
+    if (state.opts.autoImport === 'require') {
+      const {name} = helperModuleImports.addNamespace(path, source);
+      imports.react = name;
+    }
     if (state.opts.autoImport === 'namespace' && imports.react === undefined) {
-      const {name} = buildAutoImportNamespace(path, state);
+      const {name} = helperModuleImports.addNamespace(path, source);
       imports.react = name;
     } else if (
       state.opts.autoImport === 'namedExports' &&
       imports[importName] === undefined
     ) {
-      const {name} = buildAutoImportNamedExports(path, state, importName);
-      imports[name] = name;
+      const {name} = helperModuleImports.addNamed(path, importName, source);
+      imports[importName] = name;
+    } else if (
+      state.opts.autoImport === 'default' &&
+      imports.react === undefined
+    ) {
+      const {name} = helperModuleImports.addDefault(path, source);
+      imports.react = name;
     }
   };
-
-  const buildAutoImportNamedExports = (path, state, identifierName) => {
-    const source = state.opts.importSource || 'react';
-    const {name} = helperModuleImports.addNamed(path, identifierName, source, {
-      nameHint: identifierName,
-    });
-    return name;
-  };
-
-  const buildAutoImportNamespace = (path, state) => {
-    console.log(path.node);
-    const source = state.opts.importSource || 'react';
-    // if namespace exists then don't import
-    const {name} = helperModuleImports.addNamespace(path, source, {
-      nameHint: state.reactName,
-    });
-    return name;
-  };
-
-  // const buildAutoImportDefault = (path, state) => {
-  //   const source = state.opts.importSource || 'react';
-  //   helperModuleImports.addDefault(path, source, {
-  //     nameHint: state.reactName,
-  //   });
-  // };
 
   // We want to use React.createElement, even in the case of
   // jsx, for <div {...props} key={key} /> to distinguish it
@@ -657,24 +633,23 @@ module.exports = function(babel) {
       .reduce((object, property) => t.memberExpression(object, property));
   };
 
-  // const visitor = helper(babel, {
-  //   pre(state) {
-  //     const tagName = state.tagName;
-  //     const args = state.args;
-  //     if (t.react.isCompatTag(tagName)) {
-  //       args.push(t.stringLiteral(tagName));
-  //     } else {
-  //       args.push(state.tagExpr);
-  //     }
-  //   },
+  const visitor = helper(babel, {
+    pre(state) {
+      const tagName = state.tagName;
+      const args = state.args;
+      if (t.react.isCompatTag(tagName)) {
+        args.push(t.stringLiteral(tagName));
+      } else {
+        args.push(state.tagExpr);
+      }
+    },
 
-  //   post(state, pass) {
-  //     state.callee = pass.get('jsxIdentifier')();
-  //     state.staticCallee = pass.get('jsxStaticIdentifier')();
-  //     state.oldCallee = pass.get('oldJSXIdentifier')();
-  //     state.reactName = pass.get('reactIdentifierName');
-  //   },
-  // });
+    post(state, pass) {
+      state.callee = pass.get('jsxIdentifier')();
+      state.staticCallee = pass.get('jsxStaticIdentifier')();
+      state.oldCallee = pass.get('oldJSXIdentifier')();
+    },
+  });
 
   const createIdentifierName = (path, state, name, importNames) => {
     if (state.opts.autoImport === 'none') {
@@ -686,55 +661,56 @@ module.exports = function(babel) {
       return `${importNames.react}.${name}`;
     }
   };
-  const visitor = {};
+
   visitor.Program = {
     enter(path, state) {
-      let importNames;
-      const autoImportVisitor = addAutoImports(babel, imports => {
-        importNames = imports;
-      });
-      console.log(state.opts);
-      path.traverse(autoImportVisitor, state);
-      console.log(importNames);
-      //   const reactIdentifierName = path.scope.generateUidIdentifier('React');
-      //   state.set('reactIdentifierName', reactIdentifierName);
-      //   state.set(
-      //     'oldJSXIdentifier',
-      //     createIdentifierParser(
-      //       createIdentifierName(path, state, 'createElement', importNames),
-      //     ),
-      //   );
+      if (state.opts.autoImport === 'require' && isModule(path)) {
+        throw path.buildCodeFrameError(`Somethinga bout require.`);
+      } else if (state.opts.autoImport === 'require' && !isModule(path)) {
+        throw path.buildCodeFrameError(`Something about import.`);
+      }
 
-      //   state.set(
-      //     'jsxIdentifier',
-      //     createIdentifierParser(
-      //       createIdentifierName(
-      //         path,
-      //         state,
-      //         state.opts.development ? 'jsxDEV' : 'jsx',
-      //         importNames,
-      //       ),
-      //     ),
-      //   );
+      const importNames = {};
+      path.traverse(addAutoImports(babel, importNames), state);
+      const reactIdentifierName = path.scope.generateUidIdentifier('React');
+      state.set('reactIdentifierName', reactIdentifierName);
+      state.set(
+        'oldJSXIdentifier',
+        createIdentifierParser(
+          createIdentifierName(path, state, 'createElement', importNames),
+        ),
+      );
 
-      //   state.set(
-      //     'jsxStaticIdentifier',
-      //     createIdentifierParser(
-      //       createIdentifierName(
-      //         path,
-      //         state,
-      //         state.opts.development ? 'jsxDEV' : 'jsxs',
-      //         importNames,
-      //       ),
-      //     ),
-      //   );
+      state.set(
+        'jsxIdentifier',
+        createIdentifierParser(
+          createIdentifierName(
+            path,
+            state,
+            state.opts.development ? 'jsxDEV' : 'jsx',
+            importNames,
+          ),
+        ),
+      );
 
-      //   state.set(
-      //     'jsxFragIdentifier',
-      //     createIdentifierParser(
-      //       createIdentifierName(path, state, 'Fragment', importNames),
-      //     ),
-      //   );
+      state.set(
+        'jsxStaticIdentifier',
+        createIdentifierParser(
+          createIdentifierName(
+            path,
+            state,
+            state.opts.development ? 'jsxDEV' : 'jsxs',
+            importNames,
+          ),
+        ),
+      );
+
+      state.set(
+        'jsxFragIdentifier',
+        createIdentifierParser(
+          createIdentifierName(path, state, 'Fragment', importNames),
+        ),
+      );
     },
   };
 

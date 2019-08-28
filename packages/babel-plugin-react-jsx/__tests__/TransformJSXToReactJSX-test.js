@@ -15,7 +15,7 @@ function transform(input, options) {
   return wrap(
     babel.transform(input, {
       configFile: false,
-      sourceType: 'module',
+      sourceType: 'script',
       plugins: [
         '@babel/plugin-syntax-jsx',
         '@babel/plugin-transform-arrow-functions',
@@ -31,7 +31,8 @@ function transform(input, options) {
             useBuiltIns: true,
             useCreateElement: false,
             ...options,
-            autoImport: 'namespace', // none | default | namedExports / namespace
+            importSource: 'React',
+            autoImport: 'require', // none | default | namedExports / namespace / require
           },
         ],
         // '@babel/transform-modules-commonjs',
@@ -75,10 +76,9 @@ describe('transform react to jsx', () => {
     expect(
       transform(
         `      
-        import {_jsx} from 'foo';
-        const _$React1 = 1;
-        createElement.foo = _jsx();
         var x = (
+          <>
+          <div {...props} key={"1"} />
           <div>
           <div>
             <div />
@@ -88,6 +88,7 @@ describe('transform react to jsx', () => {
           {[<span key={'0'} />, <span key={'1'} />]}
         </div>
         </div>
+        </>
       );
       `,
         {
