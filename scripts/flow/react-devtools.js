@@ -23,12 +23,3 @@ declare module 'events' {
 
   declare export default typeof EventEmitter;
 }
-
-declare var __DEV__: boolean;
-
-declare var jasmine: {|
-  getEnv: () => {|
-    afterEach: (callback: Function) => void,
-    beforeEach: (callback: Function) => void,
-  |},
-|};
