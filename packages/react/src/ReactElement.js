@@ -179,12 +179,22 @@ export function jsx(type, config, maybeKey) {
   let key = null;
   let ref = null;
 
-  if (hasValidRef(config)) {
-    ref = config.ref;
+  // Currently, key can be spread in as a prop. This causes a potential
+  // issue if key is also explicitly declared (ie. <div {...props} key="Hi" />
+  // or <div key="Hi" {...props} /> ). We want to deprecate key spread,
+  // but as an intermediary step, we will use jsxDEV for everything except
+  // <div {...props} key="Hi" />, because we aren't currently able to tell if
+  // key is explicitly declared to be undefined or not.
+  if (maybeKey !== undefined) {
+    key = '' + maybeKey;
   }
 
   if (hasValidKey(config)) {
     key = '' + config.key;
+  }
+
+  if (hasValidRef(config)) {
+    ref = config.ref;
   }
 
   // Remaining properties are added to a new props object
@@ -195,12 +205,6 @@ export function jsx(type, config, maybeKey) {
     ) {
       props[propName] = config[propName];
     }
-  }
-
-  // intentionally not checking if key was set above
-  // this key is higher priority as it's static
-  if (maybeKey !== undefined) {
-    key = '' + maybeKey;
   }
 
   // Resolve default props
@@ -239,12 +243,22 @@ export function jsxDEV(type, config, maybeKey, source, self) {
   let key = null;
   let ref = null;
 
-  if (hasValidRef(config)) {
-    ref = config.ref;
+  // Currently, key can be spread in as a prop. This causes a potential
+  // issue if key is also explicitly declared (ie. <div {...props} key="Hi" />
+  // or <div key="Hi" {...props} /> ). We want to deprecate key spread,
+  // but as an intermediary step, we will use jsxDEV for everything except
+  // <div {...props} key="Hi" />, because we aren't currently able to tell if
+  // key is explicitly declared to be undefined or not.
+  if (maybeKey !== undefined) {
+    key = '' + maybeKey;
   }
 
   if (hasValidKey(config)) {
     key = '' + config.key;
+  }
+
+  if (hasValidRef(config)) {
+    ref = config.ref;
   }
 
   // Remaining properties are added to a new props object
@@ -255,12 +269,6 @@ export function jsxDEV(type, config, maybeKey, source, self) {
     ) {
       props[propName] = config[propName];
     }
-  }
-
-  // intentionally not checking if key was set above
-  // this key is higher priority as it's static
-  if (maybeKey !== undefined) {
-    key = '' + maybeKey;
   }
 
   // Resolve default props

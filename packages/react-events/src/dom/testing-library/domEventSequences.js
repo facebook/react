@@ -138,12 +138,18 @@ export function pointermove(target, payload) {
   const dispatch = arg => target.dispatchEvent(arg);
   const pointerType = getPointerType(payload);
   if (hasPointerEvent()) {
-    dispatch(domEvents.pointermove(payload));
-  }
-  if (pointerType === 'mouse') {
-    dispatch(domEvents.mousemove(payload));
+    dispatch(
+      domEvents.pointermove({
+        pressure: pointerType === 'touch' ? 1 : 0.5,
+        ...payload,
+      }),
+    );
   } else {
-    dispatch(domEvents.touchmove(payload));
+    if (pointerType === 'mouse') {
+      dispatch(domEvents.mousemove(payload));
+    } else {
+      dispatch(domEvents.touchmove(payload));
+    }
   }
 }
 
