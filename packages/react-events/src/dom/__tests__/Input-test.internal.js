@@ -14,7 +14,6 @@ let ReactFeatureFlags;
 let ReactDOM;
 let InputResponder;
 let useInput;
-let usePress;
 let Scheduler;
 
 const setUntrackedChecked = Object.getOwnPropertyDescriptor(
@@ -42,7 +41,6 @@ const modulesInit = () => {
   Scheduler = require('scheduler');
   InputResponder = require('react-events/input').InputResponder;
   useInput = require('react-events/input').useInput;
-  usePress = require('react-events/press').usePress;
 };
 
 describe('Input event responder', () => {
@@ -947,96 +945,6 @@ describe('Input event responder', () => {
         expect(ops).toEqual(['render: changed']);
         // Value should be the controlled value, not the original one
         expect(textarea.value).toBe('changed [!]');
-      });
-
-      it('is async for non-input events', () => {
-        const root = ReactDOM.unstable_createRoot(container);
-        let input;
-
-        let ops = [];
-
-        function Component({
-          innerRef,
-          onChange,
-          controlledValue,
-          pressListener,
-        }) {
-          const inputListener = useInput({
-            onChange,
-          });
-          return (
-            <input
-              type="text"
-              ref={innerRef}
-              value={controlledValue}
-              listeners={[inputListener, pressListener]}
-            />
-          );
-        }
-
-        function PressWrapper({innerRef, onPress, onChange, controlledValue}) {
-          const pressListener = usePress({
-            onPress,
-          });
-          return (
-            <Component
-              onChange={onChange}
-              innerRef={el => (input = el)}
-              controlledValue={controlledValue}
-              pressListener={pressListener}
-            />
-          );
-        }
-
-        class ControlledInput extends React.Component {
-          state = {value: 'initial'};
-          onChange = event => this.setState({value: event.target.value});
-          reset = () => {
-            this.setState({value: ''});
-          };
-          render() {
-            ops.push(`render: ${this.state.value}`);
-            const controlledValue =
-              this.state.value === 'changed' ? 'changed [!]' : this.state.value;
-            return (
-              <PressWrapper
-                onPress={this.reset}
-                onChange={this.onChange}
-                innerRef={el => (input = el)}
-                controlledValue={controlledValue}
-              />
-            );
-          }
-        }
-
-        // Initial mount. Test that this is async.
-        root.render(<ControlledInput />);
-        // Should not have flushed yet.
-        expect(ops).toEqual([]);
-        expect(input).toBe(undefined);
-        // Flush callbacks.
-        Scheduler.unstable_flushAll();
-        expect(ops).toEqual(['render: initial']);
-        expect(input.value).toBe('initial');
-
-        ops = [];
-
-        // Trigger a click event
-        input.dispatchEvent(
-          new MouseEvent('mousedown', {bubbles: true, cancelable: true}),
-        );
-        input.dispatchEvent(
-          new MouseEvent('mouseup', {bubbles: true, cancelable: true}),
-        );
-        // Nothing should have changed
-        expect(ops).toEqual([]);
-        expect(input.value).toBe('initial');
-
-        // Flush callbacks.
-        Scheduler.unstable_flushAll();
-        // Now the click update has flushed.
-        expect(ops).toEqual(['render: ']);
-        expect(input.value).toBe('');
       });
     });
   });

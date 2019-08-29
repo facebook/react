@@ -320,7 +320,7 @@ describe('ReactDOMServer', () => {
           return <div>{this.state.text}</div>;
         }
       }
-      const markup = ReactDOMServer.renderToString(<Component />);
+      const markup = ReactDOMServer.renderToStaticMarkup(<Component />);
       expect(markup).toContain('hello, world');
     });
 
@@ -339,7 +339,7 @@ describe('ReactDOMServer', () => {
           return <div>{this.state.text}</div>;
         }
       }
-      const markup = ReactDOMServer.renderToString(<Component />);
+      const markup = ReactDOMServer.renderToStaticMarkup(<Component />);
       expect(markup).toContain('hello, world');
     });
 
@@ -354,7 +354,7 @@ describe('ReactDOMServer', () => {
         }
       }
 
-      const markup = ReactDOMServer.renderToString(
+      const markup = ReactDOMServer.renderToStaticMarkup(
         <Component text="hello, world" />,
       );
       expect(markup).toContain('hello, world');
@@ -391,7 +391,7 @@ describe('ReactDOMServer', () => {
         text: PropTypes.string,
       };
 
-      const markup = ReactDOMServer.renderToString(
+      const markup = ReactDOMServer.renderToStaticMarkup(
         <ContextProvider>
           <Component />
         </ContextProvider>,
@@ -429,7 +429,7 @@ describe('ReactDOMServer', () => {
         );
       }
 
-      const markup = ReactDOMServer.renderToString(<App value={1} />);
+      const markup = ReactDOMServer.renderToStaticMarkup(<App value={1} />);
       // Extract the numbers rendered by the consumers
       const results = markup.match(/\d+/g).map(Number);
       expect(results).toEqual([2, 1, 3, 1]);
@@ -467,7 +467,7 @@ describe('ReactDOMServer', () => {
         );
       }
 
-      const markup = ReactDOMServer.renderToString(<App value={1} />);
+      const markup = ReactDOMServer.renderToStaticMarkup(<App value={1} />);
       // Extract the numbers rendered by the consumers
       const results = markup.match(/\d+/g).map(Number);
       expect(results).toEqual([2, 1, 3, 1]);
@@ -484,7 +484,7 @@ describe('ReactDOMServer', () => {
 
       let reentrantMarkup;
       function Reentrant() {
-        reentrantMarkup = ReactDOMServer.renderToString(
+        reentrantMarkup = ReactDOMServer.renderToStaticMarkup(
           <App value={1} reentrant={false} />,
         );
         return null;
@@ -512,7 +512,7 @@ describe('ReactDOMServer', () => {
         );
       }
 
-      const markup = ReactDOMServer.renderToString(
+      const markup = ReactDOMServer.renderToStaticMarkup(
         <App value={1} reentrant={true} />,
       );
       // Extract the numbers rendered by the consumers
@@ -566,7 +566,7 @@ describe('ReactDOMServer', () => {
         },
       }));
 
-      expect(ReactDOMServer.renderToString(<LazyFoo id="foo" />)).toEqual(
+      expect(ReactDOMServer.renderToStaticMarkup(<LazyFoo id="foo" />)).toEqual(
         '<div id="foo">lazy</div>',
       );
     });
@@ -578,7 +578,7 @@ describe('ReactDOMServer', () => {
         },
       }));
 
-      expect(() => ReactDOMServer.renderToString(<LazyFoo />)).toThrow(
+      expect(() => ReactDOMServer.renderToStaticMarkup(<LazyFoo />)).toThrow(
         'Bad lazy',
       );
     });

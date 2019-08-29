@@ -1713,7 +1713,7 @@ describe('ReactDOMComponent', () => {
 
       expect(() => ReactTestUtils.renderIntoDocument(<Foo />)).toWarnDev([
         'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
-          '<table>. Add a <tbody> to your code to match the DOM tree generated ' +
+          '<table>. Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated ' +
           'by the browser.' +
           '\n    in tr (at **)' +
           '\n    in Row (at **)' +

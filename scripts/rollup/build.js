@@ -351,7 +351,7 @@ function getPlugins(
     // Remove 'use strict' from individual source files.
     {
       transform(source) {
-        return source.replace(/['"]use strict['"']/g, '');
+        return source.replace(/['"]use strict["']/g, '');
       },
     },
     // Turn __DEV__ and process.env checks into constants.
