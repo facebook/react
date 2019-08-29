@@ -497,6 +497,103 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(span.className).toBe('hi');
   });
 
+  it('regression test: an update to dehydrated content forces a restart to hydrate it first', async () => {
+    // Replicates a bug where React would fail to restart and hydrate when
+    // `disableSchedulerTimeoutBasedOnReactExpirationTime` is true.
+    jest.resetModuleRegistry();
+
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    ReactFeatureFlags.enableSuspenseServerRenderer = true;
+    ReactFeatureFlags.enableSuspenseCallback = true;
+    ReactFeatureFlags.enableFlareAPI = true;
+    ReactFeatureFlags.debugRenderPhaseSideEffects = false;
+    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+    // NOTE: Once this feature flag is removed, the preceding test is likely
+    // sufficient to cover this regression case; however, it might be worth
+    // keeping this test around anyway as an extra precaution.
+    ReactFeatureFlags.disableSchedulerTimeoutBasedOnReactExpirationTime = true;
+
+    React = require('react');
+    ReactDOM = require('react-dom');
+    act = require('react-dom/test-utils').act;
+    ReactDOMServer = require('react-dom/server');
+    Scheduler = require('scheduler');
+    Suspense = React.Suspense;
+    SuspenseList = React.unstable_SuspenseList;
+
+    function Text({text}) {
+      Scheduler.unstable_yieldValue(
+        text + ' [' + Scheduler.unstable_getCurrentPriorityLevel() + ']',
+      );
+      return text;
+    }
+
+    function Parent({text, className}) {
+      Scheduler.unstable_yieldValue(
+        'Parent [' + Scheduler.unstable_getCurrentPriorityLevel() + ']',
+      );
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <Text text="Sibling" />
+            <span className={className}>
+              <Text text={text} />
+            </span>
+          </Suspense>
+        </div>
+      );
+    }
+
+    let finalHTML = ReactDOMServer.renderToString(
+      <Parent text="A" className="A" />,
+    );
+    let container = document.createElement('div');
+    container.innerHTML = finalHTML;
+    expect(Scheduler).toHaveYielded(['Parent [3]', 'Sibling [3]', 'A [3]']);
+
+    let span = container.getElementsByTagName('span')[0];
+
+    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+
+    await act(async () => {
+      // The first render hydrates the shell (everything outside the Suspense
+      // boundary) at normal priority.
+      root.render(<Parent text="A" className="A" />);
+      expect(Scheduler).toFlushUntilNextPaint(['Parent [3]']);
+      expect(span.textContent).toBe('A');
+      expect(span.className).toBe('A');
+
+      // The second render hydrates the child (inside the Suspense boundary)
+      // at idle priority. Let's partially render and stop before it finishes.
+      expect(Scheduler).toFlushAndYieldThrough(['Sibling [5]']);
+
+      // Before the idle hydration finishes, interrupt with an update. This will
+      // start over at normal priority.
+      root.render(<Parent text="B" className="B" />);
+      expect(Scheduler).toFlushUntilNextPaint([
+        'Parent [3]',
+
+        // The Suspense boundary hasn't hydrated yet, but we need to send it new
+        // props. We need to finish hydrating first. So we'll interrupt the
+        // current render, finish hydrating, then start the update again. The
+        // following two entries occur at slightly higher priority. (Parent
+        // doesn't appear as an entry because it already hydrated.)
+        'Sibling [3]',
+        'A [3]',
+      ]);
+      // Hydrating has finished
+      expect(span.textContent).toBe('A');
+      expect(span.className).toBe('A');
+      expect(span).toBe(container.getElementsByTagName('span')[0]);
+
+      // Now that the boundary is hydrated, we can perform the update.
+      expect(Scheduler).toFlushAndYield(['Parent [3]', 'Sibling [3]', 'B [3]']);
+      expect(span.textContent).toBe('B');
+      expect(span.className).toBe('B');
+      expect(span).toBe(container.getElementsByTagName('span')[0]);
+    });
+  });
+
   it('shows the fallback if props have changed before hydration completes and is still suspended', async () => {
     let suspend = false;
     let resolve;

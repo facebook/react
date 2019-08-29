@@ -57,6 +57,15 @@ function toFlushExpired(Scheduler, expectedYields) {
   });
 }
 
+function toFlushUntilNextPaint(Scheduler, expectedYields) {
+  assertYieldsWereCleared(Scheduler);
+  Scheduler.unstable_flushUntilNextPaint();
+  const actualYields = Scheduler.unstable_clearYields();
+  return captureAssertion(() => {
+    expect(actualYields).toEqual(expectedYields);
+  });
+}
+
 function toHaveYielded(Scheduler, expectedYields) {
   return captureAssertion(() => {
     const actualYields = Scheduler.unstable_clearYields();
@@ -78,6 +87,7 @@ module.exports = {
   toFlushAndYieldThrough,
   toFlushWithoutYielding,
   toFlushExpired,
+  toFlushUntilNextPaint,
   toHaveYielded,
   toFlushAndThrow,
 };
