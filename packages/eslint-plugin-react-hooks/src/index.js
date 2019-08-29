@@ -7,10 +7,10 @@
 
 'use strict';
 
-import RuleOfHooks from './RulesOfHooks';
+import RulesOfHooks from './RulesOfHooks';
 import ExhaustiveDeps from './ExhaustiveDeps';
 
 export const rules = {
-  'rules-of-hooks': RuleOfHooks,
+  'rules-of-hooks': RulesOfHooks,
   'exhaustive-deps': ExhaustiveDeps,
 };
