@@ -30,6 +30,7 @@
     "chrome-launch": "^1.1.4",
     "child-process-promise": "^2.2.1",
     "css-loader": "^1.0.1",
+    "crx": "^5.0.0",
     "firefox-profile": "^1.0.2",
     "node-libs-browser": "0.5.3",
     "nullthrows": "^1.0.0",
