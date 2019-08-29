@@ -53,10 +53,12 @@ import {
 import ReactSharedInternals from './ReactSharedInternals';
 import createFundamental from 'shared/createFundamentalComponent';
 import createResponder from 'shared/createEventResponder';
+import createScope from 'shared/createScope';
 import {
   enableJSXTransformAPI,
   enableFlareAPI,
   enableFundamentalAPI,
+  enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
 const React = {
   Children: {
@@ -112,6 +114,10 @@ if (enableFlareAPI) {
 
 if (enableFundamentalAPI) {
   React.unstable_createFundamental = createFundamental;
+}
+
+if (enableScopeAPI) {
+  React.unstable_createScope = createScope;
 }
 
 // Note: some APIs are added with feature flags.

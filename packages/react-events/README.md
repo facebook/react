@@ -92,11 +92,6 @@ const event = { type: 'press', target, pointerType, x, y };
 context.dispatchEvent('onPress', event, DiscreteEvent);
 ```
 
-### getFocusableElementsInScope(): Array<Element>
-
-Returns every DOM element that can be focused within the scope of the Event
-Responder instance.
-
 ### isTargetWithinNode(target: Element, element: Element): boolean
 
 Returns `true` if `target` is a child of `element`.

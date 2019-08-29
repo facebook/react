@@ -65,6 +65,9 @@ export const enableFlareAPI = false;
 // Experimental Host Component support.
 export const enableFundamentalAPI = false;
 
+// Experimental Scope support.
+export const enableScopeAPI = false;
+
 // New API for JSX transforms to target - https://github.com/reactjs/rfcs/pull/107
 export const enableJSXTransformAPI = false;
 
