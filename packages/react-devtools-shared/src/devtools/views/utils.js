@@ -181,9 +181,9 @@ let downloadUrl = null;
 export function downloadFile(
   element: HTMLAnchorElement,
   filename: string,
-  text: string
+  text: string,
 ): void {
-  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const blob = new Blob([text], {type: 'text/plain;charset=utf-8'});
 
   if (downloadUrl !== null) {
     URL.revokeObjectURL(downloadUrl);
