@@ -11,15 +11,15 @@ const babel = require('@babel/core');
 const codeFrame = require('@babel/code-frame');
 const {wrap} = require('jest-snapshot-serializer-raw');
 
-function transform(input, options) {
+function transform(input, pluginOpts, babelOpts) {
   return wrap(
     babel.transform(input, {
       configFile: false,
-      sourceType: 'script',
+      sourceType: 'module',
       plugins: [
         '@babel/plugin-syntax-jsx',
         '@babel/plugin-transform-arrow-functions',
-        ...(options && options.development
+        ...(pluginOpts && pluginOpts.development
           ? [
               '@babel/plugin-transform-react-jsx-source',
               '@babel/plugin-transform-react-jsx-self',
@@ -30,18 +30,241 @@ function transform(input, options) {
           {
             useBuiltIns: true,
             useCreateElement: false,
-            ...options,
-            importSource: 'React',
-            autoImport: 'require', // none | default | namedExports / namespace / require
+            ...pluginOpts,
           },
         ],
-        // '@babel/transform-modules-commonjs',
       ],
+      ...babelOpts,
     }).code
   );
 }
 
 describe('transform react to jsx', () => {
+  it('throws error when sourceType is module and autoImport is require', () => {
+    let _error;
+    const code = `var x = <div><span /></div>`;
+    try {
+      transform(code, {
+        autoImport: 'require',
+      });
+    } catch (error) {
+      _error = error;
+    }
+    expect(_error).toEqual(
+      new SyntaxError(
+        'undefined: Babel `sourceType` must be set to `script` for autoImport ' +
+          'to use `require` syntax. See Babel `sourceType` for details.\n' +
+          codeFrame.codeFrameColumns(
+            code,
+            {start: {line: 1, column: 1}},
+            {highlightCode: true}
+          )
+      )
+    );
+  });
+
+  it('throws error when sourceType is script and autoImport is not require', () => {
+    let _error;
+    const code = `var x = <div><span /></div>`;
+    try {
+      transform(
+        code,
+        {
+          autoImport: 'namespace',
+        },
+        {sourceType: 'script'}
+      );
+    } catch (error) {
+      _error = error;
+    }
+    expect(_error).toEqual(
+      new SyntaxError(
+        'undefined: Babel `sourceType` must be set to `module` for autoImport ' +
+          'to use `namespace` syntax. See Babel `sourceType` for details.\n' +
+          codeFrame.codeFrameColumns(
+            code,
+            {start: {line: 1, column: 1}},
+            {highlightCode: true}
+          )
+      )
+    );
+  });
+
+  it("auto import that doesn't exist should throw error", () => {
+    let _error;
+    const code = `var x = <div><span /></div>`;
+    try {
+      transform(code, {
+        autoImport: 'foo',
+      });
+    } catch (error) {
+      _error = error;
+    }
+    expect(_error).toEqual(
+      new SyntaxError(
+        'undefined: autoImport must be one of the following: none, require, namespace, default, namedExports\n' +
+          codeFrame.codeFrameColumns(
+            code,
+            {start: {line: 1, column: 1}},
+            {highlightCode: true}
+          )
+      )
+    );
+  });
+
+  it('cannot use autoImport with createElement', () => {
+    let _error;
+    const code = `var x = <div><span /></div>`;
+    try {
+      transform(code, {
+        autoImport: 'namespace',
+        useCreateElement: true,
+      });
+    } catch (error) {
+      _error = error;
+    }
+    expect(_error).toEqual(
+      new SyntaxError(
+        'undefined: auto importing cannot be used with createElement. Consider setting ' +
+          '`useCreateElement` to false to use the new jsx function instead\n' +
+          codeFrame.codeFrameColumns(
+            code,
+            {start: {line: 1, column: 1}},
+            {highlightCode: true}
+          )
+      )
+    );
+  });
+
+  it('auto import can specify source', () => {
+    expect(
+      transform(`var x = <div><span /></div>`, {
+        autoImport: 'namespace',
+        importSource: 'foobar',
+      })
+    ).toMatchSnapshot();
+  });
+
+  it('auto import require', () => {
+    expect(
+      transform(
+        `var x = (
+          <>
+            <div>
+              <div key="1" />
+              <div key="2" meow="wolf" />
+              <div key="3" />
+              <div {...props} key="4" />
+            </div>
+          </>
+      );`,
+        {
+          autoImport: 'require',
+        },
+        {
+          sourceType: 'script',
+        }
+      )
+    ).toMatchSnapshot();
+  });
+
+  it('auto import namespace', () => {
+    expect(
+      transform(
+        `var x = (
+          <>
+            <div>
+              <div key="1" />
+              <div key="2" meow="wolf" />
+              <div key="3" />
+              <div {...props} key="4" />
+            </div>
+          </>
+      );`,
+        {
+          autoImport: 'namespace',
+        }
+      )
+    ).toMatchSnapshot();
+  });
+
+  it('auto import default', () => {
+    expect(
+      transform(
+        `var x = (
+          <>
+            <div>
+              <div key="1" />
+              <div key="2" meow="wolf" />
+              <div key="3" />
+              <div {...props} key="4" />
+            </div>
+          </>
+      );`,
+        {
+          autoImport: 'default',
+        }
+      )
+    ).toMatchSnapshot();
+  });
+
+  it('auto import named exports', () => {
+    expect(
+      transform(
+        `var x = (
+          <>
+            <div>
+              <div key="1" />
+              <div key="2" meow="wolf" />
+              <div key="3" />
+              <div {...props} key="4" />
+            </div>
+          </>
+      );`,
+        {
+          autoImport: 'namedExports',
+        }
+      )
+    ).toMatchSnapshot();
+  });
+
+  it('auto import none', () => {
+    expect(
+      transform(
+        `var x = (
+          <>
+            <div>
+              <div key="1" />
+              <div key="2" meow="wolf" />
+              <div key="3" />
+              <div {...props} key="4" />
+            </div>
+          </>
+      );`,
+        {
+          autoImport: 'none',
+        }
+      )
+    ).toMatchSnapshot();
+  });
+
+  it('auto import undefined', () => {
+    expect(
+      transform(
+        `var x = (
+          <>
+            <div>
+              <div key="1" />
+              <div key="2" meow="wolf" />
+              <div key="3" />
+              <div {...props} key="4" />
+            </div>
+          </>
+      );`
+      )
+    ).toMatchSnapshot();
+  });
+
   it('fragment with no children', () => {
     expect(transform(`var x = <></>`)).toMatchSnapshot();
   });
@@ -72,27 +295,17 @@ describe('transform react to jsx', () => {
     ).toMatchSnapshot();
   });
 
-  fit('nonStatic children', () => {
+  it('nonStatic children', () => {
     expect(
       transform(
-        `      
-        var x = (
-          <>
-          <div {...props} key={"1"} />
-          <div>
-          <div>
-            <div />
-            <div />
-          </div>
+        `var x = (
         <div>
           {[<span key={'0'} />, <span key={'1'} />]}
         </div>
-        </div>
-        </>
       );
       `,
         {
-          development: false,
+          development: true,
         }
       )
     ).toMatchSnapshot();

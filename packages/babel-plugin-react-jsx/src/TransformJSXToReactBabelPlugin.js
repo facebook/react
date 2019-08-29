@@ -27,6 +27,16 @@ const esutils = require('esutils');
 const helperModuleImports = require('@babel/helper-module-imports');
 const isModule = helperModuleImports.isModule;
 const addNamespace = helperModuleImports.addNamespace;
+const addNamed = helperModuleImports.addNamed;
+const addDefault = helperModuleImports.addDefault;
+
+const IMPORT_TYPES = {
+  none: 'none',
+  require: 'require',
+  namespace: 'namespace',
+  default: 'default',
+  namedExports: 'namedExports',
+};
 
 function helper(babel, opts) {
   const {types: t} = babel;
@@ -565,32 +575,35 @@ function addAutoImports({types: t}, imports) {
     },
 
     JSXFragment(path, state) {
-      if (!state.opts.useCreateElement) {
-        buildAutoImport(path, state, 'Fragment');
-      }
+      buildAutoImport(path, state, 'Fragment');
     },
   };
 
   const buildAutoImport = (path, state, importName) => {
-    const source = state.opts.importSource || 'react';
-    if (state.opts.autoImport === 'require') {
-      const {name} = helperModuleImports.addNamespace(path, source);
-      imports.react = name;
-    }
-    if (state.opts.autoImport === 'namespace' && imports.react === undefined) {
-      const {name} = helperModuleImports.addNamespace(path, source);
-      imports.react = name;
-    } else if (
-      state.opts.autoImport === 'namedExports' &&
-      imports[importName] === undefined
-    ) {
-      const {name} = helperModuleImports.addNamed(path, importName, source);
-      imports[importName] = name;
-    } else if (
-      state.opts.autoImport === 'default' &&
+    if (
+      state.autoImport === IMPORT_TYPES.require &&
       imports.react === undefined
     ) {
-      const {name} = helperModuleImports.addDefault(path, source);
+      const {name} = helperModuleImports.addNamespace(path, state.source);
+      imports.react = name;
+    }
+    if (
+      state.autoImport === IMPORT_TYPES.namespace &&
+      imports.react === undefined
+    ) {
+      const {name} = addNamespace(path, state.source);
+      imports.react = name;
+    } else if (
+      state.autoImport === IMPORT_TYPES.namedExports &&
+      imports[importName] === undefined
+    ) {
+      const {name} = addNamed(path, importName, state.source);
+      imports[importName] = name;
+    } else if (
+      state.autoImport === IMPORT_TYPES.default &&
+      imports.react === undefined
+    ) {
+      const {name} = addDefault(path, state.source);
       imports.react = name;
     }
   };
@@ -651,10 +664,10 @@ module.exports = function(babel) {
     },
   });
 
-  const createIdentifierName = (path, state, name, importNames) => {
-    if (state.opts.autoImport === 'none') {
+  const createIdentifierName = (path, autoImport, name, importNames) => {
+    if (autoImport === IMPORT_TYPES.none) {
       return `React.${name}`;
-    } else if (state.opts.autoImport === 'namedExports') {
+    } else if (autoImport === IMPORT_TYPES.namedExports) {
       const identifierName = `${importNames[name]}`;
       return identifierName;
     } else {
@@ -664,20 +677,48 @@ module.exports = function(babel) {
 
   visitor.Program = {
     enter(path, state) {
-      if (state.opts.autoImport === 'require' && isModule(path)) {
-        throw path.buildCodeFrameError(`Somethinga bout require.`);
-      } else if (state.opts.autoImport === 'require' && !isModule(path)) {
-        throw path.buildCodeFrameError(`Something about import.`);
-      }
+      const AUTO_IMPORT = state.opts.autoImport || 'none';
+      const SOURCE = state.opts.importSource || 'react';
 
       const importNames = {};
-      path.traverse(addAutoImports(babel, importNames), state);
-      const reactIdentifierName = path.scope.generateUidIdentifier('React');
-      state.set('reactIdentifierName', reactIdentifierName);
+      if (IMPORT_TYPES[AUTO_IMPORT] === undefined) {
+        throw path.buildCodeFrameError(
+          'autoImport must be one of the following: ' +
+            Object.keys(IMPORT_TYPES).join(', '),
+        );
+      }
+
+      if (AUTO_IMPORT !== IMPORT_TYPES.none) {
+        if (state.opts.useCreateElement) {
+          throw path.buildCodeFrameError(
+            'auto importing cannot be used with createElement. Consider setting ' +
+              '`useCreateElement` to false to use the new jsx function instead',
+          );
+        }
+        if (AUTO_IMPORT === IMPORT_TYPES.require && isModule(path)) {
+          throw path.buildCodeFrameError(
+            'Babel `sourceType` must be set to `script` for autoImport ' +
+              'to use `require` syntax. See Babel `sourceType` for details.',
+          );
+        }
+        if (AUTO_IMPORT !== IMPORT_TYPES.require && !isModule(path)) {
+          throw path.buildCodeFrameError(
+            'Babel `sourceType` must be set to `module` for autoImport to use `' +
+              AUTO_IMPORT +
+              '` syntax. See Babel `sourceType` for details.',
+          );
+        }
+
+        path.traverse(addAutoImports(babel, importNames), {
+          autoImport: AUTO_IMPORT,
+          source: SOURCE,
+        });
+      }
+
       state.set(
         'oldJSXIdentifier',
         createIdentifierParser(
-          createIdentifierName(path, state, 'createElement', importNames),
+          createIdentifierName(path, AUTO_IMPORT, 'createElement', importNames),
         ),
       );
 
@@ -686,7 +727,7 @@ module.exports = function(babel) {
         createIdentifierParser(
           createIdentifierName(
             path,
-            state,
+            AUTO_IMPORT,
             state.opts.development ? 'jsxDEV' : 'jsx',
             importNames,
           ),
@@ -698,7 +739,7 @@ module.exports = function(babel) {
         createIdentifierParser(
           createIdentifierName(
             path,
-            state,
+            AUTO_IMPORT,
             state.opts.development ? 'jsxDEV' : 'jsxs',
             importNames,
           ),
@@ -708,7 +749,7 @@ module.exports = function(babel) {
       state.set(
         'jsxFragIdentifier',
         createIdentifierParser(
-          createIdentifierName(path, state, 'Fragment', importNames),
+          createIdentifierName(path, AUTO_IMPORT, 'Fragment', importNames),
         ),
       );
     },
