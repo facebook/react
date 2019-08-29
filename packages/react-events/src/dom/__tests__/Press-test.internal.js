@@ -423,7 +423,9 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
 
     it('is called once after virtual screen reader "click" event', () => {
       const target = createEventTarget(ref.current);
-      target.virtualclick();
+      const preventDefault = jest.fn();
+      target.virtualclick({preventDefault});
+      expect(preventDefault).toBeCalled();
       expect(onPress).toHaveBeenCalledTimes(1);
       expect(onPress).toHaveBeenCalledWith(
         expect.objectContaining({

@@ -1,0 +1,26 @@
+.Row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.Column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.Logo {
+  height: 4rem;
+  width: 4rem;
+  margin: 1rem;
+}
+
+.Title {
+  font-size: var(--font-size-sans-large);
+  margin-bottom: 0.5rem;
+}
+
+.ReleaseNotesLink {
+  color: var(--color-button-active);
+}
