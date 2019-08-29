@@ -2046,8 +2046,16 @@ function updateDehydratedSuspenseComponent(
         // at even higher pri.
         let attemptHydrationAtExpirationTime = renderExpirationTime + 1;
         suspenseState.retryTime = attemptHydrationAtExpirationTime;
+        // TODO: This happens to abort the current render and switch to a
+        // hydration pass, because the priority of the new task is slightly
+        // higher priority, which causes the work loop to cancel the current
+        // Scheduler task via `Scheduler.cancelCallback`. But we should probably
+        // model this entirely within React instead of relying on Scheduler's
+        // semantics for canceling in-progress tasks. I've chosen this approach
+        // for now since it's a fairly non-invasive change and it conceptually
+        // matches how other types of interuptions (e.g. due to input events)
+        // already work.
         scheduleWork(current, attemptHydrationAtExpirationTime);
-        // TODO: Early abort this render.
       } else {
         // We have already tried to ping at a higher priority than we're rendering with
         // so if we got here, we must have failed to hydrate at those levels. We must

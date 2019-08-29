@@ -515,6 +515,9 @@ function scheduleCallbackForRoot(
     // New callback has higher priority than the existing one.
     const existingCallbackNode = root.callbackNode;
     if (existingCallbackNode !== null) {
+      // If this happens during render, this task represents the currently
+      // running task. Canceling has the effect of interrupting the render and
+      // starting over at the higher priority.
       cancelCallback(existingCallbackNode);
     }
     root.callbackExpirationTime = expirationTime;

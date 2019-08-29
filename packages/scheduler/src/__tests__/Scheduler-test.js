@@ -288,6 +288,26 @@ describe('Scheduler', () => {
     expect(Scheduler).toFlushWithoutYielding();
   });
 
+  it('cancelling the currently running task', () => {
+    const task = scheduleCallback(NormalPriority, () => {
+      Scheduler.unstable_yieldValue('Start');
+      for (let i = 0; !shouldYield(); i++) {
+        if (i === 5) {
+          // Canceling the current task will cause `shouldYield` to return
+          // `true`. Otherwise this would infinite loop.
+          Scheduler.unstable_yieldValue('Cancel');
+          cancelCallback(task);
+        }
+      }
+      Scheduler.unstable_yieldValue('Finish');
+      // The continuation should be ignored, since the task was
+      // already canceled.
+      return () => Scheduler.unstable_yieldValue('Continuation');
+    });
+
+    expect(Scheduler).toFlushAndYield(['Start', 'Cancel', 'Finish']);
+  });
+
   it('top-level immediate callbacks fire in a subsequent task', () => {
     scheduleCallback(ImmediatePriority, () =>
       Scheduler.unstable_yieldValue('A'),

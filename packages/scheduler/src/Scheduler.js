@@ -75,6 +75,8 @@ var currentPriorityLevel = NormalPriority;
 // This is set while performing work, to prevent re-entrancy.
 var isPerformingWork = false;
 
+var didCancelCurrentTask = false;
+
 var isHostCallbackScheduled = false;
 var isHostTimeoutScheduled = false;
 
@@ -184,16 +186,20 @@ function workLoop(hasTimeRemaining, initialTime) {
       markTaskRun(currentTask, currentTime);
       const continuationCallback = callback(didUserCallbackTimeout);
       currentTime = getCurrentTime();
-      if (typeof continuationCallback === 'function') {
-        currentTask.callback = continuationCallback;
-        markTaskYield(currentTask, currentTime);
+      if (didCancelCurrentTask) {
+        didCancelCurrentTask = false;
       } else {
-        if (enableProfiling) {
-          markTaskCompleted(currentTask, currentTime);
-          currentTask.isQueued = false;
-        }
-        if (currentTask === peek(taskQueue)) {
-          pop(taskQueue);
+        if (typeof continuationCallback === 'function') {
+          currentTask.callback = continuationCallback;
+          markTaskYield(currentTask, currentTime);
+        } else {
+          if (enableProfiling) {
+            markTaskCompleted(currentTask, currentTime);
+            currentTask.isQueued = false;
+          }
+          if (currentTask === peek(taskQueue)) {
+            pop(taskQueue);
+          }
         }
       }
       advanceTimers(currentTime);
@@ -389,6 +395,9 @@ function unstable_cancelCallback(task) {
   // remove from the queue because you can't remove arbitrary nodes from an
   // array based heap, only the first one.)
   task.callback = null;
+  if (task === currentTask) {
+    didCancelCurrentTask = true;
+  }
 }
 
 function unstable_getCurrentPriorityLevel() {
@@ -406,6 +415,7 @@ function unstable_shouldYield() {
       firstTask.callback !== null &&
       firstTask.startTime <= currentTime &&
       firstTask.expirationTime < currentTask.expirationTime) ||
+    didCancelCurrentTask ||
     shouldYieldToHost()
   );
 }
