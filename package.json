@@ -4,7 +4,6 @@
     "packages/*"
   ],
   "devDependencies": {
-    "@babel/plugin-syntax-jsx": "^7.2.0",
     "@babel/cli": "^7.0.0",
     "@babel/code-frame": "^7.0.0",
     "@babel/core": "^7.0.0",
@@ -13,6 +12,7 @@
     "@babel/plugin-proposal-class-properties": "^7.0.0",
     "@babel/plugin-proposal-object-rest-spread": "^7.0.0",
     "@babel/plugin-syntax-dynamic-import": "^7.0.0",
+    "@babel/plugin-syntax-jsx": "^7.2.0",
     "@babel/plugin-transform-arrow-functions": "^7.0.0",
     "@babel/plugin-transform-async-to-generator": "^7.0.0",
     "@babel/plugin-transform-block-scoped-functions": "^7.0.0",
@@ -44,7 +44,7 @@
     "coveralls": "^2.11.6",
     "create-react-class": "^15.6.3",
     "cross-env": "^5.1.1",
-    "danger": "^3.0.4",
+    "danger": "^9.1.8",
     "error-stack-parser": "^2.0.2",
     "eslint": "^6.1.0",
     "eslint-config-fbjs": "^1.1.1",
