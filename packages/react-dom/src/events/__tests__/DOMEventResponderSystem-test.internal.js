@@ -994,4 +994,68 @@ describe('DOMEventResponderSystem', () => {
     dispatchClickEvent(ref.current);
     expect(log).toEqual([{counter: 1}]);
   });
+
+  it('should correctly pass through event properties', () => {
+    const timeStamps = [];
+    const ref = React.createRef();
+    const eventLog = [];
+    const logEvent = event => {
+      const propertiesWeCareAbout = {
+        counter: event.counter,
+        target: event.target,
+        timeStamp: event.timeStamp,
+        type: event.type,
+      };
+      timeStamps.push(event.timeStamp);
+      eventLog.push(propertiesWeCareAbout);
+    };
+    let counter = 0;
+
+    const TestResponder = createEventResponder({
+      targetEventTypes: ['click'],
+      onEvent(event, context, props) {
+        const obj = {
+          counter,
+          timeStamp: context.getTimeStamp(),
+          target: event.responderTarget,
+          type: 'click-test',
+        };
+        context.dispatchEvent(obj, props.onClick, DiscreteEvent);
+      },
+    });
+
+    const Component = () => {
+      const listener = React.unstable_useResponder(TestResponder, {
+        onClick: logEvent,
+      });
+      return <button ref={ref} listeners={listener} />;
+    };
+    ReactDOM.render(<Component />, container);
+    dispatchClickEvent(ref.current);
+    counter++;
+    dispatchClickEvent(ref.current);
+    counter++;
+    dispatchClickEvent(ref.current);
+    expect(typeof timeStamps[0] === 'number').toBe(true);
+    expect(eventLog).toEqual([
+      {
+        counter: 0,
+        target: ref.current,
+        timeStamp: timeStamps[0],
+        type: 'click-test',
+      },
+      {
+        counter: 1,
+        target: ref.current,
+        timeStamp: timeStamps[1],
+        type: 'click-test',
+      },
+      {
+        counter: 2,
+        target: ref.current,
+        timeStamp: timeStamps[2],
+        type: 'click-test',
+      },
+    ]);
+  });
 });
