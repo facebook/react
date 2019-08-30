@@ -48,14 +48,18 @@ function isTrustedTypesValue(value: any): boolean {
     return (
       TrustedTypes.isHTML(value) ||
       TrustedTypes.isScript(value) ||
-      TrustedTypes.isScriptURL(value)
+      TrustedTypes.isScriptURL(value) ||
+      // TrustedURLs are deprecated and will be removed soon: https://github.com/WICG/trusted-types/pull/204
+      (TrustedTypes.isURL && TrustedTypes.isURL(value))
     );
     // $FlowExpectedError - trustedTypes are defined only in some browsers or with polyfill
   } else if (typeof trustedTypes !== 'undefined') {
     return (
       trustedTypes.isHTML(value) ||
       trustedTypes.isScript(value) ||
-      trustedTypes.isScriptURL(value)
+      trustedTypes.isScriptURL(value) ||
+      // TrustedURLs are deprecated and will be removed soon: https://github.com/WICG/trusted-types/pull/204
+      (trustedTypes.isURL && trustedTypes.isURL(value))
     );
   } else {
     return false;
