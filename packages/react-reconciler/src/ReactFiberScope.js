@@ -14,6 +14,8 @@ import type {
   ReactScopeMethods,
 } from 'shared/ReactTypes';
 
+import {getPublicInstance} from './ReactFiberHostConfig';
+
 import {
   HostComponent,
   SuspenseComponent,
@@ -36,7 +38,7 @@ function collectScopedNodes(
   if (node.tag === HostComponent) {
     const {type, memoizedProps} = node;
     if (fn(type, memoizedProps) === true) {
-      scopedNodes.push(node.stateNode);
+      scopedNodes.push(getPublicInstance(node.stateNode));
     }
   }
   let child = node.child;
