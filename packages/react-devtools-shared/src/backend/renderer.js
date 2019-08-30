@@ -1481,9 +1481,7 @@ export function attach(
 
   // Returns whether closest unfiltered fiber parent needs to reset its child list.
   //
-  // TRICKY
-  // Although this method is recursive, refactoring it to be iterative would add a lot of complexity.
-  // Since it is not expected to operate on huge parts of the tree at once, it's probably okay?
+  // TODO Refactor this method to be iterative as well
   function updateFiberRecursively(
     nextFiber: Fiber,
     prevFiber: Fiber,
