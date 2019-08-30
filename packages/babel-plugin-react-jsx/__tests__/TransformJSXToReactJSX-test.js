@@ -157,7 +157,7 @@ describe('transform react to jsx', () => {
               <div {...props} key="4" />
             </div>
           </>
-      );`,
+        );`,
         {
           autoImport: 'require',
         },
@@ -180,7 +180,7 @@ describe('transform react to jsx', () => {
               <div {...props} key="4" />
             </div>
           </>
-      );`,
+        );`,
         {
           autoImport: 'namespace',
         }
@@ -200,7 +200,7 @@ describe('transform react to jsx', () => {
               <div {...props} key="4" />
             </div>
           </>
-      );`,
+        );`,
         {
           autoImport: 'default',
         }
@@ -220,9 +220,30 @@ describe('transform react to jsx', () => {
               <div {...props} key="4" />
             </div>
           </>
-      );`,
+        );`,
         {
           autoImport: 'namedExports',
+        }
+      )
+    ).toMatchSnapshot();
+  });
+
+  it('auto import in dev', () => {
+    expect(
+      transform(
+        `var x = (
+          <>
+            <div>
+              <div key="1" />
+              <div key="2" meow="wolf" />
+              <div key="3" />
+              <div {...props} key="4" />
+            </div>
+          </>
+        );`,
+        {
+          autoImport: 'namedExports',
+          development: true,
         }
       )
     ).toMatchSnapshot();
@@ -260,7 +281,30 @@ describe('transform react to jsx', () => {
               <div {...props} key="4" />
             </div>
           </>
-      );`
+        );`
+      )
+    ).toMatchSnapshot();
+  });
+
+  it('auto import with namespaces already defined', () => {
+    expect(
+      transform(
+        `
+         import * as _react from "foo";
+         const react = _react(1);
+         const _react1 = react;
+         const _react2 = react;
+         var x = (
+          <div>
+            <div key="1" />
+            <div key="2" meow="wolf" />
+            <div key="3" />
+            <div {...props} key="4" />
+          </div>
+        );`,
+        {
+          autoImport: 'namespace',
+        }
       )
     ).toMatchSnapshot();
   });

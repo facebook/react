@@ -30,13 +30,36 @@ const addNamespace = helperModuleImports.addNamespace;
 const addNamed = helperModuleImports.addNamed;
 const addDefault = helperModuleImports.addDefault;
 
+// These are all the valid auto import types (under the config autoImport)
+// that a user can specific
 const IMPORT_TYPES = {
-  none: 'none',
-  require: 'require',
-  namespace: 'namespace',
-  default: 'default',
-  namedExports: 'namedExports',
+  none: 'none', // default option. Will not import anything
+  require: 'require', // var _react = require("react");
+  namespace: 'namespace', // import * as _react from "react";
+  default: 'default', // import _default from "react";
+  namedExports: 'namedExports', // import { jsx } from "react";
 };
+
+// We want to use React.createElement, even in the case of
+// jsx, for <div {...props} key={key} /> to distinguish it
+// from <div key={key} {...props} />. This is an intermediary
+// step while we deprecate key spread from props. Afterwards,
+// we will remove createElement entirely
+function shouldUseCreateElement(path, t) {
+  const openingPath = path.get('openingElement');
+  const attributes = openingPath.node.attributes;
+
+  let seenPropsSpread = false;
+  for (let i = 0; i < attributes.length; i++) {
+    const attr = attributes[i];
+    if (seenPropsSpread && t.isJSXAttribute(attr) && attr.name.name === 'key') {
+      return true;
+    } else if (t.isJSXSpreadAttribute(attr)) {
+      seenPropsSpread = true;
+    }
+  }
+  return false;
+}
 
 function helper(babel, opts) {
   const {types: t} = babel;
@@ -65,7 +88,7 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
   visitor.JSXElement = {
     exit(path, file) {
       let callExpr;
-      if (file.opts.useCreateElement || shouldUseCreateElement(path)) {
+      if (file.opts.useCreateElement || shouldUseCreateElement(path, t)) {
         callExpr = buildCreateElementCall(path, file);
       } else {
         callExpr = buildJSXElementCall(path, file);
@@ -98,31 +121,6 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
   };
 
   return visitor;
-
-  // We want to use React.createElement, even in the case of
-  // jsx, for <div {...props} key={key} /> to distinguish it
-  // from <div key={key} {...props} />. This is an intermediary
-  // step while we deprecate key spread from props. Afterwards,
-  // we will remove createElement entirely
-  function shouldUseCreateElement(path) {
-    const openingPath = path.get('openingElement');
-    const attributes = openingPath.node.attributes;
-
-    let seenPropsSpread = false;
-    for (let i = 0; i < attributes.length; i++) {
-      const attr = attributes[i];
-      if (
-        seenPropsSpread &&
-        t.isJSXAttribute(attr) &&
-        attr.name.name === 'key'
-      ) {
-        return true;
-      } else if (t.isJSXSpreadAttribute(attr)) {
-        seenPropsSpread = true;
-      }
-    }
-    return false;
-  }
 
   function convertJSXIdentifier(node, parent) {
     if (t.isJSXIdentifier(node)) {
@@ -562,78 +560,30 @@ You can turn on the 'throwIfNamespace' flag to bypass this warning.`,
   }
 }
 
-function addAutoImports({types: t}, imports) {
-  const visitor = {
+function addAutoImportsNamedExport({types: t}, imports) {
+  return {
     JSXElement(path, state) {
-      if (shouldUseCreateElement(path)) {
-        buildAutoImport(path, state, 'createElement');
+      let funcName;
+      if (shouldUseCreateElement(path, t)) {
+        funcName = 'createElement';
       } else if (path.node.children.length > 1) {
-        buildAutoImport(path, state, 'jsxs');
+        funcName = state.development ? 'jsxDEV' : 'jsxs';
       } else {
-        buildAutoImport(path, state, 'jsx');
+        funcName = state.development ? 'jsxDEV' : 'jsx';
+      }
+
+      if (!imports[funcName]) {
+        imports[funcName] = addNamed(path, funcName, state.source).name;
       }
     },
 
     JSXFragment(path, state) {
-      buildAutoImport(path, state, 'Fragment');
+      const funcName = 'Fragment';
+      if (!imports[funcName]) {
+        imports[funcName] = addNamed(path, 'Fragment', state.source).name;
+      }
     },
   };
-
-  const buildAutoImport = (path, state, importName) => {
-    if (
-      state.autoImport === IMPORT_TYPES.require &&
-      imports.react === undefined
-    ) {
-      const {name} = helperModuleImports.addNamespace(path, state.source);
-      imports.react = name;
-    }
-    if (
-      state.autoImport === IMPORT_TYPES.namespace &&
-      imports.react === undefined
-    ) {
-      const {name} = addNamespace(path, state.source);
-      imports.react = name;
-    } else if (
-      state.autoImport === IMPORT_TYPES.namedExports &&
-      imports[importName] === undefined
-    ) {
-      const {name} = addNamed(path, importName, state.source);
-      imports[importName] = name;
-    } else if (
-      state.autoImport === IMPORT_TYPES.default &&
-      imports.react === undefined
-    ) {
-      const {name} = addDefault(path, state.source);
-      imports.react = name;
-    }
-  };
-
-  // We want to use React.createElement, even in the case of
-  // jsx, for <div {...props} key={key} /> to distinguish it
-  // from <div key={key} {...props} />. This is an intermediary
-  // step while we deprecate key spread from props. Afterwards,
-  // we will remove createElement entirely
-  function shouldUseCreateElement(path) {
-    const openingPath = path.get('openingElement');
-    const attributes = openingPath.node.attributes;
-
-    let seenPropsSpread = false;
-    for (let i = 0; i < attributes.length; i++) {
-      const attr = attributes[i];
-      if (
-        seenPropsSpread &&
-        t.isJSXAttribute(attr) &&
-        attr.name.name === 'key'
-      ) {
-        return true;
-      } else if (t.isJSXSpreadAttribute(attr)) {
-        seenPropsSpread = true;
-      }
-    }
-    return false;
-  }
-
-  return visitor;
 }
 
 module.exports = function(babel) {
@@ -664,61 +614,76 @@ module.exports = function(babel) {
     },
   });
 
-  const createIdentifierName = (path, autoImport, name, importNames) => {
+  const createIdentifierName = (path, autoImport, name, importName) => {
     if (autoImport === IMPORT_TYPES.none) {
       return `React.${name}`;
     } else if (autoImport === IMPORT_TYPES.namedExports) {
-      const identifierName = `${importNames[name]}`;
+      const identifierName = `${importName[name]}`;
       return identifierName;
     } else {
-      return `${importNames.react}.${name}`;
+      return `${importName}.${name}`;
     }
   };
+
+  function addAutoImports(path, state) {
+    if (state.autoImport === IMPORT_TYPES.none) {
+      return;
+    }
+
+    if (IMPORT_TYPES[state.autoImport] === undefined) {
+      throw path.buildCodeFrameError(
+        'autoImport must be one of the following: ' +
+          Object.keys(IMPORT_TYPES).join(', '),
+      );
+    }
+    if (state.useCreateElement) {
+      throw path.buildCodeFrameError(
+        'auto importing cannot be used with createElement. Consider setting ' +
+          '`useCreateElement` to false to use the new jsx function instead',
+      );
+    }
+    if (state.autoImport === IMPORT_TYPES.require && isModule(path)) {
+      throw path.buildCodeFrameError(
+        'Babel `sourceType` must be set to `script` for autoImport ' +
+          'to use `require` syntax. See Babel `sourceType` for details.',
+      );
+    }
+    if (state.autoImport !== IMPORT_TYPES.require && !isModule(path)) {
+      throw path.buildCodeFrameError(
+        'Babel `sourceType` must be set to `module` for autoImport to use `' +
+          state.autoImport +
+          '` syntax. See Babel `sourceType` for details.',
+      );
+    }
+
+    if (
+      state.autoImport === IMPORT_TYPES.require ||
+      state.autoImport === IMPORT_TYPES.namespace
+    ) {
+      return addNamespace(path, state.source).name;
+    } else if (state.autoImport === IMPORT_TYPES.default) {
+      return addDefault(path, state.source).name;
+    } else if (state.autoImport === IMPORT_TYPES.namedExports) {
+      const imports = {};
+      console.log('here');
+      path.traverse(addAutoImportsNamedExport(babel, imports), state);
+      return imports;
+    }
+  }
 
   visitor.Program = {
     enter(path, state) {
       const AUTO_IMPORT = state.opts.autoImport || 'none';
       const SOURCE = state.opts.importSource || 'react';
-
-      const importNames = {};
-      if (IMPORT_TYPES[AUTO_IMPORT] === undefined) {
-        throw path.buildCodeFrameError(
-          'autoImport must be one of the following: ' +
-            Object.keys(IMPORT_TYPES).join(', '),
-        );
-      }
-
-      if (AUTO_IMPORT !== IMPORT_TYPES.none) {
-        if (state.opts.useCreateElement) {
-          throw path.buildCodeFrameError(
-            'auto importing cannot be used with createElement. Consider setting ' +
-              '`useCreateElement` to false to use the new jsx function instead',
-          );
-        }
-        if (AUTO_IMPORT === IMPORT_TYPES.require && isModule(path)) {
-          throw path.buildCodeFrameError(
-            'Babel `sourceType` must be set to `script` for autoImport ' +
-              'to use `require` syntax. See Babel `sourceType` for details.',
-          );
-        }
-        if (AUTO_IMPORT !== IMPORT_TYPES.require && !isModule(path)) {
-          throw path.buildCodeFrameError(
-            'Babel `sourceType` must be set to `module` for autoImport to use `' +
-              AUTO_IMPORT +
-              '` syntax. See Babel `sourceType` for details.',
-          );
-        }
-
-        path.traverse(addAutoImports(babel, importNames), {
-          autoImport: AUTO_IMPORT,
-          source: SOURCE,
-        });
-      }
-
+      const importName = addAutoImports(path, {
+        ...state.opts,
+        autoImport: AUTO_IMPORT,
+        source: SOURCE,
+      });
       state.set(
         'oldJSXIdentifier',
         createIdentifierParser(
-          createIdentifierName(path, AUTO_IMPORT, 'createElement', importNames),
+          createIdentifierName(path, AUTO_IMPORT, 'createElement', importName),
         ),
       );
 
@@ -729,7 +694,7 @@ module.exports = function(babel) {
             path,
             AUTO_IMPORT,
             state.opts.development ? 'jsxDEV' : 'jsx',
-            importNames,
+            importName,
           ),
         ),
       );
@@ -741,7 +706,7 @@ module.exports = function(babel) {
             path,
             AUTO_IMPORT,
             state.opts.development ? 'jsxDEV' : 'jsxs',
-            importNames,
+            importName,
           ),
         ),
       );
@@ -749,7 +714,7 @@ module.exports = function(babel) {
       state.set(
         'jsxFragIdentifier',
         createIdentifierParser(
-          createIdentifierName(path, AUTO_IMPORT, 'Fragment', importNames),
+          createIdentifierName(path, AUTO_IMPORT, 'Fragment', importName),
         ),
       );
     },

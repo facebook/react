@@ -38,6 +38,14 @@ var div = React.jsx(Component, Object.assign({}, props, {
 }));
 `;
 
+exports[`transform react to jsx auto import can specify source 1`] = `
+import * as _foobar from "foobar";
+
+var x = _foobar.jsx("div", {
+  children: _foobar.jsx("span", {})
+});
+`;
+
 exports[`transform react to jsx auto import default 1`] = `
 import _default from "react";
 
@@ -50,6 +58,40 @@ var x = _default.jsx(_default.Fragment, {
     }))]
   })
 });
+`;
+
+exports[`transform react to jsx auto import in dev 1`] = `
+import { createElement as _createElement } from "react";
+import { jsxDEV as _jsxDEV } from "react";
+import { Fragment as _Fragment } from "react";
+var _jsxFileName = "";
+
+var x = _jsxDEV(_Fragment, {
+  children: _jsxDEV("div", {
+    children: [_jsxDEV("div", {}, "1", false, {
+      fileName: _jsxFileName,
+      lineNumber: 4
+    }, this), _jsxDEV("div", {
+      meow: "wolf"
+    }, "2", false, {
+      fileName: _jsxFileName,
+      lineNumber: 5
+    }, this), _jsxDEV("div", {}, "3", false, {
+      fileName: _jsxFileName,
+      lineNumber: 6
+    }, this), _createElement("div", Object.assign({}, props, {
+      key: "4",
+      __source: {
+        fileName: _jsxFileName,
+        lineNumber: 7
+      },
+      __self: this
+    }))]
+  }, undefined, true, {
+    fileName: _jsxFileName,
+    lineNumber: 3
+  }, this)
+}, undefined, false);
 `;
 
 exports[`transform react to jsx auto import named exports 1`] = `
@@ -83,6 +125,18 @@ var x = _react.jsx(_react.Fragment, {
 });
 `;
 
+exports[`transform react to jsx auto import none 1`] = `
+var x = React.jsx(React.Fragment, {
+  children: React.jsxs("div", {
+    children: [React.jsx("div", {}, "1"), React.jsx("div", {
+      meow: "wolf"
+    }, "2"), React.jsx("div", {}, "3"), React.createElement("div", Object.assign({}, props, {
+      key: "4"
+    }))]
+  })
+});
+`;
+
 exports[`transform react to jsx auto import require 1`] = `
 var _react = _interopRequireWildcard(require("react"));
 
@@ -99,26 +153,6 @@ var x = _react.jsx(_react.Fragment, {
 });
 `;
 
-exports[`transform react to jsx auto import can specify source 1`] = `
-import * as _foobar from "foobar";
-
-var x = _foobar.jsx("div", {
-  children: _foobar.jsx("span", {})
-});
-`;
-
-exports[`transform react to jsx auto import none 1`] = `
-var x = React.jsx(React.Fragment, {
-  children: React.jsxs("div", {
-    children: [React.jsx("div", {}, "1"), React.jsx("div", {
-      meow: "wolf"
-    }, "2"), React.jsx("div", {}, "3"), React.createElement("div", Object.assign({}, props, {
-      key: "4"
-    }))]
-  })
-});
-`;
-
 exports[`transform react to jsx auto import undefined 1`] = `
 var x = React.jsx(React.Fragment, {
   children: React.jsxs("div", {
@@ -128,6 +162,24 @@ var x = React.jsx(React.Fragment, {
       key: "4"
     }))]
   })
+});
+`;
+
+exports[`transform react to jsx auto import with namespaces already defined 1`] = `
+import * as _react3 from "react";
+import * as _react from "foo";
+
+const react = _react(1);
+
+const _react1 = react;
+const _react2 = react;
+
+var x = _react3.jsxs("div", {
+  children: [_react3.jsx("div", {}, "1"), _react3.jsx("div", {
+    meow: "wolf"
+  }, "2"), _react3.jsx("div", {}, "3"), _react3.createElement("div", Object.assign({}, props, {
+    key: "4"
+  }))]
 });
 `;
 
