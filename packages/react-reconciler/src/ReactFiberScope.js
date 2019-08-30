@@ -21,6 +21,7 @@ import {
   SuspenseComponent,
   ScopeComponent,
 } from 'shared/ReactWorkTags';
+import {enableScopeAPI} from 'shared/ReactFeatureFlags';
 
 function isFiberSuspenseAndTimedOut(fiber: Fiber): boolean {
   return fiber.tag === SuspenseComponent && fiber.memoizedState !== null;
@@ -35,19 +36,21 @@ function collectScopedNodes(
   fn: (type: string | Object, props: Object) => boolean,
   scopedNodes: Array<any>,
 ): void {
-  if (node.tag === HostComponent) {
-    const {type, memoizedProps} = node;
-    if (fn(type, memoizedProps) === true) {
-      scopedNodes.push(getPublicInstance(node.stateNode));
+  if (enableScopeAPI) {
+    if (node.tag === HostComponent) {
+      const {type, memoizedProps} = node;
+      if (fn(type, memoizedProps) === true) {
+        scopedNodes.push(getPublicInstance(node.stateNode));
+      }
     }
-  }
-  let child = node.child;
+    let child = node.child;
 
-  if (isFiberSuspenseAndTimedOut(node)) {
-    child = getSuspenseFallbackChild(node);
-  }
-  if (child !== null) {
-    collectScopedNodesFromChildren(child, fn, scopedNodes);
+    if (isFiberSuspenseAndTimedOut(node)) {
+      child = getSuspenseFallbackChild(node);
+    }
+    if (child !== null) {
+      collectScopedNodesFromChildren(child, fn, scopedNodes);
+    }
   }
 }
 
