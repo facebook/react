@@ -37,6 +37,9 @@ function createEvent(type, data = {}) {
   if (data != null) {
     Object.keys(data).forEach(key => {
       const value = data[key];
+      if (key === 'timeStamp' && !value) {
+        return;
+      }
       Object.defineProperty(event, key, {value});
     });
   }
@@ -83,6 +86,7 @@ function createPointerEvent(
     tangentialPressure = 0,
     tiltX = 0,
     tiltY = 0,
+    timeStamp,
     twist = 0,
     width,
     x = 0,
@@ -122,6 +126,7 @@ function createPointerEvent(
     tangentialPressure,
     tiltX,
     tiltY,
+    timeStamp,
     twist,
     width: isMouse ? 1 : width != null ? width : defaultPointerSize,
   });
@@ -171,6 +176,7 @@ function createMouseEvent(
     screenX,
     screenY,
     shiftKey = false,
+    timeStamp,
     x = 0,
     y = 0,
   } = {},
@@ -198,6 +204,7 @@ function createMouseEvent(
     screenX: screenX === 0 ? screenX : x,
     screenY: screenY === 0 ? screenY : y + defaultBrowserChromeSize,
     shiftKey,
+    timeStamp,
   });
 }
 
@@ -209,6 +216,8 @@ function createTouchEvent(type, payload) {
   let metaKey = false;
   let preventDefault = emptyFunction;
   let shiftKey = false;
+  let timeStamp;
+
   if (firstTouch != null) {
     if (firstTouch.altKey != null) {
       altKey = firstTouch.altKey;
@@ -224,6 +233,9 @@ function createTouchEvent(type, payload) {
     }
     if (firstTouch.shiftKey != null) {
       shiftKey = firstTouch.shiftKey;
+    }
+    if (firstTouch.timeStamp != null) {
+      timeStamp = firstTouch.timeStamp;
     }
   }
 
@@ -268,6 +280,7 @@ function createTouchEvent(type, payload) {
       firesTouchEvents: true,
     },
     targetTouches: activeTouches,
+    timeStamp,
     touches: activeTouches,
   });
 }

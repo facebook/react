@@ -9,7 +9,10 @@
 
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
-import type {ReactFundamentalComponentInstance} from 'shared/ReactTypes';
+import type {
+  ReactFundamentalComponentInstance,
+  ReactScopeInstance,
+} from 'shared/ReactTypes';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {
   Instance,
@@ -47,6 +50,7 @@ import {
   LazyComponent,
   IncompleteClassComponent,
   FundamentalComponent,
+  ScopeComponent,
 } from 'shared/ReactWorkTags';
 import {NoMode, BatchedMode} from './ReactTypeOfMode';
 import {
@@ -112,6 +116,7 @@ import {
   enableSuspenseServerRenderer,
   enableFlareAPI,
   enableFundamentalAPI,
+  enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
 import {
   markSpawnedWork,
@@ -123,6 +128,7 @@ import {createFundamentalStateInstance} from './ReactFiberFundamental';
 import {Never} from './ReactFiberExpirationTime';
 import {resetChildFibers} from './ReactChildFiber';
 import {updateEventListeners} from './ReactFiberEvents';
+import {createScopeMethods} from './ReactFiberScope';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -1207,6 +1213,31 @@ function completeWork(
             fundamentalInstance,
           );
           if (shouldUpdate) {
+            markUpdate(workInProgress);
+          }
+        }
+      }
+      break;
+    }
+    case ScopeComponent: {
+      if (enableScopeAPI) {
+        if (current === null) {
+          const type = workInProgress.type;
+          const scopeInstance: ReactScopeInstance = {
+            fiber: workInProgress,
+            methods: null,
+          };
+          workInProgress.stateNode = scopeInstance;
+          scopeInstance.methods = createScopeMethods(type, scopeInstance);
+          if (workInProgress.ref !== null) {
+            markRef(workInProgress);
+            markUpdate(workInProgress);
+          }
+        } else {
+          if (current.ref !== workInProgress.ref) {
+            markRef(workInProgress);
+          }
+          if (workInProgress.ref !== null) {
             markUpdate(workInProgress);
           }
         }

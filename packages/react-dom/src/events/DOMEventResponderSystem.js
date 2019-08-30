@@ -12,7 +12,7 @@ import {
   PASSIVE_NOT_SUPPORTED,
 } from 'legacy-events/EventSystemFlags';
 import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
-import {HostComponent, SuspenseComponent} from 'shared/ReactWorkTags';
+import {HostComponent} from 'shared/ReactWorkTags';
 import type {EventPriority} from 'shared/ReactTypes';
 import type {
   ReactDOMEventResponder,
@@ -238,28 +238,6 @@ const eventResponderContext: ReactDOMResponderContext = {
       }
     }
   },
-  getFocusableElementsInScope(deep: boolean): Array<HTMLElement> {
-    validateResponderContext();
-    const focusableElements = [];
-    const eventResponderInstance = ((currentInstance: any): ReactDOMEventResponderInstance);
-    const currentResponder = eventResponderInstance.responder;
-    let focusScopeFiber = eventResponderInstance.fiber;
-    if (deep) {
-      let deepNode = focusScopeFiber.return;
-      while (deepNode !== null) {
-        if (doesFiberHaveResponder(deepNode, currentResponder)) {
-          focusScopeFiber = deepNode;
-        }
-        deepNode = deepNode.return;
-      }
-    }
-    const child = focusScopeFiber.child;
-
-    if (child !== null) {
-      collectFocusableElements(child, focusableElements);
-    }
-    return focusableElements;
-  },
   getActiveDocument,
   objectAssign: Object.assign,
   getTimeStamp(): number {
@@ -335,33 +313,6 @@ function validateEventValue(eventValue: any): void {
   }
 }
 
-function collectFocusableElements(
-  node: Fiber,
-  focusableElements: Array<HTMLElement>,
-): void {
-  if (isFiberSuspenseAndTimedOut(node)) {
-    const fallbackChild = getSuspenseFallbackChild(node);
-    if (fallbackChild !== null) {
-      collectFocusableElements(fallbackChild, focusableElements);
-    }
-  } else {
-    if (isFiberHostComponentFocusable(node)) {
-      focusableElements.push(node.stateNode);
-    } else {
-      const child = node.child;
-
-      if (child !== null) {
-        collectFocusableElements(child, focusableElements);
-      }
-    }
-  }
-  const sibling = node.sibling;
-
-  if (sibling !== null) {
-    collectFocusableElements(sibling, focusableElements);
-  }
-}
-
 function doesFiberHaveResponder(
   fiber: Fiber,
   responder: ReactDOMEventResponder,
@@ -380,33 +331,6 @@ function doesFiberHaveResponder(
 
 function getActiveDocument(): Document {
   return ((currentDocument: any): Document);
-}
-
-function isFiberHostComponentFocusable(fiber: Fiber): boolean {
-  if (fiber.tag !== HostComponent) {
-    return false;
-  }
-  const {type, memoizedProps} = fiber;
-  if (memoizedProps.tabIndex === -1 || memoizedProps.disabled) {
-    return false;
-  }
-  if (memoizedProps.tabIndex === 0 || memoizedProps.contentEditable === true) {
-    return true;
-  }
-  if (type === 'a' || type === 'area') {
-    return !!memoizedProps.href && memoizedProps.rel !== 'ignore';
-  }
-  if (type === 'input') {
-    return memoizedProps.type !== 'hidden' && memoizedProps.type !== 'file';
-  }
-  return (
-    type === 'button' ||
-    type === 'textarea' ||
-    type === 'object' ||
-    type === 'select' ||
-    type === 'iframe' ||
-    type === 'embed'
-  );
 }
 
 function processTimers(
@@ -624,14 +548,6 @@ function validateResponderContext(): void {
     'An event responder context was used outside of an event cycle. ' +
       'Use context.setTimeout() to use asynchronous responder context outside of event cycle .',
   );
-}
-
-function isFiberSuspenseAndTimedOut(fiber: Fiber): boolean {
-  return fiber.tag === SuspenseComponent && fiber.memoizedState !== null;
-}
-
-function getSuspenseFallbackChild(fiber: Fiber): Fiber | null {
-  return ((((fiber.child: any): Fiber).sibling: any): Fiber).child;
 }
 
 export function dispatchEventForResponderEventSystem(

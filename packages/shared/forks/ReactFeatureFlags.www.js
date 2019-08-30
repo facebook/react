@@ -73,6 +73,8 @@ export const enableFlareAPI = true;
 
 export const enableFundamentalAPI = false;
 
+export const enableScopeAPI = false;
+
 export const enableJSXTransformAPI = true;
 
 export const warnAboutUnmockedScheduler = true;
