@@ -71,7 +71,7 @@ export type InspectedElement = {|
   // Can view component source location.
   canViewSource: boolean,
 
-  // Does the component have legacy context attached to it
+  // Does the component have legacy context attached to it.
   hasLegacyContext: boolean,
 
   // Inspectable properties.
@@ -83,7 +83,7 @@ export type InspectedElement = {|
   // List of owners
   owners: Array<Owner> | null,
 
-  // Location of component in source coude.
+  // Location of component in source code.
   source: Source | null,
 
   type: ElementType,

@@ -2249,7 +2249,7 @@ export function attach(
       // Can view component source location.
       canViewSource,
 
-      // Does the component have legacy context attached to it
+      // Does the component have legacy context attached to it.
       hasLegacyContext,
 
       displayName: getDisplayNameForFiber(fiber),
