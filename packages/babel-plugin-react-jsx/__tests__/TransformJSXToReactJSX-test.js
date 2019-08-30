@@ -309,6 +309,28 @@ describe('transform react to jsx', () => {
     ).toMatchSnapshot();
   });
 
+  it('auto import with react already defined', () => {
+    expect(
+      transform(
+        `
+         import * as react from "react";
+         var y = react.createElement("div", {foo: 1});
+         var x = (
+          <div>
+            <div key="1" />
+            <div key="2" meow="wolf" />
+            <div key="3" />
+            <div {...props} key="4" />
+          </div>
+        );`,
+
+        {
+          autoImport: 'namespace',
+        }
+      )
+    ).toMatchSnapshot();
+  });
+
   it('fragment with no children', () => {
     expect(transform(`var x = <></>`)).toMatchSnapshot();
   });

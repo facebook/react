@@ -183,6 +183,22 @@ var x = _react3.jsxs("div", {
 });
 `;
 
+exports[`transform react to jsx auto import with react already defined 1`] = `
+import * as _react from "react";
+import * as react from "react";
+var y = react.createElement("div", {
+  foo: 1
+});
+
+var x = _react.jsxs("div", {
+  children: [_react.jsx("div", {}, "1"), _react.jsx("div", {
+    meow: "wolf"
+  }, "2"), _react.jsx("div", {}, "3"), _react.createElement("div", Object.assign({}, props, {
+    key: "4"
+  }))]
+});
+`;
+
 exports[`transform react to jsx concatenates adjacent string literals 1`] = `
 var x = React.jsxs("div", {
   children: ["foo", "bar", "baz", React.jsx("div", {

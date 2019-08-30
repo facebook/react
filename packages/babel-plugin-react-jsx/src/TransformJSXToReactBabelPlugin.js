@@ -665,7 +665,6 @@ module.exports = function(babel) {
       return addDefault(path, state.source).name;
     } else if (state.autoImport === IMPORT_TYPES.namedExports) {
       const imports = {};
-      console.log('here');
       path.traverse(addAutoImportsNamedExport(babel, imports), state);
       return imports;
     }
