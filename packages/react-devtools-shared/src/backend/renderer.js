@@ -1227,6 +1227,9 @@ export function attach(
     }
   }
 
+  // TRICKY
+  // This method recursively mounts a fiber, but it does so iteratively.
+  // This is to avoid hitting the call stack limit for extremely deep or wide trees.
   function mountFiberRecursively(
     fiber: Fiber,
     parentFiber: Fiber | null,
@@ -1236,89 +1239,126 @@ export function attach(
       debug('mountFiberRecursively()', fiber, parentFiber);
     }
 
-    // If we have the tree selection from previous reload, try to match this Fiber.
-    // Also remember whether to do the same for siblings.
-    const mightSiblingsBeOnTrackedPath = updateTrackedPathStateBeforeMount(
-      fiber,
-    );
+    const stack = [fiber, parentFiber, traverseSiblings];
 
-    const shouldIncludeInTree = !shouldFilterFiber(fiber);
-    if (shouldIncludeInTree) {
-      recordMount(fiber, parentFiber);
-    }
+    while (stack.length > 0) {
+      const currentFiber = ((stack.shift(): any): Fiber);
+      const currentParentFiber = ((stack.shift(): any): Fiber | null);
+      const currentTraverseSiblings = ((stack.shift(): any): boolean);
 
-    const isTimedOutSuspense =
-      fiber.tag === ReactTypeOfWork.SuspenseComponent &&
-      fiber.memoizedState !== null;
+      // If we have the tree selection from previous reload, try to match this Fiber.
+      // Also remember whether to do the same for siblings.
+      const mightSiblingsBeOnTrackedPath = updateTrackedPathStateBeforeMount(
+        currentFiber,
+      );
 
-    if (isTimedOutSuspense) {
-      // Special case: if Suspense mounts in a timed-out state,
-      // get the fallback child from the inner fragment and mount
-      // it as if it was our own child. Updates handle this too.
-      const primaryChildFragment = fiber.child;
-      const fallbackChildFragment = primaryChildFragment
-        ? primaryChildFragment.sibling
-        : null;
-      const fallbackChild = fallbackChildFragment
-        ? fallbackChildFragment.child
-        : null;
-      if (fallbackChild !== null) {
-        mountFiberRecursively(
-          fallbackChild,
-          shouldIncludeInTree ? fiber : parentFiber,
+      const shouldIncludeInTree = !shouldFilterFiber(currentFiber);
+      if (shouldIncludeInTree) {
+        recordMount(currentFiber, currentParentFiber);
+      }
+
+      const isTimedOutSuspense =
+        currentFiber.tag === ReactTypeOfWork.SuspenseComponent &&
+        currentFiber.memoizedState !== null;
+
+      let didQueueChild = false;
+
+      if (isTimedOutSuspense) {
+        // Special case: if Suspense mounts in a timed-out state,
+        // get the fallback child from the inner fragment and mount
+        // it as if it was our own child. Updates handle this too.
+        const primaryChildFragment = currentFiber.child;
+        const fallbackChildFragment = primaryChildFragment
+          ? primaryChildFragment.sibling
+          : null;
+        const fallbackChild = fallbackChildFragment
+          ? fallbackChildFragment.child
+          : null;
+        if (fallbackChild !== null) {
+          didQueueChild = true;
+          stack.unshift(
+            fallbackChild,
+            shouldIncludeInTree ? currentFiber : currentParentFiber,
+            true,
+          );
+        }
+      } else {
+        if (currentFiber.child !== null) {
+          didQueueChild = true;
+          stack.unshift(
+            currentFiber.child,
+            shouldIncludeInTree ? currentFiber : currentParentFiber,
+            true,
+          );
+        }
+      }
+
+      // We're exiting this Fiber now, and entering its siblings.
+      // If we have selection to restore, we might need to re-activate tracking.
+      updateTrackedPathStateAfterMount(mightSiblingsBeOnTrackedPath);
+
+      if (currentTraverseSiblings && currentFiber.sibling !== null) {
+        // Siblings should be crawled after children, but before ancestors.
+        stack.splice(
+          didQueueChild ? 3 : 0,
+          0,
+          currentFiber.sibling,
+          currentParentFiber,
           true,
         );
       }
-    } else {
-      if (fiber.child !== null) {
-        mountFiberRecursively(
-          fiber.child,
-          shouldIncludeInTree ? fiber : parentFiber,
-          true,
-        );
-      }
-    }
-
-    // We're exiting this Fiber now, and entering its siblings.
-    // If we have selection to restore, we might need to re-activate tracking.
-    updateTrackedPathStateAfterMount(mightSiblingsBeOnTrackedPath);
-
-    if (traverseSiblings && fiber.sibling !== null) {
-      mountFiberRecursively(fiber.sibling, parentFiber, true);
     }
   }
 
-  // We use this to simulate unmounting for Suspense trees
-  // when we switch from primary to fallback.
+  // We use this to simulate unmounting for Suspense trees when we switch from primary to fallback.
+  //
+  // TRICKY
+  // This method recursively unmounts a fiber, but it does so iteratively.
+  // This is to avoid hitting the call stack limit for extremely deep or wide trees.
   function unmountFiberChildrenRecursively(fiber: Fiber) {
     if (__DEBUG__) {
       debug('unmountFiberChildrenRecursively()', fiber);
     }
 
-    // We might meet a nested Suspense on our way.
-    const isTimedOutSuspense =
-      fiber.tag === ReactTypeOfWork.SuspenseComponent &&
-      fiber.memoizedState !== null;
+    const fibers: Array<Fiber> = [fiber];
+    let index = 0;
 
-    let child = fiber.child;
-    if (isTimedOutSuspense) {
-      // If it's showing fallback tree, let's traverse it instead.
-      const primaryChildFragment = fiber.child;
-      const fallbackChildFragment = primaryChildFragment
-        ? primaryChildFragment.sibling
-        : null;
-      // Skip over to the real Fiber child.
-      child = fallbackChildFragment ? fallbackChildFragment.child : null;
+    // Fibers must be unmounted before their parents.
+    // So first we crawl the tree to determine which fibers need to be unmounted,
+    // then we step backwards to unmount them.
+    for (index = 0; index < fibers.length; index++) {
+      const currentFiber = fibers[index];
+
+      // We might meet a nested Suspense on our way.
+      const isTimedOutSuspense =
+        currentFiber.tag === ReactTypeOfWork.SuspenseComponent &&
+        currentFiber.memoizedState !== null;
+
+      let child = currentFiber.child;
+      if (isTimedOutSuspense) {
+        // If it's showing fallback tree, let's traverse it instead.
+        const primaryChildFragment = currentFiber.child;
+        const fallbackChildFragment = primaryChildFragment
+          ? primaryChildFragment.sibling
+          : null;
+        // Skip over to the real Fiber child.
+        child = fallbackChildFragment ? fallbackChildFragment.child : null;
+      }
+
+      while (child !== null) {
+        // Record simulated unmounts children-first.
+        // We skip nodes without return because those are real unmounts.
+        if (child.return !== null) {
+          fibers.push(child);
+        }
+        child = child.sibling;
+      }
     }
 
-    while (child !== null) {
-      // Record simulated unmounts children-first.
-      // We skip nodes without return because those are real unmounts.
-      if (child.return !== null) {
-        unmountFiberChildrenRecursively(child);
-        recordUnmount(child, true);
-      }
-      child = child.sibling;
+    // Note that this method doesn't unmount the original fiber, only its children.
+    for (index = fibers.length - 1; index > 0; index--) {
+      const currentFiber = fibers[index];
+      recordUnmount(currentFiber, true);
     }
   }
 
@@ -1413,22 +1453,37 @@ export function attach(
     }
   }
 
+  // TRICKY
+  // This method recursively updates child order, but it does so iteratively.
+  // This is to avoid hitting the call stack limit for extremely deep or wide trees.
   function findReorderedChildrenRecursively(
     fiber: Fiber,
     nextChildren: Array<number>,
   ) {
-    if (!shouldFilterFiber(fiber)) {
-      nextChildren.push(getFiberID(getPrimaryFiber(fiber)));
-    } else {
-      let child = fiber.child;
-      while (child !== null) {
-        findReorderedChildrenRecursively(child, nextChildren);
-        child = child.sibling;
+    let fibers: Array<Fiber> = [fiber];
+
+    while (fibers.length > 0) {
+      const currentFiber = fibers.shift();
+
+      if (!shouldFilterFiber(currentFiber)) {
+        nextChildren.push(getFiberID(getPrimaryFiber(currentFiber)));
+      } else {
+        let child = currentFiber.child;
+        let childInsertionIndex = 0;
+        while (child !== null) {
+          fibers.splice(childInsertionIndex, 0, child);
+          childInsertionIndex++;
+          child = child.sibling;
+        }
       }
     }
   }
 
   // Returns whether closest unfiltered fiber parent needs to reset its child list.
+  //
+  // TRICKY
+  // Although this method is recursive, refactoring it to be iterative would add a lot of complexity.
+  // Since it is not expected to operate on huge parts of the tree at once, it's probably okay?
   function updateFiberRecursively(
     nextFiber: Fiber,
     prevFiber: Fiber,
