@@ -602,28 +602,22 @@ describe('useSubscription', () => {
       // This update will be eagerly evaluated,
       // so the tearing case this test is guarding against would not happen.
       mutate('B');
-      expect(Scheduler).toFlushAndYieldThrough(['render:first:B']);
-      mutate('C');
-      expect(Scheduler).toFlushAndYield([
-        'render:second:B',
-        'render:first:C',
-        'render:second:C',
-      ]);
+      expect(Scheduler).toFlushAndYield(['render:first:B', 'render:second:B']);
 
       // No more pending updates
       jest.runAllTimers();
 
-      // Partial update "C" -> "D"
-      // Interrupt with a second mutation "D" -> "E".
+      // Partial update "B" -> "C"
+      // Interrupt with a second mutation "C" -> "D".
       // This update will not be eagerly evaluated,
       // but useSubscription() should eagerly close over the updated value to avoid tearing.
+      mutate('C');
+      expect(Scheduler).toFlushAndYieldThrough(['render:first:C']);
       mutate('D');
-      expect(Scheduler).toFlushAndYieldThrough(['render:first:D']);
-      mutate('E');
       expect(Scheduler).toFlushAndYield([
+        'render:second:C',
+        'render:first:D',
         'render:second:D',
-        'render:first:E',
-        'render:second:E',
       ]);
 
       // No more pending updates
