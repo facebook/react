@@ -8,7 +8,7 @@
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
-import {enableCreateElementDeprecationWarnings} from 'shared/ReactFeatureFlags';
+import {warnAboutCreateElement} from 'shared/ReactFeatureFlags';
 
 import ReactCurrentOwner from './ReactCurrentOwner';
 
