@@ -17,7 +17,7 @@ describe('ReactElement', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.warnAboutCreateElement = true;
+    ReactFeatureFlags.enableCreateElementDeprecationWarnings = true;
     React = require('react');
     ReactDOM = require('react-dom');
   });

@@ -22,7 +22,7 @@ export const {
   enableUserBlockingEvents,
   disableLegacyContext,
   disableSchedulerTimeoutBasedOnReactExpirationTime,
-  warnAboutCreateElement,
+  enableCreateElementDeprecationWarnings,
 } = require('ReactFeatureFlags');
 
 // In www, we have experimental support for gathering data
