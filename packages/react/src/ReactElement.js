@@ -8,6 +8,7 @@
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
+import {warnAboutCreateElement} from 'shared/ReactFeatureFlags';
 
 import ReactCurrentOwner from './ReactCurrentOwner';
 
@@ -338,6 +339,29 @@ export function createElement(type, config, children) {
       ) {
         props[propName] = config[propName];
       }
+    }
+  }
+
+  if (__DEV__) {
+    const displayName =
+      typeof type === 'function'
+        ? type.displayName || type.name || 'Unknown'
+        : type;
+    if (warnAboutCreateElement) {
+      warningWithoutStack(
+        false,
+        '%s: You are most likely getting this warning because ' +
+          'you are spreading an object on an element while passing it a explicit ' +
+          'key in the format `<div {...props} key={keyVal} />`. To fix this, ' +
+          'switch the key and the props spread to `<div key={keyVal} {...props} />`.' +
+          '\n\n' +
+          'If you are explicitly calling React.createElement, please switch to ' +
+          'React.jsx instead.' +
+          '\n\n' +
+          'If you have not upgraded the @babel/plugin-transform-react-jsx to the latest ' +
+          'version, please do so.',
+        displayName,
+      );
     }
   }
 
