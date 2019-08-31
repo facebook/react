@@ -11,8 +11,6 @@ import typeof ReactTestRenderer from 'react-test-renderer';
 import type {GetInspectedElementPath} from 'react-devtools-shared/src/devtools/views/Components/InspectedElementContext';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type Store from 'react-devtools-shared/src/devtools/store';
-import React, {Component, createContext} from 'react';
-import {Fragment} from '../../../../../../../../../../Applications/WebStorm.app/Contents/plugins/JavaScriptLanguage/jsLanguageServicesImpl/flow/react';
 
 describe('InspectedElementContext', () => {
   let React;
@@ -145,17 +143,17 @@ describe('InspectedElementContext', () => {
     }
 
     // Modern Context API
-    const BoolContext = createContext(contextData.bool);
+    const BoolContext = React.createContext(contextData.bool);
     BoolContext.displayName = 'BoolContext';
 
-    class ModernContextType extends Component<any> {
+    class ModernContextType extends React.Component<any> {
       static contextType = BoolContext;
       render() {
         return null;
       }
     }
 
-    const ModernContext = createContext();
+    const ModernContext = React.createContext();
     ModernContext.displayName = 'ModernContext';
 
     const container = document.createElement('div');
