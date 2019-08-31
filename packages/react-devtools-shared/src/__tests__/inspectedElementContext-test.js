@@ -118,7 +118,7 @@ describe('InspectedElementContext', () => {
     done();
   });
 
-  it('should have legacyContext flag set to true if the component is using the legacy context API.', async done => {
+  it('should have hasLegacyContext flag set to either "true" or "false" depending on which context API is used.', async done => {
     const contextData = {
       bool: true,
     };
