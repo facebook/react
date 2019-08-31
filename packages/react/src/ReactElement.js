@@ -8,7 +8,7 @@
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
-import {warnAboutCreateElement} from 'shared/ReactFeatureFlags';
+import {enableCreateElementDeprecationWarnings} from 'shared/ReactFeatureFlags';
 
 import ReactCurrentOwner from './ReactCurrentOwner';
 
@@ -343,11 +343,11 @@ export function createElement(type, config, children) {
   }
 
   if (__DEV__) {
-    const displayName =
-      typeof type === 'function'
-        ? type.displayName || type.name || 'Unknown'
-        : type;
-    if (warnAboutCreateElement) {
+    if (enableCreateElementDeprecationWarnings) {
+      const displayName =
+        typeof type === 'function'
+          ? type.displayName || type.name || 'Unknown'
+          : type;
       warningWithoutStack(
         false,
         '%s: You are most likely getting this warning because ' +

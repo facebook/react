@@ -35,7 +35,7 @@ export const enableUserBlockingEvents = false;
 export const enableSuspenseCallback = false;
 export const warnAboutDefaultPropsOnFunctionComponents = false;
 export const warnAboutStringRefs = false;
-export const warnAboutCreateElement = false;
+export const enableCreateElementDeprecationWarnings = false;
 export const disableLegacyContext = false;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 
