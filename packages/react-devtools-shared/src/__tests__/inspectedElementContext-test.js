@@ -11,10 +11,13 @@ import typeof ReactTestRenderer from 'react-test-renderer';
 import type {GetInspectedElementPath} from 'react-devtools-shared/src/devtools/views/Components/InspectedElementContext';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type Store from 'react-devtools-shared/src/devtools/store';
+import React, {Component, createContext} from 'react';
+import {Fragment} from '../../../../../../../../../../Applications/WebStorm.app/Contents/plugins/JavaScriptLanguage/jsLanguageServicesImpl/flow/react';
 
 describe('InspectedElementContext', () => {
   let React;
   let ReactDOM;
+  let PropTypes;
   let TestRenderer: ReactTestRenderer;
   let bridge: FrontendBridge;
   let store: Store;
@@ -40,6 +43,7 @@ describe('InspectedElementContext', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
+    PropTypes = require('prop-types');
     TestUtils = require('react-dom/test-utils');
     TestRenderer = utils.requireTestRenderer();
 
@@ -111,6 +115,119 @@ describe('InspectedElementContext', () => {
     );
     expect(didFinish).toBe(true);
 
+    done();
+  });
+
+  it('should have legacyContext flag set to true if the component is using the legacy context API.', async done => {
+    const contextData = {
+      bool: true,
+    };
+
+    // Legacy Context API.
+    class LegacyContextProvider extends React.Component<any> {
+      static childContextTypes = {
+        bool: PropTypes.bool,
+      };
+      getChildContext() {
+        return contextData;
+      }
+      render() {
+        return this.props.children;
+      }
+    }
+    class LegacyContextConsumer extends React.Component<any> {
+      static contextTypes = {
+        bool: PropTypes.bool,
+      };
+      render() {
+        return null;
+      }
+    }
+
+    // Modern Context API
+    const BoolContext = createContext(contextData.bool);
+    BoolContext.displayName = 'BoolContext';
+
+    class ModernContextType extends Component<any> {
+      static contextType = BoolContext;
+      render() {
+        return null;
+      }
+    }
+
+    const ModernContext = createContext();
+    ModernContext.displayName = 'ModernContext';
+
+    const container = document.createElement('div');
+    await utils.actAsync(() =>
+      ReactDOM.render(
+        <React.Fragment>
+          <LegacyContextProvider>
+            <LegacyContextConsumer />
+          </LegacyContextProvider>
+          <BoolContext.Consumer>{value => null}</BoolContext.Consumer>
+          <ModernContextType />
+          <ModernContext.Provider value={contextData}>
+            <ModernContext.Consumer>{value => null}</ModernContext.Consumer>
+          </ModernContext.Provider>
+        </React.Fragment>,
+        container,
+      ),
+    );
+
+    const ids = [
+      {
+        // <LegacyContextConsumer />
+        id: ((store.getElementIDAtIndex(1): any): number),
+        shouldHaveLegacyContext: true,
+      },
+      {
+        // <BoolContext.Consumer>
+        id: ((store.getElementIDAtIndex(2): any): number),
+        shouldHaveLegacyContext: false,
+      },
+      {
+        // <ModernContextType />
+        id: ((store.getElementIDAtIndex(3): any): number),
+        shouldHaveLegacyContext: false,
+      },
+      {
+        // <ModernContext.Consumer>
+        id: ((store.getElementIDAtIndex(5): any): number),
+        shouldHaveLegacyContext: false,
+      },
+    ];
+
+    function Suspender({target, shouldHaveLegacyContext}) {
+      const {getInspectedElement} = React.useContext(InspectedElementContext);
+      const inspectedElement = getInspectedElement(target);
+
+      expect(inspectedElement.context).not.toBe(null);
+      expect(inspectedElement.hasLegacyContext).toBe(shouldHaveLegacyContext);
+
+      return null;
+    }
+
+    for (let i = 0; i < ids.length; i++) {
+      const {id, shouldHaveLegacyContext} = ids[i];
+
+      await utils.actAsync(
+        () =>
+          TestRenderer.create(
+            <Contexts
+              defaultSelectedElementID={id}
+              defaultSelectedElementIndex={0}>
+              <React.Suspense fallback={null}>
+                <Suspender
+                  target={id}
+                  shouldHaveLegacyContext={shouldHaveLegacyContext}
+                />
+              </React.Suspense>
+            </Contexts>,
+          ),
+        false,
+      );
+    }
     done();
   });
 
