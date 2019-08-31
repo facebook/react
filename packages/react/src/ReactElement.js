@@ -343,7 +343,7 @@ export function createElement(type, config, children) {
   }
 
   if (__DEV__) {
-    if (enableCreateElementDeprecationWarnings) {
+    if (warnAboutCreateElement) {
       const displayName =
         typeof type === 'function'
           ? type.displayName || type.name || 'Unknown'
