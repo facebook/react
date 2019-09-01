@@ -244,6 +244,16 @@ describe('ReactExpiration', () => {
       '1 [C] [render]',
       '1 [D] [render]',
     ]);
+
+    expect(Scheduler).toFlushAndYieldThrough([
+      '1 [A] [commit]',
+      '1 [B] [commit]',
+      '1 [C] [commit]',
+      '1 [D] [commit]',
+    ]);
+
+    // begin the update after the first one finished
+    expect(Scheduler).toFlushAndYieldThrough(['2 [A] [render]']);
   });
 
   it('should measure expiration times relative to module initialization', () => {
