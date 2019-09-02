@@ -263,6 +263,98 @@ describe('ReactSuspense', () => {
     expect(root).toMatchRenderedOutput('AsyncAfter SuspenseSibling');
   });
 
+  it('interrupts current render if promise resolves between the render and commit phases', () => {
+    let didResolve = false;
+    let listeners = [];
+
+    const thenable = {
+      then(resolve) {
+        if (!didResolve) {
+          listeners.push(resolve);
+        } else {
+          resolve();
+        }
+      },
+    };
+
+    function resolveThenable() {
+      didResolve = true;
+      listeners.forEach(l => l());
+    }
+
+    function Async() {
+      if (!didResolve) {
+        Scheduler.unstable_yieldValue('Suspend!');
+        throw thenable;
+      }
+      Scheduler.unstable_yieldValue('Async');
+      return 'Async';
+    }
+
+    const root = ReactTestRenderer.create(
+      <>
+        <Suspense fallback={<Text text="Loading..." />}>
+          <Async />
+        </Suspense>
+        <Text text="Initial" />
+        <Text text="Sibling" />
+      </>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+    expect(Scheduler).toFlushAndYieldThrough([
+      'Suspend!',
+      'Loading...',
+      'Initial',
+      'Sibling',
+    ]);
+    expect(root).toMatchRenderedOutput(null);
+
+    // this is really convoluted, but some way to interleave code between the
+    // continuation being yielded and it getting evaluated is required
+    //
+    // that is something that _can_ happen on the real scheduler, if:
+    // - the frame time budget expires while the last ReactFiberWorkLoop.workLoop
+    //   is evaluated
+    // - the workLoop yielded its commitRoot continuation, which doesn't get
+    //   evaluated as the Scheduler.workLoop ran out of time
+    // - _all_ pending thenables settled between this yielding and the next
+    //   frame
+    //
+    // but there doesn't seem to be a way to simulate it on the mock scheduler,
+    // other than this brute force approach.
+
+    // setting this to false makes the test pass
+    const interleave = true;
+
+    const cb = Scheduler.unstable_getFirstCallbackNode().callback;
+    Scheduler.unstable_getFirstCallbackNode().callback = (...args) => {
+      const next = cb(...args);
+      return () => {
+        // the thenable resolves after reconciliation, but before commit
+        // the continuation should be bound to commitRoot but we can't
+        // assert on that
+        if (interleave) {
+          resolveThenable();
+          Scheduler.unstable_yieldValue('Resolved');
+        }
+        return next();
+      };
+    };
+    // if this resolveThenable runs instead, all is fine
+    if (!interleave) {
+      // it's ok to have this run as well, to finish the first commit:
+      // expect(Scheduler).toFlushWithoutYielding();
+      resolveThenable();
+    } else {
+      expect(Scheduler).toFlushAndYieldThrough(['Resolved']);
+    }
+
+    expect(Scheduler).toFlushAndYield(['Async']);
+    expect(root).toMatchRenderedOutput('AsyncInitialSibling');
+  });
+
   it('mounts a lazy class component in non-concurrent mode', async () => {
     class Class extends React.Component {
       componentDidMount() {
