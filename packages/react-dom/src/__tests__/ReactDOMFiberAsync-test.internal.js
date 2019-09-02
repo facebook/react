@@ -124,7 +124,7 @@ describe('ReactDOMFiberAsync', () => {
       expect(container.textContent).toEqual('Bye');
     });
 
-    it('deep updates (setState) are oncurrent', () => {
+    it('deep updates (setState) are concurrent', () => {
       let instance;
       class Component extends React.Component {
         state = {step: 0};
