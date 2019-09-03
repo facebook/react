@@ -92,6 +92,38 @@ describe('Keyboard event responder', () => {
     });
   });
 
+  describe('preventKeys', () => {
+    let onKeyDown, ref;
+
+    beforeEach(() => {
+      onKeyDown = jest.fn();
+      ref = React.createRef();
+      const Component = () => {
+        const listener = useKeyboard({
+          onKeyDown,
+          preventKeys: ['Tab'],
+        });
+        return <div ref={ref} listeners={listener} />;
+      };
+      ReactDOM.render(<Component />, container);
+    });
+
+    it('onKeyDown is default prevented', () => {
+      const preventDefault = jest.fn();
+      const target = createEventTarget(ref.current);
+      target.keydown({key: 'Tab', preventDefault});
+      expect(onKeyDown).toHaveBeenCalledTimes(1);
+      expect(preventDefault).toBeCalled();
+      expect(onKeyDown).toHaveBeenCalledWith(
+        expect.objectContaining({
+          key: 'Tab',
+          type: 'keydown',
+          defaultPrevented: true,
+        }),
+      );
+    });
+  });
+
   describe('onKeyUp', () => {
     let onKeyDown, onKeyUp, ref;
 
