@@ -235,7 +235,7 @@ const hoverResponderImpl = {
       // START
       case 'pointerover': {
         if (!state.isHovered && pointerType !== 'touch') {
-          state.hoverTarget = event.responderTarget;
+          state.hoverTarget = context.getCurrentTarget();
           dispatchHoverStartEvents(event, context, props, state);
         }
         break;
@@ -295,7 +295,7 @@ const hoverResponderFallbackImpl = {
       // START
       case 'mouseover': {
         if (!state.isHovered && !state.ignoreEmulatedMouseEvents) {
-          state.hoverTarget = event.responderTarget;
+          state.hoverTarget = context.getCurrentTarget();
           dispatchHoverStartEvents(event, context, props, state);
         }
         break;

@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {HostComponent} from 'shared/ReactWorkTags';
+import {HostComponent, ScopeComponent} from 'shared/ReactWorkTags';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import {
   batchedEventUpdates,
@@ -52,6 +52,7 @@ type ResponderTimer = {|
   instance: ReactNativeEventResponderInstance,
   func: () => void,
   id: number,
+  targetFiber: Fiber | null,
   timeStamp: number,
 |};
 
@@ -77,6 +78,7 @@ let currentTimeStamp = 0;
 let currentTimers = new Map();
 let currentInstance: null | ReactNativeEventResponderInstance = null;
 let currentTimerIDCounter = 0;
+let currentTargetFiber: Fiber | null = null;
 
 const eventResponderContext: ReactNativeResponderContext = {
   dispatchEvent(
@@ -196,6 +198,7 @@ const eventResponderContext: ReactNativeResponderContext = {
       instance: ((currentInstance: any): ReactNativeEventResponderInstance),
       func,
       id: timerId,
+      targetFiber: currentTargetFiber,
       timeStamp: currentTimeStamp,
     });
     activeTimeouts.set(timerId, timeout);
@@ -216,6 +219,24 @@ const eventResponderContext: ReactNativeResponderContext = {
   getTimeStamp(): number {
     validateResponderContext();
     return currentTimeStamp;
+  },
+  getCurrentTarget(): ReactNativeEventTarget | null {
+    validateResponderContext();
+    const responderFiber = ((currentInstance: any): ReactNativeEventResponderInstance)
+      .fiber;
+    let fiber = currentTargetFiber;
+    let currentTarget = null;
+
+    while (fiber !== null) {
+      if (fiber.tag === HostComponent) {
+        currentTarget = fiber.stateNode;
+      }
+      if (fiber === responderFiber || fiber.alternate === responderFiber) {
+        break;
+      }
+      fiber = fiber.return;
+    }
+    return currentTarget;
   },
 };
 
@@ -287,8 +308,9 @@ function processTimers(
   try {
     batchedEventUpdates(() => {
       for (let i = 0; i < timersArr.length; i++) {
-        const {instance, func, id, timeStamp} = timersArr[i];
+        const {instance, func, id, targetFiber, timeStamp} = timersArr[i];
         currentInstance = instance;
+        currentTargetFiber = targetFiber;
         currentTimeStamp = timeStamp + delay;
         try {
           func();
@@ -301,6 +323,7 @@ function processTimers(
     currentTimers = null;
     currentInstance = null;
     currentTimeStamp = 0;
+    currentTargetFiber = null;
   }
 }
 
@@ -311,7 +334,6 @@ function createFabricResponderEvent(
 ): ReactNativeResponderEvent {
   return {
     nativeEvent,
-    responderTarget: target,
     target,
     type: topLevelType,
   };
@@ -373,13 +395,16 @@ function traverseAndHandleEventResponderInstances(
   let node = targetFiber;
   while (node !== null) {
     const {dependencies, tag} = node;
-    if (tag === HostComponent && dependencies !== null) {
+    if (
+      (tag === HostComponent || tag === ScopeComponent) &&
+      dependencies !== null
+    ) {
       const respondersMap = dependencies.responders;
       if (respondersMap !== null) {
         const responderInstances = Array.from(respondersMap.values());
         for (let i = 0, length = responderInstances.length; i < length; i++) {
           const responderInstance = responderInstances[i];
-          const {props, responder, state, target} = responderInstance;
+          const {props, responder, state} = responderInstance;
           if (
             !visitedResponders.has(responder) &&
             validateResponderTargetEventTypes(eventType, responder)
@@ -388,7 +413,6 @@ function traverseAndHandleEventResponderInstances(
             visitedResponders.add(responder);
             if (onEvent !== null) {
               currentInstance = responderInstance;
-              responderEvent.responderTarget = ((target: any): ReactNativeEventTarget);
               onEvent(responderEvent, eventResponderContext, props, state);
             }
           }
@@ -406,11 +430,10 @@ function traverseAndHandleEventResponderInstances(
 
     for (let i = 0; i < responderInstances.length; i++) {
       const responderInstance = responderInstances[i];
-      const {props, responder, state, target} = responderInstance;
+      const {props, responder, state} = responderInstance;
       const onRootEvent = responder.onRootEvent;
       if (onRootEvent !== null) {
         currentInstance = responderInstance;
-        responderEvent.responderTarget = ((target: any): ReactNativeEventTarget);
         onRootEvent(responderEvent, eventResponderContext, props, state);
       }
     }
@@ -427,7 +450,9 @@ export function dispatchEventForResponderEventSystem(
   const previousInstance = currentInstance;
   const previousTimers = currentTimers;
   const previousTimeStamp = currentTimeStamp;
+  const previousTargetFiber = currentTargetFiber;
   currentTimers = null;
+  currentTargetFiber = targetFiber;
   // We might want to control timeStamp another way here
   currentTimeStamp = Date.now();
   try {
@@ -442,6 +467,7 @@ export function dispatchEventForResponderEventSystem(
     currentTimers = previousTimers;
     currentInstance = previousInstance;
     currentTimeStamp = previousTimeStamp;
+    currentTargetFiber = previousTargetFiber;
   }
 }
 

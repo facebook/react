@@ -127,7 +127,6 @@ function createKeyboardEvent(
   event: ReactDOMResponderEvent,
   context: ReactDOMResponderContext,
   type: KeyboardEventType,
-  target: Document | Element,
 ): KeyboardEvent {
   const nativeEvent = (event: any).nativeEvent;
   const {
@@ -139,6 +138,7 @@ function createKeyboardEvent(
     repeat,
     shiftKey,
   } = nativeEvent;
+  const target = ((context.getCurrentTarget(): any): Element);
 
   return {
     altKey,
@@ -160,9 +160,8 @@ function dispatchKeyboardEvent(
   listener: KeyboardEvent => void,
   context: ReactDOMResponderContext,
   type: KeyboardEventType,
-  target: Element | Document,
 ): void {
-  const syntheticEvent = createKeyboardEvent(event, context, type, target);
+  const syntheticEvent = createKeyboardEvent(event, context, type);
   context.dispatchEvent(syntheticEvent, listener, DiscreteEvent);
 }
 
@@ -173,7 +172,7 @@ const keyboardResponderImpl = {
     context: ReactDOMResponderContext,
     props: KeyboardProps,
   ): void {
-    const {responderTarget, type} = event;
+    const {type} = event;
 
     if (props.disabled) {
       return;
@@ -181,24 +180,12 @@ const keyboardResponderImpl = {
     if (type === 'keydown') {
       const onKeyDown = props.onKeyDown;
       if (isFunction(onKeyDown)) {
-        dispatchKeyboardEvent(
-          event,
-          onKeyDown,
-          context,
-          'keydown',
-          ((responderTarget: any): Element | Document),
-        );
+        dispatchKeyboardEvent(event, onKeyDown, context, 'keydown');
       }
     } else if (type === 'keyup') {
       const onKeyUp = props.onKeyUp;
       if (isFunction(onKeyUp)) {
-        dispatchKeyboardEvent(
-          event,
-          onKeyUp,
-          context,
-          'keyup',
-          ((responderTarget: any): Element | Document),
-        );
+        dispatchKeyboardEvent(event, onKeyUp, context, 'keyup');
       }
     }
   },
