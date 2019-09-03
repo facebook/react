@@ -116,7 +116,7 @@ const eventResponderContext: ReactDOMResponderContext = {
       }
     }
   },
-  isTargetWithinResponder(target: Element | Document): boolean {
+  isTargetWithinResponder(target: null | Element | Document): boolean {
     validateResponderContext();
     if (target != null) {
       let fiber = getClosestInstanceFromNode(target);
@@ -132,7 +132,7 @@ const eventResponderContext: ReactDOMResponderContext = {
     }
     return false;
   },
-  isTargetWithinResponderScope(target: Element | Document): boolean {
+  isTargetWithinResponderScope(target: null | Element | Document): boolean {
     validateResponderContext();
     const componentInstance = ((currentInstance: any): ReactDOMEventResponderInstance);
     const responder = componentInstance.responder;
@@ -155,7 +155,7 @@ const eventResponderContext: ReactDOMResponderContext = {
     return false;
   },
   isTargetWithinNode(
-    childTarget: Element | Document,
+    childTarget: null | Element | Document,
     parentTarget: Element | Document,
   ): boolean {
     validateResponderContext();
@@ -380,7 +380,6 @@ function processTimers(
 
 function createDOMResponderEvent(
   topLevelType: string,
-  responderTarget: Element,
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: Element | Document,
   passive: boolean,
@@ -388,11 +387,9 @@ function createDOMResponderEvent(
 ): ReactDOMResponderEvent {
   const {buttons, pointerType} = (nativeEvent: any);
   let eventPointerType = '';
-  let pointerId = null;
 
   if (pointerType !== undefined) {
     eventPointerType = pointerType;
-    pointerId = (nativeEvent: any).pointerId;
   } else if (nativeEvent.key !== undefined) {
     eventPointerType = 'keyboard';
   } else if (buttons !== undefined) {
@@ -405,7 +402,6 @@ function createDOMResponderEvent(
     nativeEvent: nativeEvent,
     passive,
     passiveSupported,
-    pointerId,
     pointerType: eventPointerType,
     target: nativeEventTarget,
     type: topLevelType,

@@ -245,6 +245,7 @@ function createTouchEvent(type, payload) {
       pageX,
       pageY,
       pointerId = 1,
+      pressure = 1,
       twist = 0,
       width = defaultPointerSize,
       x = 0,
@@ -253,7 +254,7 @@ function createTouchEvent(type, payload) {
       return {
         clientX: x,
         clientY: y,
-        force: 1,
+        force: pressure,
         identifier: pointerId,
         pageX: pageX || x,
         pageY: pageY || y,

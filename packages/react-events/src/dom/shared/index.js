@@ -10,6 +10,10 @@
 'use strict';
 
 import {DiscreteEvent, UserBlockingEvent} from 'shared/ReactTypes';
+import type {
+  ReactDOMResponderContext,
+  ReactDOMResponderEvent,
+} from 'shared/ReactDOMTypes';
 
 export const hasPointerEvents =
   typeof window !== 'undefined' && window.PointerEvent !== undefined;
@@ -27,16 +31,16 @@ export const buttonsEnum = {
 };
 
 export function dispatchDiscreteEvent(
-  context,
-  payload: any,
+  context: ReactDOMResponderContext,
+  payload: ReactDOMResponderEvent,
   callback: any => void,
 ) {
   context.dispatchEvent(payload, callback, DiscreteEvent);
 }
 
 export function dispatchUserBlockingEvent(
-  context,
-  payload: any,
+  context: ReactDOMResponderContext,
+  payload: ReactDOMResponderEvent,
   callback: any => void,
 ) {
   context.dispatchEvent(payload, callback, UserBlockingEvent);

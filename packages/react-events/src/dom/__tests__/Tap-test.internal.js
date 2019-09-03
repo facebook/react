@@ -197,6 +197,24 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       );
     });
 
+    test('second pointer down', () => {
+      const pointerType = 'touch';
+      const target = createEventTarget(ref.current);
+      const buttons = buttonsType.primary;
+      target.pointerdown({buttons, pointerId: 1, pointerType});
+      expect(onTapStart).toHaveBeenCalledTimes(1);
+      if (hasPointerEvents) {
+        target.pointerdown({buttons, pointerId: 2, pointerType});
+      } else {
+        // TouchEvents
+        target.pointerdown([
+          {pointerId: 1, pointerType},
+          {pointerId: 2, pointerType},
+        ]);
+      }
+      expect(onTapStart).toHaveBeenCalledTimes(1);
+    });
+
     test('primary-button pointer down', () => {
       const pointerType = 'mouse';
       const buttons = buttonsType.primary;
@@ -228,16 +246,6 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       target.pointerdown({buttons: buttonsType.eraser});
       target.pointerup();
       expect(onTapStart).toHaveBeenCalledTimes(0);
-    });
-
-    test('second pointer', () => {
-      const pointerType = 'mouse';
-      const buttons = buttonsType.primary;
-      const target = createEventTarget(ref.current);
-      target.pointerdown({buttons, pointerId: 1, pointerType});
-      expect(onTapStart).toHaveBeenCalledTimes(1);
-      target.pointerdown({buttons, pointerId: 2, pointerType});
-      expect(onTapStart).toHaveBeenCalledTimes(1);
     });
   });
 

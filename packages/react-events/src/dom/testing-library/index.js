@@ -75,7 +75,7 @@ const createEventTarget = node => ({
   pointerenter(payload) {
     domEventSequences.pointerenter(node, payload);
   },
-  // node dispatches exit & keave events
+  // node dispatches exit & leave events
   pointerexit(payload) {
     domEventSequences.pointerexit(node, payload);
   },
