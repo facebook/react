@@ -42,6 +42,7 @@ type KeyboardEvent = {|
 
 const isArray = Array.isArray;
 const targetEventTypes = ['keydown_active', 'keyup'];
+const modifiers = ['altKey', 'ctrlKey', 'metaKey', 'shiftKey'];
 
 /**
  * Normalization of deprecated HTML5 `key` values
@@ -185,21 +186,36 @@ const keyboardResponderImpl = {
     context: ReactDOMResponderContext,
     props: KeyboardProps,
   ): void {
-    const {nativeEvent, responderTarget, type} = event;
+    const {responderTarget, type} = event;
+    const nativeEvent: any = event.nativeEvent;
 
     if (props.disabled) {
       return;
     }
-    let defaultPrevented = (nativeEvent: any).defaultPrevented === true;
+    let defaultPrevented = nativeEvent.defaultPrevented === true;
     if (type === 'keydown') {
       const preventKeys = props.preventKeys;
       if (!defaultPrevented && isArray(preventKeys)) {
-        for (let i = 0; i < preventKeys.length; i++) {
-          const key = preventKeys[i];
+        preventKeyLoop: for (let i = 0; i < preventKeys.length; i++) {
+          const preventKey = preventKeys[i];
+          let key = preventKey;
 
-          if (key === getEventKey((nativeEvent: any))) {
+          if (isArray(preventKey)) {
+            key = preventKey[0];
+            const config = ((preventKey[1]: any): Object);
+            for (let s = 0; s < modifiers.length; s++) {
+              const modifier = modifiers[s];
+              if (
+                (config[modifier] && !nativeEvent[modifier]) ||
+                (!config[modifier] && nativeEvent[modifier])
+              ) {
+                continue preventKeyLoop;
+              }
+            }
+          }
+          if (key === getEventKey(nativeEvent)) {
             defaultPrevented = true;
-            (nativeEvent: any).preventDefault();
+            nativeEvent.preventDefault();
             break;
           }
         }
