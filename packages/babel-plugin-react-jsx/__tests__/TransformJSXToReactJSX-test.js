@@ -41,32 +41,25 @@ function transform(input, pluginOpts, babelOpts) {
 
 describe('transform react to jsx', () => {
   it('throws error when sourceType is module and autoImport is require', () => {
-    let _error;
     const code = `var x = <div><span /></div>`;
-    try {
+    expect(() => {
       transform(code, {
         autoImport: 'require',
       });
-    } catch (error) {
-      _error = error;
-    }
-    expect(_error).toEqual(
-      new SyntaxError(
-        'undefined: Babel `sourceType` must be set to `script` for autoImport ' +
-          'to use `require` syntax. See Babel `sourceType` for details.\n' +
-          codeFrame.codeFrameColumns(
-            code,
-            {start: {line: 1, column: 1}},
-            {highlightCode: true}
-          )
-      )
+    }).toThrow(
+      'Babel `sourceType` must be set to `script` for autoImport ' +
+        'to use `require` syntax. See Babel `sourceType` for details.\n' +
+        codeFrame.codeFrameColumns(
+          code,
+          {start: {line: 1, column: 1}},
+          {highlightCode: true}
+        )
     );
   });
 
   it('throws error when sourceType is script and autoImport is not require', () => {
-    let _error;
     const code = `var x = <div><span /></div>`;
-    try {
+    expect(() => {
       transform(
         code,
         {
@@ -74,65 +67,48 @@ describe('transform react to jsx', () => {
         },
         {sourceType: 'script'}
       );
-    } catch (error) {
-      _error = error;
-    }
-    expect(_error).toEqual(
-      new SyntaxError(
-        'undefined: Babel `sourceType` must be set to `module` for autoImport ' +
-          'to use `namespace` syntax. See Babel `sourceType` for details.\n' +
-          codeFrame.codeFrameColumns(
-            code,
-            {start: {line: 1, column: 1}},
-            {highlightCode: true}
-          )
-      )
+    }).toThrow(
+      'Babel `sourceType` must be set to `module` for autoImport ' +
+        'to use `namespace` syntax. See Babel `sourceType` for details.\n' +
+        codeFrame.codeFrameColumns(
+          code,
+          {start: {line: 1, column: 1}},
+          {highlightCode: true}
+        )
     );
   });
 
   it("auto import that doesn't exist should throw error", () => {
-    let _error;
     const code = `var x = <div><span /></div>`;
-    try {
+    expect(() => {
       transform(code, {
         autoImport: 'foo',
       });
-    } catch (error) {
-      _error = error;
-    }
-    expect(_error).toEqual(
-      new SyntaxError(
-        'undefined: autoImport must be one of the following: none, require, namespace, default, namedExports\n' +
-          codeFrame.codeFrameColumns(
-            code,
-            {start: {line: 1, column: 1}},
-            {highlightCode: true}
-          )
-      )
+    }).toThrow(
+      'autoImport must be one of the following: none, require, namespace, default, namedExports\n' +
+        codeFrame.codeFrameColumns(
+          code,
+          {start: {line: 1, column: 1}},
+          {highlightCode: true}
+        )
     );
   });
 
   it('cannot use autoImport with createElement', () => {
-    let _error;
     const code = `var x = <div><span /></div>`;
-    try {
+    expect(() => {
       transform(code, {
         autoImport: 'namespace',
         useCreateElement: true,
       });
-    } catch (error) {
-      _error = error;
-    }
-    expect(_error).toEqual(
-      new SyntaxError(
-        'undefined: auto importing cannot be used with createElement. Consider setting ' +
-          '`useCreateElement` to false to use the new jsx function instead\n' +
-          codeFrame.codeFrameColumns(
-            code,
-            {start: {line: 1, column: 1}},
-            {highlightCode: true}
-          )
-      )
+    }).toThrow(
+      'autoImport cannot be used with createElement. Consider setting ' +
+        '`useCreateElement` to `false` to use the new `jsx` function instead\n' +
+        codeFrame.codeFrameColumns(
+          code,
+          {start: {line: 1, column: 1}},
+          {highlightCode: true}
+        )
     );
   });
 
@@ -576,23 +552,15 @@ describe('transform react to jsx', () => {
   });
 
   it('should disallow spread children', () => {
-    let _error;
     const code = `<div>{...children}</div>;`;
-    try {
-      transform(code);
-    } catch (error) {
-      _error = error;
-    }
-    expect(_error).toEqual(
-      new SyntaxError(
-        'undefined: Spread children are not supported in React.' +
-          '\n' +
-          codeFrame.codeFrameColumns(
-            code,
-            {start: {line: 1, column: 6}},
-            {highlightCode: true}
-          )
-      )
+    expect(() => transform(code)).toThrow(
+      'Spread children are not supported in React.' +
+        '\n' +
+        codeFrame.codeFrameColumns(
+          code,
+          {start: {line: 1, column: 6}},
+          {highlightCode: true}
+        )
     );
   });
 
@@ -730,25 +698,17 @@ describe('transform react to jsx', () => {
   });
 
   it('should throw error namespaces if not flag', () => {
-    let _error;
     const code = `<f:image />`;
-    try {
-      transform(code);
-    } catch (error) {
-      _error = error;
-    }
-    expect(_error).toEqual(
-      new SyntaxError(
-        "undefined: Namespace tags are not supported by default. React's " +
-          "JSX doesn't support namespace tags. You can turn on the " +
-          "'throwIfNamespace' flag to bypass this warning." +
-          '\n' +
-          codeFrame.codeFrameColumns(
-            code,
-            {start: {line: 1, column: 2}},
-            {highlightCode: true}
-          )
-      )
+    expect(() => transform(code)).toThrow(
+      "Namespace tags are not supported by default. React's " +
+        "JSX doesn't support namespace tags. You can turn on the " +
+        "'throwIfNamespace' flag to bypass this warning." +
+        '\n' +
+        codeFrame.codeFrameColumns(
+          code,
+          {start: {line: 1, column: 2}},
+          {highlightCode: true}
+        )
     );
   });
 

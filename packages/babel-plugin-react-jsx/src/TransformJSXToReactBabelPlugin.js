@@ -24,11 +24,12 @@
 'use strict';
 
 const esutils = require('esutils');
-const helperModuleImports = require('@babel/helper-module-imports');
-const isModule = helperModuleImports.isModule;
-const addNamespace = helperModuleImports.addNamespace;
-const addNamed = helperModuleImports.addNamed;
-const addDefault = helperModuleImports.addDefault;
+const {
+  isModule,
+  addNamespace,
+  addNamed,
+  addDefault,
+} = require('@babel/helper-module-imports');
 
 // These are all the valid auto import types (under the config autoImport)
 // that a user can specific
@@ -45,16 +46,20 @@ const IMPORT_TYPES = {
 // from <div key={key} {...props} />. This is an intermediary
 // step while we deprecate key spread from props. Afterwards,
 // we will remove createElement entirely
-function shouldUseCreateElement(path, t) {
+function shouldUseCreateElement(path, types) {
   const openingPath = path.get('openingElement');
   const attributes = openingPath.node.attributes;
 
   let seenPropsSpread = false;
   for (let i = 0; i < attributes.length; i++) {
     const attr = attributes[i];
-    if (seenPropsSpread && t.isJSXAttribute(attr) && attr.name.name === 'key') {
+    if (
+      seenPropsSpread &&
+      types.isJSXAttribute(attr) &&
+      attr.name.name === 'key'
+    ) {
       return true;
-    } else if (t.isJSXSpreadAttribute(attr)) {
+    } else if (types.isJSXSpreadAttribute(attr)) {
       seenPropsSpread = true;
     }
   }
@@ -638,8 +643,8 @@ module.exports = function(babel) {
     }
     if (state.useCreateElement) {
       throw path.buildCodeFrameError(
-        'auto importing cannot be used with createElement. Consider setting ' +
-          '`useCreateElement` to false to use the new jsx function instead',
+        'autoImport cannot be used with createElement. Consider setting ' +
+          '`useCreateElement` to `false` to use the new `jsx` function instead',
       );
     }
     if (state.autoImport === IMPORT_TYPES.require && isModule(path)) {
