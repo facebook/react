@@ -178,7 +178,11 @@ export function serializeHooksForCopy(hooks: HooksTree | null): string {
 // Without this, we would see a "Download failed: network error" failure.
 let downloadUrl = null;
 
-export function downloadFile(filename: string, text: string): void {
+export function downloadFile(
+  element: HTMLAnchorElement,
+  filename: string,
+  text: string,
+): void {
   const blob = new Blob([text], {type: 'text/plain;charset=utf-8'});
 
   if (downloadUrl !== null) {
@@ -187,15 +191,10 @@ export function downloadFile(filename: string, text: string): void {
 
   downloadUrl = URL.createObjectURL(blob);
 
-  const element = document.createElement('a');
   element.setAttribute('href', downloadUrl);
   element.setAttribute('download', filename);
-  element.style.display = 'none';
-  ((document.body: any): HTMLBodyElement).appendChild(element);
 
   element.click();
-
-  ((document.body: any): HTMLBodyElement).removeChild(element);
 }
 
 export function truncateText(text: string, maxLength: number): string {
