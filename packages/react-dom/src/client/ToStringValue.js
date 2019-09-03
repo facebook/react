@@ -38,32 +38,18 @@ export function getToStringValue(value: mixed): ToStringValue {
 
 /**
  * Returns true only if Trusted Types are available in global object and the value is a trusted type.
- *
- * Trusted Types undergo a change where window.TrustedTypes was renamed to window.trustedTypes
- * (https://github.com/WICG/trusted-types/pull/205).
  */
-function isTrustedTypesValue(value: any): boolean {
-  // $FlowExpectedError - TrustedTypes are defined only in some browsers or with polyfill
-  if (typeof TrustedTypes !== 'undefined') {
-    return (
-      TrustedTypes.isHTML(value) ||
-      TrustedTypes.isScript(value) ||
-      TrustedTypes.isScriptURL(value) ||
-      // TrustedURLs are deprecated and will be removed soon: https://github.com/WICG/trusted-types/pull/204
-      (TrustedTypes.isURL && TrustedTypes.isURL(value))
-    );
-    // $FlowExpectedError - trustedTypes are defined only in some browsers or with polyfill
-  } else if (typeof trustedTypes !== 'undefined') {
-    return (
-      trustedTypes.isHTML(value) ||
-      trustedTypes.isScript(value) ||
-      trustedTypes.isScriptURL(value) ||
-      // TrustedURLs are deprecated and will be removed soon: https://github.com/WICG/trusted-types/pull/204
-      (trustedTypes.isURL && trustedTypes.isURL(value))
-    );
-  } else {
-    return false;
-  }
+let isTrustedTypesValue: (value: any) => boolean;
+// $FlowExpectedError - TrustedTypes are defined only in some browsers or with polyfill
+if (typeof trustedTypes !== 'undefined') {
+  isTrustedTypesValue = (value: any) =>
+    trustedTypes.isHTML(value) ||
+    trustedTypes.isScript(value) ||
+    trustedTypes.isScriptURL(value) ||
+    // TrustedURLs are deprecated and will be removed soon: https://github.com/WICG/trusted-types/pull/204
+    (trustedTypes.isURL && trustedTypes.isURL(value));
+} else {
+  isTrustedTypesValue = () => false;
 }
 
 /** Trusted value is a wrapper for "safe" values which can be assigned to DOM execution sinks. */
@@ -76,7 +62,7 @@ export opaque type TrustedValue: {toString(): string} = {toString(): string};
  *
  * If application uses Trusted Types we don't stringify trusted values, but preserve them as objects.
  */
-export function trustedTypesAwareToString(value: any): string | TrustedValue {
+export function toStringOrTrustedType(value: any): string | TrustedValue {
   // fast-path string values as it's most frequent usage of the function
   if (typeof value !== 'string' && isTrustedTypesValue(value)) {
     return value;

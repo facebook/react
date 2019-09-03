@@ -23,7 +23,6 @@ module.exports = {
     setImmediate: true,
     Buffer: true,
     // Trusted Types
-    TrustedTypes: true,
     trustedTypes: true,
 
     // Scheduler profiling

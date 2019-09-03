@@ -25,7 +25,6 @@ module.exports = {
     require: true,
     global: true,
     // Trusted Types
-    TrustedTypes: true,
     trustedTypes: true,
 
     // Scheduler profiling

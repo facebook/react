@@ -22,7 +22,6 @@ module.exports = {
     // for more information
     nativeFabricUIManager: true,
     // Trusted Types
-    TrustedTypes: true,
     trustedTypes: true,
 
     // Scheduler profiling

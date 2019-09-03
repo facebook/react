@@ -85,7 +85,7 @@ import possibleStandardNames from '../shared/possibleStandardNames';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
-import {trustedTypesAwareToString} from './ToStringValue';
+import {toStringOrTrustedType} from './ToStringValue';
 
 import {enableFlareAPI} from 'shared/ReactFeatureFlags';
 
@@ -787,7 +787,7 @@ export function diffProperties(
         if (lastHtml !== nextHtml) {
           (updatePayload = updatePayload || []).push(
             propKey,
-            trustedTypesAwareToString(nextHtml),
+            toStringOrTrustedType(nextHtml),
           );
         }
       } else {

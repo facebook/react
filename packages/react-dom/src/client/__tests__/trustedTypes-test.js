@@ -3,13 +3,13 @@ describe('when Trusted Types are available in global object', () => {
   let ReactDOM;
 
   beforeEach(() => {
-    React = require('react');
-    ReactDOM = require('react-dom');
     window.trustedTypes = {
       isHTML: () => true,
       isScript: () => false,
       isScriptURL: () => false,
     };
+    React = require('react');
+    ReactDOM = require('react-dom');
   });
 
   afterEach(() => {

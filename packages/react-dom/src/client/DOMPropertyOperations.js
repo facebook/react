@@ -16,7 +16,7 @@ import {
   OVERLOADED_BOOLEAN,
 } from '../shared/DOMProperty';
 import sanitizeURL from '../shared/sanitizeURL';
-import {trustedTypesAwareToString} from './ToStringValue';
+import {toStringOrTrustedType} from './ToStringValue';
 import {disableJavaScriptURLs} from 'shared/ReactFeatureFlags';
 import {setAttribute, setAttributeNS} from './setAttribute';
 
@@ -144,7 +144,7 @@ export function setValueForProperty(
       if (value === null) {
         node.removeAttribute(attributeName);
       } else {
-        setAttribute(node, attributeName, trustedTypesAwareToString(value));
+        setAttribute(node, attributeName, toStringOrTrustedType(value));
       }
     }
     return;
@@ -176,7 +176,7 @@ export function setValueForProperty(
     } else {
       // `setAttribute` with objects becomes only `[object]` in IE8/9,
       // ('' + value) makes it output the correct toString()-value.
-      attributeValue = trustedTypesAwareToString(value);
+      attributeValue = toStringOrTrustedType(value);
       if (propertyInfo.sanitizeURL) {
         sanitizeURL('' + attributeValue.toString());
       }
