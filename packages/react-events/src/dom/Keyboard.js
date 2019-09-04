@@ -143,7 +143,6 @@ function createKeyboardEvent(
     repeat,
     shiftKey,
   } = nativeEvent;
-  const target = ((context.getCurrentTarget(): any): Element);
 
   return {
     altKey,
@@ -155,7 +154,7 @@ function createKeyboardEvent(
     metaKey,
     repeat,
     shiftKey,
-    target,
+    target: event.target,
     timeStamp: context.getTimeStamp(),
     type,
   };

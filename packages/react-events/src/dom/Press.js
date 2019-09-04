@@ -582,7 +582,7 @@ const pressResponderImpl = {
           // We set these here, before the button check so we have this
           // data around for handling of the context menu
           state.pointerType = pointerType;
-          const pressTarget = (state.pressTarget = context.getCurrentTarget());
+          const pressTarget = (state.pressTarget = context.getResponderNode());
           if (isPointerEvent) {
             state.activePointerId = pointerId;
           } else if (isTouchEvent) {
@@ -634,7 +634,7 @@ const pressResponderImpl = {
 
         if (isFunction(onPress) && isScreenReaderVirtualClick(nativeEvent)) {
           state.pointerType = 'keyboard';
-          state.pressTarget = context.getCurrentTarget();
+          state.pressTarget = context.getResponderNode();
           const preventDefault = props.preventDefault;
 
           if (preventDefault !== false) {
