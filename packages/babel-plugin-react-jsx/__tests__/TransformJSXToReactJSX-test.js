@@ -85,7 +85,7 @@ describe('transform react to jsx', () => {
         autoImport: 'foo',
       });
     }).toThrow(
-      'autoImport must be one of the following: none, require, namespace, default, namedExports\n' +
+      'autoImport must be one of the following: none, require, namespace, defaultExport, namedExports\n' +
         codeFrame.codeFrameColumns(
           code,
           {start: {line: 1, column: 1}},
@@ -118,6 +118,30 @@ describe('transform react to jsx', () => {
         autoImport: 'namespace',
         importSource: 'foobar',
       })
+    ).toMatchSnapshot();
+  });
+
+  it('auto import require with cached variable', () => {
+    expect(
+      transform(
+        `var x = (
+          <>
+            <div>
+              <div key="1" />
+              <div key="2" meow="wolf" />
+              <div key="3" />
+              <div {...props} key="4" />
+            </div>
+          </>
+        );`,
+        {
+          autoImport: 'require',
+          shouldCacheImportFns: true,
+        },
+        {
+          sourceType: 'script',
+        }
+      )
     ).toMatchSnapshot();
   });
 
@@ -164,6 +188,27 @@ describe('transform react to jsx', () => {
     ).toMatchSnapshot();
   });
 
+  it('auto import namespace with cached variable', () => {
+    expect(
+      transform(
+        `var x = (
+          <>
+            <div>
+              <div key="1" />
+              <div key="2" meow="wolf" />
+              <div key="3" />
+              <div {...props} key="4" />
+            </div>
+          </>
+        );`,
+        {
+          autoImport: 'namespace',
+          shouldCacheImportFns: true,
+        }
+      )
+    ).toMatchSnapshot();
+  });
+
   it('auto import default', () => {
     expect(
       transform(
@@ -178,7 +223,28 @@ describe('transform react to jsx', () => {
           </>
         );`,
         {
-          autoImport: 'default',
+          autoImport: 'defaultExport',
+        }
+      )
+    ).toMatchSnapshot();
+  });
+
+  it('auto import default with cached variable', () => {
+    expect(
+      transform(
+        `var x = (
+          <>
+            <div>
+              <div key="1" />
+              <div key="2" meow="wolf" />
+              <div key="3" />
+              <div {...props} key="4" />
+            </div>
+          </>
+        );`,
+        {
+          autoImport: 'defaultExport',
+          shouldCacheImportFns: true,
         }
       )
     ).toMatchSnapshot();

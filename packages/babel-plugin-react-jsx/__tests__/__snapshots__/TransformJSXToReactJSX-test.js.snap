@@ -60,6 +60,24 @@ var x = _default.jsx(_default.Fragment, {
 });
 `;
 
+exports[`transform react to jsx auto import default with cached variable 1`] = `
+import _default from "react";
+var _createElement = _default.createElement;
+var _jsx = _default.jsx;
+var _jsxs = _default.jsxs;
+var _Fragment = _default.Fragment;
+
+var x = _jsx(_Fragment, {
+  children: _jsxs("div", {
+    children: [_jsx("div", {}, "1"), _jsx("div", {
+      meow: "wolf"
+    }, "2"), _jsx("div", {}, "3"), _createElement("div", Object.assign({}, props, {
+      key: "4"
+    }))]
+  })
+});
+`;
+
 exports[`transform react to jsx auto import in dev 1`] = `
 import { createElement as _createElement } from "react";
 import { jsxDEV as _jsxDEV } from "react";
@@ -125,6 +143,24 @@ var x = _react.jsx(_react.Fragment, {
 });
 `;
 
+exports[`transform react to jsx auto import namespace with cached variable 1`] = `
+import * as _react from "react";
+var _createElement = _react.createElement;
+var _jsx = _react.jsx;
+var _jsxs = _react.jsxs;
+var _Fragment = _react.Fragment;
+
+var x = _jsx(_Fragment, {
+  children: _jsxs("div", {
+    children: [_jsx("div", {}, "1"), _jsx("div", {
+      meow: "wolf"
+    }, "2"), _jsx("div", {}, "3"), _createElement("div", Object.assign({}, props, {
+      key: "4"
+    }))]
+  })
+});
+`;
+
 exports[`transform react to jsx auto import none 1`] = `
 var x = React.jsx(React.Fragment, {
   children: React.jsxs("div", {
@@ -138,15 +174,32 @@ var x = React.jsx(React.Fragment, {
 `;
 
 exports[`transform react to jsx auto import require 1`] = `
-var _react = _interopRequireWildcard(require("react"));
-
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = Object.defineProperty && Object.getOwnPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : {}; if (desc.get || desc.set) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } } newObj.default = obj; return newObj; } }
+var _react = require("react");
 
 var x = _react.jsx(_react.Fragment, {
   children: _react.jsxs("div", {
     children: [_react.jsx("div", {}, "1"), _react.jsx("div", {
       meow: "wolf"
     }, "2"), _react.jsx("div", {}, "3"), _react.createElement("div", Object.assign({}, props, {
+      key: "4"
+    }))]
+  })
+});
+`;
+
+exports[`transform react to jsx auto import require with cached variable 1`] = `
+var _react = require("react");
+
+var _createElement = _react.createElement;
+var _jsx = _react.jsx;
+var _jsxs = _react.jsxs;
+var _Fragment = _react.Fragment;
+
+var x = _jsx(_Fragment, {
+  children: _jsxs("div", {
+    children: [_jsx("div", {}, "1"), _jsx("div", {
+      meow: "wolf"
+    }, "2"), _jsx("div", {}, "3"), _createElement("div", Object.assign({}, props, {
       key: "4"
     }))]
   })
