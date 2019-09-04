@@ -11,8 +11,6 @@ import {
 } from './ReactControlledComponent';
 import {enableFlareAPI} from 'shared/ReactFeatureFlags';
 
-import {invokeGuardedCallbackAndCatchFirstError} from 'shared/ReactErrorUtils';
-
 // Used as a way to call batchedUpdates when we don't have a reference to
 // the renderer. Such as when we're dispatching events or if third party
 // libraries need to call batchedUpdates. Eventually, this API will go away when
