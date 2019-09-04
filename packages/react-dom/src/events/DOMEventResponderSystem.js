@@ -66,7 +66,6 @@ type ResponderTimer = {|
   instance: ReactDOMEventResponderInstance,
   func: () => void,
   id: number,
-  targetFiber: Fiber | null,
   timeStamp: number,
 |};
 
@@ -87,7 +86,6 @@ let currentInstance: null | ReactDOMEventResponderInstance = null;
 let currentTimerIDCounter = 0;
 let currentDocument: null | Document = null;
 let currentPropagationBehavior: PropagationBehavior = DoNotPropagateToNextResponder;
-let currentTargetFiber: null | Fiber = null;
 
 const eventResponderContext: ReactDOMResponderContext = {
   dispatchEvent(
@@ -230,7 +228,6 @@ const eventResponderContext: ReactDOMResponderContext = {
       instance: ((currentInstance: any): ReactDOMEventResponderInstance),
       func,
       id: timerId,
-      targetFiber: currentTargetFiber,
       timeStamp: currentTimeStamp,
     });
     activeTimeouts.set(timerId, timeout);
@@ -273,23 +270,14 @@ const eventResponderContext: ReactDOMResponderContext = {
     currentPropagationBehavior = PropagateToNextResponder;
   },
   enqueueStateRestore,
-  getCurrentTarget(): Element | null {
+  getResponderNode(): Element | null {
     validateResponderContext();
     const responderFiber = ((currentInstance: any): ReactDOMEventResponderInstance)
       .fiber;
-    let fiber = currentTargetFiber;
-    let currentTarget = null;
-
-    while (fiber !== null) {
-      if (fiber.tag === HostComponent) {
-        currentTarget = fiber.stateNode;
-      }
-      if (fiber === responderFiber || fiber.alternate === responderFiber) {
-        break;
-      }
-      fiber = fiber.return;
+    if (responderFiber.tag === ScopeComponent) {
+      return null;
     }
-    return currentTarget;
+    return responderFiber.stateNode;
   },
 };
 
@@ -373,9 +361,8 @@ function processTimers(
   try {
     batchedEventUpdates(() => {
       for (let i = 0; i < timersArr.length; i++) {
-        const {instance, func, id, timeStamp, targetFiber} = timersArr[i];
+        const {instance, func, id, timeStamp} = timersArr[i];
         currentInstance = instance;
-        currentTargetFiber = targetFiber;
         currentTimeStamp = timeStamp + delay;
         try {
           func();
@@ -388,7 +375,6 @@ function processTimers(
     currentTimers = null;
     currentInstance = null;
     currentTimeStamp = 0;
-    currentTargetFiber = null;
   }
 }
 
@@ -599,10 +585,8 @@ export function dispatchEventForResponderEventSystem(
     const previousTimeStamp = currentTimeStamp;
     const previousDocument = currentDocument;
     const previousPropagationBehavior = currentPropagationBehavior;
-    const previousTargetFiber = currentTargetFiber;
     currentPropagationBehavior = DoNotPropagateToNextResponder;
     currentTimers = null;
-    currentTargetFiber = targetFiber;
     // nodeType 9 is DOCUMENT_NODE
     currentDocument =
       (nativeEventTarget: any).nodeType === 9
@@ -626,7 +610,6 @@ export function dispatchEventForResponderEventSystem(
       currentTimeStamp = previousTimeStamp;
       currentDocument = previousDocument;
       currentPropagationBehavior = previousPropagationBehavior;
-      currentTargetFiber = previousTargetFiber;
     }
   }
 }

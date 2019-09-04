@@ -184,7 +184,7 @@ const inputResponderImpl = {
     if (props.disabled) {
       return;
     }
-    const currentTarget = context.getCurrentTarget();
+    const currentTarget = context.getResponderNode();
     if (target !== currentTarget || currentTarget === null) {
       return;
     }

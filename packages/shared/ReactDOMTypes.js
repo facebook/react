@@ -75,5 +75,5 @@ export type ReactDOMResponderContext = {
   continuePropagation(): void,
   // Used for controller components
   enqueueStateRestore(Element | Document): void,
-  getCurrentTarget(): Element | null,
+  getResponderNode(): Element | null,
 };

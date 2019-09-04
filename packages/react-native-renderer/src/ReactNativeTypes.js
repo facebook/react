@@ -219,7 +219,7 @@ export type ReactNativeResponderContext = {
   setTimeout: (func: () => void, timeout: number) => number,
   clearTimeout: (timerId: number) => void,
   getTimeStamp: () => number,
-  getCurrentTarget(): ReactNativeEventTarget | null,
+  getResponderNode(): ReactNativeEventTarget | null,
 };
 
 export type PointerType =

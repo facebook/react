@@ -52,7 +52,6 @@ type ResponderTimer = {|
   instance: ReactNativeEventResponderInstance,
   func: () => void,
   id: number,
-  targetFiber: Fiber | null,
   timeStamp: number,
 |};
 
@@ -78,7 +77,6 @@ let currentTimeStamp = 0;
 let currentTimers = new Map();
 let currentInstance: null | ReactNativeEventResponderInstance = null;
 let currentTimerIDCounter = 0;
-let currentTargetFiber: Fiber | null = null;
 
 const eventResponderContext: ReactNativeResponderContext = {
   dispatchEvent(
@@ -198,7 +196,6 @@ const eventResponderContext: ReactNativeResponderContext = {
       instance: ((currentInstance: any): ReactNativeEventResponderInstance),
       func,
       id: timerId,
-      targetFiber: currentTargetFiber,
       timeStamp: currentTimeStamp,
     });
     activeTimeouts.set(timerId, timeout);
@@ -220,23 +217,14 @@ const eventResponderContext: ReactNativeResponderContext = {
     validateResponderContext();
     return currentTimeStamp;
   },
-  getCurrentTarget(): ReactNativeEventTarget | null {
+  getResponderNode(): ReactNativeEventTarget | null {
     validateResponderContext();
     const responderFiber = ((currentInstance: any): ReactNativeEventResponderInstance)
       .fiber;
-    let fiber = currentTargetFiber;
-    let currentTarget = null;
-
-    while (fiber !== null) {
-      if (fiber.tag === HostComponent) {
-        currentTarget = fiber.stateNode;
-      }
-      if (fiber === responderFiber || fiber.alternate === responderFiber) {
-        break;
-      }
-      fiber = fiber.return;
+    if (responderFiber.tag === ScopeComponent) {
+      return null;
     }
-    return currentTarget;
+    return responderFiber.stateNode;
   },
 };
 
@@ -308,9 +296,8 @@ function processTimers(
   try {
     batchedEventUpdates(() => {
       for (let i = 0; i < timersArr.length; i++) {
-        const {instance, func, id, targetFiber, timeStamp} = timersArr[i];
+        const {instance, func, id, timeStamp} = timersArr[i];
         currentInstance = instance;
-        currentTargetFiber = targetFiber;
         currentTimeStamp = timeStamp + delay;
         try {
           func();
@@ -323,7 +310,6 @@ function processTimers(
     currentTimers = null;
     currentInstance = null;
     currentTimeStamp = 0;
-    currentTargetFiber = null;
   }
 }
 
@@ -450,9 +436,7 @@ export function dispatchEventForResponderEventSystem(
   const previousInstance = currentInstance;
   const previousTimers = currentTimers;
   const previousTimeStamp = currentTimeStamp;
-  const previousTargetFiber = currentTargetFiber;
   currentTimers = null;
-  currentTargetFiber = targetFiber;
   // We might want to control timeStamp another way here
   currentTimeStamp = Date.now();
   try {
@@ -467,7 +451,6 @@ export function dispatchEventForResponderEventSystem(
     currentTimers = previousTimers;
     currentInstance = previousInstance;
     currentTimeStamp = previousTimeStamp;
-    currentTargetFiber = previousTargetFiber;
   }
 }
 
