@@ -251,4 +251,88 @@ describe('Keyboard event responder', () => {
       );
     });
   });
+
+  describe('correctly handles responder propagation', () => {
+    describe('onKeyDown', () => {
+      let onKeyDownInner, onKeyDownOuter, ref;
+
+      function renderPropagationTest(propagates) {
+        onKeyDownInner = jest.fn(() => propagates);
+        onKeyDownOuter = jest.fn();
+        ref = React.createRef();
+        const Component = () => {
+          const listenerInner = useKeyboard({
+            onKeyDown: onKeyDownInner,
+          });
+          const listenerOuter = useKeyboard({
+            onKeyDown: onKeyDownOuter,
+          });
+          return (
+            <div listeners={listenerOuter}>
+              <div ref={ref} listeners={listenerInner} />
+            </div>
+          );
+        };
+        ReactDOM.render(<Component />, container);
+      }
+
+      it('propagates when cb returns true', () => {
+        renderPropagationTest(true);
+        const target = createEventTarget(ref.current);
+        target.keydown();
+        expect(onKeyDownInner).toBeCalled();
+        expect(onKeyDownOuter).toBeCalled();
+      });
+
+      it('does not propagate when cb returns false', () => {
+        renderPropagationTest(false);
+        const target = createEventTarget(ref.current);
+        target.keydown();
+        expect(onKeyDownInner).toBeCalled();
+        expect(onKeyDownOuter).not.toBeCalled();
+      });
+    });
+
+    describe('onKeyUp', () => {
+      let onKeyUpInner, onKeyUpOuter, ref;
+
+      function renderPropagationTest(propagates) {
+        onKeyUpInner = jest.fn(() => propagates);
+        onKeyUpOuter = jest.fn();
+        ref = React.createRef();
+        const Component = () => {
+          const listenerInner = useKeyboard({
+            onKeyUp: onKeyUpInner,
+          });
+          const listenerOuter = useKeyboard({
+            onKeyUp: onKeyUpOuter,
+          });
+          return (
+            <div listeners={listenerOuter}>
+              <div ref={ref} listeners={listenerInner} />
+            </div>
+          );
+        };
+        ReactDOM.render(<Component />, container);
+      }
+
+      it('propagates when cb returns true', () => {
+        renderPropagationTest(true);
+        const target = createEventTarget(ref.current);
+        target.keydown();
+        target.keyup();
+        expect(onKeyUpInner).toBeCalled();
+        expect(onKeyUpOuter).toBeCalled();
+      });
+
+      it('does not propagate when cb returns false', () => {
+        renderPropagationTest(false);
+        const target = createEventTarget(ref.current);
+        target.keydown();
+        target.keyup();
+        expect(onKeyUpInner).toBeCalled();
+        expect(onKeyUpOuter).not.toBeCalled();
+      });
+    });
+  });
 });

@@ -73,6 +73,7 @@ export type ReactDOMResponderContext = {
     target: Element | Document,
     elementType: string,
   ) => boolean,
+  continuePropagation(): void,
   // Used for controller components
   enqueueStateRestore(Element | Document): void,
 };
