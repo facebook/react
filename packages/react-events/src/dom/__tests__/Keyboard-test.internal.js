@@ -92,6 +92,134 @@ describe('Keyboard event responder', () => {
     });
   });
 
+  describe('preventKeys', () => {
+    it('onKeyDown is default prevented', () => {
+      const onKeyDown = jest.fn();
+      const ref = React.createRef();
+      const Component = () => {
+        const listener = useKeyboard({
+          onKeyDown,
+          preventKeys: ['Tab'],
+        });
+        return <div ref={ref} listeners={listener} />;
+      };
+      ReactDOM.render(<Component />, container);
+
+      const preventDefault = jest.fn();
+      const target = createEventTarget(ref.current);
+      target.keydown({key: 'Tab', preventDefault});
+      expect(onKeyDown).toHaveBeenCalledTimes(1);
+      expect(preventDefault).toBeCalled();
+      expect(onKeyDown).toHaveBeenCalledWith(
+        expect.objectContaining({
+          key: 'Tab',
+          type: 'keydown',
+          defaultPrevented: true,
+        }),
+      );
+    });
+
+    it('onKeyDown is default prevented (falsy modifier keys)', () => {
+      let onKeyDown = jest.fn();
+      let ref = React.createRef();
+      let Component = () => {
+        const listener = useKeyboard({
+          onKeyDown,
+          preventKeys: [['Tab', {metaKey: false}]],
+        });
+        return <div ref={ref} listeners={listener} />;
+      };
+      ReactDOM.render(<Component />, container);
+
+      let preventDefault = jest.fn();
+      let target = createEventTarget(ref.current);
+      target.keydown({key: 'Tab', preventDefault, metaKey: true});
+      expect(onKeyDown).toHaveBeenCalledTimes(1);
+      expect(preventDefault).not.toBeCalled();
+      expect(onKeyDown).toHaveBeenCalledWith(
+        expect.objectContaining({
+          key: 'Tab',
+          type: 'keydown',
+          defaultPrevented: false,
+        }),
+      );
+
+      onKeyDown = jest.fn();
+      ref = React.createRef();
+      Component = () => {
+        const listener = useKeyboard({
+          onKeyDown,
+          preventKeys: [['Tab', {metaKey: true}]],
+        });
+        return <div ref={ref} listeners={listener} />;
+      };
+      ReactDOM.render(<Component />, container);
+
+      preventDefault = jest.fn();
+      target = createEventTarget(ref.current);
+      target.keydown({key: 'Tab', preventDefault, metaKey: false});
+      expect(onKeyDown).toHaveBeenCalledTimes(1);
+      expect(preventDefault).not.toBeCalled();
+      expect(onKeyDown).toHaveBeenCalledWith(
+        expect.objectContaining({
+          key: 'Tab',
+          type: 'keydown',
+          defaultPrevented: false,
+        }),
+      );
+    });
+
+    it('onKeyDown is default prevented (truthy modifier keys)', () => {
+      let onKeyDown = jest.fn();
+      let ref = React.createRef();
+      let Component = () => {
+        const listener = useKeyboard({
+          onKeyDown,
+          preventKeys: [['Tab', {metaKey: true}]],
+        });
+        return <div ref={ref} listeners={listener} />;
+      };
+      ReactDOM.render(<Component />, container);
+
+      let preventDefault = jest.fn();
+      let target = createEventTarget(ref.current);
+      target.keydown({key: 'Tab', preventDefault, metaKey: true});
+      expect(onKeyDown).toHaveBeenCalledTimes(1);
+      expect(preventDefault).toBeCalled();
+      expect(onKeyDown).toHaveBeenCalledWith(
+        expect.objectContaining({
+          key: 'Tab',
+          type: 'keydown',
+          defaultPrevented: true,
+        }),
+      );
+
+      onKeyDown = jest.fn();
+      ref = React.createRef();
+      Component = () => {
+        const listener = useKeyboard({
+          onKeyDown,
+          preventKeys: [['Tab', {metaKey: false}]],
+        });
+        return <div ref={ref} listeners={listener} />;
+      };
+      ReactDOM.render(<Component />, container);
+
+      preventDefault = jest.fn();
+      target = createEventTarget(ref.current);
+      target.keydown({key: 'Tab', preventDefault, metaKey: false});
+      expect(onKeyDown).toHaveBeenCalledTimes(1);
+      expect(preventDefault).toBeCalled();
+      expect(onKeyDown).toHaveBeenCalledWith(
+        expect.objectContaining({
+          key: 'Tab',
+          type: 'keydown',
+          defaultPrevented: true,
+        }),
+      );
+    });
+  });
+
   describe('onKeyUp', () => {
     let onKeyDown, onKeyUp, ref;
 
