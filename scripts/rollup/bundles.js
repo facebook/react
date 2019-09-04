@@ -10,6 +10,7 @@ const bundleTypes = {
   FB_WWW_DEV: 'FB_WWW_DEV',
   FB_WWW_PROD: 'FB_WWW_PROD',
   FB_WWW_PROFILING: 'FB_WWW_PROFILING',
+  FB_WWW_COMBINED: 'FB_WWW_COMBINED',
   RN_OSS_DEV: 'RN_OSS_DEV',
   RN_OSS_PROD: 'RN_OSS_PROD',
   RN_OSS_PROFILING: 'RN_OSS_PROFILING',
@@ -28,6 +29,7 @@ const {
   FB_WWW_DEV,
   FB_WWW_PROD,
   FB_WWW_PROFILING,
+  FB_WWW_COMBINED,
   RN_OSS_DEV,
   RN_OSS_PROD,
   RN_OSS_PROFILING,
@@ -411,13 +413,7 @@ const bundles = [
 
   /******* React Scheduler (experimental) *******/
   {
-    bundleTypes: [
-      NODE_DEV,
-      NODE_PROD,
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-      FB_WWW_PROFILING,
-    ],
+    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_COMBINED],
     moduleType: ISOMORPHIC,
     entry: 'scheduler',
     global: 'Scheduler',
@@ -426,14 +422,7 @@ const bundles = [
 
   /******* React Scheduler Mock (experimental) *******/
   {
-    bundleTypes: [
-      UMD_DEV,
-      UMD_PROD,
-      NODE_DEV,
-      NODE_PROD,
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-    ],
+    bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_WWW_COMBINED],
     moduleType: ISOMORPHIC,
     entry: 'scheduler/unstable_mock',
     global: 'SchedulerMock',

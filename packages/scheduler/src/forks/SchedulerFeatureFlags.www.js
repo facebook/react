@@ -12,6 +12,5 @@ export const {
   requestIdleCallbackBeforeFirstFrame,
   requestTimerEventBeforeFirstFrame,
   enableMessageLoopImplementation,
+  enableProfiling,
 } = require('SchedulerFeatureFlags');
-
-export const enableProfiling = __PROFILE__;

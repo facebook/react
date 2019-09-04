@@ -12,6 +12,7 @@ const NODE_PROFILING = Bundles.bundleTypes.NODE_PROFILING;
 const FB_WWW_DEV = Bundles.bundleTypes.FB_WWW_DEV;
 const FB_WWW_PROD = Bundles.bundleTypes.FB_WWW_PROD;
 const FB_WWW_PROFILING = Bundles.bundleTypes.FB_WWW_PROFILING;
+const FB_WWW_COMBINED = Bundles.bundleTypes.FB_WWW_COMBINED;
 const RN_OSS_DEV = Bundles.bundleTypes.RN_OSS_DEV;
 const RN_OSS_PROD = Bundles.bundleTypes.RN_OSS_PROD;
 const RN_OSS_PROFILING = Bundles.bundleTypes.RN_OSS_PROFILING;
@@ -159,6 +160,19 @@ ${source}`;
 
   /****************** FB_WWW_PROFILING ******************/
   [FB_WWW_PROFILING](source, globalName, filename, moduleType) {
+    return `/**
+${license}
+ *
+ * @noflow
+ * @preventMunge
+ * @preserve-invariant-messages
+ */
+
+${source}`;
+  },
+
+  /****************** FB_WWW_COMBINED ******************/
+  [FB_WWW_COMBINED](source, globalName, filename, moduleType) {
     return `/**
 ${license}
  *

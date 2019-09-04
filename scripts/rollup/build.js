@@ -45,6 +45,7 @@ const {
   FB_WWW_DEV,
   FB_WWW_PROD,
   FB_WWW_PROFILING,
+  FB_WWW_COMBINED,
   RN_OSS_DEV,
   RN_OSS_PROD,
   RN_OSS_PROFILING,
@@ -111,6 +112,7 @@ function getBabelConfig(updateBabelOptions, bundleType, filename) {
     case FB_WWW_DEV:
     case FB_WWW_PROD:
     case FB_WWW_PROFILING:
+    case FB_WWW_COMBINED:
       return Object.assign({}, options, {
         plugins: options.plugins.concat([
           // Minify invariant messages
@@ -192,6 +194,7 @@ function getFormat(bundleType) {
     case FB_WWW_DEV:
     case FB_WWW_PROD:
     case FB_WWW_PROFILING:
+    case FB_WWW_COMBINED:
     case RN_OSS_DEV:
     case RN_OSS_PROD:
     case RN_OSS_PROFILING:
@@ -230,6 +233,8 @@ function getFilename(name, globalName, bundleType) {
     case RN_FB_PROFILING:
     case RN_OSS_PROFILING:
       return `${globalName}-profiling.js`;
+    case FB_WWW_COMBINED:
+      return `${globalName}-combined.js`;
   }
 }
 
@@ -238,6 +243,7 @@ function isProductionBundleType(bundleType) {
     case UMD_DEV:
     case NODE_DEV:
     case FB_WWW_DEV:
+    case FB_WWW_COMBINED:
     case RN_OSS_DEV:
     case RN_FB_DEV:
       return false;
@@ -261,6 +267,7 @@ function isProfilingBundleType(bundleType) {
   switch (bundleType) {
     case FB_WWW_DEV:
     case FB_WWW_PROD:
+    case FB_WWW_COMBINED:
     case NODE_DEV:
     case NODE_PROD:
     case RN_FB_DEV:
@@ -326,6 +333,20 @@ function getPlugins(
     bundleType === RN_FB_PROD ||
     bundleType === RN_FB_PROFILING;
   const shouldStayReadable = isFBBundle || isRNBundle || forcePrettyOutput;
+
+  const replaceConfig = {
+    __PROFILE__: isProfiling || !isProduction ? 'true' : 'false',
+    __UMD__: isUMDBundle ? 'true' : 'false',
+    'process.env.NODE_ENV': isProduction ? "'production'" : "'development'",
+  };
+
+  if (bundleType !== FB_WWW_COMBINED) {
+    // Turn __DEV__ and process.env checks into constants so the dev-only
+    // branches can be dead code eliminated in the prod bundles. Except for the
+    // FB_WWW_COMBINED bundle type, which runs in both dev and prod.
+    replaceConfig.__DEV__ = isProduction ? 'false' : 'true';
+  }
+
   return [
     // Extract error codes from invariant() messages into a file.
     shouldExtractErrors && {
@@ -355,12 +376,7 @@ function getPlugins(
       },
     },
     // Turn __DEV__ and process.env checks into constants.
-    replace({
-      __DEV__: isProduction ? 'false' : 'true',
-      __PROFILE__: isProfiling || !isProduction ? 'true' : 'false',
-      __UMD__: isUMDBundle ? 'true' : 'false',
-      'process.env.NODE_ENV': isProduction ? "'production'" : "'development'",
-    }),
+    replace(replaceConfig),
     // We still need CommonJS for external deps like object-assign.
     commonjs(),
     // Apply dead code elimination and/or minification.
@@ -648,6 +664,7 @@ async function buildEverything() {
       [bundle, FB_WWW_DEV],
       [bundle, FB_WWW_PROD],
       [bundle, FB_WWW_PROFILING],
+      [bundle, FB_WWW_COMBINED],
       [bundle, RN_OSS_DEV],
       [bundle, RN_OSS_PROD],
       [bundle, RN_OSS_PROFILING],

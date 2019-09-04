@@ -10,6 +10,7 @@ const UMD_PROFILING = bundleTypes.UMD_PROFILING;
 const FB_WWW_DEV = bundleTypes.FB_WWW_DEV;
 const FB_WWW_PROD = bundleTypes.FB_WWW_PROD;
 const FB_WWW_PROFILING = bundleTypes.FB_WWW_PROFILING;
+const FB_WWW_COMBINED = bundleTypes.FB_WWW_COMBINED;
 const RN_OSS_DEV = bundleTypes.RN_OSS_DEV;
 const RN_OSS_PROD = bundleTypes.RN_OSS_PROD;
 const RN_OSS_PROFILING = bundleTypes.RN_OSS_PROFILING;
@@ -158,11 +159,7 @@ const forks = Object.freeze({
   },
 
   'scheduler/src/SchedulerFeatureFlags': (bundleType, entry, dependencies) => {
-    if (
-      bundleType === FB_WWW_DEV ||
-      bundleType === FB_WWW_PROD ||
-      bundleType === FB_WWW_PROFILING
-    ) {
+    if (bundleType === FB_WWW_COMBINED) {
       return 'scheduler/src/forks/SchedulerFeatureFlags.www.js';
     }
     return 'scheduler/src/SchedulerFeatureFlags';
@@ -186,6 +183,7 @@ const forks = Object.freeze({
       case FB_WWW_DEV:
       case FB_WWW_PROD:
       case FB_WWW_PROFILING:
+      case FB_WWW_COMBINED:
         return 'shared/forks/lowPriorityWarning.www.js';
       default:
         return null;
@@ -198,6 +196,7 @@ const forks = Object.freeze({
       case FB_WWW_DEV:
       case FB_WWW_PROD:
       case FB_WWW_PROFILING:
+      case FB_WWW_COMBINED:
         return 'shared/forks/warningWithoutStack.www.js';
       default:
         return null;
