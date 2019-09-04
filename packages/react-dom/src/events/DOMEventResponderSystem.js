@@ -115,6 +115,7 @@ const eventResponderContext: ReactDOMResponderContext = {
       }
       case ContinuousEvent: {
         executeUserEventHandler(eventListener, eventValue);
+        break;
       }
     }
   },

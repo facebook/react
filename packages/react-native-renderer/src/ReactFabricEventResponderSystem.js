@@ -106,6 +106,7 @@ const eventResponderContext: ReactNativeResponderContext = {
       }
       case ContinuousEvent: {
         executeUserEventHandler(eventListener, eventValue);
+        break;
       }
     }
   },
