@@ -722,10 +722,9 @@ function completeWork(
             markUpdate(workInProgress);
           }
           if (enableFlareAPI) {
-            const instance = workInProgress.stateNode;
             const listeners = newProps.listeners;
             if (listeners != null) {
-              updateEventListeners(listeners, instance, workInProgress);
+              updateEventListeners(listeners, workInProgress);
             }
           }
         } else {
@@ -739,10 +738,13 @@ function completeWork(
 
           appendAllChildren(instance, workInProgress, false, false);
 
+          // This needs to be set before we mount Flare event listeners
+          workInProgress.stateNode = instance;
+
           if (enableFlareAPI) {
             const listeners = newProps.listeners;
             if (listeners != null) {
-              updateEventListeners(listeners, instance, workInProgress);
+              updateEventListeners(listeners, workInProgress);
             }
           }
 
@@ -760,7 +762,6 @@ function completeWork(
           ) {
             markUpdate(workInProgress);
           }
-          workInProgress.stateNode = instance;
         }
 
         if (workInProgress.ref !== null) {
@@ -1229,16 +1230,33 @@ function completeWork(
           };
           workInProgress.stateNode = scopeInstance;
           scopeInstance.methods = createScopeMethods(type, scopeInstance);
+          if (enableFlareAPI) {
+            const listeners = newProps.listeners;
+            if (listeners != null) {
+              updateEventListeners(listeners, workInProgress);
+            }
+          }
           if (workInProgress.ref !== null) {
             markRef(workInProgress);
             markUpdate(workInProgress);
           }
         } else {
+          if (enableFlareAPI) {
+            const prevListeners = current.memoizedProps.listeners;
+            const nextListeners = newProps.listeners;
+            if (
+              prevListeners !== nextListeners ||
+              workInProgress.ref !== null
+            ) {
+              markUpdate(workInProgress);
+            }
+          } else {
+            if (workInProgress.ref !== null) {
+              markUpdate(workInProgress);
+            }
+          }
           if (current.ref !== workInProgress.ref) {
             markRef(workInProgress);
-          }
-          if (workInProgress.ref !== null) {
-            markUpdate(workInProgress);
           }
         }
       }

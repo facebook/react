@@ -131,7 +131,6 @@ function createKeyboardEvent(
   event: ReactDOMResponderEvent,
   context: ReactDOMResponderContext,
   type: KeyboardEventType,
-  target: Document | Element,
   defaultPrevented: boolean,
 ): KeyboardEvent {
   const nativeEvent = (event: any).nativeEvent;
@@ -144,6 +143,7 @@ function createKeyboardEvent(
     repeat,
     shiftKey,
   } = nativeEvent;
+  const target = ((context.getCurrentTarget(): any): Element);
 
   return {
     altKey,
@@ -166,14 +166,12 @@ function dispatchKeyboardEvent(
   listener: KeyboardEvent => void,
   context: ReactDOMResponderContext,
   type: KeyboardEventType,
-  target: Element | Document,
   defaultPrevented: boolean,
 ): void {
   const syntheticEvent = createKeyboardEvent(
     event,
     context,
     type,
-    target,
     defaultPrevented,
   );
   const shouldPropagate = context.dispatchEvent(
@@ -193,7 +191,7 @@ const keyboardResponderImpl = {
     context: ReactDOMResponderContext,
     props: KeyboardProps,
   ): void {
-    const {responderTarget, type} = event;
+    const {type} = event;
     const nativeEvent: any = event.nativeEvent;
 
     if (props.disabled) {
@@ -234,7 +232,6 @@ const keyboardResponderImpl = {
           onKeyDown,
           context,
           'keydown',
-          ((responderTarget: any): Element | Document),
           defaultPrevented,
         );
       }
@@ -246,7 +243,6 @@ const keyboardResponderImpl = {
           onKeyUp,
           context,
           'keyup',
-          ((responderTarget: any): Element | Document),
           defaultPrevented,
         );
       }

@@ -289,7 +289,7 @@ const focusResponderImpl = {
 
     switch (type) {
       case 'focus': {
-        state.focusTarget = event.responderTarget;
+        state.focusTarget = context.getCurrentTarget();
         // Limit focus events to the direct child of the event component.
         // Browser focus is not expected to bubble.
         if (!state.isFocused && state.focusTarget === target) {
@@ -427,7 +427,7 @@ const focusWithinResponderImpl = {
 
     switch (type) {
       case 'focus': {
-        state.focusTarget = event.responderTarget;
+        state.focusTarget = context.getCurrentTarget();
         // Limit focus events to the direct child of the event component.
         // Browser focus is not expected to bubble.
         if (!state.isFocused) {
