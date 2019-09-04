@@ -11,8 +11,6 @@ import {
 } from './ReactControlledComponent';
 import {enableFlareAPI} from 'shared/ReactFeatureFlags';
 
-import {invokeGuardedCallbackAndCatchFirstError} from 'shared/ReactErrorUtils';
-
 // Used as a way to call batchedUpdates when we don't have a reference to
 // the renderer. Such as when we're dispatching events or if third party
 // libraries need to call batchedUpdates. Eventually, this API will go away when
@@ -77,12 +75,12 @@ export function batchedEventUpdates(fn, a, b) {
   }
 }
 
-export function executeUserEventHandler(fn: any => void, value: any) {
+// This is for the React Flare event system
+export function executeUserEventHandler(fn: any => void, value: any): any {
   const previouslyInEventHandler = isInsideEventHandler;
   try {
     isInsideEventHandler = true;
-    const type = typeof value === 'object' && value !== null ? value.type : '';
-    invokeGuardedCallbackAndCatchFirstError(type, fn, undefined, value);
+    return fn(value);
   } finally {
     isInsideEventHandler = previouslyInEventHandler;
   }

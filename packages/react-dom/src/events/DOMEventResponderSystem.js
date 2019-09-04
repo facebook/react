@@ -76,11 +76,17 @@ const rootEventTypesToEventResponderInstances: Map<
   Set<ReactDOMEventResponderInstance>,
 > = new Map();
 
+type PropagationBehavior = 0 | 1;
+
+const DoNotPropagateToNextResponder = 0;
+const PropagateToNextResponder = 1;
+
 let currentTimeStamp = 0;
 let currentTimers = new Map();
 let currentInstance: null | ReactDOMEventResponderInstance = null;
 let currentTimerIDCounter = 0;
 let currentDocument: null | Document = null;
+let currentPropagationBehavior: PropagationBehavior = DoNotPropagateToNextResponder;
 let currentTargetFiber: null | Fiber = null;
 
 const eventResponderContext: ReactDOMResponderContext = {
@@ -88,30 +94,27 @@ const eventResponderContext: ReactDOMResponderContext = {
     eventValue: any,
     eventListener: any => void,
     eventPriority: EventPriority,
-  ): void {
+  ): any {
     validateResponderContext();
     validateEventValue(eventValue);
     switch (eventPriority) {
       case DiscreteEvent: {
         flushDiscreteUpdatesIfNeeded(currentTimeStamp);
-        discreteUpdates(() =>
+        return discreteUpdates(() =>
           executeUserEventHandler(eventListener, eventValue),
         );
-        break;
       }
       case UserBlockingEvent: {
         if (enableUserBlockingEvents) {
-          runWithPriority(UserBlockingPriority, () =>
+          return runWithPriority(UserBlockingPriority, () =>
             executeUserEventHandler(eventListener, eventValue),
           );
         } else {
-          executeUserEventHandler(eventListener, eventValue);
+          return executeUserEventHandler(eventListener, eventValue);
         }
-        break;
       }
       case ContinuousEvent: {
-        executeUserEventHandler(eventListener, eventValue);
-        break;
+        return executeUserEventHandler(eventListener, eventValue);
       }
     }
   },
@@ -265,6 +268,9 @@ const eventResponderContext: ReactDOMResponderContext = {
       fiber = fiber.return;
     }
     return false;
+  },
+  continuePropagation() {
+    currentPropagationBehavior = PropagateToNextResponder;
   },
   enqueueStateRestore,
   getCurrentTarget(): Element | null {
@@ -489,6 +495,10 @@ function traverseAndHandleEventResponderInstances(
             if (onEvent !== null) {
               currentInstance = responderInstance;
               onEvent(responderEvent, eventResponderContext, props, state);
+              if (currentPropagationBehavior === PropagateToNextResponder) {
+                visitedResponders.delete(responder);
+                currentPropagationBehavior = DoNotPropagateToNextResponder;
+              }
             }
           }
         }
@@ -588,7 +598,9 @@ export function dispatchEventForResponderEventSystem(
     const previousTimers = currentTimers;
     const previousTimeStamp = currentTimeStamp;
     const previousDocument = currentDocument;
+    const previousPropagationBehavior = currentPropagationBehavior;
     const previousTargetFiber = currentTargetFiber;
+    currentPropagationBehavior = DoNotPropagateToNextResponder;
     currentTimers = null;
     currentTargetFiber = targetFiber;
     // nodeType 9 is DOCUMENT_NODE
@@ -613,6 +625,7 @@ export function dispatchEventForResponderEventSystem(
       currentInstance = previousInstance;
       currentTimeStamp = previousTimeStamp;
       currentDocument = previousDocument;
+      currentPropagationBehavior = previousPropagationBehavior;
       currentTargetFiber = previousTargetFiber;
     }
   }

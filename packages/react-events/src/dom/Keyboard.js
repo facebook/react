@@ -174,7 +174,14 @@ function dispatchKeyboardEvent(
     type,
     defaultPrevented,
   );
-  context.dispatchEvent(syntheticEvent, listener, DiscreteEvent);
+  const shouldPropagate = context.dispatchEvent(
+    syntheticEvent,
+    listener,
+    DiscreteEvent,
+  );
+  if (shouldPropagate) {
+    context.continuePropagation();
+  }
 }
 
 const keyboardResponderImpl = {
