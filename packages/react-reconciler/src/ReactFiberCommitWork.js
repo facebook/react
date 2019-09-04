@@ -1343,7 +1343,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
           const prevListeners = oldProps.listeners;
           const nextListeners = newProps.listeners;
           if (prevListeners !== nextListeners) {
-            updateEventListeners(nextListeners, finishedWork);
+            updateEventListeners(nextListeners, finishedWork, null);
           }
         }
       }
@@ -1400,7 +1400,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
           const prevListeners = oldProps.listeners;
           const nextListeners = newProps.listeners;
           if (prevListeners !== nextListeners) {
-            updateEventListeners(nextListeners, finishedWork);
+            updateEventListeners(nextListeners, finishedWork, null);
           }
         }
       }

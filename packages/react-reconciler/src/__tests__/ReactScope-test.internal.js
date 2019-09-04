@@ -199,11 +199,11 @@ describe('ReactScope', () => {
     });
 
     it('event responders can be attached to scopes', () => {
+      let onKeyDown = jest.fn();
       const TestScope = React.unstable_createScope((type, props) => true);
-      const onKeyDown = jest.fn();
       const ref = React.createRef();
       const useKeyboard = require('react-events/keyboard').useKeyboard;
-      const Component = () => {
+      let Component = () => {
         const listener = useKeyboard({
           onKeyDown,
         });
@@ -215,7 +215,29 @@ describe('ReactScope', () => {
       };
       ReactDOM.render(<Component />, container);
 
-      const target = createEventTarget(ref.current);
+      let target = createEventTarget(ref.current);
+      target.keydown({key: 'Q'});
+      expect(onKeyDown).toHaveBeenCalledTimes(1);
+      expect(onKeyDown).toHaveBeenCalledWith(
+        expect.objectContaining({key: 'Q', type: 'keydown'}),
+      );
+
+      onKeyDown = jest.fn();
+      Component = () => {
+        const listener = useKeyboard({
+          onKeyDown,
+        });
+        return (
+          <div>
+            <TestScope listeners={listener}>
+              <div ref={ref} />
+            </TestScope>
+          </div>
+        );
+      };
+      ReactDOM.render(<Component />, container);
+
+      target = createEventTarget(ref.current);
       target.keydown({key: 'Q'});
       expect(onKeyDown).toHaveBeenCalledTimes(1);
       expect(onKeyDown).toHaveBeenCalledWith(
