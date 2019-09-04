@@ -30,7 +30,6 @@ export type ReactDOMResponderEvent = {
   passiveSupported: boolean,
   pointerId: null | number,
   pointerType: PointerType,
-  responderTarget: null | Element | Document,
   target: Element | Document,
   type: string,
 };
@@ -75,4 +74,5 @@ export type ReactDOMResponderContext = {
   ) => boolean,
   // Used for controller components
   enqueueStateRestore(Element | Document): void,
+  getCurrentTarget(): Element | null,
 };

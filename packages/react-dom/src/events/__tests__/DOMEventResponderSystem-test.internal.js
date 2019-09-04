@@ -1017,7 +1017,7 @@ describe('DOMEventResponderSystem', () => {
         const obj = {
           counter,
           timeStamp: context.getTimeStamp(),
-          target: event.responderTarget,
+          target: context.getCurrentTarget(),
           type: 'click-test',
         };
         context.dispatchEvent(obj, props.onClick, DiscreteEvent);

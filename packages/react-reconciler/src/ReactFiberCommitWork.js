@@ -1343,7 +1343,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
           const prevListeners = oldProps.listeners;
           const nextListeners = newProps.listeners;
           if (prevListeners !== nextListeners) {
-            updateEventListeners(nextListeners, instance, finishedWork);
+            updateEventListeners(nextListeners, finishedWork);
           }
         }
       }
@@ -1394,6 +1394,15 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       if (enableScopeAPI) {
         const scopeInstance = finishedWork.stateNode;
         scopeInstance.fiber = finishedWork;
+        if (enableFlareAPI) {
+          const newProps = finishedWork.memoizedProps;
+          const oldProps = current !== null ? current.memoizedProps : newProps;
+          const prevListeners = oldProps.listeners;
+          const nextListeners = newProps.listeners;
+          if (prevListeners !== nextListeners) {
+            updateEventListeners(nextListeners, finishedWork);
+          }
+        }
       }
       return;
     }
