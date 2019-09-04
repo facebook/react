@@ -8,7 +8,7 @@
  */
 
 import type {Fiber} from './ReactFiber';
-import type {Instance} from './ReactFiberHostConfig';
+import type {Container, Instance} from './ReactFiberHostConfig';
 import type {
   ReactEventResponder,
   ReactEventResponderInstance,
@@ -53,6 +53,7 @@ function mountEventResponder(
     ReactEventResponder<any, any>,
     ReactEventResponderInstance<any, any>,
   >,
+  rootContainerInstance: null | Container,
 ) {
   let responderState = emptyObject;
   const getInitialState = responder.getInitialState;
@@ -65,25 +66,28 @@ function mountEventResponder(
     responderState,
     fiber,
   );
-  let instance = null;
-  let node = fiber;
-  while (node !== null) {
-    const tag = node.tag;
-    if (tag === HostComponent) {
-      instance = node.stateNode;
-      break;
-    } else if (tag === HostRoot) {
-      instance = node.stateNode.containerInfo;
-      break;
+
+  if (!rootContainerInstance) {
+    let node = fiber;
+    while (node !== null) {
+      const tag = node.tag;
+      if (tag === HostComponent) {
+        rootContainerInstance = node.stateNode;
+        break;
+      } else if (tag === HostRoot) {
+        rootContainerInstance = node.stateNode.containerInfo;
+        break;
+      }
+      node = node.return;
     }
-    node = node.return;
   }
+
   mountResponderInstance(
     responder,
     responderInstance,
     responderProps,
     responderState,
-    ((instance: any): Instance),
+    ((rootContainerInstance: any): Instance),
   );
   respondersMap.set(responder, responderInstance);
 }
@@ -96,6 +100,7 @@ function updateEventListener(
     ReactEventResponder<any, any>,
     ReactEventResponderInstance<any, any>,
   >,
+  rootContainerInstance: null | Container,
 ): void {
   let responder;
   let props;
@@ -127,7 +132,13 @@ function updateEventListener(
 
   if (responderInstance === undefined) {
     // Mount (happens in either complete or commit phase)
-    mountEventResponder(responder, listenerProps, fiber, respondersMap);
+    mountEventResponder(
+      responder,
+      listenerProps,
+      fiber,
+      respondersMap,
+      rootContainerInstance,
+    );
   } else {
     // Update (happens during commit phase only)
     responderInstance.props = listenerProps;
@@ -135,7 +146,11 @@ function updateEventListener(
   }
 }
 
-export function updateEventListeners(listeners: any, fiber: Fiber): void {
+export function updateEventListeners(
+  listeners: any,
+  fiber: Fiber,
+  rootContainerInstance: null | Container,
+): void {
   const visistedResponders = new Set();
   let dependencies = fiber.dependencies;
   if (listeners != null) {
@@ -153,10 +168,22 @@ export function updateEventListeners(listeners: any, fiber: Fiber): void {
     if (isArray(listeners)) {
       for (let i = 0, length = listeners.length; i < length; i++) {
         const listener = listeners[i];
-        updateEventListener(listener, fiber, visistedResponders, respondersMap);
+        updateEventListener(
+          listener,
+          fiber,
+          visistedResponders,
+          respondersMap,
+          rootContainerInstance,
+        );
       }
     } else {
-      updateEventListener(listeners, fiber, visistedResponders, respondersMap);
+      updateEventListener(
+        listeners,
+        fiber,
+        visistedResponders,
+        respondersMap,
+        rootContainerInstance,
+      );
     }
   }
   if (dependencies !== null) {

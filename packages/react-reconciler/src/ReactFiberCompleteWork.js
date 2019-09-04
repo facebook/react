@@ -724,7 +724,11 @@ function completeWork(
           if (enableFlareAPI) {
             const listeners = newProps.listeners;
             if (listeners != null) {
-              updateEventListeners(listeners, workInProgress);
+              updateEventListeners(
+                listeners,
+                workInProgress,
+                rootContainerInstance,
+              );
             }
           }
         } else {
@@ -744,7 +748,11 @@ function completeWork(
           if (enableFlareAPI) {
             const listeners = newProps.listeners;
             if (listeners != null) {
-              updateEventListeners(listeners, workInProgress);
+              updateEventListeners(
+                listeners,
+                workInProgress,
+                rootContainerInstance,
+              );
             }
           }
 
@@ -1233,7 +1241,12 @@ function completeWork(
           if (enableFlareAPI) {
             const listeners = newProps.listeners;
             if (listeners != null) {
-              updateEventListeners(listeners, workInProgress);
+              const rootContainerInstance = getRootHostContainer();
+              updateEventListeners(
+                listeners,
+                workInProgress,
+                rootContainerInstance,
+              );
             }
           }
           if (workInProgress.ref !== null) {
