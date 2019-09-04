@@ -674,6 +674,25 @@ module.exports = function(babel) {
     return targetPath[0];
   };
 
+  const getNamedExportImportPath = (path, name, importedName, source) => {
+    const targetPath = path.get('body').filter(child => {
+      const {node} = child;
+      return (
+        t.isImportDeclaration(node) &&
+        node.specifiers.length === 1 &&
+        t.isImportSpecifier(node.specifiers[0]) &&
+        t.isIdentifier(node.specifiers[0].local) &&
+        node.specifiers[0].local.name === name &&
+        t.isIdentifier(node.specifiers[0].imported) &&
+        node.specifiers[0].imported.name === importedName &&
+        t.isStringLiteral(node.source) &&
+        node.source.value === source
+      );
+    });
+
+    return targetPath[0];
+  };
+
   function getImportNames(parentPath, state) {
     const imports = {};
     parentPath.traverse({
@@ -732,9 +751,33 @@ module.exports = function(babel) {
       // import {createElement} from "react";
       const imports = getImportNames(path, state);
       const importMap = {};
+
       Object.keys(imports).forEach(importName => {
         importMap[importName] = addNamed(path, importName, state.source).name;
       });
+
+      if (state.shouldCacheImportFns) {
+        Object.keys(importMap).forEach(importName => {
+          const importPath = getNamedExportImportPath(
+            path,
+            importMap[importName],
+            importName,
+            state.source,
+          );
+
+          const newName = path.scope.generateUidIdentifier(importName);
+          importPath.insertAfter(
+            t.variableDeclaration('var', [
+              t.variableDeclarator(
+                newName,
+                t.identifier(importMap[importName]),
+              ),
+            ]),
+          );
+          importMap[importName] = newName.name;
+        });
+      }
+
       return importMap;
     }
 

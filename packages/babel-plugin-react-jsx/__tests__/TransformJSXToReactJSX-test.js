@@ -270,6 +270,27 @@ describe('transform react to jsx', () => {
     ).toMatchSnapshot();
   });
 
+  it('auto import named exports with cached variable', () => {
+    expect(
+      transform(
+        `var x = (
+          <>
+            <div>
+              <div key="1" />
+              <div key="2" meow="wolf" />
+              <div key="3" />
+              <div {...props} key="4" />
+            </div>
+          </>
+        );`,
+        {
+          autoImport: 'namedExports',
+          shouldCacheImportFns: true,
+        }
+      )
+    ).toMatchSnapshot();
+  });
+
   it('auto import in dev', () => {
     expect(
       transform(

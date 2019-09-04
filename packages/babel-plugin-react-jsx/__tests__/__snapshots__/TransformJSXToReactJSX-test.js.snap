@@ -129,6 +129,27 @@ var x = _jsx(_Fragment, {
 });
 `;
 
+exports[`transform react to jsx auto import named exports with cached variable 1`] = `
+import { createElement as _createElement } from "react";
+import { jsx as _jsx } from "react";
+import { jsxs as _jsxs } from "react";
+import { Fragment as _Fragment } from "react";
+var _createElement2 = _createElement;
+var _jsx2 = _jsx;
+var _jsxs2 = _jsxs;
+var _Fragment2 = _Fragment;
+
+var x = _jsx2(_Fragment2, {
+  children: _jsxs2("div", {
+    children: [_jsx2("div", {}, "1"), _jsx2("div", {
+      meow: "wolf"
+    }, "2"), _jsx2("div", {}, "3"), _createElement2("div", Object.assign({}, props, {
+      key: "4"
+    }))]
+  })
+});
+`;
+
 exports[`transform react to jsx auto import namespace 1`] = `
 import * as _react from "react";
 
