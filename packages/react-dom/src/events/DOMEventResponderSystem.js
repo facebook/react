@@ -92,27 +92,30 @@ const eventResponderContext: ReactDOMResponderContext = {
     eventValue: any,
     eventListener: any => void,
     eventPriority: EventPriority,
-  ): any {
+  ): void {
     validateResponderContext();
     validateEventValue(eventValue);
     switch (eventPriority) {
       case DiscreteEvent: {
         flushDiscreteUpdatesIfNeeded(currentTimeStamp);
-        return discreteUpdates(() =>
+        discreteUpdates(() =>
           executeUserEventHandler(eventListener, eventValue),
         );
+        break;
       }
       case UserBlockingEvent: {
         if (enableUserBlockingEvents) {
-          return runWithPriority(UserBlockingPriority, () =>
+          runWithPriority(UserBlockingPriority, () =>
             executeUserEventHandler(eventListener, eventValue),
           );
         } else {
-          return executeUserEventHandler(eventListener, eventValue);
+          executeUserEventHandler(eventListener, eventValue);
         }
+        break;
       }
       case ContinuousEvent: {
-        return executeUserEventHandler(eventListener, eventValue);
+        executeUserEventHandler(eventListener, eventValue);
+        break;
       }
     }
   },

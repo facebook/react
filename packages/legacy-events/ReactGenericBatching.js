@@ -9,7 +9,9 @@ import {
   needsStateRestore,
   restoreStateIfNeeded,
 } from './ReactControlledComponent';
+
 import {enableFlareAPI} from 'shared/ReactFeatureFlags';
+import {invokeGuardedCallbackAndCatchFirstError} from 'shared/ReactErrorUtils';
 
 // Used as a way to call batchedUpdates when we don't have a reference to
 // the renderer. Such as when we're dispatching events or if third party
@@ -76,11 +78,12 @@ export function batchedEventUpdates(fn, a, b) {
 }
 
 // This is for the React Flare event system
-export function executeUserEventHandler(fn: any => void, value: any): any {
+export function executeUserEventHandler(fn: any => void, value: any): void {
   const previouslyInEventHandler = isInsideEventHandler;
   try {
     isInsideEventHandler = true;
-    return fn(value);
+    const type = typeof value === 'object' && value !== null ? value.type : '';
+    invokeGuardedCallbackAndCatchFirstError(type, fn, undefined, value);
   } finally {
     isInsideEventHandler = previouslyInEventHandler;
   }

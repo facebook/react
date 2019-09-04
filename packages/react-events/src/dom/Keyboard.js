@@ -173,11 +173,11 @@ function dispatchKeyboardEvent(
     type,
     defaultPrevented,
   );
-  const shouldPropagate = context.dispatchEvent(
-    syntheticEvent,
-    listener,
-    DiscreteEvent,
-  );
+  let shouldPropagate;
+  const listenerWithReturnValue = e => {
+    shouldPropagate = listener(e);
+  };
+  context.dispatchEvent(syntheticEvent, listenerWithReturnValue, DiscreteEvent);
   if (shouldPropagate) {
     context.continuePropagation();
   }
