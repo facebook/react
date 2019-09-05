@@ -49,12 +49,10 @@ export function getClosestInstanceFromNode(targetNode) {
     // instance. Note that we don't check this field on  the targetNode
     // itself because the fibers are conceptually between the container
     // node and the first child. It isn't surrounding the container node.
-    targetInst = parentNode[internalContainerInstanceKey];
-    if (targetInst) {
-      // If so, we return the HostRoot Fiber.
-      return targetInst;
-    }
-    targetInst = parentNode[internalInstanceKey];
+    // If it's not a container, we check if it's an instance.
+    targetInst =
+      parentNode[internalContainerInstanceKey] ||
+      parentNode[internalInstanceKey];
     if (targetInst) {
       // Since this wasn't the direct target of the event, we might have
       // stepped past dehydrated DOM nodes to get here. However they could
