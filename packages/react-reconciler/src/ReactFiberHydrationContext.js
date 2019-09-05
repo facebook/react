@@ -24,7 +24,7 @@ import {
   HostRoot,
   SuspenseComponent,
 } from 'shared/ReactWorkTags';
-import {Deletion, Placement} from 'shared/ReactSideEffectTags';
+import {Deletion, Placement, Hydrating} from 'shared/ReactSideEffectTags';
 import invariant from 'shared/invariant';
 
 import {
@@ -140,7 +140,7 @@ function deleteHydratableInstance(
 }
 
 function insertNonHydratedInstance(returnFiber: Fiber, fiber: Fiber) {
-  fiber.effectTag |= Placement;
+  fiber.effectTag = (fiber.effectTag & ~Hydrating) | Placement;
   if (__DEV__) {
     switch (returnFiber.tag) {
       case HostRoot: {

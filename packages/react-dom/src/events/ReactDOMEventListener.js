@@ -22,7 +22,7 @@ import {
 } from 'legacy-events/ReactGenericBatching';
 import {runExtractedPluginEventsInBatch} from 'legacy-events/EventPluginHub';
 import {dispatchEventForResponderEventSystem} from '../events/DOMEventResponderSystem';
-import {isFiberMounted} from 'react-reconciler/reflection';
+import {getNearestMountedFiber} from 'react-reconciler/reflection';
 import {
   HostRoot,
   SuspenseComponent,
@@ -322,32 +322,31 @@ export function dispatchEvent(
   let targetInst = getClosestInstanceFromNode(nativeEventTarget);
 
   if (targetInst !== null) {
-    if (isFiberMounted(targetInst)) {
-      if (targetInst.tag === SuspenseComponent) {
+    let nearestMounted = getNearestMountedFiber(targetInst);
+    if (nearestMounted === null) {
+      // This tree has been unmounted already.
+      targetInst = null;
+    } else {
+      if (nearestMounted.tag === SuspenseComponent) {
         // TODO: This is a good opportunity to schedule a replay of
         // the event instead once this boundary has been hydrated.
         // For now we're going to just ignore this event as if it's
         // not mounted.
         targetInst = null;
-      } else if (targetInst.tag === HostRoot) {
+      } else if (nearestMounted.tag === HostRoot) {
         // We have not yet mounted/hydrated the first children.
         // TODO: This is a good opportunity to schedule a replay of
         // the event instead once this root has been hydrated.
         // For now we're going to just ignore this event as if it's
         // not mounted.
         targetInst = null;
+      } else if (nearestMounted !== targetInst) {
+        // If we get an event (ex: img onload) before committing that
+        // component's mount, ignore it for now (that is, treat it as if it was an
+        // event on a non-React tree). We might also consider queueing events and
+        // dispatching them after the mount.
+        targetInst = null;
       }
-    } else {
-      // TODO: If the nearest match was not mounted because it's part
-      // an in-progress hydration, this would be a good time schedule
-      // a replay of the event. However, we don't have easy access to
-      // the HostRoot or SuspenseComponent here.
-
-      // If we get an event (ex: img onload) before committing that
-      // component's mount, ignore it for now (that is, treat it as if it was an
-      // event on a non-React tree). We might also consider queueing events and
-      // dispatching them after the mount.
-      targetInst = null;
     }
   }
 
