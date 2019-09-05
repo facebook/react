@@ -214,6 +214,8 @@ if (
   };
 
   const performWorkUntilDeadline = () => {
+    clearTimeout(rAFTimeoutID);
+
     if (enableMessageLoopImplementation) {
       if (scheduledHostCallback !== null) {
         const currentTime = getCurrentTime();
@@ -296,7 +298,6 @@ if (
     // after that.
     isRAFLoopRunning = true;
     requestAnimationFrame(nextRAFTime => {
-      clearTimeout(rAFTimeoutID);
       onAnimationFrame(nextRAFTime);
     });
 
