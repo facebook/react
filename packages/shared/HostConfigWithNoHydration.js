@@ -34,6 +34,7 @@ export const getNextHydratableSibling = shim;
 export const getFirstHydratableChild = shim;
 export const hydrateInstance = shim;
 export const hydrateTextInstance = shim;
+export const hydrateSuspenseInstance = shim;
 export const getNextHydratableInstanceAfterSuspenseInstance = shim;
 export const clearSuspenseBoundary = shim;
 export const clearSuspenseBoundaryFromContainer = shim;

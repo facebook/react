@@ -1895,4 +1895,166 @@ describe('ReactDOMServerPartialHydration', () => {
 
     document.body.removeChild(container);
   });
+
+  it('does not invoke the parent of dehydrated boundary event', async () => {
+    let suspend = false;
+    let resolve;
+    let promise = new Promise(resolvePromise => (resolve = resolvePromise));
+
+    let clicksOnParent = 0;
+    let clicksOnChild = 0;
+
+    function Child({text}) {
+      if (suspend) {
+        throw promise;
+      } else {
+        return (
+          <span
+            onClick={e => {
+              // The stopPropagation is showing an example why invoking
+              // the event on only a parent might not be correct.
+              e.stopPropagation();
+              clicksOnChild++;
+            }}>
+            Hello
+          </span>
+        );
+      }
+    }
+
+    function App() {
+      return (
+        <div onClick={() => clicksOnParent++}>
+          <Suspense fallback="Loading...">
+            <Child />
+          </Suspense>
+        </div>
+      );
+    }
+
+    suspend = false;
+    let finalHTML = ReactDOMServer.renderToString(<App />);
+    let container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    // We need this to be in the document since we'll dispatch events on it.
+    document.body.appendChild(container);
+
+    let span = container.getElementsByTagName('span')[0];
+
+    // On the client we don't have all data yet but we want to start
+    // hydrating anyway.
+    suspend = true;
+    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    root.render(<App />);
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+
+    // We're now partially hydrated.
+    span.click();
+    expect(clicksOnChild).toBe(0);
+    expect(clicksOnParent).toBe(0);
+
+    // Resolving the promise so that rendering can complete.
+    suspend = false;
+    resolve();
+    await promise;
+
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+
+    // TODO: With selective hydration the event should've been replayed
+    // but for now we'll have to issue it again.
+    act(() => {
+      span.click();
+    });
+
+    expect(clicksOnChild).toBe(1);
+    // This will be zero due to the stopPropagation.
+    expect(clicksOnParent).toBe(0);
+
+    document.body.removeChild(container);
+  });
+
+  it('does not invoke an event on a parent tree when a subtree is dehydrated', async () => {
+    let suspend = false;
+    let resolve;
+    let promise = new Promise(resolvePromise => (resolve = resolvePromise));
+
+    let clicks = 0;
+    let childSlotRef = React.createRef();
+
+    function Parent() {
+      return <div onClick={() => clicks++} ref={childSlotRef} />;
+    }
+
+    function Child({text}) {
+      if (suspend) {
+        throw promise;
+      } else {
+        return <a>Click me</a>;
+      }
+    }
+
+    function App() {
+      // The root is a Suspense boundary.
+      return (
+        <Suspense fallback="Loading...">
+          <Child />
+        </Suspense>
+      );
+    }
+
+    suspend = false;
+    let finalHTML = ReactDOMServer.renderToString(<App />);
+
+    let parentContainer = document.createElement('div');
+    let childContainer = document.createElement('div');
+
+    // We need this to be in the document since we'll dispatch events on it.
+    document.body.appendChild(parentContainer);
+
+    // We're going to use a different root as a parent.
+    // This lets us detect whether an event goes through React's event system.
+    let parentRoot = ReactDOM.unstable_createRoot(parentContainer);
+    parentRoot.render(<Parent />);
+    Scheduler.unstable_flushAll();
+
+    childSlotRef.current.appendChild(childContainer);
+
+    childContainer.innerHTML = finalHTML;
+
+    let a = childContainer.getElementsByTagName('a')[0];
+
+    suspend = true;
+
+    // Hydrate asynchronously.
+    let root = ReactDOM.unstable_createRoot(childContainer, {hydrate: true});
+    root.render(<App />);
+    jest.runAllTimers();
+    Scheduler.unstable_flushAll();
+
+    // The Suspense boundary is not yet hydrated.
+    a.click();
+    expect(clicks).toBe(0);
+
+    // Resolving the promise so that rendering can complete.
+    suspend = false;
+    resolve();
+    await promise;
+
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+
+    // We're now full hydrated.
+    // TODO: With selective hydration the event should've been replayed
+    // but for now we'll have to issue it again.
+    act(() => {
+      a.click();
+    });
+
+    expect(clicks).toBe(1);
+
+    document.body.removeChild(parentContainer);
+  });
 });

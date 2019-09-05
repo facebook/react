@@ -107,6 +107,7 @@ import {popProvider} from './ReactFiberNewContext';
 import {
   prepareToHydrateHostInstance,
   prepareToHydrateHostTextInstance,
+  prepareToHydrateHostSuspenseInstance,
   popHydrationState,
   resetHydrationState,
 } from './ReactFiberHydrationContext';
@@ -828,6 +829,7 @@ function completeWork(
               'A dehydrated suspense component was completed without a hydrated node. ' +
                 'This is probably a bug in React.',
             );
+            prepareToHydrateHostSuspenseInstance(workInProgress);
             if (enableSchedulerTracing) {
               markSpawnedWork(Never);
             }
