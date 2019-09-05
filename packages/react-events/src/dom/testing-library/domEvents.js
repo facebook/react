@@ -245,6 +245,7 @@ function createTouchEvent(type, payload) {
       pageX,
       pageY,
       pointerId = 1,
+      pressure = 1,
       twist = 0,
       width = defaultPointerSize,
       x = 0,
@@ -253,7 +254,7 @@ function createTouchEvent(type, payload) {
       return {
         clientX: x,
         clientY: y,
-        force: 1,
+        force: pressure,
         identifier: pointerId,
         pageX: pageX || x,
         pageY: pageY || y,
@@ -297,6 +298,28 @@ export function click(payload) {
   return createMouseEvent('click', payload);
 }
 
+export function contextmenu(payload) {
+  return createMouseEvent('contextmenu', {
+    ...payload,
+    detail: 0,
+  });
+}
+
+export function dragstart(payload) {
+  return createMouseEvent('dragstart', {
+    ...payload,
+    detail: 0,
+  });
+}
+
+export function focus({relatedTarget} = {}) {
+  return createEvent('focus', {relatedTarget});
+}
+
+export function scroll() {
+  return createEvent('scroll');
+}
+
 export function virtualclick(payload) {
   return createMouseEvent('click', {
     ...payload,
@@ -312,22 +335,6 @@ export function virtualclick(payload) {
     x: 0,
     y: 0,
   });
-}
-
-export function contextmenu(payload) {
-  return createMouseEvent('contextmenu', payload);
-}
-
-export function dragstart(payload) {
-  return createMouseEvent('dragstart', payload);
-}
-
-export function focus({relatedTarget} = {}) {
-  return createEvent('focus', {relatedTarget});
-}
-
-export function scroll() {
-  return createEvent('scroll');
 }
 
 /**
