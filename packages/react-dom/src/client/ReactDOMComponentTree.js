@@ -25,19 +25,35 @@ export function markContainerAsRoot(hostRoot, node) {
   node[internalContainerInstanceKey] = hostRoot;
 }
 
-/**
- * Given a DOM node, return the closest ReactDOMComponent or
- * ReactDOMTextComponent instance ancestor.
- */
+// Given a DOM node, return the closest HostComponent or HostText fiber ancestor.
+// If the target node is part of a hydrated or not yet rendered subtree, then
+// this may also return a SuspenseComponent or HostRoot to indicate that.
+// Conceptually the HostRoot fiber is a child of the Container node. So if you
+// pass the Container node as the targetNode, you wiill not actually get the
+// HostRoot back. To get to the HostRoot, you need to pass a child of it.
+// The same thing applies to Suspense boundaries.
 export function getClosestInstanceFromNode(targetNode) {
   let targetInst = targetNode[internalInstanceKey];
   if (targetInst) {
+    // Don't return HostRoot or SuspenseComponent here.
     return targetInst;
   }
   // If the direct event target isn't a React owned DOM node, we need to look
   // to see if one of its parents is a React owned DOM node.
   let parentNode = targetNode.parentNode;
   while (parentNode) {
+    // We'll check if this is a container root that could include
+    // React nodes in the future. We need to check this first because
+    // if we're a child of a dehydrated container, we need to first
+    // find that inner container before moving on to finding the parent
+    // instance. Note that we don't check this field on  the targetNode
+    // itself because the fibers are conceptually between the container
+    // node and the first child. It isn't surrounding the container node.
+    targetInst = parentNode[internalContainerInstanceKey];
+    if (targetInst) {
+      // If so, we return the HostRoot Fiber.
+      return targetInst;
+    }
     targetInst = parentNode[internalInstanceKey];
     if (targetInst) {
       // Since this wasn't the direct target of the event, we might have
@@ -75,13 +91,6 @@ export function getClosestInstanceFromNode(targetNode) {
           // check.
         }
       }
-      return targetInst;
-    }
-    // Next we'll check if this is a container root that could include
-    // React nodes in the future.
-    targetInst = parentNode[internalContainerInstanceKey];
-    if (targetInst) {
-      // If so, we return the HostRoot Fiber.
       return targetInst;
     }
     targetNode = parentNode;
