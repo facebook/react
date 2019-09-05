@@ -412,7 +412,7 @@ const pressResponderImpl = {
     if (type === 'topTouchStart') {
       if (!state.isPressed) {
         state.pointerType = 'touch';
-        const pressTarget = (state.pressTarget = event.responderTarget);
+        const pressTarget = (state.pressTarget = context.getResponderNode());
         const touchEvent = getTouchFromPressEvent(nativeEvent);
         if (touchEvent === null) {
           return;

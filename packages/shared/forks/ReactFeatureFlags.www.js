@@ -73,7 +73,7 @@ export const enableFlareAPI = true;
 
 export const enableFundamentalAPI = false;
 
-export const enableScopeAPI = false;
+export const enableScopeAPI = true;
 
 export const enableJSXTransformAPI = true;
 

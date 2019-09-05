@@ -22,7 +22,6 @@ type ResponderEventType = string;
 
 type ResponderEvent = {|
   nativeEvent: any,
-  responderTarget: Element | Document,
   target: Element | Document,
   pointerType: string,
   type: string,

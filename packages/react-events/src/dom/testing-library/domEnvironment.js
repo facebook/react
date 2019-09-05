@@ -20,10 +20,18 @@ export function hasPointerEvent() {
 }
 
 export function setPointerEvent(bool) {
-  const mock = bool ? emptyFunction : undefined;
-  global.PointerEvent = mock;
-  global.HTMLElement.prototype.setPointerCapture = mock;
-  global.HTMLElement.prototype.releasePointerCapture = mock;
+  const pointerCaptureFn = name => id => {
+    if (typeof id !== 'number') {
+      console.error(`A pointerId must be passed to "${name}"`);
+    }
+  };
+  global.PointerEvent = bool ? emptyFunction : undefined;
+  global.HTMLElement.prototype.setPointerCapture = bool
+    ? pointerCaptureFn('setPointerCapture')
+    : undefined;
+  global.HTMLElement.prototype.releasePointerCapture = bool
+    ? pointerCaptureFn('releasePointerCapture')
+    : undefined;
 }
 
 /**

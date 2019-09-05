@@ -9,8 +9,8 @@ import {
   needsStateRestore,
   restoreStateIfNeeded,
 } from './ReactControlledComponent';
-import {enableFlareAPI} from 'shared/ReactFeatureFlags';
 
+import {enableFlareAPI} from 'shared/ReactFeatureFlags';
 import {invokeGuardedCallbackAndCatchFirstError} from 'shared/ReactErrorUtils';
 
 // Used as a way to call batchedUpdates when we don't have a reference to
@@ -77,7 +77,8 @@ export function batchedEventUpdates(fn, a, b) {
   }
 }
 
-export function executeUserEventHandler(fn: any => void, value: any) {
+// This is for the React Flare event system
+export function executeUserEventHandler(fn: any => void, value: any): void {
   const previouslyInEventHandler = isInsideEventHandler;
   try {
     isInsideEventHandler = true;
