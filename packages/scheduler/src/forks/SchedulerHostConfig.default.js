@@ -7,8 +7,6 @@
 
 import {
   enableIsInputPending,
-  requestIdleCallbackBeforeFirstFrame as requestIdleCallbackBeforeFirstFrameFlag,
-  requestTimerEventBeforeFirstFrame,
   enableMessageLoopImplementation,
 } from '../SchedulerFeatureFlags';
 
@@ -87,7 +85,6 @@ if (
   const clearTimeout = window.clearTimeout;
   const requestAnimationFrame = window.requestAnimationFrame;
   const cancelAnimationFrame = window.cancelAnimationFrame;
-  const requestIdleCallback = window.requestIdleCallback;
 
   if (typeof console !== 'undefined') {
     // TODO: Remove fb.me link
@@ -106,11 +103,6 @@ if (
       );
     }
   }
-
-  const requestIdleCallbackBeforeFirstFrame =
-    requestIdleCallbackBeforeFirstFrameFlag &&
-    typeof requestIdleCallback === 'function' &&
-    typeof cancelIdleCallback === 'function';
 
   if (
     typeof performance === 'object' &&
@@ -359,50 +351,8 @@ if (
         // Start a rAF loop.
         isRAFLoopRunning = true;
         requestAnimationFrame(rAFTime => {
-          if (requestIdleCallbackBeforeFirstFrame) {
-            cancelIdleCallback(idleCallbackID);
-          }
-          if (requestTimerEventBeforeFirstFrame) {
-            clearTimeout(idleTimeoutID);
-          }
           onAnimationFrame(rAFTime);
         });
-
-        // If we just missed the last vsync, the next rAF might not happen for
-        // another frame. To claim as much idle time as possible, post a
-        // callback with `requestIdleCallback`, which should fire if there's
-        // idle time left in the frame.
-        //
-        // This should only be an issue for the first rAF in the loop;
-        // subsequent rAFs are scheduled at the beginning of the
-        // preceding frame.
-        let idleCallbackID;
-        if (requestIdleCallbackBeforeFirstFrame) {
-          idleCallbackID = requestIdleCallback(
-            function onIdleCallbackBeforeFirstFrame() {
-              if (requestTimerEventBeforeFirstFrame) {
-                clearTimeout(idleTimeoutID);
-              }
-              frameDeadline = getCurrentTime() + frameLength;
-              performWorkUntilDeadline();
-            },
-          );
-        }
-        // Alternate strategy to address the same problem. Scheduler a timer
-        // with no delay. If this fires before the rAF, that likely indicates
-        // that there's idle time before the next vsync. This isn't always the
-        // case, but we'll be aggressive and assume it is, as a trade off to
-        // prevent idle periods.
-        let idleTimeoutID;
-        if (requestTimerEventBeforeFirstFrame) {
-          idleTimeoutID = setTimeout(function onTimerEventBeforeFirstFrame() {
-            if (requestIdleCallbackBeforeFirstFrame) {
-              cancelIdleCallback(idleCallbackID);
-            }
-            frameDeadline = getCurrentTime() + frameLength;
-            performWorkUntilDeadline();
-          }, 0);
-        }
       }
     }
   };
