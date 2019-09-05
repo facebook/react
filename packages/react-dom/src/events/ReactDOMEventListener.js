@@ -149,7 +149,8 @@ function handleTopLevel(bookKeeping: BookKeepingInstance) {
     if (!root) {
       break;
     }
-    if (ancestor.tag === HostComponent || ancestor.tag === HostText) {
+    const tag = ancestor.tag;
+    if (tag === HostComponent || tag === HostText) {
       bookKeeping.ancestors.push(ancestor);
     }
     ancestor = getClosestInstanceFromNode(root);
@@ -327,13 +328,14 @@ export function dispatchEvent(
       // This tree has been unmounted already.
       targetInst = null;
     } else {
-      if (nearestMounted.tag === SuspenseComponent) {
+      const tag = nearestMounted.tag;
+      if (tag === SuspenseComponent) {
         // TODO: This is a good opportunity to schedule a replay of
         // the event instead once this boundary has been hydrated.
         // For now we're going to just ignore this event as if it's
         // not mounted.
         targetInst = null;
-      } else if (nearestMounted.tag === HostRoot) {
+      } else if (tag === HostRoot) {
         // We have not yet mounted/hydrated the first children.
         // TODO: This is a good opportunity to schedule a replay of
         // the event instead once this root has been hydrated.
