@@ -746,9 +746,9 @@ module.exports = function(babel) {
       );
     }
 
+    // import {jsx} from "react";
+    // import {createElement} from "react";
     if (state.autoImport === IMPORT_TYPES.namedExports) {
-      // import {jsx} from "react";
-      // import {createElement} from "react";
       const imports = getImportNames(path, state);
       const importMap = {};
 
@@ -765,16 +765,16 @@ module.exports = function(babel) {
             state.source,
           );
 
-          const newName = path.scope.generateUidIdentifier(importName);
+          const importIdentifier = path.scope.generateUidIdentifier(importName);
           importPath.insertAfter(
             t.variableDeclaration('var', [
               t.variableDeclarator(
-                newName,
+                importIdentifier,
                 t.identifier(importMap[importName]),
               ),
             ]),
           );
-          importMap[importName] = newName.name;
+          importMap[importName] = importIdentifier.name;
         });
       }
 
@@ -796,8 +796,8 @@ module.exports = function(babel) {
       name = addDefault(path, state.source).name;
     }
 
+    // cache react function names as variables at the top of the file
     if (state.shouldCacheImportFns) {
-      // cache react function names as variables at the top of the file
       // var _jsx = _react.jsx;
       // var _createElement = _react.createElement;
       const imports = getImportNames(path, state);
@@ -812,16 +812,16 @@ module.exports = function(babel) {
       }
 
       Object.keys(imports).forEach(importName => {
-        const newName = path.scope.generateUidIdentifier(importName);
+        const importIdentifier = path.scope.generateUidIdentifier(importName);
         importPath.insertAfter(
           t.variableDeclaration('var', [
             t.variableDeclarator(
-              newName,
+              importIdentifier,
               t.memberExpression(t.identifier(name), t.identifier(importName)),
             ),
           ]),
         );
-        importMap[importName] = newName.name;
+        importMap[importName] = importIdentifier.name;
       });
       return importMap;
     } else {
