@@ -16,7 +16,9 @@ type FrameTimeoutConfigType = {
   timePastFrameDeadline: ?number,
 };
 
-describe('SchedulerDOM', () => {
+// Note: this is testing the implementation that we turned off.
+// enableMessageLoopImplementation is true on master.
+describe('SchedulerRAFOld', () => {
   let rAFCallbacks = [];
   let postMessageCallback;
   let postMessageEvents = [];
@@ -101,6 +103,7 @@ describe('SchedulerDOM', () => {
       ),
     );
 
+    require('scheduler/src/SchedulerFeatureFlags').enableMessageLoopImplementation = false;
     Scheduler = require('scheduler');
   });
 
