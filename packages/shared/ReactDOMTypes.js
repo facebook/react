@@ -55,7 +55,7 @@ export type ReactDOMResponderContext = {
     eventPriority: EventPriority,
   ) => void,
   isTargetWithinNode: (
-    childTarget: null | Element | Document,
+    childTarget: Element | Document,
     parentTarget: Element | Document,
   ) => boolean,
   isTargetWithinResponder: (null | Element | Document) => boolean,

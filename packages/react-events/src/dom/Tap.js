@@ -321,22 +321,17 @@ function getHitTarget(
   context: ReactDOMResponderContext,
   state: TapState,
 ): null | Element | Document {
-  if (hasPointerEvents) {
-    return event.target;
-  } else {
-    if (event.pointerType === 'touch') {
-      const doc = context.getActiveDocument();
-      const nativeEvent: any = event.nativeEvent;
-      const touch = getTouchById(nativeEvent, state.activePointerId);
-      if (touch != null) {
-        return doc.elementFromPoint(touch.clientX, touch.clientY);
-      } else {
-        return null;
-      }
+  if (!hasPointerEvents && event.pointerType === 'touch') {
+    const doc = context.getActiveDocument();
+    const nativeEvent: any = event.nativeEvent;
+    const touch = getTouchById(nativeEvent, state.activePointerId);
+    if (touch != null) {
+      return doc.elementFromPoint(touch.clientX, touch.clientY);
     } else {
-      return event.target;
+      return null;
     }
   }
+  return event.target;
 }
 
 function isActivePointer(
@@ -617,6 +612,7 @@ const responderImpl = {
       case 'scroll': {
         if (
           state.isActive &&
+          state.responderTarget != null &&
           // We ignore incoming scroll events when using mouse events
           state.pointerType !== 'mouse' &&
           // If the scroll target is the document or if the pointer target
