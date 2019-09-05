@@ -73,8 +73,15 @@ type BaseFiberRootProperties = {|
   firstPendingTime: ExpirationTime,
   // The latest pending expiration time that exists in the tree
   lastPendingTime: ExpirationTime,
-  // The time at which a suspended component pinged the root to render again
-  pingTime: ExpirationTime,
+  // The earliest suspended expiration time that exists in the tree
+  firstSuspendedTime: ExpirationTime,
+  // The latest suspended expiration time that exists in the tree
+  lastSuspendedTime: ExpirationTime,
+  // The next known expiration time after the suspended range
+  nextAfterSuspendedTime: ExpirationTime,
+  // The latest time at which a suspended component pinged the root to
+  // render again
+  lastPingedTime: ExpirationTime,
 |};
 
 // The following attributes are only used by interaction tracing builds.
@@ -120,7 +127,10 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   this.callbackExpirationTime = NoWork;
   this.firstPendingTime = NoWork;
   this.lastPendingTime = NoWork;
-  this.pingTime = NoWork;
+  this.firstSuspendedTime = NoWork;
+  this.lastSuspendedTime = NoWork;
+  this.nextAfterSuspendedTime = NoWork;
+  this.lastPingedTime = NoWork;
 
   if (enableSchedulerTracing) {
     this.interactionThreadID = unstable_getThreadID();
@@ -150,4 +160,54 @@ export function createFiberRoot(
   uninitializedFiber.stateNode = root;
 
   return root;
+}
+
+export function isRootSuspendedAtTime(
+  root: FiberRoot,
+  expirationTime: ExpirationTime,
+): boolean {
+  const firstSuspendedTime = root.firstSuspendedTime;
+  const lastSuspendedTime = root.lastSuspendedTime;
+  return (
+    firstSuspendedTime !== NoWork &&
+    (firstSuspendedTime >= expirationTime &&
+      lastSuspendedTime <= expirationTime)
+  );
+}
+
+export function markRootSuspendedAtTime(
+  root: FiberRoot,
+  expirationTime: ExpirationTime,
+): void {
+  const firstSuspendedTime = root.firstSuspendedTime;
+  const lastSuspendedTime = root.lastSuspendedTime;
+  if (firstSuspendedTime < expirationTime) {
+    root.firstSuspendedTime = expirationTime;
+  }
+  if (lastSuspendedTime > expirationTime || firstSuspendedTime === NoWork) {
+    root.lastSuspendedTime = expirationTime;
+  }
+
+  if (expirationTime <= root.lastPingedTime) {
+    root.lastPingedTime = NoWork;
+  }
+}
+
+export function markRootUnsuspendedAtTime(
+  root: FiberRoot,
+  expirationTime: ExpirationTime,
+): void {
+  if (expirationTime <= root.lastSuspendedTime) {
+    // The entire suspended range is now unsuspended.
+    root.firstSuspendedTime = root.lastSuspendedTime = root.nextAfterSuspendedTime = NoWork;
+  } else if (expirationTime <= root.firstSuspendedTime) {
+    // Part of the suspended range is now unsuspended. Narrow the range to
+    // include everything between the unsuspended time (non-inclusive) and the
+    // last suspended time.
+    root.firstSuspendedTime = expirationTime - 1;
+  }
+
+  if (expirationTime <= root.lastPingedTime) {
+    root.lastPingedTime = NoWork;
+  }
 }
