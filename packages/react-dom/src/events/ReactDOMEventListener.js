@@ -338,6 +338,11 @@ export function dispatchEvent(
         targetInst = null;
       }
     } else {
+      // TODO: If the nearest match was not mounted because it's part
+      // an in-progress hydration, this would be a good time schedule
+      // a replay of the event. However, we don't have easy access to
+      // the HostRoot or SuspenseComponent here.
+
       // If we get an event (ex: img onload) before committing that
       // component's mount, ignore it for now (that is, treat it as if it was an
       // event on a non-React tree). We might also consider queueing events and
