@@ -573,6 +573,8 @@ const responderImpl = {
 
           state.gestureState = createGestureState(context, props, state, event);
 
+          state.isActive = false;
+          dispatchChange(context, props, state);
           if (context.isTargetWithinResponder(hitTarget)) {
             // Determine whether to call preventDefault on subsequent native events.
             if (isModifiedTap(event)) {
@@ -582,8 +584,6 @@ const responderImpl = {
           } else {
             dispatchCancel(context, props, state);
           }
-          state.isActive = false;
-          dispatchChange(context, props, state);
         }
 
         if (!hasPointerEvents) {
@@ -601,9 +601,9 @@ const responderImpl = {
       case 'dragstart': {
         if (state.isActive && isActivePointer(event, state)) {
           state.gestureState = createGestureState(context, props, state, event);
-          dispatchCancel(context, props, state);
           state.isActive = false;
           dispatchChange(context, props, state);
+          dispatchCancel(context, props, state);
         }
         break;
       }
@@ -620,9 +620,9 @@ const responderImpl = {
           context.isTargetWithinNode(state.responderTarget, nativeEvent.target)
         ) {
           state.gestureState = createGestureState(context, props, state, event);
-          dispatchCancel(context, props, state);
           state.isActive = false;
           dispatchChange(context, props, state);
+          dispatchCancel(context, props, state);
         }
         break;
       }
