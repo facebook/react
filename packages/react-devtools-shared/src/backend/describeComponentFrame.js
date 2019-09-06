@@ -10,7 +10,7 @@
 // This file was forked from the React GitHub repo:
 // https://raw.githubusercontent.com/facebook/react/master/packages/shared/describeComponentFrame.js
 //
-// It has been modified sligthly to add a zero width space as commented below.
+// It has been modified slightly to add a zero width space as commented below.
 
 const BEFORE_SLASH_RE = /^(.*)[\\/]/;
 

@@ -121,7 +121,7 @@ function NativeStyleContextController({children}: Props) {
           } else {
             resource.write(element, styleAndLayout);
 
-            // Schedule update with React if the curently-selected element has been invalidated.
+            // Schedule update with React if the currently-selected element has been invalidated.
             if (id === selectedElementID) {
               setCurrentStyleAndLayout(styleAndLayout);
             }
