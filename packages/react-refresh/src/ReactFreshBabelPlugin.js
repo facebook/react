@@ -571,6 +571,11 @@ export default function(babel) {
 
           // The signature call is split in two parts. One part is called inside the function.
           // This is used to signal when first render happens.
+          if (path.node.body.type !== 'BlockStatement') {
+            path.node.body = t.blockStatement([
+              t.returnStatement(path.node.body),
+            ]);
+          }
           path
             .get('body')
             .unshiftContainer(
