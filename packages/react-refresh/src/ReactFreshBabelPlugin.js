@@ -7,16 +7,16 @@
 
 'use strict';
 
-export default function(babel) {
+export default function(babel, opts) {
   if (typeof babel.getEnv === 'function') {
     // Only available in Babel 7.
     const env = babel.getEnv();
-    if (env !== 'development' && typeof expect !== 'function') {
+    if (env !== 'development' && !opts.skipEnvCheck) {
       throw new Error(
         'React Refresh Babel transform should only be enabled in development environment. ' +
           'Instead, the environment is: "' +
           env +
-          '".',
+          '". If you want to override this check, pass {skipEnvCheck: true} as plugin options.',
       );
     }
   }
