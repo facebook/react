@@ -82,3 +82,16 @@ export function printStore(store: Store, includeWeight: boolean = false) {
 
   return snapshotLines.join('\n');
 }
+
+// We use JSON.parse to parse string values
+// e.g. 'foo' is not valid JSON but it is a valid string
+// so this method replaces e.g. 'foo' with "foo"
+export function sanitizeForParse(value: any) {
+  if (typeof value === 'string') {
+    if (value.charAt(0) === "'" && value.charAt(value.length - 1) === "'") {
+      return '"' + value.substr(1, value.length - 2) + '"';
+    }
+  }
+
+  return value;
+}
