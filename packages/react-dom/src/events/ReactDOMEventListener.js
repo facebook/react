@@ -21,8 +21,17 @@ import {
   flushDiscreteUpdatesIfNeeded,
 } from 'legacy-events/ReactGenericBatching';
 import {runExtractedPluginEventsInBatch} from 'legacy-events/EventPluginHub';
-import {dispatchEventForResponderEventSystem} from '../events/DOMEventResponderSystem';
-import {getNearestMountedFiber} from 'react-reconciler/reflection';
+import {dispatchEventForResponderEventSystem} from './DOMEventResponderSystem';
+import {
+  isReplayableDiscreteEvent,
+  queueDiscreteEvent,
+  hasQueuedDiscreteEvents,
+} from './ReactDOMEventReplaying';
+import {
+  getNearestMountedFiber,
+  getContainerFromFiber,
+  getSuspenseInstanceFromFiber,
+} from 'react-reconciler/reflection';
 import {
   HostRoot,
   SuspenseComponent,
@@ -319,6 +328,19 @@ export function dispatchEvent(
   if (!_enabled) {
     return;
   }
+  if (hasQueuedDiscreteEvents() && isReplayableDiscreteEvent(topLevelType)) {
+    // If we already have a queue of discrete events, and this is another discrete
+    // event, then we can't dispatch it regardless of its target, since they
+    // need to dispatch in order.
+    queueDiscreteEvent(
+      null, // Flags that we're not actually blocked on anything as far as we know.
+      topLevelType,
+      eventSystemFlags,
+      nativeEvent,
+    );
+    return;
+  }
+
   const nativeEventTarget = getEventTarget(nativeEvent);
   let targetInst = getClosestInstanceFromNode(nativeEventTarget);
 
@@ -330,18 +352,41 @@ export function dispatchEvent(
     } else {
       const tag = nearestMounted.tag;
       if (tag === SuspenseComponent) {
-        // TODO: This is a good opportunity to schedule a replay of
-        // the event instead once this boundary has been hydrated.
-        // For now we're going to just ignore this event as if it's
-        // not mounted.
-        targetInst = null;
+        // TODO: Check if this boundary is indeed still hydrating.
+        if (isReplayableDiscreteEvent(topLevelType)) {
+          // Queue the event to be replayed later. Abort dispatching since we
+          // don't want this event dispatched twice through the event system.
+          // TODO: This is the first discrete event. Schedule an increased
+          // priority for this boundary.
+          queueDiscreteEvent(
+            getSuspenseInstanceFromFiber(nearestMounted),
+            topLevelType,
+            eventSystemFlags,
+            nativeEvent,
+          );
+          return;
+        } else {
+          // This is not replayable so we'll invoke it but without a target,
+          // in case the event system needs to trace it.
+          targetInst = null;
+        }
       } else if (tag === HostRoot) {
-        // We have not yet mounted/hydrated the first children.
-        // TODO: This is a good opportunity to schedule a replay of
-        // the event instead once this root has been hydrated.
-        // For now we're going to just ignore this event as if it's
-        // not mounted.
-        targetInst = null;
+        // TODO: Check if this boundary is indeed still a not yet mounted/hydrated root.
+        if (isReplayableDiscreteEvent(topLevelType)) {
+          // Queue the event to be replayed later. Abort dispatching since we
+          // don't want this event dispatched twice through the event system.
+          queueDiscreteEvent(
+            getContainerFromFiber(nearestMounted),
+            topLevelType,
+            eventSystemFlags,
+            nativeEvent,
+          );
+          return;
+        } else {
+          // This is not replayable so we'll invoke it but without a target,
+          // in case the event system needs to trace it.
+          targetInst = null;
+        }
       } else if (nearestMounted !== targetInst) {
         // If we get an event (ex: img onload) before committing that
         // component's mount, ignore it for now (that is, treat it as if it was an
