@@ -27,6 +27,7 @@ type KeyboardProps = {|
   onClick?: (e: KeyboardEvent) => ?boolean,
   onKeyDown?: (e: KeyboardEvent) => ?boolean,
   onKeyUp?: (e: KeyboardEvent) => ?boolean,
+  preventClick?: boolean,
   preventKeys?: PreventKeysArray,
 |};
 
@@ -256,6 +257,12 @@ const keyboardResponderImpl = {
         );
       }
     } else if (type === 'click' && isVirtualClick(event)) {
+      if (props.preventClick !== false) {
+        // 'click' occurs before or after 'keyup', and may need native
+        // behavior prevented
+        nativeEvent.preventDefault();
+        state.defaultPrevented = true;
+      }
       const onClick = props.onClick;
       if (onClick != null) {
         dispatchKeyboardEvent(
@@ -265,10 +272,6 @@ const keyboardResponderImpl = {
           'keyboard:click',
           state.defaultPrevented,
         );
-      }
-      if (state.defaultPrevented && !nativeEvent.defaultPrevented) {
-        // 'click' occurs before 'keyup' and may need native behavior prevented
-        nativeEvent.preventDefault();
       }
     } else if (type === 'keyup') {
       state.isActive = false;

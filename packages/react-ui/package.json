@@ -20,6 +20,7 @@
     "events/input.js",
     "events/keyboard.js",
     "events/press.js",
+    "events/press-legacy.js",
     "events/scroll.js",
     "events/swipe.js",
     "events/tap.js",
