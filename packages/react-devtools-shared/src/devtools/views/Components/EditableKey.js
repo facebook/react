@@ -7,7 +7,7 @@
  * @flow
  */
 
-import React, {Fragment, useRef, useCallback, useEffect, useState} from 'react';
+import React, {useRef, useCallback, useEffect, useState} from 'react';
 import styles from './EditableKey.css';
 
 type OverrideKeyFn = (path: Array<string | number>, value: any) => void;
@@ -66,15 +66,13 @@ export default function EditableKey({
   );
 
   return (
-    <Fragment>
-      <input
-        className={styles.Input}
-        onChange={handleChange}
-        onKeyDown={handleKeyDown}
-        ref={inputRef}
-        type="text"
-        value={editableKey}
-      />
-    </Fragment>
+    <input
+      className={styles.Input}
+      onChange={handleChange}
+      onKeyDown={handleKeyDown}
+      ref={inputRef}
+      type="text"
+      value={editableKey}
+    />
   );
 }
