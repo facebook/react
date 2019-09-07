@@ -82,7 +82,10 @@ export default function InspectedElementTree({
   const handleEntryAddValue = useCallback(
     (...args) => {
       setEntryToAdd(null);
-      overrideValueFn(...args);
+
+      if (typeof overrideValueFn === 'function') {
+        overrideValueFn(...args);
+      }
     },
     [overrideValueFn, setEntryToAdd],
   );
