@@ -20,8 +20,8 @@ type KeyboardEventType = 'keydown' | 'keyup';
 
 type KeyboardProps = {
   disabled: boolean,
-  onKeyDown: (e: KeyboardEvent) => void,
-  onKeyUp: (e: KeyboardEvent) => void,
+  onKeyDown: (e: KeyboardEvent) => ?boolean,
+  onKeyUp: (e: KeyboardEvent) => ?boolean,
   preventKeys: Array<string>,
 };
 
@@ -162,7 +162,7 @@ function createKeyboardEvent(
 
 function dispatchKeyboardEvent(
   event: ReactDOMResponderEvent,
-  listener: KeyboardEvent => void,
+  listener: KeyboardEvent => ?boolean,
   context: ReactDOMResponderContext,
   type: KeyboardEventType,
   defaultPrevented: boolean,
@@ -209,9 +209,11 @@ const keyboardResponderImpl = {
             const config = ((preventKey[1]: any): Object);
             for (let s = 0; s < modifiers.length; s++) {
               const modifier = modifiers[s];
+              const configModifier = config[modifier];
+              const eventModifier = nativeEvent[modifier];
               if (
-                (config[modifier] && !nativeEvent[modifier]) ||
-                (!config[modifier] && nativeEvent[modifier])
+                (configModifier && !eventModifier) ||
+                (!configModifier && eventModifier)
               ) {
                 continue preventKeyLoop;
               }
