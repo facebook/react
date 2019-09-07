@@ -8,10 +8,12 @@
  */
 
 import {copy} from 'clipboard-js';
-import React, {useCallback} from 'react';
+import React, {useEffect, useCallback, useState} from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import KeyValue from './KeyValue';
+import EditableKey from './EditableKey';
+import EditableValue from './EditableValue';
 import {alphaSortEntries, serializeDataForCopy} from '../utils';
 import styles from './InspectedElementTree.css';
 
@@ -25,6 +27,7 @@ type Props = {|
   label: string,
   overrideValueFn?: ?OverrideValueFn,
   showWhenEmpty?: boolean,
+  canAddEntries?: boolean,
 |};
 
 export default function InspectedElementTree({
@@ -32,18 +35,56 @@ export default function InspectedElementTree({
   inspectPath,
   label,
   overrideValueFn,
+  canAddEntries = false,
   showWhenEmpty = false,
 }: Props) {
-  const entries = data != null ? Object.entries(data) : null;
-  if (entries !== null) {
-    entries.sort(alphaSortEntries);
-  }
+  const [entries, setEntries] = useState(null);
+  const [entryToAdd, setEntryToAdd] = useState(null);
+
+  useEffect(
+    () => {
+      if (data != null) {
+        setEntries(Object.entries(data).sort(alphaSortEntries));
+      } else {
+        setEntries(null);
+      }
+    },
+    [data],
+  );
 
   const isEmpty = entries === null || entries.length === 0;
 
   const handleCopy = useCallback(
     () => copy(serializeDataForCopy(((data: any): Object))),
     [data],
+  );
+
+  const handleEntryAdd = useCallback(
+    () => {
+      setEntryToAdd({
+        key: null,
+        value: '',
+      });
+    },
+    [setEntryToAdd],
+  );
+
+  const handleEntryAddName = useCallback(
+    key => {
+      setEntryToAdd({
+        ...entryToAdd,
+        key,
+      });
+    },
+    [entryToAdd, setEntryToAdd],
+  );
+
+  const handleEntryAddValue = useCallback(
+    (...args) => {
+      setEntryToAdd(null);
+      overrideValueFn(...args);
+    },
+    [overrideValueFn, setEntryToAdd],
   );
 
   if (isEmpty && !showWhenEmpty) {
@@ -56,6 +97,11 @@ export default function InspectedElementTree({
           {!isEmpty && (
             <Button onClick={handleCopy} title="Copy to clipboard">
               <ButtonIcon type="copy" />
+            </Button>
+          )}
+          {canAddEntries && (
+            <Button onClick={handleEntryAdd} title={`Add ${label}`}>
+              <ButtonIcon type="add" />
             </Button>
           )}
         </div>
@@ -73,6 +119,17 @@ export default function InspectedElementTree({
               value={value}
             />
           ))}
+        {entryToAdd && (
+          <div className={styles.AddEntry}>
+            <EditableKey overrideKeyFn={handleEntryAddName} />:
+            <EditableValue
+              dataType={typeof entryToAdd.value}
+              overrideValueFn={handleEntryAddValue}
+              path={[entryToAdd.key]}
+              value={entryToAdd.value}
+            />
+          </div>
+        )}
       </div>
     );
   }

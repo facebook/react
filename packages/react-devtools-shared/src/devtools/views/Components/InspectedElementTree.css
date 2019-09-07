@@ -46,3 +46,8 @@
   font-style: italic;
   padding-left: 0.75rem;
 }
+
+.AddEntry {
+  display: flex;
+  padding-left: 0.9rem;
+}
