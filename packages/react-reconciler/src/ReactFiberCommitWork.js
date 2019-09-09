@@ -103,6 +103,8 @@ import {
   unmountResponderInstance,
   unmountFundamentalComponent,
   updateFundamentalComponent,
+  commitHydratedContainer,
+  commitHydratedSuspenseInstance,
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
@@ -612,9 +614,7 @@ function commitLifeCycles(
       return;
     }
     case SuspenseComponent: {
-      if (enableSuspenseCallback) {
-        commitSuspenseHydrationCallbacks(finishedRoot, finishedWork);
-      }
+      commitSuspenseHydrationCallbacks(finishedRoot, finishedWork);
       return;
     }
     case SuspenseListComponent:
@@ -1306,11 +1306,12 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
         return;
       }
       case HostRoot: {
-        const root: FiberRoot = finishedWork.stateNode;
         if (supportsHydration) {
+          const root: FiberRoot = finishedWork.stateNode;
           if (root.hydrate) {
             // We've just hydrated. No need to hydrate again.
             root.hydrate = false;
+            commitHydratedContainer(root.containerInfo);
           }
         }
         break;
@@ -1384,11 +1385,12 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       return;
     }
     case HostRoot: {
-      const root: FiberRoot = finishedWork.stateNode;
       if (supportsHydration) {
+        const root: FiberRoot = finishedWork.stateNode;
         if (root.hydrate) {
           // We've just hydrated. No need to hydrate again.
           root.hydrate = false;
+          commitHydratedContainer(root.containerInfo);
         }
       }
       return;
@@ -1477,18 +1479,25 @@ function commitSuspenseHydrationCallbacks(
   finishedRoot: FiberRoot,
   finishedWork: Fiber,
 ) {
-  if (enableSuspenseCallback) {
-    const hydrationCallbacks = finishedRoot.hydrationCallbacks;
-    if (hydrationCallbacks !== null) {
-      const onHydrated = hydrationCallbacks.onHydrated;
-      if (onHydrated) {
-        const newState: SuspenseState | null = finishedWork.memoizedState;
-        if (newState === null) {
-          const current = finishedWork.alternate;
-          if (current !== null) {
-            const prevState: SuspenseState | null = current.memoizedState;
-            if (prevState !== null && prevState.dehydrated !== null) {
-              onHydrated(prevState.dehydrated);
+  if (!supportsHydration) {
+    return;
+  }
+  const newState: SuspenseState | null = finishedWork.memoizedState;
+  if (newState === null) {
+    const current = finishedWork.alternate;
+    if (current !== null) {
+      const prevState: SuspenseState | null = current.memoizedState;
+      if (prevState !== null) {
+        const suspenseInstance = prevState.dehydrated;
+        if (suspenseInstance !== null) {
+          commitHydratedSuspenseInstance(suspenseInstance);
+          if (enableSuspenseCallback) {
+            const hydrationCallbacks = finishedRoot.hydrationCallbacks;
+            if (hydrationCallbacks !== null) {
+              const onHydrated = hydrationCallbacks.onHydrated;
+              if (onHydrated) {
+                onHydrated(suspenseInstance);
+              }
             }
           }
         }

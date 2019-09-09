@@ -142,3 +142,9 @@ export function queueDiscreteEvent(
     ),
   );
 }
+
+export function retryIfBlockedOn(
+  blockedOn: Container | SuspenseInstance,
+): void {
+  // TODO: Retry if we're blocked on this boundary.
+}
