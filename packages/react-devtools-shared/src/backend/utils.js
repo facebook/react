@@ -43,7 +43,6 @@ export function copyWithSet(
   value: any,
   index: number = 0,
 ): Object | Array<any> {
-  console.log('[utils] copyWithSet()', obj, path, index, value);
   if (index >= path.length) {
     return value;
   }
