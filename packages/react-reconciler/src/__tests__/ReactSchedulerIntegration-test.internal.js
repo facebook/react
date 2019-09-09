@@ -281,13 +281,30 @@ describe('ReactSchedulerIntegration', () => {
       });
       return null;
     }
+    function CleanupEffect() {
+      useLayoutEffect(() => () => {
+        Scheduler.unstable_yieldValue('Cleanup Layout Effect');
+        Scheduler.unstable_scheduleCallback(NormalPriority, () =>
+          Scheduler.unstable_yieldValue(
+            'Scheduled Normal Callback from Cleanup Layout Effect',
+          ),
+        );
+      });
+      return null;
+    }
+    await ReactNoop.act(async () => {
+      ReactNoop.render(<CleanupEffect />);
+    });
+    expect(Scheduler).toHaveYielded([]);
     await ReactNoop.act(async () => {
       ReactNoop.render(<Effects />);
     });
     expect(Scheduler).toHaveYielded([
+      'Cleanup Layout Effect',
       'Layout Effect',
       'Passive Effect',
-      // This callback should be scheduled after the passive effects.
+      // These callbacks should be scheduled after the passive effects.
+      'Scheduled Normal Callback from Cleanup Layout Effect',
       'Scheduled Normal Callback from Layout Effect',
     ]);
   });

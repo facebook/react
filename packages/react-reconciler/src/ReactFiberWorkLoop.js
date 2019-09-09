@@ -1819,7 +1819,8 @@ function commitRootImpl(root, renderPriorityLevel) {
 
 function commitBeforeMutationEffects() {
   while (nextEffect !== null) {
-    if ((nextEffect.effectTag & Snapshot) !== NoEffect) {
+    const effectTag = nextEffect.effectTag;
+    if ((effectTag & Snapshot) !== NoEffect) {
       setCurrentDebugFiberInDEV(nextEffect);
       recordEffect();
 
@@ -1827,6 +1828,17 @@ function commitBeforeMutationEffects() {
       commitBeforeMutationEffectOnFiber(current, nextEffect);
 
       resetCurrentDebugFiberInDEV();
+    }
+    if ((effectTag & Passive) !== NoEffect) {
+      // If there are passive effects, schedule a callback to flush at
+      // the earliest opportunity.
+      if (!rootDoesHavePassiveEffects) {
+        rootDoesHavePassiveEffects = true;
+        scheduleCallback(NormalPriority, () => {
+          flushPassiveEffects();
+          return null;
+        });
+      }
     }
     nextEffect = nextEffect.nextEffect;
   }
@@ -1847,17 +1859,6 @@ function commitMutationEffects(root: FiberRoot, renderPriorityLevel) {
       const current = nextEffect.alternate;
       if (current !== null) {
         commitDetachRef(current);
-      }
-    }
-
-    if (effectTag & Passive) {
-      // If there are passive effects, schedule a callback to flush them.
-      if (!rootDoesHavePassiveEffects) {
-        rootDoesHavePassiveEffects = true;
-        scheduleCallback(NormalPriority, () => {
-          flushPassiveEffects();
-          return null;
-        });
       }
     }
 
