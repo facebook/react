@@ -1497,14 +1497,6 @@ function commitRoot(root) {
     ImmediatePriority,
     commitRootImpl.bind(null, root, renderPriorityLevel),
   );
-  // If there are passive effects, schedule a callback to flush them. This goes
-  // outside commitRootImpl so that it inherits the priority of the render.
-  if (rootWithPendingPassiveEffects !== null) {
-    scheduleCallback(NormalPriority, () => {
-      flushPassiveEffects();
-      return null;
-    });
-  }
   return null;
 }
 
@@ -1858,6 +1850,17 @@ function commitMutationEffects(root: FiberRoot, renderPriorityLevel) {
       }
     }
 
+    if (effectTag & Passive) {
+      // If there are passive effects, schedule a callback to flush them.
+      if (!rootDoesHavePassiveEffects) {
+        rootDoesHavePassiveEffects = true;
+        scheduleCallback(NormalPriority, () => {
+          flushPassiveEffects();
+          return null;
+        });
+      }
+    }
+
     // The following switch statement is only concerned about placement,
     // updates, and deletions. To avoid needing to add a case for every possible
     // bitmap value, we remove the secondary effects from the effect tag and
@@ -1941,10 +1944,6 @@ function commitLayoutEffects(
     if (effectTag & Ref) {
       recordEffect();
       commitAttachRef(nextEffect);
-    }
-
-    if (effectTag & Passive) {
-      rootDoesHavePassiveEffects = true;
     }
 
     resetCurrentDebugFiberInDEV();
