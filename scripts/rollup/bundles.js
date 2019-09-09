@@ -455,7 +455,7 @@ const bundles = [
     // won't get copied. We also can't create just DEV bundle because it contains a
     // NODE_ENV check inside. We should probably tweak our build process to allow
     // "raw" packages that don't get bundled.
-    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV],
+    bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: ISOMORPHIC,
     entry: 'eslint-plugin-react-hooks',
     global: 'ESLintPluginReactHooks',
@@ -471,7 +471,7 @@ const bundles = [
     externals: [],
   },
   {
-    bundleTypes: [NODE_DEV, NODE_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV],
     moduleType: ISOMORPHIC,
     entry: 'react-refresh/runtime',
     global: 'ReactFreshRuntime',

@@ -8,7 +8,7 @@
  */
 
 // Reach styles need to come before any component styles.
-// This makes overridding the styles simpler.
+// This makes overriding the styles simpler.
 import '@reach/menu-button/styles.css';
 import '@reach/tooltip/styles.css';
 

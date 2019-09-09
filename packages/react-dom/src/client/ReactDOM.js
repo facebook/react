@@ -70,6 +70,7 @@ import {
   getNodeFromInstance,
   getFiberCurrentPropsFromNode,
   getClosestInstanceFromNode,
+  markContainerAsRoot,
 } from './ReactDOMComponentTree';
 import {restoreControlledState} from './ReactDOMComponent';
 import {dispatchEvent} from '../events/ReactDOMEventListener';
@@ -375,6 +376,7 @@ function ReactSyncRoot(
     (options != null && options.hydrationOptions) || null;
   const root = createContainer(container, tag, hydrate, hydrationCallbacks);
   this._internalRoot = root;
+  markContainerAsRoot(root.current, container);
 }
 
 function ReactRoot(container: DOMContainer, options: void | RootOptions) {
@@ -388,6 +390,7 @@ function ReactRoot(container: DOMContainer, options: void | RootOptions) {
     hydrationCallbacks,
   );
   this._internalRoot = root;
+  markContainerAsRoot(root.current, container);
 }
 
 ReactRoot.prototype.render = ReactSyncRoot.prototype.render = function(

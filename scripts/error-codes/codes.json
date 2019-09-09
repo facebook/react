@@ -341,5 +341,6 @@
   "340": "Threw in newly mounted dehydrated component. This is likely a bug in React. Please file an issue.",
   "341": "We just came from a parent so we must have had a parent. This is a bug in React.",
   "342": "A React component suspended while rendering, but no fallback UI was specified.\n\nAdd a <Suspense fallback=...> component higher in the tree to provide a loading indicator or placeholder to display.",
-  "343": "ReactDOMServer does not yet support scope components."
+  "343": "ReactDOMServer does not yet support scope components.",
+  "344": "Expected prepareToHydrateHostSuspenseInstance() to never be called. This error is likely caused by a bug in React. Please file an issue."
 }

@@ -158,7 +158,7 @@ const eventResponderContext: ReactDOMResponderContext = {
     return false;
   },
   isTargetWithinNode(
-    childTarget: null | Element | Document,
+    childTarget: Element | Document,
     parentTarget: Element | Document,
   ): boolean {
     validateResponderContext();

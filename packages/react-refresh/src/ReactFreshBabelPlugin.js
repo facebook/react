@@ -7,16 +7,16 @@
 
 'use strict';
 
-export default function(babel) {
+export default function(babel, opts) {
   if (typeof babel.getEnv === 'function') {
     // Only available in Babel 7.
     const env = babel.getEnv();
-    if (env !== 'development' && typeof expect !== 'function') {
+    if (env !== 'development' && !opts.skipEnvCheck) {
       throw new Error(
         'React Refresh Babel transform should only be enabled in development environment. ' +
           'Instead, the environment is: "' +
           env +
-          '".',
+          '". If you want to override this check, pass {skipEnvCheck: true} as plugin options.',
       );
     }
   }
@@ -571,6 +571,11 @@ export default function(babel) {
 
           // The signature call is split in two parts. One part is called inside the function.
           // This is used to signal when first render happens.
+          if (path.node.body.type !== 'BlockStatement') {
+            path.node.body = t.blockStatement([
+              t.returnStatement(path.node.body),
+            ]);
+          }
           path
             .get('body')
             .unshiftContainer(
