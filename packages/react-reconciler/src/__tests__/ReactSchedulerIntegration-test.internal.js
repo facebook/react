@@ -265,6 +265,33 @@ describe('ReactSchedulerIntegration', () => {
     expect(Scheduler).toHaveYielded(['Effect clean-up priority: Idle']);
   });
 
+  it('passive effects are called before Normal-pri scheduled in layout effects', async () => {
+    const {useEffect, useLayoutEffect} = React;
+    function Effects({step}) {
+      useLayoutEffect(() => {
+        Scheduler.unstable_yieldValue('Layout Effect');
+        Scheduler.unstable_scheduleCallback(NormalPriority, () =>
+          Scheduler.unstable_yieldValue(
+            'Scheduled Normal Callback from Layout Effect',
+          ),
+        );
+      });
+      useEffect(() => {
+        Scheduler.unstable_yieldValue('Passive Effect');
+      });
+      return null;
+    }
+    await ReactNoop.act(async () => {
+      ReactNoop.render(<Effects />);
+    });
+    expect(Scheduler).toHaveYielded([
+      'Layout Effect',
+      'Passive Effect',
+      // This callback should be scheduled after the passive effects.
+      'Scheduled Normal Callback from Layout Effect',
+    ]);
+  });
+
   it('after completing a level of work, infers priority of the next batch based on its expiration time', () => {
     function App({label}) {
       Scheduler.unstable_yieldValue(
