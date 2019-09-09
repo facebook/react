@@ -83,8 +83,10 @@ if (
   const Date = window.Date;
   const setTimeout = window.setTimeout;
   const clearTimeout = window.clearTimeout;
-  const requestAnimationFrame = window.requestAnimationFrame && window.requestAnimationFrame.bind(window);
-  const cancelAnimationFrame = window.cancelAnimationFrame && window.cancelAnimationFrame.bind(window);
+  const requestAnimationFrame =
+    window.requestAnimationFrame && window.requestAnimationFrame.bind(window);
+  const cancelAnimationFrame =
+    window.cancelAnimationFrame && window.cancelAnimationFrame.bind(window);
 
   if (typeof console !== 'undefined') {
     // TODO: Remove fb.me link
