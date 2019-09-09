@@ -256,56 +256,6 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Everything is fine.')]);
   });
 
-  it('on error, retries at a lower priority using the expiration of higher priority', () => {
-    class Parent extends React.Component {
-      state = {hideChild: false};
-      componentDidUpdate() {
-        Scheduler.unstable_yieldValue('commit: ' + this.state.hideChild);
-      }
-      render() {
-        if (this.state.hideChild) {
-          Scheduler.unstable_yieldValue('(empty)');
-          return <span prop="(empty)" />;
-        }
-        return <Child isBroken={this.props.childIsBroken} />;
-      }
-    }
-
-    function Child(props) {
-      if (props.isBroken) {
-        Scheduler.unstable_yieldValue('Error!');
-        throw new Error('Error!');
-      }
-      Scheduler.unstable_yieldValue('Child');
-      return <span prop="Child" />;
-    }
-
-    // Initial mount
-    const parent = React.createRef(null);
-    ReactNoop.render(<Parent ref={parent} childIsBroken={false} />);
-    expect(Scheduler).toFlushAndYield(['Child']);
-    expect(ReactNoop.getChildren()).toEqual([span('Child')]);
-
-    // Schedule a low priority update to hide the child
-    parent.current.setState({hideChild: true});
-
-    // Before the low priority update is flushed, synchronously trigger an
-    // error in the child.
-    ReactNoop.flushSync(() => {
-      ReactNoop.render(<Parent ref={parent} childIsBroken={true} />);
-    });
-    expect(Scheduler).toHaveYielded([
-      // First the sync update triggers an error
-      'Error!',
-      // Because there's a pending low priority update, we restart at the
-      // lower priority. This hides the children, suppressing the error.
-      '(empty)',
-      // Now the tree can commit.
-      'commit: true',
-    ]);
-    expect(ReactNoop.getChildren()).toEqual([span('(empty)')]);
-  });
-
   it('retries one more time before handling error', () => {
     function BadRender() {
       Scheduler.unstable_yieldValue('BadRender');

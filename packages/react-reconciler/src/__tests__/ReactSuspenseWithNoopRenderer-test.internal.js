@@ -494,7 +494,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         return <Text text="(empty)" />;
       }
       return (
-        <Suspense>
+        <Suspense fallback="Loading...">
           <AsyncText ms={2000} text="Async" />
         </Suspense>
       );

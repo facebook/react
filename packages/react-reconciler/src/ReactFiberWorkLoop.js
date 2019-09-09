@@ -10,10 +10,7 @@
 import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
-import type {
-  ReactPriorityLevel,
-  SchedulerCallback,
-} from './SchedulerWithReactIntegration';
+import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
 import type {Interaction} from 'scheduler/src/Tracing';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
@@ -117,6 +114,7 @@ import {
   inferPriorityFromExpirationTime,
   LOW_PRIORITY_EXPIRATION,
   Batched,
+  Idle,
 } from './ReactFiberExpirationTime';
 import {beginWork as originalBeginWork} from './ReactFiberBeginWork';
 import {completeWork} from './ReactFiberCompleteWork';
@@ -403,10 +401,7 @@ export function scheduleUpdateOnFiber(
       // This is a legacy edge case. The initial mount of a ReactDOM.render-ed
       // root inside of batchedUpdates should be synchronous, but layout updates
       // should be deferred until the end of the batch.
-      let callback = renderRoot(root, Sync, true);
-      while (callback !== null) {
-        callback = callback(true);
-      }
+      renderRoot(root, Sync, true);
     } else {
       ensureRootIsScheduled(root);
       schedulePendingInteractions(root, expirationTime);
@@ -519,18 +514,21 @@ function getNextRootExpirationTimeToWorkOn(root: FiberRoot): ExpirationTime {
     : nextKnownPendingLevel;
 }
 
-// Use this function, along with runRootCallback, to ensure that only a single
-// callback per root is scheduled. It's still possible to call renderRoot
-// directly, but scheduling via this function helps avoid excessive callbacks.
-// It works by storing the callback node and expiration time on the root. When a
-// new callback comes in, it compares the expiration time to determine if it
-// should cancel the previous one. It also relies on commitRoot scheduling a
-// callback to render the next level, because that means we don't need a
-// separate callback per expiration time.
+// Use this function to schedule a task for a root. There's only one task per
+// root; if a task was already scheduled, we'll check to make sure the
+// expiration time of the existing task is the same as the expiration time of
+// the next level that the root has work on. This function is called on every
+// update, and right before exiting a task.
 function ensureRootIsScheduled(root: FiberRoot) {
   const expirationTime = getNextRootExpirationTimeToWorkOn(root);
+  const existingCallbackNode = root.callbackNode;
   if (expirationTime === NoWork) {
-    // Nothing to work on.
+    // There's nothing to work on.
+    if (existingCallbackNode !== null) {
+      root.callbackNode = null;
+      root.callbackExpirationTime = NoWork;
+      root.callbackPriority = NoPriority;
+    }
     return;
   }
 
@@ -544,7 +542,6 @@ function ensureRootIsScheduled(root: FiberRoot) {
 
   // If there's an existing render task, confirm it has the correct priority and
   // expiration time. Otherwise, we'll cancel it and schedule a new one.
-  const existingCallbackNode = root.callbackNode;
   if (existingCallbackNode !== null) {
     const existingCallbackPriority = root.callbackPriority;
     const existingCallbackExpirationTime = root.callbackExpirationTime;
@@ -569,30 +566,16 @@ function ensureRootIsScheduled(root: FiberRoot) {
   let callbackNode;
   if (expirationTime === Sync) {
     // Sync React callbacks are scheduled on a special internal queue
-    callbackNode = scheduleSyncCallback(
-      runRootCallback.bind(
-        null,
-        root,
-        renderRoot.bind(null, root, expirationTime),
-      ),
-    );
+    callbackNode = scheduleSyncCallback(performWorkOnRoot.bind(null, root));
   } else if (disableSchedulerTimeoutBasedOnReactExpirationTime) {
     callbackNode = scheduleCallback(
       priorityLevel,
-      runRootCallback.bind(
-        null,
-        root,
-        renderRoot.bind(null, root, expirationTime),
-      ),
+      performWorkOnRoot.bind(null, root),
     );
   } else {
     callbackNode = scheduleCallback(
       priorityLevel,
-      runRootCallback.bind(
-        null,
-        root,
-        renderRoot.bind(null, root, expirationTime),
-      ),
+      performWorkOnRoot.bind(null, root),
       // Compute a task timeout based on the expiration time. This also affects
       // ordering because tasks are processed in timeout order.
       {timeout: expirationTimeToMs(expirationTime) - now()},
@@ -602,27 +585,43 @@ function ensureRootIsScheduled(root: FiberRoot) {
   root.callbackNode = callbackNode;
 }
 
-function runRootCallback(root, callback, isSync) {
-  const prevCallbackNode = root.callbackNode;
-  let continuation = null;
-  try {
-    continuation = callback(isSync);
-    if (continuation !== null) {
-      return runRootCallback.bind(null, root, continuation);
-    } else {
-      return null;
+// This is the entry point for every concurrent task.
+function performWorkOnRoot(root, isSync) {
+  // Determine the next expiration time to work on, using the fields stored
+  // on the root.
+  let expirationTime = getNextRootExpirationTimeToWorkOn(root);
+  if (expirationTime !== NoWork) {
+    if (expirationTime !== Sync) {
+      // Since we know we're in a React event, we can clear the current
+      // event time. The next update will compute a new event time.
+      currentEventTime = NoWork;
+
+      // An async update expired. There may be other expired updates on
+      // this root.
+      if (isSync) {
+        const currentTime = requestCurrentTime();
+        if (currentTime < expirationTime) {
+          // Render all the expired work in a single batch.
+          expirationTime = currentTime;
+        }
+      }
     }
-  } finally {
-    // If the callback exits without returning a continuation, remove the
-    // corresponding callback node from the root. Unless the callback node
-    // has changed, which implies that it was already cancelled by a high
-    // priority update.
-    if (continuation === null && prevCallbackNode === root.callbackNode) {
-      root.callbackNode = null;
-      root.callbackExpirationTime = NoWork;
-      root.callbackPriority = NoPriority;
+
+    const originalCallbackNode = root.callbackNode;
+    try {
+      renderRoot(root, expirationTime, isSync);
+    } finally {
+      // Before exiting, make sure there's a callback scheduled for the
+      // pending level.
+      ensureRootIsScheduled(root);
+      if (root.callbackNode === originalCallbackNode) {
+        // The task node scheduled for this root is the same one that's
+        // currently executed. Need to return a continuation.
+        return performWorkOnRoot.bind(null, root);
+      }
     }
   }
+  return null;
 }
 
 export function flushRoot(root: FiberRoot, expirationTime: ExpirationTime) {
@@ -633,7 +632,10 @@ export function flushRoot(root: FiberRoot, expirationTime: ExpirationTime) {
         'means you attempted to commit from inside a lifecycle method.',
     );
   }
-  scheduleSyncCallback(renderRoot.bind(null, root, expirationTime));
+  scheduleSyncCallback(() => {
+    renderRoot(root, expirationTime, true);
+    return null;
+  });
   flushSyncCallbackQueue();
 }
 
@@ -702,7 +704,10 @@ function flushPendingDiscreteUpdates() {
     const roots = rootsWithPendingDiscreteUpdates;
     rootsWithPendingDiscreteUpdates = null;
     roots.forEach((expirationTime, root) => {
-      scheduleSyncCallback(renderRoot.bind(null, root, expirationTime));
+      scheduleSyncCallback(() => {
+        renderRoot(root, expirationTime, true);
+        return null;
+      });
     });
     // Now flush the immediate queue.
     flushSyncCallbackQueue();
@@ -850,7 +855,7 @@ function renderRoot(
   root: FiberRoot,
   expirationTime: ExpirationTime,
   isSync: boolean,
-): SchedulerCallback | null {
+): void {
   invariant(
     (executionContext & (RenderContext | CommitContext)) === NoContext,
     'Should not already be working.',
@@ -861,7 +866,7 @@ function renderRoot(
     // TODO: This is poorly factored. This case only exists for the
     // batch.commit() API.
     commitRoot(root);
-    return null;
+    return;
   }
 
   flushPassiveEffects();
@@ -893,32 +898,6 @@ function renderRoot(
     }
 
     startWorkLoopTimer(workInProgress);
-
-    // TODO: Fork renderRoot into renderRootSync and renderRootAsync
-    if (isSync) {
-      if (expirationTime !== Sync) {
-        // An async update expired. There may be other expired updates on
-        // this root. We should render all the expired work in a
-        // single batch.
-        const currentTime = requestCurrentTime();
-        if (currentTime < expirationTime) {
-          // Restart at the current time.
-          executionContext = prevExecutionContext;
-          resetContextDependencies();
-          ReactCurrentDispatcher.current = prevDispatcher;
-          if (enableSchedulerTracing) {
-            __interactionsRef.current = ((prevInteractions: any): Set<
-              Interaction,
-            >);
-          }
-          return renderRoot.bind(null, root, currentTime);
-        }
-      }
-    } else {
-      // Since we know we're in a React event, we can clear the current
-      // event time. The next update will compute a new event time.
-      currentEventTime = NoWork;
-    }
 
     do {
       try {
@@ -972,9 +951,9 @@ function renderRoot(
     }
 
     if (workInProgress !== null) {
-      // There's still work left over. Return a continuation.
+      // There's still work left over. Exit without committing.
       stopInterruptedWorkLoopTimer();
-      return renderRoot.bind(null, root, expirationTime);
+      return;
     }
   }
 
@@ -991,7 +970,8 @@ function renderRoot(
     // This root has a lock that prevents it from committing. Exit. If we begin
     // work on the root again, without any intervening updates, it will finish
     // without doing additional work.
-    return null;
+    markRootSuspendedAtTime(root, expirationTime);
+    return;
   }
 
   // Set this to null to indicate there's no in-progress render.
@@ -1005,26 +985,18 @@ function renderRoot(
     // but eslint doesn't know about invariant, so it complains if I do.
     // eslint-disable-next-line no-fallthrough
     case RootErrored: {
-      // An error was thrown. First check if there is lower priority work
-      // scheduled on this root.
-      const lastPendingTime = root.lastPendingTime;
-      if (lastPendingTime < expirationTime) {
-        // There's lower priority work. Before raising the error, try rendering
-        // at the lower priority to see if it fixes it. Use a continuation to
-        // maintain the existing priority and position in the queue.
-        return renderRoot.bind(null, root, lastPendingTime);
+      if (!isSync && expirationTime !== Idle) {
+        // If this was an async render, the error may have happened due to
+        // a mutation in a concurrent event. Try rendering one more time,
+        // synchronously, to see if the error goes away. If there are lower
+        // priority updates, let's include those, too, in case they fix the
+        // inconsistency. Render at Idle to include all updates.
+        renderRoot(root, Idle, true);
+        return;
       }
-      if (!isSync) {
-        // If we're rendering asynchronously, it's possible the error was
-        // caused by tearing due to a mutation during an event. Try rendering
-        // one more time without yiedling to events.
-        prepareFreshStack(root, expirationTime);
-        scheduleSyncCallback(renderRoot.bind(null, root, expirationTime));
-        return null;
-      }
-      // If we're already rendering synchronously, commit the root in its
-      // errored state.
-      return commitRoot.bind(null, root);
+      // Commit the root in its errored state.
+      commitRoot(root);
+      return;
     }
     case RootSuspended: {
       markRootSuspendedAtTime(root, expirationTime);
@@ -1063,26 +1035,31 @@ function renderRoot(
         // Don't bother with a very short suspense time.
         if (msUntilTimeout > 10) {
           if (workInProgressRootHasPendingPing) {
-            // This render was pinged but we didn't get to restart earlier so try
-            // restarting now instead.
-            prepareFreshStack(root, expirationTime);
-            return renderRoot.bind(null, root, expirationTime);
+            const lastPingedTime = root.lastPingedTime;
+            if (lastPingedTime === NoWork || lastPingedTime >= expirationTime) {
+              // This render was pinged but we didn't get to restart earlier so
+              // try restarting now instead.
+              root.lastPingedTime = expirationTime;
+              prepareFreshStack(root, expirationTime);
+              return;
+            }
           }
 
-          const nextKnownPendingLevel = root.nextKnownPendingLevel;
-          if (nextKnownPendingLevel !== NoWork) {
-            // There's lower priority work. It might be unsuspended. Try rendering
-            // at that level.
-            return renderRoot.bind(null, root, nextKnownPendingLevel);
+          const nextTime = getNextRootExpirationTimeToWorkOn(root);
+          if (nextTime !== NoWork && nextTime !== expirationTime) {
+            // There's additional work on this root.
+            return;
           }
           if (
             lastSuspendedTime !== NoWork &&
             lastSuspendedTime !== expirationTime
           ) {
-            // We should prefer to render the fallback of at the last
-            // suspended level.
-            return renderRoot.bind(null, root, lastSuspendedTime);
+            // We should prefer to render the fallback of at the last suspended
+            // level. Ping the last suspended level to try rendering it again.
+            root.lastPingedTime = lastSuspendedTime;
+            return;
           }
+
           // The render is suspended, it hasn't timed out, and there's no lower
           // priority work to do. Instead of committing the fallback
           // immediately, wait for more data to arrive.
@@ -1090,11 +1067,12 @@ function renderRoot(
             commitRoot.bind(null, root),
             msUntilTimeout,
           );
-          return null;
+          return;
         }
       }
       // The work expired. Commit immediately.
-      return commitRoot.bind(null, root);
+      commitRoot(root);
+      return;
     }
     case RootSuspendedWithDelay: {
       markRootSuspendedAtTime(root, expirationTime);
@@ -1116,25 +1094,29 @@ function renderRoot(
         // We're suspended in a state that should be avoided. We'll try to avoid committing
         // it for as long as the timeouts let us.
         if (workInProgressRootHasPendingPing) {
-          // This render was pinged but we didn't get to restart earlier so try
-          // restarting now instead.
-          prepareFreshStack(root, expirationTime);
-          return renderRoot.bind(null, root, expirationTime);
+          const lastPingedTime = root.lastPingedTime;
+          if (lastPingedTime === NoWork || lastPingedTime >= expirationTime) {
+            // This render was pinged but we didn't get to restart earlier so
+            // try restarting now instead.
+            root.lastPingedTime = expirationTime;
+            prepareFreshStack(root, expirationTime);
+            return;
+          }
         }
 
-        const nextKnownPendingLevel = root.nextKnownPendingLevel;
-        if (nextKnownPendingLevel !== NoWork) {
-          // There's lower priority work. It might be unsuspended. Try rendering
-          // at that level.
-          return renderRoot.bind(null, root, nextKnownPendingLevel);
+        const nextTime = getNextRootExpirationTimeToWorkOn(root);
+        if (nextTime !== NoWork && nextTime !== expirationTime) {
+          // There's additional work on this root.
+          return;
         }
         if (
           lastSuspendedTime !== NoWork &&
           lastSuspendedTime !== expirationTime
         ) {
-          // We should prefer to render the fallback of at the last
-          // suspended level.
-          return renderRoot.bind(null, root, lastSuspendedTime);
+          // We should prefer to render the fallback of at the last suspended
+          // level. Ping the last suspended level to try rendering it again.
+          root.lastPingedTime = lastSuspendedTime;
+          return;
         }
 
         let msUntilTimeout;
@@ -1182,11 +1164,12 @@ function renderRoot(
             commitRoot.bind(null, root),
             msUntilTimeout,
           );
-          return null;
+          return;
         }
       }
       // The work expired. Commit immediately.
-      return commitRoot.bind(null, root);
+      commitRoot(root);
+      return;
     }
     case RootCompleted: {
       // The work completed. Ready to commit.
@@ -1210,14 +1193,16 @@ function renderRoot(
           workInProgressRootCanSuspendUsingConfig,
         );
         if (msUntilTimeout > 10) {
+          markRootSuspendedAtTime(root, expirationTime);
           root.timeoutHandle = scheduleTimeout(
             commitRoot.bind(null, root),
             msUntilTimeout,
           );
-          return null;
+          return;
         }
       }
-      return commitRoot.bind(null, root);
+      commitRoot(root);
+      return;
     }
     default: {
       invariant(false, 'Unknown root exit status.');
