@@ -938,9 +938,6 @@ function updateHostRoot(current, workInProgress, renderExpirationTime) {
   }
   const root: FiberRoot = workInProgress.stateNode;
   if (
-    // TODO: This is a bug because if we render null after having hydrating,
-    // we'll reenter hydration state at the next update which will then
-    // trigger hydration warnings.
     (current === null || current.child === null) &&
     root.hydrate &&
     enterHydrationState(workInProgress)

@@ -81,6 +81,7 @@ import {
   getPublicInstance,
   supportsMutation,
   supportsPersistence,
+  supportsHydration,
   commitMount,
   commitUpdate,
   resetTextContent,
@@ -1297,6 +1298,16 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
         attachSuspenseRetryListeners(finishedWork);
         return;
       }
+      case HostRoot: {
+        const root: FiberRoot = finishedWork.stateNode;
+        if (supportsHydration) {
+          if (root.hydrate) {
+            // We've just hydrated. No need to hydrate again.
+            root.hydrate = false;
+          }
+        }
+        break;
+      }
     }
 
     commitContainer(finishedWork);
@@ -1366,6 +1377,13 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       return;
     }
     case HostRoot: {
+      const root: FiberRoot = finishedWork.stateNode;
+      if (supportsHydration) {
+        if (root.hydrate) {
+          // We've just hydrated. No need to hydrate again.
+          root.hydrate = false;
+        }
+      }
       return;
     }
     case Profiler: {
