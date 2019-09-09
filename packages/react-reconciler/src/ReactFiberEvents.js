@@ -92,6 +92,18 @@ function mountEventResponder(
   respondersMap.set(responder, responderInstance);
 }
 
+function flatten(array: Array<any>, result: Array<any>): Array<any> {
+  for (let i = 0; i < array.length; i++) {
+    const value = array[i];
+    if (Array.isArray(value)) {
+      flatten(value, result);
+    } else {
+      result.push(value);
+    }
+  }
+  return result;
+}
+
 function updateEventListener(
   listener: ReactEventResponderListener<any, any>,
   fiber: Fiber,
@@ -165,9 +177,11 @@ export function updateEventListeners(
     if (respondersMap === null) {
       respondersMap = new Map();
     }
+
     if (isArray(listeners)) {
-      for (let i = 0, length = listeners.length; i < length; i++) {
-        const listener = listeners[i];
+      const flatListeners = flatten(listeners, []);
+      for (let i = 0, length = flatListeners.length; i < length; i++) {
+        const listener = flatListeners[i];
         updateEventListener(
           listener,
           fiber,
