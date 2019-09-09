@@ -499,7 +499,8 @@ function getFunctionName(node) {
     return node.id;
   } else if (
     node.type === 'FunctionExpression' ||
-    node.type === 'ArrowFunctionExpression'
+    node.type === 'ArrowFunctionExpression' ||
+    node.type === 'CallExpression'
   ) {
     if (
       node.parent.type === 'VariableDeclarator' &&
@@ -540,6 +541,13 @@ function getFunctionName(node) {
       // Kinda clowny, but we'd said we'd follow spec convention for
       // `IsAnonymousFunctionDefinition()` usage.
       return node.parent.left;
+    } else if (
+      (node.type === 'ArrowFunctionExpression' ||
+        node.type === 'FunctionExpression') &&
+      node.parent.type === 'CallExpression'
+    ) {
+      // const Component = wrapper(() => useHook());
+      return getFunctionName(node.parent);
     } else {
       return undefined;
     }

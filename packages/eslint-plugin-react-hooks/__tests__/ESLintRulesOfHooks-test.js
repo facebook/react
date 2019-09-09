@@ -351,6 +351,30 @@ const tests = {
   invalid: [
     {
       code: `
+      // Invalid because it's dangerous and might not warn otherwise.
+      // This *must* be invalid.
+      const Component = wrapperFunction(() => {
+        if (cond) {
+          useConditionalHook();
+        }
+      });
+      `,
+      errors: [conditionalError('useConditionalHook')],
+    },
+    {
+      code: `
+      // Invalid because it's dangerous and might not warn otherwise.
+      // This *must* be invalid.
+      const Component = wrapperFunction(function () {
+        if (cond) {
+          useConditionalHook();
+        }
+      });
+      `,
+      errors: [conditionalError('useConditionalHook')],
+    },
+    {
+      code: `
         // Invalid because it's dangerous and might not warn otherwise.
         // This *must* be invalid.
         function ComponentWithConditionalHook() {
