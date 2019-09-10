@@ -16,7 +16,6 @@ import {meta} from '../../../hydration';
 import styles from './KeyValue.css';
 
 import type {InspectPath} from './SelectedElement';
-import EditableName from './EditableName';
 
 type OverrideValueFn = (path: Array<string | number>, value: any) => void;
 
