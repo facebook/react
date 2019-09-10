@@ -54,7 +54,8 @@ export default class TextAreaFixtures extends React.Component {
             <b>
               <i>not</i>
             </b>{' '}
-            see a red aura, indicating the textarea is invalid.
+            see a red aura on initial page load, indicating the textarea is
+            invalid.
             <br />
             This aura looks roughly like:
             <textarea style={{boxShadow: '0 0 1px 1px red', marginLeft: 8}} />
