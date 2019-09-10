@@ -2064,7 +2064,7 @@ function updateDehydratedSuspenseComponent(
     // render something, if we time out. Even if that requires us to delete everything and
     // skip hydration.
     // Delay having to do this as long as the suspense timeout allows us.
-    renderDidSuspendDelayIfPossible();
+    renderDidSuspendDelayIfPossible(workInProgress);
     return retrySuspenseComponentWithoutHydrating(
       current,
       workInProgress,

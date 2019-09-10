@@ -956,6 +956,8 @@ function renderRoot(
           thrownValue,
           renderExpirationTime,
         );
+        // TODO: This is not wrapped in a try-catch, so if the complete phase
+        // throws, we won't capture it.
         workInProgress = completeUnitOfWork(sourceFiber);
       }
     } while (true);
@@ -1259,12 +1261,36 @@ export function renderDidSuspend(): void {
   }
 }
 
-export function renderDidSuspendDelayIfPossible(): void {
+export function renderDidSuspendDelayIfPossible(suspendedWork: Fiber): void {
   if (
     workInProgressRootExitStatus === RootIncomplete ||
     workInProgressRootExitStatus === RootSuspended
   ) {
     workInProgressRootExitStatus = RootSuspendedWithDelay;
+  }
+
+  if (workInProgressRoot !== null) {
+    // Check if the component that suspsended, or any components in the return
+    // path, have a pending update. If so, those updates might unsuspend us, so
+    // interrupt the current render and restart.
+    let nextAfterSuspendedTime = NoWork;
+    let fiber = suspendedWork;
+    while (fiber !== null) {
+      const updateExpirationTime = fiber.expirationTime;
+      if (updateExpirationTime > nextAfterSuspendedTime) {
+        nextAfterSuspendedTime = updateExpirationTime;
+      }
+      fiber = fiber.return;
+    }
+
+    if (nextAfterSuspendedTime !== NoWork) {
+      // Mark the current render as suspended, and then mark that there's a
+      // pending update.
+      // TODO: This should immediately interrupt the current render, instead
+      // of waiting until the next time we yield.
+      markRootSuspendedAtTime(workInProgressRoot, renderExpirationTime);
+      markRootUpdatedAtTime(workInProgressRoot, nextAfterSuspendedTime);
+    }
   }
 }
 

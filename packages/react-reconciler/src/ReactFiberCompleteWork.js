@@ -922,7 +922,7 @@ function completeWork(
           } else {
             // Otherwise, we're going to have to hide content so we should
             // suspend for longer if possible.
-            renderDidSuspendDelayIfPossible();
+            renderDidSuspendDelayIfPossible(workInProgress);
           }
         }
       }
