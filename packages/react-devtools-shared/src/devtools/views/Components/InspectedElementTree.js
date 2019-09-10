@@ -82,7 +82,7 @@ export default function InspectedElementTree({
             </Button>
           )}
         </div>
-        {isEmpty && <div className={styles.Empty}>None</div>}
+        {isEmpty && !canAddEntries && <div className={styles.Empty}>None</div>}
         {!isEmpty &&
           (entries: any).map(([name, value]) => (
             <KeyValue
@@ -104,6 +104,7 @@ export default function InspectedElementTree({
             />
             :&nbsp;
             <EditableValue
+              className={styles.EditableValue}
               initialValue={''}
               overrideValueFn={handleNewEntryValue}
               path={[newPropName]}

@@ -16,6 +16,7 @@ import {useEditableValue} from '../hooks';
 type OverrideValueFn = (path: Array<string | number>, value: any) => void;
 
 type EditableValueProps = {|
+  className?: string,
   dataType: string,
   initialValue: any,
   overrideValueFn: OverrideValueFn,
@@ -23,6 +24,7 @@ type EditableValueProps = {|
 |};
 
 export default function EditableValue({
+  className = '',
   dataType,
   initialValue,
   overrideValueFn,
@@ -74,7 +76,7 @@ export default function EditableValue({
     <Fragment>
       <input
         autoComplete="new-password"
-        className={isValid ? styles.Input : styles.Invalid}
+        className={`${isValid ? styles.Input : styles.Invalid} ${className}`}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}

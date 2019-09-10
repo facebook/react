@@ -358,7 +358,7 @@ function InspectedElementView({
         inspectPath={inspectPropsPath}
         overrideValueFn={overridePropsFn}
         showWhenEmpty={true}
-        canAddEntries={true}
+        canAddEntries={typeof overridePropsFn === 'function'}
       />
       {type === ElementTypeSuspense ? (
         <InspectedElementTree

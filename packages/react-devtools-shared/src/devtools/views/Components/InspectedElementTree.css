@@ -53,3 +53,7 @@
   display: flex;
   align-items: center;
 }
+
+.EditableValue {
+  min-width: 1rem;
+}
