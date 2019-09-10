@@ -13,7 +13,6 @@ let React;
 let ReactDOM;
 let ReactDOMServer;
 let Scheduler;
-let act;
 
 // These tests rely both on ReactDOMServer and ReactDOM.
 // If a test only needs ReactDOMServer, put it in ReactServerRendering-test instead.
@@ -24,7 +23,6 @@ describe('ReactDOMServerHydration', () => {
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
     Scheduler = require('scheduler');
-    act = require('react-dom/test-utils').act;
   });
 
   it('should have the correct mounting behavior (old hydrate API)', () => {
@@ -587,13 +585,12 @@ describe('ReactDOMServerHydration', () => {
     expect(clicks).toBe(0);
 
     // Finish the rest of the hydration.
-    expect(Scheduler).toFlushAndYield(['Sibling2']);
-
-    // TODO: With selective hydration the event should've been replayed
-    // but for now we'll have to issue it again.
-    act(() => {
-      a.click();
-    });
+    if (__DEV__) {
+      // In DEV effects gets double invoked.
+      expect(Scheduler).toFlushAndYield(['Sibling2', 'Button', 'Button']);
+    } else {
+      expect(Scheduler).toFlushAndYield(['Sibling2', 'Button']);
+    }
 
     expect(clicks).toBe(1);
 
@@ -649,11 +646,6 @@ describe('ReactDOMServerHydration', () => {
     Scheduler.unstable_flushAll();
 
     // We're now full hydrated.
-    // TODO: With selective hydration the event should've been replayed
-    // but for now we'll have to issue it again.
-    act(() => {
-      a.click();
-    });
 
     expect(clicks).toBe(1);
 

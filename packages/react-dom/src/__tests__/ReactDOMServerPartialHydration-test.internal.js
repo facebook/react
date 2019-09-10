@@ -1805,12 +1805,6 @@ describe('ReactDOMServerPartialHydration', () => {
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
-    // TODO: With selective hydration the event should've been replayed
-    // but for now we'll have to issue it again.
-    act(() => {
-      a.click();
-    });
-
     expect(clicks).toBe(1);
 
     expect(container.textContent).toBe('Hello');
@@ -1885,12 +1879,6 @@ describe('ReactDOMServerPartialHydration', () => {
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
-    // TODO: With selective hydration the event should've been replayed
-    // but for now we'll have to issue it again.
-    act(() => {
-      a.click();
-    });
-
     expect(onEvent).toHaveBeenCalledTimes(1);
 
     document.body.removeChild(container);
@@ -1962,12 +1950,6 @@ describe('ReactDOMServerPartialHydration', () => {
 
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
-
-    // TODO: With selective hydration the event should've been replayed
-    // but for now we'll have to issue it again.
-    act(() => {
-      span.click();
-    });
 
     expect(clicksOnChild).toBe(1);
     // This will be zero due to the stopPropagation.
@@ -2047,11 +2029,6 @@ describe('ReactDOMServerPartialHydration', () => {
     jest.runAllTimers();
 
     // We're now full hydrated.
-    // TODO: With selective hydration the event should've been replayed
-    // but for now we'll have to issue it again.
-    act(() => {
-      a.click();
-    });
 
     expect(clicks).toBe(1);
 
