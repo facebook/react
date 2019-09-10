@@ -7,103 +7,64 @@
  * @flow
  */
 
-import React, {Fragment, useCallback, useRef, useState} from 'react';
+import React, {Fragment, useCallback, useRef} from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import styles from './EditableValue.css';
-import {sanitizeForParse} from '../../utils';
+import {useEditableValue} from '../hooks';
 
 type OverrideValueFn = (path: Array<string | number>, value: any) => void;
 
 type EditableValueProps = {|
   dataType: string,
+  initialValue: any,
   overrideValueFn: OverrideValueFn,
   path: Array<string | number>,
-  initialValue: any,
 |};
 
 export default function EditableValue({
   dataType,
+  initialValue,
   overrideValueFn,
   path,
-  initialValue,
 }: EditableValueProps) {
-  const [isValid, setIsValid] = useState(true);
-  const [hasPendingChanges, setHasPendingChanges] = useState(false);
-  const [editableValue, setEditableValue] = useEditableValue(initialValue);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const {
+    editableValue,
+    hasPendingChanges,
+    isValid,
+    parsedValue,
+    reset,
+    update,
+  } = useEditableValue(initialValue);
 
-  if (hasPendingChanges && editableValue === JSON.stringify(initialValue)) {
-    setHasPendingChanges(false);
-  }
-
-  const handleChange = useCallback(
-    ({target}) => {
-      if (dataType === 'boolean') {
-        setEditableValue(target.checked, {shouldStringify: true});
-        overrideValueFn(path, target.checked);
-      } else {
-        let isValidJSON = false;
-        try {
-          JSON.parse(sanitizeForParse(target.value));
-          isValidJSON = true;
-        } catch (error) {}
-
-        setIsValid(isValidJSON);
-        setEditableValue(target.value);
-      }
-      setHasPendingChanges(true);
-    },
-    [dataType, overrideValueFn, path],
-  );
-
-  const handleReset = useCallback(
-    () => {
-      setEditableValue(initialValue, {shouldStringify: true});
-      setHasPendingChanges(false);
-      setIsValid(true);
-
-      if (inputRef.current !== null) {
-        inputRef.current.focus();
-      }
-    },
-    [initialValue],
-  );
+  const handleChange = useCallback(({target}) => update(target.value), [
+    update,
+  ]);
 
   const handleKeyDown = useCallback(
     event => {
       // Prevent keydown events from e.g. change selected element in the tree
       event.stopPropagation();
 
-      const {key} = event;
-
-      if (key === 'Enter' && isValid) {
-        const parsedEditableValue = JSON.parse(sanitizeForParse(editableValue));
-
-        if (initialValue !== parsedEditableValue) {
-          overrideValueFn(path, parsedEditableValue);
-        }
-
-        // Don't reset the pending change flag here.
-        // The inspected fiber won't be updated until after the next "inspectElement" message.
-        // We'll reset that flag during a subsequent render.
-      } else if (key === 'Escape') {
-        setEditableValue(initialValue, {shouldStringify: true});
-        setHasPendingChanges(false);
-        setIsValid(true);
+      switch (event.key) {
+        case 'Enter':
+          if (isValid && hasPendingChanges) {
+            overrideValueFn(path, parsedValue);
+          }
+          break;
+        case 'Escape':
+          reset();
+          break;
+        default:
+          break;
       }
     },
-    [editableValue, isValid, dataType, overrideValueFn, path, initialValue],
+    [hasPendingChanges, isValid, overrideValueFn, parsedValue, reset],
   );
 
-  let inputValue =
-    initialValue === undefined ? '' : JSON.stringify(initialValue);
-  if (hasPendingChanges) {
-    inputValue = editableValue;
-  }
-
   let placeholder = '';
-  if (initialValue === undefined) {
+  if (editableValue === undefined) {
     placeholder = '(undefined)';
   } else {
     placeholder = 'Enter valid JSON';
@@ -111,57 +72,24 @@ export default function EditableValue({
 
   return (
     <Fragment>
-      {dataType === 'boolean' && (
-        <label className={styles.CheckboxLabel}>
-          <input
-            checked={inputValue === 'true'}
-            className={styles.Checkbox}
-            onChange={handleChange}
-            onKeyDown={handleKeyDown}
-            ref={inputRef}
-            type="checkbox"
-          />
-        </label>
+      <input
+        autoComplete="new-password"
+        className={isValid ? styles.Input : styles.Invalid}
+        onChange={handleChange}
+        onKeyDown={handleKeyDown}
+        placeholder={placeholder}
+        ref={inputRef}
+        type="text"
+        value={editableValue}
+      />
+      {hasPendingChanges && (
+        <Button
+          className={styles.ResetButton}
+          onClick={reset}
+          title="Reset value">
+          <ButtonIcon type="undo" />
+        </Button>
       )}
-      {dataType !== 'boolean' && (
-        <input
-          className={isValid ? styles.Input : styles.Invalid}
-          onChange={handleChange}
-          onKeyDown={handleKeyDown}
-          placeholder={placeholder}
-          ref={inputRef}
-          type="text"
-          value={inputValue}
-        />
-      )}
-      {hasPendingChanges &&
-        dataType !== 'boolean' && (
-          <Button
-            className={styles.ResetButton}
-            onClick={handleReset}
-            title="Reset value">
-            <ButtonIcon type="undo" />
-          </Button>
-        )}
     </Fragment>
   );
-}
-
-function useEditableValue(initialValue: any): [any, Function] {
-  const [editableValue, setEditableValue] = useState(
-    JSON.stringify(initialValue),
-  );
-
-  function setEditableValueWithStringify(
-    value: any,
-    {shouldStringify}: Object = {},
-  ) {
-    if (shouldStringify) {
-      setEditableValue(JSON.stringify(value));
-    } else {
-      setEditableValue(value);
-    }
-  }
-
-  return [editableValue, setEditableValueWithStringify];
 }

@@ -7,29 +7,25 @@
  * @flow
  */
 
-import React, {useRef, useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useState} from 'react';
+import AutoSizeInput from './NativeStyleEditor/AutoSizeInput';
 import styles from './EditableName.css';
 
 type OverrideNameFn = (path: Array<string | number>, value: any) => void;
 
 type EditableNameProps = {|
+  autoFocus?: boolean,
   initialValue?: string,
   overrideNameFn: OverrideNameFn,
 |};
 
 export default function EditableName({
+  autoFocus = false,
   initialValue = '',
   overrideNameFn,
 }: EditableNameProps) {
   const [editableName, setEditableName] = useState(initialValue);
   const [isValid, setIsValid] = useState(false);
-  const inputRef = useRef<HTMLInputElement | null>(null);
-
-  useEffect(() => {
-    if (inputRef.current !== null) {
-      inputRef.current.focus();
-    }
-  }, []);
 
   const handleChange = useCallback(
     ({target}) => {
@@ -51,23 +47,30 @@ export default function EditableName({
       // Prevent keydown events from e.g. change selected element in the tree
       event.stopPropagation();
 
-      const eventKey = event.key;
-
-      if ((eventKey === 'Enter' || eventKey === 'Tab') && isValid) {
-        overrideNameFn(editableName);
-      } else if (eventKey === 'Escape') {
-        setEditableName(initialValue);
+      switch (event.key) {
+        case 'Enter':
+        case 'Tab':
+          if (isValid) {
+            overrideNameFn(editableName);
+          }
+          break;
+        case 'Escape':
+          setEditableName(initialValue);
+          break;
+        default:
+          break;
       }
     },
     [editableName, setEditableName, isValid, initialValue, overrideNameFn],
   );
 
   return (
-    <input
+    <AutoSizeInput
+      autoFocus={autoFocus}
       className={styles.Input}
       onChange={handleChange}
       onKeyDown={handleKeyDown}
-      ref={inputRef}
+      placeholder="new prop"
       type="text"
       value={editableName}
     />

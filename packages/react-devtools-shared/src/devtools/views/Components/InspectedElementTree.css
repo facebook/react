@@ -48,6 +48,8 @@
 }
 
 .AddEntry {
+  padding-left: 1rem;
+  white-space: nowrap;
   display: flex;
-  padding-left: 0.9rem;
+  align-items: center;
 }

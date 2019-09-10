@@ -8,7 +8,7 @@
  */
 
 import {copy} from 'clipboard-js';
-import React, {useEffect, useCallback, useState} from 'react';
+import React, {useCallback, useState} from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import KeyValue from './KeyValue';
@@ -38,19 +38,13 @@ export default function InspectedElementTree({
   canAddEntries = false,
   showWhenEmpty = false,
 }: Props) {
-  const [entries, setEntries] = useState(null);
-  const [entryToAdd, setEntryToAdd] = useState(null);
+  const entries = data != null ? Object.entries(data) : null;
+  if (entries !== null) {
+    entries.sort(alphaSortEntries);
+  }
 
-  useEffect(
-    () => {
-      if (data != null) {
-        setEntries(Object.entries(data).sort(alphaSortEntries));
-      } else {
-        setEntries(null);
-      }
-    },
-    [data],
-  );
+  const [newPropKey, setNewPropKey] = useState<number>(0);
+  const [newPropName, setNewPropName] = useState<string>('');
 
   const isEmpty = entries === null || entries.length === 0;
 
@@ -59,38 +53,23 @@ export default function InspectedElementTree({
     [data],
   );
 
-  const handleEntryAdd = useCallback(
-    () => {
-      setEntryToAdd({
-        key: null,
-        value: '',
-      });
-    },
-    [setEntryToAdd],
-  );
+  const handleNewEntryValue = useCallback(
+    (name, value) => {
+      if (!newPropName) {
+        return;
+      }
 
-  const handleEntryAddName = useCallback(
-    key => {
-      setEntryToAdd({
-        ...entryToAdd,
-        key,
-      });
-    },
-    [entryToAdd, setEntryToAdd],
-  );
-
-  const handleEntryAddValue = useCallback(
-    (...args) => {
-      setEntryToAdd(null);
+      setNewPropName('');
+      setNewPropKey(key => key + 1);
 
       if (typeof overrideValueFn === 'function') {
-        overrideValueFn(...args);
+        overrideValueFn(name, value);
       }
     },
-    [overrideValueFn, setEntryToAdd],
+    [newPropName, overrideValueFn],
   );
 
-  if (isEmpty && !showWhenEmpty) {
+  if (isEmpty && !showWhenEmpty && !canAddEntries) {
     return null;
   } else {
     return (
@@ -100,11 +79,6 @@ export default function InspectedElementTree({
           {!isEmpty && (
             <Button onClick={handleCopy} title="Copy to clipboard">
               <ButtonIcon type="copy" />
-            </Button>
-          )}
-          {canAddEntries && (
-            <Button onClick={handleEntryAdd} title={`Add ${label}`}>
-              <ButtonIcon type="add" />
             </Button>
           )}
         </div>
@@ -122,14 +96,17 @@ export default function InspectedElementTree({
               value={value}
             />
           ))}
-        {entryToAdd && (
-          <div className={styles.AddEntry}>
-            <EditableName overrideNameFn={handleEntryAddName} />:
+        {canAddEntries && (
+          <div className={styles.AddEntry} key={newPropKey}>
+            <EditableName
+              autoFocus={newPropKey > 0}
+              overrideNameFn={setNewPropName}
+            />
+            :&nbsp;
             <EditableValue
-              dataType={typeof entryToAdd.value}
-              overrideValueFn={handleEntryAddValue}
-              path={[entryToAdd.key]}
-              initialValue={entryToAdd.value}
+              initialValue={''}
+              overrideValueFn={handleNewEntryValue}
+              path={[newPropName]}
             />
           </div>
         )}
