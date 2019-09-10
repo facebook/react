@@ -937,11 +937,7 @@ function updateHostRoot(current, workInProgress, renderExpirationTime) {
     );
   }
   const root: FiberRoot = workInProgress.stateNode;
-  if (
-    (current === null || current.child === null) &&
-    root.hydrate &&
-    enterHydrationState(workInProgress)
-  ) {
+  if (root.hydrate && enterHydrationState(workInProgress)) {
     // If we don't have any current children this might be the first pass.
     // We always try to hydrate. If this isn't a hydration pass there won't
     // be any children to hydrate which is effectively the same thing as
