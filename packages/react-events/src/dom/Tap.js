@@ -21,29 +21,33 @@ import {
   isMac,
   dispatchDiscreteEvent,
   dispatchUserBlockingEvent,
+  getTouchById,
+  hasModifierKey,
 } from './shared';
 
-type TapProps = {|
-  disabled: boolean,
-  preventDefault: boolean,
-  onTapCancel: (e: TapEvent) => void,
-  onTapChange: boolean => void,
-  onTapEnd: (e: TapEvent) => void,
-  onTapStart: (e: TapEvent) => void,
-  onTapUpdate: (e: TapEvent) => void,
-|};
+type TapProps = $ReadOnly<{|
+  disabled?: boolean,
+  maximumDistance?: number,
+  preventDefault?: boolean,
+  onTapCancel?: (e: TapEvent) => void,
+  onTapChange?: boolean => void,
+  onTapEnd?: (e: TapEvent) => void,
+  onTapStart?: (e: TapEvent) => void,
+  onTapUpdate?: (e: TapEvent) => void,
+|}>;
 
-type TapState = {
+type TapState = {|
   activePointerId: null | number,
   buttons: 0 | 1 | 4,
   gestureState: TapGestureState,
   ignoreEmulatedEvents: boolean,
+  initialPosition: {|x: number, y: number|},
   isActive: boolean,
   pointerType: PointerType,
   responderTarget: null | Element,
   rootEvents: null | Array<string>,
   shouldPreventClick: boolean,
-};
+|};
 
 type TapEventType =
   | 'tap-cancel'
@@ -76,10 +80,10 @@ type TapGestureState = {|
   y: number,
 |};
 
-type TapEvent = {|
+type TapEvent = $ReadOnly<{|
   ...TapGestureState,
   type: TapEventType,
-|};
+|}>;
 
 /**
  * Native event dependencies
@@ -120,6 +124,7 @@ function createInitialState(): TapState {
     buttons: 0,
     ignoreEmulatedEvents: false,
     isActive: false,
+    initialPosition: {x: 0, y: 0},
     pointerType: '',
     responderTarget: null,
     rootEvents: null,
@@ -299,23 +304,6 @@ function removeRootEventTypes(
  * Managing pointers
  */
 
-function getTouchById(
-  nativeEvent: TouchEvent,
-  pointerId: null | number,
-): null | Touch {
-  if (pointerId != null) {
-    const changedTouches = nativeEvent.changedTouches;
-    for (let i = 0; i < changedTouches.length; i++) {
-      const touch = changedTouches[i];
-      if (touch.identifier === pointerId) {
-        return touch;
-      }
-    }
-    return null;
-  }
-  return null;
-}
-
 function getHitTarget(
   event: ReactDOMResponderEvent,
   context: ReactDOMResponderContext,
@@ -360,14 +348,6 @@ function isActivePointer(
       return true;
     }
   }
-}
-
-function isModifiedTap(event: ReactDOMResponderEvent): boolean {
-  const nativeEvent: any = event.nativeEvent;
-  const {altKey, ctrlKey, metaKey, shiftKey} = nativeEvent;
-  return (
-    altKey === true || ctrlKey === true || metaKey === true || shiftKey === true
-  );
 }
 
 function shouldActivate(event: ReactDOMResponderEvent): boolean {
@@ -511,7 +491,12 @@ const responderImpl = {
           state.pointerType = event.pointerType;
           state.responderTarget = context.getResponderNode();
           state.shouldPreventClick = props.preventDefault !== false;
-          state.gestureState = createGestureState(context, props, state, event);
+
+          const gestureState = createGestureState(context, props, state, event);
+          state.gestureState = gestureState;
+          state.initialPosition.x = gestureState.x;
+          state.initialPosition.y = gestureState.y;
+
           dispatchStart(context, props, state);
           dispatchChange(context, props, state);
           addRootEventTypes(rootEventTypes, context, state);
@@ -549,7 +534,26 @@ const responderImpl = {
 
         if (state.isActive && isActivePointer(event, state)) {
           state.gestureState = createGestureState(context, props, state, event);
-          if (context.isTargetWithinResponder(hitTarget)) {
+          let shouldUpdate = true;
+
+          if (!context.isTargetWithinResponder(hitTarget)) {
+            shouldUpdate = false;
+          } else if (
+            props.maximumDistance != null &&
+            props.maximumDistance >= 10
+          ) {
+            const maxDistance = props.maximumDistance;
+            const initialPosition = state.initialPosition;
+            const currentPosition = state.gestureState;
+            const moveX = initialPosition.x - currentPosition.x;
+            const moveY = initialPosition.y - currentPosition.y;
+            const moveDistance = Math.sqrt(moveX * moveX + moveY * moveY);
+            if (moveDistance > maxDistance) {
+              shouldUpdate = false;
+            }
+          }
+
+          if (shouldUpdate) {
             dispatchUpdate(context, props, state);
           } else {
             state.isActive = false;
@@ -577,7 +581,7 @@ const responderImpl = {
           dispatchChange(context, props, state);
           if (context.isTargetWithinResponder(hitTarget)) {
             // Determine whether to call preventDefault on subsequent native events.
-            if (isModifiedTap(event)) {
+            if (hasModifierKey(event)) {
               state.shouldPreventClick = false;
             }
             dispatchEnd(context, props, state);
