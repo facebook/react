@@ -104,6 +104,7 @@ export default function InspectedElementTree({
             />
             :&nbsp;
             <EditableValue
+              className={styles.EditableValue}
               initialValue={''}
               overrideValueFn={handleNewEntryValue}
               path={[newPropName]}
