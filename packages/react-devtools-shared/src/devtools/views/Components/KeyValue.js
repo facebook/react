@@ -105,7 +105,7 @@ export default function KeyValue({
             dataType={dataType}
             overrideValueFn={((overrideValueFn: any): OverrideValueFn)}
             path={path}
-            value={value}
+            initialValue={value}
           />
         ) : (
           <span className={styles.Value}>{displayValue}</span>

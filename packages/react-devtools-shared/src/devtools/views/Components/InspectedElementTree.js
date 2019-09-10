@@ -8,10 +8,12 @@
  */
 
 import {copy} from 'clipboard-js';
-import React, {useCallback} from 'react';
+import React, {useCallback, useState} from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import KeyValue from './KeyValue';
+import EditableName from './EditableName';
+import EditableValue from './EditableValue';
 import {alphaSortEntries, serializeDataForCopy} from '../utils';
 import styles from './InspectedElementTree.css';
 
@@ -25,6 +27,7 @@ type Props = {|
   label: string,
   overrideValueFn?: ?OverrideValueFn,
   showWhenEmpty?: boolean,
+  canAddEntries?: boolean,
 |};
 
 export default function InspectedElementTree({
@@ -32,12 +35,16 @@ export default function InspectedElementTree({
   inspectPath,
   label,
   overrideValueFn,
+  canAddEntries = false,
   showWhenEmpty = false,
 }: Props) {
   const entries = data != null ? Object.entries(data) : null;
   if (entries !== null) {
     entries.sort(alphaSortEntries);
   }
+
+  const [newPropKey, setNewPropKey] = useState<number>(0);
+  const [newPropName, setNewPropName] = useState<string>('');
 
   const isEmpty = entries === null || entries.length === 0;
 
@@ -46,7 +53,23 @@ export default function InspectedElementTree({
     [data],
   );
 
-  if (isEmpty && !showWhenEmpty) {
+  const handleNewEntryValue = useCallback(
+    (name, value) => {
+      if (!newPropName) {
+        return;
+      }
+
+      setNewPropName('');
+      setNewPropKey(key => key + 1);
+
+      if (typeof overrideValueFn === 'function') {
+        overrideValueFn(name, value);
+      }
+    },
+    [newPropName, overrideValueFn],
+  );
+
+  if (isEmpty && !showWhenEmpty && !canAddEntries) {
     return null;
   } else {
     return (
@@ -73,6 +96,20 @@ export default function InspectedElementTree({
               value={value}
             />
           ))}
+        {canAddEntries && (
+          <div className={styles.AddEntry} key={newPropKey}>
+            <EditableName
+              autoFocus={newPropKey > 0}
+              overrideNameFn={setNewPropName}
+            />
+            :&nbsp;
+            <EditableValue
+              initialValue={''}
+              overrideValueFn={handleNewEntryValue}
+              path={[newPropName]}
+            />
+          </div>
+        )}
       </div>
     );
   }
