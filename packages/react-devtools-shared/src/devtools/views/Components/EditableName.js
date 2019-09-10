@@ -31,7 +31,7 @@ export default function EditableName({
         inputRef.current.focus();
       }
     },
-    [inputRef],
+    [],
   );
 
   const handleChange = useCallback(
