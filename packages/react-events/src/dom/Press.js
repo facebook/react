@@ -111,11 +111,7 @@ const DEFAULT_PRESS_RETENTION_OFFSET = {
 };
 
 const targetEventTypes = hasPointerEvents
-  ? [
-      'keydown_active',
-      'pointerdown',
-      'click_active',
-    ]
+  ? ['keydown_active', 'pointerdown', 'click_active']
   : ['keydown_active', 'touchstart', 'mousedown', 'click_active'];
 
 const rootEventTypes = hasPointerEvents
