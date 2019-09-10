@@ -158,9 +158,9 @@ function useEditableValue(initialValue: any): [any, Function] {
   ) {
     if (shouldStringify) {
       setEditableValue(JSON.stringify(value));
+    } else {
+      setEditableValue(value);
     }
-
-    setEditableValue(value);
   }
 
   return [editableValue, setEditableValueWithStringify];
