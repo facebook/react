@@ -226,6 +226,10 @@ let workInProgressRootExitStatus: RootExitStatus = RootIncomplete;
 let workInProgressRootLatestProcessedExpirationTime: ExpirationTime = Sync;
 let workInProgressRootLatestSuspenseTimeout: ExpirationTime = Sync;
 let workInProgressRootCanSuspendUsingConfig: null | SuspenseConfig = null;
+// The work left over by components that were visited during this render. Only
+// includes unprocessed updates, not work in bailed out children.
+let workInProgressRootNextUnprocessedUpdateTime: ExpirationTime = NoWork;
+
 // If we're pinged while rendering we don't always restart immediately.
 // This flag determines if it might be worthwhile to restart if an opportunity
 // happens latere.
@@ -484,21 +488,27 @@ function markUpdateTimeFromFiberToRoot(fiber, expirationTime) {
   }
 
   if (root !== null) {
-    if (workInProgressRootExitStatus === RootSuspendedWithDelay) {
-      // The root already suspended with a delay, which means this render
-      // definitely won't finish. Since we have a new update, let's mark it as
-      // suspended now, right before marking the incoming update. This has the
-      // effect of interrupting the current render and switching to the update.
-      // TODO: This happens to work when receiving an update during the render
-      // phase, because of the trick inside computeExpirationForFiber to
-      // subtract 1 from `renderExpirationTime` to move it into a
-      // separate bucket. But we should probably model it with an exception,
-      // using the same mechanism we use to force hydration of a subtree.
-      // TODO: This does not account for low pri updates that were already
-      // scheduled before the root started rendering. Need to track the next
-      // pending expiration time (perhaps by backtracking the return path) and
-      // then trigger a restart in the `renderDidSuspendDelayIfPossible` path.
-      markRootSuspendedAtTime(root, renderExpirationTime);
+    if (workInProgressRoot === root) {
+      // Received an update to a tree that's in the middle of rendering. Mark
+      // that's unprocessed work on this root.
+      markUnprocessedUpdateTime(expirationTime);
+
+      if (workInProgressRootExitStatus === RootSuspendedWithDelay) {
+        // The root already suspended with a delay, which means this render
+        // definitely won't finish. Since we have a new update, let's mark it as
+        // suspended now, right before marking the incoming update. This has the
+        // effect of interrupting the current render and switching to the update.
+        // TODO: This happens to work when receiving an update during the render
+        // phase, because of the trick inside computeExpirationForFiber to
+        // subtract 1 from `renderExpirationTime` to move it into a
+        // separate bucket. But we should probably model it with an exception,
+        // using the same mechanism we use to force hydration of a subtree.
+        // TODO: This does not account for low pri updates that were already
+        // scheduled before the root started rendering. Need to track the next
+        // pending expiration time (perhaps by backtracking the return path) and
+        // then trigger a restart in the `renderDidSuspendDelayIfPossible` path.
+        markRootSuspendedAtTime(root, renderExpirationTime);
+      }
     }
     // Mark that the root has a pending update.
     markRootUpdatedAtTime(root, expirationTime);
@@ -856,6 +866,7 @@ function prepareFreshStack(root, expirationTime) {
   workInProgressRootLatestProcessedExpirationTime = Sync;
   workInProgressRootLatestSuspenseTimeout = Sync;
   workInProgressRootCanSuspendUsingConfig = null;
+  workInProgressRootNextUnprocessedUpdateTime = NoWork;
   workInProgressRootHasPendingPing = false;
 
   if (enableSchedulerTracing) {
@@ -1255,13 +1266,21 @@ export function markRenderEventTimeAndConfig(
   }
 }
 
+export function markUnprocessedUpdateTime(
+  expirationTime: ExpirationTime,
+): void {
+  if (expirationTime > workInProgressRootNextUnprocessedUpdateTime) {
+    workInProgressRootNextUnprocessedUpdateTime = expirationTime;
+  }
+}
+
 export function renderDidSuspend(): void {
   if (workInProgressRootExitStatus === RootIncomplete) {
     workInProgressRootExitStatus = RootSuspended;
   }
 }
 
-export function renderDidSuspendDelayIfPossible(suspendedWork: Fiber): void {
+export function renderDidSuspendDelayIfPossible(): void {
   if (
     workInProgressRootExitStatus === RootIncomplete ||
     workInProgressRootExitStatus === RootSuspended
@@ -1269,28 +1288,20 @@ export function renderDidSuspendDelayIfPossible(suspendedWork: Fiber): void {
     workInProgressRootExitStatus = RootSuspendedWithDelay;
   }
 
-  if (workInProgressRoot !== null) {
-    // Check if the component that suspsended, or any components in the return
-    // path, have a pending update. If so, those updates might unsuspend us, so
-    // interrupt the current render and restart.
-    let nextAfterSuspendedTime = NoWork;
-    let fiber = suspendedWork;
-    while (fiber !== null) {
-      const updateExpirationTime = fiber.expirationTime;
-      if (updateExpirationTime > nextAfterSuspendedTime) {
-        nextAfterSuspendedTime = updateExpirationTime;
-      }
-      fiber = fiber.return;
-    }
-
-    if (nextAfterSuspendedTime !== NoWork) {
-      // Mark the current render as suspended, and then mark that there's a
-      // pending update.
-      // TODO: This should immediately interrupt the current render, instead
-      // of waiting until the next time we yield.
-      markRootSuspendedAtTime(workInProgressRoot, renderExpirationTime);
-      markRootUpdatedAtTime(workInProgressRoot, nextAfterSuspendedTime);
-    }
+  // Check if there's a lower priority update somewhere else in the tree.
+  if (
+    workInProgressRootNextUnprocessedUpdateTime !== NoWork &&
+    workInProgressRoot !== null
+  ) {
+    // Mark the current render as suspended, and then mark that there's a
+    // pending update.
+    // TODO: This should immediately interrupt the current render, instead
+    // of waiting until the next time we yield.
+    markRootSuspendedAtTime(workInProgressRoot, renderExpirationTime);
+    markRootUpdatedAtTime(
+      workInProgressRoot,
+      workInProgressRootNextUnprocessedUpdateTime,
+    );
   }
 }
 

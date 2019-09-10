@@ -43,6 +43,7 @@ import {
   warnIfNotCurrentlyActingUpdatesInDev,
   warnIfNotScopedWithMatchingAct,
   markRenderEventTimeAndConfig,
+  markUnprocessedUpdateTime,
 } from './ReactFiberWorkLoop';
 
 import invariant from 'shared/invariant';
@@ -532,13 +533,6 @@ export function resetHooks(): void {
   // It's also called inside mountIndeterminateComponent if we determine the
   // component is a module-style component.
 
-  if (currentlyRenderingFiber !== null) {
-    // Even though this component didn't complete, set the remaining time left
-    // on this fiber. This is sometimes useful when suspending to determine if
-    // there's a lower priority update that could "unsuspend."
-    currentlyRenderingFiber.expirationTime = remainingExpirationTime;
-  }
-
   renderExpirationTime = NoWork;
   currentlyRenderingFiber = null;
 
@@ -763,6 +757,7 @@ function updateReducer<S, I, A>(
         // Update the remaining priority in the queue.
         if (updateExpirationTime > remainingExpirationTime) {
           remainingExpirationTime = updateExpirationTime;
+          markUnprocessedUpdateTime(remainingExpirationTime);
         }
       } else {
         // This update does have sufficient priority.

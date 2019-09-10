@@ -177,6 +177,7 @@ import {
   retryDehydratedSuspenseBoundary,
   scheduleWork,
   renderDidSuspendDelayIfPossible,
+  markUnprocessedUpdateTime,
 } from './ReactFiberWorkLoop';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
@@ -2064,7 +2065,7 @@ function updateDehydratedSuspenseComponent(
     // render something, if we time out. Even if that requires us to delete everything and
     // skip hydration.
     // Delay having to do this as long as the suspense timeout allows us.
-    renderDidSuspendDelayIfPossible(workInProgress);
+    renderDidSuspendDelayIfPossible();
     return retrySuspenseComponentWithoutHydrating(
       current,
       workInProgress,
@@ -2706,6 +2707,11 @@ function bailoutOnAlreadyFinishedWork(
   if (enableProfilerTimer) {
     // Don't update "base" render times for bailouts.
     stopProfilerTimerIfRunning(workInProgress);
+  }
+
+  const updateExpirationTime = workInProgress.expirationTime;
+  if (updateExpirationTime !== NoWork) {
+    markUnprocessedUpdateTime(updateExpirationTime);
   }
 
   // Check if the children have any pending work.
