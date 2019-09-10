@@ -25,14 +25,11 @@ export default function EditableName({
   const [isValid, setIsValid] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  useEffect(
-    () => {
-      if (inputRef.current !== null) {
-        inputRef.current.focus();
-      }
-    },
-    [],
-  );
+  useEffect(() => {
+    if (inputRef.current !== null) {
+      inputRef.current.focus();
+    }
+  }, []);
 
   const handleChange = useCallback(
     ({target}) => {
@@ -59,10 +56,10 @@ export default function EditableName({
       if ((eventKey === 'Enter' || eventKey === 'Tab') && isValid) {
         overrideNameFn(editableName);
       } else if (eventKey === 'Escape') {
-        setEditableName(name);
+        setEditableName(initialValue);
       }
     },
-    [editableName, setEditableName, isValid, name, overrideNameFn],
+    [editableName, setEditableName, isValid, initialValue, overrideNameFn],
   );
 
   return (

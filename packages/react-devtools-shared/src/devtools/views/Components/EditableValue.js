@@ -7,7 +7,7 @@
  * @flow
  */
 
-import React, {Fragment, useEffect, useCallback, useRef, useState} from 'react';
+import React, {Fragment, useCallback, useRef, useState} from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import styles from './EditableValue.css';
@@ -21,12 +21,6 @@ type EditableValueProps = {|
   path: Array<string | number>,
   initialValue: any,
 |};
-
-function useEditableValue(initialValue) {
-  const [editableValue, setEditableValue] = useState(JSON.stringify(initialValue));
-
-  return [editableValue, (value, {shouldStringify} = {}) => (shouldStringify ? setEditableValue(JSON.stringify(value)) : setEditableValue(value))];
-}
 
 export default function EditableValue({
   dataType,
@@ -102,7 +96,8 @@ export default function EditableValue({
     [editableValue, isValid, dataType, overrideValueFn, path, initialValue],
   );
 
-  let inputValue = initialValue === undefined ? '' : JSON.stringify(initialValue);
+  let inputValue =
+    initialValue === undefined ? '' : JSON.stringify(initialValue);
   if (hasPendingChanges) {
     inputValue = editableValue;
   }
@@ -150,4 +145,23 @@ export default function EditableValue({
         )}
     </Fragment>
   );
+}
+
+function useEditableValue(initialValue: any): [any, Function] {
+  const [editableValue, setEditableValue] = useState(
+    JSON.stringify(initialValue),
+  );
+
+  function setEditableValueWithStringify(
+    value: any,
+    {shouldStringify}: Object = {},
+  ) {
+    if (shouldStringify) {
+      setEditableValue(JSON.stringify(value));
+    }
+
+    setEditableValue(value);
+  }
+
+  return [editableValue, setEditableValueWithStringify];
 }
