@@ -11,15 +11,36 @@ import React from 'react';
 import {TabbableScope} from './TabbableScope';
 import {useKeyboard} from 'react-events/keyboard';
 
+type FocusContainProps = {
+  children: React.Node,
+};
+
+type KeyboardEventType = 'keydown' | 'keyup';
+
+type KeyboardEvent = {|
+  altKey: boolean,
+  ctrlKey: boolean,
+  isComposing: boolean,
+  key: string,
+  location: number,
+  metaKey: boolean,
+  repeat: boolean,
+  shiftKey: boolean,
+  target: Element | Document,
+  type: KeyboardEventType,
+  timeStamp: number,
+  defaultPrevented: boolean,
+|};
+
 const {useRef} = React;
 
-export function FocusContain({children}) {
+export function FocusContain({children}: FocusContainProps): React.Node {
   const scopeRef = useRef(null);
-  const keyboard = useKeyboard({onKeyDown});
+  const keyboard = useKeyboard({onKeyDown, preventKeys: ['tab']});
 
-  function onKeyDown(event) {
+  function onKeyDown(event: KeyboardEvent): boolean {
     if (event.key !== 'Tab') {
-      return;
+      return true;
     }
     const tabbableScope = scopeRef.current;
     const tabbableNodes = tabbableScope.getScopedNodes();
@@ -47,6 +68,7 @@ export function FocusContain({children}) {
         }
       }
     }
+    return false;
   }
 
   return (

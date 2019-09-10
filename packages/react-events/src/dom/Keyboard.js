@@ -19,10 +19,10 @@ import type {ReactEventResponderListener} from 'shared/ReactTypes';
 type KeyboardEventType = 'keydown' | 'keyup';
 
 type KeyboardProps = {
-  disabled: boolean,
-  onKeyDown: (e: KeyboardEvent) => ?boolean,
-  onKeyUp: (e: KeyboardEvent) => ?boolean,
-  preventKeys: Array<string>,
+  disabled?: boolean,
+  onKeyDown?: (e: KeyboardEvent) => ?boolean,
+  onKeyUp?: (e: KeyboardEvent) => ?boolean,
+  preventKeys?: Array<string>,
 };
 
 type KeyboardEvent = {|
@@ -198,7 +198,7 @@ const keyboardResponderImpl = {
     }
     let defaultPrevented = nativeEvent.defaultPrevented === true;
     if (type === 'keydown') {
-      const preventKeys = props.preventKeys;
+      const preventKeys = ((props.preventKeys: any): Array<string>);
       if (!defaultPrevented && isArray(preventKeys)) {
         preventKeyLoop: for (let i = 0; i < preventKeys.length; i++) {
           const preventKey = preventKeys[i];
@@ -230,7 +230,7 @@ const keyboardResponderImpl = {
       if (isFunction(onKeyDown)) {
         dispatchKeyboardEvent(
           event,
-          onKeyDown,
+          ((onKeyDown: any): (e: KeyboardEvent) => ?boolean),
           context,
           'keydown',
           defaultPrevented,
@@ -241,7 +241,7 @@ const keyboardResponderImpl = {
       if (isFunction(onKeyUp)) {
         dispatchKeyboardEvent(
           event,
-          onKeyUp,
+          ((onKeyUp: any): (e: KeyboardEvent) => ?boolean),
           context,
           'keyup',
           defaultPrevented,
