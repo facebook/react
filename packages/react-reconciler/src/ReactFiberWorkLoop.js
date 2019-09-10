@@ -405,7 +405,7 @@ export function scheduleUpdateOnFiber(
       // This is a legacy edge case. The initial mount of a ReactDOM.render-ed
       // root inside of batchedUpdates should be synchronous, but layout updates
       // should be deferred until the end of the batch.
-      renderRoot(root, Sync, true);
+      performSyncWorkOnRoot(root, Sync);
     } else {
       ensureRootIsScheduled(root);
       schedulePendingInteractions(root, expirationTime);
@@ -593,16 +593,18 @@ function ensureRootIsScheduled(root: FiberRoot) {
   let callbackNode;
   if (expirationTime === Sync) {
     // Sync React callbacks are scheduled on a special internal queue
-    callbackNode = scheduleSyncCallback(performWorkOnRoot.bind(null, root));
+    callbackNode = scheduleSyncCallback(
+      performSyncWorkOnRoot.bind(null, root, Sync),
+    );
   } else if (disableSchedulerTimeoutBasedOnReactExpirationTime) {
     callbackNode = scheduleCallback(
       priorityLevel,
-      performWorkOnRoot.bind(null, root),
+      performConcurrentWorkOnRoot.bind(null, root),
     );
   } else {
     callbackNode = scheduleCallback(
       priorityLevel,
-      performWorkOnRoot.bind(null, root),
+      performConcurrentWorkOnRoot.bind(null, root),
       // Compute a task timeout based on the expiration time. This also affects
       // ordering because tasks are processed in timeout order.
       {timeout: expirationTimeToMs(expirationTime) - now()},
@@ -612,41 +614,53 @@ function ensureRootIsScheduled(root: FiberRoot) {
   root.callbackNode = callbackNode;
 }
 
-// This is the entry point for every concurrent task.
-function performWorkOnRoot(root, isSync) {
+// This is the entry point for every concurrent task, i.e. anything that
+// goes through Scheduler.
+function performConcurrentWorkOnRoot(root, didTimeout) {
+  // Since we know we're in a React event, we can clear the current
+  // event time. The next update will compute a new event time.
+  currentEventTime = NoWork;
+
   // Determine the next expiration time to work on, using the fields stored
   // on the root.
   let expirationTime = getNextRootExpirationTimeToWorkOn(root);
   if (expirationTime !== NoWork) {
-    if (expirationTime !== Sync) {
-      // Since we know we're in a React event, we can clear the current
-      // event time. The next update will compute a new event time.
-      currentEventTime = NoWork;
-
+    if (didTimeout) {
       // An async update expired. There may be other expired updates on
       // this root.
-      if (isSync) {
-        const currentTime = requestCurrentTime();
-        if (currentTime < expirationTime) {
-          // Render all the expired work in a single batch.
-          expirationTime = currentTime;
-        }
+      const currentTime = requestCurrentTime();
+      if (currentTime < expirationTime) {
+        // Render all the expired work in a single batch.
+        expirationTime = currentTime;
       }
     }
 
     const originalCallbackNode = root.callbackNode;
     try {
-      renderRoot(root, expirationTime, isSync);
+      renderRoot(root, expirationTime, didTimeout);
+      if (root.callbackNode === originalCallbackNode) {
+        // The task node scheduled for this root is the same one that's
+        // currently executed. Need to return a continuation.
+        return performConcurrentWorkOnRoot.bind(null, root);
+      }
     } finally {
       // Before exiting, make sure there's a callback scheduled for the
       // pending level.
       ensureRootIsScheduled(root);
-      if (root.callbackNode === originalCallbackNode) {
-        // The task node scheduled for this root is the same one that's
-        // currently executed. Need to return a continuation.
-        return performWorkOnRoot.bind(null, root);
-      }
     }
+  }
+  return null;
+}
+
+// This is the entry point for synchronous tasks that don't go
+// through Scheduler
+function performSyncWorkOnRoot(root, expirationTime) {
+  try {
+    renderRoot(root, expirationTime, true);
+  } finally {
+    // Before exiting, make sure there's a callback scheduled for the
+    // pending level.
+    ensureRootIsScheduled(root);
   }
   return null;
 }
@@ -659,11 +673,7 @@ export function flushRoot(root: FiberRoot, expirationTime: ExpirationTime) {
         'means you attempted to commit from inside a lifecycle method.',
     );
   }
-  scheduleSyncCallback(() => {
-    renderRoot(root, expirationTime, true);
-    return null;
-  });
-  flushSyncCallbackQueue();
+  performSyncWorkOnRoot(root, expirationTime);
 }
 
 export function flushDiscreteUpdates() {
@@ -731,10 +741,9 @@ function flushPendingDiscreteUpdates() {
     const roots = rootsWithPendingDiscreteUpdates;
     rootsWithPendingDiscreteUpdates = null;
     roots.forEach((expirationTime, root) => {
-      scheduleSyncCallback(() => {
-        renderRoot(root, expirationTime, true);
-        return null;
-      });
+      scheduleSyncCallback(
+        performSyncWorkOnRoot.bind(null, root, expirationTime),
+      );
     });
     // Now flush the immediate queue.
     flushSyncCallbackQueue();
@@ -879,6 +888,8 @@ function prepareFreshStack(root, expirationTime) {
   }
 }
 
+// renderRoot should only be called from inside either
+// `performConcurrentWorkOnRoot` or `performSyncWorkOnRoot`.
 function renderRoot(
   root: FiberRoot,
   expirationTime: ExpirationTime,
@@ -1021,7 +1032,7 @@ function renderRoot(
         // synchronously, to see if the error goes away. If there are lower
         // priority updates, let's include those, too, in case they fix the
         // inconsistency. Render at Idle to include all updates.
-        renderRoot(root, Idle, true);
+        performSyncWorkOnRoot(root, Idle);
         return;
       }
       // Commit the root in its errored state.
@@ -1863,9 +1874,8 @@ function commitRootImpl(root, renderPriorityLevel) {
           );
         }
       }
+      schedulePendingInteractions(root, remainingExpirationTime);
     }
-    ensureRootIsScheduled(root);
-    schedulePendingInteractions(root, expirationTime);
   } else {
     // If there's no remaining work, we can clear the set of already failed
     // error boundaries.
@@ -1882,8 +1892,6 @@ function commitRootImpl(root, renderPriorityLevel) {
     }
   }
 
-  onCommitRoot(finishedWork.stateNode, expirationTime);
-
   if (remainingExpirationTime === Sync) {
     // Count the number of times the root synchronously re-renders without
     // finishing. If there are too many, it indicates an infinite update loop.
@@ -1896,6 +1904,12 @@ function commitRootImpl(root, renderPriorityLevel) {
   } else {
     nestedUpdateCount = 0;
   }
+
+  onCommitRoot(finishedWork.stateNode, expirationTime);
+
+  // Always call this before exiting `commitRoot`, to ensure that any
+  // additional work on this root is scheduled.
+  ensureRootIsScheduled(root);
 
   if (hasUncaughtError) {
     hasUncaughtError = false;
