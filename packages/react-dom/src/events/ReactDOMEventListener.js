@@ -28,6 +28,8 @@ import {
   isReplayableDiscreteEvent,
   queueDiscreteEvent,
   hasQueuedDiscreteEvents,
+  clearIfContinuousEvent,
+  queueIfContinuousEvent,
 } from './ReactDOMEventReplaying';
 import {
   getNearestMountedFiber,
@@ -351,6 +353,7 @@ export function dispatchEvent(
 
   if (blockedOn === null) {
     // We successfully dispatched this event.
+    clearIfContinuousEvent(topLevelType, nativeEvent);
     return;
   }
 
@@ -360,17 +363,33 @@ export function dispatchEvent(
     return;
   }
 
+  if (
+    queueIfContinuousEvent(
+      blockedOn,
+      topLevelType,
+      eventSystemFlags,
+      nativeEvent,
+    )
+  ) {
+    return;
+  }
+
+  // We need to clear only if we didn't queue because
+  // queueing is accummulative.
+  clearIfContinuousEvent(topLevelType, nativeEvent);
+
   // This is not replayable so we'll invoke it but without a target,
   // in case the event system needs to trace it.
   if (enableFlareAPI) {
-    if (eventSystemFlags === PLUGIN_EVENT_SYSTEM) {
+    if (eventSystemFlags & PLUGIN_EVENT_SYSTEM) {
       dispatchEventForPluginEventSystem(
         topLevelType,
         eventSystemFlags,
         nativeEvent,
         null,
       );
-    } else {
+    }
+    if (eventSystemFlags & RESPONDER_EVENT_SYSTEM) {
       // React Flare event system
       dispatchEventForResponderEventSystem(
         (topLevelType: any),
@@ -440,14 +459,15 @@ export function attemptToDispatchEvent(
   }
 
   if (enableFlareAPI) {
-    if (eventSystemFlags === PLUGIN_EVENT_SYSTEM) {
+    if (eventSystemFlags & PLUGIN_EVENT_SYSTEM) {
       dispatchEventForPluginEventSystem(
         topLevelType,
         eventSystemFlags,
         nativeEvent,
         targetInst,
       );
-    } else {
+    }
+    if (eventSystemFlags & RESPONDER_EVENT_SYSTEM) {
       // React Flare event system
       dispatchEventForResponderEventSystem(
         (topLevelType: any),
