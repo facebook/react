@@ -474,8 +474,7 @@ describe('ReactDOMFiberAsync', () => {
                 }
                 ref={submitButtonRef}>
                 Submit
-              </button>{' '}
-              : null}
+              </button>
             </div>
           );
         }

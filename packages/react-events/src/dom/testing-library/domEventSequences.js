@@ -153,10 +153,11 @@ export function pointermove(target, payload) {
   }
 }
 
-export function pointerup(target, defaultPayload) {
+export function pointerup(target, defaultPayload = {}) {
   const dispatch = arg => target.dispatchEvent(arg);
   const pointerType = getPointerType(defaultPayload);
-  const payload = {buttons: buttonsType.none, ...defaultPayload};
+  // eslint-disable-next-line no-unused-vars
+  const {buttons, ...payload} = defaultPayload;
 
   if (pointerType === 'mouse') {
     if (hasPointerEvent()) {
@@ -174,6 +175,7 @@ export function pointerup(target, defaultPayload) {
     dispatch(domEvents.touchend(payload));
     dispatch(domEvents.mouseover(payload));
     dispatch(domEvents.mousemove(payload));
+    // NOTE: the value of 'buttons' for 'mousedown' must not be 0
     dispatch(domEvents.mousedown(payload));
     if (document.activeElement !== target) {
       dispatch(domEvents.focus());

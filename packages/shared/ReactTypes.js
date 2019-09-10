@@ -85,7 +85,6 @@ export type ReactEventResponderInstance<E, C> = {|
   responder: ReactEventResponder<E, C>,
   rootEventTypes: null | Set<string>,
   state: Object,
-  target: mixed,
 |};
 
 export type ReactEventResponderListener<E, C> = {|

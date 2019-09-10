@@ -406,7 +406,7 @@ export function scheduleUpdateOnFiber(
     } else {
       scheduleCallbackForRoot(root, ImmediatePriority, Sync);
       if (executionContext === NoContext) {
-        // Flush the synchronous work now, wnless we're already working or inside
+        // Flush the synchronous work now, unless we're already working or inside
         // a batch. This is intentionally inside scheduleUpdateOnFiber instead of
         // scheduleCallbackForFiber to preserve the ability to schedule a callback
         // without immediately flushing it. We only do this for user-initiated
@@ -1497,14 +1497,6 @@ function commitRoot(root) {
     ImmediatePriority,
     commitRootImpl.bind(null, root, renderPriorityLevel),
   );
-  // If there are passive effects, schedule a callback to flush them. This goes
-  // outside commitRootImpl so that it inherits the priority of the render.
-  if (rootWithPendingPassiveEffects !== null) {
-    scheduleCallback(NormalPriority, () => {
-      flushPassiveEffects();
-      return null;
-    });
-  }
   return null;
 }
 
@@ -1827,7 +1819,8 @@ function commitRootImpl(root, renderPriorityLevel) {
 
 function commitBeforeMutationEffects() {
   while (nextEffect !== null) {
-    if ((nextEffect.effectTag & Snapshot) !== NoEffect) {
+    const effectTag = nextEffect.effectTag;
+    if ((effectTag & Snapshot) !== NoEffect) {
       setCurrentDebugFiberInDEV(nextEffect);
       recordEffect();
 
@@ -1835,6 +1828,17 @@ function commitBeforeMutationEffects() {
       commitBeforeMutationEffectOnFiber(current, nextEffect);
 
       resetCurrentDebugFiberInDEV();
+    }
+    if ((effectTag & Passive) !== NoEffect) {
+      // If there are passive effects, schedule a callback to flush at
+      // the earliest opportunity.
+      if (!rootDoesHavePassiveEffects) {
+        rootDoesHavePassiveEffects = true;
+        scheduleCallback(NormalPriority, () => {
+          flushPassiveEffects();
+          return null;
+        });
+      }
     }
     nextEffect = nextEffect.nextEffect;
   }
@@ -1941,10 +1945,6 @@ function commitLayoutEffects(
     if (effectTag & Ref) {
       recordEffect();
       commitAttachRef(nextEffect);
-    }
-
-    if (effectTag & Passive) {
-      rootDoesHavePassiveEffects = true;
     }
 
     resetCurrentDebugFiberInDEV();

@@ -38,7 +38,7 @@ export default function AutoSizeInput({
     }
   };
 
-  // Copy text stlyes from <input> to hidden sizing <div>
+  // Copy text styles from <input> to hidden sizing <div>
   useLayoutEffect(() => {
     if (
       typeof window.getComputedStyle !== 'function' ||

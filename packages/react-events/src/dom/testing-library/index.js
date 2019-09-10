@@ -35,6 +35,9 @@ const createEventTarget = node => ({
   focus(payload) {
     node.dispatchEvent(domEvents.focus(payload));
   },
+  scroll(payload) {
+    node.dispatchEvent(domEvents.scroll(payload));
+  },
   /**
    * KeyboardEvent abstraction.
    */
@@ -46,9 +49,6 @@ const createEventTarget = node => ({
   },
   virtualclick(payload) {
     node.dispatchEvent(domEvents.virtualclick(payload));
-  },
-  scroll(payload) {
-    node.dispatchEvent(domEvents.scroll(payload));
   },
   /**
    * PointerEvent abstraction.
@@ -75,7 +75,7 @@ const createEventTarget = node => ({
   pointerenter(payload) {
     domEventSequences.pointerenter(node, payload);
   },
-  // node dispatches exit & out events
+  // node dispatches exit & leave events
   pointerexit(payload) {
     domEventSequences.pointerexit(node, payload);
   },

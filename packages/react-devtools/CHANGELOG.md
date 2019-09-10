@@ -7,6 +7,8 @@
   </summary>
   
   <!-- Upcoming changes go here -->
+#### Bug fixes
+* Profiler correctly saves/exports profiling data in Firefox now. ([hristo-kanchev](https://github.com/hristo-kanchev) in [#16612](https://github.com/facebook/react/pull/16612))
 </details>
 
 ## 4.0.6 (August 26, 2019)

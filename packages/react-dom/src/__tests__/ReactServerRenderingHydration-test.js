@@ -586,4 +586,62 @@ describe('ReactDOMServerHydration', () => {
 
     document.body.removeChild(container);
   });
+
+  it('does not invoke an event on a parent tree when a subtree is hydrating', () => {
+    let clicks = 0;
+    let childSlotRef = React.createRef();
+
+    function Parent() {
+      return <div onClick={() => clicks++} ref={childSlotRef} />;
+    }
+
+    function App() {
+      return (
+        <div>
+          <a>Click me</a>
+        </div>
+      );
+    }
+
+    let finalHTML = ReactDOMServer.renderToString(<App />);
+
+    let parentContainer = document.createElement('div');
+    let childContainer = document.createElement('div');
+
+    // We need this to be in the document since we'll dispatch events on it.
+    document.body.appendChild(parentContainer);
+
+    // We're going to use a different root as a parent.
+    // This lets us detect whether an event goes through React's event system.
+    let parentRoot = ReactDOM.unstable_createRoot(parentContainer);
+    parentRoot.render(<Parent />);
+    Scheduler.unstable_flushAll();
+
+    childSlotRef.current.appendChild(childContainer);
+
+    childContainer.innerHTML = finalHTML;
+
+    let a = childContainer.getElementsByTagName('a')[0];
+
+    // Hydrate asynchronously.
+    let root = ReactDOM.unstable_createRoot(childContainer, {hydrate: true});
+    root.render(<App />);
+    // Nothing has rendered so far.
+
+    a.click();
+    expect(clicks).toBe(0);
+
+    Scheduler.unstable_flushAll();
+
+    // We're now full hydrated.
+    // TODO: With selective hydration the event should've been replayed
+    // but for now we'll have to issue it again.
+    act(() => {
+      a.click();
+    });
+
+    expect(clicks).toBe(1);
+
+    document.body.removeChild(parentContainer);
+  });
 });

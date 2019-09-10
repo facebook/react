@@ -9,6 +9,8 @@
 
 'use strict';
 
+import {createEventTarget} from 'react-events/src/dom/testing-library';
+
 let React;
 let ReactFeatureFlags;
 
@@ -17,6 +19,7 @@ describe('ReactScope', () => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableScopeAPI = true;
+    ReactFeatureFlags.enableFlareAPI = true;
     React = require('react');
   });
 
@@ -193,6 +196,53 @@ describe('ReactScope', () => {
       ReactDOM.hydrate(<Test />, container);
       const nodes = scopeRef.current.getScopedNodes();
       expect(nodes).toEqual([divRef.current, spanRef.current, aRef.current]);
+    });
+
+    it('event responders can be attached to scopes', () => {
+      let onKeyDown = jest.fn();
+      const TestScope = React.unstable_createScope((type, props) => true);
+      const ref = React.createRef();
+      const useKeyboard = require('react-events/keyboard').useKeyboard;
+      let Component = () => {
+        const listener = useKeyboard({
+          onKeyDown,
+        });
+        return (
+          <TestScope listeners={listener}>
+            <div ref={ref} />
+          </TestScope>
+        );
+      };
+      ReactDOM.render(<Component />, container);
+
+      let target = createEventTarget(ref.current);
+      target.keydown({key: 'Q'});
+      expect(onKeyDown).toHaveBeenCalledTimes(1);
+      expect(onKeyDown).toHaveBeenCalledWith(
+        expect.objectContaining({key: 'Q', type: 'keydown'}),
+      );
+
+      onKeyDown = jest.fn();
+      Component = () => {
+        const listener = useKeyboard({
+          onKeyDown,
+        });
+        return (
+          <div>
+            <TestScope listeners={listener}>
+              <div ref={ref} />
+            </TestScope>
+          </div>
+        );
+      };
+      ReactDOM.render(<Component />, container);
+
+      target = createEventTarget(ref.current);
+      target.keydown({key: 'Q'});
+      expect(onKeyDown).toHaveBeenCalledTimes(1);
+      expect(onKeyDown).toHaveBeenCalledWith(
+        expect.objectContaining({key: 'Q', type: 'keydown'}),
+      );
     });
   });
 
