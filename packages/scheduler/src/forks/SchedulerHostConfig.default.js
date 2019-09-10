@@ -83,6 +83,8 @@ if (
   const Date = window.Date;
   const setTimeout = window.setTimeout;
   const clearTimeout = window.clearTimeout;
+  // Explicitly bind local references to `window`, in order to support
+  // environments where the global `this` is not the window (e.g extensions)
   const requestAnimationFrame =
     window.requestAnimationFrame && window.requestAnimationFrame.bind(window);
   const cancelAnimationFrame =
