@@ -208,7 +208,10 @@ function initialize(socket: WebSocket) {
     socket.close();
   });
 
-  store = new Store(bridge, {supportsNativeInspection: false});
+  store = new Store(bridge, {
+    supportsNativeInspection: false,
+    supportsReact: true,
+  });
 
   log('Connected');
   reload();

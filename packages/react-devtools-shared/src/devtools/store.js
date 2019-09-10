@@ -53,11 +53,13 @@ type Config = {|
   supportsNativeInspection?: boolean,
   supportsReloadAndProfile?: boolean,
   supportsProfiling?: boolean,
+  supportsReact?: boolean,
 |};
 
 export type Capabilities = {|
   hasOwnerMetadata: boolean,
   supportsProfiling: boolean,
+  supportsReact: boolean,
 |};
 
 /**
@@ -124,6 +126,7 @@ export default class Store extends EventEmitter<{|
   _supportsNativeInspection: boolean = true;
   _supportsProfiling: boolean = false;
   _supportsReloadAndProfile: boolean = false;
+  _supportsReact: boolean = false;
 
   // Total number of visible elements (within all roots).
   // Used for windowing purposes.
@@ -154,6 +157,7 @@ export default class Store extends EventEmitter<{|
         supportsNativeInspection,
         supportsProfiling,
         supportsReloadAndProfile,
+        supportsReact,
       } = config;
       this._supportsNativeInspection = supportsNativeInspection !== false;
       if (supportsProfiling) {
@@ -161,6 +165,9 @@ export default class Store extends EventEmitter<{|
       }
       if (supportsReloadAndProfile) {
         this._supportsReloadAndProfile = true;
+      }
+      if (supportsReact) {
+        this._supportsReact = true;
       }
     }
 
@@ -328,6 +335,10 @@ export default class Store extends EventEmitter<{|
 
   get supportsProfiling(): boolean {
     return this._supportsProfiling;
+  }
+
+  get supportsReact(): boolean {
+    return this._supportsReact;
   }
 
   get supportsReloadAndProfile(): boolean {
@@ -719,6 +730,7 @@ export default class Store extends EventEmitter<{|
 
     while (i < operations.length) {
       const operation = operations[i];
+      console.log(operation);
       switch (operation) {
         case TREE_OPERATION_ADD: {
           const id = ((operations[i + 1]: any): number);

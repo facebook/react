@@ -43,3 +43,24 @@
   font-size: var(--font-size-sans-large);
   color: var(--color-dim);
 }
+
+.Column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1rem;
+  height: 100%;
+  border-top: 1px solid var(--color-border);
+}
+
+.Paragraph {
+  text-align: center;
+  font-size: var(--font-size-sans-normal);
+}
+
+.Header {
+  font-size: var(--font-size-sans-large);
+  margin-bottom: 0.5rem;
+}
+

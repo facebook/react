@@ -55,8 +55,9 @@ function createPanelIfReactLoaded() {
   }
 
   chrome.devtools.inspectedWindow.eval(
-    'window.__REACT_DEVTOOLS_GLOBAL_HOOK__ && window.__REACT_DEVTOOLS_GLOBAL_HOOK__.renderers.size > 0',
-    function(pageHasReact, error) {
+    'window.__REACT_DEVTOOLS_GLOBAL_HOOK__ && window.__REACT_DEVTOOLS_GLOBAL_HOOK__.renderers',
+    function(renderers, error) {
+      const pageHasReact = renderers && renderers.size > 0;
       if (!pageHasReact || panelCreated) {
         return;
       }
@@ -130,6 +131,7 @@ function createPanelIfReactLoaded() {
           isProfiling,
           supportsReloadAndProfile: isChrome,
           supportsProfiling,
+          supportsReact: renderers.get(1) && !!renderers.get(1).ComponentTree,
         });
         store.profilerStore.profilingData = profilingData;
 
