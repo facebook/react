@@ -12,6 +12,12 @@ import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
 import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 import type {EventSystemFlags} from 'legacy-events/EventSystemFlags';
 
+import {
+  unstable_scheduleCallback as scheduleCallback,
+  unstable_NormalPriority as NormalPriority,
+} from 'scheduler';
+import {attemptToReplayEvent} from './ReactDOMEventListener';
+
 // TODO: Upgrade this definition once we're on a newer version of Flow that
 // has this definition built-in.
 type PointerEvent = Event & {pointerId: number};
@@ -66,6 +72,8 @@ type QueuedReplayableEvent = {|
   eventSystemFlags: EventSystemFlags,
   nativeEvent: AnyNativeEvent,
 |};
+
+let hasScheduledReplayAttempt = false;
 
 // The queue of discrete events to be replayed.
 let queuedDiscreteEvents: Array<QueuedReplayableEvent> = [];
@@ -141,10 +149,62 @@ export function queueDiscreteEvent(
       nativeEvent,
     ),
   );
+  if (blockedOn === null && queuedDiscreteEvents.length === 1) {
+    // This probably shouldn't happen but some defensive coding might
+    // help us get unblocked if we have a bug.
+    replayUnblockedEvents();
+  }
+}
+
+function replayUnblockedEvents() {
+  hasScheduledReplayAttempt = false;
+  while (queuedDiscreteEvents.length > 0) {
+    let nextDiscreteEvent = queuedDiscreteEvents[0];
+    if (nextDiscreteEvent.blockedOn !== null) {
+      // We're still blocked.
+      return;
+    }
+    let nextBlockedOn = attemptToReplayEvent(
+      nextDiscreteEvent.topLevelType,
+      nextDiscreteEvent.eventSystemFlags,
+      nextDiscreteEvent.nativeEvent,
+    );
+    if (nextBlockedOn !== null) {
+      // We're still blocked. Try again later.
+      nextDiscreteEvent.blockedOn = nextBlockedOn;
+    } else {
+      // We've successfully replayed the first event. Let's try the next one.
+      queuedDiscreteEvents.shift();
+    }
+  }
 }
 
 export function retryIfBlockedOn(
   blockedOn: Container | SuspenseInstance,
 ): void {
-  // TODO: Retry if we're blocked on this boundary.
+  // Mark anything that was blocked on this as no longer blocked
+  // and eligible for a replay.
+  if (queuedDiscreteEvents.length < 1) {
+    return;
+  }
+  let queuedEvent = queuedDiscreteEvents[0];
+  if (queuedEvent.blockedOn === blockedOn) {
+    queuedEvent.blockedOn = null;
+    if (!hasScheduledReplayAttempt) {
+      hasScheduledReplayAttempt = true;
+      // Schedule a callback to attempt replaying as many events as are
+      // now unblocked. This first might not actually be unblocked yet.
+      // We could check it early to avoid scheduling an unnecessary callback.
+      scheduleCallback(NormalPriority, replayUnblockedEvents);
+    }
+  }
+  // This is a exponential search for each boundary that commits. I think it's
+  // worth it because we expect very few discrete events to queue up and once
+  // we are actually fully unblocked it will be fast to replay them.
+  for (let i = 1; i < queuedDiscreteEvents.length; i++) {
+    queuedEvent = queuedDiscreteEvents[i];
+    if (queuedEvent.blockedOn === blockedOn) {
+      queuedEvent.blockedOn = null;
+    }
+  }
 }

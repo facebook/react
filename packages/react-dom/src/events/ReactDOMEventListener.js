@@ -9,6 +9,7 @@
 
 import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
+import type {SuspenseInstance} from '../client/ReactDOMHostConfig';
 import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 
 // Intentionally not named imports because Rollup would use dynamic dispatch for
@@ -423,4 +424,76 @@ export function dispatchEvent(
       targetInst,
     );
   }
+}
+
+// Attempt dispatching a queued event. Returns a SuspenseInstance if it's still blocked on an inner one.
+export function attemptToReplayEvent(
+  topLevelType: DOMTopLevelEventType,
+  eventSystemFlags: EventSystemFlags,
+  nativeEvent: AnyNativeEvent,
+): null | SuspenseInstance {
+  // TODO: Warn if _enabled is false.
+
+  const nativeEventTarget = getEventTarget(nativeEvent);
+  let targetInst = getClosestInstanceFromNode(nativeEventTarget);
+
+  if (targetInst !== null) {
+    let nearestMounted = getNearestMountedFiber(targetInst);
+    if (nearestMounted === null) {
+      // This tree has been unmounted already. Replay without a target.
+      targetInst = null;
+    } else {
+      const tag = nearestMounted.tag;
+      if (tag === SuspenseComponent) {
+        let instance = getSuspenseInstanceFromFiber(nearestMounted);
+        if (instance !== null) {
+          // We're still blocked on an inner boundary.
+          // TODO: This is the first discrete event in the queue. Schedule an increased
+          // priority for this boundary.
+          return instance;
+        }
+        // This shouldn't happen, something went wrong but to avoid blocking
+        // the whole system, dispatch the event without a target.
+        // TODO: Warn.
+        targetInst = null;
+      } else if (tag === HostRoot) {
+        // This shouldn't happen, something went wrong but to avoid blocking
+        // the whole system, dispatch the event without a target.
+        // TODO: Warn.
+        targetInst = null;
+      } else if (nearestMounted !== targetInst) {
+        // This also shouldn't happen but we can't trust the target.
+        // TODO: Warn.
+        targetInst = null;
+      }
+    }
+  }
+
+  if (enableFlareAPI) {
+    if (eventSystemFlags === PLUGIN_EVENT_SYSTEM) {
+      dispatchEventForPluginEventSystem(
+        topLevelType,
+        eventSystemFlags,
+        nativeEvent,
+        targetInst,
+      );
+    } else {
+      // React Flare event system
+      dispatchEventForResponderEventSystem(
+        (topLevelType: any),
+        targetInst,
+        nativeEvent,
+        nativeEventTarget,
+        eventSystemFlags,
+      );
+    }
+  } else {
+    dispatchEventForPluginEventSystem(
+      topLevelType,
+      eventSystemFlags,
+      nativeEvent,
+      targetInst,
+    );
+  }
+  return null;
 }
