@@ -97,7 +97,7 @@ By default DevTools listen to port `8097` on `localhost`. If you need to customi
 
 **If you are running your app from a local `file://` URL**, don't forget to check "Allow access to file URLs" on the Chrome Extensions settings page. You can find it by opening Settings > Extensions:
 
-![Allow access to file URLs](https://i.ibb.co/fvCsgPb/image.png)
+![Allow access to file URLs](https://user-images.githubusercontent.com/29597/64646784-95b58080-d3cc-11e9-943d-02474683398a.png)
 
 Or you could develop with a local HTTP server [like `serve`](https://www.npmjs.com/package/serve).
 
