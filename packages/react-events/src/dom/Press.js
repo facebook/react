@@ -29,7 +29,6 @@ type PressProps = {|
     left: number,
   },
   preventDefault: boolean,
-  stopPropagation: boolean,
   onPress: (e: PressEvent) => void,
   onPressChange: boolean => void,
   onPressEnd: (e: PressEvent) => void,
@@ -132,8 +131,6 @@ const rootEventTypes = hasPointerEvents
       'touchcancel',
       // Used as a 'cancel' signal for mouse interactions
       'dragstart',
-      // We listen to this here so stopPropagation can
-      // block other mouseup events used internally
       'mouseup_active',
       'touchend',
     ];
@@ -465,17 +462,6 @@ function updateIsPressWithinResponderRegion(
     (x >= left && x <= right && y >= top && y <= bottom);
 }
 
-function handleStopPropagation(
-  props: PressProps,
-  context: ReactDOMResponderContext,
-  nativeEvent,
-): void {
-  const stopPropagation = props.stopPropagation;
-  if (stopPropagation === true) {
-    nativeEvent.stopPropagation();
-  }
-}
-
 // After some investigation work, screen reader virtual
 // clicks (NVDA, Jaws, VoiceOver) do not have co-ords associated with the click
 // event and "detail" is always 0 (where normal clicks are > 0)
@@ -531,8 +517,6 @@ const pressResponderImpl = {
     }
     const nativeEvent: any = event.nativeEvent;
     const isPressed = state.isPressed;
-
-    handleStopPropagation(props, context, nativeEvent);
 
     switch (type) {
       // START
@@ -658,8 +642,6 @@ const pressResponderImpl = {
     const isPressed = state.isPressed;
     const activePointerId = state.activePointerId;
     const previousPointerType = state.pointerType;
-
-    handleStopPropagation(props, context, nativeEvent);
 
     switch (type) {
       // MOVE
