@@ -450,6 +450,7 @@ describe('ReactDOMFiberAsync', () => {
       const submitButtonRef = React.createRef();
 
       let formSubmitted = false;
+      let instance;
 
       class Form extends React.Component {
         state = {active: true};
@@ -459,10 +460,12 @@ describe('ReactDOMFiberAsync', () => {
         submitForm = () => {
           formSubmitted = true; // This should not get invoked
         };
-        disabledSubmitForm = () => {
+        disabledSubmitForm = jest.fn(() => {
           // The form is disabled.
-        };
+        });
         render() {
+          instance = this;
+
           return (
             <div>
               <button onClick={this.disableForm} ref={disableButtonRef}>
@@ -500,6 +503,9 @@ describe('ReactDOMFiberAsync', () => {
       let submitButton = submitButtonRef.current;
       expect(submitButton.tagName).toBe('BUTTON');
 
+      // should not happen before flush
+      expect(instance.disabledSubmitForm).toHaveBeenCalledTimes(0);
+
       // In the meantime, we can dispatch a new client event on the submit button.
       let secondEvent = document.createEvent('Event');
       secondEvent.initEvent('click', true, true);
@@ -508,6 +514,7 @@ describe('ReactDOMFiberAsync', () => {
 
       // Therefore the form should never have been submitted.
       expect(formSubmitted).toBe(false);
+      expect(instance.disabledSubmitForm).toHaveBeenCalledTimes(1);
     });
 
     it('uses the newest discrete events on a pending changed event listener', () => {
