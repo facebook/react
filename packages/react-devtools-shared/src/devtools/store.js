@@ -730,7 +730,6 @@ export default class Store extends EventEmitter<{|
 
     while (i < operations.length) {
       const operation = operations[i];
-      console.log(operation);
       switch (operation) {
         case TREE_OPERATION_ADD: {
           const id = ((operations[i + 1]: any): number);
