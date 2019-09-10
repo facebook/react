@@ -2130,6 +2130,7 @@ export function attach(
     ) {
       canViewSource = true;
       if (stateNode && stateNode.context != null) {
+        // Don't show an empty context object for class components that don't use the context API.
         const shouldHideContext =
           elementType === ElementTypeClass &&
           !(type.contextTypes || type.contextType);
