@@ -19,38 +19,34 @@ type EditableValueProps = {|
   dataType: string,
   overrideValueFn: OverrideValueFn,
   path: Array<string | number>,
-  value: any,
+  initialValue: any,
 |};
+
+function useEditableValue(initialValue) {
+  const [editableValue, setEditableValue] = useState(JSON.stringify(initialValue));
+
+  return [editableValue, (value, {shouldStringify} = {}) => (shouldStringify ? setEditableValue(JSON.stringify(value)) : setEditableValue(value))];
+}
 
 export default function EditableValue({
   dataType,
   overrideValueFn,
   path,
-  value,
+  initialValue,
 }: EditableValueProps) {
   const [isValid, setIsValid] = useState(true);
   const [hasPendingChanges, setHasPendingChanges] = useState(false);
-  const [stringifiedValue, setStringifiedValue] = useState(
-    JSON.stringify(value),
-  );
-  const [editableValue, setEditableValue] = useState(stringifiedValue);
+  const [editableValue, setEditableValue] = useEditableValue(initialValue);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  useEffect(
-    () => {
-      setStringifiedValue(JSON.stringify(value));
-    },
-    [value],
-  );
-
-  if (hasPendingChanges && editableValue === stringifiedValue) {
+  if (hasPendingChanges && editableValue === JSON.stringify(initialValue)) {
     setHasPendingChanges(false);
   }
 
   const handleChange = useCallback(
     ({target}) => {
       if (dataType === 'boolean') {
-        setEditableValue(JSON.stringify(target.checked));
+        setEditableValue(target.checked, {shouldStringify: true});
         overrideValueFn(path, target.checked);
       } else {
         let isValidJSON = false;
@@ -69,7 +65,7 @@ export default function EditableValue({
 
   const handleReset = useCallback(
     () => {
-      setEditableValue(stringifiedValue);
+      setEditableValue(initialValue, {shouldStringify: true});
       setHasPendingChanges(false);
       setIsValid(true);
 
@@ -77,7 +73,7 @@ export default function EditableValue({
         inputRef.current.focus();
       }
     },
-    [stringifiedValue],
+    [initialValue],
   );
 
   const handleKeyDown = useCallback(
@@ -90,7 +86,7 @@ export default function EditableValue({
       if (key === 'Enter' && isValid) {
         const parsedEditableValue = JSON.parse(sanitizeForParse(editableValue));
 
-        if (value !== parsedEditableValue) {
+        if (initialValue !== parsedEditableValue) {
           overrideValueFn(path, parsedEditableValue);
         }
 
@@ -98,21 +94,21 @@ export default function EditableValue({
         // The inspected fiber won't be updated until after the next "inspectElement" message.
         // We'll reset that flag during a subsequent render.
       } else if (key === 'Escape') {
-        setEditableValue(stringifiedValue);
+        setEditableValue(initialValue, {shouldStringify: true});
         setHasPendingChanges(false);
         setIsValid(true);
       }
     },
-    [editableValue, isValid, dataType, overrideValueFn, path, value],
+    [editableValue, isValid, dataType, overrideValueFn, path, initialValue],
   );
 
-  let inputValue = value === undefined ? '' : stringifiedValue;
+  let inputValue = initialValue === undefined ? '' : JSON.stringify(initialValue);
   if (hasPendingChanges) {
     inputValue = editableValue;
   }
 
   let placeholder = '';
-  if (value === undefined) {
+  if (initialValue === undefined) {
     placeholder = '(undefined)';
   } else {
     placeholder = 'Enter valid JSON';

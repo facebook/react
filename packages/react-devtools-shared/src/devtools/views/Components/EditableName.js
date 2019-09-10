@@ -13,15 +13,15 @@ import styles from './EditableName.css';
 type OverrideNameFn = (path: Array<string | number>, value: any) => void;
 
 type EditableNameProps = {|
-  key?: string,
+  initialValue?: string,
   overrideNameFn: OverrideNameFn,
 |};
 
 export default function EditableName({
-  name = '',
+  initialValue = '',
   overrideNameFn,
 }: EditableNameProps) {
-  const [editableName, setEditableName] = useState(name);
+  const [editableName, setEditableName] = useState(initialValue);
   const [isValid, setIsValid] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
 

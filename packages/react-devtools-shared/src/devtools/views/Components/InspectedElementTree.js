@@ -129,7 +129,7 @@ export default function InspectedElementTree({
               dataType={typeof entryToAdd.value}
               overrideValueFn={handleEntryAddValue}
               path={[entryToAdd.key]}
-              value={entryToAdd.value}
+              initialValue={entryToAdd.value}
             />
           </div>
         )}

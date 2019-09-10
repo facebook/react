@@ -16,6 +16,7 @@ import {meta} from '../../../hydration';
 import styles from './KeyValue.css';
 
 import type {InspectPath} from './SelectedElement';
+import EditableName from "./EditableName";
 
 type OverrideValueFn = (path: Array<string | number>, value: any) => void;
 
@@ -105,7 +106,7 @@ export default function KeyValue({
             dataType={dataType}
             overrideValueFn={((overrideValueFn: any): OverrideValueFn)}
             path={path}
-            value={value}
+            initialValue={value}
           />
         ) : (
           <span className={styles.Value}>{displayValue}</span>
