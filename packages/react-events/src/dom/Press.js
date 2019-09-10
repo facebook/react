@@ -113,9 +113,7 @@ const DEFAULT_PRESS_RETENTION_OFFSET = {
 const targetEventTypes = hasPointerEvents
   ? [
       'keydown_active',
-      // We need to preventDefault on pointerdown for mouse/pen events
-      // that are in hit target area but not the element area.
-      'pointerdown_active',
+      'pointerdown',
       'click_active',
     ]
   : ['keydown_active', 'touchstart', 'mousedown', 'click_active'];
@@ -131,7 +129,7 @@ const rootEventTypes = hasPointerEvents
       'touchcancel',
       // Used as a 'cancel' signal for mouse interactions
       'dragstart',
-      'mouseup_active',
+      'mouseup',
       'touchend',
     ];
 
