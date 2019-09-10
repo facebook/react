@@ -8,20 +8,20 @@
  */
 
 import React, {useRef, useCallback, useEffect, useState} from 'react';
-import styles from './EditableKey.css';
+import styles from './EditableName.css';
 
-type OverrideKeyFn = (path: Array<string | number>, value: any) => void;
+type OverrideNameFn = (path: Array<string | number>, value: any) => void;
 
-type EditableKeyProps = {|
+type EditableNameProps = {|
   key?: string,
-  overrideKeyFn: OverrideKeyFn,
+  overrideNameFn: OverrideNameFn,
 |};
 
-export default function EditableKey({
-  key = '',
-  overrideKeyFn,
-}: EditableKeyProps) {
-  const [editableKey, setEditableKey] = useState(key);
+export default function EditableName({
+  name = '',
+  overrideNameFn,
+}: EditableNameProps) {
+  const [editableName, setEditableName] = useState(name);
   const [isValid, setIsValid] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
@@ -44,9 +44,9 @@ export default function EditableKey({
         setIsValid(false);
       }
 
-      setEditableKey(value);
+      setEditableName(value);
     },
-    [overrideKeyFn],
+    [overrideNameFn],
   );
 
   const handleKeyDown = useCallback(
@@ -57,12 +57,12 @@ export default function EditableKey({
       const eventKey = event.key;
 
       if ((eventKey === 'Enter' || eventKey === 'Tab') && isValid) {
-        overrideKeyFn(editableKey);
+        overrideNameFn(editableName);
       } else if (eventKey === 'Escape') {
-        setEditableKey(key);
+        setEditableName(name);
       }
     },
-    [editableKey, setEditableKey, isValid, key, overrideKeyFn],
+    [editableName, setEditableName, isValid, name, overrideNameFn],
   );
 
   return (
@@ -72,7 +72,7 @@ export default function EditableKey({
       onKeyDown={handleKeyDown}
       ref={inputRef}
       type="text"
-      value={editableKey}
+      value={editableName}
     />
   );
 }

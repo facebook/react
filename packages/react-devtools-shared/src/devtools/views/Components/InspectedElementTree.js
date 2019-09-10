@@ -12,7 +12,7 @@ import React, {useEffect, useCallback, useState} from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import KeyValue from './KeyValue';
-import EditableKey from './EditableKey';
+import EditableName from './EditableName';
 import EditableValue from './EditableValue';
 import {alphaSortEntries, serializeDataForCopy} from '../utils';
 import styles from './InspectedElementTree.css';
@@ -124,7 +124,7 @@ export default function InspectedElementTree({
           ))}
         {entryToAdd && (
           <div className={styles.AddEntry}>
-            <EditableKey overrideKeyFn={handleEntryAddName} />:
+            <EditableName overrideNameFn={handleEntryAddName} />:
             <EditableValue
               dataType={typeof entryToAdd.value}
               overrideValueFn={handleEntryAddValue}
