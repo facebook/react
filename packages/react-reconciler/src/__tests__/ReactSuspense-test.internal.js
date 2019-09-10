@@ -263,6 +263,58 @@ describe('ReactSuspense', () => {
     expect(root).toMatchRenderedOutput('AsyncAfter SuspenseSibling');
   });
 
+  it(
+    'interrupts current render if something already suspended with a ' +
+      "delay, and then subsequently there's a lower priority update",
+    () => {
+      const root = ReactTestRenderer.create(
+        <>
+          <Suspense fallback={<Text text="Loading..." />} />
+          <Text text="Initial" />
+        </>,
+        {
+          unstable_isConcurrent: true,
+        },
+      );
+      expect(Scheduler).toFlushAndYield(['Initial']);
+      expect(root).toMatchRenderedOutput('Initial');
+
+      // The update will suspend.
+      root.update(
+        <>
+          <Suspense fallback={<Text text="Loading..." />}>
+            <AsyncText text="Async" ms={2000} />
+          </Suspense>
+          <Text text="After Suspense" />
+          <Text text="Sibling" />
+        </>,
+      );
+
+      // Yield past the Suspense boundary but don't complete the last sibling.
+      expect(Scheduler).toFlushAndYieldThrough([
+        'Suspend! [Async]',
+        'Loading...',
+        'After Suspense',
+      ]);
+
+      // Receives a lower priority update before the current render phase
+      // has completed.
+      Scheduler.unstable_advanceTime(1000);
+      root.update(
+        <>
+          <Suspense fallback={<Text text="Loading..." />} />
+          <Text text="Updated" />
+        </>,
+      );
+      expect(Scheduler).toHaveYielded([]);
+      expect(root).toMatchRenderedOutput('Initial');
+
+      // Render the update, instead of continuing
+      expect(Scheduler).toFlushAndYield(['Updated']);
+      expect(root).toMatchRenderedOutput('Updated');
+    },
+  );
+
   it('mounts a lazy class component in non-concurrent mode', async () => {
     class Class extends React.Component {
       componentDidMount() {

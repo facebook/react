@@ -484,6 +484,23 @@ function markUpdateTimeFromFiberToRoot(fiber, expirationTime) {
   }
 
   if (root !== null) {
+    if (workInProgressRootExitStatus === RootSuspendedWithDelay) {
+      // The root already suspended with a delay, which means this render
+      // definitely won't finish. Since we have a new update, let's mark it as
+      // suspended now, right before marking the incoming update. This has the
+      // effect of interrupting the current render and switching to the update.
+      // TODO: This happens to work when receiving an update during the render
+      // phase, because of the trick inside computeExpirationForFiber to
+      // subtract 1 from `renderExpirationTime` to move it into a
+      // separate bucket. But we should probably model it with an exception,
+      // using the same mechanism we use to force hydration of a subtree.
+      // TODO: This does not account for low pri updates that were already
+      // scheduled before the root started rendering. Need to track the next
+      // pending expiration time (perhaps by backtracking the return path) and
+      // then trigger a restart in the `renderDidSuspendDelayIfPossible` path.
+      markRootSuspendedAtTime(root, renderExpirationTime);
+    }
+    // Mark that the root has a pending update.
     markRootUpdatedAtTime(root, expirationTime);
   }
 
