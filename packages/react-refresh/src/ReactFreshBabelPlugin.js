@@ -7,7 +7,7 @@
 
 'use strict';
 
-export default function(babel, opts) {
+export default function(babel, opts = {}) {
   if (typeof babel.getEnv === 'function') {
     // Only available in Babel 7.
     const env = babel.getEnv();
@@ -300,7 +300,20 @@ export default function(babel, opts) {
       }
     });
 
-    const args = [node, t.stringLiteral(key)];
+    let finalKey = key;
+    if (typeof require === 'function' && !opts.emitFullSignatures) {
+      // Prefer to hash when we can (e.g. outside of ASTExplorer).
+      // This makes it deterministically compact, even if there's
+      // e.g. a useState ininitalizer with some code inside.
+      // We also need it for www that has transforms like cx()
+      // that don't understand if something is part of a string.
+      finalKey = require('crypto')
+        .createHash('sha1')
+        .update(key)
+        .digest('base64');
+    }
+
+    const args = [node, t.stringLiteral(finalKey)];
     if (forceReset || customHooksInScope.length > 0) {
       args.push(t.booleanLiteral(forceReset));
     }
