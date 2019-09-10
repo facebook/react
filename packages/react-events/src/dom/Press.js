@@ -29,7 +29,6 @@ type PressProps = {|
     left: number,
   },
   preventDefault: boolean,
-  stopPropagation: boolean,
   onPress: (e: PressEvent) => void,
   onPressChange: boolean => void,
   onPressEnd: (e: PressEvent) => void,
@@ -112,13 +111,7 @@ const DEFAULT_PRESS_RETENTION_OFFSET = {
 };
 
 const targetEventTypes = hasPointerEvents
-  ? [
-      'keydown_active',
-      // We need to preventDefault on pointerdown for mouse/pen events
-      // that are in hit target area but not the element area.
-      'pointerdown_active',
-      'click_active',
-    ]
+  ? ['keydown_active', 'pointerdown', 'click_active']
   : ['keydown_active', 'touchstart', 'mousedown', 'click_active'];
 
 const rootEventTypes = hasPointerEvents
@@ -132,9 +125,7 @@ const rootEventTypes = hasPointerEvents
       'touchcancel',
       // Used as a 'cancel' signal for mouse interactions
       'dragstart',
-      // We listen to this here so stopPropagation can
-      // block other mouseup events used internally
-      'mouseup_active',
+      'mouseup',
       'touchend',
     ];
 
@@ -465,17 +456,6 @@ function updateIsPressWithinResponderRegion(
     (x >= left && x <= right && y >= top && y <= bottom);
 }
 
-function handleStopPropagation(
-  props: PressProps,
-  context: ReactDOMResponderContext,
-  nativeEvent,
-): void {
-  const stopPropagation = props.stopPropagation;
-  if (stopPropagation === true) {
-    nativeEvent.stopPropagation();
-  }
-}
-
 // After some investigation work, screen reader virtual
 // clicks (NVDA, Jaws, VoiceOver) do not have co-ords associated with the click
 // event and "detail" is always 0 (where normal clicks are > 0)
@@ -531,8 +511,6 @@ const pressResponderImpl = {
     }
     const nativeEvent: any = event.nativeEvent;
     const isPressed = state.isPressed;
-
-    handleStopPropagation(props, context, nativeEvent);
 
     switch (type) {
       // START
@@ -658,8 +636,6 @@ const pressResponderImpl = {
     const isPressed = state.isPressed;
     const activePointerId = state.activePointerId;
     const previousPointerType = state.pointerType;
-
-    handleStopPropagation(props, context, nativeEvent);
 
     switch (type) {
       // MOVE

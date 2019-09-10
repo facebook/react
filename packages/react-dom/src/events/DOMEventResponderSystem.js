@@ -181,8 +181,7 @@ const eventResponderContext: ReactDOMResponderContext = {
   },
   addRootEventTypes(rootEventTypes: Array<string>): void {
     validateResponderContext();
-    const activeDocument = getActiveDocument();
-    listenToResponderEventTypesImpl(rootEventTypes, activeDocument);
+    listenToResponderEventTypesImpl(rootEventTypes, currentDocument);
     for (let i = 0; i < rootEventTypes.length; i++) {
       const rootEventType = rootEventTypes[i];
       const eventResponderInstance = ((currentInstance: any): ReactDOMEventResponderInstance);

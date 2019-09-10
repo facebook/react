@@ -867,17 +867,16 @@ export function mountResponderInstance(
 ): ReactDOMEventResponderInstance {
   // Listen to events
   const doc = instance.ownerDocument;
-  const documentBody = doc.body || doc;
   const {
     rootEventTypes,
     targetEventTypes,
   } = ((responder: any): ReactDOMEventResponder);
   if (targetEventTypes !== null) {
-    listenToEventResponderEventTypes(targetEventTypes, documentBody);
+    listenToEventResponderEventTypes(targetEventTypes, doc);
   }
   if (rootEventTypes !== null) {
     addRootEventTypesForResponderInstance(responderInstance, rootEventTypes);
-    listenToEventResponderEventTypes(rootEventTypes, documentBody);
+    listenToEventResponderEventTypes(rootEventTypes, doc);
   }
   mountEventResponder(
     responder,

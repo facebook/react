@@ -739,7 +739,6 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
             onPressMove: createEventHandler('inner: onPressMove'),
             onPressStart: createEventHandler('inner: onPressStart'),
             onPressEnd: createEventHandler('inner: onPressEnd'),
-            stopPropagation: false,
           });
           return (
             <div
@@ -1119,22 +1118,4 @@ describe.each(environmentTable)('Press responder', hasPointerEvents => {
     target.pointerup();
     target.pointerdown();
   });
-
-  if (hasPointerEvents) {
-    it('should work correctly with stopPropagation set to true', () => {
-      const ref = React.createRef();
-      const pointerDownEvent = jest.fn();
-
-      const Component = () => {
-        const listener = usePress({stopPropagation: true});
-        return <div ref={ref} listeners={listener} />;
-      };
-
-      container.addEventListener('pointerdown', pointerDownEvent);
-      ReactDOM.render(<Component />, container);
-      createEventTarget(ref.current).pointerdown();
-      container.removeEventListener('pointerdown', pointerDownEvent);
-      expect(pointerDownEvent).toHaveBeenCalledTimes(0);
-    });
-  }
 });
