@@ -11,7 +11,7 @@ import React from 'react';
 import {TabbableScope} from './TabbableScope';
 import {useKeyboard} from 'react-events/keyboard';
 
-type FocusContainProps = {
+type TabFocusContainerProps = {
   children: React.Node,
 };
 
@@ -34,7 +34,9 @@ type KeyboardEvent = {|
 
 const {useRef} = React;
 
-export function FocusContain({children}: FocusContainProps): React.Node {
+export function TabFocusContainer({
+  children,
+}: TabFocusContainerProps): React.Node {
   const scopeRef = useRef(null);
   const keyboard = useKeyboard({onKeyDown, preventKeys: ['tab']});
 

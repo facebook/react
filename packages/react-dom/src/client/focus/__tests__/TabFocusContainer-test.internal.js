@@ -9,7 +9,7 @@
 
 let React;
 let ReactFeatureFlags;
-let FocusContain;
+let TabFocusContainer;
 
 const createTabForward = type => {
   const event = new KeyboardEvent('keydown', {
@@ -30,13 +30,13 @@ const createTabBackward = type => {
   return event;
 };
 
-describe('FocusContain', () => {
+describe('TabFocusContainer', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableScopeAPI = true;
     ReactFeatureFlags.enableFlareAPI = true;
-    FocusContain = require('../FocusContain').FocusContain;
+    TabFocusContainer = require('../TabFocusContainer').TabFocusContainer;
     React = require('react');
   });
 
@@ -62,17 +62,17 @@ describe('FocusContain', () => {
       const butto2nRef = React.createRef();
       const divRef = React.createRef();
 
-      const SimpleFocusScope = () => (
-        <FocusContain>
+      const Test = () => (
+        <TabFocusContainer>
           <input ref={inputRef} />
           <button ref={buttonRef} />
           <div ref={divRef} tabIndex={0} />
           <input ref={input2Ref} tabIndex={-1} />
           <button ref={butto2nRef} />
-        </FocusContain>
+        </TabFocusContainer>
       );
 
-      ReactDOM.render(<SimpleFocusScope />, container);
+      ReactDOM.render(<Test />, container);
       inputRef.current.focus();
       document.activeElement.dispatchEvent(createTabForward());
       expect(document.activeElement).toBe(buttonRef.current);
@@ -90,16 +90,16 @@ describe('FocusContain', () => {
       const buttonRef = React.createRef();
       const button2Ref = React.createRef();
 
-      const SimpleFocusScope = () => (
-        <FocusContain>
+      const Test = () => (
+        <TabFocusContainer>
           <input ref={inputRef} tabIndex={-1} />
           <button ref={buttonRef} id={1} />
           <button ref={button2Ref} id={2} />
           <input ref={input2Ref} tabIndex={-1} />
-        </FocusContain>
+        </TabFocusContainer>
       );
 
-      ReactDOM.render(<SimpleFocusScope />, container);
+      ReactDOM.render(<Test />, container);
       buttonRef.current.focus();
       document.activeElement.dispatchEvent(createTabForward());
       expect(document.activeElement).toBe(button2Ref.current);
@@ -121,20 +121,20 @@ describe('FocusContain', () => {
       const button3Ref = React.createRef();
       const button4Ref = React.createRef();
 
-      const SimpleFocusScope = () => (
-        <FocusContain>
+      const Test = () => (
+        <TabFocusContainer>
           <input ref={inputRef} tabIndex={-1} />
           <button ref={buttonRef} id={1} />
-          <FocusContain>
+          <TabFocusContainer>
             <button ref={button2Ref} id={2} />
             <button ref={button3Ref} id={3} />
-          </FocusContain>
+          </TabFocusContainer>
           <input ref={input2Ref} tabIndex={-1} />
           <button ref={button4Ref} id={4} />
-        </FocusContain>
+        </TabFocusContainer>
       );
 
-      ReactDOM.render(<SimpleFocusScope />, container);
+      ReactDOM.render(<Test />, container);
       buttonRef.current.focus();
       expect(document.activeElement).toBe(buttonRef.current);
       document.activeElement.dispatchEvent(createTabForward());
@@ -163,20 +163,20 @@ describe('FocusContain', () => {
       const button3Ref = React.createRef();
       const button4Ref = React.createRef();
 
-      const SimpleFocusScope = () => (
-        <FocusContain>
+      const Test = () => (
+        <TabFocusContainer>
           <input ref={inputRef} tabIndex={-1} />
           <button ref={buttonRef} id={1} />
-          <FocusContain>
+          <TabFocusContainer>
             <button ref={button2Ref} id={2} />
             <button ref={button3Ref} id={3} />
-          </FocusContain>
+          </TabFocusContainer>
           <input ref={input2Ref} tabIndex={-1} />
           <button ref={button4Ref} id={4} />
-        </FocusContain>
+        </TabFocusContainer>
       );
 
-      ReactDOM.render(<SimpleFocusScope />, container);
+      ReactDOM.render(<Test />, container);
       buttonRef.current.focus();
       expect(document.activeElement).toBe(buttonRef.current);
       document.activeElement.dispatchEvent(createTabForward());
@@ -213,18 +213,18 @@ describe('FocusContain', () => {
         );
       }
 
-      const SimpleFocusScope = () => (
-        <FocusContain>
+      const Test = () => (
+        <TabFocusContainer>
           <button ref={buttonRef} id={1} />
           <button ref={button2Ref} id={2} />
           <React.Suspense fallback={<button ref={button3Ref} id={3} />}>
             <Component />
           </React.Suspense>
           <button ref={button4Ref} id={4} />
-        </FocusContain>
+        </TabFocusContainer>
       );
 
-      ReactDOM.render(<SimpleFocusScope />, container);
+      ReactDOM.render(<Test />, container);
       buttonRef.current.focus();
       expect(document.activeElement).toBe(buttonRef.current);
       document.activeElement.dispatchEvent(createTabForward());
