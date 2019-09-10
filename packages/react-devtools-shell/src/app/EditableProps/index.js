@@ -126,16 +126,7 @@ export default function EditableProps() {
     <Fragment>
       <h1>Editable props</h1>
       <strong>Class</strong>
-      <StatefulClass
-        name="Brian"
-        toggle={true}
-        newLineStringProp={'Hello \n World'}
-        nanProp={NaN}
-        infinityProp={Infinity}
-        minusInfinityProp={-Infinity}
-        emptyStringProp={''}
-        nullProp={null}
-      />
+      <StatefulClass name="Brian" toggle={true} />
       <strong>Function</strong>
       <StatefulFunction name="Brian" />
       <strong>Memoized Class</strong>
