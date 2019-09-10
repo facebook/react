@@ -86,9 +86,13 @@ if (
   // Explicitly bind local references to `window`, in order to support
   // environments where the global `this` is not the window (e.g extensions)
   const requestAnimationFrame =
-    window.requestAnimationFrame && window.requestAnimationFrame.bind(window);
+    typeof window.requestAnimationFrame === 'function'
+      ? window.requestAnimationFrame.bind(window)
+      : undefined;
   const cancelAnimationFrame =
-    window.cancelAnimationFrame && window.cancelAnimationFrame.bind(window);
+    typeof window.cancelAnimationFrame === 'function'
+      ? window.cancelAnimationFrame.bind(window)
+      : undefined;
 
   if (typeof console !== 'undefined') {
     // TODO: Remove fb.me link
