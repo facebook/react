@@ -2107,6 +2107,8 @@ export function attach(
       type,
     } = fiber;
 
+    const elementType = getElementTypeForFiber(fiber);
+
     const usesHooks =
       (tag === FunctionComponent ||
         tag === SimpleMemoComponent ||
@@ -2128,7 +2130,14 @@ export function attach(
     ) {
       canViewSource = true;
       if (stateNode && stateNode.context != null) {
-        context = stateNode.context;
+        // Don't show an empty context object for class components that don't use the context API.
+        const shouldHideContext =
+          elementType === ElementTypeClass &&
+          !(type.contextTypes || type.contextType);
+
+        if (!shouldHideContext) {
+          context = stateNode.context;
+        }
       }
     } else if (
       typeSymbol === CONTEXT_CONSUMER_NUMBER ||
@@ -2166,7 +2175,10 @@ export function attach(
       }
     }
 
+    let hasLegacyContext = false;
     if (context !== null) {
+      hasLegacyContext = !!type.contextTypes;
+
       // To simplify hydration and display logic for context, wrap in a value object.
       // Otherwise simple values (e.g. strings, booleans) become harder to handle.
       context = {value: context};
@@ -2238,8 +2250,11 @@ export function attach(
       // Can view component source location.
       canViewSource,
 
+      // Does the component have legacy context attached to it.
+      hasLegacyContext,
+
       displayName: getDisplayNameForFiber(fiber),
-      type: getElementTypeForFiber(fiber),
+      type: elementType,
 
       // Inspectable properties.
       // TODO Review sanitization approach for the below inspectable values.
