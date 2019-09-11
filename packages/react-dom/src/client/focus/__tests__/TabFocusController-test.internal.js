@@ -239,18 +239,23 @@ describe('TabFocusController', () => {
       );
 
       ReactDOM.render(<Test />, container);
-      firstFocusControllerRef.current.focusFirst();
+      const firstFocusController = firstFocusControllerRef.current;
+      const secondFocusController = secondFocusControllerRef.current;
+
+      firstFocusController.focusFirst();
       expect(document.activeElement).toBe(buttonRef.current);
-      firstFocusControllerRef.current.focusNext();
+      firstFocusController.focusNext();
       expect(document.activeElement).toBe(button2Ref.current);
-      firstFocusControllerRef.current.focusPrevious();
+      firstFocusController.focusPrevious();
       expect(document.activeElement).toBe(buttonRef.current);
-      const nextController = firstFocusControllerRef.current.getNextController();
-      expect(nextController).toBe(secondFocusControllerRef.current);
+
+      const nextController = firstFocusController.getNextController();
+      expect(nextController).toBe(secondFocusController);
       nextController.focusNext();
       expect(document.activeElement).toBe(divRef.current);
+
       const previousController = nextController.getPreviousController();
-      expect(previousController).toBe(firstFocusControllerRef.current);
+      expect(previousController).toBe(firstFocusController);
       previousController.focusNext();
       expect(document.activeElement).toBe(buttonRef.current);
     });

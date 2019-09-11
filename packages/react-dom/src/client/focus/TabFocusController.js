@@ -23,9 +23,7 @@ type KeyboardEvent = {|
   ctrlKey: boolean,
   isComposing: boolean,
   key: string,
-  location: number,
   metaKey: boolean,
-  repeat: boolean,
   shiftKey: boolean,
   target: Element | Document,
   type: KeyboardEventType,
@@ -76,7 +74,7 @@ export const TabFocusController = React.forwardRef(
           return focusNext();
         }
       },
-      preventKeys: ['Tab'],
+      preventKeys: ['Tab', ['Tab', {shiftKey: true}]],
     });
 
     function focusFirst(): void {
@@ -137,7 +135,7 @@ export const TabFocusController = React.forwardRef(
         return null;
       }
       const currentScopeIndex = allScopes.indexOf(tabbableScope);
-      if (currentScopeIndex === -1 || currentScopeIndex === 0) {
+      if (currentScopeIndex <= 0) {
         return null;
       }
       return allScopes[currentScopeIndex - 1].getHandle();
