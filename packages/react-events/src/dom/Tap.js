@@ -23,6 +23,7 @@ import {
   dispatchUserBlockingEvent,
   getTouchById,
   hasModifierKey,
+  isVirtualClick,
 } from './shared';
 
 type TapProps = $ReadOnly<{|
@@ -90,8 +91,8 @@ type TapEvent = $ReadOnly<{|
  */
 
 const targetEventTypes = hasPointerEvents
-  ? ['pointerdown']
-  : ['mousedown', 'touchstart'];
+  ? ['click', 'pointerdown']
+  : ['click', 'mousedown', 'touchstart'];
 
 const rootEventTypes = hasPointerEvents
   ? [
@@ -170,7 +171,6 @@ function createPointerEventGestureState(
     metaKey,
     pageX,
     pageY,
-    pointerType,
     pressure,
     screenX,
     screenY,
@@ -192,7 +192,7 @@ function createPointerEventGestureState(
     metaKey,
     pageX,
     pageY,
-    pointerType,
+    pointerType: state.pointerType,
     pressure,
     screenX,
     screenY,
@@ -254,7 +254,7 @@ function createFallbackGestureState(
     metaKey,
     pageX: isCancelType ? 0 : pageX,
     pageY: isCancelType ? 0 : pageY,
-    pointerType: event.pointerType,
+    pointerType: state.pointerType,
     pressure: isEndType || isCancelType ? 0 : isTouchEvent ? 1 : 0.5,
     screenX: isCancelType ? 0 : screenX,
     screenY: isCancelType ? 0 : screenY,
@@ -508,6 +508,26 @@ const responderImpl = {
           }
         }
         break;
+      }
+
+      case 'click': {
+        // Respond to programmatic click events, e.g., those dispatched by
+        // assistive technologies.
+        if (!state.isActive && isVirtualClick(event)) {
+          state.isActive = true;
+          state.buttons = nativeEvent.buttons;
+          state.pointerType = '';
+          state.responderTarget = context.getResponderNode();
+          if (props.preventDefault !== false) {
+            nativeEvent.preventDefault();
+          }
+          state.gestureState = createGestureState(context, props, state, event);
+          dispatchStart(context, props, state);
+          dispatchChange(context, props, state);
+          state.isActive = false;
+          dispatchChange(context, props, state);
+          dispatchEnd(context, props, state);
+        }
       }
     }
   },

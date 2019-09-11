@@ -301,6 +301,15 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       target.pointerup();
       expect(onTapStart).toHaveBeenCalledTimes(0);
     });
+
+    test('virtual screen-reader "click"', () => {
+      const target = createEventTarget(ref.current);
+      target.virtualclick();
+      expect(onTapStart).toHaveBeenCalledTimes(1);
+      expect(onTapStart).toHaveBeenCalledWith(
+        expect.objectContaining({pointerType: ''}),
+      );
+    });
   });
 
   describe('onTapEnd', () => {
@@ -413,6 +422,15 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
         pointerType,
       });
       expect(onTapEnd).not.toBeCalled();
+    });
+
+    test('virtual screen-reader "click"', () => {
+      const target = createEventTarget(ref.current);
+      target.virtualclick();
+      expect(onTapEnd).toHaveBeenCalledTimes(1);
+      expect(onTapEnd).toHaveBeenCalledWith(
+        expect.objectContaining({pointerType: ''}),
+      );
     });
   });
 
@@ -563,6 +581,12 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       });
       expect(onTapChange).toHaveBeenCalledTimes(2);
     });
+
+    test('virtual screen-reader "click"', () => {
+      const target = createEventTarget(ref.current);
+      target.virtualclick();
+      expect(onTapChange).toHaveBeenCalledTimes(2);
+    });
   });
 
   describe('onTapCancel', () => {
@@ -674,28 +698,26 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
   });
 
   describe('preventDefault', () => {
-    let onTapEnd, ref, innerRef, preventDefault, remount;
+    let onTapEnd, ref, innerRef, preventDefault;
+
+    function render(props) {
+      const Component = () => {
+        const listener = useTap(props);
+        return (
+          <a href="#" ref={ref} listeners={listener}>
+            <div ref={innerRef} />
+          </a>
+        );
+      };
+      ReactDOM.render(<Component />, container);
+    }
 
     beforeEach(() => {
-      remount = function(shouldPreventDefault) {
-        onTapEnd = jest.fn();
-        preventDefault = jest.fn();
-        ref = React.createRef();
-        innerRef = React.createRef();
-        const Component = () => {
-          const listener = useTap({
-            onTapEnd,
-            preventDefault: shouldPreventDefault,
-          });
-          return (
-            <a href="#" ref={ref} listeners={listener}>
-              <div ref={innerRef} />
-            </a>
-          );
-        };
-        ReactDOM.render(<Component />, container);
-      };
-      remount();
+      onTapEnd = jest.fn();
+      preventDefault = jest.fn();
+      ref = React.createRef();
+      innerRef = React.createRef();
+      render({onTapEnd});
     });
 
     test('prevents native behavior by default', () => {
@@ -706,7 +728,7 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       expect(onTapEnd).toBeCalled();
     });
 
-    test('prevents native behaviour by default (inner target)', () => {
+    test('prevents native behavior by default (inner target)', () => {
       const innerTarget = createEventTarget(innerRef.current);
       innerTarget.pointerdown();
       innerTarget.pointerup({preventDefault});
@@ -714,7 +736,14 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       expect(onTapEnd).toBeCalled();
     });
 
-    test('allows native behaviour by default (modifier keys)', () => {
+    test('prevents native behavior by default (virtual click)', () => {
+      const target = createEventTarget(ref.current);
+      target.virtualclick({preventDefault});
+      expect(preventDefault).toBeCalled();
+      expect(onTapEnd).toBeCalled();
+    });
+
+    test('allows native behavior by default (modifier keys)', () => {
       ['metaKey', 'ctrlKey', 'shiftKey'].forEach(modifierKey => {
         const target = createEventTarget(ref.current);
         target.pointerdown({[modifierKey]: true});
@@ -724,9 +753,8 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       });
     });
 
-    test('allows native behaviour if false', () => {
-      remount(false);
-
+    test('allows native behaviour if set to false', () => {
+      render({onTapEnd, preventDefault: false});
       const target = createEventTarget(ref.current);
       target.pointerdown();
       target.pointerup({preventDefault});
