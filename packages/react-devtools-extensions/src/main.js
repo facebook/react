@@ -138,14 +138,10 @@ function createPanelIfReactLoaded() {
         chrome.devtools.inspectedWindow.eval(
           `window.postMessage({ source: 'react-devtools-inject-backend' });`, 
           function(response, error) {
-          if (error) {
-            console.log(error);
+            if (error) {
+              console.log(error);
+            }
           }
-
-          if (typeof done === 'function') {
-            done();
-          }
-        }
         );
 
         const viewElementSourceFunction = createViewElementSource(
