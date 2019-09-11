@@ -77,6 +77,7 @@ import {
   HostRoot,
   ClassComponent,
   SuspenseComponent,
+  SuspenseListComponent,
   FunctionComponent,
   ForwardRef,
   MemoComponent,
@@ -2222,6 +2223,9 @@ export function resolveRetryThenable(boundaryFiber: Fiber, thenable: Thenable) {
         if (suspenseState !== null) {
           retryTime = suspenseState.retryTime;
         }
+        break;
+      case SuspenseListComponent:
+        retryCache = boundaryFiber.stateNode;
         break;
       default:
         invariant(
