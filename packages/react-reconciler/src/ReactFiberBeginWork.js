@@ -177,6 +177,7 @@ import {
   retryDehydratedSuspenseBoundary,
   scheduleWork,
   renderDidSuspendDelayIfPossible,
+  markUnprocessedUpdateTime,
 } from './ReactFiberWorkLoop';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
@@ -937,14 +938,7 @@ function updateHostRoot(current, workInProgress, renderExpirationTime) {
     );
   }
   const root: FiberRoot = workInProgress.stateNode;
-  if (
-    // TODO: This is a bug because if we render null after having hydrating,
-    // we'll reenter hydration state at the next update which will then
-    // trigger hydration warnings.
-    (current === null || current.child === null) &&
-    root.hydrate &&
-    enterHydrationState(workInProgress)
-  ) {
+  if (root.hydrate && enterHydrationState(workInProgress)) {
     // If we don't have any current children this might be the first pass.
     // We always try to hydrate. If this isn't a hydration pass there won't
     // be any children to hydrate which is effectively the same thing as
@@ -2714,6 +2708,11 @@ function bailoutOnAlreadyFinishedWork(
   if (enableProfilerTimer) {
     // Don't update "base" render times for bailouts.
     stopProfilerTimerIfRunning(workInProgress);
+  }
+
+  const updateExpirationTime = workInProgress.expirationTime;
+  if (updateExpirationTime !== NoWork) {
+    markUnprocessedUpdateTime(updateExpirationTime);
   }
 
   // Check if the children have any pending work.

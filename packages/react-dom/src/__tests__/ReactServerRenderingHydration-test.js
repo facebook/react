@@ -502,6 +502,21 @@ describe('ReactDOMServerHydration', () => {
     expect(element.textContent).toBe('Hello world');
   });
 
+  it('does not re-enter hydration after committing the first one', () => {
+    let finalHTML = ReactDOMServer.renderToString(<div />);
+    let container = document.createElement('div');
+    container.innerHTML = finalHTML;
+    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    root.render(<div />);
+    Scheduler.unstable_flushAll();
+    root.render(null);
+    Scheduler.unstable_flushAll();
+    // This should not reenter hydration state and therefore not trigger hydration
+    // warnings.
+    root.render(<div />);
+    Scheduler.unstable_flushAll();
+  });
+
   it('does not invoke an event on a concurrent hydrating node until it commits', () => {
     function Sibling({text}) {
       Scheduler.unstable_yieldValue('Sibling');

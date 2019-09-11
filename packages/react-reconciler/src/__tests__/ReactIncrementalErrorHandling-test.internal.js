@@ -243,11 +243,20 @@ describe('ReactIncrementalErrorHandling', () => {
     // This update is in a separate batch
     ReactNoop.render(<App isBroken={false} />, onCommit);
 
-    expect(Scheduler).toFlushAndYield([
+    expect(Scheduler).toFlushAndYieldThrough([
       // The first render fails. But because there's a lower priority pending
       // update, it doesn't throw.
       'error',
-      // Now we retry at the lower priority. This time it succeeds.
+    ]);
+
+    // React will try to recover by rendering all the pending updates in a
+    // single batch, synchronously. This time it succeeds.
+    //
+    // This tells Scheduler to render a single unit of work. Because the render
+    // to recover from the error is synchronous, this should be enough to
+    // finish the rest of the work.
+    Scheduler.unstable_flushNumberOfYields(1);
+    expect(Scheduler).toHaveYielded([
       'success',
       // Nothing commits until the second update completes.
       'commit',
@@ -256,54 +265,80 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Everything is fine.')]);
   });
 
-  it('on error, retries at a lower priority using the expiration of higher priority', () => {
-    class Parent extends React.Component {
-      state = {hideChild: false};
-      componentDidUpdate() {
-        Scheduler.unstable_yieldValue('commit: ' + this.state.hideChild);
-      }
-      render() {
-        if (this.state.hideChild) {
-          Scheduler.unstable_yieldValue('(empty)');
-          return <span prop="(empty)" />;
-        }
-        return <Child isBroken={this.props.childIsBroken} />;
-      }
-    }
-
-    function Child(props) {
+  it('does not include offscreen work when retrying after an error', () => {
+    function App(props) {
       if (props.isBroken) {
-        Scheduler.unstable_yieldValue('Error!');
-        throw new Error('Error!');
+        Scheduler.unstable_yieldValue('error');
+        throw new Error('Oops!');
       }
-      Scheduler.unstable_yieldValue('Child');
-      return <span prop="Child" />;
+      Scheduler.unstable_yieldValue('success');
+      return (
+        <>
+          Everything is fine
+          <div hidden={true}>
+            <div>Offscreen content</div>
+          </div>
+        </>
+      );
     }
 
-    // Initial mount
-    const parent = React.createRef(null);
-    ReactNoop.render(<Parent ref={parent} childIsBroken={false} />);
-    expect(Scheduler).toFlushAndYield(['Child']);
-    expect(ReactNoop.getChildren()).toEqual([span('Child')]);
+    function onCommit() {
+      Scheduler.unstable_yieldValue('commit');
+    }
 
-    // Schedule a low priority update to hide the child
-    parent.current.setState({hideChild: true});
+    function interrupt() {
+      ReactNoop.flushSync(() => {
+        ReactNoop.renderToRootWithID(null, 'other-root');
+      });
+    }
 
-    // Before the low priority update is flushed, synchronously trigger an
-    // error in the child.
-    ReactNoop.flushSync(() => {
-      ReactNoop.render(<Parent ref={parent} childIsBroken={true} />);
-    });
-    expect(Scheduler).toHaveYielded([
-      // First the sync update triggers an error
-      'Error!',
-      // Because there's a pending low priority update, we restart at the
-      // lower priority. This hides the children, suppressing the error.
-      '(empty)',
-      // Now the tree can commit.
-      'commit: true',
+    ReactNoop.render(<App isBroken={true} />, onCommit);
+    Scheduler.unstable_advanceTime(1000);
+    expect(Scheduler).toFlushAndYieldThrough(['error']);
+    interrupt();
+
+    expect(ReactNoop).toMatchRenderedOutput(null);
+
+    // This update is in a separate batch
+    ReactNoop.render(<App isBroken={false} />, onCommit);
+
+    expect(Scheduler).toFlushAndYieldThrough([
+      // The first render fails. But because there's a lower priority pending
+      // update, it doesn't throw.
+      'error',
     ]);
-    expect(ReactNoop.getChildren()).toEqual([span('(empty)')]);
+
+    // React will try to recover by rendering all the pending updates in a
+    // single batch, synchronously. This time it succeeds.
+    //
+    // This tells Scheduler to render a single unit of work. Because the render
+    // to recover from the error is synchronous, this should be enough to
+    // finish the rest of the work.
+    Scheduler.unstable_flushNumberOfYields(1);
+    expect(Scheduler).toHaveYielded([
+      'success',
+      // Nothing commits until the second update completes.
+      'commit',
+      'commit',
+    ]);
+    // This should not include the offscreen content
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        Everything is fine
+        <div hidden={true} />
+      </>,
+    );
+
+    // The offscreen content finishes in a subsequent render
+    expect(Scheduler).toFlushAndYield([]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        Everything is fine
+        <div hidden={true}>
+          <div>Offscreen content</div>
+        </div>
+      </>,
+    );
   });
 
   it('retries one more time before handling error', () => {
@@ -345,10 +380,6 @@ describe('ReactIncrementalErrorHandling', () => {
     ]);
     expect(ReactNoop.getChildren()).toEqual([]);
   });
-
-  // TODO: This is currently unobservable, but will be once we lift renderRoot
-  // and commitRoot into the renderer.
-  // it("does not retry synchronously if there's an update between complete and commit");
 
   it('calls componentDidCatch multiple times for multiple errors', () => {
     let id = 0;

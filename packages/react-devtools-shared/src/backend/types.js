@@ -163,6 +163,9 @@ export type InspectedElement = {|
   // Can view component source location.
   canViewSource: boolean,
 
+  // Does the component have legacy context attached to it.
+  hasLegacyContext: boolean,
+
   // Inspectable properties.
   context: Object | null,
   hooks: Object | null,

@@ -267,6 +267,7 @@ function InspectedElementView({
     canEditFunctionProps,
     canEditHooks,
     canToggleSuspense,
+    hasLegacyContext,
     context,
     hooks,
     owners,
@@ -357,6 +358,7 @@ function InspectedElementView({
         inspectPath={inspectPropsPath}
         overrideValueFn={overridePropsFn}
         showWhenEmpty={true}
+        canAddEntries={typeof overridePropsFn === 'function'}
       />
       {type === ElementTypeSuspense ? (
         <InspectedElementTree
@@ -376,7 +378,7 @@ function InspectedElementView({
       )}
       <HooksTree canEditHooks={canEditHooks} hooks={hooks} id={id} />
       <InspectedElementTree
-        label="context"
+        label={hasLegacyContext ? 'legacy context' : 'context'}
         data={context}
         inspectPath={inspectContextPath}
         overrideValueFn={overrideContextFn}

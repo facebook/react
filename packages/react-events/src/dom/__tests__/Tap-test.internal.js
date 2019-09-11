@@ -47,8 +47,8 @@ function tapAndMoveOutside({
   // NOTE: this assumes the PointerEvent implementation calls
   // 'releasePointerCapture' for touch pointers
   if (!hasPointerEvents && pointerType === 'touch') {
-    downTarget.pointermove({pointerType, ...coordinatesOutside});
     document.elementFromPoint = () => upTarget.node;
+    downTarget.pointermove({pointerType, ...coordinatesOutside});
   } else {
     upTarget.pointermove({pointerType, ...coordinatesOutside});
   }
@@ -136,6 +136,60 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       expect(onTapUpdate).not.toBeCalled();
       expect(onTapCancel).not.toBeCalled();
       expect(onTapEnd).not.toBeCalled();
+    });
+  });
+
+  describe('maximumDistance', () => {
+    let onTapCancel, onTapUpdate, ref;
+
+    function render(props) {
+      const Component = () => {
+        const listener = useTap(props);
+        return <div ref={ref} listeners={listener} />;
+      };
+      ReactDOM.render(<Component />, container);
+      document.elementFromPoint = () => ref.current;
+    }
+
+    beforeEach(() => {
+      onTapCancel = jest.fn();
+      onTapUpdate = jest.fn();
+      ref = React.createRef();
+      render({
+        maximumDistance: 20,
+        onTapCancel,
+        onTapUpdate,
+      });
+    });
+
+    test('ignores values less than 10', () => {
+      render({
+        maximumDistance: 5,
+        onTapCancel,
+        onTapUpdate,
+      });
+      const target = createEventTarget(ref.current);
+      const pointerType = 'mouse';
+      target.pointerdown({pointerType, x: 0, y: 0});
+      target.pointermove({pointerType, x: 10, y: 10});
+      expect(onTapUpdate).toHaveBeenCalledTimes(1);
+      expect(onTapCancel).toHaveBeenCalledTimes(0);
+    });
+
+    testWithPointerType('below threshold', pointerType => {
+      const target = createEventTarget(ref.current);
+      target.pointerdown({pointerType, x: 0, y: 0});
+      target.pointermove({pointerType, x: 10, y: 10});
+      expect(onTapUpdate).toHaveBeenCalledTimes(1);
+      expect(onTapCancel).toHaveBeenCalledTimes(0);
+    });
+
+    testWithPointerType('above threshold', pointerType => {
+      const target = createEventTarget(ref.current);
+      target.pointerdown({pointerType, x: 0, y: 0});
+      target.pointermove({pointerType, x: 15, y: 14});
+      expect(onTapUpdate).toHaveBeenCalledTimes(0);
+      expect(onTapCancel).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -450,16 +504,30 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
   });
 
   describe('onTapChange', () => {
-    let onTapChange, ref;
+    let eventsLog, onTapChange, ref;
+
+    const logger = msg => () => {
+      eventsLog.push(msg);
+    };
 
     beforeEach(() => {
+      eventsLog = [];
       onTapChange = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        const listener = useTap({onTapChange});
+        const listener = useTap({
+          onTapChange(e) {
+            logger('change')();
+            onTapChange(e);
+          },
+          onTapStart: logger('start'),
+          onTapEnd: logger('end'),
+          onTapCancel: logger('cancel'),
+        });
         return <div ref={ref} listeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
+      document.elementFromPoint = () => ref.current;
     });
 
     testWithPointerType('pointer down/up', pointerType => {
@@ -467,9 +535,10 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       target.pointerdown({pointerType});
       expect(onTapChange).toHaveBeenCalledTimes(1);
       expect(onTapChange).toHaveBeenCalledWith(true);
-      target.pointerup({pointerType});
+      target.pointerup({pointerType, x: 0, y: 0});
       expect(onTapChange).toHaveBeenCalledTimes(2);
       expect(onTapChange).toHaveBeenCalledWith(false);
+      expect(eventsLog).toEqual(['start', 'change', 'change', 'end']);
     });
 
     testWithPointerType('pointer cancel', pointerType => {
@@ -480,6 +549,7 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       target.pointercancel({pointerType});
       expect(onTapChange).toHaveBeenCalledTimes(2);
       expect(onTapChange).toHaveBeenCalledWith(false);
+      expect(eventsLog).toEqual(['start', 'change', 'change', 'cancel']);
     });
 
     testWithPointerType('pointer move outside target', pointerType => {
@@ -496,15 +566,16 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
   });
 
   describe('onTapCancel', () => {
-    let onTapCancel, parentRef, ref, siblingRef;
+    let onTapCancel, onTapUpdate, parentRef, ref, siblingRef;
 
     beforeEach(() => {
       onTapCancel = jest.fn();
+      onTapUpdate = jest.fn();
       parentRef = React.createRef();
       ref = React.createRef();
       siblingRef = React.createRef();
       const Component = () => {
-        const listener = useTap({onTapCancel});
+        const listener = useTap({onTapCancel, onTapUpdate});
         return (
           <div ref={parentRef}>
             <div ref={ref} listeners={listener} />
@@ -546,6 +617,8 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
           y: 0,
         }),
       );
+      target.pointermove({pointerType, x: 5, y: 5});
+      expect(onTapUpdate).not.toBeCalled();
     });
 
     test('long press context menu', () => {

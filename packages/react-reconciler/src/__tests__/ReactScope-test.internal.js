@@ -67,6 +67,8 @@ describe('ReactScope', () => {
       ReactDOM.render(<Test toggle={false} />, container);
       nodes = scopeRef.current.getScopedNodes();
       expect(nodes).toEqual([aRef.current, divRef.current, spanRef.current]);
+      ReactDOM.render(null, container);
+      expect(scopeRef.current).toBe(null);
     });
 
     it('mixed getParent() and getScopedNodes() works as intended', () => {

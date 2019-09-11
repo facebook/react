@@ -45,3 +45,28 @@ export function dispatchUserBlockingEvent(
 ) {
   context.dispatchEvent(payload, callback, UserBlockingEvent);
 }
+
+export function getTouchById(
+  nativeEvent: TouchEvent,
+  pointerId: null | number,
+): null | Touch {
+  if (pointerId != null) {
+    const changedTouches = nativeEvent.changedTouches;
+    for (let i = 0; i < changedTouches.length; i++) {
+      const touch = changedTouches[i];
+      if (touch.identifier === pointerId) {
+        return touch;
+      }
+    }
+    return null;
+  }
+  return null;
+}
+
+export function hasModifierKey(event: ReactDOMResponderEvent): boolean {
+  const nativeEvent: any = event.nativeEvent;
+  const {altKey, ctrlKey, metaKey, shiftKey} = nativeEvent;
+  return (
+    altKey === true || ctrlKey === true || metaKey === true || shiftKey === true
+  );
+}

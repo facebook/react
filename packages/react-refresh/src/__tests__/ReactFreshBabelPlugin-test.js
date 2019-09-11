@@ -19,7 +19,14 @@ function transform(input, options = {}) {
       plugins: [
         '@babel/syntax-jsx',
         '@babel/syntax-dynamic-import',
-        [freshPlugin, {skipEnvCheck: true}],
+        [
+          freshPlugin,
+          {
+            skipEnvCheck: true,
+            // To simplify debugging tests:
+            emitFullSignatures: true,
+          },
+        ],
         ...(options.plugins || []),
       ],
     }).code,

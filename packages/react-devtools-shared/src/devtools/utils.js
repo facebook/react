@@ -82,3 +82,46 @@ export function printStore(store: Store, includeWeight: boolean = false) {
 
   return snapshotLines.join('\n');
 }
+
+// We use JSON.parse to parse string values
+// e.g. 'foo' is not valid JSON but it is a valid string
+// so this method replaces e.g. 'foo' with "foo"
+export function sanitizeForParse(value: any) {
+  if (typeof value === 'string') {
+    if (
+      value.length >= 2 &&
+      value.charAt(0) === "'" &&
+      value.charAt(value.length - 1) === "'"
+    ) {
+      return '"' + value.substr(1, value.length - 2) + '"';
+    }
+  }
+  return value;
+}
+
+export function smartParse(value: any) {
+  switch (value) {
+    case 'Infinity':
+      return Infinity;
+    case 'NaN':
+      return NaN;
+    case 'undefined':
+      return undefined;
+    default:
+      return JSON.parse(sanitizeForParse(value));
+  }
+}
+
+export function smartStringify(value: any) {
+  if (typeof value === 'number') {
+    if (Number.isNaN(value)) {
+      return 'NaN';
+    } else if (!Number.isFinite(value)) {
+      return 'Infinity';
+    }
+  } else if (value === undefined) {
+    return 'undefined';
+  }
+
+  return JSON.stringify(value);
+}
