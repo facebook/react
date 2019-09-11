@@ -7,28 +7,11 @@
  * @flow
  */
 
+import {createEventTarget} from 'react-events/src/dom/testing-library';
+
 let React;
 let ReactFeatureFlags;
 let TabFocusContainer;
-
-const createTabForward = type => {
-  const event = new KeyboardEvent('keydown', {
-    key: 'Tab',
-    bubbles: true,
-    cancelable: true,
-  });
-  return event;
-};
-
-const createTabBackward = type => {
-  const event = new KeyboardEvent('keydown', {
-    key: 'Tab',
-    shiftKey: true,
-    bubbles: true,
-    cancelable: true,
-  });
-  return event;
-};
 
 describe('TabFocusContainer', () => {
   beforeEach(() => {
@@ -74,13 +57,13 @@ describe('TabFocusContainer', () => {
 
       ReactDOM.render(<Test />, container);
       inputRef.current.focus();
-      document.activeElement.dispatchEvent(createTabForward());
+      createEventTarget(document.activeElement).tabNext();
       expect(document.activeElement).toBe(buttonRef.current);
-      document.activeElement.dispatchEvent(createTabForward());
+      createEventTarget(document.activeElement).tabNext();
       expect(document.activeElement).toBe(divRef.current);
-      document.activeElement.dispatchEvent(createTabForward());
+      createEventTarget(document.activeElement).tabNext();
       expect(document.activeElement).toBe(butto2nRef.current);
-      document.activeElement.dispatchEvent(createTabBackward());
+      createEventTarget(document.activeElement).tabPrevious();
       expect(document.activeElement).toBe(divRef.current);
     });
 
@@ -101,15 +84,15 @@ describe('TabFocusContainer', () => {
 
       ReactDOM.render(<Test />, container);
       buttonRef.current.focus();
-      document.activeElement.dispatchEvent(createTabForward());
+      createEventTarget(document.activeElement).tabNext();
       expect(document.activeElement).toBe(button2Ref.current);
-      document.activeElement.dispatchEvent(createTabForward());
+      createEventTarget(document.activeElement).tabNext();
       expect(document.activeElement).toBe(buttonRef.current);
-      document.activeElement.dispatchEvent(createTabForward());
+      createEventTarget(document.activeElement).tabNext();
       expect(document.activeElement).toBe(button2Ref.current);
-      document.activeElement.dispatchEvent(createTabBackward());
+      createEventTarget(document.activeElement).tabPrevious();
       expect(document.activeElement).toBe(buttonRef.current);
-      document.activeElement.dispatchEvent(createTabBackward());
+      createEventTarget(document.activeElement).tabPrevious();
       expect(document.activeElement).toBe(button2Ref.current);
     });
 
@@ -137,21 +120,21 @@ describe('TabFocusContainer', () => {
       ReactDOM.render(<Test />, container);
       buttonRef.current.focus();
       expect(document.activeElement).toBe(buttonRef.current);
-      document.activeElement.dispatchEvent(createTabForward());
+      createEventTarget(document.activeElement).tabNext();
       expect(document.activeElement).toBe(button2Ref.current);
-      document.activeElement.dispatchEvent(createTabForward());
+      createEventTarget(document.activeElement).tabNext();
       expect(document.activeElement).toBe(button3Ref.current);
-      document.activeElement.dispatchEvent(createTabForward());
+      createEventTarget(document.activeElement).tabNext();
       expect(document.activeElement).toBe(button2Ref.current);
       // Focus is contained, so have to manually move it out
       button4Ref.current.focus();
-      document.activeElement.dispatchEvent(createTabForward());
+      createEventTarget(document.activeElement).tabNext();
       expect(document.activeElement).toBe(buttonRef.current);
-      document.activeElement.dispatchEvent(createTabBackward());
+      createEventTarget(document.activeElement).tabPrevious();
       expect(document.activeElement).toBe(button4Ref.current);
-      document.activeElement.dispatchEvent(createTabBackward());
+      createEventTarget(document.activeElement).tabPrevious();
       expect(document.activeElement).toBe(button3Ref.current);
-      document.activeElement.dispatchEvent(createTabBackward());
+      createEventTarget(document.activeElement).tabPrevious();
       expect(document.activeElement).toBe(button2Ref.current);
     });
 
@@ -179,15 +162,15 @@ describe('TabFocusContainer', () => {
       ReactDOM.render(<Test />, container);
       buttonRef.current.focus();
       expect(document.activeElement).toBe(buttonRef.current);
-      document.activeElement.dispatchEvent(createTabForward());
+      createEventTarget(document.activeElement).tabNext();
       expect(document.activeElement).toBe(button2Ref.current);
-      document.activeElement.dispatchEvent(createTabForward());
+      createEventTarget(document.activeElement).tabNext();
       expect(document.activeElement).toBe(button3Ref.current);
-      document.activeElement.dispatchEvent(createTabForward());
+      createEventTarget(document.activeElement).tabNext();
       expect(document.activeElement).toBe(button2Ref.current);
-      document.activeElement.dispatchEvent(createTabBackward());
+      createEventTarget(document.activeElement).tabPrevious();
       expect(document.activeElement).toBe(button3Ref.current);
-      document.activeElement.dispatchEvent(createTabBackward());
+      createEventTarget(document.activeElement).tabPrevious();
       expect(document.activeElement).toBe(button2Ref.current);
     });
 
@@ -227,15 +210,15 @@ describe('TabFocusContainer', () => {
       ReactDOM.render(<Test />, container);
       buttonRef.current.focus();
       expect(document.activeElement).toBe(buttonRef.current);
-      document.activeElement.dispatchEvent(createTabForward());
+      createEventTarget(document.activeElement).tabNext();
       expect(document.activeElement).toBe(button2Ref.current);
-      document.activeElement.dispatchEvent(createTabForward());
+      createEventTarget(document.activeElement).tabNext();
       expect(document.activeElement).toBe(button3Ref.current);
-      document.activeElement.dispatchEvent(createTabForward());
+      createEventTarget(document.activeElement).tabNext();
       expect(document.activeElement).toBe(button4Ref.current);
-      document.activeElement.dispatchEvent(createTabBackward());
+      createEventTarget(document.activeElement).tabPrevious();
       expect(document.activeElement).toBe(button3Ref.current);
-      document.activeElement.dispatchEvent(createTabBackward());
+      createEventTarget(document.activeElement).tabPrevious();
       expect(document.activeElement).toBe(button2Ref.current);
     });
   });
