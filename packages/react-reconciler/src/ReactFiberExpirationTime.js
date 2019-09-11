@@ -21,7 +21,10 @@ import {
 export type ExpirationTime = number;
 
 export const NoWork = 0;
+// TODO: Think of a better name for Never.
 export const Never = 1;
+// TODO: Use the Idle expiration time for idle state updates
+export const Idle = 2;
 export const Sync = MAX_SIGNED_31_BIT_INT;
 export const Batched = Sync - 1;
 
