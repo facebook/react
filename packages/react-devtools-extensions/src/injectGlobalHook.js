@@ -1,15 +1,9 @@
 /* global chrome */
 
 import nullthrows from 'nullthrows';
-import {
-  installHook
-} from 'react-devtools-shared/src/hook';
-import {
-  SESSION_STORAGE_RELOAD_AND_PROFILE_KEY
-} from 'react-devtools-shared/src/constants';
-import {
-  sessionStorageGetItem
-} from 'react-devtools-shared/src/storage';
+import {installHook} from 'react-devtools-shared/src/hook';
+import {SESSION_STORAGE_RELOAD_AND_PROFILE_KEY} from 'react-devtools-shared/src/constants';
+import {sessionStorageGetItem} from 'react-devtools-shared/src/storage';
 
 function injectCode(code) {
   const script = document.createElement('script');
