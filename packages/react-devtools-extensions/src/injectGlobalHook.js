@@ -32,14 +32,17 @@ window.addEventListener('message', function(evt) {
       };
       chrome.runtime.sendMessage(lastDetectionResult);
 
-    // Inject the backend. This is done in the content script to avoid CSP
-    // and Trusted Types violations, since content scripts can modify the DOM
-    // and are not subject to the page's policies
+      // Inject the backend. This is done in the content script to avoid CSP
+      // and Trusted Types violations, since content scripts can modify the DOM
+      // and are not subject to the page's policies.
     } else if (evt.data.source === 'react-devtools-inject-backend') {
       // the prototype stuff is in case document.createElement has been modified
-      var script = document.constructor.prototype.createElement.call(document, 'script');
+      const script = document.constructor.prototype.createElement.call(
+        document,
+        'script',
+      );
       script.src = chrome.runtime.getURL('build/backend.js');
-      script.charset = "utf-8";
+      script.charset = 'utf-8';
       document.documentElement.appendChild(script);
       script.parentNode.removeChild(script);
     }
