@@ -3,7 +3,7 @@
 export default function inject(scriptName: string, done: ? Function) {
   const source = `
   (function () {
-    window.postMessage({ source: 'react-devtools-inject-backend', type: "FROM_PAGE", text: "Hello from the webpage!" }, "*");
+    window.postMessage({ source: 'react-devtools-inject-script', scriptName: "${scriptName}" }, "*");
   })()
   `;
 
