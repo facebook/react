@@ -377,7 +377,7 @@ function dispatchStart(
   const type = 'tap:start';
   const onTapStart = props.onTapStart;
   if (onTapStart != null) {
-    const payload = {...state.gestureState, type};
+    const payload = context.objectAssign({}, state.gestureState, {type});
     dispatchDiscreteEvent(context, payload, onTapStart);
   }
 }
@@ -402,7 +402,7 @@ function dispatchUpdate(
   const type = 'tap:update';
   const onTapUpdate = props.onTapUpdate;
   if (onTapUpdate != null) {
-    const payload = {...state.gestureState, type};
+    const payload = context.objectAssign({}, state.gestureState, {type});
     dispatchUserBlockingEvent(context, payload, onTapUpdate);
   }
 }
@@ -415,7 +415,7 @@ function dispatchEnd(
   const type = 'tap:end';
   const onTapEnd = props.onTapEnd;
   if (onTapEnd != null) {
-    const payload = {...state.gestureState, type};
+    const payload = context.objectAssign({}, state.gestureState, {type});
     dispatchDiscreteEvent(context, payload, onTapEnd);
   }
 }
@@ -428,7 +428,7 @@ function dispatchCancel(
   const type = 'tap:cancel';
   const onTapCancel = props.onTapCancel;
   if (onTapCancel != null) {
-    const payload = {...state.gestureState, type};
+    const payload = context.objectAssign({}, state.gestureState, {type});
     dispatchDiscreteEvent(context, payload, onTapCancel);
   }
 }
