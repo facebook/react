@@ -65,9 +65,9 @@ export opaque type TrustedValue: {toString(): string} = {toString(): string};
  * If application uses Trusted Types we don't stringify trusted values, but preserve them as objects.
  */
 export function toStringOrTrustedType(value: any): string | TrustedValue {
-  // fast-path string values as it's most frequent usage of the function
   if (
     enableTrustedTypesIntegration &&
+    // fast-path string values as it's most frequent usage of the function
     typeof value !== 'string' &&
     isTrustedTypesValue(value)
   ) {
