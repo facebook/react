@@ -35,6 +35,9 @@ const createEventTarget = node => ({
   focus(payload) {
     node.dispatchEvent(domEvents.focus(payload));
   },
+  scroll(payload) {
+    node.dispatchEvent(domEvents.scroll(payload));
+  },
   /**
    * KeyboardEvent abstraction.
    */
@@ -44,8 +47,34 @@ const createEventTarget = node => ({
   keyup(payload) {
     node.dispatchEvent(domEvents.keyup(payload));
   },
-  scroll(payload) {
-    node.dispatchEvent(domEvents.scroll(payload));
+  virtualclick(payload) {
+    node.dispatchEvent(domEvents.virtualclick(payload));
+  },
+  tabNext() {
+    node.dispatchEvent(
+      domEvents.keydown({
+        key: 'Tab',
+      }),
+    );
+    node.dispatchEvent(
+      domEvents.keyup({
+        key: 'Tab',
+      }),
+    );
+  },
+  tabPrevious() {
+    node.dispatchEvent(
+      domEvents.keydown({
+        key: 'Tab',
+        shiftKey: true,
+      }),
+    );
+    node.dispatchEvent(
+      domEvents.keyup({
+        key: 'Tab',
+        shiftKey: true,
+      }),
+    );
   },
   /**
    * PointerEvent abstraction.
@@ -72,7 +101,7 @@ const createEventTarget = node => ({
   pointerenter(payload) {
     domEventSequences.pointerenter(node, payload);
   },
-  // node dispatches exit & out events
+  // node dispatches exit & leave events
   pointerexit(payload) {
     domEventSequences.pointerexit(node, payload);
   },
@@ -106,10 +135,35 @@ const createEventTarget = node => ({
   },
 });
 
+function describeWithPointerEvent(message, describeFn) {
+  const pointerEvent = 'PointerEvent';
+  const fallback = 'MouseEvent/TouchEvent';
+  describe.each`
+    value    | name
+    ${true}  | ${pointerEvent}
+    ${false} | ${fallback}
+  `(`${message}: $name`, entry => {
+    const hasPointerEvents = entry.value;
+    setPointerEvent(hasPointerEvents);
+    describeFn(hasPointerEvents);
+  });
+}
+
+function testWithPointerType(message, testFn) {
+  const table = hasPointerEvent()
+    ? ['mouse', 'touch', 'pen']
+    : ['mouse', 'touch'];
+  test.each(table)(`${message}: %s`, pointerType => {
+    testFn(pointerType);
+  });
+}
+
 export {
   buttonsType,
   createEventTarget,
+  describeWithPointerEvent,
   platform,
   hasPointerEvent,
   setPointerEvent,
+  testWithPointerType,
 };

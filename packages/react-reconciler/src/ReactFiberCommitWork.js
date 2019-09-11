@@ -32,6 +32,7 @@ import {
   enableFlareAPI,
   enableFundamentalAPI,
   enableSuspenseCallback,
+  enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -49,6 +50,7 @@ import {
   SimpleMemoComponent,
   SuspenseListComponent,
   FundamentalComponent,
+  ScopeComponent,
 } from 'shared/ReactWorkTags';
 import {
   invokeGuardedCallback,
@@ -79,6 +81,7 @@ import {
   getPublicInstance,
   supportsMutation,
   supportsPersistence,
+  supportsHydration,
   commitMount,
   commitUpdate,
   resetTextContent,
@@ -617,6 +620,7 @@ function commitLifeCycles(
     case SuspenseListComponent:
     case IncompleteClassComponent:
     case FundamentalComponent:
+    case ScopeComponent:
       return;
     default: {
       invariant(
@@ -690,6 +694,10 @@ function commitAttachRef(finishedWork: Fiber) {
         break;
       default:
         instanceToUse = instance;
+    }
+    // Moved outside to ensure DCE works with this flag
+    if (enableScopeAPI && finishedWork.tag === ScopeComponent) {
+      instanceToUse = instance.methods;
     }
     if (typeof ref === 'function') {
       ref(instanceToUse);
@@ -834,6 +842,12 @@ function commitUnmount(
             onDeleted((current.stateNode: SuspenseInstance));
           }
         }
+      }
+      return;
+    }
+    case ScopeComponent: {
+      if (enableScopeAPI) {
+        safelyDetachRef(current);
       }
     }
   }
@@ -1290,6 +1304,16 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
         attachSuspenseRetryListeners(finishedWork);
         return;
       }
+      case HostRoot: {
+        const root: FiberRoot = finishedWork.stateNode;
+        if (supportsHydration) {
+          if (root.hydrate) {
+            // We've just hydrated. No need to hydrate again.
+            root.hydrate = false;
+          }
+        }
+        break;
+      }
     }
 
     commitContainer(finishedWork);
@@ -1336,7 +1360,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
           const prevListeners = oldProps.listeners;
           const nextListeners = newProps.listeners;
           if (prevListeners !== nextListeners) {
-            updateEventListeners(nextListeners, instance, finishedWork);
+            updateEventListeners(nextListeners, finishedWork, null);
           }
         }
       }
@@ -1359,6 +1383,13 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       return;
     }
     case HostRoot: {
+      const root: FiberRoot = finishedWork.stateNode;
+      if (supportsHydration) {
+        if (root.hydrate) {
+          // We've just hydrated. No need to hydrate again.
+          root.hydrate = false;
+        }
+      }
       return;
     }
     case Profiler: {
@@ -1380,6 +1411,22 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       if (enableFundamentalAPI) {
         const fundamentalInstance = finishedWork.stateNode;
         updateFundamentalComponent(fundamentalInstance);
+      }
+      return;
+    }
+    case ScopeComponent: {
+      if (enableScopeAPI) {
+        const scopeInstance = finishedWork.stateNode;
+        scopeInstance.fiber = finishedWork;
+        if (enableFlareAPI) {
+          const newProps = finishedWork.memoizedProps;
+          const oldProps = current !== null ? current.memoizedProps : newProps;
+          const prevListeners = oldProps.listeners;
+          const nextListeners = newProps.listeners;
+          if (prevListeners !== nextListeners) {
+            updateEventListeners(nextListeners, finishedWork, null);
+          }
+        }
       }
       return;
     }

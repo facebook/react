@@ -80,6 +80,12 @@ export function useSubscription<Value>({
           return;
         }
 
+        // We use a state updater function to avoid scheduling work for a stale source.
+        // However it's important to eagerly read the currently value,
+        // so that all scheduled work shares the same value (in the event of multiple subscriptions).
+        // This avoids visual "tearing" when a mutation happens during a (concurrent) render.
+        const value = getCurrentValue();
+
         setState(prevState => {
           // Ignore values from stale sources!
           // Since we subscribe an unsubscribe in a passive effect,
@@ -95,7 +101,6 @@ export function useSubscription<Value>({
           // Some subscriptions will auto-invoke the handler, even if the value hasn't changed.
           // If the value hasn't changed, no update is needed.
           // Return state as-is so React can bail out and avoid an unnecessary render.
-          const value = getCurrentValue();
           if (prevState.value === value) {
             return prevState;
           }

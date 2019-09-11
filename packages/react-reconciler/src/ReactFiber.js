@@ -15,6 +15,7 @@ import type {
   ReactEventResponder,
   ReactEventResponderInstance,
   ReactFundamentalComponent,
+  ReactScope,
 } from 'shared/ReactTypes';
 import type {RootTag} from 'shared/ReactRootTags';
 import type {WorkTag} from 'shared/ReactWorkTags';
@@ -32,6 +33,7 @@ import {
   enableProfilerTimer,
   enableFundamentalAPI,
   enableUserTimingAPI,
+  enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
 import {NoEffect, Placement} from 'shared/ReactSideEffectTags';
 import {ConcurrentRoot, BatchedRoot} from 'shared/ReactRootTags';
@@ -56,6 +58,7 @@ import {
   SimpleMemoComponent,
   LazyComponent,
   FundamentalComponent,
+  ScopeComponent,
 } from 'shared/ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 
@@ -86,6 +89,7 @@ import {
   REACT_MEMO_TYPE,
   REACT_LAZY_TYPE,
   REACT_FUNDAMENTAL_TYPE,
+  REACT_SCOPE_TYPE,
 } from 'shared/ReactSymbols';
 
 let hasBadMapPolyfill;
@@ -674,6 +678,16 @@ export function createFiberFromTypeAndProps(
                 );
               }
               break;
+            case REACT_SCOPE_TYPE:
+              if (enableScopeAPI) {
+                return createFiberFromScope(
+                  type,
+                  pendingProps,
+                  mode,
+                  expirationTime,
+                  key,
+                );
+              }
           }
         }
         let info = '';
@@ -762,6 +776,19 @@ export function createFiberFromFundamental(
   const fiber = createFiber(FundamentalComponent, pendingProps, key, mode);
   fiber.elementType = fundamentalComponent;
   fiber.type = fundamentalComponent;
+  fiber.expirationTime = expirationTime;
+  return fiber;
+}
+
+function createFiberFromScope(
+  scope: ReactScope,
+  pendingProps: any,
+  mode: TypeOfMode,
+  expirationTime: ExpirationTime,
+  key: null | string,
+) {
+  const fiber = createFiber(ScopeComponent, pendingProps, key, mode);
+  fiber.type = scope;
   fiber.expirationTime = expirationTime;
   return fiber;
 }

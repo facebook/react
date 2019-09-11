@@ -1,0 +1,38 @@
+.ActiveRecordToggle {
+  color: var(--color-record-active);
+}
+.ActiveRecordToggle:hover {
+  color: var(--color-record-active);
+}
+.ActiveRecordToggle:focus {
+  color: var(--color-record-active);
+}
+.ActiveRecordToggle:active {
+  color: var(--color-record-hover);
+}
+
+.InactiveRecordToggle {
+  color: var(--color-record-inactive);
+}
+.InactiveRecordToggle:hover {
+  color: var(--color-record-hover);
+}
+.InactiveRecordToggle:focus {
+  color: var(--color-record-inactive);
+}
+.InactiveRecordToggle:active {
+  color: var(--color-record-hover);
+}
+
+.DisabledRecordToggle {
+  color: var(--color-button-disabled);
+}
+.DisabledRecordToggle:hover {
+  color: var(--color-button-disabled);
+}
+.DisabledRecordToggle:focus {
+  color: var(--color-button-disabled);
+}
+.DisabledRecordToggle:active {
+  color: var(--color-button-disabled);
+}

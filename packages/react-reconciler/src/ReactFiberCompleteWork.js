@@ -9,7 +9,10 @@
 
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
-import type {ReactFundamentalComponentInstance} from 'shared/ReactTypes';
+import type {
+  ReactFundamentalComponentInstance,
+  ReactScopeInstance,
+} from 'shared/ReactTypes';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {
   Instance,
@@ -47,6 +50,7 @@ import {
   LazyComponent,
   IncompleteClassComponent,
   FundamentalComponent,
+  ScopeComponent,
 } from 'shared/ReactWorkTags';
 import {NoMode, BatchedMode} from './ReactTypeOfMode';
 import {
@@ -103,6 +107,7 @@ import {popProvider} from './ReactFiberNewContext';
 import {
   prepareToHydrateHostInstance,
   prepareToHydrateHostTextInstance,
+  prepareToHydrateHostSuspenseInstance,
   popHydrationState,
   resetHydrationState,
 } from './ReactFiberHydrationContext';
@@ -112,6 +117,7 @@ import {
   enableSuspenseServerRenderer,
   enableFlareAPI,
   enableFundamentalAPI,
+  enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
 import {
   markSpawnedWork,
@@ -123,6 +129,7 @@ import {createFundamentalStateInstance} from './ReactFiberFundamental';
 import {Never} from './ReactFiberExpirationTime';
 import {resetChildFibers} from './ReactChildFiber';
 import {updateEventListeners} from './ReactFiberEvents';
+import {createScopeMethods} from './ReactFiberScope';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -655,7 +662,12 @@ function completeWork(
       if (current === null || current.child === null) {
         // If we hydrated, pop so that we can delete any remaining children
         // that weren't hydrated.
-        popHydrationState(workInProgress);
+        let wasHydrated = popHydrationState(workInProgress);
+        if (wasHydrated) {
+          // If we hydrated, then we'll need to schedule an update for
+          // the commit side-effects on the root.
+          markUpdate(workInProgress);
+        }
       }
       updateHostContainer(workInProgress);
       break;
@@ -716,10 +728,13 @@ function completeWork(
             markUpdate(workInProgress);
           }
           if (enableFlareAPI) {
-            const instance = workInProgress.stateNode;
             const listeners = newProps.listeners;
             if (listeners != null) {
-              updateEventListeners(listeners, instance, workInProgress);
+              updateEventListeners(
+                listeners,
+                workInProgress,
+                rootContainerInstance,
+              );
             }
           }
         } else {
@@ -733,10 +748,17 @@ function completeWork(
 
           appendAllChildren(instance, workInProgress, false, false);
 
+          // This needs to be set before we mount Flare event listeners
+          workInProgress.stateNode = instance;
+
           if (enableFlareAPI) {
             const listeners = newProps.listeners;
             if (listeners != null) {
-              updateEventListeners(listeners, instance, workInProgress);
+              updateEventListeners(
+                listeners,
+                workInProgress,
+                rootContainerInstance,
+              );
             }
           }
 
@@ -754,7 +776,6 @@ function completeWork(
           ) {
             markUpdate(workInProgress);
           }
-          workInProgress.stateNode = instance;
         }
 
         if (workInProgress.ref !== null) {
@@ -813,6 +834,7 @@ function completeWork(
               'A dehydrated suspense component was completed without a hydrated node. ' +
                 'This is probably a bug in React.',
             );
+            prepareToHydrateHostSuspenseInstance(workInProgress);
             if (enableSchedulerTracing) {
               markSpawnedWork(Never);
             }
@@ -1208,6 +1230,53 @@ function completeWork(
           );
           if (shouldUpdate) {
             markUpdate(workInProgress);
+          }
+        }
+      }
+      break;
+    }
+    case ScopeComponent: {
+      if (enableScopeAPI) {
+        if (current === null) {
+          const type = workInProgress.type;
+          const scopeInstance: ReactScopeInstance = {
+            fiber: workInProgress,
+            methods: null,
+          };
+          workInProgress.stateNode = scopeInstance;
+          scopeInstance.methods = createScopeMethods(type, scopeInstance);
+          if (enableFlareAPI) {
+            const listeners = newProps.listeners;
+            if (listeners != null) {
+              const rootContainerInstance = getRootHostContainer();
+              updateEventListeners(
+                listeners,
+                workInProgress,
+                rootContainerInstance,
+              );
+            }
+          }
+          if (workInProgress.ref !== null) {
+            markRef(workInProgress);
+            markUpdate(workInProgress);
+          }
+        } else {
+          if (enableFlareAPI) {
+            const prevListeners = current.memoizedProps.listeners;
+            const nextListeners = newProps.listeners;
+            if (
+              prevListeners !== nextListeners ||
+              workInProgress.ref !== null
+            ) {
+              markUpdate(workInProgress);
+            }
+          } else {
+            if (workInProgress.ref !== null) {
+              markUpdate(workInProgress);
+            }
+          }
+          if (current.ref !== workInProgress.ref) {
+            markRef(workInProgress);
           }
         }
       }

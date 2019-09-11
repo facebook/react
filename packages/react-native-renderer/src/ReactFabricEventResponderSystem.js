@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {HostComponent} from 'shared/ReactWorkTags';
+import {HostComponent, ScopeComponent} from 'shared/ReactWorkTags';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import {
   batchedEventUpdates,
@@ -217,6 +217,15 @@ const eventResponderContext: ReactNativeResponderContext = {
     validateResponderContext();
     return currentTimeStamp;
   },
+  getResponderNode(): ReactNativeEventTarget | null {
+    validateResponderContext();
+    const responderFiber = ((currentInstance: any): ReactNativeEventResponderInstance)
+      .fiber;
+    if (responderFiber.tag === ScopeComponent) {
+      return null;
+    }
+    return responderFiber.stateNode;
+  },
 };
 
 function validateEventValue(eventValue: any): void {
@@ -311,7 +320,6 @@ function createFabricResponderEvent(
 ): ReactNativeResponderEvent {
   return {
     nativeEvent,
-    responderTarget: target,
     target,
     type: topLevelType,
   };
@@ -373,13 +381,16 @@ function traverseAndHandleEventResponderInstances(
   let node = targetFiber;
   while (node !== null) {
     const {dependencies, tag} = node;
-    if (tag === HostComponent && dependencies !== null) {
+    if (
+      (tag === HostComponent || tag === ScopeComponent) &&
+      dependencies !== null
+    ) {
       const respondersMap = dependencies.responders;
       if (respondersMap !== null) {
         const responderInstances = Array.from(respondersMap.values());
         for (let i = 0, length = responderInstances.length; i < length; i++) {
           const responderInstance = responderInstances[i];
-          const {props, responder, state, target} = responderInstance;
+          const {props, responder, state} = responderInstance;
           if (
             !visitedResponders.has(responder) &&
             validateResponderTargetEventTypes(eventType, responder)
@@ -388,7 +399,6 @@ function traverseAndHandleEventResponderInstances(
             visitedResponders.add(responder);
             if (onEvent !== null) {
               currentInstance = responderInstance;
-              responderEvent.responderTarget = ((target: any): ReactNativeEventTarget);
               onEvent(responderEvent, eventResponderContext, props, state);
             }
           }
@@ -406,11 +416,10 @@ function traverseAndHandleEventResponderInstances(
 
     for (let i = 0; i < responderInstances.length; i++) {
       const responderInstance = responderInstances[i];
-      const {props, responder, state, target} = responderInstance;
+      const {props, responder, state} = responderInstance;
       const onRootEvent = responder.onRootEvent;
       if (onRootEvent !== null) {
         currentInstance = responderInstance;
-        responderEvent.responderTarget = ((target: any): ReactNativeEventTarget);
         onRootEvent(responderEvent, eventResponderContext, props, state);
       }
     }

@@ -29,7 +29,6 @@ type PressProps = {|
     left: number,
   },
   preventDefault: boolean,
-  stopPropagation: boolean,
   onPress: (e: PressEvent) => void,
   onPressChange: boolean => void,
   onPressEnd: (e: PressEvent) => void,
@@ -112,13 +111,7 @@ const DEFAULT_PRESS_RETENTION_OFFSET = {
 };
 
 const targetEventTypes = hasPointerEvents
-  ? [
-      'keydown_active',
-      // We need to preventDefault on pointerdown for mouse/pen events
-      // that are in hit target area but not the element area.
-      'pointerdown_active',
-      'click_active',
-    ]
+  ? ['keydown_active', 'pointerdown', 'click_active']
   : ['keydown_active', 'touchstart', 'mousedown', 'click_active'];
 
 const rootEventTypes = hasPointerEvents
@@ -132,9 +125,7 @@ const rootEventTypes = hasPointerEvents
       'touchcancel',
       // Used as a 'cancel' signal for mouse interactions
       'dragstart',
-      // We listen to this here so stopPropagation can
-      // block other mouseup events used internally
-      'mouseup_active',
+      'mouseup',
       'touchend',
     ];
 
@@ -465,15 +456,17 @@ function updateIsPressWithinResponderRegion(
     (x >= left && x <= right && y >= top && y <= bottom);
 }
 
-function handleStopPropagation(
-  props: PressProps,
-  context: ReactDOMResponderContext,
-  nativeEvent,
-): void {
-  const stopPropagation = props.stopPropagation;
-  if (stopPropagation === true) {
-    nativeEvent.stopPropagation();
-  }
+// After some investigation work, screen reader virtual
+// clicks (NVDA, Jaws, VoiceOver) do not have co-ords associated with the click
+// event and "detail" is always 0 (where normal clicks are > 0)
+function isScreenReaderVirtualClick(nativeEvent): boolean {
+  return (
+    nativeEvent.detail === 0 &&
+    nativeEvent.screenX === 0 &&
+    nativeEvent.screenY === 0 &&
+    nativeEvent.clientX === 0 &&
+    nativeEvent.clientY === 0
+  );
 }
 
 function targetIsDocument(target: null | Node): boolean {
@@ -508,7 +501,7 @@ const pressResponderImpl = {
     props: PressProps,
     state: PressState,
   ): void {
-    const {pointerId, pointerType, type} = event;
+    const {pointerType, type} = event;
 
     if (props.disabled) {
       removeRootEventTypes(context, state);
@@ -518,8 +511,6 @@ const pressResponderImpl = {
     }
     const nativeEvent: any = event.nativeEvent;
     const isPressed = state.isPressed;
-
-    handleStopPropagation(props, context, nativeEvent);
 
     switch (type) {
       // START
@@ -569,9 +560,9 @@ const pressResponderImpl = {
           // We set these here, before the button check so we have this
           // data around for handling of the context menu
           state.pointerType = pointerType;
-          const pressTarget = (state.pressTarget = event.responderTarget);
+          const pressTarget = (state.pressTarget = context.getResponderNode());
           if (isPointerEvent) {
-            state.activePointerId = pointerId;
+            state.activePointerId = nativeEvent.pointerId;
           } else if (isTouchEvent) {
             const touchEvent = getTouchFromPressEvent(nativeEvent);
             if (touchEvent === null) {
@@ -617,6 +608,18 @@ const pressResponderImpl = {
         if (state.shouldPreventClick) {
           nativeEvent.preventDefault();
         }
+        const onPress = props.onPress;
+
+        if (isFunction(onPress) && isScreenReaderVirtualClick(nativeEvent)) {
+          state.pointerType = 'keyboard';
+          state.pressTarget = context.getResponderNode();
+          const preventDefault = props.preventDefault;
+
+          if (preventDefault !== false) {
+            nativeEvent.preventDefault();
+          }
+          dispatchEvent(event, onPress, context, state, 'press', DiscreteEvent);
+        }
         break;
       }
     }
@@ -627,14 +630,12 @@ const pressResponderImpl = {
     props: PressProps,
     state: PressState,
   ): void {
-    let {pointerId, pointerType, target, type} = event;
+    let {pointerType, target, type} = event;
 
     const nativeEvent: any = event.nativeEvent;
     const isPressed = state.isPressed;
     const activePointerId = state.activePointerId;
     const previousPointerType = state.pointerType;
-
-    handleStopPropagation(props, context, nativeEvent);
 
     switch (type) {
       // MOVE
@@ -647,7 +648,10 @@ const pressResponderImpl = {
         if (previousPointerType !== pointerType) {
           return;
         }
-        if (type === 'pointermove' && activePointerId !== pointerId) {
+        if (
+          type === 'pointermove' &&
+          activePointerId !== nativeEvent.pointerId
+        ) {
           return;
         } else if (type === 'touchmove') {
           touchEvent = getTouchById(nativeEvent, activePointerId);
@@ -708,7 +712,10 @@ const pressResponderImpl = {
           const buttons = state.buttons;
           let isKeyboardEvent = false;
           let touchEvent;
-          if (type === 'pointerup' && activePointerId !== pointerId) {
+          if (
+            type === 'pointerup' &&
+            activePointerId !== nativeEvent.pointerId
+          ) {
             return;
           } else if (type === 'touchend') {
             touchEvent = getTouchById(nativeEvent, activePointerId);

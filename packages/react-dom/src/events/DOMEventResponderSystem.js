@@ -12,7 +12,7 @@ import {
   PASSIVE_NOT_SUPPORTED,
 } from 'legacy-events/EventSystemFlags';
 import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
-import {HostComponent, SuspenseComponent} from 'shared/ReactWorkTags';
+import {HostComponent, ScopeComponent} from 'shared/ReactWorkTags';
 import type {EventPriority} from 'shared/ReactTypes';
 import type {
   ReactDOMEventResponder,
@@ -75,11 +75,17 @@ const rootEventTypesToEventResponderInstances: Map<
   Set<ReactDOMEventResponderInstance>,
 > = new Map();
 
+type PropagationBehavior = 0 | 1;
+
+const DoNotPropagateToNextResponder = 0;
+const PropagateToNextResponder = 1;
+
 let currentTimeStamp = 0;
 let currentTimers = new Map();
 let currentInstance: null | ReactDOMEventResponderInstance = null;
 let currentTimerIDCounter = 0;
 let currentDocument: null | Document = null;
+let currentPropagationBehavior: PropagationBehavior = DoNotPropagateToNextResponder;
 
 const eventResponderContext: ReactDOMResponderContext = {
   dispatchEvent(
@@ -113,7 +119,7 @@ const eventResponderContext: ReactDOMResponderContext = {
       }
     }
   },
-  isTargetWithinResponder(target: Element | Document): boolean {
+  isTargetWithinResponder(target: null | Element | Document): boolean {
     validateResponderContext();
     if (target != null) {
       let fiber = getClosestInstanceFromNode(target);
@@ -129,7 +135,7 @@ const eventResponderContext: ReactDOMResponderContext = {
     }
     return false;
   },
-  isTargetWithinResponderScope(target: Element | Document): boolean {
+  isTargetWithinResponderScope(target: null | Element | Document): boolean {
     validateResponderContext();
     const componentInstance = ((currentInstance: any): ReactDOMEventResponderInstance);
     const responder = componentInstance.responder;
@@ -158,21 +164,24 @@ const eventResponderContext: ReactDOMResponderContext = {
     validateResponderContext();
     const childFiber = getClosestInstanceFromNode(childTarget);
     const parentFiber = getClosestInstanceFromNode(parentTarget);
-    const parentAlternateFiber = parentFiber.alternate;
 
-    let node = childFiber;
-    while (node !== null) {
-      if (node === parentFiber || node === parentAlternateFiber) {
-        return true;
+    if (childFiber != null && parentFiber != null) {
+      const parentAlternateFiber = parentFiber.alternate;
+      let node = childFiber;
+      while (node !== null) {
+        if (node === parentFiber || node === parentAlternateFiber) {
+          return true;
+        }
+        node = node.return;
       }
-      node = node.return;
+      return false;
     }
-    return false;
+    // Fallback to DOM APIs
+    return parentTarget.contains(childTarget);
   },
   addRootEventTypes(rootEventTypes: Array<string>): void {
     validateResponderContext();
-    const activeDocument = getActiveDocument();
-    listenToResponderEventTypesImpl(rootEventTypes, activeDocument);
+    listenToResponderEventTypesImpl(rootEventTypes, currentDocument);
     for (let i = 0; i < rootEventTypes.length; i++) {
       const rootEventType = rootEventTypes[i];
       const eventResponderInstance = ((currentInstance: any): ReactDOMEventResponderInstance);
@@ -238,28 +247,6 @@ const eventResponderContext: ReactDOMResponderContext = {
       }
     }
   },
-  getFocusableElementsInScope(deep: boolean): Array<HTMLElement> {
-    validateResponderContext();
-    const focusableElements = [];
-    const eventResponderInstance = ((currentInstance: any): ReactDOMEventResponderInstance);
-    const currentResponder = eventResponderInstance.responder;
-    let focusScopeFiber = eventResponderInstance.fiber;
-    if (deep) {
-      let deepNode = focusScopeFiber.return;
-      while (deepNode !== null) {
-        if (doesFiberHaveResponder(deepNode, currentResponder)) {
-          focusScopeFiber = deepNode;
-        }
-        deepNode = deepNode.return;
-      }
-    }
-    const child = focusScopeFiber.child;
-
-    if (child !== null) {
-      collectFocusableElements(child, focusableElements);
-    }
-    return focusableElements;
-  },
   getActiveDocument,
   objectAssign: Object.assign,
   getTimeStamp(): number {
@@ -281,7 +268,19 @@ const eventResponderContext: ReactDOMResponderContext = {
     }
     return false;
   },
+  continuePropagation() {
+    currentPropagationBehavior = PropagateToNextResponder;
+  },
   enqueueStateRestore,
+  getResponderNode(): Element | null {
+    validateResponderContext();
+    const responderFiber = ((currentInstance: any): ReactDOMEventResponderInstance)
+      .fiber;
+    if (responderFiber.tag === ScopeComponent) {
+      return null;
+    }
+    return responderFiber.stateNode;
+  },
 };
 
 function validateEventValue(eventValue: any): void {
@@ -335,38 +334,12 @@ function validateEventValue(eventValue: any): void {
   }
 }
 
-function collectFocusableElements(
-  node: Fiber,
-  focusableElements: Array<HTMLElement>,
-): void {
-  if (isFiberSuspenseAndTimedOut(node)) {
-    const fallbackChild = getSuspenseFallbackChild(node);
-    if (fallbackChild !== null) {
-      collectFocusableElements(fallbackChild, focusableElements);
-    }
-  } else {
-    if (isFiberHostComponentFocusable(node)) {
-      focusableElements.push(node.stateNode);
-    } else {
-      const child = node.child;
-
-      if (child !== null) {
-        collectFocusableElements(child, focusableElements);
-      }
-    }
-  }
-  const sibling = node.sibling;
-
-  if (sibling !== null) {
-    collectFocusableElements(sibling, focusableElements);
-  }
-}
-
 function doesFiberHaveResponder(
   fiber: Fiber,
   responder: ReactDOMEventResponder,
 ): boolean {
-  if (fiber.tag === HostComponent) {
+  const tag = fiber.tag;
+  if (tag === HostComponent || tag === ScopeComponent) {
     const dependencies = fiber.dependencies;
     if (dependencies !== null) {
       const respondersMap = dependencies.responders;
@@ -380,33 +353,6 @@ function doesFiberHaveResponder(
 
 function getActiveDocument(): Document {
   return ((currentDocument: any): Document);
-}
-
-function isFiberHostComponentFocusable(fiber: Fiber): boolean {
-  if (fiber.tag !== HostComponent) {
-    return false;
-  }
-  const {type, memoizedProps} = fiber;
-  if (memoizedProps.tabIndex === -1 || memoizedProps.disabled) {
-    return false;
-  }
-  if (memoizedProps.tabIndex === 0 || memoizedProps.contentEditable === true) {
-    return true;
-  }
-  if (type === 'a' || type === 'area') {
-    return !!memoizedProps.href && memoizedProps.rel !== 'ignore';
-  }
-  if (type === 'input') {
-    return memoizedProps.type !== 'hidden' && memoizedProps.type !== 'file';
-  }
-  return (
-    type === 'button' ||
-    type === 'textarea' ||
-    type === 'object' ||
-    type === 'select' ||
-    type === 'iframe' ||
-    type === 'embed'
-  );
 }
 
 function processTimers(
@@ -443,11 +389,9 @@ function createDOMResponderEvent(
 ): ReactDOMResponderEvent {
   const {buttons, pointerType} = (nativeEvent: any);
   let eventPointerType = '';
-  let pointerId = null;
 
   if (pointerType !== undefined) {
     eventPointerType = pointerType;
-    pointerId = (nativeEvent: any).pointerId;
   } else if (nativeEvent.key !== undefined) {
     eventPointerType = 'keyboard';
   } else if (buttons !== undefined) {
@@ -460,9 +404,7 @@ function createDOMResponderEvent(
     nativeEvent: nativeEvent,
     passive,
     passiveSupported,
-    pointerId,
     pointerType: eventPointerType,
-    responderTarget: null,
     target: nativeEventTarget,
     type: topLevelType,
   };
@@ -519,13 +461,16 @@ function traverseAndHandleEventResponderInstances(
   let node = targetFiber;
   while (node !== null) {
     const {dependencies, tag} = node;
-    if (tag === HostComponent && dependencies !== null) {
+    if (
+      (tag === HostComponent || tag === ScopeComponent) &&
+      dependencies !== null
+    ) {
       const respondersMap = dependencies.responders;
       if (respondersMap !== null) {
         const responderInstances = Array.from(respondersMap.values());
         for (let i = 0, length = responderInstances.length; i < length; i++) {
           const responderInstance = responderInstances[i];
-          const {props, responder, state, target} = responderInstance;
+          const {props, responder, state} = responderInstance;
           if (
             !visitedResponders.has(responder) &&
             validateResponderTargetEventTypes(eventType, responder)
@@ -534,10 +479,11 @@ function traverseAndHandleEventResponderInstances(
             const onEvent = responder.onEvent;
             if (onEvent !== null) {
               currentInstance = responderInstance;
-              responderEvent.responderTarget = ((target: any):
-                | Element
-                | Document);
               onEvent(responderEvent, eventResponderContext, props, state);
+              if (currentPropagationBehavior === PropagateToNextResponder) {
+                visitedResponders.delete(responder);
+                currentPropagationBehavior = DoNotPropagateToNextResponder;
+              }
             }
           }
         }
@@ -554,11 +500,10 @@ function traverseAndHandleEventResponderInstances(
 
     for (let i = 0; i < responderInstances.length; i++) {
       const responderInstance = responderInstances[i];
-      const {props, responder, state, target} = responderInstance;
+      const {props, responder, state} = responderInstance;
       const onRootEvent = responder.onRootEvent;
       if (onRootEvent !== null) {
         currentInstance = responderInstance;
-        responderEvent.responderTarget = ((target: any): Element | Document);
         onRootEvent(responderEvent, eventResponderContext, props, state);
       }
     }
@@ -626,14 +571,6 @@ function validateResponderContext(): void {
   );
 }
 
-function isFiberSuspenseAndTimedOut(fiber: Fiber): boolean {
-  return fiber.tag === SuspenseComponent && fiber.memoizedState !== null;
-}
-
-function getSuspenseFallbackChild(fiber: Fiber): Fiber | null {
-  return ((((fiber.child: any): Fiber).sibling: any): Fiber).child;
-}
-
 export function dispatchEventForResponderEventSystem(
   topLevelType: string,
   targetFiber: null | Fiber,
@@ -646,6 +583,8 @@ export function dispatchEventForResponderEventSystem(
     const previousTimers = currentTimers;
     const previousTimeStamp = currentTimeStamp;
     const previousDocument = currentDocument;
+    const previousPropagationBehavior = currentPropagationBehavior;
+    currentPropagationBehavior = DoNotPropagateToNextResponder;
     currentTimers = null;
     // nodeType 9 is DOCUMENT_NODE
     currentDocument =
@@ -669,6 +608,7 @@ export function dispatchEventForResponderEventSystem(
       currentInstance = previousInstance;
       currentTimeStamp = previousTimeStamp;
       currentDocument = previousDocument;
+      currentPropagationBehavior = previousPropagationBehavior;
     }
   }
 }

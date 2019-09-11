@@ -85,7 +85,6 @@ export type ReactEventResponderInstance<E, C> = {|
   responder: ReactEventResponder<E, C>,
   rootEventTypes: null | Set<string>,
   state: Object,
-  target: mixed,
 |};
 
 export type ReactEventResponderListener<E, C> = {|
@@ -158,4 +157,20 @@ export type ReactFundamentalImpl<C, H> = {
 export type ReactFundamentalComponent<C, H> = {|
   $$typeof: Symbol | number,
   impl: ReactFundamentalImpl<C, H>,
+|};
+
+export type ReactScope = {|
+  $$typeof: Symbol | number,
+  fn: (type: string | Object, props: Object) => boolean,
+|};
+
+export type ReactScopeMethods = {|
+  getChildren(): null | Array<ReactScopeMethods>,
+  getParent(): null | ReactScopeMethods,
+  getScopedNodes(): null | Array<Object>,
+|};
+
+export type ReactScopeInstance = {|
+  fiber: Object,
+  methods: null | ReactScopeMethods,
 |};

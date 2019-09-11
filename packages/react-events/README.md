@@ -22,7 +22,6 @@ type ResponderEventType = string;
 
 type ResponderEvent = {|
   nativeEvent: any,
-  responderTarget: Element | Document,
   target: Element | Document,
   pointerType: string,
   type: string,
@@ -91,11 +90,6 @@ to the `listener`. You can also pass a value that is not an object, but a `boole
 const event = { type: 'press', target, pointerType, x, y };
 context.dispatchEvent('onPress', event, DiscreteEvent);
 ```
-
-### getFocusableElementsInScope(): Array<Element>
-
-Returns every DOM element that can be focused within the scope of the Event
-Responder instance.
 
 ### isTargetWithinNode(target: Element, element: Element): boolean
 

@@ -60,7 +60,7 @@ describe('ReactFreshIntegration', () => {
         babelrc: false,
         presets: ['@babel/react'],
         plugins: [
-          freshPlugin,
+          [freshPlugin, {skipEnvCheck: true}],
           '@babel/plugin-transform-modules-commonjs',
           compileDestructuring && '@babel/plugin-transform-destructuring',
         ].filter(Boolean),
