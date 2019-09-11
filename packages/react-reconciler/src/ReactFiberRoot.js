@@ -84,6 +84,7 @@ type BaseFiberRootProperties = {|
   // The latest time at which a suspended component pinged the root to
   // render again
   lastPingedTime: ExpirationTime,
+  lastExpiredTime: ExpirationTime,
 |};
 
 // The following attributes are only used by interaction tracing builds.
@@ -132,6 +133,7 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   this.lastSuspendedTime = NoWork;
   this.nextKnownPendingLevel = NoWork;
   this.lastPingedTime = NoWork;
+  this.lastExpiredTime = NoWork;
 
   if (enableSchedulerTracing) {
     this.interactionThreadID = unstable_getThreadID();
@@ -192,6 +194,10 @@ export function markRootSuspendedAtTime(
   if (expirationTime <= root.lastPingedTime) {
     root.lastPingedTime = NoWork;
   }
+
+  if (expirationTime <= root.lastExpiredTime) {
+    root.lastExpiredTime = NoWork;
+  }
 }
 
 export function markRootUpdatedAtTime(
@@ -246,5 +252,20 @@ export function markRootFinishedAtTime(
   if (finishedExpirationTime <= root.lastPingedTime) {
     // Clear the pinged time
     root.lastPingedTime = NoWork;
+  }
+
+  if (finishedExpirationTime <= root.lastExpiredTime) {
+    // Clear the expired time
+    root.lastExpiredTime = NoWork;
+  }
+}
+
+export function markRootExpiredAtTime(
+  root: FiberRoot,
+  expirationTime: ExpirationTime,
+): void {
+  const lastExpiredTime = root.lastExpiredTime;
+  if (lastExpiredTime === NoWork || lastExpiredTime > expirationTime) {
+    root.lastExpiredTime = expirationTime;
   }
 }

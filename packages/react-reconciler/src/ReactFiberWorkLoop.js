@@ -68,6 +68,7 @@ import {
   markRootSuspendedAtTime,
   markRootFinishedAtTime,
   markRootUpdatedAtTime,
+  markRootExpiredAtTime,
 } from './ReactFiberRoot';
 import {
   NoMode,
@@ -521,10 +522,14 @@ function getNextRootExpirationTimeToWorkOn(root: FiberRoot): ExpirationTime {
   // Determines the next expiration time that the root should render, taking
   // into account levels that may be suspended, or levels that may have
   // received a ping.
-  //
+
+  const lastExpiredTime = root.lastExpiredTime;
+  if (lastExpiredTime !== NoWork) {
+    return lastExpiredTime;
+  }
+
   // "Pending" refers to any update that hasn't committed yet, including if it
   // suspended. The "suspended" range is therefore a subset.
-
   const firstPendingTime = root.firstPendingTime;
   if (!isRootSuspendedAtTime(root, firstPendingTime)) {
     // The highest priority pending time is not suspended. Let's work on that.
@@ -547,6 +552,17 @@ function getNextRootExpirationTimeToWorkOn(root: FiberRoot): ExpirationTime {
 // the next level that the root has work on. This function is called on every
 // update, and right before exiting a task.
 function ensureRootIsScheduled(root: FiberRoot) {
+  const lastExpiredTime = root.lastExpiredTime;
+  if (lastExpiredTime !== NoWork) {
+    // Special case: Expired work should flush synchronously.
+    root.callbackExpirationTime = Sync;
+    root.callbackPriority = ImmediatePriority;
+    root.callbackNode = scheduleSyncCallback(
+      performSyncWorkOnRoot.bind(null, root, lastExpiredTime),
+    );
+    return;
+  }
+
   const expirationTime = getNextRootExpirationTimeToWorkOn(root);
   const existingCallbackNode = root.callbackNode;
   if (expirationTime === NoWork) {
@@ -621,20 +637,16 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   // event time. The next update will compute a new event time.
   currentEventTime = NoWork;
 
+  if (didTimeout) {
+    // An async update expired.
+    const currentTime = requestCurrentTime();
+    markRootExpiredAtTime(root, currentTime);
+  }
+
   // Determine the next expiration time to work on, using the fields stored
   // on the root.
-  let expirationTime = getNextRootExpirationTimeToWorkOn(root);
+  const expirationTime = getNextRootExpirationTimeToWorkOn(root);
   if (expirationTime !== NoWork) {
-    if (didTimeout) {
-      // An async update expired. There may be other expired updates on
-      // this root.
-      const currentTime = requestCurrentTime();
-      if (currentTime < expirationTime) {
-        // Render all the expired work in a single batch.
-        expirationTime = currentTime;
-      }
-    }
-
     const originalCallbackNode = root.callbackNode;
     try {
       renderRoot(root, expirationTime, didTimeout);
@@ -673,7 +685,9 @@ export function flushRoot(root: FiberRoot, expirationTime: ExpirationTime) {
         'means you attempted to commit from inside a lifecycle method.',
     );
   }
-  performSyncWorkOnRoot(root, expirationTime);
+  markRootExpiredAtTime(root, expirationTime);
+  ensureRootIsScheduled(root);
+  flushSyncCallbackQueue();
 }
 
 export function flushDiscreteUpdates() {
@@ -741,9 +755,8 @@ function flushPendingDiscreteUpdates() {
     const roots = rootsWithPendingDiscreteUpdates;
     rootsWithPendingDiscreteUpdates = null;
     roots.forEach((expirationTime, root) => {
-      scheduleSyncCallback(
-        performSyncWorkOnRoot.bind(null, root, expirationTime),
-      );
+      markRootExpiredAtTime(root, expirationTime);
+      ensureRootIsScheduled(root);
     });
     // Now flush the immediate queue.
     flushSyncCallbackQueue();
@@ -1032,7 +1045,7 @@ function renderRoot(
         // synchronously, to see if the error goes away. If there are lower
         // priority updates, let's include those, too, in case they fix the
         // inconsistency. Render at Idle to include all updates.
-        performSyncWorkOnRoot(root, Idle);
+        markRootExpiredAtTime(root, Idle);
         return;
       }
       // Commit the root in its errored state.
