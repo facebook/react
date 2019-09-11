@@ -843,6 +843,12 @@ function commitUnmount(
           }
         }
       }
+      return;
+    }
+    case ScopeComponent: {
+      if (enableScopeAPI) {
+        safelyDetachRef(current);
+      }
     }
   }
 }

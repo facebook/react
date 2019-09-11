@@ -50,6 +50,32 @@ const createEventTarget = node => ({
   virtualclick(payload) {
     node.dispatchEvent(domEvents.virtualclick(payload));
   },
+  tabNext() {
+    node.dispatchEvent(
+      domEvents.keydown({
+        key: 'Tab',
+      }),
+    );
+    node.dispatchEvent(
+      domEvents.keyup({
+        key: 'Tab',
+      }),
+    );
+  },
+  tabPrevious() {
+    node.dispatchEvent(
+      domEvents.keydown({
+        key: 'Tab',
+        shiftKey: true,
+      }),
+    );
+    node.dispatchEvent(
+      domEvents.keyup({
+        key: 'Tab',
+        shiftKey: true,
+      }),
+    );
+  },
   /**
    * PointerEvent abstraction.
    * Dispatches the expected sequence of PointerEvents, MouseEvents, and
