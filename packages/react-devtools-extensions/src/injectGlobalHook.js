@@ -31,10 +31,10 @@ window.addEventListener('message', function(evt) {
         reactBuildType: evt.data.reactBuildType,
       };
       chrome.runtime.sendMessage(lastDetectionResult);
-    } else if (evt.data.source === 'react-devtools-inject-script' && evt.data.scriptName) {
+    } else if (evt.data.source === 'react-devtools-inject-backend') {
       //Inject the specified script
       var script = document.constructor.prototype.createElement.call(document, 'script');
-      script.src = evt.data.scriptName;
+      script.src = chrome.runtime.getURL('build/backend.js');
       script.charset = "utf-8";
       document.documentElement.appendChild(script);
       script.parentNode.removeChild(script);
