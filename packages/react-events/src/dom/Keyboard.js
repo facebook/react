@@ -22,7 +22,7 @@ type KeyboardProps = {
   disabled?: boolean,
   onKeyDown?: (e: KeyboardEvent) => ?boolean,
   onKeyUp?: (e: KeyboardEvent) => ?boolean,
-  preventKeys?: Array<string>,
+  preventKeys?: PreventKeysArray,
 };
 
 type KeyboardEvent = {|
@@ -37,6 +37,15 @@ type KeyboardEvent = {|
   timeStamp: number,
   defaultPrevented: boolean,
 |};
+
+type ModifiersObject = {|
+  altKey?: boolean,
+  ctrlKey?: boolean,
+  metaKey?: boolean,
+  shiftKey?: boolean,
+|};
+
+type PreventKeysArray = Array<string | Array<string | ModifiersObject>>;
 
 const isArray = Array.isArray;
 const targetEventTypes = ['keydown_active', 'keyup'];
@@ -132,15 +141,7 @@ function createKeyboardEvent(
   defaultPrevented: boolean,
 ): KeyboardEvent {
   const nativeEvent = (event: any).nativeEvent;
-  const {
-    altKey,
-    ctrlKey,
-    isComposing,
-    location,
-    metaKey,
-    repeat,
-    shiftKey,
-  } = nativeEvent;
+  const {altKey, ctrlKey, isComposing, metaKey, shiftKey} = nativeEvent;
 
   return {
     altKey,
@@ -148,9 +149,7 @@ function createKeyboardEvent(
     defaultPrevented,
     isComposing,
     key: getEventKey(nativeEvent),
-    location,
     metaKey,
-    repeat,
     shiftKey,
     target: event.target,
     timeStamp: context.getTimeStamp(),
@@ -196,7 +195,7 @@ const keyboardResponderImpl = {
     }
     let defaultPrevented = nativeEvent.defaultPrevented === true;
     if (type === 'keydown') {
-      const preventKeys = ((props.preventKeys: any): Array<string>);
+      const preventKeys = ((props.preventKeys: any): PreventKeysArray);
       if (!defaultPrevented && isArray(preventKeys)) {
         preventKeyLoop: for (let i = 0; i < preventKeys.length; i++) {
           const preventKey = preventKeys[i];
