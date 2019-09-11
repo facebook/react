@@ -406,7 +406,7 @@ export function scheduleUpdateOnFiber(
       // This is a legacy edge case. The initial mount of a ReactDOM.render-ed
       // root inside of batchedUpdates should be synchronous, but layout updates
       // should be deferred until the end of the batch.
-      performSyncWorkOnRoot(root, Sync);
+      performSyncWorkOnRoot(root);
     } else {
       ensureRootIsScheduled(root);
       schedulePendingInteractions(root, expirationTime);
@@ -558,7 +558,7 @@ function ensureRootIsScheduled(root: FiberRoot) {
     root.callbackExpirationTime = Sync;
     root.callbackPriority = ImmediatePriority;
     root.callbackNode = scheduleSyncCallback(
-      performSyncWorkOnRoot.bind(null, root, lastExpiredTime),
+      performSyncWorkOnRoot.bind(null, root),
     );
     return;
   }
@@ -609,9 +609,7 @@ function ensureRootIsScheduled(root: FiberRoot) {
   let callbackNode;
   if (expirationTime === Sync) {
     // Sync React callbacks are scheduled on a special internal queue
-    callbackNode = scheduleSyncCallback(
-      performSyncWorkOnRoot.bind(null, root, Sync),
-    );
+    callbackNode = scheduleSyncCallback(performSyncWorkOnRoot.bind(null, root));
   } else if (disableSchedulerTimeoutBasedOnReactExpirationTime) {
     callbackNode = scheduleCallback(
       priorityLevel,
@@ -666,7 +664,10 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
 
 // This is the entry point for synchronous tasks that don't go
 // through Scheduler
-function performSyncWorkOnRoot(root, expirationTime) {
+function performSyncWorkOnRoot(root) {
+  // Check if there's expired work on this root. Otherwise, render at Sync.
+  const lastExpiredTime = root.lastExpiredTime;
+  const expirationTime = lastExpiredTime !== NoWork ? lastExpiredTime : Sync;
   try {
     renderRoot(root, expirationTime, true);
   } finally {
