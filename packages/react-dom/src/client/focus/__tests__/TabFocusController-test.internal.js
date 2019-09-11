@@ -11,15 +11,15 @@ import {createEventTarget} from 'react-events/src/dom/testing-library';
 
 let React;
 let ReactFeatureFlags;
-let TabFocusContainer;
+let TabFocusController;
 
-describe('TabFocusContainer', () => {
+describe('TabFocusController', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableScopeAPI = true;
     ReactFeatureFlags.enableFlareAPI = true;
-    TabFocusContainer = require('../TabFocusContainer').TabFocusContainer;
+    TabFocusController = require('../TabFocusController').TabFocusController;
     React = require('react');
   });
 
@@ -38,7 +38,7 @@ describe('TabFocusContainer', () => {
       container = null;
     });
 
-    it('should work as expected with simple tab operations', () => {
+    it('handles tab operations', () => {
       const inputRef = React.createRef();
       const input2Ref = React.createRef();
       const buttonRef = React.createRef();
@@ -46,13 +46,13 @@ describe('TabFocusContainer', () => {
       const divRef = React.createRef();
 
       const Test = () => (
-        <TabFocusContainer>
+        <TabFocusController>
           <input ref={inputRef} />
           <button ref={buttonRef} />
           <div ref={divRef} tabIndex={0} />
           <input ref={input2Ref} tabIndex={-1} />
           <button ref={butto2nRef} />
-        </TabFocusContainer>
+        </TabFocusController>
       );
 
       ReactDOM.render(<Test />, container);
@@ -67,19 +67,19 @@ describe('TabFocusContainer', () => {
       expect(document.activeElement).toBe(divRef.current);
     });
 
-    it('should work as expected with wrapping tab operations', () => {
+    it('handles tab operations with containment', () => {
       const inputRef = React.createRef();
       const input2Ref = React.createRef();
       const buttonRef = React.createRef();
       const button2Ref = React.createRef();
 
       const Test = () => (
-        <TabFocusContainer>
+        <TabFocusController contain={true}>
           <input ref={inputRef} tabIndex={-1} />
           <button ref={buttonRef} id={1} />
           <button ref={button2Ref} id={2} />
           <input ref={input2Ref} tabIndex={-1} />
-        </TabFocusContainer>
+        </TabFocusController>
       );
 
       ReactDOM.render(<Test />, container);
@@ -96,7 +96,7 @@ describe('TabFocusContainer', () => {
       expect(document.activeElement).toBe(button2Ref.current);
     });
 
-    it('should work as expected when nested', () => {
+    it('handles tab operations when controllers are nested', () => {
       const inputRef = React.createRef();
       const input2Ref = React.createRef();
       const buttonRef = React.createRef();
@@ -105,16 +105,16 @@ describe('TabFocusContainer', () => {
       const button4Ref = React.createRef();
 
       const Test = () => (
-        <TabFocusContainer>
+        <TabFocusController>
           <input ref={inputRef} tabIndex={-1} />
           <button ref={buttonRef} id={1} />
-          <TabFocusContainer>
+          <TabFocusController>
             <button ref={button2Ref} id={2} />
             <button ref={button3Ref} id={3} />
-          </TabFocusContainer>
+          </TabFocusController>
           <input ref={input2Ref} tabIndex={-1} />
           <button ref={button4Ref} id={4} />
-        </TabFocusContainer>
+        </TabFocusController>
       );
 
       ReactDOM.render(<Test />, container);
@@ -125,12 +125,6 @@ describe('TabFocusContainer', () => {
       createEventTarget(document.activeElement).tabNext();
       expect(document.activeElement).toBe(button3Ref.current);
       createEventTarget(document.activeElement).tabNext();
-      expect(document.activeElement).toBe(button2Ref.current);
-      // Focus is contained, so have to manually move it out
-      button4Ref.current.focus();
-      createEventTarget(document.activeElement).tabNext();
-      expect(document.activeElement).toBe(buttonRef.current);
-      createEventTarget(document.activeElement).tabPrevious();
       expect(document.activeElement).toBe(button4Ref.current);
       createEventTarget(document.activeElement).tabPrevious();
       expect(document.activeElement).toBe(button3Ref.current);
@@ -138,7 +132,7 @@ describe('TabFocusContainer', () => {
       expect(document.activeElement).toBe(button2Ref.current);
     });
 
-    it('should work as expected when nested with scope that is contained', () => {
+    it('handles tab operations when controllers are nested with containment', () => {
       const inputRef = React.createRef();
       const input2Ref = React.createRef();
       const buttonRef = React.createRef();
@@ -147,16 +141,16 @@ describe('TabFocusContainer', () => {
       const button4Ref = React.createRef();
 
       const Test = () => (
-        <TabFocusContainer>
+        <TabFocusController>
           <input ref={inputRef} tabIndex={-1} />
           <button ref={buttonRef} id={1} />
-          <TabFocusContainer>
+          <TabFocusController contain={true}>
             <button ref={button2Ref} id={2} />
             <button ref={button3Ref} id={3} />
-          </TabFocusContainer>
+          </TabFocusController>
           <input ref={input2Ref} tabIndex={-1} />
           <button ref={button4Ref} id={4} />
-        </TabFocusContainer>
+        </TabFocusController>
       );
 
       ReactDOM.render(<Test />, container);
@@ -197,14 +191,14 @@ describe('TabFocusContainer', () => {
       }
 
       const Test = () => (
-        <TabFocusContainer>
+        <TabFocusController>
           <button ref={buttonRef} id={1} />
           <button ref={button2Ref} id={2} />
           <React.Suspense fallback={<button ref={button3Ref} id={3} />}>
             <Component />
           </React.Suspense>
           <button ref={button4Ref} id={4} />
-        </TabFocusContainer>
+        </TabFocusController>
       );
 
       ReactDOM.render(<Test />, container);
@@ -220,6 +214,50 @@ describe('TabFocusContainer', () => {
       expect(document.activeElement).toBe(button3Ref.current);
       createEventTarget(document.activeElement).tabPrevious();
       expect(document.activeElement).toBe(button2Ref.current);
+    });
+
+    it('allows for imperative tab focus control', () => {
+      const firstFocusControllerRef = React.createRef();
+      const secondFocusControllerRef = React.createRef();
+      const buttonRef = React.createRef();
+      const button2Ref = React.createRef();
+      const divRef = React.createRef();
+
+      const Test = () => (
+        <div>
+          <TabFocusController ref={firstFocusControllerRef}>
+            <input tabIndex={-1} />
+            <button ref={buttonRef} />
+            <button ref={button2Ref} />
+            <input tabIndex={-1} />
+          </TabFocusController>
+          <TabFocusController ref={secondFocusControllerRef}>
+            <input tabIndex={-1} />
+            <div ref={divRef} tabIndex={0} />
+          </TabFocusController>
+        </div>
+      );
+
+      ReactDOM.render(<Test />, container);
+      const firstFocusController = firstFocusControllerRef.current;
+      const secondFocusController = secondFocusControllerRef.current;
+
+      firstFocusController.focusFirst();
+      expect(document.activeElement).toBe(buttonRef.current);
+      firstFocusController.focusNext();
+      expect(document.activeElement).toBe(button2Ref.current);
+      firstFocusController.focusPrevious();
+      expect(document.activeElement).toBe(buttonRef.current);
+
+      const nextController = firstFocusController.getNextController();
+      expect(nextController).toBe(secondFocusController);
+      nextController.focusNext();
+      expect(document.activeElement).toBe(divRef.current);
+
+      const previousController = nextController.getPreviousController();
+      expect(previousController).toBe(firstFocusController);
+      previousController.focusNext();
+      expect(document.activeElement).toBe(buttonRef.current);
     });
   });
 });
