@@ -11,10 +11,10 @@ describe('when Trusted Types are available in global object', () => {
       isScript: () => false,
       isScriptURL: () => false,
     };
-    React = require('react');
-    ReactDOM = require('react-dom');
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableTrustedTypesIntegration = true;
+    React = require('react');
+    ReactDOM = require('react-dom');
   });
 
   afterEach(() => {
@@ -90,9 +90,10 @@ describe('when Trusted Types are available in global object', () => {
       ReactDOM.render(<script>alert("I am not executed")</script>, container);
     }).toWarnDev(
       'Warning: Encountered a script tag while rendering React component. ' +
-        'Scripts inside React components are never executed when rendering' +
-        'on the client. Consider using tamplate tag instead ' +
-        '(https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template).',
+        'Scripts inside React components are never executed when rendering ' +
+        'on the client. Consider using template tag instead ' +
+        '(https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template).\n' +
+        '    in script (at **)',
     );
 
     const spy = spyOnDev(console, 'error');

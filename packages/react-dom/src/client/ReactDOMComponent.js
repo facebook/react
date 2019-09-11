@@ -422,19 +422,22 @@ export function createElement(
         type,
       );
     }
+
     if (type === 'script') {
       // Create the script via .innerHTML so its "parser-inserted" flag is
       // set to true and it does not execute
       const div = ownerDocument.createElement('div');
-      if (__DEV__ && enableTrustedTypesIntegration && !didWarnScriptTags) {
-        warning(
-          false,
-          'Encountered a script tag while rendering React component. ' +
-            'Scripts inside React components are never executed when rendering' +
-            'on the client. Consider using tamplate tag instead ' +
-            '(https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template).',
-        );
-        didWarnScriptTags = true;
+      if (__DEV__) {
+        if (enableTrustedTypesIntegration && !didWarnScriptTags) {
+          warning(
+            false,
+            'Encountered a script tag while rendering React component. ' +
+              'Scripts inside React components are never executed when rendering ' +
+              'on the client. Consider using template tag instead ' +
+              '(https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template).',
+          );
+          didWarnScriptTags = true;
+        }
       }
       div.innerHTML = '<script><' + '/script>'; // eslint-disable-line
       // This is guaranteed to yield a script element.

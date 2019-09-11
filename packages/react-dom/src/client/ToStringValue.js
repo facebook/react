@@ -43,7 +43,7 @@ export function getToStringValue(value: mixed): ToStringValue {
  */
 let isTrustedTypesValue: (value: any) => boolean;
 // $FlowExpectedError - TrustedTypes are defined only in some browsers or with polyfill
-if (typeof trustedTypes !== 'undefined') {
+if (enableTrustedTypesIntegration && typeof trustedTypes !== 'undefined') {
   isTrustedTypesValue = (value: any) =>
     trustedTypes.isHTML(value) ||
     trustedTypes.isScript(value) ||
