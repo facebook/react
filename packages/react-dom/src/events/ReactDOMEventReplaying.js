@@ -16,7 +16,7 @@ import {
   unstable_scheduleCallback as scheduleCallback,
   unstable_NormalPriority as NormalPriority,
 } from 'scheduler';
-import {attemptToReplayEvent} from './ReactDOMEventListener';
+import {attemptToDispatchEvent} from './ReactDOMEventListener';
 
 // TODO: Upgrade this definition once we're on a newer version of Flow that
 // has this definition built-in.
@@ -164,7 +164,7 @@ function replayUnblockedEvents() {
       // We're still blocked.
       return;
     }
-    let nextBlockedOn = attemptToReplayEvent(
+    let nextBlockedOn = attemptToDispatchEvent(
       nextDiscreteEvent.topLevelType,
       nextDiscreteEvent.eventSystemFlags,
       nextDiscreteEvent.nativeEvent,
