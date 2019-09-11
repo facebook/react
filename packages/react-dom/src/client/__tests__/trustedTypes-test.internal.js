@@ -1,8 +1,11 @@
 describe('when Trusted Types are available in global object', () => {
   let React;
   let ReactDOM;
+  let ReactFeatureFlags;
+  let container;
 
   beforeEach(() => {
+    container = document.createElement('div');
     window.trustedTypes = {
       isHTML: () => true,
       isScript: () => false,
@@ -10,14 +13,16 @@ describe('when Trusted Types are available in global object', () => {
     };
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    ReactFeatureFlags.enableTrustedTypesIntegration = true;
   });
 
   afterEach(() => {
     delete window.trustedTypes;
+    ReactFeatureFlags.enableTrustedTypesIntegration = false;
   });
 
   it('should not stringify trusted values', () => {
-    const container = document.createElement('div');
     const trustedObject = {toString: () => 'I look like a trusted object'};
     class Component extends React.Component {
       state = {inner: undefined};
@@ -27,8 +32,8 @@ describe('when Trusted Types are available in global object', () => {
     }
 
     const isHTMLSpy = jest.spyOn(window.trustedTypes, ['isHTML']);
-    const instace = ReactDOM.render(<Component />, container);
-    instace.setState({inner: trustedObject});
+    const instance = ReactDOM.render(<Component />, container);
+    instance.setState({inner: trustedObject});
 
     expect(container.firstChild.innerHTML).toBe(trustedObject.toString());
     expect(isHTMLSpy).toHaveBeenCalledWith(trustedObject);
@@ -62,27 +67,38 @@ describe('when Trusted Types are available in global object', () => {
 
     it('should log a warning', () => {
       class Component extends React.Component {
-        state = {inner: undefined};
         render() {
-          return <svg dangerouslySetInnerHTML={{__html: this.state.inner}} />;
+          return <svg dangerouslySetInnerHTML={{__html: 'unsafe html'}} />;
         }
       }
-      const errorSpy = spyOnDev(console, 'error');
-
-      const container = document.createElement('div');
-      const instace = ReactDOM.render(<Component />, container);
-      instace.setState({inner: 'anyValue'});
-
-      if (__DEV__) {
-        expect(errorSpy).toHaveBeenCalledWith(
-          "Warning: Using 'dangerouslySetInnerHTML' in an svg element with " +
-            'Trusted Types enabled in an Internet Explorer will cause ' +
-            'the trusted value to be converted to string. Assigning string ' +
-            "to 'innerHTML' will throw an error if Trusted Types are enforced. " +
-            "You can try to wrap your svg element inside a div and use 'dangerouslySetInnerHTML' " +
-            'on the enclosing div instead.',
-        );
-      }
+      expect(() => {
+        ReactDOM.render(<Component />, container);
+      }).toWarnDev(
+        "Warning: Using 'dangerouslySetInnerHTML' in an svg element with " +
+          'Trusted Types enabled in an Internet Explorer will cause ' +
+          'the trusted value to be converted to string. Assigning string ' +
+          "to 'innerHTML' will throw an error if Trusted Types are enforced. " +
+          "You can try to wrap your svg element inside a div and use 'dangerouslySetInnerHTML' " +
+          'on the enclosing div instead.',
+        {withoutStack: true},
+      );
     });
+  });
+
+  it('should warn once when rendering script tag in jsx on client', () => {
+    expect(() => {
+      ReactDOM.render(<script>alert("I am not executed")</script>, container);
+    }).toWarnDev(
+      'Warning: Encountered a script tag while rendering React component. ' +
+        'Scripts inside React components are never executed when rendering' +
+        'on the client. Consider using tamplate tag instead ' +
+        '(https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template).',
+    );
+
+    const spy = spyOnDev(console, 'error');
+    ReactDOM.render(<script>alert("I am not executed")</script>, container);
+    if (__DEV__) {
+      expect(spy).toHaveBeenCalledTimes(0);
+    }
   });
 });

@@ -7,6 +7,8 @@
  * @flow
  */
 
+import {enableTrustedTypesIntegration} from 'shared/ReactFeatureFlags';
+
 export opaque type ToStringValue =
   | boolean
   | number
@@ -64,7 +66,11 @@ export opaque type TrustedValue: {toString(): string} = {toString(): string};
  */
 export function toStringOrTrustedType(value: any): string | TrustedValue {
   // fast-path string values as it's most frequent usage of the function
-  if (typeof value !== 'string' && isTrustedTypesValue(value)) {
+  if (
+    enableTrustedTypesIntegration &&
+    typeof value !== 'string' &&
+    isTrustedTypesValue(value)
+  ) {
     return value;
   } else {
     return '' + value;

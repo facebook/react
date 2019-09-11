@@ -97,3 +97,5 @@ export const warnAboutStringRefs = false;
 export const disableLegacyContext = false;
 
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
+
+export const enableTrustedTypesIntegration = false;

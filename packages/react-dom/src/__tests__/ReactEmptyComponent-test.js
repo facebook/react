@@ -145,22 +145,10 @@ describe('ReactEmptyComponent', () => {
 
     expect(function() {
       ReactTestUtils.renderIntoDocument(instance1);
-    }).toWarnDev(
-      'Warning: Encountered script tag while rendering React component. ' +
-        'Scripts inside React components are parser inserted into document ' +
-        'and they are never executed. Furthemore rendering script nodes ' +
-        'inside components breaks when using Trusted Types.',
-      {withoutStack: true},
-    );
+    }).not.toThrow();
     expect(function() {
       ReactTestUtils.renderIntoDocument(instance2);
-    }).toWarnDev(
-      'Warning: Encountered script tag while rendering React component. ' +
-        'Scripts inside React components are parser inserted into document ' +
-        'and they are never executed. Furthemore rendering script nodes ' +
-        'inside components breaks when using Trusted Types.',
-      {withoutStack: true},
-    );
+    }).not.toThrow();
 
     expect(log).toHaveBeenCalledTimes(4);
     expect(log).toHaveBeenNthCalledWith(1, null);

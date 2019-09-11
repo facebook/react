@@ -87,10 +87,14 @@ import {validateProperties as validateInputProperties} from '../shared/ReactDOMN
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
 import {toStringOrTrustedType} from './ToStringValue';
 
-import {enableFlareAPI} from 'shared/ReactFeatureFlags';
+import {
+  enableFlareAPI,
+  enableTrustedTypesIntegration,
+} from 'shared/ReactFeatureFlags';
 
 let didWarnInvalidHydration = false;
 let didWarnShadyDOM = false;
+let didWarnScriptTags = false;
 
 const DANGEROUSLY_SET_INNER_HTML = 'dangerouslySetInnerHTML';
 const SUPPRESS_CONTENT_EDITABLE_WARNING = 'suppressContentEditableWarning';
@@ -422,14 +426,15 @@ export function createElement(
       // Create the script via .innerHTML so its "parser-inserted" flag is
       // set to true and it does not execute
       const div = ownerDocument.createElement('div');
-      if (__DEV__) {
-        warningWithoutStack(
+      if (__DEV__ && enableTrustedTypesIntegration && !didWarnScriptTags) {
+        warning(
           false,
-          'Encountered script tag while rendering React component. ' +
-            'Scripts inside React components are parser inserted into document ' +
-            'and they are never executed. Furthemore rendering script nodes ' +
-            'inside components breaks when using Trusted Types.',
+          'Encountered a script tag while rendering React component. ' +
+            'Scripts inside React components are never executed when rendering' +
+            'on the client. Consider using tamplate tag instead ' +
+            '(https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template).',
         );
+        didWarnScriptTags = true;
       }
       div.innerHTML = '<script><' + '/script>'; // eslint-disable-line
       // This is guaranteed to yield a script element.

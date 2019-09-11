@@ -22,6 +22,7 @@ export const {
   enableUserBlockingEvents,
   disableLegacyContext,
   disableSchedulerTimeoutBasedOnReactExpirationTime,
+  enableTrustedTypesIntegration,
 } = require('ReactFeatureFlags');
 
 // In www, we have experimental support for gathering data

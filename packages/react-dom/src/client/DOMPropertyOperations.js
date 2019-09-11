@@ -178,7 +178,7 @@ export function setValueForProperty(
       // ('' + value) makes it output the correct toString()-value.
       attributeValue = toStringOrTrustedType(value);
       if (propertyInfo.sanitizeURL) {
-        sanitizeURL('' + attributeValue.toString());
+        sanitizeURL(attributeValue.toString());
       }
     }
     if (attributeNamespace) {
