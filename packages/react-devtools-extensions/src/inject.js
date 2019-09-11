@@ -1,14 +1,9 @@
 /* global chrome */
 
-export default function inject(scriptName: string, done: ?Function) {
+export default function inject(scriptName: string, done: ? Function) {
   const source = `
-  // the prototype stuff is in case document.createElement has been modified
   (function () {
-    var script = document.constructor.prototype.createElement.call(document, 'script');
-    script.src = "${scriptName}";
-    script.charset = "utf-8";
-    document.documentElement.appendChild(script);
-    script.parentNode.removeChild(script);
+    window.postMessage({ source: 'react-devtools-inject-backend', type: "FROM_PAGE", text: "Hello from the webpage!" }, "*");
   })()
   `;
 
