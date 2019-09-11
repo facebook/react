@@ -31,12 +31,10 @@ window.addEventListener('message', function(evt) {
         reactBuildType: evt.data.reactBuildType,
       };
       chrome.runtime.sendMessage(lastDetectionResult);
-
-      // Inject the backend. This is done in the content script to avoid CSP
-      // and Trusted Types violations, since content scripts can modify the DOM
-      // and are not subject to the page's policies.
     } else if (evt.data.source === 'react-devtools-inject-backend') {
-      // the prototype stuff is in case document.createElement has been modified
+      // The backend is injected by the content script to avoid CSP and Trusted Types violations,
+      // since content scripts can modify the DOM and are not subject to the page's policies.
+      // The prototype stuff is in case document.createElement has been modified.
       const script = document.constructor.prototype.createElement.call(
         document,
         'script',
