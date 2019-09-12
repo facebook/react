@@ -16,8 +16,7 @@
 .Name {
   font-size: var(--font-size-sans-large);
   white-space: nowrap;
-  overflow-x: hidden;
-  text-overflow: ellipsis;
+  overflow-x: scroll;
 }
 
 .NothingSelected {

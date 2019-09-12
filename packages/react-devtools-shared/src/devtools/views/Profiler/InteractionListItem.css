@@ -16,8 +16,7 @@
 
 .Name {
   white-space: nowrap;
-  overflow-x: hidden;
-  text-overflow: ellipsis;
+  overflow-x: scroll;
 }
 
 .Timeline {
