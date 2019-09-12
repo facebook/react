@@ -12,6 +12,7 @@ import {createEventTarget} from 'react-events/src/dom/testing-library';
 let React;
 let ReactFeatureFlags;
 let TabFocusController;
+let ReactTabFocus;
 
 describe('TabFocusController', () => {
   beforeEach(() => {
@@ -19,7 +20,8 @@ describe('TabFocusController', () => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableScopeAPI = true;
     ReactFeatureFlags.enableFlareAPI = true;
-    TabFocusController = require('../TabFocusController').TabFocusController;
+    ReactTabFocus = require('../ReactTabFocus');
+    TabFocusController = ReactTabFocus.TabFocusController;
     React = require('react');
   });
 
@@ -242,21 +244,25 @@ describe('TabFocusController', () => {
       const firstFocusController = firstFocusControllerRef.current;
       const secondFocusController = secondFocusControllerRef.current;
 
-      firstFocusController.focusFirst();
+      ReactTabFocus.focusFirst(firstFocusController);
       expect(document.activeElement).toBe(buttonRef.current);
-      firstFocusController.focusNext();
+      ReactTabFocus.focusNext(firstFocusController);
       expect(document.activeElement).toBe(button2Ref.current);
-      firstFocusController.focusPrevious();
+      ReactTabFocus.focusPrevious(firstFocusController);
       expect(document.activeElement).toBe(buttonRef.current);
 
-      const nextController = firstFocusController.getNextController();
+      const nextController = ReactTabFocus.getNextController(
+        firstFocusController,
+      );
       expect(nextController).toBe(secondFocusController);
-      nextController.focusNext();
+      ReactTabFocus.focusNext(nextController);
       expect(document.activeElement).toBe(divRef.current);
 
-      const previousController = nextController.getPreviousController();
+      const previousController = ReactTabFocus.getPreviousController(
+        nextController,
+      );
       expect(previousController).toBe(firstFocusController);
-      previousController.focusNext();
+      ReactTabFocus.focusNext(previousController);
       expect(document.activeElement).toBe(buttonRef.current);
     });
   });

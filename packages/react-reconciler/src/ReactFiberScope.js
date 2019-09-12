@@ -133,10 +133,6 @@ export function createScopeMethods(
       collectNearestChildScopeMethods(node.child, scope, childrenScopes);
       return childrenScopes.length === 0 ? null : childrenScopes;
     },
-    getHandle(): null | mixed {
-      const currentFiber = ((instance.fiber: any): Fiber);
-      return currentFiber.memoizedProps.handle || null;
-    },
     getParent(): null | ReactScopeMethods {
       let node = ((instance.fiber: any): Fiber).return;
       while (node !== null) {
