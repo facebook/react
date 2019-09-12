@@ -360,6 +360,8 @@ function processTimers(
   delay: number,
 ): void {
   const timersArr = Array.from(timers.values());
+  const previousInstance = currentInstance;
+  const previousTimers = currentTimers;
   try {
     batchedEventUpdates(() => {
       for (let i = 0; i < timersArr.length; i++) {
@@ -374,8 +376,8 @@ function processTimers(
       }
     });
   } finally {
-    currentTimers = null;
-    currentInstance = null;
+    currentTimers = previousTimers;
+    currentInstance = previousInstance;
     currentTimeStamp = 0;
   }
 }
@@ -518,14 +520,16 @@ export function mountEventResponder(
 ) {
   const onMount = responder.onMount;
   if (onMount !== null) {
+    const previousInstance = currentInstance;
+    const previousTimers = currentTimers;
     currentInstance = responderInstance;
     try {
       batchedEventUpdates(() => {
         onMount(eventResponderContext, props, state);
       });
     } finally {
-      currentInstance = null;
-      currentTimers = null;
+      currentInstance = previousInstance;
+      currentTimers = previousTimers;
     }
   }
 }
@@ -537,14 +541,16 @@ export function unmountEventResponder(
   const onUnmount = responder.onUnmount;
   if (onUnmount !== null) {
     let {props, state} = responderInstance;
+    const previousInstance = currentInstance;
+    const previousTimers = currentTimers;
     currentInstance = responderInstance;
     try {
       batchedEventUpdates(() => {
         onUnmount(eventResponderContext, props, state);
       });
     } finally {
-      currentInstance = null;
-      currentTimers = null;
+      currentInstance = previousInstance;
+      currentTimers = previousTimers;
     }
   }
   const rootEventTypesSet = responderInstance.rootEventTypes;
