@@ -11,7 +11,6 @@
 
 .TreeWrapper {
   flex: 0 0 65%;
-  overflow: auto;
 }
 
 .SelectedElementWrapper {

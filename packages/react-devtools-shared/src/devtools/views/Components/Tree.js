@@ -425,6 +425,7 @@ function updateIndentationSizeVar(
   prevListWidthRef.current = listWidth;
 
   let maxIndentationSize: number = indentationSizeRef.current;
+  let innerElementWidth: number = 0;
 
   // eslint-disable-next-line no-for-of-loops/no-for-of-loops
   for (let child of innerDiv.children) {
@@ -446,8 +447,8 @@ function updateIndentationSizeVar(
     }
 
     const remainingWidth = Math.max(0, listWidth - childWidth);
-
     maxIndentationSize = Math.min(maxIndentationSize, remainingWidth / depth);
+    innerElementWidth = Math.max(innerElementWidth, childWidth, listWidth);
   }
 
   // Ensures indentation will not fall below a minimum width..
@@ -459,6 +460,7 @@ function updateIndentationSizeVar(
   indentationSizeRef.current = maxIndentationSize;
 
   list.style.setProperty('--indentation-size', `${maxIndentationSize}px`);
+  list.style.setProperty('--inner-element-width', `${innerElementWidth}px`);
 }
 
 function InnerElementType({children, style, ...rest}) {

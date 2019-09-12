@@ -8,14 +8,15 @@
 
   /* Default size will be adjusted by Tree after scrolling */
   --indentation-size: 12px;
-}
 
-.List {
-  overflow-x: hidden !important;
+  /* Inner element width will be calculated based on tree element widths */
+  --inner-element-width: 100%;
 }
 
 .InnerElementType {
-  overflow-x: hidden;
+  overflow: hidden;
+  position: relative;
+  width: var(--inner-element-width) !important;
 }
 
 .SearchInput {

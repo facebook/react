@@ -117,7 +117,7 @@ export default function ElementView({data, index, style}: Props) {
         style={{
           // Left offset presents the appearance of a nested tree structure.
           // We must use padding rather than margin/left because of the selected background color.
-          transform: `translateX(calc(${depth} * var(--indentation-size)))`,
+          paddingLeft: `calc(${depth} * var(--indentation-size) + 0.25rem)`,
         }}>
         {ownerID === null ? (
           <ExpandCollapseToggle element={element} store={store} />
