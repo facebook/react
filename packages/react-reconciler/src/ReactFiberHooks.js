@@ -43,7 +43,6 @@ import {
   warnIfNotCurrentlyActingUpdatesInDev,
   warnIfNotScopedWithMatchingAct,
   markRenderEventTimeAndConfig,
-  markUnprocessedUpdateTime,
 } from './ReactFiberWorkLoop';
 
 import invariant from 'shared/invariant';
@@ -532,7 +531,6 @@ export function resetHooks(): void {
   // This is used to reset the state of this module when a component throws.
   // It's also called inside mountIndeterminateComponent if we determine the
   // component is a module-style component.
-
   renderExpirationTime = NoWork;
   currentlyRenderingFiber = null;
 
@@ -757,7 +755,6 @@ function updateReducer<S, I, A>(
         // Update the remaining priority in the queue.
         if (updateExpirationTime > remainingExpirationTime) {
           remainingExpirationTime = updateExpirationTime;
-          markUnprocessedUpdateTime(remainingExpirationTime);
         }
       } else {
         // This update does have sufficient priority.
