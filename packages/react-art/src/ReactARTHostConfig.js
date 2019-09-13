@@ -432,7 +432,6 @@ export function mountResponderInstance(
   props: Object,
   state: Object,
   instance: Object,
-  rootContainerInstance: Object,
 ) {
   throw new Error('Not yet implemented.');
 }

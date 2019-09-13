@@ -1,0 +1,561 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`InspectedElementContext should dehydrate complex nested values when requested: 1: Initially inspect element 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "hooks": null,
+  "props": {
+    "set_of_sets": {
+      "0": {},
+      "1": {}
+    }
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should dehydrate complex nested values when requested: 2: Inspect props.set_of_sets.0 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "hooks": null,
+  "props": {
+    "set_of_sets": {
+      "0": {
+        "0": 1,
+        "1": 2,
+        "2": 3
+      },
+      "1": {}
+    }
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should include updates for nested values that were previously hydrated: 1: Initially inspect element 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "hooks": null,
+  "props": {
+    "nestedObject": {
+      "a": {},
+      "c": {}
+    }
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should include updates for nested values that were previously hydrated: 2: Inspect props.nestedObject.a 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "hooks": null,
+  "props": {
+    "nestedObject": {
+      "a": {
+        "value": 1,
+        "b": {
+          "value": 1
+        }
+      },
+      "c": {}
+    }
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should include updates for nested values that were previously hydrated: 3: Inspect props.nestedObject.c 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "hooks": null,
+  "props": {
+    "nestedObject": {
+      "a": {
+        "value": 1,
+        "b": {
+          "value": 1
+        }
+      },
+      "c": {
+        "value": 1,
+        "d": {
+          "value": 1,
+          "e": {}
+        }
+      }
+    }
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should include updates for nested values that were previously hydrated: 4: update inspected element 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "hooks": null,
+  "props": {
+    "nestedObject": {
+      "a": {
+        "value": 2,
+        "b": {
+          "value": 2
+        }
+      },
+      "c": {
+        "value": 2,
+        "d": {
+          "value": 2,
+          "e": {}
+        }
+      }
+    }
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should inspect hooks for components that only use context: 1: Inspected element 2 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "hooks": [
+    {
+      "id": null,
+      "isStateEditable": false,
+      "name": "Context",
+      "value": true,
+      "subHooks": []
+    }
+  ],
+  "props": {
+    "a": 1,
+    "b": "abc"
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should inspect the currently selected element: 1: Inspected element 2 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "hooks": [
+    {
+      "id": 0,
+      "isStateEditable": true,
+      "name": "State",
+      "value": 1,
+      "subHooks": []
+    }
+  ],
+  "props": {
+    "a": 1,
+    "b": "abc"
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should not dehydrate nested values until explicitly requested: 1: Initially inspect element 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "hooks": [
+    {
+      "id": 0,
+      "isStateEditable": true,
+      "name": "State",
+      "value": {
+        "foo": {}
+      },
+      "subHooks": []
+    }
+  ],
+  "props": {
+    "nestedObject": {
+      "a": {}
+    }
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should not dehydrate nested values until explicitly requested: 2: Inspect props.nestedObject.a 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "hooks": [
+    {
+      "id": 0,
+      "isStateEditable": true,
+      "name": "State",
+      "value": {
+        "foo": {}
+      },
+      "subHooks": []
+    }
+  ],
+  "props": {
+    "nestedObject": {
+      "a": {
+        "b": {
+          "c": {}
+        }
+      }
+    }
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should not dehydrate nested values until explicitly requested: 3: Inspect props.nestedObject.a.b.c 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "hooks": [
+    {
+      "id": 0,
+      "isStateEditable": true,
+      "name": "State",
+      "value": {
+        "foo": {}
+      },
+      "subHooks": []
+    }
+  ],
+  "props": {
+    "nestedObject": {
+      "a": {
+        "b": {
+          "c": [
+            {
+              "d": {}
+            }
+          ]
+        }
+      }
+    }
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should not dehydrate nested values until explicitly requested: 4: Inspect props.nestedObject.a.b.c.0.d 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "hooks": [
+    {
+      "id": 0,
+      "isStateEditable": true,
+      "name": "State",
+      "value": {
+        "foo": {}
+      },
+      "subHooks": []
+    }
+  ],
+  "props": {
+    "nestedObject": {
+      "a": {
+        "b": {
+          "c": [
+            {
+              "d": {
+                "e": {}
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should not dehydrate nested values until explicitly requested: 5: Inspect hooks.0.value 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "hooks": [
+    {
+      "id": 0,
+      "isStateEditable": true,
+      "name": "State",
+      "value": {
+        "foo": {
+          "bar": {}
+        }
+      },
+      "subHooks": []
+    }
+  ],
+  "props": {
+    "nestedObject": {
+      "a": {
+        "b": {
+          "c": [
+            {
+              "d": {
+                "e": {}
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should not dehydrate nested values until explicitly requested: 6: Inspect hooks.0.value.foo.bar 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "hooks": [
+    {
+      "id": 0,
+      "isStateEditable": true,
+      "name": "State",
+      "value": {
+        "foo": {
+          "bar": {
+            "baz": "hi"
+          }
+        }
+      },
+      "subHooks": []
+    }
+  ],
+  "props": {
+    "nestedObject": {
+      "a": {
+        "b": {
+          "c": [
+            {
+              "d": {
+                "e": {}
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should not re-render a function with hooks if it did not update since it was last inspected: 1: initial render 1`] = `
+{
+  "id": 3,
+  "owners": null,
+  "context": null,
+  "hooks": [
+    {
+      "id": 0,
+      "isStateEditable": true,
+      "name": "State",
+      "value": 0,
+      "subHooks": []
+    }
+  ],
+  "props": {
+    "a": 1,
+    "b": "abc"
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should not re-render a function with hooks if it did not update since it was last inspected: 2: updated state 1`] = `
+{
+  "id": 3,
+  "owners": null,
+  "context": null,
+  "hooks": [
+    {
+      "id": 0,
+      "isStateEditable": true,
+      "name": "State",
+      "value": 0,
+      "subHooks": []
+    }
+  ],
+  "props": {
+    "a": 2,
+    "b": "def"
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should not tear if hydration is requested after an update: 1: Initially inspect element 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "hooks": null,
+  "props": {
+    "nestedObject": {
+      "value": 1,
+      "a": {}
+    }
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should not tear if hydration is requested after an update: 2: Inspect props.nestedObject.a 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "hooks": null,
+  "props": {
+    "nestedObject": {
+      "value": 2,
+      "a": {
+        "value": 2,
+        "b": {
+          "value": 2
+        }
+      }
+    }
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should poll for updates for the currently selected element: 1: initial render 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "hooks": null,
+  "props": {
+    "a": 1,
+    "b": "abc"
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should poll for updates for the currently selected element: 2: updated state 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "hooks": null,
+  "props": {
+    "a": 2,
+    "b": "def"
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should support complex data types: 1: Inspected element 2 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "hooks": null,
+  "props": {
+    "array_buffer": {},
+    "date": {},
+    "fn": {},
+    "html_element": {},
+    "immutable": {
+      "0": {},
+      "1": {},
+      "2": {}
+    },
+    "map": {
+      "0": {},
+      "1": {}
+    },
+    "map_of_maps": {
+      "0": {},
+      "1": {}
+    },
+    "react_element": {},
+    "set": {
+      "0": "abc",
+      "1": 123
+    },
+    "set_of_sets": {
+      "0": {},
+      "1": {}
+    },
+    "symbol": {},
+    "typed_array": {
+      "0": 100,
+      "1": -100,
+      "2": 0
+    }
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should support custom objects with enumerable properties and getters: 1: Inspected element 2 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "hooks": null,
+  "props": {
+    "data": {
+      "_number": 42,
+      "number": 42
+    }
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should support simple data types: 1: Initial inspection 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "hooks": null,
+  "props": {
+    "boolean_false": false,
+    "boolean_true": true,
+    "infinity": null,
+    "integer_zero": 0,
+    "integer_one": 1,
+    "float": 1.23,
+    "string": "abc",
+    "string_empty": "",
+    "nan": null,
+    "value_null": null
+  },
+  "state": null
+}
+`;

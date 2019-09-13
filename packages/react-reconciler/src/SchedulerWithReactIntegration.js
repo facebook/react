@@ -160,7 +160,9 @@ export function cancelCallback(callbackNode: mixed) {
 
 export function flushSyncCallbackQueue() {
   if (immediateQueueCallbackNode !== null) {
-    Scheduler_cancelCallback(immediateQueueCallbackNode);
+    const node = immediateQueueCallbackNode;
+    immediateQueueCallbackNode = null;
+    Scheduler_cancelCallback(node);
   }
   flushSyncCallbackQueueImpl();
 }

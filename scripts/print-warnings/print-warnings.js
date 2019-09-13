@@ -38,7 +38,14 @@ function transform(file, enc, cb) {
       return;
     }
 
-    const ast = babylon.parse(source, babylonOptions);
+    let ast;
+    try {
+      ast = babylon.parse(source, babylonOptions);
+    } catch (error) {
+      console.error('Failed to parse source file:', file.path);
+      throw error;
+    }
+
     traverse(ast, {
       CallExpression: {
         exit: function(astPath) {
@@ -75,6 +82,7 @@ function transform(file, enc, cb) {
 gs([
   'packages/**/*.js',
   '!packages/shared/warning.js',
+  '!packages/react-devtools*/**/*.js',
   '!**/__tests__/**/*.js',
   '!**/__mocks__/**/*.js',
 ]).pipe(

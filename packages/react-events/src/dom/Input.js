@@ -179,30 +179,31 @@ const inputResponderImpl = {
     context: ReactDOMResponderContext,
     props: InputResponderProps,
   ): void {
-    const {responderTarget, type, target} = event;
+    const {type, target} = event;
 
     if (props.disabled) {
       return;
     }
-    if (target !== responderTarget || responderTarget === null) {
+    const currentTarget = context.getResponderNode();
+    if (target !== currentTarget || currentTarget === null) {
       return;
     }
     switch (type) {
       default: {
         if (shouldUseChangeEvent(target) && type === 'change') {
-          dispatchBothChangeEvents(event, context, props, responderTarget);
+          dispatchBothChangeEvents(event, context, props, currentTarget);
         } else if (
           isTextInputElement(target) &&
           (type === 'input' || type === 'change') &&
           updateValueIfChanged(target)
         ) {
-          dispatchBothChangeEvents(event, context, props, responderTarget);
+          dispatchBothChangeEvents(event, context, props, currentTarget);
         } else if (
           isCheckable(target) &&
           type === 'click' &&
           updateValueIfChanged(target)
         ) {
-          dispatchBothChangeEvents(event, context, props, responderTarget);
+          dispatchBothChangeEvents(event, context, props, currentTarget);
         }
         break;
       }
@@ -215,7 +216,7 @@ export const InputResponder = React.unstable_createResponder(
   inputResponderImpl,
 );
 
-export function useInputResponder(
+export function useInput(
   props: InputResponderProps,
 ): ReactEventResponderListener<any, any> {
   return React.unstable_useResponder(InputResponder, props);

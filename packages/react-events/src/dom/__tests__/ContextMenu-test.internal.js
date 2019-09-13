@@ -10,17 +10,16 @@
 'use strict';
 
 import {
-  dispatchLongPressContextMenu,
-  dispatchRightClickContextMenu,
-  dispatchModifiedClickContextMenu,
+  buttonsType,
+  createEventTarget,
   platform,
   setPointerEvent,
-} from '../test-utils';
+} from '../testing-library';
 
 let React;
 let ReactFeatureFlags;
 let ReactDOM;
-let useContextMenuResponder;
+let useContextMenu;
 
 function initializeModules(hasPointerEvents) {
   setPointerEvent(hasPointerEvents);
@@ -29,8 +28,7 @@ function initializeModules(hasPointerEvents) {
   ReactFeatureFlags.enableFlareAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
-  useContextMenuResponder = require('react-events/context-menu')
-    .useContextMenuResponder;
+  useContextMenu = require('react-events/context-menu').useContextMenu;
 }
 
 const forcePointerEvents = true;
@@ -57,16 +55,21 @@ describe.each(table)('ContextMenu responder', hasPointerEvents => {
       const preventDefault = jest.fn();
       const ref = React.createRef();
       const Component = () => {
-        const listener = useContextMenuResponder({onContextMenu});
+        const listener = useContextMenu({onContextMenu});
         return <div ref={ref} listeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
 
-      dispatchRightClickContextMenu(ref.current, {preventDefault});
+      const target = createEventTarget(ref.current);
+      target.contextmenu({preventDefault});
       expect(preventDefault).toHaveBeenCalledTimes(1);
       expect(onContextMenu).toHaveBeenCalledTimes(1);
       expect(onContextMenu).toHaveBeenCalledWith(
-        expect.objectContaining({pointerType: 'mouse', type: 'contextmenu'}),
+        expect.objectContaining({
+          buttons: buttonsType.secondary,
+          pointerType: 'mouse',
+          type: 'contextmenu',
+        }),
       );
     });
 
@@ -75,16 +78,21 @@ describe.each(table)('ContextMenu responder', hasPointerEvents => {
       const preventDefault = jest.fn();
       const ref = React.createRef();
       const Component = () => {
-        const listener = useContextMenuResponder({onContextMenu});
+        const listener = useContextMenu({onContextMenu});
         return <div ref={ref} listeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
 
-      dispatchLongPressContextMenu(ref.current, {preventDefault});
+      const target = createEventTarget(ref.current);
+      target.contextmenu({preventDefault}, {pointerType: 'touch'});
       expect(preventDefault).toHaveBeenCalledTimes(1);
       expect(onContextMenu).toHaveBeenCalledTimes(1);
       expect(onContextMenu).toHaveBeenCalledWith(
-        expect.objectContaining({pointerType: 'touch', type: 'contextmenu'}),
+        expect.objectContaining({
+          buttons: buttonsType.none,
+          pointerType: 'touch',
+          type: 'contextmenu',
+        }),
       );
     });
 
@@ -92,7 +100,7 @@ describe.each(table)('ContextMenu responder', hasPointerEvents => {
       const onContextMenu = jest.fn();
       const ref = React.createRef();
       const Component = () => {
-        const listener = useContextMenuResponder({
+        const listener = useContextMenu({
           onContextMenu,
           disabled: true,
         });
@@ -100,7 +108,8 @@ describe.each(table)('ContextMenu responder', hasPointerEvents => {
       };
       ReactDOM.render(<Component />, container);
 
-      dispatchRightClickContextMenu(ref.current);
+      const target = createEventTarget(ref.current);
+      target.contextmenu();
       expect(onContextMenu).toHaveBeenCalledTimes(0);
     });
 
@@ -109,7 +118,7 @@ describe.each(table)('ContextMenu responder', hasPointerEvents => {
       const onContextMenu = jest.fn();
       const ref = React.createRef();
       const Component = () => {
-        const listener = useContextMenuResponder({
+        const listener = useContextMenu({
           onContextMenu,
           preventDefault: false,
         });
@@ -117,7 +126,8 @@ describe.each(table)('ContextMenu responder', hasPointerEvents => {
       };
       ReactDOM.render(<Component />, container);
 
-      dispatchRightClickContextMenu(ref.current, {preventDefault});
+      const target = createEventTarget(ref.current);
+      target.contextmenu({preventDefault});
       expect(preventDefault).toHaveBeenCalledTimes(0);
       expect(onContextMenu).toHaveBeenCalledTimes(1);
     });
@@ -137,15 +147,20 @@ describe.each(table)('ContextMenu responder', hasPointerEvents => {
       const onContextMenu = jest.fn();
       const ref = React.createRef();
       const Component = () => {
-        const listener = useContextMenuResponder({onContextMenu});
+        const listener = useContextMenu({onContextMenu});
         return <div ref={ref} listeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
 
-      dispatchModifiedClickContextMenu(ref.current);
+      const target = createEventTarget(ref.current);
+      target.contextmenu({}, {modified: true});
       expect(onContextMenu).toHaveBeenCalledTimes(1);
       expect(onContextMenu).toHaveBeenCalledWith(
-        expect.objectContaining({pointerType: 'mouse', type: 'contextmenu'}),
+        expect.objectContaining({
+          buttons: buttonsType.primary,
+          pointerType: 'mouse',
+          type: 'contextmenu',
+        }),
       );
     });
   });
@@ -164,12 +179,13 @@ describe.each(table)('ContextMenu responder', hasPointerEvents => {
       const onContextMenu = jest.fn();
       const ref = React.createRef();
       const Component = () => {
-        const listener = useContextMenuResponder({onContextMenu});
+        const listener = useContextMenu({onContextMenu});
         return <div ref={ref} listeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
 
-      dispatchModifiedClickContextMenu(ref.current);
+      const target = createEventTarget(ref.current);
+      target.contextmenu({}, {modified: true});
       expect(onContextMenu).toHaveBeenCalledTimes(0);
     });
   });

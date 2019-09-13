@@ -22,6 +22,8 @@ export const {
   enableUserBlockingEvents,
   disableLegacyContext,
   disableSchedulerTimeoutBasedOnReactExpirationTime,
+  warnAboutStringRefs,
+  warnAboutDefaultPropsOnFunctionComponents,
 } = require('ReactFeatureFlags');
 
 // In www, we have experimental support for gathering data
@@ -73,15 +75,13 @@ export const enableFlareAPI = true;
 
 export const enableFundamentalAPI = false;
 
+export const enableScopeAPI = true;
+
 export const enableJSXTransformAPI = true;
 
 export const warnAboutUnmockedScheduler = true;
 
 export const enableSuspenseCallback = true;
-
-export const warnAboutDefaultPropsOnFunctionComponents = false;
-
-export const warnAboutStringRefs = false;
 
 export const flushSuspenseFallbacksInTests = true;
 

@@ -428,6 +428,11 @@ export function renderWithHooks(
     do {
       didScheduleRenderPhaseUpdate = false;
       numberOfReRenders += 1;
+      if (__DEV__) {
+        // Even when hot reloading, allow dependencies to stabilize
+        // after first render to prevent infinite render phase updates.
+        ignorePreviousDependencies = false;
+      }
 
       // Start over from the beginning of the list
       nextCurrentHook = current !== null ? current.memoizedState : null;
@@ -1122,7 +1127,7 @@ function dispatchAction<S, A>(
 
   if (__DEV__) {
     warning(
-      arguments.length <= 3,
+      typeof arguments[3] !== 'function',
       "State updates from the useState() and useReducer() Hooks don't support the " +
         'second callback argument. To execute a side effect after ' +
         'rendering, declare it in the component body with useEffect().',

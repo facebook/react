@@ -13,9 +13,8 @@ import {
   enableProfiling,
 } from './SchedulerFeatureFlags';
 import {
-  requestHostCallback as requestHostCallbackWithoutProfiling,
+  requestHostCallback,
   requestHostTimeout,
-  cancelHostCallback,
   cancelHostTimeout,
   shouldYieldToHost,
   getCurrentTime,
@@ -65,7 +64,7 @@ var taskQueue = [];
 var timerQueue = [];
 
 // Incrementing id counter. Used to maintain insertion order.
-var taskIdCounter = 0;
+var taskIdCounter = 1;
 
 // Pausing the scheduler is useful for debugging.
 var isSchedulerPaused = false;
@@ -78,17 +77,6 @@ var isPerformingWork = false;
 
 var isHostCallbackScheduled = false;
 var isHostTimeoutScheduled = false;
-
-function requestHostCallbackWithProfiling(cb, time) {
-  if (enableProfiling) {
-    markSchedulerSuspended(time);
-    requestHostCallbackWithoutProfiling(cb);
-  }
-}
-
-const requestHostCallback = enableProfiling
-  ? requestHostCallbackWithProfiling
-  : requestHostCallbackWithoutProfiling;
 
 function advanceTimers(currentTime) {
   // Check for tasks that are no longer delayed and add them to the queue.
@@ -121,7 +109,7 @@ function handleTimeout(currentTime) {
   if (!isHostCallbackScheduled) {
     if (peek(taskQueue) !== null) {
       isHostCallbackScheduled = true;
-      requestHostCallback(flushWork, currentTime);
+      requestHostCallback(flushWork);
     } else {
       const firstTimer = peek(timerQueue);
       if (firstTimer !== null) {
@@ -132,7 +120,7 @@ function handleTimeout(currentTime) {
 }
 
 function flushWork(hasTimeRemaining, initialTime) {
-  if (isHostCallbackScheduled) {
+  if (enableProfiling) {
     markSchedulerUnsuspended(initialTime);
   }
 
@@ -147,75 +135,82 @@ function flushWork(hasTimeRemaining, initialTime) {
   isPerformingWork = true;
   const previousPriorityLevel = currentPriorityLevel;
   try {
-    let currentTime = initialTime;
-    advanceTimers(currentTime);
-    currentTask = peek(taskQueue);
-    while (
-      currentTask !== null &&
-      !(enableSchedulerDebugging && isSchedulerPaused)
-    ) {
-      if (
-        currentTask.expirationTime > currentTime &&
-        (!hasTimeRemaining || shouldYieldToHost())
-      ) {
-        // This currentTask hasn't expired, and we've reached the deadline.
-        break;
-      }
-      const callback = currentTask.callback;
-      if (callback !== null) {
-        currentTask.callback = null;
-        currentPriorityLevel = currentTask.priorityLevel;
-        const didUserCallbackTimeout =
-          currentTask.expirationTime <= currentTime;
-        markTaskRun(currentTask, currentTime);
-        const continuationCallback = callback(didUserCallbackTimeout);
-        currentTime = getCurrentTime();
-        if (typeof continuationCallback === 'function') {
-          currentTask.callback = continuationCallback;
-          markTaskYield(currentTask, currentTime);
-        } else {
-          if (enableProfiling) {
-            markTaskCompleted(currentTask, currentTime);
-            currentTask.isQueued = false;
-          }
-          if (currentTask === peek(taskQueue)) {
-            pop(taskQueue);
-          }
+    if (enableProfiling) {
+      try {
+        return workLoop(hasTimeRemaining, initialTime);
+      } catch (error) {
+        if (currentTask !== null) {
+          const currentTime = getCurrentTime();
+          markTaskErrored(currentTask, currentTime);
+          currentTask.isQueued = false;
         }
-        advanceTimers(currentTime);
-      } else {
-        pop(taskQueue);
+        throw error;
       }
-      currentTask = peek(taskQueue);
-    }
-    // Return whether there's additional work
-    if (currentTask !== null) {
-      markSchedulerSuspended(currentTime);
-      isHostCallbackScheduled = true;
-      return true;
     } else {
-      let firstTimer = peek(timerQueue);
-      if (firstTimer !== null) {
-        requestHostTimeout(handleTimeout, firstTimer.startTime - currentTime);
-      }
-      return false;
+      // No catch in prod codepath.
+      return workLoop(hasTimeRemaining, initialTime);
     }
-  } catch (error) {
-    if (currentTask !== null) {
-      if (enableProfiling) {
-        const currentTime = getCurrentTime();
-        markTaskErrored(currentTask, currentTime);
-        currentTask.isQueued = false;
-      }
-      if (currentTask === peek(taskQueue)) {
-        pop(taskQueue);
-      }
-    }
-    throw error;
   } finally {
     currentTask = null;
     currentPriorityLevel = previousPriorityLevel;
     isPerformingWork = false;
+    if (enableProfiling) {
+      const currentTime = getCurrentTime();
+      markSchedulerSuspended(currentTime);
+    }
+  }
+}
+
+function workLoop(hasTimeRemaining, initialTime) {
+  let currentTime = initialTime;
+  advanceTimers(currentTime);
+  currentTask = peek(taskQueue);
+  while (
+    currentTask !== null &&
+    !(enableSchedulerDebugging && isSchedulerPaused)
+  ) {
+    if (
+      currentTask.expirationTime > currentTime &&
+      (!hasTimeRemaining || shouldYieldToHost())
+    ) {
+      // This currentTask hasn't expired, and we've reached the deadline.
+      break;
+    }
+    const callback = currentTask.callback;
+    if (callback !== null) {
+      currentTask.callback = null;
+      currentPriorityLevel = currentTask.priorityLevel;
+      const didUserCallbackTimeout = currentTask.expirationTime <= currentTime;
+      markTaskRun(currentTask, currentTime);
+      const continuationCallback = callback(didUserCallbackTimeout);
+      currentTime = getCurrentTime();
+      if (typeof continuationCallback === 'function') {
+        currentTask.callback = continuationCallback;
+        markTaskYield(currentTask, currentTime);
+      } else {
+        if (enableProfiling) {
+          markTaskCompleted(currentTask, currentTime);
+          currentTask.isQueued = false;
+        }
+        if (currentTask === peek(taskQueue)) {
+          pop(taskQueue);
+        }
+      }
+      advanceTimers(currentTime);
+    } else {
+      pop(taskQueue);
+    }
+    currentTask = peek(taskQueue);
+  }
+  // Return whether there's additional work
+  if (currentTask !== null) {
+    return true;
+  } else {
+    let firstTimer = peek(timerQueue);
+    if (firstTimer !== null) {
+      requestHostTimeout(handleTimeout, firstTimer.startTime - currentTime);
+    }
+    return false;
   }
 }
 
@@ -302,8 +297,6 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
 
   var startTime;
   var timeout;
-  // TODO: Expose the current label when profiling, somehow
-  // var label;
   if (typeof options === 'object' && options !== null) {
     var delay = options.delay;
     if (typeof delay === 'number' && delay > 0) {
@@ -315,12 +308,6 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
       typeof options.timeout === 'number'
         ? options.timeout
         : timeoutForPriorityLevel(priorityLevel);
-    // if (enableProfiling) {
-    //   var _label = options.label;
-    //   if (typeof _label === 'string') {
-    //     label = _label;
-    //   }
-    // }
   } else {
     timeout = timeoutForPriorityLevel(priorityLevel);
     startTime = currentTime;
@@ -329,19 +316,15 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
   var expirationTime = startTime + timeout;
 
   var newTask = {
-    id: ++taskIdCounter,
+    id: taskIdCounter++,
     callback,
     priorityLevel,
     startTime,
     expirationTime,
     sortIndex: -1,
   };
-
   if (enableProfiling) {
     newTask.isQueued = false;
-    // if (typeof options === 'object' && options !== null) {
-    //   newTask.label = label;
-    // }
   }
 
   if (startTime > currentTime) {
@@ -370,7 +353,7 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
     // wait until the next time we yield.
     if (!isHostCallbackScheduled && !isPerformingWork) {
       isHostCallbackScheduled = true;
-      requestHostCallback(flushWork, currentTime);
+      requestHostCallback(flushWork);
     }
   }
 
@@ -385,12 +368,7 @@ function unstable_continueExecution() {
   isSchedulerPaused = false;
   if (!isHostCallbackScheduled && !isPerformingWork) {
     isHostCallbackScheduled = true;
-    if (enableProfiling) {
-      const currentTime = getCurrentTime();
-      requestHostCallbackWithProfiling(flushWork, currentTime);
-    } else {
-      requestHostCallback(flushWork);
-    }
+    requestHostCallback(flushWork);
   }
 }
 
@@ -399,26 +377,18 @@ function unstable_getFirstCallbackNode() {
 }
 
 function unstable_cancelCallback(task) {
-  if (enableProfiling && task.isQueued) {
-    const currentTime = getCurrentTime();
-    markTaskCanceled(task, currentTime);
-    task.isQueued = false;
-  }
-  if (task !== null && task === peek(taskQueue)) {
-    pop(taskQueue);
-    if (enableProfiling && !isPerformingWork && taskQueue.length === 0) {
-      // The queue is now empty.
+  if (enableProfiling) {
+    if (task.isQueued) {
       const currentTime = getCurrentTime();
-      markSchedulerUnsuspended(currentTime);
-      isHostCallbackScheduled = false;
-      cancelHostCallback();
+      markTaskCanceled(task, currentTime);
+      task.isQueued = false;
     }
-  } else {
-    // Null out the callback to indicate the task has been canceled. (Can't
-    // remove from the queue because you can't remove arbitrary nodes from an
-    // array based heap, only the first one.)
-    task.callback = null;
   }
+
+  // Null out the callback to indicate the task has been canceled. (Can't
+  // remove from the queue because you can't remove arbitrary nodes from an
+  // array based heap, only the first one.)
+  task.callback = null;
 }
 
 function unstable_getCurrentPriorityLevel() {
@@ -463,15 +433,10 @@ export {
   forceFrameRate as unstable_forceFrameRate,
 };
 
-export const unstable_startLoggingProfilingEvents = enableProfiling
-  ? startLoggingProfilingEvents
-  : null;
-
-export const unstable_stopLoggingProfilingEvents = enableProfiling
-  ? stopLoggingProfilingEvents
-  : null;
-
-// Expose a shared array buffer that contains profiling information.
-export const unstable_sharedProfilingBuffer = enableProfiling
-  ? sharedProfilingBuffer
+export const unstable_Profiling = enableProfiling
+  ? {
+      startLoggingProfilingEvents,
+      stopLoggingProfilingEvents,
+      sharedProfilingBuffer,
+    }
   : null;

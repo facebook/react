@@ -17,6 +17,11 @@ import {
   isSuspenseInstanceFallback,
 } from './ReactFiberHostConfig';
 
+export type SuspenseHydrationCallbacks = {
+  onHydrated?: (suspenseInstance: SuspenseInstance) => void,
+  onDeleted?: (suspenseInstance: SuspenseInstance) => void,
+};
+
 // A null SuspenseState represents an unsuspended normal Suspense boundary.
 // A non-null SuspenseState means that it is blocked for one reason or another.
 // - A non-null dehydrated field means it's blocked pending hydration.

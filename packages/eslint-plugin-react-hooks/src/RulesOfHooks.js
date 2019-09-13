@@ -432,9 +432,12 @@ export default {
                 'React Hook function.';
               context.report({node: hook, message});
             } else if (codePathNode.type === 'Program') {
-              // For now, ignore if it's in top level scope.
-              // We could warn here but there are false positives related
-              // configuring libraries like `history`.
+              // These are dangerous if you have inline requires enabled.
+              const message =
+                `React Hook "${context.getSource(hook)}" cannot be called ` +
+                'at the top level. React Hooks must be called in a ' +
+                'React function component or a custom React Hook function.';
+              context.report({node: hook, message});
             } else {
               // Assume in all other cases the user called a hook in some
               // random function callback. This should usually be true for

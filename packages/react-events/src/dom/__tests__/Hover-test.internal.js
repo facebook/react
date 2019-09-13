@@ -9,20 +9,13 @@
 
 'use strict';
 
-import {
-  dispatchPointerCancel,
-  dispatchPointerHoverEnter,
-  dispatchPointerHoverExit,
-  dispatchPointerHoverMove,
-  dispatchTouchTap,
-  setPointerEvent,
-} from '../test-utils';
+import {createEventTarget, setPointerEvent} from '../testing-library';
 
 let React;
 let ReactFeatureFlags;
 let ReactDOM;
 let HoverResponder;
-let useHoverResponder;
+let useHover;
 
 function initializeModules(hasPointerEvents) {
   jest.resetModules();
@@ -33,7 +26,7 @@ function initializeModules(hasPointerEvents) {
   React = require('react');
   ReactDOM = require('react-dom');
   HoverResponder = require('react-events/hover').HoverResponder;
-  useHoverResponder = require('react-events/hover').useHoverResponder;
+  useHover = require('react-events/hover').useHover;
 }
 
 const forcePointerEvents = true;
@@ -64,7 +57,7 @@ describe.each(table)('Hover responder', hasPointerEvents => {
       onHoverEnd = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        const listener = useHoverResponder({
+        const listener = useHover({
           disabled: true,
           onHoverChange,
           onHoverStart,
@@ -77,9 +70,9 @@ describe.each(table)('Hover responder', hasPointerEvents => {
     });
 
     it('does not call callbacks', () => {
-      const target = ref.current;
-      dispatchPointerHoverEnter(target);
-      dispatchPointerHoverExit(target);
+      const target = createEventTarget(ref.current);
+      target.pointerenter();
+      target.pointerexit();
       expect(onHoverChange).not.toBeCalled();
       expect(onHoverStart).not.toBeCalled();
       expect(onHoverMove).not.toBeCalled();
@@ -94,7 +87,7 @@ describe.each(table)('Hover responder', hasPointerEvents => {
       onHoverStart = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        const listener = useHoverResponder({
+        const listener = useHover({
           onHoverStart: onHoverStart,
         });
         return <div ref={ref} listeners={listener} />;
@@ -103,21 +96,23 @@ describe.each(table)('Hover responder', hasPointerEvents => {
     });
 
     it('is called for mouse pointers', () => {
-      const target = ref.current;
-      dispatchPointerHoverEnter(target);
+      const target = createEventTarget(ref.current);
+      target.pointerenter();
       expect(onHoverStart).toHaveBeenCalledTimes(1);
     });
 
     it('is not called for touch pointers', () => {
-      const target = ref.current;
-      dispatchTouchTap(target);
+      const target = createEventTarget(ref.current);
+      target.pointerdown({pointerType: 'touch'});
+      target.pointerup({pointerType: 'touch'});
       expect(onHoverStart).not.toBeCalled();
     });
 
     it('is called if a mouse pointer is used after a touch pointer', () => {
-      const target = ref.current;
-      dispatchTouchTap(target);
-      dispatchPointerHoverEnter(target);
+      const target = createEventTarget(ref.current);
+      target.pointerdown({pointerType: 'touch'});
+      target.pointerup({pointerType: 'touch'});
+      target.pointerenter();
       expect(onHoverStart).toHaveBeenCalledTimes(1);
     });
   });
@@ -129,7 +124,7 @@ describe.each(table)('Hover responder', hasPointerEvents => {
       onHoverChange = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        const listener = useHoverResponder({
+        const listener = useHover({
           onHoverChange,
         });
         return <div ref={ref} listeners={listener} />;
@@ -138,18 +133,19 @@ describe.each(table)('Hover responder', hasPointerEvents => {
     });
 
     it('is called for mouse pointers', () => {
-      const target = ref.current;
-      dispatchPointerHoverEnter(target);
+      const target = createEventTarget(ref.current);
+      target.pointerenter();
       expect(onHoverChange).toHaveBeenCalledTimes(1);
       expect(onHoverChange).toHaveBeenCalledWith(true);
-      dispatchPointerHoverExit(target);
+      target.pointerexit();
       expect(onHoverChange).toHaveBeenCalledTimes(2);
       expect(onHoverChange).toHaveBeenCalledWith(false);
     });
 
     it('is not called for touch pointers', () => {
-      const target = ref.current;
-      dispatchTouchTap(target);
+      const target = createEventTarget(ref.current);
+      target.pointerdown({pointerType: 'touch'});
+      target.pointerup({pointerType: 'touch'});
       expect(onHoverChange).not.toBeCalled();
     });
   });
@@ -161,7 +157,7 @@ describe.each(table)('Hover responder', hasPointerEvents => {
       onHoverEnd = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        const listener = useHoverResponder({
+        const listener = useHover({
           onHoverEnd,
         });
         return <div ref={ref} listeners={listener} />;
@@ -170,31 +166,32 @@ describe.each(table)('Hover responder', hasPointerEvents => {
     });
 
     it('is called for mouse pointers', () => {
-      const target = ref.current;
-      dispatchPointerHoverEnter(target);
-      dispatchPointerHoverExit(target);
+      const target = createEventTarget(ref.current);
+      target.pointerenter();
+      target.pointerexit();
       expect(onHoverEnd).toHaveBeenCalledTimes(1);
     });
 
     if (hasPointerEvents) {
       it('is called once for cancelled mouse pointers', () => {
-        const target = ref.current;
-        dispatchPointerHoverEnter(target);
-        dispatchPointerCancel(target);
+        const target = createEventTarget(ref.current);
+        target.pointerenter();
+        target.pointercancel();
         expect(onHoverEnd).toHaveBeenCalledTimes(1);
 
         // only called once if cancel follows exit
         onHoverEnd.mockReset();
-        dispatchPointerHoverEnter(target);
-        dispatchPointerHoverExit(target);
-        dispatchPointerCancel(target);
+        target.pointerenter();
+        target.pointerexit();
+        target.pointercancel();
         expect(onHoverEnd).toHaveBeenCalledTimes(1);
       });
     }
 
     it('is not called for touch pointers', () => {
-      const target = ref.current;
-      dispatchTouchTap(target);
+      const target = createEventTarget(ref.current);
+      target.pointerdown({pointerType: 'touch'});
+      target.pointerup({pointerType: 'touch'});
       expect(onHoverEnd).not.toBeCalled();
     });
   });
@@ -204,16 +201,17 @@ describe.each(table)('Hover responder', hasPointerEvents => {
       const onHoverMove = jest.fn();
       const ref = React.createRef();
       const Component = () => {
-        const listener = useHoverResponder({
+        const listener = useHover({
           onHoverMove,
         });
         return <div ref={ref} listeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
 
-      const target = ref.current;
-      dispatchPointerHoverEnter(target);
-      dispatchPointerHoverMove(target, {from: {x: 0, y: 0}, to: {x: 1, y: 1}});
+      const target = createEventTarget(ref.current);
+      target.pointerenter();
+      target.pointerhover({x: 0, y: 0});
+      target.pointerhover({x: 1, y: 1});
       expect(onHoverMove).toHaveBeenCalledTimes(2);
       expect(onHoverMove).toHaveBeenCalledWith(
         expect.objectContaining({type: 'hovermove'}),
@@ -231,7 +229,7 @@ describe.each(table)('Hover responder', hasPointerEvents => {
       };
 
       const Inner = () => {
-        const listener = useHoverResponder({
+        const listener = useHover({
           onHoverStart: createEventHandler('inner: onHoverStart'),
           onHoverEnd: createEventHandler('inner: onHoverEnd'),
           onHoverChange: createEventHandler('inner: onHoverChange'),
@@ -240,7 +238,7 @@ describe.each(table)('Hover responder', hasPointerEvents => {
       };
 
       const Outer = () => {
-        const listener = useHoverResponder({
+        const listener = useHover({
           onHoverStart: createEventHandler('outer: onHoverStart'),
           onHoverEnd: createEventHandler('outer: onHoverEnd'),
           onHoverChange: createEventHandler('outer: onHoverChange'),
@@ -253,15 +251,17 @@ describe.each(table)('Hover responder', hasPointerEvents => {
       };
       ReactDOM.render(<Outer />, container);
 
-      const innerTarget = innerRef.current;
-      const outerTarget = outerRef.current;
+      const innerNode = innerRef.current;
+      const outerNode = outerRef.current;
+      const innerTarget = createEventTarget(innerNode);
+      const outerTarget = createEventTarget(outerNode);
 
-      dispatchPointerHoverEnter(outerTarget, {relatedTarget: container});
-      dispatchPointerHoverExit(outerTarget, {relatedTarget: innerTarget});
-      dispatchPointerHoverEnter(innerTarget, {relatedTarget: outerTarget});
-      dispatchPointerHoverExit(innerTarget, {relatedTarget: outerTarget});
-      dispatchPointerHoverEnter(outerTarget, {relatedTarget: innerTarget});
-      dispatchPointerHoverExit(outerTarget, {relatedTarget: container});
+      outerTarget.pointerenter({relatedTarget: container});
+      outerTarget.pointerexit({relatedTarget: innerNode});
+      innerTarget.pointerenter({relatedTarget: outerNode});
+      innerTarget.pointerexit({relatedTarget: outerNode});
+      outerTarget.pointerenter({relatedTarget: innerNode});
+      outerTarget.pointerexit({relatedTarget: container});
 
       expect(events).toEqual([
         'outer: onHoverStart',
@@ -305,7 +305,7 @@ describe.each(table)('Hover responder', hasPointerEvents => {
       eventLog.push(propertiesWeCareAbout);
     };
     const Component = () => {
-      const listener = useHoverResponder({
+      const listener = useHover({
         onHoverStart: logEvent,
         onHoverEnd: logEvent,
         onHoverMove: logEvent,
@@ -314,14 +314,13 @@ describe.each(table)('Hover responder', hasPointerEvents => {
     };
     ReactDOM.render(<Component />, container);
 
-    const target = ref.current;
+    const node = ref.current;
+    const target = createEventTarget(node);
 
-    dispatchPointerHoverEnter(target, {x: 10, y: 10});
-    dispatchPointerHoverMove(target, {
-      from: {x: 10, y: 10},
-      to: {x: 20, y: 20},
-    });
-    dispatchPointerHoverExit(target, {x: 20, y: 20});
+    target.pointerenter({x: 10, y: 10});
+    target.pointerhover({x: 10, y: 10});
+    target.pointerhover({x: 20, y: 20});
+    target.pointerexit({x: 20, y: 20});
 
     expect(eventLog).toEqual([
       {
@@ -331,7 +330,7 @@ describe.each(table)('Hover responder', hasPointerEvents => {
         pageY: 10,
         clientX: 10,
         clientY: 10,
-        target,
+        target: node,
         timeStamp: timeStamps[0],
         type: 'hoverstart',
         pointerType: 'mouse',
@@ -343,7 +342,7 @@ describe.each(table)('Hover responder', hasPointerEvents => {
         pageY: 10,
         clientX: 10,
         clientY: 10,
-        target,
+        target: node,
         timeStamp: timeStamps[1],
         type: 'hovermove',
         pointerType: 'mouse',
@@ -355,7 +354,7 @@ describe.each(table)('Hover responder', hasPointerEvents => {
         pageY: 20,
         clientX: 20,
         clientY: 20,
-        target,
+        target: node,
         timeStamp: timeStamps[2],
         type: 'hovermove',
         pointerType: 'mouse',
@@ -367,7 +366,7 @@ describe.each(table)('Hover responder', hasPointerEvents => {
         pageY: 20,
         clientX: 20,
         clientY: 20,
-        target,
+        target: node,
         timeStamp: timeStamps[3],
         type: 'hoverend',
         pointerType: 'mouse',

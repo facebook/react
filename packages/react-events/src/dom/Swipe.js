@@ -101,7 +101,6 @@ type SwipeState = {
   swipeTarget: null | Element | Document,
   x: number,
   y: number,
-  ownershipClaimed: boolean,
 };
 
 const swipeResponderImpl = {
@@ -117,7 +116,6 @@ const swipeResponderImpl = {
       swipeTarget: null,
       x: 0,
       y: 0,
-      ownershipClaimed: false,
     };
   },
   onEvent(
@@ -141,25 +139,13 @@ const swipeResponderImpl = {
           const x = (obj: any).screenX;
           const y = (obj: any).screenY;
 
-          let shouldEnableSwiping = true;
-
-          if (props.shouldClaimOwnership && props.shouldClaimOwnership()) {
-            shouldEnableSwiping = context.requestGlobalOwnership();
-            if (shouldEnableSwiping) {
-              state.ownershipClaimed = true;
-            }
-          }
-          if (shouldEnableSwiping) {
-            state.isSwiping = true;
-            state.startX = x;
-            state.startY = y;
-            state.x = x;
-            state.y = y;
-            state.swipeTarget = target;
-            context.addRootEventTypes(rootEventTypes);
-          } else {
-            state.touchId = null;
-          }
+          state.isSwiping = true;
+          state.startX = x;
+          state.startY = y;
+          state.x = x;
+          state.y = y;
+          state.swipeTarget = target;
+          context.addRootEventTypes(rootEventTypes);
         }
         break;
       }
@@ -238,9 +224,6 @@ const swipeResponderImpl = {
           if (state.x === state.startX && state.y === state.startY) {
             return;
           }
-          if (state.ownershipClaimed) {
-            context.releaseOwnership();
-          }
           const direction = state.direction;
           const lastDirection = state.lastDirection;
           if (direction !== lastDirection) {
@@ -298,8 +281,8 @@ export const SwipeResponder = React.unstable_createResponder(
   swipeResponderImpl,
 );
 
-export function useSwipeListener(
+export function useSwipe(
   props: SwipeProps,
 ): ReactEventResponderListener<any, any> {
-  return React.unstable_useListener(SwipeResponder, props);
+  return React.unstable_useResponder(SwipeResponder, props);
 }

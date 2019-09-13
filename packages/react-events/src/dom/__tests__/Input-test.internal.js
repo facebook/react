@@ -13,8 +13,7 @@ let React;
 let ReactFeatureFlags;
 let ReactDOM;
 let InputResponder;
-let useInputResponder;
-let usePressResponder;
+let useInput;
 let Scheduler;
 
 const setUntrackedChecked = Object.getOwnPropertyDescriptor(
@@ -41,8 +40,7 @@ const modulesInit = () => {
   ReactDOM = require('react-dom');
   Scheduler = require('scheduler');
   InputResponder = require('react-events/input').InputResponder;
-  useInputResponder = require('react-events/input').useInputResponder;
-  usePressResponder = require('react-events/press').usePressResponder;
+  useInput = require('react-events/input').useInput;
 };
 
 describe('Input event responder', () => {
@@ -70,7 +68,7 @@ describe('Input event responder', () => {
       ref = React.createRef();
 
       function Component() {
-        const listener = useInputResponder({
+        const listener = useInput({
           disabled: true,
           onChange,
           onValueChange,
@@ -117,7 +115,7 @@ describe('Input event responder', () => {
       }
 
       function Component() {
-        const listener = useInputResponder({
+        const listener = useInput({
           onChange,
           onValueChange,
         });
@@ -157,7 +155,7 @@ describe('Input event responder', () => {
       }
 
       function Component() {
-        const listener = useInputResponder({
+        const listener = useInput({
           onChange,
           onValueChange,
         });
@@ -200,7 +198,7 @@ describe('Input event responder', () => {
       }
 
       function Component() {
-        const listener = useInputResponder({
+        const listener = useInput({
           onChange,
           onValueChange,
         });
@@ -242,7 +240,7 @@ describe('Input event responder', () => {
       }
 
       function Component() {
-        const listener = useInputResponder({
+        const listener = useInput({
           onChange,
           onValueChange,
         });
@@ -283,7 +281,7 @@ describe('Input event responder', () => {
       }
 
       function Component() {
-        const listener = useInputResponder({
+        const listener = useInput({
           onChange,
           onValueChange,
         });
@@ -345,7 +343,7 @@ describe('Input event responder', () => {
       }
 
       function Component() {
-        const listener = useInputResponder({
+        const listener = useInput({
           onChange,
           onValueChange,
         });
@@ -385,7 +383,7 @@ describe('Input event responder', () => {
       }
 
       function Component() {
-        const listener = useInputResponder({
+        const listener = useInput({
           onChange,
           onValueChange,
         });
@@ -438,7 +436,7 @@ describe('Input event responder', () => {
       }
 
       function Component() {
-        const listener = useInputResponder({
+        const listener = useInput({
           onChange,
           onValueChange,
         });
@@ -483,7 +481,7 @@ describe('Input event responder', () => {
       }
 
       function Radio1() {
-        const listener = useInputResponder({
+        const listener = useInput({
           onChange: onChange1,
           onValueChange: onValueChange1,
         });
@@ -491,7 +489,7 @@ describe('Input event responder', () => {
       }
 
       function Radio2() {
-        const listener = useInputResponder({
+        const listener = useInput({
           onChange: onChange2,
           onValueChange: onValueChange2,
         });
@@ -558,7 +556,7 @@ describe('Input event responder', () => {
         onChangeCalled = 0;
         onValueChangeCalled = 0;
         function Component() {
-          const listener = useInputResponder({
+          const listener = useInput({
             onChange,
             onValueChange,
           });
@@ -586,7 +584,7 @@ describe('Input event responder', () => {
         onChangeCalled = 0;
         onValueChangeCalled = 0;
         function Component2() {
-          const listener = useInputResponder({
+          const listener = useInput({
             onChange,
             onValueChange,
           });
@@ -612,7 +610,7 @@ describe('Input event responder', () => {
         onChangeCalled = 0;
         onValueChangeCalled = 0;
         function Component3() {
-          const listener = useInputResponder({
+          const listener = useInput({
             onChange,
             onValueChange,
           });
@@ -652,7 +650,7 @@ describe('Input event responder', () => {
       }
 
       function Component() {
-        const listener = useInputResponder({
+        const listener = useInput({
           onChange,
           onValueChange,
         });
@@ -689,7 +687,7 @@ describe('Input event responder', () => {
       }
 
       function Component() {
-        const listener = useInputResponder({
+        const listener = useInput({
           onChange,
           onValueChange,
         });
@@ -761,7 +759,7 @@ describe('Input event responder', () => {
         let ops = [];
 
         function Component({innerRef, onChange, controlledValue}) {
-          const listener = useInputResponder({
+          const listener = useInput({
             onChange,
           });
           return (
@@ -821,7 +819,7 @@ describe('Input event responder', () => {
         let ops = [];
 
         function Component({innerRef, onChange, controlledValue}) {
-          const listener = useInputResponder({
+          const listener = useInput({
             onChange,
           });
           return (
@@ -896,7 +894,7 @@ describe('Input event responder', () => {
         let ops = [];
 
         function Component({innerRef, onChange, controlledValue}) {
-          const listener = useInputResponder({
+          const listener = useInput({
             onChange,
           });
           return (
@@ -947,96 +945,6 @@ describe('Input event responder', () => {
         expect(ops).toEqual(['render: changed']);
         // Value should be the controlled value, not the original one
         expect(textarea.value).toBe('changed [!]');
-      });
-
-      it('is async for non-input events', () => {
-        const root = ReactDOM.unstable_createRoot(container);
-        let input;
-
-        let ops = [];
-
-        function Component({
-          innerRef,
-          onChange,
-          controlledValue,
-          pressListener,
-        }) {
-          const inputListener = useInputResponder({
-            onChange,
-          });
-          return (
-            <input
-              type="text"
-              ref={innerRef}
-              value={controlledValue}
-              listeners={[inputListener, pressListener]}
-            />
-          );
-        }
-
-        function PressWrapper({innerRef, onPress, onChange, controlledValue}) {
-          const pressListener = usePressResponder({
-            onPress,
-          });
-          return (
-            <Component
-              onChange={onChange}
-              innerRef={el => (input = el)}
-              controlledValue={controlledValue}
-              pressListener={pressListener}
-            />
-          );
-        }
-
-        class ControlledInput extends React.Component {
-          state = {value: 'initial'};
-          onChange = event => this.setState({value: event.target.value});
-          reset = () => {
-            this.setState({value: ''});
-          };
-          render() {
-            ops.push(`render: ${this.state.value}`);
-            const controlledValue =
-              this.state.value === 'changed' ? 'changed [!]' : this.state.value;
-            return (
-              <PressWrapper
-                onPress={this.reset}
-                onChange={this.onChange}
-                innerRef={el => (input = el)}
-                controlledValue={controlledValue}
-              />
-            );
-          }
-        }
-
-        // Initial mount. Test that this is async.
-        root.render(<ControlledInput />);
-        // Should not have flushed yet.
-        expect(ops).toEqual([]);
-        expect(input).toBe(undefined);
-        // Flush callbacks.
-        Scheduler.unstable_flushAll();
-        expect(ops).toEqual(['render: initial']);
-        expect(input.value).toBe('initial');
-
-        ops = [];
-
-        // Trigger a click event
-        input.dispatchEvent(
-          new MouseEvent('mousedown', {bubbles: true, cancelable: true}),
-        );
-        input.dispatchEvent(
-          new MouseEvent('mouseup', {bubbles: true, cancelable: true}),
-        );
-        // Nothing should have changed
-        expect(ops).toEqual([]);
-        expect(input.value).toBe('initial');
-
-        // Flush callbacks.
-        Scheduler.unstable_flushAll();
-        // Now the click update has flushed.
-        expect(ops).toEqual(['render: ']);
-        expect(input.value).toBe('');
       });
     });
   });

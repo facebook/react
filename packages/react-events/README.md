@@ -22,7 +22,6 @@ type ResponderEventType = string;
 
 type ResponderEvent = {|
   nativeEvent: any,
-  responderTarget: Element | Document,
   target: Element | Document,
   pointerType: string,
   type: string,
@@ -49,10 +48,6 @@ elements within the Event Responder.
 ### onMount?: (context: ResponderContext, props, state)
 
 Called after an Event Responder in mounted.
-
-### onOwnershipChange?: (context: ResponderContext, props, state)
-
-Called when ownership is granted or terminated (either globally or for the responder) for an Event Responder instance.
 
 ### onRootEvent?: (event: ResponderEvent, context: ResponderContext, props, state)
 
@@ -96,15 +91,6 @@ const event = { type: 'press', target, pointerType, x, y };
 context.dispatchEvent('onPress', event, DiscreteEvent);
 ```
 
-### getFocusableElementsInScope(): Array<Element>
-
-Returns every DOM element that can be focused within the scope of the Event
-Responder instance.
-
-### hasOwnership(): boolean
-
-Returns `true` if the instance has taken ownership of the responder.
-
 ### isTargetWithinNode(target: Element, element: Element): boolean
 
 Returns `true` if `target` is a child of `element`.
@@ -118,20 +104,9 @@ Returns `true` is the target element is within the subtree of the Event Responde
 Returns `true` is the target element is within the current Event Responder's scope. If the target element
 is within the scope of the same responder, but owned by another Event Responder instance, this will return `false`.
 
-### releaseOwnership(): boolean
-
-Returns `true` if the instance released ownership of the Event Responder instance.
-
 ### removeRootEventTypes(eventTypes: Array<ResponderEventType>)
 
 Remove the root event types added with `addRootEventTypes`.
-
-### requestGlobalOwnership(): boolean
-
-The current Event Responder instance can request global ownership of the event system. When an Event Responder instance
-has global ownership, only that instance and its responder are active. To release ownership to other event responders,
-either `releaseOwnership()` must be called or the Event Responder instance that had global ownership must be
-unmounted. Calling `requestGlobalOwnership` also returns `true`/`false` if the request was successful.
 
 ### setTimeout(func: () => void, delay: number): Symbol
 

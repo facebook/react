@@ -23,29 +23,28 @@ import {
   HostText,
   FundamentalComponent,
 } from 'shared/ReactWorkTags';
-import {NoEffect, Placement} from 'shared/ReactSideEffectTags';
+import {NoEffect, Placement, Hydrating} from 'shared/ReactSideEffectTags';
 import {enableFundamentalAPI} from 'shared/ReactFeatureFlags';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
-const MOUNTING = 1;
-const MOUNTED = 2;
-const UNMOUNTED = 3;
-
-function isFiberMountedImpl(fiber: Fiber): number {
+export function getNearestMountedFiber(fiber: Fiber): null | Fiber {
   let node = fiber;
+  let nearestMounted = fiber;
   if (!fiber.alternate) {
     // If there is no alternate, this might be a new tree that isn't inserted
     // yet. If it is, then it will have a pending insertion effect on it.
-    if ((node.effectTag & Placement) !== NoEffect) {
-      return MOUNTING;
-    }
-    while (node.return) {
-      node = node.return;
-      if ((node.effectTag & Placement) !== NoEffect) {
-        return MOUNTING;
+    let nextNode = node;
+    do {
+      node = nextNode;
+      if ((node.effectTag & (Placement | Hydrating)) !== NoEffect) {
+        // This is an insertion or in-progress hydration. The nearest possible
+        // mounted fiber is the parent but we need to continue to figure out
+        // if that one is still mounted.
+        nearestMounted = node.return;
       }
-    }
+      nextNode = node.return;
+    } while (nextNode);
   } else {
     while (node.return) {
       node = node.return;
@@ -54,15 +53,15 @@ function isFiberMountedImpl(fiber: Fiber): number {
   if (node.tag === HostRoot) {
     // TODO: Check if this was a nested HostRoot when used with
     // renderContainerIntoSubtree.
-    return MOUNTED;
+    return nearestMounted;
   }
   // If we didn't hit the root, that means that we're in an disconnected tree
   // that has been unmounted.
-  return UNMOUNTED;
+  return null;
 }
 
 export function isFiberMounted(fiber: Fiber): boolean {
-  return isFiberMountedImpl(fiber) === MOUNTED;
+  return getNearestMountedFiber(fiber) === fiber;
 }
 
 export function isMounted(component: React$Component<any, any>): boolean {
@@ -88,12 +87,12 @@ export function isMounted(component: React$Component<any, any>): boolean {
   if (!fiber) {
     return false;
   }
-  return isFiberMountedImpl(fiber) === MOUNTED;
+  return getNearestMountedFiber(fiber) === fiber;
 }
 
 function assertIsMounted(fiber) {
   invariant(
-    isFiberMountedImpl(fiber) === MOUNTED,
+    getNearestMountedFiber(fiber) === fiber,
     'Unable to find node on an unmounted component.',
   );
 }
@@ -102,12 +101,12 @@ export function findCurrentFiberUsingSlowPath(fiber: Fiber): Fiber | null {
   let alternate = fiber.alternate;
   if (!alternate) {
     // If there is no alternate, then we only need to check if it is mounted.
-    const state = isFiberMountedImpl(fiber);
+    const nearestMounted = getNearestMountedFiber(fiber);
     invariant(
-      state !== UNMOUNTED,
+      nearestMounted !== null,
       'Unable to find node on an unmounted component.',
     );
-    if (state === MOUNTING) {
+    if (nearestMounted !== fiber) {
       return null;
     }
     return fiber;

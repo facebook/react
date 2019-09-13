@@ -1,0 +1,44 @@
+{
+
+  "name": "react-devtools-extensions",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "cross-env NODE_ENV=production yarn run build:chrome && yarn run build:firefox",
+    "build:dev": "cross-env NODE_ENV=development yarn run build:chrome && yarn run build:firefox",
+    "build:chrome": "cross-env NODE_ENV=production node ./chrome/build",
+    "build:chrome:crx": "cross-env NODE_ENV=production node ./chrome/build --crx",
+    "build:chrome:dev": "cross-env NODE_ENV=development node ./chrome/build",
+    "build:firefox": "cross-env NODE_ENV=production node ./firefox/build",
+    "build:firefox:dev": "cross-env NODE_ENV=development node ./firefox/build",
+    "test:chrome": "node ./chrome/test",
+    "test:firefox": "node ./firefox/test"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.1.6",
+    "@babel/plugin-proposal-class-properties": "^7.1.0",
+    "@babel/plugin-transform-flow-strip-types": "^7.1.6",
+    "@babel/plugin-transform-react-jsx-source": "^7.2.0",
+    "@babel/preset-env": "^7.1.6",
+    "@babel/preset-flow": "^7.0.0",
+    "@babel/preset-react": "^7.0.0",
+    "archiver": "^3.0.0",
+    "babel-core": "^7.0.0-bridge",
+    "babel-eslint": "^9.0.0",
+    "babel-jest": "^24.7.1",
+    "babel-loader": "^8.0.4",
+    "chrome-launch": "^1.1.4",
+    "child-process-promise": "^2.2.1",
+    "css-loader": "^1.0.1",
+    "crx": "^5.0.0",
+    "firefox-profile": "^1.0.2",
+    "node-libs-browser": "0.5.3",
+    "nullthrows": "^1.0.0",
+    "raw-loader": "^3.1.0",
+    "style-loader": "^0.23.1",
+    "web-ext": "^3.0.0",
+    "webpack": "^4.26.0",
+    "webpack-cli": "^3.1.2",
+    "webpack-dev-server": "^3.3.1"
+  }
+}

@@ -5,11 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {runEventsInBatch} from 'events/EventBatching';
-import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
-import {enqueueStateRestore} from 'events/ReactControlledComponent';
-import {batchedUpdates} from 'events/ReactGenericBatching';
-import SyntheticEvent from 'events/SyntheticEvent';
+import {runEventsInBatch} from 'legacy-events/EventBatching';
+import {accumulateTwoPhaseDispatches} from 'legacy-events/EventPropagators';
+import {enqueueStateRestore} from 'legacy-events/ReactControlledComponent';
+import {batchedUpdates} from 'legacy-events/ReactGenericBatching';
+import SyntheticEvent from 'legacy-events/SyntheticEvent';
 import isTextInputElement from 'shared/isTextInputElement';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 

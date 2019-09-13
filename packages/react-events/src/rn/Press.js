@@ -412,7 +412,7 @@ const pressResponderImpl = {
     if (type === 'topTouchStart') {
       if (!state.isPressed) {
         state.pointerType = 'touch';
-        const pressTarget = (state.pressTarget = event.responderTarget);
+        const pressTarget = (state.pressTarget = context.getResponderNode());
         const touchEvent = getTouchFromPressEvent(nativeEvent);
         if (touchEvent === null) {
           return;
@@ -533,7 +533,7 @@ export const PressResponder = React.unstable_createResponder(
   pressResponderImpl,
 );
 
-export function usePressResponder(
+export function usePress(
   props: PressProps,
 ): ReactEventResponderListener<any, any> {
   return React.unstable_useResponder(PressResponder, props);

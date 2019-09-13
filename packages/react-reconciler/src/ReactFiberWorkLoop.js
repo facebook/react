@@ -77,6 +77,7 @@ import {
   HostRoot,
   ClassComponent,
   SuspenseComponent,
+  SuspenseListComponent,
   FunctionComponent,
   ForwardRef,
   MemoComponent,
@@ -96,6 +97,8 @@ import {
   Passive,
   Incomplete,
   HostEffectMask,
+  Hydrating,
+  HydratingAndUpdate,
 } from 'shared/ReactSideEffectTags';
 import {
   NoWork,
@@ -404,7 +407,7 @@ export function scheduleUpdateOnFiber(
     } else {
       scheduleCallbackForRoot(root, ImmediatePriority, Sync);
       if (executionContext === NoContext) {
-        // Flush the synchronous work now, wnless we're already working or inside
+        // Flush the synchronous work now, unless we're already working or inside
         // a batch. This is intentionally inside scheduleUpdateOnFiber instead of
         // scheduleCallbackForFiber to preserve the ability to schedule a callback
         // without immediately flushing it. We only do this for user-initiated
@@ -1495,14 +1498,6 @@ function commitRoot(root) {
     ImmediatePriority,
     commitRootImpl.bind(null, root, renderPriorityLevel),
   );
-  // If there are passive effects, schedule a callback to flush them. This goes
-  // outside commitRootImpl so that it inherits the priority of the render.
-  if (rootWithPendingPassiveEffects !== null) {
-    scheduleCallback(NormalPriority, () => {
-      flushPassiveEffects();
-      return null;
-    });
-  }
   return null;
 }
 
@@ -1638,6 +1633,7 @@ function commitRootImpl(root, renderPriorityLevel) {
           null,
           commitMutationEffects,
           null,
+          root,
           renderPriorityLevel,
         );
         if (hasCaughtError()) {
@@ -1648,7 +1644,7 @@ function commitRootImpl(root, renderPriorityLevel) {
         }
       } else {
         try {
-          commitMutationEffects(renderPriorityLevel);
+          commitMutationEffects(root, renderPriorityLevel);
         } catch (error) {
           invariant(nextEffect !== null, 'Should be working on an effect.');
           captureCommitPhaseError(nextEffect, error);
@@ -1824,7 +1820,8 @@ function commitRootImpl(root, renderPriorityLevel) {
 
 function commitBeforeMutationEffects() {
   while (nextEffect !== null) {
-    if ((nextEffect.effectTag & Snapshot) !== NoEffect) {
+    const effectTag = nextEffect.effectTag;
+    if ((effectTag & Snapshot) !== NoEffect) {
       setCurrentDebugFiberInDEV(nextEffect);
       recordEffect();
 
@@ -1833,11 +1830,22 @@ function commitBeforeMutationEffects() {
 
       resetCurrentDebugFiberInDEV();
     }
+    if ((effectTag & Passive) !== NoEffect) {
+      // If there are passive effects, schedule a callback to flush at
+      // the earliest opportunity.
+      if (!rootDoesHavePassiveEffects) {
+        rootDoesHavePassiveEffects = true;
+        scheduleCallback(NormalPriority, () => {
+          flushPassiveEffects();
+          return null;
+        });
+      }
+    }
     nextEffect = nextEffect.nextEffect;
   }
 }
 
-function commitMutationEffects(renderPriorityLevel) {
+function commitMutationEffects(root: FiberRoot, renderPriorityLevel) {
   // TODO: Should probably move the bulk of this function to commitWork.
   while (nextEffect !== null) {
     setCurrentDebugFiberInDEV(nextEffect);
@@ -1859,7 +1867,8 @@ function commitMutationEffects(renderPriorityLevel) {
     // updates, and deletions. To avoid needing to add a case for every possible
     // bitmap value, we remove the secondary effects from the effect tag and
     // switch on that value.
-    let primaryEffectTag = effectTag & (Placement | Update | Deletion);
+    let primaryEffectTag =
+      effectTag & (Placement | Update | Deletion | Hydrating);
     switch (primaryEffectTag) {
       case Placement: {
         commitPlacement(nextEffect);
@@ -1882,13 +1891,25 @@ function commitMutationEffects(renderPriorityLevel) {
         commitWork(current, nextEffect);
         break;
       }
+      case Hydrating: {
+        nextEffect.effectTag &= ~Hydrating;
+        break;
+      }
+      case HydratingAndUpdate: {
+        nextEffect.effectTag &= ~Hydrating;
+
+        // Update
+        const current = nextEffect.alternate;
+        commitWork(current, nextEffect);
+        break;
+      }
       case Update: {
         const current = nextEffect.alternate;
         commitWork(current, nextEffect);
         break;
       }
       case Deletion: {
-        commitDeletion(nextEffect, renderPriorityLevel);
+        commitDeletion(root, nextEffect, renderPriorityLevel);
         break;
       }
     }
@@ -1925,10 +1946,6 @@ function commitLayoutEffects(
     if (effectTag & Ref) {
       recordEffect();
       commitAttachRef(nextEffect);
-    }
-
-    if (effectTag & Passive) {
-      rootDoesHavePassiveEffects = true;
     }
 
     resetCurrentDebugFiberInDEV();
@@ -2206,6 +2223,9 @@ export function resolveRetryThenable(boundaryFiber: Fiber, thenable: Thenable) {
         if (suspenseState !== null) {
           retryTime = suspenseState.retryTime;
         }
+        break;
+      case SuspenseListComponent:
+        retryCache = boundaryFiber.stateNode;
         break;
       default:
         invariant(

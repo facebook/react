@@ -37,16 +37,16 @@ type HoverState = {
 type HoverEventType = 'hoverstart' | 'hoverend' | 'hoverchange' | 'hovermove';
 
 type HoverEvent = {|
-  pointerType: PointerType,
-  target: Element | Document,
-  type: HoverEventType,
-  timeStamp: number,
   clientX: null | number,
   clientY: null | number,
   pageX: null | number,
   pageY: null | number,
+  pointerType: PointerType,
   screenX: null | number,
   screenY: null | number,
+  target: Element | Document,
+  timeStamp: number,
+  type: HoverEventType,
   x: null | number,
   y: null | number,
 |};
@@ -235,7 +235,7 @@ const hoverResponderImpl = {
       // START
       case 'pointerover': {
         if (!state.isHovered && pointerType !== 'touch') {
-          state.hoverTarget = event.responderTarget;
+          state.hoverTarget = context.getResponderNode();
           dispatchHoverStartEvents(event, context, props, state);
         }
         break;
@@ -260,7 +260,6 @@ const hoverResponderImpl = {
     }
   },
   onUnmount: unmountResponder,
-  onOwnershipChange: unmountResponder,
 };
 
 const hoverResponderFallbackImpl = {
@@ -296,7 +295,7 @@ const hoverResponderFallbackImpl = {
       // START
       case 'mouseover': {
         if (!state.isHovered && !state.ignoreEmulatedMouseEvents) {
-          state.hoverTarget = event.responderTarget;
+          state.hoverTarget = context.getResponderNode();
           dispatchHoverStartEvents(event, context, props, state);
         }
         break;
@@ -335,7 +334,6 @@ const hoverResponderFallbackImpl = {
     }
   },
   onUnmount: unmountResponder,
-  onOwnershipChange: unmountResponder,
 };
 
 export const HoverResponder = React.unstable_createResponder(
@@ -343,7 +341,7 @@ export const HoverResponder = React.unstable_createResponder(
   hasPointerEvents ? hoverResponderImpl : hoverResponderFallbackImpl,
 );
 
-export function useHoverResponder(
+export function useHover(
   props: HoverProps,
 ): ReactEventResponderListener<any, any> {
   return React.unstable_useResponder(HoverResponder, props);

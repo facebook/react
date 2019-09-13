@@ -21,6 +21,7 @@
     "press.js",
     "scroll.js",
     "swipe.js",
+    "tap.js",
     "build-info.json",
     "cjs/",
     "umd/"

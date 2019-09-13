@@ -28,6 +28,7 @@ export const enableSchedulerDebugging = false;
 export const warnAboutDeprecatedSetNativeProps = false;
 export const enableFlareAPI = false;
 export const enableFundamentalAPI = false;
+export const enableScopeAPI = false;
 export const enableJSXTransformAPI = false;
 export const warnAboutUnmockedScheduler = true;
 export const flushSuspenseFallbacksInTests = true;

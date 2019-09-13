@@ -19,26 +19,37 @@ import type {ReactEventResponderListener} from 'shared/ReactTypes';
 type KeyboardEventType = 'keydown' | 'keyup';
 
 type KeyboardProps = {
-  disabled: boolean,
-  onKeyDown: (e: KeyboardEvent) => void,
-  onKeyUp: (e: KeyboardEvent) => void,
+  disabled?: boolean,
+  onKeyDown?: (e: KeyboardEvent) => ?boolean,
+  onKeyUp?: (e: KeyboardEvent) => ?boolean,
+  preventKeys?: PreventKeysArray,
 };
 
-type KeyboardEvent = {|
+export type KeyboardEvent = {|
   altKey: boolean,
   ctrlKey: boolean,
   isComposing: boolean,
   key: string,
-  location: number,
   metaKey: boolean,
-  repeat: boolean,
   shiftKey: boolean,
   target: Element | Document,
   type: KeyboardEventType,
   timeStamp: number,
+  defaultPrevented: boolean,
 |};
 
-const targetEventTypes = ['keydown', 'keyup'];
+type ModifiersObject = {|
+  altKey?: boolean,
+  ctrlKey?: boolean,
+  metaKey?: boolean,
+  shiftKey?: boolean,
+|};
+
+type PreventKeysArray = Array<string | Array<string | ModifiersObject>>;
+
+const isArray = Array.isArray;
+const targetEventTypes = ['keydown_active', 'keyup'];
+const modifiers = ['altKey', 'ctrlKey', 'metaKey', 'shiftKey'];
 
 /**
  * Normalization of deprecated HTML5 `key` values
@@ -107,7 +118,7 @@ function isFunction(obj): boolean {
   return typeof obj === 'function';
 }
 
-function getEventKey(nativeEvent): string {
+function getEventKey(nativeEvent: Object): string {
   const nativeKey = nativeEvent.key;
   if (nativeKey) {
     // Normalize inconsistent values reported by browsers due to
@@ -127,29 +138,20 @@ function createKeyboardEvent(
   event: ReactDOMResponderEvent,
   context: ReactDOMResponderContext,
   type: KeyboardEventType,
-  target: Document | Element,
+  defaultPrevented: boolean,
 ): KeyboardEvent {
   const nativeEvent = (event: any).nativeEvent;
-  const {
-    altKey,
-    ctrlKey,
-    isComposing,
-    location,
-    metaKey,
-    repeat,
-    shiftKey,
-  } = nativeEvent;
+  const {altKey, ctrlKey, isComposing, metaKey, shiftKey} = nativeEvent;
 
   return {
     altKey,
     ctrlKey,
+    defaultPrevented,
     isComposing,
     key: getEventKey(nativeEvent),
-    location,
     metaKey,
-    repeat,
     shiftKey,
-    target,
+    target: event.target,
     timeStamp: context.getTimeStamp(),
     type,
   };
@@ -157,13 +159,25 @@ function createKeyboardEvent(
 
 function dispatchKeyboardEvent(
   event: ReactDOMResponderEvent,
-  listener: KeyboardEvent => void,
+  listener: KeyboardEvent => ?boolean,
   context: ReactDOMResponderContext,
   type: KeyboardEventType,
-  target: Element | Document,
+  defaultPrevented: boolean,
 ): void {
-  const syntheticEvent = createKeyboardEvent(event, context, type, target);
-  context.dispatchEvent(syntheticEvent, listener, DiscreteEvent);
+  const syntheticEvent = createKeyboardEvent(
+    event,
+    context,
+    type,
+    defaultPrevented,
+  );
+  let shouldPropagate;
+  const listenerWithReturnValue = e => {
+    shouldPropagate = listener(e);
+  };
+  context.dispatchEvent(syntheticEvent, listenerWithReturnValue, DiscreteEvent);
+  if (shouldPropagate) {
+    context.continuePropagation();
+  }
 }
 
 const keyboardResponderImpl = {
@@ -173,20 +187,50 @@ const keyboardResponderImpl = {
     context: ReactDOMResponderContext,
     props: KeyboardProps,
   ): void {
-    const {responderTarget, type} = event;
+    const {type} = event;
+    const nativeEvent: any = event.nativeEvent;
 
     if (props.disabled) {
       return;
     }
+    let defaultPrevented = nativeEvent.defaultPrevented === true;
     if (type === 'keydown') {
+      const preventKeys = ((props.preventKeys: any): PreventKeysArray);
+      if (!defaultPrevented && isArray(preventKeys)) {
+        preventKeyLoop: for (let i = 0; i < preventKeys.length; i++) {
+          const preventKey = preventKeys[i];
+          let key = preventKey;
+
+          if (isArray(preventKey)) {
+            key = preventKey[0];
+            const config = ((preventKey[1]: any): Object);
+            for (let s = 0; s < modifiers.length; s++) {
+              const modifier = modifiers[s];
+              const configModifier = config[modifier];
+              const eventModifier = nativeEvent[modifier];
+              if (
+                (configModifier && !eventModifier) ||
+                (!configModifier && eventModifier)
+              ) {
+                continue preventKeyLoop;
+              }
+            }
+          }
+          if (key === getEventKey(nativeEvent)) {
+            defaultPrevented = true;
+            nativeEvent.preventDefault();
+            break;
+          }
+        }
+      }
       const onKeyDown = props.onKeyDown;
       if (isFunction(onKeyDown)) {
         dispatchKeyboardEvent(
           event,
-          onKeyDown,
+          ((onKeyDown: any): (e: KeyboardEvent) => ?boolean),
           context,
           'keydown',
-          ((responderTarget: any): Element | Document),
+          defaultPrevented,
         );
       }
     } else if (type === 'keyup') {
@@ -194,10 +238,10 @@ const keyboardResponderImpl = {
       if (isFunction(onKeyUp)) {
         dispatchKeyboardEvent(
           event,
-          onKeyUp,
+          ((onKeyUp: any): (e: KeyboardEvent) => ?boolean),
           context,
           'keyup',
-          ((responderTarget: any): Element | Document),
+          defaultPrevented,
         );
       }
     }
@@ -209,7 +253,7 @@ export const KeyboardResponder = React.unstable_createResponder(
   keyboardResponderImpl,
 );
 
-export function useKeyboardResponder(
+export function useKeyboard(
   props: KeyboardProps,
 ): ReactEventResponderListener<any, any> {
   return React.unstable_useResponder(KeyboardResponder, props);
