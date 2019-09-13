@@ -9,27 +9,27 @@
 
 import React from 'react';
 
-export const TabbableScope = React.unstable_createScope(
-  (type: string, props: Object): boolean => {
-    if (props.tabIndex === -1 || props.disabled) {
-      return false;
-    }
-    if (props.tabIndex === 0 || props.contentEditable === true) {
-      return true;
-    }
-    if (type === 'a' || type === 'area') {
-      return !!props.href && props.rel !== 'ignore';
-    }
-    if (type === 'input') {
-      return props.type !== 'hidden' && props.type !== 'file';
-    }
-    return (
-      type === 'button' ||
-      type === 'textarea' ||
-      type === 'object' ||
-      type === 'select' ||
-      type === 'iframe' ||
-      type === 'embed'
-    );
-  },
-);
+export const tabFocusableImpl = (type: string, props: Object): boolean => {
+  if (props.tabIndex === -1 || props.disabled) {
+    return false;
+  }
+  if (props.tabIndex === 0 || props.contentEditable === true) {
+    return true;
+  }
+  if (type === 'a' || type === 'area') {
+    return !!props.href && props.rel !== 'ignore';
+  }
+  if (type === 'input') {
+    return props.type !== 'hidden' && props.type !== 'file';
+  }
+  return (
+    type === 'button' ||
+    type === 'textarea' ||
+    type === 'object' ||
+    type === 'select' ||
+    type === 'iframe' ||
+    type === 'embed'
+  );
+};
+
+export const TabbableScope = React.unstable_createScope(tabFocusableImpl);
