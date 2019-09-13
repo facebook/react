@@ -177,6 +177,7 @@ import {
   retryDehydratedSuspenseBoundary,
   scheduleWork,
   renderDidSuspendDelayIfPossible,
+  markUnprocessedUpdateTime,
 } from './ReactFiberWorkLoop';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
@@ -2707,6 +2708,11 @@ function bailoutOnAlreadyFinishedWork(
   if (enableProfilerTimer) {
     // Don't update "base" render times for bailouts.
     stopProfilerTimerIfRunning(workInProgress);
+  }
+
+  const updateExpirationTime = workInProgress.expirationTime;
+  if (updateExpirationTime !== NoWork) {
+    markUnprocessedUpdateTime(updateExpirationTime);
   }
 
   // Check if the children have any pending work.

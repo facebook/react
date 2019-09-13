@@ -422,7 +422,10 @@ exports[`ReactDebugFiberPerf warns if an in-progress update is interrupted 1`] =
 `;
 
 exports[`ReactDebugFiberPerf warns if async work expires (starvation) 1`] = `
-"⚛ (Committing Changes)
+"⚛ (React Tree Reconciliation: Completed Root)
+  ⚛ Foo [mount]
+
+⚛ (Committing Changes)
   ⚛ (Committing Snapshot Effects: 0 Total)
   ⚛ (Committing Host Effects: 1 Total)
   ⚛ (Calling Lifecycle Methods: 0 Total)
