@@ -22,6 +22,9 @@ const pathToBabelPluginWrapWarning = require.resolve(
 const pathToBabelPluginAsyncToGenerator = require.resolve(
   '@babel/plugin-transform-async-to-generator'
 );
+const pathToTransformInfiniteLoops = require.resolve(
+  '../babel/transform-prevent-infinite-loops'
+);
 const pathToBabelrc = path.join(__dirname, '..', '..', 'babel.config.js');
 const pathToErrorCodes = require.resolve('../error-codes/codes.json');
 
@@ -39,7 +42,7 @@ const babelOptions = {
     // TODO: I have not verified that this actually works.
     require.resolve('@babel/plugin-transform-react-jsx-source'),
 
-    require.resolve('../babel/transform-prevent-infinite-loops'),
+    pathToTransformInfiniteLoops,
 
     // This optimization is important for extremely performance-sensitive (e.g. React source).
     // It's okay to disable it for tests.
@@ -87,6 +90,7 @@ module.exports = {
     pathToBabelrc,
     pathToBabelPluginDevWithCode,
     pathToBabelPluginWrapWarning,
+    pathToTransformInfiniteLoops,
     pathToErrorCodes,
   ]),
 };
