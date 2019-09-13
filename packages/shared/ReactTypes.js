@@ -167,7 +167,6 @@ export type ReactScope = {|
 export type ReactScopeMethods = {|
   getChildren(): null | Array<ReactScopeMethods>,
   getChildrenFromRoot(): null | Array<ReactScopeMethods>,
-  getHandle(): null | mixed,
   getParent(): null | ReactScopeMethods,
   getScopedNodes(): null | Array<Object>,
 |};
