@@ -518,7 +518,7 @@ Task 2 [Normal]              │    ░░░░░░░░🡐 canceled
 
     expect(console.error).toHaveBeenCalledTimes(1);
     expect(console.error.calls.argsFor(0)[0]).toBe(
-      "Scheduler Profiling: Event log exceeded maxinum size. Don't forget " +
+      "Scheduler Profiling: Event log exceeded maximum size. Don't forget " +
         'to call `stopLoggingProfilingEvents()`.',
     );
 

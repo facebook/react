@@ -70,7 +70,7 @@ function logEvent(entries) {
       eventLogSize *= 2;
       if (eventLogSize > MAX_EVENT_LOG_SIZE) {
         console.error(
-          "Scheduler Profiling: Event log exceeded maxinum size. Don't " +
+          "Scheduler Profiling: Event log exceeded maximum size. Don't " +
             'forget to call `stopLoggingProfilingEvents()`.',
         );
         stopLoggingProfilingEvents();
