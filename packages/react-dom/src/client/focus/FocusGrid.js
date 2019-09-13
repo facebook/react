@@ -7,24 +7,11 @@
  * @flow
  */
 
+import type {KeyboardEvent} from 'react-events/src/dom/Keyboard';
+
 import React from 'react';
 import {tabFocusableImpl} from './TabbableScope';
 import {useKeyboard} from 'react-events/keyboard';
-
-type KeyboardEventType = 'keydown' | 'keyup';
-
-type KeyboardEvent = {|
-  altKey: boolean,
-  ctrlKey: boolean,
-  isComposing: boolean,
-  key: string,
-  metaKey: boolean,
-  shiftKey: boolean,
-  target: Element | Document,
-  type: KeyboardEventType,
-  timeStamp: number,
-  defaultPrevented: boolean,
-|};
 
 type GridComponentProps = {
   children: React.Node,

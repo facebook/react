@@ -25,7 +25,7 @@ type KeyboardProps = {
   preventKeys?: PreventKeysArray,
 };
 
-type KeyboardEvent = {|
+export type KeyboardEvent = {|
   altKey: boolean,
   ctrlKey: boolean,
   isComposing: boolean,

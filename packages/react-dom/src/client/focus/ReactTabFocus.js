@@ -8,6 +8,7 @@
  */
 
 import type {ReactScopeMethods} from 'shared/ReactTypes';
+import type {KeyboardEvent} from 'react-events/src/dom/Keyboard';
 
 import React from 'react';
 import {TabbableScope} from './TabbableScope';
@@ -17,22 +18,6 @@ type TabFocusControllerProps = {
   children: React.Node,
   contain?: boolean,
 };
-
-type KeyboardEventType = 'keydown' | 'keyup';
-
-type KeyboardEvent = {|
-  altKey: boolean,
-  ctrlKey: boolean,
-  isComposing: boolean,
-  key: string,
-  metaKey: boolean,
-  shiftKey: boolean,
-  target: Element | Document,
-  type: KeyboardEventType,
-  timeStamp: number,
-  defaultPrevented: boolean,
-|};
-
 const {useRef} = React;
 
 function getTabbableNodes(scope: ReactScopeMethods) {
