@@ -638,9 +638,13 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   currentEventTime = NoWork;
 
   if (didTimeout) {
-    // An async update expired.
+    // The render task took too long to complete. Mark the current time as
+    // expired to synchronously render all expired work in a single batch.
     const currentTime = requestCurrentTime();
     markRootExpiredAtTime(root, currentTime);
+    // This will schedule a synchronous callback.
+    ensureRootIsScheduled(root);
+    return null;
   }
 
   // Determine the next expiration time to work on, using the fields stored
@@ -649,7 +653,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   if (expirationTime !== NoWork) {
     const originalCallbackNode = root.callbackNode;
     try {
-      renderRoot(root, expirationTime, didTimeout);
+      renderRoot(root, expirationTime, false);
       if (workInProgress !== null) {
         // There's still work left over. Exit without committing.
         stopInterruptedWorkLoopTimer();
@@ -675,7 +679,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
           // statement, but eslint doesn't know about invariant, so it complains
           // if I do. eslint-disable-next-line no-fallthrough
           case RootErrored: {
-            if (!didTimeout && expirationTime !== Idle) {
+            if (expirationTime !== Idle) {
               // If this was an async render, the error may have happened due to
               // a mutation in a concurrent event. Try rendering one more time,
               // synchronously, to see if the error goes away. If there are
@@ -708,7 +712,6 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
               workInProgressRootLatestProcessedExpirationTime === Sync;
             if (
               hasNotProcessedNewUpdates &&
-              !didTimeout &&
               // do not delay if we're inside an act() scope
               !(
                 __DEV__ &&
@@ -781,7 +784,6 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
             flushSuspensePriorityWarningInDEV();
 
             if (
-              !didTimeout &&
               // do not delay if we're inside an act() scope
               !(
                 __DEV__ &&
@@ -879,7 +881,6 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
           case RootCompleted: {
             // The work completed. Ready to commit.
             if (
-              !didTimeout &&
               // do not delay if we're inside an act() scope
               !(
                 __DEV__ &&
@@ -1263,6 +1264,8 @@ function renderRoot(
 
     do {
       try {
+        // TODO: This is now the only place that `isSync` is used. Consider
+        // outlining the contents of `renderRoot`.
         if (isSync) {
           workLoopSync();
         } else {
