@@ -137,6 +137,7 @@ function createKeyboardEvent(
   {
     altKey = false,
     ctrlKey = false,
+    isComposing = false,
     key = '',
     metaKey = false,
     preventDefault = emptyFunction,
@@ -151,6 +152,7 @@ function createKeyboardEvent(
     getModifierState(keyArg) {
       createGetModifierState(keyArg, modifierState);
     },
+    isComposing,
     key,
     metaKey,
     preventDefault,
