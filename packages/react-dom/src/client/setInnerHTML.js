@@ -55,6 +55,8 @@ const setInnerHTML = createMicrosoftUnsafeLocalFunction(function(
       while (svgNode.firstChild) {
         node.appendChild(svgNode.firstChild);
       }
+    } else {
+      node.innerHTML = (html: any);
     }
   } else {
     node.innerHTML = (html: any);
