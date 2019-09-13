@@ -55,7 +55,10 @@ if (enableTrustedTypesIntegration && typeof trustedTypes !== 'undefined') {
 }
 
 /** Trusted value is a wrapper for "safe" values which can be assigned to DOM execution sinks. */
-export opaque type TrustedValue: {toString(): string} = {toString(): string};
+export opaque type TrustedValue: {toString(): string, valueOf(): string} = {
+  toString(): string,
+  valueOf(): string,
+};
 
 /**
  * We allow passing objects with toString method as element attributes or in dangerouslySetInnerHTML

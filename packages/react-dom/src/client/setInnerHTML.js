@@ -46,7 +46,8 @@ const setInnerHTML = createMicrosoftUnsafeLocalFunction(function(
     if (!('innerHTML' in node)) {
       reusableSVGContainer =
         reusableSVGContainer || document.createElement('div');
-      reusableSVGContainer.innerHTML = '<svg>' + html.toString() + '</svg>';
+      reusableSVGContainer.innerHTML =
+        '<svg>' + html.valueOf().toString() + '</svg>';
       const svgNode = reusableSVGContainer.firstChild;
       while (node.firstChild) {
         node.removeChild(node.firstChild);
