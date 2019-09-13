@@ -568,6 +568,13 @@ describe('ReactDOMServerHydration', () => {
     // Hydrate asynchronously.
     let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
     root.render(<App />);
+
+    // We haven't started hydrating yet.
+    a.click();
+    // Clicking should not invoke the event yet because we haven't committed
+    // the hydration yet.
+    expect(clicks).toBe(0);
+
     // Flush part way through the render.
     if (__DEV__) {
       // In DEV effects gets double invoked.
@@ -592,7 +599,8 @@ describe('ReactDOMServerHydration', () => {
       expect(Scheduler).toFlushAndYield(['Sibling2', 'Button']);
     }
 
-    expect(clicks).toBe(1);
+    // We should have picked up both events now.
+    expect(clicks).toBe(2);
 
     expect(container.textContent).toBe('Sibling');
 

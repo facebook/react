@@ -12,11 +12,20 @@ import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
 import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 import type {EventSystemFlags} from 'legacy-events/EventSystemFlags';
 
+import {enableFlareAPI} from 'shared/ReactFeatureFlags';
 import {
   unstable_scheduleCallback as scheduleCallback,
   unstable_NormalPriority as NormalPriority,
 } from 'scheduler';
-import {attemptToDispatchEvent} from './ReactDOMEventListener';
+import {
+  attemptToDispatchEvent,
+  trapEventForResponderEventSystem,
+} from './ReactDOMEventListener';
+import {
+  getListeningSetForElement,
+  listenToTopLevel,
+} from './ReactBrowserEventEmitter';
+import {unsafeCastDOMTopLevelTypeToString} from 'legacy-events/TopLevelEventTypes';
 
 // TODO: Upgrade this definition once we're on a newer version of Flow that
 // has this definition built-in.
@@ -138,6 +147,81 @@ export function isReplayableDiscreteEvent(
       return true;
   }
   return false;
+}
+
+function trapReplayableEvent(
+  topLevelType: DOMTopLevelEventType,
+  document: Document,
+  listeningSet: Set<DOMTopLevelEventType | string>,
+) {
+  listenToTopLevel(topLevelType, document, listeningSet);
+  if (enableFlareAPI) {
+    // Trap events for the responder system.
+    const passiveEventKey =
+      unsafeCastDOMTopLevelTypeToString(topLevelType) + '_passive';
+    if (!listeningSet.has(passiveEventKey)) {
+      trapEventForResponderEventSystem(document, topLevelType, true);
+      listeningSet.add(passiveEventKey);
+    }
+    // TODO: This listens to all events as active which might have
+    // undesirable effects. It's also unnecessary to have both
+    // passive and active listeners. Instead, we could start with
+    // a passive and upgrade it to an active one if needed.
+    // For replaying purposes the active is never needed since we
+    // currently don't preventDefault.
+    const activeEventKey =
+      unsafeCastDOMTopLevelTypeToString(topLevelType) + '_active';
+    if (!listeningSet.has(activeEventKey)) {
+      trapEventForResponderEventSystem(document, topLevelType, false);
+      listeningSet.add(activeEventKey);
+    }
+  }
+}
+
+export function eagerlyTrapReplayableEvents(document: Document) {
+  const listeningSet = getListeningSetForElement(document);
+  // Discrete
+  trapReplayableEvent(TOP_MOUSE_DOWN, document, listeningSet);
+  trapReplayableEvent(TOP_MOUSE_UP, document, listeningSet);
+  trapReplayableEvent(TOP_TOUCH_CANCEL, document, listeningSet);
+  trapReplayableEvent(TOP_TOUCH_END, document, listeningSet);
+  trapReplayableEvent(TOP_TOUCH_START, document, listeningSet);
+  trapReplayableEvent(TOP_AUX_CLICK, document, listeningSet);
+  trapReplayableEvent(TOP_DOUBLE_CLICK, document, listeningSet);
+  trapReplayableEvent(TOP_POINTER_CANCEL, document, listeningSet);
+  trapReplayableEvent(TOP_POINTER_DOWN, document, listeningSet);
+  trapReplayableEvent(TOP_POINTER_UP, document, listeningSet);
+  trapReplayableEvent(TOP_DRAG_END, document, listeningSet);
+  trapReplayableEvent(TOP_DRAG_START, document, listeningSet);
+  trapReplayableEvent(TOP_DROP, document, listeningSet);
+  trapReplayableEvent(TOP_COMPOSITION_END, document, listeningSet);
+  trapReplayableEvent(TOP_COMPOSITION_START, document, listeningSet);
+  trapReplayableEvent(TOP_KEY_DOWN, document, listeningSet);
+  trapReplayableEvent(TOP_KEY_PRESS, document, listeningSet);
+  trapReplayableEvent(TOP_KEY_UP, document, listeningSet);
+  trapReplayableEvent(TOP_INPUT, document, listeningSet);
+  trapReplayableEvent(TOP_TEXT_INPUT, document, listeningSet);
+  trapReplayableEvent(TOP_CLOSE, document, listeningSet);
+  trapReplayableEvent(TOP_CANCEL, document, listeningSet);
+  trapReplayableEvent(TOP_COPY, document, listeningSet);
+  trapReplayableEvent(TOP_CUT, document, listeningSet);
+  trapReplayableEvent(TOP_PASTE, document, listeningSet);
+  trapReplayableEvent(TOP_CLICK, document, listeningSet);
+  trapReplayableEvent(TOP_CHANGE, document, listeningSet);
+  trapReplayableEvent(TOP_CONTEXT_MENU, document, listeningSet);
+  trapReplayableEvent(TOP_RESET, document, listeningSet);
+  trapReplayableEvent(TOP_SUBMIT, document, listeningSet);
+  // Continuous
+  trapReplayableEvent(TOP_FOCUS, document, listeningSet);
+  trapReplayableEvent(TOP_BLUR, document, listeningSet);
+  trapReplayableEvent(TOP_DRAG_ENTER, document, listeningSet);
+  trapReplayableEvent(TOP_DRAG_LEAVE, document, listeningSet);
+  trapReplayableEvent(TOP_MOUSE_OVER, document, listeningSet);
+  trapReplayableEvent(TOP_MOUSE_OUT, document, listeningSet);
+  trapReplayableEvent(TOP_POINTER_OVER, document, listeningSet);
+  trapReplayableEvent(TOP_POINTER_OUT, document, listeningSet);
+  trapReplayableEvent(TOP_GOT_POINTER_CAPTURE, document, listeningSet);
+  trapReplayableEvent(TOP_LOST_POINTER_CAPTURE, document, listeningSet);
 }
 
 function createQueuedReplayableEvent(

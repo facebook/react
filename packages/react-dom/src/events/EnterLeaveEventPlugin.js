@@ -63,7 +63,11 @@ const EnterLeaveEventPlugin = {
     const isOutEvent =
       topLevelType === TOP_MOUSE_OUT || topLevelType === TOP_POINTER_OUT;
 
-    if (isOverEvent && (eventSystemFlags & IS_REPLAYED) === 0 && (nativeEvent.relatedTarget || nativeEvent.fromElement)) {
+    if (
+      isOverEvent &&
+      (eventSystemFlags & IS_REPLAYED) === 0 &&
+      (nativeEvent.relatedTarget || nativeEvent.fromElement)
+    ) {
       // If this is an over event with a target, then we've already dispatched
       // the event in the out event of the other target. If this is replayed,
       // then it's because we couldn't dispatch against this target previously

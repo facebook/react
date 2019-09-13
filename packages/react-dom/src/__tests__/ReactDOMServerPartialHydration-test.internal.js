@@ -1862,6 +1862,12 @@ describe('ReactDOMServerPartialHydration', () => {
     suspend = true;
     let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
     root.render(<App />);
+
+    // We'll do one click before hydrating.
+    a.click();
+    // This should be delayed.
+    expect(onEvent).toHaveBeenCalledTimes(0);
+
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
@@ -1879,7 +1885,7 @@ describe('ReactDOMServerPartialHydration', () => {
     Scheduler.unstable_flushAll();
     jest.runAllTimers();
 
-    expect(onEvent).toHaveBeenCalledTimes(1);
+    expect(onEvent).toHaveBeenCalledTimes(2);
 
     document.body.removeChild(container);
   });
