@@ -174,7 +174,9 @@ function attachPingListener(
       renderExpirationTime,
     );
     if (enableSchedulerTracing) {
-      ping = Schedule_tracing_wrap(ping);
+      if (thenable.__reactDoNotTraceInteractions !== true) {
+        ping = Schedule_tracing_wrap(ping);
+      }
     }
     thenable.then(ping, ping);
   }
