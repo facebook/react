@@ -1512,7 +1512,7 @@ function attachSuspenseRetryListeners(finishedWork: Fiber) {
       let retry = resolveRetryThenable.bind(null, finishedWork, thenable);
       if (!retryCache.has(thenable)) {
         if (enableSchedulerTracing) {
-          if ((thenable: any).__reactDoNotTraceInteractions !== true) {
+          if (thenable.__reactDoNotTraceInteractions !== true) {
             retry = Schedule_tracing_wrap(retry);
           }
         }
