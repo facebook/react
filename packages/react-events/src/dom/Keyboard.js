@@ -16,26 +16,32 @@ import React from 'react';
 import {DiscreteEvent} from 'shared/ReactTypes';
 import type {ReactEventResponderListener} from 'shared/ReactTypes';
 
-type KeyboardEventType = 'keydown' | 'keyup';
+type KeyboardEventType = 'keyboard:keydown' | 'keyboard:keyup';
 
-type KeyboardProps = {
+type KeyboardProps = {|
   disabled?: boolean,
   onKeyDown?: (e: KeyboardEvent) => ?boolean,
   onKeyUp?: (e: KeyboardEvent) => ?boolean,
   preventKeys?: PreventKeysArray,
-};
+|};
+
+type KeyboardState = {|
+  defaultPrevented: boolean,
+  isActive: boolean,
+|};
 
 export type KeyboardEvent = {|
   altKey: boolean,
   ctrlKey: boolean,
+  defaultPrevented: boolean,
   isComposing: boolean,
   key: string,
   metaKey: boolean,
+  pointerType: 'keyboard',
   shiftKey: boolean,
   target: Element | Document,
   type: KeyboardEventType,
   timeStamp: number,
-  defaultPrevented: boolean,
 |};
 
 type ModifiersObject = {|
@@ -48,7 +54,7 @@ type ModifiersObject = {|
 type PreventKeysArray = Array<string | Array<string | ModifiersObject>>;
 
 const isArray = Array.isArray;
-const targetEventTypes = ['keydown_active', 'keyup'];
+const targetEventTypes = ['click_active', 'keydown_active', 'keyup'];
 const modifiers = ['altKey', 'ctrlKey', 'metaKey', 'shiftKey'];
 
 /**
@@ -150,6 +156,7 @@ function createKeyboardEvent(
     isComposing,
     key: getEventKey(nativeEvent),
     metaKey,
+    pointerType: 'keyboard',
     shiftKey,
     target: event.target,
     timeStamp: context.getTimeStamp(),
@@ -182,10 +189,17 @@ function dispatchKeyboardEvent(
 
 const keyboardResponderImpl = {
   targetEventTypes,
+  getInitialState(): KeyboardState {
+    return {
+      defaultPrevented: false,
+      isActive: false,
+    };
+  },
   onEvent(
     event: ReactDOMResponderEvent,
     context: ReactDOMResponderContext,
     props: KeyboardProps,
+    state: KeyboardState,
   ): void {
     const {type} = event;
     const nativeEvent: any = event.nativeEvent;
@@ -193,10 +207,12 @@ const keyboardResponderImpl = {
     if (props.disabled) {
       return;
     }
-    let defaultPrevented = nativeEvent.defaultPrevented === true;
+
     if (type === 'keydown') {
+      state.defaultPrevented = nativeEvent.defaultPrevented === true;
+
       const preventKeys = ((props.preventKeys: any): PreventKeysArray);
-      if (!defaultPrevented && isArray(preventKeys)) {
+      if (!state.defaultPrevented && isArray(preventKeys)) {
         preventKeyLoop: for (let i = 0; i < preventKeys.length; i++) {
           const preventKey = preventKeys[i];
           let key = preventKey;
@@ -216,32 +232,38 @@ const keyboardResponderImpl = {
               }
             }
           }
+
           if (key === getEventKey(nativeEvent)) {
-            defaultPrevented = true;
+            state.defaultPrevented = true;
             nativeEvent.preventDefault();
             break;
           }
         }
       }
+      state.isActive = true;
       const onKeyDown = props.onKeyDown;
       if (isFunction(onKeyDown)) {
         dispatchKeyboardEvent(
           event,
           ((onKeyDown: any): (e: KeyboardEvent) => ?boolean),
           context,
-          'keydown',
-          defaultPrevented,
+          'keyboard:keydown',
+          state.defaultPrevented,
         );
       }
+    } else if (type === 'click' && state.isActive && state.defaultPrevented) {
+      // 'click' occurs before 'keyup' and may need native behavior prevented
+      nativeEvent.preventDefault();
     } else if (type === 'keyup') {
+      state.isActive = false;
       const onKeyUp = props.onKeyUp;
       if (isFunction(onKeyUp)) {
         dispatchKeyboardEvent(
           event,
           ((onKeyUp: any): (e: KeyboardEvent) => ?boolean),
           context,
-          'keyup',
-          defaultPrevented,
+          'keyboard:keyup',
+          state.defaultPrevented,
         );
       }
     }

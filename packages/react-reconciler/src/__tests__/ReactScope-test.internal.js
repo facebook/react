@@ -220,9 +220,6 @@ describe('ReactScope', () => {
       let target = createEventTarget(ref.current);
       target.keydown({key: 'Q'});
       expect(onKeyDown).toHaveBeenCalledTimes(1);
-      expect(onKeyDown).toHaveBeenCalledWith(
-        expect.objectContaining({key: 'Q', type: 'keydown'}),
-      );
 
       onKeyDown = jest.fn();
       Component = () => {
@@ -242,9 +239,6 @@ describe('ReactScope', () => {
       target = createEventTarget(ref.current);
       target.keydown({key: 'Q'});
       expect(onKeyDown).toHaveBeenCalledTimes(1);
-      expect(onKeyDown).toHaveBeenCalledWith(
-        expect.objectContaining({key: 'Q', type: 'keydown'}),
-      );
     });
   });
 

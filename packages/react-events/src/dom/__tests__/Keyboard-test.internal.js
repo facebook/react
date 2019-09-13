@@ -25,7 +25,7 @@ function initializeModules(hasPointerEvents) {
   useKeyboard = require('react-events/keyboard').useKeyboard;
 }
 
-describe('Keyboard event responder', () => {
+describe('Keyboard responder', () => {
   let container;
 
   beforeEach(() => {
@@ -40,6 +40,71 @@ describe('Keyboard event responder', () => {
     container = null;
   });
 
+  function renderPropagationTest(propagates) {
+    const onKeyDownInner = jest.fn(() => propagates);
+    const onKeyDownOuter = jest.fn();
+    const onKeyUpInner = jest.fn(() => propagates);
+    const onKeyUpOuter = jest.fn();
+    const ref = React.createRef();
+    const Component = () => {
+      const listenerInner = useKeyboard({
+        onKeyDown: onKeyDownInner,
+        onKeyUp: onKeyUpInner,
+      });
+      const listenerOuter = useKeyboard({
+        onKeyDown: onKeyDownOuter,
+        onKeyUp: onKeyUpOuter,
+      });
+      return (
+        <div listeners={listenerOuter}>
+          <div ref={ref} listeners={listenerInner} />
+        </div>
+      );
+    };
+    ReactDOM.render(<Component />, container);
+    return {
+      onKeyDownInner,
+      onKeyDownOuter,
+      onKeyUpInner,
+      onKeyUpOuter,
+      ref,
+    };
+  }
+
+  test('propagates event when a callback returns true', () => {
+    const {
+      onKeyDownInner,
+      onKeyDownOuter,
+      onKeyUpInner,
+      onKeyUpOuter,
+      ref,
+    } = renderPropagationTest(true);
+    const target = createEventTarget(ref.current);
+    target.keydown();
+    expect(onKeyDownInner).toBeCalled();
+    expect(onKeyDownOuter).toBeCalled();
+    target.keyup();
+    expect(onKeyUpInner).toBeCalled();
+    expect(onKeyUpOuter).toBeCalled();
+  });
+
+  test('does not propagate event when a callback returns false', () => {
+    const {
+      onKeyDownInner,
+      onKeyDownOuter,
+      onKeyUpInner,
+      onKeyUpOuter,
+      ref,
+    } = renderPropagationTest(false);
+    const target = createEventTarget(ref.current);
+    target.keydown();
+    expect(onKeyDownInner).toBeCalled();
+    expect(onKeyDownOuter).not.toBeCalled();
+    target.keyup();
+    expect(onKeyUpInner).toBeCalled();
+    expect(onKeyUpOuter).not.toBeCalled();
+  });
+
   describe('disabled', () => {
     let onKeyDown, onKeyUp, ref;
 
@@ -48,17 +113,13 @@ describe('Keyboard event responder', () => {
       onKeyUp = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        const listener = useKeyboard({
-          disabled: true,
-          onKeyDown,
-          onKeyUp,
-        });
+        const listener = useKeyboard({disabled: true, onKeyDown, onKeyUp});
         return <div ref={ref} listeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
     });
 
-    it('prevents custom events being dispatched', () => {
+    test('does not call callbacks', () => {
       const target = createEventTarget(ref.current);
       target.keydown();
       target.keyup();
@@ -74,265 +135,200 @@ describe('Keyboard event responder', () => {
       onKeyDown = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        const listener = useKeyboard({
-          onKeyDown,
-        });
+        const listener = useKeyboard({onKeyDown});
         return <div ref={ref} listeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
     });
 
-    it('is called after "keydown" event', () => {
+    test('key down', () => {
       const target = createEventTarget(ref.current);
       target.keydown({key: 'Q'});
       expect(onKeyDown).toHaveBeenCalledTimes(1);
       expect(onKeyDown).toHaveBeenCalledWith(
-        expect.objectContaining({key: 'Q', type: 'keydown'}),
+        expect.objectContaining({
+          altKey: false,
+          ctrlKey: false,
+          defaultPrevented: false,
+          isComposing: false,
+          key: 'Q',
+          metaKey: false,
+          pointerType: 'keyboard',
+          shiftKey: false,
+          target: target.node,
+          timeStamp: expect.any(Number),
+          type: 'keyboard:keydown',
+        }),
       );
     });
-  });
 
-  describe('preventKeys', () => {
-    it('onKeyDown is default prevented', () => {
-      const onKeyDown = jest.fn();
-      const ref = React.createRef();
-      const Component = () => {
-        const listener = useKeyboard({
-          onKeyDown,
-          preventKeys: ['Tab'],
-        });
-        return <div ref={ref} listeners={listener} />;
-      };
-      ReactDOM.render(<Component />, container);
-
-      const preventDefault = jest.fn();
+    test('modified key down', () => {
       const target = createEventTarget(ref.current);
-      target.keydown({key: 'Tab', preventDefault});
-      expect(onKeyDown).toHaveBeenCalledTimes(1);
-      expect(preventDefault).toBeCalled();
+      target.keydown({
+        key: 'Q',
+        altKey: true,
+        ctrlKey: true,
+        shiftKey: true,
+        metaKey: true,
+      });
       expect(onKeyDown).toHaveBeenCalledWith(
         expect.objectContaining({
-          key: 'Tab',
-          type: 'keydown',
-          defaultPrevented: true,
-        }),
-      );
-    });
-
-    it('onKeyDown is default prevented (falsy modifier keys)', () => {
-      let onKeyDown = jest.fn();
-      let ref = React.createRef();
-      let Component = () => {
-        const listener = useKeyboard({
-          onKeyDown,
-          preventKeys: [['Tab', {metaKey: false}]],
-        });
-        return <div ref={ref} listeners={listener} />;
-      };
-      ReactDOM.render(<Component />, container);
-
-      let preventDefault = jest.fn();
-      let target = createEventTarget(ref.current);
-      target.keydown({key: 'Tab', preventDefault, metaKey: true});
-      expect(onKeyDown).toHaveBeenCalledTimes(1);
-      expect(preventDefault).not.toBeCalled();
-      expect(onKeyDown).toHaveBeenCalledWith(
-        expect.objectContaining({
-          key: 'Tab',
-          type: 'keydown',
+          altKey: true,
+          ctrlKey: true,
           defaultPrevented: false,
-        }),
-      );
-
-      onKeyDown = jest.fn();
-      ref = React.createRef();
-      Component = () => {
-        const listener = useKeyboard({
-          onKeyDown,
-          preventKeys: [['Tab', {metaKey: true}]],
-        });
-        return <div ref={ref} listeners={listener} />;
-      };
-      ReactDOM.render(<Component />, container);
-
-      preventDefault = jest.fn();
-      target = createEventTarget(ref.current);
-      target.keydown({key: 'Tab', preventDefault, metaKey: false});
-      expect(onKeyDown).toHaveBeenCalledTimes(1);
-      expect(preventDefault).not.toBeCalled();
-      expect(onKeyDown).toHaveBeenCalledWith(
-        expect.objectContaining({
-          key: 'Tab',
-          type: 'keydown',
-          defaultPrevented: false,
-        }),
-      );
-    });
-
-    it('onKeyDown is default prevented (truthy modifier keys)', () => {
-      let onKeyDown = jest.fn();
-      let ref = React.createRef();
-      let Component = () => {
-        const listener = useKeyboard({
-          onKeyDown,
-          preventKeys: [['Tab', {metaKey: true}]],
-        });
-        return <div ref={ref} listeners={listener} />;
-      };
-      ReactDOM.render(<Component />, container);
-
-      let preventDefault = jest.fn();
-      let target = createEventTarget(ref.current);
-      target.keydown({key: 'Tab', preventDefault, metaKey: true});
-      expect(onKeyDown).toHaveBeenCalledTimes(1);
-      expect(preventDefault).toBeCalled();
-      expect(onKeyDown).toHaveBeenCalledWith(
-        expect.objectContaining({
-          key: 'Tab',
-          type: 'keydown',
-          defaultPrevented: true,
-        }),
-      );
-
-      onKeyDown = jest.fn();
-      ref = React.createRef();
-      Component = () => {
-        const listener = useKeyboard({
-          onKeyDown,
-          preventKeys: [['Tab', {metaKey: false}]],
-        });
-        return <div ref={ref} listeners={listener} />;
-      };
-      ReactDOM.render(<Component />, container);
-
-      preventDefault = jest.fn();
-      target = createEventTarget(ref.current);
-      target.keydown({key: 'Tab', preventDefault, metaKey: false});
-      expect(onKeyDown).toHaveBeenCalledTimes(1);
-      expect(preventDefault).toBeCalled();
-      expect(onKeyDown).toHaveBeenCalledWith(
-        expect.objectContaining({
-          key: 'Tab',
-          type: 'keydown',
-          defaultPrevented: true,
+          isComposing: false,
+          key: 'Q',
+          metaKey: true,
+          pointerType: 'keyboard',
+          shiftKey: true,
+          target: target.node,
+          timeStamp: expect.any(Number),
+          type: 'keyboard:keydown',
         }),
       );
     });
   });
 
   describe('onKeyUp', () => {
-    let onKeyDown, onKeyUp, ref;
+    let onKeyUp, ref;
 
     beforeEach(() => {
-      onKeyDown = jest.fn();
       onKeyUp = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        const listener = useKeyboard({
-          onKeyDown,
-          onKeyUp,
-        });
+        const listener = useKeyboard({onKeyUp});
         return <div ref={ref} listeners={listener} />;
       };
       ReactDOM.render(<Component />, container);
     });
 
-    it('is called after "keydown" event', () => {
+    test('key up', () => {
       const target = createEventTarget(ref.current);
       target.keydown({key: 'Q'});
       target.keyup({key: 'Q'});
-      expect(onKeyDown).toHaveBeenCalledTimes(1);
-      expect(onKeyDown).toHaveBeenCalledWith(
-        expect.objectContaining({key: 'Q', type: 'keydown'}),
-      );
       expect(onKeyUp).toHaveBeenCalledTimes(1);
       expect(onKeyUp).toHaveBeenCalledWith(
-        expect.objectContaining({key: 'Q', type: 'keyup'}),
+        expect.objectContaining({
+          altKey: false,
+          ctrlKey: false,
+          defaultPrevented: false,
+          isComposing: false,
+          key: 'Q',
+          metaKey: false,
+          pointerType: 'keyboard',
+          shiftKey: false,
+          target: target.node,
+          timeStamp: expect.any(Number),
+          type: 'keyboard:keyup',
+        }),
+      );
+    });
+
+    test('modified key up', () => {
+      const target = createEventTarget(ref.current);
+      target.keydown({key: 'Q'});
+      target.keyup({
+        key: 'Q',
+        altKey: true,
+        ctrlKey: true,
+        shiftKey: true,
+        metaKey: true,
+      });
+      expect(onKeyUp).toHaveBeenCalledWith(
+        expect.objectContaining({
+          altKey: true,
+          ctrlKey: true,
+          defaultPrevented: false,
+          isComposing: false,
+          key: 'Q',
+          metaKey: true,
+          pointerType: 'keyboard',
+          shiftKey: true,
+          target: target.node,
+          timeStamp: expect.any(Number),
+          type: 'keyboard:keyup',
+        }),
       );
     });
   });
 
-  describe('correctly handles responder propagation', () => {
-    describe('onKeyDown', () => {
-      let onKeyDownInner, onKeyDownOuter, ref;
+  describe('preventKeys', () => {
+    function render(props) {
+      const ref = React.createRef();
+      const Component = () => {
+        const listener = useKeyboard(props);
+        return <div ref={ref} listeners={listener} />;
+      };
+      ReactDOM.render(<Component />, container);
+      return ref;
+    }
 
-      function renderPropagationTest(propagates) {
-        onKeyDownInner = jest.fn(() => propagates);
-        onKeyDownOuter = jest.fn();
-        ref = React.createRef();
-        const Component = () => {
-          const listenerInner = useKeyboard({
-            onKeyDown: onKeyDownInner,
-          });
-          const listenerOuter = useKeyboard({
-            onKeyDown: onKeyDownOuter,
-          });
-          return (
-            <div listeners={listenerOuter}>
-              <div ref={ref} listeners={listenerInner} />
-            </div>
-          );
-        };
-        ReactDOM.render(<Component />, container);
-      }
+    test('key config matches', () => {
+      const onKeyDown = jest.fn();
+      const preventDefault = jest.fn();
+      const preventDefaultClick = jest.fn();
+      const ref = render({onKeyDown, preventKeys: ['Tab']});
 
-      it('propagates when cb returns true', () => {
-        renderPropagationTest(true);
-        const target = createEventTarget(ref.current);
-        target.keydown();
-        expect(onKeyDownInner).toBeCalled();
-        expect(onKeyDownOuter).toBeCalled();
-      });
+      const target = createEventTarget(ref.current);
+      target.keydown({key: 'Tab', preventDefault});
+      target.click({preventDefault: preventDefaultClick});
 
-      it('does not propagate when cb returns false', () => {
-        renderPropagationTest(false);
-        const target = createEventTarget(ref.current);
-        target.keydown();
-        expect(onKeyDownInner).toBeCalled();
-        expect(onKeyDownOuter).not.toBeCalled();
-      });
+      expect(onKeyDown).toHaveBeenCalledTimes(1);
+      expect(preventDefault).toBeCalled();
+      expect(preventDefaultClick).toBeCalled();
+      expect(onKeyDown).toHaveBeenCalledWith(
+        expect.objectContaining({
+          defaultPrevented: true,
+          key: 'Tab',
+          type: 'keyboard:keydown',
+        }),
+      );
     });
 
-    describe('onKeyUp', () => {
-      let onKeyUpInner, onKeyUpOuter, ref;
+    test('key config matches (modifier keys)', () => {
+      const onKeyDown = jest.fn();
+      const preventDefault = jest.fn();
+      const preventDefaultClick = jest.fn();
+      const ref = render({onKeyDown, preventKeys: [['Tab', {shiftKey: true}]]});
 
-      function renderPropagationTest(propagates) {
-        onKeyUpInner = jest.fn(() => propagates);
-        onKeyUpOuter = jest.fn();
-        ref = React.createRef();
-        const Component = () => {
-          const listenerInner = useKeyboard({
-            onKeyUp: onKeyUpInner,
-          });
-          const listenerOuter = useKeyboard({
-            onKeyUp: onKeyUpOuter,
-          });
-          return (
-            <div listeners={listenerOuter}>
-              <div ref={ref} listeners={listenerInner} />
-            </div>
-          );
-        };
-        ReactDOM.render(<Component />, container);
-      }
+      const target = createEventTarget(ref.current);
+      target.keydown({key: 'Tab', preventDefault, shiftKey: true});
+      target.click({preventDefault: preventDefaultClick, shiftKey: true});
 
-      it('propagates when cb returns true', () => {
-        renderPropagationTest(true);
-        const target = createEventTarget(ref.current);
-        target.keydown();
-        target.keyup();
-        expect(onKeyUpInner).toBeCalled();
-        expect(onKeyUpOuter).toBeCalled();
-      });
+      expect(onKeyDown).toHaveBeenCalledTimes(1);
+      expect(preventDefault).toBeCalled();
+      expect(preventDefaultClick).toBeCalled();
+      expect(onKeyDown).toHaveBeenCalledWith(
+        expect.objectContaining({
+          defaultPrevented: true,
+          key: 'Tab',
+          shiftKey: true,
+          type: 'keyboard:keydown',
+        }),
+      );
+    });
 
-      it('does not propagate when cb returns false', () => {
-        renderPropagationTest(false);
-        const target = createEventTarget(ref.current);
-        target.keydown();
-        target.keyup();
-        expect(onKeyUpInner).toBeCalled();
-        expect(onKeyUpOuter).not.toBeCalled();
-      });
+    test('key config does not match (modifier keys)', () => {
+      const onKeyDown = jest.fn();
+      const preventDefault = jest.fn();
+      const preventDefaultClick = jest.fn();
+      const ref = render({onKeyDown, preventKeys: [['Tab', {shiftKey: true}]]});
+
+      const target = createEventTarget(ref.current);
+      target.keydown({key: 'Tab', preventDefault, shiftKey: false});
+      target.click({preventDefault: preventDefaultClick, shiftKey: false});
+
+      expect(onKeyDown).toHaveBeenCalledTimes(1);
+      expect(preventDefault).not.toBeCalled();
+      expect(preventDefaultClick).not.toBeCalled();
+      expect(onKeyDown).toHaveBeenCalledWith(
+        expect.objectContaining({
+          defaultPrevented: false,
+          key: 'Tab',
+          shiftKey: false,
+          type: 'keyboard:keydown',
+        }),
+      );
     });
   });
 });
