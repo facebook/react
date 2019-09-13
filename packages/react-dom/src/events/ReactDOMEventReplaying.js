@@ -67,6 +67,7 @@ import {
   TOP_FOCUS,
   TOP_BLUR,
 } from './DOMTopLevelEventTypes';
+import {IS_REPLAYED} from 'legacy-events/EventSystemFlags';
 
 type QueuedReplayableEvent = {|
   blockedOn: null | Container | SuspenseInstance,
@@ -148,7 +149,7 @@ function createQueuedReplayableEvent(
   return {
     blockedOn,
     topLevelType,
-    eventSystemFlags,
+    eventSystemFlags: eventSystemFlags | IS_REPLAYED,
     nativeEvent,
   };
 }

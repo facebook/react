@@ -162,6 +162,7 @@ const SelectEventPlugin = {
 
   extractEvents: function(
     topLevelType,
+    eventSystemFlags,
     targetInst,
     nativeEvent,
     nativeEventTarget,

@@ -82,12 +82,13 @@ const {getEventPriority} = SimpleEventPlugin;
 const CALLBACK_BOOKKEEPING_POOL_SIZE = 10;
 const callbackBookkeepingPool = [];
 
-type BookKeepingInstance = {
+type BookKeepingInstance = {|
   topLevelType: DOMTopLevelEventType | null,
+  eventSystemFlags: EventSystemFlags,
   nativeEvent: AnyNativeEvent | null,
   targetInst: Fiber | null,
   ancestors: Array<Fiber | null>,
-};
+|};
 
 /**
  * Find the deepest React component completely containing the root of the
@@ -116,16 +117,19 @@ function getTopLevelCallbackBookKeeping(
   topLevelType: DOMTopLevelEventType,
   nativeEvent: AnyNativeEvent,
   targetInst: Fiber | null,
+  eventSystemFlags: EventSystemFlags,
 ): BookKeepingInstance {
   if (callbackBookkeepingPool.length) {
     const instance = callbackBookkeepingPool.pop();
     instance.topLevelType = topLevelType;
+    instance.eventSystemFlags = eventSystemFlags;
     instance.nativeEvent = nativeEvent;
     instance.targetInst = targetInst;
     return instance;
   }
   return {
     topLevelType,
+    eventSystemFlags,
     nativeEvent,
     targetInst,
     ancestors: [],
@@ -177,6 +181,7 @@ function handleTopLevel(bookKeeping: BookKeepingInstance) {
 
     runExtractedPluginEventsInBatch(
       topLevelType,
+      bookKeeping.eventSystemFlags,
       targetInst,
       nativeEvent,
       eventTarget,
@@ -313,6 +318,7 @@ function dispatchEventForPluginEventSystem(
     topLevelType,
     nativeEvent,
     targetInst,
+    eventSystemFlags,
   );
 
   try {

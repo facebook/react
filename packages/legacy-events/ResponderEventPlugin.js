@@ -504,6 +504,7 @@ const ResponderEventPlugin = {
    */
   extractEvents: function(
     topLevelType,
+    eventSystemFlags,
     targetInst,
     nativeEvent,
     nativeEventTarget,

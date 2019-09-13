@@ -8,6 +8,7 @@
  */
 
 import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
+import type {EventSystemFlags} from 'legacy-events/EventSystemFlags';
 import {
   accumulateTwoPhaseDispatches,
   accumulateDirectDispatches,
@@ -32,6 +33,7 @@ const ReactNativeBridgeEventPlugin = {
    */
   extractEvents: function(
     topLevelType: TopLevelType,
+    eventSystemFlags: EventSystemFlags,
     targetInst: null | Object,
     nativeEvent: AnyNativeEvent,
     nativeEventTarget: Object,

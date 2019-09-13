@@ -262,6 +262,7 @@ const ChangeEventPlugin = {
 
   extractEvents: function(
     topLevelType,
+    eventSystemFlags,
     targetInst,
     nativeEvent,
     nativeEventTarget,
