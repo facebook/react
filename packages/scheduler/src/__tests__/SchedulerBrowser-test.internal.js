@@ -312,7 +312,7 @@ describe('SchedulerBrowser', () => {
       runtime.assertLog(['Message Event', 'B']);
     });
 
-    it('adjusts frame rate by measuring inteval between rAF events', () => {
+    it('adjusts frame rate by measuring interval between rAF events', () => {
       runtime.setHardwareFrameRate(60);
 
       scheduleCallback(NormalPriority, () => runtime.log('Tick'));
@@ -371,7 +371,7 @@ describe('SchedulerBrowser', () => {
       runtime.assertLog(['Message Event', 'Task']);
     });
 
-    it('task with continutation', () => {
+    it('task with continuation', () => {
       scheduleCallback(NormalPriority, () => {
         runtime.log('Task');
         while (!Scheduler.unstable_shouldYield()) {
