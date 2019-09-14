@@ -110,43 +110,56 @@ export function hasQueuedContinuousEvents(): boolean {
   return hasAnyQueuedContinuousEvents;
 }
 
+const discreteReplayableEvents = [
+  TOP_MOUSE_DOWN,
+  TOP_MOUSE_UP,
+  TOP_TOUCH_CANCEL,
+  TOP_TOUCH_END,
+  TOP_TOUCH_START,
+  TOP_AUX_CLICK,
+  TOP_DOUBLE_CLICK,
+  TOP_POINTER_CANCEL,
+  TOP_POINTER_DOWN,
+  TOP_POINTER_UP,
+  TOP_DRAG_END,
+  TOP_DRAG_START,
+  TOP_DROP,
+  TOP_COMPOSITION_END,
+  TOP_COMPOSITION_START,
+  TOP_KEY_DOWN,
+  TOP_KEY_PRESS,
+  TOP_KEY_UP,
+  TOP_INPUT,
+  TOP_TEXT_INPUT,
+  TOP_CLOSE,
+  TOP_CANCEL,
+  TOP_COPY,
+  TOP_CUT,
+  TOP_PASTE,
+  TOP_CLICK,
+  TOP_CHANGE,
+  TOP_CONTEXT_MENU,
+  TOP_RESET,
+  TOP_SUBMIT,
+];
+
+const continuousReplayableEvents = [
+  TOP_FOCUS,
+  TOP_BLUR,
+  TOP_DRAG_ENTER,
+  TOP_DRAG_LEAVE,
+  TOP_MOUSE_OVER,
+  TOP_MOUSE_OUT,
+  TOP_POINTER_OVER,
+  TOP_POINTER_OUT,
+  TOP_GOT_POINTER_CAPTURE,
+  TOP_LOST_POINTER_CAPTURE,
+];
+
 export function isReplayableDiscreteEvent(
   eventType: DOMTopLevelEventType,
 ): boolean {
-  switch (eventType) {
-    case TOP_MOUSE_DOWN:
-    case TOP_MOUSE_UP:
-    case TOP_TOUCH_CANCEL:
-    case TOP_TOUCH_END:
-    case TOP_TOUCH_START:
-    case TOP_AUX_CLICK:
-    case TOP_DOUBLE_CLICK:
-    case TOP_POINTER_CANCEL:
-    case TOP_POINTER_DOWN:
-    case TOP_POINTER_UP:
-    case TOP_DRAG_END:
-    case TOP_DRAG_START:
-    case TOP_DROP:
-    case TOP_COMPOSITION_END:
-    case TOP_COMPOSITION_START:
-    case TOP_KEY_DOWN:
-    case TOP_KEY_PRESS:
-    case TOP_KEY_UP:
-    case TOP_INPUT:
-    case TOP_TEXT_INPUT:
-    case TOP_CLOSE:
-    case TOP_CANCEL:
-    case TOP_COPY:
-    case TOP_CUT:
-    case TOP_PASTE:
-    case TOP_CLICK:
-    case TOP_CHANGE:
-    case TOP_CONTEXT_MENU:
-    case TOP_RESET:
-    case TOP_SUBMIT:
-      return true;
-  }
-  return false;
+  return discreteReplayableEvents.indexOf(eventType) > -1;
 }
 
 function trapReplayableEvent(
@@ -181,47 +194,13 @@ function trapReplayableEvent(
 export function eagerlyTrapReplayableEvents(document: Document) {
   const listeningSet = getListeningSetForElement(document);
   // Discrete
-  trapReplayableEvent(TOP_MOUSE_DOWN, document, listeningSet);
-  trapReplayableEvent(TOP_MOUSE_UP, document, listeningSet);
-  trapReplayableEvent(TOP_TOUCH_CANCEL, document, listeningSet);
-  trapReplayableEvent(TOP_TOUCH_END, document, listeningSet);
-  trapReplayableEvent(TOP_TOUCH_START, document, listeningSet);
-  trapReplayableEvent(TOP_AUX_CLICK, document, listeningSet);
-  trapReplayableEvent(TOP_DOUBLE_CLICK, document, listeningSet);
-  trapReplayableEvent(TOP_POINTER_CANCEL, document, listeningSet);
-  trapReplayableEvent(TOP_POINTER_DOWN, document, listeningSet);
-  trapReplayableEvent(TOP_POINTER_UP, document, listeningSet);
-  trapReplayableEvent(TOP_DRAG_END, document, listeningSet);
-  trapReplayableEvent(TOP_DRAG_START, document, listeningSet);
-  trapReplayableEvent(TOP_DROP, document, listeningSet);
-  trapReplayableEvent(TOP_COMPOSITION_END, document, listeningSet);
-  trapReplayableEvent(TOP_COMPOSITION_START, document, listeningSet);
-  trapReplayableEvent(TOP_KEY_DOWN, document, listeningSet);
-  trapReplayableEvent(TOP_KEY_PRESS, document, listeningSet);
-  trapReplayableEvent(TOP_KEY_UP, document, listeningSet);
-  trapReplayableEvent(TOP_INPUT, document, listeningSet);
-  trapReplayableEvent(TOP_TEXT_INPUT, document, listeningSet);
-  trapReplayableEvent(TOP_CLOSE, document, listeningSet);
-  trapReplayableEvent(TOP_CANCEL, document, listeningSet);
-  trapReplayableEvent(TOP_COPY, document, listeningSet);
-  trapReplayableEvent(TOP_CUT, document, listeningSet);
-  trapReplayableEvent(TOP_PASTE, document, listeningSet);
-  trapReplayableEvent(TOP_CLICK, document, listeningSet);
-  trapReplayableEvent(TOP_CHANGE, document, listeningSet);
-  trapReplayableEvent(TOP_CONTEXT_MENU, document, listeningSet);
-  trapReplayableEvent(TOP_RESET, document, listeningSet);
-  trapReplayableEvent(TOP_SUBMIT, document, listeningSet);
+  discreteReplayableEvents.forEach(topLevelType => {
+    trapReplayableEvent(topLevelType, document, listeningSet);
+  });
   // Continuous
-  trapReplayableEvent(TOP_FOCUS, document, listeningSet);
-  trapReplayableEvent(TOP_BLUR, document, listeningSet);
-  trapReplayableEvent(TOP_DRAG_ENTER, document, listeningSet);
-  trapReplayableEvent(TOP_DRAG_LEAVE, document, listeningSet);
-  trapReplayableEvent(TOP_MOUSE_OVER, document, listeningSet);
-  trapReplayableEvent(TOP_MOUSE_OUT, document, listeningSet);
-  trapReplayableEvent(TOP_POINTER_OVER, document, listeningSet);
-  trapReplayableEvent(TOP_POINTER_OUT, document, listeningSet);
-  trapReplayableEvent(TOP_GOT_POINTER_CAPTURE, document, listeningSet);
-  trapReplayableEvent(TOP_LOST_POINTER_CAPTURE, document, listeningSet);
+  continuousReplayableEvents.forEach(topLevelType => {
+    trapReplayableEvent(topLevelType, document, listeningSet);
+  });
 }
 
 function createQueuedReplayableEvent(
