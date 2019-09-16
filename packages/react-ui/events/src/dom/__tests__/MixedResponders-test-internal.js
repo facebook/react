@@ -35,7 +35,7 @@ describe('mixing responders with the heritage event system', () => {
   });
 
   it('should properly only flush sync once when the event systems are mixed', () => {
-    const usePress = require('react-events/press').usePress;
+    const usePress = require('react-ui/events/press').usePress;
     const ref = React.createRef();
     let renderCounts = 0;
 
@@ -104,7 +104,7 @@ describe('mixing responders with the heritage event system', () => {
   });
 
   it('should properly flush sync when the event systems are mixed with unstable_flushDiscreteUpdates', () => {
-    const usePress = require('react-events/press').usePress;
+    const usePress = require('react-ui/events/press').usePress;
     const ref = React.createRef();
     let renderCounts = 0;
 
@@ -177,7 +177,7 @@ describe('mixing responders with the heritage event system', () => {
       'event systems',
     async () => {
       const {useState} = React;
-      const usePress = require('react-events/press').usePress;
+      const usePress = require('react-ui/events/press').usePress;
 
       const button = React.createRef();
 
@@ -237,8 +237,8 @@ describe('mixing responders with the heritage event system', () => {
     it('is async for non-input events', () => {
       ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
       ReactFeatureFlags.enableUserBlockingEvents = true;
-      const usePress = require('react-events/press').usePress;
-      const useInput = require('react-events/input').useInput;
+      const usePress = require('react-ui/events/press').usePress;
+      const useInput = require('react-ui/events/input').useInput;
       const root = ReactDOM.unstable_createRoot(container);
       let input;
 

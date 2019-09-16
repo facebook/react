@@ -28,8 +28,8 @@ function initializeModules(hasPointerEvents) {
   ReactFeatureFlags.enableFlareAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
-  PressResponder = require('react-events/press').PressResponder;
-  usePress = require('react-events/press').usePress;
+  PressResponder = require('react-ui/events/press').PressResponder;
+  usePress = require('react-ui/events/press').usePress;
 }
 
 function removePressMoveStrings(eventString) {

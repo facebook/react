@@ -25,8 +25,8 @@ function initializeModules(hasPointerEvents) {
   ReactFeatureFlags.enableUserBlockingEvents = true;
   React = require('react');
   ReactDOM = require('react-dom');
-  HoverResponder = require('react-events/hover').HoverResponder;
-  useHover = require('react-events/hover').useHover;
+  HoverResponder = require('react-ui/events/hover').HoverResponder;
+  useHover = require('react-ui/events/hover').useHover;
 }
 
 const forcePointerEvents = true;

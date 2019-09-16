@@ -28,7 +28,7 @@ function initializeModules(hasPointerEvents) {
   ReactFeatureFlags.enableFlareAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
-  useContextMenu = require('react-events/context-menu').useContextMenu;
+  useContextMenu = require('react-ui/events/context-menu').useContextMenu;
 }
 
 const forcePointerEvents = true;

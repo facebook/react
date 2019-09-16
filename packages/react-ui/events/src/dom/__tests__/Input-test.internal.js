@@ -39,8 +39,8 @@ const modulesInit = () => {
   React = require('react');
   ReactDOM = require('react-dom');
   Scheduler = require('scheduler');
-  InputResponder = require('react-events/input').InputResponder;
-  useInput = require('react-events/input').useInput;
+  InputResponder = require('react-ui/events/input').InputResponder;
+  useInput = require('react-ui/events/input').useInput;
 };
 
 describe('Input event responder', () => {

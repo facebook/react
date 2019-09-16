@@ -23,7 +23,7 @@ describe('Drag event responder', () => {
     ReactFeatureFlags.enableFlareAPI = true;
     React = require('react');
     ReactDOM = require('react-dom');
-    useDrag = require('react-events/drag').useDrag;
+    useDrag = require('react-ui/events/drag').useDrag;
 
     container = document.createElement('div');
     document.body.appendChild(container);

@@ -24,8 +24,8 @@ function initializeModules(hasPointerEvents) {
   ReactFeatureFlags.enableFlareAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
-  FocusResponder = require('react-events/focus').FocusResponder;
-  useFocus = require('react-events/focus').useFocus;
+  FocusResponder = require('react-ui/events/focus').FocusResponder;
+  useFocus = require('react-ui/events/focus').useFocus;
 }
 
 const forcePointerEvents = true;

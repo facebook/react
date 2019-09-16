@@ -24,8 +24,8 @@ const initializeModules = hasPointerEvents => {
   ReactFeatureFlags.enableFlareAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
-  FocusWithinResponder = require('react-events/focus').FocusWithinResponder;
-  useFocusWithin = require('react-events/focus').useFocusWithin;
+  FocusWithinResponder = require('react-ui/events/focus').FocusWithinResponder;
+  useFocusWithin = require('react-ui/events/focus').useFocusWithin;
 };
 
 const forcePointerEvents = true;

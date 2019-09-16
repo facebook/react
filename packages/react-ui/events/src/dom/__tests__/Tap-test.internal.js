@@ -29,7 +29,7 @@ function initializeModules(hasPointerEvents) {
   ReactFeatureFlags.enableFlareAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
-  useTap = require('react-events/tap').useTap;
+  useTap = require('react-ui/events/tap').useTap;
 }
 
 const coordinatesInside = {x: 51, y: 51};
