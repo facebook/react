@@ -1249,20 +1249,8 @@ function renderRoot(
   if (workInProgress !== null) {
     const prevExecutionContext = executionContext;
     executionContext |= RenderContext;
-    let prevDispatcher = ReactCurrentDispatcher.current;
-    if (prevDispatcher === null) {
-      // The React isomorphic package does not include a default dispatcher.
-      // Instead the first renderer will lazily attach one, in order to give
-      // nicer error messages.
-      prevDispatcher = ContextOnlyDispatcher;
-    }
-    ReactCurrentDispatcher.current = ContextOnlyDispatcher;
-    let prevInteractions: Set<Interaction> | null = null;
-    if (enableSchedulerTracing) {
-      prevInteractions = __interactionsRef.current;
-      __interactionsRef.current = root.memoizedInteractions;
-    }
-
+    const prevDispatcher = pushDispatcher(root);
+    const prevInteractions = pushInteractions(root);
     startWorkLoopTimer(workInProgress);
 
     do {
@@ -1312,13 +1300,44 @@ function renderRoot(
         workInProgress = completeUnitOfWork(sourceFiber);
       }
     } while (true);
-
-    executionContext = prevExecutionContext;
     resetContextDependencies();
-    ReactCurrentDispatcher.current = prevDispatcher;
+    executionContext = prevExecutionContext;
+    popDispatcher(prevDispatcher);
     if (enableSchedulerTracing) {
-      __interactionsRef.current = ((prevInteractions: any): Set<Interaction>);
+      popInteractions(((prevInteractions: any): Set<Interaction>));
     }
+  }
+}
+
+function pushDispatcher(root) {
+  const prevDispatcher = ReactCurrentDispatcher.current;
+  ReactCurrentDispatcher.current = ContextOnlyDispatcher;
+  if (prevDispatcher === null) {
+    // The React isomorphic package does not include a default dispatcher.
+    // Instead the first renderer will lazily attach one, in order to give
+    // nicer error messages.
+    return ContextOnlyDispatcher;
+  } else {
+    return prevDispatcher;
+  }
+}
+
+function popDispatcher(prevDispatcher) {
+  ReactCurrentDispatcher.current = prevDispatcher;
+}
+
+function pushInteractions(root) {
+  if (enableSchedulerTracing) {
+    const prevInteractions: Set<Interaction> | null = __interactionsRef.current;
+    __interactionsRef.current = root.memoizedInteractions;
+    return prevInteractions;
+  }
+  return null;
+}
+
+function popInteractions(prevInteractions) {
+  if (enableSchedulerTracing) {
+    __interactionsRef.current = prevInteractions;
   }
 }
 
@@ -1760,11 +1779,7 @@ function commitRootImpl(root, renderPriorityLevel) {
   if (firstEffect !== null) {
     const prevExecutionContext = executionContext;
     executionContext |= CommitContext;
-    let prevInteractions: Set<Interaction> | null = null;
-    if (enableSchedulerTracing) {
-      prevInteractions = __interactionsRef.current;
-      __interactionsRef.current = root.memoizedInteractions;
-    }
+    const prevInteractions = pushInteractions(root);
 
     // Reset this to null before calling lifecycles
     ReactCurrentOwner.current = null;
@@ -1882,7 +1897,7 @@ function commitRootImpl(root, renderPriorityLevel) {
     requestPaint();
 
     if (enableSchedulerTracing) {
-      __interactionsRef.current = ((prevInteractions: any): Set<Interaction>);
+      popInteractions(((prevInteractions: any): Set<Interaction>));
     }
     executionContext = prevExecutionContext;
   } else {
@@ -2151,18 +2166,13 @@ export function flushPassiveEffects() {
 }
 
 function flushPassiveEffectsImpl(root, expirationTime) {
-  let prevInteractions: Set<Interaction> | null = null;
-  if (enableSchedulerTracing) {
-    prevInteractions = __interactionsRef.current;
-    __interactionsRef.current = root.memoizedInteractions;
-  }
-
   invariant(
     (executionContext & (RenderContext | CommitContext)) === NoContext,
     'Cannot flush passive effects while already rendering.',
   );
   const prevExecutionContext = executionContext;
   executionContext |= CommitContext;
+  const prevInteractions = pushInteractions(root);
 
   // Note: This currently assumes there are no passive effects on the root
   // fiber, because the root is not part of its own effect list. This could
@@ -2193,7 +2203,7 @@ function flushPassiveEffectsImpl(root, expirationTime) {
   }
 
   if (enableSchedulerTracing) {
-    __interactionsRef.current = ((prevInteractions: any): Set<Interaction>);
+    popInteractions(((prevInteractions: any): Set<Interaction>));
     finishPendingInteractions(root, expirationTime);
   }
 
