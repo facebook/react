@@ -11,15 +11,20 @@ import type {
   ReactDOMResponderEvent,
   ReactDOMResponderContext,
 } from 'shared/ReactDOMTypes';
+import type {ReactEventResponderListener} from 'shared/ReactTypes';
 
 import React from 'react';
 import {DiscreteEvent} from 'shared/ReactTypes';
-import type {ReactEventResponderListener} from 'shared/ReactTypes';
+import {isVirtualClick} from './shared';
 
-type KeyboardEventType = 'keyboard:keydown' | 'keyboard:keyup';
+type KeyboardEventType =
+  | 'keyboard:click'
+  | 'keyboard:keydown'
+  | 'keyboard:keyup';
 
 type KeyboardProps = {|
   disabled?: boolean,
+  onClick?: (e: KeyboardEvent) => ?boolean,
   onKeyDown?: (e: KeyboardEvent) => ?boolean,
   onKeyUp?: (e: KeyboardEvent) => ?boolean,
   preventKeys?: PreventKeysArray,
@@ -34,8 +39,8 @@ export type KeyboardEvent = {|
   altKey: boolean,
   ctrlKey: boolean,
   defaultPrevented: boolean,
-  isComposing: boolean,
-  key: string,
+  isComposing?: boolean,
+  key?: string,
   metaKey: boolean,
   pointerType: 'keyboard',
   shiftKey: boolean,
@@ -120,10 +125,6 @@ const translateToKey = {
   '224': 'Meta',
 };
 
-function isFunction(obj): boolean {
-  return typeof obj === 'function';
-}
-
 function getEventKey(nativeEvent: Object): string {
   const nativeKey = nativeEvent.key;
   if (nativeKey) {
@@ -147,14 +148,11 @@ function createKeyboardEvent(
   defaultPrevented: boolean,
 ): KeyboardEvent {
   const nativeEvent = (event: any).nativeEvent;
-  const {altKey, ctrlKey, isComposing, metaKey, shiftKey} = nativeEvent;
-
-  return {
+  const {altKey, ctrlKey, metaKey, shiftKey} = nativeEvent;
+  let keyboardEvent = {
     altKey,
     ctrlKey,
     defaultPrevented,
-    isComposing,
-    key: getEventKey(nativeEvent),
     metaKey,
     pointerType: 'keyboard',
     shiftKey,
@@ -162,6 +160,12 @@ function createKeyboardEvent(
     timeStamp: context.getTimeStamp(),
     type,
   };
+  if (type !== 'keyboard:click') {
+    const key = getEventKey(nativeEvent);
+    const isComposing = nativeEvent.isComposing;
+    keyboardEvent = context.objectAssign({isComposing, key}, keyboardEvent);
+  }
+  return keyboardEvent;
 }
 
 function dispatchKeyboardEvent(
@@ -242,7 +246,7 @@ const keyboardResponderImpl = {
       }
       state.isActive = true;
       const onKeyDown = props.onKeyDown;
-      if (isFunction(onKeyDown)) {
+      if (onKeyDown != null) {
         dispatchKeyboardEvent(
           event,
           ((onKeyDown: any): (e: KeyboardEvent) => ?boolean),
@@ -251,13 +255,25 @@ const keyboardResponderImpl = {
           state.defaultPrevented,
         );
       }
-    } else if (type === 'click' && state.isActive && state.defaultPrevented) {
-      // 'click' occurs before 'keyup' and may need native behavior prevented
-      nativeEvent.preventDefault();
+    } else if (type === 'click' && isVirtualClick(event)) {
+      const onClick = props.onClick;
+      if (onClick != null) {
+        dispatchKeyboardEvent(
+          event,
+          onClick,
+          context,
+          'keyboard:click',
+          state.defaultPrevented,
+        );
+      }
+      if (state.defaultPrevented && !nativeEvent.defaultPrevented) {
+        // 'click' occurs before 'keyup' and may need native behavior prevented
+        nativeEvent.preventDefault();
+      }
     } else if (type === 'keyup') {
       state.isActive = false;
       const onKeyUp = props.onKeyUp;
-      if (isFunction(onKeyUp)) {
+      if (onKeyUp != null) {
         dispatchKeyboardEvent(
           event,
           ((onKeyUp: any): (e: KeyboardEvent) => ?boolean),

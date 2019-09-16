@@ -41,17 +41,21 @@ describe('Keyboard responder', () => {
   });
 
   function renderPropagationTest(propagates) {
+    const onClickInner = jest.fn(() => propagates);
     const onKeyDownInner = jest.fn(() => propagates);
-    const onKeyDownOuter = jest.fn();
     const onKeyUpInner = jest.fn(() => propagates);
+    const onClickOuter = jest.fn();
+    const onKeyDownOuter = jest.fn();
     const onKeyUpOuter = jest.fn();
     const ref = React.createRef();
     const Component = () => {
       const listenerInner = useKeyboard({
+        onClick: onClickInner,
         onKeyDown: onKeyDownInner,
         onKeyUp: onKeyUpInner,
       });
       const listenerOuter = useKeyboard({
+        onClick: onClickOuter,
         onKeyDown: onKeyDownOuter,
         onKeyUp: onKeyUpOuter,
       });
@@ -63,19 +67,23 @@ describe('Keyboard responder', () => {
     };
     ReactDOM.render(<Component />, container);
     return {
+      onClickInner,
       onKeyDownInner,
-      onKeyDownOuter,
       onKeyUpInner,
+      onClickOuter,
+      onKeyDownOuter,
       onKeyUpOuter,
       ref,
     };
   }
 
-  test('propagates event when a callback returns true', () => {
+  test('propagates key event when a callback returns true', () => {
     const {
+      onClickInner,
       onKeyDownInner,
-      onKeyDownOuter,
       onKeyUpInner,
+      onClickOuter,
+      onKeyDownOuter,
       onKeyUpOuter,
       ref,
     } = renderPropagationTest(true);
@@ -86,13 +94,18 @@ describe('Keyboard responder', () => {
     target.keyup();
     expect(onKeyUpInner).toBeCalled();
     expect(onKeyUpOuter).toBeCalled();
+    target.virtualclick();
+    expect(onClickInner).toBeCalled();
+    expect(onClickOuter).toBeCalled();
   });
 
-  test('does not propagate event when a callback returns false', () => {
+  test('does not propagate key event when a callback returns false', () => {
     const {
+      onClickInner,
       onKeyDownInner,
-      onKeyDownOuter,
       onKeyUpInner,
+      onClickOuter,
+      onKeyDownOuter,
       onKeyUpOuter,
       ref,
     } = renderPropagationTest(false);
@@ -103,6 +116,9 @@ describe('Keyboard responder', () => {
     target.keyup();
     expect(onKeyUpInner).toBeCalled();
     expect(onKeyUpOuter).not.toBeCalled();
+    target.virtualclick();
+    expect(onClickInner).toBeCalled();
+    expect(onClickOuter).not.toBeCalled();
   });
 
   describe('disabled', () => {
@@ -125,6 +141,64 @@ describe('Keyboard responder', () => {
       target.keyup();
       expect(onKeyDown).not.toBeCalled();
       expect(onKeyUp).not.toBeCalled();
+    });
+  });
+
+  describe('onClick', () => {
+    let onClick, ref;
+
+    beforeEach(() => {
+      onClick = jest.fn();
+      ref = React.createRef();
+      const Component = () => {
+        const listener = useKeyboard({onClick});
+        return <div ref={ref} listeners={listener} />;
+      };
+      ReactDOM.render(<Component />, container);
+    });
+
+    // e.g, "Enter" on link
+    test('keyboard click is between key events', () => {
+      const target = createEventTarget(ref.current);
+      target.keydown({key: 'Enter'});
+      target.keyup({key: 'Enter'});
+      target.virtualclick();
+      expect(onClick).toHaveBeenCalledTimes(1);
+      expect(onClick).toHaveBeenCalledWith(
+        expect.objectContaining({
+          altKey: false,
+          ctrlKey: false,
+          defaultPrevented: false,
+          metaKey: false,
+          pointerType: 'keyboard',
+          shiftKey: false,
+          target: target.node,
+          timeStamp: expect.any(Number),
+          type: 'keyboard:click',
+        }),
+      );
+    });
+
+    // e.g., "Spacebar" on button
+    test('keyboard click is after key events', () => {
+      const target = createEventTarget(ref.current);
+      target.keydown({key: 'Enter'});
+      target.keyup({key: 'Enter'});
+      target.virtualclick();
+      expect(onClick).toHaveBeenCalledTimes(1);
+      expect(onClick).toHaveBeenCalledWith(
+        expect.objectContaining({
+          altKey: false,
+          ctrlKey: false,
+          defaultPrevented: false,
+          metaKey: false,
+          pointerType: 'keyboard',
+          shiftKey: false,
+          target: target.node,
+          timeStamp: expect.any(Number),
+          type: 'keyboard:click',
+        }),
+      );
     });
   });
 
@@ -271,7 +345,7 @@ describe('Keyboard responder', () => {
 
       const target = createEventTarget(ref.current);
       target.keydown({key: 'Tab', preventDefault});
-      target.click({preventDefault: preventDefaultClick});
+      target.virtualclick({preventDefault: preventDefaultClick});
 
       expect(onKeyDown).toHaveBeenCalledTimes(1);
       expect(preventDefault).toBeCalled();
@@ -293,7 +367,10 @@ describe('Keyboard responder', () => {
 
       const target = createEventTarget(ref.current);
       target.keydown({key: 'Tab', preventDefault, shiftKey: true});
-      target.click({preventDefault: preventDefaultClick, shiftKey: true});
+      target.virtualclick({
+        preventDefault: preventDefaultClick,
+        shiftKey: true,
+      });
 
       expect(onKeyDown).toHaveBeenCalledTimes(1);
       expect(preventDefault).toBeCalled();
@@ -316,7 +393,10 @@ describe('Keyboard responder', () => {
 
       const target = createEventTarget(ref.current);
       target.keydown({key: 'Tab', preventDefault, shiftKey: false});
-      target.click({preventDefault: preventDefaultClick, shiftKey: false});
+      target.virtualclick({
+        preventDefault: preventDefaultClick,
+        shiftKey: false,
+      });
 
       expect(onKeyDown).toHaveBeenCalledTimes(1);
       expect(preventDefault).not.toBeCalled();
