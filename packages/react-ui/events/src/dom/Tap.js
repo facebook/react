@@ -36,26 +36,6 @@ type TapProps = $ReadOnly<{|
   onTapUpdate?: (e: TapEvent) => void,
 |}>;
 
-type TapState = {|
-  activePointerId: null | number,
-  buttons: 0 | 1 | 4,
-  gestureState: TapGestureState,
-  ignoreEmulatedEvents: boolean,
-  initialPosition: {|x: number, y: number|},
-  isActive: boolean,
-  pointerType: PointerType,
-  responderTarget: null | Element,
-  rootEvents: null | Array<string>,
-  shouldPreventClick: boolean,
-|};
-
-type TapEventType =
-  | 'tap-cancel'
-  | 'tap-change'
-  | 'tap-end'
-  | 'tap-start'
-  | 'tap-update';
-
 type TapGestureState = {|
   altKey: boolean,
   buttons: 0 | 1 | 4,
@@ -80,10 +60,31 @@ type TapGestureState = {|
   y: number,
 |};
 
-type TapEvent = $ReadOnly<{|
+type TapState = {|
+  activePointerId: null | number,
+  buttons: 0 | 1 | 4,
+  gestureState: TapGestureState,
+  ignoreEmulatedEvents: boolean,
+  initialPosition: {|x: number, y: number|},
+  isActive: boolean,
+  pointerType: PointerType,
+  responderTarget: null | Element,
+  rootEvents: null | Array<string>,
+  shouldPreventClick: boolean,
+|};
+
+type TapEventType =
+  | 'tap:cancel'
+  | 'tap:change'
+  | 'tap:end'
+  | 'tap:start'
+  | 'tap:update';
+
+type TapEvent = {|
   ...TapGestureState,
+  defaultPrevented: boolean,
   type: TapEventType,
-|}>;
+|};
 
 /**
  * Native event dependencies
@@ -380,6 +381,7 @@ function dispatchStart(
     const payload = context.objectAssign({}, state.gestureState, {type});
     dispatchDiscreteEvent(context, payload, onTapStart);
   }
+  dispatchChange(context, props, state);
 }
 
 function dispatchChange(
@@ -414,8 +416,13 @@ function dispatchEnd(
 ): void {
   const type = 'tap:end';
   const onTapEnd = props.onTapEnd;
+  dispatchChange(context, props, state);
   if (onTapEnd != null) {
-    const payload = context.objectAssign({}, state.gestureState, {type});
+    const defaultPrevented = state.shouldPreventClick === true;
+    const payload = context.objectAssign({}, state.gestureState, {
+      defaultPrevented,
+      type,
+    });
     dispatchDiscreteEvent(context, payload, onTapEnd);
   }
 }
@@ -427,6 +434,7 @@ function dispatchCancel(
 ): void {
   const type = 'tap:cancel';
   const onTapCancel = props.onTapCancel;
+  dispatchChange(context, props, state);
   if (onTapCancel != null) {
     const payload = context.objectAssign({}, state.gestureState, {type});
     dispatchDiscreteEvent(context, payload, onTapCancel);
@@ -451,8 +459,8 @@ const responderImpl = {
     if (props.disabled) {
       removeRootEventTypes(context, state);
       if (state.isActive) {
-        dispatchCancel(context, props, state);
         state.isActive = false;
+        dispatchCancel(context, props, state);
       }
       return;
     }
@@ -498,7 +506,6 @@ const responderImpl = {
           state.initialPosition.y = gestureState.y;
 
           dispatchStart(context, props, state);
-          dispatchChange(context, props, state);
           addRootEventTypes(rootEventTypes, context, state);
 
           if (!hasPointerEvents) {
@@ -522,7 +529,7 @@ const responderImpl = {
     const hitTarget = getHitTarget(event, context, state);
 
     switch (eventType) {
-      // MOVE
+      // UPDATE
       case 'pointermove':
       case 'mousemove':
       case 'touchmove': {
@@ -557,7 +564,6 @@ const responderImpl = {
             dispatchUpdate(context, props, state);
           } else {
             state.isActive = false;
-            dispatchChange(context, props, state);
             dispatchCancel(context, props, state);
           }
         }
@@ -578,7 +584,6 @@ const responderImpl = {
           state.gestureState = createGestureState(context, props, state, event);
 
           state.isActive = false;
-          dispatchChange(context, props, state);
           if (context.isTargetWithinResponder(hitTarget)) {
             // Determine whether to call preventDefault on subsequent native events.
             if (hasModifierKey(event)) {
@@ -606,7 +611,6 @@ const responderImpl = {
         if (state.isActive && isActivePointer(event, state)) {
           state.gestureState = createGestureState(context, props, state, event);
           state.isActive = false;
-          dispatchChange(context, props, state);
           dispatchCancel(context, props, state);
         }
         break;
@@ -625,7 +629,6 @@ const responderImpl = {
         ) {
           state.gestureState = createGestureState(context, props, state, event);
           state.isActive = false;
-          dispatchChange(context, props, state);
           dispatchCancel(context, props, state);
         }
         break;
@@ -647,8 +650,8 @@ const responderImpl = {
   ): void {
     removeRootEventTypes(context, state);
     if (state.isActive) {
-      dispatchCancel(context, props, state);
       state.isActive = false;
+      dispatchCancel(context, props, state);
     }
   },
 };

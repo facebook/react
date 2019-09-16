@@ -703,7 +703,9 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       target.pointerdown();
       target.pointerup({preventDefault});
       expect(preventDefault).toBeCalled();
-      expect(onTapEnd).toBeCalled();
+      expect(onTapEnd).toHaveBeenCalledWith(
+        expect.objectContaining({defaultPrevented: true}),
+      );
     });
 
     test('prevents native behaviour by default (inner target)', () => {
@@ -711,7 +713,9 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       innerTarget.pointerdown();
       innerTarget.pointerup({preventDefault});
       expect(preventDefault).toBeCalled();
-      expect(onTapEnd).toBeCalled();
+      expect(onTapEnd).toHaveBeenCalledWith(
+        expect.objectContaining({defaultPrevented: true}),
+      );
     });
 
     test('allows native behaviour by default (modifier keys)', () => {
@@ -720,7 +724,9 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
         target.pointerdown({[modifierKey]: true});
         target.pointerup({[modifierKey]: true, preventDefault});
         expect(preventDefault).not.toBeCalled();
-        expect(onTapEnd).toBeCalled();
+        expect(onTapEnd).toHaveBeenCalledWith(
+          expect.objectContaining({defaultPrevented: false}),
+        );
       });
     });
 
@@ -731,7 +737,9 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       target.pointerdown();
       target.pointerup({preventDefault});
       expect(preventDefault).not.toBeCalled();
-      expect(onTapEnd).toBeCalled();
+      expect(onTapEnd).toHaveBeenCalledWith(
+        expect.objectContaining({defaultPrevented: false}),
+      );
     });
   });
 });

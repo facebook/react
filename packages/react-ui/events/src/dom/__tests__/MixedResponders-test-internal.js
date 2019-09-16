@@ -35,7 +35,7 @@ describe('mixing responders with the heritage event system', () => {
   });
 
   it('should properly only flush sync once when the event systems are mixed', () => {
-    const usePress = require('react-ui/events/press').usePress;
+    const useTap = require('react-ui/events/tap').useTap;
     const ref = React.createRef();
     let renderCounts = 0;
 
@@ -43,12 +43,12 @@ describe('mixing responders with the heritage event system', () => {
       const [, updateCounter] = React.useState(0);
       renderCounts++;
 
-      function handlePress() {
+      function handleTap() {
         updateCounter(count => count + 1);
       }
 
-      const listener = usePress({
-        onPress: handlePress,
+      const listener = useTap({
+        onTapEnd: handleTap,
       });
 
       return (
@@ -104,7 +104,7 @@ describe('mixing responders with the heritage event system', () => {
   });
 
   it('should properly flush sync when the event systems are mixed with unstable_flushDiscreteUpdates', () => {
-    const usePress = require('react-ui/events/press').usePress;
+    const useTap = require('react-ui/events/tap').useTap;
     const ref = React.createRef();
     let renderCounts = 0;
 
@@ -112,12 +112,12 @@ describe('mixing responders with the heritage event system', () => {
       const [, updateCounter] = React.useState(0);
       renderCounts++;
 
-      function handlePress() {
+      function handleTap() {
         updateCounter(count => count + 1);
       }
 
-      const listener = usePress({
-        onPress: handlePress,
+      const listener = useTap({
+        onTapEnd: handleTap,
       });
 
       return (
@@ -177,7 +177,7 @@ describe('mixing responders with the heritage event system', () => {
       'event systems',
     async () => {
       const {useState} = React;
-      const usePress = require('react-ui/events/press').usePress;
+      const useTap = require('react-ui/events/tap').useTap;
 
       const button = React.createRef();
 
@@ -187,7 +187,7 @@ describe('mixing responders with the heritage event system', () => {
         const [pressesCount, updatePressesCount] = useState(0);
         const [clicksCount, updateClicksCount] = useState(0);
 
-        function handlePress() {
+        function handleTap() {
           // This dispatches a synchronous, discrete event in the legacy event
           // system. However, because it's nested inside the new event system,
           // its updates should not flush until the end of the outer handler.
@@ -198,14 +198,14 @@ describe('mixing responders with the heritage event system', () => {
           updatePressesCount(pressesCount + 1);
         }
 
-        const listener = usePress({
-          onPress: handlePress,
+        const tap = useTap({
+          onTapEnd: handleTap,
         });
 
         return (
           <div>
             <button
-              listeners={listener}
+              listeners={tap}
               ref={button}
               onClick={() => updateClicksCount(clicksCount + 1)}>
               Presses: {pressesCount}, Clicks: {clicksCount}
@@ -237,37 +237,35 @@ describe('mixing responders with the heritage event system', () => {
     it('is async for non-input events', () => {
       ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
       ReactFeatureFlags.enableUserBlockingEvents = true;
-      const usePress = require('react-ui/events/press').usePress;
+      const useTap = require('react-ui/events/tap').useTap;
       const useInput = require('react-ui/events/input').useInput;
       const root = ReactDOM.unstable_createRoot(container);
       let input;
 
       let ops = [];
 
-      function Component({innerRef, onChange, controlledValue, pressListener}) {
-        const inputListener = useInput({
-          onChange,
-        });
+      function Component({innerRef, onChange, controlledValue, listeners}) {
+        const inputListener = useInput({onChange});
         return (
           <input
             type="text"
             ref={innerRef}
             value={controlledValue}
-            listeners={[inputListener, pressListener]}
+            listeners={[inputListener, listeners]}
           />
         );
       }
 
-      function PressWrapper({innerRef, onPress, onChange, controlledValue}) {
-        const pressListener = usePress({
-          onPress,
+      function PressWrapper({innerRef, onTap, onChange, controlledValue}) {
+        const tap = useTap({
+          onTapEnd: onTap,
         });
         return (
           <Component
             onChange={onChange}
             innerRef={el => (input = el)}
             controlledValue={controlledValue}
-            pressListener={pressListener}
+            listeners={tap}
           />
         );
       }
@@ -284,7 +282,7 @@ describe('mixing responders with the heritage event system', () => {
             this.state.value === 'changed' ? 'changed [!]' : this.state.value;
           return (
             <PressWrapper
-              onPress={this.reset}
+              onTap={this.reset}
               onChange={this.onChange}
               innerRef={el => (input = el)}
               controlledValue={controlledValue}
@@ -307,10 +305,18 @@ describe('mixing responders with the heritage event system', () => {
 
       // Trigger a click event
       input.dispatchEvent(
-        new MouseEvent('mousedown', {bubbles: true, cancelable: true}),
+        new MouseEvent('mousedown', {
+          bubbles: true,
+          cancelable: true,
+          buttons: 1,
+        }),
       );
       input.dispatchEvent(
-        new MouseEvent('mouseup', {bubbles: true, cancelable: true}),
+        new MouseEvent('mouseup', {
+          bubbles: true,
+          cancelable: true,
+          buttons: 0,
+        }),
       );
       // Nothing should have changed
       expect(ops).toEqual([]);

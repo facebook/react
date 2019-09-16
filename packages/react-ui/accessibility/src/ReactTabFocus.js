@@ -8,16 +8,17 @@
  */
 
 import type {ReactScopeMethods} from 'shared/ReactTypes';
-import type {KeyboardEvent} from 'react-ui/events/src/dom/Keyboard';
+import type {KeyboardEvent} from 'react-ui/events/keyboard';
 
 import React from 'react';
 import {TabbableScope} from './TabbableScope';
-import {useKeyboard} from '../../events/keyboard';
+import {useKeyboard} from 'react-ui/events/keyboard';
 
 type TabFocusControllerProps = {
   children: React.Node,
   contain?: boolean,
 };
+
 const {useRef} = React;
 
 function getTabbableNodes(scope: ReactScopeMethods) {

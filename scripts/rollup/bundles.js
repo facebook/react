@@ -597,6 +597,21 @@ const bundles = [
     moduleType: NON_FIBER_RENDERER,
     entry: 'react-ui/events/press',
     global: 'ReactEventsPress',
+    externals: ['react', 'react-ui/events/tap', 'react-ui/events/keyboard'],
+  },
+
+  {
+    bundleTypes: [
+      UMD_DEV,
+      UMD_PROD,
+      NODE_DEV,
+      NODE_PROD,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+    ],
+    moduleType: NON_FIBER_RENDERER,
+    entry: 'react-ui/events/press-legacy',
+    global: 'ReactEventsPressLegacy',
     externals: ['react'],
   },
 
