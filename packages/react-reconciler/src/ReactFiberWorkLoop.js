@@ -688,7 +688,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
           workLoopConcurrent();
           break;
         } catch (thrownValue) {
-          handleError(root, workInProgress, thrownValue);
+          handleError(root, thrownValue);
         }
       } while (true);
       resetContextDependencies();
@@ -1031,7 +1031,7 @@ function performSyncWorkOnRoot(root) {
           workLoopSync();
           break;
         } catch (thrownValue) {
-          handleError(root, workInProgress, thrownValue);
+          handleError(root, thrownValue);
         }
       } while (true);
       resetContextDependencies();
@@ -1322,38 +1322,46 @@ function prepareFreshStack(root, expirationTime) {
   }
 }
 
-function handleError(root, sourceFiber, thrownValue) {
-  // Reset module-level state that was set during the render phase.
-  resetContextDependencies();
-  resetHooks();
+function handleError(root, thrownValue) {
+  do {
+    try {
+      // Reset module-level state that was set during the render phase.
+      resetContextDependencies();
+      resetHooks();
 
-  if (workInProgress === null || workInProgress.return === null) {
-    // Expected to be working on a non-root fiber. This is a fatal error
-    // because there's no ancestor that can handle it; the root is
-    // supposed to capture all errors that weren't caught by an error
-    // boundary.
-    workInProgressRootExitStatus = RootFatalErrored;
-    workInProgressRootFatalError = thrownValue;
-    return null;
-  }
+      if (workInProgress === null || workInProgress.return === null) {
+        // Expected to be working on a non-root fiber. This is a fatal error
+        // because there's no ancestor that can handle it; the root is
+        // supposed to capture all errors that weren't caught by an error
+        // boundary.
+        workInProgressRootExitStatus = RootFatalErrored;
+        workInProgressRootFatalError = thrownValue;
+        return null;
+      }
 
-  if (enableProfilerTimer && sourceFiber.mode & ProfileMode) {
-    // Record the time spent rendering before an error was thrown. This
-    // avoids inaccurate Profiler durations in the case of a
-    // suspended render.
-    stopProfilerTimerIfRunningAndRecordDelta(sourceFiber, true);
-  }
+      if (enableProfilerTimer && workInProgress.mode & ProfileMode) {
+        // Record the time spent rendering before an error was thrown. This
+        // avoids inaccurate Profiler durations in the case of a
+        // suspended render.
+        stopProfilerTimerIfRunningAndRecordDelta(workInProgress, true);
+      }
 
-  throwException(
-    root,
-    workInProgress.return,
-    sourceFiber,
-    thrownValue,
-    renderExpirationTime,
-  );
-  // TODO: This is not wrapped in a try-catch, so if the complete phase
-  // throws, we won't capture it.
-  workInProgress = completeUnitOfWork(sourceFiber);
+      throwException(
+        root,
+        workInProgress.return,
+        workInProgress,
+        thrownValue,
+        renderExpirationTime,
+      );
+      workInProgress = completeUnitOfWork(workInProgress);
+    } catch (yetAnotherThrownValue) {
+      // Something in the return path also threw.
+      thrownValue = yetAnotherThrownValue;
+      continue;
+    }
+    // Return to the normal work loop.
+    return;
+  } while (true);
 }
 
 function pushDispatcher(root) {
