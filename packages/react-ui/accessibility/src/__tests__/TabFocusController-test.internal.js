@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {createEventTarget} from 'react-events/src/dom/testing-library';
+import {createEventTarget} from 'react-ui/events/src/dom/testing-library';
 
 let React;
 let ReactFeatureFlags;

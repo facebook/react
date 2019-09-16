@@ -7,11 +7,11 @@
  * @flow
  */
 
-import type {KeyboardEvent} from 'react-events/src/dom/Keyboard';
+import type {KeyboardEvent} from 'react-ui/events/src/dom/Keyboard';
 
 import React from 'react';
 import {tabFocusableImpl} from './TabbableScope';
-import {useKeyboard} from 'react-events/keyboard';
+import {useKeyboard} from '../../events/keyboard';
 
 type GridComponentProps = {
   children: React.Node,

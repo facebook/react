@@ -26,7 +26,7 @@ const initializeModules = hasPointerEvents => {
   ReactFeatureFlags.enableFlareAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
-  useScroll = require('react-events/scroll').useScroll;
+  useScroll = require('react-ui/events/scroll').useScroll;
 };
 
 describe.each(table)('Scroll responder', hasPointerEvents => {

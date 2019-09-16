@@ -22,7 +22,7 @@ function initializeModules(hasPointerEvents) {
   ReactFeatureFlags.enableFlareAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');
-  useKeyboard = require('react-events/keyboard').useKeyboard;
+  useKeyboard = require('react-ui/events/keyboard').useKeyboard;
 }
 
 describe('Keyboard responder', () => {

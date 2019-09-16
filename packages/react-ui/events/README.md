@@ -1,4 +1,4 @@
-# `react-events`
+# `react-ui/events`
 
 *This package is experimental. It is intended for use with the experimental React
 events API that is not available in open source builds.*

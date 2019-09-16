@@ -8,11 +8,11 @@
  */
 
 import type {ReactScopeMethods} from 'shared/ReactTypes';
-import type {KeyboardEvent} from 'react-events/src/dom/Keyboard';
+import type {KeyboardEvent} from 'react-ui/events/src/dom/Keyboard';
 
 import React from 'react';
 import {TabbableScope} from './TabbableScope';
-import {useKeyboard} from 'react-events/keyboard';
+import {useKeyboard} from '../../events/keyboard';
 
 type TabFocusControllerProps = {
   children: React.Node,
