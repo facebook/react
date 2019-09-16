@@ -19,7 +19,7 @@
  * same logic and follow the same code paths.
  */
 
-let lowPriorityWarning = function() {};
+let lowPriorityWarningWithoutStack = function() {};
 
 if (__DEV__) {
   const printWarning = function(format, ...args) {
@@ -36,10 +36,10 @@ if (__DEV__) {
     } catch (x) {}
   };
 
-  lowPriorityWarning = function(condition, format, ...args) {
+  lowPriorityWarningWithoutStack = function(condition, format, ...args) {
     if (format === undefined) {
       throw new Error(
-        '`lowPriorityWarning(condition, format, ...args)` requires a warning ' +
+        '`lowPriorityWarningWithoutStack(condition, format, ...args)` requires a warning ' +
           'message argument',
       );
     }
@@ -49,4 +49,4 @@ if (__DEV__) {
   };
 }
 
-export default lowPriorityWarning;
+export default lowPriorityWarningWithoutStack;

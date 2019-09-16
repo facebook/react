@@ -53,7 +53,7 @@ function transform(file, enc, cb) {
           if (
             callee.isIdentifier({name: 'warning'}) ||
             callee.isIdentifier({name: 'warningWithoutStack'}) ||
-            callee.isIdentifier({name: 'lowPriorityWarning'})
+            callee.isIdentifier({name: 'lowPriorityWarningWithoutStack'})
           ) {
             const node = astPath.node;
 
