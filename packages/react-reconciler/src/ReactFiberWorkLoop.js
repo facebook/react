@@ -1268,8 +1268,7 @@ function renderRoot(
         resetContextDependencies();
         resetHooks();
 
-        const sourceFiber = workInProgress;
-        if (sourceFiber === null || sourceFiber.return === null) {
+        if (workInProgress === null || workInProgress.return === null) {
           // Expected to be working on a non-root fiber. This is a fatal error
           // because there's no ancestor that can handle it; the root is
           // supposed to capture all errors that weren't caught by an error
@@ -1280,24 +1279,12 @@ function renderRoot(
           throw thrownValue;
         }
 
-        if (enableProfilerTimer && sourceFiber.mode & ProfileMode) {
-          // Record the time spent rendering before an error was thrown. This
-          // avoids inaccurate Profiler durations in the case of a
-          // suspended render.
-          stopProfilerTimerIfRunningAndRecordDelta(sourceFiber, true);
-        }
-
-        const returnFiber = sourceFiber.return;
-        throwException(
+        workInProgress = handleError(
           root,
-          returnFiber,
-          sourceFiber,
+          workInProgress.return,
+          workInProgress,
           thrownValue,
-          renderExpirationTime,
         );
-        // TODO: This is not wrapped in a try-catch, so if the complete phase
-        // throws, we won't capture it.
-        workInProgress = completeUnitOfWork(sourceFiber);
       }
     } while (true);
     resetContextDependencies();
@@ -1307,6 +1294,26 @@ function renderRoot(
       popInteractions(((prevInteractions: any): Set<Interaction>));
     }
   }
+}
+
+function handleError(root, returnFiber, sourceFiber, thrownValue) {
+  if (enableProfilerTimer && sourceFiber.mode & ProfileMode) {
+    // Record the time spent rendering before an error was thrown. This
+    // avoids inaccurate Profiler durations in the case of a
+    // suspended render.
+    stopProfilerTimerIfRunningAndRecordDelta(sourceFiber, true);
+  }
+
+  throwException(
+    root,
+    returnFiber,
+    sourceFiber,
+    thrownValue,
+    renderExpirationTime,
+  );
+  // TODO: This is not wrapped in a try-catch, so if the complete phase
+  // throws, we won't capture it.
+  return completeUnitOfWork(sourceFiber);
 }
 
 function pushDispatcher(root) {
