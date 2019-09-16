@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {KeyboardEvent} from '../../events/src/dom/Keyboard';
+import type {KeyboardEvent} from 'react-ui/events/src/dom/Keyboard';
 
 import React from 'react';
 import {tabFocusableImpl} from './TabbableScope';
