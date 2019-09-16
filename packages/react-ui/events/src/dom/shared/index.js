@@ -70,3 +70,17 @@ export function hasModifierKey(event: ReactDOMResponderEvent): boolean {
     altKey === true || ctrlKey === true || metaKey === true || shiftKey === true
   );
 }
+
+// Keyboards, Assitive Technologies, and element.click() all produce "virtual"
+// clicks that do not include coordinates and "detail" is always 0 (where
+// pointer clicks are > 0).
+export function isVirtualClick(event: ReactDOMResponderEvent): boolean {
+  const nativeEvent: any = event.nativeEvent;
+  return (
+    nativeEvent.detail === 0 &&
+    nativeEvent.screenX === 0 &&
+    nativeEvent.screenY === 0 &&
+    nativeEvent.clientX === 0 &&
+    nativeEvent.clientY === 0
+  );
+}

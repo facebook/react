@@ -22,6 +22,7 @@ export const {
   enableUserBlockingEvents,
   disableLegacyContext,
   disableSchedulerTimeoutBasedOnReactExpirationTime,
+  enableTrustedTypesIntegration,
   warnAboutStringRefs,
   warnAboutDefaultPropsOnFunctionComponents,
 } = require('ReactFeatureFlags');

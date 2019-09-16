@@ -7,6 +7,8 @@
  * @flow
  */
 
+import {enableTrustedTypesIntegration} from 'shared/ReactFeatureFlags';
+
 export opaque type ToStringValue =
   | boolean
   | number
@@ -33,5 +35,47 @@ export function getToStringValue(value: mixed): ToStringValue {
     default:
       // function, symbol are assigned as empty strings
       return '';
+  }
+}
+
+/**
+ * Returns true only if Trusted Types are available in global object and the value is a trusted type.
+ */
+let isTrustedTypesValue: (value: any) => boolean;
+// $FlowExpectedError - TrustedTypes are defined only in some browsers or with polyfill
+if (enableTrustedTypesIntegration && typeof trustedTypes !== 'undefined') {
+  isTrustedTypesValue = (value: any) =>
+    trustedTypes.isHTML(value) ||
+    trustedTypes.isScript(value) ||
+    trustedTypes.isScriptURL(value) ||
+    // TrustedURLs are deprecated and will be removed soon: https://github.com/WICG/trusted-types/pull/204
+    (trustedTypes.isURL && trustedTypes.isURL(value));
+} else {
+  isTrustedTypesValue = () => false;
+}
+
+/** Trusted value is a wrapper for "safe" values which can be assigned to DOM execution sinks. */
+export opaque type TrustedValue: {toString(): string, valueOf(): string} = {
+  toString(): string,
+  valueOf(): string,
+};
+
+/**
+ * We allow passing objects with toString method as element attributes or in dangerouslySetInnerHTML
+ * and we do validations that the value is safe. Once we do validation we want to use the validated
+ * value instead of the object (because object.toString may return something else on next call).
+ *
+ * If application uses Trusted Types we don't stringify trusted values, but preserve them as objects.
+ */
+export function toStringOrTrustedType(value: any): string | TrustedValue {
+  if (
+    enableTrustedTypesIntegration &&
+    // fast-path string values as it's most frequent usage of the function
+    typeof value !== 'string' &&
+    isTrustedTypesValue(value)
+  ) {
+    return value;
+  } else {
+    return '' + value;
   }
 }
