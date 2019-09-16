@@ -9,7 +9,7 @@
 
 import {Namespaces} from '../shared/DOMNamespaces';
 import createMicrosoftUnsafeLocalFunction from '../shared/createMicrosoftUnsafeLocalFunction';
-import warningWithoutStack from 'shared/warningWithoutStack';
+import warning from 'shared/warning';
 import type {TrustedValue} from './ToStringValue';
 import {enableTrustedTypesIntegration} from 'shared/ReactFeatureFlags';
 
@@ -32,7 +32,7 @@ const setInnerHTML = createMicrosoftUnsafeLocalFunction(function(
   // the target node
   if (node.namespaceURI === Namespaces.svg) {
     if (enableTrustedTypesIntegration && __DEV__) {
-      warningWithoutStack(
+      warning(
         // $FlowExpectedError - trustedTypes are defined only in some browsers or with polyfill
         typeof trustedTypes === 'undefined',
         "Using 'dangerouslySetInnerHTML' in an svg element with " +

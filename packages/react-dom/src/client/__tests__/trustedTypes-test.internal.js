@@ -80,7 +80,6 @@ describe('when Trusted Types are available in global object', () => {
           "to 'innerHTML' will throw an error if Trusted Types are enforced. " +
           "You can try to wrap your svg element inside a div and use 'dangerouslySetInnerHTML' " +
           'on the enclosing div instead.',
-        {withoutStack: true},
       );
     });
   });
@@ -96,10 +95,7 @@ describe('when Trusted Types are available in global object', () => {
         '    in script (at **)',
     );
 
-    const spy = spyOnDev(console, 'error');
+    // check that the warning is print only once
     ReactDOM.render(<script>alert("I am not executed")</script>, container);
-    if (__DEV__) {
-      expect(spy).toHaveBeenCalledTimes(0);
-    }
   });
 });
