@@ -655,43 +655,96 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   const expirationTime = getNextRootExpirationTimeToWorkOn(root);
   if (expirationTime !== NoWork) {
     const originalCallbackNode = root.callbackNode;
-    try {
-      renderRootConcurrent(root, expirationTime);
-      if (workInProgress !== null) {
-        // There's still work left over. Exit without committing.
-        stopInterruptedWorkLoopTimer();
-      } else {
-        // We now have a consistent tree. The next step is either to commit it,
-        // or, if something suspended, wait to commit it after a timeout.
-        stopFinishedWorkLoopTimer();
+    invariant(
+      (executionContext & (RenderContext | CommitContext)) === NoContext,
+      'Should not already be working.',
+    );
 
-        const finishedWork: Fiber = ((root.finishedWork =
-          root.current.alternate): any);
-        root.finishedExpirationTime = expirationTime;
+    flushPassiveEffects();
 
-        resolveLocksOnRoot(root, expirationTime);
+    // If the root or expiration time have changed, throw out the existing stack
+    // and prepare a fresh one. Otherwise we'll continue where we left off.
+    if (
+      root !== workInProgressRoot ||
+      expirationTime !== renderExpirationTime
+    ) {
+      prepareFreshStack(root, expirationTime);
+      startWorkOnPendingInteractions(root, expirationTime);
+    }
 
-        finishConcurrentRender(
-          root,
-          finishedWork,
-          workInProgressRootExitStatus,
-          expirationTime,
-        );
+    // If we have a work-in-progress fiber, it means there's still work to do
+    // in this root.
+    if (workInProgress !== null) {
+      const prevExecutionContext = executionContext;
+      executionContext |= RenderContext;
+      const prevDispatcher = pushDispatcher(root);
+      const prevInteractions = pushInteractions(root);
+      startWorkLoopTimer(workInProgress);
+      do {
+        try {
+          workLoopConcurrent();
+          break;
+        } catch (thrownValue) {
+          // Reset module-level state that was set during the render phase.
+          resetContextDependencies();
+          resetHooks();
+
+          if (workInProgress === null || workInProgress.return === null) {
+            // Expected to be working on a non-root fiber. This is a fatal error
+            // because there's no ancestor that can handle it; the root is
+            // supposed to capture all errors that weren't caught by an error
+            // boundary.
+            prepareFreshStack(root, expirationTime);
+            executionContext = prevExecutionContext;
+            markRootSuspendedAtTime(root, expirationTime);
+            ensureRootIsScheduled(root);
+            throw thrownValue;
+          }
+
+          workInProgress = handleError(
+            root,
+            workInProgress.return,
+            workInProgress,
+            thrownValue,
+          );
+        }
+      } while (true);
+      resetContextDependencies();
+      executionContext = prevExecutionContext;
+      popDispatcher(prevDispatcher);
+      if (enableSchedulerTracing) {
+        popInteractions(((prevInteractions: any): Set<Interaction>));
       }
-      // Before exiting, make sure there's a callback scheduled for the
-      // pending level. This is intentionally duplicated in the `catch` block,
-      // instead of using `finally`, because it needs to happen before we
-      // possibly return a continuation, and we can't return in the `finally`
-      // block without suppressing a potential error.
-      ensureRootIsScheduled(root);
-      if (root.callbackNode === originalCallbackNode) {
-        // The task node scheduled for this root is the same one that's
-        // currently executed. Need to return a continuation.
-        return performConcurrentWorkOnRoot.bind(null, root);
-      }
-    } catch (error) {
-      ensureRootIsScheduled(root);
-      throw error;
+    }
+
+    if (workInProgress !== null) {
+      // There's still work left over. Exit without committing.
+      stopInterruptedWorkLoopTimer();
+    } else {
+      // We now have a consistent tree. The next step is either to commit it,
+      // or, if something suspended, wait to commit it after a timeout.
+      stopFinishedWorkLoopTimer();
+
+      const finishedWork: Fiber = ((root.finishedWork =
+        root.current.alternate): any);
+      root.finishedExpirationTime = expirationTime;
+
+      resolveLocksOnRoot(root, expirationTime);
+
+      finishConcurrentRender(
+        root,
+        finishedWork,
+        workInProgressRootExitStatus,
+        expirationTime,
+      );
+    }
+    // Before exiting, make sure there's a callback scheduled for the next
+    // pending level.
+    ensureRootIsScheduled(root);
+    if (root.callbackNode === originalCallbackNode) {
+      // The task node scheduled for this root is the same one that's
+      // currently executed. Need to return a continuation.
+      return performConcurrentWorkOnRoot.bind(null, root);
     }
   }
   return null;
@@ -952,53 +1005,112 @@ function performSyncWorkOnRoot(root) {
   // Check if there's expired work on this root. Otherwise, render at Sync.
   const lastExpiredTime = root.lastExpiredTime;
   const expirationTime = lastExpiredTime !== NoWork ? lastExpiredTime : Sync;
-  try {
-    if (root.finishedExpirationTime === expirationTime) {
-      // There's already a pending commit at this expiration time.
-      // TODO: This is poorly factored. This case only exists for the
-      // batch.commit() API.
-      commitRoot(root);
-    } else {
-      renderRootSync(root, expirationTime);
-      invariant(
-        workInProgressRootExitStatus !== RootIncomplete,
-        'Cannot commit an incomplete root. This error is likely caused by a ' +
-          'bug in React. Please file an issue.',
-      );
+  if (root.finishedExpirationTime === expirationTime) {
+    // There's already a pending commit at this expiration time.
+    // TODO: This is poorly factored. This case only exists for the
+    // batch.commit() API.
+    commitRoot(root);
+  } else {
+    invariant(
+      (executionContext & (RenderContext | CommitContext)) === NoContext,
+      'Should not already be working.',
+    );
 
-      // We now have a consistent tree. The next step is either to commit it,
-      // or, if something suspended, wait to commit it after a timeout.
-      stopFinishedWorkLoopTimer();
+    flushPassiveEffects();
 
-      root.finishedWork = ((root.current.alternate: any): Fiber);
-      root.finishedExpirationTime = expirationTime;
+    // If the root or expiration time have changed, throw out the existing stack
+    // and prepare a fresh one. Otherwise we'll continue where we left off.
+    if (
+      root !== workInProgressRoot ||
+      expirationTime !== renderExpirationTime
+    ) {
+      prepareFreshStack(root, expirationTime);
+      startWorkOnPendingInteractions(root, expirationTime);
+    }
 
-      resolveLocksOnRoot(root, expirationTime);
-      if (workInProgressRootExitStatus === RootLocked) {
-        // This root has a lock that prevents it from committing. Exit. If we
-        // begin work on the root again, without any intervening updates, it
-        // will finish without doing additional work.
-        markRootSuspendedAtTime(root, expirationTime);
-      } else {
-        // Set this to null to indicate there's no in-progress render.
-        workInProgressRoot = null;
+    // If we have a work-in-progress fiber, it means there's still work to do
+    // in this root.
+    if (workInProgress !== null) {
+      const prevExecutionContext = executionContext;
+      executionContext |= RenderContext;
+      const prevDispatcher = pushDispatcher(root);
+      const prevInteractions = pushInteractions(root);
+      startWorkLoopTimer(workInProgress);
 
-        if (__DEV__) {
-          if (
-            workInProgressRootExitStatus === RootSuspended ||
-            workInProgressRootExitStatus === RootSuspendedWithDelay
-          ) {
-            flushSuspensePriorityWarningInDEV();
+      do {
+        try {
+          workLoopSync();
+          break;
+        } catch (thrownValue) {
+          // Reset module-level state that was set during the render phase.
+          resetContextDependencies();
+          resetHooks();
+
+          if (workInProgress === null || workInProgress.return === null) {
+            // Expected to be working on a non-root fiber. This is a fatal error
+            // because there's no ancestor that can handle it; the root is
+            // supposed to capture all errors that weren't caught by an error
+            // boundary.
+            prepareFreshStack(root, expirationTime);
+            executionContext = prevExecutionContext;
+            markRootSuspendedAtTime(root, expirationTime);
+            ensureRootIsScheduled(root);
+            throw thrownValue;
           }
+
+          workInProgress = handleError(
+            root,
+            workInProgress.return,
+            workInProgress,
+            thrownValue,
+          );
         }
-        commitRoot(root);
+      } while (true);
+      resetContextDependencies();
+      executionContext = prevExecutionContext;
+      popDispatcher(prevDispatcher);
+      if (enableSchedulerTracing) {
+        popInteractions(((prevInteractions: any): Set<Interaction>));
       }
     }
-  } finally {
-    // Before exiting, make sure there's a callback scheduled for the
-    // pending level.
-    ensureRootIsScheduled(root);
+
+    invariant(
+      workInProgressRootExitStatus !== RootIncomplete,
+      'Cannot commit an incomplete root. This error is likely caused by a ' +
+        'bug in React. Please file an issue.',
+    );
+
+    // We now have a consistent tree. The next step is either to commit it,
+    // or, if something suspended, wait to commit it after a timeout.
+    stopFinishedWorkLoopTimer();
+
+    root.finishedWork = ((root.current.alternate: any): Fiber);
+    root.finishedExpirationTime = expirationTime;
+
+    resolveLocksOnRoot(root, expirationTime);
+    if (workInProgressRootExitStatus === RootLocked) {
+      // This root has a lock that prevents it from committing. Exit. If we
+      // begin work on the root again, without any intervening updates, it
+      // will finish without doing additional work.
+      markRootSuspendedAtTime(root, expirationTime);
+    } else {
+      // Set this to null to indicate there's no in-progress render.
+      workInProgressRoot = null;
+
+      if (__DEV__) {
+        if (
+          workInProgressRootExitStatus === RootSuspended ||
+          workInProgressRootExitStatus === RootSuspendedWithDelay
+        ) {
+          flushSuspensePriorityWarningInDEV();
+        }
+      }
+      commitRoot(root);
+    }
   }
+  // Before exiting, make sure there's a callback scheduled for the next
+  // pending level.
+  ensureRootIsScheduled(root);
   return null;
 }
 
@@ -1224,131 +1336,6 @@ function prepareFreshStack(root, expirationTime) {
   }
 }
 
-function renderRootConcurrent(
-  root: FiberRoot,
-  expirationTime: ExpirationTime,
-): void {
-  invariant(
-    (executionContext & (RenderContext | CommitContext)) === NoContext,
-    'Should not already be working.',
-  );
-
-  flushPassiveEffects();
-
-  // If the root or expiration time have changed, throw out the existing stack
-  // and prepare a fresh one. Otherwise we'll continue where we left off.
-  if (root !== workInProgressRoot || expirationTime !== renderExpirationTime) {
-    prepareFreshStack(root, expirationTime);
-    startWorkOnPendingInteractions(root, expirationTime);
-  }
-
-  // If we have a work-in-progress fiber, it means there's still work to do
-  // in this root.
-  if (workInProgress !== null) {
-    const prevExecutionContext = executionContext;
-    executionContext |= RenderContext;
-    const prevDispatcher = pushDispatcher(root);
-    const prevInteractions = pushInteractions(root);
-    startWorkLoopTimer(workInProgress);
-
-    do {
-      try {
-        workLoop();
-        break;
-      } catch (thrownValue) {
-        // Reset module-level state that was set during the render phase.
-        resetContextDependencies();
-        resetHooks();
-
-        if (workInProgress === null || workInProgress.return === null) {
-          // Expected to be working on a non-root fiber. This is a fatal error
-          // because there's no ancestor that can handle it; the root is
-          // supposed to capture all errors that weren't caught by an error
-          // boundary.
-          prepareFreshStack(root, expirationTime);
-          executionContext = prevExecutionContext;
-          markRootSuspendedAtTime(root, expirationTime);
-          throw thrownValue;
-        }
-
-        workInProgress = handleError(
-          root,
-          workInProgress.return,
-          workInProgress,
-          thrownValue,
-        );
-      }
-    } while (true);
-    resetContextDependencies();
-    executionContext = prevExecutionContext;
-    popDispatcher(prevDispatcher);
-    if (enableSchedulerTracing) {
-      popInteractions(((prevInteractions: any): Set<Interaction>));
-    }
-  }
-}
-
-function renderRootSync(root: FiberRoot, expirationTime: ExpirationTime): void {
-  invariant(
-    (executionContext & (RenderContext | CommitContext)) === NoContext,
-    'Should not already be working.',
-  );
-
-  flushPassiveEffects();
-
-  // If the root or expiration time have changed, throw out the existing stack
-  // and prepare a fresh one. Otherwise we'll continue where we left off.
-  if (root !== workInProgressRoot || expirationTime !== renderExpirationTime) {
-    prepareFreshStack(root, expirationTime);
-    startWorkOnPendingInteractions(root, expirationTime);
-  }
-
-  // If we have a work-in-progress fiber, it means there's still work to do
-  // in this root.
-  if (workInProgress !== null) {
-    const prevExecutionContext = executionContext;
-    executionContext |= RenderContext;
-    const prevDispatcher = pushDispatcher(root);
-    const prevInteractions = pushInteractions(root);
-    startWorkLoopTimer(workInProgress);
-
-    do {
-      try {
-        workLoopSync();
-        break;
-      } catch (thrownValue) {
-        // Reset module-level state that was set during the render phase.
-        resetContextDependencies();
-        resetHooks();
-
-        if (workInProgress === null || workInProgress.return === null) {
-          // Expected to be working on a non-root fiber. This is a fatal error
-          // because there's no ancestor that can handle it; the root is
-          // supposed to capture all errors that weren't caught by an error
-          // boundary.
-          prepareFreshStack(root, expirationTime);
-          executionContext = prevExecutionContext;
-          markRootSuspendedAtTime(root, expirationTime);
-          throw thrownValue;
-        }
-
-        workInProgress = handleError(
-          root,
-          workInProgress.return,
-          workInProgress,
-          thrownValue,
-        );
-      }
-    } while (true);
-    resetContextDependencies();
-    executionContext = prevExecutionContext;
-    popDispatcher(prevDispatcher);
-    if (enableSchedulerTracing) {
-      popInteractions(((prevInteractions: any): Set<Interaction>));
-    }
-  }
-}
-
 function handleError(root, returnFiber, sourceFiber, thrownValue) {
   if (enableProfilerTimer && sourceFiber.mode & ProfileMode) {
     // Record the time spent rendering before an error was thrown. This
@@ -1511,7 +1498,7 @@ function workLoopSync() {
 }
 
 /** @noinline */
-function workLoop() {
+function workLoopConcurrent() {
   // Perform work until Scheduler asks us to yield
   while (workInProgress !== null && !shouldYield()) {
     workInProgress = performUnitOfWork(workInProgress);
