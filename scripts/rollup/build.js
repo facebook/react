@@ -338,6 +338,7 @@ function getPlugins(
     useForks(forks),
     // Ensure we don't try to bundle any fbjs modules.
     forbidFBJSImports(),
+    // Replace any externals with their valid internal FB mappings
     isFBBundle && replace(Bundles.fbBundleExternalsMap),
     // Use Node resolution mechanism.
     resolve({
