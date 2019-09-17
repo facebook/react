@@ -11,48 +11,30 @@ import {getDisplayName} from 'react-devtools-shared/src/utils';
 
 describe('utils', () => {
   describe('getDisplayName', () => {
-    const fallbackName = 'TestFallbackName';
-
-    it('should return default fallback name for empty object', () => {
-      const result = getDisplayName({});
-      expect(result).toEqual('Anonymous');
+    it('should return a function name', () => {
+      function FauxComponent() {}
+      expect(getDisplayName(FauxComponent)).toEqual('FauxComponent');
     });
 
-    it('should return displayName property from object', () => {
-      const obj = {
-        displayName: 'TestDisplayName',
-      };
-      const result = getDisplayName(obj);
-      expect(result).toEqual(obj.displayName);
+    it('should return a displayName name if specified', () => {
+      function FauxComponent() {}
+      FauxComponent.displayName = 'OverrideDisplayName';
+      expect(getDisplayName(FauxComponent)).toEqual('OverrideDisplayName');
     });
 
-    it('should return name property from object', () => {
-      const obj = {
-        name: 'TestName',
-      };
-      const result = getDisplayName(obj);
-      expect(result).toEqual(obj.name);
+    it('should return the fallback for anonymous functions', () => {
+      expect(getDisplayName(() => {}, 'Fallback')).toEqual('Fallback');
     });
 
-    it('should return provided fallback name for empty object', () => {
-      const result = getDisplayName({}, fallbackName);
-      expect(result).toEqual(fallbackName);
+    it('should return Anonymous for anonymous functions without a fallback', () => {
+      expect(getDisplayName(() => {})).toEqual('Anonymous');
     });
 
-    it('should provide fallback name when displayName prop is not a string', () => {
-      const obj = {
-        displayName: {},
-      };
-      const result = getDisplayName(obj, fallbackName);
-      expect(result).toEqual(fallbackName);
-    });
-
-    it('should provide fallback name when name prop is not a string', () => {
-      const obj = {
-        name: {},
-      };
-      const result = getDisplayName(obj, fallbackName);
-      expect(result).toEqual(fallbackName);
+    // Simulate a reported bug:
+    // https://github.com/facebook/react/issues/16685
+    it('should return a fallback when the name prop is not a string', () => {
+      const FauxComponent = {name: {}};
+      expect(getDisplayName(FauxComponent, 'Fallback')).toEqual('Fallback');
     });
   });
 });
