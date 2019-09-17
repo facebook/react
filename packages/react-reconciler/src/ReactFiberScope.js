@@ -143,6 +143,10 @@ export function createScopeMethods(
       }
       return null;
     },
+    getProps(): Object {
+      const currentFiber = ((instance.fiber: any): Fiber);
+      return currentFiber.memoizedProps;
+    },
     getScopedNodes(): null | Array<Object> {
       const currentFiber = ((instance.fiber: any): Fiber);
       const child = currentFiber.child;
