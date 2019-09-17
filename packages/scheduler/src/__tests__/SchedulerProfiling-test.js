@@ -483,6 +483,32 @@ Task 2 [Normal]              │    ░░░░░░░░🡐 canceled
     );
   });
 
+  it('handles delayed tasks', () => {
+    Scheduler.unstable_Profiling.startLoggingProfilingEvents();
+    scheduleCallback(
+      NormalPriority,
+      () => {
+        Scheduler.unstable_advanceTime(1000);
+        Scheduler.unstable_yieldValue('A');
+      },
+      {
+        delay: 1000,
+      },
+    );
+    expect(Scheduler).toFlushWithoutYielding();
+
+    Scheduler.unstable_advanceTime(1000);
+
+    expect(Scheduler).toFlushAndYield(['A']);
+
+    expect(stopProfilingAndPrintFlamegraph()).toEqual(
+      `
+!!! Main thread              │████████████████████░░░░░░░░░░░░░░░░░░░░
+Task 1 [Normal]              │                    ████████████████████
+`,
+    );
+  });
+
   it('handles cancelling a delayed task', () => {
     Scheduler.unstable_Profiling.startLoggingProfilingEvents();
     const task = scheduleCallback(
