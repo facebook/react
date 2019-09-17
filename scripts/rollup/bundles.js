@@ -659,7 +659,47 @@ const bundles = [
     global: 'ReactEventsTap',
     externals: ['react'],
   },
+
+  // React UI - Accessibility
+
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
+    moduleType: NON_FIBER_RENDERER,
+    entry: 'react-ui/accessibility/focus-table',
+    global: 'ReactFocusTable',
+    externals: [
+      'react',
+      'react-ui/events/keyboard',
+      'react-ui/accessibility/tabbable-scope',
+    ],
+  },
+
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
+    moduleType: NON_FIBER_RENDERER,
+    entry: 'react-ui/accessibility/tab-focus',
+    global: 'TabFocus',
+    externals: [
+      'react',
+      'react-ui/events/keyboard',
+      'react-ui/accessibility/tabbable-scope',
+    ],
+  },
+
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
+    moduleType: NON_FIBER_RENDERER,
+    entry: 'react-ui/accessibility/tabbable-scope',
+    global: 'ReactTabbableScope',
+    externals: ['react'],
+  },
 ];
+
+const fbBundleExternalsMap = {
+  'react-ui/events/keyboard': 'ReactEventsKeyboard',
+  'react-ui/events/tap': 'ReactEventsTap',
+  'react-ui/accessibility/tabbable-scope': 'ReactTabbableScope',
+};
 
 // Based on deep-freeze by substack (public domain)
 function deepFreeze(o) {
@@ -682,6 +722,7 @@ deepFreeze(bundleTypes);
 deepFreeze(moduleTypes);
 
 module.exports = {
+  fbBundleExternalsMap,
   bundleTypes,
   moduleTypes,
   bundles,

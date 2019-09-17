@@ -20,7 +20,7 @@ describe('TabFocusController', () => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableScopeAPI = true;
     ReactFeatureFlags.enableFlareAPI = true;
-    ReactTabFocus = require('../ReactTabFocus');
+    ReactTabFocus = require('../TabFocus');
     TabFocusController = ReactTabFocus.TabFocusController;
     React = require('react');
   });

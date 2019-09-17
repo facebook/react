@@ -11,7 +11,7 @@ import type {ReactScopeMethods} from 'shared/ReactTypes';
 import type {KeyboardEvent} from 'react-ui/events/keyboard';
 
 import React from 'react';
-import {TabbableScope} from './TabbableScope';
+import {TabbableScope} from 'react-ui/accessibility/tabbable-scope';
 import {useKeyboard} from 'react-ui/events/keyboard';
 
 type TabFocusControllerProps = {

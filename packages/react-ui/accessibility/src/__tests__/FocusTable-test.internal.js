@@ -19,7 +19,7 @@ describe('ReactFocusTable', () => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableScopeAPI = true;
     ReactFeatureFlags.enableFlareAPI = true;
-    createFocusTable = require('../ReactFocusTable').createFocusTable;
+    createFocusTable = require('../FocusTable').createFocusTable;
     React = require('react');
   });
 
