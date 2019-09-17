@@ -21,6 +21,7 @@ import {
   getNodeFromInstance,
 } from '../client/ReactDOMComponentTree';
 import {HostComponent, HostText} from 'shared/ReactWorkTags';
+import {getNearestMountedFiber} from 'react-reconciler/reflection';
 
 const eventTypes = {
   mouseEnter: {
@@ -100,8 +101,14 @@ const EnterLeaveEventPlugin = {
       from = targetInst;
       const related = nativeEvent.relatedTarget || nativeEvent.toElement;
       to = related ? getClosestInstanceFromNode(related) : null;
-      if (to !== null && to.tag !== HostComponent && to.tag !== HostText) {
-        to = null;
+      if (to !== null) {
+        const nearestMounted = getNearestMountedFiber(to);
+        if (
+          to !== nearestMounted ||
+          (to.tag !== HostComponent && to.tag !== HostText)
+        ) {
+          to = null;
+        }
       }
     } else {
       // Moving to a node from outside the window.

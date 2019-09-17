@@ -17,6 +17,58 @@ let ReactFeatureFlags;
 let Suspense;
 let SuspenseList;
 let act;
+let useHover;
+
+function dispatchMouseEvent(to, from) {
+  if (!to) {
+    to = null;
+  }
+  if (!from) {
+    from = null;
+  }
+  if (from) {
+    const mouseOutEvent = document.createEvent('MouseEvents');
+    mouseOutEvent.initMouseEvent(
+      'mouseout',
+      true,
+      true,
+      window,
+      0,
+      50,
+      50,
+      50,
+      50,
+      false,
+      false,
+      false,
+      false,
+      0,
+      to,
+    );
+    from.dispatchEvent(mouseOutEvent);
+  }
+  if (to) {
+    const mouseOverEvent = document.createEvent('MouseEvents');
+    mouseOverEvent.initMouseEvent(
+      'mouseover',
+      true,
+      true,
+      window,
+      0,
+      50,
+      50,
+      50,
+      50,
+      false,
+      false,
+      false,
+      false,
+      0,
+      from,
+    );
+    to.dispatchEvent(mouseOverEvent);
+  }
+}
 
 describe('ReactDOMServerPartialHydration', () => {
   beforeEach(() => {
@@ -34,6 +86,8 @@ describe('ReactDOMServerPartialHydration', () => {
     Scheduler = require('scheduler');
     Suspense = React.Suspense;
     SuspenseList = React.unstable_SuspenseList;
+
+    useHover = require('react-interactions/events/hover').useHover;
   });
 
   it('hydrates a parent even if a child Suspense boundary is blocked', async () => {
@@ -2039,5 +2093,224 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(clicks).toBe(1);
 
     document.body.removeChild(parentContainer);
+  });
+
+  it('blocks only on the last continuous event (legacy system)', async () => {
+    let suspend1 = false;
+    let resolve1;
+    let promise1 = new Promise(resolvePromise => (resolve1 = resolvePromise));
+    let suspend2 = false;
+    let resolve2;
+    let promise2 = new Promise(resolvePromise => (resolve2 = resolvePromise));
+
+    function First({text}) {
+      if (suspend1) {
+        throw promise1;
+      } else {
+        return 'Hello';
+      }
+    }
+
+    function Second({text}) {
+      if (suspend2) {
+        throw promise2;
+      } else {
+        return 'World';
+      }
+    }
+
+    let ops = [];
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading First...">
+            <span
+              onMouseEnter={() => ops.push('Mouse Enter First')}
+              onMouseLeave={() => ops.push('Mouse Leave First')}
+            />
+            {/* We suspend after to test what happens when we eager
+                attach the listener. */}
+            <First />
+          </Suspense>
+          <Suspense fallback="Loading Second...">
+            <span
+              onMouseEnter={() => ops.push('Mouse Enter Second')}
+              onMouseLeave={() => ops.push('Mouse Leave Second')}>
+              <Second />
+            </span>
+          </Suspense>
+        </div>
+      );
+    }
+
+    let finalHTML = ReactDOMServer.renderToString(<App />);
+    let container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    // We need this to be in the document since we'll dispatch events on it.
+    document.body.appendChild(container);
+
+    let appDiv = container.getElementsByTagName('div')[0];
+    let firstSpan = appDiv.getElementsByTagName('span')[0];
+    let secondSpan = appDiv.getElementsByTagName('span')[1];
+    expect(firstSpan.textContent).toBe('');
+    expect(secondSpan.textContent).toBe('World');
+
+    // On the client we don't have all data yet but we want to start
+    // hydrating anyway.
+    suspend1 = true;
+    suspend2 = true;
+    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    root.render(<App />);
+
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+
+    dispatchMouseEvent(appDiv, null);
+    dispatchMouseEvent(firstSpan, appDiv);
+    dispatchMouseEvent(secondSpan, firstSpan);
+
+    // Neither target is yet hydrated.
+    expect(ops).toEqual([]);
+
+    // Resolving the second promise so that rendering can complete.
+    suspend2 = false;
+    resolve2();
+    await promise2;
+
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+
+    // We've unblocked the current hover target so we should be
+    // able to replay it now.
+    expect(ops).toEqual(['Mouse Enter Second']);
+
+    // Resolving the first promise has no effect now.
+    suspend1 = false;
+    resolve1();
+    await promise1;
+
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+
+    expect(ops).toEqual(['Mouse Enter Second']);
+
+    document.body.removeChild(container);
+  });
+
+  it('blocks only on the last continuous event (Responder system)', async () => {
+    let suspend1 = false;
+    let resolve1;
+    let promise1 = new Promise(resolvePromise => (resolve1 = resolvePromise));
+    let suspend2 = false;
+    let resolve2;
+    let promise2 = new Promise(resolvePromise => (resolve2 = resolvePromise));
+
+    function First({text}) {
+      if (suspend1) {
+        throw promise1;
+      } else {
+        return 'Hello';
+      }
+    }
+
+    function Second({text}) {
+      if (suspend2) {
+        throw promise2;
+      } else {
+        return 'World';
+      }
+    }
+
+    let ops = [];
+
+    function App() {
+      const listener1 = useHover({
+        onHoverStart() {
+          ops.push('Hover Start First');
+        },
+        onHoverEnd() {
+          ops.push('Hover End First');
+        },
+      });
+      const listener2 = useHover({
+        onHoverStart() {
+          ops.push('Hover Start Second');
+        },
+        onHoverEnd() {
+          ops.push('Hover End Second');
+        },
+      });
+      return (
+        <div>
+          <Suspense fallback="Loading First...">
+            <span listeners={listener1} />
+            {/* We suspend after to test what happens when we eager
+                attach the listener. */}
+            <First />
+          </Suspense>
+          <Suspense fallback="Loading Second...">
+            <span listeners={listener2}>
+              <Second />
+            </span>
+          </Suspense>
+        </div>
+      );
+    }
+
+    let finalHTML = ReactDOMServer.renderToString(<App />);
+    let container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    // We need this to be in the document since we'll dispatch events on it.
+    document.body.appendChild(container);
+
+    let appDiv = container.getElementsByTagName('div')[0];
+    let firstSpan = appDiv.getElementsByTagName('span')[0];
+    let secondSpan = appDiv.getElementsByTagName('span')[1];
+    expect(firstSpan.textContent).toBe('');
+    expect(secondSpan.textContent).toBe('World');
+
+    // On the client we don't have all data yet but we want to start
+    // hydrating anyway.
+    suspend1 = true;
+    suspend2 = true;
+    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    root.render(<App />);
+
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+
+    dispatchMouseEvent(appDiv, null);
+    dispatchMouseEvent(firstSpan, appDiv);
+    dispatchMouseEvent(secondSpan, firstSpan);
+
+    // Neither target is yet hydrated.
+    expect(ops).toEqual([]);
+
+    // Resolving the second promise so that rendering can complete.
+    suspend2 = false;
+    resolve2();
+    await promise2;
+
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+
+    // We've unblocked the current hover target so we should be
+    // able to replay it now.
+    expect(ops).toEqual(['Hover Start Second']);
+
+    // Resolving the first promise has no effect now.
+    suspend1 = false;
+    resolve1();
+    await promise1;
+
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+
+    expect(ops).toEqual(['Hover Start Second']);
+
+    document.body.removeChild(container);
   });
 });
