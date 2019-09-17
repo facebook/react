@@ -41,8 +41,8 @@ describe('ReactFocusTable', () => {
     function createFocusTableComponent() {
       const [FocusTable, FocusTableRow, FocusTableCell] = createFocusTable();
 
-      return ({onNavigateOut, id}) => (
-        <FocusTable onNavigateOut={onNavigateOut} id={id}>
+      return ({onKeyboardOut, id}) => (
+        <FocusTable onKeyboardOut={onKeyboardOut} id={id}>
           <table>
             <tbody>
               <FocusTableRow>
@@ -161,7 +161,7 @@ describe('ReactFocusTable', () => {
               <h2>Left Sidebar</h2>
               <FocusTable
                 id="left-sidebar"
-                onNavigateOut={(direction, focusTableByID) => {
+                onKeyboardOut={(direction, focusTableByID) => {
                   if (direction === 'right') {
                     focusTableByID('content');
                   }
@@ -172,7 +172,7 @@ describe('ReactFocusTable', () => {
               <h2>Content</h2>
               <FocusTable
                 id="content"
-                onNavigateOut={(direction, focusTableByID) => {
+                onKeyboardOut={(direction, focusTableByID) => {
                   if (direction === 'right') {
                     focusTableByID('right-sidebar');
                   } else if (direction === 'left') {
@@ -185,7 +185,7 @@ describe('ReactFocusTable', () => {
               <h2>Right Sidebar</h2>
               <FocusTable
                 id="right-sidebar"
-                onNavigateOut={(direction, focusTableByID) => {
+                onKeyboardOut={(direction, focusTableByID) => {
                   if (direction === 'left') {
                     focusTableByID('content');
                   }

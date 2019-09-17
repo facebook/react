@@ -25,7 +25,7 @@ type FocusRowProps = {
 type FocusTableProps = {|
   children: React.Node,
   id?: string,
-  onNavigateOut?: (
+  onKeyboardOut?: (
     direction: 'left' | 'right' | 'up' | 'down',
     focusTableByID: (id: string) => void,
   ) => void,
@@ -108,8 +108,8 @@ function triggerNavigateOut(
     const table = row.getParent();
     if (table !== null) {
       const props = table.getProps();
-      const onNavigateOut = props.onNavigateOut;
-      if (props.type === 'table' && typeof onNavigateOut === 'function') {
+      const onKeyboardOut = props.onKeyboardOut;
+      if (props.type === 'table' && typeof onKeyboardOut === 'function') {
         const focusTableByID = (id: string) => {
           const topLevelTables = table.getChildrenFromRoot();
           if (topLevelTables !== null) {
@@ -122,7 +122,7 @@ function triggerNavigateOut(
             }
           }
         };
-        onNavigateOut(direction, focusTableByID);
+        onKeyboardOut(direction, focusTableByID);
       }
     }
   }
@@ -131,9 +131,9 @@ function triggerNavigateOut(
 export function createFocusTable(): Array<React.Component> {
   const TableScope = React.unstable_createScope(tabFocusableImpl);
 
-  function Table({children, onNavigateOut, id}): FocusTableProps {
+  function Table({children, onKeyboardOut, id}): FocusTableProps {
     return (
-      <TableScope type="table" onNavigateOut={onNavigateOut} id={id}>
+      <TableScope type="table" onKeyboardOut={onKeyboardOut} id={id}>
         {children}
       </TableScope>
     );
