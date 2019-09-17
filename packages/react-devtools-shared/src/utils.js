@@ -53,7 +53,7 @@ export function getDisplayName(
   // github.com/facebook/react-devtools/issues/803
   if (typeof type.displayName === 'string') {
     displayName = type.displayName;
-  } else if (typeof type.name === 'string') {
+  } else if (typeof type.name === 'string' && type.name !== '') {
     displayName = type.name;
   }
 
