@@ -59,15 +59,9 @@ if (enableTrustedTypesIntegration && typeof trustedTypes !== 'undefined') {
   // TrustedURLs are deprecated and will be removed soon: https://github.com/WICG/trusted-types/pull/204
   const isURL = trustedTypes.isURL ? trustedTypes.isURL : value => false;
   toStringOrTrustedType = value => {
-    if (typeof value === 'string') {
-      // Fast-path string values as it's most frequent usage of the function.
-      return value;
-    }
     if (
-      isHTML(value) ||
-      isScript(value) ||
-      isScriptURL(value) ||
-      isURL(value)
+      typeof value === 'object' &&
+      (isHTML(value) || isScript(value) || isScriptURL(value) || isURL(value))
     ) {
       // Pass Trusted Types through.
       return value;
