@@ -9,7 +9,4 @@
 
 'use strict';
 
-module.exports = {
-  createFocusGrid: require('./src/FocusGrid').createFocusGrid,
-  TabFocus: require('./src/ReactTabFocus'),
-};
+module.exports = require('./src/TabFocus');
