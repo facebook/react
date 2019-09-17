@@ -659,7 +659,22 @@ const bundles = [
     global: 'ReactEventsTap',
     externals: ['react'],
   },
+
+  // React UI - Accessibility
+
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
+    moduleType: NON_FIBER_RENDERER,
+    entry: 'react-ui/accessibility',
+    global: 'ReactAccessibility',
+    externals: ['react', 'react-ui/events/keyboard'],
+  },
 ];
+
+const fbBundleExternalsMap = {
+  'react-ui/events/keyboard': 'ReactEventsKeyboard',
+  'react-ui/events/tap': 'ReactEventsTap',
+};
 
 // Based on deep-freeze by substack (public domain)
 function deepFreeze(o) {
@@ -682,6 +697,7 @@ deepFreeze(bundleTypes);
 deepFreeze(moduleTypes);
 
 module.exports = {
+  fbBundleExternalsMap,
   bundleTypes,
   moduleTypes,
   bundles,
