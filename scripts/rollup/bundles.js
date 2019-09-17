@@ -678,7 +678,7 @@ const bundles = [
     bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
     moduleType: NON_FIBER_RENDERER,
     entry: 'react-ui/accessibility/tab-focus',
-    global: 'TabFocus',
+    global: 'ReactTabFocus',
     externals: [
       'react',
       'react-ui/events/keyboard',
