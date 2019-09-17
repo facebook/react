@@ -38,22 +38,6 @@ export function getToStringValue(value: mixed): ToStringValue {
   }
 }
 
-/**
- * Returns true only if Trusted Types are available in global object and the value is a trusted type.
- */
-let isTrustedTypesValue: (value: any) => boolean;
-// $FlowExpectedError - TrustedTypes are defined only in some browsers or with polyfill
-if (enableTrustedTypesIntegration && typeof trustedTypes !== 'undefined') {
-  isTrustedTypesValue = (value: any) =>
-    trustedTypes.isHTML(value) ||
-    trustedTypes.isScript(value) ||
-    trustedTypes.isScriptURL(value) ||
-    // TrustedURLs are deprecated and will be removed soon: https://github.com/WICG/trusted-types/pull/204
-    (trustedTypes.isURL && trustedTypes.isURL(value));
-} else {
-  isTrustedTypesValue = () => false;
-}
-
 /** Trusted value is a wrapper for "safe" values which can be assigned to DOM execution sinks. */
 export opaque type TrustedValue: {toString(): string, valueOf(): string} = {
   toString(): string,
@@ -67,15 +51,21 @@ export opaque type TrustedValue: {toString(): string, valueOf(): string} = {
  *
  * If application uses Trusted Types we don't stringify trusted values, but preserve them as objects.
  */
-export function toStringOrTrustedType(value: any): string | TrustedValue {
-  if (
-    enableTrustedTypesIntegration &&
-    // fast-path string values as it's most frequent usage of the function
-    typeof value !== 'string' &&
-    isTrustedTypesValue(value)
-  ) {
-    return value;
-  } else {
-    return '' + value;
-  }
+export let toStringOrTrustedType: any => string | TrustedValue = toString;
+if (enableTrustedTypesIntegration && typeof trustedTypes !== 'undefined') {
+  const isHTML = trustedTypes.isHTML;
+  const isScript = trustedTypes.isScript;
+  const isScriptURL = trustedTypes.isScriptURL;
+  // TrustedURLs are deprecated and will be removed soon: https://github.com/WICG/trusted-types/pull/204
+  const isURL = trustedTypes.isURL ? trustedTypes.isURL : value => false;
+  toStringOrTrustedType = value => {
+    if (
+      typeof value === 'object' &&
+      (isHTML(value) || isScript(value) || isScriptURL(value) || isURL(value))
+    ) {
+      // Pass Trusted Types through.
+      return value;
+    }
+    return toString(value);
+  };
 }
