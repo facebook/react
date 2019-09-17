@@ -14,11 +14,13 @@ describe('when Trusted Types are available in global object', () => {
   let ReactDOM;
   let ReactFeatureFlags;
   let container;
-  let fakeTTObjects;
+  let ttObject1;
+  let ttObject2;
 
   beforeEach(() => {
     jest.resetModules();
     container = document.createElement('div');
+    const fakeTTObjects = new Set();
     window.trustedTypes = {
       isHTML: value => fakeTTObjects.has(value),
       isScript: () => false,
@@ -28,7 +30,18 @@ describe('when Trusted Types are available in global object', () => {
     ReactFeatureFlags.enableTrustedTypesIntegration = true;
     React = require('react');
     ReactDOM = require('react-dom');
-    fakeTTObjects = new Set();
+    ttObject1 = {
+      toString() {
+        return '<b>Hi</b>';
+      },
+    };
+    ttObject2 = {
+      toString() {
+        return '<b>Bye</b>';
+      },
+    };
+    fakeTTObjects.add(ttObject1);
+    fakeTTObjects.add(ttObject2);
   });
 
   afterEach(() => {
@@ -36,19 +49,6 @@ describe('when Trusted Types are available in global object', () => {
   });
 
   it('should not stringify trusted values for dangerouslySetInnerHTML', () => {
-    const ttObject1 = {
-      toString() {
-        return '<b>Hi</b>';
-      },
-    };
-    const ttObject2 = {
-      toString() {
-        return '<b>Bye</b>';
-      },
-    };
-    fakeTTObjects.add(ttObject1);
-    fakeTTObjects.add(ttObject2);
-
     let innerHTMLDescriptor = Object.getOwnPropertyDescriptor(
       Element.prototype,
       'innerHTML',
@@ -92,19 +92,6 @@ describe('when Trusted Types are available in global object', () => {
   });
 
   it('should not stringify trusted values for setAttribute (unknown attribute)', () => {
-    const ttObject1 = {
-      toString() {
-        return '<b>Hi</b>';
-      },
-    };
-    const ttObject2 = {
-      toString() {
-        return '<b>Bye</b>';
-      },
-    };
-    fakeTTObjects.add(ttObject1);
-    fakeTTObjects.add(ttObject2);
-
     let setAttribute = Element.prototype.setAttribute;
     try {
       const setAttributeCalls = [];
@@ -133,19 +120,6 @@ describe('when Trusted Types are available in global object', () => {
   });
 
   it('should not stringify trusted values for setAttribute (known attribute)', () => {
-    const ttObject1 = {
-      toString() {
-        return '<b>Hi</b>';
-      },
-    };
-    const ttObject2 = {
-      toString() {
-        return '<b>Bye</b>';
-      },
-    };
-    fakeTTObjects.add(ttObject1);
-    fakeTTObjects.add(ttObject2);
-
     let setAttribute = Element.prototype.setAttribute;
     try {
       const setAttributeCalls = [];
@@ -174,19 +148,6 @@ describe('when Trusted Types are available in global object', () => {
   });
 
   it('should not stringify trusted values for setAttributeNS', () => {
-    const ttObject1 = {
-      toString() {
-        return '<b>Hi</b>';
-      },
-    };
-    const ttObject2 = {
-      toString() {
-        return '<b>Bye</b>';
-      },
-    };
-    fakeTTObjects.add(ttObject1);
-    fakeTTObjects.add(ttObject2);
-
     let setAttributeNS = Element.prototype.setAttributeNS;
     try {
       const setAttributeNSCalls = [];
