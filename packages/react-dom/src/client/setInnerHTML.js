@@ -27,23 +27,26 @@ const setInnerHTML = createMicrosoftUnsafeLocalFunction(function(
   node: Element,
   html: string | TrustedValue,
 ): void {
-  // IE does not have innerHTML for SVG nodes, so instead we inject the
-  // new markup in a temp node and then move the child nodes across into
-  // the target node
   if (node.namespaceURI === Namespaces.svg) {
-    if (enableTrustedTypesIntegration && __DEV__) {
-      warning(
-        // $FlowExpectedError - trustedTypes are defined only in some browsers or with polyfill
-        typeof trustedTypes === 'undefined',
-        "Using 'dangerouslySetInnerHTML' in an svg element with " +
-          'Trusted Types enabled in an Internet Explorer will cause ' +
-          'the trusted value to be converted to string. Assigning string ' +
-          "to 'innerHTML' will throw an error if Trusted Types are enforced. " +
-          "You can try to wrap your svg element inside a div and use 'dangerouslySetInnerHTML' " +
-          'on the enclosing div instead.',
-      );
+    if (__DEV__) {
+      if (enableTrustedTypesIntegration) {
+        // TODO: reconsider the text of this warning and when it should show
+        // before enabling the feature flag.
+        warning(
+          typeof trustedTypes === 'undefined',
+          "Using 'dangerouslySetInnerHTML' in an svg element with " +
+            'Trusted Types enabled in an Internet Explorer will cause ' +
+            'the trusted value to be converted to string. Assigning string ' +
+            "to 'innerHTML' will throw an error if Trusted Types are enforced. " +
+            "You can try to wrap your svg element inside a div and use 'dangerouslySetInnerHTML' " +
+            'on the enclosing div instead.',
+        );
+      }
     }
     if (!('innerHTML' in node)) {
+      // IE does not have innerHTML for SVG nodes, so instead we inject the
+      // new markup in a temp node and then move the child nodes across into
+      // the target node
       reusableSVGContainer =
         reusableSVGContainer || document.createElement('div');
       reusableSVGContainer.innerHTML =
@@ -55,12 +58,10 @@ const setInnerHTML = createMicrosoftUnsafeLocalFunction(function(
       while (svgNode.firstChild) {
         node.appendChild(svgNode.firstChild);
       }
-    } else {
-      node.innerHTML = (html: any);
+      return;
     }
-  } else {
-    node.innerHTML = (html: any);
   }
+  node.innerHTML = (html: any);
 });
 
 export default setInnerHTML;
