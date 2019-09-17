@@ -151,3 +151,4 @@ export const didNotFindHydratableTextInstance =
   $$$hostConfig.didNotFindHydratableTextInstance;
 export const didNotFindHydratableSuspenseInstance =
   $$$hostConfig.didNotFindHydratableSuspenseInstance;
+export const isHydrating = $$$hostConfig.isHydrating;

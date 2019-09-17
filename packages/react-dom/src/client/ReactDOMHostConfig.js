@@ -546,6 +546,8 @@ export function unhideTextInstance(
 //     Hydration
 // -------------------
 
+export const isHydrating = {current: false};
+
 export const supportsHydration = true;
 
 export function canHydrateInstance(

@@ -33,7 +33,7 @@ import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
-import {getPublicInstance} from './ReactFiberHostConfig';
+import {getPublicInstance, isHydrating} from './ReactFiberHostConfig';
 import {
   findCurrentUnmaskedContext,
   processChildContext,
@@ -345,6 +345,7 @@ export {
   flushSync,
   flushPassiveEffects,
   IsThisRendererActing,
+  isHydrating,
 };
 
 export function getPublicRootInstance(

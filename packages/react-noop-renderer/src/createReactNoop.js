@@ -245,6 +245,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   }
 
   const sharedHostConfig = {
+    isHydrating: {current: false},
     getRootHostContext() {
       return NO_CONTEXT;
     },

@@ -48,3 +48,6 @@ export const didNotFindHydratableContainerSuspenseInstance = shim;
 export const didNotFindHydratableInstance = shim;
 export const didNotFindHydratableTextInstance = shim;
 export const didNotFindHydratableSuspenseInstance = shim;
+
+// $FlowFixMe We do not want to change the flow signature of isHydrating
+export const isHydrating = null;
