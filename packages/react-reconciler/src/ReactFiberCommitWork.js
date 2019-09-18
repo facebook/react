@@ -904,7 +904,6 @@ function detachFiber(current: Fiber) {
   current.memoizedState = null;
   current.updateQueue = null;
   current.dependencies = null;
-  current.sibling = null;
   current.alternate = null;
   current.firstEffect = null;
   current.lastEffect = null;
