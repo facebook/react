@@ -4707,6 +4707,26 @@ const tests = {
           'Either include it or remove the dependency array.',
       ],
     },
+    {
+      code: `
+        import debounce from './debounce'
+
+        function Example({ cb }) {
+          const debouncedCb = useCallback(debounce(cb, {wait: 300}), []);
+        }
+      `,
+      output: `
+        import debounce from './debounce'
+
+        function Example({ cb }) {
+          const debouncedCb = useCallback(debounce(cb, {wait: 300}), [cb]);
+        }
+      `,
+      errors: [
+        "React Hook useCallback has a missing dependency: 'cb'. " +
+          'Either include it or remove the dependency array.',
+      ],
+    },
   ],
 };
 
