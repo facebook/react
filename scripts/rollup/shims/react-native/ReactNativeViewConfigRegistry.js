@@ -98,10 +98,13 @@ exports.get = function(name: string): ReactNativeBaseComponentViewConfig<> {
           : '',
       );
     }
-    viewConfigCallbacks.set(name, null);
     viewConfig = callback();
     processEventTypes(viewConfig);
     viewConfigs.set(name, viewConfig);
+
+    // Clear the callback after the config is set so that
+    // we don't mask any errors during registration.
+    viewConfigCallbacks.set(name, null);
   } else {
     viewConfig = viewConfigs.get(name);
   }
