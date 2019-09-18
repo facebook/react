@@ -303,6 +303,16 @@ function validateEventValue(eventValue: any): void {
         );
       }
     };
+    eventValue.isDefaultPrevented = () => {
+      if (__DEV__) {
+        showWarning('isDefaultPrevented()');
+      }
+    };
+    eventValue.isPropagationStopped = () => {
+      if (__DEV__) {
+        showWarning('isPropagationStopped()');
+      }
+    };
     // $FlowFixMe: we don't need value, Flow thinks we do
     Object.defineProperty(eventValue, 'nativeEvent', {
       get() {
