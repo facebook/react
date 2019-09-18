@@ -157,7 +157,9 @@ export function postMountWrapper(element: Element, props: Object) {
   // will populate textContent as well.
   // https://developer.microsoft.com/microsoft-edge/platform/issues/101525/
   if (textContent === node._wrapperState.initialValue) {
-    node.value = textContent;
+    if (textContent !== '' && textContent !== null) {
+      node.value = textContent;
+    }
   }
 }
 
