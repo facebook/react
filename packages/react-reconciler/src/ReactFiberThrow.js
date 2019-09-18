@@ -15,7 +15,6 @@ import type {Update} from './ReactUpdateQueue';
 import type {Thenable} from './ReactFiberWorkLoop';
 import type {SuspenseContext} from './ReactFiberSuspenseContext';
 
-import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
 import getComponentName from 'shared/getComponentName';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {
@@ -31,7 +30,6 @@ import {
   ShouldCapture,
   LifecycleEffectMask,
 } from 'shared/ReactSideEffectTags';
-import {enableSchedulerTracing} from 'shared/ReactFeatureFlags';
 import {NoMode, BatchedMode} from './ReactTypeOfMode';
 import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent';
 
@@ -173,9 +171,6 @@ function attachPingListener(
       thenable,
       renderExpirationTime,
     );
-    if (enableSchedulerTracing) {
-      ping = Schedule_tracing_wrap(ping);
-    }
     thenable.then(ping, ping);
   }
 }

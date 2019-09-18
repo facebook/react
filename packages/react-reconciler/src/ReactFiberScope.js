@@ -71,7 +71,7 @@ function collectNearestScopeMethods(
   scope: ReactScope,
   childrenScopes: Array<ReactScopeMethods>,
 ): void {
-  if (node.tag === ScopeComponent && node.type === scope) {
+  if (isValidScopeNode(node, scope)) {
     childrenScopes.push(node.stateNode.methods);
   } else {
     let child = node.child;
@@ -86,7 +86,7 @@ function collectNearestScopeMethods(
 }
 
 function collectNearestChildScopeMethods(
-  startingChild: Fiber,
+  startingChild: Fiber | null,
   scope: ReactScope,
   childrenScopes: Array<ReactScopeMethods>,
 ): void {
@@ -95,6 +95,10 @@ function collectNearestChildScopeMethods(
     collectNearestScopeMethods(child, scope, childrenScopes);
     child = child.sibling;
   }
+}
+
+function isValidScopeNode(node, scope) {
+  return node.tag === ScopeComponent && node.type === scope;
 }
 
 export function createScopeMethods(
@@ -112,6 +116,23 @@ export function createScopeMethods(
       }
       return childrenScopes.length === 0 ? null : childrenScopes;
     },
+    getChildrenFromRoot(): null | Array<ReactScopeMethods> {
+      const currentFiber = ((instance.fiber: any): Fiber);
+      let node = currentFiber;
+      while (node !== null) {
+        const parent = node.return;
+        if (parent === null) {
+          break;
+        }
+        node = parent;
+        if (node.tag === ScopeComponent && node.type === scope) {
+          break;
+        }
+      }
+      const childrenScopes = [];
+      collectNearestChildScopeMethods(node.child, scope, childrenScopes);
+      return childrenScopes.length === 0 ? null : childrenScopes;
+    },
     getParent(): null | ReactScopeMethods {
       let node = ((instance.fiber: any): Fiber).return;
       while (node !== null) {
@@ -121,6 +142,10 @@ export function createScopeMethods(
         node = node.return;
       }
       return null;
+    },
+    getProps(): Object {
+      const currentFiber = ((instance.fiber: any): Fiber);
+      return currentFiber.memoizedProps;
     },
     getScopedNodes(): null | Array<Object> {
       const currentFiber = ((instance.fiber: any): Fiber);

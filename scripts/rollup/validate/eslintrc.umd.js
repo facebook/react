@@ -25,6 +25,8 @@ module.exports = {
     require: true,
     globalThis: true,
     global: true,
+    // Trusted Types
+    trustedTypes: true,
 
     // Scheduler profiling
     SharedArrayBuffer: true,

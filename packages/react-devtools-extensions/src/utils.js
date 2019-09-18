@@ -12,10 +12,21 @@ export function createViewElementSource(bridge: Bridge, store: Store) {
 
       setTimeout(() => {
         // Ask Chrome to display the location of the component function,
+        // or a render method if it is a Class (ideally Class instance, not type)
         // assuming the renderer found one.
         chrome.devtools.inspectedWindow.eval(`
           if (window.$type != null) {
-            inspect(window.$type);
+            if (
+              window.$type &&
+              window.$type.prototype &&
+              window.$type.prototype.isReactComponent
+            ) {
+              // inspect Component.render, not constructor
+              inspect(window.$type.prototype.render);
+            } else {
+              // inspect Functional Component
+              inspect(window.$type);
+            }
           }
         `);
       }, 100);

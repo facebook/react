@@ -505,7 +505,7 @@ const bundles = [
       FB_WWW_PROD,
     ],
     moduleType: NON_FIBER_RENDERER,
-    entry: 'react-events/context-menu',
+    entry: 'react-ui/events/context-menu',
     global: 'ReactEventsContextMenu',
     externals: ['react'],
   },
@@ -520,7 +520,7 @@ const bundles = [
       FB_WWW_PROD,
     ],
     moduleType: NON_FIBER_RENDERER,
-    entry: 'react-events/drag',
+    entry: 'react-ui/events/drag',
     global: 'ReactEventsDrag',
     externals: ['react'],
   },
@@ -535,7 +535,7 @@ const bundles = [
       FB_WWW_PROD,
     ],
     moduleType: NON_FIBER_RENDERER,
-    entry: 'react-events/focus',
+    entry: 'react-ui/events/focus',
     global: 'ReactEventsFocus',
     externals: ['react'],
   },
@@ -550,7 +550,7 @@ const bundles = [
       FB_WWW_PROD,
     ],
     moduleType: NON_FIBER_RENDERER,
-    entry: 'react-events/hover',
+    entry: 'react-ui/events/hover',
     global: 'ReactEventsHover',
     externals: ['react'],
   },
@@ -565,7 +565,7 @@ const bundles = [
       FB_WWW_PROD,
     ],
     moduleType: NON_FIBER_RENDERER,
-    entry: 'react-events/input',
+    entry: 'react-ui/events/input',
     global: 'ReactEventsInput',
     externals: ['react'],
   },
@@ -580,7 +580,7 @@ const bundles = [
       FB_WWW_PROD,
     ],
     moduleType: NON_FIBER_RENDERER,
-    entry: 'react-events/keyboard',
+    entry: 'react-ui/events/keyboard',
     global: 'ReactEventsKeyboard',
     externals: ['react'],
   },
@@ -595,8 +595,23 @@ const bundles = [
       FB_WWW_PROD,
     ],
     moduleType: NON_FIBER_RENDERER,
-    entry: 'react-events/press',
+    entry: 'react-ui/events/press',
     global: 'ReactEventsPress',
+    externals: ['react', 'react-ui/events/tap', 'react-ui/events/keyboard'],
+  },
+
+  {
+    bundleTypes: [
+      UMD_DEV,
+      UMD_PROD,
+      NODE_DEV,
+      NODE_PROD,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+    ],
+    moduleType: NON_FIBER_RENDERER,
+    entry: 'react-ui/events/press-legacy',
+    global: 'ReactEventsPressLegacy',
     externals: ['react'],
   },
 
@@ -610,7 +625,7 @@ const bundles = [
       FB_WWW_PROD,
     ],
     moduleType: NON_FIBER_RENDERER,
-    entry: 'react-events/scroll',
+    entry: 'react-ui/events/scroll',
     global: 'ReactEventsScroll',
     externals: ['react'],
   },
@@ -625,7 +640,7 @@ const bundles = [
       FB_WWW_PROD,
     ],
     moduleType: NON_FIBER_RENDERER,
-    entry: 'react-events/swipe',
+    entry: 'react-ui/events/swipe',
     global: 'ReactEventsSwipe',
     externals: ['react'],
   },
@@ -640,11 +655,51 @@ const bundles = [
       FB_WWW_PROD,
     ],
     moduleType: NON_FIBER_RENDERER,
-    entry: 'react-events/tap',
+    entry: 'react-ui/events/tap',
     global: 'ReactEventsTap',
     externals: ['react'],
   },
+
+  // React UI - Accessibility
+
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
+    moduleType: NON_FIBER_RENDERER,
+    entry: 'react-ui/accessibility/focus-table',
+    global: 'ReactFocusTable',
+    externals: [
+      'react',
+      'react-ui/events/keyboard',
+      'react-ui/accessibility/tabbable-scope',
+    ],
+  },
+
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
+    moduleType: NON_FIBER_RENDERER,
+    entry: 'react-ui/accessibility/tab-focus',
+    global: 'ReactTabFocus',
+    externals: [
+      'react',
+      'react-ui/events/keyboard',
+      'react-ui/accessibility/tabbable-scope',
+    ],
+  },
+
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
+    moduleType: NON_FIBER_RENDERER,
+    entry: 'react-ui/accessibility/tabbable-scope',
+    global: 'ReactTabbableScope',
+    externals: ['react'],
+  },
 ];
+
+const fbBundleExternalsMap = {
+  'react-ui/events/keyboard': 'ReactEventsKeyboard',
+  'react-ui/events/tap': 'ReactEventsTap',
+  'react-ui/accessibility/tabbable-scope': 'ReactTabbableScope',
+};
 
 // Based on deep-freeze by substack (public domain)
 function deepFreeze(o) {
@@ -667,6 +722,7 @@ deepFreeze(bundleTypes);
 deepFreeze(moduleTypes);
 
 module.exports = {
+  fbBundleExternalsMap,
   bundleTypes,
   moduleTypes,
   bundles,

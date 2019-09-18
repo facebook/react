@@ -200,15 +200,19 @@ const LegacyUnbatchedContext = /*       */ 0b001000;
 const RenderContext = /*                */ 0b010000;
 const CommitContext = /*                */ 0b100000;
 
-type RootExitStatus = 0 | 1 | 2 | 3 | 4;
+type RootExitStatus = 0 | 1 | 2 | 3 | 4 | 5;
 const RootIncomplete = 0;
 const RootErrored = 1;
 const RootSuspended = 2;
 const RootSuspendedWithDelay = 3;
 const RootCompleted = 4;
+const RootLocked = 5;
 
 export type Thenable = {
   then(resolve: () => mixed, reject?: () => mixed): Thenable | void,
+
+  // Special flag to opt out of tracing interactions across a Suspense boundary.
+  __reactDoNotTraceInteractions?: boolean,
 };
 
 // Describes where we are in the React execution stack
@@ -637,9 +641,13 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   currentEventTime = NoWork;
 
   if (didTimeout) {
-    // An async update expired.
+    // The render task took too long to complete. Mark the current time as
+    // expired to synchronously render all expired work in a single batch.
     const currentTime = requestCurrentTime();
     markRootExpiredAtTime(root, currentTime);
+    // This will schedule a synchronous callback.
+    ensureRootIsScheduled(root);
+    return null;
   }
 
   // Determine the next expiration time to work on, using the fields stored
@@ -648,16 +656,290 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   if (expirationTime !== NoWork) {
     const originalCallbackNode = root.callbackNode;
     try {
-      renderRoot(root, expirationTime, didTimeout);
+      renderRoot(root, expirationTime, false);
+      if (workInProgress !== null) {
+        // There's still work left over. Exit without committing.
+        stopInterruptedWorkLoopTimer();
+      } else {
+        // We now have a consistent tree. The next step is either to commit it,
+        // or, if something suspended, wait to commit it after a timeout.
+        stopFinishedWorkLoopTimer();
+
+        const finishedWork: Fiber = ((root.finishedWork =
+          root.current.alternate): any);
+        root.finishedExpirationTime = expirationTime;
+
+        resolveLocksOnRoot(root, expirationTime);
+
+        // Set this to null to indicate there's no in-progress render.
+        workInProgressRoot = null;
+
+        switch (workInProgressRootExitStatus) {
+          case RootIncomplete: {
+            invariant(false, 'Should have a work-in-progress.');
+          }
+          // Flow knows about invariant, so it complains if I add a break
+          // statement, but eslint doesn't know about invariant, so it complains
+          // if I do. eslint-disable-next-line no-fallthrough
+          case RootErrored: {
+            if (expirationTime !== Idle) {
+              // If this was an async render, the error may have happened due to
+              // a mutation in a concurrent event. Try rendering one more time,
+              // synchronously, to see if the error goes away. If there are
+              // lower priority updates, let's include those, too, in case they
+              // fix the inconsistency. Render at Idle to include all updates.
+              markRootExpiredAtTime(root, Idle);
+              break;
+            }
+            // Commit the root in its errored state.
+            commitRoot(root);
+            break;
+          }
+          case RootSuspended: {
+            markRootSuspendedAtTime(root, expirationTime);
+            const lastSuspendedTime = root.lastSuspendedTime;
+            if (expirationTime === lastSuspendedTime) {
+              root.nextKnownPendingLevel = getRemainingExpirationTime(
+                finishedWork,
+              );
+            }
+            flushSuspensePriorityWarningInDEV();
+
+            // We have an acceptable loading state. We need to figure out if we
+            // should immediately commit it or wait a bit.
+
+            // If we have processed new updates during this render, we may now
+            // have a new loading state ready. We want to ensure that we commit
+            // that as soon as possible.
+            const hasNotProcessedNewUpdates =
+              workInProgressRootLatestProcessedExpirationTime === Sync;
+            if (
+              hasNotProcessedNewUpdates &&
+              // do not delay if we're inside an act() scope
+              !(
+                __DEV__ &&
+                flushSuspenseFallbacksInTests &&
+                IsThisRendererActing.current
+              )
+            ) {
+              // If we have not processed any new updates during this pass, then
+              // this is either a retry of an existing fallback state or a
+              // hidden tree. Hidden trees shouldn't be batched with other work
+              // and after that's fixed it can only be a retry. We're going to
+              // throttle committing retries so that we don't show too many
+              // loading states too quickly.
+              let msUntilTimeout =
+                globalMostRecentFallbackTime + FALLBACK_THROTTLE_MS - now();
+              // Don't bother with a very short suspense time.
+              if (msUntilTimeout > 10) {
+                if (workInProgressRootHasPendingPing) {
+                  const lastPingedTime = root.lastPingedTime;
+                  if (
+                    lastPingedTime === NoWork ||
+                    lastPingedTime >= expirationTime
+                  ) {
+                    // This render was pinged but we didn't get to restart
+                    // earlier so try restarting now instead.
+                    root.lastPingedTime = expirationTime;
+                    prepareFreshStack(root, expirationTime);
+                    break;
+                  }
+                }
+
+                const nextTime = getNextRootExpirationTimeToWorkOn(root);
+                if (nextTime !== NoWork && nextTime !== expirationTime) {
+                  // There's additional work on this root.
+                  break;
+                }
+                if (
+                  lastSuspendedTime !== NoWork &&
+                  lastSuspendedTime !== expirationTime
+                ) {
+                  // We should prefer to render the fallback of at the last
+                  // suspended level. Ping the last suspended level to try
+                  // rendering it again.
+                  root.lastPingedTime = lastSuspendedTime;
+                  break;
+                }
+
+                // The render is suspended, it hasn't timed out, and there's no
+                // lower priority work to do. Instead of committing the fallback
+                // immediately, wait for more data to arrive.
+                root.timeoutHandle = scheduleTimeout(
+                  commitRoot.bind(null, root),
+                  msUntilTimeout,
+                );
+                break;
+              }
+            }
+            // The work expired. Commit immediately.
+            commitRoot(root);
+            break;
+          }
+          case RootSuspendedWithDelay: {
+            markRootSuspendedAtTime(root, expirationTime);
+            const lastSuspendedTime = root.lastSuspendedTime;
+            if (expirationTime === lastSuspendedTime) {
+              root.nextKnownPendingLevel = getRemainingExpirationTime(
+                finishedWork,
+              );
+            }
+            flushSuspensePriorityWarningInDEV();
+
+            if (
+              // do not delay if we're inside an act() scope
+              !(
+                __DEV__ &&
+                flushSuspenseFallbacksInTests &&
+                IsThisRendererActing.current
+              )
+            ) {
+              // We're suspended in a state that should be avoided. We'll try to
+              // avoid committing it for as long as the timeouts let us.
+              if (workInProgressRootHasPendingPing) {
+                const lastPingedTime = root.lastPingedTime;
+                if (
+                  lastPingedTime === NoWork ||
+                  lastPingedTime >= expirationTime
+                ) {
+                  // This render was pinged but we didn't get to restart earlier
+                  // so try restarting now instead.
+                  root.lastPingedTime = expirationTime;
+                  prepareFreshStack(root, expirationTime);
+                  break;
+                }
+              }
+
+              const nextTime = getNextRootExpirationTimeToWorkOn(root);
+              if (nextTime !== NoWork && nextTime !== expirationTime) {
+                // There's additional work on this root.
+                break;
+              }
+              if (
+                lastSuspendedTime !== NoWork &&
+                lastSuspendedTime !== expirationTime
+              ) {
+                // We should prefer to render the fallback of at the last
+                // suspended level. Ping the last suspended level to try
+                // rendering it again.
+                root.lastPingedTime = lastSuspendedTime;
+                break;
+              }
+
+              let msUntilTimeout;
+              if (workInProgressRootLatestSuspenseTimeout !== Sync) {
+                // We have processed a suspense config whose expiration time we
+                // can use as the timeout.
+                msUntilTimeout =
+                  expirationTimeToMs(workInProgressRootLatestSuspenseTimeout) -
+                  now();
+              } else if (
+                workInProgressRootLatestProcessedExpirationTime === Sync
+              ) {
+                // This should never normally happen because only new updates
+                // cause delayed states, so we should have processed something.
+                // However, this could also happen in an offscreen tree.
+                msUntilTimeout = 0;
+              } else {
+                // If we don't have a suspense config, we're going to use a
+                // heuristic to determine how long we can suspend.
+                const eventTimeMs: number = inferTimeFromExpirationTime(
+                  workInProgressRootLatestProcessedExpirationTime,
+                );
+                const currentTimeMs = now();
+                const timeUntilExpirationMs =
+                  expirationTimeToMs(expirationTime) - currentTimeMs;
+                let timeElapsed = currentTimeMs - eventTimeMs;
+                if (timeElapsed < 0) {
+                  // We get this wrong some time since we estimate the time.
+                  timeElapsed = 0;
+                }
+
+                msUntilTimeout = jnd(timeElapsed) - timeElapsed;
+
+                // Clamp the timeout to the expiration time. TODO: Once the
+                // event time is exact instead of inferred from expiration time
+                // we don't need this.
+                if (timeUntilExpirationMs < msUntilTimeout) {
+                  msUntilTimeout = timeUntilExpirationMs;
+                }
+              }
+
+              // Don't bother with a very short suspense time.
+              if (msUntilTimeout > 10) {
+                // The render is suspended, it hasn't timed out, and there's no
+                // lower priority work to do. Instead of committing the fallback
+                // immediately, wait for more data to arrive.
+                root.timeoutHandle = scheduleTimeout(
+                  commitRoot.bind(null, root),
+                  msUntilTimeout,
+                );
+                break;
+              }
+            }
+            // The work expired. Commit immediately.
+            commitRoot(root);
+            break;
+          }
+          case RootCompleted: {
+            // The work completed. Ready to commit.
+            if (
+              // do not delay if we're inside an act() scope
+              !(
+                __DEV__ &&
+                flushSuspenseFallbacksInTests &&
+                IsThisRendererActing.current
+              ) &&
+              workInProgressRootLatestProcessedExpirationTime !== Sync &&
+              workInProgressRootCanSuspendUsingConfig !== null
+            ) {
+              // If we have exceeded the minimum loading delay, which probably
+              // means we have shown a spinner already, we might have to suspend
+              // a bit longer to ensure that the spinner is shown for
+              // enough time.
+              const msUntilTimeout = computeMsUntilSuspenseLoadingDelay(
+                workInProgressRootLatestProcessedExpirationTime,
+                expirationTime,
+                workInProgressRootCanSuspendUsingConfig,
+              );
+              if (msUntilTimeout > 10) {
+                markRootSuspendedAtTime(root, expirationTime);
+                root.timeoutHandle = scheduleTimeout(
+                  commitRoot.bind(null, root),
+                  msUntilTimeout,
+                );
+                break;
+              }
+            }
+            commitRoot(root);
+            break;
+          }
+          case RootLocked: {
+            // This root has a lock that prevents it from committing. Exit. If
+            // we begin work on the root again, without any intervening updates,
+            // it will finish without doing additional work.
+            markRootSuspendedAtTime(root, expirationTime);
+            break;
+          }
+          default: {
+            invariant(false, 'Unknown root exit status.');
+          }
+        }
+      }
+      // Before exiting, make sure there's a callback scheduled for the
+      // pending level. This is intentionally duplicated in the `catch` block,
+      // instead of using `finally`, because it needs to happen before we
+      // possibly return a continuation, and we can't return in the `finally`
+      // block without suppressing a potential error.
+      ensureRootIsScheduled(root);
       if (root.callbackNode === originalCallbackNode) {
         // The task node scheduled for this root is the same one that's
         // currently executed. Need to return a continuation.
         return performConcurrentWorkOnRoot.bind(null, root);
       }
-    } finally {
-      // Before exiting, make sure there's a callback scheduled for the
-      // pending level.
+    } catch (error) {
       ensureRootIsScheduled(root);
+      throw error;
     }
   }
   return null;
@@ -670,7 +952,47 @@ function performSyncWorkOnRoot(root) {
   const lastExpiredTime = root.lastExpiredTime;
   const expirationTime = lastExpiredTime !== NoWork ? lastExpiredTime : Sync;
   try {
-    renderRoot(root, expirationTime, true);
+    if (root.finishedExpirationTime === expirationTime) {
+      // There's already a pending commit at this expiration time.
+      // TODO: This is poorly factored. This case only exists for the
+      // batch.commit() API.
+      commitRoot(root);
+    } else {
+      renderRoot(root, expirationTime, true);
+      invariant(
+        workInProgressRootExitStatus !== RootIncomplete,
+        'Cannot commit an incomplete root. This error is likely caused by a ' +
+          'bug in React. Please file an issue.',
+      );
+
+      // We now have a consistent tree. The next step is either to commit it,
+      // or, if something suspended, wait to commit it after a timeout.
+      stopFinishedWorkLoopTimer();
+
+      root.finishedWork = ((root.current.alternate: any): Fiber);
+      root.finishedExpirationTime = expirationTime;
+
+      resolveLocksOnRoot(root, expirationTime);
+      if (workInProgressRootExitStatus === RootLocked) {
+        // This root has a lock that prevents it from committing. Exit. If we
+        // begin work on the root again, without any intervening updates, it
+        // will finish without doing additional work.
+        markRootSuspendedAtTime(root, expirationTime);
+      } else {
+        // Set this to null to indicate there's no in-progress render.
+        workInProgressRoot = null;
+
+        if (__DEV__) {
+          if (
+            workInProgressRootExitStatus === RootSuspended ||
+            workInProgressRootExitStatus === RootSuspendedWithDelay
+          ) {
+            flushSuspensePriorityWarningInDEV();
+          }
+        }
+        commitRoot(root);
+      }
+    }
   } finally {
     // Before exiting, make sure there's a callback scheduled for the
     // pending level.
@@ -730,9 +1052,7 @@ function resolveLocksOnRoot(root: FiberRoot, expirationTime: ExpirationTime) {
       firstBatch._onComplete();
       return null;
     });
-    return true;
-  } else {
-    return false;
+    workInProgressRootExitStatus = RootLocked;
   }
 }
 
@@ -915,14 +1235,6 @@ function renderRoot(
     'Should not already be working.',
   );
 
-  if (isSync && root.finishedExpirationTime === expirationTime) {
-    // There's already a pending commit at this expiration time.
-    // TODO: This is poorly factored. This case only exists for the
-    // batch.commit() API.
-    commitRoot(root);
-    return;
-  }
-
   flushPassiveEffects();
 
   // If the root or expiration time have changed, throw out the existing stack
@@ -955,6 +1267,8 @@ function renderRoot(
 
     do {
       try {
+        // TODO: This is now the only place that `isSync` is used. Consider
+        // outlining the contents of `renderRoot`.
         if (isSync) {
           workLoopSync();
         } else {
@@ -1004,264 +1318,6 @@ function renderRoot(
     ReactCurrentDispatcher.current = prevDispatcher;
     if (enableSchedulerTracing) {
       __interactionsRef.current = ((prevInteractions: any): Set<Interaction>);
-    }
-
-    if (workInProgress !== null) {
-      // There's still work left over. Exit without committing.
-      stopInterruptedWorkLoopTimer();
-      return;
-    }
-  }
-
-  // We now have a consistent tree. The next step is either to commit it, or, if
-  // something suspended, wait to commit it after a timeout.
-  stopFinishedWorkLoopTimer();
-
-  const finishedWork: Fiber = ((root.finishedWork =
-    root.current.alternate): any);
-  root.finishedExpirationTime = expirationTime;
-
-  const isLocked = resolveLocksOnRoot(root, expirationTime);
-  if (isLocked) {
-    // This root has a lock that prevents it from committing. Exit. If we begin
-    // work on the root again, without any intervening updates, it will finish
-    // without doing additional work.
-    markRootSuspendedAtTime(root, expirationTime);
-    return;
-  }
-
-  // Set this to null to indicate there's no in-progress render.
-  workInProgressRoot = null;
-
-  switch (workInProgressRootExitStatus) {
-    case RootIncomplete: {
-      invariant(false, 'Should have a work-in-progress.');
-    }
-    // Flow knows about invariant, so it complains if I add a break statement,
-    // but eslint doesn't know about invariant, so it complains if I do.
-    // eslint-disable-next-line no-fallthrough
-    case RootErrored: {
-      if (!isSync && expirationTime !== Idle) {
-        // If this was an async render, the error may have happened due to
-        // a mutation in a concurrent event. Try rendering one more time,
-        // synchronously, to see if the error goes away. If there are lower
-        // priority updates, let's include those, too, in case they fix the
-        // inconsistency. Render at Idle to include all updates.
-        markRootExpiredAtTime(root, Idle);
-        return;
-      }
-      // Commit the root in its errored state.
-      commitRoot(root);
-      return;
-    }
-    case RootSuspended: {
-      markRootSuspendedAtTime(root, expirationTime);
-      const lastSuspendedTime = root.lastSuspendedTime;
-      if (expirationTime === lastSuspendedTime) {
-        root.nextKnownPendingLevel = getRemainingExpirationTime(finishedWork);
-      }
-      flushSuspensePriorityWarningInDEV();
-
-      // We have an acceptable loading state. We need to figure out if we should
-      // immediately commit it or wait a bit.
-
-      // If we have processed new updates during this render, we may now have a
-      // new loading state ready. We want to ensure that we commit that as soon as
-      // possible.
-      const hasNotProcessedNewUpdates =
-        workInProgressRootLatestProcessedExpirationTime === Sync;
-      if (
-        hasNotProcessedNewUpdates &&
-        !isSync &&
-        // do not delay if we're inside an act() scope
-        !(
-          __DEV__ &&
-          flushSuspenseFallbacksInTests &&
-          IsThisRendererActing.current
-        )
-      ) {
-        // If we have not processed any new updates during this pass, then this is
-        // either a retry of an existing fallback state or a hidden tree.
-        // Hidden trees shouldn't be batched with other work and after that's
-        // fixed it can only be a retry.
-        // We're going to throttle committing retries so that we don't show too
-        // many loading states too quickly.
-        let msUntilTimeout =
-          globalMostRecentFallbackTime + FALLBACK_THROTTLE_MS - now();
-        // Don't bother with a very short suspense time.
-        if (msUntilTimeout > 10) {
-          if (workInProgressRootHasPendingPing) {
-            const lastPingedTime = root.lastPingedTime;
-            if (lastPingedTime === NoWork || lastPingedTime >= expirationTime) {
-              // This render was pinged but we didn't get to restart earlier so
-              // try restarting now instead.
-              root.lastPingedTime = expirationTime;
-              prepareFreshStack(root, expirationTime);
-              return;
-            }
-          }
-
-          const nextTime = getNextRootExpirationTimeToWorkOn(root);
-          if (nextTime !== NoWork && nextTime !== expirationTime) {
-            // There's additional work on this root.
-            return;
-          }
-          if (
-            lastSuspendedTime !== NoWork &&
-            lastSuspendedTime !== expirationTime
-          ) {
-            // We should prefer to render the fallback of at the last suspended
-            // level. Ping the last suspended level to try rendering it again.
-            root.lastPingedTime = lastSuspendedTime;
-            return;
-          }
-
-          // The render is suspended, it hasn't timed out, and there's no lower
-          // priority work to do. Instead of committing the fallback
-          // immediately, wait for more data to arrive.
-          root.timeoutHandle = scheduleTimeout(
-            commitRoot.bind(null, root),
-            msUntilTimeout,
-          );
-          return;
-        }
-      }
-      // The work expired. Commit immediately.
-      commitRoot(root);
-      return;
-    }
-    case RootSuspendedWithDelay: {
-      markRootSuspendedAtTime(root, expirationTime);
-      const lastSuspendedTime = root.lastSuspendedTime;
-      if (expirationTime === lastSuspendedTime) {
-        root.nextKnownPendingLevel = getRemainingExpirationTime(finishedWork);
-      }
-      flushSuspensePriorityWarningInDEV();
-
-      if (
-        !isSync &&
-        // do not delay if we're inside an act() scope
-        !(
-          __DEV__ &&
-          flushSuspenseFallbacksInTests &&
-          IsThisRendererActing.current
-        )
-      ) {
-        // We're suspended in a state that should be avoided. We'll try to avoid committing
-        // it for as long as the timeouts let us.
-        if (workInProgressRootHasPendingPing) {
-          const lastPingedTime = root.lastPingedTime;
-          if (lastPingedTime === NoWork || lastPingedTime >= expirationTime) {
-            // This render was pinged but we didn't get to restart earlier so
-            // try restarting now instead.
-            root.lastPingedTime = expirationTime;
-            prepareFreshStack(root, expirationTime);
-            return;
-          }
-        }
-
-        const nextTime = getNextRootExpirationTimeToWorkOn(root);
-        if (nextTime !== NoWork && nextTime !== expirationTime) {
-          // There's additional work on this root.
-          return;
-        }
-        if (
-          lastSuspendedTime !== NoWork &&
-          lastSuspendedTime !== expirationTime
-        ) {
-          // We should prefer to render the fallback of at the last suspended
-          // level. Ping the last suspended level to try rendering it again.
-          root.lastPingedTime = lastSuspendedTime;
-          return;
-        }
-
-        let msUntilTimeout;
-        if (workInProgressRootLatestSuspenseTimeout !== Sync) {
-          // We have processed a suspense config whose expiration time we can use as
-          // the timeout.
-          msUntilTimeout =
-            expirationTimeToMs(workInProgressRootLatestSuspenseTimeout) - now();
-        } else if (workInProgressRootLatestProcessedExpirationTime === Sync) {
-          // This should never normally happen because only new updates cause
-          // delayed states, so we should have processed something. However,
-          // this could also happen in an offscreen tree.
-          msUntilTimeout = 0;
-        } else {
-          // If we don't have a suspense config, we're going to use a heuristic to
-          // determine how long we can suspend.
-          const eventTimeMs: number = inferTimeFromExpirationTime(
-            workInProgressRootLatestProcessedExpirationTime,
-          );
-          const currentTimeMs = now();
-          const timeUntilExpirationMs =
-            expirationTimeToMs(expirationTime) - currentTimeMs;
-          let timeElapsed = currentTimeMs - eventTimeMs;
-          if (timeElapsed < 0) {
-            // We get this wrong some time since we estimate the time.
-            timeElapsed = 0;
-          }
-
-          msUntilTimeout = jnd(timeElapsed) - timeElapsed;
-
-          // Clamp the timeout to the expiration time.
-          // TODO: Once the event time is exact instead of inferred from expiration time
-          // we don't need this.
-          if (timeUntilExpirationMs < msUntilTimeout) {
-            msUntilTimeout = timeUntilExpirationMs;
-          }
-        }
-
-        // Don't bother with a very short suspense time.
-        if (msUntilTimeout > 10) {
-          // The render is suspended, it hasn't timed out, and there's no lower
-          // priority work to do. Instead of committing the fallback
-          // immediately, wait for more data to arrive.
-          root.timeoutHandle = scheduleTimeout(
-            commitRoot.bind(null, root),
-            msUntilTimeout,
-          );
-          return;
-        }
-      }
-      // The work expired. Commit immediately.
-      commitRoot(root);
-      return;
-    }
-    case RootCompleted: {
-      // The work completed. Ready to commit.
-      if (
-        !isSync &&
-        // do not delay if we're inside an act() scope
-        !(
-          __DEV__ &&
-          flushSuspenseFallbacksInTests &&
-          IsThisRendererActing.current
-        ) &&
-        workInProgressRootLatestProcessedExpirationTime !== Sync &&
-        workInProgressRootCanSuspendUsingConfig !== null
-      ) {
-        // If we have exceeded the minimum loading delay, which probably
-        // means we have shown a spinner already, we might have to suspend
-        // a bit longer to ensure that the spinner is shown for enough time.
-        const msUntilTimeout = computeMsUntilSuspenseLoadingDelay(
-          workInProgressRootLatestProcessedExpirationTime,
-          expirationTime,
-          workInProgressRootCanSuspendUsingConfig,
-        );
-        if (msUntilTimeout > 10) {
-          markRootSuspendedAtTime(root, expirationTime);
-          root.timeoutHandle = scheduleTimeout(
-            commitRoot.bind(null, root),
-            msUntilTimeout,
-          );
-          return;
-        }
-      }
-      commitRoot(root);
-      return;
-    }
-    default: {
-      invariant(false, 'Unknown root exit status.');
     }
   }
 }
