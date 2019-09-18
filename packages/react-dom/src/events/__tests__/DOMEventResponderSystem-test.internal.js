@@ -839,54 +839,6 @@ describe('DOMEventResponderSystem', () => {
     };
     expect(() => {
       handler = event => {
-        event.preventDefault();
-      };
-      ReactDOM.render(<Test />, container);
-      dispatchClickEvent(buttonRef.current);
-    }).toWarnDev(
-      'Warning: preventDefault() is not available on event objects created from event responder modules ' +
-        '(React Flare).' +
-        ' Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.preventDefault() }`',
-      {withoutStack: true},
-    );
-    expect(() => {
-      handler = event => {
-        event.stopPropagation();
-      };
-      ReactDOM.render(<Test />, container);
-      dispatchClickEvent(buttonRef.current);
-    }).toWarnDev(
-      'Warning: stopPropagation() is not available on event objects created from event responder modules ' +
-        '(React Flare).' +
-        ' Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.stopPropagation() }`',
-      {withoutStack: true},
-    );
-    expect(() => {
-      handler = event => {
-        event.isDefaultPrevented();
-      };
-      ReactDOM.render(<Test />, container);
-      dispatchClickEvent(buttonRef.current);
-    }).toWarnDev(
-      'Warning: isDefaultPrevented() is not available on event objects created from event responder modules ' +
-        '(React Flare).' +
-        ' Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.isDefaultPrevented() }`',
-      {withoutStack: true},
-    );
-    expect(() => {
-      handler = event => {
-        event.isPropagationStopped();
-      };
-      ReactDOM.render(<Test />, container);
-      dispatchClickEvent(buttonRef.current);
-    }).toWarnDev(
-      'Warning: isPropagationStopped() is not available on event objects created from event responder modules ' +
-        '(React Flare).' +
-        ' Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.isPropagationStopped() }`',
-      {withoutStack: true},
-    );
-    expect(() => {
-      handler = event => {
         return event.nativeEvent;
       };
       ReactDOM.render(<Test />, container);
