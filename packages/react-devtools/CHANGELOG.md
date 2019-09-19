@@ -9,7 +9,7 @@
   <!-- Upcoming changes go here -->
 </details>
 
-## 4.1.0 (August)
+## 4.1.0 (September 19, 2019)
 #### Features
 * Props/state editor supports adding new values and changing value types. ([hristo-kanchev](https://github.com/hristo-kanchev) in [#16700](https://github.com/facebook/react/pull/16700))
 #### Bug fixes
