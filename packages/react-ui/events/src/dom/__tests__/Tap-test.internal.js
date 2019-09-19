@@ -193,6 +193,39 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
     });
   });
 
+  describe('onAuxiliaryTap', () => {
+    let onAuxiliaryTap, ref;
+
+    beforeEach(() => {
+      onAuxiliaryTap = jest.fn();
+      ref = React.createRef();
+      const Component = () => {
+        const listener = useTap({onAuxiliaryTap});
+        return <div ref={ref} listeners={listener} />;
+      };
+      ReactDOM.render(<Component />, container);
+      document.elementFromPoint = () => ref.current;
+    });
+
+    test('auxiliary-button pointer up', () => {
+      const pointerType = 'mouse';
+      const buttons = buttonsType.auxiliary;
+      const target = createEventTarget(ref.current);
+      target.pointerdown({buttons, pointerType});
+      target.pointerup({pointerType});
+      expect(onAuxiliaryTap).toHaveBeenCalledTimes(1);
+    });
+
+    test('modifier-button pointer up', () => {
+      const pointerType = 'mouse';
+      const buttons = buttonsType.primary;
+      const target = createEventTarget(ref.current);
+      target.pointerdown({buttons, pointerType});
+      target.pointerup({metaKey: true, pointerType});
+      expect(onAuxiliaryTap).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('onTapStart', () => {
     let onTapStart, ref;
 
@@ -210,6 +243,7 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
     testWithPointerType('pointer down', pointerType => {
       const target = createEventTarget(ref.current);
       const nativeEvent = {
+        buttons: buttonsType.primary,
         pageX: 10,
         pageY: 10,
         pointerType,
@@ -226,7 +260,6 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       expect(onTapStart).toHaveBeenCalledWith(
         expect.objectContaining({
           altKey: false,
-          buttons: 1,
           ctrlKey: false,
           height: pointerType === 'mouse' ? 1 : 23,
           metaKey: false,
@@ -269,36 +302,31 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       expect(onTapStart).toHaveBeenCalledTimes(1);
     });
 
-    test('primary-button pointer down', () => {
-      const pointerType = 'mouse';
-      const buttons = buttonsType.primary;
+    test('ignored buttons and modifiers', () => {
       const target = createEventTarget(ref.current);
-      target.pointerdown({buttons, pointerType});
-      expect(onTapStart).toHaveBeenCalledTimes(1);
-      expect(onTapStart).toHaveBeenCalledWith(
-        expect.objectContaining({buttons, pointerType}),
-      );
-    });
-
-    test('middle-button pointer down', () => {
-      const pointerType = 'mouse';
-      const buttons = buttonsType.middle;
-      const target = createEventTarget(ref.current);
-      target.pointerdown({buttons, pointerType});
-      expect(onTapStart).toHaveBeenCalledTimes(1);
-      expect(onTapStart).toHaveBeenCalledWith(
-        expect.objectContaining({buttons, pointerType}),
-      );
-    });
-
-    test('unsupported buttons', () => {
-      const target = createEventTarget(ref.current);
+      const primary = buttonsType.primary;
       // right-click
       target.pointerdown({buttons: buttonsType.secondary});
+      target.pointerup();
+      // middle-click
+      target.pointerdown({buttons: buttonsType.auxiliary});
       target.pointerup();
       // pen eraser
       target.pointerdown({buttons: buttonsType.eraser});
       target.pointerup();
+      // alt-click
+      target.pointerdown({buttons: primary, altKey: true});
+      target.pointerup();
+      // ctrl-click
+      target.pointerdown({buttons: primary, ctrlKey: true});
+      target.pointerup();
+      // meta-click
+      target.pointerdown({buttons: primary, metaKey: true});
+      target.pointerup();
+      // shift-click
+      target.pointerdown({buttons: primary, shiftKey: true});
+      target.pointerup();
+
       expect(onTapStart).toHaveBeenCalledTimes(0);
     });
   });
@@ -319,7 +347,7 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
 
     testWithPointerType('pointer up', pointerType => {
       const target = createEventTarget(ref.current);
-      target.pointerdown({pointerType});
+      target.pointerdown({buttons: buttonsType.primary, pointerType});
       target.pointerup({
         pageX: 10,
         pageY: 10,
@@ -331,7 +359,6 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       expect(onTapEnd).toHaveBeenCalledWith(
         expect.objectContaining({
           altKey: false,
-          buttons: 1,
           ctrlKey: false,
           height: pointerType === 'mouse' ? 1 : 23,
           metaKey: false,
@@ -353,30 +380,6 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
           x: 10,
           y: 10,
         }),
-      );
-    });
-
-    test('primary-button pointer up', () => {
-      const pointerType = 'mouse';
-      const buttons = buttonsType.primary;
-      const target = createEventTarget(ref.current);
-      target.pointerdown({buttons, pointerType});
-      target.pointerup({pointerType});
-      expect(onTapEnd).toHaveBeenCalledTimes(1);
-      expect(onTapEnd).toHaveBeenCalledWith(
-        expect.objectContaining({buttons, pointerType}),
-      );
-    });
-
-    test('middle-button pointer up', () => {
-      const pointerType = 'mouse';
-      const buttons = buttonsType.middle;
-      const target = createEventTarget(ref.current);
-      target.pointerdown({buttons, pointerType});
-      target.pointerup({pointerType});
-      expect(onTapEnd).toHaveBeenCalledTimes(1);
-      expect(onTapEnd).toHaveBeenCalledWith(
-        expect.objectContaining({buttons, pointerType}),
       );
     });
 
@@ -414,6 +417,34 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       });
       expect(onTapEnd).not.toBeCalled();
     });
+
+    test('ignored buttons and modifiers', () => {
+      const target = createEventTarget(ref.current);
+      const primary = buttonsType.primary;
+      // right-click
+      target.pointerdown({buttons: buttonsType.secondary});
+      target.pointerup();
+      // middle-click
+      target.pointerdown({buttons: buttonsType.auxiliary});
+      target.pointerup();
+      // pen eraser
+      target.pointerdown({buttons: buttonsType.eraser});
+      target.pointerup();
+      // alt-click
+      target.pointerdown({buttons: primary});
+      target.pointerup({altKey: true});
+      // ctrl-click
+      target.pointerdown({buttons: primary});
+      target.pointerup({ctrlKey: true});
+      // meta-click
+      target.pointerdown({buttons: primary});
+      target.pointerup({metaKey: true});
+      // shift-click
+      target.pointerdown({buttons: primary});
+      target.pointerup({shiftKey: true});
+
+      expect(onTapEnd).toHaveBeenCalledTimes(0);
+    });
   });
 
   describe('onTapUpdate', () => {
@@ -449,7 +480,6 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       expect(onTapUpdate).toHaveBeenCalledWith(
         expect.objectContaining({
           altKey: false,
-          buttons: 1,
           ctrlKey: false,
           height: pointerType === 'mouse' ? 1 : 23,
           metaKey: false,
@@ -594,7 +624,6 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       expect(onTapCancel).toHaveBeenCalledWith(
         expect.objectContaining({
           altKey: false,
-          buttons: buttonsType.primary,
           ctrlKey: false,
           height: 1,
           metaKey: false,
@@ -619,6 +648,37 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       );
       target.pointermove({pointerType, x: 5, y: 5});
       expect(onTapUpdate).not.toBeCalled();
+    });
+
+    testWithPointerType('pointer move outside target', pointerType => {
+      const downTarget = createEventTarget(ref.current);
+      const upTarget = createEventTarget(container);
+      tapAndMoveOutside({
+        hasPointerEvents,
+        downTarget,
+        upTarget,
+        pointerType,
+      });
+      expect(onTapCancel).toBeCalled();
+    });
+
+    test('ignored modifiers', () => {
+      const target = createEventTarget(ref.current);
+      const primary = buttonsType.primary;
+      // alt-click
+      target.pointerdown({buttons: primary});
+      target.pointerup({altKey: true});
+      // ctrl-click
+      target.pointerdown({buttons: primary});
+      target.pointerup({ctrlKey: true});
+      // meta-click
+      target.pointerdown({buttons: primary});
+      target.pointerup({metaKey: true});
+      // shift-click
+      target.pointerdown({buttons: primary});
+      target.pointerup({shiftKey: true});
+
+      expect(onTapCancel).toHaveBeenCalledTimes(4);
     });
 
     test('long press context menu', () => {
@@ -658,18 +718,6 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       target.pointerdown({pointerType: 'touch'});
       containerTarget.scroll();
       expect(onTapCancel).toHaveBeenCalledTimes(1);
-    });
-
-    testWithPointerType('pointer move outside target', pointerType => {
-      const downTarget = createEventTarget(ref.current);
-      const upTarget = createEventTarget(container);
-      tapAndMoveOutside({
-        hasPointerEvents,
-        downTarget,
-        upTarget,
-        pointerType,
-      });
-      expect(onTapCancel).toBeCalled();
     });
   });
 
@@ -716,18 +764,6 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       expect(onTapEnd).toHaveBeenCalledWith(
         expect.objectContaining({defaultPrevented: true}),
       );
-    });
-
-    test('allows native behaviour by default (modifier keys)', () => {
-      ['metaKey', 'ctrlKey', 'shiftKey'].forEach(modifierKey => {
-        const target = createEventTarget(ref.current);
-        target.pointerdown({[modifierKey]: true});
-        target.pointerup({[modifierKey]: true, preventDefault});
-        expect(preventDefault).not.toBeCalled();
-        expect(onTapEnd).toHaveBeenCalledWith(
-          expect.objectContaining({defaultPrevented: false}),
-        );
-      });
     });
 
     test('allows native behaviour if false', () => {

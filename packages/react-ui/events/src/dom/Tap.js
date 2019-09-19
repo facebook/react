@@ -17,18 +17,18 @@ import type {ReactEventResponderListener} from 'shared/ReactTypes';
 import React from 'react';
 import {
   buttonsEnum,
-  hasPointerEvents,
-  isMac,
   dispatchDiscreteEvent,
   dispatchUserBlockingEvent,
   getTouchById,
   hasModifierKey,
+  hasPointerEvents,
 } from './shared';
 
 type TapProps = $ReadOnly<{|
   disabled?: boolean,
   maximumDistance?: number,
   preventDefault?: boolean,
+  onAuxiliaryTap?: (e: TapEvent) => void,
   onTapCancel?: (e: TapEvent) => void,
   onTapChange?: boolean => void,
   onTapEnd?: (e: TapEvent) => void,
@@ -38,7 +38,6 @@ type TapProps = $ReadOnly<{|
 
 type TapGestureState = {|
   altKey: boolean,
-  buttons: 0 | 1 | 4,
   ctrlKey: boolean,
   height: number,
   metaKey: boolean,
@@ -67,13 +66,15 @@ type TapState = {|
   ignoreEmulatedEvents: boolean,
   initialPosition: {|x: number, y: number|},
   isActive: boolean,
+  isAuxiliaryActive: boolean,
   pointerType: PointerType,
   responderTarget: null | Element,
   rootEvents: null | Array<string>,
-  shouldPreventClick: boolean,
+  shouldPreventDefault: boolean,
 |};
 
 type TapEventType =
+  | 'tap:auxiliary'
   | 'tap:cancel'
   | 'tap:change'
   | 'tap:end'
@@ -125,14 +126,14 @@ function createInitialState(): TapState {
     buttons: 0,
     ignoreEmulatedEvents: false,
     isActive: false,
+    isAuxiliaryActive: false,
     initialPosition: {x: 0, y: 0},
     pointerType: '',
     responderTarget: null,
     rootEvents: null,
-    shouldPreventClick: true,
+    shouldPreventDefault: true,
     gestureState: {
       altKey: false,
-      buttons: 0,
       ctrlKey: false,
       height: 1,
       metaKey: false,
@@ -187,7 +188,6 @@ function createPointerEventGestureState(
 
   return {
     altKey,
-    buttons: state.buttons,
     ctrlKey,
     height,
     metaKey,
@@ -249,7 +249,6 @@ function createFallbackGestureState(
 
   return {
     altKey,
-    buttons: state.buttons != null ? state.buttons : 1,
     ctrlKey,
     height: !isCancelType && radiusY != null ? radiusY * 2 : 1,
     metaKey,
@@ -351,19 +350,23 @@ function isActivePointer(
   }
 }
 
+function isAuxiliary(buttons: number, nativeEvent: any): boolean {
+  return (
+    // middle-click
+    buttons === buttonsEnum.auxiliary ||
+    // open-in-new-tab
+    (buttons === buttonsEnum.primary && nativeEvent.metaKey) ||
+    // open-in-new-window
+    (buttons === buttonsEnum.primary && nativeEvent.shiftKey)
+  );
+}
+
 function shouldActivate(event: ReactDOMResponderEvent): boolean {
   const nativeEvent: any = event.nativeEvent;
   const pointerType = event.pointerType;
   const buttons = nativeEvent.buttons;
-  const isContextMenu = pointerType === 'mouse' && nativeEvent.ctrlKey && isMac;
-  const isValidButton =
-    buttons === buttonsEnum.primary || buttons === buttonsEnum.middle;
-
-  if (pointerType === 'touch' || (isValidButton && !isContextMenu)) {
-    return true;
-  } else {
-    return false;
-  }
+  const isValidButton = buttons === buttonsEnum.primary;
+  return pointerType === 'touch' || (isValidButton && !hasModifierKey(event));
 }
 
 /**
@@ -418,7 +421,7 @@ function dispatchEnd(
   const onTapEnd = props.onTapEnd;
   dispatchChange(context, props, state);
   if (onTapEnd != null) {
-    const defaultPrevented = state.shouldPreventClick === true;
+    const defaultPrevented = state.shouldPreventDefault === true;
     const payload = context.objectAssign({}, state.gestureState, {
       defaultPrevented,
       type,
@@ -438,6 +441,22 @@ function dispatchCancel(
   if (onTapCancel != null) {
     const payload = context.objectAssign({}, state.gestureState, {type});
     dispatchDiscreteEvent(context, payload, onTapCancel);
+  }
+}
+
+function dispatchAuxiliaryTap(
+  context: ReactDOMResponderContext,
+  props: TapProps,
+  state: TapState,
+): void {
+  const type = 'tap:auxiliary';
+  const onAuxiliaryTap = props.onAuxiliaryTap;
+  if (onAuxiliaryTap != null) {
+    const payload = context.objectAssign({}, state.gestureState, {
+      defaultPrevented: false,
+      type,
+    });
+    dispatchDiscreteEvent(context, payload, onAuxiliaryTap);
   }
 }
 
@@ -493,25 +512,40 @@ const responderImpl = {
           }
         }
 
-        if (!state.isActive && shouldActivate(event)) {
-          state.isActive = true;
-          state.buttons = nativeEvent.buttons;
-          state.pointerType = event.pointerType;
-          state.responderTarget = context.getResponderNode();
-          state.shouldPreventClick = props.preventDefault !== false;
+        if (!state.isActive) {
+          const activate = shouldActivate(event);
+          const activateAuxiliary = isAuxiliary(
+            nativeEvent.buttons,
+            nativeEvent,
+          );
 
-          const gestureState = createGestureState(context, props, state, event);
-          state.gestureState = gestureState;
-          state.initialPosition.x = gestureState.x;
-          state.initialPosition.y = gestureState.y;
-
-          dispatchStart(context, props, state);
-          addRootEventTypes(rootEventTypes, context, state);
-
-          if (!hasPointerEvents) {
-            if (eventType === 'touchstart') {
-              state.ignoreEmulatedEvents = true;
+          if (activate || activateAuxiliary) {
+            state.buttons = nativeEvent.buttons;
+            state.pointerType = event.pointerType;
+            state.responderTarget = context.getResponderNode();
+            addRootEventTypes(rootEventTypes, context, state);
+            if (!hasPointerEvents) {
+              if (eventType === 'touchstart') {
+                state.ignoreEmulatedEvents = true;
+              }
             }
+          }
+
+          if (activate) {
+            const gestureState = createGestureState(
+              context,
+              props,
+              state,
+              event,
+            );
+            state.isActive = true;
+            state.shouldPreventDefault = props.preventDefault !== false;
+            state.gestureState = gestureState;
+            state.initialPosition.x = gestureState.x;
+            state.initialPosition.y = gestureState.y;
+            dispatchStart(context, props, state);
+          } else if (activateAuxiliary) {
+            state.isAuxiliaryActive = true;
           }
         }
         break;
@@ -575,24 +609,30 @@ const responderImpl = {
       case 'mouseup':
       case 'touchend': {
         if (state.isActive && isActivePointer(event, state)) {
-          if (state.buttons === buttonsEnum.middle) {
-            // Remove the root events here as no 'click' event is dispatched
-            // when this 'button' is pressed.
-            removeRootEventTypes(context, state);
-          }
-
           state.gestureState = createGestureState(context, props, state, event);
-
           state.isActive = false;
-          if (context.isTargetWithinResponder(hitTarget)) {
-            // Determine whether to call preventDefault on subsequent native events.
-            if (hasModifierKey(event)) {
-              state.shouldPreventClick = false;
-            }
-            dispatchEnd(context, props, state);
-          } else {
+          if (isAuxiliary(state.buttons, nativeEvent)) {
             dispatchCancel(context, props, state);
+            dispatchAuxiliaryTap(context, props, state);
+            // Remove the root events here as no 'click' event is dispatched
+            removeRootEventTypes(context, state);
+          } else if (
+            !context.isTargetWithinResponder(hitTarget) ||
+            hasModifierKey(event)
+          ) {
+            dispatchCancel(context, props, state);
+          } else {
+            dispatchEnd(context, props, state);
           }
+        } else if (
+          state.isAuxiliaryActive &&
+          isAuxiliary(state.buttons, nativeEvent)
+        ) {
+          state.isAuxiliaryActive = false;
+          state.gestureState = createGestureState(context, props, state, event);
+          dispatchAuxiliaryTap(context, props, state);
+          // Remove the root events here as no 'click' event is dispatched
+          removeRootEventTypes(context, state);
         }
 
         if (!hasPointerEvents) {
@@ -612,6 +652,7 @@ const responderImpl = {
           state.gestureState = createGestureState(context, props, state, event);
           state.isActive = false;
           dispatchCancel(context, props, state);
+          removeRootEventTypes(context, state);
         }
         break;
       }
@@ -630,12 +671,13 @@ const responderImpl = {
           state.gestureState = createGestureState(context, props, state, event);
           state.isActive = false;
           dispatchCancel(context, props, state);
+          removeRootEventTypes(context, state);
         }
         break;
       }
 
       case 'click': {
-        if (state.shouldPreventClick) {
+        if (state.shouldPreventDefault) {
           nativeEvent.preventDefault();
         }
         removeRootEventTypes(context, state);

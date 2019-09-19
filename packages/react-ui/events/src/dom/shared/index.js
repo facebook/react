@@ -27,7 +27,7 @@ export const buttonsEnum = {
   none: 0,
   primary: 1,
   secondary: 2,
-  middle: 4,
+  auxiliary: 4,
 };
 
 export function dispatchDiscreteEvent(
