@@ -255,14 +255,14 @@ describe('TabFocusController', () => {
         firstFocusController,
       );
       expect(nextController).toBe(secondFocusController);
-      ReactTabFocus.focusNext(nextController);
+      ReactTabFocus.focusFirst(nextController);
       expect(document.activeElement).toBe(divRef.current);
 
       const previousController = ReactTabFocus.getPreviousController(
         nextController,
       );
       expect(previousController).toBe(firstFocusController);
-      ReactTabFocus.focusNext(previousController);
+      ReactTabFocus.focusFirst(previousController);
       expect(document.activeElement).toBe(buttonRef.current);
     });
   });
