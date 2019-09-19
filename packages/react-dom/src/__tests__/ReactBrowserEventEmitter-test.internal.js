@@ -57,8 +57,8 @@ describe('ReactBrowserEventEmitter', () => {
     LISTENER.mockClear();
 
     // TODO: can we express this test with only public API?
-    EventPluginHub = require('events/EventPluginHub');
-    EventPluginRegistry = require('events/EventPluginRegistry');
+    EventPluginHub = require('legacy-events/EventPluginHub');
+    EventPluginRegistry = require('legacy-events/EventPluginRegistry');
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMComponentTree = require('../client/ReactDOMComponentTree');

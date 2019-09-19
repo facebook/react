@@ -215,6 +215,18 @@ describe('ReactElement.jsx', () => {
     );
   });
 
+  it('warns when a jsxs is passed something that is not an array', () => {
+    const container = document.createElement('div');
+    expect(() =>
+      ReactDOM.render(React.jsxs('div', {children: 'foo'}, null), container),
+    ).toWarnDev(
+      'React.jsx: Static children should always be an array. ' +
+        'You are likely explicitly calling React.jsxs or React.jsxDEV. ' +
+        'Use the Babel transform instead.',
+      {withoutStack: true},
+    );
+  });
+
   it('should warn when `key` is being accessed on a host element', () => {
     const element = React.jsxs('div', {}, '3');
     expect(() => void element.props.key).toWarnDev(

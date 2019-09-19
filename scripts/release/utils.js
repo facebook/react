@@ -12,6 +12,14 @@ const createLogger = require('progress-estimator');
 const prompt = require('prompt-promise');
 const theme = require('./theme');
 
+// The following packages are published to NPM but not by this script.
+// They are released through a separate process.
+const RELEASE_SCRIPT_PACKAGE_SKIPLIST = [
+  'react-devtools',
+  'react-devtools-core',
+  'react-devtools-inline',
+];
+
 // https://www.npmjs.com/package/progress-estimator#configuration
 const logger = createLogger({
   storagePath: join(__dirname, '.progress-estimator'),
@@ -49,8 +57,7 @@ const getArtifactsList = async buildID => {
     process.env.CIRCLE_CI_API_TOKEN
   }`;
   const workflowMetadata = await http.get(workflowMetadataURL, true);
-
-  const job = workflowMetadata.jobs.find(
+  const job = workflowMetadata.items.find(
     ({name}) => name === 'process_artifacts'
   );
   if (!job || !job.job_number) {
@@ -105,6 +112,10 @@ const getPublicPackages = () => {
   const packagesRoot = join(__dirname, '..', '..', 'packages');
 
   return readdirSync(packagesRoot).filter(dir => {
+    if (RELEASE_SCRIPT_PACKAGE_SKIPLIST.includes(dir)) {
+      return false;
+    }
+
     const packagePath = join(packagesRoot, dir, 'package.json');
 
     if (dir.charAt(0) !== '.' && statSync(packagePath).isFile()) {
@@ -155,6 +166,17 @@ const printDiff = (path, beforeContents, afterContents) => {
     .filter(line => line);
   console.log(coloredLines.join('\n'));
   return patch;
+};
+
+// Convert an array param (expected format "--foo bar baz")
+// to also accept comma input (e.g. "--foo bar,baz")
+const splitCommaParams = array => {
+  for (let i = array.length - 1; i >= 0; i--) {
+    const param = array[i];
+    if (param.includes(',')) {
+      array.splice(i, 1, ...param.split(','));
+    }
+  }
 };
 
 // This method is used by both local Node release scripts and Circle CI bash scripts.
@@ -228,6 +250,7 @@ module.exports = {
   handleError,
   logPromise,
   printDiff,
+  splitCommaParams,
   theme,
   updateVersionsForCanary,
 };

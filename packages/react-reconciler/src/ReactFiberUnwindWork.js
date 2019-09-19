@@ -9,6 +9,7 @@
 
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {SuspenseState} from './ReactFiberSuspenseComponent';
 
 import {
   ClassComponent,
@@ -18,13 +19,13 @@ import {
   ContextProvider,
   SuspenseComponent,
   SuspenseListComponent,
-  DehydratedSuspenseComponent,
 } from 'shared/ReactWorkTags';
 import {DidCapture, NoEffect, ShouldCapture} from 'shared/ReactSideEffectTags';
 import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
 
 import {popHostContainer, popHostContext} from './ReactFiberHostContext';
 import {popSuspenseContext} from './ReactFiberSuspenseContext';
+import {resetHydrationState} from './ReactFiberHydrationContext';
 import {
   isContextProvider as isLegacyContextProvider,
   popContext as popLegacyContext,
@@ -70,24 +71,23 @@ function unwindWork(
     }
     case SuspenseComponent: {
       popSuspenseContext(workInProgress);
+      if (enableSuspenseServerRenderer) {
+        const suspenseState: null | SuspenseState =
+          workInProgress.memoizedState;
+        if (suspenseState !== null && suspenseState.dehydrated !== null) {
+          invariant(
+            workInProgress.alternate !== null,
+            'Threw in newly mounted dehydrated component. This is likely a bug in ' +
+              'React. Please file an issue.',
+          );
+          resetHydrationState();
+        }
+      }
       const effectTag = workInProgress.effectTag;
       if (effectTag & ShouldCapture) {
         workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture;
         // Captured a suspense effect. Re-render the boundary.
         return workInProgress;
-      }
-      return null;
-    }
-    case DehydratedSuspenseComponent: {
-      if (enableSuspenseServerRenderer) {
-        // TODO: popHydrationState
-        popSuspenseContext(workInProgress);
-        const effectTag = workInProgress.effectTag;
-        if (effectTag & ShouldCapture) {
-          workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture;
-          // Captured a suspense effect. Re-render the boundary.
-          return workInProgress;
-        }
       }
       return null;
     }
@@ -131,12 +131,6 @@ function unwindInterruptedWork(interruptedWork: Fiber) {
       break;
     case SuspenseComponent:
       popSuspenseContext(interruptedWork);
-      break;
-    case DehydratedSuspenseComponent:
-      if (enableSuspenseServerRenderer) {
-        // TODO: popHydrationState
-        popSuspenseContext(interruptedWork);
-      }
       break;
     case SuspenseListComponent:
       popSuspenseContext(interruptedWork);

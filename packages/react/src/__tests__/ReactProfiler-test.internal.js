@@ -381,7 +381,7 @@ describe('Profiler', () => {
         Scheduler.unstable_advanceTime(5); // 0 -> 5
 
         ReactTestRenderer.create(
-          <React.Fragment>
+          <>
             <React.Profiler id="parent" onRender={callback}>
               <AdvanceTime byAmount={10}>
                 <React.Profiler id="child" onRender={callback}>
@@ -389,7 +389,7 @@ describe('Profiler', () => {
                 </React.Profiler>
               </AdvanceTime>
             </React.Profiler>
-          </React.Fragment>,
+          </>,
         );
 
         expect(callback).toHaveBeenCalledTimes(2);
@@ -416,14 +416,14 @@ describe('Profiler', () => {
         Scheduler.unstable_advanceTime(5); // 0 -> 5
 
         ReactTestRenderer.create(
-          <React.Fragment>
+          <>
             <React.Profiler id="first" onRender={callback}>
               <AdvanceTime byAmount={20} />
             </React.Profiler>
             <React.Profiler id="second" onRender={callback}>
               <AdvanceTime byAmount={5} />
             </React.Profiler>
-          </React.Fragment>,
+          </>,
         );
 
         expect(callback).toHaveBeenCalledTimes(2);
@@ -449,13 +449,13 @@ describe('Profiler', () => {
         Scheduler.unstable_advanceTime(5); // 0 -> 5
 
         ReactTestRenderer.create(
-          <React.Fragment>
+          <>
             <AdvanceTime byAmount={20} />
             <React.Profiler id="test" onRender={callback}>
               <AdvanceTime byAmount={5} />
             </React.Profiler>
             <AdvanceTime byAmount={20} />
-          </React.Fragment>,
+          </>,
         );
 
         expect(callback).toHaveBeenCalledTimes(1);
@@ -1225,10 +1225,10 @@ describe('Profiler', () => {
       render() {
         const {duration, id} = this.props;
         return (
-          <React.Fragment>
+          <>
             <Child duration={duration} id={id} />
             <Child duration={duration} id={id} />
-          </React.Fragment>
+          </>
         );
       }
     }
@@ -1529,11 +1529,11 @@ describe('Profiler', () => {
         render() {
           instance = this;
           return (
-            <React.Fragment>
+            <>
               <Yield value="first" />
               {this.state.count}
               <Yield value="last" />
-            </React.Fragment>
+            </>
           );
         }
       }
@@ -2626,7 +2626,6 @@ describe('Profiler', () => {
       });
 
       it('handles high-pri renderers between suspended and resolved (async) trees', async () => {
-        spyOnDev(console, 'error');
         // Set up an initial shell. We need to set this up before the test sceanrio
         // because we want initial render to suspend on navigation to the initial state.
         let renderer = ReactTestRenderer.create(
@@ -2729,17 +2728,91 @@ describe('Profiler', () => {
         expect(
           onInteractionScheduledWorkCompleted.mock.calls[1][0],
         ).toMatchInteraction(highPriUpdateInteraction);
+      });
 
-        if (__DEV__) {
-          expect(console.error).toHaveBeenCalledTimes(1);
-          expect(console.error.calls.argsFor(0)[0]).toContain(
-            'Warning: %s\n\nThe fix is to split the update',
-          );
-          expect(console.error.calls.argsFor(0)[1]).toContain(
-            'A user-blocking update was suspended by:',
-          );
-          expect(console.error.calls.argsFor(0)[1]).toContain('AsyncText');
-        }
+      it('does not trace Promises flagged with __reactDoNotTraceInteractions', async () => {
+        loadModulesForTracing({useNoopRenderer: true});
+
+        const interaction = {
+          id: 0,
+          name: 'initial render',
+          timestamp: Scheduler.unstable_now(),
+        };
+
+        AsyncText = ({ms, text}) => {
+          try {
+            TextResource.read([text, ms]);
+            Scheduler.unstable_yieldValue(`AsyncText [${text}]`);
+            return text;
+          } catch (promise) {
+            promise.__reactDoNotTraceInteractions = true;
+
+            if (typeof promise.then === 'function') {
+              Scheduler.unstable_yieldValue(`Suspend [${text}]`);
+            } else {
+              Scheduler.unstable_yieldValue(`Error [${text}]`);
+            }
+            throw promise;
+          }
+        };
+
+        const onRender = jest.fn();
+        SchedulerTracing.unstable_trace(
+          interaction.name,
+          Scheduler.unstable_now(),
+          () => {
+            ReactNoop.render(
+              <React.Profiler id="test-profiler" onRender={onRender}>
+                <React.Suspense fallback={<Text text="Loading..." />}>
+                  <AsyncText text="Async" ms={20000} />
+                </React.Suspense>
+                <Text text="Sync" />
+              </React.Profiler>,
+            );
+          },
+        );
+
+        expect(onInteractionTraced).toHaveBeenCalledTimes(1);
+        expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
+          interaction,
+        );
+        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+        expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(0);
+        expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
+
+        expect(Scheduler).toFlushAndYield([
+          'Suspend [Async]',
+          'Text [Loading...]',
+          'Text [Sync]',
+        ]);
+        // Should have committed the placeholder.
+        expect(ReactNoop.getChildrenAsJSX()).toEqual('Loading...Sync');
+        expect(onRender).toHaveBeenCalledTimes(1);
+
+        let call = onRender.mock.calls[0];
+        expect(call[0]).toEqual('test-profiler');
+        expect(call[6]).toMatchInteractions(
+          ReactFeatureFlags.enableSchedulerTracing ? [interaction] : [],
+        );
+
+        // The interaction is now complete.
+        expect(onInteractionTraced).toHaveBeenCalledTimes(1);
+        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
+        expect(
+          onInteractionScheduledWorkCompleted,
+        ).toHaveBeenLastNotifiedOfInteraction(interaction);
+
+        // Once the promise resolves, we render the suspended view
+        await awaitableAdvanceTimers(20000);
+        expect(Scheduler).toHaveYielded(['Promise resolved [Async]']);
+        expect(Scheduler).toFlushAndYield(['AsyncText [Async]']);
+        expect(ReactNoop.getChildrenAsJSX()).toEqual('AsyncSync');
+        expect(onRender).toHaveBeenCalledTimes(2);
+
+        // No interactions should be associated with this update.
+        call = onRender.mock.calls[1];
+        expect(call[0]).toEqual('test-profiler');
+        expect(call[6]).toMatchInteractions([]);
       });
     });
   });

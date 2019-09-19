@@ -97,11 +97,11 @@ describe('ReactSchedulerIntegration', () => {
 
     runWithPriority(UserBlockingPriority, () => {
       ReactNoop.render(
-        <React.Fragment>
+        <>
           <ReadPriority />
           <ReadPriority />
           <ReadPriority />
-        </React.Fragment>,
+        </>,
       );
     });
 
@@ -149,6 +149,11 @@ describe('ReactSchedulerIntegration', () => {
         Scheduler.unstable_yieldValue(
           `Effect priority: ${getCurrentPriorityAsString()}`,
         );
+        return () => {
+          Scheduler.unstable_yieldValue(
+            `Effect clean-up priority: ${getCurrentPriorityAsString()}`,
+          );
+        };
       });
       return null;
     }
@@ -170,6 +175,7 @@ describe('ReactSchedulerIntegration', () => {
     });
     expect(Scheduler).toHaveYielded([
       'Render priority: UserBlocking',
+      'Effect clean-up priority: Normal',
       'Effect priority: Normal',
     ]);
 
@@ -181,6 +187,7 @@ describe('ReactSchedulerIntegration', () => {
     });
     expect(Scheduler).toHaveYielded([
       'Render priority: Idle',
+      'Effect clean-up priority: Idle',
       'Effect priority: Idle',
     ]);
   });
@@ -210,6 +217,95 @@ describe('ReactSchedulerIntegration', () => {
       'Effect priority [step 1]: Normal',
       'Render priority [step 2]: UserBlocking',
       'Effect priority [step 2]: Normal',
+    ]);
+  });
+
+  it('passive effect clean-up functions have correct priority even when component is deleted', async () => {
+    const {useEffect} = React;
+    function ReadPriority({step}) {
+      useEffect(() => {
+        return () => {
+          Scheduler.unstable_yieldValue(
+            `Effect clean-up priority: ${getCurrentPriorityAsString()}`,
+          );
+        };
+      });
+      return null;
+    }
+
+    await ReactNoop.act(async () => {
+      ReactNoop.render(<ReadPriority />);
+    });
+    await ReactNoop.act(async () => {
+      Scheduler.unstable_runWithPriority(ImmediatePriority, () => {
+        ReactNoop.render(null);
+      });
+    });
+    expect(Scheduler).toHaveYielded(['Effect clean-up priority: Normal']);
+
+    await ReactNoop.act(async () => {
+      ReactNoop.render(<ReadPriority />);
+    });
+    await ReactNoop.act(async () => {
+      Scheduler.unstable_runWithPriority(UserBlockingPriority, () => {
+        ReactNoop.render(null);
+      });
+    });
+    expect(Scheduler).toHaveYielded(['Effect clean-up priority: Normal']);
+
+    // Renders lower than normal priority spawn effects at the same priority
+    await ReactNoop.act(async () => {
+      ReactNoop.render(<ReadPriority />);
+    });
+    await ReactNoop.act(async () => {
+      Scheduler.unstable_runWithPriority(IdlePriority, () => {
+        ReactNoop.render(null);
+      });
+    });
+    expect(Scheduler).toHaveYielded(['Effect clean-up priority: Idle']);
+  });
+
+  it('passive effects are called before Normal-pri scheduled in layout effects', async () => {
+    const {useEffect, useLayoutEffect} = React;
+    function Effects({step}) {
+      useLayoutEffect(() => {
+        Scheduler.unstable_yieldValue('Layout Effect');
+        Scheduler.unstable_scheduleCallback(NormalPriority, () =>
+          Scheduler.unstable_yieldValue(
+            'Scheduled Normal Callback from Layout Effect',
+          ),
+        );
+      });
+      useEffect(() => {
+        Scheduler.unstable_yieldValue('Passive Effect');
+      });
+      return null;
+    }
+    function CleanupEffect() {
+      useLayoutEffect(() => () => {
+        Scheduler.unstable_yieldValue('Cleanup Layout Effect');
+        Scheduler.unstable_scheduleCallback(NormalPriority, () =>
+          Scheduler.unstable_yieldValue(
+            'Scheduled Normal Callback from Cleanup Layout Effect',
+          ),
+        );
+      });
+      return null;
+    }
+    await ReactNoop.act(async () => {
+      ReactNoop.render(<CleanupEffect />);
+    });
+    expect(Scheduler).toHaveYielded([]);
+    await ReactNoop.act(async () => {
+      ReactNoop.render(<Effects />);
+    });
+    expect(Scheduler).toHaveYielded([
+      'Cleanup Layout Effect',
+      'Layout Effect',
+      'Passive Effect',
+      // These callbacks should be scheduled after the passive effects.
+      'Scheduled Normal Callback from Cleanup Layout Effect',
+      'Scheduled Normal Callback from Layout Effect',
     ]);
   });
 

@@ -57,6 +57,7 @@ export const REACT_FUNDAMENTAL_TYPE = hasSymbol
 export const REACT_RESPONDER_TYPE = hasSymbol
   ? Symbol.for('react.responder')
   : 0xead6;
+export const REACT_SCOPE_TYPE = hasSymbol ? Symbol.for('react.scope') : 0xead7;
 
 const MAYBE_ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
 const FAUX_ITERATOR_SYMBOL = '@@iterator';

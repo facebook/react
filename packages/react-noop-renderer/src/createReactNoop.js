@@ -630,8 +630,17 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   // so we can tell if any async act() calls try to run in parallel.
 
   let actingUpdatesScopeDepth = 0;
+  let didWarnAboutUsingActInProd = false;
 
   function act(callback: () => Thenable) {
+    if (!__DEV__) {
+      if (didWarnAboutUsingActInProd === false) {
+        didWarnAboutUsingActInProd = true;
+        console.error(
+          'act(...) is not supported in production builds of React, and might not behave as expected.',
+        );
+      }
+    }
     let previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
     let previousIsSomeRendererActing;
     let previousIsThisRendererActing;
@@ -899,7 +908,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       if (!root) {
         const container = {rootID: rootID, pendingChildren: [], children: []};
         rootContainers.set(rootID, container);
-        root = NoopRenderer.createContainer(container, tag, false);
+        root = NoopRenderer.createContainer(container, tag, false, null);
         roots.set(rootID, root);
       }
       return root.current.stateNode.containerInfo;
@@ -916,6 +925,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         container,
         ConcurrentRoot,
         false,
+        null,
       );
       return {
         _Scheduler: Scheduler,
@@ -941,6 +951,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         container,
         BatchedRoot,
         false,
+        null,
       );
       return {
         _Scheduler: Scheduler,

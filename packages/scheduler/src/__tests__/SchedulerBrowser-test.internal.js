@@ -15,6 +15,7 @@
 let Scheduler;
 let runtime;
 let performance;
+let cancelCallback;
 let scheduleCallback;
 let NormalPriority;
 
@@ -52,6 +53,7 @@ describe('SchedulerBrowser', () => {
       performance = window.performance;
       require('scheduler/src/SchedulerFeatureFlags').enableMessageLoopImplementation = enableMessageLoopImplementation;
       Scheduler = require('scheduler');
+      cancelCallback = Scheduler.unstable_cancelCallback;
       scheduleCallback = Scheduler.unstable_scheduleCallback;
       NormalPriority = Scheduler.unstable_NormalPriority;
     });
@@ -310,7 +312,7 @@ describe('SchedulerBrowser', () => {
       runtime.assertLog(['Message Event', 'B']);
     });
 
-    it('adjusts frame rate by measuring inteval between rAF events', () => {
+    it('adjusts frame rate by measuring interval between rAF events', () => {
       runtime.setHardwareFrameRate(60);
 
       scheduleCallback(NormalPriority, () => runtime.log('Tick'));
@@ -360,7 +362,16 @@ describe('SchedulerBrowser', () => {
     const enableMessageLoopImplementation = true;
     beforeAndAfterHooks(enableMessageLoopImplementation);
 
-    it('task with continutation', () => {
+    it('task that finishes before deadline', () => {
+      scheduleCallback(NormalPriority, () => {
+        runtime.log('Task');
+      });
+      runtime.assertLog(['Post Message']);
+      runtime.fireMessageEvent();
+      runtime.assertLog(['Message Event', 'Task']);
+    });
+
+    it('task with continuation', () => {
       scheduleCallback(NormalPriority, () => {
         runtime.log('Task');
         while (!Scheduler.unstable_shouldYield()) {
@@ -385,7 +396,48 @@ describe('SchedulerBrowser', () => {
       runtime.assertLog(['Message Event', 'Continuation']);
     });
 
-    it('task that throws', () => {
+    it('multiple tasks', () => {
+      scheduleCallback(NormalPriority, () => {
+        runtime.log('A');
+      });
+      scheduleCallback(NormalPriority, () => {
+        runtime.log('B');
+      });
+      runtime.assertLog(['Post Message']);
+      runtime.fireMessageEvent();
+      runtime.assertLog(['Message Event', 'A', 'B']);
+    });
+
+    it('multiple tasks with a yield in between', () => {
+      scheduleCallback(NormalPriority, () => {
+        runtime.log('A');
+        runtime.advanceTime(4999);
+      });
+      scheduleCallback(NormalPriority, () => {
+        runtime.log('B');
+      });
+      runtime.assertLog(['Post Message']);
+      runtime.fireMessageEvent();
+      runtime.assertLog([
+        'Message Event',
+        'A',
+        // Ran out of time. Post a continuation event.
+        'Post Message',
+      ]);
+      runtime.fireMessageEvent();
+      runtime.assertLog(['Message Event', 'B']);
+    });
+
+    it('cancels tasks', () => {
+      const task = scheduleCallback(NormalPriority, () => {
+        runtime.log('Task');
+      });
+      runtime.assertLog(['Post Message']);
+      cancelCallback(task);
+      runtime.assertLog([]);
+    });
+
+    it('throws when a task errors then continues in a new event', () => {
       scheduleCallback(NormalPriority, () => {
         runtime.log('Oops!');
         throw Error('Oops!');
@@ -410,6 +462,25 @@ describe('SchedulerBrowser', () => {
       runtime.assertLog(['Post Message']);
       runtime.fireMessageEvent();
       runtime.assertLog(['Message Event', 'A']);
+
+      scheduleCallback(NormalPriority, () => {
+        runtime.log('B');
+      });
+      runtime.assertLog(['Post Message']);
+      runtime.fireMessageEvent();
+      runtime.assertLog(['Message Event', 'B']);
+    });
+
+    it('schedule new task after a cancellation', () => {
+      let handle = scheduleCallback(NormalPriority, () => {
+        runtime.log('A');
+      });
+
+      runtime.assertLog(['Post Message']);
+      cancelCallback(handle);
+
+      runtime.fireMessageEvent();
+      runtime.assertLog(['Message Event']);
 
       scheduleCallback(NormalPriority, () => {
         runtime.log('B');

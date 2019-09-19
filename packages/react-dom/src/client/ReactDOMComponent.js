@@ -9,12 +9,12 @@
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
-import {registrationNameModules} from 'events/EventPluginRegistry';
+import {registrationNameModules} from 'legacy-events/EventPluginRegistry';
 import warning from 'shared/warning';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import endsWith from 'shared/endsWith';
-import type {DOMTopLevelEventType} from 'events/TopLevelEventTypes';
+import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 import {setListenToResponderEventTypes} from '../events/DOMEventResponderSystem';
 
 import {
@@ -85,11 +85,16 @@ import possibleStandardNames from '../shared/possibleStandardNames';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
+import {toStringOrTrustedType} from './ToStringValue';
 
-import {enableFlareAPI} from 'shared/ReactFeatureFlags';
+import {
+  enableFlareAPI,
+  enableTrustedTypesIntegration,
+} from 'shared/ReactFeatureFlags';
 
 let didWarnInvalidHydration = false;
 let didWarnShadyDOM = false;
+let didWarnScriptTags = false;
 
 const DANGEROUSLY_SET_INNER_HTML = 'dangerouslySetInnerHTML';
 const SUPPRESS_CONTENT_EDITABLE_WARNING = 'suppressContentEditableWarning';
@@ -422,6 +427,18 @@ export function createElement(
       // Create the script via .innerHTML so its "parser-inserted" flag is
       // set to true and it does not execute
       const div = ownerDocument.createElement('div');
+      if (__DEV__) {
+        if (enableTrustedTypesIntegration && !didWarnScriptTags) {
+          warning(
+            false,
+            'Encountered a script tag while rendering React component. ' +
+              'Scripts inside React components are never executed when rendering ' +
+              'on the client. Consider using template tag instead ' +
+              '(https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template).',
+          );
+          didWarnScriptTags = true;
+        }
+      }
       div.innerHTML = '<script><' + '/script>'; // eslint-disable-line
       // This is guaranteed to yield a script element.
       const firstChild = ((div.firstChild: any): HTMLScriptElement);
@@ -776,7 +793,10 @@ export function diffProperties(
       const lastHtml = lastProp ? lastProp[HTML] : undefined;
       if (nextHtml != null) {
         if (lastHtml !== nextHtml) {
-          (updatePayload = updatePayload || []).push(propKey, '' + nextHtml);
+          (updatePayload = updatePayload || []).push(
+            propKey,
+            toStringOrTrustedType(nextHtml),
+          );
         }
       } else {
         // TODO: It might be too late to clear this if we have children

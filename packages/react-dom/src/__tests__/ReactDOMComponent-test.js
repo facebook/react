@@ -1034,13 +1034,13 @@ describe('ReactDOMComponent', () => {
       return (str + '').replace(/([.?*+\^$\[\]\\(){}|-])/g, '\\$1');
     }
 
-    function toHaveAttribute(actual, expected) {
+    function expectToHaveAttribute(actual, expected) {
       const [attr, value] = expected;
       let re = '(?:^|\\s)' + attr + '=[\\\'"]';
       if (typeof value !== 'undefined') {
         re += quoteRegexp(value) + '[\\\'"]';
       }
-      return new RegExp(re).test(actual);
+      expect(actual).toMatch(new RegExp(re));
     }
 
     function genMarkup(props) {
@@ -1048,19 +1048,17 @@ describe('ReactDOMComponent', () => {
     }
 
     it('should generate the correct markup with className', () => {
-      expect(toHaveAttribute(genMarkup({className: 'a'}), ['class', 'a']));
-      expect(toHaveAttribute(genMarkup({className: 'a b'}), ['class', 'a b']));
-      expect(toHaveAttribute(genMarkup({className: ''}), ['class', '']));
+      expectToHaveAttribute(genMarkup({className: 'a'}), ['class', 'a']);
+      expectToHaveAttribute(genMarkup({className: 'a b'}), ['class', 'a b']);
+      expectToHaveAttribute(genMarkup({className: ''}), ['class', '']);
     });
 
     it('should escape style names and values', () => {
-      expect(
-        toHaveAttribute(
-          genMarkup({
-            style: {'b&ckground': '<3'},
-          }),
-          ['style', 'b&amp;ckground:&lt;3;'],
-        ),
+      expectToHaveAttribute(
+        genMarkup({
+          style: {'b&ckground': '<3'},
+        }),
+        ['style', 'b&amp;ckground:&lt;3'],
       );
     });
   });
@@ -1075,7 +1073,7 @@ describe('ReactDOMComponent', () => {
     }
 
     function toHaveInnerhtml(actual, expected) {
-      const re = '^' + quoteRegexp(expected) + '$';
+      const re = quoteRegexp(expected);
       return new RegExp(re).test(actual);
     }
 
@@ -1086,7 +1084,7 @@ describe('ReactDOMComponent', () => {
           genMarkup({dangerouslySetInnerHTML: innerHTML}),
           'testContent',
         ),
-      );
+      ).toBe(true);
     });
   });
 
@@ -1715,7 +1713,7 @@ describe('ReactDOMComponent', () => {
 
       expect(() => ReactTestUtils.renderIntoDocument(<Foo />)).toWarnDev([
         'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
-          '<table>. Add a <tbody> to your code to match the DOM tree generated ' +
+          '<table>. Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated ' +
           'by the browser.' +
           '\n    in tr (at **)' +
           '\n    in Row (at **)' +

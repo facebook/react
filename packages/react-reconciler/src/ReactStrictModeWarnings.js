@@ -194,7 +194,7 @@ if (__DEV__) {
       warningWithoutStack(
         false,
         'Using UNSAFE_componentWillMount in strict mode is not recommended and may indicate bugs in your code. ' +
-          'See https://fb.me/react-async-component-lifecycle-hooks for details.\n\n' +
+          'See https://fb.me/react-unsafe-component-lifecycles for details.\n\n' +
           '* Move code with side effects to componentDidMount, and set initial state in the constructor.\n' +
           '\nPlease update the following components: %s',
         sortedNames,
@@ -209,7 +209,7 @@ if (__DEV__) {
         false,
         'Using UNSAFE_componentWillReceiveProps in strict mode is not recommended ' +
           'and may indicate bugs in your code. ' +
-          'See https://fb.me/react-async-component-lifecycle-hooks for details.\n\n' +
+          'See https://fb.me/react-unsafe-component-lifecycles for details.\n\n' +
           '* Move data fetching code or side effects to componentDidUpdate.\n' +
           "* If you're updating state whenever props change, " +
           'refactor your code to use memoization techniques or move it to ' +
@@ -227,7 +227,7 @@ if (__DEV__) {
         false,
         'Using UNSAFE_componentWillUpdate in strict mode is not recommended ' +
           'and may indicate bugs in your code. ' +
-          'See https://fb.me/react-async-component-lifecycle-hooks for details.\n\n' +
+          'See https://fb.me/react-unsafe-component-lifecycles for details.\n\n' +
           '* Move data fetching code or side effects to componentDidUpdate.\n' +
           '\nPlease update the following components: %s',
         sortedNames,
@@ -240,7 +240,7 @@ if (__DEV__) {
       lowPriorityWarning(
         false,
         'componentWillMount has been renamed, and is not recommended for use. ' +
-          'See https://fb.me/react-async-component-lifecycle-hooks for details.\n\n' +
+          'See https://fb.me/react-unsafe-component-lifecycles for details.\n\n' +
           '* Move code with side effects to componentDidMount, and set initial state in the constructor.\n' +
           '* Rename componentWillMount to UNSAFE_componentWillMount to suppress ' +
           'this warning in non-strict mode. In React 17.x, only the UNSAFE_ name will work. ' +
@@ -259,7 +259,7 @@ if (__DEV__) {
       lowPriorityWarning(
         false,
         'componentWillReceiveProps has been renamed, and is not recommended for use. ' +
-          'See https://fb.me/react-async-component-lifecycle-hooks for details.\n\n' +
+          'See https://fb.me/react-unsafe-component-lifecycles for details.\n\n' +
           '* Move data fetching code or side effects to componentDidUpdate.\n' +
           "* If you're updating state whenever props change, refactor your " +
           'code to use memoization techniques or move it to ' +
@@ -279,7 +279,7 @@ if (__DEV__) {
       lowPriorityWarning(
         false,
         'componentWillUpdate has been renamed, and is not recommended for use. ' +
-          'See https://fb.me/react-async-component-lifecycle-hooks for details.\n\n' +
+          'See https://fb.me/react-unsafe-component-lifecycles for details.\n\n' +
           '* Move data fetching code or side effects to componentDidUpdate.\n' +
           '* Rename componentWillUpdate to UNSAFE_componentWillUpdate to suppress ' +
           'this warning in non-strict mode. In React 17.x, only the UNSAFE_ name will work. ' +
@@ -346,14 +346,14 @@ if (__DEV__) {
 
         warningWithoutStack(
           false,
-          'Legacy context API has been detected within a strict-mode tree: %s' +
+          'Legacy context API has been detected within a strict-mode tree.' +
             '\n\nThe old API will be supported in all 16.x releases, but applications ' +
             'using it should migrate to the new version.' +
             '\n\nPlease update the following components: %s' +
-            '\n\nLearn more about this warning here:' +
-            '\nhttps://fb.me/react-legacy-context',
-          strictRootComponentStack,
+            '\n\nLearn more about this warning here: https://fb.me/react-legacy-context' +
+            '%s',
           sortedNames,
+          strictRootComponentStack,
         );
       },
     );

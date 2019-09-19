@@ -1,0 +1,178 @@
+:root {
+  /**
+   * IMPORTANT: When new theme variables are added below– also add them to SettingsContext updateThemeVariables()
+   */
+
+  /* Light theme */
+  --light-color-attribute-name: #ef6632;
+  --light-color-attribute-name-inverted: rgba(255, 255, 255, 0.7);
+  --light-color-attribute-value: #1a1aa6;
+  --light-color-attribute-value-inverted: #ffffff;
+  --light-color-attribute-editable-value: #1a1aa6;
+  --light-color-background: #ffffff;
+  --light-color-background-hover: rgba(0, 136, 250, 0.1);
+  --light-color-background-inactive: #e5e5e5;
+  --light-color-background-invalid: #fff0f0;
+  --light-color-background-selected: #0088fa;
+  --light-color-button-background: #ffffff;
+  --light-color-button-background-focus: #ededed;
+  --light-color-button: #5f6673;
+  --light-color-button-disabled: #cfd1d5;
+  --light-color-button-active: #0088fa;
+  --light-color-button-focus: #23272f;
+  --light-color-button-hover: #23272f;
+  --light-color-border: #eeeeee;
+  --light-color-commit-did-not-render-fill: #cfd1d5;
+  --light-color-commit-did-not-render-fill-text: #000000;
+  --light-color-commit-did-not-render-pattern: #cfd1d5;
+  --light-color-commit-did-not-render-pattern-text: #333333;
+  --light-color-commit-gradient-0: #37afa9;
+  --light-color-commit-gradient-1: #63b19e;
+  --light-color-commit-gradient-2: #80b393;
+  --light-color-commit-gradient-3: #97b488;
+  --light-color-commit-gradient-4: #abb67d;
+  --light-color-commit-gradient-5: #beb771;
+  --light-color-commit-gradient-6: #cfb965;
+  --light-color-commit-gradient-7: #dfba57;
+  --light-color-commit-gradient-8: #efbb49;
+  --light-color-commit-gradient-9: #febc38;
+  --light-color-commit-gradient-text: #000000;
+  --light-color-component-name: #6a51b2;
+  --light-color-component-name-inverted: #ffffff;
+  --light-color-component-badge-background: rgba(0, 0, 0, 0.1);
+  --light-color-component-badge-background-inverted: rgba(255, 255, 255, 0.25);
+  --light-color-component-badge-count: #777d88;
+  --light-color-component-badge-count-inverted: rgba(255, 255, 255, 0.7);
+  --light-color-dim: #777d88;
+  --light-color-dimmer: #cfd1d5;
+  --light-color-dimmest: #eff0f1;
+  --light-color-expand-collapse-toggle: #777d88;
+  --light-color-modal-background: rgba(255, 255, 255, 0.75);
+  --light-color-record-active: #fc3a4b;
+  --light-color-record-hover: #3578e5;
+  --light-color-record-inactive: #0088fa;
+  --light-color-scroll-thumb: #c2c2c2;
+  --light-color-scroll-track: #fafafa;
+  --light-color-search-match: yellow;
+  --light-color-search-match-current: #f7923b;
+  --light-color-selected-tree-highlight-active: rgba(0, 136, 250, 0.1);
+  --light-color-selected-tree-highlight-inactive: rgba(0, 0, 0, 0.05);
+  --light-color-shadow: rgba(0, 0, 0, 0.25);
+  --light-color-tab-selected-border: #0088fa;
+  --light-color-text: #000000;
+  --light-color-text-invalid: #ff0000;
+  --light-color-text-selected: #ffffff;
+  --light-color-toggle-background-invalid: #fc3a4b;
+  --light-color-toggle-background-on: #0088fa;
+  --light-color-toggle-background-off: #cfd1d5;
+  --light-color-toggle-text: #ffffff;
+  --light-color-tooltip-background: rgba(0, 0, 0, 0.9);
+  --light-color-tooltip-text: #ffffff;
+
+  /* Dark theme */
+  --dark-color-attribute-name: #9d87d2;
+  --dark-color-attribute-name-inverted: #282828;
+  --dark-color-attribute-value: #cedae0;
+  --dark-color-attribute-value-inverted: #ffffff;
+  --dark-color-attribute-editable-value: yellow;
+  --dark-color-background: #282c34;
+  --dark-color-background-hover: rgba(255, 255, 255, 0.1);
+  --dark-color-background-inactive: #3d424a;
+  --dark-color-background-invalid: #5c0000;
+  --dark-color-background-selected: #178fb9;
+  --dark-color-button-background: #282c34;
+  --dark-color-button-background-focus: #3d424a;
+  --dark-color-button: #afb3b9;
+  --dark-color-button-active: #61dafb;
+  --dark-color-button-disabled: #4f5766;
+  --dark-color-button-focus: #a2e9fc;
+  --dark-color-button-hover: #ededed;
+  --dark-color-border: #3d424a;
+  --dark-color-commit-did-not-render-fill: #777d88;
+  --dark-color-commit-did-not-render-fill-text: #000000;
+  --dark-color-commit-did-not-render-pattern: #666c77;
+  --dark-color-commit-did-not-render-pattern-text: #ffffff;
+  --dark-color-commit-gradient-0: #37afa9;
+  --dark-color-commit-gradient-1: #63b19e;
+  --dark-color-commit-gradient-2: #80b393;
+  --dark-color-commit-gradient-3: #97b488;
+  --dark-color-commit-gradient-4: #abb67d;
+  --dark-color-commit-gradient-5: #beb771;
+  --dark-color-commit-gradient-6: #cfb965;
+  --dark-color-commit-gradient-7: #dfba57;
+  --dark-color-commit-gradient-8: #efbb49;
+  --dark-color-commit-gradient-9: #febc38;
+  --dark-color-commit-gradient-text: #000000;
+  --dark-color-component-name: #61dafb;
+  --dark-color-component-name-inverted: #282828;
+  --dark-color-component-badge-background: rgba(255, 255, 255, 0.25);
+  --dark-color-component-badge-background-inverted: rgba(0, 0, 0, 0.25);
+  --dark-color-component-badge-count: #8f949d;
+  --dark-color-component-badge-count-inverted: rgba(255, 255, 255, 0.7);
+  --dark-color-dim: #8f949d;
+  --dark-color-dimmer: #777d88;
+  --dark-color-dimmest: #4f5766;
+  --dark-color-expand-collapse-toggle: #8f949d;
+  --dark-color-modal-background: rgba(0, 0, 0, 0.75);
+  --dark-color-record-active: #fc3a4b;
+  --dark-color-record-hover: #a2e9fc;
+  --dark-color-record-inactive: #61dafb;
+  --dark-color-scroll-thumb: #afb3b9;
+  --dark-color-scroll-track: #313640;
+  --dark-color-search-match: yellow;
+  --dark-color-search-match-current: #f7923b;
+  --dark-color-selected-tree-highlight-active: rgba(23, 143, 185, 0.15);
+  --dark-color-selected-tree-highlight-inactive: rgba(255, 255, 255, 0.05);
+  --dark-color-shadow: rgba(0, 0, 0, 0.5);
+  --dark-color-tab-selected-border: #178fb9;
+  --dark-color-text: #ffffff;
+  --dark-color-text-invalid: #ff8080;
+  --dark-color-text-selected: #ffffff;
+  --dark-color-toggle-background-invalid: #fc3a4b;
+  --dark-color-toggle-background-on: #178fb9;
+  --dark-color-toggle-background-off: #777d88;
+  --dark-color-toggle-text: #ffffff;
+  --dark-color-tooltip-background: rgba(255, 255, 255, 0.9);
+  --dark-color-tooltip-text: #000000;
+
+  /* Font smoothing */
+  --light-font-smoothing: auto;
+  --dark-font-smoothing: antialiased;
+  --font-smoothing: auto;
+
+  /* Compact density */
+  --compact-font-size-monospace-small: 9px;
+  --compact-font-size-monospace-normal: 11px;
+  --compact-font-size-monospace-large: 15px;
+  --compact-font-size-sans-small: 10px;
+  --compact-font-size-sans-normal: 12px;
+  --compact-font-size-sans-large: 14px;
+  --compact-line-height-data: 18px;
+  --compact-root-font-size: 16px;
+
+  /* Comfortable density */
+  --comfortable-font-size-monospace-small: 10px;
+  --comfortable-font-size-monospace-normal: 13px;
+  --comfortable-font-size-monospace-large: 17px;
+  --comfortable-font-size-sans-small: 12px;
+  --comfortable-font-size-sans-normal: 14px;
+  --comfortable-font-size-sans-large: 16px;
+  --comfortable-line-height-data: 22px;
+  --comfortable-root-font-size: 20px;
+
+  /* GitHub.com system fonts */
+  --font-family-monospace: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo,
+    Courier, monospace;
+  --font-family-sans: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica,
+    Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol;
+
+  /* Constant values shared between JS and CSS */
+  --interaction-commit-size: 10px;
+  --interaction-label-width: 200px;
+}
+
+* {
+  box-sizing: border-box;
+
+  -webkit-font-smoothing: var(--font-smoothing);
+}

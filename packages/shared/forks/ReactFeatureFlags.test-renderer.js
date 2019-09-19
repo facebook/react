@@ -28,14 +28,17 @@ export const enableSchedulerDebugging = false;
 export const warnAboutDeprecatedSetNativeProps = false;
 export const enableFlareAPI = false;
 export const enableFundamentalAPI = false;
+export const enableScopeAPI = false;
 export const enableJSXTransformAPI = false;
 export const warnAboutUnmockedScheduler = false;
-export const revertPassiveEffectsChange = false;
 export const flushSuspenseFallbacksInTests = true;
 export const enableUserBlockingEvents = false;
 export const enableSuspenseCallback = false;
 export const warnAboutDefaultPropsOnFunctionComponents = false;
+export const warnAboutStringRefs = false;
 export const disableLegacyContext = false;
+export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
+export const enableTrustedTypesIntegration = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {

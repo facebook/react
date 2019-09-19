@@ -20,7 +20,7 @@
   "homepage": "https://reactjs.org/",
   "peerDependencies": {
     "jest": "^23.0.1",
-    "scheduler": "^0.11.0"
+    "scheduler": "^0.15.0"
   },
   "files": [
     "LICENSE",

@@ -301,10 +301,10 @@ describe('ReactLazy', () => {
     function LazyImpl(props) {
       Scheduler.unstable_yieldValue('Lazy');
       return (
-        <React.Fragment>
+        <>
           <Text text={props.siblingText} />
           {props.children}
-        </React.Fragment>
+        </>
       );
     }
     LazyImpl.defaultProps = {siblingText: 'Sibling'};
@@ -660,7 +660,6 @@ describe('ReactLazy', () => {
     // Mount
     await Promise.resolve();
     expect(() => {
-      expect(Scheduler);
       Scheduler.unstable_flushAll();
     }).toWarnDev([
       'Invalid prop `inner` of type `string` supplied to `Add`, expected `number`.',

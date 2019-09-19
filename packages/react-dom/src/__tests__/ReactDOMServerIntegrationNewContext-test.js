@@ -270,12 +270,12 @@ describe('ReactDOMServerIntegration', () => {
                   </Theme.Provider>
                   <Language.Consumer>
                     {language => (
-                      <React.Fragment>
+                      <>
                         <Theme.Consumer>
                           {theme => <div id="theme3">{theme}</div>}
                         </Theme.Consumer>
                         <div id="language2">{language}</div>
-                      </React.Fragment>
+                      </>
                     )}
                   </Language.Consumer>
                 </Theme.Provider>

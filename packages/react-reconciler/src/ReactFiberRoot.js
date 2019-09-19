@@ -13,12 +13,18 @@ import type {RootTag} from 'shared/ReactRootTags';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
 import type {Thenable} from './ReactFiberWorkLoop';
 import type {Interaction} from 'scheduler/src/Tracing';
+import type {SuspenseHydrationCallbacks} from './ReactFiberSuspenseComponent';
+import type {ReactPriorityLevel} from './SchedulerWithReactIntegration';
 
 import {noTimeout} from './ReactFiberHostConfig';
 import {createHostRootFiber} from './ReactFiber';
 import {NoWork} from './ReactFiberExpirationTime';
-import {enableSchedulerTracing} from 'shared/ReactFeatureFlags';
+import {
+  enableSchedulerTracing,
+  enableSuspenseCallback,
+} from 'shared/ReactFeatureFlags';
 import {unstable_getThreadID} from 'scheduler/tracing';
+import {NoPriority} from './SchedulerWithReactIntegration';
 
 // TODO: This should be lifted into the renderer.
 export type Batch = {
@@ -65,12 +71,20 @@ type BaseFiberRootProperties = {|
   callbackNode: *,
   // Expiration of the callback associated with this root
   callbackExpirationTime: ExpirationTime,
+  // Priority of the callback associated with this root
+  callbackPriority: ReactPriorityLevel,
   // The earliest pending expiration time that exists in the tree
   firstPendingTime: ExpirationTime,
-  // The latest pending expiration time that exists in the tree
-  lastPendingTime: ExpirationTime,
-  // The time at which a suspended component pinged the root to render again
-  pingTime: ExpirationTime,
+  // The earliest suspended expiration time that exists in the tree
+  firstSuspendedTime: ExpirationTime,
+  // The latest suspended expiration time that exists in the tree
+  lastSuspendedTime: ExpirationTime,
+  // The next known expiration time after the suspended range
+  nextKnownPendingLevel: ExpirationTime,
+  // The latest time at which a suspended component pinged the root to
+  // render again
+  lastPingedTime: ExpirationTime,
+  lastExpiredTime: ExpirationTime,
 |};
 
 // The following attributes are only used by interaction tracing builds.
@@ -83,6 +97,11 @@ type ProfilingOnlyFiberRootProperties = {|
   pendingInteractionMap: PendingInteractionMap,
 |};
 
+// The follow fields are only used by enableSuspenseCallback for hydration.
+type SuspenseCallbackOnlyFiberRootProperties = {|
+  hydrationCallbacks: null | SuspenseHydrationCallbacks,
+|};
+
 // Exported FiberRoot type includes all properties,
 // To avoid requiring potentially error-prone :any casts throughout the project.
 // Profiling properties are only safe to access in profiling builds (when enableSchedulerTracing is true).
@@ -91,6 +110,7 @@ type ProfilingOnlyFiberRootProperties = {|
 export type FiberRoot = {
   ...BaseFiberRootProperties,
   ...ProfilingOnlyFiberRootProperties,
+  ...SuspenseCallbackOnlyFiberRootProperties,
 };
 
 function FiberRootNode(containerInfo, tag, hydrate) {
@@ -107,15 +127,21 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   this.hydrate = hydrate;
   this.firstBatch = null;
   this.callbackNode = null;
-  this.callbackExpirationTime = NoWork;
+  this.callbackPriority = NoPriority;
   this.firstPendingTime = NoWork;
-  this.lastPendingTime = NoWork;
-  this.pingTime = NoWork;
+  this.firstSuspendedTime = NoWork;
+  this.lastSuspendedTime = NoWork;
+  this.nextKnownPendingLevel = NoWork;
+  this.lastPingedTime = NoWork;
+  this.lastExpiredTime = NoWork;
 
   if (enableSchedulerTracing) {
     this.interactionThreadID = unstable_getThreadID();
     this.memoizedInteractions = new Set();
     this.pendingInteractionMap = new Map();
+  }
+  if (enableSuspenseCallback) {
+    this.hydrationCallbacks = null;
   }
 }
 
@@ -123,8 +149,12 @@ export function createFiberRoot(
   containerInfo: any,
   tag: RootTag,
   hydrate: boolean,
+  hydrationCallbacks: null | SuspenseHydrationCallbacks,
 ): FiberRoot {
   const root: FiberRoot = (new FiberRootNode(containerInfo, tag, hydrate): any);
+  if (enableSuspenseCallback) {
+    root.hydrationCallbacks = hydrationCallbacks;
+  }
 
   // Cyclic construction. This cheats the type system right now because
   // stateNode is any.
@@ -133,4 +163,109 @@ export function createFiberRoot(
   uninitializedFiber.stateNode = root;
 
   return root;
+}
+
+export function isRootSuspendedAtTime(
+  root: FiberRoot,
+  expirationTime: ExpirationTime,
+): boolean {
+  const firstSuspendedTime = root.firstSuspendedTime;
+  const lastSuspendedTime = root.lastSuspendedTime;
+  return (
+    firstSuspendedTime !== NoWork &&
+    (firstSuspendedTime >= expirationTime &&
+      lastSuspendedTime <= expirationTime)
+  );
+}
+
+export function markRootSuspendedAtTime(
+  root: FiberRoot,
+  expirationTime: ExpirationTime,
+): void {
+  const firstSuspendedTime = root.firstSuspendedTime;
+  const lastSuspendedTime = root.lastSuspendedTime;
+  if (firstSuspendedTime < expirationTime) {
+    root.firstSuspendedTime = expirationTime;
+  }
+  if (lastSuspendedTime > expirationTime || firstSuspendedTime === NoWork) {
+    root.lastSuspendedTime = expirationTime;
+  }
+
+  if (expirationTime <= root.lastPingedTime) {
+    root.lastPingedTime = NoWork;
+  }
+
+  if (expirationTime <= root.lastExpiredTime) {
+    root.lastExpiredTime = NoWork;
+  }
+}
+
+export function markRootUpdatedAtTime(
+  root: FiberRoot,
+  expirationTime: ExpirationTime,
+): void {
+  // Update the range of pending times
+  const firstPendingTime = root.firstPendingTime;
+  if (expirationTime > firstPendingTime) {
+    root.firstPendingTime = expirationTime;
+  }
+
+  // Update the range of suspended times. Treat everything lower priority or
+  // equal to this update as unsuspended.
+  const firstSuspendedTime = root.firstSuspendedTime;
+  if (firstSuspendedTime !== NoWork) {
+    if (expirationTime >= firstSuspendedTime) {
+      // The entire suspended range is now unsuspended.
+      root.firstSuspendedTime = root.lastSuspendedTime = root.nextKnownPendingLevel = NoWork;
+    } else if (expirationTime >= root.lastSuspendedTime) {
+      root.lastSuspendedTime = expirationTime + 1;
+    }
+
+    // This is a pending level. Check if it's higher priority than the next
+    // known pending level.
+    if (expirationTime > root.nextKnownPendingLevel) {
+      root.nextKnownPendingLevel = expirationTime;
+    }
+  }
+}
+
+export function markRootFinishedAtTime(
+  root: FiberRoot,
+  finishedExpirationTime: ExpirationTime,
+  remainingExpirationTime: ExpirationTime,
+): void {
+  // Update the range of pending times
+  root.firstPendingTime = remainingExpirationTime;
+
+  // Update the range of suspended times. Treat everything higher priority or
+  // equal to this update as unsuspended.
+  if (finishedExpirationTime <= root.lastSuspendedTime) {
+    // The entire suspended range is now unsuspended.
+    root.firstSuspendedTime = root.lastSuspendedTime = root.nextKnownPendingLevel = NoWork;
+  } else if (finishedExpirationTime <= root.firstSuspendedTime) {
+    // Part of the suspended range is now unsuspended. Narrow the range to
+    // include everything between the unsuspended time (non-inclusive) and the
+    // last suspended time.
+    root.firstSuspendedTime = finishedExpirationTime - 1;
+  }
+
+  if (finishedExpirationTime <= root.lastPingedTime) {
+    // Clear the pinged time
+    root.lastPingedTime = NoWork;
+  }
+
+  if (finishedExpirationTime <= root.lastExpiredTime) {
+    // Clear the expired time
+    root.lastExpiredTime = NoWork;
+  }
+}
+
+export function markRootExpiredAtTime(
+  root: FiberRoot,
+  expirationTime: ExpirationTime,
+): void {
+  const lastExpiredTime = root.lastExpiredTime;
+  if (lastExpiredTime === NoWork || lastExpiredTime > expirationTime) {
+    root.lastExpiredTime = expirationTime;
+  }
 }

@@ -431,7 +431,7 @@ describe('ReactHooks', () => {
     expect(root).toMatchRenderedOutput('1');
 
     // Update to the same state. React doesn't know if the queue is empty
-    // because the alterate fiber has pending update priority, so we have to
+    // because the alternate fiber has pending update priority, so we have to
     // enter the render phase before we can bail out. But we bail out before
     // rendering the child, and we don't fire any effects.
     act(() => setCounter(1));
@@ -1077,10 +1077,10 @@ describe('ReactHooks', () => {
 
     expect(() =>
       ReactTestRenderer.create(
-        <React.Fragment>
+        <>
           <Fn />
           <Cls />
-        </React.Fragment>,
+        </>,
       ),
     ).toWarnDev(['Context can only be read while React is rendering']);
   });
@@ -1753,10 +1753,10 @@ describe('ReactHooks', () => {
 
     expect(() =>
       ReactTestRenderer.create(
-        <React.Fragment>
+        <>
           <A />
           <B />
-        </React.Fragment>,
+        </>,
       ),
     ).toThrow('Hello');
   });

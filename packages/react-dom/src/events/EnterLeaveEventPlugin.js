@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {accumulateEnterLeaveDispatches} from 'events/EventPropagators';
+import {accumulateEnterLeaveDispatches} from 'legacy-events/EventPropagators';
 
 import {
   TOP_MOUSE_OUT,
@@ -19,6 +19,7 @@ import {
   getClosestInstanceFromNode,
   getNodeFromInstance,
 } from '../client/ReactDOMComponentTree';
+import {HostComponent, HostText} from 'shared/ReactWorkTags';
 
 const eventTypes = {
   mouseEnter: {
@@ -89,6 +90,9 @@ const EnterLeaveEventPlugin = {
       from = targetInst;
       const related = nativeEvent.relatedTarget || nativeEvent.toElement;
       to = related ? getClosestInstanceFromNode(related) : null;
+      if (to !== null && to.tag !== HostComponent && to.tag !== HostText) {
+        to = null;
+      }
     } else {
       // Moving to a node from outside the window.
       from = null;

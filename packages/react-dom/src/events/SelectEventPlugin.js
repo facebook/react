@@ -5,9 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
+import {accumulateTwoPhaseDispatches} from 'legacy-events/EventPropagators';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
-import SyntheticEvent from 'events/SyntheticEvent';
+import SyntheticEvent from 'legacy-events/SyntheticEvent';
 import isTextInputElement from 'shared/isTextInputElement';
 import shallowEqual from 'shared/shallowEqual';
 

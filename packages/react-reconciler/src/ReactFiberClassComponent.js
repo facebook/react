@@ -53,9 +53,7 @@ import {
   requestCurrentTime,
   computeExpirationForFiber,
   scheduleWork,
-  flushPassiveEffects,
 } from './ReactFiberWorkLoop';
-import {revertPassiveEffectsChange} from 'shared/ReactFeatureFlags';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 
 const fakeInternalInstance = {};
@@ -202,9 +200,6 @@ const classComponentUpdater = {
       update.callback = callback;
     }
 
-    if (revertPassiveEffectsChange) {
-      flushPassiveEffects();
-    }
     enqueueUpdate(fiber, update);
     scheduleWork(fiber, expirationTime);
   },
@@ -229,9 +224,6 @@ const classComponentUpdater = {
       update.callback = callback;
     }
 
-    if (revertPassiveEffectsChange) {
-      flushPassiveEffects();
-    }
     enqueueUpdate(fiber, update);
     scheduleWork(fiber, expirationTime);
   },
@@ -255,9 +247,6 @@ const classComponentUpdater = {
       update.callback = callback;
     }
 
-    if (revertPassiveEffectsChange) {
-      flushPassiveEffects();
-    }
     enqueueUpdate(fiber, update);
     scheduleWork(fiber, expirationTime);
   },
@@ -702,7 +691,7 @@ function constructClassInstance(
             'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
               '%s uses %s but also contains the following legacy lifecycles:%s%s%s\n\n' +
               'The above lifecycles should be removed. Learn more about this warning here:\n' +
-              'https://fb.me/react-async-component-lifecycle-hooks',
+              'https://fb.me/react-unsafe-component-lifecycles',
             componentName,
             newApiName,
             foundWillMountName !== null ? `\n  ${foundWillMountName}` : '',

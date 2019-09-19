@@ -10,10 +10,8 @@
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {
-  ReactEventResponder,
-  ReactEventResponderInstance,
   ReactFundamentalComponentInstance,
-  ReactEventResponderListener,
+  ReactScopeInstance,
 } from 'shared/ReactTypes';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {
@@ -31,7 +29,6 @@ import type {SuspenseContext} from './ReactFiberSuspenseContext';
 
 import {now} from './SchedulerWithReactIntegration';
 
-import {REACT_RESPONDER_TYPE} from 'shared/ReactSymbols';
 import {
   IndeterminateComponent,
   FunctionComponent,
@@ -48,16 +45,15 @@ import {
   Profiler,
   SuspenseComponent,
   SuspenseListComponent,
-  DehydratedSuspenseComponent,
   MemoComponent,
   SimpleMemoComponent,
   LazyComponent,
   IncompleteClassComponent,
   FundamentalComponent,
+  ScopeComponent,
 } from 'shared/ReactWorkTags';
 import {NoMode, BatchedMode} from './ReactTypeOfMode';
 import {
-  Placement,
   Ref,
   Update,
   NoEffect,
@@ -80,8 +76,6 @@ import {
   createContainerChildSet,
   appendChildToContainerChildSet,
   finalizeContainerChildren,
-  mountResponderInstance,
-  unmountResponderInstance,
   getFundamentalComponentInstance,
   mountFundamentalComponent,
   cloneFundamentalInstance,
@@ -93,8 +87,6 @@ import {
   getHostContext,
   popHostContainer,
 } from './ReactFiberHostContext';
-import {NoWork} from './ReactFiberExpirationTime';
-import {createResponderInstance} from './ReactFiberEvents';
 import {
   suspenseStackCursor,
   InvisibleParentSuspenseContext,
@@ -115,8 +107,9 @@ import {popProvider} from './ReactFiberNewContext';
 import {
   prepareToHydrateHostInstance,
   prepareToHydrateHostTextInstance,
-  skipPastDehydratedSuspenseInstance,
+  prepareToHydrateHostSuspenseInstance,
   popHydrationState,
+  resetHydrationState,
 } from './ReactFiberHydrationContext';
 import {
   enableSchedulerTracing,
@@ -124,6 +117,7 @@ import {
   enableSuspenseServerRenderer,
   enableFlareAPI,
   enableFundamentalAPI,
+  enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
 import {
   markSpawnedWork,
@@ -134,10 +128,8 @@ import {
 import {createFundamentalStateInstance} from './ReactFiberFundamental';
 import {Never} from './ReactFiberExpirationTime';
 import {resetChildFibers} from './ReactChildFiber';
-import warning from 'shared/warning';
-
-const emptyObject = {};
-const isArray = Array.isArray;
+import {updateEventListeners} from './ReactFiberEvents';
+import {createScopeMethods} from './ReactFiberScope';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -168,7 +160,7 @@ if (supportsMutation) {
     while (node !== null) {
       if (node.tag === HostComponent || node.tag === HostText) {
         appendInitialChild(parent, node.stateNode);
-      } else if (node.tag === FundamentalComponent) {
+      } else if (enableFundamentalAPI && node.tag === FundamentalComponent) {
         appendInitialChild(parent, node.stateNode.instance);
       } else if (node.tag === HostPortal) {
         // If we have a portal child, then we don't want to traverse
@@ -670,10 +662,12 @@ function completeWork(
       if (current === null || current.child === null) {
         // If we hydrated, pop so that we can delete any remaining children
         // that weren't hydrated.
-        popHydrationState(workInProgress);
-        // This resets the hacky state to fix isMounted before committing.
-        // TODO: Delete this when we delete isMounted and findDOMNode.
-        workInProgress.effectTag &= ~Placement;
+        let wasHydrated = popHydrationState(workInProgress);
+        if (wasHydrated) {
+          // If we hydrated, then we'll need to schedule an update for
+          // the commit side-effects on the root.
+          markUpdate(workInProgress);
+        }
       }
       updateHostContainer(workInProgress);
       break;
@@ -694,14 +688,8 @@ function completeWork(
         if (enableFlareAPI) {
           const prevListeners = current.memoizedProps.listeners;
           const nextListeners = newProps.listeners;
-          const instance = workInProgress.stateNode;
           if (prevListeners !== nextListeners) {
-            updateEventListeners(
-              nextListeners,
-              instance,
-              rootContainerInstance,
-              workInProgress,
-            );
+            markUpdate(workInProgress);
           }
         }
 
@@ -739,6 +727,16 @@ function completeWork(
             // commit-phase we mark this as such.
             markUpdate(workInProgress);
           }
+          if (enableFlareAPI) {
+            const listeners = newProps.listeners;
+            if (listeners != null) {
+              updateEventListeners(
+                listeners,
+                workInProgress,
+                rootContainerInstance,
+              );
+            }
+          }
         } else {
           let instance = createInstance(
             type,
@@ -750,14 +748,16 @@ function completeWork(
 
           appendAllChildren(instance, workInProgress, false, false);
 
+          // This needs to be set before we mount Flare event listeners
+          workInProgress.stateNode = instance;
+
           if (enableFlareAPI) {
             const listeners = newProps.listeners;
             if (listeners != null) {
               updateEventListeners(
                 listeners,
-                instance,
-                rootContainerInstance,
                 workInProgress,
+                rootContainerInstance,
               );
             }
           }
@@ -776,7 +776,6 @@ function completeWork(
           ) {
             markUpdate(workInProgress);
           }
-          workInProgress.stateNode = instance;
         }
 
         if (workInProgress.ref !== null) {
@@ -825,6 +824,42 @@ function completeWork(
     case SuspenseComponent: {
       popSuspenseContext(workInProgress);
       const nextState: null | SuspenseState = workInProgress.memoizedState;
+
+      if (enableSuspenseServerRenderer) {
+        if (nextState !== null && nextState.dehydrated !== null) {
+          if (current === null) {
+            let wasHydrated = popHydrationState(workInProgress);
+            invariant(
+              wasHydrated,
+              'A dehydrated suspense component was completed without a hydrated node. ' +
+                'This is probably a bug in React.',
+            );
+            prepareToHydrateHostSuspenseInstance(workInProgress);
+            if (enableSchedulerTracing) {
+              markSpawnedWork(Never);
+            }
+            return null;
+          } else {
+            // We should never have been in a hydration state if we didn't have a current.
+            // However, in some of those paths, we might have reentered a hydration state
+            // and then we might be inside a hydration state. In that case, we'll need to
+            // exit out of it.
+            resetHydrationState();
+            if ((workInProgress.effectTag & DidCapture) === NoEffect) {
+              // This boundary did not suspend so it's now hydrated and unsuspended.
+              workInProgress.memoizedState = null;
+            }
+            // If nothing suspended, we need to schedule an effect to mark this boundary
+            // as having hydrated so events know that they're free be invoked.
+            // It's also a signal to replay events and the suspense callback.
+            // If something suspended, schedule an effect to attach retry listeners.
+            // So we might as well always mark this.
+            workInProgress.effectTag |= Update;
+            return null;
+          }
+        }
+      }
+
       if ((workInProgress.effectTag & DidCapture) !== NoEffect) {
         // Something suspended. Re-render with the fallback children.
         workInProgress.expirationTime = renderExpirationTime;
@@ -836,8 +871,8 @@ function completeWork(
       let prevDidTimeout = false;
       if (current === null) {
         // In cases where we didn't find a suitable hydration boundary we never
-        // downgraded this to a DehydratedSuspenseComponent, but we still need to
-        // pop the hydration state since we might be inside the insertion tree.
+        // put this in dehydrated mode, but we still need to pop the hydration
+        // state since we might be inside the insertion tree.
         popHydrationState(workInProgress);
       } else {
         const prevState: null | SuspenseState = current.memoizedState;
@@ -953,33 +988,6 @@ function completeWork(
       const Component = workInProgress.type;
       if (isLegacyContextProvider(Component)) {
         popLegacyContext(workInProgress);
-      }
-      break;
-    }
-    case DehydratedSuspenseComponent: {
-      if (enableSuspenseServerRenderer) {
-        popSuspenseContext(workInProgress);
-        if (current === null) {
-          let wasHydrated = popHydrationState(workInProgress);
-          invariant(
-            wasHydrated,
-            'A dehydrated suspense component was completed without a hydrated node. ' +
-              'This is probably a bug in React.',
-          );
-          if (enableSchedulerTracing) {
-            markSpawnedWork(Never);
-          }
-          skipPastDehydratedSuspenseInstance(workInProgress);
-        } else if ((workInProgress.effectTag & DidCapture) === NoEffect) {
-          // This boundary did not suspend so it's now hydrated.
-          // To handle any future suspense cases, we're going to now upgrade it
-          // to a Suspense component. We detach it from the existing current fiber.
-          current.alternate = null;
-          workInProgress.alternate = null;
-          workInProgress.tag = SuspenseComponent;
-          workInProgress.memoizedState = null;
-          workInProgress.stateNode = null;
-        }
       }
       break;
     }
@@ -1227,6 +1235,53 @@ function completeWork(
       }
       break;
     }
+    case ScopeComponent: {
+      if (enableScopeAPI) {
+        if (current === null) {
+          const type = workInProgress.type;
+          const scopeInstance: ReactScopeInstance = {
+            fiber: workInProgress,
+            methods: null,
+          };
+          workInProgress.stateNode = scopeInstance;
+          scopeInstance.methods = createScopeMethods(type, scopeInstance);
+          if (enableFlareAPI) {
+            const listeners = newProps.listeners;
+            if (listeners != null) {
+              const rootContainerInstance = getRootHostContainer();
+              updateEventListeners(
+                listeners,
+                workInProgress,
+                rootContainerInstance,
+              );
+            }
+          }
+          if (workInProgress.ref !== null) {
+            markRef(workInProgress);
+            markUpdate(workInProgress);
+          }
+        } else {
+          if (enableFlareAPI) {
+            const prevListeners = current.memoizedProps.listeners;
+            const nextListeners = newProps.listeners;
+            if (
+              prevListeners !== nextListeners ||
+              workInProgress.ref !== null
+            ) {
+              markUpdate(workInProgress);
+            }
+          } else {
+            if (workInProgress.ref !== null) {
+              markUpdate(workInProgress);
+            }
+          }
+          if (current.ref !== workInProgress.ref) {
+            markRef(workInProgress);
+          }
+        }
+      }
+      break;
+    }
     default:
       invariant(
         false,
@@ -1236,158 +1291,6 @@ function completeWork(
   }
 
   return null;
-}
-
-function mountEventResponder(
-  responder: ReactEventResponder<any, any>,
-  responderProps: Object,
-  instance: Instance,
-  rootContainerInstance: Container,
-  fiber: Fiber,
-  respondersMap: Map<
-    ReactEventResponder<any, any>,
-    ReactEventResponderInstance<any, any>,
-  >,
-) {
-  let responderState = emptyObject;
-  const getInitialState = responder.getInitialState;
-  if (getInitialState !== null) {
-    responderState = getInitialState(responderProps);
-  }
-  const responderInstance = createResponderInstance(
-    responder,
-    responderProps,
-    responderState,
-    instance,
-    fiber,
-  );
-  mountResponderInstance(
-    responder,
-    responderInstance,
-    responderProps,
-    responderState,
-    instance,
-    rootContainerInstance,
-  );
-  respondersMap.set(responder, responderInstance);
-}
-
-function updateEventListener(
-  listener: ReactEventResponderListener<any, any>,
-  fiber: Fiber,
-  visistedResponders: Set<ReactEventResponder<any, any>>,
-  respondersMap: Map<
-    ReactEventResponder<any, any>,
-    ReactEventResponderInstance<any, any>,
-  >,
-  instance: Instance,
-  rootContainerInstance: Container,
-): void {
-  let responder;
-  let props;
-
-  if (listener) {
-    responder = listener.responder;
-    props = listener.props;
-  }
-  invariant(
-    responder && responder.$$typeof === REACT_RESPONDER_TYPE,
-    'An invalid value was used as an event listener. Expect one or many event ' +
-      'listeners created via React.unstable_useResponer().',
-  );
-  const listenerProps = ((props: any): Object);
-  if (visistedResponders.has(responder)) {
-    // show warning
-    if (__DEV__) {
-      warning(
-        false,
-        'Duplicate event responder "%s" found in event listeners. ' +
-          'Event listeners passed to elements cannot use the same event responder more than once.',
-        responder.displayName,
-      );
-    }
-    return;
-  }
-  visistedResponders.add(responder);
-  const responderInstance = respondersMap.get(responder);
-
-  if (responderInstance === undefined) {
-    // Mount
-    mountEventResponder(
-      responder,
-      listenerProps,
-      instance,
-      rootContainerInstance,
-      fiber,
-      respondersMap,
-    );
-  } else {
-    // Update
-    responderInstance.props = listenerProps;
-    responderInstance.fiber = fiber;
-  }
-}
-
-function updateEventListeners(
-  listeners: any,
-  instance: Instance,
-  rootContainerInstance: Container,
-  fiber: Fiber,
-): void {
-  const visistedResponders = new Set();
-  let dependencies = fiber.dependencies;
-  if (listeners != null) {
-    if (dependencies === null) {
-      dependencies = fiber.dependencies = {
-        expirationTime: NoWork,
-        firstContext: null,
-        responders: new Map(),
-      };
-    }
-    let respondersMap = dependencies.responders;
-    if (respondersMap === null) {
-      respondersMap = new Map();
-    }
-    if (isArray(listeners)) {
-      for (let i = 0, length = listeners.length; i < length; i++) {
-        const listener = listeners[i];
-        updateEventListener(
-          listener,
-          fiber,
-          visistedResponders,
-          respondersMap,
-          instance,
-          rootContainerInstance,
-        );
-      }
-    } else {
-      updateEventListener(
-        listeners,
-        fiber,
-        visistedResponders,
-        respondersMap,
-        instance,
-        rootContainerInstance,
-      );
-    }
-  }
-  if (dependencies !== null) {
-    const respondersMap = dependencies.responders;
-    if (respondersMap !== null) {
-      // Unmount
-      const mountedResponders = Array.from(respondersMap.keys());
-      for (let i = 0, length = mountedResponders.length; i < length; i++) {
-        const mountedResponder = mountedResponders[i];
-        if (!visistedResponders.has(mountedResponder)) {
-          const responderInstance = ((respondersMap.get(
-            mountedResponder,
-          ): any): ReactEventResponderInstance<any, any>);
-          unmountResponderInstance(responderInstance);
-          respondersMap.delete(mountedResponder);
-        }
-      }
-    }
-  }
 }
 
 export {completeWork};

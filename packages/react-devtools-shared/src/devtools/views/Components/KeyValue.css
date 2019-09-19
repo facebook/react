@@ -1,0 +1,41 @@
+.Item:not([hidden]) {
+  display: flex;
+}
+
+.Name {
+  color: var(--color-dim);
+  flex: 0 0 auto;
+  user-select: none;
+}
+.EditableName {
+  color: var(--color-attribute-name);
+  flex: 0 0 auto;
+  user-select: none;
+}
+.EditableName:after,
+.Name:after {
+  content: ': ';
+  color: var(--color-text);
+  margin-right: 0.5rem;
+}
+
+.Value {
+  color: var(--color-attribute-value);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.None {
+  color: var(--color-dimmer);
+  font-style: italic;
+}
+
+.ExpandCollapseToggleSpacer {
+  flex: 0 0 1rem;
+  width: 1rem;
+}
+
+.Empty {
+  color: var(--color-dimmer);
+}

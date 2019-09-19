@@ -7,7 +7,7 @@
 
 'use strict';
 
-let babel = require('babel-core');
+let babel = require('@babel/core');
 let {wrap} = require('jest-snapshot-serializer-raw');
 let freshPlugin = require('react-refresh/babel');
 
@@ -15,10 +15,18 @@ function transform(input, options = {}) {
   return wrap(
     babel.transform(input, {
       babelrc: false,
+      configFile: false,
       plugins: [
-        'syntax-jsx',
-        'syntax-dynamic-import',
-        freshPlugin,
+        '@babel/syntax-jsx',
+        '@babel/syntax-dynamic-import',
+        [
+          freshPlugin,
+          {
+            skipEnvCheck: true,
+            // To simplify debugging tests:
+            emitFullSignatures: true,
+          },
+        ],
         ...(options.plugins || []),
       ],
     }).code,
@@ -457,6 +465,19 @@ describe('ReactFreshBabelPlugin', () => {
           );
         }
     `),
+    ).toMatchSnapshot();
+  });
+
+  it('can handle implicit arrow returns', () => {
+    expect(
+      transform(`
+        export default () => useContext(X);
+        export const Foo = () => useContext(X);
+        module.exports = () => useContext(X);
+        const Bar = () => useContext(X);
+        const Baz = memo(() => useContext(X));
+        const Qux = () => (0, useContext(X));
+      `),
     ).toMatchSnapshot();
   });
 });

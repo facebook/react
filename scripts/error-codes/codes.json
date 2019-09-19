@@ -301,7 +301,7 @@
   "300": "Rendered fewer hooks than expected. This may be caused by an accidental early return statement.",
   "301": "Too many re-renders. React limits the number of renders to prevent an infinite loop.",
   "302": "It is not supported to run the profiling version of a renderer (for example, `react-dom/profiling`) without also replacing the `scheduler/tracing` module with `scheduler/tracing-profiling`. Your bundler might have a setting for aliasing both modules. Learn more at http://fb.me/react-profiling",
-  "303": "suspense fallback not found, something is broken",
+  "303": "ReactDOMServer did not find an internal fallback frame for Suspense. This is a bug in React. Please file an issue.",
   "304": "Maximum number of concurrent React renderers exceeded. This can happen if you are not properly destroying the Readable provided by React. Ensure that you call .destroy() on it if you no longer want to read from it, and did not read to the end. If you use .pipe() this should be automatic.",
   "305": "The current renderer does not support hydration. This error is likely caused by a bug in React. Please file an issue.",
   "306": "Element type is invalid. Received a promise that resolves to: %s. Lazy element type must resolve to a class or function.%s",
@@ -337,6 +337,10 @@
   "336": "The \"%s\" event responder cannot be used via the \"useEvent\" hook.",
   "337": "An invalid event responder was provided to host component",
   "338": "ReactDOMServer does not yet support the fundamental API.",
-  "339": "An invalid value was used as an event responder. Expect one or many event responders created via React.unstable_createResponer().",
-  "340": "An invalid value was used as an event listener. Expect one or many event listeners created via React.unstable_useResponer()."
+  "339": "An invalid value was used as an event listener. Expect one or many event listeners created via React.unstable_useResponder().",
+  "340": "Threw in newly mounted dehydrated component. This is likely a bug in React. Please file an issue.",
+  "341": "We just came from a parent so we must have had a parent. This is a bug in React.",
+  "342": "A React component suspended while rendering, but no fallback UI was specified.\n\nAdd a <Suspense fallback=...> component higher in the tree to provide a loading indicator or placeholder to display.",
+  "343": "ReactDOMServer does not yet support scope components.",
+  "344": "Expected prepareToHydrateHostSuspenseInstance() to never be called. This error is likely caused by a bug in React. Please file an issue."
 }

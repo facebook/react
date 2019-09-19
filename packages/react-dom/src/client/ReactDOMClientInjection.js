@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {injection as EventPluginHubInjection} from 'events/EventPluginHub';
-import {setComponentTree} from 'events/EventPluginUtils';
+import {injection as EventPluginHubInjection} from 'legacy-events/EventPluginHub';
+import {setComponentTree} from 'legacy-events/EventPluginUtils';
 
 import {
   getFiberCurrentPropsFromNode,

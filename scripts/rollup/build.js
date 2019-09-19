@@ -338,6 +338,8 @@ function getPlugins(
     useForks(forks),
     // Ensure we don't try to bundle any fbjs modules.
     forbidFBJSImports(),
+    // Replace any externals with their valid internal FB mappings
+    isFBBundle && replace(Bundles.fbBundleExternalsMap),
     // Use Node resolution mechanism.
     resolve({
       skip: externals,
@@ -351,7 +353,7 @@ function getPlugins(
     // Remove 'use strict' from individual source files.
     {
       transform(source) {
-        return source.replace(/['"]use strict['"']/g, '');
+        return source.replace(/['"]use strict["']/g, '');
       },
     },
     // Turn __DEV__ and process.env checks into constants.
@@ -370,10 +372,6 @@ function getPlugins(
           // Don't let it create global variables in the browser.
           // https://github.com/facebook/react/issues/10909
           assume_function_wrapper: !isUMDBundle,
-          // Works because `google-closure-compiler-js` is forked in Yarn lockfile.
-          // We can remove this if GCC merges my PR:
-          // https://github.com/google/closure-compiler/pull/2707
-          // and then the compiled version is released via `google-closure-compiler-js`.
           renaming: !shouldStayReadable,
         })
       ),
@@ -456,11 +454,11 @@ async function createBundle(bundle, bundleType) {
   const packageName = Packaging.getPackageName(bundle.entry);
 
   let resolvedEntry = require.resolve(bundle.entry);
-  if (
+  const isFBBundle =
     bundleType === FB_WWW_DEV ||
     bundleType === FB_WWW_PROD ||
-    bundleType === FB_WWW_PROFILING
-  ) {
+    bundleType === FB_WWW_PROFILING;
+  if (isFBBundle) {
     const resolvedFBEntry = resolvedEntry.replace('.js', '.fb.js');
     if (fs.existsSync(resolvedFBEntry)) {
       resolvedEntry = resolvedFBEntry;
@@ -476,6 +474,10 @@ async function createBundle(bundle, bundleType) {
   if (!shouldBundleDependencies) {
     const deps = Modules.getDependencies(bundleType, bundle.entry);
     externals = externals.concat(deps);
+  }
+  if (isFBBundle) {
+    // Add any mapped fb bundle externals
+    externals = externals.concat(Object.values(Bundles.fbBundleExternalsMap));
   }
 
   const importSideEffects = Modules.getImportSideEffects();

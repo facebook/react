@@ -9,6 +9,7 @@
 
 import type {ThreadID} from './ReactThreadIDAllocator';
 import type {ReactElement} from 'shared/ReactElementType';
+import type {LazyComponent} from 'shared/ReactLazyComponent';
 import type {ReactProvider, ReactContext} from 'shared/ReactTypes';
 
 import React from 'react';
@@ -20,11 +21,18 @@ import warningWithoutStack from 'shared/warningWithoutStack';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
+  Resolved,
+  Rejected,
+  Pending,
+  initializeLazyComponentType,
+} from 'shared/ReactLazyComponent';
+import {
   warnAboutDeprecatedLifecycles,
   disableLegacyContext,
   enableSuspenseServerRenderer,
   enableFundamentalAPI,
   enableFlareAPI,
+  enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -41,6 +49,7 @@ import {
   REACT_LAZY_TYPE,
   REACT_MEMO_TYPE,
   REACT_FUNDAMENTAL_TYPE,
+  REACT_SCOPE_TYPE,
 } from 'shared/ReactSymbols';
 
 import {
@@ -583,7 +592,7 @@ function resolve(
                 false,
                 // keep this warning in sync with ReactStrictModeWarning.js
                 'componentWillMount has been renamed, and is not recommended for use. ' +
-                  'See https://fb.me/react-async-component-lifecycle-hooks for details.\n\n' +
+                  'See https://fb.me/react-unsafe-component-lifecycles for details.\n\n' +
                   '* Move code from componentWillMount to componentDidMount (preferred in most cases) ' +
                   'or the constructor.\n' +
                   '\nPlease update the following components: %s',
@@ -876,7 +885,8 @@ class ReactDOMServerRenderer {
               const fallbackFrame = frame.fallbackFrame;
               invariant(
                 fallbackFrame,
-                'suspense fallback not found, something is broken',
+                'ReactDOMServer did not find an internal fallback frame for Suspense. ' +
+                  'This is a bug in React. Please file an issue.',
               );
               this.stack.push(fallbackFrame);
               out[this.suspenseDepth] += '<!--$!-->';
@@ -902,8 +912,20 @@ class ReactDOMServerRenderer {
         try {
           outBuffer += this.render(child, frame.context, frame.domNamespace);
         } catch (err) {
-          if (enableSuspenseServerRenderer && typeof err.then === 'function') {
-            suspended = true;
+          if (err != null && typeof err.then === 'function') {
+            if (enableSuspenseServerRenderer) {
+              invariant(
+                this.suspenseDepth > 0,
+                // TODO: include component name. This is a bit tricky with current factoring.
+                'A React component suspended while rendering, but no fallback UI was specified.\n' +
+                  '\n' +
+                  'Add a <Suspense fallback=...> component higher in the tree to ' +
+                  'provide a loading indicator or placeholder to display.',
+              );
+              suspended = true;
+            } else {
+              invariant(false, 'ReactDOMServer does not yet support Suspense.');
+            }
           } else {
             throw err;
           }
@@ -1226,11 +1248,70 @@ class ReactDOMServerRenderer {
             );
           }
           // eslint-disable-next-line-no-fallthrough
-          case REACT_LAZY_TYPE:
+          case REACT_LAZY_TYPE: {
+            const element: ReactElement = (nextChild: any);
+            const lazyComponent: LazyComponent<any> = (nextChild: any).type;
+            // Attempt to initialize lazy component regardless of whether the
+            // suspense server-side renderer is enabled so synchronously
+            // resolved constructors are supported.
+            initializeLazyComponentType(lazyComponent);
+            switch (lazyComponent._status) {
+              case Resolved: {
+                const nextChildren = [
+                  React.createElement(
+                    lazyComponent._result,
+                    Object.assign({ref: element.ref}, element.props),
+                  ),
+                ];
+                const frame: Frame = {
+                  type: null,
+                  domNamespace: parentNamespace,
+                  children: nextChildren,
+                  childIndex: 0,
+                  context: context,
+                  footer: '',
+                };
+                if (__DEV__) {
+                  ((frame: any): FrameDev).debugElementStack = [];
+                }
+                this.stack.push(frame);
+                return '';
+              }
+              case Rejected:
+                throw lazyComponent._result;
+              case Pending:
+              default:
+                invariant(
+                  false,
+                  'ReactDOMServer does not yet support lazy-loaded components.',
+                );
+            }
+          }
+          // eslint-disable-next-line-no-fallthrough
+          case REACT_SCOPE_TYPE: {
+            if (enableScopeAPI) {
+              const nextChildren = toArray(
+                ((nextChild: any): ReactElement).props.children,
+              );
+              const frame: Frame = {
+                type: null,
+                domNamespace: parentNamespace,
+                children: nextChildren,
+                childIndex: 0,
+                context: context,
+                footer: '',
+              };
+              if (__DEV__) {
+                ((frame: any): FrameDev).debugElementStack = [];
+              }
+              this.stack.push(frame);
+              return '';
+            }
             invariant(
               false,
-              'ReactDOMServer does not yet support lazy-loaded components.',
+              'ReactDOMServer does not yet support scope components.',
             );
+          }
         }
       }
 

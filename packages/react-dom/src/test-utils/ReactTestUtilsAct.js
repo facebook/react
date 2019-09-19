@@ -74,8 +74,17 @@ function flushWorkAndMicroTasks(onDone: (err: ?Error) => void) {
 // so we can tell if any async act() calls try to run in parallel.
 
 let actingUpdatesScopeDepth = 0;
+let didWarnAboutUsingActInProd = false;
 
 function act(callback: () => Thenable) {
+  if (!__DEV__) {
+    if (didWarnAboutUsingActInProd === false) {
+      didWarnAboutUsingActInProd = true;
+      console.error(
+        'act(...) is not supported in production builds of React, and might not behave as expected.',
+      );
+    }
+  }
   let previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
   let previousIsSomeRendererActing;
   let previousIsThisRendererActing;

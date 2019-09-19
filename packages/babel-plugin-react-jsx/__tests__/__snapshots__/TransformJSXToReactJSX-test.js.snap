@@ -1,0 +1,374 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`transform react to jsx React.fragment to set keys and source 1`] = `
+var _jsxFileName = "";
+var x = React.jsxDEV(React.Fragment, {}, "foo", false, {
+  fileName: _jsxFileName,
+  lineNumber: 1
+}, this);
+`;
+
+exports[`transform react to jsx adds appropriate new lines when using spread attribute 1`] = `
+React.jsx(Component, Object.assign({}, props, {
+  sound: "moo"
+}));
+`;
+
+exports[`transform react to jsx arrow functions 1`] = `
+var foo = function () {
+  var _this = this;
+
+  return function () {
+    return React.jsx(_this, {});
+  };
+};
+
+var bar = function () {
+  var _this2 = this;
+
+  return function () {
+    return React.jsx(_this2.foo, {});
+  };
+};
+`;
+
+exports[`transform react to jsx assignment 1`] = `
+var div = React.jsx(Component, Object.assign({}, props, {
+  foo: "bar"
+}));
+`;
+
+exports[`transform react to jsx concatenates adjacent string literals 1`] = `
+var x = React.jsxs("div", {
+  children: ["foo", "bar", "baz", React.jsx("div", {
+    children: "buz bang"
+  }), "qux", null, "quack"]
+});
+`;
+
+exports[`transform react to jsx fragment with no children 1`] = `var x = React.jsx(React.Fragment, {});`;
+
+exports[`transform react to jsx fragments 1`] = `
+var x = React.jsx(React.Fragment, {
+  children: React.jsx("div", {})
+});
+`;
+
+exports[`transform react to jsx fragments in dev mode (no key and source) 1`] = `
+var _jsxFileName = "";
+var x = React.jsxDEV(React.Fragment, {
+  children: React.jsxDEV("div", {}, undefined, false, {
+    fileName: _jsxFileName,
+    lineNumber: 1
+  }, this)
+}, undefined, false);
+`;
+
+exports[`transform react to jsx fragments to set keys 1`] = `var x = React.jsx(React.Fragment, {}, "foo");`;
+
+exports[`transform react to jsx nonStatic children 1`] = `
+var _jsxFileName = "";
+var x = React.jsxDEV("div", {
+  children: [React.jsxDEV("span", {}, '0', false, {
+    fileName: _jsxFileName,
+    lineNumber: 3
+  }, this), React.jsxDEV("span", {}, '1', false, {
+    fileName: _jsxFileName,
+    lineNumber: 3
+  }, this)]
+}, undefined, false, {
+  fileName: _jsxFileName,
+  lineNumber: 2
+}, this);
+`;
+
+exports[`transform react to jsx properly handles keys 1`] = `
+var x = React.jsxs("div", {
+  children: [React.jsx("div", {}, "1"), React.jsx("div", {
+    meow: "wolf"
+  }, "2"), React.jsx("div", {}, "3")]
+});
+`;
+
+exports[`transform react to jsx properly passes in source and self 1`] = `
+var _jsxFileName = "";
+var x = React.jsxDEV("div", {}, undefined, false, {
+  fileName: _jsxFileName,
+  lineNumber: 1
+}, this);
+`;
+
+exports[`transform react to jsx should allow constructor as prop 1`] = `
+React.jsx(Component, {
+  constructor: "foo"
+});
+`;
+
+exports[`transform react to jsx should allow deeper js namespacing 1`] = `React.jsx(Namespace.DeepNamespace.Component, {});`;
+
+exports[`transform react to jsx should allow elements as attributes 1`] = `
+React.jsx("div", {
+  attr: React.jsx("div", {})
+});
+`;
+
+exports[`transform react to jsx should allow js namespacing 1`] = `React.jsx(Namespace.Component, {});`;
+
+exports[`transform react to jsx should allow nested fragments 1`] = `
+React.jsx("div", {
+  children: React.jsxs(React.Fragment, {
+    children: [React.jsxs(React.Fragment, {
+      children: [React.jsx("span", {
+        children: "Hello"
+      }), React.jsx("span", {
+        children: "world"
+      })]
+    }), React.jsxs(React.Fragment, {
+      children: [React.jsx("span", {
+        children: "Goodbye"
+      }), React.jsx("span", {
+        children: "world"
+      })]
+    })]
+  })
+});
+`;
+
+exports[`transform react to jsx should avoid wrapping in extra parens if not needed 1`] = `
+var x = React.jsx("div", {
+  children: React.jsx(Component, {})
+});
+var x = React.jsx("div", {
+  children: props.children
+});
+var x = React.jsx(Composite, {
+  children: props.children
+});
+var x = React.jsx(Composite, {
+  children: React.jsx(Composite2, {})
+});
+`;
+
+exports[`transform react to jsx should convert simple tags 1`] = `var x = React.jsx("div", {});`;
+
+exports[`transform react to jsx should convert simple text 1`] = `
+var x = React.jsx("div", {
+  children: "text"
+});
+`;
+
+exports[`transform react to jsx should escape xhtml jsxattribute 1`] = `
+React.jsx("div", {
+  id: "w\\xF4w"
+});
+React.jsx("div", {
+  id: "w"
+});
+React.jsx("div", {
+  id: "w < w"
+});
+`;
+
+exports[`transform react to jsx should escape xhtml jsxtext 1`] = `
+React.jsx("div", {
+  children: "wow"
+});
+React.jsx("div", {
+  children: "w\\xF4w"
+});
+React.jsx("div", {
+  children: "w & w"
+});
+React.jsx("div", {
+  children: "w & w"
+});
+React.jsx("div", {
+  children: "w \\xA0 w"
+});
+React.jsx("div", {
+  children: "this should not parse as unicode: \\xA0"
+});
+React.jsx("div", {
+  children: "this should parse as nbsp: \\xA0 "
+});
+React.jsxs("div", {
+  children: ["this should parse as unicode: ", '  ']
+});
+React.jsx("div", {
+  children: "w < w"
+});
+`;
+
+exports[`transform react to jsx should handle attributed elements 1`] = `
+var HelloMessage = React.createClass({
+  render: function () {
+    return React.jsxs("div", {
+      children: ["Hello ", this.props.name]
+    });
+  }
+});
+React.render(React.jsx(HelloMessage, {
+  name: React.jsx("span", {
+    children: "Sebastian"
+  })
+}), mountNode);
+`;
+
+exports[`transform react to jsx should handle has own property correctly 1`] = `
+React.jsx("hasOwnProperty", {
+  children: "testing"
+});
+`;
+
+exports[`transform react to jsx should have correct comma in nested children 1`] = `
+var x = React.jsxs("div", {
+  children: [React.jsx("div", {
+    children: React.jsx("br", {})
+  }), React.jsxs(Component, {
+    children: [foo, React.jsx("br", {}), bar]
+  }), React.jsx("br", {})]
+});
+`;
+
+exports[`transform react to jsx should insert commas after expressions before whitespace 1`] = `
+var x = React.jsx("div", {
+  attr1: "foo" + "bar",
+  attr2: "foo" + "bar" + "baz" + "bug",
+  attr3: "foo" + "bar" + "baz" + "bug",
+  attr4: "baz"
+});
+`;
+
+exports[`transform react to jsx should not add quotes to identifier names 1`] = `
+var e = React.jsx(F, {
+  aaa: true,
+  new: true,
+  const: true,
+  var: true,
+  default: true,
+  "foo-bar": true
+});
+`;
+
+exports[`transform react to jsx should not strip nbsp even couple with other whitespace 1`] = `
+React.jsx("div", {
+  children: "\\xA0 "
+});
+`;
+
+exports[`transform react to jsx should not strip tags with a single child of nbsp 1`] = `
+React.jsx("div", {
+  children: "\\xA0"
+});
+`;
+
+exports[`transform react to jsx should properly handle comments adjacent to children 1`] = `
+var x = React.jsxs("div", {
+  children: [React.jsx("span", {}), React.jsx("br", {})]
+});
+`;
+
+exports[`transform react to jsx should properly handle comments between props 1`] = `
+var x = React.jsx("div", {
+  /* a multi-line
+    comment */
+  attr1: "foo",
+  children: React.jsx("span", {
+    // a double-slash comment
+    attr2: "bar"
+  })
+});
+`;
+
+exports[`transform react to jsx should properly handle potentially null variables 1`] = `
+var foo = null;
+var x = React.jsx("div", Object.assign({}, foo));
+`;
+
+exports[`transform react to jsx should quote jsx attributes 1`] = `
+React.jsx("button", {
+  "data-value": "a value",
+  children: "Button"
+});
+`;
+
+exports[`transform react to jsx should support xml namespaces if flag 1`] = `
+React.jsx("f:image", {
+  "n:attr": true
+});
+`;
+
+exports[`transform react to jsx should transform known hyphenated tags 1`] = `React.jsx("font-face", {});`;
+
+exports[`transform react to jsx static children 1`] = `
+var _jsxFileName = "";
+var x = React.jsxDEV("div", {
+  children: [React.jsxDEV("span", {}, undefined, false, {
+    fileName: _jsxFileName,
+    lineNumber: 3
+  }, this), [React.jsxDEV("span", {}, '0', false, {
+    fileName: _jsxFileName,
+    lineNumber: 4
+  }, this), React.jsxDEV("span", {}, '1', false, {
+    fileName: _jsxFileName,
+    lineNumber: 4
+  }, this)]]
+}, undefined, true, {
+  fileName: _jsxFileName,
+  lineNumber: 2
+}, this);
+`;
+
+exports[`transform react to jsx useBuiltIns false uses extend instead of Object.assign 1`] = `
+function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
+
+React.jsx(Component, _extends({
+  y: 2
+}, x));
+`;
+
+exports[`transform react to jsx uses createElement when the key comes after a spread 1`] = `
+var x = React.createElement("div", Object.assign({}, props, {
+  key: "1",
+  foo: "bar"
+}));
+`;
+
+exports[`transform react to jsx uses jsx when the key comes before a spread 1`] = `
+var x = React.jsx("div", Object.assign({}, props, {
+  foo: "bar"
+}), "1");
+`;
+
+exports[`transform react to jsx uses jsxDEV instead of jsx in dev mode 1`] = `
+var _jsxFileName = "";
+var x = React.jsxDEV("span", {
+  propOne: "one",
+  children: "Hi"
+}, undefined, false, {
+  fileName: _jsxFileName,
+  lineNumber: 1
+}, this);
+`;
+
+exports[`transform react to jsx wraps props in react spread for first spread attributes 1`] = `
+React.jsx(Component, Object.assign({}, x, {
+  y: 2,
+  z: true
+}));
+`;
+
+exports[`transform react to jsx wraps props in react spread for last spread attributes 1`] = `
+React.jsx(Component, Object.assign({
+  y: 2,
+  z: true
+}, x));
+`;
+
+exports[`transform react to jsx wraps props in react spread for middle spread attributes 1`] = `
+React.jsx(Component, Object.assign({
+  y: 2
+}, x, {
+  z: true
+}));
+`;

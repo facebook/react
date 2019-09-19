@@ -1818,9 +1818,9 @@ describe('ReactFresh', () => {
             <span />
           </HelloV1>,
           <HelloV1>
-            <React.Fragment>
+            <>
               <HelloV1 />
-            </React.Fragment>
+            </>
           </HelloV1>,
         </div>,
         <HelloV1>
@@ -2111,9 +2111,9 @@ describe('ReactFresh', () => {
     if (__DEV__) {
       testRemountingWithWrapper(Hello => {
         const child = (
-          <React.Fragment>
+          <>
             <Hello />
-          </React.Fragment>
+          </>
         );
         return function Wrapper() {
           return child;
@@ -2126,13 +2126,13 @@ describe('ReactFresh', () => {
     if (__DEV__) {
       testRemountingWithWrapper(Hello => {
         const child = (
-          <React.Fragment>
-            <React.Fragment>
+          <>
+            <>
               <React.Fragment />
-            </React.Fragment>
+            </>
             <Hello />
             <React.Fragment />
-          </React.Fragment>
+          </>
         );
         return function Wrapper() {
           return child;
@@ -2350,6 +2350,49 @@ describe('ReactFresh', () => {
     }
   });
 
+  // This pattern is inspired by useSubscription and similar mechanisms.
+  it('does not get into infinite loops during render phase updates', () => {
+    if (__DEV__) {
+      render(() => {
+        function Hello() {
+          const source = React.useMemo(() => ({value: 10}), []);
+          const [state, setState] = React.useState({value: null});
+          if (state !== source) {
+            setState(source);
+          }
+          return <p style={{color: 'blue'}}>{state.value}</p>;
+        }
+        $RefreshReg$(Hello, 'Hello');
+        return Hello;
+      });
+
+      const el = container.firstChild;
+      expect(el.textContent).toBe('10');
+      expect(el.style.color).toBe('blue');
+
+      // Perform a hot update.
+      act(() => {
+        patch(() => {
+          function Hello() {
+            const source = React.useMemo(() => ({value: 20}), []);
+            const [state, setState] = React.useState({value: null});
+            if (state !== source) {
+              // This should perform a single render-phase update.
+              setState(source);
+            }
+            return <p style={{color: 'red'}}>{state.value}</p>;
+          }
+          $RefreshReg$(Hello, 'Hello');
+          return Hello;
+        });
+      });
+
+      expect(container.firstChild).toBe(el);
+      expect(el.textContent).toBe('20');
+      expect(el.style.color).toBe('red');
+    }
+  });
+
   it('can hot reload offscreen components', () => {
     if (__DEV__) {
       const AppV1 = prepare(() => {
@@ -2471,13 +2514,13 @@ describe('ReactFresh', () => {
 
         function App() {
           return (
-            <React.Fragment>
+            <>
               <p>A</p>
               <Boundary>
                 <Hello />
               </Boundary>
               <p>B</p>
-            </React.Fragment>
+            </>
           );
         }
 
@@ -2549,13 +2592,13 @@ describe('ReactFresh', () => {
 
         function App() {
           return (
-            <React.Fragment>
+            <>
               <p>A</p>
               <Boundary>
                 <Hello />
               </Boundary>
               <p>B</p>
-            </React.Fragment>
+            </>
           );
         }
 
@@ -2630,13 +2673,13 @@ describe('ReactFresh', () => {
 
         function App() {
           return (
-            <React.Fragment>
+            <>
               <p>A</p>
               <Boundary>
                 <Hello />
               </Boundary>
               <p>B</p>
-            </React.Fragment>
+            </>
           );
         }
 
@@ -3183,14 +3226,14 @@ describe('ReactFresh', () => {
 
         function Frag() {
           return (
-            <React.Fragment>
+            <>
               <div className="Frag">
                 <div />
               </div>
               <div className="Frag">
                 <div />
               </div>
-            </React.Fragment>
+            </>
           );
         }
         $RefreshReg$(Frag, 'Frag');

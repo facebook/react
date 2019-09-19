@@ -27,7 +27,7 @@ function sleep(period) {
 
 describe('ReactTestUtils.act()', () => {
   // first we run all the tests with concurrent mode
-  let concurrentRoot;
+  let concurrentRoot = null;
   function renderConcurrent(el, dom) {
     concurrentRoot = ReactDOM.unstable_createRoot(dom);
     concurrentRoot.render(el);
@@ -71,7 +71,7 @@ describe('ReactTestUtils.act()', () => {
   runActTests('legacy sync mode', renderSync, unmountSync, rerenderSync);
 
   // and then in batched mode
-  let batchedRoot;
+  let batchedRoot = null;
   function renderBatched(el, dom) {
     batchedRoot = ReactDOM.unstable_createSyncRoot(dom);
     batchedRoot.render(el);
@@ -790,6 +790,27 @@ function runActTests(label, render, unmount, rerender) {
           expect(container.textContent).toBe('was suspended');
         });
       }
+    });
+    describe('warn in prod mode', () => {
+      it('warns if you try to use act() in prod mode', () => {
+        const spy = spyOnDevAndProd(console, 'error');
+
+        act(() => {});
+
+        if (!__DEV__) {
+          expect(console.error).toHaveBeenCalledTimes(1);
+          expect(console.error.calls.argsFor(0)[0]).toContain(
+            'act(...) is not supported in production builds of React',
+          );
+        } else {
+          expect(console.error).toHaveBeenCalledTimes(0);
+        }
+
+        spy.calls.reset();
+        // does not warn twice
+        act(() => {});
+        expect(console.error).toHaveBeenCalledTimes(0);
+      });
     });
   });
 }

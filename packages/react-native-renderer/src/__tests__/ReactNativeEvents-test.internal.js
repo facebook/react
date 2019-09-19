@@ -68,11 +68,54 @@ beforeEach(() => {
     .RCTEventEmitter;
   React = require('react');
   ReactNative = require('react-native-renderer');
-  ResponderEventPlugin = require('events/ResponderEventPlugin').default;
+  ResponderEventPlugin = require('legacy-events/ResponderEventPlugin').default;
   UIManager = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
     .UIManager;
   createReactNativeComponentClass = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
     .ReactNativeViewConfigRegistry.register;
+});
+
+it('fails to register the same event name with different types', () => {
+  const InvalidEvents = createReactNativeComponentClass('InvalidEvents', () => {
+    if (!__DEV__) {
+      // Simulate a registration error in prod.
+      throw new Error('Event cannot be both direct and bubbling: topChange');
+    }
+
+    // This view config has the same bubbling and direct event name
+    // which will fail to register in developement.
+    return {
+      uiViewClassName: 'InvalidEvents',
+      validAttributes: {
+        onChange: true,
+      },
+      bubblingEventTypes: {
+        topChange: {
+          phasedRegistrationNames: {
+            bubbled: 'onChange',
+            captured: 'onChangeCapture',
+          },
+        },
+      },
+      directEventTypes: {
+        topChange: {
+          registrationName: 'onChange',
+        },
+      },
+    };
+  });
+
+  // The first time this renders,
+  // we attempt to register the view config and fail.
+  expect(() => ReactNative.render(<InvalidEvents />, 1)).toThrow(
+    'Event cannot be both direct and bubbling: topChange',
+  );
+
+  // Continue to re-register the config and
+  // fail so that we don't mask the above failure.
+  expect(() => ReactNative.render(<InvalidEvents />, 1)).toThrow(
+    'Event cannot be both direct and bubbling: topChange',
+  );
 });
 
 it('fails if unknown/unsupported event types are dispatched', () => {

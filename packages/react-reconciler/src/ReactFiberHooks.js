@@ -38,12 +38,12 @@ import {
 import {
   scheduleWork,
   computeExpirationForFiber,
-  flushPassiveEffects,
   requestCurrentTime,
   warnIfNotCurrentlyActingEffectsInDEV,
   warnIfNotCurrentlyActingUpdatesInDev,
   warnIfNotScopedWithMatchingAct,
   markRenderEventTimeAndConfig,
+  markUnprocessedUpdateTime,
 } from './ReactFiberWorkLoop';
 
 import invariant from 'shared/invariant';
@@ -51,7 +51,6 @@ import warning from 'shared/warning';
 import getComponentName from 'shared/getComponentName';
 import is from 'shared/objectIs';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork';
-import {revertPassiveEffectsChange} from 'shared/ReactFeatureFlags';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 import {getCurrentPriorityLevel} from './SchedulerWithReactIntegration';
 
@@ -430,6 +429,11 @@ export function renderWithHooks(
     do {
       didScheduleRenderPhaseUpdate = false;
       numberOfReRenders += 1;
+      if (__DEV__) {
+        // Even when hot reloading, allow dependencies to stabilize
+        // after first render to prevent infinite render phase updates.
+        ignorePreviousDependencies = false;
+      }
 
       // Start over from the beginning of the list
       nextCurrentHook = current !== null ? current.memoizedState : null;
@@ -528,6 +532,7 @@ export function resetHooks(): void {
   // This is used to reset the state of this module when a component throws.
   // It's also called inside mountIndeterminateComponent if we determine the
   // component is a module-style component.
+
   renderExpirationTime = NoWork;
   currentlyRenderingFiber = null;
 
@@ -752,6 +757,7 @@ function updateReducer<S, I, A>(
         // Update the remaining priority in the queue.
         if (updateExpirationTime > remainingExpirationTime) {
           remainingExpirationTime = updateExpirationTime;
+          markUnprocessedUpdateTime(remainingExpirationTime);
         }
       } else {
         // This update does have sufficient priority.
@@ -1124,7 +1130,7 @@ function dispatchAction<S, A>(
 
   if (__DEV__) {
     warning(
-      arguments.length <= 3,
+      typeof arguments[3] !== 'function',
       "State updates from the useState() and useReducer() Hooks don't support the " +
         'second callback argument. To execute a side effect after ' +
         'rendering, declare it in the component body with useEffect().',
@@ -1166,10 +1172,6 @@ function dispatchAction<S, A>(
       lastRenderPhaseUpdate.next = update;
     }
   } else {
-    if (revertPassiveEffectsChange) {
-      flushPassiveEffects();
-    }
-
     const currentTime = requestCurrentTime();
     const suspenseConfig = requestCurrentSuspenseConfig();
     const expirationTime = computeExpirationForFiber(
