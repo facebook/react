@@ -78,7 +78,7 @@ export const buttonsType = {
   // pen barrel button
   secondary: 2,
   // middle mouse
-  middle: 4,
+  auxiliary: 4,
   // back mouse
   back: 8,
   // forward mouse

@@ -34,7 +34,7 @@ type PressEventType =
 
 type PressEvent = {|
   altKey: boolean,
-  buttons: null | 0 | 1 | 4,
+  buttons: null | 1 | 4,
   ctrlKey: boolean,
   defaultPrevented: boolean,
   key: null | string,
@@ -53,7 +53,7 @@ type PressEvent = {|
 function createGestureState(e: any, type: PressEventType): PressEvent {
   return {
     altKey: e.altKey,
-    buttons: e.buttons,
+    buttons: e.type === 'tap:auxiliary' ? 4 : 1,
     ctrlKey: e.ctrlKey,
     defaultPrevented: e.defaultPrevented,
     key: e.key,
@@ -103,6 +103,19 @@ export function usePress(props: PressProps) {
   const tap = useTap({
     disabled: disabled || active === 'keyboard',
     preventDefault,
+    onAuxiliaryTap(e) {
+      if (onPressStart != null) {
+        onPressStart(createGestureState(e, 'pressstart'));
+      }
+      if (onPressEnd != null) {
+        onPressEnd(createGestureState(e, 'pressend'));
+      }
+      // Here we rely on Tap only calling 'onAuxiliaryTap' with modifiers when
+      // the primary button is pressed
+      if (onPress != null && (e.metaKey || e.shiftKey)) {
+        onPress(createGestureState(e, 'press'));
+      }
+    },
     onTapStart(e) {
       if (active == null) {
         updateActive('tap');
@@ -124,7 +137,7 @@ export function usePress(props: PressProps) {
         if (onPressEnd != null) {
           onPressEnd(createGestureState(e, 'pressend'));
         }
-        if (onPress != null && e.buttons !== 4) {
+        if (onPress != null) {
           onPress(createGestureState(e, 'press'));
         }
         updateActive(null);
