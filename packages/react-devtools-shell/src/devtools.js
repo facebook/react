@@ -56,7 +56,6 @@ inject('dist/app.js', () => {
         createElement(DevTools, {
           browserTheme: 'light',
           showTabBar: true,
-          showWelcomeToTheNewDevToolsDialog: true,
           warnIfLegacyBackendDetected: true,
         }),
       );
