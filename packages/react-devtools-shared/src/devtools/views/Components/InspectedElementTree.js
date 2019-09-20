@@ -8,7 +8,7 @@
  */
 
 import {copy} from 'clipboard-js';
-import React, {useCallback, useState} from 'react';
+import React, {useCallback, useState, useMemo} from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import KeyValue from './KeyValue';
@@ -38,13 +38,20 @@ export default function InspectedElementTree({
   canAddEntries = false,
   showWhenEmpty = false,
 }: Props) {
-  const entries = data != null ? Object.entries(data) : null;
-  if (entries !== null) {
-    entries.sort(alphaSortEntries);
-  }
-
   const [newPropKey, setNewPropKey] = useState<number>(0);
   const [newPropName, setNewPropName] = useState<string>('');
+  const entries = useMemo(
+    () => {
+      const dataEntries = data != null ? Object.entries(data) : null;
+
+      if (dataEntries !== null) {
+        return dataEntries.sort(alphaSortEntries);
+      }
+
+      return dataEntries;
+    },
+    [data],
+  );
 
   const isEmpty = entries === null || entries.length === 0;
 
