@@ -41,9 +41,9 @@ describe('Keyboard responder', () => {
   });
 
   function renderPropagationTest(propagates) {
-    const onClickInner = jest.fn(() => propagates);
-    const onKeyDownInner = jest.fn(() => propagates);
-    const onKeyUpInner = jest.fn(() => propagates);
+    const onClickInner = jest.fn(e => propagates && e.continuePropagation());
+    const onKeyDownInner = jest.fn(e => propagates && e.continuePropagation());
+    const onKeyUpInner = jest.fn(e => propagates && e.continuePropagation());
     const onClickOuter = jest.fn();
     const onKeyDownOuter = jest.fn();
     const onKeyUpOuter = jest.fn();
@@ -77,7 +77,7 @@ describe('Keyboard responder', () => {
     };
   }
 
-  test('propagates key event when a callback returns true', () => {
+  test('propagates key event when a continuePropagation() is used', () => {
     const {
       onClickInner,
       onKeyDownInner,
@@ -99,7 +99,7 @@ describe('Keyboard responder', () => {
     expect(onClickOuter).toBeCalled();
   });
 
-  test('does not propagate key event when a callback returns false', () => {
+  test('does not propagate key event by default', () => {
     const {
       onClickInner,
       onKeyDownInner,
@@ -148,7 +148,9 @@ describe('Keyboard responder', () => {
     let onClick, ref;
 
     beforeEach(() => {
-      onClick = jest.fn();
+      onClick = jest.fn(e => {
+        e.preventDefault();
+      });
       ref = React.createRef();
       const Component = () => {
         const listener = useKeyboard({onClick});
@@ -346,7 +348,7 @@ describe('Keyboard responder', () => {
     });
   });
 
-  describe('preventClick', () => {
+  describe('preventDefault for onClick', () => {
     function render(props) {
       const ref = React.createRef();
       const Component = () => {
@@ -357,7 +359,7 @@ describe('Keyboard responder', () => {
       return ref;
     }
 
-    test('prevents native click by default', () => {
+    test('does not prevent native click by default', () => {
       const onClick = jest.fn();
       const preventDefault = jest.fn();
       const ref = render({onClick});
@@ -365,22 +367,6 @@ describe('Keyboard responder', () => {
       const target = createEventTarget(ref.current);
       target.virtualclick({preventDefault});
 
-      expect(preventDefault).toBeCalled();
-      expect(onClick).toHaveBeenCalledTimes(1);
-      expect(onClick).toHaveBeenCalledWith(
-        expect.objectContaining({
-          defaultPrevented: true,
-        }),
-      );
-    });
-
-    test('allows native behaviour if false', () => {
-      const onClick = jest.fn();
-      const preventDefault = jest.fn();
-      const ref = render({onClick, preventClick: false});
-
-      const target = createEventTarget(ref.current);
-      target.virtualclick({preventDefault});
       expect(preventDefault).not.toBeCalled();
       expect(onClick).toHaveBeenCalledTimes(1);
       expect(onClick).toHaveBeenCalledWith(
@@ -389,9 +375,25 @@ describe('Keyboard responder', () => {
         }),
       );
     });
+
+    test('prevents native behaviour with preventDefault', () => {
+      const onClick = jest.fn(e => e.preventDefault());
+      const preventDefault = jest.fn();
+      const ref = render({onClick});
+
+      const target = createEventTarget(ref.current);
+      target.virtualclick({preventDefault});
+      expect(preventDefault).toBeCalled();
+      expect(onClick).toHaveBeenCalledTimes(1);
+      expect(onClick).toHaveBeenCalledWith(
+        expect.objectContaining({
+          defaultPrevented: true,
+        }),
+      );
+    });
   });
 
-  describe('preventKeys', () => {
+  describe('preventDefault for onKeyDown', () => {
     function render(props) {
       const ref = React.createRef();
       const Component = () => {
@@ -403,10 +405,14 @@ describe('Keyboard responder', () => {
     }
 
     test('key config matches', () => {
-      const onKeyDown = jest.fn();
+      const onKeyDown = jest.fn(e => {
+        if (e.key === 'Tab') {
+          e.preventDefault();
+        }
+      });
       const preventDefault = jest.fn();
       const preventDefaultClick = jest.fn();
-      const ref = render({onKeyDown, preventKeys: ['Tab']});
+      const ref = render({onKeyDown});
 
       const target = createEventTarget(ref.current);
       target.keydown({key: 'Tab', preventDefault});
@@ -424,9 +430,13 @@ describe('Keyboard responder', () => {
     });
 
     test('key config matches (modifier keys)', () => {
-      const onKeyDown = jest.fn();
+      const onKeyDown = jest.fn(e => {
+        if (e.key === 'Tab' && e.shiftKey) {
+          e.preventDefault();
+        }
+      });
       const preventDefault = jest.fn();
-      const ref = render({onKeyDown, preventKeys: [['Tab', {shiftKey: true}]]});
+      const ref = render({onKeyDown});
 
       const target = createEventTarget(ref.current);
       target.keydown({key: 'Tab', preventDefault, shiftKey: true});
@@ -443,9 +453,13 @@ describe('Keyboard responder', () => {
     });
 
     test('key config does not match (modifier keys)', () => {
-      const onKeyDown = jest.fn();
+      const onKeyDown = jest.fn(e => {
+        if (e.key === 'Tab' && e.shiftKey) {
+          e.preventDefault();
+        }
+      });
       const preventDefault = jest.fn();
-      const ref = render({onKeyDown, preventKeys: [['Tab', {shiftKey: true}]]});
+      const ref = render({onKeyDown});
 
       const target = createEventTarget(ref.current);
       target.keydown({key: 'Tab', preventDefault, shiftKey: false});

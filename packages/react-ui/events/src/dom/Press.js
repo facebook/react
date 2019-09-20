@@ -81,6 +81,13 @@ function isValidKey(e): boolean {
   );
 }
 
+function handlePreventDefault(preventDefault: ?boolean, e: any): void {
+  const key = e.key;
+  if (preventDefault !== false && (key === ' ' || key === 'Enter')) {
+    e.preventDefault();
+  }
+}
+
 /**
  * The lack of built-in composition for gesture responders means we have to
  * selectively ignore callbacks from useKeyboard or useTap if the other is
@@ -155,28 +162,30 @@ export function usePress(props: PressProps) {
 
   const keyboard = useKeyboard({
     disabled: disabled || active === 'tap',
-    preventClick: preventDefault !== false,
-    preventKeys: preventDefault !== false ? [' ', 'Enter'] : [],
     onClick(e) {
+      if (preventDefault !== false) {
+        e.preventDefault();
+      }
       if (active == null && onPress != null) {
         onPress(createGestureState(e, 'press'));
       }
     },
     onKeyDown(e) {
       if (active == null && isValidKey(e)) {
+        handlePreventDefault(preventDefault, e);
         updateActive('keyboard');
+
         if (onPressStart != null) {
           onPressStart(createGestureState(e, 'pressstart'));
         }
         if (onPressChange != null) {
           onPressChange(true);
         }
-        // stop propagation
-        return false;
       }
     },
     onKeyUp(e) {
       if (active === 'keyboard' && isValidKey(e)) {
+        handlePreventDefault(preventDefault, e);
         if (onPressChange != null) {
           onPressChange(false);
         }
@@ -187,8 +196,6 @@ export function usePress(props: PressProps) {
           onPress(createGestureState(e, 'press'));
         }
         updateActive(null);
-        // stop propagation
-        return false;
       }
     },
   });

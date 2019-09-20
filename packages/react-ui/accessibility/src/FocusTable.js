@@ -146,7 +146,7 @@ export function createFocusTable(): Array<React.Component> {
   function Cell({children}): FocusCellProps {
     const scopeRef = useRef(null);
     const keyboard = useKeyboard({
-      onKeyDown(event: KeyboardEvent): boolean {
+      onKeyDown(event: KeyboardEvent): void {
         const currentCell = scopeRef.current;
         switch (event.key) {
           case 'UpArrow': {
@@ -162,7 +162,7 @@ export function createFocusTable(): Array<React.Component> {
                 }
               }
             }
-            return false;
+            return;
           }
           case 'DownArrow': {
             const [cells, rowIndex] = getRowCells(currentCell);
@@ -179,7 +179,7 @@ export function createFocusTable(): Array<React.Component> {
                 }
               }
             }
-            return false;
+            return;
           }
           case 'LeftArrow': {
             const [cells, rowIndex] = getRowCells(currentCell);
@@ -190,7 +190,7 @@ export function createFocusTable(): Array<React.Component> {
                 triggerNavigateOut(currentCell, 'left');
               }
             }
-            return false;
+            return;
           }
           case 'RightArrow': {
             const [cells, rowIndex] = getRowCells(currentCell);
@@ -203,10 +203,10 @@ export function createFocusTable(): Array<React.Component> {
                 }
               }
             }
-            return false;
+            return;
           }
         }
-        return true;
+        event.continuePropagation();
       },
     });
     return (

@@ -53,10 +53,11 @@ function focusElem(elem: null | HTMLElement): void {
   }
 }
 
-export function focusNext(
+function internalFocusNext(
   scope: ReactScopeMethods,
+  event?: KeyboardEvent,
   contain?: boolean,
-): boolean {
+): void {
   const [
     tabbableNodes,
     firstTabbableElem,
@@ -66,23 +67,31 @@ export function focusNext(
   ] = getTabbableNodes(scope);
 
   if (focusedElement === null) {
-    focusElem(firstTabbableElem);
+    if (event) {
+      event.continuePropagation();
+    }
   } else if (focusedElement === lastTabbableElem) {
-    if (contain === true) {
+    if (contain) {
       focusElem(firstTabbableElem);
-    } else {
-      return true;
+      if (event) {
+        event.preventDefault();
+      }
+    } else if (event) {
+      event.continuePropagation();
     }
   } else {
     focusElem((tabbableNodes: any)[currentIndex + 1]);
+    if (event) {
+      event.preventDefault();
+    }
   }
-  return false;
 }
 
-export function focusPrevious(
+function internalFocusPrevious(
   scope: ReactScopeMethods,
+  event?: KeyboardEvent,
   contain?: boolean,
-): boolean {
+): void {
   const [
     tabbableNodes,
     firstTabbableElem,
@@ -92,17 +101,32 @@ export function focusPrevious(
   ] = getTabbableNodes(scope);
 
   if (focusedElement === null) {
-    focusElem(firstTabbableElem);
+    if (event) {
+      event.continuePropagation();
+    }
   } else if (focusedElement === firstTabbableElem) {
-    if (contain === true) {
+    if (contain) {
       focusElem(lastTabbableElem);
-    } else {
-      return true;
+      if (event) {
+        event.preventDefault();
+      }
+    } else if (event) {
+      event.continuePropagation();
     }
   } else {
     focusElem((tabbableNodes: any)[currentIndex - 1]);
+    if (event) {
+      event.preventDefault();
+    }
   }
-  return false;
+}
+
+export function focusPrevious(scope: ReactScopeMethods): void {
+  internalFocusPrevious(scope);
+}
+
+export function focusNext(scope: ReactScopeMethods): void {
+  internalFocusNext(scope);
 }
 
 export function getNextController(
@@ -137,21 +161,20 @@ export const TabFocusController = React.forwardRef(
   ({children, contain}: TabFocusControllerProps, ref): React.Node => {
     const scopeRef = useRef(null);
     const keyboard = useKeyboard({
-      onKeyDown(event: KeyboardEvent): boolean {
+      onKeyDown(event: KeyboardEvent): void {
         if (event.key !== 'Tab') {
-          return true;
+          event.continuePropagation();
+          return;
         }
         const scope = scopeRef.current;
         if (scope !== null) {
           if (event.shiftKey) {
-            return focusPrevious(scope, contain);
+            internalFocusPrevious(scope, event, contain);
           } else {
-            return focusNext(scope, contain);
+            internalFocusNext(scope, event, contain);
           }
         }
-        return true;
       },
-      preventKeys: ['Tab', ['Tab', {shiftKey: true}]],
     });
 
     return (
