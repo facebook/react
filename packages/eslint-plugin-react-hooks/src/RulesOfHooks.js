@@ -193,7 +193,7 @@ export default {
           // If `pathList` includes the current segment then we've found a cycle!
           // We need to fill `cyclic` with all segments inside cycle
           if (pathList.has(segment.id)) {
-            const pathArray = [...pathList];
+            const pathArray = Array.from(pathList);
             const cyclicSegments = pathArray.slice(
               pathArray.indexOf(segment.id) + 1,
             );
