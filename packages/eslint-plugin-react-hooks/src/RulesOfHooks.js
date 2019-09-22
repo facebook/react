@@ -127,7 +127,7 @@ export default {
               pathArray.indexOf(segment.id) + 1,
             );
             for (const cyclicSegment of cyclicSegments) {
-              cyclic.add(cyclicSegment)
+              cyclic.add(cyclicSegment);
             }
 
             return 0;
@@ -198,7 +198,7 @@ export default {
               pathArray.indexOf(segment.id) + 1,
             );
             for (const cyclicSegment of cyclicSegments) {
-              cyclic.add(cyclicSegment)
+              cyclic.add(cyclicSegment);
             }
 
             return 0;

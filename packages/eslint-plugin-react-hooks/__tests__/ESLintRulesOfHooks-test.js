@@ -568,10 +568,7 @@ const tests = {
           }
         }
       `,
-      errors: [
-        loopError('useHook1'),
-        loopError('useHook2', true),
-      ],
+      errors: [loopError('useHook1'), loopError('useHook2', true)],
     },
     {
       code: `
