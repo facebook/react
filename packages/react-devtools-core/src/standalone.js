@@ -40,11 +40,6 @@ let nodeWaitingToConnectHTML: string = '';
 let projectRoots: Array<string> = [];
 let statusListener: StatusListener = (message: string) => {};
 
-// Unlike browser extension users, people using the standalone have actively installed version 4,
-// So we probably don't need to show them a changelog notice.
-// We should give embedded users (e.g. Nuclide, Sonar) a way of showing this dialog though.
-let showWelcomeToTheNewDevToolsDialog: boolean = false;
-
 function setContentDOMNode(value: HTMLElement) {
   node = value;
 
@@ -60,11 +55,6 @@ function setProjectRoots(value: Array<string>) {
 
 function setStatusListener(value: StatusListener) {
   statusListener = value;
-  return DevtoolsUI;
-}
-
-function setShowWelcomeToTheNewDevToolsDialog(value: boolean) {
-  showWelcomeToTheNewDevToolsDialog = value;
   return DevtoolsUI;
 }
 
@@ -108,7 +98,6 @@ function reload() {
         bridge: ((bridge: any): FrontendBridge),
         canViewElementSourceFunction,
         showTabBar: true,
-        showWelcomeToTheNewDevToolsDialog,
         store: ((store: any): Store),
         warnIfLegacyBackendDetected: true,
         viewElementSourceFunction,
@@ -318,7 +307,6 @@ const DevtoolsUI = {
   connectToSocket,
   setContentDOMNode,
   setProjectRoots,
-  setShowWelcomeToTheNewDevToolsDialog,
   setStatusListener,
   startServer,
 };

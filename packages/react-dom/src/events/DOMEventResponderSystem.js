@@ -303,16 +303,6 @@ function validateEventValue(eventValue: any): void {
         );
       }
     };
-    eventValue.preventDefault = () => {
-      if (__DEV__) {
-        showWarning('preventDefault()');
-      }
-    };
-    eventValue.stopPropagation = () => {
-      if (__DEV__) {
-        showWarning('stopPropagation()');
-      }
-    };
     eventValue.isDefaultPrevented = () => {
       if (__DEV__) {
         showWarning('isDefaultPrevented()');

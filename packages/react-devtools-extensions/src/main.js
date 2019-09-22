@@ -161,7 +161,6 @@ function createPanelIfReactLoaded() {
               overrideTab,
               profilerPortalContainer,
               showTabBar: false,
-              showWelcomeToTheNewDevToolsDialog: true,
               store,
               viewElementSourceFunction,
             }),

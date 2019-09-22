@@ -9,7 +9,7 @@
 
 'use strict';
 
-import {createEventTarget} from 'react-ui/events/src/dom/testing-library';
+import {createEventTarget} from 'react-interactions/events/src/dom/testing-library';
 
 let React;
 let ReactFeatureFlags;
@@ -204,7 +204,8 @@ describe('ReactScope', () => {
       let onKeyDown = jest.fn();
       const TestScope = React.unstable_createScope((type, props) => true);
       const ref = React.createRef();
-      const useKeyboard = require('react-ui/events/keyboard').useKeyboard;
+      const useKeyboard = require('react-interactions/events/keyboard')
+        .useKeyboard;
       let Component = () => {
         const listener = useKeyboard({
           onKeyDown,
