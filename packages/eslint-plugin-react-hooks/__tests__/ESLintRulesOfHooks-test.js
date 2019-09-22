@@ -347,6 +347,18 @@ const tests = {
         useHook();
       }
     `,
+    `
+      // Valid because the neither the condition nor the loop affect the hook call.
+      function App(props) {
+        const someObject = {propA: true};
+        for (const propName in someObject) {
+          if (propName === true) {
+          } else {
+          }
+        }
+        const [myState, setMyState] = useState(null);
+      }
+    `,
   ],
   invalid: [
     {
@@ -558,11 +570,7 @@ const tests = {
       `,
       errors: [
         loopError('useHook1'),
-
-        // NOTE: Small imprecision in error reporting due to caching means we
-        // have a conditional error here instead of a loop error. However,
-        // we will always get an error so this is acceptable.
-        conditionalError('useHook2', true),
+        loopError('useHook2', true),
       ],
     },
     {
