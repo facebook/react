@@ -1422,6 +1422,8 @@ function inferTimeFromExpirationTimeWithSuspenseConfig(
   );
 }
 
+// The work loop is an extremely hot path. Tell Closure not to inline it.
+/** @noinline */
 function workLoopSync() {
   // Already timed out, so perform work without checking if we need to yield.
   while (workInProgress !== null) {
@@ -1429,6 +1431,7 @@ function workLoopSync() {
   }
 }
 
+/** @noinline */
 function workLoop() {
   // Perform work until Scheduler asks us to yield
   while (workInProgress !== null && !shouldYield()) {
