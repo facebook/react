@@ -40,7 +40,7 @@ export type SnapshotNode = {|
 
 export type ChangeDescription = {|
   context: Array<string> | boolean | null,
-  didHooksChange: boolean,
+  hooks: Array<number> | boolean | null,
   isFirstMount: boolean,
   props: Array<string> | null,
   state: Array<string> | null,

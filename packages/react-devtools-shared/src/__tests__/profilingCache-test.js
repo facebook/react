@@ -572,4 +572,75 @@ describe('ProfilingCache', () => {
       ),
     );
   });
+
+  describe('enableProfilerShowChangedHooksIndices', () => {
+    beforeEach(() => {
+      const FeatureFlags = require('../config/DevToolsFeatureFlags');
+      FeatureFlags.enableProfilerShowChangedHooksIndices = true;
+    });
+
+    it('should report which hooks changed', () => {
+      let setStateOne = null;
+      let setStateTwo = null;
+
+      const FunctionComponentWithHooks = ({count}) => {
+        setStateOne = React.useState(0)[1];
+        setStateTwo = React.useState(0)[1];
+
+        return null;
+      };
+
+      const container = document.createElement('div');
+
+      utils.act(() => store.profilerStore.startProfiling());
+      utils.act(() =>
+        ReactDOM.render(<FunctionComponentWithHooks />, container),
+      );
+
+      expect(setStateOne).not.toBeNull();
+      expect(setStateTwo).not.toBeNull();
+
+      // One hook changes
+      utils.act(() => setStateOne(1));
+
+      // Two hooks change
+      utils.act(() =>
+        ReactDOM.unstable_batchedUpdates(() => {
+          setStateOne(2);
+          setStateTwo(2);
+        }),
+      );
+
+      // No hooks change
+      utils.act(() =>
+        ReactDOM.render(<FunctionComponentWithHooks />, container),
+      );
+      utils.act(() => store.profilerStore.stopProfiling());
+
+      function Validator({commitIndex, rootID}) {
+        const commitData = store.profilerStore.getCommitData(
+          rootID,
+          commitIndex,
+        );
+        expect(commitData).toMatchSnapshot(
+          `CommitDetails commitIndex: ${commitIndex}`,
+        );
+        return null;
+      }
+
+      const rootID = store.roots[0];
+
+      for (let commitIndex = 0; commitIndex < 4; commitIndex++) {
+        utils.act(() => {
+          TestRenderer.create(
+            <Validator
+              commitIndex={commitIndex}
+              previousCommitDetails={null}
+              rootID={rootID}
+            />,
+          );
+        });
+      }
+    });
+  });
 });

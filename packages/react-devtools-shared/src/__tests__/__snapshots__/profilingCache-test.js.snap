@@ -1,25 +1,130 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`ProfilingCache enableProfilerShowChangedHooksIndices should report which hooks changed: CommitDetails commitIndex: 0 1`] = `
+Object {
+  "changeDescriptions": Map {
+    2 => Object {
+      "context": null,
+      "hooks": null,
+      "isFirstMount": true,
+      "props": null,
+      "state": null,
+    },
+  },
+  "duration": 0,
+  "fiberActualDurations": Map {
+    1 => 0,
+    2 => 0,
+  },
+  "fiberSelfDurations": Map {
+    1 => 0,
+    2 => 0,
+  },
+  "interactionIDs": Array [],
+  "priorityLevel": "Immediate",
+  "timestamp": 0,
+}
+`;
+
+exports[`ProfilingCache enableProfilerShowChangedHooksIndices should report which hooks changed: CommitDetails commitIndex: 1 1`] = `
+Object {
+  "changeDescriptions": Map {
+    2 => Object {
+      "context": null,
+      "hooks": Array [
+        0,
+      ],
+      "isFirstMount": false,
+      "props": Array [],
+      "state": null,
+    },
+  },
+  "duration": 0,
+  "fiberActualDurations": Map {
+    2 => 0,
+  },
+  "fiberSelfDurations": Map {
+    2 => 0,
+  },
+  "interactionIDs": Array [],
+  "priorityLevel": "Immediate",
+  "timestamp": 0,
+}
+`;
+
+exports[`ProfilingCache enableProfilerShowChangedHooksIndices should report which hooks changed: CommitDetails commitIndex: 2 1`] = `
+Object {
+  "changeDescriptions": Map {
+    2 => Object {
+      "context": null,
+      "hooks": Array [
+        0,
+        1,
+      ],
+      "isFirstMount": false,
+      "props": Array [],
+      "state": null,
+    },
+  },
+  "duration": 0,
+  "fiberActualDurations": Map {
+    2 => 0,
+  },
+  "fiberSelfDurations": Map {
+    2 => 0,
+  },
+  "interactionIDs": Array [],
+  "priorityLevel": "Immediate",
+  "timestamp": 0,
+}
+`;
+
+exports[`ProfilingCache enableProfilerShowChangedHooksIndices should report which hooks changed: CommitDetails commitIndex: 3 1`] = `
+Object {
+  "changeDescriptions": Map {
+    2 => Object {
+      "context": null,
+      "hooks": null,
+      "isFirstMount": false,
+      "props": Array [],
+      "state": null,
+    },
+  },
+  "duration": 0,
+  "fiberActualDurations": Map {
+    2 => 0,
+    1 => 0,
+  },
+  "fiberSelfDurations": Map {
+    2 => 0,
+    1 => 0,
+  },
+  "interactionIDs": Array [],
+  "priorityLevel": "Immediate",
+  "timestamp": 0,
+}
+`;
+
 exports[`ProfilingCache should calculate a self duration based on actual children (not filtered children): CommitDetails with filtered self durations 1`] = `
 Object {
   "changeDescriptions": Map {
     2 => Object {
       "context": null,
-      "didHooksChange": false,
+      "hooks": false,
       "isFirstMount": true,
       "props": null,
       "state": null,
     },
     3 => Object {
       "context": null,
-      "didHooksChange": false,
+      "hooks": false,
       "isFirstMount": true,
       "props": null,
       "state": null,
     },
     5 => Object {
       "context": null,
-      "didHooksChange": false,
+      "hooks": false,
       "isFirstMount": true,
       "props": null,
       "state": null,
@@ -49,14 +154,14 @@ Object {
   "changeDescriptions": Map {
     2 => Object {
       "context": null,
-      "didHooksChange": false,
+      "hooks": false,
       "isFirstMount": true,
       "props": null,
       "state": null,
     },
     4 => Object {
       "context": null,
-      "didHooksChange": false,
+      "hooks": false,
       "isFirstMount": true,
       "props": null,
       "state": null,
@@ -86,7 +191,7 @@ Object {
   "changeDescriptions": Map {
     5 => Object {
       "context": null,
-      "didHooksChange": false,
+      "hooks": false,
       "isFirstMount": true,
       "props": null,
       "state": null,
@@ -112,28 +217,28 @@ Object {
   "changeDescriptions": Map {
     2 => Object {
       "context": null,
-      "didHooksChange": false,
+      "hooks": false,
       "isFirstMount": true,
       "props": null,
       "state": null,
     },
     3 => Object {
       "context": null,
-      "didHooksChange": false,
+      "hooks": false,
       "isFirstMount": true,
       "props": null,
       "state": null,
     },
     4 => Object {
       "context": null,
-      "didHooksChange": false,
+      "hooks": false,
       "isFirstMount": true,
       "props": null,
       "state": null,
     },
     5 => Object {
       "context": null,
-      "didHooksChange": false,
+      "hooks": false,
       "isFirstMount": true,
       "props": null,
       "state": null,
@@ -165,28 +270,28 @@ Object {
   "changeDescriptions": Map {
     3 => Object {
       "context": null,
-      "didHooksChange": false,
+      "hooks": false,
       "isFirstMount": false,
       "props": Array [],
       "state": null,
     },
     4 => Object {
       "context": null,
-      "didHooksChange": false,
+      "hooks": false,
       "isFirstMount": false,
       "props": Array [],
       "state": null,
     },
     6 => Object {
       "context": null,
-      "didHooksChange": false,
+      "hooks": false,
       "isFirstMount": true,
       "props": null,
       "state": null,
     },
     2 => Object {
       "context": null,
-      "didHooksChange": false,
+      "hooks": false,
       "isFirstMount": false,
       "props": Array [
         "count",
@@ -220,14 +325,14 @@ Object {
   "changeDescriptions": Map {
     3 => Object {
       "context": null,
-      "didHooksChange": false,
+      "hooks": false,
       "isFirstMount": false,
       "props": Array [],
       "state": null,
     },
     2 => Object {
       "context": null,
-      "didHooksChange": false,
+      "hooks": false,
       "isFirstMount": false,
       "props": Array [
         "count",
@@ -257,7 +362,7 @@ Object {
   "changeDescriptions": Map {
     2 => Object {
       "context": null,
-      "didHooksChange": false,
+      "hooks": false,
       "isFirstMount": false,
       "props": Array [
         "count",
@@ -291,7 +396,7 @@ Object {
               2,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": true,
                 "props": null,
                 "state": null,
@@ -301,7 +406,7 @@ Object {
               3,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": true,
                 "props": null,
                 "state": null,
@@ -311,7 +416,7 @@ Object {
               4,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": true,
                 "props": null,
                 "state": null,
@@ -321,7 +426,7 @@ Object {
               5,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": true,
                 "props": null,
                 "state": null,
@@ -383,7 +488,7 @@ Object {
               3,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -393,7 +498,7 @@ Object {
               4,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -403,7 +508,7 @@ Object {
               6,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": true,
                 "props": null,
                 "state": null,
@@ -413,7 +518,7 @@ Object {
               2,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": false,
                 "props": Array [
                   "count",
@@ -477,7 +582,7 @@ Object {
               3,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -487,7 +592,7 @@ Object {
               2,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": false,
                 "props": Array [
                   "count",
@@ -535,7 +640,7 @@ Object {
               2,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": false,
                 "props": Array [
                   "count",
@@ -764,7 +869,7 @@ Object {
               2,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": true,
                 "props": null,
                 "state": null,
@@ -774,7 +879,7 @@ Object {
               3,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": true,
                 "props": null,
                 "state": null,
@@ -784,7 +889,7 @@ Object {
               4,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": true,
                 "props": null,
                 "state": null,
@@ -838,7 +943,7 @@ Object {
               3,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -848,7 +953,7 @@ Object {
               5,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": true,
                 "props": null,
                 "state": null,
@@ -858,7 +963,7 @@ Object {
               2,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": false,
                 "props": Array [
                   "count",
@@ -914,7 +1019,7 @@ Object {
               3,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -924,7 +1029,7 @@ Object {
               5,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -934,7 +1039,7 @@ Object {
               6,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": true,
                 "props": null,
                 "state": null,
@@ -944,7 +1049,7 @@ Object {
               2,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": false,
                 "props": Array [
                   "count",
@@ -1153,28 +1258,28 @@ Object {
       "changeDescriptions": Map {
         3 => Object {
           "context": null,
-          "didHooksChange": false,
+          "hooks": false,
           "isFirstMount": false,
           "props": Array [],
           "state": null,
         },
         4 => Object {
           "context": null,
-          "didHooksChange": false,
+          "hooks": false,
           "isFirstMount": false,
           "props": Array [],
           "state": null,
         },
         10 => Object {
           "context": null,
-          "didHooksChange": false,
+          "hooks": false,
           "isFirstMount": true,
           "props": null,
           "state": null,
         },
         2 => Object {
           "context": null,
-          "didHooksChange": false,
+          "hooks": false,
           "isFirstMount": false,
           "props": Array [
             "count",
@@ -1205,14 +1310,14 @@ Object {
       "changeDescriptions": Map {
         3 => Object {
           "context": null,
-          "didHooksChange": false,
+          "hooks": false,
           "isFirstMount": false,
           "props": Array [],
           "state": null,
         },
         2 => Object {
           "context": null,
-          "didHooksChange": false,
+          "hooks": false,
           "isFirstMount": false,
           "props": Array [
             "count",
@@ -1239,7 +1344,7 @@ Object {
       "changeDescriptions": Map {
         2 => Object {
           "context": null,
-          "didHooksChange": false,
+          "hooks": false,
           "isFirstMount": false,
           "props": Array [
             "count",
@@ -1391,21 +1496,21 @@ Object {
       "changeDescriptions": Map {
         12 => Object {
           "context": null,
-          "didHooksChange": false,
+          "hooks": false,
           "isFirstMount": true,
           "props": null,
           "state": null,
         },
         13 => Object {
           "context": null,
-          "didHooksChange": false,
+          "hooks": false,
           "isFirstMount": true,
           "props": null,
           "state": null,
         },
         14 => Object {
           "context": null,
-          "didHooksChange": false,
+          "hooks": false,
           "isFirstMount": true,
           "props": null,
           "state": null,
@@ -1583,7 +1688,7 @@ Object {
               3,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -1593,7 +1698,7 @@ Object {
               4,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -1603,7 +1708,7 @@ Object {
               10,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": true,
                 "props": null,
                 "state": null,
@@ -1613,7 +1718,7 @@ Object {
               2,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": false,
                 "props": Array [
                   "count",
@@ -1677,7 +1782,7 @@ Object {
               3,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -1687,7 +1792,7 @@ Object {
               2,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": false,
                 "props": Array [
                   "count",
@@ -1735,7 +1840,7 @@ Object {
               2,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": false,
                 "props": Array [
                   "count",
@@ -1929,7 +2034,7 @@ Object {
               12,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": true,
                 "props": null,
                 "state": null,
@@ -1939,7 +2044,7 @@ Object {
               13,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": true,
                 "props": null,
                 "state": null,
@@ -1949,7 +2054,7 @@ Object {
               14,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": true,
                 "props": null,
                 "state": null,
@@ -2170,35 +2275,35 @@ Object {
   "changeDescriptions": Map {
     2 => Object {
       "context": null,
-      "didHooksChange": false,
+      "hooks": false,
       "isFirstMount": true,
       "props": null,
       "state": null,
     },
     4 => Object {
       "context": null,
-      "didHooksChange": false,
+      "hooks": false,
       "isFirstMount": true,
       "props": null,
       "state": null,
     },
     5 => Object {
       "context": null,
-      "didHooksChange": false,
+      "hooks": false,
       "isFirstMount": true,
       "props": null,
       "state": null,
     },
     6 => Object {
       "context": null,
-      "didHooksChange": false,
+      "hooks": false,
       "isFirstMount": true,
       "props": null,
       "state": null,
     },
     7 => Object {
       "context": null,
-      "didHooksChange": false,
+      "hooks": false,
       "isFirstMount": true,
       "props": null,
       "state": null,
@@ -2234,7 +2339,7 @@ Object {
   "changeDescriptions": Map {
     5 => Object {
       "context": null,
-      "didHooksChange": true,
+      "hooks": true,
       "isFirstMount": false,
       "props": Array [
         "count",
@@ -2243,14 +2348,14 @@ Object {
     },
     4 => Object {
       "context": true,
-      "didHooksChange": false,
+      "hooks": false,
       "isFirstMount": false,
       "props": Array [],
       "state": null,
     },
     7 => Object {
       "context": null,
-      "didHooksChange": true,
+      "hooks": true,
       "isFirstMount": false,
       "props": Array [
         "count",
@@ -2261,14 +2366,14 @@ Object {
       "context": Array [
         "count",
       ],
-      "didHooksChange": false,
+      "hooks": false,
       "isFirstMount": false,
       "props": Array [],
       "state": null,
     },
     2 => Object {
       "context": null,
-      "didHooksChange": false,
+      "hooks": false,
       "isFirstMount": false,
       "props": Array [],
       "state": Array [
@@ -2304,35 +2409,35 @@ Object {
   "changeDescriptions": Map {
     5 => Object {
       "context": null,
-      "didHooksChange": false,
+      "hooks": false,
       "isFirstMount": false,
       "props": Array [],
       "state": null,
     },
     4 => Object {
       "context": false,
-      "didHooksChange": false,
+      "hooks": false,
       "isFirstMount": false,
       "props": Array [],
       "state": null,
     },
     7 => Object {
       "context": null,
-      "didHooksChange": false,
+      "hooks": false,
       "isFirstMount": false,
       "props": Array [],
       "state": null,
     },
     6 => Object {
       "context": Array [],
-      "didHooksChange": false,
+      "hooks": false,
       "isFirstMount": false,
       "props": Array [],
       "state": null,
     },
     2 => Object {
       "context": null,
-      "didHooksChange": false,
+      "hooks": false,
       "isFirstMount": false,
       "props": Array [
         "foo",
@@ -2370,35 +2475,35 @@ Object {
   "changeDescriptions": Map {
     5 => Object {
       "context": null,
-      "didHooksChange": false,
+      "hooks": false,
       "isFirstMount": false,
       "props": Array [],
       "state": null,
     },
     4 => Object {
       "context": false,
-      "didHooksChange": false,
+      "hooks": false,
       "isFirstMount": false,
       "props": Array [],
       "state": null,
     },
     7 => Object {
       "context": null,
-      "didHooksChange": false,
+      "hooks": false,
       "isFirstMount": false,
       "props": Array [],
       "state": null,
     },
     6 => Object {
       "context": Array [],
-      "didHooksChange": false,
+      "hooks": false,
       "isFirstMount": false,
       "props": Array [],
       "state": null,
     },
     2 => Object {
       "context": null,
-      "didHooksChange": false,
+      "hooks": false,
       "isFirstMount": false,
       "props": Array [
         "foo",
@@ -2437,35 +2542,35 @@ Object {
   "changeDescriptions": Map {
     5 => Object {
       "context": null,
-      "didHooksChange": false,
+      "hooks": false,
       "isFirstMount": false,
       "props": Array [],
       "state": null,
     },
     4 => Object {
       "context": false,
-      "didHooksChange": false,
+      "hooks": false,
       "isFirstMount": false,
       "props": Array [],
       "state": null,
     },
     7 => Object {
       "context": null,
-      "didHooksChange": false,
+      "hooks": false,
       "isFirstMount": false,
       "props": Array [],
       "state": null,
     },
     6 => Object {
       "context": Array [],
-      "didHooksChange": false,
+      "hooks": false,
       "isFirstMount": false,
       "props": Array [],
       "state": null,
     },
     2 => Object {
       "context": null,
-      "didHooksChange": false,
+      "hooks": false,
       "isFirstMount": false,
       "props": Array [
         "bar",
@@ -2509,7 +2614,7 @@ Object {
               2,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": true,
                 "props": null,
                 "state": null,
@@ -2519,7 +2624,7 @@ Object {
               4,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": true,
                 "props": null,
                 "state": null,
@@ -2529,7 +2634,7 @@ Object {
               5,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": true,
                 "props": null,
                 "state": null,
@@ -2539,7 +2644,7 @@ Object {
               6,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": true,
                 "props": null,
                 "state": null,
@@ -2549,7 +2654,7 @@ Object {
               7,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": true,
                 "props": null,
                 "state": null,
@@ -2627,7 +2732,7 @@ Object {
               5,
               Object {
                 "context": null,
-                "didHooksChange": true,
+                "hooks": true,
                 "isFirstMount": false,
                 "props": Array [
                   "count",
@@ -2639,7 +2744,7 @@ Object {
               4,
               Object {
                 "context": true,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -2649,7 +2754,7 @@ Object {
               7,
               Object {
                 "context": null,
-                "didHooksChange": true,
+                "hooks": true,
                 "isFirstMount": false,
                 "props": Array [
                   "count",
@@ -2663,7 +2768,7 @@ Object {
                 "context": Array [
                   "count",
                 ],
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -2673,7 +2778,7 @@ Object {
               2,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": Array [
@@ -2745,7 +2850,7 @@ Object {
               5,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -2755,7 +2860,7 @@ Object {
               4,
               Object {
                 "context": false,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -2765,7 +2870,7 @@ Object {
               7,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -2775,7 +2880,7 @@ Object {
               6,
               Object {
                 "context": Array [],
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -2785,7 +2890,7 @@ Object {
               2,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": false,
                 "props": Array [
                   "foo",
@@ -2865,7 +2970,7 @@ Object {
               5,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -2875,7 +2980,7 @@ Object {
               4,
               Object {
                 "context": false,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -2885,7 +2990,7 @@ Object {
               7,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -2895,7 +3000,7 @@ Object {
               6,
               Object {
                 "context": Array [],
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -2905,7 +3010,7 @@ Object {
               2,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": false,
                 "props": Array [
                   "foo",
@@ -2986,7 +3091,7 @@ Object {
               5,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -2996,7 +3101,7 @@ Object {
               4,
               Object {
                 "context": false,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -3006,7 +3111,7 @@ Object {
               7,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -3016,7 +3121,7 @@ Object {
               6,
               Object {
                 "context": Array [],
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -3026,7 +3131,7 @@ Object {
               2,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": false,
                 "props": Array [
                   "bar",
@@ -3343,7 +3448,7 @@ Object {
               2,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": true,
                 "props": null,
                 "state": null,
@@ -3353,7 +3458,7 @@ Object {
               3,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": true,
                 "props": null,
                 "state": null,
@@ -3363,7 +3468,7 @@ Object {
               4,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": true,
                 "props": null,
                 "state": null,
@@ -3419,7 +3524,7 @@ Object {
               3,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": false,
                 "props": Array [],
                 "state": null,
@@ -3429,7 +3534,7 @@ Object {
               5,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": true,
                 "props": null,
                 "state": null,
@@ -3439,7 +3544,7 @@ Object {
               2,
               Object {
                 "context": null,
-                "didHooksChange": false,
+                "hooks": false,
                 "isFirstMount": false,
                 "props": Array [
                   "count",

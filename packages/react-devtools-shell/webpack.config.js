@@ -38,6 +38,12 @@ const config = {
       'react-debug-tools': resolve(builtModulesDir, 'react-debug-tools'),
       'react-is': resolve(builtModulesDir, 'react-is'),
       scheduler: resolve(builtModulesDir, 'scheduler'),
+
+      // Feature flags used for early testing features within FB hosted version of extension:
+      'react-devtools-shared/src/config/DevToolsFeatureFlags': resolve(
+        __dirname,
+        '../react-devtools-shared/src/config/DevToolsFeatureFlags.oss',
+      ),
     },
   },
   plugins: [

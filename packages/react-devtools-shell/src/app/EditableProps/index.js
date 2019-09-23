@@ -31,6 +31,31 @@ function reducer(state, action) {
   }
 }
 
+function ArrayOfStrings() {
+  const [items, setItems] = useState(['a', 'b', 'c']);
+  const addItem = () =>
+    setItems(prevItems => {
+      const charCode =
+        prevItems.length > 0
+          ? prevItems[prevItems.length - 1].charCodeAt(0) + 1
+          : 97;
+      const newChar = String.fromCharCode(charCode);
+      return [...prevItems, newChar];
+    });
+  const removeItem = () =>
+    setItems(prevItems => {
+      return prevItems.slice(1);
+    });
+
+  return (
+    <div>
+      Items array ({items.join(',')})
+      <button onClick={addItem}>Add item</button>
+      <button onClick={removeItem}>Remove item</button>
+    </div>
+  );
+}
+
 type StatefulFunctionProps = {|name: string|};
 
 function StatefulFunction({name}: StatefulFunctionProps) {
@@ -135,6 +160,8 @@ export default function EditableProps() {
       <MemoizedStatefulFunction name="Brian" />
       <strong>Forward Ref</strong>
       <ForwardRef name="Brian" />
+      <strong>Array of Strings</strong>
+      <ArrayOfStrings />
     </Fragment>
   );
 }

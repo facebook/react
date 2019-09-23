@@ -48,6 +48,7 @@ import {
   patch as patchConsole,
   registerRenderer as registerRendererWithConsole,
 } from './console';
+import {enableProfilerShowChangedHooksIndices} from 'react-devtools-shared/src/config/DevToolsFeatureFlags';
 
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {
@@ -793,7 +794,7 @@ export function attach(
         if (prevFiber === null) {
           return {
             context: null,
-            didHooksChange: false,
+            hooks: enableProfilerShowChangedHooksIndices ? null : false,
             isFirstMount: true,
             props: null,
             state: null,
@@ -801,7 +802,7 @@ export function attach(
         } else {
           return {
             context: getContextChangedKeys(nextFiber),
-            didHooksChange: didHooksChange(
+            hooks: getChangedHooks(
               prevFiber.memoizedState,
               nextFiber.memoizedState,
             ),
@@ -907,10 +908,16 @@ export function attach(
     return null;
   }
 
-  function didHooksChange(prev: any, next: any): boolean {
+  function getChangedHooks(
+    prev: any,
+    next: any,
+  ): boolean | null | Array<number> {
     if (next == null) {
       return false;
     }
+
+    let index = 0;
+    let changedIndices: null | Array<number> = null;
 
     // We can't report anything meaningful for hooks changes.
     if (
@@ -921,15 +928,31 @@ export function attach(
     ) {
       while (next !== null) {
         if (next.memoizedState !== prev.memoizedState) {
-          return true;
-        } else {
-          next = next.next;
-          prev = prev.next;
+          if (enableProfilerShowChangedHooksIndices) {
+            if (changedIndices === null) {
+              changedIndices = [index];
+            } else {
+              changedIndices.push(index);
+            }
+          } else {
+            return true;
+          }
+        }
+
+        next = next.next;
+        prev = prev.next;
+
+        if (enableProfilerShowChangedHooksIndices) {
+          index++;
         }
       }
     }
 
-    return false;
+    if (enableProfilerShowChangedHooksIndices) {
+      return changedIndices;
+    } else {
+      return false;
+    }
   }
 
   function getChangedKeys(prev: any, next: any): null | Array<string> {

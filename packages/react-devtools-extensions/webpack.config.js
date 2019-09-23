@@ -13,6 +13,7 @@ if (!NODE_ENV) {
 const builtModulesDir = resolve(__dirname, '..', '..', 'build', 'node_modules');
 
 const __DEV__ = NODE_ENV === 'development';
+const __FACEBOOK__ = process.env.FACEBOOK;
 
 const GITHUB_URL = getGitHubURL();
 const DEVTOOLS_VERSION = getVersionString();
@@ -39,6 +40,15 @@ module.exports = {
       'react-dom': resolve(builtModulesDir, 'react-dom'),
       'react-is': resolve(builtModulesDir, 'react-is'),
       scheduler: resolve(builtModulesDir, 'scheduler'),
+
+      // Feature flags used for early testing features within FB hosted version of extension:
+      'react-devtools-shared/src/config/DevToolsFeatureFlags': resolve(
+        __dirname,
+        '../react-devtools-shared/src/config',
+        __FACEBOOK__
+          ? 'DevToolsFeatureFlags.facebook'
+          : 'DevToolsFeatureFlags.oss',
+      ),
     },
   },
   plugins: [

@@ -139,23 +139,24 @@ function WhatChanged({
     );
   }
 
+  const {context, hooks, props, state} = changeDescription;
   const changes = [];
 
-  if (changeDescription.context === true) {
+  if (context === true) {
     changes.push(
       <div key="context" className={styles.WhatChangedItem}>
         • Context changed
       </div>,
     );
   } else if (
-    typeof changeDescription.context === 'object' &&
-    changeDescription.context !== null &&
-    changeDescription.context.length !== 0
+    typeof context === 'object' &&
+    context !== null &&
+    context.length !== 0
   ) {
     changes.push(
       <div key="context" className={styles.WhatChangedItem}>
         • Context changed:
-        {changeDescription.context.map(key => (
+        {context.map(key => (
           <span key={key} className={styles.WhatChangedKey}>
             {key}
           </span>
@@ -164,22 +165,35 @@ function WhatChanged({
     );
   }
 
-  if (changeDescription.didHooksChange) {
-    changes.push(
-      <div key="hooks" className={styles.WhatChangedItem}>
-        • Hooks changed
-      </div>,
-    );
+  if (hooks) {
+    if (Array.isArray(hooks)) {
+      if (hooks.length === 1) {
+        changes.push(
+          <div key="hooks" className={styles.WhatChangedItem}>
+            • Hook at index {hooks[0]} changed
+          </div>,
+        );
+      } else {
+        changes.push(
+          <div key="hooks" className={styles.WhatChangedItem}>
+            • Hooks at indices {hooks.join(',')} changed
+          </div>,
+        );
+      }
+    } else {
+      changes.push(
+        <div key="hooks" className={styles.WhatChangedItem}>
+          • Hooks changed
+        </div>,
+      );
+    }
   }
 
-  if (
-    changeDescription.props !== null &&
-    changeDescription.props.length !== 0
-  ) {
+  if (props !== null && props.length !== 0) {
     changes.push(
       <div key="props" className={styles.WhatChangedItem}>
         • Props changed:
-        {changeDescription.props.map(key => (
+        {props.map(key => (
           <span key={key} className={styles.WhatChangedKey}>
             {key}
           </span>
@@ -188,14 +202,11 @@ function WhatChanged({
     );
   }
 
-  if (
-    changeDescription.state !== null &&
-    changeDescription.state.length !== 0
-  ) {
+  if (state !== null && state.length !== 0) {
     changes.push(
       <div key="state" className={styles.WhatChangedItem}>
         • State changed:
-        {changeDescription.state.map(key => (
+        {state.map(key => (
           <span key={key} className={styles.WhatChangedKey}>
             {key}
           </span>

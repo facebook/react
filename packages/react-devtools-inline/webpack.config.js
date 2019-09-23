@@ -36,6 +36,12 @@ module.exports = {
     'react-dom': 'react-dom',
     'react-is': 'react-is',
     scheduler: 'scheduler',
+
+    // Feature flags used for early testing features within FB hosted version of extension:
+    'react-devtools-shared/src/config/DevToolsFeatureFlags': resolve(
+      __dirname,
+      '../react-devtools-shared/src/config/DevToolsFeatureFlags.oss',
+    ),
   },
   plugins: [
     new DefinePlugin({
