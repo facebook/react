@@ -116,35 +116,35 @@ describe('ReactFocusTable', () => {
       const a1 = createEventTarget(buttons[0]);
       a1.focus();
       a1.keydown({
-        key: 'RightArrow',
+        key: 'ArrowRight',
       });
       expect(document.activeElement.textContent).toBe('A2');
 
       const a2 = createEventTarget(document.activeElement);
       a2.keydown({
-        key: 'DownArrow',
+        key: 'ArrowDown',
       });
       expect(document.activeElement.textContent).toBe('B2');
 
       const b2 = createEventTarget(document.activeElement);
       b2.keydown({
-        key: 'LeftArrow',
+        key: 'ArrowLeft',
       });
       expect(document.activeElement.textContent).toBe('B1');
 
       const b1 = createEventTarget(document.activeElement);
       b1.keydown({
-        key: 'DownArrow',
+        key: 'ArrowDown',
       });
       expect(document.activeElement.textContent).toBe('C1');
 
       const c1 = createEventTarget(document.activeElement);
       c1.keydown({
-        key: 'DownArrow',
+        key: 'ArrowDown',
       });
       expect(document.activeElement.textContent).toBe('C1');
       c1.keydown({
-        key: 'UpArrow',
+        key: 'ArrowUp',
       });
       expect(document.activeElement.textContent).toBe('B1');
     });
@@ -201,55 +201,55 @@ describe('ReactFocusTable', () => {
       let a1 = createEventTarget(buttons[0]);
       a1.focus();
       a1.keydown({
-        key: 'RightArrow',
+        key: 'ArrowRight',
       });
       expect(document.activeElement.textContent).toBe('A2');
 
       let a2 = createEventTarget(document.activeElement);
       a2.keydown({
-        key: 'RightArrow',
+        key: 'ArrowRight',
       });
       expect(document.activeElement.textContent).toBe('A3');
 
       let a3 = createEventTarget(document.activeElement);
       a3.keydown({
-        key: 'RightArrow',
+        key: 'ArrowRight',
       });
       expect(document.activeElement.textContent).toBe('A1');
 
       a1 = createEventTarget(document.activeElement);
       a1.keydown({
-        key: 'RightArrow',
+        key: 'ArrowRight',
       });
       expect(document.activeElement.textContent).toBe('A2');
 
       a2 = createEventTarget(document.activeElement);
       a2.keydown({
-        key: 'RightArrow',
+        key: 'ArrowRight',
       });
       expect(document.activeElement.textContent).toBe('A3');
 
       a3 = createEventTarget(document.activeElement);
       a3.keydown({
-        key: 'RightArrow',
+        key: 'ArrowRight',
       });
       expect(document.activeElement.textContent).toBe('A1');
 
       a1 = createEventTarget(document.activeElement);
       a1.keydown({
-        key: 'RightArrow',
+        key: 'ArrowRight',
       });
       expect(document.activeElement.textContent).toBe('A2');
 
       a2 = createEventTarget(document.activeElement);
       a2.keydown({
-        key: 'RightArrow',
+        key: 'ArrowRight',
       });
       expect(document.activeElement.textContent).toBe('A3');
 
       a3 = createEventTarget(document.activeElement);
       a3.keydown({
-        key: 'RightArrow',
+        key: 'ArrowRight',
       });
       expect(document.activeElement.textContent).toBe('A3');
     });
