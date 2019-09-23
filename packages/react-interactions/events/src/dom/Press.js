@@ -12,6 +12,7 @@ import type {PointerType} from 'shared/ReactDOMTypes';
 import React from 'react';
 import {useTap} from 'react-interactions/events/tap';
 import {useKeyboard} from 'react-interactions/events/keyboard';
+import warning from 'shared/warning';
 
 const emptyObject = {};
 
@@ -48,6 +49,8 @@ type PressEvent = {|
   type: PressEventType,
   x: number,
   y: number,
+  preventDefault: () => void,
+  stopPropagation: () => void,
 |};
 
 function createGestureState(e: any, type: PressEventType): PressEvent {
@@ -67,6 +70,26 @@ function createGestureState(e: any, type: PressEventType): PressEvent {
     type,
     x: e.x,
     y: e.y,
+    preventDefault() {
+      // NO-OP, we should remove this in the future
+      if (__DEV__) {
+        warning(
+          false,
+          'preventDefault is not available on event objects created from event responder modules (React Flare). ' +
+            'Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.preventDefault() }`',
+        );
+      }
+    },
+    stopPropagation() {
+      // NO-OP, we should remove this in the future
+      if (__DEV__) {
+        warning(
+          false,
+          'stopPropagation is not available on event objects created from event responder modules (React Flare). ' +
+            'Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.stopPropagation() }`',
+        );
+      }
+    },
   };
 }
 
