@@ -62,10 +62,10 @@ function focusCell(cell: ReactScopeMethods): void {
   }
 }
 
-function focusCellByRowIndex(row: ReactScopeMethods, rowIndex: number): void {
+function focusCellByIndex(row: ReactScopeMethods, cellIndex: number): void {
   const cells = row.getChildren();
   if (cells !== null) {
-    const cell = cells[rowIndex];
+    const cell = cells[cellIndex];
     if (cell) {
       focusCell(cell);
     }
@@ -150,14 +150,15 @@ export function createFocusTable(): Array<React.Component> {
         const currentCell = scopeRef.current;
         switch (event.key) {
           case 'ArrowUp': {
-            const [cells, rowIndex] = getRowCells(currentCell);
+            const [cells, cellIndex] = getRowCells(currentCell);
             if (cells !== null) {
-              const [columns, columnIndex] = getRows(currentCell);
-              if (columns !== null) {
-                if (columnIndex > 0) {
-                  const column = columns[columnIndex - 1];
-                  focusCellByRowIndex(column, rowIndex);
-                } else if (columnIndex === 0) {
+              const [rows, rowIndex] = getRows(currentCell);
+              if (rows !== null) {
+                if (rowIndex > 0) {
+                  const row = rows[rowIndex - 1];
+                  focusCellByIndex(row, cellIndex);
+                  event.preventDefault();
+                } else if (rowIndex === 0) {
                   triggerNavigateOut(currentCell, 'up');
                 }
               }
@@ -165,16 +166,17 @@ export function createFocusTable(): Array<React.Component> {
             return;
           }
           case 'ArrowDown': {
-            const [cells, rowIndex] = getRowCells(currentCell);
+            const [cells, cellIndex] = getRowCells(currentCell);
             if (cells !== null) {
-              const [columns, columnIndex] = getRows(currentCell);
-              if (columns !== null) {
-                if (columnIndex !== -1) {
-                  if (columnIndex === columns.length - 1) {
+              const [rows, rowIndex] = getRows(currentCell);
+              if (rows !== null) {
+                if (rowIndex !== -1) {
+                  if (rowIndex === rows.length - 1) {
                     triggerNavigateOut(currentCell, 'down');
                   } else {
-                    const column = columns[columnIndex + 1];
-                    focusCellByRowIndex(column, rowIndex);
+                    const row = rows[rowIndex + 1];
+                    focusCellByIndex(row, cellIndex);
+                    event.preventDefault();
                   }
                 }
               }
@@ -186,6 +188,7 @@ export function createFocusTable(): Array<React.Component> {
             if (cells !== null) {
               if (rowIndex > 0) {
                 focusCell(cells[rowIndex - 1]);
+                event.preventDefault();
               } else if (rowIndex === 0) {
                 triggerNavigateOut(currentCell, 'left');
               }
@@ -200,6 +203,7 @@ export function createFocusTable(): Array<React.Component> {
                   triggerNavigateOut(currentCell, 'right');
                 } else {
                   focusCell(cells[rowIndex + 1]);
+                  event.preventDefault();
                 }
               }
             }
