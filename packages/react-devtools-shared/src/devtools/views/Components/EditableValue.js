@@ -17,7 +17,6 @@ type OverrideValueFn = (path: Array<string | number>, value: any) => void;
 
 type EditableValueProps = {|
   className?: string,
-  dataType: string,
   initialValue: any,
   overrideValueFn: OverrideValueFn,
   path: Array<string | number>,
@@ -25,7 +24,6 @@ type EditableValueProps = {|
 
 export default function EditableValue({
   className = '',
-  dataType,
   initialValue,
   overrideValueFn,
   path,
