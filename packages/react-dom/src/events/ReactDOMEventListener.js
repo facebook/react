@@ -9,6 +9,8 @@
 
 import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
+import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
+import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
 import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 
 // Intentionally not named imports because Rollup would use dynamic dispatch for
@@ -21,9 +23,25 @@ import {
   flushDiscreteUpdatesIfNeeded,
 } from 'legacy-events/ReactGenericBatching';
 import {runExtractedPluginEventsInBatch} from 'legacy-events/EventPluginHub';
-import {dispatchEventForResponderEventSystem} from '../events/DOMEventResponderSystem';
-import {isFiberMounted} from 'react-reconciler/reflection';
-import {HostRoot} from 'shared/ReactWorkTags';
+import {dispatchEventForResponderEventSystem} from './DOMEventResponderSystem';
+import {
+  isReplayableDiscreteEvent,
+  queueDiscreteEvent,
+  hasQueuedDiscreteEvents,
+  clearIfContinuousEvent,
+  queueIfContinuousEvent,
+} from './ReactDOMEventReplaying';
+import {
+  getNearestMountedFiber,
+  getContainerFromFiber,
+  getSuspenseInstanceFromFiber,
+} from 'react-reconciler/reflection';
+import {
+  HostRoot,
+  SuspenseComponent,
+  HostComponent,
+  HostText,
+} from 'shared/ReactWorkTags';
 import {
   type EventSystemFlags,
   PLUGIN_EVENT_SYSTEM,
@@ -64,12 +82,13 @@ const {getEventPriority} = SimpleEventPlugin;
 const CALLBACK_BOOKKEEPING_POOL_SIZE = 10;
 const callbackBookkeepingPool = [];
 
-type BookKeepingInstance = {
+type BookKeepingInstance = {|
   topLevelType: DOMTopLevelEventType | null,
+  eventSystemFlags: EventSystemFlags,
   nativeEvent: AnyNativeEvent | null,
   targetInst: Fiber | null,
   ancestors: Array<Fiber | null>,
-};
+|};
 
 /**
  * Find the deepest React component completely containing the root of the
@@ -77,6 +96,9 @@ type BookKeepingInstance = {
  * other). If React trees are not nested, returns null.
  */
 function findRootContainerNode(inst) {
+  if (inst.tag === HostRoot) {
+    return inst.stateNode.containerInfo;
+  }
   // TODO: It may be a good idea to cache this to prevent unnecessary DOM
   // traversal, but caching is difficult to do correctly without using a
   // mutation observer to listen for all DOM changes.
@@ -95,16 +117,19 @@ function getTopLevelCallbackBookKeeping(
   topLevelType: DOMTopLevelEventType,
   nativeEvent: AnyNativeEvent,
   targetInst: Fiber | null,
+  eventSystemFlags: EventSystemFlags,
 ): BookKeepingInstance {
   if (callbackBookkeepingPool.length) {
     const instance = callbackBookkeepingPool.pop();
     instance.topLevelType = topLevelType;
+    instance.eventSystemFlags = eventSystemFlags;
     instance.nativeEvent = nativeEvent;
     instance.targetInst = targetInst;
     return instance;
   }
   return {
     topLevelType,
+    eventSystemFlags,
     nativeEvent,
     targetInst,
     ancestors: [],
@@ -141,7 +166,10 @@ function handleTopLevel(bookKeeping: BookKeepingInstance) {
     if (!root) {
       break;
     }
-    bookKeeping.ancestors.push(ancestor);
+    const tag = ancestor.tag;
+    if (tag === HostComponent || tag === HostText) {
+      bookKeeping.ancestors.push(ancestor);
+    }
     ancestor = getClosestInstanceFromNode(root);
   } while (ancestor);
 
@@ -153,6 +181,7 @@ function handleTopLevel(bookKeeping: BookKeepingInstance) {
 
     runExtractedPluginEventsInBatch(
       topLevelType,
+      bookKeeping.eventSystemFlags,
       targetInst,
       nativeEvent,
       eventTarget,
@@ -289,6 +318,7 @@ function dispatchEventForPluginEventSystem(
     topLevelType,
     nativeEvent,
     targetInst,
+    eventSystemFlags,
   );
 
   try {
@@ -308,30 +338,142 @@ export function dispatchEvent(
   if (!_enabled) {
     return;
   }
+  if (hasQueuedDiscreteEvents() && isReplayableDiscreteEvent(topLevelType)) {
+    // If we already have a queue of discrete events, and this is another discrete
+    // event, then we can't dispatch it regardless of its target, since they
+    // need to dispatch in order.
+    queueDiscreteEvent(
+      null, // Flags that we're not actually blocked on anything as far as we know.
+      topLevelType,
+      eventSystemFlags,
+      nativeEvent,
+    );
+    return;
+  }
+
+  const blockedOn = attemptToDispatchEvent(
+    topLevelType,
+    eventSystemFlags,
+    nativeEvent,
+  );
+
+  if (blockedOn === null) {
+    // We successfully dispatched this event.
+    clearIfContinuousEvent(topLevelType, nativeEvent);
+    return;
+  }
+
+  if (isReplayableDiscreteEvent(topLevelType)) {
+    // This this to be replayed later once the target is available.
+    queueDiscreteEvent(blockedOn, topLevelType, eventSystemFlags, nativeEvent);
+    return;
+  }
+
+  if (
+    queueIfContinuousEvent(
+      blockedOn,
+      topLevelType,
+      eventSystemFlags,
+      nativeEvent,
+    )
+  ) {
+    return;
+  }
+
+  // We need to clear only if we didn't queue because
+  // queueing is accummulative.
+  clearIfContinuousEvent(topLevelType, nativeEvent);
+
+  // This is not replayable so we'll invoke it but without a target,
+  // in case the event system needs to trace it.
+  if (enableFlareAPI) {
+    if (eventSystemFlags & PLUGIN_EVENT_SYSTEM) {
+      dispatchEventForPluginEventSystem(
+        topLevelType,
+        eventSystemFlags,
+        nativeEvent,
+        null,
+      );
+    }
+    if (eventSystemFlags & RESPONDER_EVENT_SYSTEM) {
+      // React Flare event system
+      dispatchEventForResponderEventSystem(
+        (topLevelType: any),
+        null,
+        nativeEvent,
+        getEventTarget(nativeEvent),
+        eventSystemFlags,
+      );
+    }
+  } else {
+    dispatchEventForPluginEventSystem(
+      topLevelType,
+      eventSystemFlags,
+      nativeEvent,
+      null,
+    );
+  }
+}
+
+// Attempt dispatching an event. Returns a SuspenseInstance or Container if it's blocked.
+export function attemptToDispatchEvent(
+  topLevelType: DOMTopLevelEventType,
+  eventSystemFlags: EventSystemFlags,
+  nativeEvent: AnyNativeEvent,
+): null | Container | SuspenseInstance {
+  // TODO: Warn if _enabled is false.
+
   const nativeEventTarget = getEventTarget(nativeEvent);
   let targetInst = getClosestInstanceFromNode(nativeEventTarget);
 
-  if (
-    targetInst !== null &&
-    typeof targetInst.tag === 'number' &&
-    !isFiberMounted(targetInst)
-  ) {
-    // If we get an event (ex: img onload) before committing that
-    // component's mount, ignore it for now (that is, treat it as if it was an
-    // event on a non-React tree). We might also consider queueing events and
-    // dispatching them after the mount.
-    targetInst = null;
+  if (targetInst !== null) {
+    let nearestMounted = getNearestMountedFiber(targetInst);
+    if (nearestMounted === null) {
+      // This tree has been unmounted already. Dispatch without a target.
+      targetInst = null;
+    } else {
+      const tag = nearestMounted.tag;
+      if (tag === SuspenseComponent) {
+        let instance = getSuspenseInstanceFromFiber(nearestMounted);
+        if (instance !== null) {
+          // Queue the event to be replayed later. Abort dispatching since we
+          // don't want this event dispatched twice through the event system.
+          // TODO: If this is the first discrete event in the queue. Schedule an increased
+          // priority for this boundary.
+          return instance;
+        }
+        // This shouldn't happen, something went wrong but to avoid blocking
+        // the whole system, dispatch the event without a target.
+        // TODO: Warn.
+        targetInst = null;
+      } else if (tag === HostRoot) {
+        const root: FiberRoot = nearestMounted.stateNode;
+        if (root.hydrate) {
+          // If this happens during a replay something went wrong and it might block
+          // the whole system.
+          return getContainerFromFiber(nearestMounted);
+        }
+        targetInst = null;
+      } else if (nearestMounted !== targetInst) {
+        // If we get an event (ex: img onload) before committing that
+        // component's mount, ignore it for now (that is, treat it as if it was an
+        // event on a non-React tree). We might also consider queueing events and
+        // dispatching them after the mount.
+        targetInst = null;
+      }
+    }
   }
 
   if (enableFlareAPI) {
-    if (eventSystemFlags === PLUGIN_EVENT_SYSTEM) {
+    if (eventSystemFlags & PLUGIN_EVENT_SYSTEM) {
       dispatchEventForPluginEventSystem(
         topLevelType,
         eventSystemFlags,
         nativeEvent,
         targetInst,
       );
-    } else {
+    }
+    if (eventSystemFlags & RESPONDER_EVENT_SYSTEM) {
       // React Flare event system
       dispatchEventForResponderEventSystem(
         (topLevelType: any),
@@ -349,4 +491,6 @@ export function dispatchEvent(
       targetInst,
     );
   }
+  // We're not blocked on anything.
+  return null;
 }

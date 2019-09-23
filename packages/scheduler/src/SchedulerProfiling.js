@@ -44,7 +44,9 @@ if (enableProfiling) {
   profilingState[CURRENT_TASK_ID] = 0;
 }
 
-const INITIAL_EVENT_LOG_SIZE = 1000;
+// Bytes per element is 4
+const INITIAL_EVENT_LOG_SIZE = 131072;
+const MAX_EVENT_LOG_SIZE = 524288; // Equivalent to 2 megabytes
 
 let eventLogSize = 0;
 let eventLogBuffer = null;
@@ -65,10 +67,16 @@ function logEvent(entries) {
     const offset = eventLogIndex;
     eventLogIndex += entries.length;
     if (eventLogIndex + 1 > eventLogSize) {
-      eventLogSize = eventLogIndex + 1;
-      const newEventLog = new Int32Array(
-        eventLogSize * Int32Array.BYTES_PER_ELEMENT,
-      );
+      eventLogSize *= 2;
+      if (eventLogSize > MAX_EVENT_LOG_SIZE) {
+        console.error(
+          "Scheduler Profiling: Event log exceeded maximum size. Don't " +
+            'forget to call `stopLoggingProfilingEvents()`.',
+        );
+        stopLoggingProfilingEvents();
+        return;
+      }
+      const newEventLog = new Int32Array(eventLogSize * 4);
       newEventLog.set(eventLog);
       eventLogBuffer = newEventLog.buffer;
       eventLog = newEventLog;
@@ -79,14 +87,17 @@ function logEvent(entries) {
 
 export function startLoggingProfilingEvents(): void {
   eventLogSize = INITIAL_EVENT_LOG_SIZE;
-  eventLogBuffer = new ArrayBuffer(eventLogSize * Int32Array.BYTES_PER_ELEMENT);
+  eventLogBuffer = new ArrayBuffer(eventLogSize * 4);
   eventLog = new Int32Array(eventLogBuffer);
   eventLogIndex = 0;
 }
 
 export function stopLoggingProfilingEvents(): ArrayBuffer | null {
   const buffer = eventLogBuffer;
-  eventLogBuffer = eventLog = null;
+  eventLogSize = 0;
+  eventLogBuffer = null;
+  eventLog = null;
+  eventLogIndex = 0;
   return buffer;
 }
 

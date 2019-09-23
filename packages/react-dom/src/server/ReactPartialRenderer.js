@@ -32,6 +32,7 @@ import {
   enableSuspenseServerRenderer,
   enableFundamentalAPI,
   enableFlareAPI,
+  enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -48,6 +49,7 @@ import {
   REACT_LAZY_TYPE,
   REACT_MEMO_TYPE,
   REACT_FUNDAMENTAL_TYPE,
+  REACT_SCOPE_TYPE,
 } from 'shared/ReactSymbols';
 
 import {
@@ -1284,6 +1286,31 @@ class ReactDOMServerRenderer {
                   'ReactDOMServer does not yet support lazy-loaded components.',
                 );
             }
+          }
+          // eslint-disable-next-line-no-fallthrough
+          case REACT_SCOPE_TYPE: {
+            if (enableScopeAPI) {
+              const nextChildren = toArray(
+                ((nextChild: any): ReactElement).props.children,
+              );
+              const frame: Frame = {
+                type: null,
+                domNamespace: parentNamespace,
+                children: nextChildren,
+                childIndex: 0,
+                context: context,
+                footer: '',
+              };
+              if (__DEV__) {
+                ((frame: any): FrameDev).debugElementStack = [];
+              }
+              this.stack.push(frame);
+              return '';
+            }
+            invariant(
+              false,
+              'ReactDOMServer does not yet support scope components.',
+            );
           }
         }
       }

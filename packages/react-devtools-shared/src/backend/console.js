@@ -47,7 +47,7 @@ export function dangerous_setTargetConsoleForTesting(
 
 // v16 renderers should use this method to inject internals necessary to generate a component stack.
 // These internals will be used if the console is patched.
-// Injecting them separately allows the console to easily be patched or unpacted later (at runtime).
+// Injecting them separately allows the console to easily be patched or un-patched later (at runtime).
 export function registerRenderer(renderer: ReactRenderer): void {
   const {getCurrentFiber, findFiberByHostInstance, version} = renderer;
 

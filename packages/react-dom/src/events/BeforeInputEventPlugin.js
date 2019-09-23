@@ -464,6 +464,7 @@ const BeforeInputEventPlugin = {
 
   extractEvents: function(
     topLevelType,
+    eventSystemFlags,
     targetInst,
     nativeEvent,
     nativeEventTarget,

@@ -13,6 +13,7 @@ import type {
   ReactSyntheticEvent,
 } from './ReactSyntheticEventType';
 import type {TopLevelType} from './TopLevelEventTypes';
+import type {EventSystemFlags} from 'legacy-events/EventSystemFlags';
 
 export type EventTypes = {[key: string]: DispatchConfig};
 
@@ -24,6 +25,7 @@ export type PluginModule<NativeEvent> = {
   eventTypes: EventTypes,
   extractEvents: (
     topLevelType: TopLevelType,
+    eventSystemFlags: EventSystemFlags,
     targetInst: null | Fiber,
     nativeTarget: NativeEvent,
     nativeEventTarget: EventTarget,

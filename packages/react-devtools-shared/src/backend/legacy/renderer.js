@@ -753,6 +753,9 @@ export function attach(
       // Can view component source location.
       canViewSource: type === ElementTypeClass || type === ElementTypeFunction,
 
+      // Only legacy context exists in legacy versions.
+      hasLegacyContext: true,
+
       displayName: displayName,
 
       type: type,

@@ -13,6 +13,8 @@
 .*/__mocks__/.*
 .*/__tests__/.*
 
+%REACT_RENDERER_FLOW_IGNORES%
+
 [include]
 ../../../node_modules/
 ../../../packages/

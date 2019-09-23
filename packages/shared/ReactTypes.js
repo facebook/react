@@ -85,7 +85,6 @@ export type ReactEventResponderInstance<E, C> = {|
   responder: ReactEventResponder<E, C>,
   rootEventTypes: null | Set<string>,
   state: Object,
-  target: mixed,
 |};
 
 export type ReactEventResponderListener<E, C> = {|
@@ -167,7 +166,9 @@ export type ReactScope = {|
 
 export type ReactScopeMethods = {|
   getChildren(): null | Array<ReactScopeMethods>,
+  getChildrenFromRoot(): null | Array<ReactScopeMethods>,
   getParent(): null | ReactScopeMethods,
+  getProps(): Object,
   getScopedNodes(): null | Array<Object>,
 |};
 

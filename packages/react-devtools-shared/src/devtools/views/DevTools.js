@@ -8,7 +8,7 @@
  */
 
 // Reach styles need to come before any component styles.
-// This makes overridding the styles simpler.
+// This makes overriding the styles simpler.
 import '@reach/menu-button/styles.css';
 import '@reach/tooltip/styles.css';
 
@@ -25,7 +25,6 @@ import {ProfilerContextController} from './Profiler/ProfilerContext';
 import {ModalDialogContextController} from './ModalDialog';
 import ReactLogo from './ReactLogo';
 import WarnIfLegacyBackendDetected from './WarnIfLegacyBackendDetected';
-import ShowWelcomeToTheNewDevToolsDialog from './ShowWelcomeToTheNewDevToolsDialog';
 
 import styles from './DevTools.css';
 
@@ -50,7 +49,6 @@ export type Props = {|
   canViewElementSourceFunction?: ?CanViewElementSource,
   defaultTab?: TabID,
   showTabBar?: boolean,
-  showWelcomeToTheNewDevToolsDialog?: boolean,
   store: Store,
   warnIfLegacyBackendDetected?: boolean,
   viewElementSourceFunction?: ?ViewElementSource,
@@ -92,7 +90,6 @@ export default function DevTools({
   overrideTab,
   profilerPortalContainer,
   showTabBar = false,
-  showWelcomeToTheNewDevToolsDialog = false,
   store,
   warnIfLegacyBackendDetected = false,
   viewElementSourceFunction,
@@ -167,9 +164,6 @@ export default function DevTools({
             </ViewElementSourceContext.Provider>
           </SettingsContextController>
           {warnIfLegacyBackendDetected && <WarnIfLegacyBackendDetected />}
-          {showWelcomeToTheNewDevToolsDialog && (
-            <ShowWelcomeToTheNewDevToolsDialog />
-          )}
         </ModalDialogContextController>
       </StoreContext.Provider>
     </BridgeContext.Provider>

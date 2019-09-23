@@ -191,7 +191,6 @@ export type ReactFaricEvent = {
 
 export type ReactNativeResponderEvent = {
   nativeEvent: ReactFaricEvent,
-  responderTarget: null | ReactNativeEventTarget,
   target: null | ReactNativeEventTarget,
   type: string,
 };
@@ -220,6 +219,7 @@ export type ReactNativeResponderContext = {
   setTimeout: (func: () => void, timeout: number) => number,
   clearTimeout: (timerId: number) => void,
   getTimeStamp: () => number,
+  getResponderNode(): ReactNativeEventTarget | null,
 };
 
 export type PointerType =

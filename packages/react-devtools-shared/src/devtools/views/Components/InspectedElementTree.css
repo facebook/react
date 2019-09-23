@@ -46,3 +46,14 @@
   font-style: italic;
   padding-left: 0.75rem;
 }
+
+.AddEntry {
+  padding-left: 1rem;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+}
+
+.EditableValue {
+  min-width: 1rem;
+}

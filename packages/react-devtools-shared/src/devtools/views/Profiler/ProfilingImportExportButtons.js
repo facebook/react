@@ -29,6 +29,7 @@ export default function ProfilingImportExportButtons() {
   const {profilerStore} = store;
 
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const downloadRef = useRef<HTMLAnchorElement | null>(null);
 
   const {dispatch: modalDialogDispatch} = useContext(ModalDialogContext);
 
@@ -38,7 +39,7 @@ export default function ProfilingImportExportButtons() {
         return;
       }
 
-      if (profilingData !== null) {
+      if (profilingData !== null && downloadRef.current !== null) {
         const profilingDataExport = prepareProfilingDataExport(profilingData);
         const date = new Date();
         const dateString = date
@@ -54,6 +55,7 @@ export default function ProfilingImportExportButtons() {
           })
           .replace(/:/g, '-');
         downloadFile(
+          downloadRef.current,
           `profiling-data.${dateString}.${timeString}.json`,
           JSON.stringify(profilingDataExport, null, 2),
         );
@@ -114,6 +116,7 @@ export default function ProfilingImportExportButtons() {
         onChange={handleFiles}
         tabIndex={-1}
       />
+      <a ref={downloadRef} className={styles.Input} />
       <Button
         disabled={isProfiling}
         onClick={uploadData}

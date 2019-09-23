@@ -839,30 +839,6 @@ describe('DOMEventResponderSystem', () => {
     };
     expect(() => {
       handler = event => {
-        event.preventDefault();
-      };
-      ReactDOM.render(<Test />, container);
-      dispatchClickEvent(buttonRef.current);
-    }).toWarnDev(
-      'Warning: preventDefault() is not available on event objects created from event responder modules ' +
-        '(React Flare).' +
-        ' Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.preventDefault() }`',
-      {withoutStack: true},
-    );
-    expect(() => {
-      handler = event => {
-        event.stopPropagation();
-      };
-      ReactDOM.render(<Test />, container);
-      dispatchClickEvent(buttonRef.current);
-    }).toWarnDev(
-      'Warning: stopPropagation() is not available on event objects created from event responder modules ' +
-        '(React Flare).' +
-        ' Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.stopPropagation() }`',
-      {withoutStack: true},
-    );
-    expect(() => {
-      handler = event => {
         event.isDefaultPrevented();
       };
       ReactDOM.render(<Test />, container);
@@ -1017,7 +993,7 @@ describe('DOMEventResponderSystem', () => {
         const obj = {
           counter,
           timeStamp: context.getTimeStamp(),
-          target: event.responderTarget,
+          target: context.getResponderNode(),
           type: 'click-test',
         };
         context.dispatchEvent(obj, props.onClick, DiscreteEvent);

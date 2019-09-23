@@ -52,6 +52,7 @@ import {
   mountEventResponder,
   unmountEventResponder,
 } from '../events/DOMEventResponderSystem';
+import {retryIfBlockedOn} from '../events/ReactDOMEventReplaying';
 
 export type Type = string;
 export type Props = {
@@ -477,6 +478,8 @@ export function clearSuspenseBoundary(
       if (data === SUSPENSE_END_DATA) {
         if (depth === 0) {
           parentInstance.removeChild(nextNode);
+          // Retry if any event replaying was blocked on this.
+          retryIfBlockedOn(suspenseInstance);
           return;
         } else {
           depth--;
@@ -492,6 +495,8 @@ export function clearSuspenseBoundary(
     node = nextNode;
   } while (node);
   // TODO: Warn, we didn't find the end comment boundary.
+  // Retry if any event replaying was blocked on this.
+  retryIfBlockedOn(suspenseInstance);
 }
 
 export function clearSuspenseBoundaryFromContainer(
@@ -505,6 +510,8 @@ export function clearSuspenseBoundaryFromContainer(
   } else {
     // Document nodes should never contain suspense boundaries.
   }
+  // Retry if any event replaying was blocked on this.
+  retryIfBlockedOn(container);
 }
 
 export function hideInstance(instance: Instance): void {
@@ -673,6 +680,13 @@ export function hydrateTextInstance(
   return diffHydratedText(textInstance, text);
 }
 
+export function hydrateSuspenseInstance(
+  suspenseInstance: SuspenseInstance,
+  internalInstanceHandle: Object,
+) {
+  precacheFiberNode(internalInstanceHandle, suspenseInstance);
+}
+
 export function getNextHydratableInstanceAfterSuspenseInstance(
   suspenseInstance: SuspenseInstance,
 ): null | HydratableInstance {
@@ -702,6 +716,51 @@ export function getNextHydratableInstanceAfterSuspenseInstance(
   }
   // TODO: Warn, we didn't find the end comment boundary.
   return null;
+}
+
+// Returns the SuspenseInstance if this node is a direct child of a
+// SuspenseInstance. I.e. if its previous sibling is a Comment with
+// SUSPENSE_x_START_DATA. Otherwise, null.
+export function getParentSuspenseInstance(
+  targetInstance: Instance,
+): null | SuspenseInstance {
+  let node = targetInstance.previousSibling;
+  // Skip past all nodes within this suspense boundary.
+  // There might be nested nodes so we need to keep track of how
+  // deep we are and only break out when we're back on top.
+  let depth = 0;
+  while (node) {
+    if (node.nodeType === COMMENT_NODE) {
+      let data = ((node: any).data: string);
+      if (
+        data === SUSPENSE_START_DATA ||
+        data === SUSPENSE_FALLBACK_START_DATA ||
+        data === SUSPENSE_PENDING_START_DATA
+      ) {
+        if (depth === 0) {
+          return ((node: any): SuspenseInstance);
+        } else {
+          depth--;
+        }
+      } else if (data === SUSPENSE_END_DATA) {
+        depth++;
+      }
+    }
+    node = node.previousSibling;
+  }
+  return null;
+}
+
+export function commitHydratedContainer(container: Container): void {
+  // Retry if any event replaying was blocked on this.
+  retryIfBlockedOn(container);
+}
+
+export function commitHydratedSuspenseInstance(
+  suspenseInstance: SuspenseInstance,
+): void {
+  // Retry if any event replaying was blocked on this.
+  retryIfBlockedOn(suspenseInstance);
 }
 
 export function didNotMatchHydratedContainerTextInstance(
@@ -827,17 +886,16 @@ export function mountResponderInstance(
 ): ReactDOMEventResponderInstance {
   // Listen to events
   const doc = instance.ownerDocument;
-  const documentBody = doc.body || doc;
   const {
     rootEventTypes,
     targetEventTypes,
   } = ((responder: any): ReactDOMEventResponder);
   if (targetEventTypes !== null) {
-    listenToEventResponderEventTypes(targetEventTypes, documentBody);
+    listenToEventResponderEventTypes(targetEventTypes, doc);
   }
   if (rootEventTypes !== null) {
     addRootEventTypesForResponderInstance(responderInstance, rootEventTypes);
-    listenToEventResponderEventTypes(rootEventTypes, documentBody);
+    listenToEventResponderEventTypes(rootEventTypes, doc);
   }
   mountEventResponder(
     responder,

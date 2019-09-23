@@ -81,6 +81,7 @@ import {
   getPublicInstance,
   supportsMutation,
   supportsPersistence,
+  supportsHydration,
   commitMount,
   commitUpdate,
   resetTextContent,
@@ -102,6 +103,8 @@ import {
   unmountResponderInstance,
   unmountFundamentalComponent,
   updateFundamentalComponent,
+  commitHydratedContainer,
+  commitHydratedSuspenseInstance,
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
@@ -611,9 +614,7 @@ function commitLifeCycles(
       return;
     }
     case SuspenseComponent: {
-      if (enableSuspenseCallback) {
-        commitSuspenseHydrationCallbacks(finishedRoot, finishedWork);
-      }
+      commitSuspenseHydrationCallbacks(finishedRoot, finishedWork);
       return;
     }
     case SuspenseListComponent:
@@ -842,6 +843,12 @@ function commitUnmount(
           }
         }
       }
+      return;
+    }
+    case ScopeComponent: {
+      if (enableScopeAPI) {
+        safelyDetachRef(current);
+      }
     }
   }
 }
@@ -886,6 +893,7 @@ function commitNestedUnmounts(
 }
 
 function detachFiber(current: Fiber) {
+  const alternate = current.alternate;
   // Cut off the return pointers to disconnect it from the tree. Ideally, we
   // should clear the child pointer of the parent alternate to let this
   // get GC:ed but we don't know which for sure which parent is the current
@@ -896,13 +904,13 @@ function detachFiber(current: Fiber) {
   current.memoizedState = null;
   current.updateQueue = null;
   current.dependencies = null;
-  const alternate = current.alternate;
+  current.alternate = null;
+  current.firstEffect = null;
+  current.lastEffect = null;
+  current.pendingProps = null;
+  current.memoizedProps = null;
   if (alternate !== null) {
-    alternate.return = null;
-    alternate.child = null;
-    alternate.memoizedState = null;
-    alternate.updateQueue = null;
-    alternate.dependencies = null;
+    detachFiber(alternate);
   }
 }
 
@@ -1297,6 +1305,17 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
         attachSuspenseRetryListeners(finishedWork);
         return;
       }
+      case HostRoot: {
+        if (supportsHydration) {
+          const root: FiberRoot = finishedWork.stateNode;
+          if (root.hydrate) {
+            // We've just hydrated. No need to hydrate again.
+            root.hydrate = false;
+            commitHydratedContainer(root.containerInfo);
+          }
+        }
+        break;
+      }
     }
 
     commitContainer(finishedWork);
@@ -1343,7 +1362,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
           const prevListeners = oldProps.listeners;
           const nextListeners = newProps.listeners;
           if (prevListeners !== nextListeners) {
-            updateEventListeners(nextListeners, instance, finishedWork);
+            updateEventListeners(nextListeners, finishedWork, null);
           }
         }
       }
@@ -1366,6 +1385,14 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       return;
     }
     case HostRoot: {
+      if (supportsHydration) {
+        const root: FiberRoot = finishedWork.stateNode;
+        if (root.hydrate) {
+          // We've just hydrated. No need to hydrate again.
+          root.hydrate = false;
+          commitHydratedContainer(root.containerInfo);
+        }
+      }
       return;
     }
     case Profiler: {
@@ -1394,6 +1421,15 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       if (enableScopeAPI) {
         const scopeInstance = finishedWork.stateNode;
         scopeInstance.fiber = finishedWork;
+        if (enableFlareAPI) {
+          const newProps = finishedWork.memoizedProps;
+          const oldProps = current !== null ? current.memoizedProps : newProps;
+          const prevListeners = oldProps.listeners;
+          const nextListeners = newProps.listeners;
+          if (prevListeners !== nextListeners) {
+            updateEventListeners(nextListeners, finishedWork, null);
+          }
+        }
       }
       return;
     }
@@ -1443,18 +1479,25 @@ function commitSuspenseHydrationCallbacks(
   finishedRoot: FiberRoot,
   finishedWork: Fiber,
 ) {
-  if (enableSuspenseCallback) {
-    const hydrationCallbacks = finishedRoot.hydrationCallbacks;
-    if (hydrationCallbacks !== null) {
-      const onHydrated = hydrationCallbacks.onHydrated;
-      if (onHydrated) {
-        const newState: SuspenseState | null = finishedWork.memoizedState;
-        if (newState === null) {
-          const current = finishedWork.alternate;
-          if (current !== null) {
-            const prevState: SuspenseState | null = current.memoizedState;
-            if (prevState !== null && prevState.dehydrated !== null) {
-              onHydrated(prevState.dehydrated);
+  if (!supportsHydration) {
+    return;
+  }
+  const newState: SuspenseState | null = finishedWork.memoizedState;
+  if (newState === null) {
+    const current = finishedWork.alternate;
+    if (current !== null) {
+      const prevState: SuspenseState | null = current.memoizedState;
+      if (prevState !== null) {
+        const suspenseInstance = prevState.dehydrated;
+        if (suspenseInstance !== null) {
+          commitHydratedSuspenseInstance(suspenseInstance);
+          if (enableSuspenseCallback) {
+            const hydrationCallbacks = finishedRoot.hydrationCallbacks;
+            if (hydrationCallbacks !== null) {
+              const onHydrated = hydrationCallbacks.onHydrated;
+              if (onHydrated) {
+                onHydrated(suspenseInstance);
+              }
             }
           }
         }
@@ -1479,7 +1522,9 @@ function attachSuspenseRetryListeners(finishedWork: Fiber) {
       let retry = resolveRetryThenable.bind(null, finishedWork, thenable);
       if (!retryCache.has(thenable)) {
         if (enableSchedulerTracing) {
-          retry = Schedule_tracing_wrap(retry);
+          if (thenable.__reactDoNotTraceInteractions !== true) {
+            retry = Schedule_tracing_wrap(retry);
+          }
         }
         retryCache.add(thenable);
         thenable.then(retry, retry);

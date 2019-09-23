@@ -23,6 +23,8 @@ const importSideEffects = Object.freeze({
 const knownGlobals = Object.freeze({
   react: 'React',
   'react-dom': 'ReactDOM',
+  'react-interactions/events/keyboard': 'ReactEventsKeyboard',
+  'react-interactions/events/tap': 'ReactEventsTap',
   scheduler: 'Scheduler',
   'scheduler/tracing': 'SchedulerTracing',
   'scheduler/unstable_mock': 'SchedulerMock',

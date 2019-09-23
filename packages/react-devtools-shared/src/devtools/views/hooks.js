@@ -9,10 +9,68 @@
 
 import throttle from 'lodash.throttle';
 import {useCallback, useEffect, useLayoutEffect, useState} from 'react';
+import {unstable_batchedUpdates as batchedUpdates} from 'react-dom';
 import {
   localStorageGetItem,
   localStorageSetItem,
 } from 'react-devtools-shared/src/storage';
+import {sanitizeForParse, smartParse, smartStringify} from '../utils';
+
+type EditableValue = {|
+  editableValue: any,
+  hasPendingChanges: boolean,
+  isValid: boolean,
+  parsedValue: any,
+  reset: () => void,
+  update: (newValue: any) => void,
+|};
+
+// Convenience hook for working with an editable value that is validated via JSON.parse.
+export function useEditableValue(
+  initialValue: any,
+  initialIsValid?: boolean = true,
+): EditableValue {
+  const [editableValue, setEditableValue] = useState(() =>
+    smartStringify(initialValue),
+  );
+  const [parsedValue, setParsedValue] = useState(initialValue);
+  const [isValid, setIsValid] = useState(initialIsValid);
+
+  const reset = useCallback(
+    () => {
+      setEditableValue(smartStringify(initialValue));
+      setParsedValue(initialValue);
+      setIsValid(initialIsValid);
+    },
+    [initialValue, initialIsValid],
+  );
+
+  const update = useCallback(newValue => {
+    let isNewValueValid = false;
+    let newParsedValue;
+    try {
+      newParsedValue = smartParse(newValue);
+      isNewValueValid = true;
+    } catch (error) {}
+
+    batchedUpdates(() => {
+      setEditableValue(sanitizeForParse(newValue));
+      if (isNewValueValid) {
+        setParsedValue(newParsedValue);
+      }
+      setIsValid(isNewValueValid);
+    });
+  }, []);
+
+  return {
+    editableValue,
+    hasPendingChanges: smartStringify(initialValue) !== editableValue,
+    isValid,
+    parsedValue,
+    reset,
+    update,
+  };
+}
 
 export function useIsOverflowing(
   containerRef: {current: HTMLDivElement | null},
