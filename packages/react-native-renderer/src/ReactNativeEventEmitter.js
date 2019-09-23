@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {RESPONDER_EVENT_SYSTEM} from 'legacy-events/EventSystemFlags';
+import {PLUGIN_EVENT_SYSTEM} from 'legacy-events/EventSystemFlags';
 import {
   getListener,
   runExtractedPluginEventsInBatch,
@@ -101,7 +101,7 @@ function _receiveRootNodeIDEvent(
   batchedUpdates(function() {
     runExtractedPluginEventsInBatch(
       topLevelType,
-      RESPONDER_EVENT_SYSTEM,
+      PLUGIN_EVENT_SYSTEM,
       inst,
       nativeEvent,
       nativeEvent.target,

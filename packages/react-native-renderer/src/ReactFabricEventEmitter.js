@@ -9,7 +9,7 @@
 
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
-import {RESPONDER_EVENT_SYSTEM} from 'legacy-events/EventSystemFlags';
+import {PLUGIN_EVENT_SYSTEM} from 'legacy-events/EventSystemFlags';
 import {
   getListener,
   runExtractedPluginEventsInBatch,
@@ -42,7 +42,7 @@ export function dispatchEvent(
     // Heritage plugin event system
     runExtractedPluginEventsInBatch(
       topLevelType,
-      RESPONDER_EVENT_SYSTEM,
+      PLUGIN_EVENT_SYSTEM,
       targetFiber,
       nativeEvent,
       nativeEvent.target,
