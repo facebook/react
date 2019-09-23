@@ -13,6 +13,7 @@ import {
   REACT_SUSPENSE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
 } from 'shared/ReactSymbols';
+import getComponentName from 'shared/getComponentName';
 
 import {Component, PureComponent} from './ReactBaseClasses';
 import {createRef} from './ReactCreateRef';
@@ -99,6 +100,7 @@ const React = {
   cloneElement: __DEV__ ? cloneElementWithValidation : cloneElement,
   createFactory: __DEV__ ? createFactoryWithValidation : createFactory,
   isValidElement: isValidElement,
+  getComponentName,
 
   version: ReactVersion,
 
