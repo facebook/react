@@ -1392,6 +1392,40 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         expect(Scheduler).toFlushExpired(['Hi']);
       });
     }
+
+    it('handles errors in the return path of a component that suspends', async () => {
+      // Covers an edge case where an error is thrown inside the complete phase
+      // of a component that is in the return path of a component that suspends.
+      // The second error should also be handled (i.e. able to be captured by
+      // an error boundary.
+      class ErrorBoundary extends React.Component {
+        state = {error: null};
+        static getDerivedStateFromError(error, errorInfo) {
+          return {error};
+        }
+        render() {
+          if (this.state.error) {
+            return `Caught an error: ${this.state.error.message}`;
+          }
+          return this.props.children;
+        }
+      }
+
+      ReactNoop.renderLegacySyncRoot(
+        <ErrorBoundary>
+          <Suspense fallback="Loading...">
+            <errorInCompletePhase>
+              <AsyncText ms={1000} text="Async" />
+            </errorInCompletePhase>
+          </Suspense>
+        </ErrorBoundary>,
+      );
+
+      expect(Scheduler).toHaveYielded(['Suspend! [Async]']);
+      expect(ReactNoop).toMatchRenderedOutput(
+        'Caught an error: Error in host config.',
+      );
+    });
   });
 
   it('does not call lifecycles of a suspended component', async () => {
