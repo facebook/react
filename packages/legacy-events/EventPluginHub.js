@@ -22,6 +22,7 @@ import type {ReactSyntheticEvent} from './ReactSyntheticEventType';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {AnyNativeEvent} from './PluginModuleType';
 import type {TopLevelType} from './TopLevelEventTypes';
+import type {EventSystemFlags} from 'legacy-events/EventSystemFlags';
 
 function isInteractive(tag) {
   return (
@@ -131,6 +132,7 @@ export function getListener(inst: Fiber, registrationName: string) {
  */
 function extractPluginEvents(
   topLevelType: TopLevelType,
+  eventSystemFlags: EventSystemFlags,
   targetInst: null | Fiber,
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: EventTarget,
@@ -142,6 +144,7 @@ function extractPluginEvents(
     if (possiblePlugin) {
       const extractedEvents = possiblePlugin.extractEvents(
         topLevelType,
+        eventSystemFlags,
         targetInst,
         nativeEvent,
         nativeEventTarget,
@@ -156,12 +159,14 @@ function extractPluginEvents(
 
 export function runExtractedPluginEventsInBatch(
   topLevelType: TopLevelType,
+  eventSystemFlags: EventSystemFlags,
   targetInst: null | Fiber,
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: EventTarget,
 ) {
   const events = extractPluginEvents(
     topLevelType,
+    eventSystemFlags,
     targetInst,
     nativeEvent,
     nativeEventTarget,

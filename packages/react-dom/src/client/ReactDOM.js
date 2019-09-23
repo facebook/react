@@ -74,6 +74,7 @@ import {
 } from './ReactDOMComponentTree';
 import {restoreControlledState} from './ReactDOMComponent';
 import {dispatchEvent} from '../events/ReactDOMEventListener';
+import {eagerlyTrapReplayableEvents} from '../events/ReactDOMEventReplaying';
 import {
   ELEMENT_NODE,
   COMMENT_NODE,
@@ -365,7 +366,7 @@ ReactWork.prototype._onCommit = function(): void {
   }
 };
 
-function ReactSyncRoot(
+function createRootImpl(
   container: DOMContainer,
   tag: RootTag,
   options: void | RootOptions,
@@ -375,22 +376,27 @@ function ReactSyncRoot(
   const hydrationCallbacks =
     (options != null && options.hydrationOptions) || null;
   const root = createContainer(container, tag, hydrate, hydrationCallbacks);
-  this._internalRoot = root;
   markContainerAsRoot(root.current, container);
+  if (hydrate && tag !== LegacyRoot) {
+    const doc =
+      container.nodeType === DOCUMENT_NODE
+        ? container
+        : container.ownerDocument;
+    eagerlyTrapReplayableEvents(doc);
+  }
+  return root;
+}
+
+function ReactSyncRoot(
+  container: DOMContainer,
+  tag: RootTag,
+  options: void | RootOptions,
+) {
+  this._internalRoot = createRootImpl(container, tag, options);
 }
 
 function ReactRoot(container: DOMContainer, options: void | RootOptions) {
-  const hydrate = options != null && options.hydrate === true;
-  const hydrationCallbacks =
-    (options != null && options.hydrationOptions) || null;
-  const root = createContainer(
-    container,
-    ConcurrentRoot,
-    hydrate,
-    hydrationCallbacks,
-  );
-  this._internalRoot = root;
-  markContainerAsRoot(root.current, container);
+  this._internalRoot = createRootImpl(container, ConcurrentRoot, options);
 }
 
 ReactRoot.prototype.render = ReactSyncRoot.prototype.render = function(

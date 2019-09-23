@@ -13,6 +13,7 @@ import {
   TOP_POINTER_OUT,
   TOP_POINTER_OVER,
 } from './DOMTopLevelEventTypes';
+import {IS_REPLAYED} from 'legacy-events/EventSystemFlags';
 import SyntheticMouseEvent from './SyntheticMouseEvent';
 import SyntheticPointerEvent from './SyntheticPointerEvent';
 import {
@@ -20,6 +21,7 @@ import {
   getNodeFromInstance,
 } from '../client/ReactDOMComponentTree';
 import {HostComponent, HostText} from 'shared/ReactWorkTags';
+import {getNearestMountedFiber} from 'react-reconciler/reflection';
 
 const eventTypes = {
   mouseEnter: {
@@ -52,6 +54,7 @@ const EnterLeaveEventPlugin = {
    */
   extractEvents: function(
     topLevelType,
+    eventSystemFlags,
     targetInst,
     nativeEvent,
     nativeEventTarget,
@@ -61,7 +64,15 @@ const EnterLeaveEventPlugin = {
     const isOutEvent =
       topLevelType === TOP_MOUSE_OUT || topLevelType === TOP_POINTER_OUT;
 
-    if (isOverEvent && (nativeEvent.relatedTarget || nativeEvent.fromElement)) {
+    if (
+      isOverEvent &&
+      (eventSystemFlags & IS_REPLAYED) === 0 &&
+      (nativeEvent.relatedTarget || nativeEvent.fromElement)
+    ) {
+      // If this is an over event with a target, then we've already dispatched
+      // the event in the out event of the other target. If this is replayed,
+      // then it's because we couldn't dispatch against this target previously
+      // so we have to do it now instead.
       return null;
     }
 
@@ -90,8 +101,14 @@ const EnterLeaveEventPlugin = {
       from = targetInst;
       const related = nativeEvent.relatedTarget || nativeEvent.toElement;
       to = related ? getClosestInstanceFromNode(related) : null;
-      if (to !== null && to.tag !== HostComponent && to.tag !== HostText) {
-        to = null;
+      if (to !== null) {
+        const nearestMounted = getNearestMountedFiber(to);
+        if (
+          to !== nearestMounted ||
+          (to.tag !== HostComponent && to.tag !== HostText)
+        ) {
+          to = null;
+        }
       }
     } else {
       // Moving to a node from outside the window.

@@ -10,6 +10,7 @@
 'use strict';
 
 const {HostComponent} = require('shared/ReactWorkTags');
+const {PLUGIN_EVENT_SYSTEM} = require('legacy-events/EventSystemFlags');
 
 let EventBatching;
 let EventPluginUtils;
@@ -313,6 +314,7 @@ const run = function(config, hierarchyConfig, nativeEventConfig) {
   // Trigger the event
   const extractedEvents = ResponderEventPlugin.extractEvents(
     nativeEventConfig.topLevelType,
+    PLUGIN_EVENT_SYSTEM,
     nativeEventConfig.targetInst,
     nativeEventConfig.nativeEvent,
     nativeEventConfig.target,
