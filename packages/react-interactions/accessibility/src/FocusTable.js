@@ -149,7 +149,7 @@ export function createFocusTable(): Array<React.Component> {
       onKeyDown(event: KeyboardEvent): void {
         const currentCell = scopeRef.current;
         switch (event.key) {
-          case 'UpArrow': {
+          case 'ArrowUp': {
             const [cells, rowIndex] = getRowCells(currentCell);
             if (cells !== null) {
               const [columns, columnIndex] = getRows(currentCell);
@@ -164,7 +164,7 @@ export function createFocusTable(): Array<React.Component> {
             }
             return;
           }
-          case 'DownArrow': {
+          case 'ArrowDown': {
             const [cells, rowIndex] = getRowCells(currentCell);
             if (cells !== null) {
               const [columns, columnIndex] = getRows(currentCell);
@@ -181,7 +181,7 @@ export function createFocusTable(): Array<React.Component> {
             }
             return;
           }
-          case 'LeftArrow': {
+          case 'ArrowLeft': {
             const [cells, rowIndex] = getRowCells(currentCell);
             if (cells !== null) {
               if (rowIndex > 0) {
@@ -192,7 +192,7 @@ export function createFocusTable(): Array<React.Component> {
             }
             return;
           }
-          case 'RightArrow': {
+          case 'ArrowRight': {
             const [cells, rowIndex] = getRowCells(currentCell);
             if (cells !== null) {
               if (rowIndex !== -1) {
