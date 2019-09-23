@@ -687,7 +687,16 @@ const bundles = [
       'react',
       'react-interactions/events/keyboard',
       'react-interactions/accessibility/tabbable-scope',
+      'react-interactions/accessibility/focus-control',
     ],
+  },
+
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
+    moduleType: NON_FIBER_RENDERER,
+    entry: 'react-interactions/accessibility/focus-control',
+    global: 'ReactFocusControl',
+    externals: ['react'],
   },
 
   {
@@ -703,6 +712,7 @@ const fbBundleExternalsMap = {
   'react-interactions/events/keyboard': 'ReactEventsKeyboard',
   'react-interactions/events/tap': 'ReactEventsTap',
   'react-interactions/accessibility/tabbable-scope': 'ReactTabbableScope',
+  'react-interactions/accessibility/focus-control': 'ReactFocusControl',
 };
 
 // Based on deep-freeze by substack (public domain)
