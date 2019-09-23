@@ -257,6 +257,8 @@ var x = _react3.jsxs("div", {
 });
 `;
 
+exports[`transform react to jsx auto import with no JSX 1`] = `var foo = "<div></div>";`;
+
 exports[`transform react to jsx auto import with react already defined 1`] = `
 import * as _react from "react";
 import * as react from "react";

@@ -270,6 +270,20 @@ describe('transform react to jsx', () => {
     ).toMatchSnapshot();
   });
 
+  it('auto import with no JSX', () => {
+    expect(
+      transform(
+        `var foo = "<div></div>"`,
+        {
+          autoImport: 'require',
+        },
+        {
+          sourceType: 'script',
+        }
+      )
+    ).toMatchSnapshot();
+  });
+
   it('auto import named exports with cached variable', () => {
     expect(
       transform(

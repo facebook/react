@@ -715,8 +715,25 @@ module.exports = function(babel) {
     return imports;
   }
 
+  function shouldAddAutoImports(parentPath) {
+    let shouldAdd = false;
+    parentPath.traverse({
+      JSXElement(path) {
+        shouldAdd = true;
+        path.stop();
+      },
+
+      JSXFragment(path) {
+        shouldAdd = true;
+        path.stop();
+      },
+    });
+
+    return shouldAdd;
+  }
+
   function addAutoImports(path, state) {
-    if (state.autoImport === IMPORT_TYPES.none) {
+    if (state.autoImport === IMPORT_TYPES.none || !shouldAddAutoImports(path)) {
       return;
     }
 
