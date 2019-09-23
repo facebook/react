@@ -8,13 +8,7 @@
  */
 
 import throttle from 'lodash.throttle';
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useState,
-} from 'react';
+import {useCallback, useEffect, useLayoutEffect, useState} from 'react';
 import {unstable_batchedUpdates as batchedUpdates} from 'react-dom';
 import {
   localStorageGetItem,
@@ -42,11 +36,14 @@ export function useEditableValue(
   const [parsedValue, setParsedValue] = useState(initialValue);
   const [isValid, setIsValid] = useState(initialIsValid);
 
-  const reset = useCallback(() => {
-    setEditableValue(smartStringify(initialValue));
-    setParsedValue(initialValue);
-    setIsValid(initialIsValid);
-  }, []);
+  const reset = useCallback(
+    () => {
+      setEditableValue(smartStringify(initialValue));
+      setParsedValue(initialValue);
+      setIsValid(initialIsValid);
+    },
+    [initialValue, initialIsValid],
+  );
 
   const update = useCallback(newValue => {
     let isNewValueValid = false;
@@ -65,17 +62,14 @@ export function useEditableValue(
     });
   }, []);
 
-  return useMemo(
-    () => ({
-      editableValue,
-      hasPendingChanges: smartStringify(initialValue) !== editableValue,
-      isValid,
-      parsedValue,
-      reset,
-      update,
-    }),
-    [editableValue, initialValue, isValid, parsedValue],
-  );
+  return {
+    editableValue,
+    hasPendingChanges: smartStringify(initialValue) !== editableValue,
+    isValid,
+    parsedValue,
+    reset,
+    update,
+  };
 }
 
 export function useIsOverflowing(
