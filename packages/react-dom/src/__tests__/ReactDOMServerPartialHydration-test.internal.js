@@ -1944,6 +1944,164 @@ describe('ReactDOMServerPartialHydration', () => {
     document.body.removeChild(container);
   });
 
+  it('invokes discrete events on nested suspense boundaries in a root (legacy system)', async () => {
+    let suspend = false;
+    let resolve;
+    let promise = new Promise(resolvePromise => (resolve = resolvePromise));
+
+    let clicks = 0;
+
+    function Button() {
+      return (
+        <a
+          onClick={() => {
+            clicks++;
+          }}>
+          Click me
+        </a>
+      );
+    }
+
+    function Child() {
+      if (suspend) {
+        throw promise;
+      } else {
+        return (
+          <Suspense fallback="Loading...">
+            <Button />
+          </Suspense>
+        );
+      }
+    }
+
+    function App() {
+      return (
+        <Suspense fallback="Loading...">
+          <Child />
+        </Suspense>
+      );
+    }
+
+    suspend = false;
+    let finalHTML = ReactDOMServer.renderToString(<App />);
+    let container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    // We need this to be in the document since we'll dispatch events on it.
+    document.body.appendChild(container);
+
+    let a = container.getElementsByTagName('a')[0];
+
+    // On the client we don't have all data yet but we want to start
+    // hydrating anyway.
+    suspend = true;
+    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    root.render(<App />);
+
+    // We'll do one click before hydrating.
+    a.click();
+    // This should be delayed.
+    expect(clicks).toBe(0);
+
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+
+    // We're now partially hydrated.
+    a.click();
+    expect(clicks).toBe(0);
+
+    // Resolving the promise so that rendering can complete.
+    suspend = false;
+    resolve();
+    await promise;
+
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+
+    expect(clicks).toBe(2);
+
+    document.body.removeChild(container);
+  });
+
+  it('invokes discrete events on nested suspense boundaries in a root (responder system)', async () => {
+    let suspend = false;
+    let resolve;
+    let promise = new Promise(resolvePromise => (resolve = resolvePromise));
+
+    const onEvent = jest.fn();
+    const TestResponder = React.unstable_createResponder('TestEventResponder', {
+      targetEventTypes: ['click'],
+      onEvent,
+    });
+
+    function Button() {
+      let listener = React.unstable_useResponder(TestResponder, {});
+      return <a listeners={listener}>Click me</a>;
+    }
+
+    function Child() {
+      if (suspend) {
+        throw promise;
+      } else {
+        return (
+          <Suspense fallback="Loading...">
+            <Button />
+          </Suspense>
+        );
+      }
+    }
+
+    function App() {
+      return (
+        <Suspense fallback="Loading...">
+          <Child />
+        </Suspense>
+      );
+    }
+
+    suspend = false;
+    let finalHTML = ReactDOMServer.renderToString(<App />);
+    let container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    // We need this to be in the document since we'll dispatch events on it.
+    document.body.appendChild(container);
+
+    let a = container.getElementsByTagName('a')[0];
+
+    // On the client we don't have all data yet but we want to start
+    // hydrating anyway.
+    suspend = true;
+    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    root.render(<App />);
+
+    // We'll do one click before hydrating.
+    a.click();
+    // This should be delayed.
+    expect(onEvent).toHaveBeenCalledTimes(0);
+
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+
+    // We're now partially hydrated.
+    a.click();
+    // We should not have invoked the event yet because we're not
+    // yet hydrated.
+    expect(onEvent).toHaveBeenCalledTimes(0);
+
+    // Resolving the promise so that rendering can complete.
+    suspend = false;
+    resolve();
+    await promise;
+
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+
+    expect(onEvent).toHaveBeenCalledTimes(2);
+
+    document.body.removeChild(container);
+  });
+
   it('does not invoke the parent of dehydrated boundary event', async () => {
     let suspend = false;
     let resolve;
