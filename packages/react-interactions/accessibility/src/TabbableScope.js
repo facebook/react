@@ -32,4 +32,6 @@ export const tabFocusableImpl = (type: string, props: Object): boolean => {
   );
 };
 
-export const TabbableScope = React.unstable_createScope(tabFocusableImpl);
+const TabbableScope = React.unstable_createScope(tabFocusableImpl);
+
+export default TabbableScope;

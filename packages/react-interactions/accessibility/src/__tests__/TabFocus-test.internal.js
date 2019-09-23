@@ -11,8 +11,9 @@ import {createEventTarget} from 'react-interactions/events/src/dom/testing-libra
 
 let React;
 let ReactFeatureFlags;
-let TabFocusController;
-let ReactTabFocus;
+let TabFocus;
+let TabbableScope;
+let FocusControl;
 
 describe('TabFocusController', () => {
   beforeEach(() => {
@@ -20,8 +21,9 @@ describe('TabFocusController', () => {
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableScopeAPI = true;
     ReactFeatureFlags.enableFlareAPI = true;
-    ReactTabFocus = require('../TabFocus');
-    TabFocusController = ReactTabFocus.TabFocusController;
+    TabFocus = require('../TabFocus').default;
+    TabbableScope = require('../TabbableScope').default;
+    FocusControl = require('../FocusControl');
     React = require('react');
   });
 
@@ -48,13 +50,13 @@ describe('TabFocusController', () => {
       const divRef = React.createRef();
 
       const Test = () => (
-        <TabFocusController>
+        <TabFocus scope={TabbableScope}>
           <input ref={inputRef} />
           <button ref={buttonRef} />
           <div ref={divRef} tabIndex={0} />
           <input ref={input2Ref} tabIndex={-1} />
           <button ref={butto2nRef} />
-        </TabFocusController>
+        </TabFocus>
       );
 
       ReactDOM.render(<Test />, container);
@@ -76,12 +78,12 @@ describe('TabFocusController', () => {
       const button2Ref = React.createRef();
 
       const Test = () => (
-        <TabFocusController contain={true}>
+        <TabFocus scope={TabbableScope} contain={true}>
           <input ref={inputRef} tabIndex={-1} />
           <button ref={buttonRef} id={1} />
           <button ref={button2Ref} id={2} />
           <input ref={input2Ref} tabIndex={-1} />
-        </TabFocusController>
+        </TabFocus>
       );
 
       ReactDOM.render(<Test />, container);
@@ -107,16 +109,16 @@ describe('TabFocusController', () => {
       const button4Ref = React.createRef();
 
       const Test = () => (
-        <TabFocusController>
+        <TabFocus scope={TabbableScope}>
           <input ref={inputRef} tabIndex={-1} />
           <button ref={buttonRef} id={1} />
-          <TabFocusController>
+          <TabFocus scope={TabbableScope}>
             <button ref={button2Ref} id={2} />
             <button ref={button3Ref} id={3} />
-          </TabFocusController>
+          </TabFocus>
           <input ref={input2Ref} tabIndex={-1} />
           <button ref={button4Ref} id={4} />
-        </TabFocusController>
+        </TabFocus>
       );
 
       ReactDOM.render(<Test />, container);
@@ -143,16 +145,16 @@ describe('TabFocusController', () => {
       const button4Ref = React.createRef();
 
       const Test = () => (
-        <TabFocusController>
+        <TabFocus scope={TabbableScope}>
           <input ref={inputRef} tabIndex={-1} />
           <button ref={buttonRef} id={1} />
-          <TabFocusController contain={true}>
+          <TabFocus contain={true} scope={TabbableScope}>
             <button ref={button2Ref} id={2} />
             <button ref={button3Ref} id={3} />
-          </TabFocusController>
+          </TabFocus>
           <input ref={input2Ref} tabIndex={-1} />
           <button ref={button4Ref} id={4} />
-        </TabFocusController>
+        </TabFocus>
       );
 
       ReactDOM.render(<Test />, container);
@@ -193,14 +195,14 @@ describe('TabFocusController', () => {
       }
 
       const Test = () => (
-        <TabFocusController>
+        <TabFocus scope={TabbableScope}>
           <button ref={buttonRef} id={1} />
           <button ref={button2Ref} id={2} />
           <React.Suspense fallback={<button ref={button3Ref} id={3} />}>
             <Component />
           </React.Suspense>
           <button ref={button4Ref} id={4} />
-        </TabFocusController>
+        </TabFocus>
       );
 
       ReactDOM.render(<Test />, container);
@@ -227,16 +229,16 @@ describe('TabFocusController', () => {
 
       const Test = () => (
         <div>
-          <TabFocusController ref={firstFocusControllerRef}>
+          <TabFocus ref={firstFocusControllerRef} scope={TabbableScope}>
             <input tabIndex={-1} />
             <button ref={buttonRef} />
             <button ref={button2Ref} />
             <input tabIndex={-1} />
-          </TabFocusController>
-          <TabFocusController ref={secondFocusControllerRef}>
+          </TabFocus>
+          <TabFocus ref={secondFocusControllerRef} scope={TabbableScope}>
             <input tabIndex={-1} />
             <div ref={divRef} tabIndex={0} />
-          </TabFocusController>
+          </TabFocus>
         </div>
       );
 
@@ -244,25 +246,25 @@ describe('TabFocusController', () => {
       const firstFocusController = firstFocusControllerRef.current;
       const secondFocusController = secondFocusControllerRef.current;
 
-      ReactTabFocus.focusFirst(firstFocusController);
+      FocusControl.focusFirst(firstFocusController);
       expect(document.activeElement).toBe(buttonRef.current);
-      ReactTabFocus.focusNext(firstFocusController);
+      FocusControl.focusNext(firstFocusController);
       expect(document.activeElement).toBe(button2Ref.current);
-      ReactTabFocus.focusPrevious(firstFocusController);
+      FocusControl.focusPrevious(firstFocusController);
       expect(document.activeElement).toBe(buttonRef.current);
 
-      const nextController = ReactTabFocus.getNextController(
+      const nextController = FocusControl.getNextController(
         firstFocusController,
       );
       expect(nextController).toBe(secondFocusController);
-      ReactTabFocus.focusFirst(nextController);
+      FocusControl.focusFirst(nextController);
       expect(document.activeElement).toBe(divRef.current);
 
-      const previousController = ReactTabFocus.getPreviousController(
+      const previousController = FocusControl.getPreviousController(
         nextController,
       );
       expect(previousController).toBe(firstFocusController);
-      ReactTabFocus.focusFirst(previousController);
+      FocusControl.focusFirst(previousController);
       expect(document.activeElement).toBe(buttonRef.current);
     });
   });

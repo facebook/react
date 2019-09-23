@@ -11,7 +11,6 @@ import type {ReactScopeMethods} from 'shared/ReactTypes';
 import type {KeyboardEvent} from 'react-interactions/events/keyboard';
 
 import React from 'react';
-import {tabFocusableImpl} from 'react-interactions/accessibility/tabbable-scope';
 import {useKeyboard} from 'react-interactions/events/keyboard';
 
 type FocusCellProps = {
@@ -128,8 +127,10 @@ function triggerNavigateOut(
   }
 }
 
-export function createFocusTable(): Array<React.Component> {
-  const TableScope = React.unstable_createScope(tabFocusableImpl);
+export function createFocusTable(
+  scopeImpl: (type: string, props: Object) => boolean,
+): Array<React.Component> {
+  const TableScope = React.unstable_createScope(scopeImpl);
 
   function Table({children, onKeyboardOut, id}): FocusTableProps {
     return (
