@@ -321,7 +321,20 @@ export function computeExpirationForFiber(
 
   if ((executionContext & RenderContext) !== NoContext) {
     // Use whatever time we're already rendering
+    // TODO: Should there be a way to opt out, like with `runWithPriority`?
     return renderExpirationTime;
+  }
+
+  if ((executionContext & CommitContext) !== NoContext) {
+    if (pendingPassiveEffectsExpirationTime === Never) {
+      // Updates triggered by an effect inside an offscreen tree should be
+      // Never, not Idle.
+      // TODO: This wouldn't be necessary if we deprioritized offscreen updates
+      // when traversing the return path (`markUpdateTimeFromFiberToRoot`),
+      // instead of waiting to bail out in the render phase.
+      // TODO: Should there be a way to opt out, like with `runWithPriority`?
+      return Never;
+    }
   }
 
   let expirationTime;
@@ -347,7 +360,7 @@ export function computeExpirationForFiber(
         expirationTime = computeAsyncExpiration(currentTime);
         break;
       case IdlePriority:
-        expirationTime = Never;
+        expirationTime = Idle;
         break;
       default:
         invariant(false, 'Expected a valid priority level');
@@ -1406,14 +1419,14 @@ export function markRenderEventTimeAndConfig(
 ): void {
   if (
     expirationTime < workInProgressRootLatestProcessedExpirationTime &&
-    expirationTime > Never
+    expirationTime > Idle
   ) {
     workInProgressRootLatestProcessedExpirationTime = expirationTime;
   }
   if (suspenseConfig !== null) {
     if (
       expirationTime < workInProgressRootLatestSuspenseTimeout &&
-      expirationTime > Never
+      expirationTime > Idle
     ) {
       workInProgressRootLatestSuspenseTimeout = expirationTime;
       // Most of the time we only have one config and getting wrong is not bad.
@@ -2203,36 +2216,33 @@ function commitLayoutEffects(
 }
 
 export function flushPassiveEffects() {
+  if (pendingPassiveEffectsRenderPriority !== NoPriority) {
+    const priorityLevel =
+      pendingPassiveEffectsRenderPriority > NormalPriority
+        ? NormalPriority
+        : pendingPassiveEffectsRenderPriority;
+    pendingPassiveEffectsRenderPriority = NoPriority;
+    return runWithPriority(priorityLevel, flushPassiveEffectsImpl);
+  }
+}
+
+function flushPassiveEffectsImpl() {
   if (rootWithPendingPassiveEffects === null) {
     return false;
   }
-  const root = rootWithPendingPassiveEffects;
-  const expirationTime = pendingPassiveEffectsExpirationTime;
-  const renderPriorityLevel = pendingPassiveEffectsRenderPriority;
-  rootWithPendingPassiveEffects = null;
-  pendingPassiveEffectsExpirationTime = NoWork;
-  pendingPassiveEffectsRenderPriority = NoPriority;
-  const priorityLevel =
-    renderPriorityLevel > NormalPriority ? NormalPriority : renderPriorityLevel;
-  return runWithPriority(
-    priorityLevel,
-    flushPassiveEffectsImpl.bind(null, root, expirationTime),
-  );
-}
 
-function flushPassiveEffectsImpl(root, expirationTime) {
   invariant(
     (executionContext & (RenderContext | CommitContext)) === NoContext,
     'Cannot flush passive effects while already rendering.',
   );
   const prevExecutionContext = executionContext;
   executionContext |= CommitContext;
-  const prevInteractions = pushInteractions(root);
+  const prevInteractions = pushInteractions(rootWithPendingPassiveEffects);
 
   // Note: This currently assumes there are no passive effects on the root
   // fiber, because the root is not part of its own effect list. This could
   // change in the future.
-  let effect = root.current.firstEffect;
+  let effect = rootWithPendingPassiveEffects.current.firstEffect;
   while (effect !== null) {
     if (__DEV__) {
       setCurrentDebugFiberInDEV(effect);
@@ -2259,10 +2269,17 @@ function flushPassiveEffectsImpl(root, expirationTime) {
 
   if (enableSchedulerTracing) {
     popInteractions(((prevInteractions: any): Set<Interaction>));
-    finishPendingInteractions(root, expirationTime);
+    finishPendingInteractions(
+      rootWithPendingPassiveEffects,
+      pendingPassiveEffectsExpirationTime,
+    );
   }
 
   executionContext = prevExecutionContext;
+
+  rootWithPendingPassiveEffects = null;
+  pendingPassiveEffectsExpirationTime = NoWork;
+
   flushSyncCallbackQueue();
 
   // If additional passive effects were scheduled, increment a counter. If this
