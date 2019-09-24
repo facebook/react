@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactScopeMethods} from 'shared/ReactTypes';
+import type {ReactScope, ReactScopeMethods} from 'shared/ReactTypes';
 import type {KeyboardEvent} from 'react-interactions/events/keyboard';
 
 import React from 'react';
@@ -127,10 +127,8 @@ function triggerNavigateOut(
   }
 }
 
-export function createFocusTable(
-  scopeImpl: (type: string, props: Object) => boolean,
-): Array<React.Component> {
-  const TableScope = React.unstable_createScope(scopeImpl);
+export function createFocusTable(scope: ReactScope): Array<React.Component> {
+  const TableScope = React.unstable_createScope(scope.fn);
 
   function Table({children, onKeyboardOut, id}): FocusTableProps {
     return (

@@ -706,6 +706,18 @@ const bundles = [
     global: 'ReactTabbableScope',
     externals: ['react'],
   },
+
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
+    moduleType: NON_FIBER_RENDERER,
+    entry: 'react-interactions/accessibility/focus-list',
+    global: 'ReactFocusList',
+    externals: [
+      'react',
+      'react-interactions/events/keyboard',
+      'react-interactions/accessibility/tabbable-scope',
+    ],
+  },
 ];
 
 const fbBundleExternalsMap = {
