@@ -325,18 +325,6 @@ export function computeExpirationForFiber(
     return renderExpirationTime;
   }
 
-  if ((executionContext & CommitContext) !== NoContext) {
-    if (pendingPassiveEffectsExpirationTime === Never) {
-      // Updates triggered by an effect inside an offscreen tree should be
-      // Never, not Idle.
-      // TODO: This wouldn't be necessary if we deprioritized offscreen updates
-      // when traversing the return path (`markUpdateTimeFromFiberToRoot`),
-      // instead of waiting to bail out in the render phase.
-      // TODO: Should there be a way to opt out, like with `runWithPriority`?
-      return Never;
-    }
-  }
-
   let expirationTime;
   if (suspenseConfig !== null) {
     // Compute an expiration time based on the Suspense timeout.
@@ -2231,7 +2219,9 @@ function flushPassiveEffectsImpl() {
     return false;
   }
   const root = rootWithPendingPassiveEffects;
+  const expirationTime = pendingPassiveEffectsExpirationTime;
   rootWithPendingPassiveEffects = null;
+  pendingPassiveEffectsExpirationTime = NoWork;
 
   invariant(
     (executionContext & (RenderContext | CommitContext)) === NoContext,
@@ -2271,11 +2261,10 @@ function flushPassiveEffectsImpl() {
 
   if (enableSchedulerTracing) {
     popInteractions(((prevInteractions: any): Set<Interaction>));
-    finishPendingInteractions(root, pendingPassiveEffectsExpirationTime);
+    finishPendingInteractions(root, expirationTime);
   }
 
   executionContext = prevExecutionContext;
-  pendingPassiveEffectsExpirationTime = NoWork;
 
   flushSyncCallbackQueue();
 
