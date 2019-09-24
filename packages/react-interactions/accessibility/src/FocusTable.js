@@ -149,6 +149,10 @@ export function createFocusTable(
     const keyboard = useKeyboard({
       onKeyDown(event: KeyboardEvent): void {
         const currentCell = scopeRef.current;
+        if (currentCell === null) {
+          event.continuePropagation();
+          return;
+        }
         switch (event.key) {
           case 'ArrowUp': {
             const [cells, cellIndex] = getRowCells(currentCell);
@@ -211,7 +215,6 @@ export function createFocusTable(
             return;
           }
         }
-        event.continuePropagation();
       },
     });
     return (

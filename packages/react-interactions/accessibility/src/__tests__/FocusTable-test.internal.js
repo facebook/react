@@ -14,7 +14,7 @@ let ReactFeatureFlags;
 let createFocusTable;
 let tabFocusableImpl;
 
-describe('ReactFocusTable', () => {
+describe('FocusTable', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
