@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactScopeMethods} from 'shared/ReactTypes';
+import type {ReactScope, ReactScopeMethods} from 'shared/ReactTypes';
 import type {KeyboardEvent} from 'react-interactions/events/keyboard';
 
 import React from 'react';
@@ -59,10 +59,8 @@ function getNextListItem(
   return null;
 }
 
-export function createFocusList(
-  scopeImpl: (type: string, props: Object) => boolean,
-): Array<React.Component> {
-  const TableScope = React.unstable_createScope(scopeImpl);
+export function createFocusList(scope: ReactScope): Array<React.Component> {
+  const TableScope = React.unstable_createScope(scope.fn);
 
   function List({children, portrait}): FocusListProps {
     return (

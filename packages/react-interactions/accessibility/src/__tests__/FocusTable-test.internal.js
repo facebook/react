@@ -12,7 +12,7 @@ import {createEventTarget} from 'react-interactions/events/src/dom/testing-libra
 let React;
 let ReactFeatureFlags;
 let createFocusTable;
-let tabFocusableImpl;
+let TabbableScope;
 
 describe('FocusTable', () => {
   beforeEach(() => {
@@ -21,7 +21,7 @@ describe('FocusTable', () => {
     ReactFeatureFlags.enableScopeAPI = true;
     ReactFeatureFlags.enableFlareAPI = true;
     createFocusTable = require('../FocusTable').createFocusTable;
-    tabFocusableImpl = require('../TabbableScope').tabFocusableImpl;
+    TabbableScope = require('../TabbableScope').default;
     React = require('react');
   });
 
@@ -42,7 +42,7 @@ describe('FocusTable', () => {
 
     function createFocusTableComponent() {
       const [FocusTable, FocusTableRow, FocusTableCell] = createFocusTable(
-        tabFocusableImpl,
+        TabbableScope,
       );
 
       return ({onKeyboardOut, id}) => (

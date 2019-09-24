@@ -12,7 +12,7 @@ import {createEventTarget} from 'react-interactions/events/src/dom/testing-libra
 let React;
 let ReactFeatureFlags;
 let createFocusList;
-let tabFocusableImpl;
+let TabbableScope;
 
 describe('FocusList', () => {
   beforeEach(() => {
@@ -21,7 +21,7 @@ describe('FocusList', () => {
     ReactFeatureFlags.enableScopeAPI = true;
     ReactFeatureFlags.enableFlareAPI = true;
     createFocusList = require('../FocusList').createFocusList;
-    tabFocusableImpl = require('../TabbableScope').tabFocusableImpl;
+    TabbableScope = require('../TabbableScope').default;
     React = require('react');
   });
 
@@ -41,7 +41,7 @@ describe('FocusList', () => {
     });
 
     function createFocusListComponent() {
-      const [FocusList, FocusItem] = createFocusList(tabFocusableImpl);
+      const [FocusList, FocusItem] = createFocusList(TabbableScope);
 
       return ({portrait}) => (
         <FocusList portrait={portrait}>
