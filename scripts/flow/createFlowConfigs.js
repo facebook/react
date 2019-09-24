@@ -32,6 +32,7 @@ module.name_mapper='ReactFiberHostConfig$$' -> 'forks/ReactFiberHostConfig.${ren
 module.name_mapper='react-stream/inline.${renderer}$$' -> 'react-stream/inline-typed'
 module.name_mapper='ReactFizzHostConfig$$' -> 'forks/ReactFizzHostConfig.${fizzRenderer}'
 module.name_mapper='ReactFizzFormatConfig$$' -> 'forks/ReactFizzFormatConfig.${fizzRenderer}'
+module.name_mapper='react-devtools-feature-flags' -> 'react-devtools-shared/src/config/DevToolsFeatureFlags.stable'
     `.trim(),
     )
     .replace(

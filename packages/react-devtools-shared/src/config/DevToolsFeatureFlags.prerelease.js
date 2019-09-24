@@ -7,10 +7,9 @@
  * @flow
  */
 
-import typeof * as FeatureFlagsType from './DevToolsFeatureFlags';
-import typeof * as FacebookFeatureFlagsType from './DevToolsFeatureFlags.facebook';
+import typeof * as FeatureFlagsType from './DevToolsFeatureFlags.stable';
+import typeof * as FacebookFeatureFlagsType from './DevToolsFeatureFlags.prerelease';
 
-export const enableComponentFlagHighHooksUsage = true;
 export const enableProfilerShowChangedHooksIndices = true;
 
 // Flow magic to verify the exports of this file match the original version.

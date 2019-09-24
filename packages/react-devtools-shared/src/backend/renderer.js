@@ -48,7 +48,7 @@ import {
   patch as patchConsole,
   registerRenderer as registerRendererWithConsole,
 } from './console';
-import {enableProfilerShowChangedHooksIndices} from 'react-devtools-shared/src/config/DevToolsFeatureFlags';
+import {enableProfilerShowChangedHooksIndices} from 'react-devtools-feature-flags';
 
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {

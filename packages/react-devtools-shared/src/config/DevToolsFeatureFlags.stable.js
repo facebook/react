@@ -7,5 +7,4 @@
  * @flow
  */
 
-export const enableComponentFlagHighHooksUsage = false;
 export const enableProfilerShowChangedHooksIndices = false;

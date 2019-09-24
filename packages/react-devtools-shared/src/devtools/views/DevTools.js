@@ -30,6 +30,9 @@ import styles from './DevTools.css';
 
 import './root.css';
 
+import {enableProfilerShowChangedHooksIndices} from 'react-devtools-feature-flags';
+console.log('enableProfilerShowChangedHooksIndices', enableProfilerShowChangedHooksIndices);
+
 import type {InspectedElement} from 'react-devtools-shared/src/devtools/views/Components/types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 

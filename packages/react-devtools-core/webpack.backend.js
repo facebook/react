@@ -14,6 +14,7 @@ if (!NODE_ENV) {
 const builtModulesDir = resolve(__dirname, '..', '..', 'build', 'node_modules');
 
 const __DEV__ = NODE_ENV === 'development';
+const __PRERELEASE__ = process.env.PRERELEASE === 'true';
 
 const GITHUB_URL = getGitHubURL();
 const DEVTOOLS_VERSION = getVersionString();
@@ -41,9 +42,12 @@ module.exports = {
       scheduler: resolve(builtModulesDir, 'scheduler'),
 
       // Feature flags used for early testing features within FB hosted version of extension:
-      'react-devtools-shared/src/config/DevToolsFeatureFlags': resolve(
+      'react-devtools-feature-flags': resolve(
         __dirname,
-        '../react-devtools-shared/src/config/DevToolsFeatureFlags.oss',
+        '../react-devtools-shared/src/config',
+        __PRERELEASE__
+          ? 'DevToolsFeatureFlags.prerelease'
+          : 'DevToolsFeatureFlags.stable',
       ),
     },
   },
