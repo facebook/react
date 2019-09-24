@@ -2230,6 +2230,8 @@ function flushPassiveEffectsImpl() {
   if (rootWithPendingPassiveEffects === null) {
     return false;
   }
+  const root = rootWithPendingPassiveEffects;
+  rootWithPendingPassiveEffects = null;
 
   invariant(
     (executionContext & (RenderContext | CommitContext)) === NoContext,
@@ -2237,12 +2239,12 @@ function flushPassiveEffectsImpl() {
   );
   const prevExecutionContext = executionContext;
   executionContext |= CommitContext;
-  const prevInteractions = pushInteractions(rootWithPendingPassiveEffects);
+  const prevInteractions = pushInteractions(root);
 
   // Note: This currently assumes there are no passive effects on the root
   // fiber, because the root is not part of its own effect list. This could
   // change in the future.
-  let effect = rootWithPendingPassiveEffects.current.firstEffect;
+  let effect = root.current.firstEffect;
   while (effect !== null) {
     if (__DEV__) {
       setCurrentDebugFiberInDEV(effect);
@@ -2269,15 +2271,10 @@ function flushPassiveEffectsImpl() {
 
   if (enableSchedulerTracing) {
     popInteractions(((prevInteractions: any): Set<Interaction>));
-    finishPendingInteractions(
-      rootWithPendingPassiveEffects,
-      pendingPassiveEffectsExpirationTime,
-    );
+    finishPendingInteractions(root, pendingPassiveEffectsExpirationTime);
   }
 
   executionContext = prevExecutionContext;
-
-  rootWithPendingPassiveEffects = null;
   pendingPassiveEffectsExpirationTime = NoWork;
 
   flushSyncCallbackQueue();
