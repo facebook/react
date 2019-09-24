@@ -619,6 +619,7 @@ type Props = {|
   children: React$Node,
 
   // Used for automated testing
+  defaultInspectedElementID?: ?number,
   defaultOwnerID?: ?number,
   defaultSelectedElementID?: ?number,
   defaultSelectedElementIndex?: ?number,
@@ -627,6 +628,7 @@ type Props = {|
 // TODO Remove TreeContextController wrapper element once global ConsearchText.write API exists.
 function TreeContextController({
   children,
+  defaultInspectedElementID,
   defaultOwnerID,
   defaultSelectedElementID,
   defaultSelectedElementIndex,
@@ -700,7 +702,8 @@ function TreeContextController({
     ownerFlatTree: null,
 
     // Inspection element panel
-    inspectedElementID: null,
+    inspectedElementID:
+      defaultInspectedElementID == null ? null : defaultInspectedElementID,
   });
 
   const dispatchWrapper = useCallback(

@@ -102,9 +102,9 @@ export default function KeyValue({
         </span>
         {isEditable ? (
           <EditableValue
-            initialValue={value}
             overrideValueFn={((overrideValueFn: any): OverrideValueFn)}
             path={path}
+            value={value}
           />
         ) : (
           <span className={styles.Value}>{displayValue}</span>
