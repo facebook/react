@@ -9,4 +9,4 @@
 
 'use strict';
 
-module.exports = require('./src/TabFocus');
+module.exports = require('./src/FocusManager');
