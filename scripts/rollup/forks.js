@@ -181,12 +181,12 @@ const forks = Object.freeze({
   },
 
   // This logic is forked on www to ignore some warnings.
-  'shared/lowPriorityWarning': (bundleType, entry) => {
+  'shared/lowPriorityWarningWithoutStack': (bundleType, entry) => {
     switch (bundleType) {
       case FB_WWW_DEV:
       case FB_WWW_PROD:
       case FB_WWW_PROFILING:
-        return 'shared/forks/lowPriorityWarning.www.js';
+        return 'shared/forks/lowPriorityWarningWithoutStack.www.js';
       default:
         return null;
     }

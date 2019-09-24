@@ -61,7 +61,7 @@ import ReactVersion from 'shared/ReactVersion';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
-import lowPriorityWarning from 'shared/lowPriorityWarning';
+import lowPriorityWarningWithoutStack from 'shared/lowPriorityWarningWithoutStack';
 import warningWithoutStack from 'shared/warningWithoutStack';
 import {enableStableConcurrentModeAPIs} from 'shared/ReactFeatureFlags';
 
@@ -542,7 +542,7 @@ function legacyCreateRootFromDOMContainer(
   if (__DEV__) {
     if (shouldHydrate && !forceHydrate && !warnedAboutHydrateAPI) {
       warnedAboutHydrateAPI = true;
-      lowPriorityWarning(
+      lowPriorityWarningWithoutStack(
         false,
         'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
           'will stop working in React v17. Replace the ReactDOM.render() call ' +
@@ -801,7 +801,7 @@ const ReactDOM: Object = {
   unstable_createPortal(...args) {
     if (!didWarnAboutUnstableCreatePortal) {
       didWarnAboutUnstableCreatePortal = true;
-      lowPriorityWarning(
+      lowPriorityWarningWithoutStack(
         false,
         'The ReactDOM.unstable_createPortal() alias has been deprecated, ' +
           'and will be removed in React 17+. Update your code to use ' +
