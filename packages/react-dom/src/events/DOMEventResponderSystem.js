@@ -39,7 +39,6 @@ import {
   UserBlockingEvent,
   DiscreteEvent,
 } from 'shared/ReactTypes';
-import {enableUserBlockingEvents} from 'shared/ReactFeatureFlags';
 
 // Intentionally not named imports because Rollup would use dynamic dispatch for
 // CommonJS interop named imports.
@@ -104,13 +103,9 @@ const eventResponderContext: ReactDOMResponderContext = {
         break;
       }
       case UserBlockingEvent: {
-        if (enableUserBlockingEvents) {
-          runWithPriority(UserBlockingPriority, () =>
-            executeUserEventHandler(eventListener, eventValue),
-          );
-        } else {
-          executeUserEventHandler(eventListener, eventValue);
-        }
+        runWithPriority(UserBlockingPriority, () =>
+          executeUserEventHandler(eventListener, eventValue),
+        );
         break;
       }
       case ContinuousEvent: {
