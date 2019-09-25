@@ -33,14 +33,15 @@ describe('ReactNativeError', () => {
   });
 
   it('should throw error if null component registration getter is used', () => {
-    let error;
-    try {
-      createReactNativeComponentClass('View', null);
-    } catch (e) {
-      error = e;
-    }
-
-    expect(error.toString()).toBe('Invariant Violation: View config getter callback must be a function: View (received null)');
+    expect(() => {
+      try {
+        createReactNativeComponentClass('View', null);
+      } catch (e) {
+        throw new Error(e.toString());
+      }
+    }).toThrow(
+      'Invariant Violation: View config getter callback for component `View` must be a function (received `null`)',
+    );
   });
 
   it('should be able to extract a component stack from a native view', () => {

@@ -80,7 +80,7 @@ exports.register = function(name: string, callback: ViewConfigGetter): string {
   );
   invariant(
     typeof callback === 'function',
-    'View config getter callback must be a function: %s (received %s)',
+    'View config getter callback for component `%s` must be a function (received `%s`)',
     name,
     callback === null ? 'null' : typeof callback,
   );
@@ -100,7 +100,7 @@ exports.get = function(name: string): ReactNativeBaseComponentViewConfig<> {
     if (typeof callback !== 'function') {
       invariant(
         false,
-        'View config registration not found for name %s (received %s).%s',
+        'View config getter callback for component `%s` must be a function (received `%s`).%s',
         name,
         callback === null ? 'null' : typeof callback,
         typeof name[0] === 'string' && /[a-z]/.test(name[0])
