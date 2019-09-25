@@ -12,7 +12,10 @@ import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
 import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 import type {EventSystemFlags} from 'legacy-events/EventSystemFlags';
 
-import {enableFlareAPI} from 'shared/ReactFeatureFlags';
+import {
+  enableFlareAPI,
+  enableSelectiveHydration,
+} from 'shared/ReactFeatureFlags';
 import {
   unstable_scheduleCallback as scheduleCallback,
   unstable_NormalPriority as NormalPriority,
@@ -25,7 +28,14 @@ import {
   getListeningSetForElement,
   listenToTopLevel,
 } from './ReactBrowserEventEmitter';
+import {getInstanceFromNode} from '../client/ReactDOMComponentTree';
 import {unsafeCastDOMTopLevelTypeToString} from 'legacy-events/TopLevelEventTypes';
+
+let attemptSynchronousHydration: (fiber: Object) => void;
+
+export function setAttemptSynchronousHydration(fn: (fiber: Object) => void) {
+  attemptSynchronousHydration = fn;
+}
 
 // TODO: Upgrade this definition once we're on a newer version of Flow that
 // has this definition built-in.
@@ -223,18 +233,36 @@ export function queueDiscreteEvent(
   eventSystemFlags: EventSystemFlags,
   nativeEvent: AnyNativeEvent,
 ): void {
-  queuedDiscreteEvents.push(
-    createQueuedReplayableEvent(
-      blockedOn,
-      topLevelType,
-      eventSystemFlags,
-      nativeEvent,
-    ),
+  const queuedEvent = createQueuedReplayableEvent(
+    blockedOn,
+    topLevelType,
+    eventSystemFlags,
+    nativeEvent,
   );
-  if (blockedOn === null && queuedDiscreteEvents.length === 1) {
-    // This probably shouldn't happen but some defensive coding might
-    // help us get unblocked if we have a bug.
-    replayUnblockedEvents();
+  queuedDiscreteEvents.push(queuedEvent);
+  if (enableSelectiveHydration) {
+    if (queuedDiscreteEvents.length === 1) {
+      // If this was the first discrete event, we might be able to
+      // synchronously unblock it so that preventDefault still works.
+      while (queuedEvent.blockedOn !== null) {
+        let fiber = getInstanceFromNode(queuedEvent.blockedOn);
+        if (fiber === null) {
+          break;
+        }
+        attemptSynchronousHydration(fiber);
+        if (queuedEvent.blockedOn === null) {
+          // We got unblocked by hydration. Let's try again.
+          replayUnblockedEvents();
+          // If we're reblocked, on an inner boundary, we might need
+          // to attempt hydrating that one.
+          continue;
+        } else {
+          // We're still blocked from hydation, we have to give up
+          // and replay later.
+          break;
+        }
+      }
+    }
   }
 }
 

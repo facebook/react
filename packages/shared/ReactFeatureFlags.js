@@ -33,6 +33,7 @@ export const enableSchedulerTracing = __PROFILE__;
 
 // Only used in www builds.
 export const enableSuspenseServerRenderer = false; // TODO: __DEV__? Here it might just be false.
+export const enableSelectiveHydration = false;
 
 // Only used in www builds.
 export const enableSchedulerDebugging = false;
