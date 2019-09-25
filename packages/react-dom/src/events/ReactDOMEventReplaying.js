@@ -20,7 +20,6 @@ import {
   unstable_scheduleCallback as scheduleCallback,
   unstable_NormalPriority as NormalPriority,
 } from 'scheduler';
-import {attemptSynchronousHydration} from 'react-reconciler/inline.dom';
 import {
   attemptToDispatchEvent,
   trapEventForResponderEventSystem,
@@ -31,6 +30,12 @@ import {
 } from './ReactBrowserEventEmitter';
 import {getInstanceFromNode} from '../client/ReactDOMComponentTree';
 import {unsafeCastDOMTopLevelTypeToString} from 'legacy-events/TopLevelEventTypes';
+
+let attemptSynchronousHydration: (fiber: Object) => void;
+
+export function setAttemptSynchronousHydration(fn: (fiber: Object) => void) {
+  attemptSynchronousHydration = fn;
+}
 
 // TODO: Upgrade this definition once we're on a newer version of Flow that
 // has this definition built-in.
