@@ -1789,7 +1789,7 @@ export function attach(
         // Try our best to find the fallback directly.
         const maybeFallbackFiber = fiber.child && fiber.child.sibling;
         if (maybeFallbackFiber != null) {
-          fiber = maybeFallbackFiber;
+          return maybeFallbackFiber;
         }
       }
       const hostFibers = findAllCurrentHostFibers(id);
