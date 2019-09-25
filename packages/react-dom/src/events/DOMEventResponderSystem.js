@@ -12,7 +12,7 @@ import {
   PASSIVE_NOT_SUPPORTED,
 } from 'legacy-events/EventSystemFlags';
 import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
-import {HostComponent, ScopeComponent} from 'shared/ReactWorkTags';
+import {HostComponent, ScopeComponent, HostPortal} from 'shared/ReactWorkTags';
 import type {EventPriority} from 'shared/ReactTypes';
 import type {
   ReactDOMEventResponder,
@@ -451,9 +451,12 @@ function traverseAndHandleEventResponderInstances(
     isPassiveSupported,
   );
   let node = targetFiber;
+  let insidePortal = false;
   while (node !== null) {
     const {dependencies, tag} = node;
-    if (
+    if (tag === HostPortal) {
+      insidePortal = true;
+    } else if (
       (tag === HostComponent || tag === ScopeComponent) &&
       dependencies !== null
     ) {
@@ -465,7 +468,8 @@ function traverseAndHandleEventResponderInstances(
           const {props, responder, state} = responderInstance;
           if (
             !visitedResponders.has(responder) &&
-            validateResponderTargetEventTypes(eventType, responder)
+            validateResponderTargetEventTypes(eventType, responder) &&
+            (!insidePortal || responder.targetPortalPropagation)
           ) {
             visitedResponders.add(responder);
             const onEvent = responder.onEvent;

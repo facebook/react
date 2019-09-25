@@ -180,6 +180,7 @@ function dispatchKeyboardEvent(
 
 const keyboardResponderImpl = {
   targetEventTypes,
+  targetPortalPropagation: true,
   getInitialState(): KeyboardState {
     return {
       isActive: false,

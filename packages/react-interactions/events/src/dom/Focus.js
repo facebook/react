@@ -293,6 +293,7 @@ function unmountFocusResponder(
 
 const focusResponderImpl = {
   targetEventTypes,
+  targetPortalPropagation: true,
   rootEventTypes,
   getInitialState(): FocusState {
     return {
@@ -430,6 +431,7 @@ function unmountFocusWithinResponder(
 
 const focusWithinResponderImpl = {
   targetEventTypes,
+  targetPortalPropagation: true,
   rootEventTypes,
   getInitialState(): FocusState {
     return {
