@@ -1777,7 +1777,7 @@ export function attach(
 
   function findNativeNodesForFiberID(id: number) {
     try {
-      let fiber = findCurrentFiberUsingSlowPathById(id);
+      const fiber = findCurrentFiberUsingSlowPathById(id);
       if (fiber === null) {
         return null;
       }
