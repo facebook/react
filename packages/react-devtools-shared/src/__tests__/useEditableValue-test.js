@@ -33,17 +33,21 @@ describe('useEditableValue', () => {
     }
 
     const container = document.createElement('div');
-    ReactDOM.render(<Example value="foo" />, container);
-    expect(state.editableValue).toEqual('"foo"');
-    expect(state.externalValue).toEqual('foo');
+    ReactDOM.render(<Example value={1} />, container);
+    expect(state.editableValue).toEqual('1');
+    expect(state.externalValue).toEqual(1);
+    expect(state.parsedValue).toEqual(1);
     expect(state.hasPendingChanges).toBe(false);
+    expect(state.isValid).toBe(true);
 
     // If there are NO pending changes,
     // an update to the external prop value should override the local/pending value.
-    ReactDOM.render(<Example value="bar" />, container);
-    expect(state.editableValue).toEqual('"bar"');
-    expect(state.externalValue).toEqual('bar');
+    ReactDOM.render(<Example value={2} />, container);
+    expect(state.editableValue).toEqual('2');
+    expect(state.externalValue).toEqual(2);
+    expect(state.parsedValue).toEqual(2);
     expect(state.hasPendingChanges).toBe(false);
+    expect(state.isValid).toBe(true);
   });
 
   it('should not override editable state when external props are updated if there are pending changes', () => {
@@ -57,28 +61,113 @@ describe('useEditableValue', () => {
     }
 
     const container = document.createElement('div');
-    ReactDOM.render(<Example value="foo" />, container);
-    expect(state.editableValue).toEqual('"foo"');
-    expect(state.externalValue).toEqual('foo');
+    ReactDOM.render(<Example value={1} />, container);
+    expect(state.editableValue).toEqual('1');
+    expect(state.externalValue).toEqual(1);
+    expect(state.parsedValue).toEqual(1);
     expect(state.hasPendingChanges).toBe(false);
+    expect(state.isValid).toBe(true);
 
     // Update (local) editable state.
     act(() =>
       dispatch({
         type: 'UPDATE',
-        editableValue: 'not-foo',
-        externalValue: 'foo',
+        editableValue: '2',
+        externalValue: 1,
       }),
     );
-    expect(state.editableValue).toEqual('not-foo');
-    expect(state.externalValue).toEqual('foo');
+    expect(state.editableValue).toEqual('2');
+    expect(state.externalValue).toEqual(1);
+    expect(state.parsedValue).toEqual(2);
     expect(state.hasPendingChanges).toBe(true);
+    expect(state.isValid).toBe(true);
 
     // If there ARE pending changes,
     // an update to the external prop value should NOT override the local/pending value.
-    ReactDOM.render(<Example value="bar" />, container);
-    expect(state.editableValue).toEqual('not-foo');
-    expect(state.externalValue).toEqual('bar');
+    ReactDOM.render(<Example value={3} />, container);
+    expect(state.editableValue).toEqual('2');
+    expect(state.externalValue).toEqual(3);
+    expect(state.parsedValue).toEqual(2);
     expect(state.hasPendingChanges).toBe(true);
+    expect(state.isValid).toBe(true);
+  });
+
+  it('should parse edits to ensure valid JSON', () => {
+    let dispatch, state;
+
+    function Example({value}) {
+      const tuple = useEditableValue(value);
+      state = tuple[0];
+      dispatch = tuple[1];
+      return null;
+    }
+
+    const container = document.createElement('div');
+    ReactDOM.render(<Example value={1} />, container);
+    expect(state.editableValue).toEqual('1');
+    expect(state.externalValue).toEqual(1);
+    expect(state.parsedValue).toEqual(1);
+    expect(state.hasPendingChanges).toBe(false);
+    expect(state.isValid).toBe(true);
+
+    // Update (local) editable state.
+    act(() =>
+      dispatch({
+        type: 'UPDATE',
+        editableValue: '"a',
+        externalValue: 1,
+      }),
+    );
+    expect(state.editableValue).toEqual('"a');
+    expect(state.externalValue).toEqual(1);
+    expect(state.parsedValue).toEqual(1);
+    expect(state.hasPendingChanges).toBe(true);
+    expect(state.isValid).toBe(false);
+  });
+
+  it('should reset to external value upon request', () => {
+    let dispatch, state;
+
+    function Example({value}) {
+      const tuple = useEditableValue(value);
+      state = tuple[0];
+      dispatch = tuple[1];
+      return null;
+    }
+
+    const container = document.createElement('div');
+    ReactDOM.render(<Example value={1} />, container);
+    expect(state.editableValue).toEqual('1');
+    expect(state.externalValue).toEqual(1);
+    expect(state.parsedValue).toEqual(1);
+    expect(state.hasPendingChanges).toBe(false);
+    expect(state.isValid).toBe(true);
+
+    // Update (local) editable state.
+    act(() =>
+      dispatch({
+        type: 'UPDATE',
+        editableValue: '2',
+        externalValue: 1,
+      }),
+    );
+    expect(state.editableValue).toEqual('2');
+    expect(state.externalValue).toEqual(1);
+    expect(state.parsedValue).toEqual(2);
+    expect(state.hasPendingChanges).toBe(true);
+    expect(state.isValid).toBe(true);
+
+    // Reset editable state
+    act(() =>
+      dispatch({
+        type: 'RESET',
+        externalValue: 1,
+      }),
+    );
+    expect(state.editableValue).toEqual('1');
+    expect(state.externalValue).toEqual(1);
+    expect(state.parsedValue).toEqual(1);
+    expect(state.hasPendingChanges).toBe(false);
+    expect(state.isValid).toBe(true);
   });
 });
