@@ -27,6 +27,9 @@ moduleNameMapper[
   '^shared/ReactFeatureFlags'
 ] = `<rootDir>/packages/shared/forks/ReactFeatureFlags.readonly`;
 
+moduleNameMapper['react-devtools-feature-flags'] =
+  '<rootDir>/packages/react-devtools-shared/src/config/DevToolsFeatureFlags.stable';
+
 // Map packages to bundles
 packages.forEach(name => {
   // Root entry point

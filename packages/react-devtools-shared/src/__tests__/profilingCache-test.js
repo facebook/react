@@ -575,7 +575,7 @@ describe('ProfilingCache', () => {
 
   describe('enableProfilerShowChangedHooksIndices', () => {
     beforeEach(() => {
-      const FeatureFlags = require('../config/DevToolsFeatureFlags');
+      const FeatureFlags = require('react-devtools-feature-flags');
       FeatureFlags.enableProfilerShowChangedHooksIndices = true;
     });
 
