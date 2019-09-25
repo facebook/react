@@ -110,7 +110,7 @@ export function focusPrevious(
   }
 }
 
-export function getNextController(
+export function getNextScope(
   scope: ReactScopeMethods,
 ): null | ReactScopeMethods {
   const allScopes = scope.getChildrenFromRoot();
@@ -124,7 +124,7 @@ export function getNextController(
   return allScopes[currentScopeIndex + 1];
 }
 
-export function getPreviousController(
+export function getPreviousScope(
   scope: ReactScopeMethods,
 ): null | ReactScopeMethods {
   const allScopes = scope.getChildrenFromRoot();
