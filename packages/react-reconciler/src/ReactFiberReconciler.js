@@ -27,7 +27,12 @@ import {
   findCurrentHostFiberWithNoPortals,
 } from 'react-reconciler/reflection';
 import {get as getInstance} from 'shared/ReactInstanceMap';
-import {HostComponent, ClassComponent} from 'shared/ReactWorkTags';
+import {
+  HostComponent,
+  ClassComponent,
+  HostRoot,
+  SuspenseComponent,
+} from 'shared/ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
@@ -359,6 +364,21 @@ export function getPublicRootInstance(
       return getPublicInstance(containerFiber.child.stateNode);
     default:
       return containerFiber.child.stateNode;
+  }
+}
+
+export function attemptSynchronousHydration(fiber: Fiber): void {
+  switch (fiber.tag) {
+    case HostRoot:
+      let root: FiberRoot = fiber.stateNode;
+      if (root.hydrate) {
+        // Flush the first scheduled "update".
+        flushRoot(root, root.firstPendingTime);
+      }
+      break;
+    case SuspenseComponent:
+      flushSync(() => scheduleWork(fiber, Sync));
+      break;
   }
 }
 

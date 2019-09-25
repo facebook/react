@@ -5,7 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {HostComponent, HostText} from 'shared/ReactWorkTags';
+import {
+  HostComponent,
+  HostText,
+  HostRoot,
+  SuspenseComponent,
+} from 'shared/ReactWorkTags';
 import invariant from 'shared/invariant';
 
 import {getParentSuspenseInstance} from './ReactDOMHostConfig';
@@ -112,9 +117,14 @@ export function getClosestInstanceFromNode(targetNode) {
  * instance, or null if the node was not rendered by this React.
  */
 export function getInstanceFromNode(node) {
-  const inst = node[internalInstanceKey];
+  const inst = node[internalInstanceKey] || node[internalContainerInstanceKey];
   if (inst) {
-    if (inst.tag === HostComponent || inst.tag === HostText) {
+    if (
+      inst.tag === HostComponent ||
+      inst.tag === HostText ||
+      inst.tag === SuspenseComponent ||
+      inst.tag === HostRoot
+    ) {
       return inst;
     } else {
       return null;
