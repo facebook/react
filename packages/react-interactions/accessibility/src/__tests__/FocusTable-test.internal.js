@@ -257,5 +257,74 @@ describe('FocusTable', () => {
       });
       expect(document.activeElement.textContent).toBe('A3');
     });
+
+    it('handles nested tables correctly', () => {
+      const CustomScope = React.unstable_createScope((type, props) => {
+        return type === 'input';
+      });
+      const [FocusTable, FocusRow, FocusCell] = createFocusTable(CustomScope);
+      const firstRef = React.createRef();
+
+      function Test() {
+        return (
+          <FocusTable>
+            <div>
+              <FocusRow>
+                <FocusCell>
+                  <FocusTable>
+                    <FocusRow>
+                      <FocusCell>
+                        <input
+                          placeholder="Nested A1"
+                          tabIndex={0}
+                          ref={firstRef}
+                        />
+                      </FocusCell>
+                      <FocusCell>
+                        <input placeholder="Nested B1" tabIndex={0} />
+                      </FocusCell>
+                    </FocusRow>
+                  </FocusTable>
+                </FocusCell>
+                <FocusCell>
+                  <input placeholder="B1" tabIndex={-1} />
+                </FocusCell>
+                <FocusCell>
+                  <input placeholder="C1" tabIndex={-1} />
+                </FocusCell>
+              </FocusRow>
+            </div>
+            <div>
+              <FocusRow>
+                <FocusCell>
+                  <input placeholder="A2" tabIndex={-1} />
+                </FocusCell>
+                <FocusCell>
+                  <input placeholder="B2" tabIndex={-1} />
+                </FocusCell>
+                <FocusCell>
+                  <input placeholder="C1" tabIndex={-1} />
+                </FocusCell>
+              </FocusRow>
+            </div>
+          </FocusTable>
+        );
+      }
+
+      ReactDOM.render(<Test />, container);
+      firstRef.current.focus();
+
+      const nestedA1 = createEventTarget(document.activeElement);
+      nestedA1.keydown({
+        key: 'ArrowRight',
+      });
+      expect(document.activeElement.placeholder).toBe('Nested B1');
+
+      const nestedB1 = createEventTarget(document.activeElement);
+      nestedB1.keydown({
+        key: 'ArrowRight',
+      });
+      expect(document.activeElement.placeholder).toBe('B1');
+    });
   });
 });
