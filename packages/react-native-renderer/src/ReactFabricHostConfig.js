@@ -11,7 +11,7 @@ import type {
   MeasureInWindowOnSuccessCallback,
   MeasureLayoutOnSuccessCallback,
   MeasureOnSuccessCallback,
-  NativeMethodsMixinType,
+  NativeMethods,
   ReactNativeBaseComponentViewConfig,
   ReactNativeResponderEvent,
   ReactNativeResponderContext,
@@ -151,9 +151,9 @@ class ReactFabricHostComponent {
   }
 
   measureLayout(
-    relativeToNativeNode: number | Object,
+    relativeToNativeNode: number | ReactFabricHostComponent,
     onSuccess: MeasureLayoutOnSuccessCallback,
-    onFail: () => void /* currently unused */,
+    onFail?: () => void /* currently unused */,
   ) {
     if (
       typeof relativeToNativeNode === 'number' ||
@@ -186,7 +186,7 @@ class ReactFabricHostComponent {
 }
 
 // eslint-disable-next-line no-unused-expressions
-(ReactFabricHostComponent.prototype: NativeMethodsMixinType);
+(ReactFabricHostComponent.prototype: NativeMethods);
 
 export * from 'shared/HostConfigWithNoMutation';
 export * from 'shared/HostConfigWithNoHydration';
