@@ -15,7 +15,7 @@ const {
   getPreviousScope,
 } = FocusControl;
 
-function KeyboarFocusMover(props) {
+function KeyboardFocusMover(props) {
   const scopeRef = useRef(null);
 
   useEffect(() => {

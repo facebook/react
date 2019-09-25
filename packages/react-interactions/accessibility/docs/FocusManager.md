@@ -8,14 +8,14 @@ control. These are the various props that `FocusManager` accepts:
 ```jsx
 function MyDialog(props) {
   return (
-    <TabbableScope containFocus={true} autoFocus={true}>
+    <FocusManager containFocus={true} autoFocus={true}>
       <div>
         <h2>{props.title}<h2>
         <p>{props.text}</p>
         <Button onPress={...}>Accept</Button>
         <Button onPress={...}>Close</Button>
       </div>
-    </TabbableScope>
+    </FocusManager>
   )
 }
 ```
