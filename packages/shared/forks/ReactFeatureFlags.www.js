@@ -14,17 +14,8 @@ import typeof * as FeatureFlagsShimType from './ReactFeatureFlags.www';
 export const {
   debugRenderPhaseSideEffects,
   debugRenderPhaseSideEffectsForStrictMode,
-  replayFailedUnitOfWorkWithInvokeGuardedCallback,
-  warnAboutDeprecatedLifecycles,
   disableInputAttributeSyncing,
-  warnAboutShorthandPropertyCollision,
-  warnAboutDeprecatedSetNativeProps,
-  enableUserBlockingEvents,
-  disableLegacyContext,
-  disableSchedulerTimeoutBasedOnReactExpirationTime,
   enableTrustedTypesIntegration,
-  warnAboutStringRefs,
-  warnAboutDefaultPropsOnFunctionComponents,
 } = require('ReactFeatureFlags');
 
 // In www, we have experimental support for gathering data
@@ -38,6 +29,16 @@ export let enableUserTimingAPI = __DEV__;
 export const enableProfilerTimer = __PROFILE__;
 export const enableSchedulerTracing = __PROFILE__;
 export const enableSchedulerDebugging = true;
+
+export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
+export const warnAboutDeprecatedLifecycles = true;
+export const warnAboutShorthandPropertyCollision = false;
+export const warnAboutDeprecatedSetNativeProps = false;
+export const disableLegacyContext = false;
+export const warnAboutStringRefs = false;
+export const warnAboutDefaultPropsOnFunctionComponents = false;
+export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
+export const enableUserBlockingEvents = true;
 
 export const enableStableConcurrentModeAPIs = false;
 
