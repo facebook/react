@@ -301,16 +301,12 @@ describe('FocusManager', () => {
       FocusControl.focusPrevious(firstFocusController);
       expect(document.activeElement).toBe(buttonRef.current);
 
-      const nextController = FocusControl.getNextController(
-        firstFocusController,
-      );
+      const nextController = FocusControl.getNextScope(firstFocusController);
       expect(nextController).toBe(secondFocusController);
       FocusControl.focusFirst(nextController);
       expect(document.activeElement).toBe(divRef.current);
 
-      const previousController = FocusControl.getPreviousController(
-        nextController,
-      );
+      const previousController = FocusControl.getPreviousScope(nextController);
       expect(previousController).toBe(firstFocusController);
       FocusControl.focusFirst(previousController);
       expect(document.activeElement).toBe(buttonRef.current);
