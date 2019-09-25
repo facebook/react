@@ -7,9 +7,11 @@
   </summary>
   
   <!-- Upcoming changes go here -->
+
 #### Bug fixes
 * Fixed bug where Components panel was always empty for certain users. ([bvaughn](https://github.com/bvaughn) in [#16864](https://github.com/facebook/react/pull/16864))
 * Fixed regression in DevTools editable hooks interface that caused primitive values to be shown as `undefined`. ([bvaughn](https://github.com/bvaughn) in [#16867](https://github.com/facebook/react/pull/16867))
+* Fixed bug where DevTools showed stale values in props/state/hooks editing interface. ([bvaughn](https://github.com/bvaughn) in [#16878](https://github.com/facebook/react/pull/16878))
 </details>
 
 ## 4.1.0 (September 19, 2019)

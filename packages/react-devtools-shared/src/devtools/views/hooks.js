@@ -8,68 +8,102 @@
  */
 
 import throttle from 'lodash.throttle';
-import {useCallback, useEffect, useLayoutEffect, useState} from 'react';
-import {unstable_batchedUpdates as batchedUpdates} from 'react-dom';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useReducer,
+  useState,
+} from 'react';
 import {
   localStorageGetItem,
   localStorageSetItem,
 } from 'react-devtools-shared/src/storage';
 import {sanitizeForParse, smartParse, smartStringify} from '../utils';
 
-type EditableValue = {|
+type ACTION_RESET = {|
+  type: 'RESET',
+  externalValue: any,
+|};
+type ACTION_UPDATE = {|
+  type: 'UPDATE',
   editableValue: any,
+  externalValue: any,
+|};
+
+type UseEditableValueAction = ACTION_RESET | ACTION_UPDATE;
+type UseEditableValueDispatch = (action: UseEditableValueAction) => void;
+type UseEditableValueState = {|
+  editableValue: any,
+  externalValue: any,
   hasPendingChanges: boolean,
   isValid: boolean,
   parsedValue: any,
-  reset: () => void,
-  update: (newValue: any) => void,
 |};
+
+function useEditableValueReducer(state, action) {
+  switch (action.type) {
+    case 'RESET':
+      return {
+        ...state,
+        editableValue: smartStringify(action.externalValue),
+        externalValue: action.externalValue,
+        hasPendingChanges: false,
+        isValid: true,
+        parsedValue: action.externalValue,
+      };
+    case 'UPDATE':
+      let isNewValueValid = false;
+      let newParsedValue;
+      try {
+        newParsedValue = smartParse(action.editableValue);
+        isNewValueValid = true;
+      } catch (error) {}
+      return {
+        ...state,
+        editableValue: sanitizeForParse(action.editableValue),
+        externalValue: action.externalValue,
+        hasPendingChanges:
+          smartStringify(action.externalValue) !== action.editableValue,
+        isValid: isNewValueValid,
+        parsedValue: isNewValueValid ? newParsedValue : state.parsedValue,
+      };
+    default:
+      throw new Error(`Invalid action "${action.type}"`);
+  }
+}
 
 // Convenience hook for working with an editable value that is validated via JSON.parse.
 export function useEditableValue(
-  initialValue: any,
-  initialIsValid?: boolean = true,
-): EditableValue {
-  const [editableValue, setEditableValue] = useState(() =>
-    smartStringify(initialValue),
-  );
-  const [parsedValue, setParsedValue] = useState(initialValue);
-  const [isValid, setIsValid] = useState(initialIsValid);
+  externalValue: any,
+): [UseEditableValueState, UseEditableValueDispatch] {
+  const [state, dispatch] = useReducer<
+    UseEditableValueState,
+    UseEditableValueAction,
+  >(useEditableValueReducer, {
+    editableValue: smartStringify(externalValue),
+    externalValue,
+    hasPendingChanges: false,
+    isValid: true,
+    parsedValue: externalValue,
+  });
 
-  const reset = useCallback(
-    () => {
-      setEditableValue(smartStringify(initialValue));
-      setParsedValue(initialValue);
-      setIsValid(initialIsValid);
-    },
-    [initialValue, initialIsValid],
-  );
+  if (state.externalValue !== externalValue) {
+    if (!state.hasPendingChanges) {
+      dispatch({
+        type: 'RESET',
+        externalValue,
+      });
+    } else {
+      dispatch({
+        type: 'UPDATE',
+        editableValue: state.editableValue,
+        externalValue,
+      });
+    }
+  }
 
-  const update = useCallback(newValue => {
-    let isNewValueValid = false;
-    let newParsedValue;
-    try {
-      newParsedValue = smartParse(newValue);
-      isNewValueValid = true;
-    } catch (error) {}
-
-    batchedUpdates(() => {
-      setEditableValue(sanitizeForParse(newValue));
-      if (isNewValueValid) {
-        setParsedValue(newParsedValue);
-      }
-      setIsValid(isNewValueValid);
-    });
-  }, []);
-
-  return {
-    editableValue,
-    hasPendingChanges: smartStringify(initialValue) !== editableValue,
-    isValid,
-    parsedValue,
-    reset,
-    update,
-  };
+  return [state, dispatch];
 }
 
 export function useIsOverflowing(
