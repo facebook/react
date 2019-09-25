@@ -101,6 +101,7 @@ function getRows(currentCell: ReactScopeMethods) {
 function triggerNavigateOut(
   currentCell: ReactScopeMethods,
   direction: 'left' | 'right' | 'up' | 'down',
+  event,
 ): void {
   const row = currentCell.getParent();
   if (row !== null && row.getProps().type === 'row') {
@@ -122,9 +123,11 @@ function triggerNavigateOut(
           }
         };
         onKeyboardOut(direction, focusTableByID);
+        return;
       }
     }
   }
+  event.continuePropagation();
 }
 
 export function createFocusTable(scope: ReactScope): Array<React.Component> {
@@ -162,7 +165,7 @@ export function createFocusTable(scope: ReactScope): Array<React.Component> {
                   focusCellByIndex(row, cellIndex);
                   event.preventDefault();
                 } else if (rowIndex === 0) {
-                  triggerNavigateOut(currentCell, 'up');
+                  triggerNavigateOut(currentCell, 'up', event);
                 }
               }
             }
@@ -175,7 +178,7 @@ export function createFocusTable(scope: ReactScope): Array<React.Component> {
               if (rows !== null) {
                 if (rowIndex !== -1) {
                   if (rowIndex === rows.length - 1) {
-                    triggerNavigateOut(currentCell, 'down');
+                    triggerNavigateOut(currentCell, 'down', event);
                   } else {
                     const row = rows[rowIndex + 1];
                     focusCellByIndex(row, cellIndex);
@@ -193,7 +196,7 @@ export function createFocusTable(scope: ReactScope): Array<React.Component> {
                 focusCell(cells[rowIndex - 1]);
                 event.preventDefault();
               } else if (rowIndex === 0) {
-                triggerNavigateOut(currentCell, 'left');
+                triggerNavigateOut(currentCell, 'left', event);
               }
             }
             return;
@@ -203,7 +206,7 @@ export function createFocusTable(scope: ReactScope): Array<React.Component> {
             if (cells !== null) {
               if (rowIndex !== -1) {
                 if (rowIndex === cells.length - 1) {
-                  triggerNavigateOut(currentCell, 'right');
+                  triggerNavigateOut(currentCell, 'right', event);
                 } else {
                   focusCell(cells[rowIndex + 1]);
                   event.preventDefault();
