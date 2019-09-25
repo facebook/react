@@ -8,7 +8,7 @@
  * @flow
  */
 
-import * as React from 'react';
+import React, {type ElementRef, type AbstractComponent} from 'react';
 
 export type MeasureOnSuccessCallback = (
   x: number,
@@ -111,7 +111,7 @@ export type NativeMethods = {
   measure(callback: MeasureOnSuccessCallback): void,
   measureInWindow(callback: MeasureInWindowOnSuccessCallback): void,
   measureLayout(
-    relativeToNativeNode: number | React.ElementRef<HostComponent<mixed>>,
+    relativeToNativeNode: number | ElementRef<HostComponent<mixed>>,
     onSuccess: MeasureLayoutOnSuccessCallback,
     onFail?: () => void,
   ): void,
@@ -119,7 +119,7 @@ export type NativeMethods = {
 };
 
 export type NativeMethodsMixinType = NativeMethods;
-export type HostComponent<T> = React.AbstractComponent<
+export type HostComponent<T> = AbstractComponent<
   T,
   $ReadOnly<$Exact<NativeMethods>>,
 >;
