@@ -12,7 +12,7 @@ import type {
   MeasureInWindowOnSuccessCallback,
   MeasureLayoutOnSuccessCallback,
   MeasureOnSuccessCallback,
-  NativeMethodsMixinType,
+  NativeMethods,
   ReactNativeBaseComponentViewConfig,
 } from './ReactNativeTypes';
 
@@ -172,7 +172,7 @@ export default function(
     measureLayout(
       relativeToNativeNode: number | Object,
       onSuccess: MeasureLayoutOnSuccessCallback,
-      onFail: () => void /* currently unused */,
+      onFail?: () => void /* currently unused */,
     ): void {
       let maybeInstance;
 
@@ -295,7 +295,7 @@ export default function(
   }
 
   // eslint-disable-next-line no-unused-expressions
-  (ReactNativeComponent.prototype: NativeMethodsMixinType);
+  (ReactNativeComponent.prototype: NativeMethods);
 
   return ReactNativeComponent;
 }
