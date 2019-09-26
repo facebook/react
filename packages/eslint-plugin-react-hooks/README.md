@@ -34,6 +34,20 @@ Then add it to your ESLint configuration:
 }
 ```
 
+## Configuration
+
+`exhaustive-deps` can be configured to validate custom hooks via the `additionalHooks` option.
+This option accepts a regex to match the names of custom hooks.
+
+```js
+{
+  "rules": {
+    // ...
+    "react-hooks/exhaustive-deps": ["warn", { "additionalHooks": "(useMyCustomHook|useMyOtherCustomHook)" }]
+  }
+}
+```
+
 ## Valid and Invalid Examples
 
 Please refer to the [Rules of Hooks](https://reactjs.org/docs/hooks-rules.html) documentation and the [Hooks FAQ](https://reactjs.org/docs/hooks-faq.html#what-exactly-do-the-lint-rules-enforce) to learn more about this rule.
