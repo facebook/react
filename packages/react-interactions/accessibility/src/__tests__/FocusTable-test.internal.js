@@ -45,8 +45,8 @@ describe('FocusTable', () => {
         TabbableScope,
       );
 
-      return ({onKeyboardOut, id}) => (
-        <FocusTable onKeyboardOut={onKeyboardOut} id={id}>
+      return ({onKeyboardOut, id, wrap}) => (
+        <FocusTable onKeyboardOut={onKeyboardOut} id={id} wrap={wrap}>
           <table>
             <tbody>
               <FocusTableRow>
@@ -325,6 +325,37 @@ describe('FocusTable', () => {
         key: 'ArrowRight',
       });
       expect(document.activeElement.placeholder).toBe('B1');
+    });
+
+    it('handles keyboard arrow operations with wrapping enabled', () => {
+      const Test = createFocusTableComponent();
+
+      ReactDOM.render(<Test wrap={true} />, container);
+      const buttons = document.querySelectorAll('button');
+      let a1 = createEventTarget(buttons[0]);
+      a1.focus();
+      a1.keydown({
+        key: 'ArrowRight',
+      });
+      expect(document.activeElement.textContent).toBe('A2');
+
+      const a2 = createEventTarget(document.activeElement);
+      a2.keydown({
+        key: 'ArrowRight',
+      });
+      expect(document.activeElement.textContent).toBe('A3');
+
+      const a3 = createEventTarget(document.activeElement);
+      a3.keydown({
+        key: 'ArrowRight',
+      });
+      expect(document.activeElement.textContent).toBe('A1');
+
+      a1 = createEventTarget(document.activeElement);
+      a1.keydown({
+        key: 'ArrowLeft',
+      });
+      expect(document.activeElement.textContent).toBe('A3');
     });
   });
 });
