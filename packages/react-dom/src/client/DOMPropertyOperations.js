@@ -144,7 +144,7 @@ export function setValueForProperty(
       if (value === null) {
         node.removeAttribute(attributeName);
       } else {
-        setAttribute(node, attributeName, toStringOrTrustedType(value));
+        setAttribute(node, attributeName, value);
       }
     }
     return;
@@ -176,7 +176,7 @@ export function setValueForProperty(
     } else {
       // `setAttribute` with objects becomes only `[object]` in IE8/9,
       // ('' + value) makes it output the correct toString()-value.
-      attributeValue = toStringOrTrustedType(value);
+      attributeValue = value;
       if (propertyInfo.sanitizeURL) {
         sanitizeURL(attributeValue.toString());
       }
