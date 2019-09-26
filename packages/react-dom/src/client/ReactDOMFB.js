@@ -35,7 +35,6 @@ Object.assign(
     // Perf experiment
     addUserTimingListener,
 
-    // Temporary for Frisson
     getIsHydrating,
   },
 );
