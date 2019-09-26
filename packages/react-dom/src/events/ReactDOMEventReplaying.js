@@ -37,6 +37,12 @@ export function setAttemptSynchronousHydration(fn: (fiber: Object) => void) {
   attemptSynchronousHydration = fn;
 }
 
+let attemptHydration: (fiber: Object) => void;
+
+export function setAttemptHydration(fn: (fiber: Object) => void) {
+  attemptHydration = fn;
+}
+
 // TODO: Upgrade this definition once we're on a newer version of Flow that
 // has this definition built-in.
 type PointerEvent = Event & {
