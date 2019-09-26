@@ -29,6 +29,33 @@ describe('FocusTable', () => {
     let ReactDOM;
     let container;
 
+    function emulateBrowserTab(backwards) {
+      const activeElement = document.activeElement;
+      const focusedElem = createEventTarget(activeElement);
+      let defaultPrevented = false;
+      focusedElem.keydown({
+        key: 'Tab',
+        shiftKey: backwards,
+        preventDefault() {
+          defaultPrevented = true;
+        },
+      });
+      if (!defaultPrevented) {
+        // This is not a full spec compliant version, but should be suffice for this test
+        const focusableElems = Array.from(
+          document.querySelectorAll(
+            'input, button, select, textarea, a[href], [tabindex], [contenteditable], iframe, object, embed',
+          ),
+        ).filter(
+          elem => elem.tabIndex > -1 && !elem.disabled && !elem.contentEditable,
+        );
+        const idx = focusableElems.indexOf(activeElement);
+        if (idx !== -1) {
+          focusableElems[backwards ? idx - 1 : idx + 1].focus();
+        }
+      }
+    }
+
     beforeEach(() => {
       ReactDOM = require('react-dom');
       container = document.createElement('div');
@@ -356,6 +383,69 @@ describe('FocusTable', () => {
         key: 'ArrowLeft',
       });
       expect(document.activeElement.textContent).toBe('A3');
+    });
+
+    it('handles keyboard arrow operations mixed with tabbing', () => {
+      const [FocusTable, FocusRow, FocusCell] = createFocusTable(TabbableScope);
+      const beforeRef = React.createRef();
+      const afterRef = React.createRef();
+
+      function Test() {
+        return (
+          <>
+            <input placeholder="Before" ref={beforeRef} />
+            <FocusTable tabScope={TabbableScope}>
+              <div>
+                <FocusRow>
+                  <FocusCell>
+                    <input placeholder="A1" />
+                  </FocusCell>
+                  <FocusCell>
+                    <input placeholder="B1" />
+                  </FocusCell>
+                  <FocusCell>
+                    <input placeholder="C1" />
+                  </FocusCell>
+                </FocusRow>
+              </div>
+              <div>
+                <FocusRow>
+                  <FocusCell>
+                    <input placeholder="A2" />
+                  </FocusCell>
+                  <FocusCell>
+                    <input placeholder="B2" />
+                  </FocusCell>
+                  <FocusCell>
+                    <input placeholder="C1" />
+                  </FocusCell>
+                </FocusRow>
+              </div>
+            </FocusTable>
+            <input placeholder="After" ref={afterRef} />
+          </>
+        );
+      }
+
+      ReactDOM.render(<Test />, container);
+      beforeRef.current.focus();
+
+      expect(document.activeElement.placeholder).toBe('Before');
+      emulateBrowserTab();
+      expect(document.activeElement.placeholder).toBe('A1');
+      emulateBrowserTab();
+      expect(document.activeElement.placeholder).toBe('After');
+      emulateBrowserTab(true);
+      expect(document.activeElement.placeholder).toBe('A1');
+      const a1 = createEventTarget(document.activeElement);
+      a1.keydown({
+        key: 'ArrowRight',
+      });
+      expect(document.activeElement.placeholder).toBe('B1');
+      emulateBrowserTab();
+      expect(document.activeElement.placeholder).toBe('After');
+      emulateBrowserTab(true);
+      expect(document.activeElement.placeholder).toBe('B1');
     });
   });
 });

@@ -675,6 +675,7 @@ const bundles = [
       'react',
       'react-interactions/events/keyboard',
       'react-interactions/accessibility/tabbable-scope',
+      'react-interactions/accessibility/focus-control',
     ],
   },
 
