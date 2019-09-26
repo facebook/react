@@ -893,17 +893,20 @@ describe('ReactIncrementalSideEffects', () => {
   it('deprioritizes setStates that happens within a deprioritized tree', () => {
     const barInstances = [];
 
+    let id = 1;
     class Bar extends React.Component {
       constructor() {
         super();
         this.state = {active: false};
+        this.id = id;
+        id++;
         barInstances.push(this);
       }
       activate() {
         this.setState({active: true});
       }
       render() {
-        Scheduler.unstable_yieldValue('Bar');
+        Scheduler.unstable_yieldValue('Bar' + this.id);
         return <span prop={this.state.active ? 'X' : this.props.idx} />;
       }
     }
@@ -921,7 +924,7 @@ describe('ReactIncrementalSideEffects', () => {
       );
     }
     ReactNoop.render(<Foo tick={0} idx={0} />);
-    expect(Scheduler).toFlushAndYield(['Foo', 'Bar', 'Bar', 'Bar']);
+    expect(Scheduler).toFlushAndYield(['Foo', 'Bar1', 'Bar2', 'Bar3']);
     expect(ReactNoop.getChildrenAsJSX()).toEqual(
       <div>
         <span prop={0} />
@@ -934,7 +937,7 @@ describe('ReactIncrementalSideEffects', () => {
     );
 
     ReactNoop.render(<Foo tick={1} idx={1} />);
-    expect(Scheduler).toFlushAndYieldThrough(['Foo', 'Bar', 'Bar']);
+    expect(Scheduler).toFlushAndYieldThrough(['Foo', 'Bar1', 'Bar2']);
     expect(ReactNoop.getChildrenAsJSX()).toEqual(
       <div>
         {/* Updated */}
@@ -952,7 +955,7 @@ describe('ReactIncrementalSideEffects', () => {
     // This should not be enough time to render the content of all the hidden
     // items. Including the set state since that is deprioritized.
     // ReactNoop.flushDeferredPri(35);
-    expect(Scheduler).toFlushAndYieldThrough(['Bar']);
+    expect(Scheduler).toFlushAndYieldThrough(['Bar1']);
     expect(ReactNoop.getChildrenAsJSX()).toEqual(
       <div>
         {/* Updated */}
@@ -968,7 +971,7 @@ describe('ReactIncrementalSideEffects', () => {
 
     // However, once we render fully, we will have enough time to finish it all
     // at once.
-    expect(Scheduler).toFlushAndYield(['Bar', 'Bar']);
+    expect(Scheduler).toFlushAndYield(['Bar2', 'Bar3']);
     expect(ReactNoop.getChildrenAsJSX()).toEqual(
       <div>
         <span prop={1} />
