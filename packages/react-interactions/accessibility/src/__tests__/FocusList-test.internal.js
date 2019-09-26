@@ -43,8 +43,8 @@ describe('FocusList', () => {
     function createFocusListComponent() {
       const [FocusList, FocusItem] = createFocusList(TabbableScope);
 
-      return ({portrait}) => (
-        <FocusList portrait={portrait}>
+      return ({portrait, wrap}) => (
+        <FocusList portrait={portrait} wrap={wrap}>
           <ul>
             <FocusItem>
               <li tabIndex={0}>Item 1</li>
@@ -122,6 +122,37 @@ describe('FocusList', () => {
       expect(document.activeElement.textContent).toBe('Item 3');
       thirdListItem.keydown({
         key: 'ArrowDown',
+      });
+      expect(document.activeElement.textContent).toBe('Item 3');
+    });
+
+    it('handles keyboard arrow operations (portrait) with wrapping enabled', () => {
+      const Test = createFocusListComponent();
+
+      ReactDOM.render(<Test portrait={true} wrap={true} />, container);
+      const listItems = document.querySelectorAll('li');
+      let firstListItem = createEventTarget(listItems[0]);
+      firstListItem.focus();
+      firstListItem.keydown({
+        key: 'ArrowDown',
+      });
+      expect(document.activeElement.textContent).toBe('Item 2');
+
+      const secondListItem = createEventTarget(document.activeElement);
+      secondListItem.keydown({
+        key: 'ArrowDown',
+      });
+      expect(document.activeElement.textContent).toBe('Item 3');
+
+      const thirdListItem = createEventTarget(document.activeElement);
+      thirdListItem.keydown({
+        key: 'ArrowDown',
+      });
+      expect(document.activeElement.textContent).toBe('Item 1');
+
+      firstListItem = createEventTarget(document.activeElement);
+      firstListItem.keydown({
+        key: 'ArrowUp',
       });
       expect(document.activeElement.textContent).toBe('Item 3');
     });
