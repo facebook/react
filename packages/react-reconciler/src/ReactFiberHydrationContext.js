@@ -485,7 +485,7 @@ function resetHydrationState(): void {
 }
 
 function getIsHydrating(): boolean {
-  return !!isHydrating;
+  return isHydrating;
 }
 
 export {
