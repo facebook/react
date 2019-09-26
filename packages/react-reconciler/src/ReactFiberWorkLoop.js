@@ -1329,6 +1329,7 @@ function handleError(root, thrownValue) {
       // Reset module-level state that was set during the render phase.
       resetContextDependencies();
       resetHooks();
+      resetCurrentDebugFiberInDEV();
 
       if (workInProgress === null || workInProgress.return === null) {
         // Expected to be working on a non-root fiber. This is a fatal error
@@ -2672,10 +2673,12 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
         throw originalError;
       }
 
-      // Keep this code in sync with renderRoot; any changes here must have
+      // Keep this code in sync with handleError; any changes here must have
       // corresponding changes there.
       resetContextDependencies();
       resetHooks();
+      // Don't reset current debug fiber, since we're about to work on the
+      // same fiber again.
 
       // Unwind the failed stack frame
       unwindInterruptedWork(unitOfWork);
@@ -3072,10 +3075,10 @@ function startWorkOnPendingInteractions(root, expirationTime) {
   );
 
   // Store the current set of interactions on the FiberRoot for a few reasons:
-  // We can re-use it in hot functions like renderRoot() without having to
-  // recalculate it. We will also use it in commitWork() to pass to any Profiler
-  // onRender() hooks. This also provides DevTools with a way to access it when
-  // the onCommitRoot() hook is called.
+  // We can re-use it in hot functions like performConcurrentWorkOnRoot()
+  // without having to recalculate it. We will also use it in commitWork() to
+  // pass to any Profiler onRender() hooks. This also provides DevTools with a
+  // way to access it when the onCommitRoot() hook is called.
   root.memoizedInteractions = interactions;
 
   if (interactions.size > 0) {
