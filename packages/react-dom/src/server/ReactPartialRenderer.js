@@ -1186,10 +1186,13 @@ class ReactDOMServerRenderer {
                     );
                   }
                 }
-              } else {
-                reactContext = (reactContext: any)._context;
               }
             }
+
+            if ((reactContext: any)._context !== undefined) {
+              reactContext = (reactContext: any)._context;
+            }
+
             const nextProps: any = (nextChild: any).props;
             const threadID = this.threadID;
             validateContextBounds(reactContext, threadID);
