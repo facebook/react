@@ -62,12 +62,12 @@ import {Never} from './ReactFiberExpirationTime';
 // This may have been an insertion or a hydration.
 let hydrationParentFiber: null | Fiber = null;
 let nextHydratableInstance: null | HydratableInstance = null;
-let isHydrating: boolean = false;
+let _isHydrating: boolean = false;
 
 function warnIfHydrating() {
   if (__DEV__) {
     warning(
-      !isHydrating,
+      !_isHydrating,
       'We should not be hydrating here. This is a bug in React. Please file a bug.',
     );
   }
@@ -81,7 +81,7 @@ function enterHydrationState(fiber: Fiber): boolean {
   const parentInstance = fiber.stateNode.containerInfo;
   nextHydratableInstance = getFirstHydratableChild(parentInstance);
   hydrationParentFiber = fiber;
-  isHydrating = true;
+  _isHydrating = true;
   return true;
 }
 
@@ -94,7 +94,7 @@ function reenterHydrationStateFromDehydratedSuspenseInstance(
   }
   nextHydratableInstance = getNextHydratableSibling(suspenseInstance);
   popToNextHostParent(fiber);
-  isHydrating = true;
+  _isHydrating = true;
   return true;
 }
 
@@ -254,14 +254,14 @@ function tryHydrate(fiber, nextInstance) {
 }
 
 function tryToClaimNextHydratableInstance(fiber: Fiber): void {
-  if (!isHydrating) {
+  if (!_isHydrating) {
     return;
   }
   let nextInstance = nextHydratableInstance;
   if (!nextInstance) {
     // Nothing to hydrate. Make it an insertion.
     insertNonHydratedInstance((hydrationParentFiber: any), fiber);
-    isHydrating = false;
+    _isHydrating = false;
     hydrationParentFiber = fiber;
     return;
   }
@@ -274,7 +274,7 @@ function tryToClaimNextHydratableInstance(fiber: Fiber): void {
     if (!nextInstance || !tryHydrate(fiber, nextInstance)) {
       // Nothing to hydrate. Make it an insertion.
       insertNonHydratedInstance((hydrationParentFiber: any), fiber);
-      isHydrating = false;
+      _isHydrating = false;
       hydrationParentFiber = fiber;
       return;
     }
@@ -434,12 +434,12 @@ function popHydrationState(fiber: Fiber): boolean {
     // tree.
     return false;
   }
-  if (!isHydrating) {
+  if (!_isHydrating) {
     // If we're not currently hydrating but we're in a hydration context, then
     // we were an insertion and now need to pop up reenter hydration of our
     // siblings.
     popToNextHostParent(fiber);
-    isHydrating = true;
+    _isHydrating = true;
     return false;
   }
 
@@ -481,7 +481,11 @@ function resetHydrationState(): void {
 
   hydrationParentFiber = null;
   nextHydratableInstance = null;
-  isHydrating = false;
+  _isHydrating = false;
+}
+
+function isHydrating(): boolean {
+  return !!_isHydrating;
 }
 
 export {
@@ -494,4 +498,5 @@ export {
   prepareToHydrateHostTextInstance,
   prepareToHydrateHostSuspenseInstance,
   popHydrationState,
+  isHydrating,
 };

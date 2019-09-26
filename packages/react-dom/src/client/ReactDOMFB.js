@@ -8,6 +8,7 @@
  */
 
 import {findCurrentFiberUsingSlowPath} from 'react-reconciler/reflection';
+import {isHydrating} from 'react-reconciler/src/ReactFiberHydrationContext';
 import {get as getInstance} from 'shared/ReactInstanceMap';
 import {addUserTimingListener} from 'shared/ReactFeatureFlags';
 
@@ -33,6 +34,9 @@ Object.assign(
     },
     // Perf experiment
     addUserTimingListener,
+
+    // Temporary for Fission
+    isHydrating,
   },
 );
 
