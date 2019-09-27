@@ -71,16 +71,13 @@ export function hasModifierKey(event: ReactDOMResponderEvent): boolean {
   );
 }
 
-// Keyboards, Assitive Technologies, and element.click() all produce "virtual"
-// clicks that do not include coordinates and "detail" is always 0 (where
-// pointer clicks are > 0).
+// Keyboards, Assitive Technologies, and element.click() all produce a "virtual"
+// click event. This is a method of inferring such clicks. Every browser except
+// IE 11 only sets a zero value of "detail" for click events that are "virtual".
+// However, IE 11 uses a zero value for all click events. For IE 11 we rely on
+// the quirk that it produces click events that are of type PointerEvent, and
+// where only the "virtual" click lacks a pointerType field.
 export function isVirtualClick(event: ReactDOMResponderEvent): boolean {
   const nativeEvent: any = event.nativeEvent;
-  return (
-    nativeEvent.detail === 0 &&
-    nativeEvent.screenX === 0 &&
-    nativeEvent.screenY === 0 &&
-    nativeEvent.clientX === 0 &&
-    nativeEvent.clientY === 0
-  );
+  return nativeEvent.detail === 0 && !nativeEvent.pointerType;
 }
