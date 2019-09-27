@@ -23,7 +23,7 @@
 * Improve queue performance by switching its internal data structure to a min binary heap. ([@acdlite](http://github.com/acdlite) in [#16245](https://github.com/facebook/react/pull/16245))
 * Use `postMessage` loop with short intervals instead of attempting to align to frame boundaries with `requestAnimationFrame`. ([@acdlite](http://github.com/acdlite) in [#16214](https://github.com/facebook/react/pull/16214))
 
-# useSubscription
+### useSubscription
 
 * Avoid tearing issue when a mutation happens and the previous update is still in progress. ([@bvaughn](http://github.com/bvaughn) in [#16623](https://github.com/facebook/react/pull/16623))
 
