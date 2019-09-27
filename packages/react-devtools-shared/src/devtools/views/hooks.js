@@ -87,8 +87,7 @@ export function useEditableValue(
     isValid: true,
     parsedValue: externalValue,
   });
-
-  if (state.externalValue !== externalValue) {
+  if (!Object.is(state.externalValue, externalValue)) {
     if (!state.hasPendingChanges) {
       dispatch({
         type: 'RESET',
