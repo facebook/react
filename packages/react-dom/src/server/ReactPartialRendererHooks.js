@@ -283,7 +283,8 @@ export function useReducer<S, I, A>(
       const firstRenderPhaseUpdate = renderPhaseUpdates.get(queue);
       if (firstRenderPhaseUpdate !== undefined) {
         renderPhaseUpdates.delete(queue);
-        let newState = workInProgressHook.memoizedState;
+        const oldState = workInProgressHook.memoizedState;
+        let newState = oldState;
         let update = firstRenderPhaseUpdate;
         do {
           // Process this render phase update. We don't have to check the
@@ -293,7 +294,7 @@ export function useReducer<S, I, A>(
           if (__DEV__) {
             isInHookUserCodeInDev = true;
           }
-          newState = reducer(newState, action);
+          newState = reducer(oldState, action);
           if (__DEV__) {
             isInHookUserCodeInDev = false;
           }

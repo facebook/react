@@ -251,11 +251,12 @@ class ReactShallowRenderer {
             const firstRenderPhaseUpdate = this._renderPhaseUpdates.get(queue);
             if (firstRenderPhaseUpdate !== undefined) {
               (this._renderPhaseUpdates: any).delete(queue);
-              let newState = workInProgressHook.memoizedState;
+              const oldState = workInProgressHook.memoizedState;
+              let newState = oldState;
               let update = firstRenderPhaseUpdate;
               do {
                 const action = update.action;
-                newState = reducer(newState, action);
+                newState = reducer(oldState, action);
                 update = update.next;
               } while (update !== null);
               workInProgressHook.memoizedState = newState;
@@ -265,12 +266,13 @@ class ReactShallowRenderer {
           return [workInProgressHook.memoizedState, dispatch];
         }
         // Process updates outside of render
-        let newState = workInProgressHook.memoizedState;
+        const oldState = workInProgressHook.memoizedState;
+        let newState = oldState;
         let update = queue.first;
         if (update !== null) {
           do {
             const action = update.action;
-            newState = reducer(newState, action);
+            newState = reducer(oldState, action);
             update = update.next;
           } while (update !== null);
           queue.first = null;

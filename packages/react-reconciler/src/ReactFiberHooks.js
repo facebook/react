@@ -688,7 +688,7 @@ function updateReducer<S, I, A>(
           // priority because it will always be the same as the current
           // render's.
           const action = update.action;
-          newState = reducer(newState, action);
+          newState = reducer(baseState, action);
           update = update.next;
         } while (update !== null);
 
@@ -777,7 +777,7 @@ function updateReducer<S, I, A>(
           newState = ((update.eagerState: any): S);
         } else {
           const action = update.action;
-          newState = reducer(newState, action);
+          newState = reducer(baseState, action);
         }
       }
       prevUpdate = update;
