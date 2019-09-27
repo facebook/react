@@ -78,7 +78,7 @@ import {
   current as ReactCurrentFiberCurrent,
 } from './ReactCurrentFiber';
 import {StrictMode} from './ReactTypeOfMode';
-import {Sync} from './ReactFiberExpirationTime';
+import {Sync, computeInteractiveExpiration} from './ReactFiberExpirationTime';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 import {
   scheduleRefresh,
@@ -384,7 +384,8 @@ export function attemptSynchronousHydration(fiber: Fiber): void {
       // If we're still blocked after this, we need to increase
       // the priority of any promises resolving within this
       // boundary so that they next attempt also has higher pri.
-      markRetryTimeIfNotHydrated(fiber, Sync);
+      let retryExpTime = computeInteractiveExpiration(requestCurrentTime());
+      markRetryTimeIfNotHydrated(fiber, retryExpTime);
       break;
   }
 }
@@ -407,7 +408,7 @@ function markRetryTimeIfNotHydrated(fiber: Fiber, retryTime: ExpirationTime) {
   }
 }
 
-export function attemptHydration(fiber: Fiber): void {
+export function attemptUserBlockingHydration(fiber: Fiber): void {
   if (fiber.tag !== SuspenseComponent) {
     // We ignore HostRoots here because we can't increase
     // their priority and they should not suspend on I/O,
@@ -415,7 +416,9 @@ export function attemptHydration(fiber: Fiber): void {
     // Suspense.
     return;
   }
-  // TODO
+  let expTime = computeInteractiveExpiration(requestCurrentTime());
+  scheduleWork(fiber, expTime);
+  markRetryTimeIfNotHydrated(fiber, expTime);
 }
 
 export {findHostInstance};

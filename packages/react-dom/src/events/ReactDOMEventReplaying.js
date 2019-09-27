@@ -37,10 +37,10 @@ export function setAttemptSynchronousHydration(fn: (fiber: Object) => void) {
   attemptSynchronousHydration = fn;
 }
 
-let attemptHydration: (fiber: Object) => void;
+let attemptUserBlockingHydration: (fiber: Object) => void;
 
-export function setAttemptHydration(fn: (fiber: Object) => void) {
-  attemptHydration = fn;
+export function setAttemptUserBlockingHydration(fn: (fiber: Object) => void) {
+  attemptUserBlockingHydration = fn;
 }
 
 // TODO: Upgrade this definition once we're on a newer version of Flow that
@@ -442,6 +442,12 @@ function replayUnblockedEvents() {
     let nextDiscreteEvent = queuedDiscreteEvents[0];
     if (nextDiscreteEvent.blockedOn !== null) {
       // We're still blocked.
+      // Increase the priority of this boundary to unblock
+      // the next discrete event.
+      let fiber = getInstanceFromNode(nextDiscreteEvent.blockedOn);
+      if (fiber !== null) {
+        attemptUserBlockingHydration(fiber);
+      }
       break;
     }
     let nextBlockedOn = attemptToDispatchEvent(
