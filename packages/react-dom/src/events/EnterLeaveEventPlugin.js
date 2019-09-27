@@ -146,6 +146,10 @@ const EnterLeaveEventPlugin = {
 
     accumulateEnterLeaveDispatches(leave, enter, from, to);
 
+    if (isOutEvent && from && nativeEventTarget !== fromNode) {
+      return [leave];
+    }
+
     return [leave, enter];
   },
 };
