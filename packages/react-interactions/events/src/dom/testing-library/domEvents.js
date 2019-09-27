@@ -422,9 +422,14 @@ export function pointerup(payload) {
  */
 
 export function mousedown(payload) {
+  // The value of 'buttons' for 'mousedown' must not be 0
+  const buttons =
+    payload == null || payload.buttons === 0
+      ? buttonsType.primary
+      : payload.buttons;
   return createMouseEvent('mousedown', {
-    buttons: buttonsType.primary,
     ...payload,
+    buttons,
   });
 }
 
