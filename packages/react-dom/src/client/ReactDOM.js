@@ -40,6 +40,7 @@ import {
   flushPassiveEffects,
   IsThisRendererActing,
   attemptSynchronousHydration,
+  attemptUserBlockingHydration,
 } from 'react-reconciler/inline.dom';
 import {createPortal as createPortalImpl} from 'shared/ReactPortal';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
@@ -75,7 +76,10 @@ import {
 } from './ReactDOMComponentTree';
 import {restoreControlledState} from './ReactDOMComponent';
 import {dispatchEvent} from '../events/ReactDOMEventListener';
-import {setAttemptSynchronousHydration} from '../events/ReactDOMEventReplaying';
+import {
+  setAttemptSynchronousHydration,
+  setAttemptUserBlockingHydration,
+} from '../events/ReactDOMEventReplaying';
 import {eagerlyTrapReplayableEvents} from '../events/ReactDOMEventReplaying';
 import {
   ELEMENT_NODE,
@@ -86,6 +90,7 @@ import {
 import {ROOT_ATTRIBUTE_NAME} from '../shared/DOMProperty';
 
 setAttemptSynchronousHydration(attemptSynchronousHydration);
+setAttemptUserBlockingHydration(attemptUserBlockingHydration);
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
