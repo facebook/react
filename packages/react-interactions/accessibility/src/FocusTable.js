@@ -7,15 +7,15 @@
  * @flow
  */
 
-import type {ReactScopeMethods} from 'shared/ReactTypes';
+import type {ReactScope, ReactScopeMethods} from 'shared/ReactTypes';
 import type {KeyboardEvent} from 'react-interactions/events/keyboard';
 
 import React from 'react';
-import {tabFocusableImpl} from 'react-interactions/accessibility/tabbable-scope';
 import {useKeyboard} from 'react-interactions/events/keyboard';
 
 type FocusCellProps = {
   children?: React.Node,
+  onKeyDown?: KeyboardEvent => void,
 };
 
 type FocusRowProps = {
@@ -29,6 +29,7 @@ type FocusTableProps = {|
     direction: 'left' | 'right' | 'up' | 'down',
     focusTableByID: (id: string) => void,
   ) => void,
+  wrap?: boolean,
 |};
 
 const {useRef} = React;
@@ -55,19 +56,26 @@ export function focusFirstCellOnTable(table: ReactScopeMethods): void {
   }
 }
 
-function focusCell(cell: ReactScopeMethods): void {
+function focusCell(cell: ReactScopeMethods, event?: KeyboardEvent): void {
   const tabbableNodes = cell.getScopedNodes();
   if (tabbableNodes !== null && tabbableNodes.length > 0) {
     tabbableNodes[0].focus();
+    if (event) {
+      event.preventDefault();
+    }
   }
 }
 
-function focusCellByRowIndex(row: ReactScopeMethods, rowIndex: number): void {
+function focusCellByIndex(
+  row: ReactScopeMethods,
+  cellIndex: number,
+  event?: KeyboardEvent,
+): void {
   const cells = row.getChildren();
   if (cells !== null) {
-    const cell = cells[rowIndex];
+    const cell = cells[cellIndex];
     if (cell) {
-      focusCell(cell);
+      focusCell(cell, event);
     }
   }
 }
@@ -102,6 +110,7 @@ function getRows(currentCell: ReactScopeMethods) {
 function triggerNavigateOut(
   currentCell: ReactScopeMethods,
   direction: 'left' | 'right' | 'up' | 'down',
+  event,
 ): void {
   const row = currentCell.getParent();
   if (row !== null && row.getProps().type === 'row') {
@@ -123,17 +132,34 @@ function triggerNavigateOut(
           }
         };
         onKeyboardOut(direction, focusTableByID);
+        return;
       }
     }
   }
+  event.continuePropagation();
 }
 
-export function createFocusTable(): Array<React.Component> {
-  const TableScope = React.unstable_createScope(tabFocusableImpl);
+function getTableWrapProp(currentCell: ReactScopeMethods): boolean {
+  const row = currentCell.getParent();
+  if (row !== null && row.getProps().type === 'row') {
+    const table = row.getParent();
+    if (table !== null) {
+      return table.getProps().wrap || false;
+    }
+  }
+  return false;
+}
 
-  function Table({children, onKeyboardOut, id}): FocusTableProps {
+export function createFocusTable(scope: ReactScope): Array<React.Component> {
+  const TableScope = React.unstable_createScope(scope.fn);
+
+  function Table({children, onKeyboardOut, id, wrap}): FocusTableProps {
     return (
-      <TableScope type="table" onKeyboardOut={onKeyboardOut} id={id}>
+      <TableScope
+        type="table"
+        onKeyboardOut={onKeyboardOut}
+        id={id}
+        wrap={wrap}>
         {children}
       </TableScope>
     );
@@ -143,70 +169,99 @@ export function createFocusTable(): Array<React.Component> {
     return <TableScope type="row">{children}</TableScope>;
   }
 
-  function Cell({children}): FocusCellProps {
+  function Cell({children, onKeyDown}): FocusCellProps {
     const scopeRef = useRef(null);
     const keyboard = useKeyboard({
       onKeyDown(event: KeyboardEvent): void {
         const currentCell = scopeRef.current;
+        if (currentCell === null) {
+          event.continuePropagation();
+          return;
+        }
         switch (event.key) {
-          case 'UpArrow': {
-            const [cells, rowIndex] = getRowCells(currentCell);
+          case 'ArrowUp': {
+            const [cells, cellIndex] = getRowCells(currentCell);
             if (cells !== null) {
-              const [columns, columnIndex] = getRows(currentCell);
-              if (columns !== null) {
-                if (columnIndex > 0) {
-                  const column = columns[columnIndex - 1];
-                  focusCellByRowIndex(column, rowIndex);
-                } else if (columnIndex === 0) {
-                  triggerNavigateOut(currentCell, 'up');
-                }
-              }
-            }
-            return;
-          }
-          case 'DownArrow': {
-            const [cells, rowIndex] = getRowCells(currentCell);
-            if (cells !== null) {
-              const [columns, columnIndex] = getRows(currentCell);
-              if (columns !== null) {
-                if (columnIndex !== -1) {
-                  if (columnIndex === columns.length - 1) {
-                    triggerNavigateOut(currentCell, 'down');
+              const [rows, rowIndex] = getRows(currentCell);
+              if (rows !== null) {
+                if (rowIndex > 0) {
+                  const row = rows[rowIndex - 1];
+                  focusCellByIndex(row, cellIndex, event);
+                } else if (rowIndex === 0) {
+                  const wrap = getTableWrapProp(currentCell);
+                  if (wrap) {
+                    const row = rows[rows.length - 1];
+                    focusCellByIndex(row, cellIndex, event);
                   } else {
-                    const column = columns[columnIndex + 1];
-                    focusCellByRowIndex(column, rowIndex);
+                    triggerNavigateOut(currentCell, 'up', event);
                   }
                 }
               }
             }
             return;
           }
-          case 'LeftArrow': {
-            const [cells, rowIndex] = getRowCells(currentCell);
+          case 'ArrowDown': {
+            const [cells, cellIndex] = getRowCells(currentCell);
             if (cells !== null) {
-              if (rowIndex > 0) {
-                focusCell(cells[rowIndex - 1]);
-              } else if (rowIndex === 0) {
-                triggerNavigateOut(currentCell, 'left');
+              const [rows, rowIndex] = getRows(currentCell);
+              if (rows !== null) {
+                if (rowIndex !== -1) {
+                  if (rowIndex === rows.length - 1) {
+                    const wrap = getTableWrapProp(currentCell);
+                    if (wrap) {
+                      const row = rows[0];
+                      focusCellByIndex(row, cellIndex, event);
+                    } else {
+                      triggerNavigateOut(currentCell, 'down', event);
+                    }
+                  } else {
+                    const row = rows[rowIndex + 1];
+                    focusCellByIndex(row, cellIndex, event);
+                  }
+                }
               }
             }
             return;
           }
-          case 'RightArrow': {
+          case 'ArrowLeft': {
+            const [cells, rowIndex] = getRowCells(currentCell);
+            if (cells !== null) {
+              if (rowIndex > 0) {
+                focusCell(cells[rowIndex - 1]);
+                event.preventDefault();
+              } else if (rowIndex === 0) {
+                const wrap = getTableWrapProp(currentCell);
+                if (wrap) {
+                  focusCell(cells[cells.length - 1], event);
+                } else {
+                  triggerNavigateOut(currentCell, 'left', event);
+                }
+              }
+            }
+            return;
+          }
+          case 'ArrowRight': {
             const [cells, rowIndex] = getRowCells(currentCell);
             if (cells !== null) {
               if (rowIndex !== -1) {
                 if (rowIndex === cells.length - 1) {
-                  triggerNavigateOut(currentCell, 'right');
+                  const wrap = getTableWrapProp(currentCell);
+                  if (wrap) {
+                    focusCell(cells[0], event);
+                  } else {
+                    triggerNavigateOut(currentCell, 'right', event);
+                  }
                 } else {
-                  focusCell(cells[rowIndex + 1]);
+                  focusCell(cells[rowIndex + 1], event);
                 }
               }
             }
             return;
           }
         }
-        event.continuePropagation();
+        if (onKeyDown) {
+          onKeyDown(event);
+        }
       },
     });
     return (

@@ -789,6 +789,7 @@ function createFiberFromScope(
 ) {
   const fiber = createFiber(ScopeComponent, pendingProps, key, mode);
   fiber.type = scope;
+  fiber.elementType = scope;
   fiber.expirationTime = expirationTime;
   return fiber;
 }

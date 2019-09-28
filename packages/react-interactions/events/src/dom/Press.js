@@ -12,6 +12,7 @@ import type {PointerType} from 'shared/ReactDOMTypes';
 import React from 'react';
 import {useTap} from 'react-interactions/events/tap';
 import {useKeyboard} from 'react-interactions/events/keyboard';
+import warning from 'shared/warning';
 
 const emptyObject = {};
 
@@ -48,6 +49,8 @@ type PressEvent = {|
   type: PressEventType,
   x: number,
   y: number,
+  preventDefault: () => void,
+  stopPropagation: () => void,
 |};
 
 function createGestureState(e: any, type: PressEventType): PressEvent {
@@ -67,6 +70,26 @@ function createGestureState(e: any, type: PressEventType): PressEvent {
     type,
     x: e.x,
     y: e.y,
+    preventDefault() {
+      // NO-OP, we should remove this in the future
+      if (__DEV__) {
+        warning(
+          false,
+          'preventDefault is not available on event objects created from event responder modules (React Flare). ' +
+            'Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.preventDefault() }`',
+        );
+      }
+    },
+    stopPropagation() {
+      // NO-OP, we should remove this in the future
+      if (__DEV__) {
+        warning(
+          false,
+          'stopPropagation is not available on event objects created from event responder modules (React Flare). ' +
+            'Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.stopPropagation() }`',
+        );
+      }
+    },
   };
 }
 
@@ -105,10 +128,10 @@ export function usePress(props: PressProps) {
     onPressStart,
   } = safeProps;
 
-  const [active, updateActive] = React.useState(null);
+  const activeResponder = React.useRef(null);
 
   const tap = useTap({
-    disabled: disabled || active === 'keyboard',
+    disabled: disabled || activeResponder.current === 'keyboard',
     preventDefault,
     onAuxiliaryTap(e) {
       if (onPressStart != null) {
@@ -124,8 +147,8 @@ export function usePress(props: PressProps) {
       }
     },
     onTapStart(e) {
-      if (active == null) {
-        updateActive('tap');
+      if (activeResponder.current == null) {
+        activeResponder.current = 'tap';
         if (onPressStart != null) {
           onPressStart(createGestureState(e, 'pressstart'));
         }
@@ -133,47 +156,47 @@ export function usePress(props: PressProps) {
     },
     onTapChange: onPressChange,
     onTapUpdate(e) {
-      if (active === 'tap') {
+      if (activeResponder.current === 'tap') {
         if (onPressMove != null) {
           onPressMove(createGestureState(e, 'pressmove'));
         }
       }
     },
     onTapEnd(e) {
-      if (active === 'tap') {
+      if (activeResponder.current === 'tap') {
         if (onPressEnd != null) {
           onPressEnd(createGestureState(e, 'pressend'));
         }
         if (onPress != null) {
           onPress(createGestureState(e, 'press'));
         }
-        updateActive(null);
+        activeResponder.current = null;
       }
     },
     onTapCancel(e) {
-      if (active === 'tap') {
+      if (activeResponder.current === 'tap') {
         if (onPressEnd != null) {
           onPressEnd(createGestureState(e, 'pressend'));
         }
-        updateActive(null);
+        activeResponder.current = null;
       }
     },
   });
 
   const keyboard = useKeyboard({
-    disabled: disabled || active === 'tap',
+    disabled: disabled || activeResponder.current === 'tap',
     onClick(e) {
       if (preventDefault !== false) {
         e.preventDefault();
       }
-      if (active == null && onPress != null) {
+      if (activeResponder.current == null && onPress != null) {
         onPress(createGestureState(e, 'press'));
       }
     },
     onKeyDown(e) {
-      if (active == null && isValidKey(e)) {
+      if (activeResponder.current == null && isValidKey(e)) {
         handlePreventDefault(preventDefault, e);
-        updateActive('keyboard');
+        activeResponder.current = 'keyboard';
 
         if (onPressStart != null) {
           onPressStart(createGestureState(e, 'pressstart'));
@@ -184,7 +207,7 @@ export function usePress(props: PressProps) {
       }
     },
     onKeyUp(e) {
-      if (active === 'keyboard' && isValidKey(e)) {
+      if (activeResponder.current === 'keyboard' && isValidKey(e)) {
         handlePreventDefault(preventDefault, e);
         if (onPressChange != null) {
           onPressChange(false);
@@ -195,7 +218,7 @@ export function usePress(props: PressProps) {
         if (onPress != null) {
           onPress(createGestureState(e, 'press'));
         }
-        updateActive(null);
+        activeResponder.current = null;
       }
     },
   });

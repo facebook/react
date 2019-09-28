@@ -10,17 +10,6 @@
 import type {ReactScopeMethods} from 'shared/ReactTypes';
 import type {KeyboardEvent} from 'react-interactions/events/keyboard';
 
-import React from 'react';
-import {TabbableScope} from 'react-interactions/accessibility/tabbable-scope';
-import {useKeyboard} from 'react-interactions/events/keyboard';
-
-type TabFocusControllerProps = {
-  children: React.Node,
-  contain?: boolean,
-};
-
-const {useRef} = React;
-
 function getTabbableNodes(scope: ReactScopeMethods) {
   const tabbableNodes = scope.getScopedNodes();
   if (tabbableNodes === null || tabbableNodes.length === 0) {
@@ -53,7 +42,7 @@ function focusElem(elem: null | HTMLElement): void {
   }
 }
 
-function internalFocusNext(
+export function focusNext(
   scope: ReactScopeMethods,
   event?: KeyboardEvent,
   contain?: boolean,
@@ -87,7 +76,7 @@ function internalFocusNext(
   }
 }
 
-function internalFocusPrevious(
+export function focusPrevious(
   scope: ReactScopeMethods,
   event?: KeyboardEvent,
   contain?: boolean,
@@ -121,15 +110,7 @@ function internalFocusPrevious(
   }
 }
 
-export function focusPrevious(scope: ReactScopeMethods): void {
-  internalFocusPrevious(scope);
-}
-
-export function focusNext(scope: ReactScopeMethods): void {
-  internalFocusNext(scope);
-}
-
-export function getNextController(
+export function getNextScope(
   scope: ReactScopeMethods,
 ): null | ReactScopeMethods {
   const allScopes = scope.getChildrenFromRoot();
@@ -143,7 +124,7 @@ export function getNextController(
   return allScopes[currentScopeIndex + 1];
 }
 
-export function getPreviousController(
+export function getPreviousScope(
   scope: ReactScopeMethods,
 ): null | ReactScopeMethods {
   const allScopes = scope.getChildrenFromRoot();
@@ -156,42 +137,3 @@ export function getPreviousController(
   }
   return allScopes[currentScopeIndex - 1];
 }
-
-export const TabFocusController = React.forwardRef(
-  ({children, contain}: TabFocusControllerProps, ref): React.Node => {
-    const scopeRef = useRef(null);
-    const keyboard = useKeyboard({
-      onKeyDown(event: KeyboardEvent): void {
-        if (event.key !== 'Tab') {
-          event.continuePropagation();
-          return;
-        }
-        const scope = scopeRef.current;
-        if (scope !== null) {
-          if (event.shiftKey) {
-            internalFocusPrevious(scope, event, contain);
-          } else {
-            internalFocusNext(scope, event, contain);
-          }
-        }
-      },
-    });
-
-    return (
-      <TabbableScope
-        ref={node => {
-          if (ref) {
-            if (typeof ref === 'function') {
-              ref(node);
-            } else {
-              ref.current = node;
-            }
-          }
-          scopeRef.current = node;
-        }}
-        listeners={keyboard}>
-        {children}
-      </TabbableScope>
-    );
-  },
-);

@@ -12,14 +12,16 @@ import {createEventTarget} from 'react-interactions/events/src/dom/testing-libra
 let React;
 let ReactFeatureFlags;
 let createFocusTable;
+let TabbableScope;
 
-describe('ReactFocusTable', () => {
+describe('FocusTable', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableScopeAPI = true;
     ReactFeatureFlags.enableFlareAPI = true;
     createFocusTable = require('../FocusTable').createFocusTable;
+    TabbableScope = require('../TabbableScope').default;
     React = require('react');
   });
 
@@ -39,10 +41,12 @@ describe('ReactFocusTable', () => {
     });
 
     function createFocusTableComponent() {
-      const [FocusTable, FocusTableRow, FocusTableCell] = createFocusTable();
+      const [FocusTable, FocusTableRow, FocusTableCell] = createFocusTable(
+        TabbableScope,
+      );
 
-      return ({onKeyboardOut, id}) => (
-        <FocusTable onKeyboardOut={onKeyboardOut} id={id}>
+      return ({onKeyboardOut, id, wrap}) => (
+        <FocusTable onKeyboardOut={onKeyboardOut} id={id} wrap={wrap}>
           <table>
             <tbody>
               <FocusTableRow>
@@ -116,35 +120,35 @@ describe('ReactFocusTable', () => {
       const a1 = createEventTarget(buttons[0]);
       a1.focus();
       a1.keydown({
-        key: 'RightArrow',
+        key: 'ArrowRight',
       });
       expect(document.activeElement.textContent).toBe('A2');
 
       const a2 = createEventTarget(document.activeElement);
       a2.keydown({
-        key: 'DownArrow',
+        key: 'ArrowDown',
       });
       expect(document.activeElement.textContent).toBe('B2');
 
       const b2 = createEventTarget(document.activeElement);
       b2.keydown({
-        key: 'LeftArrow',
+        key: 'ArrowLeft',
       });
       expect(document.activeElement.textContent).toBe('B1');
 
       const b1 = createEventTarget(document.activeElement);
       b1.keydown({
-        key: 'DownArrow',
+        key: 'ArrowDown',
       });
       expect(document.activeElement.textContent).toBe('C1');
 
       const c1 = createEventTarget(document.activeElement);
       c1.keydown({
-        key: 'DownArrow',
+        key: 'ArrowDown',
       });
       expect(document.activeElement.textContent).toBe('C1');
       c1.keydown({
-        key: 'UpArrow',
+        key: 'ArrowUp',
       });
       expect(document.activeElement.textContent).toBe('B1');
     });
@@ -201,55 +205,155 @@ describe('ReactFocusTable', () => {
       let a1 = createEventTarget(buttons[0]);
       a1.focus();
       a1.keydown({
-        key: 'RightArrow',
+        key: 'ArrowRight',
       });
       expect(document.activeElement.textContent).toBe('A2');
 
       let a2 = createEventTarget(document.activeElement);
       a2.keydown({
-        key: 'RightArrow',
+        key: 'ArrowRight',
       });
       expect(document.activeElement.textContent).toBe('A3');
 
       let a3 = createEventTarget(document.activeElement);
       a3.keydown({
-        key: 'RightArrow',
+        key: 'ArrowRight',
       });
       expect(document.activeElement.textContent).toBe('A1');
 
       a1 = createEventTarget(document.activeElement);
       a1.keydown({
-        key: 'RightArrow',
+        key: 'ArrowRight',
       });
       expect(document.activeElement.textContent).toBe('A2');
 
       a2 = createEventTarget(document.activeElement);
       a2.keydown({
-        key: 'RightArrow',
+        key: 'ArrowRight',
       });
       expect(document.activeElement.textContent).toBe('A3');
 
       a3 = createEventTarget(document.activeElement);
       a3.keydown({
-        key: 'RightArrow',
+        key: 'ArrowRight',
       });
       expect(document.activeElement.textContent).toBe('A1');
 
       a1 = createEventTarget(document.activeElement);
       a1.keydown({
-        key: 'RightArrow',
+        key: 'ArrowRight',
       });
       expect(document.activeElement.textContent).toBe('A2');
 
       a2 = createEventTarget(document.activeElement);
       a2.keydown({
-        key: 'RightArrow',
+        key: 'ArrowRight',
       });
       expect(document.activeElement.textContent).toBe('A3');
 
       a3 = createEventTarget(document.activeElement);
       a3.keydown({
-        key: 'RightArrow',
+        key: 'ArrowRight',
+      });
+      expect(document.activeElement.textContent).toBe('A3');
+    });
+
+    it('handles nested tables correctly', () => {
+      const CustomScope = React.unstable_createScope((type, props) => {
+        return type === 'input';
+      });
+      const [FocusTable, FocusRow, FocusCell] = createFocusTable(CustomScope);
+      const firstRef = React.createRef();
+
+      function Test() {
+        return (
+          <FocusTable>
+            <div>
+              <FocusRow>
+                <FocusCell>
+                  <FocusTable>
+                    <FocusRow>
+                      <FocusCell>
+                        <input
+                          placeholder="Nested A1"
+                          tabIndex={0}
+                          ref={firstRef}
+                        />
+                      </FocusCell>
+                      <FocusCell>
+                        <input placeholder="Nested B1" tabIndex={0} />
+                      </FocusCell>
+                    </FocusRow>
+                  </FocusTable>
+                </FocusCell>
+                <FocusCell>
+                  <input placeholder="B1" tabIndex={-1} />
+                </FocusCell>
+                <FocusCell>
+                  <input placeholder="C1" tabIndex={-1} />
+                </FocusCell>
+              </FocusRow>
+            </div>
+            <div>
+              <FocusRow>
+                <FocusCell>
+                  <input placeholder="A2" tabIndex={-1} />
+                </FocusCell>
+                <FocusCell>
+                  <input placeholder="B2" tabIndex={-1} />
+                </FocusCell>
+                <FocusCell>
+                  <input placeholder="C1" tabIndex={-1} />
+                </FocusCell>
+              </FocusRow>
+            </div>
+          </FocusTable>
+        );
+      }
+
+      ReactDOM.render(<Test />, container);
+      firstRef.current.focus();
+
+      const nestedA1 = createEventTarget(document.activeElement);
+      nestedA1.keydown({
+        key: 'ArrowRight',
+      });
+      expect(document.activeElement.placeholder).toBe('Nested B1');
+
+      const nestedB1 = createEventTarget(document.activeElement);
+      nestedB1.keydown({
+        key: 'ArrowRight',
+      });
+      expect(document.activeElement.placeholder).toBe('B1');
+    });
+
+    it('handles keyboard arrow operations with wrapping enabled', () => {
+      const Test = createFocusTableComponent();
+
+      ReactDOM.render(<Test wrap={true} />, container);
+      const buttons = document.querySelectorAll('button');
+      let a1 = createEventTarget(buttons[0]);
+      a1.focus();
+      a1.keydown({
+        key: 'ArrowRight',
+      });
+      expect(document.activeElement.textContent).toBe('A2');
+
+      const a2 = createEventTarget(document.activeElement);
+      a2.keydown({
+        key: 'ArrowRight',
+      });
+      expect(document.activeElement.textContent).toBe('A3');
+
+      const a3 = createEventTarget(document.activeElement);
+      a3.keydown({
+        key: 'ArrowRight',
+      });
+      expect(document.activeElement.textContent).toBe('A1');
+
+      a1 = createEventTarget(document.activeElement);
+      a1.keydown({
+        key: 'ArrowLeft',
       });
       expect(document.activeElement.textContent).toBe('A3');
     });

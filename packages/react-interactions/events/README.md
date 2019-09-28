@@ -1,4 +1,4 @@
-# `react-ui/events`
+# `react-interactions/events`
 
 *This package is experimental. It is intended for use with the experimental React
 events API that is not available in open source builds.*
@@ -11,6 +11,8 @@ The core API is documented below. Documentation for individual Event Responders
 can be found [here](./docs).
 
 ## Event Responder Interface
+
+Note: React Responders require the internal React flag `enableFlareAPI`.
 
 An Event Responder Interface is defined using an object. Each responder can define DOM
 events to listen to, handle the synthetic responder events, dispatch custom

@@ -161,7 +161,7 @@ export default function(
     measureLayout: function(
       relativeToNativeNode: number | Object,
       onSuccess: MeasureLayoutOnSuccessCallback,
-      onFail: () => void /* currently unused */,
+      onFail?: () => void /* currently unused */,
     ) {
       let maybeInstance;
 

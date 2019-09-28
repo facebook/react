@@ -1392,6 +1392,40 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         expect(Scheduler).toFlushExpired(['Hi']);
       });
     }
+
+    it('handles errors in the return path of a component that suspends', async () => {
+      // Covers an edge case where an error is thrown inside the complete phase
+      // of a component that is in the return path of a component that suspends.
+      // The second error should also be handled (i.e. able to be captured by
+      // an error boundary.
+      class ErrorBoundary extends React.Component {
+        state = {error: null};
+        static getDerivedStateFromError(error, errorInfo) {
+          return {error};
+        }
+        render() {
+          if (this.state.error) {
+            return `Caught an error: ${this.state.error.message}`;
+          }
+          return this.props.children;
+        }
+      }
+
+      ReactNoop.renderLegacySyncRoot(
+        <ErrorBoundary>
+          <Suspense fallback="Loading...">
+            <errorInCompletePhase>
+              <AsyncText ms={1000} text="Async" />
+            </errorInCompletePhase>
+          </Suspense>
+        </ErrorBoundary>,
+      );
+
+      expect(Scheduler).toHaveYielded(['Suspend! [Async]']);
+      expect(ReactNoop).toMatchRenderedOutput(
+        'Caught an error: Error in host config.',
+      );
+    });
   });
 
   it('does not call lifecycles of a suspended component', async () => {
@@ -2541,5 +2575,54 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       // Should not display a fallback
       expect(root).toMatchRenderedOutput(<span prop="Initial" />);
     });
+  });
+
+  it('regression test: resets current "debug phase" after suspending', async () => {
+    function App() {
+      return (
+        <Suspense fallback="Loading...">
+          <Foo suspend={false} />
+        </Suspense>
+      );
+    }
+
+    const thenable = {then() {}};
+
+    let foo;
+    class Foo extends React.Component {
+      state = {suspend: false};
+      render() {
+        foo = this;
+
+        if (this.state.suspend) {
+          Scheduler.unstable_yieldValue('Suspend!');
+          throw thenable;
+        }
+
+        return <Text text="Foo" />;
+      }
+    }
+
+    const root = ReactNoop.createRoot();
+    await ReactNoop.act(async () => {
+      root.render(<App />);
+    });
+
+    expect(Scheduler).toHaveYielded(['Foo']);
+
+    await ReactNoop.act(async () => {
+      foo.setState({suspend: true});
+
+      // In the regression that this covers, we would neglect to reset the
+      // current debug phase after suspending (in the catch block), so React
+      // thinks we're still inside the render phase.
+      expect(Scheduler).toFlushAndYieldThrough(['Suspend!']);
+
+      // Then when this setState happens, React would incorrectly fire a warning
+      // about updates that happen the render phase (only fired by classes).
+      foo.setState({suspend: false});
+    });
+
+    expect(root).toMatchRenderedOutput(<span prop="Foo" />);
   });
 });

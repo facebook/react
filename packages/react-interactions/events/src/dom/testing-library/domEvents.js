@@ -104,7 +104,7 @@ function createPointerEvent(
     ctrlKey,
     detail,
     getModifierState(keyArg) {
-      createGetModifierState(keyArg, modifierState);
+      return createGetModifierState(keyArg, modifierState);
     },
     height: isMouse ? 1 : height != null ? height : defaultPointerSize,
     metaKey,
@@ -150,7 +150,7 @@ function createKeyboardEvent(
     altKey,
     ctrlKey,
     getModifierState(keyArg) {
-      createGetModifierState(keyArg, modifierState);
+      return createGetModifierState(keyArg, modifierState);
     },
     isComposing,
     key,
@@ -193,7 +193,7 @@ function createMouseEvent(
     ctrlKey,
     detail,
     getModifierState(keyArg) {
-      createGetModifierState(keyArg, modifierState);
+      return createGetModifierState(keyArg, modifierState);
     },
     metaKey,
     movementX,

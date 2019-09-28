@@ -8,7 +8,7 @@
  * @flow
  */
 
-import React from 'react';
+import React, {type ElementRef, type AbstractComponent} from 'react';
 
 export type MeasureOnSuccessCallback = (
   x: number,
@@ -89,29 +89,40 @@ class ReactNativeComponent<Props> extends React.Component<Props> {
   measure(callback: MeasureOnSuccessCallback): void {}
   measureInWindow(callback: MeasureInWindowOnSuccessCallback): void {}
   measureLayout(
-    relativeToNativeNode: number | Object,
+    relativeToNativeNode: number | ElementRef<HostComponent<mixed>>,
     onSuccess: MeasureLayoutOnSuccessCallback,
     onFail?: () => void,
   ): void {}
   setNativeProps(nativeProps: Object): void {}
 }
 
+// This type is only used for FlowTests. It shouldn't be imported directly
+export type _InternalReactNativeComponentClass<Props> = Class<
+  ReactNativeComponent<Props>,
+>;
+
 /**
  * This type keeps ReactNativeFiberHostComponent and NativeMethodsMixin in sync.
  * It can also provide types for ReactNative applications that use NMM or refs.
  */
-export type NativeMethodsMixinType = {
+export type NativeMethods = {
   blur(): void,
   focus(): void,
   measure(callback: MeasureOnSuccessCallback): void,
   measureInWindow(callback: MeasureInWindowOnSuccessCallback): void,
   measureLayout(
-    relativeToNativeNode: number | Object,
+    relativeToNativeNode: number | ElementRef<HostComponent<mixed>>,
     onSuccess: MeasureLayoutOnSuccessCallback,
-    onFail: () => void,
+    onFail?: () => void,
   ): void,
   setNativeProps(nativeProps: Object): void,
 };
+
+export type NativeMethodsMixinType = NativeMethods;
+export type HostComponent<T> = AbstractComponent<
+  T,
+  $ReadOnly<$Exact<NativeMethods>>,
+>;
 
 type SecretInternalsType = {
   NativeMethodsMixin: NativeMethodsMixinType,

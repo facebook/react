@@ -302,29 +302,31 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       expect(onTapStart).toHaveBeenCalledTimes(1);
     });
 
-    test('ignored buttons and modifiers', () => {
+    testWithPointerType('ignored buttons and modifiers', pointerType => {
       const target = createEventTarget(ref.current);
-      const primary = buttonsType.primary;
-      // right-click
-      target.pointerdown({buttons: buttonsType.secondary});
-      target.pointerup();
-      // middle-click
-      target.pointerdown({buttons: buttonsType.auxiliary});
-      target.pointerup();
-      // pen eraser
-      target.pointerdown({buttons: buttonsType.eraser});
-      target.pointerup();
+      const {auxiliary, eraser, primary, secondary} = buttonsType;
+      if (pointerType !== 'touch') {
+        // right-click
+        target.pointerdown({buttons: secondary, pointerType});
+        target.pointerup();
+        // middle-click
+        target.pointerdown({buttons: auxiliary, pointerType});
+        target.pointerup();
+        // pen eraser
+        target.pointerdown({buttons: eraser, pointerType});
+        target.pointerup();
+      }
       // alt-click
-      target.pointerdown({buttons: primary, altKey: true});
+      target.pointerdown({buttons: primary, altKey: true, pointerType});
       target.pointerup();
       // ctrl-click
-      target.pointerdown({buttons: primary, ctrlKey: true});
+      target.pointerdown({buttons: primary, ctrlKey: true, pointerType});
       target.pointerup();
       // meta-click
-      target.pointerdown({buttons: primary, metaKey: true});
+      target.pointerdown({buttons: primary, metaKey: true, pointerType});
       target.pointerup();
       // shift-click
-      target.pointerdown({buttons: primary, shiftKey: true});
+      target.pointerdown({buttons: primary, shiftKey: true, pointerType});
       target.pointerup();
 
       expect(onTapStart).toHaveBeenCalledTimes(0);

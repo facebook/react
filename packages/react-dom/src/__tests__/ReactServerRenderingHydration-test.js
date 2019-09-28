@@ -13,7 +13,6 @@ let React;
 let ReactDOM;
 let ReactDOMServer;
 let Scheduler;
-let act;
 
 // These tests rely both on ReactDOMServer and ReactDOM.
 // If a test only needs ReactDOMServer, put it in ReactServerRendering-test instead.
@@ -24,7 +23,6 @@ describe('ReactDOMServerHydration', () => {
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
     Scheduler = require('scheduler');
-    act = require('react-dom/test-utils').act;
   });
 
   it('should have the correct mounting behavior (old hydrate API)', () => {
@@ -570,6 +568,13 @@ describe('ReactDOMServerHydration', () => {
     // Hydrate asynchronously.
     let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
     root.render(<App />);
+
+    // We haven't started hydrating yet.
+    a.click();
+    // Clicking should not invoke the event yet because we haven't committed
+    // the hydration yet.
+    expect(clicks).toBe(0);
+
     // Flush part way through the render.
     if (__DEV__) {
       // In DEV effects gets double invoked.
@@ -587,15 +592,15 @@ describe('ReactDOMServerHydration', () => {
     expect(clicks).toBe(0);
 
     // Finish the rest of the hydration.
-    expect(Scheduler).toFlushAndYield(['Sibling2']);
+    if (__DEV__) {
+      // In DEV effects gets double invoked.
+      expect(Scheduler).toFlushAndYield(['Sibling2', 'Button', 'Button']);
+    } else {
+      expect(Scheduler).toFlushAndYield(['Sibling2', 'Button']);
+    }
 
-    // TODO: With selective hydration the event should've been replayed
-    // but for now we'll have to issue it again.
-    act(() => {
-      a.click();
-    });
-
-    expect(clicks).toBe(1);
+    // We should have picked up both events now.
+    expect(clicks).toBe(2);
 
     expect(container.textContent).toBe('Sibling');
 
@@ -649,11 +654,6 @@ describe('ReactDOMServerHydration', () => {
     Scheduler.unstable_flushAll();
 
     // We're now full hydrated.
-    // TODO: With selective hydration the event should've been replayed
-    // but for now we'll have to issue it again.
-    act(() => {
-      a.click();
-    });
 
     expect(clicks).toBe(1);
 

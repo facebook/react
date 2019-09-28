@@ -28,6 +28,7 @@ function createEventResponder({
   onMount,
   onUnmount,
   getInitialState,
+  targetPortalPropagation,
 }) {
   return React.unstable_createResponder('TestEventResponder', {
     targetEventTypes,
@@ -37,6 +38,7 @@ function createEventResponder({
     onMount,
     onUnmount,
     getInitialState,
+    targetPortalPropagation,
   });
 }
 
@@ -1033,5 +1035,52 @@ describe('DOMEventResponderSystem', () => {
         type: 'click-test',
       },
     ]);
+  });
+
+  it('should not propagate target events through portals by default', () => {
+    const buttonRef = React.createRef();
+    const onEvent = jest.fn();
+    const TestResponder = createEventResponder({
+      targetEventTypes: ['click'],
+      onEvent,
+    });
+    const domNode = document.createElement('div');
+    document.body.appendChild(domNode);
+    const Component = () => {
+      const listener = React.unstable_useResponder(TestResponder, {});
+      return (
+        <div listeners={listener}>
+          {ReactDOM.createPortal(<button ref={buttonRef} />, domNode)}
+        </div>
+      );
+    };
+    ReactDOM.render(<Component />, container);
+    dispatchClickEvent(buttonRef.current);
+    document.body.removeChild(domNode);
+    expect(onEvent).not.toBeCalled();
+  });
+
+  it('should propagate target events through portals when enabled', () => {
+    const buttonRef = React.createRef();
+    const onEvent = jest.fn();
+    const TestResponder = createEventResponder({
+      targetPortalPropagation: true,
+      targetEventTypes: ['click'],
+      onEvent,
+    });
+    const domNode = document.createElement('div');
+    document.body.appendChild(domNode);
+    const Component = () => {
+      const listener = React.unstable_useResponder(TestResponder, {});
+      return (
+        <div listeners={listener}>
+          {ReactDOM.createPortal(<button ref={buttonRef} />, domNode)}
+        </div>
+      );
+    };
+    ReactDOM.render(<Component />, container);
+    dispatchClickEvent(buttonRef.current);
+    document.body.removeChild(domNode);
+    expect(onEvent).toBeCalled();
   });
 });

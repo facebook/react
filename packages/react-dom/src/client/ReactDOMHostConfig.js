@@ -52,6 +52,7 @@ import {
   mountEventResponder,
   unmountEventResponder,
 } from '../events/DOMEventResponderSystem';
+import {retryIfBlockedOn} from '../events/ReactDOMEventReplaying';
 
 export type Type = string;
 export type Props = {
@@ -477,6 +478,8 @@ export function clearSuspenseBoundary(
       if (data === SUSPENSE_END_DATA) {
         if (depth === 0) {
           parentInstance.removeChild(nextNode);
+          // Retry if any event replaying was blocked on this.
+          retryIfBlockedOn(suspenseInstance);
           return;
         } else {
           depth--;
@@ -492,6 +495,8 @@ export function clearSuspenseBoundary(
     node = nextNode;
   } while (node);
   // TODO: Warn, we didn't find the end comment boundary.
+  // Retry if any event replaying was blocked on this.
+  retryIfBlockedOn(suspenseInstance);
 }
 
 export function clearSuspenseBoundaryFromContainer(
@@ -505,6 +510,8 @@ export function clearSuspenseBoundaryFromContainer(
   } else {
     // Document nodes should never contain suspense boundaries.
   }
+  // Retry if any event replaying was blocked on this.
+  retryIfBlockedOn(container);
 }
 
 export function hideInstance(instance: Instance): void {
@@ -742,6 +749,18 @@ export function getParentSuspenseInstance(
     node = node.previousSibling;
   }
   return null;
+}
+
+export function commitHydratedContainer(container: Container): void {
+  // Retry if any event replaying was blocked on this.
+  retryIfBlockedOn(container);
+}
+
+export function commitHydratedSuspenseInstance(
+  suspenseInstance: SuspenseInstance,
+): void {
+  // Retry if any event replaying was blocked on this.
+  retryIfBlockedOn(suspenseInstance);
 }
 
 export function didNotMatchHydratedContainerTextInstance(

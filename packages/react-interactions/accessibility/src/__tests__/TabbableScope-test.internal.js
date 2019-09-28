@@ -16,7 +16,7 @@ describe('TabbableScope', () => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableScopeAPI = true;
-    TabbableScope = require('../TabbableScope').TabbableScope;
+    TabbableScope = require('../TabbableScope').default;
     React = require('react');
   });
 

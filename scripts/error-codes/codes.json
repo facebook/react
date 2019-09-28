@@ -155,7 +155,7 @@
   "153": "Resuming work not yet implemented.",
   "154": "We should always have pending or current props. This error is likely caused by a bug in React. Please file an issue.",
   "155": "An indeterminate component should never have mounted. This error is likely caused by a bug in React. Please file an issue.",
-  "156": "Unknown unit of work tag. This error is likely caused by a bug in React. Please file an issue.",
+  "156": "Unknown unit of work tag (%s). This error is likely caused by a bug in React. Please file an issue.",
   "157": "Invalid type of work. This error is likely caused by a bug in React. Please file an issue.",
   "158": "There must be pending props for an initial mount. This error is likely caused by a bug in React. Please file an issue.",
   "159": "There should always be pending or memoized props. This error is likely caused by a bug in React. Please file an issue.",
@@ -342,5 +342,6 @@
   "341": "We just came from a parent so we must have had a parent. This is a bug in React.",
   "342": "A React component suspended while rendering, but no fallback UI was specified.\n\nAdd a <Suspense fallback=...> component higher in the tree to provide a loading indicator or placeholder to display.",
   "343": "ReactDOMServer does not yet support scope components.",
-  "344": "Expected prepareToHydrateHostSuspenseInstance() to never be called. This error is likely caused by a bug in React. Please file an issue."
+  "344": "Expected prepareToHydrateHostSuspenseInstance() to never be called. This error is likely caused by a bug in React. Please file an issue.",
+  "345": "Root did not complete. This is a bug in React."
 }

@@ -22,6 +22,7 @@ export default function createEventResponder<E, C>(
     onRootEvent,
     rootEventTypes,
     targetEventTypes,
+    targetPortalPropagation,
   } = responderConfig;
   const eventResponder = {
     $$typeof: REACT_RESPONDER_TYPE,
@@ -33,6 +34,7 @@ export default function createEventResponder<E, C>(
     onUnmount: onUnmount || null,
     rootEventTypes: rootEventTypes || null,
     targetEventTypes: targetEventTypes || null,
+    targetPortalPropagation: targetPortalPropagation || false,
   };
   // We use responder as a Map key later on. When we have a bad
   // polyfill, then we can't use it as a key as the polyfill tries

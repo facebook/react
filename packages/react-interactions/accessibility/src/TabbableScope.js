@@ -9,7 +9,7 @@
 
 import React from 'react';
 
-export const tabFocusableImpl = (type: string, props: Object): boolean => {
+const tabFocusableImpl = (type: string, props: Object): boolean => {
   if (props.tabIndex === -1 || props.disabled) {
     return false;
   }
@@ -32,4 +32,6 @@ export const tabFocusableImpl = (type: string, props: Object): boolean => {
   );
 };
 
-export const TabbableScope = React.unstable_createScope(tabFocusableImpl);
+const TabbableScope = React.unstable_createScope(tabFocusableImpl);
+
+export default TabbableScope;

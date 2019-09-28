@@ -350,23 +350,26 @@ function isActivePointer(
   }
 }
 
-function isAuxiliary(buttons: number, nativeEvent: any): boolean {
+function isAuxiliary(buttons: number, event: ReactDOMResponderEvent): boolean {
+  const nativeEvent: any = event.nativeEvent;
+  const isPrimaryPointer =
+    buttons === buttonsEnum.primary || event.pointerType === 'touch';
   return (
     // middle-click
     buttons === buttonsEnum.auxiliary ||
     // open-in-new-tab
-    (buttons === buttonsEnum.primary && nativeEvent.metaKey) ||
+    (isPrimaryPointer && nativeEvent.metaKey) ||
     // open-in-new-window
-    (buttons === buttonsEnum.primary && nativeEvent.shiftKey)
+    (isPrimaryPointer && nativeEvent.shiftKey)
   );
 }
 
 function shouldActivate(event: ReactDOMResponderEvent): boolean {
   const nativeEvent: any = event.nativeEvent;
-  const pointerType = event.pointerType;
-  const buttons = nativeEvent.buttons;
-  const isValidButton = buttons === buttonsEnum.primary;
-  return pointerType === 'touch' || (isValidButton && !hasModifierKey(event));
+  const isPrimaryPointer =
+    nativeEvent.buttons === buttonsEnum.primary ||
+    event.pointerType === 'touch';
+  return isPrimaryPointer && !hasModifierKey(event);
 }
 
 /**
@@ -514,10 +517,7 @@ const responderImpl = {
 
         if (!state.isActive) {
           const activate = shouldActivate(event);
-          const activateAuxiliary = isAuxiliary(
-            nativeEvent.buttons,
-            nativeEvent,
-          );
+          const activateAuxiliary = isAuxiliary(nativeEvent.buttons, event);
 
           if (activate || activateAuxiliary) {
             state.buttons = nativeEvent.buttons;
@@ -531,7 +531,9 @@ const responderImpl = {
             }
           }
 
-          if (activate) {
+          if (activateAuxiliary) {
+            state.isAuxiliaryActive = true;
+          } else if (activate) {
             const gestureState = createGestureState(
               context,
               props,
@@ -544,8 +546,6 @@ const responderImpl = {
             state.initialPosition.x = gestureState.x;
             state.initialPosition.y = gestureState.y;
             dispatchStart(context, props, state);
-          } else if (activateAuxiliary) {
-            state.isAuxiliaryActive = true;
           }
         }
         break;
@@ -611,7 +611,7 @@ const responderImpl = {
         if (state.isActive && isActivePointer(event, state)) {
           state.gestureState = createGestureState(context, props, state, event);
           state.isActive = false;
-          if (isAuxiliary(state.buttons, nativeEvent)) {
+          if (isAuxiliary(state.buttons, event)) {
             dispatchCancel(context, props, state);
             dispatchAuxiliaryTap(context, props, state);
             // Remove the root events here as no 'click' event is dispatched
@@ -626,7 +626,7 @@ const responderImpl = {
           }
         } else if (
           state.isAuxiliaryActive &&
-          isAuxiliary(state.buttons, nativeEvent)
+          isAuxiliary(state.buttons, event)
         ) {
           state.isAuxiliaryActive = false;
           state.gestureState = createGestureState(context, props, state, event);

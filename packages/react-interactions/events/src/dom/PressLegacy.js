@@ -19,6 +19,7 @@ import type {
 
 import React from 'react';
 import {DiscreteEvent, UserBlockingEvent} from 'shared/ReactTypes';
+import warning from 'shared/warning';
 
 type PressProps = {|
   disabled: boolean,
@@ -93,6 +94,8 @@ type PressEvent = {|
   type: PressEventType,
   x: null | number,
   y: null | number,
+  preventDefault: () => void,
+  stopPropagation: () => void,
 |};
 
 const hasPointerEvents =
@@ -185,6 +188,26 @@ function createPressEvent(
     type,
     x: clientX,
     y: clientY,
+    preventDefault() {
+      // NO-OP, we should remove this in the future
+      if (__DEV__) {
+        warning(
+          false,
+          'preventDefault is not available on event objects created from event responder modules (React Flare). ' +
+            'Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.preventDefault() }`',
+        );
+      }
+    },
+    stopPropagation() {
+      // NO-OP, we should remove this in the future
+      if (__DEV__) {
+        warning(
+          false,
+          'stopPropagation is not available on event objects created from event responder modules (React Flare). ' +
+            'Try wrapping in a conditional, i.e. `if (event.type !== "press") { event.stopPropagation() }`',
+        );
+      }
+    },
   };
 }
 

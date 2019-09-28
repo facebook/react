@@ -21,9 +21,16 @@ import {
 export type ExpirationTime = number;
 
 export const NoWork = 0;
-// TODO: Think of a better name for Never.
+// TODO: Think of a better name for Never. The key difference with Idle is that
+// Never work can be committed in an inconsistent state without tearing the UI.
+// The main example is offscreen content, like a hidden subtree. So one possible
+// name is Offscreen. However, it also includes dehydrated Suspense boundaries,
+// which are inconsistent in the sense that they haven't finished yet, but
+// aren't visibly inconsistent because the server rendered HTML matches what the
+// hydrated tree would look like.
 export const Never = 1;
-// TODO: Use the Idle expiration time for idle state updates
+// Idle is slightly higher priority than Never. It must completely finish in
+// order to be consistent.
 export const Idle = 2;
 export const Sync = MAX_SIGNED_31_BIT_INT;
 export const Batched = Sync - 1;
@@ -115,7 +122,7 @@ export function inferPriorityFromExpirationTime(
   if (expirationTime === Sync) {
     return ImmediatePriority;
   }
-  if (expirationTime === Never) {
+  if (expirationTime === Never || expirationTime === Idle) {
     return IdlePriority;
   }
   const msUntil =

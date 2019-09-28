@@ -96,6 +96,7 @@ export type ReactEventResponder<E, C> = {
   $$typeof: Symbol | number,
   displayName: string,
   targetEventTypes: null | Array<string>,
+  targetPortalPropagation: boolean,
   rootEventTypes: null | Array<string>,
   getInitialState: null | ((props: Object) => Object),
   onEvent:

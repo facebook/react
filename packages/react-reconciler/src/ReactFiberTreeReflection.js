@@ -8,6 +8,8 @@
  */
 
 import type {Fiber} from './ReactFiber';
+import type {Container, SuspenseInstance} from './ReactFiberHostConfig';
+import type {SuspenseState} from './ReactFiberSuspenseComponent';
 
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
@@ -22,6 +24,7 @@ import {
   HostPortal,
   HostText,
   FundamentalComponent,
+  SuspenseComponent,
 } from 'shared/ReactWorkTags';
 import {NoEffect, Placement, Hydrating} from 'shared/ReactSideEffectTags';
 import {enableFundamentalAPI} from 'shared/ReactFeatureFlags';
@@ -58,6 +61,30 @@ export function getNearestMountedFiber(fiber: Fiber): null | Fiber {
   // If we didn't hit the root, that means that we're in an disconnected tree
   // that has been unmounted.
   return null;
+}
+
+export function getSuspenseInstanceFromFiber(
+  fiber: Fiber,
+): null | SuspenseInstance {
+  if (fiber.tag === SuspenseComponent) {
+    let suspenseState: SuspenseState | null = fiber.memoizedState;
+    if (suspenseState === null) {
+      const current = fiber.alternate;
+      if (current !== null) {
+        suspenseState = current.memoizedState;
+      }
+    }
+    if (suspenseState !== null) {
+      return suspenseState.dehydrated;
+    }
+  }
+  return null;
+}
+
+export function getContainerFromFiber(fiber: Fiber): null | Container {
+  return fiber.tag === HostRoot
+    ? (fiber.stateNode.containerInfo: Container)
+    : null;
 }
 
 export function isFiberMounted(fiber: Fiber): boolean {

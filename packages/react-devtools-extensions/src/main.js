@@ -135,10 +135,10 @@ function createPanelIfReactLoaded() {
         // Initialize the backend only once the Store has been initialized.
         // Otherwise the Store may miss important initial tree op codes.
         chrome.devtools.inspectedWindow.eval(
-          `window.postMessage({ source: 'react-devtools-inject-backend' });`,
+          `window.postMessage({ source: 'react-devtools-inject-backend' }, window.origin);`,
           function(response, evalError) {
             if (evalError) {
-              console.log(evalError);
+              console.error(evalError);
             }
           },
         );
@@ -161,6 +161,7 @@ function createPanelIfReactLoaded() {
               overrideTab,
               profilerPortalContainer,
               showTabBar: false,
+              warnIfUnsupportedVersionDetected: true,
               store,
               viewElementSourceFunction,
             }),
