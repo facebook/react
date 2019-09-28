@@ -31,7 +31,6 @@ export const enableScopeAPI = true;
 export const enableJSXTransformAPI = true;
 export const warnAboutUnmockedScheduler = true;
 export const flushSuspenseFallbacksInTests = true;
-export const enableUserBlockingEvents = false;
 export const enableSuspenseCallback = true;
 export const warnAboutDefaultPropsOnFunctionComponents = false;
 export const warnAboutStringRefs = false;

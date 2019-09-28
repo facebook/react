@@ -62,10 +62,7 @@ import SimpleEventPlugin from './SimpleEventPlugin';
 import {getRawEventName} from './DOMTopLevelEventTypes';
 import {passiveBrowserEventsSupported} from './checkPassiveEvents';
 
-import {
-  enableFlareAPI,
-  enableUserBlockingEvents,
-} from 'shared/ReactFeatureFlags';
+import {enableFlareAPI} from 'shared/ReactFeatureFlags';
 import {
   UserBlockingEvent,
   ContinuousEvent,
@@ -298,14 +295,10 @@ function dispatchUserBlockingUpdate(
   eventSystemFlags,
   nativeEvent,
 ) {
-  if (enableUserBlockingEvents) {
-    runWithPriority(
-      UserBlockingPriority,
-      dispatchEvent.bind(null, topLevelType, eventSystemFlags, nativeEvent),
-    );
-  } else {
-    dispatchEvent(topLevelType, eventSystemFlags, nativeEvent);
-  }
+  runWithPriority(
+    UserBlockingPriority,
+    dispatchEvent.bind(null, topLevelType, eventSystemFlags, nativeEvent),
+  );
 }
 
 function dispatchEventForPluginEventSystem(

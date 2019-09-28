@@ -22,7 +22,6 @@ function initializeModules(hasPointerEvents) {
   setPointerEvent(hasPointerEvents);
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
   ReactFeatureFlags.enableFlareAPI = true;
-  ReactFeatureFlags.enableUserBlockingEvents = true;
   React = require('react');
   ReactDOM = require('react-dom');
   HoverResponder = require('react-interactions/events/hover').HoverResponder;

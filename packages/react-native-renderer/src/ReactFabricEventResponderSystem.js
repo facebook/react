@@ -31,7 +31,6 @@ import {
   UserBlockingEvent,
   DiscreteEvent,
 } from './ReactNativeTypes';
-import {enableUserBlockingEvents} from 'shared/ReactFeatureFlags';
 import warning from 'shared/warning';
 import invariant from 'shared/invariant';
 
@@ -95,13 +94,9 @@ const eventResponderContext: ReactNativeResponderContext = {
         break;
       }
       case UserBlockingEvent: {
-        if (enableUserBlockingEvents) {
-          runWithPriority(UserBlockingPriority, () =>
-            executeUserEventHandler(eventListener, eventValue),
-          );
-        } else {
-          executeUserEventHandler(eventListener, eventValue);
-        }
+        runWithPriority(UserBlockingPriority, () =>
+          executeUserEventHandler(eventListener, eventValue),
+        );
         break;
       }
       case ContinuousEvent: {

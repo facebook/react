@@ -39,7 +39,6 @@ export const disableLegacyContext = false;
 export const warnAboutStringRefs = false;
 export const warnAboutDefaultPropsOnFunctionComponents = false;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
-export const enableUserBlockingEvents = true;
 
 export const enableStableConcurrentModeAPIs = false;
 
