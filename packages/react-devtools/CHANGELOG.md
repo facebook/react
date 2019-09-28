@@ -10,7 +10,7 @@
 
 </details>
 
-## 4.1.2 (September 2y, 2019)
+## 4.1.2 (September 27, 2019)
 #### Bug fixes
 * Fixed an infinite loop that occurred in some cases with prop values of `NaN`. ([bvaughn](https://github.com/bvaughn) in [#16934](https://github.com/facebook/react/pull/16934))
 
