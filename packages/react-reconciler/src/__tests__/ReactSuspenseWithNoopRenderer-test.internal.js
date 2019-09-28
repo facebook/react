@@ -494,7 +494,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         return <Text text="(empty)" />;
       }
       return (
-        <Suspense>
+        <Suspense fallback="Loading...">
           <AsyncText ms={2000} text="Async" />
         </Suspense>
       );
@@ -516,6 +516,71 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       '(empty)',
     ]);
     expect(ReactNoop.getChildren()).toEqual([span('(empty)')]);
+  });
+
+  it('tries each subsequent level after suspending', async () => {
+    const root = ReactNoop.createRoot();
+
+    function App({step, shouldSuspend}) {
+      return (
+        <Suspense fallback="Loading...">
+          <Text text="Sibling" />
+          {shouldSuspend ? (
+            <AsyncText ms={10000} text={'Step ' + step} />
+          ) : (
+            <Text text={'Step ' + step} />
+          )}
+        </Suspense>
+      );
+    }
+
+    function interrupt() {
+      // React has a heuristic to batch all updates that occur within the same
+      // event. This is a trick to circumvent that heuristic.
+      ReactNoop.flushSync(() => {
+        ReactNoop.renderToRootWithID(null, 'other-root');
+      });
+    }
+
+    // Mount the Suspense boundary without suspending, so that the subsequent
+    // updates suspend with a delay.
+    await ReactNoop.act(async () => {
+      root.render(<App step={0} shouldSuspend={false} />);
+    });
+    await advanceTimers(1000);
+    expect(Scheduler).toHaveYielded(['Sibling', 'Step 0']);
+
+    // Schedule an update at several distinct expiration times
+    await ReactNoop.act(async () => {
+      root.render(<App step={1} shouldSuspend={true} />);
+      Scheduler.unstable_advanceTime(1000);
+      expect(Scheduler).toFlushAndYieldThrough(['Sibling']);
+      interrupt();
+
+      root.render(<App step={2} shouldSuspend={true} />);
+      Scheduler.unstable_advanceTime(1000);
+      expect(Scheduler).toFlushAndYieldThrough(['Sibling']);
+      interrupt();
+
+      root.render(<App step={3} shouldSuspend={true} />);
+      Scheduler.unstable_advanceTime(1000);
+      expect(Scheduler).toFlushAndYieldThrough(['Sibling']);
+      interrupt();
+
+      root.render(<App step={4} shouldSuspend={false} />);
+    });
+
+    // Should suspend at each distinct level
+    expect(Scheduler).toHaveYielded([
+      'Sibling',
+      'Suspend! [Step 1]',
+      'Sibling',
+      'Suspend! [Step 2]',
+      'Sibling',
+      'Suspend! [Step 3]',
+      'Sibling',
+      'Step 4',
+    ]);
   });
 
   it('forces an expiration after an update times out', async () => {
@@ -1327,6 +1392,40 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         expect(Scheduler).toFlushExpired(['Hi']);
       });
     }
+
+    it('handles errors in the return path of a component that suspends', async () => {
+      // Covers an edge case where an error is thrown inside the complete phase
+      // of a component that is in the return path of a component that suspends.
+      // The second error should also be handled (i.e. able to be captured by
+      // an error boundary.
+      class ErrorBoundary extends React.Component {
+        state = {error: null};
+        static getDerivedStateFromError(error, errorInfo) {
+          return {error};
+        }
+        render() {
+          if (this.state.error) {
+            return `Caught an error: ${this.state.error.message}`;
+          }
+          return this.props.children;
+        }
+      }
+
+      ReactNoop.renderLegacySyncRoot(
+        <ErrorBoundary>
+          <Suspense fallback="Loading...">
+            <errorInCompletePhase>
+              <AsyncText ms={1000} text="Async" />
+            </errorInCompletePhase>
+          </Suspense>
+        </ErrorBoundary>,
+      );
+
+      expect(Scheduler).toHaveYielded(['Suspend! [Async]']);
+      expect(ReactNoop).toMatchRenderedOutput(
+        'Caught an error: Error in host config.',
+      );
+    });
   });
 
   it('does not call lifecycles of a suspended component', async () => {
@@ -2476,5 +2575,54 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       // Should not display a fallback
       expect(root).toMatchRenderedOutput(<span prop="Initial" />);
     });
+  });
+
+  it('regression test: resets current "debug phase" after suspending', async () => {
+    function App() {
+      return (
+        <Suspense fallback="Loading...">
+          <Foo suspend={false} />
+        </Suspense>
+      );
+    }
+
+    const thenable = {then() {}};
+
+    let foo;
+    class Foo extends React.Component {
+      state = {suspend: false};
+      render() {
+        foo = this;
+
+        if (this.state.suspend) {
+          Scheduler.unstable_yieldValue('Suspend!');
+          throw thenable;
+        }
+
+        return <Text text="Foo" />;
+      }
+    }
+
+    const root = ReactNoop.createRoot();
+    await ReactNoop.act(async () => {
+      root.render(<App />);
+    });
+
+    expect(Scheduler).toHaveYielded(['Foo']);
+
+    await ReactNoop.act(async () => {
+      foo.setState({suspend: true});
+
+      // In the regression that this covers, we would neglect to reset the
+      // current debug phase after suspending (in the catch block), so React
+      // thinks we're still inside the render phase.
+      expect(Scheduler).toFlushAndYieldThrough(['Suspend!']);
+
+      // Then when this setState happens, React would incorrectly fire a warning
+      // about updates that happen the render phase (only fired by classes).
+      foo.setState({suspend: false});
+    });
+
+    expect(root).toMatchRenderedOutput(<span prop="Foo" />);
   });
 });

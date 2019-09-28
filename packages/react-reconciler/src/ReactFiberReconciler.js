@@ -20,14 +20,22 @@ import {FundamentalComponent} from 'shared/ReactWorkTags';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
-import type {SuspenseHydrationCallbacks} from './ReactFiberSuspenseComponent';
+import type {
+  SuspenseHydrationCallbacks,
+  SuspenseState,
+} from './ReactFiberSuspenseComponent';
 
 import {
   findCurrentHostFiber,
   findCurrentHostFiberWithNoPortals,
 } from 'react-reconciler/reflection';
 import {get as getInstance} from 'shared/ReactInstanceMap';
-import {HostComponent, ClassComponent} from 'shared/ReactWorkTags';
+import {
+  HostComponent,
+  ClassComponent,
+  HostRoot,
+  SuspenseComponent,
+} from 'shared/ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import warningWithoutStack from 'shared/warningWithoutStack';
@@ -70,7 +78,7 @@ import {
   current as ReactCurrentFiberCurrent,
 } from './ReactCurrentFiber';
 import {StrictMode} from './ReactTypeOfMode';
-import {Sync} from './ReactFiberExpirationTime';
+import {Sync, computeInteractiveExpiration} from './ReactFiberExpirationTime';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 import {
   scheduleRefresh,
@@ -360,6 +368,57 @@ export function getPublicRootInstance(
     default:
       return containerFiber.child.stateNode;
   }
+}
+
+export function attemptSynchronousHydration(fiber: Fiber): void {
+  switch (fiber.tag) {
+    case HostRoot:
+      let root: FiberRoot = fiber.stateNode;
+      if (root.hydrate) {
+        // Flush the first scheduled "update".
+        flushRoot(root, root.firstPendingTime);
+      }
+      break;
+    case SuspenseComponent:
+      flushSync(() => scheduleWork(fiber, Sync));
+      // If we're still blocked after this, we need to increase
+      // the priority of any promises resolving within this
+      // boundary so that they next attempt also has higher pri.
+      let retryExpTime = computeInteractiveExpiration(requestCurrentTime());
+      markRetryTimeIfNotHydrated(fiber, retryExpTime);
+      break;
+  }
+}
+
+function markRetryTimeImpl(fiber: Fiber, retryTime: ExpirationTime) {
+  let suspenseState: null | SuspenseState = fiber.memoizedState;
+  if (suspenseState !== null && suspenseState.dehydrated !== null) {
+    if (suspenseState.retryTime < retryTime) {
+      suspenseState.retryTime = retryTime;
+    }
+  }
+}
+
+// Increases the priority of thennables when they resolve within this boundary.
+function markRetryTimeIfNotHydrated(fiber: Fiber, retryTime: ExpirationTime) {
+  markRetryTimeImpl(fiber, retryTime);
+  let alternate = fiber.alternate;
+  if (alternate) {
+    markRetryTimeImpl(alternate, retryTime);
+  }
+}
+
+export function attemptUserBlockingHydration(fiber: Fiber): void {
+  if (fiber.tag !== SuspenseComponent) {
+    // We ignore HostRoots here because we can't increase
+    // their priority and they should not suspend on I/O,
+    // since you have to wrap anything that might suspend in
+    // Suspense.
+    return;
+  }
+  let expTime = computeInteractiveExpiration(requestCurrentTime());
+  scheduleWork(fiber, expTime);
+  markRetryTimeIfNotHydrated(fiber, expTime);
 }
 
 export {findHostInstance};

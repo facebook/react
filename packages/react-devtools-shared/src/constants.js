@@ -35,6 +35,9 @@ export const PROFILER_EXPORT_VERSION = 4;
 export const CHANGE_LOG_URL =
   'https://github.com/facebook/react/blob/master/packages/react-devtools/CHANGELOG.md';
 
+export const UNSUPPORTED_VERSION_URL =
+  'https://reactjs.org/blog/2019/08/15/new-react-devtools.html#how-do-i-get-the-old-version-back';
+
 // HACK
 //
 // Extracting during build time avoids a temporarily invalid state for the inline target.

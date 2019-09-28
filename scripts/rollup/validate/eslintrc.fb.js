@@ -22,6 +22,8 @@ module.exports = {
     // Node.js Server Rendering
     setImmediate: true,
     Buffer: true,
+    // Trusted Types
+    trustedTypes: true,
 
     // Scheduler profiling
     SharedArrayBuffer: true,

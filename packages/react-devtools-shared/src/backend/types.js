@@ -81,7 +81,10 @@ export type ReactRenderer = {
   // Enables DevTools to append owners-only component stack to error messages.
   getCurrentFiber?: () => Fiber | null,
 
-  // <= 15
+  // Uniquely identifies React DOM v15.
+  ComponentTree?: any,
+
+  // Present for React DOM v12 (possibly earlier) through v15.
   Mount?: any,
 };
 

@@ -177,6 +177,7 @@ import {
   retryDehydratedSuspenseBoundary,
   scheduleWork,
   renderDidSuspendDelayIfPossible,
+  markUnprocessedUpdateTime,
 } from './ReactFiberWorkLoop';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
@@ -2709,6 +2710,11 @@ function bailoutOnAlreadyFinishedWork(
     stopProfilerTimerIfRunning(workInProgress);
   }
 
+  const updateExpirationTime = workInProgress.expirationTime;
+  if (updateExpirationTime !== NoWork) {
+    markUnprocessedUpdateTime(updateExpirationTime);
+  }
+
   // Check if the children have any pending work.
   const childExpirationTime = workInProgress.childExpirationTime;
   if (childExpirationTime < renderExpirationTime) {
@@ -3187,8 +3193,9 @@ function beginWork(
   }
   invariant(
     false,
-    'Unknown unit of work tag. This error is likely caused by a bug in ' +
+    'Unknown unit of work tag (%s). This error is likely caused by a bug in ' +
       'React. Please file an issue.',
+    workInProgress.tag,
   );
 }
 

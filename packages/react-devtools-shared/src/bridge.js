@@ -83,6 +83,7 @@ type BackendEvents = {|
   stopInspectingNative: [boolean],
   syncSelectionFromNativeElementsPanel: [],
   syncSelectionToNativeElementsPanel: [],
+  unsupportedRendererVersion: [RendererID],
 
   // React Native style editor plug-in.
   isNativeStyleEditorSupported: [

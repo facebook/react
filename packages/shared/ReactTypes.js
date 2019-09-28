@@ -96,6 +96,7 @@ export type ReactEventResponder<E, C> = {
   $$typeof: Symbol | number,
   displayName: string,
   targetEventTypes: null | Array<string>,
+  targetPortalPropagation: boolean,
   rootEventTypes: null | Array<string>,
   getInitialState: null | ((props: Object) => Object),
   onEvent:
@@ -168,6 +169,7 @@ export type ReactScopeMethods = {|
   getChildren(): null | Array<ReactScopeMethods>,
   getChildrenFromRoot(): null | Array<ReactScopeMethods>,
   getParent(): null | ReactScopeMethods,
+  getProps(): Object,
   getScopedNodes(): null | Array<Object>,
 |};
 

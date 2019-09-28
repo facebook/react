@@ -270,7 +270,6 @@ function HookView({canEditHooks, hook, id, inspectPath, path}: HookViewProps) {
             </span>
             {typeof overrideValueFn === 'function' ? (
               <EditableValue
-                dataType={type}
                 overrideValueFn={overrideValueFn}
                 path={[]}
                 value={value}

@@ -75,6 +75,12 @@ exports.register = function(name: string, callback: ViewConfigGetter): string {
     'Tried to register two views with the same name %s',
     name,
   );
+  invariant(
+    typeof callback === 'function',
+    'View config getter callback for component `%s` must be a function (received `%s`)',
+    name,
+    callback === null ? 'null' : typeof callback,
+  );
   viewConfigCallbacks.set(name, callback);
   return name;
 };
@@ -91,17 +97,21 @@ exports.get = function(name: string): ReactNativeBaseComponentViewConfig<> {
     if (typeof callback !== 'function') {
       invariant(
         false,
-        'View config not found for name %s.%s',
+        'View config getter callback for component `%s` must be a function (received `%s`).%s',
         name,
+        callback === null ? 'null' : typeof callback,
         typeof name[0] === 'string' && /[a-z]/.test(name[0])
           ? ' Make sure to start component names with a capital letter.'
           : '',
       );
     }
-    viewConfigCallbacks.set(name, null);
     viewConfig = callback();
     processEventTypes(viewConfig);
     viewConfigs.set(name, viewConfig);
+
+    // Clear the callback after the config is set so that
+    // we don't mask any errors during registration.
+    viewConfigCallbacks.set(name, null);
   } else {
     viewConfig = viewConfigs.get(name);
   }

@@ -33,6 +33,7 @@ export const enableSchedulerTracing = __PROFILE__;
 
 // Only used in www builds.
 export const enableSuspenseServerRenderer = false; // TODO: __DEV__? Here it might just be false.
+export const enableSelectiveHydration = false;
 
 // Only used in www builds.
 export const enableSchedulerDebugging = false;
@@ -79,11 +80,6 @@ export const warnAboutUnmockedScheduler = false;
 // *except* in some of our own tests, where we test incremental loading states.
 export const flushSuspenseFallbacksInTests = true;
 
-// Changes priority of some events like mousemove to user-blocking priority,
-// but without making them discrete. The flag exists in case it causes
-// starvation problems.
-export const enableUserBlockingEvents = false;
-
 // Add a callback property to suspense to notify which promises are currently
 // in the update queue. This allows reporting and tracing of what is causing
 // the user to see a loading state.
@@ -100,3 +96,5 @@ export const warnAboutStringRefs = false;
 export const disableLegacyContext = false;
 
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
+
+export const enableTrustedTypesIntegration = false;

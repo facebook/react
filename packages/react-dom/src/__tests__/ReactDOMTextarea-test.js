@@ -126,6 +126,33 @@ describe('ReactDOMTextarea', () => {
     expect(node.value).toEqual('gorilla');
   });
 
+  it('will not initially assign an empty value (covers case where firefox throws a validation error when required attribute is set)', () => {
+    const container = document.createElement('div');
+
+    let counter = 0;
+    const originalCreateElement = document.createElement;
+    spyOnDevAndProd(document, 'createElement').and.callFake(function(type) {
+      const el = originalCreateElement.apply(this, arguments);
+      let value = '';
+      if (type === 'textarea') {
+        Object.defineProperty(el, 'value', {
+          get: function() {
+            return value;
+          },
+          set: function(val) {
+            value = '' + val;
+            counter++;
+          },
+        });
+      }
+      return el;
+    });
+
+    ReactDOM.render(<textarea value="" readOnly={true} />, container);
+
+    expect(counter).toEqual(0);
+  });
+
   it('should render defaultValue for SSR', () => {
     const markup = ReactDOMServer.renderToString(<textarea defaultValue="1" />);
     const div = document.createElement('div');

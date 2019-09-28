@@ -17,4 +17,4 @@ function is(x: any, y: any) {
   );
 }
 
-export default is;
+export default (typeof Object.is === 'function' ? Object.is : is);

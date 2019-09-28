@@ -5,7 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {HostComponent, HostText} from 'shared/ReactWorkTags';
+import {
+  HostComponent,
+  HostText,
+  HostRoot,
+  SuspenseComponent,
+} from 'shared/ReactWorkTags';
 import invariant from 'shared/invariant';
 
 import {getParentSuspenseInstance} from './ReactDOMHostConfig';
@@ -62,14 +67,21 @@ export function getClosestInstanceFromNode(targetNode) {
       // a nested suspense boundary within it. So we can use this as a fast
       // bailout. Most of the time, when people add non-React children to
       // the tree, it is using a ref to a child-less DOM node.
-      // We only need to check one of the fibers because if it has ever
-      // gone from having children to deleting them or vice versa it would
-      // have deleted the dehydrated boundary nested inside already.
-      if (targetInst.child !== null) {
+      // Normally we'd only need to check one of the fibers because if it
+      // has ever gone from having children to deleting them or vice versa
+      // it would have deleted the dehydrated boundary nested inside already.
+      // However, since the HostRoot starts out with an alternate it might
+      // have one on the alternate so we need to check in case this was a
+      // root.
+      const alternate = targetInst.alternate;
+      if (
+        targetInst.child !== null ||
+        (alternate !== null && alternate.child !== null)
+      ) {
         // Next we need to figure out if the node that skipped past is
         // nested within a dehydrated boundary and if so, which one.
         let suspenseInstance = getParentSuspenseInstance(targetNode);
-        if (suspenseInstance !== null) {
+        while (suspenseInstance !== null) {
           // We found a suspense instance. That means that we haven't
           // hydrated it yet. Even though we leave the comments in the
           // DOM after hydrating, and there are boundaries in the DOM
@@ -83,10 +95,13 @@ export function getClosestInstanceFromNode(targetNode) {
             return targetSuspenseInst;
           }
           // If we don't find a Fiber on the comment, it might be because
-          // we haven't gotten to hydrate it yet. That should mean that
-          // the parent component also hasn't hydrated yet but we can
-          // just return that since it will bail out on the isMounted
-          // check.
+          // we haven't gotten to hydrate it yet. There might still be a
+          // parent boundary that hasn't above this one so we need to find
+          // the outer most that is known.
+          suspenseInstance = getParentSuspenseInstance(suspenseInstance);
+          // If we don't find one, then that should mean that the parent
+          // host component also hasn't hydrated yet. We can return it
+          // below since it will bail out on the isMounted check later.
         }
       }
       return targetInst;
@@ -102,9 +117,14 @@ export function getClosestInstanceFromNode(targetNode) {
  * instance, or null if the node was not rendered by this React.
  */
 export function getInstanceFromNode(node) {
-  const inst = node[internalInstanceKey];
+  const inst = node[internalInstanceKey] || node[internalContainerInstanceKey];
   if (inst) {
-    if (inst.tag === HostComponent || inst.tag === HostText) {
+    if (
+      inst.tag === HostComponent ||
+      inst.tag === HostText ||
+      inst.tag === SuspenseComponent ||
+      inst.tag === HostRoot
+    ) {
       return inst;
     } else {
       return null;
