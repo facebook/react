@@ -6,6 +6,12 @@
   </summary>
 </details>
 
+## 16.10.1 (September 28, 2019)
+
+### React DOM
+
+* Fix regression in Next.js apps by allowing Suspense mismatch during hydration to silently proceed ([@sebmarkbage](https://github.com/sebmarkbage) in [#16943](https://github.com/facebook/react/pull/16943))
+
 ## 16.10.0 (September 27, 2019)
 
 ### React DOM
