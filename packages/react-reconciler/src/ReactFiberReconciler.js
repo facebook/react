@@ -78,7 +78,11 @@ import {
   current as ReactCurrentFiberCurrent,
 } from './ReactCurrentFiber';
 import {StrictMode} from './ReactTypeOfMode';
-import {Sync, computeInteractiveExpiration} from './ReactFiberExpirationTime';
+import {
+  Sync,
+  computeInteractiveExpiration,
+  computeContinuousHydrationExpiration,
+} from './ReactFiberExpirationTime';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 import {
   scheduleRefresh,
@@ -417,6 +421,19 @@ export function attemptUserBlockingHydration(fiber: Fiber): void {
     return;
   }
   let expTime = computeInteractiveExpiration(requestCurrentTime());
+  scheduleWork(fiber, expTime);
+  markRetryTimeIfNotHydrated(fiber, expTime);
+}
+
+export function attemptContinuousHydration(fiber: Fiber): void {
+  if (fiber.tag !== SuspenseComponent) {
+    // We ignore HostRoots here because we can't increase
+    // their priority and they should not suspend on I/O,
+    // since you have to wrap anything that might suspend in
+    // Suspense.
+    return;
+  }
+  let expTime = computeContinuousHydrationExpiration(requestCurrentTime());
   scheduleWork(fiber, expTime);
   markRetryTimeIfNotHydrated(fiber, expTime);
 }
