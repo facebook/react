@@ -135,7 +135,7 @@ function createPanelIfReactLoaded() {
         // Initialize the backend only once the Store has been initialized.
         // Otherwise the Store may miss important initial tree op codes.
         chrome.devtools.inspectedWindow.eval(
-          `window.postMessage({ source: 'react-devtools-inject-backend' }, window.origin);`,
+          `window.postMessage({ source: 'react-devtools-inject-backend' }, '*');`,
           function(response, evalError) {
             if (evalError) {
               console.error(evalError);
