@@ -29,15 +29,13 @@ exports[`error transform should replace simple invariant calls 1`] = `
 import _ReactError from \\"shared/ReactError\\";
 import invariant from 'shared/invariant';
 
-(function () {
-  if (!condition) {
-    if (__DEV__) {
-      throw _ReactError(Error(\\"Do not override existing functions.\\"));
-    } else {
-      throw _ReactErrorProd(Error(16));
-    }
+if (!condition) {
+  if (__DEV__) {
+    throw _ReactError(Error(\\"Do not override existing functions.\\"));
+  } else {
+    throw _ReactErrorProd(Error(16));
   }
-})();"
+}"
 `;
 
 exports[`error transform should support invariant calls with a concatenated template string and args 1`] = `
@@ -45,15 +43,13 @@ exports[`error transform should support invariant calls with a concatenated temp
 import _ReactError from \\"shared/ReactError\\";
 import invariant from 'shared/invariant';
 
-(function () {
-  if (!condition) {
-    if (__DEV__) {
-      throw _ReactError(Error(\\"Expected a component class, got \\" + Foo + \\".\\" + Bar));
-    } else {
-      throw _ReactErrorProd(Error(18), Foo, Bar);
-    }
+if (!condition) {
+  if (__DEV__) {
+    throw _ReactError(Error(\\"Expected a component class, got \\" + Foo + \\".\\" + Bar));
+  } else {
+    throw _ReactErrorProd(Error(18), Foo, Bar);
   }
-})();"
+}"
 `;
 
 exports[`error transform should support invariant calls with args 1`] = `
@@ -61,24 +57,20 @@ exports[`error transform should support invariant calls with args 1`] = `
 import _ReactError from \\"shared/ReactError\\";
 import invariant from 'shared/invariant';
 
-(function () {
-  if (!condition) {
-    if (__DEV__) {
-      throw _ReactError(Error(\\"Expected \\" + foo + \\" target to be an array; got \\" + bar));
-    } else {
-      throw _ReactErrorProd(Error(7), foo, bar);
-    }
+if (!condition) {
+  if (__DEV__) {
+    throw _ReactError(Error(\\"Expected \\" + foo + \\" target to be an array; got \\" + bar));
+  } else {
+    throw _ReactErrorProd(Error(7), foo, bar);
   }
-})();"
+}"
 `;
 
 exports[`error transform should support noMinify option 1`] = `
 "import _ReactError from \\"shared/ReactError\\";
 import invariant from 'shared/invariant';
 
-(function () {
-  if (!condition) {
-    throw _ReactError(Error(\\"Do not override existing functions.\\"));
-  }
-})();"
+if (!condition) {
+  throw _ReactError(Error(\\"Do not override existing functions.\\"));
+}"
 `;

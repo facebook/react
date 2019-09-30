@@ -64,6 +64,14 @@ module.exports = function(babel) {
             ])
           );
 
+          const parentStatementPath = path.parentPath;
+          if (parentStatementPath.type !== 'ExpressionStatement') {
+            throw path.buildCodeFrameError(
+              'invariant() cannot be called from expression context. Move ' +
+                'the call to its own statement.'
+            );
+          }
+
           if (noMinify) {
             // Error minification is disabled for this build.
             //
@@ -71,7 +79,7 @@ module.exports = function(babel) {
             //   if (!condition) {
             //     throw ReactError(Error(`A ${adj} message that contains ${noun}`));
             //   }
-            path.replaceWith(
+            parentStatementPath.replaceWith(
               t.ifStatement(
                 t.unaryExpression('!', condition),
                 t.blockStatement([devThrow])
@@ -138,7 +146,7 @@ module.exports = function(babel) {
           //       throw ReactErrorProd(Error(ERR_CODE), adj, noun);
           //     }
           //   }
-          path.replaceWith(
+          parentStatementPath.replaceWith(
             t.ifStatement(
               t.unaryExpression('!', condition),
               t.blockStatement([
