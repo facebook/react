@@ -8,9 +8,11 @@
   
   <!-- Upcoming changes go here -->
 
+</details>
+
+## 4.1.3 (September 30, 2019)
 #### Bug fixes
 * Fixed regression where DevTools wouldn't properly connect with apps when using the `file://` protocol. ([linshunghuang](https://github.com/linshunghuang) in [#16953](https://github.com/facebook/react/pull/16953))
-</details>
 
 ## 4.1.2 (September 27, 2019)
 #### Bug fixes
