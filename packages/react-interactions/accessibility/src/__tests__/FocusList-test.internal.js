@@ -7,7 +7,10 @@
  * @flow
  */
 
-import {createEventTarget} from 'react-interactions/events/src/dom/testing-library';
+import {
+  createEventTarget,
+  emulateBrowserTab,
+} from 'react-interactions/events/src/dom/testing-library';
 
 let React;
 let ReactFeatureFlags;
@@ -155,6 +158,75 @@ describe('FocusList', () => {
         key: 'ArrowUp',
       });
       expect(document.activeElement.textContent).toBe('Item 3');
+    });
+
+    it('handles keyboard arrow operations mixed with tabbing', () => {
+      const [FocusList, FocusItem] = createFocusList(TabbableScope);
+      const beforeRef = React.createRef();
+      const afterRef = React.createRef();
+
+      function Test() {
+        return (
+          <>
+            <input placeholder="Before" ref={beforeRef} />
+            <FocusList tabScope={TabbableScope} portrait={true}>
+              <ul>
+                <FocusItem>
+                  <li>
+                    <input placeholder="A" />
+                  </li>
+                </FocusItem>
+                <FocusItem>
+                  <li>
+                    <input placeholder="B" />
+                  </li>
+                </FocusItem>
+                <FocusItem>
+                  <li>
+                    <input placeholder="C" />
+                  </li>
+                </FocusItem>
+                <FocusItem>
+                  <li>
+                    <input placeholder="D" />
+                  </li>
+                </FocusItem>
+                <FocusItem>
+                  <li>
+                    <input placeholder="E" />
+                  </li>
+                </FocusItem>
+                <FocusItem>
+                  <li>
+                    <input placeholder="F" />
+                  </li>
+                </FocusItem>
+              </ul>
+            </FocusList>
+            <input placeholder="After" ref={afterRef} />
+          </>
+        );
+      }
+
+      ReactDOM.render(<Test />, container);
+      beforeRef.current.focus();
+
+      expect(document.activeElement.placeholder).toBe('Before');
+      emulateBrowserTab();
+      expect(document.activeElement.placeholder).toBe('A');
+      emulateBrowserTab();
+      expect(document.activeElement.placeholder).toBe('After');
+      emulateBrowserTab(true);
+      expect(document.activeElement.placeholder).toBe('A');
+      const a = createEventTarget(document.activeElement);
+      a.keydown({
+        key: 'ArrowDown',
+      });
+      expect(document.activeElement.placeholder).toBe('B');
+      emulateBrowserTab();
+      expect(document.activeElement.placeholder).toBe('After');
+      emulateBrowserTab(true);
+      expect(document.activeElement.placeholder).toBe('B');
     });
   });
 });

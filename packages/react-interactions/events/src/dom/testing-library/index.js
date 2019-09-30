@@ -158,6 +158,33 @@ function testWithPointerType(message, testFn) {
   });
 }
 
+function emulateBrowserTab(backwards) {
+  const activeElement = document.activeElement;
+  const focusedElem = createEventTarget(activeElement);
+  let defaultPrevented = false;
+  focusedElem.keydown({
+    key: 'Tab',
+    shiftKey: backwards,
+    preventDefault() {
+      defaultPrevented = true;
+    },
+  });
+  if (!defaultPrevented) {
+    // This is not a full spec compliant version, but should be suffice for this test
+    const focusableElems = Array.from(
+      document.querySelectorAll(
+        'input, button, select, textarea, a[href], [tabindex], [contenteditable], iframe, object, embed',
+      ),
+    ).filter(
+      elem => elem.tabIndex > -1 && !elem.disabled && !elem.contentEditable,
+    );
+    const idx = focusableElems.indexOf(activeElement);
+    if (idx !== -1) {
+      focusableElems[backwards ? idx - 1 : idx + 1].focus();
+    }
+  }
+}
+
 export {
   buttonsType,
   createEventTarget,
@@ -166,4 +193,5 @@ export {
   hasPointerEvent,
   setPointerEvent,
   testWithPointerType,
+  emulateBrowserTab,
 };

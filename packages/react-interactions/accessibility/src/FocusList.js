@@ -12,6 +12,7 @@ import type {KeyboardEvent} from 'react-interactions/events/keyboard';
 
 import React from 'react';
 import {useKeyboard} from 'react-interactions/events/keyboard';
+import {setElementCanTab} from 'react-interactions/accessibility/focus-control';
 
 type FocusItemProps = {
   children?: React.Node,
@@ -22,6 +23,7 @@ type FocusListProps = {|
   children: React.Node,
   portrait: boolean,
   wrap?: boolean,
+  tabScope?: ReactScope,
 |};
 
 const {useRef} = React;
@@ -41,7 +43,7 @@ function getPreviousListItem(
   const items = list.getChildren();
   if (items !== null) {
     const currentItemIndex = items.indexOf(currentItem);
-    const wrap = getListWrapProp(currentItem);
+    const wrap = getListProps(currentItem).wrap;
     if (currentItemIndex === 0 && wrap) {
       return items[items.length - 1] || null;
     } else if (currentItemIndex > 0) {
@@ -58,7 +60,7 @@ function getNextListItem(
   const items = list.getChildren();
   if (items !== null) {
     const currentItemIndex = items.indexOf(currentItem);
-    const wrap = getListWrapProp(currentItem);
+    const wrap = getListProps(currentItem).wrap;
     const end = currentItemIndex === items.length - 1;
     if (end && wrap) {
       return items[0] || null;
@@ -69,22 +71,38 @@ function getNextListItem(
   return null;
 }
 
-function getListWrapProp(currentItem: ReactScopeMethods): boolean {
-  const list = currentItem.getParent();
+function getListProps(currentCell: ReactScopeMethods): Object {
+  const list = currentCell.getParent();
   if (list !== null) {
     const listProps = list.getProps();
-    return (listProps.type === 'list' && listProps.wrap) || false;
+    if (listProps && listProps.type === 'list') {
+      return listProps;
+    }
   }
-  return false;
+  return {};
 }
 
 export function createFocusList(scope: ReactScope): Array<React.Component> {
   const TableScope = React.unstable_createScope(scope.fn);
 
-  function List({children, portrait, wrap}): FocusListProps {
+  function List({
+    children,
+    portrait,
+    wrap,
+    tabScope: TabScope,
+  }): FocusListProps {
+    const tabScopeRef = useRef(null);
     return (
-      <TableScope type="list" portrait={portrait} wrap={wrap}>
-        {children}
+      <TableScope
+        type="list"
+        portrait={portrait}
+        wrap={wrap}
+        tabScopeRef={tabScopeRef}>
+        {TabScope ? (
+          <TabScope ref={tabScopeRef}>{children}</TabScope>
+        ) : (
+          children
+        )}
       </TableScope>
     );
   }
@@ -100,6 +118,24 @@ export function createFocusList(scope: ReactScope): Array<React.Component> {
           if (list !== null && listProps.type === 'list') {
             const portrait = listProps.portrait;
             switch (event.key) {
+              case 'Tab': {
+                const tabScope = getListProps(currentItem).tabScopeRef.current;
+                if (tabScope) {
+                  const activeNode = document.activeElement;
+                  const nodes = tabScope.getScopedNodes();
+                  for (let i = 0; i < nodes.length; i++) {
+                    const node = nodes[i];
+                    if (node !== activeNode) {
+                      setElementCanTab(node, false);
+                    } else {
+                      setElementCanTab(node, true);
+                    }
+                  }
+                  return;
+                }
+                event.continuePropagation();
+                return;
+              }
               case 'ArrowUp': {
                 if (portrait) {
                   const previousListItem = getPreviousListItem(

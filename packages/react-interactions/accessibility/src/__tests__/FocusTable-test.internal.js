@@ -7,7 +7,10 @@
  * @flow
  */
 
-import {createEventTarget} from 'react-interactions/events/src/dom/testing-library';
+import {
+  createEventTarget,
+  emulateBrowserTab,
+} from 'react-interactions/events/src/dom/testing-library';
 
 let React;
 let ReactFeatureFlags;
@@ -28,33 +31,6 @@ describe('FocusTable', () => {
   describe('ReactDOM', () => {
     let ReactDOM;
     let container;
-
-    function emulateBrowserTab(backwards) {
-      const activeElement = document.activeElement;
-      const focusedElem = createEventTarget(activeElement);
-      let defaultPrevented = false;
-      focusedElem.keydown({
-        key: 'Tab',
-        shiftKey: backwards,
-        preventDefault() {
-          defaultPrevented = true;
-        },
-      });
-      if (!defaultPrevented) {
-        // This is not a full spec compliant version, but should be suffice for this test
-        const focusableElems = Array.from(
-          document.querySelectorAll(
-            'input, button, select, textarea, a[href], [tabindex], [contenteditable], iframe, object, embed',
-          ),
-        ).filter(
-          elem => elem.tabIndex > -1 && !elem.disabled && !elem.contentEditable,
-        );
-        const idx = focusableElems.indexOf(activeElement);
-        if (idx !== -1) {
-          focusableElems[backwards ? idx - 1 : idx + 1].focus();
-        }
-      }
-    }
 
     beforeEach(() => {
       ReactDOM = require('react-dom');

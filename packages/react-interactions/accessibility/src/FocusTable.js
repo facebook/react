@@ -31,6 +31,7 @@ type FocusTableProps = {|
     focusTableByID: (id: string) => void,
   ) => void,
   wrap?: boolean,
+  tabScope?: ReactScope,
 |};
 
 const {useRef} = React;

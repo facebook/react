@@ -64,6 +64,7 @@ const FocusManager = React.forwardRef(
       onBlurWithin: function(event) {
         if (!containFocus) {
           event.continuePropagation();
+          return;
         }
         const lastNode = event.target;
         if (lastNode) {
