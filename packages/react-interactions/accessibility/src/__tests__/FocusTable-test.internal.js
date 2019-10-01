@@ -7,10 +7,8 @@
  * @flow
  */
 
-import {
-  createEventTarget,
-  emulateBrowserTab,
-} from 'react-interactions/events/src/dom/testing-library';
+import {createEventTarget} from 'react-interactions/events/src/dom/testing-library';
+import {emulateBrowserTab} from '../emulateBrowserTab';
 
 let React;
 let ReactFeatureFlags;
@@ -48,8 +46,12 @@ describe('FocusTable', () => {
         TabbableScope,
       );
 
-      return ({onKeyboardOut, id, wrap}) => (
-        <FocusTable onKeyboardOut={onKeyboardOut} id={id} wrap={wrap}>
+      return ({onKeyboardOut, id, wrap, allowModifiers}) => (
+        <FocusTable
+          onKeyboardOut={onKeyboardOut}
+          id={id}
+          wrap={wrap}
+          allowModifiers={allowModifiers}>
           <table>
             <tbody>
               <FocusTableRow>
@@ -115,6 +117,20 @@ describe('FocusTable', () => {
       );
     }
 
+    it('handles keyboard arrow operations with allowModifiers', () => {
+      const Test = createFocusTableComponent();
+
+      ReactDOM.render(<Test allowModifiers={true} />, container);
+      const buttons = document.querySelectorAll('button');
+      const a1 = createEventTarget(buttons[0]);
+      a1.focus();
+      a1.keydown({
+        key: 'ArrowRight',
+        altKey: true,
+      });
+      expect(document.activeElement.textContent).toBe('A2');
+    });
+
     it('handles keyboard arrow operations', () => {
       const Test = createFocusTableComponent();
 
@@ -133,7 +149,7 @@ describe('FocusTable', () => {
       });
       expect(document.activeElement.textContent).toBe('B2');
 
-      const b2 = createEventTarget(document.activeElement);
+      let b2 = createEventTarget(document.activeElement);
       b2.keydown({
         key: 'ArrowLeft',
       });
@@ -153,6 +169,14 @@ describe('FocusTable', () => {
       c1.keydown({
         key: 'ArrowUp',
       });
+      expect(document.activeElement.textContent).toBe('B1');
+      // Should be a no-op due to modifier
+      b2 = createEventTarget(document.activeElement);
+      b2.keydown({
+        key: 'ArrowUp',
+        altKey: true,
+      });
+      b2 = createEventTarget(document.activeElement);
       expect(document.activeElement.textContent).toBe('B1');
     });
 

@@ -7,10 +7,8 @@
  * @flow
  */
 
-import {
-  createEventTarget,
-  emulateBrowserTab,
-} from 'react-interactions/events/src/dom/testing-library';
+import {createEventTarget} from 'react-interactions/events/src/dom/testing-library';
+import {emulateBrowserTab} from '../emulateBrowserTab';
 
 let React;
 let ReactFeatureFlags;
@@ -46,8 +44,11 @@ describe('FocusList', () => {
     function createFocusListComponent() {
       const [FocusList, FocusItem] = createFocusList(TabbableScope);
 
-      return ({portrait, wrap}) => (
-        <FocusList portrait={portrait} wrap={wrap}>
+      return ({portrait, wrap, allowModifiers}) => (
+        <FocusList
+          portrait={portrait}
+          wrap={wrap}
+          allowModifiers={allowModifiers}>
           <ul>
             <FocusItem>
               <li tabIndex={0}>Item 1</li>
@@ -92,6 +93,12 @@ describe('FocusList', () => {
       expect(document.activeElement.textContent).toBe('Item 3');
       thirdListItem.keydown({
         key: 'ArrowLeft',
+      });
+      expect(document.activeElement.textContent).toBe('Item 3');
+      // Should be a no-op due to modifier
+      thirdListItem.keydown({
+        key: 'ArrowUp',
+        altKey: true,
       });
       expect(document.activeElement.textContent).toBe('Item 3');
     });
@@ -158,6 +165,23 @@ describe('FocusList', () => {
         key: 'ArrowUp',
       });
       expect(document.activeElement.textContent).toBe('Item 3');
+    });
+
+    it('handles keyboard arrow operations (portrait) with allowModifiers', () => {
+      const Test = createFocusListComponent();
+
+      ReactDOM.render(
+        <Test portrait={true} allowModifiers={true} />,
+        container,
+      );
+      const listItems = document.querySelectorAll('li');
+      let firstListItem = createEventTarget(listItems[0]);
+      firstListItem.focus();
+      firstListItem.keydown({
+        key: 'ArrowDown',
+        altKey: true,
+      });
+      expect(document.activeElement.textContent).toBe('Item 2');
     });
 
     it('handles keyboard arrow operations mixed with tabbing', () => {
