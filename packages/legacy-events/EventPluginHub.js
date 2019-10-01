@@ -132,10 +132,10 @@ export function getListener(inst: Fiber, registrationName: string) {
  */
 function extractPluginEvents(
   topLevelType: TopLevelType,
-  eventSystemFlags: EventSystemFlags,
   targetInst: null | Fiber,
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: EventTarget,
+  eventSystemFlags: EventSystemFlags,
 ): Array<ReactSyntheticEvent> | ReactSyntheticEvent | null {
   let events = null;
   for (let i = 0; i < plugins.length; i++) {
@@ -144,10 +144,10 @@ function extractPluginEvents(
     if (possiblePlugin) {
       const extractedEvents = possiblePlugin.extractEvents(
         topLevelType,
-        eventSystemFlags,
         targetInst,
         nativeEvent,
         nativeEventTarget,
+        eventSystemFlags,
       );
       if (extractedEvents) {
         events = accumulateInto(events, extractedEvents);
@@ -159,17 +159,17 @@ function extractPluginEvents(
 
 export function runExtractedPluginEventsInBatch(
   topLevelType: TopLevelType,
-  eventSystemFlags: EventSystemFlags,
   targetInst: null | Fiber,
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: EventTarget,
+  eventSystemFlags: EventSystemFlags,
 ) {
   const events = extractPluginEvents(
     topLevelType,
-    eventSystemFlags,
     targetInst,
     nativeEvent,
     nativeEventTarget,
+    eventSystemFlags,
   );
   runEventsInBatch(events);
 }
