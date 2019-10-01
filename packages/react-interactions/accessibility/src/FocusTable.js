@@ -32,6 +32,7 @@ type FocusTableProps = {|
   ) => void,
   wrap?: boolean,
   tabScope?: ReactScope,
+  allowModifiers?: boolean,
 |};
 
 const {useRef} = React;
@@ -152,6 +153,13 @@ function getTableProps(currentCell: ReactScopeMethods): Object {
   return {};
 }
 
+function hasModifierKey(event: KeyboardEvent): boolean {
+  const {altKey, ctrlKey, metaKey, shiftKey} = event;
+  return (
+    altKey === true || ctrlKey === true || metaKey === true || shiftKey === true
+  );
+}
+
 export function createFocusTable(scope: ReactScope): Array<React.Component> {
   const TableScope = React.unstable_createScope(scope.fn);
 
@@ -161,6 +169,7 @@ export function createFocusTable(scope: ReactScope): Array<React.Component> {
     id,
     wrap,
     tabScope: TabScope,
+    allowModifiers,
   }): FocusTableProps {
     const tabScopeRef = useRef(null);
     return (
@@ -169,7 +178,8 @@ export function createFocusTable(scope: ReactScope): Array<React.Component> {
         onKeyboardOut={onKeyboardOut}
         id={id}
         wrap={wrap}
-        tabScopeRef={tabScopeRef}>
+        tabScopeRef={tabScopeRef}
+        allowModifiers={allowModifiers}>
         {TabScope ? (
           <TabScope ref={tabScopeRef}>{children}</TabScope>
         ) : (
@@ -192,25 +202,35 @@ export function createFocusTable(scope: ReactScope): Array<React.Component> {
           event.continuePropagation();
           return;
         }
-        switch (event.key) {
-          case 'Tab': {
-            const tabScope = getTableProps(currentCell).tabScopeRef.current;
-            if (tabScope) {
-              const activeNode = document.activeElement;
-              const nodes = tabScope.getScopedNodes();
-              for (let i = 0; i < nodes.length; i++) {
-                const node = nodes[i];
-                if (node !== activeNode) {
-                  setElementCanTab(node, false);
-                } else {
-                  setElementCanTab(node, true);
-                }
+        const key = event.key;
+        if (key === 'Tab') {
+          const tabScope = getTableProps(currentCell).tabScopeRef.current;
+          if (tabScope) {
+            const activeNode = document.activeElement;
+            const nodes = tabScope.getScopedNodes();
+            for (let i = 0; i < nodes.length; i++) {
+              const node = nodes[i];
+              if (node !== activeNode) {
+                setElementCanTab(node, false);
+              } else {
+                setElementCanTab(node, true);
               }
-              return;
             }
+            return;
+          }
+          event.continuePropagation();
+          return;
+        }
+        // Using modifier keys with keyboard arrow events should be no-ops
+        // unless an explicit allowModifiers flag is set on the FocusTable.
+        if (hasModifierKey(event)) {
+          const allowModifiers = getTableProps(currentCell).allowModifiers;
+          if (!allowModifiers) {
             event.continuePropagation();
             return;
           }
+        }
+        switch (key) {
           case 'ArrowUp': {
             const [cells, cellIndex] = getRowCells(currentCell);
             if (cells !== null) {

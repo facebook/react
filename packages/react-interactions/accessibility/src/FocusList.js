@@ -24,6 +24,7 @@ type FocusListProps = {|
   portrait: boolean,
   wrap?: boolean,
   tabScope?: ReactScope,
+  allowModifiers?: boolean,
 |};
 
 const {useRef} = React;
@@ -82,6 +83,13 @@ function getListProps(currentCell: ReactScopeMethods): Object {
   return {};
 }
 
+function hasModifierKey(event: KeyboardEvent): boolean {
+  const {altKey, ctrlKey, metaKey, shiftKey} = event;
+  return (
+    altKey === true || ctrlKey === true || metaKey === true || shiftKey === true
+  );
+}
+
 export function createFocusList(scope: ReactScope): Array<React.Component> {
   const TableScope = React.unstable_createScope(scope.fn);
 
@@ -90,6 +98,7 @@ export function createFocusList(scope: ReactScope): Array<React.Component> {
     portrait,
     wrap,
     tabScope: TabScope,
+    allowModifiers,
   }): FocusListProps {
     const tabScopeRef = useRef(null);
     return (
@@ -97,7 +106,8 @@ export function createFocusList(scope: ReactScope): Array<React.Component> {
         type="list"
         portrait={portrait}
         wrap={wrap}
-        tabScopeRef={tabScopeRef}>
+        tabScopeRef={tabScopeRef}
+        allowModifiers={allowModifiers}>
         {TabScope ? (
           <TabScope ref={tabScopeRef}>{children}</TabScope>
         ) : (
@@ -117,25 +127,36 @@ export function createFocusList(scope: ReactScope): Array<React.Component> {
           const listProps = list && list.getProps();
           if (list !== null && listProps.type === 'list') {
             const portrait = listProps.portrait;
-            switch (event.key) {
-              case 'Tab': {
-                const tabScope = getListProps(currentItem).tabScopeRef.current;
-                if (tabScope) {
-                  const activeNode = document.activeElement;
-                  const nodes = tabScope.getScopedNodes();
-                  for (let i = 0; i < nodes.length; i++) {
-                    const node = nodes[i];
-                    if (node !== activeNode) {
-                      setElementCanTab(node, false);
-                    } else {
-                      setElementCanTab(node, true);
-                    }
+            const key = event.key;
+
+            if (key === 'Tab') {
+              const tabScope = getListProps(currentItem).tabScopeRef.current;
+              if (tabScope) {
+                const activeNode = document.activeElement;
+                const nodes = tabScope.getScopedNodes();
+                for (let i = 0; i < nodes.length; i++) {
+                  const node = nodes[i];
+                  if (node !== activeNode) {
+                    setElementCanTab(node, false);
+                  } else {
+                    setElementCanTab(node, true);
                   }
-                  return;
                 }
+                return;
+              }
+              event.continuePropagation();
+              return;
+            }
+            // Using modifier keys with keyboard arrow events should be no-ops
+            // unless an explicit allowModifiers flag is set on the FocusList.
+            if (hasModifierKey(event)) {
+              const allowModifiers = getListProps(currentItem).allowModifiers;
+              if (!allowModifiers) {
                 event.continuePropagation();
                 return;
               }
+            }
+            switch (key) {
               case 'ArrowUp': {
                 if (portrait) {
                   const previousListItem = getPreviousListItem(
