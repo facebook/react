@@ -1091,6 +1091,14 @@ function mountMemo<T>(
 ): T {
   const hook = mountWorkInProgressHook();
   const nextDeps = deps === undefined ? null : deps;
+  invariant(
+    nextCreate instanceof Function,
+    'useMemo requires a function reference to be passed:' +
+    'useMemo(() => calculate(...)' +
+    'Did you accidentally pass a function call?' +
+    'useMemo(calculate)'
+  )
+  console.error(`NEXT CREATE NOT A FUNCTION ${typeof nextCreate}`);
   const nextValue = nextCreate();
   hook.memoizedState = [nextValue, nextDeps];
   return nextValue;
