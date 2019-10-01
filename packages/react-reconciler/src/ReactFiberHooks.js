@@ -1094,11 +1094,10 @@ function mountMemo<T>(
   invariant(
     nextCreate instanceof Function,
     'useMemo requires a function reference to be passed:' +
-    'useMemo(() => calculate(...)' +
-    'Did you accidentally pass a function call?' +
-    'useMemo(calculate)'
-  )
-  console.error(`NEXT CREATE NOT A FUNCTION ${typeof nextCreate}`);
+      'useMemo(() => calculate(...)' +
+      'Did you accidentally pass a function call?' +
+      'useMemo(calculate)',
+  );
   const nextValue = nextCreate();
   hook.memoizedState = [nextValue, nextDeps];
   return nextValue;
