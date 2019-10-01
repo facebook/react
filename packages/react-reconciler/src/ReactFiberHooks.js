@@ -736,7 +736,6 @@ function updateReducer<S, I, A>(
   }
   if (first !== null) {
     let newState = baseState;
-    let newBaseState = null;
     let newBaseUpdate = null;
     let prevUpdate = baseUpdate;
     let update = first;
@@ -750,7 +749,6 @@ function updateReducer<S, I, A>(
         if (!didSkip) {
           didSkip = true;
           newBaseUpdate = prevUpdate;
-          newBaseState = newState;
         }
         // Update the remaining priority in the queue.
         if (updateExpirationTime > remainingExpirationTime) {
@@ -786,7 +784,6 @@ function updateReducer<S, I, A>(
 
     if (!didSkip) {
       newBaseUpdate = prevUpdate;
-      newBaseState = newState;
     }
 
     // Mark that the fiber performed work, but only if the new state is
@@ -797,7 +794,7 @@ function updateReducer<S, I, A>(
 
     hook.memoizedState = newState;
     hook.baseUpdate = newBaseUpdate;
-    hook.baseState = newBaseState;
+    hook.baseState = newState;
 
     queue.lastRenderedState = newState;
   }
