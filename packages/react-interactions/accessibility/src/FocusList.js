@@ -147,6 +147,8 @@ export function createFocusList(scope: ReactScope): Array<React.Component> {
               event.continuePropagation();
               return;
             }
+            // Using modifier keys with keyboard arrow events should be no-ops
+            // unless an explicit allowModifiers flag is set on the FocusList.
             if (hasModifierKey(event)) {
               const allowModifiers = getListProps(currentItem).allowModifiers;
               if (!allowModifiers) {

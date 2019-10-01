@@ -221,6 +221,8 @@ export function createFocusTable(scope: ReactScope): Array<React.Component> {
           event.continuePropagation();
           return;
         }
+        // Using modifier keys with keyboard arrow events should be no-ops
+        // unless an explicit allowModifiers flag is set on the FocusTable.
         if (hasModifierKey(event)) {
           const allowModifiers = getTableProps(currentCell).allowModifiers;
           if (!allowModifiers) {
