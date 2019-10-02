@@ -61,7 +61,6 @@ import {
   NoEffect,
   ContentReset,
   Placement,
-  Snapshot,
   Update,
   Passive,
 } from 'shared/ReactSideEffectTags';
@@ -113,7 +112,6 @@ import {
 } from './ReactFiberWorkLoop';
 import {
   NoEffect as NoHookEffect,
-  UnmountSnapshot,
   UnmountMutation,
   MountMutation,
   UnmountLayout,
@@ -243,88 +241,61 @@ function commitBeforeMutationLifeCycles(
   current: Fiber | null,
   finishedWork: Fiber,
 ): void {
-  switch (finishedWork.tag) {
-    case FunctionComponent:
-    case ForwardRef:
-    case SimpleMemoComponent: {
-      commitHookEffectList(UnmountSnapshot, NoHookEffect, finishedWork);
-      return;
-    }
-    case ClassComponent: {
-      if (finishedWork.effectTag & Snapshot) {
-        if (current !== null) {
-          const prevProps = current.memoizedProps;
-          const prevState = current.memoizedState;
-          startPhaseTimer(finishedWork, 'getSnapshotBeforeUpdate');
-          const instance = finishedWork.stateNode;
-          // We could update instance props and state here,
-          // but instead we rely on them being set during last render.
-          // TODO: revisit this when we implement resuming.
-          if (__DEV__) {
-            if (
-              finishedWork.type === finishedWork.elementType &&
-              !didWarnAboutReassigningProps
-            ) {
-              warning(
-                instance.props === finishedWork.memoizedProps,
-                'Expected %s props to match memoized props before ' +
-                  'getSnapshotBeforeUpdate. ' +
-                  'This might either be because of a bug in React, or because ' +
-                  'a component reassigns its own `this.props`. ' +
-                  'Please file an issue.',
-                getComponentName(finishedWork.type) || 'instance',
-              );
-              warning(
-                instance.state === finishedWork.memoizedState,
-                'Expected %s state to match memoized state before ' +
-                  'getSnapshotBeforeUpdate. ' +
-                  'This might either be because of a bug in React, or because ' +
-                  'a component reassigns its own `this.props`. ' +
-                  'Please file an issue.',
-                getComponentName(finishedWork.type) || 'instance',
-              );
-            }
-          }
-          const snapshot = instance.getSnapshotBeforeUpdate(
-            finishedWork.elementType === finishedWork.type
-              ? prevProps
-              : resolveDefaultProps(finishedWork.type, prevProps),
-            prevState,
-          );
-          if (__DEV__) {
-            const didWarnSet = ((didWarnAboutUndefinedSnapshotBeforeUpdate: any): Set<
-              mixed,
-            >);
-            if (snapshot === undefined && !didWarnSet.has(finishedWork.type)) {
-              didWarnSet.add(finishedWork.type);
-              warningWithoutStack(
-                false,
-                '%s.getSnapshotBeforeUpdate(): A snapshot value (or null) ' +
-                  'must be returned. You have returned undefined.',
-                getComponentName(finishedWork.type),
-              );
-            }
-          }
-          instance.__reactInternalSnapshotBeforeUpdate = snapshot;
-          stopPhaseTimer();
-        }
+  if (current !== null) {
+    const prevProps = current.memoizedProps;
+    const prevState = current.memoizedState;
+    startPhaseTimer(finishedWork, 'getSnapshotBeforeUpdate');
+    const instance = finishedWork.stateNode;
+    // We could update instance props and state here,
+    // but instead we rely on them being set during last render.
+    // TODO: revisit this when we implement resuming.
+    if (__DEV__) {
+      if (
+        finishedWork.type === finishedWork.elementType &&
+        !didWarnAboutReassigningProps
+      ) {
+        warning(
+          instance.props === finishedWork.memoizedProps,
+          'Expected %s props to match memoized props before ' +
+            'getSnapshotBeforeUpdate. ' +
+            'This might either be because of a bug in React, or because ' +
+            'a component reassigns its own `this.props`. ' +
+            'Please file an issue.',
+          getComponentName(finishedWork.type) || 'instance',
+        );
+        warning(
+          instance.state === finishedWork.memoizedState,
+          'Expected %s state to match memoized state before ' +
+            'getSnapshotBeforeUpdate. ' +
+            'This might either be because of a bug in React, or because ' +
+            'a component reassigns its own `this.props`. ' +
+            'Please file an issue.',
+          getComponentName(finishedWork.type) || 'instance',
+        );
       }
-      return;
     }
-    case HostRoot:
-    case HostComponent:
-    case HostText:
-    case HostPortal:
-    case IncompleteClassComponent:
-      // Nothing to do for these component types
-      return;
-    default: {
-      invariant(
-        false,
-        'This unit of work tag should not have side-effects. This error is ' +
-          'likely caused by a bug in React. Please file an issue.',
-      );
+    const snapshot = instance.getSnapshotBeforeUpdate(
+      finishedWork.elementType === finishedWork.type
+        ? prevProps
+        : resolveDefaultProps(finishedWork.type, prevProps),
+      prevState,
+    );
+    if (__DEV__) {
+      const didWarnSet = ((didWarnAboutUndefinedSnapshotBeforeUpdate: any): Set<
+        mixed,
+      >);
+      if (snapshot === undefined && !didWarnSet.has(finishedWork.type)) {
+        didWarnSet.add(finishedWork.type);
+        warningWithoutStack(
+          false,
+          '%s.getSnapshotBeforeUpdate(): A snapshot value (or null) ' +
+            'must be returned. You have returned undefined.',
+          getComponentName(finishedWork.type),
+        );
+      }
     }
+    instance.__reactInternalSnapshotBeforeUpdate = snapshot;
+    stopPhaseTimer();
   }
 }
 
