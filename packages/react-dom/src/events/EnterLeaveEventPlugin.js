@@ -54,10 +54,10 @@ const EnterLeaveEventPlugin = {
    */
   extractEvents: function(
     topLevelType,
-    eventSystemFlags,
     targetInst,
     nativeEvent,
     nativeEventTarget,
+    eventSystemFlags,
   ) {
     const isOverEvent =
       topLevelType === TOP_MOUSE_OVER || topLevelType === TOP_POINTER_OVER;

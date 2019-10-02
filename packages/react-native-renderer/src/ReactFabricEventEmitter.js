@@ -42,10 +42,10 @@ export function dispatchEvent(
     // Heritage plugin event system
     runExtractedPluginEventsInBatch(
       topLevelType,
-      PLUGIN_EVENT_SYSTEM,
       targetFiber,
       nativeEvent,
       nativeEvent.target,
+      PLUGIN_EVENT_SYSTEM,
     );
   });
   // React Native doesn't use ReactControlledComponent but if it did, here's
