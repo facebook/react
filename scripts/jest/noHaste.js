@@ -1,6 +1,8 @@
 'use strict';
 
-export function getHasteName() {
-  // We never want Haste.
-  return null;
-}
+module.exports = {
+  getHasteName() {
+    // We never want Haste.
+    return null;
+  },
+};
