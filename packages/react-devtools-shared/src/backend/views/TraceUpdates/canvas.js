@@ -9,6 +9,7 @@
 
 import type {Data} from './index';
 import type {Rect} from '../utils';
+import type {NativeType} from '../../types';
 
 const OUTLINE_COLOR = '#f0f0f0';
 
@@ -28,7 +29,7 @@ const COLORS = [
 
 let canvas: HTMLCanvasElement | null = null;
 
-export function draw(idToData: Map<number, Data>): void {
+export function draw(nodeToData: Map<NativeType, Data>): void {
   if (canvas === null) {
     initialize();
   }
@@ -40,15 +41,14 @@ export function draw(idToData: Map<number, Data>): void {
   const context = canvasFlow.getContext('2d');
   context.clearRect(0, 0, canvasFlow.width, canvasFlow.height);
 
-  // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-  for (let data of idToData.values()) {
-    const colorIndex = Math.min(COLORS.length - 1, data.count - 1);
-    const color = COLORS[colorIndex];
+  nodeToData.forEach(({count, rect}) => {
+    if (rect !== null) {
+      const colorIndex = Math.min(COLORS.length - 1, count - 1);
+      const color = COLORS[colorIndex];
 
-    data.rects.forEach(rect => {
       drawBorder(context, rect, color);
-    });
-  }
+    }
+  });
 }
 
 function drawBorder(

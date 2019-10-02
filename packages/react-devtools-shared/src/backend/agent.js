@@ -29,7 +29,6 @@ import {patch as patchConsole, unpatch as unpatchConsole} from './console';
 
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
 import type {
-  FindNativeNodesForFiberID,
   InstanceAndStyle,
   NativeType,
   OwnersList,
@@ -92,7 +91,7 @@ export default class Agent extends EventEmitter<{|
   hideNativeHighlight: [],
   showNativeHighlight: [NativeType],
   shutdown: [],
-  traceUpdates: [Map<number, FindNativeNodesForFiberID>],
+  traceUpdates: [Set<NativeType>],
 |}> {
   _bridge: BackendBridge;
   _isProfiling: boolean = false;
@@ -434,10 +433,8 @@ export default class Agent extends EventEmitter<{|
     }
   };
 
-  onTraceUpdates = (
-    highlightedNodesMap: Map<number, FindNativeNodesForFiberID>,
-  ) => {
-    this.emit('traceUpdates', highlightedNodesMap);
+  onTraceUpdates = (nodes: Set<NativeType>) => {
+    this.emit('traceUpdates', nodes);
   };
 
   onHookOperations = (operations: Array<number>) => {

@@ -11,7 +11,7 @@ import Agent from 'react-devtools-shared/src/backend/agent';
 import {destroy as destroyCanvas, draw} from './canvas';
 import {getNestedBoundingClientRect} from '../utils';
 
-import type {FindNativeNodesForFiberID} from '../../types';
+import type {NativeType} from '../../types';
 import type {Rect} from '../utils';
 
 // How long the rect should be shown for?
@@ -30,10 +30,10 @@ export type Data = {|
   count: number,
   expirationTime: number,
   lastMeasuredAt: number,
-  rects: Array<Rect>,
+  rect: Rect | null,
 |};
 
-const idToData: Map<number, Data> = new Map();
+const nodeToData: Map<NativeType, Data> = new Map();
 
 let agent: Agent = ((null: any): Agent);
 let drawAnimationFrameID: AnimationFrameID | null = null;
@@ -50,7 +50,7 @@ export function toggleEnabled(value: boolean): void {
   isEnabled = value;
 
   if (!isEnabled) {
-    idToData.clear();
+    nodeToData.clear();
 
     if (drawAnimationFrameID !== null) {
       cancelAnimationFrame(drawAnimationFrameID);
@@ -66,38 +66,30 @@ export function toggleEnabled(value: boolean): void {
   }
 }
 
-function traceUpdates(
-  highlightedNodesMap: Map<number, FindNativeNodesForFiberID>,
-): void {
+function traceUpdates(nodes: Set<NativeType>): void {
   if (!isEnabled) {
     return;
   }
 
-  highlightedNodesMap.forEach((findNativeNodes, id) => {
-    const data = idToData.get(id);
+  nodes.forEach(node => {
+    const data = nodeToData.get(node);
     const now = getCurrentTime();
 
     let lastMeasuredAt = data != null ? data.lastMeasuredAt : 0;
-    let rects = data != null ? data.rects : [];
+    let rect = data != null ? data.rect : null;
     if (lastMeasuredAt + REMEASUREMENT_AFTER_DURATION < now) {
       lastMeasuredAt = now;
-
-      const nodes = findNativeNodes(id);
-      if (nodes != null) {
-        rects = ((nodes
-          .map(measureNode)
-          .filter(rect => rect !== null): any): Array<Rect>);
-      }
+      rect = measureNode(node);
     }
 
-    idToData.set(id, {
+    nodeToData.set(node, {
       count: data != null ? data.count + 1 : 1,
       expirationTime:
         data != null
           ? Math.min(Number.MAX_VALUE, data.expirationTime + DISPLAY_DURATION)
           : now + DISPLAY_DURATION,
       lastMeasuredAt,
-      rects,
+      rect,
     });
   });
 
@@ -119,15 +111,15 @@ function prepareToDraw(): void {
   let earliestExpiration = Number.MAX_VALUE;
 
   // Remove any items that have already expired.
-  idToData.forEach((data, id) => {
+  nodeToData.forEach((data, node) => {
     if (data.expirationTime < now) {
-      idToData.delete(id);
+      nodeToData.delete(node);
     } else {
       earliestExpiration = Math.min(earliestExpiration, data.expirationTime);
     }
   });
 
-  draw(idToData);
+  draw(nodeToData);
 
   redrawTimeoutID = setTimeout(prepareToDraw, earliestExpiration - now);
 }
