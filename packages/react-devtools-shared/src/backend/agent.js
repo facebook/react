@@ -204,22 +204,6 @@ export default class Agent extends EventEmitter<{|
     return null;
   }
 
-  getNodesForID(id: number): Array<Object> | null {
-    for (let rendererID in this._rendererInterfaces) {
-      const renderer = ((this._rendererInterfaces[
-        (rendererID: any)
-      ]: any): RendererInterface);
-
-      try {
-        const nodes = renderer.findNativeNodesForFiberID(id);
-        if (nodes != null) {
-          return nodes;
-        }
-      } catch (error) {}
-    }
-    return null;
-  }
-
   getProfilingData = ({rendererID}: {|rendererID: RendererID|}) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
