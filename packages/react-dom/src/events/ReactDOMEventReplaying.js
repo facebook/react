@@ -43,6 +43,12 @@ export function setAttemptUserBlockingHydration(fn: (fiber: Object) => void) {
   attemptUserBlockingHydration = fn;
 }
 
+let attemptContinuousHydration: (fiber: Object) => void;
+
+export function setAttemptContinuousHydration(fn: (fiber: Object) => void) {
+  attemptContinuousHydration = fn;
+}
+
 // TODO: Upgrade this definition once we're on a newer version of Flow that
 // has this definition built-in.
 type PointerEvent = Event & {
@@ -305,7 +311,7 @@ export function clearIfContinuousEvent(
   }
 }
 
-function accumulateOrCreateQueuedReplayableEvent(
+function accumulateOrCreateContinuousQueuedReplayableEvent(
   existingQueuedEvent: null | QueuedReplayableEvent,
   blockedOn: null | Container | SuspenseInstance,
   topLevelType: DOMTopLevelEventType,
@@ -316,12 +322,20 @@ function accumulateOrCreateQueuedReplayableEvent(
     existingQueuedEvent === null ||
     existingQueuedEvent.nativeEvent !== nativeEvent
   ) {
-    return createQueuedReplayableEvent(
+    let queuedEvent = createQueuedReplayableEvent(
       blockedOn,
       topLevelType,
       eventSystemFlags,
       nativeEvent,
     );
+    if (blockedOn !== null) {
+      let fiber = getInstanceFromNode(blockedOn);
+      if (fiber !== null) {
+        // Attempt to increase the priority of this target.
+        attemptContinuousHydration(fiber);
+      }
+    }
+    return queuedEvent;
   }
   // If we have already queued this exact event, then it's because
   // the different event systems have different DOM event listeners.
@@ -343,7 +357,7 @@ export function queueIfContinuousEvent(
   switch (topLevelType) {
     case TOP_FOCUS: {
       const focusEvent = ((nativeEvent: any): FocusEvent);
-      queuedFocus = accumulateOrCreateQueuedReplayableEvent(
+      queuedFocus = accumulateOrCreateContinuousQueuedReplayableEvent(
         queuedFocus,
         blockedOn,
         topLevelType,
@@ -354,7 +368,7 @@ export function queueIfContinuousEvent(
     }
     case TOP_DRAG_ENTER: {
       const dragEvent = ((nativeEvent: any): DragEvent);
-      queuedDrag = accumulateOrCreateQueuedReplayableEvent(
+      queuedDrag = accumulateOrCreateContinuousQueuedReplayableEvent(
         queuedDrag,
         blockedOn,
         topLevelType,
@@ -365,7 +379,7 @@ export function queueIfContinuousEvent(
     }
     case TOP_MOUSE_OVER: {
       const mouseEvent = ((nativeEvent: any): MouseEvent);
-      queuedMouse = accumulateOrCreateQueuedReplayableEvent(
+      queuedMouse = accumulateOrCreateContinuousQueuedReplayableEvent(
         queuedMouse,
         blockedOn,
         topLevelType,
@@ -379,7 +393,7 @@ export function queueIfContinuousEvent(
       const pointerId = pointerEvent.pointerId;
       queuedPointers.set(
         pointerId,
-        accumulateOrCreateQueuedReplayableEvent(
+        accumulateOrCreateContinuousQueuedReplayableEvent(
           queuedPointers.get(pointerId) || null,
           blockedOn,
           topLevelType,
@@ -394,7 +408,7 @@ export function queueIfContinuousEvent(
       const pointerId = pointerEvent.pointerId;
       queuedPointerCaptures.set(
         pointerId,
-        accumulateOrCreateQueuedReplayableEvent(
+        accumulateOrCreateContinuousQueuedReplayableEvent(
           queuedPointerCaptures.get(pointerId) || null,
           blockedOn,
           topLevelType,
@@ -408,7 +422,9 @@ export function queueIfContinuousEvent(
   return false;
 }
 
-function attemptReplayQueuedEvent(queuedEvent: QueuedReplayableEvent): boolean {
+function attemptReplayContinuousQueuedEvent(
+  queuedEvent: QueuedReplayableEvent,
+): boolean {
   if (queuedEvent.blockedOn !== null) {
     return false;
   }
@@ -419,18 +435,22 @@ function attemptReplayQueuedEvent(queuedEvent: QueuedReplayableEvent): boolean {
   );
   if (nextBlockedOn !== null) {
     // We're still blocked. Try again later.
+    let fiber = getInstanceFromNode(nextBlockedOn);
+    if (fiber !== null) {
+      attemptContinuousHydration(fiber);
+    }
     queuedEvent.blockedOn = nextBlockedOn;
     return false;
   }
   return true;
 }
 
-function attemptReplayQueuedEventInMap(
+function attemptReplayContinuousQueuedEventInMap(
   queuedEvent: QueuedReplayableEvent,
   key: number,
   map: Map<number, QueuedReplayableEvent>,
 ): void {
-  if (attemptReplayQueuedEvent(queuedEvent)) {
+  if (attemptReplayContinuousQueuedEvent(queuedEvent)) {
     map.delete(key);
   }
 }
@@ -464,17 +484,17 @@ function replayUnblockedEvents() {
     }
   }
   // Next replay any continuous events.
-  if (queuedFocus !== null && attemptReplayQueuedEvent(queuedFocus)) {
+  if (queuedFocus !== null && attemptReplayContinuousQueuedEvent(queuedFocus)) {
     queuedFocus = null;
   }
-  if (queuedDrag !== null && attemptReplayQueuedEvent(queuedDrag)) {
+  if (queuedDrag !== null && attemptReplayContinuousQueuedEvent(queuedDrag)) {
     queuedDrag = null;
   }
-  if (queuedMouse !== null && attemptReplayQueuedEvent(queuedMouse)) {
+  if (queuedMouse !== null && attemptReplayContinuousQueuedEvent(queuedMouse)) {
     queuedMouse = null;
   }
-  queuedPointers.forEach(attemptReplayQueuedEventInMap);
-  queuedPointerCaptures.forEach(attemptReplayQueuedEventInMap);
+  queuedPointers.forEach(attemptReplayContinuousQueuedEventInMap);
+  queuedPointerCaptures.forEach(attemptReplayContinuousQueuedEventInMap);
 }
 
 function scheduleCallbackIfUnblocked(
