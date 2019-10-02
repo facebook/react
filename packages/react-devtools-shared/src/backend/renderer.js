@@ -1233,7 +1233,7 @@ export function attach(
     fiber: Fiber,
     parentFiber: Fiber | null,
     traverseSiblings: boolean,
-    belongsToUntracedAncestor: boolean,
+    traceNearestHostComponentUpdate: boolean,
   ) {
     if (__DEBUG__) {
       debug('mountFiberRecursively()', fiber, parentFiber);
@@ -1252,11 +1252,11 @@ export function attach(
 
     if (traceUpdatesEnabled) {
       const elementType = getElementTypeForFiber(fiber);
-      if (belongsToUntracedAncestor) {
-        // If a traced ancestor rendered, we should mark the nearest host nodes for highlighting.
+      if (traceNearestHostComponentUpdate) {
+        // If an ancestor updated, we should mark the nearest host nodes for highlighting.
         if (elementType === ElementTypeHostComponent) {
           traceUpdatesForNodes.add(fiber.stateNode);
-          belongsToUntracedAncestor = false;
+          traceNearestHostComponentUpdate = false;
         }
       } else {
         if (
@@ -1264,8 +1264,8 @@ export function attach(
           elementType === ElementTypeClass ||
           elementType === ElementTypeContext
         ) {
-          // Otherwise if this is a traced ancestor, flag it for descendants.
-          belongsToUntracedAncestor = true;
+          // Otherwise if this is a traced ancestor, flag for the nearest host descendant(s).
+          traceNearestHostComponentUpdate = true;
         }
       }
     }
@@ -1290,7 +1290,7 @@ export function attach(
           fallbackChild,
           shouldIncludeInTree ? fiber : parentFiber,
           true,
-          belongsToUntracedAncestor,
+          traceNearestHostComponentUpdate,
         );
       }
     } else {
@@ -1299,7 +1299,7 @@ export function attach(
           fiber.child,
           shouldIncludeInTree ? fiber : parentFiber,
           true,
-          belongsToUntracedAncestor,
+          traceNearestHostComponentUpdate,
         );
       }
     }
@@ -1313,7 +1313,7 @@ export function attach(
         fiber.sibling,
         parentFiber,
         true,
-        belongsToUntracedAncestor,
+        traceNearestHostComponentUpdate,
       );
     }
   }
@@ -1463,7 +1463,7 @@ export function attach(
     nextFiber: Fiber,
     prevFiber: Fiber,
     parentFiber: Fiber | null,
-    nearestTracedAncestorDidRender: boolean,
+    traceNearestHostComponentUpdate: boolean,
   ): boolean {
     if (__DEBUG__) {
       debug('updateFiberRecursively()', nextFiber, parentFiber);
@@ -1471,11 +1471,11 @@ export function attach(
 
     if (traceUpdatesEnabled) {
       const elementType = getElementTypeForFiber(nextFiber);
-      if (nearestTracedAncestorDidRender) {
-        // If a traced ancestor rendered, we should mark the nearest host nodes for highlighting.
+      if (traceNearestHostComponentUpdate) {
+        // If an ancestor updated, we should mark the nearest host nodes for highlighting.
         if (elementType === ElementTypeHostComponent) {
           traceUpdatesForNodes.add(nextFiber.stateNode);
-          nearestTracedAncestorDidRender = false;
+          traceNearestHostComponentUpdate = false;
         }
       } else {
         if (
@@ -1483,8 +1483,11 @@ export function attach(
           elementType === ElementTypeClass ||
           elementType === ElementTypeContext
         ) {
-          // Otherwise if this is a traced ancestor, flag it for descendants.
-          nearestTracedAncestorDidRender = didFiberRender(prevFiber, nextFiber);
+          // Otherwise if this is a traced ancestor, flag for the nearest host descendant(s).
+          traceNearestHostComponentUpdate = didFiberRender(
+            prevFiber,
+            nextFiber,
+          );
         }
       }
     }
@@ -1535,7 +1538,7 @@ export function attach(
           nextFallbackChildSet,
           prevFallbackChildSet,
           nextFiber,
-          nearestTracedAncestorDidRender,
+          traceNearestHostComponentUpdate,
         )
       ) {
         shouldResetChildren = true;
@@ -1551,7 +1554,7 @@ export function attach(
           nextPrimaryChildSet,
           nextFiber,
           true,
-          nearestTracedAncestorDidRender,
+          traceNearestHostComponentUpdate,
         );
       }
       shouldResetChildren = true;
@@ -1571,7 +1574,7 @@ export function attach(
           nextFallbackChildSet,
           nextFiber,
           true,
-          nearestTracedAncestorDidRender,
+          traceNearestHostComponentUpdate,
         );
         shouldResetChildren = true;
       }
@@ -1595,7 +1598,7 @@ export function attach(
                 nextChild,
                 prevChild,
                 shouldIncludeInTree ? nextFiber : parentFiber,
-                nearestTracedAncestorDidRender,
+                traceNearestHostComponentUpdate,
               )
             ) {
               // If a nested tree child order changed but it can't handle its own
@@ -1614,7 +1617,7 @@ export function attach(
               nextChild,
               shouldIncludeInTree ? nextFiber : parentFiber,
               false,
-              nearestTracedAncestorDidRender,
+              traceNearestHostComponentUpdate,
             );
             shouldResetChildren = true;
           }
@@ -1634,7 +1637,7 @@ export function attach(
         if (traceUpdatesEnabled) {
           // If we're tracing updates and we've bailed out before reaching a host node,
           // we should fall back to recursively marking the nearest host descendates for highlight.
-          if (nearestTracedAncestorDidRender) {
+          if (traceNearestHostComponentUpdate) {
             const hostFibers = findAllCurrentHostFibers(
               getFiberID(getPrimaryFiber(nextFiber)),
             );
