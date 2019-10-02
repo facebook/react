@@ -61,7 +61,6 @@ import {
   NoEffect,
   ContentReset,
   Placement,
-  Snapshot,
   Update,
   Passive,
 } from 'shared/ReactSideEffectTags';
@@ -110,7 +109,6 @@ import {
 } from './ReactFiberWorkLoop';
 import {
   NoEffect as NoHookEffect,
-  UnmountSnapshot,
   UnmountMutation,
   MountMutation,
   UnmountLayout,
