@@ -21,10 +21,15 @@ import {
   sessionStorageSetItem,
 } from 'react-devtools-shared/src/storage';
 import setupHighlighter from './views/Highlighter';
+import {
+  initialize as setupTraceUpdates,
+  toggleEnabled as toggleTraceUpdatesEnabled,
+} from './views/TraceUpdates';
 import {patch as patchConsole, unpatch as unpatchConsole} from './console';
 
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
 import type {
+  FindNativeNodesForFiberID,
   InstanceAndStyle,
   NativeType,
   OwnersList,
@@ -87,6 +92,7 @@ export default class Agent extends EventEmitter<{|
   hideNativeHighlight: [],
   showNativeHighlight: [NativeType],
   shutdown: [],
+  traceUpdates: [Map<number, FindNativeNodesForFiberID>],
 |}> {
   _bridge: BackendBridge;
   _isProfiling: boolean = false;
@@ -143,6 +149,7 @@ export default class Agent extends EventEmitter<{|
       this.updateAppendComponentStack,
     );
     bridge.addListener('updateComponentFilters', this.updateComponentFilters);
+    bridge.addListener('updateTraceUpdates', this.updateTraceUpdates);
     bridge.addListener('viewElementSource', this.viewElementSource);
 
     if (this._isProfiling) {
@@ -159,6 +166,7 @@ export default class Agent extends EventEmitter<{|
     bridge.send('isBackendStorageAPISupported', isBackendStorageAPISupported);
 
     setupHighlighter(bridge, this);
+    setupTraceUpdates(this);
   }
 
   get rendererInterfaces(): {[key: RendererID]: RendererInterface} {
@@ -192,6 +200,22 @@ export default class Agent extends EventEmitter<{|
         // Some old React versions might throw if they can't find a match.
         // If so we should ignore it...
       }
+    }
+    return null;
+  }
+
+  getNodesForID(id: number): Array<Object> | null {
+    for (let rendererID in this._rendererInterfaces) {
+      const renderer = ((this._rendererInterfaces[
+        (rendererID: any)
+      ]: any): RendererInterface);
+
+      try {
+        const nodes = renderer.findNativeNodesForFiberID(id);
+        if (nodes != null) {
+          return nodes;
+        }
+      } catch (error) {}
     }
     return null;
   }
@@ -407,6 +431,16 @@ export default class Agent extends EventEmitter<{|
     }
   };
 
+  updateTraceUpdates = (isEnabled: boolean) => {
+    toggleTraceUpdatesEnabled(isEnabled);
+    for (let rendererID in this._rendererInterfaces) {
+      const renderer = ((this._rendererInterfaces[
+        (rendererID: any)
+      ]: any): RendererInterface);
+      renderer.toggleTraceUpdatesEnabled(isEnabled);
+    }
+  };
+
   viewElementSource = ({id, rendererID}: ElementAndRendererID) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
@@ -414,6 +448,12 @@ export default class Agent extends EventEmitter<{|
     } else {
       renderer.prepareViewElementSource(id);
     }
+  };
+
+  onTraceUpdates = (
+    highlightedNodesMap: Map<number, FindNativeNodesForFiberID>,
+  ) => {
+    this.emit('traceUpdates', highlightedNodesMap);
   };
 
   onHookOperations = (operations: Array<number>) => {

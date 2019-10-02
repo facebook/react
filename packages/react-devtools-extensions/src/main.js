@@ -129,6 +129,7 @@ function createPanelIfReactLoaded() {
           isProfiling,
           supportsReloadAndProfile: isChrome,
           supportsProfiling,
+          supportsTraceUpdates: true,
         });
         store.profilerStore.profilingData = profilingData;
 

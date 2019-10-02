@@ -255,7 +255,8 @@ export type RendererInterface = {
   setTrackedPath: (path: Array<PathFrame> | null) => void,
   startProfiling: (recordChangeDescriptions: boolean) => void,
   stopProfiling: () => void,
-  updateComponentFilters: (somponentFilters: Array<ComponentFilter>) => void,
+  updateComponentFilters: (componentFilters: Array<ComponentFilter>) => void,
+  toggleTraceUpdatesEnabled: (enabled: boolean) => void,
 };
 
 export type Handler = (data: any) => void;

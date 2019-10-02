@@ -54,6 +54,7 @@ import type {
   ChangeDescription,
   CommitDataBackend,
   DevToolsHook,
+  FindNativeNodesForFiberID,
   InspectedElement,
   InspectedElementPayload,
   InstanceAndStyle,
@@ -531,6 +532,10 @@ export function attach(
   const hideElementsWithDisplayNames: Set<RegExp> = new Set();
   const hideElementsWithPaths: Set<RegExp> = new Set();
   const hideElementsWithTypes: Set<ElementType> = new Set();
+
+  // Highlight updates
+  let traceUpdatesEnabled: boolean = false;
+  let highlightedNodesMap: Map<number, FindNativeNodesForFiberID> = new Map();
 
   function applyComponentFilters(componentFilters: Array<ComponentFilter>) {
     hideElementsWithTypes.clear();
@@ -1124,6 +1129,23 @@ export function attach(
     return stringID;
   }
 
+  function recordTraceUpdate(fiber: Fiber) {
+    // Highlighting every host node would be too noisy.
+    // We highlight user components and context consumers.
+    // Without consumers, a context update that renders only host nodes directly wouldn't highlight at all.
+    const elementType = getElementTypeForFiber(fiber);
+    if (
+      elementType === ElementTypeFunction ||
+      elementType === ElementTypeClass ||
+      elementType === ElementTypeContext
+    ) {
+      highlightedNodesMap.set(
+        getFiberID(getPrimaryFiber(fiber)),
+        findNativeNodesForFiberID,
+      );
+    }
+  }
+
   function recordMount(fiber: Fiber, parentFiber: Fiber | null) {
     const isRoot = fiber.tag === HostRoot;
     const id = getFiberID(getPrimaryFiber(fiber));
@@ -1242,6 +1264,10 @@ export function attach(
     const shouldIncludeInTree = !shouldFilterFiber(fiber);
     if (shouldIncludeInTree) {
       recordMount(fiber, parentFiber);
+    }
+
+    if (traceUpdatesEnabled) {
+      recordTraceUpdate(fiber);
     }
 
     const isTimedOutSuspense =
@@ -1435,11 +1461,17 @@ export function attach(
       debug('updateFiberRecursively()', nextFiber, parentFiber);
     }
 
+    const didRender = didFiberRender(prevFiber, nextFiber);
+
+    if (traceUpdatesEnabled && didRender) {
+      recordTraceUpdate(nextFiber);
+    }
+
     if (
       mostRecentlyInspectedElement !== null &&
       mostRecentlyInspectedElement.id ===
         getFiberID(getPrimaryFiber(nextFiber)) &&
-      didFiberRender(prevFiber, nextFiber)
+      didRender
     ) {
       // If this Fiber has updated, clear cached inspected data.
       // If it is inspected again, it may need to be re-run to obtain updated hooks values.
@@ -1671,6 +1703,10 @@ export function attach(
       mightBeOnTrackedPath = true;
     }
 
+    if (traceUpdatesEnabled) {
+      highlightedNodesMap.clear();
+    }
+
     // Checking root.memoizedInteractions handles multi-renderer edge-case-
     // where some v16 renderers support profiling and others don't.
     const isProfilingSupported = root.memoizedInteractions != null;
@@ -1737,6 +1773,10 @@ export function attach(
 
     // We're done here.
     flushPendingEvents(root);
+
+    if (traceUpdatesEnabled) {
+      hook.emit('traceUpdates', highlightedNodesMap);
+    }
 
     currentRootID = -1;
   }
@@ -3015,6 +3055,10 @@ export function attach(
     }
   };
 
+  function toggleTraceUpdatesEnabled(isEnabled: boolean): void {
+    traceUpdatesEnabled = isEnabled;
+  }
+
   return {
     cleanup,
     findNativeNodesForFiberID,
@@ -3040,5 +3084,6 @@ export function attach(
     startProfiling,
     stopProfiling,
     updateComponentFilters,
+    toggleTraceUpdatesEnabled,
   };
 }

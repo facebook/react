@@ -44,6 +44,7 @@ export function initBackend(
     }),
 
     hook.sub('operations', agent.onHookOperations),
+    hook.sub('traceUpdates', agent.onTraceUpdates),
 
     // TODO Add additional subscriptions required for profiling mode
   ];

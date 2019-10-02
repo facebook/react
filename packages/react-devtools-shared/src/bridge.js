@@ -115,6 +115,7 @@ type FrontendEvents = {|
   stopProfiling: [],
   updateAppendComponentStack: [boolean],
   updateComponentFilters: [Array<ComponentFilter>],
+  updateTraceUpdates: [boolean],
   viewElementSource: [ElementAndRendererID],
 
   // React Native style editor plug-in.

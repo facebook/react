@@ -912,6 +912,10 @@ export function attach(
     // Not implemented.
   }
 
+  function toggleTraceUpdatesEnabled(enabled: boolean) {
+    // Not implemented.
+  }
+
   function setTrackedPath(path: Array<PathFrame> | null) {
     // Not implemented.
   }
@@ -949,5 +953,6 @@ export function attach(
     startProfiling,
     stopProfiling,
     updateComponentFilters,
+    toggleTraceUpdatesEnabled,
   };
 }
