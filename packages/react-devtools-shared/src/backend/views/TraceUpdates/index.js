@@ -46,7 +46,6 @@ export function initialize(injectedAgent: Agent): void {
 }
 
 export function toggleEnabled(value: boolean): void {
-  console.log('[TraceUpdates] toggleEnabled()', value);
   isEnabled = value;
 
   if (!isEnabled) {
@@ -77,7 +76,7 @@ function traceUpdates(nodes: Set<NativeType>): void {
 
     let lastMeasuredAt = data != null ? data.lastMeasuredAt : 0;
     let rect = data != null ? data.rect : null;
-    if (lastMeasuredAt + REMEASUREMENT_AFTER_DURATION < now) {
+    if (rect === null || lastMeasuredAt + REMEASUREMENT_AFTER_DURATION < now) {
       lastMeasuredAt = now;
       rect = measureNode(node);
     }
