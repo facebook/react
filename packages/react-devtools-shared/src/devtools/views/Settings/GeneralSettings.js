@@ -18,12 +18,12 @@ export default function GeneralSettings(_: {||}) {
   const {
     appendComponentStack,
     displayDensity,
-    traceUpdates,
     setAppendComponentStack,
-    setTraceUpdates,
     setDisplayDensity,
     setTheme,
+    setTraceUpdatesEnabled,
     theme,
+    traceUpdatesEnabled,
   } = useContext(SettingsContext);
 
   const {supportsTraceUpdates} = useContext(StoreContext);
@@ -60,9 +60,9 @@ export default function GeneralSettings(_: {||}) {
           <label>
             <input
               type="checkbox"
-              checked={traceUpdates}
+              checked={traceUpdatesEnabled}
               onChange={({currentTarget}) =>
-                setTraceUpdates(currentTarget.checked)
+                setTraceUpdatesEnabled(currentTarget.checked)
               }
             />{' '}
             Highlight updates when components render.

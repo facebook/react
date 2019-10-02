@@ -3104,7 +3104,7 @@ export function attach(
     }
   };
 
-  function toggleTraceUpdatesEnabled(isEnabled: boolean): void {
+  function setTraceUpdatesEnabled(isEnabled: boolean): void {
     traceUpdatesEnabled = isEnabled;
   }
 
@@ -3129,10 +3129,10 @@ export function attach(
     setInHook,
     setInProps,
     setInState,
+    setTraceUpdatesEnabled,
     setTrackedPath,
     startProfiling,
     stopProfiling,
     updateComponentFilters,
-    toggleTraceUpdatesEnabled,
   };
 }

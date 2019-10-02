@@ -912,7 +912,7 @@ export function attach(
     // Not implemented.
   }
 
-  function toggleTraceUpdatesEnabled(enabled: boolean) {
+  function setTraceUpdatesEnabled(enabled: boolean) {
     // Not implemented.
   }
 
@@ -949,10 +949,10 @@ export function attach(
     setInHook,
     setInProps,
     setInState,
+    setTraceUpdatesEnabled,
     setTrackedPath,
     startProfiling,
     stopProfiling,
     updateComponentFilters,
-    toggleTraceUpdatesEnabled,
   };
 }

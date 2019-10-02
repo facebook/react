@@ -23,7 +23,7 @@ import {
 import setupHighlighter from './views/Highlighter';
 import {
   initialize as setupTraceUpdates,
-  toggleEnabled as toggleTraceUpdatesEnabled,
+  toggleEnabled as setTraceUpdatesEnabled,
 } from './views/TraceUpdates';
 import {patch as patchConsole, unpatch as unpatchConsole} from './console';
 
@@ -137,6 +137,7 @@ export default class Agent extends EventEmitter<{|
     bridge.addListener('overrideState', this.overrideState);
     bridge.addListener('overrideSuspense', this.overrideSuspense);
     bridge.addListener('reloadAndProfile', this.reloadAndProfile);
+    bridge.addListener('setTraceUpdatesEnabled', this.setTraceUpdatesEnabled);
     bridge.addListener('startProfiling', this.startProfiling);
     bridge.addListener('stopProfiling', this.stopProfiling);
     bridge.addListener(
@@ -149,7 +150,6 @@ export default class Agent extends EventEmitter<{|
       this.updateAppendComponentStack,
     );
     bridge.addListener('updateComponentFilters', this.updateComponentFilters);
-    bridge.addListener('updateTraceUpdates', this.updateTraceUpdates);
     bridge.addListener('viewElementSource', this.viewElementSource);
 
     if (this._isProfiling) {
@@ -348,7 +348,7 @@ export default class Agent extends EventEmitter<{|
       rendererInterface.startProfiling(this._recordChangeDescriptions);
     }
 
-    rendererInterface.toggleTraceUpdatesEnabled(this._traceUpdatesEnabled);
+    rendererInterface.setTraceUpdatesEnabled(this._traceUpdatesEnabled);
 
     // When the renderer is attached, we need to tell it whether
     // we remember the previous selection that we'd like to restore.
@@ -358,6 +358,19 @@ export default class Agent extends EventEmitter<{|
       rendererInterface.setTrackedPath(selection.path);
     }
   }
+
+  setTraceUpdatesEnabled = (traceUpdatesEnabled: boolean) => {
+    this._traceUpdatesEnabled = traceUpdatesEnabled;
+
+    setTraceUpdatesEnabled(traceUpdatesEnabled);
+
+    for (let rendererID in this._rendererInterfaces) {
+      const renderer = ((this._rendererInterfaces[
+        (rendererID: any)
+      ]: any): RendererInterface);
+      renderer.setTraceUpdatesEnabled(traceUpdatesEnabled);
+    }
+  };
 
   syncSelectionFromNativeElementsPanel = () => {
     const target = window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0;
@@ -414,19 +427,6 @@ export default class Agent extends EventEmitter<{|
         (rendererID: any)
       ]: any): RendererInterface);
       renderer.updateComponentFilters(componentFilters);
-    }
-  };
-
-  updateTraceUpdates = (isEnabled: boolean) => {
-    this._traceUpdatesEnabled = isEnabled;
-
-    toggleTraceUpdatesEnabled(isEnabled);
-
-    for (let rendererID in this._rendererInterfaces) {
-      const renderer = ((this._rendererInterfaces[
-        (rendererID: any)
-      ]: any): RendererInterface);
-      renderer.toggleTraceUpdatesEnabled(isEnabled);
     }
   };
 

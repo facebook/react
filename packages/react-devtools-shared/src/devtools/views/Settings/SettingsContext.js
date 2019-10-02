@@ -41,8 +41,8 @@ type Context = {|
   theme: Theme,
   setTheme(value: Theme): void,
 
-  traceUpdates: boolean,
-  setTraceUpdates: (value: boolean) => void,
+  traceUpdatesEnabled: boolean,
+  setTraceUpdatesEnabled: (value: boolean) => void,
 |};
 
 const SettingsContext = createContext<Context>(((null: any): Context));
@@ -76,10 +76,9 @@ function SettingsContextController({
   const [appendComponentStack, setAppendComponentStack] = useLocalStorage<
     boolean,
   >(LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY, true);
-  const [traceUpdates, setTraceUpdates] = useLocalStorage<boolean>(
-    'React::DevTools::traceUpdates',
-    false,
-  );
+  const [traceUpdatesEnabled, setTraceUpdatesEnabled] = useLocalStorage<
+    boolean,
+  >('React::DevTools::traceUpdatesEnabled', false);
 
   const documentElements = useMemo<DocumentElements>(
     () => {
@@ -147,35 +146,35 @@ function SettingsContextController({
 
   useEffect(
     () => {
-      bridge.send('updateTraceUpdates', traceUpdates);
+      bridge.send('setTraceUpdatesEnabled', traceUpdatesEnabled);
     },
-    [bridge, traceUpdates],
+    [bridge, traceUpdatesEnabled],
   );
 
   const value = useMemo(
     () => ({
-      displayDensity,
-      setDisplayDensity,
-      theme,
-      setTheme,
       appendComponentStack,
-      setAppendComponentStack,
-      traceUpdates,
-      setTraceUpdates,
+      displayDensity,
       lineHeight:
         displayDensity === 'compact'
           ? COMPACT_LINE_HEIGHT
           : COMFORTABLE_LINE_HEIGHT,
-    }),
-    [
-      displayDensity,
+      setAppendComponentStack,
       setDisplayDensity,
       setTheme,
-      appendComponentStack,
-      setAppendComponentStack,
-      traceUpdates,
-      setTraceUpdates,
+      setTraceUpdatesEnabled,
       theme,
+      traceUpdatesEnabled,
+    }),
+    [
+      appendComponentStack,
+      displayDensity,
+      setAppendComponentStack,
+      setDisplayDensity,
+      setTheme,
+      setTraceUpdatesEnabled,
+      theme,
+      traceUpdatesEnabled,
     ],
   );
 
