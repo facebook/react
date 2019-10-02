@@ -99,6 +99,7 @@ export default class Agent extends EventEmitter<{|
   _rendererInterfaces: {[key: RendererID]: RendererInterface} = {};
   _persistedSelection: PersistedSelection | null = null;
   _persistedSelectionMatch: PathMatch | null = null;
+  _traceUpdatesEnabled: boolean = false;
 
   constructor(bridge: BackendBridge) {
     super();
@@ -347,6 +348,8 @@ export default class Agent extends EventEmitter<{|
       rendererInterface.startProfiling(this._recordChangeDescriptions);
     }
 
+    rendererInterface.toggleTraceUpdatesEnabled(this._traceUpdatesEnabled);
+
     // When the renderer is attached, we need to tell it whether
     // we remember the previous selection that we'd like to restore.
     // It'll start tracking mounts for matches to the last selection path.
@@ -415,7 +418,10 @@ export default class Agent extends EventEmitter<{|
   };
 
   updateTraceUpdates = (isEnabled: boolean) => {
+    this._traceUpdatesEnabled = isEnabled;
+
     toggleTraceUpdatesEnabled(isEnabled);
+
     for (let rendererID in this._rendererInterfaces) {
       const renderer = ((this._rendererInterfaces[
         (rendererID: any)
