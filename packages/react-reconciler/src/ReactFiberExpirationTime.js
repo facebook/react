@@ -35,7 +35,7 @@ export const Idle = 2;
 // Continuous Hydration is a moving priority. It is slightly higher than Idle
 // and is used to increase priority of hover targets. It is increasing with
 // each usage so that last always wins.
-export let ContinuousHydration = 3;
+let ContinuousHydration = 3;
 export const Sync = MAX_SIGNED_31_BIT_INT;
 export const Batched = Sync - 1;
 
