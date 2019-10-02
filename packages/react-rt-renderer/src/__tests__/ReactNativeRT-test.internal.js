@@ -14,6 +14,8 @@ let React;
 let ReactNativeRT;
 let RTManager;
 
+import {REACT_PORTAL_TYPE} from 'shared/ReactSymbols';
+
 describe('ReactNativeRT', () => {
   beforeEach(() => {
     jest.resetModules();
@@ -58,5 +60,17 @@ describe('ReactNativeRT', () => {
     expect(RTManager.appendChildToContext.mock.calls.length).toBe(1);
     expect(RTManager.appendChildToContext.mock.calls.length).toBe(1);
     expect(RTManager.updateNode.mock.calls.length).toBe(1);
+  });
+
+  it('should be able to create portal', () => {
+    const portal = ReactNativeRT.createPortal(<rt-box foo="foo" />, 11);
+
+    expect(portal).toEqual({
+      $$typeof: REACT_PORTAL_TYPE,
+      children: <rt-box foo="foo" />,
+      containerInfo: 11,
+      implementation: null,
+      key: null,
+    });
   });
 });
