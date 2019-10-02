@@ -2576,4 +2576,53 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       expect(root).toMatchRenderedOutput(<span prop="Initial" />);
     });
   });
+
+  it('regression test: resets current "debug phase" after suspending', async () => {
+    function App() {
+      return (
+        <Suspense fallback="Loading...">
+          <Foo suspend={false} />
+        </Suspense>
+      );
+    }
+
+    const thenable = {then() {}};
+
+    let foo;
+    class Foo extends React.Component {
+      state = {suspend: false};
+      render() {
+        foo = this;
+
+        if (this.state.suspend) {
+          Scheduler.unstable_yieldValue('Suspend!');
+          throw thenable;
+        }
+
+        return <Text text="Foo" />;
+      }
+    }
+
+    const root = ReactNoop.createRoot();
+    await ReactNoop.act(async () => {
+      root.render(<App />);
+    });
+
+    expect(Scheduler).toHaveYielded(['Foo']);
+
+    await ReactNoop.act(async () => {
+      foo.setState({suspend: true});
+
+      // In the regression that this covers, we would neglect to reset the
+      // current debug phase after suspending (in the catch block), so React
+      // thinks we're still inside the render phase.
+      expect(Scheduler).toFlushAndYieldThrough(['Suspend!']);
+
+      // Then when this setState happens, React would incorrectly fire a warning
+      // about updates that happen the render phase (only fired by classes).
+      foo.setState({suspend: false});
+    });
+
+    expect(root).toMatchRenderedOutput(<span prop="Foo" />);
+  });
 });

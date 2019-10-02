@@ -675,17 +675,19 @@ const bundles = [
       'react',
       'react-interactions/events/keyboard',
       'react-interactions/accessibility/tabbable-scope',
+      'react-interactions/accessibility/focus-control',
     ],
   },
 
   {
     bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
     moduleType: NON_FIBER_RENDERER,
-    entry: 'react-interactions/accessibility/tab-focus',
-    global: 'ReactTabFocus',
+    entry: 'react-interactions/accessibility/focus-manager',
+    global: 'ReactFocusManager',
     externals: [
       'react',
       'react-interactions/events/keyboard',
+      'react-interactions/events/focus',
       'react-interactions/accessibility/tabbable-scope',
       'react-interactions/accessibility/focus-control',
     ],
@@ -706,9 +708,23 @@ const bundles = [
     global: 'ReactTabbableScope',
     externals: ['react'],
   },
+
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
+    moduleType: NON_FIBER_RENDERER,
+    entry: 'react-interactions/accessibility/focus-list',
+    global: 'ReactFocusList',
+    externals: [
+      'react',
+      'react-interactions/events/keyboard',
+      'react-interactions/accessibility/tabbable-scope',
+      'react-interactions/accessibility/focus-control',
+    ],
+  },
 ];
 
 const fbBundleExternalsMap = {
+  'react-interactions/events/focus': 'ReactEventsFocus',
   'react-interactions/events/keyboard': 'ReactEventsKeyboard',
   'react-interactions/events/tap': 'ReactEventsTap',
   'react-interactions/accessibility/tabbable-scope': 'ReactTabbableScope',

@@ -4,7 +4,6 @@ import {createElement} from 'react';
 import {unstable_createRoot as createRoot, flushSync} from 'react-dom';
 import Bridge from 'react-devtools-shared/src/bridge';
 import Store from 'react-devtools-shared/src/devtools/store';
-import inject from './inject';
 import {
   createViewElementSource,
   getBrowserName,
@@ -135,7 +134,14 @@ function createPanelIfReactLoaded() {
 
         // Initialize the backend only once the Store has been initialized.
         // Otherwise the Store may miss important initial tree op codes.
-        inject(chrome.runtime.getURL('build/backend.js'));
+        chrome.devtools.inspectedWindow.eval(
+          `window.postMessage({ source: 'react-devtools-inject-backend' }, '*');`,
+          function(response, evalError) {
+            if (evalError) {
+              console.error(evalError);
+            }
+          },
+        );
 
         const viewElementSourceFunction = createViewElementSource(
           bridge,
@@ -155,7 +161,7 @@ function createPanelIfReactLoaded() {
               overrideTab,
               profilerPortalContainer,
               showTabBar: false,
-              showWelcomeToTheNewDevToolsDialog: true,
+              warnIfUnsupportedVersionDetected: true,
               store,
               viewElementSourceFunction,
             }),

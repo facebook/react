@@ -104,7 +104,7 @@ function createPointerEvent(
     ctrlKey,
     detail,
     getModifierState(keyArg) {
-      createGetModifierState(keyArg, modifierState);
+      return createGetModifierState(keyArg, modifierState);
     },
     height: isMouse ? 1 : height != null ? height : defaultPointerSize,
     metaKey,
@@ -150,7 +150,7 @@ function createKeyboardEvent(
     altKey,
     ctrlKey,
     getModifierState(keyArg) {
-      createGetModifierState(keyArg, modifierState);
+      return createGetModifierState(keyArg, modifierState);
     },
     isComposing,
     key,
@@ -193,7 +193,7 @@ function createMouseEvent(
     ctrlKey,
     detail,
     getModifierState(keyArg) {
-      createGetModifierState(keyArg, modifierState);
+      return createGetModifierState(keyArg, modifierState);
     },
     metaKey,
     movementX,
@@ -422,9 +422,14 @@ export function pointerup(payload) {
  */
 
 export function mousedown(payload) {
+  // The value of 'buttons' for 'mousedown' must not be 0
+  const buttons =
+    payload == null || payload.buttons === 0
+      ? buttonsType.primary
+      : payload.buttons;
   return createMouseEvent('mousedown', {
-    buttons: buttonsType.primary,
     ...payload,
+    buttons,
   });
 }
 

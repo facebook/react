@@ -248,10 +248,10 @@ const SimpleEventPlugin: PluginModule<MouseEvent> & {
 
   extractEvents: function(
     topLevelType: TopLevelType,
-    eventSystemFlags: EventSystemFlags,
     targetInst: null | Fiber,
     nativeEvent: MouseEvent,
     nativeEventTarget: EventTarget,
+    eventSystemFlags: EventSystemFlags,
   ): null | ReactSyntheticEvent {
     const dispatchConfig = topLevelEventsToDispatchConfig[topLevelType];
     if (!dispatchConfig) {

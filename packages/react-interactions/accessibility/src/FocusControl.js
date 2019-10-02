@@ -110,7 +110,7 @@ export function focusPrevious(
   }
 }
 
-export function getNextController(
+export function getNextScope(
   scope: ReactScopeMethods,
 ): null | ReactScopeMethods {
   const allScopes = scope.getChildrenFromRoot();
@@ -124,7 +124,7 @@ export function getNextController(
   return allScopes[currentScopeIndex + 1];
 }
 
-export function getPreviousController(
+export function getPreviousScope(
   scope: ReactScopeMethods,
 ): null | ReactScopeMethods {
   const allScopes = scope.getChildrenFromRoot();
@@ -136,4 +136,43 @@ export function getPreviousController(
     return null;
   }
   return allScopes[currentScopeIndex - 1];
+}
+
+const tabIndexDesc = Object.getOwnPropertyDescriptor(
+  HTMLElement.prototype,
+  'tabIndex',
+);
+const tabIndexSetter = (tabIndexDesc: any).set;
+
+export function setElementCanTab(elem: HTMLElement, canTab: boolean): void {
+  let tabIndexState = (elem: any)._tabIndexState;
+  if (!tabIndexState) {
+    tabIndexState = {
+      value: elem.tabIndex,
+      canTab,
+    };
+    (elem: any)._tabIndexState = tabIndexState;
+    if (!canTab) {
+      elem.tabIndex = -1;
+    }
+    // We track the tabIndex value so we can restore the correct
+    // tabIndex after we're done with it.
+    // $FlowFixMe: Flow comoplains that we are missing value?
+    Object.defineProperty(elem, 'tabIndex', {
+      enumerable: false,
+      configurable: true,
+      get() {
+        return tabIndexState.canTab ? tabIndexState.value : -1;
+      },
+      set(val) {
+        if (tabIndexState.canTab) {
+          tabIndexSetter.call(elem, val);
+        }
+        tabIndexState.value = val;
+      },
+    });
+  } else if (tabIndexState.canTab !== canTab) {
+    tabIndexSetter.call(elem, canTab ? tabIndexState.value : -1);
+    tabIndexState.canTab = canTab;
+  }
 }

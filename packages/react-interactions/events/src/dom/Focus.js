@@ -26,6 +26,7 @@ type FocusEvent = {|
   type: FocusEventType | FocusWithinEventType,
   pointerType: PointerType,
   timeStamp: number,
+  continuePropagation: () => void,
 |};
 
 type FocusState = {
@@ -47,12 +48,16 @@ type FocusProps = {
 type FocusEventType = 'focus' | 'blur' | 'focuschange' | 'focusvisiblechange';
 
 type FocusWithinProps = {
-  disabled: boolean,
-  onFocusWithinChange: boolean => void,
-  onFocusWithinVisibleChange: boolean => void,
+  disabled?: boolean,
+  onBlurWithin?: (e: FocusEvent) => void,
+  onFocusWithinChange?: boolean => void,
+  onFocusWithinVisibleChange?: boolean => void,
 };
 
-type FocusWithinEventType = 'focuswithinvisiblechange' | 'focuswithinchange';
+type FocusWithinEventType =
+  | 'focuswithinvisiblechange'
+  | 'focuswithinchange'
+  | 'blurwithin';
 
 /**
  * Shared between Focus and FocusWithin
@@ -89,6 +94,14 @@ function createFocusEvent(
     type,
     pointerType,
     timeStamp: context.getTimeStamp(),
+    // We don't use stopPropagation, as the default behavior
+    // is to not propagate. Plus, there might be confusion
+    // using stopPropagation as we don't actually stop
+    // native propagation from working, but instead only
+    // allow propagation to the others keyboard responders.
+    continuePropagation() {
+      context.continuePropagation();
+    },
   };
 }
 
@@ -226,6 +239,26 @@ function dispatchBlurEvents(
   }
 }
 
+function dispatchBlurWithinEvents(
+  context: ReactDOMResponderContext,
+  event: ReactDOMResponderEvent,
+  props: FocusWithinProps,
+  state: FocusState,
+) {
+  const pointerType = state.pointerType;
+  const target = ((state.focusTarget: any): Element | Document) || event.target;
+  const onBlurWithin = (props.onBlurWithin: any);
+  if (isFunction(onBlurWithin)) {
+    const syntheticEvent = createFocusEvent(
+      context,
+      'blurwithin',
+      target,
+      pointerType,
+    );
+    context.dispatchEvent(syntheticEvent, onBlurWithin, DiscreteEvent);
+  }
+}
+
 function dispatchFocusChange(
   context: ReactDOMResponderContext,
   props: FocusProps,
@@ -260,6 +293,7 @@ function unmountFocusResponder(
 
 const focusResponderImpl = {
   targetEventTypes,
+  targetPortalPropagation: true,
   rootEventTypes,
   getInitialState(): FocusState {
     return {
@@ -364,7 +398,7 @@ function dispatchFocusWithinChangeEvent(
   state: FocusState,
   value: boolean,
 ) {
-  const onFocusWithinChange = props.onFocusWithinChange;
+  const onFocusWithinChange = (props.onFocusWithinChange: any);
   if (isFunction(onFocusWithinChange)) {
     context.dispatchEvent(value, onFocusWithinChange, DiscreteEvent);
   }
@@ -379,7 +413,7 @@ function dispatchFocusWithinVisibleChangeEvent(
   state: FocusState,
   value: boolean,
 ) {
-  const onFocusWithinVisibleChange = props.onFocusWithinVisibleChange;
+  const onFocusWithinVisibleChange = (props.onFocusWithinVisibleChange: any);
   if (isFunction(onFocusWithinVisibleChange)) {
     context.dispatchEvent(value, onFocusWithinVisibleChange, DiscreteEvent);
   }
@@ -397,6 +431,7 @@ function unmountFocusWithinResponder(
 
 const focusWithinResponderImpl = {
   targetEventTypes,
+  targetPortalPropagation: true,
   rootEventTypes,
   getInitialState(): FocusState {
     return {
@@ -447,6 +482,7 @@ const focusWithinResponderImpl = {
           !context.isTargetWithinResponder(relatedTarget)
         ) {
           dispatchFocusWithinChangeEvent(context, props, state, false);
+          dispatchBlurWithinEvents(context, event, props, state);
           state.isFocused = false;
         }
         break;

@@ -474,6 +474,10 @@ export default class Agent extends EventEmitter<{|
     }
   };
 
+  onUnsupportedRenderer(rendererID: number) {
+    this._bridge.send('unsupportedRendererVersion', rendererID);
+  }
+
   _throttledPersistSelection = throttle((rendererID: number, id: number) => {
     // This is throttled, so both renderer and selected ID
     // might not be available by the time we read them.

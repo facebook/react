@@ -57,6 +57,7 @@ inject('dist/app.js', () => {
           browserTheme: 'light',
           showTabBar: true,
           warnIfLegacyBackendDetected: true,
+          warnIfUnsupportedVersionDetected: true,
         }),
       );
     },

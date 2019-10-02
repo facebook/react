@@ -134,4 +134,55 @@ describe('EnterLeaveEventPlugin', () => {
     expect(childEnterCalls).toBe(1);
     expect(parentEnterCalls).toBe(0);
   });
+
+  // Test for https://github.com/facebook/react/issues/16763.
+  it('should call mouseEnter once from sibling rendered inside a rendered component', done => {
+    const mockFn = jest.fn();
+
+    class Parent extends React.Component {
+      constructor(props) {
+        super(props);
+        this.parentEl = React.createRef();
+      }
+
+      componentDidMount() {
+        ReactDOM.render(<MouseEnterDetect />, this.parentEl.current);
+      }
+
+      render() {
+        return <div ref={this.parentEl} />;
+      }
+    }
+
+    class MouseEnterDetect extends React.Component {
+      constructor(props) {
+        super(props);
+        this.firstEl = React.createRef();
+        this.siblingEl = React.createRef();
+      }
+
+      componentDidMount() {
+        this.siblingEl.current.dispatchEvent(
+          new MouseEvent('mouseout', {
+            bubbles: true,
+            cancelable: true,
+            relatedTarget: this.firstEl.current,
+          }),
+        );
+        expect(mockFn.mock.calls.length).toBe(1);
+        done();
+      }
+
+      render() {
+        return (
+          <React.Fragment>
+            <div ref={this.firstEl} onMouseEnter={mockFn} />
+            <div ref={this.siblingEl} />
+          </React.Fragment>
+        );
+      }
+    }
+
+    ReactDOM.render(<Parent />, container);
+  });
 });

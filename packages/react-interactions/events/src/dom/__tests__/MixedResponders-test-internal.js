@@ -236,7 +236,6 @@ describe('mixing responders with the heritage event system', () => {
   describe('mixing the Input and Press repsonders', () => {
     it('is async for non-input events', () => {
       ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
-      ReactFeatureFlags.enableUserBlockingEvents = true;
       const useTap = require('react-interactions/events/tap').useTap;
       const useInput = require('react-interactions/events/input').useInput;
       const root = ReactDOM.unstable_createRoot(container);

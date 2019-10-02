@@ -7,10 +7,23 @@
   </summary>
   
   <!-- Upcoming changes go here -->
-#### Bug fixes
-* Fixed bug where Components panel was always empty for certain users. ([bvaughn](https://github.com/bvaughn) in [#16864](https://github.com/facebook/react/pull/16864))
-* Fixed regression in DevTools editable hooks interface that caused primitive values to be shown as `undefined`. ([bvaughn](https://github.com/bvaughn) in [#16867](https://github.com/facebook/react/pull/16867))
+
 </details>
+
+## 4.1.3 (September 30, 2019)
+#### Bug fixes
+* Fixed regression where DevTools wouldn't properly connect with apps when using the `file://` protocol. ([linshunghuang](https://github.com/linshunghuang) in [#16953](https://github.com/facebook/react/pull/16953))
+
+## 4.1.2 (September 27, 2019)
+#### Bug fixes
+* Fixed an infinite loop that occurred in some cases with prop values of `NaN`. ([bvaughn](https://github.com/bvaughn) in [#16934](https://github.com/facebook/react/pull/16934))
+
+## 4.1.1 (September 26, 2019)
+#### Bug fixes
+* Fixed bug where Components panel was always empty for certain users. ([linshunghuang](https://github.com/linshunghuang) in [#16900](https://github.com/facebook/react/pull/16900))
+* Fixed regression in DevTools editable hooks interface that caused primitive values to be shown as `undefined`. ([bvaughn](https://github.com/bvaughn) in [#16867](https://github.com/facebook/react/pull/16867))
+* Fixed bug where DevTools showed stale values in props/state/hooks editing interface. ([bvaughn](https://github.com/bvaughn) in [#16878](https://github.com/facebook/react/pull/16878))
+* Show unsupported version dialog with downgrade instructions. ([bvaughn](https://github.com/bvaughn) in [#16897](https://github.com/facebook/react/pull/16897))
 
 ## 4.1.0 (September 19, 2019)
 #### Features

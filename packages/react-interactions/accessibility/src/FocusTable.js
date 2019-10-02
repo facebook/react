@@ -7,14 +7,16 @@
  * @flow
  */
 
-import type {ReactScopeMethods} from 'shared/ReactTypes';
+import type {ReactScope, ReactScopeMethods} from 'shared/ReactTypes';
 import type {KeyboardEvent} from 'react-interactions/events/keyboard';
 
 import React from 'react';
 import {useKeyboard} from 'react-interactions/events/keyboard';
+import {setElementCanTab} from 'react-interactions/accessibility/focus-control';
 
 type FocusCellProps = {
   children?: React.Node,
+  onKeyDown?: KeyboardEvent => void,
 };
 
 type FocusRowProps = {
@@ -28,6 +30,9 @@ type FocusTableProps = {|
     direction: 'left' | 'right' | 'up' | 'down',
     focusTableByID: (id: string) => void,
   ) => void,
+  wrap?: boolean,
+  tabScope?: ReactScope,
+  allowModifiers?: boolean,
 |};
 
 const {useRef} = React;
@@ -54,19 +59,26 @@ export function focusFirstCellOnTable(table: ReactScopeMethods): void {
   }
 }
 
-function focusCell(cell: ReactScopeMethods): void {
+function focusScope(cell: ReactScopeMethods, event?: KeyboardEvent): void {
   const tabbableNodes = cell.getScopedNodes();
   if (tabbableNodes !== null && tabbableNodes.length > 0) {
     tabbableNodes[0].focus();
+    if (event) {
+      event.preventDefault();
+    }
   }
 }
 
-function focusCellByIndex(row: ReactScopeMethods, cellIndex: number): void {
+function focusCellByIndex(
+  row: ReactScopeMethods,
+  cellIndex: number,
+  event?: KeyboardEvent,
+): void {
   const cells = row.getChildren();
   if (cells !== null) {
     const cell = cells[cellIndex];
     if (cell) {
-      focusCell(cell);
+      focusScope(cell, event);
     }
   }
 }
@@ -101,6 +113,7 @@ function getRows(currentCell: ReactScopeMethods) {
 function triggerNavigateOut(
   currentCell: ReactScopeMethods,
   direction: 'left' | 'right' | 'up' | 'down',
+  event,
 ): void {
   const row = currentCell.getParent();
   if (row !== null && row.getProps().type === 'row') {
@@ -122,20 +135,56 @@ function triggerNavigateOut(
           }
         };
         onKeyboardOut(direction, focusTableByID);
+        return;
       }
     }
   }
+  event.continuePropagation();
 }
 
-export function createFocusTable(
-  scopeImpl: (type: string, props: Object) => boolean,
-): Array<React.Component> {
-  const TableScope = React.unstable_createScope(scopeImpl);
+function getTableProps(currentCell: ReactScopeMethods): Object {
+  const row = currentCell.getParent();
+  if (row !== null && row.getProps().type === 'row') {
+    const table = row.getParent();
+    if (table !== null) {
+      return table.getProps();
+    }
+  }
+  return {};
+}
 
-  function Table({children, onKeyboardOut, id}): FocusTableProps {
+function hasModifierKey(event: KeyboardEvent): boolean {
+  const {altKey, ctrlKey, metaKey, shiftKey} = event;
+  return (
+    altKey === true || ctrlKey === true || metaKey === true || shiftKey === true
+  );
+}
+
+export function createFocusTable(scope: ReactScope): Array<React.Component> {
+  const TableScope = React.unstable_createScope(scope.fn);
+
+  function Table({
+    children,
+    onKeyboardOut,
+    id,
+    wrap,
+    tabScope: TabScope,
+    allowModifiers,
+  }): FocusTableProps {
+    const tabScopeRef = useRef(null);
     return (
-      <TableScope type="table" onKeyboardOut={onKeyboardOut} id={id}>
-        {children}
+      <TableScope
+        type="table"
+        onKeyboardOut={onKeyboardOut}
+        id={id}
+        wrap={wrap}
+        tabScopeRef={tabScopeRef}
+        allowModifiers={allowModifiers}>
+        {TabScope ? (
+          <TabScope ref={tabScopeRef}>{children}</TabScope>
+        ) : (
+          children
+        )}
       </TableScope>
     );
   }
@@ -144,12 +193,44 @@ export function createFocusTable(
     return <TableScope type="row">{children}</TableScope>;
   }
 
-  function Cell({children}): FocusCellProps {
+  function Cell({children, onKeyDown}): FocusCellProps {
     const scopeRef = useRef(null);
     const keyboard = useKeyboard({
       onKeyDown(event: KeyboardEvent): void {
         const currentCell = scopeRef.current;
-        switch (event.key) {
+        if (currentCell === null) {
+          event.continuePropagation();
+          return;
+        }
+        const key = event.key;
+        if (key === 'Tab') {
+          const tabScope = getTableProps(currentCell).tabScopeRef.current;
+          if (tabScope) {
+            const activeNode = document.activeElement;
+            const nodes = tabScope.getScopedNodes();
+            for (let i = 0; i < nodes.length; i++) {
+              const node = nodes[i];
+              if (node !== activeNode) {
+                setElementCanTab(node, false);
+              } else {
+                setElementCanTab(node, true);
+              }
+            }
+            return;
+          }
+          event.continuePropagation();
+          return;
+        }
+        // Using modifier keys with keyboard arrow events should be no-ops
+        // unless an explicit allowModifiers flag is set on the FocusTable.
+        if (hasModifierKey(event)) {
+          const allowModifiers = getTableProps(currentCell).allowModifiers;
+          if (!allowModifiers) {
+            event.continuePropagation();
+            return;
+          }
+        }
+        switch (key) {
           case 'ArrowUp': {
             const [cells, cellIndex] = getRowCells(currentCell);
             if (cells !== null) {
@@ -157,10 +238,15 @@ export function createFocusTable(
               if (rows !== null) {
                 if (rowIndex > 0) {
                   const row = rows[rowIndex - 1];
-                  focusCellByIndex(row, cellIndex);
-                  event.preventDefault();
+                  focusCellByIndex(row, cellIndex, event);
                 } else if (rowIndex === 0) {
-                  triggerNavigateOut(currentCell, 'up');
+                  const wrap = getTableProps(currentCell).wrap;
+                  if (wrap) {
+                    const row = rows[rows.length - 1];
+                    focusCellByIndex(row, cellIndex, event);
+                  } else {
+                    triggerNavigateOut(currentCell, 'up', event);
+                  }
                 }
               }
             }
@@ -173,11 +259,16 @@ export function createFocusTable(
               if (rows !== null) {
                 if (rowIndex !== -1) {
                   if (rowIndex === rows.length - 1) {
-                    triggerNavigateOut(currentCell, 'down');
+                    const wrap = getTableProps(currentCell).wrap;
+                    if (wrap) {
+                      const row = rows[0];
+                      focusCellByIndex(row, cellIndex, event);
+                    } else {
+                      triggerNavigateOut(currentCell, 'down', event);
+                    }
                   } else {
                     const row = rows[rowIndex + 1];
-                    focusCellByIndex(row, cellIndex);
-                    event.preventDefault();
+                    focusCellByIndex(row, cellIndex, event);
                   }
                 }
               }
@@ -188,10 +279,15 @@ export function createFocusTable(
             const [cells, rowIndex] = getRowCells(currentCell);
             if (cells !== null) {
               if (rowIndex > 0) {
-                focusCell(cells[rowIndex - 1]);
+                focusScope(cells[rowIndex - 1]);
                 event.preventDefault();
               } else if (rowIndex === 0) {
-                triggerNavigateOut(currentCell, 'left');
+                const wrap = getTableProps(currentCell).wrap;
+                if (wrap) {
+                  focusScope(cells[cells.length - 1], event);
+                } else {
+                  triggerNavigateOut(currentCell, 'left', event);
+                }
               }
             }
             return;
@@ -201,17 +297,23 @@ export function createFocusTable(
             if (cells !== null) {
               if (rowIndex !== -1) {
                 if (rowIndex === cells.length - 1) {
-                  triggerNavigateOut(currentCell, 'right');
+                  const wrap = getTableProps(currentCell).wrap;
+                  if (wrap) {
+                    focusScope(cells[0], event);
+                  } else {
+                    triggerNavigateOut(currentCell, 'right', event);
+                  }
                 } else {
-                  focusCell(cells[rowIndex + 1]);
-                  event.preventDefault();
+                  focusScope(cells[rowIndex + 1], event);
                 }
               }
             }
             return;
           }
         }
-        event.continuePropagation();
+        if (onKeyDown) {
+          onKeyDown(event);
+        }
       },
     });
     return (

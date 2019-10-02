@@ -321,6 +321,7 @@ export function computeExpirationForFiber(
 
   if ((executionContext & RenderContext) !== NoContext) {
     // Use whatever time we're already rendering
+    // TODO: Should there be a way to opt out, like with `runWithPriority`?
     return renderExpirationTime;
   }
 
@@ -347,7 +348,7 @@ export function computeExpirationForFiber(
         expirationTime = computeAsyncExpiration(currentTime);
         break;
       case IdlePriority:
-        expirationTime = Never;
+        expirationTime = Idle;
         break;
       default:
         invariant(false, 'Expected a valid priority level');
@@ -1328,6 +1329,7 @@ function handleError(root, thrownValue) {
       // Reset module-level state that was set during the render phase.
       resetContextDependencies();
       resetHooks();
+      resetCurrentDebugFiberInDEV();
 
       if (workInProgress === null || workInProgress.return === null) {
         // Expected to be working on a non-root fiber. This is a fatal error
@@ -1406,14 +1408,14 @@ export function markRenderEventTimeAndConfig(
 ): void {
   if (
     expirationTime < workInProgressRootLatestProcessedExpirationTime &&
-    expirationTime > Never
+    expirationTime > Idle
   ) {
     workInProgressRootLatestProcessedExpirationTime = expirationTime;
   }
   if (suspenseConfig !== null) {
     if (
       expirationTime < workInProgressRootLatestSuspenseTimeout &&
-      expirationTime > Never
+      expirationTime > Idle
     ) {
       workInProgressRootLatestSuspenseTimeout = expirationTime;
       // Most of the time we only have one config and getting wrong is not bad.
@@ -2203,24 +2205,25 @@ function commitLayoutEffects(
 }
 
 export function flushPassiveEffects() {
+  if (pendingPassiveEffectsRenderPriority !== NoPriority) {
+    const priorityLevel =
+      pendingPassiveEffectsRenderPriority > NormalPriority
+        ? NormalPriority
+        : pendingPassiveEffectsRenderPriority;
+    pendingPassiveEffectsRenderPriority = NoPriority;
+    return runWithPriority(priorityLevel, flushPassiveEffectsImpl);
+  }
+}
+
+function flushPassiveEffectsImpl() {
   if (rootWithPendingPassiveEffects === null) {
     return false;
   }
   const root = rootWithPendingPassiveEffects;
   const expirationTime = pendingPassiveEffectsExpirationTime;
-  const renderPriorityLevel = pendingPassiveEffectsRenderPriority;
   rootWithPendingPassiveEffects = null;
   pendingPassiveEffectsExpirationTime = NoWork;
-  pendingPassiveEffectsRenderPriority = NoPriority;
-  const priorityLevel =
-    renderPriorityLevel > NormalPriority ? NormalPriority : renderPriorityLevel;
-  return runWithPriority(
-    priorityLevel,
-    flushPassiveEffectsImpl.bind(null, root, expirationTime),
-  );
-}
 
-function flushPassiveEffectsImpl(root, expirationTime) {
   invariant(
     (executionContext & (RenderContext | CommitContext)) === NoContext,
     'Cannot flush passive effects while already rendering.',
@@ -2263,6 +2266,7 @@ function flushPassiveEffectsImpl(root, expirationTime) {
   }
 
   executionContext = prevExecutionContext;
+
   flushSyncCallbackQueue();
 
   // If additional passive effects were scheduled, increment a counter. If this
@@ -2669,10 +2673,12 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
         throw originalError;
       }
 
-      // Keep this code in sync with renderRoot; any changes here must have
+      // Keep this code in sync with handleError; any changes here must have
       // corresponding changes there.
       resetContextDependencies();
       resetHooks();
+      // Don't reset current debug fiber, since we're about to work on the
+      // same fiber again.
 
       // Unwind the failed stack frame
       unwindInterruptedWork(unitOfWork);
@@ -3069,10 +3075,10 @@ function startWorkOnPendingInteractions(root, expirationTime) {
   );
 
   // Store the current set of interactions on the FiberRoot for a few reasons:
-  // We can re-use it in hot functions like renderRoot() without having to
-  // recalculate it. We will also use it in commitWork() to pass to any Profiler
-  // onRender() hooks. This also provides DevTools with a way to access it when
-  // the onCommitRoot() hook is called.
+  // We can re-use it in hot functions like performConcurrentWorkOnRoot()
+  // without having to recalculate it. We will also use it in commitWork() to
+  // pass to any Profiler onRender() hooks. This also provides DevTools with a
+  // way to access it when the onCommitRoot() hook is called.
   root.memoizedInteractions = interactions;
 
   if (interactions.size > 0) {

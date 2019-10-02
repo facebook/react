@@ -54,10 +54,10 @@ const EnterLeaveEventPlugin = {
    */
   extractEvents: function(
     topLevelType,
-    eventSystemFlags,
     targetInst,
     nativeEvent,
     nativeEventTarget,
+    eventSystemFlags,
   ) {
     const isOverEvent =
       topLevelType === TOP_MOUSE_OVER || topLevelType === TOP_POINTER_OVER;
@@ -162,6 +162,10 @@ const EnterLeaveEventPlugin = {
     enter.relatedTarget = fromNode;
 
     accumulateEnterLeaveDispatches(leave, enter, from, to);
+
+    if (isOutEvent && from && nativeEventTarget !== fromNode) {
+      return [leave];
+    }
 
     return [leave, enter];
   },

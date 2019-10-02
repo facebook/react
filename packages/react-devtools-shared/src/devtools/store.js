@@ -73,6 +73,7 @@ export default class Store extends EventEmitter<{|
   supportsNativeStyleEditor: [],
   supportsProfiling: [],
   supportsReloadAndProfile: [],
+  unsupportedRendererVersionDetected: [],
 |}> {
   _bridge: FrontendBridge;
 
@@ -124,6 +125,8 @@ export default class Store extends EventEmitter<{|
   _supportsNativeInspection: boolean = true;
   _supportsProfiling: boolean = false;
   _supportsReloadAndProfile: boolean = false;
+
+  _unsupportedRendererVersionDetected: boolean = false;
 
   // Total number of visible elements (within all roots).
   // Used for windowing purposes.
@@ -178,6 +181,10 @@ export default class Store extends EventEmitter<{|
     bridge.addListener(
       'isNativeStyleEditorSupported',
       this.onBridgeNativeStyleEditorSupported,
+    );
+    bridge.addListener(
+      'unsupportedRendererVersion',
+      this.onBridgeUnsupportedRendererVersion,
     );
 
     this._profilerStore = new ProfilerStore(bridge, this, isProfiling);
@@ -335,6 +342,10 @@ export default class Store extends EventEmitter<{|
     // And if so, can the backend use the localStorage API?
     // Both of these are required for the reload-and-profile feature to work.
     return this._supportsReloadAndProfile && this._isBackendStorageAPISupported;
+  }
+
+  get unsupportedRendererVersionDetected(): boolean {
+    return this._unsupportedRendererVersionDetected;
   }
 
   containsElement(id: number): boolean {
@@ -1008,5 +1019,11 @@ export default class Store extends EventEmitter<{|
     this._isBackendStorageAPISupported = isBackendStorageAPISupported;
 
     this.emit('supportsReloadAndProfile');
+  };
+
+  onBridgeUnsupportedRendererVersion = () => {
+    this._unsupportedRendererVersionDetected = true;
+
+    this.emit('unsupportedRendererVersionDetected');
   };
 }

@@ -7,7 +7,7 @@
  * @flow
  */
 
-import React, {Fragment, useCallback, useRef} from 'react';
+import React, {Fragment, useRef} from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import styles from './EditableValue.css';
@@ -17,51 +17,51 @@ type OverrideValueFn = (path: Array<string | number>, value: any) => void;
 
 type EditableValueProps = {|
   className?: string,
-  initialValue: any,
   overrideValueFn: OverrideValueFn,
   path: Array<string | number>,
+  value: any,
 |};
 
 export default function EditableValue({
   className = '',
-  initialValue,
   overrideValueFn,
   path,
+  value,
 }: EditableValueProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const {
-    editableValue,
-    hasPendingChanges,
-    isValid,
-    parsedValue,
-    reset,
-    update,
-  } = useEditableValue(initialValue);
+  const [state, dispatch] = useEditableValue(value);
+  const {editableValue, hasPendingChanges, isValid, parsedValue} = state;
 
-  const handleChange = useCallback(({target}) => update(target.value), [
-    update,
-  ]);
+  const reset = () =>
+    dispatch({
+      type: 'RESET',
+      externalValue: value,
+    });
 
-  const handleKeyDown = useCallback(
-    event => {
-      // Prevent keydown events from e.g. change selected element in the tree
-      event.stopPropagation();
+  const handleChange = ({target}) =>
+    dispatch({
+      type: 'UPDATE',
+      editableValue: target.value,
+      externalValue: value,
+    });
 
-      switch (event.key) {
-        case 'Enter':
-          if (isValid && hasPendingChanges) {
-            overrideValueFn(path, parsedValue);
-          }
-          break;
-        case 'Escape':
-          reset();
-          break;
-        default:
-          break;
-      }
-    },
-    [hasPendingChanges, isValid, overrideValueFn, parsedValue, reset],
-  );
+  const handleKeyDown = event => {
+    // Prevent keydown events from e.g. change selected element in the tree
+    event.stopPropagation();
+
+    switch (event.key) {
+      case 'Enter':
+        if (isValid && hasPendingChanges) {
+          overrideValueFn(path, parsedValue);
+        }
+        break;
+      case 'Escape':
+        reset();
+        break;
+      default:
+        break;
+    }
+  };
 
   let placeholder = '';
   if (editableValue === undefined) {
