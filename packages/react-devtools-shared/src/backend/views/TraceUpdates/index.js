@@ -17,6 +17,10 @@ import type {Rect} from '../utils';
 // How long the rect should be shown for?
 const DISPLAY_DURATION = 250;
 
+// What's the longest we are willing to show the overlay for?
+// This can be important if we're getting a flurry of events (e.g. scroll update).
+const MAX_DISPLAY_DURATION = 3000;
+
 // How long should a rect be considered valid for?
 const REMEASUREMENT_AFTER_DURATION = 250;
 
@@ -85,7 +89,10 @@ function traceUpdates(nodes: Set<NativeType>): void {
       count: data != null ? data.count + 1 : 1,
       expirationTime:
         data != null
-          ? Math.min(Number.MAX_VALUE, data.expirationTime + DISPLAY_DURATION)
+          ? Math.min(
+              now + MAX_DISPLAY_DURATION,
+              data.expirationTime + DISPLAY_DURATION,
+            )
           : now + DISPLAY_DURATION,
       lastMeasuredAt,
       rect,
