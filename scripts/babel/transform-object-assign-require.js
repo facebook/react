@@ -19,6 +19,7 @@ module.exports = function autoImporter(babel) {
     });
     return state.id;
   }
+  /////////////////////////
 
   return {
     pre: function() {
