@@ -438,6 +438,18 @@ export function attemptContinuousHydration(fiber: Fiber): void {
   markRetryTimeIfNotHydrated(fiber, expTime);
 }
 
+export function attemptHydrationAtCurrentPriority(fiber: Fiber): void {
+  if (fiber.tag !== SuspenseComponent) {
+    // We ignore HostRoots here because we can't increase
+    // their priority other than synchronously flush it.
+    return;
+  }
+  const currentTime = requestCurrentTime();
+  const expTime = computeExpirationForFiber(currentTime, fiber, null);
+  scheduleWork(fiber, expTime);
+  markRetryTimeIfNotHydrated(fiber, expTime);
+}
+
 export {findHostInstance};
 
 export {findHostInstanceWithWarning};
