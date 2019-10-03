@@ -9,6 +9,7 @@ import {
   getBrowserName,
   getBrowserTheme,
 } from './utils';
+import {LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY} from 'react-devtools-shared/src/constants';
 import {
   getSavedComponentFilters,
   getAppendComponentStack,
@@ -124,6 +125,16 @@ function createPanelIfReactLoaded() {
         if (store !== null) {
           profilingData = store.profilerStore.profilingData;
         }
+
+        bridge.addListener('extensionBackendInitialized', () => {
+          // Initialize the renderer's trace-updates setting.
+          // This handles the case of navigating to a new page after the DevTools have already been shown.
+          bridge.send(
+            'setTraceUpdatesEnabled',
+            localStorageGetItem(LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY) ===
+              'true',
+          );
+        });
 
         store = new Store(bridge, {
           isProfiling,

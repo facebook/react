@@ -70,6 +70,7 @@ type NativeStyleEditor_SetValueParams = {|
 |};
 
 type BackendEvents = {|
+  extensionBackendInitialized: [],
   inspectedElement: [InspectedElementPayload],
   isBackendStorageAPISupported: [boolean],
   operations: [Array<number>],

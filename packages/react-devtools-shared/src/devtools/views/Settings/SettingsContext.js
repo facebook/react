@@ -18,6 +18,7 @@ import {
   COMFORTABLE_LINE_HEIGHT,
   COMPACT_LINE_HEIGHT,
   LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY,
+  LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY,
 } from 'react-devtools-shared/src/constants';
 import {useLocalStorage} from '../hooks';
 import {BridgeContext} from '../context';
@@ -78,7 +79,7 @@ function SettingsContextController({
   >(LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY, true);
   const [traceUpdatesEnabled, setTraceUpdatesEnabled] = useLocalStorage<
     boolean,
-  >('React::DevTools::traceUpdatesEnabled', false);
+  >(LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY, false);
 
   const documentElements = useMemo<DocumentElements>(
     () => {
