@@ -3,7 +3,7 @@
 `FocusContain` is a component that contains user-focusability to only that
 of the children of the component. This means focus control will not escape
 unless the componoent is disabled (using the `disabled` prop) or unmounted.
-Additionally, `FocusContain` can contian tab focus when passed a `ReactScope`
+Additionally, `FocusContain` can contain tab focus when passed a `ReactScope`
 using the `tabFocus` prop.
 
 ## Usage
@@ -25,5 +25,3 @@ function MyDialog(props) {
   )
 }
 ```
-
-

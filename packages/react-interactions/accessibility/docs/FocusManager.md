@@ -44,11 +44,11 @@ Focus the first node that matches the given scope.
 
 ### `focusNext`
 
-Focus the next sequential node that matchs the given scope.
+Focus the next sequential node that matches the given scope.
 
 ### `focusPrevious`
 
-Focus the previous sequential node that matchs the given scope.
+Focus the previous sequential node that matches the given scope.
 
 ### `getNextScope`
 
