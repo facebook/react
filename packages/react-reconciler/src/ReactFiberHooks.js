@@ -34,6 +34,7 @@ import {
   MountLayout,
   UnmountPassive,
   MountPassive,
+  UnmountLayout,
 } from './ReactHookEffectTags';
 import {
   scheduleWork,
@@ -955,7 +956,7 @@ function mountLayoutEffect(
 ): void {
   return mountEffectImpl(
     UpdateEffect,
-    UnmountMutation | MountLayout,
+    UnmountLayout | MountLayout,
     create,
     deps,
   );
@@ -967,7 +968,7 @@ function updateLayoutEffect(
 ): void {
   return updateEffectImpl(
     UpdateEffect,
-    UnmountMutation | MountLayout,
+    UnmountLayout | MountLayout,
     create,
     deps,
   );
