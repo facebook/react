@@ -42,6 +42,12 @@ const eventTypes = {
   },
 };
 
+// We track the lastNativeEvent to ensure that when we encounter
+// cases where we process the same nativeEvent multiple times,
+// which can happen when have multiple ancestors, that we don't
+// duplicate enter
+let lastNativeEvent;
+
 const EnterLeaveEventPlugin = {
   eventTypes: eventTypes,
 
@@ -163,9 +169,11 @@ const EnterLeaveEventPlugin = {
 
     accumulateEnterLeaveDispatches(leave, enter, from, to);
 
-    if (isOutEvent && from && nativeEventTarget !== fromNode) {
+    if (nativeEvent === lastNativeEvent) {
+      lastNativeEvent = null;
       return [leave];
     }
+    lastNativeEvent = nativeEvent;
 
     return [leave, enter];
   },
