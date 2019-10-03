@@ -70,6 +70,7 @@ type NativeStyleEditor_SetValueParams = {|
 |};
 
 type BackendEvents = {|
+  extensionBackendInitialized: [],
   inspectedElement: [InspectedElementPayload],
   isBackendStorageAPISupported: [boolean],
   operations: [Array<number>],
@@ -108,6 +109,7 @@ type FrontendEvents = {|
   profilingData: [ProfilingDataBackend],
   reloadAndProfile: [boolean],
   selectFiber: [number],
+  setTraceUpdatesEnabled: [boolean],
   shutdown: [],
   startInspectingNative: [],
   startProfiling: [boolean],
