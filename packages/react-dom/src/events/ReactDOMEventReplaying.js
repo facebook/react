@@ -11,15 +11,23 @@ import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
 import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
 import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
 import type {EventSystemFlags} from 'legacy-events/EventSystemFlags';
+import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
 
 import {
   enableFlareAPI,
   enableSelectiveHydration,
 } from 'shared/ReactFeatureFlags';
 import {
+  unstable_runWithPriority as runWithPriority,
   unstable_scheduleCallback as scheduleCallback,
   unstable_NormalPriority as NormalPriority,
+  unstable_getCurrentPriorityLevel as getCurrentPriorityLevel,
 } from 'scheduler';
+import {
+  getNearestMountedFiber,
+  getContainerFromFiber,
+  getSuspenseInstanceFromFiber,
+} from 'react-reconciler/reflection';
 import {
   attemptToDispatchEvent,
   trapEventForResponderEventSystem,
@@ -28,8 +36,12 @@ import {
   getListeningSetForElement,
   listenToTopLevel,
 } from './ReactBrowserEventEmitter';
-import {getInstanceFromNode} from '../client/ReactDOMComponentTree';
+import {
+  getInstanceFromNode,
+  getClosestInstanceFromNode,
+} from '../client/ReactDOMComponentTree';
 import {unsafeCastDOMTopLevelTypeToString} from 'legacy-events/TopLevelEventTypes';
+import {HostRoot, SuspenseComponent} from 'shared/ReactWorkTags';
 
 let attemptSynchronousHydration: (fiber: Object) => void;
 
@@ -47,6 +59,14 @@ let attemptContinuousHydration: (fiber: Object) => void;
 
 export function setAttemptContinuousHydration(fn: (fiber: Object) => void) {
   attemptContinuousHydration = fn;
+}
+
+let attemptHydrationAtCurrentPriority: (fiber: Object) => void;
+
+export function setAttemptHydrationAtCurrentPriority(
+  fn: (fiber: Object) => void,
+) {
+  attemptHydrationAtCurrentPriority = fn;
 }
 
 // TODO: Upgrade this definition once we're on a newer version of Flow that
@@ -123,6 +143,13 @@ let queuedMouse: null | QueuedReplayableEvent = null;
 let queuedPointers: Map<number, QueuedReplayableEvent> = new Map();
 let queuedPointerCaptures: Map<number, QueuedReplayableEvent> = new Map();
 // We could consider replaying selectionchange and touchmoves too.
+
+type QueuedHydrationTarget = {|
+  blockedOn: null | Container | SuspenseInstance,
+  target: Node,
+  priority: number,
+|};
+let queuedExplicitHydrationTargets: Array<QueuedHydrationTarget> = [];
 
 export function hasQueuedDiscreteEvents(): boolean {
   return queuedDiscreteEvents.length > 0;
@@ -422,6 +449,64 @@ export function queueIfContinuousEvent(
   return false;
 }
 
+// Check if this target is unblocked. Returns true if it's unblocked.
+function attemptExplicitHydrationTarget(
+  queuedTarget: QueuedHydrationTarget,
+): void {
+  // TODO: This function shares a lot of logic with attemptToDispatchEvent.
+  // Try to unify them. It's a bit tricky since it would require two return
+  // values.
+  let targetInst = getClosestInstanceFromNode(queuedTarget.target);
+  if (targetInst !== null) {
+    let nearestMounted = getNearestMountedFiber(targetInst);
+    if (nearestMounted !== null) {
+      const tag = nearestMounted.tag;
+      if (tag === SuspenseComponent) {
+        let instance = getSuspenseInstanceFromFiber(nearestMounted);
+        if (instance !== null) {
+          // We're blocked on hydrating this boundary.
+          // Increase its priority.
+          queuedTarget.blockedOn = instance;
+          runWithPriority(queuedTarget.priority, () => {
+            attemptHydrationAtCurrentPriority(nearestMounted);
+          });
+          return;
+        }
+      } else if (tag === HostRoot) {
+        const root: FiberRoot = nearestMounted.stateNode;
+        if (root.hydrate) {
+          queuedTarget.blockedOn = getContainerFromFiber(nearestMounted);
+          // We don't currently have a way to increase the priority of
+          // a root other than sync.
+          return;
+        }
+      }
+    }
+  }
+  queuedTarget.blockedOn = null;
+}
+
+export function queueExplicitHydrationTarget(target: Node): void {
+  if (enableSelectiveHydration) {
+    let priority = getCurrentPriorityLevel();
+    const queuedTarget: QueuedHydrationTarget = {
+      blockedOn: null,
+      target: target,
+      priority: priority,
+    };
+    let i = 0;
+    for (; i < queuedExplicitHydrationTargets.length; i++) {
+      if (priority <= queuedExplicitHydrationTargets[i].priority) {
+        break;
+      }
+    }
+    queuedExplicitHydrationTargets.splice(i, 0, queuedTarget);
+    if (i === 0) {
+      attemptExplicitHydrationTarget(queuedTarget);
+    }
+  }
+}
+
 function attemptReplayContinuousQueuedEvent(
   queuedEvent: QueuedReplayableEvent,
 ): boolean {
@@ -544,4 +629,25 @@ export function retryIfBlockedOn(
     scheduleCallbackIfUnblocked(queuedEvent, unblocked);
   queuedPointers.forEach(unblock);
   queuedPointerCaptures.forEach(unblock);
+
+  for (let i = 0; i < queuedExplicitHydrationTargets.length; i++) {
+    let queuedTarget = queuedExplicitHydrationTargets[i];
+    if (queuedTarget.blockedOn === unblocked) {
+      queuedTarget.blockedOn = null;
+    }
+  }
+
+  while (queuedExplicitHydrationTargets.length > 0) {
+    let nextExplicitTarget = queuedExplicitHydrationTargets[0];
+    if (nextExplicitTarget.blockedOn !== null) {
+      // We're still blocked.
+      break;
+    } else {
+      attemptExplicitHydrationTarget(nextExplicitTarget);
+      if (nextExplicitTarget.blockedOn === null) {
+        // We're unblocked.
+        queuedExplicitHydrationTargets.shift();
+      }
+    }
+  }
 }

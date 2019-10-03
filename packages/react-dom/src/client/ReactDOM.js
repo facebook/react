@@ -42,6 +42,7 @@ import {
   attemptSynchronousHydration,
   attemptUserBlockingHydration,
   attemptContinuousHydration,
+  attemptHydrationAtCurrentPriority,
 } from 'react-reconciler/inline.dom';
 import {createPortal as createPortalImpl} from 'shared/ReactPortal';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
@@ -81,8 +82,10 @@ import {
   setAttemptSynchronousHydration,
   setAttemptUserBlockingHydration,
   setAttemptContinuousHydration,
+  setAttemptHydrationAtCurrentPriority,
+  eagerlyTrapReplayableEvents,
+  queueExplicitHydrationTarget,
 } from '../events/ReactDOMEventReplaying';
-import {eagerlyTrapReplayableEvents} from '../events/ReactDOMEventReplaying';
 import {
   ELEMENT_NODE,
   COMMENT_NODE,
@@ -94,6 +97,7 @@ import {ROOT_ATTRIBUTE_NAME} from '../shared/DOMProperty';
 setAttemptSynchronousHydration(attemptSynchronousHydration);
 setAttemptUserBlockingHydration(attemptUserBlockingHydration);
 setAttemptContinuousHydration(attemptContinuousHydration);
+setAttemptHydrationAtCurrentPriority(attemptHydrationAtCurrentPriority);
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -840,6 +844,12 @@ const ReactDOM: Object = {
   unstable_createRoot: createRoot,
   unstable_createSyncRoot: createSyncRoot,
   unstable_flushControlled: flushControlled,
+
+  unstable_scheduleHydration(target: Node) {
+    if (target) {
+      queueExplicitHydrationTarget(target);
+    }
+  },
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
     // Keep in sync with ReactDOMUnstableNativeDependencies.js
