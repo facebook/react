@@ -6,6 +6,12 @@
   </summary>
 </details>
 
+## 16.10.2 (October 3, 2019)
+
+### React DOM
+
+* Fix regression in react-native-web by restoring order of arguments in event plugin extractors ([@necolas](https://github.com/necolas) in [#16978](https://github.com/facebook/react/pull/16978))
+
 ## 16.10.1 (September 28, 2019)
 
 ### React DOM
