@@ -117,7 +117,7 @@ export default {
         function countPathsFromStart(segment, pathHistory) {
           const {cache} = countPathsFromStart;
           let paths = cache.get(segment.id);
-          let pathList = new Set(pathHistory);
+          const pathList = new Set(pathHistory);
 
           // If `pathList` includes the current segment then we've found a cycle!
           // We need to fill `cyclic` with all segments inside cycle
