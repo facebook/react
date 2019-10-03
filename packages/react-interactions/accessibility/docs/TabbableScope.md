@@ -1,11 +1,13 @@
 # TabbableScope
 
 `TabbableScope` is a custom scope implementation that can be used with
-`FocusManager`, `FocusList`, `FocusTable` and `FocusControl` modules.
+`FocusContain`, `FocusGroup`, `FocusTable` and `FocusManager` modules.
 
 ## Usage
 
 ```jsx
+import TabbableScope from 'react-interactions/accessibility/tabbable-scope';
+
 function FocusableNodeCollector(props) {
   const scopeRef = useRef(null);
 

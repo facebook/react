@@ -504,10 +504,10 @@ const ResponderEventPlugin = {
    */
   extractEvents: function(
     topLevelType,
-    eventSystemFlags,
     targetInst,
     nativeEvent,
     nativeEventTarget,
+    eventSystemFlags,
   ) {
     if (isStartish(topLevelType)) {
       trackedTouchCount += 1;

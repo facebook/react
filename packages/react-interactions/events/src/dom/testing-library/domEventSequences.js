@@ -18,6 +18,8 @@ function getPointerType(payload) {
   let pointerType = 'mouse';
   if (payload != null && payload.pointerType != null) {
     pointerType = payload.pointerType;
+  } else if (Array.isArray(payload)) {
+    pointerType = 'touch';
   }
   return pointerType;
 }
@@ -77,31 +79,36 @@ export function pointercancel(target, payload) {
 export function pointerdown(target, defaultPayload) {
   const dispatch = arg => target.dispatchEvent(arg);
   const pointerType = getPointerType(defaultPayload);
-  const payload = {buttons: buttonsType.primary, ...defaultPayload};
 
-  if (pointerType === 'mouse') {
-    if (hasPointerEvent()) {
-      dispatch(domEvents.pointerover(payload));
-      dispatch(domEvents.pointerenter(payload));
-    }
-    dispatch(domEvents.mouseover(payload));
-    dispatch(domEvents.mouseenter(payload));
-    if (hasPointerEvent()) {
-      dispatch(domEvents.pointerdown(payload));
-    }
-    dispatch(domEvents.mousedown(payload));
-    if (document.activeElement !== target) {
-      dispatch(domEvents.focus());
-    }
+  if (Array.isArray(defaultPayload)) {
+    // Arrays are for multi-touch only
+    dispatch(domEvents.touchstart(defaultPayload));
   } else {
-    if (hasPointerEvent()) {
-      dispatch(domEvents.pointerover(payload));
-      dispatch(domEvents.pointerenter(payload));
-      dispatch(domEvents.pointerdown(payload));
-    }
-    dispatch(domEvents.touchstart(payload));
-    if (hasPointerEvent()) {
-      dispatch(domEvents.gotpointercapture(payload));
+    const payload = {buttons: buttonsType.primary, ...defaultPayload};
+    if (pointerType === 'mouse') {
+      if (hasPointerEvent()) {
+        dispatch(domEvents.pointerover(payload));
+        dispatch(domEvents.pointerenter(payload));
+      }
+      dispatch(domEvents.mouseover(payload));
+      dispatch(domEvents.mouseenter(payload));
+      if (hasPointerEvent()) {
+        dispatch(domEvents.pointerdown(payload));
+      }
+      dispatch(domEvents.mousedown(payload));
+      if (document.activeElement !== target) {
+        dispatch(domEvents.focus());
+      }
+    } else {
+      if (hasPointerEvent()) {
+        dispatch(domEvents.pointerover(payload));
+        dispatch(domEvents.pointerenter(payload));
+        dispatch(domEvents.pointerdown(payload));
+      }
+      dispatch(domEvents.touchstart(payload));
+      if (hasPointerEvent()) {
+        dispatch(domEvents.gotpointercapture(payload));
+      }
     }
   }
 }
@@ -153,13 +160,14 @@ export function pointermove(target, payload) {
   }
 }
 
-export function pointerup(target, defaultPayload = {}) {
+export function pointerup(target, payload) {
   const dispatch = arg => target.dispatchEvent(arg);
-  const pointerType = getPointerType(defaultPayload);
-  // eslint-disable-next-line no-unused-vars
-  const {buttons, ...payload} = defaultPayload;
+  const pointerType = getPointerType(payload);
 
-  if (pointerType === 'mouse') {
+  if (Array.isArray(payload)) {
+    // Arrays are for multi-touch only
+    dispatch(domEvents.touchend(payload));
+  } else if (pointerType === 'mouse') {
     if (hasPointerEvent()) {
       dispatch(domEvents.pointerup(payload));
     }
@@ -175,7 +183,6 @@ export function pointerup(target, defaultPayload = {}) {
     dispatch(domEvents.touchend(payload));
     dispatch(domEvents.mouseover(payload));
     dispatch(domEvents.mousemove(payload));
-    // NOTE: the value of 'buttons' for 'mousedown' must not be 0
     dispatch(domEvents.mousedown(payload));
     if (document.activeElement !== target) {
       dispatch(domEvents.focus());

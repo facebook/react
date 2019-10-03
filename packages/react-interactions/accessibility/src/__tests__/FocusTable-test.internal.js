@@ -8,7 +8,7 @@
  */
 
 import {createEventTarget} from 'react-interactions/events/src/dom/testing-library';
-import {emulateBrowserTab} from '../emulateBrowserTab';
+import {emulateBrowserTab} from '../shared/emulateBrowserTab';
 
 let React;
 let ReactFeatureFlags;

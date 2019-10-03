@@ -212,7 +212,7 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       const buttons = buttonsType.auxiliary;
       const target = createEventTarget(ref.current);
       target.pointerdown({buttons, pointerType});
-      target.pointerup({pointerType});
+      target.pointerup({buttons, pointerType});
       expect(onAuxiliaryTap).toHaveBeenCalledTimes(1);
     });
 
@@ -221,7 +221,7 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       const buttons = buttonsType.primary;
       const target = createEventTarget(ref.current);
       target.pointerdown({buttons, pointerType});
-      target.pointerup({metaKey: true, pointerType});
+      target.pointerup({buttons, metaKey: true, pointerType});
       expect(onAuxiliaryTap).toHaveBeenCalledTimes(1);
     });
   });
@@ -284,7 +284,7 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       );
     });
 
-    test('second pointer down', () => {
+    test('second pointer on target', () => {
       const pointerType = 'touch';
       const target = createEventTarget(ref.current);
       const buttons = buttonsType.primary;
@@ -294,10 +294,7 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
         target.pointerdown({buttons, pointerId: 2, pointerType});
       } else {
         // TouchEvents
-        target.pointerdown([
-          {pointerId: 1, pointerType},
-          {pointerId: 2, pointerType},
-        ]);
+        target.pointerdown([{pointerId: 1}, {pointerId: 2}]);
       }
       expect(onTapStart).toHaveBeenCalledTimes(1);
     });
@@ -349,8 +346,10 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
 
     testWithPointerType('pointer up', pointerType => {
       const target = createEventTarget(ref.current);
-      target.pointerdown({buttons: buttonsType.primary, pointerType});
+      const buttons = buttonsType.primary;
+      target.pointerdown({buttons, pointerType});
       target.pointerup({
+        buttons,
         pageX: 10,
         pageY: 10,
         pointerType,
@@ -420,18 +419,40 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       expect(onTapEnd).not.toBeCalled();
     });
 
+    if (hasPointerEvents) {
+      test('second pointer up off target', () => {
+        const pointerType = 'touch';
+        const target = createEventTarget(ref.current);
+        const offTarget = createEventTarget(container);
+        const buttons = buttonsType.primary;
+
+        target.pointerdown({buttons, pointerId: 1, pointerType});
+        offTarget.pointerdown({buttons, pointerId: 2, pointerType});
+        offTarget.pointerup({
+          buttons,
+          pageX: 10,
+          pageY: 10,
+          pointerId: 2,
+          pointerType,
+          x: 10,
+          y: 10,
+        });
+        expect(onTapEnd).toHaveBeenCalledTimes(0);
+      });
+    }
+
     test('ignored buttons and modifiers', () => {
       const target = createEventTarget(ref.current);
       const primary = buttonsType.primary;
       // right-click
       target.pointerdown({buttons: buttonsType.secondary});
-      target.pointerup();
+      target.pointerup({buttons: buttonsType.secondary});
       // middle-click
       target.pointerdown({buttons: buttonsType.auxiliary});
-      target.pointerup();
+      target.pointerup({buttons: buttonsType.auxiliary});
       // pen eraser
       target.pointerdown({buttons: buttonsType.eraser});
-      target.pointerup();
+      target.pointerup({buttons: buttonsType.eraser});
       // alt-click
       target.pointerdown({buttons: primary});
       target.pointerup({altKey: true});
@@ -533,6 +554,21 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       // No extra 'onTapUpdate' calls when the pointer is outside the target
       expect(onTapUpdate).toHaveBeenCalledTimes(1);
     });
+
+    if (hasPointerEvents) {
+      test('second pointer off target', () => {
+        const pointerType = 'touch';
+        const target = createEventTarget(ref.current);
+        const offTarget = createEventTarget(container);
+        const buttons = buttonsType.primary;
+        target.pointerdown({buttons, pointerId: 1, pointerType});
+        offTarget.pointerdown({buttons, pointerId: 2, pointerType});
+        target.pointermove({pointerId: 1, pointerType, x: 10, y: 10});
+        expect(onTapUpdate).toHaveBeenCalledTimes(1);
+        offTarget.pointermove({pointerId: 2, pointerType, x: 10, y: 10});
+        expect(onTapUpdate).toHaveBeenCalledTimes(1);
+      });
+    }
   });
 
   describe('onTapChange', () => {
@@ -651,6 +687,32 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       target.pointermove({pointerType, x: 5, y: 5});
       expect(onTapUpdate).not.toBeCalled();
     });
+
+    test('second pointer on target', () => {
+      const pointerType = 'touch';
+      const target = createEventTarget(ref.current);
+      const buttons = buttonsType.primary;
+      target.pointerdown({buttons, pointerId: 1, pointerType});
+      if (hasPointerEvents) {
+        target.pointerdown({buttons, pointerId: 2, pointerType});
+      } else {
+        // TouchEvents
+        target.pointerdown([{pointerId: 1}, {pointerId: 2}]);
+      }
+      expect(onTapCancel).toHaveBeenCalledTimes(1);
+    });
+
+    if (hasPointerEvents) {
+      test('second pointer off target', () => {
+        const pointerType = 'touch';
+        const target = createEventTarget(ref.current);
+        const offTarget = createEventTarget(container);
+        const buttons = buttonsType.primary;
+        target.pointerdown({buttons, pointerId: 1, pointerType});
+        offTarget.pointerdown({buttons, pointerId: 2, pointerType});
+        expect(onTapCancel).toHaveBeenCalledTimes(0);
+      });
+    }
 
     testWithPointerType('pointer move outside target', pointerType => {
       const downTarget = createEventTarget(ref.current);

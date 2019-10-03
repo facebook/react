@@ -16,6 +16,57 @@ let Scheduler;
 let ReactFeatureFlags;
 let Suspense;
 
+function dispatchMouseHoverEvent(to, from) {
+  if (!to) {
+    to = null;
+  }
+  if (!from) {
+    from = null;
+  }
+  if (from) {
+    const mouseOutEvent = document.createEvent('MouseEvents');
+    mouseOutEvent.initMouseEvent(
+      'mouseout',
+      true,
+      true,
+      window,
+      0,
+      50,
+      50,
+      50,
+      50,
+      false,
+      false,
+      false,
+      false,
+      0,
+      to,
+    );
+    from.dispatchEvent(mouseOutEvent);
+  }
+  if (to) {
+    const mouseOverEvent = document.createEvent('MouseEvents');
+    mouseOverEvent.initMouseEvent(
+      'mouseover',
+      true,
+      true,
+      window,
+      0,
+      50,
+      50,
+      50,
+      50,
+      false,
+      false,
+      false,
+      false,
+      0,
+      from,
+    );
+    to.dispatchEvent(mouseOverEvent);
+  }
+}
+
 function dispatchClickEvent(target) {
   const mouseOutEvent = document.createEvent('MouseEvents');
   mouseOutEvent.initMouseEvent(
@@ -286,6 +337,105 @@ describe('ReactDOMServerSelectiveHydration', () => {
       'Clicked D',
       // B should render last since it wasn't clicked.
       'B',
+    ]);
+
+    document.body.removeChild(container);
+  });
+
+  it('hydrates the last target as higher priority for continuous events', async () => {
+    let suspend = false;
+    let resolve;
+    let promise = new Promise(resolvePromise => (resolve = resolvePromise));
+
+    function Child({text}) {
+      if ((text === 'A' || text === 'D') && suspend) {
+        throw promise;
+      }
+      Scheduler.unstable_yieldValue(text);
+      return (
+        <span
+          onClick={e => {
+            e.preventDefault();
+            Scheduler.unstable_yieldValue('Clicked ' + text);
+          }}
+          onMouseEnter={e => {
+            e.preventDefault();
+            Scheduler.unstable_yieldValue('Hover ' + text);
+          }}>
+          {text}
+        </span>
+      );
+    }
+
+    function App() {
+      Scheduler.unstable_yieldValue('App');
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <Child text="A" />
+          </Suspense>
+          <Suspense fallback="Loading...">
+            <Child text="B" />
+          </Suspense>
+          <Suspense fallback="Loading...">
+            <Child text="C" />
+          </Suspense>
+          <Suspense fallback="Loading...">
+            <Child text="D" />
+          </Suspense>
+        </div>
+      );
+    }
+
+    let finalHTML = ReactDOMServer.renderToString(<App />);
+
+    expect(Scheduler).toHaveYielded(['App', 'A', 'B', 'C', 'D']);
+
+    let container = document.createElement('div');
+    // We need this to be in the document since we'll dispatch events on it.
+    document.body.appendChild(container);
+
+    container.innerHTML = finalHTML;
+
+    let spanB = container.getElementsByTagName('span')[1];
+    let spanC = container.getElementsByTagName('span')[2];
+    let spanD = container.getElementsByTagName('span')[3];
+
+    suspend = true;
+
+    // A and D will be suspended. We'll click on D which should take
+    // priority, after we unsuspend.
+    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    root.render(<App />);
+
+    // Nothing has been hydrated so far.
+    expect(Scheduler).toHaveYielded([]);
+
+    // Click D
+    dispatchMouseHoverEvent(spanD, null);
+    dispatchClickEvent(spanD);
+    // Hover over B and then C.
+    dispatchMouseHoverEvent(spanB, spanD);
+    dispatchMouseHoverEvent(spanC, spanB);
+
+    expect(Scheduler).toHaveYielded(['App']);
+
+    suspend = false;
+    resolve();
+    await promise;
+
+    // We should prioritize hydrating D first because we clicked it.
+    // Next we should hydrate C since that's the current hover target.
+    // Next it doesn't matter if we hydrate A or B first but as an
+    // implementation detail we're currently hydrating B first since
+    // we at one point hovered over it and we never deprioritized it.
+    expect(Scheduler).toFlushAndYield([
+      'D',
+      'Clicked D',
+      'C',
+      'Hover C',
+      'B',
+      'A',
     ]);
 
     document.body.removeChild(container);

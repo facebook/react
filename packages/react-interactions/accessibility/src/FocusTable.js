@@ -12,7 +12,7 @@ import type {KeyboardEvent} from 'react-interactions/events/keyboard';
 
 import React from 'react';
 import {useKeyboard} from 'react-interactions/events/keyboard';
-import {setElementCanTab} from 'react-interactions/accessibility/focus-control';
+import setElementCanTab from './shared/setElementCanTab';
 
 type FocusCellProps = {
   children?: React.Node,

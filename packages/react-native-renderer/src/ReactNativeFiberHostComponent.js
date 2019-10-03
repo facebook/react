@@ -83,15 +83,6 @@ class ReactNativeFiberHostComponent {
       relativeNode = relativeToNativeNode;
     } else if (relativeToNativeNode._nativeTag) {
       relativeNode = relativeToNativeNode._nativeTag;
-    } else if (
-      /* $FlowFixMe canonical doesn't exist on the node.
-       I think this branch is dead and will remove it in a followup */
-      relativeToNativeNode.canonical &&
-      relativeToNativeNode.canonical._nativeTag
-    ) {
-      /* $FlowFixMe canonical doesn't exist on the node.
-       I think this branch is dead and will remove it in a followup */
-      relativeNode = relativeToNativeNode.canonical._nativeTag;
     }
 
     if (relativeNode == null) {

@@ -758,8 +758,8 @@ function loopError(hook) {
 function functionError(hook, fn) {
   return {
     message:
-      `React Hook "${hook}" is called in function "${fn}" which is neither ` +
-      'a React function component or a custom React Hook function.',
+      `React Hook "${hook}" is called in function "${fn}" that is neither ` +
+      'a React function component nor a custom React Hook function.',
   };
 }
 
