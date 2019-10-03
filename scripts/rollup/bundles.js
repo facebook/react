@@ -682,22 +682,21 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
     moduleType: NON_FIBER_RENDERER,
-    entry: 'react-interactions/accessibility/focus-manager',
-    global: 'ReactFocusManager',
+    entry: 'react-interactions/accessibility/focus-contain',
+    global: 'ReactFocusContain',
     externals: [
       'react',
-      'react-interactions/events/keyboard',
       'react-interactions/events/focus',
-      'react-interactions/accessibility/tabbable-scope',
-      'react-interactions/accessibility/focus-control',
+      'react-interactions/events/keyboard',
+      'react-interactions/accessibility/focus-manager',
     ],
   },
 
   {
     bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
     moduleType: NON_FIBER_RENDERER,
-    entry: 'react-interactions/accessibility/focus-control',
-    global: 'ReactFocusControl',
+    entry: 'react-interactions/accessibility/focus-manager',
+    global: 'ReactFocusManager',
     externals: ['react'],
   },
 
@@ -712,13 +711,13 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
     moduleType: NON_FIBER_RENDERER,
-    entry: 'react-interactions/accessibility/focus-list',
-    global: 'ReactFocusList',
+    entry: 'react-interactions/accessibility/focus-group',
+    global: 'ReactFocusGroup',
     externals: [
       'react',
       'react-interactions/events/keyboard',
       'react-interactions/accessibility/tabbable-scope',
-      'react-interactions/accessibility/focus-control',
+      'react-interactions/accessibility/focus-manager',
     ],
   },
 ];
@@ -728,7 +727,7 @@ const fbBundleExternalsMap = {
   'react-interactions/events/keyboard': 'ReactEventsKeyboard',
   'react-interactions/events/tap': 'ReactEventsTap',
   'react-interactions/accessibility/tabbable-scope': 'ReactTabbableScope',
-  'react-interactions/accessibility/focus-control': 'ReactFocusControl',
+  'react-interactions/accessibility/focus-manager': 'ReactFocusManager',
 };
 
 // Based on deep-freeze by substack (public domain)

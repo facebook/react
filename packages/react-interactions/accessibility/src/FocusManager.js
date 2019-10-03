@@ -7,109 +7,114 @@
  * @flow
  */
 
-import type {ReactScope} from 'shared/ReactTypes';
+import type {ReactScopeMethods} from 'shared/ReactTypes';
 import type {KeyboardEvent} from 'react-interactions/events/keyboard';
 
-import React from 'react';
-import {useKeyboard} from 'react-interactions/events/keyboard';
-import {useFocusWithin} from 'react-interactions/events/focus';
-import {
-  focusFirst,
-  focusPrevious,
-  focusNext,
-} from 'react-interactions/accessibility/focus-control';
-import TabbableScope from 'react-interactions/accessibility/tabbable-scope';
+import getTabbableNodes from './shared/getTabbableNodes';
 
-type TabFocusProps = {|
-  autoFocus?: boolean,
-  children: React.Node,
-  containFocus?: boolean,
-  restoreFocus?: boolean,
-  scope: ReactScope,
-|};
+export function focusFirst(scope: ReactScopeMethods): void {
+  const [, firstTabbableElem] = getTabbableNodes(scope);
+  focusElem(firstTabbableElem);
+}
 
-const {useLayoutEffect, useRef} = React;
+function focusElem(elem: null | HTMLElement): void {
+  if (elem !== null) {
+    elem.focus();
+  }
+}
 
-const FocusManager = React.forwardRef(
-  (
-    {
-      autoFocus,
-      children,
-      containFocus,
-      restoreFocus,
-      scope: CustomScope,
-    }: TabFocusProps,
-    ref,
-  ): React.Node => {
-    const ScopeToUse = CustomScope || TabbableScope;
-    const scopeRef = useRef(null);
-    // This ensures tabbing works through the React tree (including Portals and Suspense nodes)
-    const keyboard = useKeyboard({
-      onKeyDown(event: KeyboardEvent): void {
-        if (event.key !== 'Tab') {
-          event.continuePropagation();
-          return;
-        }
-        const scope = scopeRef.current;
-        if (scope !== null) {
-          if (event.shiftKey) {
-            focusPrevious(scope, event, containFocus);
-          } else {
-            focusNext(scope, event, containFocus);
-          }
-        }
-      },
-    });
-    const focusWithin = useFocusWithin({
-      onBlurWithin: function(event) {
-        if (!containFocus) {
-          event.continuePropagation();
-          return;
-        }
-        const lastNode = event.target;
-        if (lastNode) {
-          requestAnimationFrame(() => {
-            (lastNode: any).focus();
-          });
-        }
-      },
-    });
-    useLayoutEffect(
-      () => {
-        const scope = scopeRef.current;
-        let restoreElem;
-        if (restoreFocus) {
-          restoreElem = document.activeElement;
-        }
-        if (autoFocus && scope !== null) {
-          focusFirst(scope);
-        }
-        if (restoreElem) {
-          return () => {
-            (restoreElem: any).focus();
-          };
-        }
-      },
-      [scopeRef],
-    );
+export function focusNext(
+  scope: ReactScopeMethods,
+  event?: KeyboardEvent,
+  contain?: boolean,
+): void {
+  const [
+    tabbableNodes,
+    firstTabbableElem,
+    lastTabbableElem,
+    currentIndex,
+    focusedElement,
+  ] = getTabbableNodes(scope);
 
-    return (
-      <ScopeToUse
-        ref={node => {
-          if (ref) {
-            if (typeof ref === 'function') {
-              ref(node);
-            } else {
-              ref.current = node;
-            }
-          }
-          scopeRef.current = node;
-        }}
-        listeners={[keyboard, focusWithin]}>
-        {children}
-      </ScopeToUse>
-    );
-  },
-);
+  if (focusedElement === null) {
+    if (event) {
+      event.continuePropagation();
+    }
+  } else if (focusedElement === lastTabbableElem) {
+    if (contain) {
+      focusElem(firstTabbableElem);
+      if (event) {
+        event.preventDefault();
+      }
+    } else if (event) {
+      event.continuePropagation();
+    }
+  } else {
+    focusElem((tabbableNodes: any)[currentIndex + 1]);
+    if (event) {
+      event.preventDefault();
+    }
+  }
+}
 
-export default FocusManager;
+export function focusPrevious(
+  scope: ReactScopeMethods,
+  event?: KeyboardEvent,
+  contain?: boolean,
+): void {
+  const [
+    tabbableNodes,
+    firstTabbableElem,
+    lastTabbableElem,
+    currentIndex,
+    focusedElement,
+  ] = getTabbableNodes(scope);
+
+  if (focusedElement === null) {
+    if (event) {
+      event.continuePropagation();
+    }
+  } else if (focusedElement === firstTabbableElem) {
+    if (contain) {
+      focusElem(lastTabbableElem);
+      if (event) {
+        event.preventDefault();
+      }
+    } else if (event) {
+      event.continuePropagation();
+    }
+  } else {
+    focusElem((tabbableNodes: any)[currentIndex - 1]);
+    if (event) {
+      event.preventDefault();
+    }
+  }
+}
+
+export function getNextScope(
+  scope: ReactScopeMethods,
+): null | ReactScopeMethods {
+  const allScopes = scope.getChildrenFromRoot();
+  if (allScopes === null) {
+    return null;
+  }
+  const currentScopeIndex = allScopes.indexOf(scope);
+  if (currentScopeIndex === -1 || currentScopeIndex === allScopes.length - 1) {
+    return null;
+  }
+  return allScopes[currentScopeIndex + 1];
+}
+
+export function getPreviousScope(
+  scope: ReactScopeMethods,
+): null | ReactScopeMethods {
+  const allScopes = scope.getChildrenFromRoot();
+  if (allScopes === null) {
+    return null;
+  }
+  const currentScopeIndex = allScopes.indexOf(scope);
+  if (currentScopeIndex <= 0) {
+    return null;
+  }
+  return allScopes[currentScopeIndex - 1];
+}

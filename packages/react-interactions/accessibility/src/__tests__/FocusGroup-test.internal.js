@@ -8,20 +8,20 @@
  */
 
 import {createEventTarget} from 'react-interactions/events/src/dom/testing-library';
-import {emulateBrowserTab} from '../emulateBrowserTab';
+import {emulateBrowserTab} from '../shared/emulateBrowserTab';
 
 let React;
 let ReactFeatureFlags;
-let createFocusList;
+let createFocusGroup;
 let TabbableScope;
 
-describe('FocusList', () => {
+describe('FocusGroup', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableScopeAPI = true;
     ReactFeatureFlags.enableFlareAPI = true;
-    createFocusList = require('../FocusList').createFocusList;
+    createFocusGroup = require('../FocusGroup').createFocusGroup;
     TabbableScope = require('../TabbableScope').default;
     React = require('react');
   });
@@ -41,11 +41,11 @@ describe('FocusList', () => {
       container = null;
     });
 
-    function createFocusListComponent() {
-      const [FocusList, FocusItem] = createFocusList(TabbableScope);
+    function createFocusGroupComponent() {
+      const [FocusGroup, FocusItem] = createFocusGroup(TabbableScope);
 
       return ({portrait, wrap, allowModifiers}) => (
-        <FocusList
+        <FocusGroup
           portrait={portrait}
           wrap={wrap}
           allowModifiers={allowModifiers}>
@@ -60,43 +60,43 @@ describe('FocusList', () => {
               <li tabIndex={0}>Item 3</li>
             </FocusItem>
           </ul>
-        </FocusList>
+        </FocusGroup>
       );
     }
 
     it('handles keyboard arrow operations (portrait)', () => {
-      const Test = createFocusListComponent();
+      const Test = createFocusGroupComponent();
 
       ReactDOM.render(<Test portrait={true} />, container);
-      const listItems = document.querySelectorAll('li');
-      const firstListItem = createEventTarget(listItems[0]);
-      firstListItem.focus();
-      firstListItem.keydown({
+      const groupItems = document.querySelectorAll('li');
+      const firstGroupItem = createEventTarget(groupItems[0]);
+      firstGroupItem.focus();
+      firstGroupItem.keydown({
         key: 'ArrowDown',
       });
       expect(document.activeElement.textContent).toBe('Item 2');
 
-      const secondListItem = createEventTarget(document.activeElement);
-      secondListItem.keydown({
+      const secondGroupItem = createEventTarget(document.activeElement);
+      secondGroupItem.keydown({
         key: 'ArrowDown',
       });
       expect(document.activeElement.textContent).toBe('Item 3');
 
-      const thirdListItem = createEventTarget(document.activeElement);
-      thirdListItem.keydown({
+      const thirdGroupItem = createEventTarget(document.activeElement);
+      thirdGroupItem.keydown({
         key: 'ArrowDown',
       });
       expect(document.activeElement.textContent).toBe('Item 3');
-      thirdListItem.keydown({
+      thirdGroupItem.keydown({
         key: 'ArrowRight',
       });
       expect(document.activeElement.textContent).toBe('Item 3');
-      thirdListItem.keydown({
+      thirdGroupItem.keydown({
         key: 'ArrowLeft',
       });
       expect(document.activeElement.textContent).toBe('Item 3');
       // Should be a no-op due to modifier
-      thirdListItem.keydown({
+      thirdGroupItem.keydown({
         key: 'ArrowUp',
         altKey: true,
       });
@@ -104,80 +104,80 @@ describe('FocusList', () => {
     });
 
     it('handles keyboard arrow operations (landscape)', () => {
-      const Test = createFocusListComponent();
+      const Test = createFocusGroupComponent();
 
       ReactDOM.render(<Test portrait={false} />, container);
-      const listItems = document.querySelectorAll('li');
-      const firstListItem = createEventTarget(listItems[0]);
-      firstListItem.focus();
-      firstListItem.keydown({
+      const GroupItems = document.querySelectorAll('li');
+      const firstGroupItem = createEventTarget(GroupItems[0]);
+      firstGroupItem.focus();
+      firstGroupItem.keydown({
         key: 'ArrowRight',
       });
       expect(document.activeElement.textContent).toBe('Item 2');
 
-      const secondListItem = createEventTarget(document.activeElement);
-      secondListItem.keydown({
+      const secondGroupItem = createEventTarget(document.activeElement);
+      secondGroupItem.keydown({
         key: 'ArrowRight',
       });
       expect(document.activeElement.textContent).toBe('Item 3');
 
-      const thirdListItem = createEventTarget(document.activeElement);
-      thirdListItem.keydown({
+      const thirdGroupItem = createEventTarget(document.activeElement);
+      thirdGroupItem.keydown({
         key: 'ArrowRight',
       });
       expect(document.activeElement.textContent).toBe('Item 3');
-      thirdListItem.keydown({
+      thirdGroupItem.keydown({
         key: 'ArrowUp',
       });
       expect(document.activeElement.textContent).toBe('Item 3');
-      thirdListItem.keydown({
+      thirdGroupItem.keydown({
         key: 'ArrowDown',
       });
       expect(document.activeElement.textContent).toBe('Item 3');
     });
 
     it('handles keyboard arrow operations (portrait) with wrapping enabled', () => {
-      const Test = createFocusListComponent();
+      const Test = createFocusGroupComponent();
 
       ReactDOM.render(<Test portrait={true} wrap={true} />, container);
-      const listItems = document.querySelectorAll('li');
-      let firstListItem = createEventTarget(listItems[0]);
-      firstListItem.focus();
-      firstListItem.keydown({
+      const GroupItems = document.querySelectorAll('li');
+      let firstGroupItem = createEventTarget(GroupItems[0]);
+      firstGroupItem.focus();
+      firstGroupItem.keydown({
         key: 'ArrowDown',
       });
       expect(document.activeElement.textContent).toBe('Item 2');
 
-      const secondListItem = createEventTarget(document.activeElement);
-      secondListItem.keydown({
+      const secondGroupItem = createEventTarget(document.activeElement);
+      secondGroupItem.keydown({
         key: 'ArrowDown',
       });
       expect(document.activeElement.textContent).toBe('Item 3');
 
-      const thirdListItem = createEventTarget(document.activeElement);
-      thirdListItem.keydown({
+      const thirdGroupItem = createEventTarget(document.activeElement);
+      thirdGroupItem.keydown({
         key: 'ArrowDown',
       });
       expect(document.activeElement.textContent).toBe('Item 1');
 
-      firstListItem = createEventTarget(document.activeElement);
-      firstListItem.keydown({
+      firstGroupItem = createEventTarget(document.activeElement);
+      firstGroupItem.keydown({
         key: 'ArrowUp',
       });
       expect(document.activeElement.textContent).toBe('Item 3');
     });
 
     it('handles keyboard arrow operations (portrait) with allowModifiers', () => {
-      const Test = createFocusListComponent();
+      const Test = createFocusGroupComponent();
 
       ReactDOM.render(
         <Test portrait={true} allowModifiers={true} />,
         container,
       );
-      const listItems = document.querySelectorAll('li');
-      let firstListItem = createEventTarget(listItems[0]);
-      firstListItem.focus();
-      firstListItem.keydown({
+      const GroupItems = document.querySelectorAll('li');
+      let firstGroupItem = createEventTarget(GroupItems[0]);
+      firstGroupItem.focus();
+      firstGroupItem.keydown({
         key: 'ArrowDown',
         altKey: true,
       });
@@ -185,7 +185,7 @@ describe('FocusList', () => {
     });
 
     it('handles keyboard arrow operations mixed with tabbing', () => {
-      const [FocusList, FocusItem] = createFocusList(TabbableScope);
+      const [FocusGroup, FocusItem] = createFocusGroup(TabbableScope);
       const beforeRef = React.createRef();
       const afterRef = React.createRef();
 
@@ -193,7 +193,7 @@ describe('FocusList', () => {
         return (
           <>
             <input placeholder="Before" ref={beforeRef} />
-            <FocusList tabScope={TabbableScope} portrait={true}>
+            <FocusGroup tabScope={TabbableScope} portrait={true}>
               <ul>
                 <FocusItem>
                   <li>
@@ -226,7 +226,7 @@ describe('FocusList', () => {
                   </li>
                 </FocusItem>
               </ul>
-            </FocusList>
+            </FocusGroup>
             <input placeholder="After" ref={afterRef} />
           </>
         );

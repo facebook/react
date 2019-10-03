@@ -12,7 +12,7 @@
 import {createEventTarget} from 'react-interactions/events/src/dom/testing-library';
 
 // This function is used by the a11y modules for testing
-export function emulateBrowserTab(backwards) {
+export function emulateBrowserTab(backwards: boolean): void {
   const activeElement = document.activeElement;
   const focusedElem = createEventTarget(activeElement);
   let defaultPrevented = false;
@@ -29,9 +29,7 @@ export function emulateBrowserTab(backwards) {
       document.querySelectorAll(
         'input, button, select, textarea, a[href], [tabindex], [contenteditable], iframe, object, embed',
       ),
-    ).filter(
-      elem => elem.tabIndex > -1 && !elem.disabled && !elem.contentEditable,
-    );
+    ).filter(elem => elem.tabIndex > -1 && !elem.disabled);
     const idx = focusableElems.indexOf(activeElement);
     if (idx !== -1) {
       focusableElems[backwards ? idx - 1 : idx + 1].focus();

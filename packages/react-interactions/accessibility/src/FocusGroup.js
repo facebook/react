@@ -12,14 +12,14 @@ import type {KeyboardEvent} from 'react-interactions/events/keyboard';
 
 import React from 'react';
 import {useKeyboard} from 'react-interactions/events/keyboard';
-import {setElementCanTab} from 'react-interactions/accessibility/focus-control';
+import setElementCanTab from './shared/setElementCanTab';
 
 type FocusItemProps = {
   children?: React.Node,
   onKeyDown?: KeyboardEvent => void,
 };
 
-type FocusListProps = {|
+type FocusGroupProps = {|
   children: React.Node,
   portrait: boolean,
   wrap?: boolean,
@@ -29,7 +29,7 @@ type FocusListProps = {|
 
 const {useRef} = React;
 
-function focusListItem(cell: ReactScopeMethods, event: KeyboardEvent): void {
+function focusGroupItem(cell: ReactScopeMethods, event: KeyboardEvent): void {
   const tabbableNodes = cell.getScopedNodes();
   if (tabbableNodes !== null && tabbableNodes.length > 0) {
     tabbableNodes[0].focus();
@@ -37,14 +37,14 @@ function focusListItem(cell: ReactScopeMethods, event: KeyboardEvent): void {
   }
 }
 
-function getPreviousListItem(
-  list: ReactScopeMethods,
+function getPreviousGroupItem(
+  group: ReactScopeMethods,
   currentItem: ReactScopeMethods,
 ): null | ReactScopeMethods {
-  const items = list.getChildren();
+  const items = group.getChildren();
   if (items !== null) {
     const currentItemIndex = items.indexOf(currentItem);
-    const wrap = getListProps(currentItem).wrap;
+    const wrap = getGroupProps(currentItem).wrap;
     if (currentItemIndex === 0 && wrap) {
       return items[items.length - 1] || null;
     } else if (currentItemIndex > 0) {
@@ -54,14 +54,14 @@ function getPreviousListItem(
   return null;
 }
 
-function getNextListItem(
-  list: ReactScopeMethods,
+function getNextGroupItem(
+  group: ReactScopeMethods,
   currentItem: ReactScopeMethods,
 ): null | ReactScopeMethods {
-  const items = list.getChildren();
+  const items = group.getChildren();
   if (items !== null) {
     const currentItemIndex = items.indexOf(currentItem);
-    const wrap = getListProps(currentItem).wrap;
+    const wrap = getGroupProps(currentItem).wrap;
     const end = currentItemIndex === items.length - 1;
     if (end && wrap) {
       return items[0] || null;
@@ -72,12 +72,12 @@ function getNextListItem(
   return null;
 }
 
-function getListProps(currentCell: ReactScopeMethods): Object {
-  const list = currentCell.getParent();
-  if (list !== null) {
-    const listProps = list.getProps();
-    if (listProps && listProps.type === 'list') {
-      return listProps;
+function getGroupProps(currentCell: ReactScopeMethods): Object {
+  const group = currentCell.getParent();
+  if (group !== null) {
+    const groupProps = group.getProps();
+    if (groupProps && groupProps.type === 'group') {
+      return groupProps;
     }
   }
   return {};
@@ -90,20 +90,20 @@ function hasModifierKey(event: KeyboardEvent): boolean {
   );
 }
 
-export function createFocusList(scope: ReactScope): Array<React.Component> {
+export function createFocusGroup(scope: ReactScope): Array<React.Component> {
   const TableScope = React.unstable_createScope(scope.fn);
 
-  function List({
+  function Group({
     children,
     portrait,
     wrap,
     tabScope: TabScope,
     allowModifiers,
-  }): FocusListProps {
+  }): FocusGroupProps {
     const tabScopeRef = useRef(null);
     return (
       <TableScope
-        type="list"
+        type="group"
         portrait={portrait}
         wrap={wrap}
         tabScopeRef={tabScopeRef}
@@ -123,14 +123,14 @@ export function createFocusList(scope: ReactScope): Array<React.Component> {
       onKeyDown(event: KeyboardEvent): void {
         const currentItem = scopeRef.current;
         if (currentItem !== null) {
-          const list = currentItem.getParent();
-          const listProps = list && list.getProps();
-          if (list !== null && listProps.type === 'list') {
-            const portrait = listProps.portrait;
+          const group = currentItem.getParent();
+          const groupProps = group && group.getProps();
+          if (group !== null && groupProps.type === 'group') {
+            const portrait = groupProps.portrait;
             const key = event.key;
 
             if (key === 'Tab') {
-              const tabScope = getListProps(currentItem).tabScopeRef.current;
+              const tabScope = getGroupProps(currentItem).tabScopeRef.current;
               if (tabScope) {
                 const activeNode = document.activeElement;
                 const nodes = tabScope.getScopedNodes();
@@ -148,9 +148,9 @@ export function createFocusList(scope: ReactScope): Array<React.Component> {
               return;
             }
             // Using modifier keys with keyboard arrow events should be no-ops
-            // unless an explicit allowModifiers flag is set on the FocusList.
+            // unless an explicit allowModifiers flag is set on the FocusGroup.
             if (hasModifierKey(event)) {
-              const allowModifiers = getListProps(currentItem).allowModifiers;
+              const allowModifiers = getGroupProps(currentItem).allowModifiers;
               if (!allowModifiers) {
                 event.continuePropagation();
                 return;
@@ -159,12 +159,12 @@ export function createFocusList(scope: ReactScope): Array<React.Component> {
             switch (key) {
               case 'ArrowUp': {
                 if (portrait) {
-                  const previousListItem = getPreviousListItem(
-                    list,
+                  const previousGroupItem = getPreviousGroupItem(
+                    group,
                     currentItem,
                   );
-                  if (previousListItem) {
-                    focusListItem(previousListItem, event);
+                  if (previousGroupItem) {
+                    focusGroupItem(previousGroupItem, event);
                     return;
                   }
                 }
@@ -172,9 +172,9 @@ export function createFocusList(scope: ReactScope): Array<React.Component> {
               }
               case 'ArrowDown': {
                 if (portrait) {
-                  const nextListItem = getNextListItem(list, currentItem);
-                  if (nextListItem) {
-                    focusListItem(nextListItem, event);
+                  const nextGroupItem = getNextGroupItem(group, currentItem);
+                  if (nextGroupItem) {
+                    focusGroupItem(nextGroupItem, event);
                     return;
                   }
                 }
@@ -182,12 +182,12 @@ export function createFocusList(scope: ReactScope): Array<React.Component> {
               }
               case 'ArrowLeft': {
                 if (!portrait) {
-                  const previousListItem = getPreviousListItem(
-                    list,
+                  const previousGroupItem = getPreviousGroupItem(
+                    group,
                     currentItem,
                   );
-                  if (previousListItem) {
-                    focusListItem(previousListItem, event);
+                  if (previousGroupItem) {
+                    focusGroupItem(previousGroupItem, event);
                     return;
                   }
                 }
@@ -195,9 +195,9 @@ export function createFocusList(scope: ReactScope): Array<React.Component> {
               }
               case 'ArrowRight': {
                 if (!portrait) {
-                  const nextListItem = getNextListItem(list, currentItem);
-                  if (nextListItem) {
-                    focusListItem(nextListItem, event);
+                  const nextGroupItem = getNextGroupItem(group, currentItem);
+                  if (nextGroupItem) {
+                    focusGroupItem(nextGroupItem, event);
                     return;
                   }
                 }
@@ -219,5 +219,5 @@ export function createFocusList(scope: ReactScope): Array<React.Component> {
     );
   }
 
-  return [List, Item];
+  return [Group, Item];
 }

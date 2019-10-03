@@ -9,4 +9,4 @@
 
 'use strict';
 
-module.exports = require('./src/FocusList');
+module.exports = require('./src/FocusGroup');

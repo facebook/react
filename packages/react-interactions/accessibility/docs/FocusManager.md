@@ -1,39 +1,59 @@
 # FocusManager
 
-`FocusManager` is a component that is designed to provide basic focus management
-control. These are the various props that `FocusManager` accepts:
+`FocusManager` is a module that exports a selection of helpful utility functions to be used
+in conjunction with the `ref` from a React Scope, such as `TabbableScope`.
 
-## Usage
+## Example
 
 ```jsx
-function MyDialog(props) {
+import {
+  focusFirst,
+  focusNext,
+  focusPrevious,
+  getNextScope,
+  getPreviousScope,
+} from 'react-interactions/accessibility/focus-manager';
+
+function KeyboardFocusMover(props) {
+  const scopeRef = useRef(null);
+
+  useEffect(() => {
+    const scope = scopeRef.current;
+
+    if (scope) {
+      // Focus the first tabbable DOM node in my children
+      focusFirst(scope);
+      // Then focus the next chilkd
+      focusNext(scope);
+    }
+  });
+  
   return (
-    <FocusManager containFocus={true} autoFocus={true}>
-      <div>
-        <h2>{props.title}<h2>
-        <p>{props.text}</p>
-        <Button onPress={...}>Accept</Button>
-        <Button onPress={...}>Close</Button>
-      </div>
-    </FocusManager>
-  )
+    <TabbableScope ref={scopeRef}>
+      {props.children}
+    </TabbableScope>
+  );
 }
 ```
 
-### `scope`
-`FocusManager` accepts a custom `ReactScope`. If a custom one is not supplied, `FocusManager`
-will default to using `TabbableScope`.
+## FocusManager API
 
-### `autoFocus`
-When enabled, the first host node that matches the `FocusManager` scope will be focused
-upon the `FocusManager` mounting.
+### `focusFirst`
 
-### `restoreFocus`
-When enabled, the previous host node that was focused as `FocusManager` is mounted,
-has its focus restored upon `FocusManager` unmounting.
+Focus the first node that matches the given scope.
 
-### `containFocus`
-This contains the user focus to only that of `FocusManager`s sub-tree. Tabbing or
-interacting with nodes outside the sub-tree will restore focus back into the `FocusManager`.
-This is useful for modals, dialogs, dropdowns and other UI elements that require
-a form of user-focus control that is similar to the `inert` property on the web.
+### `focusNext`
+
+Focus the next sequential node that matches the given scope.
+
+### `focusPrevious`
+
+Focus the previous sequential node that matches the given scope.
+
+### `getNextScope`
+
+Focus the first node that matches the next sibling scope from the given scope.
+
+### `getPreviousScope`
+
+Focus the first node that matches the previous sibling scope from the given scope.
