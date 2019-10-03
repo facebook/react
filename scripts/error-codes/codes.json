@@ -343,5 +343,6 @@
   "342": "A React component suspended while rendering, but no fallback UI was specified.\n\nAdd a <Suspense fallback=...> component higher in the tree to provide a loading indicator or placeholder to display.",
   "343": "ReactDOMServer does not yet support scope components.",
   "344": "Expected prepareToHydrateHostSuspenseInstance() to never be called. This error is likely caused by a bug in React. Please file an issue.",
-  "345": "Root did not complete. This is a bug in React."
+  "345": "Root did not complete. This is a bug in React.",
+  "346": "An event responder context was used outside of an event cycle."
 }

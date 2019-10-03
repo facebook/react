@@ -42,18 +42,6 @@ const {
   unstable_runWithPriority: runWithPriority,
 } = Scheduler;
 
-type ResponderTimeout = {|
-  id: TimeoutID,
-  timers: Map<number, ResponderTimer>,
-|};
-
-type ResponderTimer = {|
-  instance: ReactNativeEventResponderInstance,
-  func: () => void,
-  id: number,
-  timeStamp: number,
-|};
-
 type ReactNativeEventResponder = ReactEventResponder<
   ReactNativeResponderEvent,
   ReactNativeResponderContext,
@@ -66,16 +54,13 @@ type ReactNativeEventResponderInstance = ReactEventResponderInstance<
 
 const {measureInWindow} = nativeFabricUIManager;
 
-const activeTimeouts: Map<number, ResponderTimeout> = new Map();
 const rootEventTypesToEventResponderInstances: Map<
   string,
   Set<ReactNativeEventResponderInstance>,
 > = new Map();
 
 let currentTimeStamp = 0;
-let currentTimers = new Map();
 let currentInstance: null | ReactNativeEventResponderInstance = null;
-let currentTimerIDCounter = 0;
 
 const eventResponderContext: ReactNativeResponderContext = {
   dispatchEvent(
@@ -168,46 +153,6 @@ const eventResponderContext: ReactNativeResponderContext = {
       }
     }
   },
-  setTimeout(func: () => void, delay): number {
-    validateResponderContext();
-    if (currentTimers === null) {
-      currentTimers = new Map();
-    }
-    let timeout = currentTimers.get(delay);
-
-    const timerId = currentTimerIDCounter++;
-    if (timeout === undefined) {
-      const timers = new Map();
-      const id = setTimeout(() => {
-        processTimers(timers, delay);
-      }, delay);
-      timeout = {
-        id,
-        timers,
-      };
-      currentTimers.set(delay, timeout);
-    }
-    timeout.timers.set(timerId, {
-      instance: ((currentInstance: any): ReactNativeEventResponderInstance),
-      func,
-      id: timerId,
-      timeStamp: currentTimeStamp,
-    });
-    activeTimeouts.set(timerId, timeout);
-    return timerId;
-  },
-  clearTimeout(timerId: number): void {
-    validateResponderContext();
-    const timeout = activeTimeouts.get(timerId);
-
-    if (timeout !== undefined) {
-      const timers = timeout.timers;
-      timers.delete(timerId);
-      if (timers.size === 0) {
-        clearTimeout(timeout.id);
-      }
-    }
-  },
   getTimeStamp(): number {
     validateResponderContext();
     return currentTimeStamp;
@@ -283,31 +228,6 @@ function getFiberFromTarget(
   return ((target.canonical._internalInstanceHandle: any): Fiber) || null;
 }
 
-function processTimers(
-  timers: Map<number, ResponderTimer>,
-  delay: number,
-): void {
-  const timersArr = Array.from(timers.values());
-  try {
-    batchedEventUpdates(() => {
-      for (let i = 0; i < timersArr.length; i++) {
-        const {instance, func, id, timeStamp} = timersArr[i];
-        currentInstance = instance;
-        currentTimeStamp = timeStamp + delay;
-        try {
-          func();
-        } finally {
-          activeTimeouts.delete(id);
-        }
-      }
-    });
-  } finally {
-    currentTimers = null;
-    currentInstance = null;
-    currentTimeStamp = 0;
-  }
-}
-
 function createFabricResponderEvent(
   topLevelType: string,
   nativeEvent: ReactFaricEvent,
@@ -323,8 +243,7 @@ function createFabricResponderEvent(
 function validateResponderContext(): void {
   invariant(
     currentInstance,
-    'An event responder context was used outside of an event cycle. ' +
-      'Use context.setTimeout() to use asynchronous responder context outside of event cycle .',
+    'An event responder context was used outside of an event cycle.',
   );
 }
 
@@ -429,9 +348,7 @@ export function dispatchEventForResponderEventSystem(
   nativeEvent: ReactFaricEvent,
 ): void {
   const previousInstance = currentInstance;
-  const previousTimers = currentTimers;
   const previousTimeStamp = currentTimeStamp;
-  currentTimers = null;
   // We might want to control timeStamp another way here
   currentTimeStamp = Date.now();
   try {
@@ -443,7 +360,6 @@ export function dispatchEventForResponderEventSystem(
       );
     });
   } finally {
-    currentTimers = previousTimers;
     currentInstance = previousInstance;
     currentTimeStamp = previousTimeStamp;
   }
@@ -466,7 +382,6 @@ export function mountEventResponder(
       });
     } finally {
       currentInstance = null;
-      currentTimers = null;
     }
   }
 }
@@ -487,7 +402,6 @@ export function unmountEventResponder(
       });
     } finally {
       currentInstance = null;
-      currentTimers = null;
     }
   }
   const rootEventTypesSet = responderInstance.rootEventTypes;
