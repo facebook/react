@@ -185,4 +185,55 @@ describe('EnterLeaveEventPlugin', () => {
 
     ReactDOM.render(<Parent />, container);
   });
+
+  it('should call mouseEnter when pressing a non tracked React node', done => {
+    const mockFn = jest.fn();
+
+    class Parent extends React.Component {
+      constructor(props) {
+        super(props);
+        this.parentEl = React.createRef();
+      }
+
+      componentDidMount() {
+        ReactDOM.render(<MouseEnterDetect />, this.parentEl.current);
+      }
+
+      render() {
+        return <div ref={this.parentEl} />;
+      }
+    }
+
+    class MouseEnterDetect extends React.Component {
+      constructor(props) {
+        super(props);
+        this.divRef = React.createRef();
+        this.siblingEl = React.createRef();
+      }
+
+      componentDidMount() {
+        const attachedNode = document.createElement('div');
+        this.divRef.current.appendChild(attachedNode);
+        attachedNode.dispatchEvent(
+          new MouseEvent('mouseout', {
+            bubbles: true,
+            cancelable: true,
+            relatedTarget: this.siblingEl.current,
+          }),
+        );
+        expect(mockFn.mock.calls.length).toBe(1);
+        done();
+      }
+
+      render() {
+        return (
+          <div ref={this.divRef}>
+            <div ref={this.siblingEl} onMouseEnter={mockFn} />
+          </div>
+        );
+      }
+    }
+
+    ReactDOM.render(<Parent />, container);
+  });
 });
