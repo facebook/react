@@ -8,9 +8,11 @@
   
   <!-- Upcoming changes go here -->
 
+</details>
+
+## 4.2.0 (October 3, 2019)
 #### Features
 * "Highlight updates" feature added for browser extensions and `react-devtools-inline` NPM package. ([bvaughn](https://github.com/bvaughn) in [#16989](https://github.com/facebook/react/pull/16989))
-</details>
 
 ## 4.1.3 (September 30, 2019)
 #### Bug fixes
