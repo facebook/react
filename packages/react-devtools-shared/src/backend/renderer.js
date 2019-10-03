@@ -1258,16 +1258,10 @@ export function attach(
           traceUpdatesForNodes.add(fiber.stateNode);
           traceNearestHostComponentUpdate = false;
         }
-      } else {
-        if (
-          elementType === ElementTypeFunction ||
-          elementType === ElementTypeClass ||
-          elementType === ElementTypeContext
-        ) {
-          // Otherwise if this is a traced ancestor, flag for the nearest host descendant(s).
-          traceNearestHostComponentUpdate = true;
-        }
       }
+
+      // We intentionally do not re-enable the traceNearestHostComponentUpdate flag in this branch,
+      // because we don't want to highlight every host node inside of a newly mounted subtree.
     }
 
     const isTimedOutSuspense =
