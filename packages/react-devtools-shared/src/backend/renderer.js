@@ -1251,8 +1251,8 @@ export function attach(
     }
 
     if (traceUpdatesEnabled) {
-      const elementType = getElementTypeForFiber(fiber);
       if (traceNearestHostComponentUpdate) {
+        const elementType = getElementTypeForFiber(fiber);
         // If an ancestor updated, we should mark the nearest host nodes for highlighting.
         if (elementType === ElementTypeHostComponent) {
           traceUpdatesForNodes.add(fiber.stateNode);
