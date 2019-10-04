@@ -98,7 +98,11 @@ function collectNearestChildScopeMethods(
 }
 
 function isValidScopeNode(node, scope) {
-  return node.tag === ScopeComponent && node.type === scope;
+  return (
+    node.tag === ScopeComponent &&
+    node.type === scope &&
+    node.stateNode !== null
+  );
 }
 
 export function createScopeMethods(
