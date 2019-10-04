@@ -104,29 +104,6 @@ describe('ReactDOMSuspensePlaceholder', () => {
     expect(window.getComputedStyle(divs[2].current).display).toEqual('inline');
   });
 
-  it('hides and unhides child portals', async () => {
-    const portalContainer = document.createElement('div');
-    function Component() {
-      return ReactDOM.createPortal(<span />, portalContainer);
-    }
-
-    function App() {
-      return (
-        <Suspense fallback={<Text text="Loading..." />}>
-          <AsyncText ms={500} text="A" />
-          <Component />
-        </Suspense>
-      );
-    }
-
-    ReactDOM.render(<App />, container);
-    expect(window.getComputedStyle(portalContainer).display).toEqual('none');
-
-    await advanceTimers(500);
-    Scheduler.unstable_flushAll();
-    expect(window.getComputedStyle(portalContainer).display).toEqual('block');
-  });
-
   it('hides and unhides timed out text nodes', async () => {
     function App() {
       return (
