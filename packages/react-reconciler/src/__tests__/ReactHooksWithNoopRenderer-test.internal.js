@@ -1605,14 +1605,18 @@ describe('ReactHooksWithNoopRenderer', () => {
         return (
           <>
             <IncrementButton increment={increment} ref={button} />
-            <IncrementButton2 increment={increment}/>
+            <IncrementButton2 increment={increment} />
             <Text text={'Count: ' + count} />
           </>
         );
       }
 
       ReactNoop.render(<Counter incrementBy={1} />);
-      expect(Scheduler).toFlushAndYield(['PureComponent Increment', 'Component Increment', 'Count: 0']);
+      expect(Scheduler).toFlushAndYield([
+        'PureComponent Increment',
+        'Component Increment',
+        'Count: 0',
+      ]);
       expect(ReactNoop.getChildren()).toEqual([
         span('PureComponent Increment'),
         span('Component Increment'),
