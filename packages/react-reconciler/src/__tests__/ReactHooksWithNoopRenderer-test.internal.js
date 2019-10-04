@@ -1586,10 +1586,17 @@ describe('ReactHooksWithNoopRenderer', () => {
           this.props.increment();
         };
         render() {
-          return <Text text="Increment" />;
+          return <Text text="PureComponent Increment" />;
         }
       }
 
+      class IncrementButton2 extends React.Component {
+        render() {
+          return <Text text="Component Increment" />;
+        }
+      }
+
+      const button = React.createRef(null);
       function Counter({incrementBy}) {
         const [count, updateCount] = useState(0);
         const increment = useCallback(() => updateCount(c => c + incrementBy), [
@@ -1598,47 +1605,52 @@ describe('ReactHooksWithNoopRenderer', () => {
         return (
           <>
             <IncrementButton increment={increment} ref={button} />
+            <IncrementButton2 increment={increment}/>
             <Text text={'Count: ' + count} />
           </>
         );
       }
 
-      const button = React.createRef(null);
       ReactNoop.render(<Counter incrementBy={1} />);
-      expect(Scheduler).toFlushAndYield(['Increment', 'Count: 0']);
+      expect(Scheduler).toFlushAndYield(['PureComponent Increment', 'Component Increment', 'Count: 0']);
       expect(ReactNoop.getChildren()).toEqual([
-        span('Increment'),
+        span('PureComponent Increment'),
+        span('Component Increment'),
         span('Count: 0'),
       ]);
 
       act(button.current.increment);
       expect(Scheduler).toHaveYielded([
-        // Button should not re-render, because its props haven't changed
-        // 'Increment',
+        // PureComponent Button should not re-render, because its props haven't changed, but Component does.
+        'Component Increment',
         'Count: 1',
       ]);
       expect(ReactNoop.getChildren()).toEqual([
-        span('Increment'),
+        span('PureComponent Increment'),
+        span('Component Increment'),
         span('Count: 1'),
       ]);
 
       // Increase the increment amount
       ReactNoop.render(<Counter incrementBy={10} />);
       expect(Scheduler).toFlushAndYield([
-        // Inputs did change this time
-        'Increment',
+        // Inputs did change this time, so both they will re-render
+        'PureComponent Increment',
+        'Component Increment',
         'Count: 1',
       ]);
       expect(ReactNoop.getChildren()).toEqual([
-        span('Increment'),
+        span('PureComponent Increment'),
+        span('Component Increment'),
         span('Count: 1'),
       ]);
 
       // Callback should have updated
       act(button.current.increment);
-      expect(Scheduler).toHaveYielded(['Count: 11']);
+      expect(Scheduler).toHaveYielded(['Component Increment', 'Count: 11']);
       expect(ReactNoop.getChildren()).toEqual([
-        span('Increment'),
+        span('PureComponent Increment'),
+        span('Component Increment'),
         span('Count: 11'),
       ]);
     });
