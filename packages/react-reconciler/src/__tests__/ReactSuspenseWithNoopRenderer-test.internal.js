@@ -2110,6 +2110,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       expect(Scheduler).toFlushAndYield(['A']);
       expect(ReactNoop.getChildren()).toEqual([span('A')]);
 
+      // Advancing time before the next render shouldn't count towards the timeout of the suspense config
+      Scheduler.unstable_advanceTime(1100);
+      await advanceTimers(1100);
+
       // Start transition.
       React.unstable_withSuspenseConfig(
         () => ReactNoop.render(<App page="B" />),
