@@ -1,0 +1,8 @@
+{
+  "packages": ["packages/react", "packages/react-dom"],
+  "buildCommand": "build react/index,react-dom/index",
+  "publishDirectory": {
+    "react": "build/node_modules/react",
+    "react-dom": "build/node_modules/react-dom"
+  }
+}
