@@ -4,5 +4,6 @@
   "publishDirectory": {
     "react": "build/node_modules/react",
     "react-dom": "build/node_modules/react-dom"
-  }
+  },
+  "sandboxes": ["new"]
 }
