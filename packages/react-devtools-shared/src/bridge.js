@@ -56,6 +56,11 @@ type InspectElementParams = {|
   path?: Array<string | number>,
 |};
 
+type GetDataForCopyParams = {|
+  ...ElementAndRendererID,
+  property: string,
+|};
+
 type NativeStyleEditor_RenameAttributeParams = {|
   ...ElementAndRendererID,
   oldName: string,
@@ -85,6 +90,7 @@ type BackendEvents = {|
   syncSelectionFromNativeElementsPanel: [],
   syncSelectionToNativeElementsPanel: [],
   unsupportedRendererVersion: [RendererID],
+  dataForCopy: [Object],
 
   // React Native style editor plug-in.
   isNativeStyleEditorSupported: [
@@ -118,6 +124,7 @@ type FrontendEvents = {|
   updateAppendComponentStack: [boolean],
   updateComponentFilters: [Array<ComponentFilter>],
   viewElementSource: [ElementAndRendererID],
+  getDataForCopy: [GetDataForCopyParams],
 
   // React Native style editor plug-in.
   NativeStyleEditor_measure: [ElementAndRendererID],

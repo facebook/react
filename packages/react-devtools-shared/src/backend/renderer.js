@@ -33,7 +33,7 @@ import {
   utfEncodeString,
 } from 'react-devtools-shared/src/utils';
 import {sessionStorageGetItem} from 'react-devtools-shared/src/storage';
-import {cleanForBridge, copyWithSet} from './utils';
+import {cleanForBridge, copyWithSet, sanitizeForCopy} from './utils';
 import {
   __DEBUG__,
   SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
@@ -2560,6 +2560,22 @@ export function attach(
     }
   }
 
+  function getDataForCopy(id: number, property: string) {
+    const result = isMostRecentlyInspectedElementCurrent(id)
+      ? mostRecentlyInspectedElement
+      : inspectElementRaw(id);
+    if (result === null) {
+      console.warn(`Could not find Fiber with id "${id}"`);
+      return null;
+    }
+
+    if (!result.hasOwnProperty(property)) {
+      return null;
+    }
+
+    return sanitizeForCopy(result[property]);
+  }
+
   function logElementToConsole(id) {
     const result = isMostRecentlyInspectedElementCurrent(id)
       ? mostRecentlyInspectedElement
@@ -3131,5 +3147,6 @@ export function attach(
     startProfiling,
     stopProfiling,
     updateComponentFilters,
+    getDataForCopy,
   };
 }

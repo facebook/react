@@ -7,14 +7,13 @@
  * @flow
  */
 
-import {copy} from 'clipboard-js';
 import React, {useCallback, useState} from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import KeyValue from './KeyValue';
 import EditableName from './EditableName';
 import EditableValue from './EditableValue';
-import {alphaSortEntries, serializeDataForCopy} from '../utils';
+import {alphaSortEntries} from '../utils';
 import styles from './InspectedElementTree.css';
 
 import type {InspectPath} from './SelectedElement';
@@ -28,6 +27,7 @@ type Props = {|
   overrideValueFn?: ?OverrideValueFn,
   showWhenEmpty?: boolean,
   canAddEntries?: boolean,
+  copyToClipboard: () => void,
 |};
 
 export default function InspectedElementTree({
@@ -35,6 +35,7 @@ export default function InspectedElementTree({
   inspectPath,
   label,
   overrideValueFn,
+  copyToClipboard,
   canAddEntries = false,
   showWhenEmpty = false,
 }: Props) {
@@ -47,11 +48,6 @@ export default function InspectedElementTree({
   const [newPropName, setNewPropName] = useState<string>('');
 
   const isEmpty = entries === null || entries.length === 0;
-
-  const handleCopy = useCallback(
-    () => copy(serializeDataForCopy(((data: any): Object))),
-    [data],
-  );
 
   const handleNewEntryValue = useCallback(
     (name, value) => {
@@ -77,7 +73,7 @@ export default function InspectedElementTree({
         <div className={styles.HeaderRow}>
           <div className={styles.Header}>{label}</div>
           {!isEmpty && (
-            <Button onClick={handleCopy} title="Copy to clipboard">
+            <Button onClick={copyToClipboard} title="Copy to clipboard">
               <ButtonIcon type="copy" />
             </Button>
           )}

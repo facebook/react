@@ -257,6 +257,7 @@ export type RendererInterface = {
   startProfiling: (recordChangeDescriptions: boolean) => void,
   stopProfiling: () => void,
   updateComponentFilters: (componentFilters: Array<ComponentFilter>) => void,
+  getDataForCopy: (id: number, property: string) => Object | null,
 };
 
 export type Handler = (data: any) => void;

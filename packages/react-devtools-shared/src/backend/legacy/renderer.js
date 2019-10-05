@@ -15,7 +15,7 @@ import {
   ElementTypeOtherOrUnknown,
 } from 'react-devtools-shared/src/types';
 import {getUID, utfEncodeString, printOperationsArray} from '../../utils';
-import {cleanForBridge, copyWithSet} from '../utils';
+import {cleanForBridge, copyWithSet, sanitizeForCopy} from '../utils';
 import {getDisplayName} from 'react-devtools-shared/src/utils';
 import {
   __DEBUG__,
@@ -695,6 +695,20 @@ export function attach(
     };
   }
 
+  function getDataForCopy(id: number, property: string) {
+    const result = inspectElementRaw(id);
+    if (result === null) {
+      console.warn(`Could not find element with id "${id}"`);
+      return null;
+    }
+
+    if (!result.hasOwnProperty(property)) {
+      return null;
+    }
+
+    return sanitizeForCopy(result[property]);
+  }
+
   function inspectElementRaw(id: number): InspectedElement | null {
     const internalInstance = idToInternalInstanceMap.get(id);
 
@@ -954,5 +968,6 @@ export function attach(
     startProfiling,
     stopProfiling,
     updateComponentFilters,
+    getDataForCopy,
   };
 }

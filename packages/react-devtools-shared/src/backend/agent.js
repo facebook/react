@@ -87,6 +87,12 @@ type PersistedSelection = {|
   path: Array<PathFrame>,
 |};
 
+type GetDataForCopyParams = {|
+  id: number,
+  rendererID: number,
+  property: string,
+|};
+
 export default class Agent extends EventEmitter<{|
   hideNativeHighlight: [],
   showNativeHighlight: [NativeType],
@@ -131,6 +137,7 @@ export default class Agent extends EventEmitter<{|
     bridge.addListener('getOwnersList', this.getOwnersList);
     bridge.addListener('inspectElement', this.inspectElement);
     bridge.addListener('logElementToConsole', this.logElementToConsole);
+    bridge.addListener('getDataForCopy', this.getDataForCopy);
     bridge.addListener('overrideContext', this.overrideContext);
     bridge.addListener('overrideHookState', this.overrideHookState);
     bridge.addListener('overrideProps', this.overrideProps);
@@ -251,6 +258,18 @@ export default class Agent extends EventEmitter<{|
       // For now, it doesn't seem like there is a way to do that:
       // https://github.com/bvaughn/react-devtools-experimental/issues/102
       // (Setting $0 doesn't work, and calling inspect() switches the tab.)
+    }
+  };
+
+  getDataForCopy = ({id, property, rendererID}: GetDataForCopyParams) => {
+    const renderer = this._rendererInterfaces[rendererID];
+    if (renderer == null) {
+      console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
+    } else {
+      const data = renderer.getDataForCopy(id, property);
+      if (data !== null) {
+        this._bridge.send('dataForCopy', data);
+      }
     }
   };
 

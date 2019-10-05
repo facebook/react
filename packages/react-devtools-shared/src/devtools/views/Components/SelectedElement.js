@@ -7,7 +7,8 @@
  * @flow
  */
 
-import React, {useCallback, useContext} from 'react';
+import {copy} from 'clipboard-js';
+import React, {useCallback, useContext, useEffect} from 'react';
 import {TreeDispatcherContext, TreeStateContext} from './TreeContext';
 import {BridgeContext, StoreContext} from '../context';
 import Button from '../Button';
@@ -52,6 +53,16 @@ export default function SelectedElement(_: Props) {
     InspectedElementContext,
   );
 
+  const copyData = (data: Object) => copy(JSON.stringify(data, null, 2));
+
+  useEffect(
+    () => {
+      bridge.addListener('dataForCopy', copyData);
+      return () => bridge.removeListener('dataForCopy', copyData);
+    },
+    [bridge],
+  );
+
   const element =
     inspectedElementID !== null
       ? store.getElementByID(inspectedElementID)
@@ -87,6 +98,22 @@ export default function SelectedElement(_: Props) {
           bridge.send('logElementToConsole', {
             id: inspectedElementID,
             rendererID,
+          });
+        }
+      }
+    },
+    [bridge, inspectedElementID, store],
+  );
+
+  const copyToClipboard = useCallback(
+    property => {
+      if (inspectedElementID !== null) {
+        const rendererID = store.getRendererIDForElement(inspectedElementID);
+        if (rendererID !== null) {
+          bridge.send('getDataForCopy', {
+            id: inspectedElementID,
+            rendererID,
+            property,
           });
         }
       }
@@ -241,6 +268,7 @@ export default function SelectedElement(_: Props) {
           element={element}
           getInspectedElementPath={getInspectedElementPath}
           inspectedElement={inspectedElement}
+          copyToClipboard={copyToClipboard}
         />
       )}
     </div>
@@ -253,6 +281,7 @@ type InspectedElementViewProps = {|
   element: Element,
   getInspectedElementPath: GetInspectedElementPath,
   inspectedElement: InspectedElement,
+  copyToClipboard: (property: string) => void,
 |};
 
 const IS_SUSPENDED = 'Suspended';
@@ -261,6 +290,7 @@ function InspectedElementView({
   element,
   getInspectedElementPath,
   inspectedElement,
+  copyToClipboard,
 }: InspectedElementViewProps) {
   const {id, type} = element;
   const {
@@ -296,6 +326,20 @@ function InspectedElementView({
       getInspectedElementPath(id, ['state', ...path]);
     },
     [getInspectedElementPath, id],
+  );
+
+  const copyContextToClipboard = useCallback(() => copyToClipboard('context'), [
+    copyToClipboard,
+  ]);
+  const copyPropsToClipboard = useCallback(() => copyToClipboard('props'), [
+    copyToClipboard,
+  ]);
+  const copyStateToClipboard = useCallback(() => copyToClipboard('state'), [
+    copyToClipboard,
+  ]);
+  const copySuspenseToClipboard = useCallback(
+    () => copy(JSON.stringify({[IS_SUSPENDED]: state !== null}, null, 2)),
+    [state],
   );
 
   let overrideContextFn = null;
@@ -359,6 +403,7 @@ function InspectedElementView({
         overrideValueFn={overridePropsFn}
         showWhenEmpty={true}
         canAddEntries={typeof overridePropsFn === 'function'}
+        copyToClipboard={copyPropsToClipboard}
       />
       {type === ElementTypeSuspense ? (
         <InspectedElementTree
@@ -367,6 +412,7 @@ function InspectedElementView({
             [IS_SUSPENDED]: state !== null,
           }}
           overrideValueFn={overrideSuspenseFn}
+          copyToClipboard={copySuspenseToClipboard}
         />
       ) : (
         <InspectedElementTree
@@ -374,6 +420,7 @@ function InspectedElementView({
           data={state}
           inspectPath={inspectStatePath}
           overrideValueFn={overrideStateFn}
+          copyToClipboard={copyStateToClipboard}
         />
       )}
       <HooksTree canEditHooks={canEditHooks} hooks={hooks} id={id} />
@@ -382,6 +429,7 @@ function InspectedElementView({
         data={context}
         inspectPath={inspectContextPath}
         overrideValueFn={overrideContextFn}
+        copyToClipboard={copyContextToClipboard}
       />
 
       <NativeStyleEditor />
