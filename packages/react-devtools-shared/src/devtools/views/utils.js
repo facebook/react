@@ -105,6 +105,7 @@ export function getMetaValueLabel(data: Object): string | null {
     case 'object':
       return 'Object';
     case 'date':
+    case 'regexp':
     case 'symbol':
       return name;
     case 'iterator':

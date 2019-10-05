@@ -81,6 +81,7 @@ type PropType =
   | 'number'
   | 'object'
   | 'react_element'
+  | 'regexp'
   | 'string'
   | 'symbol'
   | 'typed_array'
@@ -128,6 +129,8 @@ function getDataType(data: Object): PropType {
         return 'array_buffer';
       } else if (typeof data[Symbol.iterator] === 'function') {
         return 'iterator';
+      } else if (data instanceof RegExp) {
+        return 'regexp';
       } else if (Object.prototype.toString.call(data) === '[object Date]') {
         return 'date';
       }
@@ -317,6 +320,14 @@ export function dehydrate(
       }
 
     case 'date':
+      cleaned.push(path);
+      return {
+        inspectable: false,
+        name: data.toString(),
+        type,
+      };
+
+    case 'regexp':
       cleaned.push(path);
       return {
         inspectable: false,
