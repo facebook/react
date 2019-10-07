@@ -17,6 +17,7 @@ import setElementCanTab from './shared/setElementCanTab';
 type FocusCellProps = {
   children?: React.Node,
   onKeyDown?: KeyboardEvent => void,
+  colSpan?: number,
 };
 
 type FocusRowProps = {
@@ -25,12 +26,12 @@ type FocusRowProps = {
 
 type FocusTableProps = {|
   children: React.Node,
-  id?: string,
   onKeyboardOut?: (
     direction: 'left' | 'right' | 'up' | 'down',
-    focusTableByID: (id: string) => void,
+    event: KeyboardEvent,
   ) => void,
-  wrap?: boolean,
+  wrapX?: boolean,
+  wrapY?: boolean,
   tabScope?: ReactScope,
   allowModifiers?: boolean,
 |};
@@ -69,18 +70,44 @@ function focusScope(cell: ReactScopeMethods, event?: KeyboardEvent): void {
   }
 }
 
-function focusCellByIndex(
+// This takes into account colSpan
+function focusCellByColumnIndex(
   row: ReactScopeMethods,
-  cellIndex: number,
+  columnIndex: number,
   event?: KeyboardEvent,
 ): void {
   const cells = row.getChildren();
   if (cells !== null) {
-    const cell = cells[cellIndex];
-    if (cell) {
-      focusScope(cell, event);
+    let colSize = 0;
+    for (let i = 0; i < cells.length; i++) {
+      const cell = cells[i];
+      if (cell) {
+        colSize += cell.getProps().colSpan || 1;
+        if (colSize > columnIndex) {
+          focusScope(cell, event);
+          return;
+        }
+      }
     }
   }
+}
+
+function getCellIndexes(
+  cells: Array<ReactScopeMethods>,
+  currentCell: ReactScopeMethods,
+): [number, number] {
+  let totalColSpan = 0;
+  for (let i = 0; i < cells.length; i++) {
+    const cell = cells[i];
+    if (cell === currentCell) {
+      return [i, i + totalColSpan];
+    }
+    const colSpan = cell.getProps().colSpan;
+    if (colSpan) {
+      totalColSpan += colSpan - 1;
+    }
+  }
+  return [-1, -1];
 }
 
 function getRowCells(currentCell: ReactScopeMethods) {
@@ -88,11 +115,14 @@ function getRowCells(currentCell: ReactScopeMethods) {
   if (row !== null && row.getProps().type === 'row') {
     const cells = row.getChildren();
     if (cells !== null) {
-      const rowIndex = cells.indexOf(currentCell);
-      return [cells, rowIndex];
+      const [rowIndex, rowIndexWithColSpan] = getCellIndexes(
+        cells,
+        currentCell,
+      );
+      return [cells, rowIndex, rowIndexWithColSpan];
     }
   }
-  return [null, 0];
+  return [null, -1, -1];
 }
 
 function getRows(currentCell: ReactScopeMethods) {
@@ -107,7 +137,7 @@ function getRows(currentCell: ReactScopeMethods) {
       }
     }
   }
-  return [null, 0];
+  return [null, -1, -1];
 }
 
 function triggerNavigateOut(
@@ -122,19 +152,7 @@ function triggerNavigateOut(
       const props = table.getProps();
       const onKeyboardOut = props.onKeyboardOut;
       if (props.type === 'table' && typeof onKeyboardOut === 'function') {
-        const focusTableByID = (id: string) => {
-          const topLevelTables = table.getChildrenFromRoot();
-          if (topLevelTables !== null) {
-            for (let i = 0; i < topLevelTables.length; i++) {
-              const topLevelTable = topLevelTables[i];
-              if (topLevelTable.getProps().id === id) {
-                focusFirstCellOnTable(topLevelTable);
-                return;
-              }
-            }
-          }
-        };
-        onKeyboardOut(direction, focusTableByID);
+        onKeyboardOut(direction, event);
         return;
       }
     }
@@ -166,8 +184,8 @@ export function createFocusTable(scope: ReactScope): Array<React.Component> {
   function Table({
     children,
     onKeyboardOut,
-    id,
-    wrap,
+    wrapX,
+    wrapY,
     tabScope: TabScope,
     allowModifiers,
   }): FocusTableProps {
@@ -176,8 +194,8 @@ export function createFocusTable(scope: ReactScope): Array<React.Component> {
       <TableScope
         type="table"
         onKeyboardOut={onKeyboardOut}
-        id={id}
-        wrap={wrap}
+        wrapX={wrapX}
+        wrapY={wrapY}
         tabScopeRef={tabScopeRef}
         allowModifiers={allowModifiers}>
         {TabScope ? (
@@ -193,7 +211,7 @@ export function createFocusTable(scope: ReactScope): Array<React.Component> {
     return <TableScope type="row">{children}</TableScope>;
   }
 
-  function Cell({children, onKeyDown}): FocusCellProps {
+  function Cell({children, onKeyDown, colSpan}): FocusCellProps {
     const scopeRef = useRef(null);
     const keyboard = useKeyboard({
       onKeyDown(event: KeyboardEvent): void {
@@ -232,18 +250,18 @@ export function createFocusTable(scope: ReactScope): Array<React.Component> {
         }
         switch (key) {
           case 'ArrowUp': {
-            const [cells, cellIndex] = getRowCells(currentCell);
+            const [cells, , cellIndexWithColSpan] = getRowCells(currentCell);
             if (cells !== null) {
               const [rows, rowIndex] = getRows(currentCell);
               if (rows !== null) {
                 if (rowIndex > 0) {
                   const row = rows[rowIndex - 1];
-                  focusCellByIndex(row, cellIndex, event);
+                  focusCellByColumnIndex(row, cellIndexWithColSpan, event);
                 } else if (rowIndex === 0) {
-                  const wrap = getTableProps(currentCell).wrap;
-                  if (wrap) {
+                  const wrapY = getTableProps(currentCell).wrapY;
+                  if (wrapY) {
                     const row = rows[rows.length - 1];
-                    focusCellByIndex(row, cellIndex, event);
+                    focusCellByColumnIndex(row, cellIndexWithColSpan, event);
                   } else {
                     triggerNavigateOut(currentCell, 'up', event);
                   }
@@ -253,22 +271,22 @@ export function createFocusTable(scope: ReactScope): Array<React.Component> {
             return;
           }
           case 'ArrowDown': {
-            const [cells, cellIndex] = getRowCells(currentCell);
+            const [cells, , cellIndexWithColSpan] = getRowCells(currentCell);
             if (cells !== null) {
               const [rows, rowIndex] = getRows(currentCell);
               if (rows !== null) {
                 if (rowIndex !== -1) {
                   if (rowIndex === rows.length - 1) {
-                    const wrap = getTableProps(currentCell).wrap;
-                    if (wrap) {
+                    const wrapY = getTableProps(currentCell).wrapY;
+                    if (wrapY) {
                       const row = rows[0];
-                      focusCellByIndex(row, cellIndex, event);
+                      focusCellByColumnIndex(row, cellIndexWithColSpan, event);
                     } else {
                       triggerNavigateOut(currentCell, 'down', event);
                     }
                   } else {
                     const row = rows[rowIndex + 1];
-                    focusCellByIndex(row, cellIndex, event);
+                    focusCellByColumnIndex(row, cellIndexWithColSpan, event);
                   }
                 }
               }
@@ -282,8 +300,8 @@ export function createFocusTable(scope: ReactScope): Array<React.Component> {
                 focusScope(cells[rowIndex - 1]);
                 event.preventDefault();
               } else if (rowIndex === 0) {
-                const wrap = getTableProps(currentCell).wrap;
-                if (wrap) {
+                const wrapX = getTableProps(currentCell).wrapX;
+                if (wrapX) {
                   focusScope(cells[cells.length - 1], event);
                 } else {
                   triggerNavigateOut(currentCell, 'left', event);
@@ -297,8 +315,8 @@ export function createFocusTable(scope: ReactScope): Array<React.Component> {
             if (cells !== null) {
               if (rowIndex !== -1) {
                 if (rowIndex === cells.length - 1) {
-                  const wrap = getTableProps(currentCell).wrap;
-                  if (wrap) {
+                  const wrapX = getTableProps(currentCell).wrapX;
+                  if (wrapX) {
                     focusScope(cells[0], event);
                   } else {
                     triggerNavigateOut(currentCell, 'right', event);
@@ -317,7 +335,11 @@ export function createFocusTable(scope: ReactScope): Array<React.Component> {
       },
     });
     return (
-      <TableScope listeners={keyboard} ref={scopeRef} type="cell">
+      <TableScope
+        listeners={keyboard}
+        ref={scopeRef}
+        type="cell"
+        colSpan={colSpan}>
         {children}
       </TableScope>
     );
