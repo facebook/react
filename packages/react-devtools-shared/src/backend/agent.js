@@ -50,6 +50,9 @@ const debug = (methodName, ...args) => {
   }
 };
 
+const invalidRendererWarning = (rendererID: number, id: number) =>
+  `Invalid renderer id "${rendererID}" for element "${id}"`;
+
 type ElementAndRendererID = {|
   id: number,
   rendererID: number,
@@ -227,7 +230,7 @@ export default class Agent extends EventEmitter<{|
   getOwnersList = ({id, rendererID}: ElementAndRendererID) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
-      console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
+      console.warn(invalidRendererWarning(rendererID, id));
     } else {
       const owners = renderer.getOwnersList(id);
       this._bridge.send('ownersList', ({id, owners}: OwnersList));
@@ -237,7 +240,7 @@ export default class Agent extends EventEmitter<{|
   inspectElement = ({id, path, rendererID}: InspectElementParams) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
-      console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
+      console.warn(invalidRendererWarning(rendererID, id));
     } else {
       this._bridge.send('inspectedElement', renderer.inspectElement(id, path));
 
@@ -264,7 +267,7 @@ export default class Agent extends EventEmitter<{|
   getDataForCopy = ({id, property, rendererID}: GetDataForCopyParams) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
-      console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
+      console.warn(invalidRendererWarning(rendererID, id));
     } else {
       const data = renderer.getDataForCopy(id, property);
       if (data !== null) {
@@ -276,7 +279,7 @@ export default class Agent extends EventEmitter<{|
   logElementToConsole = ({id, rendererID}: ElementAndRendererID) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
-      console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
+      console.warn(invalidRendererWarning(rendererID, id));
     } else {
       renderer.logElementToConsole(id);
     }
@@ -298,7 +301,7 @@ export default class Agent extends EventEmitter<{|
   overrideContext = ({id, path, rendererID, value}: SetInParams) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
-      console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
+      console.warn(invalidRendererWarning(rendererID, id));
     } else {
       renderer.setInContext(id, path, value);
     }
@@ -313,7 +316,7 @@ export default class Agent extends EventEmitter<{|
   }: OverrideHookParams) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
-      console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
+      console.warn(invalidRendererWarning(rendererID, id));
     } else {
       renderer.setInHook(id, hookID, path, value);
     }
@@ -322,7 +325,7 @@ export default class Agent extends EventEmitter<{|
   overrideProps = ({id, path, rendererID, value}: SetInParams) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
-      console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
+      console.warn(invalidRendererWarning(rendererID, id));
     } else {
       renderer.setInProps(id, path, value);
     }
@@ -331,7 +334,7 @@ export default class Agent extends EventEmitter<{|
   overrideState = ({id, path, rendererID, value}: SetInParams) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
-      console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
+      console.warn(invalidRendererWarning(rendererID, id));
     } else {
       renderer.setInState(id, path, value);
     }
@@ -344,7 +347,7 @@ export default class Agent extends EventEmitter<{|
   }: OverrideSuspenseParams) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
-      console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
+      console.warn(invalidRendererWarning(rendererID, id));
     } else {
       renderer.overrideSuspense(id, forceFallback);
     }
@@ -452,7 +455,7 @@ export default class Agent extends EventEmitter<{|
   viewElementSource = ({id, rendererID}: ElementAndRendererID) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
-      console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
+      console.warn(invalidRendererWarning(rendererID, id));
     } else {
       renderer.prepareViewElementSource(id);
     }
