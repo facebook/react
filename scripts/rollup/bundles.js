@@ -663,71 +663,12 @@ const bundles = [
     global: 'ReactEventsTap',
     externals: ['react'],
   },
-
-  // React UI - Accessibility
-
-  {
-    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
-    moduleType: NON_FIBER_RENDERER,
-    entry: 'react-interactions/accessibility/focus-table',
-    global: 'ReactFocusTable',
-    externals: [
-      'react',
-      'react-interactions/events/keyboard',
-      'react-interactions/accessibility/tabbable-scope',
-      'react-interactions/accessibility/focus-control',
-    ],
-  },
-
-  {
-    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
-    moduleType: NON_FIBER_RENDERER,
-    entry: 'react-interactions/accessibility/focus-contain',
-    global: 'ReactFocusContain',
-    externals: [
-      'react',
-      'react-interactions/events/focus',
-      'react-interactions/events/keyboard',
-      'react-interactions/accessibility/focus-manager',
-    ],
-  },
-
-  {
-    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
-    moduleType: NON_FIBER_RENDERER,
-    entry: 'react-interactions/accessibility/focus-manager',
-    global: 'ReactFocusManager',
-    externals: ['react'],
-  },
-
-  {
-    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
-    moduleType: NON_FIBER_RENDERER,
-    entry: 'react-interactions/accessibility/tabbable-scope',
-    global: 'ReactTabbableScope',
-    externals: ['react'],
-  },
-
-  {
-    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
-    moduleType: NON_FIBER_RENDERER,
-    entry: 'react-interactions/accessibility/focus-group',
-    global: 'ReactFocusGroup',
-    externals: [
-      'react',
-      'react-interactions/events/keyboard',
-      'react-interactions/accessibility/tabbable-scope',
-      'react-interactions/accessibility/focus-manager',
-    ],
-  },
 ];
 
 const fbBundleExternalsMap = {
   'react-interactions/events/focus': 'ReactEventsFocus',
   'react-interactions/events/keyboard': 'ReactEventsKeyboard',
   'react-interactions/events/tap': 'ReactEventsTap',
-  'react-interactions/accessibility/tabbable-scope': 'ReactTabbableScope',
-  'react-interactions/accessibility/focus-manager': 'ReactFocusManager',
 };
 
 // Based on deep-freeze by substack (public domain)
