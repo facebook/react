@@ -90,7 +90,9 @@ function hasModifierKey(event: KeyboardEvent): boolean {
   );
 }
 
-export function createFocusGroup(scope: ReactScope): Array<React.Component> {
+export function createFocusGroup(
+  scope: ReactScope,
+): [(FocusGroupProps) => React.Node, (FocusItemProps) => React.Node] {
   const TableScope = React.unstable_createScope(scope.fn);
 
   function Group({
@@ -99,7 +101,7 @@ export function createFocusGroup(scope: ReactScope): Array<React.Component> {
     wrap,
     tabScope: TabScope,
     allowModifiers,
-  }): FocusGroupProps {
+  }: FocusGroupProps): React.Node {
     const tabScopeRef = useRef(null);
     return (
       <TableScope
@@ -117,7 +119,7 @@ export function createFocusGroup(scope: ReactScope): Array<React.Component> {
     );
   }
 
-  function Item({children, onKeyDown}): FocusItemProps {
+  function Item({children, onKeyDown}: FocusItemProps): React.Node {
     const scopeRef = useRef(null);
     const keyboard = useKeyboard({
       onKeyDown(event: KeyboardEvent): void {

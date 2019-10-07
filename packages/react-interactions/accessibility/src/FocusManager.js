@@ -41,7 +41,7 @@ export function focusNext(
       event.continuePropagation();
     }
   } else if (focusedElement === lastTabbableElem) {
-    if (contain) {
+    if (contain === true) {
       focusElem(firstTabbableElem);
       if (event) {
         event.preventDefault();
@@ -49,8 +49,8 @@ export function focusNext(
     } else if (event) {
       event.continuePropagation();
     }
-  } else {
-    focusElem((tabbableNodes: any)[currentIndex + 1]);
+  } else if (tabbableNodes) {
+    focusElem(tabbableNodes[currentIndex + 1]);
     if (event) {
       event.preventDefault();
     }
@@ -75,7 +75,7 @@ export function focusPrevious(
       event.continuePropagation();
     }
   } else if (focusedElement === firstTabbableElem) {
-    if (contain) {
+    if (contain === true) {
       focusElem(lastTabbableElem);
       if (event) {
         event.preventDefault();
@@ -83,8 +83,8 @@ export function focusPrevious(
     } else if (event) {
       event.continuePropagation();
     }
-  } else {
-    focusElem((tabbableNodes: any)[currentIndex - 1]);
+  } else if (tabbableNodes) {
+    focusElem(tabbableNodes[currentIndex - 1]);
     if (event) {
       event.preventDefault();
     }

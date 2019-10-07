@@ -38,28 +38,6 @@ type FocusTableProps = {|
 
 const {useRef} = React;
 
-export function focusFirstCellOnTable(table: ReactScopeMethods): void {
-  const rows = table.getChildren();
-  if (rows !== null) {
-    const firstRow = rows[0];
-    if (firstRow !== null) {
-      const cells = firstRow.getChildren();
-      if (cells !== null) {
-        const firstCell = cells[0];
-        if (firstCell !== null) {
-          const tabbableNodes = firstCell.getScopedNodes();
-          if (tabbableNodes !== null) {
-            const firstElem = tabbableNodes[0];
-            if (firstElem !== null) {
-              firstElem.focus();
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
 function focusScope(cell: ReactScopeMethods, event?: KeyboardEvent): void {
   const tabbableNodes = cell.getScopedNodes();
   if (tabbableNodes !== null && tabbableNodes.length > 0) {
@@ -178,7 +156,13 @@ function hasModifierKey(event: KeyboardEvent): boolean {
   );
 }
 
-export function createFocusTable(scope: ReactScope): Array<React.Component> {
+export function createFocusTable(
+  scope: ReactScope,
+): [
+  (FocusTableProps) => React.Node,
+  (FocusRowProps) => React.Node,
+  (FocusCellProps) => React.Node,
+] {
   const TableScope = React.unstable_createScope(scope.fn);
 
   function Table({
@@ -188,7 +172,7 @@ export function createFocusTable(scope: ReactScope): Array<React.Component> {
     wrapY,
     tabScope: TabScope,
     allowModifiers,
-  }): FocusTableProps {
+  }: FocusTableProps): React.Node {
     const tabScopeRef = useRef(null);
     return (
       <TableScope
@@ -207,11 +191,11 @@ export function createFocusTable(scope: ReactScope): Array<React.Component> {
     );
   }
 
-  function Row({children}): FocusRowProps {
+  function Row({children}: FocusRowProps): React.Node {
     return <TableScope type="row">{children}</TableScope>;
   }
 
-  function Cell({children, onKeyDown, colSpan}): FocusCellProps {
+  function Cell({children, onKeyDown, colSpan}: FocusCellProps): React.Node {
     const scopeRef = useRef(null);
     const keyboard = useKeyboard({
       onKeyDown(event: KeyboardEvent): void {
