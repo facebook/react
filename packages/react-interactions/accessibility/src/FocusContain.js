@@ -30,12 +30,12 @@ export default function FocusContain({
   children,
   disabled,
   tabScope: TabScope,
-}: FocusContainProps) {
+}: FocusContainProps): React.Node {
   const scopeRef = useRef(null);
   // This ensures tabbing works through the React tree (including Portals and Suspense nodes)
   const keyboard = useKeyboard({
     onKeyDown(event: KeyboardEvent): void {
-      if (disabled || event.key !== 'Tab') {
+      if (disabled === true || event.key !== 'Tab') {
         event.continuePropagation();
         return;
       }
@@ -51,7 +51,7 @@ export default function FocusContain({
   });
   const focusWithin = useFocusWithin({
     onBlurWithin: function(event) {
-      if (disabled) {
+      if (disabled === true) {
         event.continuePropagation();
         return;
       }
@@ -66,7 +66,7 @@ export default function FocusContain({
   useLayoutEffect(
     () => {
       const scope = scopeRef.current;
-      if (scope && !disabled) {
+      if (scope !== null && disabled !== true) {
         const elems = scope.getScopedNodes();
         if (elems && elems.indexOf(document.activeElement) === -1) {
           elems[0].focus();

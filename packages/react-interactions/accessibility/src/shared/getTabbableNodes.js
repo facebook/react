@@ -9,7 +9,15 @@
 
 import type {ReactScopeMethods} from 'shared/ReactTypes';
 
-export default function getTabbableNodes(scope: ReactScopeMethods) {
+export default function getTabbableNodes(
+  scope: ReactScopeMethods,
+): [
+  null | Array<HTMLElement>,
+  null | HTMLElement,
+  null | HTMLElement,
+  number,
+  null | HTMLElement,
+] {
   const tabbableNodes = scope.getScopedNodes();
   if (tabbableNodes === null || tabbableNodes.length === 0) {
     return [null, null, null, 0, null];
