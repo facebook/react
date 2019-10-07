@@ -252,10 +252,11 @@ export type RendererInterface = {
   ) => void,
   setInProps: (id: number, path: Array<string | number>, value: any) => void,
   setInState: (id: number, path: Array<string | number>, value: any) => void,
+  setTraceUpdatesEnabled: (enabled: boolean) => void,
   setTrackedPath: (path: Array<PathFrame> | null) => void,
   startProfiling: (recordChangeDescriptions: boolean) => void,
   stopProfiling: () => void,
-  updateComponentFilters: (somponentFilters: Array<ComponentFilter>) => void,
+  updateComponentFilters: (componentFilters: Array<ComponentFilter>) => void,
 };
 
 export type Handler = (data: any) => void;

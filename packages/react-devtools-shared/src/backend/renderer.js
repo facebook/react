@@ -57,6 +57,7 @@ import type {
   InspectedElement,
   InspectedElementPayload,
   InstanceAndStyle,
+  NativeType,
   Owner,
   PathFrame,
   PathMatch,
@@ -532,6 +533,10 @@ export function attach(
   const hideElementsWithPaths: Set<RegExp> = new Set();
   const hideElementsWithTypes: Set<ElementType> = new Set();
 
+  // Highlight updates
+  let traceUpdatesEnabled: boolean = false;
+  let traceUpdatesForNodes: Set<NativeType> = new Set();
+
   function applyComponentFilters(componentFilters: Array<ComponentFilter>) {
     hideElementsWithTypes.clear();
     hideElementsWithDisplayNames.clear();
@@ -613,7 +618,7 @@ export function attach(
     hook.getFiberRoots(rendererID).forEach(root => {
       currentRootID = getFiberID(getPrimaryFiber(root.current));
       setRootPseudoKey(currentRootID, root.current);
-      mountFiberRecursively(root.current, null);
+      mountFiberRecursively(root.current, null, false, false);
       flushPendingEvents(root);
       currentRootID = -1;
     });
@@ -1227,7 +1232,8 @@ export function attach(
   function mountFiberRecursively(
     fiber: Fiber,
     parentFiber: Fiber | null,
-    traverseSiblings = false,
+    traverseSiblings: boolean,
+    traceNearestHostComponentUpdate: boolean,
   ) {
     if (__DEBUG__) {
       debug('mountFiberRecursively()', fiber, parentFiber);
@@ -1242,6 +1248,20 @@ export function attach(
     const shouldIncludeInTree = !shouldFilterFiber(fiber);
     if (shouldIncludeInTree) {
       recordMount(fiber, parentFiber);
+    }
+
+    if (traceUpdatesEnabled) {
+      if (traceNearestHostComponentUpdate) {
+        const elementType = getElementTypeForFiber(fiber);
+        // If an ancestor updated, we should mark the nearest host nodes for highlighting.
+        if (elementType === ElementTypeHostComponent) {
+          traceUpdatesForNodes.add(fiber.stateNode);
+          traceNearestHostComponentUpdate = false;
+        }
+      }
+
+      // We intentionally do not re-enable the traceNearestHostComponentUpdate flag in this branch,
+      // because we don't want to highlight every host node inside of a newly mounted subtree.
     }
 
     const isTimedOutSuspense =
@@ -1264,6 +1284,7 @@ export function attach(
           fallbackChild,
           shouldIncludeInTree ? fiber : parentFiber,
           true,
+          traceNearestHostComponentUpdate,
         );
       }
     } else {
@@ -1272,6 +1293,7 @@ export function attach(
           fiber.child,
           shouldIncludeInTree ? fiber : parentFiber,
           true,
+          traceNearestHostComponentUpdate,
         );
       }
     }
@@ -1281,7 +1303,12 @@ export function attach(
     updateTrackedPathStateAfterMount(mightSiblingsBeOnTrackedPath);
 
     if (traverseSiblings && fiber.sibling !== null) {
-      mountFiberRecursively(fiber.sibling, parentFiber, true);
+      mountFiberRecursively(
+        fiber.sibling,
+        parentFiber,
+        true,
+        traceNearestHostComponentUpdate,
+      );
     }
   }
 
@@ -1430,9 +1457,33 @@ export function attach(
     nextFiber: Fiber,
     prevFiber: Fiber,
     parentFiber: Fiber | null,
+    traceNearestHostComponentUpdate: boolean,
   ): boolean {
     if (__DEBUG__) {
       debug('updateFiberRecursively()', nextFiber, parentFiber);
+    }
+
+    if (traceUpdatesEnabled) {
+      const elementType = getElementTypeForFiber(nextFiber);
+      if (traceNearestHostComponentUpdate) {
+        // If an ancestor updated, we should mark the nearest host nodes for highlighting.
+        if (elementType === ElementTypeHostComponent) {
+          traceUpdatesForNodes.add(nextFiber.stateNode);
+          traceNearestHostComponentUpdate = false;
+        }
+      } else {
+        if (
+          elementType === ElementTypeFunction ||
+          elementType === ElementTypeClass ||
+          elementType === ElementTypeContext
+        ) {
+          // Otherwise if this is a traced ancestor, flag for the nearest host descendant(s).
+          traceNearestHostComponentUpdate = didFiberRender(
+            prevFiber,
+            nextFiber,
+          );
+        }
+      }
     }
 
     if (
@@ -1481,6 +1532,7 @@ export function attach(
           nextFallbackChildSet,
           prevFallbackChildSet,
           nextFiber,
+          traceNearestHostComponentUpdate,
         )
       ) {
         shouldResetChildren = true;
@@ -1492,7 +1544,12 @@ export function attach(
       // 2. Mount primary set
       const nextPrimaryChildSet = nextFiber.child;
       if (nextPrimaryChildSet !== null) {
-        mountFiberRecursively(nextPrimaryChildSet, nextFiber, true);
+        mountFiberRecursively(
+          nextPrimaryChildSet,
+          nextFiber,
+          true,
+          traceNearestHostComponentUpdate,
+        );
       }
       shouldResetChildren = true;
     } else if (!prevDidTimeout && nextDidTimeOut) {
@@ -1507,7 +1564,12 @@ export function attach(
         ? nextFiberChild.sibling
         : null;
       if (nextFallbackChildSet != null) {
-        mountFiberRecursively(nextFallbackChildSet, nextFiber, true);
+        mountFiberRecursively(
+          nextFallbackChildSet,
+          nextFiber,
+          true,
+          traceNearestHostComponentUpdate,
+        );
         shouldResetChildren = true;
       }
     } else {
@@ -1530,6 +1592,7 @@ export function attach(
                 nextChild,
                 prevChild,
                 shouldIncludeInTree ? nextFiber : parentFiber,
+                traceNearestHostComponentUpdate,
               )
             ) {
               // If a nested tree child order changed but it can't handle its own
@@ -1547,6 +1610,8 @@ export function attach(
             mountFiberRecursively(
               nextChild,
               shouldIncludeInTree ? nextFiber : parentFiber,
+              false,
+              traceNearestHostComponentUpdate,
             );
             shouldResetChildren = true;
           }
@@ -1561,6 +1626,19 @@ export function attach(
         // If we have no more children, but used to, they don't line up.
         if (prevChildAtSameIndex !== null) {
           shouldResetChildren = true;
+        }
+      } else {
+        if (traceUpdatesEnabled) {
+          // If we're tracing updates and we've bailed out before reaching a host node,
+          // we should fall back to recursively marking the nearest host descendates for highlight.
+          if (traceNearestHostComponentUpdate) {
+            const hostFibers = findAllCurrentHostFibers(
+              getFiberID(getPrimaryFiber(nextFiber)),
+            );
+            hostFibers.forEach(hostFiber => {
+              traceUpdatesForNodes.add(hostFiber.stateNode);
+            });
+          }
         }
       }
     }
@@ -1645,7 +1723,7 @@ export function attach(
           };
         }
 
-        mountFiberRecursively(root.current, null);
+        mountFiberRecursively(root.current, null, false, false);
         flushPendingEvents(root);
         currentRootID = -1;
       });
@@ -1669,6 +1747,10 @@ export function attach(
     // our path in case we have selection to restore.
     if (trackedPath !== null) {
       mightBeOnTrackedPath = true;
+    }
+
+    if (traceUpdatesEnabled) {
+      traceUpdatesForNodes.clear();
     }
 
     // Checking root.memoizedInteractions handles multi-renderer edge-case-
@@ -1704,10 +1786,10 @@ export function attach(
       if (!wasMounted && isMounted) {
         // Mount a new root.
         setRootPseudoKey(currentRootID, current);
-        mountFiberRecursively(current, null);
+        mountFiberRecursively(current, null, false, false);
       } else if (wasMounted && isMounted) {
         // Update an existing root.
-        updateFiberRecursively(current, alternate, null);
+        updateFiberRecursively(current, alternate, null, false);
       } else if (wasMounted && !isMounted) {
         // Unmount an existing root.
         removeRootPseudoKey(currentRootID);
@@ -1716,7 +1798,7 @@ export function attach(
     } else {
       // Mount a new root.
       setRootPseudoKey(currentRootID, current);
-      mountFiberRecursively(current, null);
+      mountFiberRecursively(current, null, false, false);
     }
 
     if (isProfiling && isProfilingSupported) {
@@ -1737,6 +1819,10 @@ export function attach(
 
     // We're done here.
     flushPendingEvents(root);
+
+    if (traceUpdatesEnabled) {
+      hook.emit('traceUpdates', traceUpdatesForNodes);
+    }
 
     currentRootID = -1;
   }
@@ -3015,6 +3101,10 @@ export function attach(
     }
   };
 
+  function setTraceUpdatesEnabled(isEnabled: boolean): void {
+    traceUpdatesEnabled = isEnabled;
+  }
+
   return {
     cleanup,
     findNativeNodesForFiberID,
@@ -3036,6 +3126,7 @@ export function attach(
     setInHook,
     setInProps,
     setInState,
+    setTraceUpdatesEnabled,
     setTrackedPath,
     startProfiling,
     stopProfiling,

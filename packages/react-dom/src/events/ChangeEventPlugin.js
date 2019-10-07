@@ -262,10 +262,10 @@ const ChangeEventPlugin = {
 
   extractEvents: function(
     topLevelType,
-    eventSystemFlags,
     targetInst,
     nativeEvent,
     nativeEventTarget,
+    eventSystemFlags,
   ) {
     const targetNode = targetInst ? getNodeFromInstance(targetInst) : window;
 

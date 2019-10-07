@@ -659,4 +659,15 @@ describe('ReactDOMServerHydration', () => {
 
     document.body.removeChild(parentContainer);
   });
+
+  it('regression test: Suspense + hydration in legacy mode ', () => {
+    const element = document.createElement('div');
+    element.innerHTML = '<div>Hello World</div>';
+    ReactDOM.hydrate(
+      <React.Suspense>
+        <div>Hello World</div>
+      </React.Suspense>,
+      element,
+    );
+  });
 });

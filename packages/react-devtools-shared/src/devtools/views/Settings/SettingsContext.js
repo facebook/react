@@ -18,6 +18,7 @@ import {
   COMFORTABLE_LINE_HEIGHT,
   COMPACT_LINE_HEIGHT,
   LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY,
+  LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY,
 } from 'react-devtools-shared/src/constants';
 import {useLocalStorage} from '../hooks';
 import {BridgeContext} from '../context';
@@ -40,6 +41,9 @@ type Context = {|
 
   theme: Theme,
   setTheme(value: Theme): void,
+
+  traceUpdatesEnabled: boolean,
+  setTraceUpdatesEnabled: (value: boolean) => void,
 |};
 
 const SettingsContext = createContext<Context>(((null: any): Context));
@@ -73,6 +77,9 @@ function SettingsContextController({
   const [appendComponentStack, setAppendComponentStack] = useLocalStorage<
     boolean,
   >(LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY, true);
+  const [traceUpdatesEnabled, setTraceUpdatesEnabled] = useLocalStorage<
+    boolean,
+  >(LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY, false);
 
   const documentElements = useMemo<DocumentElements>(
     () => {
@@ -138,26 +145,37 @@ function SettingsContextController({
     [bridge, appendComponentStack],
   );
 
+  useEffect(
+    () => {
+      bridge.send('setTraceUpdatesEnabled', traceUpdatesEnabled);
+    },
+    [bridge, traceUpdatesEnabled],
+  );
+
   const value = useMemo(
     () => ({
-      displayDensity,
-      setDisplayDensity,
-      theme,
-      setTheme,
       appendComponentStack,
-      setAppendComponentStack,
+      displayDensity,
       lineHeight:
         displayDensity === 'compact'
           ? COMPACT_LINE_HEIGHT
           : COMFORTABLE_LINE_HEIGHT,
-    }),
-    [
-      displayDensity,
+      setAppendComponentStack,
       setDisplayDensity,
       setTheme,
-      appendComponentStack,
-      setAppendComponentStack,
+      setTraceUpdatesEnabled,
       theme,
+      traceUpdatesEnabled,
+    }),
+    [
+      appendComponentStack,
+      displayDensity,
+      setAppendComponentStack,
+      setDisplayDensity,
+      setTheme,
+      setTraceUpdatesEnabled,
+      theme,
+      traceUpdatesEnabled,
     ],
   );
 

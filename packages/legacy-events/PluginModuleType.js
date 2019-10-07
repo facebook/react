@@ -25,10 +25,10 @@ export type PluginModule<NativeEvent> = {
   eventTypes: EventTypes,
   extractEvents: (
     topLevelType: TopLevelType,
-    eventSystemFlags: EventSystemFlags,
     targetInst: null | Fiber,
     nativeTarget: NativeEvent,
     nativeEventTarget: EventTarget,
+    eventSystemFlags: EventSystemFlags,
   ) => ?ReactSyntheticEvent,
   tapMoveThreshold?: number,
 };

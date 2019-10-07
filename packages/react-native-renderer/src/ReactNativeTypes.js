@@ -227,8 +227,6 @@ export type ReactNativeResponderContext = {
   ): void,
   addRootEventTypes: (rootEventTypes: Array<string>) => void,
   removeRootEventTypes: (rootEventTypes: Array<string>) => void,
-  setTimeout: (func: () => void, timeout: number) => number,
-  clearTimeout: (timerId: number) => void,
   getTimeStamp: () => number,
   getResponderNode(): ReactNativeEventTarget | null,
 };

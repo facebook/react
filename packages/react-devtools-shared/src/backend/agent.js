@@ -21,6 +21,10 @@ import {
   sessionStorageSetItem,
 } from 'react-devtools-shared/src/storage';
 import setupHighlighter from './views/Highlighter';
+import {
+  initialize as setupTraceUpdates,
+  toggleEnabled as setTraceUpdatesEnabled,
+} from './views/TraceUpdates';
 import {patch as patchConsole, unpatch as unpatchConsole} from './console';
 
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
@@ -87,6 +91,7 @@ export default class Agent extends EventEmitter<{|
   hideNativeHighlight: [],
   showNativeHighlight: [NativeType],
   shutdown: [],
+  traceUpdates: [Set<NativeType>],
 |}> {
   _bridge: BackendBridge;
   _isProfiling: boolean = false;
@@ -94,6 +99,7 @@ export default class Agent extends EventEmitter<{|
   _rendererInterfaces: {[key: RendererID]: RendererInterface} = {};
   _persistedSelection: PersistedSelection | null = null;
   _persistedSelectionMatch: PathMatch | null = null;
+  _traceUpdatesEnabled: boolean = false;
 
   constructor(bridge: BackendBridge) {
     super();
@@ -131,6 +137,7 @@ export default class Agent extends EventEmitter<{|
     bridge.addListener('overrideState', this.overrideState);
     bridge.addListener('overrideSuspense', this.overrideSuspense);
     bridge.addListener('reloadAndProfile', this.reloadAndProfile);
+    bridge.addListener('setTraceUpdatesEnabled', this.setTraceUpdatesEnabled);
     bridge.addListener('startProfiling', this.startProfiling);
     bridge.addListener('stopProfiling', this.stopProfiling);
     bridge.addListener(
@@ -159,6 +166,7 @@ export default class Agent extends EventEmitter<{|
     bridge.send('isBackendStorageAPISupported', isBackendStorageAPISupported);
 
     setupHighlighter(bridge, this);
+    setupTraceUpdates(this);
   }
 
   get rendererInterfaces(): {[key: RendererID]: RendererInterface} {
@@ -340,6 +348,8 @@ export default class Agent extends EventEmitter<{|
       rendererInterface.startProfiling(this._recordChangeDescriptions);
     }
 
+    rendererInterface.setTraceUpdatesEnabled(this._traceUpdatesEnabled);
+
     // When the renderer is attached, we need to tell it whether
     // we remember the previous selection that we'd like to restore.
     // It'll start tracking mounts for matches to the last selection path.
@@ -348,6 +358,19 @@ export default class Agent extends EventEmitter<{|
       rendererInterface.setTrackedPath(selection.path);
     }
   }
+
+  setTraceUpdatesEnabled = (traceUpdatesEnabled: boolean) => {
+    this._traceUpdatesEnabled = traceUpdatesEnabled;
+
+    setTraceUpdatesEnabled(traceUpdatesEnabled);
+
+    for (let rendererID in this._rendererInterfaces) {
+      const renderer = ((this._rendererInterfaces[
+        (rendererID: any)
+      ]: any): RendererInterface);
+      renderer.setTraceUpdatesEnabled(traceUpdatesEnabled);
+    }
+  };
 
   syncSelectionFromNativeElementsPanel = () => {
     const target = window.__REACT_DEVTOOLS_GLOBAL_HOOK__.$0;
@@ -414,6 +437,10 @@ export default class Agent extends EventEmitter<{|
     } else {
       renderer.prepareViewElementSource(id);
     }
+  };
+
+  onTraceUpdates = (nodes: Set<NativeType>) => {
+    this.emit('traceUpdates', nodes);
   };
 
   onHookOperations = (operations: Array<number>) => {

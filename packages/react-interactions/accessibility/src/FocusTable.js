@@ -12,6 +12,7 @@ import type {KeyboardEvent} from 'react-interactions/events/keyboard';
 
 import React from 'react';
 import {useKeyboard} from 'react-interactions/events/keyboard';
+import setElementCanTab from './shared/setElementCanTab';
 
 type FocusCellProps = {
   children?: React.Node,
@@ -30,6 +31,8 @@ type FocusTableProps = {|
     focusTableByID: (id: string) => void,
   ) => void,
   wrap?: boolean,
+  tabScope?: ReactScope,
+  allowModifiers?: boolean,
 |};
 
 const {useRef} = React;
@@ -56,7 +59,7 @@ export function focusFirstCellOnTable(table: ReactScopeMethods): void {
   }
 }
 
-function focusCell(cell: ReactScopeMethods, event?: KeyboardEvent): void {
+function focusScope(cell: ReactScopeMethods, event?: KeyboardEvent): void {
   const tabbableNodes = cell.getScopedNodes();
   if (tabbableNodes !== null && tabbableNodes.length > 0) {
     tabbableNodes[0].focus();
@@ -75,7 +78,7 @@ function focusCellByIndex(
   if (cells !== null) {
     const cell = cells[cellIndex];
     if (cell) {
-      focusCell(cell, event);
+      focusScope(cell, event);
     }
   }
 }
@@ -139,28 +142,49 @@ function triggerNavigateOut(
   event.continuePropagation();
 }
 
-function getTableWrapProp(currentCell: ReactScopeMethods): boolean {
+function getTableProps(currentCell: ReactScopeMethods): Object {
   const row = currentCell.getParent();
   if (row !== null && row.getProps().type === 'row') {
     const table = row.getParent();
     if (table !== null) {
-      return table.getProps().wrap || false;
+      return table.getProps();
     }
   }
-  return false;
+  return {};
+}
+
+function hasModifierKey(event: KeyboardEvent): boolean {
+  const {altKey, ctrlKey, metaKey, shiftKey} = event;
+  return (
+    altKey === true || ctrlKey === true || metaKey === true || shiftKey === true
+  );
 }
 
 export function createFocusTable(scope: ReactScope): Array<React.Component> {
   const TableScope = React.unstable_createScope(scope.fn);
 
-  function Table({children, onKeyboardOut, id, wrap}): FocusTableProps {
+  function Table({
+    children,
+    onKeyboardOut,
+    id,
+    wrap,
+    tabScope: TabScope,
+    allowModifiers,
+  }): FocusTableProps {
+    const tabScopeRef = useRef(null);
     return (
       <TableScope
         type="table"
         onKeyboardOut={onKeyboardOut}
         id={id}
-        wrap={wrap}>
-        {children}
+        wrap={wrap}
+        tabScopeRef={tabScopeRef}
+        allowModifiers={allowModifiers}>
+        {TabScope ? (
+          <TabScope ref={tabScopeRef}>{children}</TabScope>
+        ) : (
+          children
+        )}
       </TableScope>
     );
   }
@@ -178,7 +202,35 @@ export function createFocusTable(scope: ReactScope): Array<React.Component> {
           event.continuePropagation();
           return;
         }
-        switch (event.key) {
+        const key = event.key;
+        if (key === 'Tab') {
+          const tabScope = getTableProps(currentCell).tabScopeRef.current;
+          if (tabScope) {
+            const activeNode = document.activeElement;
+            const nodes = tabScope.getScopedNodes();
+            for (let i = 0; i < nodes.length; i++) {
+              const node = nodes[i];
+              if (node !== activeNode) {
+                setElementCanTab(node, false);
+              } else {
+                setElementCanTab(node, true);
+              }
+            }
+            return;
+          }
+          event.continuePropagation();
+          return;
+        }
+        // Using modifier keys with keyboard arrow events should be no-ops
+        // unless an explicit allowModifiers flag is set on the FocusTable.
+        if (hasModifierKey(event)) {
+          const allowModifiers = getTableProps(currentCell).allowModifiers;
+          if (!allowModifiers) {
+            event.continuePropagation();
+            return;
+          }
+        }
+        switch (key) {
           case 'ArrowUp': {
             const [cells, cellIndex] = getRowCells(currentCell);
             if (cells !== null) {
@@ -188,7 +240,7 @@ export function createFocusTable(scope: ReactScope): Array<React.Component> {
                   const row = rows[rowIndex - 1];
                   focusCellByIndex(row, cellIndex, event);
                 } else if (rowIndex === 0) {
-                  const wrap = getTableWrapProp(currentCell);
+                  const wrap = getTableProps(currentCell).wrap;
                   if (wrap) {
                     const row = rows[rows.length - 1];
                     focusCellByIndex(row, cellIndex, event);
@@ -207,7 +259,7 @@ export function createFocusTable(scope: ReactScope): Array<React.Component> {
               if (rows !== null) {
                 if (rowIndex !== -1) {
                   if (rowIndex === rows.length - 1) {
-                    const wrap = getTableWrapProp(currentCell);
+                    const wrap = getTableProps(currentCell).wrap;
                     if (wrap) {
                       const row = rows[0];
                       focusCellByIndex(row, cellIndex, event);
@@ -227,12 +279,12 @@ export function createFocusTable(scope: ReactScope): Array<React.Component> {
             const [cells, rowIndex] = getRowCells(currentCell);
             if (cells !== null) {
               if (rowIndex > 0) {
-                focusCell(cells[rowIndex - 1]);
+                focusScope(cells[rowIndex - 1]);
                 event.preventDefault();
               } else if (rowIndex === 0) {
-                const wrap = getTableWrapProp(currentCell);
+                const wrap = getTableProps(currentCell).wrap;
                 if (wrap) {
-                  focusCell(cells[cells.length - 1], event);
+                  focusScope(cells[cells.length - 1], event);
                 } else {
                   triggerNavigateOut(currentCell, 'left', event);
                 }
@@ -245,14 +297,14 @@ export function createFocusTable(scope: ReactScope): Array<React.Component> {
             if (cells !== null) {
               if (rowIndex !== -1) {
                 if (rowIndex === cells.length - 1) {
-                  const wrap = getTableWrapProp(currentCell);
+                  const wrap = getTableProps(currentCell).wrap;
                   if (wrap) {
-                    focusCell(cells[0], event);
+                    focusScope(cells[0], event);
                   } else {
                     triggerNavigateOut(currentCell, 'right', event);
                   }
                 } else {
-                  focusCell(cells[rowIndex + 1], event);
+                  focusScope(cells[rowIndex + 1], event);
                 }
               }
             }

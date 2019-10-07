@@ -101,10 +101,10 @@ function _receiveRootNodeIDEvent(
   batchedUpdates(function() {
     runExtractedPluginEventsInBatch(
       topLevelType,
-      PLUGIN_EVENT_SYSTEM,
       inst,
       nativeEvent,
       nativeEvent.target,
+      PLUGIN_EVENT_SYSTEM,
     );
   });
   // React Native doesn't use ReactControlledComponent but if it did, here's

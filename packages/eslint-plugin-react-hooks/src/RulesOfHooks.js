@@ -428,7 +428,7 @@ export default {
               const message =
                 `React Hook "${context.getSource(hook)}" is called in ` +
                 `function "${context.getSource(codePathFunctionName)}" ` +
-                'which is neither a React function component or a custom ' +
+                'that is neither a React function component nor a custom ' +
                 'React Hook function.';
               context.report({node: hook, message});
             } else if (codePathNode.type === 'Program') {
