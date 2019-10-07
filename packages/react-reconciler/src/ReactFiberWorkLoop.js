@@ -367,20 +367,6 @@ export function computeExpirationForFiber(
   return expirationTime;
 }
 
-let lastUniqueAsyncExpiration = NoWork;
-export function computeUniqueAsyncExpiration(): ExpirationTime {
-  const currentTime = requestCurrentTime();
-  let result = computeAsyncExpiration(currentTime);
-  if (result <= lastUniqueAsyncExpiration) {
-    // Since we assume the current time monotonically increases, we only hit
-    // this branch when computeUniqueAsyncExpiration is fired multiple times
-    // within a 200ms window (or whatever the async bucket size is).
-    result -= 1;
-  }
-  lastUniqueAsyncExpiration = result;
-  return result;
-}
-
 export function scheduleUpdateOnFiber(
   fiber: Fiber,
   expirationTime: ExpirationTime,
@@ -1080,16 +1066,11 @@ function finishSyncRender(root, exitStatus, expirationTime) {
 }
 
 export function flushRoot(root: FiberRoot, expirationTime: ExpirationTime) {
-  if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
-    invariant(
-      false,
-      'work.commit(): Cannot commit while already rendering. This likely ' +
-        'means you attempted to commit from inside a lifecycle method.',
-    );
-  }
   markRootExpiredAtTime(root, expirationTime);
   ensureRootIsScheduled(root);
-  flushSyncCallbackQueue();
+  if ((executionContext & (RenderContext | CommitContext)) === NoContext) {
+    flushSyncCallbackQueue();
+  }
 }
 
 export function flushDiscreteUpdates() {

@@ -306,7 +306,6 @@ export function updateContainer(
 }
 
 export {
-  flushRoot,
   batchedEventUpdates,
   batchedUpdates,
   unbatchedUpdates,
