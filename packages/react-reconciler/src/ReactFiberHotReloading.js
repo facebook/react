@@ -18,7 +18,7 @@ import {
   scheduleWork,
   flushPassiveEffects,
 } from './ReactFiberWorkLoop';
-import {updateContainerAtExpirationTime} from './ReactFiberReconciler';
+import {updateContainer, syncUpdates} from './ReactFiberReconciler';
 import {emptyContextObject} from './ReactFiberContext';
 import {Sync} from './ReactFiberExpirationTime';
 import {
@@ -258,7 +258,9 @@ export let scheduleRoot: ScheduleRoot = (
       return;
     }
     flushPassiveEffects();
-    updateContainerAtExpirationTime(element, root, null, Sync, null);
+    syncUpdates(() => {
+      updateContainer(element, root, null, null);
+    });
   }
 };
 

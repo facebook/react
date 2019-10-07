@@ -200,14 +200,13 @@ const LegacyUnbatchedContext = /*       */ 0b001000;
 const RenderContext = /*                */ 0b010000;
 const CommitContext = /*                */ 0b100000;
 
-type RootExitStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+type RootExitStatus = 0 | 1 | 2 | 3 | 4 | 5;
 const RootIncomplete = 0;
 const RootFatalErrored = 1;
 const RootErrored = 2;
 const RootSuspended = 3;
 const RootSuspendedWithDelay = 4;
 const RootCompleted = 5;
-const RootLocked = 6;
 
 export type Thenable = {
   then(resolve: () => mixed, reject?: () => mixed): Thenable | void,
@@ -719,7 +718,6 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
         const finishedWork: Fiber = ((root.finishedWork =
           root.current.alternate): any);
         root.finishedExpirationTime = expirationTime;
-        resolveLocksOnRoot(root, expirationTime);
         finishConcurrentRender(
           root,
           finishedWork,
@@ -976,13 +974,6 @@ function finishConcurrentRender(
       commitRoot(root);
       break;
     }
-    case RootLocked: {
-      // This root has a lock that prevents it from committing. Exit. If
-      // we begin work on the root again, without any intervening updates,
-      // it will finish without doing additional work.
-      markRootSuspendedAtTime(root, expirationTime);
-      break;
-    }
     default: {
       invariant(false, 'Unknown root exit status.');
     }
@@ -1060,12 +1051,10 @@ function performSyncWorkOnRoot(root) {
         );
       } else {
         // We now have a consistent tree. Because this is a sync render, we
-        // will commit it even if something suspended. The only exception is
-        // if the root is locked (using the unstable_createBatch API).
+        // will commit it even if something suspended.
         stopFinishedWorkLoopTimer();
         root.finishedWork = (root.current.alternate: any);
         root.finishedExpirationTime = expirationTime;
-        resolveLocksOnRoot(root, expirationTime);
         finishSyncRender(root, workInProgressRootExitStatus, expirationTime);
       }
 
@@ -1079,25 +1068,15 @@ function performSyncWorkOnRoot(root) {
 }
 
 function finishSyncRender(root, exitStatus, expirationTime) {
-  if (exitStatus === RootLocked) {
-    // This root has a lock that prevents it from committing. Exit. If we
-    // begin work on the root again, without any intervening updates, it
-    // will finish without doing additional work.
-    markRootSuspendedAtTime(root, expirationTime);
-  } else {
-    // Set this to null to indicate there's no in-progress render.
-    workInProgressRoot = null;
+  // Set this to null to indicate there's no in-progress render.
+  workInProgressRoot = null;
 
-    if (__DEV__) {
-      if (
-        exitStatus === RootSuspended ||
-        exitStatus === RootSuspendedWithDelay
-      ) {
-        flushSuspensePriorityWarningInDEV();
-      }
+  if (__DEV__) {
+    if (exitStatus === RootSuspended || exitStatus === RootSuspendedWithDelay) {
+      flushSuspensePriorityWarningInDEV();
     }
-    commitRoot(root);
   }
+  commitRoot(root);
 }
 
 export function flushRoot(root: FiberRoot, expirationTime: ExpirationTime) {
@@ -1138,21 +1117,6 @@ export function flushDiscreteUpdates() {
   // If the discrete updates scheduled passive effects, flush them now so that
   // they fire before the next serial event.
   flushPassiveEffects();
-}
-
-function resolveLocksOnRoot(root: FiberRoot, expirationTime: ExpirationTime) {
-  const firstBatch = root.firstBatch;
-  if (
-    firstBatch !== null &&
-    firstBatch._defer &&
-    firstBatch._expirationTime >= expirationTime
-  ) {
-    scheduleCallback(NormalPriority, () => {
-      firstBatch._onComplete();
-      return null;
-    });
-    workInProgressRootExitStatus = RootLocked;
-  }
 }
 
 export function deferredUpdates<A>(fn: () => A): A {

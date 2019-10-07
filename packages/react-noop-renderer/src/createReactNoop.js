@@ -22,7 +22,6 @@ import type {RootTag} from 'shared/ReactRootTags';
 
 import * as Scheduler from 'scheduler/unstable_mock';
 import {createPortal} from 'shared/ReactPortal';
-import expect from 'expect';
 import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import enqueueTask from 'shared/enqueueTask';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -1196,31 +1195,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       logFiber(root.current, 0);
 
       console.log(...bufferedLog);
-    },
-
-    flushWithoutCommitting(
-      expectedFlush: Array<mixed>,
-      rootID: string = DEFAULT_ROOT_ID,
-    ) {
-      const root: any = roots.get(rootID);
-      const expiration = NoopRenderer.computeUniqueAsyncExpiration();
-      const batch = {
-        _defer: true,
-        _expirationTime: expiration,
-        _onComplete: () => {
-          root.firstBatch = null;
-        },
-        _next: null,
-      };
-      root.firstBatch = batch;
-      Scheduler.unstable_flushAllWithoutAsserting();
-      const actual = Scheduler.unstable_clearYields();
-      expect(actual).toEqual(expectedFlush);
-      return (expectedCommit: Array<mixed>) => {
-        batch._defer = false;
-        NoopRenderer.flushRoot(root, expiration);
-        expect(Scheduler.unstable_clearYields()).toEqual(expectedCommit);
-      };
     },
 
     getRoot(rootID: string = DEFAULT_ROOT_ID) {

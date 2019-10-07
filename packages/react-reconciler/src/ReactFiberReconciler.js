@@ -19,7 +19,6 @@ import type {
 import {FundamentalComponent} from 'shared/ReactWorkTags';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
-import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
 import type {
   SuspenseHydrationCallbacks,
   SuspenseState,
@@ -51,7 +50,6 @@ import {
 import {createFiberRoot} from './ReactFiberRoot';
 import {injectInternals} from './ReactFiberDevToolsHook';
 import {
-  computeUniqueAsyncExpiration,
   requestCurrentTime,
   computeExpirationForFiber,
   scheduleWork,
@@ -136,92 +134,6 @@ function getContextForSubtree(
   }
 
   return parentContext;
-}
-
-function scheduleRootUpdate(
-  current: Fiber,
-  element: ReactNodeList,
-  expirationTime: ExpirationTime,
-  suspenseConfig: null | SuspenseConfig,
-  callback: ?Function,
-) {
-  if (__DEV__) {
-    if (
-      ReactCurrentFiberPhase === 'render' &&
-      ReactCurrentFiberCurrent !== null &&
-      !didWarnAboutNestedUpdates
-    ) {
-      didWarnAboutNestedUpdates = true;
-      warningWithoutStack(
-        false,
-        'Render methods should be a pure function of props and state; ' +
-          'triggering nested component updates from render is not allowed. ' +
-          'If necessary, trigger nested updates in componentDidUpdate.\n\n' +
-          'Check the render method of %s.',
-        getComponentName(ReactCurrentFiberCurrent.type) || 'Unknown',
-      );
-    }
-  }
-
-  const update = createUpdate(expirationTime, suspenseConfig);
-  // Caution: React DevTools currently depends on this property
-  // being called "element".
-  update.payload = {element};
-
-  callback = callback === undefined ? null : callback;
-  if (callback !== null) {
-    warningWithoutStack(
-      typeof callback === 'function',
-      'render(...): Expected the last optional `callback` argument to be a ' +
-        'function. Instead received: %s.',
-      callback,
-    );
-    update.callback = callback;
-  }
-
-  enqueueUpdate(current, update);
-  scheduleWork(current, expirationTime);
-
-  return expirationTime;
-}
-
-export function updateContainerAtExpirationTime(
-  element: ReactNodeList,
-  container: OpaqueRoot,
-  parentComponent: ?React$Component<any, any>,
-  expirationTime: ExpirationTime,
-  suspenseConfig: null | SuspenseConfig,
-  callback: ?Function,
-) {
-  // TODO: If this is a nested container, this won't be the root.
-  const current = container.current;
-
-  if (__DEV__) {
-    if (ReactFiberInstrumentation.debugTool) {
-      if (current.alternate === null) {
-        ReactFiberInstrumentation.debugTool.onMountContainer(container);
-      } else if (element === null) {
-        ReactFiberInstrumentation.debugTool.onUnmountContainer(container);
-      } else {
-        ReactFiberInstrumentation.debugTool.onUpdateContainer(container);
-      }
-    }
-  }
-
-  const context = getContextForSubtree(parentComponent);
-  if (container.context === null) {
-    container.context = context;
-  } else {
-    container.pendingContext = context;
-  }
-
-  return scheduleRootUpdate(
-    current,
-    element,
-    expirationTime,
-    suspenseConfig,
-    callback,
-  );
 }
 
 function findHostInstance(component: Object): PublicInstance | null {
@@ -333,19 +245,68 @@ export function updateContainer(
     current,
     suspenseConfig,
   );
-  return updateContainerAtExpirationTime(
-    element,
-    container,
-    parentComponent,
-    expirationTime,
-    suspenseConfig,
-    callback,
-  );
+
+  if (__DEV__) {
+    if (ReactFiberInstrumentation.debugTool) {
+      if (current.alternate === null) {
+        ReactFiberInstrumentation.debugTool.onMountContainer(container);
+      } else if (element === null) {
+        ReactFiberInstrumentation.debugTool.onUnmountContainer(container);
+      } else {
+        ReactFiberInstrumentation.debugTool.onUpdateContainer(container);
+      }
+    }
+  }
+
+  const context = getContextForSubtree(parentComponent);
+  if (container.context === null) {
+    container.context = context;
+  } else {
+    container.pendingContext = context;
+  }
+
+  if (__DEV__) {
+    if (
+      ReactCurrentFiberPhase === 'render' &&
+      ReactCurrentFiberCurrent !== null &&
+      !didWarnAboutNestedUpdates
+    ) {
+      didWarnAboutNestedUpdates = true;
+      warningWithoutStack(
+        false,
+        'Render methods should be a pure function of props and state; ' +
+          'triggering nested component updates from render is not allowed. ' +
+          'If necessary, trigger nested updates in componentDidUpdate.\n\n' +
+          'Check the render method of %s.',
+        getComponentName(ReactCurrentFiberCurrent.type) || 'Unknown',
+      );
+    }
+  }
+
+  const update = createUpdate(expirationTime, suspenseConfig);
+  // Caution: React DevTools currently depends on this property
+  // being called "element".
+  update.payload = {element};
+
+  callback = callback === undefined ? null : callback;
+  if (callback !== null) {
+    warningWithoutStack(
+      typeof callback === 'function',
+      'render(...): Expected the last optional `callback` argument to be a ' +
+        'function. Instead received: %s.',
+      callback,
+    );
+    update.callback = callback;
+  }
+
+  enqueueUpdate(current, update);
+  scheduleWork(current, expirationTime);
+
+  return expirationTime;
 }
 
 export {
   flushRoot,
-  computeUniqueAsyncExpiration,
   batchedEventUpdates,
   batchedUpdates,
   unbatchedUpdates,
