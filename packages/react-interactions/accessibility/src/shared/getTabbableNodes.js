@@ -18,7 +18,7 @@ export default function getTabbableNodes(
   number,
   null | HTMLElement,
 ] {
-  const tabbableNodes = scope.getAllScopedNodes();
+  const tabbableNodes = scope.getAllNodes();
   if (tabbableNodes === null || tabbableNodes.length === 0) {
     return [null, null, null, 0, null];
   }

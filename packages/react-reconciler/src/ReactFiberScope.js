@@ -189,7 +189,7 @@ export function createScopeMethods(
       const currentFiber = ((instance.fiber: any): Fiber);
       return currentFiber.memoizedProps;
     },
-    getAllScopedNodes(): null | Array<Object> {
+    getAllNodes(): null | Array<Object> {
       const currentFiber = ((instance.fiber: any): Fiber);
       const child = currentFiber.child;
       const scopedNodes = [];
@@ -198,7 +198,7 @@ export function createScopeMethods(
       }
       return scopedNodes.length === 0 ? null : scopedNodes;
     },
-    getFirstScopedNode(): null | Object {
+    getFirstNode(): null | Object {
       const currentFiber = ((instance.fiber: any): Fiber);
       const child = currentFiber.child;
       if (child !== null) {

@@ -71,7 +71,7 @@ export default function FocusContain({
         disabled !== true &&
         !scope.containsNode(document.activeElement)
       ) {
-        const fistElem = scope.getFirstScopedNode();
+        const fistElem = scope.getFirstNode();
         if (fistElem !== null) {
           fistElem.focus();
         }

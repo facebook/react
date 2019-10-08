@@ -38,7 +38,7 @@ describe('ReactScope', () => {
       container = null;
     });
 
-    it('getAllScopedNodes() works as intended', () => {
+    it('getAllNodes() works as intended', () => {
       const TestScope = React.unstable_createScope((type, props) => true);
       const scopeRef = React.createRef();
       const divRef = React.createRef();
@@ -62,16 +62,16 @@ describe('ReactScope', () => {
       }
 
       ReactDOM.render(<Test toggle={true} />, container);
-      let nodes = scopeRef.current.getAllScopedNodes();
+      let nodes = scopeRef.current.getAllNodes();
       expect(nodes).toEqual([divRef.current, spanRef.current, aRef.current]);
       ReactDOM.render(<Test toggle={false} />, container);
-      nodes = scopeRef.current.getAllScopedNodes();
+      nodes = scopeRef.current.getAllNodes();
       expect(nodes).toEqual([aRef.current, divRef.current, spanRef.current]);
       ReactDOM.render(null, container);
       expect(scopeRef.current).toBe(null);
     });
 
-    it('getFirstScopedNode() works as intended', () => {
+    it('getFirstNode() works as intended', () => {
       const TestScope = React.unstable_createScope((type, props) => true);
       const scopeRef = React.createRef();
       const divRef = React.createRef();
@@ -95,10 +95,10 @@ describe('ReactScope', () => {
       }
 
       ReactDOM.render(<Test toggle={true} />, container);
-      let node = scopeRef.current.getFirstScopedNode();
+      let node = scopeRef.current.getFirstNode();
       expect(node).toEqual(divRef.current);
       ReactDOM.render(<Test toggle={false} />, container);
-      node = scopeRef.current.getFirstScopedNode();
+      node = scopeRef.current.getFirstNode();
       expect(node).toEqual(aRef.current);
       ReactDOM.render(null, container);
       expect(scopeRef.current).toBe(null);
@@ -153,7 +153,7 @@ describe('ReactScope', () => {
       expect(scopeRef.current.containsNode(emRef.current)).toBe(false);
     });
 
-    it('mixed getParent() and getAllScopedNodes() works as intended', () => {
+    it('mixed getParent() and getAllNodes() works as intended', () => {
       const TestScope = React.unstable_createScope((type, props) => true);
       const TestScope2 = React.unstable_createScope((type, props) => true);
       const refA = React.createRef();
@@ -190,14 +190,14 @@ describe('ReactScope', () => {
       ReactDOM.render(<Test />, container);
       const dParent = refD.current.getParent();
       expect(dParent).not.toBe(null);
-      expect(dParent.getAllScopedNodes()).toEqual([
+      expect(dParent.getAllNodes()).toEqual([
         divA.current,
         spanB.current,
         divB.current,
       ]);
       const cParent = refC.current.getParent();
       expect(cParent).not.toBe(null);
-      expect(cParent.getAllScopedNodes()).toEqual([
+      expect(cParent.getAllNodes()).toEqual([
         spanA.current,
         divA.current,
         spanB.current,
@@ -278,7 +278,7 @@ describe('ReactScope', () => {
       );
       container.innerHTML = html;
       ReactDOM.hydrate(<Test />, container);
-      const nodes = scopeRef.current.getAllScopedNodes();
+      const nodes = scopeRef.current.getAllNodes();
       expect(nodes).toEqual([divRef.current, spanRef.current, aRef.current]);
     });
 
@@ -332,7 +332,7 @@ describe('ReactScope', () => {
       ReactTestRenderer = require('react-test-renderer');
     });
 
-    it('getAllScopedNodes() works as intended', () => {
+    it('getAllNodes() works as intended', () => {
       const TestScope = React.unstable_createScope((type, props) => true);
       const scopeRef = React.createRef();
       const divRef = React.createRef();
@@ -360,14 +360,14 @@ describe('ReactScope', () => {
           return element;
         },
       });
-      let nodes = scopeRef.current.getAllScopedNodes();
+      let nodes = scopeRef.current.getAllNodes();
       expect(nodes).toEqual([divRef.current, spanRef.current, aRef.current]);
       renderer.update(<Test toggle={false} />);
-      nodes = scopeRef.current.getAllScopedNodes();
+      nodes = scopeRef.current.getAllNodes();
       expect(nodes).toEqual([aRef.current, divRef.current, spanRef.current]);
     });
 
-    it('getFirstScopedNode() works as intended', () => {
+    it('getFirstNode() works as intended', () => {
       const TestScope = React.unstable_createScope((type, props) => true);
       const scopeRef = React.createRef();
       const divRef = React.createRef();
@@ -395,14 +395,14 @@ describe('ReactScope', () => {
           return element;
         },
       });
-      let node = scopeRef.current.getFirstScopedNode();
+      let node = scopeRef.current.getFirstNode();
       expect(node).toEqual(divRef.current);
       renderer.update(<Test toggle={false} />);
-      node = scopeRef.current.getFirstScopedNode();
+      node = scopeRef.current.getFirstNode();
       expect(node).toEqual(aRef.current);
     });
 
-    it('mixed getParent() and getAllScopedNodes() works as intended', () => {
+    it('mixed getParent() and getAllNodes() works as intended', () => {
       const TestScope = React.unstable_createScope((type, props) => true);
       const TestScope2 = React.unstable_createScope((type, props) => true);
       const refA = React.createRef();
@@ -443,14 +443,14 @@ describe('ReactScope', () => {
       });
       const dParent = refD.current.getParent();
       expect(dParent).not.toBe(null);
-      expect(dParent.getAllScopedNodes()).toEqual([
+      expect(dParent.getAllNodes()).toEqual([
         divA.current,
         spanB.current,
         divB.current,
       ]);
       const cParent = refC.current.getParent();
       expect(cParent).not.toBe(null);
-      expect(cParent.getAllScopedNodes()).toEqual([
+      expect(cParent.getAllNodes()).toEqual([
         spanA.current,
         divA.current,
         spanB.current,
