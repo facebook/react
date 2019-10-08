@@ -35,7 +35,7 @@ describe('TabbableScope', () => {
       container = null;
     });
 
-    it('getScopedNodes() works as intended', () => {
+    it('getAllScopedNodes() works as intended', () => {
       const scopeRef = React.createRef();
       const nodeRefA = React.createRef();
       const nodeRefB = React.createRef();
@@ -58,7 +58,7 @@ describe('TabbableScope', () => {
       }
 
       ReactDOM.render(<Test />, container);
-      let nodes = scopeRef.current.getScopedNodes();
+      let nodes = scopeRef.current.getAllScopedNodes();
       expect(nodes).toEqual([
         nodeRefA.current,
         nodeRefB.current,

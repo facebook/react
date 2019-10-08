@@ -15,7 +15,7 @@ function FocusableNodeCollector(props) {
     const scope = scopeRef.current;
 
     if (scope) {
-      const tabFocusableNodes = scope.getScopedNodes();
+      const tabFocusableNodes = scope.getAllScopedNodes();
       if (tabFocusableNodes && props.onFocusableNodes) {
         props.onFocusableNodes(tabFocusableNodes);
       }
