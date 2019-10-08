@@ -170,7 +170,9 @@ export type ReactScopeMethods = {|
   getChildrenFromRoot(): null | Array<ReactScopeMethods>,
   getParent(): null | ReactScopeMethods,
   getProps(): Object,
-  getScopedNodes(): null | Array<Object>,
+  getAllNodes(): null | Array<Object>,
+  getFirstNode(): null | Object,
+  containsNode(Object): boolean,
 |};
 
 export type ReactScopeInstance = {|

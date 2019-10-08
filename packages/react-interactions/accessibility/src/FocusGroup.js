@@ -30,9 +30,9 @@ type FocusGroupProps = {|
 const {useRef} = React;
 
 function focusGroupItem(cell: ReactScopeMethods, event: KeyboardEvent): void {
-  const tabbableNodes = cell.getScopedNodes();
-  if (tabbableNodes !== null && tabbableNodes.length > 0) {
-    tabbableNodes[0].focus();
+  const firstScopedNode = cell.getFirstNode();
+  if (firstScopedNode !== null) {
+    firstScopedNode.focus();
     event.preventDefault();
   }
 }
@@ -135,7 +135,7 @@ export function createFocusGroup(
               const tabScope = getGroupProps(currentItem).tabScopeRef.current;
               if (tabScope) {
                 const activeNode = document.activeElement;
-                const nodes = tabScope.getScopedNodes();
+                const nodes = tabScope.getAllNodes();
                 for (let i = 0; i < nodes.length; i++) {
                   const node = nodes[i];
                   if (node !== activeNode) {

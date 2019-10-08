@@ -38,7 +38,7 @@ describe('ReactScope', () => {
       container = null;
     });
 
-    it('getScopedNodes() works as intended', () => {
+    it('getAllNodes() works as intended', () => {
       const TestScope = React.unstable_createScope((type, props) => true);
       const scopeRef = React.createRef();
       const divRef = React.createRef();
@@ -62,16 +62,98 @@ describe('ReactScope', () => {
       }
 
       ReactDOM.render(<Test toggle={true} />, container);
-      let nodes = scopeRef.current.getScopedNodes();
+      let nodes = scopeRef.current.getAllNodes();
       expect(nodes).toEqual([divRef.current, spanRef.current, aRef.current]);
       ReactDOM.render(<Test toggle={false} />, container);
-      nodes = scopeRef.current.getScopedNodes();
+      nodes = scopeRef.current.getAllNodes();
       expect(nodes).toEqual([aRef.current, divRef.current, spanRef.current]);
       ReactDOM.render(null, container);
       expect(scopeRef.current).toBe(null);
     });
 
-    it('mixed getParent() and getScopedNodes() works as intended', () => {
+    it('getFirstNode() works as intended', () => {
+      const TestScope = React.unstable_createScope((type, props) => true);
+      const scopeRef = React.createRef();
+      const divRef = React.createRef();
+      const spanRef = React.createRef();
+      const aRef = React.createRef();
+
+      function Test({toggle}) {
+        return toggle ? (
+          <TestScope ref={scopeRef}>
+            <div ref={divRef}>DIV</div>
+            <span ref={spanRef}>SPAN</span>
+            <a ref={aRef}>A</a>
+          </TestScope>
+        ) : (
+          <TestScope ref={scopeRef}>
+            <a ref={aRef}>A</a>
+            <div ref={divRef}>DIV</div>
+            <span ref={spanRef}>SPAN</span>
+          </TestScope>
+        );
+      }
+
+      ReactDOM.render(<Test toggle={true} />, container);
+      let node = scopeRef.current.getFirstNode();
+      expect(node).toEqual(divRef.current);
+      ReactDOM.render(<Test toggle={false} />, container);
+      node = scopeRef.current.getFirstNode();
+      expect(node).toEqual(aRef.current);
+      ReactDOM.render(null, container);
+      expect(scopeRef.current).toBe(null);
+    });
+
+    it('containsNode() works as intended', () => {
+      const TestScope = React.unstable_createScope((type, props) => true);
+      const scopeRef = React.createRef();
+      const divRef = React.createRef();
+      const spanRef = React.createRef();
+      const aRef = React.createRef();
+      const outerSpan = React.createRef();
+      const emRef = React.createRef();
+
+      function Test({toggle}) {
+        return toggle ? (
+          <div>
+            <span ref={outerSpan}>SPAN</span>
+            <TestScope ref={scopeRef}>
+              <div ref={divRef}>DIV</div>
+              <span ref={spanRef}>SPAN</span>
+              <a ref={aRef}>A</a>
+            </TestScope>
+            <em ref={emRef}>EM</em>
+          </div>
+        ) : (
+          <div>
+            <TestScope ref={scopeRef}>
+              <a ref={aRef}>A</a>
+              <div ref={divRef}>DIV</div>
+              <span ref={spanRef}>SPAN</span>
+              <em ref={emRef}>EM</em>
+            </TestScope>
+            <span ref={outerSpan}>SPAN</span>
+          </div>
+        );
+      }
+
+      ReactDOM.render(<Test toggle={true} />, container);
+      expect(scopeRef.current.containsNode(divRef.current)).toBe(true);
+      expect(scopeRef.current.containsNode(spanRef.current)).toBe(true);
+      expect(scopeRef.current.containsNode(aRef.current)).toBe(true);
+      expect(scopeRef.current.containsNode(outerSpan.current)).toBe(false);
+      expect(scopeRef.current.containsNode(emRef.current)).toBe(false);
+      ReactDOM.render(<Test toggle={false} />, container);
+      expect(scopeRef.current.containsNode(divRef.current)).toBe(true);
+      expect(scopeRef.current.containsNode(spanRef.current)).toBe(true);
+      expect(scopeRef.current.containsNode(aRef.current)).toBe(true);
+      expect(scopeRef.current.containsNode(outerSpan.current)).toBe(false);
+      expect(scopeRef.current.containsNode(emRef.current)).toBe(true);
+      ReactDOM.render(<Test toggle={true} />, container);
+      expect(scopeRef.current.containsNode(emRef.current)).toBe(false);
+    });
+
+    it('mixed getParent() and getAllNodes() works as intended', () => {
       const TestScope = React.unstable_createScope((type, props) => true);
       const TestScope2 = React.unstable_createScope((type, props) => true);
       const refA = React.createRef();
@@ -108,14 +190,14 @@ describe('ReactScope', () => {
       ReactDOM.render(<Test />, container);
       const dParent = refD.current.getParent();
       expect(dParent).not.toBe(null);
-      expect(dParent.getScopedNodes()).toEqual([
+      expect(dParent.getAllNodes()).toEqual([
         divA.current,
         spanB.current,
         divB.current,
       ]);
       const cParent = refC.current.getParent();
       expect(cParent).not.toBe(null);
-      expect(cParent.getScopedNodes()).toEqual([
+      expect(cParent.getAllNodes()).toEqual([
         spanA.current,
         divA.current,
         spanB.current,
@@ -196,7 +278,7 @@ describe('ReactScope', () => {
       );
       container.innerHTML = html;
       ReactDOM.hydrate(<Test />, container);
-      const nodes = scopeRef.current.getScopedNodes();
+      const nodes = scopeRef.current.getAllNodes();
       expect(nodes).toEqual([divRef.current, spanRef.current, aRef.current]);
     });
 
@@ -250,7 +332,7 @@ describe('ReactScope', () => {
       ReactTestRenderer = require('react-test-renderer');
     });
 
-    it('getScopedNodes() works as intended', () => {
+    it('getAllNodes() works as intended', () => {
       const TestScope = React.unstable_createScope((type, props) => true);
       const scopeRef = React.createRef();
       const divRef = React.createRef();
@@ -278,14 +360,49 @@ describe('ReactScope', () => {
           return element;
         },
       });
-      let nodes = scopeRef.current.getScopedNodes();
+      let nodes = scopeRef.current.getAllNodes();
       expect(nodes).toEqual([divRef.current, spanRef.current, aRef.current]);
       renderer.update(<Test toggle={false} />);
-      nodes = scopeRef.current.getScopedNodes();
+      nodes = scopeRef.current.getAllNodes();
       expect(nodes).toEqual([aRef.current, divRef.current, spanRef.current]);
     });
 
-    it('mixed getParent() and getScopedNodes() works as intended', () => {
+    it('getFirstNode() works as intended', () => {
+      const TestScope = React.unstable_createScope((type, props) => true);
+      const scopeRef = React.createRef();
+      const divRef = React.createRef();
+      const spanRef = React.createRef();
+      const aRef = React.createRef();
+
+      function Test({toggle}) {
+        return toggle ? (
+          <TestScope ref={scopeRef}>
+            <div ref={divRef}>DIV</div>
+            <span ref={spanRef}>SPAN</span>
+            <a ref={aRef}>A</a>
+          </TestScope>
+        ) : (
+          <TestScope ref={scopeRef}>
+            <a ref={aRef}>A</a>
+            <div ref={divRef}>DIV</div>
+            <span ref={spanRef}>SPAN</span>
+          </TestScope>
+        );
+      }
+
+      const renderer = ReactTestRenderer.create(<Test toggle={true} />, {
+        createNodeMock: element => {
+          return element;
+        },
+      });
+      let node = scopeRef.current.getFirstNode();
+      expect(node).toEqual(divRef.current);
+      renderer.update(<Test toggle={false} />);
+      node = scopeRef.current.getFirstNode();
+      expect(node).toEqual(aRef.current);
+    });
+
+    it('mixed getParent() and getAllNodes() works as intended', () => {
       const TestScope = React.unstable_createScope((type, props) => true);
       const TestScope2 = React.unstable_createScope((type, props) => true);
       const refA = React.createRef();
@@ -326,14 +443,14 @@ describe('ReactScope', () => {
       });
       const dParent = refD.current.getParent();
       expect(dParent).not.toBe(null);
-      expect(dParent.getScopedNodes()).toEqual([
+      expect(dParent.getAllNodes()).toEqual([
         divA.current,
         spanB.current,
         divB.current,
       ]);
       const cParent = refC.current.getParent();
       expect(cParent).not.toBe(null);
-      expect(cParent.getScopedNodes()).toEqual([
+      expect(cParent.getAllNodes()).toEqual([
         spanA.current,
         divA.current,
         spanB.current,

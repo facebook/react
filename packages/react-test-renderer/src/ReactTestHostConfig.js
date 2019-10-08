@@ -29,6 +29,7 @@ export type Instance = {|
   props: Object,
   isHidden: boolean,
   children: Array<Instance | TextInstance>,
+  internalInstanceHandle: Object,
   rootContainerInstance: Container,
   tag: 'INSTANCE',
 |};
@@ -155,6 +156,7 @@ export function createInstance(
     props: propsToUse,
     isHidden: false,
     children: [],
+    internalInstanceHandle,
     rootContainerInstance,
     tag: 'INSTANCE',
   };
@@ -350,4 +352,8 @@ export function unmountFundamentalComponent(
   if (onUnmount !== undefined) {
     onUnmount(null, instance, props, state);
   }
+}
+
+export function getInstanceFromNode(node: Object) {
+  throw new Error('Not yet implemented.');
 }
