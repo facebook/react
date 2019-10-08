@@ -29,13 +29,11 @@ type FocusGroupProps = {|
 
 const {useRef} = React;
 
-function focusGroupItem(cell: ReactScopeMethods, event?: KeyboardEvent): void {
+function focusGroupItem(cell: ReactScopeMethods, event: KeyboardEvent): void {
   const firstScopedNode = cell.getFirstScopedNode();
   if (firstScopedNode !== null) {
     firstScopedNode.focus();
-    if (event) {
-      event.preventDefault();
-    }
+    event.preventDefault();
   }
 }
 
