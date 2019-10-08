@@ -12,7 +12,6 @@
 
 let React;
 let ReactFabric;
-let ReactFeatureFlags;
 let createReactClass;
 let createReactNativeComponentClass;
 let UIManager;
@@ -38,8 +37,6 @@ describe('ReactFabric', () => {
 
     React = require('react');
     StrictMode = React.StrictMode;
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.warnAboutDeprecatedSetNativeProps = true;
     ReactFabric = require('react-native-renderer/fabric');
     UIManager = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
       .UIManager;
