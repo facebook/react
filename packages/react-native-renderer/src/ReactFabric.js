@@ -109,15 +109,6 @@ const ReactFabric: ReactFabricType = {
 
   findNodeHandle,
 
-  setNativeProps(handle: any, nativeProps: Object) {
-    warningWithoutStack(
-      false,
-      'Warning: setNativeProps is not currently supported in Fabric',
-    );
-
-    return;
-  },
-
   dispatchCommand(handle: any, command: string, args: Array<any>) {
     const invalid =
       handle._nativeTag == null || handle._internalInstanceHandle == null;
