@@ -73,24 +73,4 @@ describe('ReactFabric', () => {
       [10, 20],
     );
   });
-
-  it('sets native props with setNativeProps on Fabric nodes with the RN renderer', () => {
-    UIManager.updateView.mockReset();
-    const View = createReactNativeComponentClass('RCTView', () => ({
-      validAttributes: {title: true},
-      uiViewClassName: 'RCTView',
-    }));
-
-    let ref = React.createRef();
-
-    ReactFabric.render(<View title="bar" ref={ref} />, 11);
-    expect(UIManager.updateView).not.toBeCalled();
-    ReactNative.setNativeProps(ref.current, {title: 'baz'});
-    expect(UIManager.updateView).toHaveBeenCalledTimes(1);
-    expect(UIManager.updateView).toHaveBeenCalledWith(
-      expect.any(Number),
-      'RCTView',
-      {title: 'baz'},
-    );
-  });
 });

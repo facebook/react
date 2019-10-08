@@ -26,7 +26,6 @@ export const disableInputAttributeSyncing = false;
 export const enableStableConcurrentModeAPIs = false;
 export const warnAboutShorthandPropertyCollision = false;
 export const enableSchedulerDebugging = false;
-export const warnAboutDeprecatedSetNativeProps = false;
 export const enableFlareAPI = false;
 export const enableFundamentalAPI = false;
 export const enableScopeAPI = false;
