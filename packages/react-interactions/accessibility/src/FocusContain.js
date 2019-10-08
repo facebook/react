@@ -66,10 +66,11 @@ export default function FocusContain({
   useLayoutEffect(
     () => {
       const scope = scopeRef.current;
+      const activeElement = document.activeElement;
       if (
         scope !== null &&
-        disabled !== true &&
-        !scope.containsNode(document.activeElement)
+        (!activeElement ||
+          (disabled !== true && !scope.containsNode(activeElement)))
       ) {
         const fistElem = scope.getFirstNode();
         if (fistElem !== null) {
