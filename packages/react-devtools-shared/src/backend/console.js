@@ -17,11 +17,18 @@ const APPEND_STACK_TO_METHODS = ['error', 'trace', 'warn'];
 
 const FRAME_REGEX = /\n {4}in /;
 
+type OnErrorOrWarning = (
+  fiber: Fiber,
+  type: 'error' | 'warn',
+  args: Array<any>,
+) => void;
+
 const injectedRenderers: Map<
   ReactRenderer,
   {|
     getCurrentFiber: () => Fiber | null,
     getDisplayNameForFiber: (fiber: Fiber) => string | null,
+    onErrorOrWarning: ?OnErrorOrWarning,
   |},
 > = new Map();
 
@@ -48,7 +55,10 @@ export function dangerous_setTargetConsoleForTesting(
 // v16 renderers should use this method to inject internals necessary to generate a component stack.
 // These internals will be used if the console is patched.
 // Injecting them separately allows the console to easily be patched or un-patched later (at runtime).
-export function registerRenderer(renderer: ReactRenderer): void {
+export function registerRenderer(
+  renderer: ReactRenderer,
+  onErrorOrWarning?: OnErrorOrWarning,
+): void {
   const {getCurrentFiber, findFiberByHostInstance, version} = renderer;
 
   // Ignore React v15 and older because they don't expose a component stack anyway.
@@ -62,6 +72,7 @@ export function registerRenderer(renderer: ReactRenderer): void {
     injectedRenderers.set(renderer, {
       getCurrentFiber,
       getDisplayNameForFiber,
+      onErrorOrWarning,
     });
   }
 }
@@ -104,22 +115,37 @@ export function patch(): void {
             for (let {
               getCurrentFiber,
               getDisplayNameForFiber,
+              onErrorOrWarning,
             } of injectedRenderers.values()) {
               let current: ?Fiber = getCurrentFiber();
               let ownerStack: string = '';
-              while (current != null) {
-                const name = getDisplayNameForFiber(current);
-                const owner = current._debugOwner;
-                const ownerName =
-                  owner != null ? getDisplayNameForFiber(owner) : null;
+              if (current != null) {
+                if (method === 'error' || method === 'warn') {
+                  if (typeof onErrorOrWarning === 'function') {
+                    // TODO (inline errors) The renderer is injected in two places:
+                    // 1. First by "react-devtools-shared/src/hook" which isn't stateful and doesn't supply onErrorOrWarning()
+                    // 2. Second by "react-devtools-shared/src/backend/renderer" which is and does
+                    //
+                    // We should probably move the queueing+batching mechanism from backend/renderer to this file,
+                    // so that it handles warnings logged during initial mount (potentially before step 2 above).
+                    onErrorOrWarning(current, method, args);
+                  }
+                }
 
-                ownerStack += describeComponentFrame(
-                  name,
-                  current._debugSource,
-                  ownerName,
-                );
+                while (current != null) {
+                  const name = getDisplayNameForFiber(current);
+                  const owner = current._debugOwner;
+                  const ownerName =
+                    owner != null ? getDisplayNameForFiber(owner) : null;
 
-                current = owner;
+                  ownerStack += describeComponentFrame(
+                    name,
+                    current._debugSource,
+                    ownerName,
+                  );
+
+                  current = owner;
+                }
               }
 
               if (ownerStack !== '') {
@@ -129,6 +155,7 @@ export function patch(): void {
             }
           }
         } catch (error) {
+          console.log(error);
           // Don't let a DevTools or React internal error interfere with logging.
         }
 
@@ -136,6 +163,7 @@ export function patch(): void {
       };
 
       overrideMethod.__REACT_DEVTOOLS_ORIGINAL_METHOD__ = originalMethod;
+      originalMethod.__REACT_DEVTOOLS_OVERRIDE_METHOD__ = overrideMethod;
 
       // $FlowFixMe property error|warn is not writable.
       targetConsole[method] = overrideMethod;

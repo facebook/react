@@ -29,7 +29,7 @@ import {printStore} from './utils';
 import ProfilerStore from './ProfilerStore';
 
 import type {Element} from './views/Components/types';
-import type {ComponentFilter, ElementType} from '../types';
+import type {ComponentFilter, ElementType, ErrorOrWarning} from '../types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 
 const debug = (methodName, ...args) => {
@@ -174,6 +174,7 @@ export default class Store extends EventEmitter<{|
     }
 
     this._bridge = bridge;
+    bridge.addListener('errorsAndWarnings', this.onBridgeErrorsAndWarnings);
     bridge.addListener('operations', this.onBridgeOperations);
     bridge.addListener(
       'overrideComponentFilters',
@@ -702,6 +703,10 @@ export default class Store extends EventEmitter<{|
     this._nativeStyleEditorValidAttributes = validAttributes || null;
 
     this.emit('supportsNativeStyleEditor');
+  };
+
+  onBridgeErrorsAndWarnings = (errorsAndWarnings: Array<ErrorOrWarning>) => {
+    console.log('onBridgeErrorsAndWarnings', errorsAndWarnings);
   };
 
   onBridgeOperations = (operations: Array<number>) => {

@@ -37,7 +37,7 @@ import type {
   RendererID,
   RendererInterface,
 } from './types';
-import type {ComponentFilter} from '../types';
+import type {ComponentFilter, ErrorOrWarning} from '../types';
 
 const debug = (methodName, ...args) => {
   if (__DEBUG__) {
@@ -437,6 +437,10 @@ export default class Agent extends EventEmitter<{|
     } else {
       renderer.prepareViewElementSource(id);
     }
+  };
+
+  onErrorsAndWarnings = (errorsAndWarnings: Array<ErrorOrWarning>) => {
+    this._bridge.send('errorsAndWarnings', errorsAndWarnings);
   };
 
   onTraceUpdates = (nodes: Set<NativeType>) => {

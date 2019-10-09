@@ -493,13 +493,69 @@ export function attach(
     typeof setSuspenseHandler === 'function' &&
     typeof scheduleUpdate === 'function';
 
+  type PendingErrorOrWarning = {|
+    args: Array<any>,
+    fiber: Fiber,
+    type: 'error' | 'warn',
+  |};
+
+  let flushErrorOrWarningUpdatesTimoutID: TimeoutID | null = null;
+  const pendingErrorOrWarnings: Array<PendingErrorOrWarning> = [];
+
+  function onErrorOrWarning(
+    fiber: Fiber,
+    type: 'error' | 'warn',
+    args: Array<any>,
+  ): void {
+    // There are a few places that errors might be logged:
+    // 1. During render (either for initial mount or an update)
+    // 2. During commit effects (both active and passive)
+    // 3. During unmounts (or commit effect cleanup functions)
+    //
+    // Initial render presents a special challenge-
+    // since neither backend nor frontend Store know about a Fiber until it has mounted (and committed).
+    // In this case, we need to hold onto errors until the subsequent commit hook is called.
+    //
+    // Passive effects also present a special challenge-
+    // since the commit hook is called before passive effects, are run,
+    // meaning that we might not want to wait until the subsequent commit hook to notify the frontend.
+    //
+    // For this reason, warnings/errors are sent to the frontend periodically (on a timer).
+    // When processing errors, any Fiber that is not still registered is assumed to be unmounted.
+    pendingErrorOrWarnings.push({fiber, type, args});
+
+    if (flushErrorOrWarningUpdatesTimoutID === null) {
+      flushErrorOrWarningUpdatesTimoutID = setTimeout(
+        flushErrorOrWarningUpdates,
+        1000,
+      );
+    }
+  }
+
+  function flushErrorOrWarningUpdates() {
+    flushErrorOrWarningUpdatesTimoutID = null;
+
+    hook.emit(
+      'errorsAndWarnings',
+      pendingErrorOrWarnings
+        .filter(({fiber}) => isFiberMounted(fiber))
+        .map(({args, fiber, type}) => ({
+          id: getFiberID(getPrimaryFiber(fiber)),
+          type,
+          // TODO (inline errors) Send JSON-serialized args
+        })),
+    );
+
+    pendingErrorOrWarnings.splice(0);
+  }
+
   // Patching the console enables DevTools to do a few useful things:
   // * Append component stacks to warnings and error messages
   // * Disable logging during re-renders to inspect hooks (see inspectHooksOfFiber)
   //
   // Don't patch in test environments because we don't want to interfere with Jest's own console overrides.
   if (process.env.NODE_ENV !== 'test') {
-    registerRendererWithConsole(renderer);
+    registerRendererWithConsole(renderer, onErrorOrWarning);
 
     // The renderer interface can't read this preference directly,
     // because it is stored in localStorage within the context of the extension.
@@ -755,6 +811,17 @@ export function attach(
     }
     primaryFibers.add(fiber);
     return fiber;
+  }
+
+  function isFiberMounted(fiber: Fiber): boolean {
+    if (primaryFibers.has(fiber)) {
+      return true;
+    }
+    const {alternate} = fiber;
+    if (alternate != null && primaryFibers.has(alternate)) {
+      return true;
+    }
+    return false;
   }
 
   const fiberToIDMap: Map<Fiber, number> = new Map();

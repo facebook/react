@@ -75,3 +75,8 @@ export type ComponentFilter =
   | BooleanComponentFilter
   | ElementTypeComponentFilter
   | RegExpComponentFilter;
+
+export type ErrorOrWarning = {|
+  id: number,
+  type: 'error' | 'warn',
+|};
