@@ -4,59 +4,49 @@ exports[`error transform should correctly transform invariants that are not in t
 "import invariant from 'shared/invariant';
 
 /*FIXME (minify-errors-in-prod): Unminified error message in production build!*/
-(function () {
-  if (!condition) {
-    throw Error(\\"This is not a real error message.\\");
-  }
-})();"
+if (!condition) {
+  throw Error(\\"This is not a real error message.\\");
+}"
 `;
 
 exports[`error transform should handle escaped characters 1`] = `
 "import invariant from 'shared/invariant';
 
 /*FIXME (minify-errors-in-prod): Unminified error message in production build!*/
-(function () {
-  if (!condition) {
-    throw Error(\\"What's up?\\");
-  }
-})();"
+if (!condition) {
+  throw Error(\\"What's up?\\");
+}"
 `;
 
 exports[`error transform should replace simple invariant calls 1`] = `
-"import _ReactErrorProd from \\"shared/ReactErrorProd\\";
+"import _formatProdErrorMessage from \\"shared/formatProdErrorMessage\\";
 import invariant from 'shared/invariant';
 
 if (!condition) {
-  if (__DEV__) {
-    throw Error(\\"Do not override existing functions.\\");
-  } else {
-    throw _ReactErrorProd(Error(16));
+  {
+    throw Error(__DEV__ ? \\"Do not override existing functions.\\" : _formatProdErrorMessage(16));
   }
 }"
 `;
 
 exports[`error transform should support invariant calls with a concatenated template string and args 1`] = `
-"import _ReactErrorProd from \\"shared/ReactErrorProd\\";
+"import _formatProdErrorMessage from \\"shared/formatProdErrorMessage\\";
 import invariant from 'shared/invariant';
 
 if (!condition) {
-  if (__DEV__) {
-    throw Error(\\"Expected a component class, got \\" + Foo + \\".\\" + Bar);
-  } else {
-    throw _ReactErrorProd(Error(18), Foo, Bar);
+  {
+    throw Error(__DEV__ ? \\"Expected a component class, got \\" + Foo + \\".\\" + Bar : _formatProdErrorMessage(18, Foo, Bar));
   }
 }"
 `;
 
 exports[`error transform should support invariant calls with args 1`] = `
-"import _ReactErrorProd from \\"shared/ReactErrorProd\\";
+"import _formatProdErrorMessage from \\"shared/formatProdErrorMessage\\";
 import invariant from 'shared/invariant';
 
 if (!condition) {
-  if (__DEV__) {
-    throw Error(\\"Expected \\" + foo + \\" target to be an array; got \\" + bar);
-  } else {
-    throw _ReactErrorProd(Error(7), foo, bar);
+  {
+    throw Error(__DEV__ ? \\"Expected \\" + foo + \\" target to be an array; got \\" + bar : _formatProdErrorMessage(7, foo, bar));
   }
 }"
 `;
