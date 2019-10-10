@@ -44,7 +44,6 @@ export const warnAboutStringRefs = false;
 export const disableLegacyContext = false;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 export const enableTrustedTypesIntegration = false;
-export const enableNewSuspenseAPI = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {

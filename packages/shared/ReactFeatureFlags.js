@@ -98,5 +98,3 @@ export const disableLegacyContext = false;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 
 export const enableTrustedTypesIntegration = false;
-
-export const enableNewSuspenseAPI = false;

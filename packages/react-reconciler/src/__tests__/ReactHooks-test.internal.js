@@ -27,7 +27,7 @@ describe('ReactHooks', () => {
 
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
-    ReactFeatureFlags.enableNewSuspenseAPI = true;
+    ReactFeatureFlags.enableStableConcurrentModeAPIs = true;
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
     Scheduler = require('scheduler');
