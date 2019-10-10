@@ -1136,7 +1136,7 @@ function mountSuspenseDeferredValue<T>(
   mountEffect(
     () => {
       Scheduler.unstable_next(() => {
-        const previousConfig = requestCurrentSuspenseConfig();
+        const previousConfig = ReactCurrentBatchConfig.suspense;
         ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
         try {
           setValue(value);
@@ -1158,7 +1158,7 @@ function updateSuspenseDeferredValue<T>(
   updateEffect(
     () => {
       Scheduler.unstable_next(() => {
-        const previousConfig = requestCurrentSuspenseConfig();
+        const previousConfig = ReactCurrentBatchConfig.suspense;
         ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
         try {
           setValue(value);
@@ -1237,6 +1237,7 @@ function dispatchAction<S, A>(
         'rendering, declare it in the component body with useEffect().',
     );
   }
+
   const alternate = fiber.alternate;
   if (
     fiber === currentlyRenderingFiber ||
