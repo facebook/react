@@ -30,7 +30,7 @@ module.exports = function(babel) {
           //
           // if (!condition) {
           //   if (__DEV__) {
-          //     throw ReactError(Error(`A ${adj} message that contains ${noun}`));
+          //     throw Error(`A ${adj} message that contains ${noun}`);
           //   } else {
           //     throw ReactErrorProd(Error(ERR_CODE), adj, noun);
           //   }
@@ -46,21 +46,11 @@ module.exports = function(babel) {
             .split('%s')
             .map(raw => t.templateElement({raw, cooked: String.raw({raw})}));
 
-          const reactErrorIdentfier = helperModuleImports.addDefault(
-            path,
-            'shared/ReactError',
-            {
-              nameHint: 'ReactError',
-            }
-          );
-
           // Outputs:
-          //   throw ReactError(Error(`A ${adj} message that contains ${noun}`));
+          //   throw Error(`A ${adj} message that contains ${noun}`);
           const devThrow = t.throwStatement(
-            t.callExpression(reactErrorIdentfier, [
-              t.callExpression(t.identifier('Error'), [
-                t.templateLiteral(errorMsgQuasis, errorMsgExpressions),
-              ]),
+            t.callExpression(t.identifier('Error'), [
+              t.templateLiteral(errorMsgQuasis, errorMsgExpressions),
             ])
           );
 
@@ -77,7 +67,7 @@ module.exports = function(babel) {
             //
             // Outputs:
             //   if (!condition) {
-            //     throw ReactError(Error(`A ${adj} message that contains ${noun}`));
+            //     throw Error(`A ${adj} message that contains ${noun}`);
             //   }
             parentStatementPath.replaceWith(
               t.ifStatement(
