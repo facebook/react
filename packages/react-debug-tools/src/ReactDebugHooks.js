@@ -14,8 +14,9 @@ import type {
   ReactEventResponderListener,
 } from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
-import type {Hook} from 'react-reconciler/src/ReactFiberHooks';
+import type {Hook, TimeoutConfig} from 'react-reconciler/src/ReactFiberHooks';
 import type {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactFiberHooks';
+import type {SuspenseConfig} from 'react-reconciler/src/ReactFiberSuspenseConfig';
 
 import ErrorStackParser from 'error-stack-parser';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -236,6 +237,31 @@ function useResponder(
   };
 }
 
+function useSuspenseTransition(
+  config: SuspenseConfig | null | void,
+): [(() => void) => void, boolean] {
+  nextHook();
+  hookLog.push({
+    primitive: 'SuspenseTransition',
+    stackError: new Error(),
+    value: config,
+  });
+  return [callback => {}, false];
+}
+
+function useSuspenseDeferredValue<T>(
+  value: T,
+  config: TimeoutConfig | null | void,
+): T {
+  nextHook();
+  hookLog.push({
+    primitive: 'SuspenseDeferredValue',
+    stackError: new Error(),
+    value,
+  });
+  return value;
+}
+
 const Dispatcher: DispatcherType = {
   readContext,
   useCallback,
@@ -249,6 +275,8 @@ const Dispatcher: DispatcherType = {
   useRef,
   useState,
   useResponder,
+  useSuspenseTransition,
+  useSuspenseDeferredValue,
 };
 
 // Inspect

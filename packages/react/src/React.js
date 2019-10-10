@@ -40,6 +40,8 @@ import {
   useRef,
   useState,
   useResponder,
+  useSuspenseTransition,
+  useSuspenseDeferredValue,
 } from './ReactHooks';
 import {withSuspenseConfig} from './ReactBatchConfig';
 import {
@@ -59,6 +61,7 @@ import {
   enableFlareAPI,
   enableFundamentalAPI,
   enableScopeAPI,
+  enableNewSuspenseAPI,
 } from 'shared/ReactFeatureFlags';
 const React = {
   Children: {
@@ -106,6 +109,11 @@ const React = {
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: ReactSharedInternals,
 };
+
+if (enableNewSuspenseAPI) {
+  React.useSuspenseTransition = useSuspenseTransition;
+  React.useSuspenseDeferredValue = useSuspenseDeferredValue;
+}
 
 if (enableFlareAPI) {
   React.unstable_useResponder = useResponder;
