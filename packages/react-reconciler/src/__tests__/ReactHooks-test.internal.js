@@ -1470,10 +1470,9 @@ describe('ReactHooks', () => {
     const useReducerHelper = () => React.useReducer((s, a) => a, 0);
     const useRefHelper = () => React.useRef(null);
     const useStateHelper = () => React.useState(0);
-    const useSuspenseTransitionHelper = () =>
-      React.useSuspenseTransition({timeoutMs: 1000});
-    const useSuspenseDeferredValueHelper = () =>
-      React.useSuspenseDeferredValue(0, {timeoutMs: 1000});
+    const useTransitionHelper = () => React.useTransition({timeoutMs: 1000});
+    const useDeferredValueHelper = () =>
+      React.useDeferredValue(0, {timeoutMs: 1000});
 
     // We don't include useImperativeHandleHelper in this set,
     // because it generates an additional warning about the inputs length changing.
@@ -1488,8 +1487,8 @@ describe('ReactHooks', () => {
       useReducerHelper,
       useRefHelper,
       useStateHelper,
-      useSuspenseTransitionHelper,
-      useSuspenseDeferredValueHelper,
+      useTransitionHelper,
+      useDeferredValueHelper,
     ];
 
     const formatHookNamesToMatchErrorMessage = (hookNameA, hookNameB) => {
@@ -1616,8 +1615,8 @@ describe('ReactHooks', () => {
       useReducerHelper,
       useRefHelper,
       useStateHelper,
-      useSuspenseTransitionHelper,
-      useSuspenseDeferredValueHelper,
+      useTransitionHelper,
+      useDeferredValueHelper,
     ];
 
     hooksInList.forEach((firstHelper, index) => {

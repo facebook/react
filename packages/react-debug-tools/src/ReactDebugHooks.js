@@ -237,25 +237,22 @@ function useResponder(
   };
 }
 
-function useSuspenseTransition(
+function useTransition(
   config: SuspenseConfig | null | void,
 ): [(() => void) => void, boolean] {
   nextHook();
   hookLog.push({
-    primitive: 'SuspenseTransition',
+    primitive: 'Transition',
     stackError: new Error(),
     value: config,
   });
   return [callback => {}, false];
 }
 
-function useSuspenseDeferredValue<T>(
-  value: T,
-  config: TimeoutConfig | null | void,
-): T {
+function useDeferredValue<T>(value: T, config: TimeoutConfig | null | void): T {
   nextHook();
   hookLog.push({
-    primitive: 'SuspenseDeferredValue',
+    primitive: 'DeferredValue',
     stackError: new Error(),
     value,
   });
@@ -275,8 +272,8 @@ const Dispatcher: DispatcherType = {
   useRef,
   useState,
   useResponder,
-  useSuspenseTransition,
-  useSuspenseDeferredValue,
+  useTransition,
+  useDeferredValue,
 };
 
 // Inspect

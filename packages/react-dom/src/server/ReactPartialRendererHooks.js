@@ -460,15 +460,12 @@ function useResponder(responder, props): ReactEventResponderListener<any, any> {
   };
 }
 
-function useSuspenseDeferredValue<T>(
-  value: T,
-  config: TimeoutConfig | null | void,
-): T {
+function useDeferredValue<T>(value: T, config: TimeoutConfig | null | void): T {
   resolveCurrentlyRenderingComponent();
   return value;
 }
 
-function useSuspenseTransition(
+function useTransition(
   config: SuspenseConfig | null | void,
 ): [(callback: () => void) => void, boolean] {
   resolveCurrentlyRenderingComponent();
@@ -502,6 +499,6 @@ export const Dispatcher: DispatcherType = {
   // Debugging effect
   useDebugValue: noop,
   useResponder,
-  useSuspenseDeferredValue,
-  useSuspenseTransition,
+  useDeferredValue,
+  useTransition,
 };

@@ -28,8 +28,8 @@ let useCallback;
 let useMemo;
 let useRef;
 let useImperativeHandle;
-let useSuspenseTransition;
-let useSuspenseDeferredValue;
+let useTransition;
+let useDeferredValue;
 let forwardRef;
 let memo;
 let act;
@@ -59,8 +59,8 @@ describe('ReactHooksWithNoopRenderer', () => {
     useImperativeHandle = React.useImperativeHandle;
     forwardRef = React.forwardRef;
     memo = React.memo;
-    useSuspenseTransition = React.useSuspenseTransition;
-    useSuspenseDeferredValue = React.useSuspenseDeferredValue;
+    useTransition = React.useTransition;
+    useDeferredValue = React.useDeferredValue;
     Suspense = React.Suspense;
     act = ReactNoop.act;
 
@@ -1975,12 +1975,12 @@ describe('ReactHooksWithNoopRenderer', () => {
     });
   });
 
-  describe('useSuspenseTransition', () => {
+  describe('useTransition', () => {
     it('delays showing loading state until after timeout', async () => {
       let transition;
       function App() {
         const [show, setShow] = useState(false);
-        const [startTransition, isPending] = useSuspenseTransition({
+        const [startTransition, isPending] = useTransition({
           timeoutMs: 1000,
         });
         transition = () => {
@@ -2041,7 +2041,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     });
   });
 
-  describe('useSuspenseDeferredValue', () => {
+  describe('useDeferredValue', () => {
     it('defers text value until specified timeout', async () => {
       function TextBox({text}) {
         return <AsyncText ms={1000} text={text} />;
@@ -2050,7 +2050,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       let _setText;
       function App() {
         const [text, setText] = useState('A');
-        const deferredText = useSuspenseDeferredValue(text, {
+        const deferredText = useDeferredValue(text, {
           timeoutMs: 500,
         });
         _setText = setText;

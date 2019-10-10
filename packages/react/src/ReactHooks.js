@@ -161,14 +161,14 @@ export function useResponder(
   return dispatcher.useResponder(responder, listenerProps || emptyObject);
 }
 
-export function useSuspenseTransition(
+export function useTransition(
   config: ?Object,
 ): [(() => void) => void, boolean] {
   const dispatcher = resolveDispatcher();
-  return dispatcher.useSuspenseTransition(config);
+  return dispatcher.useTransition(config);
 }
 
-export function useSuspenseDeferredValue<T>(value: T, config: ?Object): T {
+export function useDeferredValue<T>(value: T, config: ?Object): T {
   const dispatcher = resolveDispatcher();
-  return dispatcher.useSuspenseDeferredValue(value, config);
+  return dispatcher.useDeferredValue(value, config);
 }

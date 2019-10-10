@@ -40,8 +40,8 @@ import {
   useRef,
   useState,
   useResponder,
-  useSuspenseTransition,
-  useSuspenseDeferredValue,
+  useTransition,
+  useDeferredValue,
 } from './ReactHooks';
 import {withSuspenseConfig} from './ReactBatchConfig';
 import {
@@ -111,8 +111,8 @@ const React = {
 };
 
 if (enableNewSuspenseAPI) {
-  React.useSuspenseTransition = useSuspenseTransition;
-  React.useSuspenseDeferredValue = useSuspenseDeferredValue;
+  React.useTransition = useTransition;
+  React.useDeferredValue = useDeferredValue;
 }
 
 if (enableFlareAPI) {

@@ -378,26 +378,23 @@ class ReactShallowRenderer {
     });
 
     // TODO: implement if we decide to keep the shallow renderer
-    const useSuspenseTransition = (
+    const useTransition = (
       config,
     ): [(callback: () => void) => void, boolean] => {
       this._validateCurrentlyRenderingComponent();
       const startTransition = callback => {
         callback();
       };
-      warning(
-        false,
-        'useSuspenseTransition is not implemented for shallow renderers',
-      );
+      warning(false, 'useTransition is not implemented for shallow renderers');
       return [startTransition, false];
     };
 
     // TODO: implement if we decide to keep the shallow renderer
-    const useSuspenseDeferredValue = <T>(value: T, config): T => {
+    const useDeferredValue = <T>(value: T, config): T => {
       this._validateCurrentlyRenderingComponent();
       warning(
         false,
-        'useSuspenseDeferredValue is not implemented for shallow renderers',
+        'useDeferredValue is not implemented for shallow renderers',
       );
       return value;
     };
@@ -418,8 +415,8 @@ class ReactShallowRenderer {
       useRef,
       useState,
       useResponder,
-      useSuspenseTransition,
-      useSuspenseDeferredValue,
+      useTransition,
+      useDeferredValue,
     };
   }
 
