@@ -1237,6 +1237,7 @@ function dispatchAction<S, A>(
         'rendering, declare it in the component body with useEffect().',
     );
   }
+
   const alternate = fiber.alternate;
   if (
     fiber === currentlyRenderingFiber ||
