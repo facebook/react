@@ -51,15 +51,24 @@ export default function EditableValue({
 
     switch (event.key) {
       case 'Enter':
-        if (isValid && hasPendingChanges) {
-          overrideValueFn(path, parsedValue);
-        }
+        applyChanges();
         break;
       case 'Escape':
         reset();
         break;
       default:
         break;
+    }
+  };
+
+  const handleBlur = event => {
+    event.stopPropagation();
+    applyChanges();
+  };
+
+  const applyChanges = () => {
+    if (isValid && hasPendingChanges) {
+      overrideValueFn(path, parsedValue);
     }
   };
 
@@ -77,6 +86,7 @@ export default function EditableValue({
         className={`${isValid ? styles.Input : styles.Invalid} ${className}`}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
+        onBlur={handleBlur}
         placeholder={placeholder}
         ref={inputRef}
         type="text"
