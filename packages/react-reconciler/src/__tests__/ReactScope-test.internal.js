@@ -402,6 +402,59 @@ describe('ReactScope', () => {
       expect(node).toEqual(aRef.current);
     });
 
+    it('containsNode() works as intended', () => {
+      const TestScope = React.unstable_createScope((type, props) => true);
+      const scopeRef = React.createRef();
+      const divRef = React.createRef();
+      const spanRef = React.createRef();
+      const aRef = React.createRef();
+      const outerSpan = React.createRef();
+      const emRef = React.createRef();
+
+      function Test({toggle}) {
+        return toggle ? (
+          <div>
+            <span ref={outerSpan}>SPAN</span>
+            <TestScope ref={scopeRef}>
+              <div ref={divRef}>DIV</div>
+              <span ref={spanRef}>SPAN</span>
+              <a ref={aRef}>A</a>
+            </TestScope>
+            <em ref={emRef}>EM</em>
+          </div>
+        ) : (
+          <div>
+            <TestScope ref={scopeRef}>
+              <a ref={aRef}>A</a>
+              <div ref={divRef}>DIV</div>
+              <span ref={spanRef}>SPAN</span>
+              <em ref={emRef}>EM</em>
+            </TestScope>
+            <span ref={outerSpan}>SPAN</span>
+          </div>
+        );
+      }
+
+      const renderer = ReactTestRenderer.create(<Test toggle={true} />, {
+        createNodeMock: element => {
+          return element;
+        },
+      });
+      expect(scopeRef.current.containsNode(divRef.current)).toBe(true);
+      expect(scopeRef.current.containsNode(spanRef.current)).toBe(true);
+      expect(scopeRef.current.containsNode(aRef.current)).toBe(true);
+      expect(scopeRef.current.containsNode(outerSpan.current)).toBe(false);
+      expect(scopeRef.current.containsNode(emRef.current)).toBe(false);
+      renderer.update(<Test toggle={false} />);
+      expect(scopeRef.current.containsNode(divRef.current)).toBe(true);
+      expect(scopeRef.current.containsNode(spanRef.current)).toBe(true);
+      expect(scopeRef.current.containsNode(aRef.current)).toBe(true);
+      expect(scopeRef.current.containsNode(outerSpan.current)).toBe(false);
+      expect(scopeRef.current.containsNode(emRef.current)).toBe(true);
+      renderer.update(<Test toggle={true} />);
+      expect(scopeRef.current.containsNode(emRef.current)).toBe(false);
+    });
+
     it('mixed getParent() and getAllNodes() works as intended', () => {
       const TestScope = React.unstable_createScope((type, props) => true);
       const TestScope2 = React.unstable_createScope((type, props) => true);
