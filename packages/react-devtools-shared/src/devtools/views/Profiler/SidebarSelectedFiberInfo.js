@@ -167,7 +167,7 @@ function WhatChanged({
   if (changeDescription.didHooksChange) {
     changes.push(
       <div key="hooks" className={styles.WhatChangedItem}>
-        • Hooks changed
+        • Internal state changed
       </div>,
     );
   }
@@ -207,7 +207,7 @@ function WhatChanged({
   if (changes.length === 0) {
     changes.push(
       <div key="nothing" className={styles.WhatChangedItem}>
-        The parent component rendered.
+        The parent component rendered or context changed
       </div>,
     );
   }
