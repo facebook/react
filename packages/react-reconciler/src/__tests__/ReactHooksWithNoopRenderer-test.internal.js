@@ -2039,8 +2039,75 @@ describe('ReactHooksWithNoopRenderer', () => {
         span('After... Pending: false'),
       ]);
     });
-  });
+    it('delays showing loading state until after busyDelayMs + busyMinDurationMs', async () => {
+      let transition;
+      function App() {
+        const [show, setShow] = useState(false);
+        const [startTransition, isPending] = useTransition({
+          busyDelayMs: 1000,
+          busyMinDurationMs: 2000,
+        });
+        transition = () => {
+          startTransition(() => {
+            setShow(true);
+          });
+        };
+        return (
+          <Suspense
+            fallback={<Text text={`Loading... Pending: ${isPending}`} />}>
+            {show ? (
+              <AsyncText ms={2000} text={`After... Pending: ${isPending}`} />
+            ) : (
+              <Text text={`Before... Pending: ${isPending}`} />
+            )}
+          </Suspense>
+        );
+      }
+      ReactNoop.render(<App />);
+      expect(Scheduler).toFlushAndYield(['Before... Pending: false']);
+      expect(ReactNoop.getChildren()).toEqual([
+        span('Before... Pending: false'),
+      ]);
 
+      act(() => {
+        Scheduler.unstable_runWithPriority(
+          Scheduler.unstable_UserBlockingPriority,
+          transition,
+        );
+      });
+      Scheduler.unstable_advanceTime(1000);
+      await advanceTimers(1000);
+      expect(Scheduler).toHaveYielded([
+        'Before... Pending: true',
+        'Suspend! [After... Pending: false]',
+        'Loading... Pending: false',
+      ]);
+      expect(ReactNoop.getChildren()).toEqual([
+        span('Before... Pending: true'),
+      ]);
+
+      Scheduler.unstable_advanceTime(1000);
+      await advanceTimers(1000);
+      expect(Scheduler).toHaveYielded([
+        'Promise resolved [After... Pending: false]',
+      ]);
+      expect(Scheduler).toFlushAndYield(['After... Pending: false']);
+      expect(ReactNoop.getChildren()).toEqual([
+        span('Before... Pending: true'),
+      ]);
+
+      Scheduler.unstable_advanceTime(1000);
+      await advanceTimers(1000);
+      expect(ReactNoop.getChildren()).toEqual([
+        span('Before... Pending: true'),
+      ]);
+      Scheduler.unstable_advanceTime(250);
+      await advanceTimers(250);
+      expect(ReactNoop.getChildren()).toEqual([
+        span('After... Pending: false'),
+      ]);
+    });
+  });
   describe('useDeferredValue', () => {
     it('defers text value until specified timeout', async () => {
       function TextBox({text}) {
