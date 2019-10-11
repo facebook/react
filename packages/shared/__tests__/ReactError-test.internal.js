@@ -37,15 +37,7 @@ describe('ReactError', () => {
   });
 
   if (__DEV__) {
-    it('should throw errors whose name is "Invariant Violation"', () => {
-      let error;
-      try {
-        React.useState();
-      } catch (e) {
-        error = e;
-      }
-      expect(error.name).toEqual('Invariant Violation');
-    });
+    it("empty test so Jest doesn't complain", () => {});
   } else {
     it('should error with minified error code', () => {
       expect(() => ReactDOM.render('Hi', null)).toThrowError(
