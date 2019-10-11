@@ -78,12 +78,16 @@ const getArtifactsList = async buildID => {
 const getBuildInfo = async () => {
   const cwd = join(__dirname, '..', '..');
 
+  const isExperimental = process.env.RELEASE_CHANNEL === 'experimental';
+
   const branch = await execRead('git branch | grep \\* | cut -d " " -f2', {
     cwd,
   });
   const commit = await execRead('git show -s --format=%h', {cwd});
   const checksum = await getChecksumForCurrentRevision(cwd);
-  const version = `0.0.0-${commit}`;
+  const version = isExperimental
+    ? `0.0.0-experimental-${commit}`
+    : `0.0.0-${commit}`;
 
   // Only available for Circle CI builds.
   // https://circleci.com/docs/2.0/env-vars/
@@ -94,7 +98,9 @@ const getBuildInfo = async () => {
   const packageJSON = await readJson(
     join(cwd, 'packages', 'react', 'package.json')
   );
-  const reactVersion = `${packageJSON.version}-canary-${commit}`;
+  const reactVersion = isExperimental
+    ? `${packageJSON.version}-experimental-canary-${commit}`
+    : `${packageJSON.version}-canary-${commit}`;
 
   return {branch, buildNumber, checksum, commit, reactVersion, version};
 };

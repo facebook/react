@@ -7,6 +7,7 @@ if (NODE_ENV !== 'development' && NODE_ENV !== 'production') {
 global.__DEV__ = NODE_ENV === 'development';
 global.__PROFILE__ = NODE_ENV === 'development';
 global.__UMD__ = false;
+global.__EXPERIMENTAL__ = process.env.RELEASE_CHANNEL === 'experimental';
 
 if (typeof window !== 'undefined') {
   global.requestIdleCallback = function(callback) {
