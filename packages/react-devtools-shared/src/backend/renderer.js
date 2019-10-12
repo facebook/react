@@ -2543,8 +2543,10 @@ export function attach(
     value: any,
   ) {
     const fiber = findCurrentFiberUsingSlowPathById(id);
-    if (fiber !== null && typeof overrideHookState === 'function') {
-      overrideHookState(fiber, index, path, value);
+    if (fiber !== null) {
+      if (typeof overrideHookState === 'function') {
+        overrideHookState(fiber, index, path, value);
+      }
     }
   }
 
