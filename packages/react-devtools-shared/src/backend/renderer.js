@@ -2115,6 +2115,7 @@ export function attach(
     const typeSymbol = getTypeSymbol(type);
 
     let canViewSource = false;
+    let canForceRerender = false;
     let context = null;
     if (
       tag === ClassComponent ||
@@ -2126,6 +2127,11 @@ export function attach(
       tag === SimpleMemoComponent
     ) {
       canViewSource = true;
+
+      if (typeof scheduleUpdate === 'function') {
+        canForceRerender = true;
+      }
+
       if (stateNode && stateNode.context != null) {
         // Don't show an empty context object for class components that don't use the context API.
         const shouldHideContext =
@@ -2246,6 +2252,9 @@ export function attach(
 
       // Can view component source location.
       canViewSource,
+
+      // Can force the component to re-render.
+      canForceRerender,
 
       // Does the component have legacy context attached to it.
       hasLegacyContext,
@@ -2517,6 +2526,16 @@ export function attach(
     }
   }
 
+  function forceRerender(id: number) {
+    const fiber = findCurrentFiberUsingSlowPathById(id);
+
+    if (fiber !== null) {
+      if (typeof scheduleUpdate === 'function') {
+        scheduleUpdate(fiber);
+      }
+    }
+  }
+
   function setInHook(
     id: number,
     index: number,
@@ -2524,10 +2543,8 @@ export function attach(
     value: any,
   ) {
     const fiber = findCurrentFiberUsingSlowPathById(id);
-    if (fiber !== null) {
-      if (typeof overrideHookState === 'function') {
-        overrideHookState(fiber, index, path, value);
-      }
+    if (fiber !== null && typeof overrideHookState === 'function') {
+      overrideHookState(fiber, index, path, value);
     }
   }
 
@@ -3029,6 +3046,7 @@ export function attach(
     handleCommitFiberUnmount,
     inspectElement,
     logElementToConsole,
+    forceRerender,
     prepareViewElementSource,
     overrideSuspense,
     renderer,

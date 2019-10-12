@@ -71,6 +71,9 @@ export type InspectedElement = {|
   // Can view component source location.
   canViewSource: boolean,
 
+  // Can force the component to re-render.
+  canForceRerender: boolean,
+
   // Does the component have legacy context attached to it.
   hasLegacyContext: boolean,
 

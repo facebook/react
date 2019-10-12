@@ -100,6 +100,7 @@ type FrontendEvents = {|
   highlightNativeElement: [HighlightElementInDOM],
   inspectElement: [InspectElementParams],
   logElementToConsole: [ElementAndRendererID],
+  forceRerender: [ElementAndRendererID],
   overrideContext: [OverrideValue],
   overrideHookState: [OverrideHookState],
   overrideProps: [OverrideValue],

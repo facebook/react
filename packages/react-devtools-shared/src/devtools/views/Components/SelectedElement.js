@@ -93,6 +93,20 @@ export default function SelectedElement(_: Props) {
     },
     [bridge, inspectedElementID, store],
   );
+  const forceRerender = useCallback(
+    () => {
+      if (inspectedElementID !== null) {
+        const rendererID = store.getRendererIDForElement(inspectedElementID);
+        if (rendererID !== null) {
+          bridge.send('forceRerender', {
+            id: inspectedElementID,
+            rendererID,
+          });
+        }
+      }
+    },
+    [bridge, inspectedElementID, store],
+  );
 
   const viewSource = useCallback(
     () => {
@@ -114,6 +128,9 @@ export default function SelectedElement(_: Props) {
     viewElementSourceFunction !== null &&
     (canViewElementSourceFunction === null ||
       canViewElementSourceFunction(inspectedElement));
+
+  const canForceRerender =
+    inspectedElement !== null && inspectedElement.canForceRerender;
 
   const isSuspended =
     element !== null &&
@@ -227,6 +244,14 @@ export default function SelectedElement(_: Props) {
           title="View source for this element">
           <ButtonIcon type="view-source" />
         </Button>
+        {canForceRerender && (
+          <Button
+            className={styles.IconButton}
+            onClick={forceRerender}
+            title="Re-render component">
+            <ButtonIcon type="reload" />
+          </Button>
+        )}
       </div>
 
       {inspectedElement === null && (

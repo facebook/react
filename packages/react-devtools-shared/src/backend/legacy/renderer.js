@@ -753,6 +753,9 @@ export function attach(
       // Can view component source location.
       canViewSource: type === ElementTypeClass || type === ElementTypeFunction,
 
+      // Can force the component to re-render.
+      canForceRerender: false,
+
       // Only legacy context exists in legacy versions.
       hasLegacyContext: true,
 
@@ -891,6 +894,9 @@ export function attach(
   const setInHook = () => {
     throw new Error('setInHook not supported by this renderer');
   };
+  const forceRerender = () => {
+    throw new Error('forceRerender not supported by this renderer');
+  };
   const startProfiling = () => {
     // Do not throw, since this would break a multi-root scenario where v15 and v16 were both present.
   };
@@ -938,6 +944,7 @@ export function attach(
     handleCommitFiberUnmount,
     inspectElement,
     logElementToConsole,
+    forceRerender,
     overrideSuspense,
     prepareViewElementSource,
     renderer,
