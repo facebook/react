@@ -512,6 +512,11 @@ function getFunctionName(node) {
       node.parent.right === node &&
       node.parent.operator === '='
     ) {
+      // const Hooks = {}
+      // Hooks.useHook = () => {};
+      if (node.parent.left.type === 'MemberExpression') {
+        return node.parent.left.property;
+      }
       // useHook = () => {};
       return node.parent.left;
     } else if (

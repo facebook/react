@@ -109,6 +109,16 @@ const tests = {
     `,
     `
       // Valid because hooks can call hooks.
+      Foo.useHook = () => { useState(); }
+      Foo.Bar.useHook = () => { useState(); }
+    `,
+    `
+      // Valid because components can call hooks.
+      Components.Foo = () => { useState(); }
+      Components.Bar = () => { useState(); }
+    `,
+    `
+      // Valid because hooks can call hooks.
       function useHook() {
         useHook1();
         useHook2();
