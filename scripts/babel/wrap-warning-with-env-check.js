@@ -11,7 +11,7 @@ module.exports = function(babel, options) {
 
   const DEV_EXPRESSION = t.identifier('__DEV__');
 
-  const SEEN_SYMBOL = Symbol('expression.seen');
+  const seen = new WeakSet();
 
   return {
     visitor: {
@@ -20,43 +20,62 @@ module.exports = function(babel, options) {
           const node = path.node;
 
           // Ignore if it's already been processed
-          if (node[SEEN_SYMBOL]) {
+          if (seen.has(node)) {
             return;
           }
 
           if (
             path.get('callee').isIdentifier({name: 'warning'}) ||
-            path.get('callee').isIdentifier({name: 'warningWithoutStack'})
+            path.get('callee').isIdentifier({name: 'warningWithoutStack'}) ||
+            path.get('callee').isIdentifier({name: 'lowPriorityWarning'}) ||
+            path
+              .get('callee')
+              .isIdentifier({name: 'lowPriorityWarningWithoutStack'})
           ) {
+            seen.add(node);
+
             // Turns this code:
             //
-            // warning(condition, argument, argument);
+            // if (!condition) {
+            //   warning(argument, argument);
+            // }
             //
             // into this:
             //
-            // if (__DEV__) {
-            //   if (!condition) {
-            //     warning(false, argument, argument);
-            //   }
+            // if (__DEV__ && !condition) {
+            //   warning(argument, argument);
             // }
             //
             // The goal is to strip out warning calls entirely in production
-            // and to avoid evaluating the arguments in development.
-            const condition = node.arguments[0];
-            const newNode = t.callExpression(
-              node.callee,
-              [t.booleanLiteral(false)].concat(node.arguments.slice(1))
-            );
-            newNode[SEEN_SYMBOL] = true;
+            // and to avoid evaluating the rest of the arguments in development.
+
+            if (path.parentPath.isExpressionStatement()) {
+              const maybeBlock = path.parentPath.parentPath;
+              if (
+                // only continue this branch if this is the only statement in the block statement
+                !(
+                  maybeBlock.isBlockStatement() &&
+                  maybeBlock.node.body.length !== 1
+                )
+              ) {
+                const parent = maybeBlock.isBlockStatement()
+                  ? maybeBlock.parentPath
+                  : maybeBlock;
+                if (parent.isIfStatement()) {
+                  const test = parent.get('test');
+                  test.replaceWith(
+                    t.logicalExpression('&&', DEV_EXPRESSION, test.node)
+                  );
+                  return;
+                }
+              }
+            }
+
             path.replaceWith(
-              t.ifStatement(
+              t.conditionalExpression(
                 DEV_EXPRESSION,
-                t.blockStatement([
-                  t.ifStatement(
-                    t.unaryExpression('!', condition),
-                    t.expressionStatement(newNode)
-                  ),
-                ])
+                node,
+                t.unaryExpression('void', t.numericLiteral(0))
               )
             );
           }

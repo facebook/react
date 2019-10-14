@@ -17,7 +17,7 @@
  * will remain to ensure logic does not differ in production.
  */
 
-export default function invariant(condition, format, a, b, c, d, e, f) {
+export default function invariant(format, a, b, c, d, e, f) {
   throw new Error(
     'Internal React error: invariant() is meant to be replaced at compile ' +
       'time. There is no runtime version.',

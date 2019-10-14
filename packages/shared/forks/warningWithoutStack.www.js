@@ -5,4 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export default require('warning');
+const _warning = require('warning');
+
+export default function warningWithoutStack(format, ...args) {
+  return _warning(false, format, ...args);
+}

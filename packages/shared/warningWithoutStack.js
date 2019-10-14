@@ -15,21 +15,17 @@
 let warningWithoutStack = () => {};
 
 if (__DEV__) {
-  warningWithoutStack = function(condition, format, ...args) {
+  warningWithoutStack = function(format, ...args) {
     if (format === undefined) {
       throw new Error(
-        '`warningWithoutStack(condition, format, ...args)` requires a warning ' +
+        '`warningWithoutStack(format, ...args)` requires a warning ' +
           'message argument',
       );
     }
     if (args.length > 8) {
-      // Check before the condition to catch violations early.
       throw new Error(
         'warningWithoutStack() currently supports at most 8 arguments.',
       );
-    }
-    if (condition) {
-      return;
     }
     if (typeof console !== 'undefined') {
       const argsWithFormat = args.map(item => '' + item);

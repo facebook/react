@@ -15,60 +15,60 @@ const ruleTester = new RuleTester();
 
 ruleTester.run('eslint-rules/warning-and-invariant-args', rule, {
   valid: [
-    "warning(true, 'hello, world');",
-    "warning(true, 'expected %s, got %s', 42, 24);",
+    "warning('hello, world');",
+    "warning('expected %s, got %s', 42, 24);",
     'arbitraryFunction(a, b)',
     // These messages are in the error code map
-    "invariant(false, 'Do not override existing functions.')",
-    "invariant(false, '%s(...): Target container is not a DOM element.', str)",
+    "invariant('Do not override existing functions.')",
+    "invariant('%s(...): Target container is not a DOM element.', str)",
   ],
   invalid: [
     {
-      code: "warning('hello, world');",
+      code: 'warning();',
       errors: [
         {
-          message: 'warning takes at least two arguments',
+          message: 'warning takes at least one argument',
         },
       ],
     },
     {
-      code: 'warning(true, null);',
+      code: 'warning(null);',
       errors: [
         {
-          message: 'The second argument to warning must be a string literal',
+          message: 'The first argument to warning must be a string literal',
         },
       ],
     },
     {
-      code: 'var g = 5; invariant(true, g);',
+      code: 'var g = 5; invariant(g);',
       errors: [
         {
-          message: 'The second argument to invariant must be a string literal',
+          message: 'The first argument to invariant must be a string literal',
         },
       ],
     },
     {
-      code: "warning(true, 'expected %s, got %s');",
+      code: "warning('expected %s, got %s');",
       errors: [
         {
           message:
-            'Expected 4 arguments in call to warning based on the number of ' +
+            'Expected 3 arguments in call to warning based on the number of ' +
+            '"%s" substitutions, but got 1',
+        },
+      ],
+    },
+    {
+      code: "warning('foo is a bar under foobar', 'junk argument');",
+      errors: [
+        {
+          message:
+            'Expected 1 argument in call to warning based on the number of ' +
             '"%s" substitutions, but got 2',
         },
       ],
     },
     {
-      code: "warning(true, 'foo is a bar under foobar', 'junk argument');",
-      errors: [
-        {
-          message:
-            'Expected 2 arguments in call to warning based on the number of ' +
-            '"%s" substitutions, but got 3',
-        },
-      ],
-    },
-    {
-      code: "invariant(true, 'error!');",
+      code: "invariant('error!');",
       errors: [
         {
           message:
@@ -78,7 +78,7 @@ ruleTester.run('eslint-rules/warning-and-invariant-args', rule, {
       ],
     },
     {
-      code: "warning(true, 'error!');",
+      code: "warning('error!');",
       errors: [
         {
           message:
@@ -88,7 +88,7 @@ ruleTester.run('eslint-rules/warning-and-invariant-args', rule, {
       ],
     },
     {
-      code: "warning(true, '%s %s, %s %s: %s (%s)', 1, 2, 3, 4, 5, 6);",
+      code: "warning('%s %s, %s %s: %s (%s)', 1, 2, 3, 4, 5, 6);",
       errors: [
         {
           message:
@@ -99,7 +99,7 @@ ruleTester.run('eslint-rules/warning-and-invariant-args', rule, {
       ],
     },
     {
-      code: "invariant(false, 'Not in error map')",
+      code: "invariant('Not in error map')",
       errors: [
         {
           message:

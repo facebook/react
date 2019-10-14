@@ -47,21 +47,23 @@ module.exports = function(context) {
         node.callee.type === 'Identifier' &&
         (node.callee.name === 'warning' ||
           node.callee.name === 'warningWithoutStack' ||
+          node.callee.name === 'lowPriorityWarning' ||
+          node.callee.name === 'lowPriorityWarningWithoutStack' ||
           node.callee.name === 'invariant');
       if (!isWarningOrInvariant) {
         return;
       }
-      if (node.arguments.length < 2) {
-        context.report(node, '{{name}} takes at least two arguments', {
+      if (node.arguments.length < 1) {
+        context.report(node, '{{name}} takes at least one argument', {
           name: node.callee.name,
         });
         return;
       }
-      const format = getLiteralString(node.arguments[1]);
+      const format = getLiteralString(node.arguments[0]);
       if (format === null) {
         context.report(
           node,
-          'The second argument to {{name}} must be a string literal',
+          'The first argument to {{name}} must be a string literal',
           {name: node.callee.name}
         );
         return;
@@ -75,15 +77,16 @@ module.exports = function(context) {
         );
         return;
       }
-      // count the number of formatting substitutions, plus the first two args
-      const expectedNArgs = (format.match(/%s/g) || []).length + 2;
+      // count the number of formatting substitutions, plus the first arg
+      const expectedNArgs = (format.match(/%s/g) || []).length + 1;
       if (node.arguments.length !== expectedNArgs) {
         context.report(
           node,
-          'Expected {{expectedNArgs}} arguments in call to {{name}} based on ' +
+          'Expected {{expectedNArgs}} argument{{s}} in call to {{name}} based on ' +
             'the number of "%s" substitutions, but got {{length}}',
           {
             expectedNArgs: expectedNArgs,
+            s: expectedNArgs > 1 ? 's' : '',
             name: node.callee.name,
             length: node.arguments.length,
           }

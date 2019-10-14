@@ -6,4 +6,8 @@
  */
 
 // This "lowPriorityWarning" is an external module
-export default require('lowPriorityWarning');
+const _lowPriorityWarning = require('lowPriorityWarning');
+
+export default function lowPriorityWarningWithoutStack(format, ...args) {
+  return _lowPriorityWarning(false, format, ...args);
+}

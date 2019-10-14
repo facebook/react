@@ -35,22 +35,72 @@ describe('wrap-warning-with-env-check', () => {
 
   it('should wrap warning calls', () => {
     compare(
-      "warning(condition, 'a %s b', 'c');",
-      "__DEV__ ? !condition ? warning(false, 'a %s b', 'c') : void 0 : void 0;"
+      `if (condition) {
+  warning('a %s b', 'c');
+}`,
+      `if (__DEV__ && condition) {
+  warning('a %s b', 'c');
+}`
+    );
+    compare(
+      "warning('a %s b', 'c');",
+      "__DEV__ ? warning('a %s b', 'c') : void 0;"
     );
   });
 
   it('should wrap warningWithoutStack calls', () => {
     compare(
-      "warningWithoutStack(condition, 'a %s b', 'c');",
-      "__DEV__ ? !condition ? warningWithoutStack(false, 'a %s b', 'c') : void 0 : void 0;"
+      `if (condition) {
+  warningWithoutStack('a %s b', 'c');
+}`,
+      `if (__DEV__ && condition) {
+  warningWithoutStack('a %s b', 'c');
+}`
+    );
+    compare(
+      "warningWithoutStack('a %s b', 'c');",
+      "__DEV__ ? warningWithoutStack('a %s b', 'c') : void 0;"
+    );
+  });
+
+  it('should wrap lowPriorityWarning calls', () => {
+    compare(
+      `if (condition) {
+  lowPriorityWarning('a %s b', 'c');
+}`,
+      `if (__DEV__ && condition) {
+  lowPriorityWarning('a %s b', 'c');
+}`
+    );
+    compare(
+      "lowPriorityWarning('a %s b', 'c');",
+      "__DEV__ ? lowPriorityWarning('a %s b', 'c') : void 0;"
+    );
+  });
+
+  it('should wrap lowPriorityWarningWithoutStack calls', () => {
+    compare(
+      `if (condition) {
+  lowPriorityWarningWithoutStack('a %s b', 'c');
+}`,
+      `if (__DEV__ && condition) {
+  lowPriorityWarningWithoutStack('a %s b', 'c');
+}`
+    );
+    compare(
+      "lowPriorityWarningWithoutStack('a %s b', 'c');",
+      "__DEV__ ? lowPriorityWarningWithoutStack('a %s b', 'c') : void 0;"
     );
   });
 
   it('should not wrap invariant calls', () => {
     compare(
-      "invariant(condition, 'a %s b', 'c');",
-      "invariant(condition, 'a %s b', 'c');"
+      `if (condition) {
+  invariant('a %s b', 'c');
+}`,
+      `if (condition) {
+  invariant('a %s b', 'c');
+}`
     );
   });
 });

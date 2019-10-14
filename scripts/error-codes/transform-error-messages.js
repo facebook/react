@@ -24,7 +24,9 @@ module.exports = function(babel) {
         if (path.get('callee').isIdentifier({name: 'invariant'})) {
           // Turns this code:
           //
-          // invariant(condition, 'A %s message that contains %s', adj, noun);
+          // if (!condition) {
+          //   invariant('A %s message that contains %s', adj, noun);
+          // }
           //
           // into this:
           //
@@ -39,9 +41,8 @@ module.exports = function(babel) {
           // where ERR_CODE is an error code: a unique identifier (a number
           // string) that references a verbose error message. The mapping is
           // stored in `scripts/error-codes/codes.json`.
-          const condition = node.arguments[0];
-          const errorMsgLiteral = evalToString(node.arguments[1]);
-          const errorMsgExpressions = Array.from(node.arguments.slice(2));
+          const errorMsgLiteral = evalToString(node.arguments[0]);
+          const errorMsgExpressions = Array.from(node.arguments.slice(1));
           const errorMsgQuasis = errorMsgLiteral
             .split('%s')
             .map(raw => t.templateElement({raw, cooked: String.raw({raw})}));
@@ -69,13 +70,8 @@ module.exports = function(babel) {
             //     throw Error(`A ${adj} message that contains ${noun}`);
             //   }
             parentStatementPath.replaceWith(
-              t.ifStatement(
-                t.unaryExpression('!', condition),
-                t.blockStatement([
-                  t.throwStatement(
-                    t.callExpression(t.identifier('Error'), [devMessage])
-                  ),
-                ])
+              t.throwStatement(
+                t.callExpression(t.identifier('Error'), [devMessage])
               )
             );
             return;
@@ -100,13 +96,8 @@ module.exports = function(babel) {
             //     throw Error(`A ${adj} message that contains ${noun}`);
             //   }
             parentStatementPath.replaceWith(
-              t.ifStatement(
-                t.unaryExpression('!', condition),
-                t.blockStatement([
-                  t.throwStatement(
-                    t.callExpression(t.identifier('Error'), [devMessage])
-                  ),
-                ])
+              t.throwStatement(
+                t.callExpression(t.identifier('Error'), [devMessage])
               )
             );
             parentStatementPath.addComment(
@@ -140,20 +131,13 @@ module.exports = function(babel) {
           //   );
           // }
           parentStatementPath.replaceWith(
-            t.ifStatement(
-              t.unaryExpression('!', condition),
-              t.blockStatement([
-                t.blockStatement([
-                  t.throwStatement(
-                    t.callExpression(t.identifier('Error'), [
-                      t.conditionalExpression(
-                        DEV_EXPRESSION,
-                        devMessage,
-                        prodMessage
-                      ),
-                    ])
-                  ),
-                ]),
+            t.throwStatement(
+              t.callExpression(t.identifier('Error'), [
+                t.conditionalExpression(
+                  DEV_EXPRESSION,
+                  devMessage,
+                  prodMessage
+                ),
               ])
             )
           );

@@ -75,7 +75,7 @@ module.exports = function(opts) {
 
             // error messages can be concatenated (`+`) at runtime, so here's a
             // trivial partial evaluator that interprets the literal value
-            const errorMsgLiteral = evalToString(node.arguments[1]);
+            const errorMsgLiteral = evalToString(node.arguments[0]);
             addToErrorMap(errorMsgLiteral);
           }
         },

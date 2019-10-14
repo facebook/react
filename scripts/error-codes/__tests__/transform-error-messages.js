@@ -32,7 +32,9 @@ describe('error transform', () => {
     expect(
       transform(`
 import invariant from 'shared/invariant';
-invariant(condition, 'Do not override existing functions.');
+if (!condition) {
+  invariant('Do not override existing functions.');
+}
 `)
     ).toMatchSnapshot();
   });
@@ -41,7 +43,7 @@ invariant(condition, 'Do not override existing functions.');
     expect(() => {
       transform(`
 import invariant from 'shared/invariant';
-cond && invariant(condition, 'Do not override existing functions.');
+cond && !condition && invariant('Do not override existing functions.');
 `);
     }).toThrow('invariant() cannot be called from expression context');
   });
@@ -50,7 +52,9 @@ cond && invariant(condition, 'Do not override existing functions.');
     expect(
       transform(`
 import invariant from 'shared/invariant';
-invariant(condition, 'Expected %s target to be an array; got %s', foo, bar);
+if (!condition) {
+  invariant('Expected %s target to be an array; got %s', foo, bar);
+}
 `)
     ).toMatchSnapshot();
   });
@@ -59,7 +63,9 @@ invariant(condition, 'Expected %s target to be an array; got %s', foo, bar);
     expect(
       transform(`
 import invariant from 'shared/invariant';
-invariant(condition, 'Expected a component class, ' + 'got %s.' + '%s', Foo, Bar);
+if (!condition) {
+  invariant('Expected a component class, ' + 'got %s.' + '%s', Foo, Bar);
+}
 `)
     ).toMatchSnapshot();
   });
@@ -68,7 +74,9 @@ invariant(condition, 'Expected a component class, ' + 'got %s.' + '%s', Foo, Bar
     expect(
       transform(`
 import invariant from 'shared/invariant';
-invariant(condition, 'This is not a real error message.');
+if (!condition) {
+  invariant('This is not a real error message.');
+}
 `)
     ).toMatchSnapshot();
   });
@@ -77,7 +85,9 @@ invariant(condition, 'This is not a real error message.');
     expect(
       transform(`
 import invariant from 'shared/invariant';
-invariant(condition, 'What\\'s up?');
+if (!condition) {
+  invariant('What\\'s up?');
+}
 `)
     ).toMatchSnapshot();
   });
@@ -87,7 +97,9 @@ invariant(condition, 'What\\'s up?');
       transform(
         `
 import invariant from 'shared/invariant';
-invariant(condition, 'Do not override existing functions.');
+if (!condition) {
+  invariant('Do not override existing functions.');
+}
 `,
         {noMinify: true}
       )
