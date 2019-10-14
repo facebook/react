@@ -1826,6 +1826,68 @@ describe('ReactSuspenseList', () => {
     );
   });
 
+  it('eventually resolves a nested forwards suspense list', async () => {
+    let B = createAsyncText('B');
+
+    function Foo() {
+      return (
+        <SuspenseList revealOrder="together">
+          <SuspenseList revealOrder="forwards">
+            <Suspense fallback={<Text text="Loading A" />}>
+              <Text text="A" />
+            </Suspense>
+            <Suspense fallback={<Text text="Loading B" />}>
+              <B />
+            </Suspense>
+            <Suspense fallback={<Text text="Loading C" />}>
+              <Text text="C" />
+            </Suspense>
+          </SuspenseList>
+          <Suspense fallback={<Text text="Loading D" />}>
+            <Text text="D" />
+          </Suspense>
+        </SuspenseList>
+      );
+    }
+
+    ReactNoop.render(<Foo />);
+
+    expect(Scheduler).toFlushAndYield([
+      'A',
+      'Suspend! [B]',
+      'Loading B',
+      'Loading C',
+      'D',
+      // The second pass forces the fallbacks
+      'Loading A',
+      'Loading B',
+      'Loading C',
+      'Loading D',
+    ]);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>Loading A</span>
+        <span>Loading B</span>
+        <span>Loading C</span>
+        <span>Loading D</span>
+      </>,
+    );
+
+    await B.resolve();
+
+    expect(Scheduler).toFlushAndYield(['A', 'B', 'C', 'D']);
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+        <span>D</span>
+      </>,
+    );
+  });
+
   it('can do unrelated adjacent updates', async () => {
     let updateAdjacent;
     function Adjacent() {

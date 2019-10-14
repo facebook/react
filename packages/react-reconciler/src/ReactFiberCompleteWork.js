@@ -1083,6 +1083,15 @@ function completeWork(
           if (suspended !== null) {
             workInProgress.effectTag |= DidCapture;
             didSuspendAlready = true;
+
+            // Ensure we transfer the update queue to the parent so that it doesn't
+            // get lost if this row ends up dropped during a second pass.
+            let newThennables = suspended.updateQueue;
+            if (newThennables !== null) {
+              workInProgress.updateQueue = newThennables;
+              workInProgress.effectTag |= Update;
+            }
+
             cutOffTailIfNeeded(renderState, true);
             // This might have been modified.
             if (
@@ -1090,12 +1099,6 @@ function completeWork(
               renderState.tailMode === 'hidden'
             ) {
               // We need to delete the row we just rendered.
-              // Ensure we transfer the update queue to the parent.
-              let newThennables = suspended.updateQueue;
-              if (newThennables !== null) {
-                workInProgress.updateQueue = newThennables;
-                workInProgress.effectTag |= Update;
-              }
               // Reset the effect list to what it w as before we rendered this
               // child. The nested children have already appended themselves.
               let lastEffect = (workInProgress.lastEffect =
