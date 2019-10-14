@@ -31,9 +31,9 @@ export const enableProfilerTimer = __PROFILE__;
 // Trace which interactions trigger each commit.
 export const enableSchedulerTracing = __PROFILE__;
 
-// Only used in www builds.
-export const enableSuspenseServerRenderer = false; // TODO: __DEV__? Here it might just be false.
-export const enableSelectiveHydration = false;
+// SSR experiments
+export const enableSuspenseServerRenderer = __EXPERIMENTAL__;
+export const enableSelectiveHydration = __EXPERIMENTAL__;
 
 // Only used in www builds.
 export const enableSchedulerDebugging = false;
