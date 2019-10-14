@@ -2121,6 +2121,20 @@ function updateDehydratedSuspenseComponent(
   }
 }
 
+function scheduleWorkOnFiber(
+  fiber: Fiber,
+  renderExpirationTime: ExpirationTime,
+) {
+  if (fiber.expirationTime < renderExpirationTime) {
+    fiber.expirationTime = renderExpirationTime;
+  }
+  let alternate = fiber.alternate;
+  if (alternate !== null && alternate.expirationTime < renderExpirationTime) {
+    alternate.expirationTime = renderExpirationTime;
+  }
+  scheduleWorkOnParentPath(fiber.return, renderExpirationTime);
+}
+
 function propagateSuspenseContextChange(
   workInProgress: Fiber,
   firstChild: null | Fiber,
@@ -2134,18 +2148,15 @@ function propagateSuspenseContextChange(
     if (node.tag === SuspenseComponent) {
       const state: SuspenseState | null = node.memoizedState;
       if (state !== null) {
-        if (node.expirationTime < renderExpirationTime) {
-          node.expirationTime = renderExpirationTime;
-        }
-        let alternate = node.alternate;
-        if (
-          alternate !== null &&
-          alternate.expirationTime < renderExpirationTime
-        ) {
-          alternate.expirationTime = renderExpirationTime;
-        }
-        scheduleWorkOnParentPath(node.return, renderExpirationTime);
+        scheduleWorkOnFiber(node, renderExpirationTime);
       }
+    } else if (node.tag === SuspenseListComponent) {
+      // If the tail is hidden there might not be an Suspense boundaries
+      // to schedule work on. In this case we have to schedule it on the
+      // list itself.
+      // We don't have to traverse to the children of the list since
+      // the list will propagate the change when it rerenders.
+      scheduleWorkOnFiber(node, renderExpirationTime);
     } else if (node.child !== null) {
       node.child.return = node;
       node = node.child;
